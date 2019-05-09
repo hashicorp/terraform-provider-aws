@@ -25,6 +25,7 @@ func TestAccAwsDxHostedPrivateVirtualInterface_basic(t *testing.T) {
 	}
 	vifName := fmt.Sprintf("terraform-testacc-dxvif-%s", acctest.RandString(5))
 	bgpAsn := randIntRange(64512, 65534)
+	vlan := randIntRange(2049, 4094)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -32,7 +33,7 @@ func TestAccAwsDxHostedPrivateVirtualInterface_basic(t *testing.T) {
 		CheckDestroy: testAccCheckAwsDxHostedPrivateVirtualInterfaceDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDxHostedPrivateVirtualInterfaceConfig_basic(connectionId, ownerAccountId, vifName, bgpAsn),
+				Config: testAccDxHostedPrivateVirtualInterfaceConfig_basic(connectionId, ownerAccountId, vifName, bgpAsn, vlan),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsDxHostedPrivateVirtualInterfaceExists("aws_dx_hosted_private_virtual_interface.foo"),
 					resource.TestCheckResourceAttr("aws_dx_hosted_private_virtual_interface.foo", "name", vifName),
@@ -61,14 +62,15 @@ func TestAccAwsDxHostedPrivateVirtualInterface_mtuUpdate(t *testing.T) {
 	}
 	vifName := fmt.Sprintf("terraform-testacc-dxvif-%s", acctest.RandString(5))
 	bgpAsn := randIntRange(64512, 65534)
+	vlan := randIntRange(2049, 4094)
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsDxHostedPrivateVirtualInterfaceDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDxHostedPrivateVirtualInterfaceConfig_basic(connectionId, ownerAccountId, vifName, bgpAsn),
+				Config: testAccDxHostedPrivateVirtualInterfaceConfig_basic(connectionId, ownerAccountId, vifName, bgpAsn, vlan),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsDxHostedPrivateVirtualInterfaceExists("aws_dx_hosted_private_virtual_interface.foo"),
 					resource.TestCheckResourceAttr("aws_dx_hosted_private_virtual_interface.foo", "name", vifName),
@@ -77,7 +79,7 @@ func TestAccAwsDxHostedPrivateVirtualInterface_mtuUpdate(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccDxHostedPrivateVirtualInterfaceConfig_JumboFrames(connectionId, ownerAccountId, vifName, bgpAsn),
+				Config: testAccDxHostedPrivateVirtualInterfaceConfig_JumboFrames(connectionId, ownerAccountId, vifName, bgpAsn, vlan),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsDxHostedPrivateVirtualInterfaceExists("aws_dx_hosted_private_virtual_interface.foo"),
 					resource.TestCheckResourceAttr("aws_dx_hosted_private_virtual_interface.foo", "name", vifName),
@@ -85,7 +87,7 @@ func TestAccAwsDxHostedPrivateVirtualInterface_mtuUpdate(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccDxHostedPrivateVirtualInterfaceConfig_basic(connectionId, ownerAccountId, vifName, bgpAsn),
+				Config: testAccDxHostedPrivateVirtualInterfaceConfig_basic(connectionId, ownerAccountId, vifName, bgpAsn, vlan),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsDxHostedPrivateVirtualInterfaceExists("aws_dx_hosted_private_virtual_interface.foo"),
 					resource.TestCheckResourceAttr("aws_dx_hosted_private_virtual_interface.foo", "name", vifName),
@@ -132,31 +134,31 @@ func testAccCheckAwsDxHostedPrivateVirtualInterfaceExists(name string) resource.
 	}
 }
 
-func testAccDxHostedPrivateVirtualInterfaceConfig_basic(cid, ownerAcctId, n string, bgpAsn int) string {
+func testAccDxHostedPrivateVirtualInterfaceConfig_basic(cid, ownerAcctId, n string, bgpAsn, vlan int) string {
 	return fmt.Sprintf(`
 resource "aws_dx_hosted_private_virtual_interface" "foo" {
   connection_id    = "%s"
   owner_account_id = "%s"
 
   name           = "%s"
-  vlan           = 4094
+  vlan           = %d
   address_family = "ipv4"
   bgp_asn        = %d
 }
-`, cid, ownerAcctId, n, bgpAsn)
+`, cid, ownerAcctId, n, vlan, bgpAsn)
 }
 
-func testAccDxHostedPrivateVirtualInterfaceConfig_JumboFrames(cid, ownerAcctId, n string, bgpAsn int) string {
+func testAccDxHostedPrivateVirtualInterfaceConfig_JumboFrames(cid, ownerAcctId, n string, bgpAsn, vlan int) string {
 	return fmt.Sprintf(`
 resource "aws_dx_hosted_private_virtual_interface" "foo" {
   connection_id    = "%s"
   owner_account_id = "%s"
 
   name           = "%s"
-  vlan           = 4094
+  vlan           = %d
   address_family = "ipv4"
   bgp_asn        = %d
   mtu			 = 9001
 }
-`, cid, ownerAcctId, n, bgpAsn)
+`, cid, ownerAcctId, n, vlan, bgpAsn)
 }

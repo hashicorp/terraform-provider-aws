@@ -3,7 +3,6 @@ package aws
 import (
 	"fmt"
 	"log"
-	"strings"
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -46,10 +45,6 @@ func testSweepGameliftBuilds(region string) error {
 	log.Printf("[INFO] Found %d Gamelift Builds", len(resp.Builds))
 
 	for _, build := range resp.Builds {
-		if !strings.HasPrefix(*build.Name, testAccGameliftBuildPrefix) {
-			continue
-		}
-
 		log.Printf("[INFO] Deleting Gamelift Build %q", *build.BuildId)
 		_, err := conn.DeleteBuild(&gamelift.DeleteBuildInput{
 			BuildId: build.BuildId,

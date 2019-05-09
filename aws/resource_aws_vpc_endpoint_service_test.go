@@ -2,6 +2,7 @@ package aws
 
 import (
 	"fmt"
+	"log"
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -12,6 +13,72 @@ import (
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/terraform"
 )
+
+func init() {
+	resource.AddTestSweepers("aws_vpc_endpoint_service", &resource.Sweeper{
+		Name: "aws_vpc_endpoint_service",
+		F:    testSweepEc2VpcEndpointServices,
+		Dependencies: []string{
+			"aws_vpc_endpoint",
+		},
+	})
+}
+
+func testSweepEc2VpcEndpointServices(region string) error {
+	client, err := sharedClientForRegion(region)
+	if err != nil {
+		return fmt.Errorf("error getting client: %s", err)
+	}
+	conn := client.(*AWSClient).ec2conn
+	input := &ec2.DescribeVpcEndpointServiceConfigurationsInput{}
+
+	for {
+		output, err := conn.DescribeVpcEndpointServiceConfigurations(input)
+
+		if testSweepSkipSweepError(err) {
+			log.Printf("[WARN] Skipping EC2 VPC Endpoint Service sweep for %s: %s", region, err)
+			return nil
+		}
+
+		if err != nil {
+			return fmt.Errorf("error retrieving EC2 VPC Endpoint Services: %s", err)
+		}
+
+		for _, serviceConfiguration := range output.ServiceConfigurations {
+			if aws.StringValue(serviceConfiguration.ServiceState) == ec2.ServiceStateDeleted {
+				continue
+			}
+
+			id := aws.StringValue(serviceConfiguration.ServiceId)
+			input := &ec2.DeleteVpcEndpointServiceConfigurationsInput{
+				ServiceIds: []*string{serviceConfiguration.ServiceId},
+			}
+
+			log.Printf("[INFO] Deleting EC2 VPC Endpoint Service: %s", id)
+			_, err := conn.DeleteVpcEndpointServiceConfigurations(input)
+
+			if isAWSErr(err, "InvalidVpcEndpointServiceId.NotFound", "") {
+				continue
+			}
+
+			if err != nil {
+				return fmt.Errorf("error deleting EC2 VPC Endpoint Service (%s): %s", id, err)
+			}
+
+			if err := waitForVpcEndpointServiceDeletion(conn, id); err != nil {
+				return fmt.Errorf("error waiting for VPC Endpoint Service (%s) to delete: %s", id, err)
+			}
+		}
+
+		if aws.StringValue(output.NextToken) == "" {
+			break
+		}
+
+		input.NextToken = output.NextToken
+	}
+
+	return nil
+}
 
 func TestAccAWSVpcEndpointService_importBasic(t *testing.T) {
 	lbName := fmt.Sprintf("testaccawsnlb-basic-%s", acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum))
@@ -78,10 +145,8 @@ func TestAccAWSVpcEndpointService_removed(t *testing.T) {
 		_, err := conn.DeleteVpcEndpointServiceConfigurations(&ec2.DeleteVpcEndpointServiceConfigurationsInput{
 			ServiceIds: []*string{svcCfg.ServiceId},
 		})
-		if err != nil {
-			return err
-		}
-		return nil
+
+		return err
 	}
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -164,7 +229,7 @@ func testAccVpcEndpointServiceBasicConfig(lb1Name string) string {
 resource "aws_vpc" "nlb_test" {
   cidr_block = "10.0.0.0/16"
 
-  tags {
+  tags = {
     Name = "terraform-testacc-vpc-endpoint-service"
   }
 }
@@ -182,7 +247,7 @@ resource "aws_lb" "nlb_test_1" {
   idle_timeout               = 60
   enable_deletion_protection = false
 
-  tags {
+  tags = {
     Name = "testAccVpcEndpointServiceBasicConfig_nlb1"
   }
 }
@@ -192,7 +257,7 @@ resource "aws_subnet" "nlb_test_1" {
   cidr_block        = "10.0.1.0/24"
   availability_zone = "us-west-2a"
 
-  tags {
+  tags = {
     Name = "tf-acc-vpc-endpoint-service-1"
   }
 }
@@ -202,7 +267,7 @@ resource "aws_subnet" "nlb_test_2" {
   cidr_block        = "10.0.2.0/24"
   availability_zone = "us-west-2b"
 
-  tags {
+  tags = {
     Name = "tf-acc-vpc-endpoint-service-2"
   }
 }
@@ -229,7 +294,7 @@ func testAccVpcEndpointServiceModifiedConfig(lb1Name, lb2Name string) string {
 resource "aws_vpc" "nlb_test" {
   cidr_block = "10.0.0.0/16"
 
-  tags {
+  tags = {
     Name = "terraform-testacc-vpc-endpoint-service"
   }
 }
@@ -247,7 +312,7 @@ resource "aws_lb" "nlb_test_1" {
   idle_timeout               = 60
   enable_deletion_protection = false
 
-  tags {
+  tags = {
     Name = "testAccVpcEndpointServiceBasicConfig_nlb1"
   }
 }
@@ -265,7 +330,7 @@ resource "aws_lb" "nlb_test_2" {
 	idle_timeout               = 60
 	enable_deletion_protection = false
 
-	tags {
+	tags = {
 	  Name = "testAccVpcEndpointServiceBasicConfig_nlb2"
 	}
   }
@@ -275,7 +340,7 @@ resource "aws_subnet" "nlb_test_1" {
   cidr_block        = "10.0.1.0/24"
   availability_zone = "us-west-2a"
 
-  tags {
+  tags = {
     Name = "tf-acc-vpc-endpoint-service-1"
   }
 }
@@ -285,7 +350,7 @@ resource "aws_subnet" "nlb_test_2" {
   cidr_block        = "10.0.2.0/24"
   availability_zone = "us-west-2b"
 
-  tags {
+  tags = {
     Name = "tf-acc-vpc-endpoint-service-2"
   }
 }

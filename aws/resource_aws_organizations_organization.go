@@ -14,6 +14,7 @@ func resourceAwsOrganizationsOrganization() *schema.Resource {
 	return &schema.Resource{
 		Create: resourceAwsOrganizationsOrganizationCreate,
 		Read:   resourceAwsOrganizationsOrganizationRead,
+		Update: resourceAwsOrganizationsOrganizationUpdate,
 		Delete: resourceAwsOrganizationsOrganizationDelete,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
@@ -35,6 +36,47 @@ func resourceAwsOrganizationsOrganization() *schema.Resource {
 			"master_account_id": {
 				Type:     schema.TypeString,
 				Computed: true,
+			},
+			"aws_service_access_principals": {
+				Type:     schema.TypeSet,
+				Optional: true,
+				Elem:     &schema.Schema{Type: schema.TypeString},
+			},
+			"roots": {
+				Type:     schema.TypeList,
+				Computed: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"id": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"name": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"arn": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"policy_types": {
+							Type:     schema.TypeList,
+							Computed: true,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"status": {
+										Type:     schema.TypeString,
+										Computed: true,
+									},
+									"type": {
+										Type:     schema.TypeString,
+										Computed: true,
+									},
+								},
+							},
+						},
+					},
+				},
 			},
 			"feature_set": {
 				Type:     schema.TypeString,
@@ -66,6 +108,21 @@ func resourceAwsOrganizationsOrganizationCreate(d *schema.ResourceData, meta int
 	org := resp.Organization
 	d.SetId(*org.Id)
 
+	awsServiceAccessPrincipals := d.Get("aws_service_access_principals").(*schema.Set).List()
+	for _, principalRaw := range awsServiceAccessPrincipals {
+		principal := principalRaw.(string)
+		input := &organizations.EnableAWSServiceAccessInput{
+			ServicePrincipal: aws.String(principal),
+		}
+
+		log.Printf("[DEBUG] Enabling AWS Service Access in Organization: %s", input)
+		_, err := conn.EnableAWSServiceAccess(input)
+
+		if err != nil {
+			return fmt.Errorf("error enabling AWS Service Access (%s) in Organization: %s", principal, err)
+		}
+	}
+
 	return resourceAwsOrganizationsOrganizationRead(d, meta)
 }
 
@@ -74,21 +131,97 @@ func resourceAwsOrganizationsOrganizationRead(d *schema.ResourceData, meta inter
 
 	log.Printf("[INFO] Reading Organization: %s", d.Id())
 	org, err := conn.DescribeOrganization(&organizations.DescribeOrganizationInput{})
+
+	if isAWSErr(err, organizations.ErrCodeAWSOrganizationsNotInUseException, "") {
+		log.Printf("[WARN] Organization does not exist, removing from state: %s", d.Id())
+		d.SetId("")
+		return nil
+	}
+
 	if err != nil {
-		if isAWSErr(err, organizations.ErrCodeAWSOrganizationsNotInUseException, "") {
-			log.Printf("[WARN] Organization does not exist, removing from state: %s", d.Id())
-			d.SetId("")
-			return nil
-		}
-		return err
+		return fmt.Errorf("error describing Organization: %s", err)
+	}
+
+	log.Printf("[INFO] Listing Roots for Organization: %s", d.Id())
+	var roots []*organizations.Root
+	err = conn.ListRootsPages(&organizations.ListRootsInput{}, func(page *organizations.ListRootsOutput, lastPage bool) bool {
+		roots = append(roots, page.Roots...)
+		return !lastPage
+	})
+	if err != nil {
+		return fmt.Errorf("error listing AWS Organization (%s) roots: %s", d.Id(), err)
 	}
 
 	d.Set("arn", org.Organization.Arn)
+	if err := d.Set("roots", flattenOrganizationsRoots(roots)); err != nil {
+		return fmt.Errorf("error setting roots: %s", err)
+	}
 	d.Set("feature_set", org.Organization.FeatureSet)
 	d.Set("master_account_arn", org.Organization.MasterAccountArn)
 	d.Set("master_account_email", org.Organization.MasterAccountEmail)
 	d.Set("master_account_id", org.Organization.MasterAccountId)
+
+	awsServiceAccessPrincipals := make([]string, 0)
+
+	// ConstraintViolationException: The request failed because the organization does not have all features enabled. Please enable all features in your organization and then retry.
+	if aws.StringValue(org.Organization.FeatureSet) == organizations.OrganizationFeatureSetAll {
+		err = conn.ListAWSServiceAccessForOrganizationPages(&organizations.ListAWSServiceAccessForOrganizationInput{}, func(page *organizations.ListAWSServiceAccessForOrganizationOutput, lastPage bool) bool {
+			for _, enabledServicePrincipal := range page.EnabledServicePrincipals {
+				awsServiceAccessPrincipals = append(awsServiceAccessPrincipals, aws.StringValue(enabledServicePrincipal.ServicePrincipal))
+			}
+			return !lastPage
+		})
+
+		if err != nil {
+			return fmt.Errorf("error listing AWS Service Access for Organization (%s): %s", d.Id(), err)
+		}
+	}
+
+	if err := d.Set("aws_service_access_principals", awsServiceAccessPrincipals); err != nil {
+		return fmt.Errorf("error setting aws_service_access_principals: %s", err)
+	}
+
 	return nil
+}
+
+func resourceAwsOrganizationsOrganizationUpdate(d *schema.ResourceData, meta interface{}) error {
+	conn := meta.(*AWSClient).organizationsconn
+
+	if d.HasChange("aws_service_access_principals") {
+		oldRaw, newRaw := d.GetChange("aws_service_access_principals")
+		oldSet := oldRaw.(*schema.Set)
+		newSet := newRaw.(*schema.Set)
+
+		for _, disablePrincipalRaw := range oldSet.Difference(newSet).List() {
+			principal := disablePrincipalRaw.(string)
+			input := &organizations.DisableAWSServiceAccessInput{
+				ServicePrincipal: aws.String(principal),
+			}
+
+			log.Printf("[DEBUG] Disabling AWS Service Access in Organization: %s", input)
+			_, err := conn.DisableAWSServiceAccess(input)
+
+			if err != nil {
+				return fmt.Errorf("error disabling AWS Service Access (%s) in Organization: %s", principal, err)
+			}
+		}
+
+		for _, enablePrincipalRaw := range newSet.Difference(oldSet).List() {
+			principal := enablePrincipalRaw.(string)
+			input := &organizations.EnableAWSServiceAccessInput{
+				ServicePrincipal: aws.String(principal),
+			}
+
+			log.Printf("[DEBUG] Enabling AWS Service Access in Organization: %s", input)
+			_, err := conn.EnableAWSServiceAccess(input)
+
+			if err != nil {
+				return fmt.Errorf("error enabling AWS Service Access (%s) in Organization: %s", principal, err)
+			}
+		}
+	}
+
+	return resourceAwsOrganizationsOrganizationRead(d, meta)
 }
 
 func resourceAwsOrganizationsOrganizationDelete(d *schema.ResourceData, meta interface{}) error {
@@ -102,4 +235,34 @@ func resourceAwsOrganizationsOrganizationDelete(d *schema.ResourceData, meta int
 	}
 
 	return nil
+}
+
+func flattenOrganizationsRoots(roots []*organizations.Root) []map[string]interface{} {
+	if len(roots) == 0 {
+		return nil
+	}
+	var result []map[string]interface{}
+	for _, r := range roots {
+		result = append(result, map[string]interface{}{
+			"id":           aws.StringValue(r.Id),
+			"name":         aws.StringValue(r.Name),
+			"arn":          aws.StringValue(r.Arn),
+			"policy_types": flattenOrganizationsRootPolicyTypeSummaries(r.PolicyTypes),
+		})
+	}
+	return result
+}
+
+func flattenOrganizationsRootPolicyTypeSummaries(summaries []*organizations.PolicyTypeSummary) []map[string]interface{} {
+	if len(summaries) == 0 {
+		return nil
+	}
+	var result []map[string]interface{}
+	for _, s := range summaries {
+		result = append(result, map[string]interface{}{
+			"status": aws.StringValue(s.Status),
+			"type":   aws.StringValue(s.Type),
+		})
+	}
+	return result
 }

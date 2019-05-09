@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"log"
 	"regexp"
-	"strings"
 	"testing"
 	"time"
 
@@ -55,10 +54,6 @@ func testSweepCloudWatchEventPermissions(region string) error {
 
 	for _, statement := range policyDoc.Statements {
 		sid := statement.Sid
-
-		if !strings.HasPrefix(sid, "TestAcc") {
-			continue
-		}
 
 		log.Printf("[INFO] Deleting CloudWatch Event Permission %s", sid)
 		_, err := conn.RemovePermission(&events.RemovePermissionInput{
@@ -281,11 +276,7 @@ func testAccCheckCloudWatchEventPermissionExists(pr string) resource.TestCheckFu
 		}
 
 		_, err = findCloudWatchEventPermissionPolicyStatementByID(&policyDoc, rs.Primary.ID)
-		if err != nil {
-			return err
-		}
-
-		return nil
+		return err
 	}
 }
 

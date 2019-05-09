@@ -6,7 +6,7 @@ description: |-
   Provides a resource to create a VPC Egress Only Internet Gateway.
 ---
 
-# aws_egress_only_internet_gateway
+# Resource: aws_egress_only_internet_gateway
 
 [IPv6 only] Creates an egress-only Internet gateway for your VPC.
 An egress-only Internet gateway is used to enable outbound communication
@@ -17,8 +17,8 @@ outside of your VPC from initiating an IPv6 connection with your instance.
 
 ```hcl
 resource "aws_vpc" "foo" {
-	cidr_block = "10.1.0.0/16"
-	assign_generated_ipv6_cidr_block = true
+  cidr_block                       = "10.1.0.0/16"
+  assign_generated_ipv6_cidr_block = true
 }
 
 resource "aws_egress_only_internet_gateway" "foo" {

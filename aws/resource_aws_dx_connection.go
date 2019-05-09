@@ -48,6 +48,14 @@ func resourceAwsDxConnection() *schema.Resource {
 				Computed: true,
 			},
 			"tags": tagsSchema(),
+			"has_logical_redundancy": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"aws_device": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 		},
 	}
 }
@@ -116,12 +124,11 @@ func resourceAwsDxConnectionRead(d *schema.ResourceData, meta interface{}) error
 	d.Set("bandwidth", connection.Bandwidth)
 	d.Set("location", connection.Location)
 	d.Set("jumbo_frame_capable", connection.JumboFrameCapable)
+	d.Set("has_logical_redundancy", connection.HasLogicalRedundancy)
+	d.Set("aws_device", connection.AwsDeviceV2)
 
-	if err := getTagsDX(conn, d, arn); err != nil {
-		return err
-	}
-
-	return nil
+	err1 := getTagsDX(conn, d, arn)
+	return err1
 }
 
 func resourceAwsDxConnectionUpdate(d *schema.ResourceData, meta interface{}) error {

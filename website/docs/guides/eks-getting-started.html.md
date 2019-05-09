@@ -60,7 +60,7 @@ that will cost you money against your AWS bill.
 The sample architecture introduced here includes the following resources:
 
 * EKS Cluster: AWS managed Kubernetes cluster of master servers
-* AutoScaling Group containing 2 m4.large instances based on the latest EKS Amazon Linux 2 AMI: Operator managed Kuberneted worker nodes for running Kubernetes service deployments
+* AutoScaling Group containing 2 m4.large instances based on the latest EKS Amazon Linux 2 AMI: Operator managed Kubernetes worker nodes for running Kubernetes service deployments
 * Associated VPC, Internet Gateway, Security Groups, and Subnets: Operator managed networking resources for the EKS Cluster and worker node instances
 * Associated IAM Roles and Policies: Operator managed access resources for EKS and worker node instances
 
@@ -157,7 +157,7 @@ resource "aws_subnet" "demo" {
 resource "aws_internet_gateway" "demo" {
   vpc_id = "${aws_vpc.demo.id}"
 
-  tags {
+  tags = {
     Name = "terraform-eks-demo"
   }
 }
@@ -244,7 +244,7 @@ resource "aws_security_group" "demo-cluster" {
     cidr_blocks = ["0.0.0.0/0"]
   }
 
-  tags {
+  tags = {
     Name = "terraform-eks-demo"
   }
 }
@@ -430,7 +430,17 @@ resource "aws_security_group_rule" "demo-node-ingress-self" {
   type                     = "ingress"
 }
 
-resource "aws_security_group_rule" "demo-node-ingress-cluster" {
+resource "aws_security_group_rule" "demo-node-ingress-cluster-https" {
+  description              = "Allow worker Kubelets and pods to receive communication from the cluster control plane"
+  from_port                = 443
+  protocol                 = "tcp"
+  security_group_id        = "${aws_security_group.demo-node.id}"
+  source_security_group_id = "${aws_security_group.demo-cluster.id}"
+  to_port                  = 443
+  type                     = "ingress"
+}
+
+resource "aws_security_group_rule" "demo-node-ingress-cluster-others" {
   description              = "Allow worker Kubelets and pods to receive communication from the cluster control plane"
   from_port                = 1025
   protocol                 = "tcp"
@@ -467,13 +477,13 @@ This offers flexibility to scale up and down the worker nodes on demand when
 used in conjunction with AutoScaling policies (not implemented here).
 
 First, let us create a data source to fetch the latest Amazon Machine Image
-(AMI) that Amazon provides with an EKS compatible Kubernetes baked in.
+(AMI) that Amazon provides with an EKS compatible Kubernetes baked in. It will filter for and select an AMI compatible with the specific Kubernetes version being deployed.
 
 ```hcl
 data "aws_ami" "eks-worker" {
   filter {
     name   = "name"
-    values = ["amazon-eks-node-v*"]
+    values = ["amazon-eks-node-${aws_eks_cluster.demo.version}-v*"]
   }
 
   most_recent = true

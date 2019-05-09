@@ -6,7 +6,7 @@ description: |-
   Provides a Pinpoint App resource.
 ---
 
-# aws_pinpoint_app
+# Resource: aws_pinpoint_app
 
 Provides a Pinpoint App resource.
 
@@ -14,10 +14,10 @@ Provides a Pinpoint App resource.
 
 ```hcl
 resource "aws_pinpoint_app" "example" {
-  name         = "test-app"
-  
+  name = "test-app"
+
   limits {
-    maximum_duration    = 600
+    maximum_duration = 600
   }
 
   quiet_time {

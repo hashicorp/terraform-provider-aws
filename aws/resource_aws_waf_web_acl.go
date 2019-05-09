@@ -5,6 +5,7 @@ import (
 	"log"
 
 	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/waf"
 	"github.com/hashicorp/terraform/helper/schema"
 	"github.com/hashicorp/terraform/helper/validation"
@@ -21,6 +22,10 @@ func resourceAwsWafWebAcl() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
+			"arn": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"name": {
 				Type:     schema.TypeString,
 				Required: true,
@@ -44,6 +49,44 @@ func resourceAwsWafWebAcl() *schema.Resource {
 				Required:     true,
 				ForceNew:     true,
 				ValidateFunc: validateWafMetricName,
+			},
+			"logging_configuration": {
+				Type:     schema.TypeList,
+				Optional: true,
+				MaxItems: 1,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"log_destination": {
+							Type:     schema.TypeString,
+							Required: true,
+						},
+						"redacted_fields": {
+							Type:     schema.TypeList,
+							Optional: true,
+							MaxItems: 1,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"field_to_match": {
+										Type:     schema.TypeSet,
+										Required: true,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"data": {
+													Type:     schema.TypeString,
+													Optional: true,
+												},
+												"type": {
+													Type:     schema.TypeString,
+													Required: true,
+												},
+											},
+										},
+									},
+								},
+							},
+						},
+					},
+				},
 			},
 			"rules": {
 				Type:     schema.TypeSet,
@@ -104,7 +147,7 @@ func resourceAwsWafWebAcl() *schema.Resource {
 func resourceAwsWafWebAclCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).wafconn
 
-	wr := newWafRetryer(conn, "global")
+	wr := newWafRetryer(conn)
 	out, err := wr.RetryWithToken(func(token *string) (interface{}, error) {
 		params := &waf.CreateWebACLInput{
 			ChangeToken:   token,
@@ -120,6 +163,16 @@ func resourceAwsWafWebAclCreate(d *schema.ResourceData, meta interface{}) error 
 	}
 	resp := out.(*waf.CreateWebACLOutput)
 	d.SetId(*resp.WebACL.WebACLId)
+
+	arn := arn.ARN{
+		Partition: meta.(*AWSClient).partition,
+		Service:   "waf",
+		AccountID: meta.(*AWSClient).accountid,
+		Resource:  fmt.Sprintf("webacl/%s", d.Id()),
+	}.String()
+
+	// Set for update
+	d.Set("arn", arn)
 	return resourceAwsWafWebAclUpdate(d, meta)
 }
 
@@ -146,6 +199,14 @@ func resourceAwsWafWebAclRead(d *schema.ResourceData, meta interface{}) error {
 		return nil
 	}
 
+	arn := arn.ARN{
+		Partition: meta.(*AWSClient).partition,
+		Service:   "waf",
+		AccountID: meta.(*AWSClient).accountid,
+		Resource:  fmt.Sprintf("webacl/%s", d.Id()),
+	}.String()
+	d.Set("arn", arn)
+
 	if err := d.Set("default_action", flattenWafAction(resp.WebACL.DefaultAction)); err != nil {
 		return fmt.Errorf("error setting default_action: %s", err)
 	}
@@ -153,6 +214,26 @@ func resourceAwsWafWebAclRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("metric_name", resp.WebACL.MetricName)
 	if err := d.Set("rules", flattenWafWebAclRules(resp.WebACL.Rules)); err != nil {
 		return fmt.Errorf("error setting rules: %s", err)
+	}
+
+	getLoggingConfigurationInput := &waf.GetLoggingConfigurationInput{
+		ResourceArn: aws.String(d.Get("arn").(string)),
+	}
+	loggingConfiguration := []interface{}{}
+
+	log.Printf("[DEBUG] Getting WAF Web ACL (%s) Logging Configuration: %s", d.Id(), getLoggingConfigurationInput)
+	getLoggingConfigurationOutput, err := conn.GetLoggingConfiguration(getLoggingConfigurationInput)
+
+	if err != nil && !isAWSErr(err, waf.ErrCodeNonexistentItemException, "") {
+		return fmt.Errorf("error getting WAF Web ACL (%s) Logging Configuration: %s", d.Id(), err)
+	}
+
+	if getLoggingConfigurationOutput != nil {
+		loggingConfiguration = flattenWAFLoggingConfiguration(getLoggingConfigurationOutput.LoggingConfiguration)
+	}
+
+	if err := d.Set("logging_configuration", loggingConfiguration); err != nil {
+		return fmt.Errorf("error setting logging_configuration: %s", err)
 	}
 
 	return nil
@@ -165,7 +246,7 @@ func resourceAwsWafWebAclUpdate(d *schema.ResourceData, meta interface{}) error 
 		o, n := d.GetChange("rules")
 		oldR, newR := o.(*schema.Set).List(), n.(*schema.Set).List()
 
-		wr := newWafRetryer(conn, "global")
+		wr := newWafRetryer(conn)
 		_, err := wr.RetryWithToken(func(token *string) (interface{}, error) {
 			req := &waf.UpdateWebACLInput{
 				ChangeToken:   token,
@@ -180,6 +261,31 @@ func resourceAwsWafWebAclUpdate(d *schema.ResourceData, meta interface{}) error 
 		}
 	}
 
+	if d.HasChange("logging_configuration") {
+		loggingConfiguration := d.Get("logging_configuration").([]interface{})
+
+		if len(loggingConfiguration) == 1 {
+			input := &waf.PutLoggingConfigurationInput{
+				LoggingConfiguration: expandWAFLoggingConfiguration(loggingConfiguration, d.Get("arn").(string)),
+			}
+
+			log.Printf("[DEBUG] Updating WAF Web ACL (%s) Logging Configuration: %s", d.Id(), input)
+			if _, err := conn.PutLoggingConfiguration(input); err != nil {
+				return fmt.Errorf("error updating WAF Web ACL (%s) Logging Configuration: %s", d.Id(), err)
+			}
+		} else {
+			input := &waf.DeleteLoggingConfigurationInput{
+				ResourceArn: aws.String(d.Get("arn").(string)),
+			}
+
+			log.Printf("[DEBUG] Deleting WAF Web ACL (%s) Logging Configuration: %s", d.Id(), input)
+			if _, err := conn.DeleteLoggingConfiguration(input); err != nil {
+				return fmt.Errorf("error deleting WAF Web ACL (%s) Logging Configuration: %s", d.Id(), err)
+			}
+		}
+
+	}
+
 	return resourceAwsWafWebAclRead(d, meta)
 }
 
@@ -189,7 +295,7 @@ func resourceAwsWafWebAclDelete(d *schema.ResourceData, meta interface{}) error 
 	// First, need to delete all rules
 	rules := d.Get("rules").(*schema.Set).List()
 	if len(rules) > 0 {
-		wr := newWafRetryer(conn, "global")
+		wr := newWafRetryer(conn)
 		_, err := wr.RetryWithToken(func(token *string) (interface{}, error) {
 			req := &waf.UpdateWebACLInput{
 				ChangeToken:   token,
@@ -204,7 +310,7 @@ func resourceAwsWafWebAclDelete(d *schema.ResourceData, meta interface{}) error 
 		}
 	}
 
-	wr := newWafRetryer(conn, "global")
+	wr := newWafRetryer(conn)
 	_, err := wr.RetryWithToken(func(token *string) (interface{}, error) {
 		req := &waf.DeleteWebACLInput{
 			ChangeToken: token,
@@ -218,4 +324,93 @@ func resourceAwsWafWebAclDelete(d *schema.ResourceData, meta interface{}) error 
 		return fmt.Errorf("Error Deleting WAF ACL: %s", err)
 	}
 	return nil
+}
+
+func expandWAFLoggingConfiguration(l []interface{}, resourceARN string) *waf.LoggingConfiguration {
+	if len(l) == 0 || l[0] == nil {
+		return nil
+	}
+
+	m := l[0].(map[string]interface{})
+
+	loggingConfiguration := &waf.LoggingConfiguration{
+		LogDestinationConfigs: []*string{
+			aws.String(m["log_destination"].(string)),
+		},
+		RedactedFields: expandWAFRedactedFields(m["redacted_fields"].([]interface{})),
+		ResourceArn:    aws.String(resourceARN),
+	}
+
+	return loggingConfiguration
+}
+
+func expandWAFRedactedFields(l []interface{}) []*waf.FieldToMatch {
+	if len(l) == 0 || l[0] == nil {
+		return nil
+	}
+
+	m := l[0].(map[string]interface{})
+
+	if m["field_to_match"] == nil {
+		return nil
+	}
+
+	redactedFields := make([]*waf.FieldToMatch, 0)
+
+	for _, fieldToMatch := range m["field_to_match"].(*schema.Set).List() {
+		if fieldToMatch == nil {
+			continue
+		}
+
+		redactedFields = append(redactedFields, expandFieldToMatch(fieldToMatch.(map[string]interface{})))
+	}
+
+	return redactedFields
+}
+
+func flattenWAFLoggingConfiguration(loggingConfiguration *waf.LoggingConfiguration) []interface{} {
+	if loggingConfiguration == nil {
+		return []interface{}{}
+	}
+
+	m := map[string]interface{}{
+		"log_destination": "",
+		"redacted_fields": flattenWAFRedactedFields(loggingConfiguration.RedactedFields),
+	}
+
+	if len(loggingConfiguration.LogDestinationConfigs) > 0 {
+		m["log_destination"] = aws.StringValue(loggingConfiguration.LogDestinationConfigs[0])
+	}
+
+	return []interface{}{m}
+}
+
+func flattenWAFRedactedFields(fieldToMatches []*waf.FieldToMatch) []interface{} {
+	if len(fieldToMatches) == 0 {
+		return []interface{}{}
+	}
+
+	fieldToMatchResource := &schema.Resource{
+		Schema: map[string]*schema.Schema{
+			"data": {
+				Type:     schema.TypeString,
+				Optional: true,
+			},
+			"type": {
+				Type:     schema.TypeString,
+				Required: true,
+			},
+		},
+	}
+	l := make([]interface{}, len(fieldToMatches))
+
+	for i, fieldToMatch := range fieldToMatches {
+		l[i] = flattenFieldToMatch(fieldToMatch)[0]
+	}
+
+	m := map[string]interface{}{
+		"field_to_match": schema.NewSet(schema.HashResource(fieldToMatchResource), l),
+	}
+
+	return []interface{}{m}
 }

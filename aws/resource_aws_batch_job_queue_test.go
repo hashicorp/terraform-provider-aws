@@ -6,7 +6,6 @@ import (
 	"strconv"
 	"strings"
 	"testing"
-	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/batch"
@@ -56,14 +55,14 @@ func testSweepBatchJobQueues(region string) error {
 		}
 
 		log.Printf("[INFO] Disabling Batch Job Queue: %s", *name)
-		err := disableBatchJobQueue(*name, 10*time.Minute, conn)
+		err := disableBatchJobQueue(*name, conn)
 		if err != nil {
 			log.Printf("[ERROR] Failed to disable Batch Job Queue %s: %s", *name, err)
 			continue
 		}
 
 		log.Printf("[INFO] Deleting Batch Job Queue: %s", *name)
-		err = deleteBatchJobQueue(*name, 10*time.Minute, conn)
+		err = deleteBatchJobQueue(*name, conn)
 		if err != nil {
 			log.Printf("[ERROR] Failed to delete Batch Job Queue %s: %s", *name, err)
 		}
@@ -218,12 +217,12 @@ func testAccCheckBatchJobQueueDisappears(jobQueue *batch.JobQueueDetail) resourc
 		conn := testAccProvider.Meta().(*AWSClient).batchconn
 		name := aws.StringValue(jobQueue.JobQueueName)
 
-		err := disableBatchJobQueue(name, 10*time.Minute, conn)
+		err := disableBatchJobQueue(name, conn)
 		if err != nil {
 			return fmt.Errorf("error disabling Batch Job Queue (%s): %s", name, err)
 		}
 
-		return deleteBatchJobQueue(name, 10*time.Minute, conn)
+		return deleteBatchJobQueue(name, conn)
 	}
 }
 
@@ -293,7 +292,7 @@ resource "aws_security_group" "test_acc" {
 
 resource "aws_vpc" "test_acc" {
   cidr_block = "10.1.0.0/16"
-  tags {
+  tags = {
     Name = "terraform-testacc-batch-job-queue"
   }
 }
@@ -301,14 +300,14 @@ resource "aws_vpc" "test_acc" {
 resource "aws_subnet" "test_acc" {
   vpc_id = "${aws_vpc.test_acc.id}"
   cidr_block = "10.1.1.0/24"
-  tags {
+  tags = {
     Name = "tf-acc-batch-job-queue"
   }
 }
 
 resource "aws_batch_compute_environment" "test_environment" {
   compute_environment_name = "tf_acctest_batch_compute_environment_%[1]d"
-  compute_resources = {
+  compute_resources {
     instance_role = "${aws_iam_role.aws_batch_service_role.arn}"
     instance_type = ["m3.medium"]
     max_vcpus = 1

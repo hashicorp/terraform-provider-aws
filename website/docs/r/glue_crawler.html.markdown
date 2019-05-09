@@ -6,7 +6,7 @@ description: |-
   Manages a Glue Crawler
 ---
 
-# aws_glue_crawler
+# Resource: aws_glue_crawler
 
 Manages a Glue Crawler. More information can be found in the [AWS Glue Developer Guide](https://docs.aws.amazon.com/glue/latest/dg/add-crawler.html)
 
@@ -73,6 +73,7 @@ The following arguments are supported:
 * `schedule` (Optional) A cron expression used to specify the schedule. For more information, see [Time-Based Schedules for Jobs and Crawlers](https://docs.aws.amazon.com/glue/latest/dg/monitor-data-warehouse-schedule.html). For example, to run something every day at 12:15 UTC, you would specify: `cron(15 12 * * ? *)`.
 * `schema_change_policy` (Optional) Policy for the crawler's update and deletion behavior.
 * `table_prefix` (Optional) The table prefix used for catalog tables that are created.
+* `security_configuration` (Optional) The name of Security Configuration to be used by the crawler
 
 ### dynamodb_target Argument Reference
 
@@ -99,6 +100,7 @@ The following arguments are supported:
 In addition to all arguments above, the following attributes are exported:
 
 * `id` - Crawler name
+* `arn` - The ARN of the crawler 
 
 ## Import
 

@@ -6,7 +6,7 @@ description: |-
   Associates an SSM Document to an instance or EC2 tag.
 ---
 
-# aws_ssm_association
+# Resource: aws_ssm_association
 
 Associates an SSM Document to an instance or EC2 tag.
 
@@ -35,6 +35,9 @@ The following arguments are supported:
 * `parameters` - (Optional) A block of arbitrary string parameters to pass to the SSM document.
 * `schedule_expression` - (Optional) A cron expression when the association will be applied to the target(s).
 * `targets` - (Optional) A block containing the targets of the SSM association. Targets are documented below. AWS currently supports a maximum of 5 targets.
+* `compliance_severity` - (Optional) The compliance severity for the association. Can be one of the following: `UNSPECIFIED`, `LOW`, `MEDIUM`, `HIGH` or `CRITICAL`
+* `max_concurrency` - (Optional) The maximum number of targets allowed to run the association at the same time. You can specify a number, for example 10, or a percentage of the target set, for example 10%.
+* `max_errors` - (Optional) The number of errors that are allowed before the system stops sending requests to run the association on additional targets. You can specify a number, for example 10, or a percentage of the target set, for example 10%.
 
 Output Location (`output_location`) is an S3 bucket where you want to store the results of this association:
 

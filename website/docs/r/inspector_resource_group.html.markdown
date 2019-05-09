@@ -6,7 +6,7 @@ description: |-
   Provides a Inspector resource group.
 ---
 
-# aws_inspector_resource_group
+# Resource: aws_inspector_resource_group
 
 Provides a Inspector resource group
 
@@ -14,7 +14,7 @@ Provides a Inspector resource group
 
 ```hcl
 resource "aws_inspector_resource_group" "bar" {
-  tags {
+  tags = {
     Name = "foo"
     Env  = "bar"
   }

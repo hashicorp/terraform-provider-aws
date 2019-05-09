@@ -52,6 +52,7 @@ func resourceAwsSfnStateMachine() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"tags": tagsSchema(),
 		},
 	}
 }
@@ -92,6 +93,17 @@ func resourceAwsSfnStateMachineCreate(d *schema.ResourceData, meta interface{}) 
 
 	d.SetId(*activity.StateMachineArn)
 
+	if v, ok := d.GetOk("tags"); ok {
+		input := &sfn.TagResourceInput{
+			ResourceArn: aws.String(d.Id()),
+			Tags:        tagsFromMapSfn(v.(map[string]interface{})),
+		}
+		log.Printf("[DEBUG] Tagging SFN State Machine: %s", input)
+		_, err := conn.TagResource(input)
+		if err != nil {
+			return fmt.Errorf("error tagging SFN State Machine (%s): %s", d.Id(), input)
+		}
+	}
 	return resourceAwsSfnStateMachineRead(d, meta)
 }
 
@@ -122,6 +134,26 @@ func resourceAwsSfnStateMachineRead(d *schema.ResourceData, meta interface{}) er
 		log.Printf("[DEBUG] Error setting creation_date: %s", err)
 	}
 
+	tags := map[string]string{}
+
+	tagsResp, err := conn.ListTagsForResource(
+		&sfn.ListTagsForResourceInput{
+			ResourceArn: aws.String(d.Id()),
+		},
+	)
+
+	if err != nil && !isAWSErr(err, "UnknownOperationException", "") {
+		return fmt.Errorf("error listing SFN Activity (%s) tags: %s", d.Id(), err)
+	}
+
+	if tagsResp != nil {
+		tags = tagsToMapSfn(tagsResp.Tags)
+	}
+
+	if err := d.Set("tags", tags); err != nil {
+		return fmt.Errorf("error setting tags: %s", err)
+	}
+
 	return nil
 }
 
@@ -143,6 +175,42 @@ func resourceAwsSfnStateMachineUpdate(d *schema.ResourceData, meta interface{}) 
 			return fmt.Errorf("Error updating Step Function State Machine: %s", err)
 		}
 		return err
+	}
+
+	if d.HasChange("tags") {
+		oldTagsRaw, newTagsRaw := d.GetChange("tags")
+		oldTagsMap := oldTagsRaw.(map[string]interface{})
+		newTagsMap := newTagsRaw.(map[string]interface{})
+		createTags, removeTags := diffTagsSfn(tagsFromMapSfn(oldTagsMap), tagsFromMapSfn(newTagsMap))
+
+		if len(removeTags) > 0 {
+			removeTagKeys := make([]*string, len(removeTags))
+			for i, removeTag := range removeTags {
+				removeTagKeys[i] = removeTag.Key
+			}
+
+			input := &sfn.UntagResourceInput{
+				ResourceArn: aws.String(d.Id()),
+				TagKeys:     removeTagKeys,
+			}
+
+			log.Printf("[DEBUG] Untagging State Function: %s", input)
+			if _, err := conn.UntagResource(input); err != nil {
+				return fmt.Errorf("error untagging State Function (%s): %s", d.Id(), err)
+			}
+		}
+
+		if len(createTags) > 0 {
+			input := &sfn.TagResourceInput{
+				ResourceArn: aws.String(d.Id()),
+				Tags:        createTags,
+			}
+
+			log.Printf("[DEBUG] Tagging State Function: %s", input)
+			if _, err := conn.TagResource(input); err != nil {
+				return fmt.Errorf("error tagging State Function (%s): %s", d.Id(), err)
+			}
+		}
 	}
 
 	return resourceAwsSfnStateMachineRead(d, meta)

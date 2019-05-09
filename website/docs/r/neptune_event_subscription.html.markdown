@@ -6,7 +6,7 @@ description: |-
   Provides a Neptune event subscription resource.
 ---
 
-# aws_neptune_event_subscription
+# Resource: aws_neptune_event_subscription
 
 ## Example Usage
 
@@ -55,7 +55,7 @@ resource "aws_neptune_event_subscription" "default" {
     "read replica",
   ]
 
-  tags {
+  tags = {
     "env" = "test"
   }
 }

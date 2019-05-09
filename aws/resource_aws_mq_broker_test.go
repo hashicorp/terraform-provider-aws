@@ -95,10 +95,6 @@ func testSweepMqBrokers(region string) error {
 	log.Printf("[DEBUG] %d MQ brokers found", len(resp.BrokerSummaries))
 
 	for _, bs := range resp.BrokerSummaries {
-		if !strings.HasPrefix(*bs.BrokerName, "tf-acc-test-") {
-			continue
-		}
-
 		log.Printf("[INFO] Deleting MQ broker %s", *bs.BrokerId)
 		_, err := conn.DeleteBroker(&mq.DeleteBrokerInput{
 			BrokerId: bs.BrokerId,
@@ -262,6 +258,9 @@ func TestAccAWSMqBroker_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("aws_mq_broker.test", "maintenance_window_start_time.#", "1"),
 					resource.TestCheckResourceAttrSet("aws_mq_broker.test", "maintenance_window_start_time.0.day_of_week"),
 					resource.TestCheckResourceAttrSet("aws_mq_broker.test", "maintenance_window_start_time.0.time_of_day"),
+					resource.TestCheckResourceAttr("aws_mq_broker.test", "logs.#", "1"),
+					resource.TestCheckResourceAttr("aws_mq_broker.test", "logs.0.general", "true"),
+					resource.TestCheckResourceAttr("aws_mq_broker.test", "logs.0.audit", "false"),
 					resource.TestCheckResourceAttr("aws_mq_broker.test", "maintenance_window_start_time.0.time_zone", "UTC"),
 					resource.TestCheckResourceAttr("aws_mq_broker.test", "publicly_accessible", "false"),
 					resource.TestCheckResourceAttr("aws_mq_broker.test", "security_groups.#", "1"),
@@ -330,6 +329,9 @@ func TestAccAWSMqBroker_allFieldsDefaultVpc(t *testing.T) {
 					resource.TestCheckResourceAttr("aws_mq_broker.test", "maintenance_window_start_time.0.day_of_week", "TUESDAY"),
 					resource.TestCheckResourceAttr("aws_mq_broker.test", "maintenance_window_start_time.0.time_of_day", "02:00"),
 					resource.TestCheckResourceAttr("aws_mq_broker.test", "maintenance_window_start_time.0.time_zone", "CET"),
+					resource.TestCheckResourceAttr("aws_mq_broker.test", "logs.#", "1"),
+					resource.TestCheckResourceAttr("aws_mq_broker.test", "logs.0.general", "false"),
+					resource.TestCheckResourceAttr("aws_mq_broker.test", "logs.0.audit", "false"),
 					resource.TestCheckResourceAttr("aws_mq_broker.test", "publicly_accessible", "true"),
 					resource.TestCheckResourceAttr("aws_mq_broker.test", "security_groups.#", "2"),
 					resource.TestCheckResourceAttr("aws_mq_broker.test", "subnet_ids.#", "2"),
@@ -436,6 +438,9 @@ func TestAccAWSMqBroker_allFieldsCustomVpc(t *testing.T) {
 					resource.TestCheckResourceAttr("aws_mq_broker.test", "maintenance_window_start_time.0.day_of_week", "TUESDAY"),
 					resource.TestCheckResourceAttr("aws_mq_broker.test", "maintenance_window_start_time.0.time_of_day", "02:00"),
 					resource.TestCheckResourceAttr("aws_mq_broker.test", "maintenance_window_start_time.0.time_zone", "CET"),
+					resource.TestCheckResourceAttr("aws_mq_broker.test", "logs.#", "1"),
+					resource.TestCheckResourceAttr("aws_mq_broker.test", "logs.0.general", "true"),
+					resource.TestCheckResourceAttr("aws_mq_broker.test", "logs.0.audit", "true"),
 					resource.TestCheckResourceAttr("aws_mq_broker.test", "publicly_accessible", "true"),
 					resource.TestCheckResourceAttr("aws_mq_broker.test", "security_groups.#", "2"),
 					resource.TestCheckResourceAttr("aws_mq_broker.test", "subnet_ids.#", "2"),
@@ -555,6 +560,46 @@ func TestAccAWSMqBroker_updateUsers(t *testing.T) {
 	})
 }
 
+func TestAccAWSMqBroker_updateTags(t *testing.T) {
+	sgName := fmt.Sprintf("tf-acc-test-%s", acctest.RandString(5))
+	brokerName := fmt.Sprintf("tf-acc-test-%s", acctest.RandString(5))
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAwsMqBrokerDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccMqBrokerConfig_updateTags1(sgName, brokerName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAwsMqBrokerExists("aws_mq_broker.test"),
+					resource.TestCheckResourceAttr("aws_mq_broker.test", "tags.%", "1"),
+					resource.TestCheckResourceAttr("aws_mq_broker.test", "tags.env", "test"),
+				),
+			},
+			// Adding new user + modify existing
+			{
+				Config: testAccMqBrokerConfig_updateTags2(sgName, brokerName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAwsMqBrokerExists("aws_mq_broker.test"),
+					resource.TestCheckResourceAttr("aws_mq_broker.test", "tags.%", "2"),
+					resource.TestCheckResourceAttr("aws_mq_broker.test", "tags.env", "test2"),
+					resource.TestCheckResourceAttr("aws_mq_broker.test", "tags.role", "test-role"),
+				),
+			},
+			// Deleting user + modify existing
+			{
+				Config: testAccMqBrokerConfig_updateTags3(sgName, brokerName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAwsMqBrokerExists("aws_mq_broker.test"),
+					resource.TestCheckResourceAttr("aws_mq_broker.test", "tags.%", "1"),
+					resource.TestCheckResourceAttr("aws_mq_broker.test", "tags.role", "test-role"),
+				),
+			},
+		},
+	})
+}
+
 func testAccCheckAwsMqBrokerDestroy(s *terraform.State) error {
 	conn := testAccProvider.Meta().(*AWSClient).mqconn
 
@@ -604,6 +649,9 @@ resource "aws_mq_broker" "test" {
   engine_version = "5.15.0"
   host_instance_type = "mq.t2.micro"
   security_groups = ["${aws_security_group.test.id}"]
+  logs {
+    general = true
+  }
   user {
     username = "Test"
     password = "TestTest1234"
@@ -668,7 +716,7 @@ data "aws_availability_zones" "available" {}
 
 resource "aws_vpc" "main" {
   cidr_block = "10.11.0.0/16"
-  tags {
+  tags = {
     Name = "terraform-testacc-mq-broker-all-fields-custom-vpc"
   }
 }
@@ -691,7 +739,7 @@ resource "aws_subnet" "private" {
   cidr_block = "10.11.${count.index}.0/24"
   availability_zone = "${data.aws_availability_zones.available.names[count.index]}"
   vpc_id = "${aws_vpc.main.id}"
-  tags {
+  tags = {
     Name = "tf-acc-mq-broker-all-fields-custom-vpc-${count.index}"
   }
 }
@@ -733,6 +781,10 @@ resource "aws_mq_broker" "test" {
   engine_type = "ActiveMQ"
   engine_version = "5.15.0"
   host_instance_type = "mq.t2.micro"
+  logs {
+    general = true
+    audit = true
+  }
   maintenance_window_start_time {
     day_of_week = "TUESDAY"
     time_of_day = "02:00"
@@ -740,7 +792,7 @@ resource "aws_mq_broker" "test" {
   }
   publicly_accessible = true
   security_groups = ["${aws_security_group.mq1.id}", "${aws_security_group.mq2.id}"]
-  subnet_ids = ["${aws_subnet.private.*.id}"]
+  subnet_ids = ["${aws_subnet.private.*.id[0]}", "${aws_subnet.private.*.id[1]}"]
   user {
     username = "Test"
     password = "TestTest1234"
@@ -818,6 +870,79 @@ resource "aws_mq_broker" "test" {
     username = "second"
     password = "TestTest2222"
     groups = ["admin"]
+  }
+}`, sgName, brokerName)
+}
+
+func testAccMqBrokerConfig_updateTags1(sgName, brokerName string) string {
+	return fmt.Sprintf(`
+resource "aws_security_group" "test" {
+  name = "%s"
+}
+
+resource "aws_mq_broker" "test" {
+  apply_immediately = true
+  broker_name = "%s"
+  engine_type = "ActiveMQ"
+  engine_version = "5.15.0"
+  host_instance_type = "mq.t2.micro"
+	security_groups = ["${aws_security_group.test.id}"]
+  user {
+    username = "Test"
+    password = "TestTest1234"
+	}
+
+  tags = {
+    env = "test"
+  }
+}`, sgName, brokerName)
+}
+
+func testAccMqBrokerConfig_updateTags2(sgName, brokerName string) string {
+	return fmt.Sprintf(`
+resource "aws_security_group" "test" {
+  name = "%s"
+}
+
+resource "aws_mq_broker" "test" {
+  apply_immediately = true
+  broker_name = "%s"
+  engine_type = "ActiveMQ"
+  engine_version = "5.15.0"
+  host_instance_type = "mq.t2.micro"
+	security_groups = ["${aws_security_group.test.id}"]
+  user {
+    username = "Test"
+    password = "TestTest1234"
+	}
+
+  tags = {
+		env = "test2"
+		role = "test-role"
+  }
+}`, sgName, brokerName)
+}
+
+func testAccMqBrokerConfig_updateTags3(sgName, brokerName string) string {
+	return fmt.Sprintf(`
+resource "aws_security_group" "test" {
+  name = "%s"
+}
+
+resource "aws_mq_broker" "test" {
+  apply_immediately = true
+  broker_name = "%s"
+  engine_type = "ActiveMQ"
+  engine_version = "5.15.0"
+  host_instance_type = "mq.t2.micro"
+	security_groups = ["${aws_security_group.test.id}"]
+  user {
+    username = "Test"
+    password = "TestTest1234"
+	}
+
+  tags = {
+		role = "test-role"
   }
 }`, sgName, brokerName)
 }

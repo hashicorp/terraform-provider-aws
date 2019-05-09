@@ -6,7 +6,7 @@ description: |-
   Provides a CloudHSM v2 HSM module resource.
 ---
 
-# aws_cloudhsm_v2_hsm
+# Resource: aws_cloudhsm_v2_hsm
 
 Creates an HSM module in Amazon CloudHSM v2 cluster.
 
@@ -16,11 +16,11 @@ The following example below creates an HSM module in CloudHSM cluster.
 
 ```hcl
 data "aws_cloudhsm_v2_cluster" "cluster" {
-    cluster_id = "${var.cloudhsm_cluster_id}"
+  cluster_id = "${var.cloudhsm_cluster_id}"
 }
 
 resource "aws_cloudhsm_v2_hsm" "cloudhsm_v2_hsm" {
-  subnet_id = "${data.aws_cloudhsm_v2_cluster.cluster.subnet_ids[0]}"
+  subnet_id  = "${data.aws_cloudhsm_v2_cluster.cluster.subnet_ids[0]}"
   cluster_id = "${data.aws_cloudhsm_v2_cluster.cluster.cluster_id}"
 }
 ```

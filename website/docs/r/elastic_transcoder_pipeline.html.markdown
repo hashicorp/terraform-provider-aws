@@ -6,7 +6,7 @@ description: |-
   Provides an Elastic Transcoder pipeline resource.
 ---
 
-# aws_elastictranscoder_pipeline
+# Resource: aws_elastictranscoder_pipeline
 
 Provides an Elastic Transcoder pipeline resource.
 
@@ -93,3 +93,11 @@ The `thumbnail_config_permissions` object supports the following:
 * `access` - The permission that you want to give to the AWS user that you specified in `thumbnail_config_permissions.grantee`.
 * `grantee` - The AWS user or group that you want to have access to thumbnail files.
 * `grantee_type` - Specify the type of value that appears in the `thumbnail_config_permissions.grantee` object.
+
+## Import
+
+Elastic Transcoder pipelines can be imported using the `id`, e.g.
+
+```
+$ terraform import aws_elastic_transcoder_pipeline.basic_pipeline 1407981661351-cttk8b
+```

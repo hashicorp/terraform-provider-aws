@@ -86,29 +86,6 @@ func testAccCheckAWSPlacementGroupExists(n string) resource.TestCheckFunc {
 	}
 }
 
-func testAccCheckAWSDestroyPlacementGroup(n string) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		rs, ok := s.RootModule().Resources[n]
-		if !ok {
-			return fmt.Errorf("Not found: %s", n)
-		}
-
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("No Placement Group ID is set")
-		}
-
-		conn := testAccProvider.Meta().(*AWSClient).ec2conn
-		_, err := conn.DeletePlacementGroup(&ec2.DeletePlacementGroupInput{
-			GroupName: aws.String(rs.Primary.ID),
-		})
-
-		if err != nil {
-			return fmt.Errorf("Error destroying Placement Group (%s): %s", rs.Primary.ID, err)
-		}
-		return nil
-	}
-}
-
 func testAccAWSPlacementGroupConfig(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_placement_group" "test" {

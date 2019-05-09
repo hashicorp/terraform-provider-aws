@@ -6,7 +6,6 @@ import (
 	"reflect"
 	"regexp"
 	"sort"
-	"strings"
 	"testing"
 	"time"
 
@@ -51,23 +50,6 @@ func testSweepBeanstalkEnvironments(region string) error {
 	}
 
 	for _, bse := range resp.Environments {
-		var testOptGroup bool
-		for _, testName := range []string{
-			"terraform-",
-			"tf-test-",
-			"tf_acc_",
-			"tf-acc-",
-		} {
-			if strings.HasPrefix(*bse.EnvironmentName, testName) {
-				testOptGroup = true
-			}
-		}
-
-		if !testOptGroup {
-			log.Printf("Skipping (%s) (%s)", *bse.EnvironmentName, *bse.EnvironmentId)
-			continue
-		}
-
 		log.Printf("Trying to terminate (%s) (%s)", *bse.EnvironmentName, *bse.EnvironmentId)
 
 		_, err := beanstalkconn.TerminateEnvironment(
@@ -923,61 +905,6 @@ resource "aws_elastic_beanstalk_environment" "tfenvtest" {
 }`, appName, envName)
 }
 
-func testAccBeanstalkEnvConfig_settings_update(appName, envName string) string {
-	return fmt.Sprintf(`
-resource "aws_elastic_beanstalk_application" "tftest" {
-  name = "%s"
-  description = "tf-test-desc"
-}
-
-resource "aws_elastic_beanstalk_environment" "tfenvtest" {
-  name                = "%s"
-  application         = "${aws_elastic_beanstalk_application.tftest.name}"
-  solution_stack_name = "64bit Amazon Linux running Python"
-
-  wait_for_ready_timeout = "15m"
-
-  setting {
-    namespace = "aws:elasticbeanstalk:application:environment"
-    name      = "ENV_STATIC"
-    value     = "true"
-  }
-
-  setting {
-    namespace = "aws:elasticbeanstalk:application:environment"
-    name      = "ENV_UPDATE"
-    value     = "false"
-  }
-
-  setting {
-    namespace = "aws:elasticbeanstalk:application:environment"
-    name      = "ENV_ADD"
-    value     = "true"
-  }
-
-  setting {
-    namespace = "aws:autoscaling:scheduledaction"
-    resource  = "ScheduledAction01"
-    name      = "MinSize"
-    value     = 2
-  }
-
-  setting {
-    namespace = "aws:autoscaling:scheduledaction"
-    resource  = "ScheduledAction01"
-    name      = "MaxSize"
-    value     = 3
-  }
-
-  setting {
-    namespace = "aws:autoscaling:scheduledaction"
-    resource  = "ScheduledAction01"
-    name      = "StartTime"
-    value     = "2016-07-28T04:07:02Z"
-  }
-}`, appName, envName)
-}
-
 func testAccBeanstalkWorkerEnvConfig(instanceProfileName, roleName, policyName, appName, envName string) string {
 	return fmt.Sprintf(`
  resource "aws_iam_instance_profile" "tftest" {
@@ -1107,7 +1034,7 @@ resource "aws_elastic_beanstalk_environment" "tfenvtest" {
 
   wait_for_ready_timeout = "15m"
 
-  tags {
+  tags = {
     firstTag = "%s"
     secondTag = "%s"
   }
@@ -1118,7 +1045,7 @@ func testAccBeanstalkEnv_VPC(sgName, appName, envName string) string {
 	return fmt.Sprintf(`
 resource "aws_vpc" "tf_b_test" {
   cidr_block = "10.0.0.0/16"
-	tags {
+	tags = {
 		Name = "terraform-testacc-elastic-beanstalk-env-vpc"
 	}
 }
@@ -1136,7 +1063,7 @@ resource "aws_route" "r" {
 resource "aws_subnet" "main" {
   vpc_id     = "${aws_vpc.tf_b_test.id}"
   cidr_block = "10.0.0.0/24"
-  tags {
+  tags = {
     Name = "tf-acc-elastic-beanstalk-env-vpc"
   }
 }

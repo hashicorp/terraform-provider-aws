@@ -121,11 +121,7 @@ func testAccCheckAWSCodePipelineWebhookExists(n string) resource.TestCheckFunc {
 		conn := testAccProvider.Meta().(*AWSClient).codepipelineconn
 
 		_, err := getCodePipelineWebhook(conn, rs.Primary.ID)
-		if err != nil {
-			return err
-		}
-
-		return nil
+		return err
 	}
 }
 
@@ -269,7 +265,7 @@ resource "aws_codepipeline" "bar" {
       version          = "1"
       output_artifacts = ["test"]
 
-      configuration {
+      configuration = {
         Owner  = "lifesum-terraform"
         Repo   = "test"
         Branch = "master"
@@ -288,7 +284,7 @@ resource "aws_codepipeline" "bar" {
       input_artifacts = ["test"]
       version         = "1"
 
-      configuration {
+      configuration = {
         ProjectName = "test"
       }
     }

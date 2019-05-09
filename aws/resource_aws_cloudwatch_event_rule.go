@@ -48,7 +48,7 @@ func resourceAwsCloudWatchEventRule() *schema.Resource {
 			"event_pattern": {
 				Type:         schema.TypeString,
 				Optional:     true,
-				ValidateFunc: validateEventPatternValue(2048),
+				ValidateFunc: validateEventPatternValue(),
 				StateFunc: func(v interface{}) string {
 					json, _ := structure.NormalizeJsonString(v.(string))
 					return json
@@ -73,6 +73,7 @@ func resourceAwsCloudWatchEventRule() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"tags": tagsSchema(),
 		},
 	}
 }
@@ -100,7 +101,7 @@ func resourceAwsCloudWatchEventRuleCreate(d *schema.ResourceData, meta interface
 	err = resource.Retry(30*time.Second, func() *resource.RetryError {
 		var err error
 		out, err = conn.PutRule(input)
-		pattern := regexp.MustCompile("cannot be assumed by principal '[a-z]+\\.amazonaws\\.com'\\.$")
+		pattern := regexp.MustCompile(`cannot be assumed by principal '[a-z]+\.amazonaws\.com'\.$`)
 		if err != nil {
 			if awsErr, ok := err.(awserr.Error); ok {
 				if awsErr.Code() == "ValidationException" && pattern.MatchString(awsErr.Message()) {
@@ -120,6 +121,10 @@ func resourceAwsCloudWatchEventRuleCreate(d *schema.ResourceData, meta interface
 	d.SetId(*input.Name)
 
 	log.Printf("[INFO] CloudWatch Event Rule %q created", *out.RuleArn)
+
+	if err := setTagsCloudWatchEvents(conn, d, aws.StringValue(out.RuleArn)); err != nil {
+		return fmt.Errorf("Error creating tags for %s: %s", d.Id(), err)
+	}
 
 	return resourceAwsCloudWatchEventRuleUpdate(d, meta)
 }
@@ -163,7 +168,9 @@ func resourceAwsCloudWatchEventRuleRead(d *schema.ResourceData, meta interface{}
 	}
 	log.Printf("[DEBUG] Setting boolean state: %t", boolState)
 	d.Set("is_enabled", boolState)
-
+	if err := saveTagsCloudWatchEvents(conn, d, aws.StringValue(out.Arn)); err != nil {
+		return fmt.Errorf("error setting tags: %s", err)
+	}
 	return nil
 }
 
@@ -190,7 +197,7 @@ func resourceAwsCloudWatchEventRuleUpdate(d *schema.ResourceData, meta interface
 	// IAM Roles take some time to propagate
 	err = resource.Retry(30*time.Second, func() *resource.RetryError {
 		_, err := conn.PutRule(input)
-		pattern := regexp.MustCompile("cannot be assumed by principal '[a-z]+\\.amazonaws\\.com'\\.$")
+		pattern := regexp.MustCompile(`cannot be assumed by principal '[a-z]+\.amazonaws\.com'\.$`)
 		if err != nil {
 			if awsErr, ok := err.(awserr.Error); ok {
 				if awsErr.Code() == "ValidationException" && pattern.MatchString(awsErr.Message()) {
@@ -215,6 +222,12 @@ func resourceAwsCloudWatchEventRuleUpdate(d *schema.ResourceData, meta interface
 			return err
 		}
 		log.Printf("[DEBUG] CloudWatch Event Rule (%q) disabled", d.Id())
+	}
+
+	if d.HasChange("tags") {
+		if err := setTagsCloudWatchEvents(conn, d, d.Get("arn").(string)); err != nil {
+			return fmt.Errorf("Error updating tags for %s: %s", d.Id(), err)
+		}
 	}
 
 	return resourceAwsCloudWatchEventRuleRead(d, meta)
@@ -281,7 +294,7 @@ func getStringStateFromBoolean(isEnabled bool) string {
 	return "DISABLED"
 }
 
-func validateEventPatternValue(length int) schema.SchemaValidateFunc {
+func validateEventPatternValue() schema.SchemaValidateFunc {
 	return func(v interface{}, k string) (ws []string, errors []error) {
 		json, err := structure.NormalizeJsonString(v)
 		if err != nil {
@@ -294,9 +307,9 @@ func validateEventPatternValue(length int) schema.SchemaValidateFunc {
 		}
 
 		// Check whether the normalized JSON is within the given length.
-		if len(json) > length {
+		if len(json) > 2048 {
 			errors = append(errors, fmt.Errorf(
-				"%q cannot be longer than %d characters: %q", k, length, json))
+				"%q cannot be longer than %d characters: %q", k, 2048, json))
 		}
 		return
 	}

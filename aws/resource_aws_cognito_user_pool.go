@@ -148,17 +148,19 @@ func resourceAwsCognitoUserPool() *schema.Resource {
 			},
 
 			"email_verification_subject": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Computed:     true,
-				ValidateFunc: validateCognitoUserPoolEmailVerificationSubject,
+				Type:          schema.TypeString,
+				Optional:      true,
+				Computed:      true,
+				ValidateFunc:  validateCognitoUserPoolEmailVerificationSubject,
+				ConflictsWith: []string{"verification_message_template.0.email_subject"},
 			},
 
 			"email_verification_message": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Computed:     true,
-				ValidateFunc: validateCognitoUserPoolEmailVerificationMessage,
+				Type:          schema.TypeString,
+				Optional:      true,
+				Computed:      true,
+				ValidateFunc:  validateCognitoUserPoolEmailVerificationMessage,
+				ConflictsWith: []string{"verification_message_template.0.email_message"},
 			},
 
 			"endpoint": {
@@ -391,9 +393,10 @@ func resourceAwsCognitoUserPool() *schema.Resource {
 			},
 
 			"sms_verification_message": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ValidateFunc: validateCognitoUserPoolSmsVerificationMessage,
+				Type:          schema.TypeString,
+				Optional:      true,
+				ValidateFunc:  validateCognitoUserPoolSmsVerificationMessage,
+				ConflictsWith: []string{"verification_message_template.0.sms_message"},
 			},
 
 			"tags": tagsSchema(),
@@ -410,6 +413,25 @@ func resourceAwsCognitoUserPool() *schema.Resource {
 					}, false),
 				},
 				ConflictsWith: []string{"alias_attributes"},
+			},
+
+			"user_pool_add_ons": {
+				Type:     schema.TypeList,
+				Optional: true,
+				MaxItems: 1,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"advanced_security_mode": {
+							Type:     schema.TypeString,
+							Required: true,
+							ValidateFunc: validation.StringInSlice([]string{
+								cognitoidentityprovider.AdvancedSecurityModeTypeAudit,
+								cognitoidentityprovider.AdvancedSecurityModeTypeEnforced,
+								cognitoidentityprovider.AdvancedSecurityModeTypeOff,
+							}, false),
+						},
+					},
+				},
 			},
 
 			"verification_message_template": {
@@ -429,10 +451,11 @@ func resourceAwsCognitoUserPool() *schema.Resource {
 							}, false),
 						},
 						"email_message": {
-							Type:         schema.TypeString,
-							Optional:     true,
-							Computed:     true,
-							ValidateFunc: validateCognitoUserPoolTemplateEmailMessage,
+							Type:          schema.TypeString,
+							Optional:      true,
+							Computed:      true,
+							ValidateFunc:  validateCognitoUserPoolTemplateEmailMessage,
+							ConflictsWith: []string{"email_verification_message"},
 						},
 						"email_message_by_link": {
 							Type:         schema.TypeString,
@@ -441,10 +464,11 @@ func resourceAwsCognitoUserPool() *schema.Resource {
 							ValidateFunc: validateCognitoUserPoolTemplateEmailMessageByLink,
 						},
 						"email_subject": {
-							Type:         schema.TypeString,
-							Optional:     true,
-							Computed:     true,
-							ValidateFunc: validateCognitoUserPoolTemplateEmailSubject,
+							Type:          schema.TypeString,
+							Optional:      true,
+							Computed:      true,
+							ValidateFunc:  validateCognitoUserPoolTemplateEmailSubject,
+							ConflictsWith: []string{"email_verification_subject"},
 						},
 						"email_subject_by_link": {
 							Type:         schema.TypeString,
@@ -453,10 +477,11 @@ func resourceAwsCognitoUserPool() *schema.Resource {
 							ValidateFunc: validateCognitoUserPoolTemplateEmailSubjectByLink,
 						},
 						"sms_message": {
-							Type:         schema.TypeString,
-							Optional:     true,
-							Computed:     true,
-							ValidateFunc: validateCognitoUserPoolTemplateSmsMessage,
+							Type:          schema.TypeString,
+							Optional:      true,
+							Computed:      true,
+							ValidateFunc:  validateCognitoUserPoolTemplateSmsMessage,
+							ConflictsWith: []string{"sms_verification_message"},
 						},
 					},
 				},
@@ -578,6 +603,20 @@ func resourceAwsCognitoUserPoolCreate(d *schema.ResourceData, meta interface{}) 
 
 	if v, ok := d.GetOk("username_attributes"); ok {
 		params.UsernameAttributes = expandStringList(v.([]interface{}))
+	}
+
+	if v, ok := d.GetOk("user_pool_add_ons"); ok {
+		configs := v.([]interface{})
+		config, ok := configs[0].(map[string]interface{})
+
+		if ok {
+			userPoolAddons := &cognitoidentityprovider.UserPoolAddOnsType{}
+
+			if v, ok := config["advanced_security_mode"]; ok && v.(string) != "" {
+				userPoolAddons.AdvancedSecurityMode = aws.String(v.(string))
+			}
+			params.UserPoolAddOns = userPoolAddons
+		}
 	}
 
 	if v, ok := d.GetOk("verification_message_template"); ok {
@@ -710,6 +749,10 @@ func resourceAwsCognitoUserPoolRead(d *schema.ResourceData, meta interface{}) er
 		d.Set("username_attributes", flattenStringList(resp.UserPool.UsernameAttributes))
 	}
 
+	if err := d.Set("user_pool_add_ons", flattenCognitoUserPoolUserPoolAddOns(resp.UserPool.UserPoolAddOns)); err != nil {
+		return fmt.Errorf("Failed setting user_pool_add_ons: %s", err)
+	}
+
 	if err := d.Set("verification_message_template", flattenCognitoUserPoolVerificationMessageTemplate(resp.UserPool.VerificationMessageTemplate)); err != nil {
 		return fmt.Errorf("Failed setting verification_message_template: %s", err)
 	}
@@ -812,6 +855,20 @@ func resourceAwsCognitoUserPoolUpdate(d *schema.ResourceData, meta interface{}) 
 
 		if ok && config != nil {
 			params.SmsConfiguration = expandCognitoUserPoolSmsConfiguration(config)
+		}
+	}
+
+	if v, ok := d.GetOk("user_pool_add_ons"); ok {
+		configs := v.([]interface{})
+		config, ok := configs[0].(map[string]interface{})
+
+		if ok && config != nil {
+			userPoolAddons := &cognitoidentityprovider.UserPoolAddOnsType{}
+
+			if v, ok := config["advanced_security_mode"]; ok && v.(string) != "" {
+				userPoolAddons.AdvancedSecurityMode = aws.String(v.(string))
+			}
+			params.UserPoolAddOns = userPoolAddons
 		}
 	}
 

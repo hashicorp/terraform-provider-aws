@@ -6,7 +6,7 @@ description: |-
   Provides an Elastic network interface (ENI) resource.
 ---
 
-# aws_network_interface
+# Resource: aws_network_interface
 
 Provides an Elastic network interface (ENI) resource.
 
@@ -32,7 +32,7 @@ The following arguments are supported:
 * `subnet_id` - (Required) Subnet ID to create the ENI in.
 * `description` - (Optional) A description for the network interface.
 * `private_ips` - (Optional) List of private IPs to assign to the ENI.
-* `private_ips_count` - (Optional) Number of private IPs to assign to the ENI.
+* `private_ips_count` - (Optional) Number of secondary private IPs to assign to the ENI. The total number of private IPs will be 1 + private_ips_count, as a primary private IP will be assiged to an ENI by default. 
 * `security_groups` - (Optional) List of security group IDs to assign to the ENI.
 * `attachment` - (Optional) Block to define the attachment of the ENI. Documented below.
 * `source_dest_check` - (Optional) Whether to enable source destination checking for the ENI. Default true.
@@ -47,6 +47,7 @@ The `attachment` block supports:
 
 In addition to all arguments above, the following attributes are exported:
 
+* `id` - The ID of the network interface.
 * `subnet_id` - Subnet ID the ENI is in.
 * `description` - A description for the network interface.
 * `private_ips` - List of private IPs assigned to the ENI.

@@ -10,10 +10,9 @@ import (
 // testing rulesForGroupPermissions
 func TestRulesMixedMatching(t *testing.T) {
 	cases := []struct {
-		groupId string
-		local   []interface{}
-		remote  []map[string]interface{}
-		saves   []map[string]interface{}
+		local  []interface{}
+		remote []map[string]interface{}
+		saves  []map[string]interface{}
 	}{
 		{
 			local: []interface{}{
@@ -660,9 +659,7 @@ func TestRulesMixedMatching(t *testing.T) {
 							lcs = append(lcs, c)
 						}
 					default:
-						for _, c := range s["cidr_blocks"].([]interface{}) {
-							lcs = append(lcs, c)
-						}
+						lcs = append(lcs, s["cidr_blocks"].([]interface{})...)
 					}
 				}
 				savesCidrs := schema.NewSet(schema.HashString, lcs)

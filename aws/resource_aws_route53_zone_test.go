@@ -14,23 +14,6 @@ import (
 	"github.com/hashicorp/terraform/terraform"
 )
 
-func TestCleanPrefix(t *testing.T) {
-	cases := []struct {
-		Input, Prefix, Output string
-	}{
-		{"/hostedzone/foo", "/hostedzone/", "foo"},
-		{"/change/foo", "/change/", "foo"},
-		{"/bar", "/test", "/bar"},
-	}
-
-	for _, tc := range cases {
-		actual := cleanPrefix(tc.Input, tc.Prefix)
-		if actual != tc.Output {
-			t.Fatalf("input: %s\noutput: %s", tc.Input, actual)
-		}
-	}
-}
-
 func TestCleanZoneID(t *testing.T) {
 	cases := []struct {
 		Input, Output string
@@ -92,6 +75,30 @@ func TestAccAWSRoute53Zone_basic(t *testing.T) {
 				ImportState:             true,
 				ImportStateVerify:       true,
 				ImportStateVerifyIgnore: []string{"force_destroy"},
+			},
+		},
+	})
+}
+
+func TestAccAWSRoute53Zone_disappears(t *testing.T) {
+	var zone route53.GetHostedZoneOutput
+
+	rString := acctest.RandString(8)
+	resourceName := "aws_route53_zone.test"
+	zoneName := fmt.Sprintf("%s.terraformtest.com", rString)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckRoute53ZoneDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccRoute53ZoneConfig(zoneName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckRoute53ZoneExists(resourceName, &zone),
+					testAccCheckRoute53ZoneDisappears(&zone),
+				),
+				ExpectNonEmptyPlan: true,
 			},
 		},
 	})
@@ -402,77 +409,6 @@ func TestAccAWSRoute53Zone_VPC_Updates(t *testing.T) {
 	})
 }
 
-func TestAccAWSRoute53Zone_VPCID(t *testing.T) {
-	var zone route53.GetHostedZoneOutput
-
-	rString := acctest.RandString(8)
-	resourceName := "aws_route53_zone.test"
-	vpcResourceName := "aws_vpc.test"
-	zoneName := fmt.Sprintf("%s.terraformtest.com", rString)
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckRoute53ZoneDestroy,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccRoute53ZoneConfigVPCID(zoneName),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckRoute53ZoneExists(resourceName, &zone),
-					resource.TestCheckResourceAttr(resourceName, "vpc.#", "1"),
-					resource.TestCheckResourceAttrPair(resourceName, "vpc_id", vpcResourceName, "id"),
-					testAccCheckRoute53ZoneAssociatesWithVpc(vpcResourceName, &zone),
-				),
-			},
-			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"force_destroy"},
-			},
-		},
-	})
-}
-
-func TestAccAWSRoute53Zone_VPCRegion(t *testing.T) {
-	var zone route53.GetHostedZoneOutput
-
-	rString := acctest.RandString(8)
-	resourceName := "aws_route53_zone.test"
-	vpcResourceName := "aws_vpc.test"
-	zoneName := fmt.Sprintf("%s.terraformtest.com", rString)
-
-	// record the initialized providers so that we can use them to
-	// check for the instances in each region
-	var providers []*schema.Provider
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { testAccPreCheck(t) },
-		ProviderFactories: testAccProviderFactories(&providers),
-		CheckDestroy:      testAccCheckWithProviders(testAccCheckRoute53ZoneDestroyWithProvider, &providers),
-		Steps: []resource.TestStep{
-			{
-				Config: testAccRoute53ZoneConfigVPCRegion(zoneName),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckRoute53ZoneExistsWithProvider(resourceName, &zone,
-						testAccAwsRegionProviderFunc("us-west-2", &providers)),
-					resource.TestCheckResourceAttr(resourceName, "vpc.#", "1"),
-					resource.TestCheckResourceAttrPair(resourceName, "vpc_id", vpcResourceName, "id"),
-					testAccCheckRoute53ZoneAssociatesWithVpc(vpcResourceName, &zone),
-				),
-			},
-			{
-				// Config must be provided for aliased provider
-				Config:                  testAccRoute53ZoneConfigVPCRegion(zoneName),
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"force_destroy"},
-			},
-		},
-	})
-}
-
 func testAccCheckRoute53ZoneDestroy(s *terraform.State) error {
 	return testAccCheckRoute53ZoneDestroyWithProvider(s, testAccProvider)
 }
@@ -582,6 +518,20 @@ func testAccCheckRoute53ZoneExistsWithProvider(n string, zone *route53.GetHosted
 
 		*zone = *resp
 		return nil
+	}
+}
+
+func testAccCheckRoute53ZoneDisappears(zone *route53.GetHostedZoneOutput) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := testAccProvider.Meta().(*AWSClient).r53conn
+
+		input := &route53.DeleteHostedZoneInput{
+			Id: zone.HostedZone.Id,
+		}
+
+		_, err := conn.DeleteHostedZone(input)
+
+		return err
 	}
 }
 
@@ -702,7 +652,7 @@ func testAccRoute53ZoneConfigTagsSingle(zoneName, tag1Key, tag1Value string) str
 resource "aws_route53_zone" "test" {
   name = "%s."
 
-  tags {
+  tags = {
     %q = %q
   }
 }
@@ -714,7 +664,7 @@ func testAccRoute53ZoneConfigTagsMultiple(zoneName, tag1Key, tag1Value, tag2Key,
 resource "aws_route53_zone" "test" {
   name = "%s."
 
-  tags {
+  tags = {
     %q = %q
     %q = %q
   }
@@ -722,61 +672,12 @@ resource "aws_route53_zone" "test" {
 `, zoneName, tag1Key, tag1Value, tag2Key, tag2Value)
 }
 
-func testAccRoute53ZoneConfigVPCID(zoneName string) string {
-	return fmt.Sprintf(`
-resource "aws_vpc" "test" {
-  cidr_block = "172.29.0.0/24"
-
-  tags {
-    Name = "terraform-testacc-route53-zone-private"
-  }
-}
-
-resource "aws_route53_zone" "test" {
-  name   = "%s."
-  vpc_id = "${aws_vpc.test.id}"
-}
-`, zoneName)
-}
-
-func testAccRoute53ZoneConfigVPCRegion(zoneName string) string {
-	return fmt.Sprintf(`
-provider "aws" {
-  alias  = "west"
-  region = "us-west-2"
-}
-
-provider "aws" {
-  alias  = "east"
-  region = "us-east-1"
-}
-
-resource "aws_vpc" "test" {
-  provider = "aws.east"
-
-  cidr_block = "172.29.0.0/24"
-
-  tags {
-    Name = "terraform-testacc-route53-zone-private-region"
-  }
-}
-
-resource "aws_route53_zone" "test" {
-  provider = "aws.west"
-
-  name       = "%s."
-  vpc_id     = "${aws_vpc.test.id}"
-  vpc_region = "us-east-1"
-}
-`, zoneName)
-}
-
 func testAccRoute53ZoneConfigVPCSingle(rName, zoneName string) string {
 	return fmt.Sprintf(`
 resource "aws_vpc" "test1" {
   cidr_block = "10.1.0.0/16"
 
-  tags {
+  tags = {
     Name = %q
   }
 }
@@ -796,7 +697,7 @@ func testAccRoute53ZoneConfigVPCMultiple(rName, zoneName string) string {
 resource "aws_vpc" "test1" {
   cidr_block = "10.1.0.0/16"
 
-  tags {
+  tags = {
     Name = %q
   }
 }
@@ -804,7 +705,7 @@ resource "aws_vpc" "test1" {
 resource "aws_vpc" "test2" {
   cidr_block = "10.2.0.0/16"
 
-  tags {
+  tags = {
     Name = %q
   }
 }

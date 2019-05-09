@@ -186,12 +186,12 @@ resource "aws_cognito_resource_server" "main" {
   identifier = "%s"
   name = "%s"
 
-  scope = {
+  scope {
     scope_name = "scope_1_name"
     scope_description = "scope_1_description"
   }
 
-  scope = {
+  scope {
     scope_name = "scope_2_name"
     scope_description = "scope_2_description"
   }
@@ -211,7 +211,7 @@ resource "aws_cognito_resource_server" "main" {
   identifier = "%s"
   name = "%s"
 
-  scope = {
+  scope {
     scope_name = "scope_1_name_updated"
     scope_description = "scope_1_description"
   }

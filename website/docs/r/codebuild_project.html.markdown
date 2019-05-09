@@ -6,9 +6,9 @@ description: |-
   Provides a CodeBuild Project resource.
 ---
 
-# aws_codebuild_project
+# Resource: aws_codebuild_project
 
-Provides a CodeBuild Project resource.
+Provides a CodeBuild Project resource. See also the [`aws_codebuild_webhook` resource](/docs/providers/aws/r/codebuild_webhook.html), which manages the webhook to the source (e.g. the "rebuild every time a code change is pushed" option in the CodeBuild web console).
 
 ## Example Usage
 
@@ -38,7 +38,7 @@ EOF
 }
 
 resource "aws_iam_role_policy" "example" {
-  role        = "${aws_iam_role.example.name}"
+  role = "${aws_iam_role.example.name}"
 
   policy = <<POLICY
 {
@@ -84,10 +84,10 @@ POLICY
 }
 
 resource "aws_codebuild_project" "example" {
-  name         = "test-project"
-  description  = "test_codebuild_project"
-  build_timeout      = "5"
-  service_role = "${aws_iam_role.example.arn}"
+  name          = "test-project"
+  description   = "test_codebuild_project"
+  build_timeout = "5"
+  service_role  = "${aws_iam_role.example.arn}"
 
   artifacts {
     type = "NO_ARTIFACTS"
@@ -99,9 +99,10 @@ resource "aws_codebuild_project" "example" {
   }
 
   environment {
-    compute_type = "BUILD_GENERAL1_SMALL"
-    image        = "aws/codebuild/nodejs:6.3.1"
-    type         = "LINUX_CONTAINER"
+    compute_type                = "BUILD_GENERAL1_SMALL"
+    image                       = "aws/codebuild/standard:1.0"
+    type                        = "LINUX_CONTAINER"
+    image_pull_credentials_type = "CODEBUILD"
 
     environment_variable {
       "name"  = "SOME_KEY1"
@@ -135,7 +136,7 @@ resource "aws_codebuild_project" "example" {
     ]
   }
 
-  tags {
+  tags = {
     "Environment" = "Test"
   }
 }
@@ -180,6 +181,7 @@ The following arguments are supported:
 * `compute_type` - (Required) Information about the compute resources the build project will use. Available values for this parameter are: `BUILD_GENERAL1_SMALL`, `BUILD_GENERAL1_MEDIUM` or `BUILD_GENERAL1_LARGE`. `BUILD_GENERAL1_SMALL` is only valid if `type` is set to `LINUX_CONTAINER`
 * `image` - (Required) The *image identifier* of the Docker image to use for this build project ([list of Docker images provided by AWS CodeBuild.](https://docs.aws.amazon.com/codebuild/latest/userguide/build-env-ref-available.html)). You can read more about the AWS curated environment images in the [documentation](https://docs.aws.amazon.com/codebuild/latest/APIReference/API_ListCuratedEnvironmentImages.html).
 * `type` - (Required) The type of build environment to use for related builds. Available values are: `LINUX_CONTAINER` or `WINDOWS_CONTAINER`.
+* `image_pull_credentials_type` - (Optional) The type of credentials AWS CodeBuild uses to pull images in your build. Available values for this parameter are `CODEBUILD` or `SERVICE_ROLE`. When you use a cross-account or private registry image, you must use SERVICE_ROLE credentials. When you use an AWS CodeBuild curated image, you must use CODEBUILD credentials. Default to `CODEBUILD`
 * `environment_variable` - (Optional) A set of environment variables to make available to builds for this build project.
 * `privileged_mode` - (Optional) If set to true, enables running the Docker daemon inside a Docker container. Defaults to `false`.
 * `certificate` - (Optional) The ARN of the S3 bucket, path prefix and object key that contains the PEM-encoded certificate.
@@ -198,7 +200,7 @@ The following arguments are supported:
 * `git_clone_depth` - (Optional) Truncate git history to this many commits.
 * `insecure_ssl` - (Optional) Ignore SSL warnings when connecting to source control.
 * `location` - (Optional) The location of the source code from git or s3.
-* `report_build_status` - (Optional) Set to `true` to report the status of a build's start and finish to your source provider. This option is only valid when your source provider is GitHub.
+* `report_build_status` - (Optional) Set to `true` to report the status of a build's start and finish to your source provider. This option is only valid when the `type` is `BITBUCKET` or `GITHUB`.
 
 `auth` supports the following:
 
@@ -232,7 +234,7 @@ The following arguments are supported:
 * `git_clone_depth` - (Optional) Truncate git history to this many commits.
 * `insecure_ssl` - (Optional) Ignore SSL warnings when connecting to source control.
 * `location` - (Optional) The location of the source code from git or s3.
-* `report_build_status` - (Optional) Set to `true` to report the status of a build's start and finish to your source provider. This option is only valid when your source provider is GitHub.
+* `report_build_status` - (Optional) Set to `true` to report the status of a build's start and finish to your source provider. This option is only valid when your source provider is `GITHUB`, `BITBUCKET`, or `GITHUB_ENTERPRISE`.
 
 ## Attributes Reference
 

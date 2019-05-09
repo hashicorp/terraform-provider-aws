@@ -27,23 +27,8 @@ func testSweepIamServerCertificates(region string) error {
 	}
 	conn := client.(*AWSClient).iamconn
 
-	prefixes := []string{
-		"tf-acctest-",
-		"test_cert_",
-		"terraform-test-cert-",
-	}
-
 	err = conn.ListServerCertificatesPages(&iam.ListServerCertificatesInput{}, func(out *iam.ListServerCertificatesOutput, lastPage bool) bool {
 		for _, sc := range out.ServerCertificateMetadataList {
-			hasPrefix := false
-			for _, prefix := range prefixes {
-				if strings.HasPrefix(*sc.ServerCertificateName, prefix) {
-					hasPrefix = true
-				}
-			}
-			if !hasPrefix {
-				continue
-			}
 			log.Printf("[INFO] Deleting IAM Server Certificate: %s", *sc.ServerCertificateName)
 
 			_, err := conn.DeleteServerCertificate(&iam.DeleteServerCertificateInput{

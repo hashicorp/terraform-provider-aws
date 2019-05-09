@@ -6,7 +6,7 @@ description: |-
   Manages Password Policy for the AWS Account.
 ---
 
-# aws_iam_account_password_policy
+# Resource: aws_iam_account_password_policy
 
 -> **Note:** There is only a single policy allowed per AWS account. An existing policy will be lost when using this resource as an effect of this limitation.
 

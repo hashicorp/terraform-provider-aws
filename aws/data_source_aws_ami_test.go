@@ -127,37 +127,6 @@ func TestAccAWSAmiDataSource_instanceStore(t *testing.T) {
 	})
 }
 
-func TestAccAWSAmiDataSource_owners(t *testing.T) {
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:  func() { testAccPreCheck(t) },
-		Providers: testAccProviders,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccCheckAwsAmiDataSourceOwnersConfig,
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsAmiDataSourceID("data.aws_ami.amazon_ami"),
-				),
-			},
-		},
-	})
-}
-
-// Acceptance test for: https://github.com/hashicorp/terraform/issues/10758
-func TestAccAWSAmiDataSource_ownersEmpty(t *testing.T) {
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:  func() { testAccPreCheck(t) },
-		Providers: testAccProviders,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccCheckAwsAmiDataSourceEmptyOwnersConfig,
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsAmiDataSourceID("data.aws_ami.amazon_ami"),
-				),
-			},
-		},
-	})
-}
-
 func TestAccAWSAmiDataSource_localNameFilter(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:  func() { testAccPreCheck(t) },
@@ -174,12 +143,7 @@ func TestAccAWSAmiDataSource_localNameFilter(t *testing.T) {
 	})
 }
 
-func testAccCheckAwsAmiDataSourceDestroy(s *terraform.State) error {
-	return nil
-}
-
 func testAccCheckAwsAmiDataSourceID(n string) resource.TestCheckFunc {
-	// Wait for IAM role
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -200,10 +164,8 @@ func testAccCheckAwsAmiDataSourceID(n string) resource.TestCheckFunc {
 const testAccCheckAwsAmiDataSourceConfig = `
 data "aws_ami" "nat_ami" {
   most_recent = true
-  filter {
-    name = "owner-alias"
-    values = ["amazon"]
-  }
+  owners      = ["amazon"]
+
   filter {
     name = "name"
     values = ["amzn-ami-vpc-nat*"]
@@ -227,10 +189,8 @@ data "aws_ami" "nat_ami" {
 const testAccCheckAwsAmiDataSourceWindowsConfig = `
 data "aws_ami" "windows_ami" {
   most_recent = true
-  filter {
-    name = "owner-alias"
-    values = ["amazon"]
-  }
+  owners      = ["amazon"]
+
   filter {
     name = "name"
     values = ["Windows_Server-2012-R2*"]
@@ -254,10 +214,8 @@ data "aws_ami" "windows_ami" {
 const testAccCheckAwsAmiDataSourceInstanceStoreConfig = `
 data "aws_ami" "instance_store_ami" {
   most_recent = true
-  filter {
-    name = "owner-id"
-    values = ["099720109477"]
-  }
+  owners      = ["099720109477"]
+
   filter {
     name = "name"
     values = ["ubuntu/images/hvm-instance/ubuntu-trusty-14.04-amd64-server*"]
@@ -269,38 +227,6 @@ data "aws_ami" "instance_store_ami" {
   filter {
     name = "root-device-type"
     values = ["instance-store"]
-  }
-}
-`
-
-// Testing owner parameter
-const testAccCheckAwsAmiDataSourceOwnersConfig = `
-data "aws_ami" "amazon_ami" {
-  most_recent = true
-  owners = ["amazon"]
-}
-`
-
-const testAccCheckAwsAmiDataSourceEmptyOwnersConfig = `
-data "aws_ami" "amazon_ami" {
-  most_recent = true
-  owners = [""]
-
-  # we need to test the owners = [""] for regressions but we want to filter the results
-  # beyond all public AWS AMIs :)
-  filter {
-    name = "owner-alias"
-    values = ["amazon"]
-  }
-
-  filter {
-    name = "name"
-    values = ["amzn-ami-minimal-hvm-*"]
-  }
-
-  filter {
-    name = "root-device-type"
-    values = ["ebs"]
   }
 }
 `

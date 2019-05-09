@@ -231,7 +231,7 @@ resource "aws_s3_bucket_inventory" "test" {
     }
   }
 }
-`, testAccAWSS3BucketMetricsConfigBucket(bucketName), inventoryName)
+`, testAccAWSS3BucketInventoryConfigBucket(bucketName), inventoryName)
 }
 
 func testAccAWSS3BucketInventoryConfigEncryptWithSSES3(bucketName, inventoryName string) string {
@@ -258,7 +258,7 @@ resource "aws_s3_bucket_inventory" "test" {
     }
   }
 }
-`, testAccAWSS3BucketMetricsConfigBucket(bucketName), inventoryName)
+`, testAccAWSS3BucketInventoryConfigBucket(bucketName), inventoryName)
 }
 
 func testAccAWSS3BucketInventoryConfigEncryptWithSSEKMS(bucketName, inventoryName string) string {
@@ -281,7 +281,7 @@ resource "aws_s3_bucket_inventory" "test" {
 
   destination {
     bucket {
-      format = "ORC"
+      format = "Parquet"
       bucket_arn = "${aws_s3_bucket.bucket.arn}"
 
       encryption {
@@ -292,5 +292,5 @@ resource "aws_s3_bucket_inventory" "test" {
     }
   }
 }
-`, testAccAWSS3BucketMetricsConfigBucket(bucketName), bucketName, inventoryName)
+`, testAccAWSS3BucketInventoryConfigBucket(bucketName), bucketName, inventoryName)
 }

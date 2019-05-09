@@ -2,6 +2,7 @@ package aws
 
 import (
 	"fmt"
+	"os"
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -162,6 +163,56 @@ func TestAccAWSWafWebAcl_Rules(t *testing.T) {
 	})
 }
 
+func TestAccAWSWafWebAcl_LoggingConfiguration(t *testing.T) {
+	oldvar := os.Getenv("AWS_DEFAULT_REGION")
+	os.Setenv("AWS_DEFAULT_REGION", "us-east-1")
+	defer os.Setenv("AWS_DEFAULT_REGION", oldvar)
+
+	var webACL waf.WebACL
+	rName := fmt.Sprintf("wafacl%s", acctest.RandString(5))
+	resourceName := "aws_waf_web_acl.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSWafWebAclDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSWafWebAclConfig_Logging(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSWafWebAclExists(resourceName, &webACL),
+					resource.TestCheckResourceAttr(resourceName, "logging_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "logging_configuration.0.redacted_fields.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "logging_configuration.0.redacted_fields.0.field_to_match.#", "2"),
+				),
+			},
+			// Test resource import
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			// Test logging configuration update
+			{
+				Config: testAccAWSWafWebAclConfig_LoggingUpdate(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSWafWebAclExists(resourceName, &webACL),
+					resource.TestCheckResourceAttr(resourceName, "logging_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "logging_configuration.0.redacted_fields.#", "0"),
+				),
+			},
+			// Test logging configuration removal
+			{
+				Config: testAccAWSWafWebAclConfig_Required(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSWafWebAclExists(resourceName, &webACL),
+					resource.TestCheckResourceAttr(resourceName, "logging_configuration.#", "0"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccAWSWafWebAcl_disappears(t *testing.T) {
 	var webACL waf.WebACL
 	rName := fmt.Sprintf("wafacl%s", acctest.RandString(5))
@@ -188,7 +239,7 @@ func testAccCheckAWSWafWebAclDisappears(v *waf.WebACL) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := testAccProvider.Meta().(*AWSClient).wafconn
 
-		wr := newWafRetryer(conn, "global")
+		wr := newWafRetryer(conn)
 
 		_, err := wr.RetryWithToken(func(token *string) (interface{}, error) {
 			opts := &waf.DeleteWebACLInput{
@@ -413,4 +464,124 @@ resource "aws_waf_web_acl" "test" {
   }
 }
 `, rName, rName, rName, rName, rName, rName, rName)
+}
+
+func testAccAWSWafWebAclConfig_Logging(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_waf_web_acl" "test" {
+  name        = %[1]q
+  metric_name = %[1]q
+
+  default_action {
+    type = "ALLOW"
+  }
+
+  logging_configuration {
+
+    log_destination = "${aws_kinesis_firehose_delivery_stream.test.arn}"
+
+    redacted_fields {
+
+      field_to_match {
+        type = "URI"
+      }
+
+      field_to_match {
+        data = "referer"
+        type = "HEADER"
+      }
+    }
+
+  }
+}
+
+resource "aws_s3_bucket" "test" {
+  bucket = %[1]q
+  acl    = "private"
+}
+
+resource "aws_iam_role" "test" {
+  name = %[1]q
+  assume_role_policy = <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Action": "sts:AssumeRole",
+      "Principal": {
+        "Service": "firehose.amazonaws.com"
+      },
+      "Effect": "Allow",
+      "Sid": ""
+    }
+  ]
+}
+EOF
+}
+
+resource "aws_kinesis_firehose_delivery_stream" "test" {
+  # the name must begin with aws-waf-logs-
+  name        = "aws-waf-logs-%[1]s"
+  destination = "s3"
+
+  s3_configuration {
+    role_arn   = "${aws_iam_role.test.arn}"
+    bucket_arn = "${aws_s3_bucket.test.arn}"
+  }
+}
+`, rName)
+}
+
+func testAccAWSWafWebAclConfig_LoggingUpdate(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_waf_web_acl" "test" {
+  metric_name = %[1]q
+  name        = %[1]q
+
+  default_action {
+    type = "ALLOW"
+  }
+
+  logging_configuration {
+    log_destination = "${aws_kinesis_firehose_delivery_stream.test.arn}"
+  }
+}
+
+resource "aws_s3_bucket" "test" {
+  bucket = %[1]q
+  acl    = "private"
+}
+
+resource "aws_iam_role" "test" {
+  name = %[1]q
+
+  assume_role_policy = <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Action": "sts:AssumeRole",
+      "Principal": {
+        "Service": "firehose.amazonaws.com"
+      },
+      "Effect": "Allow",
+      "Sid": ""
+    }
+  ]
+}
+EOF
+}
+
+resource "aws_kinesis_firehose_delivery_stream" "test" {
+  # the name must begin with aws-waf-logs-
+  name        = "aws-waf-logs-%[1]s"
+  destination = "s3"
+
+  s3_configuration {
+    role_arn   = "${aws_iam_role.test.arn}"
+    bucket_arn = "${aws_s3_bucket.test.arn}"
+  }
+}
+
+`, rName)
 }

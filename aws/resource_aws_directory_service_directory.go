@@ -453,8 +453,10 @@ func resourceAwsDirectoryServiceDirectoryRead(d *schema.ResourceData, meta inter
 	d.Set("connect_settings", flattenDSConnectSettings(dir.DnsIpAddrs, dir.ConnectSettings))
 	d.Set("enable_sso", dir.SsoEnabled)
 
-	if dir.VpcSettings != nil {
-		d.Set("security_group_id", *dir.VpcSettings.SecurityGroupId)
+	if aws.StringValue(dir.Type) == directoryservice.DirectoryTypeAdconnector {
+		d.Set("security_group_id", aws.StringValue(dir.ConnectSettings.SecurityGroupId))
+	} else {
+		d.Set("security_group_id", aws.StringValue(dir.VpcSettings.SecurityGroupId))
 	}
 
 	tagList, err := dsconn.ListTagsForResource(&directoryservice.ListTagsForResourceInput{
@@ -482,7 +484,7 @@ func resourceAwsDirectoryServiceDirectoryDelete(d *schema.ResourceData, meta int
 	}
 
 	log.Printf("[DEBUG] Waiting for Directory Service Directory (%q) to be deleted", d.Id())
-	err = waitForDirectoryServiceDirectoryDeletion(dsconn, d.Id(), 60*time.Minute)
+	err = waitForDirectoryServiceDirectoryDeletion(dsconn, d.Id())
 	if err != nil {
 		return fmt.Errorf("error waiting for Directory Service (%s) to be deleted: %s", d.Id(), err)
 	}
@@ -490,7 +492,7 @@ func resourceAwsDirectoryServiceDirectoryDelete(d *schema.ResourceData, meta int
 	return nil
 }
 
-func waitForDirectoryServiceDirectoryDeletion(conn *directoryservice.DirectoryService, directoryID string, timeout time.Duration) error {
+func waitForDirectoryServiceDirectoryDeletion(conn *directoryservice.DirectoryService, directoryID string) error {
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{
 			directoryservice.DirectoryStageActive,
@@ -516,7 +518,7 @@ func waitForDirectoryServiceDirectoryDeletion(conn *directoryservice.DirectorySe
 			log.Printf("[DEBUG] Deletion of Directory Service Directory %q is in following stage: %q.", directoryID, aws.StringValue(ds.Stage))
 			return ds, aws.StringValue(ds.Stage), nil
 		},
-		Timeout: timeout,
+		Timeout: 60 * time.Minute,
 	}
 	_, err := stateConf.WaitForState()
 

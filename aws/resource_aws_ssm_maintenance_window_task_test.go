@@ -49,6 +49,8 @@ func TestAccAWSSSMMaintenanceWindowTask_updateForcesNewResource(t *testing.T) {
 				Config: testAccAWSSSMMaintenanceWindowTaskBasicConfigUpdated(name),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSSSMMaintenanceWindowTaskExists("aws_ssm_maintenance_window_task.target", &after),
+					resource.TestCheckResourceAttr("aws_ssm_maintenance_window_task.target", "name", "TestMaintenanceWindowTask"),
+					resource.TestCheckResourceAttr("aws_ssm_maintenance_window_task.target", "description", "This resource is for test purpose only"),
 					testAccCheckAwsSsmWindowsTaskRecreated(t, &before, &after),
 				),
 			},
@@ -213,6 +215,8 @@ resource "aws_ssm_maintenance_window_task" "target" {
   task_type = "RUN_COMMAND"
   task_arn = "AWS-RunShellScript"
   priority = 1
+  name = "TestMaintenanceWindowTask"
+  description = "This resource is for test purpose only"
   service_role_arn = "${aws_iam_role.ssm_role.arn}"
   max_concurrency = "2"
   max_errors = "1"

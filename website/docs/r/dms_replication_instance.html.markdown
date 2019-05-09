@@ -6,7 +6,7 @@ description: |-
   Provides a DMS (Data Migration Service) replication instance resource.
 ---
 
-# aws_dms_replication_instance
+# Resource: aws_dms_replication_instance
 
 Provides a DMS (Data Migration Service) replication instance resource. DMS replication instances can be created, updated, deleted, and imported.
 
@@ -28,7 +28,7 @@ resource "aws_dms_replication_instance" "test" {
   replication_instance_id      = "test-dms-replication-instance-tf"
   replication_subnet_group_id  = "${aws_dms_replication_subnet_group.test-dms-replication-subnet-group-tf.id}"
 
-  tags {
+  tags = {
     Name = "test"
   }
 

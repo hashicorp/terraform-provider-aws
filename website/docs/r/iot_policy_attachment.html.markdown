@@ -6,7 +6,7 @@ description: |-
   Provides an IoT policy attachment.
 ---
 
-# aws_iot_policy_attachment
+# Resource: aws_iot_policy_attachment
 
 Provides an IoT policy attachment.
 
@@ -14,7 +14,7 @@ Provides an IoT policy attachment.
 
 ```hcl
 resource "aws_iot_policy" "pubsub" {
-  name        = "PubSubToAnyTopic"
+  name   = "PubSubToAnyTopic"
   policy = <<EOF
 {
   "Version": "2012-10-17",
@@ -32,7 +32,7 @@ EOF
 }
 
 resource "aws_iot_certificate" "cert" {
-  csr = "${file("csr.pem")}"
+  csr    = "${file("csr.pem")}"
   active = true
 }
 

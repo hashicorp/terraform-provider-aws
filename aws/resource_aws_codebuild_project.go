@@ -172,6 +172,15 @@ func resourceAwsCodeBuildProject() *schema.Resource {
 								codebuild.EnvironmentTypeWindowsContainer,
 							}, false),
 						},
+						"image_pull_credentials_type": {
+							Type:     schema.TypeString,
+							Optional: true,
+							Default:  codebuild.ImagePullCredentialsTypeCodebuild,
+							ValidateFunc: validation.StringInSlice([]string{
+								codebuild.ImagePullCredentialsTypeCodebuild,
+								codebuild.ImagePullCredentialsTypeServiceRole,
+							}, false),
+						},
 						"privileged_mode": {
 							Type:     schema.TypeBool,
 							Optional: true,
@@ -377,12 +386,6 @@ func resourceAwsCodeBuildProject() *schema.Resource {
 				Required: true,
 				MaxItems: 1,
 				Set:      resourceAwsCodeBuildProjectSourceHash,
-			},
-			"timeout": {
-				Type:         schema.TypeInt,
-				Optional:     true,
-				ValidateFunc: validation.IntBetween(5, 480),
-				Removed:      "This field has been removed. Please use build_timeout instead",
 			},
 			"build_timeout": {
 				Type:         schema.TypeInt,
@@ -639,6 +642,10 @@ func expandProjectEnvironment(d *schema.ResourceData) *codebuild.ProjectEnvironm
 		projectEnv.Certificate = aws.String(v.(string))
 	}
 
+	if v := envConfig["image_pull_credentials_type"]; v != nil {
+		projectEnv.ImagePullCredentialsType = aws.String(v.(string))
+	}
+
 	if v := envConfig["environment_variable"]; v != nil {
 		envVariables := v.([]interface{})
 		if len(envVariables) > 0 {
@@ -727,9 +734,9 @@ func expandProjectSourceData(data map[string]interface{}) codebuild.ProjectSourc
 		projectSource.Location = aws.String(data["location"].(string))
 	}
 
-	// Only valid for GITHUB source type, e.g.
-	// InvalidInputException: Source type GITHUB_ENTERPRISE does not support ReportBuildStatus
-	if sourceType == codebuild.SourceTypeGithub {
+	// Only valid for BITBUCKET, GITHUB, and GITHUB_ENTERPRISE source types, e.g.
+	// InvalidInputException: Source type NO_SOURCE does not support ReportBuildStatus
+	if sourceType == codebuild.SourceTypeBitbucket || sourceType == codebuild.SourceTypeGithub || sourceType == codebuild.SourceTypeGithubEnterprise {
 		projectSource.ReportBuildStatus = aws.Bool(data["report_build_status"].(bool))
 	}
 
@@ -922,12 +929,7 @@ func resourceAwsCodeBuildProjectDelete(d *schema.ResourceData, meta interface{})
 	_, err := conn.DeleteProject(&codebuild.DeleteProjectInput{
 		Name: aws.String(d.Id()),
 	})
-
-	if err != nil {
-		return err
-	}
-
-	return nil
+	return err
 }
 
 func flattenAwsCodeBuildProjectSecondaryArtifacts(artifactsList []*codebuild.ProjectArtifacts) *schema.Set {
@@ -1009,6 +1011,7 @@ func flattenAwsCodeBuildProjectEnvironment(environment *codebuild.ProjectEnviron
 	envConfig["image"] = *environment.Image
 	envConfig["certificate"] = aws.StringValue(environment.Certificate)
 	envConfig["privileged_mode"] = *environment.PrivilegedMode
+	envConfig["image_pull_credentials_type"] = *environment.ImagePullCredentialsType
 
 	if environment.EnvironmentVariables != nil {
 		envConfig["environment_variable"] = environmentVariablesToMap(environment.EnvironmentVariables)
@@ -1090,11 +1093,13 @@ func resourceAwsCodeBuildProjectEnvironmentHash(v interface{}) int {
 	computeType := m["compute_type"].(string)
 	image := m["image"].(string)
 	privilegedMode := m["privileged_mode"].(bool)
+	imagePullCredentialsType := m["image_pull_credentials_type"].(string)
 	environmentVariables := m["environment_variable"].([]interface{})
 	buf.WriteString(fmt.Sprintf("%s-", environmentType))
 	buf.WriteString(fmt.Sprintf("%s-", computeType))
 	buf.WriteString(fmt.Sprintf("%s-", image))
 	buf.WriteString(fmt.Sprintf("%t-", privilegedMode))
+	buf.WriteString(fmt.Sprintf("%s-", imagePullCredentialsType))
 	if v, ok := m["certificate"]; ok && v.(string) != "" {
 		buf.WriteString(fmt.Sprintf("%s-", v.(string)))
 	}

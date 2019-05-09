@@ -34,6 +34,10 @@ func resourceAwsFlowLog() *schema.Resource {
 				ForceNew:      true,
 				ConflictsWith: []string{"log_group_name"},
 				ValidateFunc:  validateArn,
+				StateFunc: func(arn interface{}) string {
+					// aws_cloudwatch_log_group arn attribute references contain a trailing `:*`, which breaks functionality
+					return strings.TrimSuffix(arn.(string), ":*")
+				},
 			},
 
 			"log_destination_type": {
@@ -124,7 +128,7 @@ func resourceAwsLogFlowCreate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if v, ok := d.GetOk("log_destination"); ok && v != "" {
-		opts.LogDestination = aws.String(v.(string))
+		opts.LogDestination = aws.String(strings.TrimSuffix(v.(string), ":*"))
 	}
 
 	if v, ok := d.GetOk("log_group_name"); ok && v != "" {
@@ -136,6 +140,10 @@ func resourceAwsLogFlowCreate(d *schema.ResourceData, meta interface{}) error {
 	resp, err := conn.CreateFlowLogs(opts)
 	if err != nil {
 		return fmt.Errorf("Error creating Flow Log for (%s), error: %s", resourceId, err)
+	}
+
+	if len(resp.Unsuccessful) > 0 {
+		return fmt.Errorf("Error creating Flow Log for (%s), error: %s", resourceId, *resp.Unsuccessful[0].Error.Message)
 	}
 
 	if len(resp.FlowLogIds) > 1 {

@@ -6,7 +6,7 @@ description: |-
   Provides a Pinpoint ADM Channel resource.
 ---
 
-# aws_pinpoint_adm_channel
+# Resource: aws_pinpoint_adm_channel
 
 Provides a Pinpoint ADM (Amazon Device Messaging) Channel resource.
 
@@ -20,11 +20,10 @@ Provides a Pinpoint ADM (Amazon Device Messaging) Channel resource.
 resource "aws_pinpoint_app" "app" {}
 
 resource "aws_pinpoint_adm_channel" "channel" {
-    application_id = "${aws_pinpoint_app.app.application_id}"
-    client_id      = ""
-    client_secret  = ""
-    enabled        = true
-    
+  application_id = "${aws_pinpoint_app.app.application_id}"
+  client_id      = ""
+  client_secret  = ""
+  enabled        = true
 }
 ```
 

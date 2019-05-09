@@ -6,16 +6,14 @@ description: |-
   Provides a way to set SNS SMS preferences.
 ---
 
-# aws_sns_sms_preferences
+# Resource: aws_sns_sms_preferences
 
 Provides a way to set SNS SMS preferences.
 
 ## Example Usage
 
 ```hcl
-resource "aws_sns_sms_preferences" "update_sms_prefs" {
-
-}
+resource "aws_sns_sms_preferences" "update_sms_prefs" {}
 ```
 
 ## Argument Reference

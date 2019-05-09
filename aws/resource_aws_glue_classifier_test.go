@@ -3,7 +3,6 @@ package aws
 import (
 	"fmt"
 	"log"
-	"strings"
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -27,10 +26,6 @@ func testSweepGlueClassifiers(region string) error {
 	}
 	conn := client.(*AWSClient).glueconn
 
-	prefixes := []string{
-		"tf-acc-test-",
-	}
-
 	input := &glue.GetClassifiersInput{}
 	err = conn.GetClassifiersPages(input, func(page *glue.GetClassifiersOutput, lastPage bool) bool {
 		if len(page.Classifiers) == 0 {
@@ -38,8 +33,6 @@ func testSweepGlueClassifiers(region string) error {
 			return false
 		}
 		for _, classifier := range page.Classifiers {
-			skip := true
-
 			var name string
 			if classifier.GrokClassifier != nil {
 				name = aws.StringValue(classifier.GrokClassifier.Name)
@@ -50,17 +43,6 @@ func testSweepGlueClassifiers(region string) error {
 			}
 			if name == "" {
 				log.Printf("[WARN] Unable to determine Glue Classifier name: %#v", classifier)
-				continue
-			}
-
-			for _, prefix := range prefixes {
-				if strings.HasPrefix(name, prefix) {
-					skip = false
-					break
-				}
-			}
-			if skip {
-				log.Printf("[INFO] Skipping Glue Classifier: %s", name)
 				continue
 			}
 

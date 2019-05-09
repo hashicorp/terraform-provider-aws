@@ -6,7 +6,7 @@ description: |-
   Provides a resource to manage the accepter's side of a Direct Connect hosted private virtual interface.
 ---
 
-# aws_dx_hosted_private_virtual_interface_accepter
+# Resource: aws_dx_hosted_private_virtual_interface_accepter
 
 Provides a resource to manage the accepter's side of a Direct Connect hosted private virtual interface.
 This resource accepts ownership of a private virtual interface created by another AWS account.
@@ -49,7 +49,7 @@ resource "aws_dx_hosted_private_virtual_interface_accepter" "accepter" {
   virtual_interface_id = "${aws_dx_hosted_private_virtual_interface.creator.id}"
   vpn_gateway_id       = "${aws_vpn_gateway.vpn_gw.id}"
 
-  tags {
+  tags = {
     Side = "Accepter"
   }
 }

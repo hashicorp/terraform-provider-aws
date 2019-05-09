@@ -14,7 +14,7 @@ Use this data source to get information about a CloudHSM v2 cluster
 
 ```hcl
 data "aws_cloudhsm_v2_cluster" "cluster" {
-    cluster_id = "cluster-testclusterid"
+  cluster_id = "cluster-testclusterid"
 }
 ```
 ## Argument Reference

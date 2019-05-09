@@ -6,7 +6,7 @@ description: |-
   Provides a Service Discovery Private DNS Namespace resource.
 ---
 
-# aws_service_discovery_private_dns_namespace
+# Resource: aws_service_discovery_private_dns_namespace
 
 Provides a Service Discovery Private DNS Namespace resource.
 
@@ -18,9 +18,9 @@ resource "aws_vpc" "example" {
 }
 
 resource "aws_service_discovery_private_dns_namespace" "example" {
-  name = "hoge.example.local"
+  name        = "hoge.example.local"
   description = "example"
-  vpc = "${aws_vpc.example.id}"
+  vpc         = "${aws_vpc.example.id}"
 }
 ```
 

@@ -192,6 +192,22 @@ func TestAccAWSLambdaPermission_basic(t *testing.T) {
 	})
 }
 
+func TestAccAWSLambdaPermission_StatementId_Duplicate(t *testing.T) {
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSLambdaPermissionDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config:      testAccAWSLambdaPermissionConfigStatementIdDuplicate(rName),
+				ExpectError: regexp.MustCompile(`ResourceConflictException`),
+			},
+		},
+	})
+}
+
 func TestAccAWSLambdaPermission_withRawFunctionName(t *testing.T) {
 	var statement LambdaPolicyStatement
 
@@ -567,7 +583,7 @@ resource "aws_lambda_function" "test_lambda" {
     function_name = "%s"
     role = "${aws_iam_role.iam_for_lambda.arn}"
     handler = "exports.handler"
-    runtime = "nodejs4.3"
+    runtime = "nodejs8.10"
 }
 
 resource "aws_iam_role" "iam_for_lambda" {
@@ -590,6 +606,52 @@ EOF
 }`, funcName, roleName)
 }
 
+func testAccAWSLambdaPermissionConfigStatementIdDuplicate(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_lambda_permission" "test1" {
+  action             = "lambda:InvokeFunction"
+  event_source_token = "test-event-source-token"
+  function_name      = "${aws_lambda_function.test.arn}"
+  principal          = "events.amazonaws.com"
+  statement_id       = "AllowExecutionFromCloudWatch"
+}
+
+resource "aws_lambda_permission" "test2" {
+  action             = "lambda:InvokeFunction"
+  event_source_token = "test-event-source-token"
+  function_name      = "${aws_lambda_function.test.arn}"
+  principal          = "events.amazonaws.com"
+  statement_id       = "AllowExecutionFromCloudWatch"
+}
+
+resource "aws_lambda_function" "test" {
+  filename      = "test-fixtures/lambdatest.zip"
+  function_name = %q
+  handler       = "exports.handler"
+  role          = "${aws_iam_role.test.arn}"
+  runtime       = "nodejs8.10"
+}
+
+resource "aws_iam_role" "test" {
+  name = %q
+  assume_role_policy = <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Action": "sts:AssumeRole",
+      "Principal": {
+        "Service": "lambda.amazonaws.com"
+      },
+      "Effect": "Allow",
+      "Sid": ""
+    }
+  ]
+}
+EOF
+}`, rName, rName)
+}
+
 func testAccAWSLambdaPermissionConfig_withRawFunctionName(funcName, roleName string) string {
 	return fmt.Sprintf(`
 resource "aws_lambda_permission" "with_raw_func_name" {
@@ -604,7 +666,7 @@ resource "aws_lambda_function" "test_lambda" {
     function_name = "%s"
     role = "${aws_iam_role.iam_for_lambda.arn}"
     handler = "exports.handler"
-    runtime = "nodejs4.3"
+    runtime = "nodejs8.10"
 }
 
 resource "aws_iam_role" "iam_for_lambda" {
@@ -642,7 +704,7 @@ resource "aws_lambda_function" "test_lambda" {
     function_name = "lambda_function_name_perm"
     role = "${aws_iam_role.iam_for_lambda.arn}"
     handler = "exports.handler"
-    runtime = "nodejs4.3"
+    runtime = "nodejs8.10"
 }
 
 resource "aws_iam_role" "iam_for_lambda" {
@@ -690,7 +752,7 @@ resource "aws_lambda_function" "test_lambda" {
     function_name = "%s"
     role = "${aws_iam_role.iam_for_lambda.arn}"
     handler = "exports.handler"
-    runtime = "nodejs4.3"
+    runtime = "nodejs8.10"
 }
 
 resource "aws_iam_role" "iam_for_lambda" {
@@ -735,7 +797,7 @@ resource "aws_lambda_function" "test_lambda" {
     function_name = "%s"
     role = "${aws_iam_role.iam_for_lambda.arn}"
     handler = "exports.handler"
-    runtime = "nodejs4.3"
+    runtime = "nodejs8.10"
 }
 
 resource "aws_iam_role" "iam_for_lambda" {
@@ -794,7 +856,7 @@ resource "aws_lambda_function" "my-func" {
     function_name = "%s"
     role = "${aws_iam_role.police.arn}"
     handler = "exports.handler"
-    runtime = "nodejs4.3"
+    runtime = "nodejs8.10"
 }
 
 resource "aws_iam_role" "police" {
@@ -843,7 +905,7 @@ resource "aws_lambda_function" "my-func" {
     function_name = "%s"
     role = "${aws_iam_role.police.arn}"
     handler = "exports.handler"
-    runtime = "nodejs4.3"
+    runtime = "nodejs8.10"
 }
 
 resource "aws_iam_role" "police" {
@@ -881,7 +943,7 @@ resource "aws_lambda_function" "my-func" {
     function_name = "%s"
     role = "${aws_iam_role.police.arn}"
     handler = "exports.handler"
-    runtime = "nodejs4.3"
+    runtime = "nodejs8.10"
 }
 
 resource "aws_iam_role" "police" {

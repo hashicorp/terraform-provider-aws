@@ -90,6 +90,7 @@ The following arguments are supported:
   Statements without an `sid` cannot be overwritten.
 * `statement` (Optional) - A nested configuration block (described below)
   configuring one *statement* to be included in the policy document.
+* `version` (Optional) - IAM policy document version. Valid values: `2008-10-17`, `2012-10-17`. Defaults to `2012-10-17`. For more information, see the [AWS IAM User Guide](https://docs.aws.amazon.com/IAM/latest/UserGuide/reference_policies_elements_version.html).
 
 Each document configuration may have one or more `statement` blocks, which
 each accept the following arguments:
@@ -307,7 +308,7 @@ Use without a `statement`:
 ```hcl
 data "aws_iam_policy_document" "source" {
   statement {
-    sid = "OverridePlaceholder"
+    sid       = "OverridePlaceholder"
     actions   = ["ec2:DescribeAccountAttributes"]
     resources = ["*"]
   }
@@ -315,14 +316,14 @@ data "aws_iam_policy_document" "source" {
 
 data "aws_iam_policy_document" "override" {
   statement {
-    sid = "OverridePlaceholder"
+    sid       = "OverridePlaceholder"
     actions   = ["s3:GetObject"]
     resources = ["*"]
   }
 }
 
 data "aws_iam_policy_document" "politik" {
-  source_json = "${data.aws_iam_policy_document.source.json}"
+  source_json   = "${data.aws_iam_policy_document.source.json}"
   override_json = "${data.aws_iam_policy_document.override.json}"
 }
 ```

@@ -3,7 +3,6 @@ package aws
 import (
 	"fmt"
 	"log"
-	"strings"
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -46,18 +45,6 @@ func testSweepKmsKeys(region string) error {
 				continue
 			}
 
-			tOut, err := conn.ListResourceTags(&kms.ListResourceTagsInput{
-				KeyId: k.KeyId,
-			})
-			if err != nil {
-				log.Printf("Error: Failed to get tags for key %q: %s", *k.KeyId, err)
-				return false
-			}
-			if !kmsTagHasPrefix(tOut.Tags, "Name", "tf-acc-test-kms-key-") {
-				// Skip keys which don't have designated tag
-				continue
-			}
-
 			_, err = conn.ScheduleKeyDeletion(&kms.ScheduleKeyDeletionInput{
 				KeyId:               k.KeyId,
 				PendingWindowInDays: aws.Int64(int64(7)),
@@ -78,15 +65,6 @@ func testSweepKmsKeys(region string) error {
 	}
 
 	return nil
-}
-
-func kmsTagHasPrefix(tags []*kms.Tag, key, prefix string) bool {
-	for _, t := range tags {
-		if *t.TagKey == key && strings.HasPrefix(*t.TagValue, prefix) {
-			return true
-		}
-	}
-	return false
 }
 
 func TestAccAWSKmsKey_importBasic(t *testing.T) {
@@ -366,7 +344,7 @@ resource "aws_kms_key" "foo" {
   ]
 }
 POLICY
-	tags {
+	tags = {
 		Name = "tf-acc-test-kms-key-%s"
 	}
 }`, rName, rName)
@@ -397,7 +375,7 @@ resource "aws_kms_key" "foo" {
   ]
 }
 POLICY
-	tags {
+	tags = {
 		Name = "tf-acc-test-kms-key-%s"
 	}
 }`, rName, rName)
@@ -408,7 +386,7 @@ func testAccAWSKmsKey_removedPolicy(rName string) string {
 resource "aws_kms_key" "foo" {
     description = "Terraform acc test %s"
     deletion_window_in_days = 7
-    tags {
+  tags = {
 		Name = "tf-acc-test-kms-key-%s"
 	}
 }`, rName, rName)
@@ -420,7 +398,7 @@ resource "aws_kms_key" "bar" {
     description = "Terraform acc test is_enabled %s"
     deletion_window_in_days = 7
     enable_key_rotation = true
-    tags {
+  tags = {
 		Name = "tf-acc-test-kms-key-%s"
 	}
 }`, rName, rName)
@@ -433,7 +411,7 @@ resource "aws_kms_key" "bar" {
     deletion_window_in_days = 7
     enable_key_rotation = false
     is_enabled = false
-    tags {
+  tags = {
 		Name = "tf-acc-test-kms-key-%s"
 	}
 }`, rName, rName)
@@ -446,7 +424,7 @@ resource "aws_kms_key" "bar" {
     deletion_window_in_days = 7
     enable_key_rotation = true
     is_enabled = true
-    tags {
+  tags = {
 		Name = "tf-acc-test-kms-key-%s"
 	}
 }`, rName, rName)
@@ -456,7 +434,7 @@ func testAccAWSKmsKey_tags(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_kms_key" "foo" {
     description = "Terraform acc test %s"
-	tags {
+	tags = {
 		Name = "tf-acc-test-kms-key-%s"
 		Key1 = "Value One"
 		Description = "Very interesting"

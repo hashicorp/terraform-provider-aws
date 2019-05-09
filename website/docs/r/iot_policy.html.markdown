@@ -6,7 +6,7 @@ description: |-
   Provides an IoT policy.
 ---
 
-# aws_iot_policy
+# Resource: aws_iot_policy
 
 Provides an IoT policy.
 
@@ -14,7 +14,8 @@ Provides an IoT policy.
 
 ```hcl
 resource "aws_iot_policy" "pubsub" {
-  name        = "PubSubToAnyTopic"
+  name = "PubSubToAnyTopic"
+
   policy = <<EOF
 {
   "Version": "2012-10-17",

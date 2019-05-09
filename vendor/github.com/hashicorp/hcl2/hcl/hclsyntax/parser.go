@@ -1,14 +1,14 @@
 package hclsyntax
 
 import (
-	"bufio"
 	"bytes"
 	"fmt"
+	"strconv"
+	"unicode/utf8"
 
 	"github.com/apparentlymart/go-textseg/textseg"
 	"github.com/hashicorp/hcl2/hcl"
 	"github.com/zclconf/go-cty/cty"
-	"github.com/zclconf/go-cty/cty/convert"
 )
 
 type parser struct {
@@ -54,7 +54,7 @@ Token:
 						Severity: hcl.DiagError,
 						Summary:  "Attribute redefined",
 						Detail: fmt.Sprintf(
-							"The attribute %q was already defined at %s. Each attribute may be defined only once.",
+							"The argument %q was already set at %s. Each argument may be set only once.",
 							titem.Name, existing.NameRange.String(),
 						),
 						Subject: &titem.NameRange,
@@ -79,15 +79,15 @@ Token:
 				if bad.Type == TokenOQuote {
 					diags = append(diags, &hcl.Diagnostic{
 						Severity: hcl.DiagError,
-						Summary:  "Invalid attribute name",
-						Detail:   "Attribute names must not be quoted.",
+						Summary:  "Invalid argument name",
+						Detail:   "Argument names must not be quoted.",
 						Subject:  &bad.Range,
 					})
 				} else {
 					diags = append(diags, &hcl.Diagnostic{
 						Severity: hcl.DiagError,
-						Summary:  "Attribute or block definition required",
-						Detail:   "An attribute or block definition is required here.",
+						Summary:  "Argument or block definition required",
+						Detail:   "An argument or block definition is required here.",
 						Subject:  &bad.Range,
 					})
 				}
@@ -119,8 +119,8 @@ func (p *parser) ParseBodyItem() (Node, hcl.Diagnostics) {
 		return nil, hcl.Diagnostics{
 			{
 				Severity: hcl.DiagError,
-				Summary:  "Attribute or block definition required",
-				Detail:   "An attribute or block definition is required here.",
+				Summary:  "Argument or block definition required",
+				Detail:   "An argument or block definition is required here.",
 				Subject:  &ident.Range,
 			},
 		}
@@ -130,16 +130,16 @@ func (p *parser) ParseBodyItem() (Node, hcl.Diagnostics) {
 
 	switch next.Type {
 	case TokenEqual:
-		return p.finishParsingBodyAttribute(ident)
-	case TokenOQuote, TokenOBrace:
+		return p.finishParsingBodyAttribute(ident, false)
+	case TokenOQuote, TokenOBrace, TokenIdent:
 		return p.finishParsingBodyBlock(ident)
 	default:
 		p.recoverAfterBodyItem()
 		return nil, hcl.Diagnostics{
 			{
 				Severity: hcl.DiagError,
-				Summary:  "Attribute or block definition required",
-				Detail:   "An attribute or block definition is required here. To define an attribute, use the equals sign \"=\" to introduce the attribute value.",
+				Summary:  "Argument or block definition required",
+				Detail:   "An argument or block definition is required here. To set an argument, use the equals sign \"=\" to introduce the argument value.",
 				Subject:  &ident.Range,
 			},
 		}
@@ -148,7 +148,72 @@ func (p *parser) ParseBodyItem() (Node, hcl.Diagnostics) {
 	return nil, nil
 }
 
-func (p *parser) finishParsingBodyAttribute(ident Token) (Node, hcl.Diagnostics) {
+// parseSingleAttrBody is a weird variant of ParseBody that deals with the
+// body of a nested block containing only one attribute value all on a single
+// line, like foo { bar = baz } . It expects to find a single attribute item
+// immediately followed by the end token type with no intervening newlines.
+func (p *parser) parseSingleAttrBody(end TokenType) (*Body, hcl.Diagnostics) {
+	ident := p.Read()
+	if ident.Type != TokenIdent {
+		p.recoverAfterBodyItem()
+		return nil, hcl.Diagnostics{
+			{
+				Severity: hcl.DiagError,
+				Summary:  "Argument or block definition required",
+				Detail:   "An argument or block definition is required here.",
+				Subject:  &ident.Range,
+			},
+		}
+	}
+
+	var attr *Attribute
+	var diags hcl.Diagnostics
+
+	next := p.Peek()
+
+	switch next.Type {
+	case TokenEqual:
+		node, attrDiags := p.finishParsingBodyAttribute(ident, true)
+		diags = append(diags, attrDiags...)
+		attr = node.(*Attribute)
+	case TokenOQuote, TokenOBrace, TokenIdent:
+		p.recoverAfterBodyItem()
+		return nil, hcl.Diagnostics{
+			{
+				Severity: hcl.DiagError,
+				Summary:  "Argument definition required",
+				Detail:   fmt.Sprintf("A single-line block definition can contain only a single argument. If you meant to define argument %q, use an equals sign to assign it a value. To define a nested block, place it on a line of its own within its parent block.", ident.Bytes),
+				Subject:  hcl.RangeBetween(ident.Range, next.Range).Ptr(),
+			},
+		}
+	default:
+		p.recoverAfterBodyItem()
+		return nil, hcl.Diagnostics{
+			{
+				Severity: hcl.DiagError,
+				Summary:  "Argument or block definition required",
+				Detail:   "An argument or block definition is required here. To set an argument, use the equals sign \"=\" to introduce the argument value.",
+				Subject:  &ident.Range,
+			},
+		}
+	}
+
+	return &Body{
+		Attributes: Attributes{
+			string(ident.Bytes): attr,
+		},
+
+		SrcRange: attr.SrcRange,
+		EndRange: hcl.Range{
+			Filename: attr.SrcRange.Filename,
+			Start:    attr.SrcRange.End,
+			End:      attr.SrcRange.End,
+		},
+	}, diags
+
+}
+
+func (p *parser) finishParsingBodyAttribute(ident Token, singleLine bool) (Node, hcl.Diagnostics) {
 	eqTok := p.Read() // eat equals token
 	if eqTok.Type != TokenEqual {
 		// should never happen if caller behaves
@@ -165,32 +230,33 @@ func (p *parser) finishParsingBodyAttribute(ident Token) (Node, hcl.Diagnostics)
 		endRange = p.PrevRange()
 		p.recoverAfterBodyItem()
 	} else {
-		end := p.Peek()
-		if end.Type != TokenNewline {
-			if !p.recovery {
-				if end.Type == TokenEOF {
+		endRange = p.PrevRange()
+		if !singleLine {
+			end := p.Peek()
+			if end.Type != TokenNewline && end.Type != TokenEOF {
+				if !p.recovery {
+					summary := "Missing newline after argument"
+					detail := "An argument definition must end with a newline."
+
+					if end.Type == TokenComma {
+						summary = "Unexpected comma after argument"
+						detail = "Argument definitions must be separated by newlines, not commas. " + detail
+					}
+
 					diags = append(diags, &hcl.Diagnostic{
 						Severity: hcl.DiagError,
-						Summary:  "Missing newline after attribute definition",
-						Detail:   "A newline is required after an attribute definition at the end of a file.",
-						Subject:  &end.Range,
-						Context:  hcl.RangeBetween(ident.Range, end.Range).Ptr(),
-					})
-				} else {
-					diags = append(diags, &hcl.Diagnostic{
-						Severity: hcl.DiagError,
-						Summary:  "Missing newline after attribute definition",
-						Detail:   "An attribute definition must end with a newline.",
+						Summary:  summary,
+						Detail:   detail,
 						Subject:  &end.Range,
 						Context:  hcl.RangeBetween(ident.Range, end.Range).Ptr(),
 					})
 				}
+				endRange = p.PrevRange()
+				p.recoverAfterBodyItem()
+			} else {
+				endRange = p.PrevRange()
+				p.Read() // eat newline
 			}
-			endRange = p.PrevRange()
-			p.recoverAfterBodyItem()
-		} else {
-			endRange = p.PrevRange()
-			p.Read() // eat newline
 		}
 	}
 
@@ -227,19 +293,15 @@ Token:
 			diags = append(diags, labelDiags...)
 			labels = append(labels, label)
 			labelRanges = append(labelRanges, labelRange)
-			if labelDiags.HasErrors() {
-				p.recoverAfterBodyItem()
-				return &Block{
-					Type:   blockType,
-					Labels: labels,
-					Body:   nil,
+			// parseQuoteStringLiteral recovers up to the closing quote
+			// if it encounters problems, so we can continue looking for
+			// more labels and eventually the block body even.
 
-					TypeRange:       ident.Range,
-					LabelRanges:     labelRanges,
-					OpenBraceRange:  ident.Range, // placeholder
-					CloseBraceRange: ident.Range, // placeholder
-				}, diags
-			}
+		case TokenIdent:
+			tok = p.Read() // eat token
+			label, labelRange := string(tok.Bytes), tok.Range
+			labels = append(labels, label)
+			labelRanges = append(labelRanges, labelRange)
 
 		default:
 			switch tok.Type {
@@ -247,7 +309,7 @@ Token:
 				diags = append(diags, &hcl.Diagnostic{
 					Severity: hcl.DiagError,
 					Summary:  "Invalid block definition",
-					Detail:   "The equals sign \"=\" indicates an attribute definition, and must not be used when defining a block.",
+					Detail:   "The equals sign \"=\" indicates an argument definition, and must not be used when defining a block.",
 					Subject:  &tok.Range,
 					Context:  hcl.RangeBetween(ident.Range, tok.Range).Ptr(),
 				})
@@ -276,7 +338,10 @@ Token:
 			return &Block{
 				Type:   blockType,
 				Labels: labels,
-				Body:   nil,
+				Body: &Body{
+					SrcRange: ident.Range,
+					EndRange: ident.Range,
+				},
 
 				TypeRange:       ident.Range,
 				LabelRanges:     labelRanges,
@@ -288,32 +353,66 @@ Token:
 
 	// Once we fall out here, the peeker is pointed just after our opening
 	// brace, so we can begin our nested body parsing.
-	body, bodyDiags := p.ParseBody(TokenCBrace)
+	var body *Body
+	var bodyDiags hcl.Diagnostics
+	switch p.Peek().Type {
+	case TokenNewline, TokenEOF, TokenCBrace:
+		body, bodyDiags = p.ParseBody(TokenCBrace)
+	default:
+		// Special one-line, single-attribute block parsing mode.
+		body, bodyDiags = p.parseSingleAttrBody(TokenCBrace)
+		switch p.Peek().Type {
+		case TokenCBrace:
+			p.Read() // the happy path - just consume the closing brace
+		case TokenComma:
+			// User seems to be trying to use the object-constructor
+			// comma-separated style, which isn't permitted for blocks.
+			diags = append(diags, &hcl.Diagnostic{
+				Severity: hcl.DiagError,
+				Summary:  "Invalid single-argument block definition",
+				Detail:   "Single-line block syntax can include only one argument definition. To define multiple arguments, use the multi-line block syntax with one argument definition per line.",
+				Subject:  p.Peek().Range.Ptr(),
+			})
+			p.recover(TokenCBrace)
+		case TokenNewline:
+			// We don't allow weird mixtures of single and multi-line syntax.
+			diags = append(diags, &hcl.Diagnostic{
+				Severity: hcl.DiagError,
+				Summary:  "Invalid single-argument block definition",
+				Detail:   "An argument definition on the same line as its containing block creates a single-line block definition, which must also be closed on the same line. Place the block's closing brace immediately after the argument definition.",
+				Subject:  p.Peek().Range.Ptr(),
+			})
+			p.recover(TokenCBrace)
+		default:
+			// Some other weird thing is going on. Since we can't guess a likely
+			// user intent for this one, we'll skip it if we're already in
+			// recovery mode.
+			if !p.recovery {
+				diags = append(diags, &hcl.Diagnostic{
+					Severity: hcl.DiagError,
+					Summary:  "Invalid single-argument block definition",
+					Detail:   "A single-line block definition must end with a closing brace immediately after its single argument definition.",
+					Subject:  p.Peek().Range.Ptr(),
+				})
+			}
+			p.recover(TokenCBrace)
+		}
+	}
 	diags = append(diags, bodyDiags...)
 	cBraceRange := p.PrevRange()
 
 	eol := p.Peek()
-	if eol.Type == TokenNewline {
+	if eol.Type == TokenNewline || eol.Type == TokenEOF {
 		p.Read() // eat newline
 	} else {
 		if !p.recovery {
-			if eol.Type == TokenEOF {
-				diags = append(diags, &hcl.Diagnostic{
-					Severity: hcl.DiagError,
-					Summary:  "Missing newline after block definition",
-					Detail:   "A newline is required after a block definition at the end of a file.",
-					Subject:  &eol.Range,
-					Context:  hcl.RangeBetween(ident.Range, eol.Range).Ptr(),
-				})
-			} else {
-				diags = append(diags, &hcl.Diagnostic{
-					Severity: hcl.DiagError,
-					Summary:  "Missing newline after block definition",
-					Detail:   "A block definition must end with a newline.",
-					Subject:  &eol.Range,
-					Context:  hcl.RangeBetween(ident.Range, eol.Range).Ptr(),
-				})
-			}
+			diags = append(diags, &hcl.Diagnostic{
+				Severity: hcl.DiagError,
+				Summary:  "Missing newline after block definition",
+				Detail:   "A block definition must end with a newline.",
+				Subject:  &eol.Range,
+				Context:  hcl.RangeBetween(ident.Range, eol.Range).Ptr(),
+			})
 		}
 		p.recoverAfterBodyItem()
 	}
@@ -472,7 +571,14 @@ func (p *parser) parseBinaryOps(ops []map[TokenType]*Operation) (Expression, hcl
 
 func (p *parser) parseExpressionWithTraversals() (Expression, hcl.Diagnostics) {
 	term, diags := p.parseExpressionTerm()
-	ret := term
+	ret, moreDiags := p.parseExpressionTraversals(term)
+	diags = append(diags, moreDiags...)
+	return ret, diags
+}
+
+func (p *parser) parseExpressionTraversals(from Expression) (Expression, hcl.Diagnostics) {
+	var diags hcl.Diagnostics
+	ret := from
 
 Traversal:
 	for {
@@ -491,6 +597,53 @@ Traversal:
 				rng := hcl.RangeBetween(dot.Range, attrTok.Range)
 				step := hcl.TraverseAttr{
 					Name:     name,
+					SrcRange: rng,
+				}
+
+				ret = makeRelativeTraversal(ret, step, rng)
+
+			case TokenNumberLit:
+				// This is a weird form we inherited from HIL, allowing numbers
+				// to be used as attributes as a weird way of writing [n].
+				// This was never actually a first-class thing in HIL, but
+				// HIL tolerated sequences like .0. in its variable names and
+				// calling applications like Terraform exploited that to
+				// introduce indexing syntax where none existed.
+				numTok := p.Read() // eat token
+				attrTok = numTok
+
+				// This syntax is ambiguous if multiple indices are used in
+				// succession, like foo.0.1.baz: that actually parses as
+				// a fractional number 0.1. Since we're only supporting this
+				// syntax for compatibility with legacy Terraform
+				// configurations, and Terraform does not tend to have lists
+				// of lists, we'll choose to reject that here with a helpful
+				// error message, rather than failing later because the index
+				// isn't a whole number.
+				if dotIdx := bytes.IndexByte(numTok.Bytes, '.'); dotIdx >= 0 {
+					first := numTok.Bytes[:dotIdx]
+					second := numTok.Bytes[dotIdx+1:]
+					diags = append(diags, &hcl.Diagnostic{
+						Severity: hcl.DiagError,
+						Summary:  "Invalid legacy index syntax",
+						Detail:   fmt.Sprintf("When using the legacy index syntax, chaining two indexes together is not permitted. Use the proper index syntax instead, like [%s][%s].", first, second),
+						Subject:  &attrTok.Range,
+					})
+					rng := hcl.RangeBetween(dot.Range, numTok.Range)
+					step := hcl.TraverseIndex{
+						Key:      cty.DynamicVal,
+						SrcRange: rng,
+					}
+					ret = makeRelativeTraversal(ret, step, rng)
+					break
+				}
+
+				numVal, numDiags := p.numberLitValue(numTok)
+				diags = append(diags, numDiags...)
+
+				rng := hcl.RangeBetween(dot.Range, numTok.Range)
+				step := hcl.TraverseIndex{
+					Key:      numVal,
 					SrcRange: rng,
 				}
 
@@ -516,6 +669,27 @@ Traversal:
 						// into a list, for expressions like:
 						// foo.bar.*.baz.0.foo
 						numTok := p.Read()
+
+						// Weird special case if the user writes something
+						// like foo.bar.*.baz.0.0.foo, where 0.0 parses
+						// as a number.
+						if dotIdx := bytes.IndexByte(numTok.Bytes, '.'); dotIdx >= 0 {
+							first := numTok.Bytes[:dotIdx]
+							second := numTok.Bytes[dotIdx+1:]
+							diags = append(diags, &hcl.Diagnostic{
+								Severity: hcl.DiagError,
+								Summary:  "Invalid legacy index syntax",
+								Detail:   fmt.Sprintf("When using the legacy index syntax, chaining two indexes together is not permitted. Use the proper index syntax with a full splat expression [*] instead, like [%s][%s].", first, second),
+								Subject:  &attrTok.Range,
+							})
+							trav = append(trav, hcl.TraverseIndex{
+								Key:      cty.DynamicVal,
+								SrcRange: hcl.RangeBetween(dot.Range, numTok.Range),
+							})
+							lastRange = numTok.Range
+							continue
+						}
+
 						numVal, numDiags := p.numberLitValue(numTok)
 						diags = append(diags, numDiags...)
 						trav = append(trav, hcl.TraverseIndex{
@@ -602,44 +776,81 @@ Traversal:
 			// the key value is something constant.
 
 			open := p.Read()
-			// TODO: If we have a TokenStar inside our brackets, parse as
-			// a Splat expression: foo[*].baz[0].
-			var close Token
-			p.PushIncludeNewlines(false) // arbitrary newlines allowed in brackets
-			keyExpr, keyDiags := p.ParseExpression()
-			diags = append(diags, keyDiags...)
-			if p.recovery && keyDiags.HasErrors() {
-				close = p.recover(TokenCBrack)
-			} else {
-				close = p.Read()
+			switch p.Peek().Type {
+			case TokenStar:
+				// This is a full splat expression, like foo[*], which consumes
+				// the rest of the traversal steps after it using a recursive
+				// call to this function.
+				p.Read() // consume star
+				close := p.Read()
 				if close.Type != TokenCBrack && !p.recovery {
 					diags = append(diags, &hcl.Diagnostic{
 						Severity: hcl.DiagError,
-						Summary:  "Missing close bracket on index",
-						Detail:   "The index operator must end with a closing bracket (\"]\").",
+						Summary:  "Missing close bracket on splat index",
+						Detail:   "The star for a full splat operator must be immediately followed by a closing bracket (\"]\").",
 						Subject:  &close.Range,
 					})
 					close = p.recover(TokenCBrack)
 				}
-			}
-			p.PushIncludeNewlines(true)
-
-			if lit, isLit := keyExpr.(*LiteralValueExpr); isLit {
-				litKey, _ := lit.Value(nil)
-				rng := hcl.RangeBetween(open.Range, close.Range)
-				step := &hcl.TraverseIndex{
-					Key:      litKey,
-					SrcRange: rng,
+				// Splat expressions use a special "anonymous symbol"  as a
+				// placeholder in an expression to be evaluated once for each
+				// item in the source expression.
+				itemExpr := &AnonSymbolExpr{
+					SrcRange: hcl.RangeBetween(open.Range, close.Range),
 				}
-				ret = makeRelativeTraversal(ret, step, rng)
-			} else {
-				rng := hcl.RangeBetween(open.Range, close.Range)
-				ret = &IndexExpr{
-					Collection: ret,
-					Key:        keyExpr,
+				// Now we'll recursively call this same function to eat any
+				// remaining traversal steps against the anonymous symbol.
+				travExpr, nestedDiags := p.parseExpressionTraversals(itemExpr)
+				diags = append(diags, nestedDiags...)
 
-					SrcRange:  rng,
-					OpenRange: open.Range,
+				ret = &SplatExpr{
+					Source: ret,
+					Each:   travExpr,
+					Item:   itemExpr,
+
+					SrcRange:    hcl.RangeBetween(open.Range, travExpr.Range()),
+					MarkerRange: hcl.RangeBetween(open.Range, close.Range),
+				}
+
+			default:
+
+				var close Token
+				p.PushIncludeNewlines(false) // arbitrary newlines allowed in brackets
+				keyExpr, keyDiags := p.ParseExpression()
+				diags = append(diags, keyDiags...)
+				if p.recovery && keyDiags.HasErrors() {
+					close = p.recover(TokenCBrack)
+				} else {
+					close = p.Read()
+					if close.Type != TokenCBrack && !p.recovery {
+						diags = append(diags, &hcl.Diagnostic{
+							Severity: hcl.DiagError,
+							Summary:  "Missing close bracket on index",
+							Detail:   "The index operator must end with a closing bracket (\"]\").",
+							Subject:  &close.Range,
+						})
+						close = p.recover(TokenCBrack)
+					}
+				}
+				p.PopIncludeNewlines()
+
+				if lit, isLit := keyExpr.(*LiteralValueExpr); isLit {
+					litKey, _ := lit.Value(nil)
+					rng := hcl.RangeBetween(open.Range, close.Range)
+					step := hcl.TraverseIndex{
+						Key:      litKey,
+						SrcRange: rng,
+					}
+					ret = makeRelativeTraversal(ret, step, rng)
+				} else {
+					rng := hcl.RangeBetween(open.Range, close.Range)
+					ret = &IndexExpr{
+						Collection: ret,
+						Key:        keyExpr,
+
+						SrcRange:  rng,
+						OpenRange: open.Range,
+					}
 				}
 			}
 
@@ -758,7 +969,7 @@ func (p *parser) parseExpressionTerm() (Expression, hcl.Diagnostics) {
 	case TokenOQuote, TokenOHeredoc:
 		open := p.Read() // eat opening marker
 		closer := p.oppositeBracket(open.Type)
-		exprs, passthru, _, diags := p.parseTemplateInner(closer)
+		exprs, passthru, _, diags := p.parseTemplateInner(closer, tokenOpensFlushHeredoc(open))
 
 		closeRange := p.PrevRange()
 
@@ -836,11 +1047,10 @@ func (p *parser) parseExpressionTerm() (Expression, hcl.Diagnostics) {
 }
 
 func (p *parser) numberLitValue(tok Token) (cty.Value, hcl.Diagnostics) {
-	// We'll lean on the cty converter to do the conversion, to ensure that
-	// the behavior is the same as what would happen if converting a
-	// non-literal string to a number.
-	numStrVal := cty.StringVal(string(tok.Bytes))
-	numVal, err := convert.Convert(numStrVal, cty.Number)
+	// The cty.ParseNumberVal is always the same behavior as converting a
+	// string to a number, ensuring we always interpret decimal numbers in
+	// the same way.
+	numVal, err := cty.ParseNumberVal(string(tok.Bytes))
 	if err != nil {
 		ret := cty.UnknownVal(cty.Number)
 		return ret, hcl.Diagnostics{
@@ -1032,12 +1242,18 @@ func (p *parser) parseObjectCons() (Expression, hcl.Diagnostics) {
 		panic("parseObjectCons called without peeker pointing to open brace")
 	}
 
-	p.PushIncludeNewlines(true)
-	defer p.PopIncludeNewlines()
-
-	if forKeyword.TokenMatches(p.Peek()) {
+	// We must temporarily stop looking at newlines here while we check for
+	// a "for" keyword, since for expressions are _not_ newline-sensitive,
+	// even though object constructors are.
+	p.PushIncludeNewlines(false)
+	isFor := forKeyword.TokenMatches(p.Peek())
+	p.PopIncludeNewlines()
+	if isFor {
 		return p.finishParsingForExpr(open)
 	}
+
+	p.PushIncludeNewlines(true)
+	defer p.PopIncludeNewlines()
 
 	var close Token
 
@@ -1056,23 +1272,9 @@ func (p *parser) parseObjectCons() (Expression, hcl.Diagnostics) {
 			break
 		}
 
-		// As a special case, we allow the key to be a literal identifier.
-		// This means that a variable reference or function call can't appear
-		// directly as key expression, and must instead be wrapped in some
-		// disambiguation punctuation, like (var.a) = "b" or "${var.a}" = "b".
 		var key Expression
 		var keyDiags hcl.Diagnostics
-		if p.Peek().Type == TokenIdent {
-			nameTok := p.Read()
-			key = &LiteralValueExpr{
-				Val: cty.StringVal(string(nameTok.Bytes)),
-
-				SrcRange: nameTok.Range,
-			}
-		} else {
-			key, keyDiags = p.ParseExpression()
-		}
-
+		key, keyDiags = p.ParseExpression()
 		diags = append(diags, keyDiags...)
 
 		if p.recovery && keyDiags.HasErrors() {
@@ -1083,22 +1285,44 @@ func (p *parser) parseObjectCons() (Expression, hcl.Diagnostics) {
 			break
 		}
 
+		// We wrap up the key expression in a special wrapper that deals
+		// with our special case that naked identifiers as object keys
+		// are interpreted as literal strings.
+		key = &ObjectConsKeyExpr{Wrapped: key}
+
 		next = p.Peek()
 		if next.Type != TokenEqual && next.Type != TokenColon {
 			if !p.recovery {
-				if next.Type == TokenNewline || next.Type == TokenComma {
+				switch next.Type {
+				case TokenNewline, TokenComma:
 					diags = append(diags, &hcl.Diagnostic{
 						Severity: hcl.DiagError,
-						Summary:  "Missing item value",
-						Detail:   "Expected an item value, introduced by an equals sign (\"=\").",
+						Summary:  "Missing attribute value",
+						Detail:   "Expected an attribute value, introduced by an equals sign (\"=\").",
 						Subject:  &next.Range,
 						Context:  hcl.RangeBetween(open.Range, next.Range).Ptr(),
 					})
-				} else {
+				case TokenIdent:
+					// Although this might just be a plain old missing equals
+					// sign before a reference, one way to get here is to try
+					// to write an attribute name containing a period followed
+					// by a digit, which was valid in HCL1, like this:
+					//     foo1.2_bar = "baz"
+					// We can't know exactly what the user intended here, but
+					// we'll augment our message with an extra hint in this case
+					// in case it is helpful.
 					diags = append(diags, &hcl.Diagnostic{
 						Severity: hcl.DiagError,
 						Summary:  "Missing key/value separator",
-						Detail:   "Expected an equals sign (\"=\") to mark the beginning of the item value.",
+						Detail:   "Expected an equals sign (\"=\") to mark the beginning of the attribute value. If you intended to given an attribute name containing periods or spaces, write the name in quotes to create a string literal.",
+						Subject:  &next.Range,
+						Context:  hcl.RangeBetween(open.Range, next.Range).Ptr(),
+					})
+				default:
+					diags = append(diags, &hcl.Diagnostic{
+						Severity: hcl.DiagError,
+						Summary:  "Missing key/value separator",
+						Detail:   "Expected an equals sign (\"=\") to mark the beginning of the attribute value.",
 						Subject:  &next.Range,
 						Context:  hcl.RangeBetween(open.Range, next.Range).Ptr(),
 					})
@@ -1136,8 +1360,8 @@ func (p *parser) parseObjectCons() (Expression, hcl.Diagnostics) {
 			if !p.recovery {
 				diags = append(diags, &hcl.Diagnostic{
 					Severity: hcl.DiagError,
-					Summary:  "Missing item separator",
-					Detail:   "Expected a newline or comma to mark the beginning of the next item.",
+					Summary:  "Missing attribute separator",
+					Detail:   "Expected a newline or comma to mark the beginning of the next attribute.",
 					Subject:  &next.Range,
 					Context:  hcl.RangeBetween(open.Range, next.Range).Ptr(),
 				})
@@ -1159,6 +1383,8 @@ func (p *parser) parseObjectCons() (Expression, hcl.Diagnostics) {
 }
 
 func (p *parser) finishParsingForExpr(open Token) (Expression, hcl.Diagnostics) {
+	p.PushIncludeNewlines(false)
+	defer p.PopIncludeNewlines()
 	introducer := p.Read()
 	if !forKeyword.TokenMatches(introducer) {
 		// Should never happen if callers are behaving
@@ -1231,7 +1457,7 @@ func (p *parser) finishParsingForExpr(open Token) (Expression, hcl.Diagnostics) 
 			diags = append(diags, &hcl.Diagnostic{
 				Severity: hcl.DiagError,
 				Summary:  "Invalid 'for' expression",
-				Detail:   "For expression requires 'in' keyword after names.",
+				Detail:   "For expression requires the 'in' keyword after its name declarations.",
 				Subject:  p.Peek().Range.Ptr(),
 				Context:  hcl.RangeBetween(open.Range, p.Peek().Range).Ptr(),
 			})
@@ -1259,7 +1485,7 @@ func (p *parser) finishParsingForExpr(open Token) (Expression, hcl.Diagnostics) 
 			diags = append(diags, &hcl.Diagnostic{
 				Severity: hcl.DiagError,
 				Summary:  "Invalid 'for' expression",
-				Detail:   "For expression requires colon after collection expression.",
+				Detail:   "For expression requires a colon after the collection expression.",
 				Subject:  p.Peek().Range.Ptr(),
 				Context:  hcl.RangeBetween(open.Range, p.Peek().Range).Ptr(),
 			})
@@ -1413,7 +1639,7 @@ Token:
 		case TokenTemplateControl, TokenTemplateInterp:
 			which := "$"
 			if tok.Type == TokenTemplateControl {
-				which = "!"
+				which = "%"
 			}
 
 			diags = append(diags, &hcl.Diagnostic{
@@ -1426,7 +1652,16 @@ Token:
 				Subject: &tok.Range,
 				Context: hcl.RangeBetween(oQuote.Range, tok.Range).Ptr(),
 			})
-			p.recover(TokenTemplateSeqEnd)
+
+			// Now that we're returning an error callers won't attempt to use
+			// the result for any real operations, but they might try to use
+			// the partial AST for other analyses, so we'll leave a marker
+			// to indicate that there was something invalid in the string to
+			// help avoid misinterpretation of the partial result
+			ret.WriteString(which)
+			ret.WriteString("{ ... }")
+
+			p.recover(TokenTemplateSeqEnd) // we'll try to keep parsing after the sequence ends
 
 		case TokenEOF:
 			diags = append(diags, &hcl.Diagnostic{
@@ -1447,7 +1682,7 @@ Token:
 				Subject:  &tok.Range,
 				Context:  hcl.RangeBetween(oQuote.Range, tok.Range).Ptr(),
 			})
-			p.recover(TokenOQuote)
+			p.recover(TokenCQuote)
 			break Token
 
 		}
@@ -1476,139 +1711,149 @@ func (p *parser) decodeStringLit(tok Token) (string, hcl.Diagnostics) {
 	var diags hcl.Diagnostics
 
 	ret := make([]byte, 0, len(tok.Bytes))
-	var esc []byte
+	slices := scanStringLit(tok.Bytes, quoted)
 
-	sc := bufio.NewScanner(bytes.NewReader(tok.Bytes))
-	sc.Split(textseg.ScanGraphemeClusters)
+	// We will mutate rng constantly as we walk through our token slices below.
+	// Any diagnostics must take a copy of this rng rather than simply pointing
+	// to it, e.g. by using rng.Ptr() rather than &rng.
+	rng := tok.Range
+	rng.End = rng.Start
 
-	pos := tok.Range.Start
-	newPos := pos
-Character:
-	for sc.Scan() {
-		pos = newPos
-		ch := sc.Bytes()
-
-		// Adjust position based on our new character.
-		// \r\n is considered to be a single character in text segmentation,
-		if (len(ch) == 1 && ch[0] == '\n') || (len(ch) == 2 && ch[1] == '\n') {
-			newPos.Line++
-			newPos.Column = 0
-		} else {
-			newPos.Column++
+Slices:
+	for _, slice := range slices {
+		if len(slice) == 0 {
+			continue
 		}
-		newPos.Byte += len(ch)
 
-		if len(esc) > 0 {
-			switch esc[0] {
-			case '\\':
-				if len(ch) == 1 {
-					switch ch[0] {
+		// Advance the start of our range to where the previous token ended
+		rng.Start = rng.End
 
-					// TODO: numeric character escapes with \uXXXX
+		// Advance the end of our range to after our token.
+		b := slice
+		for len(b) > 0 {
+			adv, ch, _ := textseg.ScanGraphemeClusters(b, true)
+			rng.End.Byte += adv
+			switch ch[0] {
+			case '\r', '\n':
+				rng.End.Line++
+				rng.End.Column = 1
+			default:
+				rng.End.Column++
+			}
+			b = b[adv:]
+		}
 
-					case 'n':
-						ret = append(ret, '\n')
-						esc = esc[:0]
-						continue Character
-					case 'r':
-						ret = append(ret, '\r')
-						esc = esc[:0]
-						continue Character
-					case 't':
-						ret = append(ret, '\t')
-						esc = esc[:0]
-						continue Character
-					case '"':
-						ret = append(ret, '"')
-						esc = esc[:0]
-						continue Character
-					case '\\':
-						ret = append(ret, '\\')
-						esc = esc[:0]
-						continue Character
-					}
-				}
-
-				var detail string
-				switch {
-				case len(ch) == 1 && (ch[0] == '$' || ch[0] == '!'):
-					detail = fmt.Sprintf(
-						"The characters \"\\%s\" do not form a recognized escape sequence. To escape a \"%s{\" template sequence, use \"%s%s{\".",
-						ch, ch, ch, ch,
-					)
-				default:
-					detail = fmt.Sprintf("The characters \"\\%s\" do not form a recognized escape sequence.", ch)
-				}
-
+	TokenType:
+		switch slice[0] {
+		case '\\':
+			if !quoted {
+				// If we're not in quoted mode then just treat this token as
+				// normal. (Slices can still start with backslash even if we're
+				// not specifically looking for backslash sequences.)
+				break TokenType
+			}
+			if len(slice) < 2 {
 				diags = append(diags, &hcl.Diagnostic{
 					Severity: hcl.DiagError,
 					Summary:  "Invalid escape sequence",
-					Detail:   detail,
-					Subject: &hcl.Range{
-						Filename: tok.Range.Filename,
-						Start: hcl.Pos{
-							Line:   pos.Line,
-							Column: pos.Column - 1, // safe because we know the previous character must be a backslash
-							Byte:   pos.Byte - 1,
-						},
-						End: hcl.Pos{
-							Line:   pos.Line,
-							Column: pos.Column + 1, // safe because we know the previous character must be a backslash
-							Byte:   pos.Byte + len(ch),
-						},
-					},
+					Detail:   "Backslash must be followed by an escape sequence selector character.",
+					Subject:  rng.Ptr(),
 				})
-				ret = append(ret, ch...)
-				esc = esc[:0]
-				continue Character
+				break TokenType
+			}
 
-			case '$', '!':
-				switch len(esc) {
-				case 1:
-					if len(ch) == 1 && ch[0] == esc[0] {
-						esc = append(esc, ch[0])
-						continue Character
-					}
+			switch slice[1] {
 
-					// Any other character means this wasn't an escape sequence
-					// after all.
-					ret = append(ret, esc...)
-					ret = append(ret, ch...)
-					esc = esc[:0]
-				case 2:
-					if len(ch) == 1 && ch[0] == '{' {
-						// successful escape sequence
-						ret = append(ret, esc[0])
-					} else {
-						// not an escape sequence, so just output literal
-						ret = append(ret, esc...)
-					}
-					ret = append(ret, ch...)
-					esc = esc[:0]
-				default:
-					// should never happen
-					panic("have invalid escape sequence >2 characters")
+			case 'n':
+				ret = append(ret, '\n')
+				continue Slices
+			case 'r':
+				ret = append(ret, '\r')
+				continue Slices
+			case 't':
+				ret = append(ret, '\t')
+				continue Slices
+			case '"':
+				ret = append(ret, '"')
+				continue Slices
+			case '\\':
+				ret = append(ret, '\\')
+				continue Slices
+			case 'u', 'U':
+				if slice[1] == 'u' && len(slice) != 6 {
+					diags = append(diags, &hcl.Diagnostic{
+						Severity: hcl.DiagError,
+						Summary:  "Invalid escape sequence",
+						Detail:   "The \\u escape sequence must be followed by four hexadecimal digits.",
+						Subject:  rng.Ptr(),
+					})
+					break TokenType
+				} else if slice[1] == 'U' && len(slice) != 10 {
+					diags = append(diags, &hcl.Diagnostic{
+						Severity: hcl.DiagError,
+						Summary:  "Invalid escape sequence",
+						Detail:   "The \\U escape sequence must be followed by eight hexadecimal digits.",
+						Subject:  rng.Ptr(),
+					})
+					break TokenType
 				}
 
-			}
-		} else {
-			if len(ch) == 1 {
-				switch ch[0] {
-				case '\\':
-					if quoted { // ignore backslashes in unquoted mode
-						esc = append(esc, '\\')
-						continue Character
-					}
-				case '$':
-					esc = append(esc, '$')
-					continue Character
-				case '!':
-					esc = append(esc, '!')
-					continue Character
+				numHex := string(slice[2:])
+				num, err := strconv.ParseUint(numHex, 16, 32)
+				if err != nil {
+					// Should never happen because the scanner won't match
+					// a sequence of digits that isn't valid.
+					panic(err)
 				}
+
+				r := rune(num)
+				l := utf8.RuneLen(r)
+				if l == -1 {
+					diags = append(diags, &hcl.Diagnostic{
+						Severity: hcl.DiagError,
+						Summary:  "Invalid escape sequence",
+						Detail:   fmt.Sprintf("Cannot encode character U+%04x in UTF-8.", num),
+						Subject:  rng.Ptr(),
+					})
+					break TokenType
+				}
+				for i := 0; i < l; i++ {
+					ret = append(ret, 0)
+				}
+				rb := ret[len(ret)-l:]
+				utf8.EncodeRune(rb, r)
+
+				continue Slices
+
+			default:
+				diags = append(diags, &hcl.Diagnostic{
+					Severity: hcl.DiagError,
+					Summary:  "Invalid escape sequence",
+					Detail:   fmt.Sprintf("The symbol %q is not a valid escape sequence selector.", slice[1:]),
+					Subject:  rng.Ptr(),
+				})
+				ret = append(ret, slice[1:]...)
+				continue Slices
 			}
-			ret = append(ret, ch...)
+
+		case '$', '%':
+			if len(slice) != 3 {
+				// Not long enough to be our escape sequence, so it's literal.
+				break TokenType
+			}
+
+			if slice[1] == slice[0] && slice[2] == '{' {
+				ret = append(ret, slice[0])
+				ret = append(ret, '{')
+				continue Slices
+			}
+
+			break TokenType
 		}
+
+		// If we fall out here or break out of here from the switch above
+		// then this slice is just a literal.
+		ret = append(ret, slice...)
 	}
 
 	return string(ret), diags

@@ -25,10 +25,6 @@ func TestAccAWSElasticBeanstalkSolutionStackDataSource(t *testing.T) {
 	})
 }
 
-func testAccCheckAwsElasticBeanstalkSolutionStackDataSourceDestroy(s *terraform.State) error {
-	return nil
-}
-
 func testAccCheckAwsElasticBeanstalkSolutionStackDataSourceID(n string) resource.TestCheckFunc {
 	// Wait for solution stacks
 	return func(s *terraform.State) error {

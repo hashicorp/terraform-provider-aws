@@ -6,7 +6,7 @@ description: |-
   Provides an security group rule resource.
 ---
 
-# aws_security_group_rule
+# Resource: aws_security_group_rule
 
 Provides a security group rule resource. Represents a single `ingress` or
 `egress` group rule, which can be added to external Security Groups.
@@ -20,6 +20,8 @@ a conflict of rule settings and will overwrite rules.
 
 ~> **NOTE:** Setting `protocol = "all"` or `protocol = -1` with `from_port` and `to_port` will result in the EC2 API creating a security group rule with all ports open. This API behavior cannot be controlled by Terraform and may generate warnings in the future.
 
+~> **NOTE:** Referencing Security Groups across VPC peering has certain restrictions. More information is available in the [VPC Peering User Guide](https://docs.aws.amazon.com/vpc/latest/peering/vpc-peering-security-groups.html).
+
 ## Example Usage
 
 Basic usage
@@ -30,7 +32,8 @@ resource "aws_security_group_rule" "allow_all" {
   from_port       = 0
   to_port         = 65535
   protocol        = "tcp"
-  cidr_blocks     = ["0.0.0.0/0"]
+  # Opening to 0.0.0.0/0 can lead to security vulnerabilities.
+  cidr_blocks = # add a CIDR block here
   prefix_list_ids = ["pl-12c4e678"]
 
   security_group_id = "sg-123456"

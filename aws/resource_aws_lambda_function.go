@@ -10,7 +10,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/lambda"
-	"github.com/mitchellh/go-homedir"
+	homedir "github.com/mitchellh/go-homedir"
 
 	"errors"
 
@@ -21,12 +21,33 @@ import (
 
 const awsMutexLambdaKey = `aws_lambda_function`
 
+var validLambdaRuntimes = []string{
+	// lambda.RuntimeNodejs has reached end of life since October 2016 so not included here
+	lambda.RuntimeDotnetcore10,
+	lambda.RuntimeDotnetcore20,
+	lambda.RuntimeDotnetcore21,
+	lambda.RuntimeGo1X,
+	lambda.RuntimeJava8,
+	lambda.RuntimeNodejs43,
+	lambda.RuntimeNodejs43Edge,
+	lambda.RuntimeNodejs610,
+	lambda.RuntimeNodejs810,
+	lambda.RuntimeProvided,
+	lambda.RuntimePython27,
+	lambda.RuntimePython36,
+	lambda.RuntimePython37,
+	lambda.RuntimeRuby25,
+}
+
 func resourceAwsLambdaFunction() *schema.Resource {
 	return &schema.Resource{
 		Create: resourceAwsLambdaFunctionCreate,
 		Read:   resourceAwsLambdaFunctionRead,
 		Update: resourceAwsLambdaFunctionUpdate,
 		Delete: resourceAwsLambdaFunctionDelete,
+		Timeouts: &schema.ResourceTimeout{
+			Create: schema.DefaultTimeout(10 * time.Minute),
+		},
 
 		Importer: &schema.ResourceImporter{
 			State: func(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
@@ -84,36 +105,34 @@ func resourceAwsLambdaFunction() *schema.Resource {
 				Type:     schema.TypeString,
 				Required: true,
 			},
+			"layers": {
+				Type:     schema.TypeList,
+				Optional: true,
+				MaxItems: 5,
+				Elem: &schema.Schema{
+					Type:         schema.TypeString,
+					ValidateFunc: validateArn,
+				},
+			},
 			"memory_size": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Default:  128,
 			},
 			"reserved_concurrent_executions": {
-				Type:     schema.TypeInt,
-				Optional: true,
+				Type:         schema.TypeInt,
+				Optional:     true,
+				Default:      -1,
+				ValidateFunc: validation.IntAtLeast(-1),
 			},
 			"role": {
 				Type:     schema.TypeString,
 				Required: true,
 			},
 			"runtime": {
-				Type:     schema.TypeString,
-				Required: true,
-				ValidateFunc: validation.StringInSlice([]string{
-					// lambda.RuntimeNodejs has reached end of life since October 2016 so not included here
-					lambda.RuntimeDotnetcore10,
-					lambda.RuntimeDotnetcore20,
-					lambda.RuntimeDotnetcore21,
-					lambda.RuntimeGo1X,
-					lambda.RuntimeJava8,
-					lambda.RuntimeNodejs43,
-					lambda.RuntimeNodejs43Edge,
-					lambda.RuntimeNodejs610,
-					lambda.RuntimeNodejs810,
-					lambda.RuntimePython27,
-					lambda.RuntimePython36,
-				}, false),
+				Type:         schema.TypeString,
+				Required:     true,
+				ValidateFunc: validation.StringInSlice(validLambdaRuntimes, false),
 			},
 			"timeout": {
 				Type:     schema.TypeInt,
@@ -309,6 +328,10 @@ func resourceAwsLambdaFunctionCreate(d *schema.ResourceData, meta interface{}) e
 		Publish:      aws.Bool(d.Get("publish").(bool)),
 	}
 
+	if v, ok := d.GetOk("layers"); ok && len(v.([]interface{})) > 0 {
+		params.Layers = expandStringList(v.([]interface{}))
+	}
+
 	if v, ok := d.GetOk("dead_letter_config"); ok {
 		dlcMaps := v.([]interface{})
 		if len(dlcMaps) == 1 { // Schema guarantees either 0 or 1
@@ -392,11 +415,11 @@ func resourceAwsLambdaFunctionCreate(d *schema.ResourceData, meta interface{}) e
 		return nil
 	})
 	if err != nil {
-		if !isAWSErr(err, "InvalidParameterValueException", "Your request has been throttled by EC2") {
+		if !isResourceTimeoutError(err) && !isAWSErr(err, "InvalidParameterValueException", "Your request has been throttled by EC2") {
 			return fmt.Errorf("Error creating Lambda function: %s", err)
 		}
-		// Allow 9 more minutes for EC2 throttling
-		err := resource.Retry(9*time.Minute, func() *resource.RetryError {
+		// Allow additional time for slower uploads or EC2 throttling
+		err := resource.Retry(d.Timeout(schema.TimeoutCreate), func() *resource.RetryError {
 			_, err := conn.CreateFunction(params)
 			if err != nil {
 				log.Printf("[DEBUG] Error creating Lambda Function: %s", err)
@@ -417,7 +440,7 @@ func resourceAwsLambdaFunctionCreate(d *schema.ResourceData, meta interface{}) e
 
 	d.SetId(d.Get("function_name").(string))
 
-	if reservedConcurrentExecutions > 0 {
+	if reservedConcurrentExecutions >= 0 {
 
 		log.Printf("[DEBUG] Setting Concurrency to %d for the Lambda Function %s", reservedConcurrentExecutions, functionName)
 
@@ -474,7 +497,7 @@ func resourceAwsLambdaFunctionRead(d *schema.ResourceData, meta interface{}) err
 	if getFunctionOutput.Concurrency != nil {
 		d.Set("reserved_concurrent_executions", getFunctionOutput.Concurrency.ReservedConcurrentExecutions)
 	} else {
-		d.Set("reserved_concurrent_executions", nil)
+		d.Set("reserved_concurrent_executions", -1)
 	}
 
 	// Tagging operations are permitted on Lambda functions only.
@@ -501,6 +524,12 @@ func resourceAwsLambdaFunctionRead(d *schema.ResourceData, meta interface{}) err
 	d.Set("kms_key_arn", function.KMSKeyArn)
 	d.Set("source_code_hash", function.CodeSha256)
 	d.Set("source_code_size", function.CodeSize)
+
+	layers := flattenLambdaLayers(function.Layers)
+	log.Printf("[INFO] Setting Lambda %s Layers %#v from API", d.Id(), layers)
+	if err := d.Set("layers", layers); err != nil {
+		return fmt.Errorf("Error setting layers for Lambda Function (%s): %s", d.Id(), err)
+	}
 
 	config := flattenLambdaVpcConfigResponse(function.VpcConfig)
 	log.Printf("[INFO] Setting Lambda %s VPC config %#v from API", d.Id(), config)
@@ -540,6 +569,7 @@ func resourceAwsLambdaFunctionRead(d *schema.ResourceData, meta interface{}) err
 		d.Set("version", function.Version)
 		d.Set("qualified_arn", function.FunctionArn)
 	} else {
+
 		// List is sorted from oldest to latest
 		// so this may get costly over time :'(
 		var lastVersion, lastQualifiedArn string
@@ -563,13 +593,7 @@ func resourceAwsLambdaFunctionRead(d *schema.ResourceData, meta interface{}) err
 		d.Set("qualified_arn", lastQualifiedArn)
 	}
 
-	invokeArn := arn.ARN{
-		Partition: meta.(*AWSClient).partition,
-		Service:   "apigateway",
-		Region:    meta.(*AWSClient).region,
-		AccountID: "lambda",
-		Resource:  fmt.Sprintf("path/2015-03-31/functions/%s/invocations", *function.FunctionArn),
-	}.String()
+	invokeArn := lambdaFunctionInvokeArn(*function.FunctionArn, meta)
 	d.Set("invoke_arn", invokeArn)
 
 	return nil
@@ -660,6 +684,11 @@ func resourceAwsLambdaFunctionUpdate(d *schema.ResourceData, meta interface{}) e
 	}
 	if d.HasChange("kms_key_arn") {
 		configReq.KMSKeyArn = aws.String(d.Get("kms_key_arn").(string))
+		configUpdate = true
+	}
+	if d.HasChange("layers") {
+		layers := d.Get("layers").([]interface{})
+		configReq.Layers = expandStringList(layers)
 		configUpdate = true
 	}
 	if d.HasChange("dead_letter_config") {
@@ -830,7 +859,7 @@ func resourceAwsLambdaFunctionUpdate(d *schema.ResourceData, meta interface{}) e
 	if d.HasChange("reserved_concurrent_executions") {
 		nc := d.Get("reserved_concurrent_executions")
 
-		if nc.(int) > 0 {
+		if nc.(int) >= 0 {
 			log.Printf("[DEBUG] Updating Concurrency to %d for the Lambda Function %s", nc.(int), d.Id())
 
 			concurrencyParams := &lambda.PutFunctionConcurrencyInput{
@@ -880,4 +909,14 @@ func readEnvironmentVariables(ev map[string]interface{}) map[string]string {
 	}
 
 	return variables
+}
+
+func lambdaFunctionInvokeArn(functionArn string, meta interface{}) string {
+	return arn.ARN{
+		Partition: meta.(*AWSClient).partition,
+		Service:   "apigateway",
+		Region:    meta.(*AWSClient).region,
+		AccountID: "lambda",
+		Resource:  fmt.Sprintf("path/2015-03-31/functions/%s/invocations", functionArn),
+	}.String()
 }

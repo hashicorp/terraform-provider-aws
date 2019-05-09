@@ -172,6 +172,45 @@ func TestAccAwsDmsEndpointMongoDb(t *testing.T) {
 	})
 }
 
+func TestAccAwsDmsEndpointDocDB(t *testing.T) {
+	resourceName := "aws_dms_endpoint.dms_endpoint"
+	randId := acctest.RandString(8) + "-docdb"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: dmsEndpointDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: dmsEndpointDocDBConfig(randId),
+				Check: resource.ComposeTestCheckFunc(
+					checkDmsEndpointExists(resourceName),
+					resource.TestCheckResourceAttrSet(resourceName, "endpoint_arn"),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"password"},
+			},
+			{
+				Config: dmsEndpointDocDBConfigUpdate(randId),
+				Check: resource.ComposeTestCheckFunc(
+					checkDmsEndpointExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "database_name", "tf-test-dms-db-updated"),
+					resource.TestCheckResourceAttr(resourceName, "extra_connection_attributes", "extra"),
+					resource.TestCheckResourceAttr(resourceName, "password", "tftestupdate"),
+					resource.TestCheckResourceAttr(resourceName, "port", "27019"),
+					resource.TestCheckResourceAttr(resourceName, "ssl_mode", "none"),
+					resource.TestCheckResourceAttr(resourceName, "server_name", "tftestupdate"),
+					resource.TestCheckResourceAttr(resourceName, "username", "tftestupdate"),
+				),
+			},
+		},
+	})
+}
+
 func dmsEndpointDestroy(s *terraform.State) error {
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_dms_endpoint" {
@@ -232,7 +271,7 @@ resource "aws_dms_endpoint" "dms_endpoint" {
 	port = 3306
 	server_name = "tftest"
 	ssl_mode = "none"
-	tags {
+	tags = {
 		Name = "tf-test-dms-endpoint-%[1]s"
 		Update = "to-update"
 		Remove = "to-remove"
@@ -254,7 +293,7 @@ resource "aws_dms_endpoint" "dms_endpoint" {
 	port = 3303
 	server_name = "tftestupdate"
 	ssl_mode = "none"
-	tags {
+	tags = {
 		Name = "tf-test-dms-endpoint-%[1]s"
 		Update = "updated"
 		Add = "added"
@@ -272,7 +311,7 @@ resource "aws_dms_endpoint" "dms_endpoint" {
 	engine_name = "dynamodb"
 	service_access_role = "${aws_iam_role.iam_role.arn}"
 	ssl_mode = "none"
-	tags {
+	tags = {
 		Name = "tf-test-dynamodb-endpoint-%[1]s"
 		Update = "to-update"
 		Remove = "to-remove"
@@ -335,7 +374,7 @@ resource "aws_dms_endpoint" "dms_endpoint" {
 	engine_name = "dynamodb"
 	service_access_role = "${aws_iam_role.iam_role.arn}"
 	ssl_mode = "none"
-	tags {
+	tags = {
 		Name = "tf-test-dynamodb-endpoint-%[1]s"
 		Update = "updated"
 		Add = "added"
@@ -396,7 +435,7 @@ resource "aws_dms_endpoint" "dms_endpoint" {
 	engine_name = "s3"
 	ssl_mode = "none"
 	extra_connection_attributes = ""
-	tags {
+	tags = {
 		Name = "tf-test-s3-endpoint-%[1]s"
 		Update = "to-update"
 		Remove = "to-remove"
@@ -468,7 +507,7 @@ resource "aws_dms_endpoint" "dms_endpoint" {
 	engine_name = "s3"
 	ssl_mode = "none"
 	extra_connection_attributes = "key=value;"
-	tags {
+	tags = {
 		Name = "tf-test-s3-endpoint-%[1]s"
 		Update = "updated"
 		Add = "added"
@@ -553,7 +592,7 @@ resource "aws_dms_endpoint" "dms_endpoint" {
 	ssl_mode = "none"
 	extra_connection_attributes = ""
 	kms_key_arn = "${data.aws_kms_alias.dms.target_key_arn}"
-	tags {
+	tags = {
 		Name = "tf-test-dms-endpoint-%[1]s"
 		Update = "to-update"
 		Remove = "to-remove"
@@ -588,7 +627,7 @@ resource "aws_dms_endpoint" "dms_endpoint" {
 	ssl_mode = "require"
 	extra_connection_attributes = "key=value;"
 	kms_key_arn = "${data.aws_kms_alias.dms.target_key_arn}"
-	tags {
+	tags = {
 		Name = "tf-test-dms-endpoint-%[1]s"
 		Update = "updated"
 		Add = "added"
@@ -599,6 +638,50 @@ resource "aws_dms_endpoint" "dms_endpoint" {
 		extract_doc_id = "true"
 		docs_to_investigate = "1001"
 	}
+}
+`, randId)
+}
+
+func dmsEndpointDocDBConfig(randId string) string {
+	return fmt.Sprintf(`
+resource "aws_dms_endpoint" "dms_endpoint" {
+	database_name = "tf-test-dms-db"
+	endpoint_id = "tf-test-dms-endpoint-%[1]s"
+	endpoint_type = "target"
+	engine_name = "docdb"
+	extra_connection_attributes = ""
+	password = "tftest"
+	port = 27017
+	server_name = "tftest"
+	ssl_mode = "none"
+	tags = {
+		Name = "tf-test-dms-endpoint-%[1]s"
+		Update = "to-update"
+		Remove = "to-remove"
+	}
+	username = "tftest"
+}
+`, randId)
+}
+
+func dmsEndpointDocDBConfigUpdate(randId string) string {
+	return fmt.Sprintf(`
+resource "aws_dms_endpoint" "dms_endpoint" {
+	database_name = "tf-test-dms-db-updated"
+	endpoint_id = "tf-test-dms-endpoint-%[1]s"
+	endpoint_type = "target"
+	engine_name = "docdb"
+	extra_connection_attributes = "extra"
+	password = "tftestupdate"
+	port = 27019
+	server_name = "tftestupdate"
+	ssl_mode = "none"
+	tags = {
+		Name = "tf-test-dms-endpoint-%[1]s"
+		Update = "updated"
+		Add = "added"
+	}
+	username = "tftestupdate"
 }
 `, randId)
 }

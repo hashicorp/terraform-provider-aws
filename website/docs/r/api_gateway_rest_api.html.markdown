@@ -6,7 +6,7 @@ description: |-
   Provides an API Gateway REST API.
 ---
 
-# aws_api_gateway_rest_api
+# Resource: aws_api_gateway_rest_api
 
 Provides an API Gateway REST API.
 
@@ -25,7 +25,7 @@ resource "aws_api_gateway_rest_api" "MyDemoAPI" {
 
 ```hcl
 resource "aws_api_gateway_rest_api" "example" {
-  name        = "regional-example"
+  name = "regional-example"
 
   endpoint_configuration {
     types = ["REGIONAL"]

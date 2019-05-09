@@ -6,7 +6,7 @@ description: |-
   Provides an EC2 Container Registry Repository.
 ---
 
-# aws_ecr_repository
+# Resource: aws_ecr_repository
 
 Provides an EC2 Container Registry Repository.
 
@@ -27,6 +27,7 @@ resource "aws_ecr_repository" "foo" {
 The following arguments are supported:
 
 * `name` - (Required) Name of the repository.
+* `tags` - (Optional) A mapping of tags to assign to the resource.
 
 ## Attributes Reference
 

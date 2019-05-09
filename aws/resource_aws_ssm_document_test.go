@@ -27,7 +27,9 @@ func TestAccAWSSSMDocument_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("aws_ssm_document.foo", "document_format", "JSON"),
 					resource.TestMatchResourceAttr("aws_ssm_document.foo", "arn",
 						regexp.MustCompile(`^arn:aws:ssm:[a-z]{2}-[a-z]+-\d{1}:\d{12}:document/.*$`)),
-					resource.TestCheckResourceAttr("aws_ssm_document.foo", "tags.%", "0"),
+					resource.TestCheckResourceAttr("aws_ssm_document.foo", "tags.%", "1"),
+					resource.TestCheckResourceAttr(
+						"aws_ssm_document.foo", "tags.Name", "My Document"),
 				),
 			},
 		},
@@ -91,6 +93,26 @@ func TestAccAWSSSMDocument_permission_public(t *testing.T) {
 func TestAccAWSSSMDocument_permission_private(t *testing.T) {
 	name := acctest.RandString(10)
 	ids := "123456789012"
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSSSMDocumentDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSSSMDocumentPrivatePermissionConfig(name, ids),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSSSMDocumentExists("aws_ssm_document.foo"),
+					resource.TestCheckResourceAttr(
+						"aws_ssm_document.foo", "permissions.type", "Share"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAWSSSMDocument_permission_batching(t *testing.T) {
+	name := acctest.RandString(10)
+	ids := "123456789012,123456789013,123456789014,123456789015,123456789016,123456789017,123456789018,123456789019,123456789020,123456789021,123456789022,123456789023,123456789024,123456789025,123456789026,123456789027,123456789028,123456789029,123456789030,123456789031,123456789032"
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
@@ -319,11 +341,8 @@ func testAccCheckAWSSSMDocumentExists(n string) resource.TestCheckFunc {
 		_, err := conn.DescribeDocument(&ssm.DescribeDocumentInput{
 			Name: aws.String(rs.Primary.ID),
 		})
-		if err != nil {
-			return err
-		}
 
-		return nil
+		return err
 	}
 }
 
@@ -365,14 +384,16 @@ func testAccAWSSSMDocumentBasicConfig(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_ssm_document" "foo" {
   name = "test_document-%s"
-	document_type = "Command"
+  document_type = "Command"
+  tags = {
+    Name = "My Document"
+  }
 
   content = <<DOC
     {
       "schemaVersion": "1.2",
       "description": "Check ip configuration of a Linux instance.",
       "parameters": {
-
       },
       "runtimeConfig": {
         "aws:runShellScript": {
@@ -572,6 +593,8 @@ func testAccAWSSSMDocumentTypeAutomationConfig(rName string) string {
 	return fmt.Sprintf(`
 data "aws_ami" "ssm_ami" {
 	most_recent = true
+	owners      = ["099720109477"] # Canonical
+
 	filter {
 		name = "name"
 		values = ["*hvm-ssd/ubuntu-trusty-14.04*"]
@@ -580,7 +603,7 @@ data "aws_ami" "ssm_ami" {
 
 resource "aws_iam_instance_profile" "ssm_profile" {
   name = "ssm_profile-%s"
-  roles = ["${aws_iam_role.ssm_role.name}"]
+  role = "${aws_iam_role.ssm_role.name}"
 }
 
 resource "aws_iam_role" "ssm_role" {
@@ -721,7 +744,7 @@ resource "aws_ssm_document" "foo" {
     }
 DOC
 
-  tags {
+  tags = {
     %s = %q
   }
 }
@@ -754,7 +777,7 @@ resource "aws_ssm_document" "foo" {
     }
 DOC
 
-  tags {
+  tags = {
     %s = %q
     %s = %q
   }

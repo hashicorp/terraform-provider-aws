@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"log"
 	"regexp"
-	"strings"
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -51,10 +50,6 @@ func testSweepCognitoUserPools(region string) error {
 
 		for _, userPool := range output.UserPools {
 			name := aws.StringValue(userPool.Name)
-
-			if !strings.HasPrefix(name, "tf_acc_") {
-				continue
-			}
 
 			log.Printf("[INFO] Deleting Cognito User Pool %s", name)
 			_, err := conn.DeleteUserPool(&cognitoidentityprovider.DeleteUserPoolInput{
@@ -108,9 +103,9 @@ func TestAccAWSCognitoUserPool_basic(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAWSCognitoUserPoolExists("aws_cognito_user_pool.pool"),
 					resource.TestMatchResourceAttr("aws_cognito_user_pool.pool", "arn",
-						regexp.MustCompile("^arn:aws:cognito-idp:[^:]+:[0-9]{12}:userpool/[\\w-]+_[0-9a-zA-Z]+$")),
+						regexp.MustCompile(`^arn:aws:cognito-idp:[^:]+:[0-9]{12}:userpool/[\w-]+_[0-9a-zA-Z]+$`)),
 					resource.TestMatchResourceAttr("aws_cognito_user_pool.pool", "endpoint",
-						regexp.MustCompile("^cognito-idp\\.[^.]+\\.amazonaws.com/[\\w-]+_[0-9a-zA-Z]+$")),
+						regexp.MustCompile(`^cognito-idp\.[^.]+\.amazonaws.com/[\w-]+_[0-9a-zA-Z]+$`)),
 					resource.TestCheckResourceAttr("aws_cognito_user_pool.pool", "name", "terraform-test-pool-"+name),
 					resource.TestCheckResourceAttrSet("aws_cognito_user_pool.pool", "creation_date"),
 					resource.TestCheckResourceAttrSet("aws_cognito_user_pool.pool", "last_modified_date"),
@@ -147,6 +142,37 @@ func TestAccAWSCognitoUserPool_withAdminCreateUserConfiguration(t *testing.T) {
 					resource.TestCheckResourceAttr("aws_cognito_user_pool.pool", "admin_create_user_config.0.invite_message_template.0.email_message", "Your username is {username} and constant password is {####}. "),
 					resource.TestCheckResourceAttr("aws_cognito_user_pool.pool", "admin_create_user_config.0.invite_message_template.0.email_subject", "Foo{####}BaBaz"),
 					resource.TestCheckResourceAttr("aws_cognito_user_pool.pool", "admin_create_user_config.0.invite_message_template.0.sms_message", "Your username is {username} and constant password is {####}."),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAWSCognitoUserPool_withAdvancedSecurityMode(t *testing.T) {
+	name := acctest.RandString(5)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSCognitoUserPoolDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSCognitoUserPoolConfig_withAdvancedSecurityMode(name, "OFF"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckAWSCognitoUserPoolExists("aws_cognito_user_pool.pool"),
+					resource.TestCheckResourceAttr("aws_cognito_user_pool.pool", "user_pool_add_ons.0.advanced_security_mode", "OFF"),
+				),
+			},
+			{
+				Config: testAccAWSCognitoUserPoolConfig_withAdvancedSecurityMode(name, "ENFORCED"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr("aws_cognito_user_pool.pool", "user_pool_add_ons.0.advanced_security_mode", "ENFORCED"),
+				),
+			},
+			{
+				Config: testAccAWSCognitoUserPoolConfig_basic(name),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr("aws_cognito_user_pool.pool", "user_pool_add_ons.#", "0"),
 				),
 			},
 		},
@@ -689,11 +715,7 @@ func testAccCheckAWSCognitoUserPoolExists(name string) resource.TestCheckFunc {
 
 		_, err := conn.DescribeUserPool(params)
 
-		if err != nil {
-			return err
-		}
-
-		return nil
+		return err
 	}
 }
 
@@ -738,6 +760,17 @@ resource "aws_cognito_user_pool" "pool" {
     }
   }
 }`, name)
+}
+
+func testAccAWSCognitoUserPoolConfig_withAdvancedSecurityMode(name string, mode string) string {
+	return fmt.Sprintf(`
+resource "aws_cognito_user_pool" "pool" {
+  name = "terraform-test-pool-%s"
+
+  user_pool_add_ons {
+    advanced_security_mode = "%s"
+  }
+}`, name, mode)
 }
 
 func testAccAWSCognitoUserPoolConfig_withDeviceConfiguration(name string) string {
@@ -791,7 +824,7 @@ func testAccAWSCognitoUserPoolConfig_withTags(name string) string {
 resource "aws_cognito_user_pool" "pool" {
   name = "terraform-test-pool-%s"
 
-  tags {
+  tags = {
     "Name" = "Foo"
   }
 }`, name)
@@ -876,7 +909,7 @@ func testAccAWSCognitoUserPoolConfig_withTagsUpdated(name string) string {
 resource "aws_cognito_user_pool" "pool" {
   name = "terraform-test-pool-%s"
 
-  tags {
+  tags = {
     "Name"    = "FooBar"
     "Project" = "Terraform"
   }
@@ -958,7 +991,7 @@ resource "aws_lambda_function" "main" {
   function_name = "%[1]s"
   role          = "${aws_iam_role.main.arn}"
   handler       = "exports.example"
-  runtime       = "nodejs4.3"
+  runtime       = "nodejs8.10"
 }
 
 resource "aws_cognito_user_pool" "main" {
@@ -1005,7 +1038,7 @@ resource "aws_lambda_function" "main" {
   function_name = "%[1]s"
   role          = "${aws_iam_role.main.arn}"
   handler       = "exports.example"
-  runtime       = "nodejs4.3"
+  runtime       = "nodejs8.10"
 }
 
 resource "aws_lambda_function" "second" {
@@ -1013,7 +1046,7 @@ resource "aws_lambda_function" "second" {
   function_name = "%[1]s_second"
   role          = "${aws_iam_role.main.arn}"
   handler       = "exports.example"
-  runtime       = "nodejs4.3"
+  runtime       = "nodejs8.10"
 }
 
 resource "aws_cognito_user_pool" "main" {
@@ -1122,11 +1155,8 @@ resource "aws_cognito_user_pool" "pool" {
   # attributes.
   verification_message_template {
     default_email_option  = "CONFIRM_WITH_LINK"
-    email_message         = "Foo {####} Bar"
     email_message_by_link = "{##foobar##}"
-    email_subject         = "FooBar {####}"
     email_subject_by_link = "foobar"
-    sms_message           = "{####} Baz"
   }
 }`, name)
 }
@@ -1233,7 +1263,7 @@ resource "aws_cognito_user_pool" "pool" {
     sns_caller_arn = "${aws_iam_role.main.arn}"
   }
 
-  tags {
+  tags = {
     "Name" = "Foo"
   }
 }`, name, name, name, mfaconfig, smsAuthMsg)

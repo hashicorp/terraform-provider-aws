@@ -6,7 +6,7 @@ description: |-
   Provides a Virtual Private Gateway attachment resource.
 ---
 
-# aws_vpn_gateway_attachment
+# Resource: aws_vpn_gateway_attachment
 
 Provides a Virtual Private Gateway attachment resource, allowing for an existing
 hardware VPN gateway to be attached and/or detached from a VPC.
@@ -23,7 +23,7 @@ resource "aws_vpc" "network" {
 }
 
 resource "aws_vpn_gateway" "vpn" {
-  tags {
+  tags = {
     Name = "example-vpn-gateway"
   }
 }

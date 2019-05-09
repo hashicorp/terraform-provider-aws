@@ -7,7 +7,6 @@ import (
 	"reflect"
 	"regexp"
 	"sort"
-	"strings"
 	"testing"
 	"time"
 
@@ -33,10 +32,6 @@ func testSweepELBs(region string) error {
 	}
 	conn := client.(*AWSClient).elbconn
 
-	prefixes := []string{
-		"test-elb-",
-	}
-
 	err = conn.DescribeLoadBalancersPages(&elb.DescribeLoadBalancersInput{}, func(out *elb.DescribeLoadBalancersOutput, isLast bool) bool {
 		if len(out.LoadBalancerDescriptions) == 0 {
 			log.Println("[INFO] No ELBs found for sweeping")
@@ -44,17 +39,6 @@ func testSweepELBs(region string) error {
 		}
 
 		for _, lb := range out.LoadBalancerDescriptions {
-			skip := true
-			for _, prefix := range prefixes {
-				if strings.HasPrefix(*lb.LoadBalancerName, prefix) {
-					skip = false
-					break
-				}
-			}
-			if skip {
-				log.Printf("[INFO] Skipping ELB: %s", *lb.LoadBalancerName)
-				continue
-			}
 			log.Printf("[INFO] Deleting ELB: %s", *lb.LoadBalancerName)
 
 			_, err := conn.DeleteLoadBalancer(&elb.DeleteLoadBalancerInput{
@@ -1222,7 +1206,7 @@ resource "aws_elb" "bar" {
     lb_protocol = "HttP"
   }
 
-	tags {
+	tags = {
 		bar = "baz"
 	}
 
@@ -1420,7 +1404,7 @@ resource "aws_elb" "bar" {
     lb_protocol = "http"
   }
 
-	tags {
+	tags = {
 		foo = "bar"
 		new = "type"
 	}
@@ -1624,7 +1608,7 @@ resource "aws_security_group" "bar" {
     cidr_blocks = ["0.0.0.0/0"]
   }
 
-	tags {
+	tags = {
 		Name = "tf_elb_sg_test"
 	}
 }
@@ -1700,7 +1684,7 @@ resource "aws_vpc" "azelb" {
   cidr_block           = "10.1.0.0/16"
   enable_dns_hostnames = true
 
-  tags {
+  tags = {
     Name = "terraform-testacc-elb-subnets"
   }
 }
@@ -1710,7 +1694,7 @@ resource "aws_subnet" "public_a_one" {
 
   cidr_block        = "10.1.1.0/24"
   availability_zone = "us-west-2a"
-  tags {
+  tags = {
     Name = "tf-acc-elb-subnets-a-one"
   }
 }
@@ -1720,7 +1704,7 @@ resource "aws_subnet" "public_b_one" {
 
   cidr_block        = "10.1.7.0/24"
   availability_zone = "us-west-2b"
-  tags {
+  tags = {
     Name = "tf-acc-elb-subnets-b-one"
   }
 }
@@ -1730,7 +1714,7 @@ resource "aws_subnet" "public_a_two" {
 
   cidr_block        = "10.1.2.0/24"
   availability_zone = "us-west-2a"
-  tags {
+  tags = {
     Name = "tf-acc-elb-subnets-a-two"
   }
 }
@@ -1756,7 +1740,7 @@ resource "aws_elb" "ourapp" {
 resource "aws_internet_gateway" "gw" {
   vpc_id = "${aws_vpc.azelb.id}"
 
-  tags {
+  tags = {
     Name = "main"
   }
 }
@@ -1771,7 +1755,7 @@ resource "aws_vpc" "azelb" {
   cidr_block           = "10.1.0.0/16"
   enable_dns_hostnames = true
 
-  tags {
+  tags = {
     Name = "terraform-testacc-elb-subnet-swap"
   }
 }
@@ -1781,7 +1765,7 @@ resource "aws_subnet" "public_a_one" {
 
   cidr_block        = "10.1.1.0/24"
   availability_zone = "us-west-2a"
-  tags {
+  tags = {
     Name = "tf-acc-elb-subnet-swap-a-one"
   }
 }
@@ -1791,7 +1775,7 @@ resource "aws_subnet" "public_b_one" {
 
   cidr_block        = "10.1.7.0/24"
   availability_zone = "us-west-2b"
-  tags {
+  tags = {
     Name = "tf-acc-elb-subnet-swap-b-one"
   }
 }
@@ -1801,7 +1785,7 @@ resource "aws_subnet" "public_a_two" {
 
   cidr_block        = "10.1.2.0/24"
   availability_zone = "us-west-2a"
-  tags {
+  tags = {
     Name = "tf-acc-elb-subnet-swap-a-two"
   }
 }
@@ -1827,7 +1811,7 @@ resource "aws_elb" "ourapp" {
 resource "aws_internet_gateway" "gw" {
   vpc_id = "${aws_vpc.azelb.id}"
 
-  tags {
+  tags = {
     Name = "main"
   }
 }
