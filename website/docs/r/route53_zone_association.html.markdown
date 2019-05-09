@@ -14,7 +14,7 @@ Manages a Route53 Hosted Zone VPC association. VPC associations can only be made
 
 ~> **NOTE:** Terraform provides both this standalone Zone VPC Association resource and exclusive VPC associations defined in-line in the [`aws_route53_zone` resource](/docs/providers/aws/r/route53_zone.html) via `vpc` configuration blocks. At this time, you cannot use those in-line VPC associations in conjunction with this resource and the same zone ID otherwise it will cause a perpetual difference in plan output. You can optionally use the generic Terraform resource [lifecycle configuration block](/docs/configuration/resources.html#lifecycle) with `ignore_changes` in the `aws_route53_zone` resource to manage additional associations via this resource.
 
-~> **NOTE:** This resource does not perform the `CreateVPCAssociationAuthorization` operation, which is necessary to perform a route53 zone association between vpcs in different AWS accounts. At the present time this operation must be done out of band of terraform or by using a provisioner. For more details on how to do this consult the [AWS Documentation on the matter](https://aws.amazon.com/premiumsupport/knowledge-center/private-hosted-zone-different-account/)
+~> **NOTE:** This resource does not perform the `CreateVPCAssociationAuthorization` operation, which is necessary to perform a route53 zone association between vpcs in different AWS accounts. At the present time there is not a terrform resource to perorm this operation. For information on how to do perform this operation out of band of terraform consult the [AWS Documentation on the matter](https://aws.amazon.com/premiumsupport/knowledge-center/private-hosted-zone-different-account/)
 
 ## Example Usage
 
