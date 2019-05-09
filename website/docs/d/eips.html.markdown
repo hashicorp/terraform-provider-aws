@@ -24,7 +24,7 @@ data "aws_eips" "by_tags" {
 
 ## Argument Reference
 
-* `tags` - (Optional) A mapping of tags, each pair of which must exactly match a pair on the desired Elastic IPs
+* `tags` - (Required) A mapping of tags, each pair of which must exactly match a pair on the desired Elastic IPs
 
 ## Attributes Reference
 
