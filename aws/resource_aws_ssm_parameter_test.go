@@ -62,7 +62,7 @@ func TestAccAWSSSMParameter_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSSSMAdvancedParameter(t *testing.T) {
+func TestAccAWSSSMParameter_Tier(t *testing.T) {
 	var param ssm.Parameter
 	name := fmt.Sprintf("%s_%s", t.Name(), acctest.RandString(10))
 
