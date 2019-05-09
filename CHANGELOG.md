@@ -4,6 +4,7 @@ FEATURES:
 
 * **New Data Source:** `aws_lambda_layer_version` [GH-8577]
 * **New Resource:** `aws_organizations_organizational_unit` [GH-4207]
+* **New Resource:** `aws_xray_sampling_rule` [GH-8535]
 
 ENHANCEMENTS:
 
