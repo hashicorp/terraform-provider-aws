@@ -13,6 +13,7 @@ ENHANCEMENTS:
 * resource/aws_cloudfront_distribution: Validate `*_cache_behavior` `forwarded_values` `cookies` configuration block `forward` argument [GH-8563]
 * resource/aws_lambda_alias: Support resource import [GH-8513]
 * resource/aws_organizations_organization: Add `roots` attribute [GH-8399]
+* resource/aws_organizations_organization: Add `accounts` attribute [GH-8581]
 * resource/aws_rds_cluster: Add `copy_tags_to_snapshot` argument [GH-8544]
 * resource/aws_ssm_parameter: Add `tier` argument (support `Advanced` parameters) [GH-8525]
 
