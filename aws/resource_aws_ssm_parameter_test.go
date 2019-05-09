@@ -53,7 +53,7 @@ func TestAccAWSSSMParameter_basic(t *testing.T) {
 						regexp.MustCompile(fmt.Sprintf("^arn:aws:ssm:[a-z0-9-]+:[0-9]{12}:parameter/%s$", name))),
 					resource.TestCheckResourceAttr("aws_ssm_parameter.foo", "value", "bar"),
 					resource.TestCheckResourceAttr("aws_ssm_parameter.foo", "type", "String"),
-					resource.TestCheckResourceAttr("aws_ssm_parameter.foo", "tier", "Basic"),
+					resource.TestCheckResourceAttr("aws_ssm_parameter.foo", "tier", "Standard"),
 					resource.TestCheckResourceAttr("aws_ssm_parameter.foo", "tags.%", "1"),
 					resource.TestCheckResourceAttr("aws_ssm_parameter.foo", "tags.Name", "My Parameter"),
 				),
