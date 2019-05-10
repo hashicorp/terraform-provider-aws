@@ -269,6 +269,11 @@ func resourceAwsSesReceiptRule() *schema.Resource {
 							Required: true,
 						},
 
+						"encoding": {
+							Type:     schema.TypeString,
+							Optional: true,
+						},
+
 						"position": {
 							Type:     schema.TypeInt,
 							Required: true,
@@ -279,6 +284,11 @@ func resourceAwsSesReceiptRule() *schema.Resource {
 					var buf bytes.Buffer
 					m := v.(map[string]interface{})
 					buf.WriteString(fmt.Sprintf("%s-", m["topic_arn"].(string)))
+
+					if _, ok := m["encoding"]; ok {
+						buf.WriteString(fmt.Sprintf("%s-", m["encoding"].(string)))
+					}
+
 					buf.WriteString(fmt.Sprintf("%d-", m["position"].(int)))
 
 					return hashcode.String(buf.String())
@@ -533,6 +543,10 @@ func resourceAwsSesReceiptRuleRead(d *schema.ResourceData, meta interface{}) err
 				"position":  i + 1,
 			}
 
+			if element.SNSAction.Encoding != nil {
+				snsAction["encoding"] = *element.SNSAction.Encoding
+			}
+
 			snsActionList = append(snsActionList, snsAction)
 		}
 
@@ -728,6 +742,10 @@ func buildReceiptRule(d *schema.ResourceData) *ses.ReceiptRule {
 
 			snsAction := &ses.SNSAction{
 				TopicArn: aws.String(elem["topic_arn"].(string)),
+			}
+
+			if elem["encoding"] != "" {
+				snsAction.Encoding = aws.String(elem["encoding"].(string))
 			}
 
 			actions[elem["position"].(int)] = &ses.ReceiptAction{

@@ -87,6 +87,7 @@ SNS actions support the following:
 
 * `topic_arn` - (Required) The ARN of an SNS topic to notify
 * `position` - (Required) The position of the action in the receipt rule
+* `encoding` - (Optional) The encoding to use for the email within the SNS notification
 
 Stop actions support the following:
 
