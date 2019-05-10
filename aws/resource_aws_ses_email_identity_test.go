@@ -30,6 +30,11 @@ func TestAccAWSSESEmailIdentity_basic(t *testing.T) {
 					testAccCheckAwsSESEmailIdentityArn("aws_ses_email_identity.test", email),
 				),
 			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
 		},
 	})
 }
@@ -50,6 +55,11 @@ func TestAccAWSSESEmailIdentity_trailingPeriod(t *testing.T) {
 					testAccCheckAwsSESEmailIdentityExists("aws_ses_email_identity.test"),
 					testAccCheckAwsSESEmailIdentityArn("aws_ses_email_identity.test", email),
 				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})
@@ -140,7 +150,7 @@ func testAccCheckAwsSESEmailIdentityArn(n string, email string) resource.TestChe
 func testAccAwsSESEmailIdentityConfig(email string) string {
 	return fmt.Sprintf(`
 resource "aws_ses_email_identity" "test" {
-	email = "%s"
+	email = %q
 }
 `, email)
 }
