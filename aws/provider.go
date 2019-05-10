@@ -221,6 +221,7 @@ func Provider() terraform.ResourceProvider {
 			"aws_kms_secrets":                        dataSourceAwsKmsSecrets(),
 			"aws_lambda_function":                    dataSourceAwsLambdaFunction(),
 			"aws_lambda_invocation":                  dataSourceAwsLambdaInvocation(),
+			"aws_lambda_layer_version":               dataSourceAwsLambdaLayerVersion(),
 			"aws_launch_configuration":               dataSourceAwsLaunchConfiguration(),
 			"aws_launch_template":                    dataSourceAwsLaunchTemplate(),
 			"aws_mq_broker":                          dataSourceAwsMqBroker(),
@@ -592,6 +593,7 @@ func Provider() terraform.ResourceProvider {
 			"aws_organizations_account":                               resourceAwsOrganizationsAccount(),
 			"aws_organizations_policy":                                resourceAwsOrganizationsPolicy(),
 			"aws_organizations_policy_attachment":                     resourceAwsOrganizationsPolicyAttachment(),
+			"aws_organizations_organizational_unit":                   resourceAwsOrganizationsOrganizationalUnit(),
 			"aws_placement_group":                                     resourceAwsPlacementGroup(),
 			"aws_proxy_protocol_policy":                               resourceAwsProxyProtocolPolicy(),
 			"aws_ram_principal_association":                           resourceAwsRamPrincipalAssociation(),
@@ -760,6 +762,7 @@ func Provider() terraform.ResourceProvider {
 			"aws_pinpoint_event_stream":                               resourceAwsPinpointEventStream(),
 			"aws_pinpoint_gcm_channel":                                resourceAwsPinpointGCMChannel(),
 			"aws_pinpoint_sms_channel":                                resourceAwsPinpointSMSChannel(),
+			"aws_xray_sampling_rule":                                  resourceAwsXraySamplingRule(),
 
 			// ALBs are actually LBs because they can be type `network` or `application`
 			// To avoid regressions, we will add a new resource for each and they both point
@@ -963,6 +966,7 @@ func init() {
 		"wafregional",
 		"worklink",
 		"workspaces",
+		"xray",
 	}
 }
 

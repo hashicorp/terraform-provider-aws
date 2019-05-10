@@ -189,14 +189,12 @@ each type of contribution.
 
 #### Documentation Update
 
-Because [Terraform's website][website] is in the same repo as the code, it's
-easy for anybody to help us improve our docs.
+The [Terraform AWS Provider's website source][website] is in this repository along with the code and testing. Below are some common items that will get flagged during documentation reviews:
 
- - [ ] __Reasoning for docs update__: Including a quick explanation for why the
-   update needed is helpful for reviewers.
- - [ ] __Relevant Terraform version__: Is this update worth deploying to the
-   site immediately, or is it referencing an upcoming version of Terraform and
-   should get pushed out with the next release?
+- [ ] __Reasoning for Change__: Most documentation updates should include an explanation for why the update is needed.
+- [ ] __Prefer AWS Documentation__: Documentation about AWS service features and valid argument values that are likely to update over time should link to AWS service user guides and API references where possible.
+- [ ] __Large Example Configurations__: Example Terraform configuration that includes multiple resource definitions should be added to the repository `examples` directory instead of an individual resource documentation page. Each directory under `examples` should be self-contained to call `terraform apply` without special configuration.
+- [ ] __Terraform Configuration Language Features__: Individual resource documentation pages and examples should refrain from highlighting particular Terraform configuration language syntax workarounds or features such as `variable`, `local`, `count`, and built-in functions.
 
 #### Enhancement/Bugfix to a Resource
 
@@ -731,6 +729,6 @@ export AWS_ALTERNATE_ACCESS_KEY_ID=...
 export AWS_ALTERNATE_SECRET_ACCESS_KEY=...
 ```
 
-[website]: https://github.com/hashicorp/terraform/tree/master/website
+[website]: https://github.com/terraform-providers/terraform-provider-aws/tree/master/website
 [acctests]: https://github.com/hashicorp/terraform#acceptance-tests
 [ml]: https://groups.google.com/group/terraform-tool

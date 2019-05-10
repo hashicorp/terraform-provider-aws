@@ -1084,6 +1084,18 @@ var awsPartition = partition{
 		"docdb": service{
 
 			Endpoints: endpoints{
+				"ap-northeast-1": endpoint{
+					Hostname: "rds.ap-northeast-1.amazonaws.com",
+					CredentialScope: credentialScope{
+						Region: "ap-northeast-1",
+					},
+				},
+				"ap-northeast-2": endpoint{
+					Hostname: "rds.ap-northeast-2.amazonaws.com",
+					CredentialScope: credentialScope{
+						Region: "ap-northeast-2",
+					},
+				},
 				"eu-central-1": endpoint{
 					Hostname: "rds.eu-central-1.amazonaws.com",
 					CredentialScope: credentialScope{
@@ -3508,7 +3520,12 @@ var awscnPartition = partition{
 		"mediaconvert": service{
 
 			Endpoints: endpoints{
-				"cn-northwest-1": endpoint{},
+				"cn-northwest-1": endpoint{
+					Hostname: "subscribe.mediaconvert.cn-northwest-1.amazonaws.com.cn",
+					CredentialScope: credentialScope{
+						Region: "cn-northwest-1",
+					},
+				},
 			},
 		},
 		"monitoring": service{

@@ -53,8 +53,44 @@ func TestAccAWSSSMParameter_basic(t *testing.T) {
 						regexp.MustCompile(fmt.Sprintf("^arn:aws:ssm:[a-z0-9-]+:[0-9]{12}:parameter/%s$", name))),
 					resource.TestCheckResourceAttr("aws_ssm_parameter.foo", "value", "bar"),
 					resource.TestCheckResourceAttr("aws_ssm_parameter.foo", "type", "String"),
+					resource.TestCheckResourceAttr("aws_ssm_parameter.foo", "tier", "Standard"),
 					resource.TestCheckResourceAttr("aws_ssm_parameter.foo", "tags.%", "1"),
 					resource.TestCheckResourceAttr("aws_ssm_parameter.foo", "tags.Name", "My Parameter"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAWSSSMParameter_Tier(t *testing.T) {
+	var parameter1, parameter2, parameter3 ssm.Parameter
+	rName := fmt.Sprintf("%s_%s", t.Name(), acctest.RandString(10))
+	resourceName := "aws_ssm_parameter.foo"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSSSMParameterDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSSSMParameterConfigTier(rName, "Advanced"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSSSMParameterExists(resourceName, &parameter1),
+					resource.TestCheckResourceAttr(resourceName, "tier", "Advanced"),
+				),
+			},
+			{
+				Config: testAccAWSSSMParameterConfigTier(rName, "Standard"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSSSMParameterExists(resourceName, &parameter2),
+					resource.TestCheckResourceAttr(resourceName, "tier", "Standard"),
+				),
+			},
+			{
+				Config: testAccAWSSSMParameterConfigTier(rName, "Advanced"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSSSMParameterExists(resourceName, &parameter3),
+					resource.TestCheckResourceAttr(resourceName, "tier", "Advanced"),
 				),
 			},
 		},
@@ -377,6 +413,17 @@ resource "aws_ssm_parameter" "foo" {
   }
 }
 `, rName, pType, value)
+}
+
+func testAccAWSSSMParameterConfigTier(rName, tier string) string {
+	return fmt.Sprintf(`
+resource "aws_ssm_parameter" "foo" {
+  name  = %[1]q
+  tier  = %[2]q
+  type  = "String"
+  value = "bar"
+}
+`, rName, tier)
 }
 
 func testAccAWSSSMParameterBasicConfigTagsUpdated(rName, pType, value string) string {
