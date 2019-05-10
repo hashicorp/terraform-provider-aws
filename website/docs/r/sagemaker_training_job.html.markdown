@@ -6,7 +6,7 @@ description: |-
   Provides a Sagemaker Training Job resource.
 ---
 
-# aws\_sagemaker\_training\_job
+# Resource: aws_sagemaker_training_job
 
 Provides a Sagemaker Training Job resource.
 
