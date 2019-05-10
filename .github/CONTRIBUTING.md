@@ -323,11 +323,9 @@ manually sourced values from documentation.
 
 ### Common Review Items
 
-The sections below outline common pull request feedback items that may be helpful to contributors to know before submission and during the review process.
+The Terraform AWS Provider follows common practices to ensure consistent and reliable implementations across all resources in the project. While there may be older resource and testing code that predates these guidelines, new submissions are generally expected to adhere to these items to maintain Terraform Provider quality. For any guidelines listed, contributors are encouraged to ask any questions and community reviewers are encouraged to provide review suggestions based on these guidelines to speed up the review and merge process.
 
 #### Resource Contribution Guidelines
-
-The Terraform AWS Provider follows common practices to ensure consistent and reliable implementations across all resources in the project. While there may be older schema and resource code present that predates these guidelines, new submissions are generally expected to adhere to these items to maintain Terraform Provider quality. For any guidelines listed, contributors are encouraged to ask any questions and community reviewers are encouraged to provide review suggestions based on these guidelines to speed up the review and merge process.
 
 The below are required items that will be noted during submission review and prevent immediate merging:
 
@@ -392,8 +390,6 @@ The below are style-based items that _may_ be noted during review and are recomm
 - [ ] __Skips Error() Call with AWS Go SDK Error Objects__: Error objects do not need to have `Error()` called.
 
 #### Acceptance Testing Guidelines
-
-The Terraform AWS Provider follows common practices to ensure consistent and reliable testing across all resources in the project. While there may be older testing present that predates these guidelines, new submissions are generally expected to adhere to these items to maintain Terraform Provider quality. For any guidelines listed, contributors are encouraged to ask any questions and community reviewers are encouraged to provide review suggestions based on these guidelines to speed up the review and merge process.
 
 The below are required items that will be noted during submission review and prevent immediate merging:
 
