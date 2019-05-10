@@ -200,7 +200,7 @@ func TestAccAwsDxGatewayAssociation_basicVpnGatewayCrossAccount(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsDxGatewayAssociationExists(resourceName),
 					resource.TestCheckResourceAttrPair(resourceName, "dx_gateway_id", resourceNameDxGw, "id"),
-					resource.TestCheckResourceAttrPair(resourceName, "vpn_gateway_id", resourceNameVgw, "id"),
+					resource.TestCheckResourceAttrPair(resourceName, "associated_gateway_id", resourceNameVgw, "id"),
 					resource.TestCheckResourceAttrSet(resourceName, "dx_gateway_association_id"),
 					resource.TestCheckNoResourceAttr(resourceName, "vpn_gateway_id"),
 					resource.TestCheckResourceAttr(resourceName, "associated_gateway_type", "virtualPrivateGateway"),
@@ -263,6 +263,7 @@ func TestAccAwsDxGatewayAssociation_basicTransitGatewaySingleAccount(t *testing.
 }
 
 func TestAccAwsDxGatewayAssociation_basicTransitGatewayCrossAccount(t *testing.T) {
+	var providers []*schema.Provider
 	resourceName := "aws_dx_gateway_association.test"
 	resourceNameDxGw := "aws_dx_gateway.test"
 	resourceNameTgw := "aws_ec2_transit_gateway.test"
@@ -270,9 +271,12 @@ func TestAccAwsDxGatewayAssociation_basicTransitGatewayCrossAccount(t *testing.T
 	rBgpAsn := randIntRange(64512, 65534)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckAwsDxGatewayAssociationDestroy,
+		PreCheck: func() {
+			testAccPreCheck(t)
+			testAccAlternateAccountPreCheck(t)
+		},
+		ProviderFactories: testAccProviderFactories(&providers),
+		CheckDestroy:      testAccCheckAwsDxGatewayAssociationDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDxGatewayAssociationConfig_basicTransitGatewayCrossAccount(rName, rBgpAsn),
@@ -382,7 +386,7 @@ func TestAccAwsDxGatewayAssociation_allowedPrefixesVpnGatewayCrossAccount(t *tes
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsDxGatewayAssociationExists(resourceName),
 					resource.TestCheckResourceAttrPair(resourceName, "dx_gateway_id", resourceNameDxGw, "id"),
-					resource.TestCheckResourceAttrPair(resourceName, "vpn_gateway_id", resourceNameVgw, "id"),
+					resource.TestCheckResourceAttrPair(resourceName, "associated_gateway_id", resourceNameVgw, "id"),
 					resource.TestCheckResourceAttrSet(resourceName, "dx_gateway_association_id"),
 					resource.TestCheckResourceAttr(resourceName, "allowed_prefixes.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "allowed_prefixes.1642241106", "10.255.255.8/29"),
@@ -395,7 +399,7 @@ func TestAccAwsDxGatewayAssociation_allowedPrefixesVpnGatewayCrossAccount(t *tes
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsDxGatewayAssociationExists(resourceName),
 					resource.TestCheckResourceAttrPair(resourceName, "dx_gateway_id", resourceNameDxGw, "id"),
-					resource.TestCheckResourceAttrPair(resourceName, "vpn_gateway_id", resourceNameVgw, "id"),
+					resource.TestCheckResourceAttrPair(resourceName, "associated_gateway_id", resourceNameVgw, "id"),
 					resource.TestCheckResourceAttrSet(resourceName, "dx_gateway_association_id"),
 					resource.TestCheckResourceAttr(resourceName, "allowed_prefixes.#", "2"),
 					resource.TestCheckResourceAttr(resourceName, "allowed_prefixes.2173830893", "10.255.255.0/30"),
