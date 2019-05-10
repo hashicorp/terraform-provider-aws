@@ -127,7 +127,7 @@ func expandWebhookFilterGroup(d *schema.ResourceData) [][]*codebuild.WebhookFilt
 
 func expandWebhookFilterData(data map[string]interface{}) codebuild.WebhookFilter {
 	filter := codebuild.WebhookFilter{
-		Type: aws.String(data["type"].(string)),
+		Type:                  aws.String(data["type"].(string)),
 		ExcludeMatchedPattern: aws.Bool(data["exclude_matched_pattern"].(bool)),
 	}
 
