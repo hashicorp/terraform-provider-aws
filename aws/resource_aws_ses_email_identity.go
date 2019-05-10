@@ -83,11 +83,11 @@ func resourceAwsSesEmailIdentityRead(d *schema.ResourceData, meta interface{}) e
 	}
 
 	arn := arn.ARN{
-		Partition: meta.(*AWSClient).partition,
-		Service:   "ses",
-		Region:    meta.(*AWSClient).region,
 		AccountID: meta.(*AWSClient).accountid,
+		Partition: meta.(*AWSClient).partition,
+		Region:    meta.(*AWSClient).region,
 		Resource:  fmt.Sprintf("identity/%s", d.Id()),
+		Service:   "ses",
 	}.String()
 	d.Set("arn", arn)
 	return nil
