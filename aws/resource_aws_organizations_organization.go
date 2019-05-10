@@ -224,7 +224,7 @@ func resourceAwsOrganizationsOrganizationRead(d *schema.ResourceData, meta inter
 	enabledPolicyTypes := make([]string, 0)
 
 	for _, policyType := range roots[0].PolicyTypes {
-		if aws.StringValue(policyType.Status) == organizations.PolicyTypeStatusEnabled || aws.StringValue(policyType.Status) == organizations.PolicyTypeStatusPendingEnable {
+		if aws.StringValue(policyType.Status) == organizations.PolicyTypeStatusEnabled {
 			enabledPolicyTypes = append(enabledPolicyTypes, aws.StringValue(policyType.Type))
 		}
 	}
@@ -300,7 +300,7 @@ func resourceAwsOrganizationsOrganizationUpdate(d *schema.ResourceData, meta int
 			policyType := v.(string)
 			input := &organizations.EnablePolicyTypeInput{
 				PolicyType: aws.String(policyType),
-				RootId:     aws.String(d.Get("roots.0.id").(string)),
+				RootId:     aws.String(defaultRootID),
 			}
 
 			log.Printf("[DEBUG] Enabling Policy Type in Organization: %s", input)
