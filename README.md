@@ -18,7 +18,7 @@ Developing the Provider
 
 If you wish to work on the provider, you'll first need [Go](http://www.golang.org) installed on your machine (please check the [requirements](https://github.com/terraform-providers/terraform-provider-aws#requirements) before proceeding).
 
-*Note:* This project uses [Go Modules](https://blog.golang.org/using-go-modules) making it safe to work with it outside of your existing [GOPATH](http://golang.org/doc/code.html#GOPATH). The instructions that follow assume a directory in your home directory outside of the standard GOPATH (i.e `$HOME/development/terraform-providers/`). If you are using go1.11 please make sure that `GO111MODULE=on` is set.
+*Note:* This project uses [Go Modules](https://blog.golang.org/using-go-modules) making it safe to work with it outside of your existing [GOPATH](http://golang.org/doc/code.html#GOPATH). The instructions that follow assume a directory in your home directory outside of the standard GOPATH (i.e `$HOME/development/terraform-providers/`). If you are using Go 1.11, please make sure that `GO111MODULE=on` is set.
 
 Clone repository to: `$HOME/development/terraform-providers/`
 
@@ -26,21 +26,18 @@ Clone repository to: `$HOME/development/terraform-providers/`
 $ mkdir -p $HOME/development/terraform-providers/; cd $HOME/development/terraform-providers/
 $ git clone git@github.com:terraform-providers/terraform-provider-aws
 ...
-Cloning into 'terraform-provider-aws'...
 ```
 
 Enter the provider directory and run `make tools`. This will install the needed tools for the provider.
 
 ```sh
 $ make tools
-...
 ```
 
 To compile the provider, run `make build`. This will build the provider and put the provider binary in the `$GOPATH/bin` directory.
 
 ```sh
 $ make build
-==> Checking that code complies with gofmt requirements...
 ...
 $ $GOPATH/bin/terraform-provider-aws
 ...
@@ -54,17 +51,12 @@ If you're building the provider, follow the instructions to [install it as a plu
 Testing the Provider
 ---------------------------
 
-In order to test the provider, you can simply run `make test`.
+In order to test the provider, you can run `make test`.
 
 *Note:* Make sure no `AWS_ACCESS_KEY_ID` or `AWS_SECRET_ACCESS_KEY` variables are set, and there's no `[default]` section in the AWS credentials file `~/.aws/credentials`.
 
 ```sh
 $ make test
-==> Checking that code complies with gofmt requirements...
-go test ./... -timeout=30s -parallel=4
-...
-ok   github.com/terraform-providers/terraform-provider-aws/aws  2.625s
-...
 ```
 
 In order to run the full suite of Acceptance tests, run `make testacc`.
