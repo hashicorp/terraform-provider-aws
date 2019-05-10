@@ -236,7 +236,7 @@ resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"
 
   tags = {
-    Name = "tf-acc-test-dx-gateway-association-proposal"
+    Name = %[1]q
   }
 }
 
@@ -244,7 +244,7 @@ resource "aws_vpn_gateway" "test" {
   vpc_id = "${aws_vpc.test.id}"
 
   tags = {
-    Name = "tf-acc-test-dx-gateway-association-proposal"
+    Name = %[1]q
   }
 }
 `, rName, rBgpAsn)

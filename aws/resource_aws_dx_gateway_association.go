@@ -41,8 +41,18 @@ func resourceAwsDxGatewayAssociation() *schema.Resource {
 			"associated_gateway_id": {
 				Type:          schema.TypeString,
 				Optional:      true,
+				Computed:      true,
 				ForceNew:      true,
-				ConflictsWith: []string{"vpn_gateway_id"},
+				ConflictsWith: []string{"associated_gateway_owner_account_id", "proposal_id", "vpn_gateway_id"},
+			},
+
+			"associated_gateway_owner_account_id": {
+				Type:          schema.TypeString,
+				Optional:      true,
+				Computed:      true,
+				ForceNew:      true,
+				ValidateFunc:  validateAwsAccountId,
+				ConflictsWith: []string{"associated_gateway_id", "vpn_gateway_id"},
 			},
 
 			"associated_gateway_type": {
@@ -61,6 +71,18 @@ func resourceAwsDxGatewayAssociation() *schema.Resource {
 				ForceNew: true,
 			},
 
+			"dx_gateway_owner_account_id": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+
+			"proposal_id": {
+				Type:          schema.TypeString,
+				Optional:      true,
+				ForceNew:      true,
+				ConflictsWith: []string{"associated_gateway_id", "vpn_gateway_id"},
+			},
+
 			"transit_gateway_attachment_id": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -70,7 +92,7 @@ func resourceAwsDxGatewayAssociation() *schema.Resource {
 				Type:          schema.TypeString,
 				Optional:      true,
 				ForceNew:      true,
-				ConflictsWith: []string{"associated_gateway_id"},
+				ConflictsWith: []string{"associated_gateway_id", "associated_gateway_owner_account_id", "proposal_id"},
 				Deprecated:    "use 'associated_gateway_id' argument instead",
 			},
 		},
@@ -86,36 +108,63 @@ func resourceAwsDxGatewayAssociation() *schema.Resource {
 func resourceAwsDxGatewayAssociationCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).dxconn
 
+	dxgwId := d.Get("dx_gateway_id").(string)
 	gwIdRaw, gwIdOk := d.GetOk("associated_gateway_id")
 	vgwIdRaw, vgwIdOk := d.GetOk("vpn_gateway_id")
-	if !gwIdOk && !vgwIdOk {
-		return errors.New("one of associated_gateway_id or vpn_gateway_id must be configured")
+	gwAcctIdRaw, gwAcctIdOk := d.GetOk("associated_gateway_owner_account_id")
+	proposalIdRaw, proposalIdOk := d.GetOk("proposal_id")
+
+	if gwAcctIdOk || proposalIdOk {
+		// Cross-account association.
+		if !(gwAcctIdOk && proposalIdOk) {
+			return errors.New("associated_gateway_owner_account_id and proposal_id must be configured")
+		}
+	} else if !(gwIdOk || vgwIdOk) {
+		return errors.New("either associated_gateway_owner_account_id and proposal_id or one of associated_gateway_id or vpn_gateway_id must be configured")
 	}
 
-	dxgwId := d.Get("dx_gateway_id").(string)
-	gwId := ""
+	associationId := ""
+	if gwAcctIdOk {
+		req := &directconnect.AcceptDirectConnectGatewayAssociationProposalInput{
+			AssociatedGatewayOwnerAccount:                 aws.String(gwAcctIdRaw.(string)),
+			DirectConnectGatewayId:                        aws.String(dxgwId),
+			OverrideAllowedPrefixesToDirectConnectGateway: expandDxRouteFilterPrefixes(d.Get("allowed_prefixes").(*schema.Set)),
+			ProposalId: aws.String(proposalIdRaw.(string)),
+		}
 
-	req := &directconnect.CreateDirectConnectGatewayAssociationInput{
-		AddAllowedPrefixesToDirectConnectGateway: expandDxRouteFilterPrefixes(d.Get("allowed_prefixes").(*schema.Set)),
-		DirectConnectGatewayId:                   aws.String(dxgwId),
-	}
-	if gwIdOk {
-		gwId = gwIdRaw.(string)
-		req.GatewayId = aws.String(gwId)
+		log.Printf("[DEBUG] Accepting Direct Connect gateway association proposal: %#v", req)
+		resp, err := conn.AcceptDirectConnectGatewayAssociationProposal(req)
+		if err != nil {
+			return fmt.Errorf("error accepting Direct Connect gateway association proposal: %s", err)
+		}
+
+		// For historical reasons the resource ID isn't set to the association ID returned from the API.
+		associationId = aws.StringValue(resp.DirectConnectGatewayAssociation.AssociationId)
+		d.SetId(dxGatewayAssociationId(dxgwId, aws.StringValue(resp.DirectConnectGatewayAssociation.AssociatedGateway.Id)))
 	} else {
-		gwId = vgwIdRaw.(string)
-		req.VirtualGatewayId = aws.String(gwId)
-	}
+		req := &directconnect.CreateDirectConnectGatewayAssociationInput{
+			AddAllowedPrefixesToDirectConnectGateway: expandDxRouteFilterPrefixes(d.Get("allowed_prefixes").(*schema.Set)),
+			DirectConnectGatewayId:                   aws.String(dxgwId),
+		}
+		gwId := ""
+		if gwIdOk {
+			gwId = gwIdRaw.(string)
+			req.GatewayId = aws.String(gwId)
+		} else {
+			gwId = vgwIdRaw.(string)
+			req.VirtualGatewayId = aws.String(gwId)
+		}
 
-	log.Printf("[DEBUG] Creating Direct Connect gateway association: %#v", req)
-	resp, err := conn.CreateDirectConnectGatewayAssociation(req)
-	if err != nil {
-		return fmt.Errorf("error creating Direct Connect gateway association: %s", err)
-	}
+		log.Printf("[DEBUG] Creating Direct Connect gateway association: %#v", req)
+		resp, err := conn.CreateDirectConnectGatewayAssociation(req)
+		if err != nil {
+			return fmt.Errorf("error creating Direct Connect gateway association: %s", err)
+		}
 
-	// For historical reasons the resource ID isn't set to the association ID returned from the API.
-	associationId := aws.StringValue(resp.DirectConnectGatewayAssociation.AssociationId)
-	d.SetId(dxGatewayAssociationId(dxgwId, gwId))
+		// For historical reasons the resource ID isn't set to the association ID returned from the API.
+		associationId = aws.StringValue(resp.DirectConnectGatewayAssociation.AssociationId)
+		d.SetId(dxGatewayAssociationId(dxgwId, gwId))
+	}
 	d.Set("dx_gateway_association_id", associationId)
 
 	if err := waitForDirectConnectGatewayAssociationAvailabilityOnCreate(conn, associationId, d.Timeout(schema.TimeoutCreate)); err != nil {
@@ -151,10 +200,13 @@ func resourceAwsDxGatewayAssociationRead(d *schema.ResourceData, meta interface{
 	} else {
 		d.Set("associated_gateway_id", assoc.AssociatedGateway.Id)
 	}
+	d.Set("associated_gateway_owner_account_id", assoc.AssociatedGateway.OwnerAccount)
 	d.Set("associated_gateway_type", assoc.AssociatedGateway.Type)
 	d.Set("dx_gateway_association_id", assoc.AssociationId)
 	d.Set("dx_gateway_id", assoc.DirectConnectGatewayId)
+	d.Set("dx_gateway_owner_account_id", assoc.DirectConnectGatewayOwnerAccount)
 
+	tgwAttachmentId := ""
 	if aws.StringValue(assoc.AssociatedGateway.Type) == directconnect.GatewayTypeTransitGateway {
 		ec2conn := meta.(*AWSClient).ec2conn
 
@@ -178,8 +230,9 @@ func resourceAwsDxGatewayAssociationRead(d *schema.ResourceData, meta interface{
 			return fmt.Errorf("error reading Direct Connect gateway association (%s) transit gateway attachment: multiple responses", d.Id())
 		}
 
-		d.Set("transit_gateway_attachment_id", resp.TransitGatewayAttachments[0].TransitGatewayAttachmentId)
+		tgwAttachmentId = aws.StringValue(resp.TransitGatewayAttachments[0].TransitGatewayAttachmentId)
 	}
+	d.Set("transit_gateway_attachment_id", tgwAttachmentId)
 
 	return nil
 }
