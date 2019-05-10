@@ -9,6 +9,7 @@ func TestAccAWSOrganizations(t *testing.T) {
 		"Organization": {
 			"basic":                      testAccAwsOrganizationsOrganization_basic,
 			"AwsServiceAccessPrincipals": testAccAwsOrganizationsOrganization_AwsServiceAccessPrincipals,
+			"EnabledPolicyTypes":         testAccAwsOrganizationsOrganization_EnabledPolicyTypes,
 			"FeatureSet":                 testAccAwsOrganizationsOrganization_FeatureSet,
 		},
 		"Account": {
@@ -17,6 +18,11 @@ func TestAccAWSOrganizations(t *testing.T) {
 		"OrganizationalUnit": {
 			"basic": testAccAwsOrganizationsOrganizationalUnit_basic,
 			"Name":  testAccAwsOrganizationsOrganizationalUnit_Name,
+		},
+		"PolicyAttachment": {
+			"Account":            testAccAwsOrganizationsPolicyAttachment_Account,
+			"OrganizationalUnit": testAccAwsOrganizationsPolicyAttachment_OrganizationalUnit,
+			"Root":               testAccAwsOrganizationsPolicyAttachment_Root,
 		},
 	}
 

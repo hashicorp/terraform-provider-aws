@@ -3,12 +3,16 @@ package aws
 import (
 	"fmt"
 	"log"
+	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/organizations"
+	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/helper/schema"
 	"github.com/hashicorp/terraform/helper/validation"
 )
+
+const organizationsPolicyTypeStatusDisabled = "DISABLED"
 
 func resourceAwsOrganizationsOrganization() *schema.Resource {
 	return &schema.Resource{
@@ -102,6 +106,16 @@ func resourceAwsOrganizationsOrganization() *schema.Resource {
 					},
 				},
 			},
+			"enabled_policy_types": {
+				Type:     schema.TypeSet,
+				Optional: true,
+				Elem: &schema.Schema{
+					Type: schema.TypeString,
+					ValidateFunc: validation.StringInSlice([]string{
+						organizations.PolicyTypeServiceControlPolicy,
+					}, false),
+				},
+			},
 			"feature_set": {
 				Type:     schema.TypeString,
 				Optional: true,
@@ -144,6 +158,32 @@ func resourceAwsOrganizationsOrganizationCreate(d *schema.ResourceData, meta int
 
 		if err != nil {
 			return fmt.Errorf("error enabling AWS Service Access (%s) in Organization: %s", principal, err)
+		}
+	}
+
+	enabledPolicyTypes := d.Get("enabled_policy_types").(*schema.Set).List()
+
+	if len(enabledPolicyTypes) > 0 {
+		defaultRoot, err := getOrganizationDefaultRoot(conn)
+
+		if err != nil {
+			return fmt.Errorf("error getting AWS Organization (%s) default root: %s", d.Id(), err)
+		}
+
+		for _, v := range enabledPolicyTypes {
+			enabledPolicyType := v.(string)
+			input := &organizations.EnablePolicyTypeInput{
+				PolicyType: aws.String(enabledPolicyType),
+				RootId:     defaultRoot.Id,
+			}
+
+			if _, err := conn.EnablePolicyType(input); err != nil {
+				return fmt.Errorf("error enabling policy type (%s) in Organization (%s): %s", enabledPolicyType, d.Id(), err)
+			}
+
+			if err := waitForOrganizationDefaultRootPolicyTypeEnable(conn, enabledPolicyType); err != nil {
+				return fmt.Errorf("error waiting for policy type (%s) enabling in Organization (%s): %s", enabledPolicyType, d.Id(), err)
+			}
 		}
 	}
 
@@ -220,6 +260,18 @@ func resourceAwsOrganizationsOrganizationRead(d *schema.ResourceData, meta inter
 		return fmt.Errorf("error setting aws_service_access_principals: %s", err)
 	}
 
+	enabledPolicyTypes := make([]string, 0)
+
+	for _, policyType := range roots[0].PolicyTypes {
+		if aws.StringValue(policyType.Status) == organizations.PolicyTypeStatusEnabled {
+			enabledPolicyTypes = append(enabledPolicyTypes, aws.StringValue(policyType.Type))
+		}
+	}
+
+	if err := d.Set("enabled_policy_types", enabledPolicyTypes); err != nil {
+		return fmt.Errorf("error setting enabled_policy_types: %s", err)
+	}
+
 	return nil
 }
 
@@ -256,6 +308,47 @@ func resourceAwsOrganizationsOrganizationUpdate(d *schema.ResourceData, meta int
 
 			if err != nil {
 				return fmt.Errorf("error enabling AWS Service Access (%s) in Organization: %s", principal, err)
+			}
+		}
+	}
+
+	if d.HasChange("enabled_policy_types") {
+		defaultRootID := d.Get("roots.0.id").(string)
+		o, n := d.GetChange("enabled_policy_types")
+		oldSet := o.(*schema.Set)
+		newSet := n.(*schema.Set)
+
+		for _, v := range oldSet.Difference(newSet).List() {
+			policyType := v.(string)
+			input := &organizations.DisablePolicyTypeInput{
+				PolicyType: aws.String(policyType),
+				RootId:     aws.String(defaultRootID),
+			}
+
+			log.Printf("[DEBUG] Disabling Policy Type in Organization: %s", input)
+			if _, err := conn.DisablePolicyType(input); err != nil {
+				return fmt.Errorf("error disabling policy type (%s) in Organization (%s) Root (%s): %s", policyType, d.Id(), defaultRootID, err)
+			}
+
+			if err := waitForOrganizationDefaultRootPolicyTypeDisable(conn, policyType); err != nil {
+				return fmt.Errorf("error waiting for policy type (%s) disabling in Organization (%s) Root (%s): %s", policyType, d.Id(), defaultRootID, err)
+			}
+		}
+
+		for _, v := range newSet.Difference(oldSet).List() {
+			policyType := v.(string)
+			input := &organizations.EnablePolicyTypeInput{
+				PolicyType: aws.String(policyType),
+				RootId:     aws.String(defaultRootID),
+			}
+
+			log.Printf("[DEBUG] Enabling Policy Type in Organization: %s", input)
+			if _, err := conn.EnablePolicyType(input); err != nil {
+				return fmt.Errorf("error enabling policy type (%s) in Organization (%s) Root (%s): %s", policyType, d.Id(), defaultRootID, err)
+			}
+
+			if err := waitForOrganizationDefaultRootPolicyTypeEnable(conn, policyType); err != nil {
+				return fmt.Errorf("error waiting for policy type (%s) enabling in Organization (%s) Root (%s): %s", policyType, d.Id(), defaultRootID, err)
 			}
 		}
 	}
@@ -320,4 +413,74 @@ func flattenOrganizationsRootPolicyTypeSummaries(summaries []*organizations.Poli
 		})
 	}
 	return result
+}
+
+func getOrganizationDefaultRoot(conn *organizations.Organizations) (*organizations.Root, error) {
+	var roots []*organizations.Root
+
+	err := conn.ListRootsPages(&organizations.ListRootsInput{}, func(page *organizations.ListRootsOutput, lastPage bool) bool {
+		roots = append(roots, page.Roots...)
+
+		return !lastPage
+	})
+
+	if err != nil {
+		return nil, err
+	}
+
+	if len(roots) == 0 {
+		return nil, fmt.Errorf("no roots found")
+	}
+
+	return roots[0], nil
+}
+
+func getOrganizationDefaultRootPolicyTypeRefreshFunc(conn *organizations.Organizations, policyType string) resource.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		defaultRoot, err := getOrganizationDefaultRoot(conn)
+
+		if err != nil {
+			return nil, "", fmt.Errorf("error getting default root: %s", err)
+		}
+
+		for _, pt := range defaultRoot.PolicyTypes {
+			if aws.StringValue(pt.Type) == policyType {
+				return pt, aws.StringValue(pt.Status), nil
+			}
+		}
+
+		return &organizations.PolicyTypeSummary{}, organizationsPolicyTypeStatusDisabled, nil
+	}
+}
+
+func waitForOrganizationDefaultRootPolicyTypeDisable(conn *organizations.Organizations, policyType string) error {
+	stateConf := &resource.StateChangeConf{
+		Pending: []string{
+			organizations.PolicyTypeStatusEnabled,
+			organizations.PolicyTypeStatusPendingDisable,
+		},
+		Target:  []string{organizationsPolicyTypeStatusDisabled},
+		Refresh: getOrganizationDefaultRootPolicyTypeRefreshFunc(conn, policyType),
+		Timeout: 5 * time.Minute,
+	}
+
+	_, err := stateConf.WaitForState()
+
+	return err
+}
+
+func waitForOrganizationDefaultRootPolicyTypeEnable(conn *organizations.Organizations, policyType string) error {
+	stateConf := &resource.StateChangeConf{
+		Pending: []string{
+			organizationsPolicyTypeStatusDisabled,
+			organizations.PolicyTypeStatusPendingEnable,
+		},
+		Target:  []string{organizations.PolicyTypeStatusEnabled},
+		Refresh: getOrganizationDefaultRootPolicyTypeRefreshFunc(conn, policyType),
+		Timeout: 5 * time.Minute,
+	}
+
+	_, err := stateConf.WaitForState()
+
+	return err
 }
