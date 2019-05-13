@@ -1,5 +1,9 @@
 ## 2.11.0 (Unreleased)
 
+FEATURES:
+
+* **New Data Source:** `aws_ecr_image` [GH-8403]
+
 ENHANCEMENTS:
 
 * resource/aws_autoscaling_schedule: Support resource import [GH-8300]
