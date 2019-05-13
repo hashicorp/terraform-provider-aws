@@ -18093,6 +18093,44 @@ type UpdateConstraintInput struct {
 	//
 	// Id is a required field
 	Id *string `min:"1" type:"string" required:"true"`
+
+	// The constraint parameters, in JSON format. The syntax depends on the constraint
+	// type as follows:
+	//
+	// LAUNCHSpecify the RoleArn property as follows:
+	//
+	// {"RoleArn" : "arn:aws:iam::123456789012:role/LaunchRole"}
+	//
+	// You cannot have both a LAUNCH and a STACKSET constraint.
+	//
+	// You also cannot have more than one LAUNCH constraint on a product and portfolio.
+	//
+	// NOTIFICATIONSpecify the NotificationArns property as follows:
+	//
+	// {"NotificationArns" : ["arn:aws:sns:us-east-1:123456789012:Topic"]}
+	//
+	// RESOURCE_UPDATESpecify the TagUpdatesOnProvisionedProduct property as follows:
+	//
+	// {"Version":"2.0","Properties":{"TagUpdateOnProvisionedProduct":"String"}}
+	//
+	// The TagUpdatesOnProvisionedProduct property accepts a string value of ALLOWED
+	// or NOT_ALLOWED.
+	//
+	// STACKSETSpecify the Parameters property as follows:
+	//
+	// {"Version": "String", "Properties": {"AccountList": [ "String" ], "RegionList":
+	// [ "String" ], "AdminRole": "String", "ExecutionRole": "String"}}
+	//
+	// You cannot have both a LAUNCH and a STACKSET constraint.
+	//
+	// You also cannot have more than one STACKSET constraint on a product and portfolio.
+	//
+	// Products with a STACKSET constraint will launch an AWS CloudFormation stack
+	// set.
+	//
+	// TEMPLATESpecify the Rules property. For more information, see Template Constraint
+	// Rules (http://docs.aws.amazon.com/servicecatalog/latest/adminguide/reference-template_constraint_rules.html).
+	Parameters *string `type:"string"`
 }
 
 // String returns the string representation
@@ -18136,6 +18174,12 @@ func (s *UpdateConstraintInput) SetDescription(v string) *UpdateConstraintInput 
 // SetId sets the Id field's value.
 func (s *UpdateConstraintInput) SetId(v string) *UpdateConstraintInput {
 	s.Id = &v
+	return s
+}
+
+// SetParameters sets the Parameters field's value.
+func (s *UpdateConstraintInput) SetParameters(v string) *UpdateConstraintInput {
+	s.Parameters = &v
 	return s
 }
 
