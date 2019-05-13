@@ -1134,6 +1134,32 @@ func TestAccAWSLambdaFunction_runtimeValidation_noRuntime(t *testing.T) {
 	})
 }
 
+func TestAccAWSLambdaFunction_runtimeValidation_NodeJs10x(t *testing.T) {
+	var conf lambda.GetFunctionOutput
+
+	rString := acctest.RandString(8)
+
+	funcName := fmt.Sprintf("tf_acc_lambda_func_runtime_valid_nodejs10x_%s", rString)
+	policyName := fmt.Sprintf("tf_acc_policy_lambda_func_runtime_valid_nodejs10x_%s", rString)
+	roleName := fmt.Sprintf("tf_acc_role_lambda_func_runtime_valid_nodejs10x_%s", rString)
+	sgName := fmt.Sprintf("tf_acc_sg_lambda_func_runtime_valid_nodejs10x_%s", rString)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckLambdaFunctionDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSLambdaConfigNodeJs10xRuntime(funcName, policyName, roleName, sgName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAwsLambdaFunctionExists("aws_lambda_function.lambda_function_test", funcName, &conf),
+					resource.TestCheckResourceAttr("aws_lambda_function.lambda_function_test", "runtime", lambda.RuntimeNodejs10X),
+				),
+			},
+		},
+	})
+}
+
 func TestAccAWSLambdaFunction_runtimeValidation_NodeJs810(t *testing.T) {
 	var conf lambda.GetFunctionOutput
 
@@ -2151,6 +2177,18 @@ resource "aws_lambda_function" "lambda_function_test" {
     function_name = "%s"
     role = "${aws_iam_role.iam_for_lambda.arn}"
     handler = "exports.example"
+}
+`, funcName)
+}
+
+func testAccAWSLambdaConfigNodeJs10xRuntime(funcName, policyName, roleName, sgName string) string {
+	return fmt.Sprintf(baseAccAWSLambdaConfig(policyName, roleName, sgName)+`
+resource "aws_lambda_function" "lambda_function_test" {
+    filename = "test-fixtures/lambdatest.zip"
+    function_name = "%s"
+    role = "${aws_iam_role.iam_for_lambda.arn}"
+    handler = "exports.example"
+    runtime = "nodejs10.x"
 }
 `, funcName)
 }
