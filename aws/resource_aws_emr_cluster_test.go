@@ -2826,10 +2826,10 @@ resource "aws_main_route_table_association" "a" {
 `, r, password)
 }
 
-func testAccAWSEmrClusterConfig_SecurityConfiguration(r int) string {
+func testAccAWSEmrClusterConfig_SecurityConfiguration(rInt int) string {
 	return fmt.Sprintf(`
 resource "aws_emr_cluster" "tf-test-cluster" {
-  name          = "emr-test-%d"
+  name          = "emr-test-%[1]d"
   release_label = "emr-5.5.0"
   applications  = ["Spark"]
 
@@ -2871,7 +2871,7 @@ resource "aws_emr_cluster" "tf-test-cluster" {
 }
 
 resource "aws_security_group" "allow_all" {
-  name        = "allow_all_%d"
+  name        = "allow_all_%[1]d"
   description = "Allow all inbound traffic"
   vpc_id      = "${aws_vpc.main.id}"
 
@@ -2944,7 +2944,7 @@ resource "aws_main_route_table_association" "a" {
 
 # IAM role for EMR Service
 resource "aws_iam_role" "iam_emr_default_role" {
-  name = "iam_emr_default_role_%d"
+  name = "iam_emr_default_role_%[1]d"
 
   assume_role_policy = <<EOT
 {
@@ -2969,7 +2969,7 @@ resource "aws_iam_role_policy_attachment" "service-attach" {
 }
 
 resource "aws_iam_policy" "iam_emr_default_policy" {
-  name = "iam_emr_default_policy_%d"
+  name = "iam_emr_default_policy_%[1]d"
 
   policy = <<EOT
 {
@@ -3039,7 +3039,7 @@ EOT
 
 # IAM Role for EC2 Instance Profile
 resource "aws_iam_role" "iam_emr_profile_role" {
-  name = "iam_emr_profile_role_%d"
+  name = "iam_emr_profile_role_%[1]d"
 
   assume_role_policy = <<EOT
 {
@@ -3059,7 +3059,7 @@ EOT
 }
 
 resource "aws_iam_instance_profile" "emr_profile" {
-  name  = "emr_profile_%d"
+  name  = "emr_profile_%[1]d"
   role = "${aws_iam_role.iam_emr_profile_role.name}"
 }
 
@@ -3069,7 +3069,7 @@ resource "aws_iam_role_policy_attachment" "profile-attach" {
 }
 
 resource "aws_iam_policy" "iam_emr_profile_policy" {
-  name = "iam_emr_profile_policy_%d"
+  name = "iam_emr_profile_policy_%[1]d"
 
   policy = <<EOT
 {
@@ -3108,7 +3108,7 @@ EOT
 
 # IAM Role for autoscaling
 resource "aws_iam_role" "emr-autoscaling-role" {
-  name               = "EMR_AutoScaling_DefaultRole_%d"
+  name               = "EMR_AutoScaling_DefaultRole_%[1]d"
   assume_role_policy = "${data.aws_iam_policy_document.emr-autoscaling-role-policy.json}"
 }
 
@@ -3149,7 +3149,7 @@ EOF
 }
 
 resource "aws_kms_key" "foo" {
-    description = "Terraform acc test %d"
+    description = "Terraform acc test %[1]d"
     deletion_window_in_days = 7
     policy = <<POLICY
 {
@@ -3169,7 +3169,7 @@ resource "aws_kms_key" "foo" {
 }
 POLICY
 }
-`, r, r, r, r, r, r, r, r, r)
+`, rInt)
 }
 
 const testAccAWSEmrClusterConfig_Step_DebugLoggingStep = `
