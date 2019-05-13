@@ -115,13 +115,5 @@ func dataSourceAwsEcrImageRead(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("failed to set image_tags: %s", err)
 	}
 
-	tags := []string{}
-	for _, t := range image.ImageTags {
-		tags = append(tags, *t)
-	}
-	if err := d.Set("image_tags", tags); err != nil {
-		return fmt.Errorf("failed to set image_tags: %s", err)
-	}
-
 	return nil
 }
