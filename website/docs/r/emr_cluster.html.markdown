@@ -227,7 +227,7 @@ EOF
 
 ## core_instance_group Configuration Block
 
-Supported nested arguments for the `core_instance_group` configuration block:
+Supported arguments for the `core_instance_group` configuration block:
 
 * `instance_type` - (Required) EC2 instance type for all instances in the instance group.
 * `autoscaling_policy` - (Optional) String containing the [EMR Auto Scaling Policy](https://docs.aws.amazon.com/emr/latest/ManagementGuide/emr-automatic-scaling.html) JSON.
