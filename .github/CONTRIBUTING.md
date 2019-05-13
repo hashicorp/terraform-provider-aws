@@ -327,7 +327,7 @@ The Terraform AWS Provider follows common practices to ensure consistent and rel
 
 #### Resource Contribution Guidelines
 
-The below are required items that will be noted during submission review and prevent immediate merging:
+The following resource checks need to be addressed before your contribution can be merged. The exclusion of any applicable check may result in a delayed time to merge. 
 
 - [ ] __Passes Testing__: All code and documentation changes must pass unit testing, code linting, and website link testing. Resource code changes must pass all acceptance testing for the resource.
 - [ ] __Avoids API Calls Across Account, Region, and Service Boundaries__: Resources should not implement cross-account, cross-region, or cross-service API calls.
