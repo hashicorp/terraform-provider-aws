@@ -1,4 +1,9 @@
 ## 2.11.0 (Unreleased)
+
+ENHANCEMENTS:
+
+* resource/aws_autoscaling_schedule: Support resource import [GH-8300]
+
 ## 2.10.0 (May 10, 2019)
 
 FEATURES:
