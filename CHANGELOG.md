@@ -4,6 +4,11 @@ ENHANCEMENTS:
 
 * resource/aws_autoscaling_schedule: Support resource import [GH-8300]
 
+BUG FIXES:
+
+* resource/aws_vpn_gateway: Handle `attaching` and `detaching` attachment status [GH-8576]
+* resource/aws_vpn_gateway_attachment: Handle `attaching` and `detaching` attachment status [GH-8576]
+
 ## 2.10.0 (May 10, 2019)
 
 FEATURES:
