@@ -15,6 +15,7 @@ ENHANCEMENTS:
 * resource/aws_autoscaling_schedule: Support resource import [GH-8300]
 * resource/aws_emr_cluster: Add `master_instance_group` and `core_instance_group` configuration blocks (deprecates other instance group configuration methods) [GH-8459]
 * resource/aws_lambda_function: Support `nodejs10.x` in `runtime` validation [GH-8622]
+* resource/aws_sns_topic: Add `tags` argument [GH-8468]
 
 BUG FIXES:
 
