@@ -299,3 +299,15 @@ func setVpcEndpointServiceUpdateLists(d *schema.ResourceData, key string, a, r *
 
 	return true
 }
+
+func flattenVpcEndpointServiceAllowedPrincipals(allowedPrincipals []*ec2.AllowedPrincipal) *schema.Set {
+	vPrincipals := []interface{}{}
+
+	for _, allowedPrincipal := range allowedPrincipals {
+		if allowedPrincipal.Principal != nil {
+			vPrincipals = append(vPrincipals, aws.StringValue(allowedPrincipal.Principal))
+		}
+	}
+
+	return schema.NewSet(schema.HashString, vPrincipals)
+}
