@@ -493,6 +493,14 @@ func resourceAwsLbListenerCreate(d *schema.ResourceData, meta interface{}) error
 		return nil
 	})
 
+	if isResourceTimeoutError(err) {
+		_, err := elbconn.CreateListener(params)
+
+		if err != nil {
+			return fmt.Errorf("Error creating LB Listener: %s", err)
+		}
+	}
+
 	if err != nil {
 		return fmt.Errorf("Error creating LB Listener: %s", err)
 	}
@@ -525,6 +533,14 @@ func resourceAwsLbListenerRead(d *schema.ResourceData, meta interface{}) error {
 		}
 		return nil
 	})
+
+	if isResourceTimeoutError(err) {
+		_, err := elbconn.DescribeListeners(request)
+
+		if err != nil {
+			return fmt.Errorf("Error retrieving Listener: %s", err)
+		}
+	}
 
 	if isAWSErr(err, elbv2.ErrCodeListenerNotFoundException, "") {
 		log.Printf("[WARN] ELBv2 Listener (%s) not found - removing from state", d.Id())
