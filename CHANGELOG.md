@@ -7,6 +7,7 @@ NOTES:
 FEATURES:
 
 * **New Data Source:** `aws_ecr_image` [GH-8403]
+* **New Data Source:** `aws_ram_resource_share` [GH-8491]
 * **New Guide:** Version 3 Upgrade Guide [GH-8459]
 
 ENHANCEMENTS:
