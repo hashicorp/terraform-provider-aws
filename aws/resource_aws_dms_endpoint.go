@@ -141,10 +141,7 @@ func resourceAwsDmsEndpoint() *schema.Resource {
 							Optional: true,
 							Default:  "PASSWORD",
 							DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
-								if strings.ToLower(old) == strings.ToLower(new) {
-									return true
-								}
-								return false
+								return strings.EqualFold(old, new)
 							},
 						},
 						"auth_mechanism": {
@@ -152,10 +149,7 @@ func resourceAwsDmsEndpoint() *schema.Resource {
 							Optional: true,
 							Default:  "DEFAULT",
 							DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
-								if strings.ToLower(old) == strings.ToLower(new) {
-									return true
-								}
-								return false
+								return strings.EqualFold(old, new)
 							},
 						},
 						"nesting_level": {
@@ -163,10 +157,7 @@ func resourceAwsDmsEndpoint() *schema.Resource {
 							Optional: true,
 							Default:  "NONE",
 							DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
-								if strings.ToLower(old) == strings.ToLower(new) {
-									return true
-								}
-								return false
+								return strings.EqualFold(old, new)
 							},
 						},
 						"extract_doc_id": {
