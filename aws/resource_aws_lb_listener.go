@@ -799,6 +799,15 @@ func resourceAwsLbListenerUpdate(d *schema.ResourceData, meta interface{}) error
 		}
 		return nil
 	})
+
+	if isResourceTimeoutError(err) {
+		_, err := elbconn.ModifyListener(params)
+
+		if err != nil {
+			return fmt.Errorf("Error modifying LB Listener: %s", err)
+		}
+	}
+
 	if err != nil {
 		return fmt.Errorf("Error modifying LB Listener: %s", err)
 	}
