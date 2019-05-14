@@ -6,6 +6,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ram"
 	"github.com/hashicorp/terraform/helper/schema"
+	"github.com/hashicorp/terraform/helper/validation"
 )
 
 func dataSourceAwsRamResourceShare() *schema.Resource {
@@ -16,7 +17,6 @@ func dataSourceAwsRamResourceShare() *schema.Resource {
 			"filter": {
 				Type:     schema.TypeSet,
 				Optional: true,
-				MinItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"name": {
@@ -35,6 +35,10 @@ func dataSourceAwsRamResourceShare() *schema.Resource {
 			"resource_owner": {
 				Type:     schema.TypeString,
 				Required: true,
+				ValidateFunc: validation.StringInSlice([]string{
+					ram.ResourceOwnerOtherAccounts,
+					ram.ResourceOwnerSelf,
+				}, false),
 			},
 
 			"name": {
@@ -103,7 +107,11 @@ func dataSourceAwsRamResourceShareRead(d *schema.ResourceData, meta interface{})
 				d.Set("arn", aws.StringValue(r.ResourceShareArn))
 				d.Set("owning_account_id", aws.StringValue(r.OwningAccountId))
 				d.Set("status", aws.StringValue(r.Status))
-				d.Set("tags", r.Tags)
+
+				if err := d.Set("tags", tagsToMapRAM(r.Tags)); err != nil {
+					return fmt.Errorf("error setting tags: %s", err)
+				}
+
 				break
 			}
 		}

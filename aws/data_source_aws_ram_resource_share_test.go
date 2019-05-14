@@ -47,6 +47,7 @@ func TestAccDataSourceAwsRamResourceShare_Tags(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(datasourceName, "name", resourceName, "name"),
 					resource.TestCheckResourceAttrPair(datasourceName, "id", resourceName, "id"),
+					resource.TestCheckResourceAttrPair(datasourceName, "tags.%", resourceName, "tags.%"),
 				),
 			},
 		},
@@ -81,12 +82,12 @@ resource "aws_ram_resource_share" "test" {
 
 data "aws_ram_resource_share" "test" {
   name = "${aws_ram_resource_share.test.name}"
-	resource_owner = "SELF"
+  resource_owner = "SELF"
 	
-	filter = {
-		name = "Name"
-		values = ["%s-Tags"]
-	}
+  filter {
+	name = "Name"
+	values = ["%s-Tags"]
+  }
 }
 `, rName, rName, rName)
 }
