@@ -214,6 +214,7 @@ func TestAccAWSMskCluster_brokerNodes(t *testing.T) {
 					resource.TestCheckResourceAttrPair(resourceName, "broker_node_group_info.0.client_subnets.2", "aws_subnet.example_subnet_az3", "id"),
 					resource.TestCheckResourceAttr(resourceName, "broker_node_group_info.0.security_groups.#", "1"),
 					resource.TestCheckResourceAttrPair(resourceName, "broker_node_group_info.0.security_groups.0", "aws_security_group.example_sg", "id"),
+					resource.TestCheckResourceAttr(resourceName, "kafka_version", "2.1.0"),
 				),
 			},
 			{
@@ -417,24 +418,6 @@ resource "aws_msk_cluster" "example" {
 		security_groups = [ "${aws_security_group.example_sg.id}" ]
 	}
 	enhanced_monitoring = "PER_BROKER"
-}
-`, randInt)
-
-}
-
-func testAccMskClusterConfig_v2_1_0(randInt int) string {
-	return testAccMskClusterBaseConfig() + fmt.Sprintf(`
-
-resource "aws_msk_cluster" "example" {
-	cluster_name = "tf-test-%d"
-	kafka_version = "2.1.0"
-	number_of_broker_nodes = 3
-	broker_node_group_info {
-		instance_type = "kafka.m5.large"
-		ebs_volume_size = 1
-		client_subnets = [ "${aws_subnet.example_subnet_az1.id}", "${aws_subnet.example_subnet_az2.id}", "${aws_subnet.example_subnet_az3.id}" ] 
-		security_groups = [ "${aws_security_group.example_sg.id}" ]
-	}
 }
 `, randInt)
 
