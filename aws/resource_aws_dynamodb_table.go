@@ -354,6 +354,7 @@ func resourceAwsDynamoDbTableCreate(d *schema.ResourceData, meta interface{}) er
 	}
 
 	var output *dynamodb.CreateTableOutput
+	var requiresTagging bool
 	err := resource.Retry(2*time.Minute, func() *resource.RetryError {
 		var err error
 		output, err = conn.CreateTable(req)
@@ -373,6 +374,13 @@ func resourceAwsDynamoDbTableCreate(d *schema.ResourceData, meta interface{}) er
 				req.BillingMode = nil
 				return resource.RetryableError(err)
 			}
+			// AWS GovCloud (US) and others may reply with the following until their API is updated:
+			// ValidationException: Unsupported input parameter Tags
+			if isAWSErr(err, "ValidationException", "Unsupported input parameter Tags") {
+				req.Tags = nil
+				requiresTagging = true
+				return resource.RetryableError(err)
+			}
 
 			return resource.NonRetryableError(err)
 		}
@@ -387,6 +395,12 @@ func resourceAwsDynamoDbTableCreate(d *schema.ResourceData, meta interface{}) er
 
 	if err := waitForDynamoDbTableToBeActive(d.Id(), d.Timeout(schema.TimeoutCreate), conn); err != nil {
 		return err
+	}
+
+	if requiresTagging {
+		if err := setTagsDynamoDb(conn, d); err != nil {
+			return fmt.Errorf("error adding DynamoDB Table (%s) tags: %s", d.Id(), err)
+		}
 	}
 
 	if d.Get("ttl.0.enabled").(bool) {
@@ -549,11 +563,10 @@ func resourceAwsDynamoDbTableUpdate(d *schema.ResourceData, meta interface{}) er
 			return fmt.Errorf("error updating DynamoDB Table (%s) time to live: %s", d.Id(), err)
 		}
 	}
-	if !d.IsNewResource() {
-		if d.HasChange("tags") {
-			if err := setTagsDynamoDb(conn, d); err != nil {
-				return fmt.Errorf("error updating DynamoDB Table (%s) tags: %s", d.Id(), err)
-			}
+
+	if d.HasChange("tags") {
+		if err := setTagsDynamoDb(conn, d); err != nil {
+			return fmt.Errorf("error updating DynamoDB Table (%s) tags: %s", d.Id(), err)
 		}
 	}
 
