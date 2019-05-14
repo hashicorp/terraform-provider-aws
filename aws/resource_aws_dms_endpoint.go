@@ -67,6 +67,7 @@ func resourceAwsDmsEndpoint() *schema.Resource {
 					"azuredb",
 					"docdb",
 					"dynamodb",
+					"kinesis",
 					"mariadb",
 					"mongodb",
 					"mysql",
@@ -139,16 +140,34 @@ func resourceAwsDmsEndpoint() *schema.Resource {
 							Type:     schema.TypeString,
 							Optional: true,
 							Default:  "PASSWORD",
+							DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+								if strings.ToLower(old) == strings.ToLower(new) {
+									return true
+								}
+								return false
+							},
 						},
 						"auth_mechanism": {
 							Type:     schema.TypeString,
 							Optional: true,
 							Default:  "DEFAULT",
+							DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+								if strings.ToLower(old) == strings.ToLower(new) {
+									return true
+								}
+								return false
+							},
 						},
 						"nesting_level": {
 							Type:     schema.TypeString,
 							Optional: true,
 							Default:  "NONE",
+							DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+								if strings.ToLower(old) == strings.ToLower(new) {
+									return true
+								}
+								return false
+							},
 						},
 						"extract_doc_id": {
 							Type:     schema.TypeString,
@@ -218,6 +237,39 @@ func resourceAwsDmsEndpoint() *schema.Resource {
 					},
 				},
 			},
+			"kinesis_settings": {
+				Type:     schema.TypeList,
+				Optional: true,
+				MaxItems: 1,
+				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+					if old == "1" && new == "0" {
+						return true
+					}
+					return false
+				},
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"message_format": {
+							Type:     schema.TypeString,
+							Optional: true,
+							ValidateFunc: validation.StringInSlice([]string{
+								"JSON",
+							}, false),
+							Default: "JSON",
+						},
+						"service_access_role_arn": {
+							Type:     schema.TypeString,
+							Optional: true,
+							Default:  "",
+						},
+						"stream_arn": {
+							Type:     schema.TypeString,
+							Optional: true,
+							Default:  "",
+						},
+					},
+				},
+			},
 		},
 	}
 }
@@ -237,6 +289,12 @@ func resourceAwsDmsEndpointCreate(d *schema.ResourceData, meta interface{}) erro
 	case "dynamodb":
 		request.DynamoDbSettings = &dms.DynamoDbSettings{
 			ServiceAccessRoleArn: aws.String(d.Get("service_access_role").(string)),
+		}
+	case "kinesis":
+		request.KinesisSettings = &dms.KinesisSettings{
+			MessageFormat:        aws.String(d.Get("kinesis_settings.0.message_format").(string)),
+			ServiceAccessRoleArn: aws.String(d.Get("kinesis_settings.0.service_access_role_arn").(string)),
+			StreamArn:            aws.String(d.Get("kinesis_settings.0.stream_arn").(string)),
 		}
 	case "mongodb":
 		request.MongoDbSettings = &dms.MongoDbSettings{
@@ -413,6 +471,19 @@ func resourceAwsDmsEndpointUpdate(d *schema.ResourceData, meta interface{}) erro
 			}
 			hasChanges = true
 		}
+	case "kinesis":
+		if d.HasChange("kinesis_settings.0.service_access_role_arn") ||
+			d.HasChange("kinesis_settings.0.stream_arn") {
+			// Intentionally omitting MessageFormat, because it's rejected on ModifyEndpoint calls.
+			// "An error occurred (InvalidParameterValueException) when calling the ModifyEndpoint
+			// operation: Message format  cannot be modified for kinesis endpoints."
+			request.KinesisSettings = &dms.KinesisSettings{
+				ServiceAccessRoleArn: aws.String(d.Get("kinesis_settings.0.service_access_role_arn").(string)),
+				StreamArn:            aws.String(d.Get("kinesis_settings.0.stream_arn").(string)),
+			}
+			request.EngineName = aws.String(d.Get("engine_name").(string)) // Must be included (should be 'kinesis')
+			hasChanges = true
+		}
 	case "mongodb":
 		if d.HasChange("username") ||
 			d.HasChange("password") ||
@@ -542,6 +613,10 @@ func resourceAwsDmsEndpointSetState(d *schema.ResourceData, endpoint *dms.Endpoi
 		} else {
 			d.Set("service_access_role", "")
 		}
+	case "kinesis":
+		if err := d.Set("kinesis_settings", flattenDmsKinesisSettings(endpoint.KinesisSettings)); err != nil {
+			return fmt.Errorf("Error setting kinesis_settings for DMS: %s", err)
+		}
 	case "mongodb":
 		if endpoint.MongoDbSettings != nil {
 			d.Set("username", endpoint.MongoDbSettings.Username)
@@ -589,6 +664,11 @@ func flattenDmsMongoDbSettings(settings *dms.MongoDbSettings) []map[string]inter
 		"auth_source":         aws.StringValue(settings.AuthSource),
 	}
 
+	// The DMS API returns "scram-sha-1", cf. https://github.com/aws/aws-sdk-go/issues/2522
+	if *settings.AuthMechanism == "scram-sha-1" {
+		m["auth_mechanism"] = "scram_sha_1"
+	}
+
 	return []map[string]interface{}{m}
 }
 
@@ -605,6 +685,20 @@ func flattenDmsS3Settings(settings *dms.S3Settings) []map[string]interface{} {
 		"bucket_folder":             aws.StringValue(settings.BucketFolder),
 		"bucket_name":               aws.StringValue(settings.BucketName),
 		"compression_type":          aws.StringValue(settings.CompressionType),
+	}
+
+	return []map[string]interface{}{m}
+}
+
+func flattenDmsKinesisSettings(settings *dms.KinesisSettings) []map[string]interface{} {
+	if settings == nil {
+		return []map[string]interface{}{}
+	}
+
+	m := map[string]interface{}{
+		"message_format":          aws.StringValue(settings.MessageFormat),
+		"service_access_role_arn": aws.StringValue(settings.ServiceAccessRoleArn),
+		"stream_arn":              aws.StringValue(settings.StreamArn),
 	}
 
 	return []map[string]interface{}{m}
