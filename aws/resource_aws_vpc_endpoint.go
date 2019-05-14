@@ -460,3 +460,26 @@ func setVpcEndpointUpdateLists(d *schema.ResourceData, key string, a, r *[]*stri
 		}
 	}
 }
+
+func flattenVpcEndpointDnsEntries(dnsEntries []*ec2.DnsEntry) []interface{} {
+	vDnsEntries := []interface{}{}
+
+	for _, dnsEntry := range dnsEntries {
+		vDnsEntries = append(vDnsEntries, map[string]interface{}{
+			"dns_name":       aws.StringValue(dnsEntry.DnsName),
+			"hosted_zone_id": aws.StringValue(dnsEntry.HostedZoneId),
+		})
+	}
+
+	return vDnsEntries
+}
+
+func flattenVpcEndpointSecurityGroupIds(groups []*ec2.SecurityGroupIdentifier) *schema.Set {
+	vSecurityGroupIds := []interface{}{}
+
+	for _, group := range groups {
+		vSecurityGroupIds = append(vSecurityGroupIds, aws.StringValue(group.GroupId))
+	}
+
+	return schema.NewSet(schema.HashString, vSecurityGroupIds)
+}

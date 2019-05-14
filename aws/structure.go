@@ -4467,39 +4467,6 @@ func expandDynamoDbEncryptAtRestOptions(m map[string]interface{}) *dynamodb.SSES
 	return &options
 }
 
-func flattenVpcEndpointServiceAllowedPrincipals(allowedPrincipals []*ec2.AllowedPrincipal) []string {
-	result := make([]string, 0, len(allowedPrincipals))
-	for _, allowedPrincipal := range allowedPrincipals {
-		if allowedPrincipal.Principal != nil {
-			result = append(result, *allowedPrincipal.Principal)
-		}
-	}
-	return result
-}
-
-func flattenVpcEndpointSecurityGroupIds(groups []*ec2.SecurityGroupIdentifier) *schema.Set {
-	vSecurityGroupIds := []interface{}{}
-
-	for _, group := range groups {
-		vSecurityGroupIds = append(vSecurityGroupIds, aws.StringValue(group.GroupId))
-	}
-
-	return schema.NewSet(schema.HashString, vSecurityGroupIds)
-}
-
-func flattenVpcEndpointDnsEntries(dnsEntries []*ec2.DnsEntry) []interface{} {
-	vDnsEntries := []interface{}{}
-
-	for _, dnsEntry := range dnsEntries {
-		vDnsEntries = append(vDnsEntries, map[string]interface{}{
-			"dns_name":       aws.StringValue(dnsEntry.DnsName),
-			"hosted_zone_id": aws.StringValue(dnsEntry.HostedZoneId),
-		})
-	}
-
-	return vDnsEntries
-}
-
 func expandDynamoDbTableItemAttributes(input string) (map[string]*dynamodb.AttributeValue, error) {
 	var attributes map[string]*dynamodb.AttributeValue
 
