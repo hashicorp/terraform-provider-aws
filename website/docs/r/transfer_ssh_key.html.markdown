@@ -6,7 +6,7 @@ description: |-
   Provides a AWS Transfer SSH Public Key resource.
 ---
 
-# aws_transfer_ssh_key
+# Resource: aws_transfer_ssh_key
 
 Provides a AWS Transfer User SSH Key resource.
 

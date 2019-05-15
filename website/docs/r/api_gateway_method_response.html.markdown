@@ -6,7 +6,7 @@ description: |-
   Provides an HTTP Method Response for an API Gateway Resource.
 ---
 
-# aws_api_gateway_method_response
+# Resource: aws_api_gateway_method_response
 
 Provides an HTTP Method Response for an API Gateway Resource.
 

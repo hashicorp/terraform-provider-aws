@@ -1456,7 +1456,7 @@ type DeleteScalingPolicyInput struct {
 
 	// The namespace of the AWS service that provides the resource or custom-resource
 	// for a resource provided by your own application or service. For more information,
-	// see AWS Service Namespaces (http://docs.aws.amazon.com/general/latest/gr/aws-arns-and-namespaces.html#genref-aws-service-namespaces)
+	// see AWS Service Namespaces (https://docs.aws.amazon.com/general/latest/gr/aws-arns-and-namespaces.html#genref-aws-service-namespaces)
 	// in the Amazon Web Services General Reference.
 	//
 	// ServiceNamespace is a required field
@@ -1623,7 +1623,7 @@ type DeleteScheduledActionInput struct {
 
 	// The namespace of the AWS service that provides the resource or custom-resource
 	// for a resource provided by your own application or service. For more information,
-	// see AWS Service Namespaces (http://docs.aws.amazon.com/general/latest/gr/aws-arns-and-namespaces.html#genref-aws-service-namespaces)
+	// see AWS Service Namespaces (https://docs.aws.amazon.com/general/latest/gr/aws-arns-and-namespaces.html#genref-aws-service-namespaces)
 	// in the Amazon Web Services General Reference.
 	//
 	// ServiceNamespace is a required field
@@ -1785,7 +1785,7 @@ type DeregisterScalableTargetInput struct {
 
 	// The namespace of the AWS service that provides the resource or custom-resource
 	// for a resource provided by your own application or service. For more information,
-	// see AWS Service Namespaces (http://docs.aws.amazon.com/general/latest/gr/aws-arns-and-namespaces.html#genref-aws-service-namespaces)
+	// see AWS Service Namespaces (https://docs.aws.amazon.com/general/latest/gr/aws-arns-and-namespaces.html#genref-aws-service-namespaces)
 	// in the Amazon Web Services General Reference.
 	//
 	// ServiceNamespace is a required field
@@ -1945,7 +1945,7 @@ type DescribeScalableTargetsInput struct {
 
 	// The namespace of the AWS service that provides the resource or custom-resource
 	// for a resource provided by your own application or service. For more information,
-	// see AWS Service Namespaces (http://docs.aws.amazon.com/general/latest/gr/aws-arns-and-namespaces.html#genref-aws-service-namespaces)
+	// see AWS Service Namespaces (https://docs.aws.amazon.com/general/latest/gr/aws-arns-and-namespaces.html#genref-aws-service-namespaces)
 	// in the Amazon Web Services General Reference.
 	//
 	// ServiceNamespace is a required field
@@ -2127,7 +2127,7 @@ type DescribeScalingActivitiesInput struct {
 
 	// The namespace of the AWS service that provides the resource or custom-resource
 	// for a resource provided by your own application or service. For more information,
-	// see AWS Service Namespaces (http://docs.aws.amazon.com/general/latest/gr/aws-arns-and-namespaces.html#genref-aws-service-namespaces)
+	// see AWS Service Namespaces (https://docs.aws.amazon.com/general/latest/gr/aws-arns-and-namespaces.html#genref-aws-service-namespaces)
 	// in the Amazon Web Services General Reference.
 	//
 	// ServiceNamespace is a required field
@@ -2315,7 +2315,7 @@ type DescribeScalingPoliciesInput struct {
 
 	// The namespace of the AWS service that provides the resource or custom-resource
 	// for a resource provided by your own application or service. For more information,
-	// see AWS Service Namespaces (http://docs.aws.amazon.com/general/latest/gr/aws-arns-and-namespaces.html#genref-aws-service-namespaces)
+	// see AWS Service Namespaces (https://docs.aws.amazon.com/general/latest/gr/aws-arns-and-namespaces.html#genref-aws-service-namespaces)
 	// in the Amazon Web Services General Reference.
 	//
 	// ServiceNamespace is a required field
@@ -2509,7 +2509,7 @@ type DescribeScheduledActionsInput struct {
 
 	// The namespace of the AWS service that provides the resource or custom-resource
 	// for a resource provided by your own application or service. For more information,
-	// see AWS Service Namespaces (http://docs.aws.amazon.com/general/latest/gr/aws-arns-and-namespaces.html#genref-aws-service-namespaces)
+	// see AWS Service Namespaces (https://docs.aws.amazon.com/general/latest/gr/aws-arns-and-namespaces.html#genref-aws-service-namespaces)
 	// in the Amazon Web Services General Reference.
 	//
 	// ServiceNamespace is a required field
@@ -2740,8 +2740,8 @@ type PutScalingPolicyInput struct {
 	// policy.
 	//
 	// For information on which services do not support StepScaling or TargetTrackingScaling,
-	// see Step Scaling Policies for Application Auto Scaling (https://docs.aws.amazon.com/autoscaling/application/userguide/application-auto-scaling-step-scaling-policies.html)
-	// and Target Tracking Scaling Policies for Application Auto Scaling (https://docs.aws.amazon.com/autoscaling/application/userguide/application-auto-scaling-target-tracking.html)
+	// see the information about Limits in Step Scaling Policies (https://docs.aws.amazon.com/autoscaling/application/userguide/application-auto-scaling-step-scaling-policies.html)
+	// and Target Tracking Scaling Policies (https://docs.aws.amazon.com/autoscaling/application/userguide/application-auto-scaling-target-tracking.html)
 	// in the Application Auto Scaling User Guide.
 	PolicyType *string `type:"string" enum:"PolicyType"`
 
@@ -2821,7 +2821,7 @@ type PutScalingPolicyInput struct {
 
 	// The namespace of the AWS service that provides the resource or custom-resource
 	// for a resource provided by your own application or service. For more information,
-	// see AWS Service Namespaces (http://docs.aws.amazon.com/general/latest/gr/aws-arns-and-namespaces.html#genref-aws-service-namespaces)
+	// see AWS Service Namespaces (https://docs.aws.amazon.com/general/latest/gr/aws-arns-and-namespaces.html#genref-aws-service-namespaces)
 	// in the Amazon Web Services General Reference.
 	//
 	// ServiceNamespace is a required field
@@ -3076,7 +3076,7 @@ type PutScheduledActionInput struct {
 
 	// The namespace of the AWS service that provides the resource or custom-resource
 	// for a resource provided by your own application or service. For more information,
-	// see AWS Service Namespaces (http://docs.aws.amazon.com/general/latest/gr/aws-arns-and-namespaces.html#genref-aws-service-namespaces)
+	// see AWS Service Namespaces (https://docs.aws.amazon.com/general/latest/gr/aws-arns-and-namespaces.html#genref-aws-service-namespaces)
 	// in the Amazon Web Services General Reference.
 	//
 	// ServiceNamespace is a required field
@@ -3285,7 +3285,7 @@ type RegisterScalableTargetInput struct {
 
 	// The namespace of the AWS service that provides the resource or custom-resource
 	// for a resource provided by your own application or service. For more information,
-	// see AWS Service Namespaces (http://docs.aws.amazon.com/general/latest/gr/aws-arns-and-namespaces.html#genref-aws-service-namespaces)
+	// see AWS Service Namespaces (https://docs.aws.amazon.com/general/latest/gr/aws-arns-and-namespaces.html#genref-aws-service-namespaces)
 	// in the Amazon Web Services General Reference.
 	//
 	// ServiceNamespace is a required field
@@ -3478,7 +3478,7 @@ type ScalableTarget struct {
 
 	// The namespace of the AWS service that provides the resource or custom-resource
 	// for a resource provided by your own application or service. For more information,
-	// see AWS Service Namespaces (http://docs.aws.amazon.com/general/latest/gr/aws-arns-and-namespaces.html#genref-aws-service-namespaces)
+	// see AWS Service Namespaces (https://docs.aws.amazon.com/general/latest/gr/aws-arns-and-namespaces.html#genref-aws-service-namespaces)
 	// in the Amazon Web Services General Reference.
 	//
 	// ServiceNamespace is a required field
@@ -3671,7 +3671,7 @@ type ScalingActivity struct {
 
 	// The namespace of the AWS service that provides the resource or custom-resource
 	// for a resource provided by your own application or service. For more information,
-	// see AWS Service Namespaces (http://docs.aws.amazon.com/general/latest/gr/aws-arns-and-namespaces.html#genref-aws-service-namespaces)
+	// see AWS Service Namespaces (https://docs.aws.amazon.com/general/latest/gr/aws-arns-and-namespaces.html#genref-aws-service-namespaces)
 	// in the Amazon Web Services General Reference.
 	//
 	// ServiceNamespace is a required field
@@ -3870,7 +3870,7 @@ type ScalingPolicy struct {
 
 	// The namespace of the AWS service that provides the resource or custom-resource
 	// for a resource provided by your own application or service. For more information,
-	// see AWS Service Namespaces (http://docs.aws.amazon.com/general/latest/gr/aws-arns-and-namespaces.html#genref-aws-service-namespaces)
+	// see AWS Service Namespaces (https://docs.aws.amazon.com/general/latest/gr/aws-arns-and-namespaces.html#genref-aws-service-namespaces)
 	// in the Amazon Web Services General Reference.
 	//
 	// ServiceNamespace is a required field
@@ -4075,7 +4075,7 @@ type ScheduledAction struct {
 
 	// The namespace of the AWS service that provides the resource or custom-resource
 	// for a resource provided by your own application or service. For more information,
-	// see AWS Service Namespaces (http://docs.aws.amazon.com/general/latest/gr/aws-arns-and-namespaces.html#genref-aws-service-namespaces)
+	// see AWS Service Namespaces (https://docs.aws.amazon.com/general/latest/gr/aws-arns-and-namespaces.html#genref-aws-service-namespaces)
 	// in the Amazon Web Services General Reference.
 	//
 	// ServiceNamespace is a required field

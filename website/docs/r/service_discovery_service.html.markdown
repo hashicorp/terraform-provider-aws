@@ -6,7 +6,7 @@ description: |-
   Provides a Service Discovery Service resource.
 ---
 
-# aws_service_discovery_service
+# Resource: aws_service_discovery_service
 
 Provides a Service Discovery Service resource.
 

@@ -82,6 +82,9 @@ func (c *Transfer) CreateServerRequest(input *CreateServerInput) (req *request.R
 //   * ErrCodeInvalidRequestException "InvalidRequestException"
 //   This exception is thrown when the client submits a malformed request.
 //
+//   * ErrCodeResourceExistsException "ResourceExistsException"
+//   The requested resource does not exist.
+//
 // See also, https://docs.aws.amazon.com/goto/WebAPI/transfer-2018-11-05/CreateServer
 func (c *Transfer) CreateServer(input *CreateServerInput) (*CreateServerOutput, error) {
 	req, out := c.CreateServerRequest(input)
@@ -802,6 +805,12 @@ func (c *Transfer) ListServersRequest(input *ListServersInput) (req *request.Req
 		Name:       opListServers,
 		HTTPMethod: "POST",
 		HTTPPath:   "/",
+		Paginator: &request.Paginator{
+			InputTokens:     []string{"NextToken"},
+			OutputTokens:    []string{"NextToken"},
+			LimitToken:      "MaxResults",
+			TruncationToken: "",
+		},
 	}
 
 	if input == nil {
@@ -861,6 +870,56 @@ func (c *Transfer) ListServersWithContext(ctx aws.Context, input *ListServersInp
 	return out, req.Send()
 }
 
+// ListServersPages iterates over the pages of a ListServers operation,
+// calling the "fn" function with the response data for each page. To stop
+// iterating, return false from the fn function.
+//
+// See ListServers method for more information on how to use this operation.
+//
+// Note: This operation can generate multiple requests to a service.
+//
+//    // Example iterating over at most 3 pages of a ListServers operation.
+//    pageNum := 0
+//    err := client.ListServersPages(params,
+//        func(page *ListServersOutput, lastPage bool) bool {
+//            pageNum++
+//            fmt.Println(page)
+//            return pageNum <= 3
+//        })
+//
+func (c *Transfer) ListServersPages(input *ListServersInput, fn func(*ListServersOutput, bool) bool) error {
+	return c.ListServersPagesWithContext(aws.BackgroundContext(), input, fn)
+}
+
+// ListServersPagesWithContext same as ListServersPages except
+// it takes a Context and allows setting request options on the pages.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *Transfer) ListServersPagesWithContext(ctx aws.Context, input *ListServersInput, fn func(*ListServersOutput, bool) bool, opts ...request.Option) error {
+	p := request.Pagination{
+		NewRequest: func() (*request.Request, error) {
+			var inCpy *ListServersInput
+			if input != nil {
+				tmp := *input
+				inCpy = &tmp
+			}
+			req, _ := c.ListServersRequest(inCpy)
+			req.SetContext(ctx)
+			req.ApplyOptions(opts...)
+			return req, nil
+		},
+	}
+
+	cont := true
+	for p.Next() && cont {
+		cont = fn(p.Page().(*ListServersOutput), !p.HasNextPage())
+	}
+	return p.Err()
+}
+
 const opListTagsForResource = "ListTagsForResource"
 
 // ListTagsForResourceRequest generates a "aws/request.Request" representing the
@@ -892,6 +951,12 @@ func (c *Transfer) ListTagsForResourceRequest(input *ListTagsForResourceInput) (
 		Name:       opListTagsForResource,
 		HTTPMethod: "POST",
 		HTTPPath:   "/",
+		Paginator: &request.Paginator{
+			InputTokens:     []string{"NextToken"},
+			OutputTokens:    []string{"NextToken"},
+			LimitToken:      "MaxResults",
+			TruncationToken: "",
+		},
 	}
 
 	if input == nil {
@@ -951,6 +1016,56 @@ func (c *Transfer) ListTagsForResourceWithContext(ctx aws.Context, input *ListTa
 	return out, req.Send()
 }
 
+// ListTagsForResourcePages iterates over the pages of a ListTagsForResource operation,
+// calling the "fn" function with the response data for each page. To stop
+// iterating, return false from the fn function.
+//
+// See ListTagsForResource method for more information on how to use this operation.
+//
+// Note: This operation can generate multiple requests to a service.
+//
+//    // Example iterating over at most 3 pages of a ListTagsForResource operation.
+//    pageNum := 0
+//    err := client.ListTagsForResourcePages(params,
+//        func(page *ListTagsForResourceOutput, lastPage bool) bool {
+//            pageNum++
+//            fmt.Println(page)
+//            return pageNum <= 3
+//        })
+//
+func (c *Transfer) ListTagsForResourcePages(input *ListTagsForResourceInput, fn func(*ListTagsForResourceOutput, bool) bool) error {
+	return c.ListTagsForResourcePagesWithContext(aws.BackgroundContext(), input, fn)
+}
+
+// ListTagsForResourcePagesWithContext same as ListTagsForResourcePages except
+// it takes a Context and allows setting request options on the pages.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *Transfer) ListTagsForResourcePagesWithContext(ctx aws.Context, input *ListTagsForResourceInput, fn func(*ListTagsForResourceOutput, bool) bool, opts ...request.Option) error {
+	p := request.Pagination{
+		NewRequest: func() (*request.Request, error) {
+			var inCpy *ListTagsForResourceInput
+			if input != nil {
+				tmp := *input
+				inCpy = &tmp
+			}
+			req, _ := c.ListTagsForResourceRequest(inCpy)
+			req.SetContext(ctx)
+			req.ApplyOptions(opts...)
+			return req, nil
+		},
+	}
+
+	cont := true
+	for p.Next() && cont {
+		cont = fn(p.Page().(*ListTagsForResourceOutput), !p.HasNextPage())
+	}
+	return p.Err()
+}
+
 const opListUsers = "ListUsers"
 
 // ListUsersRequest generates a "aws/request.Request" representing the
@@ -982,6 +1097,12 @@ func (c *Transfer) ListUsersRequest(input *ListUsersInput) (req *request.Request
 		Name:       opListUsers,
 		HTTPMethod: "POST",
 		HTTPPath:   "/",
+		Paginator: &request.Paginator{
+			InputTokens:     []string{"NextToken"},
+			OutputTokens:    []string{"NextToken"},
+			LimitToken:      "MaxResults",
+			TruncationToken: "",
+		},
 	}
 
 	if input == nil {
@@ -1042,6 +1163,56 @@ func (c *Transfer) ListUsersWithContext(ctx aws.Context, input *ListUsersInput, 
 	req.SetContext(ctx)
 	req.ApplyOptions(opts...)
 	return out, req.Send()
+}
+
+// ListUsersPages iterates over the pages of a ListUsers operation,
+// calling the "fn" function with the response data for each page. To stop
+// iterating, return false from the fn function.
+//
+// See ListUsers method for more information on how to use this operation.
+//
+// Note: This operation can generate multiple requests to a service.
+//
+//    // Example iterating over at most 3 pages of a ListUsers operation.
+//    pageNum := 0
+//    err := client.ListUsersPages(params,
+//        func(page *ListUsersOutput, lastPage bool) bool {
+//            pageNum++
+//            fmt.Println(page)
+//            return pageNum <= 3
+//        })
+//
+func (c *Transfer) ListUsersPages(input *ListUsersInput, fn func(*ListUsersOutput, bool) bool) error {
+	return c.ListUsersPagesWithContext(aws.BackgroundContext(), input, fn)
+}
+
+// ListUsersPagesWithContext same as ListUsersPages except
+// it takes a Context and allows setting request options on the pages.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *Transfer) ListUsersPagesWithContext(ctx aws.Context, input *ListUsersInput, fn func(*ListUsersOutput, bool) bool, opts ...request.Option) error {
+	p := request.Pagination{
+		NewRequest: func() (*request.Request, error) {
+			var inCpy *ListUsersInput
+			if input != nil {
+				tmp := *input
+				inCpy = &tmp
+			}
+			req, _ := c.ListUsersRequest(inCpy)
+			req.SetContext(ctx)
+			req.ApplyOptions(opts...)
+			return req, nil
+		},
+	}
+
+	cont := true
+	for p.Next() && cont {
+		cont = fn(p.Page().(*ListUsersOutput), !p.HasNextPage())
+	}
+	return p.Err()
 }
 
 const opStartServer = "StartServer"
@@ -1708,6 +1879,24 @@ func (c *Transfer) UpdateUserWithContext(ctx aws.Context, input *UpdateUserInput
 type CreateServerInput struct {
 	_ struct{} `type:"structure"`
 
+	// The virtual private cloud (VPC) endpoint settings that you want to configure
+	// for your SFTP server.
+	EndpointDetails *EndpointDetails `type:"structure"`
+
+	// The type of VPC endpoint that you want your SFTP server connect to. If you
+	// connect to a VPC endpoint, your SFTP server isn't accessible over the public
+	// internet.
+	EndpointType *string `type:"string" enum:"EndpointType"`
+
+	// The RSA private key as generated by ssh-keygen -N "" -f my-new-server-key
+	// command.
+	//
+	// If you aren't planning to migrate existing users from an existing SFTP server
+	// to a new AWS SFTP server, don't update the host key. Accidentally changing
+	// a server's host key can be disruptive. For more information, see change-host-key
+	// in the AWS SFTP User Guide.
+	HostKey *string `type:"string"`
+
 	// An array containing all of the information required to call a customer-supplied
 	// authentication API. This parameter is not required when the IdentityProviderType
 	// value of server that is created uses the SERVICE_MANAGED authentication method.
@@ -1720,7 +1909,7 @@ type CreateServerInput struct {
 	// by you to integrate an identity provider of your choice.
 	IdentityProviderType *string `type:"string" enum:"IdentityProviderType"`
 
-	// A value that allows the service to write your SFTP users’ activity to your
+	// A value that allows the service to write your SFTP users' activity to your
 	// Amazon CloudWatch logs for monitoring and auditing purposes.
 	LoggingRole *string `type:"string"`
 
@@ -1759,6 +1948,24 @@ func (s *CreateServerInput) Validate() error {
 		return invalidParams
 	}
 	return nil
+}
+
+// SetEndpointDetails sets the EndpointDetails field's value.
+func (s *CreateServerInput) SetEndpointDetails(v *EndpointDetails) *CreateServerInput {
+	s.EndpointDetails = v
+	return s
+}
+
+// SetEndpointType sets the EndpointType field's value.
+func (s *CreateServerInput) SetEndpointType(v string) *CreateServerInput {
+	s.EndpointType = &v
+	return s
+}
+
+// SetHostKey sets the HostKey field's value.
+func (s *CreateServerInput) SetHostKey(v string) *CreateServerInput {
+	s.HostKey = &v
+	return s
 }
 
 // SetIdentityProviderDetails sets the IdentityProviderDetails field's value.
@@ -1823,12 +2030,12 @@ type CreateUserInput struct {
 	// ${Transfer:HomeDirectory}, and ${Transfer:HomeBucket}.
 	Policy *string `type:"string"`
 
-	// The IAM role that controls your user’s access to your Amazon S3 bucket. The
+	// The IAM role that controls your user's access to your Amazon S3 bucket. The
 	// policies attached to this role will determine the level of access you want
 	// to provide your users when transferring files into and out of your Amazon
 	// S3 bucket or buckets. The IAM role should also contain a trust relationship
 	// that allows the SFTP server to access your resources when servicing your
-	// SFTP user’s transfer requests.
+	// SFTP user's transfer requests.
 	//
 	// Role is a required field
 	Role *string `type:"string" required:"true"`
@@ -1848,7 +2055,9 @@ type CreateUserInput struct {
 	Tags []*Tag `min:"1" type:"list"`
 
 	// A unique string that identifies a user and is associated with a server as
-	// specified by the ServerId.
+	// specified by the ServerId. This user name must be a minimum of 3 and a maximum
+	// of 32 characters long. The following are valid characters: a-z, A-Z, 0-9,
+	// underscore, and hyphen. The user name can't start with a hyphen.
 	//
 	// UserName is a required field
 	UserName *string `type:"string" required:"true"`
@@ -2035,7 +2244,7 @@ type DeleteSshPublicKeyInput struct {
 	// ServerId is a required field
 	ServerId *string `type:"string" required:"true"`
 
-	// A unique identifier used to reference your user’s specific SSH key.
+	// A unique identifier used to reference your user's specific SSH key.
 	//
 	// SshPublicKeyId is a required field
 	SshPublicKeyId *string `type:"string" required:"true"`
@@ -2341,6 +2550,20 @@ type DescribedServer struct {
 	// Arn is a required field
 	Arn *string `min:"20" type:"string" required:"true"`
 
+	// The virtual private cloud (VPC) endpoint settings that you configured for
+	// your SFTP server.
+	EndpointDetails *EndpointDetails `type:"structure"`
+
+	// The type of endpoint that your SFTP server is connected to. If your SFTP
+	// server is connected to a VPC endpoint, your server isn't accessible over
+	// the public internet.
+	EndpointType *string `type:"string" enum:"EndpointType"`
+
+	// This value contains the Message-Digest Algorithm (MD5) hash of the server's
+	// host key. This value is equivalent to the output of ssh-keygen -l -E md5
+	// -f my-new-server-key command.
+	HostKeyFingerprint *string `type:"string"`
+
 	// Specifies information to call a customer-supplied authentication API. This
 	// field is not populated when the IdentityProviderType of the server is SERVICE_MANAGED>.
 	IdentityProviderDetails *IdentityProviderDetails `type:"structure"`
@@ -2393,6 +2616,24 @@ func (s DescribedServer) GoString() string {
 // SetArn sets the Arn field's value.
 func (s *DescribedServer) SetArn(v string) *DescribedServer {
 	s.Arn = &v
+	return s
+}
+
+// SetEndpointDetails sets the EndpointDetails field's value.
+func (s *DescribedServer) SetEndpointDetails(v *EndpointDetails) *DescribedServer {
+	s.EndpointDetails = v
+	return s
+}
+
+// SetEndpointType sets the EndpointType field's value.
+func (s *DescribedServer) SetEndpointType(v string) *DescribedServer {
+	s.EndpointType = &v
+	return s
+}
+
+// SetHostKeyFingerprint sets the HostKeyFingerprint field's value.
+func (s *DescribedServer) SetHostKeyFingerprint(v string) *DescribedServer {
+	s.HostKeyFingerprint = &v
 	return s
 }
 
@@ -2456,12 +2697,12 @@ type DescribedUser struct {
 	// Specifies the name of the policy in use for the described user.
 	Policy *string `type:"string"`
 
-	// This property specifies the IAM role that controls your user’s access to
+	// This property specifies the IAM role that controls your user's access to
 	// your Amazon S3 bucket. The policies attached to this role will determine
 	// the level of access you want to provide your users when transferring files
 	// into and out of your Amazon S3 bucket or buckets. The IAM role should also
 	// contain a trust relationship that allows the SFTP server to access your resources
-	// when servicing your SFTP user’s transfer requests.
+	// when servicing your SFTP user's transfer requests.
 	Role *string `type:"string"`
 
 	// This property contains the public key portion of the Secure Shell (SSH) keys
@@ -2527,6 +2768,31 @@ func (s *DescribedUser) SetTags(v []*Tag) *DescribedUser {
 // SetUserName sets the UserName field's value.
 func (s *DescribedUser) SetUserName(v string) *DescribedUser {
 	s.UserName = &v
+	return s
+}
+
+// The configuration settings for the virtual private cloud (VPC) endpoint for
+// your SFTP server.
+type EndpointDetails struct {
+	_ struct{} `type:"structure"`
+
+	// The ID of the VPC endpoint.
+	VpcEndpointId *string `type:"string"`
+}
+
+// String returns the string representation
+func (s EndpointDetails) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s EndpointDetails) GoString() string {
+	return s.String()
+}
+
+// SetVpcEndpointId sets the VpcEndpointId field's value.
+func (s *EndpointDetails) SetVpcEndpointId(v string) *EndpointDetails {
+	s.VpcEndpointId = &v
 	return s
 }
 
@@ -2780,8 +3046,13 @@ type ListTagsForResourceInput struct {
 	// Arn is a required field
 	Arn *string `min:"20" type:"string" required:"true"`
 
+	// Specifies the number of tags to return as a response to the ListTagsForResource
+	// request.
 	MaxResults *int64 `min:"1" type:"integer"`
 
+	// When you request additional results from the ListTagsForResource call, a
+	// NextToken parameter is returned in the input. You can then pass in a subsequent
+	// command the NextToken parameter to continue listing additional tags.
 	NextToken *string `min:"1" type:"string"`
 }
 
@@ -2841,6 +3112,9 @@ type ListTagsForResourceOutput struct {
 	// This value is the ARN you specified to list the tags of.
 	Arn *string `min:"20" type:"string"`
 
+	// When you can get additional results from the ListTagsForResource call, a
+	// NextToken parameter is returned in the output. You can then pass in a subsequent
+	// command the NextToken parameter to continue listing additional tags.
 	NextToken *string `min:"1" type:"string"`
 
 	// Key-value pairs that are assigned to a resource, usually for the purpose
@@ -2883,7 +3157,7 @@ type ListUsersInput struct {
 	// Specifies the number of users to return as a response to the ListUsers request.
 	MaxResults *int64 `min:"1" type:"integer"`
 
-	// When you can get additional results from the ListUsersListUsers call, a NextToken
+	// When you can get additional results from the ListUsers call, a NextToken
 	// parameter is returned in the output. You can then pass in a subsequent command
 	// the NextToken parameter to continue listing additional users.
 	NextToken *string `min:"1" type:"string"`
@@ -3000,6 +3274,11 @@ type ListedServer struct {
 	// Arn is a required field
 	Arn *string `min:"20" type:"string" required:"true"`
 
+	// The type of VPC endpoint that your SFTP server is connected to. If your SFTP
+	// server is connected to a VPC endpoint, your server isn't accessible over
+	// the public internet.
+	EndpointType *string `type:"string" enum:"EndpointType"`
+
 	// The authentication method used to validate a user for the server that was
 	// specified. listed. This can include Secure Shell (SSH), user name and password
 	// combinations, or your own custom authentication method. Valid values include
@@ -3042,6 +3321,12 @@ func (s ListedServer) GoString() string {
 // SetArn sets the Arn field's value.
 func (s *ListedServer) SetArn(v string) *ListedServer {
 	s.Arn = &v
+	return s
+}
+
+// SetEndpointType sets the EndpointType field's value.
+func (s *ListedServer) SetEndpointType(v string) *ListedServer {
+	s.EndpointType = &v
 	return s
 }
 
@@ -3629,12 +3914,32 @@ func (s UntagResourceOutput) GoString() string {
 type UpdateServerInput struct {
 	_ struct{} `type:"structure"`
 
+	// The virtual private cloud (VPC) endpoint settings that are configured for
+	// your SFTP server. With a VPC endpoint, your SFTP server isn't accessible
+	// over the public internet.
+	EndpointDetails *EndpointDetails `type:"structure"`
+
+	// The type of endpoint that you want your SFTP server to connect to. You can
+	// choose to connect to the public internet or a virtual private cloud (VPC)
+	// endpoint. With a VPC endpoint, your SFTP server isn't accessible over the
+	// public internet.
+	EndpointType *string `type:"string" enum:"EndpointType"`
+
+	// The RSA private key as generated by ssh-keygen -N "" -f my-new-server-key.
+	//
+	// If you aren't planning to migrate existing users from an existing SFTP server
+	// to a new AWS SFTP server, don't update the host key. Accidentally changing
+	// a server's host key can be disruptive. For more information, see change-host-key
+	// in the AWS SFTP User Guide.
+	HostKey *string `type:"string"`
+
 	// This response parameter is an array containing all of the information required
 	// to call a customer's authentication API method.
 	IdentityProviderDetails *IdentityProviderDetails `type:"structure"`
 
-	// Changes the AWS Identity and Access Management (IAM) role that allows Amazon
-	// S3 events to be logged in Amazon CloudWatch, turning logging on or off.
+	// A value that changes the AWS Identity and Access Management (IAM) role that
+	// allows Amazon S3 events to be logged in Amazon CloudWatch, turning logging
+	// on or off.
 	LoggingRole *string `type:"string"`
 
 	// A system-assigned unique identifier for an SFTP server instance that the
@@ -3665,6 +3970,24 @@ func (s *UpdateServerInput) Validate() error {
 		return invalidParams
 	}
 	return nil
+}
+
+// SetEndpointDetails sets the EndpointDetails field's value.
+func (s *UpdateServerInput) SetEndpointDetails(v *EndpointDetails) *UpdateServerInput {
+	s.EndpointDetails = v
+	return s
+}
+
+// SetEndpointType sets the EndpointType field's value.
+func (s *UpdateServerInput) SetEndpointType(v string) *UpdateServerInput {
+	s.EndpointType = &v
+	return s
+}
+
+// SetHostKey sets the HostKey field's value.
+func (s *UpdateServerInput) SetHostKey(v string) *UpdateServerInput {
+	s.HostKey = &v
+	return s
 }
 
 // SetIdentityProviderDetails sets the IdentityProviderDetails field's value.
@@ -3726,12 +4049,12 @@ type UpdateUserInput struct {
 	// and ${Transfer:HomeBucket}.
 	Policy *string `type:"string"`
 
-	// The IAM role that controls your user’s access to your Amazon S3 bucket. The
+	// The IAM role that controls your user's access to your Amazon S3 bucket. The
 	// policies attached to this role will determine the level of access you want
 	// to provide your users when transferring files into and out of your Amazon
 	// S3 bucket or buckets. The IAM role should also contain a trust relationship
 	// that allows the Secure File Transfer Protocol (SFTP) server to access your
-	// resources when servicing your SFTP user’s transfer requests.
+	// resources when servicing your SFTP user's transfer requests.
 	Role *string `type:"string"`
 
 	// A system-assigned unique identifier for an SFTP server instance that the
@@ -3742,7 +4065,9 @@ type UpdateUserInput struct {
 
 	// A unique string that identifies a user and is associated with a server as
 	// specified by the ServerId. This is the string that will be used by your user
-	// when they log in to your SFTP server.
+	// when they log in to your SFTP server. This user name is a minimum of 3 and
+	// a maximum of 32 characters long. The following are valid characters: a-z,
+	// A-Z, 0-9, underscore, and hyphen. The user name can't start with a hyphen.
 	//
 	// UserName is a required field
 	UserName *string `type:"string" required:"true"`
@@ -3843,6 +4168,14 @@ func (s *UpdateUserOutput) SetUserName(v string) *UpdateUserOutput {
 	s.UserName = &v
 	return s
 }
+
+const (
+	// EndpointTypePublic is a EndpointType enum value
+	EndpointTypePublic = "PUBLIC"
+
+	// EndpointTypeVpcEndpoint is a EndpointType enum value
+	EndpointTypeVpcEndpoint = "VPC_ENDPOINT"
+)
 
 // Returns information related to the type of user authentication that is in
 // use for a server's users. For SERVICE_MANAGED authentication, the Secure

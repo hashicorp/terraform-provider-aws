@@ -6,7 +6,7 @@ description: |-
   Provides an Neptune subnet group resource.
 ---
 
-# aws_neptune_subnet_group
+# Resource: aws_neptune_subnet_group
 
 Provides an Neptune subnet group resource.
 

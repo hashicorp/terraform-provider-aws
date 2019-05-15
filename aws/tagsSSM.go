@@ -1,6 +1,7 @@
 package aws
 
 import (
+	"fmt"
 	"log"
 	"regexp"
 
@@ -115,4 +116,22 @@ func tagIgnoredSSM(t *ssm.Tag) bool {
 		}
 	}
 	return false
+}
+
+func saveTagsSSM(conn *ssm.SSM, d *schema.ResourceData, id, resourceType string) error {
+	resp, err := conn.ListTagsForResource(&ssm.ListTagsForResourceInput{
+		ResourceId:   aws.String(id),
+		ResourceType: aws.String(resourceType),
+	})
+
+	if err != nil {
+		return fmt.Errorf("Error retrieving tags for SSM resource: %s", id)
+	}
+
+	var dt []*ssm.Tag
+	if len(resp.TagList) > 0 {
+		dt = resp.TagList
+	}
+
+	return d.Set("tags", tagsToMapSSM(dt))
 }

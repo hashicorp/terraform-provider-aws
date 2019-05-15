@@ -93,14 +93,14 @@ func (c *EFS) CreateFileSystemRequest(input *CreateFileSystemInput) (req *reques
 // scale to higher levels of aggregate throughput and operations per second
 // with a tradeoff of slightly higher latencies for most file operations. The
 // performance mode can't be changed after the file system has been created.
-// For more information, see Amazon EFS: Performance Modes (http://docs.aws.amazon.com/efs/latest/ug/performance.html#performancemodes.html).
+// For more information, see Amazon EFS: Performance Modes (https://docs.aws.amazon.com/efs/latest/ug/performance.html#performancemodes.html).
 //
 // After the file system is fully created, Amazon EFS sets its lifecycle state
 // to available, at which point you can create one or more mount targets for
 // the file system in your VPC. For more information, see CreateMountTarget.
 // You mount your Amazon EFS file system on an EC2 instances in your VPC by
 // using the mount target. For more information, see Amazon EFS: How it Works
-// (http://docs.aws.amazon.com/efs/latest/ug/how-it-works.html).
+// (https://docs.aws.amazon.com/efs/latest/ug/how-it-works.html).
 //
 // This operation requires permissions for the elasticfilesystem:CreateFileSystem
 // action.
@@ -213,7 +213,7 @@ func (c *EFS) CreateMountTargetRequest(input *CreateMountTargetInput) (req *requ
 // target for a given file system. If you have multiple subnets in an Availability
 // Zone, you create a mount target in one of the subnets. EC2 instances do not
 // need to be in the same subnet as the mount target in order to access their
-// file system. For more information, see Amazon EFS: How it Works (http://docs.aws.amazon.com/efs/latest/ug/how-it-works.html).
+// file system. For more information, see Amazon EFS: How it Works (https://docs.aws.amazon.com/efs/latest/ug/how-it-works.html).
 //
 // In the request, you also specify a file system ID for which you are creating
 // the mount target and the file system's lifecycle state must be available.
@@ -234,7 +234,7 @@ func (c *EFS) CreateMountTargetRequest(input *CreateMountTargetInput) (req *requ
 // when mounting the file system. The EC2 instance on which you mount the file
 // system by using the mount target can resolve the mount target's DNS name
 // to its IP address. For more information, see How it Works: Implementation
-// Overview (http://docs.aws.amazon.com/efs/latest/ug/how-it-works.html#how-it-works-implementation).
+// Overview (https://docs.aws.amazon.com/efs/latest/ug/how-it-works.html#how-it-works-implementation).
 //
 // Note that you can create mount targets for a file system in only one VPC,
 // and there can be only one mount target per Availability Zone. That is, if
@@ -285,8 +285,8 @@ func (c *EFS) CreateMountTargetRequest(input *CreateMountTargetInput) (req *requ
 // information, see Amazon EFS (http://aws.amazon.com/efs/). In addition, by
 // always using a mount target local to the instance's Availability Zone, you
 // eliminate a partial failure scenario. If the Availability Zone in which your
-// mount target is created goes down, then you won't be able to access your
-// file system through that mount target.
+// mount target is created goes down, then you can't access your file system
+// through that mount target.
 //
 // This operation requires permissions for the following action on the file
 // system:
@@ -342,7 +342,7 @@ func (c *EFS) CreateMountTargetRequest(input *CreateMountTargetInput) (req *requ
 //   The calling account has reached the limit for elastic network interfaces
 //   for the specific AWS Region. The client should try to delete some elastic
 //   network interfaces or get the account limit raised. For more information,
-//   see Amazon VPC Limits (http://docs.aws.amazon.com/AmazonVPC/latest/UserGuide/VPC_Appendix_Limits.html)
+//   see Amazon VPC Limits (https://docs.aws.amazon.com/AmazonVPC/latest/UserGuide/VPC_Appendix_Limits.html)
 //   in the Amazon VPC User Guide  (see the Network interfaces per VPC entry in
 //   the table).
 //
@@ -740,9 +740,9 @@ func (c *EFS) DeleteTagsRequest(input *DeleteTagsInput) (req *request.Request, o
 // DeleteTags API operation for Amazon Elastic File System.
 //
 // Deletes the specified tags from a file system. If the DeleteTags request
-// includes a tag key that does not exist, Amazon EFS ignores it and doesn't
+// includes a tag key that doesn't exist, Amazon EFS ignores it and doesn't
 // cause an error. For more information about tags and related restrictions,
-// see Tag Restrictions (http://docs.aws.amazon.com/awsaccountbilling/latest/aboutv2/cost-alloc-tags.html)
+// see Tag Restrictions (https://docs.aws.amazon.com/awsaccountbilling/latest/aboutv2/cost-alloc-tags.html)
 // in the AWS Billing and Cost Management User Guide.
 //
 // This operation requires permissions for the elasticfilesystem:DeleteTags
@@ -945,9 +945,9 @@ func (c *EFS) DescribeLifecycleConfigurationRequest(input *DescribeLifecycleConf
 //
 // Returns the current LifecycleConfiguration object for the specified Amazon
 // EFS file system. EFS lifecycle management uses the LifecycleConfiguration
-// to identify which files to move to the EFS Infrequent Access (IA) storage
-// class. For a file system without a LifecycleConfiguration, the call returns
-// an empty array in the response.
+// object to identify which files to move to the EFS Infrequent Access (IA)
+// storage class. For a file system without a LifecycleConfiguration object,
+// the call returns an empty array in the response.
 //
 // This operation requires permissions for the elasticfilesystem:DescribeLifecycleConfiguration
 // operation.
@@ -1236,7 +1236,7 @@ func (c *EFS) DescribeTagsRequest(input *DescribeTagsInput) (req *request.Reques
 //
 // Returns the tags associated with a file system. The order of tags returned
 // in the response of one DescribeTags call and the order of tags returned across
-// the responses of a multi-call iteration (when using pagination) is unspecified.
+// the responses of a multiple-call iteration (when using pagination) is unspecified.
 //
 // This operation requires permissions for the elasticfilesystem:DescribeTags
 // action.
@@ -1441,13 +1441,14 @@ func (c *EFS) PutLifecycleConfigurationRequest(input *PutLifecycleConfigurationI
 // PutLifecycleConfiguration API operation for Amazon Elastic File System.
 //
 // Enables lifecycle management by creating a new LifecycleConfiguration object.
-// A LifecycleConfiguration defines when files in an Amazon EFS file system
-// are automatically transitioned to the lower-cost EFS Infrequent Access (IA)
-// storage class. A LifecycleConfiguration applies to all files in a file system.
+// A LifecycleConfiguration object defines when files in an Amazon EFS file
+// system are automatically transitioned to the lower-cost EFS Infrequent Access
+// (IA) storage class. A LifecycleConfiguration applies to all files in a file
+// system.
 //
 // Each Amazon EFS file system supports one lifecycle configuration, which applies
-// to all files in the file system. If a LifecycleConfiguration already exists
-// for the specified file system, a PutLifecycleConfiguration call modifies
+// to all files in the file system. If a LifecycleConfiguration object already
+// exists for the specified file system, a PutLifecycleConfiguration call modifies
 // the existing configuration. A PutLifecycleConfiguration call with an empty
 // LifecyclePolicies array in the request body deletes any existing LifecycleConfiguration
 // and disables lifecycle management.
@@ -1462,7 +1463,7 @@ func (c *EFS) PutLifecycleConfigurationRequest(input *PutLifecycleConfigurationI
 //
 //    * A LifecyclePolicies array of LifecyclePolicy objects that define when
 //    files are moved to the IA storage class. The array can contain only one
-//    "TransitionToIA": "AFTER_30_DAYS"LifecyclePolicy object.
+//    "TransitionToIA": "AFTER_30_DAYS"LifecyclePolicy item.
 //
 // This operation requires permissions for the elasticfilesystem:PutLifecycleConfiguration
 // operation.
@@ -1624,50 +1625,55 @@ func (c *EFS) UpdateFileSystemWithContext(ctx aws.Context, input *UpdateFileSyst
 type CreateFileSystemInput struct {
 	_ struct{} `type:"structure"`
 
-	// String of up to 64 ASCII characters. Amazon EFS uses this to ensure idempotent
+	// A string of up to 64 ASCII characters. Amazon EFS uses this to ensure idempotent
 	// creation.
 	//
 	// CreationToken is a required field
 	CreationToken *string `min:"1" type:"string" required:"true"`
 
 	// A Boolean value that, if true, creates an encrypted file system. When creating
-	// an encrypted file system, you have the option of specifying a CreateFileSystemRequest$KmsKeyId
+	// an encrypted file system, you have the option of specifying CreateFileSystemRequest$KmsKeyId
 	// for an existing AWS Key Management Service (AWS KMS) customer master key
 	// (CMK). If you don't specify a CMK, then the default CMK for Amazon EFS, /aws/elasticfilesystem,
 	// is used to protect the encrypted file system.
 	Encrypted *bool `type:"boolean"`
 
 	// The ID of the AWS KMS CMK to be used to protect the encrypted file system.
-	// This parameter is only required if you want to use a non-default CMK. If
-	// this parameter is not specified, the default CMK for Amazon EFS is used.
-	// This ID can be in one of the following formats:
+	// This parameter is only required if you want to use a nondefault CMK. If this
+	// parameter is not specified, the default CMK for Amazon EFS is used. This
+	// ID can be in one of the following formats:
 	//
-	//    * Key ID - A unique identifier of the key, for example, 1234abcd-12ab-34cd-56ef-1234567890ab.
+	//    * Key ID - A unique identifier of the key, for example 1234abcd-12ab-34cd-56ef-1234567890ab.
 	//
-	//    * ARN - An Amazon Resource Name (ARN) for the key, for example, arn:aws:kms:us-west-2:111122223333:key/1234abcd-12ab-34cd-56ef-1234567890ab.
+	//    * ARN - An Amazon Resource Name (ARN) for the key, for example arn:aws:kms:us-west-2:111122223333:key/1234abcd-12ab-34cd-56ef-1234567890ab.
 	//
-	//    * Key alias - A previously created display name for a key. For example,
+	//    * Key alias - A previously created display name for a key, for example
 	//    alias/projectKey1.
 	//
-	//    * Key alias ARN - An ARN for a key alias, for example, arn:aws:kms:us-west-2:444455556666:alias/projectKey1.
+	//    * Key alias ARN - An ARN for a key alias, for example arn:aws:kms:us-west-2:444455556666:alias/projectKey1.
 	//
 	// If KmsKeyId is specified, the CreateFileSystemRequest$Encrypted parameter
 	// must be set to true.
 	KmsKeyId *string `min:"1" type:"string"`
 
-	// The PerformanceMode of the file system. We recommend generalPurpose performance
+	// The performance mode of the file system. We recommend generalPurpose performance
 	// mode for most file systems. File systems using the maxIO performance mode
 	// can scale to higher levels of aggregate throughput and operations per second
-	// with a tradeoff of slightly higher latencies for most file operations. This
-	// can't be changed after the file system has been created.
+	// with a tradeoff of slightly higher latencies for most file operations. The
+	// performance mode can't be changed after the file system has been created.
 	PerformanceMode *string `type:"string" enum:"PerformanceMode"`
 
 	// The throughput, measured in MiB/s, that you want to provision for a file
 	// system that you're creating. The limit on throughput is 1024 MiB/s. You can
 	// get these limits increased by contacting AWS Support. For more information,
-	// see Amazon EFS Limits That You Can Increase (http://docs.aws.amazon.com/efs/latest/ug/limits.html#soft-limits)
+	// see Amazon EFS Limits That You Can Increase (https://docs.aws.amazon.com/efs/latest/ug/limits.html#soft-limits)
 	// in the Amazon EFS User Guide.
 	ProvisionedThroughputInMibps *float64 `type:"double"`
+
+	// A value that specifies to create one or more tags associated with the file
+	// system. Each tag is a user-defined key-value pair. Name your file system
+	// on creation by including a "Key":"Name","Value":"{value}" key-value pair.
+	Tags []*Tag `type:"list"`
 
 	// The throughput mode for the file system to be created. There are two throughput
 	// modes to choose from for your file system: bursting and provisioned. You
@@ -1698,6 +1704,16 @@ func (s *CreateFileSystemInput) Validate() error {
 	}
 	if s.KmsKeyId != nil && len(*s.KmsKeyId) < 1 {
 		invalidParams.Add(request.NewErrParamMinLen("KmsKeyId", 1))
+	}
+	if s.Tags != nil {
+		for i, v := range s.Tags {
+			if v == nil {
+				continue
+			}
+			if err := v.Validate(); err != nil {
+				invalidParams.AddNested(fmt.Sprintf("%s[%v]", "Tags", i), err.(request.ErrInvalidParams))
+			}
+		}
 	}
 
 	if invalidParams.Len() > 0 {
@@ -1736,6 +1752,12 @@ func (s *CreateFileSystemInput) SetProvisionedThroughputInMibps(v float64) *Crea
 	return s
 }
 
+// SetTags sets the Tags field's value.
+func (s *CreateFileSystemInput) SetTags(v []*Tag) *CreateFileSystemInput {
+	s.Tags = v
+	return s
+}
+
 // SetThroughputMode sets the ThroughputMode field's value.
 func (s *CreateFileSystemInput) SetThroughputMode(v string) *CreateFileSystemInput {
 	s.ThroughputMode = &v
@@ -1745,7 +1767,7 @@ func (s *CreateFileSystemInput) SetThroughputMode(v string) *CreateFileSystemInp
 type CreateMountTargetInput struct {
 	_ struct{} `type:"structure"`
 
-	// ID of the file system for which to create the mount target.
+	// The ID of the file system for which to create the mount target.
 	//
 	// FileSystemId is a required field
 	FileSystemId *string `type:"string" required:"true"`
@@ -1757,7 +1779,7 @@ type CreateMountTargetInput struct {
 	// for the same VPC as subnet specified.
 	SecurityGroups []*string `type:"list"`
 
-	// ID of the subnet to add the mount target in.
+	// The ID of the subnet to add the mount target in.
 	//
 	// SubnetId is a required field
 	SubnetId *string `type:"string" required:"true"`
@@ -1816,13 +1838,13 @@ func (s *CreateMountTargetInput) SetSubnetId(v string) *CreateMountTargetInput {
 type CreateTagsInput struct {
 	_ struct{} `type:"structure"`
 
-	// ID of the file system whose tags you want to modify (String). This operation
+	// The ID of the file system whose tags you want to modify (String). This operation
 	// modifies the tags only, not the file system.
 	//
 	// FileSystemId is a required field
 	FileSystemId *string `location:"uri" locationName:"FileSystemId" type:"string" required:"true"`
 
-	// Array of Tag objects to add. Each Tag object is a key-value pair.
+	// An array of Tag objects to add. Each Tag object is a key-value pair.
 	//
 	// Tags is a required field
 	Tags []*Tag `type:"list" required:"true"`
@@ -1896,7 +1918,7 @@ func (s CreateTagsOutput) GoString() string {
 type DeleteFileSystemInput struct {
 	_ struct{} `type:"structure"`
 
-	// ID of the file system you want to delete.
+	// The ID of the file system you want to delete.
 	//
 	// FileSystemId is a required field
 	FileSystemId *string `location:"uri" locationName:"FileSystemId" type:"string" required:"true"`
@@ -1951,7 +1973,7 @@ func (s DeleteFileSystemOutput) GoString() string {
 type DeleteMountTargetInput struct {
 	_ struct{} `type:"structure"`
 
-	// ID of the mount target to delete (String).
+	// The ID of the mount target to delete (String).
 	//
 	// MountTargetId is a required field
 	MountTargetId *string `location:"uri" locationName:"MountTargetId" type:"string" required:"true"`
@@ -2006,12 +2028,12 @@ func (s DeleteMountTargetOutput) GoString() string {
 type DeleteTagsInput struct {
 	_ struct{} `type:"structure"`
 
-	// ID of the file system whose tags you want to delete (String).
+	// The ID of the file system whose tags you want to delete (String).
 	//
 	// FileSystemId is a required field
 	FileSystemId *string `location:"uri" locationName:"FileSystemId" type:"string" required:"true"`
 
-	// List of tag keys to delete.
+	// A list of tag keys to delete.
 	//
 	// TagKeys is a required field
 	TagKeys []*string `type:"list" required:"true"`
@@ -2146,7 +2168,7 @@ func (s *DescribeFileSystemsInput) SetMaxItems(v int64) *DescribeFileSystemsInpu
 type DescribeFileSystemsOutput struct {
 	_ struct{} `type:"structure"`
 
-	// Array of file system descriptions.
+	// An array of file system descriptions.
 	FileSystems []*FileSystemDescription `type:"list"`
 
 	// Present if provided by caller in the request (String).
@@ -2254,7 +2276,7 @@ func (s *DescribeLifecycleConfigurationOutput) SetLifecyclePolicies(v []*Lifecyc
 type DescribeMountTargetSecurityGroupsInput struct {
 	_ struct{} `type:"structure"`
 
-	// ID of the mount target whose security groups you want to retrieve.
+	// The ID of the mount target whose security groups you want to retrieve.
 	//
 	// MountTargetId is a required field
 	MountTargetId *string `location:"uri" locationName:"MountTargetId" type:"string" required:"true"`
@@ -2295,7 +2317,7 @@ func (s *DescribeMountTargetSecurityGroupsInput) SetMountTargetId(v string) *Des
 type DescribeMountTargetSecurityGroupsOutput struct {
 	_ struct{} `type:"structure"`
 
-	// Array of security groups.
+	// An array of security groups.
 	//
 	// SecurityGroups is a required field
 	SecurityGroups []*string `type:"list" required:"true"`
@@ -2433,17 +2455,17 @@ func (s *DescribeMountTargetsOutput) SetNextMarker(v string) *DescribeMountTarge
 type DescribeTagsInput struct {
 	_ struct{} `type:"structure"`
 
-	// ID of the file system whose tag set you want to retrieve.
+	// The ID of the file system whose tag set you want to retrieve.
 	//
 	// FileSystemId is a required field
 	FileSystemId *string `location:"uri" locationName:"FileSystemId" type:"string" required:"true"`
 
-	// (Optional) Opaque pagination token returned from a previous DescribeTags
+	// (Optional) An opaque pagination token returned from a previous DescribeTags
 	// operation (String). If present, it specifies to continue the list from where
 	// the previous call left off.
 	Marker *string `location:"querystring" locationName:"Marker" type:"string"`
 
-	// (Optional) Maximum number of file system tags to return in the response.
+	// (Optional) The maximum number of file system tags to return in the response.
 	// Currently, this number is automatically set to 10.
 	MaxItems *int64 `location:"querystring" locationName:"MaxItems" min:"1" type:"integer"`
 }
@@ -2541,16 +2563,16 @@ func (s *DescribeTagsOutput) SetTags(v []*Tag) *DescribeTagsOutput {
 	return s
 }
 
-// Description of the file system.
+// A description of the file system.
 type FileSystemDescription struct {
 	_ struct{} `type:"structure"`
 
-	// Time that the file system was created, in seconds (since 1970-01-01T00:00:00Z).
+	// The time that the file system was created, in seconds (since 1970-01-01T00:00:00Z).
 	//
 	// CreationTime is a required field
 	CreationTime *time.Time `type:"timestamp" required:"true"`
 
-	// Opaque string specified in the request.
+	// The opaque string specified in the request.
 	//
 	// CreationToken is a required field
 	CreationToken *string `min:"1" type:"string" required:"true"`
@@ -2558,7 +2580,7 @@ type FileSystemDescription struct {
 	// A Boolean value that, if true, indicates that the file system is encrypted.
 	Encrypted *bool `type:"boolean"`
 
-	// ID of the file system, assigned by Amazon EFS.
+	// The ID of the file system, assigned by Amazon EFS.
 	//
 	// FileSystemId is a required field
 	FileSystemId *string `type:"string" required:"true"`
@@ -2567,29 +2589,29 @@ type FileSystemDescription struct {
 	// that was used to protect the encrypted file system.
 	KmsKeyId *string `min:"1" type:"string"`
 
-	// Lifecycle phase of the file system.
+	// The lifecycle phase of the file system.
 	//
 	// LifeCycleState is a required field
 	LifeCycleState *string `type:"string" required:"true" enum:"LifeCycleState"`
 
 	// You can add tags to a file system, including a Name tag. For more information,
-	// see CreateTags. If the file system has a Name tag, Amazon EFS returns the
-	// value in this field.
+	// see CreateFileSystem. If the file system has a Name tag, Amazon EFS returns
+	// the value in this field.
 	Name *string `type:"string"`
 
-	// Current number of mount targets that the file system has. For more information,
+	// The current number of mount targets that the file system has. For more information,
 	// see CreateMountTarget.
 	//
 	// NumberOfMountTargets is a required field
 	NumberOfMountTargets *int64 `type:"integer" required:"true"`
 
-	// AWS account that created the file system. If the file system was created
+	// The AWS account that created the file system. If the file system was created
 	// by an IAM user, the parent account to which the user belongs is the owner.
 	//
 	// OwnerId is a required field
 	OwnerId *string `type:"string" required:"true"`
 
-	// The PerformanceMode of the file system.
+	// The performance mode of the file system.
 	//
 	// PerformanceMode is a required field
 	PerformanceMode *string `type:"string" required:"true" enum:"PerformanceMode"`
@@ -2597,22 +2619,27 @@ type FileSystemDescription struct {
 	// The throughput, measured in MiB/s, that you want to provision for a file
 	// system. The limit on throughput is 1024 MiB/s. You can get these limits increased
 	// by contacting AWS Support. For more information, see Amazon EFS Limits That
-	// You Can Increase (http://docs.aws.amazon.com/efs/latest/ug/limits.html#soft-limits)
+	// You Can Increase (https://docs.aws.amazon.com/efs/latest/ug/limits.html#soft-limits)
 	// in the Amazon EFS User Guide.
 	ProvisionedThroughputInMibps *float64 `type:"double"`
 
-	// Latest known metered size (in bytes) of data stored in the file system, in
-	// its Value field, and the time at which that size was determined in its Timestamp
-	// field. The Timestamp value is the integer number of seconds since 1970-01-01T00:00:00Z.
-	// The SizeInBytes value doesn't represent the size of a consistent snapshot
-	// of the file system, but it is eventually consistent when there are no writes
-	// to the file system. That is, SizeInBytes represents actual size only if the
-	// file system is not modified for a period longer than a couple of hours. Otherwise,
-	// the value is not the exact size that the file system was at any point in
-	// time.
+	// The latest known metered size (in bytes) of data stored in the file system,
+	// in its Value field, and the time at which that size was determined in its
+	// Timestamp field. The Timestamp value is the integer number of seconds since
+	// 1970-01-01T00:00:00Z. The SizeInBytes value doesn't represent the size of
+	// a consistent snapshot of the file system, but it is eventually consistent
+	// when there are no writes to the file system. That is, SizeInBytes represents
+	// actual size only if the file system is not modified for a period longer than
+	// a couple of hours. Otherwise, the value is not the exact size that the file
+	// system was at any point in time.
 	//
 	// SizeInBytes is a required field
 	SizeInBytes *FileSystemSize `type:"structure" required:"true"`
+
+	// The tags associated with the file system, presented as an array of Tag objects.
+	//
+	// Tags is a required field
+	Tags []*Tag `type:"list" required:"true"`
 
 	// The throughput mode for a file system. There are two throughput modes to
 	// choose from for your file system: bursting and provisioned. You can decrease
@@ -2704,28 +2731,34 @@ func (s *FileSystemDescription) SetSizeInBytes(v *FileSystemSize) *FileSystemDes
 	return s
 }
 
+// SetTags sets the Tags field's value.
+func (s *FileSystemDescription) SetTags(v []*Tag) *FileSystemDescription {
+	s.Tags = v
+	return s
+}
+
 // SetThroughputMode sets the ThroughputMode field's value.
 func (s *FileSystemDescription) SetThroughputMode(v string) *FileSystemDescription {
 	s.ThroughputMode = &v
 	return s
 }
 
-// Latest known metered size (in bytes) of data stored in the file system, in
-// its Value field, and the time at which that size was determined in its Timestamp
-// field. Note that the value does not represent the size of a consistent snapshot
+// The latest known metered size (in bytes) of data stored in the file system,
+// in its Value field, and the time at which that size was determined in its
+// Timestamp field. The value doesn't represent the size of a consistent snapshot
 // of the file system, but it is eventually consistent when there are no writes
-// to the file system. That is, the value will represent the actual size only
-// if the file system is not modified for a period longer than a couple of hours.
+// to the file system. That is, the value represents the actual size only if
+// the file system is not modified for a period longer than a couple of hours.
 // Otherwise, the value is not necessarily the exact size the file system was
 // at any instant in time.
 type FileSystemSize struct {
 	_ struct{} `type:"structure"`
 
-	// Time at which the size of data, returned in the Value field, was determined.
+	// The time at which the size of data, returned in the Value field, was determined.
 	// The value is the integer number of seconds since 1970-01-01T00:00:00Z.
 	Timestamp *time.Time `type:"timestamp"`
 
-	// Latest known metered size (in bytes) of data stored in the file system.
+	// The latest known metered size (in bytes) of data stored in the file system.
 	//
 	// Value is a required field
 	Value *int64 `type:"long" required:"true"`
@@ -2778,8 +2811,8 @@ func (s *FileSystemSize) SetValueInStandard(v int64) *FileSystemSize {
 type LifecyclePolicy struct {
 	_ struct{} `type:"structure"`
 
-	// A value that indicates how long it takes to transition to the IA storage
-	// class. Currently, the only possible value is AFTER_30_DAYS.
+	// A value that indicates how long it takes to transition files to the IA storage
+	// class. Currently, the only valid value is AFTER_30_DAYS.
 	//
 	// AFTER_30_DAYS indicates files that have not been read from or written to
 	// for 30 days are transitioned from the Standard storage class to the IA storage
@@ -2807,12 +2840,12 @@ func (s *LifecyclePolicy) SetTransitionToIA(v string) *LifecyclePolicy {
 type ModifyMountTargetSecurityGroupsInput struct {
 	_ struct{} `type:"structure"`
 
-	// ID of the mount target whose security groups you want to modify.
+	// The ID of the mount target whose security groups you want to modify.
 	//
 	// MountTargetId is a required field
 	MountTargetId *string `location:"uri" locationName:"MountTargetId" type:"string" required:"true"`
 
-	// Array of up to five VPC security group IDs.
+	// An array of up to five VPC security group IDs.
 	SecurityGroups []*string `type:"list"`
 }
 
@@ -2872,7 +2905,7 @@ func (s ModifyMountTargetSecurityGroupsOutput) GoString() string {
 type MountTargetDescription struct {
 	_ struct{} `type:"structure"`
 
-	// ID of the file system for which the mount target is intended.
+	// The ID of the file system for which the mount target is intended.
 	//
 	// FileSystemId is a required field
 	FileSystemId *string `type:"string" required:"true"`
@@ -2890,14 +2923,14 @@ type MountTargetDescription struct {
 	// MountTargetId is a required field
 	MountTargetId *string `type:"string" required:"true"`
 
-	// ID of the network interface that Amazon EFS created when it created the mount
-	// target.
+	// The ID of the network interface that Amazon EFS created when it created the
+	// mount target.
 	NetworkInterfaceId *string `type:"string"`
 
 	// AWS account ID that owns the resource.
 	OwnerId *string `type:"string"`
 
-	// ID of the mount target's subnet.
+	// The ID of the mount target's subnet.
 	//
 	// SubnetId is a required field
 	SubnetId *string `type:"string" required:"true"`
@@ -3038,18 +3071,18 @@ func (s *PutLifecycleConfigurationOutput) SetLifecyclePolicies(v []*LifecyclePol
 	return s
 }
 
-// A tag is a key-value pair. Allowed characters: letters, white space, and
-// numbers, representable in UTF-8, and the following characters: + - = . _
-// : /
+// A tag is a key-value pair. Allowed characters are letters, white space, and
+// numbers that can be represented in UTF-8, and the following characters: +
+// - = . _ : /
 type Tag struct {
 	_ struct{} `type:"structure"`
 
-	// Tag key (String). The key can't start with aws:.
+	// The tag key (String). The key can't start with aws:.
 	//
 	// Key is a required field
 	Key *string `min:"1" type:"string" required:"true"`
 
-	// Value of the tag key.
+	// The value of the tag key.
 	//
 	// Value is a required field
 	Value *string `type:"string" required:"true"`
@@ -3159,16 +3192,16 @@ func (s *UpdateFileSystemInput) SetThroughputMode(v string) *UpdateFileSystemInp
 	return s
 }
 
-// Description of the file system.
+// A description of the file system.
 type UpdateFileSystemOutput struct {
 	_ struct{} `type:"structure"`
 
-	// Time that the file system was created, in seconds (since 1970-01-01T00:00:00Z).
+	// The time that the file system was created, in seconds (since 1970-01-01T00:00:00Z).
 	//
 	// CreationTime is a required field
 	CreationTime *time.Time `type:"timestamp" required:"true"`
 
-	// Opaque string specified in the request.
+	// The opaque string specified in the request.
 	//
 	// CreationToken is a required field
 	CreationToken *string `min:"1" type:"string" required:"true"`
@@ -3176,7 +3209,7 @@ type UpdateFileSystemOutput struct {
 	// A Boolean value that, if true, indicates that the file system is encrypted.
 	Encrypted *bool `type:"boolean"`
 
-	// ID of the file system, assigned by Amazon EFS.
+	// The ID of the file system, assigned by Amazon EFS.
 	//
 	// FileSystemId is a required field
 	FileSystemId *string `type:"string" required:"true"`
@@ -3185,29 +3218,29 @@ type UpdateFileSystemOutput struct {
 	// that was used to protect the encrypted file system.
 	KmsKeyId *string `min:"1" type:"string"`
 
-	// Lifecycle phase of the file system.
+	// The lifecycle phase of the file system.
 	//
 	// LifeCycleState is a required field
 	LifeCycleState *string `type:"string" required:"true" enum:"LifeCycleState"`
 
 	// You can add tags to a file system, including a Name tag. For more information,
-	// see CreateTags. If the file system has a Name tag, Amazon EFS returns the
-	// value in this field.
+	// see CreateFileSystem. If the file system has a Name tag, Amazon EFS returns
+	// the value in this field.
 	Name *string `type:"string"`
 
-	// Current number of mount targets that the file system has. For more information,
+	// The current number of mount targets that the file system has. For more information,
 	// see CreateMountTarget.
 	//
 	// NumberOfMountTargets is a required field
 	NumberOfMountTargets *int64 `type:"integer" required:"true"`
 
-	// AWS account that created the file system. If the file system was created
+	// The AWS account that created the file system. If the file system was created
 	// by an IAM user, the parent account to which the user belongs is the owner.
 	//
 	// OwnerId is a required field
 	OwnerId *string `type:"string" required:"true"`
 
-	// The PerformanceMode of the file system.
+	// The performance mode of the file system.
 	//
 	// PerformanceMode is a required field
 	PerformanceMode *string `type:"string" required:"true" enum:"PerformanceMode"`
@@ -3215,22 +3248,27 @@ type UpdateFileSystemOutput struct {
 	// The throughput, measured in MiB/s, that you want to provision for a file
 	// system. The limit on throughput is 1024 MiB/s. You can get these limits increased
 	// by contacting AWS Support. For more information, see Amazon EFS Limits That
-	// You Can Increase (http://docs.aws.amazon.com/efs/latest/ug/limits.html#soft-limits)
+	// You Can Increase (https://docs.aws.amazon.com/efs/latest/ug/limits.html#soft-limits)
 	// in the Amazon EFS User Guide.
 	ProvisionedThroughputInMibps *float64 `type:"double"`
 
-	// Latest known metered size (in bytes) of data stored in the file system, in
-	// its Value field, and the time at which that size was determined in its Timestamp
-	// field. The Timestamp value is the integer number of seconds since 1970-01-01T00:00:00Z.
-	// The SizeInBytes value doesn't represent the size of a consistent snapshot
-	// of the file system, but it is eventually consistent when there are no writes
-	// to the file system. That is, SizeInBytes represents actual size only if the
-	// file system is not modified for a period longer than a couple of hours. Otherwise,
-	// the value is not the exact size that the file system was at any point in
-	// time.
+	// The latest known metered size (in bytes) of data stored in the file system,
+	// in its Value field, and the time at which that size was determined in its
+	// Timestamp field. The Timestamp value is the integer number of seconds since
+	// 1970-01-01T00:00:00Z. The SizeInBytes value doesn't represent the size of
+	// a consistent snapshot of the file system, but it is eventually consistent
+	// when there are no writes to the file system. That is, SizeInBytes represents
+	// actual size only if the file system is not modified for a period longer than
+	// a couple of hours. Otherwise, the value is not the exact size that the file
+	// system was at any point in time.
 	//
 	// SizeInBytes is a required field
 	SizeInBytes *FileSystemSize `type:"structure" required:"true"`
+
+	// The tags associated with the file system, presented as an array of Tag objects.
+	//
+	// Tags is a required field
+	Tags []*Tag `type:"list" required:"true"`
 
 	// The throughput mode for a file system. There are two throughput modes to
 	// choose from for your file system: bursting and provisioned. You can decrease
@@ -3319,6 +3357,12 @@ func (s *UpdateFileSystemOutput) SetProvisionedThroughputInMibps(v float64) *Upd
 // SetSizeInBytes sets the SizeInBytes field's value.
 func (s *UpdateFileSystemOutput) SetSizeInBytes(v *FileSystemSize) *UpdateFileSystemOutput {
 	s.SizeInBytes = v
+	return s
+}
+
+// SetTags sets the Tags field's value.
+func (s *UpdateFileSystemOutput) SetTags(v []*Tag) *UpdateFileSystemOutput {
+	s.Tags = v
 	return s
 }
 

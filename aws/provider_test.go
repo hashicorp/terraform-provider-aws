@@ -4,7 +4,9 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"reflect"
 	"regexp"
+	"strings"
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws/arn"
@@ -37,6 +39,11 @@ func init() {
 				*providers = append(*providers, p.(*schema.Provider))
 				return p, nil
 			},
+			"tls": func() (terraform.ResourceProvider, error) {
+				p := tls.Provider()
+				*providers = append(*providers, p.(*schema.Provider))
+				return p, nil
+			},
 		}
 	}
 	testAccProvidersWithTLS = map[string]terraform.ResourceProvider{
@@ -59,13 +66,12 @@ func TestProvider_impl(t *testing.T) {
 }
 
 func testAccPreCheck(t *testing.T) {
-	if v := os.Getenv("AWS_PROFILE"); v == "" {
-		if v := os.Getenv("AWS_ACCESS_KEY_ID"); v == "" {
-			t.Fatal("AWS_ACCESS_KEY_ID must be set for acceptance tests")
-		}
-		if v := os.Getenv("AWS_SECRET_ACCESS_KEY"); v == "" {
-			t.Fatal("AWS_SECRET_ACCESS_KEY must be set for acceptance tests")
-		}
+	if os.Getenv("AWS_PROFILE") == "" && os.Getenv("AWS_ACCESS_KEY_ID") == "" {
+		t.Fatal("AWS_ACCESS_KEY_ID or AWS_PROFILE must be set for acceptance tests")
+	}
+
+	if os.Getenv("AWS_ACCESS_KEY_ID") != "" && os.Getenv("AWS_SECRET_ACCESS_KEY") == "" {
+		t.Fatal("AWS_SECRET_ACCESS_KEY must be set for acceptance tests")
 	}
 
 	region := testAccGetRegion()
@@ -192,6 +198,16 @@ func testAccGetPartition() string {
 	return "aws"
 }
 
+func testAccAlternateAccountPreCheck(t *testing.T) {
+	if os.Getenv("AWS_ALTERNATE_PROFILE") == "" && os.Getenv("AWS_ALTERNATE_ACCESS_KEY_ID") == "" {
+		t.Fatal("AWS_ALTERNATE_ACCESS_KEY_ID or AWS_ALTERNATE_PROFILE must be set for acceptance tests")
+	}
+
+	if os.Getenv("AWS_ALTERNATE_ACCESS_KEY_ID") != "" && os.Getenv("AWS_ALTERNATE_SECRET_ACCESS_KEY") == "" {
+		t.Fatal("AWS_ALTERNATE_SECRET_ACCESS_KEY must be set for acceptance tests")
+	}
+}
+
 func testAccEC2ClassicPreCheck(t *testing.T) {
 	client := testAccProvider.Meta().(*AWSClient)
 	platforms := client.supportedplatforms
@@ -229,6 +245,32 @@ func testAccOrganizationsAccountPreCheck(t *testing.T) {
 		t.Fatalf("error describing AWS Organization: %s", err)
 	}
 	t.Skip("skipping tests; this AWS account must not be an existing member of an AWS Organization")
+}
+
+func testAccAlternateAccountProviderConfig() string {
+	return fmt.Sprintf(`
+provider "aws" {
+  access_key = %[1]q
+  alias      = "alternate"
+  profile    = %[2]q
+  secret_key = %[3]q
+}
+`, os.Getenv("AWS_ALTERNATE_ACCESS_KEY_ID"), os.Getenv("AWS_ALTERNATE_PROFILE"), os.Getenv("AWS_ALTERNATE_SECRET_ACCESS_KEY"))
+}
+
+// Provider configuration hardcoded for us-east-1.
+// This should only be necessary for testing ACM Certificates with CloudFront
+// related infrastucture such as API Gateway Domain Names for EDGE endpoints,
+// CloudFront Distribution Viewer Certificates, and Cognito User Pool Domains.
+// Other valid usage is for services only available in us-east-1 such as the
+// Cost and Usage Reporting and Pricing services.
+func testAccUsEast1RegionProviderConfig() string {
+	return fmt.Sprintf(`
+provider "aws" {
+  alias  = "us-east-1"
+  region = "us-east-1"
+}
+`)
 }
 
 func testAccAwsRegionProviderFunc(region string, providers *[]*schema.Provider) func() *schema.Provider {
@@ -324,5 +366,222 @@ func testSweepSkipSweepError(err error) bool {
 	if isAWSErr(err, "AccessDeniedException", "") {
 		return true
 	}
+	// Example: BadRequestException: vpc link not supported for region us-gov-west-1
+	if isAWSErr(err, "BadRequestException", "not supported") {
+		return true
+	}
+	// Example: InvalidAction: The action DescribeTransitGatewayAttachments is not valid for this web service
+	if isAWSErr(err, "InvalidAction", "is not valid") {
+		return true
+	}
 	return false
+}
+
+func TestAccAWSProvider_Endpoints(t *testing.T) {
+	var providers []*schema.Provider
+	var endpoints strings.Builder
+
+	// Initialize each endpoint configuration with matching name and value
+	for _, endpointServiceName := range endpointServiceNames {
+		// Skip deprecated endpoint configurations as they will override expected values
+		if endpointServiceName == "kinesis_analytics" || endpointServiceName == "r53" {
+			continue
+		}
+
+		endpoints.WriteString(fmt.Sprintf("%s = \"http://%s\"\n", endpointServiceName, endpointServiceName))
+	}
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:          func() { testAccPreCheck(t) },
+		ProviderFactories: testAccProviderFactories(&providers),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSProviderConfigEndpoints(endpoints.String()),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSProviderEndpoints(&providers),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAWSProvider_Endpoints_Deprecated(t *testing.T) {
+	var providers []*schema.Provider
+	var endpointsDeprecated strings.Builder
+
+	// Initialize each deprecated endpoint configuration with matching name and value
+	for _, endpointServiceName := range endpointServiceNames {
+		// Only configure deprecated endpoint configurations
+		if endpointServiceName != "kinesis_analytics" && endpointServiceName != "r53" {
+			continue
+		}
+
+		endpointsDeprecated.WriteString(fmt.Sprintf("%s = \"http://%s\"\n", endpointServiceName, endpointServiceName))
+	}
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:          func() { testAccPreCheck(t) },
+		ProviderFactories: testAccProviderFactories(&providers),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSProviderConfigEndpoints(endpointsDeprecated.String()),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSProviderEndpointsDeprecated(&providers),
+				),
+			},
+		},
+	})
+}
+
+func testAccCheckAWSProviderEndpoints(providers *[]*schema.Provider) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		if providers == nil {
+			return fmt.Errorf("no providers initialized")
+		}
+
+		// Match AWSClient struct field names to endpoint configuration names
+		endpointFieldNameF := func(endpoint string) func(string) bool {
+			return func(name string) bool {
+				switch endpoint {
+				case "applicationautoscaling":
+					endpoint = "appautoscaling"
+				case "budgets":
+					endpoint = "budget"
+				case "cloudformation":
+					endpoint = "cf"
+				case "cloudhsm":
+					endpoint = "cloudhsmv2"
+				case "cognitoidentity":
+					endpoint = "cognito"
+				case "configservice":
+					endpoint = "config"
+				case "cur":
+					endpoint = "costandusagereport"
+				case "directconnect":
+					endpoint = "dx"
+				case "lexmodels":
+					endpoint = "lexmodel"
+				case "route53":
+					endpoint = "r53"
+				case "sdb":
+					endpoint = "simpledb"
+				case "serverlessrepo":
+					endpoint = "serverlessapplicationrepository"
+				case "servicecatalog":
+					endpoint = "sc"
+				case "servicediscovery":
+					endpoint = "sd"
+				case "stepfunctions":
+					endpoint = "sfn"
+				}
+
+				switch name {
+				case endpoint, fmt.Sprintf("%sconn", endpoint), fmt.Sprintf("%sConn", endpoint):
+					return true
+				}
+
+				return false
+			}
+		}
+
+		for _, provider := range *providers {
+			if provider == nil || provider.Meta() == nil || provider.Meta().(*AWSClient) == nil {
+				continue
+			}
+
+			providerClient := provider.Meta().(*AWSClient)
+
+			for _, endpointServiceName := range endpointServiceNames {
+				// Skip deprecated endpoint configurations as they will override expected values
+				if endpointServiceName == "kinesis_analytics" || endpointServiceName == "r53" {
+					continue
+				}
+
+				providerClientField := reflect.Indirect(reflect.ValueOf(providerClient)).FieldByNameFunc(endpointFieldNameF(endpointServiceName))
+
+				if !providerClientField.IsValid() {
+					return fmt.Errorf("unable to match AWSClient struct field name for endpoint name: %s", endpointServiceName)
+				}
+
+				actualEndpoint := reflect.Indirect(reflect.Indirect(providerClientField).FieldByName("Config").FieldByName("Endpoint")).String()
+				expectedEndpoint := fmt.Sprintf("http://%s", endpointServiceName)
+
+				if actualEndpoint != expectedEndpoint {
+					return fmt.Errorf("expected endpoint (%s) value (%s), got: %s", endpointServiceName, expectedEndpoint, actualEndpoint)
+				}
+			}
+		}
+
+		return nil
+	}
+}
+
+func testAccCheckAWSProviderEndpointsDeprecated(providers *[]*schema.Provider) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		if providers == nil {
+			return fmt.Errorf("no providers initialized")
+		}
+
+		// Match AWSClient struct field names to endpoint configuration names
+		endpointFieldNameF := func(endpoint string) func(string) bool {
+			return func(name string) bool {
+				switch endpoint {
+				case "kinesis_analytics":
+					endpoint = "kinesisanalytics"
+				}
+
+				return name == fmt.Sprintf("%sconn", endpoint)
+			}
+		}
+
+		for _, provider := range *providers {
+			if provider == nil || provider.Meta() == nil || provider.Meta().(*AWSClient) == nil {
+				continue
+			}
+
+			providerClient := provider.Meta().(*AWSClient)
+
+			for _, endpointServiceName := range endpointServiceNames {
+				// Only check deprecated endpoint configurations
+				if endpointServiceName != "kinesis_analytics" && endpointServiceName != "r53" {
+					continue
+				}
+
+				providerClientField := reflect.Indirect(reflect.ValueOf(providerClient)).FieldByNameFunc(endpointFieldNameF(endpointServiceName))
+
+				if !providerClientField.IsValid() {
+					return fmt.Errorf("unable to match AWSClient struct field name for endpoint name: %s", endpointServiceName)
+				}
+
+				actualEndpoint := reflect.Indirect(reflect.Indirect(providerClientField).FieldByName("Config").FieldByName("Endpoint")).String()
+				expectedEndpoint := fmt.Sprintf("http://%s", endpointServiceName)
+
+				if actualEndpoint != expectedEndpoint {
+					return fmt.Errorf("expected endpoint (%s) value (%s), got: %s", endpointServiceName, expectedEndpoint, actualEndpoint)
+				}
+			}
+		}
+
+		return nil
+	}
+}
+
+func testAccAWSProviderConfigEndpoints(endpoints string) string {
+	return fmt.Sprintf(`
+provider "aws" {
+  skip_credentials_validation = true
+  skip_get_ec2_platforms      = true
+  skip_metadata_api_check     = true
+  skip_requesting_account_id  = true
+
+  endpoints {
+%[1]s
+  }
+}
+
+# Required to initialize the provider
+data "aws_arn" "test" {
+  arn = "arn:aws:s3:::test"
+}
+`, endpoints)
 }

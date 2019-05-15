@@ -84,6 +84,10 @@ func resourceAwsDxHostedPublicVirtualInterface() *schema.Resource {
 				Elem:     &schema.Schema{Type: schema.TypeString},
 				MinItems: 1,
 			},
+			"aws_device": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 		},
 
 		Timeouts: &schema.ResourceTimeout{
@@ -128,7 +132,7 @@ func resourceAwsDxHostedPublicVirtualInterfaceCreate(d *schema.ResourceData, met
 		req.NewPublicVirtualInterfaceAllocation.AmazonAddress = aws.String(aaRaw.(string))
 	}
 	if v, ok := d.GetOk("route_filter_prefixes"); ok {
-		req.NewPublicVirtualInterfaceAllocation.RouteFilterPrefixes = expandDxRouteFilterPrefixes(v.(*schema.Set).List())
+		req.NewPublicVirtualInterfaceAllocation.RouteFilterPrefixes = expandDxRouteFilterPrefixes(v.(*schema.Set))
 	}
 
 	log.Printf("[DEBUG] Allocating Direct Connect hosted public virtual interface: %#v", req)
@@ -177,6 +181,7 @@ func resourceAwsDxHostedPublicVirtualInterfaceRead(d *schema.ResourceData, meta 
 	d.Set("amazon_address", vif.AmazonAddress)
 	d.Set("route_filter_prefixes", flattenDxRouteFilterPrefixes(vif.RouteFilterPrefixes))
 	d.Set("owner_account_id", vif.OwnerAccount)
+	d.Set("aws_device", vif.AwsDeviceV2)
 
 	return nil
 }

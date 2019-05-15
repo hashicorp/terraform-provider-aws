@@ -257,9 +257,9 @@ func (c *ELBV2) CreateListenerRequest(input *CreateListenerInput) (req *request.
 // If you attempt to create multiple listeners with the same settings, each
 // call succeeds.
 //
-// For more information, see Listeners for Your Application Load Balancers (http://docs.aws.amazon.com/elasticloadbalancing/latest/application/load-balancer-listeners.html)
+// For more information, see Listeners for Your Application Load Balancers (https://docs.aws.amazon.com/elasticloadbalancing/latest/application/load-balancer-listeners.html)
 // in the Application Load Balancers Guide and Listeners for Your Network Load
-// Balancers (http://docs.aws.amazon.com/elasticloadbalancing/latest/network/load-balancer-listeners.html)
+// Balancers (https://docs.aws.amazon.com/elasticloadbalancing/latest/network/load-balancer-listeners.html)
 // in the Network Load Balancers Guide.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
@@ -392,17 +392,17 @@ func (c *ELBV2) CreateLoadBalancerRequest(input *CreateLoadBalancerInput) (req *
 // your current load balancers, see DescribeLoadBalancers. When you are finished
 // with a load balancer, you can delete it using DeleteLoadBalancer.
 //
-// For limit information, see Limits for Your Application Load Balancer (http://docs.aws.amazon.com/elasticloadbalancing/latest/application/load-balancer-limits.html)
+// For limit information, see Limits for Your Application Load Balancer (https://docs.aws.amazon.com/elasticloadbalancing/latest/application/load-balancer-limits.html)
 // in the Application Load Balancers Guide and Limits for Your Network Load
-// Balancer (http://docs.aws.amazon.com/elasticloadbalancing/latest/network/load-balancer-limits.html)
+// Balancer (https://docs.aws.amazon.com/elasticloadbalancing/latest/network/load-balancer-limits.html)
 // in the Network Load Balancers Guide.
 //
 // This operation is idempotent, which means that it completes at most one time.
 // If you attempt to create multiple load balancers with the same settings,
 // each call succeeds.
 //
-// For more information, see Application Load Balancers (http://docs.aws.amazon.com/elasticloadbalancing/latest/application/application-load-balancers.html)
-// in the Application Load Balancers Guide and Network Load Balancers (http://docs.aws.amazon.com/elasticloadbalancing/latest/network/network-load-balancers.html)
+// For more information, see Application Load Balancers (https://docs.aws.amazon.com/elasticloadbalancing/latest/application/application-load-balancers.html)
+// in the Application Load Balancers Guide and Network Load Balancers (https://docs.aws.amazon.com/elasticloadbalancing/latest/network/network-load-balancers.html)
 // in the Network Load Balancers Guide.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
@@ -524,7 +524,7 @@ func (c *ELBV2) CreateRuleRequest(input *CreateRuleInput) (req *request.Request,
 // Rules are evaluated in priority order, from the lowest value to the highest
 // value. When the conditions for a rule are met, its actions are performed.
 // If the conditions for no rules are met, the actions for the default rule
-// are performed. For more information, see Listener Rules (http://docs.aws.amazon.com/elasticloadbalancing/latest/application/load-balancer-listeners.html#listener-rules)
+// are performed. For more information, see Listener Rules (https://docs.aws.amazon.com/elasticloadbalancing/latest/application/load-balancer-listeners.html#listener-rules)
 // in the Application Load Balancers Guide.
 //
 // To view your current rules, use DescribeRules. To update a rule, use ModifyRule.
@@ -661,9 +661,9 @@ func (c *ELBV2) CreateTargetGroupRequest(input *CreateTargetGroupInput) (req *re
 // call succeeds.
 //
 // For more information, see Target Groups for Your Application Load Balancers
-// (http://docs.aws.amazon.com/elasticloadbalancing/latest/application/load-balancer-target-groups.html)
+// (https://docs.aws.amazon.com/elasticloadbalancing/latest/application/load-balancer-target-groups.html)
 // in the Application Load Balancers Guide or Target Groups for Your Network
-// Load Balancers (http://docs.aws.amazon.com/elasticloadbalancing/latest/network/load-balancer-target-groups.html)
+// Load Balancers (https://docs.aws.amazon.com/elasticloadbalancing/latest/network/load-balancer-target-groups.html)
 // in the Network Load Balancers Guide.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
@@ -1182,9 +1182,9 @@ func (c *ELBV2) DescribeAccountLimitsRequest(input *DescribeAccountLimitsInput) 
 // Describes the current Elastic Load Balancing resource limits for your AWS
 // account.
 //
-// For more information, see Limits for Your Application Load Balancers (http://docs.aws.amazon.com/elasticloadbalancing/latest/application/load-balancer-limits.html)
+// For more information, see Limits for Your Application Load Balancers (https://docs.aws.amazon.com/elasticloadbalancing/latest/application/load-balancer-limits.html)
 // in the Application Load Balancer Guide or Limits for Your Network Load Balancers
-// (http://docs.aws.amazon.com/elasticloadbalancing/latest/network/load-balancer-limits.html)
+// (https://docs.aws.amazon.com/elasticloadbalancing/latest/network/load-balancer-limits.html)
 // in the Network Load Balancers Guide.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
@@ -1484,8 +1484,8 @@ func (c *ELBV2) DescribeLoadBalancerAttributesRequest(input *DescribeLoadBalance
 // Describes the attributes for the specified Application Load Balancer or Network
 // Load Balancer.
 //
-// For more information, see Load Balancer Attributes (http://docs.aws.amazon.com/elasticloadbalancing/latest/application/application-load-balancers.html#load-balancer-attributes)
-// in the Application Load Balancers Guide or Load Balancer Attributes (http://docs.aws.amazon.com/elasticloadbalancing/latest/network/network-load-balancers.html#load-balancer-attributes)
+// For more information, see Load Balancer Attributes (https://docs.aws.amazon.com/elasticloadbalancing/latest/application/application-load-balancers.html#load-balancer-attributes)
+// in the Application Load Balancers Guide or Load Balancer Attributes (https://docs.aws.amazon.com/elasticloadbalancing/latest/network/network-load-balancers.html#load-balancer-attributes)
 // in the Network Load Balancers Guide.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
@@ -1791,7 +1791,7 @@ func (c *ELBV2) DescribeSSLPoliciesRequest(input *DescribeSSLPoliciesInput) (req
 //
 // Describes the specified policies or all policies used for SSL negotiation.
 //
-// For more information, see Security Policies (http://docs.aws.amazon.com/elasticloadbalancing/latest/application/create-https-listener.html#describe-ssl-policies)
+// For more information, see Security Policies (https://docs.aws.amazon.com/elasticloadbalancing/latest/application/create-https-listener.html#describe-ssl-policies)
 // in the Application Load Balancers Guide.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
@@ -1963,8 +1963,8 @@ func (c *ELBV2) DescribeTargetGroupAttributesRequest(input *DescribeTargetGroupA
 //
 // Describes the attributes for the specified target group.
 //
-// For more information, see Target Group Attributes (http://docs.aws.amazon.com/elasticloadbalancing/latest/application/load-balancer-target-groups.html#target-group-attributes)
-// in the Application Load Balancers Guide or Target Group Attributes (http://docs.aws.amazon.com/elasticloadbalancing/latest/network/load-balancer-target-groups.html#target-group-attributes)
+// For more information, see Target Group Attributes (https://docs.aws.amazon.com/elasticloadbalancing/latest/application/load-balancer-target-groups.html#target-group-attributes)
+// in the Application Load Balancers Guide or Target Group Attributes (https://docs.aws.amazon.com/elasticloadbalancing/latest/network/load-balancer-target-groups.html#target-group-attributes)
 // in the Network Load Balancers Guide.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
@@ -3802,10 +3802,10 @@ type AuthenticateOidcActionConfig struct {
 	// ClientId is a required field
 	ClientId *string `type:"string" required:"true"`
 
-	// The OAuth 2.0 client secret.
-	//
-	// ClientSecret is a required field
-	ClientSecret *string `type:"string" required:"true"`
+	// The OAuth 2.0 client secret. This parameter is required if you are creating
+	// a rule. If you are modifying a rule, you can omit this parameter if you set
+	// UseExistingClientSecret to true.
+	ClientSecret *string `type:"string"`
 
 	// The OIDC issuer identifier of the IdP. This must be a full URL, including
 	// the HTTPS protocol, the domain, and the path.
@@ -3843,6 +3843,10 @@ type AuthenticateOidcActionConfig struct {
 	// TokenEndpoint is a required field
 	TokenEndpoint *string `type:"string" required:"true"`
 
+	// Indicates whether to use the existing client secret when modifying a rule.
+	// If you are creating a rule, you can omit this parameter or set it to false.
+	UseExistingClientSecret *bool `type:"boolean"`
+
 	// The user info endpoint of the IdP. This must be a full URL, including the
 	// HTTPS protocol, the domain, and the path.
 	//
@@ -3868,9 +3872,6 @@ func (s *AuthenticateOidcActionConfig) Validate() error {
 	}
 	if s.ClientId == nil {
 		invalidParams.Add(request.NewErrParamRequired("ClientId"))
-	}
-	if s.ClientSecret == nil {
-		invalidParams.Add(request.NewErrParamRequired("ClientSecret"))
 	}
 	if s.Issuer == nil {
 		invalidParams.Add(request.NewErrParamRequired("Issuer"))
@@ -3945,6 +3946,12 @@ func (s *AuthenticateOidcActionConfig) SetSessionTimeout(v int64) *AuthenticateO
 // SetTokenEndpoint sets the TokenEndpoint field's value.
 func (s *AuthenticateOidcActionConfig) SetTokenEndpoint(v string) *AuthenticateOidcActionConfig {
 	s.TokenEndpoint = &v
+	return s
+}
+
+// SetUseExistingClientSecret sets the UseExistingClientSecret field's value.
+func (s *AuthenticateOidcActionConfig) SetUseExistingClientSecret(v bool) *AuthenticateOidcActionConfig {
+	s.UseExistingClientSecret = &v
 	return s
 }
 
@@ -6066,6 +6073,80 @@ func (s *FixedResponseActionConfig) SetStatusCode(v string) *FixedResponseAction
 	return s
 }
 
+type HostHeaderConditionConfig struct {
+	_ struct{} `type:"structure"`
+
+	Values []*string `type:"list"`
+}
+
+// String returns the string representation
+func (s HostHeaderConditionConfig) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s HostHeaderConditionConfig) GoString() string {
+	return s.String()
+}
+
+// SetValues sets the Values field's value.
+func (s *HostHeaderConditionConfig) SetValues(v []*string) *HostHeaderConditionConfig {
+	s.Values = v
+	return s
+}
+
+type HttpHeaderConditionConfig struct {
+	_ struct{} `type:"structure"`
+
+	HttpHeaderName *string `type:"string"`
+
+	Values []*string `type:"list"`
+}
+
+// String returns the string representation
+func (s HttpHeaderConditionConfig) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s HttpHeaderConditionConfig) GoString() string {
+	return s.String()
+}
+
+// SetHttpHeaderName sets the HttpHeaderName field's value.
+func (s *HttpHeaderConditionConfig) SetHttpHeaderName(v string) *HttpHeaderConditionConfig {
+	s.HttpHeaderName = &v
+	return s
+}
+
+// SetValues sets the Values field's value.
+func (s *HttpHeaderConditionConfig) SetValues(v []*string) *HttpHeaderConditionConfig {
+	s.Values = v
+	return s
+}
+
+type HttpRequestMethodConditionConfig struct {
+	_ struct{} `type:"structure"`
+
+	Values []*string `type:"list"`
+}
+
+// String returns the string representation
+func (s HttpRequestMethodConditionConfig) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s HttpRequestMethodConditionConfig) GoString() string {
+	return s.String()
+}
+
+// SetValues sets the Values field's value.
+func (s *HttpRequestMethodConditionConfig) SetValues(v []*string) *HttpRequestMethodConditionConfig {
+	s.Values = v
+	return s
+}
+
 // Information about an Elastic Load Balancing resource limit for your AWS account.
 type Limit struct {
 	_ struct{} `type:"structure"`
@@ -6372,11 +6453,6 @@ type LoadBalancerAttribute struct {
 	// The following attributes are supported by both Application Load Balancers
 	// and Network Load Balancers:
 	//
-	//    * deletion_protection.enabled - Indicates whether deletion protection
-	//    is enabled. The value is true or false. The default is false.
-	//
-	// The following attributes are supported by only Application Load Balancers:
-	//
 	//    * access_logs.s3.enabled - Indicates whether access logs are enabled.
 	//    The value is true or false. The default is false.
 	//
@@ -6387,6 +6463,11 @@ type LoadBalancerAttribute struct {
 	//
 	//    * access_logs.s3.prefix - The prefix for the location in the S3 bucket
 	//    for the access logs.
+	//
+	//    * deletion_protection.enabled - Indicates whether deletion protection
+	//    is enabled. The value is true or false. The default is false.
+	//
+	// The following attributes are supported by only Application Load Balancers:
 	//
 	//    * idle_timeout.timeout_seconds - The idle timeout value, in seconds. The
 	//    valid range is 1-4000 seconds. The default is 60 seconds.
@@ -6550,7 +6631,7 @@ type ModifyListenerInput struct {
 	Protocol *string `type:"string" enum:"ProtocolEnum"`
 
 	// [HTTPS and TLS listeners] The security policy that defines which protocols
-	// and ciphers are supported. For more information, see Security Policies (http://docs.aws.amazon.com/elasticloadbalancing/latest/application/create-https-listener.html#describe-ssl-policies)
+	// and ciphers are supported. For more information, see Security Policies (https://docs.aws.amazon.com/elasticloadbalancing/latest/application/create-https-listener.html#describe-ssl-policies)
 	// in the Application Load Balancers Guide.
 	SslPolicy *string `type:"string"`
 }
@@ -7114,6 +7195,80 @@ func (s *ModifyTargetGroupOutput) SetTargetGroups(v []*TargetGroup) *ModifyTarge
 	return s
 }
 
+type PathPatternConditionConfig struct {
+	_ struct{} `type:"structure"`
+
+	Values []*string `type:"list"`
+}
+
+// String returns the string representation
+func (s PathPatternConditionConfig) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s PathPatternConditionConfig) GoString() string {
+	return s.String()
+}
+
+// SetValues sets the Values field's value.
+func (s *PathPatternConditionConfig) SetValues(v []*string) *PathPatternConditionConfig {
+	s.Values = v
+	return s
+}
+
+type QueryStringConditionConfig struct {
+	_ struct{} `type:"structure"`
+
+	Values []*QueryStringKeyValuePair `type:"list"`
+}
+
+// String returns the string representation
+func (s QueryStringConditionConfig) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s QueryStringConditionConfig) GoString() string {
+	return s.String()
+}
+
+// SetValues sets the Values field's value.
+func (s *QueryStringConditionConfig) SetValues(v []*QueryStringKeyValuePair) *QueryStringConditionConfig {
+	s.Values = v
+	return s
+}
+
+type QueryStringKeyValuePair struct {
+	_ struct{} `type:"structure"`
+
+	Key *string `type:"string"`
+
+	Value *string `type:"string"`
+}
+
+// String returns the string representation
+func (s QueryStringKeyValuePair) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s QueryStringKeyValuePair) GoString() string {
+	return s.String()
+}
+
+// SetKey sets the Key field's value.
+func (s *QueryStringKeyValuePair) SetKey(v string) *QueryStringKeyValuePair {
+	s.Key = &v
+	return s
+}
+
+// SetValue sets the Value field's value.
+func (s *QueryStringKeyValuePair) SetValue(v string) *QueryStringKeyValuePair {
+	s.Value = &v
+	return s
+}
+
 // Information about a redirect action.
 //
 // A URI consists of the following components: protocol://hostname:port/path?query.
@@ -7511,6 +7666,18 @@ type RuleCondition struct {
 	// The name of the field. The possible values are host-header and path-pattern.
 	Field *string `type:"string"`
 
+	HostHeaderConfig *HostHeaderConditionConfig `type:"structure"`
+
+	HttpHeaderConfig *HttpHeaderConditionConfig `type:"structure"`
+
+	HttpRequestMethodConfig *HttpRequestMethodConditionConfig `type:"structure"`
+
+	PathPatternConfig *PathPatternConditionConfig `type:"structure"`
+
+	QueryStringConfig *QueryStringConditionConfig `type:"structure"`
+
+	SourceIpConfig *SourceIpConditionConfig `type:"structure"`
+
 	// The condition value.
 	//
 	// If the field name is host-header, you can specify a single host name (for
@@ -7556,6 +7723,42 @@ func (s RuleCondition) GoString() string {
 // SetField sets the Field field's value.
 func (s *RuleCondition) SetField(v string) *RuleCondition {
 	s.Field = &v
+	return s
+}
+
+// SetHostHeaderConfig sets the HostHeaderConfig field's value.
+func (s *RuleCondition) SetHostHeaderConfig(v *HostHeaderConditionConfig) *RuleCondition {
+	s.HostHeaderConfig = v
+	return s
+}
+
+// SetHttpHeaderConfig sets the HttpHeaderConfig field's value.
+func (s *RuleCondition) SetHttpHeaderConfig(v *HttpHeaderConditionConfig) *RuleCondition {
+	s.HttpHeaderConfig = v
+	return s
+}
+
+// SetHttpRequestMethodConfig sets the HttpRequestMethodConfig field's value.
+func (s *RuleCondition) SetHttpRequestMethodConfig(v *HttpRequestMethodConditionConfig) *RuleCondition {
+	s.HttpRequestMethodConfig = v
+	return s
+}
+
+// SetPathPatternConfig sets the PathPatternConfig field's value.
+func (s *RuleCondition) SetPathPatternConfig(v *PathPatternConditionConfig) *RuleCondition {
+	s.PathPatternConfig = v
+	return s
+}
+
+// SetQueryStringConfig sets the QueryStringConfig field's value.
+func (s *RuleCondition) SetQueryStringConfig(v *QueryStringConditionConfig) *RuleCondition {
+	s.QueryStringConfig = v
+	return s
+}
+
+// SetSourceIpConfig sets the SourceIpConfig field's value.
+func (s *RuleCondition) SetSourceIpConfig(v *SourceIpConditionConfig) *RuleCondition {
+	s.SourceIpConfig = v
 	return s
 }
 
@@ -7916,6 +8119,28 @@ func (s SetSubnetsOutput) GoString() string {
 // SetAvailabilityZones sets the AvailabilityZones field's value.
 func (s *SetSubnetsOutput) SetAvailabilityZones(v []*AvailabilityZone) *SetSubnetsOutput {
 	s.AvailabilityZones = v
+	return s
+}
+
+type SourceIpConditionConfig struct {
+	_ struct{} `type:"structure"`
+
+	Values []*string `type:"list"`
+}
+
+// String returns the string representation
+func (s SourceIpConditionConfig) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s SourceIpConditionConfig) GoString() string {
+	return s.String()
+}
+
+// SetValues sets the Values field's value.
+func (s *SourceIpConditionConfig) SetValues(v []*string) *SourceIpConditionConfig {
+	s.Values = v
 	return s
 }
 

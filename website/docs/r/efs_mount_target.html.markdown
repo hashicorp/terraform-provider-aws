@@ -6,7 +6,7 @@ description: |-
   Provides an Elastic File System (EFS) mount target.
 ---
 
-# aws_efs_mount_target
+# Resource: aws_efs_mount_target
 
 Provides an Elastic File System (EFS) mount target.
 

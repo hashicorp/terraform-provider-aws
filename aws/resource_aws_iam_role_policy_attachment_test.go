@@ -62,7 +62,84 @@ func TestAccAWSRolePolicyAttachment_basic(t *testing.T) {
 		},
 	})
 }
+
+func TestAccAWSRolePolicyAttachment_disappears(t *testing.T) {
+	var attachedRolePolicies iam.ListAttachedRolePoliciesOutput
+
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_iam_role_policy_attachment.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSRolePolicyAttachmentDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSIAMRolePolicyAttachmentConfig(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSRolePolicyAttachmentExists(resourceName, 1, &attachedRolePolicies),
+					testAccCheckAWSIAMRolePolicyAttachmentDisappears(resourceName),
+				),
+				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}
+
+func TestAccAWSRolePolicyAttachment_disappears_Role(t *testing.T) {
+	var attachedRolePolicies iam.ListAttachedRolePoliciesOutput
+	var role iam.GetRoleOutput
+
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	iamRoleResourceName := "aws_iam_role.test"
+	resourceName := "aws_iam_role_policy_attachment.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSRolePolicyAttachmentDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSIAMRolePolicyAttachmentConfig(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSRoleExists(iamRoleResourceName, &role),
+					testAccCheckAWSRolePolicyAttachmentExists(resourceName, 1, &attachedRolePolicies),
+					// DeleteConflict: Cannot delete entity, must detach all policies first.
+					testAccCheckAWSIAMRolePolicyAttachmentDisappears(resourceName),
+					testAccCheckAWSRoleDisappears(&role),
+				),
+				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}
+
 func testAccCheckAWSRolePolicyAttachmentDestroy(s *terraform.State) error {
+	conn := testAccProvider.Meta().(*AWSClient).iamconn
+
+	for _, rs := range s.RootModule().Resources {
+		if rs.Type != "aws_iam_role_policy_attachment" {
+			continue
+		}
+
+		policyARN := rs.Primary.Attributes["policy_arn"]
+		role := rs.Primary.Attributes["role"]
+
+		hasPolicyAttachment, err := iamRoleHasPolicyARNAttachment(conn, role, policyARN)
+
+		if isAWSErr(err, iam.ErrCodeNoSuchEntityException, "") {
+			continue
+		}
+
+		if err != nil {
+			return err
+		}
+
+		if hasPolicyAttachment {
+			return fmt.Errorf("IAM Role (%s) Policy Attachment (%s) still exists", role, policyARN)
+		}
+	}
+
 	return nil
 }
 
@@ -111,6 +188,23 @@ func testAccCheckAWSRolePolicyAttachmentAttributes(policies []string, out *iam.L
 			return fmt.Errorf("Error: Number of attached policies was incorrect: expected %d matched policies, matched %d of %d", len(policies), matched, len(out.AttachedPolicies))
 		}
 		return nil
+	}
+}
+
+func testAccCheckAWSIAMRolePolicyAttachmentDisappears(resourceName string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := testAccProvider.Meta().(*AWSClient).iamconn
+
+		rs, ok := s.RootModule().Resources[resourceName]
+
+		if !ok {
+			return fmt.Errorf("Not found: %s", resourceName)
+		}
+
+		policyARN := rs.Primary.Attributes["policy_arn"]
+		role := rs.Primary.Attributes["role"]
+
+		return detachPolicyFromRole(conn, role, policyARN)
 	}
 }
 
@@ -258,4 +352,35 @@ EOF
 			role = "${aws_iam_role.role.name}"
 			policy_arn = "${aws_iam_policy.policy3.arn}"
 	}`, rInt, rInt, rInt, rInt)
+}
+
+func testAccAWSIAMRolePolicyAttachmentConfig(rName string) string {
+	return fmt.Sprintf(`
+data "aws_partition" "current" {}
+
+resource "aws_iam_role" "test" {
+  name = %[1]q
+
+  assume_role_policy = <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Action": "sts:AssumeRole",
+      "Principal": {
+        "Service": "ec2.amazonaws.com"
+      },
+      "Effect": "Allow",
+      "Sid": ""
+    }
+  ]
+}
+EOF
+}
+
+resource "aws_iam_role_policy_attachment" "test" {
+  policy_arn = "arn:${data.aws_partition.current.partition}:iam::aws:policy/AdministratorAccess"
+  role       = "${aws_iam_role.test.name}"
+}
+`, rName)
 }

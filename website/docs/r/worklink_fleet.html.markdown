@@ -6,7 +6,7 @@ description: |-
   Provides a AWS WorkLink Fleet resource.
 ---
 
-# aws_worklink_fleet
+# Resource: aws_worklink_fleet
 
 ## Example Usage
 

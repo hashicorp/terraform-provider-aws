@@ -6,7 +6,7 @@ description: |-
   Provides an OpsWorks memcached layer resource.
 ---
 
-# aws_opsworks_memcached_layer
+# Resource: aws_opsworks_memcached_layer
 
 Provides an OpsWorks memcached layer resource.
 

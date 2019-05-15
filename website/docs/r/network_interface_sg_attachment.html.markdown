@@ -6,7 +6,7 @@ description: |-
   Associates a security group with a network interface.
 ---
 
-# aws_network_interface_sg_attachment
+# Resource: aws_network_interface_sg_attachment
 
 This resource attaches a security group to an Elastic Network Interface (ENI).
 It can be used to attach a security group to any existing ENI, be it a

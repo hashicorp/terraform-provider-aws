@@ -6,7 +6,7 @@ description: |-
   Provides an AutoScaling Group with Notification support
 ---
 
-# aws_autoscaling_notification
+# Resource: aws_autoscaling_notification
 
 Provides an AutoScaling Group with Notification support, via SNS Topics. Each of
 the `notifications` map to a [Notification Configuration][2] inside Amazon Web

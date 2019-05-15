@@ -813,6 +813,11 @@ func resourceAwsDbInstanceCreate(d *schema.ResourceData, meta interface{}) error
 			opts.Engine = aws.String(attr.(string))
 		}
 
+		if attr, ok := d.GetOk("engine_version"); ok {
+			modifyDbInstanceInput.EngineVersion = aws.String(attr.(string))
+			requiresModifyDbInstance = true
+		}
+
 		if attr, ok := d.GetOk("iam_database_authentication_enabled"); ok {
 			opts.EnableIAMDatabaseAuthentication = aws.Bool(attr.(bool))
 		}
@@ -1539,11 +1544,8 @@ func resourceAwsDbInstanceRetrieve(id string, conn *rds.RDS) (*rds.DBInstance, e
 		return nil, fmt.Errorf("Error retrieving DB Instances: %s", err)
 	}
 
-	if len(resp.DBInstances) != 1 ||
-		*resp.DBInstances[0].DBInstanceIdentifier != id {
-		if err != nil {
-			return nil, nil
-		}
+	if len(resp.DBInstances) != 1 || resp.DBInstances[0] == nil || aws.StringValue(resp.DBInstances[0].DBInstanceIdentifier) != id {
+		return nil, nil
 	}
 
 	return resp.DBInstances[0], nil

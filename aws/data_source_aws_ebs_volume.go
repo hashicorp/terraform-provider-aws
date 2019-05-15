@@ -7,7 +7,6 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/ec2"
-	"github.com/davecgh/go-spew/spew"
 	"github.com/hashicorp/terraform/helper/schema"
 )
 
@@ -79,8 +78,6 @@ func dataSourceAwsEbsVolumeRead(d *schema.ResourceData, meta interface{}) error 
 	if err != nil {
 		return err
 	}
-
-	log.Printf("Found These Volumes %s", spew.Sdump(resp.Volumes))
 
 	filteredVolumes := resp.Volumes[:]
 

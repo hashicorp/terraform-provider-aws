@@ -419,7 +419,8 @@ func (c *MediaStore) DeleteLifecyclePolicyRequest(input *DeleteLifecyclePolicyIn
 
 // DeleteLifecyclePolicy API operation for AWS Elemental MediaStore.
 //
-// Removes an object lifecycle policy from a container.
+// Removes an object lifecycle policy from a container. It takes up to 20 minutes
+// for the change to take effect.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -1064,6 +1065,9 @@ func (c *MediaStore) PutCorsPolicyRequest(input *PutCorsPolicyInput) (req *reque
 // to 398,000 characters. You can add up to 100 rules to a CORS policy. If more
 // than one rule applies, the service uses the first applicable rule listed.
 //
+// To learn more about CORS, see Cross-Origin Resource Sharing (CORS) in AWS
+// Elemental MediaStore (https://docs.aws.amazon.com/mediastore/latest/ug/cors-policy.html).
+//
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
 // the error.
@@ -1151,7 +1155,10 @@ func (c *MediaStore) PutLifecyclePolicyRequest(input *PutLifecyclePolicyInput) (
 //
 // Writes an object lifecycle policy to a container. If the container already
 // has an object lifecycle policy, the service replaces the existing policy
-// with the new policy.
+// with the new policy. It takes up to 20 minutes for the change to take effect.
+//
+// For information about how to construct an object lifecycle policy, see Components
+// of an Object Lifecycle Policy (https://docs.aws.amazon.com/mediastore/latest/ug/policies-object-lifecycle-components.html).
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -1193,6 +1200,184 @@ func (c *MediaStore) PutLifecyclePolicyWithContext(ctx aws.Context, input *PutLi
 	return out, req.Send()
 }
 
+const opStartAccessLogging = "StartAccessLogging"
+
+// StartAccessLoggingRequest generates a "aws/request.Request" representing the
+// client's request for the StartAccessLogging operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See StartAccessLogging for more information on using the StartAccessLogging
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the StartAccessLoggingRequest method.
+//    req, resp := client.StartAccessLoggingRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/mediastore-2017-09-01/StartAccessLogging
+func (c *MediaStore) StartAccessLoggingRequest(input *StartAccessLoggingInput) (req *request.Request, output *StartAccessLoggingOutput) {
+	op := &request.Operation{
+		Name:       opStartAccessLogging,
+		HTTPMethod: "POST",
+		HTTPPath:   "/",
+	}
+
+	if input == nil {
+		input = &StartAccessLoggingInput{}
+	}
+
+	output = &StartAccessLoggingOutput{}
+	req = c.newRequest(op, input, output)
+	req.Handlers.Unmarshal.Swap(jsonrpc.UnmarshalHandler.Name, protocol.UnmarshalDiscardBodyHandler)
+	return
+}
+
+// StartAccessLogging API operation for AWS Elemental MediaStore.
+//
+// Starts access logging on the specified container. When you enable access
+// logging on a container, MediaStore delivers access logs for objects stored
+// in that container to Amazon CloudWatch Logs.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for AWS Elemental MediaStore's
+// API operation StartAccessLogging for usage and error information.
+//
+// Returned Error Codes:
+//   * ErrCodeContainerInUseException "ContainerInUseException"
+//   The container that you specified in the request already exists or is being
+//   updated.
+//
+//   * ErrCodeContainerNotFoundException "ContainerNotFoundException"
+//   The container that you specified in the request does not exist.
+//
+//   * ErrCodeInternalServerError "InternalServerError"
+//   The service is temporarily unavailable.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/mediastore-2017-09-01/StartAccessLogging
+func (c *MediaStore) StartAccessLogging(input *StartAccessLoggingInput) (*StartAccessLoggingOutput, error) {
+	req, out := c.StartAccessLoggingRequest(input)
+	return out, req.Send()
+}
+
+// StartAccessLoggingWithContext is the same as StartAccessLogging with the addition of
+// the ability to pass a context and additional request options.
+//
+// See StartAccessLogging for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *MediaStore) StartAccessLoggingWithContext(ctx aws.Context, input *StartAccessLoggingInput, opts ...request.Option) (*StartAccessLoggingOutput, error) {
+	req, out := c.StartAccessLoggingRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
+const opStopAccessLogging = "StopAccessLogging"
+
+// StopAccessLoggingRequest generates a "aws/request.Request" representing the
+// client's request for the StopAccessLogging operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See StopAccessLogging for more information on using the StopAccessLogging
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the StopAccessLoggingRequest method.
+//    req, resp := client.StopAccessLoggingRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/mediastore-2017-09-01/StopAccessLogging
+func (c *MediaStore) StopAccessLoggingRequest(input *StopAccessLoggingInput) (req *request.Request, output *StopAccessLoggingOutput) {
+	op := &request.Operation{
+		Name:       opStopAccessLogging,
+		HTTPMethod: "POST",
+		HTTPPath:   "/",
+	}
+
+	if input == nil {
+		input = &StopAccessLoggingInput{}
+	}
+
+	output = &StopAccessLoggingOutput{}
+	req = c.newRequest(op, input, output)
+	req.Handlers.Unmarshal.Swap(jsonrpc.UnmarshalHandler.Name, protocol.UnmarshalDiscardBodyHandler)
+	return
+}
+
+// StopAccessLogging API operation for AWS Elemental MediaStore.
+//
+// Stops access logging on the specified container. When you stop access logging
+// on a container, MediaStore stops sending access logs to Amazon CloudWatch
+// Logs. These access logs are not saved and are not retrievable.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for AWS Elemental MediaStore's
+// API operation StopAccessLogging for usage and error information.
+//
+// Returned Error Codes:
+//   * ErrCodeContainerInUseException "ContainerInUseException"
+//   The container that you specified in the request already exists or is being
+//   updated.
+//
+//   * ErrCodeContainerNotFoundException "ContainerNotFoundException"
+//   The container that you specified in the request does not exist.
+//
+//   * ErrCodeInternalServerError "InternalServerError"
+//   The service is temporarily unavailable.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/mediastore-2017-09-01/StopAccessLogging
+func (c *MediaStore) StopAccessLogging(input *StopAccessLoggingInput) (*StopAccessLoggingOutput, error) {
+	req, out := c.StopAccessLoggingRequest(input)
+	return out, req.Send()
+}
+
+// StopAccessLoggingWithContext is the same as StopAccessLogging with the addition of
+// the ability to pass a context and additional request options.
+//
+// See StopAccessLogging for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *MediaStore) StopAccessLoggingWithContext(ctx aws.Context, input *StopAccessLoggingInput, opts ...request.Option) (*StopAccessLoggingOutput, error) {
+	req, out := c.StopAccessLoggingRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
 // This section describes operations that you can perform on an AWS Elemental
 // MediaStore container.
 type Container struct {
@@ -1205,6 +1390,13 @@ type Container struct {
 	//
 	// For example: arn:aws:mediastore:us-west-2:111122223333:container/movies
 	ARN *string `min:"1" type:"string"`
+
+	// The state of access logging on the container. This value is false by default,
+	// indicating that AWS Elemental MediaStore does not send access logs to Amazon
+	// CloudWatch Logs. When you enable access logging on the container, MediaStore
+	// changes this value to true, indicating that the service delivers access logs
+	// for objects stored in that container to CloudWatch Logs.
+	AccessLoggingEnabled *bool `type:"boolean"`
 
 	// Unix timestamp.
 	CreationTime *time.Time `type:"timestamp"`
@@ -1238,6 +1430,12 @@ func (s Container) GoString() string {
 // SetARN sets the ARN field's value.
 func (s *Container) SetARN(v string) *Container {
 	s.ARN = &v
+	return s
+}
+
+// SetAccessLoggingEnabled sets the AccessLoggingEnabled field's value.
+func (s *Container) SetAccessLoggingEnabled(v bool) *Container {
+	s.AccessLoggingEnabled = &v
 	return s
 }
 
@@ -2246,6 +2444,116 @@ func (s PutLifecyclePolicyOutput) String() string {
 
 // GoString returns the string representation
 func (s PutLifecyclePolicyOutput) GoString() string {
+	return s.String()
+}
+
+type StartAccessLoggingInput struct {
+	_ struct{} `type:"structure"`
+
+	// The name of the container that you want to start access logging on.
+	//
+	// ContainerName is a required field
+	ContainerName *string `min:"1" type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s StartAccessLoggingInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s StartAccessLoggingInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *StartAccessLoggingInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "StartAccessLoggingInput"}
+	if s.ContainerName == nil {
+		invalidParams.Add(request.NewErrParamRequired("ContainerName"))
+	}
+	if s.ContainerName != nil && len(*s.ContainerName) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("ContainerName", 1))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetContainerName sets the ContainerName field's value.
+func (s *StartAccessLoggingInput) SetContainerName(v string) *StartAccessLoggingInput {
+	s.ContainerName = &v
+	return s
+}
+
+type StartAccessLoggingOutput struct {
+	_ struct{} `type:"structure"`
+}
+
+// String returns the string representation
+func (s StartAccessLoggingOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s StartAccessLoggingOutput) GoString() string {
+	return s.String()
+}
+
+type StopAccessLoggingInput struct {
+	_ struct{} `type:"structure"`
+
+	// The name of the container that you want to stop access logging on.
+	//
+	// ContainerName is a required field
+	ContainerName *string `min:"1" type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s StopAccessLoggingInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s StopAccessLoggingInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *StopAccessLoggingInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "StopAccessLoggingInput"}
+	if s.ContainerName == nil {
+		invalidParams.Add(request.NewErrParamRequired("ContainerName"))
+	}
+	if s.ContainerName != nil && len(*s.ContainerName) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("ContainerName", 1))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetContainerName sets the ContainerName field's value.
+func (s *StopAccessLoggingInput) SetContainerName(v string) *StopAccessLoggingInput {
+	s.ContainerName = &v
+	return s
+}
+
+type StopAccessLoggingOutput struct {
+	_ struct{} `type:"structure"`
+}
+
+// String returns the string representation
+func (s StopAccessLoggingOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s StopAccessLoggingOutput) GoString() string {
 	return s.String()
 }
 

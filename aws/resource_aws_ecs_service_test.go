@@ -3,6 +3,7 @@ package aws
 import (
 	"fmt"
 	"log"
+	"math"
 	"regexp"
 	"testing"
 	"time"
@@ -323,7 +324,7 @@ func TestAccAWSEcsService_healthCheckGracePeriodSeconds(t *testing.T) {
 			},
 			{
 				Config: testAccAWSEcsService_healthCheckGracePeriodSeconds(vpcNameTag, clusterName, tdName,
-					roleName, policyName, lbName, svcName, 7201),
+					roleName, policyName, lbName, svcName, math.MaxInt32+1),
 				ExpectError: regexp.MustCompile(`expected health_check_grace_period_seconds to be in the range`),
 			},
 			{
@@ -340,6 +341,14 @@ func TestAccAWSEcsService_healthCheckGracePeriodSeconds(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSEcsServiceExists(resourceName, &service),
 					resource.TestCheckResourceAttr(resourceName, "health_check_grace_period_seconds", "600"),
+				),
+			},
+			{
+				Config: testAccAWSEcsService_healthCheckGracePeriodSeconds(vpcNameTag, clusterName, tdName,
+					roleName, policyName, lbName, svcName, math.MaxInt32),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSEcsServiceExists(resourceName, &service),
+					resource.TestCheckResourceAttr(resourceName, "health_check_grace_period_seconds", "2147483647"),
 				),
 			},
 		},

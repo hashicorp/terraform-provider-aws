@@ -38,6 +38,9 @@ func TestAccAWSAMI_basic(t *testing.T) {
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"manage_ebs_snapshots",
+				},
 			},
 		},
 	})
@@ -76,6 +79,9 @@ func TestAccAWSAMI_snapshotSize(t *testing.T) {
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"manage_ebs_snapshots",
+				},
 			},
 		},
 	})

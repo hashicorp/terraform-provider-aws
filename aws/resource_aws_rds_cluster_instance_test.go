@@ -16,27 +16,6 @@ import (
 	"github.com/aws/aws-sdk-go/service/rds"
 )
 
-func TestAccAWSRDSClusterInstance_importBasic(t *testing.T) {
-	resourceName := "aws_rds_cluster_instance.cluster_instances"
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckAWSClusterDestroy,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccAWSClusterInstanceConfig(acctest.RandInt()),
-			},
-
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-			},
-		},
-	})
-}
-
 func TestAccAWSRDSClusterInstance_basic(t *testing.T) {
 	var v rds.DBInstance
 
@@ -60,6 +39,15 @@ func TestAccAWSRDSClusterInstance_basic(t *testing.T) {
 					resource.TestCheckResourceAttrSet("aws_rds_cluster_instance.cluster_instances", "engine_version"),
 					resource.TestCheckResourceAttr("aws_rds_cluster_instance.cluster_instances", "engine", "aurora"),
 				),
+			},
+			{
+				ResourceName:      "aws_rds_cluster_instance.cluster_instances",
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"apply_immediately",
+					"identifier_prefix",
+				},
 			},
 			{
 				Config: testAccAWSClusterInstanceConfigModified(acctest.RandInt()),
@@ -89,6 +77,15 @@ func TestAccAWSRDSClusterInstance_az(t *testing.T) {
 					resource.TestMatchResourceAttr("aws_rds_cluster_instance.cluster_instances", "availability_zone", regexp.MustCompile("^us-west-2[a-z]{1}$")),
 				),
 			},
+			{
+				ResourceName:      "aws_rds_cluster_instance.cluster_instances",
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"apply_immediately",
+					"identifier_prefix",
+				},
+			},
 		},
 	})
 }
@@ -113,6 +110,15 @@ func TestAccAWSRDSClusterInstance_namePrefix(t *testing.T) {
 						"aws_rds_cluster_instance.test", "identifier", regexp.MustCompile("^tf-cluster-instance-")),
 				),
 			},
+			{
+				ResourceName:      "aws_rds_cluster_instance.test",
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"apply_immediately",
+					"identifier_prefix",
+				},
+			},
 		},
 	})
 }
@@ -134,6 +140,15 @@ func TestAccAWSRDSClusterInstance_generatedName(t *testing.T) {
 						"aws_rds_cluster_instance.test", "identifier", regexp.MustCompile("^tf-")),
 				),
 			},
+			{
+				ResourceName:      "aws_rds_cluster_instance.test",
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"apply_immediately",
+					"identifier_prefix",
+				},
+			},
 		},
 	})
 }
@@ -154,6 +169,15 @@ func TestAccAWSRDSClusterInstance_kmsKey(t *testing.T) {
 					resource.TestMatchResourceAttr(
 						"aws_rds_cluster_instance.cluster_instances", "kms_key_id", keyRegex),
 				),
+			},
+			{
+				ResourceName:      "aws_rds_cluster_instance.cluster_instances",
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"apply_immediately",
+					"identifier_prefix",
+				},
 			},
 		},
 	})
@@ -199,10 +223,13 @@ func TestAccAWSRDSClusterInstance_PubliclyAccessible(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"apply_immediately"},
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"apply_immediately",
+					"identifier_prefix",
+				},
 			},
 			{
 				Config: testAccAWSRDSClusterInstanceConfig_PubliclyAccessible(rName, false),
@@ -231,6 +258,15 @@ func TestAccAWSRDSClusterInstance_CopyTagsToSnapshot(t *testing.T) {
 					resource.TestCheckResourceAttr(
 						"aws_rds_cluster_instance.cluster_instances", "copy_tags_to_snapshot", "true"),
 				),
+			},
+			{
+				ResourceName:      "aws_rds_cluster_instance.cluster_instances",
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"apply_immediately",
+					"identifier_prefix",
+				},
 			},
 			{
 				Config: testAccAWSClusterInstanceConfig_CopyTagsToSnapshot(rNameSuffix, false),
@@ -333,6 +369,15 @@ func TestAccAWSRDSClusterInstance_withInstanceEnhancedMonitor(t *testing.T) {
 					testAccCheckAWSDBClusterInstanceAttributes(&v),
 				),
 			},
+			{
+				ResourceName:      "aws_rds_cluster_instance.cluster_instances",
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"apply_immediately",
+					"identifier_prefix",
+				},
+			},
 		},
 	})
 }
@@ -356,6 +401,15 @@ func TestAccAWSRDSClusterInstance_withInstancePerformanceInsights(t *testing.T) 
 					resource.TestMatchResourceAttr(
 						"aws_rds_cluster_instance.cluster_instances", "performance_insights_kms_key_id", keyRegex),
 				),
+			},
+			{
+				ResourceName:      "aws_rds_cluster_instance.cluster_instances",
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"apply_immediately",
+					"identifier_prefix",
+				},
 			},
 		},
 	})

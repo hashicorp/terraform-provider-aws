@@ -6,7 +6,7 @@ description: |-
   Provides an AWS WAF Regional Size Constraint Set resource for use with ALB.
 ---
 
-# aws_wafregional_size_constraint_set
+# Resource: aws_wafregional_size_constraint_set
 
 Provides a WAF Regional Size Constraint Set Resource for use with Application Load Balancer.
 

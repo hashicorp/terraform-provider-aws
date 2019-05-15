@@ -35,6 +35,12 @@ func TestAccAWSCloudwatchLogSubscriptionFilter_basic(t *testing.T) {
 						"aws_cloudwatch_log_subscription_filter.test_lambdafunction_logfilter", "distribution", "Random"),
 				),
 			},
+			{
+				ResourceName:      "aws_cloudwatch_log_subscription_filter.test_lambdafunction_logfilter",
+				ImportState:       true,
+				ImportStateIdFunc: testAccAWSCloudwatchLogSubscriptionFilterImportStateIDFunc("aws_cloudwatch_log_subscription_filter.test_lambdafunction_logfilter"),
+				ImportStateVerify: true,
+			},
 		},
 	})
 }
@@ -168,6 +174,21 @@ func testAccCheckAwsCloudwatchLogSubscriptionFilterExists(n string, filter *clou
 		}
 
 		return nil
+	}
+}
+
+func testAccAWSCloudwatchLogSubscriptionFilterImportStateIDFunc(resourceName string) resource.ImportStateIdFunc {
+	return func(s *terraform.State) (string, error) {
+		rs, ok := s.RootModule().Resources[resourceName]
+		if !ok {
+			return "", fmt.Errorf("Not found: %s", resourceName)
+		}
+
+		logGroupName := rs.Primary.Attributes["log_group_name"]
+		filterNamePrefix := rs.Primary.Attributes["name"]
+		stateID := fmt.Sprintf("%s|%s", logGroupName, filterNamePrefix)
+
+		return stateID, nil
 	}
 }
 

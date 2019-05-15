@@ -77,6 +77,12 @@ func resourceAwsRDSCluster() *schema.Resource {
 				Set:      schema.HashString,
 			},
 
+			"copy_tags_to_snapshot": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				Default:  false,
+			},
+
 			"database_name": {
 				Type:     schema.TypeString,
 				Optional: true,
@@ -428,6 +434,7 @@ func resourceAwsRDSClusterCreate(d *schema.ResourceData, meta interface{}) error
 
 	if _, ok := d.GetOk("snapshot_identifier"); ok {
 		opts := rds.RestoreDBClusterFromSnapshotInput{
+			CopyTagsToSnapshot:   aws.Bool(d.Get("copy_tags_to_snapshot").(bool)),
 			DBClusterIdentifier:  aws.String(identifier),
 			DeletionProtection:   aws.Bool(d.Get("deletion_protection").(bool)),
 			Engine:               aws.String(d.Get("engine").(string)),
@@ -514,6 +521,7 @@ func resourceAwsRDSClusterCreate(d *schema.ResourceData, meta interface{}) error
 		}
 	} else if _, ok := d.GetOk("replication_source_identifier"); ok {
 		createOpts := &rds.CreateDBClusterInput{
+			CopyTagsToSnapshot:          aws.Bool(d.Get("copy_tags_to_snapshot").(bool)),
 			DBClusterIdentifier:         aws.String(identifier),
 			DeletionProtection:          aws.Bool(d.Get("deletion_protection").(bool)),
 			Engine:                      aws.String(d.Get("engine").(string)),
@@ -609,6 +617,7 @@ func resourceAwsRDSClusterCreate(d *schema.ResourceData, meta interface{}) error
 		}
 		s3_bucket := v.([]interface{})[0].(map[string]interface{})
 		createOpts := &rds.RestoreDBClusterFromS3Input{
+			CopyTagsToSnapshot:  aws.Bool(d.Get("copy_tags_to_snapshot").(bool)),
 			DBClusterIdentifier: aws.String(identifier),
 			DeletionProtection:  aws.Bool(d.Get("deletion_protection").(bool)),
 			Engine:              aws.String(d.Get("engine").(string)),
@@ -724,6 +733,7 @@ func resourceAwsRDSClusterCreate(d *schema.ResourceData, meta interface{}) error
 		}
 
 		createOpts := &rds.CreateDBClusterInput{
+			CopyTagsToSnapshot:   aws.Bool(d.Get("copy_tags_to_snapshot").(bool)),
 			DBClusterIdentifier:  aws.String(identifier),
 			DeletionProtection:   aws.Bool(d.Get("deletion_protection").(bool)),
 			Engine:               aws.String(d.Get("engine").(string)),
@@ -930,6 +940,7 @@ func resourceAwsRDSClusterRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("backtrack_window", int(aws.Int64Value(dbc.BacktrackWindow)))
 	d.Set("backup_retention_period", dbc.BackupRetentionPeriod)
 	d.Set("cluster_identifier", dbc.DBClusterIdentifier)
+	d.Set("copy_tags_to_snapshot", dbc.CopyTagsToSnapshot)
 
 	var cm []string
 	for _, m := range dbc.DBClusterMembers {
@@ -1028,6 +1039,11 @@ func resourceAwsRDSClusterUpdate(d *schema.ResourceData, meta interface{}) error
 
 	if d.HasChange("backtrack_window") {
 		req.BacktrackWindow = aws.Int64(int64(d.Get("backtrack_window").(int)))
+		requestUpdate = true
+	}
+
+	if d.HasChange("copy_tags_to_snapshot") {
+		req.CopyTagsToSnapshot = aws.Bool(d.Get("copy_tags_to_snapshot").(bool))
 		requestUpdate = true
 	}
 
@@ -1237,23 +1253,17 @@ func resourceAwsRDSClusterDelete(d *schema.ResourceData, meta interface{}) error
 		}
 		return nil
 	})
-	if err != nil {
-		return fmt.Errorf("RDS Cluster cannot be deleted: %s", err)
+
+	if isResourceTimeoutError(err) {
+		_, err = conn.DeleteDBCluster(&deleteOpts)
 	}
 
-	stateConf := &resource.StateChangeConf{
-		Pending:    resourceAwsRdsClusterDeletePendingStates,
-		Target:     []string{"destroyed"},
-		Refresh:    resourceAwsRDSClusterStateRefreshFunc(conn, d.Id()),
-		Timeout:    d.Timeout(schema.TimeoutDelete),
-		MinTimeout: 10 * time.Second,
-		Delay:      30 * time.Second,
+	if err != nil {
+		return fmt.Errorf("error deleting RDS Cluster (%s): %s", d.Id(), err)
 	}
 
-	// Wait, catching any errors
-	_, err = stateConf.WaitForState()
-	if err != nil {
-		return fmt.Errorf("Error deleting RDS Cluster (%s): %s", d.Id(), err)
+	if err := waitForRDSClusterDeletion(conn, d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
+		return fmt.Errorf("error waiting for RDS Cluster (%s) deletion: %s", d.Id(), err)
 	}
 
 	return nil
@@ -1344,5 +1354,20 @@ func waitForRDSClusterUpdate(conn *rds.RDS, id string, timeout time.Duration) er
 		Delay:      30 * time.Second, // Wait 30 secs before starting
 	}
 	_, err := stateConf.WaitForState()
+	return err
+}
+
+func waitForRDSClusterDeletion(conn *rds.RDS, id string, timeout time.Duration) error {
+	stateConf := &resource.StateChangeConf{
+		Pending:    resourceAwsRdsClusterDeletePendingStates,
+		Target:     []string{"destroyed"},
+		Refresh:    resourceAwsRDSClusterStateRefreshFunc(conn, id),
+		Timeout:    timeout,
+		MinTimeout: 10 * time.Second,
+		Delay:      30 * time.Second,
+	}
+
+	_, err := stateConf.WaitForState()
+
 	return err
 }

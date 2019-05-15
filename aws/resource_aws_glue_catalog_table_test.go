@@ -12,6 +12,41 @@ import (
 	"github.com/hashicorp/terraform/terraform"
 )
 
+func TestAccAWSGlueCatalogTable_recreates(t *testing.T) {
+	resourceName := "aws_glue_catalog_table.test"
+	rInt := acctest.RandInt()
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckGlueTableDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccGlueCatalogTable_basic(rInt),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckGlueCatalogTableExists(resourceName),
+				),
+			},
+			{
+				PreConfig: func() {
+					conn := testAccProvider.Meta().(*AWSClient).glueconn
+					input := &glue.DeleteTableInput{
+						Name:         aws.String(fmt.Sprintf("my_test_catalog_table_%d", rInt)),
+						DatabaseName: aws.String(fmt.Sprintf("my_test_catalog_database_%d", rInt)),
+					}
+					_, err := conn.DeleteTable(input)
+					if err != nil {
+						t.Fatalf("error deleting Glue Catalog Table: %s", err)
+					}
+				},
+				Config:             testAccGlueCatalogTable_basic(rInt),
+				ExpectNonEmptyPlan: true,
+				PlanOnly:           true,
+			},
+		},
+	})
+}
+
 func TestAccAWSGlueCatalogTable_importBasic(t *testing.T) {
 	resourceName := "aws_glue_catalog_table.test"
 	rInt := acctest.RandInt()

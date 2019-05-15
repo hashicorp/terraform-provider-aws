@@ -6,7 +6,7 @@ description: |-
   Manages a RDS database instance snapshot.
 ---
 
-# aws_db_snapshot
+# Resource: aws_db_snapshot
 
 Manages a RDS database instance snapshot. For managing RDS database cluster snapshots, see the [`aws_db_cluster_snapshot` resource](/docs/providers/aws/r/db_cluster_snapshot.html).
 

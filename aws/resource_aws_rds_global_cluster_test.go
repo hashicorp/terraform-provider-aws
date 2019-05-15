@@ -3,6 +3,7 @@ package aws
 import (
 	"errors"
 	"fmt"
+	"log"
 	"regexp"
 	"testing"
 
@@ -12,6 +13,61 @@ import (
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/terraform"
 )
+
+func init() {
+	resource.AddTestSweepers("aws_rds_global_cluster", &resource.Sweeper{
+		Name: "aws_rds_global_cluster",
+		F:    testSweepRdsGlobalClusters,
+		Dependencies: []string{
+			"aws_rds_cluster",
+		},
+	})
+}
+
+func testSweepRdsGlobalClusters(region string) error {
+	client, err := sharedClientForRegion(region)
+
+	if err != nil {
+		return fmt.Errorf("error getting client: %s", err)
+	}
+
+	conn := client.(*AWSClient).rdsconn
+	input := &rds.DescribeGlobalClustersInput{}
+
+	err = conn.DescribeGlobalClustersPages(input, func(out *rds.DescribeGlobalClustersOutput, lastPage bool) bool {
+		for _, globalCluster := range out.GlobalClusters {
+			id := aws.StringValue(globalCluster.GlobalClusterIdentifier)
+			input := &rds.DeleteGlobalClusterInput{
+				GlobalClusterIdentifier: globalCluster.GlobalClusterIdentifier,
+			}
+
+			log.Printf("[INFO] Deleting RDS Global Cluster: %s", id)
+
+			_, err := conn.DeleteGlobalCluster(input)
+
+			if err != nil {
+				log.Printf("[ERROR] Failed to delete RDS Global Cluster (%s): %s", id, err)
+				continue
+			}
+
+			if err := waitForRdsGlobalClusterDeletion(conn, id); err != nil {
+				log.Printf("[ERROR] Failure while waiting for RDS Global Cluster (%s) to be deleted: %s", id, err)
+			}
+		}
+		return !lastPage
+	})
+
+	if testSweepSkipSweepError(err) {
+		log.Printf("[WARN] Skipping RDS Global Cluster sweep for %s: %s", region, err)
+		return nil
+	}
+
+	if err != nil {
+		return fmt.Errorf("error retrieving RDS Global Clusters: %s", err)
+	}
+
+	return nil
+}
 
 func TestAccAWSRdsGlobalCluster_basic(t *testing.T) {
 	var globalCluster1 rds.GlobalCluster

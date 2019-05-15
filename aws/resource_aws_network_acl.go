@@ -50,10 +50,11 @@ func resourceAwsNetworkAcl() *schema.Resource {
 				Set:      schema.HashString,
 			},
 			"ingress": {
-				Type:     schema.TypeSet,
-				Required: false,
-				Optional: true,
-				Computed: true,
+				Type:       schema.TypeSet,
+				Required:   false,
+				Optional:   true,
+				Computed:   true,
+				ConfigMode: schema.SchemaConfigModeAttr,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"from_port": {
@@ -100,10 +101,11 @@ func resourceAwsNetworkAcl() *schema.Resource {
 				Set: resourceAwsNetworkAclEntryHash,
 			},
 			"egress": {
-				Type:     schema.TypeSet,
-				Required: false,
-				Optional: true,
-				Computed: true,
+				Type:       schema.TypeSet,
+				Required:   false,
+				Optional:   true,
+				Computed:   true,
+				ConfigMode: schema.SchemaConfigModeAttr,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"from_port": {

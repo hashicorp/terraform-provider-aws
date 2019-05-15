@@ -144,6 +144,34 @@ func TestAccAWSTransferServer_forcedestroy(t *testing.T) {
 	})
 }
 
+func TestAccAWSTransferServer_vpcEndpointId(t *testing.T) {
+	var conf transfer.DescribedServer
+	resourceName := "aws_transfer_server.default"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:      func() { testAccPreCheck(t) },
+		IDRefreshName: resourceName,
+		Providers:     testAccProviders,
+		CheckDestroy:  testAccCheckAWSTransferServerDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSTransferServerConfig_VpcEndPoint,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSTransferServerExists(resourceName, &conf),
+					resource.TestCheckResourceAttr(
+						resourceName, "endpoint_type", "VPC_ENDPOINT"),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"force_destroy"},
+			},
+		},
+	})
+}
+
 func testAccCheckAWSTransferServerExists(n string, res *transfer.DescribedServer) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
@@ -467,3 +495,67 @@ POLICY
 }
 `, rName, rName)
 }
+
+const testAccAWSTransferServerConfig_VpcEndPoint = `
+
+data "aws_region" "current" {}
+
+resource "aws_vpc" "test" {
+	cidr_block = "10.0.0.0/16"
+
+	tags = {
+		Name = "terraform-testacc-default-route-table-vpc-endpoint"
+	}
+}
+
+resource "aws_internet_gateway" "igw" {
+	vpc_id = "${aws_vpc.test.id}"
+
+	tags = {
+		Name = "test"
+	}
+}
+
+resource "aws_security_group" "sg" {
+	name 		= "allow-transfer-server"
+	description = "Allow TLS inbound traffic"
+	vpc_id 		= "${aws_vpc.test.id}"
+	ingress {
+		from_port       = 0
+		to_port         = 0
+		protocol        = "-1"
+		self 			= true
+	}
+}
+
+resource "aws_vpc_endpoint" "transfer" {
+	vpc_id = "${aws_vpc.test.id}"
+	vpc_endpoint_type = "Interface"
+	service_name = "com.amazonaws.${data.aws_region.current.name}.transfer.server"
+
+	security_group_ids = [
+		"${aws_security_group.sg.id}",
+	]
+}
+
+resource "aws_default_route_table" "foo" {
+	default_route_table_id = "${aws_vpc.test.default_route_table_id}"
+
+	tags = {
+		Name = "test"
+	}
+
+	route {
+		cidr_block = "0.0.0.0/0"
+		gateway_id = "${aws_internet_gateway.igw.id}"
+	}
+}
+
+
+resource "aws_transfer_server" "default" {
+	endpoint_type = "VPC_ENDPOINT"
+	endpoint_details {
+		vpc_endpoint_id = "${aws_vpc_endpoint.transfer.id}"
+	}
+}
+`

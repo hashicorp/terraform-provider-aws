@@ -6,7 +6,7 @@ description: |-
   Requests and manages a certificate from Amazon Certificate Manager (ACM).
 ---
 
-# aws_acm_certificate
+# Resource: aws_acm_certificate
 
 The ACM certificate resource allows requesting and management of certificates
 from the Amazon Certificate Manager.

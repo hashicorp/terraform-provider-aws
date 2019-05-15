@@ -6,7 +6,7 @@ description: |-
   Provides a AWS WAF Regional web access control group (ACL) resource for use with ALB.
 ---
 
-# aws_wafregional_web_acl
+# Resource: aws_wafregional_web_acl
 
 Provides a WAF Regional Web ACL Resource for use with Application Load Balancer.
 

@@ -57,6 +57,14 @@ func resourceAwsDxBgpPeer() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"bgp_peer_id": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"aws_device": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 		},
 
 		Timeouts: &schema.ResourceTimeout{
@@ -141,6 +149,8 @@ func resourceAwsDxBgpPeerRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("bgp_auth_key", bgpPeer.AuthKey)
 	d.Set("customer_address", bgpPeer.CustomerAddress)
 	d.Set("bgp_status", bgpPeer.BgpStatus)
+	d.Set("bgp_peer_id", bgpPeer.BgpPeerId)
+	d.Set("aws_device", bgpPeer.AwsDeviceV2)
 
 	return nil
 }

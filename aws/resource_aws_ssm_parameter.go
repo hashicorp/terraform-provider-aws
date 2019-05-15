@@ -8,6 +8,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/ssm"
+	"github.com/hashicorp/terraform/helper/customdiff"
 	"github.com/hashicorp/terraform/helper/schema"
 	"github.com/hashicorp/terraform/helper/validation"
 )
@@ -32,6 +33,15 @@ func resourceAwsSsmParameter() *schema.Resource {
 			"description": {
 				Type:     schema.TypeString,
 				Optional: true,
+			},
+			"tier": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Default:  ssm.ParameterTierStandard,
+				ValidateFunc: validation.StringInSlice([]string{
+					ssm.ParameterTierStandard,
+					ssm.ParameterTierAdvanced,
+				}, false),
 			},
 			"type": {
 				Type:     schema.TypeString,
@@ -67,6 +77,14 @@ func resourceAwsSsmParameter() *schema.Resource {
 			},
 			"tags": tagsSchema(),
 		},
+
+		CustomizeDiff: customdiff.All(
+			// Prevent the following error during tier update from Advanced to Standard:
+			// ValidationException: This parameter uses the advanced-parameter tier. You can't downgrade a parameter from the advanced-parameter tier to the standard-parameter tier. If necessary, you can delete the advanced parameter and recreate it as a standard parameter.
+			customdiff.ForceNewIfChange("tier", func(old, new, meta interface{}) bool {
+				return old.(string) == ssm.ParameterTierAdvanced && new.(string) == ssm.ParameterTierStandard
+			}),
+		),
 	}
 }
 
@@ -127,6 +145,7 @@ func resourceAwsSsmParameterRead(d *schema.ResourceData, meta interface{}) error
 	detail := describeResp.Parameters[0]
 	d.Set("key_id", detail.KeyId)
 	d.Set("description", detail.Description)
+	d.Set("tier", detail.Tier)
 	d.Set("allowed_pattern", detail.AllowedPattern)
 
 	if tagList, err := ssmconn.ListTagsForResource(&ssm.ListTagsForResourceInput{
@@ -173,6 +192,7 @@ func resourceAwsSsmParameterPut(d *schema.ResourceData, meta interface{}) error 
 	paramInput := &ssm.PutParameterInput{
 		Name:           aws.String(d.Get("name").(string)),
 		Type:           aws.String(d.Get("type").(string)),
+		Tier:           aws.String(d.Get("tier").(string)),
 		Value:          aws.String(d.Get("value").(string)),
 		Overwrite:      aws.Bool(shouldUpdateSsmParameter(d)),
 		AllowedPattern: aws.String(d.Get("allowed_pattern").(string)),

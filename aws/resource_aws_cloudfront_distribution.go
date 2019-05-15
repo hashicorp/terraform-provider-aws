@@ -22,6 +22,8 @@ func resourceAwsCloudFrontDistribution() *schema.Resource {
 		Importer: &schema.ResourceImporter{
 			State: resourceAwsCloudFrontDistributionImport,
 		},
+		MigrateState:  resourceAwsCloudFrontDistributionMigrateState,
+		SchemaVersion: 1,
 
 		Schema: map[string]*schema.Schema{
 			"arn": {
@@ -81,7 +83,7 @@ func resourceAwsCloudFrontDistribution() *schema.Resource {
 													Required: true,
 												},
 												"whitelisted_names": {
-													Type:     schema.TypeList,
+													Type:     schema.TypeSet,
 													Optional: true,
 													Elem:     &schema.Schema{Type: schema.TypeString},
 												},
@@ -89,7 +91,7 @@ func resourceAwsCloudFrontDistribution() *schema.Resource {
 										},
 									},
 									"headers": {
-										Type:     schema.TypeList,
+										Type:     schema.TypeSet,
 										Optional: true,
 										Elem:     &schema.Schema{Type: schema.TypeString},
 									},
@@ -205,9 +207,14 @@ func resourceAwsCloudFrontDistribution() *schema.Resource {
 												"forward": {
 													Type:     schema.TypeString,
 													Required: true,
+													ValidateFunc: validation.StringInSlice([]string{
+														cloudfront.ItemSelectionAll,
+														cloudfront.ItemSelectionNone,
+														cloudfront.ItemSelectionWhitelist,
+													}, false),
 												},
 												"whitelisted_names": {
-													Type:     schema.TypeList,
+													Type:     schema.TypeSet,
 													Optional: true,
 													Elem:     &schema.Schema{Type: schema.TypeString},
 												},
@@ -215,7 +222,7 @@ func resourceAwsCloudFrontDistribution() *schema.Resource {
 										},
 									},
 									"headers": {
-										Type:     schema.TypeList,
+										Type:     schema.TypeSet,
 										Optional: true,
 										Elem:     &schema.Schema{Type: schema.TypeString},
 									},
@@ -362,9 +369,14 @@ func resourceAwsCloudFrontDistribution() *schema.Resource {
 												"forward": {
 													Type:     schema.TypeString,
 													Required: true,
+													ValidateFunc: validation.StringInSlice([]string{
+														cloudfront.ItemSelectionAll,
+														cloudfront.ItemSelectionNone,
+														cloudfront.ItemSelectionWhitelist,
+													}, false),
 												},
 												"whitelisted_names": {
-													Type:     schema.TypeList,
+													Type:     schema.TypeSet,
 													Optional: true,
 													Elem:     &schema.Schema{Type: schema.TypeString},
 												},
@@ -372,7 +384,7 @@ func resourceAwsCloudFrontDistribution() *schema.Resource {
 										},
 									},
 									"headers": {
-										Type:     schema.TypeList,
+										Type:     schema.TypeSet,
 										Optional: true,
 										Elem:     &schema.Schema{Type: schema.TypeString},
 									},
@@ -474,6 +486,47 @@ func resourceAwsCloudFrontDistribution() *schema.Resource {
 							Type:     schema.TypeString,
 							Optional: true,
 							Default:  "",
+						},
+					},
+				},
+			},
+			"origin_group": {
+				Type:     schema.TypeSet,
+				Optional: true,
+				Set:      originGroupHash,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"origin_id": {
+							Type:         schema.TypeString,
+							Required:     true,
+							ValidateFunc: validation.NoZeroValues,
+						},
+						"failover_criteria": {
+							Type:     schema.TypeList,
+							Required: true,
+							MaxItems: 1,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"status_codes": {
+										Type:     schema.TypeSet,
+										Required: true,
+										Elem:     &schema.Schema{Type: schema.TypeInt},
+									},
+								},
+							},
+						},
+						"member": {
+							Type:     schema.TypeList,
+							Required: true,
+							MinItems: 2,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"origin_id": {
+										Type:     schema.TypeString,
+										Required: true,
+									},
+								},
+							},
 						},
 					},
 				},
@@ -606,19 +659,16 @@ func resourceAwsCloudFrontDistribution() *schema.Resource {
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"acm_certificate_arn": {
-							Type:          schema.TypeString,
-							Optional:      true,
-							ConflictsWith: []string{"viewer_certificate.0.cloudfront_default_certificate", "viewer_certificate.0.iam_certificate_id"},
+							Type:     schema.TypeString,
+							Optional: true,
 						},
 						"cloudfront_default_certificate": {
-							Type:          schema.TypeBool,
-							Optional:      true,
-							ConflictsWith: []string{"viewer_certificate.0.acm_certificate_arn", "viewer_certificate.0.iam_certificate_id"},
+							Type:     schema.TypeBool,
+							Optional: true,
 						},
 						"iam_certificate_id": {
-							Type:          schema.TypeString,
-							Optional:      true,
-							ConflictsWith: []string{"viewer_certificate.0.acm_certificate_arn", "viewer_certificate.0.cloudfront_default_certificate"},
+							Type:     schema.TypeString,
+							Optional: true,
 						},
 						"minimum_protocol_version": {
 							Type:     schema.TypeString,
@@ -676,6 +726,11 @@ func resourceAwsCloudFrontDistribution() *schema.Resource {
 				Optional: true,
 				Default:  false,
 			},
+			"wait_for_deployment": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				Default:  true,
+			},
 			"is_ipv6_enabled": {
 				Type:     schema.TypeBool,
 				Optional: true,
@@ -702,21 +757,38 @@ func resourceAwsCloudFrontDistributionCreate(d *schema.ResourceData, meta interf
 	err := resource.Retry(1*time.Minute, func() *resource.RetryError {
 		var err error
 		resp, err = conn.CreateDistributionWithTags(params)
+
+		// ACM and IAM certificate eventual consistency
+		// InvalidViewerCertificate: The specified SSL certificate doesn't exist, isn't in us-east-1 region, isn't valid, or doesn't include a valid certificate chain.
+		if isAWSErr(err, cloudfront.ErrCodeInvalidViewerCertificate, "") {
+			return resource.RetryableError(err)
+		}
+
 		if err != nil {
-			// ACM and IAM certificate eventual consistency
-			// InvalidViewerCertificate: The specified SSL certificate doesn't exist, isn't in us-east-1 region, isn't valid, or doesn't include a valid certificate chain.
-			if isAWSErr(err, cloudfront.ErrCodeInvalidViewerCertificate, "") {
-				return resource.RetryableError(err)
-			}
 			return resource.NonRetryableError(err)
 		}
+
 		return nil
 	})
+
+	// Propagate AWS Go SDK retried error, if any
+	if isResourceTimeoutError(err) {
+		resp, err = conn.CreateDistributionWithTags(params)
+	}
+
 	if err != nil {
 		return fmt.Errorf("error creating CloudFront Distribution: %s", err)
 	}
 
 	d.SetId(*resp.Distribution.Id)
+
+	if d.Get("wait_for_deployment").(bool) {
+		log.Printf("[DEBUG] Waiting until CloudFront Distribution (%s) is deployed", d.Id())
+		if err := resourceAwsCloudFrontDistributionWaitUntilDeployed(d.Id(), meta); err != nil {
+			return fmt.Errorf("error waiting until CloudFront Distribution (%s) is deployed: %s", d.Id(), err)
+		}
+	}
+
 	return resourceAwsCloudFrontDistributionRead(d, meta)
 }
 
@@ -782,18 +854,34 @@ func resourceAwsCloudFrontDistributionUpdate(d *schema.ResourceData, meta interf
 	// Handle eventual consistency issues
 	err := resource.Retry(1*time.Minute, func() *resource.RetryError {
 		_, err := conn.UpdateDistribution(params)
+
+		// ACM and IAM certificate eventual consistency
+		// InvalidViewerCertificate: The specified SSL certificate doesn't exist, isn't in us-east-1 region, isn't valid, or doesn't include a valid certificate chain.
+		if isAWSErr(err, cloudfront.ErrCodeInvalidViewerCertificate, "") {
+			return resource.RetryableError(err)
+		}
+
 		if err != nil {
-			// ACM and IAM certificate eventual consistency
-			// InvalidViewerCertificate: The specified SSL certificate doesn't exist, isn't in us-east-1 region, isn't valid, or doesn't include a valid certificate chain.
-			if isAWSErr(err, cloudfront.ErrCodeInvalidViewerCertificate, "") {
-				return resource.RetryableError(err)
-			}
 			return resource.NonRetryableError(err)
 		}
+
 		return nil
 	})
+
+	// Propagate AWS Go SDK retried error, if any
+	if isResourceTimeoutError(err) {
+		_, err = conn.UpdateDistribution(params)
+	}
+
 	if err != nil {
 		return fmt.Errorf("error updating CloudFront Distribution (%s): %s", d.Id(), err)
+	}
+
+	if d.Get("wait_for_deployment").(bool) {
+		log.Printf("[DEBUG] Waiting until CloudFront Distribution (%s) is deployed", d.Id())
+		if err := resourceAwsCloudFrontDistributionWaitUntilDeployed(d.Id(), meta); err != nil {
+			return fmt.Errorf("error waiting until CloudFront Distribution (%s) is deployed: %s", d.Id(), err)
+		}
 	}
 
 	if err := setTagsCloudFront(conn, d, d.Get("arn").(string)); err != nil {
@@ -806,42 +894,162 @@ func resourceAwsCloudFrontDistributionUpdate(d *schema.ResourceData, meta interf
 func resourceAwsCloudFrontDistributionDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).cloudfrontconn
 
-	// manually disable the distribution first
-	d.Set("enabled", false)
-	err := resourceAwsCloudFrontDistributionUpdate(d, meta)
-	if err != nil {
-		return err
-	}
-
-	// skip delete if retain_on_delete is enabled
 	if d.Get("retain_on_delete").(bool) {
+		// Check if we need to disable first
+		getDistributionInput := &cloudfront.GetDistributionInput{
+			Id: aws.String(d.Id()),
+		}
+
+		log.Printf("[DEBUG] Refreshing CloudFront Distribution (%s) to check if disable is necessary", d.Id())
+		getDistributionOutput, err := conn.GetDistribution(getDistributionInput)
+
+		if err != nil {
+			return fmt.Errorf("error refreshing CloudFront Distribution (%s) to check if disable is necessary: %s", d.Id(), err)
+		}
+
+		if getDistributionOutput == nil || getDistributionOutput.Distribution == nil || getDistributionOutput.Distribution.DistributionConfig == nil {
+			return fmt.Errorf("error refreshing CloudFront Distribution (%s) to check if disable is necessary: empty response", d.Id())
+		}
+
+		if !aws.BoolValue(getDistributionOutput.Distribution.DistributionConfig.Enabled) {
+			log.Printf("[WARN] Removing CloudFront Distribution ID %q with `retain_on_delete` set. Please delete this distribution manually.", d.Id())
+			return nil
+		}
+
+		updateDistributionInput := &cloudfront.UpdateDistributionInput{
+			DistributionConfig: getDistributionOutput.Distribution.DistributionConfig,
+			Id:                 getDistributionInput.Id,
+			IfMatch:            getDistributionOutput.ETag,
+		}
+		updateDistributionInput.DistributionConfig.Enabled = aws.Bool(false)
+
+		log.Printf("[DEBUG] Disabling CloudFront Distribution: %s", d.Id())
+		_, err = conn.UpdateDistribution(updateDistributionInput)
+
+		if err != nil {
+			return fmt.Errorf("error disabling CloudFront Distribution (%s): %s", d.Id(), err)
+		}
+
 		log.Printf("[WARN] Removing CloudFront Distribution ID %q with `retain_on_delete` set. Please delete this distribution manually.", d.Id())
 		return nil
 	}
 
-	// Distribution needs to be in deployed state again before it can be deleted.
-	err = resourceAwsCloudFrontDistributionWaitUntilDeployed(d.Id(), meta)
-	if err != nil {
-		return err
-	}
-
-	// now delete
-	params := &cloudfront.DeleteDistributionInput{
+	deleteDistributionInput := &cloudfront.DeleteDistributionInput{
 		Id:      aws.String(d.Id()),
 		IfMatch: aws.String(d.Get("etag").(string)),
 	}
 
-	// Eventual consistency for "deployed" state
-	err = resource.Retry(1*time.Minute, func() *resource.RetryError {
-		_, err := conn.DeleteDistribution(params)
-		if err != nil {
-			if isAWSErr(err, cloudfront.ErrCodeDistributionNotDisabled, "The distribution you are trying to delete has not been disabled.") {
-				return resource.RetryableError(err)
-			}
-			return resource.NonRetryableError(err)
-		}
+	log.Printf("[DEBUG] Deleting CloudFront Distribution: %s", d.Id())
+	_, err := conn.DeleteDistribution(deleteDistributionInput)
+
+	if err == nil || isAWSErr(err, cloudfront.ErrCodeNoSuchDistribution, "") {
 		return nil
-	})
+	}
+
+	// Refresh our ETag if it is out of date and attempt deletion again.
+	if isAWSErr(err, cloudfront.ErrCodeInvalidIfMatchVersion, "") {
+		getDistributionInput := &cloudfront.GetDistributionInput{
+			Id: aws.String(d.Id()),
+		}
+		var getDistributionOutput *cloudfront.GetDistributionOutput
+
+		log.Printf("[DEBUG] Refreshing CloudFront Distribution (%s) ETag", d.Id())
+		getDistributionOutput, err = conn.GetDistribution(getDistributionInput)
+
+		if err != nil {
+			return fmt.Errorf("error refreshing CloudFront Distribution (%s) ETag: %s", d.Id(), err)
+		}
+
+		if getDistributionOutput == nil {
+			return fmt.Errorf("error refreshing CloudFront Distribution (%s) ETag: empty response", d.Id())
+		}
+
+		deleteDistributionInput.IfMatch = getDistributionOutput.ETag
+
+		_, err = conn.DeleteDistribution(deleteDistributionInput)
+	}
+
+	// Disable distribution if it is not yet disabled and attempt deletion again.
+	// Here we update via the deployed configuration to ensure we are not submitting an out of date
+	// configuration from the Terraform configuration, should other changes have occurred manually.
+	if isAWSErr(err, cloudfront.ErrCodeDistributionNotDisabled, "") {
+		getDistributionInput := &cloudfront.GetDistributionInput{
+			Id: aws.String(d.Id()),
+		}
+		var getDistributionOutput *cloudfront.GetDistributionOutput
+
+		log.Printf("[DEBUG] Refreshing CloudFront Distribution (%s) to disable", d.Id())
+		getDistributionOutput, err = conn.GetDistribution(getDistributionInput)
+
+		if err != nil {
+			return fmt.Errorf("error refreshing CloudFront Distribution (%s) to disable: %s", d.Id(), err)
+		}
+
+		if getDistributionOutput == nil || getDistributionOutput.Distribution == nil {
+			return fmt.Errorf("error refreshing CloudFront Distribution (%s) to disable: empty response", d.Id())
+		}
+
+		updateDistributionInput := &cloudfront.UpdateDistributionInput{
+			DistributionConfig: getDistributionOutput.Distribution.DistributionConfig,
+			Id:                 deleteDistributionInput.Id,
+			IfMatch:            getDistributionOutput.ETag,
+		}
+		updateDistributionInput.DistributionConfig.Enabled = aws.Bool(false)
+		var updateDistributionOutput *cloudfront.UpdateDistributionOutput
+
+		log.Printf("[DEBUG] Disabling CloudFront Distribution: %s", d.Id())
+		updateDistributionOutput, err = conn.UpdateDistribution(updateDistributionInput)
+
+		if err != nil {
+			return fmt.Errorf("error disabling CloudFront Distribution (%s): %s", d.Id(), err)
+		}
+
+		log.Printf("[DEBUG] Waiting until CloudFront Distribution (%s) is deployed", d.Id())
+		if err := resourceAwsCloudFrontDistributionWaitUntilDeployed(d.Id(), meta); err != nil {
+			return fmt.Errorf("error waiting until CloudFront Distribution (%s) is deployed: %s", d.Id(), err)
+		}
+
+		deleteDistributionInput.IfMatch = updateDistributionOutput.ETag
+
+		_, err = conn.DeleteDistribution(deleteDistributionInput)
+
+		// CloudFront has eventual consistency issues even for "deployed" state.
+		// Occasionally the DeleteDistribution call will return this error as well, in which retries will succeed:
+		//   * PreconditionFailed: The request failed because it didn't meet the preconditions in one or more request-header fields
+		if isAWSErr(err, cloudfront.ErrCodeDistributionNotDisabled, "") || isAWSErr(err, cloudfront.ErrCodePreconditionFailed, "") {
+			err = resource.Retry(2*time.Minute, func() *resource.RetryError {
+				_, err := conn.DeleteDistribution(deleteDistributionInput)
+
+				if isAWSErr(err, cloudfront.ErrCodeDistributionNotDisabled, "") {
+					return resource.RetryableError(err)
+				}
+
+				if isAWSErr(err, cloudfront.ErrCodeNoSuchDistribution, "") {
+					return nil
+				}
+
+				if isAWSErr(err, cloudfront.ErrCodePreconditionFailed, "") {
+					return resource.RetryableError(err)
+				}
+
+				if err != nil {
+					return resource.NonRetryableError(err)
+				}
+
+				return nil
+			})
+
+			// Propagate AWS Go SDK retried error, if any
+			if isResourceTimeoutError(err) {
+				_, err = conn.DeleteDistribution(deleteDistributionInput)
+			}
+		}
+	}
+
+	if isAWSErr(err, cloudfront.ErrCodeNoSuchDistribution, "") {
+		return nil
+	}
+
 	if err != nil {
 		return fmt.Errorf("CloudFront Distribution %s cannot be deleted: %s", d.Id(), err)
 	}
@@ -859,7 +1067,7 @@ func resourceAwsCloudFrontDistributionWaitUntilDeployed(id string, meta interfac
 		Refresh:    resourceAwsCloudFrontWebDistributionStateRefreshFunc(id, meta),
 		Timeout:    70 * time.Minute,
 		MinTimeout: 15 * time.Second,
-		Delay:      10 * time.Minute,
+		Delay:      1 * time.Minute,
 	}
 
 	_, err := stateConf.WaitForState()

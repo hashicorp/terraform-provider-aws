@@ -54,6 +54,7 @@ func TestAccAWSDocDBClusterInstance_basic(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
+					"apply_immediately",
 					"identifier_prefix",
 				},
 			},
@@ -84,6 +85,7 @@ func TestAccAWSDocDBClusterInstance_az(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
+					"apply_immediately",
 					"identifier_prefix",
 				},
 			},
@@ -116,6 +118,7 @@ func TestAccAWSDocDBClusterInstance_namePrefix(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
+					"apply_immediately",
 					"identifier_prefix",
 				},
 			},
@@ -146,6 +149,7 @@ func TestAccAWSDocDBClusterInstance_generatedName(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
+					"apply_immediately",
 					"identifier_prefix",
 				},
 			},
@@ -175,6 +179,7 @@ func TestAccAWSDocDBClusterInstance_kmsKey(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
+					"apply_immediately",
 					"identifier_prefix",
 				},
 			},

@@ -25,6 +25,7 @@ func TestAccDataSourceAwsDynamoDbTable_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("data.aws_dynamodb_table.dynamodb_table_test", "range_key", "GameTitle"),
 					resource.TestCheckResourceAttr("data.aws_dynamodb_table.dynamodb_table_test", "attribute.#", "3"),
 					resource.TestCheckResourceAttr("data.aws_dynamodb_table.dynamodb_table_test", "global_secondary_index.#", "1"),
+					resource.TestCheckResourceAttr("data.aws_dynamodb_table.dynamodb_table_test", "ttl.#", "1"),
 					resource.TestCheckResourceAttr("data.aws_dynamodb_table.dynamodb_table_test", "tags.%", "2"),
 					resource.TestCheckResourceAttr("data.aws_dynamodb_table.dynamodb_table_test", "tags.Name", "dynamodb-table-1"),
 					resource.TestCheckResourceAttr("data.aws_dynamodb_table.dynamodb_table_test", "tags.Environment", "test"),

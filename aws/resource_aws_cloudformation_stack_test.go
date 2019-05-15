@@ -52,6 +52,27 @@ func TestAccAWSCloudFormationStack_basic(t *testing.T) {
 	})
 }
 
+func TestAccAWSCloudFormationStack_disappears(t *testing.T) {
+	var stack cloudformation.Stack
+	stackName := fmt.Sprintf("tf-acc-test-basic-%s", acctest.RandString(10))
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSCloudFormationDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSCloudFormationStackConfig(stackName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckCloudFormationStackExists("aws_cloudformation_stack.network", &stack),
+					testAccCheckCloudFormationStackDisappears(&stack),
+				),
+				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}
+
 func TestAccAWSCloudFormationStack_yaml(t *testing.T) {
 	var stack cloudformation.Stack
 	stackName := fmt.Sprintf("tf-acc-test-yaml-%s", acctest.RandString(10))
@@ -252,9 +273,11 @@ func testAccCheckCloudFormationStackExists(n string, stack *cloudformation.Stack
 		if err != nil {
 			return err
 		}
-		if len(resp.Stacks) == 0 {
+		if len(resp.Stacks) == 0 || resp.Stacks[0] == nil {
 			return fmt.Errorf("CloudFormation stack not found")
 		}
+
+		*stack = *resp.Stacks[0]
 
 		return nil
 	}
@@ -286,6 +309,29 @@ func testAccCheckAWSCloudFormationDestroy(s *terraform.State) error {
 	}
 
 	return nil
+}
+
+func testAccCheckCloudFormationStackDisappears(stack *cloudformation.Stack) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := testAccProvider.Meta().(*AWSClient).cfconn
+
+		input := &cloudformation.DeleteStackInput{
+			StackName: stack.StackName,
+		}
+
+		_, err := conn.DeleteStack(input)
+
+		if err != nil {
+			return err
+		}
+
+		// Use the AWS Go SDK waiter until the resource is refactored
+		describeStacksInput := &cloudformation.DescribeStacksInput{
+			StackName: stack.StackName,
+		}
+
+		return conn.WaitUntilStackDeleteComplete(describeStacksInput)
+	}
 }
 
 func testAccAWSCloudFormationStackConfig(stackName string) string {

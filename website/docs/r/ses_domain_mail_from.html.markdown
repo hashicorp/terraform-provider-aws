@@ -6,7 +6,7 @@ description: |-
   Provides an SES domain MAIL FROM resource
 ---
 
-# aws_ses_domain_mail_from
+# Resource: aws_ses_domain_mail_from
 
 Provides an SES domain MAIL FROM resource.
 

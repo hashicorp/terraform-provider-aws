@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"fmt"
 	"log"
+	"math"
 	"strings"
 	"time"
 
@@ -62,7 +63,7 @@ func resourceAwsEcsService() *schema.Resource {
 			"health_check_grace_period_seconds": {
 				Type:         schema.TypeInt,
 				Optional:     true,
-				ValidateFunc: validation.IntBetween(0, 7200),
+				ValidateFunc: validation.IntBetween(0, math.MaxInt32),
 			},
 
 			"launch_type": {
@@ -210,39 +211,23 @@ func resourceAwsEcsService() *schema.Resource {
 			"placement_strategy": {
 				Type:     schema.TypeSet,
 				Optional: true,
-				ForceNew: true,
+				Computed: true,
 				MaxItems: 5,
 				Removed:  "Use `ordered_placement_strategy` configuration block(s) instead",
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"type": {
 							Type:     schema.TypeString,
-							ForceNew: true,
 							Required: true,
 						},
 						"field": {
 							Type:     schema.TypeString,
-							ForceNew: true,
 							Optional: true,
 							DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
 								return strings.EqualFold(old, new)
 							},
 						},
 					},
-				},
-				Set: func(v interface{}) int {
-					var buf bytes.Buffer
-					m := v.(map[string]interface{})
-					buf.WriteString(fmt.Sprintf("%s-", m["type"].(string)))
-					if m["field"] != nil {
-						field := m["field"].(string)
-						if field == "host" {
-							buf.WriteString("instanceId-")
-						} else {
-							buf.WriteString(fmt.Sprintf("%s-", field))
-						}
-					}
-					return hashcode.String(buf.String())
 				},
 			},
 			"ordered_placement_strategy": {

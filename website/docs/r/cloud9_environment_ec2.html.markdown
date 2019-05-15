@@ -6,7 +6,7 @@ description: |-
   Provides a Cloud9 EC2 Development Environment.
 ---
 
-# aws_cloud9_environment_ec2
+# Resource: aws_cloud9_environment_ec2
 
 Provides a Cloud9 EC2 Development Environment.
 

@@ -148,8 +148,8 @@ func (c *MediaConvert) CancelJobRequest(input *CancelJobInput) (req *request.Req
 
 // CancelJob API operation for AWS Elemental MediaConvert.
 //
-// Permanently remove a job from a queue. Once you have canceled a job, you
-// can't start it again. You can't delete a running job.
+// Permanently cancel a job. Once you have canceled a job, you can't start it
+// again.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -2771,7 +2771,10 @@ func (s *Ac3Settings) SetSampleRate(v int64) *Ac3Settings {
 	return s
 }
 
-// Acceleration settings for job execution.
+// Accelerated transcoding can significantly speed up jobs with long, visually
+// complex content. Outputs that use this feature incur pro-tier pricing. For
+// information about feature limitations, see the AWS Elemental MediaConvert
+// User Guide.
 type AccelerationSettings struct {
 	_ struct{} `type:"structure"`
 
@@ -4481,6 +4484,10 @@ type CmafGroupSettings struct {
 	// first input file.
 	Destination *string `locationName:"destination" type:"string"`
 
+	// Settings associated with the destination. Will vary based on the type of
+	// destination
+	DestinationSettings *DestinationSettings `locationName:"destinationSettings" type:"structure"`
+
 	// DRM settings.
 	Encryption *CmafEncryptionSettings `locationName:"encryption" type:"structure"`
 
@@ -4594,6 +4601,12 @@ func (s *CmafGroupSettings) SetCodecSpecification(v string) *CmafGroupSettings {
 // SetDestination sets the Destination field's value.
 func (s *CmafGroupSettings) SetDestination(v string) *CmafGroupSettings {
 	s.Destination = &v
+	return s
+}
+
+// SetDestinationSettings sets the DestinationSettings field's value.
+func (s *CmafGroupSettings) SetDestinationSettings(v *DestinationSettings) *CmafGroupSettings {
+	s.DestinationSettings = v
 	return s
 }
 
@@ -4770,7 +4783,16 @@ type ContainerSettings struct {
 	// Settings for F4v container
 	F4vSettings *F4vSettings `locationName:"f4vSettings" type:"structure"`
 
-	// Settings for M2TS Container.
+	// MPEG-2 TS container settings. These apply to outputs in a File output group
+	// when the output's container (ContainerType) is MPEG-2 Transport Stream (M2TS).
+	// In these assets, data is organized by the program map table (PMT). Each transport
+	// stream program contains subsets of data, including audio, video, and metadata.
+	// Each of these subsets of data has a numerical label called a packet identifier
+	// (PID). Each transport stream program corresponds to one MediaConvert output.
+	// The PMT lists the types of data in a program along with their PID. Downstream
+	// systems and players use the program map table to look up the PID for each
+	// type of data it accesses and then uses the PIDs to locate specific data within
+	// the asset.
 	M2tsSettings *M2tsSettings `locationName:"m2tsSettings" type:"structure"`
 
 	// Settings for TS segments in HLS
@@ -4854,8 +4876,10 @@ func (s *ContainerSettings) SetMp4Settings(v *Mp4Settings) *ContainerSettings {
 type CreateJobInput struct {
 	_ struct{} `type:"structure"`
 
-	// This is a beta feature. If you are interested in using this feature, please
-	// contact AWS customer support.
+	// Accelerated transcoding can significantly speed up jobs with long, visually
+	// complex content. Outputs that use this feature incur pro-tier pricing. For
+	// information about feature limitations, see the AWS Elemental MediaConvert
+	// User Guide.
 	AccelerationSettings *AccelerationSettings `locationName:"accelerationSettings" type:"structure"`
 
 	// Optional. Choose a tag type that AWS Billing and Cost Management will use
@@ -4887,6 +4911,12 @@ type CreateJobInput struct {
 	//
 	// Settings is a required field
 	Settings *JobSettings `locationName:"settings" type:"structure" required:"true"`
+
+	// Specify how often MediaConvert sends STATUS_UPDATE events to Amazon CloudWatch
+	// Events. Set the interval, in seconds, between status updates. MediaConvert
+	// sends an update at this interval from the time the service begins processing
+	// your job to the time it completes the transcode or encounters an error.
+	StatusUpdateInterval *string `locationName:"statusUpdateInterval" type:"string" enum:"StatusUpdateInterval"`
 
 	// User-defined metadata that you want to associate with an MediaConvert job.
 	// You specify metadata in key/value pairs.
@@ -4971,6 +5001,12 @@ func (s *CreateJobInput) SetSettings(v *JobSettings) *CreateJobInput {
 	return s
 }
 
+// SetStatusUpdateInterval sets the StatusUpdateInterval field's value.
+func (s *CreateJobInput) SetStatusUpdateInterval(v string) *CreateJobInput {
+	s.StatusUpdateInterval = &v
+	return s
+}
+
 // SetUserMetadata sets the UserMetadata field's value.
 func (s *CreateJobInput) SetUserMetadata(v map[string]*string) *CreateJobInput {
 	s.UserMetadata = v
@@ -5008,8 +5044,10 @@ func (s *CreateJobOutput) SetJob(v *Job) *CreateJobOutput {
 type CreateJobTemplateInput struct {
 	_ struct{} `type:"structure"`
 
-	// This is a beta feature. If you are interested in using this feature please
-	// contact AWS customer support.
+	// Accelerated transcoding can significantly speed up jobs with long, visually
+	// complex content. Outputs that use this feature incur pro-tier pricing. For
+	// information about feature limitations, see the AWS Elemental MediaConvert
+	// User Guide.
 	AccelerationSettings *AccelerationSettings `locationName:"accelerationSettings" type:"structure"`
 
 	// Optional. A category for the job template you are creating
@@ -5032,6 +5070,12 @@ type CreateJobTemplateInput struct {
 	//
 	// Settings is a required field
 	Settings *JobTemplateSettings `locationName:"settings" type:"structure" required:"true"`
+
+	// Specify how often MediaConvert sends STATUS_UPDATE events to Amazon CloudWatch
+	// Events. Set the interval, in seconds, between status updates. MediaConvert
+	// sends an update at this interval from the time the service begins processing
+	// your job to the time it completes the transcode or encounters an error.
+	StatusUpdateInterval *string `locationName:"statusUpdateInterval" type:"string" enum:"StatusUpdateInterval"`
 
 	// The tags that you want to add to the resource. You can tag resources with
 	// a key-value pair or with only a key.
@@ -5107,6 +5151,12 @@ func (s *CreateJobTemplateInput) SetQueue(v string) *CreateJobTemplateInput {
 // SetSettings sets the Settings field's value.
 func (s *CreateJobTemplateInput) SetSettings(v *JobTemplateSettings) *CreateJobTemplateInput {
 	s.Settings = v
+	return s
+}
+
+// SetStatusUpdateInterval sets the StatusUpdateInterval field's value.
+func (s *CreateJobTemplateInput) SetStatusUpdateInterval(v string) *CreateJobTemplateInput {
+	s.StatusUpdateInterval = &v
 	return s
 }
 
@@ -5376,6 +5426,14 @@ func (s *CreateQueueOutput) SetQueue(v *Queue) *CreateQueueOutput {
 type DashIsoEncryptionSettings struct {
 	_ struct{} `type:"structure"`
 
+	// This setting can improve the compatibility of your output with video players
+	// on obsolete devices. It applies only to DASH H.264 outputs with DRM encryption.
+	// Choose Unencrypted SEI (UNENCRYPTED_SEI) only to correct problems with playback
+	// on older devices. Otherwise, keep the default setting CENC v1 (CENC_V1).
+	// If you choose Unencrypted SEI, for that output, the service will exclude
+	// the access unit delimiter and will leave the SEI NAL units unencrypted.
+	PlaybackDeviceCompatibility *string `locationName:"playbackDeviceCompatibility" type:"string" enum:"DashIsoPlaybackDeviceCompatibility"`
+
 	// Settings for use with a SPEKE key provider
 	SpekeKeyProvider *SpekeKeyProvider `locationName:"spekeKeyProvider" type:"structure"`
 }
@@ -5388,6 +5446,12 @@ func (s DashIsoEncryptionSettings) String() string {
 // GoString returns the string representation
 func (s DashIsoEncryptionSettings) GoString() string {
 	return s.String()
+}
+
+// SetPlaybackDeviceCompatibility sets the PlaybackDeviceCompatibility field's value.
+func (s *DashIsoEncryptionSettings) SetPlaybackDeviceCompatibility(v string) *DashIsoEncryptionSettings {
+	s.PlaybackDeviceCompatibility = &v
+	return s
 }
 
 // SetSpekeKeyProvider sets the SpekeKeyProvider field's value.
@@ -5412,6 +5476,10 @@ type DashIsoGroupSettings struct {
 	// file. If your job has multiple inputs, the service uses the filename of the
 	// first input file.
 	Destination *string `locationName:"destination" type:"string"`
+
+	// Settings associated with the destination. Will vary based on the type of
+	// destination
+	DestinationSettings *DestinationSettings `locationName:"destinationSettings" type:"structure"`
 
 	// DRM settings.
 	Encryption *DashIsoEncryptionSettings `locationName:"encryption" type:"structure"`
@@ -5487,6 +5555,12 @@ func (s *DashIsoGroupSettings) SetBaseUrl(v string) *DashIsoGroupSettings {
 // SetDestination sets the Destination field's value.
 func (s *DashIsoGroupSettings) SetDestination(v string) *DashIsoGroupSettings {
 	s.Destination = &v
+	return s
+}
+
+// SetDestinationSettings sets the DestinationSettings field's value.
+func (s *DashIsoGroupSettings) SetDestinationSettings(v *DestinationSettings) *DashIsoGroupSettings {
+	s.DestinationSettings = v
 	return s
 }
 
@@ -5844,6 +5918,31 @@ func (s *DescribeEndpointsOutput) SetNextToken(v string) *DescribeEndpointsOutpu
 	return s
 }
 
+// Settings associated with the destination. Will vary based on the type of
+// destination
+type DestinationSettings struct {
+	_ struct{} `type:"structure"`
+
+	// Settings associated with S3 destination
+	S3Settings *S3DestinationSettings `locationName:"s3Settings" type:"structure"`
+}
+
+// String returns the string representation
+func (s DestinationSettings) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DestinationSettings) GoString() string {
+	return s.String()
+}
+
+// SetS3Settings sets the S3Settings field's value.
+func (s *DestinationSettings) SetS3Settings(v *S3DestinationSettings) *DestinationSettings {
+	s.S3Settings = v
+	return s
+}
+
 // Removes an association between the Amazon Resource Name (ARN) of an AWS Certificate
 // Manager (ACM) certificate and an AWS Elemental MediaConvert resource.
 type DisassociateCertificateInput struct {
@@ -5853,7 +5952,7 @@ type DisassociateCertificateInput struct {
 	// resource.
 	//
 	// Arn is a required field
-	Arn *string `locationName:"arn" type:"string" required:"true"`
+	Arn *string `location:"uri" locationName:"arn" type:"string" required:"true"`
 }
 
 // String returns the string representation
@@ -5871,6 +5970,9 @@ func (s *DisassociateCertificateInput) Validate() error {
 	invalidParams := request.ErrInvalidParams{Context: "DisassociateCertificateInput"}
 	if s.Arn == nil {
 		invalidParams.Add(request.NewErrParamRequired("Arn"))
+	}
+	if s.Arn != nil && len(*s.Arn) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("Arn", 1))
 	}
 
 	if invalidParams.Len() > 0 {
@@ -6604,11 +6706,12 @@ type EmbeddedDestinationSettings struct {
 	// Ignore this setting unless your input captions are SCC format and your output
 	// container is MXF. With this combination of input captions format and output
 	// container, you can optionally use this setting to replace the input channel
-	// number with the track number that you specify. If you don't specify an output
-	// track number, the system uses the input channel number for the output channel
-	// number. This setting applies to each output individually. Channels must be
-	// unique and may only be combined in the following combinations: (1+3, 2+4,
-	// 1+4, 2+3).
+	// number with the track number that you specify. Specify a different number
+	// for each output captions track. If you don't specify an output track number,
+	// the system uses the input channel number for the output channel number. This
+	// setting applies to each output individually. You can optionally combine two
+	// captions channels in your output. The two output channel numbers can be one
+	// of the following pairs: 1,3; 2,4; 1,4; or 2,3.
 	Destination608ChannelNumber *int64 `locationName:"destination608ChannelNumber" min:"1" type:"integer"`
 }
 
@@ -6727,6 +6830,115 @@ func (s *Endpoint) SetUrl(v string) *Endpoint {
 	return s
 }
 
+// ESAM ManifestConfirmConditionNotification defined by OC-SP-ESAM-API-I03-131025.
+type EsamManifestConfirmConditionNotification struct {
+	_ struct{} `type:"structure"`
+
+	// Provide your ESAM ManifestConfirmConditionNotification XML document inside
+	// your JSON job settings. Form the XML document as per OC-SP-ESAM-API-I03-131025.
+	// The transcoder will use the Manifest Conditioning instructions in the message
+	// that you supply.
+	MccXml *string `locationName:"mccXml" type:"string"`
+}
+
+// String returns the string representation
+func (s EsamManifestConfirmConditionNotification) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s EsamManifestConfirmConditionNotification) GoString() string {
+	return s.String()
+}
+
+// SetMccXml sets the MccXml field's value.
+func (s *EsamManifestConfirmConditionNotification) SetMccXml(v string) *EsamManifestConfirmConditionNotification {
+	s.MccXml = &v
+	return s
+}
+
+// Settings for Event Signaling And Messaging (ESAM). If you don't do ad insertion,
+// you can ignore these settings.
+type EsamSettings struct {
+	_ struct{} `type:"structure"`
+
+	// Specifies an ESAM ManifestConfirmConditionNotification XML as per OC-SP-ESAM-API-I03-131025.
+	// The transcoder uses the manifest conditioning instructions that you provide
+	// in the setting MCC XML (mccXml).
+	ManifestConfirmConditionNotification *EsamManifestConfirmConditionNotification `locationName:"manifestConfirmConditionNotification" type:"structure"`
+
+	// Specifies the stream distance, in milliseconds, between the SCTE 35 messages
+	// that the transcoder places and the splice points that they refer to. If the
+	// time between the start of the asset and the SCTE-35 message is less than
+	// this value, then the transcoder places the SCTE-35 marker at the beginning
+	// of the stream.
+	ResponseSignalPreroll *int64 `locationName:"responseSignalPreroll" type:"integer"`
+
+	// Specifies an ESAM SignalProcessingNotification XML as per OC-SP-ESAM-API-I03-131025.
+	// The transcoder uses the signal processing instructions that you provide in
+	// the setting SCC XML (sccXml).
+	SignalProcessingNotification *EsamSignalProcessingNotification `locationName:"signalProcessingNotification" type:"structure"`
+}
+
+// String returns the string representation
+func (s EsamSettings) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s EsamSettings) GoString() string {
+	return s.String()
+}
+
+// SetManifestConfirmConditionNotification sets the ManifestConfirmConditionNotification field's value.
+func (s *EsamSettings) SetManifestConfirmConditionNotification(v *EsamManifestConfirmConditionNotification) *EsamSettings {
+	s.ManifestConfirmConditionNotification = v
+	return s
+}
+
+// SetResponseSignalPreroll sets the ResponseSignalPreroll field's value.
+func (s *EsamSettings) SetResponseSignalPreroll(v int64) *EsamSettings {
+	s.ResponseSignalPreroll = &v
+	return s
+}
+
+// SetSignalProcessingNotification sets the SignalProcessingNotification field's value.
+func (s *EsamSettings) SetSignalProcessingNotification(v *EsamSignalProcessingNotification) *EsamSettings {
+	s.SignalProcessingNotification = v
+	return s
+}
+
+// ESAM SignalProcessingNotification data defined by OC-SP-ESAM-API-I03-131025.
+type EsamSignalProcessingNotification struct {
+	_ struct{} `type:"structure"`
+
+	// Provide your ESAM SignalProcessingNotification XML document inside your JSON
+	// job settings. Form the XML document as per OC-SP-ESAM-API-I03-131025. The
+	// transcoder will use the signal processing instructions in the message that
+	// you supply. Provide your ESAM SignalProcessingNotification XML document inside
+	// your JSON job settings. If you want the service to place SCTE-35 markers
+	// at the insertion points you specify in the XML document, you must also enable
+	// SCTE-35 ESAM (scte35Esam). Note that you can either specify an ESAM XML document
+	// or enable SCTE-35 passthrough. You can't do both.
+	SccXml *string `locationName:"sccXml" type:"string"`
+}
+
+// String returns the string representation
+func (s EsamSignalProcessingNotification) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s EsamSignalProcessingNotification) GoString() string {
+	return s.String()
+}
+
+// SetSccXml sets the SccXml field's value.
+func (s *EsamSignalProcessingNotification) SetSccXml(v string) *EsamSignalProcessingNotification {
+	s.SccXml = &v
+	return s
+}
+
 // Settings for F4v container
 type F4vSettings struct {
 	_ struct{} `type:"structure"`
@@ -6764,6 +6976,10 @@ type FileGroupSettings struct {
 	// file. If your job has multiple inputs, the service uses the filename of the
 	// first input file.
 	Destination *string `locationName:"destination" type:"string"`
+
+	// Settings associated with the destination. Will vary based on the type of
+	// destination
+	DestinationSettings *DestinationSettings `locationName:"destinationSettings" type:"structure"`
 }
 
 // String returns the string representation
@@ -6779,6 +6995,12 @@ func (s FileGroupSettings) GoString() string {
 // SetDestination sets the Destination field's value.
 func (s *FileGroupSettings) SetDestination(v string) *FileGroupSettings {
 	s.Destination = &v
+	return s
+}
+
+// SetDestinationSettings sets the DestinationSettings field's value.
+func (s *FileGroupSettings) SetDestinationSettings(v *DestinationSettings) *FileGroupSettings {
+	s.DestinationSettings = v
 	return s
 }
 
@@ -7986,10 +8208,17 @@ type H265Settings struct {
 	// Inserts timecode for each frame as 4 bytes of an unregistered SEI message.
 	UnregisteredSeiTimecode *string `locationName:"unregisteredSeiTimecode" type:"string" enum:"H265UnregisteredSeiTimecode"`
 
-	// If HVC1, output that is H.265 will be marked as HVC1 and adhere to the ISO-IECJTC1-SC29_N13798_Text_ISOIEC_FDIS_14496-15_3rd_E
-	// spec which states that parameter set NAL units will be stored in the sample
-	// headers but not in the samples directly. If HEV1, then H.265 will be marked
-	// as HEV1 and parameter set NAL units will be written into the samples.
+	// Use this setting only for outputs encoded with H.265 that are in CMAF or
+	// DASH output groups. If you include writeMp4PackagingType in your JSON job
+	// specification for other outputs, your video might not work properly with
+	// downstream systems and video players. If the location of parameter set NAL
+	// units don't matter in your workflow, ignore this setting. The service defaults
+	// to marking your output as HEV1. Choose HVC1 to mark your output as HVC1.
+	// This makes your output compliant with this specification: ISO IECJTC1 SC29
+	// N13798 Text ISO/IEC FDIS 14496-15 3rd Edition. For these outputs, the service
+	// stores parameter set NAL units in the sample headers but not in the samples
+	// directly. Keep the default HEV1 to mark your output as HEV1. For these outputs,
+	// the service writes parameter set NAL units directly into the samples.
 	WriteMp4PackagingType *string `locationName:"writeMp4PackagingType" type:"string" enum:"H265WriteMp4PackagingType"`
 }
 
@@ -8513,6 +8742,10 @@ type HlsEncryptionSettings struct {
 	// in the manifest. Otherwise Initialization Vector is not in the manifest.
 	InitializationVectorInManifest *string `locationName:"initializationVectorInManifest" type:"string" enum:"HlsInitializationVectorInManifest"`
 
+	// Enable this setting to insert the EXT-X-SESSION-KEY element into the master
+	// playlist. This allows for offline Apple HLS FairPlay content protection.
+	OfflineEncrypted *string `locationName:"offlineEncrypted" type:"string" enum:"HlsOfflineEncrypted"`
+
 	// Settings for use with a SPEKE key provider
 	SpekeKeyProvider *SpekeKeyProvider `locationName:"spekeKeyProvider" type:"structure"`
 
@@ -8561,6 +8794,12 @@ func (s *HlsEncryptionSettings) SetEncryptionMethod(v string) *HlsEncryptionSett
 // SetInitializationVectorInManifest sets the InitializationVectorInManifest field's value.
 func (s *HlsEncryptionSettings) SetInitializationVectorInManifest(v string) *HlsEncryptionSettings {
 	s.InitializationVectorInManifest = &v
+	return s
+}
+
+// SetOfflineEncrypted sets the OfflineEncrypted field's value.
+func (s *HlsEncryptionSettings) SetOfflineEncrypted(v string) *HlsEncryptionSettings {
+	s.OfflineEncrypted = &v
 	return s
 }
 
@@ -8624,6 +8863,10 @@ type HlsGroupSettings struct {
 	// file. If your job has multiple inputs, the service uses the filename of the
 	// first input file.
 	Destination *string `locationName:"destination" type:"string"`
+
+	// Settings associated with the destination. Will vary based on the type of
+	// destination
+	DestinationSettings *DestinationSettings `locationName:"destinationSettings" type:"structure"`
 
 	// Indicates whether segments should be placed in subdirectories.
 	DirectoryStructure *string `locationName:"directoryStructure" type:"string" enum:"HlsDirectoryStructure"`
@@ -8782,6 +9025,12 @@ func (s *HlsGroupSettings) SetCodecSpecification(v string) *HlsGroupSettings {
 // SetDestination sets the Destination field's value.
 func (s *HlsGroupSettings) SetDestination(v string) *HlsGroupSettings {
 	s.Destination = &v
+	return s
+}
+
+// SetDestinationSettings sets the DestinationSettings field's value.
+func (s *HlsGroupSettings) SetDestinationSettings(v *DestinationSettings) *HlsGroupSettings {
+	s.DestinationSettings = v
 	return s
 }
 
@@ -9060,7 +9309,10 @@ type Input struct {
 	// video inputs.
 	DeblockFilter *string `locationName:"deblockFilter" type:"string" enum:"InputDeblockFilter"`
 
-	// Settings for decrypting any input files that are encrypted.
+	// Settings for decrypting any input files that you encrypt before you upload
+	// them to Amazon S3. MediaConvert can decrypt files only when you use AWS Key
+	// Management Service (KMS) to encrypt the data key that you use to encrypt
+	// your content.
 	DecryptionSettings *InputDecryptionSettings `locationName:"decryptionSettings" type:"structure"`
 
 	// Enable Denoise (InputDenoiseFilter) to filter noise from the input. Default
@@ -9342,20 +9594,33 @@ func (s *InputClipping) SetStartTimecode(v string) *InputClipping {
 	return s
 }
 
-// Specify the decryption settings used to decrypt encrypted input
+// Settings for decrypting any input files that you encrypt before you upload
+// them to Amazon S3. MediaConvert can decrypt files only when you use AWS Key
+// Management Service (KMS) to encrypt the data key that you use to encrypt
+// your content.
 type InputDecryptionSettings struct {
 	_ struct{} `type:"structure"`
 
-	// This specifies how the encrypted file needs to be decrypted.
+	// Specify the encryption mode that you used to encrypt your input files.
 	DecryptionMode *string `locationName:"decryptionMode" type:"string" enum:"DecryptionMode"`
 
-	// Decryption key either 128 or 192 or 256 bits encrypted with KMS
+	// Warning! Don't provide your encryption key in plaintext. Your job settings
+	// could be intercepted, making your encrypted content vulnerable. Specify the
+	// encrypted version of the data key that you used to encrypt your content.
+	// The data key must be encrypted by AWS Key Management Service (KMS). The key
+	// can be 128, 192, or 256 bits.
 	EncryptedDecryptionKey *string `locationName:"encryptedDecryptionKey" min:"24" type:"string"`
 
-	// Initialization Vector 96 bits (CTR/GCM mode only) or 128 bits.
+	// Specify the initialization vector that you used when you encrypted your content
+	// before uploading it to Amazon S3. You can use a 16-byte initialization vector
+	// with any encryption mode. Or, you can use a 12-byte initialization vector
+	// with GCM or CTR. MediaConvert accepts only initialization vectors that are
+	// base64-encoded.
 	InitializationVector *string `locationName:"initializationVector" min:"16" type:"string"`
 
-	// The AWS region in which decryption key was encrypted with KMS
+	// Specify the AWS Region for AWS Key Management Service (KMS) that you used
+	// to encrypt your data key, if that Region is different from the one you are
+	// using for AWS Elemental MediaConvert.
 	KmsKeyRegion *string `locationName:"kmsKeyRegion" min:"9" type:"string"`
 }
 
@@ -9779,7 +10044,8 @@ func (s *InsertableImage) SetWidth(v int64) *InsertableImage {
 type Job struct {
 	_ struct{} `type:"structure"`
 
-	// Acceleration settings for job execution.
+	// Accelerated transcoding can significantly speed up jobs with long, visually
+	// complex content.
 	AccelerationSettings *AccelerationSettings `locationName:"accelerationSettings" type:"structure"`
 
 	// An identifier for this resource that is unique within all of AWS.
@@ -9795,6 +10061,9 @@ type Job struct {
 	// The time, in Unix epoch format in seconds, when the job got created.
 	CreatedAt *time.Time `locationName:"createdAt" type:"timestamp" timestampFormat:"unixTimestamp"`
 
+	// A job's phase can be PROBING, TRANSCODING OR UPLOADING
+	CurrentPhase *string `locationName:"currentPhase" type:"string" enum:"JobPhase"`
+
 	// Error code for the job
 	ErrorCode *int64 `locationName:"errorCode" type:"integer"`
 
@@ -9804,6 +10073,17 @@ type Job struct {
 	// A portion of the job's ARN, unique within your AWS Elemental MediaConvert
 	// resources
 	Id *string `locationName:"id" type:"string"`
+
+	// An estimate of how far your job has progressed. This estimate is shown as
+	// a percentage of the total time from when your job leaves its queue to when
+	// your output files appear in your output Amazon S3 bucket. AWS Elemental MediaConvert
+	// provides jobPercentComplete in CloudWatch STATUS_UPDATE events and in the
+	// response to GetJob and ListJobs requests. The jobPercentComplete estimate
+	// is reliable for the following input containers: Quicktime, Transport Stream,
+	// MP4, and MXF. For some jobs, including audio-only jobs and jobs that use
+	// input clipping, the service can't provide information about job progress.
+	// In those cases, jobPercentComplete returns a null value.
+	JobPercentComplete *int64 `locationName:"jobPercentComplete" type:"integer"`
 
 	// The job template that the job is created from, if it is created from a job
 	// template.
@@ -9816,6 +10096,10 @@ type Job struct {
 	// you don't specify, the job will go to the default queue. For more about queues,
 	// see the User Guide topic at http://docs.aws.amazon.com/mediaconvert/latest/ug/what-is.html
 	Queue *string `locationName:"queue" type:"string"`
+
+	// The number of times that the service automatically attempted to process your
+	// job after encountering an error.
+	RetryCount *int64 `locationName:"retryCount" type:"integer"`
 
 	// The IAM role you use for creating this job. For details about permissions,
 	// see the User Guide topic at the User Guide at http://docs.aws.amazon.com/mediaconvert/latest/ug/iam-role.html
@@ -9830,6 +10114,12 @@ type Job struct {
 
 	// A job's status can be SUBMITTED, PROGRESSING, COMPLETE, CANCELED, or ERROR.
 	Status *string `locationName:"status" type:"string" enum:"JobStatus"`
+
+	// Specify how often MediaConvert sends STATUS_UPDATE events to Amazon CloudWatch
+	// Events. Set the interval, in seconds, between status updates. MediaConvert
+	// sends an update at this interval from the time the service begins processing
+	// your job to the time it completes the transcode or encounters an error.
+	StatusUpdateInterval *string `locationName:"statusUpdateInterval" type:"string" enum:"StatusUpdateInterval"`
 
 	// Information about when jobs are submitted, started, and finished is specified
 	// in Unix epoch format in seconds.
@@ -9874,6 +10164,12 @@ func (s *Job) SetCreatedAt(v time.Time) *Job {
 	return s
 }
 
+// SetCurrentPhase sets the CurrentPhase field's value.
+func (s *Job) SetCurrentPhase(v string) *Job {
+	s.CurrentPhase = &v
+	return s
+}
+
 // SetErrorCode sets the ErrorCode field's value.
 func (s *Job) SetErrorCode(v int64) *Job {
 	s.ErrorCode = &v
@@ -9889,6 +10185,12 @@ func (s *Job) SetErrorMessage(v string) *Job {
 // SetId sets the Id field's value.
 func (s *Job) SetId(v string) *Job {
 	s.Id = &v
+	return s
+}
+
+// SetJobPercentComplete sets the JobPercentComplete field's value.
+func (s *Job) SetJobPercentComplete(v int64) *Job {
+	s.JobPercentComplete = &v
 	return s
 }
 
@@ -9910,6 +10212,12 @@ func (s *Job) SetQueue(v string) *Job {
 	return s
 }
 
+// SetRetryCount sets the RetryCount field's value.
+func (s *Job) SetRetryCount(v int64) *Job {
+	s.RetryCount = &v
+	return s
+}
+
 // SetRole sets the Role field's value.
 func (s *Job) SetRole(v string) *Job {
 	s.Role = &v
@@ -9925,6 +10233,12 @@ func (s *Job) SetSettings(v *JobSettings) *Job {
 // SetStatus sets the Status field's value.
 func (s *Job) SetStatus(v string) *Job {
 	s.Status = &v
+	return s
+}
+
+// SetStatusUpdateInterval sets the StatusUpdateInterval field's value.
+func (s *Job) SetStatusUpdateInterval(v string) *Job {
+	s.StatusUpdateInterval = &v
 	return s
 }
 
@@ -9951,6 +10265,9 @@ type JobSettings struct {
 	// Settings for ad avail blanking. Video can be blanked or overlaid with an
 	// image, and audio muted during SCTE-35 triggered ad avails.
 	AvailBlanking *AvailBlanking `locationName:"availBlanking" type:"structure"`
+
+	// Settings for Event Signaling And Messaging (ESAM).
+	Esam *EsamSettings `locationName:"esam" type:"structure"`
 
 	// Use Inputs (inputs) to define source file used in the transcode job. There
 	// can be multiple inputs add in a job. These inputs will be concantenated together
@@ -10050,6 +10367,12 @@ func (s *JobSettings) SetAvailBlanking(v *AvailBlanking) *JobSettings {
 	return s
 }
 
+// SetEsam sets the Esam field's value.
+func (s *JobSettings) SetEsam(v *EsamSettings) *JobSettings {
+	s.Esam = v
+	return s
+}
+
 // SetInputs sets the Inputs field's value.
 func (s *JobSettings) SetInputs(v []*Input) *JobSettings {
 	s.Inputs = v
@@ -10091,7 +10414,8 @@ func (s *JobSettings) SetTimedMetadataInsertion(v *TimedMetadataInsertion) *JobS
 type JobTemplate struct {
 	_ struct{} `type:"structure"`
 
-	// Acceleration settings for job execution.
+	// Accelerated transcoding is currently in private preview. Contact AWS for
+	// more information.
 	AccelerationSettings *AccelerationSettings `locationName:"accelerationSettings" type:"structure"`
 
 	// An identifier for this resource that is unique within all of AWS.
@@ -10124,6 +10448,12 @@ type JobTemplate struct {
 	//
 	// Settings is a required field
 	Settings *JobTemplateSettings `locationName:"settings" type:"structure" required:"true"`
+
+	// Specify how often MediaConvert sends STATUS_UPDATE events to Amazon CloudWatch
+	// Events. Set the interval, in seconds, between status updates. MediaConvert
+	// sends an update at this interval from the time the service begins processing
+	// your job to the time it completes the transcode or encounters an error.
+	StatusUpdateInterval *string `locationName:"statusUpdateInterval" type:"string" enum:"StatusUpdateInterval"`
 
 	// A job template can be of two types: system or custom. System or built-in
 	// job templates can't be modified or deleted by the user.
@@ -10194,6 +10524,12 @@ func (s *JobTemplate) SetSettings(v *JobTemplateSettings) *JobTemplate {
 	return s
 }
 
+// SetStatusUpdateInterval sets the StatusUpdateInterval field's value.
+func (s *JobTemplate) SetStatusUpdateInterval(v string) *JobTemplate {
+	s.StatusUpdateInterval = &v
+	return s
+}
+
 // SetType sets the Type field's value.
 func (s *JobTemplate) SetType(v string) *JobTemplate {
 	s.Type = &v
@@ -10212,6 +10548,9 @@ type JobTemplateSettings struct {
 	// Settings for ad avail blanking. Video can be blanked or overlaid with an
 	// image, and audio muted during SCTE-35 triggered ad avails.
 	AvailBlanking *AvailBlanking `locationName:"availBlanking" type:"structure"`
+
+	// Settings for Event Signaling And Messaging (ESAM).
+	Esam *EsamSettings `locationName:"esam" type:"structure"`
 
 	// Use Inputs (inputs) to define the source file used in the transcode job.
 	// There can only be one input in a job template. Using the API, you can include
@@ -10308,6 +10647,12 @@ func (s *JobTemplateSettings) SetAdAvailOffset(v int64) *JobTemplateSettings {
 // SetAvailBlanking sets the AvailBlanking field's value.
 func (s *JobTemplateSettings) SetAvailBlanking(v *AvailBlanking) *JobTemplateSettings {
 	s.AvailBlanking = v
+	return s
+}
+
+// SetEsam sets the Esam field's value.
+func (s *JobTemplateSettings) SetEsam(v *EsamSettings) *JobTemplateSettings {
+	s.Esam = v
 	return s
 }
 
@@ -10865,7 +11210,57 @@ func (s *ListTagsForResourceOutput) SetResourceTags(v *ResourceTags) *ListTagsFo
 	return s
 }
 
-// Settings for M2TS Container.
+// Settings for SCTE-35 signals from ESAM. Include this in your job settings
+// to put SCTE-35 markers in your HLS and transport stream outputs at the insertion
+// points that you specify in an ESAM XML document. Provide the document in
+// the setting SCC XML (sccXml).
+type M2tsScte35Esam struct {
+	_ struct{} `type:"structure"`
+
+	// Packet Identifier (PID) of the SCTE-35 stream in the transport stream generated
+	// by ESAM.
+	Scte35EsamPid *int64 `locationName:"scte35EsamPid" min:"32" type:"integer"`
+}
+
+// String returns the string representation
+func (s M2tsScte35Esam) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s M2tsScte35Esam) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *M2tsScte35Esam) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "M2tsScte35Esam"}
+	if s.Scte35EsamPid != nil && *s.Scte35EsamPid < 32 {
+		invalidParams.Add(request.NewErrParamMinValue("Scte35EsamPid", 32))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetScte35EsamPid sets the Scte35EsamPid field's value.
+func (s *M2tsScte35Esam) SetScte35EsamPid(v int64) *M2tsScte35Esam {
+	s.Scte35EsamPid = &v
+	return s
+}
+
+// MPEG-2 TS container settings. These apply to outputs in a File output group
+// when the output's container (ContainerType) is MPEG-2 Transport Stream (M2TS).
+// In these assets, data is organized by the program map table (PMT). Each transport
+// stream program contains subsets of data, including audio, video, and metadata.
+// Each of these subsets of data has a numerical label called a packet identifier
+// (PID). Each transport stream program corresponds to one MediaConvert output.
+// The PMT lists the types of data in a program along with their PID. Downstream
+// systems and players use the program map table to look up the PID for each
+// type of data it accesses and then uses the PIDs to locate specific data within
+// the asset.
 type M2tsSettings struct {
 	_ struct{} `type:"structure"`
 
@@ -10875,14 +11270,14 @@ type M2tsSettings struct {
 	// The number of audio frames to insert for each PES packet.
 	AudioFramesPerPes *int64 `locationName:"audioFramesPerPes" type:"integer"`
 
-	// Packet Identifier (PID) of the elementary audio stream(s) in the transport
-	// stream. Multiple values are accepted, and can be entered in ranges and/or
-	// by comma separation.
+	// Specify the packet identifiers (PIDs) for any elementary audio streams you
+	// include in this output. Specify multiple PIDs as a JSON array. Default is
+	// the range 482-492.
 	AudioPids []*int64 `locationName:"audioPids" type:"list"`
 
-	// The output bitrate of the transport stream in bits per second. Setting to
-	// 0 lets the muxer automatically determine the appropriate bitrate. Other common
-	// values are 3750000, 7500000, and 15000000.
+	// Specify the output bitrate of the transport stream in bits per second. Setting
+	// to 0 lets the muxer automatically determine the appropriate bitrate. Other
+	// common values are 3750000, 7500000, and 15000000.
 	Bitrate *int64 `locationName:"bitrate" type:"integer"`
 
 	// Controls what buffer model to use for accurate interleaving. If set to MULTIPLEX,
@@ -10898,15 +11293,15 @@ type M2tsSettings struct {
 	// interval.
 	DvbSdtSettings *DvbSdtSettings `locationName:"dvbSdtSettings" type:"structure"`
 
-	// Packet Identifier (PID) for input source DVB Subtitle data to this output.
-	// Multiple values are accepted, and can be entered in ranges and/or by comma
-	// separation.
+	// Specify the packet identifiers (PIDs) for DVB subtitle data included in this
+	// output. Specify multiple PIDs as a JSON array. Default is the range 460-479.
 	DvbSubPids []*int64 `locationName:"dvbSubPids" type:"list"`
 
 	// Inserts DVB Time and Date Table (TDT) at the specified table repetition interval.
 	DvbTdtSettings *DvbTdtSettings `locationName:"dvbTdtSettings" type:"structure"`
 
-	// Packet Identifier (PID) for input source DVB Teletext data to this output.
+	// Specify the packet identifier (PID) for DVB teletext data you include in
+	// this output. Default is 499.
 	DvbTeletextPid *int64 `locationName:"dvbTeletextPid" min:"32" type:"integer"`
 
 	// When set to VIDEO_AND_FIXED_INTERVALS, audio EBP markers will be added to
@@ -10927,15 +11322,15 @@ type M2tsSettings struct {
 	EsRateInPes *string `locationName:"esRateInPes" type:"string" enum:"M2tsEsRateInPes"`
 
 	// Keep the default value (DEFAULT) unless you know that your audio EBP markers
-	// are incorrectly appearing before your video EBP markers. Set this value to
-	// Force (FORCE) to correct this problem.
+	// are incorrectly appearing before your video EBP markers. To correct this
+	// problem, set this value to Force (FORCE).
 	ForceTsVideoEbpOrder *string `locationName:"forceTsVideoEbpOrder" type:"string" enum:"M2tsForceTsVideoEbpOrder"`
 
-	// The length in seconds of each fragment. Only used with EBP markers.
+	// The length, in seconds, of each fragment. Only used with EBP markers.
 	FragmentTime *float64 `locationName:"fragmentTime" type:"double"`
 
-	// Maximum time in milliseconds between Program Clock References (PCRs) inserted
-	// into the transport stream.
+	// Specify the maximum time, in milliseconds, between Program Clock References
+	// (PCRs) inserted into the transport stream.
 	MaxPcrInterval *int64 `locationName:"maxPcrInterval" type:"integer"`
 
 	// When set, enforces that Encoder Boundary Points do not come within the specified
@@ -10964,23 +11359,27 @@ type M2tsSettings struct {
 	// when the PCR PID is the same as the video or audio elementary stream.
 	PcrControl *string `locationName:"pcrControl" type:"string" enum:"M2tsPcrControl"`
 
-	// Packet Identifier (PID) of the Program Clock Reference (PCR) in the transport
-	// stream. When no value is given, the encoder will assign the same value as
-	// the Video PID.
+	// Specify the packet identifier (PID) for the program clock reference (PCR)
+	// in this output. If you do not specify a value, the service will use the value
+	// for Video PID (VideoPid).
 	PcrPid *int64 `locationName:"pcrPid" min:"32" type:"integer"`
 
-	// The number of milliseconds between instances of this table in the output
-	// transport stream.
+	// Specify the number of milliseconds between instances of the program map table
+	// (PMT) in the output transport stream.
 	PmtInterval *int64 `locationName:"pmtInterval" type:"integer"`
 
-	// Packet Identifier (PID) for the Program Map Table (PMT) in the transport
-	// stream.
+	// Specify the packet identifier (PID) for the program map table (PMT) itself.
+	// Default is 480.
 	PmtPid *int64 `locationName:"pmtPid" min:"32" type:"integer"`
 
-	// Packet Identifier (PID) of the private metadata stream in the transport stream.
+	// Specify the packet identifier (PID) of the private metadata stream. Default
+	// is 503.
 	PrivateMetadataPid *int64 `locationName:"privateMetadataPid" min:"32" type:"integer"`
 
-	// The value of the program number field in the Program Map Table.
+	// Use Program number (programNumber) to specify the program number used in
+	// the program map table (PMT) for this output. Default is 1. Program numbers
+	// and program map tables are parts of MPEG-2 transport stream containers, used
+	// for organizing data.
 	ProgramNumber *int64 `locationName:"programNumber" type:"integer"`
 
 	// When set to CBR, inserts null packets into transport stream to fill specified
@@ -10988,7 +11387,13 @@ type M2tsSettings struct {
 	// but the output will not be padded up to that bitrate.
 	RateMode *string `locationName:"rateMode" type:"string" enum:"M2tsRateMode"`
 
-	// Packet Identifier (PID) of the SCTE-35 stream in the transport stream.
+	// Include this in your job settings to put SCTE-35 markers in your HLS and
+	// transport stream outputs at the insertion points that you specify in an ESAM
+	// XML document. Provide the document in the setting SCC XML (sccXml).
+	Scte35Esam *M2tsScte35Esam `locationName:"scte35Esam" type:"structure"`
+
+	// Specify the packet identifier (PID) of the SCTE-35 stream in the transport
+	// stream.
 	Scte35Pid *int64 `locationName:"scte35Pid" min:"32" type:"integer"`
 
 	// Enables SCTE-35 passthrough (scte35Source) to pass any SCTE-35 signals from
@@ -11017,17 +11422,21 @@ type M2tsSettings struct {
 	// Note that EBP lookahead is a slight exception to this rule.
 	SegmentationStyle *string `locationName:"segmentationStyle" type:"string" enum:"M2tsSegmentationStyle"`
 
-	// The length in seconds of each segment. Required unless markers is set to
-	// _none_.
+	// Specify the length, in seconds, of each segment. Required unless markers
+	// is set to _none_.
 	SegmentationTime *float64 `locationName:"segmentationTime" type:"double"`
 
-	// Packet Identifier (PID) of the timed metadata stream in the transport stream.
+	// Specify the packet identifier (PID) for timed metadata in this output. Default
+	// is 502.
 	TimedMetadataPid *int64 `locationName:"timedMetadataPid" min:"32" type:"integer"`
 
-	// The value of the transport stream ID field in the Program Map Table.
+	// Specify the ID for the transport stream itself in the program map table for
+	// this output. Transport stream IDs and program map tables are parts of MPEG-2
+	// transport stream containers, used for organizing data.
 	TransportStreamId *int64 `locationName:"transportStreamId" type:"integer"`
 
-	// Packet Identifier (PID) of the elementary video stream in the transport stream.
+	// Specify the packet identifier (PID) of the elementary video stream in the
+	// transport stream.
 	VideoPid *int64 `locationName:"videoPid" min:"32" type:"integer"`
 }
 
@@ -11078,6 +11487,11 @@ func (s *M2tsSettings) Validate() error {
 	if s.DvbTdtSettings != nil {
 		if err := s.DvbTdtSettings.Validate(); err != nil {
 			invalidParams.AddNested("DvbTdtSettings", err.(request.ErrInvalidParams))
+		}
+	}
+	if s.Scte35Esam != nil {
+		if err := s.Scte35Esam.Validate(); err != nil {
+			invalidParams.AddNested("Scte35Esam", err.(request.ErrInvalidParams))
 		}
 	}
 
@@ -11246,6 +11660,12 @@ func (s *M2tsSettings) SetProgramNumber(v int64) *M2tsSettings {
 // SetRateMode sets the RateMode field's value.
 func (s *M2tsSettings) SetRateMode(v string) *M2tsSettings {
 	s.RateMode = &v
+	return s
+}
+
+// SetScte35Esam sets the Scte35Esam field's value.
+func (s *M2tsSettings) SetScte35Esam(v *M2tsScte35Esam) *M2tsSettings {
+	s.Scte35Esam = v
 	return s
 }
 
@@ -12309,6 +12729,10 @@ type MsSmoothGroupSettings struct {
 	// first input file.
 	Destination *string `locationName:"destination" type:"string"`
 
+	// Settings associated with the destination. Will vary based on the type of
+	// destination
+	DestinationSettings *DestinationSettings `locationName:"destinationSettings" type:"structure"`
+
 	// If you are using DRM, set DRM System (MsSmoothEncryptionSettings) to specify
 	// the value SpekeKeyProvider.
 	Encryption *MsSmoothEncryptionSettings `locationName:"encryption" type:"structure"`
@@ -12354,6 +12778,12 @@ func (s *MsSmoothGroupSettings) SetAudioDeduplication(v string) *MsSmoothGroupSe
 // SetDestination sets the Destination field's value.
 func (s *MsSmoothGroupSettings) SetDestination(v string) *MsSmoothGroupSettings {
 	s.Destination = &v
+	return s
+}
+
+// SetDestinationSettings sets the DestinationSettings field's value.
+func (s *MsSmoothGroupSettings) SetDestinationSettings(v *DestinationSettings) *MsSmoothGroupSettings {
+	s.DestinationSettings = v
 	return s
 }
 
@@ -13811,6 +14241,80 @@ func (s *ResourceTags) SetTags(v map[string]*string) *ResourceTags {
 	return s
 }
 
+// Settings associated with S3 destination
+type S3DestinationSettings struct {
+	_ struct{} `type:"structure"`
+
+	// Settings for how your job outputs are encrypted as they are uploaded to Amazon
+	// S3.
+	Encryption *S3EncryptionSettings `locationName:"encryption" type:"structure"`
+}
+
+// String returns the string representation
+func (s S3DestinationSettings) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s S3DestinationSettings) GoString() string {
+	return s.String()
+}
+
+// SetEncryption sets the Encryption field's value.
+func (s *S3DestinationSettings) SetEncryption(v *S3EncryptionSettings) *S3DestinationSettings {
+	s.Encryption = v
+	return s
+}
+
+// Settings for how your job outputs are encrypted as they are uploaded to Amazon
+// S3.
+type S3EncryptionSettings struct {
+	_ struct{} `type:"structure"`
+
+	// Specify how you want your data keys managed. AWS uses data keys to encrypt
+	// your content. AWS also encrypts the data keys themselves, using a customer
+	// master key (CMK), and then stores the encrypted data keys alongside your
+	// encrypted content. Use this setting to specify which AWS service manages
+	// the CMK. For simplest set up, choose Amazon S3 (SERVER_SIDE_ENCRYPTION_S3).
+	// If you want your master key to be managed by AWS Key Management Service (KMS),
+	// choose AWS KMS (SERVER_SIDE_ENCRYPTION_KMS). By default, when you choose
+	// AWS KMS, KMS uses the AWS managed customer master key (CMK) associated with
+	// Amazon S3 to encrypt your data keys. You can optionally choose to specify
+	// a different, customer managed CMK. Do so by specifying the Amazon Resource
+	// Name (ARN) of the key for the setting KMS ARN (kmsKeyArn).
+	EncryptionType *string `locationName:"encryptionType" type:"string" enum:"S3ServerSideEncryptionType"`
+
+	// Optionally, specify the customer master key (CMK) that you want to use to
+	// encrypt the data key that AWS uses to encrypt your output content. Enter
+	// the Amazon Resource Name (ARN) of the CMK. To use this setting, you must
+	// also set Server-side encryption (S3ServerSideEncryptionType) to AWS KMS (SERVER_SIDE_ENCRYPTION_KMS).
+	// If you set Server-side encryption to AWS KMS but don't specify a CMK here,
+	// AWS uses the AWS managed CMK associated with Amazon S3.
+	KmsKeyArn *string `locationName:"kmsKeyArn" type:"string"`
+}
+
+// String returns the string representation
+func (s S3EncryptionSettings) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s S3EncryptionSettings) GoString() string {
+	return s.String()
+}
+
+// SetEncryptionType sets the EncryptionType field's value.
+func (s *S3EncryptionSettings) SetEncryptionType(v string) *S3EncryptionSettings {
+	s.EncryptionType = &v
+	return s
+}
+
+// SetKmsKeyArn sets the KmsKeyArn field's value.
+func (s *S3EncryptionSettings) SetKmsKeyArn(v string) *S3EncryptionSettings {
+	s.KmsKeyArn = &v
+	return s
+}
+
 // Settings for SCC caption output.
 type SccDestinationSettings struct {
 	_ struct{} `type:"structure"`
@@ -14457,8 +14961,10 @@ func (s UntagResourceOutput) GoString() string {
 type UpdateJobTemplateInput struct {
 	_ struct{} `type:"structure"`
 
-	// This is a beta feature. If you are interested in using this feature, please
-	// contact AWS customer support.
+	// Accelerated transcoding can significantly speed up jobs with long, visually
+	// complex content. Outputs that use this feature incur pro-tier pricing. For
+	// information about feature limitations, see the AWS Elemental MediaConvert
+	// User Guide.
 	AccelerationSettings *AccelerationSettings `locationName:"accelerationSettings" type:"structure"`
 
 	// The new category for the job template, if you are changing it.
@@ -14478,6 +14984,12 @@ type UpdateJobTemplateInput struct {
 	// JobTemplateSettings contains all the transcode settings saved in the template
 	// that will be applied to jobs created from it.
 	Settings *JobTemplateSettings `locationName:"settings" type:"structure"`
+
+	// Specify how often MediaConvert sends STATUS_UPDATE events to Amazon CloudWatch
+	// Events. Set the interval, in seconds, between status updates. MediaConvert
+	// sends an update at this interval from the time the service begins processing
+	// your job to the time it completes the transcode or encounters an error.
+	StatusUpdateInterval *string `locationName:"statusUpdateInterval" type:"string" enum:"StatusUpdateInterval"`
 }
 
 // String returns the string representation
@@ -14549,6 +15061,12 @@ func (s *UpdateJobTemplateInput) SetQueue(v string) *UpdateJobTemplateInput {
 // SetSettings sets the Settings field's value.
 func (s *UpdateJobTemplateInput) SetSettings(v *JobTemplateSettings) *UpdateJobTemplateInput {
 	s.Settings = v
+	return s
+}
+
+// SetStatusUpdateInterval sets the StatusUpdateInterval field's value.
+func (s *UpdateJobTemplateInput) SetStatusUpdateInterval(v string) *UpdateJobTemplateInput {
+	s.StatusUpdateInterval = &v
 	return s
 }
 
@@ -14916,9 +15434,9 @@ type VideoDescription struct {
 	// to calculate output AFD values based on the input AFD scaler data.
 	AfdSignaling *string `locationName:"afdSignaling" type:"string" enum:"AfdSignaling"`
 
-	// Enable Anti-alias (AntiAlias) to enhance sharp edges in video output when
-	// your input resolution is much larger than your output resolution. Default
-	// is enabled.
+	// The service automatically applies the anti-alias filter to all outputs. The
+	// service no longer accepts the value DISABLED for AntiAlias. If you specify
+	// that in your job, the service will ignore the setting.
 	AntiAlias *string `locationName:"antiAlias" type:"string" enum:"AntiAlias"`
 
 	// Video codec settings, (CodecSettings) under (VideoDescription), contains
@@ -14979,11 +15497,11 @@ type VideoDescription struct {
 	// elsewhere in the job.
 	ScalingBehavior *string `locationName:"scalingBehavior" type:"string" enum:"ScalingBehavior"`
 
-	// Use Sharpness (Sharpness)setting to specify the strength of anti-aliasing.
+	// Use Sharpness (Sharpness) setting to specify the strength of anti-aliasing.
 	// This setting changes the width of the anti-alias filter kernel used for scaling.
 	// Sharpness only applies if your output resolution is different from your input
-	// resolution, and if you set Anti-alias (AntiAlias) to ENABLED. 0 is the softest
-	// setting, 100 the sharpest, and 50 recommended for most content.
+	// resolution. 0 is the softest setting, 100 the sharpest, and 50 recommended
+	// for most content.
 	Sharpness *int64 `locationName:"sharpness" type:"integer"`
 
 	// Applies only to H.264, H.265, MPEG2, and ProRes outputs. Only enable Timecode
@@ -15323,6 +15841,18 @@ type VideoSelector struct {
 	// Selects a specific program from within a multi-program transport stream.
 	// Note that Quad 4K is not currently supported.
 	ProgramNumber *int64 `locationName:"programNumber" type:"integer"`
+
+	// Use Rotate (InputRotate) to specify how the service rotates your video. You
+	// can choose automatic rotation or specify a rotation. You can specify a clockwise
+	// rotation of 0, 90, 180, or 270 degrees. If your input video container is
+	// .mov or .mp4 and your input has rotation metadata, you can choose Automatic
+	// to have the service rotate your video according to the rotation specified
+	// in the metadata. The rotation must be within one degree of 90, 180, or 270
+	// degrees. If the rotation metadata specifies any other rotation, the service
+	// will default to no rotation. By default, the service does no rotation, even
+	// if your input video has rotation metadata. The service doesn't pass through
+	// rotation metadata.
+	Rotate *string `locationName:"rotate" type:"string" enum:"InputRotate"`
 }
 
 // String returns the string representation
@@ -15378,6 +15908,12 @@ func (s *VideoSelector) SetPid(v int64) *VideoSelector {
 // SetProgramNumber sets the ProgramNumber field's value.
 func (s *VideoSelector) SetProgramNumber(v int64) *VideoSelector {
 	s.ProgramNumber = &v
+	return s
+}
+
+// SetRotate sets the Rotate field's value.
+func (s *VideoSelector) SetRotate(v string) *VideoSelector {
+	s.Rotate = &v
 	return s
 }
 
@@ -15626,7 +16162,8 @@ const (
 	Ac3MetadataControlUseConfigured = "USE_CONFIGURED"
 )
 
-// Acceleration configuration for the job.
+// Enable Acceleration (AccelerationMode) on any job that you want processed
+// with accelerated transcoding.
 const (
 	// AccelerationModeDisabled is a AccelerationMode enum value
 	AccelerationModeDisabled = "DISABLED"
@@ -15652,9 +16189,9 @@ const (
 	AfdSignalingFixed = "FIXED"
 )
 
-// Enable Anti-alias (AntiAlias) to enhance sharp edges in video output when
-// your input resolution is much larger than your output resolution. Default
-// is enabled.
+// The service automatically applies the anti-alias filter to all outputs. The
+// service no longer accepts the value DISABLED for AntiAlias. If you specify
+// that in your job, the service will ignore the setting.
 const (
 	// AntiAliasDisabled is a AntiAlias enum value
 	AntiAliasDisabled = "DISABLED"
@@ -16197,6 +16734,20 @@ const (
 	DashIsoHbbtvComplianceNone = "NONE"
 )
 
+// This setting can improve the compatibility of your output with video players
+// on obsolete devices. It applies only to DASH H.264 outputs with DRM encryption.
+// Choose Unencrypted SEI (UNENCRYPTED_SEI) only to correct problems with playback
+// on older devices. Otherwise, keep the default setting CENC v1 (CENC_V1).
+// If you choose Unencrypted SEI, for that output, the service will exclude
+// the access unit delimiter and will leave the SEI NAL units unencrypted.
+const (
+	// DashIsoPlaybackDeviceCompatibilityCencV1 is a DashIsoPlaybackDeviceCompatibility enum value
+	DashIsoPlaybackDeviceCompatibilityCencV1 = "CENC_V1"
+
+	// DashIsoPlaybackDeviceCompatibilityUnencryptedSei is a DashIsoPlaybackDeviceCompatibility enum value
+	DashIsoPlaybackDeviceCompatibilityUnencryptedSei = "UNENCRYPTED_SEI"
+)
+
 // When set to SINGLE_FILE, a single output file is generated, which is internally
 // segmented using the Fragment Length and Segment Length. When set to SEGMENTED_FILES,
 // separate segment files will be created.
@@ -16222,7 +16773,7 @@ const (
 	DashIsoWriteSegmentTimelineInRepresentationDisabled = "DISABLED"
 )
 
-// This specifies how the encrypted file needs to be decrypted.
+// Specify the encryption mode that you used to encrypt your input files.
 const (
 	// DecryptionModeAesCtr is a DecryptionMode enum value
 	DecryptionModeAesCtr = "AES_CTR"
@@ -17329,10 +17880,17 @@ const (
 	H265UnregisteredSeiTimecodeEnabled = "ENABLED"
 )
 
-// If HVC1, output that is H.265 will be marked as HVC1 and adhere to the ISO-IECJTC1-SC29_N13798_Text_ISOIEC_FDIS_14496-15_3rd_E
-// spec which states that parameter set NAL units will be stored in the sample
-// headers but not in the samples directly. If HEV1, then H.265 will be marked
-// as HEV1 and parameter set NAL units will be written into the samples.
+// Use this setting only for outputs encoded with H.265 that are in CMAF or
+// DASH output groups. If you include writeMp4PackagingType in your JSON job
+// specification for other outputs, your video might not work properly with
+// downstream systems and video players. If the location of parameter set NAL
+// units don't matter in your workflow, ignore this setting. The service defaults
+// to marking your output as HEV1. Choose HVC1 to mark your output as HVC1.
+// This makes your output compliant with this specification: ISO IECJTC1 SC29
+// N13798 Text ISO/IEC FDIS 14496-15 3rd Edition. For these outputs, the service
+// stores parameter set NAL units in the sample headers but not in the samples
+// directly. Keep the default HEV1 to mark your output as HEV1. For these outputs,
+// the service writes parameter set NAL units directly into the samples.
 const (
 	// H265WriteMp4PackagingTypeHvc1 is a H265WriteMp4PackagingType enum value
 	H265WriteMp4PackagingTypeHvc1 = "HVC1"
@@ -17482,6 +18040,16 @@ const (
 	HlsManifestDurationFormatInteger = "INTEGER"
 )
 
+// Enable this setting to insert the EXT-X-SESSION-KEY element into the master
+// playlist. This allows for offline Apple HLS FairPlay content protection.
+const (
+	// HlsOfflineEncryptedEnabled is a HlsOfflineEncrypted enum value
+	HlsOfflineEncryptedEnabled = "ENABLED"
+
+	// HlsOfflineEncryptedDisabled is a HlsOfflineEncrypted enum value
+	HlsOfflineEncryptedDisabled = "DISABLED"
+)
+
 // Indicates whether the .m3u8 manifest file should be generated for this HLS
 // output group.
 const (
@@ -17587,6 +18155,33 @@ const (
 	InputPsiControlUsePsi = "USE_PSI"
 )
 
+// Use Rotate (InputRotate) to specify how the service rotates your video. You
+// can choose automatic rotation or specify a rotation. You can specify a clockwise
+// rotation of 0, 90, 180, or 270 degrees. If your input video container is
+// .mov or .mp4 and your input has rotation metadata, you can choose Automatic
+// to have the service rotate your video according to the rotation specified
+// in the metadata. The rotation must be within one degree of 90, 180, or 270
+// degrees. If the rotation metadata specifies any other rotation, the service
+// will default to no rotation. By default, the service does no rotation, even
+// if your input video has rotation metadata. The service doesn't pass through
+// rotation metadata.
+const (
+	// InputRotateDegree0 is a InputRotate enum value
+	InputRotateDegree0 = "DEGREE_0"
+
+	// InputRotateDegrees90 is a InputRotate enum value
+	InputRotateDegrees90 = "DEGREES_90"
+
+	// InputRotateDegrees180 is a InputRotate enum value
+	InputRotateDegrees180 = "DEGREES_180"
+
+	// InputRotateDegrees270 is a InputRotate enum value
+	InputRotateDegrees270 = "DEGREES_270"
+
+	// InputRotateAuto is a InputRotate enum value
+	InputRotateAuto = "AUTO"
+)
+
 // Timecode source under input settings (InputTimecodeSource) only affects the
 // behavior of features that apply to a single input at a time, such as input
 // clipping and synchronizing some captions formats. Use this setting to specify
@@ -17603,6 +18198,18 @@ const (
 
 	// InputTimecodeSourceSpecifiedstart is a InputTimecodeSource enum value
 	InputTimecodeSourceSpecifiedstart = "SPECIFIEDSTART"
+)
+
+// A job's phase can be PROBING, TRANSCODING OR UPLOADING
+const (
+	// JobPhaseProbing is a JobPhase enum value
+	JobPhaseProbing = "PROBING"
+
+	// JobPhaseTranscoding is a JobPhase enum value
+	JobPhaseTranscoding = "TRANSCODING"
+
+	// JobPhaseUploading is a JobPhase enum value
+	JobPhaseUploading = "UPLOADING"
 )
 
 // A job's status can be SUBMITTED, PROGRESSING, COMPLETE, CANCELED, or ERROR.
@@ -18269,8 +18876,8 @@ const (
 )
 
 // Keep the default value (DEFAULT) unless you know that your audio EBP markers
-// are incorrectly appearing before your video EBP markers. Set this value to
-// Force (FORCE) to correct this problem.
+// are incorrectly appearing before your video EBP markers. To correct this
+// problem, set this value to Force (FORCE).
 const (
 	// M2tsForceTsVideoEbpOrderForce is a M2tsForceTsVideoEbpOrder enum value
 	M2tsForceTsVideoEbpOrderForce = "FORCE"
@@ -19030,6 +19637,25 @@ const (
 	RespondToAfdPassthrough = "PASSTHROUGH"
 )
 
+// Specify how you want your data keys managed. AWS uses data keys to encrypt
+// your content. AWS also encrypts the data keys themselves, using a customer
+// master key (CMK), and then stores the encrypted data keys alongside your
+// encrypted content. Use this setting to specify which AWS service manages
+// the CMK. For simplest set up, choose Amazon S3 (SERVER_SIDE_ENCRYPTION_S3).
+// If you want your master key to be managed by AWS Key Management Service (KMS),
+// choose AWS KMS (SERVER_SIDE_ENCRYPTION_KMS). By default, when you choose
+// AWS KMS, KMS uses the AWS managed customer master key (CMK) associated with
+// Amazon S3 to encrypt your data keys. You can optionally choose to specify
+// a different, customer managed CMK. Do so by specifying the Amazon Resource
+// Name (ARN) of the key for the setting KMS ARN (kmsKeyArn).
+const (
+	// S3ServerSideEncryptionTypeServerSideEncryptionS3 is a S3ServerSideEncryptionType enum value
+	S3ServerSideEncryptionTypeServerSideEncryptionS3 = "SERVER_SIDE_ENCRYPTION_S3"
+
+	// S3ServerSideEncryptionTypeServerSideEncryptionKms is a S3ServerSideEncryptionType enum value
+	S3ServerSideEncryptionTypeServerSideEncryptionKms = "SERVER_SIDE_ENCRYPTION_KMS"
+)
+
 // Applies only if your input aspect ratio is different from your output aspect
 // ratio. Choose "Stretch to output" to have the service stretch your video
 // image to fit. Keep the setting "Default" to allow the service to letterbox
@@ -19061,6 +19687,57 @@ const (
 
 	// SccDestinationFramerateFramerate2997NonDropframe is a SccDestinationFramerate enum value
 	SccDestinationFramerateFramerate2997NonDropframe = "FRAMERATE_29_97_NON_DROPFRAME"
+)
+
+// Specify how often MediaConvert sends STATUS_UPDATE events to Amazon CloudWatch
+// Events. Set the interval, in seconds, between status updates. MediaConvert
+// sends an update at this interval from the time the service begins processing
+// your job to the time it completes the transcode or encounters an error.
+const (
+	// StatusUpdateIntervalSeconds10 is a StatusUpdateInterval enum value
+	StatusUpdateIntervalSeconds10 = "SECONDS_10"
+
+	// StatusUpdateIntervalSeconds12 is a StatusUpdateInterval enum value
+	StatusUpdateIntervalSeconds12 = "SECONDS_12"
+
+	// StatusUpdateIntervalSeconds15 is a StatusUpdateInterval enum value
+	StatusUpdateIntervalSeconds15 = "SECONDS_15"
+
+	// StatusUpdateIntervalSeconds20 is a StatusUpdateInterval enum value
+	StatusUpdateIntervalSeconds20 = "SECONDS_20"
+
+	// StatusUpdateIntervalSeconds30 is a StatusUpdateInterval enum value
+	StatusUpdateIntervalSeconds30 = "SECONDS_30"
+
+	// StatusUpdateIntervalSeconds60 is a StatusUpdateInterval enum value
+	StatusUpdateIntervalSeconds60 = "SECONDS_60"
+
+	// StatusUpdateIntervalSeconds120 is a StatusUpdateInterval enum value
+	StatusUpdateIntervalSeconds120 = "SECONDS_120"
+
+	// StatusUpdateIntervalSeconds180 is a StatusUpdateInterval enum value
+	StatusUpdateIntervalSeconds180 = "SECONDS_180"
+
+	// StatusUpdateIntervalSeconds240 is a StatusUpdateInterval enum value
+	StatusUpdateIntervalSeconds240 = "SECONDS_240"
+
+	// StatusUpdateIntervalSeconds300 is a StatusUpdateInterval enum value
+	StatusUpdateIntervalSeconds300 = "SECONDS_300"
+
+	// StatusUpdateIntervalSeconds360 is a StatusUpdateInterval enum value
+	StatusUpdateIntervalSeconds360 = "SECONDS_360"
+
+	// StatusUpdateIntervalSeconds420 is a StatusUpdateInterval enum value
+	StatusUpdateIntervalSeconds420 = "SECONDS_420"
+
+	// StatusUpdateIntervalSeconds480 is a StatusUpdateInterval enum value
+	StatusUpdateIntervalSeconds480 = "SECONDS_480"
+
+	// StatusUpdateIntervalSeconds540 is a StatusUpdateInterval enum value
+	StatusUpdateIntervalSeconds540 = "SECONDS_540"
+
+	// StatusUpdateIntervalSeconds600 is a StatusUpdateInterval enum value
+	StatusUpdateIntervalSeconds600 = "SECONDS_600"
 )
 
 // Use Position (Position) under under Timecode burn-in (TimecodeBurnIn) to

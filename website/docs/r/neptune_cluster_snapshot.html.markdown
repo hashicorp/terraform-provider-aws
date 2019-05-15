@@ -6,7 +6,7 @@ description: |-
   Manages a Neptune database cluster snapshot.
 ---
 
-# aws_neptune_cluster_snapshot
+# Resource: aws_neptune_cluster_snapshot
 
 Manages a Neptune database cluster snapshot.
 

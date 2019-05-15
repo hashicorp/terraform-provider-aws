@@ -6,7 +6,7 @@ description: |-
   Provides a Batch Job Queue resource.
 ---
 
-# aws_batch_job_queue
+# Resource: aws_batch_job_queue
 
 Provides a Batch Job Queue resource.
 

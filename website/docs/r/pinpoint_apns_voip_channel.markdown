@@ -6,7 +6,7 @@ description: |-
   Provides a Pinpoint APNs VoIP Channel resource.
 ---
 
-# aws_pinpoint_apns_voip_channel
+# Resource: aws_pinpoint_apns_voip_channel
 
 Provides a Pinpoint APNs VoIP Channel resource.
 

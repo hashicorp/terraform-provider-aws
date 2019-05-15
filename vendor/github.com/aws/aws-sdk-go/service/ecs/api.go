@@ -156,9 +156,9 @@ func (c *ECS) CreateServiceRequest(input *CreateServiceInput) (req *request.Requ
 // CreateService API operation for Amazon EC2 Container Service.
 //
 // Runs and maintains a desired number of tasks from a specified task definition.
-// If the number of tasks running in a service drops below desiredCount, Amazon
-// ECS spawns another copy of the task in the specified cluster. To update an
-// existing service, see UpdateService.
+// If the number of tasks running in a service drops below the desiredCount,
+// Amazon ECS spawns another copy of the task in the specified cluster. To update
+// an existing service, see UpdateService.
 //
 // In addition to maintaining the desired count of tasks in your service, you
 // can optionally run your service behind a load balancer. The load balancer
@@ -166,9 +166,33 @@ func (c *ECS) CreateServiceRequest(input *CreateServiceInput) (req *request.Requ
 // For more information, see Service Load Balancing (https://docs.aws.amazon.com/AmazonECS/latest/developerguide/service-load-balancing.html)
 // in the Amazon Elastic Container Service Developer Guide.
 //
+// Tasks for services that do not use a load balancer are considered healthy
+// if they're in the RUNNING state. Tasks for services that do use a load balancer
+// are considered healthy if they're in the RUNNING state and the container
+// instance that they're hosted on is reported as healthy by the load balancer.
+//
+// There are two service scheduler strategies available:
+//
+//    * REPLICA - The replica scheduling strategy places and maintains the desired
+//    number of tasks across your cluster. By default, the service scheduler
+//    spreads tasks across Availability Zones. You can use task placement strategies
+//    and constraints to customize task placement decisions. For more information,
+//    see Service Scheduler Concepts (https://docs.aws.amazon.com/AmazonECS/latest/developerguide/ecs_services.html)
+//    in the Amazon Elastic Container Service Developer Guide.
+//
+//    * DAEMON - The daemon scheduling strategy deploys exactly one task on
+//    each active container instance that meets all of the task placement constraints
+//    that you specify in your cluster. When using this strategy, you don't
+//    need to specify a desired number of tasks, a task placement strategy,
+//    or use Service Auto Scaling policies. For more information, see Service
+//    Scheduler Concepts (https://docs.aws.amazon.com/AmazonECS/latest/developerguide/ecs_services.html)
+//    in the Amazon Elastic Container Service Developer Guide.
+//
 // You can optionally specify a deployment configuration for your service. The
 // deployment is triggered by changing properties, such as the task definition
-// or the desired count of a service, with an UpdateService operation.
+// or the desired count of a service, with an UpdateService operation. The default
+// value for a replica service for minimumHealthyPercent is 100%. The default
+// value for a daemon service for minimumHealthyPercent is 0%.
 //
 // If a service is using the ECS deployment controller, the minimum healthy
 // percent represents a lower limit on the number of tasks in a service that
@@ -178,12 +202,12 @@ func (c *ECS) CreateServiceRequest(input *CreateServiceInput) (req *request.Requ
 // tasks using the EC2 launch type. This parameter enables you to deploy without
 // using additional cluster capacity. For example, if your service has a desired
 // number of four tasks and a minimum healthy percent of 50%, the scheduler
-// may stop two existing tasks to free up cluster capacity before starting two
-// new tasks. Tasks for services that do not use a load balancer are considered
-// healthy if they are in the RUNNING state; tasks for services that do use
-// a load balancer are considered healthy if they are in the RUNNING state and
-// they are reported as healthy by the load balancer. The default value for
-// minimum healthy percent is 100%.
+// might stop two existing tasks to free up cluster capacity before starting
+// two new tasks. Tasks for services that do not use a load balancer are considered
+// healthy if they're in the RUNNING state. Tasks for services that do use a
+// load balancer are considered healthy if they're in the RUNNING state and
+// they're reported as healthy by the load balancer. The default value for minimum
+// healthy percent is 100%.
 //
 // If a service is using the ECS deployment controller, the maximum percent
 // parameter represents an upper limit on the number of tasks in a service that
@@ -197,20 +221,21 @@ func (c *ECS) CreateServiceRequest(input *CreateServiceInput) (req *request.Requ
 // resources required to do this are available). The default value for maximum
 // percent is 200%.
 //
-// If a service is using the CODE_DEPLOY deployment controller and tasks that
-// use the EC2 launch type, the minimum healthy percent and maximum percent
-// values are only used to define the lower and upper limit on the number of
-// the tasks in the service that remain in the RUNNING state while the container
-// instances are in the DRAINING state. If the tasks in the service use the
-// Fargate launch type, the minimum healthy percent and maximum percent values
-// are not used, although they are currently visible when describing your service.
+// If a service is using either the CODE_DEPLOY or EXTERNAL deployment controller
+// types and tasks that use the EC2 launch type, the minimum healthy percent
+// and maximum percent values are used only to define the lower and upper limit
+// on the number of the tasks in the service that remain in the RUNNING state
+// while the container instances are in the DRAINING state. If the tasks in
+// the service use the Fargate launch type, the minimum healthy percent and
+// maximum percent values aren't used, although they're currently visible when
+// describing your service.
 //
-// Tasks for services that do not use a load balancer are considered healthy
-// if they are in the RUNNING state. Tasks for services that do use a load balancer
-// are considered healthy if they are in the RUNNING state and the container
-// instance they are hosted on is reported as healthy by the load balancer.
-// The default value for a replica service for minimumHealthyPercent is 100%.
-// The default value for a daemon service for minimumHealthyPercent is 0%.
+// When creating a service that uses the EXTERNAL deployment controller, you
+// can specify only parameters that aren't controlled at the task set level.
+// The only required parameter is the service name. You control your services
+// using the CreateTaskSet operation. For more information, see Amazon ECS Deployment
+// Types (https://docs.aws.amazon.com/AmazonECS/latest/developerguide/deployment-types.html)
+// in the Amazon Elastic Container Service Developer Guide.
 //
 // When the service scheduler launches new tasks, it determines task placement
 // in your cluster using the following logic:
@@ -287,6 +312,122 @@ func (c *ECS) CreateService(input *CreateServiceInput) (*CreateServiceOutput, er
 // for more information on using Contexts.
 func (c *ECS) CreateServiceWithContext(ctx aws.Context, input *CreateServiceInput, opts ...request.Option) (*CreateServiceOutput, error) {
 	req, out := c.CreateServiceRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
+const opCreateTaskSet = "CreateTaskSet"
+
+// CreateTaskSetRequest generates a "aws/request.Request" representing the
+// client's request for the CreateTaskSet operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See CreateTaskSet for more information on using the CreateTaskSet
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the CreateTaskSetRequest method.
+//    req, resp := client.CreateTaskSetRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/ecs-2014-11-13/CreateTaskSet
+func (c *ECS) CreateTaskSetRequest(input *CreateTaskSetInput) (req *request.Request, output *CreateTaskSetOutput) {
+	op := &request.Operation{
+		Name:       opCreateTaskSet,
+		HTTPMethod: "POST",
+		HTTPPath:   "/",
+	}
+
+	if input == nil {
+		input = &CreateTaskSetInput{}
+	}
+
+	output = &CreateTaskSetOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// CreateTaskSet API operation for Amazon EC2 Container Service.
+//
+// Create a task set in the specified cluster and service. This is used when
+// a service uses the EXTERNAL deployment controller type. For more information,
+// see Amazon ECS Deployment Types (http://docs.aws.amazon.com/AmazonECS/latest/developerguide/deployment-types.html)
+// in the Amazon Elastic Container Service Developer Guide.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for Amazon EC2 Container Service's
+// API operation CreateTaskSet for usage and error information.
+//
+// Returned Error Codes:
+//   * ErrCodeServerException "ServerException"
+//   These errors are usually caused by a server issue.
+//
+//   * ErrCodeClientException "ClientException"
+//   These errors are usually caused by a client action, such as using an action
+//   or resource on behalf of a user that doesn't have permissions to use the
+//   action or resource, or specifying an identifier that is not valid.
+//
+//   * ErrCodeInvalidParameterException "InvalidParameterException"
+//   The specified parameter is invalid. Review the available parameters for the
+//   API request.
+//
+//   * ErrCodeClusterNotFoundException "ClusterNotFoundException"
+//   The specified cluster could not be found. You can view your available clusters
+//   with ListClusters. Amazon ECS clusters are Region-specific.
+//
+//   * ErrCodeUnsupportedFeatureException "UnsupportedFeatureException"
+//   The specified task is not supported in this Region.
+//
+//   * ErrCodePlatformUnknownException "PlatformUnknownException"
+//   The specified platform version does not exist.
+//
+//   * ErrCodePlatformTaskDefinitionIncompatibilityException "PlatformTaskDefinitionIncompatibilityException"
+//   The specified platform version does not satisfy the task definition's required
+//   capabilities.
+//
+//   * ErrCodeAccessDeniedException "AccessDeniedException"
+//   You do not have authorization to perform the requested action.
+//
+//   * ErrCodeServiceNotFoundException "ServiceNotFoundException"
+//   The specified service could not be found. You can view your available services
+//   with ListServices. Amazon ECS services are cluster-specific and Region-specific.
+//
+//   * ErrCodeServiceNotActiveException "ServiceNotActiveException"
+//   The specified service is not active. You can't update a service that is inactive.
+//   If you have previously deleted a service, you can re-create it with CreateService.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/ecs-2014-11-13/CreateTaskSet
+func (c *ECS) CreateTaskSet(input *CreateTaskSetInput) (*CreateTaskSetOutput, error) {
+	req, out := c.CreateTaskSetRequest(input)
+	return out, req.Send()
+}
+
+// CreateTaskSetWithContext is the same as CreateTaskSet with the addition of
+// the ability to pass a context and additional request options.
+//
+// See CreateTaskSet for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *ECS) CreateTaskSetWithContext(ctx aws.Context, input *CreateTaskSetInput, opts ...request.Option) (*CreateTaskSetOutput, error) {
+	req, out := c.CreateTaskSetRequest(input)
 	req.SetContext(ctx)
 	req.ApplyOptions(opts...)
 	return out, req.Send()
@@ -687,6 +828,120 @@ func (c *ECS) DeleteService(input *DeleteServiceInput) (*DeleteServiceOutput, er
 // for more information on using Contexts.
 func (c *ECS) DeleteServiceWithContext(ctx aws.Context, input *DeleteServiceInput, opts ...request.Option) (*DeleteServiceOutput, error) {
 	req, out := c.DeleteServiceRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
+const opDeleteTaskSet = "DeleteTaskSet"
+
+// DeleteTaskSetRequest generates a "aws/request.Request" representing the
+// client's request for the DeleteTaskSet operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See DeleteTaskSet for more information on using the DeleteTaskSet
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the DeleteTaskSetRequest method.
+//    req, resp := client.DeleteTaskSetRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/ecs-2014-11-13/DeleteTaskSet
+func (c *ECS) DeleteTaskSetRequest(input *DeleteTaskSetInput) (req *request.Request, output *DeleteTaskSetOutput) {
+	op := &request.Operation{
+		Name:       opDeleteTaskSet,
+		HTTPMethod: "POST",
+		HTTPPath:   "/",
+	}
+
+	if input == nil {
+		input = &DeleteTaskSetInput{}
+	}
+
+	output = &DeleteTaskSetOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// DeleteTaskSet API operation for Amazon EC2 Container Service.
+//
+// Deletes a specified task set within a service. This is used when a service
+// uses the EXTERNAL deployment controller type. For more information, see Amazon
+// ECS Deployment Types (http://docs.aws.amazon.com/AmazonECS/latest/developerguide/deployment-types.html)
+// in the Amazon Elastic Container Service Developer Guide.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for Amazon EC2 Container Service's
+// API operation DeleteTaskSet for usage and error information.
+//
+// Returned Error Codes:
+//   * ErrCodeServerException "ServerException"
+//   These errors are usually caused by a server issue.
+//
+//   * ErrCodeClientException "ClientException"
+//   These errors are usually caused by a client action, such as using an action
+//   or resource on behalf of a user that doesn't have permissions to use the
+//   action or resource, or specifying an identifier that is not valid.
+//
+//   * ErrCodeInvalidParameterException "InvalidParameterException"
+//   The specified parameter is invalid. Review the available parameters for the
+//   API request.
+//
+//   * ErrCodeClusterNotFoundException "ClusterNotFoundException"
+//   The specified cluster could not be found. You can view your available clusters
+//   with ListClusters. Amazon ECS clusters are Region-specific.
+//
+//   * ErrCodeUnsupportedFeatureException "UnsupportedFeatureException"
+//   The specified task is not supported in this Region.
+//
+//   * ErrCodeAccessDeniedException "AccessDeniedException"
+//   You do not have authorization to perform the requested action.
+//
+//   * ErrCodeServiceNotFoundException "ServiceNotFoundException"
+//   The specified service could not be found. You can view your available services
+//   with ListServices. Amazon ECS services are cluster-specific and Region-specific.
+//
+//   * ErrCodeServiceNotActiveException "ServiceNotActiveException"
+//   The specified service is not active. You can't update a service that is inactive.
+//   If you have previously deleted a service, you can re-create it with CreateService.
+//
+//   * ErrCodeTaskSetNotFoundException "TaskSetNotFoundException"
+//   The specified task set could not be found. You can view your available container
+//   instances with DescribeTaskSets. Task sets are specific to each cluster,
+//   service and Region.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/ecs-2014-11-13/DeleteTaskSet
+func (c *ECS) DeleteTaskSet(input *DeleteTaskSetInput) (*DeleteTaskSetOutput, error) {
+	req, out := c.DeleteTaskSetRequest(input)
+	return out, req.Send()
+}
+
+// DeleteTaskSetWithContext is the same as DeleteTaskSet with the addition of
+// the ability to pass a context and additional request options.
+//
+// See DeleteTaskSet for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *ECS) DeleteTaskSetWithContext(ctx aws.Context, input *DeleteTaskSetInput, opts ...request.Option) (*DeleteTaskSetOutput, error) {
+	req, out := c.DeleteTaskSetRequest(input)
 	req.SetContext(ctx)
 	req.ApplyOptions(opts...)
 	return out, req.Send()
@@ -1261,6 +1516,115 @@ func (c *ECS) DescribeTaskDefinition(input *DescribeTaskDefinitionInput) (*Descr
 // for more information on using Contexts.
 func (c *ECS) DescribeTaskDefinitionWithContext(ctx aws.Context, input *DescribeTaskDefinitionInput, opts ...request.Option) (*DescribeTaskDefinitionOutput, error) {
 	req, out := c.DescribeTaskDefinitionRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
+const opDescribeTaskSets = "DescribeTaskSets"
+
+// DescribeTaskSetsRequest generates a "aws/request.Request" representing the
+// client's request for the DescribeTaskSets operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See DescribeTaskSets for more information on using the DescribeTaskSets
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the DescribeTaskSetsRequest method.
+//    req, resp := client.DescribeTaskSetsRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/ecs-2014-11-13/DescribeTaskSets
+func (c *ECS) DescribeTaskSetsRequest(input *DescribeTaskSetsInput) (req *request.Request, output *DescribeTaskSetsOutput) {
+	op := &request.Operation{
+		Name:       opDescribeTaskSets,
+		HTTPMethod: "POST",
+		HTTPPath:   "/",
+	}
+
+	if input == nil {
+		input = &DescribeTaskSetsInput{}
+	}
+
+	output = &DescribeTaskSetsOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// DescribeTaskSets API operation for Amazon EC2 Container Service.
+//
+// Describes the task sets in the specified cluster and service. This is used
+// when a service uses the EXTERNAL deployment controller type. For more information,
+// see Amazon ECS Deployment Types (http://docs.aws.amazon.com/AmazonECS/latest/developerguide/deployment-types.html)
+// in the Amazon Elastic Container Service Developer Guide.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for Amazon EC2 Container Service's
+// API operation DescribeTaskSets for usage and error information.
+//
+// Returned Error Codes:
+//   * ErrCodeServerException "ServerException"
+//   These errors are usually caused by a server issue.
+//
+//   * ErrCodeClientException "ClientException"
+//   These errors are usually caused by a client action, such as using an action
+//   or resource on behalf of a user that doesn't have permissions to use the
+//   action or resource, or specifying an identifier that is not valid.
+//
+//   * ErrCodeInvalidParameterException "InvalidParameterException"
+//   The specified parameter is invalid. Review the available parameters for the
+//   API request.
+//
+//   * ErrCodeClusterNotFoundException "ClusterNotFoundException"
+//   The specified cluster could not be found. You can view your available clusters
+//   with ListClusters. Amazon ECS clusters are Region-specific.
+//
+//   * ErrCodeUnsupportedFeatureException "UnsupportedFeatureException"
+//   The specified task is not supported in this Region.
+//
+//   * ErrCodeAccessDeniedException "AccessDeniedException"
+//   You do not have authorization to perform the requested action.
+//
+//   * ErrCodeServiceNotFoundException "ServiceNotFoundException"
+//   The specified service could not be found. You can view your available services
+//   with ListServices. Amazon ECS services are cluster-specific and Region-specific.
+//
+//   * ErrCodeServiceNotActiveException "ServiceNotActiveException"
+//   The specified service is not active. You can't update a service that is inactive.
+//   If you have previously deleted a service, you can re-create it with CreateService.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/ecs-2014-11-13/DescribeTaskSets
+func (c *ECS) DescribeTaskSets(input *DescribeTaskSetsInput) (*DescribeTaskSetsOutput, error) {
+	req, out := c.DescribeTaskSetsRequest(input)
+	return out, req.Send()
+}
+
+// DescribeTaskSetsWithContext is the same as DescribeTaskSets with the addition of
+// the ability to pass a context and additional request options.
+//
+// See DescribeTaskSets for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *ECS) DescribeTaskSetsWithContext(ctx aws.Context, input *DescribeTaskSetsInput, opts ...request.Option) (*DescribeTaskSetsOutput, error) {
+	req, out := c.DescribeTaskSetsRequest(input)
 	req.SetContext(ctx)
 	req.ApplyOptions(opts...)
 	return out, req.Send()
@@ -4123,6 +4487,12 @@ func (c *ECS) UpdateServiceRequest(input *UpdateServiceInput) (req *request.Requ
 // be created. For more information, see CreateDeployment (https://docs.aws.amazon.com/codedeploy/latest/APIReference/API_CreateDeployment.html)
 // in the AWS CodeDeploy API Reference.
 //
+// For services using an external deployment controller, you can update only
+// the desired count and health check grace period using this API. If the launch
+// type, load balancer, network configuration, platform version, or task definition
+// need to be updated, you should create a new task set. For more information,
+// see CreateTaskSet.
+//
 // You can add to or subtract from the number of instantiations of a task definition
 // in a service by specifying the cluster that the service is running in and
 // a new desiredCount parameter.
@@ -4256,6 +4626,237 @@ func (c *ECS) UpdateService(input *UpdateServiceInput) (*UpdateServiceOutput, er
 // for more information on using Contexts.
 func (c *ECS) UpdateServiceWithContext(ctx aws.Context, input *UpdateServiceInput, opts ...request.Option) (*UpdateServiceOutput, error) {
 	req, out := c.UpdateServiceRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
+const opUpdateServicePrimaryTaskSet = "UpdateServicePrimaryTaskSet"
+
+// UpdateServicePrimaryTaskSetRequest generates a "aws/request.Request" representing the
+// client's request for the UpdateServicePrimaryTaskSet operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See UpdateServicePrimaryTaskSet for more information on using the UpdateServicePrimaryTaskSet
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the UpdateServicePrimaryTaskSetRequest method.
+//    req, resp := client.UpdateServicePrimaryTaskSetRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/ecs-2014-11-13/UpdateServicePrimaryTaskSet
+func (c *ECS) UpdateServicePrimaryTaskSetRequest(input *UpdateServicePrimaryTaskSetInput) (req *request.Request, output *UpdateServicePrimaryTaskSetOutput) {
+	op := &request.Operation{
+		Name:       opUpdateServicePrimaryTaskSet,
+		HTTPMethod: "POST",
+		HTTPPath:   "/",
+	}
+
+	if input == nil {
+		input = &UpdateServicePrimaryTaskSetInput{}
+	}
+
+	output = &UpdateServicePrimaryTaskSetOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// UpdateServicePrimaryTaskSet API operation for Amazon EC2 Container Service.
+//
+// Modifies which task set in a service is the primary task set. Any parameters
+// that are updated on the primary task set in a service will transition to
+// the service. This is used when a service uses the EXTERNAL deployment controller
+// type. For more information, see Amazon ECS Deployment Types (http://docs.aws.amazon.com/AmazonECS/latest/developerguide/deployment-types.html)
+// in the Amazon Elastic Container Service Developer Guide.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for Amazon EC2 Container Service's
+// API operation UpdateServicePrimaryTaskSet for usage and error information.
+//
+// Returned Error Codes:
+//   * ErrCodeServerException "ServerException"
+//   These errors are usually caused by a server issue.
+//
+//   * ErrCodeClientException "ClientException"
+//   These errors are usually caused by a client action, such as using an action
+//   or resource on behalf of a user that doesn't have permissions to use the
+//   action or resource, or specifying an identifier that is not valid.
+//
+//   * ErrCodeInvalidParameterException "InvalidParameterException"
+//   The specified parameter is invalid. Review the available parameters for the
+//   API request.
+//
+//   * ErrCodeClusterNotFoundException "ClusterNotFoundException"
+//   The specified cluster could not be found. You can view your available clusters
+//   with ListClusters. Amazon ECS clusters are Region-specific.
+//
+//   * ErrCodeUnsupportedFeatureException "UnsupportedFeatureException"
+//   The specified task is not supported in this Region.
+//
+//   * ErrCodeAccessDeniedException "AccessDeniedException"
+//   You do not have authorization to perform the requested action.
+//
+//   * ErrCodeServiceNotFoundException "ServiceNotFoundException"
+//   The specified service could not be found. You can view your available services
+//   with ListServices. Amazon ECS services are cluster-specific and Region-specific.
+//
+//   * ErrCodeServiceNotActiveException "ServiceNotActiveException"
+//   The specified service is not active. You can't update a service that is inactive.
+//   If you have previously deleted a service, you can re-create it with CreateService.
+//
+//   * ErrCodeTaskSetNotFoundException "TaskSetNotFoundException"
+//   The specified task set could not be found. You can view your available container
+//   instances with DescribeTaskSets. Task sets are specific to each cluster,
+//   service and Region.
+//
+//   * ErrCodeAccessDeniedException "AccessDeniedException"
+//   You do not have authorization to perform the requested action.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/ecs-2014-11-13/UpdateServicePrimaryTaskSet
+func (c *ECS) UpdateServicePrimaryTaskSet(input *UpdateServicePrimaryTaskSetInput) (*UpdateServicePrimaryTaskSetOutput, error) {
+	req, out := c.UpdateServicePrimaryTaskSetRequest(input)
+	return out, req.Send()
+}
+
+// UpdateServicePrimaryTaskSetWithContext is the same as UpdateServicePrimaryTaskSet with the addition of
+// the ability to pass a context and additional request options.
+//
+// See UpdateServicePrimaryTaskSet for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *ECS) UpdateServicePrimaryTaskSetWithContext(ctx aws.Context, input *UpdateServicePrimaryTaskSetInput, opts ...request.Option) (*UpdateServicePrimaryTaskSetOutput, error) {
+	req, out := c.UpdateServicePrimaryTaskSetRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
+const opUpdateTaskSet = "UpdateTaskSet"
+
+// UpdateTaskSetRequest generates a "aws/request.Request" representing the
+// client's request for the UpdateTaskSet operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See UpdateTaskSet for more information on using the UpdateTaskSet
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the UpdateTaskSetRequest method.
+//    req, resp := client.UpdateTaskSetRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/ecs-2014-11-13/UpdateTaskSet
+func (c *ECS) UpdateTaskSetRequest(input *UpdateTaskSetInput) (req *request.Request, output *UpdateTaskSetOutput) {
+	op := &request.Operation{
+		Name:       opUpdateTaskSet,
+		HTTPMethod: "POST",
+		HTTPPath:   "/",
+	}
+
+	if input == nil {
+		input = &UpdateTaskSetInput{}
+	}
+
+	output = &UpdateTaskSetOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// UpdateTaskSet API operation for Amazon EC2 Container Service.
+//
+// Modifies a task set. This is used when a service uses the EXTERNAL deployment
+// controller type. For more information, see Amazon ECS Deployment Types (http://docs.aws.amazon.com/AmazonECS/latest/developerguide/deployment-types.html)
+// in the Amazon Elastic Container Service Developer Guide.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for Amazon EC2 Container Service's
+// API operation UpdateTaskSet for usage and error information.
+//
+// Returned Error Codes:
+//   * ErrCodeServerException "ServerException"
+//   These errors are usually caused by a server issue.
+//
+//   * ErrCodeClientException "ClientException"
+//   These errors are usually caused by a client action, such as using an action
+//   or resource on behalf of a user that doesn't have permissions to use the
+//   action or resource, or specifying an identifier that is not valid.
+//
+//   * ErrCodeInvalidParameterException "InvalidParameterException"
+//   The specified parameter is invalid. Review the available parameters for the
+//   API request.
+//
+//   * ErrCodeClusterNotFoundException "ClusterNotFoundException"
+//   The specified cluster could not be found. You can view your available clusters
+//   with ListClusters. Amazon ECS clusters are Region-specific.
+//
+//   * ErrCodeUnsupportedFeatureException "UnsupportedFeatureException"
+//   The specified task is not supported in this Region.
+//
+//   * ErrCodeAccessDeniedException "AccessDeniedException"
+//   You do not have authorization to perform the requested action.
+//
+//   * ErrCodeServiceNotFoundException "ServiceNotFoundException"
+//   The specified service could not be found. You can view your available services
+//   with ListServices. Amazon ECS services are cluster-specific and Region-specific.
+//
+//   * ErrCodeServiceNotActiveException "ServiceNotActiveException"
+//   The specified service is not active. You can't update a service that is inactive.
+//   If you have previously deleted a service, you can re-create it with CreateService.
+//
+//   * ErrCodeTaskSetNotFoundException "TaskSetNotFoundException"
+//   The specified task set could not be found. You can view your available container
+//   instances with DescribeTaskSets. Task sets are specific to each cluster,
+//   service and Region.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/ecs-2014-11-13/UpdateTaskSet
+func (c *ECS) UpdateTaskSet(input *UpdateTaskSetInput) (*UpdateTaskSetOutput, error) {
+	req, out := c.UpdateTaskSetRequest(input)
+	return out, req.Send()
+}
+
+// UpdateTaskSetWithContext is the same as UpdateTaskSet with the addition of
+// the ability to pass a context and additional request options.
+//
+// See UpdateTaskSet for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *ECS) UpdateTaskSetWithContext(ctx aws.Context, input *UpdateTaskSetInput, opts ...request.Option) (*UpdateTaskSetOutput, error) {
+	req, out := c.UpdateTaskSetRequest(input)
 	req.SetContext(ctx)
 	req.ApplyOptions(opts...)
 	return out, req.Send()
@@ -4841,6 +5442,28 @@ type ContainerDefinition struct {
 	// of CPU that is described in the task definition.
 	Cpu *int64 `locationName:"cpu" type:"integer"`
 
+	// The dependencies defined for container startup and shutdown. A container
+	// can contain multiple dependencies. When a dependency is defined for container
+	// startup, for container shutdown it is reversed.
+	//
+	// For tasks using the EC2 launch type, the container instances require at least
+	// version 1.26.0 of the container agent to enable container dependencies. However,
+	// we recommend using the latest container agent version. For information about
+	// checking your agent version and updating to the latest version, see Updating
+	// the Amazon ECS Container Agent (http://docs.aws.amazon.com/AmazonECS/latest/developerguide/ecs-agent-update.html)
+	// in the Amazon Elastic Container Service Developer Guide. If you are using
+	// an Amazon ECS-optimized Linux AMI, your instance needs at least version 1.26.0-1
+	// of the ecs-init package. If your container instances are launched from version
+	// 20190301 or later, then they contain the required versions of the container
+	// agent and ecs-init. For more information, see Amazon ECS-optimized Linux
+	// AMI (http://docs.aws.amazon.com/AmazonECS/latest/developerguide/ecs-optimized_AMI.html)
+	// in the Amazon Elastic Container Service Developer Guide.
+	//
+	// This parameter is available for tasks using the Fargate launch type in the
+	// Ohio (us-east-2) region only and the task or service requires platform version
+	// 1.3.0 or later.
+	DependsOn []*ContainerDependency `locationName:"dependsOn" type:"list"`
+
 	// When this parameter is true, networking is disabled within the container.
 	// This parameter maps to NetworkDisabled in the Create a container (https://docs.docker.com/engine/api/v1.35/#operation/ContainerCreate)
 	// section of the Docker Remote API (https://docs.docker.com/engine/api/v1.35/).
@@ -5017,7 +5640,11 @@ type ContainerDefinition struct {
 
 	// The log configuration specification for the container.
 	//
-	// If you are using the Fargate launch type, the only supported value is awslogs.
+	// For tasks using the Fargate launch type, the supported log drivers are awslogs
+	// and splunk.
+	//
+	// For tasks using the EC2 launch type, the supported log drivers are awslogs,
+	// syslog, gelf, fluentd, splunk, journald, and json-file.
 	//
 	// This parameter maps to LogConfig in the Create a container (https://docs.docker.com/engine/api/v1.35/#operation/ContainerCreate)
 	// section of the Docker Remote API (https://docs.docker.com/engine/api/v1.35/)
@@ -5178,6 +5805,53 @@ type ContainerDefinition struct {
 	// in the Amazon Elastic Container Service Developer Guide.
 	Secrets []*Secret `locationName:"secrets" type:"list"`
 
+	// Time duration to wait before giving up on resolving dependencies for a container.
+	// For example, you specify two containers in a task definition with containerA
+	// having a dependency on containerB reaching a COMPLETE, SUCCESS, or HEALTHY
+	// status. If a startTimeout value is specified for containerB and it does not
+	// reach the desired status within that time then containerA will give up and
+	// not start. This results in the task transitioning to a STOPPED state.
+	//
+	// For tasks using the EC2 launch type, the container instances require at least
+	// version 1.26.0 of the container agent to enable a container start timeout
+	// value. However, we recommend using the latest container agent version. For
+	// information about checking your agent version and updating to the latest
+	// version, see Updating the Amazon ECS Container Agent (http://docs.aws.amazon.com/AmazonECS/latest/developerguide/ecs-agent-update.html)
+	// in the Amazon Elastic Container Service Developer Guide. If you are using
+	// an Amazon ECS-optimized Linux AMI, your instance needs at least version 1.26.0-1
+	// of the ecs-init package. If your container instances are launched from version
+	// 20190301 or later, then they contain the required versions of the container
+	// agent and ecs-init. For more information, see Amazon ECS-optimized Linux
+	// AMI (http://docs.aws.amazon.com/AmazonECS/latest/developerguide/ecs-optimized_AMI.html)
+	// in the Amazon Elastic Container Service Developer Guide.
+	//
+	// This parameter is available for tasks using the Fargate launch type in the
+	// Ohio (us-east-2) region only and the task or service requires platform version
+	// 1.3.0 or later.
+	StartTimeout *int64 `locationName:"startTimeout" type:"integer"`
+
+	// Time duration to wait before the container is forcefully killed if it doesn't
+	// exit normally on its own. For tasks using the Fargate launch type, the max
+	// stopTimeout value is 2 minutes. This parameter is available for tasks using
+	// the Fargate launch type in the Ohio (us-east-2) region only and the task
+	// or service requires platform version 1.3.0 or later.
+	//
+	// For tasks using the EC2 launch type, the stop timeout value for the container
+	// takes precedence over the ECS_CONTAINER_STOP_TIMEOUT container agent configuration
+	// parameter, if used. Container instances require at least version 1.26.0 of
+	// the container agent to enable a container stop timeout value. However, we
+	// recommend using the latest container agent version. For information about
+	// checking your agent version and updating to the latest version, see Updating
+	// the Amazon ECS Container Agent (http://docs.aws.amazon.com/AmazonECS/latest/developerguide/ecs-agent-update.html)
+	// in the Amazon Elastic Container Service Developer Guide. If you are using
+	// an Amazon ECS-optimized Linux AMI, your instance needs at least version 1.26.0-1
+	// of the ecs-init package. If your container instances are launched from version
+	// 20190301 or later, then they contain the required versions of the container
+	// agent and ecs-init. For more information, see Amazon ECS-optimized Linux
+	// AMI (http://docs.aws.amazon.com/AmazonECS/latest/developerguide/ecs-optimized_AMI.html)
+	// in the Amazon Elastic Container Service Developer Guide.
+	StopTimeout *int64 `locationName:"stopTimeout" type:"integer"`
+
 	// A list of namespaced kernel parameters to set in the container. This parameter
 	// maps to Sysctls in the Create a container (https://docs.docker.com/engine/api/v1.35/#operation/ContainerCreate)
 	// section of the Docker Remote API (https://docs.docker.com/engine/api/v1.35/)
@@ -5209,6 +5883,21 @@ type ContainerDefinition struct {
 	// section of the Docker Remote API (https://docs.docker.com/engine/api/v1.35/)
 	// and the --user option to docker run (https://docs.docker.com/engine/reference/run/).
 	//
+	// You can use the following formats. If specifying a UID or GID, you must specify
+	// it as a positive integer.
+	//
+	//    * user
+	//
+	//    * user:group
+	//
+	//    * uid
+	//
+	//    * uid:gid
+	//
+	//    * user:gid
+	//
+	//    * uid:group
+	//
 	// This parameter is not supported for Windows containers.
 	User *string `locationName:"user" type:"string"`
 
@@ -5238,6 +5927,16 @@ func (s ContainerDefinition) GoString() string {
 // Validate inspects the fields of the type to determine if they are valid.
 func (s *ContainerDefinition) Validate() error {
 	invalidParams := request.ErrInvalidParams{Context: "ContainerDefinition"}
+	if s.DependsOn != nil {
+		for i, v := range s.DependsOn {
+			if v == nil {
+				continue
+			}
+			if err := v.Validate(); err != nil {
+				invalidParams.AddNested(fmt.Sprintf("%s[%v]", "DependsOn", i), err.(request.ErrInvalidParams))
+			}
+		}
+	}
 	if s.ExtraHosts != nil {
 		for i, v := range s.ExtraHosts {
 			if v == nil {
@@ -5314,6 +6013,12 @@ func (s *ContainerDefinition) SetCommand(v []*string) *ContainerDefinition {
 // SetCpu sets the Cpu field's value.
 func (s *ContainerDefinition) SetCpu(v int64) *ContainerDefinition {
 	s.Cpu = &v
+	return s
+}
+
+// SetDependsOn sets the DependsOn field's value.
+func (s *ContainerDefinition) SetDependsOn(v []*ContainerDependency) *ContainerDefinition {
+	s.DependsOn = v
 	return s
 }
 
@@ -5479,6 +6184,18 @@ func (s *ContainerDefinition) SetSecrets(v []*Secret) *ContainerDefinition {
 	return s
 }
 
+// SetStartTimeout sets the StartTimeout field's value.
+func (s *ContainerDefinition) SetStartTimeout(v int64) *ContainerDefinition {
+	s.StartTimeout = &v
+	return s
+}
+
+// SetStopTimeout sets the StopTimeout field's value.
+func (s *ContainerDefinition) SetStopTimeout(v int64) *ContainerDefinition {
+	s.StopTimeout = &v
+	return s
+}
+
 // SetSystemControls sets the SystemControls field's value.
 func (s *ContainerDefinition) SetSystemControls(v []*SystemControl) *ContainerDefinition {
 	s.SystemControls = v
@@ -5506,6 +6223,94 @@ func (s *ContainerDefinition) SetVolumesFrom(v []*VolumeFrom) *ContainerDefiniti
 // SetWorkingDirectory sets the WorkingDirectory field's value.
 func (s *ContainerDefinition) SetWorkingDirectory(v string) *ContainerDefinition {
 	s.WorkingDirectory = &v
+	return s
+}
+
+// The dependencies defined for container startup and shutdown. A container
+// can contain multiple dependencies. When a dependency is defined for container
+// startup, for container shutdown it is reversed.
+//
+// Your Amazon ECS container instances require at least version 1.26.0 of the
+// container agent to enable container dependencies. However, we recommend using
+// the latest container agent version. For information about checking your agent
+// version and updating to the latest version, see Updating the Amazon ECS Container
+// Agent (http://docs.aws.amazon.com/AmazonECS/latest/developerguide/ecs-agent-update.html)
+// in the Amazon Elastic Container Service Developer Guide. If you are using
+// an Amazon ECS-optimized Linux AMI, your instance needs at least version 1.26.0-1
+// of the ecs-init package. If your container instances are launched from version
+// 20190301 or later, then they contain the required versions of the container
+// agent and ecs-init. For more information, see Amazon ECS-optimized Linux
+// AMI (http://docs.aws.amazon.com/AmazonECS/latest/developerguide/ecs-optimized_AMI.html)
+// in the Amazon Elastic Container Service Developer Guide.
+//
+// If you are using tasks that use the Fargate launch type, container dependency
+// parameters are not supported.
+type ContainerDependency struct {
+	_ struct{} `type:"structure"`
+
+	// The dependency condition of the container. The following are the available
+	// conditions and their behavior:
+	//
+	//    * START - This condition emulates the behavior of links and volumes today.
+	//    It validates that a dependent container is started before permitting other
+	//    containers to start.
+	//
+	//    * COMPLETE - This condition validates that a dependent container runs
+	//    to completion (exits) before permitting other containers to start. This
+	//    can be useful for nonessential containers that run a script and then exit.
+	//
+	//    * SUCCESS - This condition is the same as COMPLETE, but it also requires
+	//    that the container exits with a zero status.
+	//
+	//    * HEALTHY - This condition validates that the dependent container passes
+	//    its Docker health check before permitting other containers to start. This
+	//    requires that the dependent container has health checks configured. This
+	//    condition is confirmed only at task startup.
+	//
+	// Condition is a required field
+	Condition *string `locationName:"condition" type:"string" required:"true" enum:"ContainerCondition"`
+
+	// The name of a container.
+	//
+	// ContainerName is a required field
+	ContainerName *string `locationName:"containerName" type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s ContainerDependency) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ContainerDependency) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *ContainerDependency) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "ContainerDependency"}
+	if s.Condition == nil {
+		invalidParams.Add(request.NewErrParamRequired("Condition"))
+	}
+	if s.ContainerName == nil {
+		invalidParams.Add(request.NewErrParamRequired("ContainerName"))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetCondition sets the Condition field's value.
+func (s *ContainerDependency) SetCondition(v string) *ContainerDependency {
+	s.Condition = &v
+	return s
+}
+
+// SetContainerName sets the ContainerName field's value.
+func (s *ContainerDependency) SetContainerName(v string) *ContainerDependency {
+	s.ContainerName = &v
 	return s
 }
 
@@ -5981,10 +6786,10 @@ type CreateServiceInput struct {
 	// has first started. This is only valid if your service is configured to use
 	// a load balancer. If your service's tasks take a while to start and respond
 	// to Elastic Load Balancing health checks, you can specify a health check grace
-	// period of up to 7,200 seconds. During that time, the ECS service scheduler
-	// ignores health check status. This grace period can prevent the ECS service
-	// scheduler from marking tasks as unhealthy and stopping them before they have
-	// time to come up.
+	// period of up to 2,147,483,647 seconds. During that time, the ECS service
+	// scheduler ignores health check status. This grace period can prevent the
+	// ECS service scheduler from marking tasks as unhealthy and stopping them before
+	// they have time to come up.
 	HealthCheckGracePeriodSeconds *int64 `locationName:"healthCheckGracePeriodSeconds" type:"integer"`
 
 	// The launch type on which to run your service. For more information, see Amazon
@@ -6050,9 +6855,9 @@ type CreateServiceInput struct {
 	// specify a maximum of five strategy rules per service.
 	PlacementStrategy []*PlacementStrategy `locationName:"placementStrategy" type:"list"`
 
-	// The platform version on which your tasks in the service are running. A platform
-	// version is only specified for tasks using the Fargate launch type. If one
-	// is not specified, the LATEST platform version is used by default. For more
+	// The platform version that your tasks in the service are running on. A platform
+	// version is specified only for tasks using the Fargate launch type. If one
+	// isn't specified, the LATEST platform version is used by default. For more
 	// information, see AWS Fargate Platform Versions (https://docs.aws.amazon.com/AmazonECS/latest/developerguide/platform_versions.html)
 	// in the Amazon Elastic Container Service Developer Guide.
 	PlatformVersion *string `locationName:"platformVersion" type:"string"`
@@ -6095,16 +6900,17 @@ type CreateServiceInput struct {
 	//    number of tasks across your cluster. By default, the service scheduler
 	//    spreads tasks across Availability Zones. You can use task placement strategies
 	//    and constraints to customize task placement decisions. This scheduler
-	//    strategy is required if using the CODE_DEPLOY deployment controller.
+	//    strategy is required if the service is using the CODE_DEPLOY or EXTERNAL
+	//    deployment controller types.
 	//
 	//    * DAEMON-The daemon scheduling strategy deploys exactly one task on each
 	//    active container instance that meets all of the task placement constraints
-	//    that you specify in your cluster. When you are using this strategy, there
-	//    is no need to specify a desired number of tasks, a task placement strategy,
+	//    that you specify in your cluster. When you're using this strategy, you
+	//    don't need to specify a desired number of tasks, a task placement strategy,
 	//    or use Service Auto Scaling policies.
 	//
-	// Tasks using the Fargate launch type or the CODE_DEPLOY deploymenet controller
-	//    do not support the DAEMON scheduling strategy.
+	// Tasks using the Fargate launch type or the CODE_DEPLOY or EXTERNAL deployment
+	//    controller types don't support the DAEMON scheduling strategy.
 	SchedulingStrategy *string `locationName:"schedulingStrategy" type:"string" enum:"SchedulingStrategy"`
 
 	// The name of your service. Up to 255 letters (uppercase and lowercase), numbers,
@@ -6134,8 +6940,9 @@ type CreateServiceInput struct {
 	// to run in your service. If a revision is not specified, the latest ACTIVE
 	// revision is used.
 	//
-	// TaskDefinition is a required field
-	TaskDefinition *string `locationName:"taskDefinition" type:"string" required:"true"`
+	// A task definition must be specified if the service is using the ECS deployment
+	// controller.
+	TaskDefinition *string `locationName:"taskDefinition" type:"string"`
 }
 
 // String returns the string representation
@@ -6153,9 +6960,6 @@ func (s *CreateServiceInput) Validate() error {
 	invalidParams := request.ErrInvalidParams{Context: "CreateServiceInput"}
 	if s.ServiceName == nil {
 		invalidParams.Add(request.NewErrParamRequired("ServiceName"))
-	}
-	if s.TaskDefinition == nil {
-		invalidParams.Add(request.NewErrParamRequired("TaskDefinition"))
 	}
 	if s.DeploymentController != nil {
 		if err := s.DeploymentController.Validate(); err != nil {
@@ -6331,6 +7135,189 @@ func (s CreateServiceOutput) GoString() string {
 // SetService sets the Service field's value.
 func (s *CreateServiceOutput) SetService(v *Service) *CreateServiceOutput {
 	s.Service = v
+	return s
+}
+
+type CreateTaskSetInput struct {
+	_ struct{} `type:"structure"`
+
+	// Unique, case-sensitive identifier that you provide to ensure the idempotency
+	// of the request. Up to 32 ASCII characters are allowed.
+	ClientToken *string `locationName:"clientToken" type:"string"`
+
+	// The short name or full Amazon Resource Name (ARN) of the cluster that hosts
+	// the service to create the task set in.
+	//
+	// Cluster is a required field
+	Cluster *string `locationName:"cluster" type:"string" required:"true"`
+
+	// An optional non-unique tag that identifies this task set in external systems.
+	// If the task set is associated with a service discovery registry, the tasks
+	// in this task set will have the ECS_TASK_SET_EXTERNAL_ID AWS Cloud Map attribute
+	// set to the provided value.
+	ExternalId *string `locationName:"externalId" type:"string"`
+
+	// The launch type that new tasks in the task set will use. For more information,
+	// see Amazon ECS Launch Types (https://docs.aws.amazon.com/AmazonECS/latest/developerguide/launch_types.html)
+	// in the Amazon Elastic Container Service Developer Guide.
+	LaunchType *string `locationName:"launchType" type:"string" enum:"LaunchType"`
+
+	// A load balancer object representing the load balancer to use with the task
+	// set. The supported load balancer types are either an Application Load Balancer
+	// or a Network Load Balancer.
+	LoadBalancers []*LoadBalancer `locationName:"loadBalancers" type:"list"`
+
+	// An object representing the network configuration for a task or service.
+	NetworkConfiguration *NetworkConfiguration `locationName:"networkConfiguration" type:"structure"`
+
+	// The platform version that the tasks in the task set should use. A platform
+	// version is specified only for tasks using the Fargate launch type. If one
+	// isn't specified, the LATEST platform version is used by default.
+	PlatformVersion *string `locationName:"platformVersion" type:"string"`
+
+	// A floating-point percentage of the desired number of tasks to place and keep
+	// running in the task set.
+	Scale *Scale `locationName:"scale" type:"structure"`
+
+	// The short name or full Amazon Resource Name (ARN) of the service to create
+	// the task set in.
+	//
+	// Service is a required field
+	Service *string `locationName:"service" type:"string" required:"true"`
+
+	// The details of the service discovery registries to assign to this task set.
+	// For more information, see Service Discovery (http://docs.aws.amazon.com/AmazonECS/latest/developerguide/service-discovery.html).
+	ServiceRegistries []*ServiceRegistry `locationName:"serviceRegistries" type:"list"`
+
+	// The task definition for the tasks in the task set to use.
+	//
+	// TaskDefinition is a required field
+	TaskDefinition *string `locationName:"taskDefinition" type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s CreateTaskSetInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s CreateTaskSetInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *CreateTaskSetInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "CreateTaskSetInput"}
+	if s.Cluster == nil {
+		invalidParams.Add(request.NewErrParamRequired("Cluster"))
+	}
+	if s.Service == nil {
+		invalidParams.Add(request.NewErrParamRequired("Service"))
+	}
+	if s.TaskDefinition == nil {
+		invalidParams.Add(request.NewErrParamRequired("TaskDefinition"))
+	}
+	if s.NetworkConfiguration != nil {
+		if err := s.NetworkConfiguration.Validate(); err != nil {
+			invalidParams.AddNested("NetworkConfiguration", err.(request.ErrInvalidParams))
+		}
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetClientToken sets the ClientToken field's value.
+func (s *CreateTaskSetInput) SetClientToken(v string) *CreateTaskSetInput {
+	s.ClientToken = &v
+	return s
+}
+
+// SetCluster sets the Cluster field's value.
+func (s *CreateTaskSetInput) SetCluster(v string) *CreateTaskSetInput {
+	s.Cluster = &v
+	return s
+}
+
+// SetExternalId sets the ExternalId field's value.
+func (s *CreateTaskSetInput) SetExternalId(v string) *CreateTaskSetInput {
+	s.ExternalId = &v
+	return s
+}
+
+// SetLaunchType sets the LaunchType field's value.
+func (s *CreateTaskSetInput) SetLaunchType(v string) *CreateTaskSetInput {
+	s.LaunchType = &v
+	return s
+}
+
+// SetLoadBalancers sets the LoadBalancers field's value.
+func (s *CreateTaskSetInput) SetLoadBalancers(v []*LoadBalancer) *CreateTaskSetInput {
+	s.LoadBalancers = v
+	return s
+}
+
+// SetNetworkConfiguration sets the NetworkConfiguration field's value.
+func (s *CreateTaskSetInput) SetNetworkConfiguration(v *NetworkConfiguration) *CreateTaskSetInput {
+	s.NetworkConfiguration = v
+	return s
+}
+
+// SetPlatformVersion sets the PlatformVersion field's value.
+func (s *CreateTaskSetInput) SetPlatformVersion(v string) *CreateTaskSetInput {
+	s.PlatformVersion = &v
+	return s
+}
+
+// SetScale sets the Scale field's value.
+func (s *CreateTaskSetInput) SetScale(v *Scale) *CreateTaskSetInput {
+	s.Scale = v
+	return s
+}
+
+// SetService sets the Service field's value.
+func (s *CreateTaskSetInput) SetService(v string) *CreateTaskSetInput {
+	s.Service = &v
+	return s
+}
+
+// SetServiceRegistries sets the ServiceRegistries field's value.
+func (s *CreateTaskSetInput) SetServiceRegistries(v []*ServiceRegistry) *CreateTaskSetInput {
+	s.ServiceRegistries = v
+	return s
+}
+
+// SetTaskDefinition sets the TaskDefinition field's value.
+func (s *CreateTaskSetInput) SetTaskDefinition(v string) *CreateTaskSetInput {
+	s.TaskDefinition = &v
+	return s
+}
+
+type CreateTaskSetOutput struct {
+	_ struct{} `type:"structure"`
+
+	// Information about a set of Amazon ECS tasks in either an AWS CodeDeploy or
+	// an EXTERNAL deployment. An Amazon ECS task set includes details such as the
+	// desired number of tasks, how many tasks are running, and whether the task
+	// set serves production traffic.
+	TaskSet *TaskSet `locationName:"taskSet" type:"structure"`
+}
+
+// String returns the string representation
+func (s CreateTaskSetOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s CreateTaskSetOutput) GoString() string {
+	return s.String()
+}
+
+// SetTaskSet sets the TaskSet field's value.
+func (s *CreateTaskSetOutput) SetTaskSet(v *TaskSet) *CreateTaskSetOutput {
+	s.TaskSet = v
 	return s
 }
 
@@ -6641,8 +7628,112 @@ func (s *DeleteServiceOutput) SetService(v *Service) *DeleteServiceOutput {
 	return s
 }
 
-// The details of an Amazon ECS service deployment. This is used when a service
-// uses the CODE_DEPLOY deployment controller type.
+type DeleteTaskSetInput struct {
+	_ struct{} `type:"structure"`
+
+	// The short name or full Amazon Resource Name (ARN) of the cluster that hosts
+	// the service that the task set exists in to delete.
+	//
+	// Cluster is a required field
+	Cluster *string `locationName:"cluster" type:"string" required:"true"`
+
+	// If true, this allows you to delete a task set even if it hasn't been scaled
+	// down to zero.
+	Force *bool `locationName:"force" type:"boolean"`
+
+	// The short name or full Amazon Resource Name (ARN) of the service that hosts
+	// the task set to delete.
+	//
+	// Service is a required field
+	Service *string `locationName:"service" type:"string" required:"true"`
+
+	// The task set ID or full Amazon Resource Name (ARN) of the task set to delete.
+	//
+	// TaskSet is a required field
+	TaskSet *string `locationName:"taskSet" type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s DeleteTaskSetInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DeleteTaskSetInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *DeleteTaskSetInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "DeleteTaskSetInput"}
+	if s.Cluster == nil {
+		invalidParams.Add(request.NewErrParamRequired("Cluster"))
+	}
+	if s.Service == nil {
+		invalidParams.Add(request.NewErrParamRequired("Service"))
+	}
+	if s.TaskSet == nil {
+		invalidParams.Add(request.NewErrParamRequired("TaskSet"))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetCluster sets the Cluster field's value.
+func (s *DeleteTaskSetInput) SetCluster(v string) *DeleteTaskSetInput {
+	s.Cluster = &v
+	return s
+}
+
+// SetForce sets the Force field's value.
+func (s *DeleteTaskSetInput) SetForce(v bool) *DeleteTaskSetInput {
+	s.Force = &v
+	return s
+}
+
+// SetService sets the Service field's value.
+func (s *DeleteTaskSetInput) SetService(v string) *DeleteTaskSetInput {
+	s.Service = &v
+	return s
+}
+
+// SetTaskSet sets the TaskSet field's value.
+func (s *DeleteTaskSetInput) SetTaskSet(v string) *DeleteTaskSetInput {
+	s.TaskSet = &v
+	return s
+}
+
+type DeleteTaskSetOutput struct {
+	_ struct{} `type:"structure"`
+
+	// Information about a set of Amazon ECS tasks in either an AWS CodeDeploy or
+	// an EXTERNAL deployment. An Amazon ECS task set includes details such as the
+	// desired number of tasks, how many tasks are running, and whether the task
+	// set serves production traffic.
+	TaskSet *TaskSet `locationName:"taskSet" type:"structure"`
+}
+
+// String returns the string representation
+func (s DeleteTaskSetOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DeleteTaskSetOutput) GoString() string {
+	return s.String()
+}
+
+// SetTaskSet sets the TaskSet field's value.
+func (s *DeleteTaskSetOutput) SetTaskSet(v *TaskSet) *DeleteTaskSetOutput {
+	s.TaskSet = v
+	return s
+}
+
+// The details of an Amazon ECS service deployment. This is used only when a
+// service uses the ECS deployment controller type.
 type Deployment struct {
 	_ struct{} `type:"structure"`
 
@@ -6772,8 +7863,8 @@ func (s *Deployment) SetUpdatedAt(v time.Time) *Deployment {
 	return s
 }
 
-// Optional deployment parameters that control how many tasks run during the
-// deployment and the ordering of stopping and starting tasks.
+// Optional deployment parameters that control how many tasks run during a deployment
+// and the ordering of stopping and starting tasks.
 type DeploymentConfiguration struct {
 	_ struct{} `type:"structure"`
 
@@ -6789,13 +7880,13 @@ type DeploymentConfiguration struct {
 	// the cluster resources required to do this are available). The default value
 	// for maximum percent is 200%.
 	//
-	// If a service is using the blue/green (CODE_DEPLOY) deployment type and tasks
-	// that use the EC2 launch type, the maximum percent value is set to the default
-	// value and is used to define the upper limit on the number of the tasks in
-	// the service that remain in the RUNNING state while the container instances
-	// are in the DRAINING state. If the tasks in the service use the Fargate launch
-	// type, the maximum percent value is not used, although it is returned when
-	// describing your service.
+	// If a service is using the blue/green (CODE_DEPLOY) or EXTERNAL deployment
+	// types and tasks that use the EC2 launch type, the maximum percent value is
+	// set to the default value and is used to define the upper limit on the number
+	// of the tasks in the service that remain in the RUNNING state while the container
+	// instances are in the DRAINING state. If the tasks in the service use the
+	// Fargate launch type, the maximum percent value is not used, although it is
+	// returned when describing your service.
 	MaximumPercent *int64 `locationName:"maximumPercent" type:"integer"`
 
 	// If a service is using the rolling update (ECS) deployment type, the minimum
@@ -6813,13 +7904,13 @@ type DeploymentConfiguration struct {
 	// they are reported as healthy by the load balancer. The default value for
 	// minimum healthy percent is 100%.
 	//
-	// If a service is using the blue/green (CODE_DEPLOY) deployment type and tasks
-	// that use the EC2 launch type, the minimum healthy percent value is set to
-	// the default value and is used to define the lower limit on the number of
-	// the tasks in the service that remain in the RUNNING state while the container
-	// instances are in the DRAINING state. If the tasks in the service use the
-	// Fargate launch type, the minimum healthy percent value is not used, although
-	// it is returned when describing your service.
+	// If a service is using the blue/green (CODE_DEPLOY) or EXTERNAL deployment
+	// types and tasks that use the EC2 launch type, the minimum healthy percent
+	// value is set to the default value and is used to define the lower limit on
+	// the number of the tasks in the service that remain in the RUNNING state while
+	// the container instances are in the DRAINING state. If the tasks in the service
+	// use the Fargate launch type, the minimum healthy percent value is not used,
+	// although it is returned when describing your service.
 	MinimumHealthyPercent *int64 `locationName:"minimumHealthyPercent" type:"integer"`
 }
 
@@ -6853,7 +7944,7 @@ type DeploymentController struct {
 
 	// The deployment controller type to use.
 	//
-	// There are two deployment controller types available:
+	// There are three deployment controller types available:
 	//
 	// ECSThe rolling update (ECS) deployment type involves replacing the current
 	// running version of the container with the latest version. The number of containers
@@ -6863,9 +7954,11 @@ type DeploymentController struct {
 	//
 	// CODE_DEPLOYThe blue/green (CODE_DEPLOY) deployment type uses the blue/green
 	// deployment model powered by AWS CodeDeploy, which allows you to verify a
-	// new deployment of a service before sending production traffic to it. For
-	// more information, see Amazon ECS Deployment Types (http://docs.aws.amazon.com/AmazonECS/latest/developerguide/deployment-types.html)
-	// in the Amazon Elastic Container Service Developer Guide.
+	// new deployment of a service before sending production traffic to it.
+	//
+	// EXTERNALThe external (EXTERNAL) deployment type enables you to use any third-party
+	// deployment controller for full control over the deployment process for an
+	// Amazon ECS service.
 	//
 	// Type is a required field
 	Type *string `locationName:"type" type:"string" required:"true" enum:"DeploymentControllerType"`
@@ -7409,6 +8502,101 @@ func (s *DescribeTaskDefinitionOutput) SetTags(v []*Tag) *DescribeTaskDefinition
 // SetTaskDefinition sets the TaskDefinition field's value.
 func (s *DescribeTaskDefinitionOutput) SetTaskDefinition(v *TaskDefinition) *DescribeTaskDefinitionOutput {
 	s.TaskDefinition = v
+	return s
+}
+
+type DescribeTaskSetsInput struct {
+	_ struct{} `type:"structure"`
+
+	// The short name or full Amazon Resource Name (ARN) of the cluster that hosts
+	// the service that the task sets exist in.
+	//
+	// Cluster is a required field
+	Cluster *string `locationName:"cluster" type:"string" required:"true"`
+
+	// The short name or full Amazon Resource Name (ARN) of the service that the
+	// task sets exist in.
+	//
+	// Service is a required field
+	Service *string `locationName:"service" type:"string" required:"true"`
+
+	// The ID or full Amazon Resource Name (ARN) of task sets to describe.
+	TaskSets []*string `locationName:"taskSets" type:"list"`
+}
+
+// String returns the string representation
+func (s DescribeTaskSetsInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DescribeTaskSetsInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *DescribeTaskSetsInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "DescribeTaskSetsInput"}
+	if s.Cluster == nil {
+		invalidParams.Add(request.NewErrParamRequired("Cluster"))
+	}
+	if s.Service == nil {
+		invalidParams.Add(request.NewErrParamRequired("Service"))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetCluster sets the Cluster field's value.
+func (s *DescribeTaskSetsInput) SetCluster(v string) *DescribeTaskSetsInput {
+	s.Cluster = &v
+	return s
+}
+
+// SetService sets the Service field's value.
+func (s *DescribeTaskSetsInput) SetService(v string) *DescribeTaskSetsInput {
+	s.Service = &v
+	return s
+}
+
+// SetTaskSets sets the TaskSets field's value.
+func (s *DescribeTaskSetsInput) SetTaskSets(v []*string) *DescribeTaskSetsInput {
+	s.TaskSets = v
+	return s
+}
+
+type DescribeTaskSetsOutput struct {
+	_ struct{} `type:"structure"`
+
+	// Any failures associated with the call.
+	Failures []*Failure `locationName:"failures" type:"list"`
+
+	// The list of task sets described.
+	TaskSets []*TaskSet `locationName:"taskSets" type:"list"`
+}
+
+// String returns the string representation
+func (s DescribeTaskSetsOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DescribeTaskSetsOutput) GoString() string {
+	return s.String()
+}
+
+// SetFailures sets the Failures field's value.
+func (s *DescribeTaskSetsOutput) SetFailures(v []*Failure) *DescribeTaskSetsOutput {
+	s.Failures = v
+	return s
+}
+
+// SetTaskSets sets the TaskSets field's value.
+func (s *DescribeTaskSetsOutput) SetTaskSets(v []*TaskSet) *DescribeTaskSetsOutput {
+	s.TaskSets = v
 	return s
 }
 
@@ -9256,9 +10444,16 @@ type LogConfiguration struct {
 
 	// The log driver to use for the container. The valid values listed for this
 	// parameter are log drivers that the Amazon ECS container agent can communicate
-	// with by default. If you are using the Fargate launch type, the only supported
-	// value is awslogs. For more information about using the awslogs driver, see
-	// Using the awslogs Log Driver (https://docs.aws.amazon.com/AmazonECS/latest/developerguide/using_awslogs.html)
+	// with by default.
+	//
+	// For tasks using the Fargate launch type, the supported log drivers are awslogs
+	// and splunk.
+	//
+	// For tasks using the EC2 launch type, the supported log drivers are awslogs,
+	// syslog, gelf, fluentd, splunk, journald, and json-file.
+	//
+	// For more information about using the awslogs log driver, see Using the awslogs
+	// Log Driver (https://docs.aws.amazon.com/AmazonECS/latest/developerguide/using_awslogs.html)
 	// in the Amazon Elastic Container Service Developer Guide.
 	//
 	// If you have a custom driver that is not listed above that you would like
@@ -9282,6 +10477,9 @@ type LogConfiguration struct {
 	// to your container instance and run the following command: sudo docker version
 	// --format '{{.Server.APIVersion}}'
 	Options map[string]*string `locationName:"options" type:"map"`
+
+	// The secrets to pass to the log configuration.
+	SecretOptions []*Secret `locationName:"secretOptions" type:"list"`
 }
 
 // String returns the string representation
@@ -9300,6 +10498,16 @@ func (s *LogConfiguration) Validate() error {
 	if s.LogDriver == nil {
 		invalidParams.Add(request.NewErrParamRequired("LogDriver"))
 	}
+	if s.SecretOptions != nil {
+		for i, v := range s.SecretOptions {
+			if v == nil {
+				continue
+			}
+			if err := v.Validate(); err != nil {
+				invalidParams.AddNested(fmt.Sprintf("%s[%v]", "SecretOptions", i), err.(request.ErrInvalidParams))
+			}
+		}
+	}
 
 	if invalidParams.Len() > 0 {
 		return invalidParams
@@ -9316,6 +10524,12 @@ func (s *LogConfiguration) SetLogDriver(v string) *LogConfiguration {
 // SetOptions sets the Options field's value.
 func (s *LogConfiguration) SetOptions(v map[string]*string) *LogConfiguration {
 	s.Options = v
+	return s
+}
+
+// SetSecretOptions sets the SecretOptions field's value.
+func (s *LogConfiguration) SetSecretOptions(v []*Secret) *LogConfiguration {
+	s.SecretOptions = v
 	return s
 }
 
@@ -9734,6 +10948,103 @@ func (s *PortMapping) SetHostPort(v int64) *PortMapping {
 // SetProtocol sets the Protocol field's value.
 func (s *PortMapping) SetProtocol(v string) *PortMapping {
 	s.Protocol = &v
+	return s
+}
+
+// The configuration details for the App Mesh proxy.
+//
+// For tasks using the EC2 launch type, the container instances require at least
+// version 1.26.0 of the container agent and at least version 1.26.0-1 of the
+// ecs-init package to enable a proxy configuration. If your container instances
+// are launched from the Amazon ECS-optimized AMI version 20190301 or later,
+// then they contain the required versions of the container agent and ecs-init.
+// For more information, see Amazon ECS-optimized Linux AMI (http://docs.aws.amazon.com/AmazonECS/latest/developerguide/ecs-optimized_AMI.html)
+// in the Amazon Elastic Container Service Developer Guide.
+//
+// This parameter is available for tasks using the Fargate launch type in the
+// Ohio (us-east-2) region only and the task or service requires platform version
+// 1.3.0 or later.
+type ProxyConfiguration struct {
+	_ struct{} `type:"structure"`
+
+	// The name of the container that will serve as the App Mesh proxy.
+	//
+	// ContainerName is a required field
+	ContainerName *string `locationName:"containerName" type:"string" required:"true"`
+
+	// The set of network configuration parameters to provide the Container Network
+	// Interface (CNI) plugin, specified as key-value pairs.
+	//
+	//    * IgnoredUID - (Required) The user ID (UID) of the proxy container as
+	//    defined by the user parameter in a container definition. This is used
+	//    to ensure the proxy ignores its own traffic. If IgnoredGID is specified,
+	//    this field can be empty.
+	//
+	//    * IgnoredGID - (Required) The group ID (GID) of the proxy container as
+	//    defined by the user parameter in a container definition. This is used
+	//    to ensure the proxy ignores its own traffic. If IgnoredGID is specified,
+	//    this field can be empty.
+	//
+	//    * AppPorts - (Required) The list of ports that the application uses. Network
+	//    traffic to these ports is forwarded to the ProxyIngressPort and ProxyEgressPort.
+	//
+	//    * ProxyIngressPort - (Required) Specifies the port that incoming traffic
+	//    to the AppPorts is directed to.
+	//
+	//    * ProxyEgressPort - (Required) Specifies the port that outgoing traffic
+	//    from the AppPorts is directed to.
+	//
+	//    * EgressIgnoredPorts - (Required) The egress traffic going to the specified
+	//    ports is ignored and not redirected to the ProxyEgressPort. It can be
+	//    an empty list.
+	//
+	//    * EgressIgnoredIPs - (Required) The egress traffic going to the specified
+	//    IP addresses is ignored and not redirected to the ProxyEgressPort. It
+	//    can be an empty list.
+	Properties []*KeyValuePair `locationName:"properties" type:"list"`
+
+	// The proxy type. The only supported value is APPMESH.
+	Type *string `locationName:"type" type:"string" enum:"ProxyConfigurationType"`
+}
+
+// String returns the string representation
+func (s ProxyConfiguration) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ProxyConfiguration) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *ProxyConfiguration) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "ProxyConfiguration"}
+	if s.ContainerName == nil {
+		invalidParams.Add(request.NewErrParamRequired("ContainerName"))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetContainerName sets the ContainerName field's value.
+func (s *ProxyConfiguration) SetContainerName(v string) *ProxyConfiguration {
+	s.ContainerName = &v
+	return s
+}
+
+// SetProperties sets the Properties field's value.
+func (s *ProxyConfiguration) SetProperties(v []*KeyValuePair) *ProxyConfiguration {
+	s.Properties = v
+	return s
+}
+
+// SetType sets the Type field's value.
+func (s *ProxyConfiguration) SetType(v string) *ProxyConfiguration {
+	s.Type = &v
 	return s
 }
 
@@ -10334,6 +11645,21 @@ type RegisterTaskDefinitionInput struct {
 	// the task definition and those specified at runtime).
 	PlacementConstraints []*TaskDefinitionPlacementConstraint `locationName:"placementConstraints" type:"list"`
 
+	// The configuration details for the App Mesh proxy.
+	//
+	// For tasks using the EC2 launch type, the container instances require at least
+	// version 1.26.0 of the container agent and at least version 1.26.0-1 of the
+	// ecs-init package to enable a proxy configuration. If your container instances
+	// are launched from the Amazon ECS-optimized AMI version 20190301 or later,
+	// then they contain the required versions of the container agent and ecs-init.
+	// For more information, see Amazon ECS-optimized Linux AMI (http://docs.aws.amazon.com/AmazonECS/latest/developerguide/ecs-optimized_AMI.html)
+	// in the Amazon Elastic Container Service Developer Guide.
+	//
+	// This parameter is available for tasks using the Fargate launch type in the
+	// Ohio (us-east-2) region only and the task or service requires platform version
+	// 1.3.0 or later.
+	ProxyConfiguration *ProxyConfiguration `locationName:"proxyConfiguration" type:"structure"`
+
 	// The launch type required by the task. If no value is specified, it defaults
 	// to EC2.
 	RequiresCompatibilities []*string `locationName:"requiresCompatibilities" type:"list"`
@@ -10383,6 +11709,11 @@ func (s *RegisterTaskDefinitionInput) Validate() error {
 			if err := v.Validate(); err != nil {
 				invalidParams.AddNested(fmt.Sprintf("%s[%v]", "ContainerDefinitions", i), err.(request.ErrInvalidParams))
 			}
+		}
+	}
+	if s.ProxyConfiguration != nil {
+		if err := s.ProxyConfiguration.Validate(); err != nil {
+			invalidParams.AddNested("ProxyConfiguration", err.(request.ErrInvalidParams))
 		}
 	}
 	if s.Tags != nil {
@@ -10453,6 +11784,12 @@ func (s *RegisterTaskDefinitionInput) SetPidMode(v string) *RegisterTaskDefiniti
 // SetPlacementConstraints sets the PlacementConstraints field's value.
 func (s *RegisterTaskDefinitionInput) SetPlacementConstraints(v []*TaskDefinitionPlacementConstraint) *RegisterTaskDefinitionInput {
 	s.PlacementConstraints = v
+	return s
+}
+
+// SetProxyConfiguration sets the ProxyConfiguration field's value.
+func (s *RegisterTaskDefinitionInput) SetProxyConfiguration(v *ProxyConfiguration) *RegisterTaskDefinitionInput {
+	s.ProxyConfiguration = v
 	return s
 }
 
@@ -10945,8 +12282,7 @@ func (s *RunTaskOutput) SetTasks(v []*Task) *RunTaskOutput {
 }
 
 // A floating-point percentage of the desired number of tasks to place and keep
-// running in the service. This is used when a service uses the CODE_DEPLOY
-// deployment controller type.
+// running in the task set.
 type Scale struct {
 	_ struct{} `type:"structure"`
 
@@ -10954,7 +12290,7 @@ type Scale struct {
 	Unit *string `locationName:"unit" type:"string" enum:"ScaleUnit"`
 
 	// The value, specified as a percent total of a service's desiredCount, to scale
-	// the task set.
+	// the task set. Accepted values are numbers between 0 and 100.
 	Value *float64 `locationName:"value" type:"double"`
 }
 
@@ -10980,23 +12316,28 @@ func (s *Scale) SetValue(v float64) *Scale {
 	return s
 }
 
-// An object representing the secret to expose to your container. For more information,
-// see Specifying Sensitive Data (http://docs.aws.amazon.com/AmazonECS/latest/developerguide/specifying-sensitive-data.html)
+// An object representing the secret to expose to your container. Secrets can
+// be exposed to a container in the following ways:
+//
+//    * To inject sensitive data into your containers as environment variables,
+//    use the secrets container definition parameter.
+//
+//    * To reference sensitive information in the log configuration of a container,
+//    use the secretOptions container definition parameter.
+//
+// For more information, see Specifying Sensitive Data (http://docs.aws.amazon.com/AmazonECS/latest/developerguide/specifying-sensitive-data.html)
 // in the Amazon Elastic Container Service Developer Guide.
 type Secret struct {
 	_ struct{} `type:"structure"`
 
-	// The value to set as the environment variable on the container.
+	// The name of the secret.
 	//
 	// Name is a required field
 	Name *string `locationName:"name" type:"string" required:"true"`
 
-	// The secret to expose to the container. If your task is using the EC2 launch
-	// type, then supported values are either the full ARN of the AWS Secrets Manager
-	// secret or the full ARN of the parameter in the AWS Systems Manager Parameter
-	// Store. If your task is using the Fargate launch type, then the only supported
-	// value is the full ARN of the parameter in the AWS Systems Manager Parameter
-	// Store.
+	// The secret to expose to the container. The supported values are either the
+	// full ARN of the AWS Secrets Manager secret or the full ARN of the parameter
+	// in the AWS Systems Manager Parameter Store.
 	//
 	// If the AWS Systems Manager Parameter Store parameter exists in the same Region
 	// as the task you are launching, then you can use either the full ARN or name
@@ -11164,6 +12505,8 @@ type Service struct {
 	// within a Region or across multiple Regions.
 	ServiceName *string `locationName:"serviceName" type:"string"`
 
+	// The details of the service discovery registries to assign to this service.
+	// For more information, see Service Discovery (http://docs.aws.amazon.com/AmazonECS/latest/developerguide/service-discovery.html).
 	ServiceRegistries []*ServiceRegistry `locationName:"serviceRegistries" type:"list"`
 
 	// The status of the service. The valid values are ACTIVE, DRAINING, or INACTIVE.
@@ -11180,9 +12523,10 @@ type Service struct {
 	// UpdateService.
 	TaskDefinition *string `locationName:"taskDefinition" type:"string"`
 
-	// Information about a set of Amazon ECS tasks in an AWS CodeDeploy deployment.
-	// An Amazon ECS task set includes details such as the desired number of tasks,
-	// how many tasks are running, and whether the task set serves production traffic.
+	// Information about a set of Amazon ECS tasks in either an AWS CodeDeploy or
+	// an EXTERNAL deployment. An Amazon ECS task set includes details such as the
+	// desired number of tasks, how many tasks are running, and whether the task
+	// set serves production traffic.
 	TaskSets []*TaskSet `locationName:"taskSets" type:"list"`
 }
 
@@ -11434,8 +12778,8 @@ type ServiceRegistry struct {
 	Port *int64 `locationName:"port" type:"integer"`
 
 	// The Amazon Resource Name (ARN) of the service registry. The currently supported
-	// service registry is Amazon Route 53 Auto Naming. For more information, see
-	// Service (https://docs.aws.amazon.com/Route53/latest/APIReference/API_autonaming_Service.html).
+	// service registry is AWS Cloud Map. For more information, see CreateService
+	// (https://docs.aws.amazon.com/cloud-map/latest/api/API_CreateService.html).
 	RegistryArn *string `locationName:"registryArn" type:"string"`
 }
 
@@ -11484,10 +12828,10 @@ type Setting struct {
 	// user. If this field is omitted, the authenticated user is assumed.
 	PrincipalArn *string `locationName:"principalArn" type:"string"`
 
-	// The current account setting for the resource name. If enabled, then the resource
-	// will receive the new Amazon Resource Name (ARN) and resource identifier (ID)
-	// format. If disabled, then the resource will receive the old Amazon Resource
-	// Name (ARN) and resource identifier (ID) format.
+	// The current account setting for the resource name. If enabled, the resource
+	// receives the new Amazon Resource Name (ARN) and resource identifier (ID)
+	// format. If disabled, the resource receives the old Amazon Resource Name (ARN)
+	// and resource identifier (ID) format.
 	Value *string `locationName:"value" type:"string"`
 }
 
@@ -11740,7 +13084,7 @@ type StopTaskInput struct {
 	// API operations on this task. Up to 255 characters are allowed in this message.
 	Reason *string `locationName:"reason" type:"string"`
 
-	// The task ID or full ARN entry of the task to stop.
+	// The task ID or full Amazon Resource Name (ARN) of the task to stop.
 	//
 	// Task is a required field
 	Task *string `locationName:"task" type:"string" required:"true"`
@@ -12745,6 +14089,17 @@ type TaskDefinition struct {
 	// not valid if you are using the Fargate launch type for your task.
 	PlacementConstraints []*TaskDefinitionPlacementConstraint `locationName:"placementConstraints" type:"list"`
 
+	// The configuration details for the App Mesh proxy.
+	//
+	// Your Amazon ECS container instances require at least version 1.26.0 of the
+	// container agent and at least version 1.26.0-1 of the ecs-init package to
+	// enable a proxy configuration. If your container instances are launched from
+	// the Amazon ECS-optimized AMI version 20190301 or later, then they contain
+	// the required versions of the container agent and ecs-init. For more information,
+	// see Amazon ECS-optimized Linux AMI (http://docs.aws.amazon.com/AmazonECS/latest/developerguide/ecs-optimized_AMI.html)
+	// in the Amazon Elastic Container Service Developer Guide.
+	ProxyConfiguration *ProxyConfiguration `locationName:"proxyConfiguration" type:"structure"`
+
 	// The container instance attributes required by your task. This field is not
 	// valid if you are using the Fargate launch type for your task.
 	RequiresAttributes []*Attribute `locationName:"requiresAttributes" type:"list"`
@@ -12854,6 +14209,12 @@ func (s *TaskDefinition) SetPidMode(v string) *TaskDefinition {
 // SetPlacementConstraints sets the PlacementConstraints field's value.
 func (s *TaskDefinition) SetPlacementConstraints(v []*TaskDefinitionPlacementConstraint) *TaskDefinition {
 	s.PlacementConstraints = v
+	return s
+}
+
+// SetProxyConfiguration sets the ProxyConfiguration field's value.
+func (s *TaskDefinition) SetProxyConfiguration(v *ProxyConfiguration) *TaskDefinition {
+	s.ProxyConfiguration = v
 	return s
 }
 
@@ -13007,20 +14368,34 @@ func (s *TaskOverride) SetTaskRoleArn(v string) *TaskOverride {
 	return s
 }
 
-// Information about a set of Amazon ECS tasks in an AWS CodeDeploy deployment.
-// An Amazon ECS task set includes details such as the desired number of tasks,
-// how many tasks are running, and whether the task set serves production traffic.
+// Information about a set of Amazon ECS tasks in either an AWS CodeDeploy or
+// an EXTERNAL deployment. An Amazon ECS task set includes details such as the
+// desired number of tasks, how many tasks are running, and whether the task
+// set serves production traffic.
 type TaskSet struct {
 	_ struct{} `type:"structure"`
 
+	// The Amazon Resource Name (ARN) of the cluster that the service that hosts
+	// the task set exists in.
+	ClusterArn *string `locationName:"clusterArn" type:"string"`
+
 	// The computed desired count for the task set. This is calculated by multiplying
-	// the service's desiredCount by the task set's scale percentage.
+	// the service's desiredCount by the task set's scale percentage. The result
+	// is always rounded up. For example, if the computed desired count is 1.2,
+	// it rounds up to 2 tasks.
 	ComputedDesiredCount *int64 `locationName:"computedDesiredCount" type:"integer"`
 
 	// The Unix timestamp for when the task set was created.
 	CreatedAt *time.Time `locationName:"createdAt" type:"timestamp"`
 
-	// The deployment ID of the AWS CodeDeploy deployment.
+	// The external ID associated with the task set.
+	//
+	// If a task set is created by an AWS CodeDeploy deployment, the externalId
+	// parameter contains the AWS CodeDeploy deployment ID.
+	//
+	// If a task set is created for an external deployment and is associated with
+	// a service discovery registry, the externalId parameter contains the ECS_TASK_SET_EXTERNAL_ID
+	// AWS Cloud Map attribute.
 	ExternalId *string `locationName:"externalId" type:"string"`
 
 	// The ID of the task set.
@@ -13040,7 +14415,7 @@ type TaskSet struct {
 	// The number of tasks in the task set that are in the PENDING status during
 	// a deployment. A task in the PENDING state is preparing to enter the RUNNING
 	// state. A task set enters the PENDING status when it launches for the first
-	// time, or when it is restarted after being in the STOPPED state.
+	// time or when it is restarted after being in the STOPPED state.
 	PendingCount *int64 `locationName:"pendingCount" type:"integer"`
 
 	// The platform version on which the tasks in the task set are running. A platform
@@ -13055,8 +14430,15 @@ type TaskSet struct {
 	RunningCount *int64 `locationName:"runningCount" type:"integer"`
 
 	// A floating-point percentage of the desired number of tasks to place and keep
-	// running in the service.
+	// running in the task set.
 	Scale *Scale `locationName:"scale" type:"structure"`
+
+	// The Amazon Resource Name (ARN) of the service the task set exists in.
+	ServiceArn *string `locationName:"serviceArn" type:"string"`
+
+	// The details of the service discovery registries to assign to this task set.
+	// For more information, see Service Discovery (http://docs.aws.amazon.com/AmazonECS/latest/developerguide/service-discovery.html).
+	ServiceRegistries []*ServiceRegistry `locationName:"serviceRegistries" type:"list"`
 
 	// The stability status, which indicates whether the task set has reached a
 	// steady state. If the following conditions are met, the task set will be in
@@ -13077,8 +14459,10 @@ type TaskSet struct {
 	// The Unix timestamp for when the task set stability status was retrieved.
 	StabilityStatusAt *time.Time `locationName:"stabilityStatusAt" type:"timestamp"`
 
-	// The tag specified when a task set is started. If the task is started by an
-	// AWS CodeDeploy deployment, then the startedBy parameter is CODE_DEPLOY.
+	// The tag specified when a task set is started. If the task set is created
+	// by an AWS CodeDeploy deployment, the startedBy parameter is CODE_DEPLOY.
+	// For a task set created for an external deployment, the startedBy field isn't
+	// used.
 	StartedBy *string `locationName:"startedBy" type:"string"`
 
 	// The status of the task set. The following describes each state:
@@ -13109,6 +14493,12 @@ func (s TaskSet) String() string {
 // GoString returns the string representation
 func (s TaskSet) GoString() string {
 	return s.String()
+}
+
+// SetClusterArn sets the ClusterArn field's value.
+func (s *TaskSet) SetClusterArn(v string) *TaskSet {
+	s.ClusterArn = &v
+	return s
 }
 
 // SetComputedDesiredCount sets the ComputedDesiredCount field's value.
@@ -13174,6 +14564,18 @@ func (s *TaskSet) SetRunningCount(v int64) *TaskSet {
 // SetScale sets the Scale field's value.
 func (s *TaskSet) SetScale(v *Scale) *TaskSet {
 	s.Scale = v
+	return s
+}
+
+// SetServiceArn sets the ServiceArn field's value.
+func (s *TaskSet) SetServiceArn(v string) *TaskSet {
+	s.ServiceArn = &v
+	return s
+}
+
+// SetServiceRegistries sets the ServiceRegistries field's value.
+func (s *TaskSet) SetServiceRegistries(v []*ServiceRegistry) *TaskSet {
+	s.ServiceRegistries = v
 	return s
 }
 
@@ -13762,6 +15164,210 @@ func (s *UpdateServiceOutput) SetService(v *Service) *UpdateServiceOutput {
 	return s
 }
 
+type UpdateServicePrimaryTaskSetInput struct {
+	_ struct{} `type:"structure"`
+
+	// The short name or full Amazon Resource Name (ARN) of the cluster that hosts
+	// the service that the task set exists in.
+	//
+	// Cluster is a required field
+	Cluster *string `locationName:"cluster" type:"string" required:"true"`
+
+	// The short name or full Amazon Resource Name (ARN) of the task set to set
+	// as the primary task set in the deployment.
+	//
+	// PrimaryTaskSet is a required field
+	PrimaryTaskSet *string `locationName:"primaryTaskSet" type:"string" required:"true"`
+
+	// The short name or full Amazon Resource Name (ARN) of the service that the
+	// task set exists in.
+	//
+	// Service is a required field
+	Service *string `locationName:"service" type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s UpdateServicePrimaryTaskSetInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s UpdateServicePrimaryTaskSetInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *UpdateServicePrimaryTaskSetInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "UpdateServicePrimaryTaskSetInput"}
+	if s.Cluster == nil {
+		invalidParams.Add(request.NewErrParamRequired("Cluster"))
+	}
+	if s.PrimaryTaskSet == nil {
+		invalidParams.Add(request.NewErrParamRequired("PrimaryTaskSet"))
+	}
+	if s.Service == nil {
+		invalidParams.Add(request.NewErrParamRequired("Service"))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetCluster sets the Cluster field's value.
+func (s *UpdateServicePrimaryTaskSetInput) SetCluster(v string) *UpdateServicePrimaryTaskSetInput {
+	s.Cluster = &v
+	return s
+}
+
+// SetPrimaryTaskSet sets the PrimaryTaskSet field's value.
+func (s *UpdateServicePrimaryTaskSetInput) SetPrimaryTaskSet(v string) *UpdateServicePrimaryTaskSetInput {
+	s.PrimaryTaskSet = &v
+	return s
+}
+
+// SetService sets the Service field's value.
+func (s *UpdateServicePrimaryTaskSetInput) SetService(v string) *UpdateServicePrimaryTaskSetInput {
+	s.Service = &v
+	return s
+}
+
+type UpdateServicePrimaryTaskSetOutput struct {
+	_ struct{} `type:"structure"`
+
+	// Information about a set of Amazon ECS tasks in either an AWS CodeDeploy or
+	// an EXTERNAL deployment. An Amazon ECS task set includes details such as the
+	// desired number of tasks, how many tasks are running, and whether the task
+	// set serves production traffic.
+	TaskSet *TaskSet `locationName:"taskSet" type:"structure"`
+}
+
+// String returns the string representation
+func (s UpdateServicePrimaryTaskSetOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s UpdateServicePrimaryTaskSetOutput) GoString() string {
+	return s.String()
+}
+
+// SetTaskSet sets the TaskSet field's value.
+func (s *UpdateServicePrimaryTaskSetOutput) SetTaskSet(v *TaskSet) *UpdateServicePrimaryTaskSetOutput {
+	s.TaskSet = v
+	return s
+}
+
+type UpdateTaskSetInput struct {
+	_ struct{} `type:"structure"`
+
+	// The short name or full Amazon Resource Name (ARN) of the cluster that hosts
+	// the service that the task set exists in.
+	//
+	// Cluster is a required field
+	Cluster *string `locationName:"cluster" type:"string" required:"true"`
+
+	// A floating-point percentage of the desired number of tasks to place and keep
+	// running in the task set.
+	//
+	// Scale is a required field
+	Scale *Scale `locationName:"scale" type:"structure" required:"true"`
+
+	// The short name or full Amazon Resource Name (ARN) of the service that the
+	// task set exists in.
+	//
+	// Service is a required field
+	Service *string `locationName:"service" type:"string" required:"true"`
+
+	// The short name or full Amazon Resource Name (ARN) of the task set to update.
+	//
+	// TaskSet is a required field
+	TaskSet *string `locationName:"taskSet" type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s UpdateTaskSetInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s UpdateTaskSetInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *UpdateTaskSetInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "UpdateTaskSetInput"}
+	if s.Cluster == nil {
+		invalidParams.Add(request.NewErrParamRequired("Cluster"))
+	}
+	if s.Scale == nil {
+		invalidParams.Add(request.NewErrParamRequired("Scale"))
+	}
+	if s.Service == nil {
+		invalidParams.Add(request.NewErrParamRequired("Service"))
+	}
+	if s.TaskSet == nil {
+		invalidParams.Add(request.NewErrParamRequired("TaskSet"))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetCluster sets the Cluster field's value.
+func (s *UpdateTaskSetInput) SetCluster(v string) *UpdateTaskSetInput {
+	s.Cluster = &v
+	return s
+}
+
+// SetScale sets the Scale field's value.
+func (s *UpdateTaskSetInput) SetScale(v *Scale) *UpdateTaskSetInput {
+	s.Scale = v
+	return s
+}
+
+// SetService sets the Service field's value.
+func (s *UpdateTaskSetInput) SetService(v string) *UpdateTaskSetInput {
+	s.Service = &v
+	return s
+}
+
+// SetTaskSet sets the TaskSet field's value.
+func (s *UpdateTaskSetInput) SetTaskSet(v string) *UpdateTaskSetInput {
+	s.TaskSet = &v
+	return s
+}
+
+type UpdateTaskSetOutput struct {
+	_ struct{} `type:"structure"`
+
+	// Information about a set of Amazon ECS tasks in either an AWS CodeDeploy or
+	// an EXTERNAL deployment. An Amazon ECS task set includes details such as the
+	// desired number of tasks, how many tasks are running, and whether the task
+	// set serves production traffic.
+	TaskSet *TaskSet `locationName:"taskSet" type:"structure"`
+}
+
+// String returns the string representation
+func (s UpdateTaskSetOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s UpdateTaskSetOutput) GoString() string {
+	return s.String()
+}
+
+// SetTaskSet sets the TaskSet field's value.
+func (s *UpdateTaskSetOutput) SetTaskSet(v *TaskSet) *UpdateTaskSetOutput {
+	s.TaskSet = v
+	return s
+}
+
 // The Docker and Amazon ECS container agent version information about a container
 // instance.
 type VersionInfo struct {
@@ -13956,6 +15562,20 @@ const (
 )
 
 const (
+	// ContainerConditionStart is a ContainerCondition enum value
+	ContainerConditionStart = "START"
+
+	// ContainerConditionComplete is a ContainerCondition enum value
+	ContainerConditionComplete = "COMPLETE"
+
+	// ContainerConditionSuccess is a ContainerCondition enum value
+	ContainerConditionSuccess = "SUCCESS"
+
+	// ContainerConditionHealthy is a ContainerCondition enum value
+	ContainerConditionHealthy = "HEALTHY"
+)
+
+const (
 	// ContainerInstanceFieldTags is a ContainerInstanceField enum value
 	ContainerInstanceFieldTags = "TAGS"
 )
@@ -13974,6 +15594,9 @@ const (
 
 	// DeploymentControllerTypeCodeDeploy is a DeploymentControllerType enum value
 	DeploymentControllerTypeCodeDeploy = "CODE_DEPLOY"
+
+	// DeploymentControllerTypeExternal is a DeploymentControllerType enum value
+	DeploymentControllerTypeExternal = "EXTERNAL"
 )
 
 const (
@@ -14103,6 +15726,11 @@ const (
 
 	// PropagateTagsService is a PropagateTags enum value
 	PropagateTagsService = "SERVICE"
+)
+
+const (
+	// ProxyConfigurationTypeAppmesh is a ProxyConfigurationType enum value
+	ProxyConfigurationTypeAppmesh = "APPMESH"
 )
 
 const (
