@@ -137,6 +137,8 @@ func testAccCheckAWSSfnStateMachineDestroy(s *terraform.State) error {
 
 func testAccAWSSfnStateMachineConfig(rName string, rMaxAttempts int) string {
 	return fmt.Sprintf(`
+data "aws_partition" "current" {}
+
 data "aws_region" "current" {}
 
 resource "aws_iam_role_policy" "iam_policy_for_lambda" {
@@ -152,7 +154,7 @@ resource "aws_iam_role_policy" "iam_policy_for_lambda" {
       "logs:CreateLogStream",
       "logs:PutLogEvents"
     ],
-    "Resource": "arn:aws:logs:*:*:*"
+    "Resource": "arn:${data.aws_partition.current.partition}:logs:*:*:*"
   }]
 }
 EOF
@@ -254,6 +256,8 @@ EOF
 
 func testAccAWSSfnStateMachineConfigTags1(rName string, tag1Key, tag1Value string) string {
 	return fmt.Sprintf(`
+data "aws_partition" "current" {}
+
 data "aws_region" "current" {}
 
 resource "aws_iam_role_policy" "iam_policy_for_lambda" {
@@ -269,7 +273,7 @@ resource "aws_iam_role_policy" "iam_policy_for_lambda" {
       "logs:CreateLogStream",
       "logs:PutLogEvents"
     ],
-    "Resource": "arn:aws:logs:*:*:*"
+    "Resource": "arn:${data.aws_partition.current.partition}:logs:*:*:*"
   }]
 }
 EOF
@@ -373,6 +377,8 @@ tags = {
 
 func testAccAWSSfnStateMachineConfigTags2(rName string, tag1Key, tag1Value, tag2Key, tag2Value string) string {
 	return fmt.Sprintf(`
+data "aws_partition" "current" {}
+
 data "aws_region" "current" {}
 
 resource "aws_iam_role_policy" "iam_policy_for_lambda" {
@@ -388,7 +394,7 @@ resource "aws_iam_role_policy" "iam_policy_for_lambda" {
       "logs:CreateLogStream",
       "logs:PutLogEvents"
     ],
-    "Resource": "arn:aws:logs:*:*:*"
+    "Resource": "arn:${data.aws_partition.current.partition}:logs:*:*:*"
   }]
 }
 EOF
