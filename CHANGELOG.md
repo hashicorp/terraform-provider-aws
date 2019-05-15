@@ -15,6 +15,7 @@ FEATURES:
 ENHANCEMENTS:
 
 * resource/aws_autoscaling_schedule: Support resource import [GH-8300]
+* resource/aws_backup_selection: Support resource import [GH-8546]
 * resource/aws_dynamodb_table: Support tagging on creation (where available) [GH-8469]
 * resource/aws_emr_cluster: Add `master_instance_group` and `core_instance_group` configuration blocks (deprecates other instance group configuration methods) [GH-8459]
 * resource/aws_kinesis_analytics_application: Add `tags` argument [GH-8643]
@@ -25,6 +26,7 @@ ENHANCEMENTS:
 
 BUG FIXES:
 
+* resource/aws_backup_selection: Properly trigger resource recreation with `selection_tag` updates [GH-8546]
 * resource/aws_vpn_gateway: Handle `attaching` and `detaching` attachment status [GH-8576]
 * resource/aws_vpn_gateway_attachment: Handle `attaching` and `detaching` attachment status [GH-8576]
 
