@@ -638,6 +638,7 @@ func Provider() terraform.ResourceProvider {
 			"aws_ses_domain_identity_verification":                    resourceAwsSesDomainIdentityVerification(),
 			"aws_ses_domain_dkim":                                     resourceAwsSesDomainDkim(),
 			"aws_ses_domain_mail_from":                                resourceAwsSesDomainMailFrom(),
+			"aws_ses_email_identity":                                  resourceAwsSesEmailIdentity(),
 			"aws_ses_receipt_filter":                                  resourceAwsSesReceiptFilter(),
 			"aws_ses_receipt_rule":                                    resourceAwsSesReceiptRule(),
 			"aws_ses_receipt_rule_set":                                resourceAwsSesReceiptRuleSet(),
