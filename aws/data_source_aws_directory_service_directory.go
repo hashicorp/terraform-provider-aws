@@ -15,17 +15,18 @@ func dataSourceDirectoryService() *schema.Resource {
 			"directory_id": {
 				Type:     schema.TypeString,
 				Optional: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
 			"name": {
 				Type:     schema.TypeString,
 				Optional: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
 			"shortname": {
 				Type:     schema.TypeString,
-				Optional: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
+				Computed: true,
+			},
+			"access_url": {
+				Type:     schema.TypeString,
+				Computed: true,
 			},
 		},
 	}
@@ -50,13 +51,14 @@ func dataSourceDirectoryServiceRead(d *schema.ResourceData, meta interface{}) er
 	if err != nil {
 		return fmt.Errorf("error describing directories: %s", err)
 	}
+
 	var directoryDescriptionFound *directoryservice.DirectoryDescription
 
 	for _, directoryDescription := range resp.DirectoryDescriptions {
 		directoryDescriptionName := *directoryDescription.Name
-		directoryDescriptionId := *directoryDescription.DirectoryId
+		directoryDescriptionID := *directoryDescription.DirectoryId
 		// Try to match by directory_id
-		if idExists && directoryDescriptionId == id.(string) {
+		if idExists && directoryDescriptionID == id.(string) {
 			directoryDescriptionFound = directoryDescription
 			break
 			//  Try to match by name
@@ -69,10 +71,12 @@ func dataSourceDirectoryServiceRead(d *schema.ResourceData, meta interface{}) er
 	if directoryDescriptionFound == nil {
 		return fmt.Errorf("no matching directory service found")
 	}
+
 	idDirectoryService := (*directoryDescriptionFound.DirectoryId)
 	d.SetId(idDirectoryService)
 	d.Set("name", directoryDescriptionFound.Name)
 	d.Set("shortname", directoryDescriptionFound.ShortName)
+	d.Set("access_url", directoryDescriptionFound.AccessUrl)
 
 	return nil
 }
