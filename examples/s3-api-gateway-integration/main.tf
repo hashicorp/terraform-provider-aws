@@ -109,6 +109,8 @@ resource "aws_api_gateway_method_response" "200" {
 }
 
 resource "aws_api_gateway_method_response" "400" {
+  depends_on = ["aws_api_gateway_integration.S3Integration"]
+
   rest_api_id = "${aws_api_gateway_rest_api.MyS3.id}"
   resource_id = "${aws_api_gateway_rest_api.MyS3.root_resource_id}"
   http_method = "${aws_api_gateway_method.GetBuckets.http_method}"
@@ -116,6 +118,8 @@ resource "aws_api_gateway_method_response" "400" {
 }
 
 resource "aws_api_gateway_method_response" "500" {
+  depends_on = ["aws_api_gateway_integration.S3Integration"]
+
   rest_api_id = "${aws_api_gateway_rest_api.MyS3.id}"
   resource_id = "${aws_api_gateway_rest_api.MyS3.root_resource_id}"
   http_method = "${aws_api_gateway_method.GetBuckets.http_method}"
@@ -123,12 +127,12 @@ resource "aws_api_gateway_method_response" "500" {
 }
 
 resource "aws_api_gateway_integration_response" "200IntegrationResponse" {
+  depends_on = ["aws_api_gateway_integration.S3Integration"]
+
   rest_api_id = "${aws_api_gateway_rest_api.MyS3.id}"
   resource_id = "${aws_api_gateway_rest_api.MyS3.root_resource_id}"
   http_method = "${aws_api_gateway_method.GetBuckets.http_method}"
   status_code = "${aws_api_gateway_method_response.200.status_code}"
-
-  selection_pattern = "-"
 
   response_parameters = {
     "method.response.header.Timestamp"      = "integration.response.header.Date"
@@ -138,6 +142,8 @@ resource "aws_api_gateway_integration_response" "200IntegrationResponse" {
 }
 
 resource "aws_api_gateway_integration_response" "400IntegrationResponse" {
+  depends_on = ["aws_api_gateway_integration.S3Integration"]
+
   rest_api_id = "${aws_api_gateway_rest_api.MyS3.id}"
   resource_id = "${aws_api_gateway_rest_api.MyS3.root_resource_id}"
   http_method = "${aws_api_gateway_method.GetBuckets.http_method}"
@@ -147,6 +153,8 @@ resource "aws_api_gateway_integration_response" "400IntegrationResponse" {
 }
 
 resource "aws_api_gateway_integration_response" "500IntegrationResponse" {
+  depends_on = ["aws_api_gateway_integration.S3Integration"]
+
   rest_api_id = "${aws_api_gateway_rest_api.MyS3.id}"
   resource_id = "${aws_api_gateway_rest_api.MyS3.root_resource_id}"
   http_method = "${aws_api_gateway_method.GetBuckets.http_method}"
