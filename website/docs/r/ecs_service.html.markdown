@@ -72,16 +72,26 @@ resource "aws_ecs_service" "bar" {
 }
 ```
 
+### External Deployment Controller
+
+```hcl
+resource "aws_ecs_service" "foo" {
+  name                  = "foo"
+  cluster               = "${aws_ecs_cluster.foo.id}"
+  deployment_controller = "EXTERNAL"
+}
+```
+
 ## Argument Reference
 
 The following arguments are supported:
 
 * `name` - (Required) The name of the service (up to 255 letters, numbers, hyphens, and underscores)
-* `task_definition` - (Required) The family and revision (`family:revision`) or full ARN of the task definition that you want to run in your service.
+* `task_definition` - (Optional) The family and revision (`family:revision`) or full ARN of the task definition that you want to run in your service. If a revision is not specified, the latest `ACTIVE` revision is used. Note that a task definition must be specified if the service is using the `ECS` deployment controller.
 * `desired_count` - (Optional) The number of instances of the task definition to place and keep running. Defaults to 0. Do not specify if using the `DAEMON` scheduling strategy.
 * `launch_type` - (Optional) The launch type on which to run your service. The valid values are `EC2` and `FARGATE`. Defaults to `EC2`.
 * `platform_version` - (Optional) The platform version on which to run your service. Only applicable for `launch_type` set to `FARGATE`. Defaults to `LATEST`. More information about Fargate platform versions can be found in the [AWS ECS User Guide](https://docs.aws.amazon.com/AmazonECS/latest/developerguide/platform_versions.html).
-* `scheduling_strategy` - (Optional) The scheduling strategy to use for the service. The valid values are `REPLICA` and `DAEMON`. Defaults to `REPLICA`. Note that [*Fargate tasks do not support the `DAEMON` scheduling strategy*](https://docs.aws.amazon.com/AmazonECS/latest/developerguide/scheduling_tasks.html).
+* `scheduling_strategy` - (Optional) The scheduling strategy to use for the service. The valid values are `REPLICA` and `DAEMON`. Defaults to `REPLICA`. Note that [*Tasks using the Fargate launch type or the `CODE_DEPLOY` or `EXTERNAL` deployment controller types don't support the `DAEMON` scheduling strategy*](https://docs.aws.amazon.com/AmazonECS/latest/APIReference/API_CreateService.html).
 * `cluster` - (Optional) ARN of an ECS cluster
 * `iam_role` - (Optional) ARN of the IAM role that allows Amazon ECS to make calls to your load balancer on your behalf. This parameter is required if you are using a load balancer with your service, but only if your task definition does not use the `awsvpc` network mode. If using `awsvpc` network mode, do not specify this role. If your account has already created the Amazon ECS service-linked role, that role is used by default for your service unless you specify a role here.
 * `deployment_controller` - (Optional) Configuration block containing deployment controller configuration. Defined below.
@@ -102,7 +112,7 @@ The following arguments are supported:
 
 The `deployment_controller` configuration block supports the following:
 
-* `type` - (Optional) Type of deployment controller. Valid values: `CODE_DEPLOY`, `ECS`. Default: `ECS`.
+* `type` - (Optional) Type of deployment controller. Valid values: `CODE_DEPLOY`, `ECS`, `EXTERNAL`. Default: `ECS`.
 
 ## load_balancer
 
