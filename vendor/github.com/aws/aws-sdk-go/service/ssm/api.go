@@ -4950,6 +4950,106 @@ func (c *SSM) DescribePatchGroupsWithContext(ctx aws.Context, input *DescribePat
 	return out, req.Send()
 }
 
+const opDescribePatchProperties = "DescribePatchProperties"
+
+// DescribePatchPropertiesRequest generates a "aws/request.Request" representing the
+// client's request for the DescribePatchProperties operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See DescribePatchProperties for more information on using the DescribePatchProperties
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the DescribePatchPropertiesRequest method.
+//    req, resp := client.DescribePatchPropertiesRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/DescribePatchProperties
+func (c *SSM) DescribePatchPropertiesRequest(input *DescribePatchPropertiesInput) (req *request.Request, output *DescribePatchPropertiesOutput) {
+	op := &request.Operation{
+		Name:       opDescribePatchProperties,
+		HTTPMethod: "POST",
+		HTTPPath:   "/",
+	}
+
+	if input == nil {
+		input = &DescribePatchPropertiesInput{}
+	}
+
+	output = &DescribePatchPropertiesOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// DescribePatchProperties API operation for Amazon Simple Systems Manager (SSM).
+//
+// Lists the properties of available patches organized by product, product family,
+// classification, severity, and other properties of available patches. You
+// can use the reported properties in the filters you specify in requests for
+// actions such as CreatePatchBaseline, UpdatePatchBaseline, DescribeAvailablePatches,
+// and DescribePatchBaselines.
+//
+// The following section lists the properties that can be used in filters for
+// each major operating system type:
+//
+// WINDOWSValid properties: PRODUCT, PRODUCT_FAMILY, CLASSIFICATION, MSRC_SEVERITY
+//
+// AMAZON_LINUXValid properties: PRODUCT, CLASSIFICATION, SEVERITY
+//
+// AMAZON_LINUX_2Valid properties: PRODUCT, CLASSIFICATION, SEVERITY
+//
+// UBUNTU Valid properties: PRODUCT, PRIORITY
+//
+// REDHAT_ENTERPRISE_LINUXValid properties: PRODUCT, CLASSIFICATION, SEVERITY
+//
+// SUSEValid properties: PRODUCT, CLASSIFICATION, SEVERITY
+//
+// CENTOSValid properties: PRODUCT, CLASSIFICATION, SEVERITY
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for Amazon Simple Systems Manager (SSM)'s
+// API operation DescribePatchProperties for usage and error information.
+//
+// Returned Error Codes:
+//   * ErrCodeInternalServerError "InternalServerError"
+//   An error occurred on the server side.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/DescribePatchProperties
+func (c *SSM) DescribePatchProperties(input *DescribePatchPropertiesInput) (*DescribePatchPropertiesOutput, error) {
+	req, out := c.DescribePatchPropertiesRequest(input)
+	return out, req.Send()
+}
+
+// DescribePatchPropertiesWithContext is the same as DescribePatchProperties with the addition of
+// the ability to pass a context and additional request options.
+//
+// See DescribePatchProperties for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *SSM) DescribePatchPropertiesWithContext(ctx aws.Context, input *DescribePatchPropertiesInput, opts ...request.Option) (*DescribePatchPropertiesOutput, error) {
+	req, out := c.DescribePatchPropertiesRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
 const opDescribeSessions = "DescribeSessions"
 
 // DescribeSessionsRequest generates a "aws/request.Request" representing the
@@ -5449,6 +5549,8 @@ func (c *SSM) GetDeployablePatchSnapshotForInstanceRequest(input *GetDeployableP
 //   The operating systems you specified is not supported, or the operation is
 //   not supported for the operating system. Valid operating systems include:
 //   Windows, AmazonLinux, RedhatEnterpriseLinux, and Ubuntu.
+//
+//   * ErrCodeUnsupportedFeatureRequiredException "UnsupportedFeatureRequiredException"
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/GetDeployablePatchSnapshotForInstance
 func (c *SSM) GetDeployablePatchSnapshotForInstance(input *GetDeployablePatchSnapshotForInstanceInput) (*GetDeployablePatchSnapshotForInstanceOutput, error) {
@@ -8832,6 +8934,22 @@ func (c *SSM) PutParameterRequest(input *PutParameterInput) (req *request.Reques
 //   * ErrCodeUnsupportedParameterType "UnsupportedParameterType"
 //   The parameter type is not supported.
 //
+//   * ErrCodePoliciesLimitExceededException "PoliciesLimitExceededException"
+//   You specified more than the maximum number of allowed policies for the parameter.
+//   The maximum is 10.
+//
+//   * ErrCodeInvalidPolicyTypeException "InvalidPolicyTypeException"
+//   The policy type is not supported. Parameter Store supports the following
+//   policy types: Expiration, ExpirationNotification, and NoChangeNotification.
+//
+//   * ErrCodeInvalidPolicyAttributeException "InvalidPolicyAttributeException"
+//   A policy attribute or its value is invalid.
+//
+//   * ErrCodeIncompatiblePolicyException "IncompatiblePolicyException"
+//   There is a conflict in the policies specified for this parameter. You can't,
+//   for example, specify two Expiration policies for a parameter. Review your
+//   policies, and try again.
+//
 // See also, https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/PutParameter
 func (c *SSM) PutParameter(input *PutParameterInput) (*PutParameterOutput, error) {
 	req, out := c.PutParameterRequest(input)
@@ -11774,9 +11892,7 @@ type AssociationExecution struct {
 	// Detailed status information about the execution.
 	DetailedStatus *string `type:"string"`
 
-	// The execution ID for the association. If the association does not run at
-	// intervals or according to a schedule, then the ExecutionID is the same as
-	// the AssociationID.
+	// The execution ID for the association.
 	ExecutionId *string `type:"string"`
 
 	// The date of the last execution.
@@ -11931,8 +12047,7 @@ type AssociationExecutionTarget struct {
 	// Detailed information about the execution status.
 	DetailedStatus *string `type:"string"`
 
-	// The execution ID. If the association does not run at intervals or according
-	// to a schedule, then the ExecutionID is the same as the AssociationID.
+	// The execution ID.
 	ExecutionId *string `type:"string"`
 
 	// The date of the last execution.
@@ -14937,7 +15052,7 @@ type CreateAssociationInput struct {
 	// An Amazon S3 bucket where you want to store the output details of the request.
 	OutputLocation *InstanceAssociationOutputLocation `type:"structure"`
 
-	// The parameters for the documents runtime configuration.
+	// The parameters for the runtime configuration of the document.
 	Parameters map[string][]*string `type:"map"`
 
 	// A cron expression when the association will be applied to the target(s).
@@ -15508,7 +15623,7 @@ type CreatePatchBaselineInput struct {
 	//
 	// For information about accepted formats for lists of approved patches and
 	// rejected patches, see Package Name Formats for Approved and Rejected Patch
-	// Lists (http://docs.aws.amazon.com/systems-manager/latest/userguide/patch-manager-approved-rejected-package-name-formats.html)
+	// Lists (https://docs.aws.amazon.com/systems-manager/latest/userguide/patch-manager-approved-rejected-package-name-formats.html)
 	// in the AWS Systems Manager User Guide.
 	ApprovedPatches []*string `type:"list"`
 
@@ -15544,7 +15659,7 @@ type CreatePatchBaselineInput struct {
 	//
 	// For information about accepted formats for lists of approved patches and
 	// rejected patches, see Package Name Formats for Approved and Rejected Patch
-	// Lists (http://docs.aws.amazon.com/systems-manager/latest/userguide/patch-manager-approved-rejected-package-name-formats.html)
+	// Lists (https://docs.aws.amazon.com/systems-manager/latest/userguide/patch-manager-approved-rejected-package-name-formats.html)
 	// in the AWS Systems Manager User Guide.
 	RejectedPatches []*string `type:"list"`
 
@@ -19827,6 +19942,10 @@ type DescribePatchGroupStateOutput struct {
 
 	// The number of instances with patches that aren't applicable.
 	InstancesWithNotApplicablePatches *int64 `type:"integer"`
+
+	// The number of instances with NotApplicable patches beyond the supported limit,
+	// which are not reported by name to Systems Manager Inventory.
+	InstancesWithUnreportedNotApplicablePatches *int64 `type:"integer"`
 }
 
 // String returns the string representation
@@ -19878,6 +19997,12 @@ func (s *DescribePatchGroupStateOutput) SetInstancesWithMissingPatches(v int64) 
 // SetInstancesWithNotApplicablePatches sets the InstancesWithNotApplicablePatches field's value.
 func (s *DescribePatchGroupStateOutput) SetInstancesWithNotApplicablePatches(v int64) *DescribePatchGroupStateOutput {
 	s.InstancesWithNotApplicablePatches = &v
+	return s
+}
+
+// SetInstancesWithUnreportedNotApplicablePatches sets the InstancesWithUnreportedNotApplicablePatches field's value.
+func (s *DescribePatchGroupStateOutput) SetInstancesWithUnreportedNotApplicablePatches(v int64) *DescribePatchGroupStateOutput {
+	s.InstancesWithUnreportedNotApplicablePatches = &v
 	return s
 }
 
@@ -19980,6 +20105,125 @@ func (s *DescribePatchGroupsOutput) SetMappings(v []*PatchGroupPatchBaselineMapp
 // SetNextToken sets the NextToken field's value.
 func (s *DescribePatchGroupsOutput) SetNextToken(v string) *DescribePatchGroupsOutput {
 	s.NextToken = &v
+	return s
+}
+
+type DescribePatchPropertiesInput struct {
+	_ struct{} `type:"structure"`
+
+	// The maximum number of items to return for this call. The call also returns
+	// a token that you can specify in a subsequent call to get the next set of
+	// results.
+	MaxResults *int64 `min:"1" type:"integer"`
+
+	// The token for the next set of items to return. (You received this token from
+	// a previous call.)
+	NextToken *string `type:"string"`
+
+	// The operating system type for which to list patches.
+	//
+	// OperatingSystem is a required field
+	OperatingSystem *string `type:"string" required:"true" enum:"OperatingSystem"`
+
+	// Indicates whether to list patches for the Windows operating system or for
+	// Microsoft applications. Not applicable for Linux operating systems.
+	PatchSet *string `type:"string" enum:"PatchSet"`
+
+	// The patch property for which you want to view patch details.
+	//
+	// Property is a required field
+	Property *string `type:"string" required:"true" enum:"PatchProperty"`
+}
+
+// String returns the string representation
+func (s DescribePatchPropertiesInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DescribePatchPropertiesInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *DescribePatchPropertiesInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "DescribePatchPropertiesInput"}
+	if s.MaxResults != nil && *s.MaxResults < 1 {
+		invalidParams.Add(request.NewErrParamMinValue("MaxResults", 1))
+	}
+	if s.OperatingSystem == nil {
+		invalidParams.Add(request.NewErrParamRequired("OperatingSystem"))
+	}
+	if s.Property == nil {
+		invalidParams.Add(request.NewErrParamRequired("Property"))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetMaxResults sets the MaxResults field's value.
+func (s *DescribePatchPropertiesInput) SetMaxResults(v int64) *DescribePatchPropertiesInput {
+	s.MaxResults = &v
+	return s
+}
+
+// SetNextToken sets the NextToken field's value.
+func (s *DescribePatchPropertiesInput) SetNextToken(v string) *DescribePatchPropertiesInput {
+	s.NextToken = &v
+	return s
+}
+
+// SetOperatingSystem sets the OperatingSystem field's value.
+func (s *DescribePatchPropertiesInput) SetOperatingSystem(v string) *DescribePatchPropertiesInput {
+	s.OperatingSystem = &v
+	return s
+}
+
+// SetPatchSet sets the PatchSet field's value.
+func (s *DescribePatchPropertiesInput) SetPatchSet(v string) *DescribePatchPropertiesInput {
+	s.PatchSet = &v
+	return s
+}
+
+// SetProperty sets the Property field's value.
+func (s *DescribePatchPropertiesInput) SetProperty(v string) *DescribePatchPropertiesInput {
+	s.Property = &v
+	return s
+}
+
+type DescribePatchPropertiesOutput struct {
+	_ struct{} `type:"structure"`
+
+	// The token for the next set of items to return. (You use this token in the
+	// next call.)
+	NextToken *string `type:"string"`
+
+	// A list of the properties for patches matching the filter request parameters.
+	Properties []map[string]*string `type:"list"`
+}
+
+// String returns the string representation
+func (s DescribePatchPropertiesOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DescribePatchPropertiesOutput) GoString() string {
+	return s.String()
+}
+
+// SetNextToken sets the NextToken field's value.
+func (s *DescribePatchPropertiesOutput) SetNextToken(v string) *DescribePatchPropertiesOutput {
+	s.NextToken = &v
+	return s
+}
+
+// SetProperties sets the Properties field's value.
+func (s *DescribePatchPropertiesOutput) SetProperties(v []map[string]*string) *DescribePatchPropertiesOutput {
+	s.Properties = v
 	return s
 }
 
@@ -24224,7 +24468,9 @@ type InstancePatchState struct {
 	MissingCount *int64 `type:"integer"`
 
 	// The number of patches from the patch baseline that aren't applicable for
-	// the instance and hence aren't installed on the instance.
+	// the instance and therefore aren't installed on the instance. This number
+	// may be truncated if the list of patch names is very large. The number of
+	// patches beyond this limit are reported in UnreportedNotApplicableCount.
 	NotApplicableCount *int64 `type:"integer"`
 
 	// The type of patching operation that was performed: SCAN (assess patch compliance
@@ -24255,6 +24501,10 @@ type InstancePatchState struct {
 	// The ID of the patch baseline snapshot used during the patching operation
 	// when this compliance data was collected.
 	SnapshotId *string `min:"36" type:"string"`
+
+	// The number of patches beyond the supported limit of NotApplicableCount that
+	// are not reported by name to Systems Manager Inventory.
+	UnreportedNotApplicableCount *int64 `type:"integer"`
 }
 
 // String returns the string representation
@@ -24354,6 +24604,12 @@ func (s *InstancePatchState) SetPatchGroup(v string) *InstancePatchState {
 // SetSnapshotId sets the SnapshotId field's value.
 func (s *InstancePatchState) SetSnapshotId(v string) *InstancePatchState {
 	s.SnapshotId = &v
+	return s
+}
+
+// SetUnreportedNotApplicableCount sets the UnreportedNotApplicableCount field's value.
+func (s *InstancePatchState) SetUnreportedNotApplicableCount(v int64) *InstancePatchState {
+	s.UnreportedNotApplicableCount = &v
 	return s
 }
 
@@ -27456,24 +27712,31 @@ func (s *MaintenanceWindowStepFunctionsParameters) SetName(v string) *Maintenanc
 type MaintenanceWindowTarget struct {
 	_ struct{} `type:"structure"`
 
-	// A description of the target.
+	// A description for the target.
 	Description *string `min:"1" type:"string" sensitive:"true"`
 
 	// The target name.
 	Name *string `min:"3" type:"string"`
 
-	// User-provided value that will be included in any CloudWatch events raised
-	// while running tasks for these targets in this Maintenance Window.
+	// A user-provided value that will be included in any CloudWatch events that
+	// are raised while running tasks for these targets in this Maintenance Window.
 	OwnerInformation *string `min:"1" type:"string" sensitive:"true"`
 
-	// The type of target.
+	// The type of target that is being registered with the Maintenance Window.
 	ResourceType *string `type:"string" enum:"MaintenanceWindowResourceType"`
 
-	// The targets (either instances or tags). Instances are specified using Key=instanceids,Values=<instanceid1>,<instanceid2>.
-	// Tags are specified using Key=<tag name>,Values=<tag value>.
+	// The targets, either instances or tags.
+	//
+	// Specify instances using the following format:
+	//
+	// Key=instanceids,Values=<instanceid1>,<instanceid2>
+	//
+	// Tags are specified using the following format:
+	//
+	// Key=<tag name>,Values=<tag value>.
 	Targets []*Target `type:"list"`
 
-	// The Maintenance Window ID where the target is registered.
+	// The ID of the Maintenance Window to register the target with.
 	WindowId *string `min:"20" type:"string"`
 
 	// The ID of the target.
@@ -27547,7 +27810,7 @@ type MaintenanceWindowTask struct {
 	// for the supported Maintenance Window task types, see MaintenanceWindowTaskInvocationParameters.
 	LoggingInfo *LoggingInfo `type:"structure"`
 
-	// The maximum number of targets this task can be run for in parallel.
+	// The maximum number of targets this task can be run for, in parallel.
 	MaxConcurrency *string `min:"1" type:"string"`
 
 	// The maximum number of errors allowed before this task stops being scheduled.
@@ -27586,7 +27849,7 @@ type MaintenanceWindowTask struct {
 	// LAMBDA, or STEP_FUNCTION.
 	Type *string `type:"string" enum:"MaintenanceWindowTaskType"`
 
-	// The Maintenance Window ID where the task is registered.
+	// The ID of the Maintenance Window where the task is registered.
 	WindowId *string `min:"20" type:"string"`
 
 	// The task ID.
@@ -28024,7 +28287,7 @@ type Parameter struct {
 	Type *string `type:"string" enum:"ParameterType"`
 
 	// The parameter value.
-	Value *string `min:"1" type:"string"`
+	Value *string `type:"string"`
 
 	// The parameter version.
 	Version *int64 `type:"long"`
@@ -28115,11 +28378,17 @@ type ParameterHistory struct {
 	// The name of the parameter.
 	Name *string `min:"1" type:"string"`
 
+	// Information about the policies assigned to a parameter.
+	Policies []*ParameterInlinePolicy `type:"list"`
+
+	// The parameter tier.
+	Tier *string `type:"string" enum:"ParameterTier"`
+
 	// The type of parameter used.
 	Type *string `type:"string" enum:"ParameterType"`
 
 	// The parameter value.
-	Value *string `min:"1" type:"string"`
+	Value *string `type:"string"`
 
 	// The parameter version.
 	Version *int64 `type:"long"`
@@ -28177,6 +28446,18 @@ func (s *ParameterHistory) SetName(v string) *ParameterHistory {
 	return s
 }
 
+// SetPolicies sets the Policies field's value.
+func (s *ParameterHistory) SetPolicies(v []*ParameterInlinePolicy) *ParameterHistory {
+	s.Policies = v
+	return s
+}
+
+// SetTier sets the Tier field's value.
+func (s *ParameterHistory) SetTier(v string) *ParameterHistory {
+	s.Tier = &v
+	return s
+}
+
 // SetType sets the Type field's value.
 func (s *ParameterHistory) SetType(v string) *ParameterHistory {
 	s.Type = &v
@@ -28192,6 +28473,52 @@ func (s *ParameterHistory) SetValue(v string) *ParameterHistory {
 // SetVersion sets the Version field's value.
 func (s *ParameterHistory) SetVersion(v int64) *ParameterHistory {
 	s.Version = &v
+	return s
+}
+
+// One or more policies assigned to a parameter.
+type ParameterInlinePolicy struct {
+	_ struct{} `type:"structure"`
+
+	// The status of the policy. Policies report the following statuses: Pending
+	// (the policy has not been enforced or applied yet), Finished (the policy was
+	// applied), Failed (the policy was not applied), or InProgress (the policy
+	// is being applied now).
+	PolicyStatus *string `type:"string"`
+
+	// The JSON text of the policy.
+	PolicyText *string `type:"string"`
+
+	// The type of policy. Parameter Store supports the following policy types:
+	// Expiration, ExpirationNotification, and NoChangeNotification.
+	PolicyType *string `type:"string"`
+}
+
+// String returns the string representation
+func (s ParameterInlinePolicy) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ParameterInlinePolicy) GoString() string {
+	return s.String()
+}
+
+// SetPolicyStatus sets the PolicyStatus field's value.
+func (s *ParameterInlinePolicy) SetPolicyStatus(v string) *ParameterInlinePolicy {
+	s.PolicyStatus = &v
+	return s
+}
+
+// SetPolicyText sets the PolicyText field's value.
+func (s *ParameterInlinePolicy) SetPolicyText(v string) *ParameterInlinePolicy {
+	s.PolicyText = &v
+	return s
+}
+
+// SetPolicyType sets the PolicyType field's value.
+func (s *ParameterInlinePolicy) SetPolicyType(v string) *ParameterInlinePolicy {
+	s.PolicyType = &v
 	return s
 }
 
@@ -28219,6 +28546,12 @@ type ParameterMetadata struct {
 
 	// The parameter name.
 	Name *string `min:"1" type:"string"`
+
+	// A list of policies associated with a parameter.
+	Policies []*ParameterInlinePolicy `type:"list"`
+
+	// The parameter tier.
+	Tier *string `type:"string" enum:"ParameterTier"`
 
 	// The type of parameter. Valid parameter types include the following: String,
 	// String list, Secure string.
@@ -28274,6 +28607,18 @@ func (s *ParameterMetadata) SetName(v string) *ParameterMetadata {
 	return s
 }
 
+// SetPolicies sets the Policies field's value.
+func (s *ParameterMetadata) SetPolicies(v []*ParameterInlinePolicy) *ParameterMetadata {
+	s.Policies = v
+	return s
+}
+
+// SetTier sets the Tier field's value.
+func (s *ParameterMetadata) SetTier(v string) *ParameterMetadata {
+	s.Tier = &v
+	return s
+}
+
 // SetType sets the Type field's value.
 func (s *ParameterMetadata) SetType(v string) *ParameterMetadata {
 	s.Type = &v
@@ -28288,7 +28633,9 @@ func (s *ParameterMetadata) SetVersion(v int64) *ParameterMetadata {
 
 // One or more filters. Use a filter to return a more specific list of results.
 //
-// The Name field can't be used with the GetParametersByPath API action.
+// The Name and Tier filter keys can't be used with the GetParametersByPath
+// API action. Also, the Label filter key can't be used with the DescribeParameters
+// API action.
 type ParameterStringFilter struct {
 	_ struct{} `type:"structure"`
 
@@ -28693,440 +29040,36 @@ func (s *PatchComplianceData) SetTitle(v string) *PatchComplianceData {
 	return s
 }
 
-// Defines a patch filter.
-//
-// A patch filter consists of key/value pairs, but not all keys are valid for
-// all operating system types. For example, the key PRODUCT is valid for all
-// supported operating system types. The key MSRC_SEVERITY, however, is valid
-// only for Windows operating systems, and the key SECTION is valid only for
-// Ubuntu operating systems.
-//
-// Refer to the following sections for information about which keys may be used
-// with each major operating system, and which values are valid for each key.
-//
-// Windows Operating Systems
-//
-// The supported keys for Windows operating systems are PRODUCT, CLASSIFICATION,
-// and MSRC_SEVERITY. See the following lists for valid values for each of these
-// keys.
-//
-// Supported key:PRODUCT
-//
-// Supported values:
-//
-//    * Windows7
-//
-//    * Windows8
-//
-//    * Windows8.1
-//
-//    * Windows8Embedded
-//
-//    * Windows10
-//
-//    * Windows10LTSB
-//
-//    * WindowsServer2008
-//
-//    * WindowsServer2008R2
-//
-//    * WindowsServer2012
-//
-//    * WindowsServer2012R2
-//
-//    * WindowsServer2016
-//
-//    * WindowsServer2019
-//
-//    * *
-//
-// Use a wildcard character (*) to target all supported operating system versions.
-//
-// Supported key:CLASSIFICATION
-//
-// Supported values:
-//
-//    * CriticalUpdates
-//
-//    * DefinitionUpdates
-//
-//    * Drivers
-//
-//    * FeaturePacks
-//
-//    * SecurityUpdates
-//
-//    * ServicePacks
-//
-//    * Tools
-//
-//    * UpdateRollups
-//
-//    * Updates
-//
-//    * Upgrades
-//
-// Supported key:MSRC_SEVERITY
-//
-// Supported values:
-//
-//    * Critical
-//
-//    * Important
-//
-//    * Moderate
-//
-//    * Low
-//
-//    * Unspecified
-//
-// Ubuntu Operating Systems
-//
-// The supported keys for Ubuntu operating systems are PRODUCT, PRIORITY, and
-// SECTION. See the following lists for valid values for each of these keys.
-//
-// Supported key:PRODUCT
-//
-// Supported values:
-//
-//    * Ubuntu14.04
-//
-//    * Ubuntu16.04
-//
-//    * *
-//
-// Use a wildcard character (*) to target all supported operating system versions.
-//
-// Supported key:PRIORITY
-//
-// Supported values:
-//
-//    * Required
-//
-//    * Important
-//
-//    * Standard
-//
-//    * Optional
-//
-//    * Extra
-//
-// Supported key:SECTION
-//
-// Only the length of the key value is validated. Minimum length is 1. Maximum
-// length is 64.
-//
-// Amazon Linux Operating Systems
-//
-// The supported keys for Amazon Linux operating systems are PRODUCT, CLASSIFICATION,
-// and SEVERITY. See the following lists for valid values for each of these
-// keys.
-//
-// Supported key:PRODUCT
-//
-// Supported values:
-//
-//    * AmazonLinux2012.03
-//
-//    * AmazonLinux2012.09
-//
-//    * AmazonLinux2013.03
-//
-//    * AmazonLinux2013.09
-//
-//    * AmazonLinux2014.03
-//
-//    * AmazonLinux2014.09
-//
-//    * AmazonLinux2015.03
-//
-//    * AmazonLinux2015.09
-//
-//    * AmazonLinux2016.03
-//
-//    * AmazonLinux2016.09
-//
-//    * AmazonLinux2017.03
-//
-//    * AmazonLinux2017.09
-//
-//    * *
-//
-// Use a wildcard character (*) to target all supported operating system versions.
-//
-// Supported key:CLASSIFICATION
-//
-// Supported values:
-//
-//    * Security
-//
-//    * Bugfix
-//
-//    * Enhancement
-//
-//    * Recommended
-//
-//    * Newpackage
-//
-// Supported key:SEVERITY
-//
-// Supported values:
-//
-//    * Critical
-//
-//    * Important
-//
-//    * Medium
-//
-//    * Low
-//
-// Amazon Linux 2 Operating Systems
-//
-// The supported keys for Amazon Linux 2 operating systems are PRODUCT, CLASSIFICATION,
-// and SEVERITY. See the following lists for valid values for each of these
-// keys.
-//
-// Supported key:PRODUCT
-//
-// Supported values:
-//
-//    * AmazonLinux2
-//
-//    * AmazonLinux2.0
-//
-//    * *
-//
-// Use a wildcard character (*) to target all supported operating system versions.
-//
-// Supported key:CLASSIFICATION
-//
-// Supported values:
-//
-//    * Security
-//
-//    * Bugfix
-//
-//    * Enhancement
-//
-//    * Recommended
-//
-//    * Newpackage
-//
-// Supported key:SEVERITY
-//
-// Supported values:
-//
-//    * Critical
-//
-//    * Important
-//
-//    * Medium
-//
-//    * Low
-//
-// RedHat Enterprise Linux (RHEL) Operating Systems
-//
-// The supported keys for RedHat Enterprise Linux operating systems are PRODUCT,
-// CLASSIFICATION, and SEVERITY. See the following lists for valid values for
-// each of these keys.
-//
-// Supported key:PRODUCT
-//
-// Supported values:
-//
-//    * RedhatEnterpriseLinux6.5
-//
-//    * RedhatEnterpriseLinux6.6
-//
-//    * RedhatEnterpriseLinux6.7
-//
-//    * RedhatEnterpriseLinux6.8
-//
-//    * RedhatEnterpriseLinux6.9
-//
-//    * RedhatEnterpriseLinux7.0
-//
-//    * RedhatEnterpriseLinux7.1
-//
-//    * RedhatEnterpriseLinux7.2
-//
-//    * RedhatEnterpriseLinux7.3
-//
-//    * RedhatEnterpriseLinux7.4
-//
-//    * RedhatEnterpriseLinux7.5
-//
-//    * RedhatEnterpriseLinux7.6
-//
-//    * *
-//
-// Use a wildcard character (*) to target all supported operating system versions.
-//
-// Supported key:CLASSIFICATION
-//
-// Supported values:
-//
-//    * Security
-//
-//    * Bugfix
-//
-//    * Enhancement
-//
-//    * Recommended
-//
-//    * Newpackage
-//
-// Supported key:SEVERITY
-//
-// Supported values:
-//
-//    * Critical
-//
-//    * Important
-//
-//    * Medium
-//
-//    * Low
-//
-// SUSE Linux Enterprise Server (SLES) Operating Systems
-//
-// The supported keys for SLES operating systems are PRODUCT, CLASSIFICATION,
-// and SEVERITY. See the following lists for valid values for each of these
-// keys.
-//
-// Supported key:PRODUCT
-//
-// Supported values:
-//
-//    * Suse12.0
-//
-//    * Suse12.1
-//
-//    * Suse12.2
-//
-//    * Suse12.3
-//
-//    * Suse12.4
-//
-//    * Suse12.5
-//
-//    * Suse12.6
-//
-//    * Suse12.7
-//
-//    * Suse12.8
-//
-//    * Suse12.9
-//
-//    * *
-//
-// Use a wildcard character (*) to target all supported operating system versions.
-//
-// Supported key:CLASSIFICATION
-//
-// Supported values:
-//
-//    * Security
-//
-//    * Recommended
-//
-//    * Optional
-//
-//    * Feature
-//
-//    * Document
-//
-//    * Yast
-//
-// Supported key:SEVERITY
-//
-// Supported values:
-//
-//    * Critical
-//
-//    * Important
-//
-//    * Moderate
-//
-//    * Low
-//
-// CentOS Operating Systems
-//
-// The supported keys for CentOS operating systems are PRODUCT, CLASSIFICATION,
-// and SEVERITY. See the following lists for valid values for each of these
-// keys.
-//
-// Supported key:PRODUCT
-//
-// Supported values:
-//
-//    * CentOS6.5
-//
-//    * CentOS6.6
-//
-//    * CentOS6.7
-//
-//    * CentOS6.8
-//
-//    * CentOS6.9
-//
-//    * CentOS7.0
-//
-//    * CentOS7.1
-//
-//    * CentOS7.2
-//
-//    * CentOS7.3
-//
-//    * CentOS7.4
-//
-//    * CentOS7.5
-//
-//    * CentOS7.6
-//
-//    * *
-//
-// Use a wildcard character (*) to target all supported operating system versions.
-//
-// Supported key:CLASSIFICATION
-//
-// Supported values:
-//
-//    * Security
-//
-//    * Bugfix
-//
-//    * Enhancement
-//
-//    * Recommended
-//
-//    * Newpackage
-//
-// Supported key:SEVERITY
-//
-// Supported values:
-//
-//    * Critical
-//
-//    * Important
-//
-//    * Medium
-//
-//    * Low
+// Defines which patches should be included in a patch baseline.
+//
+// A patch filter consists of a key and a set of values. The filter key is a
+// patch property. For example, the available filter keys for WINDOWS are PATCH_SET,
+// PRODUCT, PRODUCT_FAMILY, CLASSIFICATION, and MSRC_SEVERITY. The filter values
+// define a matching criterion for the patch property indicated by the key.
+// For example, if the filter key is PRODUCT and the filter values are ["Office
+// 2013", "Office 2016"], then the filter accepts all patches where product
+// name is either "Office 2013" or "Office 2016". The filter values can be exact
+// values for the patch property given as a key, or a wildcard (*), which matches
+// all values.
+//
+// You can view lists of valid values for the patch properties by running the
+// DescribePatchProperties command. For information about which patch properties
+// can be used with each major operating system, see DescribePatchProperties.
 type PatchFilter struct {
 	_ struct{} `type:"structure"`
 
 	// The key for the filter.
 	//
-	// See PatchFilter for lists of valid keys for each operating system type.
+	// Run the DescribePatchProperties command to view lists of valid keys for each
+	// operating system type.
 	//
 	// Key is a required field
 	Key *string `type:"string" required:"true" enum:"PatchFilterKey"`
 
 	// The value for the filter key.
 	//
-	// See PatchFilter for lists of valid values for each key based on operating
-	// system type.
+	// Run the DescribePatchProperties command to view lists of valid values for
+	// each key based on operating system type.
 	//
 	// Values is a required field
 	Values []*string `min:"1" type:"list" required:"true"`
@@ -29927,6 +29870,30 @@ type PutParameterInput struct {
 	// Overwrite an existing parameter. If not specified, will default to "false".
 	Overwrite *bool `type:"boolean"`
 
+	// One or more policies to apply to a parameter. This action takes a JSON array.
+	// Parameter Store supports the following policy types:
+	//
+	// Expiration: This policy deletes the parameter after it expires. When you
+	// create the policy, you specify the expiration date. You can update the expiration
+	// date and time by updating the policy. Updating the parameter does not affect
+	// the expiration date and time. When the expiration time is reached, Parameter
+	// Store deletes the parameter.
+	//
+	// ExpirationNotification: This policy triggers an event in Amazon CloudWatch
+	// Events that notifies you about the expiration. By using this policy, you
+	// can receive notification before or after the expiration time is reached,
+	// in units of days or hours.
+	//
+	// NoChangeNotification: This policy triggers a CloudWatch event if a parameter
+	// has not been modified for a specified period of time. This policy type is
+	// useful when, for example, a secret needs to be changed within a period of
+	// time, but it has not been changed.
+	//
+	// All existing policies are preserved until you send new policies or an empty
+	// policy. For more information about parameter policies, see Working with Parameter
+	// Policies (http://docs.aws.amazon.com/systems-manager/latest/userguide/sysman-paramstore-su-policies.html).
+	Policies *string `min:"1" type:"string"`
+
 	// Optional metadata that you assign to a resource. Tags enable you to categorize
 	// a resource in different ways, such as by purpose, owner, or environment.
 	// For example, you might want to tag a Systems Manager parameter to identify
@@ -29944,6 +29911,32 @@ type PutParameterInput struct {
 	// action.
 	Tags []*Tag `type:"list"`
 
+	// Parameter Store offers a standard tier and an advanced tier for parameters.
+	// Standard parameters have a value limit of 4 KB and can't be configured to
+	// use parameter policies. You can create a maximum of 10,000 standard parameters
+	// per account and per Region. Standard parameters are offered at no additional
+	// cost.
+	//
+	// Advanced parameters have a value limit of 8 KB and can be configured to use
+	// parameter policies. You can create a maximum of 100,000 advanced parameters
+	// per account and per Region. Advanced parameters incur a charge.
+	//
+	// If you don't specify a parameter tier when you create a new parameter, the
+	// parameter defaults to using the standard tier. You can change a standard
+	// parameter to an advanced parameter at any time. But you can't revert an advanced
+	// parameter to a standard parameter. Reverting an advanced parameter to a standard
+	// parameter would result in data loss because the system would truncate the
+	// size of the parameter from 8 KB to 4 KB. Reverting would also remove any
+	// policies attached to the parameter. Lastly, advanced parameters use a different
+	// form of encryption than standard parameters.
+	//
+	// If you no longer need an advanced parameter, or if you no longer want to
+	// incur charges for an advanced parameter, you must delete it and recreate
+	// it as a new standard parameter. For more information, see About Advanced
+	// Parameters (http://docs.aws.amazon.com/systems-manager/latest/userguide/parameter-store-advanced-parameters.html)
+	// in the AWS Systems Manager User Guide.
+	Tier *string `type:"string" enum:"ParameterTier"`
+
 	// The type of parameter that you want to add to the system.
 	//
 	// Items in a StringList must be separated by a comma (,). You can't use other
@@ -29956,10 +29949,11 @@ type PutParameterInput struct {
 	// Type is a required field
 	Type *string `type:"string" required:"true" enum:"ParameterType"`
 
-	// The parameter value that you want to add to the system.
+	// The parameter value that you want to add to the system. Standard parameters
+	// have a value limit of 4 KB. Advanced parameters have a value limit of 8 KB.
 	//
 	// Value is a required field
-	Value *string `min:"1" type:"string" required:"true"`
+	Value *string `type:"string" required:"true"`
 }
 
 // String returns the string representation
@@ -29984,14 +29978,14 @@ func (s *PutParameterInput) Validate() error {
 	if s.Name != nil && len(*s.Name) < 1 {
 		invalidParams.Add(request.NewErrParamMinLen("Name", 1))
 	}
+	if s.Policies != nil && len(*s.Policies) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("Policies", 1))
+	}
 	if s.Type == nil {
 		invalidParams.Add(request.NewErrParamRequired("Type"))
 	}
 	if s.Value == nil {
 		invalidParams.Add(request.NewErrParamRequired("Value"))
-	}
-	if s.Value != nil && len(*s.Value) < 1 {
-		invalidParams.Add(request.NewErrParamMinLen("Value", 1))
 	}
 	if s.Tags != nil {
 		for i, v := range s.Tags {
@@ -30040,9 +30034,21 @@ func (s *PutParameterInput) SetOverwrite(v bool) *PutParameterInput {
 	return s
 }
 
+// SetPolicies sets the Policies field's value.
+func (s *PutParameterInput) SetPolicies(v string) *PutParameterInput {
+	s.Policies = &v
+	return s
+}
+
 // SetTags sets the Tags field's value.
 func (s *PutParameterInput) SetTags(v []*Tag) *PutParameterInput {
 	s.Tags = v
+	return s
+}
+
+// SetTier sets the Tier field's value.
+func (s *PutParameterInput) SetTier(v string) *PutParameterInput {
+	s.Tier = &v
 	return s
 }
 
@@ -32954,15 +32960,15 @@ type Target struct {
 	// User-defined criteria for sending commands that target instances that meet
 	// the criteria. Key can be tag:<Amazon EC2 tag> or InstanceIds. For more information
 	// about how to send commands that target instances using Key,Value parameters,
-	// see Targeting Multiple Instances (http://docs.aws.amazon.com/systems-manager/latest/userguide/send-commands-multiple.html#send-commands-targeting)
+	// see Using Targets and Rate Controls to Send Commands to a Fleet (https://docs.aws.amazon.com/systems-manager/latest/userguide/send-commands-multiple.html#send-commands-targeting)
 	// in the AWS Systems Manager User Guide.
 	Key *string `min:"1" type:"string"`
 
 	// User-defined criteria that maps to Key. For example, if you specified tag:ServerRole,
 	// you could specify value:WebServer to run a command on instances that include
 	// Amazon EC2 tags of ServerRole,WebServer. For more information about how to
-	// send commands that target instances using Key,Value parameters, see Sending
-	// Commands to a Fleet (http://docs.aws.amazon.com/systems-manager/latest/userguide/send-commands-multiple.html)
+	// send commands that target instances using Key,Value parameters, see Using
+	// Targets and Rate Controls to Send Commands to a Fleet (https://docs.aws.amazon.com/systems-manager/latest/userguide/send-commands-multiple.html)
 	// in the AWS Systems Manager User Guide.
 	Values []*string `type:"list"`
 }
@@ -34632,7 +34638,7 @@ type UpdatePatchBaselineInput struct {
 	//
 	// For information about accepted formats for lists of approved patches and
 	// rejected patches, see Package Name Formats for Approved and Rejected Patch
-	// Lists (http://docs.aws.amazon.com/systems-manager/latest/userguide/patch-manager-approved-rejected-package-name-formats.html)
+	// Lists (https://docs.aws.amazon.com/systems-manager/latest/userguide/patch-manager-approved-rejected-package-name-formats.html)
 	// in the AWS Systems Manager User Guide.
 	ApprovedPatches []*string `type:"list"`
 
@@ -34662,7 +34668,7 @@ type UpdatePatchBaselineInput struct {
 	//
 	// For information about accepted formats for lists of approved patches and
 	// rejected patches, see Package Name Formats for Approved and Rejected Patch
-	// Lists (http://docs.aws.amazon.com/systems-manager/latest/userguide/patch-manager-approved-rejected-package-name-formats.html)
+	// Lists (https://docs.aws.amazon.com/systems-manager/latest/userguide/patch-manager-approved-rejected-package-name-formats.html)
 	// in the AWS Systems Manager User Guide.
 	RejectedPatches []*string `type:"list"`
 
@@ -35628,6 +35634,14 @@ const (
 )
 
 const (
+	// ParameterTierStandard is a ParameterTier enum value
+	ParameterTierStandard = "Standard"
+
+	// ParameterTierAdvanced is a ParameterTier enum value
+	ParameterTierAdvanced = "Advanced"
+)
+
+const (
 	// ParameterTypeString is a ParameterType enum value
 	ParameterTypeString = "String"
 
@@ -35712,8 +35726,14 @@ const (
 )
 
 const (
+	// PatchFilterKeyPatchSet is a PatchFilterKey enum value
+	PatchFilterKeyPatchSet = "PATCH_SET"
+
 	// PatchFilterKeyProduct is a PatchFilterKey enum value
 	PatchFilterKeyProduct = "PRODUCT"
+
+	// PatchFilterKeyProductFamily is a PatchFilterKey enum value
+	PatchFilterKeyProductFamily = "PRODUCT_FAMILY"
 
 	// PatchFilterKeyClassification is a PatchFilterKey enum value
 	PatchFilterKeyClassification = "CLASSIFICATION"
@@ -35740,6 +35760,34 @@ const (
 
 	// PatchOperationTypeInstall is a PatchOperationType enum value
 	PatchOperationTypeInstall = "Install"
+)
+
+const (
+	// PatchPropertyProduct is a PatchProperty enum value
+	PatchPropertyProduct = "PRODUCT"
+
+	// PatchPropertyProductFamily is a PatchProperty enum value
+	PatchPropertyProductFamily = "PRODUCT_FAMILY"
+
+	// PatchPropertyClassification is a PatchProperty enum value
+	PatchPropertyClassification = "CLASSIFICATION"
+
+	// PatchPropertyMsrcSeverity is a PatchProperty enum value
+	PatchPropertyMsrcSeverity = "MSRC_SEVERITY"
+
+	// PatchPropertyPriority is a PatchProperty enum value
+	PatchPropertyPriority = "PRIORITY"
+
+	// PatchPropertySeverity is a PatchProperty enum value
+	PatchPropertySeverity = "SEVERITY"
+)
+
+const (
+	// PatchSetOs is a PatchSet enum value
+	PatchSetOs = "OS"
+
+	// PatchSetApplication is a PatchSet enum value
+	PatchSetApplication = "APPLICATION"
 )
 
 const (

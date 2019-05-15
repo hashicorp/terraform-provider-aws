@@ -162,7 +162,7 @@ func TestAccAWSEksCluster_Logging(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSEksClusterExists(resourceName, &cluster1),
 					resource.TestCheckResourceAttr(resourceName, "enabled_cluster_log_types.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "enabled_cluster_log_types.0", "api"),
+					resource.TestCheckResourceAttr(resourceName, "enabled_cluster_log_types.2902841359", "api"),
 				),
 			},
 			{
@@ -176,8 +176,17 @@ func TestAccAWSEksCluster_Logging(t *testing.T) {
 					testAccCheckAWSEksClusterExists(resourceName, &cluster2),
 					testAccCheckAWSEksClusterNotRecreated(&cluster1, &cluster2),
 					resource.TestCheckResourceAttr(resourceName, "enabled_cluster_log_types.#", "2"),
-					resource.TestCheckResourceAttr(resourceName, "enabled_cluster_log_types.0", "api"),
-					resource.TestCheckResourceAttr(resourceName, "enabled_cluster_log_types.1", "audit"),
+					resource.TestCheckResourceAttr(resourceName, "enabled_cluster_log_types.2902841359", "api"),
+					resource.TestCheckResourceAttr(resourceName, "enabled_cluster_log_types.2451111801", "audit"),
+				),
+			},
+			// Disable all log types.
+			{
+				Config: testAccAWSEksClusterConfig_Required(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSEksClusterExists(resourceName, &cluster2),
+					testAccCheckAWSEksClusterNotRecreated(&cluster1, &cluster2),
+					resource.TestCheckResourceAttr(resourceName, "enabled_cluster_log_types.#", "0"),
 				),
 			},
 		},

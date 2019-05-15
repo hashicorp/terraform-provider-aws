@@ -12,11 +12,12 @@ Manages an EKS Cluster.
 
 ## Example Usage
 
+### Basic Usage
+
 ```hcl
 resource "aws_eks_cluster" "example" {
-  enabled_cluster_log_types = ["api", "audit"]
-  name                      = "example"
-  role_arn                  = "${aws_iam_role.example.arn}"
+  name     = "example"
+  role_arn = "${aws_iam_role.example.arn}"
 
   vpc_config {
     subnet_ids = ["${aws_subnet.example1.id}", "${aws_subnet.example2.id}"]
@@ -29,6 +30,33 @@ output "endpoint" {
 
 output "kubeconfig-certificate-authority-data" {
   value = "${aws_eks_cluster.example.certificate_authority.0.data}"
+}
+```
+
+### Enabling Control Plane Logging
+
+[EKS Control Plane Logging](https://docs.aws.amazon.com/eks/latest/userguide/control-plane-logs.html) can be enabled via the `enabled_cluster_log_types` argument. To manage the CloudWatch Log Group retention period, the [`aws_cloudwatch_log_group` resource](/docs/providers/aws/r/cloudwatch_log_group.html) can be used.
+
+-> The below configuration uses [`depends_on`](/docs/configuration/resources.html#depends_on-explicit-resource-dependencies) to prevent ordering issues with EKS automatically creating the log group first and a variable for naming consistency. Other ordering and naming methodologies may be more appropriate for your environment.
+
+```hcl
+variable "cluster_name" {
+  default = "example"
+  type    = "string"
+}
+
+resource "aws_eks_cluster" "example" {
+  depends_on = ["aws_cloudwatch_log_group.example"]
+
+  enabled_cluster_log_types = ["api", "audit"]
+  name                      = "${var.cluster_name}"
+  # ... other configuration ...
+}
+
+resource "aws_cloudwatch_log_group" "example" {
+  name             = "/aws/eks/${var.cluster_name}/cluster"
+  retention_period = 7
+  # ... potentially other configuration ...
 }
 ```
 

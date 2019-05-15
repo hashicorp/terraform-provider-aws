@@ -825,6 +825,97 @@ func (c *MediaLive) DeleteReservationWithContext(ctx aws.Context, input *DeleteR
 	return out, req.Send()
 }
 
+const opDeleteSchedule = "DeleteSchedule"
+
+// DeleteScheduleRequest generates a "aws/request.Request" representing the
+// client's request for the DeleteSchedule operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See DeleteSchedule for more information on using the DeleteSchedule
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the DeleteScheduleRequest method.
+//    req, resp := client.DeleteScheduleRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/medialive-2017-10-14/DeleteSchedule
+func (c *MediaLive) DeleteScheduleRequest(input *DeleteScheduleInput) (req *request.Request, output *DeleteScheduleOutput) {
+	op := &request.Operation{
+		Name:       opDeleteSchedule,
+		HTTPMethod: "DELETE",
+		HTTPPath:   "/prod/channels/{channelId}/schedule",
+	}
+
+	if input == nil {
+		input = &DeleteScheduleInput{}
+	}
+
+	output = &DeleteScheduleOutput{}
+	req = c.newRequest(op, input, output)
+	req.Handlers.Unmarshal.Swap(restjson.UnmarshalHandler.Name, protocol.UnmarshalDiscardBodyHandler)
+	return
+}
+
+// DeleteSchedule API operation for AWS Elemental MediaLive.
+//
+// Delete all schedule actions on a channel.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for AWS Elemental MediaLive's
+// API operation DeleteSchedule for usage and error information.
+//
+// Returned Error Codes:
+//   * ErrCodeBadRequestException "BadRequestException"
+//
+//   * ErrCodeInternalServerErrorException "InternalServerErrorException"
+//
+//   * ErrCodeForbiddenException "ForbiddenException"
+//
+//   * ErrCodeBadGatewayException "BadGatewayException"
+//
+//   * ErrCodeNotFoundException "NotFoundException"
+//
+//   * ErrCodeGatewayTimeoutException "GatewayTimeoutException"
+//
+//   * ErrCodeTooManyRequestsException "TooManyRequestsException"
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/medialive-2017-10-14/DeleteSchedule
+func (c *MediaLive) DeleteSchedule(input *DeleteScheduleInput) (*DeleteScheduleOutput, error) {
+	req, out := c.DeleteScheduleRequest(input)
+	return out, req.Send()
+}
+
+// DeleteScheduleWithContext is the same as DeleteSchedule with the addition of
+// the ability to pass a context and additional request options.
+//
+// See DeleteSchedule for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *MediaLive) DeleteScheduleWithContext(ctx aws.Context, input *DeleteScheduleInput, opts ...request.Option) (*DeleteScheduleOutput, error) {
+	req, out := c.DeleteScheduleRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
 const opDeleteTags = "DeleteTags"
 
 // DeleteTagsRequest generates a "aws/request.Request" representing the
@@ -2671,6 +2762,100 @@ func (c *MediaLive) UpdateChannel(input *UpdateChannelInput) (*UpdateChannelOutp
 // for more information on using Contexts.
 func (c *MediaLive) UpdateChannelWithContext(ctx aws.Context, input *UpdateChannelInput, opts ...request.Option) (*UpdateChannelOutput, error) {
 	req, out := c.UpdateChannelRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
+const opUpdateChannelClass = "UpdateChannelClass"
+
+// UpdateChannelClassRequest generates a "aws/request.Request" representing the
+// client's request for the UpdateChannelClass operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See UpdateChannelClass for more information on using the UpdateChannelClass
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the UpdateChannelClassRequest method.
+//    req, resp := client.UpdateChannelClassRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/medialive-2017-10-14/UpdateChannelClass
+func (c *MediaLive) UpdateChannelClassRequest(input *UpdateChannelClassInput) (req *request.Request, output *UpdateChannelClassOutput) {
+	op := &request.Operation{
+		Name:       opUpdateChannelClass,
+		HTTPMethod: "PUT",
+		HTTPPath:   "/prod/channels/{channelId}/channelClass",
+	}
+
+	if input == nil {
+		input = &UpdateChannelClassInput{}
+	}
+
+	output = &UpdateChannelClassOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// UpdateChannelClass API operation for AWS Elemental MediaLive.
+//
+// Changes the class of the channel.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for AWS Elemental MediaLive's
+// API operation UpdateChannelClass for usage and error information.
+//
+// Returned Error Codes:
+//   * ErrCodeBadRequestException "BadRequestException"
+//
+//   * ErrCodeUnprocessableEntityException "UnprocessableEntityException"
+//
+//   * ErrCodeInternalServerErrorException "InternalServerErrorException"
+//
+//   * ErrCodeForbiddenException "ForbiddenException"
+//
+//   * ErrCodeBadGatewayException "BadGatewayException"
+//
+//   * ErrCodeNotFoundException "NotFoundException"
+//
+//   * ErrCodeGatewayTimeoutException "GatewayTimeoutException"
+//
+//   * ErrCodeTooManyRequestsException "TooManyRequestsException"
+//
+//   * ErrCodeConflictException "ConflictException"
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/medialive-2017-10-14/UpdateChannelClass
+func (c *MediaLive) UpdateChannelClass(input *UpdateChannelClassInput) (*UpdateChannelClassOutput, error) {
+	req, out := c.UpdateChannelClassRequest(input)
+	return out, req.Send()
+}
+
+// UpdateChannelClassWithContext is the same as UpdateChannelClass with the addition of
+// the ability to pass a context and additional request options.
+//
+// See UpdateChannelClass for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *MediaLive) UpdateChannelClassWithContext(ctx aws.Context, input *UpdateChannelClassInput, opts ...request.Option) (*UpdateChannelClassOutput, error) {
+	req, out := c.UpdateChannelClassRequest(input)
 	req.SetContext(ctx)
 	req.ApplyOptions(opts...)
 	return out, req.Send()
@@ -6320,6 +6505,59 @@ func (s *DeleteReservationOutput) SetTags(v map[string]*string) *DeleteReservati
 func (s *DeleteReservationOutput) SetUsagePrice(v float64) *DeleteReservationOutput {
 	s.UsagePrice = &v
 	return s
+}
+
+type DeleteScheduleInput struct {
+	_ struct{} `type:"structure"`
+
+	// ChannelId is a required field
+	ChannelId *string `location:"uri" locationName:"channelId" type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s DeleteScheduleInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DeleteScheduleInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *DeleteScheduleInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "DeleteScheduleInput"}
+	if s.ChannelId == nil {
+		invalidParams.Add(request.NewErrParamRequired("ChannelId"))
+	}
+	if s.ChannelId != nil && len(*s.ChannelId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("ChannelId", 1))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetChannelId sets the ChannelId field's value.
+func (s *DeleteScheduleInput) SetChannelId(v string) *DeleteScheduleInput {
+	s.ChannelId = &v
+	return s
+}
+
+type DeleteScheduleOutput struct {
+	_ struct{} `type:"structure"`
+}
+
+// String returns the string representation
+func (s DeleteScheduleOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DeleteScheduleOutput) GoString() string {
+	return s.String()
 }
 
 type DeleteTagsInput struct {
@@ -16069,6 +16307,100 @@ func (s *UdpOutputSettings) SetFecOutputSettings(v *FecOutputSettings) *UdpOutpu
 	return s
 }
 
+type UpdateChannelClassInput struct {
+	_ struct{} `type:"structure"`
+
+	// A standard channel has two encoding pipelines and a single pipeline channel
+	// only has one.
+	//
+	// ChannelClass is a required field
+	ChannelClass *string `locationName:"channelClass" type:"string" required:"true" enum:"ChannelClass"`
+
+	// ChannelId is a required field
+	ChannelId *string `location:"uri" locationName:"channelId" type:"string" required:"true"`
+
+	Destinations []*OutputDestination `locationName:"destinations" type:"list"`
+}
+
+// String returns the string representation
+func (s UpdateChannelClassInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s UpdateChannelClassInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *UpdateChannelClassInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "UpdateChannelClassInput"}
+	if s.ChannelClass == nil {
+		invalidParams.Add(request.NewErrParamRequired("ChannelClass"))
+	}
+	if s.ChannelId == nil {
+		invalidParams.Add(request.NewErrParamRequired("ChannelId"))
+	}
+	if s.ChannelId != nil && len(*s.ChannelId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("ChannelId", 1))
+	}
+	if s.Destinations != nil {
+		for i, v := range s.Destinations {
+			if v == nil {
+				continue
+			}
+			if err := v.Validate(); err != nil {
+				invalidParams.AddNested(fmt.Sprintf("%s[%v]", "Destinations", i), err.(request.ErrInvalidParams))
+			}
+		}
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetChannelClass sets the ChannelClass field's value.
+func (s *UpdateChannelClassInput) SetChannelClass(v string) *UpdateChannelClassInput {
+	s.ChannelClass = &v
+	return s
+}
+
+// SetChannelId sets the ChannelId field's value.
+func (s *UpdateChannelClassInput) SetChannelId(v string) *UpdateChannelClassInput {
+	s.ChannelId = &v
+	return s
+}
+
+// SetDestinations sets the Destinations field's value.
+func (s *UpdateChannelClassInput) SetDestinations(v []*OutputDestination) *UpdateChannelClassInput {
+	s.Destinations = v
+	return s
+}
+
+type UpdateChannelClassOutput struct {
+	_ struct{} `type:"structure"`
+
+	Channel *Channel `locationName:"channel" type:"structure"`
+}
+
+// String returns the string representation
+func (s UpdateChannelClassOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s UpdateChannelClassOutput) GoString() string {
+	return s.String()
+}
+
+// SetChannel sets the Channel field's value.
+func (s *UpdateChannelClassOutput) SetChannel(v *Channel) *UpdateChannelClassOutput {
+	s.Channel = v
+	return s
+}
+
 type UpdateChannelInput struct {
 	_ struct{} `type:"structure"`
 
@@ -17213,6 +17545,12 @@ const (
 
 	// ChannelStateDeleted is a ChannelState enum value
 	ChannelStateDeleted = "DELETED"
+
+	// ChannelStateUpdating is a ChannelState enum value
+	ChannelStateUpdating = "UPDATING"
+
+	// ChannelStateUpdateFailed is a ChannelState enum value
+	ChannelStateUpdateFailed = "UPDATE_FAILED"
 )
 
 // Dvb Sdt Output Sdt

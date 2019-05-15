@@ -285,7 +285,7 @@ data "aws_availability_zones" "available" {}
 
 resource "aws_neptune_cluster" "default" {
   cluster_identifier 	= "tf-neptune-cluster-test-%d"
-  availability_zones 	= ["${data.aws_availability_zones.available.names[0]}", "${data.aws_availability_zones.available.names[1]}"]
+  availability_zones 	= ["${data.aws_availability_zones.available.names[0]}", "${data.aws_availability_zones.available.names[1]}", "${data.aws_availability_zones.available.names[2]}"]
   skip_final_snapshot 	= true
 }
 

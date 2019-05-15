@@ -125,6 +125,37 @@ func TestAccAWSTransferUser_disappears(t *testing.T) {
 	})
 }
 
+func TestAccAWSTransferUser_UserName_Validation(t *testing.T) {
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSTransferUserDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config:      testAccAWSTransferUserName_validation("!@#$%^"),
+				ExpectError: regexp.MustCompile(`Invalid "user_name": must be between 3 and 32 alphanumeric or special characters hyphen and underscore. However, "user_name" cannot begin with a hyphen`),
+			},
+			{
+				Config:      testAccAWSTransferUserName_validation(acctest.RandString(2)),
+				ExpectError: regexp.MustCompile(`Invalid "user_name": must be between 3 and 32 alphanumeric or special characters hyphen and underscore. However, "user_name" cannot begin with a hyphen`),
+			},
+			{
+				Config:      testAccAWSTransferUserName_validation(acctest.RandString(33)),
+				ExpectError: regexp.MustCompile(`Invalid "user_name": must be between 3 and 32 alphanumeric or special characters hyphen and underscore. However, "user_name" cannot begin with a hyphen`),
+			},
+			{
+				Config:      testAccAWSTransferUserName_validation("-abcdef"),
+				ExpectError: regexp.MustCompile(`Invalid "user_name": must be between 3 and 32 alphanumeric or special characters hyphen and underscore. However, "user_name" cannot begin with a hyphen`),
+			},
+			{
+				Config:             testAccAWSTransferUserName_validation("valid_username"),
+				ExpectNonEmptyPlan: true,
+				PlanOnly:           true,
+			},
+		},
+	})
+}
+
 func testAccCheckAWSTransferUserExists(n string, res *transfer.DescribedUser) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
@@ -258,6 +289,40 @@ resource "aws_transfer_user" "foo" {
 }
 	
 `, rName, rName)
+}
+
+func testAccAWSTransferUserName_validation(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_transfer_server" "foo" {
+	identity_provider_type = "SERVICE_MANAGED"
+	tags = {
+		NAME     = "tf-acc-test-transfer-server"
+	}
+}
+resource "aws_transfer_user" "foo" {
+    server_id      = "${aws_transfer_server.foo.id}"
+    user_name      = "%s"
+    role           = "${aws_iam_role.foo.arn}"
+}
+resource "aws_iam_role" "foo" {
+	name = "tf-test-transfer-user-iam-role"
+
+	assume_role_policy = <<EOF
+{
+	"Version": "2012-10-17",
+	"Statement": [
+		{
+		"Effect": "Allow",
+		"Principal": {
+			"Service": "transfer.amazonaws.com"
+		},
+		"Action": "sts:AssumeRole"
+		}
+	]
+}
+EOF
+}
+`, rName)
 }
 
 func testAccAWSTransferUserConfig_options(rName string) string {

@@ -125,25 +125,28 @@ func resourceAwsLb() *schema.Resource {
 			"access_logs": {
 				Type:             schema.TypeList,
 				Optional:         true,
-				Computed:         true,
 				MaxItems:         1,
-				DiffSuppressFunc: suppressIfLBType("network"),
+				DiffSuppressFunc: suppressMissingOptionalConfigurationBlock,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"bucket": {
-							Type:             schema.TypeString,
-							Required:         true,
-							DiffSuppressFunc: suppressIfLBType("network"),
+							Type:     schema.TypeString,
+							Required: true,
+							DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+								return !d.Get("access_logs.0.enabled").(bool)
+							},
 						},
 						"prefix": {
-							Type:             schema.TypeString,
-							Optional:         true,
-							DiffSuppressFunc: suppressIfLBType("network"),
+							Type:     schema.TypeString,
+							Optional: true,
+							DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+								return !d.Get("access_logs.0.enabled").(bool)
+							},
 						},
 						"enabled": {
-							Type:             schema.TypeBool,
-							Optional:         true,
-							DiffSuppressFunc: suppressIfLBType("network"),
+							Type:     schema.TypeBool,
+							Optional: true,
+							Default:  false,
 						},
 					},
 				},
@@ -343,18 +346,21 @@ func resourceAwsLbUpdate(d *schema.ResourceData, meta interface{}) error {
 
 	attributes := make([]*elbv2.LoadBalancerAttribute, 0)
 
-	switch d.Get("load_balancer_type").(string) {
-	case "application":
-		if d.HasChange("access_logs") || d.IsNewResource() {
-			logs := d.Get("access_logs").([]interface{})
-			if len(logs) == 1 {
-				log := logs[0].(map[string]interface{})
+	if d.HasChange("access_logs") {
+		logs := d.Get("access_logs").([]interface{})
 
+		if len(logs) == 1 && logs[0] != nil {
+			log := logs[0].(map[string]interface{})
+
+			enabled := log["enabled"].(bool)
+
+			attributes = append(attributes,
+				&elbv2.LoadBalancerAttribute{
+					Key:   aws.String("access_logs.s3.enabled"),
+					Value: aws.String(strconv.FormatBool(enabled)),
+				})
+			if enabled {
 				attributes = append(attributes,
-					&elbv2.LoadBalancerAttribute{
-						Key:   aws.String("access_logs.s3.enabled"),
-						Value: aws.String(strconv.FormatBool(log["enabled"].(bool))),
-					},
 					&elbv2.LoadBalancerAttribute{
 						Key:   aws.String("access_logs.s3.bucket"),
 						Value: aws.String(log["bucket"].(string)),
@@ -363,13 +369,17 @@ func resourceAwsLbUpdate(d *schema.ResourceData, meta interface{}) error {
 						Key:   aws.String("access_logs.s3.prefix"),
 						Value: aws.String(log["prefix"].(string)),
 					})
-			} else if len(logs) == 0 {
-				attributes = append(attributes, &elbv2.LoadBalancerAttribute{
-					Key:   aws.String("access_logs.s3.enabled"),
-					Value: aws.String("false"),
-				})
 			}
+		} else {
+			attributes = append(attributes, &elbv2.LoadBalancerAttribute{
+				Key:   aws.String("access_logs.s3.enabled"),
+				Value: aws.String("false"),
+			})
 		}
+	}
+
+	switch d.Get("load_balancer_type").(string) {
+	case "application":
 		if d.HasChange("idle_timeout") || d.IsNewResource() {
 			attributes = append(attributes, &elbv2.LoadBalancerAttribute{
 				Key:   aws.String("idle_timeout.timeout_seconds"),
@@ -627,16 +637,14 @@ func flattenSubnetsFromAvailabilityZones(availabilityZones []*elbv2.Availability
 func flattenSubnetMappingsFromAvailabilityZones(availabilityZones []*elbv2.AvailabilityZone) []map[string]interface{} {
 	l := make([]map[string]interface{}, 0)
 	for _, availabilityZone := range availabilityZones {
+		m := make(map[string]interface{})
+		m["subnet_id"] = aws.StringValue(availabilityZone.SubnetId)
+
 		for _, loadBalancerAddress := range availabilityZone.LoadBalancerAddresses {
-			m := make(map[string]interface{})
-			m["subnet_id"] = aws.StringValue(availabilityZone.SubnetId)
-
-			if loadBalancerAddress.AllocationId != nil {
-				m["allocation_id"] = aws.StringValue(loadBalancerAddress.AllocationId)
-			}
-
-			l = append(l, m)
+			m["allocation_id"] = aws.StringValue(loadBalancerAddress.AllocationId)
 		}
+
+		l = append(l, m)
 	}
 	return l
 }
@@ -701,7 +709,12 @@ func flattenAwsLbResource(d *schema.ResourceData, meta interface{}, lb *elbv2.Lo
 		return fmt.Errorf("Error retrieving LB Attributes: %s", err)
 	}
 
-	accessLogMap := map[string]interface{}{}
+	accessLogMap := map[string]interface{}{
+		"bucket":  "",
+		"enabled": false,
+		"prefix":  "",
+	}
+
 	for _, attr := range attributesResp.Attributes {
 		switch aws.StringValue(attr.Key) {
 		case "access_logs.s3.enabled":
@@ -732,12 +745,8 @@ func flattenAwsLbResource(d *schema.ResourceData, meta interface{}, lb *elbv2.Lo
 		}
 	}
 
-	if accessLogMap["bucket"] != "" || accessLogMap["prefix"] != "" {
-		if err := d.Set("access_logs", []interface{}{accessLogMap}); err != nil {
-			return fmt.Errorf("error setting access_logs: %s", err)
-		}
-	} else {
-		d.Set("access_logs", []interface{}{})
+	if err := d.Set("access_logs", []interface{}{accessLogMap}); err != nil {
+		return fmt.Errorf("error setting access_logs: %s", err)
 	}
 
 	return nil

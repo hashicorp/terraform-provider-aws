@@ -12,6 +12,10 @@ Provides an Elastic MapReduce Cluster, a web service that makes it easy to
 process large amounts of data efficiently. See [Amazon Elastic MapReduce Documentation](https://aws.amazon.com/documentation/elastic-mapreduce/)
 for more information.
 
+To configure [Instance Groups](https://docs.aws.amazon.com/emr/latest/ManagementGuide/emr-instance-group-configuration.html#emr-plan-instance-groups) for [task nodes](https://docs.aws.amazon.com/emr/latest/ManagementGuide/emr-master-core-task-nodes.html#emr-plan-task), see the [`aws_emr_instance_group` resource](/docs/providers/aws/r/emr_instance_group.html).
+
+-> Support for [Instance Fleets](https://docs.aws.amazon.com/emr/latest/ManagementGuide/emr-instance-group-configuration.html#emr-plan-instance-fleets) will be made available in an upcoming release.
+
 ## Example Usage
 
 ```hcl
@@ -38,10 +42,13 @@ EOF
     instance_profile                  = "${aws_iam_instance_profile.emr_profile.arn}"
   }
 
-  instance_group {
-    instance_role  = "CORE"
+  master_instance_group {
+    instance_type = "m4.large"
+  }
+
+  core_instance_group {
     instance_type  = "c4.large"
-    instance_count = "1"
+    instance_count = 1
     ebs_config {
       size                 = "40"
       type                 = "gp2"
@@ -83,10 +90,6 @@ EOF
 EOF
   }
   ebs_root_volume_size = 100
-
-  master_instance_type = "m5.xlarge"
-  core_instance_type   = "m5.xlarge"
-  core_instance_count  = 1
 
   tags = {
     role = "rolename"
@@ -173,14 +176,16 @@ The following arguments are supported:
 
 * `name` - (Required) The name of the job flow
 * `release_label` - (Required) The release label for the Amazon EMR release
-* `master_instance_type` - (Optional) The EC2 instance type of the master node. Exactly one of `master_instance_type` and `instance_group` must be specified.
+* `master_instance_group` - (Optional) Configuration block to use an [Instance Group](https://docs.aws.amazon.com/emr/latest/ManagementGuide/emr-instance-group-configuration.html#emr-plan-instance-groups) for the [master node type](https://docs.aws.amazon.com/emr/latest/ManagementGuide/emr-master-core-task-nodes.html#emr-plan-master). Cannot be specified if `master_instance_type` argument or `instance_group` configuration blocks are set. Detailed below.
+* `master_instance_type` - (Optional, **DEPRECATED**) Use the `master_instance_group` configuration block `instance_type` argument instead. The EC2 instance type of the master node. Cannot be specified if `master_instance_group` or `instance_group` configuration blocks are set.
 * `scale_down_behavior` - (Optional) The way that individual Amazon EC2 instances terminate when an automatic scale-in activity occurs or an `instance group` is resized.
 * `additional_info` - (Optional) A JSON string for selecting additional features such as adding proxy information. Note: Currently there is no API to retrieve the value of this argument after EMR cluster creation from provider, therefore Terraform cannot detect drift from the actual EMR cluster if its value is changed outside Terraform.
 * `service_role` - (Required) IAM role that will be assumed by the Amazon EMR service to access AWS resources
 * `security_configuration` - (Optional) The security configuration name to attach to the EMR cluster. Only valid for EMR clusters with `release_label` 4.8.0 or greater
-* `core_instance_type` - (Optional) The EC2 instance type of the slave nodes. Cannot be specified if `instance_groups` is set
-* `core_instance_count` - (Optional) Number of Amazon EC2 instances used to execute the job flow. EMR will use one node as the cluster's master node and use the remainder of the nodes (`core_instance_count`-1) as core nodes. Cannot be specified if `instance_groups` is set. Default `1`
-* `instance_group` - (Optional) A list of `instance_group` objects for each instance group in the cluster. Exactly one of `master_instance_type` and `instance_group` must be specified. If `instance_group` is set, then it must contain a configuration block for at least the `MASTER` instance group type (as well as any additional instance groups). Defined below
+* `core_instance_group` - (Optional) Configuration block to use an [Instance Group](https://docs.aws.amazon.com/emr/latest/ManagementGuide/emr-instance-group-configuration.html#emr-plan-instance-groups) for the [core node type](https://docs.aws.amazon.com/emr/latest/ManagementGuide/emr-master-core-task-nodes.html#emr-plan-core). Cannot be specified if `core_instance_count` argument, `core_instance_type` argument, or `instance_group` configuration blocks are set. Detailed below.
+* `core_instance_type` - (Optional, **DEPRECATED**) Use the `core_instance_group` configuration block `instance_type` argument instead. The EC2 instance type of the slave nodes. Cannot be specified if `core_instance_group` or `instance_group` configuration blocks are set.
+* `core_instance_count` - (Optional, **DEPRECATED**) Use the `core_instance_group` configuration block `instance_count` argument instead. Number of Amazon EC2 instances used to execute the job flow. EMR will use one node as the cluster's master node and use the remainder of the nodes (`core_instance_count`-1) as core nodes. Cannot be specified if `core_instance_group` or `instance_group` configuration blocks are set. Default `1`
+* `instance_group` - (Optional, **DEPRECATED**) Use the `master_instance_group` configuration block, `core_instance_group` configuration block and [`aws_emr_instance_group` resource(s)](/docs/providers/aws/r/emr_instance_group.html) instead. A list of `instance_group` objects for each instance group in the cluster. Exactly one of `master_instance_type` and `instance_group` must be specified. If `instance_group` is set, then it must contain a configuration block for at least the `MASTER` instance group type (as well as any additional instance groups). Cannot be specified if `master_instance_group` or `core_instance_group` configuration blocks are set. Defined below
 * `log_uri` - (Optional) S3 bucket to write the log files of the job flow. If a value is not provided, logs are not created
 * `applications` - (Optional) A list of applications for the cluster. Valid values are: `Flink`, `Hadoop`, `Hive`, `Mahout`, `Pig`, `Spark`, and `JupyterHub` (as of EMR 5.14.0). Case insensitive
 * `termination_protection` - (Optional) Switch on/off termination protection (default is off)
@@ -219,6 +224,17 @@ EOF
 * `autoscaling_role` - (Optional) An IAM role for automatic scaling policies. The IAM role provides permissions that the automatic scaling feature requires to launch and terminate EC2 instances in an instance group.
 * `step` - (Optional) List of steps to run when creating the cluster. Defined below. It is highly recommended to utilize the [lifecycle configuration block](/docs/configuration/resources.html) with `ignore_changes` if other steps are being managed outside of Terraform. This argument is processed in [attribute-as-blocks mode](/docs/configuration/attr-as-blocks.html).
 * `tags` - (Optional) list of tags to apply to the EMR Cluster
+
+## core_instance_group Configuration Block
+
+Supported arguments for the `core_instance_group` configuration block:
+
+* `instance_type` - (Required) EC2 instance type for all instances in the instance group.
+* `autoscaling_policy` - (Optional) String containing the [EMR Auto Scaling Policy](https://docs.aws.amazon.com/emr/latest/ManagementGuide/emr-automatic-scaling.html) JSON.
+* `bid_price` - (Optional) Bid price for each EC2 instance in the instance group, expressed in USD. By setting this attribute, the instance group is being declared as a Spot Instance, and will implicitly create a Spot request. Leave this blank to use On-Demand Instances.
+* `ebs_config` - (Optional) Configuration block(s) for EBS volumes attached to each instance in the instance group. Detailed below.
+* `instance_count` - (Optional) Target number of instances for the instance group. Must be at least 1. Defaults to 1.
+* `name` - (Optional) Friendly name given to the instance group.
 
 ## ec2_attributes
 
@@ -270,6 +286,15 @@ Attributes for each task instance group in the cluster
 * `ebs_config` - (Optional) A list of attributes for the EBS volumes attached to each instance in the instance group. Each `ebs_config` defined will result in additional EBS volumes being attached to _each_ instance in the instance group. Defined below
 * `autoscaling_policy` - (Optional) The autoscaling policy document. This is a JSON formatted string. See [EMR Auto Scaling](https://docs.aws.amazon.com/emr/latest/ManagementGuide/emr-automatic-scaling.html)
 
+## master_instance_group Configuration Block
+
+Supported nested arguments for the `master_instance_group` configuration block:
+
+* `instance_type` - (Required) EC2 instance type for all instances in the instance group.
+* `bid_price` - (Optional) Bid price for each EC2 instance in the instance group, expressed in USD. By setting this attribute, the instance group is being declared as a Spot Instance, and will implicitly create a Spot request. Leave this blank to use On-Demand Instances.
+* `ebs_config` - (Optional) Configuration block(s) for EBS volumes attached to each instance in the instance group. Detailed below.
+* `name` - (Optional) Friendly name given to the instance group.
+
 ## ebs_config
 
 Attributes for the EBS volumes attached to each EC2 instance in the `instance_group`
@@ -309,10 +334,9 @@ In addition to all arguments above, the following attributes are exported:
 * `id` - The ID of the EMR Cluster
 * `name` - The name of the cluster.
 * `release_label` - The release label for the Amazon EMR release.
-* `master_instance_type` - The EC2 instance type of the master node.
+* `master_instance_group.0.id` - Master node type Instance Group ID, if using Instance Group for this node type.
 * `master_public_dns` - The public DNS name of the master EC2 instance.
-* `core_instance_type` - The EC2 instance type of the slave nodes.
-* `core_instance_count` The number of slave nodes, i.e. EC2 instance nodes.
+* `core_instance_group.0.id` - Core node type Instance Group ID, if using Instance Group for this node type.
 * `log_uri` - The path to the Amazon S3 location where logs for this cluster are stored.
 * `applications` - The applications installed on this cluster.
 * `ec2_attributes` - Provides information about the EC2 instances in a cluster grouped by category: key name, subnet ID, IAM instance profile, and so on.
@@ -321,8 +345,6 @@ In addition to all arguments above, the following attributes are exported:
 * `service_role` - The IAM role that will be assumed by the Amazon EMR service to access AWS resources on your behalf.
 * `visible_to_all_users` - Indicates whether the job flow is visible to all IAM users of the AWS account associated with the job flow.
 * `tags` - The list of tags associated with a cluster.
-
-For any instance_group the id is exported IN `aws_emr_cluster.instance_group.HASHCODE.id`  format, e.g. `aws_emr_cluster.example.instance_group.12345678.id`
 
 ## Example bootable config
 

@@ -1876,6 +1876,9 @@ func (c *WorkSpaces) ImportWorkspaceImageRequest(input *ImportWorkspaceImageInpu
 //   * ErrCodeAccessDeniedException "AccessDeniedException"
 //   The user is not authorized to access a resource.
 //
+//   * ErrCodeInvalidParameterValuesException "InvalidParameterValuesException"
+//   One or more parameter values are not valid.
+//
 // See also, https://docs.aws.amazon.com/goto/WebAPI/workspaces-2015-04-08/ImportWorkspaceImage
 func (c *WorkSpaces) ImportWorkspaceImage(input *ImportWorkspaceImageInput) (*ImportWorkspaceImageOutput, error) {
 	req, out := c.ImportWorkspaceImageRequest(input)
@@ -5487,6 +5490,9 @@ func (s *RebuildRequest) SetWorkspaceId(v string) *RebuildRequest {
 type RebuildWorkspacesInput struct {
 	_ struct{} `type:"structure"`
 
+	// Reserved.
+	AdditionalInfo *string `type:"string"`
+
 	// The WorkSpace to rebuild. You can specify a single WorkSpace.
 	//
 	// RebuildWorkspaceRequests is a required field
@@ -5527,6 +5533,12 @@ func (s *RebuildWorkspacesInput) Validate() error {
 		return invalidParams
 	}
 	return nil
+}
+
+// SetAdditionalInfo sets the AdditionalInfo field's value.
+func (s *RebuildWorkspacesInput) SetAdditionalInfo(v string) *RebuildWorkspacesInput {
+	s.AdditionalInfo = &v
+	return s
 }
 
 // SetRebuildWorkspaceRequests sets the RebuildWorkspaceRequests field's value.

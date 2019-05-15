@@ -4643,23 +4643,26 @@ func expandVpcPeeringConnectionOptions(m map[string]interface{}) *ec2.PeeringCon
 	return options
 }
 
-func expandDxRouteFilterPrefixes(cfg []interface{}) []*directconnect.RouteFilterPrefix {
-	prefixes := make([]*directconnect.RouteFilterPrefix, len(cfg))
-	for i, p := range cfg {
-		prefix := &directconnect.RouteFilterPrefix{
-			Cidr: aws.String(p.(string)),
-		}
-		prefixes[i] = prefix
+func expandDxRouteFilterPrefixes(vPrefixes *schema.Set) []*directconnect.RouteFilterPrefix {
+	routeFilterPrefixes := []*directconnect.RouteFilterPrefix{}
+
+	for _, vPrefix := range vPrefixes.List() {
+		routeFilterPrefixes = append(routeFilterPrefixes, &directconnect.RouteFilterPrefix{
+			Cidr: aws.String(vPrefix.(string)),
+		})
 	}
-	return prefixes
+
+	return routeFilterPrefixes
 }
 
-func flattenDxRouteFilterPrefixes(prefixes []*directconnect.RouteFilterPrefix) *schema.Set {
-	out := make([]interface{}, 0)
-	for _, prefix := range prefixes {
-		out = append(out, aws.StringValue(prefix.Cidr))
+func flattenDxRouteFilterPrefixes(routeFilterPrefixes []*directconnect.RouteFilterPrefix) *schema.Set {
+	vPrefixes := []interface{}{}
+
+	for _, routeFilterPrefix := range routeFilterPrefixes {
+		vPrefixes = append(vPrefixes, aws.StringValue(routeFilterPrefix.Cidr))
 	}
-	return schema.NewSet(schema.HashString, out)
+
+	return schema.NewSet(schema.HashString, vPrefixes)
 }
 
 func expandMacieClassificationType(d *schema.ResourceData) *macie.ClassificationType {

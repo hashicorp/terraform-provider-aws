@@ -59,7 +59,8 @@ func (c *SageMaker) AddTagsRequest(input *AddTagsInput) (req *request.Request, o
 //
 // Adds or overwrites one or more tags for the specified Amazon SageMaker resource.
 // You can add tags to notebook instances, training jobs, hyperparameter tuning
-// jobs, models, endpoint configurations, and endpoints.
+// jobs, batch transform jobs, models, labeling jobs, work teams, endpoint configurations,
+// and endpoints.
 //
 // Each tag consists of a key and an optional value. Tag keys must be unique
 // per resource. For more information about tags, see For more information,
@@ -418,6 +419,10 @@ func (c *SageMaker) CreateEndpointRequest(input *CreateEndpointInput) (req *requ
 // API.
 //
 // Use this API only for hosting models using Amazon SageMaker hosting services.
+//
+//  You must not delete an EndpointConfig in use by an endpoint that is live
+// or while the UpdateEndpoint or CreateEndpoint operations are being performed
+// on the endpoint. To update an endpoint, you must create a new EndpointConfig.
 //
 // The endpoint name must be unique within an AWS Region in your AWS account.
 //
@@ -1229,6 +1234,10 @@ func (c *SageMaker) CreatePresignedNotebookInstanceUrlRequest(input *CreatePresi
 // operator and the aws:SourceIP condition context key to specify the list of
 // IP addresses that you want to have access to the notebook instance. For more
 // information, see Limit Access to a Notebook Instance by IP Address (https://docs.aws.amazon.com/sagemaker/latest/dg/nbi-ip-filter.html).
+//
+// The URL that you get from a call to is valid only for 5 minutes. If you try
+// to use the URL after the 5-minute limit expires, you are directed to the
+// AWS console sign-in page.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -6370,7 +6379,8 @@ func (c *SageMaker) StopNotebookInstanceRequest(input *StopNotebookInstanceInput
 //
 // Terminates the ML compute instance. Before terminating the instance, Amazon
 // SageMaker disconnects the ML storage volume from it. Amazon SageMaker preserves
-// the ML storage volume.
+// the ML storage volume. Amazon SageMaker stops charging you for the ML compute
+// instance when you call StopNotebookInstance.
 //
 // To access data on the ML storage volume for a notebook instance that has
 // been terminated, call the StartNotebookInstance API. StartNotebookInstance
@@ -6704,8 +6714,9 @@ func (c *SageMaker) UpdateEndpointRequest(input *UpdateEndpointInput) (req *requ
 // check the status of an endpoint, use the DescribeEndpoint (https://docs.aws.amazon.com/sagemaker/latest/dg/API_DescribeEndpoint.html)
 // API.
 //
-// You cannot update an endpoint with the current EndpointConfig. To update
-// an endpoint, you must create a new EndpointConfig.
+// You must not delete an EndpointConfig in use by an endpoint that is live
+// or while the UpdateEndpoint or CreateEndpoint operations are being performed
+// on the endpoint. To update an endpoint, you must create a new EndpointConfig.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -6873,8 +6884,7 @@ func (c *SageMaker) UpdateNotebookInstanceRequest(input *UpdateNotebookInstanceI
 //
 // Updates a notebook instance. NotebookInstance updates include upgrading or
 // downgrading the ML compute instance used for your notebook instance to accommodate
-// changes in your workload requirements. You can also update the VPC security
-// groups.
+// changes in your workload requirements.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -7597,6 +7607,8 @@ type AnnotationConsolidationConfig struct {
 	//
 	// arn:aws:lambda:ap-northeast-1:477331159723:function:ACS-BoundingBox
 	//
+	// arn:aws:lambda:ap-southeast-2:454466003867:function:ACS-BoundingBox
+	//
 	//    * Image classification - Uses a variant of the Expectation Maximization
 	//    approach to estimate the true class of an image based on annotations from
 	//    individual workers.
@@ -7610,6 +7622,8 @@ type AnnotationConsolidationConfig struct {
 	// arn:aws:lambda:eu-west-1:568282634449:function:ACS-ImageMultiClass
 	//
 	// arn:aws:lambda:ap-northeast-1:477331159723:function:ACS-ImageMultiClass
+	//
+	// arn:aws:lambda:ap-southeast-2:454466003867:function:ACS-ImageMultiClass
 	//
 	//    * Semantic segmentation - Treats each pixel in an image as a multi-class
 	//    classification and treats pixel annotations from workers as "votes" for
@@ -7625,6 +7639,8 @@ type AnnotationConsolidationConfig struct {
 	//
 	// arn:aws:lambda:ap-northeast-1:477331159723:function:ACS-SemanticSegmentation
 	//
+	// arn:aws:lambda:ap-southeast-2:454466003867:function:ACS-SemanticSegmentation
+	//
 	//    * Text classification - Uses a variant of the Expectation Maximization
 	//    approach to estimate the true class of text based on annotations from
 	//    individual workers.
@@ -7638,6 +7654,8 @@ type AnnotationConsolidationConfig struct {
 	// arn:aws:lambda:eu-west-1:568282634449:function:ACS-TextMultiClass
 	//
 	// arn:aws:lambda:ap-northeast-1:477331159723:function:ACS-TextMultiClass
+	//
+	// arn:aws:lambda:ap-southeast-2:454466003867:function:ACS-TextMultiClass
 	//
 	// For more information, see Annotation Consolidation (http://docs.aws.amazon.com/sagemaker/latest/dg/sms-annotation-consolidation.html).
 	//
@@ -8269,7 +8287,18 @@ func (s *CompilationJobSummary) SetLastModifiedTime(v time.Time) *CompilationJob
 type ContainerDefinition struct {
 	_ struct{} `type:"structure"`
 
-	// This parameter is ignored.
+	// This parameter is ignored for models that contain only a PrimaryContainer.
+	//
+	// When a ContainerDefinition is part of an inference pipeline, the value of
+	// ths parameter uniquely identifies the container for the purposes of logging
+	// and metrics. For information, see Use Logs and Metrics to Monitor an Inference
+	// Pipeline (http://docs.aws.amazon.com/sagemaker/latest/dg/inference-pipeline-logs-metrics.html).
+	// If you don't specify a value for this parameter for a ContainerDefinition
+	// that is part of an inference pipeline, a unique name is automatically assigned
+	// based on the position of the ContainerDefinition in the pipeline. If you
+	// specify a value for the ContainerHostName for any ContainerDefinition that
+	// is part of an inference pipeline, you must specify a value for the ContainerHostName
+	// parameter of every ContainerDefinition in that pipeline.
 	ContainerHostname *string `type:"string"`
 
 	// The environment variables to set in the Docker container. Each key and value
@@ -8287,7 +8316,9 @@ type ContainerDefinition struct {
 
 	// The S3 path where the model artifacts, which result from model training,
 	// are stored. This path must point to a single gzip compressed tar archive
-	// (.tar.gz suffix).
+	// (.tar.gz suffix). The S3 path is required for Amazon SageMaker built-in algorithms,
+	// but not if you use your own algorithms. For more information on built-in
+	// algorithms, see Common Parameters (http://docs.aws.amazon.com/sagemaker/latest/dg/sagemaker-algo-docker-registry-paths.html).
 	//
 	// If you provide a value for this parameter, Amazon SageMaker uses AWS Security
 	// Token Service to download model artifacts from the S3 path you provide. AWS
@@ -8296,6 +8327,9 @@ type ContainerDefinition struct {
 	// more information, see Activating and Deactivating AWS STS in an AWS Region
 	// (http://docs.aws.amazon.com/IAM/latest/UserGuide/id_credentials_temp_enable-regions.html)
 	// in the AWS Identity and Access Management User Guide.
+	//
+	// If you use a built-in algorithm to create a model, Amazon SageMaker requires
+	// that you provide a S3 path to the model artifacts in ModelDataUrl.
 	ModelDataUrl *string `type:"string"`
 
 	// The name of the model package to use to create the model.
@@ -8378,7 +8412,7 @@ type ContinuousParameterRange struct {
 
 	// The scale that hyperparameter tuning uses to search the hyperparameter range.
 	// For information about choosing a hyperparameter scale, see Hyperparameter
-	// Range Scaling (http://docs.aws.amazon.com//sagemaker/latest/dg/automatic-model-tuning-define-ranges.html#scaling-type).
+	// Scaling (http://docs.aws.amazon.com//sagemaker/latest/dg/automatic-model-tuning-define-ranges.html#scaling-type).
 	// One of the following values:
 	//
 	// AutoAmazon SageMaker hyperparameter tuning chooses the best scale for the
@@ -8777,7 +8811,7 @@ type CreateCompilationJobInput struct {
 	// OutputConfig is a required field
 	OutputConfig *OutputConfig `type:"structure" required:"true"`
 
-	// The Amazon Resource Name (ARN) of an IIAMAM role that enables Amazon SageMaker
+	// The Amazon Resource Name (ARN) of an IAM role that enables Amazon SageMaker
 	// to perform tasks on your behalf.
 	//
 	// During model compilation, Amazon SageMaker needs your permission to:
@@ -8932,15 +8966,15 @@ type CreateEndpointConfigInput struct {
 	// instance that hosts the endpoint.
 	KmsKeyId *string `type:"string"`
 
-	// An array of ProductionVariant objects, one for each model that you want to
+	// An list of ProductionVariant objects, one for each model that you want to
 	// host at this endpoint.
 	//
 	// ProductionVariants is a required field
 	ProductionVariants []*ProductionVariant `min:"1" type:"list" required:"true"`
 
-	// An array of key-value pairs. For more information, see Using Cost Allocation
+	// A list of key-value pairs. For more information, see Using Cost Allocation
 	// Tags (https://docs.aws.amazon.com/awsaccountbilling/latest/aboutv2/cost-alloc-tags.html#allocation-what)
-	// in the AWS Billing and Cost Management User Guide.
+	// in the  AWS Billing and Cost Management User Guide.
 	Tags []*Tag `type:"list"`
 }
 
@@ -9174,9 +9208,7 @@ type CreateHyperParameterTuningJobInput struct {
 	// jobs that this tuning job launches, including static hyperparameters, input
 	// data configuration, output data configuration, resource configuration, and
 	// stopping condition.
-	//
-	// TrainingJobDefinition is a required field
-	TrainingJobDefinition *HyperParameterTrainingJobDefinition `type:"structure" required:"true"`
+	TrainingJobDefinition *HyperParameterTrainingJobDefinition `type:"structure"`
 
 	// Specifies the configuration for starting the hyperparameter tuning job using
 	// one or more previous tuning jobs as a starting point. The results of previous
@@ -9218,9 +9250,6 @@ func (s *CreateHyperParameterTuningJobInput) Validate() error {
 	}
 	if s.HyperParameterTuningJobName != nil && len(*s.HyperParameterTuningJobName) < 1 {
 		invalidParams.Add(request.NewErrParamMinLen("HyperParameterTuningJobName", 1))
-	}
-	if s.TrainingJobDefinition == nil {
-		invalidParams.Add(request.NewErrParamRequired("TrainingJobDefinition"))
 	}
 	if s.HyperParameterTuningJobConfig != nil {
 		if err := s.HyperParameterTuningJobConfig.Validate(); err != nil {
@@ -9611,9 +9640,10 @@ type CreateModelInput struct {
 	// in the AWS Billing and Cost Management User Guide.
 	Tags []*Tag `type:"list"`
 
-	// A VpcConfig object that specifies the VPC that you want your model to connect
-	// to. Control access to and from your model container by configuring the VPC.
-	// VpcConfig is used in hosting services and in batch transform. For more information,
+	// A VpcConfig (https://docs.aws.amazon.com/sagemaker/latest/dg/API_VpcConfig.html)
+	// object that specifies the VPC that you want your model to connect to. Control
+	// access to and from your model container by configuring the VPC. VpcConfig
+	// is used in hosting services and in batch transform. For more information,
 	// see Protect Endpoints by Using an Amazon Virtual Private Cloud (https://docs.aws.amazon.com/sagemaker/latest/dg/host-vpc.html)
 	// and Protect Data in Batch Transform Jobs by Using an Amazon Virtual Private
 	// Cloud (https://docs.aws.amazon.com/sagemaker/latest/dg/batch-vpc.html).
@@ -9927,10 +9957,10 @@ type CreateNotebookInstanceInput struct {
 	// InstanceType is a required field
 	InstanceType *string `type:"string" required:"true" enum:"InstanceType"`
 
-	// If you provide a AWS KMS key ID, Amazon SageMaker uses it to encrypt data
-	// at rest on the ML storage volume that is attached to your notebook instance.
-	// The KMS key you provide must be enabled. For information, see Enabling and
-	// Disabling Keys (http://docs.aws.amazon.com/kms/latest/developerguide/enabling-keys.html)
+	// The Amazon Resource Name (ARN) of a AWS Key Management Service key that Amazon
+	// SageMaker uses to encrypt data on the storage volume attached to your notebook
+	// instance. The KMS key you provide must be enabled. For information, see Enabling
+	// and Disabling Keys (http://docs.aws.amazon.com/kms/latest/developerguide/enabling-keys.html)
 	// in the AWS Key Management Service Developer Guide.
 	KmsKeyId *string `type:"string"`
 
@@ -10642,9 +10672,12 @@ type CreateTransformJobInput struct {
 	Environment map[string]*string `type:"map"`
 
 	// The maximum number of parallel requests that can be sent to each instance
-	// in a transform job. The default value is 1. To allow Amazon SageMaker to
-	// determine the appropriate number for MaxConcurrentTransforms, set the value
-	// to 0.
+	// in a transform job. If MaxConcurrentTransforms is set to 0 or left unset,
+	// Amazon SageMaker checks the optional execution-parameters to determine the
+	// optimal settings for your chosen algorithm. If the execution-parameters endpoint
+	// is not enabled, the default value is 1. For more information on execution-parameters,
+	// see How Containers Serve Requests (http://docs.aws.amazon.com/sagemaker/latest/dg/your-algorithms-batch-code.html#your-algorithms-batch-code-how-containe-serves-requests).
+	// For built-in algorithms, you don't need to set a value for MaxConcurrentTransforms.
 	MaxConcurrentTransforms *int64 `type:"integer"`
 
 	// The maximum allowed size of the payload, in MB. A payload is the data portion
@@ -10861,6 +10894,9 @@ type CreateWorkteamInput struct {
 	// MemberDefinitions is a required field
 	MemberDefinitions []*MemberDefinition `min:"1" type:"list" required:"true"`
 
+	// Configures notification of workers regarding available or expiring work items.
+	NotificationConfiguration *NotificationConfiguration `type:"structure"`
+
 	Tags []*Tag `type:"list"`
 
 	// The name of the work team. Use this name to identify the work team.
@@ -10939,6 +10975,12 @@ func (s *CreateWorkteamInput) SetMemberDefinitions(v []*MemberDefinition) *Creat
 	return s
 }
 
+// SetNotificationConfiguration sets the NotificationConfiguration field's value.
+func (s *CreateWorkteamInput) SetNotificationConfiguration(v *NotificationConfiguration) *CreateWorkteamInput {
+	s.NotificationConfiguration = v
+	return s
+}
+
 // SetTags sets the Tags field's value.
 func (s *CreateWorkteamInput) SetTags(v []*Tag) *CreateWorkteamInput {
 	s.Tags = v
@@ -10980,9 +11022,7 @@ type DataSource struct {
 	_ struct{} `type:"structure"`
 
 	// The S3 location of the data source that is associated with a channel.
-	//
-	// S3DataSource is a required field
-	S3DataSource *S3DataSource `type:"structure" required:"true"`
+	S3DataSource *S3DataSource `type:"structure"`
 }
 
 // String returns the string representation
@@ -10998,9 +11038,6 @@ func (s DataSource) GoString() string {
 // Validate inspects the fields of the type to determine if they are valid.
 func (s *DataSource) Validate() error {
 	invalidParams := request.ErrInvalidParams{Context: "DataSource"}
-	if s.S3DataSource == nil {
-		invalidParams.Add(request.NewErrParamRequired("S3DataSource"))
-	}
 	if s.S3DataSource != nil {
 		if err := s.S3DataSource.Validate(); err != nil {
 			invalidParams.AddNested("S3DataSource", err.(request.ErrInvalidParams))
@@ -12487,9 +12524,7 @@ type DescribeHyperParameterTuningJobOutput struct {
 
 	// The HyperParameterTrainingJobDefinition object that specifies the definition
 	// of the training jobs that this tuning job launches.
-	//
-	// TrainingJobDefinition is a required field
-	TrainingJobDefinition *HyperParameterTrainingJobDefinition `type:"structure" required:"true"`
+	TrainingJobDefinition *HyperParameterTrainingJobDefinition `type:"structure"`
 
 	// The TrainingJobStatusCounters object that specifies the number of training
 	// jobs, categorized by status, that this tuning job launched.
@@ -14930,6 +14965,16 @@ type HumanTaskConfig struct {
 	//
 	//    * arn:aws:lambda:ap-northeast-1:477331159723:function:PRE-TextMultiClass
 	//
+	// Asia Pacific (Sydney (ap-southeast-1):
+	//
+	//    * arn:aws:lambda:ap-southeast-2:454466003867:function:PRE-BoundingBox
+	//
+	//    * arn:aws:lambda:ap-southeast-2:454466003867:function:PRE-ImageMultiClass
+	//
+	//    * arn:aws:lambda:ap-southeast-2:454466003867:function:PRE-SemanticSegmentation
+	//
+	//    * arn:aws:lambda:ap-southeast-2:454466003867:function:PRE-TextMultiClass
+	//
 	// PreHumanTaskLambdaArn is a required field
 	PreHumanTaskLambdaArn *string `type:"string" required:"true"`
 
@@ -15685,15 +15730,11 @@ type HyperParameterTuningJobConfig struct {
 
 	// The HyperParameterTuningJobObjective object that specifies the objective
 	// metric for this tuning job.
-	//
-	// HyperParameterTuningJobObjective is a required field
-	HyperParameterTuningJobObjective *HyperParameterTuningJobObjective `type:"structure" required:"true"`
+	HyperParameterTuningJobObjective *HyperParameterTuningJobObjective `type:"structure"`
 
 	// The ParameterRanges object that specifies the ranges of hyperparameters that
 	// this tuning job searches.
-	//
-	// ParameterRanges is a required field
-	ParameterRanges *ParameterRanges `type:"structure" required:"true"`
+	ParameterRanges *ParameterRanges `type:"structure"`
 
 	// The ResourceLimits object that specifies the maximum number of training jobs
 	// and parallel training jobs for this tuning job.
@@ -15736,12 +15777,6 @@ func (s HyperParameterTuningJobConfig) GoString() string {
 // Validate inspects the fields of the type to determine if they are valid.
 func (s *HyperParameterTuningJobConfig) Validate() error {
 	invalidParams := request.ErrInvalidParams{Context: "HyperParameterTuningJobConfig"}
-	if s.HyperParameterTuningJobObjective == nil {
-		invalidParams.Add(request.NewErrParamRequired("HyperParameterTuningJobObjective"))
-	}
-	if s.ParameterRanges == nil {
-		invalidParams.Add(request.NewErrParamRequired("ParameterRanges"))
-	}
 	if s.ResourceLimits == nil {
 		invalidParams.Add(request.NewErrParamRequired("ResourceLimits"))
 	}
@@ -16357,7 +16392,7 @@ type IntegerParameterRange struct {
 
 	// The scale that hyperparameter tuning uses to search the hyperparameter range.
 	// For information about choosing a hyperparameter scale, see Hyperparameter
-	// Range Scaling (http://docs.aws.amazon.com//sagemaker/latest/dg/automatic-model-tuning-define-ranges.html#scaling-type).
+	// Scaling (http://docs.aws.amazon.com//sagemaker/latest/dg/automatic-model-tuning-define-ranges.html#scaling-type).
 	// One of the following values:
 	//
 	// AutoAmazon SageMaker hyperparameter tuning chooses the best scale for the
@@ -16751,6 +16786,9 @@ type LabelingJobForWorkteamSummary struct {
 	// The name of the labeling job that the work team is assigned to.
 	LabelingJobName *string `min:"1" type:"string"`
 
+	// The configured number of workers per data object.
+	NumberOfHumanWorkersPerDataObject *int64 `min:"1" type:"integer"`
+
 	// WorkRequesterAccountId is a required field
 	WorkRequesterAccountId *string `type:"string" required:"true"`
 }
@@ -16786,6 +16824,12 @@ func (s *LabelingJobForWorkteamSummary) SetLabelCounters(v *LabelCountersForWork
 // SetLabelingJobName sets the LabelingJobName field's value.
 func (s *LabelingJobForWorkteamSummary) SetLabelingJobName(v string) *LabelingJobForWorkteamSummary {
 	s.LabelingJobName = &v
+	return s
+}
+
+// SetNumberOfHumanWorkersPerDataObject sets the NumberOfHumanWorkersPerDataObject field's value.
+func (s *LabelingJobForWorkteamSummary) SetNumberOfHumanWorkersPerDataObject(v int64) *LabelingJobForWorkteamSummary {
+	s.NumberOfHumanWorkersPerDataObject = &v
 	return s
 }
 
@@ -17649,8 +17693,8 @@ func (s *ListCompilationJobsOutput) SetNextToken(v string) *ListCompilationJobsO
 type ListEndpointConfigsInput struct {
 	_ struct{} `type:"structure"`
 
-	// A filter that returns only endpoint configurations created after the specified
-	// time (timestamp).
+	// A filter that returns only endpoint configurations with a creation time greater
+	// than or equal to the specified time (timestamp).
 	CreationTimeAfter *time.Time `type:"timestamp"`
 
 	// A filter that returns only endpoint configurations created before the specified
@@ -17779,8 +17823,8 @@ func (s *ListEndpointConfigsOutput) SetNextToken(v string) *ListEndpointConfigsO
 type ListEndpointsInput struct {
 	_ struct{} `type:"structure"`
 
-	// A filter that returns only endpoints that were created after the specified
-	// time (timestamp).
+	// A filter that returns only endpoints with a creation time greater than or
+	// equal to the specified time (timestamp).
 	CreationTimeAfter *time.Time `type:"timestamp"`
 
 	// A filter that returns only endpoints that were created before the specified
@@ -18534,7 +18578,8 @@ func (s *ListModelPackagesOutput) SetNextToken(v string) *ListModelPackagesOutpu
 type ListModelsInput struct {
 	_ struct{} `type:"structure"`
 
-	// A filter that returns only models created after the specified time (timestamp).
+	// A filter that returns only models with a creation time greater than or equal
+	// to the specified time (timestamp).
 	CreationTimeAfter *time.Time `type:"timestamp"`
 
 	// A filter that returns only models created before the specified time (timestamp).
@@ -20664,6 +20709,31 @@ func (s *NotebookInstanceSummary) SetNotebookInstanceStatus(v string) *NotebookI
 // SetUrl sets the Url field's value.
 func (s *NotebookInstanceSummary) SetUrl(v string) *NotebookInstanceSummary {
 	s.Url = &v
+	return s
+}
+
+// Configures SNS notifications of available or expiring work items for work
+// teams.
+type NotificationConfiguration struct {
+	_ struct{} `type:"structure"`
+
+	// The ARN for the SNS topic to which notifications should be published.
+	NotificationTopicArn *string `type:"string"`
+}
+
+// String returns the string representation
+func (s NotificationConfiguration) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s NotificationConfiguration) GoString() string {
+	return s.String()
+}
+
+// SetNotificationTopicArn sets the NotificationTopicArn field's value.
+func (s *NotificationConfiguration) SetNotificationTopicArn(v string) *NotificationConfiguration {
+	s.NotificationTopicArn = &v
 	return s
 }
 
@@ -24405,6 +24475,10 @@ type TransformS3DataSource struct {
 	// file containing a list of object keys that you want Amazon SageMaker to use
 	// for batch transform.
 	//
+	// The following values are compatible: ManifestFile, S3Prefix
+	//
+	// The following value is not compatible: AugmentedManifestFile
+	//
 	// S3DataType is a required field
 	S3DataType *string `type:"string" required:"true" enum:"S3DataType"`
 
@@ -24891,19 +24965,27 @@ type UpdateNotebookInstanceInput struct {
 	DefaultCodeRepository *string `min:"1" type:"string"`
 
 	// A list of the Elastic Inference (EI) instance types to remove from this notebook
-	// instance.
+	// instance. This operation is idempotent. If you specify an accelerator type
+	// that is not associated with the notebook instance when you call this method,
+	// it does not throw an error.
 	DisassociateAcceleratorTypes *bool `type:"boolean"`
 
 	// A list of names or URLs of the default Git repositories to remove from this
-	// notebook instance.
+	// notebook instance. This operation is idempotent. If you specify a Git repository
+	// that is not associated with the notebook instance when you call this method,
+	// it does not throw an error.
 	DisassociateAdditionalCodeRepositories *bool `type:"boolean"`
 
 	// The name or URL of the default Git repository to remove from this notebook
-	// instance.
+	// instance. This operation is idempotent. If you specify a Git repository that
+	// is not associated with the notebook instance when you call this method, it
+	// does not throw an error.
 	DisassociateDefaultCodeRepository *bool `type:"boolean"`
 
 	// Set to true to remove the notebook instance lifecycle configuration currently
-	// associated with the notebook instance.
+	// associated with the notebook instance. This operation is idempotent. If you
+	// specify a lifecycle configuration that is not associated with the notebook
+	// instance when you call this method, it does not throw an error.
 	DisassociateLifecycleConfig *bool `type:"boolean"`
 
 	// The Amazon ML compute instance type.
@@ -25163,6 +25245,9 @@ type UpdateWorkteamInput struct {
 	// A list of MemberDefinition objects that contain the updated work team members.
 	MemberDefinitions []*MemberDefinition `min:"1" type:"list"`
 
+	// Configures SNS topic notifications for available or expiring work items
+	NotificationConfiguration *NotificationConfiguration `type:"structure"`
+
 	// The name of the work team to update.
 	//
 	// WorkteamName is a required field
@@ -25223,6 +25308,12 @@ func (s *UpdateWorkteamInput) SetMemberDefinitions(v []*MemberDefinition) *Updat
 	return s
 }
 
+// SetNotificationConfiguration sets the NotificationConfiguration field's value.
+func (s *UpdateWorkteamInput) SetNotificationConfiguration(v *NotificationConfiguration) *UpdateWorkteamInput {
+	s.NotificationConfiguration = v
+	return s
+}
+
 // SetWorkteamName sets the WorkteamName field's value.
 func (s *UpdateWorkteamInput) SetWorkteamName(v string) *UpdateWorkteamInput {
 	s.WorkteamName = &v
@@ -25270,6 +25361,11 @@ type VpcConfig struct {
 
 	// The ID of the subnets in the VPC to which you want to connect your training
 	// job or model.
+	//
+	// Amazon EC2 P3 accelerated computing instances are not available in the c/d/e
+	// availability zones of region us-east-1. If you want to create endpoints with
+	// P3 instances in VPC mode in region us-east-1, create subnets in a/b/f availability
+	// zones instead.
 	//
 	// Subnets is a required field
 	Subnets []*string `min:"1" type:"list" required:"true"`
@@ -25339,6 +25435,10 @@ type Workteam struct {
 	// MemberDefinitions is a required field
 	MemberDefinitions []*MemberDefinition `min:"1" type:"list" required:"true"`
 
+	// Configures SNS notifications of available or expiring work items for work
+	// teams.
+	NotificationConfiguration *NotificationConfiguration `type:"structure"`
+
 	// The Amazon Marketplace identifier for a vendor's work team.
 	ProductListingIds []*string `type:"list"`
 
@@ -25388,6 +25488,12 @@ func (s *Workteam) SetLastUpdatedDate(v time.Time) *Workteam {
 // SetMemberDefinitions sets the MemberDefinitions field's value.
 func (s *Workteam) SetMemberDefinitions(v []*MemberDefinition) *Workteam {
 	s.MemberDefinitions = v
+	return s
+}
+
+// SetNotificationConfiguration sets the NotificationConfiguration field's value.
+func (s *Workteam) SetNotificationConfiguration(v *NotificationConfiguration) *Workteam {
+	s.NotificationConfiguration = v
 	return s
 }
 
@@ -26232,6 +26338,9 @@ const (
 )
 
 const (
+	// TargetDeviceLambda is a TargetDevice enum value
+	TargetDeviceLambda = "lambda"
+
 	// TargetDeviceMlM4 is a TargetDevice enum value
 	TargetDeviceMlM4 = "ml_m4"
 
@@ -26255,6 +26364,9 @@ const (
 
 	// TargetDeviceJetsonTx2 is a TargetDevice enum value
 	TargetDeviceJetsonTx2 = "jetson_tx2"
+
+	// TargetDeviceJetsonNano is a TargetDevice enum value
+	TargetDeviceJetsonNano = "jetson_nano"
 
 	// TargetDeviceRasp3b is a TargetDevice enum value
 	TargetDeviceRasp3b = "rasp3b"
