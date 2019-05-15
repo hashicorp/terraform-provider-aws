@@ -19,7 +19,7 @@ for more information.
 ```hcl
 # Create a new GitLab Lightsail Instance
 resource "aws_lightsail_instance" "gitlab_test" {
-  name              = "custom gitlab"
+  name              = "custom_gitlab"
   availability_zone = "us-east-1b"
   blueprint_id      = "string"
   bundle_id         = "string"
