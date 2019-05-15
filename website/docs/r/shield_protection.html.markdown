@@ -16,19 +16,12 @@ The resource can be an Amazon CloudFront distribution, Elastic Load Balancing lo
 ### Create protection
 
 ```hcl
-variable "name" {
-  default = "bar"
-}
-
 data "aws_availability_zones" "available" {}
 data "aws_region" "current" {}
 data "aws_caller_identity" "current" {}
 
 resource "aws_eip" "foo" {
-  tags {
-    foo  = "bar"
-    Name = "${var.name}"
-  }
+  vpc = true
 }
 
 resource "aws_shield_protection" "foo" {
@@ -41,8 +34,7 @@ resource "aws_shield_protection" "foo" {
 
 The following arguments are supported:
 
-* Creating a shield protection
-  * `name` - (Required) A friendly name for the Protection you are creating.
+* `name` - (Required) A friendly name for the Protection you are creating.
 * `resource_arn` - (Required) The ARN (Amazon Resource Name) of the resource to be protected.
 
 ## Attributes Reference
