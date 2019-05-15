@@ -115,6 +115,13 @@ In addition to all arguments above, the following attributes are exported:
 * `bootstrap_brokers` - A comma separated list of one or more hostname:port pairs of kafka brokers suitable to boostrap connectivity to the kafka cluster.
 * `encryption_info.0.encryption_at_rest_kms_id` - The ARN of the KMS key used for encryption at rest of the broker data volumes.
 
+## Timeouts
+
+`aws_msk_cluster` provides the following [Timeouts](/docs/configuration/resources.html#timeouts) configuration options:
+
+* `create` - (Default `45 minutes`) Used for creating a new cluster.
+* `delete` - (Default `45 minutes`) Used for destroying a cluster.
+
 ## Import
 
 MSK clusters can be imported using the cluster `arn`, e.g.
