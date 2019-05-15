@@ -8,8 +8,8 @@ FEATURES:
 
 * **New Data Source:** `aws_ecr_image` [GH-8403]
 * **New Data Source:** `aws_ram_resource_share` [GH-8491]
-* **New resource:** `aws_ses_email_identity` [GH-6575]
 * **New Guide:** Version 3 Upgrade Guide [GH-8459]
+* **New Resource:** `aws_ses_email_identity` [GH-6575]
 
 ENHANCEMENTS:
 
