@@ -43,7 +43,7 @@ The following arguments are supported:
 
 * Creating a shield protection
   * `name` - (Required) A friendly name for the Protection you are creating.
-  * `resource_arn` - The ARN (Amazon Resource Name) of the resource to be protected.
+* `resource_arn` - (Required) The ARN (Amazon Resource Name) of the resource to be protected.
 
 ## Attributes Reference
 
