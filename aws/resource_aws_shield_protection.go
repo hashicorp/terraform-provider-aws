@@ -1,8 +1,9 @@
 package aws
 
 import (
+	"fmt"
+
 	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/shield"
 	"github.com/hashicorp/terraform/helper/schema"
 )
@@ -13,7 +14,7 @@ func resourceAwsShieldProtection() *schema.Resource {
 		Read:   resourceAwsShieldProtectionRead,
 		Delete: resourceAwsShieldProtectionDelete,
 		Importer: &schema.ResourceImporter{
-			State: resourceAwsShieldProtectionImport,
+			State: schema.ImportStatePassthrough,
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -42,7 +43,7 @@ func resourceAwsShieldProtectionCreate(d *schema.ResourceData, meta interface{})
 
 	resp, err := conn.CreateProtection(input)
 	if err != nil {
-		return err
+		return fmt.Errorf("error creating Shield Protection: %s", err)
 	}
 	d.SetId(*resp.ProtectionId)
 	return resourceAwsShieldProtectionRead(d, meta)
@@ -55,10 +56,12 @@ func resourceAwsShieldProtectionRead(d *schema.ResourceData, meta interface{}) e
 		ProtectionId: aws.String(d.Id()),
 	}
 
-	_, err := conn.DescribeProtection(input)
+	resp, err := conn.DescribeProtection(input)
 	if err != nil {
-		return err
+		return fmt.Errorf("error reading Shield Protection (%s): %s", d.Id(), err)
 	}
+	d.Set("name", resp.Protection.Name)
+	d.Set("resource_arn", resp.Protection.ResourceArn)
 	return nil
 }
 
@@ -70,34 +73,13 @@ func resourceAwsShieldProtectionDelete(d *schema.ResourceData, meta interface{})
 	}
 
 	_, err := conn.DeleteProtection(input)
+
+	if isAWSErr(err, shield.ErrCodeResourceNotFoundException, "") {
+		return nil
+	}
+
 	if err != nil {
-		if aerr, ok := err.(awserr.Error); ok {
-			switch aerr.Code() {
-			case shield.ErrCodeResourceNotFoundException:
-				return nil
-			default:
-				return err
-			}
-		}
-		return err
+		return fmt.Errorf("error deleting Shield Protection (%s): %s", d.Id(), err)
 	}
 	return nil
-}
-
-func resourceAwsShieldProtectionImport(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
-	conn := meta.(*AWSClient).shieldconn
-
-	input := &shield.DescribeProtectionInput{
-		ProtectionId: aws.String(d.Id()),
-	}
-
-	resp, err := conn.DescribeProtection(input)
-	if err != nil {
-		return nil, err
-	}
-
-	d.Set("name", resp.Protection.Name)
-	d.Set("resource_arn", resp.Protection.ResourceArn)
-
-	return []*schema.ResourceData{d}, nil
 }
