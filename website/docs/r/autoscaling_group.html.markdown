@@ -263,7 +263,7 @@ This configuration block supports the following:
 This configuration block supports the following:
 
 * `launch_template_specification` - (Required) Nested argument defines the Launch Template. Defined below.
-* `override` - (Optional) List of nested arguments provides the ability to specify multiple instance types. This will override the same parameter in the launch template. For on-demand instances, Auto Scaling considers the order of preference of instance types to launch based on the order specified in the overrides list. Defined below.
+* `override` - (Required) List of nested arguments provides the ability to specify multiple instance types. This will override the same parameter in the launch template. For on-demand instances, Auto Scaling considers the order of preference of instance types to launch based on the order specified in the overrides list. Defined below.
 
 ##### mixed_instances_policy launch_template launch_template_specification
 
@@ -279,7 +279,7 @@ This configuration block supports the following:
 
 This configuration block supports the following:
 
-* `instance_type` - (Optional) Override the instance type in the Launch Template.
+* `instance_type` - (Required) Override the instance type in the Launch Template.
 
 ### tag and tags
 
