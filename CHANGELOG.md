@@ -10,6 +10,7 @@ FEATURES:
 * **New Data Source:** `aws_ram_resource_share` [GH-8491]
 * **New Guide:** Version 3 Upgrade Guide [GH-8459]
 * **New Resource:** `aws_ses_email_identity` [GH-6575]
+* **New Resource:** `aws_shield_protection` [GH-7721]
 
 ENHANCEMENTS:
 
