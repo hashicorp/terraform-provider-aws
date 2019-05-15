@@ -16,17 +16,6 @@ func dataSourceAwsVpcEndpointService() *schema.Resource {
 		Read: dataSourceAwsVpcEndpointServiceRead,
 
 		Schema: map[string]*schema.Schema{
-			"service": {
-				Type:          schema.TypeString,
-				Optional:      true,
-				ConflictsWith: []string{"service_name"},
-			},
-			"service_name": {
-				Type:          schema.TypeString,
-				Optional:      true,
-				Computed:      true,
-				ConflictsWith: []string{"service"},
-			},
 			"acceptance_required": {
 				Type:     schema.TypeBool,
 				Computed: true,
@@ -55,10 +44,26 @@ func dataSourceAwsVpcEndpointService() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"service": {
+				Type:          schema.TypeString,
+				Optional:      true,
+				ConflictsWith: []string{"service_name"},
+			},
+			"service_id": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"service_name": {
+				Type:          schema.TypeString,
+				Optional:      true,
+				Computed:      true,
+				ConflictsWith: []string{"service"},
+			},
 			"service_type": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"tags": tagsSchemaComputed(),
 			"vpc_endpoint_policy_supported": {
 				Type:     schema.TypeBool,
 				Computed: true,
@@ -130,7 +135,12 @@ func dataSourceAwsVpcEndpointServiceRead(d *schema.ResourceData, meta interface{
 	d.Set("manages_vpc_endpoints", sd.ManagesVpcEndpoints)
 	d.Set("owner", sd.Owner)
 	d.Set("private_dns_name", sd.PrivateDnsName)
+	d.Set("service_id", sd.ServiceId)
 	d.Set("service_type", sd.ServiceType[0].ServiceType)
+	err = d.Set("tags", tagsToMap(sd.Tags))
+	if err != nil {
+		return fmt.Errorf("error setting tags: %s", err)
+	}
 	d.Set("vpc_endpoint_policy_supported", sd.VpcEndpointPolicySupported)
 
 	return nil

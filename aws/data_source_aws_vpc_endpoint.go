@@ -15,26 +15,6 @@ func dataSourceAwsVpcEndpoint() *schema.Resource {
 		Read: dataSourceAwsVpcEndpointRead,
 
 		Schema: map[string]*schema.Schema{
-			"id": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-			},
-			"service_name": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-			},
-			"state": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-			},
-			"vpc_id": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-			},
 			"cidr_blocks": {
 				Type:     schema.TypeList,
 				Computed: true,
@@ -55,6 +35,11 @@ func dataSourceAwsVpcEndpoint() *schema.Resource {
 						},
 					},
 				},
+			},
+			"id": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
 			},
 			"network_interface_ids": {
 				Type:     schema.TypeSet,
@@ -90,14 +75,30 @@ func dataSourceAwsVpcEndpoint() *schema.Resource {
 				Elem:     &schema.Schema{Type: schema.TypeString},
 				Set:      schema.HashString,
 			},
+			"service_name": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+			},
+			"state": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+			},
 			"subnet_ids": {
 				Type:     schema.TypeSet,
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 				Set:      schema.HashString,
 			},
+			"tags": tagsSchemaComputed(),
 			"vpc_endpoint_type": {
 				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"vpc_id": {
+				Type:     schema.TypeString,
+				Optional: true,
 				Computed: true,
 			},
 		},
@@ -193,6 +194,10 @@ func dataSourceAwsVpcEndpointRead(d *schema.ResourceData, meta interface{}) erro
 	err = d.Set("subnet_ids", flattenStringSet(vpce.SubnetIds))
 	if err != nil {
 		return fmt.Errorf("error setting subnet_ids: %s", err)
+	}
+	err = d.Set("tags", tagsToMap(vpce.Tags))
+	if err != nil {
+		return fmt.Errorf("error setting tags: %s", err)
 	}
 	// VPC endpoints don't have types in GovCloud, so set type to default if empty
 	if vpceType := aws.StringValue(vpce.VpcEndpointType); vpceType == "" {

@@ -82,24 +82,27 @@ func testSweepEc2VpcEndpointServices(region string) error {
 
 func TestAccAWSVpcEndpointService_basic(t *testing.T) {
 	var svcCfg ec2.ServiceConfiguration
-	resourceName := "aws_vpc_endpoint_service.foo"
+	resourceName := "aws_vpc_endpoint_service.test"
 	rName1 := fmt.Sprintf("tf-testacc-vpcesvc-%s", acctest.RandStringFromCharSet(13, acctest.CharSetAlphaNum))
 	rName2 := fmt.Sprintf("tf-testacc-vpcesvc-%s", acctest.RandStringFromCharSet(13, acctest.CharSetAlphaNum))
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:      func() { testAccPreCheck(t) },
-		IDRefreshName: "aws_vpc_endpoint_service.foo",
-		Providers:     testAccProviders,
-		CheckDestroy:  testAccCheckVpcEndpointServiceDestroy,
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckVpcEndpointServiceDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccVpcEndpointServiceBasicConfig(rName1),
+				Config: testAccVpcEndpointServiceConfig_basic(rName1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVpcEndpointServiceExists(resourceName, &svcCfg),
 					resource.TestCheckResourceAttr(resourceName, "acceptance_required", "false"),
 					resource.TestCheckResourceAttr(resourceName, "network_load_balancer_arns.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "allowed_principals.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "manages_vpc_endpoints", "false"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "3"),
+					resource.TestCheckResourceAttr(resourceName, "tags.Environment", "test"),
+					resource.TestCheckResourceAttr(resourceName, "tags.Usage", "original"),
+					resource.TestCheckResourceAttr(resourceName, "tags.Name", rName1),
 				),
 			},
 			{
@@ -108,12 +111,15 @@ func TestAccAWSVpcEndpointService_basic(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccVpcEndpointServiceModifiedConfig(rName1, rName2),
+				Config: testAccVpcEndpointServiceConfig_modified(rName1, rName2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckVpcEndpointServiceExists("aws_vpc_endpoint_service.foo", &svcCfg),
+					testAccCheckVpcEndpointServiceExists(resourceName, &svcCfg),
 					resource.TestCheckResourceAttr(resourceName, "acceptance_required", "true"),
 					resource.TestCheckResourceAttr(resourceName, "network_load_balancer_arns.#", "2"),
 					resource.TestCheckResourceAttr(resourceName, "allowed_principals.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, "tags.Usage", "changed"),
+					resource.TestCheckResourceAttr(resourceName, "tags.Name", rName1),
 				),
 			},
 		},
@@ -122,7 +128,7 @@ func TestAccAWSVpcEndpointService_basic(t *testing.T) {
 
 func TestAccAWSVpcEndpointService_removed(t *testing.T) {
 	var svcCfg ec2.ServiceConfiguration
-	resourceName := "aws_vpc_endpoint_service.foo"
+	resourceName := "aws_vpc_endpoint_service.test"
 	rName := fmt.Sprintf("tf-testacc-vpcesvc-%s", acctest.RandStringFromCharSet(13, acctest.CharSetAlphaNum))
 
 	testDestroy := func(*terraform.State) error {
@@ -141,7 +147,7 @@ func TestAccAWSVpcEndpointService_removed(t *testing.T) {
 		CheckDestroy: testAccCheckVpcEndpointServiceDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccVpcEndpointServiceBasicConfig(rName),
+				Config: testAccVpcEndpointServiceConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVpcEndpointServiceExists(resourceName, &svcCfg),
 					testDestroy,
@@ -209,10 +215,9 @@ func testAccCheckVpcEndpointServiceExists(n string, svcCfg *ec2.ServiceConfigura
 	}
 }
 
-func testAccVpcEndpointServiceBasicConfig(rName string) string {
-	return fmt.Sprintf(
-		`
-resource "aws_vpc" "nlb_test" {
+func testAccVpcEndpointServiceConfig_basic(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"
 
   tags = {
@@ -220,12 +225,12 @@ resource "aws_vpc" "nlb_test" {
   }
 }
 
-resource "aws_lb" "nlb_test_1" {
+resource "aws_lb" "test1" {
   name =  %[1]q
 
   subnets = [
-    "${aws_subnet.nlb_test_1.id}",
-    "${aws_subnet.nlb_test_2.id}",
+    "${aws_subnet.test1.id}",
+    "${aws_subnet.test2.id}",
   ]
 
   load_balancer_type         = "network"
@@ -238,20 +243,22 @@ resource "aws_lb" "nlb_test_1" {
   }
 }
 
-resource "aws_subnet" "nlb_test_1" {
-  vpc_id            = "${aws_vpc.nlb_test.id}"
+data "aws_availability_zones" "available" {}
+
+resource "aws_subnet" "test1" {
+  vpc_id            = "${aws_vpc.test.id}"
   cidr_block        = "10.0.1.0/24"
-  availability_zone = "us-west-2a"
+  availability_zone = "${data.aws_availability_zones.available.names[0]}"
 
   tags = {
     Name =  %[1]q
   }
 }
 
-resource "aws_subnet" "nlb_test_2" {
-  vpc_id            = "${aws_vpc.nlb_test.id}"
+resource "aws_subnet" "test2" {
+  vpc_id            = "${aws_vpc.test.id}"
   cidr_block        = "10.0.2.0/24"
-  availability_zone = "us-west-2b"
+  availability_zone = "${data.aws_availability_zones.available.names[1]}"
 
   tags = {
     Name =  %[1]q
@@ -260,24 +267,29 @@ resource "aws_subnet" "nlb_test_2" {
 
 data "aws_caller_identity" "current" {}
 
-resource "aws_vpc_endpoint_service" "foo" {
+resource "aws_vpc_endpoint_service" "test" {
   acceptance_required = false
 
   network_load_balancer_arns = [
-    "${aws_lb.nlb_test_1.id}",
+    "${aws_lb.test1.arn}",
   ]
 
   allowed_principals = [
     "${data.aws_caller_identity.current.arn}"
   ]
+
+  tags = {
+    Environment = "test"
+    Usage       = "original"
+    Name        = %[1]q
+  }
 }
 `, rName)
 }
 
-func testAccVpcEndpointServiceModifiedConfig(rName1, rName2 string) string {
-	return fmt.Sprintf(
-		`
-resource "aws_vpc" "nlb_test" {
+func testAccVpcEndpointServiceConfig_modified(rName1, rName2 string) string {
+	return fmt.Sprintf(`
+resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"
 
   tags = {
@@ -285,12 +297,12 @@ resource "aws_vpc" "nlb_test" {
   }
 }
 
-resource "aws_lb" "nlb_test_1" {
+resource "aws_lb" "test1" {
   name = %[1]q
 
   subnets = [
-    "${aws_subnet.nlb_test_1.id}",
-    "${aws_subnet.nlb_test_2.id}",
+    "${aws_subnet.test1.id}",
+    "${aws_subnet.test2.id}",
   ]
 
   load_balancer_type         = "network"
@@ -303,12 +315,12 @@ resource "aws_lb" "nlb_test_1" {
   }
 }
 
-resource "aws_lb" "nlb_test_2" {
+resource "aws_lb" "test2" {
   name = %[2]q
 
   subnets = [
-    "${aws_subnet.nlb_test_1.id}",
-    "${aws_subnet.nlb_test_2.id}",
+    "${aws_subnet.test1.id}",
+    "${aws_subnet.test2.id}",
   ]
 
   load_balancer_type         = "network"
@@ -321,20 +333,22 @@ resource "aws_lb" "nlb_test_2" {
   }
 }
 
-resource "aws_subnet" "nlb_test_1" {
-  vpc_id            = "${aws_vpc.nlb_test.id}"
+data "aws_availability_zones" "available" {}
+
+resource "aws_subnet" "test1" {
+  vpc_id            = "${aws_vpc.test.id}"
   cidr_block        = "10.0.1.0/24"
-  availability_zone = "us-west-2a"
+  availability_zone = "${data.aws_availability_zones.available.names[0]}"
 
   tags = {
     Name = %[1]q
   }
 }
 
-resource "aws_subnet" "nlb_test_2" {
-  vpc_id            = "${aws_vpc.nlb_test.id}"
+resource "aws_subnet" "test2" {
+  vpc_id            = "${aws_vpc.test.id}"
   cidr_block        = "10.0.2.0/24"
-  availability_zone = "us-west-2b"
+  availability_zone = "${data.aws_availability_zones.available.names[1]}"
 
   tags = {
     Name = %[1]q
@@ -343,15 +357,20 @@ resource "aws_subnet" "nlb_test_2" {
 
 data "aws_caller_identity" "current" {}
 
-resource "aws_vpc_endpoint_service" "foo" {
+resource "aws_vpc_endpoint_service" "test" {
   acceptance_required = true
 
   network_load_balancer_arns = [
-    "${aws_lb.nlb_test_1.id}",
-    "${aws_lb.nlb_test_2.id}",
+    "${aws_lb.test1.arn}",
+    "${aws_lb.test2.arn}",
   ]
 
   allowed_principals = []
+
+  tags = {
+    Usage = "changed"
+    Name  = %[1]q
+  }
 }
 `, rName1, rName2)
 }

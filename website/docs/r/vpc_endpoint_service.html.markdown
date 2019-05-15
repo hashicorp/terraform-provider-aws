@@ -19,12 +19,25 @@ and will overwrite the association.
 
 ## Example Usage
 
-Basic usage:
+### Basic
 
 ```hcl
-resource "aws_vpc_endpoint_service" "foo" {
+resource "aws_vpc_endpoint_service" "example" {
   acceptance_required        = false
-  network_load_balancer_arns = ["${aws_lb.test.arn}"]
+  network_load_balancer_arns = ["${aws_lb.example.arn}"]
+}
+```
+
+### Basic w/ Tags
+
+```hcl
+resource "aws_vpc_endpoint_service" "example" {
+  acceptance_required        = false
+  network_load_balancer_arns = ["${aws_lb.example.arn}"]
+
+  tags = {
+    Environment = "test"
+  }
 }
 ```
 
@@ -35,6 +48,7 @@ The following arguments are supported:
 * `acceptance_required` - (Required) Whether or not VPC endpoint connection requests to the service must be accepted by the service owner - `true` or `false`.
 * `network_load_balancer_arns` - (Required) The ARNs of one or more Network Load Balancers for the endpoint service.
 * `allowed_principals` - (Optional) The ARNs of one or more principals allowed to discover the endpoint service.
+* `tags` - (Optional) A mapping of tags to assign to the resource.
 
 ## Attributes Reference
 

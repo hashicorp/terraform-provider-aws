@@ -61,5 +61,7 @@ In addition to all arguments above, the following attributes are exported:
 * `manages_vpc_endpoints` - Whether or not the service manages its VPC endpoints - `true` or `false`.
 * `owner` - The AWS account ID of the service owner or `amazon`.
 * `private_dns_name` - The private DNS name for the service.
+* `service_id` - The ID of the endpoint service.
 * `service_type` - The service type, `Gateway` or `Interface`.
+* `tags` - A mapping of tags assigned to the resource.
 * `vpc_endpoint_policy_supported` - Whether or not the service supports endpoint policies - `true` or `false`.

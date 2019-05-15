@@ -50,6 +50,7 @@ In addition to all arguments above, the following attributes are exported:
 * `route_table_ids` - One or more route tables associated with the VPC Endpoint. Applicable for endpoints of type `Gateway`.
 * `security_group_ids` - One or more security groups associated with the network interfaces. Applicable for endpoints of type `Interface`.
 * `subnet_ids` - One or more subnets in which the VPC Endpoint is located. Applicable for endpoints of type `Interface`.
+* `tags` - A mapping of tags assigned to the resource.
 * `vpc_endpoint_type` - The VPC Endpoint type, `Gateway` or `Interface`.
 
 DNS blocks (for `dns_entry`) support the following attributes:

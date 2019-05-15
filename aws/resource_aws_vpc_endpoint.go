@@ -25,66 +25,9 @@ func resourceAwsVpcEndpoint() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"service_name": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
-			"vpc_id": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
 			"auto_accept": {
 				Type:     schema.TypeBool,
 				Optional: true,
-			},
-			"policy": {
-				Type:             schema.TypeString,
-				Optional:         true,
-				Computed:         true,
-				ValidateFunc:     validation.ValidateJsonString,
-				DiffSuppressFunc: suppressEquivalentAwsPolicyDiffs,
-				StateFunc: func(v interface{}) string {
-					json, _ := structure.NormalizeJsonString(v)
-					return json
-				},
-			},
-			"private_dns_enabled": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Default:  false,
-			},
-			"route_table_ids": {
-				Type:     schema.TypeSet,
-				Optional: true,
-				Computed: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-				Set:      schema.HashString,
-			},
-			"security_group_ids": {
-				Type:     schema.TypeSet,
-				Optional: true,
-				Computed: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-				Set:      schema.HashString,
-			},
-			"subnet_ids": {
-				Type:     schema.TypeSet,
-				Optional: true,
-				Computed: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-				Set:      schema.HashString,
-			},
-			"vpc_endpoint_type": {
-				Type:     schema.TypeString,
-				Optional: true,
-				ForceNew: true,
-				Default:  ec2.VpcEndpointTypeGateway,
-				ValidateFunc: validation.StringInSlice([]string{
-					ec2.VpcEndpointTypeGateway,
-					ec2.VpcEndpointTypeInterface,
-				}, false),
 			},
 			"cidr_blocks": {
 				Type:     schema.TypeList,
@@ -113,17 +56,75 @@ func resourceAwsVpcEndpoint() *schema.Resource {
 				Elem:     &schema.Schema{Type: schema.TypeString},
 				Set:      schema.HashString,
 			},
+			"policy": {
+				Type:             schema.TypeString,
+				Optional:         true,
+				Computed:         true,
+				ValidateFunc:     validation.ValidateJsonString,
+				DiffSuppressFunc: suppressEquivalentAwsPolicyDiffs,
+				StateFunc: func(v interface{}) string {
+					json, _ := structure.NormalizeJsonString(v)
+					return json
+				},
+			},
 			"prefix_list_id": {
 				Type:     schema.TypeString,
 				Computed: true,
+			},
+			"private_dns_enabled": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				Default:  false,
 			},
 			"requester_managed": {
 				Type:     schema.TypeBool,
 				Computed: true,
 			},
+			"route_table_ids": {
+				Type:     schema.TypeSet,
+				Optional: true,
+				Computed: true,
+				Elem:     &schema.Schema{Type: schema.TypeString},
+				Set:      schema.HashString,
+			},
+			"security_group_ids": {
+				Type:     schema.TypeSet,
+				Optional: true,
+				Computed: true,
+				Elem:     &schema.Schema{Type: schema.TypeString},
+				Set:      schema.HashString,
+			},
+			"service_name": {
+				Type:     schema.TypeString,
+				Required: true,
+				ForceNew: true,
+			},
 			"state": {
 				Type:     schema.TypeString,
 				Computed: true,
+			},
+			"subnet_ids": {
+				Type:     schema.TypeSet,
+				Optional: true,
+				Computed: true,
+				Elem:     &schema.Schema{Type: schema.TypeString},
+				Set:      schema.HashString,
+			},
+			"tags": tagsSchema(),
+			"vpc_endpoint_type": {
+				Type:     schema.TypeString,
+				Optional: true,
+				ForceNew: true,
+				Default:  ec2.VpcEndpointTypeGateway,
+				ValidateFunc: validation.StringInSlice([]string{
+					ec2.VpcEndpointTypeGateway,
+					ec2.VpcEndpointTypeInterface,
+				}, false),
+			},
+			"vpc_id": {
+				Type:     schema.TypeString,
+				Required: true,
+				ForceNew: true,
 			},
 		},
 
@@ -178,6 +179,10 @@ func resourceAwsVpcEndpointCreate(d *schema.ResourceData, meta interface{}) erro
 	}
 
 	if err := vpcEndpointWaitUntilAvailable(conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
+		return err
+	}
+
+	if err := setTags(conn, d); err != nil {
 		return err
 	}
 
@@ -261,6 +266,10 @@ func resourceAwsVpcEndpointRead(d *schema.ResourceData, meta interface{}) error 
 	if err != nil {
 		return fmt.Errorf("error setting subnet_ids: %s", err)
 	}
+	err = d.Set("tags", tagsToMap(vpce.Tags))
+	if err != nil {
+		return fmt.Errorf("error setting tags: %s", err)
+	}
 	// VPC endpoints don't have types in GovCloud, so set type to default if empty
 	if vpceType := aws.StringValue(vpce.VpcEndpointType); vpceType == "" {
 		d.Set("vpc_endpoint_type", ec2.VpcEndpointTypeGateway)
@@ -311,6 +320,10 @@ func resourceAwsVpcEndpointUpdate(d *schema.ResourceData, meta interface{}) erro
 	}
 
 	if err := vpcEndpointWaitUntilAvailable(conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
+		return err
+	}
+
+	if err := setTags(conn, d); err != nil {
 		return err
 	}
 

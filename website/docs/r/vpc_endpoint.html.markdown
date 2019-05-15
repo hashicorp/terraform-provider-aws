@@ -19,7 +19,7 @@ Doing so will cause a conflict of associations and will overwrite the associatio
 
 ## Example Usage
 
-Basic usage:
+### Basic
 
 ```hcl
 resource "aws_vpc_endpoint" "s3" {
@@ -28,7 +28,20 @@ resource "aws_vpc_endpoint" "s3" {
 }
 ```
 
-Interface type usage:
+### Basic w/ Tags
+
+```hcl
+resource "aws_vpc_endpoint" "s3" {
+  vpc_id       = "${aws_vpc.main.id}"
+  service_name = "com.amazonaws.us-west-2.s3"
+
+  tags = {
+    Environment = "test"
+  }
+}
+```
+
+### Interface Endpoint Type
 
 ```hcl
 resource "aws_vpc_endpoint" "ec2" {
@@ -44,7 +57,7 @@ resource "aws_vpc_endpoint" "ec2" {
 }
 ```
 
-Custom Service Usage:
+### Custom Service
 
 ```hcl
 resource "aws_vpc_endpoint" "ptfe_service" {
@@ -90,6 +103,7 @@ Defaults to `false`.
 * `route_table_ids` - (Optional) One or more route table IDs. Applicable for endpoints of type `Gateway`.
 * `subnet_ids` - (Optional) The ID of one or more subnets in which to create a network interface for the endpoint. Applicable for endpoints of type `Interface`.
 * `security_group_ids` - (Optional) The ID of one or more security groups to associate with the network interface. Required for endpoints of type `Interface`.
+* `tags` - (Optional) A mapping of tags to assign to the resource.
 * `vpc_endpoint_type` - (Optional) The VPC endpoint type, `Gateway` or `Interface`. Defaults to `Gateway`.
 
 ### Timeouts

@@ -27,13 +27,6 @@ func resourceAwsVpcEndpointService() *schema.Resource {
 				Type:     schema.TypeBool,
 				Required: true,
 			},
-			"network_load_balancer_arns": {
-				Type:     schema.TypeSet,
-				Required: true,
-				MinItems: 1,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-				Set:      schema.HashString,
-			},
 			"allowed_principals": {
 				Type:     schema.TypeSet,
 				Optional: true,
@@ -57,6 +50,13 @@ func resourceAwsVpcEndpointService() *schema.Resource {
 				Type:     schema.TypeBool,
 				Computed: true,
 			},
+			"network_load_balancer_arns": {
+				Type:     schema.TypeSet,
+				Required: true,
+				MinItems: 1,
+				Elem:     &schema.Schema{Type: schema.TypeString},
+				Set:      schema.HashString,
+			},
 			"private_dns_name": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -73,6 +73,7 @@ func resourceAwsVpcEndpointService() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"tags": tagsSchema(),
 		},
 	}
 }
@@ -138,6 +139,10 @@ func resourceAwsVpcEndpointServiceRead(d *schema.ResourceData, meta interface{})
 	d.Set("service_name", svcCfg.ServiceName)
 	d.Set("service_type", svcCfg.ServiceType[0].ServiceType)
 	d.Set("state", svcCfg.ServiceState)
+	err = d.Set("tags", tagsToMap(svcCfg.Tags))
+	if err != nil {
+		return fmt.Errorf("error setting tags: %s", err)
+	}
 
 	resp, err := conn.DescribeVpcEndpointServicePermissions(&ec2.DescribeVpcEndpointServicePermissionsInput{
 		ServiceId: aws.String(d.Id()),
@@ -196,6 +201,11 @@ func resourceAwsVpcEndpointServiceUpdate(d *schema.ResourceData, meta interface{
 
 		d.SetPartial("allowed_principals")
 	}
+
+	if err := setTags(conn, d); err != nil {
+		return err
+	}
+	d.SetPartial("tags")
 
 	d.Partial(false)
 	return resourceAwsVpcEndpointServiceRead(d, meta)
