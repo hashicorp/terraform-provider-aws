@@ -172,7 +172,7 @@ func resourceAwsBackupSelectionDelete(d *schema.ResourceData, meta interface{}) 
 func resourceAwsBackupSelectionImportState(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
 	idParts := strings.Split(d.Id(), "|")
 	if len(idParts) != 2 || idParts[0] == "" || idParts[1] == "" {
-		return nil, fmt.Errorf("unexpected format of ID (%q), expected <plan-id>:<selection-id>", d.Id())
+		return nil, fmt.Errorf("unexpected format of ID (%q), expected <plan-id>|<selection-id>", d.Id())
 	}
 
 	planID := idParts[0]
