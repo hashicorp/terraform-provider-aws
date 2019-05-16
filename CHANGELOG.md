@@ -17,6 +17,8 @@ ENHANCEMENTS:
 * resource/aws_autoscaling_schedule: Support resource import [GH-8300]
 * resource/aws_backup_selection: Support resource import [GH-8546]
 * resource/aws_dynamodb_table: Support tagging on creation (where available) [GH-8469]
+* resource/aws_elastic_beanstalk_application: Add `tags` argument and `arn` attribute [GH-8614]
+* resource/aws_elastic_beanstalk_application_version: Add `tags` argument and `arn` attribute [GH-8614]
 * resource/aws_emr_cluster: Add `master_instance_group` and `core_instance_group` configuration blocks (deprecates other instance group configuration methods) [GH-8459]
 * resource/aws_kinesis_analytics_application: Add `tags` argument [GH-8643]
 * resource/aws_lambda_function: Support `nodejs10.x` in `runtime` validation [GH-8622]
