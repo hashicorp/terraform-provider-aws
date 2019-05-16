@@ -145,7 +145,10 @@ func resourceAwsSsmParameterRead(d *schema.ResourceData, meta interface{}) error
 	detail := describeResp.Parameters[0]
 	d.Set("key_id", detail.KeyId)
 	d.Set("description", detail.Description)
-	d.Set("tier", detail.Tier)
+	d.Set("tier", ssm.ParameterTierStandard)
+	if detail.Tier != nil {
+		d.Set("tier", detail.Tier)
+	}
 	d.Set("allowed_pattern", detail.AllowedPattern)
 
 	if tagList, err := ssmconn.ListTagsForResource(&ssm.ListTagsForResourceInput{
@@ -209,7 +212,14 @@ func resourceAwsSsmParameterPut(d *schema.ResourceData, meta interface{}) error 
 	}
 
 	log.Printf("[DEBUG] Waiting for SSM Parameter %v to be updated", d.Get("name"))
-	if _, err := ssmconn.PutParameter(paramInput); err != nil {
+	_, err := ssmconn.PutParameter(paramInput)
+
+	if isAWSErr(err, "ValidationException", "Tier is not supported") {
+		paramInput.Tier = nil
+		_, err = ssmconn.PutParameter(paramInput)
+	}
+
+	if err != nil {
 		return fmt.Errorf("error creating SSM parameter: %s", err)
 	}
 
