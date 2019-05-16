@@ -65,13 +65,16 @@ func TestTagsToMapMskCluster(t *testing.T) {
 		"bar": aws.String("baz"),
 	}
 
-	inter := tagsToMapMskCluster(source)
-	t.Logf("%v -> %v", source, inter)
-	//	final := tagsFromMapMskCluster(inter)
+	inter := make(map[string]interface{})
+	for k, v := range tagsToMapMskCluster(source) {
+		inter[k] = v
+	}
 
-	//if !reflect.DeepEqual(source, final) {
-	//t.Fatalf("bad tag transformation: %v -> %v -> %v", source, inter, final)
-	//}
+	final := tagsFromMapMskCluster(inter)
+
+	if !reflect.DeepEqual(source, final) {
+		t.Fatalf("bad tag transformation: %v -> %v -> %v", source, inter, final)
+	}
 }
 
 func TestIgnoringTagsMskCluster(t *testing.T) {
