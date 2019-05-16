@@ -322,17 +322,17 @@ func convertValidationOptions(certificate *acm.CertificateDetail) ([]map[string]
 // the remaining options are sorted alphabetically by their domain name.
 // Sorting is necessary because the API endpoint returns the validation options in random
 // order different each time.
-func sortDomainValidationOptions(domainName *string, domainValiationOptions []map[string]interface{}) {
-	sort.Slice(domainValiationOptions, func(i, j int) bool {
-		if domainValiationOptions[i]["domain_name"].(string) == *domainName {
+func sortDomainValidationOptions(domainName *string, domainValidationOptions []map[string]interface{}) {
+	sort.Slice(domainValidationOptions, func(i, j int) bool {
+		if domainValidationOptions[i]["domain_name"].(string) == *domainName {
 			return true
 		}
-		if domainValiationOptions[j]["domain_name"].(string) == *domainName {
+		if domainValidationOptions[j]["domain_name"].(string) == *domainName {
 			return false
 		}
 
-		return domainValiationOptions[i]["domain_name"].(string) <
-			domainValiationOptions[j]["domain_name"].(string)
+		return domainValidationOptions[i]["domain_name"].(string) <
+			domainValidationOptions[j]["domain_name"].(string)
 	})
 }
 
