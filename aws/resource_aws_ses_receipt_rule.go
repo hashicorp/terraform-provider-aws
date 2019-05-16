@@ -271,6 +271,7 @@ func resourceAwsSesReceiptRule() *schema.Resource {
 
 						"encoding": {
 							Type:     schema.TypeString,
+							Default:  aws.String("UTF-8"),
 							Optional: true,
 						},
 

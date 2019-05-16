@@ -61,6 +61,56 @@ func TestAccAWSSESReceiptRule_s3Action(t *testing.T) {
 	})
 }
 
+func TestAccAWSSESReceiptRule_snsActionEncoding(t *testing.T) {
+	rInt := acctest.RandInt()
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			testAccPreCheck(t)
+		},
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckSESReceiptRuleDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSSESReceiptRuleSNSActionEncodingConfig(rInt),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAwsSESReceiptRuleExists("aws_ses_receipt_rule.basic"),
+					testAccCheckAwsSESReceiptRuleSNSAction("aws_ses_receipt_rule.basic"),
+				),
+			},
+			{
+				ResourceName:      "aws_ses_receipt_rule.basic",
+				ImportState:       true,
+				ImportStateIdFunc: testAccAwsSesReceiptRuleImportStateIdFunc("aws_ses_receipt_rule.basic"),
+			},
+		},
+	})
+}
+
+func TestAccAWSSESReceiptRule_snsAction(t *testing.T) {
+	rInt := acctest.RandInt()
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			testAccPreCheck(t)
+		},
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckSESReceiptRuleDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSSESReceiptRuleSNSActionConfig(rInt),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAwsSESReceiptRuleExists("aws_ses_receipt_rule.basic"),
+					testAccCheckAwsSESReceiptRuleSNSAction("aws_ses_receipt_rule.basic"),
+				),
+			},
+			{
+				ResourceName:      "aws_ses_receipt_rule.basic",
+				ImportState:       true,
+				ImportStateIdFunc: testAccAwsSesReceiptRuleImportStateIdFunc("aws_ses_receipt_rule.basic"),
+			},
+		},
+	})
+}
+
 func TestAccAWSSESReceiptRule_order(t *testing.T) {
 	rInt := acctest.RandInt()
 	resource.ParallelTest(t, resource.TestCase{
@@ -281,6 +331,40 @@ func testAccCheckAwsSESReceiptRuleActions(n string) resource.TestCheckFunc {
 	}
 }
 
+func testAccCheckAwsSESReceiptRuleSNSAction(n string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		rs, ok := s.RootModule().Resources[n]
+		if !ok {
+			return fmt.Errorf("SES Receipt Rule not found: %s", n)
+		}
+
+		if rs.Primary.ID == "" {
+			return fmt.Errorf("SES Receipt Rule name not set")
+		}
+
+		conn := testAccProvider.Meta().(*AWSClient).sesConn
+
+		params := &ses.DescribeReceiptRuleInput{
+			RuleName:    aws.String(rs.Primary.Attributes["name"]),
+			RuleSetName: aws.String(rs.Primary.Attributes["rule_set_name"]),
+		}
+
+		response, err := conn.DescribeReceiptRule(params)
+		if err != nil {
+			return err
+		}
+
+		actions := response.Rule.Actions
+
+		snsActionAction := actions[0].SNSAction
+		if *snsActionAction.Encoding != "UTF-8" {
+			return fmt.Errorf("Encoding (%s) was not equal to Base64", *snsActionAction.Encoding)
+		}
+
+		return nil
+	}
+}
+
 func testAccAWSSESReceiptRuleBasicConfig(rInt int) string {
 	return fmt.Sprintf(`
 resource "aws_ses_receipt_rule_set" "test" {
@@ -322,6 +406,61 @@ resource "aws_ses_receipt_rule" "basic" {
     	bucket_name = "${aws_s3_bucket.emails.id}"
     	position = 1
   	}
+}
+`, rInt, rInt)
+}
+
+func testAccAWSSESReceiptRuleSNSActionConfig(rInt int) string {
+	return fmt.Sprintf(`
+resource "aws_ses_receipt_rule_set" "test" {
+    rule_set_name = "test-me-%d"
+}
+
+resource "aws_sns_topic" "sns_topic" {
+    name = "sns-terraform-topic-%d"
+}
+
+resource "aws_ses_receipt_rule" "basic" {
+    name = "basic"
+    rule_set_name = "${aws_ses_receipt_rule_set.test.rule_set_name}"
+    recipients = ["test@example.com"]
+    enabled = true
+    scan_enabled = true
+    tls_policy = "Require"
+	
+	sns_action {
+		topic_arn   = "${aws_sns_topic.sns_topic.arn}"
+		position    = 1
+	}
+	
+}
+`, rInt, rInt)
+}
+
+func testAccAWSSESReceiptRuleSNSActionEncodingConfig(rInt int) string {
+	return fmt.Sprintf(`
+resource "aws_ses_receipt_rule_set" "test" {
+    rule_set_name = "test-me-%d"
+}
+
+resource "aws_sns_topic" "sns_topic" {
+    name = "sns-terraform-topic-%d"
+}
+
+resource "aws_ses_receipt_rule" "basic" {
+    name = "basic"
+    rule_set_name = "${aws_ses_receipt_rule_set.test.rule_set_name}"
+    recipients = ["test@example.com"]
+    enabled = true
+    scan_enabled = true
+    tls_policy = "Require"
+	
+	sns_action {
+		topic_arn   = "${aws_sns_topic.sns_topic.arn}"
+		position    = 1
+		encoding    = "UTF-8"
+	}
+	
 }
 `, rInt, rInt)
 }
