@@ -650,3 +650,70 @@ func testAccCheckAcmCertificateDestroy(s *terraform.State) error {
 
 	return nil
 }
+
+func TestSortDomainValidationOptions(t *testing.T) {
+	domainName := "www.example.com"
+
+	data := []map[string][]string{
+		{
+			"input":  {},
+			"sorted": {},
+		},
+		{
+			"input":  {"www.example.com"},
+			"sorted": {"www.example.com"},
+		},
+		{
+			"input":  {"www.example.com", "a.example.com", "b.example.com"},
+			"sorted": {"www.example.com", "a.example.com", "b.example.com"},
+		},
+		{
+			"input":  {"a.example.com", "b.example.com", "www.example.com", "c.example.com"},
+			"sorted": {"www.example.com", "a.example.com", "b.example.com", "c.example.com"},
+		},
+		{
+			"input":  {"a.example.com", "b.example.com", "c.example.com", "www.example.com"},
+			"sorted": {"www.example.com", "a.example.com", "b.example.com", "c.example.com"},
+		},
+		{
+			"input":  {"a.example.com", "z.example.com", "b.example.com", "www.example.com"},
+			"sorted": {"www.example.com", "a.example.com", "b.example.com", "z.example.com"},
+		},
+		{
+			"input":  {"www.example.com", "a.example.com", "b.example.com", "z.example.com"},
+			"sorted": {"www.example.com", "a.example.com", "b.example.com", "z.example.com"},
+		},
+		{
+			"input":  {"www.example.com", "z.example.com", "b.example.com", "a.example.com"},
+			"sorted": {"www.example.com", "a.example.com", "b.example.com", "z.example.com"},
+		},
+		{
+			"input":  {"www.example.com", "z.example.com", "b.example.com", "a.example.com"},
+			"sorted": {"www.example.com", "a.example.com", "b.example.com", "z.example.com"},
+		},
+	}
+
+	for _, testCase := range data {
+		var options []map[string]interface{}
+
+		for _, domainName := range testCase["input"] {
+			options = append(options,
+				map[string]interface{}{
+					"domain_name": domainName,
+				},
+			)
+		}
+
+		sortDomainValidationOptions(&domainName, options)
+
+		for i := range options {
+			actual := options[i]["domain_name"].(string)
+			expected := testCase["sorted"][i]
+
+			if actual != expected {
+				t.Errorf("\ninput was: %v\ngot: %v\nwant: %v\n", testCase["input"], options, testCase["sorted"])
+				break
+			}
+		}
+	}
+}
