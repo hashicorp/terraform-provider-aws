@@ -467,7 +467,7 @@ func resourceAwsLbListenerRuleCreate(d *schema.ResourceData, meta interface{}) e
 	}
 
 	var resp *elbv2.CreateRuleOutput
-	if v, ok := d.GetOk("priority"); ok {
+	if v, ok := d.GetOk("priority"); ok && v != "" {
 		var err error
 		params.Priority = aws.Int64(int64(v.(int)))
 		resp, err = elbconn.CreateRule(params)
