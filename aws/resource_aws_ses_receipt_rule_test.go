@@ -358,7 +358,7 @@ func testAccCheckAwsSESReceiptRuleSNSAction(n string) resource.TestCheckFunc {
 
 		snsActionAction := actions[0].SNSAction
 		if *snsActionAction.Encoding != "UTF-8" {
-			return fmt.Errorf("Encoding (%s) was not equal to Base64", *snsActionAction.Encoding)
+			return fmt.Errorf("Encoding (%s) was not equal to UTF-8", *snsActionAction.Encoding)
 		}
 
 		return nil
