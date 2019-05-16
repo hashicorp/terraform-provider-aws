@@ -45705,7 +45705,7 @@ type DescribeCapacityReservationsInput struct {
 	// The maximum number of results to return for the request in a single page.
 	// The remaining results can be seen by sending another request with the returned
 	// nextToken value.
-	MaxResults *int64 `type:"integer"`
+	MaxResults *int64 `min:"1" type:"integer"`
 
 	// The token to retrieve the next page of results.
 	NextToken *string `type:"string"`
@@ -45719,6 +45719,19 @@ func (s DescribeCapacityReservationsInput) String() string {
 // GoString returns the string representation
 func (s DescribeCapacityReservationsInput) GoString() string {
 	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *DescribeCapacityReservationsInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "DescribeCapacityReservationsInput"}
+	if s.MaxResults != nil && *s.MaxResults < 1 {
+		invalidParams.Add(request.NewErrParamMinValue("MaxResults", 1))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
 }
 
 // SetCapacityReservationIds sets the CapacityReservationIds field's value.
@@ -46898,7 +46911,7 @@ type DescribeElasticGpusInput struct {
 	// The maximum number of results to return in a single call. To retrieve the
 	// remaining results, make another call with the returned NextToken value. This
 	// value can be between 5 and 1000.
-	MaxResults *int64 `type:"integer"`
+	MaxResults *int64 `min:"10" type:"integer"`
 
 	// The token to request the next page of results.
 	NextToken *string `type:"string"`
@@ -46912,6 +46925,19 @@ func (s DescribeElasticGpusInput) String() string {
 // GoString returns the string representation
 func (s DescribeElasticGpusInput) GoString() string {
 	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *DescribeElasticGpusInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "DescribeElasticGpusInput"}
+	if s.MaxResults != nil && *s.MaxResults < 10 {
+		invalidParams.Add(request.NewErrParamMinValue("MaxResults", 10))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
 }
 
 // SetDryRun sets the DryRun field's value.
@@ -50225,7 +50251,7 @@ type DescribeLaunchTemplatesInput struct {
 	// The maximum number of results to return in a single call. To retrieve the
 	// remaining results, make another call with the returned NextToken value. This
 	// value can be between 1 and 200.
-	MaxResults *int64 `type:"integer"`
+	MaxResults *int64 `min:"1" type:"integer"`
 
 	// The token to request the next page of results.
 	NextToken *string `type:"string"`
@@ -50239,6 +50265,19 @@ func (s DescribeLaunchTemplatesInput) String() string {
 // GoString returns the string representation
 func (s DescribeLaunchTemplatesInput) GoString() string {
 	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *DescribeLaunchTemplatesInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "DescribeLaunchTemplatesInput"}
+	if s.MaxResults != nil && *s.MaxResults < 1 {
+		invalidParams.Add(request.NewErrParamMinValue("MaxResults", 1))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
 }
 
 // SetDryRun sets the DryRun field's value.
@@ -50818,7 +50857,7 @@ type DescribeNetworkInterfacePermissionsInput struct {
 	// The maximum number of results to return in a single call. To retrieve the
 	// remaining results, make another call with the returned NextToken value. If
 	// this parameter is not specified, up to 50 results are returned by default.
-	MaxResults *int64 `type:"integer"`
+	MaxResults *int64 `min:"5" type:"integer"`
 
 	// One or more network interface permission IDs.
 	NetworkInterfacePermissionIds []*string `locationName:"NetworkInterfacePermissionId" type:"list"`
@@ -50835,6 +50874,19 @@ func (s DescribeNetworkInterfacePermissionsInput) String() string {
 // GoString returns the string representation
 func (s DescribeNetworkInterfacePermissionsInput) GoString() string {
 	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *DescribeNetworkInterfacePermissionsInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "DescribeNetworkInterfacePermissionsInput"}
+	if s.MaxResults != nil && *s.MaxResults < 5 {
+		invalidParams.Add(request.NewErrParamMinValue("MaxResults", 5))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
 }
 
 // SetFilters sets the Filters field's value.
@@ -51014,7 +51066,7 @@ type DescribeNetworkInterfacesInput struct {
 	// The maximum number of items to return for this request. The request returns
 	// a token that you can specify in a subsequent call to get the next set of
 	// results.
-	MaxResults *int64 `type:"integer"`
+	MaxResults *int64 `min:"5" type:"integer"`
 
 	// One or more network interface IDs.
 	//
@@ -51033,6 +51085,19 @@ func (s DescribeNetworkInterfacesInput) String() string {
 // GoString returns the string representation
 func (s DescribeNetworkInterfacesInput) GoString() string {
 	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *DescribeNetworkInterfacesInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "DescribeNetworkInterfacesInput"}
+	if s.MaxResults != nil && *s.MaxResults < 5 {
+		invalidParams.Add(request.NewErrParamMinValue("MaxResults", 5))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
 }
 
 // SetDryRun sets the DryRun field's value.
@@ -52173,7 +52238,7 @@ type DescribeRouteTablesInput struct {
 
 	// The maximum number of results to return with a single call. To retrieve the
 	// remaining results, make another call with the returned nextToken value.
-	MaxResults *int64 `type:"integer"`
+	MaxResults *int64 `min:"5" type:"integer"`
 
 	// The token for the next page of results.
 	NextToken *string `type:"string"`
@@ -52192,6 +52257,19 @@ func (s DescribeRouteTablesInput) String() string {
 // GoString returns the string representation
 func (s DescribeRouteTablesInput) GoString() string {
 	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *DescribeRouteTablesInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "DescribeRouteTablesInput"}
+	if s.MaxResults != nil && *s.MaxResults < 5 {
+		invalidParams.Add(request.NewErrParamMinValue("MaxResults", 5))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
 }
 
 // SetDryRun sets the DryRun field's value.
@@ -52716,7 +52794,7 @@ type DescribeSecurityGroupsInput struct {
 	// remaining results, make another request with the returned NextToken value.
 	// This value can be between 5 and 1000. If this parameter is not specified,
 	// then all results are returned.
-	MaxResults *int64 `type:"integer"`
+	MaxResults *int64 `min:"5" type:"integer"`
 
 	// The token to request the next page of results.
 	NextToken *string `type:"string"`
@@ -52730,6 +52808,19 @@ func (s DescribeSecurityGroupsInput) String() string {
 // GoString returns the string representation
 func (s DescribeSecurityGroupsInput) GoString() string {
 	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *DescribeSecurityGroupsInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "DescribeSecurityGroupsInput"}
+	if s.MaxResults != nil && *s.MaxResults < 5 {
+		invalidParams.Add(request.NewErrParamMinValue("MaxResults", 5))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
 }
 
 // SetDryRun sets the DryRun field's value.
@@ -55729,6 +55820,16 @@ type DescribeVpcEndpointServiceConfigurationsInput struct {
 	//
 	//    * service-state - The state of the service (Pending | Available | Deleting
 	//    | Deleted | Failed).
+	//
+	//    * tag:<key> - The key/value combination of a tag assigned to the resource.
+	//    Use the tag key in the filter name and the tag value as the filter value.
+	//    For example, to find all resources that have a tag with the key Owner
+	//    and the value TeamA, specify tag:Owner for the filter name and TeamA for
+	//    the filter value.
+	//
+	//    * tag-key - The key of a tag assigned to the resource. Use this filter
+	//    to find all resources assigned a tag with a specific key, regardless of
+	//    the tag value.
 	Filters []*Filter `locationName:"Filter" locationNameList:"Filter" type:"list"`
 
 	// The maximum number of results to return for the request in a single page.
@@ -55950,6 +56051,16 @@ type DescribeVpcEndpointServicesInput struct {
 	// One or more filters.
 	//
 	//    * service-name: The name of the service.
+	//
+	//    * tag:<key> - The key/value combination of a tag assigned to the resource.
+	//    Use the tag key in the filter name and the tag value as the filter value.
+	//    For example, to find all resources that have a tag with the key Owner
+	//    and the value TeamA, specify tag:Owner for the filter name and TeamA for
+	//    the filter value.
+	//
+	//    * tag-key - The key of a tag assigned to the resource. Use this filter
+	//    to find all resources assigned a tag with a specific key, regardless of
+	//    the tag value.
 	Filters []*Filter `locationName:"Filter" locationNameList:"Filter" type:"list"`
 
 	// The maximum number of items to return for this request. The request returns
@@ -56070,6 +56181,16 @@ type DescribeVpcEndpointsInput struct {
 	//
 	//    * vpc-endpoint-state: The state of the endpoint. (pending | available
 	//    | deleting | deleted)
+	//
+	//    * tag:<key> - The key/value combination of a tag assigned to the resource.
+	//    Use the tag key in the filter name and the tag value as the filter value.
+	//    For example, to find all resources that have a tag with the key Owner
+	//    and the value TeamA, specify tag:Owner for the filter name and TeamA for
+	//    the filter value.
+	//
+	//    * tag-key - The key of a tag assigned to the resource. Use this filter
+	//    to find all resources assigned a tag with a specific key, regardless of
+	//    the tag value.
 	Filters []*Filter `locationName:"Filter" locationNameList:"Filter" type:"list"`
 
 	// The maximum number of items to return for this request. The request returns
@@ -80948,6 +81069,9 @@ type ServiceConfiguration struct {
 
 	// The type of service.
 	ServiceType []*ServiceTypeDetail `locationName:"serviceType" locationNameList:"item" type:"list"`
+
+	// Any tags assigned to the service.
+	Tags []*Tag `locationName:"tagSet" locationNameList:"item" type:"list"`
 }
 
 // String returns the string representation
@@ -81020,6 +81144,12 @@ func (s *ServiceConfiguration) SetServiceType(v []*ServiceTypeDetail) *ServiceCo
 	return s
 }
 
+// SetTags sets the Tags field's value.
+func (s *ServiceConfiguration) SetTags(v []*Tag) *ServiceConfiguration {
+	s.Tags = v
+	return s
+}
+
 // Describes a VPC endpoint service.
 type ServiceDetail struct {
 	_ struct{} `type:"structure"`
@@ -81044,11 +81174,17 @@ type ServiceDetail struct {
 	// The private DNS name for the service.
 	PrivateDnsName *string `locationName:"privateDnsName" type:"string"`
 
+	// The ID of the endpoint service.
+	ServiceId *string `locationName:"serviceId" type:"string"`
+
 	// The Amazon Resource Name (ARN) of the service.
 	ServiceName *string `locationName:"serviceName" type:"string"`
 
 	// The type of service.
 	ServiceType []*ServiceTypeDetail `locationName:"serviceType" locationNameList:"item" type:"list"`
+
+	// Any tags assigned to the service.
+	Tags []*Tag `locationName:"tagSet" locationNameList:"item" type:"list"`
 
 	// Indicates whether the service supports endpoint policies.
 	VpcEndpointPolicySupported *bool `locationName:"vpcEndpointPolicySupported" type:"boolean"`
@@ -81100,6 +81236,12 @@ func (s *ServiceDetail) SetPrivateDnsName(v string) *ServiceDetail {
 	return s
 }
 
+// SetServiceId sets the ServiceId field's value.
+func (s *ServiceDetail) SetServiceId(v string) *ServiceDetail {
+	s.ServiceId = &v
+	return s
+}
+
 // SetServiceName sets the ServiceName field's value.
 func (s *ServiceDetail) SetServiceName(v string) *ServiceDetail {
 	s.ServiceName = &v
@@ -81109,6 +81251,12 @@ func (s *ServiceDetail) SetServiceName(v string) *ServiceDetail {
 // SetServiceType sets the ServiceType field's value.
 func (s *ServiceDetail) SetServiceType(v []*ServiceTypeDetail) *ServiceDetail {
 	s.ServiceType = v
+	return s
+}
+
+// SetTags sets the Tags field's value.
+func (s *ServiceDetail) SetTags(v []*Tag) *ServiceDetail {
+	s.Tags = v
 	return s
 }
 
@@ -87016,6 +87164,9 @@ type VpcEndpoint struct {
 	// (Interface endpoint) One or more subnets in which the endpoint is located.
 	SubnetIds []*string `locationName:"subnetIdSet" locationNameList:"item" type:"list"`
 
+	// Any tags assigned to the VPC endpoint.
+	Tags []*Tag `locationName:"tagSet" locationNameList:"item" type:"list"`
+
 	// The ID of the VPC endpoint.
 	VpcEndpointId *string `locationName:"vpcEndpointId" type:"string"`
 
@@ -87099,6 +87250,12 @@ func (s *VpcEndpoint) SetState(v string) *VpcEndpoint {
 // SetSubnetIds sets the SubnetIds field's value.
 func (s *VpcEndpoint) SetSubnetIds(v []*string) *VpcEndpoint {
 	s.SubnetIds = v
+	return s
+}
+
+// SetTags sets the Tags field's value.
+func (s *VpcEndpoint) SetTags(v []*Tag) *VpcEndpoint {
+	s.Tags = v
 	return s
 }
 
