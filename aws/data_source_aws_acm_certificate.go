@@ -45,7 +45,7 @@ func dataSourceAwsAcmCertificateRead(d *schema.ResourceData, meta interface{}) e
 	conn := meta.(*AWSClient).acmconn
 
 	// Explicitly define algorithms, by default, the API does not return all types
-	// Values from: https://docs.aws.amazon.com/acm/latest/APIReference/API_Filters.html#ACM-Type-Filters-keyTypes
+	// More information about the values present: https://docs.aws.amazon.com/acm/latest/APIReference/API_Filters.html#ACM-Type-Filters-keyTypes
 	keyAlgorithms := []string{
 		acm.KeyAlgorithmEcPrime256v1,
 		acm.KeyAlgorithmEcSecp384r1,
@@ -54,13 +54,9 @@ func dataSourceAwsAcmCertificateRead(d *schema.ResourceData, meta interface{}) e
 		acm.KeyAlgorithmRsa2048,
 		acm.KeyAlgorithmRsa4096,
 	}
-	keyTypes := make([]*string, len(keyAlgorithms))
-	for i := 0; i < len(keyAlgorithms); i++ {
-		keyTypes[i] = &keyAlgorithms[i]
-	}
 	params := &acm.ListCertificatesInput{
 		Includes: &acm.Filters{
-			KeyTypes: keyTypes,
+			KeyTypes: aws.StringSlice(keyAlgorithms),
 		},
 	}
 	target := d.Get("domain")
