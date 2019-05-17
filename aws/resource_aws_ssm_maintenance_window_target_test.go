@@ -57,11 +57,11 @@ func TestAccAWSSSMMaintenanceWindowTarget_validation(t *testing.T) {
 			},
 			{
 				Config:      testAccAWSSSMMaintenanceWindowTargetBasicConfigWithTarget(name, "goodname", "bd"),
-				ExpectError: regexp.MustCompile("expected length of [\\w]+ to be in the range \\(3 - 128\\), got [\\w]+"),
+				ExpectError: regexp.MustCompile(`expected length of [\w]+ to be in the range \(3 - 128\), got [\w]+`),
 			},
 			{
 				Config:      testAccAWSSSMMaintenanceWindowTargetBasicConfigWithTarget(name, "goodname", "This description is tooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooo long"),
-				ExpectError: regexp.MustCompile("expected length of [\\w]+ to be in the range \\(3 - 128\\), got [\\w]+"),
+				ExpectError: regexp.MustCompile(`expected length of [\w]+ to be in the range \(3 - 128\), got [\w]+`),
 			},
 		},
 	})
