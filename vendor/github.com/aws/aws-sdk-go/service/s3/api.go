@@ -17624,7 +17624,7 @@ type NoncurrentVersionExpiration struct {
 	// Specifies the number of days an object is noncurrent before Amazon S3 can
 	// perform the associated action. For information about the noncurrent days
 	// calculations, see How Amazon S3 Calculates When an Object Became Noncurrent
-	// (https://docs.aws.amazon.com/AmazonS3/latest/dev/s3-access-control.html)
+	// (https://docs.aws.amazon.com/AmazonS3/latest/dev/intro-lifecycle-rules.html#non-current-days-calculations)
 	// in the Amazon Simple Storage Service Developer Guide.
 	NoncurrentDays *int64 `type:"integer"`
 }
@@ -19612,6 +19612,8 @@ type PutBucketReplicationInput struct {
 	//
 	// ReplicationConfiguration is a required field
 	ReplicationConfiguration *ReplicationConfiguration `locationName:"ReplicationConfiguration" type:"structure" required:"true" xmlURI:"http://s3.amazonaws.com/doc/2006-03-01/"`
+
+	Token *string `location:"header" locationName:"x-amz-bucket-object-lock-token" type:"string"`
 }
 
 // String returns the string representation
@@ -19664,6 +19666,12 @@ func (s *PutBucketReplicationInput) getBucket() (v string) {
 // SetReplicationConfiguration sets the ReplicationConfiguration field's value.
 func (s *PutBucketReplicationInput) SetReplicationConfiguration(v *ReplicationConfiguration) *PutBucketReplicationInput {
 	s.ReplicationConfiguration = v
+	return s
+}
+
+// SetToken sets the Token field's value.
+func (s *PutBucketReplicationInput) SetToken(v string) *PutBucketReplicationInput {
+	s.Token = &v
 	return s
 }
 

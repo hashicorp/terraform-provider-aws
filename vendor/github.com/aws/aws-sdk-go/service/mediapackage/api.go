@@ -2160,10 +2160,12 @@ type DashPackage struct {
 	// the nearest multiple of the source segment duration.
 	SegmentDurationSeconds *int64 `locationName:"segmentDurationSeconds" type:"integer"`
 
-	// Determines the type of SegmentTimeline included in the Media Presentation
+	// Determines the type of SegmentTemplate included in the Media Presentation
 	// Description (MPD). When set to NUMBER_WITH_TIMELINE, a full timeline is presented
 	// in each SegmentTemplate, with $Number$ media URLs. When set to TIME_WITH_TIMELINE,
 	// a full timeline is presented in each SegmentTemplate, with $Time$ media URLs.
+	// When set to NUMBER_WITH_DURATION, only a duration is included in each SegmentTemplate,
+	// with $Number$ media URLs.
 	SegmentTemplateFormat *string `locationName:"segmentTemplateFormat" type:"string" enum:"SegmentTemplateFormat"`
 
 	// A StreamSelection configuration.
@@ -4492,6 +4494,9 @@ const (
 
 	// SegmentTemplateFormatTimeWithTimeline is a SegmentTemplateFormat enum value
 	SegmentTemplateFormatTimeWithTimeline = "TIME_WITH_TIMELINE"
+
+	// SegmentTemplateFormatNumberWithDuration is a SegmentTemplateFormat enum value
+	SegmentTemplateFormatNumberWithDuration = "NUMBER_WITH_DURATION"
 )
 
 const (
