@@ -1,4 +1,9 @@
 ## 2.12.0 (Unreleased)
+
+ENHANCEMENTS:
+
+* resource/aws_ssm_maintenance_window_target: Add support for name and description for maintenance window targets
+
 ## 2.11.0 (May 17, 2019)
 
 NOTES:
