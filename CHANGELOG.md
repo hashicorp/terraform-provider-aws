@@ -3,6 +3,7 @@
 NOTES:
 
 * resource/aws_emr_cluster: The `instance_group` configuration block, `master_instance_type` argument, `core_instance_count` argument, and `core_instance_type` argument have been deprecated in favor of new `master_instance_group` and `core_instance_group` configuration blocks. The older, conflicting configurations were problematic in update scenarios. Task instance groups can be managed with the `aws_emr_instance_group` resource. Upgrade instructions can be found in the new Version 3 Upgrade Guide. [GH-8459]
+* resrouce/aws_emr_instance_group: The addition of `autoscaling_policy` and `bid_price` arguments allow for the migration of task instance groups from the deprecated `instance_group` configuration block in the `aws_emr_cluster` resource. Import instructions for `aws_emr_instance_group` can be found in the resource documentation. [GH-8078]
 
 FEATURES:
 
@@ -20,6 +21,7 @@ ENHANCEMENTS:
 * resource/aws_elastic_beanstalk_application: Add `tags` argument and `arn` attribute [GH-8614]
 * resource/aws_elastic_beanstalk_application_version: Add `tags` argument and `arn` attribute [GH-8614]
 * resource/aws_emr_cluster: Add `master_instance_group` and `core_instance_group` configuration blocks (deprecates other instance group configuration methods) [GH-8459]
+* resource/aws_emr_instance_group: Add support for `autoscaling_policy`, `bid_price`, and resource import [GH-8078] 
 * resource/aws_kinesis_analytics_application: Add `tags` argument [GH-8643]
 * resource/aws_lambda_function: Support `nodejs10.x` in `runtime` validation [GH-8622]
 * resource/aws_sfn_activity: Support tagging on creation [GH-8395]
