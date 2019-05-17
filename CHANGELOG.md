@@ -24,6 +24,7 @@ ENHANCEMENTS:
 * resource/aws_emr_instance_group: Add support for `autoscaling_policy`, `bid_price`, and resource import [GH-8078] 
 * resource/aws_kinesis_analytics_application: Add `tags` argument [GH-8643]
 * resource/aws_lambda_function: Support `nodejs10.x` in `runtime` validation [GH-8622]
+* resource/aws_organizations_account: Add parent_id argument (support moving accounts) [GH-8583]
 * resource/aws_sfn_activity: Support tagging on creation [GH-8395]
 * resource/aws_sfn_state_machine: Support tagging on creation [GH-8395]
 * resource/aws_sns_topic: Add `tags` argument [GH-8468]
