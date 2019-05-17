@@ -248,8 +248,8 @@ func resourceAwsCodeBuildWebhookFilterHash(v interface{}) int {
 	m := v.([]map[string]interface{})
 
 	for _, f := range m {
-		buf.WriteString(fmt.Sprintf("%s-", f["type"].(*string)))
-		buf.WriteString(fmt.Sprintf("%s-", f["pattern"].(*string)))
+		buf.WriteString(fmt.Sprintf("%v-", f["type"].(*string)))
+		buf.WriteString(fmt.Sprintf("%v-", f["pattern"].(*string)))
 		buf.WriteString(fmt.Sprintf("%q", f["exclude_matched_pattern"]))
 	}
 

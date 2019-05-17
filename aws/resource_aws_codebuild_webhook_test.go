@@ -168,39 +168,26 @@ func TestAccAWSCodeBuildWebhook_FilterGroup(t *testing.T) {
 		CheckDestroy: testAccCheckAWSCodeBuildWebhookDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSCodeBuildWebhookConfig_FilterGroup(rName, "PUSH"),
+				Config: testAccAWSCodeBuildWebhookConfig_FilterGroup(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSCodeBuildWebhookExists(resourceName, &webhook),
 					testAccCheckAWSCodeBuildWebhookFilter(&webhook, [][]*codebuild.WebhookFilter{
 						{
-							{
-								Type:                  aws.String("HEAD_REF"),
-								Pattern:               aws.String("refs/heads/master"),
-								ExcludeMatchedPattern: aws.Bool(false),
-							},
 							{
 								Type:                  aws.String("EVENT"),
 								Pattern:               aws.String("PUSH"),
 								ExcludeMatchedPattern: aws.Bool(false),
 							},
-						},
-					}),
-				),
-			},
-			{
-				Config: testAccAWSCodeBuildWebhookConfig_FilterGroup(rName, "PULL_REQUEST_CREATED"),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSCodeBuildWebhookExists(resourceName, &webhook),
-					testAccCheckAWSCodeBuildWebhookFilter(&webhook, [][]*codebuild.WebhookFilter{
-						{
-							{
-								Type:                  aws.String("EVENT"),
-								Pattern:               aws.String("PULL_REQUEST_CREATED"),
-								ExcludeMatchedPattern: aws.Bool(false),
-							},
 							{
 								Type:                  aws.String("HEAD_REF"),
 								Pattern:               aws.String("refs/heads/master"),
+								ExcludeMatchedPattern: aws.Bool(true),
+							},
+						},
+						{
+							{
+								Type:                  aws.String("EVENT"),
+								Pattern:               aws.String("PULL_REQUEST_UPDATED"),
 								ExcludeMatchedPattern: aws.Bool(false),
 							},
 						},
@@ -349,20 +336,30 @@ resource "aws_codebuild_webhook" "test" {
 `, branchFilter)
 }
 
-func testAccAWSCodeBuildWebhookConfig_FilterGroup(rName, eventType string) string {
-	return fmt.Sprintf(testAccAWSCodeBuildProjectConfig_basic(rName)+`
+func testAccAWSCodeBuildWebhookConfig_FilterGroup(rName string) string {
+	return fmt.Sprintf(testAccAWSCodeBuildProjectConfig_basic(rName) + `
 resource "aws_codebuild_webhook" "test" {
 	project_name = "${aws_codebuild_project.test.name}"
 
 	filter_group {
-		type  = "EVENT"
-		pattern = "%s"
+		filter {
+			type = "EVENT"
+			pattern = "PUSH"
+		}
+
+		filter {
+			type = "HEAD_REF"
+			pattern = "refs/heads/master"
+			exclude_matched_pattern = true
+		}
 	}
 
 	filter_group {
-		type = "HEAD_REF"
-		pattern = "refs/heads/master"
+		filter {
+			type = "EVENT"
+			pattern = "PULL_REQUEST_UPDATED"
+		}
 	}
 }
-`, eventType)
+`)
 }
