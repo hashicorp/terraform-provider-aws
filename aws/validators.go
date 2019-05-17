@@ -1825,19 +1825,6 @@ func validateAwsSSMMaintenanceWindowTaskName(v interface{}, k string) (ws []stri
 	return
 }
 
-func validateAwsSSMMaintenanceWindowTargetName(v interface{}, k string) (ws []string, errors []error) {
-	// https://docs.aws.amazon.com/systems-manager/latest/APIReference/API_RegisterTaskWithMaintenanceWindow.html#systemsmanager-RegisterTaskWithMaintenanceWindow-request-Name
-	value := v.(string)
-
-	if !regexp.MustCompile(`^[a-zA-Z0-9_\-.]{3,128}$`).MatchString(value) {
-		errors = append(errors, fmt.Errorf(
-			"Only alphanumeric characters, hyphens, dots & underscores allowed in %q: %q (Must satisfy regular expression pattern: ^[a-zA-Z0-9_\\-.]{3,128}$)",
-			k, value))
-	}
-
-	return
-}
-
 func validateBatchName(v interface{}, k string) (ws []string, errors []error) {
 	value := v.(string)
 	if !regexp.MustCompile(`^[0-9a-zA-Z]{1}[0-9a-zA-Z_\-]{0,127}$`).MatchString(value) {
