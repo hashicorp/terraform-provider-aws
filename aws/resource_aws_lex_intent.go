@@ -63,7 +63,7 @@ func resourceAwsLexIntent() *schema.Resource {
 				MaxItems: 1,
 				Elem:     lexFollowUpPromptResource,
 			},
-			// optional for create but required on update
+			// Must be required because required by updates even though optional for creates
 			"fulfillment_activity": {
 				Type:     schema.TypeList,
 				Required: true,
