@@ -359,6 +359,10 @@ func testSweepSkipSweepError(err error) bool {
 	if isAWSErr(err, "InvalidParameterValue", "not permitted in this API version for your account") {
 		return true
 	}
+	// InvalidParameterValue: Access Denied to API Version: APIGlobalDatabases
+	if isAWSErr(err, "InvalidParameterValue", "Access Denied to API Version") {
+		return true
+	}
 	// GovCloud has endpoints that respond with (no message provided):
 	// AccessDeniedException:
 	// Since acceptance test sweepers are best effort and this response is very common,
