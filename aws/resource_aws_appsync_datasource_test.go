@@ -577,7 +577,7 @@ resource "aws_lambda_function" "test" {
   function_name = %q
   handler       = "exports.test"
   role          = "${aws_iam_role.lambda.arn}"
-  runtime       = "nodejs6.10"
+  runtime       = "nodejs8.10"
 }
 
 resource "aws_iam_role" "test" {
