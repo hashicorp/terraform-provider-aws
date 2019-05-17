@@ -16,7 +16,7 @@ func TestAccAwsBackupVault_basic(t *testing.T) {
 
 	rInt := acctest.RandInt()
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSBackup(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsBackupVaultDestroy,
 		Steps: []resource.TestStep{
@@ -35,7 +35,7 @@ func TestAccAwsBackupVault_withKmsKey(t *testing.T) {
 
 	rInt := acctest.RandInt()
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSBackup(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsBackupVaultDestroy,
 		Steps: []resource.TestStep{
@@ -55,7 +55,7 @@ func TestAccAwsBackupVault_withTags(t *testing.T) {
 
 	rInt := acctest.RandInt()
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSBackup(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsBackupVaultDestroy,
 		Steps: []resource.TestStep{
@@ -134,6 +134,22 @@ func testAccCheckAwsBackupVaultExists(name string, vault *backup.DescribeBackupV
 		*vault = *resp
 
 		return nil
+	}
+}
+
+func testAccPreCheckAWSBackup(t *testing.T) {
+	conn := testAccProvider.Meta().(*AWSClient).backupconn
+
+	input := &backup.ListBackupVaultsInput{}
+
+	_, err := conn.ListBackupVaults(input)
+
+	if testAccPreCheckSkipError(err) {
+		t.Skipf("skipping acceptance testing: %s", err)
+	}
+
+	if err != nil {
+		t.Fatalf("unexpected PreCheck error: %s", err)
 	}
 }
 
