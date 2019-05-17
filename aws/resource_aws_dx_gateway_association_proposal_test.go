@@ -12,7 +12,7 @@ import (
 	"github.com/hashicorp/terraform/terraform"
 )
 
-func TestAccAwsDxGatewayAssociationProposal_deprecated(t *testing.T) {
+func TestAccAwsDxGatewayAssociationProposal_VpnGatewayId(t *testing.T) {
 	var proposal1 directconnect.GatewayAssociationProposal
 	var providers []*schema.Provider
 	rBgpAsn := randIntRange(64512, 65534)
@@ -30,7 +30,7 @@ func TestAccAwsDxGatewayAssociationProposal_deprecated(t *testing.T) {
 		CheckDestroy:      testAccCheckAwsDxGatewayAssociationProposalDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDxGatewayAssociationProposalConfig_deprecated(rName, rBgpAsn),
+				Config: testAccDxGatewayAssociationProposalConfig_vpnGatewayId(rName, rBgpAsn),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsDxGatewayAssociationProposalExists(resourceName, &proposal1),
 					resource.TestCheckResourceAttrPair(resourceName, "dx_gateway_id", resourceNameDxGw, "id"),
@@ -152,7 +152,7 @@ func TestAccAwsDxGatewayAssociationProposal_disappears(t *testing.T) {
 	})
 }
 
-func TestAccAwsDxGatewayAssociationProposal_allowedPrefixes(t *testing.T) {
+func TestAccAwsDxGatewayAssociationProposal_AllowedPrefixes(t *testing.T) {
 	var proposal1, proposal2 directconnect.GatewayAssociationProposal
 	var providers []*schema.Provider
 	rBgpAsn := randIntRange(64512, 65534)
@@ -292,7 +292,7 @@ resource "aws_vpn_gateway" "test" {
 `, rName, rBgpAsn)
 }
 
-func testAccDxGatewayAssociationProposalConfig_deprecated(rName string, rBgpAsn int) string {
+func testAccDxGatewayAssociationProposalConfig_vpnGatewayId(rName string, rBgpAsn int) string {
 	return testAccDxGatewayAssociationProposalConfigBase_vpnGateway(rName, rBgpAsn) + fmt.Sprintf(`
 resource "aws_dx_gateway_association_proposal" "test" {
   dx_gateway_id               = "${aws_dx_gateway.test.id}"

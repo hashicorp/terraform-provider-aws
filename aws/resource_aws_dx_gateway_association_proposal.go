@@ -1,7 +1,6 @@
 package aws
 
 import (
-	"errors"
 	"fmt"
 	"log"
 
@@ -32,11 +31,7 @@ func resourceAwsDxGatewayAssociationProposal() *schema.Resource {
 					return false
 				}
 
-				if proposal != nil && aws.StringValue(proposal.ProposalState) == directconnect.GatewayAssociationProposalStateRequested {
-					return true
-				}
-
-				return false
+				return proposal != nil && aws.StringValue(proposal.ProposalState) == directconnect.GatewayAssociationProposalStateRequested
 			}),
 		),
 
@@ -86,22 +81,24 @@ func resourceAwsDxGatewayAssociationProposal() *schema.Resource {
 func resourceAwsDxGatewayAssociationProposalCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).dxconn
 
-	gwIdRaw, gwIdOk := d.GetOk("associated_gateway_id")
-	vgwIdRaw, vgwIdOk := d.GetOk("vpn_gateway_id")
-	if !gwIdOk && !vgwIdOk {
-		return errors.New("one of associated_gateway_id or vpn_gateway_id must be configured")
-	}
-
+	allowedPrefixes := expandDirectConnectGatewayAssociationProposalAllowedPrefixes(d.Get("allowed_prefixes").(*schema.Set).List())
 	input := &directconnect.CreateDirectConnectGatewayAssociationProposalInput{
-		AddAllowedPrefixesToDirectConnectGateway: expandDirectConnectGatewayAssociationProposalAllowedPrefixes(d.Get("allowed_prefixes").(*schema.Set).List()),
+		AddAllowedPrefixesToDirectConnectGateway: allowedPrefixes,
 		DirectConnectGatewayId:                   aws.String(d.Get("dx_gateway_id").(string)),
 		DirectConnectGatewayOwnerAccount:         aws.String(d.Get("dx_gateway_owner_account_id").(string)),
 	}
-	if gwIdOk {
-		input.GatewayId = aws.String(gwIdRaw.(string))
-	} else {
-		input.GatewayId = aws.String(vgwIdRaw.(string))
+	var gwID string
+	if v, ok := d.GetOk("vpn_gateway_id"); ok {
+		gwID = v.(string)
+	} else if v, ok := d.GetOk("associated_gateway_id"); ok {
+		gwID = v.(string)
 	}
+
+	if gwID == "" {
+		return fmt.Errorf("gateway id not provided, one of associated_gateway_id or vpn_gateway_id must be configured")
+	}
+
+	input.GatewayId = aws.String(gwID)
 
 	log.Printf("[DEBUG] Creating Direct Connect Gateway Association Proposal: %s", input)
 	output, err := conn.CreateDirectConnectGatewayAssociationProposal(input)
