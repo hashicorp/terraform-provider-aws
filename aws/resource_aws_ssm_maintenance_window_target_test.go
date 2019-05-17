@@ -190,8 +190,8 @@ resource "aws_ssm_maintenance_window" "foo" {
 }
 
 resource "aws_ssm_maintenance_window_target" "target" {
-	name = "TestMaintenanceWindowTarget"
-	description = "This resource is for test purpose only"
+  name = "TestMaintenanceWindowTarget"
+  description = "This resource is for test purpose only"
   window_id = "${aws_ssm_maintenance_window.foo.id}"
   resource_type = "INSTANCE"
   targets {
@@ -216,8 +216,8 @@ resource "aws_ssm_maintenance_window" "foo" {
 }
 
 resource "aws_ssm_maintenance_window_target" "target" {
-	name = "TestMaintenanceWindowTarget"
-	description = "This resource is for test purpose only - updated"
+  name = "TestMaintenanceWindowTarget"
+  description = "This resource is for test purpose only - updated"
   window_id = "${aws_ssm_maintenance_window.foo.id}"
   resource_type = "INSTANCE"
   owner_information = "something"
@@ -243,8 +243,8 @@ resource "aws_ssm_maintenance_window" "foo" {
 }
 
 resource "aws_ssm_maintenance_window_target" "target" {
-	name = "%s"
-	description = "%s"
+  name = "%s"
+  description = "%s"
   window_id = "${aws_ssm_maintenance_window.foo.id}"
   resource_type = "INSTANCE"
   owner_information = "something"
