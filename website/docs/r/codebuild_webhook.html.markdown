@@ -23,6 +23,18 @@ When working with [Bitbucket](https://bitbucket.org) and [GitHub](https://github
 ```hcl
 resource "aws_codebuild_webhook" "example" {
   project_name = "${aws_codebuild_project.example.name}"
+  
+  filter_group {
+    filter {
+      type = "EVENT"
+      pattern = "PUSH"
+    }
+
+    filter {
+      type = "HEAD_REF"
+      pattern = "master"
+    }
+  }
 }
 ```
 
@@ -61,6 +73,10 @@ The following arguments are supported:
 * `filter_group` - (Optional) Information about the webhook's trigger. Filter group blocks are documented below.
 
 `filter_group` supports the following:
+
+* `filter` - (Required) A webhook filter for the group. Filter blocks are documented below.
+
+`filter` supports the following:
 
 * `type` - (Required) The webhook filter group's type. Valid values for this parameter are: `EVENT`, `BASE_REF`, `HEAD_REF`, `ACTOR_ACCOUNT_ID`, `FILE_PATH`. At least one filter group must specify `EVENT` as its type.
 * `pattern` - (Required) For a filter that uses `EVENT` type, a comma-separated string that specifies one event: `PUSH`, `PULL_REQUEST_CREATED`, `PULL_REQUEST_UPDATED`, `PULL_REQUEST_REOPENED`. `PULL_REQUEST_REOPENED` works with GitHub & GitHub Enterprise only. For a fitler that uses any of the other filter types, a regular expression.
