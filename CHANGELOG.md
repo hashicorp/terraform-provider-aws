@@ -31,6 +31,7 @@ ENHANCEMENTS:
 BUG FIXES:
 
 * resource/aws_backup_selection: Properly trigger resource recreation with `selection_tag` updates [GH-8546]
+* resource/aws_cloudwatch_event_rule: Ignore `UnknownOperationException` error on reading tags (fixes ap-east-1 support) [GH-8659]
 * resource/aws_ssm_parameter: Remove `Tier` from `PutParameter` if unsupported (fixes AWS China support) [GH-8664]
 * resource/aws_vpn_gateway: Handle `attaching` and `detaching` attachment status [GH-8576]
 * resource/aws_vpn_gateway_attachment: Handle `attaching` and `detaching` attachment status [GH-8576]
