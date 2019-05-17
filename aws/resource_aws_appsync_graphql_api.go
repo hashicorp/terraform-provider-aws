@@ -166,7 +166,7 @@ func resourceAwsAppsyncGraphqlApiCreate(d *schema.ResourceData, meta interface{}
 
 	resp, err := conn.CreateGraphqlApi(input)
 	if err != nil {
-		return fmt.Errorf("error creating AppSync GraphQL API: %d", err)
+		return fmt.Errorf("error creating AppSync GraphQL API: %s", err)
 	}
 
 	d.SetId(*resp.GraphqlApi.ApiId)
@@ -186,13 +186,15 @@ func resourceAwsAppsyncGraphqlApiRead(d *schema.ResourceData, meta interface{}) 
 	}
 
 	resp, err := conn.GetGraphqlApi(input)
+
+	if isAWSErr(err, appsync.ErrCodeNotFoundException, "") {
+		log.Printf("[WARN] No such entity found for Appsync Graphql API (%s)", d.Id())
+		d.SetId("")
+		return nil
+	}
+
 	if err != nil {
-		if isAWSErr(err, appsync.ErrCodeNotFoundException, "") {
-			log.Printf("[WARN] No such entity found for Appsync Graphql API (%s)", d.Id())
-			d.SetId("")
-			return nil
-		}
-		return err
+		return fmt.Errorf("error getting AppSync GraphQL API (%s): %s", d.Id(), err)
 	}
 
 	d.Set("arn", resp.GraphqlApi.Arn)
@@ -250,7 +252,7 @@ func resourceAwsAppsyncGraphqlApiUpdate(d *schema.ResourceData, meta interface{}
 
 	_, err := conn.UpdateGraphqlApi(input)
 	if err != nil {
-		return err
+		return fmt.Errorf("error updating AppSync GraphQL API (%s): %s", d.Id(), err)
 	}
 
 	if d.HasChange("schema") {
@@ -269,11 +271,13 @@ func resourceAwsAppsyncGraphqlApiDelete(d *schema.ResourceData, meta interface{}
 		ApiId: aws.String(d.Id()),
 	}
 	_, err := conn.DeleteGraphqlApi(input)
+
+	if isAWSErr(err, appsync.ErrCodeNotFoundException, "") {
+		return nil
+	}
+
 	if err != nil {
-		if isAWSErr(err, appsync.ErrCodeNotFoundException, "") {
-			return nil
-		}
-		return err
+		return fmt.Errorf("error deleting AppSync GraphQL API (%s): %s", d.Id(), err)
 	}
 
 	return nil
