@@ -94,7 +94,7 @@ The following arguments are supported:
 
 * `name`
 
-	The name of the bot that you want to create a new version of. The name is case sensitive.
+	The name of the bot that you want to create, case sensitive.
 
     * Type: string
     * Min: 2
