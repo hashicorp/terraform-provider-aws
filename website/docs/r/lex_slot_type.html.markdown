@@ -6,7 +6,7 @@ description: |-
   Provides an Amazon Lex Slot Type resource.
 ---
 
-# aws_lex_slot_type
+# Resource: aws_lex_slot_type
 
 Provides an Amazon Lex Slot Type resource. For more information see
 [Amazon Lex: How It Works](https://docs.aws.amazon.com/lex/latest/dg/how-it-works.html)
@@ -44,47 +44,42 @@ resource "aws_lex_slot_type" "flower_types" {
 
 The following arguments are supported:
 
-### Required
-
-* `enumeration_value`
-
-	A list of EnumerationValue objects that defines the values that the slot type can take. Each
-	value can have a list of synonyms, which are additional values that help train the machine
-	learning model about the values that it resolves for a slot.
-
-    * Type: List of [EnumerationValues](/docs/providers/aws/r/lex_enumeration_value.html)
-    * Min: 1
-    * Max: 10000
-
-* `name`
-
-	The name of the slot type. The name is not case sensitive.
-
-    * Type: string
-    * Min: 1
-    * Max: 100
-    * Pattern: ^([A-Za-z]_?)+$
-
-### Optional
-
-* `description`
+* `description` _(Optional, Type: string, Min: 0, Max: 200)_:
 
 	A description of the slot type.
 
-    * Type: string
-    * Min: 0
-    * Max: 200
+* `enumeration_value` _(**Required**, Type: list, Min: 1, Max: 10000)_:
 
-* `value_selection_strategy`
+	A list of EnumerationValue objects that defines the values that the slot type can take. Each
+	value can have a list of synonyms, which are additional values that help train the machine
+	learning model about the values that it resolves for a slot. Attributes are documented under
+  [enumeration_value](#enumeration_value-1).
+
+* `name` _(**Required**, Type: string, Min: 1, Max: 100, Regex: \^([A-Za-z]\_?)+$)_:
+
+	The name of the slot type. The name is not case sensitive.
+
+* `value_selection_strategy` _(Optional, Type: string, Values: ORIGINAL_VALUE | TOP_RESOLUTION, Default: ORIGINAL_VALUE)_:
 
 	Determines the slot resolution strategy that Amazon Lex uses to return slot type values.
 	*ORIGINAL_VALUE* returns the value entered by the user if the user value is similar to the slot
 	value. *TOP_RESOLUTION* returns the first value in the resolution list if there is a resolution
 	list for the slot, otherwise null is returned.
 
-    * Type: string
-    * Values: ORIGINAL_VALUE | TOP_RESOLUTION
-    * Default: ORIGINAL_VALUE
+### enumeration_value
+
+Each slot type can have a set of values. Each enumeration value represents a value the slot type
+can take.
+
+For example, a pizza ordering bot could have a slot type that specifies the type of crust that the pizza should have. The slot type could include the values: thick, thin, stuffed.
+
+* `synonyms` _(Optional, Type: list of strings, Min: 1, Max:140)_:
+
+    Additional values related to the slot type value.
+
+* `value` _(Required, Type: string, Min: 1, Max: 140)_:
+
+	  The value of the slot type.
 
 ## Attributes Reference
 

@@ -8,7 +8,7 @@ description: |-
 
 # Data Source: aws_lex_bot_alias
 
-`aws_lex_bot_alias` provides details about a specific Lex Bot Alias.
+Provides details about a specific Amazon Lex Bot Alias.
 
 ## Example Usage
 
@@ -21,13 +21,13 @@ data "aws_lex_bot_alias" "order_flowers_prod" {
 
 ## Argument Reference
 
-### Required
+The following arguments are supported:
 
-* `bot_name`
+* `bot_name` _(Required)_:
 
     The name of the bot.
 
-* `name`
+* `name` _(Required)_:
 
     The name of the bot alias. The name is case sensitive.
 

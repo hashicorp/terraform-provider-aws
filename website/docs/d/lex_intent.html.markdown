@@ -8,7 +8,7 @@ description: |-
 
 # Data Source: aws_lex_intent
 
-`aws_lex_intent` provides details about a specific Amazon Lex Intent.
+Provides details about a specific Amazon Lex Intent.
 
 ## Example Usage
 
@@ -21,15 +21,13 @@ data "aws_lex_intent" "order_flowers" {
 
 ## Argument Reference
 
-### Required
+The following arguments are supported:
 
-* `name`
+* `name` _(Required)_:
 
     The name of the slot type. The name is case sensitive.
 
-### Optional
-
-* `version`
+* `version` _(Optional)_:
 
     The version or alias of the slot type.
 

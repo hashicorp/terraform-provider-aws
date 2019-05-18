@@ -8,7 +8,7 @@ description: |-
 
 # Data Source: aws_lex_slot_type
 
-`aws_lex_slot_type` provides details about a specific Amazon Lex Slot Type.
+Provides details about a specific Amazon Lex Slot Type.
 
 ## Example Usage
 
@@ -21,13 +21,13 @@ data "aws_lex_slot_type" "flower_types" {
 
 ## Argument Reference
 
-### Required
+The following arguments are supported:
 
-* `name`
+* `name` _(Required)_:
 
     The name of the slot type. The name is case sensitive.
 
-* `version`
+* `version` _(Required)_:
 
     The version or alias of the slot type.
 

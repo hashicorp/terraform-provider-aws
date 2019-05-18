@@ -6,7 +6,7 @@ description: |-
   Provides an Amazon Lex Bot Alias resource.
 ---
 
-# aws_lex_bot_alias
+# Resource: aws_lex_bot_alias
 
 Provides an Amazon Lex Bot Alias resource. For more information see
 [Amazon Lex: How It Works](https://docs.aws.amazon.com/lex/latest/dg/how-it-works.html)
@@ -26,44 +26,21 @@ resource "aws_lex_bot_alias" "order_flowers_prod" {
 
 The following arguments are supported:
 
-### Required
-
-* `bot_name`
+* `bot_name` _(**Required**, Type: string, Min: 1, Max: 100, Regex: \^([A-Za-z]\_?)+$)_:
 
 	The name of the bot.
 
-	* Type: string
-	* Min: 1
-	* Max: 100
-	* Pattern: ^([A-Za-z]_?)+$
-
-* `bot_version`
+* `bot_version` _(**Required**, Type: string, Min: 1, Max: 64, Regex: \$LATEST|[0-9]+)_:
 
 	The name of the bot.
 
-	* Type: string
-	* Min: 1
-	* Max: 64
-	* Pattern: \$LATEST|[0-9]+
-
-* `name`
-
-	The name of the alias. The name is not case sensitive.
-
-	* Type: string
-	* Min: 1
-	* Max: 100
-	* Pattern: ^([A-Za-z]_?)+$
-
-### Optional
-
-* `description`
+* `description` _(Optional, Type: string, Min: 0, Max: 200)_:
 
 	A description of the alias.
 
-	* Type: string
-	* Min: 0
-	* Max: 200
+* `name` _(**Required**, Type: string, Min: 1, Max: 100, Regex: \^([A-Za-z]\_?)+$)_:
+
+	The name of the alias. The name is not case sensitive.
 
 ## Attributes Reference
 
