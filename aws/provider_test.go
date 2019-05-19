@@ -332,6 +332,12 @@ func testAccCheckWithProviders(f func(*terraform.State, *schema.Provider) error,
 // Check service API call error for reasons to skip acceptance testing
 // These include missing API endpoints and unsupported API calls
 func testAccPreCheckSkipError(err error) bool {
+	// GovCloud has endpoints that respond with (no message provided after the error code):
+	// AccessDeniedException:
+	// Ignore these API endpoints that exist but are not officially enabled
+	if isAWSErr(err, "AccessDeniedException", "") {
+		return true
+	}
 	// Ignore missing API endpoints
 	if isAWSErr(err, "RequestError", "send request failed") {
 		return true
