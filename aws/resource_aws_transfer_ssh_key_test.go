@@ -17,7 +17,7 @@ func TestAccAWSTransferSshKey_basic(t *testing.T) {
 	rName := acctest.RandString(5)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSTransfer(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSTransferSshKeyDestroy,
 		Steps: []resource.TestStep{
