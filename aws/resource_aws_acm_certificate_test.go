@@ -650,3 +650,76 @@ func testAccCheckAcmCertificateDestroy(s *terraform.State) error {
 
 	return nil
 }
+
+func TestSortDomainValidationOptions(t *testing.T) {
+	domainName := "www.example.com"
+
+	data := []map[string][]string{
+		{
+			"domainValidationOptions": {},
+			"subjectAlternativeNames": {},
+			"expectedResult":          {},
+		},
+		{
+			"domainValidationOptions": {"www.example.com"},
+			"subjectAlternativeNames": {},
+			"expectedResult":          {"www.example.com"},
+		},
+		{
+			"domainValidationOptions": {"www.example.com"},
+			"subjectAlternativeNames": {"a.example.com"},
+			"expectedResult":          {"www.example.com"},
+		},
+		{
+			"domainValidationOptions": {"www.example.com", "a.example.com", "b.example.com"},
+			"subjectAlternativeNames": {"a.example.com", "b.example.com"},
+			"expectedResult":          {"www.example.com", "a.example.com", "b.example.com"},
+		},
+		{
+			"domainValidationOptions": {"a.example.com", "b.example.com", "www.example.com", "c.example.com"},
+			"subjectAlternativeNames": {"a.example.com", "b.example.com", "c.example.com"},
+			"expectedResult":          {"www.example.com", "a.example.com", "b.example.com", "c.example.com"},
+		},
+		{
+			"domainValidationOptions": {"a.example.com", "b.example.com", "www.example.com", "c.example.com"},
+			"subjectAlternativeNames": {"c.example.com", "b.example.com", "a.example.com"},
+			"expectedResult":          {"www.example.com", "c.example.com", "b.example.com", "a.example.com"},
+		},
+		{
+			"domainValidationOptions": {"y.example.com", "b.example.com", "www.example.com", "a.example.com"},
+			"subjectAlternativeNames": {"a.example.com", "b.example.com", "y.example.com"},
+			"expectedResult":          {"www.example.com", "a.example.com", "b.example.com", "y.example.com"},
+		},
+	}
+
+	for _, testCase := range data {
+		var options []map[string]interface{}
+
+		for _, domainName := range testCase["domainValidationOptions"] {
+			options = append(options,
+				map[string]interface{}{
+					"domain_name": domainName,
+				},
+			)
+		}
+
+		subjectAlternativeNames := testCase["subjectAlternativeNames"]
+		sortDomainValidationOptions(&domainName, subjectAlternativeNames, options)
+
+		expected := testCase["expectedResult"]
+		if len(options) != len(expected) {
+			t.Errorf("expected same length for input %v and expected output %v\n",
+				options, expected)
+			break
+		}
+
+		for i := range options {
+			actual := options[i]["domain_name"].(string)
+			if actual != expected[i] {
+				t.Errorf("input was: %v and %v\ngot: %v\nwant: %v\n",
+					testCase["domainValidationOptions"], subjectAlternativeNames, options, testCase["exptectedResult"])
+				break
+			}
+		}
+	}
+}

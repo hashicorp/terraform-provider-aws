@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"log"
+	"sort"
 	"strings"
 	"time"
 
@@ -210,15 +211,16 @@ func resourceAwsAcmCertificateRead(d *schema.ResourceData, meta interface{}) err
 		d.Set("domain_name", resp.Certificate.DomainName)
 		d.Set("arn", resp.Certificate.CertificateArn)
 
-		if err := d.Set("subject_alternative_names", cleanUpSubjectAlternativeNames(resp.Certificate)); err != nil {
+		sans := cleanUpSubjectAlternativeNames(resp.Certificate)
+		if err := d.Set("subject_alternative_names", sans); err != nil {
 			return resource.NonRetryableError(err)
 		}
 
 		domainValidationOptions, emailValidationOptions, err := convertValidationOptions(resp.Certificate)
-
 		if err != nil {
 			return resource.RetryableError(err)
 		}
+		sortDomainValidationOptions(d.Get("domain_name").(*string), sans, domainValidationOptions)
 
 		if err := d.Set("domain_validation_options", domainValidationOptions); err != nil {
 			return resource.NonRetryableError(err)
@@ -244,6 +246,7 @@ func resourceAwsAcmCertificateRead(d *schema.ResourceData, meta interface{}) err
 		return nil
 	})
 }
+
 func resourceAwsAcmCertificateGuessValidationMethod(domainValidationOptions []map[string]interface{}, emailValidationOptions []string) string {
 	// The DescribeCertificate Response doesn't have information on what validation method was used
 	// so we need to guess from the validation options we see...
@@ -283,8 +286,8 @@ func cleanUpSubjectAlternativeNames(cert *acm.CertificateDetail) []string {
 			vs = append(vs, aws.StringValue(v))
 		}
 	}
+	sort.Strings(vs)
 	return vs
-
 }
 
 func convertValidationOptions(certificate *acm.CertificateDetail) ([]map[string]interface{}, []string, error) {
@@ -313,6 +316,29 @@ func convertValidationOptions(certificate *acm.CertificateDetail) ([]map[string]
 	}
 
 	return domainValidationResult, emailValidationResult, nil
+}
+
+// sortDomainValidationOptions sorts a slice of domain validation options
+// to match the order they occur in in the subject alternative names.
+func sortDomainValidationOptions(domainName *string, subjectAlterntaiveNames []string, domainValidationOptions []map[string]interface{}) {
+	sans := append([]string{*domainName}, subjectAlterntaiveNames...)
+
+	// validation method is email and domainValidationOptions is empty
+	if len(sans) != len(domainValidationOptions) {
+		return
+	}
+
+	// This works because requesting a certificate is either by method email or method dns,
+	// but not mixed and furthermore the method cannot be changed after creation.
+	for i, san := range sans {
+		for j, opt := range domainValidationOptions {
+			if san == opt["domain_name"].(string) {
+				domainValidationOptions[i], domainValidationOptions[j] =
+					domainValidationOptions[j], domainValidationOptions[i]
+				break
+			}
+		}
+	}
 }
 
 func resourceAwsAcmCertificateDelete(d *schema.ResourceData, meta interface{}) error {
