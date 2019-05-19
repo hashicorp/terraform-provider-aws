@@ -120,12 +120,14 @@ func TestAccAWSIAMGroup_nameChange(t *testing.T) {
 				Config: testAccAWSGroupConfig(groupName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSGroupExists("aws_iam_group.group", &conf),
+					testAccCheckAWSGroupAttributes(&conf, groupName, "/"),
 				),
 			},
 			{
 				Config: testAccAWSGroupConfig(groupName2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSGroupExists("aws_iam_group.group2", &conf),
+					testAccCheckAWSGroupExists("aws_iam_group.group", &conf),
+					testAccCheckAWSGroupAttributes(&conf, groupName2, "/"),
 				),
 			},
 		},
