@@ -13,7 +13,7 @@ import (
 
 func TestAccAWSMediaStoreContainer_basic(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSMediaStore(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsMediaStoreContainerDestroy,
 		Steps: []resource.TestStep{
@@ -31,7 +31,7 @@ func TestAccAWSMediaStoreContainer_import(t *testing.T) {
 	resourceName := "aws_media_store_container.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSMediaStore(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsMediaStoreContainerDestroy,
 		Steps: []resource.TestStep{
@@ -90,6 +90,22 @@ func testAccCheckAwsMediaStoreContainerExists(name string) resource.TestCheckFun
 		_, err := conn.DescribeContainer(input)
 
 		return err
+	}
+}
+
+func testAccPreCheckAWSMediaStore(t *testing.T) {
+	conn := testAccProvider.Meta().(*AWSClient).mediastoreconn
+
+	input := &mediastore.ListContainersInput{}
+
+	_, err := conn.ListContainers(input)
+
+	if testAccPreCheckSkipError(err) {
+		t.Skipf("skipping acceptance testing: %s", err)
+	}
+
+	if err != nil {
+		t.Fatalf("unexpected PreCheck error: %s", err)
 	}
 }
 
