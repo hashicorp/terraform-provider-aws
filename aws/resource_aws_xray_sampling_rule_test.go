@@ -17,7 +17,7 @@ func TestAccAWSXraySamplingRule_basic(t *testing.T) {
 	ruleName := fmt.Sprintf("tf_acc_sampling_rule_%s", rString)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSXray(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSXraySamplingRuleDestroy,
 		Steps: []resource.TestStep{
@@ -57,7 +57,7 @@ func TestAccAWSXraySamplingRule_update(t *testing.T) {
 	updatedReservoirSize := acctest.RandIntRange(0, 2147483647)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSXray(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSXraySamplingRuleDestroy,
 		Steps: []resource.TestStep{
@@ -150,6 +150,22 @@ func testAccCheckAWSXraySamplingRuleDestroy(s *terraform.State) error {
 	}
 
 	return nil
+}
+
+func testAccPreCheckAWSXray(t *testing.T) {
+	conn := testAccProvider.Meta().(*AWSClient).xrayconn
+
+	input := &xray.GetSamplingRulesInput{}
+
+	_, err := conn.GetSamplingRules(input)
+
+	if testAccPreCheckSkipError(err) {
+		t.Skipf("skipping acceptance testing: %s", err)
+	}
+
+	if err != nil {
+		t.Fatalf("unexpected PreCheck error: %s", err)
+	}
 }
 
 func testAccAWSXraySamplingRuleConfig_basic(ruleName string) string {
