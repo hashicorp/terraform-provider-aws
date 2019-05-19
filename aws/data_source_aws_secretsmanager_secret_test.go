@@ -12,7 +12,7 @@ import (
 
 func TestAccDataSourceAwsSecretsManagerSecret_Basic(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:  func() { testAccPreCheck(t) },
+		PreCheck:  func() { testAccPreCheck(t); testAccPreCheckAWSSecretsManager(t) },
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
 			{
@@ -37,7 +37,7 @@ func TestAccDataSourceAwsSecretsManagerSecret_ARN(t *testing.T) {
 	datasourceName := "data.aws_secretsmanager_secret.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:  func() { testAccPreCheck(t) },
+		PreCheck:  func() { testAccPreCheck(t); testAccPreCheckAWSSecretsManager(t) },
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
 			{
@@ -56,7 +56,7 @@ func TestAccDataSourceAwsSecretsManagerSecret_Name(t *testing.T) {
 	datasourceName := "data.aws_secretsmanager_secret.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:  func() { testAccPreCheck(t) },
+		PreCheck:  func() { testAccPreCheck(t); testAccPreCheckAWSSecretsManager(t) },
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
 			{
@@ -75,7 +75,7 @@ func TestAccDataSourceAwsSecretsManagerSecret_Policy(t *testing.T) {
 	datasourceName := "data.aws_secretsmanager_secret.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:  func() { testAccPreCheck(t) },
+		PreCheck:  func() { testAccPreCheck(t); testAccPreCheckAWSSecretsManager(t) },
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
 			{
