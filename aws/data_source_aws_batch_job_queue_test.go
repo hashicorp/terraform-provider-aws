@@ -15,7 +15,7 @@ func TestAccDataSourceAwsBatchJobQueue(t *testing.T) {
 	datasourceName := "data.aws_batch_job_queue.by_name"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:  func() { testAccPreCheck(t) },
+		PreCheck:  func() { testAccPreCheck(t); testAccPreCheckAWSBatch(t) },
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
 			{
