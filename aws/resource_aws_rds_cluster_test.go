@@ -145,6 +145,7 @@ func TestAccAWSRDSCluster_basic(t *testing.T) {
 					testAccCheckAWSClusterExists(resourceName, &dbCluster),
 					resource.TestMatchResourceAttr(resourceName, "arn", regexp.MustCompile(`^arn:[^:]+:rds:[^:]+:\d{12}:cluster:.+`)),
 					resource.TestCheckResourceAttr(resourceName, "backtrack_window", "0"),
+					resource.TestCheckResourceAttr(resourceName, "copy_tags_to_snapshot", "false"),
 					resource.TestCheckResourceAttr(resourceName, "storage_encrypted", "false"),
 					resource.TestCheckResourceAttr(resourceName, "db_cluster_parameter_group_name", "default.aurora5.6"),
 					resource.TestCheckResourceAttrSet(resourceName, "reader_endpoint"),
@@ -434,6 +435,41 @@ func TestAccAWSRDSCluster_encrypted(t *testing.T) {
 						"aws_rds_cluster.default", "storage_encrypted", "true"),
 					resource.TestCheckResourceAttr(
 						"aws_rds_cluster.default", "db_cluster_parameter_group_name", "default.aurora5.6"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAWSRDSCluster_copyTagsToSnapshot(t *testing.T) {
+	var v rds.DBCluster
+	rInt := acctest.RandInt()
+	resourceName := "aws_rds_cluster.default"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSClusterDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSClusterConfigWithCopyTagsToSnapshot(rInt, true),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSClusterExists(resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "copy_tags_to_snapshot", "true"),
+				),
+			},
+			{
+				Config: testAccAWSClusterConfigWithCopyTagsToSnapshot(rInt, false),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSClusterExists(resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "copy_tags_to_snapshot", "false"),
+				),
+			},
+			{
+				Config: testAccAWSClusterConfigWithCopyTagsToSnapshot(rInt, true),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSClusterExists(resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "copy_tags_to_snapshot", "true"),
 				),
 			},
 		},
@@ -2660,4 +2696,18 @@ resource "aws_rds_cluster" "test" {
   kms_key_id = "${aws_kms_key.test.arn}"
 }
 `, rName, rName, rName)
+}
+
+func testAccAWSClusterConfigWithCopyTagsToSnapshot(n int, f bool) string {
+	return fmt.Sprintf(`
+resource "aws_rds_cluster" "default" {
+  cluster_identifier = "tf-aurora-cluster-%[1]d"
+  availability_zones = ["us-west-2a","us-west-2b","us-west-2c"]
+  database_name = "mydb"
+  master_username = "foo"
+  master_password = "mustbeeightcharaters"
+  db_cluster_parameter_group_name = "default.aurora5.6"
+	copy_tags_to_snapshot = %[2]t
+	skip_final_snapshot = true
+}`, n, f)
 }

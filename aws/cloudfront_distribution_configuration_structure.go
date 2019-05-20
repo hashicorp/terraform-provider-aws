@@ -414,7 +414,7 @@ func expandForwardedValues(m map[string]interface{}) *cloudfront.ForwardedValues
 	fv := &cloudfront.ForwardedValues{
 		QueryString: aws.Bool(m["query_string"].(bool)),
 	}
-	if v, ok := m["cookies"]; ok && len(v.([]interface{})) > 0 {
+	if v, ok := m["cookies"]; ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
 		fv.Cookies = expandCookiePreference(v.([]interface{})[0].(map[string]interface{}))
 	}
 	if v, ok := m["headers"]; ok {

@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"reflect"
 	"regexp"
+	"strconv"
+	"strings"
 	"testing"
 	"time"
 
@@ -12,8 +14,6 @@ import (
 	"github.com/hashicorp/terraform/helper/acctest"
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/terraform"
-	"strconv"
-	"strings"
 )
 
 func TestAccAWSBudgetsBudget_basic(t *testing.T) {
@@ -344,7 +344,7 @@ func testAccAWSBudgetsBudgetConfigUpdate(name string) budgets.Budget {
 		BudgetName: aws.String(name),
 		BudgetType: aws.String("COST"),
 		BudgetLimit: &budgets.Spend{
-			Amount: aws.String("500"),
+			Amount: aws.String("500.0"),
 			Unit:   aws.String("USD"),
 		},
 		CostFilters: map[string][]*string{
@@ -379,7 +379,7 @@ func testAccAWSBudgetsBudgetConfigDefaults(name string) budgets.Budget {
 		BudgetName: aws.String(name),
 		BudgetType: aws.String("COST"),
 		BudgetLimit: &budgets.Spend{
-			Amount: aws.String("100"),
+			Amount: aws.String("100.0"),
 			Unit:   aws.String("USD"),
 		},
 		CostFilters: map[string][]*string{

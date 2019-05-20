@@ -681,6 +681,10 @@ const (
 	// The size of inventory data has exceeded the total size limit for the resource.
 	ErrCodeTotalSizeLimitExceededException = "TotalSizeLimitExceededException"
 
+	// ErrCodeUnsupportedFeatureRequiredException for service response error code
+	// "UnsupportedFeatureRequiredException".
+	ErrCodeUnsupportedFeatureRequiredException = "UnsupportedFeatureRequiredException"
+
 	// ErrCodeUnsupportedInventoryItemContextException for service response error code
 	// "UnsupportedInventoryItemContextException".
 	//

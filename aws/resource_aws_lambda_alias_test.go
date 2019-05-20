@@ -38,6 +38,12 @@ func TestAccAWSLambdaAlias_basic(t *testing.T) {
 					resource.TestMatchResourceAttr(resourceName, "invoke_arn", regexp.MustCompile(fmt.Sprintf("^arn:[^:]+:apigateway:[^:]+:lambda:path/2015-03-31/functions/arn:[^:]+:lambda:[^:]+:[^:]+:function:%s:%s/invocations$", funcName, aliasName))),
 				),
 			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateId:     fmt.Sprintf("%s/%s", funcName, aliasName),
+				ImportStateVerify: true,
+			},
 		},
 	})
 }

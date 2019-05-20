@@ -32,7 +32,7 @@ func dataSourceAwsEksClusterAuth() *schema.Resource {
 func dataSourceAwsEksClusterAuthRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).stsconn
 	name := d.Get("name").(string)
-	generator, err := token.NewGenerator(false, false)
+	generator, err := token.NewGenerator(false)
 	if err != nil {
 		return fmt.Errorf("error getting token generator: %v", err)
 	}
