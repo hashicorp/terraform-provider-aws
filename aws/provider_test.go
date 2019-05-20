@@ -39,6 +39,11 @@ func init() {
 				*providers = append(*providers, p.(*schema.Provider))
 				return p, nil
 			},
+			"tls": func() (terraform.ResourceProvider, error) {
+				p := tls.Provider()
+				*providers = append(*providers, p.(*schema.Provider))
+				return p, nil
+			},
 		}
 	}
 	testAccProvidersWithTLS = map[string]terraform.ResourceProvider{
@@ -61,13 +66,12 @@ func TestProvider_impl(t *testing.T) {
 }
 
 func testAccPreCheck(t *testing.T) {
-	if v := os.Getenv("AWS_PROFILE"); v == "" {
-		if v := os.Getenv("AWS_ACCESS_KEY_ID"); v == "" {
-			t.Fatal("AWS_ACCESS_KEY_ID must be set for acceptance tests")
-		}
-		if v := os.Getenv("AWS_SECRET_ACCESS_KEY"); v == "" {
-			t.Fatal("AWS_SECRET_ACCESS_KEY must be set for acceptance tests")
-		}
+	if os.Getenv("AWS_PROFILE") == "" && os.Getenv("AWS_ACCESS_KEY_ID") == "" {
+		t.Fatal("AWS_ACCESS_KEY_ID or AWS_PROFILE must be set for acceptance tests")
+	}
+
+	if os.Getenv("AWS_ACCESS_KEY_ID") != "" && os.Getenv("AWS_SECRET_ACCESS_KEY") == "" {
+		t.Fatal("AWS_SECRET_ACCESS_KEY must be set for acceptance tests")
 	}
 
 	region := testAccGetRegion()
@@ -252,6 +256,21 @@ provider "aws" {
   secret_key = %[3]q
 }
 `, os.Getenv("AWS_ALTERNATE_ACCESS_KEY_ID"), os.Getenv("AWS_ALTERNATE_PROFILE"), os.Getenv("AWS_ALTERNATE_SECRET_ACCESS_KEY"))
+}
+
+// Provider configuration hardcoded for us-east-1.
+// This should only be necessary for testing ACM Certificates with CloudFront
+// related infrastucture such as API Gateway Domain Names for EDGE endpoints,
+// CloudFront Distribution Viewer Certificates, and Cognito User Pool Domains.
+// Other valid usage is for services only available in us-east-1 such as the
+// Cost and Usage Reporting and Pricing services.
+func testAccUsEast1RegionProviderConfig() string {
+	return fmt.Sprintf(`
+provider "aws" {
+  alias  = "us-east-1"
+  region = "us-east-1"
+}
+`)
 }
 
 func testAccAwsRegionProviderFunc(region string, providers *[]*schema.Provider) func() *schema.Provider {

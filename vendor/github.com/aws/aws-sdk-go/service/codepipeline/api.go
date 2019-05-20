@@ -3316,6 +3316,9 @@ func (s *ActionConfigurationProperty) SetType(v string) *ActionConfigurationProp
 type ActionContext struct {
 	_ struct{} `type:"structure"`
 
+	// The system-generated unique ID that corresponds to an action's execution.
+	ActionExecutionId *string `locationName:"actionExecutionId" type:"string"`
+
 	// The name of the action within the context of a job.
 	Name *string `locationName:"name" min:"1" type:"string"`
 }
@@ -3328,6 +3331,12 @@ func (s ActionContext) String() string {
 // GoString returns the string representation
 func (s ActionContext) GoString() string {
 	return s.String()
+}
+
+// SetActionExecutionId sets the ActionExecutionId field's value.
+func (s *ActionContext) SetActionExecutionId(v string) *ActionContext {
+	s.ActionExecutionId = &v
+	return s
 }
 
 // SetName sets the Name field's value.
@@ -4691,7 +4700,7 @@ type CreateCustomActionTypeInput struct {
 	// Provider is a required field
 	Provider *string `locationName:"provider" min:"1" type:"string" required:"true"`
 
-	// Returns information about the settings for an action type.
+	// URLs that provide users information about this custom action.
 	Settings *ActionTypeSettings `locationName:"settings" type:"structure"`
 
 	// The version identifier of the custom action.
@@ -6197,7 +6206,7 @@ type JobData struct {
 	// Represents an AWS session credentials object. These credentials are temporary
 	// credentials that are issued by AWS Secure Token Service (STS). They can be
 	// used to access input and output artifacts in the Amazon S3 bucket used to
-	// store artifact for the pipeline in AWS CodePipeline.
+	// store artifacts for the pipeline in AWS CodePipeline.
 	ArtifactCredentials *AWSSessionCredentials `locationName:"artifactCredentials" type:"structure" sensitive:"true"`
 
 	// A system-generated token, such as a AWS CodeDeploy deployment ID, that a
@@ -6215,6 +6224,8 @@ type JobData struct {
 	OutputArtifacts []*Artifact `locationName:"outputArtifacts" type:"list"`
 
 	// Represents information about a pipeline to a job worker.
+	//
+	// Includes pipelineArn and pipelineExecutionId for Custom jobs.
 	PipelineContext *PipelineContext `locationName:"pipelineContext" type:"structure"`
 }
 
@@ -6326,9 +6337,12 @@ type ListActionExecutionsInput struct {
 	Filter *ActionExecutionFilter `locationName:"filter" type:"structure"`
 
 	// The maximum number of results to return in a single call. To retrieve the
-	// remaining results, make another call with the returned nextToken value. The
-	// action execution history is limited to the most recent 12 months, based on
-	// action execution start times. Default value is 100.
+	// remaining results, make another call with the returned nextToken value. Action
+	// execution history is retained for up to 12 months, based on action execution
+	// start times. Default value is 100.
+	//
+	// Detailed execution history is available for executions run on or after February
+	// 21, 2019.
 	MaxResults *int64 `locationName:"maxResults" min:"1" type:"integer"`
 
 	// The token that was returned from the previous ListActionExecutions call,
@@ -6520,9 +6534,9 @@ type ListPipelineExecutionsInput struct {
 	_ struct{} `type:"structure"`
 
 	// The maximum number of results to return in a single call. To retrieve the
-	// remaining results, make another call with the returned nextToken value. The
-	// available pipeline execution history is limited to the most recent 12 months,
-	// based on pipeline execution start times. Default value is 100.
+	// remaining results, make another call with the returned nextToken value. Pipeline
+	// history is limited to the most recent 12 months, based on pipeline execution
+	// start times. Default value is 100.
 	MaxResults *int64 `locationName:"maxResults" min:"1" type:"integer"`
 
 	// The token that was returned from the previous ListPipelineExecutions call,
@@ -6908,11 +6922,21 @@ func (s *OutputArtifact) SetName(v string) *OutputArtifact {
 }
 
 // Represents information about a pipeline to a job worker.
+//
+// PipelineContext contains pipelineArn and pipelineExecutionId for custom action
+// jobs. The pipelineArn and pipelineExecutionId fields are not populated for
+// ThirdParty action jobs.
 type PipelineContext struct {
 	_ struct{} `type:"structure"`
 
 	// The context of an action to a job worker within the stage of a pipeline.
 	Action *ActionContext `locationName:"action" type:"structure"`
+
+	// The Amazon Resource Name (ARN) of the pipeline.
+	PipelineArn *string `locationName:"pipelineArn" type:"string"`
+
+	// The execution ID of the pipeline.
+	PipelineExecutionId *string `locationName:"pipelineExecutionId" type:"string"`
 
 	// The name of the pipeline. This is a user-specified value. Pipeline names
 	// must be unique across all pipeline names under an Amazon Web Services account.
@@ -6935,6 +6959,18 @@ func (s PipelineContext) GoString() string {
 // SetAction sets the Action field's value.
 func (s *PipelineContext) SetAction(v *ActionContext) *PipelineContext {
 	s.Action = v
+	return s
+}
+
+// SetPipelineArn sets the PipelineArn field's value.
+func (s *PipelineContext) SetPipelineArn(v string) *PipelineContext {
+	s.PipelineArn = &v
+	return s
+}
+
+// SetPipelineExecutionId sets the PipelineExecutionId field's value.
+func (s *PipelineContext) SetPipelineExecutionId(v string) *PipelineContext {
+	s.PipelineExecutionId = &v
 	return s
 }
 
@@ -8859,6 +8895,8 @@ type ThirdPartyJobData struct {
 	OutputArtifacts []*Artifact `locationName:"outputArtifacts" type:"list"`
 
 	// Represents information about a pipeline to a job worker.
+	//
+	// Does not include pipelineArn and pipelineExecutionId for ThirdParty jobs.
 	PipelineContext *PipelineContext `locationName:"pipelineContext" type:"structure"`
 }
 
@@ -9143,7 +9181,9 @@ type WebhookDefinition struct {
 
 	// Supported options are GITHUB_HMAC, IP and UNAUTHENTICATED.
 	//
-	//    *  GITHUB_HMAC implements the authentication scheme described here: https://developer.github.com/webhooks/securing/
+	//    * For information about the authentication scheme implemented by GITHUB_HMAC,
+	//    see Securing your webhooks (https://developer.github.com/webhooks/securing/)
+	//    on the GitHub Developer website.
 	//
 	//    *  IP will reject webhooks trigger requests unless they originate from
 	//    an IP within the IP range whitelisted in the authentication configuration.
@@ -9291,9 +9331,10 @@ type WebhookFilterRule struct {
 	_ struct{} `type:"structure"`
 
 	// A JsonPath expression that will be applied to the body/payload of the webhook.
-	// The value selected by JsonPath expression must match the value specified
-	// in the matchEquals field, otherwise the request will be ignored. More information
-	// on JsonPath expressions can be found here: https://github.com/json-path/JsonPath.
+	// The value selected by the JsonPath expression must match the value specified
+	// in the MatchEquals field, otherwise the request will be ignored. For more
+	// information about JsonPath expressions, see Java JsonPath implementation
+	// (https://github.com/json-path/JsonPath) in GitHub.
 	//
 	// JsonPath is a required field
 	JsonPath *string `locationName:"jsonPath" min:"1" type:"string" required:"true"`
@@ -9305,8 +9346,8 @@ type WebhookFilterRule struct {
 	// example, if the value supplied here is "refs/heads/{Branch}" and the target
 	// action has an action configuration property called "Branch" with a value
 	// of "master", the MatchEquals value will be evaluated as "refs/heads/master".
-	// A list of action configuration properties for built-in action types can be
-	// found here: Pipeline Structure Reference Action Requirements (https://docs.aws.amazon.com/codepipeline/latest/userguide/reference-pipeline-structure.html#action-requirements).
+	// For a list of action configuration properties for built-in action types,
+	// see Pipeline Structure Reference Action Requirements (https://docs.aws.amazon.com/codepipeline/latest/userguide/reference-pipeline-structure.html#action-requirements).
 	MatchEquals *string `locationName:"matchEquals" min:"1" type:"string"`
 }
 

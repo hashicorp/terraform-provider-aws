@@ -13,6 +13,7 @@ var redshiftServiceAccountPerRegionMap = map[string]string{
 	"us-east-2":      "391106570357",
 	"us-west-1":      "262260360010",
 	"us-west-2":      "902366379725",
+	"ap-east-1":      "313564881002",
 	"ap-south-1":     "865932855811",
 	"ap-northeast-2": "760740231472",
 	"ap-southeast-1": "361669875840",

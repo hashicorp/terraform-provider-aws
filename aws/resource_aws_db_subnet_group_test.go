@@ -2,6 +2,7 @@ package aws
 
 import (
 	"fmt"
+	"log"
 	"regexp"
 	"testing"
 
@@ -13,6 +14,56 @@ import (
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/rds"
 )
+
+func init() {
+	resource.AddTestSweepers("aws_db_subnet_group", &resource.Sweeper{
+		Name: "aws_db_subnet_group",
+		F:    testSweepRdsDbSubnetGroups,
+		Dependencies: []string{
+			"aws_db_instance",
+		},
+	})
+}
+
+func testSweepRdsDbSubnetGroups(region string) error {
+	client, err := sharedClientForRegion(region)
+
+	if err != nil {
+		return fmt.Errorf("error getting client: %s", err)
+	}
+
+	conn := client.(*AWSClient).rdsconn
+	input := &rds.DescribeDBSubnetGroupsInput{}
+
+	err = conn.DescribeDBSubnetGroupsPages(input, func(out *rds.DescribeDBSubnetGroupsOutput, lastPage bool) bool {
+		for _, dbSubnetGroup := range out.DBSubnetGroups {
+			name := aws.StringValue(dbSubnetGroup.DBSubnetGroupName)
+			input := &rds.DeleteDBSubnetGroupInput{
+				DBSubnetGroupName: dbSubnetGroup.DBSubnetGroupName,
+			}
+
+			log.Printf("[INFO] Deleting RDS DB Subnet Group: %s", name)
+
+			_, err := conn.DeleteDBSubnetGroup(input)
+
+			if err != nil {
+				log.Printf("[ERROR] Failed to delete RDS DB Subnet Group (%s): %s", name, err)
+			}
+		}
+		return !lastPage
+	})
+
+	if testSweepSkipSweepError(err) {
+		log.Printf("[WARN] Skipping RDS DB Subnet Group sweep for %s: %s", region, err)
+		return nil
+	}
+
+	if err != nil {
+		return fmt.Errorf("error retrieving RDS DB Subnet Groups: %s", err)
+	}
+
+	return nil
+}
 
 func TestAccAWSDBSubnetGroup_importBasic(t *testing.T) {
 	resourceName := "aws_db_subnet_group.foo"

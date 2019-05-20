@@ -2771,8 +2771,10 @@ func (s *Ac3Settings) SetSampleRate(v int64) *Ac3Settings {
 	return s
 }
 
-// Accelerated transcoding is currently in private preview. Contact AWS for
-// more information.
+// Accelerated transcoding can significantly speed up jobs with long, visually
+// complex content. Outputs that use this feature incur pro-tier pricing. For
+// information about feature limitations, see the AWS Elemental MediaConvert
+// User Guide.
 type AccelerationSettings struct {
 	_ struct{} `type:"structure"`
 
@@ -4874,8 +4876,10 @@ func (s *ContainerSettings) SetMp4Settings(v *Mp4Settings) *ContainerSettings {
 type CreateJobInput struct {
 	_ struct{} `type:"structure"`
 
-	// This is a beta feature. If you are interested in using this feature, please
-	// contact AWS customer support.
+	// Accelerated transcoding can significantly speed up jobs with long, visually
+	// complex content. Outputs that use this feature incur pro-tier pricing. For
+	// information about feature limitations, see the AWS Elemental MediaConvert
+	// User Guide.
 	AccelerationSettings *AccelerationSettings `locationName:"accelerationSettings" type:"structure"`
 
 	// Optional. Choose a tag type that AWS Billing and Cost Management will use
@@ -5040,8 +5044,10 @@ func (s *CreateJobOutput) SetJob(v *Job) *CreateJobOutput {
 type CreateJobTemplateInput struct {
 	_ struct{} `type:"structure"`
 
-	// This is a beta feature. If you are interested in using this feature please
-	// contact AWS customer support.
+	// Accelerated transcoding can significantly speed up jobs with long, visually
+	// complex content. Outputs that use this feature incur pro-tier pricing. For
+	// information about feature limitations, see the AWS Elemental MediaConvert
+	// User Guide.
 	AccelerationSettings *AccelerationSettings `locationName:"accelerationSettings" type:"structure"`
 
 	// Optional. A category for the job template you are creating
@@ -5420,6 +5426,14 @@ func (s *CreateQueueOutput) SetQueue(v *Queue) *CreateQueueOutput {
 type DashIsoEncryptionSettings struct {
 	_ struct{} `type:"structure"`
 
+	// This setting can improve the compatibility of your output with video players
+	// on obsolete devices. It applies only to DASH H.264 outputs with DRM encryption.
+	// Choose Unencrypted SEI (UNENCRYPTED_SEI) only to correct problems with playback
+	// on older devices. Otherwise, keep the default setting CENC v1 (CENC_V1).
+	// If you choose Unencrypted SEI, for that output, the service will exclude
+	// the access unit delimiter and will leave the SEI NAL units unencrypted.
+	PlaybackDeviceCompatibility *string `locationName:"playbackDeviceCompatibility" type:"string" enum:"DashIsoPlaybackDeviceCompatibility"`
+
 	// Settings for use with a SPEKE key provider
 	SpekeKeyProvider *SpekeKeyProvider `locationName:"spekeKeyProvider" type:"structure"`
 }
@@ -5432,6 +5446,12 @@ func (s DashIsoEncryptionSettings) String() string {
 // GoString returns the string representation
 func (s DashIsoEncryptionSettings) GoString() string {
 	return s.String()
+}
+
+// SetPlaybackDeviceCompatibility sets the PlaybackDeviceCompatibility field's value.
+func (s *DashIsoEncryptionSettings) SetPlaybackDeviceCompatibility(v string) *DashIsoEncryptionSettings {
+	s.PlaybackDeviceCompatibility = &v
+	return s
 }
 
 // SetSpekeKeyProvider sets the SpekeKeyProvider field's value.
@@ -10024,8 +10044,8 @@ func (s *InsertableImage) SetWidth(v int64) *InsertableImage {
 type Job struct {
 	_ struct{} `type:"structure"`
 
-	// Accelerated transcoding is currently in private preview. Contact AWS for
-	// more information.
+	// Accelerated transcoding can significantly speed up jobs with long, visually
+	// complex content.
 	AccelerationSettings *AccelerationSettings `locationName:"accelerationSettings" type:"structure"`
 
 	// An identifier for this resource that is unique within all of AWS.
@@ -14941,8 +14961,10 @@ func (s UntagResourceOutput) GoString() string {
 type UpdateJobTemplateInput struct {
 	_ struct{} `type:"structure"`
 
-	// This is a beta feature. If you are interested in using this feature, please
-	// contact AWS customer support.
+	// Accelerated transcoding can significantly speed up jobs with long, visually
+	// complex content. Outputs that use this feature incur pro-tier pricing. For
+	// information about feature limitations, see the AWS Elemental MediaConvert
+	// User Guide.
 	AccelerationSettings *AccelerationSettings `locationName:"accelerationSettings" type:"structure"`
 
 	// The new category for the job template, if you are changing it.
@@ -15412,9 +15434,9 @@ type VideoDescription struct {
 	// to calculate output AFD values based on the input AFD scaler data.
 	AfdSignaling *string `locationName:"afdSignaling" type:"string" enum:"AfdSignaling"`
 
-	// The anti-alias filter is automatically applied to all outputs. The service
-	// no longer accepts the value DISABLED for AntiAlias. If you specify that in
-	// your job, the service will ignore the setting.
+	// The service automatically applies the anti-alias filter to all outputs. The
+	// service no longer accepts the value DISABLED for AntiAlias. If you specify
+	// that in your job, the service will ignore the setting.
 	AntiAlias *string `locationName:"antiAlias" type:"string" enum:"AntiAlias"`
 
 	// Video codec settings, (CodecSettings) under (VideoDescription), contains
@@ -16140,7 +16162,8 @@ const (
 	Ac3MetadataControlUseConfigured = "USE_CONFIGURED"
 )
 
-// Acceleration configuration for the job.
+// Enable Acceleration (AccelerationMode) on any job that you want processed
+// with accelerated transcoding.
 const (
 	// AccelerationModeDisabled is a AccelerationMode enum value
 	AccelerationModeDisabled = "DISABLED"
@@ -16166,9 +16189,9 @@ const (
 	AfdSignalingFixed = "FIXED"
 )
 
-// The anti-alias filter is automatically applied to all outputs. The service
-// no longer accepts the value DISABLED for AntiAlias. If you specify that in
-// your job, the service will ignore the setting.
+// The service automatically applies the anti-alias filter to all outputs. The
+// service no longer accepts the value DISABLED for AntiAlias. If you specify
+// that in your job, the service will ignore the setting.
 const (
 	// AntiAliasDisabled is a AntiAlias enum value
 	AntiAliasDisabled = "DISABLED"
@@ -16709,6 +16732,20 @@ const (
 
 	// DashIsoHbbtvComplianceNone is a DashIsoHbbtvCompliance enum value
 	DashIsoHbbtvComplianceNone = "NONE"
+)
+
+// This setting can improve the compatibility of your output with video players
+// on obsolete devices. It applies only to DASH H.264 outputs with DRM encryption.
+// Choose Unencrypted SEI (UNENCRYPTED_SEI) only to correct problems with playback
+// on older devices. Otherwise, keep the default setting CENC v1 (CENC_V1).
+// If you choose Unencrypted SEI, for that output, the service will exclude
+// the access unit delimiter and will leave the SEI NAL units unencrypted.
+const (
+	// DashIsoPlaybackDeviceCompatibilityCencV1 is a DashIsoPlaybackDeviceCompatibility enum value
+	DashIsoPlaybackDeviceCompatibilityCencV1 = "CENC_V1"
+
+	// DashIsoPlaybackDeviceCompatibilityUnencryptedSei is a DashIsoPlaybackDeviceCompatibility enum value
+	DashIsoPlaybackDeviceCompatibilityUnencryptedSei = "UNENCRYPTED_SEI"
 )
 
 // When set to SINGLE_FILE, a single output file is generated, which is internally

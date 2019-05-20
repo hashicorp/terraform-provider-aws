@@ -2483,6 +2483,106 @@ func (c *CognitoIdentityProvider) AdminSetUserMFAPreferenceWithContext(ctx aws.C
 	return out, req.Send()
 }
 
+const opAdminSetUserPassword = "AdminSetUserPassword"
+
+// AdminSetUserPasswordRequest generates a "aws/request.Request" representing the
+// client's request for the AdminSetUserPassword operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See AdminSetUserPassword for more information on using the AdminSetUserPassword
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the AdminSetUserPasswordRequest method.
+//    req, resp := client.AdminSetUserPasswordRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/cognito-idp-2016-04-18/AdminSetUserPassword
+func (c *CognitoIdentityProvider) AdminSetUserPasswordRequest(input *AdminSetUserPasswordInput) (req *request.Request, output *AdminSetUserPasswordOutput) {
+	op := &request.Operation{
+		Name:       opAdminSetUserPassword,
+		HTTPMethod: "POST",
+		HTTPPath:   "/",
+	}
+
+	if input == nil {
+		input = &AdminSetUserPasswordInput{}
+	}
+
+	output = &AdminSetUserPasswordOutput{}
+	req = c.newRequest(op, input, output)
+	req.Handlers.Unmarshal.Swap(jsonrpc.UnmarshalHandler.Name, protocol.UnmarshalDiscardBodyHandler)
+	return
+}
+
+// AdminSetUserPassword API operation for Amazon Cognito Identity Provider.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for Amazon Cognito Identity Provider's
+// API operation AdminSetUserPassword for usage and error information.
+//
+// Returned Error Codes:
+//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   This exception is thrown when the Amazon Cognito service cannot find the
+//   requested resource.
+//
+//   * ErrCodeNotAuthorizedException "NotAuthorizedException"
+//   This exception is thrown when a user is not authorized.
+//
+//   * ErrCodeUserNotFoundException "UserNotFoundException"
+//   This exception is thrown when a user is not found.
+//
+//   * ErrCodeInternalErrorException "InternalErrorException"
+//   This exception is thrown when Amazon Cognito encounters an internal error.
+//
+//   * ErrCodeTooManyRequestsException "TooManyRequestsException"
+//   This exception is thrown when the user has made too many requests for a given
+//   operation.
+//
+//   * ErrCodeInvalidParameterException "InvalidParameterException"
+//   This exception is thrown when the Amazon Cognito service encounters an invalid
+//   parameter.
+//
+//   * ErrCodeInvalidPasswordException "InvalidPasswordException"
+//   This exception is thrown when the Amazon Cognito service encounters an invalid
+//   password.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/cognito-idp-2016-04-18/AdminSetUserPassword
+func (c *CognitoIdentityProvider) AdminSetUserPassword(input *AdminSetUserPasswordInput) (*AdminSetUserPasswordOutput, error) {
+	req, out := c.AdminSetUserPasswordRequest(input)
+	return out, req.Send()
+}
+
+// AdminSetUserPasswordWithContext is the same as AdminSetUserPassword with the addition of
+// the ability to pass a context and additional request options.
+//
+// See AdminSetUserPassword for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *CognitoIdentityProvider) AdminSetUserPasswordWithContext(ctx aws.Context, input *AdminSetUserPasswordInput, opts ...request.Option) (*AdminSetUserPasswordOutput, error) {
+	req, out := c.AdminSetUserPasswordRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
 const opAdminSetUserSettings = "AdminSetUserSettings"
 
 // AdminSetUserSettingsRequest generates a "aws/request.Request" representing the
@@ -13673,6 +13773,97 @@ func (s AdminSetUserMFAPreferenceOutput) GoString() string {
 	return s.String()
 }
 
+type AdminSetUserPasswordInput struct {
+	_ struct{} `type:"structure"`
+
+	// Password is a required field
+	Password *string `min:"6" type:"string" required:"true" sensitive:"true"`
+
+	Permanent *bool `type:"boolean"`
+
+	// UserPoolId is a required field
+	UserPoolId *string `min:"1" type:"string" required:"true"`
+
+	// Username is a required field
+	Username *string `min:"1" type:"string" required:"true" sensitive:"true"`
+}
+
+// String returns the string representation
+func (s AdminSetUserPasswordInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s AdminSetUserPasswordInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *AdminSetUserPasswordInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "AdminSetUserPasswordInput"}
+	if s.Password == nil {
+		invalidParams.Add(request.NewErrParamRequired("Password"))
+	}
+	if s.Password != nil && len(*s.Password) < 6 {
+		invalidParams.Add(request.NewErrParamMinLen("Password", 6))
+	}
+	if s.UserPoolId == nil {
+		invalidParams.Add(request.NewErrParamRequired("UserPoolId"))
+	}
+	if s.UserPoolId != nil && len(*s.UserPoolId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("UserPoolId", 1))
+	}
+	if s.Username == nil {
+		invalidParams.Add(request.NewErrParamRequired("Username"))
+	}
+	if s.Username != nil && len(*s.Username) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("Username", 1))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetPassword sets the Password field's value.
+func (s *AdminSetUserPasswordInput) SetPassword(v string) *AdminSetUserPasswordInput {
+	s.Password = &v
+	return s
+}
+
+// SetPermanent sets the Permanent field's value.
+func (s *AdminSetUserPasswordInput) SetPermanent(v bool) *AdminSetUserPasswordInput {
+	s.Permanent = &v
+	return s
+}
+
+// SetUserPoolId sets the UserPoolId field's value.
+func (s *AdminSetUserPasswordInput) SetUserPoolId(v string) *AdminSetUserPasswordInput {
+	s.UserPoolId = &v
+	return s
+}
+
+// SetUsername sets the Username field's value.
+func (s *AdminSetUserPasswordInput) SetUsername(v string) *AdminSetUserPasswordInput {
+	s.Username = &v
+	return s
+}
+
+type AdminSetUserPasswordOutput struct {
+	_ struct{} `type:"structure"`
+}
+
+// String returns the string representation
+func (s AdminSetUserPasswordOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s AdminSetUserPasswordOutput) GoString() string {
+	return s.String()
+}
+
 // Represents the request to set user settings as an administrator.
 type AdminSetUserSettingsInput struct {
 	_ struct{} `type:"structure"`
@@ -20951,6 +21142,8 @@ type PasswordPolicyType struct {
 	// In the password policy that you have set, refers to whether you have required
 	// users to use at least one uppercase letter in their password.
 	RequireUppercase *bool `type:"boolean"`
+
+	TemporaryPasswordValidityDays *int64 `type:"integer"`
 }
 
 // String returns the string representation
@@ -21003,6 +21196,12 @@ func (s *PasswordPolicyType) SetRequireSymbols(v bool) *PasswordPolicyType {
 // SetRequireUppercase sets the RequireUppercase field's value.
 func (s *PasswordPolicyType) SetRequireUppercase(v bool) *PasswordPolicyType {
 	s.RequireUppercase = &v
+	return s
+}
+
+// SetTemporaryPasswordValidityDays sets the TemporaryPasswordValidityDays field's value.
+func (s *PasswordPolicyType) SetTemporaryPasswordValidityDays(v int64) *PasswordPolicyType {
+	s.TemporaryPasswordValidityDays = &v
 	return s
 }
 

@@ -2,7 +2,6 @@ package aws
 
 import (
 	"fmt"
-	"regexp"
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -49,10 +48,47 @@ func TestAccAWSSSMParameter_basic(t *testing.T) {
 				Config: testAccAWSSSMParameterBasicConfig(name, "String", "bar"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSSSMParameterExists("aws_ssm_parameter.foo", &param),
-					resource.TestMatchResourceAttr("aws_ssm_parameter.foo", "arn",
-						regexp.MustCompile(fmt.Sprintf("^arn:aws:ssm:[a-z0-9-]+:[0-9]{12}:parameter/%s$", name))),
+					testAccCheckResourceAttrRegionalARN("aws_ssm_parameter.foo", "arn", "ssm", fmt.Sprintf("parameter/%s", name)),
 					resource.TestCheckResourceAttr("aws_ssm_parameter.foo", "value", "bar"),
 					resource.TestCheckResourceAttr("aws_ssm_parameter.foo", "type", "String"),
+					resource.TestCheckResourceAttr("aws_ssm_parameter.foo", "tier", "Standard"),
+					resource.TestCheckResourceAttr("aws_ssm_parameter.foo", "tags.%", "1"),
+					resource.TestCheckResourceAttr("aws_ssm_parameter.foo", "tags.Name", "My Parameter"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAWSSSMParameter_Tier(t *testing.T) {
+	var parameter1, parameter2, parameter3 ssm.Parameter
+	rName := fmt.Sprintf("%s_%s", t.Name(), acctest.RandString(10))
+	resourceName := "aws_ssm_parameter.foo"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSSSMParameterDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSSSMParameterConfigTier(rName, "Advanced"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSSSMParameterExists(resourceName, &parameter1),
+					resource.TestCheckResourceAttr(resourceName, "tier", "Advanced"),
+				),
+			},
+			{
+				Config: testAccAWSSSMParameterConfigTier(rName, "Standard"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSSSMParameterExists(resourceName, &parameter2),
+					resource.TestCheckResourceAttr(resourceName, "tier", "Standard"),
+				),
+			},
+			{
+				Config: testAccAWSSSMParameterConfigTier(rName, "Advanced"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSSSMParameterExists(resourceName, &parameter3),
+					resource.TestCheckResourceAttr(resourceName, "tier", "Advanced"),
 				),
 			},
 		},
@@ -80,7 +116,7 @@ func TestAccAWSSSMParameter_disappears(t *testing.T) {
 	})
 }
 
-func TestAccAWSSSMParameter_update(t *testing.T) {
+func TestAccAWSSSMParameter_overwrite(t *testing.T) {
 	var param ssm.Parameter
 	name := fmt.Sprintf("%s_%s", t.Name(), acctest.RandString(10))
 
@@ -98,6 +134,31 @@ func TestAccAWSSSMParameter_update(t *testing.T) {
 					testAccCheckAWSSSMParameterExists("aws_ssm_parameter.foo", &param),
 					resource.TestCheckResourceAttr("aws_ssm_parameter.foo", "value", "baz1"),
 					resource.TestCheckResourceAttr("aws_ssm_parameter.foo", "type", "String"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAWSSSMParameter_updateTags(t *testing.T) {
+	var param ssm.Parameter
+	name := fmt.Sprintf("%s_%s", t.Name(), acctest.RandString(10))
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSSSMParameterDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSSSMParameterBasicConfig(name, "String", "bar"),
+			},
+			{
+				Config: testAccAWSSSMParameterBasicConfigTagsUpdated(name, "String", "baz1"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSSSMParameterExists("aws_ssm_parameter.foo", &param),
+					resource.TestCheckResourceAttr("aws_ssm_parameter.foo", "tags.%", "2"),
+					resource.TestCheckResourceAttr("aws_ssm_parameter.foo", "tags.Name", "My Parameter Updated"),
+					resource.TestCheckResourceAttr("aws_ssm_parameter.foo", "tags.AnotherTag", "AnotherTagValue"),
 				),
 			},
 		},
@@ -167,8 +228,7 @@ func TestAccAWSSSMParameter_fullPath(t *testing.T) {
 				Config: testAccAWSSSMParameterBasicConfig(name, "String", "bar"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSSSMParameterExists("aws_ssm_parameter.foo", &param),
-					resource.TestMatchResourceAttr("aws_ssm_parameter.foo", "arn",
-						regexp.MustCompile(fmt.Sprintf("^arn:aws:ssm:[a-z0-9-]+:[0-9]{12}:parameter%s$", name))),
+					testAccCheckResourceAttrRegionalARN("aws_ssm_parameter.foo", "arn", "ssm", fmt.Sprintf("parameter%s", name)),
 					resource.TestCheckResourceAttr("aws_ssm_parameter.foo", "value", "bar"),
 					resource.TestCheckResourceAttr("aws_ssm_parameter.foo", "type", "String"),
 				),
@@ -345,6 +405,34 @@ resource "aws_ssm_parameter" "foo" {
   name  = "%s"
   type  = "%s"
   value = "%s"
+  tags  = {
+    Name = "My Parameter"
+  }
+}
+`, rName, pType, value)
+}
+
+func testAccAWSSSMParameterConfigTier(rName, tier string) string {
+	return fmt.Sprintf(`
+resource "aws_ssm_parameter" "foo" {
+  name  = %[1]q
+  tier  = %[2]q
+  type  = "String"
+  value = "bar"
+}
+`, rName, tier)
+}
+
+func testAccAWSSSMParameterBasicConfigTagsUpdated(rName, pType, value string) string {
+	return fmt.Sprintf(`
+resource "aws_ssm_parameter" "foo" {
+  name  = "%s"
+  type  = "%s"
+  value = "%s"
+  tags = {
+    Name = "My Parameter Updated"
+    AnotherTag = "AnotherTagValue"
+  }
 }
 `, rName, pType, value)
 }

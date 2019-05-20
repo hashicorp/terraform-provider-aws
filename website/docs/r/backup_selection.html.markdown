@@ -52,3 +52,11 @@ Tag conditions (`selection_tag`) support the following:
 In addition to all arguments above, the following attributes are exported:
 
 * `id` - Backup Selection identifier
+
+## Import
+
+Backup selection can be imported using the role plan_id and id separated by `|`.
+
+```
+$ terraform import aws_backup_selection.example plan-id|selection-id
+```

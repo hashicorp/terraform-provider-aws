@@ -8585,6 +8585,11 @@ func (s *CreateNFSFileShareOutput) SetFileShareARN(v string) *CreateNFSFileShare
 type CreateSMBFileShareInput struct {
 	_ struct{} `type:"structure"`
 
+	// A list of users or groups in the Active Directory that have administrator
+	// rights to the file share. A group must be prefixed with the @ character.
+	// For example @group1. Can only be set if Authentication is set to ActiveDirectory.
+	AdminUserList []*string `type:"list"`
+
 	// The authentication method that users use to access the file share.
 	//
 	// Valid values are ActiveDirectory or GuestAccess. The default is ActiveDirectory.
@@ -8657,6 +8662,9 @@ type CreateSMBFileShareInput struct {
 	// Set this value to "true to enable ACL (access control list) on the SMB file
 	// share. Set it to "false" to map file and directory permissions to the POSIX
 	// permissions.
+	//
+	// For more information, see https://docs.aws.amazon.com/storagegateway/latest/userguide/smb-acl.html
+	// in the Storage Gateway User Guide.
 	SMBACLEnabled *bool `type:"boolean"`
 
 	// A list of up to 50 tags that can be assigned to the NFS file share. Each
@@ -8735,6 +8743,12 @@ func (s *CreateSMBFileShareInput) Validate() error {
 		return invalidParams
 	}
 	return nil
+}
+
+// SetAdminUserList sets the AdminUserList field's value.
+func (s *CreateSMBFileShareInput) SetAdminUserList(v []*string) *CreateSMBFileShareInput {
+	s.AdminUserList = v
+	return s
 }
 
 // SetAuthentication sets the Authentication field's value.
@@ -8975,6 +8989,15 @@ type CreateSnapshotInput struct {
 	// SnapshotDescription is a required field
 	SnapshotDescription *string `min:"1" type:"string" required:"true"`
 
+	// A list of up to 50 tags that can be assigned to a snapshot. Each tag is a
+	// key-value pair.
+	//
+	// Valid characters for key and value are letters, spaces, and numbers representable
+	// in UTF-8 format, and the following special characters: + - = . _ : / @. The
+	// maximum length of a tag's key is 128 characters, and the maximum length for
+	// a tag's value is 256.
+	Tags []*Tag `type:"list"`
+
 	// The Amazon Resource Name (ARN) of the volume. Use the ListVolumes operation
 	// to return a list of gateway volumes.
 	//
@@ -9007,6 +9030,16 @@ func (s *CreateSnapshotInput) Validate() error {
 	if s.VolumeARN != nil && len(*s.VolumeARN) < 50 {
 		invalidParams.Add(request.NewErrParamMinLen("VolumeARN", 50))
 	}
+	if s.Tags != nil {
+		for i, v := range s.Tags {
+			if v == nil {
+				continue
+			}
+			if err := v.Validate(); err != nil {
+				invalidParams.AddNested(fmt.Sprintf("%s[%v]", "Tags", i), err.(request.ErrInvalidParams))
+			}
+		}
+	}
 
 	if invalidParams.Len() > 0 {
 		return invalidParams
@@ -9017,6 +9050,12 @@ func (s *CreateSnapshotInput) Validate() error {
 // SetSnapshotDescription sets the SnapshotDescription field's value.
 func (s *CreateSnapshotInput) SetSnapshotDescription(v string) *CreateSnapshotInput {
 	s.SnapshotDescription = &v
+	return s
+}
+
+// SetTags sets the Tags field's value.
+func (s *CreateSnapshotInput) SetTags(v []*Tag) *CreateSnapshotInput {
+	s.Tags = v
 	return s
 }
 
@@ -14284,6 +14323,11 @@ func (s *RetrieveTapeRecoveryPointOutput) SetTapeARN(v string) *RetrieveTapeReco
 type SMBFileShareInfo struct {
 	_ struct{} `type:"structure"`
 
+	// A list of users or groups in the Active Directory that have administrator
+	// rights to the file share. A group must be prefixed with the @ character.
+	// For example @group1. Can only be set if Authentication is set to ActiveDirectory.
+	AdminUserList []*string `type:"list"`
+
 	// The authentication method of the file share.
 	//
 	// Valid values are ActiveDirectory or GuestAccess. The default is ActiveDirectory.
@@ -14357,6 +14401,9 @@ type SMBFileShareInfo struct {
 	// If this value is set to "true", indicates that ACL (access control list)
 	// is enabled on the SMB file share. If it is set to "false", it indicates that
 	// file and directory permissions are mapped to the POSIX permission.
+	//
+	// For more information, see https://docs.aws.amazon.com/storagegateway/latest/userguide/smb-acl.html
+	// in the Storage Gateway User Guide.
 	SMBACLEnabled *bool `type:"boolean"`
 
 	// A list of up to 50 tags assigned to the SMB file share, sorted alphabetically
@@ -14378,6 +14425,12 @@ func (s SMBFileShareInfo) String() string {
 // GoString returns the string representation
 func (s SMBFileShareInfo) GoString() string {
 	return s.String()
+}
+
+// SetAdminUserList sets the AdminUserList field's value.
+func (s *SMBFileShareInfo) SetAdminUserList(v []*string) *SMBFileShareInfo {
+	s.AdminUserList = v
+	return s
 }
 
 // SetAuthentication sets the Authentication field's value.
@@ -16137,6 +16190,11 @@ func (s *UpdateNFSFileShareOutput) SetFileShareARN(v string) *UpdateNFSFileShare
 type UpdateSMBFileShareInput struct {
 	_ struct{} `type:"structure"`
 
+	// A list of users or groups in the Active Directory that have administrator
+	// rights to the file share. A group must be prefixed with the @ character.
+	// For example @group1. Can only be set if Authentication is set to ActiveDirectory.
+	AdminUserList []*string `type:"list"`
+
 	// The default storage class for objects put into an Amazon S3 bucket by the
 	// file gateway. Possible values are S3_STANDARD, S3_STANDARD_IA, or S3_ONEZONE_IA.
 	// If this field is not populated, the default value S3_STANDARD is used. Optional.
@@ -16186,6 +16244,9 @@ type UpdateSMBFileShareInput struct {
 	// Set this value to "true to enable ACL (access control list) on the SMB file
 	// share. Set it to "false" to map file and directory permissions to the POSIX
 	// permissions.
+	//
+	// For more information, see https://docs.aws.amazon.com/storagegateway/latest/userguide/smb-acl.htmlin
+	// the Storage Gateway User Guide.
 	SMBACLEnabled *bool `type:"boolean"`
 
 	// A list of users or groups in the Active Directory that are allowed to access
@@ -16224,6 +16285,12 @@ func (s *UpdateSMBFileShareInput) Validate() error {
 		return invalidParams
 	}
 	return nil
+}
+
+// SetAdminUserList sets the AdminUserList field's value.
+func (s *UpdateSMBFileShareInput) SetAdminUserList(v []*string) *UpdateSMBFileShareInput {
+	s.AdminUserList = v
+	return s
 }
 
 // SetDefaultStorageClass sets the DefaultStorageClass field's value.
@@ -16343,6 +16410,15 @@ type UpdateSnapshotScheduleInput struct {
 	// StartAt is a required field
 	StartAt *int64 `type:"integer" required:"true"`
 
+	// A list of up to 50 tags that can be assigned to a snapshot. Each tag is a
+	// key-value pair.
+	//
+	// Valid characters for key and value are letters, spaces, and numbers representable
+	// in UTF-8 format, and the following special characters: + - = . _ : / @. The
+	// maximum length of a tag's key is 128 characters, and the maximum length for
+	// a tag's value is 256.
+	Tags []*Tag `type:"list"`
+
 	// The Amazon Resource Name (ARN) of the volume. Use the ListVolumes operation
 	// to return a list of gateway volumes.
 	//
@@ -16381,6 +16457,16 @@ func (s *UpdateSnapshotScheduleInput) Validate() error {
 	if s.VolumeARN != nil && len(*s.VolumeARN) < 50 {
 		invalidParams.Add(request.NewErrParamMinLen("VolumeARN", 50))
 	}
+	if s.Tags != nil {
+		for i, v := range s.Tags {
+			if v == nil {
+				continue
+			}
+			if err := v.Validate(); err != nil {
+				invalidParams.AddNested(fmt.Sprintf("%s[%v]", "Tags", i), err.(request.ErrInvalidParams))
+			}
+		}
+	}
 
 	if invalidParams.Len() > 0 {
 		return invalidParams
@@ -16403,6 +16489,12 @@ func (s *UpdateSnapshotScheduleInput) SetRecurrenceInHours(v int64) *UpdateSnaps
 // SetStartAt sets the StartAt field's value.
 func (s *UpdateSnapshotScheduleInput) SetStartAt(v int64) *UpdateSnapshotScheduleInput {
 	s.StartAt = &v
+	return s
+}
+
+// SetTags sets the Tags field's value.
+func (s *UpdateSnapshotScheduleInput) SetTags(v []*Tag) *UpdateSnapshotScheduleInput {
+	s.Tags = v
 	return s
 }
 

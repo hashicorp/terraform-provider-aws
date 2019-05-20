@@ -37,6 +37,10 @@ resource "aws_dx_hosted_private_virtual_interface" "creator" {
   vlan           = 4094
   address_family = "ipv4"
   bgp_asn        = 65352
+
+  # The aws_dx_hosted_private_virtual_interface
+  # must be destroyed before the aws_vpn_gateway.
+  depends_on = ["aws_vpn_gateway.vpn_gw"]
 }
 
 # Accepter's side of the VIF.

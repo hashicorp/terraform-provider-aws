@@ -195,6 +195,12 @@ data "aws_route" "by_instance_id"{
 
 func testAccAWSRouteDataSourceConfigTransitGatewayID() string {
 	return fmt.Sprintf(`
+data "aws_availability_zones" "available" {
+  # IncorrectState: Transit Gateway is not available in availability zone us-west-2d
+  blacklisted_zone_ids = ["usw2-az4"]
+  state                = "available"
+}
+
 resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"
 
@@ -204,8 +210,9 @@ resource "aws_vpc" "test" {
 }
 
 resource "aws_subnet" "test" {
-  cidr_block = "10.0.0.0/24"
-  vpc_id     = "${aws_vpc.test.id}"
+  availability_zone = "${data.aws_availability_zones.available.names[0]}"
+  cidr_block        = "10.0.0.0/24"
+  vpc_id            = "${aws_vpc.test.id}"
 
   tags = {
     Name = "tf-acc-test-ec2-route-datasource-transit-gateway-id"

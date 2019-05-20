@@ -11,10 +11,14 @@
 
 Fixes #0000
 
-Changes proposed in this pull request:
+Release note for [CHANGELOG](https://github.com/terraform-providers/terraform-provider-aws/blob/master/CHANGELOG.md):
+<!--
+If change is not user facing, just write "NONE" in the release-note block below.
+-->
 
-* Change 1
-* Change 2
+```release-note
+
+```
 
 Output from acceptance testing:
 
