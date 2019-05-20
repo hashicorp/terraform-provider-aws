@@ -17,6 +17,12 @@ Use the navigation to the left to read about the available resources.
 ## Example Usage
 
 ```hcl
+# Configure the AWS Provider
+provider "aws" {
+  version = "~> 2.0"
+  region = "us-east-1"
+}
+
 # Create a web server
 resource "aws_instance" "web" {
   ami           = "ami-2757f631"
