@@ -111,8 +111,6 @@ func resourceAwsIamGroupUpdate(d *schema.ResourceData, meta interface{}) error {
 		_, err := iamconn.UpdateGroup(request)
 		if err != nil {
 			return fmt.Errorf("Error updating IAM Group %s: %s", d.Id(), err)
-			d.SetId("")
-			return nil
 		}
 		d.SetId(nn.(string))
 		return resourceAwsIamGroupRead(d, meta)
