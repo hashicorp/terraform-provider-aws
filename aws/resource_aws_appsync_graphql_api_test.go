@@ -86,6 +86,7 @@ func TestAccAWSAppsyncGraphqlApi_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "user_pool_config.#", "0"),
 					resource.TestCheckResourceAttrSet(resourceName, "uris.%"),
 					resource.TestCheckResourceAttrSet(resourceName, "uris.GRAPHQL"),
+					resource.TestCheckNoResourceAttr(resourceName, "tags"),
 				),
 			},
 			{
@@ -653,6 +654,46 @@ func TestAccAWSAppsyncGraphqlApi_UserPoolConfig_DefaultAction(t *testing.T) {
 	})
 }
 
+func TestAccAWSAppsyncGraphqlApi_Tags(t *testing.T) {
+	var api1 appsync.GraphqlApi
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_appsync_graphql_api.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAwsAppsyncGraphqlApiDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAppsyncGraphqlApiConfig_Tags(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAwsAppsyncGraphqlApiExists(resourceName, &api1),
+					resource.TestCheckResourceAttr(resourceName, "authentication_type", "API_KEY"),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, "tags.Key1", "Value One"),
+					resource.TestCheckResourceAttr(resourceName, "tags.Description", "Very interesting"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccAppsyncGraphqlApiConfig_TagsModified(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAwsAppsyncGraphqlApiExists(resourceName, &api1),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "3"),
+					resource.TestCheckResourceAttr(resourceName, "tags.Key1", "Value One Changed"),
+					resource.TestCheckResourceAttr(resourceName, "tags.Key2", "Value Two"),
+					resource.TestCheckResourceAttr(resourceName, "tags.Key3", "Value Three"),
+				),
+			},
+		},
+	})
+}
+
 func testAccCheckAwsAppsyncGraphqlApiDestroy(s *terraform.State) error {
 	conn := testAccProvider.Meta().(*AWSClient).appsyncconn
 	for _, rs := range s.RootModule().Resources {
@@ -897,4 +938,29 @@ resource "aws_appsync_graphql_api" "test" {
   schema              = "type Mutation {\n\tputPostV2(id: ID!, title: String!): PostV2\n}\n\ntype PostV2 {\n\tid: ID!\n\ttitle: String!\n}\n\ntype Query {\n\tsinglePostV2(id: ID!): PostV2\n}\n\nschema {\n\tquery: Query\n\tmutation: Mutation\n\n}\n"
 }
 `, rName)
+}
+
+func testAccAppsyncGraphqlApiConfig_Tags(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_appsync_graphql_api" "test" {
+  authentication_type = "API_KEY"
+  name = %q
+  tags = {
+    Key1 = "Value One"
+    Description = "Very interesting"
+  }
+}`, rName)
+}
+
+func testAccAppsyncGraphqlApiConfig_TagsModified(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_appsync_graphql_api" "test" {
+  authentication_type = "API_KEY"
+  name = %q
+  tags = {
+    Key1 = "Value One Changed"
+    Key2 = "Value Two"
+    Key3 = "Value Three"
+  }
+}`, rName)
 }

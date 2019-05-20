@@ -180,6 +180,7 @@ func Provider() terraform.ResourceProvider {
 			"aws_ec2_transit_gateway_route_table":    dataSourceAwsEc2TransitGatewayRouteTable(),
 			"aws_ec2_transit_gateway_vpc_attachment": dataSourceAwsEc2TransitGatewayVpcAttachment(),
 			"aws_ec2_transit_gateway_vpn_attachment": dataSourceAwsEc2TransitGatewayVpnAttachment(),
+			"aws_ecr_image":                          dataSourceAwsEcrImage(),
 			"aws_ecr_repository":                     dataSourceAwsEcrRepository(),
 			"aws_ecs_cluster":                        dataSourceAwsEcsCluster(),
 			"aws_ecs_container_definition":           dataSourceAwsEcsContainerDefinition(),
@@ -221,6 +222,7 @@ func Provider() terraform.ResourceProvider {
 			"aws_kms_secrets":                        dataSourceAwsKmsSecrets(),
 			"aws_lambda_function":                    dataSourceAwsLambdaFunction(),
 			"aws_lambda_invocation":                  dataSourceAwsLambdaInvocation(),
+			"aws_lambda_layer_version":               dataSourceAwsLambdaLayerVersion(),
 			"aws_launch_configuration":               dataSourceAwsLaunchConfiguration(),
 			"aws_launch_template":                    dataSourceAwsLaunchTemplate(),
 			"aws_mq_broker":                          dataSourceAwsMqBroker(),
@@ -231,6 +233,7 @@ func Provider() terraform.ResourceProvider {
 			"aws_partition":                          dataSourceAwsPartition(),
 			"aws_prefix_list":                        dataSourceAwsPrefixList(),
 			"aws_pricing_product":                    dataSourceAwsPricingProduct(),
+			"aws_ram_resource_share":                 dataSourceAwsRamResourceShare(),
 			"aws_rds_cluster":                        dataSourceAwsRdsCluster(),
 			"aws_redshift_cluster":                   dataSourceAwsRedshiftCluster(),
 			"aws_redshift_service_account":           dataSourceAwsRedshiftServiceAccount(),
@@ -386,6 +389,7 @@ func Provider() terraform.ResourceProvider {
 			"aws_db_cluster_snapshot":                                 resourceAwsDbClusterSnapshot(),
 			"aws_db_event_subscription":                               resourceAwsDbEventSubscription(),
 			"aws_db_instance":                                         resourceAwsDbInstance(),
+			"aws_db_instance_role_association":                        resourceAwsDbInstanceRoleAssociation(),
 			"aws_db_option_group":                                     resourceAwsDbOptionGroup(),
 			"aws_db_parameter_group":                                  resourceAwsDbParameterGroup(),
 			"aws_db_security_group":                                   resourceAwsDbSecurityGroup(),
@@ -591,6 +595,7 @@ func Provider() terraform.ResourceProvider {
 			"aws_organizations_account":                               resourceAwsOrganizationsAccount(),
 			"aws_organizations_policy":                                resourceAwsOrganizationsPolicy(),
 			"aws_organizations_policy_attachment":                     resourceAwsOrganizationsPolicyAttachment(),
+			"aws_organizations_organizational_unit":                   resourceAwsOrganizationsOrganizationalUnit(),
 			"aws_placement_group":                                     resourceAwsPlacementGroup(),
 			"aws_proxy_protocol_policy":                               resourceAwsProxyProtocolPolicy(),
 			"aws_ram_principal_association":                           resourceAwsRamPrincipalAssociation(),
@@ -633,6 +638,7 @@ func Provider() terraform.ResourceProvider {
 			"aws_ses_domain_identity_verification":                    resourceAwsSesDomainIdentityVerification(),
 			"aws_ses_domain_dkim":                                     resourceAwsSesDomainDkim(),
 			"aws_ses_domain_mail_from":                                resourceAwsSesDomainMailFrom(),
+			"aws_ses_email_identity":                                  resourceAwsSesEmailIdentity(),
 			"aws_ses_receipt_filter":                                  resourceAwsSesReceiptFilter(),
 			"aws_ses_receipt_rule":                                    resourceAwsSesReceiptRule(),
 			"aws_ses_receipt_rule_set":                                resourceAwsSesReceiptRuleSet(),
@@ -660,6 +666,7 @@ func Provider() terraform.ResourceProvider {
 			"aws_service_discovery_private_dns_namespace":             resourceAwsServiceDiscoveryPrivateDnsNamespace(),
 			"aws_service_discovery_public_dns_namespace":              resourceAwsServiceDiscoveryPublicDnsNamespace(),
 			"aws_service_discovery_service":                           resourceAwsServiceDiscoveryService(),
+			"aws_shield_protection":                                   resourceAwsShieldProtection(),
 			"aws_simpledb_domain":                                     resourceAwsSimpleDBDomain(),
 			"aws_ssm_activation":                                      resourceAwsSsmActivation(),
 			"aws_ssm_association":                                     resourceAwsSsmAssociation(),
@@ -759,6 +766,7 @@ func Provider() terraform.ResourceProvider {
 			"aws_pinpoint_event_stream":                               resourceAwsPinpointEventStream(),
 			"aws_pinpoint_gcm_channel":                                resourceAwsPinpointGCMChannel(),
 			"aws_pinpoint_sms_channel":                                resourceAwsPinpointSMSChannel(),
+			"aws_xray_sampling_rule":                                  resourceAwsXraySamplingRule(),
 
 			// ALBs are actually LBs because they can be type `network` or `application`
 			// To avoid regressions, we will add a new resource for each and they both point
@@ -918,6 +926,7 @@ func init() {
 		"licensemanager",
 		"lightsail",
 		"macie",
+		"managedblockchain",
 		"mediaconnect",
 		"mediaconvert",
 		"medialive",
@@ -961,6 +970,7 @@ func init() {
 		"wafregional",
 		"worklink",
 		"workspaces",
+		"xray",
 	}
 }
 
