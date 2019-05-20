@@ -33,6 +33,8 @@ func TestAccAWSSSMPatchBaseline_basic(t *testing.T) {
 						"aws_ssm_patch_baseline.foo", "approved_patches_compliance_level", ssm.PatchComplianceLevelCritical),
 					resource.TestCheckResourceAttr(
 						"aws_ssm_patch_baseline.foo", "description", "Baseline containing all updates approved for production systems"),
+					resource.TestCheckResourceAttr("aws_ssm_patch_baseline.foo", "tags.%", "1"),
+					resource.TestCheckResourceAttr("aws_ssm_patch_baseline.foo", "tags.Name", "My Patch Baseline"),
 				),
 			},
 			{
@@ -56,6 +58,9 @@ func TestAccAWSSSMPatchBaseline_basic(t *testing.T) {
 						"aws_ssm_patch_baseline.foo", "approved_patches_compliance_level", ssm.PatchComplianceLevelHigh),
 					resource.TestCheckResourceAttr(
 						"aws_ssm_patch_baseline.foo", "description", "Baseline containing all updates approved for production systems - August 2017"),
+					resource.TestCheckResourceAttr("aws_ssm_patch_baseline.foo", "tags.%", "2"),
+					resource.TestCheckResourceAttr("aws_ssm_patch_baseline.foo", "tags.Name", "My Patch Baseline Aug 17"),
+					resource.TestCheckResourceAttr("aws_ssm_patch_baseline.foo", "tags.Environment", "production"),
 					func(*terraform.State) error {
 						if *before.BaselineId != *after.BaselineId {
 							t.Fatal("Baseline IDs changed unexpectedly")
@@ -245,6 +250,9 @@ resource "aws_ssm_patch_baseline" "foo" {
   description = "Baseline containing all updates approved for production systems"
   approved_patches = ["KB123456"]
   approved_patches_compliance_level = "CRITICAL"
+  tags = {
+    Name = "My Patch Baseline"
+  }
 }
 
 `, rName)
@@ -258,6 +266,10 @@ resource "aws_ssm_patch_baseline" "foo" {
   description = "Baseline containing all updates approved for production systems - August 2017"
   approved_patches = ["KB123456","KB456789"]
   approved_patches_compliance_level = "HIGH"
+  tags = {
+    Name = "My Patch Baseline Aug 17"
+    Environment = "production"
+  }
 }
 
 `, rName)
@@ -270,6 +282,9 @@ resource "aws_ssm_patch_baseline" "foo" {
   name  = "patch-baseline-%s"
   operating_system = "AMAZON_LINUX"
   description = "Baseline containing all updates approved for production systems"
+  tags = {
+    Name = "My Patch Baseline"
+  }
   approval_rule {
   	approve_after_days = 7
 	enable_non_security = true
@@ -297,6 +312,9 @@ resource "aws_ssm_patch_baseline" "foo" {
   name  = "patch-baseline-%s"
   operating_system = "WINDOWS"
   description = "Baseline containing all updates approved for production systems"
+  tags = {
+    Name = "My Patch Baseline"
+  }
   approval_rule {
   	approve_after_days = 7
   	compliance_level = "INFORMATIONAL"

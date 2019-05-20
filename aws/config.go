@@ -81,6 +81,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/licensemanager"
 	"github.com/aws/aws-sdk-go/service/lightsail"
 	"github.com/aws/aws-sdk-go/service/macie"
+	"github.com/aws/aws-sdk-go/service/managedblockchain"
 	"github.com/aws/aws-sdk-go/service/mediaconnect"
 	"github.com/aws/aws-sdk-go/service/mediaconvert"
 	"github.com/aws/aws-sdk-go/service/medialive"
@@ -123,6 +124,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/wafregional"
 	"github.com/aws/aws-sdk-go/service/worklink"
 	"github.com/aws/aws-sdk-go/service/workspaces"
+	"github.com/aws/aws-sdk-go/service/xray"
 	awsbase "github.com/hashicorp/aws-sdk-go-base"
 	"github.com/hashicorp/terraform/helper/logging"
 	"github.com/hashicorp/terraform/terraform"
@@ -231,6 +233,7 @@ type AWSClient struct {
 	licensemanagerconn                  *licensemanager.LicenseManager
 	lightsailconn                       *lightsail.Lightsail
 	macieconn                           *macie.Macie
+	managedblockchainconn               *managedblockchain.ManagedBlockchain
 	mediaconnectconn                    *mediaconnect.MediaConnect
 	mediaconvertconn                    *mediaconvert.MediaConvert
 	medialiveconn                       *medialive.MediaLive
@@ -276,6 +279,7 @@ type AWSClient struct {
 	wafregionalconn                     *wafregional.WAFRegional
 	worklinkconn                        *worklink.WorkLink
 	workspacesconn                      *workspaces.WorkSpaces
+	xrayconn                            *xray.XRay
 }
 
 // Client configures and returns a fully initialized AWSClient
@@ -386,7 +390,7 @@ func (c *Config) Client() (interface{}, error) {
 		fsxconn:                             fsx.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["fsx"])})),
 		gameliftconn:                        gamelift.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["gamelift"])})),
 		glacierconn:                         glacier.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["glacier"])})),
-		globalacceleratorconn:               globalaccelerator.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["globalaccelerator"])})),
+		globalacceleratorconn:               globalaccelerator.New(sess.Copy(&aws.Config{Region: aws.String("us-west-2"), Endpoint: aws.String(c.Endpoints["globalaccelerator"])})),
 		glueconn:                            glue.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["glue"])})),
 		guarddutyconn:                       guardduty.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["guardduty"])})),
 		iamconn:                             iam.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["iam"])})),
@@ -403,6 +407,7 @@ func (c *Config) Client() (interface{}, error) {
 		licensemanagerconn:                  licensemanager.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["licensemanager"])})),
 		lightsailconn:                       lightsail.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["lightsail"])})),
 		macieconn:                           macie.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["macie"])})),
+		managedblockchainconn:               managedblockchain.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["managedblockchain"])})),
 		mediaconnectconn:                    mediaconnect.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["mediaconnect"])})),
 		mediaconvertconn:                    mediaconvert.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["mediaconvert"])})),
 		medialiveconn:                       medialive.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["medialive"])})),
@@ -434,7 +439,7 @@ func (c *Config) Client() (interface{}, error) {
 		serverlessapplicationrepositoryconn: serverlessapplicationrepository.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["serverlessrepo"])})),
 		sesConn:                             ses.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["ses"])})),
 		sfnconn:                             sfn.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["stepfunctions"])})),
-		shieldconn:                          shield.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["shield"])})),
+		shieldconn:                          shield.New(sess.Copy(&aws.Config{Region: aws.String("us-east-1"), Endpoint: aws.String(c.Endpoints["shield"])})),
 		simpledbconn:                        simpledb.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["sdb"])})),
 		snsconn:                             sns.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["sns"])})),
 		sqsconn:                             sqs.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["sqs"])})),
@@ -447,6 +452,7 @@ func (c *Config) Client() (interface{}, error) {
 		wafregionalconn:                     wafregional.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["wafregional"])})),
 		worklinkconn:                        worklink.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["worklink"])})),
 		workspacesconn:                      workspaces.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["workspaces"])})),
+		xrayconn:                            xray.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["xray"])})),
 	}
 
 	// Handle deprecated endpoint configurations

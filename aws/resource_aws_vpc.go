@@ -501,6 +501,14 @@ func resourceAwsVpcDelete(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceAwsVpcCustomizeDiff(diff *schema.ResourceDiff, v interface{}) error {
+	if diff.HasChange("assign_generated_ipv6_cidr_block") {
+		if err := diff.SetNewComputed("ipv6_association_id"); err != nil {
+			return fmt.Errorf("error setting ipv6_association_id to computed: %s", err)
+		}
+		if err := diff.SetNewComputed("ipv6_cidr_block"); err != nil {
+			return fmt.Errorf("error setting ipv6_cidr_block to computed: %s", err)
+		}
+	}
 	if diff.HasChange("instance_tenancy") {
 		old, new := diff.GetChange("instance_tenancy")
 		if old.(string) != ec2.TenancyDedicated || new.(string) != ec2.TenancyDefault {

@@ -11,7 +11,7 @@ import (
 	"github.com/hashicorp/terraform/helper/acctest"
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/terraform"
-	"github.com/jen20/awspolicyequivalence"
+	awspolicy "github.com/jen20/awspolicyequivalence"
 )
 
 func TestAccAWSSNSTopic_importBasic(t *testing.T) {
@@ -250,6 +250,46 @@ func TestAccAWSSNSTopic_encryption(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSSNSTopicExists("aws_sns_topic.test_topic", attributes),
 					resource.TestCheckResourceAttr("aws_sns_topic.test_topic", "kms_master_key_id", ""),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAWSSNSTopic_tags(t *testing.T) {
+	attributes := make(map[string]string)
+
+	rName := acctest.RandString(10)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:      func() { testAccPreCheck(t) },
+		IDRefreshName: "aws_sns_topic.test_topic",
+		Providers:     testAccProviders,
+		CheckDestroy:  testAccCheckAWSSNSTopicDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSSNSTopicConfigTags1(rName, "key1", "value1"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSSNSTopicExists("aws_sns_topic.test_topic", attributes),
+					resource.TestCheckResourceAttr("aws_sns_topic.test_topic", "tags.%", "1"),
+					resource.TestCheckResourceAttr("aws_sns_topic.test_topic", "tags.key1", "value1"),
+				),
+			},
+			{
+				Config: testAccAWSSNSTopicConfigTags2(rName, "key1", "value1updated", "key2", "value2"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSSNSTopicExists("aws_sns_topic.test_topic", attributes),
+					resource.TestCheckResourceAttr("aws_sns_topic.test_topic", "tags.%", "2"),
+					resource.TestCheckResourceAttr("aws_sns_topic.test_topic", "tags.key1", "value1updated"),
+					resource.TestCheckResourceAttr("aws_sns_topic.test_topic", "tags.key2", "value2"),
+				),
+			},
+			{
+				Config: testAccAWSSNSTopicConfigTags1(rName, "key2", "value2"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSSNSTopicExists("aws_sns_topic.test_topic", attributes),
+					resource.TestCheckResourceAttr("aws_sns_topic.test_topic", "tags.%", "1"),
+					resource.TestCheckResourceAttr("aws_sns_topic.test_topic", "tags.key2", "value2"),
 				),
 			},
 		},
@@ -630,4 +670,25 @@ resource "aws_sns_topic" "test_topic" {
 	kms_master_key_id = "alias/aws/sns"
 }
 `, r)
+}
+
+func testAccAWSSNSTopicConfigTags1(r, tag1Key, tag1Value string) string {
+	return fmt.Sprintf(`
+resource "aws_sns_topic" "test_topic" {
+	name = "terraform-test-topic-%s"
+	tags = {
+		%q = %q
+	}
+	}`, r, tag1Key, tag1Value)
+}
+
+func testAccAWSSNSTopicConfigTags2(r, tag1Key, tag1Value, tag2Key, tag2Value string) string {
+	return fmt.Sprintf(`
+resource "aws_sns_topic" "test_topic" {
+	name = "terraform-test-topic-%s"
+	tags = {
+		%q = %q
+		%q = %q
+	  }
+	}`, r, tag1Key, tag1Value, tag2Key, tag2Value)
 }

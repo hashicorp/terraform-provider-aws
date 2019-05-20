@@ -21,25 +21,6 @@ import (
 	"github.com/hashicorp/terraform/helper/validation"
 )
 
-// validateAny returns a SchemaValidateFunc which tests if the provided value
-// passes any of the provided SchemaValidateFunc
-// Temporarily added into AWS provider, but will be submitted upstream into provider SDK
-func validateAny(validators ...schema.SchemaValidateFunc) schema.SchemaValidateFunc {
-	return func(i interface{}, k string) ([]string, []error) {
-		var allErrors []error
-		var allWarnings []string
-		for _, validator := range validators {
-			validatorWarnings, validatorErrors := validator(i, k)
-			if len(validatorWarnings) == 0 && len(validatorErrors) == 0 {
-				return []string{}, []error{}
-			}
-			allWarnings = append(allWarnings, validatorWarnings...)
-			allErrors = append(allErrors, validatorErrors...)
-		}
-		return allWarnings, allErrors
-	}
-}
-
 // FloatAtLeast returns a SchemaValidateFunc which tests if the provided value
 // is of type float and is at least min (inclusive)
 func FloatAtLeast(min float64) schema.SchemaValidateFunc {
@@ -602,23 +583,6 @@ func validateCloudWatchLogResourcePolicyDocument(v interface{}, k string) (ws []
 		errors = append(errors, fmt.Errorf("%q contains an invalid JSON: %s", k, err))
 	}
 	return
-}
-
-func validateIntegerInSlice(valid []int) schema.SchemaValidateFunc {
-	return func(i interface{}, k string) (s []string, es []error) {
-		v, ok := i.(int)
-		if !ok {
-			es = append(es, fmt.Errorf("expected type of %s to be int", k))
-			return
-		}
-		for _, in := range valid {
-			if v == in {
-				return
-			}
-		}
-		es = append(es, fmt.Errorf("expected %s to be one of %v, got %d", k, valid, v))
-		return
-	}
 }
 
 func validateCloudWatchEventTargetId(v interface{}, k string) (ws []string, errors []error) {

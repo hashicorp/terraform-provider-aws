@@ -552,6 +552,7 @@ func resourceAwsKinesisAnalyticsApplication() *schema.Resource {
 					},
 				},
 			},
+			"tags": tagsSchema(),
 		},
 	}
 }
@@ -586,6 +587,10 @@ func resourceAwsKinesisAnalyticsApplicationCreate(d *schema.ResourceData, meta i
 			outputs = append(outputs, output)
 		}
 		createOpts.Outputs = outputs
+	}
+
+	if v, ok := d.GetOk("tags"); ok {
+		createOpts.Tags = tagsFromMapKinesisAnalytics(v.(map[string]interface{}))
 	}
 
 	// Retry for IAM eventual consistency
@@ -656,6 +661,10 @@ func resourceAwsKinesisAnalyticsApplicationRead(d *schema.ResourceData, meta int
 
 	if err := d.Set("reference_data_sources", flattenKinesisAnalyticsReferenceDataSources(resp.ApplicationDetail.ReferenceDataSourceDescriptions)); err != nil {
 		return fmt.Errorf("error setting reference_data_sources: %s", err)
+	}
+
+	if err := getTagsKinesisAnalytics(conn, d); err != nil {
+		return fmt.Errorf("error setting tags: %s", err)
 	}
 
 	return nil
@@ -783,6 +792,11 @@ func resourceAwsKinesisAnalyticsApplicationUpdate(d *schema.ResourceData, meta i
 				version = version + 1
 			}
 		}
+
+		if err := setTagsKinesisAnalytics(conn, d); err != nil {
+			return fmt.Errorf("Error update resource tags for %s: %s", d.Id(), err)
+		}
+
 	}
 
 	oldReferenceData, newReferenceData := d.GetChange("reference_data_sources")
