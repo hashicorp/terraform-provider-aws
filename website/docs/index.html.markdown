@@ -42,7 +42,9 @@ explained below:
 
 ### Static credentials ###
 
-!> WARNING: Hard-coding credentials into any Terraform file is not recommended and risks secret leakage should this file ever be committed to a public source code control system.
+!> **Warning:** Hard-coding credentials into any Terraform configuration is not
+recommended, and risks secret leakage should this file ever be committed to a
+public version control system.
 
 Static credentials can be provided by adding an `access_key` and `secret_key`
 in-line in the AWS provider block:
