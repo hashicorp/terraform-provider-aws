@@ -6,7 +6,7 @@ require (
 	github.com/apparentlymart/go-cidr v0.0.0-20170418151526-7e4b007599d4 // indirect
 	github.com/apparentlymart/go-textseg v0.0.0-20170531203952-b836f5c4d331 // indirect
 	github.com/armon/go-radix v0.0.0-20170727155443-1fca145dffbc // indirect
-	github.com/aws/aws-sdk-go v1.15.16
+	github.com/aws/aws-sdk-go v1.15.75
 	github.com/beevik/etree v0.0.0-20171015221209-af219c0c7ea1
 	github.com/bgentry/go-netrc v0.0.0-20140422174119-9fd32a8b3d3d // indirect
 	github.com/bgentry/speakeasy v0.1.0 // indirect
@@ -14,7 +14,6 @@ require (
 	github.com/davecgh/go-spew v1.1.0
 	github.com/golang/glog v0.0.0-20160126235308-23def4e6c14b // indirect
 	github.com/golang/protobuf v0.0.0-20171113180720-1e59b77b52bf // indirect
-	github.com/gopherjs/gopherjs v0.0.0-20181103185306-d547d1d9531e // indirect
 	github.com/hashicorp/errwrap v0.0.0-20141028054710-7554cd9344ce
 	github.com/hashicorp/go-cleanhttp v0.0.0-20170211013415-3573b8b52aa7
 	github.com/hashicorp/go-getter v0.0.0-20180327010114-90bb99a48d86 // indirect
@@ -33,7 +32,6 @@ require (
 	github.com/hashicorp/yamux v0.0.0-20160720233140-d1caa6c97c9f // indirect
 	github.com/jen20/awspolicyequivalence v0.0.0-20180316120552-9fbcaca9f9f8
 	github.com/jmespath/go-jmespath v0.0.0-20160803190731-bd40a432e4c7 // indirect
-	github.com/jtolds/gls v4.2.1+incompatible // indirect
 	github.com/keybase/go-crypto v0.0.0-20161004153544-93f5b35093ba // indirect
 	github.com/kr/pretty v0.1.0 // indirect
 	github.com/kylelemons/godebug v0.0.0-20170820004349-d65d576e9348 // indirect
@@ -48,8 +46,6 @@ require (
 	github.com/mitchellh/reflectwalk v0.0.0-20170726202117-63d60e9d0dbc // indirect
 	github.com/posener/complete v0.0.0-20170730193024-f4461a52b632 // indirect
 	github.com/satori/uuid v0.0.0-20160927100844-b061729afc07
-	github.com/smartystreets/assertions v0.0.0-20190116191733-b6c0e53d7304 // indirect
-	github.com/smartystreets/goconvey v0.0.0-20181108003508-044398e4856c // indirect
 	github.com/stretchr/testify v1.3.0 // indirect
 	github.com/terraform-providers/terraform-provider-template v0.1.1
 	github.com/terraform-providers/terraform-provider-tls v0.1.0
@@ -57,6 +53,7 @@ require (
 	github.com/zclconf/go-cty v0.0.0-20180106055834-709e4033eeb0 // indirect
 	golang.org/x/crypto v0.0.0-20180110145155-b3c9a1d25cfb // indirect
 	golang.org/x/net v0.0.0-20171024115130-4b14673ba32b // indirect
+	golang.org/x/sync v0.0.0-20190423024810-112230192c58 // indirect
 	golang.org/x/sys v0.0.0-20170803140359-d8f5ea21b929 // indirect
 	golang.org/x/text v0.0.0-20171024115504-6eab0e8f74e8 // indirect
 	google.golang.org/genproto v0.0.0-20171002232614-f676e0f3ac63 // indirect
