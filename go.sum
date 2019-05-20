@@ -10,6 +10,8 @@ github.com/armon/go-radix v0.0.0-20170727155443-1fca145dffbc h1:/WQ8Tr5zbclKWAtv
 github.com/armon/go-radix v0.0.0-20170727155443-1fca145dffbc/go.mod h1:ufUuZ+zHj4x4TnLV4JWEpy2hxWSpsRywHrMgIH9cCH8=
 github.com/aws/aws-sdk-go v1.15.16 h1:h3Wt98XmE8BWKZKLNhw1bl+ABVMvdWwetYM/rs88jMY=
 github.com/aws/aws-sdk-go v1.15.16/go.mod h1:mFuSZ37Z9YOHbQEwBWztmVzqXrEkub65tZoCYDt7FT0=
+github.com/aws/aws-sdk-go v1.15.75 h1:KV0OmIfKLyAypOXjZMulzqmoHHGX8J0+3wJJVJNX2hs=
+github.com/aws/aws-sdk-go v1.15.75/go.mod h1:E3/ieXAlvM0XWO57iftYVDLLvQ824smPP3ATZkfNZeM=
 github.com/beevik/etree v0.0.0-20171015221209-af219c0c7ea1 h1:6fqkBkx5cRbd8Pq0UEMxyteIAPoE1KiPptnx1yEzJLU=
 github.com/beevik/etree v0.0.0-20171015221209-af219c0c7ea1/go.mod h1:r8Aw8JqVegEf0w2fDnATrX9VpkMcyFeM0FhwO62wh+A=
 github.com/bgentry/go-netrc v0.0.0-20140422174119-9fd32a8b3d3d h1:xDfNPAt8lFiC1UJrqV3uuy861HCTo708pDMbjHHdCas=
