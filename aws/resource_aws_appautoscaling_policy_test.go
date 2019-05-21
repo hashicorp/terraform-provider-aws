@@ -12,6 +12,85 @@ import (
 	"github.com/hashicorp/terraform/terraform"
 )
 
+func TestValidateAppautoscalingPolicyImportInput_positiveCases(t *testing.T) {
+	testCases := []struct {
+		input                     string
+		expectedServiceNamespace  string
+		expectedResourceId        string
+		expectedScalableDimension string
+		expectedPolicyName        string
+	}{
+		{
+			"rds/cluster:id/rds:cluster:ReadReplicaCount/cpu-auto-scaling",
+			"rds", "cluster:id", "rds:cluster:ReadReplicaCount", "cpu-auto-scaling"},
+		{
+			"ecs/service/clusterName/serviceName/ecs:service:DesiredCount/scale-down",
+			"ecs", "service/clusterName/serviceName", "ecs:service:DesiredCount", "scale-down"},
+		{
+			"dynamodb/table/tableName/dynamodb:table:ReadCapacityUnits/DynamoDBReadCapacityUtilization:table/tableName",
+			"dynamodb", "table/tableName", "dynamodb:table:ReadCapacityUnits", "DynamoDBReadCapacityUtilization:table/tableName"},
+	}
+
+	for _, test := range testCases {
+		idParts := strings.Split(test.input, "/")
+		serviceNamespace, resourceId, scalableDimension, policyName, err := validateAppautoscalingPolicyImportInput(idParts)
+
+		if err != nil || serviceNamespace != test.expectedServiceNamespace {
+			t.Errorf("serviceNamespace interpolation error -> %s != %s", test.expectedServiceNamespace, serviceNamespace)
+		}
+		if err != nil && resourceId != test.expectedResourceId {
+			t.Errorf("resourceId interpolation error -> %s != %s", test.expectedResourceId, resourceId)
+		}
+		if err != nil || scalableDimension != test.expectedScalableDimension {
+			t.Errorf("scalableDimension interpolation error -> %s != %s", test.expectedScalableDimension, scalableDimension)
+		}
+		if err != nil || policyName != test.expectedPolicyName {
+			t.Errorf("policyName interpolation error -> %s != %s", test.expectedPolicyName, policyName)
+		}
+	}
+}
+
+func TestValidateAppautoscalingPolicyImportInput_negativeCases(t *testing.T) {
+	testCases := []struct {
+		input                     string
+		expectedServiceNamespace  string
+		expectedResourceId        string
+		expectedScalableDimension string
+		expectedPolicyName        string
+	}{
+		{
+			"wrongValue",
+			"", "", "", ""},
+		{
+			"",
+			"", "", "", ""},
+		{
+			"too/many/arguments/that/are/not/required",
+			"", "", "", ""},
+	}
+
+	for _, test := range testCases {
+		idParts := strings.Split(test.input, "/")
+		serviceNamespace, resourceId, scalableDimension, policyName, err := validateAppautoscalingPolicyImportInput(idParts)
+
+		if err == nil || serviceNamespace != test.expectedServiceNamespace {
+			t.Errorf("serviceNamespace interpolation error -> %s != %s", test.expectedServiceNamespace, serviceNamespace)
+		}
+		if err == nil || resourceId != test.expectedResourceId {
+			t.Errorf("resourceId interpolation error -> %s != %s", test.expectedResourceId, resourceId)
+		}
+		if err == nil || scalableDimension != test.expectedScalableDimension {
+			t.Errorf("scalableDimension interpolation error -> %s != %s", test.expectedScalableDimension, scalableDimension)
+		}
+		if err == nil || policyName != test.expectedPolicyName {
+			t.Errorf("policyName interpolation error -> %s != %s", test.expectedPolicyName, policyName)
+		}
+		if err == nil && err.Error() == "" {
+			t.Errorf("empty error -> error should describe outcome")
+		}
+	}
+}
+
 func TestAccAWSAppautoScalingPolicy_basic(t *testing.T) {
 	var policy applicationautoscaling.ScalingPolicy
 	appAutoscalingTargetResourceName := "aws_appautoscaling_target.test"
@@ -309,44 +388,6 @@ func TestAccAWSAppautoScalingPolicy_ResourceId_ForceNew(t *testing.T) {
 			},
 		},
 	})
-}
-
-func TestValidateAppautoscalingPolicyImportInput(t *testing.T) {
-	testCases := []struct {
-		input                     string
-		expectedServiceNamespace  string
-		expectedResourceId        string
-		expectedScalableDimension string
-		expectedPolicyName        string
-	}{
-		{
-			"rds/cluster:id/rds:cluster:ReadReplicaCount/cpu-auto-scaling",
-			"rds", "cluster:id", "rds:cluster:ReadReplicaCount", "cpu-auto-scaling"},
-		{
-			"ecs/service/clusterName/serviceName/ecs:service:DesiredCount/scale-down",
-			"ecs", "service/clusterName/serviceName", "ecs:service:DesiredCount", "scale-down"},
-		{
-			"dynamodb/table/tableName/dynamodb:table:ReadCapacityUnits/DynamoDBReadCapacityUtilization:table/tableName",
-			"dynamodb", "table/tableName", "dynamodb:table:ReadCapacityUnits", "DynamoDBReadCapacityUtilization:table/tableName"},
-	}
-
-	for _, test := range testCases {
-		idParts := strings.Split(test.input, "/")
-		serviceNamespace, resourceId, scalableDimension, policyName := validateAppautoscalingPolicyImportInput(idParts)
-
-		if serviceNamespace != test.expectedServiceNamespace {
-			t.Errorf("serviceNamespace interpolation error -> %s != %s", test.expectedServiceNamespace, serviceNamespace)
-		}
-		if resourceId != test.expectedResourceId {
-			t.Errorf("resourceId interpolation error -> %s != %s", test.expectedResourceId, resourceId)
-		}
-		if scalableDimension != test.expectedScalableDimension {
-			t.Errorf("scalableDimension interpolation error -> %s != %s", test.expectedScalableDimension, scalableDimension)
-		}
-		if policyName != test.expectedPolicyName {
-			t.Errorf("policyName interpolation error -> %s != %s", test.expectedPolicyName, policyName)
-		}
-	}
 }
 
 func testAccCheckAWSAppautoscalingPolicyExists(n string, policy *applicationautoscaling.ScalingPolicy) resource.TestCheckFunc {
