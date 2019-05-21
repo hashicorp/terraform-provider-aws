@@ -124,16 +124,36 @@ resource "aws_autoscaling_group" "example" {
 ## Interpolated tags
 
 ```hcl
-variable "extra_tags" {
+
+variable "extra_tags_in_normal_map_format" {
+  default = {
+    "maptag_key_1" = "maptag_value_1"
+    "maptag_key_2" = "maptag_value_2"
+    "maptag_key_3" = "maptag_value_3"
+    "maptag_key_4" = "maptag_value_4"
+  }
+}
+
+data "null_data_source" "tags_converter" {
+  count = "${length(keys(var.extra_tags_in_normal_map_format))}"
+
+  inputs = {
+    key                 = "${element(keys(var.extra_tags_in_normal_map_format), count.index)}"
+    value               = "${element(values(var.extra_tags_in_normal_map_format), count.index)}"
+    propagate_at_launch = "true"
+  }
+}
+
+variable "extra_tags_in_autoscaling_group_format" {
   default = [
     {
-      key                 = "Foo"
-      value               = "Bar"
+      key                 = "extra_tag_in_asg_format_key_1"
+      value               = "extra_tag_in_asg_format_value_1"
       propagate_at_launch = true
     },
     {
-      key                 = "Baz"
-      value               = "Bam"
+      key                 = "extra_tag_in_asg_format_key_2"
+      value               = "extra_tag_in_asg_format_value_2"
       propagate_at_launch = true
     },
   ]
@@ -146,26 +166,17 @@ resource "aws_autoscaling_group" "bar" {
   launch_configuration = "${aws_launch_configuration.foobar.name}"
   vpc_zone_identifier  = ["${aws_subnet.example1.id}", "${aws_subnet.example2.id}"]
 
-  tags = [
-    {
-      key                 = "explicit1"
-      value               = "value1"
-      propagate_at_launch = true
-    },
-    {
-      key                 = "explicit2"
-      value               = "value2"
-      propagate_at_launch = true
-    },
-  ]
-
-  tags = ["${concat(
-    list(
-      map("key", "interpolation1", "value", "value3", "propagate_at_launch", true),
-      map("key", "interpolation2", "value", "value4", "propagate_at_launch", true)
-    ),
-    var.extra_tags)
+  tags = ["${
+      concat(
+        list(
+            map("key", "interpolation_key_1", "value", "interpolation_value_1", "propagate_at_launch", true),
+            map("key", "interpolation_key_2", "value", "interpolation_value_2", "propagate_at_launch", true)
+        ),
+        var.extra_tags_in_autoscaling_group_format,
+        data.null_data_source.tags_converter.*.outputs,
+    )
   }"]
+
 }
 ```
 
