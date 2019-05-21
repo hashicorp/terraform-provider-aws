@@ -4,6 +4,10 @@ ENHANCEMENTS:
 
 * resource/aws_ssm_maintenance_window_target: Add support for name and description for maintenance window targets
 
+BUG FIXES:
+
+* resource/aws_iam_group: Prevent state removal during name attribute update [GH-8707]
+
 ## 2.11.0 (May 17, 2019)
 
 NOTES:
