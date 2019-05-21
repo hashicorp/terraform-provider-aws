@@ -19,14 +19,13 @@ Use the navigation to the left to read about the available resources.
 ```hcl
 # Configure the AWS Provider
 provider "aws" {
-  access_key = "${var.aws_access_key}"
-  secret_key = "${var.aws_secret_key}"
-  region     = "us-east-1"
+  version = "~> 2.0"
+  region = "us-east-1"
 }
 
-# Create a web server
-resource "aws_instance" "web" {
-  # ...
+# Create a VPC
+resource "aws_vpc" "example" {
+  cidr_block = "10.0.0.0/16"
 }
 ```
 
@@ -43,16 +42,20 @@ explained below:
 
 ### Static credentials ###
 
-Static credentials can be provided by adding an `access_key` and `secret_key` in-line in the
-AWS provider block:
+!> **Warning:** Hard-coding credentials into any Terraform configuration is not
+recommended, and risks secret leakage should this file ever be committed to a
+public version control system.
+
+Static credentials can be provided by adding an `access_key` and `secret_key`
+in-line in the AWS provider block:
 
 Usage:
 
 ```hcl
 provider "aws" {
   region     = "us-west-2"
-  access_key = "anaccesskey"
-  secret_key = "asecretkey"
+  access_key = "my-access-key"
+  secret_key = "my-secret-key"
 }
 ```
 
