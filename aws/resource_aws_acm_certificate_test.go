@@ -519,6 +519,64 @@ func TestAccAWSAcmCertificate_imported_IpAddress(t *testing.T) {
 	})
 }
 
+func TestConvertValidationOptionsStableOutput(t *testing.T) {
+	firstValidationOption := &acm.DomainValidation{
+		DomainName: aws.String("first"),
+		ResourceRecord: &acm.ResourceRecord{
+			Name: aws.String("first_name"),
+			Type: aws.String("first_type"),
+			Value: aws.String("first_value"),
+		},
+	}
+
+	secondValidationOption := &acm.DomainValidation{
+		DomainName: aws.String("second"),
+		ResourceRecord: &acm.ResourceRecord{
+			Name: aws.String("second_name"),
+			Type: aws.String("second_type"),
+			Value: aws.String("second_value"),
+		},
+	}
+
+
+	firstCert := &acm.CertificateDetail{
+		Type: aws.String(acm.CertificateTypeAmazonIssued),
+		DomainValidationOptions:[]*acm.DomainValidation{
+			firstValidationOption,
+			secondValidationOption,
+		},
+	}
+	secondCert := &acm.CertificateDetail{
+		Type: aws.String(acm.CertificateTypeAmazonIssued),
+		DomainValidationOptions:[]*acm.DomainValidation{
+			secondValidationOption,
+			firstValidationOption,
+		},
+	}
+
+	firstDomainValidation, _, err := convertValidationOptions(firstCert)
+	if err != nil {
+		t.Fatalf("expected err %s to be nil", err)
+	}
+	secondDomainValidation, _, err := convertValidationOptions(secondCert)
+	if err != nil {
+		t.Fatalf("expected err %s to be nil", err)
+	}
+
+	if len(firstDomainValidation) != len(secondDomainValidation) {
+		t.Fatalf("Cert domain validations expected to be of same length but aren't")
+	}
+	for idx := range firstDomainValidation{
+		first := firstDomainValidation[idx]["domain_name"]
+		second := secondDomainValidation[idx]["domain_name"]
+
+		if first != second {
+			t.Fatalf("acm domain validation outputs: expected %s to equal %s", first, second)
+		}
+
+	}
+}
+
 func testAccAcmCertificateConfig(domainName, validationMethod string) string {
 	return fmt.Sprintf(`
 resource "aws_acm_certificate" "cert" {
