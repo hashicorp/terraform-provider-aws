@@ -69,6 +69,7 @@ func resourceAwsCodeBuildWebhook() *schema.Resource {
 						},
 					},
 				},
+				Set:           resourceAwsCodeBuildWebhookFilterHash,
 				ConflictsWith: []string{"branch_filter"},
 			},
 			"payload_url": {
@@ -245,27 +246,33 @@ func flattenAwsCodeBuildWebhookFilterGroups(filterList [][]*codebuild.WebhookFil
 
 func resourceAwsCodeBuildWebhookFilterHash(v interface{}) int {
 	var buf bytes.Buffer
-	m := v.([]map[string]interface{})
+	m := v.(map[string]interface{})
 
-	for _, f := range m {
-		buf.WriteString(fmt.Sprintf("%v-", f["type"].(*string)))
-		buf.WriteString(fmt.Sprintf("%v-", f["pattern"].(*string)))
-		buf.WriteString(fmt.Sprintf("%q", f["exclude_matched_pattern"]))
+	for _, g := range m {
+		for _, f := range g.([]interface{}) {
+			r := f.(map[string]interface{})
+			buf.WriteString(fmt.Sprintf("%s-", r["type"].(string)))
+			buf.WriteString(fmt.Sprintf("%s-", r["pattern"].(string)))
+			buf.WriteString(fmt.Sprintf("%q", r["exclude_matched_pattern"]))
+		}
 	}
 
 	return hashcode.String(buf.String())
 }
 
-func flattenAwsCodeBuildWebhookFilterData(filter []*codebuild.WebhookFilter) []map[string]interface{} {
-	values := make([]map[string]interface{}, 0)
+func flattenAwsCodeBuildWebhookFilterData(filters []*codebuild.WebhookFilter) map[string]interface{} {
+	values := map[string]interface{}{}
+	ff := make([]interface{}, 0)
 
-	for _, f := range filter {
-		values = append(values, map[string]interface{}{
-			"type":                    f.Type,
-			"pattern":                 f.Pattern,
-			"exclude_matched_pattern": f.ExcludeMatchedPattern,
+	for _, f := range filters {
+		ff = append(ff, map[string]interface{}{
+			"type":                    *f.Type,
+			"pattern":                 *f.Pattern,
+			"exclude_matched_pattern": *f.ExcludeMatchedPattern,
 		})
 	}
+
+	values["filter"] = ff
 
 	return values
 }
