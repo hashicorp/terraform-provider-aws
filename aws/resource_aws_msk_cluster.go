@@ -3,7 +3,6 @@ package aws
 import (
 	"fmt"
 	"log"
-	"strings"
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -21,10 +20,6 @@ func resourceAwsMskCluster() *schema.Resource {
 		Delete: resourceAwsMskClusterDelete,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
-		},
-		Timeouts: &schema.ResourceTimeout{
-			Create: schema.DefaultTimeout(45 * time.Minute),
-			Delete: schema.DefaultTimeout(45 * time.Minute),
 		},
 		Schema: map[string]*schema.Schema{
 			"arn": {
@@ -95,16 +90,12 @@ func resourceAwsMskCluster() *schema.Resource {
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"encryption_at_rest_kms_id": {
-							Type:     schema.TypeString,
-							Optional: true,
-							Computed: true,
-							ForceNew: true,
-							DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
-								// MSK api accepts either KMS short id or arn, but always returns arn.
-								// treat them as equivalent
-								return strings.Contains(old, new)
-							},
+						"encryption_at_rest_kms_key_arn": {
+							Type:         schema.TypeString,
+							Optional:     true,
+							Computed:     true,
+							ForceNew:     true,
+							ValidateFunc: validateArn,
 						},
 					},
 				},
@@ -165,64 +156,39 @@ func resourceAwsMskClusterCreate(d *schema.ResourceData, meta interface{}) error
 
 	if v, ok := d.GetOk("encryption_info"); ok {
 		info := v.([]interface{})
-		if len(info) == 1 {
-			if info[0] == nil {
-				return fmt.Errorf("At least one item is expected inside encryption_info")
-
-			}
-
+		if len(info) == 1 && info[0] != nil {
 			i := info[0].(map[string]interface{})
 
 			input.EncryptionInfo = &kafka.EncryptionInfo{
 				EncryptionAtRest: &kafka.EncryptionAtRest{
-					DataVolumeKMSKeyId: aws.String(i["encryption_at_rest_kms_id"].(string)),
+					DataVolumeKMSKeyId: aws.String(i["encryption_at_rest_kms_key_arn"].(string)),
 				},
 			}
 		}
 	}
 
-	var out *kafka.CreateClusterOutput
-	err := resource.Retry(30*time.Second, func() *resource.RetryError {
-		var err error
-		out, err = conn.CreateCluster(input)
+	out, err := conn.CreateCluster(input)
 
-		if err != nil {
-			if isAWSErr(err, kafka.ErrCodeTooManyRequestsException, "Too Many Requests") {
-				return resource.RetryableError(err)
-			}
-			return resource.NonRetryableError(err)
-		}
-		return nil
-	})
 	if err != nil {
-		return fmt.Errorf("error creating MSK cluster (%s): %s", d.Id(), err)
+		return fmt.Errorf("error creating MSK cluster: %s", err)
 	}
 
 	d.SetId(aws.StringValue(out.ClusterArn))
-
-	// set tags while cluster is being created
-	tags := tagsFromMapMskCluster(d.Get("tags").(map[string]interface{}))
 
 	if err := setTagsMskCluster(conn, d, aws.StringValue(out.ClusterArn)); err != nil {
 		return err
 	}
 
-	d.Set("tags", tagsToMapMskCluster(tags))
-	d.SetPartial("tags")
-
 	log.Printf("[DEBUG] Waiting for MSK cluster %q to be created", d.Id())
-	err = waitForClusterCreation(conn, d.Id())
+	err = waitForMskClusterCreation(conn, d.Id())
 	if err != nil {
 		return fmt.Errorf("error waiting for MSK cluster creation (%s): %s", d.Id(), err)
 	}
-	d.Partial(false)
-
-	log.Printf("[DEBUG] MSK cluster %q created", d.Id())
 
 	return resourceAwsMskClusterRead(d, meta)
 }
 
-func waitForClusterCreation(conn *kafka.Kafka, arn string) error {
+func waitForMskClusterCreation(conn *kafka.Kafka, arn string) error {
 	return resource.Retry(60*time.Minute, func() *resource.RetryError {
 		out, err := conn.DescribeCluster(&kafka.DescribeClusterInput{
 			ClusterArn: aws.String(arn),
@@ -268,16 +234,18 @@ func resourceAwsMskClusterRead(d *schema.ResourceData, meta interface{}) error {
 
 	d.SetId(aws.StringValue(cluster.ClusterArn))
 	d.Set("arn", aws.StringValue(cluster.ClusterArn))
-	d.Set("bootstrap_brokers", brokerOut.BootstrapBrokerString)
+	d.Set("bootstrap_brokers", aws.StringValue(brokerOut.BootstrapBrokerString))
 
-	d.Set("broker_node_group_info", flattenMskBrokerNodeGroupInfo(cluster.BrokerNodeGroupInfo))
+	if err := d.Set("broker_node_group_info", flattenMskBrokerNodeGroupInfo(cluster.BrokerNodeGroupInfo)); err != nil {
+		return fmt.Errorf("error setting broker_node_group_info: %s", err)
+	}
 
 	d.Set("cluster_name", aws.StringValue(cluster.ClusterName))
 	d.Set("enhanced_monitoring", aws.StringValue(cluster.EnhancedMonitoring))
 	d.Set("encryption_info", flattenMskEncryptionInfo(cluster.EncryptionInfo))
 	d.Set("kafka_version", aws.StringValue(cluster.CurrentBrokerSoftwareInfo.KafkaVersion))
 	d.Set("number_of_broker_nodes", aws.Int64Value(cluster.NumberOfBrokerNodes))
-	d.Set("zookeeper_connect_string", cluster.ZookeeperConnectString)
+	d.Set("zookeeper_connect_string", aws.StringValue(cluster.ZookeeperConnectString))
 
 	listTagsOut, err := conn.ListTagsForResource(&kafka.ListTagsForResourceInput{
 		ResourceArn: cluster.ClusterArn,
@@ -286,7 +254,9 @@ func resourceAwsMskClusterRead(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("failed listing tags for msk cluster %q: %s", d.Id(), err)
 	}
 
-	d.Set("tags", tagsToMapMskCluster(listTagsOut.Tags))
+	if err := d.Set("tags", tagsToMapMskCluster(listTagsOut.Tags)); err != nil {
+		return fmt.Errorf("error setting tags: %s", err)
+	}
 
 	return nil
 }
@@ -329,7 +299,7 @@ func flattenMskEncryptionInfo(e *kafka.EncryptionInfo) []map[string]interface{} 
 	}
 
 	m := map[string]interface{}{
-		"encryption_at_rest_kms_id": aws.StringValue(e.EncryptionAtRest.DataVolumeKMSKeyId),
+		"encryption_at_rest_kms_key_arn": aws.StringValue(e.EncryptionAtRest.DataVolumeKMSKeyId),
 	}
 
 	return []map[string]interface{}{m}

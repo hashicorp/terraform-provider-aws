@@ -71,7 +71,7 @@ func TestAccAWSMskCluster_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckMskClusterExists(resourceName, &cluster),
 					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "kafka", regexp.MustCompile(`cluster/.+`)),
-					testAccMatchResourceAttrRegionalARN(resourceName, "encryption_info.0.encryption_at_rest_kms_id", "kms", regexp.MustCompile(`key/.+`)),
+					testAccMatchResourceAttrRegionalARN(resourceName, "encryption_info.0.encryption_at_rest_kms_key_arn", "kms", regexp.MustCompile(`key/.+`)),
 					resource.TestCheckResourceAttr(resourceName, "cluster_name", fmt.Sprintf("tf-test-%d", ri)),
 					resource.TestCheckResourceAttr(resourceName, "broker_node_group_info.0.az_distribution", kafka.BrokerAZDistributionDefault),
 					resource.TestCheckResourceAttr(resourceName, "kafka_version", "1.1.1"),
@@ -116,7 +116,7 @@ func TestAccAWSMskCluster_kms(t *testing.T) {
 				Config: testAccMskClusterConfig_kms(ri),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckMskClusterExists(resourceName, &cluster),
-					resource.TestCheckResourceAttrPair(resourceName, "encryption_info.0.encryption_at_rest_kms_id", "aws_kms_key.example_key", "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "encryption_info.0.encryption_at_rest_kms_key_arn", "aws_kms_key.example_key", "arn"),
 				),
 			},
 			{
@@ -391,7 +391,7 @@ resource "aws_msk_cluster" "example" {
 	kafka_version = "1.1.1"
 	number_of_broker_nodes = 3
 	encryption_info {
-		encryption_at_rest_kms_id = "${aws_kms_key.example_key.key_id}"
+		encryption_at_rest_kms_key_arn = "${aws_kms_key.example_key.arn}"
 	}
 	broker_node_group_info {
 		instance_type = "kafka.m5.large"
