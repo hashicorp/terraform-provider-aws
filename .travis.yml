@@ -5,7 +5,6 @@ services:
 language: go
 
 env:
-env:
   global:
     - GOFLAGS=-mod=vendor
     - LINUX_BINARY_PATH=${GOPATH}/bin/terraform-provider-aws
