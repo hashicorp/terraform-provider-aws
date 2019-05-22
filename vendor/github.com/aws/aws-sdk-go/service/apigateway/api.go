@@ -11461,6 +11461,9 @@ type ApiKey struct {
 	// A list of Stage resources that are associated with the ApiKey resource.
 	StageKeys []*string `locationName:"stageKeys" type:"list"`
 
+	// The collection of tags. Each tag element is associated with a given resource.
+	Tags map[string]*string `locationName:"tags" type:"map"`
+
 	// The value of the API Key.
 	Value *string `locationName:"value" type:"string"`
 }
@@ -11520,6 +11523,12 @@ func (s *ApiKey) SetName(v string) *ApiKey {
 // SetStageKeys sets the StageKeys field's value.
 func (s *ApiKey) SetStageKeys(v []*string) *ApiKey {
 	s.StageKeys = v
+	return s
+}
+
+// SetTags sets the Tags field's value.
+func (s *ApiKey) SetTags(v map[string]*string) *ApiKey {
+	s.Tags = v
 	return s
 }
 
@@ -11847,6 +11856,9 @@ type ClientCertificate struct {
 	// The PEM-encoded public key of the client certificate, which can be used to
 	// configure certificate authentication in the integration endpoint .
 	PemEncodedCertificate *string `locationName:"pemEncodedCertificate" type:"string"`
+
+	// The collection of tags. Each tag element is associated with a given resource.
+	Tags map[string]*string `locationName:"tags" type:"map"`
 }
 
 // String returns the string representation
@@ -11889,6 +11901,12 @@ func (s *ClientCertificate) SetPemEncodedCertificate(v string) *ClientCertificat
 	return s
 }
 
+// SetTags sets the Tags field's value.
+func (s *ClientCertificate) SetTags(v map[string]*string) *ClientCertificate {
+	s.Tags = v
+	return s
+}
+
 // Request to create an ApiKey resource.
 type CreateApiKeyInput struct {
 	_ struct{} `type:"structure"`
@@ -11912,6 +11930,11 @@ type CreateApiKeyInput struct {
 
 	// DEPRECATED FOR USAGE PLANS - Specifies stages associated with the API key.
 	StageKeys []*StageKey `locationName:"stageKeys" type:"list"`
+
+	// The key-value map of strings. The valid character set is [a-zA-Z+-=._:/].
+	// The tag key can be up to 128 characters and must not start with aws:. The
+	// tag value can be up to 256 characters.
+	Tags map[string]*string `locationName:"tags" type:"map"`
 
 	// Specifies a value of the API key.
 	Value *string `locationName:"value" type:"string"`
@@ -11960,6 +11983,12 @@ func (s *CreateApiKeyInput) SetName(v string) *CreateApiKeyInput {
 // SetStageKeys sets the StageKeys field's value.
 func (s *CreateApiKeyInput) SetStageKeys(v []*StageKey) *CreateApiKeyInput {
 	s.StageKeys = v
+	return s
+}
+
+// SetTags sets the Tags field's value.
+func (s *CreateApiKeyInput) SetTags(v map[string]*string) *CreateApiKeyInput {
+	s.Tags = v
 	return s
 }
 
@@ -12538,6 +12567,11 @@ type CreateDomainNameInput struct {
 	// The user-friendly name of the certificate that will be used by regional endpoint
 	// for this domain name.
 	RegionalCertificateName *string `locationName:"regionalCertificateName" type:"string"`
+
+	// The key-value map of strings. The valid character set is [a-zA-Z+-=._:/].
+	// The tag key can be up to 128 characters and must not start with aws:. The
+	// tag value can be up to 256 characters.
+	Tags map[string]*string `locationName:"tags" type:"map"`
 }
 
 // String returns the string representation
@@ -12614,6 +12648,12 @@ func (s *CreateDomainNameInput) SetRegionalCertificateArn(v string) *CreateDomai
 // SetRegionalCertificateName sets the RegionalCertificateName field's value.
 func (s *CreateDomainNameInput) SetRegionalCertificateName(v string) *CreateDomainNameInput {
 	s.RegionalCertificateName = &v
+	return s
+}
+
+// SetTags sets the Tags field's value.
+func (s *CreateDomainNameInput) SetTags(v map[string]*string) *CreateDomainNameInput {
+	s.Tags = v
 	return s
 }
 
@@ -12891,6 +12931,11 @@ type CreateRestApiInput struct {
 	// of the caller and Method
 	Policy *string `locationName:"policy" type:"string"`
 
+	// The key-value map of strings. The valid character set is [a-zA-Z+-=._:/].
+	// The tag key can be up to 128 characters and must not start with aws:. The
+	// tag value can be up to 256 characters.
+	Tags map[string]*string `locationName:"tags" type:"map"`
+
 	// A version identifier for the API.
 	Version *string `locationName:"version" type:"string"`
 }
@@ -12963,6 +13008,12 @@ func (s *CreateRestApiInput) SetName(v string) *CreateRestApiInput {
 // SetPolicy sets the Policy field's value.
 func (s *CreateRestApiInput) SetPolicy(v string) *CreateRestApiInput {
 	s.Policy = &v
+	return s
+}
+
+// SetTags sets the Tags field's value.
+func (s *CreateRestApiInput) SetTags(v map[string]*string) *CreateRestApiInput {
+	s.Tags = v
 	return s
 }
 
@@ -13138,6 +13189,11 @@ type CreateUsagePlanInput struct {
 	// The quota of the usage plan.
 	Quota *QuotaSettings `locationName:"quota" type:"structure"`
 
+	// The key-value map of strings. The valid character set is [a-zA-Z+-=._:/].
+	// The tag key can be up to 128 characters and must not start with aws:. The
+	// tag value can be up to 256 characters.
+	Tags map[string]*string `locationName:"tags" type:"map"`
+
 	// The throttling limits of the usage plan.
 	Throttle *ThrottleSettings `locationName:"throttle" type:"structure"`
 }
@@ -13186,6 +13242,12 @@ func (s *CreateUsagePlanInput) SetName(v string) *CreateUsagePlanInput {
 // SetQuota sets the Quota field's value.
 func (s *CreateUsagePlanInput) SetQuota(v *QuotaSettings) *CreateUsagePlanInput {
 	s.Quota = v
+	return s
+}
+
+// SetTags sets the Tags field's value.
+func (s *CreateUsagePlanInput) SetTags(v map[string]*string) *CreateUsagePlanInput {
+	s.Tags = v
 	return s
 }
 
@@ -13282,6 +13344,11 @@ type CreateVpcLinkInput struct {
 	// Name is a required field
 	Name *string `locationName:"name" type:"string" required:"true"`
 
+	// The key-value map of strings. The valid character set is [a-zA-Z+-=._:/].
+	// The tag key can be up to 128 characters and must not start with aws:. The
+	// tag value can be up to 256 characters.
+	Tags map[string]*string `locationName:"tags" type:"map"`
+
 	// [Required] The ARNs of network load balancers of the VPC targeted by the
 	// VPC link. The network load balancers must be owned by the same AWS account
 	// of the API owner.
@@ -13325,6 +13392,12 @@ func (s *CreateVpcLinkInput) SetDescription(v string) *CreateVpcLinkInput {
 // SetName sets the Name field's value.
 func (s *CreateVpcLinkInput) SetName(v string) *CreateVpcLinkInput {
 	s.Name = &v
+	return s
+}
+
+// SetTags sets the Tags field's value.
+func (s *CreateVpcLinkInput) SetTags(v map[string]*string) *CreateVpcLinkInput {
+	s.Tags = v
 	return s
 }
 
@@ -15279,6 +15352,9 @@ type DomainName struct {
 	// For more information, see Set up a Regional Custom Domain Name (https://docs.aws.amazon.com/apigateway/latest/developerguide/apigateway-regional-api-custom-domain-create.html)
 	// and AWS Regions and Endpoints for API Gateway (https://docs.aws.amazon.com/general/latest/gr/rande.html#apigateway_region).
 	RegionalHostedZoneId *string `locationName:"regionalHostedZoneId" type:"string"`
+
+	// The collection of tags. Each tag element is associated with a given resource.
+	Tags map[string]*string `locationName:"tags" type:"map"`
 }
 
 // String returns the string representation
@@ -15354,6 +15430,12 @@ func (s *DomainName) SetRegionalDomainName(v string) *DomainName {
 // SetRegionalHostedZoneId sets the RegionalHostedZoneId field's value.
 func (s *DomainName) SetRegionalHostedZoneId(v string) *DomainName {
 	s.RegionalHostedZoneId = &v
+	return s
+}
+
+// SetTags sets the Tags field's value.
+func (s *DomainName) SetTags(v map[string]*string) *DomainName {
+	s.Tags = v
 	return s
 }
 
@@ -15537,6 +15619,11 @@ type GenerateClientCertificateInput struct {
 
 	// The description of the ClientCertificate.
 	Description *string `locationName:"description" type:"string"`
+
+	// The key-value map of strings. The valid character set is [a-zA-Z+-=._:/].
+	// The tag key can be up to 128 characters and must not start with aws:. The
+	// tag value can be up to 256 characters.
+	Tags map[string]*string `locationName:"tags" type:"map"`
 }
 
 // String returns the string representation
@@ -15552,6 +15639,12 @@ func (s GenerateClientCertificateInput) GoString() string {
 // SetDescription sets the Description field's value.
 func (s *GenerateClientCertificateInput) SetDescription(v string) *GenerateClientCertificateInput {
 	s.Description = &v
+	return s
+}
+
+// SetTags sets the Tags field's value.
+func (s *GenerateClientCertificateInput) SetTags(v map[string]*string) *GenerateClientCertificateInput {
+	s.Tags = v
 	return s
 }
 
@@ -21690,6 +21783,9 @@ type RestApi struct {
 	// of the caller and Method
 	Policy *string `locationName:"policy" type:"string"`
 
+	// The collection of tags. Each tag element is associated with a given resource.
+	Tags map[string]*string `locationName:"tags" type:"map"`
+
 	// A version identifier for the API.
 	Version *string `locationName:"version" type:"string"`
 
@@ -21759,6 +21855,12 @@ func (s *RestApi) SetName(v string) *RestApi {
 // SetPolicy sets the Policy field's value.
 func (s *RestApi) SetPolicy(v string) *RestApi {
 	s.Policy = &v
+	return s
+}
+
+// SetTags sets the Tags field's value.
+func (s *RestApi) SetTags(v map[string]*string) *RestApi {
+	s.Tags = v
 	return s
 }
 
@@ -24394,6 +24496,9 @@ type UpdateVpcLinkOutput struct {
 	// A description about the VPC link status.
 	StatusMessage *string `locationName:"statusMessage" type:"string"`
 
+	// The collection of tags. Each tag element is associated with a given resource.
+	Tags map[string]*string `locationName:"tags" type:"map"`
+
 	// The ARNs of network load balancers of the VPC targeted by the VPC link. The
 	// network load balancers must be owned by the same AWS account of the API owner.
 	TargetArns []*string `locationName:"targetArns" type:"list"`
@@ -24436,6 +24541,12 @@ func (s *UpdateVpcLinkOutput) SetStatus(v string) *UpdateVpcLinkOutput {
 // SetStatusMessage sets the StatusMessage field's value.
 func (s *UpdateVpcLinkOutput) SetStatusMessage(v string) *UpdateVpcLinkOutput {
 	s.StatusMessage = &v
+	return s
+}
+
+// SetTags sets the Tags field's value.
+func (s *UpdateVpcLinkOutput) SetTags(v map[string]*string) *UpdateVpcLinkOutput {
+	s.Tags = v
 	return s
 }
 
@@ -24540,6 +24651,9 @@ type UsagePlan struct {
 	// The maximum number of permitted requests per a given unit time interval.
 	Quota *QuotaSettings `locationName:"quota" type:"structure"`
 
+	// The collection of tags. Each tag element is associated with a given resource.
+	Tags map[string]*string `locationName:"tags" type:"map"`
+
 	// The request throttle limits of a usage plan.
 	Throttle *ThrottleSettings `locationName:"throttle" type:"structure"`
 }
@@ -24587,6 +24701,12 @@ func (s *UsagePlan) SetProductCode(v string) *UsagePlan {
 // SetQuota sets the Quota field's value.
 func (s *UsagePlan) SetQuota(v *QuotaSettings) *UsagePlan {
 	s.Quota = v
+	return s
+}
+
+// SetTags sets the Tags field's value.
+func (s *UsagePlan) SetTags(v map[string]*string) *UsagePlan {
+	s.Tags = v
 	return s
 }
 
