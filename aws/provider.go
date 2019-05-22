@@ -563,6 +563,7 @@ func Provider() terraform.ResourceProvider {
 			"aws_media_store_container":                               resourceAwsMediaStoreContainer(),
 			"aws_media_store_container_policy":                        resourceAwsMediaStoreContainerPolicy(),
 			"aws_msk_cluster":                                         resourceAwsMskCluster(),
+			"aws_msk_configuration":                                   resourceAwsMskConfiguration(),
 			"aws_nat_gateway":                                         resourceAwsNatGateway(),
 			"aws_network_acl":                                         resourceAwsNetworkAcl(),
 			"aws_default_network_acl":                                 resourceAwsDefaultNetworkAcl(),
