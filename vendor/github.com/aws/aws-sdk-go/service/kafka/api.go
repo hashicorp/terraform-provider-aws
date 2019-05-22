@@ -109,6 +109,103 @@ func (c *Kafka) CreateClusterWithContext(ctx aws.Context, input *CreateClusterIn
 	return out, req.Send()
 }
 
+const opCreateConfiguration = "CreateConfiguration"
+
+// CreateConfigurationRequest generates a "aws/request.Request" representing the
+// client's request for the CreateConfiguration operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See CreateConfiguration for more information on using the CreateConfiguration
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the CreateConfigurationRequest method.
+//    req, resp := client.CreateConfigurationRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/kafka-2018-11-14/CreateConfiguration
+func (c *Kafka) CreateConfigurationRequest(input *CreateConfigurationInput) (req *request.Request, output *CreateConfigurationOutput) {
+	op := &request.Operation{
+		Name:       opCreateConfiguration,
+		HTTPMethod: "POST",
+		HTTPPath:   "/v1/configurations",
+	}
+
+	if input == nil {
+		input = &CreateConfigurationInput{}
+	}
+
+	output = &CreateConfigurationOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// CreateConfiguration API operation for Managed Streaming for Kafka.
+//
+// Creates a new MSK configuration.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for Managed Streaming for Kafka's
+// API operation CreateConfiguration for usage and error information.
+//
+// Returned Error Codes:
+//   * ErrCodeBadRequestException "BadRequestException"
+//   Returns information about an error.
+//
+//   * ErrCodeInternalServerErrorException "InternalServerErrorException"
+//   Returns information about an error.
+//
+//   * ErrCodeUnauthorizedException "UnauthorizedException"
+//   Returns information about an error.
+//
+//   * ErrCodeForbiddenException "ForbiddenException"
+//   Returns information about an error.
+//
+//   * ErrCodeServiceUnavailableException "ServiceUnavailableException"
+//   Returns information about an error.
+//
+//   * ErrCodeTooManyRequestsException "TooManyRequestsException"
+//   Returns information about an error.
+//
+//   * ErrCodeConflictException "ConflictException"
+//   Returns information about an error.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/kafka-2018-11-14/CreateConfiguration
+func (c *Kafka) CreateConfiguration(input *CreateConfigurationInput) (*CreateConfigurationOutput, error) {
+	req, out := c.CreateConfigurationRequest(input)
+	return out, req.Send()
+}
+
+// CreateConfigurationWithContext is the same as CreateConfiguration with the addition of
+// the ability to pass a context and additional request options.
+//
+// See CreateConfiguration for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *Kafka) CreateConfigurationWithContext(ctx aws.Context, input *CreateConfigurationInput, opts ...request.Option) (*CreateConfigurationOutput, error) {
+	req, out := c.CreateConfigurationRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
 const opDeleteCluster = "DeleteCluster"
 
 // DeleteClusterRequest generates a "aws/request.Request" representing the
@@ -290,6 +387,194 @@ func (c *Kafka) DescribeClusterWithContext(ctx aws.Context, input *DescribeClust
 	return out, req.Send()
 }
 
+const opDescribeConfiguration = "DescribeConfiguration"
+
+// DescribeConfigurationRequest generates a "aws/request.Request" representing the
+// client's request for the DescribeConfiguration operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See DescribeConfiguration for more information on using the DescribeConfiguration
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the DescribeConfigurationRequest method.
+//    req, resp := client.DescribeConfigurationRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/kafka-2018-11-14/DescribeConfiguration
+func (c *Kafka) DescribeConfigurationRequest(input *DescribeConfigurationInput) (req *request.Request, output *DescribeConfigurationOutput) {
+	op := &request.Operation{
+		Name:       opDescribeConfiguration,
+		HTTPMethod: "GET",
+		HTTPPath:   "/v1/configurations/{arn}",
+	}
+
+	if input == nil {
+		input = &DescribeConfigurationInput{}
+	}
+
+	output = &DescribeConfigurationOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// DescribeConfiguration API operation for Managed Streaming for Kafka.
+//
+// Returns a description of this MSK configuration.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for Managed Streaming for Kafka's
+// API operation DescribeConfiguration for usage and error information.
+//
+// Returned Error Codes:
+//   * ErrCodeBadRequestException "BadRequestException"
+//   Returns information about an error.
+//
+//   * ErrCodeUnauthorizedException "UnauthorizedException"
+//   Returns information about an error.
+//
+//   * ErrCodeInternalServerErrorException "InternalServerErrorException"
+//   Returns information about an error.
+//
+//   * ErrCodeForbiddenException "ForbiddenException"
+//   Returns information about an error.
+//
+//   * ErrCodeNotFoundException "NotFoundException"
+//   Returns information about an error.
+//
+//   * ErrCodeServiceUnavailableException "ServiceUnavailableException"
+//   Returns information about an error.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/kafka-2018-11-14/DescribeConfiguration
+func (c *Kafka) DescribeConfiguration(input *DescribeConfigurationInput) (*DescribeConfigurationOutput, error) {
+	req, out := c.DescribeConfigurationRequest(input)
+	return out, req.Send()
+}
+
+// DescribeConfigurationWithContext is the same as DescribeConfiguration with the addition of
+// the ability to pass a context and additional request options.
+//
+// See DescribeConfiguration for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *Kafka) DescribeConfigurationWithContext(ctx aws.Context, input *DescribeConfigurationInput, opts ...request.Option) (*DescribeConfigurationOutput, error) {
+	req, out := c.DescribeConfigurationRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
+const opDescribeConfigurationRevision = "DescribeConfigurationRevision"
+
+// DescribeConfigurationRevisionRequest generates a "aws/request.Request" representing the
+// client's request for the DescribeConfigurationRevision operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See DescribeConfigurationRevision for more information on using the DescribeConfigurationRevision
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the DescribeConfigurationRevisionRequest method.
+//    req, resp := client.DescribeConfigurationRevisionRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/kafka-2018-11-14/DescribeConfigurationRevision
+func (c *Kafka) DescribeConfigurationRevisionRequest(input *DescribeConfigurationRevisionInput) (req *request.Request, output *DescribeConfigurationRevisionOutput) {
+	op := &request.Operation{
+		Name:       opDescribeConfigurationRevision,
+		HTTPMethod: "GET",
+		HTTPPath:   "/v1/configurations/{arn}/revisions/{revision}",
+	}
+
+	if input == nil {
+		input = &DescribeConfigurationRevisionInput{}
+	}
+
+	output = &DescribeConfigurationRevisionOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// DescribeConfigurationRevision API operation for Managed Streaming for Kafka.
+//
+// Returns a description of this revision of the configuration.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for Managed Streaming for Kafka's
+// API operation DescribeConfigurationRevision for usage and error information.
+//
+// Returned Error Codes:
+//   * ErrCodeBadRequestException "BadRequestException"
+//   Returns information about an error.
+//
+//   * ErrCodeUnauthorizedException "UnauthorizedException"
+//   Returns information about an error.
+//
+//   * ErrCodeInternalServerErrorException "InternalServerErrorException"
+//   Returns information about an error.
+//
+//   * ErrCodeForbiddenException "ForbiddenException"
+//   Returns information about an error.
+//
+//   * ErrCodeNotFoundException "NotFoundException"
+//   Returns information about an error.
+//
+//   * ErrCodeServiceUnavailableException "ServiceUnavailableException"
+//   Returns information about an error.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/kafka-2018-11-14/DescribeConfigurationRevision
+func (c *Kafka) DescribeConfigurationRevision(input *DescribeConfigurationRevisionInput) (*DescribeConfigurationRevisionOutput, error) {
+	req, out := c.DescribeConfigurationRevisionRequest(input)
+	return out, req.Send()
+}
+
+// DescribeConfigurationRevisionWithContext is the same as DescribeConfigurationRevision with the addition of
+// the ability to pass a context and additional request options.
+//
+// See DescribeConfigurationRevision for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *Kafka) DescribeConfigurationRevisionWithContext(ctx aws.Context, input *DescribeConfigurationRevisionInput, opts ...request.Option) (*DescribeConfigurationRevisionOutput, error) {
+	req, out := c.DescribeConfigurationRevisionRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
 const opGetBootstrapBrokers = "GetBootstrapBrokers"
 
 // GetBootstrapBrokersRequest generates a "aws/request.Request" representing the
@@ -412,6 +697,12 @@ func (c *Kafka) ListClustersRequest(input *ListClustersInput) (req *request.Requ
 		Name:       opListClusters,
 		HTTPMethod: "GET",
 		HTTPPath:   "/v1/clusters",
+		Paginator: &request.Paginator{
+			InputTokens:     []string{"NextToken"},
+			OutputTokens:    []string{"NextToken"},
+			LimitToken:      "MaxResults",
+			TruncationToken: "",
+		},
 	}
 
 	if input == nil {
@@ -469,6 +760,203 @@ func (c *Kafka) ListClustersWithContext(ctx aws.Context, input *ListClustersInpu
 	return out, req.Send()
 }
 
+// ListClustersPages iterates over the pages of a ListClusters operation,
+// calling the "fn" function with the response data for each page. To stop
+// iterating, return false from the fn function.
+//
+// See ListClusters method for more information on how to use this operation.
+//
+// Note: This operation can generate multiple requests to a service.
+//
+//    // Example iterating over at most 3 pages of a ListClusters operation.
+//    pageNum := 0
+//    err := client.ListClustersPages(params,
+//        func(page *ListClustersOutput, lastPage bool) bool {
+//            pageNum++
+//            fmt.Println(page)
+//            return pageNum <= 3
+//        })
+//
+func (c *Kafka) ListClustersPages(input *ListClustersInput, fn func(*ListClustersOutput, bool) bool) error {
+	return c.ListClustersPagesWithContext(aws.BackgroundContext(), input, fn)
+}
+
+// ListClustersPagesWithContext same as ListClustersPages except
+// it takes a Context and allows setting request options on the pages.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *Kafka) ListClustersPagesWithContext(ctx aws.Context, input *ListClustersInput, fn func(*ListClustersOutput, bool) bool, opts ...request.Option) error {
+	p := request.Pagination{
+		NewRequest: func() (*request.Request, error) {
+			var inCpy *ListClustersInput
+			if input != nil {
+				tmp := *input
+				inCpy = &tmp
+			}
+			req, _ := c.ListClustersRequest(inCpy)
+			req.SetContext(ctx)
+			req.ApplyOptions(opts...)
+			return req, nil
+		},
+	}
+
+	cont := true
+	for p.Next() && cont {
+		cont = fn(p.Page().(*ListClustersOutput), !p.HasNextPage())
+	}
+	return p.Err()
+}
+
+const opListConfigurations = "ListConfigurations"
+
+// ListConfigurationsRequest generates a "aws/request.Request" representing the
+// client's request for the ListConfigurations operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See ListConfigurations for more information on using the ListConfigurations
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the ListConfigurationsRequest method.
+//    req, resp := client.ListConfigurationsRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/kafka-2018-11-14/ListConfigurations
+func (c *Kafka) ListConfigurationsRequest(input *ListConfigurationsInput) (req *request.Request, output *ListConfigurationsOutput) {
+	op := &request.Operation{
+		Name:       opListConfigurations,
+		HTTPMethod: "GET",
+		HTTPPath:   "/v1/configurations",
+		Paginator: &request.Paginator{
+			InputTokens:     []string{"NextToken"},
+			OutputTokens:    []string{"NextToken"},
+			LimitToken:      "MaxResults",
+			TruncationToken: "",
+		},
+	}
+
+	if input == nil {
+		input = &ListConfigurationsInput{}
+	}
+
+	output = &ListConfigurationsOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// ListConfigurations API operation for Managed Streaming for Kafka.
+//
+// Returns a list of all the MSK configurations in this Region for this account.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for Managed Streaming for Kafka's
+// API operation ListConfigurations for usage and error information.
+//
+// Returned Error Codes:
+//   * ErrCodeServiceUnavailableException "ServiceUnavailableException"
+//   Returns information about an error.
+//
+//   * ErrCodeBadRequestException "BadRequestException"
+//   Returns information about an error.
+//
+//   * ErrCodeUnauthorizedException "UnauthorizedException"
+//   Returns information about an error.
+//
+//   * ErrCodeInternalServerErrorException "InternalServerErrorException"
+//   Returns information about an error.
+//
+//   * ErrCodeForbiddenException "ForbiddenException"
+//   Returns information about an error.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/kafka-2018-11-14/ListConfigurations
+func (c *Kafka) ListConfigurations(input *ListConfigurationsInput) (*ListConfigurationsOutput, error) {
+	req, out := c.ListConfigurationsRequest(input)
+	return out, req.Send()
+}
+
+// ListConfigurationsWithContext is the same as ListConfigurations with the addition of
+// the ability to pass a context and additional request options.
+//
+// See ListConfigurations for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *Kafka) ListConfigurationsWithContext(ctx aws.Context, input *ListConfigurationsInput, opts ...request.Option) (*ListConfigurationsOutput, error) {
+	req, out := c.ListConfigurationsRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
+// ListConfigurationsPages iterates over the pages of a ListConfigurations operation,
+// calling the "fn" function with the response data for each page. To stop
+// iterating, return false from the fn function.
+//
+// See ListConfigurations method for more information on how to use this operation.
+//
+// Note: This operation can generate multiple requests to a service.
+//
+//    // Example iterating over at most 3 pages of a ListConfigurations operation.
+//    pageNum := 0
+//    err := client.ListConfigurationsPages(params,
+//        func(page *ListConfigurationsOutput, lastPage bool) bool {
+//            pageNum++
+//            fmt.Println(page)
+//            return pageNum <= 3
+//        })
+//
+func (c *Kafka) ListConfigurationsPages(input *ListConfigurationsInput, fn func(*ListConfigurationsOutput, bool) bool) error {
+	return c.ListConfigurationsPagesWithContext(aws.BackgroundContext(), input, fn)
+}
+
+// ListConfigurationsPagesWithContext same as ListConfigurationsPages except
+// it takes a Context and allows setting request options on the pages.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *Kafka) ListConfigurationsPagesWithContext(ctx aws.Context, input *ListConfigurationsInput, fn func(*ListConfigurationsOutput, bool) bool, opts ...request.Option) error {
+	p := request.Pagination{
+		NewRequest: func() (*request.Request, error) {
+			var inCpy *ListConfigurationsInput
+			if input != nil {
+				tmp := *input
+				inCpy = &tmp
+			}
+			req, _ := c.ListConfigurationsRequest(inCpy)
+			req.SetContext(ctx)
+			req.ApplyOptions(opts...)
+			return req, nil
+		},
+	}
+
+	cont := true
+	for p.Next() && cont {
+		cont = fn(p.Page().(*ListConfigurationsOutput), !p.HasNextPage())
+	}
+	return p.Err()
+}
+
 const opListNodes = "ListNodes"
 
 // ListNodesRequest generates a "aws/request.Request" representing the
@@ -500,6 +988,12 @@ func (c *Kafka) ListNodesRequest(input *ListNodesInput) (req *request.Request, o
 		Name:       opListNodes,
 		HTTPMethod: "GET",
 		HTTPPath:   "/v1/clusters/{clusterArn}/nodes",
+		Paginator: &request.Paginator{
+			InputTokens:     []string{"NextToken"},
+			OutputTokens:    []string{"NextToken"},
+			LimitToken:      "MaxResults",
+			TruncationToken: "",
+		},
 	}
 
 	if input == nil {
@@ -555,6 +1049,56 @@ func (c *Kafka) ListNodesWithContext(ctx aws.Context, input *ListNodesInput, opt
 	req.SetContext(ctx)
 	req.ApplyOptions(opts...)
 	return out, req.Send()
+}
+
+// ListNodesPages iterates over the pages of a ListNodes operation,
+// calling the "fn" function with the response data for each page. To stop
+// iterating, return false from the fn function.
+//
+// See ListNodes method for more information on how to use this operation.
+//
+// Note: This operation can generate multiple requests to a service.
+//
+//    // Example iterating over at most 3 pages of a ListNodes operation.
+//    pageNum := 0
+//    err := client.ListNodesPages(params,
+//        func(page *ListNodesOutput, lastPage bool) bool {
+//            pageNum++
+//            fmt.Println(page)
+//            return pageNum <= 3
+//        })
+//
+func (c *Kafka) ListNodesPages(input *ListNodesInput, fn func(*ListNodesOutput, bool) bool) error {
+	return c.ListNodesPagesWithContext(aws.BackgroundContext(), input, fn)
+}
+
+// ListNodesPagesWithContext same as ListNodesPages except
+// it takes a Context and allows setting request options on the pages.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *Kafka) ListNodesPagesWithContext(ctx aws.Context, input *ListNodesInput, fn func(*ListNodesOutput, bool) bool, opts ...request.Option) error {
+	p := request.Pagination{
+		NewRequest: func() (*request.Request, error) {
+			var inCpy *ListNodesInput
+			if input != nil {
+				tmp := *input
+				inCpy = &tmp
+			}
+			req, _ := c.ListNodesRequest(inCpy)
+			req.SetContext(ctx)
+			req.ApplyOptions(opts...)
+			return req, nil
+		},
+	}
+
+	cont := true
+	for p.Next() && cont {
+		cont = fn(p.Page().(*ListNodesOutput), !p.HasNextPage())
+	}
+	return p.Err()
 }
 
 const opListTagsForResource = "ListTagsForResource"
@@ -978,7 +1522,7 @@ type BrokerSoftwareInfo struct {
 	ConfigurationArn *string `locationName:"configurationArn" type:"string"`
 
 	// The revision of the configuration to use.
-	ConfigurationRevision *string `locationName:"configurationRevision" type:"string"`
+	ConfigurationRevision *int64 `locationName:"configurationRevision" type:"long"`
 
 	// The version of Apache Kafka.
 	KafkaVersion *string `locationName:"kafkaVersion" type:"string"`
@@ -1001,7 +1545,7 @@ func (s *BrokerSoftwareInfo) SetConfigurationArn(v string) *BrokerSoftwareInfo {
 }
 
 // SetConfigurationRevision sets the ConfigurationRevision field's value.
-func (s *BrokerSoftwareInfo) SetConfigurationRevision(v string) *BrokerSoftwareInfo {
+func (s *BrokerSoftwareInfo) SetConfigurationRevision(v int64) *BrokerSoftwareInfo {
 	s.ConfigurationRevision = &v
 	return s
 }
@@ -1128,6 +1672,182 @@ func (s *ClusterInfo) SetZookeeperConnectString(v string) *ClusterInfo {
 	return s
 }
 
+// Represents an MSK Configuration.
+type Configuration struct {
+	_ struct{} `type:"structure"`
+
+	// The Amazon Resource Name (ARN) of the configuration.
+	//
+	// Arn is a required field
+	Arn *string `locationName:"arn" type:"string" required:"true"`
+
+	// CreationTime is a required field
+	CreationTime *time.Time `locationName:"creationTime" type:"timestamp" timestampFormat:"iso8601" required:"true"`
+
+	// The description of the configuration.
+	//
+	// Description is a required field
+	Description *string `locationName:"description" type:"string" required:"true"`
+
+	// KafkaVersions is a required field
+	KafkaVersions []*string `locationName:"kafkaVersions" type:"list" required:"true"`
+
+	// Describes a configuration revision.
+	//
+	// LatestRevision is a required field
+	LatestRevision *ConfigurationRevision `locationName:"latestRevision" type:"structure" required:"true"`
+
+	// The name of the configuration.
+	//
+	// Name is a required field
+	Name *string `locationName:"name" type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s Configuration) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s Configuration) GoString() string {
+	return s.String()
+}
+
+// SetArn sets the Arn field's value.
+func (s *Configuration) SetArn(v string) *Configuration {
+	s.Arn = &v
+	return s
+}
+
+// SetCreationTime sets the CreationTime field's value.
+func (s *Configuration) SetCreationTime(v time.Time) *Configuration {
+	s.CreationTime = &v
+	return s
+}
+
+// SetDescription sets the Description field's value.
+func (s *Configuration) SetDescription(v string) *Configuration {
+	s.Description = &v
+	return s
+}
+
+// SetKafkaVersions sets the KafkaVersions field's value.
+func (s *Configuration) SetKafkaVersions(v []*string) *Configuration {
+	s.KafkaVersions = v
+	return s
+}
+
+// SetLatestRevision sets the LatestRevision field's value.
+func (s *Configuration) SetLatestRevision(v *ConfigurationRevision) *Configuration {
+	s.LatestRevision = v
+	return s
+}
+
+// SetName sets the Name field's value.
+func (s *Configuration) SetName(v string) *Configuration {
+	s.Name = &v
+	return s
+}
+
+// Specifies the Kafka configuration to use for the brokers.
+type ConfigurationInfo struct {
+	_ struct{} `type:"structure"`
+
+	// ARN of the configuration to use.
+	//
+	// Arn is a required field
+	Arn *string `locationName:"arn" type:"string" required:"true"`
+
+	// The revision of the configuration to use.
+	//
+	// Revision is a required field
+	Revision *int64 `locationName:"revision" type:"long" required:"true"`
+}
+
+// String returns the string representation
+func (s ConfigurationInfo) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ConfigurationInfo) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *ConfigurationInfo) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "ConfigurationInfo"}
+	if s.Arn == nil {
+		invalidParams.Add(request.NewErrParamRequired("Arn"))
+	}
+	if s.Revision == nil {
+		invalidParams.Add(request.NewErrParamRequired("Revision"))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetArn sets the Arn field's value.
+func (s *ConfigurationInfo) SetArn(v string) *ConfigurationInfo {
+	s.Arn = &v
+	return s
+}
+
+// SetRevision sets the Revision field's value.
+func (s *ConfigurationInfo) SetRevision(v int64) *ConfigurationInfo {
+	s.Revision = &v
+	return s
+}
+
+// Describes a configuration revision.
+type ConfigurationRevision struct {
+	_ struct{} `type:"structure"`
+
+	// The time when the configuration revision was created.
+	//
+	// CreationTime is a required field
+	CreationTime *time.Time `locationName:"creationTime" type:"timestamp" timestampFormat:"iso8601" required:"true"`
+
+	// The description of the configuration revision.
+	Description *string `locationName:"description" type:"string"`
+
+	// The revision number.
+	//
+	// Revision is a required field
+	Revision *int64 `locationName:"revision" type:"long" required:"true"`
+}
+
+// String returns the string representation
+func (s ConfigurationRevision) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ConfigurationRevision) GoString() string {
+	return s.String()
+}
+
+// SetCreationTime sets the CreationTime field's value.
+func (s *ConfigurationRevision) SetCreationTime(v time.Time) *ConfigurationRevision {
+	s.CreationTime = &v
+	return s
+}
+
+// SetDescription sets the Description field's value.
+func (s *ConfigurationRevision) SetDescription(v string) *ConfigurationRevision {
+	s.Description = &v
+	return s
+}
+
+// SetRevision sets the Revision field's value.
+func (s *ConfigurationRevision) SetRevision(v int64) *ConfigurationRevision {
+	s.Revision = &v
+	return s
+}
+
 // Creates a cluster.
 type CreateClusterInput struct {
 	_ struct{} `type:"structure"`
@@ -1141,6 +1861,9 @@ type CreateClusterInput struct {
 	//
 	// ClusterName is a required field
 	ClusterName *string `locationName:"clusterName" min:"1" type:"string" required:"true"`
+
+	// Comprises of the Configuration to be used on Kafka brokers in a cluster.
+	ConfigurationInfo *ConfigurationInfo `locationName:"configurationInfo" type:"structure"`
 
 	// Includes all encryption-related information.
 	EncryptionInfo *EncryptionInfo `locationName:"encryptionInfo" type:"structure"`
@@ -1199,6 +1922,11 @@ func (s *CreateClusterInput) Validate() error {
 			invalidParams.AddNested("BrokerNodeGroupInfo", err.(request.ErrInvalidParams))
 		}
 	}
+	if s.ConfigurationInfo != nil {
+		if err := s.ConfigurationInfo.Validate(); err != nil {
+			invalidParams.AddNested("ConfigurationInfo", err.(request.ErrInvalidParams))
+		}
+	}
 	if s.EncryptionInfo != nil {
 		if err := s.EncryptionInfo.Validate(); err != nil {
 			invalidParams.AddNested("EncryptionInfo", err.(request.ErrInvalidParams))
@@ -1220,6 +1948,12 @@ func (s *CreateClusterInput) SetBrokerNodeGroupInfo(v *BrokerNodeGroupInfo) *Cre
 // SetClusterName sets the ClusterName field's value.
 func (s *CreateClusterInput) SetClusterName(v string) *CreateClusterInput {
 	s.ClusterName = &v
+	return s
+}
+
+// SetConfigurationInfo sets the ConfigurationInfo field's value.
+func (s *CreateClusterInput) SetConfigurationInfo(v *ConfigurationInfo) *CreateClusterInput {
+	s.ConfigurationInfo = v
 	return s
 }
 
@@ -1286,6 +2020,138 @@ func (s *CreateClusterOutput) SetClusterName(v string) *CreateClusterOutput {
 // SetState sets the State field's value.
 func (s *CreateClusterOutput) SetState(v string) *CreateClusterOutput {
 	s.State = &v
+	return s
+}
+
+// Request body for CreateConfiguration.
+type CreateConfigurationInput struct {
+	_ struct{} `type:"structure"`
+
+	// The description of the configuration.
+	Description *string `locationName:"description" type:"string"`
+
+	// The versions of Apache Kafka with which you can use this MSK configuration.
+	//
+	// KafkaVersions is a required field
+	KafkaVersions []*string `locationName:"kafkaVersions" type:"list" required:"true"`
+
+	// The name of the configuration.
+	//
+	// Name is a required field
+	Name *string `locationName:"name" type:"string" required:"true"`
+
+	// Contents of the server.properties file. When using the API, you must ensure
+	// that the contents of the file are base64 encoded. When using the AWS Management
+	// Console, the SDK, or the AWS CLI, the contents of server.properties can be
+	// in plaintext.
+	//
+	// ServerProperties is automatically base64 encoded/decoded by the SDK.
+	//
+	// ServerProperties is a required field
+	ServerProperties []byte `locationName:"serverProperties" type:"blob" required:"true"`
+}
+
+// String returns the string representation
+func (s CreateConfigurationInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s CreateConfigurationInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *CreateConfigurationInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "CreateConfigurationInput"}
+	if s.KafkaVersions == nil {
+		invalidParams.Add(request.NewErrParamRequired("KafkaVersions"))
+	}
+	if s.Name == nil {
+		invalidParams.Add(request.NewErrParamRequired("Name"))
+	}
+	if s.ServerProperties == nil {
+		invalidParams.Add(request.NewErrParamRequired("ServerProperties"))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetDescription sets the Description field's value.
+func (s *CreateConfigurationInput) SetDescription(v string) *CreateConfigurationInput {
+	s.Description = &v
+	return s
+}
+
+// SetKafkaVersions sets the KafkaVersions field's value.
+func (s *CreateConfigurationInput) SetKafkaVersions(v []*string) *CreateConfigurationInput {
+	s.KafkaVersions = v
+	return s
+}
+
+// SetName sets the Name field's value.
+func (s *CreateConfigurationInput) SetName(v string) *CreateConfigurationInput {
+	s.Name = &v
+	return s
+}
+
+// SetServerProperties sets the ServerProperties field's value.
+func (s *CreateConfigurationInput) SetServerProperties(v []byte) *CreateConfigurationInput {
+	s.ServerProperties = v
+	return s
+}
+
+// Response body for CreateConfiguration
+type CreateConfigurationOutput struct {
+	_ struct{} `type:"structure"`
+
+	// The Amazon Resource Name (ARN) of the configuration.
+	Arn *string `locationName:"arn" type:"string"`
+
+	// The time when the configuration was created.
+	CreationTime *time.Time `locationName:"creationTime" type:"timestamp" timestampFormat:"iso8601"`
+
+	// Latest revision of the configuration.
+	LatestRevision *ConfigurationRevision `locationName:"latestRevision" type:"structure"`
+
+	// The name of the configuration.
+	Name *string `locationName:"name" type:"string"`
+}
+
+// String returns the string representation
+func (s CreateConfigurationOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s CreateConfigurationOutput) GoString() string {
+	return s.String()
+}
+
+// SetArn sets the Arn field's value.
+func (s *CreateConfigurationOutput) SetArn(v string) *CreateConfigurationOutput {
+	s.Arn = &v
+	return s
+}
+
+// SetCreationTime sets the CreationTime field's value.
+func (s *CreateConfigurationOutput) SetCreationTime(v time.Time) *CreateConfigurationOutput {
+	s.CreationTime = &v
+	return s
+}
+
+// SetLatestRevision sets the LatestRevision field's value.
+func (s *CreateConfigurationOutput) SetLatestRevision(v *ConfigurationRevision) *CreateConfigurationOutput {
+	s.LatestRevision = v
+	return s
+}
+
+// SetName sets the Name field's value.
+func (s *CreateConfigurationOutput) SetName(v string) *CreateConfigurationOutput {
+	s.Name = &v
 	return s
 }
 
@@ -1429,6 +2295,229 @@ func (s DescribeClusterOutput) GoString() string {
 // SetClusterInfo sets the ClusterInfo field's value.
 func (s *DescribeClusterOutput) SetClusterInfo(v *ClusterInfo) *DescribeClusterOutput {
 	s.ClusterInfo = v
+	return s
+}
+
+type DescribeConfigurationInput struct {
+	_ struct{} `type:"structure"`
+
+	// Arn is a required field
+	Arn *string `location:"uri" locationName:"arn" type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s DescribeConfigurationInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DescribeConfigurationInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *DescribeConfigurationInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "DescribeConfigurationInput"}
+	if s.Arn == nil {
+		invalidParams.Add(request.NewErrParamRequired("Arn"))
+	}
+	if s.Arn != nil && len(*s.Arn) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("Arn", 1))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetArn sets the Arn field's value.
+func (s *DescribeConfigurationInput) SetArn(v string) *DescribeConfigurationInput {
+	s.Arn = &v
+	return s
+}
+
+// Response body for DescribeConfiguration.
+type DescribeConfigurationOutput struct {
+	_ struct{} `type:"structure"`
+
+	// The Amazon Resource Name (ARN) of the configuration.
+	Arn *string `locationName:"arn" type:"string"`
+
+	// The time when the configuration was created.
+	CreationTime *time.Time `locationName:"creationTime" type:"timestamp" timestampFormat:"iso8601"`
+
+	// The description of the configuration.
+	Description *string `locationName:"description" type:"string"`
+
+	// The versions of Apache Kafka with which you can use this MSK configuration.
+	KafkaVersions []*string `locationName:"kafkaVersions" type:"list"`
+
+	// Latest revision of the configuration.
+	LatestRevision *ConfigurationRevision `locationName:"latestRevision" type:"structure"`
+
+	// The name of the configuration.
+	Name *string `locationName:"name" type:"string"`
+}
+
+// String returns the string representation
+func (s DescribeConfigurationOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DescribeConfigurationOutput) GoString() string {
+	return s.String()
+}
+
+// SetArn sets the Arn field's value.
+func (s *DescribeConfigurationOutput) SetArn(v string) *DescribeConfigurationOutput {
+	s.Arn = &v
+	return s
+}
+
+// SetCreationTime sets the CreationTime field's value.
+func (s *DescribeConfigurationOutput) SetCreationTime(v time.Time) *DescribeConfigurationOutput {
+	s.CreationTime = &v
+	return s
+}
+
+// SetDescription sets the Description field's value.
+func (s *DescribeConfigurationOutput) SetDescription(v string) *DescribeConfigurationOutput {
+	s.Description = &v
+	return s
+}
+
+// SetKafkaVersions sets the KafkaVersions field's value.
+func (s *DescribeConfigurationOutput) SetKafkaVersions(v []*string) *DescribeConfigurationOutput {
+	s.KafkaVersions = v
+	return s
+}
+
+// SetLatestRevision sets the LatestRevision field's value.
+func (s *DescribeConfigurationOutput) SetLatestRevision(v *ConfigurationRevision) *DescribeConfigurationOutput {
+	s.LatestRevision = v
+	return s
+}
+
+// SetName sets the Name field's value.
+func (s *DescribeConfigurationOutput) SetName(v string) *DescribeConfigurationOutput {
+	s.Name = &v
+	return s
+}
+
+type DescribeConfigurationRevisionInput struct {
+	_ struct{} `type:"structure"`
+
+	// Arn is a required field
+	Arn *string `location:"uri" locationName:"arn" type:"string" required:"true"`
+
+	// Revision is a required field
+	Revision *int64 `location:"uri" locationName:"revision" type:"long" required:"true"`
+}
+
+// String returns the string representation
+func (s DescribeConfigurationRevisionInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DescribeConfigurationRevisionInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *DescribeConfigurationRevisionInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "DescribeConfigurationRevisionInput"}
+	if s.Arn == nil {
+		invalidParams.Add(request.NewErrParamRequired("Arn"))
+	}
+	if s.Arn != nil && len(*s.Arn) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("Arn", 1))
+	}
+	if s.Revision == nil {
+		invalidParams.Add(request.NewErrParamRequired("Revision"))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetArn sets the Arn field's value.
+func (s *DescribeConfigurationRevisionInput) SetArn(v string) *DescribeConfigurationRevisionInput {
+	s.Arn = &v
+	return s
+}
+
+// SetRevision sets the Revision field's value.
+func (s *DescribeConfigurationRevisionInput) SetRevision(v int64) *DescribeConfigurationRevisionInput {
+	s.Revision = &v
+	return s
+}
+
+// Response body for DescribeConfigurationRevision.
+type DescribeConfigurationRevisionOutput struct {
+	_ struct{} `type:"structure"`
+
+	// The Amazon Resource Name (ARN) of the configuration.
+	Arn *string `locationName:"arn" type:"string"`
+
+	// The time when the configuration was created.
+	CreationTime *time.Time `locationName:"creationTime" type:"timestamp" timestampFormat:"iso8601"`
+
+	// The description of the configuration.
+	Description *string `locationName:"description" type:"string"`
+
+	Revision *int64 `locationName:"revision" type:"long"`
+
+	// Contents of the server.properties file. When using the API, you must ensure
+	// that the contents of the file are base64 encoded. When using the AWS Management
+	// Console, the SDK, or the AWS CLI, the contents of server.properties can be
+	// in plaintext.
+	//
+	// ServerProperties is automatically base64 encoded/decoded by the SDK.
+	ServerProperties []byte `locationName:"serverProperties" type:"blob"`
+}
+
+// String returns the string representation
+func (s DescribeConfigurationRevisionOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DescribeConfigurationRevisionOutput) GoString() string {
+	return s.String()
+}
+
+// SetArn sets the Arn field's value.
+func (s *DescribeConfigurationRevisionOutput) SetArn(v string) *DescribeConfigurationRevisionOutput {
+	s.Arn = &v
+	return s
+}
+
+// SetCreationTime sets the CreationTime field's value.
+func (s *DescribeConfigurationRevisionOutput) SetCreationTime(v time.Time) *DescribeConfigurationRevisionOutput {
+	s.CreationTime = &v
+	return s
+}
+
+// SetDescription sets the Description field's value.
+func (s *DescribeConfigurationRevisionOutput) SetDescription(v string) *DescribeConfigurationRevisionOutput {
+	s.Description = &v
+	return s
+}
+
+// SetRevision sets the Revision field's value.
+func (s *DescribeConfigurationRevisionOutput) SetRevision(v int64) *DescribeConfigurationRevisionOutput {
+	s.Revision = &v
+	return s
+}
+
+// SetServerProperties sets the ServerProperties field's value.
+func (s *DescribeConfigurationRevisionOutput) SetServerProperties(v []byte) *DescribeConfigurationRevisionOutput {
+	s.ServerProperties = v
 	return s
 }
 
@@ -1695,6 +2784,71 @@ func (s *ListClustersOutput) SetClusterInfoList(v []*ClusterInfo) *ListClustersO
 
 // SetNextToken sets the NextToken field's value.
 func (s *ListClustersOutput) SetNextToken(v string) *ListClustersOutput {
+	s.NextToken = &v
+	return s
+}
+
+type ListConfigurationsInput struct {
+	_ struct{} `type:"structure"`
+
+	MaxResults *string `location:"querystring" locationName:"maxResults" type:"string"`
+
+	NextToken *string `location:"querystring" locationName:"nextToken" type:"string"`
+}
+
+// String returns the string representation
+func (s ListConfigurationsInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ListConfigurationsInput) GoString() string {
+	return s.String()
+}
+
+// SetMaxResults sets the MaxResults field's value.
+func (s *ListConfigurationsInput) SetMaxResults(v string) *ListConfigurationsInput {
+	s.MaxResults = &v
+	return s
+}
+
+// SetNextToken sets the NextToken field's value.
+func (s *ListConfigurationsInput) SetNextToken(v string) *ListConfigurationsInput {
+	s.NextToken = &v
+	return s
+}
+
+// The response contains an array of Configuration and a next token if the response
+// is truncated.
+type ListConfigurationsOutput struct {
+	_ struct{} `type:"structure"`
+
+	Configurations []*Configuration `locationName:"configurations" type:"list"`
+
+	// The paginated results marker. When the result of a ListConfigurations operation
+	// is truncated, the call returns NextToken in the response. To get another
+	// batch of configurations, provide this token in your next request.
+	NextToken *string `locationName:"nextToken" type:"string"`
+}
+
+// String returns the string representation
+func (s ListConfigurationsOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ListConfigurationsOutput) GoString() string {
+	return s.String()
+}
+
+// SetConfigurations sets the Configurations field's value.
+func (s *ListConfigurationsOutput) SetConfigurations(v []*Configuration) *ListConfigurationsOutput {
+	s.Configurations = v
+	return s
+}
+
+// SetNextToken sets the NextToken field's value.
+func (s *ListConfigurationsOutput) SetNextToken(v string) *ListConfigurationsOutput {
 	s.NextToken = &v
 	return s
 }
