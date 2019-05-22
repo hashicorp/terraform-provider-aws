@@ -193,14 +193,6 @@ func resourceAwsRamResourceShareAccepterRead(d *schema.ResourceData, meta interf
 	return nil
 }
 
-/*
-func resourceAwsRamResourceShareAccepterDelete(d *schema.ResourceData, meta interface{}) error {
-	d.SetId("")
-	log.Printf("[WARN] Will not delete resource share invitation. Terraform will remove this invitation accepter from the state file. However, resources may remain.")
-	return nil
-}
-*/
-
 func resourceAwsRamResourceShareAccepterDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).ramconn
 
