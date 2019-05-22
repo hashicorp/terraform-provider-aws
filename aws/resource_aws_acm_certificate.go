@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"log"
+	"sort"
 	"strings"
 	"time"
 
@@ -312,6 +313,13 @@ func convertValidationOptions(certificate *acm.CertificateDetail) ([]map[string]
 		}
 	}
 
+	// Sort these so we have a stable output
+	sort.SliceStable(domainValidationResult,
+		func(i, j int) bool {
+			return domainValidationResult[i]["domain_name"].(string) < domainValidationResult[j]["domain_name"].(string)
+		})
+
+	sort.Strings(emailValidationResult)
 	return domainValidationResult, emailValidationResult, nil
 }
 
