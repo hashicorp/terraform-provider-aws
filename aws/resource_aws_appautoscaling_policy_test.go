@@ -85,7 +85,7 @@ func TestValidateAppautoscalingPolicyImportInput_negativeCases(t *testing.T) {
 		if err == nil || policyName != test.expectedPolicyName {
 			t.Errorf("policyName interpolation error -> %s != %s", test.expectedPolicyName, policyName)
 		}
-		if err == nil && err.Error() == "" {
+		if err != nil && err.Error() == "" {
 			t.Errorf("empty error -> error should describe outcome")
 		}
 	}
