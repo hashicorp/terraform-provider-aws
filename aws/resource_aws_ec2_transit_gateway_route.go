@@ -93,7 +93,7 @@ func resourceAwsEc2TransitGatewayRouteRead(d *schema.ResourceData, meta interfac
 	})
 
 	if isResourceTimeoutError(err) {
-		_, err = ec2DescribeTransitGatewayRoute(conn, transitGatewayRouteTableID, destination)
+		transitGatewayRoute, err = ec2DescribeTransitGatewayRoute(conn, transitGatewayRouteTableID, destination)
 	}
 
 	if isAWSErr(err, "InvalidRouteTableID.NotFound", "") {
