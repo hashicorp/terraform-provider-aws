@@ -1,5 +1,9 @@
 ## 2.12.0 (Unreleased)
 
+FEATURES:
+
+* **New Resource:** `aws_msk_cluster` [GH-8635]
+
 ENHANCEMENTS:
 
 * resource/aws_ssm_maintenance_window_target: Add support for name and description for maintenance window targets
