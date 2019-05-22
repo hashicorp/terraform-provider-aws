@@ -45,6 +45,8 @@ If multiple, different Terraform AWS Provider configurations are required, see t
 
 The Terraform AWS Provider allows the following endpoints to be customized:
 
+<div style="column-width: 14em;">
+
 - `acm`
 - `acmpca`
 - `apigateway`
@@ -161,6 +163,8 @@ The Terraform AWS Provider allows the following endpoints to be customized:
 - `worklink`
 - `workspaces`
 - `xray`
+
+</div>
 
 ## Connecting to Local AWS Compatible Solutions
 
