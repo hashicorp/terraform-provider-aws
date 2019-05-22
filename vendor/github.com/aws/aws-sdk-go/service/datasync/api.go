@@ -3409,11 +3409,15 @@ type DescribeAgentOutput struct {
 	// The time that the agent was activated (that is, created in your account).
 	CreationTime *time.Time `type:"timestamp"`
 
+	EndpointOptions *EndpointOptions `type:"structure"`
+
 	// The time that the agent last connected to DataSyc.
 	LastConnectionTime *time.Time `type:"timestamp"`
 
 	// The name of the agent.
 	Name *string `min:"1" type:"string"`
+
+	PrivateLinkConfig *PrivateLinkConfig `type:"structure"`
 
 	// The status of the agent. If the status is ONLINE, then the agent is configured
 	// properly and is available to use. The Running status is the normal running
@@ -3445,6 +3449,12 @@ func (s *DescribeAgentOutput) SetCreationTime(v time.Time) *DescribeAgentOutput 
 	return s
 }
 
+// SetEndpointOptions sets the EndpointOptions field's value.
+func (s *DescribeAgentOutput) SetEndpointOptions(v *EndpointOptions) *DescribeAgentOutput {
+	s.EndpointOptions = v
+	return s
+}
+
 // SetLastConnectionTime sets the LastConnectionTime field's value.
 func (s *DescribeAgentOutput) SetLastConnectionTime(v time.Time) *DescribeAgentOutput {
 	s.LastConnectionTime = &v
@@ -3454,6 +3464,12 @@ func (s *DescribeAgentOutput) SetLastConnectionTime(v time.Time) *DescribeAgentO
 // SetName sets the Name field's value.
 func (s *DescribeAgentOutput) SetName(v string) *DescribeAgentOutput {
 	s.Name = &v
+	return s
+}
+
+// SetPrivateLinkConfig sets the PrivateLinkConfig field's value.
+func (s *DescribeAgentOutput) SetPrivateLinkConfig(v *PrivateLinkConfig) *DescribeAgentOutput {
+	s.PrivateLinkConfig = v
 	return s
 }
 
@@ -4186,6 +4202,36 @@ func (s *Ec2Config) SetSubnetArn(v string) *Ec2Config {
 	return s
 }
 
+type EndpointOptions struct {
+	_ struct{} `type:"structure"`
+
+	Fips *bool `type:"boolean"`
+
+	PrivateLink *bool `type:"boolean"`
+}
+
+// String returns the string representation
+func (s EndpointOptions) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s EndpointOptions) GoString() string {
+	return s.String()
+}
+
+// SetFips sets the Fips field's value.
+func (s *EndpointOptions) SetFips(v bool) *EndpointOptions {
+	s.Fips = &v
+	return s
+}
+
+// SetPrivateLink sets the PrivateLink field's value.
+func (s *EndpointOptions) SetPrivateLink(v bool) *EndpointOptions {
+	s.PrivateLink = &v
+	return s
+}
+
 // A pattern that determines which files to include in the transfer or which
 // files to exclude.
 type FilterRule struct {
@@ -4906,6 +4952,44 @@ func (s *Options) SetUid(v string) *Options {
 // SetVerifyMode sets the VerifyMode field's value.
 func (s *Options) SetVerifyMode(v string) *Options {
 	s.VerifyMode = &v
+	return s
+}
+
+type PrivateLinkConfig struct {
+	_ struct{} `type:"structure"`
+
+	PrivateLinkEndpoint *string `type:"string"`
+
+	SecurityGroupArns []*string `min:"1" type:"list"`
+
+	SubnetArns []*string `min:"1" type:"list"`
+}
+
+// String returns the string representation
+func (s PrivateLinkConfig) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s PrivateLinkConfig) GoString() string {
+	return s.String()
+}
+
+// SetPrivateLinkEndpoint sets the PrivateLinkEndpoint field's value.
+func (s *PrivateLinkConfig) SetPrivateLinkEndpoint(v string) *PrivateLinkConfig {
+	s.PrivateLinkEndpoint = &v
+	return s
+}
+
+// SetSecurityGroupArns sets the SecurityGroupArns field's value.
+func (s *PrivateLinkConfig) SetSecurityGroupArns(v []*string) *PrivateLinkConfig {
+	s.SecurityGroupArns = v
+	return s
+}
+
+// SetSubnetArns sets the SubnetArns field's value.
+func (s *PrivateLinkConfig) SetSubnetArns(v []*string) *PrivateLinkConfig {
+	s.SubnetArns = v
 	return s
 }
 
