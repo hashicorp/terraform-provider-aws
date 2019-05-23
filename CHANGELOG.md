@@ -12,6 +12,7 @@ ENHANCEMENTS:
 * resource/aws_db_instance: Add `performance_insights_enabled`, `performance_insights_kms_key_id`, and `performance_insights_retention_period` arguments [GH-6453]
 * resource/aws_ec2_transit_gateway: Handle deletion of transit gateways with DirectConnect Attachments [GH-8752]
 * resource/aws_ec2_transit_gateway_route: Add retry to read method after timeout [GH-8726]
+* resource/aws_kinesis_stream: Add `enforce_consumer_deletion` argument [GH-8682]
 * resource/aws_ssm_maintenance_window_target: Add support for name and description for maintenance window targets [GH-8671]
 
 BUG FIXES:
