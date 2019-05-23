@@ -6,6 +6,7 @@ FEATURES:
 
 ENHANCEMENTS:
 
+* resource/aws_ec2_transit_gateway_route: Add retry to read method after timeout [GH-8726]
 * resource/aws_ssm_maintenance_window_target: Add support for name and description for maintenance window targets
 
 BUG FIXES:
