@@ -143,10 +143,11 @@ func TestAccAWSKinesisStream_importBasic(t *testing.T) {
 			},
 
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-				ImportStateId:     streamName,
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateId:           streamName,
+				ImportStateVerifyIgnore: []string{"enforce_consumer_deletion"},
 			},
 		},
 	})
@@ -282,6 +283,28 @@ func TestAccAWSKinesisStream_shardLevelMetrics(t *testing.T) {
 	})
 }
 
+func TestAccAWSKinesisStream_enforceConsumerDeletion(t *testing.T) {
+	var stream kinesis.StreamDescription
+
+	rInt := acctest.RandInt()
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckKinesisStreamDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccKinesisStreamConfigWithEnforceConsumerDeletion(rInt),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckKinesisStreamExists("aws_kinesis_stream.test_stream", &stream),
+					testAccCheckAWSKinesisStreamAttributes(&stream),
+					testAccAWSKinesisStreamRegisterStreamConsumer(&stream, fmt.Sprintf("tf-test-%d", rInt)),
+				),
+			},
+		},
+	})
+}
+
 func TestAccAWSKinesisStream_Tags(t *testing.T) {
 	var stream kinesis.StreamDescription
 	resourceName := "aws_kinesis_stream.test"
@@ -379,6 +402,21 @@ func testAccCheckKinesisStreamDestroy(s *terraform.State) error {
 	}
 
 	return nil
+}
+
+func testAccAWSKinesisStreamRegisterStreamConsumer(stream *kinesis.StreamDescription, rStr string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := testAccProvider.Meta().(*AWSClient).kinesisconn
+
+		if _, err := conn.RegisterStreamConsumer(&kinesis.RegisterStreamConsumerInput{
+			ConsumerName: aws.String(rStr),
+			StreamARN:    stream.StreamARN,
+		}); err != nil {
+			return err
+		}
+
+		return nil
+	}
 }
 
 func testAccKinesisStreamConfig(rInt int) string {
@@ -536,4 +574,17 @@ resource "aws_kinesis_stream" "test" {
 %s
 	}
 }`, rInt, tagPairs)
+}
+
+func testAccKinesisStreamConfigWithEnforceConsumerDeletion(rInt int) string {
+	return fmt.Sprintf(`
+resource "aws_kinesis_stream" "test_stream" {
+	name                      = "terraform-kinesis-test-%d"
+	shard_count               = 2
+	enforce_consumer_deletion = true
+
+	tags = {
+		Name = "tf-test"
+	}
+}`, rInt)
 }
