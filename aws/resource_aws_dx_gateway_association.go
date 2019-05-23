@@ -117,7 +117,7 @@ func resourceAwsDxGatewayAssociationCreate(d *schema.ResourceData, meta interfac
 	if gwAcctIdOk || proposalIdOk {
 		// Cross-account association.
 		if !(gwAcctIdOk && proposalIdOk) {
-			return errors.New("associated_gateway_owner_account_id and proposal_id must be configured")
+			return fmt.Errorf("associated_gateway_owner_account_id and proposal_id must be configured")
 		}
 	} else if !(gwIdOk || vgwIdOk) {
 		return errors.New("either associated_gateway_owner_account_id and proposal_id or one of associated_gateway_id or vpn_gateway_id must be configured")
