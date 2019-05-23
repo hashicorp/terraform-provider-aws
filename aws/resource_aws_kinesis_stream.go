@@ -57,6 +57,12 @@ func resourceAwsKinesisStream() *schema.Resource {
 				Set:      schema.HashString,
 			},
 
+			"enforce_consumer_deletion": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				Default:  false,
+			},
+
 			"encryption_type": {
 				Type:     schema.TypeString,
 				Optional: true,
@@ -204,7 +210,8 @@ func resourceAwsKinesisStreamDelete(d *schema.ResourceData, meta interface{}) er
 	sn := d.Get("name").(string)
 
 	_, err := conn.DeleteStream(&kinesis.DeleteStreamInput{
-		StreamName: aws.String(sn),
+		StreamName:              aws.String(sn),
+		EnforceConsumerDeletion: aws.Bool(d.Get("enforce_consumer_deletion").(bool)),
 	})
 	if err != nil {
 		return err
