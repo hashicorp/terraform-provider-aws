@@ -523,8 +523,8 @@ func TestConvertValidationOptionsStableOutput(t *testing.T) {
 	firstValidationOption := &acm.DomainValidation{
 		DomainName: aws.String("first"),
 		ResourceRecord: &acm.ResourceRecord{
-			Name: aws.String("first_name"),
-			Type: aws.String("first_type"),
+			Name:  aws.String("first_name"),
+			Type:  aws.String("first_type"),
 			Value: aws.String("first_value"),
 		},
 	}
@@ -532,23 +532,22 @@ func TestConvertValidationOptionsStableOutput(t *testing.T) {
 	secondValidationOption := &acm.DomainValidation{
 		DomainName: aws.String("second"),
 		ResourceRecord: &acm.ResourceRecord{
-			Name: aws.String("second_name"),
-			Type: aws.String("second_type"),
+			Name:  aws.String("second_name"),
+			Type:  aws.String("second_type"),
 			Value: aws.String("second_value"),
 		},
 	}
 
-
 	firstCert := &acm.CertificateDetail{
 		Type: aws.String(acm.CertificateTypeAmazonIssued),
-		DomainValidationOptions:[]*acm.DomainValidation{
+		DomainValidationOptions: []*acm.DomainValidation{
 			firstValidationOption,
 			secondValidationOption,
 		},
 	}
 	secondCert := &acm.CertificateDetail{
 		Type: aws.String(acm.CertificateTypeAmazonIssued),
-		DomainValidationOptions:[]*acm.DomainValidation{
+		DomainValidationOptions: []*acm.DomainValidation{
 			secondValidationOption,
 			firstValidationOption,
 		},
@@ -566,7 +565,7 @@ func TestConvertValidationOptionsStableOutput(t *testing.T) {
 	if len(firstDomainValidation) != len(secondDomainValidation) {
 		t.Fatalf("Cert domain validations expected to be of same length but aren't")
 	}
-	for idx := range firstDomainValidation{
+	for idx := range firstDomainValidation {
 		first := firstDomainValidation[idx]["domain_name"]
 		second := secondDomainValidation[idx]["domain_name"]
 
