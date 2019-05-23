@@ -25,6 +25,15 @@ func resourceAwsKinesisStream() *schema.Resource {
 			State: resourceAwsKinesisStreamImport,
 		},
 
+		SchemaVersion: 1,
+		StateUpgraders: []schema.StateUpgrader{
+			{
+				Type:    resourceAwsKinesisStreamResourceV0().CoreConfigSchema().ImpliedType(),
+				Upgrade: resourceAwsKinesisStreamStateUpgradeV0,
+				Version: 0,
+			},
+		},
+
 		Timeouts: &schema.ResourceTimeout{
 			Create: schema.DefaultTimeout(5 * time.Minute),
 			Update: schema.DefaultTimeout(120 * time.Minute),
