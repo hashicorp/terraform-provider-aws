@@ -216,6 +216,15 @@ func TestAccAWSCodeBuildProject_Cache(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "cache.0.type", "NO_CACHE"),
 				),
 			},
+			{
+				Config: testAccAWSCodeBuildProjectConfig_LocalCache(rName, "LOCAL_DOCKER_LAYER_CACHE"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSCodeBuildProjectExists(resourceName, &project),
+					resource.TestCheckResourceAttr(resourceName, "cache.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "cache.0.modes.0", "LOCAL_DOCKER_LAYER_CACHE"),
+					resource.TestCheckResourceAttr(resourceName, "cache.0.type", "LOCAL"),
+				),
+			},
 		},
 	})
 }
@@ -1147,6 +1156,35 @@ resource "aws_codebuild_project" "test" {
   }
 }
 `, rName, cacheLocation, cacheType)
+}
+
+func testAccAWSCodeBuildProjectConfig_LocalCache(rName, modeType string) string {
+	return testAccAWSCodeBuildProjectConfig_Base_ServiceRole(rName) + fmt.Sprintf(`
+resource "aws_codebuild_project" "test" {
+  name         = "%s"
+  service_role = "${aws_iam_role.test.arn}"
+
+  artifacts {
+    type = "NO_ARTIFACTS"
+  }
+
+  cache {
+		type     = "LOCAL"
+		modes    = ["%s"]
+  }
+
+  environment {
+    compute_type = "BUILD_GENERAL1_SMALL"
+    image        = "2"
+    type         = "LINUX_CONTAINER"
+  }
+
+  source {
+    type     = "GITHUB"
+    location = "https://github.com/hashicorp/packer.git"
+  }
+}
+`, rName, modeType)
 }
 
 func testAccAWSCodeBuildProjectConfig_Description(rName, description string) string {

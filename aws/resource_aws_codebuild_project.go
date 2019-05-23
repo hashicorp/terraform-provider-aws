@@ -99,11 +99,17 @@ func resourceAwsCodeBuildProject() *schema.Resource {
 							ValidateFunc: validation.StringInSlice([]string{
 								codebuild.CacheTypeNoCache,
 								codebuild.CacheTypeS3,
+								codebuild.CacheTypeLocal,
 							}, false),
 						},
 						"location": {
 							Type:     schema.TypeString,
 							Optional: true,
+						},
+						"modes": {
+							Type:     schema.TypeList,
+							Optional: true,
+							Elem:     &schema.Schema{Type: schema.TypeString},
 						},
 					},
 				},
@@ -436,7 +442,7 @@ func resourceAwsCodeBuildProject() *schema.Resource {
 			func(diff *schema.ResourceDiff, v interface{}) error {
 				// Plan time validation for cache location
 				cacheType, cacheTypeOk := diff.GetOk("cache.0.type")
-				if !cacheTypeOk || cacheType.(string) == codebuild.CacheTypeNoCache {
+				if !cacheTypeOk || cacheType.(string) == codebuild.CacheTypeNoCache || cacheType.(string) == codebuild.CacheTypeLocal {
 					return nil
 				}
 				if v, ok := diff.GetOk("cache.0.location"); ok && v.(string) != "" {
@@ -612,6 +618,13 @@ func expandProjectCache(s []interface{}) *codebuild.ProjectCache {
 
 	if v, ok := data["location"]; ok {
 		projectCache.Location = aws.String(v.(string))
+	}
+
+	if cacheType := data["type"]; cacheType == codebuild.CacheTypeLocal {
+		if modes, modesOk := data["modes"]; modesOk {
+			modesStrings := modes.([]interface{})
+			projectCache.Modes = expandStringList(modesStrings)
+		}
 	}
 
 	return projectCache
@@ -998,6 +1011,7 @@ func flattenAwsCodebuildProjectCache(cache *codebuild.ProjectCache) []interface{
 	values := map[string]interface{}{
 		"location": aws.StringValue(cache.Location),
 		"type":     aws.StringValue(cache.Type),
+		"modes":    aws.StringValueSlice(cache.Modes),
 	}
 
 	return []interface{}{values}
