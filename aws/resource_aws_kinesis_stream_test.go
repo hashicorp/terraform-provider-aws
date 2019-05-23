@@ -579,9 +579,9 @@ resource "aws_kinesis_stream" "test" {
 func testAccKinesisStreamConfigWithEnforceConsumerDeletion(rInt int) string {
 	return fmt.Sprintf(`
 resource "aws_kinesis_stream" "test_stream" {
-	name 											= "terraform-kinesis-test-%d"
-	shard_count 							= 2
-	enforce_consumer_deletion	= true
+	name                      = "terraform-kinesis-test-%d"
+	shard_count               = 2
+	enforce_consumer_deletion = true
 
 	tags = {
 		Name = "tf-test"
