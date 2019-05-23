@@ -38,7 +38,28 @@ resource "aws_dx_gateway_association" "example" {
 }
 ```
 
-### Single Account VGW With Allowed Prefixes
+### Transit Gateway Association
+
+```hcl
+resource "aws_dx_gateway" "example" {
+  name            = "example"
+  amazon_side_asn = "64512"
+}
+
+resource "aws_ec2_transit_gateway" "example" {}
+
+resource "aws_dx_gateway_association" "example" {
+  dx_gateway_id         = "${aws_dx_gateway.example.id}"
+  associated_gateway_id = "${aws_ec2_transit_gateway.example.id}"
+
+  allowed_prefixes = [
+    "10.255.255.0/30",
+    "10.255.255.8/30",
+  ]
+}
+```
+
+### Allowed Prefixes
 
 ```hcl
 resource "aws_dx_gateway" "example" {
@@ -61,27 +82,6 @@ resource "aws_dx_gateway_association" "example" {
   allowed_prefixes = [
     "210.52.109.0/24",
     "175.45.176.0/22",
-  ]
-}
-```
-
-### Transit Gateway Association
-
-```hcl
-resource "aws_dx_gateway" "example" {
-  name            = "example"
-  amazon_side_asn = "64512"
-}
-
-resource "aws_ec2_transit_gateway" "example" {}
-
-resource "aws_dx_gateway_association" "example" {
-  dx_gateway_id         = "${aws_dx_gateway.example.id}"
-  associated_gateway_id = "${aws_ec2_transit_gateway.example.id}"
-
-  allowed_prefixes = [
-    "10.255.255.0/30",
-    "10.255.255.8/30",
   ]
 }
 ```
