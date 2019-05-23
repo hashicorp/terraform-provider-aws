@@ -65,7 +65,7 @@ resource "aws_dx_gateway_association" "example" {
 }
 ```
 
-### Transit Gateway Single Account
+### Transit Gateway Association
 
 ```hcl
 resource "aws_dx_gateway" "example" {
