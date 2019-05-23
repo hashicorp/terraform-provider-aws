@@ -3,7 +3,6 @@ package aws
 import (
 	"fmt"
 	"log"
-	"regexp"
 	"testing"
 	"time"
 
@@ -123,7 +122,6 @@ func TestAccAwsDxGatewayAssociation_deprecatedSingleAccount(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, "dx_gateway_association_id"),
 					resource.TestCheckNoResourceAttr(resourceName, "associated_gateway_id"),
 					resource.TestCheckResourceAttr(resourceName, "associated_gateway_type", "virtualPrivateGateway"),
-					resource.TestCheckResourceAttr(resourceName, "transit_gateway_attachment_id", ""),
 					testAccCheckResourceAttrAccountID(resourceName, "associated_gateway_owner_account_id"),
 					testAccCheckResourceAttrAccountID(resourceName, "dx_gateway_owner_account_id"),
 					resource.TestCheckResourceAttr(resourceName, "allowed_prefixes.#", "1"),
@@ -155,7 +153,6 @@ func TestAccAwsDxGatewayAssociation_basicVpnGatewaySingleAccount(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, "dx_gateway_association_id"),
 					resource.TestCheckNoResourceAttr(resourceName, "vpn_gateway_id"),
 					resource.TestCheckResourceAttr(resourceName, "associated_gateway_type", "virtualPrivateGateway"),
-					resource.TestCheckResourceAttr(resourceName, "transit_gateway_attachment_id", ""),
 					testAccCheckResourceAttrAccountID(resourceName, "associated_gateway_owner_account_id"),
 					testAccCheckResourceAttrAccountID(resourceName, "dx_gateway_owner_account_id"),
 					resource.TestCheckResourceAttr(resourceName, "allowed_prefixes.#", "1"),
@@ -204,7 +201,6 @@ func TestAccAwsDxGatewayAssociation_basicVpnGatewayCrossAccount(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, "dx_gateway_association_id"),
 					resource.TestCheckNoResourceAttr(resourceName, "vpn_gateway_id"),
 					resource.TestCheckResourceAttr(resourceName, "associated_gateway_type", "virtualPrivateGateway"),
-					resource.TestCheckResourceAttr(resourceName, "transit_gateway_attachment_id", ""),
 					testAccCheckResourceAttrAccountID(resourceName, "associated_gateway_owner_account_id"),
 					// dx_gateway_owner_account_id is the "aws.alternate" provider's account ID.
 					// testAccCheckResourceAttrAccountID(resourceName, "dx_gateway_owner_account_id"),
@@ -237,7 +233,6 @@ func TestAccAwsDxGatewayAssociation_basicTransitGatewaySingleAccount(t *testing.
 					resource.TestCheckResourceAttrSet(resourceName, "dx_gateway_association_id"),
 					resource.TestCheckNoResourceAttr(resourceName, "vpn_gateway_id"),
 					resource.TestCheckResourceAttr(resourceName, "associated_gateway_type", "transitGateway"),
-					resource.TestMatchResourceAttr(resourceName, "transit_gateway_attachment_id", regexp.MustCompile(`^tgw-attach-.+`)),
 					testAccCheckResourceAttrAccountID(resourceName, "associated_gateway_owner_account_id"),
 					testAccCheckResourceAttrAccountID(resourceName, "dx_gateway_owner_account_id"),
 					resource.TestCheckResourceAttr(resourceName, "allowed_prefixes.#", "2"),
@@ -287,7 +282,6 @@ func TestAccAwsDxGatewayAssociation_basicTransitGatewayCrossAccount(t *testing.T
 					resource.TestCheckResourceAttrSet(resourceName, "dx_gateway_association_id"),
 					resource.TestCheckNoResourceAttr(resourceName, "vpn_gateway_id"),
 					resource.TestCheckResourceAttr(resourceName, "associated_gateway_type", "transitGateway"),
-					resource.TestMatchResourceAttr(resourceName, "transit_gateway_attachment_id", regexp.MustCompile(`^tgw-attach-.+`)),
 					testAccCheckResourceAttrAccountID(resourceName, "associated_gateway_owner_account_id"),
 					// dx_gateway_owner_account_id is the "aws.alternate" provider's account ID.
 					// testAccCheckResourceAttrAccountID(resourceName, "dx_gateway_owner_account_id"),

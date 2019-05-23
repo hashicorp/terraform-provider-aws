@@ -9,15 +9,12 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/directconnect"
-	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/helper/schema"
 )
 
 const (
 	gatewayAssociationStateDeleted = "deleted"
-
-	transitGatewayAttachmentResourceTypeDirectConnectGateway = "direct-connect-gateway"
 )
 
 func resourceAwsDxGatewayAssociation() *schema.Resource {
@@ -81,11 +78,6 @@ func resourceAwsDxGatewayAssociation() *schema.Resource {
 				Optional:      true,
 				ForceNew:      true,
 				ConflictsWith: []string{"associated_gateway_id", "vpn_gateway_id"},
-			},
-
-			"transit_gateway_attachment_id": {
-				Type:     schema.TypeString,
-				Computed: true,
 			},
 
 			"vpn_gateway_id": {
@@ -206,34 +198,6 @@ func resourceAwsDxGatewayAssociationRead(d *schema.ResourceData, meta interface{
 	d.Set("dx_gateway_id", assoc.DirectConnectGatewayId)
 	d.Set("dx_gateway_owner_account_id", assoc.DirectConnectGatewayOwnerAccount)
 
-	tgwAttachmentId := ""
-	if aws.StringValue(assoc.AssociatedGateway.Type) == directconnect.GatewayTypeTransitGateway {
-		ec2conn := meta.(*AWSClient).ec2conn
-
-		req := &ec2.DescribeTransitGatewayAttachmentsInput{
-			Filters: buildEC2AttributeFilterList(map[string]string{
-				"resource-id":        aws.StringValue(assoc.DirectConnectGatewayId),
-				"resource-type":      transitGatewayAttachmentResourceTypeDirectConnectGateway,
-				"transit-gateway-id": aws.StringValue(assoc.AssociatedGateway.Id),
-			}),
-		}
-
-		log.Printf("[DEBUG] Finding Direct Connect gateway association transit gateway attachment: %#v", req)
-		resp, err := ec2conn.DescribeTransitGatewayAttachments(req)
-		if err != nil {
-			return fmt.Errorf("error finding Direct Connect gateway association (%s) transit gateway attachment: %s", d.Id(), err)
-		}
-		if resp == nil || len(resp.TransitGatewayAttachments) == 0 || resp.TransitGatewayAttachments[0] == nil {
-			return fmt.Errorf("error finding Direct Connect gateway association (%s) transit gateway attachment: empty response", d.Id())
-		}
-		if len(resp.TransitGatewayAttachments) > 1 {
-			return fmt.Errorf("error reading Direct Connect gateway association (%s) transit gateway attachment: multiple responses", d.Id())
-		}
-
-		tgwAttachmentId = aws.StringValue(resp.TransitGatewayAttachments[0].TransitGatewayAttachmentId)
-	}
-	d.Set("transit_gateway_attachment_id", tgwAttachmentId)
-
 	return nil
 }
 
@@ -295,13 +259,6 @@ func resourceAwsDxGatewayAssociationDelete(d *schema.ResourceData, meta interfac
 		return fmt.Errorf("error waiting for Direct Connect gateway association (%s) to be deleted: %s", d.Id(), err)
 	}
 
-	if tgwAttachmentId := d.Get("transit_gateway_attachment_id").(string); tgwAttachmentId != "" {
-		ec2conn := meta.(*AWSClient).ec2conn
-
-		if err := waitForEc2TransitGatewayAttachmentDeletion(ec2conn, tgwAttachmentId, d.Timeout(schema.TimeoutDelete)); err != nil {
-			return fmt.Errorf("error waiting for Direct Connect gateway association (%s) transit gateway attachment (%s) to be deleted: %s", d.Id(), tgwAttachmentId, err)
-		}
-	}
 	return nil
 }
 
@@ -368,29 +325,6 @@ func dxGatewayAssociationStateRefresh(conn *directconnect.DirectConnect, associa
 	}
 }
 
-func ec2TransitGatewayAttachmentStateRefresh(conn *ec2.EC2, attachmentId string) resource.StateRefreshFunc {
-	return func() (interface{}, string, error) {
-		resp, err := conn.DescribeTransitGatewayAttachments(&ec2.DescribeTransitGatewayAttachmentsInput{
-			TransitGatewayAttachmentIds: []*string{aws.String(attachmentId)},
-		})
-		if isAWSErr(err, "InvalidTransitGatewayAttachmentID.NotFound", "") {
-			return nil, ec2.TransitGatewayAttachmentStateDeleted, nil
-		}
-		if err != nil {
-			return nil, "", err
-		}
-
-		if resp == nil || len(resp.TransitGatewayAttachments) == 0 || resp.TransitGatewayAttachments[0] == nil {
-			return nil, ec2.TransitGatewayAttachmentStateDeleted, nil
-		}
-		if len(resp.TransitGatewayAttachments) > 1 {
-			return nil, "", errors.New("error reading EC2 Transit Gateway Attachment: multiple results found, try adjusting search criteria")
-		}
-
-		return resp.TransitGatewayAttachments[0], aws.StringValue(resp.TransitGatewayAttachments[0].State), nil
-	}
-}
-
 // Terraform resource ID.
 func dxGatewayAssociationId(dxgwId, gwId string) string {
 	return fmt.Sprintf("ga-%s%s", dxgwId, gwId)
@@ -431,21 +365,6 @@ func waitForDirectConnectGatewayAssociationDeletion(conn *directconnect.DirectCo
 		Pending:    []string{directconnect.GatewayAssociationStateDisassociating},
 		Target:     []string{directconnect.GatewayAssociationStateDisassociated, gatewayAssociationStateDeleted},
 		Refresh:    dxGatewayAssociationStateRefresh(conn, associationId),
-		Timeout:    timeout,
-		Delay:      10 * time.Second,
-		MinTimeout: 5 * time.Second,
-	}
-
-	_, err := stateConf.WaitForState()
-
-	return err
-}
-
-func waitForEc2TransitGatewayAttachmentDeletion(conn *ec2.EC2, attachmentId string, timeout time.Duration) error {
-	stateConf := &resource.StateChangeConf{
-		Pending:    []string{ec2.TransitGatewayAttachmentStateAvailable, ec2.TransitGatewayAttachmentStateDeleting},
-		Target:     []string{ec2.TransitGatewayAttachmentStateDeleted},
-		Refresh:    ec2TransitGatewayAttachmentStateRefresh(conn, attachmentId),
 		Timeout:    timeout,
 		Delay:      10 * time.Second,
 		MinTimeout: 5 * time.Second,
