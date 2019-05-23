@@ -31621,6 +31621,10 @@ func (s *AssociateAddressOutput) SetAssociationId(v string) *AssociateAddressOut
 type AssociateClientVpnTargetNetworkInput struct {
 	_ struct{} `type:"structure"`
 
+	// Unique, case-sensitive identifier that you provide to ensure the idempotency
+	// of the request. For more information, see How to Ensure Idempotency (https://docs.aws.amazon.com/AWSEC2/latest/APIReference/Run_Instance_Idempotency.html).
+	ClientToken *string `type:"string" idempotencyToken:"true"`
+
 	// The ID of the Client VPN endpoint.
 	//
 	// ClientVpnEndpointId is a required field
@@ -31662,6 +31666,12 @@ func (s *AssociateClientVpnTargetNetworkInput) Validate() error {
 		return invalidParams
 	}
 	return nil
+}
+
+// SetClientToken sets the ClientToken field's value.
+func (s *AssociateClientVpnTargetNetworkInput) SetClientToken(v string) *AssociateClientVpnTargetNetworkInput {
+	s.ClientToken = &v
+	return s
 }
 
 // SetClientVpnEndpointId sets the ClientVpnEndpointId field's value.
@@ -32874,6 +32884,10 @@ type AuthorizeClientVpnIngressInput struct {
 	// who successfully establish a VPN connection access to the network.
 	AuthorizeAllGroups *bool `type:"boolean"`
 
+	// Unique, case-sensitive identifier that you provide to ensure the idempotency
+	// of the request. For more information, see How to Ensure Idempotency (https://docs.aws.amazon.com/AWSEC2/latest/APIReference/Run_Instance_Idempotency.html).
+	ClientToken *string `type:"string" idempotencyToken:"true"`
+
 	// The ID of the Client VPN endpoint.
 	//
 	// ClientVpnEndpointId is a required field
@@ -32930,6 +32944,12 @@ func (s *AuthorizeClientVpnIngressInput) SetAccessGroupId(v string) *AuthorizeCl
 // SetAuthorizeAllGroups sets the AuthorizeAllGroups field's value.
 func (s *AuthorizeClientVpnIngressInput) SetAuthorizeAllGroups(v bool) *AuthorizeClientVpnIngressInput {
 	s.AuthorizeAllGroups = &v
+	return s
+}
+
+// SetClientToken sets the ClientToken field's value.
+func (s *AuthorizeClientVpnIngressInput) SetClientToken(v string) *AuthorizeClientVpnIngressInput {
+	s.ClientToken = &v
 	return s
 }
 
@@ -36306,10 +36326,6 @@ type CopyImageInput struct {
 	//
 	//    * Key ID
 	//
-	//    * Key alias. The alias ARN contains the arn:aws:kms namespace, followed
-	//    by the Region of the CMK, the AWS account ID of the CMK owner, the alias
-	//    namespace, and then the CMK alias. For example, arn:aws:kms:us-east-1:012345678910:alias/ExampleAlias.
-	//
 	//    * ARN using key ID. The ID ARN contains the arn:aws:kms namespace, followed
 	//    by the Region of the CMK, the AWS account ID of the CMK owner, the key
 	//    namespace, and then the CMK ID. For example, arn:aws:kms:us-east-1:012345678910:key/abcd1234-a123-456a-a12b-a123b4cd56ef.
@@ -36951,8 +36967,8 @@ type CreateClientVpnEndpointInput struct {
 	// ClientCidrBlock is a required field
 	ClientCidrBlock *string `type:"string" required:"true"`
 
-	// Unique, case-sensitive identifier you provide to ensure the idempotency of
-	// the request. For more information, see  How to Ensure Idempotency (https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/Run_Instance_Idempotency.html).
+	// Unique, case-sensitive identifier that you provide to ensure the idempotency
+	// of the request. For more information, see How to Ensure Idempotency (https://docs.aws.amazon.com/AWSEC2/latest/APIReference/Run_Instance_Idempotency.html).
 	ClientToken *string `type:"string" idempotencyToken:"true"`
 
 	// Information about the client connection logging options.
@@ -37137,6 +37153,10 @@ func (s *CreateClientVpnEndpointOutput) SetStatus(v *ClientVpnEndpointStatus) *C
 type CreateClientVpnRouteInput struct {
 	_ struct{} `type:"structure"`
 
+	// Unique, case-sensitive identifier that you provide to ensure the idempotency
+	// of the request. For more information, see How to Ensure Idempotency (https://docs.aws.amazon.com/AWSEC2/latest/APIReference/Run_Instance_Idempotency.html).
+	ClientToken *string `type:"string" idempotencyToken:"true"`
+
 	// The ID of the Client VPN endpoint to which to add the route.
 	//
 	// ClientVpnEndpointId is a required field
@@ -37200,6 +37220,12 @@ func (s *CreateClientVpnRouteInput) Validate() error {
 		return invalidParams
 	}
 	return nil
+}
+
+// SetClientToken sets the ClientToken field's value.
+func (s *CreateClientVpnRouteInput) SetClientToken(v string) *CreateClientVpnRouteInput {
+	s.ClientToken = &v
+	return s
 }
 
 // SetClientVpnEndpointId sets the ClientVpnEndpointId field's value.
@@ -39281,12 +39307,11 @@ type CreateNetworkInterfaceInput struct {
 	// The IDs of one or more security groups.
 	Groups []*string `locationName:"SecurityGroupId" locationNameList:"SecurityGroupId" type:"list"`
 
-	// Indicates whether the network interface is an Elastic Fabric Adapter (EFA).
-	// Only specify this parameter to create an EFA. For more information, see Elastic
-	// Fabric Adapter (https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/efa.html)
+	// Indicates the type of network interface. To create an Elastic Fabric Adapter
+	// (EFA), specify efa. For more information, see  Elastic Fabric Adapter (https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/efa.html)
 	// in the Amazon Elastic Compute Cloud User Guide.
 	//
-	// If you are not creating an EFA ENI, omit this parameter.
+	// If you are not creating an EFA, specify interface or omit this parameter.
 	InterfaceType *string `type:"string" enum:"NetworkInterfaceCreationType"`
 
 	// The number of IPv6 addresses to assign to a network interface. Amazon EC2
@@ -40850,13 +40875,15 @@ type CreateVolumeInput struct {
 	// it is UnauthorizedOperation.
 	DryRun *bool `locationName:"dryRun" type:"boolean"`
 
-	// Specifies whether the volume should be encrypted. Encrypted Amazon EBS volumes
-	// may only be attached to instances that support Amazon EBS encryption. Volumes
-	// that are created from encrypted snapshots are automatically encrypted. There
-	// is no way to create an encrypted volume from an unencrypted snapshot or vice
-	// versa. If your AMI uses encrypted volumes, you can only launch it on supported
-	// instance types. For more information, see Amazon EBS Encryption (https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/EBSEncryption.html)
-	// in the Amazon Elastic Compute Cloud User Guide.
+	// Specifies the encryption state of the volume. The default effect of setting
+	// this parameter depends on the volume's source and ownership. Each default
+	// case can be overridden by specifying a customer master key (CMK) with the
+	// KeyKeyId parameter. For a complete list of possible encryption cases, see
+	// Amazon EBS Encryption (https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/EBSEncryption.html).
+	//
+	// Encrypted Amazon EBS volumes may only be attached to instances that support
+	// Amazon EBS encryption. For more information, see Supported Instance Types
+	// (https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/EBSEncryption.html#EBSEncryption_supported_instances).
 	Encrypted *bool `locationName:"encrypted" type:"boolean"`
 
 	// The number of I/O operations per second (IOPS) to provision for the volume,
@@ -58416,15 +58443,18 @@ type EbsBlockDevice struct {
 	// Indicates whether the EBS volume is deleted on instance termination.
 	DeleteOnTermination *bool `locationName:"deleteOnTermination" type:"boolean"`
 
-	// Indicates whether the EBS volume is encrypted. Encrypted volumes can only
-	// be attached to instances that support Amazon EBS encryption.
+	// Indicates whether the encryption state of an EBS volume is to be changed
+	// while being restored from a backing snapshot. The default effect of setting
+	// this parameter to true or leaving it unset depends on the origin, starting
+	// encryption state, and ownership of the volume. Each default case can be overridden
+	// by specifying a customer master key (CMK) as argument to the KmsKeyId parameter
+	// in addition to setting Encrypted = true. For a complete list of possible
+	// encryption cases, see Amazon EBS Encryption (https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/EBSEncryption.html).
 	//
-	// If you are creating a volume from a snapshot, you cannot specify an encryption
-	// value. This is because only blank volumes can be encrypted on creation. If
-	// you are creating a snapshot from an existing EBS volume, you cannot specify
-	// an encryption value that differs from that of the EBS volume. We recommend
-	// that you omit the encryption value from the block device mappings when creating
-	// an image from an instance.
+	// In no case can you remove encryption from an encrypted volume.
+	//
+	// Encrypted volumes can only be attached to instances that support Amazon EBS
+	// encryption. For more information, see Supported Instance Types (https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/EBSEncryption.html#EBSEncryption_supported_instances).
 	Encrypted *bool `locationName:"encrypted" type:"boolean"`
 
 	// The number of I/O operations per second (IOPS) that the volume supports.
@@ -58435,9 +58465,11 @@ type EbsBlockDevice struct {
 	// in the Amazon Elastic Compute Cloud User Guide.
 	//
 	// Constraints: Range is 100-16,000 IOPS for gp2 volumes and 100 to 64,000IOPS
-	// for io1 volumes, in most Regions. The maximum IOPS for io1 of 64,000 is guaranteed
+	// for io1 volumes in most Regions. Maximum io1IOPS of 64,000 is guaranteed
 	// only on Nitro-based instances (https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/instance-types.html#ec2-nitro-instances).
-	// Other instance families guarantee performance up to 32,000 IOPS.
+	// Other instance families guarantee performance up to 32,000 IOPS. For more
+	// information, see Amazon EBS Volume Types (https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/EBSVolumeTypes.html)
+	// in the Amazon Elastic Compute Cloud User Guide.
 	//
 	// Condition: This parameter is required for requests to create io1 volumes;
 	// it is not used in requests to create gp2, st1, sc1, or standard volumes.
@@ -65202,6 +65234,8 @@ type InstanceNetworkInterface struct {
 	Groups []*GroupIdentifier `locationName:"groupSet" locationNameList:"item" type:"list"`
 
 	// Describes the type of network interface.
+	//
+	// Valid values: interface | efa
 	InterfaceType *string `locationName:"interfaceType" type:"string"`
 
 	// One or more IPv6 addresses associated with the network interface.
@@ -65477,7 +65511,13 @@ type InstanceNetworkInterfaceSpecification struct {
 	// creating a network interface when launching an instance.
 	Groups []*string `locationName:"SecurityGroupId" locationNameList:"SecurityGroupId" type:"list"`
 
-	// The type of interface.
+	// The type of network interface. To create an Elastic Fabric Adapter (EFA),
+	// specify efa. For more information, see Elastic Fabric Adapter (https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/efa.html)
+	// in the Amazon Elastic Compute Cloud User Guide.
+	//
+	// If you are not creating an EFA, specify interface or omit this parameter.
+	//
+	// Valide values: interface | efa
 	InterfaceType *string `type:"string"`
 
 	// A number of IPv6 addresses to assign to the network interface. Amazon EC2
@@ -73183,8 +73223,7 @@ type Placement struct {
 
 	// The tenancy of the instance (if the instance is running in a VPC). An instance
 	// with a tenancy of dedicated runs on single-tenant hardware. The host tenancy
-	// is not supported for the ImportInstance (https://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_ImportInstance.html)
-	// command.
+	// is not supported for the ImportInstance command.
 	Tenancy *string `locationName:"tenancy" type:"string" enum:"Tenancy"`
 }
 
@@ -79044,9 +79083,9 @@ type RunInstancesInput struct {
 
 	// If you set this parameter to true, you can't terminate the instance using
 	// the Amazon EC2 console, CLI, or API; otherwise, you can. To change this attribute
-	// to false after launch, use ModifyInstanceAttribute (https://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_ModifyInstanceAttribute.html).
-	// Alternatively, if you set InstanceInitiatedShutdownBehavior to terminate,
-	// you can terminate the instance by running the shutdown command from the instance.
+	// to false after launch, use ModifyInstanceAttribute. Alternatively, if you
+	// set InstanceInitiatedShutdownBehavior to terminate, you can terminate the
+	// instance by running the shutdown command from the instance.
 	//
 	// Default: false
 	DisableApiTermination *bool `locationName:"disableApiTermination" type:"boolean"`
@@ -79086,8 +79125,9 @@ type RunInstancesInput struct {
 	// The IAM instance profile.
 	IamInstanceProfile *IamInstanceProfileSpecification `locationName:"iamInstanceProfile" type:"structure"`
 
-	// The ID of the AMI. An AMI is required to launch an instance and must be specified
-	// here or in a launch template.
+	// The ID of the AMI, which you can get by calling DescribeImages. An AMI ID
+	// is required to launch an instance and must be specified here or in a launch
+	// template.
 	ImageId *string `type:"string"`
 
 	// Indicates whether an instance stops or terminates when you initiate shutdown

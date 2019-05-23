@@ -3182,6 +3182,12 @@ func (c *ServiceCatalog) DescribeRecordRequest(input *DescribeRecordInput) (req 
 // Use this operation after calling a request operation (for example, ProvisionProduct,
 // TerminateProvisionedProduct, or UpdateProvisionedProduct).
 //
+// If a provisioned product was transferred to a new owner using UpdateProvisionedProductProperties,
+// the new owner will be able to describe all past records for that product.
+// The previous owner will no longer be able to describe the records, but will
+// be able to use ListRecordHistory to see the product's history from when he
+// was the owner.
+//
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
 // the error.
@@ -7461,6 +7467,93 @@ func (c *ServiceCatalog) UpdateProvisionedProduct(input *UpdateProvisionedProduc
 // for more information on using Contexts.
 func (c *ServiceCatalog) UpdateProvisionedProductWithContext(ctx aws.Context, input *UpdateProvisionedProductInput, opts ...request.Option) (*UpdateProvisionedProductOutput, error) {
 	req, out := c.UpdateProvisionedProductRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
+const opUpdateProvisionedProductProperties = "UpdateProvisionedProductProperties"
+
+// UpdateProvisionedProductPropertiesRequest generates a "aws/request.Request" representing the
+// client's request for the UpdateProvisionedProductProperties operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See UpdateProvisionedProductProperties for more information on using the UpdateProvisionedProductProperties
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the UpdateProvisionedProductPropertiesRequest method.
+//    req, resp := client.UpdateProvisionedProductPropertiesRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/servicecatalog-2015-12-10/UpdateProvisionedProductProperties
+func (c *ServiceCatalog) UpdateProvisionedProductPropertiesRequest(input *UpdateProvisionedProductPropertiesInput) (req *request.Request, output *UpdateProvisionedProductPropertiesOutput) {
+	op := &request.Operation{
+		Name:       opUpdateProvisionedProductProperties,
+		HTTPMethod: "POST",
+		HTTPPath:   "/",
+	}
+
+	if input == nil {
+		input = &UpdateProvisionedProductPropertiesInput{}
+	}
+
+	output = &UpdateProvisionedProductPropertiesOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// UpdateProvisionedProductProperties API operation for AWS Service Catalog.
+//
+// Requests updates to the properties of the specified provisioned product.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for AWS Service Catalog's
+// API operation UpdateProvisionedProductProperties for usage and error information.
+//
+// Returned Error Codes:
+//   * ErrCodeInvalidParametersException "InvalidParametersException"
+//   One or more parameters provided to the operation are not valid.
+//
+//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   The specified resource was not found.
+//
+//   * ErrCodeInvalidStateException "InvalidStateException"
+//   An attempt was made to modify a resource that is in a state that is not valid.
+//   Check your resources to ensure that they are in valid states before retrying
+//   the operation.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/servicecatalog-2015-12-10/UpdateProvisionedProductProperties
+func (c *ServiceCatalog) UpdateProvisionedProductProperties(input *UpdateProvisionedProductPropertiesInput) (*UpdateProvisionedProductPropertiesOutput, error) {
+	req, out := c.UpdateProvisionedProductPropertiesRequest(input)
+	return out, req.Send()
+}
+
+// UpdateProvisionedProductPropertiesWithContext is the same as UpdateProvisionedProductProperties with the addition of
+// the ability to pass a context and additional request options.
+//
+// See UpdateProvisionedProductProperties for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *ServiceCatalog) UpdateProvisionedProductPropertiesWithContext(ctx aws.Context, input *UpdateProvisionedProductPropertiesInput, opts ...request.Option) (*UpdateProvisionedProductPropertiesOutput, error) {
+	req, out := c.UpdateProvisionedProductPropertiesRequest(input)
 	req.SetContext(ctx)
 	req.ApplyOptions(opts...)
 	return out, req.Send()
@@ -18575,7 +18668,7 @@ type UpdateProvisionedProductInput struct {
 	// and ProvisionedProductId.
 	ProvisionedProductId *string `min:"1" type:"string"`
 
-	// The updated name of the provisioned product. You cannot specify both ProvisionedProductName
+	// The name of the provisioned product. You cannot specify both ProvisionedProductName
 	// and ProvisionedProductId.
 	ProvisionedProductName *string `min:"1" type:"string"`
 
@@ -18740,6 +18833,160 @@ func (s UpdateProvisionedProductOutput) GoString() string {
 // SetRecordDetail sets the RecordDetail field's value.
 func (s *UpdateProvisionedProductOutput) SetRecordDetail(v *RecordDetail) *UpdateProvisionedProductOutput {
 	s.RecordDetail = v
+	return s
+}
+
+type UpdateProvisionedProductPropertiesInput struct {
+	_ struct{} `type:"structure"`
+
+	// The language code.
+	//
+	//    * en - English (default)
+	//
+	//    * jp - Japanese
+	//
+	//    * zh - Chinese
+	AcceptLanguage *string `type:"string"`
+
+	// The idempotency token that uniquely identifies the provisioning product update
+	// request.
+	IdempotencyToken *string `min:"1" type:"string" idempotencyToken:"true"`
+
+	// The identifier of the provisioned product.
+	//
+	// ProvisionedProductId is a required field
+	ProvisionedProductId *string `min:"1" type:"string" required:"true"`
+
+	// A map that contains the provisioned product properties to be updated.
+	//
+	// The OWNER key only accepts user ARNs. The owner is the user that is allowed
+	// to see, update, terminate, and execute service actions in the provisioned
+	// product.
+	//
+	// The administrator can change the owner of a provisioned product to another
+	// IAM user within the same account. Both end user owners and administrators
+	// can see ownership history of the provisioned product using the ListRecordHistory
+	// API. The new owner can describe all past records for the provisioned product
+	// using the DescribeRecord API. The previous owner can no longer use DescribeRecord,
+	// but can still see the product's history from when he was an owner using ListRecordHistory.
+	//
+	// If a provisioned product ownership is assigned to an end user, they can see
+	// and perform any action through the API or Service Catalog console such as
+	// update, terminate, and execute service actions. If an end user provisions
+	// a product and the owner is updated to someone else, they will no longer be
+	// able to see or perform any actions through API or the Service Catalog console
+	// on that provisioned product.
+	//
+	// ProvisionedProductProperties is a required field
+	ProvisionedProductProperties map[string]*string `min:"1" type:"map" required:"true"`
+}
+
+// String returns the string representation
+func (s UpdateProvisionedProductPropertiesInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s UpdateProvisionedProductPropertiesInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *UpdateProvisionedProductPropertiesInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "UpdateProvisionedProductPropertiesInput"}
+	if s.IdempotencyToken != nil && len(*s.IdempotencyToken) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("IdempotencyToken", 1))
+	}
+	if s.ProvisionedProductId == nil {
+		invalidParams.Add(request.NewErrParamRequired("ProvisionedProductId"))
+	}
+	if s.ProvisionedProductId != nil && len(*s.ProvisionedProductId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("ProvisionedProductId", 1))
+	}
+	if s.ProvisionedProductProperties == nil {
+		invalidParams.Add(request.NewErrParamRequired("ProvisionedProductProperties"))
+	}
+	if s.ProvisionedProductProperties != nil && len(s.ProvisionedProductProperties) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("ProvisionedProductProperties", 1))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetAcceptLanguage sets the AcceptLanguage field's value.
+func (s *UpdateProvisionedProductPropertiesInput) SetAcceptLanguage(v string) *UpdateProvisionedProductPropertiesInput {
+	s.AcceptLanguage = &v
+	return s
+}
+
+// SetIdempotencyToken sets the IdempotencyToken field's value.
+func (s *UpdateProvisionedProductPropertiesInput) SetIdempotencyToken(v string) *UpdateProvisionedProductPropertiesInput {
+	s.IdempotencyToken = &v
+	return s
+}
+
+// SetProvisionedProductId sets the ProvisionedProductId field's value.
+func (s *UpdateProvisionedProductPropertiesInput) SetProvisionedProductId(v string) *UpdateProvisionedProductPropertiesInput {
+	s.ProvisionedProductId = &v
+	return s
+}
+
+// SetProvisionedProductProperties sets the ProvisionedProductProperties field's value.
+func (s *UpdateProvisionedProductPropertiesInput) SetProvisionedProductProperties(v map[string]*string) *UpdateProvisionedProductPropertiesInput {
+	s.ProvisionedProductProperties = v
+	return s
+}
+
+type UpdateProvisionedProductPropertiesOutput struct {
+	_ struct{} `type:"structure"`
+
+	// The provisioned product identifier.
+	ProvisionedProductId *string `min:"1" type:"string"`
+
+	// A map that contains the properties updated.
+	ProvisionedProductProperties map[string]*string `min:"1" type:"map"`
+
+	// The identifier of the record.
+	RecordId *string `min:"1" type:"string"`
+
+	// The status of the request.
+	Status *string `type:"string" enum:"RecordStatus"`
+}
+
+// String returns the string representation
+func (s UpdateProvisionedProductPropertiesOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s UpdateProvisionedProductPropertiesOutput) GoString() string {
+	return s.String()
+}
+
+// SetProvisionedProductId sets the ProvisionedProductId field's value.
+func (s *UpdateProvisionedProductPropertiesOutput) SetProvisionedProductId(v string) *UpdateProvisionedProductPropertiesOutput {
+	s.ProvisionedProductId = &v
+	return s
+}
+
+// SetProvisionedProductProperties sets the ProvisionedProductProperties field's value.
+func (s *UpdateProvisionedProductPropertiesOutput) SetProvisionedProductProperties(v map[string]*string) *UpdateProvisionedProductPropertiesOutput {
+	s.ProvisionedProductProperties = v
+	return s
+}
+
+// SetRecordId sets the RecordId field's value.
+func (s *UpdateProvisionedProductPropertiesOutput) SetRecordId(v string) *UpdateProvisionedProductPropertiesOutput {
+	s.RecordId = &v
+	return s
+}
+
+// SetStatus sets the Status field's value.
+func (s *UpdateProvisionedProductPropertiesOutput) SetStatus(v string) *UpdateProvisionedProductPropertiesOutput {
+	s.Status = &v
 	return s
 }
 
@@ -19464,6 +19711,11 @@ const (
 
 	// ProductViewSortByCreationDate is a ProductViewSortBy enum value
 	ProductViewSortByCreationDate = "CreationDate"
+)
+
+const (
+	// PropertyKeyOwner is a PropertyKey enum value
+	PropertyKeyOwner = "OWNER"
 )
 
 const (

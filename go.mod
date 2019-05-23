@@ -1,7 +1,7 @@
 module github.com/terraform-providers/terraform-provider-aws
 
 require (
-	github.com/aws/aws-sdk-go v1.19.35
+	github.com/aws/aws-sdk-go v1.19.36
 	github.com/beevik/etree v1.1.0
 	github.com/boombuler/barcode v1.0.0 // indirect
 	github.com/client9/misspell v0.3.4
