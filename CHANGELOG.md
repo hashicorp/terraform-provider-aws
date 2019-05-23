@@ -2,6 +2,7 @@
 
 FEATURES:
 
+* **New Data Source:** `aws_msk_cluster` [GH-8743]
 * **New Resource:** `aws_msk_cluster` [GH-8635]
 * **New Resource:** `aws_msk_configuration` [GH-8740]
 
