@@ -239,6 +239,21 @@ func TestAccAWSAcmCertificate_san_single(t *testing.T) {
 				),
 			},
 			{
+				Config: testAccAcmCertificateConfig(domain, acm.ValidationMethodDns),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestMatchResourceAttr("aws_acm_certificate.cert", "arn", certificateArnRegex),
+					resource.TestCheckResourceAttr("aws_acm_certificate.cert", "domain_name", domain),
+					resource.TestCheckResourceAttr("aws_acm_certificate.cert", "domain_validation_options.#", "1"),
+					resource.TestCheckResourceAttr("aws_acm_certificate.cert", "domain_validation_options.0.domain_name", domain),
+					resource.TestCheckResourceAttrSet("aws_acm_certificate.cert", "domain_validation_options.0.resource_record_name"),
+					resource.TestCheckResourceAttr("aws_acm_certificate.cert", "domain_validation_options.0.resource_record_type", "CNAME"),
+					resource.TestCheckResourceAttrSet("aws_acm_certificate.cert", "domain_validation_options.0.resource_record_value"),
+					resource.TestCheckResourceAttr("aws_acm_certificate.cert", "subject_alternative_names.#", "0"),
+					resource.TestCheckResourceAttr("aws_acm_certificate.cert", "validation_emails.#", "0"),
+					resource.TestCheckResourceAttr("aws_acm_certificate.cert", "validation_method", acm.ValidationMethodDns),
+				),
+			},
+			{
 				ResourceName:      "aws_acm_certificate.cert",
 				ImportState:       true,
 				ImportStateVerify: true,
