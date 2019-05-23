@@ -22,7 +22,7 @@ data "aws_msk_cluster" "example" {
 
 The following arguments are supported:
 
-* `name` - (Required) Name of the cluster.
+* `cluster_name` - (Required) Name of the cluster.
 
 ## Attribute Reference
 
