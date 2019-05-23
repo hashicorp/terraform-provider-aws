@@ -86,52 +86,7 @@ resource "aws_dx_gateway_association" "example" {
 }
 ```
 
-### VGW Cross-Account
-
-```hcl
-provider "aws" {
-  # Creator's credentials.
-}
-
-provider "aws" {
-  alias = "accepter"
-
-  # Accepter's credentials.
-}
-
-# Creator's side of the proposal.
-data "aws_caller_identity" "creator" {}
-
-resource "aws_vpc" "example" {
-  cidr_block = "10.255.255.0/28"
-}
-
-resource "aws_vpn_gateway" "example" {
-  vpc_id = "${aws_vpc.example.id}"
-}
-
-resource "aws_dx_gateway_association_proposal" "example" {
-  dx_gateway_id               = "${aws_dx_gateway.example.id}"
-  dx_gateway_owner_account_id = "${aws_dx_gateway.example.owner_account_id}"
-  associated_gateway_id       = "${aws_vpn_gateway.example.id}"
-}
-
-# Accepter's side of the proposal.
-resource "aws_dx_gateway" "example" {
-  provider = "aws.accepter"
-
-  name            = "example"
-  amazon_side_asn = "64512"
-}
-
-resource "aws_dx_gateway_association" "example" {
-  provider = "aws.accepter"
-
-  proposal_id                         = "${aws_dx_gateway_association_proposal.example.id}"
-  dx_gateway_id                       = "${aws_dx_gateway.example.id}"
-  associated_gateway_owner_account_id = "${data.aws_caller_identity.creator.account_id}"
-}
-```
+A full example of how to to create a VPN Gateway in one AWS account, create a Direct Connect Gateway in a second AWS account, and associate the VPN Gateway with the Direct Connect Gateway via the `aws_dx_gateway_association_proposal` and `aws_dx_gateway_association` resources can be found in [the `./examples/dx-gateway-cross-account-vgw-association` directory within the Github Repository](https://github.com/terraform-providers/terraform-provider-aws/tree/master/examples/dx-gateway-cross-account-vgw-association).
 
 ## Argument Reference
 
