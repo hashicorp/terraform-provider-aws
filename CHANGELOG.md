@@ -3,6 +3,7 @@
 FEATURES:
 
 * **New Resource:** `aws_msk_cluster` [GH-8635]
+* **New Resource:** `aws_msk_configuration` [GH-8740]
 
 ENHANCEMENTS:
 
