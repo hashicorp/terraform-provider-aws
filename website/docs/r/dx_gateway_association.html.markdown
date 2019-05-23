@@ -16,7 +16,7 @@ by creating an `aws_dx_gateway_association` resource with the `proposal_id` and 
 
 ## Example Usage
 
-### VGW Single Account
+### VPN Gateway Association
 
 ```hcl
 resource "aws_dx_gateway" "example" {
