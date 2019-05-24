@@ -39,14 +39,6 @@ The following arguments are supported:
 * `transit_gateway_default_route_table_propagation` - (Optional) Boolean whether the VPC Attachment should propagate routes with the EC2 Transit Gateway propagation default route table. Default value: `true`.
 * `tags` - (Optional) Key-value tags for the EC2 Transit Gateway VPC Attachment.
 
-### Removing `aws_ec2_transit_gateway_vpc_attachment_accepter` from your configuration
-
-AWS allows a cross-account EC2 Transit Gateway VPC Attachment to be deleted from either the requester's or accepter's side.
-However, Terraform only allows the EC2 Transit Gateway VPC Attachment to be deleted from the requester's side
-by removing the corresponding `aws_ec2_transit_gateway_vpc_attachment` resource from your configuration.
-Removing a `aws_ec2_transit_gateway_vpc_attachment_accepter` resource from your configuration will remove it
-from your statefile and management, **but will not destroy the EC2 Transit Gateway VPC Attachment.**
-
 ## Attribute Reference
 
 In addition to all arguments above, the following attributes are exported:

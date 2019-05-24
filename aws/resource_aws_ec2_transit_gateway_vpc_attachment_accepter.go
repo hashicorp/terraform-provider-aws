@@ -221,6 +221,26 @@ func resourceAwsEc2TransitGatewayVpcAttachmentAccepterUpdate(d *schema.ResourceD
 }
 
 func resourceAwsEc2TransitGatewayVpcAttachmentAccepterDelete(d *schema.ResourceData, meta interface{}) error {
-	log.Printf("[WARN] Will not delete EC2 Transit Gateway VPC Attachment. Terraform will remove this resource from the state file, however resources may remain.")
+	conn := meta.(*AWSClient).ec2conn
+
+	input := &ec2.DeleteTransitGatewayVpcAttachmentInput{
+		TransitGatewayAttachmentId: aws.String(d.Id()),
+	}
+
+	log.Printf("[DEBUG] Deleting EC2 Transit Gateway VPC Attachment (%s): %s", d.Id(), input)
+	_, err := conn.DeleteTransitGatewayVpcAttachment(input)
+
+	if isAWSErr(err, "InvalidTransitGatewayAttachmentID.NotFound", "") {
+		return nil
+	}
+
+	if err != nil {
+		return fmt.Errorf("error deleting EC2 Transit Gateway VPC Attachment: %s", err)
+	}
+
+	if err := waitForEc2TransitGatewayVpcAttachmentDeletion(conn, d.Id()); err != nil {
+		return fmt.Errorf("error waiting for EC2 Transit Gateway VPC Attachment (%s) deletion: %s", d.Id(), err)
+	}
+
 	return nil
 }
