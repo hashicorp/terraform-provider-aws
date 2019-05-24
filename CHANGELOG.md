@@ -1,5 +1,10 @@
 ## 2.12.0 (Unreleased)
 
+NOTES:
+
+* resource/aws_dx_gateway_association: The `vpn_gateway_id` attribute is being deprecated in favor of the new `associated_gateway_id` attribute to support transit gateway associations [GH-8528]
+* resource/aws_dx_gateway_association_proposal: The `vpn_gateway_id` attribute is being deprecated in favor of the new `associated_gateway_id` attribute to support transit gateway associations [GH-8528]
+
 FEATURES:
 
 * **New Data Source:** `aws_msk_cluster` [GH-8743]
@@ -10,6 +15,8 @@ ENHANCEMENTS:
 
 * resource/aws_codebuild_project: Add `cache` configuration block `modes` argument and add `type` argument validation of `local` (support local cache) [GH-8215]
 * resource/aws_db_instance: Add `performance_insights_enabled`, `performance_insights_kms_key_id`, and `performance_insights_retention_period` arguments [GH-6453]
+* resource/aws_dx_gateway_association: New attributes `associated_gateway_owner_account_id` and `proposal_id` added to support the acceptance of a Direct Connect gateway association proposal and create a cross-account Direct Connect gateway association. New exported attributes `associated_gateway_type` and `dx_gateway_owner_account_id` [GH-8528]
+* resource/aws_dx_gateway_association_proposal: New attribute `associated_gateway_id` replaces deprecated `vpn_gateway_id` attribute to support transit gateway associations. New exported attributes `associated_gateway_owner_account_id` and `associated_gateway_type` [GH-8528]
 * resource/aws_ec2_transit_gateway: Handle deletion of transit gateways with DirectConnect Attachments [GH-8752]
 * resource/aws_ec2_transit_gateway_route: Add retry to read method after timeout [GH-8726]
 * resource/aws_kinesis_stream: Add `enforce_consumer_deletion` argument [GH-8682]
