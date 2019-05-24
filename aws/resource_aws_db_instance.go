@@ -1285,7 +1285,7 @@ func resourceAwsDbInstanceRead(d *schema.ResourceData, meta interface{}) error {
 	})
 
 	if err != nil {
-		return fmt.Errorf("Error retrieving tags for ARN: %s", arn)
+		return fmt.Errorf("Error retrieving tags for ARN (%s): %s", arn, err)
 	}
 
 	var dt []*rds.Tag

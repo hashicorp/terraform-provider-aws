@@ -125,7 +125,7 @@ func saveTagsSSM(conn *ssm.SSM, d *schema.ResourceData, id, resourceType string)
 	})
 
 	if err != nil {
-		return fmt.Errorf("Error retrieving tags for SSM resource: %s", id)
+		return fmt.Errorf("Error retrieving tags for SSM resource (%s): %s", id, err)
 	}
 
 	var dt []*ssm.Tag
