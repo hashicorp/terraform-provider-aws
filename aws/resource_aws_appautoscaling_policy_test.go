@@ -264,7 +264,8 @@ func TestAccAWSAppautoScalingPolicy_dynamoDb(t *testing.T) {
 				Config: testAccAWSAppautoscalingPolicyDynamoDB(randPolicyName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSAppautoscalingPolicyExists("aws_appautoscaling_policy.dynamo_test", &policy),
-					resource.TestCheckResourceAttr("aws_appautoscaling_policy.dynamo_test", "name", randPolicyName),
+					resource.TestCheckResourceAttr("aws_appautoscaling_policy.dynamo_test", "name", fmt.Sprintf("DynamoDBWriteCapacityUtilization:table/%s", randPolicyName)),
+					resource.TestCheckResourceAttr("aws_appautoscaling_policy.dynamo_test", "policy_type", "TargetTrackingScaling"),
 					resource.TestCheckResourceAttr("aws_appautoscaling_policy.dynamo_test", "service_namespace", "dynamodb"),
 					resource.TestCheckResourceAttr("aws_appautoscaling_policy.dynamo_test", "scalable_dimension", "dynamodb:table:WriteCapacityUnits"),
 				),
@@ -607,7 +608,7 @@ resource "aws_appautoscaling_target" "dynamo_test" {
 }
 
 resource "aws_appautoscaling_policy" "dynamo_test" {
-  name = "%s"
+  name = "DynamoDBWriteCapacityUtilization:${aws_appautoscaling_target.dynamo_test.resource_id}"
   policy_type = "TargetTrackingScaling"
   service_namespace = "dynamodb"
   resource_id = "table/${aws_dynamodb_table.dynamodb_table_test.name}"
@@ -625,7 +626,7 @@ resource "aws_appautoscaling_policy" "dynamo_test" {
 
   depends_on = ["aws_appautoscaling_target.dynamo_test"]
 }
-`, randPolicyName, randPolicyName)
+`, randPolicyName)
 }
 
 func testAccAWSAppautoscalingPolicy_multiplePoliciesSameName(tableName1, tableName2, namePrefix string) string {
