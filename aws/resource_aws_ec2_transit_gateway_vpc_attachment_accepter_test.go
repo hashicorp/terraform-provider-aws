@@ -36,6 +36,51 @@ func TestAccAWSEc2TransitGatewayVpcAttachmentAccepter_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "dns_support", ec2.DnsSupportValueEnable),
 					resource.TestCheckResourceAttr(resourceName, "ipv6_support", ec2.Ipv6SupportValueDisable),
 					resource.TestCheckResourceAttr(resourceName, "subnet_ids.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttrPair(resourceName, "transit_gateway_id", transitGatewayResourceName, "id"),
+					resource.TestCheckResourceAttrPair(resourceName, "transit_gateway_attachment_id", vpcAttachmentName, "id"),
+					resource.TestCheckResourceAttr(resourceName, "transit_gateway_default_route_table_association", "true"),
+					resource.TestCheckResourceAttr(resourceName, "transit_gateway_default_route_table_propagation", "true"),
+					resource.TestCheckResourceAttrPair(resourceName, "vpc_id", vpcResourceName, "id"),
+					resource.TestCheckResourceAttrPair(resourceName, "vpc_owner_id", callerIdentityDatasourceName, "account_id"),
+				),
+			},
+			{
+				Config:            testAccAWSEc2TransitGatewayVpcAttachmentAccepterConfig_basic(rName),
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccAWSEc2TransitGatewayVpcAttachmentAccepter_Tags(t *testing.T) {
+	var providers []*schema.Provider
+	var transitGatewayVpcAttachment ec2.TransitGatewayVpcAttachment
+	resourceName := "aws_ec2_transit_gateway_vpc_attachment_accepter.test"
+	vpcAttachmentName := "aws_ec2_transit_gateway_vpc_attachment.test"
+	transitGatewayResourceName := "aws_ec2_transit_gateway.test"
+	vpcResourceName := "aws_vpc.test"
+	callerIdentityDatasourceName := "data.aws_caller_identity.creator"
+	rName := fmt.Sprintf("tf-testacc-tgwvpcattach-%s", acctest.RandString(8))
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			testAccPreCheck(t)
+			testAccAlternateAccountPreCheck(t)
+			testAccPreCheckAWSEc2TransitGateway(t)
+		},
+		ProviderFactories: testAccProviderFactories(&providers),
+		CheckDestroy:      testAccCheckAWSEc2TransitGatewayVpcAttachmentDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSEc2TransitGatewayVpcAttachmentAccepterConfig_tags(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSEc2TransitGatewayVpcAttachmentExists(resourceName, &transitGatewayVpcAttachment),
+					resource.TestCheckResourceAttr(resourceName, "dns_support", ec2.DnsSupportValueEnable),
+					resource.TestCheckResourceAttr(resourceName, "ipv6_support", ec2.Ipv6SupportValueDisable),
+					resource.TestCheckResourceAttr(resourceName, "subnet_ids.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "4"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Name", rName),
 					resource.TestCheckResourceAttr(resourceName, "tags.Side", "Accepter"),
@@ -50,7 +95,7 @@ func TestAccAWSEc2TransitGatewayVpcAttachmentAccepter_basic(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccAWSEc2TransitGatewayVpcAttachmentAccepterConfig_updated(rName),
+				Config: testAccAWSEc2TransitGatewayVpcAttachmentAccepterConfig_tagsUpdated(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSEc2TransitGatewayVpcAttachmentExists(resourceName, &transitGatewayVpcAttachment),
 					resource.TestCheckResourceAttr(resourceName, "dns_support", ec2.DnsSupportValueEnable),
@@ -70,7 +115,7 @@ func TestAccAWSEc2TransitGatewayVpcAttachmentAccepter_basic(t *testing.T) {
 				),
 			},
 			{
-				Config:            testAccAWSEc2TransitGatewayVpcAttachmentAccepterConfig_updated(rName),
+				Config:            testAccAWSEc2TransitGatewayVpcAttachmentAccepterConfig_tagsUpdated(rName),
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
@@ -224,6 +269,14 @@ func testAccAWSEc2TransitGatewayVpcAttachmentAccepterConfig_basic(rName string) 
 	return testAccAWSEc2TransitGatewayVpcAttachmentAccepterConfig_base(rName) + fmt.Sprintf(`
 resource "aws_ec2_transit_gateway_vpc_attachment_accepter" "test" {
   transit_gateway_attachment_id = "${aws_ec2_transit_gateway_vpc_attachment.test.id}"
+}
+`)
+}
+
+func testAccAWSEc2TransitGatewayVpcAttachmentAccepterConfig_tags(rName string) string {
+	return testAccAWSEc2TransitGatewayVpcAttachmentAccepterConfig_base(rName) + fmt.Sprintf(`
+resource "aws_ec2_transit_gateway_vpc_attachment_accepter" "test" {
+  transit_gateway_attachment_id = "${aws_ec2_transit_gateway_vpc_attachment.test.id}"
 
   tags = {
     Name = %[1]q
@@ -235,7 +288,7 @@ resource "aws_ec2_transit_gateway_vpc_attachment_accepter" "test" {
 `, rName)
 }
 
-func testAccAWSEc2TransitGatewayVpcAttachmentAccepterConfig_updated(rName string) string {
+func testAccAWSEc2TransitGatewayVpcAttachmentAccepterConfig_tagsUpdated(rName string) string {
 	return testAccAWSEc2TransitGatewayVpcAttachmentAccepterConfig_base(rName) + fmt.Sprintf(`
 resource "aws_ec2_transit_gateway_vpc_attachment_accepter" "test" {
   transit_gateway_attachment_id = "${aws_ec2_transit_gateway_vpc_attachment.test.id}"
