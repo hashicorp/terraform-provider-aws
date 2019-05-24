@@ -121,7 +121,7 @@ func TestAccAwsDxGateway_importComplex(t *testing.T) {
 		CheckDestroy: testAccCheckAwsDxGatewayDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDxGatewayAssociationConfig_multiVgws(rName1, rName2, rBgpAsn),
+				Config: testAccDxGatewayAssociationConfig_multiVpnGatewaysSingleAccount(rName1, rName2, rBgpAsn),
 			},
 
 			{
