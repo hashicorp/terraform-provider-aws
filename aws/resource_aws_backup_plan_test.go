@@ -12,6 +12,10 @@ import (
 	"github.com/hashicorp/terraform/terraform"
 )
 
+func TestAccAwsBackupPlan_TESTING(t *testing.T) {
+	t.Skip("This is only a test")
+}
+
 func TestAccAwsBackupPlan_basic(t *testing.T) {
 	var plan backup.GetBackupPlanOutput
 	rInt := acctest.RandInt()
