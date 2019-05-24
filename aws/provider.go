@@ -426,6 +426,7 @@ func Provider() terraform.ResourceProvider {
 			"aws_dynamodb_table":                                      resourceAwsDynamoDbTable(),
 			"aws_dynamodb_table_item":                                 resourceAwsDynamoDbTableItem(),
 			"aws_dynamodb_global_table":                               resourceAwsDynamoDbGlobalTable(),
+			"aws_ebs_default_kms_key":                                 resourceAwsEbsDefaultKmsKey(),
 			"aws_ebs_encryption_by_default":                           resourceAwsEbsEncryptionByDefault(),
 			"aws_ebs_snapshot":                                        resourceAwsEbsSnapshot(),
 			"aws_ebs_snapshot_copy":                                   resourceAwsEbsSnapshotCopy(),
