@@ -84,7 +84,7 @@ The following arguments are supported:
 * `default_action` - (Required) Configuration block with action that you want AWS WAF to take when a request doesn't match the criteria in any of the rules that are associated with the web ACL. Detailed below.
 * `metric_name` - (Required) The name or description for the Amazon CloudWatch metric of this web ACL.
 * `name` - (Required) The name or description of the web ACL.
-* `rules` - (Required) Configuration blocks containing rules to associate with the web ACL and the settings for each rule. Detailed below.
+* `rules` - (Optional) Configuration blocks containing rules to associate with the web ACL and the settings for each rule. Detailed below.
 * `logging_configuration` - (Optional) Configuration block to enable WAF logging. Detailed below.
 
 ### `default_action` Configuration Block
