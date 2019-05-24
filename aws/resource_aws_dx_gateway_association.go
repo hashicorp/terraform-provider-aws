@@ -27,6 +27,9 @@ func resourceAwsDxGatewayAssociation() *schema.Resource {
 			State: resourceAwsDxGatewayAssociationImport,
 		},
 
+		SchemaVersion: 1,
+		MigrateState:  resourceAwsDxGatewayAssociationMigrateState,
+
 		Schema: map[string]*schema.Schema{
 			"allowed_prefixes": {
 				Type:     schema.TypeSet,
