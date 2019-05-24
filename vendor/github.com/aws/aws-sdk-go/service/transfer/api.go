@@ -881,7 +881,7 @@ func (c *Transfer) ListServersWithContext(ctx aws.Context, input *ListServersInp
 //    // Example iterating over at most 3 pages of a ListServers operation.
 //    pageNum := 0
 //    err := client.ListServersPages(params,
-//        func(page *ListServersOutput, lastPage bool) bool {
+//        func(page *transfer.ListServersOutput, lastPage bool) bool {
 //            pageNum++
 //            fmt.Println(page)
 //            return pageNum <= 3
@@ -1027,7 +1027,7 @@ func (c *Transfer) ListTagsForResourceWithContext(ctx aws.Context, input *ListTa
 //    // Example iterating over at most 3 pages of a ListTagsForResource operation.
 //    pageNum := 0
 //    err := client.ListTagsForResourcePages(params,
-//        func(page *ListTagsForResourceOutput, lastPage bool) bool {
+//        func(page *transfer.ListTagsForResourceOutput, lastPage bool) bool {
 //            pageNum++
 //            fmt.Println(page)
 //            return pageNum <= 3
@@ -1176,7 +1176,7 @@ func (c *Transfer) ListUsersWithContext(ctx aws.Context, input *ListUsersInput, 
 //    // Example iterating over at most 3 pages of a ListUsers operation.
 //    pageNum := 0
 //    err := client.ListUsersPages(params,
-//        func(page *ListUsersOutput, lastPage bool) bool {
+//        func(page *transfer.ListUsersOutput, lastPage bool) bool {
 //            pageNum++
 //            fmt.Println(page)
 //            return pageNum <= 3
@@ -2021,7 +2021,7 @@ type CreateUserInput struct {
 	_ struct{} `type:"structure"`
 
 	// The landing directory (folder) for a user when they log in to the server
-	// using their SFTP client. An example is /home/username.
+	// using their SFTP client. An example is /home/username .
 	HomeDirectory *string `type:"string"`
 
 	// A scope-down policy for your user so you can use the same IAM role across
@@ -2691,7 +2691,7 @@ type DescribedUser struct {
 
 	// This property specifies the landing directory (or folder) which is the location
 	// that files are written to or read from in an Amazon S3 bucket for the described
-	// user. An example would be: /bucket_name/home/username.
+	// user. An example would be: /bucket_name/home/username .
 	HomeDirectory *string `type:"string"`
 
 	// Specifies the name of the policy in use for the described user.
@@ -4039,7 +4039,7 @@ type UpdateUserInput struct {
 
 	// The HomeDirectory parameter specifies the landing directory (folder) for
 	// a user when they log in to the server using their client. An example would
-	// be: /home/username.
+	// be: /home/username .
 	HomeDirectory *string `type:"string"`
 
 	// Allows you to supply a scope-down policy for your user so you can use the

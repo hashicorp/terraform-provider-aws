@@ -83,17 +83,14 @@ const (
 	//    * ACCOUNT_NUMBER_LIMIT_EXCEEDED: You attempted to exceed the limit on
 	//    the number of accounts in an organization. If you need more accounts,
 	//    contact AWS Support (https://console.aws.amazon.com/support/home#/) to
-	//    request an increase in your limit.
-	//
-	// Or the number of invitations that you tried to send would cause you to exceed
-	//    the limit of accounts in your organization. Send fewer invitations or
-	//    contact AWS Support to request an increase in the number of accounts.
-	//
-	// Deleted and closed accounts still count toward your limit.
-	//
-	// If you get receive this exception when running a command immediately after
-	//    creating the organization, wait one hour and try again. If after an hour
-	//    it continues to fail with this error, contact AWS Support (https://console.aws.amazon.com/support/home#/).
+	//    request an increase in your limit. Or the number of invitations that you
+	//    tried to send would cause you to exceed the limit of accounts in your
+	//    organization. Send fewer invitations or contact AWS Support to request
+	//    an increase in the number of accounts. Deleted and closed accounts still
+	//    count toward your limit. If you get receive this exception when running
+	//    a command immediately after creating the organization, wait one hour and
+	//    try again. If after an hour it continues to fail with this error, contact
+	//    AWS Support (https://console.aws.amazon.com/support/home#/).
 	//
 	//    * HANDSHAKE_RATE_LIMIT_EXCEEDED: You attempted to exceed the number of
 	//    handshakes that you can send in one day.
@@ -243,11 +240,9 @@ const (
 	//
 	//    * ACCOUNT_NUMBER_LIMIT_EXCEEDED: You attempted to exceed the limit on
 	//    the number of accounts in an organization. Note that deleted and closed
-	//    accounts still count toward your limit.
-	//
-	// If you get this exception immediately after creating the organization, wait
-	//    one hour and try again. If after an hour it continues to fail with this
-	//    error, contact AWS Support (https://console.aws.amazon.com/support/home#/).
+	//    accounts still count toward your limit. If you get this exception immediately
+	//    after creating the organization, wait one hour and try again. If after
+	//    an hour it continues to fail with this error, contact AWS Support (https://console.aws.amazon.com/support/home#/).
 	//
 	//    * HANDSHAKE_RATE_LIMIT_EXCEEDED: You attempted to exceed the number of
 	//    handshakes that you can send in one day.

@@ -77,13 +77,13 @@ func (c *EKS) CreateClusterRequest(input *CreateClusterInput) (req *request.Requ
 // API server endpoint. By default, public access is enabled, and private access
 // is disabled. For more information, see Amazon EKS Cluster Endpoint Access
 // Control (https://docs.aws.amazon.com/eks/latest/userguide/cluster-endpoint.html)
-// in the Amazon EKS User Guide.
+// in the Amazon EKS User Guide .
 //
 // You can use the logging parameter to enable or disable exporting the Kubernetes
 // control plane logs for your cluster to CloudWatch Logs. By default, cluster
 // control plane logs aren't exported to CloudWatch Logs. For more information,
 // see Amazon EKS Cluster Control Plane Logs (https://docs.aws.amazon.com/eks/latest/userguide/control-plane-logs.html)
-// in the Amazon EKS User Guide.
+// in the Amazon EKS User Guide .
 //
 // CloudWatch Logs ingestion, archive storage, and data scanning rates apply
 // to exported control plane logs. For more information, see Amazon CloudWatch
@@ -686,7 +686,7 @@ func (c *EKS) UpdateClusterConfigRequest(input *UpdateClusterConfigInput) (req *
 // control plane logs for your cluster to CloudWatch Logs. By default, cluster
 // control plane logs aren't exported to CloudWatch Logs. For more information,
 // see Amazon EKS Cluster Control Plane Logs (https://docs.aws.amazon.com/eks/latest/userguide/control-plane-logs.html)
-// in the Amazon EKS User Guide.
+// in the Amazon EKS User Guide .
 //
 // CloudWatch Logs ingestion, archive storage, and data scanning rates apply
 // to exported control plane logs. For more information, see Amazon CloudWatch
@@ -696,7 +696,7 @@ func (c *EKS) UpdateClusterConfigRequest(input *UpdateClusterConfigInput) (req *
 // access to your cluster's Kubernetes API server endpoint. By default, public
 // access is enabled, and private access is disabled. For more information,
 // see Amazon EKS Cluster Endpoint Access Control (https://docs.aws.amazon.com/eks/latest/userguide/cluster-endpoint.html)
-// in the Amazon EKS User Guide.
+// in the Amazon EKS User Guide .
 //
 // At this time, you can not update the subnets or security group IDs for an
 // existing cluster.
@@ -920,7 +920,7 @@ type Cluster struct {
 
 	// The platform version of your Amazon EKS cluster. For more information, see
 	// Platform Versions (https://docs.aws.amazon.com/eks/latest/userguide/platform-versions.html)
-	// in the Amazon EKS User Guide.
+	// in the Amazon EKS User Guide .
 	PlatformVersion *string `locationName:"platformVersion" type:"string"`
 
 	// The VPC configuration used by the cluster control plane. Amazon EKS VPC resources
@@ -1035,7 +1035,7 @@ type CreateClusterInput struct {
 	// to CloudWatch Logs. By default, cluster control plane logs aren't exported
 	// to CloudWatch Logs. For more information, see Amazon EKS Cluster Control
 	// Plane Logs (https://docs.aws.amazon.com/eks/latest/userguide/control-plane-logs.html)
-	// in the Amazon EKS User Guide.
+	// in the Amazon EKS User Guide .
 	//
 	// CloudWatch Logs ingestion, archive storage, and data scanning rates apply
 	// to exported control plane logs. For more information, see Amazon CloudWatch
@@ -1061,7 +1061,7 @@ type CreateClusterInput struct {
 	// The Amazon Resource Name (ARN) of the IAM role that provides permissions
 	// for Amazon EKS to make calls to other AWS API operations on your behalf.
 	// For more information, see Amazon EKS Service IAM Role (https://docs.aws.amazon.com/eks/latest/userguide/service_IAM_role.html)
-	// in the Amazon EKS User Guide.
+	// in the Amazon EKS User Guide .
 	//
 	// RoleArn is a required field
 	RoleArn *string `locationName:"roleArn" type:"string" required:"true"`
@@ -1771,7 +1771,7 @@ type UpdateClusterConfigInput struct {
 	// to CloudWatch Logs. By default, cluster control plane logs aren't exported
 	// to CloudWatch Logs. For more information, see Amazon EKS Cluster Control
 	// Plane Logs (https://docs.aws.amazon.com/eks/latest/userguide/control-plane-logs.html)
-	// in the Amazon EKS User Guide.
+	// in the Amazon EKS User Guide .
 	//
 	// CloudWatch Logs ingestion, archive storage, and data scanning rates apply
 	// to exported control plane logs. For more information, see Amazon CloudWatch
@@ -1991,7 +1991,7 @@ type VpcConfigRequest struct {
 	// value for this parameter is false, which disables private access for your
 	// Kubernetes API server. For more information, see Amazon EKS Cluster Endpoint
 	// Access Control (https://docs.aws.amazon.com/eks/latest/userguide/cluster-endpoint.html)
-	// in the Amazon EKS User Guide.
+	// in the Amazon EKS User Guide .
 	EndpointPrivateAccess *bool `locationName:"endpointPrivateAccess" type:"boolean"`
 
 	// Set this value to false to disable public access for your cluster's Kubernetes
@@ -2000,7 +2000,7 @@ type VpcConfigRequest struct {
 	// value for this parameter is true, which enables public access for your Kubernetes
 	// API server. For more information, see Amazon EKS Cluster Endpoint Access
 	// Control (https://docs.aws.amazon.com/eks/latest/userguide/cluster-endpoint.html)
-	// in the Amazon EKS User Guide.
+	// in the Amazon EKS User Guide .
 	EndpointPublicAccess *bool `locationName:"endpointPublicAccess" type:"boolean"`
 
 	// Specify one or more security groups for the cross-account elastic network

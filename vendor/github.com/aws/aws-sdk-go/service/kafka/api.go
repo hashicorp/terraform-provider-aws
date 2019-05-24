@@ -771,7 +771,7 @@ func (c *Kafka) ListClustersWithContext(ctx aws.Context, input *ListClustersInpu
 //    // Example iterating over at most 3 pages of a ListClusters operation.
 //    pageNum := 0
 //    err := client.ListClustersPages(params,
-//        func(page *ListClustersOutput, lastPage bool) bool {
+//        func(page *kafka.ListClustersOutput, lastPage bool) bool {
 //            pageNum++
 //            fmt.Println(page)
 //            return pageNum <= 3
@@ -918,7 +918,7 @@ func (c *Kafka) ListConfigurationsWithContext(ctx aws.Context, input *ListConfig
 //    // Example iterating over at most 3 pages of a ListConfigurations operation.
 //    pageNum := 0
 //    err := client.ListConfigurationsPages(params,
-//        func(page *ListConfigurationsOutput, lastPage bool) bool {
+//        func(page *kafka.ListConfigurationsOutput, lastPage bool) bool {
 //            pageNum++
 //            fmt.Println(page)
 //            return pageNum <= 3
@@ -1062,7 +1062,7 @@ func (c *Kafka) ListNodesWithContext(ctx aws.Context, input *ListNodesInput, opt
 //    // Example iterating over at most 3 pages of a ListNodes operation.
 //    pageNum := 0
 //    err := client.ListNodesPages(params,
-//        func(page *ListNodesOutput, lastPage bool) bool {
+//        func(page *kafka.ListNodesOutput, lastPage bool) bool {
 //            pageNum++
 //            fmt.Println(page)
 //            return pageNum <= 3

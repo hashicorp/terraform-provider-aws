@@ -1385,7 +1385,7 @@ func (c *CodeCommit) DescribePullRequestEventsWithContext(ctx aws.Context, input
 //    // Example iterating over at most 3 pages of a DescribePullRequestEvents operation.
 //    pageNum := 0
 //    err := client.DescribePullRequestEventsPages(params,
-//        func(page *DescribePullRequestEventsOutput, lastPage bool) bool {
+//        func(page *codecommit.DescribePullRequestEventsOutput, lastPage bool) bool {
 //            pageNum++
 //            fmt.Println(page)
 //            return pageNum <= 3
@@ -1884,7 +1884,7 @@ func (c *CodeCommit) GetCommentsForComparedCommitWithContext(ctx aws.Context, in
 //    // Example iterating over at most 3 pages of a GetCommentsForComparedCommit operation.
 //    pageNum := 0
 //    err := client.GetCommentsForComparedCommitPages(params,
-//        func(page *GetCommentsForComparedCommitOutput, lastPage bool) bool {
+//        func(page *codecommit.GetCommentsForComparedCommitOutput, lastPage bool) bool {
 //            pageNum++
 //            fmt.Println(page)
 //            return pageNum <= 3
@@ -2077,7 +2077,7 @@ func (c *CodeCommit) GetCommentsForPullRequestWithContext(ctx aws.Context, input
 //    // Example iterating over at most 3 pages of a GetCommentsForPullRequest operation.
 //    pageNum := 0
 //    err := client.GetCommentsForPullRequestPages(params,
-//        func(page *GetCommentsForPullRequestOutput, lastPage bool) bool {
+//        func(page *codecommit.GetCommentsForPullRequestOutput, lastPage bool) bool {
 //            pageNum++
 //            fmt.Println(page)
 //            return pageNum <= 3
@@ -2378,7 +2378,7 @@ func (c *CodeCommit) GetDifferencesWithContext(ctx aws.Context, input *GetDiffer
 //    // Example iterating over at most 3 pages of a GetDifferences operation.
 //    pageNum := 0
 //    err := client.GetDifferencesPages(params,
-//        func(page *GetDifferencesOutput, lastPage bool) bool {
+//        func(page *codecommit.GetDifferencesOutput, lastPage bool) bool {
 //            pageNum++
 //            fmt.Println(page)
 //            return pageNum <= 3
@@ -3239,7 +3239,7 @@ func (c *CodeCommit) ListBranchesWithContext(ctx aws.Context, input *ListBranche
 //    // Example iterating over at most 3 pages of a ListBranches operation.
 //    pageNum := 0
 //    err := client.ListBranchesPages(params,
-//        func(page *ListBranchesOutput, lastPage bool) bool {
+//        func(page *codecommit.ListBranchesOutput, lastPage bool) bool {
 //            pageNum++
 //            fmt.Println(page)
 //            return pageNum <= 3
@@ -3417,7 +3417,7 @@ func (c *CodeCommit) ListPullRequestsWithContext(ctx aws.Context, input *ListPul
 //    // Example iterating over at most 3 pages of a ListPullRequests operation.
 //    pageNum := 0
 //    err := client.ListPullRequestsPages(params,
-//        func(page *ListPullRequestsOutput, lastPage bool) bool {
+//        func(page *codecommit.ListPullRequestsOutput, lastPage bool) bool {
 //            pageNum++
 //            fmt.Println(page)
 //            return pageNum <= 3
@@ -3558,7 +3558,7 @@ func (c *CodeCommit) ListRepositoriesWithContext(ctx aws.Context, input *ListRep
 //    // Example iterating over at most 3 pages of a ListRepositories operation.
 //    pageNum := 0
 //    err := client.ListRepositoriesPages(params,
-//        func(page *ListRepositoriesOutput, lastPage bool) bool {
+//        func(page *codecommit.ListRepositoriesOutput, lastPage bool) bool {
 //            pageNum++
 //            fmt.Println(page)
 //            return pageNum <= 3

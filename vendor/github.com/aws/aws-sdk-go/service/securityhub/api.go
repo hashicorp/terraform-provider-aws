@@ -1702,7 +1702,7 @@ func (c *SecurityHub) GetFindingsWithContext(ctx aws.Context, input *GetFindings
 //    // Example iterating over at most 3 pages of a GetFindings operation.
 //    pageNum := 0
 //    err := client.GetFindingsPages(params,
-//        func(page *GetFindingsOutput, lastPage bool) bool {
+//        func(page *securityhub.GetFindingsOutput, lastPage bool) bool {
 //            pageNum++
 //            fmt.Println(page)
 //            return pageNum <= 3
@@ -1944,7 +1944,7 @@ func (c *SecurityHub) GetInsightsWithContext(ctx aws.Context, input *GetInsights
 //    // Example iterating over at most 3 pages of a GetInsights operation.
 //    pageNum := 0
 //    err := client.GetInsightsPages(params,
-//        func(page *GetInsightsOutput, lastPage bool) bool {
+//        func(page *securityhub.GetInsightsOutput, lastPage bool) bool {
 //            pageNum++
 //            fmt.Println(page)
 //            return pageNum <= 3
@@ -2462,7 +2462,7 @@ func (c *SecurityHub) ListEnabledProductsForImportWithContext(ctx aws.Context, i
 //    // Example iterating over at most 3 pages of a ListEnabledProductsForImport operation.
 //    pageNum := 0
 //    err := client.ListEnabledProductsForImportPages(params,
-//        func(page *ListEnabledProductsForImportOutput, lastPage bool) bool {
+//        func(page *securityhub.ListEnabledProductsForImportOutput, lastPage bool) bool {
 //            pageNum++
 //            fmt.Println(page)
 //            return pageNum <= 3
