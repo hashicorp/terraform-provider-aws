@@ -6865,6 +6865,8 @@ func (c *WAFRegional) PutLoggingConfigurationRequest(input *waf.PutLoggingConfig
 // operating. However, if you are capturing logs for Amazon CloudFront, always
 // create the firehose in US East (N. Virginia).
 //
+// Do not create the data firehose using a Kinesis stream as your source.
+//
 // Associate that firehose to your web ACL using a PutLoggingConfiguration request.
 //
 // When you successfully enable logging using a PutLoggingConfiguration request,

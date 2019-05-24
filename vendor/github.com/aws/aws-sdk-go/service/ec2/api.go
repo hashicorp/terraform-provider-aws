@@ -6730,7 +6730,7 @@ func (c *EC2) CreateVpnConnectionRequest(input *CreateVpnConnectionInput) (req *
 // CreateVpnConnection API operation for Amazon Elastic Compute Cloud.
 //
 // Creates a VPN connection between an existing virtual private gateway and
-// a VPN customer gateway. The only supported connection type is ipsec.1.
+// a VPN customer gateway. The supported connection types are ipsec.1 and ipsec.2.
 //
 // The response includes information that you need to give to your network administrator
 // to configure your customer gateway.
@@ -21341,6 +21341,89 @@ func (c *EC2) DetachVpnGatewayWithContext(ctx aws.Context, input *DetachVpnGatew
 	return out, req.Send()
 }
 
+const opDisableEbsEncryptionByDefault = "DisableEbsEncryptionByDefault"
+
+// DisableEbsEncryptionByDefaultRequest generates a "aws/request.Request" representing the
+// client's request for the DisableEbsEncryptionByDefault operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See DisableEbsEncryptionByDefault for more information on using the DisableEbsEncryptionByDefault
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the DisableEbsEncryptionByDefaultRequest method.
+//    req, resp := client.DisableEbsEncryptionByDefaultRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/ec2-2016-11-15/DisableEbsEncryptionByDefault
+func (c *EC2) DisableEbsEncryptionByDefaultRequest(input *DisableEbsEncryptionByDefaultInput) (req *request.Request, output *DisableEbsEncryptionByDefaultOutput) {
+	op := &request.Operation{
+		Name:       opDisableEbsEncryptionByDefault,
+		HTTPMethod: "POST",
+		HTTPPath:   "/",
+	}
+
+	if input == nil {
+		input = &DisableEbsEncryptionByDefaultInput{}
+	}
+
+	output = &DisableEbsEncryptionByDefaultOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// DisableEbsEncryptionByDefault API operation for Amazon Elastic Compute Cloud.
+//
+// Disables default encryption for EBS volumes that are created in your account
+// in the current region.
+//
+// Call this API if you have enabled default encryption using EnableEbsEncryptionByDefault
+// and want to disable default EBS encryption. Once default EBS encryption is
+// disabled, you can still create an encrypted volume by setting encrypted to
+// true in the API call that creates the volume.
+//
+// Disabling default EBS encryption will not change the encryption status of
+// any of your existing volumes.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for Amazon Elastic Compute Cloud's
+// API operation DisableEbsEncryptionByDefault for usage and error information.
+// See also, https://docs.aws.amazon.com/goto/WebAPI/ec2-2016-11-15/DisableEbsEncryptionByDefault
+func (c *EC2) DisableEbsEncryptionByDefault(input *DisableEbsEncryptionByDefaultInput) (*DisableEbsEncryptionByDefaultOutput, error) {
+	req, out := c.DisableEbsEncryptionByDefaultRequest(input)
+	return out, req.Send()
+}
+
+// DisableEbsEncryptionByDefaultWithContext is the same as DisableEbsEncryptionByDefault with the addition of
+// the ability to pass a context and additional request options.
+//
+// See DisableEbsEncryptionByDefault for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *EC2) DisableEbsEncryptionByDefaultWithContext(ctx aws.Context, input *DisableEbsEncryptionByDefaultInput, opts ...request.Option) (*DisableEbsEncryptionByDefaultOutput, error) {
+	req, out := c.DisableEbsEncryptionByDefaultRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
 const opDisableTransitGatewayRouteTablePropagation = "DisableTransitGatewayRouteTablePropagation"
 
 // DisableTransitGatewayRouteTablePropagationRequest generates a "aws/request.Request" representing the
@@ -22198,6 +22281,105 @@ func (c *EC2) DisassociateVpcCidrBlockWithContext(ctx aws.Context, input *Disass
 	return out, req.Send()
 }
 
+const opEnableEbsEncryptionByDefault = "EnableEbsEncryptionByDefault"
+
+// EnableEbsEncryptionByDefaultRequest generates a "aws/request.Request" representing the
+// client's request for the EnableEbsEncryptionByDefault operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See EnableEbsEncryptionByDefault for more information on using the EnableEbsEncryptionByDefault
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the EnableEbsEncryptionByDefaultRequest method.
+//    req, resp := client.EnableEbsEncryptionByDefaultRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/ec2-2016-11-15/EnableEbsEncryptionByDefault
+func (c *EC2) EnableEbsEncryptionByDefaultRequest(input *EnableEbsEncryptionByDefaultInput) (req *request.Request, output *EnableEbsEncryptionByDefaultOutput) {
+	op := &request.Operation{
+		Name:       opEnableEbsEncryptionByDefault,
+		HTTPMethod: "POST",
+		HTTPPath:   "/",
+	}
+
+	if input == nil {
+		input = &EnableEbsEncryptionByDefaultInput{}
+	}
+
+	output = &EnableEbsEncryptionByDefaultOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// EnableEbsEncryptionByDefault API operation for Amazon Elastic Compute Cloud.
+//
+// Enables default encryption for EBS volumes that are created in your account
+// in the current region.
+//
+// Once encryption is enabled with this action, EBS volumes that are created
+// in your account will always be encrypted even if encryption is not specified
+// at launch. This setting overrides the encrypted setting to true in all API
+// calls that create EBS volumes in your account. A volume will be encrypted
+// even if you specify encryption to be false in the API call that creates the
+// volume.
+//
+// If you do not specify a customer master key (CMK) in the API call that creates
+// the EBS volume, then the volume is encrypted to your AWS account's default
+// CMK.
+//
+// You can specify a default CMK of your choice using ModifyEbsDefaultKmsKeyId.
+//
+// Enabling default encryption for EBS volumes has no effect on existing unencrypted
+// volumes in your account. Encrypting the data in these requires manual action.
+// You can either create an encrypted snapshot of an unencrypted volume, or
+// encrypt a copy of an unencrypted snapshot. Any volume restored from an encrypted
+// snapshot is also encrypted. For more information, see Amazon EBS Snapshots
+// (https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/EBSSnapshots.html).
+//
+// Once EBS encryption by default is enabled, you can no longer launch older-generation
+// instance types that do not support encryption. For more information, see
+// Supported Instance Types (https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/EBSEncryption.html#EBSEncryption_supported_instances).
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for Amazon Elastic Compute Cloud's
+// API operation EnableEbsEncryptionByDefault for usage and error information.
+// See also, https://docs.aws.amazon.com/goto/WebAPI/ec2-2016-11-15/EnableEbsEncryptionByDefault
+func (c *EC2) EnableEbsEncryptionByDefault(input *EnableEbsEncryptionByDefaultInput) (*EnableEbsEncryptionByDefaultOutput, error) {
+	req, out := c.EnableEbsEncryptionByDefaultRequest(input)
+	return out, req.Send()
+}
+
+// EnableEbsEncryptionByDefaultWithContext is the same as EnableEbsEncryptionByDefault with the addition of
+// the ability to pass a context and additional request options.
+//
+// See EnableEbsEncryptionByDefault for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *EC2) EnableEbsEncryptionByDefaultWithContext(ctx aws.Context, input *EnableEbsEncryptionByDefaultInput, opts ...request.Option) (*EnableEbsEncryptionByDefaultOutput, error) {
+	req, out := c.EnableEbsEncryptionByDefaultRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
 const opEnableTransitGatewayRouteTablePropagation = "EnableTransitGatewayRouteTablePropagation"
 
 // EnableTransitGatewayRouteTablePropagationRequest generates a "aws/request.Request" representing the
@@ -22974,6 +23156,157 @@ func (c *EC2) GetConsoleScreenshot(input *GetConsoleScreenshotInput) (*GetConsol
 // for more information on using Contexts.
 func (c *EC2) GetConsoleScreenshotWithContext(ctx aws.Context, input *GetConsoleScreenshotInput, opts ...request.Option) (*GetConsoleScreenshotOutput, error) {
 	req, out := c.GetConsoleScreenshotRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
+const opGetEbsDefaultKmsKeyId = "GetEbsDefaultKmsKeyId"
+
+// GetEbsDefaultKmsKeyIdRequest generates a "aws/request.Request" representing the
+// client's request for the GetEbsDefaultKmsKeyId operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See GetEbsDefaultKmsKeyId for more information on using the GetEbsDefaultKmsKeyId
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the GetEbsDefaultKmsKeyIdRequest method.
+//    req, resp := client.GetEbsDefaultKmsKeyIdRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/ec2-2016-11-15/GetEbsDefaultKmsKeyId
+func (c *EC2) GetEbsDefaultKmsKeyIdRequest(input *GetEbsDefaultKmsKeyIdInput) (req *request.Request, output *GetEbsDefaultKmsKeyIdOutput) {
+	op := &request.Operation{
+		Name:       opGetEbsDefaultKmsKeyId,
+		HTTPMethod: "POST",
+		HTTPPath:   "/",
+	}
+
+	if input == nil {
+		input = &GetEbsDefaultKmsKeyIdInput{}
+	}
+
+	output = &GetEbsDefaultKmsKeyIdOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// GetEbsDefaultKmsKeyId API operation for Amazon Elastic Compute Cloud.
+//
+// Describes the default customer master key (CMK) that your account uses to
+// encrypt EBS volumes if you don’t specify a CMK in the API call. You can change
+// this default using ModifyEbsDefaultKmsKeyId.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for Amazon Elastic Compute Cloud's
+// API operation GetEbsDefaultKmsKeyId for usage and error information.
+// See also, https://docs.aws.amazon.com/goto/WebAPI/ec2-2016-11-15/GetEbsDefaultKmsKeyId
+func (c *EC2) GetEbsDefaultKmsKeyId(input *GetEbsDefaultKmsKeyIdInput) (*GetEbsDefaultKmsKeyIdOutput, error) {
+	req, out := c.GetEbsDefaultKmsKeyIdRequest(input)
+	return out, req.Send()
+}
+
+// GetEbsDefaultKmsKeyIdWithContext is the same as GetEbsDefaultKmsKeyId with the addition of
+// the ability to pass a context and additional request options.
+//
+// See GetEbsDefaultKmsKeyId for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *EC2) GetEbsDefaultKmsKeyIdWithContext(ctx aws.Context, input *GetEbsDefaultKmsKeyIdInput, opts ...request.Option) (*GetEbsDefaultKmsKeyIdOutput, error) {
+	req, out := c.GetEbsDefaultKmsKeyIdRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
+const opGetEbsEncryptionByDefault = "GetEbsEncryptionByDefault"
+
+// GetEbsEncryptionByDefaultRequest generates a "aws/request.Request" representing the
+// client's request for the GetEbsEncryptionByDefault operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See GetEbsEncryptionByDefault for more information on using the GetEbsEncryptionByDefault
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the GetEbsEncryptionByDefaultRequest method.
+//    req, resp := client.GetEbsEncryptionByDefaultRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/ec2-2016-11-15/GetEbsEncryptionByDefault
+func (c *EC2) GetEbsEncryptionByDefaultRequest(input *GetEbsEncryptionByDefaultInput) (req *request.Request, output *GetEbsEncryptionByDefaultOutput) {
+	op := &request.Operation{
+		Name:       opGetEbsEncryptionByDefault,
+		HTTPMethod: "POST",
+		HTTPPath:   "/",
+	}
+
+	if input == nil {
+		input = &GetEbsEncryptionByDefaultInput{}
+	}
+
+	output = &GetEbsEncryptionByDefaultOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// GetEbsEncryptionByDefault API operation for Amazon Elastic Compute Cloud.
+//
+// Describes whether default EBS encryption is enabled for your account in the
+// current region.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for Amazon Elastic Compute Cloud's
+// API operation GetEbsEncryptionByDefault for usage and error information.
+// See also, https://docs.aws.amazon.com/goto/WebAPI/ec2-2016-11-15/GetEbsEncryptionByDefault
+func (c *EC2) GetEbsEncryptionByDefault(input *GetEbsEncryptionByDefaultInput) (*GetEbsEncryptionByDefaultOutput, error) {
+	req, out := c.GetEbsEncryptionByDefaultRequest(input)
+	return out, req.Send()
+}
+
+// GetEbsEncryptionByDefaultWithContext is the same as GetEbsEncryptionByDefault with the addition of
+// the ability to pass a context and additional request options.
+//
+// See GetEbsEncryptionByDefault for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *EC2) GetEbsEncryptionByDefaultWithContext(ctx aws.Context, input *GetEbsEncryptionByDefaultInput, opts ...request.Option) (*GetEbsEncryptionByDefaultOutput, error) {
+	req, out := c.GetEbsEncryptionByDefaultRequest(input)
 	req.SetContext(ctx)
 	req.ApplyOptions(opts...)
 	return out, req.Send()
@@ -24318,6 +24651,89 @@ func (c *EC2) ModifyClientVpnEndpointWithContext(ctx aws.Context, input *ModifyC
 	return out, req.Send()
 }
 
+const opModifyEbsDefaultKmsKeyId = "ModifyEbsDefaultKmsKeyId"
+
+// ModifyEbsDefaultKmsKeyIdRequest generates a "aws/request.Request" representing the
+// client's request for the ModifyEbsDefaultKmsKeyId operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See ModifyEbsDefaultKmsKeyId for more information on using the ModifyEbsDefaultKmsKeyId
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the ModifyEbsDefaultKmsKeyIdRequest method.
+//    req, resp := client.ModifyEbsDefaultKmsKeyIdRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/ec2-2016-11-15/ModifyEbsDefaultKmsKeyId
+func (c *EC2) ModifyEbsDefaultKmsKeyIdRequest(input *ModifyEbsDefaultKmsKeyIdInput) (req *request.Request, output *ModifyEbsDefaultKmsKeyIdOutput) {
+	op := &request.Operation{
+		Name:       opModifyEbsDefaultKmsKeyId,
+		HTTPMethod: "POST",
+		HTTPPath:   "/",
+	}
+
+	if input == nil {
+		input = &ModifyEbsDefaultKmsKeyIdInput{}
+	}
+
+	output = &ModifyEbsDefaultKmsKeyIdOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// ModifyEbsDefaultKmsKeyId API operation for Amazon Elastic Compute Cloud.
+//
+// Changes the default customer master key (CMK) that your account uses to encrypt
+// EBS volumes if you don’t specify a CMK in the API call.
+//
+// Your account has an AWS-managed default CMK that is used for encrypting an
+// EBS volume when no CMK is specified in the API call that creates the volume.
+// By calling this API, you can specify a customer-managed CMK to use in place
+// of the AWS-managed default CMK.
+//
+// Note: Deleting or disabling the custom CMK that you have specified to act
+// as your default CMK will result in instance-launch failures.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for Amazon Elastic Compute Cloud's
+// API operation ModifyEbsDefaultKmsKeyId for usage and error information.
+// See also, https://docs.aws.amazon.com/goto/WebAPI/ec2-2016-11-15/ModifyEbsDefaultKmsKeyId
+func (c *EC2) ModifyEbsDefaultKmsKeyId(input *ModifyEbsDefaultKmsKeyIdInput) (*ModifyEbsDefaultKmsKeyIdOutput, error) {
+	req, out := c.ModifyEbsDefaultKmsKeyIdRequest(input)
+	return out, req.Send()
+}
+
+// ModifyEbsDefaultKmsKeyIdWithContext is the same as ModifyEbsDefaultKmsKeyId with the addition of
+// the ability to pass a context and additional request options.
+//
+// See ModifyEbsDefaultKmsKeyId for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *EC2) ModifyEbsDefaultKmsKeyIdWithContext(ctx aws.Context, input *ModifyEbsDefaultKmsKeyIdInput, opts ...request.Option) (*ModifyEbsDefaultKmsKeyIdOutput, error) {
+	req, out := c.ModifyEbsDefaultKmsKeyIdRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
 const opModifyFleet = "ModifyFleet"
 
 // ModifyFleetRequest generates a "aws/request.Request" representing the
@@ -25601,6 +26017,8 @@ func (c *EC2) ModifySpotFleetRequestRequest(input *ModifySpotFleetRequestInput) 
 // ModifySpotFleetRequest API operation for Amazon Elastic Compute Cloud.
 //
 // Modifies the specified Spot Fleet request.
+//
+// You can only modify a Spot Fleet request of type maintain.
 //
 // While the Spot Fleet request is being modified, it is in the modifying state.
 //
@@ -28481,6 +28899,92 @@ func (c *EC2) RequestSpotInstances(input *RequestSpotInstancesInput) (*RequestSp
 // for more information on using Contexts.
 func (c *EC2) RequestSpotInstancesWithContext(ctx aws.Context, input *RequestSpotInstancesInput, opts ...request.Option) (*RequestSpotInstancesOutput, error) {
 	req, out := c.RequestSpotInstancesRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
+const opResetEbsDefaultKmsKeyId = "ResetEbsDefaultKmsKeyId"
+
+// ResetEbsDefaultKmsKeyIdRequest generates a "aws/request.Request" representing the
+// client's request for the ResetEbsDefaultKmsKeyId operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See ResetEbsDefaultKmsKeyId for more information on using the ResetEbsDefaultKmsKeyId
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the ResetEbsDefaultKmsKeyIdRequest method.
+//    req, resp := client.ResetEbsDefaultKmsKeyIdRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/ec2-2016-11-15/ResetEbsDefaultKmsKeyId
+func (c *EC2) ResetEbsDefaultKmsKeyIdRequest(input *ResetEbsDefaultKmsKeyIdInput) (req *request.Request, output *ResetEbsDefaultKmsKeyIdOutput) {
+	op := &request.Operation{
+		Name:       opResetEbsDefaultKmsKeyId,
+		HTTPMethod: "POST",
+		HTTPPath:   "/",
+	}
+
+	if input == nil {
+		input = &ResetEbsDefaultKmsKeyIdInput{}
+	}
+
+	output = &ResetEbsDefaultKmsKeyIdOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// ResetEbsDefaultKmsKeyId API operation for Amazon Elastic Compute Cloud.
+//
+// Resets the account's default customer master key (CMK) to the account's AWS-managed
+// default CMK. This default CMK is used to encrypt EBS volumes when you have
+// enabled EBS encryption by default without specifying a CMK in the API call.
+// If you have not enabled encryption by default, then this CMK is used when
+// you set the Encrypted parameter to true without specifying a custom CMK in
+// the API call.
+//
+// Call this API if you have modified the default CMK that is used for encrypting
+// your EBS volume using ModifyEbsDefaultKmsKeyId and you want to reset it to
+// the AWS-managed default CMK. After resetting, you can continue to provide
+// a CMK of your choice in the API call that creates the volume. However, if
+// no CMK is specified, your account will encrypt the volume to the AWS-managed
+// default CMK.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for Amazon Elastic Compute Cloud's
+// API operation ResetEbsDefaultKmsKeyId for usage and error information.
+// See also, https://docs.aws.amazon.com/goto/WebAPI/ec2-2016-11-15/ResetEbsDefaultKmsKeyId
+func (c *EC2) ResetEbsDefaultKmsKeyId(input *ResetEbsDefaultKmsKeyIdInput) (*ResetEbsDefaultKmsKeyIdOutput, error) {
+	req, out := c.ResetEbsDefaultKmsKeyIdRequest(input)
+	return out, req.Send()
+}
+
+// ResetEbsDefaultKmsKeyIdWithContext is the same as ResetEbsDefaultKmsKeyId with the addition of
+// the ability to pass a context and additional request options.
+//
+// See ResetEbsDefaultKmsKeyId for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *EC2) ResetEbsDefaultKmsKeyIdWithContext(ctx aws.Context, input *ResetEbsDefaultKmsKeyIdInput, opts ...request.Option) (*ResetEbsDefaultKmsKeyIdOutput, error) {
+	req, out := c.ResetEbsDefaultKmsKeyIdRequest(input)
 	req.SetContext(ctx)
 	req.ApplyOptions(opts...)
 	return out, req.Send()
@@ -40863,8 +41367,7 @@ func (s *CreateTransitGatewayVpcAttachmentRequestOptions) SetIpv6Support(v strin
 type CreateVolumeInput struct {
 	_ struct{} `type:"structure"`
 
-	// The Availability Zone in which to create the volume. Use DescribeAvailabilityZones
-	// to list the Availability Zones that are currently available to you.
+	// The Availability Zone in which to create the volume.
 	//
 	// AvailabilityZone is a required field
 	AvailabilityZone *string `type:"string" required:"true"`
@@ -40876,10 +41379,13 @@ type CreateVolumeInput struct {
 	DryRun *bool `locationName:"dryRun" type:"boolean"`
 
 	// Specifies the encryption state of the volume. The default effect of setting
-	// this parameter depends on the volume's source and ownership. Each default
-	// case can be overridden by specifying a customer master key (CMK) with the
-	// KeyKeyId parameter. For a complete list of possible encryption cases, see
-	// Amazon EBS Encryption (https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/EBSEncryption.html).
+	// the Encrypted parameter to true through the console, API, or CLI depends
+	// on the volume's origin (new or from a snapshot), starting encryption state,
+	// ownership, and whether account-level encryption (https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/account-level-encryption.html)
+	// is enabled. Each default case can be overridden by specifying a customer
+	// master key (CMK) with the KmsKeyId parameter in addition to setting Encrypted
+	// to true. For a complete list of possible encryption cases, see Amazon EBS
+	// Encryption (AWSEC2/latest/UserGuide/EBSEncryption.htm).
 	//
 	// Encrypted Amazon EBS volumes may only be attached to instances that support
 	// Amazon EBS encryption. For more information, see Supported Instance Types
@@ -40898,10 +41404,10 @@ type CreateVolumeInput struct {
 	Iops *int64 `type:"integer"`
 
 	// An identifier for the AWS Key Management Service (AWS KMS) customer master
-	// key (CMK) to use when creating the encrypted volume. This parameter is only
-	// required if you want to use a non-default CMK; if this parameter is not specified,
-	// the default CMK for EBS is used. If a KmsKeyId is specified, the Encrypted
-	// flag must also be set.
+	// key (CMK) to use to encrypt the volume. This parameter is only required if
+	// you want to use a non-default CMK; if this parameter is not specified, the
+	// default CMK for EBS is used. If a KmsKeyId is specified, the Encrypted flag
+	// must also be set.
 	//
 	// The CMK identifier may be provided in any of the following formats:
 	//
@@ -40935,7 +41441,7 @@ type CreateVolumeInput struct {
 	// Default: If you're creating the volume from a snapshot and don't specify
 	// a volume size, the default is the snapshot size.
 	//
-	// At least one of Size or SnapshotId are required.
+	// At least one of Size or SnapshotId is required.
 	Size *int64 `type:"integer"`
 
 	// The snapshot from which to create the volume.
@@ -41258,7 +41764,7 @@ type CreateVpcEndpointInput struct {
 	// true: enableDnsHostnames and enableDnsSupport. Use ModifyVpcAttribute to
 	// set the VPC attributes.
 	//
-	// Default: false
+	// Default: true
 	PrivateDnsEnabled *bool `type:"boolean"`
 
 	// (Gateway endpoint) One or more route table IDs.
@@ -41728,7 +42234,7 @@ type CreateVpnConnectionInput struct {
 	// specify a virtual private gateway.
 	TransitGatewayId *string `type:"string"`
 
-	// The type of VPN connection (ipsec.1).
+	// The type of VPN connection (ipsec.1 | ipsec.2).
 	//
 	// Type is a required field
 	Type *string `type:"string" required:"true"`
@@ -57351,6 +57857,55 @@ func (s *DirectoryServiceAuthenticationRequest) SetDirectoryId(v string) *Direct
 	return s
 }
 
+type DisableEbsEncryptionByDefaultInput struct {
+	_ struct{} `type:"structure"`
+
+	// Checks whether you have the required permissions for the action, without
+	// actually making the request, and provides an error response. If you have
+	// the required permissions, the error response is DryRunOperation. Otherwise,
+	// it is UnauthorizedOperation.
+	DryRun *bool `type:"boolean"`
+}
+
+// String returns the string representation
+func (s DisableEbsEncryptionByDefaultInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DisableEbsEncryptionByDefaultInput) GoString() string {
+	return s.String()
+}
+
+// SetDryRun sets the DryRun field's value.
+func (s *DisableEbsEncryptionByDefaultInput) SetDryRun(v bool) *DisableEbsEncryptionByDefaultInput {
+	s.DryRun = &v
+	return s
+}
+
+type DisableEbsEncryptionByDefaultOutput struct {
+	_ struct{} `type:"structure"`
+
+	// Account-level encryption status after performing the action.
+	EbsEncryptionByDefault *bool `locationName:"ebsEncryptionByDefault" type:"boolean"`
+}
+
+// String returns the string representation
+func (s DisableEbsEncryptionByDefaultOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DisableEbsEncryptionByDefaultOutput) GoString() string {
+	return s.String()
+}
+
+// SetEbsEncryptionByDefault sets the EbsEncryptionByDefault field's value.
+func (s *DisableEbsEncryptionByDefaultOutput) SetEbsEncryptionByDefault(v bool) *DisableEbsEncryptionByDefaultOutput {
+	s.EbsEncryptionByDefault = &v
+	return s
+}
+
 type DisableTransitGatewayRouteTablePropagationInput struct {
 	_ struct{} `type:"structure"`
 
@@ -58443,13 +58998,16 @@ type EbsBlockDevice struct {
 	// Indicates whether the EBS volume is deleted on instance termination.
 	DeleteOnTermination *bool `locationName:"deleteOnTermination" type:"boolean"`
 
-	// Indicates whether the encryption state of an EBS volume is to be changed
-	// while being restored from a backing snapshot. The default effect of setting
-	// this parameter to true or leaving it unset depends on the origin, starting
-	// encryption state, and ownership of the volume. Each default case can be overridden
-	// by specifying a customer master key (CMK) as argument to the KmsKeyId parameter
-	// in addition to setting Encrypted = true. For a complete list of possible
-	// encryption cases, see Amazon EBS Encryption (https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/EBSEncryption.html).
+	// Indicates whether the encryption state of an EBS volume is changed while
+	// being restored from a backing snapshot. The default effect of setting the
+	// Encrypted parameter to true through the console, API, or CLI depends on the
+	// volume's origin (new or from a snapshot), starting encryption state, ownership,
+	// and whether account-level encryption (https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/account-level-encryption.html)
+	// is enabled. Each default case can be overridden by specifying a customer
+	// master key (CMK) with the KmsKeyId parameter in addition to setting Encrypted
+	// to true. For a complete list of possible encryption cases, see Amazon EBS
+	// Encryption (https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/EBSEncryption.html#encryption-parameters)
+	// in the Amazon Elastic Compute Cloud User Guide.
 	//
 	// In no case can you remove encryption from an encrypted volume.
 	//
@@ -58465,7 +59023,7 @@ type EbsBlockDevice struct {
 	// in the Amazon Elastic Compute Cloud User Guide.
 	//
 	// Constraints: Range is 100-16,000 IOPS for gp2 volumes and 100 to 64,000IOPS
-	// for io1 volumes in most Regions. Maximum io1IOPS of 64,000 is guaranteed
+	// for io1 volumes in most Regions. Maximum io1 IOPS of 64,000 is guaranteed
 	// only on Nitro-based instances (https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/instance-types.html#ec2-nitro-instances).
 	// Other instance families guarantee performance up to 32,000 IOPS. For more
 	// information, see Amazon EBS Volume Types (https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/EBSVolumeTypes.html)
@@ -58972,6 +59530,55 @@ func (s *ElasticInferenceAcceleratorAssociation) SetElasticInferenceAcceleratorA
 // SetElasticInferenceAcceleratorAssociationTime sets the ElasticInferenceAcceleratorAssociationTime field's value.
 func (s *ElasticInferenceAcceleratorAssociation) SetElasticInferenceAcceleratorAssociationTime(v time.Time) *ElasticInferenceAcceleratorAssociation {
 	s.ElasticInferenceAcceleratorAssociationTime = &v
+	return s
+}
+
+type EnableEbsEncryptionByDefaultInput struct {
+	_ struct{} `type:"structure"`
+
+	// Checks whether you have the required permissions for the action, without
+	// actually making the request, and provides an error response. If you have
+	// the required permissions, the error response is DryRunOperation. Otherwise,
+	// it is UnauthorizedOperation.
+	DryRun *bool `type:"boolean"`
+}
+
+// String returns the string representation
+func (s EnableEbsEncryptionByDefaultInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s EnableEbsEncryptionByDefaultInput) GoString() string {
+	return s.String()
+}
+
+// SetDryRun sets the DryRun field's value.
+func (s *EnableEbsEncryptionByDefaultInput) SetDryRun(v bool) *EnableEbsEncryptionByDefaultInput {
+	s.DryRun = &v
+	return s
+}
+
+type EnableEbsEncryptionByDefaultOutput struct {
+	_ struct{} `type:"structure"`
+
+	// Account-level encryption status after performing the action.
+	EbsEncryptionByDefault *bool `locationName:"ebsEncryptionByDefault" type:"boolean"`
+}
+
+// String returns the string representation
+func (s EnableEbsEncryptionByDefaultOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s EnableEbsEncryptionByDefaultOutput) GoString() string {
+	return s.String()
+}
+
+// SetEbsEncryptionByDefault sets the EbsEncryptionByDefault field's value.
+func (s *EnableEbsEncryptionByDefaultOutput) SetEbsEncryptionByDefault(v bool) *EnableEbsEncryptionByDefaultOutput {
+	s.EbsEncryptionByDefault = &v
 	return s
 }
 
@@ -61085,6 +61692,105 @@ func (s *GetConsoleScreenshotOutput) SetImageData(v string) *GetConsoleScreensho
 // SetInstanceId sets the InstanceId field's value.
 func (s *GetConsoleScreenshotOutput) SetInstanceId(v string) *GetConsoleScreenshotOutput {
 	s.InstanceId = &v
+	return s
+}
+
+type GetEbsDefaultKmsKeyIdInput struct {
+	_ struct{} `type:"structure"`
+
+	// Checks whether you have the required permissions for the action, without
+	// actually making the request, and provides an error response. If you have
+	// the required permissions, the error response is DryRunOperation. Otherwise,
+	// it is UnauthorizedOperation.
+	DryRun *bool `type:"boolean"`
+}
+
+// String returns the string representation
+func (s GetEbsDefaultKmsKeyIdInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s GetEbsDefaultKmsKeyIdInput) GoString() string {
+	return s.String()
+}
+
+// SetDryRun sets the DryRun field's value.
+func (s *GetEbsDefaultKmsKeyIdInput) SetDryRun(v bool) *GetEbsDefaultKmsKeyIdInput {
+	s.DryRun = &v
+	return s
+}
+
+type GetEbsDefaultKmsKeyIdOutput struct {
+	_ struct{} `type:"structure"`
+
+	// The full ARN of the default CMK that your account uses to encrypt an EBS
+	// volume when no CMK is specified in the API call that creates the volume.
+	KmsKeyId *string `locationName:"kmsKeyId" type:"string"`
+}
+
+// String returns the string representation
+func (s GetEbsDefaultKmsKeyIdOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s GetEbsDefaultKmsKeyIdOutput) GoString() string {
+	return s.String()
+}
+
+// SetKmsKeyId sets the KmsKeyId field's value.
+func (s *GetEbsDefaultKmsKeyIdOutput) SetKmsKeyId(v string) *GetEbsDefaultKmsKeyIdOutput {
+	s.KmsKeyId = &v
+	return s
+}
+
+type GetEbsEncryptionByDefaultInput struct {
+	_ struct{} `type:"structure"`
+
+	// Checks whether you have the required permissions for the action, without
+	// actually making the request, and provides an error response. If you have
+	// the required permissions, the error response is DryRunOperation. Otherwise,
+	// it is UnauthorizedOperation.
+	DryRun *bool `type:"boolean"`
+}
+
+// String returns the string representation
+func (s GetEbsEncryptionByDefaultInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s GetEbsEncryptionByDefaultInput) GoString() string {
+	return s.String()
+}
+
+// SetDryRun sets the DryRun field's value.
+func (s *GetEbsEncryptionByDefaultInput) SetDryRun(v bool) *GetEbsEncryptionByDefaultInput {
+	s.DryRun = &v
+	return s
+}
+
+type GetEbsEncryptionByDefaultOutput struct {
+	_ struct{} `type:"structure"`
+
+	// Indicates whether default encryption for EBS volumes is enabled or disabled.
+	EbsEncryptionByDefault *bool `locationName:"ebsEncryptionByDefault" type:"boolean"`
+}
+
+// String returns the string representation
+func (s GetEbsEncryptionByDefaultOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s GetEbsEncryptionByDefaultOutput) GoString() string {
+	return s.String()
+}
+
+// SetEbsEncryptionByDefault sets the EbsEncryptionByDefault field's value.
+func (s *GetEbsEncryptionByDefaultOutput) SetEbsEncryptionByDefault(v bool) *GetEbsEncryptionByDefaultOutput {
+	s.EbsEncryptionByDefault = &v
 	return s
 }
 
@@ -68758,6 +69464,99 @@ func (s *ModifyClientVpnEndpointOutput) SetReturn(v bool) *ModifyClientVpnEndpoi
 	return s
 }
 
+type ModifyEbsDefaultKmsKeyIdInput struct {
+	_ struct{} `type:"structure"`
+
+	// Checks whether you have the required permissions for the action, without
+	// actually making the request, and provides an error response. If you have
+	// the required permissions, the error response is DryRunOperation. Otherwise,
+	// it is UnauthorizedOperation.
+	DryRun *bool `type:"boolean"`
+
+	// An identifier for the AWS Key Management Service (AWS KMS) customer master
+	// key (CMK) to use to encrypt the volume. This parameter is only required if
+	// you want to use a non-default CMK; if this parameter is not specified, the
+	// default CMK for EBS is used. If a KmsKeyId is specified, the Encrypted flag
+	// must also be set.
+	//
+	// The CMK identifier may be provided in any of the following formats:
+	//
+	//    * Key ID
+	//
+	//    * Key alias
+	//
+	//    * ARN using key ID. The ID ARN contains the arn:aws:kms namespace, followed
+	//    by the Region of the CMK, the AWS account ID of the CMK owner, the key
+	//    namespace, and then the CMK ID. For example, arn:aws:kms:us-east-1:012345678910:key/abcd1234-a123-456a-a12b-a123b4cd56ef.
+	//
+	//
+	//    * ARN using key alias. The alias ARN contains the arn:aws:kms namespace,
+	//    followed by the Region of the CMK, the AWS account ID of the CMK owner,
+	//    the alias namespace, and then the CMK alias. For example, arn:aws:kms:us-east-1:012345678910:alias/ExampleAlias.
+	//
+	// KmsKeyId is a required field
+	KmsKeyId *string `type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s ModifyEbsDefaultKmsKeyIdInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ModifyEbsDefaultKmsKeyIdInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *ModifyEbsDefaultKmsKeyIdInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "ModifyEbsDefaultKmsKeyIdInput"}
+	if s.KmsKeyId == nil {
+		invalidParams.Add(request.NewErrParamRequired("KmsKeyId"))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetDryRun sets the DryRun field's value.
+func (s *ModifyEbsDefaultKmsKeyIdInput) SetDryRun(v bool) *ModifyEbsDefaultKmsKeyIdInput {
+	s.DryRun = &v
+	return s
+}
+
+// SetKmsKeyId sets the KmsKeyId field's value.
+func (s *ModifyEbsDefaultKmsKeyIdInput) SetKmsKeyId(v string) *ModifyEbsDefaultKmsKeyIdInput {
+	s.KmsKeyId = &v
+	return s
+}
+
+type ModifyEbsDefaultKmsKeyIdOutput struct {
+	_ struct{} `type:"structure"`
+
+	// The full ARN of the default CMK that your account uses to encrypt an EBS
+	// volume when no CMK is specified in the API call that creates the volume.
+	KmsKeyId *string `locationName:"kmsKeyId" type:"string"`
+}
+
+// String returns the string representation
+func (s ModifyEbsDefaultKmsKeyIdOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ModifyEbsDefaultKmsKeyIdOutput) GoString() string {
+	return s.String()
+}
+
+// SetKmsKeyId sets the KmsKeyId field's value.
+func (s *ModifyEbsDefaultKmsKeyIdOutput) SetKmsKeyId(v string) *ModifyEbsDefaultKmsKeyIdOutput {
+	s.KmsKeyId = &v
+	return s
+}
+
 type ModifyFleetInput struct {
 	_ struct{} `type:"structure"`
 
@@ -70532,10 +71331,8 @@ type ModifySubnetAttributeInput struct {
 	// or later of the Amazon EC2 API.
 	AssignIpv6AddressOnCreation *AttributeBooleanValue `type:"structure"`
 
-	// Specify true to indicate that network interfaces created in the specified
-	// subnet should be assigned a public IPv4 address. This includes a network
-	// interface that's created when launching an instance into the subnet (the
-	// instance therefore receives a public IPv4 address).
+	// Specify true to indicate that ENIs attached to instances created in the specified
+	// subnet should be assigned a public IPv4 address.
 	MapPublicIpOnLaunch *AttributeBooleanValue `type:"structure"`
 
 	// The ID of the subnet.
@@ -76025,9 +76822,11 @@ type RequestLaunchTemplateData struct {
 	// only.
 	CreditSpecification *CreditSpecificationRequest `type:"structure"`
 
-	// If set to true, you can't terminate the instance using the Amazon EC2 console,
-	// CLI, or API. To change this attribute to false after launch, use  ModifyInstanceAttribute
-	// (https://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_ModifyInstanceAttribute.html).
+	// If you set this parameter to true, you can't terminate the instance using
+	// the Amazon EC2 console, CLI, or API; otherwise, you can. To change this attribute
+	// after launch, use ModifyInstanceAttribute (https://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_ModifyInstanceAttribute.html).
+	// Alternatively, if you set InstanceInitiatedShutdownBehavior to terminate,
+	// you can terminate the instance by running the shutdown command from the instance.
 	DisableApiTermination *bool `type:"boolean"`
 
 	// Indicates whether the instance is optimized for Amazon EBS I/O. This optimization
@@ -76053,7 +76852,7 @@ type RequestLaunchTemplateData struct {
 	// The IAM instance profile.
 	IamInstanceProfile *LaunchTemplateIamInstanceProfileSpecificationRequest `type:"structure"`
 
-	// The ID of the AMI, which you can get by using DescribeImages (https://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_DescribeImages.html).
+	// The ID of the AMI.
 	ImageId *string `type:"string"`
 
 	// Indicates whether an instance stops or terminates when you initiate shutdown
@@ -77638,6 +78437,56 @@ func (s *ReservedInstancesOffering) SetUsagePrice(v float64) *ReservedInstancesO
 	return s
 }
 
+type ResetEbsDefaultKmsKeyIdInput struct {
+	_ struct{} `type:"structure"`
+
+	// Checks whether you have the required permissions for the action, without
+	// actually making the request, and provides an error response. If you have
+	// the required permissions, the error response is DryRunOperation. Otherwise,
+	// it is UnauthorizedOperation.
+	DryRun *bool `type:"boolean"`
+}
+
+// String returns the string representation
+func (s ResetEbsDefaultKmsKeyIdInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ResetEbsDefaultKmsKeyIdInput) GoString() string {
+	return s.String()
+}
+
+// SetDryRun sets the DryRun field's value.
+func (s *ResetEbsDefaultKmsKeyIdInput) SetDryRun(v bool) *ResetEbsDefaultKmsKeyIdInput {
+	s.DryRun = &v
+	return s
+}
+
+type ResetEbsDefaultKmsKeyIdOutput struct {
+	_ struct{} `type:"structure"`
+
+	// The full ARN of the default CMK that your account uses to encrypt an EBS
+	// volume when no CMK is specified in the API call that creates the volume.
+	KmsKeyId *string `locationName:"kmsKeyId" type:"string"`
+}
+
+// String returns the string representation
+func (s ResetEbsDefaultKmsKeyIdOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ResetEbsDefaultKmsKeyIdOutput) GoString() string {
+	return s.String()
+}
+
+// SetKmsKeyId sets the KmsKeyId field's value.
+func (s *ResetEbsDefaultKmsKeyIdOutput) SetKmsKeyId(v string) *ResetEbsDefaultKmsKeyIdOutput {
+	s.KmsKeyId = &v
+	return s
+}
+
 type ResetFpgaImageAttributeInput struct {
 	_ struct{} `type:"structure"`
 
@@ -79083,9 +79932,9 @@ type RunInstancesInput struct {
 
 	// If you set this parameter to true, you can't terminate the instance using
 	// the Amazon EC2 console, CLI, or API; otherwise, you can. To change this attribute
-	// to false after launch, use ModifyInstanceAttribute. Alternatively, if you
-	// set InstanceInitiatedShutdownBehavior to terminate, you can terminate the
-	// instance by running the shutdown command from the instance.
+	// after launch, use ModifyInstanceAttribute (https://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_ModifyInstanceAttribute.html).
+	// Alternatively, if you set InstanceInitiatedShutdownBehavior to terminate,
+	// you can terminate the instance by running the shutdown command from the instance.
 	//
 	// Default: false
 	DisableApiTermination *bool `locationName:"disableApiTermination" type:"boolean"`
@@ -79125,9 +79974,8 @@ type RunInstancesInput struct {
 	// The IAM instance profile.
 	IamInstanceProfile *IamInstanceProfileSpecification `locationName:"iamInstanceProfile" type:"structure"`
 
-	// The ID of the AMI, which you can get by calling DescribeImages. An AMI ID
-	// is required to launch an instance and must be specified here or in a launch
-	// template.
+	// The ID of the AMI. An AMI ID is required to launch an instance and must be
+	// specified here or in a launch template.
 	ImageId *string `type:"string"`
 
 	// Indicates whether an instance stops or terminates when you initiate shutdown
