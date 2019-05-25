@@ -97,13 +97,12 @@ func resourceAwsAppautoscalingScheduledActionPut(d *schema.ResourceData, meta in
 	if v, ok := d.GetOk("schedule"); ok {
 		input.Schedule = aws.String(v.(string))
 	}
-	if v, ok := d.GetOk("scalable_target_action"); ok {
+	if _, ok := d.GetOk("scalable_target_action"); ok {
 		sta := &applicationautoscaling.ScalableTargetAction{}
-		raw := v.([]interface{})[0].(map[string]interface{})
-		if max, ok := raw["max_capacity"]; ok {
+		if max, ok := d.GetOkExists("scalable_target_action.0.max_capacity"); ok {
 			sta.MaxCapacity = aws.Int64(int64(max.(int)))
 		}
-		if min, ok := raw["min_capacity"]; ok {
+		if min, ok := d.GetOkExists("scalable_target_action.0.min_capacity"); ok {
 			sta.MinCapacity = aws.Int64(int64(min.(int)))
 		}
 		input.ScalableTargetAction = sta

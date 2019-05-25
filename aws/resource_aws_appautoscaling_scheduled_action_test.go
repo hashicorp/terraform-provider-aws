@@ -22,7 +22,7 @@ func TestAccAWSAppautoscalingScheduledAction_dynamo(t *testing.T) {
 			{
 				Config: testAccAppautoscalingScheduledActionConfig_DynamoDB(acctest.RandString(5), ts),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsAppautoscalingScheduledActionExists("aws_appautoscaling_scheduled_action.hoge"),
+					testAccCheckAwsAppautoscalingScheduledActionExists("aws_appautoscaling_scheduled_action.scale_down"),
 				),
 			},
 		},
@@ -135,7 +135,7 @@ resource "aws_appautoscaling_target" "read" {
   max_capacity = 10
 }
 
-resource "aws_appautoscaling_scheduled_action" "hoge" {
+resource "aws_appautoscaling_scheduled_action" "scale_down" {
   name = "tf-appauto-%s"
   service_namespace = "${aws_appautoscaling_target.read.service_namespace}"
   resource_id = "${aws_appautoscaling_target.read.resource_id}"
@@ -144,7 +144,9 @@ resource "aws_appautoscaling_scheduled_action" "hoge" {
 
   scalable_target_action {
     min_capacity = 1
-    max_capacity = 10
+    # max_capacity is omitted and shall thus be omitted from the request
+    # if it is not omitted and instead sent with the value 0, then the following error would be returned:
+    # "ValidationException: Maximum capacity cannot be less than minimum capacity"
   }
 }
 `, rName, rName, ts)
