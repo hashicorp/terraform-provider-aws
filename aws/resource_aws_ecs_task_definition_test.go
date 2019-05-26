@@ -504,7 +504,7 @@ func TestAccAWSEcsTaskDefinition_Tags(t *testing.T) {
 	})
 }
 
-func TestAccAWSEcsTaskDefinition_ProxyConfiguration(t *testing.T){
+func TestAccAWSEcsTaskDefinition_ProxyConfiguration(t *testing.T) {
 	var taskDefinition ecs.TaskDefinition
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_ecs_task_definition.test"
@@ -537,7 +537,7 @@ func TestAccAWSEcsTaskDefinition_ProxyConfiguration(t *testing.T){
 
 func testAccAWSEcsTaskDefinitionConfigProxyConfiguration(rName string, containerName string, proxyType string,
 	ignoredUid string, ignoredGid string, appPorts string, proxyIngressPort string, proxyEgressPort string,
-	egressIgnoredPorts string, egressIgnoredIPs string)  string {
+	egressIgnoredPorts string, egressIgnoredIPs string) string {
 
 	return fmt.Sprintf(`
 resource "aws_ecs_cluster" "test" {
@@ -618,7 +618,7 @@ func testAccCheckAWSEcsTaskDefinitionProxyConfiguration(after *ecs.TaskDefinitio
 		}
 
 		propertyLookups := make(map[string]string)
-		for _, property := range properties  {
+		for _, property := range properties {
 			propertyLookups[*property.Name] = *property.Value
 		}
 
