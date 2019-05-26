@@ -504,6 +504,156 @@ func TestAccAWSEcsTaskDefinition_Tags(t *testing.T) {
 	})
 }
 
+func TestAccAWSEcsTaskDefinition_ProxyConfiguration(t *testing.T){
+	var taskDefinition ecs.TaskDefinition
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_ecs_task_definition.test"
+
+	containerName := "web"
+	proxyType := "APPMESH"
+	ignoredUid := "1337"
+	ignoredGid := "999"
+	appPorts := "80"
+	proxyIngressPort := "15000"
+	proxyEgressPort := "15001"
+	egressIgnoredPorts := "5500"
+	egressIgnoredIPs := "169.254.170.2,169.254.169.254"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSEcsTaskDefinitionDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSEcsTaskDefinitionConfigProxyConfiguration(rName, containerName, proxyType, ignoredUid, ignoredGid, appPorts, proxyIngressPort, proxyEgressPort, egressIgnoredPorts, egressIgnoredIPs),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSEcsTaskDefinitionExists(resourceName, &taskDefinition),
+					testAccCheckAWSEcsTaskDefinitionProxyConfiguration(&taskDefinition, containerName, proxyType, ignoredUid, ignoredGid, appPorts, proxyIngressPort, proxyEgressPort, egressIgnoredPorts, egressIgnoredIPs),
+				),
+			},
+		},
+	})
+}
+
+func testAccAWSEcsTaskDefinitionConfigProxyConfiguration(rName string, containerName string, proxyType string,
+	ignoredUid string, ignoredGid string, appPorts string, proxyIngressPort string, proxyEgressPort string,
+	egressIgnoredPorts string, egressIgnoredIPs string)  string {
+
+	return fmt.Sprintf(`
+resource "aws_ecs_cluster" "test" {
+  name = %q
+}
+
+resource "aws_ecs_task_definition" "test" {
+  family = %q
+  network_mode = "awsvpc"
+
+  proxy_configuration = {
+    type = %q
+    container_name = %q
+    properties = [
+      {
+        name = "IgnoredUID"
+        value = %q
+      },
+      {
+        name = "IgnoredGID"
+        value = %q
+      },
+      {
+        name = "AppPorts"
+        value = %q
+      },
+      {
+        name = "ProxyIngressPort",
+        value = %q
+      },
+      {
+        name = "ProxyEgressPort",
+        value = %q
+      },
+      {
+        name = "EgressIgnoredPorts"
+        value = %q
+      },
+      {
+        name = "EgressIgnoredIPs",
+        value = %q
+      }
+    ]
+  }
+
+  container_definitions = <<DEFINITION
+[
+  {
+    "cpu": 128,
+    "essential": true,
+    "image": "nginx:latest",
+    "memory": 128,
+    "name": %q
+  }
+]
+DEFINITION
+
+}
+`, rName, rName, containerName, proxyType, containerName, ignoredUid, ignoredGid, appPorts, proxyIngressPort, proxyEgressPort, egressIgnoredPorts, egressIgnoredIPs)
+}
+
+func testAccCheckAWSEcsTaskDefinitionProxyConfiguration(after *ecs.TaskDefinition, containerName string, proxyType string,
+	ignoredUid string, ignoredGid string, appPorts string, proxyIngressPort string, proxyEgressPort string,
+	egressIgnoredPorts string, egressIgnoredIPs string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		if *after.ProxyConfiguration.Type != proxyType {
+			return fmt.Errorf("Expected (%s) ProxyConfiguration.Type, got (%s)", proxyType, *after.ProxyConfiguration.Type)
+		}
+
+		if *after.ProxyConfiguration.ContainerName != containerName {
+			return fmt.Errorf("Expected (%s) ProxyConfiguration.ContainerName, got (%s)", containerName, *after.ProxyConfiguration.ContainerName)
+		}
+
+		properties := after.ProxyConfiguration.Properties
+		expectedProperties := []string{"IgnoredUID", "IgnoredGID", "AppPorts", "ProxyIngressPort", "ProxyEgressPort", "EgressIgnoredPorts", "EgressIgnoredIPs"}
+		if len(properties) != len(expectedProperties) {
+			return fmt.Errorf("Expected (%d) ProxyConfiguration.Property count, got (%d)", len(expectedProperties), len(properties))
+		}
+
+		propertyLookups := make(map[string]string)
+		for _, property := range properties  {
+			propertyLookups[*property.Name] = *property.Value
+		}
+
+		if propertyLookups["IgnoredUID"] != ignoredUid {
+			return fmt.Errorf("Expected (%s) ProxyConfiguration.Properties.IgnoredUID, got (%s)", ignoredUid, propertyLookups["IgnoredUID"])
+		}
+
+		if propertyLookups["IgnoredGID"] != ignoredGid {
+			return fmt.Errorf("Expected (%s) ProxyConfiguration.Properties.IgnoredGID, got (%s)", ignoredGid, propertyLookups["IgnoredGID"])
+		}
+
+		if propertyLookups["AppPorts"] != appPorts {
+			return fmt.Errorf("Expected (%s) ProxyConfiguration.Properties.AppPorts, got (%s)", appPorts, propertyLookups["AppPorts"])
+		}
+
+		if propertyLookups["ProxyIngressPort"] != proxyIngressPort {
+			return fmt.Errorf("Expected (%s) ProxyConfiguration.Properties.ProxyIngressPort, got (%s)", proxyIngressPort, propertyLookups["ProxyIngressPort"])
+		}
+
+		if propertyLookups["ProxyEgressPort"] != proxyEgressPort {
+			return fmt.Errorf("Expected (%s) ProxyConfiguration.Properties.ProxyEgressPort, got (%s)", proxyEgressPort, propertyLookups["ProxyEgressPort"])
+		}
+
+		if propertyLookups["EgressIgnoredPorts"] != egressIgnoredPorts {
+			return fmt.Errorf("Expected (%s) ProxyConfiguration.Properties.EgressIgnoredPorts, got (%s)", egressIgnoredPorts, propertyLookups["EgressIgnoredPorts"])
+		}
+
+		if propertyLookups["EgressIgnoredIPs"] != egressIgnoredIPs {
+			return fmt.Errorf("Expected (%s) ProxyConfiguration.Properties.EgressIgnoredIPs, got (%s)", egressIgnoredIPs, propertyLookups["EgressIgnoredIPs"])
+		}
+
+		return nil
+	}
+}
+
 func testAccCheckEcsTaskDefinitionRecreated(t *testing.T,
 	before, after *ecs.TaskDefinition) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
@@ -585,7 +735,6 @@ func testAccCheckAWSEcsTaskDefinitionExists(name string, def *ecs.TaskDefinition
 		if err != nil {
 			return err
 		}
-
 		*def = *out.TaskDefinition
 
 		return nil

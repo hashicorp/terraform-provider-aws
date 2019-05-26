@@ -230,6 +230,70 @@ func resourceAwsEcsTaskDefinition() *schema.Resource {
 				}, false),
 			},
 
+			"proxy_configuration": {
+				Type:     schema.TypeSet,
+				Optional: true,
+				ForceNew: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"container_name": {
+							Type:     schema.TypeString,
+							Required: true,
+							ForceNew: true,
+						},
+						"properties": {
+							Type:     schema.TypeSet,
+							Optional: true,
+							ForceNew: true,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"name": {
+										Type:     schema.TypeString,
+										Required: true,
+										ForceNew: true,
+									},
+									"value": {
+										Type:     schema.TypeString,
+										Required: true,
+										ForceNew: true,
+									},
+								},
+							},
+							Set: func(v interface{}) int {
+								var buf bytes.Buffer
+								m := v.(map[string]interface{})
+								buf.WriteString(fmt.Sprintf("%s-", m["name"].(string)))
+								buf.WriteString(fmt.Sprintf("%s-", m["value"].(string)))
+								return hashcode.String(buf.String())
+							},
+						},
+						"type": {
+							Type:     schema.TypeString,
+							Optional: true,
+							ForceNew: true,
+							ValidateFunc: validation.StringInSlice([]string{
+								ecs.ProxyConfigurationTypeAppmesh,
+							}, false),
+						},
+					},
+				},
+				Set: func(v interface{}) int {
+					var buf bytes.Buffer
+					m := v.(map[string]interface{})
+					buf.WriteString(fmt.Sprintf("%s-", m["container_name"].(string)))
+					buf.WriteString(fmt.Sprintf("%s-", m["type"].(string)))
+
+					rawProps := m["properties"].(*schema.Set).List()
+					for _, rawProp := range rawProps {
+						property := rawProp.(map[string]interface{})
+						buf.WriteString(fmt.Sprintf("%s-", property["name"].(string)))
+						buf.WriteString(fmt.Sprintf("%s-", property["value"].(string)))
+					}
+
+					return hashcode.String(buf.String())
+				},
+			},
+
 			"tags": tagsSchema(),
 		},
 	}
@@ -319,6 +383,37 @@ func resourceAwsEcsTaskDefinitionCreate(d *schema.ResourceData, meta interface{}
 
 	if v, ok := d.GetOk("requires_compatibilities"); ok && v.(*schema.Set).Len() > 0 {
 		input.RequiresCompatibilities = expandStringList(v.(*schema.Set).List())
+	}
+
+	proxyConfigs := d.Get("proxy_configuration").(*schema.Set).List()
+	if len(proxyConfigs) > 0 {
+		proxyConfig := proxyConfigs[0]
+		configMap := proxyConfig.(map[string]interface{})
+
+		containerName := configMap["container_name"].(string)
+		proxyType := configMap["type"].(string)
+
+		rawProperties := configMap["properties"].(*schema.Set).List()
+
+		properties := make([]*ecs.KeyValuePair, len(rawProperties))
+
+		for i, rawProperty := range rawProperties {
+			propertyMap := rawProperty.(map[string]interface{})
+			propertyName := propertyMap["name"].(string)
+			propertyValue := propertyMap["value"].(string)
+
+			properties[i] = &ecs.KeyValuePair{
+				Name:  aws.String(propertyName),
+				Value: aws.String(propertyValue),
+			}
+		}
+
+		var ecsProxyConfig ecs.ProxyConfiguration
+		ecsProxyConfig.ContainerName = aws.String(containerName)
+		ecsProxyConfig.Type = aws.String(proxyType)
+		ecsProxyConfig.Properties = properties
+
+		input.ProxyConfiguration = &ecsProxyConfig
 	}
 
 	log.Printf("[DEBUG] Registering ECS task definition: %s", input)

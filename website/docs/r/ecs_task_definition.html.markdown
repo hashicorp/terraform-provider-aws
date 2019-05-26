@@ -89,6 +89,7 @@ official [Developer Guide](https://docs.aws.amazon.com/AmazonECS/latest/develope
 * `cpu` - (Optional) The number of cpu units used by the task. If the `requires_compatibilities` is `FARGATE` this field is required.
 * `memory` - (Optional) The amount (in MiB) of memory used by the task. If the `requires_compatibilities` is `FARGATE` this field is required.
 * `requires_compatibilities` - (Optional) A set of launch types required by the task. The valid values are `EC2` and `FARGATE`.
+* `proxy_configuration` - (Optional) The [proxy configuration](#proxy-configuration-arguments) details for the App Mesh proxy.
 * `tags` - (Optional) Key-value mapping of resource tags
 
 #### Volume Block Arguments
@@ -134,6 +135,52 @@ For more information, see [Cluster Query Language in the Amazon EC2 Container
 Service Developer
 Guide](http://docs.aws.amazon.com/AmazonECS/latest/developerguide/cluster-query-language.html).
 
+#### Proxy Configuration Arguments
+
+* `type` - (Optional) The proxy type. The only supported value is `APPMESH`.
+* `container_name` - (Required) The name of the container that will serve as the App Mesh proxy.
+* `properties` - (Required) The set of network configuration parameters to provide the Container Network Interface (CNI) plugin, specified as a list of [Proxy Configuration Properties](#proxy-configuration-property-arguments).
+
+  
+##### Proxy Configuration Property Arguments
+* `name` - (Required) Variable name. The only supported names names are: `IgnoredUID`, `IgnoredGID`, `AppPorts`, `ProxyIngressPort`, `ProxyEgressPort`, `EgressIgnoredPorts`, `EgressIgnoredIPs` 
+* `value` - (Required) Variable value. Separate multiple values with a comma.
+
+
+##### Example Usage:
+```hcl
+resource "aws_ecs_task_definition" "service" {
+  family                = "service"
+  container_definitions = "${file("task-definitions/service.json")}"
+
+  proxy_configuration = {
+    type = "APPMESH"
+    container_name = "applicationContainerName"
+    properties = [
+      {
+        name = "IgnoredUID"
+        value = "1337"
+      },
+      {
+        name = "AppPorts"
+        value = "8080"
+      },
+      {
+        name = "ProxyIngressPort",
+        value = "15000"
+      },
+      {
+        name = "ProxyEgressPort",
+        value = "15001"
+      },
+      {
+        name = "EgressIgnoredIPs",
+        value = "169.254.170.2,169.254.169.254"
+      }
+    ]
+  }
+}
+```
 
 ## Attributes Reference
 
