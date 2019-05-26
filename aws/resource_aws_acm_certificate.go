@@ -4,7 +4,6 @@ import (
 	"errors"
 	"fmt"
 	"log"
-	"sort"
 	"strings"
 	"time"
 
@@ -211,7 +210,7 @@ func resourceAwsAcmCertificateRead(d *schema.ResourceData, meta interface{}) err
 		d.Set("domain_name", resp.Certificate.DomainName)
 		d.Set("arn", resp.Certificate.CertificateArn)
 
-		sans := cleanUpSubjectAlternativeNames(resp.Certificate)
+		sans := readSubjectAlternativeNames(resp.Certificate, d)
 		if err := d.Set("subject_alternative_names", sans); err != nil {
 			return resource.NonRetryableError(err)
 		}
@@ -278,16 +277,43 @@ func resourceAwsAcmCertificateUpdate(d *schema.ResourceData, meta interface{}) e
 	return resourceAwsAcmCertificateRead(d, meta)
 }
 
-func cleanUpSubjectAlternativeNames(cert *acm.CertificateDetail) []string {
-	sans := cert.SubjectAlternativeNames
-	vs := make([]string, 0)
-	for _, v := range sans {
-		if aws.StringValue(v) != aws.StringValue(cert.DomainName) {
-			vs = append(vs, aws.StringValue(v))
+// readSubjectAlternativeNames returns all subject alternative names (SANs)
+// fetched from remote in cert but ordered according to user-defined state.
+// Also, the domain_name is excluded from the result.
+//
+// Sorting keeps the state stable and is necessary because the API may return
+// SANS ordred differetnly from request to request.
+func readSubjectAlternativeNames(cert *acm.CertificateDetail, d *schema.ResourceData) []string {
+	remotes := cert.SubjectAlternativeNames
+	sans := make([]string, 0)
+
+	// intersection of all SANs, user defined (ud) and remote. ordered as user defined (ud) in state.
+	for _, ud := range d.Get("subject_alternative_names").([]interface{}) {
+		san := ud.(string)
+		for _, r := range remotes {
+			if san == aws.StringValue(r) {
+				sans = append(sans, san)
+				break
+			}
 		}
 	}
-	sort.Strings(vs)
-	return vs
+
+	// append SANs exsting only in slice fetched from remote. exclude domainName.
+	for _, r := range remotes {
+		san := aws.StringValue(r)
+		found := false
+		for _, ud := range sans {
+			if san == ud {
+				found = true
+				break
+			}
+		}
+		if !found && san != aws.StringValue(cert.DomainName) {
+			sans = append(sans, san)
+		}
+	}
+
+	return sans
 }
 
 func convertValidationOptions(certificate *acm.CertificateDetail) ([]map[string]interface{}, []string, error) {
@@ -319,7 +345,7 @@ func convertValidationOptions(certificate *acm.CertificateDetail) ([]map[string]
 }
 
 // sortDomainValidationOptions sorts a slice of domain validation options
-// to match the order they occur in in the subject alternative names.
+// according to the order of domain names in the subject alternatnive names slice
 func sortDomainValidationOptions(domainName *string, subjectAlterntaiveNames []string, domainValidationOptions []map[string]interface{}) {
 	sans := append([]string{*domainName}, subjectAlterntaiveNames...)
 
@@ -328,7 +354,7 @@ func sortDomainValidationOptions(domainName *string, subjectAlterntaiveNames []s
 		return
 	}
 
-	// This works because requesting a certificate is either by method email or method dns,
+	// This works because the requesting a certificate is either by email or by dns,
 	// but not mixed and furthermore the method cannot be changed after creation.
 	for i, san := range sans {
 		for j, opt := range domainValidationOptions {

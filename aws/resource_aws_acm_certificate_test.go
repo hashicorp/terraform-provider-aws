@@ -13,6 +13,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/acm"
 	"github.com/hashicorp/terraform/helper/acctest"
 	"github.com/hashicorp/terraform/helper/resource"
+	terraformSchema "github.com/hashicorp/terraform/helper/schema"
 	"github.com/hashicorp/terraform/terraform"
 )
 
@@ -712,12 +713,133 @@ func TestSortDomainValidationOptions(t *testing.T) {
 				options, expected)
 			break
 		}
-
 		for i := range options {
 			actual := options[i]["domain_name"].(string)
 			if actual != expected[i] {
 				t.Errorf("input was: %v and %v\ngot: %v\nwant: %v\n",
 					testCase["domainValidationOptions"], subjectAlternativeNames, options, testCase["exptectedResult"])
+				break
+			}
+		}
+	}
+}
+
+func TestReadSubjectAlternativeNames(t *testing.T) {
+	domainName := "www.example.com"
+
+	data := []map[string][]string{
+		{
+			"local":    {},
+			"remote":   {"www.example.com"},
+			"expected": {},
+		},
+		{
+			"local":    {},
+			"remote":   {},
+			"expected": {},
+		},
+		{
+			"local":    {"a.example.com"},
+			"remote":   {"www.example.com"},
+			"expected": {},
+		},
+		{
+			"local":    {"a.example.com"},
+			"remote":   {"www.example.com", "a.example.com"},
+			"expected": {"a.example.com"},
+		},
+		{
+			"local":    {"z.example.com"},
+			"remote":   {"www.example.com", "z.example.com"},
+			"expected": {"z.example.com"},
+		},
+		{
+			"local":    {"a.example.com"},
+			"remote":   {"www.example.com", "a.example.com", "b.example.com"},
+			"expected": {"a.example.com", "b.example.com"},
+		},
+		{
+			"local":    {"a.example.com"},
+			"remote":   {"www.example.com", "b.example.com", "a.example.com"},
+			"expected": {"a.example.com", "b.example.com"},
+		},
+		{
+			"local":    {"a.example.com"},
+			"remote":   {"a.example.com", "b.example.com", "www.example.com"},
+			"expected": {"a.example.com", "b.example.com"},
+		},
+		{
+			"local":    {"a.example.com"},
+			"remote":   {"b.example.com", "a.example.com", "www.example.com"},
+			"expected": {"a.example.com", "b.example.com"},
+		},
+		{
+			"local":    {"z.example.com"},
+			"remote":   {"a.example.com", "z.example.com", "www.example.com"},
+			"expected": {"z.example.com", "a.example.com"},
+		},
+		{
+			"local":    {"a.example.com", "b.example.com", "z.example.com"},
+			"remote":   {"www.example.com"},
+			"expected": {},
+		},
+		{
+			"local":    {"a.example.com", "b.example.com", "z.example.com"},
+			"remote":   {"b.example.com", "www.example.com"},
+			"expected": {"b.example.com"},
+		},
+		{
+			"local":    {"a.example.com", "b.example.com", "z.example.com"},
+			"remote":   {"z.example.com", "a.example.com", "www.example.com", "b.example.com"},
+			"expected": {"a.example.com", "b.example.com", "z.example.com"},
+		},
+		{
+			"local":    {"a.example.com", "b.example.com", "x.example.com", "y.example.com", "z.example.com"},
+			"remote":   {"z.example.com", "a.example.com", "www.example.com", "b.example.com", "o.example.com"},
+			"expected": {"a.example.com", "b.example.com", "z.example.com", "o.example.com"},
+		},
+	}
+
+	for _, testCase := range data {
+		resourceDataMock, err := terraformSchema.InternalMap(
+			map[string]*terraformSchema.Schema{
+				"domain_name": {
+					Type:     terraformSchema.TypeString,
+					Optional: true,
+					Computed: true,
+				},
+				"subject_alternative_names": {
+					Type:     terraformSchema.TypeList,
+					Optional: true,
+					Computed: true,
+					Elem:     &terraformSchema.Schema{Type: terraformSchema.TypeString},
+				},
+			},
+		).Data(nil, nil)
+
+		if err != nil {
+			t.Errorf("cannot build ResourceData\n")
+		}
+
+		resourceDataMock.Set("domain_name", domainName)
+		resourceDataMock.Set("subject_alternative_names", testCase["local"])
+
+		responseMock := acm.CertificateDetail{
+			DomainName:              &domainName,
+			SubjectAlternativeNames: aws.StringSlice(testCase["remote"]),
+		}
+
+		actual := readSubjectAlternativeNames(&responseMock, resourceDataMock)
+		expected := testCase["expected"]
+
+		if len(actual) != len(expected) {
+			t.Errorf("expected same length for input %v and expected output %v\n", actual, expected)
+			break
+		}
+		for i := range actual {
+			if actual[i] != expected[i] {
+				t.Errorf("input was: %v and %v\ngot: %v\nwant: %v\n",
+					testCase["local"], testCase["remote"], actual, testCase["expected"])
 				break
 			}
 		}
