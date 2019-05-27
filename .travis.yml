@@ -3,9 +3,34 @@ sudo: required
 services:
   - docker
 language: go
-go:
-  - "1.12.x"
-env: GOFLAGS=-mod=vendor
+
+go: "1.12.x"
+
+env:
+  global:
+      GOFLAGS=-mod=vendor
+
+matrix:
+  fast_finish: true
+  allow_failures:
+    - go: tip
+  include:
+    - go:
+      env: CCC=0
+      script:
+        - make lint
+        - make test
+        - make build
+        - make website-lint
+        - make website-test
+    - go:
+      env: CCC=1
+      cache:
+        directories:
+          - $HOME/.cache/go-build
+          - $HOME/gopath/pkg/mod
+      script:
+        - make build
 
 git:
   depth: 1
@@ -18,17 +43,6 @@ install:
   - bash scripts/gogetcookie.sh
   - make tools
 
-script:
-  - make lint
-  - make test
-  - make compile
-  - make website-lint
-  - make website-test
-
 branches:
   only:
     - master
-matrix:
-  fast_finish: true
-  allow_failures:
-    - go: tip

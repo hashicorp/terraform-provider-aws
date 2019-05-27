@@ -8,16 +8,17 @@ BUILD_DIR=bin
 default: build
 
 build: fmtcheck
+ifeq ($(CCC),1) #Cross Compile Check enabled
+	@echo "==> Cross compiling provider into ${BUILD_DIR}/"
+	gox \
+		-parallel=2 \
+		-arch="amd64" \
+		-os="linux darwin windows freebsd openbsd solaris" \
+		-osarch="!darwin/arm !darwin/386" \
+		-output="$(BUILD_DIR)/{{.Dir}}_{{.OS}}_{{.Arch}}"
+else
 	go install
-
-compile: fmtcheck
-			@echo "==> Cross compiling provider into ${BUILD_DIR}/"
-	    gox \
-	    	-parallel=2 \
-	    	-arch="amd64" \
-	    	-os="linux darwin windows freebsd openbsd solaris" \
-	    	-osarch="!darwin/arm !darwin/386" \
-	    	-output="$(BUILD_DIR)/{{.Dir}}_{{.OS}}_{{.Arch}}"
+endif
 
 sweep:
 	@echo "WARNING: This will destroy infrastructure. Use only in development accounts."
