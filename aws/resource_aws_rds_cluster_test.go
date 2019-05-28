@@ -2701,10 +2701,21 @@ resource "aws_rds_cluster" "test" {
   snapshot_identifier = "${aws_db_cluster_snapshot.test.id}"
 
   storage_encrypted = true
-  kms_key_id        = "${aws_kms_key.test.arn}"
+  kms_key_id = "${aws_kms_key.test.arn}"
 }
 `, rName, rName, rName)
 }
 
 func testAccAWSClusterConfigWithCopyTagsToSnapshot(n int, f bool) string {
 	return fmt.Sprintf(`
+resource "aws_rds_cluster" "default" {
+  cluster_identifier = "tf-aurora-cluster-%[1]d"
+  availability_zones = ["us-west-2a","us-west-2b","us-west-2c"]
+  database_name = "mydb"
+  master_username = "foo"
+  master_password = "mustbeeightcharaters"
+  db_cluster_parameter_group_name = "default.aurora5.6"
+	copy_tags_to_snapshot = %[2]t
+	skip_final_snapshot = true
+}`, n, f)
+}

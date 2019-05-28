@@ -113,3 +113,8 @@ func testAccCheckAWSConfigAggregateAuthorizationDestroy(s *terraform.State) erro
 
 func testAccAWSConfigAggregateAuthorizationConfig_basic(rString string) string {
 	return fmt.Sprintf(`
+resource "aws_config_aggregate_authorization" "example" {
+  account_id = "%s"
+  region = "eu-west-1"
+}`, rString)
+}

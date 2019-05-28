@@ -265,9 +265,8 @@ resource "aws_autoscaling_group" "foobar" {
 }
 
 resource "aws_autoscaling_lifecycle_hook" "foobar" {
-  name                   = "foobar"
+  name                   = "foobar-%d"
   autoscaling_group_name = "${aws_autoscaling_group.foobar.name}"
-  default_result         = "CONTINUE"
   heartbeat_timeout      = 2000
   lifecycle_transition   = "autoscaling:EC2_INSTANCE_LAUNCHING"
 
