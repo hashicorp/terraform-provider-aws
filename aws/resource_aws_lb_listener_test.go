@@ -1290,6 +1290,7 @@ resource "aws_lb_listener" "test" {
   certificate_arn   = "${aws_iam_server_certificate.test.arn}"
 
   default_action {
+    order = 1
     type = "authenticate-oidc"
 
     authenticate_oidc {

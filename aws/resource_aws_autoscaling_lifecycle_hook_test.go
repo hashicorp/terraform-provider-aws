@@ -210,7 +210,7 @@ resource "aws_sqs_queue" "foobar" {
 }
 
 resource "aws_iam_role" "foobar" {
-  name = "foobar"
+  name = "foobar-%d"
 
   assume_role_policy = <<EOF
 {
@@ -225,7 +225,7 @@ EOF
 }
 
 resource "aws_iam_role_policy" "foobar" {
-  name = "foobar"
+  name = "foobar-%d"
   role = "${aws_iam_role.foobar.id}"
 
   policy = <<EOF
