@@ -48,6 +48,7 @@ data "aws_caller_identity" "current" {}
 
 resource "aws_elasticsearch_domain" "example" {
   domain_name = "${var.domain}"
+
   # ... other configuration ...
 
   access_policies = <<POLICY
@@ -78,6 +79,7 @@ resource "aws_cloudwatch_log_group" "example" {
 
 resource "aws_cloudwatch_log_resource_policy" "example" {
   policy_name = "example"
+
   policy_document = <<CONFIG
 {
   "Version": "2012-10-17",

@@ -72,7 +72,7 @@ which take the following arguments:
 data "aws_subnet_ids" "selected" {
   filter {
     name   = "tag:Name"
-    values = [""] # insert values here
+    values = [""]       # insert values here
   }
 }
 ```

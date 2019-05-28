@@ -45,7 +45,7 @@ resource "aws_spot_fleet_request" "cheap_compute" {
       volume_type = "gp2"
     }
 
-  tags = {
+    tags = {
       Name = "spot-fleet-example"
     }
   }

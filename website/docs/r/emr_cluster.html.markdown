@@ -23,6 +23,7 @@ resource "aws_emr_cluster" "cluster" {
   name          = "emr-test-arn"
   release_label = "emr-4.6.0"
   applications  = ["Spark"]
+
   additional_info = <<EOF
 {
   "instanceAwsClientConfiguration": {
@@ -49,12 +50,15 @@ EOF
   core_instance_group {
     instance_type  = "c4.large"
     instance_count = 1
+
     ebs_config {
       size                 = "40"
       type                 = "gp2"
       volumes_per_instance = 1
     }
-    bid_price          = "0.30"
+
+    bid_price = "0.30"
+
     autoscaling_policy = <<EOF
 {
 "Constraints": {
@@ -89,6 +93,7 @@ EOF
 }
 EOF
   }
+
   ebs_root_volume_size = 100
 
   tags = {
@@ -130,7 +135,8 @@ EOF
     }
   ]
 EOF
-  service_role        = "${aws_iam_role.iam_emr_service_role.arn}"
+
+  service_role = "${aws_iam_role.iam_emr_service_role.arn}"
 }
 ```
 
@@ -154,8 +160,8 @@ resource "aws_emr_cluster" "example" {
   # ... other configuration ...
 
   step {
-    action_on_failure  = "TERMINATE_CLUSTER"
-    name   = "Setup Hadoop Debugging"
+    action_on_failure = "TERMINATE_CLUSTER"
+    name              = "Setup Hadoop Debugging"
 
     hadoop_jar_step {
       jar  = "command-runner.jar"
