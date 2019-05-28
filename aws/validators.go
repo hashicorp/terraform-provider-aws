@@ -124,9 +124,9 @@ func validateNeptuneEngine() schema.SchemaValidateFunc {
 
 func validateElastiCacheClusterId(v interface{}, k string) (ws []string, errors []error) {
 	value := v.(string)
-	if (len(value) < 1) || (len(value) > 20) {
+	if (len(value) < 1) || (len(value) > 30) {
 		errors = append(errors, fmt.Errorf(
-			"%q (%q) must contain from 1 to 20 alphanumeric characters or hyphens", k, value))
+			"%q (%q) must contain from 1 to 30 alphanumeric characters or hyphens", k, value))
 	}
 	if !regexp.MustCompile(`^[0-9a-z-]+$`).MatchString(value) {
 		errors = append(errors, fmt.Errorf(
