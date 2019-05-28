@@ -1838,7 +1838,7 @@ type Build struct {
 	// if your service role has permission to that key.
 	//
 	// You can specify either the Amazon Resource Name (ARN) of the CMK or, if available,
-	// the CMK's alias (using the format alias/alias-name).
+	// the CMK's alias (using the format alias/alias-name ).
 	EncryptionKey *string `locationName:"encryptionKey" min:"1" type:"string"`
 
 	// When the build process ended, expressed in Unix time format.
@@ -1880,13 +1880,12 @@ type Build struct {
 
 	// An identifier for the version of this build's source code.
 	//
-	//    *  For AWS CodeCommit, GitHub, GitHub Enterprise, and BitBucket, the commit
+	//    * For AWS CodeCommit, GitHub, GitHub Enterprise, and BitBucket, the commit
 	//    ID.
 	//
-	//    *  For AWS CodePipeline, the source revision provided by AWS CodePipeline.
+	//    * For AWS CodePipeline, the source revision provided by AWS CodePipeline.
 	//
-	//
-	//    *  For Amazon Simple Storage Service (Amazon S3), this does not apply.
+	//    * For Amazon Simple Storage Service (Amazon S3), this does not apply.
 	ResolvedSourceVersion *string `locationName:"resolvedSourceVersion" min:"1" type:"string"`
 
 	// An array of ProjectArtifacts objects.
@@ -2422,7 +2421,7 @@ type CreateProjectInput struct {
 	// if your service role has permission to that key.
 	//
 	// You can specify either the Amazon Resource Name (ARN) of the CMK or, if available,
-	// the CMK's alias (using the format alias/alias-name).
+	// the CMK's alias (using the format alias/alias-name ).
 	EncryptionKey *string `locationName:"encryptionKey" min:"1" type:"string"`
 
 	// Information about the build environment for the build project.
@@ -3949,7 +3948,7 @@ type Project struct {
 	// if your service role has permission to that key.
 	//
 	// You can specify either the Amazon Resource Name (ARN) of the CMK or, if available,
-	// the CMK's alias (using the format alias/alias-name).
+	// the CMK's alias (using the format alias/alias-name ).
 	EncryptionKey *string `locationName:"encryptionKey" min:"1" type:"string"`
 
 	// Information about the build environment for this build project.
@@ -4173,15 +4172,14 @@ type ProjectArtifacts struct {
 	//
 	// For example:
 	//
-	//    *  If path is set to MyArtifacts, namespaceType is set to BUILD_ID, and
+	//    * If path is set to MyArtifacts, namespaceType is set to BUILD_ID, and
 	//    name is set to MyArtifact.zip, then the output artifact is stored in MyArtifacts/build-ID/MyArtifact.zip.
 	//
+	//    * If path is empty, namespaceType is set to NONE, and name is set to "/",
+	//    the output artifact is stored in the root of the output bucket.
 	//
-	//    *  If path is empty, namespaceType is set to NONE, and name is set to
-	//    "/", the output artifact is stored in the root of the output bucket.
-	//
-	//    *  If path is set to MyArtifacts, namespaceType is set to BUILD_ID, and
-	//    name is set to "/", the output artifact is stored in MyArtifacts/build-ID.
+	//    * If path is set to MyArtifacts, namespaceType is set to BUILD_ID, and
+	//    name is set to "/", the output artifact is stored in MyArtifacts/build-ID .
 	Name *string `locationName:"name" type:"string"`
 
 	// Along with path and name, the pattern that AWS CodeBuild uses to determine
@@ -4194,12 +4192,9 @@ type ProjectArtifacts struct {
 	//    * If type is set to NO_ARTIFACTS, this value is ignored if specified,
 	//    because no build output is produced.
 	//
-	//    * If type is set to S3, valid values include:
-	//
-	// BUILD_ID: Include the build ID in the location of the build output artifact.
-	//
-	// NONE: Do not include the build ID. This is the default if namespaceType is
-	//    not specified.
+	//    * If type is set to S3, valid values include: BUILD_ID: Include the build
+	//    ID in the location of the build output artifact. NONE: Do not include
+	//    the build ID. This is the default if namespaceType is not specified.
 	//
 	// For example, if path is set to MyArtifacts, namespaceType is set to BUILD_ID,
 	// and name is set to MyArtifact.zip, the output artifact is stored in MyArtifacts/build-ID/MyArtifact.zip.
@@ -4220,13 +4215,10 @@ type ProjectArtifacts struct {
 	//    * If type is set to NO_ARTIFACTS, this value is ignored if specified,
 	//    because no build output is produced.
 	//
-	//    * If type is set to S3, valid values include:
-	//
-	// NONE: AWS CodeBuild creates in the output bucket a folder that contains the
-	//    build output. This is the default if packaging is not specified.
-	//
-	// ZIP: AWS CodeBuild creates in the output bucket a ZIP file that contains
-	//    the build output.
+	//    * If type is set to S3, valid values include: NONE: AWS CodeBuild creates
+	//    in the output bucket a folder that contains the build output. This is
+	//    the default if packaging is not specified. ZIP: AWS CodeBuild creates
+	//    in the output bucket a ZIP file that contains the build output.
 	Packaging *string `locationName:"packaging" type:"string" enum:"ArtifactPackaging"`
 
 	// Along with namespaceType and name, the pattern that AWS CodeBuild uses to
@@ -4400,29 +4392,19 @@ type ProjectCache struct {
 	//    * LOCAL_DOCKER_LAYER_CACHE mode caches existing Docker layers. This mode
 	//    is a good choice for projects that build or pull large Docker images.
 	//    It can prevent the performance issues caused by pulling large Docker images
-	//    down from the network.
-	//
-	//  You can use a Docker layer cache in the Linux enviornment only.
-	//
-	//  The privileged flag must be set so that your project has the required Docker
-	//    permissions.
-	//
-	//  You should consider the security implications before you use a Docker layer
-	//    cache.
+	//    down from the network. You can use a Docker layer cache in the Linux enviornment
+	//    only. The privileged flag must be set so that your project has the required
+	//    Docker permissions. You should consider the security implications before
+	//    you use a Docker layer cache.
 	//
 	//    * LOCAL_CUSTOM_CACHE mode caches directories you specify in the buildspec
 	//    file. This mode is a good choice if your build scenario is not suited
 	//    to one of the other three local cache modes. If you use a custom cache:
-	//
-	//
-	//  Only directories can be specified for caching. You cannot specify individual
-	//    files.
-	//
-	//  Symlinks are used to reference cached directories.
-	//
-	//  Cached directories are linked to your build before it downloads its project
-	//    sources. Cached items are overriden if a source item has the same name.
-	//    Directories are specified using cache paths in the buildspec file.
+	//    Only directories can be specified for caching. You cannot specify individual
+	//    files. Symlinks are used to reference cached directories. Cached directories
+	//    are linked to your build before it downloads its project sources. Cached
+	//    items are overriden if a source item has the same name. Directories are
+	//    specified using cache paths in the buildspec file.
 	Modes []*string `locationName:"modes" type:"list"`
 
 	// The type of cache used by the build project. Valid values include:
@@ -4695,16 +4677,13 @@ type ProjectSource struct {
 	//
 	//    * For source code in an AWS CodeCommit repository, the HTTPS clone URL
 	//    to the repository that contains the source code and the build spec (for
-	//    example, https://git-codecommit.region-ID.amazonaws.com/v1/repos/repo-name).
+	//    example, https://git-codecommit.region-ID.amazonaws.com/v1/repos/repo-name
+	//    ).
 	//
 	//    * For source code in an Amazon Simple Storage Service (Amazon S3) input
-	//    bucket, one of the following.
-	//
-	//  The path to the ZIP file that contains the source code (for example, bucket-name/path/to/object-name.zip).
-	//
-	//
-	//  The path to the folder that contains the source code (for example, bucket-name/path/to/source-code/folder/).
-	//
+	//    bucket, one of the following. The path to the ZIP file that contains the
+	//    source code (for example, bucket-name/path/to/object-name.zip). The path
+	//    to the folder that contains the source code (for example, bucket-name/path/to/source-code/folder/).
 	//
 	//    * For source code in a GitHub repository, the HTTPS clone URL to the repository
 	//    that contains the source and the build spec. You must connect your AWS
@@ -4923,7 +4902,7 @@ func (s *ProjectSourceVersion) SetSourceVersion(v string) *ProjectSourceVersion 
 //
 //    * imagePullCredentialsType must be set to SERVICE_ROLE.
 //
-//    *  images cannot be curated or an Amazon ECR image.
+//    * images cannot be curated or an Amazon ECR image.
 //
 // For more information, see Private Registry with AWS Secrets Manager Sample
 // for AWS CodeBuild (https://docs.aws.amazon.com/codebuild/latest/userguide/sample-private-registry.html).
@@ -5062,6 +5041,7 @@ type SourceAuth struct {
 	// The resource value that applies to the specified authorization type.
 	Resource *string `locationName:"resource" type:"string"`
 
+	//
 	// This data type is deprecated and is no longer accurate or used.
 	//
 	// The authorization type to use. The only valid value is OAUTH, which represents
@@ -5737,7 +5717,7 @@ type UpdateProjectInput struct {
 	// if your service role has permission to that key.
 	//
 	// You can specify either the Amazon Resource Name (ARN) of the CMK or, if available,
-	// the CMK's alias (using the format alias/alias-name).
+	// the CMK's alias (using the format alias/alias-name ).
 	EncryptionKey *string `locationName:"encryptionKey" min:"1" type:"string"`
 
 	// Information to be changed about the build environment for the build project.
@@ -6015,7 +5995,8 @@ type UpdateWebhookInput struct {
 	BranchFilter *string `locationName:"branchFilter" type:"string"`
 
 	// An array of arrays of WebhookFilter objects used to determine if a webhook
-	// event can trigger a build. A filter group must pcontain at least one EVENTWebhookFilter.
+	// event can trigger a build. A filter group must pcontain at least one EVENT
+	// WebhookFilter.
 	FilterGroups [][]*WebhookFilter `locationName:"filterGroups" type:"list"`
 
 	// The name of the AWS CodeBuild project.
@@ -6267,32 +6248,42 @@ type WebhookFilter struct {
 	// The type of webhook filter. There are five webhook filter types: EVENT, ACTOR_ACCOUNT_ID,
 	// HEAD_REF, BASE_REF, and FILE_PATH.
 	//
-	// EVENT  A webhook event triggers a build when the provided pattern matches
-	// one of four event types: PUSH, PULL_REQUEST_CREATED, PULL_REQUEST_UPDATED,
-	// and PULL_REQUEST_REOPENED. The EVENT patterns are specified as a comma-separated
-	// string. For example, PUSH, PULL_REQUEST_CREATED, PULL_REQUEST_UPDATED filters
-	// all push, pull request created, and pull request updated events.
+	// EVENT
 	//
-	//  The PULL_REQUEST_REOPENED works with GitHub and GitHub Enterprise only.
+	// A webhook event triggers a build when the provided pattern matches one of
+	// four event types: PUSH, PULL_REQUEST_CREATED, PULL_REQUEST_UPDATED, and PULL_REQUEST_REOPENED.
+	// The EVENT patterns are specified as a comma-separated string. For example,
+	// PUSH, PULL_REQUEST_CREATED, PULL_REQUEST_UPDATED filters all push, pull request
+	// created, and pull request updated events.
 	//
-	//  ACTOR_ACCOUNT_ID  A webhook event triggers a build when a GitHub, GitHub
-	// Enterprise, or Bitbucket account ID matches the regular expression pattern.
+	// The PULL_REQUEST_REOPENED works with GitHub and GitHub Enterprise only.
 	//
-	//  HEAD_REF  A webhook event triggers a build when the head reference matches
-	// the regular expression pattern. For example, refs/heads/branch-name and refs/tags/tag-name.
+	// ACTOR_ACCOUNT_ID
 	//
-	//  Works with GitHub and GitHub Enterprise push, GitHub and GitHub Enterprise
+	// A webhook event triggers a build when a GitHub, GitHub Enterprise, or Bitbucket
+	// account ID matches the regular expression pattern.
+	//
+	// HEAD_REF
+	//
+	// A webhook event triggers a build when the head reference matches the regular
+	// expression pattern. For example, refs/heads/branch-name and refs/tags/tag-name.
+	//
+	// Works with GitHub and GitHub Enterprise push, GitHub and GitHub Enterprise
 	// pull request, Bitbucket push, and Bitbucket pull request events.
 	//
-	//  BASE_REF  A webhook event triggers a build when the base reference matches
-	// the regular expression pattern. For example, refs/heads/branch-name.
+	// BASE_REF
 	//
-	//  Works with pull request events only.
+	// A webhook event triggers a build when the base reference matches the regular
+	// expression pattern. For example, refs/heads/branch-name.
 	//
-	//  FILE_PATH  A webhook triggers a build when the path of a changed file matches
-	// the regular expression pattern.
+	// Works with pull request events only.
 	//
-	//  Works with GitHub and GitHub Enterprise push events only.
+	// FILE_PATH
+	//
+	// A webhook triggers a build when the path of a changed file matches the regular
+	// expression pattern.
+	//
+	// Works with GitHub and GitHub Enterprise push events only.
 	//
 	// Type is a required field
 	Type *string `locationName:"type" type:"string" required:"true" enum:"WebhookFilterType"`

@@ -4344,7 +4344,7 @@ func (c *ServiceCatalog) ListAcceptedPortfolioSharesWithContext(ctx aws.Context,
 //    // Example iterating over at most 3 pages of a ListAcceptedPortfolioShares operation.
 //    pageNum := 0
 //    err := client.ListAcceptedPortfolioSharesPages(params,
-//        func(page *ListAcceptedPortfolioSharesOutput, lastPage bool) bool {
+//        func(page *servicecatalog.ListAcceptedPortfolioSharesOutput, lastPage bool) bool {
 //            pageNum++
 //            fmt.Println(page)
 //            return pageNum <= 3
@@ -4482,7 +4482,7 @@ func (c *ServiceCatalog) ListBudgetsForResourceWithContext(ctx aws.Context, inpu
 //    // Example iterating over at most 3 pages of a ListBudgetsForResource operation.
 //    pageNum := 0
 //    err := client.ListBudgetsForResourcePages(params,
-//        func(page *ListBudgetsForResourceOutput, lastPage bool) bool {
+//        func(page *servicecatalog.ListBudgetsForResourceOutput, lastPage bool) bool {
 //            pageNum++
 //            fmt.Println(page)
 //            return pageNum <= 3
@@ -4620,7 +4620,7 @@ func (c *ServiceCatalog) ListConstraintsForPortfolioWithContext(ctx aws.Context,
 //    // Example iterating over at most 3 pages of a ListConstraintsForPortfolio operation.
 //    pageNum := 0
 //    err := client.ListConstraintsForPortfolioPages(params,
-//        func(page *ListConstraintsForPortfolioOutput, lastPage bool) bool {
+//        func(page *servicecatalog.ListConstraintsForPortfolioOutput, lastPage bool) bool {
 //            pageNum++
 //            fmt.Println(page)
 //            return pageNum <= 3
@@ -4760,7 +4760,7 @@ func (c *ServiceCatalog) ListLaunchPathsWithContext(ctx aws.Context, input *List
 //    // Example iterating over at most 3 pages of a ListLaunchPaths operation.
 //    pageNum := 0
 //    err := client.ListLaunchPathsPages(params,
-//        func(page *ListLaunchPathsOutput, lastPage bool) bool {
+//        func(page *servicecatalog.ListLaunchPathsOutput, lastPage bool) bool {
 //            pageNum++
 //            fmt.Println(page)
 //            return pageNum <= 3
@@ -4902,7 +4902,7 @@ func (c *ServiceCatalog) ListOrganizationPortfolioAccessWithContext(ctx aws.Cont
 //    // Example iterating over at most 3 pages of a ListOrganizationPortfolioAccess operation.
 //    pageNum := 0
 //    err := client.ListOrganizationPortfolioAccessPages(params,
-//        func(page *ListOrganizationPortfolioAccessOutput, lastPage bool) bool {
+//        func(page *servicecatalog.ListOrganizationPortfolioAccessOutput, lastPage bool) bool {
 //            pageNum++
 //            fmt.Println(page)
 //            return pageNum <= 3
@@ -5116,7 +5116,7 @@ func (c *ServiceCatalog) ListPortfoliosWithContext(ctx aws.Context, input *ListP
 //    // Example iterating over at most 3 pages of a ListPortfolios operation.
 //    pageNum := 0
 //    err := client.ListPortfoliosPages(params,
-//        func(page *ListPortfoliosOutput, lastPage bool) bool {
+//        func(page *servicecatalog.ListPortfoliosOutput, lastPage bool) bool {
 //            pageNum++
 //            fmt.Println(page)
 //            return pageNum <= 3
@@ -5254,7 +5254,7 @@ func (c *ServiceCatalog) ListPortfoliosForProductWithContext(ctx aws.Context, in
 //    // Example iterating over at most 3 pages of a ListPortfoliosForProduct operation.
 //    pageNum := 0
 //    err := client.ListPortfoliosForProductPages(params,
-//        func(page *ListPortfoliosForProductOutput, lastPage bool) bool {
+//        func(page *servicecatalog.ListPortfoliosForProductOutput, lastPage bool) bool {
 //            pageNum++
 //            fmt.Println(page)
 //            return pageNum <= 3
@@ -5392,7 +5392,7 @@ func (c *ServiceCatalog) ListPrincipalsForPortfolioWithContext(ctx aws.Context, 
 //    // Example iterating over at most 3 pages of a ListPrincipalsForPortfolio operation.
 //    pageNum := 0
 //    err := client.ListPrincipalsForPortfolioPages(params,
-//        func(page *ListPrincipalsForPortfolioOutput, lastPage bool) bool {
+//        func(page *servicecatalog.ListPrincipalsForPortfolioOutput, lastPage bool) bool {
 //            pageNum++
 //            fmt.Println(page)
 //            return pageNum <= 3
@@ -5697,7 +5697,7 @@ func (c *ServiceCatalog) ListProvisioningArtifactsForServiceActionWithContext(ct
 //    // Example iterating over at most 3 pages of a ListProvisioningArtifactsForServiceAction operation.
 //    pageNum := 0
 //    err := client.ListProvisioningArtifactsForServiceActionPages(params,
-//        func(page *ListProvisioningArtifactsForServiceActionOutput, lastPage bool) bool {
+//        func(page *servicecatalog.ListProvisioningArtifactsForServiceActionOutput, lastPage bool) bool {
 //            pageNum++
 //            fmt.Println(page)
 //            return pageNum <= 3
@@ -5919,7 +5919,7 @@ func (c *ServiceCatalog) ListResourcesForTagOptionWithContext(ctx aws.Context, i
 //    // Example iterating over at most 3 pages of a ListResourcesForTagOption operation.
 //    pageNum := 0
 //    err := client.ListResourcesForTagOptionPages(params,
-//        func(page *ListResourcesForTagOptionOutput, lastPage bool) bool {
+//        func(page *servicecatalog.ListResourcesForTagOptionOutput, lastPage bool) bool {
 //            pageNum++
 //            fmt.Println(page)
 //            return pageNum <= 3
@@ -6054,7 +6054,7 @@ func (c *ServiceCatalog) ListServiceActionsWithContext(ctx aws.Context, input *L
 //    // Example iterating over at most 3 pages of a ListServiceActions operation.
 //    pageNum := 0
 //    err := client.ListServiceActionsPages(params,
-//        func(page *ListServiceActionsOutput, lastPage bool) bool {
+//        func(page *servicecatalog.ListServiceActionsOutput, lastPage bool) bool {
 //            pageNum++
 //            fmt.Println(page)
 //            return pageNum <= 3
@@ -6193,7 +6193,7 @@ func (c *ServiceCatalog) ListServiceActionsForProvisioningArtifactWithContext(ct
 //    // Example iterating over at most 3 pages of a ListServiceActionsForProvisioningArtifact operation.
 //    pageNum := 0
 //    err := client.ListServiceActionsForProvisioningArtifactPages(params,
-//        func(page *ListServiceActionsForProvisioningArtifactOutput, lastPage bool) bool {
+//        func(page *servicecatalog.ListServiceActionsForProvisioningArtifactOutput, lastPage bool) bool {
 //            pageNum++
 //            fmt.Println(page)
 //            return pageNum <= 3
@@ -6333,7 +6333,7 @@ func (c *ServiceCatalog) ListTagOptionsWithContext(ctx aws.Context, input *ListT
 //    // Example iterating over at most 3 pages of a ListTagOptions operation.
 //    pageNum := 0
 //    err := client.ListTagOptionsPages(params,
-//        func(page *ListTagOptionsOutput, lastPage bool) bool {
+//        func(page *servicecatalog.ListTagOptionsOutput, lastPage bool) bool {
 //            pageNum++
 //            fmt.Println(page)
 //            return pageNum <= 3
@@ -6724,7 +6724,7 @@ func (c *ServiceCatalog) SearchProductsWithContext(ctx aws.Context, input *Searc
 //    // Example iterating over at most 3 pages of a SearchProducts operation.
 //    pageNum := 0
 //    err := client.SearchProductsPages(params,
-//        func(page *SearchProductsOutput, lastPage bool) bool {
+//        func(page *servicecatalog.SearchProductsOutput, lastPage bool) bool {
 //            pageNum++
 //            fmt.Println(page)
 //            return pageNum <= 3
@@ -6862,7 +6862,7 @@ func (c *ServiceCatalog) SearchProductsAsAdminWithContext(ctx aws.Context, input
 //    // Example iterating over at most 3 pages of a SearchProductsAsAdmin operation.
 //    pageNum := 0
 //    err := client.SearchProductsAsAdminPages(params,
-//        func(page *SearchProductsAsAdminOutput, lastPage bool) bool {
+//        func(page *servicecatalog.SearchProductsAsAdminOutput, lastPage bool) bool {
 //            pageNum++
 //            fmt.Println(page)
 //            return pageNum <= 3
@@ -6997,7 +6997,7 @@ func (c *ServiceCatalog) SearchProvisionedProductsWithContext(ctx aws.Context, i
 //    // Example iterating over at most 3 pages of a SearchProvisionedProducts operation.
 //    pageNum := 0
 //    err := client.SearchProvisionedProductsPages(params,
-//        func(page *SearchProvisionedProductsOutput, lastPage bool) bool {
+//        func(page *servicecatalog.SearchProvisionedProductsOutput, lastPage bool) bool {
 //            pageNum++
 //            fmt.Println(page)
 //            return pageNum <= 3
@@ -8878,7 +8878,9 @@ type CreateConstraintInput struct {
 	// The constraint parameters, in JSON format. The syntax depends on the constraint
 	// type as follows:
 	//
-	// LAUNCHSpecify the RoleArn property as follows:
+	// LAUNCH
+	//
+	// Specify the RoleArn property as follows:
 	//
 	// {"RoleArn" : "arn:aws:iam::123456789012:role/LaunchRole"}
 	//
@@ -8886,18 +8888,24 @@ type CreateConstraintInput struct {
 	//
 	// You also cannot have more than one LAUNCH constraint on a product and portfolio.
 	//
-	// NOTIFICATIONSpecify the NotificationArns property as follows:
+	// NOTIFICATION
+	//
+	// Specify the NotificationArns property as follows:
 	//
 	// {"NotificationArns" : ["arn:aws:sns:us-east-1:123456789012:Topic"]}
 	//
-	// RESOURCE_UPDATESpecify the TagUpdatesOnProvisionedProduct property as follows:
+	// RESOURCE_UPDATE
+	//
+	// Specify the TagUpdatesOnProvisionedProduct property as follows:
 	//
 	// {"Version":"2.0","Properties":{"TagUpdateOnProvisionedProduct":"String"}}
 	//
 	// The TagUpdatesOnProvisionedProduct property accepts a string value of ALLOWED
 	// or NOT_ALLOWED.
 	//
-	// STACKSETSpecify the Parameters property as follows:
+	// STACKSET
+	//
+	// Specify the Parameters property as follows:
 	//
 	// {"Version": "String", "Properties": {"AccountList": [ "String" ], "RegionList":
 	// [ "String" ], "AdminRole": "String", "ExecutionRole": "String"}}
@@ -8909,7 +8917,9 @@ type CreateConstraintInput struct {
 	// Products with a STACKSET constraint will launch an AWS CloudFormation stack
 	// set.
 	//
-	// TEMPLATESpecify the Rules property. For more information, see Template Constraint
+	// TEMPLATE
+	//
+	// Specify the Rules property. For more information, see Template Constraint
 	// Rules (http://docs.aws.amazon.com/servicecatalog/latest/adminguide/reference-template_constraint_rules.html).
 	//
 	// Parameters is a required field
@@ -9935,17 +9945,25 @@ type CreateServiceActionInput struct {
 
 	// The self-service action definition. Can be one of the following:
 	//
-	// NameThe name of the AWS Systems Manager Document. For example, AWS-RestartEC2Instance.
+	// Name
 	//
-	// VersionThe AWS Systems Manager automation document version. For example,
-	// "Version": "1"
+	// The name of the AWS Systems Manager Document. For example, AWS-RestartEC2Instance.
 	//
-	// AssumeRoleThe Amazon Resource Name (ARN) of the role that performs the self-service
+	// Version
+	//
+	// The AWS Systems Manager automation document version. For example, "Version":
+	// "1"
+	//
+	// AssumeRole
+	//
+	// The Amazon Resource Name (ARN) of the role that performs the self-service
 	// actions on your behalf. For example, "AssumeRole": "arn:aws:iam::12345678910:role/ActionRole".
 	//
 	// To reuse the provisioned product launch role, set to "AssumeRole": "LAUNCH_ROLE".
 	//
-	// ParametersThe list of parameters in JSON format.
+	// Parameters
+	//
+	// The list of parameters in JSON format.
 	//
 	// For example: [{\"Name\":\"InstanceId\",\"Type\":\"TARGET\"}].
 	//
@@ -18190,7 +18208,9 @@ type UpdateConstraintInput struct {
 	// The constraint parameters, in JSON format. The syntax depends on the constraint
 	// type as follows:
 	//
-	// LAUNCHSpecify the RoleArn property as follows:
+	// LAUNCH
+	//
+	// Specify the RoleArn property as follows:
 	//
 	// {"RoleArn" : "arn:aws:iam::123456789012:role/LaunchRole"}
 	//
@@ -18198,18 +18218,24 @@ type UpdateConstraintInput struct {
 	//
 	// You also cannot have more than one LAUNCH constraint on a product and portfolio.
 	//
-	// NOTIFICATIONSpecify the NotificationArns property as follows:
+	// NOTIFICATION
+	//
+	// Specify the NotificationArns property as follows:
 	//
 	// {"NotificationArns" : ["arn:aws:sns:us-east-1:123456789012:Topic"]}
 	//
-	// RESOURCE_UPDATESpecify the TagUpdatesOnProvisionedProduct property as follows:
+	// RESOURCE_UPDATE
+	//
+	// Specify the TagUpdatesOnProvisionedProduct property as follows:
 	//
 	// {"Version":"2.0","Properties":{"TagUpdateOnProvisionedProduct":"String"}}
 	//
 	// The TagUpdatesOnProvisionedProduct property accepts a string value of ALLOWED
 	// or NOT_ALLOWED.
 	//
-	// STACKSETSpecify the Parameters property as follows:
+	// STACKSET
+	//
+	// Specify the Parameters property as follows:
 	//
 	// {"Version": "String", "Properties": {"AccountList": [ "String" ], "RegionList":
 	// [ "String" ], "AdminRole": "String", "ExecutionRole": "String"}}
@@ -18221,7 +18247,9 @@ type UpdateConstraintInput struct {
 	// Products with a STACKSET constraint will launch an AWS CloudFormation stack
 	// set.
 	//
-	// TEMPLATESpecify the Rules property. For more information, see Template Constraint
+	// TEMPLATE
+	//
+	// Specify the Rules property. For more information, see Template Constraint
 	// Rules (http://docs.aws.amazon.com/servicecatalog/latest/adminguide/reference-template_constraint_rules.html).
 	Parameters *string `type:"string"`
 }
@@ -19268,15 +19296,21 @@ type UpdateProvisioningPreferences struct {
 	//
 	// Applicable only to a CFN_STACKSET provisioned product type.
 	//
-	// CREATECreates a new stack instance in the stack set represented by the provisioned
+	// CREATE
+	//
+	// Creates a new stack instance in the stack set represented by the provisioned
 	// product. In this case, only new stack instances are created based on accounts
 	// and regions; if new ProductId or ProvisioningArtifactID are passed, they
 	// will be ignored.
 	//
-	// UPDATEUpdates the stack set represented by the provisioned product and also
-	// its stack instances.
+	// UPDATE
 	//
-	// DELETEDeletes a stack instance in the stack set represented by the provisioned
+	// Updates the stack set represented by the provisioned product and also its
+	// stack instances.
+	//
+	// DELETE
+	//
+	// Deletes a stack instance in the stack set represented by the provisioned
 	// product.
 	StackSetOperationType *string `type:"string" enum:"StackSetOperationType"`
 

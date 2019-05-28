@@ -3549,7 +3549,7 @@ func (c *Glue) GetClassifiersWithContext(ctx aws.Context, input *GetClassifiersI
 //    // Example iterating over at most 3 pages of a GetClassifiers operation.
 //    pageNum := 0
 //    err := client.GetClassifiersPages(params,
-//        func(page *GetClassifiersOutput, lastPage bool) bool {
+//        func(page *glue.GetClassifiersOutput, lastPage bool) bool {
 //            pageNum++
 //            fmt.Println(page)
 //            return pageNum <= 3
@@ -3781,7 +3781,7 @@ func (c *Glue) GetConnectionsWithContext(ctx aws.Context, input *GetConnectionsI
 //    // Example iterating over at most 3 pages of a GetConnections operation.
 //    pageNum := 0
 //    err := client.GetConnectionsPages(params,
-//        func(page *GetConnectionsOutput, lastPage bool) bool {
+//        func(page *glue.GetConnectionsOutput, lastPage bool) bool {
 //            pageNum++
 //            fmt.Println(page)
 //            return pageNum <= 3
@@ -3998,7 +3998,7 @@ func (c *Glue) GetCrawlerMetricsWithContext(ctx aws.Context, input *GetCrawlerMe
 //    // Example iterating over at most 3 pages of a GetCrawlerMetrics operation.
 //    pageNum := 0
 //    err := client.GetCrawlerMetricsPages(params,
-//        func(page *GetCrawlerMetricsOutput, lastPage bool) bool {
+//        func(page *glue.GetCrawlerMetricsOutput, lastPage bool) bool {
 //            pageNum++
 //            fmt.Println(page)
 //            return pageNum <= 3
@@ -4133,7 +4133,7 @@ func (c *Glue) GetCrawlersWithContext(ctx aws.Context, input *GetCrawlersInput, 
 //    // Example iterating over at most 3 pages of a GetCrawlers operation.
 //    pageNum := 0
 //    err := client.GetCrawlersPages(params,
-//        func(page *GetCrawlersOutput, lastPage bool) bool {
+//        func(page *glue.GetCrawlersOutput, lastPage bool) bool {
 //            pageNum++
 //            fmt.Println(page)
 //            return pageNum <= 3
@@ -4453,7 +4453,7 @@ func (c *Glue) GetDatabasesWithContext(ctx aws.Context, input *GetDatabasesInput
 //    // Example iterating over at most 3 pages of a GetDatabases operation.
 //    pageNum := 0
 //    err := client.GetDatabasesPages(params,
-//        func(page *GetDatabasesOutput, lastPage bool) bool {
+//        func(page *glue.GetDatabasesOutput, lastPage bool) bool {
 //            pageNum++
 //            fmt.Println(page)
 //            return pageNum <= 3
@@ -4780,7 +4780,7 @@ func (c *Glue) GetDevEndpointsWithContext(ctx aws.Context, input *GetDevEndpoint
 //    // Example iterating over at most 3 pages of a GetDevEndpoints operation.
 //    pageNum := 0
 //    err := client.GetDevEndpointsPages(params,
-//        func(page *GetDevEndpointsOutput, lastPage bool) bool {
+//        func(page *glue.GetDevEndpointsOutput, lastPage bool) bool {
 //            pageNum++
 //            fmt.Println(page)
 //            return pageNum <= 3
@@ -5100,7 +5100,7 @@ func (c *Glue) GetJobRunsWithContext(ctx aws.Context, input *GetJobRunsInput, op
 //    // Example iterating over at most 3 pages of a GetJobRuns operation.
 //    pageNum := 0
 //    err := client.GetJobRunsPages(params,
-//        func(page *GetJobRunsOutput, lastPage bool) bool {
+//        func(page *glue.GetJobRunsOutput, lastPage bool) bool {
 //            pageNum++
 //            fmt.Println(page)
 //            return pageNum <= 3
@@ -5244,7 +5244,7 @@ func (c *Glue) GetJobsWithContext(ctx aws.Context, input *GetJobsInput, opts ...
 //    // Example iterating over at most 3 pages of a GetJobs operation.
 //    pageNum := 0
 //    err := client.GetJobsPages(params,
-//        func(page *GetJobsOutput, lastPage bool) bool {
+//        func(page *glue.GetJobsOutput, lastPage bool) bool {
 //            pageNum++
 //            fmt.Println(page)
 //            return pageNum <= 3
@@ -5570,7 +5570,7 @@ func (c *Glue) GetPartitionsWithContext(ctx aws.Context, input *GetPartitionsInp
 //    // Example iterating over at most 3 pages of a GetPartitions operation.
 //    pageNum := 0
 //    err := client.GetPartitionsPages(params,
-//        func(page *GetPartitionsOutput, lastPage bool) bool {
+//        func(page *glue.GetPartitionsOutput, lastPage bool) bool {
 //            pageNum++
 //            fmt.Println(page)
 //            return pageNum <= 3
@@ -5975,7 +5975,7 @@ func (c *Glue) GetSecurityConfigurationsWithContext(ctx aws.Context, input *GetS
 //    // Example iterating over at most 3 pages of a GetSecurityConfigurations operation.
 //    pageNum := 0
 //    err := client.GetSecurityConfigurationsPages(params,
-//        func(page *GetSecurityConfigurationsOutput, lastPage bool) bool {
+//        func(page *glue.GetSecurityConfigurationsOutput, lastPage bool) bool {
 //            pageNum++
 //            fmt.Println(page)
 //            return pageNum <= 3
@@ -6305,7 +6305,7 @@ func (c *Glue) GetTableVersionsWithContext(ctx aws.Context, input *GetTableVersi
 //    // Example iterating over at most 3 pages of a GetTableVersions operation.
 //    pageNum := 0
 //    err := client.GetTableVersionsPages(params,
-//        func(page *GetTableVersionsOutput, lastPage bool) bool {
+//        func(page *glue.GetTableVersionsOutput, lastPage bool) bool {
 //            pageNum++
 //            fmt.Println(page)
 //            return pageNum <= 3
@@ -6452,7 +6452,7 @@ func (c *Glue) GetTablesWithContext(ctx aws.Context, input *GetTablesInput, opts
 //    // Example iterating over at most 3 pages of a GetTables operation.
 //    pageNum := 0
 //    err := client.GetTablesPages(params,
-//        func(page *GetTablesOutput, lastPage bool) bool {
+//        func(page *glue.GetTablesOutput, lastPage bool) bool {
 //            pageNum++
 //            fmt.Println(page)
 //            return pageNum <= 3
@@ -6772,7 +6772,7 @@ func (c *Glue) GetTriggersWithContext(ctx aws.Context, input *GetTriggersInput, 
 //    // Example iterating over at most 3 pages of a GetTriggers operation.
 //    pageNum := 0
 //    err := client.GetTriggersPages(params,
-//        func(page *GetTriggersOutput, lastPage bool) bool {
+//        func(page *glue.GetTriggersOutput, lastPage bool) bool {
 //            pageNum++
 //            fmt.Println(page)
 //            return pageNum <= 3
@@ -7010,7 +7010,7 @@ func (c *Glue) GetUserDefinedFunctionsWithContext(ctx aws.Context, input *GetUse
 //    // Example iterating over at most 3 pages of a GetUserDefinedFunctions operation.
 //    pageNum := 0
 //    err := client.GetUserDefinedFunctionsPages(params,
-//        func(page *GetUserDefinedFunctionsOutput, lastPage bool) bool {
+//        func(page *glue.GetUserDefinedFunctionsOutput, lastPage bool) bool {
 //            pageNum++
 //            fmt.Println(page)
 //            return pageNum <= 3
@@ -7234,7 +7234,7 @@ func (c *Glue) ListCrawlersWithContext(ctx aws.Context, input *ListCrawlersInput
 //    // Example iterating over at most 3 pages of a ListCrawlers operation.
 //    pageNum := 0
 //    err := client.ListCrawlersPages(params,
-//        func(page *ListCrawlersOutput, lastPage bool) bool {
+//        func(page *glue.ListCrawlersOutput, lastPage bool) bool {
 //            pageNum++
 //            fmt.Println(page)
 //            return pageNum <= 3
@@ -7384,7 +7384,7 @@ func (c *Glue) ListDevEndpointsWithContext(ctx aws.Context, input *ListDevEndpoi
 //    // Example iterating over at most 3 pages of a ListDevEndpoints operation.
 //    pageNum := 0
 //    err := client.ListDevEndpointsPages(params,
-//        func(page *ListDevEndpointsOutput, lastPage bool) bool {
+//        func(page *glue.ListDevEndpointsOutput, lastPage bool) bool {
 //            pageNum++
 //            fmt.Println(page)
 //            return pageNum <= 3
@@ -7534,7 +7534,7 @@ func (c *Glue) ListJobsWithContext(ctx aws.Context, input *ListJobsInput, opts .
 //    // Example iterating over at most 3 pages of a ListJobs operation.
 //    pageNum := 0
 //    err := client.ListJobsPages(params,
-//        func(page *ListJobsOutput, lastPage bool) bool {
+//        func(page *glue.ListJobsOutput, lastPage bool) bool {
 //            pageNum++
 //            fmt.Println(page)
 //            return pageNum <= 3
@@ -7684,7 +7684,7 @@ func (c *Glue) ListTriggersWithContext(ctx aws.Context, input *ListTriggersInput
 //    // Example iterating over at most 3 pages of a ListTriggers operation.
 //    pageNum := 0
 //    err := client.ListTriggersPages(params,
-//        func(page *ListTriggersOutput, lastPage bool) bool {
+//        func(page *glue.ListTriggersOutput, lastPage bool) bool {
 //            pageNum++
 //            fmt.Println(page)
 //            return pageNum <= 3
@@ -17558,39 +17558,53 @@ type GetPartitionsInput struct {
 	// Operators: The following are the operators that you can use in the Expression
 	// API call:
 	//
-	// =Checks if the values of the two operands are equal or not; if yes, then
-	// the condition becomes true.
+	// =
+	//
+	// Checks if the values of the two operands are equal or not; if yes, then the
+	// condition becomes true.
 	//
 	// Example: Assume 'variable a' holds 10 and 'variable b' holds 20.
 	//
 	// (a = b) is not true.
 	//
-	// < >Checks if the values of two operands are equal or not; if the values are
+	// < >
+	//
+	// Checks if the values of two operands are equal or not; if the values are
 	// not equal, then the condition becomes true.
 	//
 	// Example: (a < > b) is true.
 	//
-	// >Checks if the value of the left operand is greater than the value of the
+	// >
+	//
+	// Checks if the value of the left operand is greater than the value of the
 	// right operand; if yes, then the condition becomes true.
 	//
 	// Example: (a > b) is not true.
 	//
-	// <Checks if the value of the left operand is less than the value of the right
+	// <
+	//
+	// Checks if the value of the left operand is less than the value of the right
 	// operand; if yes, then the condition becomes true.
 	//
 	// Example: (a < b) is true.
 	//
-	// >=Checks if the value of the left operand is greater than or equal to the
-	// value of the right operand; if yes, then the condition becomes true.
+	// >=
+	//
+	// Checks if the value of the left operand is greater than or equal to the value
+	// of the right operand; if yes, then the condition becomes true.
 	//
 	// Example: (a >= b) is not true.
 	//
-	// <=Checks if the value of the left operand is less than or equal to the value
+	// <=
+	//
+	// Checks if the value of the left operand is less than or equal to the value
 	// of the right operand; if yes, then the condition becomes true.
 	//
 	// Example: (a <= b) is true.
 	//
-	// AND, OR, IN, BETWEEN, LIKE, NOT, IS NULLLogical operators.
+	// AND, OR, IN, BETWEEN, LIKE, NOT, IS NULL
+	//
+	// Logical operators.
 	//
 	// Supported Partition Key Types: The following are the the supported partition
 	// keys.

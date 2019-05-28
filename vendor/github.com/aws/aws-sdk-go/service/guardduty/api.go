@@ -2351,7 +2351,7 @@ func (c *GuardDuty) ListDetectorsWithContext(ctx aws.Context, input *ListDetecto
 //    // Example iterating over at most 3 pages of a ListDetectors operation.
 //    pageNum := 0
 //    err := client.ListDetectorsPages(params,
-//        func(page *ListDetectorsOutput, lastPage bool) bool {
+//        func(page *guardduty.ListDetectorsOutput, lastPage bool) bool {
 //            pageNum++
 //            fmt.Println(page)
 //            return pageNum <= 3
@@ -2489,7 +2489,7 @@ func (c *GuardDuty) ListFiltersWithContext(ctx aws.Context, input *ListFiltersIn
 //    // Example iterating over at most 3 pages of a ListFilters operation.
 //    pageNum := 0
 //    err := client.ListFiltersPages(params,
-//        func(page *ListFiltersOutput, lastPage bool) bool {
+//        func(page *guardduty.ListFiltersOutput, lastPage bool) bool {
 //            pageNum++
 //            fmt.Println(page)
 //            return pageNum <= 3
@@ -2627,7 +2627,7 @@ func (c *GuardDuty) ListFindingsWithContext(ctx aws.Context, input *ListFindings
 //    // Example iterating over at most 3 pages of a ListFindings operation.
 //    pageNum := 0
 //    err := client.ListFindingsPages(params,
-//        func(page *ListFindingsOutput, lastPage bool) bool {
+//        func(page *guardduty.ListFindingsOutput, lastPage bool) bool {
 //            pageNum++
 //            fmt.Println(page)
 //            return pageNum <= 3
@@ -2765,7 +2765,7 @@ func (c *GuardDuty) ListIPSetsWithContext(ctx aws.Context, input *ListIPSetsInpu
 //    // Example iterating over at most 3 pages of a ListIPSets operation.
 //    pageNum := 0
 //    err := client.ListIPSetsPages(params,
-//        func(page *ListIPSetsOutput, lastPage bool) bool {
+//        func(page *guardduty.ListIPSetsOutput, lastPage bool) bool {
 //            pageNum++
 //            fmt.Println(page)
 //            return pageNum <= 3
@@ -2904,7 +2904,7 @@ func (c *GuardDuty) ListInvitationsWithContext(ctx aws.Context, input *ListInvit
 //    // Example iterating over at most 3 pages of a ListInvitations operation.
 //    pageNum := 0
 //    err := client.ListInvitationsPages(params,
-//        func(page *ListInvitationsOutput, lastPage bool) bool {
+//        func(page *guardduty.ListInvitationsOutput, lastPage bool) bool {
 //            pageNum++
 //            fmt.Println(page)
 //            return pageNum <= 3
@@ -3043,7 +3043,7 @@ func (c *GuardDuty) ListMembersWithContext(ctx aws.Context, input *ListMembersIn
 //    // Example iterating over at most 3 pages of a ListMembers operation.
 //    pageNum := 0
 //    err := client.ListMembersPages(params,
-//        func(page *ListMembersOutput, lastPage bool) bool {
+//        func(page *guardduty.ListMembersOutput, lastPage bool) bool {
 //            pageNum++
 //            fmt.Println(page)
 //            return pageNum <= 3
@@ -3182,7 +3182,7 @@ func (c *GuardDuty) ListThreatIntelSetsWithContext(ctx aws.Context, input *ListT
 //    // Example iterating over at most 3 pages of a ListThreatIntelSets operation.
 //    pageNum := 0
 //    err := client.ListThreatIntelSetsPages(params,
-//        func(page *ListThreatIntelSetsOutput, lastPage bool) bool {
+//        func(page *guardduty.ListThreatIntelSetsOutput, lastPage bool) bool {
 //            pageNum++
 //            fmt.Println(page)
 //            return pageNum <= 3

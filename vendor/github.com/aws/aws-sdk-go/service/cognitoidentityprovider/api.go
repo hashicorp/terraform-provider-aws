@@ -1791,7 +1791,7 @@ func (c *CognitoIdentityProvider) AdminListGroupsForUserWithContext(ctx aws.Cont
 //    // Example iterating over at most 3 pages of a AdminListGroupsForUser operation.
 //    pageNum := 0
 //    err := client.AdminListGroupsForUserPages(params,
-//        func(page *AdminListGroupsForUserOutput, lastPage bool) bool {
+//        func(page *cognitoidentityprovider.AdminListGroupsForUserOutput, lastPage bool) bool {
 //            pageNum++
 //            fmt.Println(page)
 //            return pageNum <= 3
@@ -1948,7 +1948,7 @@ func (c *CognitoIdentityProvider) AdminListUserAuthEventsWithContext(ctx aws.Con
 //    // Example iterating over at most 3 pages of a AdminListUserAuthEvents operation.
 //    pageNum := 0
 //    err := client.AdminListUserAuthEventsPages(params,
-//        func(page *AdminListUserAuthEventsOutput, lastPage bool) bool {
+//        func(page *cognitoidentityprovider.AdminListUserAuthEventsOutput, lastPage bool) bool {
 //            pageNum++
 //            fmt.Println(page)
 //            return pageNum <= 3
@@ -6037,8 +6037,7 @@ func (c *CognitoIdentityProvider) ForgotPasswordRequest(input *ForgotPasswordInp
 // for the user, the confirmation code is sent to the phone number. Otherwise,
 // if a verified email exists, the confirmation code is sent to the email. If
 // neither a verified phone number nor a verified email exists, InvalidParameterException
-// is thrown. To use the confirmation code for resetting the password, call
-// .
+// is thrown. To use the confirmation code for resetting the password, call .
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -7471,7 +7470,7 @@ func (c *CognitoIdentityProvider) ListGroupsWithContext(ctx aws.Context, input *
 //    // Example iterating over at most 3 pages of a ListGroups operation.
 //    pageNum := 0
 //    err := client.ListGroupsPages(params,
-//        func(page *ListGroupsOutput, lastPage bool) bool {
+//        func(page *cognitoidentityprovider.ListGroupsOutput, lastPage bool) bool {
 //            pageNum++
 //            fmt.Println(page)
 //            return pageNum <= 3
@@ -7621,7 +7620,7 @@ func (c *CognitoIdentityProvider) ListIdentityProvidersWithContext(ctx aws.Conte
 //    // Example iterating over at most 3 pages of a ListIdentityProviders operation.
 //    pageNum := 0
 //    err := client.ListIdentityProvidersPages(params,
-//        func(page *ListIdentityProvidersOutput, lastPage bool) bool {
+//        func(page *cognitoidentityprovider.ListIdentityProvidersOutput, lastPage bool) bool {
 //            pageNum++
 //            fmt.Println(page)
 //            return pageNum <= 3
@@ -7771,7 +7770,7 @@ func (c *CognitoIdentityProvider) ListResourceServersWithContext(ctx aws.Context
 //    // Example iterating over at most 3 pages of a ListResourceServers operation.
 //    pageNum := 0
 //    err := client.ListResourceServersPages(params,
-//        func(page *ListResourceServersOutput, lastPage bool) bool {
+//        func(page *cognitoidentityprovider.ListResourceServersOutput, lastPage bool) bool {
 //            pageNum++
 //            fmt.Println(page)
 //            return pageNum <= 3
@@ -8115,7 +8114,7 @@ func (c *CognitoIdentityProvider) ListUserPoolClientsWithContext(ctx aws.Context
 //    // Example iterating over at most 3 pages of a ListUserPoolClients operation.
 //    pageNum := 0
 //    err := client.ListUserPoolClientsPages(params,
-//        func(page *ListUserPoolClientsOutput, lastPage bool) bool {
+//        func(page *cognitoidentityprovider.ListUserPoolClientsOutput, lastPage bool) bool {
 //            pageNum++
 //            fmt.Println(page)
 //            return pageNum <= 3
@@ -8261,7 +8260,7 @@ func (c *CognitoIdentityProvider) ListUserPoolsWithContext(ctx aws.Context, inpu
 //    // Example iterating over at most 3 pages of a ListUserPools operation.
 //    pageNum := 0
 //    err := client.ListUserPoolsPages(params,
-//        func(page *ListUserPoolsOutput, lastPage bool) bool {
+//        func(page *cognitoidentityprovider.ListUserPoolsOutput, lastPage bool) bool {
 //            pageNum++
 //            fmt.Println(page)
 //            return pageNum <= 3
@@ -8507,7 +8506,7 @@ func (c *CognitoIdentityProvider) ListUsersInGroupWithContext(ctx aws.Context, i
 //    // Example iterating over at most 3 pages of a ListUsersInGroup operation.
 //    pageNum := 0
 //    err := client.ListUsersInGroupPages(params,
-//        func(page *ListUsersInGroupOutput, lastPage bool) bool {
+//        func(page *cognitoidentityprovider.ListUsersInGroupOutput, lastPage bool) bool {
 //            pageNum++
 //            fmt.Println(page)
 //            return pageNum <= 3
@@ -10698,8 +10697,7 @@ func (c *CognitoIdentityProvider) UpdateUserPoolClientRequest(input *UpdateUserP
 //
 // Updates the specified user pool app client with the specified attributes.
 // If you don't provide a value for an attribute, it will be set to the default
-// value. You can get a list of the current user pool app client settings with
-// .
+// value. You can get a list of the current user pool app client settings with .
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -12898,10 +12896,12 @@ type AdminLinkProviderForUserInput struct {
 	// respectively. The ProviderAttributeValue for the user must be the same value
 	// as the id, sub, or user_id value found in the social identity provider token.
 	//
-	// For SAML, the ProviderAttributeNamecan be any value that matches a claim in the SAML assertion. If you wish
-	// to link SAML users based on the subject of the SAML assertion, you should
-	// map the subject to a claim through the SAML identity provider and submit
-	// that claim name as the ProviderAttributeName. If you set ProviderAttributeNameto Cognito_Subject
+	// For SAML, the ProviderAttributeName can be any value that matches a claim
+	// in the SAML assertion. If you wish to link SAML users based on the subject
+	// of the SAML assertion, you should map the subject to a claim through the
+	// SAML identity provider and submit that claim name as the ProviderAttributeName.
+	// If you set ProviderAttributeName to Cognito_Subject, Cognito will automatically
+	// parse the default unique identifier found in the subject from the SAML token.
 	//
 	// SourceUser is a required field
 	SourceUser *ProviderUserIdentifierType `type:"structure" required:"true"`
@@ -13512,7 +13512,6 @@ type AdminRespondToAuthChallengeInput struct {
 	//
 	//    * NEW_PASSWORD_REQUIRED: NEW_PASSWORD, any other required attributes,
 	//    USERNAME, SECRET_HASH (if app client is configured with client secret).
-	//
 	//
 	// The value of the USERNAME attribute must be the user's actual username, not
 	// an alias (such as email address or phone number). To make this easier, the
@@ -16345,10 +16344,10 @@ type CreateUserPoolInput struct {
 	// need permission to invoke a function. So you will need to make an extra call
 	// to add permission for these event sources to invoke your Lambda function.
 	//
-	// For more information on using the Lambda API to add permission, see  AddPermission
-	//  (https://docs.aws.amazon.com/lambda/latest/dg/API_AddPermission.html).
+	// For more information on using the Lambda API to add permission, see AddPermission
+	// (https://docs.aws.amazon.com/lambda/latest/dg/API_AddPermission.html).
 	//
-	// For adding permission using the AWS CLI, see  add-permission  (https://docs.aws.amazon.com/cli/latest/reference/lambda/add-permission.html).
+	// For adding permission using the AWS CLI, see add-permission (https://docs.aws.amazon.com/cli/latest/reference/lambda/add-permission.html).
 	LambdaConfig *LambdaConfigType `type:"structure"`
 
 	// Specifies MFA configuration details.
@@ -17968,12 +17967,14 @@ type EmailConfigurationType struct {
 	// email functionality or your Amazon SES email configuration. Specify one of
 	// the following values:
 	//
-	// COGNITO_DEFAULTWhen Amazon Cognito emails your users, it uses its built-in
-	// email functionality. When you use the default option, Amazon Cognito allows
-	// only a limited number of emails each day for your user pool. For typical
-	// production environments, the default email limit is below the required delivery
-	// volume. To achieve a higher delivery volume, specify DEVELOPER to use your
-	// Amazon SES email configuration.
+	// COGNITO_DEFAULT
+	//
+	// When Amazon Cognito emails your users, it uses its built-in email functionality.
+	// When you use the default option, Amazon Cognito allows only a limited number
+	// of emails each day for your user pool. For typical production environments,
+	// the default email limit is below the required delivery volume. To achieve
+	// a higher delivery volume, specify DEVELOPER to use your Amazon SES email
+	// configuration.
 	//
 	// To look up the email delivery limit for the default option, see Limits in
 	// Amazon Cognito (https://docs.aws.amazon.com/cognito/latest/developerguide/limits.html)
@@ -17983,7 +17984,9 @@ type EmailConfigurationType struct {
 	// the FROM address, provide the ARN of an Amazon SES verified email address
 	// for the SourceArn parameter.
 	//
-	// DEVELOPERWhen Amazon Cognito emails your users, it uses your Amazon SES configuration.
+	// DEVELOPER
+	//
+	// When Amazon Cognito emails your users, it uses your Amazon SES configuration.
 	// Amazon Cognito calls Amazon SES on your behalf to send email from your verified
 	// email address. When you use this option, the email delivery limits are the
 	// same limits that apply to your Amazon SES verified email address in your
@@ -20622,7 +20625,7 @@ type ListUsersInput struct {
 	// attributes are returned.
 	AttributesToGet []*string `type:"list"`
 
-	// A filter string of the form "AttributeNameFilter-Type "AttributeValue"".
+	// A filter string of the form "AttributeName Filter-Type "AttributeValue"".
 	// Quotation marks within the filter string must be escaped using the backslash
 	// (\) character. For example, "family_name = \"Reddy\"".
 	//

@@ -63,20 +63,17 @@ func (c *Organizations) AcceptHandshakeRequest(input *AcceptHandshakeInput) (req
 // have the relevant IAM permissions:
 //
 //    * Invitation to join or Approve all features request handshakes: only
-//    a principal from the member account.
-//
-// The user who calls the API for an invitation to join must have the organizations:AcceptHandshake
-//    permission. If you enabled all features in the organization, then the
-//    user must also have the iam:CreateServiceLinkedRole permission so that
-//    Organizations can create the required service-linked role named AWSServiceRoleForOrganizations.
+//    a principal from the member account. The user who calls the API for an
+//    invitation to join must have the organizations:AcceptHandshake permission.
+//    If you enabled all features in the organization, then the user must also
+//    have the iam:CreateServiceLinkedRole permission so that Organizations
+//    can create the required service-linked role named AWSServiceRoleForOrganizations.
 //    For more information, see AWS Organizations and Service-Linked Roles (http://docs.aws.amazon.com/organizations/latest/userguide/orgs_integration_services.html#orgs_integration_service-linked-roles)
 //    in the AWS Organizations User Guide.
 //
 //    * Enable all features final confirmation handshake: only a principal from
-//    the master account.
-//
-// For more information about invitations, see Inviting an AWS Account to Join
-//    Your Organization (https://docs.aws.amazon.com/organizations/latest/userguide/orgs_manage_accounts_invites.html)
+//    the master account. For more information about invitations, see Inviting
+//    an AWS Account to Join Your Organization (https://docs.aws.amazon.com/organizations/latest/userguide/orgs_manage_accounts_invites.html)
 //    in the AWS Organizations User Guide. For more information about requests
 //    to enable all features in the organization, see Enabling All Features
 //    in Your Organization (https://docs.aws.amazon.com/organizations/latest/userguide/orgs_manage_org_support-all-features.html)
@@ -113,11 +110,9 @@ func (c *Organizations) AcceptHandshakeRequest(input *AcceptHandshakeInput) (req
 //
 //      * ACCOUNT_NUMBER_LIMIT_EXCEEDED: You attempted to exceed the limit on
 //      the number of accounts in an organization. Note that deleted and closed
-//      accounts still count toward your limit.
-//
-//   If you get this exception immediately after creating the organization, wait
-//      one hour and try again. If after an hour it continues to fail with this
-//      error, contact AWS Support (https://console.aws.amazon.com/support/home#/).
+//      accounts still count toward your limit. If you get this exception immediately
+//      after creating the organization, wait one hour and try again. If after
+//      an hour it continues to fail with this error, contact AWS Support (https://console.aws.amazon.com/support/home#/).
 //
 //      * HANDSHAKE_RATE_LIMIT_EXCEEDED: You attempted to exceed the number of
 //      handshakes that you can send in one day.
@@ -310,38 +305,30 @@ func (c *Organizations) AttachPolicyRequest(input *AttachPolicyInput) (req *requ
 //
 //    * Service control policy (SCP) - An SCP specifies what permissions can
 //    be delegated to users in affected member accounts. The scope of influence
-//    for a policy depends on what you attach the policy to:
-//
-// If you attach an SCP to a root, it affects all accounts in the organization.
-//
-// If you attach an SCP to an OU, it affects all accounts in that OU and in
-//    any child OUs.
-//
-// If you attach the policy directly to an account, then it affects only that
-//    account.
-//
-// SCPs are JSON policies that specify the maximum permissions for an organization
-//    or organizational unit (OU). When you attach one SCP to a higher level
-//    root or OU, and you also attach a different SCP to a child OU or to an
-//    account, the child policy can further restrict only the permissions that
-//    pass through the parent filter and are available to the child. An SCP
-//    that is attached to a child cannot grant a permission that is not already
-//    granted by the parent. For example, imagine that the parent SCP allows
-//    permissions A, B, C, D, and E. The child SCP allows C, D, E, F, and G.
-//    The result is that the accounts affected by the child SCP are allowed
-//    to use only C, D, and E. They cannot use A or B because they were filtered
-//    out by the child OU. They also cannot use F and G because they were filtered
-//    out by the parent OU. They cannot be granted back by the child SCP; child
-//    SCPs can only filter the permissions they receive from the parent SCP.
-//
-// AWS Organizations attaches a default SCP named "FullAWSAccess to every root,
-//    OU, and account. This default SCP allows all services and actions, enabling
-//    any new child OU or account to inherit the permissions of the parent root
-//    or OU. If you detach the default policy, you must replace it with a policy
-//    that specifies the permissions that you want to allow in that OU or account.
-//
-// For more information about how Organizations policies permissions work, see
-//    Using Service Control Policies (https://docs.aws.amazon.com/organizations/latest/userguide/orgs_manage_policies_scp.html)
+//    for a policy depends on what you attach the policy to: If you attach an
+//    SCP to a root, it affects all accounts in the organization. If you attach
+//    an SCP to an OU, it affects all accounts in that OU and in any child OUs.
+//    If you attach the policy directly to an account, then it affects only
+//    that account. SCPs are JSON policies that specify the maximum permissions
+//    for an organization or organizational unit (OU). When you attach one SCP
+//    to a higher level root or OU, and you also attach a different SCP to a
+//    child OU or to an account, the child policy can further restrict only
+//    the permissions that pass through the parent filter and are available
+//    to the child. An SCP that is attached to a child cannot grant a permission
+//    that is not already granted by the parent. For example, imagine that the
+//    parent SCP allows permissions A, B, C, D, and E. The child SCP allows
+//    C, D, E, F, and G. The result is that the accounts affected by the child
+//    SCP are allowed to use only C, D, and E. They cannot use A or B because
+//    they were filtered out by the child OU. They also cannot use F and G because
+//    they were filtered out by the parent OU. They cannot be granted back by
+//    the child SCP; child SCPs can only filter the permissions they receive
+//    from the parent SCP. AWS Organizations attaches a default SCP named "FullAWSAccess
+//    to every root, OU, and account. This default SCP allows all services and
+//    actions, enabling any new child OU or account to inherit the permissions
+//    of the parent root or OU. If you detach the default policy, you must replace
+//    it with a policy that specifies the permissions that you want to allow
+//    in that OU or account. For more information about how Organizations policies
+//    permissions work, see Using Service Control Policies (https://docs.aws.amazon.com/organizations/latest/userguide/orgs_manage_policies_scp.html)
 //    in the AWS Organizations User Guide.
 //
 // This operation can be called only from the organization's master account.
@@ -383,17 +370,14 @@ func (c *Organizations) AttachPolicyRequest(input *AttachPolicyInput) (req *requ
 //      * ACCOUNT_NUMBER_LIMIT_EXCEEDED: You attempted to exceed the limit on
 //      the number of accounts in an organization. If you need more accounts,
 //      contact AWS Support (https://console.aws.amazon.com/support/home#/) to
-//      request an increase in your limit.
-//
-//   Or the number of invitations that you tried to send would cause you to exceed
-//      the limit of accounts in your organization. Send fewer invitations or
-//      contact AWS Support to request an increase in the number of accounts.
-//
-//   Deleted and closed accounts still count toward your limit.
-//
-//   If you get receive this exception when running a command immediately after
-//      creating the organization, wait one hour and try again. If after an hour
-//      it continues to fail with this error, contact AWS Support (https://console.aws.amazon.com/support/home#/).
+//      request an increase in your limit. Or the number of invitations that you
+//      tried to send would cause you to exceed the limit of accounts in your
+//      organization. Send fewer invitations or contact AWS Support to request
+//      an increase in the number of accounts. Deleted and closed accounts still
+//      count toward your limit. If you get receive this exception when running
+//      a command immediately after creating the organization, wait one hour and
+//      try again. If after an hour it continues to fail with this error, contact
+//      AWS Support (https://console.aws.amazon.com/support/home#/).
 //
 //      * HANDSHAKE_RATE_LIMIT_EXCEEDED: You attempted to exceed the number of
 //      handshakes that you can send in one day.
@@ -814,41 +798,46 @@ func (c *Organizations) CreateAccountRequest(input *CreateAccountInput) (req *re
 //    the Activity in Your Organization (http://docs.aws.amazon.com/organizations/latest/userguide/orgs_monitoring.html)
 //    in the AWS Organizations User Guide.
 //
-// The user who calls the API to create an account must have the organizations:CreateAccountpermission. If you enabled all features in the organization, AWS Organizations
-// will create the required service-linked role named AWSServiceRoleForOrganizations. For more information, see AWS Organizations and Service-Linked Roles (http://docs.aws.amazon.com/organizations/latest/userguide/orgs_integrate_services.html#orgs_integrate_services-using_slrs)in the AWS Organizations User Guide.
+// The user who calls the API to create an account must have the organizations:CreateAccount
+// permission. If you enabled all features in the organization, AWS Organizations
+// will create the required service-linked role named AWSServiceRoleForOrganizations.
+// For more information, see AWS Organizations and Service-Linked Roles (http://docs.aws.amazon.com/organizations/latest/userguide/orgs_integrate_services.html#orgs_integrate_services-using_slrs)
+// in the AWS Organizations User Guide.
 //
 // AWS Organizations preconfigures the new member account with a role (named
-// OrganizationAccountAccessRoleby default) that grants users in the master account administrator permissions
-// in the new member account. Principals in the master account can assume the
-// role. AWS Organizations clones the company name and address information for
-// the new account from the organization's master account.
+// OrganizationAccountAccessRole by default) that grants users in the master
+// account administrator permissions in the new member account. Principals in
+// the master account can assume the role. AWS Organizations clones the company
+// name and address information for the new account from the organization's
+// master account.
 //
 // This operation can be called only from the organization's master account.
 //
 // For more information about creating accounts, see Creating an AWS Account
-// in Your Organization (https://docs.aws.amazon.com/organizations/latest/userguide/orgs_manage_accounts_create.html)in the AWS Organizations User Guide.
-//
-// When you create an account in an organization using the AWS Organizations
-// console, API, or CLI commands, the information required for the account to
-// operate as a standalone account, such as a payment method and signing the
-// end user license agreement (EULA) is not automatically collected. If you
-// must remove an account from your organization later, you can do so only after
-// you provide the missing information. Follow the steps at  To leave an organization
-// as a member account (http://docs.aws.amazon.com/organizations/latest/userguide/orgs_manage_accounts_remove.html#leave-without-all-info)
+// in Your Organization (https://docs.aws.amazon.com/organizations/latest/userguide/orgs_manage_accounts_create.html)
 // in the AWS Organizations User Guide.
 //
-// If you get an exception that indicates that you exceeded your account limits
-// for the organization, contact AWS Support (https://console.aws.amazon.com/support/home#/).
+//    * When you create an account in an organization using the AWS Organizations
+//    console, API, or CLI commands, the information required for the account
+//    to operate as a standalone account, such as a payment method and signing
+//    the end user license agreement (EULA) is not automatically collected.
+//    If you must remove an account from your organization later, you can do
+//    so only after you provide the missing information. Follow the steps at
+//    To leave an organization as a member account (http://docs.aws.amazon.com/organizations/latest/userguide/orgs_manage_accounts_remove.html#leave-without-all-info)
+//    in the AWS Organizations User Guide.
 //
-// If you get an exception that indicates that the operation failed because
-// your organization is still initializing, wait one hour and then try again.
-// If the error persists, contact AWS Support (https://console.aws.amazon.com/support/home#/).
+//    * If you get an exception that indicates that you exceeded your account
+//    limits for the organization, contact AWS Support (https://console.aws.amazon.com/support/home#/).
 //
-// Using CreateAccount to create multiple temporary accounts isn't recommended.
-// You can only close an account from the Billing and Cost Management Console,
-// and you must be signed in as the root user. For information on the requirements
-// and process for closing an account, see Closing an AWS Account (http://docs.aws.amazon.com/organizations/latest/userguide/orgs_manage_accounts_close.html)
-// in the AWS Organizations User Guide.
+//    * If you get an exception that indicates that the operation failed because
+//    your organization is still initializing, wait one hour and then try again.
+//    If the error persists, contact AWS Support (https://console.aws.amazon.com/support/home#/).
+//
+//    * Using CreateAccount to create multiple temporary accounts isn't recommended.
+//    You can only close an account from the Billing and Cost Management Console,
+//    and you must be signed in as the root user. For information on the requirements
+//    and process for closing an account, see Closing an AWS Account (http://docs.aws.amazon.com/organizations/latest/userguide/orgs_manage_accounts_close.html)
+//    in the AWS Organizations User Guide.
 //
 // When you create a member account with this operation, you can choose whether
 // to create the account with the IAM User and Role Access to Billing Information
@@ -895,17 +884,14 @@ func (c *Organizations) CreateAccountRequest(input *CreateAccountInput) (req *re
 //      * ACCOUNT_NUMBER_LIMIT_EXCEEDED: You attempted to exceed the limit on
 //      the number of accounts in an organization. If you need more accounts,
 //      contact AWS Support (https://console.aws.amazon.com/support/home#/) to
-//      request an increase in your limit.
-//
-//   Or the number of invitations that you tried to send would cause you to exceed
-//      the limit of accounts in your organization. Send fewer invitations or
-//      contact AWS Support to request an increase in the number of accounts.
-//
-//   Deleted and closed accounts still count toward your limit.
-//
-//   If you get receive this exception when running a command immediately after
-//      creating the organization, wait one hour and try again. If after an hour
-//      it continues to fail with this error, contact AWS Support (https://console.aws.amazon.com/support/home#/).
+//      request an increase in your limit. Or the number of invitations that you
+//      tried to send would cause you to exceed the limit of accounts in your
+//      organization. Send fewer invitations or contact AWS Support to request
+//      an increase in the number of accounts. Deleted and closed accounts still
+//      count toward your limit. If you get receive this exception when running
+//      a command immediately after creating the organization, wait one hour and
+//      try again. If after an hour it continues to fail with this error, contact
+//      AWS Support (https://console.aws.amazon.com/support/home#/).
 //
 //      * HANDSHAKE_RATE_LIMIT_EXCEEDED: You attempted to exceed the number of
 //      handshakes that you can send in one day.
@@ -1129,7 +1115,7 @@ func (c *Organizations) CreateGovCloudAccountRequest(input *CreateGovCloudAccoun
 //
 //    * You are authorized to create accounts in the AWS GovCloud (US) Region.
 //    For more information on the AWS GovCloud (US) Region, see the AWS GovCloud
-//    User Guide (http://docs.aws.amazon.com/govcloud-us/latest/UserGuide/welcome.html).
+//    User Guide. (http://docs.aws.amazon.com/govcloud-us/latest/UserGuide/welcome.html)
 //
 //    * You already have an account in the AWS GovCloud (US) Region that is
 //    associated with your master account in the commercial Region.
@@ -1147,9 +1133,8 @@ func (c *Organizations) CreateGovCloudAccountRequest(input *CreateGovCloudAccoun
 //
 //    * Verify that AWS CloudTrail is enabled to store logs.
 //
-//    * Create an S3 bucket for AWS CloudTrail log storage.
-//
-// For more information, see Verifying AWS CloudTrail Is Enabled (http://docs.aws.amazon.com/govcloud-us/latest/UserGuide/verifying-cloudtrail.html)
+//    * Create an S3 bucket for AWS CloudTrail log storage. For more information,
+//    see Verifying AWS CloudTrail Is Enabled (http://docs.aws.amazon.com/govcloud-us/latest/UserGuide/verifying-cloudtrail.html)
 //    in the AWS GovCloud User Guide.
 //
 // You call this action from the master account of your organization in the
@@ -1175,11 +1160,12 @@ func (c *Organizations) CreateGovCloudAccountRequest(input *CreateGovCloudAccoun
 //    the Activity in Your Organization (http://docs.aws.amazon.com/organizations/latest/userguide/orgs_monitoring.html)
 //    in the AWS Organizations User Guide.
 //
-// When you call the CreateGovCloudAccountaction, you create two accounts: a standalone account in the AWS GovCloud
-// (US) Region and an associated account in the commercial Region for billing
-// and support purposes. The account in the commercial Region is automatically
-// a member of the organization whose credentials made the request. Both accounts
-// are associated with the same email address.
+// When you call the CreateGovCloudAccount action, you create two accounts:
+// a standalone account in the AWS GovCloud (US) Region and an associated account
+// in the commercial Region for billing and support purposes. The account in
+// the commercial Region is automatically a member of the organization whose
+// credentials made the request. Both accounts are associated with the same
+// email address.
 //
 // A role is created in the new account in the commercial Region that allows
 // the master account in the organization in the commercial Region to assume
@@ -1188,32 +1174,35 @@ func (c *Organizations) CreateGovCloudAccountRequest(input *CreateGovCloudAccoun
 // GovCloud (US) account that can be assumed by the AWS GovCloud (US) account
 // that is associated with the master account of the commercial organization.
 // For more information and to view a diagram that explains how account access
-// works, see AWS Organizations (http://docs.aws.amazon.com/govcloud-us/latest/UserGuide/govcloud-organizations.html)in the AWS GovCloud User Guide.
+// works, see AWS Organizations (http://docs.aws.amazon.com/govcloud-us/latest/UserGuide/govcloud-organizations.html)
+// in the AWS GovCloud User Guide.
 //
 // For more information about creating accounts, see Creating an AWS Account
-// in Your Organization (https://docs.aws.amazon.com/organizations/latest/userguide/orgs_manage_accounts_create.html)in the AWS Organizations User Guide.
-//
-// When you create an account in an organization using the AWS Organizations
-// console, API, or CLI commands, the information required for the account to
-// operate as a standalone account, such as a payment method and signing the
-// end user license agreement (EULA) is not automatically collected. If you
-// must remove an account from your organization later, you can do so only after
-// you provide the missing information. Follow the steps at  To leave an organization
-// as a member account (http://docs.aws.amazon.com/organizations/latest/userguide/orgs_manage_accounts_remove.html#leave-without-all-info)
+// in Your Organization (https://docs.aws.amazon.com/organizations/latest/userguide/orgs_manage_accounts_create.html)
 // in the AWS Organizations User Guide.
 //
-// If you get an exception that indicates that you exceeded your account limits
-// for the organization, contact AWS Support (https://console.aws.amazon.com/support/home#/).
+//    * When you create an account in an organization using the AWS Organizations
+//    console, API, or CLI commands, the information required for the account
+//    to operate as a standalone account, such as a payment method and signing
+//    the end user license agreement (EULA) is not automatically collected.
+//    If you must remove an account from your organization later, you can do
+//    so only after you provide the missing information. Follow the steps at
+//    To leave an organization as a member account (http://docs.aws.amazon.com/organizations/latest/userguide/orgs_manage_accounts_remove.html#leave-without-all-info)
+//    in the AWS Organizations User Guide.
 //
-// If you get an exception that indicates that the operation failed because
-// your organization is still initializing, wait one hour and then try again.
-// If the error persists, contact AWS Support (https://console.aws.amazon.com/support/home#/).
+//    * If you get an exception that indicates that you exceeded your account
+//    limits for the organization, contact AWS Support (https://console.aws.amazon.com/support/home#/).
 //
-// Using CreateGovCloudAccount to create multiple temporary accounts isn't recommended.
-// You can only close an account from the AWS Billing and Cost Management console,
-// and you must be signed in as the root user. For information on the requirements
-// and process for closing an account, see Closing an AWS Account (http://docs.aws.amazon.com/organizations/latest/userguide/orgs_manage_accounts_close.html)
-// in the AWS Organizations User Guide.
+//    * If you get an exception that indicates that the operation failed because
+//    your organization is still initializing, wait one hour and then try again.
+//    If the error persists, contact AWS Support (https://console.aws.amazon.com/support/home#/).
+//
+//    * Using CreateGovCloudAccount to create multiple temporary accounts isn't
+//    recommended. You can only close an account from the AWS Billing and Cost
+//    Management console, and you must be signed in as the root user. For information
+//    on the requirements and process for closing an account, see Closing an
+//    AWS Account (http://docs.aws.amazon.com/organizations/latest/userguide/orgs_manage_accounts_close.html)
+//    in the AWS Organizations User Guide.
 //
 // When you create a member account with this operation, you can choose whether
 // to create the account with the IAM User and Role Access to Billing Information
@@ -1260,17 +1249,14 @@ func (c *Organizations) CreateGovCloudAccountRequest(input *CreateGovCloudAccoun
 //      * ACCOUNT_NUMBER_LIMIT_EXCEEDED: You attempted to exceed the limit on
 //      the number of accounts in an organization. If you need more accounts,
 //      contact AWS Support (https://console.aws.amazon.com/support/home#/) to
-//      request an increase in your limit.
-//
-//   Or the number of invitations that you tried to send would cause you to exceed
-//      the limit of accounts in your organization. Send fewer invitations or
-//      contact AWS Support to request an increase in the number of accounts.
-//
-//   Deleted and closed accounts still count toward your limit.
-//
-//   If you get receive this exception when running a command immediately after
-//      creating the organization, wait one hour and try again. If after an hour
-//      it continues to fail with this error, contact AWS Support (https://console.aws.amazon.com/support/home#/).
+//      request an increase in your limit. Or the number of invitations that you
+//      tried to send would cause you to exceed the limit of accounts in your
+//      organization. Send fewer invitations or contact AWS Support to request
+//      an increase in the number of accounts. Deleted and closed accounts still
+//      count toward your limit. If you get receive this exception when running
+//      a command immediately after creating the organization, wait one hour and
+//      try again. If after an hour it continues to fail with this error, contact
+//      AWS Support (https://console.aws.amazon.com/support/home#/).
 //
 //      * HANDSHAKE_RATE_LIMIT_EXCEEDED: You attempted to exceed the number of
 //      handshakes that you can send in one day.
@@ -1542,17 +1528,14 @@ func (c *Organizations) CreateOrganizationRequest(input *CreateOrganizationInput
 //      * ACCOUNT_NUMBER_LIMIT_EXCEEDED: You attempted to exceed the limit on
 //      the number of accounts in an organization. If you need more accounts,
 //      contact AWS Support (https://console.aws.amazon.com/support/home#/) to
-//      request an increase in your limit.
-//
-//   Or the number of invitations that you tried to send would cause you to exceed
-//      the limit of accounts in your organization. Send fewer invitations or
-//      contact AWS Support to request an increase in the number of accounts.
-//
-//   Deleted and closed accounts still count toward your limit.
-//
-//   If you get receive this exception when running a command immediately after
-//      creating the organization, wait one hour and try again. If after an hour
-//      it continues to fail with this error, contact AWS Support (https://console.aws.amazon.com/support/home#/).
+//      request an increase in your limit. Or the number of invitations that you
+//      tried to send would cause you to exceed the limit of accounts in your
+//      organization. Send fewer invitations or contact AWS Support to request
+//      an increase in the number of accounts. Deleted and closed accounts still
+//      count toward your limit. If you get receive this exception when running
+//      a command immediately after creating the organization, wait one hour and
+//      try again. If after an hour it continues to fail with this error, contact
+//      AWS Support (https://console.aws.amazon.com/support/home#/).
 //
 //      * HANDSHAKE_RATE_LIMIT_EXCEEDED: You attempted to exceed the number of
 //      handshakes that you can send in one day.
@@ -1816,17 +1799,14 @@ func (c *Organizations) CreateOrganizationalUnitRequest(input *CreateOrganizatio
 //      * ACCOUNT_NUMBER_LIMIT_EXCEEDED: You attempted to exceed the limit on
 //      the number of accounts in an organization. If you need more accounts,
 //      contact AWS Support (https://console.aws.amazon.com/support/home#/) to
-//      request an increase in your limit.
-//
-//   Or the number of invitations that you tried to send would cause you to exceed
-//      the limit of accounts in your organization. Send fewer invitations or
-//      contact AWS Support to request an increase in the number of accounts.
-//
-//   Deleted and closed accounts still count toward your limit.
-//
-//   If you get receive this exception when running a command immediately after
-//      creating the organization, wait one hour and try again. If after an hour
-//      it continues to fail with this error, contact AWS Support (https://console.aws.amazon.com/support/home#/).
+//      request an increase in your limit. Or the number of invitations that you
+//      tried to send would cause you to exceed the limit of accounts in your
+//      organization. Send fewer invitations or contact AWS Support to request
+//      an increase in the number of accounts. Deleted and closed accounts still
+//      count toward your limit. If you get receive this exception when running
+//      a command immediately after creating the organization, wait one hour and
+//      try again. If after an hour it continues to fail with this error, contact
+//      AWS Support (https://console.aws.amazon.com/support/home#/).
 //
 //      * HANDSHAKE_RATE_LIMIT_EXCEEDED: You attempted to exceed the number of
 //      handshakes that you can send in one day.
@@ -2088,17 +2068,14 @@ func (c *Organizations) CreatePolicyRequest(input *CreatePolicyInput) (req *requ
 //      * ACCOUNT_NUMBER_LIMIT_EXCEEDED: You attempted to exceed the limit on
 //      the number of accounts in an organization. If you need more accounts,
 //      contact AWS Support (https://console.aws.amazon.com/support/home#/) to
-//      request an increase in your limit.
-//
-//   Or the number of invitations that you tried to send would cause you to exceed
-//      the limit of accounts in your organization. Send fewer invitations or
-//      contact AWS Support to request an increase in the number of accounts.
-//
-//   Deleted and closed accounts still count toward your limit.
-//
-//   If you get receive this exception when running a command immediately after
-//      creating the organization, wait one hour and try again. If after an hour
-//      it continues to fail with this error, contact AWS Support (https://console.aws.amazon.com/support/home#/).
+//      request an increase in your limit. Or the number of invitations that you
+//      tried to send would cause you to exceed the limit of accounts in your
+//      organization. Send fewer invitations or contact AWS Support to request
+//      an increase in the number of accounts. Deleted and closed accounts still
+//      count toward your limit. If you get receive this exception when running
+//      a command immediately after creating the organization, wait one hour and
+//      try again. If after an hour it continues to fail with this error, contact
+//      AWS Support (https://console.aws.amazon.com/support/home#/).
 //
 //      * HANDSHAKE_RATE_LIMIT_EXCEEDED: You attempted to exceed the number of
 //      handshakes that you can send in one day.
@@ -4010,17 +3987,14 @@ func (c *Organizations) DetachPolicyRequest(input *DetachPolicyInput) (req *requ
 //      * ACCOUNT_NUMBER_LIMIT_EXCEEDED: You attempted to exceed the limit on
 //      the number of accounts in an organization. If you need more accounts,
 //      contact AWS Support (https://console.aws.amazon.com/support/home#/) to
-//      request an increase in your limit.
-//
-//   Or the number of invitations that you tried to send would cause you to exceed
-//      the limit of accounts in your organization. Send fewer invitations or
-//      contact AWS Support to request an increase in the number of accounts.
-//
-//   Deleted and closed accounts still count toward your limit.
-//
-//   If you get receive this exception when running a command immediately after
-//      creating the organization, wait one hour and try again. If after an hour
-//      it continues to fail with this error, contact AWS Support (https://console.aws.amazon.com/support/home#/).
+//      request an increase in your limit. Or the number of invitations that you
+//      tried to send would cause you to exceed the limit of accounts in your
+//      organization. Send fewer invitations or contact AWS Support to request
+//      an increase in the number of accounts. Deleted and closed accounts still
+//      count toward your limit. If you get receive this exception when running
+//      a command immediately after creating the organization, wait one hour and
+//      try again. If after an hour it continues to fail with this error, contact
+//      AWS Support (https://console.aws.amazon.com/support/home#/).
 //
 //      * HANDSHAKE_RATE_LIMIT_EXCEEDED: You attempted to exceed the number of
 //      handshakes that you can send in one day.
@@ -4257,13 +4231,17 @@ func (c *Organizations) DisableAWSServiceAccessRequest(input *DisableAWSServiceA
 // on that service. For more information, see the documentation for the other
 // AWS service.
 //
-// After you perform the DisableAWSServiceAccessoperation, the specified service can no longer perform operations in your
-// organization's accounts unless the operations are explicitly permitted by
-// the IAM policies that are attached to your roles.
+// After you perform the DisableAWSServiceAccess operation, the specified service
+// can no longer perform operations in your organization's accounts unless the
+// operations are explicitly permitted by the IAM policies that are attached
+// to your roles.
 //
 // For more information about integrating other services with AWS Organizations,
 // including the list of services that work with Organizations, see Integrating
-// AWS Organizations with Other AWS Services (http://docs.aws.amazon.com/organizations/latest/userguide/orgs_integrate_services.html)in the AWS Organizations User Guide
+// AWS Organizations with Other AWS Services (http://docs.aws.amazon.com/organizations/latest/userguide/orgs_integrate_services.html)
+// in the AWS Organizations User Guide.
+//
+// This operation can be called only from the organization's master account.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -4302,17 +4280,14 @@ func (c *Organizations) DisableAWSServiceAccessRequest(input *DisableAWSServiceA
 //      * ACCOUNT_NUMBER_LIMIT_EXCEEDED: You attempted to exceed the limit on
 //      the number of accounts in an organization. If you need more accounts,
 //      contact AWS Support (https://console.aws.amazon.com/support/home#/) to
-//      request an increase in your limit.
-//
-//   Or the number of invitations that you tried to send would cause you to exceed
-//      the limit of accounts in your organization. Send fewer invitations or
-//      contact AWS Support to request an increase in the number of accounts.
-//
-//   Deleted and closed accounts still count toward your limit.
-//
-//   If you get receive this exception when running a command immediately after
-//      creating the organization, wait one hour and try again. If after an hour
-//      it continues to fail with this error, contact AWS Support (https://console.aws.amazon.com/support/home#/).
+//      request an increase in your limit. Or the number of invitations that you
+//      tried to send would cause you to exceed the limit of accounts in your
+//      organization. Send fewer invitations or contact AWS Support to request
+//      an increase in the number of accounts. Deleted and closed accounts still
+//      count toward your limit. If you get receive this exception when running
+//      a command immediately after creating the organization, wait one hour and
+//      try again. If after an hour it continues to fail with this error, contact
+//      AWS Support (https://console.aws.amazon.com/support/home#/).
 //
 //      * HANDSHAKE_RATE_LIMIT_EXCEEDED: You attempted to exceed the number of
 //      handshakes that you can send in one day.
@@ -4573,17 +4548,14 @@ func (c *Organizations) DisablePolicyTypeRequest(input *DisablePolicyTypeInput) 
 //      * ACCOUNT_NUMBER_LIMIT_EXCEEDED: You attempted to exceed the limit on
 //      the number of accounts in an organization. If you need more accounts,
 //      contact AWS Support (https://console.aws.amazon.com/support/home#/) to
-//      request an increase in your limit.
-//
-//   Or the number of invitations that you tried to send would cause you to exceed
-//      the limit of accounts in your organization. Send fewer invitations or
-//      contact AWS Support to request an increase in the number of accounts.
-//
-//   Deleted and closed accounts still count toward your limit.
-//
-//   If you get receive this exception when running a command immediately after
-//      creating the organization, wait one hour and try again. If after an hour
-//      it continues to fail with this error, contact AWS Support (https://console.aws.amazon.com/support/home#/).
+//      request an increase in your limit. Or the number of invitations that you
+//      tried to send would cause you to exceed the limit of accounts in your
+//      organization. Send fewer invitations or contact AWS Support to request
+//      an increase in the number of accounts. Deleted and closed accounts still
+//      count toward your limit. If you get receive this exception when running
+//      a command immediately after creating the organization, wait one hour and
+//      try again. If after an hour it continues to fail with this error, contact
+//      AWS Support (https://console.aws.amazon.com/support/home#/).
 //
 //      * HANDSHAKE_RATE_LIMIT_EXCEEDED: You attempted to exceed the number of
 //      handshakes that you can send in one day.
@@ -4863,17 +4835,14 @@ func (c *Organizations) EnableAWSServiceAccessRequest(input *EnableAWSServiceAcc
 //      * ACCOUNT_NUMBER_LIMIT_EXCEEDED: You attempted to exceed the limit on
 //      the number of accounts in an organization. If you need more accounts,
 //      contact AWS Support (https://console.aws.amazon.com/support/home#/) to
-//      request an increase in your limit.
-//
-//   Or the number of invitations that you tried to send would cause you to exceed
-//      the limit of accounts in your organization. Send fewer invitations or
-//      contact AWS Support to request an increase in the number of accounts.
-//
-//   Deleted and closed accounts still count toward your limit.
-//
-//   If you get receive this exception when running a command immediately after
-//      creating the organization, wait one hour and try again. If after an hour
-//      it continues to fail with this error, contact AWS Support (https://console.aws.amazon.com/support/home#/).
+//      request an increase in your limit. Or the number of invitations that you
+//      tried to send would cause you to exceed the limit of accounts in your
+//      organization. Send fewer invitations or contact AWS Support to request
+//      an increase in the number of accounts. Deleted and closed accounts still
+//      count toward your limit. If you get receive this exception when running
+//      a command immediately after creating the organization, wait one hour and
+//      try again. If after an hour it continues to fail with this error, contact
+//      AWS Support (https://console.aws.amazon.com/support/home#/).
 //
 //      * HANDSHAKE_RATE_LIMIT_EXCEEDED: You attempted to exceed the number of
 //      handshakes that you can send in one day.
@@ -5147,11 +5116,9 @@ func (c *Organizations) EnableAllFeaturesRequest(input *EnableAllFeaturesInput) 
 //
 //      * ACCOUNT_NUMBER_LIMIT_EXCEEDED: You attempted to exceed the limit on
 //      the number of accounts in an organization. Note that deleted and closed
-//      accounts still count toward your limit.
-//
-//   If you get this exception immediately after creating the organization, wait
-//      one hour and try again. If after an hour it continues to fail with this
-//      error, contact AWS Support (https://console.aws.amazon.com/support/home#/).
+//      accounts still count toward your limit. If you get this exception immediately
+//      after creating the organization, wait one hour and try again. If after
+//      an hour it continues to fail with this error, contact AWS Support (https://console.aws.amazon.com/support/home#/).
 //
 //      * HANDSHAKE_RATE_LIMIT_EXCEEDED: You attempted to exceed the number of
 //      handshakes that you can send in one day.
@@ -5367,17 +5334,14 @@ func (c *Organizations) EnablePolicyTypeRequest(input *EnablePolicyTypeInput) (r
 //      * ACCOUNT_NUMBER_LIMIT_EXCEEDED: You attempted to exceed the limit on
 //      the number of accounts in an organization. If you need more accounts,
 //      contact AWS Support (https://console.aws.amazon.com/support/home#/) to
-//      request an increase in your limit.
-//
-//   Or the number of invitations that you tried to send would cause you to exceed
-//      the limit of accounts in your organization. Send fewer invitations or
-//      contact AWS Support to request an increase in the number of accounts.
-//
-//   Deleted and closed accounts still count toward your limit.
-//
-//   If you get receive this exception when running a command immediately after
-//      creating the organization, wait one hour and try again. If after an hour
-//      it continues to fail with this error, contact AWS Support (https://console.aws.amazon.com/support/home#/).
+//      request an increase in your limit. Or the number of invitations that you
+//      tried to send would cause you to exceed the limit of accounts in your
+//      organization. Send fewer invitations or contact AWS Support to request
+//      an increase in the number of accounts. Deleted and closed accounts still
+//      count toward your limit. If you get receive this exception when running
+//      a command immediately after creating the organization, wait one hour and
+//      try again. If after an hour it continues to fail with this error, contact
+//      AWS Support (https://console.aws.amazon.com/support/home#/).
 //
 //      * HANDSHAKE_RATE_LIMIT_EXCEEDED: You attempted to exceed the number of
 //      handshakes that you can send in one day.
@@ -5606,17 +5570,18 @@ func (c *Organizations) InviteAccountToOrganizationRequest(input *InviteAccountT
 // is associated with the other account's owner. The invitation is implemented
 // as a Handshake whose details are in the response.
 //
-// You can invite AWS accounts only from the same seller as the master account.
-// For example, if your organization's master account was created by Amazon
-// Internet Services Pvt. Ltd (AISPL), an AWS seller in India, then you can
-// only invite other AISPL accounts to your organization. You can't combine
-// accounts from AISPL and AWS, or any other AWS seller. For more information,
-// see Consolidated Billing in India (http://docs.aws.amazon.com/awsaccountbilling/latest/aboutv2/useconsolidatedbilliing-India.html).
+//    * You can invite AWS accounts only from the same seller as the master
+//    account. For example, if your organization's master account was created
+//    by Amazon Internet Services Pvt. Ltd (AISPL), an AWS seller in India,
+//    then you can only invite other AISPL accounts to your organization. You
+//    can't combine accounts from AISPL and AWS, or any other AWS seller. For
+//    more information, see Consolidated Billing in India (http://docs.aws.amazon.com/awsaccountbilling/latest/aboutv2/useconsolidatedbilliing-India.html).
 //
-// If you receive an exception that indicates that you exceeded your account
-// limits for the organization or that the operation failed because your organization
-// is still initializing, wait one hour and then try again. If the error persists
-// after an hour, then contact AWS Customer Support (https://console.aws.amazon.com/support/home#/).
+//    * If you receive an exception that indicates that you exceeded your account
+//    limits for the organization or that the operation failed because your
+//    organization is still initializing, wait one hour and then try again.
+//    If the error persists after an hour, then contact AWS Customer Support
+//    (https://console.aws.amazon.com/support/home#/).
 //
 // This operation can be called only from the organization's master account.
 //
@@ -5658,11 +5623,9 @@ func (c *Organizations) InviteAccountToOrganizationRequest(input *InviteAccountT
 //
 //      * ACCOUNT_NUMBER_LIMIT_EXCEEDED: You attempted to exceed the limit on
 //      the number of accounts in an organization. Note that deleted and closed
-//      accounts still count toward your limit.
-//
-//   If you get this exception immediately after creating the organization, wait
-//      one hour and try again. If after an hour it continues to fail with this
-//      error, contact AWS Support (https://console.aws.amazon.com/support/home#/).
+//      accounts still count toward your limit. If you get this exception immediately
+//      after creating the organization, wait one hour and try again. If after
+//      an hour it continues to fail with this error, contact AWS Support (https://console.aws.amazon.com/support/home#/).
 //
 //      * HANDSHAKE_RATE_LIMIT_EXCEEDED: You attempted to exceed the number of
 //      handshakes that you can send in one day.
@@ -5849,28 +5812,28 @@ func (c *Organizations) LeaveOrganizationRequest(input *LeaveOrganizationInput) 
 //
 // This operation can be called only from a member account in the organization.
 //
-// The master account in an organization with all features enabled can set service
-// control policies (SCPs) that can restrict what administrators of member accounts
-// can do, including preventing them from successfully calling LeaveOrganization
-// and leaving the organization.
+//    * The master account in an organization with all features enabled can
+//    set service control policies (SCPs) that can restrict what administrators
+//    of member accounts can do, including preventing them from successfully
+//    calling LeaveOrganization and leaving the organization.
 //
-// You can leave an organization as a member account only if the account is
-// configured with the information required to operate as a standalone account.
-// When you create an account in an organization using the AWS Organizations
-// console, API, or CLI commands, the information required of standalone accounts
-// is not automatically collected. For each account that you want to make standalone,
-// you must accept the End User License Agreement (EULA), choose a support plan,
-// provide and verify the required contact information, and provide a current
-// payment method. AWS uses the payment method to charge for any billable (not
-// free tier) AWS activity that occurs while the account is not attached to
-// an organization. Follow the steps at  To leave an organization when all required
-// account information has not yet been provided (http://docs.aws.amazon.com/organizations/latest/userguide/orgs_manage_accounts_remove.html#leave-without-all-info)
-// in the AWS Organizations User Guide.
+//    * You can leave an organization as a member account only if the account
+//    is configured with the information required to operate as a standalone
+//    account. When you create an account in an organization using the AWS Organizations
+//    console, API, or CLI commands, the information required of standalone
+//    accounts is not automatically collected. For each account that you want
+//    to make standalone, you must accept the End User License Agreement (EULA),
+//    choose a support plan, provide and verify the required contact information,
+//    and provide a current payment method. AWS uses the payment method to charge
+//    for any billable (not free tier) AWS activity that occurs while the account
+//    is not attached to an organization. Follow the steps at To leave an organization
+//    when all required account information has not yet been provided (http://docs.aws.amazon.com/organizations/latest/userguide/orgs_manage_accounts_remove.html#leave-without-all-info)
+//    in the AWS Organizations User Guide.
 //
-// You can leave an organization only after you enable IAM user access to billing
-// in your account. For more information, see Activating Access to the Billing
-// and Cost Management Console (http://docs.aws.amazon.com/awsaccountbilling/latest/aboutv2/grantaccess.html#ControllingAccessWebsite-Activate)
-// in the AWS Billing and Cost Management User Guide.
+//    * You can leave an organization only after you enable IAM user access
+//    to billing in your account. For more information, see Activating Access
+//    to the Billing and Cost Management Console (http://docs.aws.amazon.com/awsaccountbilling/latest/aboutv2/grantaccess.html#ControllingAccessWebsite-Activate)
+//    in the AWS Billing and Cost Management User Guide.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -5914,17 +5877,14 @@ func (c *Organizations) LeaveOrganizationRequest(input *LeaveOrganizationInput) 
 //      * ACCOUNT_NUMBER_LIMIT_EXCEEDED: You attempted to exceed the limit on
 //      the number of accounts in an organization. If you need more accounts,
 //      contact AWS Support (https://console.aws.amazon.com/support/home#/) to
-//      request an increase in your limit.
-//
-//   Or the number of invitations that you tried to send would cause you to exceed
-//      the limit of accounts in your organization. Send fewer invitations or
-//      contact AWS Support to request an increase in the number of accounts.
-//
-//   Deleted and closed accounts still count toward your limit.
-//
-//   If you get receive this exception when running a command immediately after
-//      creating the organization, wait one hour and try again. If after an hour
-//      it continues to fail with this error, contact AWS Support (https://console.aws.amazon.com/support/home#/).
+//      request an increase in your limit. Or the number of invitations that you
+//      tried to send would cause you to exceed the limit of accounts in your
+//      organization. Send fewer invitations or contact AWS Support to request
+//      an increase in the number of accounts. Deleted and closed accounts still
+//      count toward your limit. If you get receive this exception when running
+//      a command immediately after creating the organization, wait one hour and
+//      try again. If after an hour it continues to fail with this error, contact
+//      AWS Support (https://console.aws.amazon.com/support/home#/).
 //
 //      * HANDSHAKE_RATE_LIMIT_EXCEEDED: You attempted to exceed the number of
 //      handshakes that you can send in one day.
@@ -6191,17 +6151,14 @@ func (c *Organizations) ListAWSServiceAccessForOrganizationRequest(input *ListAW
 //      * ACCOUNT_NUMBER_LIMIT_EXCEEDED: You attempted to exceed the limit on
 //      the number of accounts in an organization. If you need more accounts,
 //      contact AWS Support (https://console.aws.amazon.com/support/home#/) to
-//      request an increase in your limit.
-//
-//   Or the number of invitations that you tried to send would cause you to exceed
-//      the limit of accounts in your organization. Send fewer invitations or
-//      contact AWS Support to request an increase in the number of accounts.
-//
-//   Deleted and closed accounts still count toward your limit.
-//
-//   If you get receive this exception when running a command immediately after
-//      creating the organization, wait one hour and try again. If after an hour
-//      it continues to fail with this error, contact AWS Support (https://console.aws.amazon.com/support/home#/).
+//      request an increase in your limit. Or the number of invitations that you
+//      tried to send would cause you to exceed the limit of accounts in your
+//      organization. Send fewer invitations or contact AWS Support to request
+//      an increase in the number of accounts. Deleted and closed accounts still
+//      count toward your limit. If you get receive this exception when running
+//      a command immediately after creating the organization, wait one hour and
+//      try again. If after an hour it continues to fail with this error, contact
+//      AWS Support (https://console.aws.amazon.com/support/home#/).
 //
 //      * HANDSHAKE_RATE_LIMIT_EXCEEDED: You attempted to exceed the number of
 //      handshakes that you can send in one day.
@@ -6379,7 +6336,7 @@ func (c *Organizations) ListAWSServiceAccessForOrganizationWithContext(ctx aws.C
 //    // Example iterating over at most 3 pages of a ListAWSServiceAccessForOrganization operation.
 //    pageNum := 0
 //    err := client.ListAWSServiceAccessForOrganizationPages(params,
-//        func(page *ListAWSServiceAccessForOrganizationOutput, lastPage bool) bool {
+//        func(page *organizations.ListAWSServiceAccessForOrganizationOutput, lastPage bool) bool {
 //            pageNum++
 //            fmt.Println(page)
 //            return pageNum <= 3
@@ -6475,7 +6432,7 @@ func (c *Organizations) ListAccountsRequest(input *ListAccountsInput) (req *requ
 // Always check the NextToken response parameter for a null value when calling
 // a List* operation. These operations can occasionally return an empty set
 // of results even when there are more results available. The NextToken response
-// parameter value is nullonly when there are no more results to display.
+// parameter value is null only when there are no more results to display.
 //
 // This operation can be called only from the organization's master account.
 //
@@ -6602,7 +6559,7 @@ func (c *Organizations) ListAccountsWithContext(ctx aws.Context, input *ListAcco
 //    // Example iterating over at most 3 pages of a ListAccounts operation.
 //    pageNum := 0
 //    err := client.ListAccountsPages(params,
-//        func(page *ListAccountsOutput, lastPage bool) bool {
+//        func(page *organizations.ListAccountsOutput, lastPage bool) bool {
 //            pageNum++
 //            fmt.Println(page)
 //            return pageNum <= 3
@@ -6701,7 +6658,7 @@ func (c *Organizations) ListAccountsForParentRequest(input *ListAccountsForParen
 // Always check the NextToken response parameter for a null value when calling
 // a List* operation. These operations can occasionally return an empty set
 // of results even when there are more results available. The NextToken response
-// parameter value is nullonly when there are no more results to display.
+// parameter value is null only when there are no more results to display.
 //
 // This operation can be called only from the organization's master account.
 //
@@ -6831,7 +6788,7 @@ func (c *Organizations) ListAccountsForParentWithContext(ctx aws.Context, input 
 //    // Example iterating over at most 3 pages of a ListAccountsForParent operation.
 //    pageNum := 0
 //    err := client.ListAccountsForParentPages(params,
-//        func(page *ListAccountsForParentOutput, lastPage bool) bool {
+//        func(page *organizations.ListAccountsForParentOutput, lastPage bool) bool {
 //            pageNum++
 //            fmt.Println(page)
 //            return pageNum <= 3
@@ -6927,7 +6884,7 @@ func (c *Organizations) ListChildrenRequest(input *ListChildrenInput) (req *requ
 // Always check the NextToken response parameter for a null value when calling
 // a List* operation. These operations can occasionally return an empty set
 // of results even when there are more results available. The NextToken response
-// parameter value is nullonly when there are no more results to display.
+// parameter value is null only when there are no more results to display.
 //
 // This operation can be called only from the organization's master account.
 //
@@ -7057,7 +7014,7 @@ func (c *Organizations) ListChildrenWithContext(ctx aws.Context, input *ListChil
 //    // Example iterating over at most 3 pages of a ListChildren operation.
 //    pageNum := 0
 //    err := client.ListChildrenPages(params,
-//        func(page *ListChildrenOutput, lastPage bool) bool {
+//        func(page *organizations.ListChildrenOutput, lastPage bool) bool {
 //            pageNum++
 //            fmt.Println(page)
 //            return pageNum <= 3
@@ -7152,7 +7109,7 @@ func (c *Organizations) ListCreateAccountStatusRequest(input *ListCreateAccountS
 // Always check the NextToken response parameter for a null value when calling
 // a List* operation. These operations can occasionally return an empty set
 // of results even when there are more results available. The NextToken response
-// parameter value is nullonly when there are no more results to display.
+// parameter value is null only when there are no more results to display.
 //
 // This operation can be called only from the organization's master account.
 //
@@ -7282,7 +7239,7 @@ func (c *Organizations) ListCreateAccountStatusWithContext(ctx aws.Context, inpu
 //    // Example iterating over at most 3 pages of a ListCreateAccountStatus operation.
 //    pageNum := 0
 //    err := client.ListCreateAccountStatusPages(params,
-//        func(page *ListCreateAccountStatusOutput, lastPage bool) bool {
+//        func(page *organizations.ListCreateAccountStatusOutput, lastPage bool) bool {
 //            pageNum++
 //            fmt.Println(page)
 //            return pageNum <= 3
@@ -7381,7 +7338,7 @@ func (c *Organizations) ListHandshakesForAccountRequest(input *ListHandshakesFor
 // Always check the NextToken response parameter for a null value when calling
 // a List* operation. These operations can occasionally return an empty set
 // of results even when there are more results available. The NextToken response
-// parameter value is nullonly when there are no more results to display.
+// parameter value is null only when there are no more results to display.
 //
 // This operation can be called from any account in the organization.
 //
@@ -7508,7 +7465,7 @@ func (c *Organizations) ListHandshakesForAccountWithContext(ctx aws.Context, inp
 //    // Example iterating over at most 3 pages of a ListHandshakesForAccount operation.
 //    pageNum := 0
 //    err := client.ListHandshakesForAccountPages(params,
-//        func(page *ListHandshakesForAccountOutput, lastPage bool) bool {
+//        func(page *organizations.ListHandshakesForAccountOutput, lastPage bool) bool {
 //            pageNum++
 //            fmt.Println(page)
 //            return pageNum <= 3
@@ -7609,7 +7566,7 @@ func (c *Organizations) ListHandshakesForOrganizationRequest(input *ListHandshak
 // Always check the NextToken response parameter for a null value when calling
 // a List* operation. These operations can occasionally return an empty set
 // of results even when there are more results available. The NextToken response
-// parameter value is nullonly when there are no more results to display.
+// parameter value is null only when there are no more results to display.
 //
 // This operation can be called only from the organization's master account.
 //
@@ -7740,7 +7697,7 @@ func (c *Organizations) ListHandshakesForOrganizationWithContext(ctx aws.Context
 //    // Example iterating over at most 3 pages of a ListHandshakesForOrganization operation.
 //    pageNum := 0
 //    err := client.ListHandshakesForOrganizationPages(params,
-//        func(page *ListHandshakesForOrganizationOutput, lastPage bool) bool {
+//        func(page *organizations.ListHandshakesForOrganizationOutput, lastPage bool) bool {
 //            pageNum++
 //            fmt.Println(page)
 //            return pageNum <= 3
@@ -7834,7 +7791,7 @@ func (c *Organizations) ListOrganizationalUnitsForParentRequest(input *ListOrgan
 // Always check the NextToken response parameter for a null value when calling
 // a List* operation. These operations can occasionally return an empty set
 // of results even when there are more results available. The NextToken response
-// parameter value is nullonly when there are no more results to display.
+// parameter value is null only when there are no more results to display.
 //
 // This operation can be called only from the organization's master account.
 //
@@ -7964,7 +7921,7 @@ func (c *Organizations) ListOrganizationalUnitsForParentWithContext(ctx aws.Cont
 //    // Example iterating over at most 3 pages of a ListOrganizationalUnitsForParent operation.
 //    pageNum := 0
 //    err := client.ListOrganizationalUnitsForParentPages(params,
-//        func(page *ListOrganizationalUnitsForParentOutput, lastPage bool) bool {
+//        func(page *organizations.ListOrganizationalUnitsForParentOutput, lastPage bool) bool {
 //            pageNum++
 //            fmt.Println(page)
 //            return pageNum <= 3
@@ -8060,7 +8017,7 @@ func (c *Organizations) ListParentsRequest(input *ListParentsInput) (req *reques
 // Always check the NextToken response parameter for a null value when calling
 // a List* operation. These operations can occasionally return an empty set
 // of results even when there are more results available. The NextToken response
-// parameter value is nullonly when there are no more results to display.
+// parameter value is null only when there are no more results to display.
 //
 // This operation can be called only from the organization's master account.
 //
@@ -8193,7 +8150,7 @@ func (c *Organizations) ListParentsWithContext(ctx aws.Context, input *ListParen
 //    // Example iterating over at most 3 pages of a ListParents operation.
 //    pageNum := 0
 //    err := client.ListParentsPages(params,
-//        func(page *ListParentsOutput, lastPage bool) bool {
+//        func(page *organizations.ListParentsOutput, lastPage bool) bool {
 //            pageNum++
 //            fmt.Println(page)
 //            return pageNum <= 3
@@ -8287,7 +8244,7 @@ func (c *Organizations) ListPoliciesRequest(input *ListPoliciesInput) (req *requ
 // Always check the NextToken response parameter for a null value when calling
 // a List* operation. These operations can occasionally return an empty set
 // of results even when there are more results available. The NextToken response
-// parameter value is nullonly when there are no more results to display.
+// parameter value is null only when there are no more results to display.
 //
 // This operation can be called only from the organization's master account.
 //
@@ -8414,7 +8371,7 @@ func (c *Organizations) ListPoliciesWithContext(ctx aws.Context, input *ListPoli
 //    // Example iterating over at most 3 pages of a ListPolicies operation.
 //    pageNum := 0
 //    err := client.ListPoliciesPages(params,
-//        func(page *ListPoliciesOutput, lastPage bool) bool {
+//        func(page *organizations.ListPoliciesOutput, lastPage bool) bool {
 //            pageNum++
 //            fmt.Println(page)
 //            return pageNum <= 3
@@ -8510,7 +8467,7 @@ func (c *Organizations) ListPoliciesForTargetRequest(input *ListPoliciesForTarge
 // Always check the NextToken response parameter for a null value when calling
 // a List* operation. These operations can occasionally return an empty set
 // of results even when there are more results available. The NextToken response
-// parameter value is nullonly when there are no more results to display.
+// parameter value is null only when there are no more results to display.
 //
 // This operation can be called only from the organization's master account.
 //
@@ -8640,7 +8597,7 @@ func (c *Organizations) ListPoliciesForTargetWithContext(ctx aws.Context, input 
 //    // Example iterating over at most 3 pages of a ListPoliciesForTarget operation.
 //    pageNum := 0
 //    err := client.ListPoliciesForTargetPages(params,
-//        func(page *ListPoliciesForTargetOutput, lastPage bool) bool {
+//        func(page *organizations.ListPoliciesForTargetOutput, lastPage bool) bool {
 //            pageNum++
 //            fmt.Println(page)
 //            return pageNum <= 3
@@ -8734,7 +8691,7 @@ func (c *Organizations) ListRootsRequest(input *ListRootsInput) (req *request.Re
 // Always check the NextToken response parameter for a null value when calling
 // a List* operation. These operations can occasionally return an empty set
 // of results even when there are more results available. The NextToken response
-// parameter value is nullonly when there are no more results to display.
+// parameter value is null only when there are no more results to display.
 //
 // This operation can be called only from the organization's master account.
 //
@@ -8867,7 +8824,7 @@ func (c *Organizations) ListRootsWithContext(ctx aws.Context, input *ListRootsIn
 //    // Example iterating over at most 3 pages of a ListRoots operation.
 //    pageNum := 0
 //    err := client.ListRootsPages(params,
-//        func(page *ListRootsOutput, lastPage bool) bool {
+//        func(page *organizations.ListRootsOutput, lastPage bool) bool {
 //            pageNum++
 //            fmt.Println(page)
 //            return pageNum <= 3
@@ -8962,7 +8919,7 @@ func (c *Organizations) ListTargetsForPolicyRequest(input *ListTargetsForPolicyI
 // Always check the NextToken response parameter for a null value when calling
 // a List* operation. These operations can occasionally return an empty set
 // of results even when there are more results available. The NextToken response
-// parameter value is nullonly when there are no more results to display.
+// parameter value is null only when there are no more results to display.
 //
 // This operation can be called only from the organization's master account.
 //
@@ -9092,7 +9049,7 @@ func (c *Organizations) ListTargetsForPolicyWithContext(ctx aws.Context, input *
 //    // Example iterating over at most 3 pages of a ListTargetsForPolicy operation.
 //    pageNum := 0
 //    err := client.ListTargetsForPolicyPages(params,
-//        func(page *ListTargetsForPolicyOutput, lastPage bool) bool {
+//        func(page *organizations.ListTargetsForPolicyOutput, lastPage bool) bool {
 //            pageNum++
 //            fmt.Println(page)
 //            return pageNum <= 3
@@ -9378,8 +9335,8 @@ func (c *Organizations) RemoveAccountFromOrganizationRequest(input *RemoveAccoun
 // payment method. AWS uses the payment method to charge for any billable (not
 // free tier) AWS activity that occurs while the account is not attached to
 // an organization. To remove an account that does not yet have this information,
-// you must sign in as the member account and follow the steps at  To leave
-// an organization when all required account information has not yet been provided
+// you must sign in as the member account and follow the steps at To leave an
+// organization when all required account information has not yet been provided
 // (http://docs.aws.amazon.com/organizations/latest/userguide/orgs_manage_accounts_remove.html#leave-without-all-info)
 // in the AWS Organizations User Guide.
 //
@@ -9425,17 +9382,14 @@ func (c *Organizations) RemoveAccountFromOrganizationRequest(input *RemoveAccoun
 //      * ACCOUNT_NUMBER_LIMIT_EXCEEDED: You attempted to exceed the limit on
 //      the number of accounts in an organization. If you need more accounts,
 //      contact AWS Support (https://console.aws.amazon.com/support/home#/) to
-//      request an increase in your limit.
-//
-//   Or the number of invitations that you tried to send would cause you to exceed
-//      the limit of accounts in your organization. Send fewer invitations or
-//      contact AWS Support to request an increase in the number of accounts.
-//
-//   Deleted and closed accounts still count toward your limit.
-//
-//   If you get receive this exception when running a command immediately after
-//      creating the organization, wait one hour and try again. If after an hour
-//      it continues to fail with this error, contact AWS Support (https://console.aws.amazon.com/support/home#/).
+//      request an increase in your limit. Or the number of invitations that you
+//      tried to send would cause you to exceed the limit of accounts in your
+//      organization. Send fewer invitations or contact AWS Support to request
+//      an increase in the number of accounts. Deleted and closed accounts still
+//      count toward your limit. If you get receive this exception when running
+//      a command immediately after creating the organization, wait one hour and
+//      try again. If after an hour it continues to fail with this error, contact
+//      AWS Support (https://console.aws.amazon.com/support/home#/).
 //
 //      * HANDSHAKE_RATE_LIMIT_EXCEEDED: You attempted to exceed the number of
 //      handshakes that you can send in one day.
@@ -9866,17 +9820,14 @@ func (c *Organizations) UpdatePolicyRequest(input *UpdatePolicyInput) (req *requ
 //      * ACCOUNT_NUMBER_LIMIT_EXCEEDED: You attempted to exceed the limit on
 //      the number of accounts in an organization. If you need more accounts,
 //      contact AWS Support (https://console.aws.amazon.com/support/home#/) to
-//      request an increase in your limit.
-//
-//   Or the number of invitations that you tried to send would cause you to exceed
-//      the limit of accounts in your organization. Send fewer invitations or
-//      contact AWS Support to request an increase in the number of accounts.
-//
-//   Deleted and closed accounts still count toward your limit.
-//
-//   If you get receive this exception when running a command immediately after
-//      creating the organization, wait one hour and try again. If after an hour
-//      it continues to fail with this error, contact AWS Support (https://console.aws.amazon.com/support/home#/).
+//      request an increase in your limit. Or the number of invitations that you
+//      tried to send would cause you to exceed the limit of accounts in your
+//      organization. Send fewer invitations or contact AWS Support to request
+//      an increase in the number of accounts. Deleted and closed accounts still
+//      count toward your limit. If you get receive this exception when running
+//      a command immediately after creating the organization, wait one hour and
+//      try again. If after an hour it continues to fail with this error, contact
+//      AWS Support (https://console.aws.amazon.com/support/home#/).
 //
 //      * HANDSHAKE_RATE_LIMIT_EXCEEDED: You attempted to exceed the number of
 //      handshakes that you can send in one day.
@@ -10799,10 +10750,8 @@ type CreateOrganizationInput struct {
 	//    * CONSOLIDATED_BILLING: All member accounts have their bills consolidated
 	//    to and paid by the master account. For more information, see Consolidated
 	//    billing (https://docs.aws.amazon.com/organizations/latest/userguide/orgs_getting-started_concepts.html#feature-set-cb-only)
-	//    in the AWS Organizations User Guide.
-	//
-	//  The consolidated billing feature subset isn't available for organizations
-	//    in the AWS GovCloud (US) Region.
+	//    in the AWS Organizations User Guide. The consolidated billing feature
+	//    subset isn't available for organizations in the AWS GovCloud (US) Region.
 	//
 	//    * ALL: In addition to all the features supported by the consolidated billing
 	//    feature set, the master account can also apply any type of policy to any
@@ -12381,7 +12330,7 @@ type InviteAccountToOrganizationInput struct {
 	// The identifier (ID) of the AWS account that you want to invite to join your
 	// organization. This is a JSON object that contains the following elements:
 	//
-	// { "Type": "ACCOUNT", "Id": "<account id number>" }
+	// { "Type": "ACCOUNT", "Id": "< account id number >" }
 	//
 	// If you use the AWS CLI, you can submit this as a single string, similar to
 	// the following example:

@@ -669,7 +669,7 @@ func (c *MediaConnect) ListEntitlementsWithContext(ctx aws.Context, input *ListE
 //    // Example iterating over at most 3 pages of a ListEntitlements operation.
 //    pageNum := 0
 //    err := client.ListEntitlementsPages(params,
-//        func(page *ListEntitlementsOutput, lastPage bool) bool {
+//        func(page *mediaconnect.ListEntitlementsOutput, lastPage bool) bool {
 //            pageNum++
 //            fmt.Println(page)
 //            return pageNum <= 3
@@ -822,7 +822,7 @@ func (c *MediaConnect) ListFlowsWithContext(ctx aws.Context, input *ListFlowsInp
 //    // Example iterating over at most 3 pages of a ListFlows operation.
 //    pageNum := 0
 //    err := client.ListFlowsPages(params,
-//        func(page *ListFlowsOutput, lastPage bool) bool {
+//        func(page *mediaconnect.ListFlowsOutput, lastPage bool) bool {
 //            pageNum++
 //            fmt.Println(page)
 //            return pageNum <= 3

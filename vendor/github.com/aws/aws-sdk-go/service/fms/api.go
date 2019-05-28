@@ -927,7 +927,7 @@ func (c *FMS) ListComplianceStatusWithContext(ctx aws.Context, input *ListCompli
 //    // Example iterating over at most 3 pages of a ListComplianceStatus operation.
 //    pageNum := 0
 //    err := client.ListComplianceStatusPages(params,
-//        func(page *ListComplianceStatusOutput, lastPage bool) bool {
+//        func(page *fms.ListComplianceStatusOutput, lastPage bool) bool {
 //            pageNum++
 //            fmt.Println(page)
 //            return pageNum <= 3
@@ -1070,7 +1070,7 @@ func (c *FMS) ListMemberAccountsWithContext(ctx aws.Context, input *ListMemberAc
 //    // Example iterating over at most 3 pages of a ListMemberAccounts operation.
 //    pageNum := 0
 //    err := client.ListMemberAccountsPages(params,
-//        func(page *ListMemberAccountsOutput, lastPage bool) bool {
+//        func(page *fms.ListMemberAccountsOutput, lastPage bool) bool {
 //            pageNum++
 //            fmt.Println(page)
 //            return pageNum <= 3
@@ -1220,7 +1220,7 @@ func (c *FMS) ListPoliciesWithContext(ctx aws.Context, input *ListPoliciesInput,
 //    // Example iterating over at most 3 pages of a ListPolicies operation.
 //    pageNum := 0
 //    err := client.ListPoliciesPages(params,
-//        func(page *ListPoliciesOutput, lastPage bool) bool {
+//        func(page *fms.ListPoliciesOutput, lastPage bool) bool {
 //            pageNum++
 //            fmt.Println(page)
 //            return pageNum <= 3

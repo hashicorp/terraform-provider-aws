@@ -3130,7 +3130,7 @@ func (c *Redshift) DescribeClusterParameterGroupsWithContext(ctx aws.Context, in
 //    // Example iterating over at most 3 pages of a DescribeClusterParameterGroups operation.
 //    pageNum := 0
 //    err := client.DescribeClusterParameterGroupsPages(params,
-//        func(page *DescribeClusterParameterGroupsOutput, lastPage bool) bool {
+//        func(page *redshift.DescribeClusterParameterGroupsOutput, lastPage bool) bool {
 //            pageNum++
 //            fmt.Println(page)
 //            return pageNum <= 3
@@ -3276,7 +3276,7 @@ func (c *Redshift) DescribeClusterParametersWithContext(ctx aws.Context, input *
 //    // Example iterating over at most 3 pages of a DescribeClusterParameters operation.
 //    pageNum := 0
 //    err := client.DescribeClusterParametersPages(params,
-//        func(page *DescribeClusterParametersOutput, lastPage bool) bool {
+//        func(page *redshift.DescribeClusterParametersOutput, lastPage bool) bool {
 //            pageNum++
 //            fmt.Println(page)
 //            return pageNum <= 3
@@ -3431,7 +3431,7 @@ func (c *Redshift) DescribeClusterSecurityGroupsWithContext(ctx aws.Context, inp
 //    // Example iterating over at most 3 pages of a DescribeClusterSecurityGroups operation.
 //    pageNum := 0
 //    err := client.DescribeClusterSecurityGroupsPages(params,
-//        func(page *DescribeClusterSecurityGroupsOutput, lastPage bool) bool {
+//        func(page *redshift.DescribeClusterSecurityGroupsOutput, lastPage bool) bool {
 //            pageNum++
 //            fmt.Println(page)
 //            return pageNum <= 3
@@ -3586,7 +3586,7 @@ func (c *Redshift) DescribeClusterSnapshotsWithContext(ctx aws.Context, input *D
 //    // Example iterating over at most 3 pages of a DescribeClusterSnapshots operation.
 //    pageNum := 0
 //    err := client.DescribeClusterSnapshotsPages(params,
-//        func(page *DescribeClusterSnapshotsOutput, lastPage bool) bool {
+//        func(page *redshift.DescribeClusterSnapshotsOutput, lastPage bool) bool {
 //            pageNum++
 //            fmt.Println(page)
 //            return pageNum <= 3
@@ -3737,7 +3737,7 @@ func (c *Redshift) DescribeClusterSubnetGroupsWithContext(ctx aws.Context, input
 //    // Example iterating over at most 3 pages of a DescribeClusterSubnetGroups operation.
 //    pageNum := 0
 //    err := client.DescribeClusterSubnetGroupsPages(params,
-//        func(page *DescribeClusterSubnetGroupsOutput, lastPage bool) bool {
+//        func(page *redshift.DescribeClusterSubnetGroupsOutput, lastPage bool) bool {
 //            pageNum++
 //            fmt.Println(page)
 //            return pageNum <= 3
@@ -3953,7 +3953,7 @@ func (c *Redshift) DescribeClusterVersionsWithContext(ctx aws.Context, input *De
 //    // Example iterating over at most 3 pages of a DescribeClusterVersions operation.
 //    pageNum := 0
 //    err := client.DescribeClusterVersionsPages(params,
-//        func(page *DescribeClusterVersionsOutput, lastPage bool) bool {
+//        func(page *redshift.DescribeClusterVersionsOutput, lastPage bool) bool {
 //            pageNum++
 //            fmt.Println(page)
 //            return pageNum <= 3
@@ -4104,7 +4104,7 @@ func (c *Redshift) DescribeClustersWithContext(ctx aws.Context, input *DescribeC
 //    // Example iterating over at most 3 pages of a DescribeClusters operation.
 //    pageNum := 0
 //    err := client.DescribeClustersPages(params,
-//        func(page *DescribeClustersOutput, lastPage bool) bool {
+//        func(page *redshift.DescribeClustersOutput, lastPage bool) bool {
 //            pageNum++
 //            fmt.Println(page)
 //            return pageNum <= 3
@@ -4238,7 +4238,7 @@ func (c *Redshift) DescribeDefaultClusterParametersWithContext(ctx aws.Context, 
 //    // Example iterating over at most 3 pages of a DescribeDefaultClusterParameters operation.
 //    pageNum := 0
 //    err := client.DescribeDefaultClusterParametersPages(params,
-//        func(page *DescribeDefaultClusterParametersOutput, lastPage bool) bool {
+//        func(page *redshift.DescribeDefaultClusterParametersOutput, lastPage bool) bool {
 //            pageNum++
 //            fmt.Println(page)
 //            return pageNum <= 3
@@ -4465,7 +4465,7 @@ func (c *Redshift) DescribeEventSubscriptionsWithContext(ctx aws.Context, input 
 //    // Example iterating over at most 3 pages of a DescribeEventSubscriptions operation.
 //    pageNum := 0
 //    err := client.DescribeEventSubscriptionsPages(params,
-//        func(page *DescribeEventSubscriptionsOutput, lastPage bool) bool {
+//        func(page *redshift.DescribeEventSubscriptionsOutput, lastPage bool) bool {
 //            pageNum++
 //            fmt.Println(page)
 //            return pageNum <= 3
@@ -4598,7 +4598,7 @@ func (c *Redshift) DescribeEventsWithContext(ctx aws.Context, input *DescribeEve
 //    // Example iterating over at most 3 pages of a DescribeEvents operation.
 //    pageNum := 0
 //    err := client.DescribeEventsPages(params,
-//        func(page *DescribeEventsOutput, lastPage bool) bool {
+//        func(page *redshift.DescribeEventsOutput, lastPage bool) bool {
 //            pageNum++
 //            fmt.Println(page)
 //            return pageNum <= 3
@@ -4748,7 +4748,7 @@ func (c *Redshift) DescribeHsmClientCertificatesWithContext(ctx aws.Context, inp
 //    // Example iterating over at most 3 pages of a DescribeHsmClientCertificates operation.
 //    pageNum := 0
 //    err := client.DescribeHsmClientCertificatesPages(params,
-//        func(page *DescribeHsmClientCertificatesOutput, lastPage bool) bool {
+//        func(page *redshift.DescribeHsmClientCertificatesOutput, lastPage bool) bool {
 //            pageNum++
 //            fmt.Println(page)
 //            return pageNum <= 3
@@ -4898,7 +4898,7 @@ func (c *Redshift) DescribeHsmConfigurationsWithContext(ctx aws.Context, input *
 //    // Example iterating over at most 3 pages of a DescribeHsmConfigurations operation.
 //    pageNum := 0
 //    err := client.DescribeHsmConfigurationsPages(params,
-//        func(page *DescribeHsmConfigurationsOutput, lastPage bool) bool {
+//        func(page *redshift.DescribeHsmConfigurationsOutput, lastPage bool) bool {
 //            pageNum++
 //            fmt.Println(page)
 //            return pageNum <= 3
@@ -5116,7 +5116,7 @@ func (c *Redshift) DescribeOrderableClusterOptionsWithContext(ctx aws.Context, i
 //    // Example iterating over at most 3 pages of a DescribeOrderableClusterOptions operation.
 //    pageNum := 0
 //    err := client.DescribeOrderableClusterOptionsPages(params,
-//        func(page *DescribeOrderableClusterOptionsOutput, lastPage bool) bool {
+//        func(page *redshift.DescribeOrderableClusterOptionsOutput, lastPage bool) bool {
 //            pageNum++
 //            fmt.Println(page)
 //            return pageNum <= 3
@@ -5267,7 +5267,7 @@ func (c *Redshift) DescribeReservedNodeOfferingsWithContext(ctx aws.Context, inp
 //    // Example iterating over at most 3 pages of a DescribeReservedNodeOfferings operation.
 //    pageNum := 0
 //    err := client.DescribeReservedNodeOfferingsPages(params,
-//        func(page *DescribeReservedNodeOfferingsOutput, lastPage bool) bool {
+//        func(page *redshift.DescribeReservedNodeOfferingsOutput, lastPage bool) bool {
 //            pageNum++
 //            fmt.Println(page)
 //            return pageNum <= 3
@@ -5406,7 +5406,7 @@ func (c *Redshift) DescribeReservedNodesWithContext(ctx aws.Context, input *Desc
 //    // Example iterating over at most 3 pages of a DescribeReservedNodes operation.
 //    pageNum := 0
 //    err := client.DescribeReservedNodesPages(params,
-//        func(page *DescribeReservedNodesOutput, lastPage bool) bool {
+//        func(page *redshift.DescribeReservedNodesOutput, lastPage bool) bool {
 //            pageNum++
 //            fmt.Println(page)
 //            return pageNum <= 3
@@ -7930,15 +7930,8 @@ func (c *Redshift) ResizeClusterRequest(input *ResizeClusterInput) (req *request
 //
 // Elastic resize operations have the following restrictions:
 //
-//    * You can only resize clusters of the following types:
-//
-// dc2.large
-//
-// dc2.8xlarge
-//
-// ds2.xlarge
-//
-// ds2.8xlarge
+//    * You can only resize clusters of the following types: dc2.large dc2.8xlarge
+//    ds2.xlarge ds2.8xlarge
 //
 //    * The type of nodes that you add must match the node type for the cluster.
 //
@@ -10786,7 +10779,7 @@ type CreateClusterInput struct {
 	MasterUsername *string `type:"string" required:"true"`
 
 	// The node type to be provisioned for the cluster. For information about node
-	// types, go to  Working with Clusters (https://docs.aws.amazon.com/redshift/latest/mgmt/working-with-clusters.html#how-many-nodes)
+	// types, go to Working with Clusters (https://docs.aws.amazon.com/redshift/latest/mgmt/working-with-clusters.html#how-many-nodes)
 	// in the Amazon Redshift Cluster Management Guide.
 	//
 	// Valid Values: ds2.xlarge | ds2.8xlarge | ds2.xlarge | ds2.8xlarge | dc1.large
@@ -10798,7 +10791,7 @@ type CreateClusterInput struct {
 	// The number of compute nodes in the cluster. This parameter is required when
 	// the ClusterType parameter is specified as multi-node.
 	//
-	// For information about determining how many nodes you need, go to  Working
+	// For information about determining how many nodes you need, go to Working
 	// with Clusters (https://docs.aws.amazon.com/redshift/latest/mgmt/working-with-clusters.html#how-many-nodes)
 	// in the Amazon Redshift Cluster Management Guide.
 	//
@@ -16239,17 +16232,7 @@ type EnableLoggingInput struct {
 	//
 	//    * Cannot contain spaces( ), double quotes ("), single quotes ('), a backslash
 	//    (\), or control characters. The hexadecimal codes for invalid characters
-	//    are:
-	//
-	// x00 to x20
-	//
-	// x22
-	//
-	// x27
-	//
-	// x5c
-	//
-	// x7f or larger
+	//    are: x00 to x20 x22 x27 x5c x7f or larger
 	S3KeyPrefix *string `type:"string"`
 }
 
@@ -17581,7 +17564,7 @@ type ModifyClusterInput struct {
 	// cluster is deleted and your connection is switched to the new cluster. You
 	// can use DescribeResize to track the progress of the resize request.
 	//
-	// Valid Values:  multi-node | single-node
+	// Valid Values: multi-node | single-node
 	ClusterType *string `type:"string"`
 
 	// The new version number of the Amazon Redshift engine to upgrade to.
@@ -19747,7 +19730,7 @@ type RestoreFromClusterSnapshotInput struct {
 	// type into another dc1.large instance type or dc2.large instance type. You
 	// can't restore dc1.8xlarge to dc2.8xlarge. First restore to a dc1.8xlareg
 	// cluster, then resize to a dc2.8large cluster. For more information about
-	// node types, see  About Clusters and Nodes (https://docs.aws.amazon.com/redshift/latest/mgmt/working-with-clusters.html#rs-about-clusters-and-nodes)
+	// node types, see About Clusters and Nodes (https://docs.aws.amazon.com/redshift/latest/mgmt/working-with-clusters.html#rs-about-clusters-and-nodes)
 	// in the Amazon Redshift Cluster Management Guide.
 	NodeType *string `type:"string"`
 
@@ -20634,7 +20617,6 @@ type Snapshot struct {
 	// used:
 	//
 	//    * CreateClusterSnapshot and CopyClusterSnapshot returns status as "creating".
-	//
 	//
 	//    * DescribeClusterSnapshots returns status as "creating", "available",
 	//    "final snapshot", or "failed".
