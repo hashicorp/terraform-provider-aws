@@ -21,17 +21,17 @@ data "aws_ami" "example" {
   owners           = ["self"]
 
   filter {
-    name = "name"
+    name   = "name"
     values = ["myami-*"]
   }
 
   filter {
-    name = "root-device-type"
+    name   = "root-device-type"
     values = ["ebs"]
   }
 
   filter {
-    name = "virtualization-type"
+    name   = "virtualization-type"
     values = ["hvm"]
   }
 }

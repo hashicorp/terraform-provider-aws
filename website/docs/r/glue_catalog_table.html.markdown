@@ -28,7 +28,7 @@ resource "aws_glue_catalog_table" "aws_glue_catalog_table" {
   name          = "MyCatalogTable"
   database_name = "MyCatalogDatabase"
 
-  table_type  = "EXTERNAL_TABLE"
+  table_type = "EXTERNAL_TABLE"
 
   parameters = {
     EXTERNAL            = "TRUE"
@@ -51,12 +51,12 @@ resource "aws_glue_catalog_table" "aws_glue_catalog_table" {
 
     columns = [
       {
-        name    = "my_string"
-        type    = "string"
+        name = "my_string"
+        type = "string"
       },
       {
-        name    = "my_double"
-        type    = "double"
+        name = "my_double"
+        type = "double"
       },
       {
         name    = "my_date"

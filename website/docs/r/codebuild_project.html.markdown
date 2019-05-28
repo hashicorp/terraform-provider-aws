@@ -152,8 +152,8 @@ resource "aws_codebuild_project" "project-with-cache" {
   }
 
   cache {
-    type     = "LOCAL"
-    modes    = ["LOCAL_DOCKER_LAYER_CACHE", "LOCAL_SOURCE_CACHE"]
+    type  = "LOCAL"
+    modes = ["LOCAL_DOCKER_LAYER_CACHE", "LOCAL_SOURCE_CACHE"]
   }
 
   environment {
@@ -166,8 +166,6 @@ resource "aws_codebuild_project" "project-with-cache" {
       "name"  = "SOME_KEY1"
       "value" = "SOME_VALUE1"
     }
-
-
   }
 
   source {
