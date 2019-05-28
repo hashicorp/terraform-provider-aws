@@ -770,7 +770,7 @@ resource "aws_network_acl" "test" {
     from_port       = 0
     icmp_code       = -1
     icmp_type       = -1
-    ipv6_cidr_block =  "::/0"
+    ipv6_cidr_block = "::/0"
     protocol        = 58
     rule_no         = 1
     to_port         = 0

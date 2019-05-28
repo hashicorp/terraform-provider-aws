@@ -136,8 +136,8 @@ func testAccGuardDutyThreatintelsetConfig_basic(bucketName, keyName, threatintel
 %s
 
 resource "aws_s3_bucket" "test" {
-  acl = "private"
-  bucket = "%s"
+  acl           = "private"
+  bucket        = "%s"
   force_destroy = true
 }
 
@@ -149,11 +149,11 @@ resource "aws_s3_bucket_object" "test" {
 }
 
 resource "aws_guardduty_threatintelset" "test" {
-  name = "%s"
+  name        = "%s"
   detector_id = "${aws_guardduty_detector.test.id}"
-  format = "TXT"
-  location = "https://s3.amazonaws.com/${aws_s3_bucket_object.test.bucket}/${aws_s3_bucket_object.test.key}"
-  activate = %t
+  format      = "TXT"
+  location    = "https://s3.amazonaws.com/${aws_s3_bucket_object.test.bucket}/${aws_s3_bucket_object.test.key}"
+  activate    = %t
 }
 `, testAccGuardDutyDetectorConfig_basic1, bucketName, keyName, threatintelsetName, activate)
 }

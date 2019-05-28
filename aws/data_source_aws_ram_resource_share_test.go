@@ -57,14 +57,15 @@ func TestAccDataSourceAwsRamResourceShare_Tags(t *testing.T) {
 func testAccDataSourceAwsRamResourceShareConfig_Name(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_ram_resource_share" "wrong" {
-  name            = "%s-wrong"
+  name = "%s-wrong"
 }
+
 resource "aws_ram_resource_share" "test" {
-	name            = "%s"
+  name = "%s"
 }
 
 data "aws_ram_resource_share" "test" {
-  name = "${aws_ram_resource_share.test.name}"
+  name           = "${aws_ram_resource_share.test.name}"
   resource_owner = "SELF"
 }
 `, rName, rName)
@@ -73,20 +74,20 @@ data "aws_ram_resource_share" "test" {
 func testAccDataSourceAwsRamResourceShareConfig_Tags(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_ram_resource_share" "test" {
-	name            = "%s"
+  name = "%s"
 
-	tags = {
-		Name = "%s-Tags"
-	}
+  tags = {
+    Name = "%s-Tags"
+  }
 }
 
 data "aws_ram_resource_share" "test" {
-  name = "${aws_ram_resource_share.test.name}"
+  name           = "${aws_ram_resource_share.test.name}"
   resource_owner = "SELF"
-	
+
   filter {
-	name = "Name"
-	values = ["%s-Tags"]
+    name   = "Name"
+    values = ["%s-Tags"]
   }
 }
 `, rName, rName, rName)

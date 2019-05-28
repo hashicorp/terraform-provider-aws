@@ -292,7 +292,7 @@ func testAccIAMServerCertConfig(rInt int) string {
 %s
 
 resource "aws_iam_server_certificate" "test_cert" {
-  name = "terraform-test-cert-%d"
+  name             = "terraform-test-cert-%d"
   certificate_body = "${tls_self_signed_cert.example.cert_pem}"
   private_key      = "${tls_private_key.example.private_key_pem}"
 }
@@ -316,8 +316,8 @@ func testAccIAMServerCertConfig_path(rInt int, path string) string {
 %s
 
 resource "aws_iam_server_certificate" "test_cert" {
-  name = "terraform-test-cert-%d"
-  path = "%s"
+  name             = "terraform-test-cert-%d"
+  path             = "%s"
   certificate_body = "${tls_self_signed_cert.example.cert_pem}"
   private_key      = "${tls_private_key.example.private_key_pem}"
 }
@@ -328,10 +328,10 @@ resource "aws_iam_server_certificate" "test_cert" {
 func testAccIAMServerCertConfig_file(rInt int, fName string) string {
 	return fmt.Sprintf(`
 resource "aws_iam_server_certificate" "test_cert" {
-  name = "terraform-test-cert-%d"
-	certificate_body = "${file("%s")}"
+  name             = "terraform-test-cert-%d"
+  certificate_body = "${file("%s")}"
 
-	private_key =  <<EOF
+  private_key = <<EOF
 -----BEGIN RSA PRIVATE KEY-----
 MIICXQIBAAKBgQDKdH6BU9Q0xBVPfeX5NjCC/B2Pm3WsFGnTtRw4abkD+r4to9wD
 eYUgjH2yPCyonNOA8mNiCQgDTtaLfbA8LjBYoodt7rgaTO7C0ugRtmTNK96DmYxm

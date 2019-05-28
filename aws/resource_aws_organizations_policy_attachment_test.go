@@ -201,8 +201,8 @@ resource "aws_organizations_organization" "test" {
 resource "aws_organizations_policy" "test" {
   depends_on = ["aws_organizations_organization.test"]
 
-  content     = "{\"Version\": \"2012-10-17\", \"Statement\": { \"Effect\": \"Allow\", \"Action\": \"*\", \"Resource\": \"*\"}}"
-  name        = "%s"
+  content = "{\"Version\": \"2012-10-17\", \"Statement\": { \"Effect\": \"Allow\", \"Action\": \"*\", \"Resource\": \"*\"}}"
+  name    = "%s"
 }
 
 resource "aws_organizations_policy_attachment" "test" {
@@ -226,8 +226,8 @@ resource "aws_organizations_organizational_unit" "test" {
 resource "aws_organizations_policy" "test" {
   depends_on = ["aws_organizations_organization.test"]
 
-  content     = "{\"Version\": \"2012-10-17\", \"Statement\": { \"Effect\": \"Allow\", \"Action\": \"*\", \"Resource\": \"*\"}}"
-  name        = %[1]q
+  content = "{\"Version\": \"2012-10-17\", \"Statement\": { \"Effect\": \"Allow\", \"Action\": \"*\", \"Resource\": \"*\"}}"
+  name    = %[1]q
 }
 
 resource "aws_organizations_policy_attachment" "test" {
@@ -246,8 +246,8 @@ resource "aws_organizations_organization" "test" {
 resource "aws_organizations_policy" "test" {
   depends_on = ["aws_organizations_organization.test"]
 
-  content     = "{\"Version\": \"2012-10-17\", \"Statement\": { \"Effect\": \"Allow\", \"Action\": \"*\", \"Resource\": \"*\"}}"
-  name        = %[1]q
+  content = "{\"Version\": \"2012-10-17\", \"Statement\": { \"Effect\": \"Allow\", \"Action\": \"*\", \"Resource\": \"*\"}}"
+  name    = %[1]q
 }
 
 resource "aws_organizations_policy_attachment" "test" {

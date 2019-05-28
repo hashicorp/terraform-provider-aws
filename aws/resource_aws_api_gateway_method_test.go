@@ -621,14 +621,14 @@ resource "aws_api_gateway_rest_api" "test" {
 
 resource "aws_api_gateway_resource" "test" {
   rest_api_id = "${aws_api_gateway_rest_api.test.id}"
-  parent_id = "${aws_api_gateway_rest_api.test.root_resource_id}"
-  path_part = "test"
+  parent_id   = "${aws_api_gateway_rest_api.test.root_resource_id}"
+  path_part   = "test"
 }
 
 resource "aws_api_gateway_method" "test" {
-  rest_api_id = "${aws_api_gateway_rest_api.test.id}"
-  resource_id = "${aws_api_gateway_resource.test.id}"
-  http_method = "GET"
+  rest_api_id   = "${aws_api_gateway_rest_api.test.id}"
+  resource_id   = "${aws_api_gateway_resource.test.id}"
+  http_method   = "GET"
   authorization = "NONE"
 
   request_models = {
@@ -636,7 +636,7 @@ resource "aws_api_gateway_method" "test" {
   }
 
   request_parameters = {
-	  "method.request.querystring.page" = false
+    "method.request.querystring.page" = false
   }
 }
 `, rInt)
@@ -650,20 +650,20 @@ resource "aws_api_gateway_rest_api" "test" {
 
 resource "aws_api_gateway_resource" "test" {
   rest_api_id = "${aws_api_gateway_rest_api.test.id}"
-  parent_id = "${aws_api_gateway_rest_api.test.root_resource_id}"
-  path_part = "test"
+  parent_id   = "${aws_api_gateway_rest_api.test.root_resource_id}"
+  path_part   = "test"
 }
 
 resource "aws_api_gateway_request_validator" "validator" {
-  rest_api_id = "${aws_api_gateway_rest_api.test.id}"
-  name = "paramsValidator"
+  rest_api_id                 = "${aws_api_gateway_rest_api.test.id}"
+  name                        = "paramsValidator"
   validate_request_parameters = true
 }
 
 resource "aws_api_gateway_method" "test" {
-  rest_api_id = "${aws_api_gateway_rest_api.test.id}"
-  resource_id = "${aws_api_gateway_resource.test.id}"
-  http_method = "GET"
+  rest_api_id   = "${aws_api_gateway_rest_api.test.id}"
+  resource_id   = "${aws_api_gateway_resource.test.id}"
+  http_method   = "GET"
   authorization = "NONE"
 
   request_models = {
@@ -671,8 +671,8 @@ resource "aws_api_gateway_method" "test" {
   }
 
   request_parameters = {
-    "method.request.header.Content-Type" = false,
-	  "method.request.querystring.page" = true
+    "method.request.header.Content-Type" = false
+    "method.request.querystring.page"    = true
   }
 
   request_validator_id = "${aws_api_gateway_request_validator.validator.id}"
@@ -688,20 +688,20 @@ resource "aws_api_gateway_rest_api" "test" {
 
 resource "aws_api_gateway_resource" "test" {
   rest_api_id = "${aws_api_gateway_rest_api.test.id}"
-  parent_id = "${aws_api_gateway_rest_api.test.root_resource_id}"
-  path_part = "test"
+  parent_id   = "${aws_api_gateway_rest_api.test.root_resource_id}"
+  path_part   = "test"
 }
 
 resource "aws_api_gateway_request_validator" "validator" {
-  rest_api_id = "${aws_api_gateway_rest_api.test.id}"
-  name = "paramsValidator"
+  rest_api_id                 = "${aws_api_gateway_rest_api.test.id}"
+  name                        = "paramsValidator"
   validate_request_parameters = true
 }
 
 resource "aws_api_gateway_method" "test" {
-  rest_api_id = "${aws_api_gateway_rest_api.test.id}"
-  resource_id = "${aws_api_gateway_resource.test.id}"
-  http_method = "GET"
+  rest_api_id   = "${aws_api_gateway_rest_api.test.id}"
+  resource_id   = "${aws_api_gateway_resource.test.id}"
+  http_method   = "GET"
   authorization = "NONE"
 
   request_models = {
@@ -709,7 +709,7 @@ resource "aws_api_gateway_method" "test" {
   }
 
   request_parameters = {
-	  "method.request.querystring.page" = false
+    "method.request.querystring.page" = false
   }
 }
 `, rInt)

@@ -138,7 +138,7 @@ func testAccCheckAWSCognitoUserPoolDomainDestroy(s *terraform.State) error {
 func testAccAWSCognitoUserPoolDomainConfig_basic(domainName, poolName string) string {
 	return fmt.Sprintf(`
 resource "aws_cognito_user_pool_domain" "main" {
-  domain = "%s"
+  domain       = "%s"
   user_pool_id = "${aws_cognito_user_pool.main.id}"
 }
 
@@ -151,8 +151,8 @@ resource "aws_cognito_user_pool" "main" {
 func testAccAWSCognitoUserPoolDomainConfig_custom(customSubDomainName, poolName, certificateArn string) string {
 	return fmt.Sprintf(`
 resource "aws_cognito_user_pool_domain" "main" {
-  domain = "%s"
-  user_pool_id = "${aws_cognito_user_pool.main.id}"
+  domain          = "%s"
+  user_pool_id    = "${aws_cognito_user_pool.main.id}"
   certificate_arn = "%s"
 }
 

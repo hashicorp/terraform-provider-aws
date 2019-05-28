@@ -78,8 +78,8 @@ func testAccDxBgpPeerConfig(vifId string, bgpAsn int) string {
 resource "aws_dx_bgp_peer" "foo" {
   virtual_interface_id = "%s"
 
-  address_family       = "ipv6"
-  bgp_asn              = %d
+  address_family = "ipv6"
+  bgp_asn        = %d
 }
 `, vifId, bgpAsn)
 }

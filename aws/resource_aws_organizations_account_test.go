@@ -161,7 +161,7 @@ func testAccCheckAwsOrganizationsAccountExists(n string, a *organizations.Accoun
 func testAccAwsOrganizationsAccountConfig(name, email string) string {
 	return fmt.Sprintf(`
 resource "aws_organizations_account" "test" {
-  name = "%s"
+  name  = "%s"
   email = "%s"
 }
 `, name, email)

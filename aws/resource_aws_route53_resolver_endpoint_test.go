@@ -275,7 +275,7 @@ resource "aws_route53_resolver_endpoint" "foo" {
 
   tags = {
     Environment = "production"
-    Usage = "original"
+    Usage       = "original"
   }
 }
 `, testAccRoute53ResolverEndpointConfig_base(rInt), direction, name)

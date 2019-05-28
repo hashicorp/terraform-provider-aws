@@ -406,8 +406,8 @@ resource "aws_sqs_queue" "test_queue" {
 
 resource "aws_sns_topic_subscription" "test_subscription" {
   topic_arn = "${aws_sns_topic.test_topic.arn}"
-  protocol = "sqs"
-  endpoint = "${aws_sqs_queue.test_queue.arn}"
+  protocol  = "sqs"
+  endpoint  = "${aws_sqs_queue.test_queue.arn}"
 }
 `, i, i)
 }
@@ -423,9 +423,9 @@ resource "aws_sqs_queue" "test_queue" {
 }
 
 resource "aws_sns_topic_subscription" "test_subscription" {
-  topic_arn = "${aws_sns_topic.test_topic.arn}"
-  protocol = "sqs"
-  endpoint = "${aws_sqs_queue.test_queue.arn}"
+  topic_arn     = "${aws_sns_topic.test_topic.arn}"
+  protocol      = "sqs"
+  endpoint      = "${aws_sqs_queue.test_queue.arn}"
   filter_policy = %s
 }
 `, i, i, policy)
@@ -763,15 +763,15 @@ resource "aws_lambda_function" "authorizer" {
 
   environment {
     variables = {
-        AUTH_USER="%s"
-        AUTH_PASS="%s"
+      AUTH_USER = "%s"
+      AUTH_PASS = "%s"
     }
   }
 }
 
 resource "aws_api_gateway_gateway_response" "test" {
-  rest_api_id = "${aws_api_gateway_rest_api.test.id}"
-  status_code = "401"
+  rest_api_id   = "${aws_api_gateway_rest_api.test.id}"
+  status_code   = "401"
   response_type = "UNAUTHORIZED"
 
   response_templates = {

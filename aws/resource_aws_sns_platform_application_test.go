@@ -472,6 +472,7 @@ resource "aws_iam_role_policy_attachment" "test" {
 }
 
 %s
+
 `, iamRoleName, testAccAwsSnsPlatformApplicationConfig_basicAttribute(name, platform, attributeKey, "${aws_iam_role.test.arn}"))
 }
 
@@ -482,5 +483,6 @@ resource "aws_sns_topic" "test" {
 }
 
 %s
+
 `, snsTopicName, testAccAwsSnsPlatformApplicationConfig_basicAttribute(name, platform, attributeKey, "${aws_sns_topic.test.arn}"))
 }

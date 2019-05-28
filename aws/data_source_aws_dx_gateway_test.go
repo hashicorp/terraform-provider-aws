@@ -41,6 +41,7 @@ resource "aws_dx_gateway" "wrong" {
   amazon_side_asn = "%d"
   name            = "%s-wrong"
 }
+
 resource "aws_dx_gateway" "test" {
   amazon_side_asn = "%d"
   name            = "%s"

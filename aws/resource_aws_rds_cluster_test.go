@@ -1619,39 +1619,42 @@ func testAccAWSClusterConfig_namePrefix(n int) string {
 	return fmt.Sprintf(`
 resource "aws_rds_cluster" "test" {
   cluster_identifier_prefix = "tf-test-"
-  master_username = "root"
-  master_password = "password"
-  db_subnet_group_name = "${aws_db_subnet_group.test.name}"
-  skip_final_snapshot = true
+  master_username           = "root"
+  master_password           = "password"
+  db_subnet_group_name      = "${aws_db_subnet_group.test.name}"
+  skip_final_snapshot       = true
 }
 
 resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"
-	tags = {
-		Name = "terraform-testacc-rds-cluster-name-prefix"
-	}
+
+  tags = {
+    Name = "terraform-testacc-rds-cluster-name-prefix"
+  }
 }
 
 resource "aws_subnet" "a" {
-  vpc_id = "${aws_vpc.test.id}"
-  cidr_block = "10.0.0.0/24"
+  vpc_id            = "${aws_vpc.test.id}"
+  cidr_block        = "10.0.0.0/24"
   availability_zone = "us-west-2a"
+
   tags = {
     Name = "tf-acc-rds-cluster-name-prefix-a"
   }
 }
 
 resource "aws_subnet" "b" {
-  vpc_id = "${aws_vpc.test.id}"
-  cidr_block = "10.0.1.0/24"
+  vpc_id            = "${aws_vpc.test.id}"
+  cidr_block        = "10.0.1.0/24"
   availability_zone = "us-west-2b"
+
   tags = {
     Name = "tf-acc-rds-cluster-name-prefix-b"
   }
 }
 
 resource "aws_db_subnet_group" "test" {
-  name = "tf-test-%d"
+  name       = "tf-test-%d"
   subnet_ids = ["${aws_subnet.a.id}", "${aws_subnet.b.id}"]
 }
 `, n)
@@ -1659,7 +1662,6 @@ resource "aws_db_subnet_group" "test" {
 
 func testAccAWSClusterConfig_s3Restore(bucketName string, bucketPrefix string, uniqueId string) string {
 	return fmt.Sprintf(`
-
 data "aws_region" "current" {}
 
 resource "aws_s3_bucket" "xtrabackup" {
@@ -1674,11 +1676,10 @@ resource "aws_s3_bucket_object" "xtrabackup_db" {
   etag   = "${filemd5("../files/mysql-5-6-xtrabackup.tar.gz")}"
 }
 
-
-
 resource "aws_iam_role" "rds_s3_access_role" {
-    name = "%s-role"
-    assume_role_policy = <<EOF
+  name = "%s-role"
+
+  assume_role_policy = <<EOF
 {
   "Version": "2012-10-17",
   "Statement": [
@@ -1696,7 +1697,8 @@ EOF
 }
 
 resource "aws_iam_policy" "test" {
-  name   = "%s-policy"
+  name = "%s-policy"
+
   policy = <<POLICY
 {
     "Version": "2012-10-17",
@@ -1717,59 +1719,62 @@ POLICY
 }
 
 resource "aws_iam_policy_attachment" "test-attach" {
-    name = "%s-policy-attachment"
-    roles = [
-        "${aws_iam_role.rds_s3_access_role.name}"
-    ]
+  name = "%s-policy-attachment"
 
-    policy_arn = "${aws_iam_policy.test.arn}"
+  roles = [
+    "${aws_iam_role.rds_s3_access_role.name}",
+  ]
+
+  policy_arn = "${aws_iam_policy.test.arn}"
 }
-
 
 resource "aws_rds_cluster" "test" {
   cluster_identifier_prefix = "tf-test-"
-  master_username = "root"
-  master_password = "password"
-  db_subnet_group_name = "${aws_db_subnet_group.test.name}"
-  skip_final_snapshot = true
+  master_username           = "root"
+  master_password           = "password"
+  db_subnet_group_name      = "${aws_db_subnet_group.test.name}"
+  skip_final_snapshot       = true
+
   s3_import {
-      source_engine = "mysql"
-      source_engine_version = "5.6"
+    source_engine         = "mysql"
+    source_engine_version = "5.6"
 
-      bucket_name = "${aws_s3_bucket.xtrabackup.bucket}"
-      bucket_prefix = "%s"
-      ingestion_role = "${aws_iam_role.rds_s3_access_role.arn}"
+    bucket_name    = "${aws_s3_bucket.xtrabackup.bucket}"
+    bucket_prefix  = "%s"
+    ingestion_role = "${aws_iam_role.rds_s3_access_role.arn}"
   }
-
 }
 
 resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"
-	tags = {
-		Name = "%s-vpc"
-	}
+
+  tags = {
+    Name = "%s-vpc"
+  }
 }
 
 resource "aws_subnet" "a" {
-  vpc_id = "${aws_vpc.test.id}"
-  cidr_block = "10.0.0.0/24"
+  vpc_id            = "${aws_vpc.test.id}"
+  cidr_block        = "10.0.0.0/24"
   availability_zone = "us-west-2a"
+
   tags = {
     Name = "%s-subnet-a"
   }
 }
 
 resource "aws_subnet" "b" {
-  vpc_id = "${aws_vpc.test.id}"
-  cidr_block = "10.0.1.0/24"
+  vpc_id            = "${aws_vpc.test.id}"
+  cidr_block        = "10.0.1.0/24"
   availability_zone = "us-west-2b"
+
   tags = {
     Name = "%s-subnet-b"
   }
 }
 
 resource "aws_db_subnet_group" "test" {
-  name = "%s-db-subnet-group"
+  name       = "%s-db-subnet-group"
   subnet_ids = ["${aws_subnet.a.id}", "${aws_subnet.b.id}"]
 }
 `, bucketName, bucketPrefix, uniqueId, uniqueId, uniqueId, bucketPrefix, uniqueId, uniqueId, uniqueId, uniqueId)
@@ -1778,39 +1783,42 @@ resource "aws_db_subnet_group" "test" {
 func testAccAWSClusterConfig_generatedName(n int) string {
 	return fmt.Sprintf(`
 resource "aws_rds_cluster" "test" {
-  master_username = "root"
-  master_password = "password"
+  master_username      = "root"
+  master_password      = "password"
   db_subnet_group_name = "${aws_db_subnet_group.test.name}"
-  skip_final_snapshot = true
+  skip_final_snapshot  = true
 }
 
 resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"
-	tags = {
-		Name = "terraform-testacc-rds-cluster-generated-name"
-	}
+
+  tags = {
+    Name = "terraform-testacc-rds-cluster-generated-name"
+  }
 }
 
 resource "aws_subnet" "a" {
-  vpc_id = "${aws_vpc.test.id}"
-  cidr_block = "10.0.0.0/24"
+  vpc_id            = "${aws_vpc.test.id}"
+  cidr_block        = "10.0.0.0/24"
   availability_zone = "us-west-2a"
+
   tags = {
     Name = "tf-acc-rds-cluster-generated-name-a"
   }
 }
 
 resource "aws_subnet" "b" {
-  vpc_id = "${aws_vpc.test.id}"
-  cidr_block = "10.0.1.0/24"
+  vpc_id            = "${aws_vpc.test.id}"
+  cidr_block        = "10.0.1.0/24"
   availability_zone = "us-west-2b"
+
   tags = {
     Name = "tf-acc-rds-cluster-generated-name-b"
   }
 }
 
 resource "aws_db_subnet_group" "test" {
-  name = "tf-test-%d"
+  name       = "tf-test-%d"
   subnet_ids = ["${aws_subnet.a.id}", "${aws_subnet.b.id}"]
 }
 `, n)
@@ -2360,11 +2368,11 @@ resource "aws_rds_cluster" "test_replica" {
 func testAccAWSRDSClusterConfig_DeletionProtection(rName string, deletionProtection bool) string {
 	return fmt.Sprintf(`
 resource "aws_rds_cluster" "test" {
-  cluster_identifier   = %q
-  deletion_protection  = %t
-  master_password      = "barbarbarbar"
-  master_username      = "foo"
-  skip_final_snapshot  = true
+  cluster_identifier  = %q
+  deletion_protection = %t
+  master_password     = "barbarbarbar"
+  master_username     = "foo"
+  skip_final_snapshot = true
 }
 `, rName, deletionProtection)
 }
@@ -2372,11 +2380,11 @@ resource "aws_rds_cluster" "test" {
 func testAccAWSRDSClusterConfig_EngineMode(rName, engineMode string) string {
 	return fmt.Sprintf(`
 resource "aws_rds_cluster" "test" {
-  cluster_identifier   = %q
-  engine_mode          = %q
-  master_password      = "barbarbarbar"
-  master_username      = "foo"
-  skip_final_snapshot  = true
+  cluster_identifier  = %q
+  engine_mode         = %q
+  master_password     = "barbarbarbar"
+  master_username     = "foo"
+  skip_final_snapshot = true
 }
 `, rName, engineMode)
 }
@@ -2420,11 +2428,11 @@ resource "aws_rds_cluster" "test" {
 func testAccAWSRDSClusterConfig_ScalingConfiguration(rName string, autoPause bool, maxCapacity, minCapacity, secondsUntilAutoPause int) string {
 	return fmt.Sprintf(`
 resource "aws_rds_cluster" "test" {
-  cluster_identifier   = %q
-  engine_mode          = "serverless"
-  master_password      = "barbarbarbar"
-  master_username      = "foo"
-  skip_final_snapshot  = true
+  cluster_identifier  = %q
+  engine_mode         = "serverless"
+  master_password     = "barbarbarbar"
+  master_username     = "foo"
+  skip_final_snapshot = true
 
   scaling_configuration {
     auto_pause               = %t
@@ -2439,10 +2447,10 @@ resource "aws_rds_cluster" "test" {
 func testAccAWSRDSClusterConfig_SnapshotIdentifier(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_rds_cluster" "source" {
-  cluster_identifier   = "%s-source"
-  master_password      = "barbarbarbar"
-  master_username      = "foo"
-  skip_final_snapshot  = true
+  cluster_identifier  = "%s-source"
+  master_password     = "barbarbarbar"
+  master_username     = "foo"
+  skip_final_snapshot = true
 }
 
 resource "aws_db_cluster_snapshot" "test" {
@@ -2580,10 +2588,10 @@ resource "aws_rds_cluster" "test" {
 func testAccAWSRDSClusterConfig_SnapshotIdentifier_Tags(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_rds_cluster" "source" {
-  cluster_identifier   = "%s-source"
-  master_password      = "barbarbarbar"
-  master_username      = "foo"
-  skip_final_snapshot  = true
+  cluster_identifier  = "%s-source"
+  master_password     = "barbarbarbar"
+  master_username     = "foo"
+  skip_final_snapshot = true
 }
 
 resource "aws_db_cluster_snapshot" "test" {
@@ -2615,10 +2623,10 @@ data "aws_security_group" "default" {
 }
 
 resource "aws_rds_cluster" "source" {
-  cluster_identifier   = "%s-source"
-  master_password      = "barbarbarbar"
-  master_username      = "foo"
-  skip_final_snapshot  = true
+  cluster_identifier  = "%s-source"
+  master_password     = "barbarbarbar"
+  master_username     = "foo"
+  skip_final_snapshot = true
 }
 
 resource "aws_db_cluster_snapshot" "test" {
@@ -2647,10 +2655,10 @@ data "aws_security_group" "default" {
 }
 
 resource "aws_rds_cluster" "source" {
-  cluster_identifier   = "%s-source"
-  master_password      = "barbarbarbar"
-  master_username      = "foo"
-  skip_final_snapshot  = true
+  cluster_identifier  = "%s-source"
+  master_password     = "barbarbarbar"
+  master_username     = "foo"
+  skip_final_snapshot = true
 }
 
 resource "aws_db_cluster_snapshot" "test" {
@@ -2676,10 +2684,10 @@ func testAccAWSRDSClusterConfig_SnapshotIdentifier_EncryptedRestore(rName string
 resource "aws_kms_key" "test" {}
 
 resource "aws_rds_cluster" "source" {
-  cluster_identifier   = "%s-source"
-  master_password      = "barbarbarbar"
-  master_username      = "foo"
-  skip_final_snapshot  = true
+  cluster_identifier  = "%s-source"
+  master_password     = "barbarbarbar"
+  master_username     = "foo"
+  skip_final_snapshot = true
 }
 
 resource "aws_db_cluster_snapshot" "test" {

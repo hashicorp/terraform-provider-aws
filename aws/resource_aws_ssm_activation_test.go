@@ -174,6 +174,7 @@ func testAccAWSSSMActivationBasicConfig(rName string, rTag string) string {
 	return fmt.Sprintf(`
 resource "aws_iam_role" "test_role" {
   name = "test_role-%s"
+
   assume_role_policy = <<EOF
 {
   "Version": "2012-10-17",
@@ -191,7 +192,7 @@ EOF
 }
 
 resource "aws_iam_role_policy_attachment" "test_attach" {
-  role = "${aws_iam_role.test_role.name}"
+  role       = "${aws_iam_role.test_role.name}"
   policy_arn = "arn:aws:iam::aws:policy/service-role/AmazonEC2RoleforSSM"
 }
 
@@ -201,7 +202,8 @@ resource "aws_ssm_activation" "foo" {
   iam_role           = "${aws_iam_role.test_role.name}"
   registration_limit = "5"
   depends_on         = ["aws_iam_role_policy_attachment.test_attach"]
-  tags               = {
+
+  tags = {
     Name = "%s"
   }
 }
@@ -212,6 +214,7 @@ func testAccAWSSSMActivationConfig_expirationDate(rName, expirationDate string) 
 	return fmt.Sprintf(`
 resource "aws_iam_role" "test_role" {
   name = "test_role-%[1]s"
+
   assume_role_policy = <<EOF
 {
   "Version": "2012-10-17",
@@ -229,7 +232,7 @@ EOF
 }
 
 resource "aws_iam_role_policy_attachment" "test_attach" {
-  role = "${aws_iam_role.test_role.name}"
+  role       = "${aws_iam_role.test_role.name}"
   policy_arn = "arn:aws:iam::aws:policy/service-role/AmazonEC2RoleforSSM"
 }
 

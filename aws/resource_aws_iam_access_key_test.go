@@ -196,11 +196,11 @@ func testDecryptSecretKeyAndTest(nAccessKey, key string) resource.TestCheckFunc 
 func testAccAWSAccessKeyConfig(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_iam_user" "a_user" {
-        name = "%s"
+  name = "%s"
 }
 
 resource "aws_iam_access_key" "a_key" {
-        user    = "${aws_iam_user.a_user.name}"
+  user = "${aws_iam_user.a_user.name}"
 }
 `, rName)
 }
@@ -208,12 +208,13 @@ resource "aws_iam_access_key" "a_key" {
 func testAccAWSAccessKeyConfig_encrypted(rName, key string) string {
 	return fmt.Sprintf(`
 resource "aws_iam_user" "a_user" {
-        name = "%s"
+  name = "%s"
 }
 
 resource "aws_iam_access_key" "a_key" {
-        user    = "${aws_iam_user.a_user.name}"
-        pgp_key = <<EOF
+  user = "${aws_iam_user.a_user.name}"
+
+  pgp_key = <<EOF
 %s
 EOF
 }
@@ -223,12 +224,12 @@ EOF
 func testAccAWSAccessKeyConfig_inactive(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_iam_user" "a_user" {
-        name = "%s"
+  name = "%s"
 }
 
 resource "aws_iam_access_key" "a_key" {
-		user   = "${aws_iam_user.a_user.name}"
-		status = "Inactive"
+  user   = "${aws_iam_user.a_user.name}"
+  status = "Inactive"
 }
 `, rName)
 }

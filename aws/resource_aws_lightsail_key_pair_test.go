@@ -172,6 +172,7 @@ func testAccAWSLightsailKeyPairConfig_basic(lightsailName string) string {
 provider "aws" {
   region = "us-east-1"
 }
+
 resource "aws_lightsail_key_pair" "lightsail_key_pair_test" {
   name = "%s"
 }
@@ -183,10 +184,11 @@ func testAccAWSLightsailKeyPairConfig_imported(lightsailName, key string) string
 provider "aws" {
   region = "us-east-1"
 }
+
 resource "aws_lightsail_key_pair" "lightsail_key_pair_test" {
   name = "%s"
-	
-	public_key = "%s"
+
+  public_key = "%s"
 }
 `, lightsailName, lightsailPubKey)
 }
@@ -196,10 +198,11 @@ func testAccAWSLightsailKeyPairConfig_encrypted(lightsailName, key string) strin
 provider "aws" {
   region = "us-east-1"
 }
+
 resource "aws_lightsail_key_pair" "lightsail_key_pair_test" {
   name = "%s"
-	
-	pgp_key = <<EOF
+
+  pgp_key = <<EOF
 %s
 EOF
 }

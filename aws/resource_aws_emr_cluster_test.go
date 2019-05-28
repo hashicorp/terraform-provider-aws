@@ -2098,6 +2098,7 @@ resource "aws_emr_cluster" "tf-test-cluster" {
   name          = "emr-test-%[1]d"
   release_label = "emr-4.6.0"
   applications  = ["Spark"]
+
   additional_info = <<EOF
 {
 	"instanceAwsClientConfiguration": {
@@ -2126,7 +2127,7 @@ EOF
   }
 
   keep_job_flow_alive_when_no_steps = true
-  termination_protection = false
+  termination_protection            = false
 
   scale_down_behavior = "TERMINATE_AT_TASK_COMPLETION"
 
@@ -2140,8 +2141,8 @@ EOF
 
   depends_on = ["aws_main_route_table_association.a"]
 
-  service_role = "${aws_iam_role.iam_emr_default_role.arn}"
-  autoscaling_role = "${aws_iam_role.emr-autoscaling-role.arn}"
+  service_role         = "${aws_iam_role.iam_emr_default_role.arn}"
+  autoscaling_role     = "${aws_iam_role.emr-autoscaling-role.arn}"
   ebs_root_volume_size = 21
 }
 
@@ -2151,10 +2152,10 @@ resource "aws_security_group" "allow_all" {
   vpc_id      = "${aws_vpc.main.id}"
 
   ingress {
-    from_port   = 0
-    to_port     = 0
-    protocol    = "-1"
-    self = true
+    from_port = 0
+    to_port   = 0
+    protocol  = "-1"
+    self      = true
   }
 
   egress {
@@ -2334,7 +2335,7 @@ EOT
 }
 
 resource "aws_iam_instance_profile" "emr_profile" {
-  name  = "emr_profile_%[1]d"
+  name = "emr_profile_%[1]d"
   role = "${aws_iam_role.iam_emr_profile_role.name}"
 }
 
@@ -2391,9 +2392,10 @@ data "aws_iam_policy_document" "emr-autoscaling-role-policy" {
   statement {
     effect  = "Allow"
     actions = ["sts:AssumeRole"]
+
     principals {
       type        = "Service"
-      identifiers = ["elasticmapreduce.amazonaws.com","application-autoscaling.amazonaws.com"]
+      identifiers = ["elasticmapreduce.amazonaws.com", "application-autoscaling.amazonaws.com"]
     }
   }
 }
@@ -2410,7 +2412,7 @@ func testAccAWSEmrClusterConfigConfigurationsJson(r int) string {
 resource "aws_emr_cluster" "tf-test-cluster" {
   name          = "emr-test-%[1]d"
   release_label = "emr-4.6.0"
-  applications  = ["Hadoop","Spark"]
+  applications  = ["Hadoop", "Spark"]
 
   ec2_attributes {
     subnet_id                         = "${aws_subnet.main.id}"
@@ -2424,8 +2426,7 @@ resource "aws_emr_cluster" "tf-test-cluster" {
   core_instance_count  = 1
 
   keep_job_flow_alive_when_no_steps = true
-  termination_protection = false
-
+  termination_protection            = false
 
   bootstrap_action {
     path = "s3://elasticmapreduce/bootstrap-actions/run-if"
@@ -2464,7 +2465,7 @@ EOF
 
   depends_on = ["aws_main_route_table_association.a"]
 
-  service_role = "${aws_iam_role.iam_emr_default_role.arn}"
+  service_role         = "${aws_iam_role.iam_emr_default_role.arn}"
   ebs_root_volume_size = 21
 }
 
@@ -2474,10 +2475,10 @@ resource "aws_security_group" "allow_all" {
   vpc_id      = "${aws_vpc.main.id}"
 
   ingress {
-    from_port   = 0
-    to_port     = 0
-    protocol    = "-1"
-    self = true
+    from_port = 0
+    to_port   = 0
+    protocol  = "-1"
+    self      = true
   }
 
   egress {
@@ -2657,7 +2658,7 @@ EOT
 }
 
 resource "aws_iam_instance_profile" "emr_profile" {
-  name  = "emr_profile_%[1]d"
+  name = "emr_profile_%[1]d"
   role = "${aws_iam_role.iam_emr_profile_role.name}"
 }
 
@@ -2758,10 +2759,10 @@ resource "aws_security_group" "allow_all" {
   vpc_id      = "${aws_vpc.main.id}"
 
   ingress {
-    from_port   = 0
-    to_port     = 0
-    protocol    = "-1"
-    self = true
+    from_port = 0
+    to_port   = 0
+    protocol  = "-1"
+    self      = true
   }
 
   egress {
@@ -2854,7 +2855,7 @@ resource "aws_emr_cluster" "tf-test-cluster" {
   }
 
   keep_job_flow_alive_when_no_steps = true
-  termination_protection = false
+  termination_protection            = false
 
   bootstrap_action {
     path = "s3://elasticmapreduce/bootstrap-actions/run-if"
@@ -2866,7 +2867,7 @@ resource "aws_emr_cluster" "tf-test-cluster" {
 
   depends_on = ["aws_main_route_table_association.a"]
 
-  service_role = "${aws_iam_role.iam_emr_default_role.arn}"
+  service_role     = "${aws_iam_role.iam_emr_default_role.arn}"
   autoscaling_role = "${aws_iam_role.emr-autoscaling-role.arn}"
 }
 
@@ -2876,10 +2877,10 @@ resource "aws_security_group" "allow_all" {
   vpc_id      = "${aws_vpc.main.id}"
 
   ingress {
-    from_port   = 0
-    to_port     = 0
-    protocol    = "-1"
-    self = true
+    from_port = 0
+    to_port   = 0
+    protocol  = "-1"
+    self      = true
   }
 
   egress {
@@ -3059,7 +3060,7 @@ EOT
 }
 
 resource "aws_iam_instance_profile" "emr_profile" {
-  name  = "emr_profile_%[1]d"
+  name = "emr_profile_%[1]d"
   role = "${aws_iam_role.iam_emr_profile_role.name}"
 }
 
@@ -3116,9 +3117,10 @@ data "aws_iam_policy_document" "emr-autoscaling-role-policy" {
   statement {
     effect  = "Allow"
     actions = ["sts:AssumeRole"]
+
     principals {
       type        = "Service"
-      identifiers = ["elasticmapreduce.amazonaws.com","application-autoscaling.amazonaws.com"]
+      identifiers = ["elasticmapreduce.amazonaws.com", "application-autoscaling.amazonaws.com"]
     }
   }
 }
@@ -3129,7 +3131,7 @@ resource "aws_iam_role_policy_attachment" "emr-autoscaling-role" {
 }
 
 resource "aws_emr_security_configuration" "foo" {
-	configuration = <<EOF
+  configuration = <<EOF
 {
   "EncryptionConfiguration": {
     "AtRestEncryptionConfiguration": {
@@ -3149,9 +3151,10 @@ EOF
 }
 
 resource "aws_kms_key" "foo" {
-    description = "Terraform acc test %[1]d"
-    deletion_window_in_days = 7
-    policy = <<POLICY
+  description             = "Terraform acc test %[1]d"
+  deletion_window_in_days = 7
+
+  policy = <<POLICY
 {
   "Version": "2012-10-17",
   "Id": "kms-tf-1",
@@ -3238,13 +3241,13 @@ resource "aws_emr_cluster" "tf-test-cluster" {
     subnet_id                         = "${aws_subnet.main.0.id}"
   }
 
-%[2]s
+  %[2]s
 
   depends_on = ["aws_main_route_table_association.a"]
 }
 
 resource "aws_s3_bucket" "test" {
-  bucket = "tf-acc-test-%[1]d"
+  bucket        = "tf-acc-test-%[1]d"
   force_destroy = true
 }
 
@@ -3254,10 +3257,10 @@ resource "aws_security_group" "allow_all" {
   vpc_id      = "${aws_vpc.main.id}"
 
   ingress {
-    from_port   = 0
-    to_port     = 0
-    protocol    = "-1"
-    self = true
+    from_port = 0
+    to_port   = 0
+    protocol  = "-1"
+    self      = true
   }
 
   egress {
@@ -3658,15 +3661,18 @@ resource "aws_emr_cluster" "tf-test-cluster" {
   }
 
   instance_group {
-    instance_role = "CORE"
-    instance_type = "c4.large"
+    instance_role  = "CORE"
+    instance_type  = "c4.large"
     instance_count = "1"
+
     ebs_config {
-      size = "40"
-      type = "gp2"
+      size                 = "40"
+      type                 = "gp2"
       volumes_per_instance = 1
     }
+
     bid_price = "0.30"
+
     autoscaling_policy = <<EOT
 {
   "Constraints": {
@@ -3703,8 +3709,8 @@ EOT
   }
 
   instance_group {
-    instance_role = "MASTER"
-    instance_type = "c4.large"
+    instance_role  = "MASTER"
+    instance_type  = "c4.large"
     instance_count = 1
   }
 
@@ -3716,7 +3722,7 @@ EOT
   }
 
   keep_job_flow_alive_when_no_steps = true
-  termination_protection = false
+  termination_protection            = false
 
   bootstrap_action {
     path = "s3://elasticmapreduce/bootstrap-actions/run-if"
@@ -3728,7 +3734,7 @@ EOT
 
   depends_on = ["aws_main_route_table_association.a"]
 
-  service_role = "${aws_iam_role.iam_emr_default_role.arn}"
+  service_role     = "${aws_iam_role.iam_emr_default_role.arn}"
   autoscaling_role = "${aws_iam_role.emr-autoscaling-role.arn}"
 }
 
@@ -3738,10 +3744,10 @@ resource "aws_security_group" "allow_all" {
   vpc_id      = "${aws_vpc.main.id}"
 
   ingress {
-    from_port   = 0
-    to_port     = 0
-    protocol    = "-1"
-    self = true
+    from_port = 0
+    to_port   = 0
+    protocol  = "-1"
+    self      = true
   }
 
   egress {
@@ -3921,7 +3927,7 @@ EOT
 }
 
 resource "aws_iam_instance_profile" "emr_profile" {
-  name  = "emr_profile_%[1]d"
+  name = "emr_profile_%[1]d"
   role = "${aws_iam_role.iam_emr_profile_role.name}"
 }
 
@@ -3978,9 +3984,10 @@ data "aws_iam_policy_document" "emr-autoscaling-role-policy" {
   statement {
     effect  = "Allow"
     actions = ["sts:AssumeRole"]
+
     principals {
       type        = "Service"
-      identifiers = ["elasticmapreduce.amazonaws.com","application-autoscaling.amazonaws.com"]
+      identifiers = ["elasticmapreduce.amazonaws.com", "application-autoscaling.amazonaws.com"]
     }
   }
 }
@@ -4049,7 +4056,7 @@ resource "aws_emr_cluster" "tf-test-cluster" {
   }
 
   keep_job_flow_alive_when_no_steps = true
-  termination_protection = false
+  termination_protection            = false
 
   bootstrap_action {
     path = "s3://elasticmapreduce/bootstrap-actions/run-if"
@@ -4061,7 +4068,7 @@ resource "aws_emr_cluster" "tf-test-cluster" {
 
   depends_on = ["aws_main_route_table_association.a"]
 
-  service_role = "${aws_iam_role.iam_emr_default_role.arn}"
+  service_role     = "${aws_iam_role.iam_emr_default_role.arn}"
   autoscaling_role = "${aws_iam_role.emr-autoscaling-role.arn}"
 }
 
@@ -4071,10 +4078,10 @@ resource "aws_security_group" "allow_all" {
   vpc_id      = "${aws_vpc.main.id}"
 
   ingress {
-    from_port   = 0
-    to_port     = 0
-    protocol    = "-1"
-    self = true
+    from_port = 0
+    to_port   = 0
+    protocol  = "-1"
+    self      = true
   }
 
   egress {
@@ -4254,7 +4261,7 @@ EOT
 }
 
 resource "aws_iam_instance_profile" "emr_profile" {
-  name  = "emr_profile_%[1]d"
+  name = "emr_profile_%[1]d"
   role = "${aws_iam_role.iam_emr_profile_role.name}"
 }
 
@@ -4311,9 +4318,10 @@ data "aws_iam_policy_document" "emr-autoscaling-role-policy" {
   statement {
     effect  = "Allow"
     actions = ["sts:AssumeRole"]
+
     principals {
       type        = "Service"
-      identifiers = ["elasticmapreduce.amazonaws.com","application-autoscaling.amazonaws.com"]
+      identifiers = ["elasticmapreduce.amazonaws.com", "application-autoscaling.amazonaws.com"]
     }
   }
 }
@@ -4340,15 +4348,18 @@ resource "aws_emr_cluster" "tf-test-cluster" {
   }
 
   instance_group {
-    instance_role = "CORE"
-    instance_type = "c4.large"
+    instance_role  = "CORE"
+    instance_type  = "c4.large"
     instance_count = "1"
+
     ebs_config {
-      size = "40"
-      type = "gp2"
+      size                 = "40"
+      type                 = "gp2"
       volumes_per_instance = 1
     }
+
     bid_price = "0.30"
+
     autoscaling_policy = <<EOT
 {
   "Constraints": {
@@ -4385,8 +4396,8 @@ EOT
   }
 
   instance_group {
-    instance_role = "MASTER"
-    instance_type = "c4.large"
+    instance_role  = "MASTER"
+    instance_type  = "c4.large"
     instance_count = 1
   }
 
@@ -4398,7 +4409,7 @@ EOT
   }
 
   keep_job_flow_alive_when_no_steps = true
-  termination_protection = false
+  termination_protection            = false
 
   bootstrap_action {
     path = "s3://elasticmapreduce/bootstrap-actions/run-if"
@@ -4410,7 +4421,7 @@ EOT
 
   depends_on = ["aws_main_route_table_association.a"]
 
-  service_role = "${aws_iam_role.iam_emr_default_role.arn}"
+  service_role     = "${aws_iam_role.iam_emr_default_role.arn}"
   autoscaling_role = "${aws_iam_role.emr-autoscaling-role.arn}"
 }
 
@@ -4420,10 +4431,10 @@ resource "aws_security_group" "allow_all" {
   vpc_id      = "${aws_vpc.main.id}"
 
   ingress {
-    from_port   = 0
-    to_port     = 0
-    protocol    = "-1"
-    self = true
+    from_port = 0
+    to_port   = 0
+    protocol  = "-1"
+    self      = true
   }
 
   egress {
@@ -4603,7 +4614,7 @@ EOT
 }
 
 resource "aws_iam_instance_profile" "emr_profile" {
-  name  = "emr_profile_%[1]d"
+  name = "emr_profile_%[1]d"
   role = "${aws_iam_role.iam_emr_profile_role.name}"
 }
 
@@ -4660,9 +4671,10 @@ data "aws_iam_policy_document" "emr-autoscaling-role-policy" {
   statement {
     effect  = "Allow"
     actions = ["sts:AssumeRole"]
+
     principals {
       type        = "Service"
-      identifiers = ["elasticmapreduce.amazonaws.com","application-autoscaling.amazonaws.com"]
+      identifiers = ["elasticmapreduce.amazonaws.com", "application-autoscaling.amazonaws.com"]
     }
   }
 }
@@ -4689,15 +4701,18 @@ resource "aws_emr_cluster" "tf-test-cluster" {
   }
 
   instance_group {
-    instance_role = "CORE"
-    instance_type = "c4.large"
+    instance_role  = "CORE"
+    instance_type  = "c4.large"
     instance_count = "1"
+
     ebs_config {
-      size = "500"
-      type = "st1"
+      size                 = "500"
+      type                 = "st1"
       volumes_per_instance = 1
     }
+
     bid_price = "0.30"
+
     autoscaling_policy = <<EOT
 {
   "Constraints": {
@@ -4734,8 +4749,8 @@ EOT
   }
 
   instance_group {
-    instance_role = "MASTER"
-    instance_type = "c4.large"
+    instance_role  = "MASTER"
+    instance_type  = "c4.large"
     instance_count = 1
   }
 
@@ -4747,7 +4762,7 @@ EOT
   }
 
   keep_job_flow_alive_when_no_steps = true
-  termination_protection = false
+  termination_protection            = false
 
   bootstrap_action {
     path = "s3://elasticmapreduce/bootstrap-actions/run-if"
@@ -4757,7 +4772,7 @@ EOT
 
   depends_on = ["aws_main_route_table_association.a"]
 
-  service_role = "${aws_iam_role.iam_emr_default_role.arn}"
+  service_role     = "${aws_iam_role.iam_emr_default_role.arn}"
   autoscaling_role = "${aws_iam_role.emr-autoscaling-role.arn}"
 }
 
@@ -4767,10 +4782,10 @@ resource "aws_security_group" "allow_all" {
   vpc_id      = "${aws_vpc.main.id}"
 
   ingress {
-    from_port   = 0
-    to_port     = 0
-    protocol    = "-1"
-    self = true
+    from_port = 0
+    to_port   = 0
+    protocol  = "-1"
+    self      = true
   }
 
   egress {
@@ -4950,7 +4965,7 @@ EOT
 }
 
 resource "aws_iam_instance_profile" "emr_profile" {
-  name  = "emr_profile_%[1]d"
+  name = "emr_profile_%[1]d"
   role = "${aws_iam_role.iam_emr_profile_role.name}"
 }
 
@@ -5007,9 +5022,10 @@ data "aws_iam_policy_document" "emr-autoscaling-role-policy" {
   statement {
     effect  = "Allow"
     actions = ["sts:AssumeRole"]
+
     principals {
       type        = "Service"
-      identifiers = ["elasticmapreduce.amazonaws.com","application-autoscaling.amazonaws.com"]
+      identifiers = ["elasticmapreduce.amazonaws.com", "application-autoscaling.amazonaws.com"]
     }
   }
 }
@@ -5036,15 +5052,18 @@ resource "aws_emr_cluster" "tf-test-cluster" {
   }
 
   instance_group {
-    instance_role = "CORE"
-    instance_type = "c4.large"
+    instance_role  = "CORE"
+    instance_type  = "c4.large"
     instance_count = "1"
+
     ebs_config {
-      size = "500"
-      type = "st1"
+      size                 = "500"
+      type                 = "st1"
       volumes_per_instance = 1
     }
+
     bid_price = "0.30"
+
     autoscaling_policy = <<EOT
 {
   "Constraints": {
@@ -5081,8 +5100,8 @@ EOT
   }
 
   instance_group {
-    instance_role = "MASTER"
-    instance_type = "c4.large"
+    instance_role  = "MASTER"
+    instance_type  = "c4.large"
     instance_count = 1
   }
 
@@ -5094,7 +5113,7 @@ EOT
   }
 
   keep_job_flow_alive_when_no_steps = true
-  termination_protection = false
+  termination_protection            = false
 
   bootstrap_action {
     path = "s3://elasticmapreduce/bootstrap-actions/run-if"
@@ -5104,7 +5123,7 @@ EOT
 
   depends_on = ["aws_main_route_table_association.a"]
 
-  service_role = "${aws_iam_role.iam_emr_default_role.arn}"
+  service_role     = "${aws_iam_role.iam_emr_default_role.arn}"
   autoscaling_role = "${aws_iam_role.emr-autoscaling-role.arn}"
 }
 
@@ -5114,10 +5133,10 @@ resource "aws_security_group" "allow_all" {
   vpc_id      = "${aws_vpc.main.id}"
 
   ingress {
-    from_port   = 0
-    to_port     = 0
-    protocol    = "-1"
-    self = true
+    from_port = 0
+    to_port   = 0
+    protocol  = "-1"
+    self      = true
   }
 
   egress {
@@ -5297,7 +5316,7 @@ EOT
 }
 
 resource "aws_iam_instance_profile" "emr_profile" {
-  name  = "emr_profile_%[1]d"
+  name = "emr_profile_%[1]d"
   role = "${aws_iam_role.iam_emr_profile_role.name}"
 }
 
@@ -5354,9 +5373,10 @@ data "aws_iam_policy_document" "emr-autoscaling-role-policy" {
   statement {
     effect  = "Allow"
     actions = ["sts:AssumeRole"]
+
     principals {
       type        = "Service"
-      identifiers = ["elasticmapreduce.amazonaws.com","application-autoscaling.amazonaws.com"]
+      identifiers = ["elasticmapreduce.amazonaws.com", "application-autoscaling.amazonaws.com"]
     }
   }
 }
@@ -5493,7 +5513,7 @@ resource "aws_emr_cluster" "tf-test-cluster" {
   }
 
   keep_job_flow_alive_when_no_steps = true
-  termination_protection = %[2]s
+  termination_protection            = %[2]s
 
   bootstrap_action {
     path = "s3://elasticmapreduce/bootstrap-actions/run-if"
@@ -5505,7 +5525,7 @@ resource "aws_emr_cluster" "tf-test-cluster" {
 
   depends_on = ["aws_main_route_table_association.a"]
 
-  service_role = "${aws_iam_role.iam_emr_default_role.arn}"
+  service_role     = "${aws_iam_role.iam_emr_default_role.arn}"
   autoscaling_role = "${aws_iam_role.emr-autoscaling-role.arn}"
 }
 
@@ -5515,10 +5535,10 @@ resource "aws_security_group" "allow_all" {
   vpc_id      = "${aws_vpc.main.id}"
 
   ingress {
-    from_port   = 0
-    to_port     = 0
-    protocol    = "-1"
-    self = true
+    from_port = 0
+    to_port   = 0
+    protocol  = "-1"
+    self      = true
   }
 
   egress {
@@ -5698,7 +5718,7 @@ EOT
 }
 
 resource "aws_iam_instance_profile" "emr_profile" {
-  name  = "emr_profile_%[1]d"
+  name = "emr_profile_%[1]d"
   role = "${aws_iam_role.iam_emr_profile_role.name}"
 }
 
@@ -5758,7 +5778,7 @@ data "aws_iam_policy_document" "emr-autoscaling-role-policy" {
 
     principals {
       type        = "Service"
-      identifiers = ["elasticmapreduce.amazonaws.com","application-autoscaling.amazonaws.com"]
+      identifiers = ["elasticmapreduce.amazonaws.com", "application-autoscaling.amazonaws.com"]
     }
   }
 }
@@ -5796,7 +5816,7 @@ resource "aws_emr_cluster" "tf-test-cluster" {
   }
 
   keep_job_flow_alive_when_no_steps = %s
-  termination_protection = false
+  termination_protection            = false
 
   step {
     action_on_failure = "CONTINUE"
@@ -5818,7 +5838,7 @@ resource "aws_emr_cluster" "tf-test-cluster" {
 
   depends_on = ["aws_main_route_table_association.a"]
 
-  service_role = "${aws_iam_role.iam_emr_default_role.arn}"
+  service_role     = "${aws_iam_role.iam_emr_default_role.arn}"
   autoscaling_role = "${aws_iam_role.emr-autoscaling-role.arn}"
 }
 
@@ -5828,10 +5848,10 @@ resource "aws_security_group" "allow_all" {
   vpc_id      = "${aws_vpc.main.id}"
 
   ingress {
-    from_port   = 0
-    to_port     = 0
-    protocol    = "-1"
-    self = true
+    from_port = 0
+    to_port   = 0
+    protocol  = "-1"
+    self      = true
   }
 
   egress {
@@ -6011,7 +6031,7 @@ EOT
 }
 
 resource "aws_iam_instance_profile" "emr_profile" {
-  name  = "emr_profile_%[1]d"
+  name = "emr_profile_%[1]d"
   role = "${aws_iam_role.iam_emr_profile_role.name}"
 }
 
@@ -6071,7 +6091,7 @@ data "aws_iam_policy_document" "emr-autoscaling-role-policy" {
 
     principals {
       type        = "Service"
-      identifiers = ["elasticmapreduce.amazonaws.com","application-autoscaling.amazonaws.com"]
+      identifiers = ["elasticmapreduce.amazonaws.com", "application-autoscaling.amazonaws.com"]
     }
   }
 }
@@ -6109,7 +6129,7 @@ resource "aws_emr_cluster" "tf-test-cluster" {
   }
 
   keep_job_flow_alive_when_no_steps = true
-  visible_to_all_users = false
+  visible_to_all_users              = false
 
   bootstrap_action {
     path = "s3://elasticmapreduce/bootstrap-actions/run-if"
@@ -6121,7 +6141,7 @@ resource "aws_emr_cluster" "tf-test-cluster" {
 
   depends_on = ["aws_main_route_table_association.a"]
 
-  service_role = "${aws_iam_role.iam_emr_default_role.arn}"
+  service_role     = "${aws_iam_role.iam_emr_default_role.arn}"
   autoscaling_role = "${aws_iam_role.emr-autoscaling-role.arn}"
 }
 
@@ -6131,10 +6151,10 @@ resource "aws_security_group" "allow_all" {
   vpc_id      = "${aws_vpc.main.id}"
 
   ingress {
-    from_port   = 0
-    to_port     = 0
-    protocol    = "-1"
-    self = true
+    from_port = 0
+    to_port   = 0
+    protocol  = "-1"
+    self      = true
   }
 
   egress {
@@ -6314,7 +6334,7 @@ EOT
 }
 
 resource "aws_iam_instance_profile" "emr_profile" {
-  name  = "emr_profile_%d"
+  name = "emr_profile_%d"
   role = "${aws_iam_role.iam_emr_profile_role.name}"
 }
 
@@ -6374,7 +6394,7 @@ data "aws_iam_policy_document" "emr-autoscaling-role-policy" {
 
     principals {
       type        = "Service"
-      identifiers = ["elasticmapreduce.amazonaws.com","application-autoscaling.amazonaws.com"]
+      identifiers = ["elasticmapreduce.amazonaws.com", "application-autoscaling.amazonaws.com"]
     }
   }
 }
@@ -6411,7 +6431,7 @@ resource "aws_emr_cluster" "tf-test-cluster" {
   }
 
   keep_job_flow_alive_when_no_steps = true
-  termination_protection = false
+  termination_protection            = false
 
   bootstrap_action {
     path = "s3://elasticmapreduce/bootstrap-actions/run-if"
@@ -6423,7 +6443,7 @@ resource "aws_emr_cluster" "tf-test-cluster" {
 
   depends_on = ["aws_main_route_table_association.a"]
 
-  service_role = "${aws_iam_role.iam_emr_default_role.arn}"
+  service_role     = "${aws_iam_role.iam_emr_default_role.arn}"
   autoscaling_role = "${aws_iam_role.emr-autoscaling-role.arn}"
 }
 
@@ -6433,10 +6453,10 @@ resource "aws_security_group" "allow_all" {
   vpc_id      = "${aws_vpc.main.id}"
 
   ingress {
-    from_port   = 0
-    to_port     = 0
-    protocol    = "-1"
-    self = true
+    from_port = 0
+    to_port   = 0
+    protocol  = "-1"
+    self      = true
   }
 
   egress {
@@ -6616,7 +6636,7 @@ EOT
 }
 
 resource "aws_iam_instance_profile" "emr_profile" {
-  name  = "emr_profile_%[1]d"
+  name = "emr_profile_%[1]d"
   role = "${aws_iam_role.iam_emr_profile_role.name}"
 }
 
@@ -6676,7 +6696,7 @@ data "aws_iam_policy_document" "emr-autoscaling-role-policy" {
 
     principals {
       type        = "Service"
-      identifiers = ["elasticmapreduce.amazonaws.com","application-autoscaling.amazonaws.com"]
+      identifiers = ["elasticmapreduce.amazonaws.com", "application-autoscaling.amazonaws.com"]
     }
   }
 }
@@ -6714,7 +6734,7 @@ resource "aws_emr_cluster" "tf-test-cluster" {
   }
 
   keep_job_flow_alive_when_no_steps = true
-  termination_protection = false
+  termination_protection            = false
 
   bootstrap_action {
     path = "s3://elasticmapreduce/bootstrap-actions/run-if"
@@ -6726,8 +6746,8 @@ resource "aws_emr_cluster" "tf-test-cluster" {
 
   depends_on = ["aws_main_route_table_association.a"]
 
-  service_role = "${aws_iam_role.iam_emr_default_role.arn}"
-  autoscaling_role = "${aws_iam_role.emr-autoscaling-role.arn}"
+  service_role         = "${aws_iam_role.iam_emr_default_role.arn}"
+  autoscaling_role     = "${aws_iam_role.emr-autoscaling-role.arn}"
   ebs_root_volume_size = 48
 }
 
@@ -6737,10 +6757,10 @@ resource "aws_security_group" "allow_all" {
   vpc_id      = "${aws_vpc.main.id}"
 
   ingress {
-    from_port   = 0
-    to_port     = 0
-    protocol    = "-1"
-    self = true
+    from_port = 0
+    to_port   = 0
+    protocol  = "-1"
+    self      = true
   }
 
   egress {
@@ -6920,7 +6940,7 @@ EOT
 }
 
 resource "aws_iam_instance_profile" "emr_profile" {
-  name  = "emr_profile_%d"
+  name = "emr_profile_%d"
   role = "${aws_iam_role.iam_emr_profile_role.name}"
 }
 
@@ -6977,9 +6997,10 @@ data "aws_iam_policy_document" "emr-autoscaling-role-policy" {
   statement {
     effect  = "Allow"
     actions = ["sts:AssumeRole"]
+
     principals {
       type        = "Service"
-      identifiers = ["elasticmapreduce.amazonaws.com","application-autoscaling.amazonaws.com"]
+      identifiers = ["elasticmapreduce.amazonaws.com", "application-autoscaling.amazonaws.com"]
     }
   }
 }
@@ -6994,20 +7015,22 @@ resource "aws_iam_role_policy_attachment" "emr-autoscaling-role" {
 func testAccAWSEmrClusterConfigS3Logging(rInt int) string {
 	return fmt.Sprintf(`
 resource "aws_s3_bucket" "test" {
-  bucket = "tf-acc-test-%d"
+  bucket        = "tf-acc-test-%d"
   force_destroy = true
 }
 
 resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/24"
+
   tags = {
     Name = "terraform-testacc-emr-cluster-s3-logging"
   }
 }
 
 resource "aws_subnet" "test" {
-  vpc_id = "${aws_vpc.test.id}"
+  vpc_id     = "${aws_vpc.test.id}"
   cidr_block = "10.0.0.0/24"
+
   tags = {
     Name = "tf-acc-emr-cluster-s3-logging"
   }
@@ -7019,6 +7042,7 @@ resource "aws_internet_gateway" "main" {
 
 resource "aws_route_table" "test" {
   vpc_id = "${aws_vpc.test.id}"
+
   route {
     cidr_block = "0.0.0.0/0"
     gateway_id = "${aws_internet_gateway.main.id}"
@@ -7026,20 +7050,20 @@ resource "aws_route_table" "test" {
 }
 
 resource "aws_route_table_association" "test" {
-  subnet_id = "${aws_subnet.test.id}"
+  subnet_id      = "${aws_subnet.test.id}"
   route_table_id = "${aws_route_table.test.id}"
 }
 
 resource "aws_security_group" "test" {
-  name = "tf-acc-test-%d"
+  name        = "tf-acc-test-%d"
   description = "tf acceptance test"
-  vpc_id = "${aws_vpc.test.id}"
+  vpc_id      = "${aws_vpc.test.id}"
 
   egress {
-    from_port       = 0
-    to_port         = 0
-    protocol        = "-1"
-    cidr_blocks     = ["0.0.0.0/0"]
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
   }
 }
 
@@ -7048,7 +7072,7 @@ resource "aws_emr_cluster" "tf-test-cluster" {
   release_label = "emr-4.6.0"
   applications  = ["Spark"]
 
-  termination_protection = false
+  termination_protection            = false
   keep_job_flow_alive_when_no_steps = true
 
   master_instance_type = "c4.large"
@@ -7058,10 +7082,10 @@ resource "aws_emr_cluster" "tf-test-cluster" {
   log_uri = "s3://${aws_s3_bucket.test.bucket}/"
 
   ec2_attributes {
-    instance_profile = "arn:aws:iam::${data.aws_caller_identity.current.account_id}:instance-profile/EMR_EC2_DefaultRole"
+    instance_profile                  = "arn:aws:iam::${data.aws_caller_identity.current.account_id}:instance-profile/EMR_EC2_DefaultRole"
     emr_managed_master_security_group = "${aws_security_group.test.id}"
-    emr_managed_slave_security_group = "${aws_security_group.test.id}"
-    subnet_id = "${aws_subnet.test.id}"
+    emr_managed_slave_security_group  = "${aws_security_group.test.id}"
+    subnet_id                         = "${aws_subnet.test.id}"
   }
 
   bootstrap_action {
@@ -7103,7 +7127,7 @@ resource "aws_emr_cluster" "tf-test-cluster" {
   }
 
   keep_job_flow_alive_when_no_steps = true
-  termination_protection = false
+  termination_protection            = false
 
   bootstrap_action {
     path = "s3://elasticmapreduce/bootstrap-actions/run-if"
@@ -7115,10 +7139,10 @@ resource "aws_emr_cluster" "tf-test-cluster" {
 
   depends_on = ["aws_main_route_table_association.a"]
 
-  service_role = "${aws_iam_role.iam_emr_default_role.arn}"
-  autoscaling_role = "${aws_iam_role.emr-autoscaling-role.arn}"
+  service_role         = "${aws_iam_role.iam_emr_default_role.arn}"
+  autoscaling_role     = "${aws_iam_role.emr-autoscaling-role.arn}"
   ebs_root_volume_size = 48
-  custom_ami_id = "${data.aws_ami.emr-custom-ami.id}"
+  custom_ami_id        = "${data.aws_ami.emr-custom-ami.id}"
 }
 
 resource "aws_security_group" "allow_all" {
@@ -7127,10 +7151,10 @@ resource "aws_security_group" "allow_all" {
   vpc_id      = "${aws_vpc.main.id}"
 
   ingress {
-    from_port   = 0
-    to_port     = 0
-    protocol    = "-1"
-    self = true
+    from_port = 0
+    to_port   = 0
+    protocol  = "-1"
+    self      = true
   }
 
   egress {
@@ -7311,7 +7335,7 @@ EOT
 }
 
 resource "aws_iam_instance_profile" "emr_profile" {
-  name  = "emr_profile_%d"
+  name = "emr_profile_%d"
   role = "${aws_iam_role.iam_emr_profile_role.name}"
 }
 
@@ -7368,9 +7392,10 @@ data "aws_iam_policy_document" "emr-autoscaling-role-policy" {
   statement {
     effect  = "Allow"
     actions = ["sts:AssumeRole"]
+
     principals {
       type        = "Service"
-      identifiers = ["elasticmapreduce.amazonaws.com","application-autoscaling.amazonaws.com"]
+      identifiers = ["elasticmapreduce.amazonaws.com", "application-autoscaling.amazonaws.com"]
     }
   }
 }
@@ -7382,7 +7407,7 @@ resource "aws_iam_role_policy_attachment" "emr-autoscaling-role" {
 
 data "aws_ami" "emr-custom-ami" {
   most_recent = true
-  owners = ["137112412989"]
+  owners      = ["137112412989"]
 
   filter {
     name   = "name"

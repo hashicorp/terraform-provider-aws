@@ -131,7 +131,7 @@ func testAccCheckAwsSESEmailIdentityExists(n string) resource.TestCheckFunc {
 func testAccAwsSESEmailIdentityConfig(email string) string {
 	return fmt.Sprintf(`
 resource "aws_ses_email_identity" "test" {
-	email = %q
+  email = %q
 }
 `, email)
 }
