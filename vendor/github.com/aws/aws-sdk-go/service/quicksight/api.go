@@ -54,7 +54,7 @@ func (c *QuickSight) CreateGroupRequest(input *CreateGroupInput) (req *request.R
 //
 // Creates an Amazon QuickSight group.
 //
-// The permissions resource is arn:aws:quicksight:us-east-1:<relevant-aws-account-id>:group/default/<group-name>.
+// The permissions resource is arn:aws:quicksight:us-east-1:<relevant-aws-account-id>:group/default/<group-name> .
 //
 // The response is a group object.
 //
@@ -169,7 +169,7 @@ func (c *QuickSight) CreateGroupMembershipRequest(input *CreateGroupMembershipIn
 //
 // Adds an Amazon QuickSight user to an Amazon QuickSight group.
 //
-// The permissions resource is arn:aws:quicksight:us-east-1:<aws-account-id>:group/default/<group-name>.
+// The permissions resource is arn:aws:quicksight:us-east-1:<aws-account-id>:group/default/<group-name> .
 //
 // The condition resource is the user name.
 //
@@ -282,7 +282,7 @@ func (c *QuickSight) DeleteGroupRequest(input *DeleteGroupInput) (req *request.R
 //
 // Removes a user group from Amazon QuickSight.
 //
-// The permissions resource is arn:aws:quicksight:us-east-1:<aws-account-id>:group/default/<group-name>.
+// The permissions resource is arn:aws:quicksight:us-east-1:<aws-account-id>:group/default/<group-name> .
 //
 // CLI Sample:
 //
@@ -390,7 +390,7 @@ func (c *QuickSight) DeleteGroupMembershipRequest(input *DeleteGroupMembershipIn
 // Removes a user from a group so that the user is no longer a member of the
 // group.
 //
-// The permissions resource is arn:aws:quicksight:us-east-1:<aws-account-id>:group/default/<group-name>.
+// The permissions resource is arn:aws:quicksight:us-east-1:<aws-account-id>:group/default/<group-name> .
 //
 // The condition resource is the user name.
 //
@@ -503,8 +503,7 @@ func (c *QuickSight) DeleteUserRequest(input *DeleteUserInput) (req *request.Req
 // the AWS Identity and Access Management (IAM) user or role that's making the
 // call. The IAM user isn't deleted as a result of this call.
 //
-// The permission resource is arn:aws:quicksight:us-east-1:<aws-account-id>:user/default/<user-name>
-// .
+// The permission resource is arn:aws:quicksight:us-east-1:<aws-account-id>:user/default/<user-name> .
 //
 // CLI Sample:
 //
@@ -706,7 +705,7 @@ func (c *QuickSight) DescribeGroupRequest(input *DescribeGroupInput) (req *reque
 // Returns an Amazon QuickSight group's description and Amazon Resource Name
 // (ARN).
 //
-// The permissions resource is arn:aws:quicksight:us-east-1:<relevant-aws-account-id>:group/default/<group-name>.
+// The permissions resource is arn:aws:quicksight:us-east-1:<relevant-aws-account-id>:group/default/<group-name> .
 //
 // The response is the group object.
 //
@@ -815,7 +814,7 @@ func (c *QuickSight) DescribeUserRequest(input *DescribeUserInput) (req *request
 //
 // Returns information about a user, given the user name.
 //
-// The permission resource is arn:aws:quicksight:us-east-1:<aws-account-id>:user/default/<user-name>.
+// The permission resource is arn:aws:quicksight:us-east-1:<aws-account-id>:user/default/<user-name> .
 //
 // The response is a user object that contains the user's Amazon Resource Name
 // (ARN), AWS Identity and Access Management (IAM) role, and email address.
@@ -922,7 +921,7 @@ func (c *QuickSight) GetDashboardEmbedUrlRequest(input *GetDashboardEmbedUrlInpu
 //
 // Generates a server-side embeddable URL and authorization code. Before this
 // can work properly, first you need to configure the dashboards and user permissions.
-// For more information, see  Embedding Amazon QuickSight Dashboards (https://docs.aws.amazon.com/en_us/quicksight/latest/user/embedding.html).
+// For more information, see Embedding Amazon QuickSight Dashboards (https://docs.aws.amazon.com/en_us/quicksight/latest/user/embedding.html).
 //
 // Currently, you can use GetDashboardEmbedURL only from the server, not from
 // the user’s browser.
@@ -1074,7 +1073,7 @@ func (c *QuickSight) ListGroupMembershipsRequest(input *ListGroupMembershipsInpu
 //
 // Lists member users in a group.
 //
-// The permissions resource is arn:aws:quicksight:us-east-1:<aws-account-id>:group/default/<group-name>.
+// The permissions resource is arn:aws:quicksight:us-east-1:<aws-account-id>:group/default/<group-name> .
 //
 // The response is a list of group member objects.
 //
@@ -1297,7 +1296,7 @@ func (c *QuickSight) ListUserGroupsRequest(input *ListUserGroupsInput) (req *req
 // Lists the Amazon QuickSight groups that an Amazon QuickSight user is a member
 // of.
 //
-// The permission resource is arn:aws:quicksight:us-east-1:<aws-account-id>:user/default/<user-name>.
+// The permission resource is arn:aws:quicksight:us-east-1:<aws-account-id>:user/default/<user-name> .
 //
 // The response is a one or more group objects.
 //
@@ -1403,7 +1402,7 @@ func (c *QuickSight) ListUsersRequest(input *ListUsersInput) (req *request.Reque
 //
 // Returns a list of all of the Amazon QuickSight users belonging to this account.
 //
-// The permission resource is arn:aws:quicksight:us-east-1:<aws-account-id>:user/default/*.
+// The permission resource is arn:aws:quicksight:us-east-1:<aws-account-id>:user/default/* .
 //
 // The response is a list of user objects, containing each user's Amazon Resource
 // Name (ARN), AWS Identity and Access Management (IAM) role, and email address.
@@ -1514,7 +1513,7 @@ func (c *QuickSight) RegisterUserRequest(input *RegisterUserInput) (req *request
 // AWS Identity and Access Management (IAM) identity or role specified in the
 // request.
 //
-// The permission resource is arn:aws:quicksight:us-east-1:<aws-account-id>:user/default/<user-name>.
+// The permission resource is arn:aws:quicksight:us-east-1:<aws-account-id>:user/default/<user-name> .
 //
 // The condition resource is the Amazon Resource Name (ARN) for the IAM user
 // or role, and the session name.
@@ -1632,7 +1631,7 @@ func (c *QuickSight) UpdateGroupRequest(input *UpdateGroupInput) (req *request.R
 //
 // Changes a group description.
 //
-// The permissions resource is arn:aws:quicksight:us-east-1:<aws-account-id>:group/default/<group-name>.
+// The permissions resource is arn:aws:quicksight:us-east-1:<aws-account-id>:group/default/<group-name> .
 //
 // The response is a group object.
 //
@@ -1741,7 +1740,7 @@ func (c *QuickSight) UpdateUserRequest(input *UpdateUserInput) (req *request.Req
 //
 // Updates an Amazon QuickSight user.
 //
-// The permission resource is arn:aws:quicksight:us-east-1:<aws-account-id>:user/default/<user-name>.
+// The permission resource is arn:aws:quicksight:us-east-1:<aws-account-id>:user/default/<user-name> .
 //
 // The response is a user object that contains the user's Amazon QuickSight
 // user name, email address, active or inactive status in Amazon QuickSight,
@@ -4032,9 +4031,9 @@ func (s *UpdateUserOutput) SetUser(v *User) *UpdateUserOutput {
 type User struct {
 	_ struct{} `type:"structure"`
 
-	// Active status of user. When you create an Amazon QuickSight user that’s not
-	// an IAM user or an AD user, that user is inactive until they sign in and provide
-	// a password
+	// Active status of user. When you create an Amazon QuickSight user that’s
+	// not an IAM user or an AD user, that user is inactive until they sign in and
+	// provide a password
 	Active *bool `type:"boolean"`
 
 	// The Amazon Resource Name (ARN) for the user.

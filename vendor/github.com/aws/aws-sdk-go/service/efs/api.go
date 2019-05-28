@@ -251,28 +251,22 @@ func (c *EFS) CreateMountTargetRequest(input *CreateMountTargetInput) (req *requ
 //
 //    * Creates a new mount target in the specified subnet.
 //
-//    * Also creates a new network interface in the subnet as follows:
-//
-// If the request provides an IpAddress, Amazon EFS assigns that IP address
-//    to the network interface. Otherwise, Amazon EFS assigns a free address
-//    in the subnet (in the same way that the Amazon EC2 CreateNetworkInterface
-//    call does when a request does not specify a primary private IP address).
-//
-// If the request provides SecurityGroups, this network interface is associated
+//    * Also creates a new network interface in the subnet as follows: If the
+//    request provides an IpAddress, Amazon EFS assigns that IP address to the
+//    network interface. Otherwise, Amazon EFS assigns a free address in the
+//    subnet (in the same way that the Amazon EC2 CreateNetworkInterface call
+//    does when a request does not specify a primary private IP address). If
+//    the request provides SecurityGroups, this network interface is associated
 //    with those security groups. Otherwise, it belongs to the default security
-//    group for the subnet's VPC.
-//
-// Assigns the description Mount target fsmt-id for file system fs-id where
-//    fsmt-id is the mount target ID, and fs-id is the FileSystemId.
-//
-// Sets the requesterManaged property of the network interface to true, and
-//    the requesterId value to EFS.
-//
-// Each Amazon EFS mount target has one corresponding requester-managed EC2
-//    network interface. After the network interface is created, Amazon EFS
-//    sets the NetworkInterfaceId field in the mount target's description to
-//    the network interface ID, and the IpAddress field to its address. If network
-//    interface creation fails, the entire CreateMountTarget operation fails.
+//    group for the subnet's VPC. Assigns the description Mount target fsmt-id
+//    for file system fs-id where fsmt-id is the mount target ID, and fs-id
+//    is the FileSystemId. Sets the requesterManaged property of the network
+//    interface to true, and the requesterId value to EFS. Each Amazon EFS mount
+//    target has one corresponding requester-managed EC2 network interface.
+//    After the network interface is created, Amazon EFS sets the NetworkInterfaceId
+//    field in the mount target's description to the network interface ID, and
+//    the IpAddress field to its address. If network interface creation fails,
+//    the entire CreateMountTarget operation fails.
 //
 // The CreateMountTarget call returns only after creating the network interface,
 // but while the mount target state is still creating, you can check the mount
@@ -343,7 +337,7 @@ func (c *EFS) CreateMountTargetRequest(input *CreateMountTargetInput) (req *requ
 //   for the specific AWS Region. The client should try to delete some elastic
 //   network interfaces or get the account limit raised. For more information,
 //   see Amazon VPC Limits (https://docs.aws.amazon.com/AmazonVPC/latest/UserGuide/VPC_Appendix_Limits.html)
-//   in the Amazon VPC User Guide  (see the Network interfaces per VPC entry in
+//   in the Amazon VPC User Guide (see the Network interfaces per VPC entry in
 //   the table).
 //
 //   * ErrCodeSecurityGroupLimitExceeded "SecurityGroupLimitExceeded"
@@ -1463,7 +1457,7 @@ func (c *EFS) PutLifecycleConfigurationRequest(input *PutLifecycleConfigurationI
 //
 //    * A LifecyclePolicies array of LifecyclePolicy objects that define when
 //    files are moved to the IA storage class. The array can contain only one
-//    "TransitionToIA": "AFTER_30_DAYS"LifecyclePolicy item.
+//    "TransitionToIA": "AFTER_30_DAYS" LifecyclePolicy item.
 //
 // This operation requires permissions for the elasticfilesystem:PutLifecycleConfiguration
 // operation.
@@ -3085,7 +3079,7 @@ func (s *PutLifecycleConfigurationOutput) SetLifecyclePolicies(v []*LifecyclePol
 }
 
 // A tag is a key-value pair. Allowed characters are letters, white space, and
-// numbers that can be represented in UTF-8, and the following characters: +
+// numbers that can be represented in UTF-8, and the following characters:+
 // - = . _ : /
 type Tag struct {
 	_ struct{} `type:"structure"`

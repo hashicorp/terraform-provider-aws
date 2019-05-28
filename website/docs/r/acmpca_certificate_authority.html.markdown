@@ -26,6 +26,7 @@ resource "aws_acmpca_certificate_authority" "example" {
       common_name = "example.com"
     }
   }
+
   permanent_deletion_time_in_days = 7
 }
 ```

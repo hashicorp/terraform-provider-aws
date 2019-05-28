@@ -123,9 +123,9 @@ func testAccCheckAwsDxConnectionExists(name string) resource.TestCheckFunc {
 func testAccDxConnectionConfig(n string) string {
 	return fmt.Sprintf(`
 resource "aws_dx_connection" "hoge" {
-  name = "%s"
+  name      = "%s"
   bandwidth = "1Gbps"
-  location = "EqSe2"
+  location  = "EqSe2"
 }
 `, n)
 }
@@ -133,13 +133,13 @@ resource "aws_dx_connection" "hoge" {
 func testAccDxConnectionConfig_tags(n string) string {
 	return fmt.Sprintf(`
 resource "aws_dx_connection" "hoge" {
-  name = "%s"
+  name      = "%s"
   bandwidth = "1Gbps"
-  location = "EqSe2"
+  location  = "EqSe2"
 
   tags = {
     Environment = "production"
-    Usage = "original"
+    Usage       = "original"
   }
 }
 `, n)
@@ -148,9 +148,9 @@ resource "aws_dx_connection" "hoge" {
 func testAccDxConnectionConfig_tagsChanged(n string) string {
 	return fmt.Sprintf(`
 resource "aws_dx_connection" "hoge" {
-  name = "%s"
+  name      = "%s"
   bandwidth = "1Gbps"
-  location = "EqSe2"
+  location  = "EqSe2"
 
   tags = {
     Usage = "changed"

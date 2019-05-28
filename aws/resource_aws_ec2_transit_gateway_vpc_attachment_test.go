@@ -68,7 +68,7 @@ func testSweepEc2TransitGatewayVpcAttachments(region string) error {
 				return fmt.Errorf("error deleting EC2 Transit Gateway VPC Attachment (%s): %s", id, err)
 			}
 
-			if err := waitForEc2TransitGatewayRouteTableAttachmentDeletion(conn, id); err != nil {
+			if err := waitForEc2TransitGatewayVpcAttachmentDeletion(conn, id); err != nil {
 				return fmt.Errorf("error waiting for EC2 Transit Gateway VPC Attachment (%s) deletion: %s", id, err)
 			}
 		}
@@ -529,7 +529,7 @@ func testAccCheckAWSEc2TransitGatewayVpcAttachmentDisappears(transitGatewayVpcAt
 			return err
 		}
 
-		return waitForEc2TransitGatewayRouteTableAttachmentDeletion(conn, aws.StringValue(transitGatewayVpcAttachment.TransitGatewayAttachmentId))
+		return waitForEc2TransitGatewayVpcAttachmentDeletion(conn, aws.StringValue(transitGatewayVpcAttachment.TransitGatewayAttachmentId))
 	}
 }
 

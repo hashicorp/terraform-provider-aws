@@ -165,8 +165,9 @@ func testAccCheckMskConfigurationExists(resourceName string, configuration *kafk
 func testAccMskConfigurationConfig(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_msk_configuration" "test" {
-  kafka_versions    = ["2.1.0"]
-  name              = %[1]q
+  kafka_versions = ["2.1.0"]
+  name           = %[1]q
+
   server_properties = <<PROPERTIES
 auto.create.topics.enable = true
 delete.topic.enable = true
@@ -178,9 +179,10 @@ PROPERTIES
 func testAccMskConfigurationConfigDescription(rName, description string) string {
 	return fmt.Sprintf(`
 resource "aws_msk_configuration" "test" {
-  description       = %[2]q
-  kafka_versions    = ["2.1.0"]
-  name              = %[1]q
+  description    = %[2]q
+  kafka_versions = ["2.1.0"]
+  name           = %[1]q
+
   server_properties = <<PROPERTIES
 auto.create.topics.enable = true
 PROPERTIES
@@ -191,8 +193,9 @@ PROPERTIES
 func testAccMskConfigurationConfigKafkaVersions(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_msk_configuration" "test" {
-  kafka_versions    = ["1.1.1", "2.1.0"]
-  name              = %[1]q
+  kafka_versions = ["1.1.1", "2.1.0"]
+  name           = %[1]q
+
   server_properties = <<PROPERTIES
 auto.create.topics.enable = true
 PROPERTIES
@@ -203,8 +206,9 @@ PROPERTIES
 func testAccMskConfigurationConfigServerProperties(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_msk_configuration" "test" {
-  kafka_versions    = ["2.1.0"]
-  name              = %[1]q
+  kafka_versions = ["2.1.0"]
+  name           = %[1]q
+
   server_properties = <<PROPERTIES
 auto.create.topics.enable = false
 PROPERTIES

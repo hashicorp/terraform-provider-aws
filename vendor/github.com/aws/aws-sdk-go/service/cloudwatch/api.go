@@ -280,7 +280,7 @@ func (c *CloudWatch) DescribeAlarmHistoryWithContext(ctx aws.Context, input *Des
 //    // Example iterating over at most 3 pages of a DescribeAlarmHistory operation.
 //    pageNum := 0
 //    err := client.DescribeAlarmHistoryPages(params,
-//        func(page *DescribeAlarmHistoryOutput, lastPage bool) bool {
+//        func(page *cloudwatch.DescribeAlarmHistoryOutput, lastPage bool) bool {
 //            pageNum++
 //            fmt.Println(page)
 //            return pageNum <= 3
@@ -417,7 +417,7 @@ func (c *CloudWatch) DescribeAlarmsWithContext(ctx aws.Context, input *DescribeA
 //    // Example iterating over at most 3 pages of a DescribeAlarms operation.
 //    pageNum := 0
 //    err := client.DescribeAlarmsPages(params,
-//        func(page *DescribeAlarmsOutput, lastPage bool) bool {
+//        func(page *cloudwatch.DescribeAlarmsOutput, lastPage bool) bool {
 //            pageNum++
 //            fmt.Println(page)
 //            return pageNum <= 3
@@ -901,7 +901,7 @@ func (c *CloudWatch) GetMetricDataWithContext(ctx aws.Context, input *GetMetricD
 //    // Example iterating over at most 3 pages of a GetMetricData operation.
 //    pageNum := 0
 //    err := client.GetMetricDataPages(params,
-//        func(page *GetMetricDataOutput, lastPage bool) bool {
+//        func(page *cloudwatch.GetMetricDataOutput, lastPage bool) bool {
 //            pageNum++
 //            fmt.Println(page)
 //            return pageNum <= 3
@@ -1274,7 +1274,7 @@ func (c *CloudWatch) ListDashboardsWithContext(ctx aws.Context, input *ListDashb
 //    // Example iterating over at most 3 pages of a ListDashboards operation.
 //    pageNum := 0
 //    err := client.ListDashboardsPages(params,
-//        func(page *ListDashboardsOutput, lastPage bool) bool {
+//        func(page *cloudwatch.ListDashboardsOutput, lastPage bool) bool {
 //            pageNum++
 //            fmt.Println(page)
 //            return pageNum <= 3
@@ -1420,7 +1420,7 @@ func (c *CloudWatch) ListMetricsWithContext(ctx aws.Context, input *ListMetricsI
 //    // Example iterating over at most 3 pages of a ListMetrics operation.
 //    pageNum := 0
 //    err := client.ListMetricsPages(params,
-//        func(page *ListMetricsOutput, lastPage bool) bool {
+//        func(page *cloudwatch.ListMetricsOutput, lastPage bool) bool {
 //            pageNum++
 //            fmt.Println(page)
 //            return pageNum <= 3

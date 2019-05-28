@@ -184,7 +184,7 @@ func testAccAWSCloud9EnvironmentEc2Config(name string) string {
 	return fmt.Sprintf(`
 resource "aws_cloud9_environment_ec2" "test" {
   instance_type = "t2.micro"
-  name = "%s"
+  name          = "%s"
 }
 `, name)
 }
@@ -192,25 +192,27 @@ resource "aws_cloud9_environment_ec2" "test" {
 func testAccAWSCloud9EnvironmentEc2AllFieldsConfig(name, description, userName string) string {
 	return fmt.Sprintf(`
 resource "aws_cloud9_environment_ec2" "test" {
-  instance_type = "t2.micro"
-  name = "%s"
-  description = "%s"
+  instance_type               = "t2.micro"
+  name                        = "%s"
+  description                 = "%s"
   automatic_stop_time_minutes = 60
-  subnet_id = "${aws_subnet.test.id}"
-  owner_arn = "${aws_iam_user.test.arn}"
-  depends_on = ["aws_route_table_association.test"]
+  subnet_id                   = "${aws_subnet.test.id}"
+  owner_arn                   = "${aws_iam_user.test.arn}"
+  depends_on                  = ["aws_route_table_association.test"]
 }
 
 resource "aws_vpc" "test" {
   cidr_block = "10.10.0.0/16"
+
   tags = {
     Name = "terraform-testacc-cloud9-environment-ec2-all-fields"
   }
 }
 
 resource "aws_subnet" "test" {
-  vpc_id = "${aws_vpc.test.id}"
+  vpc_id     = "${aws_vpc.test.id}"
   cidr_block = "10.10.0.0/19"
+
   tags = {
     Name = "tf-acc-cloud9-environment-ec2-all-fields"
   }
@@ -222,6 +224,7 @@ resource "aws_internet_gateway" "test" {
 
 resource "aws_route_table" "test" {
   vpc_id = "${aws_vpc.test.id}"
+
   route {
     cidr_block = "0.0.0.0/0"
     gateway_id = "${aws_internet_gateway.test.id}"

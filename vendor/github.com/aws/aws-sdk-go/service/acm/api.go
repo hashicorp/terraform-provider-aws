@@ -717,7 +717,7 @@ func (c *ACM) ListCertificatesWithContext(ctx aws.Context, input *ListCertificat
 //    // Example iterating over at most 3 pages of a ListCertificates operation.
 //    pageNum := 0
 //    err := client.ListCertificatesPages(params,
-//        func(page *ListCertificatesOutput, lastPage bool) bool {
+//        func(page *acm.ListCertificatesOutput, lastPage bool) bool {
 //            pageNum++
 //            fmt.Println(page)
 //            return pageNum <= 3
@@ -1269,7 +1269,7 @@ func (c *ACM) UpdateCertificateOptionsRequest(input *UpdateCertificateOptionsInp
 //
 // Updates a certificate. Currently, you can use this function to specify whether
 // to opt in to or out of recording your certificate in a certificate transparency
-// log. For more information, see  Opting Out of Certificate Transparency Logging
+// log. For more information, see Opting Out of Certificate Transparency Logging
 // (https://docs.aws.amazon.com/acm/latest/userguide/acm-bestpractices.html#best-practices-transparency).
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions

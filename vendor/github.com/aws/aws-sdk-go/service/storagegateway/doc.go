@@ -46,8 +46,8 @@
 // systems with the new format. For more information, see Longer EC2 and EBS
 // Resource IDs (https://aws.amazon.com/ec2/faqs/#longer-ids).
 //
-//  For example, a volume Amazon Resource Name (ARN) with the longer volume
-// ID format looks like the following:
+// For example, a volume Amazon Resource Name (ARN) with the longer volume ID
+// format looks like the following:
 //
 // arn:aws:storagegateway:us-west-2:111122223333:gateway/sgw-12A3456B/volume/vol-1122AABBCCDDEEFFG.
 //

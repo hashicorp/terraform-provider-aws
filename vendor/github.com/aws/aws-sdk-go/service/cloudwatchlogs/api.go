@@ -1251,7 +1251,7 @@ func (c *CloudWatchLogs) DescribeDestinationsWithContext(ctx aws.Context, input 
 //    // Example iterating over at most 3 pages of a DescribeDestinations operation.
 //    pageNum := 0
 //    err := client.DescribeDestinationsPages(params,
-//        func(page *DescribeDestinationsOutput, lastPage bool) bool {
+//        func(page *cloudwatchlogs.DescribeDestinationsOutput, lastPage bool) bool {
 //            pageNum++
 //            fmt.Println(page)
 //            return pageNum <= 3
@@ -1474,7 +1474,7 @@ func (c *CloudWatchLogs) DescribeLogGroupsWithContext(ctx aws.Context, input *De
 //    // Example iterating over at most 3 pages of a DescribeLogGroups operation.
 //    pageNum := 0
 //    err := client.DescribeLogGroupsPages(params,
-//        func(page *DescribeLogGroupsOutput, lastPage bool) bool {
+//        func(page *cloudwatchlogs.DescribeLogGroupsOutput, lastPage bool) bool {
 //            pageNum++
 //            fmt.Println(page)
 //            return pageNum <= 3
@@ -1621,7 +1621,7 @@ func (c *CloudWatchLogs) DescribeLogStreamsWithContext(ctx aws.Context, input *D
 //    // Example iterating over at most 3 pages of a DescribeLogStreams operation.
 //    pageNum := 0
 //    err := client.DescribeLogStreamsPages(params,
-//        func(page *DescribeLogStreamsOutput, lastPage bool) bool {
+//        func(page *cloudwatchlogs.DescribeLogStreamsOutput, lastPage bool) bool {
 //            pageNum++
 //            fmt.Println(page)
 //            return pageNum <= 3
@@ -1765,7 +1765,7 @@ func (c *CloudWatchLogs) DescribeMetricFiltersWithContext(ctx aws.Context, input
 //    // Example iterating over at most 3 pages of a DescribeMetricFilters operation.
 //    pageNum := 0
 //    err := client.DescribeMetricFiltersPages(params,
-//        func(page *DescribeMetricFiltersOutput, lastPage bool) bool {
+//        func(page *cloudwatchlogs.DescribeMetricFiltersOutput, lastPage bool) bool {
 //            pageNum++
 //            fmt.Println(page)
 //            return pageNum <= 3
@@ -2079,7 +2079,7 @@ func (c *CloudWatchLogs) DescribeSubscriptionFiltersWithContext(ctx aws.Context,
 //    // Example iterating over at most 3 pages of a DescribeSubscriptionFilters operation.
 //    pageNum := 0
 //    err := client.DescribeSubscriptionFiltersPages(params,
-//        func(page *DescribeSubscriptionFiltersOutput, lastPage bool) bool {
+//        func(page *cloudwatchlogs.DescribeSubscriptionFiltersOutput, lastPage bool) bool {
 //            pageNum++
 //            fmt.Println(page)
 //            return pageNum <= 3
@@ -2326,7 +2326,7 @@ func (c *CloudWatchLogs) FilterLogEventsWithContext(ctx aws.Context, input *Filt
 //    // Example iterating over at most 3 pages of a FilterLogEvents operation.
 //    pageNum := 0
 //    err := client.FilterLogEventsPages(params,
-//        func(page *FilterLogEventsOutput, lastPage bool) bool {
+//        func(page *cloudwatchlogs.FilterLogEventsOutput, lastPage bool) bool {
 //            pageNum++
 //            fmt.Println(page)
 //            return pageNum <= 3
@@ -2473,7 +2473,7 @@ func (c *CloudWatchLogs) GetLogEventsWithContext(ctx aws.Context, input *GetLogE
 //    // Example iterating over at most 3 pages of a GetLogEvents operation.
 //    pageNum := 0
 //    err := client.GetLogEventsPages(params,
-//        func(page *GetLogEventsOutput, lastPage bool) bool {
+//        func(page *cloudwatchlogs.GetLogEventsOutput, lastPage bool) bool {
 //            pageNum++
 //            fmt.Println(page)
 //            return pageNum <= 3

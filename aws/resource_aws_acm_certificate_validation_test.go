@@ -190,16 +190,16 @@ func testAccAcmCertificateValidation_basic(rootZoneDomain, domainName string) st
 %s
 
 data "aws_route53_zone" "zone" {
-  name = "%s."
+  name         = "%s."
   private_zone = false
 }
 
 resource "aws_route53_record" "cert_validation" {
-  name = "${aws_acm_certificate.cert.domain_validation_options.0.resource_record_name}"
-  type = "${aws_acm_certificate.cert.domain_validation_options.0.resource_record_type}"
+  name    = "${aws_acm_certificate.cert.domain_validation_options.0.resource_record_name}"
+  type    = "${aws_acm_certificate.cert.domain_validation_options.0.resource_record_type}"
   zone_id = "${data.aws_route53_zone.zone.id}"
   records = ["${aws_acm_certificate.cert.domain_validation_options.0.resource_record_value}"]
-  ttl = 60
+  ttl     = 60
 }
 
 resource "aws_acm_certificate_validation" "cert" {
@@ -216,6 +216,7 @@ func testAccAcmCertificateValidation_timeout(domainName string) string {
 
 resource "aws_acm_certificate_validation" "cert" {
   certificate_arn = "${aws_acm_certificate.cert.arn}"
+
   timeouts {
     create = "5s"
   }
@@ -228,7 +229,7 @@ func testAccAcmCertificateValidation_validationRecordFqdnsEmailValidation(domain
 %s
 
 resource "aws_acm_certificate_validation" "cert" {
-  certificate_arn = "${aws_acm_certificate.cert.arn}"
+  certificate_arn         = "${aws_acm_certificate.cert.arn}"
   validation_record_fqdns = ["wrong-validation-fqdn.example.com"]
 }
 `, testAccAcmCertificateConfig(domainName, acm.ValidationMethodEmail))
@@ -239,20 +240,20 @@ func testAccAcmCertificateValidation_validationRecordFqdnsOneRoute53Record(rootZ
 %s
 
 data "aws_route53_zone" "zone" {
-  name = "%s."
+  name         = "%s."
   private_zone = false
 }
 
 resource "aws_route53_record" "cert_validation" {
-  name = "${aws_acm_certificate.cert.domain_validation_options.0.resource_record_name}"
-  type = "${aws_acm_certificate.cert.domain_validation_options.0.resource_record_type}"
+  name    = "${aws_acm_certificate.cert.domain_validation_options.0.resource_record_name}"
+  type    = "${aws_acm_certificate.cert.domain_validation_options.0.resource_record_type}"
   zone_id = "${data.aws_route53_zone.zone.id}"
   records = ["${aws_acm_certificate.cert.domain_validation_options.0.resource_record_value}"]
-  ttl = 60
+  ttl     = 60
 }
 
 resource "aws_acm_certificate_validation" "cert" {
-  certificate_arn = "${aws_acm_certificate.cert.arn}"
+  certificate_arn         = "${aws_acm_certificate.cert.arn}"
   validation_record_fqdns = ["${aws_route53_record.cert_validation.fqdn}"]
 }
 `, testAccAcmCertificateConfig(domainName, acm.ValidationMethodDns), rootZoneDomain)
@@ -263,31 +264,32 @@ func testAccAcmCertificateValidation_validationRecordFqdnsTwoRoute53Records(root
 %s
 
 data "aws_route53_zone" "zone" {
-  name = "%s."
+  name         = "%s."
   private_zone = false
 }
 
 resource "aws_route53_record" "cert_validation" {
-  name = "${aws_acm_certificate.cert.domain_validation_options.0.resource_record_name}"
-  type = "${aws_acm_certificate.cert.domain_validation_options.0.resource_record_type}"
+  name    = "${aws_acm_certificate.cert.domain_validation_options.0.resource_record_name}"
+  type    = "${aws_acm_certificate.cert.domain_validation_options.0.resource_record_type}"
   zone_id = "${data.aws_route53_zone.zone.id}"
   records = ["${aws_acm_certificate.cert.domain_validation_options.0.resource_record_value}"]
-  ttl = 60
+  ttl     = 60
 }
 
 resource "aws_route53_record" "cert_validation_san" {
-  name = "${aws_acm_certificate.cert.domain_validation_options.1.resource_record_name}"
-  type = "${aws_acm_certificate.cert.domain_validation_options.1.resource_record_type}"
+  name    = "${aws_acm_certificate.cert.domain_validation_options.1.resource_record_name}"
+  type    = "${aws_acm_certificate.cert.domain_validation_options.1.resource_record_type}"
   zone_id = "${data.aws_route53_zone.zone.id}"
   records = ["${aws_acm_certificate.cert.domain_validation_options.1.resource_record_value}"]
-  ttl = 60
+  ttl     = 60
 }
 
 resource "aws_acm_certificate_validation" "cert" {
   certificate_arn = "${aws_acm_certificate.cert.arn}"
+
   validation_record_fqdns = [
     "${aws_route53_record.cert_validation.fqdn}",
-    "${aws_route53_record.cert_validation_san.fqdn}"
+    "${aws_route53_record.cert_validation_san.fqdn}",
   ]
 }
 `, testAccAcmCertificateConfig_subjectAlternativeNames(domainName, subjectAlternativeNames, acm.ValidationMethodDns), rootZoneDomain)
@@ -298,7 +300,7 @@ func testAccAcmCertificateValidation_validationRecordFqdnsWrongFqdn(domainName s
 %s
 
 resource "aws_acm_certificate_validation" "cert" {
-  certificate_arn = "${aws_acm_certificate.cert.arn}"
+  certificate_arn         = "${aws_acm_certificate.cert.arn}"
   validation_record_fqdns = ["wrong-validation-fqdn.example.com"]
 }
 `, testAccAcmCertificateConfig(domainName, acm.ValidationMethodDns))

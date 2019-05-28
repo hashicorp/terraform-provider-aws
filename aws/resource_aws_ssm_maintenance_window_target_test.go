@@ -183,23 +183,25 @@ func testAccCheckAWSSSMMaintenanceWindowTargetDestroy(s *terraform.State) error 
 func testAccAWSSSMMaintenanceWindowTargetBasicConfig(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_ssm_maintenance_window" "foo" {
-  name = "maintenance-window-%s"
+  name     = "maintenance-window-%s"
   schedule = "cron(0 16 ? * TUE *)"
   duration = 3
-  cutoff = 1
+  cutoff   = 1
 }
 
 resource "aws_ssm_maintenance_window_target" "target" {
-  name = "TestMaintenanceWindowTarget"
-  description = "This resource is for test purpose only"
-  window_id = "${aws_ssm_maintenance_window.foo.id}"
+  name          = "TestMaintenanceWindowTarget"
+  description   = "This resource is for test purpose only"
+  window_id     = "${aws_ssm_maintenance_window.foo.id}"
   resource_type = "INSTANCE"
+
   targets {
-    key = "tag:Name"
+    key    = "tag:Name"
     values = ["acceptance_test"]
   }
+
   targets {
-    key = "tag:Name2"
+    key    = "tag:Name2"
     values = ["acceptance_test", "acceptance_test2"]
   }
 }
@@ -209,24 +211,26 @@ resource "aws_ssm_maintenance_window_target" "target" {
 func testAccAWSSSMMaintenanceWindowTargetBasicConfigUpdated(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_ssm_maintenance_window" "foo" {
-  name = "maintenance-window-%s"
+  name     = "maintenance-window-%s"
   schedule = "cron(0 16 ? * TUE *)"
   duration = 3
-  cutoff = 1
+  cutoff   = 1
 }
 
 resource "aws_ssm_maintenance_window_target" "target" {
-  name = "TestMaintenanceWindowTarget"
-  description = "This resource is for test purpose only - updated"
-  window_id = "${aws_ssm_maintenance_window.foo.id}"
-  resource_type = "INSTANCE"
+  name              = "TestMaintenanceWindowTarget"
+  description       = "This resource is for test purpose only - updated"
+  window_id         = "${aws_ssm_maintenance_window.foo.id}"
+  resource_type     = "INSTANCE"
   owner_information = "something"
+
   targets {
-    key = "tag:Name"
+    key    = "tag:Name"
     values = ["acceptance_test"]
   }
+
   targets {
-    key = "tag:Updated"
+    key    = "tag:Updated"
     values = ["new-value"]
   }
 }
@@ -236,24 +240,26 @@ resource "aws_ssm_maintenance_window_target" "target" {
 func testAccAWSSSMMaintenanceWindowTargetBasicConfigWithTarget(rName, tName, tDesc string) string {
 	return fmt.Sprintf(`
 resource "aws_ssm_maintenance_window" "foo" {
-  name = "maintenance-window-%s"
+  name     = "maintenance-window-%s"
   schedule = "cron(0 16 ? * TUE *)"
   duration = 3
-  cutoff = 1
+  cutoff   = 1
 }
 
 resource "aws_ssm_maintenance_window_target" "target" {
-  name = "%s"
-  description = "%s"
-  window_id = "${aws_ssm_maintenance_window.foo.id}"
-  resource_type = "INSTANCE"
+  name              = "%s"
+  description       = "%s"
+  window_id         = "${aws_ssm_maintenance_window.foo.id}"
+  resource_type     = "INSTANCE"
   owner_information = "something"
+
   targets {
-    key = "tag:Name"
+    key    = "tag:Name"
     values = ["acceptance_test"]
   }
+
   targets {
-    key = "tag:Updated"
+    key    = "tag:Updated"
     values = ["new-value"]
   }
 }

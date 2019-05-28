@@ -1456,7 +1456,7 @@ func (c *CodePipeline) ListActionExecutionsWithContext(ctx aws.Context, input *L
 //    // Example iterating over at most 3 pages of a ListActionExecutions operation.
 //    pageNum := 0
 //    err := client.ListActionExecutionsPages(params,
-//        func(page *ListActionExecutionsOutput, lastPage bool) bool {
+//        func(page *codepipeline.ListActionExecutionsOutput, lastPage bool) bool {
 //            pageNum++
 //            fmt.Println(page)
 //            return pageNum <= 3
@@ -1596,7 +1596,7 @@ func (c *CodePipeline) ListActionTypesWithContext(ctx aws.Context, input *ListAc
 //    // Example iterating over at most 3 pages of a ListActionTypes operation.
 //    pageNum := 0
 //    err := client.ListActionTypesPages(params,
-//        func(page *ListActionTypesOutput, lastPage bool) bool {
+//        func(page *codepipeline.ListActionTypesOutput, lastPage bool) bool {
 //            pageNum++
 //            fmt.Println(page)
 //            return pageNum <= 3
@@ -1738,7 +1738,7 @@ func (c *CodePipeline) ListPipelineExecutionsWithContext(ctx aws.Context, input 
 //    // Example iterating over at most 3 pages of a ListPipelineExecutions operation.
 //    pageNum := 0
 //    err := client.ListPipelineExecutionsPages(params,
-//        func(page *ListPipelineExecutionsOutput, lastPage bool) bool {
+//        func(page *codepipeline.ListPipelineExecutionsOutput, lastPage bool) bool {
 //            pageNum++
 //            fmt.Println(page)
 //            return pageNum <= 3
@@ -1877,7 +1877,7 @@ func (c *CodePipeline) ListPipelinesWithContext(ctx aws.Context, input *ListPipe
 //    // Example iterating over at most 3 pages of a ListPipelines operation.
 //    pageNum := 0
 //    err := client.ListPipelinesPages(params,
-//        func(page *ListPipelinesOutput, lastPage bool) bool {
+//        func(page *codepipeline.ListPipelinesOutput, lastPage bool) bool {
 //            pageNum++
 //            fmt.Println(page)
 //            return pageNum <= 3
@@ -2022,7 +2022,7 @@ func (c *CodePipeline) ListTagsForResourceWithContext(ctx aws.Context, input *Li
 //    // Example iterating over at most 3 pages of a ListTagsForResource operation.
 //    pageNum := 0
 //    err := client.ListTagsForResourcePages(params,
-//        func(page *ListTagsForResourceOutput, lastPage bool) bool {
+//        func(page *codepipeline.ListTagsForResourceOutput, lastPage bool) bool {
 //            pageNum++
 //            fmt.Println(page)
 //            return pageNum <= 3
@@ -2163,7 +2163,7 @@ func (c *CodePipeline) ListWebhooksWithContext(ctx aws.Context, input *ListWebho
 //    // Example iterating over at most 3 pages of a ListWebhooks operation.
 //    pageNum := 0
 //    err := client.ListWebhooksPages(params,
-//        func(page *ListWebhooksOutput, lastPage bool) bool {
+//        func(page *codepipeline.ListWebhooksOutput, lastPage bool) bool {
 //            pageNum++
 //            fmt.Println(page)
 //            return pageNum <= 3
@@ -10215,10 +10215,10 @@ type WebhookDefinition struct {
 	//    see Securing your webhooks (https://developer.github.com/webhooks/securing/)
 	//    on the GitHub Developer website.
 	//
-	//    *  IP will reject webhooks trigger requests unless they originate from
+	//    * IP will reject webhooks trigger requests unless they originate from
 	//    an IP within the IP range whitelisted in the authentication configuration.
 	//
-	//    *  UNAUTHENTICATED will accept all webhook trigger requests regardless
+	//    * UNAUTHENTICATED will accept all webhook trigger requests regardless
 	//    of origin.
 	//
 	// Authentication is a required field

@@ -2433,25 +2433,26 @@ resource "aws_db_instance" "s3" {
 func testAccAWSDBInstanceConfig_FinalSnapshotIdentifier(rInt int) string {
 	return fmt.Sprintf(`
 resource "aws_db_instance" "snapshot" {
-	identifier = "tf-snapshot-%d"
+  identifier = "tf-snapshot-%d"
 
-	allocated_storage = 5
-	engine = "mysql"
-	engine_version = "5.6.35"
-	instance_class = "db.t2.micro"
-	name = "baz"
-	password = "barbarbarbar"
-	publicly_accessible = true
-	username = "foo"
-	backup_retention_period = 1
+  allocated_storage       = 5
+  engine                  = "mysql"
+  engine_version          = "5.6.35"
+  instance_class          = "db.t2.micro"
+  name                    = "baz"
+  password                = "barbarbarbar"
+  publicly_accessible     = true
+  username                = "foo"
+  backup_retention_period = 1
 
-	parameter_group_name = "default.mysql5.6"
+  parameter_group_name = "default.mysql5.6"
 
-	copy_tags_to_snapshot = true
-	final_snapshot_identifier = "foobarbaz-test-terraform-final-snapshot-%d"
-	tags = {
-		Name = "tf-tags-db"
-	}
+  copy_tags_to_snapshot     = true
+  final_snapshot_identifier = "foobarbaz-test-terraform-final-snapshot-%d"
+
+  tags = {
+    Name = "tf-tags-db"
+  }
 }
 `, rInt, rInt)
 }
@@ -2822,6 +2823,7 @@ func testAccAWSDBMSSQL_timezone_AKST(rInt int) string {
 resource "aws_vpc" "foo" {
   cidr_block           = "10.1.0.0/16"
   enable_dns_hostnames = true
+
   tags = {
     Name = "terraform-testacc-db-instance-mssql-timezone-akst"
   }
@@ -2838,6 +2840,7 @@ resource "aws_subnet" "main" {
   vpc_id            = "${aws_vpc.foo.id}"
   availability_zone = "us-west-2a"
   cidr_block        = "10.1.1.0/24"
+
   tags = {
     Name = "tf-acc-db-instance-mssql-timezone-akst-main"
   }
@@ -2847,6 +2850,7 @@ resource "aws_subnet" "other" {
   vpc_id            = "${aws_vpc.foo.id}"
   availability_zone = "us-west-2b"
   cidr_block        = "10.1.2.0/24"
+
   tags = {
     Name = "tf-acc-db-instance-mssql-timezone-akst-other"
   }
@@ -2863,7 +2867,7 @@ resource "aws_db_instance" "mssql" {
   password                = "somecrazypassword"
   engine                  = "sqlserver-ex"
   backup_retention_period = 0
-  skip_final_snapshot = true
+  skip_final_snapshot     = true
 
   #publicly_accessible = true
 
@@ -2895,6 +2899,7 @@ func testAccAWSDBMSSQLDomain(rInt int) string {
 resource "aws_vpc" "foo" {
   cidr_block           = "10.1.0.0/16"
   enable_dns_hostnames = true
+
   tags = {
     Name = "terraform-testacc-db-instance-mssql-domain"
   }
@@ -2911,6 +2916,7 @@ resource "aws_subnet" "main" {
   vpc_id            = "${aws_vpc.foo.id}"
   availability_zone = "us-west-2a"
   cidr_block        = "10.1.1.0/24"
+
   tags = {
     Name = "tf-acc-db-instance-mssql-domain-main"
   }
@@ -2920,6 +2926,7 @@ resource "aws_subnet" "other" {
   vpc_id            = "${aws_vpc.foo.id}"
   availability_zone = "us-west-2b"
   cidr_block        = "10.1.2.0/24"
+
   tags = {
     Name = "tf-acc-db-instance-mssql-domain-other"
   }
@@ -2936,10 +2943,10 @@ resource "aws_db_instance" "mssql" {
   password                = "somecrazypassword"
   engine                  = "sqlserver-ex"
   backup_retention_period = 0
-  skip_final_snapshot = true
+  skip_final_snapshot     = true
 
-  domain                  = "${aws_directory_service_directory.foo.id}"
-  domain_iam_role_name    = "${aws_iam_role.role.name}"
+  domain               = "${aws_directory_service_directory.foo.id}"
+  domain_iam_role_name = "${aws_iam_role.role.name}"
 
   vpc_security_group_ids = ["${aws_security_group.rds-mssql.id}"]
 }
@@ -3017,6 +3024,7 @@ func testAccAWSDBMSSQLUpdateDomain(rInt int) string {
 resource "aws_vpc" "foo" {
   cidr_block           = "10.1.0.0/16"
   enable_dns_hostnames = true
+
   tags = {
     Name = "terraform-testacc-db-instance-mssql-domain"
   }
@@ -3033,6 +3041,7 @@ resource "aws_subnet" "main" {
   vpc_id            = "${aws_vpc.foo.id}"
   availability_zone = "us-west-2a"
   cidr_block        = "10.1.1.0/24"
+
   tags = {
     Name = "tf-acc-db-instance-mssql-domain-main"
   }
@@ -3042,6 +3051,7 @@ resource "aws_subnet" "other" {
   vpc_id            = "${aws_vpc.foo.id}"
   availability_zone = "us-west-2b"
   cidr_block        = "10.1.2.0/24"
+
   tags = {
     Name = "tf-acc-db-instance-mssql-domain-other"
   }
@@ -3058,11 +3068,11 @@ resource "aws_db_instance" "mssql" {
   password                = "somecrazypassword"
   engine                  = "sqlserver-ex"
   backup_retention_period = 0
-  skip_final_snapshot = true
+  skip_final_snapshot     = true
   apply_immediately       = true
 
-  domain                  = "${aws_directory_service_directory.bar.id}"
-  domain_iam_role_name    = "${aws_iam_role.role.name}"
+  domain               = "${aws_directory_service_directory.bar.id}"
+  domain_iam_role_name = "${aws_iam_role.role.name}"
 
   vpc_security_group_ids = ["${aws_security_group.rds-mssql.id}"]
 }
@@ -3140,6 +3150,7 @@ func testAccAWSDBMSSQLDomainSnapshotRestore(rInt int) string {
 resource "aws_vpc" "foo" {
   cidr_block           = "10.1.0.0/16"
   enable_dns_hostnames = true
+
   tags = {
     Name = "terraform-testacc-db-instance-mssql-domain"
   }
@@ -3156,6 +3167,7 @@ resource "aws_subnet" "main" {
   vpc_id            = "${aws_vpc.foo.id}"
   availability_zone = "us-west-2a"
   cidr_block        = "10.1.1.0/24"
+
   tags = {
     Name = "tf-acc-db-instance-mssql-domain-main"
   }
@@ -3165,6 +3177,7 @@ resource "aws_subnet" "other" {
   vpc_id            = "${aws_vpc.foo.id}"
   availability_zone = "us-west-2b"
   cidr_block        = "10.1.2.0/24"
+
   tags = {
     Name = "tf-acc-db-instance-mssql-domain-other"
   }
@@ -3186,9 +3199,9 @@ resource "aws_db_snapshot" "mssql-snap" {
 }
 
 resource "aws_db_instance" "mssql_restore" {
-  identifier              = "tf-test-mssql-%d-restore"
+  identifier = "tf-test-mssql-%d-restore"
 
-  db_subnet_group_name    = "${aws_db_subnet_group.rds_one.name}"
+  db_subnet_group_name = "${aws_db_subnet_group.rds_one.name}"
 
   instance_class          = "db.t2.micro"
   allocated_storage       = 20
@@ -3197,12 +3210,12 @@ resource "aws_db_instance" "mssql_restore" {
   engine                  = "sqlserver-ex"
   backup_retention_period = 0
   skip_final_snapshot     = true
-  snapshot_identifier = "${aws_db_snapshot.mssql-snap.id}"
+  snapshot_identifier     = "${aws_db_snapshot.mssql-snap.id}"
 
-  domain                  = "${aws_directory_service_directory.foo.id}"
-  domain_iam_role_name    = "${aws_iam_role.role.name}"
+  domain               = "${aws_directory_service_directory.foo.id}"
+  domain_iam_role_name = "${aws_iam_role.role.name}"
 
-  apply_immediately = true
+  apply_immediately      = true
   vpc_security_group_ids = ["${aws_security_group.rds-mssql.id}"]
 }
 
@@ -3267,6 +3280,7 @@ func testAccAWSDBMySQLSnapshotRestoreWithEngineVersion(rInt int) string {
 resource "aws_vpc" "foo" {
   cidr_block           = "10.1.0.0/16"
   enable_dns_hostnames = true
+
   tags = {
     Name = "terraform-testacc-db-instance-mysql-domain"
   }
@@ -3283,6 +3297,7 @@ resource "aws_subnet" "main" {
   vpc_id            = "${aws_vpc.foo.id}"
   availability_zone = "us-west-2a"
   cidr_block        = "10.1.1.0/24"
+
   tags = {
     Name = "tf-acc-db-instance-mysql-domain-main"
   }
@@ -3292,6 +3307,7 @@ resource "aws_subnet" "other" {
   vpc_id            = "${aws_vpc.foo.id}"
   availability_zone = "us-west-2b"
   cidr_block        = "10.1.2.0/24"
+
   tags = {
     Name = "tf-acc-db-instance-mysql-domain-other"
   }
@@ -3299,8 +3315,8 @@ resource "aws_subnet" "other" {
 
 resource "aws_db_instance" "mysql" {
   allocated_storage   = 20
-	engine              = "MySQL"
-	engine_version			= "5.6.35"
+  engine              = "MySQL"
+  engine_version      = "5.6.35"
   identifier          = "tf-test-mysql-%[1]d"
   instance_class      = "db.t2.micro"
   password            = "password"
@@ -3314,21 +3330,21 @@ resource "aws_db_snapshot" "mysql-snap" {
 }
 
 resource "aws_db_instance" "mysql_restore" {
-  identifier              = "tf-test-mysql-%[1]d-restore"
+  identifier = "tf-test-mysql-%[1]d-restore"
 
-  db_subnet_group_name    = "${aws_db_subnet_group.rds_one.name}"
+  db_subnet_group_name = "${aws_db_subnet_group.rds_one.name}"
 
   instance_class          = "db.t2.micro"
   allocated_storage       = 20
   username                = "root"
   password                = "password"
-	engine                  = "MySQL"
-	engine_version					= "5.6.41"
+  engine                  = "MySQL"
+  engine_version          = "5.6.41"
   backup_retention_period = 0
   skip_final_snapshot     = true
-  snapshot_identifier 		= "${aws_db_snapshot.mysql-snap.id}"
+  snapshot_identifier     = "${aws_db_snapshot.mysql-snap.id}"
 
-  apply_immediately = true
+  apply_immediately      = true
   vpc_security_group_ids = ["${aws_security_group.rds-mysql.id}"]
 }
 
@@ -3348,7 +3364,6 @@ resource "aws_security_group_rule" "rds-mysql-1" {
 
   security_group_id = "${aws_security_group.rds-mysql.id}"
 }
-
 `, rInt)
 }
 
@@ -3620,18 +3635,19 @@ resource "aws_db_instance" "bar" {
 func testAccAWSDBInstanceConfigSuppressInitialState(rInt int) string {
 	return fmt.Sprintf(`
 resource "aws_db_instance" "bar" {
-  identifier = "foobarbaz-test-terraform-%d"
-	allocated_storage = 10
-	engine = "MySQL"
-	instance_class = "db.t2.micro"
-	name = "baz"
-	password = "barbarbarbar"
-	username = "foo"
-	skip_final_snapshot = true
+  identifier          = "foobarbaz-test-terraform-%d"
+  allocated_storage   = 10
+  engine              = "MySQL"
+  instance_class      = "db.t2.micro"
+  name                = "baz"
+  password            = "barbarbarbar"
+  username            = "foo"
+  skip_final_snapshot = true
 }
 
 data "template_file" "test" {
   template = ""
+
   vars = {
     test_var = "${aws_db_instance.bar.engine_version}"
   }
@@ -3918,6 +3934,7 @@ data "aws_partition" "current" {}
 
 resource "aws_iam_role" "test" {
   name = %q
+
   assume_role_policy = <<EOF
 {
   "Version": "2012-10-17",
@@ -3992,7 +4009,7 @@ resource "aws_db_parameter_group" "test" {
   name   = %q
 
   parameter {
-    name = "sync_binlog"
+    name  = "sync_binlog"
     value = 0
   }
 }
@@ -4148,10 +4165,10 @@ resource "aws_db_instance" "test" {
   identifier          = %q
   instance_class      = "${aws_db_instance.source.instance_class}"
   snapshot_identifier = "${aws_db_snapshot.test.id}"
-	skip_final_snapshot = true
-	allocated_storage   = 200
+  skip_final_snapshot = true
+  allocated_storage   = 200
   iops                = %d
-	storage_type        = "io1"
+  storage_type        = "io1"
 }
 `, rName, rName, rName, iops)
 }
@@ -4387,6 +4404,7 @@ data "aws_partition" "current" {}
 
 resource "aws_iam_role" "test" {
   name = %q
+
   assume_role_policy = <<EOF
 {
   "Version": "2012-10-17",
@@ -4499,7 +4517,7 @@ resource "aws_db_parameter_group" "test" {
   name   = %q
 
   parameter {
-    name = "sync_binlog"
+    name  = "sync_binlog"
     value = 0
   }
 }
@@ -4698,8 +4716,9 @@ resource "aws_db_instance" "test" {
 func testAccAWSDBInstancePerformanceInsightsDisabled(n int) string {
 	return fmt.Sprintf(`
 resource "aws_kms_key" "foo" {
-    description = "Terraform acc test %d"
-    policy = <<POLICY
+  description = "Terraform acc test %d"
+
+  policy = <<POLICY
 {
   "Version": "2012-10-17",
   "Id": "kms-tf-1",
@@ -4719,15 +4738,15 @@ POLICY
 }
 
 resource "aws_db_instance" "bar" {
-  engine                                = "mysql"
-  identifier                            = "tf-db-test-%d"
-  instance_class                        = "db.m3.medium"
-  allocated_storage                     = 5
-  backup_retention_period               = 0
-  name                                  = "mydb"
-  username                              = "foo"
-  password                              = "mustbeeightcharaters"
-  skip_final_snapshot                   = true
+  engine                  = "mysql"
+  identifier              = "tf-db-test-%d"
+  instance_class          = "db.m3.medium"
+  allocated_storage       = 5
+  backup_retention_period = 0
+  name                    = "mydb"
+  username                = "foo"
+  password                = "mustbeeightcharaters"
+  skip_final_snapshot     = true
 }
 `, n, n)
 }
@@ -4735,8 +4754,9 @@ resource "aws_db_instance" "bar" {
 func testAccAWSDBInstancePerformanceInsightsEnabled(n int, piRetentionPeriod int) string {
 	return fmt.Sprintf(`
 resource "aws_kms_key" "foo" {
-    description = "Terraform acc test %d"
-    policy = <<POLICY
+  description = "Terraform acc test %d"
+
+  policy = <<POLICY
 {
   "Version": "2012-10-17",
   "Id": "kms-tf-1",
@@ -4777,7 +4797,8 @@ func testAccAWSDBInstanceConfig_ReplicateSourceDb_PerformanceInsightsEnabled(rNa
 	return fmt.Sprintf(`
 resource "aws_kms_key" "test" {
   description = "Terraform acc test"
-  policy      = <<POLICY
+
+  policy = <<POLICY
 {
   "Version": "2012-10-17",
   "Id": "kms-tf-1",
@@ -4824,7 +4845,8 @@ func testAccAWSDBInstanceConfig_SnapshotIdentifier_PerformanceInsightsEnabled(rN
 	return fmt.Sprintf(`
 resource "aws_kms_key" "test" {
   description = "Terraform acc test"
-  policy      = <<POLICY
+
+  policy = <<POLICY
 {
   "Version": "2012-10-17",
   "Id": "kms-tf-1",

@@ -345,34 +345,39 @@ resource "aws_opsworks_custom_layer" "tf-acc" {
 func testAccAwsOpsworksCustomLayerConfigVpcCreate(name string) string {
 	return fmt.Sprintf(`
 provider "aws" {
-	region = "us-west-2"
+  region = "us-west-2"
 }
 
 resource "aws_opsworks_custom_layer" "tf-acc" {
-  stack_id = "${aws_opsworks_stack.tf-acc.id}"
-  name = "%s"
-  short_name = "tf-ops-acc-custom-layer"
+  stack_id               = "${aws_opsworks_stack.tf-acc.id}"
+  name                   = "%s"
+  short_name             = "tf-ops-acc-custom-layer"
   auto_assign_public_ips = false
+
   custom_security_group_ids = [
     "${aws_security_group.tf-ops-acc-layer1.id}",
     "${aws_security_group.tf-ops-acc-layer2.id}",
   ]
-  drain_elb_on_shutdown = true
+
+  drain_elb_on_shutdown     = true
   instance_shutdown_timeout = 300
+
   system_packages = [
     "git",
     "golang",
   ]
+
   ebs_volume {
-    type = "gp2"
+    type            = "gp2"
     number_of_disks = 2
-    mount_point = "/home"
-    size = 100
-    raid_level = 0
+    mount_point     = "/home"
+    size            = 100
+    raid_level      = 0
   }
 }
 
 %s
+
 
 %s
 

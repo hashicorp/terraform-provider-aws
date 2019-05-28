@@ -2312,7 +2312,7 @@ func (c *SSM) DescribeActivationsWithContext(ctx aws.Context, input *DescribeAct
 //    // Example iterating over at most 3 pages of a DescribeActivations operation.
 //    pageNum := 0
 //    err := client.DescribeActivationsPages(params,
-//        func(page *DescribeActivationsOutput, lastPage bool) bool {
+//        func(page *ssm.DescribeActivationsOutput, lastPage bool) bool {
 //            pageNum++
 //            fmt.Println(page)
 //            return pageNum <= 3
@@ -3487,7 +3487,7 @@ func (c *SSM) DescribeInstanceInformationWithContext(ctx aws.Context, input *Des
 //    // Example iterating over at most 3 pages of a DescribeInstanceInformation operation.
 //    pageNum := 0
 //    err := client.DescribeInstanceInformationPages(params,
-//        func(page *DescribeInstanceInformationOutput, lastPage bool) bool {
+//        func(page *ssm.DescribeInstanceInformationOutput, lastPage bool) bool {
 //            pageNum++
 //            fmt.Println(page)
 //            return pageNum <= 3
@@ -4671,7 +4671,7 @@ func (c *SSM) DescribeParametersWithContext(ctx aws.Context, input *DescribePara
 //    // Example iterating over at most 3 pages of a DescribeParameters operation.
 //    pageNum := 0
 //    err := client.DescribeParametersPages(params,
-//        func(page *DescribeParametersOutput, lastPage bool) bool {
+//        func(page *ssm.DescribeParametersOutput, lastPage bool) bool {
 //            pageNum++
 //            fmt.Println(page)
 //            return pageNum <= 3
@@ -5003,19 +5003,33 @@ func (c *SSM) DescribePatchPropertiesRequest(input *DescribePatchPropertiesInput
 // The following section lists the properties that can be used in filters for
 // each major operating system type:
 //
-// WINDOWSValid properties: PRODUCT, PRODUCT_FAMILY, CLASSIFICATION, MSRC_SEVERITY
+// WINDOWS
 //
-// AMAZON_LINUXValid properties: PRODUCT, CLASSIFICATION, SEVERITY
+// Valid properties: PRODUCT, PRODUCT_FAMILY, CLASSIFICATION, MSRC_SEVERITY
 //
-// AMAZON_LINUX_2Valid properties: PRODUCT, CLASSIFICATION, SEVERITY
+// AMAZON_LINUX
 //
-// UBUNTU Valid properties: PRODUCT, PRIORITY
+// Valid properties: PRODUCT, CLASSIFICATION, SEVERITY
 //
-// REDHAT_ENTERPRISE_LINUXValid properties: PRODUCT, CLASSIFICATION, SEVERITY
+// AMAZON_LINUX_2
 //
-// SUSEValid properties: PRODUCT, CLASSIFICATION, SEVERITY
+// Valid properties: PRODUCT, CLASSIFICATION, SEVERITY
 //
-// CENTOSValid properties: PRODUCT, CLASSIFICATION, SEVERITY
+// UBUNTU
+//
+// Valid properties: PRODUCT, PRIORITY
+//
+// REDHAT_ENTERPRISE_LINUX
+//
+// Valid properties: PRODUCT, CLASSIFICATION, SEVERITY
+//
+// SUSE
+//
+// Valid properties: PRODUCT, CLASSIFICATION, SEVERITY
+//
+// CENTOS
+//
+// Valid properties: PRODUCT, CLASSIFICATION, SEVERITY
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -6472,7 +6486,7 @@ func (c *SSM) GetParameterHistoryWithContext(ctx aws.Context, input *GetParamete
 //    // Example iterating over at most 3 pages of a GetParameterHistory operation.
 //    pageNum := 0
 //    err := client.GetParameterHistoryPages(params,
-//        func(page *GetParameterHistoryOutput, lastPage bool) bool {
+//        func(page *ssm.GetParameterHistoryOutput, lastPage bool) bool {
 //            pageNum++
 //            fmt.Println(page)
 //            return pageNum <= 3
@@ -6718,7 +6732,7 @@ func (c *SSM) GetParametersByPathWithContext(ctx aws.Context, input *GetParamete
 //    // Example iterating over at most 3 pages of a GetParametersByPath operation.
 //    pageNum := 0
 //    err := client.GetParametersByPathPages(params,
-//        func(page *GetParametersByPathOutput, lastPage bool) bool {
+//        func(page *ssm.GetParametersByPathOutput, lastPage bool) bool {
 //            pageNum++
 //            fmt.Println(page)
 //            return pageNum <= 3
@@ -7329,7 +7343,7 @@ func (c *SSM) ListAssociationsWithContext(ctx aws.Context, input *ListAssociatio
 //    // Example iterating over at most 3 pages of a ListAssociations operation.
 //    pageNum := 0
 //    err := client.ListAssociationsPages(params,
-//        func(page *ListAssociationsOutput, lastPage bool) bool {
+//        func(page *ssm.ListAssociationsOutput, lastPage bool) bool {
 //            pageNum++
 //            fmt.Println(page)
 //            return pageNum <= 3
@@ -7491,7 +7505,7 @@ func (c *SSM) ListCommandInvocationsWithContext(ctx aws.Context, input *ListComm
 //    // Example iterating over at most 3 pages of a ListCommandInvocations operation.
 //    pageNum := 0
 //    err := client.ListCommandInvocationsPages(params,
-//        func(page *ListCommandInvocationsOutput, lastPage bool) bool {
+//        func(page *ssm.ListCommandInvocationsOutput, lastPage bool) bool {
 //            pageNum++
 //            fmt.Println(page)
 //            return pageNum <= 3
@@ -7649,7 +7663,7 @@ func (c *SSM) ListCommandsWithContext(ctx aws.Context, input *ListCommandsInput,
 //    // Example iterating over at most 3 pages of a ListCommands operation.
 //    pageNum := 0
 //    err := client.ListCommandsPages(params,
-//        func(page *ListCommandsOutput, lastPage bool) bool {
+//        func(page *ssm.ListCommandsOutput, lastPage bool) bool {
 //            pageNum++
 //            fmt.Println(page)
 //            return pageNum <= 3
@@ -8060,7 +8074,7 @@ func (c *SSM) ListDocumentsWithContext(ctx aws.Context, input *ListDocumentsInpu
 //    // Example iterating over at most 3 pages of a ListDocuments operation.
 //    pageNum := 0
 //    err := client.ListDocumentsPages(params,
-//        func(page *ListDocumentsOutput, lastPage bool) bool {
+//        func(page *ssm.ListDocumentsOutput, lastPage bool) bool {
 //            pageNum++
 //            fmt.Println(page)
 //            return pageNum <= 3
@@ -10102,8 +10116,7 @@ func (c *SSM) StartSessionRequest(input *StartSessionInput) (req *request.Reques
 //
 // AWS CLI usage: start-session is an interactive command that requires the
 // Session Manager plugin to be installed on the client machine making the call.
-// For information, see  Install the Session Manager Plugin for the AWS CLI
-// (http://docs.aws.amazon.com/systems-manager/latest/userguide/session-manager-working-with-install-plugin.html)
+// For information, see Install the Session Manager Plugin for the AWS CLI (http://docs.aws.amazon.com/systems-manager/latest/userguide/session-manager-working-with-install-plugin.html)
 // in the AWS Systems Manager User Guide.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
@@ -13660,33 +13673,17 @@ type CommandFilter struct {
 	//    before July 7, 2018.
 	//
 	//    * Status: Specify a valid command status to see a list of all command
-	//    executions with that status. Status values you can specify include:
-	//
-	// Pending
-	//
-	// InProgress
-	//
-	// Success
-	//
-	// Cancelled
-	//
-	// Failed
-	//
-	// TimedOut
-	//
-	// Cancelling
+	//    executions with that status. Status values you can specify include: Pending
+	//    InProgress Success Cancelled Failed TimedOut Cancelling
 	//
 	//    * DocumentName: Specify name of the SSM document for which you want to
 	//    see command execution results. For example, specify AWS-RunPatchBaseline
 	//    to see command executions that used this SSM document to perform security
 	//    patching operations on instances.
 	//
-	//    * ExecutionStage: Specify one of the following values:
-	//
-	// Executing: Returns a list of command executions that are currently still
-	//    running.
-	//
-	// Complete: Returns a list of command executions that have already completed.
+	//    * ExecutionStage: Specify one of the following values: Executing: Returns
+	//    a list of command executions that are currently still running. Complete:
+	//    Returns a list of command executions that have already completed.
 	//
 	// Value is a required field
 	Value *string `locationName:"value" min:"1" type:"string" required:"true"`
@@ -15232,11 +15229,11 @@ type CreateDocumentInput struct {
 	// Do not use the following to begin the names of documents you create. They
 	// are reserved by AWS for use as document prefixes:
 	//
-	// aws
+	//    * aws
 	//
-	// amazon
+	//    * amazon
 	//
-	// amzn
+	//    * amzn
 	//
 	// Name is a required field
 	Name *string `type:"string" required:"true"`
@@ -30454,7 +30451,7 @@ type RegisterTaskWithMaintenanceWindowInput struct {
 	// For more information, see Service-Linked Role Permissions for Systems Manager
 	// (http://docs.aws.amazon.com/systems-manager/latest/userguide/using-service-linked-roles.html#slr-permissions)
 	// and Should I Use a Service-Linked Role or a Custom Service Role to Run Maintenance
-	// Window Tasks?  (http://docs.aws.amazon.com/systems-manager/latest/userguide/sysman-maintenance-permissions.html#maintenance-window-tasks-service-role)
+	// Window Tasks? (http://docs.aws.amazon.com/systems-manager/latest/userguide/sysman-maintenance-permissions.html#maintenance-window-tasks-service-role)
 	// in the AWS Systems Manager User Guide.
 	ServiceRoleArn *string `type:"string"`
 
@@ -31986,19 +31983,8 @@ type SessionFilter struct {
 	//    by that user.
 	//
 	//    * Status: Specify a valid session status to see a list of all sessions
-	//    with that status. Status values you can specify include:
-	//
-	// Connected
-	//
-	// Connecting
-	//
-	// Disconnected
-	//
-	// Terminated
-	//
-	// Terminating
-	//
-	// Failed
+	//    with that status. Status values you can specify include: Connected Connecting
+	//    Disconnected Terminated Terminating Failed
 	//
 	// Value is a required field
 	Value *string `locationName:"value" min:"1" type:"string" required:"true"`
@@ -34229,7 +34215,7 @@ type UpdateMaintenanceWindowTaskInput struct {
 	// For more information, see Service-Linked Role Permissions for Systems Manager
 	// (http://docs.aws.amazon.com/systems-manager/latest/userguide/using-service-linked-roles.html#slr-permissions)
 	// and Should I Use a Service-Linked Role or a Custom Service Role to Run Maintenance
-	// Window Tasks?  (http://docs.aws.amazon.com/systems-manager/latest/userguide/sysman-maintenance-permissions.html#maintenance-window-tasks-service-role)
+	// Window Tasks? (http://docs.aws.amazon.com/systems-manager/latest/userguide/sysman-maintenance-permissions.html#maintenance-window-tasks-service-role)
 	// in the AWS Systems Manager User Guide.
 	ServiceRoleArn *string `type:"string"`
 

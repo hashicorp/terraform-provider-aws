@@ -773,10 +773,10 @@ resource "aws_launch_template" "test" {
 # ValidationError: You must use a valid fully-formed launch template. the encrypted flag cannot be specified since device /dev/sda1 has a snapshot specified.
 resource "aws_autoscaling_group" "test" {
   availability_zones = ["${data.aws_availability_zones.available.names[0]}"]
-  desired_capacity = 0
-  max_size         = 0
-  min_size         = 0
-  name             = %q
+  desired_capacity   = 0
+  max_size           = 0
+  min_size           = 0
+  name               = %q
 
   launch_template {
     id      = "${aws_launch_template.test.id}"
@@ -824,10 +824,10 @@ resource "aws_launch_template" "test" {
 # ValidationError: You must use a valid fully-formed launch template. the encrypted flag cannot be specified since device /dev/sda1 has a snapshot specified.
 resource "aws_autoscaling_group" "test" {
   availability_zones = ["${data.aws_availability_zones.available.names[0]}"]
-  desired_capacity = 0
-  max_size         = 0
-  min_size         = 0
-  name             = %q
+  desired_capacity   = 0
+  max_size           = 0
+  min_size           = 0
+  name               = %q
 
   launch_template {
     id      = "${aws_launch_template.test.id}"
@@ -899,7 +899,7 @@ resource "aws_launch_template" "foo" {
 
   network_interfaces {
     network_interface_id = "eni-123456ab"
-    security_groups = ["sg-1a23bc45"]
+    security_groups      = ["sg-1a23bc45"]
   }
 
   placement {
@@ -912,7 +912,8 @@ resource "aws_launch_template" "foo" {
 
   tag_specifications {
     resource_type = "instance"
-  tags = {
+
+    tags = {
       Name = "test"
     }
   }
@@ -937,9 +938,9 @@ func testAccAWSLaunchTemplateConfig_capacityReservation_preference(rInt int, pre
 resource "aws_launch_template" "foo" {
   name = "foo_%d"
 
-	capacity_reservation_specification {
-		capacity_reservation_preference = %q
-	}
+  capacity_reservation_specification {
+    capacity_reservation_preference = %q
+  }
 }
 `, rInt, preference)
 }
@@ -949,20 +950,20 @@ func testAccAWSLaunchTemplateConfig_capacityReservation_target(rInt int) string 
 data "aws_availability_zones" "available" {}
 
 resource "aws_ec2_capacity_reservation" "test" {
-	availability_zone = "${data.aws_availability_zones.available.names[0]}"
-	instance_count    = 1
-	instance_platform = "Linux/UNIX"
-	instance_type     = "t2.micro"
+  availability_zone = "${data.aws_availability_zones.available.names[0]}"
+  instance_count    = 1
+  instance_platform = "Linux/UNIX"
+  instance_type     = "t2.micro"
 }
 
 resource "aws_launch_template" "foo" {
   name = "foo_%d"
 
-	capacity_reservation_specification {
-		capacity_reservation_target {
-			capacity_reservation_id = "${aws_ec2_capacity_reservation.test.id}"
-		}
-	}
+  capacity_reservation_specification {
+    capacity_reservation_target {
+      capacity_reservation_id = "${aws_ec2_capacity_reservation.test.id}"
+    }
+  }
 }
 `, rInt)
 }
@@ -1000,9 +1001,9 @@ resource "aws_licensemanager_license_configuration" "example" {
 resource "aws_launch_template" "example" {
   name = "foo_%d"
 
-	license_specification {
-		license_configuration_arn = "${aws_licensemanager_license_configuration.example.id}"
-	}
+  license_specification {
+    license_configuration_arn = "${aws_licensemanager_license_configuration.example.id}"
+  }
 }
 `, rInt)
 }
@@ -1010,8 +1011,8 @@ resource "aws_launch_template" "example" {
 func testAccAWSLaunchTemplateConfig_description(rName, description string) string {
 	return fmt.Sprintf(`
 resource "aws_launch_template" "foo" {
-	name 				= "%s"
-	description = "%s"
+  name        = "%s"
+  description = "%s"
 }
 `, rName, description)
 }

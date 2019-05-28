@@ -56,8 +56,29 @@ resource "aws_instance" "app" {
 
 * `vpc_id` - (Required) The VPC ID that you want to filter from.
 
+* `filter` - (Optional) Custom filter block as described below.
+
 * `tags` - (Optional) A mapping of tags, each pair of which must exactly match
   a pair on the desired subnets.
+
+More complex filters can be expressed using one or more `filter` sub-blocks,
+which take the following arguments:
+
+* `name` - (Required) The name of the field to filter by, as defined by
+  [the underlying AWS API](http://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_DescribeSubnets.html).
+  For example, if matching against tag `Name`, use:
+
+```hcl
+data "aws_subnet_ids" "selected" {
+  filter {
+    name   = "tag:Name"
+    values = [""]       # insert values here
+  }
+}
+```
+
+* `values` - (Required) Set of values that are accepted for the given field.
+  Subnet IDs will be selected if any one of the given values match.
 
 ## Attributes Reference
 

@@ -160,9 +160,9 @@ func testAccCheckSesTemplateDestroy(s *terraform.State) error {
 func testAccCheckAwsSesTemplateResourceConfigBasic1(name string) string {
 	return fmt.Sprintf(`
 resource "aws_ses_template" "test" {
-  name = "%s"
+  name    = "%s"
   subject = "subject"
-  html = "html"
+  html    = "html"
 }
 `, name)
 }
@@ -170,10 +170,10 @@ resource "aws_ses_template" "test" {
 func testAccCheckAwsSesTemplateResourceConfigBasic2(name string) string {
 	return fmt.Sprintf(`
 resource "aws_ses_template" "test" {
-  name = "%s"
+  name    = "%s"
   subject = "subject"
-  html = "html"
-  text = "text"
+  html    = "html"
+  text    = "text"
 }
 `, name)
 }
@@ -181,9 +181,9 @@ resource "aws_ses_template" "test" {
 func testAccCheckAwsSesTemplateResourceConfigBasic3(name string) string {
 	return fmt.Sprintf(`
 resource "aws_ses_template" "test" {
-  name = "%s"
+  name    = "%s"
   subject = "subject"
-  html = "html update"
+  html    = "html update"
 }
 `, name)
 }

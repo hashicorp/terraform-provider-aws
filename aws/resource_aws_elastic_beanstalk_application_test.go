@@ -380,11 +380,11 @@ resource "aws_elastic_beanstalk_application" "tftest" {
 func testAccBeanstalkAppConfigWithTags(rName, tag1, tag2 string) string {
 	return fmt.Sprintf(`
 resource "aws_elastic_beanstalk_application" "tftest" {
-  name = "%s"
-	description = "tf-test-desc"
-	
+  name        = "%s"
+  description = "tf-test-desc"
+
   tags = {
-    firstTag = "%s"
+    firstTag  = "%s"
     secondTag = "%s"
   }
 }
@@ -394,13 +394,13 @@ resource "aws_elastic_beanstalk_application" "tftest" {
 func testAccBeanstalkAppConfigWithAddTags(rName, tag1, tag2, tag3 string) string {
 	return fmt.Sprintf(`
 resource "aws_elastic_beanstalk_application" "tftest" {
-  name = "%s"
-	description = "tf-test-desc"
-	
+  name        = "%s"
+  description = "tf-test-desc"
+
   tags = {
-    firstTag = "%s"
-		secondTag = "%s"
-		thirdTag  = "%s"
+    firstTag  = "%s"
+    secondTag = "%s"
+    thirdTag  = "%s"
   }
 }
 `, rName, tag1, tag2, tag3)

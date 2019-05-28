@@ -132,6 +132,7 @@ func testAccAWSLightsailDomainConfig_basic(lightsailDomainName string) string {
 provider "aws" {
   region = "us-east-1"
 }
+
 resource "aws_lightsail_domain" "domain_test" {
   domain_name = "%s"
 }

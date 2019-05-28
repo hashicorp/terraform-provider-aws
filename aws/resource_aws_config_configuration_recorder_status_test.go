@@ -171,13 +171,14 @@ func testAccCheckConfigConfigurationRecorderStatusDestroy(s *terraform.State) er
 func testAccConfigConfigurationRecorderStatusConfig(randInt int, enabled bool) string {
 	return fmt.Sprintf(`
 resource "aws_config_configuration_recorder" "foo" {
-  name = "tf-acc-test-%d"
+  name     = "tf-acc-test-%d"
   role_arn = "${aws_iam_role.r.arn}"
 }
 
 resource "aws_iam_role" "r" {
-    name = "tf-acc-test-awsconfig-%d"
-    assume_role_policy = <<POLICY
+  name = "tf-acc-test-awsconfig-%d"
+
+  assume_role_policy = <<POLICY
 {
   "Version": "2012-10-17",
   "Statement": [
@@ -195,9 +196,10 @@ POLICY
 }
 
 resource "aws_iam_role_policy" "p" {
-    name = "tf-acc-test-awsconfig-%d"
-    role = "${aws_iam_role.r.id}"
-    policy = <<EOF
+  name = "tf-acc-test-awsconfig-%d"
+  role = "${aws_iam_role.r.id}"
+
+  policy = <<EOF
 {
   "Version": "2012-10-17",
   "Statement": [
@@ -217,17 +219,17 @@ EOF
 }
 
 resource "aws_s3_bucket" "b" {
-  bucket = "tf-acc-test-awsconfig-%d"
+  bucket        = "tf-acc-test-awsconfig-%d"
   force_destroy = true
 }
 
 resource "aws_config_delivery_channel" "foo" {
-  name = "tf-acc-test-awsconfig-%d"
+  name           = "tf-acc-test-awsconfig-%d"
   s3_bucket_name = "${aws_s3_bucket.b.bucket}"
 }
 
 resource "aws_config_configuration_recorder_status" "foo" {
-  name = "${aws_config_configuration_recorder.foo.name}"
+  name       = "${aws_config_configuration_recorder.foo.name}"
   is_enabled = %t
   depends_on = ["aws_config_delivery_channel.foo"]
 }

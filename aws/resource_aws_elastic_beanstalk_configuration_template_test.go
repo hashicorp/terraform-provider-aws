@@ -219,7 +219,6 @@ resource "aws_elastic_beanstalk_configuration_template" "tf_template" {
     name      = "InstanceType"
     value     = "m1.small"
   }
-
 }
 `, name, name)
 }

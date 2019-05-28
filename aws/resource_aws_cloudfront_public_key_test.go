@@ -131,10 +131,10 @@ func testAccCheckCloudFrontPublicKeyDestroy(s *terraform.State) error {
 
 func testAccAWSCloudFrontPublicKeyConfig(rInt int) string {
 	return fmt.Sprintf(`
-  resource "aws_cloudfront_public_key" "example" {
-  comment = "test key"
+resource "aws_cloudfront_public_key" "example" {
+  comment     = "test key"
   encoded_key = "${file("test-fixtures/cloudfront-public-key.pem")}"
-  name = "tf-acc-test-%d"
+  name        = "tf-acc-test-%d"
 }
 `, rInt)
 }

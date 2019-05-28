@@ -1071,7 +1071,7 @@ func (c *S3) DeleteBucketReplicationRequest(input *DeleteBucketReplicationInput)
 // DeleteBucketReplication API operation for Amazon Simple Storage Service.
 //
 // Deletes the replication configuration from the bucket. For information about
-// replication configuration, see Cross-Region Replication (CRR) ( https://docs.aws.amazon.com/AmazonS3/latest/dev/crr.html)
+// replication configuration, see Cross-Region Replication (CRR) (https://docs.aws.amazon.com/AmazonS3/latest/dev/crr.html)
 // in the Amazon S3 Developer Guide.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
@@ -4210,7 +4210,7 @@ func (c *S3) ListMultipartUploadsWithContext(ctx aws.Context, input *ListMultipa
 //    // Example iterating over at most 3 pages of a ListMultipartUploads operation.
 //    pageNum := 0
 //    err := client.ListMultipartUploadsPages(params,
-//        func(page *ListMultipartUploadsOutput, lastPage bool) bool {
+//        func(page *s3.ListMultipartUploadsOutput, lastPage bool) bool {
 //            pageNum++
 //            fmt.Println(page)
 //            return pageNum <= 3
@@ -4340,7 +4340,7 @@ func (c *S3) ListObjectVersionsWithContext(ctx aws.Context, input *ListObjectVer
 //    // Example iterating over at most 3 pages of a ListObjectVersions operation.
 //    pageNum := 0
 //    err := client.ListObjectVersionsPages(params,
-//        func(page *ListObjectVersionsOutput, lastPage bool) bool {
+//        func(page *s3.ListObjectVersionsOutput, lastPage bool) bool {
 //            pageNum++
 //            fmt.Println(page)
 //            return pageNum <= 3
@@ -4477,7 +4477,7 @@ func (c *S3) ListObjectsWithContext(ctx aws.Context, input *ListObjectsInput, op
 //    // Example iterating over at most 3 pages of a ListObjects operation.
 //    pageNum := 0
 //    err := client.ListObjectsPages(params,
-//        func(page *ListObjectsOutput, lastPage bool) bool {
+//        func(page *s3.ListObjectsOutput, lastPage bool) bool {
 //            pageNum++
 //            fmt.Println(page)
 //            return pageNum <= 3
@@ -4615,7 +4615,7 @@ func (c *S3) ListObjectsV2WithContext(ctx aws.Context, input *ListObjectsV2Input
 //    // Example iterating over at most 3 pages of a ListObjectsV2 operation.
 //    pageNum := 0
 //    err := client.ListObjectsV2Pages(params,
-//        func(page *ListObjectsV2Output, lastPage bool) bool {
+//        func(page *s3.ListObjectsV2Output, lastPage bool) bool {
 //            pageNum++
 //            fmt.Println(page)
 //            return pageNum <= 3
@@ -4745,7 +4745,7 @@ func (c *S3) ListPartsWithContext(ctx aws.Context, input *ListPartsInput, opts .
 //    // Example iterating over at most 3 pages of a ListParts operation.
 //    pageNum := 0
 //    err := client.ListPartsPages(params,
-//        func(page *ListPartsOutput, lastPage bool) bool {
+//        func(page *s3.ListPartsOutput, lastPage bool) bool {
 //            pageNum++
 //            fmt.Println(page)
 //            return pageNum <= 3
@@ -5831,7 +5831,7 @@ func (c *S3) PutBucketReplicationRequest(input *PutBucketReplicationInput) (req 
 // PutBucketReplication API operation for Amazon Simple Storage Service.
 //
 // Creates a replication configuration or replaces an existing one. For more
-// information, see Cross-Region Replication (CRR) ( https://docs.aws.amazon.com/AmazonS3/latest/dev/crr.html)
+// information, see Cross-Region Replication (CRR) (https://docs.aws.amazon.com/AmazonS3/latest/dev/crr.html)
 // in the Amazon S3 Developer Guide.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
@@ -21530,7 +21530,7 @@ type ReplicationRule struct {
 	//    * Same object qualify tag based filter criteria specified in multiple
 	//    rules
 	//
-	// For more information, see Cross-Region Replication (CRR) ( https://docs.aws.amazon.com/AmazonS3/latest/dev/crr.html)
+	// For more information, see Cross-Region Replication (CRR) (https://docs.aws.amazon.com/AmazonS3/latest/dev/crr.html)
 	// in the Amazon S3 Developer Guide.
 	Priority *int64 `type:"integer"`
 
@@ -22545,15 +22545,15 @@ type SelectObjectContentInput struct {
 	// Specifies if periodic request progress information should be enabled.
 	RequestProgress *RequestProgress `type:"structure"`
 
-	// The SSE Algorithm used to encrypt the object. For more information, see
-	// Server-Side Encryption (Using Customer-Provided Encryption Keys (https://docs.aws.amazon.com/AmazonS3/latest/dev/ServerSideEncryptionCustomerKeys.html).
+	// The SSE Algorithm used to encrypt the object. For more information, see Server-Side
+	// Encryption (Using Customer-Provided Encryption Keys (https://docs.aws.amazon.com/AmazonS3/latest/dev/ServerSideEncryptionCustomerKeys.html).
 	SSECustomerAlgorithm *string `location:"header" locationName:"x-amz-server-side-encryption-customer-algorithm" type:"string"`
 
-	// The SSE Customer Key. For more information, see  Server-Side Encryption (Using
+	// The SSE Customer Key. For more information, see Server-Side Encryption (Using
 	// Customer-Provided Encryption Keys (https://docs.aws.amazon.com/AmazonS3/latest/dev/ServerSideEncryptionCustomerKeys.html).
 	SSECustomerKey *string `marshal-as:"blob" location:"header" locationName:"x-amz-server-side-encryption-customer-key" type:"string" sensitive:"true"`
 
-	// The SSE Customer Key MD5. For more information, see  Server-Side Encryption
+	// The SSE Customer Key MD5. For more information, see Server-Side Encryption
 	// (Using Customer-Provided Encryption Keys (https://docs.aws.amazon.com/AmazonS3/latest/dev/ServerSideEncryptionCustomerKeys.html).
 	SSECustomerKeyMD5 *string `location:"header" locationName:"x-amz-server-side-encryption-customer-key-MD5" type:"string"`
 }

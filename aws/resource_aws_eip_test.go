@@ -561,8 +561,8 @@ resource "aws_eip" "bar" {
 func testAccAWSEIPConfig_PublicIpv4Pool_custom(poolName string) string {
 	return fmt.Sprintf(`
 resource "aws_eip" "bar" {
-   vpc = true
-   public_ipv4_pool = "%s"
+  vpc              = true
+  public_ipv4_pool = "%s"
 }
 `, poolName)
 }

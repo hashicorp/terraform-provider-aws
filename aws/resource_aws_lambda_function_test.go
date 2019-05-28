@@ -2129,13 +2129,14 @@ resource "aws_s3_bucket" "lambda_bucket" {
 
 resource "aws_s3_bucket_object" "lambda_code" {
   bucket = "${aws_s3_bucket.lambda_bucket.id}"
-  key = "lambdatest.zip"
+  key    = "lambdatest.zip"
   source = "test-fixtures/lambdatest.zip"
 }
 
 resource "aws_iam_role" "iam_for_lambda" {
-    name = "%s"
-    assume_role_policy = <<EOF
+  name = "%s"
+
+  assume_role_policy = <<EOF
 {
   "Version": "2012-10-17",
   "Statement": [
@@ -2153,12 +2154,12 @@ EOF
 }
 
 resource "aws_lambda_function" "lambda_function_s3test" {
-    s3_bucket = "${aws_s3_bucket.lambda_bucket.id}"
-    s3_key = "${aws_s3_bucket_object.lambda_code.id}"
-    function_name = "%s"
-    role = "${aws_iam_role.iam_for_lambda.arn}"
-    handler = "exports.example"
-    runtime = "nodejs8.10"
+  s3_bucket     = "${aws_s3_bucket.lambda_bucket.id}"
+  s3_key        = "${aws_s3_bucket_object.lambda_code.id}"
+  function_name = "%s"
+  role          = "${aws_iam_role.iam_for_lambda.arn}"
+  handler       = "exports.example"
+  runtime       = "nodejs8.10"
 }
 `, bucketName, roleName, funcName)
 }
@@ -2306,8 +2307,9 @@ resource "aws_lambda_function" "lambda_function_test" {
 func genAWSLambdaFunctionConfig_local(filePath, roleName, funcName string) string {
 	return fmt.Sprintf(`
 resource "aws_iam_role" "iam_for_lambda" {
-    name = "%s"
-    assume_role_policy = <<EOF
+  name = "%s"
+
+  assume_role_policy = <<EOF
 {
   "Version": "2012-10-17",
   "Statement": [
@@ -2323,13 +2325,14 @@ resource "aws_iam_role" "iam_for_lambda" {
 }
 EOF
 }
+
 resource "aws_lambda_function" "lambda_function_local" {
-    filename = "%s"
-    source_code_hash = "${filebase64sha256("%s")}"
-    function_name = "%s"
-    role = "${aws_iam_role.iam_for_lambda.arn}"
-    handler = "exports.example"
-    runtime = "nodejs8.10"
+  filename         = "%s"
+  source_code_hash = "${filebase64sha256("%s")}"
+  function_name    = "%s"
+  role             = "${aws_iam_role.iam_for_lambda.arn}"
+  handler          = "exports.example"
+  runtime          = "nodejs8.10"
 }
 
 data "template_file" "last_modified" {
@@ -2339,7 +2342,6 @@ data "template_file" "last_modified" {
     last_modified = "${aws_lambda_function.lambda_function_local.last_modified}"
   }
 }
-
 `, roleName, filePath, filePath, funcName)
 }
 

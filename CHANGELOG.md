@@ -1,4 +1,9 @@
 ## 2.13.0 (Unreleased)
+
+FEATURES:
+
+* **New Resource:** `aws_ec2_transit_gateway_vpc_attachment_accepter` [GH-8679]
+
 ## 2.12.0 (May 24, 2019)
 
 NOTES:

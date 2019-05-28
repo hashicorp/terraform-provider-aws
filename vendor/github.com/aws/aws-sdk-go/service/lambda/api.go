@@ -2083,6 +2083,7 @@ func (c *Lambda) InvokeAsyncRequest(input *InvokeAsyncInput) (req *request.Reque
 
 // InvokeAsync API operation for AWS Lambda.
 //
+//
 // For asynchronous function invocation, use Invoke.
 //
 // Invokes a function asynchronously.
@@ -2335,7 +2336,7 @@ func (c *Lambda) ListEventSourceMappingsWithContext(ctx aws.Context, input *List
 //    // Example iterating over at most 3 pages of a ListEventSourceMappings operation.
 //    pageNum := 0
 //    err := client.ListEventSourceMappingsPages(params,
-//        func(page *ListEventSourceMappingsOutput, lastPage bool) bool {
+//        func(page *lambda.ListEventSourceMappingsOutput, lastPage bool) bool {
 //            pageNum++
 //            fmt.Println(page)
 //            return pageNum <= 3
@@ -2483,7 +2484,7 @@ func (c *Lambda) ListFunctionsWithContext(ctx aws.Context, input *ListFunctionsI
 //    // Example iterating over at most 3 pages of a ListFunctions operation.
 //    pageNum := 0
 //    err := client.ListFunctionsPages(params,
-//        func(page *ListFunctionsOutput, lastPage bool) bool {
+//        func(page *lambda.ListFunctionsOutput, lastPage bool) bool {
 //            pageNum++
 //            fmt.Println(page)
 //            return pageNum <= 3
@@ -5664,7 +5665,7 @@ type FunctionConfiguration struct {
 	// (https://www.w3.org/TR/NOTE-datetime) (YYYY-MM-DDThh:mm:ss.sTZD).
 	LastModified *string `type:"string"`
 
-	// The function's  layers (https://docs.aws.amazon.com/lambda/latest/dg/configuration-layers.html).
+	// The function's layers (https://docs.aws.amazon.com/lambda/latest/dg/configuration-layers.html).
 	Layers []*Layer `type:"list"`
 
 	// For Lambda@Edge functions, the ARN of the master function.

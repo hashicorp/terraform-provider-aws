@@ -2540,7 +2540,7 @@ func (c *Neptune) DescribeDBEngineVersionsWithContext(ctx aws.Context, input *De
 //    // Example iterating over at most 3 pages of a DescribeDBEngineVersions operation.
 //    pageNum := 0
 //    err := client.DescribeDBEngineVersionsPages(params,
-//        func(page *DescribeDBEngineVersionsOutput, lastPage bool) bool {
+//        func(page *neptune.DescribeDBEngineVersionsOutput, lastPage bool) bool {
 //            pageNum++
 //            fmt.Println(page)
 //            return pageNum <= 3
@@ -2675,7 +2675,7 @@ func (c *Neptune) DescribeDBInstancesWithContext(ctx aws.Context, input *Describ
 //    // Example iterating over at most 3 pages of a DescribeDBInstances operation.
 //    pageNum := 0
 //    err := client.DescribeDBInstancesPages(params,
-//        func(page *DescribeDBInstancesOutput, lastPage bool) bool {
+//        func(page *neptune.DescribeDBInstancesOutput, lastPage bool) bool {
 //            pageNum++
 //            fmt.Println(page)
 //            return pageNum <= 3
@@ -2812,7 +2812,7 @@ func (c *Neptune) DescribeDBParameterGroupsWithContext(ctx aws.Context, input *D
 //    // Example iterating over at most 3 pages of a DescribeDBParameterGroups operation.
 //    pageNum := 0
 //    err := client.DescribeDBParameterGroupsPages(params,
-//        func(page *DescribeDBParameterGroupsOutput, lastPage bool) bool {
+//        func(page *neptune.DescribeDBParameterGroupsOutput, lastPage bool) bool {
 //            pageNum++
 //            fmt.Println(page)
 //            return pageNum <= 3
@@ -2947,7 +2947,7 @@ func (c *Neptune) DescribeDBParametersWithContext(ctx aws.Context, input *Descri
 //    // Example iterating over at most 3 pages of a DescribeDBParameters operation.
 //    pageNum := 0
 //    err := client.DescribeDBParametersPages(params,
-//        func(page *DescribeDBParametersOutput, lastPage bool) bool {
+//        func(page *neptune.DescribeDBParametersOutput, lastPage bool) bool {
 //            pageNum++
 //            fmt.Println(page)
 //            return pageNum <= 3
@@ -3085,7 +3085,7 @@ func (c *Neptune) DescribeDBSubnetGroupsWithContext(ctx aws.Context, input *Desc
 //    // Example iterating over at most 3 pages of a DescribeDBSubnetGroups operation.
 //    pageNum := 0
 //    err := client.DescribeDBSubnetGroupsPages(params,
-//        func(page *DescribeDBSubnetGroupsOutput, lastPage bool) bool {
+//        func(page *neptune.DescribeDBSubnetGroupsOutput, lastPage bool) bool {
 //            pageNum++
 //            fmt.Println(page)
 //            return pageNum <= 3
@@ -3291,7 +3291,7 @@ func (c *Neptune) DescribeEngineDefaultParametersWithContext(ctx aws.Context, in
 //    // Example iterating over at most 3 pages of a DescribeEngineDefaultParameters operation.
 //    pageNum := 0
 //    err := client.DescribeEngineDefaultParametersPages(params,
-//        func(page *DescribeEngineDefaultParametersOutput, lastPage bool) bool {
+//        func(page *neptune.DescribeEngineDefaultParametersOutput, lastPage bool) bool {
 //            pageNum++
 //            fmt.Println(page)
 //            return pageNum <= 3
@@ -3505,7 +3505,7 @@ func (c *Neptune) DescribeEventSubscriptionsWithContext(ctx aws.Context, input *
 //    // Example iterating over at most 3 pages of a DescribeEventSubscriptions operation.
 //    pageNum := 0
 //    err := client.DescribeEventSubscriptionsPages(params,
-//        func(page *DescribeEventSubscriptionsOutput, lastPage bool) bool {
+//        func(page *neptune.DescribeEventSubscriptionsOutput, lastPage bool) bool {
 //            pageNum++
 //            fmt.Println(page)
 //            return pageNum <= 3
@@ -3639,7 +3639,7 @@ func (c *Neptune) DescribeEventsWithContext(ctx aws.Context, input *DescribeEven
 //    // Example iterating over at most 3 pages of a DescribeEvents operation.
 //    pageNum := 0
 //    err := client.DescribeEventsPages(params,
-//        func(page *DescribeEventsOutput, lastPage bool) bool {
+//        func(page *neptune.DescribeEventsOutput, lastPage bool) bool {
 //            pageNum++
 //            fmt.Println(page)
 //            return pageNum <= 3
@@ -3769,7 +3769,7 @@ func (c *Neptune) DescribeOrderableDBInstanceOptionsWithContext(ctx aws.Context,
 //    // Example iterating over at most 3 pages of a DescribeOrderableDBInstanceOptions operation.
 //    pageNum := 0
 //    err := client.DescribeOrderableDBInstanceOptionsPages(params,
-//        func(page *DescribeOrderableDBInstanceOptionsOutput, lastPage bool) bool {
+//        func(page *neptune.DescribeOrderableDBInstanceOptionsOutput, lastPage bool) bool {
 //            pageNum++
 //            fmt.Println(page)
 //            return pageNum <= 3
@@ -5961,7 +5961,7 @@ type AddTagsToResourceInput struct {
 	_ struct{} `type:"structure"`
 
 	// The Amazon Neptune resource that the tags are added to. This value is an
-	// Amazon Resource Name (ARN). For information about creating an ARN, see  Constructing
+	// Amazon Resource Name (ARN). For information about creating an ARN, see Constructing
 	// an Amazon Resource Name (ARN) (https://docs.aws.amazon.com/neptune/latest/UserGuide/tagging.ARN.html#tagging.ARN.Constructing).
 	//
 	// ResourceName is a required field
@@ -6051,7 +6051,7 @@ type ApplyPendingMaintenanceActionInput struct {
 	OptInType *string `type:"string" required:"true"`
 
 	// The Amazon Resource Name (ARN) of the resource that the pending maintenance
-	// action applies to. For information about creating an ARN, see  Constructing
+	// action applies to. For information about creating an ARN, see Constructing
 	// an Amazon Resource Name (ARN) (https://docs.aws.amazon.com/neptune/latest/UserGuide/tagging.ARN.html#tagging.ARN.Constructing).
 	//
 	// ResourceIdentifier is a required field
@@ -6223,7 +6223,7 @@ type CopyDBClusterParameterGroupInput struct {
 	_ struct{} `type:"structure"`
 
 	// The identifier or Amazon Resource Name (ARN) for the source DB cluster parameter
-	// group. For information about creating an ARN, see  Constructing an Amazon
+	// group. For information about creating an ARN, see Constructing an Amazon
 	// Resource Name (ARN) (https://docs.aws.amazon.com/neptune/latest/UserGuide/tagging.ARN.html#tagging.ARN.Constructing).
 	//
 	// Constraints:
@@ -6504,7 +6504,7 @@ type CopyDBParameterGroupInput struct {
 	_ struct{} `type:"structure"`
 
 	// The identifier or ARN for the source DB parameter group. For information
-	// about creating an ARN, see  Constructing an Amazon Resource Name (ARN) (https://docs.aws.amazon.com/neptune/latest/UserGuide/tagging.ARN.html#tagging.ARN.Constructing).
+	// about creating an ARN, see Constructing an Amazon Resource Name (ARN) (https://docs.aws.amazon.com/neptune/latest/UserGuide/tagging.ARN.html#tagging.ARN.Constructing).
 	//
 	// Constraints:
 	//
@@ -6757,7 +6757,7 @@ type CreateDBClusterInput struct {
 	// backups are enabled using the BackupRetentionPeriod parameter.
 	//
 	// The default is a 30-minute window selected at random from an 8-hour block
-	// of time for each AWS Region. To see the time blocks available, see  Adjusting
+	// of time for each AWS Region. To see the time blocks available, see Adjusting
 	// the Preferred Maintenance Window (https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/AdjustingTheMaintenanceWindow.html)
 	// in the Amazon Neptune User Guide.
 	//
@@ -6779,7 +6779,7 @@ type CreateDBClusterInput struct {
 	//
 	// The default is a 30-minute window selected at random from an 8-hour block
 	// of time for each AWS Region, occurring on a random day of the week. To see
-	// the time blocks available, see  Adjusting the Preferred Maintenance Window
+	// the time blocks available, see Adjusting the Preferred Maintenance Window
 	// (https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/AdjustingTheMaintenanceWindow.html)
 	// in the Amazon Neptune User Guide.
 	//
@@ -13176,7 +13176,7 @@ type ListTagsForResourceInput struct {
 	Filters []*Filter `locationNameList:"Filter" type:"list"`
 
 	// The Amazon Neptune resource with tags to be listed. This value is an Amazon
-	// Resource Name (ARN). For information about creating an ARN, see  Constructing
+	// Resource Name (ARN). For information about creating an ARN, see Constructing
 	// an Amazon Resource Name (ARN) (https://docs.aws.amazon.com/neptune/latest/UserGuide/tagging.ARN.html#tagging.ARN.Constructing).
 	//
 	// ResourceName is a required field
@@ -15430,7 +15430,7 @@ type RemoveTagsFromResourceInput struct {
 
 	// The Amazon Neptune resource that the tags are removed from. This value is
 	// an Amazon Resource Name (ARN). For information about creating an ARN, see
-	//  Constructing an Amazon Resource Name (ARN) (https://docs.aws.amazon.com/neptune/latest/UserGuide/tagging.ARN.html#tagging.ARN.Constructing).
+	// Constructing an Amazon Resource Name (ARN) (https://docs.aws.amazon.com/neptune/latest/UserGuide/tagging.ARN.html#tagging.ARN.Constructing).
 	//
 	// ResourceName is a required field
 	ResourceName *string `type:"string" required:"true"`

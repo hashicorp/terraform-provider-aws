@@ -647,7 +647,7 @@ func (c *MediaPackage) ListChannelsWithContext(ctx aws.Context, input *ListChann
 //    // Example iterating over at most 3 pages of a ListChannels operation.
 //    pageNum := 0
 //    err := client.ListChannelsPages(params,
-//        func(page *ListChannelsOutput, lastPage bool) bool {
+//        func(page *mediapackage.ListChannelsOutput, lastPage bool) bool {
 //            pageNum++
 //            fmt.Println(page)
 //            return pageNum <= 3
@@ -791,7 +791,7 @@ func (c *MediaPackage) ListOriginEndpointsWithContext(ctx aws.Context, input *Li
 //    // Example iterating over at most 3 pages of a ListOriginEndpoints operation.
 //    pageNum := 0
 //    err := client.ListOriginEndpointsPages(params,
-//        func(page *ListOriginEndpointsOutput, lastPage bool) bool {
+//        func(page *mediapackage.ListOriginEndpointsOutput, lastPage bool) bool {
 //            pageNum++
 //            fmt.Println(page)
 //            return pageNum <= 3

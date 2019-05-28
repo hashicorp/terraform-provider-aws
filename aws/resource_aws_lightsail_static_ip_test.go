@@ -184,6 +184,7 @@ func testAccAWSLightsailStaticIpConfig_basic(staticIpName string) string {
 provider "aws" {
   region = "us-east-1"
 }
+
 resource "aws_lightsail_static_ip" "test" {
   name = "%s"
 }

@@ -2169,7 +2169,7 @@ func (c *DeviceFarm) GetOfferingStatusWithContext(ctx aws.Context, input *GetOff
 //    // Example iterating over at most 3 pages of a GetOfferingStatus operation.
 //    pageNum := 0
 //    err := client.GetOfferingStatusPages(params,
-//        func(page *GetOfferingStatusOutput, lastPage bool) bool {
+//        func(page *devicefarm.GetOfferingStatusOutput, lastPage bool) bool {
 //            pageNum++
 //            fmt.Println(page)
 //            return pageNum <= 3
@@ -3017,7 +3017,7 @@ func (c *DeviceFarm) ListArtifactsWithContext(ctx aws.Context, input *ListArtifa
 //    // Example iterating over at most 3 pages of a ListArtifacts operation.
 //    pageNum := 0
 //    err := client.ListArtifactsPages(params,
-//        func(page *ListArtifactsOutput, lastPage bool) bool {
+//        func(page *devicefarm.ListArtifactsOutput, lastPage bool) bool {
 //            pageNum++
 //            fmt.Println(page)
 //            return pageNum <= 3
@@ -3250,7 +3250,7 @@ func (c *DeviceFarm) ListDevicePoolsWithContext(ctx aws.Context, input *ListDevi
 //    // Example iterating over at most 3 pages of a ListDevicePools operation.
 //    pageNum := 0
 //    err := client.ListDevicePoolsPages(params,
-//        func(page *ListDevicePoolsOutput, lastPage bool) bool {
+//        func(page *devicefarm.ListDevicePoolsOutput, lastPage bool) bool {
 //            pageNum++
 //            fmt.Println(page)
 //            return pageNum <= 3
@@ -3394,7 +3394,7 @@ func (c *DeviceFarm) ListDevicesWithContext(ctx aws.Context, input *ListDevicesI
 //    // Example iterating over at most 3 pages of a ListDevices operation.
 //    pageNum := 0
 //    err := client.ListDevicesPages(params,
-//        func(page *ListDevicesOutput, lastPage bool) bool {
+//        func(page *devicefarm.ListDevicesOutput, lastPage bool) bool {
 //            pageNum++
 //            fmt.Println(page)
 //            return pageNum <= 3
@@ -3626,7 +3626,7 @@ func (c *DeviceFarm) ListJobsWithContext(ctx aws.Context, input *ListJobsInput, 
 //    // Example iterating over at most 3 pages of a ListJobs operation.
 //    pageNum := 0
 //    err := client.ListJobsPages(params,
-//        func(page *ListJobsOutput, lastPage bool) bool {
+//        func(page *devicefarm.ListJobsOutput, lastPage bool) bool {
 //            pageNum++
 //            fmt.Println(page)
 //            return pageNum <= 3
@@ -3963,7 +3963,7 @@ func (c *DeviceFarm) ListOfferingTransactionsWithContext(ctx aws.Context, input 
 //    // Example iterating over at most 3 pages of a ListOfferingTransactions operation.
 //    pageNum := 0
 //    err := client.ListOfferingTransactionsPages(params,
-//        func(page *ListOfferingTransactionsOutput, lastPage bool) bool {
+//        func(page *devicefarm.ListOfferingTransactionsOutput, lastPage bool) bool {
 //            pageNum++
 //            fmt.Println(page)
 //            return pageNum <= 3
@@ -4116,7 +4116,7 @@ func (c *DeviceFarm) ListOfferingsWithContext(ctx aws.Context, input *ListOfferi
 //    // Example iterating over at most 3 pages of a ListOfferings operation.
 //    pageNum := 0
 //    err := client.ListOfferingsPages(params,
-//        func(page *ListOfferingsOutput, lastPage bool) bool {
+//        func(page *devicefarm.ListOfferingsOutput, lastPage bool) bool {
 //            pageNum++
 //            fmt.Println(page)
 //            return pageNum <= 3
@@ -4260,7 +4260,7 @@ func (c *DeviceFarm) ListProjectsWithContext(ctx aws.Context, input *ListProject
 //    // Example iterating over at most 3 pages of a ListProjects operation.
 //    pageNum := 0
 //    err := client.ListProjectsPages(params,
-//        func(page *ListProjectsOutput, lastPage bool) bool {
+//        func(page *devicefarm.ListProjectsOutput, lastPage bool) bool {
 //            pageNum++
 //            fmt.Println(page)
 //            return pageNum <= 3
@@ -4492,7 +4492,7 @@ func (c *DeviceFarm) ListRunsWithContext(ctx aws.Context, input *ListRunsInput, 
 //    // Example iterating over at most 3 pages of a ListRuns operation.
 //    pageNum := 0
 //    err := client.ListRunsPages(params,
-//        func(page *ListRunsOutput, lastPage bool) bool {
+//        func(page *devicefarm.ListRunsOutput, lastPage bool) bool {
 //            pageNum++
 //            fmt.Println(page)
 //            return pageNum <= 3
@@ -4636,7 +4636,7 @@ func (c *DeviceFarm) ListSamplesWithContext(ctx aws.Context, input *ListSamplesI
 //    // Example iterating over at most 3 pages of a ListSamples operation.
 //    pageNum := 0
 //    err := client.ListSamplesPages(params,
-//        func(page *ListSamplesOutput, lastPage bool) bool {
+//        func(page *devicefarm.ListSamplesOutput, lastPage bool) bool {
 //            pageNum++
 //            fmt.Println(page)
 //            return pageNum <= 3
@@ -4780,7 +4780,7 @@ func (c *DeviceFarm) ListSuitesWithContext(ctx aws.Context, input *ListSuitesInp
 //    // Example iterating over at most 3 pages of a ListSuites operation.
 //    pageNum := 0
 //    err := client.ListSuitesPages(params,
-//        func(page *ListSuitesOutput, lastPage bool) bool {
+//        func(page *devicefarm.ListSuitesOutput, lastPage bool) bool {
 //            pageNum++
 //            fmt.Println(page)
 //            return pageNum <= 3
@@ -5006,7 +5006,7 @@ func (c *DeviceFarm) ListTestsWithContext(ctx aws.Context, input *ListTestsInput
 //    // Example iterating over at most 3 pages of a ListTests operation.
 //    pageNum := 0
 //    err := client.ListTestsPages(params,
-//        func(page *ListTestsOutput, lastPage bool) bool {
+//        func(page *devicefarm.ListTestsOutput, lastPage bool) bool {
 //            pageNum++
 //            fmt.Println(page)
 //            return pageNum <= 3
@@ -5150,7 +5150,7 @@ func (c *DeviceFarm) ListUniqueProblemsWithContext(ctx aws.Context, input *ListU
 //    // Example iterating over at most 3 pages of a ListUniqueProblems operation.
 //    pageNum := 0
 //    err := client.ListUniqueProblemsPages(params,
-//        func(page *ListUniqueProblemsOutput, lastPage bool) bool {
+//        func(page *devicefarm.ListUniqueProblemsOutput, lastPage bool) bool {
 //            pageNum++
 //            fmt.Println(page)
 //            return pageNum <= 3
@@ -5294,7 +5294,7 @@ func (c *DeviceFarm) ListUploadsWithContext(ctx aws.Context, input *ListUploadsI
 //    // Example iterating over at most 3 pages of a ListUploads operation.
 //    pageNum := 0
 //    err := client.ListUploadsPages(params,
-//        func(page *ListUploadsOutput, lastPage bool) bool {
+//        func(page *devicefarm.ListUploadsOutput, lastPage bool) bool {
 //            pageNum++
 //            fmt.Println(page)
 //            return pageNum <= 3
@@ -8847,55 +8847,79 @@ type DeviceFilter struct {
 	// The supported operators for each attribute are provided in the following
 	// list.
 	//
-	// ARNThe Amazon Resource Name (ARN) of the device. For example, "arn:aws:devicefarm:us-west-2::device:12345Example".
+	// ARN
+	//
+	// The Amazon Resource Name (ARN) of the device. For example, "arn:aws:devicefarm:us-west-2::device:12345Example".
 	//
 	// Supported operators: EQUALS, IN, NOT_IN
 	//
-	// PLATFORMThe device platform. Valid values are "ANDROID" or "IOS".
+	// PLATFORM
+	//
+	// The device platform. Valid values are "ANDROID" or "IOS".
 	//
 	// Supported operators: EQUALS
 	//
-	// OS_VERSIONThe operating system version. For example, "10.3.2".
+	// OS_VERSION
+	//
+	// The operating system version. For example, "10.3.2".
 	//
 	// Supported operators: EQUALS, GREATER_THAN, GREATER_THAN_OR_EQUALS, IN, LESS_THAN,
 	// LESS_THAN_OR_EQUALS, NOT_IN
 	//
-	// MODELThe device model. For example, "iPad 5th Gen".
+	// MODEL
+	//
+	// The device model. For example, "iPad 5th Gen".
 	//
 	// Supported operators: CONTAINS, EQUALS, IN, NOT_IN
 	//
-	// AVAILABILITYThe current availability of the device. Valid values are "AVAILABLE",
-	// "HIGHLY_AVAILABLE", "BUSY", or "TEMPORARY_NOT_AVAILABLE".
+	// AVAILABILITY
+	//
+	// The current availability of the device. Valid values are "AVAILABLE", "HIGHLY_AVAILABLE",
+	// "BUSY", or "TEMPORARY_NOT_AVAILABLE".
 	//
 	// Supported operators: EQUALS
 	//
-	// FORM_FACTORThe device form factor. Valid values are "PHONE" or "TABLET".
+	// FORM_FACTOR
+	//
+	// The device form factor. Valid values are "PHONE" or "TABLET".
 	//
 	// Supported operators: EQUALS
 	//
-	// MANUFACTURERThe device manufacturer. For example, "Apple".
+	// MANUFACTURER
+	//
+	// The device manufacturer. For example, "Apple".
 	//
 	// Supported operators: EQUALS, IN, NOT_IN
 	//
-	// REMOTE_ACCESS_ENABLEDWhether the device is enabled for remote access. Valid
-	// values are "TRUE" or "FALSE".
+	// REMOTE_ACCESS_ENABLED
+	//
+	// Whether the device is enabled for remote access. Valid values are "TRUE"
+	// or "FALSE".
 	//
 	// Supported operators: EQUALS
 	//
-	// REMOTE_DEBUG_ENABLEDWhether the device is enabled for remote debugging. Valid
-	// values are "TRUE" or "FALSE".
+	// REMOTE_DEBUG_ENABLED
+	//
+	// Whether the device is enabled for remote debugging. Valid values are "TRUE"
+	// or "FALSE".
 	//
 	// Supported operators: EQUALS
 	//
-	// INSTANCE_ARNThe Amazon Resource Name (ARN) of the device instance.
+	// INSTANCE_ARN
+	//
+	// The Amazon Resource Name (ARN) of the device instance.
 	//
 	// Supported operators: EQUALS, IN, NOT_IN
 	//
-	// INSTANCE_LABELSThe label of the device instance.
+	// INSTANCE_LABELS
+	//
+	// The label of the device instance.
 	//
 	// Supported operators: CONTAINS
 	//
-	// FLEET_TYPEThe fleet type. Valid values are "PUBLIC" or "PRIVATE".
+	// FLEET_TYPE
+	//
+	// The fleet type. Valid values are "PUBLIC" or "PRIVATE".
 	//
 	// Supported operators: EQUALS
 	Attribute *string `locationName:"attribute" type:"string" enum:"DeviceFilterAttribute"`
@@ -9203,75 +9227,36 @@ type DeviceSelectionConfiguration struct {
 	// Used to dynamically select a set of devices for a test run. A filter is made
 	// up of an attribute, an operator, and one or more values.
 	//
-	//    * Attribute
+	//    * Attribute The aspect of a device such as platform or model used as the
+	//    selection criteria in a device filter. Allowed values include: ARN: The
+	//    Amazon Resource Name (ARN) of the device. For example, "arn:aws:devicefarm:us-west-2::device:12345Example".
+	//    PLATFORM: The device platform. Valid values are "ANDROID" or "IOS". OS_VERSION:
+	//    The operating system version. For example, "10.3.2". MODEL: The device
+	//    model. For example, "iPad 5th Gen". AVAILABILITY: The current availability
+	//    of the device. Valid values are "AVAILABLE", "HIGHLY_AVAILABLE", "BUSY",
+	//    or "TEMPORARY_NOT_AVAILABLE". FORM_FACTOR: The device form factor. Valid
+	//    values are "PHONE" or "TABLET". MANUFACTURER: The device manufacturer.
+	//    For example, "Apple". REMOTE_ACCESS_ENABLED: Whether the device is enabled
+	//    for remote access. Valid values are "TRUE" or "FALSE". REMOTE_DEBUG_ENABLED:
+	//    Whether the device is enabled for remote debugging. Valid values are "TRUE"
+	//    or "FALSE". INSTANCE_ARN: The Amazon Resource Name (ARN) of the device
+	//    instance. INSTANCE_LABELS: The label of the device instance. FLEET_TYPE:
+	//    The fleet type. Valid values are "PUBLIC" or "PRIVATE".
 	//
-	// The aspect of a device such as platform or model used as the selection criteria
-	//    in a device filter.
-	//
-	// Allowed values include:
-	//
-	// ARN: The Amazon Resource Name (ARN) of the device. For example, "arn:aws:devicefarm:us-west-2::device:12345Example".
-	//
-	// PLATFORM: The device platform. Valid values are "ANDROID" or "IOS".
-	//
-	// OS_VERSION: The operating system version. For example, "10.3.2".
-	//
-	// MODEL: The device model. For example, "iPad 5th Gen".
-	//
-	// AVAILABILITY: The current availability of the device. Valid values are "AVAILABLE",
-	//    "HIGHLY_AVAILABLE", "BUSY", or "TEMPORARY_NOT_AVAILABLE".
-	//
-	// FORM_FACTOR: The device form factor. Valid values are "PHONE" or "TABLET".
-	//
-	// MANUFACTURER: The device manufacturer. For example, "Apple".
-	//
-	// REMOTE_ACCESS_ENABLED: Whether the device is enabled for remote access. Valid
-	//    values are "TRUE" or "FALSE".
-	//
-	// REMOTE_DEBUG_ENABLED: Whether the device is enabled for remote debugging.
-	//    Valid values are "TRUE" or "FALSE".
-	//
-	// INSTANCE_ARN: The Amazon Resource Name (ARN) of the device instance.
-	//
-	// INSTANCE_LABELS: The label of the device instance.
-	//
-	// FLEET_TYPE: The fleet type. Valid values are "PUBLIC" or "PRIVATE".
-	//
-	//    * Operator
-	//
-	// The filter operator.
-	//
-	// The EQUALS operator is available for every attribute except INSTANCE_LABELS.
-	//
-	// The CONTAINS operator is available for the INSTANCE_LABELS and MODEL attributes.
-	//
-	// The IN and NOT_IN operators are available for the ARN, OS_VERSION, MODEL,
-	//    MANUFACTURER, and INSTANCE_ARN attributes.
-	//
-	// The LESS_THAN, GREATER_THAN, LESS_THAN_OR_EQUALS, and GREATER_THAN_OR_EQUALS
+	//    * Operator The filter operator. The EQUALS operator is available for every
+	//    attribute except INSTANCE_LABELS. The CONTAINS operator is available for
+	//    the INSTANCE_LABELS and MODEL attributes. The IN and NOT_IN operators
+	//    are available for the ARN, OS_VERSION, MODEL, MANUFACTURER, and INSTANCE_ARN
+	//    attributes. The LESS_THAN, GREATER_THAN, LESS_THAN_OR_EQUALS, and GREATER_THAN_OR_EQUALS
 	//    operators are also available for the OS_VERSION attribute.
 	//
-	//    * Values
-	//
-	// An array of one or more filter values.
-	//
-	// Operator Values
-	//
-	// The IN and NOT_IN operators can take a values array that has more than one
-	//    element.
-	//
-	// The other operators require an array with a single element.
-	//
-	// Attribute Values
-	//
-	// The PLATFORM attribute can be set to "ANDROID" or "IOS".
-	//
-	// The AVAILABILITY attribute can be set to "AVAILABLE", "HIGHLY_AVAILABLE",
-	//    "BUSY", or "TEMPORARY_NOT_AVAILABLE".
-	//
-	// The FORM_FACTOR attribute can be set to "PHONE" or "TABLET".
-	//
-	// The FLEET_TYPE attribute can be set to "PUBLIC" or "PRIVATE".
+	//    * Values An array of one or more filter values. Operator Values The IN
+	//    and NOT_IN operators can take a values array that has more than one element.
+	//    The other operators require an array with a single element. Attribute
+	//    Values The PLATFORM attribute can be set to "ANDROID" or "IOS". The AVAILABILITY
+	//    attribute can be set to "AVAILABLE", "HIGHLY_AVAILABLE", "BUSY", or "TEMPORARY_NOT_AVAILABLE".
+	//    The FORM_FACTOR attribute can be set to "PHONE" or "TABLET". The FLEET_TYPE
+	//    attribute can be set to "PUBLIC" or "PRIVATE".
 	//
 	// Filters is a required field
 	Filters []*DeviceFilter `locationName:"filters" type:"list" required:"true"`
@@ -11321,57 +11306,33 @@ type ListDevicesInput struct {
 	// operator, and one or more values.
 	//
 	//    * Attribute: The aspect of a device such as platform or model used as
-	//    the selction criteria in a device filter.
+	//    the selction criteria in a device filter. Allowed values include: ARN:
+	//    The Amazon Resource Name (ARN) of the device. For example, "arn:aws:devicefarm:us-west-2::device:12345Example".
+	//    PLATFORM: The device platform. Valid values are "ANDROID" or "IOS". OS_VERSION:
+	//    The operating system version. For example, "10.3.2". MODEL: The device
+	//    model. For example, "iPad 5th Gen". AVAILABILITY: The current availability
+	//    of the device. Valid values are "AVAILABLE", "HIGHLY_AVAILABLE", "BUSY",
+	//    or "TEMPORARY_NOT_AVAILABLE". FORM_FACTOR: The device form factor. Valid
+	//    values are "PHONE" or "TABLET". MANUFACTURER: The device manufacturer.
+	//    For example, "Apple". REMOTE_ACCESS_ENABLED: Whether the device is enabled
+	//    for remote access. Valid values are "TRUE" or "FALSE". REMOTE_DEBUG_ENABLED:
+	//    Whether the device is enabled for remote debugging. Valid values are "TRUE"
+	//    or "FALSE". INSTANCE_ARN: The Amazon Resource Name (ARN) of the device
+	//    instance. INSTANCE_LABELS: The label of the device instance. FLEET_TYPE:
+	//    The fleet type. Valid values are "PUBLIC" or "PRIVATE".
 	//
-	// Allowed values include:
-	//
-	// ARN: The Amazon Resource Name (ARN) of the device. For example, "arn:aws:devicefarm:us-west-2::device:12345Example".
-	//
-	// PLATFORM: The device platform. Valid values are "ANDROID" or "IOS".
-	//
-	// OS_VERSION: The operating system version. For example, "10.3.2".
-	//
-	// MODEL: The device model. For example, "iPad 5th Gen".
-	//
-	// AVAILABILITY: The current availability of the device. Valid values are "AVAILABLE",
-	//    "HIGHLY_AVAILABLE", "BUSY", or "TEMPORARY_NOT_AVAILABLE".
-	//
-	// FORM_FACTOR: The device form factor. Valid values are "PHONE" or "TABLET".
-	//
-	// MANUFACTURER: The device manufacturer. For example, "Apple".
-	//
-	// REMOTE_ACCESS_ENABLED: Whether the device is enabled for remote access. Valid
-	//    values are "TRUE" or "FALSE".
-	//
-	// REMOTE_DEBUG_ENABLED: Whether the device is enabled for remote debugging.
-	//    Valid values are "TRUE" or "FALSE".
-	//
-	// INSTANCE_ARN: The Amazon Resource Name (ARN) of the device instance.
-	//
-	// INSTANCE_LABELS: The label of the device instance.
-	//
-	// FLEET_TYPE: The fleet type. Valid values are "PUBLIC" or "PRIVATE".
-	//
-	//    * Operator: The filter operator.
-	//
-	// The EQUALS operator is available for every attribute except INSTANCE_LABELS.
-	//
-	// The CONTAINS operator is available for the INSTANCE_LABELS and MODEL attributes.
-	//
-	// The IN and NOT_IN operators are available for the ARN, OS_VERSION, MODEL,
-	//    MANUFACTURER, and INSTANCE_ARN attributes.
-	//
-	// The LESS_THAN, GREATER_THAN, LESS_THAN_OR_EQUALS, and GREATER_THAN_OR_EQUALS
+	//    * Operator: The filter operator. The EQUALS operator is available for
+	//    every attribute except INSTANCE_LABELS. The CONTAINS operator is available
+	//    for the INSTANCE_LABELS and MODEL attributes. The IN and NOT_IN operators
+	//    are available for the ARN, OS_VERSION, MODEL, MANUFACTURER, and INSTANCE_ARN
+	//    attributes. The LESS_THAN, GREATER_THAN, LESS_THAN_OR_EQUALS, and GREATER_THAN_OR_EQUALS
 	//    operators are also available for the OS_VERSION attribute.
 	//
-	//    * Values: An array of one or more filter values.
-	//
-	// The IN and NOT_IN operators take a values array that has one or more elements.
-	//
-	// The other operators require an array with a single element.
-	//
-	// In a request, the AVAILABILITY attribute takes "AVAILABLE", "HIGHLY_AVAILABLE",
-	//    "BUSY", or "TEMPORARY_NOT_AVAILABLE" as values.
+	//    * Values: An array of one or more filter values. The IN and NOT_IN operators
+	//    take a values array that has one or more elements. The other operators
+	//    require an array with a single element. In a request, the AVAILABILITY
+	//    attribute takes "AVAILABLE", "HIGHLY_AVAILABLE", "BUSY", or "TEMPORARY_NOT_AVAILABLE"
+	//    as values.
 	Filters []*DeviceFilter `locationName:"filters" type:"list"`
 
 	// An identifier that was returned from the previous call to this operation,
@@ -12728,7 +12689,7 @@ type ListUploadsInput struct {
 	//
 	//    * APPIUM_NODE_TEST_SPEC: An Appium Node.js test spec upload.
 	//
-	//    *  APPIUM_RUBY_TEST_SPEC: An Appium Ruby test spec upload.
+	//    * APPIUM_RUBY_TEST_SPEC: An Appium Ruby test spec upload.
 	//
 	//    * APPIUM_WEB_JAVA_JUNIT_TEST_SPEC: An Appium Java JUnit test spec upload
 	//    for a web app.
@@ -14056,59 +14017,85 @@ type Rule struct {
 	// The supported operators for each attribute are provided in the following
 	// list.
 	//
-	// APPIUM_VERSIONThe Appium version for the test.
+	// APPIUM_VERSION
+	//
+	// The Appium version for the test.
 	//
 	// Supported operators: CONTAINS
 	//
-	// ARNThe Amazon Resource Name (ARN) of the device. For example, "arn:aws:devicefarm:us-west-2::device:12345Example".
+	// ARN
+	//
+	// The Amazon Resource Name (ARN) of the device. For example, "arn:aws:devicefarm:us-west-2::device:12345Example".
 	//
 	// Supported operators: EQUALS, IN, NOT_IN
 	//
-	// AVAILABILITYThe current availability of the device. Valid values are "AVAILABLE",
-	// "HIGHLY_AVAILABLE", "BUSY", or "TEMPORARY_NOT_AVAILABLE".
+	// AVAILABILITY
+	//
+	// The current availability of the device. Valid values are "AVAILABLE", "HIGHLY_AVAILABLE",
+	// "BUSY", or "TEMPORARY_NOT_AVAILABLE".
 	//
 	// Supported operators: EQUALS
 	//
-	// FLEET_TYPEThe fleet type. Valid values are "PUBLIC" or "PRIVATE".
+	// FLEET_TYPE
+	//
+	// The fleet type. Valid values are "PUBLIC" or "PRIVATE".
 	//
 	// Supported operators: EQUALS
 	//
-	// FORM_FACTORThe device form factor. Valid values are "PHONE" or "TABLET".
+	// FORM_FACTOR
+	//
+	// The device form factor. Valid values are "PHONE" or "TABLET".
 	//
 	// Supported operators: EQUALS, IN, NOT_IN
 	//
-	// INSTANCE_ARNThe Amazon Resource Name (ARN) of the device instance.
+	// INSTANCE_ARN
+	//
+	// The Amazon Resource Name (ARN) of the device instance.
 	//
 	// Supported operators: IN, NOT_IN
 	//
-	// INSTANCE_LABELSThe label of the device instance.
+	// INSTANCE_LABELS
+	//
+	// The label of the device instance.
 	//
 	// Supported operators: CONTAINS
 	//
-	// MANUFACTURERThe device manufacturer. For example, "Apple".
+	// MANUFACTURER
+	//
+	// The device manufacturer. For example, "Apple".
 	//
 	// Supported operators: EQUALS, IN, NOT_IN
 	//
-	// MODELThe device model, such as "Apple iPad Air 2" or "Google Pixel".
+	// MODEL
+	//
+	// The device model, such as "Apple iPad Air 2" or "Google Pixel".
 	//
 	// Supported operators: CONTAINS, EQUALS, IN, NOT_IN
 	//
-	// OS_VERSIONThe operating system version. For example, "10.3.2".
+	// OS_VERSION
+	//
+	// The operating system version. For example, "10.3.2".
 	//
 	// Supported operators: EQUALS, GREATER_THAN, GREATER_THAN_OR_EQUALS, IN, LESS_THAN,
 	// LESS_THAN_OR_EQUALS, NOT_IN
 	//
-	// PLATFORMThe device platform. Valid values are "ANDROID" or "IOS".
+	// PLATFORM
+	//
+	// The device platform. Valid values are "ANDROID" or "IOS".
 	//
 	// Supported operators: EQUALS, IN, NOT_IN
 	//
-	// REMOTE_ACCESS_ENABLEDWhether the device is enabled for remote access. Valid
-	// values are "TRUE" or "FALSE".
+	// REMOTE_ACCESS_ENABLED
+	//
+	// Whether the device is enabled for remote access. Valid values are "TRUE"
+	// or "FALSE".
 	//
 	// Supported operators: EQUALS
 	//
-	// REMOTE_DEBUG_ENABLEDWhether the device is enabled for remote debugging. Valid
-	// values are "TRUE" or "FALSE".
+	// REMOTE_DEBUG_ENABLED
+	//
+	// Whether the device is enabled for remote debugging. Valid values are "TRUE"
+	// or "FALSE".
 	//
 	// Supported operators: EQUALS
 	Attribute *string `locationName:"attribute" type:"string" enum:"DeviceAttribute"`
@@ -14929,15 +14916,11 @@ type ScheduleRunTest struct {
 	// For Appium tests (all types):
 	//
 	//    * appium_version: The Appium version. Currently supported values are "1.6.5"
-	//    (and higher), "latest", and "default".
-	//
-	// “latest” will run the latest Appium version supported by Device Farm (1.9.1).
-	//
-	// For “default”, Device Farm will choose a compatible version of Appium for
-	//    the device. The current behavior is to run 1.7.2 on Android devices and
-	//    iOS 9 and earlier, 1.7.2 for iOS 10 and later.
-	//
-	// This behavior is subject to change.
+	//    (and higher), "latest", and "default". “latest” will run the latest
+	//    Appium version supported by Device Farm (1.9.1). For “default”, Device
+	//    Farm will choose a compatible version of Appium for the device. The current
+	//    behavior is to run 1.7.2 on Android devices and iOS 9 and earlier, 1.7.2
+	//    for iOS 10 and later. This behavior is subject to change.
 	//
 	// For Fuzz tests (Android only):
 	//
@@ -14960,35 +14943,22 @@ type ScheduleRunTest struct {
 	//
 	// For Instrumentation:
 	//
-	//    * filter: A test filter string. Examples:
-	//
-	// Running a single test case: "com.android.abc.Test1"
-	//
-	// Running a single test: "com.android.abc.Test1#smoke"
-	//
-	// Running multiple tests: "com.android.abc.Test1,com.android.abc.Test2"
+	//    * filter: A test filter string. Examples: Running a single test case:
+	//    "com.android.abc.Test1" Running a single test: "com.android.abc.Test1#smoke"
+	//    Running multiple tests: "com.android.abc.Test1,com.android.abc.Test2"
 	//
 	// For XCTest and XCTestUI:
 	//
-	//    * filter: A test filter string. Examples:
-	//
-	// Running a single test class: "LoginTests"
-	//
-	// Running a multiple test classes: "LoginTests,SmokeTests"
-	//
-	// Running a single test: "LoginTests/testValid"
-	//
-	// Running multiple tests: "LoginTests/testValid,LoginTests/testInvalid"
+	//    * filter: A test filter string. Examples: Running a single test class:
+	//    "LoginTests" Running a multiple test classes: "LoginTests,SmokeTests"
+	//    Running a single test: "LoginTests/testValid" Running multiple tests:
+	//    "LoginTests/testValid,LoginTests/testInvalid"
 	//
 	// For UIAutomator:
 	//
-	//    * filter: A test filter string. Examples:
-	//
-	// Running a single test case: "com.android.abc.Test1"
-	//
-	// Running a single test: "com.android.abc.Test1#smoke"
-	//
-	// Running multiple tests: "com.android.abc.Test1,com.android.abc.Test2"
+	//    * filter: A test filter string. Examples: Running a single test case:
+	//    "com.android.abc.Test1" Running a single test: "com.android.abc.Test1#smoke"
+	//    Running multiple tests: "com.android.abc.Test1,com.android.abc.Test2"
 	Parameters map[string]*string `locationName:"parameters" type:"map"`
 
 	// The ARN of the uploaded test that will be run.

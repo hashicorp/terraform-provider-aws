@@ -376,6 +376,7 @@ resource "aws_route53_resolver_rule" "example" {
   target_ip {
     ip = "192.0.2.7"
   }
+
   target_ip {
     ip   = "192.0.2.17"
     port = 54
@@ -398,6 +399,7 @@ resource "aws_route53_resolver_rule" "example" {
   target_ip {
     ip = "192.0.2.7"
   }
+
   target_ip {
     ip   = "192.0.2.17"
     port = 54

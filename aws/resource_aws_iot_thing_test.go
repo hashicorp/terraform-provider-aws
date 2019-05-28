@@ -179,12 +179,14 @@ resource "aws_iot_thing" "test" {
 func testAccAWSIotThingConfig_full(thingName, typeName, answer string) string {
 	return fmt.Sprintf(`
 resource "aws_iot_thing" "test" {
-  name       = "%s"
+  name = "%s"
+
   attributes = {
-  	One = "11111"
-  	Two = "TwoTwo"
-  	Answer = "%s"
+    One    = "11111"
+    Two    = "TwoTwo"
+    Answer = "%s"
   }
+
   thing_type_name = "${aws_iot_thing_type.test.name}"
 }
 

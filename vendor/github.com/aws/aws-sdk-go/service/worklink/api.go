@@ -1606,7 +1606,7 @@ func (c *WorkLink) ListDevicesWithContext(ctx aws.Context, input *ListDevicesInp
 //    // Example iterating over at most 3 pages of a ListDevices operation.
 //    pageNum := 0
 //    err := client.ListDevicesPages(params,
-//        func(page *ListDevicesOutput, lastPage bool) bool {
+//        func(page *worklink.ListDevicesOutput, lastPage bool) bool {
 //            pageNum++
 //            fmt.Println(page)
 //            return pageNum <= 3
@@ -1750,7 +1750,7 @@ func (c *WorkLink) ListDomainsWithContext(ctx aws.Context, input *ListDomainsInp
 //    // Example iterating over at most 3 pages of a ListDomains operation.
 //    pageNum := 0
 //    err := client.ListDomainsPages(params,
-//        func(page *ListDomainsOutput, lastPage bool) bool {
+//        func(page *worklink.ListDomainsOutput, lastPage bool) bool {
 //            pageNum++
 //            fmt.Println(page)
 //            return pageNum <= 3
@@ -1894,7 +1894,7 @@ func (c *WorkLink) ListFleetsWithContext(ctx aws.Context, input *ListFleetsInput
 //    // Example iterating over at most 3 pages of a ListFleets operation.
 //    pageNum := 0
 //    err := client.ListFleetsPages(params,
-//        func(page *ListFleetsOutput, lastPage bool) bool {
+//        func(page *worklink.ListFleetsOutput, lastPage bool) bool {
 //            pageNum++
 //            fmt.Println(page)
 //            return pageNum <= 3
@@ -2042,7 +2042,7 @@ func (c *WorkLink) ListWebsiteAuthorizationProvidersWithContext(ctx aws.Context,
 //    // Example iterating over at most 3 pages of a ListWebsiteAuthorizationProviders operation.
 //    pageNum := 0
 //    err := client.ListWebsiteAuthorizationProvidersPages(params,
-//        func(page *ListWebsiteAuthorizationProvidersOutput, lastPage bool) bool {
+//        func(page *worklink.ListWebsiteAuthorizationProvidersOutput, lastPage bool) bool {
 //            pageNum++
 //            fmt.Println(page)
 //            return pageNum <= 3
@@ -2187,7 +2187,7 @@ func (c *WorkLink) ListWebsiteCertificateAuthoritiesWithContext(ctx aws.Context,
 //    // Example iterating over at most 3 pages of a ListWebsiteCertificateAuthorities operation.
 //    pageNum := 0
 //    err := client.ListWebsiteCertificateAuthoritiesPages(params,
-//        func(page *ListWebsiteCertificateAuthoritiesOutput, lastPage bool) bool {
+//        func(page *worklink.ListWebsiteCertificateAuthoritiesOutput, lastPage bool) bool {
 //            pageNum++
 //            fmt.Println(page)
 //            return pageNum <= 3

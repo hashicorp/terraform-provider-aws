@@ -292,13 +292,14 @@ resource "aws_subnet" "acctest" {
     foo  = "bar"
     Name = "${var.name}"
   }
-
 }
+
 resource "aws_elb" "acctest" {
   name = "${var.name}"
+
   #availability_zones = ["us-east-1a", "us-east-1b", "us-east-1c"]
-  subnets            = ["${aws_subnet.acctest.*.id[0]}", "${aws_subnet.acctest.*.id[1]}"]
-  internal           = true
+  subnets  = ["${aws_subnet.acctest.*.id[0]}", "${aws_subnet.acctest.*.id[1]}"]
+  internal = true
 
   listener {
     instance_port     = 8000
@@ -370,7 +371,6 @@ resource "aws_subnet" "acctest" {
     foo  = "bar"
     Name = "${var.name}"
   }
-
 }
 
 resource "aws_security_group" "acctest" {
