@@ -251,11 +251,12 @@ func testAccCheckAWSGameliftAliasDestroy(s *terraform.State) error {
 func testAccAWSGameliftAliasBasicConfig(aliasName, description, message string) string {
 	return fmt.Sprintf(`
 resource "aws_gamelift_alias" "test" {
-  name = "%s"
+  name        = "%s"
   description = "%s"
+
   routing_strategy {
     message = "%s"
-    type = "TERMINAL"
+    type    = "TERMINAL"
   }
 }
 `, aliasName, description, message)
@@ -265,14 +266,17 @@ func testAccAWSGameliftAliasAllFieldsConfig(aliasName, description,
 	fleetName, launchPath, params, buildName, bucketName, key, roleArn string) string {
 	return fmt.Sprintf(`
 resource "aws_gamelift_alias" "test" {
-  name = "%s"
+  name        = "%s"
   description = "%s"
+
   routing_strategy {
     fleet_id = "${aws_gamelift_fleet.test.id}"
-    type = "SIMPLE"
+    type     = "SIMPLE"
   }
 }
+
 %s
+
 `, aliasName, description,
 		testAccAWSGameliftFleetBasicConfig(fleetName, launchPath, params, buildName, bucketName, key, roleArn))
 }

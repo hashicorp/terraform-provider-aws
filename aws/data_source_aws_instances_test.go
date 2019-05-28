@@ -115,9 +115,10 @@ data "aws_ami" "ubuntu" {
 }
 
 resource "aws_instance" "test" {
-  count = 2
-  ami = "${data.aws_ami.ubuntu.id}"
+  count         = 2
+  ami           = "${data.aws_ami.ubuntu.id}"
   instance_type = "t2.micro"
+
   tags = {
     Name      = "tf-acc-test-ec2-instance-data-source-%d"
     SecondTag = "tf-acc-test-ec2-instance-data-source-%d"
@@ -152,9 +153,10 @@ data "aws_ami" "ubuntu" {
 }
 
 resource "aws_instance" "test" {
-  count = 2
-  ami = "${data.aws_ami.ubuntu.id}"
+  count         = 2
+  ami           = "${data.aws_ami.ubuntu.id}"
   instance_type = "t2.micro"
+
   tags = {
     Name = "tf-acc-test-ec2-instance-data-source-%d"
   }
@@ -164,8 +166,8 @@ data "aws_instances" "test" {
   instance_tags = {
     Name = "${aws_instance.test.0.tags["Name"]}"
   }
-  
-  instance_state_names = [ "pending", "running" ]
+
+  instance_state_names = ["pending", "running"]
 }
 `, rInt)
 }

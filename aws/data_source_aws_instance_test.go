@@ -392,17 +392,18 @@ func testAccInstanceDataSourceConfig_Tags(rInt int) string {
 	return fmt.Sprintf(`
 resource "aws_instance" "web" {
   # us-west-2
-  ami = "ami-4fccb37f"
+  ami           = "ami-4fccb37f"
   instance_type = "m1.small"
+
   tags = {
-    Name = "HelloWorld"
+    Name     = "HelloWorld"
     TestSeed = "%d"
   }
 }
 
 data "aws_instance" "web-instance" {
   instance_tags = {
-    Name = "${aws_instance.web.tags["Name"]}"
+    Name     = "${aws_instance.web.tags["Name"]}"
     TestSeed = "%d"
   }
 }
@@ -634,22 +635,22 @@ provider "aws" {
 }
 
 resource "aws_security_group" "tf_test_foo" {
-  name = "tf_test_foo-%d"
+  name        = "tf_test_foo-%d"
   description = "foo"
 
   ingress {
-    protocol = "icmp"
+    protocol  = "icmp"
     from_port = -1
-    to_port = -1
-    self = true
+    to_port   = -1
+    self      = true
   }
 }
 
 resource "aws_instance" "foo" {
-  ami = "ami-408c7f28"
-  instance_type = "m1.small"
+  ami             = "ami-408c7f28"
+  instance_type   = "m1.small"
   security_groups = ["${aws_security_group.tf_test_foo.name}"]
-  user_data = "foo:-with-character's"
+  user_data       = "foo:-with-character's"
 }
 
 data "aws_instance" "foo" {
@@ -798,11 +799,12 @@ data "aws_ami" "amzn-ami-minimal-hvm-ebs" {
   owners      = ["amazon"]
 
   filter {
-    name = "name"
+    name   = "name"
     values = ["amzn-ami-minimal-hvm-*"]
   }
+
   filter {
-    name = "root-device-type"
+    name   = "root-device-type"
     values = ["ebs"]
   }
 }

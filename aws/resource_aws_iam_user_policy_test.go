@@ -371,14 +371,15 @@ func testAccCheckIAMUserPolicyExpectedPolicies(iamUserResource string, expected 
 func testAccAwsIamUserPolicyConfig(suffix string) string {
 	return fmt.Sprintf(`
 resource "aws_iam_user" "user_%[1]s" {
-	name = "tf_test_user_test_%[1]s"
-	path = "/"
+  name = "tf_test_user_test_%[1]s"
+  path = "/"
 }
 
 resource "aws_iam_user_policy" "foo_%[1]s" {
-	name = "tf_test_policy_test_%[1]s"
-	user = "${aws_iam_user.user_%[1]s.name}"
-	policy = <<EOF
+  name = "tf_test_policy_test_%[1]s"
+  user = "${aws_iam_user.user_%[1]s.name}"
+
+  policy = <<EOF
 {
   "Version": "2012-10-17",
   "Statement": {

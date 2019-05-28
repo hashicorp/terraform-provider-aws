@@ -751,6 +751,7 @@ resource "tls_self_signed_cert" "test" {
     "digital_signature",
     "server_auth",
   ]
+
   key_algorithm         = "RSA"
   private_key_pem       = "${tls_private_key.test.private_key_pem}"
   validity_period_hours = 12
@@ -1146,28 +1147,28 @@ resource "aws_lb_listener" "test" {
 func testAccAWSLBListenerConfig_oidc(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_lb" "test" {
-  name            = "%s"
-  internal        = false
-  security_groups = ["${aws_security_group.test.id}"]
-  subnets         = ["${aws_subnet.test.*.id[0]}", "${aws_subnet.test.*.id[1]}"]
+  name                       = "%s"
+  internal                   = false
+  security_groups            = ["${aws_security_group.test.id}"]
+  subnets                    = ["${aws_subnet.test.*.id[0]}", "${aws_subnet.test.*.id[1]}"]
   enable_deletion_protection = false
 }
 
 resource "aws_lb_target_group" "test" {
-  name = "%s"
-  port = 8080
+  name     = "%s"
+  port     = 8080
   protocol = "HTTP"
-  vpc_id = "${aws_vpc.test.id}"
+  vpc_id   = "${aws_vpc.test.id}"
 
   health_check {
-    path = "/health"
-    interval = 60
-    port = 8081
-    protocol = "HTTP"
-    timeout = 3
-    healthy_threshold = 3
+    path                = "/health"
+    interval            = 60
+    port                = 8081
+    protocol            = "HTTP"
+    timeout             = 3
+    healthy_threshold   = 3
     unhealthy_threshold = 3
-    matcher = "200-299"
+    matcher             = "200-299"
   }
 }
 
@@ -1215,7 +1216,7 @@ resource "aws_security_group" "test" {
 }
 
 resource "aws_iam_server_certificate" "test" {
-  name = "terraform-test-cert-%s"
+  name             = "terraform-test-cert-%s"
   certificate_body = "${tls_self_signed_cert.test.cert_pem}"
   private_key      = "${tls_private_key.test.private_key_pem}"
 }
@@ -1289,7 +1290,6 @@ resource "aws_lb_listener" "test" {
   certificate_arn   = "${aws_iam_server_certificate.test.arn}"
 
   default_action {
-    order = 1
     type = "authenticate-oidc"
 
     authenticate_oidc {

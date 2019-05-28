@@ -335,18 +335,18 @@ func testAccCheckAWSCloudWatchEventTargetDestroy(s *terraform.State) error {
 func testAccAWSCloudWatchEventTargetConfig(ruleName, snsTopicName, targetID string) string {
 	return fmt.Sprintf(`
 resource "aws_cloudwatch_event_rule" "foo" {
-	name = "%s"
-	schedule_expression = "rate(1 hour)"
+  name                = "%s"
+  schedule_expression = "rate(1 hour)"
 }
 
 resource "aws_cloudwatch_event_target" "moobar" {
-	rule = "${aws_cloudwatch_event_rule.foo.name}"
-	target_id = "%s"
-	arn = "${aws_sns_topic.moon.arn}"
+  rule      = "${aws_cloudwatch_event_rule.foo.name}"
+  target_id = "%s"
+  arn       = "${aws_sns_topic.moon.arn}"
 }
 
 resource "aws_sns_topic" "moon" {
-	name = "%s"
+  name = "%s"
 }
 `, ruleName, targetID, snsTopicName)
 }
@@ -354,17 +354,17 @@ resource "aws_sns_topic" "moon" {
 func testAccAWSCloudWatchEventTargetConfigMissingTargetId(ruleName, snsTopicName string) string {
 	return fmt.Sprintf(`
 resource "aws_cloudwatch_event_rule" "foo" {
-	name = "%s"
-	schedule_expression = "rate(1 hour)"
+  name                = "%s"
+  schedule_expression = "rate(1 hour)"
 }
 
 resource "aws_cloudwatch_event_target" "moobar" {
-	rule = "${aws_cloudwatch_event_rule.foo.name}"
-	arn = "${aws_sns_topic.moon.arn}"
+  rule = "${aws_cloudwatch_event_rule.foo.name}"
+  arn  = "${aws_sns_topic.moon.arn}"
 }
 
 resource "aws_sns_topic" "moon" {
-	name = "%s"
+  name = "%s"
 }
 `, ruleName, snsTopicName)
 }
@@ -784,14 +784,14 @@ CONTAINER_PROPERTIES
 func testAccAWSCloudWatchEventTargetConfigKinesis(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_cloudwatch_event_rule" "cloudwatch_event_rule" {
-  name        = "%[1]s"
-  description = "schedule_batch_test"
+  name                = "%[1]s"
+  description         = "schedule_batch_test"
   schedule_expression = "rate(5 minutes)"
 }
 
 resource "aws_cloudwatch_event_target" "test" {
-  arn = "${aws_kinesis_stream.kinesis_stream.arn}"
-  rule = "${aws_cloudwatch_event_rule.cloudwatch_event_rule.id}"
+  arn      = "${aws_kinesis_stream.kinesis_stream.arn}"
+  rule     = "${aws_cloudwatch_event_rule.cloudwatch_event_rule.id}"
   role_arn = "${aws_iam_role.iam_role.arn}"
 
   kinesis_target {
@@ -801,6 +801,7 @@ resource "aws_cloudwatch_event_target" "test" {
 
 resource "aws_iam_role" "iam_role" {
   name = "event_%[1]s"
+
   assume_role_policy = <<EOF
 {
   "Version": "2012-10-17",

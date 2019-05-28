@@ -176,7 +176,7 @@ func testAccCheckAwsSESDomainIdentityArn(n string, domain string) resource.TestC
 func testAccAwsSESDomainIdentityConfig(domain string) string {
 	return fmt.Sprintf(`
 resource "aws_ses_domain_identity" "test" {
-	domain = "%s"
+  domain = "%s"
 }
 `, domain)
 }

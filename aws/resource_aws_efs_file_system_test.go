@@ -455,7 +455,7 @@ resource "aws_kms_key" "foo" {
 }
 
 resource "aws_efs_file_system" "foo-with-kms" {
-  encrypted = false
+  encrypted  = false
   kms_key_id = "${aws_kms_key.foo.arn}"
 }
 `, rInt)

@@ -210,7 +210,7 @@ resource "aws_sqs_queue" "foobar" {
 }
 
 resource "aws_iam_role" "foobar" {
-  name = "foobar-%d"
+  name = "foobar"
 
   assume_role_policy = <<EOF
 {
@@ -225,7 +225,7 @@ EOF
 }
 
 resource "aws_iam_role_policy" "foobar" {
-  name = "foobar-%d"
+  name = "foobar"
   role = "${aws_iam_role.foobar.id}"
 
   policy = <<EOF
@@ -265,8 +265,9 @@ resource "aws_autoscaling_group" "foobar" {
 }
 
 resource "aws_autoscaling_lifecycle_hook" "foobar" {
-  name                   = "foobar-%d"
+  name                   = "foobar"
   autoscaling_group_name = "${aws_autoscaling_group.foobar.name}"
+  default_result         = "CONTINUE"
   heartbeat_timeout      = 2000
   lifecycle_transition   = "autoscaling:EC2_INSTANCE_LAUNCHING"
 

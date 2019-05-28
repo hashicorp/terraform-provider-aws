@@ -374,11 +374,13 @@ resource "aws_cloudformation_stack_set" "test" {
   administration_role_arn = "${aws_iam_role.Administration.arn}"
   execution_role_name     = "${aws_iam_role.Execution.name}"
   name                    = %[1]q
-  parameters              = {
+
+  parameters = {
     Parameter1 = "stacksetvalue1"
     Parameter2 = "stacksetvalue2"
   }
-  template_body           = <<TEMPLATE
+
+  template_body = <<TEMPLATE
 Parameters:
   Parameter1:
     Type: String

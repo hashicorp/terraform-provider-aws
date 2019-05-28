@@ -141,7 +141,7 @@ provider "aws" {
 
 resource "aws_lightsail_static_ip_attachment" "test" {
   static_ip_name = "${aws_lightsail_static_ip.test.name}"
-  instance_name = "${aws_lightsail_instance.test.name}"
+  instance_name  = "${aws_lightsail_instance.test.name}"
 }
 
 resource "aws_lightsail_static_ip" "test" {

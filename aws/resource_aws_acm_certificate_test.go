@@ -569,30 +569,30 @@ resource "aws_acm_certificate" "cert" {
 func testAccAcmCertificateConfig_selfSigned(certName string) string {
 	return fmt.Sprintf(`
 resource "tls_private_key" "%[1]s" {
-	algorithm = "RSA"
+  algorithm = "RSA"
 }
 
 resource "tls_self_signed_cert" "%[1]s" {
-	key_algorithm   = "RSA"
-	private_key_pem = "${tls_private_key.%[1]s.private_key_pem}"
+  key_algorithm   = "RSA"
+  private_key_pem = "${tls_private_key.%[1]s.private_key_pem}"
 
-	subject {
-		common_name  = "%[1]s.com"
-		organization = "ACME Examples, Inc"
-	}
+  subject {
+    common_name  = "%[1]s.com"
+    organization = "ACME Examples, Inc"
+  }
 
-	validity_period_hours = 12
+  validity_period_hours = 12
 
-	allowed_uses = [
-		"key_encipherment",
-		"digital_signature",
-		"server_auth",
-	]
+  allowed_uses = [
+    "key_encipherment",
+    "digital_signature",
+    "server_auth",
+  ]
 }
 
 resource "aws_acm_certificate" "cert" {
-  private_key 		= "${tls_private_key.%[1]s.private_key_pem}"
-  certificate_body  = "${tls_self_signed_cert.%[1]s.cert_pem}"
+  private_key      = "${tls_private_key.%[1]s.private_key_pem}"
+  certificate_body = "${tls_self_signed_cert.%[1]s.cert_pem}"
 }
 `, certName)
 }

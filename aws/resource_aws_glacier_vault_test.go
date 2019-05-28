@@ -247,12 +247,14 @@ resource "aws_sns_topic" "aws_sns_topic" {
 
 resource "aws_glacier_vault" "full" {
   name = "my_test_vault_%d"
+
   notification {
-  	sns_topic = "${aws_sns_topic.aws_sns_topic.arn}"
-  	events = ["ArchiveRetrievalCompleted","InventoryRetrievalCompleted"]
+    sns_topic = "${aws_sns_topic.aws_sns_topic.arn}"
+    events    = ["ArchiveRetrievalCompleted", "InventoryRetrievalCompleted"]
   }
+
   tags = {
-    Test="Test1"
+    Test = "Test1"
   }
 }
 `, rInt, rInt)
@@ -266,8 +268,9 @@ resource "aws_sns_topic" "aws_sns_topic" {
 
 resource "aws_glacier_vault" "full" {
   name = "my_test_vault_%d"
+
   tags = {
-    Test="Test1"
+    Test = "Test1"
   }
 }
 `, rInt, rInt)

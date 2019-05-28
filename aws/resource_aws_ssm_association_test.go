@@ -632,8 +632,9 @@ resource "aws_ssm_association" "foo" {
 func testAccAWSSSMAssociationBasicConfigWithDocumentVersion(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_ssm_document" "foo_document" {
-  name    = "test_document_association-%s"
-	document_type = "Command"
+  name          = "test_document_association-%s"
+  document_type = "Command"
+
   content = <<DOC
   {
     "schemaVersion": "1.2",
@@ -656,10 +657,11 @@ DOC
 }
 
 resource "aws_ssm_association" "foo" {
-  name        = "test_document_association-%s"
+  name             = "test_document_association-%s"
   document_version = "${aws_ssm_document.foo_document.latest_version}"
+
   targets {
-    key = "tag:Name"
+    key    = "tag:Name"
     values = ["acceptanceTest"]
   }
 }
@@ -919,8 +921,9 @@ resource "aws_ssm_association" "foo" {
 func testAccAWSSSMAssociationConfigWithAssociationNameAndScheduleExpression(rName, associationName, scheduleExpression string) string {
 	return fmt.Sprintf(`
 resource "aws_ssm_document" "test" {
-  name = "test_document_association-%s"
+  name          = "test_document_association-%s"
   document_type = "Command"
+
   content = <<DOC
   {
     "schemaVersion": "1.2",
@@ -947,7 +950,7 @@ resource "aws_ssm_association" "test" {
   schedule_expression = %q
 
   targets {
-    key = "tag:Name"
+    key    = "tag:Name"
     values = ["acceptanceTest"]
   }
 }
@@ -957,8 +960,9 @@ resource "aws_ssm_association" "test" {
 func testAccAWSSSMAssociationBasicConfigWithComplianceSeverity(compSeverity, rName, assocName string) string {
 	return fmt.Sprintf(`
 resource "aws_ssm_document" "foo_document" {
-  name = "test_document_association-%s"
+  name          = "test_document_association-%s"
   document_type = "Command"
+
   content = <<DOC
   {
     "schemaVersion": "1.2",
@@ -980,11 +984,12 @@ DOC
 }
 
 resource "aws_ssm_association" "foo" {
-  name = "${aws_ssm_document.foo_document.name}"
-  association_name = "%s"
+  name                = "${aws_ssm_document.foo_document.name}"
+  association_name    = "%s"
   compliance_severity = "%s"
+
   targets {
-    key = "tag:Name"
+    key    = "tag:Name"
     values = ["acceptanceTest"]
   }
 }
@@ -994,8 +999,9 @@ resource "aws_ssm_association" "foo" {
 func testAccAWSSSMAssociationRateControlConfig(rName, rate string) string {
 	return fmt.Sprintf(`
 resource "aws_ssm_document" "foo_document" {
-  name    = "tf-test-ssm-document-%s"
-	document_type = "Command"
+  name          = "tf-test-ssm-document-%s"
+  document_type = "Command"
+
   content = <<DOC
   {
     "schemaVersion": "1.2",
@@ -1015,12 +1021,14 @@ resource "aws_ssm_document" "foo_document" {
   }
 DOC
 }
+
 resource "aws_ssm_association" "foo" {
-  name        = "${aws_ssm_document.foo_document.name}"
+  name            = "${aws_ssm_document.foo_document.name}"
   max_concurrency = "%s"
-  max_errors = "%s"
-	targets {
-    key = "tag:Name"
+  max_errors      = "%s"
+
+  targets {
+    key    = "tag:Name"
     values = ["acceptanceTest"]
   }
 }

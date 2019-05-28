@@ -696,7 +696,7 @@ resource "aws_sqs_queue" "queue" {
 
   tags = {
     Environment = "production"
-    Usage = "original"
+    Usage       = "original"
   }
 }
 `, r)

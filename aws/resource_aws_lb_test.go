@@ -1532,16 +1532,18 @@ data "aws_availability_zones" "available" {}
 
 resource "aws_vpc" "main" {
   cidr_block = "10.10.0.0/16"
+
   tags = {
-  	Name = "terraform-testacc-lb-network-load-balancer-eip"
+    Name = "terraform-testacc-lb-network-load-balancer-eip"
   }
 }
 
 resource "aws_subnet" "public" {
-  count = "${length(data.aws_availability_zones.available.names)}"
+  count             = "${length(data.aws_availability_zones.available.names)}"
   availability_zone = "${data.aws_availability_zones.available.names[count.index]}"
-  cidr_block = "10.10.${count.index}.0/24"
-  vpc_id = "${aws_vpc.main.id}"
+  cidr_block        = "10.10.${count.index}.0/24"
+  vpc_id            = "${aws_vpc.main.id}"
+
   tags = {
     Name = "tf-acc-lb-network-load-balancer-eip-${count.index}"
   }
@@ -1553,6 +1555,7 @@ resource "aws_internet_gateway" "default" {
 
 resource "aws_route_table" "public" {
   vpc_id = "${aws_vpc.main.id}"
+
   route {
     cidr_block = "0.0.0.0/0"
     gateway_id = "${aws_internet_gateway.default.id}"
@@ -1560,20 +1563,22 @@ resource "aws_route_table" "public" {
 }
 
 resource "aws_route_table_association" "a" {
-  count = "${length(data.aws_availability_zones.available.names)}"
+  count          = "${length(data.aws_availability_zones.available.names)}"
   subnet_id      = "${aws_subnet.public.*.id[count.index]}"
   route_table_id = "${aws_route_table.public.id}"
 }
 
 resource "aws_lb" "lb_test" {
-  name            = "%s"
+  name               = "%s"
   load_balancer_type = "network"
+
   subnet_mapping {
-    subnet_id = "${aws_subnet.public.0.id}"
+    subnet_id     = "${aws_subnet.public.0.id}"
     allocation_id = "${aws_eip.lb.0.id}"
   }
+
   subnet_mapping {
-    subnet_id = "${aws_subnet.public.1.id}"
+    subnet_id     = "${aws_subnet.public.1.id}"
     allocation_id = "${aws_eip.lb.1.id}"
   }
 
@@ -2131,7 +2136,7 @@ data "aws_iam_policy_document" "test" {
     }
   }
 
-	statement {
+  statement {
     actions   = ["s3:GetBucketAcl"]
     effect    = "Allow"
     resources = ["${aws_s3_bucket.test.arn}"]
