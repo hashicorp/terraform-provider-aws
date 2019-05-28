@@ -475,6 +475,96 @@ func (c *StorageGateway) AddWorkingStorageWithContext(ctx aws.Context, input *Ad
 	return out, req.Send()
 }
 
+const opAssignTapePool = "AssignTapePool"
+
+// AssignTapePoolRequest generates a "aws/request.Request" representing the
+// client's request for the AssignTapePool operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See AssignTapePool for more information on using the AssignTapePool
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the AssignTapePoolRequest method.
+//    req, resp := client.AssignTapePoolRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/storagegateway-2013-06-30/AssignTapePool
+func (c *StorageGateway) AssignTapePoolRequest(input *AssignTapePoolInput) (req *request.Request, output *AssignTapePoolOutput) {
+	op := &request.Operation{
+		Name:       opAssignTapePool,
+		HTTPMethod: "POST",
+		HTTPPath:   "/",
+	}
+
+	if input == nil {
+		input = &AssignTapePoolInput{}
+	}
+
+	output = &AssignTapePoolOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// AssignTapePool API operation for AWS Storage Gateway.
+//
+// Assigns a tape to a tape pool for archiving. The tape assigned to a pool
+// is archived in the S3 storage class that is associated with the pool. When
+// you use your backup application to eject the tape, the tape is archived directly
+// into the S3 storage class (Glacier or Deep Archive) that corresponds to the
+// pool.
+//
+// Valid values: "GLACIER", "DEEP_ARCHIVE"
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for AWS Storage Gateway's
+// API operation AssignTapePool for usage and error information.
+//
+// Returned Error Codes:
+//   * ErrCodeInvalidGatewayRequestException "InvalidGatewayRequestException"
+//   An exception occurred because an invalid gateway request was issued to the
+//   service. For more information, see the error and message fields.
+//
+//   * ErrCodeInternalServerError "InternalServerError"
+//   An internal server error has occurred during the request. For more information,
+//   see the error and message fields.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/storagegateway-2013-06-30/AssignTapePool
+func (c *StorageGateway) AssignTapePool(input *AssignTapePoolInput) (*AssignTapePoolOutput, error) {
+	req, out := c.AssignTapePoolRequest(input)
+	return out, req.Send()
+}
+
+// AssignTapePoolWithContext is the same as AssignTapePool with the addition of
+// the ability to pass a context and additional request options.
+//
+// See AssignTapePool for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *StorageGateway) AssignTapePoolWithContext(ctx aws.Context, input *AssignTapePoolInput, opts ...request.Option) (*AssignTapePoolOutput, error) {
+	req, out := c.AssignTapePoolRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
 const opAttachVolume = "AttachVolume"
 
 // AttachVolumeRequest generates a "aws/request.Request" representing the
@@ -7556,6 +7646,95 @@ func (s *AddWorkingStorageOutput) SetGatewayARN(v string) *AddWorkingStorageOutp
 	return s
 }
 
+type AssignTapePoolInput struct {
+	_ struct{} `type:"structure"`
+
+	// The ID of the pool that you want to add your tape to for archiving. The tape
+	// in this pool is archived in the S3 storage class that is associated with
+	// the pool. When you use your backup application to eject the tape, the tape
+	// is archived directly into the storage class (Glacier or Deep Archive) that
+	// corresponds to the pool.
+	//
+	// Valid values: "GLACIER", "DEEP_ARCHIVE"
+	//
+	// PoolId is a required field
+	PoolId *string `min:"1" type:"string" required:"true"`
+
+	// The unique Amazon Resource Name (ARN) of the virtual tape that you want to
+	// add to the tape pool.
+	//
+	// TapeARN is a required field
+	TapeARN *string `min:"50" type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s AssignTapePoolInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s AssignTapePoolInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *AssignTapePoolInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "AssignTapePoolInput"}
+	if s.PoolId == nil {
+		invalidParams.Add(request.NewErrParamRequired("PoolId"))
+	}
+	if s.PoolId != nil && len(*s.PoolId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("PoolId", 1))
+	}
+	if s.TapeARN == nil {
+		invalidParams.Add(request.NewErrParamRequired("TapeARN"))
+	}
+	if s.TapeARN != nil && len(*s.TapeARN) < 50 {
+		invalidParams.Add(request.NewErrParamMinLen("TapeARN", 50))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetPoolId sets the PoolId field's value.
+func (s *AssignTapePoolInput) SetPoolId(v string) *AssignTapePoolInput {
+	s.PoolId = &v
+	return s
+}
+
+// SetTapeARN sets the TapeARN field's value.
+func (s *AssignTapePoolInput) SetTapeARN(v string) *AssignTapePoolInput {
+	s.TapeARN = &v
+	return s
+}
+
+type AssignTapePoolOutput struct {
+	_ struct{} `type:"structure"`
+
+	// The unique Amazon Resource Names (ARN) of the virtual tape that was added
+	// to the tape pool.
+	TapeARN *string `min:"50" type:"string"`
+}
+
+// String returns the string representation
+func (s AssignTapePoolOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s AssignTapePoolOutput) GoString() string {
+	return s.String()
+}
+
+// SetTapeARN sets the TapeARN field's value.
+func (s *AssignTapePoolOutput) SetTapeARN(v string) *AssignTapePoolOutput {
+	s.TapeARN = &v
+	return s
+}
+
 // AttachVolumeInput
 type AttachVolumeInput struct {
 	_ struct{} `type:"structure"`
@@ -8036,11 +8215,11 @@ type ChapInfo struct {
 
 	// The secret key that the initiator (for example, the Windows client) must
 	// provide to participate in mutual CHAP with the target.
-	SecretToAuthenticateInitiator *string `min:"1" type:"string"`
+	SecretToAuthenticateInitiator *string `min:"1" type:"string" sensitive:"true"`
 
 	// The secret key that the target must provide to participate in mutual CHAP
 	// with the initiator (e.g. Windows client).
-	SecretToAuthenticateTarget *string `min:"1" type:"string"`
+	SecretToAuthenticateTarget *string `min:"1" type:"string" sensitive:"true"`
 
 	// The Amazon Resource Name (ARN) of the volume.
 	//
@@ -15571,7 +15750,7 @@ type UpdateChapCredentialsInput struct {
 	// The secret key must be between 12 and 16 bytes when encoded in UTF-8.
 	//
 	// SecretToAuthenticateInitiator is a required field
-	SecretToAuthenticateInitiator *string `min:"1" type:"string" required:"true"`
+	SecretToAuthenticateInitiator *string `min:"1" type:"string" required:"true" sensitive:"true"`
 
 	// The secret key that the target must provide to participate in mutual CHAP
 	// with the initiator (e.g. Windows client).
@@ -15579,7 +15758,7 @@ type UpdateChapCredentialsInput struct {
 	// Byte constraints: Minimum bytes of 12. Maximum bytes of 16.
 	//
 	// The secret key must be between 12 and 16 bytes when encoded in UTF-8.
-	SecretToAuthenticateTarget *string `min:"1" type:"string"`
+	SecretToAuthenticateTarget *string `min:"1" type:"string" sensitive:"true"`
 
 	// The Amazon Resource Name (ARN) of the iSCSI volume target. Use the DescribeStorediSCSIVolumes
 	// operation to return the TargetARN for specified VolumeARN.
