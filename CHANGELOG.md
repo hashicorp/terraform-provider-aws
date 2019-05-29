@@ -4,6 +4,10 @@ FEATURES:
 
 * **New Resource:** `aws_ec2_transit_gateway_vpc_attachment_accepter` [GH-8679]
 
+BUG FIXES:
+
+* resource/aws_dms_endpoint: Fix casing for `mongodb_settings` configuration block `auth_type`, `auth_mechanism`, and `nesting_level` argument defaults [GH-8008] / [GH-8795]
+
 ## 2.12.0 (May 24, 2019)
 
 NOTES:
