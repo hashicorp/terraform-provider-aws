@@ -6,6 +6,7 @@ FEATURES:
 
 BUG FIXES:
 
+* data-source/aws_rds_cluster: Add missing `hosted_zone_id` attribute [GH-8799]
 * resource/aws_dms_endpoint: Fix casing for `mongodb_settings` configuration block `auth_type`, `auth_mechanism`, and `nesting_level` argument defaults [GH-8008] / [GH-8795]
 
 ## 2.12.0 (May 24, 2019)
