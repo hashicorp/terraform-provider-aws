@@ -1176,26 +1176,26 @@ resource "aws_s3_bucket" "default" {
 
 resource "aws_s3_bucket_object" "default" {
   bucket = "${aws_s3_bucket.default.id}"
-  key = "python-v1.zip"
+  key    = "python-v1.zip"
   source = "test-fixtures/python-v1.zip"
 }
 
 resource "aws_elastic_beanstalk_application" "default" {
-  name = "%s"
+  name        = "%s"
   description = "tf-test-desc"
 }
 
 resource "aws_elastic_beanstalk_application_version" "default" {
   application = "${aws_elastic_beanstalk_application.default.name}"
-  name = "%s"
-  bucket = "${aws_s3_bucket.default.id}"
-  key = "${aws_s3_bucket_object.default.id}"
+  name        = "%s"
+  bucket      = "${aws_s3_bucket.default.id}"
+  key         = "${aws_s3_bucket_object.default.id}"
 }
 
 resource "aws_elastic_beanstalk_environment" "default" {
-  name = "%s"
-  application = "${aws_elastic_beanstalk_application.default.name}"
-  version_label = "${aws_elastic_beanstalk_application_version.default.name}"
+  name                = "%s"
+  application         = "${aws_elastic_beanstalk_application.default.name}"
+  version_label       = "${aws_elastic_beanstalk_application_version.default.name}"
   solution_stack_name = "64bit Amazon Linux running Python"
 }
 `, bucketName, appName, appVersionName, envName)
@@ -1204,7 +1204,7 @@ resource "aws_elastic_beanstalk_environment" "default" {
 func testAccBeanstalkEnvSettingJsonValue(appName, queueName, keyPairName, instanceProfileName, roleName, policyName, envName string) string {
 	return fmt.Sprintf(`
 resource "aws_elastic_beanstalk_application" "app" {
-  name = "%s"
+  name        = "%s"
   description = "This is a description"
 }
 
@@ -1218,7 +1218,7 @@ resource "aws_key_pair" "test" {
 }
 
 resource "aws_iam_instance_profile" "app" {
-  name  = "%s"
+  name = "%s"
   role = "${aws_iam_role.test.name}"
 }
 
@@ -1264,134 +1264,135 @@ EOF
 }
 
 resource "aws_elastic_beanstalk_environment" "default" {
-  name = "%s"
-  application = "${aws_elastic_beanstalk_application.app.name}"
-  tier = "Worker"
+  name                = "%s"
+  application         = "${aws_elastic_beanstalk_application.app.name}"
+  tier                = "Worker"
   solution_stack_name = "64bit Amazon Linux 2016.03 v2.1.0 running Docker 1.9.1"
 
   setting = {
     namespace = "aws:elasticbeanstalk:command"
-    name = "BatchSize"
-    value = "30"
+    name      = "BatchSize"
+    value     = "30"
   }
 
   setting = {
     namespace = "aws:elasticbeanstalk:command"
-    name = "BatchSizeType"
-    value = "Percentage"
+    name      = "BatchSizeType"
+    value     = "Percentage"
   }
 
   setting = {
     namespace = "aws:elasticbeanstalk:command"
-    name = "DeploymentPolicy"
-    value = "Rolling"
+    name      = "DeploymentPolicy"
+    value     = "Rolling"
   }
 
   setting = {
     namespace = "aws:elasticbeanstalk:sns:topics"
-    name = "Notification Endpoint"
-    value = "example@example.com"
+    name      = "Notification Endpoint"
+    value     = "example@example.com"
   }
 
   setting = {
     namespace = "aws:elasticbeanstalk:sqsd"
-    name = "ErrorVisibilityTimeout"
-    value = "2"
+    name      = "ErrorVisibilityTimeout"
+    value     = "2"
   }
 
   setting = {
     namespace = "aws:elasticbeanstalk:sqsd"
-    name = "HttpPath"
-    value = "/event-message"
+    name      = "HttpPath"
+    value     = "/event-message"
   }
 
   setting = {
     namespace = "aws:elasticbeanstalk:sqsd"
-    name = "WorkerQueueURL"
-    value = "${aws_sqs_queue.test.id}"
+    name      = "WorkerQueueURL"
+    value     = "${aws_sqs_queue.test.id}"
   }
 
   setting = {
     namespace = "aws:elasticbeanstalk:sqsd"
-    name = "VisibilityTimeout"
-    value = "300"
+    name      = "VisibilityTimeout"
+    value     = "300"
   }
 
   setting = {
     namespace = "aws:elasticbeanstalk:sqsd"
-    name = "HttpConnections"
-    value = "10"
+    name      = "HttpConnections"
+    value     = "10"
   }
 
   setting = {
     namespace = "aws:elasticbeanstalk:sqsd"
-    name = "InactivityTimeout"
-    value = "299"
+    name      = "InactivityTimeout"
+    value     = "299"
   }
 
   setting = {
     namespace = "aws:elasticbeanstalk:sqsd"
-    name = "MimeType"
-    value = "application/json"
+    name      = "MimeType"
+    value     = "application/json"
   }
 
   setting = {
     namespace = "aws:elasticbeanstalk:environment"
-    name = "ServiceRole"
-    value = "aws-elasticbeanstalk-service-role"
+    name      = "ServiceRole"
+    value     = "aws-elasticbeanstalk-service-role"
   }
 
   setting = {
     namespace = "aws:elasticbeanstalk:environment"
-    name = "EnvironmentType"
-    value = "LoadBalanced"
+    name      = "EnvironmentType"
+    value     = "LoadBalanced"
   }
 
   setting = {
     namespace = "aws:elasticbeanstalk:application"
-    name = "Application Healthcheck URL"
-    value = "/health"
+    name      = "Application Healthcheck URL"
+    value     = "/health"
   }
 
   setting = {
     namespace = "aws:elasticbeanstalk:healthreporting:system"
-    name = "SystemType"
-    value = "enhanced"
+    name      = "SystemType"
+    value     = "enhanced"
   }
 
   setting = {
     namespace = "aws:elasticbeanstalk:healthreporting:system"
-    name = "HealthCheckSuccessThreshold"
-    value = "Ok"
+    name      = "HealthCheckSuccessThreshold"
+    value     = "Ok"
   }
 
   setting = {
     namespace = "aws:autoscaling:launchconfiguration"
-    name = "IamInstanceProfile"
-    value = "${aws_iam_instance_profile.app.name}"
+    name      = "IamInstanceProfile"
+    value     = "${aws_iam_instance_profile.app.name}"
   }
 
   setting = {
     namespace = "aws:autoscaling:launchconfiguration"
-    name = "InstanceType"
-    value = "t2.micro"
+    name      = "InstanceType"
+    value     = "t2.micro"
   }
 
   setting = {
     namespace = "aws:autoscaling:launchconfiguration"
-    name = "EC2KeyName"
-    value = "${aws_key_pair.test.key_name}"
+    name      = "EC2KeyName"
+    value     = "${aws_key_pair.test.key_name}"
   }
 
   setting = {
     namespace = "aws:autoscaling:updatepolicy:rollingupdate"
-    name = "RollingUpdateEnabled"
-    value = "false"
+    name      = "RollingUpdateEnabled"
+    value     = "false"
   }
 
   setting = {
     namespace = "aws:elasticbeanstalk:healthreporting:system"
-    name = "ConfigDocument"
+    name      = "ConfigDocument"
+
     value = <<EOF
 {
 	"Version": 1,

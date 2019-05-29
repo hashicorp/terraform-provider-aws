@@ -140,7 +140,7 @@ func testAccCheckAwsBackupVaultExists(name string, vault *backup.DescribeBackupV
 func testAccBackupVaultConfig(randInt int) string {
 	return fmt.Sprintf(`
 resource "aws_backup_vault" "test" {
-	name = "tf_acc_test_backup_vault_%d"
+  name = "tf_acc_test_backup_vault_%d"
 }
 `, randInt)
 }
@@ -148,13 +148,13 @@ resource "aws_backup_vault" "test" {
 func testAccBackupVaultWithKmsKey(randInt int) string {
 	return fmt.Sprintf(`
 resource "aws_kms_key" "test" {
-	description             = "Test KMS Key for AWS Backup Vault"
-	deletion_window_in_days = 10
+  description             = "Test KMS Key for AWS Backup Vault"
+  deletion_window_in_days = 10
 }
 
 resource "aws_backup_vault" "test" {
-	name = "tf_acc_test_backup_vault_%d"
-	kms_key_arn = "${aws_kms_key.test.arn}"
+  name        = "tf_acc_test_backup_vault_%d"
+  kms_key_arn = "${aws_kms_key.test.arn}"
 }
 `, randInt)
 }
@@ -162,12 +162,12 @@ resource "aws_backup_vault" "test" {
 func testAccBackupVaultWithTags(randInt int) string {
 	return fmt.Sprintf(`
 resource "aws_backup_vault" "test" {
-	name = "tf_acc_test_backup_vault_%d"
-	
-	tags = {
-		up		= "down"
-		left	= "right"
-	}
+  name = "tf_acc_test_backup_vault_%d"
+
+  tags = {
+    up   = "down"
+    left = "right"
+  }
 }
 `, randInt)
 }
@@ -175,14 +175,14 @@ resource "aws_backup_vault" "test" {
 func testAccBackupVaultWithUpdateTags(randInt int) string {
 	return fmt.Sprintf(`
 resource "aws_backup_vault" "test" {
-	name = "tf_acc_test_backup_vault_%d"
-	
-	tags = {
-		up		= "downdown"
-		left	= "rightright"
-		foo		= "bar"
-		fizz	= "buzz"
-	}
+  name = "tf_acc_test_backup_vault_%d"
+
+  tags = {
+    up   = "downdown"
+    left = "rightright"
+    foo  = "bar"
+    fizz = "buzz"
+  }
 }
 `, randInt)
 }
@@ -190,12 +190,12 @@ resource "aws_backup_vault" "test" {
 func testAccBackupVaultWithRemoveTags(randInt int) string {
 	return fmt.Sprintf(`
 resource "aws_backup_vault" "test" {
-	name = "tf_acc_test_backup_vault_%d"
+  name = "tf_acc_test_backup_vault_%d"
 
-	tags = {
-		foo		= "bar"
-		fizz	= "buzz"
-	}
+  tags = {
+    foo  = "bar"
+    fizz = "buzz"
+  }
 }
 `, randInt)
 }

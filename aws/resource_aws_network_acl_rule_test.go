@@ -557,7 +557,7 @@ resource "aws_network_acl_rule" "test" {
   icmp_code       = -1
   icmp_type       = -1
   ipv6_cidr_block = "::/0"
-  network_acl_id = "${aws_network_acl.test.id}"
+  network_acl_id  = "${aws_network_acl.test.id}"
   protocol        = 58
   rule_action     = "allow"
   rule_number     = 150

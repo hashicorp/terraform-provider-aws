@@ -309,9 +309,9 @@ resource "aws_backup_plan" "test" {
   name = "tf_acc_test_backup_plan_%[1]d"
 
   rule {
-    rule_name          = "tf_acc_test_backup_rule_%[1]d"
-    target_vault_name  = "${aws_backup_vault.test.name}"
-    schedule           = "cron(0 12 * * ? *)"
+    rule_name         = "tf_acc_test_backup_rule_%[1]d"
+    target_vault_name = "${aws_backup_vault.test.name}"
+    schedule          = "cron(0 12 * * ? *)"
   }
 }
 `, randInt)
@@ -327,13 +327,13 @@ resource "aws_backup_plan" "test" {
   name = "tf_acc_test_backup_plan_%[1]d"
 
   rule {
-    rule_name          = "tf_acc_test_backup_rule_%[1]d"
-    target_vault_name  = "${aws_backup_vault.test.name}"
-    schedule           = "cron(0 12 * * ? *)"
+    rule_name         = "tf_acc_test_backup_rule_%[1]d"
+    target_vault_name = "${aws_backup_vault.test.name}"
+    schedule          = "cron(0 12 * * ? *)"
   }
 
   tags = {
-	  env = "test"
+    env = "test"
   }
 }
 `, randInt)
@@ -349,14 +349,14 @@ resource "aws_backup_plan" "test" {
   name = "tf_acc_test_backup_plan_%[1]d"
 
   rule {
-    rule_name          = "tf_acc_test_backup_rule_%[1]d"
-    target_vault_name  = "${aws_backup_vault.test.name}"
-    schedule           = "cron(0 12 * * ? *)"
+    rule_name         = "tf_acc_test_backup_rule_%[1]d"
+    target_vault_name = "${aws_backup_vault.test.name}"
+    schedule          = "cron(0 12 * * ? *)"
   }
 
   tags = {
-	  env = "test"
-	  app = "widget"
+    env = "test"
+    app = "widget"
   }
 }
 `, randInt)
@@ -372,12 +372,13 @@ resource "aws_backup_plan" "test" {
   name = "tf_acc_test_backup_plan_%[1]s"
 
   rule {
-    rule_name          = "tf_acc_test_backup_rule_%[1]s"
-    target_vault_name  = "${aws_backup_vault.test.name}"
-    schedule           = "cron(0 12 * * ? *)"
+    rule_name         = "tf_acc_test_backup_rule_%[1]s"
+    target_vault_name = "${aws_backup_vault.test.name}"
+    schedule          = "cron(0 12 * * ? *)"
+
     lifecycle {
-        cold_storage_after = 30
-        delete_after       = 160
+      cold_storage_after = 30
+      delete_after       = 160
     }
   }
 }
@@ -394,11 +395,12 @@ resource "aws_backup_plan" "test" {
   name = "tf_acc_test_backup_plan_%[1]s"
 
   rule {
-    rule_name          = "tf_acc_test_backup_rule_%[1]s"
-    target_vault_name  = "${aws_backup_vault.test.name}"
-    schedule           = "cron(0 12 * * ? *)"
+    rule_name         = "tf_acc_test_backup_rule_%[1]s"
+    target_vault_name = "${aws_backup_vault.test.name}"
+    schedule          = "cron(0 12 * * ? *)"
+
     lifecycle {
-        delete_after   = "7"
+      delete_after = "7"
     }
   }
 }
@@ -415,11 +417,12 @@ resource "aws_backup_plan" "test" {
   name = "tf_acc_test_backup_plan_%[1]s"
 
   rule {
-    rule_name             = "tf_acc_test_backup_rule_%[1]s"
-    target_vault_name     = "${aws_backup_vault.test.name}"
-    schedule              = "cron(0 12 * * ? *)"
+    rule_name         = "tf_acc_test_backup_rule_%[1]s"
+    target_vault_name = "${aws_backup_vault.test.name}"
+    schedule          = "cron(0 12 * * ? *)"
+
     lifecycle {
-      cold_storage_after  = "7"
+      cold_storage_after = "7"
     }
   }
 }
@@ -436,15 +439,15 @@ resource "aws_backup_plan" "test" {
   name = "tf_acc_test_backup_plan_%[1]d"
 
   rule {
-    rule_name          = "tf_acc_test_backup_rule_%[1]d"
-    target_vault_name  = "${aws_backup_vault.test.name}"
-    schedule           = "cron(0 12 * * ? *)"
+    rule_name         = "tf_acc_test_backup_rule_%[1]d"
+    target_vault_name = "${aws_backup_vault.test.name}"
+    schedule          = "cron(0 12 * * ? *)"
   }
 
   rule {
-    rule_name          = "tf_acc_test_backup_rule_%[1]d_2"
-    target_vault_name  = "${aws_backup_vault.test.name}"
-    schedule           = "cron(0 6 * * ? *)"
+    rule_name         = "tf_acc_test_backup_rule_%[1]d_2"
+    target_vault_name = "${aws_backup_vault.test.name}"
+    schedule          = "cron(0 6 * * ? *)"
   }
 }
 `, randInt)

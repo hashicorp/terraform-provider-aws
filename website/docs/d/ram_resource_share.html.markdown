@@ -20,11 +20,11 @@ data "aws_ram_resource_share" "example" {
 ## Search by filters
 ```hcl
 data "aws_ram_resource_share" "tag_filter" {
-  name = "MyResourceName"
+  name           = "MyResourceName"
   resource_owner = "SELF"
 
   filter {
-    name = "NameOfTag"
+    name   = "NameOfTag"
     values = ["exampleNameTagValue"]
   }
 }

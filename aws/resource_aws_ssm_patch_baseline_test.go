@@ -244,92 +244,90 @@ func testAccCheckAWSSSMPatchBaselineDestroy(s *terraform.State) error {
 
 func testAccAWSSSMPatchBaselineBasicConfig(rName string) string {
 	return fmt.Sprintf(`
-
 resource "aws_ssm_patch_baseline" "foo" {
-  name  = "patch-baseline-%s"
-  description = "Baseline containing all updates approved for production systems"
-  approved_patches = ["KB123456"]
+  name                              = "patch-baseline-%s"
+  description                       = "Baseline containing all updates approved for production systems"
+  approved_patches                  = ["KB123456"]
   approved_patches_compliance_level = "CRITICAL"
+
   tags = {
     Name = "My Patch Baseline"
   }
 }
-
 `, rName)
 }
 
 func testAccAWSSSMPatchBaselineBasicConfigUpdated(rName string) string {
 	return fmt.Sprintf(`
-
 resource "aws_ssm_patch_baseline" "foo" {
-  name  = "updated-patch-baseline-%s"
-  description = "Baseline containing all updates approved for production systems - August 2017"
-  approved_patches = ["KB123456","KB456789"]
+  name                              = "updated-patch-baseline-%s"
+  description                       = "Baseline containing all updates approved for production systems - August 2017"
+  approved_patches                  = ["KB123456", "KB456789"]
   approved_patches_compliance_level = "HIGH"
+
   tags = {
-    Name = "My Patch Baseline Aug 17"
+    Name        = "My Patch Baseline Aug 17"
     Environment = "production"
   }
 }
-
 `, rName)
 }
 
 func testAccAWSSSMPatchBaselineConfigWithOperatingSystem(rName string) string {
 	return fmt.Sprintf(`
-
 resource "aws_ssm_patch_baseline" "foo" {
-  name  = "patch-baseline-%s"
+  name             = "patch-baseline-%s"
   operating_system = "AMAZON_LINUX"
-  description = "Baseline containing all updates approved for production systems"
+  description      = "Baseline containing all updates approved for production systems"
+
   tags = {
     Name = "My Patch Baseline"
   }
+
   approval_rule {
-  	approve_after_days = 7
-	enable_non_security = true
-  	compliance_level = "CRITICAL"
+    approve_after_days  = 7
+    enable_non_security = true
+    compliance_level    = "CRITICAL"
 
-  	patch_filter {
-		key = "PRODUCT"
-		values = ["AmazonLinux2016.03","AmazonLinux2016.09","AmazonLinux2017.03","AmazonLinux2017.09"]
-  	}
+    patch_filter {
+      key    = "PRODUCT"
+      values = ["AmazonLinux2016.03", "AmazonLinux2016.09", "AmazonLinux2017.03", "AmazonLinux2017.09"]
+    }
 
-  	patch_filter {
-		key = "SEVERITY"
-		values = ["Critical","Important"]
-  	}
+    patch_filter {
+      key    = "SEVERITY"
+      values = ["Critical", "Important"]
+    }
   }
 }
-
 `, rName)
 }
 
 func testAccAWSSSMPatchBaselineConfigWithOperatingSystemUpdated(rName string) string {
 	return fmt.Sprintf(`
-
 resource "aws_ssm_patch_baseline" "foo" {
-  name  = "patch-baseline-%s"
+  name             = "patch-baseline-%s"
   operating_system = "WINDOWS"
-  description = "Baseline containing all updates approved for production systems"
+  description      = "Baseline containing all updates approved for production systems"
+
   tags = {
     Name = "My Patch Baseline"
   }
+
   approval_rule {
-  	approve_after_days = 7
-  	compliance_level = "INFORMATIONAL"
+    approve_after_days = 7
+    compliance_level   = "INFORMATIONAL"
 
-  	patch_filter {
-		key = "PRODUCT"
-		values = ["WindowsServer2012R2"]
-  	}
+    patch_filter {
+      key    = "PRODUCT"
+      values = ["WindowsServer2012R2"]
+    }
 
-  	patch_filter {
-		key = "MSRC_SEVERITY"
-		values = ["Critical","Important"]
-  	}
+    patch_filter {
+      key    = "MSRC_SEVERITY"
+      values = ["Critical", "Important"]
+    }
   }
 }
-
 `, rName)
 }

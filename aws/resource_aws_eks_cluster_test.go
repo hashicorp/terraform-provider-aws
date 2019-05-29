@@ -487,9 +487,9 @@ func testAccAWSEksClusterConfig_Logging(rName string, logTypes []string) string 
 %s
 
 resource "aws_eks_cluster" "test" {
-  name     = "%s"
-  role_arn = "${aws_iam_role.test.arn}"
-  enabled_cluster_log_types  = ["%v"]
+  name                      = "%s"
+  role_arn                  = "${aws_iam_role.test.arn}"
+  enabled_cluster_log_types = ["%v"]
 
   vpc_config {
     subnet_ids = ["${aws_subnet.test.*.id[0]}", "${aws_subnet.test.*.id[1]}"]

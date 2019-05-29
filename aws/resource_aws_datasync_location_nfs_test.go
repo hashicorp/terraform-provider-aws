@@ -396,10 +396,11 @@ resource "aws_instance" "test" {
 
   ami                         = "${data.aws_ami.aws-thinstaller.id}"
   associate_public_ip_address = true
+
   # Default instance type from sync.sh
-  instance_type               = "c5.2xlarge"
-  vpc_security_group_ids      = ["${aws_security_group.test.id}"]
-  subnet_id                   = "${aws_subnet.test.id}"
+  instance_type          = "c5.2xlarge"
+  vpc_security_group_ids = ["${aws_security_group.test.id}"]
+  subnet_id              = "${aws_subnet.test.id}"
 
   tags = {
     Name = "tf-acc-test-datasync-location-nfs"

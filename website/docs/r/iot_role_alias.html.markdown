@@ -14,7 +14,8 @@ Provides an IoT role alias.
 
 ```hcl
 resource "aws_iam_role" "role" {
-  name   = "dynamodb-access-role"
+  name = "dynamodb-access-role"
+
   policy = <<EOF
 {
   "Version": "2012-10-17",

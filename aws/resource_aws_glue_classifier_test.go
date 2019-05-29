@@ -411,8 +411,8 @@ resource "aws_glue_classifier" "test" {
   name = "%s"
 
   xml_classifier {
-    classification  = "%s"
-    row_tag         = "%s"
+    classification = "%s"
+    row_tag        = "%s"
   }
 }
 `, rName, classification, rowTag)

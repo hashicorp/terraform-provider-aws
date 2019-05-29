@@ -683,9 +683,9 @@ resource "aws_dms_replication_instance" "test" {
 func testAccAWSDmsReplicationInstanceConfig_ReplicationInstanceClass(rName, replicationInstanceClass string) string {
 	return fmt.Sprintf(`
 resource "aws_dms_replication_instance" "test" {
-  apply_immediately            = true
-  replication_instance_class   = %q
-  replication_instance_id      = %q
+  apply_immediately          = true
+  replication_instance_class = %q
+  replication_instance_id    = %q
 }
 `, replicationInstanceClass, rName)
 }

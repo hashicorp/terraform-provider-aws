@@ -97,12 +97,13 @@ func testAccCheckAWSEcrRepositoryPolicyExists(name string) resource.TestCheckFun
 func testAccAWSEcrRepositoryPolicy(randString string) string {
 	return fmt.Sprintf(`
 resource "aws_ecr_repository" "foo" {
-	name = "tf-acc-test-ecr-%s"
+  name = "tf-acc-test-ecr-%s"
 }
 
 resource "aws_ecr_repository_policy" "default" {
-	repository = "${aws_ecr_repository.foo.name}"
-	policy = <<EOF
+  repository = "${aws_ecr_repository.foo.name}"
+
+  policy = <<EOF
 {
     "Version": "2008-10-17",
     "Statement": [
@@ -128,7 +129,7 @@ EOF
 func testAccAWSEcrRepositoryPolicyWithIAMRole(randString string) string {
 	return fmt.Sprintf(`
 resource "aws_ecr_repository" "foo" {
-	name = "tf-acc-test-ecr-%s"
+  name = "tf-acc-test-ecr-%s"
 }
 
 resource "aws_iam_role" "foo" {
@@ -151,8 +152,9 @@ EOF
 }
 
 resource "aws_ecr_repository_policy" "default" {
-	repository = "${aws_ecr_repository.foo.name}"
-	policy = <<EOF
+  repository = "${aws_ecr_repository.foo.name}"
+
+  policy = <<EOF
 {
     "Version": "2008-10-17",
     "Statement": [

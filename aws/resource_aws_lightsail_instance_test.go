@@ -165,6 +165,7 @@ func testAccAWSLightsailInstanceConfig_basic(lightsailName string) string {
 provider "aws" {
   region = "us-east-1"
 }
+
 resource "aws_lightsail_instance" "lightsail_instance_test" {
   name              = "%s"
   availability_zone = "us-east-1b"
@@ -179,10 +180,11 @@ func testAccAWSLightsailInstanceConfig_euRegion(lightsailName string) string {
 provider "aws" {
   region = "eu-west-1"
 }
+
 resource "aws_lightsail_instance" "lightsail_instance_test" {
   name              = "%s"
   availability_zone = "eu-west-1a"
-  blueprint_id = "joomla_3_6_5"
+  blueprint_id      = "joomla_3_6_5"
   bundle_id         = "nano_1_0"
 }
 `, lightsailName)

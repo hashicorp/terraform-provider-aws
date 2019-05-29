@@ -249,6 +249,7 @@ resource "aws_cognito_user_pool" "main" {
 
 resource "aws_iam_role" "group_role" {
   name = "%[1]s"
+
   assume_role_policy = <<EOF
 {
   "Version": "2012-10-17",
@@ -282,6 +283,7 @@ resource "aws_cognito_user_pool" "main" {
 
 resource "aws_iam_role" "group_role_updated" {
   name = "%[1]s-updated"
+
   assume_role_policy = <<EOF
 {
   "Version": "2012-10-17",

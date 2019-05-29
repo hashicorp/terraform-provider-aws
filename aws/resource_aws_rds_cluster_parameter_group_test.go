@@ -433,9 +433,9 @@ resource "aws_rds_cluster_parameter_group" "bar" {
   }
 
   parameter {
-    name  = "character_set_client"
-    value = "utf8"
-		apply_method = "pending-reboot"
+    name         = "character_set_client"
+    value        = "utf8"
+    apply_method = "pending-reboot"
   }
 
   tags = {
