@@ -579,7 +579,6 @@ EOF
 #end
 EOF
 }
-
 `, i, i)
 	}
 
@@ -620,6 +619,5 @@ resource "aws_appsync_datasource" "test" {
 }
 
 %s
-
 `, rName, queryFields, rName, resolverResources)
 }

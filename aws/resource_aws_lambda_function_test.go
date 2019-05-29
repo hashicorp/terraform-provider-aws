@@ -1914,7 +1914,6 @@ resource "aws_lambda_function" "lambda_function_test" {
         mode = "Active"
     }
 }
-
 `, funcName)
 }
 
@@ -1931,7 +1930,6 @@ resource "aws_lambda_function" "lambda_function_test" {
         mode = "PassThrough"
     }
 }
-
 `, funcName)
 }
 
@@ -1952,7 +1950,6 @@ resource "aws_lambda_function" "lambda_function_test" {
 resource "aws_sns_topic" "lambda_function_test" {
 	name = "%s"
 }
-
 `, funcName, topicName)
 }
 
@@ -1978,7 +1975,6 @@ resource "aws_sns_topic" "lambda_function_test" {
 resource "aws_sns_topic" "lambda_function_test_2" {
 	name = "%s"
 }
-
 `, uFuncName, topic1Name, topic2Name)
 }
 
@@ -2105,8 +2101,6 @@ resource "aws_security_group" "sg_for_lambda_2" {
       cidr_blocks = ["0.0.0.0/0"]
   }
 }
-
-
 `, funcName, sgName2)
 }
 

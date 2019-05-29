@@ -166,7 +166,7 @@ func testAccAwsVpnConnectionRouteConfig(rBgpAsn int) string {
 	    destination_cidr_block = "172.168.10.0/24"
 	    vpn_connection_id = "${aws_vpn_connection.vpn_connection.id}"
 	}
-	`, rBgpAsn)
+`, rBgpAsn)
 }
 
 // Change destination_cidr_block
@@ -195,5 +195,5 @@ func testAccAwsVpnConnectionRouteConfigUpdate(rBgpAsn int) string {
 		destination_cidr_block = "172.168.20.0/24"
 		vpn_connection_id = "${aws_vpn_connection.vpn_connection.id}"
 	}
-	`, rBgpAsn)
+`, rBgpAsn)
 }

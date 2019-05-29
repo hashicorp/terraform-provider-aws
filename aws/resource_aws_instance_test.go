@@ -2534,7 +2534,7 @@ func testAccInstanceConfigDisableAPITermination(val bool) string {
 		subnet_id = "${aws_subnet.foo.id}"
 		disable_api_termination = %t
 	}
-	`, val)
+`, val)
 }
 
 const testAccInstanceConfigVPC = `
@@ -3775,7 +3775,7 @@ func testAccInstanceConfig_getPasswordData(val bool, rInt int) string {
 
 		get_password_data = %t
 	}
-	`, rInt, val)
+`, rInt, val)
 }
 
 func testAccInstanceConfig_creditSpecification_unspecified(rInt int) string {

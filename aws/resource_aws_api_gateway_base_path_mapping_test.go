@@ -234,7 +234,6 @@ resource "aws_api_gateway_domain_name" "test" {
 }
 
 %s
-
 `, domainName, testAccAWSAPIGatewayCerts(domainName))
 }
 
@@ -281,6 +280,5 @@ resource "aws_api_gateway_domain_name" "test" {
 }
 
 %s
-
 `, domainName, testAccAWSAPIGatewayCerts(domainName))
 }

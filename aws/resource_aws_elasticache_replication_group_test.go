@@ -1046,7 +1046,6 @@ resource "aws_elasticache_replication_group" "bar" {
     availability_zones = ["us-west-2a"]
     auto_minor_version_upgrade = false
 }
-
 `, acctest.RandInt(), acctest.RandInt(), acctest.RandString(10))
 
 var testAccAWSElasticacheReplicationGroupMultiAZInVPCConfig = fmt.Sprintf(`

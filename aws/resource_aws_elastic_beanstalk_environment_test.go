@@ -813,7 +813,7 @@ func testAccBeanstalkEnvConfig(appName, envName string) string {
 	 solution_stack_name = "64bit Amazon Linux running Python"
 	 depends_on = ["aws_elastic_beanstalk_application.tftest"]
  }
- `, appName, envName)
+`, appName, envName)
 }
 
 func testAccBeanstalkEnvConfig_platform_arn(appName, envName, platformArn string) string {

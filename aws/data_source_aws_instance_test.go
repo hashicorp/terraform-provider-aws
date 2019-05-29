@@ -744,7 +744,7 @@ func testAccInstanceDataSourceConfig_getPasswordData(val bool, rInt int) string 
 
 		get_password_data = %t
 	}
-	`, rInt, val)
+`, rInt, val)
 }
 
 func testAccInstanceDataSourceConfigGetUserData(getUserData bool) string {

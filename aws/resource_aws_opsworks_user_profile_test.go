@@ -141,7 +141,7 @@ resource "aws_iam_user" "user" {
 	name = "%s"
 	path = "/"
 }
-	`, rn)
+`, rn)
 }
 
 func testAccAwsOpsworksUserProfileUpdate(rn, updateRn string) string {
@@ -160,5 +160,5 @@ resource "aws_iam_user" "new-user" {
 	name = "%s"
 	path = "/"
 }
-	`, rn, updateRn)
+`, rn, updateRn)
 }

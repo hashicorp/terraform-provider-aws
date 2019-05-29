@@ -276,7 +276,6 @@ resource "aws_gamelift_alias" "test" {
 }
 
 %s
-
 `, aliasName, description,
 		testAccAWSGameliftFleetBasicConfig(fleetName, launchPath, params, buildName, bucketName, key, roleArn))
 }

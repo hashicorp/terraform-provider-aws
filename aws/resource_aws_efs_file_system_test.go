@@ -414,7 +414,7 @@ func testAccAWSEFSFileSystemConfigPagedTags(rInt int) string {
 			Region = "us-west-2"
 		}
 	}
-	`, rInt)
+`, rInt)
 }
 
 func testAccAWSEFSFileSystemConfigWithTags(rInt int) string {
@@ -425,7 +425,7 @@ func testAccAWSEFSFileSystemConfigWithTags(rInt int) string {
 			Another = "tag"
 		}
 	}
-	`, rInt)
+`, rInt)
 }
 
 const testAccAWSEFSFileSystemConfigWithPerformanceMode = `

@@ -285,7 +285,7 @@ resource "aws_vpc_endpoint_service" "foo" {
     "${data.aws_caller_identity.current.arn}"
   ]
 }
-	`, lb1Name)
+`, lb1Name)
 }
 
 func testAccVpcEndpointServiceModifiedConfig(lb1Name, lb2Name string) string {
@@ -367,5 +367,5 @@ resource "aws_vpc_endpoint_service" "foo" {
 
   allowed_principals = []
 }
-	`, lb1Name, lb2Name)
+`, lb1Name, lb2Name)
 }

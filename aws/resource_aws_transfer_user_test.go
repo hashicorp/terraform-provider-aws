@@ -433,9 +433,7 @@ resource "aws_transfer_user" "foo" {
 		ADMIN = "test"
 	}
 }
-
-
-	`, rName, rName)
+`, rName, rName)
 }
 
 func testAccAWSTransferUserConfig_modify(rName string) string {
@@ -540,9 +538,7 @@ resource "aws_transfer_user" "foo" {
 		TEST   = "test2"
 	}
 }
-
-
-	`, rName, rName)
+`, rName, rName)
 }
 
 func testAccAWSTransferUserConfig_forceNew(rName string) string {
@@ -649,6 +645,5 @@ resource "aws_transfer_user" "foo" {
 		TEST   = "test2"
 	}
 }
-
-	`, rName, rName)
+`, rName, rName)
 }

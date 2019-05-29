@@ -1357,7 +1357,7 @@ resource "aws_ecs_service" "mongo" {
     expression = "attribute:ecs.availability-zone in [${data.aws_availability_zones.available.names[0]}]"
   }
 }
-	`, clusterName, tdName, svcName)
+`, clusterName, tdName, svcName)
 }
 
 func testAccAWSEcsServiceWithPlacementConstraintEmptyExpression(clusterName, tdName, svcName string) string {

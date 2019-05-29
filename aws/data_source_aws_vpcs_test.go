@@ -129,7 +129,7 @@ func testAccDataSourceAwsVpcsConfig_tags(rName string) string {
 			Service = "${aws_vpc.test-vpc.tags["Service"]}"
 		}
 	}
-	`, rName, rName)
+`, rName, rName)
 }
 
 func testAccDataSourceAwsVpcsConfig_filters(rName string) string {
@@ -147,5 +147,5 @@ func testAccDataSourceAwsVpcsConfig_filters(rName string) string {
     		values = ["${aws_vpc.test-vpc.cidr_block}"]
 		}
 	}
-	`, rName)
+`, rName)
 }

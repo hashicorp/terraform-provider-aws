@@ -3463,7 +3463,7 @@ func testAccAWSDBInstanceConfigCloudwatchLogsExportConfiguration(rInt int) strin
 			"error",
 		]
 	}
-	`, rInt, rInt)
+`, rInt, rInt)
 }
 
 func testAccAWSDBInstanceConfigCloudwatchLogsExportConfigurationAdd(rInt int) string {

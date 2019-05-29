@@ -160,7 +160,6 @@ resource "aws_opsworks_rds_db_instance" "tf-acc-opsworks-db" {
 
 
 %s
-
 `, userName, password, testAccAwsOpsworksStackConfigVpcCreate(name), testAccAWSDBInstanceConfig)
 }
 

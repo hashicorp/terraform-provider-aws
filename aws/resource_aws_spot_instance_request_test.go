@@ -784,7 +784,7 @@ func testAccAWSSpotInstanceRequestConfig_getPasswordData(rInt int) string {
 		wait_for_fulfillment = true
 		get_password_data    = true
 	}
-	`, rInt)
+`, rInt)
 }
 
 func testAccAWSSpotInstanceRequestInterruptConfig(interruption_behavior string) string {

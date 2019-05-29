@@ -266,7 +266,7 @@ func testAccCustomerGatewayConfigUpdateTags(rInt, rBgpAsn int) string {
 			Another = "tag"
 		}
 	}
-	`, rBgpAsn, rInt)
+`, rBgpAsn, rInt)
 }
 
 // Change the ip_address.

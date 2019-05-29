@@ -189,7 +189,7 @@ resource "aws_elastic_beanstalk_application_version" "default" {
   bucket = "${aws_s3_bucket.default.id}"
   key = "${aws_s3_bucket_object.default.id}"
 }
- `, randInt, randInt, randInt)
+`, randInt, randInt, randInt)
 }
 
 func testAccBeanstalkApplicationVersionConfig_duplicateLabel(randInt int) string {
@@ -227,7 +227,7 @@ resource "aws_elastic_beanstalk_application_version" "second" {
   bucket = "${aws_s3_bucket.default.id}"
   key = "${aws_s3_bucket_object.default.id}"
 }
- `, randInt, randInt, randInt, randInt, randInt)
+`, randInt, randInt, randInt, randInt, randInt)
 }
 
 func testAccBeanstalkApplicationVersionConfigWithTags(randInt int, tag1, tag2 string) string {
@@ -258,7 +258,7 @@ resource "aws_elastic_beanstalk_application_version" "default" {
     secondTag = "%[3]s"
   }
 }
- `, randInt, tag1, tag2)
+`, randInt, tag1, tag2)
 }
 
 func testAccBeanstalkApplicationVersionConfigWithAddTags(randInt int, tag1, tag2, tag3 string) string {
@@ -290,5 +290,5 @@ resource "aws_elastic_beanstalk_application_version" "default" {
 		thirdTag  = "%[4]s"
   }
 }
- `, randInt, tag1, tag2, tag3)
+`, randInt, tag1, tag2, tag3)
 }

@@ -282,7 +282,7 @@ resource "aws_redshift_subnet_group" "foo" {
 	description = "foo description"
 	subnet_ids = ["${aws_subnet.foo.id}", "${aws_subnet.bar.id}"]
 }
-	`, rInt)
+`, rInt)
 }
 
 func testAccRedshiftSubnetGroup_updateDescription(rInt int) string {
