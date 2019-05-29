@@ -562,7 +562,7 @@ func testAccAWSEmrInstanceGroupConfig_basic(r int) string {
     instance_count = 1
     instance_type  = "c4.large"
   }
-	`, r)
+`, r)
 }
 
 func testAccAWSEmrInstanceGroupConfig_BidPrice(r int) string {
@@ -573,7 +573,7 @@ func testAccAWSEmrInstanceGroupConfig_BidPrice(r int) string {
     instance_count = 1
     instance_type  = "c4.large"
   }
-	`, r)
+`, r)
 }
 
 func testAccAWSEmrInstanceGroupConfig_AutoScalingPolicy(r, min, max int) string {
@@ -631,7 +631,7 @@ func testAccAWSEmrInstanceGroupConfig_ebsConfig(r int, o bool) string {
       type = "gp2"
     }
   }
-	`, r, o)
+`, r, o)
 }
 
 func testAccAWSEmrInstanceGroupConfig_zeroCount(r int) string {
@@ -641,5 +641,5 @@ func testAccAWSEmrInstanceGroupConfig_zeroCount(r int) string {
     instance_count = 0
     instance_type  = "c4.large"
   }
-	`, r)
+`, r)
 }

@@ -201,12 +201,12 @@ provider "aws" {
 
 resource "aws_opsworks_stack" "main" {
   name                         = "%s"
-  region = "us-west-2"
+  region                       = "us-west-2"
   service_role_arn             = "${aws_iam_role.opsworks_service.arn}"
   default_instance_profile_arn = "${aws_iam_instance_profile.opsworks_instance.arn}"
 
   configuration_manager_version = "12"
-  default_availability_zone = "us-west-2b"
+  default_availability_zone     = "us-west-2b"
 }
 
 resource "aws_iam_role" "opsworks_service" {
@@ -275,7 +275,8 @@ EOT
 resource "aws_iam_instance_profile" "opsworks_instance" {
   name  = "%s_profile"
   roles = ["${aws_iam_role.opsworks_instance.name}"]
-}`, rName, rInt, rInt, rInt, rName)
+}
+`, rName, rInt, rInt, rInt, rName)
 }
 
 func testAccAwsOpsWorksStack_regional_endpoint(rName string, rInt int) string {
@@ -286,12 +287,12 @@ provider "aws" {
 
 resource "aws_opsworks_stack" "main" {
   name                         = "%s"
-  region = "us-west-2"
+  region                       = "us-west-2"
   service_role_arn             = "${aws_iam_role.opsworks_service.arn}"
   default_instance_profile_arn = "${aws_iam_instance_profile.opsworks_instance.arn}"
 
   configuration_manager_version = "12"
-  default_availability_zone = "us-west-2b"
+  default_availability_zone     = "us-west-2b"
 }
 
 resource "aws_iam_role" "opsworks_service" {
@@ -360,7 +361,8 @@ EOT
 resource "aws_iam_instance_profile" "opsworks_instance" {
   name  = "%s_profile"
   roles = ["${aws_iam_role.opsworks_instance.name}"]
-}`, rName, rInt, rInt, rInt, rName)
+}
+`, rName, rInt, rInt, rInt, rName)
 }
 
 ////////////////////////////
@@ -638,20 +640,21 @@ provider "aws" {
 }
 
 resource "aws_opsworks_stack" "tf-acc" {
-  name = "%s"
-  region = "us-east-1"
-  service_role_arn = "${aws_iam_role.opsworks_service.arn}"
-  default_instance_profile_arn = "${aws_iam_instance_profile.opsworks_instance.arn}"
-  default_availability_zone = "us-east-1a"
-  default_os = "Amazon Linux 2016.09"
-  default_root_device_type = "ebs"
-  custom_json = "{\"key\": \"value\"}"
+  name                          = "%s"
+  region                        = "us-east-1"
+  service_role_arn              = "${aws_iam_role.opsworks_service.arn}"
+  default_instance_profile_arn  = "${aws_iam_instance_profile.opsworks_instance.arn}"
+  default_availability_zone     = "us-east-1a"
+  default_os                    = "Amazon Linux 2016.09"
+  default_root_device_type      = "ebs"
+  custom_json                   = "{\"key\": \"value\"}"
   configuration_manager_version = "11.10"
-  use_opsworks_security_groups = false
+  use_opsworks_security_groups  = false
 }
 
 resource "aws_iam_role" "opsworks_service" {
   name = "%s_opsworks_service"
+
   assume_role_policy = <<EOT
 {
   "Version": "2008-10-17",
@@ -672,6 +675,7 @@ EOT
 resource "aws_iam_role_policy" "opsworks_service" {
   name = "%s_opsworks_service"
   role = "${aws_iam_role.opsworks_service.id}"
+
   policy = <<EOT
 {
   "Statement": [
@@ -693,6 +697,7 @@ EOT
 
 resource "aws_iam_role" "opsworks_instance" {
   name = "%s_opsworks_instance"
+
   assume_role_policy = <<EOT
 {
   "Version": "2008-10-17",
@@ -711,7 +716,7 @@ EOT
 }
 
 resource "aws_iam_instance_profile" "opsworks_instance" {
-  name = "%s_opsworks_instance"
+  name  = "%s_opsworks_instance"
   roles = ["${aws_iam_role.opsworks_instance.name}"]
 }
 `, name, name, name, name, name)
@@ -908,22 +913,24 @@ func testAccAwsOpsworksStackConfigNoVpcCreateUpdateServiceRole(name string) stri
 provider "aws" {
   region = "us-east-1"
 }
+
 resource "aws_opsworks_stack" "tf-acc" {
-  name = "%s"
-  region = "us-east-1"
-  service_role_arn = "${aws_iam_role.opsworks_service_new.arn}"
-  default_instance_profile_arn = "${aws_iam_instance_profile.opsworks_instance.arn}"
-  default_availability_zone = "us-east-1a"
-  default_os = "Amazon Linux 2016.09"
-  default_root_device_type = "ebs"
-  custom_json = "{\"key\": \"value\"}"
+  name                          = "%s"
+  region                        = "us-east-1"
+  service_role_arn              = "${aws_iam_role.opsworks_service_new.arn}"
+  default_instance_profile_arn  = "${aws_iam_instance_profile.opsworks_instance.arn}"
+  default_availability_zone     = "us-east-1a"
+  default_os                    = "Amazon Linux 2016.09"
+  default_root_device_type      = "ebs"
+  custom_json                   = "{\"key\": \"value\"}"
   configuration_manager_version = "11.10"
-  use_opsworks_security_groups = false
+  use_opsworks_security_groups  = false
 }
 
 resource "aws_iam_role" "opsworks_service" {
-    name = "%s_opsworks_service"
-    assume_role_policy = <<EOT
+  name = "%s_opsworks_service"
+
+  assume_role_policy = <<EOT
 {
   "Version": "2008-10-17",
   "Statement": [
@@ -942,6 +949,7 @@ EOT
 
 resource "aws_iam_role" "opsworks_service_new" {
   name = "%s_opsworks_service_new"
+
   assume_role_policy = <<EOT
 {
   "Version": "2008-10-17",
@@ -962,6 +970,7 @@ EOT
 resource "aws_iam_role_policy" "opsworks_service_new" {
   name = "%s_opsworks_service_new"
   role = "${aws_iam_role.opsworks_service_new.id}"
+
   policy = <<EOT
 {
   "Statement": [
@@ -984,6 +993,7 @@ EOT
 resource "aws_iam_role_policy" "opsworks_service" {
   name = "%s_opsworks_service"
   role = "${aws_iam_role.opsworks_service.id}"
+
   policy = <<EOT
 {
   "Statement": [
@@ -1005,6 +1015,7 @@ EOT
 
 resource "aws_iam_role" "opsworks_instance" {
   name = "%s_opsworks_instance"
+
   assume_role_policy = <<EOT
 {
   "Version": "2008-10-17",
@@ -1023,9 +1034,10 @@ EOT
 }
 
 resource "aws_iam_instance_profile" "opsworks_instance" {
-  name = "%s_opsworks_instance"
+  name  = "%s_opsworks_instance"
   roles = ["${aws_iam_role.opsworks_instance.name}"]
-}`, name, name, name, name, name, name, name)
+}
+`, name, name, name, name, name, name, name)
 }
 
 ////////////////////////////
@@ -1036,34 +1048,39 @@ func testAccAwsOpsworksStackConfigVpcCreate(name string) string {
 	return fmt.Sprintf(`
 resource "aws_vpc" "tf-acc" {
   cidr_block = "10.3.5.0/24"
+
   tags = {
     Name = "terraform-testacc-opsworks-stack-vpc-create"
   }
 }
+
 resource "aws_subnet" "tf-acc" {
-  vpc_id = "${aws_vpc.tf-acc.id}"
-  cidr_block = "${aws_vpc.tf-acc.cidr_block}"
+  vpc_id            = "${aws_vpc.tf-acc.id}"
+  cidr_block        = "${aws_vpc.tf-acc.cidr_block}"
   availability_zone = "us-west-2a"
+
   tags = {
     Name = "tf-acc-opsworks-stack-vpc-create"
   }
 }
+
 resource "aws_opsworks_stack" "tf-acc" {
-  name = "%s"
-  region = "us-west-2"
-  vpc_id = "${aws_vpc.tf-acc.id}"
-  default_subnet_id = "${aws_subnet.tf-acc.id}"
-  service_role_arn = "${aws_iam_role.opsworks_service.arn}"
-  default_instance_profile_arn = "${aws_iam_instance_profile.opsworks_instance.arn}"
-  default_os = "Amazon Linux 2016.09"
-  default_root_device_type = "ebs"
-  custom_json = "{\"key\": \"value\"}"
+  name                          = "%s"
+  region                        = "us-west-2"
+  vpc_id                        = "${aws_vpc.tf-acc.id}"
+  default_subnet_id             = "${aws_subnet.tf-acc.id}"
+  service_role_arn              = "${aws_iam_role.opsworks_service.arn}"
+  default_instance_profile_arn  = "${aws_iam_instance_profile.opsworks_instance.arn}"
+  default_os                    = "Amazon Linux 2016.09"
+  default_root_device_type      = "ebs"
+  custom_json                   = "{\"key\": \"value\"}"
   configuration_manager_version = "11.10"
-  use_opsworks_security_groups = false
+  use_opsworks_security_groups  = false
 }
 
 resource "aws_iam_role" "opsworks_service" {
   name = "%s_opsworks_service"
+
   assume_role_policy = <<EOT
 {
   "Version": "2008-10-17",
@@ -1084,6 +1101,7 @@ EOT
 resource "aws_iam_role_policy" "opsworks_service" {
   name = "%s_opsworks_service"
   role = "${aws_iam_role.opsworks_service.id}"
+
   policy = <<EOT
 {
   "Statement": [
@@ -1105,6 +1123,7 @@ EOT
 
 resource "aws_iam_role" "opsworks_instance" {
   name = "%s_opsworks_instance"
+
   assume_role_policy = <<EOT
 {
   "Version": "2008-10-17",
@@ -1123,7 +1142,7 @@ EOT
 }
 
 resource "aws_iam_instance_profile" "opsworks_instance" {
-  name = "%s_opsworks_instance"
+  name  = "%s_opsworks_instance"
   roles = ["${aws_iam_role.opsworks_instance.name}"]
 }
 `, name, name, name, name, name)

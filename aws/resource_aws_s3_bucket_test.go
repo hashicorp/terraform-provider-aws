@@ -2063,14 +2063,15 @@ func testAccAWSS3BucketPolicy(randInt int, partition string) string {
 			"Resource": "arn:%s:s3:::tf-test-bucket-%d/*"
 		}
 	]
-}`, partition, randInt)
+}
+`, partition, randInt)
 }
 
 func testAccAWSS3BucketConfig(randInt int) string {
 	return fmt.Sprintf(`
 resource "aws_s3_bucket" "bucket" {
-	bucket = "tf-test-bucket-%d"
-	acl = "public-read"
+  bucket = "tf-test-bucket-%d"
+  acl    = "public-read"
 }
 `, randInt)
 }

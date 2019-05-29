@@ -2512,29 +2512,31 @@ resource "aws_instance" "foo" {
 
 func testAccInstanceConfigDisableAPITermination(val bool) string {
 	return fmt.Sprintf(`
-	resource "aws_vpc" "foo" {
-		cidr_block = "10.1.0.0/16"
-	tags = {
-			Name = "terraform-testacc-instance-disable-api-termination"
-		}
-	}
+resource "aws_vpc" "foo" {
+  cidr_block = "10.1.0.0/16"
 
-	resource "aws_subnet" "foo" {
-		cidr_block = "10.1.1.0/24"
-		vpc_id = "${aws_vpc.foo.id}"
-	tags = {
-			Name = "tf-acc-instance-disable-api-termination"
-		}
-	}
+  tags = {
+    Name = "terraform-testacc-instance-disable-api-termination"
+  }
+}
 
-	resource "aws_instance" "foo" {
-		# us-west-2
-		ami = "ami-4fccb37f"
-		instance_type = "m1.small"
-		subnet_id = "${aws_subnet.foo.id}"
-		disable_api_termination = %t
-	}
-	`, val)
+resource "aws_subnet" "foo" {
+  cidr_block = "10.1.1.0/24"
+  vpc_id     = "${aws_vpc.foo.id}"
+
+  tags = {
+    Name = "tf-acc-instance-disable-api-termination"
+  }
+}
+
+resource "aws_instance" "foo" {
+  # us-west-2
+  ami                     = "ami-4fccb37f"
+  instance_type           = "m1.small"
+  subnet_id               = "${aws_subnet.foo.id}"
+  disable_api_termination = %t
+}
+`, val)
 }
 
 const testAccInstanceConfigVPC = `
@@ -2569,6 +2571,7 @@ func testAccInstanceConfigPlacementGroup(rStr string) string {
 	return fmt.Sprintf(`
 resource "aws_vpc" "foo" {
   cidr_block = "10.1.0.0/16"
+
   tags = {
     Name = "terraform-testacc-instance-placement-group"
   }
@@ -2576,25 +2579,27 @@ resource "aws_vpc" "foo" {
 
 resource "aws_subnet" "foo" {
   cidr_block = "10.1.1.0/24"
-  vpc_id = "${aws_vpc.foo.id}"
+  vpc_id     = "${aws_vpc.foo.id}"
+
   tags = {
-  	Name = "tf-acc-instance-placement-group"
+    Name = "tf-acc-instance-placement-group"
   }
 }
 
 resource "aws_placement_group" "foo" {
-  name = "testAccInstanceConfigPlacementGroup_%s"
+  name     = "testAccInstanceConfigPlacementGroup_%s"
   strategy = "cluster"
 }
 
 # Limitations: https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/placement-groups.html#concepts-placement-groups
 resource "aws_instance" "foo" {
   # us-west-2
-  ami = "ami-55a7ea65"
-  instance_type = "c3.large"
-  subnet_id = "${aws_subnet.foo.id}"
+  ami                         = "ami-55a7ea65"
+  instance_type               = "c3.large"
+  subnet_id                   = "${aws_subnet.foo.id}"
   associate_public_ip_address = true
-  placement_group = "${aws_placement_group.foo.name}"
+  placement_group             = "${aws_placement_group.foo.name}"
+
   # pre-encoded base64 data
   user_data = "3dc39dda39be1205215e776bad998da361a5955d"
 }
@@ -2914,39 +2919,43 @@ resource "aws_instance" "foo" {
 func testAccInstanceConfigWithoutInstanceProfile(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_iam_role" "test" {
-	name = "test-%s"
-	assume_role_policy = "{\"Version\":\"2012-10-17\",\"Statement\":[{\"Effect\":\"Allow\",\"Principal\":{\"Service\":[\"ec2.amazonaws.com\"]},\"Action\":[\"sts:AssumeRole\"]}]}"
+  name               = "test-%s"
+  assume_role_policy = "{\"Version\":\"2012-10-17\",\"Statement\":[{\"Effect\":\"Allow\",\"Principal\":{\"Service\":[\"ec2.amazonaws.com\"]},\"Action\":[\"sts:AssumeRole\"]}]}"
 }
 
 resource "aws_instance" "foo" {
-	ami = "ami-4fccb37f"
-	instance_type = "m1.small"
-	tags = {
-		bar = "baz"
-	}
-}`, rName)
+  ami           = "ami-4fccb37f"
+  instance_type = "m1.small"
+
+  tags = {
+    bar = "baz"
+  }
+}
+`, rName)
 }
 
 func testAccInstanceConfigWithInstanceProfile(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_iam_role" "test" {
-	name = "test-%s"
-	assume_role_policy = "{\"Version\":\"2012-10-17\",\"Statement\":[{\"Effect\":\"Allow\",\"Principal\":{\"Service\":[\"ec2.amazonaws.com\"]},\"Action\":[\"sts:AssumeRole\"]}]}"
+  name               = "test-%s"
+  assume_role_policy = "{\"Version\":\"2012-10-17\",\"Statement\":[{\"Effect\":\"Allow\",\"Principal\":{\"Service\":[\"ec2.amazonaws.com\"]},\"Action\":[\"sts:AssumeRole\"]}]}"
 }
 
 resource "aws_iam_instance_profile" "test" {
-	name = "test-%s"
-	roles = ["${aws_iam_role.test.name}"]
+  name  = "test-%s"
+  roles = ["${aws_iam_role.test.name}"]
 }
 
 resource "aws_instance" "foo" {
-	ami = "ami-4fccb37f"
-	instance_type = "m1.small"
-	iam_instance_profile = "${aws_iam_instance_profile.test.name}"
-	tags = {
-		bar = "baz"
-	}
-}`, rName, rName)
+  ami                  = "ami-4fccb37f"
+  instance_type        = "m1.small"
+  iam_instance_profile = "${aws_iam_instance_profile.test.name}"
+
+  tags = {
+    bar = "baz"
+  }
+}
+`, rName, rName)
 }
 
 const testAccInstanceConfigPrivateIP = `
@@ -3006,45 +3015,47 @@ resource "aws_internet_gateway" "gw" {
 
 resource "aws_vpc" "foo" {
   cidr_block = "10.1.0.0/16"
-	tags = {
-		Name = "terraform-testacc-instance-network-security-groups"
-	}
+
+  tags = {
+    Name = "terraform-testacc-instance-network-security-groups"
+  }
 }
 
 resource "aws_security_group" "tf_test_foo" {
-  name = "tf_test_%d"
+  name        = "tf_test_%d"
   description = "foo"
-  vpc_id="${aws_vpc.foo.id}"
+  vpc_id      = "${aws_vpc.foo.id}"
 
   ingress {
-    protocol = "icmp"
-    from_port = -1
-    to_port = -1
+    protocol    = "icmp"
+    from_port   = -1
+    to_port     = -1
     cidr_blocks = ["0.0.0.0/0"]
   }
 }
 
 resource "aws_subnet" "foo" {
   cidr_block = "10.1.1.0/24"
-  vpc_id = "${aws_vpc.foo.id}"
+  vpc_id     = "${aws_vpc.foo.id}"
+
   tags = {
-  	Name = "tf-acc-instance-network-security-groups"
+    Name = "tf-acc-instance-network-security-groups"
   }
 }
 
 resource "aws_instance" "foo_instance" {
-  ami = "ami-21f78e11"
-  instance_type = "t1.micro"
-  vpc_security_group_ids = ["${aws_security_group.tf_test_foo.id}"]
-  subnet_id = "${aws_subnet.foo.id}"
+  ami                         = "ami-21f78e11"
+  instance_type               = "t1.micro"
+  vpc_security_group_ids      = ["${aws_security_group.tf_test_foo.id}"]
+  subnet_id                   = "${aws_subnet.foo.id}"
   associate_public_ip_address = true
-	depends_on = ["aws_internet_gateway.gw"]
+  depends_on                  = ["aws_internet_gateway.gw"]
 }
 
 resource "aws_eip" "foo_eip" {
-  instance = "${aws_instance.foo_instance.id}"
-  vpc = true
-	depends_on = ["aws_internet_gateway.gw"]
+  instance   = "${aws_instance.foo_instance.id}"
+  vpc        = true
+  depends_on = ["aws_internet_gateway.gw"]
 }
 `, rInt)
 }
@@ -3546,227 +3557,252 @@ func testAccInstanceConfig_associatePublic_defaultPrivate(rInt int) string {
 	return fmt.Sprintf(`
 resource "aws_vpc" "my_vpc" {
   cidr_block = "172.16.0.0/16"
+
   tags = {
     Name = "terraform-testacc-instance-associate-public-default-private"
   }
 }
 
 resource "aws_subnet" "public_subnet" {
-  vpc_id = "${aws_vpc.my_vpc.id}"
-  cidr_block = "172.16.20.0/24"
-  availability_zone = "us-west-2a"
+  vpc_id                  = "${aws_vpc.my_vpc.id}"
+  cidr_block              = "172.16.20.0/24"
+  availability_zone       = "us-west-2a"
   map_public_ip_on_launch = false
+
   tags = {
     Name = "tf-acc-instance-associate-public-default-private"
   }
 }
 
 resource "aws_instance" "foo" {
-  ami = "ami-22b9a343" # us-west-2
+  ami           = "ami-22b9a343"                   # us-west-2
   instance_type = "t2.micro"
-  subnet_id = "${aws_subnet.public_subnet.id}"
+  subnet_id     = "${aws_subnet.public_subnet.id}"
+
   tags = {
     Name = "tf-acctest-%d"
   }
-}`, rInt)
+}
+`, rInt)
 }
 
 func testAccInstanceConfig_associatePublic_defaultPublic(rInt int) string {
 	return fmt.Sprintf(`
 resource "aws_vpc" "my_vpc" {
   cidr_block = "172.16.0.0/16"
+
   tags = {
     Name = "terraform-testacc-instance-associate-public-default-public"
   }
 }
 
 resource "aws_subnet" "public_subnet" {
-  vpc_id = "${aws_vpc.my_vpc.id}"
-  cidr_block = "172.16.20.0/24"
-  availability_zone = "us-west-2a"
+  vpc_id                  = "${aws_vpc.my_vpc.id}"
+  cidr_block              = "172.16.20.0/24"
+  availability_zone       = "us-west-2a"
   map_public_ip_on_launch = true
+
   tags = {
     Name = "tf-acc-instance-associate-public-default-public"
   }
 }
 
 resource "aws_instance" "foo" {
-  ami = "ami-22b9a343" # us-west-2
+  ami           = "ami-22b9a343"                   # us-west-2
   instance_type = "t2.micro"
-  subnet_id = "${aws_subnet.public_subnet.id}"
+  subnet_id     = "${aws_subnet.public_subnet.id}"
+
   tags = {
     Name = "tf-acctest-%d"
   }
-}`, rInt)
+}
+`, rInt)
 }
 
 func testAccInstanceConfig_associatePublic_explicitPublic(rInt int) string {
 	return fmt.Sprintf(`
 resource "aws_vpc" "my_vpc" {
   cidr_block = "172.16.0.0/16"
+
   tags = {
     Name = "terraform-testacc-instance-associate-public-explicit-public"
   }
 }
 
 resource "aws_subnet" "public_subnet" {
-  vpc_id = "${aws_vpc.my_vpc.id}"
-  cidr_block = "172.16.20.0/24"
-  availability_zone = "us-west-2a"
+  vpc_id                  = "${aws_vpc.my_vpc.id}"
+  cidr_block              = "172.16.20.0/24"
+  availability_zone       = "us-west-2a"
   map_public_ip_on_launch = true
+
   tags = {
     Name = "tf-acc-instance-associate-public-explicit-public"
   }
 }
 
 resource "aws_instance" "foo" {
-  ami = "ami-22b9a343" # us-west-2
-  instance_type = "t2.micro"
-  subnet_id = "${aws_subnet.public_subnet.id}"
+  ami                         = "ami-22b9a343"                   # us-west-2
+  instance_type               = "t2.micro"
+  subnet_id                   = "${aws_subnet.public_subnet.id}"
   associate_public_ip_address = true
+
   tags = {
     Name = "tf-acctest-%d"
   }
-}`, rInt)
+}
+`, rInt)
 }
 
 func testAccInstanceConfig_associatePublic_explicitPrivate(rInt int) string {
 	return fmt.Sprintf(`
 resource "aws_vpc" "my_vpc" {
   cidr_block = "172.16.0.0/16"
+
   tags = {
     Name = "terraform-testacc-instance-associate-public-explicit-private"
   }
 }
 
 resource "aws_subnet" "public_subnet" {
-  vpc_id = "${aws_vpc.my_vpc.id}"
-  cidr_block = "172.16.20.0/24"
-  availability_zone = "us-west-2a"
+  vpc_id                  = "${aws_vpc.my_vpc.id}"
+  cidr_block              = "172.16.20.0/24"
+  availability_zone       = "us-west-2a"
   map_public_ip_on_launch = false
+
   tags = {
     Name = "tf-acc-instance-associate-public-explicit-private"
   }
 }
 
 resource "aws_instance" "foo" {
-  ami = "ami-22b9a343" # us-west-2
-  instance_type = "t2.micro"
-  subnet_id = "${aws_subnet.public_subnet.id}"
+  ami                         = "ami-22b9a343"                   # us-west-2
+  instance_type               = "t2.micro"
+  subnet_id                   = "${aws_subnet.public_subnet.id}"
   associate_public_ip_address = false
+
   tags = {
     Name = "tf-acctest-%d"
   }
-}`, rInt)
+}
+`, rInt)
 }
 
 func testAccInstanceConfig_associatePublic_overridePublic(rInt int) string {
 	return fmt.Sprintf(`
 resource "aws_vpc" "my_vpc" {
   cidr_block = "172.16.0.0/16"
+
   tags = {
     Name = "terraform-testacc-instance-associate-public-override-public"
   }
 }
 
 resource "aws_subnet" "public_subnet" {
-  vpc_id = "${aws_vpc.my_vpc.id}"
-  cidr_block = "172.16.20.0/24"
-  availability_zone = "us-west-2a"
+  vpc_id                  = "${aws_vpc.my_vpc.id}"
+  cidr_block              = "172.16.20.0/24"
+  availability_zone       = "us-west-2a"
   map_public_ip_on_launch = false
+
   tags = {
     Name = "tf-acc-instance-associate-public-override-public"
   }
 }
 
 resource "aws_instance" "foo" {
-  ami = "ami-22b9a343" # us-west-2
-  instance_type = "t2.micro"
-  subnet_id = "${aws_subnet.public_subnet.id}"
+  ami                         = "ami-22b9a343"                   # us-west-2
+  instance_type               = "t2.micro"
+  subnet_id                   = "${aws_subnet.public_subnet.id}"
   associate_public_ip_address = true
+
   tags = {
     Name = "tf-acctest-%d"
   }
-}`, rInt)
+}
+`, rInt)
 }
 
 func testAccInstanceConfig_associatePublic_overridePrivate(rInt int) string {
 	return fmt.Sprintf(`
 resource "aws_vpc" "my_vpc" {
   cidr_block = "172.16.0.0/16"
+
   tags = {
     Name = "terraform-testacc-instance-associate-public-override-private"
   }
 }
 
 resource "aws_subnet" "public_subnet" {
-  vpc_id = "${aws_vpc.my_vpc.id}"
-  cidr_block = "172.16.20.0/24"
-  availability_zone = "us-west-2a"
+  vpc_id                  = "${aws_vpc.my_vpc.id}"
+  cidr_block              = "172.16.20.0/24"
+  availability_zone       = "us-west-2a"
   map_public_ip_on_launch = true
+
   tags = {
     Name = "tf-acc-instance-associate-public-override-private"
   }
 }
 
 resource "aws_instance" "foo" {
-  ami = "ami-22b9a343" # us-west-2
-  instance_type = "t2.micro"
-  subnet_id = "${aws_subnet.public_subnet.id}"
+  ami                         = "ami-22b9a343"                   # us-west-2
+  instance_type               = "t2.micro"
+  subnet_id                   = "${aws_subnet.public_subnet.id}"
   associate_public_ip_address = false
+
   tags = {
     Name = "tf-acctest-%d"
   }
-}`, rInt)
+}
+`, rInt)
 }
 
 func testAccInstanceConfig_getPasswordData(val bool, rInt int) string {
 	return fmt.Sprintf(`
-	# Find latest Microsoft Windows Server 2016 Core image (Amazon deletes old ones)
-	data "aws_ami" "win2016core" {
-		most_recent = true
-		owners      = ["amazon"]
+# Find latest Microsoft Windows Server 2016 Core image (Amazon deletes old ones)
+data "aws_ami" "win2016core" {
+  most_recent = true
+  owners      = ["amazon"]
 
-		filter {
-			name = "name"
-			values = ["Windows_Server-2016-English-Core-Base-*"]
-		}
-	}
+  filter {
+    name   = "name"
+    values = ["Windows_Server-2016-English-Core-Base-*"]
+  }
+}
 
-	resource "aws_key_pair" "foo" {
-		key_name = "tf-acctest-%d"
-		public_key = "ssh-rsa AAAAB3NzaC1yc2EAAAABJQAAAQEAq6U3HQYC4g8WzU147gZZ7CKQH8TgYn3chZGRPxaGmHW1RUwsyEs0nmombmIhwxudhJ4ehjqXsDLoQpd6+c7BuLgTMvbv8LgE9LX53vnljFe1dsObsr/fYLvpU9LTlo8HgHAqO5ibNdrAUvV31ronzCZhms/Gyfdaue88Fd0/YnsZVGeOZPayRkdOHSpqme2CBrpa8myBeL1CWl0LkDG4+YCURjbaelfyZlIApLYKy3FcCan9XQFKaL32MJZwCgzfOvWIMtYcU8QtXMgnA3/I3gXk8YDUJv5P4lj0s/PJXuTM8DygVAUtebNwPuinS7wwonm5FXcWMuVGsVpG5K7FGQ== tf-acc-winpasswordtest"
-	}
+resource "aws_key_pair" "foo" {
+  key_name   = "tf-acctest-%d"
+  public_key = "ssh-rsa AAAAB3NzaC1yc2EAAAABJQAAAQEAq6U3HQYC4g8WzU147gZZ7CKQH8TgYn3chZGRPxaGmHW1RUwsyEs0nmombmIhwxudhJ4ehjqXsDLoQpd6+c7BuLgTMvbv8LgE9LX53vnljFe1dsObsr/fYLvpU9LTlo8HgHAqO5ibNdrAUvV31ronzCZhms/Gyfdaue88Fd0/YnsZVGeOZPayRkdOHSpqme2CBrpa8myBeL1CWl0LkDG4+YCURjbaelfyZlIApLYKy3FcCan9XQFKaL32MJZwCgzfOvWIMtYcU8QtXMgnA3/I3gXk8YDUJv5P4lj0s/PJXuTM8DygVAUtebNwPuinS7wwonm5FXcWMuVGsVpG5K7FGQ== tf-acc-winpasswordtest"
+}
 
-	resource "aws_instance" "foo" {
-		ami = "${data.aws_ami.win2016core.id}"
-		instance_type = "t2.medium"
-		key_name = "${aws_key_pair.foo.key_name}"
+resource "aws_instance" "foo" {
+  ami           = "${data.aws_ami.win2016core.id}"
+  instance_type = "t2.medium"
+  key_name      = "${aws_key_pair.foo.key_name}"
 
-		get_password_data = %t
-	}
-	`, rInt, val)
+  get_password_data = %t
+}
+`, rInt, val)
 }
 
 func testAccInstanceConfig_creditSpecification_unspecified(rInt int) string {
 	return fmt.Sprintf(`
 resource "aws_vpc" "my_vpc" {
   cidr_block = "172.16.0.0/16"
+
   tags = {
     Name = "tf-acctest-%d"
   }
 }
 
 resource "aws_subnet" "my_subnet" {
-  vpc_id = "${aws_vpc.my_vpc.id}"
-  cidr_block = "172.16.20.0/24"
+  vpc_id            = "${aws_vpc.my_vpc.id}"
+  cidr_block        = "172.16.20.0/24"
   availability_zone = "us-west-2a"
 }
 
 resource "aws_instance" "foo" {
-  ami = "ami-22b9a343" # us-west-2
+  ami           = "ami-22b9a343"               # us-west-2
   instance_type = "t2.micro"
-  subnet_id = "${aws_subnet.my_subnet.id}"
+  subnet_id     = "${aws_subnet.my_subnet.id}"
 }
 `, rInt)
 }

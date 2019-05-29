@@ -286,10 +286,12 @@ func testAccAWSWafByteMatchSetConfig(name string) string {
 	return fmt.Sprintf(`
 resource "aws_waf_byte_match_set" "byte_set" {
   name = "%s"
+
   byte_match_tuples {
-    text_transformation = "NONE"
-    target_string = "badrefer1"
+    text_transformation   = "NONE"
+    target_string         = "badrefer1"
     positional_constraint = "CONTAINS"
+
     field_to_match {
       type = "HEADER"
       data = "referer"
@@ -297,25 +299,29 @@ resource "aws_waf_byte_match_set" "byte_set" {
   }
 
   byte_match_tuples {
-    text_transformation = "NONE"
-    target_string = "badrefer2"
+    text_transformation   = "NONE"
+    target_string         = "badrefer2"
     positional_constraint = "CONTAINS"
+
     field_to_match {
       type = "HEADER"
       data = "referer"
     }
   }
-}`, name)
+}
+`, name)
 }
 
 func testAccAWSWafByteMatchSetConfigChangeName(name string) string {
 	return fmt.Sprintf(`
 resource "aws_waf_byte_match_set" "byte_set" {
   name = "%s"
+
   byte_match_tuples {
-    text_transformation = "NONE"
-    target_string = "badrefer1"
+    text_transformation   = "NONE"
+    target_string         = "badrefer1"
     positional_constraint = "CONTAINS"
+
     field_to_match {
       type = "HEADER"
       data = "referer"
@@ -323,25 +329,29 @@ resource "aws_waf_byte_match_set" "byte_set" {
   }
 
   byte_match_tuples {
-    text_transformation = "NONE"
-    target_string = "badrefer2"
+    text_transformation   = "NONE"
+    target_string         = "badrefer2"
     positional_constraint = "CONTAINS"
+
     field_to_match {
       type = "HEADER"
       data = "referer"
     }
   }
-}`, name)
+}
+`, name)
 }
 
 func testAccAWSWafByteMatchSetConfig_changeTuples(name string) string {
 	return fmt.Sprintf(`
 resource "aws_waf_byte_match_set" "byte_set" {
   name = "%s"
+
   byte_match_tuples {
-    text_transformation = "NONE"
-    target_string = "badrefer1"
+    text_transformation   = "NONE"
+    target_string         = "badrefer1"
     positional_constraint = "CONTAINS"
+
     field_to_match {
       type = "HEADER"
       data = "referer"
@@ -349,20 +359,23 @@ resource "aws_waf_byte_match_set" "byte_set" {
   }
 
   byte_match_tuples {
-    text_transformation = "URL_DECODE"
-    target_string = "blah"
+    text_transformation   = "URL_DECODE"
+    target_string         = "blah"
     positional_constraint = "CONTAINS_WORD"
+
     field_to_match {
       type = "METHOD"
       data = "GET"
     }
   }
-}`, name)
+}
+`, name)
 }
 
 func testAccAWSWafByteMatchSetConfig_noTuples(name string) string {
 	return fmt.Sprintf(`
 resource "aws_waf_byte_match_set" "byte_set" {
   name = "%s"
-}`, name)
+}
+`, name)
 }

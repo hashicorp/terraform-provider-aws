@@ -1334,6 +1334,7 @@ resource "aws_ecs_cluster" "default" {
 
 resource "aws_ecs_task_definition" "mongo" {
   family = "%s"
+
   container_definitions = <<DEFINITION
 [
   {
@@ -1348,16 +1349,17 @@ DEFINITION
 }
 
 resource "aws_ecs_service" "mongo" {
-  name = "%s"
-  cluster = "${aws_ecs_cluster.default.id}"
+  name            = "%s"
+  cluster         = "${aws_ecs_cluster.default.id}"
   task_definition = "${aws_ecs_task_definition.mongo.arn}"
-  desired_count = 1
+  desired_count   = 1
+
   placement_constraints {
-    type = "memberOf"
+    type       = "memberOf"
     expression = "attribute:ecs.availability-zone in [${data.aws_availability_zones.available.names[0]}]"
   }
 }
-	`, clusterName, tdName, svcName)
+`, clusterName, tdName, svcName)
 }
 
 func testAccAWSEcsServiceWithPlacementConstraintEmptyExpression(clusterName, tdName, svcName string) string {
@@ -1365,8 +1367,10 @@ func testAccAWSEcsServiceWithPlacementConstraintEmptyExpression(clusterName, tdN
 resource "aws_ecs_cluster" "default" {
   name = "%s"
 }
+
 resource "aws_ecs_task_definition" "mongo" {
   family = "%s"
+
   container_definitions = <<DEFINITION
 [
   {
@@ -1379,11 +1383,13 @@ resource "aws_ecs_task_definition" "mongo" {
 ]
 DEFINITION
 }
+
 resource "aws_ecs_service" "mongo" {
-  name = "%s"
-  cluster = "${aws_ecs_cluster.default.id}"
+  name            = "%s"
+  cluster         = "${aws_ecs_cluster.default.id}"
   task_definition = "${aws_ecs_task_definition.mongo.arn}"
-  desired_count = 1
+  desired_count   = 1
+
   placement_constraints {
     type = "distinctInstance"
   }
@@ -2008,6 +2014,7 @@ resource "aws_ecs_cluster" "default" {
 
 resource "aws_ecs_task_definition" "jenkins" {
   family = "%s"
+
   container_definitions = <<DEFINITION
 [
   {
@@ -2022,11 +2029,12 @@ DEFINITION
 }
 
 resource "aws_ecs_service" "jenkins" {
-  name = "%s"
-  cluster = "${aws_ecs_cluster.default.id}"
+  name            = "%s"
+  cluster         = "${aws_ecs_cluster.default.id}"
   task_definition = "${aws_ecs_task_definition.jenkins.family}:${aws_ecs_task_definition.jenkins.revision}"
-  desired_count = 1
-}`, clusterName, tdName, svcName)
+  desired_count   = 1
+}
+`, clusterName, tdName, svcName)
 }
 
 func testAccAWSEcsServiceWithFamilyAndRevisionModified(clusterName, tdName, svcName string) string {
@@ -2037,6 +2045,7 @@ resource "aws_ecs_cluster" "default" {
 
 resource "aws_ecs_task_definition" "jenkins" {
   family = "%s"
+
   container_definitions = <<DEFINITION
 [
   {
@@ -2051,11 +2060,12 @@ DEFINITION
 }
 
 resource "aws_ecs_service" "jenkins" {
-  name = "%s"
-  cluster = "${aws_ecs_cluster.default.id}"
+  name            = "%s"
+  cluster         = "${aws_ecs_cluster.default.id}"
   task_definition = "${aws_ecs_task_definition.jenkins.family}:${aws_ecs_task_definition.jenkins.revision}"
-  desired_count = 1
-}`, clusterName, tdName, svcName)
+  desired_count   = 1
+}
+`, clusterName, tdName, svcName)
 }
 
 func testAccAWSEcsServiceWithRenamedCluster(clusterName, tdName, svcName string) string {
@@ -2063,8 +2073,10 @@ func testAccAWSEcsServiceWithRenamedCluster(clusterName, tdName, svcName string)
 resource "aws_ecs_cluster" "default" {
   name = "%s"
 }
+
 resource "aws_ecs_task_definition" "ghost" {
   family = "%s"
+
   container_definitions = <<DEFINITION
 [
   {
@@ -2077,11 +2089,12 @@ resource "aws_ecs_task_definition" "ghost" {
 ]
 DEFINITION
 }
+
 resource "aws_ecs_service" "ghost" {
-  name = "%s"
-  cluster = "${aws_ecs_cluster.default.id}"
+  name            = "%s"
+  cluster         = "${aws_ecs_cluster.default.id}"
   task_definition = "${aws_ecs_task_definition.ghost.family}:${aws_ecs_task_definition.ghost.revision}"
-  desired_count = 1
+  desired_count   = 1
 }
 `, clusterName, tdName, svcName)
 }

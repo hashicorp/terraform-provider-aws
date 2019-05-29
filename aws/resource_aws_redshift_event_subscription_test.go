@@ -251,20 +251,23 @@ resource "aws_sns_topic" "aws_sns_topic" {
 }
 
 resource "aws_redshift_event_subscription" "bar" {
-  name = "tf-acc-test-redshift-event-subs-%d"
+  name          = "tf-acc-test-redshift-event-subs-%d"
   sns_topic_arn = "${aws_sns_topic.aws_sns_topic.arn}"
-  source_type = "cluster"
-  severity = "INFO"
+  source_type   = "cluster"
+  severity      = "INFO"
+
   event_categories = [
     "configuration",
     "management",
     "monitoring",
     "security",
   ]
+
   tags = {
     Name = "name"
   }
-}`, rInt, rInt)
+}
+`, rInt, rInt)
 }
 
 func testAccAWSRedshiftEventSubscriptionConfigUpdate(rInt int) string {
@@ -274,18 +277,21 @@ resource "aws_sns_topic" "aws_sns_topic" {
 }
 
 resource "aws_redshift_event_subscription" "bar" {
-  name = "tf-acc-test-redshift-event-subs-%d"
+  name          = "tf-acc-test-redshift-event-subs-%d"
   sns_topic_arn = "${aws_sns_topic.aws_sns_topic.arn}"
-  enabled = false
-  source_type = "cluster-snapshot"
-  severity = "INFO"
+  enabled       = false
+  source_type   = "cluster-snapshot"
+  severity      = "INFO"
+
   event_categories = [
     "monitoring",
   ]
+
   tags = {
     Name = "new-name"
   }
-}`, rInt, rInt)
+}
+`, rInt, rInt)
 }
 
 func testAccAWSRedshiftEventSubscriptionConfigWithSourceIds(rInt int) string {
@@ -295,57 +301,63 @@ resource "aws_sns_topic" "aws_sns_topic" {
 }
 
 resource "aws_redshift_parameter_group" "bar" {
-  name = "redshift-parameter-group-event-%d"
-  family = "redshift-1.0"
+  name        = "redshift-parameter-group-event-%d"
+  family      = "redshift-1.0"
   description = "Test parameter group for terraform"
 }
 
 resource "aws_redshift_event_subscription" "bar" {
-  name = "tf-acc-test-redshift-event-subs-with-ids-%d"
+  name          = "tf-acc-test-redshift-event-subs-with-ids-%d"
   sns_topic_arn = "${aws_sns_topic.aws_sns_topic.arn}"
-  source_type = "cluster-parameter-group"
-  severity = "INFO"
-  source_ids = ["${aws_redshift_parameter_group.bar.id}"]
+  source_type   = "cluster-parameter-group"
+  severity      = "INFO"
+  source_ids    = ["${aws_redshift_parameter_group.bar.id}"]
+
   event_categories = [
     "configuration",
   ]
+
   tags = {
     Name = "name"
   }
-}`, rInt, rInt, rInt)
+}
+`, rInt, rInt, rInt)
 }
 
 func testAccAWSRedshiftEventSubscriptionConfigUpdateSourceIds(rInt int) string {
 	return fmt.Sprintf(`
-    resource "aws_sns_topic" "aws_sns_topic" {
-        name = "tf-acc-test-redshift-event-subs-sns-topic-%d"
-    }
+resource "aws_sns_topic" "aws_sns_topic" {
+  name = "tf-acc-test-redshift-event-subs-sns-topic-%d"
+}
 
-    resource "aws_redshift_parameter_group" "bar" {
-        name = "tf-acc-redshift-parameter-group-event-%d"
-        family = "redshift-1.0"
-        description = "Test parameter group for terraform"
-    }
+resource "aws_redshift_parameter_group" "bar" {
+  name        = "tf-acc-redshift-parameter-group-event-%d"
+  family      = "redshift-1.0"
+  description = "Test parameter group for terraform"
+}
 
-    resource "aws_redshift_parameter_group" "foo" {
-        name = "tf-acc-redshift-parameter-group-event-2-%d"
-        family = "redshift-1.0"
-        description = "Test parameter group for terraform"
-    }
+resource "aws_redshift_parameter_group" "foo" {
+  name        = "tf-acc-redshift-parameter-group-event-2-%d"
+  family      = "redshift-1.0"
+  description = "Test parameter group for terraform"
+}
 
-    resource "aws_redshift_event_subscription" "bar" {
-        name = "tf-acc-test-redshift-event-subs-with-ids-%d"
-        sns_topic_arn = "${aws_sns_topic.aws_sns_topic.arn}"
-        source_type = "cluster-parameter-group"
-        severity = "INFO"
-        source_ids = ["${aws_redshift_parameter_group.bar.id}","${aws_redshift_parameter_group.foo.id}"]
-        event_categories = [
-            "configuration",
-        ]
+resource "aws_redshift_event_subscription" "bar" {
+  name          = "tf-acc-test-redshift-event-subs-with-ids-%d"
+  sns_topic_arn = "${aws_sns_topic.aws_sns_topic.arn}"
+  source_type   = "cluster-parameter-group"
+  severity      = "INFO"
+  source_ids    = ["${aws_redshift_parameter_group.bar.id}", "${aws_redshift_parameter_group.foo.id}"]
+
+  event_categories = [
+    "configuration",
+  ]
+
   tags = {
-            Name = "name"
-        }
-    }`, rInt, rInt, rInt, rInt)
+    Name = "name"
+  }
+}
+`, rInt, rInt, rInt, rInt)
 }
 
 func testAccAWSRedshiftEventSubscriptionConfigUpdateCategories(rInt int) string {
@@ -355,15 +367,18 @@ resource "aws_sns_topic" "aws_sns_topic" {
 }
 
 resource "aws_redshift_event_subscription" "bar" {
-  name = "tf-acc-test-redshift-event-subs-%d"
+  name          = "tf-acc-test-redshift-event-subs-%d"
   sns_topic_arn = "${aws_sns_topic.aws_sns_topic.arn}"
-  source_type = "cluster"
-  severity = "INFO"
+  source_type   = "cluster"
+  severity      = "INFO"
+
   event_categories = [
     "monitoring",
   ]
+
   tags = {
     Name = "name"
   }
-}`, rInt, rInt)
+}
+`, rInt, rInt)
 }

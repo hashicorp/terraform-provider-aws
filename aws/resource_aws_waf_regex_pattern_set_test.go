@@ -228,22 +228,25 @@ func testAccCheckAWSWafRegexPatternSetDestroy(s *terraform.State) error {
 func testAccAWSWafRegexPatternSetConfig(name string) string {
 	return fmt.Sprintf(`
 resource "aws_waf_regex_pattern_set" "test" {
-  name = "%s"
+  name                  = "%s"
   regex_pattern_strings = ["one", "two"]
-}`, name)
+}
+`, name)
 }
 
 func testAccAWSWafRegexPatternSetConfig_changePatterns(name string) string {
 	return fmt.Sprintf(`
 resource "aws_waf_regex_pattern_set" "test" {
-  name = "%s"
+  name                  = "%s"
   regex_pattern_strings = ["two", "three", "four"]
-}`, name)
+}
+`, name)
 }
 
 func testAccAWSWafRegexPatternSetConfig_noPatterns(name string) string {
 	return fmt.Sprintf(`
 resource "aws_waf_regex_pattern_set" "test" {
   name = "%s"
-}`, name)
+}
+`, name)
 }

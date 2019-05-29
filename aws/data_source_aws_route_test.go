@@ -233,7 +233,7 @@ resource "aws_route" "test" {
   transit_gateway_id     = "${aws_ec2_transit_gateway_vpc_attachment.test.transit_gateway_id}"
 }
 
-data "aws_route" "test"{
+data "aws_route" "test" {
   route_table_id     = "${aws_route.test.route_table_id}"
   transit_gateway_id = "${aws_route.test.transit_gateway_id}"
 }

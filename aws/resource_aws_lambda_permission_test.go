@@ -571,24 +571,25 @@ func lambdaPermissionExists(rs *terraform.ResourceState, conn *lambda.Lambda) (*
 func testAccAWSLambdaPermissionConfig(funcName, roleName string) string {
 	return fmt.Sprintf(`
 resource "aws_lambda_permission" "allow_cloudwatch" {
-    statement_id = "AllowExecutionFromCloudWatch"
-    action = "lambda:InvokeFunction"
-    function_name = "${aws_lambda_function.test_lambda.arn}"
-    principal = "events.amazonaws.com"
-    event_source_token = "test-event-source-token"
+  statement_id       = "AllowExecutionFromCloudWatch"
+  action             = "lambda:InvokeFunction"
+  function_name      = "${aws_lambda_function.test_lambda.arn}"
+  principal          = "events.amazonaws.com"
+  event_source_token = "test-event-source-token"
 }
 
 resource "aws_lambda_function" "test_lambda" {
-    filename = "test-fixtures/lambdatest.zip"
-    function_name = "%s"
-    role = "${aws_iam_role.iam_for_lambda.arn}"
-    handler = "exports.handler"
-    runtime = "nodejs8.10"
+  filename      = "test-fixtures/lambdatest.zip"
+  function_name = "%s"
+  role          = "${aws_iam_role.iam_for_lambda.arn}"
+  handler       = "exports.handler"
+  runtime       = "nodejs8.10"
 }
 
 resource "aws_iam_role" "iam_for_lambda" {
-    name = "%s"
-    assume_role_policy = <<EOF
+  name = "%s"
+
+  assume_role_policy = <<EOF
 {
   "Version": "2012-10-17",
   "Statement": [
@@ -603,7 +604,8 @@ resource "aws_iam_role" "iam_for_lambda" {
   ]
 }
 EOF
-}`, funcName, roleName)
+}
+`, funcName, roleName)
 }
 
 func testAccAWSLambdaPermissionConfigStatementIdDuplicate(rName string) string {
@@ -634,6 +636,7 @@ resource "aws_lambda_function" "test" {
 
 resource "aws_iam_role" "test" {
   name = %q
+
   assume_role_policy = <<EOF
 {
   "Version": "2012-10-17",
@@ -649,29 +652,31 @@ resource "aws_iam_role" "test" {
   ]
 }
 EOF
-}`, rName, rName)
+}
+`, rName, rName)
 }
 
 func testAccAWSLambdaPermissionConfig_withRawFunctionName(funcName, roleName string) string {
 	return fmt.Sprintf(`
 resource "aws_lambda_permission" "with_raw_func_name" {
-    statement_id = "AllowExecutionWithRawFuncName"
-    action = "lambda:InvokeFunction"
-    function_name = "${aws_lambda_function.test_lambda.arn}"
-    principal = "events.amazonaws.com"
+  statement_id  = "AllowExecutionWithRawFuncName"
+  action        = "lambda:InvokeFunction"
+  function_name = "${aws_lambda_function.test_lambda.arn}"
+  principal     = "events.amazonaws.com"
 }
 
 resource "aws_lambda_function" "test_lambda" {
-    filename = "test-fixtures/lambdatest.zip"
-    function_name = "%s"
-    role = "${aws_iam_role.iam_for_lambda.arn}"
-    handler = "exports.handler"
-    runtime = "nodejs8.10"
+  filename      = "test-fixtures/lambdatest.zip"
+  function_name = "%s"
+  role          = "${aws_iam_role.iam_for_lambda.arn}"
+  handler       = "exports.handler"
+  runtime       = "nodejs8.10"
 }
 
 resource "aws_iam_role" "iam_for_lambda" {
-    name = "%s"
-    assume_role_policy = <<EOF
+  name = "%s"
+
+  assume_role_policy = <<EOF
 {
   "Version": "2012-10-17",
   "Statement": [
@@ -835,7 +840,8 @@ resource "aws_lambda_permission" "third" {
     action = "lambda:*"
     function_name = "${aws_lambda_function.test_lambda.arn}"
     principal = "events.amazonaws.com"
-}`, funcName, roleName)
+}
+`, funcName, roleName)
 }
 
 func testAccAWSLambdaPermissionConfig_withS3(bucketName, funcName, roleName string) string {

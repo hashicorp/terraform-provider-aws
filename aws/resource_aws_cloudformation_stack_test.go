@@ -338,6 +338,7 @@ func testAccAWSCloudFormationStackConfig(stackName string) string {
 	return fmt.Sprintf(`
 resource "aws_cloudformation_stack" "network" {
   name = "%[1]s"
+
   template_body = <<STACK
 {
   "Resources" : {
@@ -363,13 +364,15 @@ resource "aws_cloudformation_stack" "network" {
   }
 }
 STACK
-}`, stackName)
+}
+`, stackName)
 }
 
 func testAccAWSCloudFormationStackConfig_yaml(stackName string) string {
 	return fmt.Sprintf(`
 resource "aws_cloudformation_stack" "yaml" {
   name = "%[1]s"
+
   template_body = <<STACK
 Resources:
   MyVPC:
@@ -389,13 +392,15 @@ Outputs:
     Description: The VPC ID
     Value: !Ref MyVPC
 STACK
-}`, stackName)
+}
+`, stackName)
 }
 
 func testAccAWSCloudFormationStackConfig_defaultParams(stackName string) string {
 	return fmt.Sprintf(`
 resource "aws_cloudformation_stack" "asg-demo" {
   name = "%[1]s"
+
   template_body = <<BODY
 {
     "Parameters": {

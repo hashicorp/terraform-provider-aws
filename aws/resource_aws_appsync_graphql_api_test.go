@@ -960,23 +960,27 @@ func testAccAppsyncGraphqlApiConfig_Tags(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_appsync_graphql_api" "test" {
   authentication_type = "API_KEY"
-  name = %q
+  name                = %q
+
   tags = {
-    Key1 = "Value One"
+    Key1        = "Value One"
     Description = "Very interesting"
   }
-}`, rName)
+}
+`, rName)
 }
 
 func testAccAppsyncGraphqlApiConfig_TagsModified(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_appsync_graphql_api" "test" {
   authentication_type = "API_KEY"
-  name = %q
+  name                = %q
+
   tags = {
     Key1 = "Value One Changed"
     Key2 = "Value Two"
     Key3 = "Value Three"
   }
-}`, rName)
+}
+`, rName)
 }

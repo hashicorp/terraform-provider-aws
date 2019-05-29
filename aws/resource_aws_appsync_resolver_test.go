@@ -579,7 +579,6 @@ EOF
 #end
 EOF
 }
-
 `, i, i)
 	}
 

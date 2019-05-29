@@ -422,54 +422,62 @@ func testAccAWSKinesisStreamRegisterStreamConsumer(stream *kinesis.StreamDescrip
 func testAccKinesisStreamConfig(rInt int) string {
 	return fmt.Sprintf(`
 resource "aws_kinesis_stream" "test_stream" {
-	name = "terraform-kinesis-test-%d"
-	shard_count = 2
-	tags = {
-		Name = "tf-test"
-	}
-}`, rInt)
+  name        = "terraform-kinesis-test-%d"
+  shard_count = 2
+
+  tags = {
+    Name = "tf-test"
+  }
+}
+`, rInt)
 }
 
 func testAccKinesisStreamConfigConcurrent(rInt int) string {
 	return fmt.Sprintf(`
 resource "aws_kinesis_stream" "test_stream" {
-        count = 20
-	name = "terraform-kinesis-test-%d-${count.index}"
-	shard_count = 2
-	tags = {
-		Name = "tf-test"
-	}
-}`, rInt)
+  count       = 20
+  name        = "terraform-kinesis-test-%d-${count.index}"
+  shard_count = 2
+
+  tags = {
+    Name = "tf-test"
+  }
+}
+`, rInt)
 }
 
 func testAccKinesisStreamConfigWithEncryptionAndNoKmsKey(rInt int) string {
 	return fmt.Sprintf(`
 resource "aws_kinesis_stream" "test_stream" {
-	name = "terraform-kinesis-test-%d"
-	shard_count = 2
-	encryption_type = "KMS"
-	tags = {
-		Name = "tf-test"
-	}
-}`, rInt)
+  name            = "terraform-kinesis-test-%d"
+  shard_count     = 2
+  encryption_type = "KMS"
+
+  tags = {
+    Name = "tf-test"
+  }
+}
+`, rInt)
 }
 
 func testAccKinesisStreamConfigWithEncryption(rInt int) string {
 	return fmt.Sprintf(`
 resource "aws_kinesis_stream" "test_stream" {
-	name = "terraform-kinesis-test-%d"
-	shard_count = 2
-	encryption_type = "KMS"
-	kms_key_id = "${aws_kms_key.foo.id}"
-	tags = {
-		Name = "tf-test"
-	}
+  name            = "terraform-kinesis-test-%d"
+  shard_count     = 2
+  encryption_type = "KMS"
+  kms_key_id      = "${aws_kms_key.foo.id}"
+
+  tags = {
+    Name = "tf-test"
+  }
 }
 
 resource "aws_kms_key" "foo" {
-    description = "Kinesis Stream SSE AccTests %d"
-    deletion_window_in_days = 7
-    policy = <<POLICY
+  description             = "Kinesis Stream SSE AccTests %d"
+  deletion_window_in_days = 7
+
+  policy = <<POLICY
 {
   "Version": "2012-10-17",
   "Id": "kms-tf-1",
@@ -487,77 +495,88 @@ resource "aws_kms_key" "foo" {
 }
 POLICY
 }
-
 `, rInt, rInt)
 }
 
 func testAccKinesisStreamConfigUpdateShardCount(rInt int) string {
 	return fmt.Sprintf(`
 resource "aws_kinesis_stream" "test_stream" {
-	name = "terraform-kinesis-test-%d"
-	shard_count = 4
-	tags = {
-		Name = "tf-test"
-	}
-}`, rInt)
+  name        = "terraform-kinesis-test-%d"
+  shard_count = 4
+
+  tags = {
+    Name = "tf-test"
+  }
+}
+`, rInt)
 }
 
 func testAccKinesisStreamConfigUpdateRetentionPeriod(rInt int) string {
 	return fmt.Sprintf(`
 resource "aws_kinesis_stream" "test_stream" {
-	name = "terraform-kinesis-test-%d"
-	shard_count = 2
-	retention_period = 100
-	tags = {
-		Name = "tf-test"
-	}
-}`, rInt)
+  name             = "terraform-kinesis-test-%d"
+  shard_count      = 2
+  retention_period = 100
+
+  tags = {
+    Name = "tf-test"
+  }
+}
+`, rInt)
 }
 
 func testAccKinesisStreamConfigDecreaseRetentionPeriod(rInt int) string {
 	return fmt.Sprintf(`
 resource "aws_kinesis_stream" "test_stream" {
-	name = "terraform-kinesis-test-%d"
-	shard_count = 2
-	retention_period = 28
-	tags = {
-		Name = "tf-test"
-	}
-}`, rInt)
+  name             = "terraform-kinesis-test-%d"
+  shard_count      = 2
+  retention_period = 28
+
+  tags = {
+    Name = "tf-test"
+  }
+}
+`, rInt)
 }
 
 func testAccKinesisStreamConfigAllShardLevelMetrics(rInt int) string {
 	return fmt.Sprintf(`
 resource "aws_kinesis_stream" "test_stream" {
-	name = "terraform-kinesis-test-%d"
-	shard_count = 2
-	tags = {
-		Name = "tf-test"
-	}
-	shard_level_metrics = [
-		"IncomingBytes",
-		"IncomingRecords",
-		"OutgoingBytes",
-		"OutgoingRecords",
-		"WriteProvisionedThroughputExceeded",
-		"ReadProvisionedThroughputExceeded",
-		"IteratorAgeMilliseconds"
-	]
-}`, rInt)
+  name        = "terraform-kinesis-test-%d"
+  shard_count = 2
+
+  tags = {
+    Name = "tf-test"
+  }
+
+  shard_level_metrics = [
+    "IncomingBytes",
+    "IncomingRecords",
+    "OutgoingBytes",
+    "OutgoingRecords",
+    "WriteProvisionedThroughputExceeded",
+    "ReadProvisionedThroughputExceeded",
+    "IteratorAgeMilliseconds",
+  ]
+}
+`, rInt)
 }
 
 func testAccKinesisStreamConfigSingleShardLevelMetric(rInt int) string {
 	return fmt.Sprintf(`
 resource "aws_kinesis_stream" "test_stream" {
-	name = "terraform-kinesis-test-%d"
-	shard_count = 2
-	tags = {
-		Name = "tf-test"
-	}
-	shard_level_metrics = [
-		"IncomingBytes"
-	]
-}`, rInt)
+  name        = "terraform-kinesis-test-%d"
+  shard_count = 2
+
+  tags = {
+    Name = "tf-test"
+  }
+
+  shard_level_metrics = [
+    "IncomingBytes",
+  ]
+}
+`, rInt)
 }
 
 func testAccKinesisStreamConfig_Tags(rInt, tagCount int) string {
@@ -568,23 +587,26 @@ func testAccKinesisStreamConfig_Tags(rInt, tagCount int) string {
 
 	return fmt.Sprintf(`
 resource "aws_kinesis_stream" "test" {
-	name = "terraform-kinesis-test-%d"
-	shard_count = 2
-	tags = {
-%s
-	}
-}`, rInt, tagPairs)
+  name        = "terraform-kinesis-test-%d"
+  shard_count = 2
+
+  tags = {
+    %s
+  }
+}
+`, rInt, tagPairs)
 }
 
 func testAccKinesisStreamConfigWithEnforceConsumerDeletion(rInt int) string {
 	return fmt.Sprintf(`
 resource "aws_kinesis_stream" "test_stream" {
-	name                      = "terraform-kinesis-test-%d"
-	shard_count               = 2
-	enforce_consumer_deletion = true
+  name                      = "terraform-kinesis-test-%d"
+  shard_count               = 2
+  enforce_consumer_deletion = true
 
-	tags = {
-		Name = "tf-test"
-	}
-}`, rInt)
+  tags = {
+    Name = "tf-test"
+  }
+}
+`, rInt)
 }

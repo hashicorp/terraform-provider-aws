@@ -265,27 +265,28 @@ resource "aws_elb" "bar" {
 }
 
 resource "aws_launch_configuration" "as_conf" {
-    name = "test_config_%d"
-    image_id = "ami-f34032c3"
-    instance_type = "t1.micro"
+  name          = "test_config_%d"
+  image_id      = "ami-f34032c3"
+  instance_type = "t1.micro"
 }
 
 resource "aws_autoscaling_group" "asg" {
-  availability_zones = ["us-west-2a", "us-west-2b", "us-west-2c"]
-  name = "asg-lb-assoc-terraform-test_%d"
-  max_size = 1
-  min_size = 0
-  desired_capacity = 0
+  availability_zones        = ["us-west-2a", "us-west-2b", "us-west-2c"]
+  name                      = "asg-lb-assoc-terraform-test_%d"
+  max_size                  = 1
+  min_size                  = 0
+  desired_capacity          = 0
   health_check_grace_period = 300
-  force_delete = true
-  launch_configuration = "${aws_launch_configuration.as_conf.name}"
+  force_delete              = true
+  launch_configuration      = "${aws_launch_configuration.as_conf.name}"
 
   tag {
-    key = "Name"
-    value = "terraform-asg-lg-assoc-test"
+    key                 = "Name"
+    value               = "terraform-asg-lg-assoc-test"
     propagate_at_launch = true
   }
-}`, rInt, rInt)
+}
+`, rInt, rInt)
 }
 
 func testAccAWSAutoscalingAttachment_elb_associated(rInt int) string {

@@ -197,5 +197,5 @@ resource "aws_vpc_endpoint_service" "foo" {
 data "aws_vpc_endpoint_service" "foo" {
   service_name = "${aws_vpc_endpoint_service.foo.service_name}"
 }
-  `, lbName)
+`, lbName)
 }

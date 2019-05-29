@@ -315,43 +315,49 @@ func testAccCheckMskClusterTags(td *kafka.ListTagsForResourceOutput, key string,
 func testAccMskClusterBaseConfig() string {
 	return fmt.Sprintf(`
 resource "aws_vpc" "example_vpc" {
-	cidr_block = "192.168.0.0/22"
-	tags = {
-		Name = "tf-testacc-msk-cluster-vpc"
-	}
+  cidr_block = "192.168.0.0/22"
+
+  tags = {
+    Name = "tf-testacc-msk-cluster-vpc"
+  }
 }
 
 data "aws_availability_zones" "available" {
-	state = "available"
+  state = "available"
 }
 
 resource "aws_subnet" "example_subnet_az1" {
-	vpc_id = "${aws_vpc.example_vpc.id}"
-	cidr_block = "192.168.0.0/24"
-	availability_zone = "${data.aws_availability_zones.available.names[0]}"
-	tags = {
-		Name = "tf-testacc-msk-cluster-subnet-az1"
-	}
+  vpc_id            = "${aws_vpc.example_vpc.id}"
+  cidr_block        = "192.168.0.0/24"
+  availability_zone = "${data.aws_availability_zones.available.names[0]}"
+
+  tags = {
+    Name = "tf-testacc-msk-cluster-subnet-az1"
+  }
 }
+
 resource "aws_subnet" "example_subnet_az2" {
-	vpc_id = "${aws_vpc.example_vpc.id}"
-	cidr_block = "192.168.1.0/24"
-	availability_zone = "${data.aws_availability_zones.available.names[1]}"
-	tags = {
-		Name = "tf-testacc-msk-cluster-subnet-az2"
-	}
+  vpc_id            = "${aws_vpc.example_vpc.id}"
+  cidr_block        = "192.168.1.0/24"
+  availability_zone = "${data.aws_availability_zones.available.names[1]}"
+
+  tags = {
+    Name = "tf-testacc-msk-cluster-subnet-az2"
+  }
 }
+
 resource "aws_subnet" "example_subnet_az3" {
-	vpc_id = "${aws_vpc.example_vpc.id}"
-	cidr_block = "192.168.2.0/24"
-	availability_zone = "${data.aws_availability_zones.available.names[2]}"
-	tags = {
-		Name = "tf-testacc-msk-cluster-subnet-az3"
-	}
+  vpc_id            = "${aws_vpc.example_vpc.id}"
+  cidr_block        = "192.168.2.0/24"
+  availability_zone = "${data.aws_availability_zones.available.names[2]}"
+
+  tags = {
+    Name = "tf-testacc-msk-cluster-subnet-az3"
+  }
 }
 
 resource "aws_security_group" "example_sg" {
-	vpc_id = "${aws_vpc.example_vpc.id}"
+  vpc_id = "${aws_vpc.example_vpc.id}"
 }
 `)
 

@@ -25,7 +25,8 @@ func TestAccAWSS3BucketPolicy_basic(t *testing.T) {
 		"Action": "s3:*",
 		"Resource": ["arn:%s:s3:::%s/*","arn:%s:s3:::%s"]
 	}]
-}`, partition, name, partition, name)
+}
+`, partition, name, partition, name)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -61,7 +62,8 @@ func TestAccAWSS3BucketPolicy_policyUpdate(t *testing.T) {
 		"Action": "s3:*",
 		"Resource": ["arn:%s:s3:::%s/*","arn:%s:s3:::%s"]
 	}]
-}`, partition, name, partition, name)
+}
+`, partition, name, partition, name)
 
 	expectedPolicyText2 := fmt.Sprintf(`{
 	"Version":"2012-10-17",
@@ -72,7 +74,8 @@ func TestAccAWSS3BucketPolicy_policyUpdate(t *testing.T) {
 		"Action": ["s3:DeleteBucket", "s3:ListBucket", "s3:ListBucketVersions"],
 		"Resource": ["arn:%s:s3:::%s/*","arn:%s:s3:::%s"]
 	}]
-}`, partition, name, partition, name)
+}
+`, partition, name, partition, name)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },

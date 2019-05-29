@@ -389,21 +389,22 @@ resource "aws_wafregional_ipset" "ipset" {
   name = "%s"
 
   ip_set_descriptor {
-    type = "IPV4"
+    type  = "IPV4"
     value = "192.0.7.0/24"
   }
 }
 
 resource "aws_wafregional_rule" "wafrule" {
-  name = "%s"
+  name        = "%s"
   metric_name = "%s"
 
   predicate {
     data_id = "${aws_wafregional_ipset.ipset.id}"
     negated = false
-    type = "IPMatch"
+    type    = "IPMatch"
   }
-}`, name, name, name)
+}
+`, name, name, name)
 }
 
 func testAccAWSWafRegionalRuleConfigChangeName(name string) string {
@@ -412,28 +413,29 @@ resource "aws_wafregional_ipset" "ipset" {
   name = "%s"
 
   ip_set_descriptor {
-    type = "IPV4"
+    type  = "IPV4"
     value = "192.0.7.0/24"
   }
 }
 
 resource "aws_wafregional_rule" "wafrule" {
-  name = "%s"
+  name        = "%s"
   metric_name = "%s"
 
   predicate {
     data_id = "${aws_wafregional_ipset.ipset.id}"
     negated = false
-    type = "IPMatch"
+    type    = "IPMatch"
   }
-}`, name, name, name)
+}
+`, name, name, name)
 }
 
 func testAccAWSWafRegionalRule_noPredicates(name string) string {
 	return fmt.Sprintf(`
 resource "aws_wafregional_rule" "wafrule" {
-	name = "%s"
-	metric_name = "%s"
+  name        = "%s"
+  metric_name = "%s"
 }
 `, name, name)
 }
@@ -444,35 +446,38 @@ resource "aws_wafregional_ipset" "ipset" {
   name = "%s"
 
   ip_set_descriptor {
-    type = "IPV4"
+    type  = "IPV4"
     value = "192.0.7.0/24"
   }
 }
 
 resource "aws_wafregional_xss_match_set" "xss_match_set" {
   name = "%s"
+
   xss_match_tuple {
-	text_transformation = "NONE"
-	field_to_match {
-	  type = "URI"
+    text_transformation = "NONE"
+
+    field_to_match {
+      type = "URI"
     }
   }
 }
 
 resource "aws_wafregional_rule" "wafrule" {
-  name = "%s"
+  name        = "%s"
   metric_name = "%s"
 
   predicate {
     data_id = "${aws_wafregional_xss_match_set.xss_match_set.id}"
     negated = true
-    type = "XssMatch"
+    type    = "XssMatch"
   }
 
   predicate {
     data_id = "${aws_wafregional_ipset.ipset.id}"
     negated = true
-    type = "IPMatch"
+    type    = "IPMatch"
   }
-}`, name, name, name, name)
+}
+`, name, name, name, name)
 }
