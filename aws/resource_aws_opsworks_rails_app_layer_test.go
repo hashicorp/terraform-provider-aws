@@ -95,6 +95,7 @@ resource "aws_opsworks_rails_app_layer" "tf-acc" {
 
 
 %s
+
 `, name, testAccAwsOpsworksStackConfigVpcCreate(name), testAccAwsOpsworksCustomLayerSecurityGroups(name))
 }
 
@@ -120,5 +121,6 @@ resource "aws_opsworks_rails_app_layer" "tf-acc" {
 
 
 %s
+
 `, name, testAccAwsOpsworksStackConfigVpcCreate(name), testAccAwsOpsworksCustomLayerSecurityGroups(name))
 }

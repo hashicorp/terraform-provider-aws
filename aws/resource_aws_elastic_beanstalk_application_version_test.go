@@ -174,20 +174,20 @@ resource "aws_s3_bucket" "default" {
 
 resource "aws_s3_bucket_object" "default" {
   bucket = "${aws_s3_bucket.default.id}"
-  key = "beanstalk/python-v1.zip"
+  key    = "beanstalk/python-v1.zip"
   source = "test-fixtures/python-v1.zip"
 }
 
 resource "aws_elastic_beanstalk_application" "default" {
-  name = "tf-test-name-%d"
+  name        = "tf-test-name-%d"
   description = "tf-test-desc"
 }
 
 resource "aws_elastic_beanstalk_application_version" "default" {
   application = "${aws_elastic_beanstalk_application.default.name}"
-  name = "tf-test-version-label-%d"
-  bucket = "${aws_s3_bucket.default.id}"
-  key = "${aws_s3_bucket_object.default.id}"
+  name        = "tf-test-version-label-%d"
+  bucket      = "${aws_s3_bucket.default.id}"
+  key         = "${aws_s3_bucket_object.default.id}"
 }
 `, randInt, randInt, randInt)
 }
@@ -200,32 +200,32 @@ resource "aws_s3_bucket" "default" {
 
 resource "aws_s3_bucket_object" "default" {
   bucket = "${aws_s3_bucket.default.id}"
-  key = "beanstalk/python-v1.zip"
+  key    = "beanstalk/python-v1.zip"
   source = "test-fixtures/python-v1.zip"
 }
 
 resource "aws_elastic_beanstalk_application" "first" {
-  name = "tf-test-name-%d-first"
+  name        = "tf-test-name-%d-first"
   description = "tf-test-desc"
 }
 
 resource "aws_elastic_beanstalk_application_version" "first" {
   application = "${aws_elastic_beanstalk_application.first.name}"
-  name = "tf-test-version-label-%d"
-  bucket = "${aws_s3_bucket.default.id}"
-  key = "${aws_s3_bucket_object.default.id}"
+  name        = "tf-test-version-label-%d"
+  bucket      = "${aws_s3_bucket.default.id}"
+  key         = "${aws_s3_bucket_object.default.id}"
 }
 
 resource "aws_elastic_beanstalk_application" "second" {
-  name = "tf-test-name-%d-second"
+  name        = "tf-test-name-%d-second"
   description = "tf-test-desc"
 }
 
 resource "aws_elastic_beanstalk_application_version" "second" {
   application = "${aws_elastic_beanstalk_application.second.name}"
-  name = "tf-test-version-label-%d"
-  bucket = "${aws_s3_bucket.default.id}"
-  key = "${aws_s3_bucket_object.default.id}"
+  name        = "tf-test-version-label-%d"
+  bucket      = "${aws_s3_bucket.default.id}"
+  key         = "${aws_s3_bucket_object.default.id}"
 }
 `, randInt, randInt, randInt, randInt, randInt)
 }
@@ -238,23 +238,23 @@ resource "aws_s3_bucket" "default" {
 
 resource "aws_s3_bucket_object" "default" {
   bucket = "${aws_s3_bucket.default.id}"
-  key = "beanstalk/python-v1.zip"
+  key    = "beanstalk/python-v1.zip"
   source = "test-fixtures/python-v1.zip"
 }
 
 resource "aws_elastic_beanstalk_application" "default" {
-  name = "tf-test-name-%[1]d"
+  name        = "tf-test-name-%[1]d"
   description = "tf-test-desc"
 }
 
 resource "aws_elastic_beanstalk_application_version" "default" {
   application = "${aws_elastic_beanstalk_application.default.name}"
-  name = "tf-test-version-label-%[1]d"
-  bucket = "${aws_s3_bucket.default.id}"
-	key = "${aws_s3_bucket_object.default.id}"
-	
+  name        = "tf-test-version-label-%[1]d"
+  bucket      = "${aws_s3_bucket.default.id}"
+  key         = "${aws_s3_bucket_object.default.id}"
+
   tags = {
-    firstTag = "%[2]s"
+    firstTag  = "%[2]s"
     secondTag = "%[3]s"
   }
 }
@@ -269,25 +269,25 @@ resource "aws_s3_bucket" "default" {
 
 resource "aws_s3_bucket_object" "default" {
   bucket = "${aws_s3_bucket.default.id}"
-  key = "beanstalk/python-v1.zip"
+  key    = "beanstalk/python-v1.zip"
   source = "test-fixtures/python-v1.zip"
 }
 
 resource "aws_elastic_beanstalk_application" "default" {
-  name = "tf-test-name-%[1]d"
+  name        = "tf-test-name-%[1]d"
   description = "tf-test-desc"
 }
 
 resource "aws_elastic_beanstalk_application_version" "default" {
   application = "${aws_elastic_beanstalk_application.default.name}"
-  name = "tf-test-version-label-%[1]d"
-  bucket = "${aws_s3_bucket.default.id}"
-	key = "${aws_s3_bucket_object.default.id}"
-	
+  name        = "tf-test-version-label-%[1]d"
+  bucket      = "${aws_s3_bucket.default.id}"
+  key         = "${aws_s3_bucket_object.default.id}"
+
   tags = {
-    firstTag = "%[2]s"
-		secondTag = "%[3]s"
-		thirdTag  = "%[4]s"
+    firstTag  = "%[2]s"
+    secondTag = "%[3]s"
+    thirdTag  = "%[4]s"
   }
 }
 `, randInt, tag1, tag2, tag3)

@@ -3411,58 +3411,60 @@ resource "aws_db_instance" "bar" {
 
 func testAccAWSDBInstanceConfigCloudwatchLogsExportConfiguration(rInt int) string {
 	return fmt.Sprintf(`
+resource "aws_vpc" "foo" {
+  cidr_block           = "10.1.0.0/16"
+  enable_dns_hostnames = true
 
-	resource "aws_vpc" "foo" {
-		cidr_block           = "10.1.0.0/16"
-		enable_dns_hostnames = true
-	tags = {
-		  Name = "terraform-testacc-db-instance-enable-cloudwatch"
-		}
-	  }
+  tags = {
+    Name = "terraform-testacc-db-instance-enable-cloudwatch"
+  }
+}
 
-	  resource "aws_db_subnet_group" "rds_one" {
-		name        = "tf_acc_test_%d"
-		description = "db subnets for rds_one"
+resource "aws_db_subnet_group" "rds_one" {
+  name        = "tf_acc_test_%d"
+  description = "db subnets for rds_one"
 
-		subnet_ids = ["${aws_subnet.main.id}", "${aws_subnet.other.id}"]
-	  }
+  subnet_ids = ["${aws_subnet.main.id}", "${aws_subnet.other.id}"]
+}
 
-	  resource "aws_subnet" "main" {
-		vpc_id            = "${aws_vpc.foo.id}"
-		availability_zone = "us-west-2a"
-		cidr_block        = "10.1.1.0/24"
-	tags = {
-		  Name = "tf-acc-db-instance-enable-cloudwatch-main"
-		}
-	  }
+resource "aws_subnet" "main" {
+  vpc_id            = "${aws_vpc.foo.id}"
+  availability_zone = "us-west-2a"
+  cidr_block        = "10.1.1.0/24"
 
-	  resource "aws_subnet" "other" {
-		vpc_id            = "${aws_vpc.foo.id}"
-		availability_zone = "us-west-2b"
-		cidr_block        = "10.1.2.0/24"
-	tags = {
-		  Name = "tf-acc-db-instance-enable-cloudwatch-other"
-		}
-	  }
+  tags = {
+    Name = "tf-acc-db-instance-enable-cloudwatch-main"
+  }
+}
 
-	resource "aws_db_instance" "bar" {
-		identifier = "foobarbaz-test-terraform-%d"
+resource "aws_subnet" "other" {
+  vpc_id            = "${aws_vpc.foo.id}"
+  availability_zone = "us-west-2b"
+  cidr_block        = "10.1.2.0/24"
 
-		db_subnet_group_name = "${aws_db_subnet_group.rds_one.name}"
-		allocated_storage = 10
-		engine = "MySQL"
-		engine_version = "5.6"
-		instance_class = "db.t2.micro"
-		name = "baz"
-		password = "barbarbarbar"
-		username = "foo"
-		skip_final_snapshot = true
+  tags = {
+    Name = "tf-acc-db-instance-enable-cloudwatch-other"
+  }
+}
 
-		enabled_cloudwatch_logs_exports = [
-			"audit",
-			"error",
-		]
-	}
+resource "aws_db_instance" "bar" {
+  identifier = "foobarbaz-test-terraform-%d"
+
+  db_subnet_group_name = "${aws_db_subnet_group.rds_one.name}"
+  allocated_storage    = 10
+  engine               = "MySQL"
+  engine_version       = "5.6"
+  instance_class       = "db.t2.micro"
+  name                 = "baz"
+  password             = "barbarbarbar"
+  username             = "foo"
+  skip_final_snapshot  = true
+
+  enabled_cloudwatch_logs_exports = [
+    "audit",
+    "error",
+  ]
+}
 `, rInt, rInt)
 }
 

@@ -1334,6 +1334,7 @@ resource "aws_ecs_cluster" "default" {
 
 resource "aws_ecs_task_definition" "mongo" {
   family = "%s"
+
   container_definitions = <<DEFINITION
 [
   {
@@ -1348,12 +1349,13 @@ DEFINITION
 }
 
 resource "aws_ecs_service" "mongo" {
-  name = "%s"
-  cluster = "${aws_ecs_cluster.default.id}"
+  name            = "%s"
+  cluster         = "${aws_ecs_cluster.default.id}"
   task_definition = "${aws_ecs_task_definition.mongo.arn}"
-  desired_count = 1
+  desired_count   = 1
+
   placement_constraints {
-    type = "memberOf"
+    type       = "memberOf"
     expression = "attribute:ecs.availability-zone in [${data.aws_availability_zones.available.names[0]}]"
   }
 }
@@ -1365,8 +1367,10 @@ func testAccAWSEcsServiceWithPlacementConstraintEmptyExpression(clusterName, tdN
 resource "aws_ecs_cluster" "default" {
   name = "%s"
 }
+
 resource "aws_ecs_task_definition" "mongo" {
   family = "%s"
+
   container_definitions = <<DEFINITION
 [
   {
@@ -1379,11 +1383,13 @@ resource "aws_ecs_task_definition" "mongo" {
 ]
 DEFINITION
 }
+
 resource "aws_ecs_service" "mongo" {
-  name = "%s"
-  cluster = "${aws_ecs_cluster.default.id}"
+  name            = "%s"
+  cluster         = "${aws_ecs_cluster.default.id}"
   task_definition = "${aws_ecs_task_definition.mongo.arn}"
-  desired_count = 1
+  desired_count   = 1
+
   placement_constraints {
     type = "distinctInstance"
   }

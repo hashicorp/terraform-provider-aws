@@ -823,13 +823,13 @@ provider "aws" {
 }
 
 resource "aws_elastic_beanstalk_application" "tftest" {
-  name = "%s"
+  name        = "%s"
   description = "tf-test-desc"
 }
 
 resource "aws_elastic_beanstalk_environment" "tfenvtest" {
-  name = "%s"
-  application = "${aws_elastic_beanstalk_application.tftest.name}"
+  name         = "%s"
+  application  = "${aws_elastic_beanstalk_application.tftest.name}"
   platform_arn = "%s"
 }
 `, appName, envName, platformArn)

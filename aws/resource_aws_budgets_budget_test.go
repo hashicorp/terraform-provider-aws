@@ -429,16 +429,17 @@ func testAccAWSBudgetsBudgetConfig_WithAccountID(budgetConfig budgets.Budget, ac
 
 	return fmt.Sprintf(`
 resource "aws_budgets_budget" "foo" {
-	account_id = "%s"
-	name_prefix = "%s"
-	budget_type = "%s"
-	limit_amount = "%s"
-	limit_unit = "%s"
-	time_period_start = "%s" 
-	time_unit = "%s"
-	cost_filters = {
-		"%s" = "%s"
-	}
+  account_id        = "%s"
+  name_prefix       = "%s"
+  budget_type       = "%s"
+  limit_amount      = "%s"
+  limit_unit        = "%s"
+  time_period_start = "%s"
+  time_unit         = "%s"
+
+  cost_filters = {
+    "%s" = "%s"
+  }
 }
 `, accountID, *budgetConfig.BudgetName, *budgetConfig.BudgetType, *budgetConfig.BudgetLimit.Amount, *budgetConfig.BudgetLimit.Unit, timePeriodStart, *budgetConfig.TimeUnit, costFilterKey, costFilterValue)
 }
@@ -449,15 +450,16 @@ func testAccAWSBudgetsBudgetConfig_PrefixDefaults(budgetConfig budgets.Budget, c
 
 	return fmt.Sprintf(`
 resource "aws_budgets_budget" "foo" {
-	name_prefix = "%s"
-	budget_type = "%s"
-	limit_amount = "%s"
-	limit_unit = "%s"
-	time_period_start = "%s" 
-	time_unit = "%s"
-	cost_filters = {
-		"%s" = "%s"
-	}
+  name_prefix       = "%s"
+  budget_type       = "%s"
+  limit_amount      = "%s"
+  limit_unit        = "%s"
+  time_period_start = "%s"
+  time_unit         = "%s"
+
+  cost_filters = {
+    "%s" = "%s"
+  }
 }
 `, *budgetConfig.BudgetName, *budgetConfig.BudgetType, *budgetConfig.BudgetLimit.Amount, *budgetConfig.BudgetLimit.Unit, timePeriodStart, *budgetConfig.TimeUnit, costFilterKey, costFilterValue)
 }
@@ -469,21 +471,24 @@ func testAccAWSBudgetsBudgetConfig_Prefix(budgetConfig budgets.Budget, costFilte
 
 	return fmt.Sprintf(`
 resource "aws_budgets_budget" "foo" {
-	name_prefix = "%s"
-	budget_type = "%s"
-	limit_amount = "%s"
-	limit_unit = "%s"
-	cost_types {
-		include_tax = "%t"
-		include_subscription = "%t"
-		use_blended = "%t"
-	}
-	time_period_start = "%s" 
-	time_period_end = "%s"
-	time_unit = "%s"
-	cost_filters = {
-		"%s" = "%s"
-	}
+  name_prefix  = "%s"
+  budget_type  = "%s"
+  limit_amount = "%s"
+  limit_unit   = "%s"
+
+  cost_types {
+    include_tax          = "%t"
+    include_subscription = "%t"
+    use_blended          = "%t"
+  }
+
+  time_period_start = "%s"
+  time_period_end   = "%s"
+  time_unit         = "%s"
+
+  cost_filters = {
+    "%s" = "%s"
+  }
 }
 `, *budgetConfig.BudgetName, *budgetConfig.BudgetType, *budgetConfig.BudgetLimit.Amount, *budgetConfig.BudgetLimit.Unit, *budgetConfig.CostTypes.IncludeTax, *budgetConfig.CostTypes.IncludeSubscription, *budgetConfig.CostTypes.UseBlended, timePeriodStart, timePeriodEnd, *budgetConfig.TimeUnit, costFilterKey, costFilterValue)
 }
@@ -493,15 +498,16 @@ func testAccAWSBudgetsBudgetConfig_BasicDefaults(budgetConfig budgets.Budget, co
 
 	return fmt.Sprintf(`
 resource "aws_budgets_budget" "foo" {
-	name = "%s"
-	budget_type = "%s"
-	limit_amount = "%s"
-	limit_unit = "%s"
-	time_period_start = "%s" 
-	time_unit = "%s"
-	cost_filters = {
-		"%s" = "%s"
-	}
+  name              = "%s"
+  budget_type       = "%s"
+  limit_amount      = "%s"
+  limit_unit        = "%s"
+  time_period_start = "%s"
+  time_unit         = "%s"
+
+  cost_filters = {
+    "%s" = "%s"
+  }
 }
 `, *budgetConfig.BudgetName, *budgetConfig.BudgetType, *budgetConfig.BudgetLimit.Amount, *budgetConfig.BudgetLimit.Unit, timePeriodStart, *budgetConfig.TimeUnit, costFilterKey, costFilterValue)
 }
@@ -513,21 +519,24 @@ func testAccAWSBudgetsBudgetConfig_Basic(budgetConfig budgets.Budget, costFilter
 
 	return fmt.Sprintf(`
 resource "aws_budgets_budget" "foo" {
-	name = "%s"
-	budget_type = "%s"
-	limit_amount = "%s"
-	limit_unit = "%s"
-	cost_types {
-		include_tax = "%t"
-		include_subscription = "%t"
-		use_blended = "%t"
-	}
-	time_period_start = "%s" 
-	time_period_end = "%s"
-	time_unit = "%s"
-	cost_filters = {
-		"%s" = "%s"
-	}
+  name         = "%s"
+  budget_type  = "%s"
+  limit_amount = "%s"
+  limit_unit   = "%s"
+
+  cost_types {
+    include_tax          = "%t"
+    include_subscription = "%t"
+    use_blended          = "%t"
+  }
+
+  time_period_start = "%s"
+  time_period_end   = "%s"
+  time_unit         = "%s"
+
+  cost_filters = {
+    "%s" = "%s"
+  }
 }
 `, *budgetConfig.BudgetName, *budgetConfig.BudgetType, *budgetConfig.BudgetLimit.Amount, *budgetConfig.BudgetLimit.Unit, *budgetConfig.CostTypes.IncludeTax, *budgetConfig.CostTypes.IncludeSubscription, *budgetConfig.CostTypes.UseBlended, timePeriodStart, timePeriodEnd, *budgetConfig.TimeUnit, costFilterKey, costFilterValue)
 }
