@@ -386,7 +386,8 @@ resource "aws_wafregional_byte_match_set" "byte_set" {
       data = "referer"
     }
   }
-}`, name)
+}
+`, name)
 }
 
 func testAccAWSWafRegionalByteMatchSetConfigChangeName(name string) string {
@@ -412,14 +413,16 @@ resource "aws_wafregional_byte_match_set" "byte_set" {
       data = "referer"
     }
   }
-}`, name)
+}
+`, name)
 }
 
 func testAccAWSWafRegionalByteMatchSetConfig_noDescriptors(name string) string {
 	return fmt.Sprintf(`
 resource "aws_wafregional_byte_match_set" "byte_match_set" {
 	name = "%s"
-}`, name)
+}
+`, name)
 }
 
 func testAccAWSWafRegionalByteMatchSetConfigChangeByteMatchTuples(name string) string {
@@ -443,5 +446,6 @@ resource "aws_wafregional_byte_match_set" "byte_set" {
       type = "URI"
     }
   }
-}`, name)
+}
+`, name)
 }

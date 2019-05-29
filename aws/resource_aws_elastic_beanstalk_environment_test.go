@@ -847,7 +847,8 @@ resource "aws_elastic_beanstalk_environment" "tfenvtest" {
   solution_stack_name = "64bit Amazon Linux running Python"
 
   wait_for_ready_timeout = "15m"
-}`, appName, envName)
+}
+`, appName, envName)
 }
 
 func testAccBeanstalkEnvConfig_settings(appName, envName string) string {
@@ -902,7 +903,8 @@ resource "aws_elastic_beanstalk_environment" "tfenvtest" {
     name      = "StartTime"
     value     = "2016-07-28T04:07:02Z"
   }
-}`, appName, envName)
+}
+`, appName, envName)
 }
 
 func testAccBeanstalkWorkerEnvConfig(instanceProfileName, roleName, policyName, appName, envName string) string {
@@ -982,7 +984,8 @@ resource "aws_elastic_beanstalk_configuration_template" "tftest" {
     name      = "TEMPLATE"
     value     = "%d"
   }
-}`, appName, envName, cfgTplName, cfgTplValue)
+}
+`, appName, envName, cfgTplName, cfgTplValue)
 }
 
 func testAccBeanstalkResourceOptionSetting(appName, envName string) string {
@@ -1017,7 +1020,8 @@ resource "aws_elastic_beanstalk_environment" "tfenvtest" {
     name = "Recurrence"
     value = "0 8 * * *"
   }
-}`, appName, envName)
+}
+`, appName, envName)
 }
 
 func testAccBeanstalkTagsTemplate(appName, envName, firstTag, secondTag string) string {
@@ -1038,7 +1042,8 @@ resource "aws_elastic_beanstalk_environment" "tfenvtest" {
     firstTag = "%s"
     secondTag = "%s"
   }
-}`, appName, envName, firstTag, secondTag)
+}
+`, appName, envName, firstTag, secondTag)
 }
 
 func testAccBeanstalkEnv_VPC(sgName, appName, envName string) string {

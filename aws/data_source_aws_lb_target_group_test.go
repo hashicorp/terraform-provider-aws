@@ -227,7 +227,8 @@ data "aws_lb_target_group" "alb_tg_test_with_arn" {
 
 data "aws_lb_target_group" "alb_tg_test_with_name" {
 	name = "${aws_lb_target_group.test.name}"
-}`, lbName, targetGroupName)
+}
+`, lbName, targetGroupName)
 }
 
 func testAccDataSourceAWSLBTargetGroupConfigBackwardsCompatibility(lbName string, targetGroupName string) string {
@@ -335,5 +336,6 @@ data "aws_alb_target_group" "alb_tg_test_with_arn" {
 
 data "aws_alb_target_group" "alb_tg_test_with_name" {
 	name = "${aws_alb_target_group.test.name}"
-}`, lbName, targetGroupName)
+}
+`, lbName, targetGroupName)
 }

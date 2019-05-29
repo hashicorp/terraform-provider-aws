@@ -80,5 +80,6 @@ func testAccDataSourceAwsDynamoDbTableConfigBasic(tableName string) string {
 
 data "aws_dynamodb_table" "dynamodb_table_test" {
   name = "${aws_dynamodb_table.dynamodb_table_test.name}"
-}`, tableName)
+}
+`, tableName)
 }

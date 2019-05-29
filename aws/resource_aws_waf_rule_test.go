@@ -378,7 +378,8 @@ resource "aws_waf_rule" "wafrule" {
     negated = false
     type = "IPMatch"
   }
-}`, name, name, name)
+}
+`, name, name, name)
 }
 
 func testAccAWSWafRuleConfigChangeName(name string) string {
@@ -400,7 +401,8 @@ resource "aws_waf_rule" "wafrule" {
     negated = false
     type = "IPMatch"
   }
-}`, name, name, name)
+}
+`, name, name, name)
 }
 
 func testAccAWSWafRuleConfig_changePredicates(name string) string {
@@ -435,7 +437,8 @@ resource "aws_waf_rule" "wafrule" {
     negated = true
     type = "ByteMatch"
   }
-}`, name, name, name, name)
+}
+`, name, name, name, name)
 }
 
 func testAccAWSWafRuleConfig_noPredicates(name string) string {
@@ -443,7 +446,8 @@ func testAccAWSWafRuleConfig_noPredicates(name string) string {
 resource "aws_waf_rule" "wafrule" {
   name = "%s"
   metric_name = "%s"
-}`, name, name)
+}
+`, name, name)
 }
 
 func testAccAWSWafRuleConfig_geoMatchSetPredicate(name string) string {
@@ -464,5 +468,6 @@ resource "aws_waf_rule" "wafrule" {
     negated = true
     type = "GeoMatch"
   }
-}`, name, name, name)
+}
+`, name, name, name)
 }

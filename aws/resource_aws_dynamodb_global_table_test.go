@@ -241,7 +241,8 @@ resource "aws_dynamodb_table" "us-west-2" {
     name = "myAttribute"
     type = "S"
   }
-}`, tableName, tableName, tableName)
+}
+`, tableName, tableName, tableName)
 }
 
 func testAccDynamoDbGlobalTableConfig_multipleRegions1(tableName string) string {
@@ -257,7 +258,8 @@ resource "aws_dynamodb_global_table" "test" {
   replica {
     region_name = "us-east-1"
   }
-}`, testAccDynamoDbGlobalTableConfig_multipleRegions_dynamodb_tables(tableName), tableName)
+}
+`, testAccDynamoDbGlobalTableConfig_multipleRegions_dynamodb_tables(tableName), tableName)
 }
 
 func testAccDynamoDbGlobalTableConfig_multipleRegions2(tableName string) string {
@@ -277,7 +279,8 @@ resource "aws_dynamodb_global_table" "test" {
   replica {
     region_name = "us-east-2"
   }
-}`, testAccDynamoDbGlobalTableConfig_multipleRegions_dynamodb_tables(tableName), tableName)
+}
+`, testAccDynamoDbGlobalTableConfig_multipleRegions_dynamodb_tables(tableName), tableName)
 }
 
 func testAccDynamoDbGlobalTableConfig_multipleRegions3(tableName string) string {
@@ -297,7 +300,8 @@ resource "aws_dynamodb_global_table" "test" {
   replica {
     region_name = "us-west-2"
   }
-}`, testAccDynamoDbGlobalTableConfig_multipleRegions_dynamodb_tables(tableName), tableName)
+}
+`, testAccDynamoDbGlobalTableConfig_multipleRegions_dynamodb_tables(tableName), tableName)
 }
 
 func testAccDynamoDbGlobalTableConfig_invalidName(tableName string) string {
@@ -308,5 +312,6 @@ resource "aws_dynamodb_global_table" "test" {
   replica {
     region_name = "us-east-1"
   }
-}`, tableName)
+}
+`, tableName)
 }

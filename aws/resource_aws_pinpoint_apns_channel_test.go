@@ -207,7 +207,8 @@ resource "aws_pinpoint_apns_channel" "test_apns_channel" {
   default_authentication_method = "CERTIFICATE"
   certificate                   = %s
   private_key                   = %s
-}`, conf.Certificate, conf.PrivateKey)
+}
+`, conf.Certificate, conf.PrivateKey)
 }
 
 func testAccAWSPinpointAPNSChannelConfig_basicToken(conf *testAccAwsPinpointAPNSChannelTokenConfiguration) string {
@@ -228,7 +229,8 @@ resource "aws_pinpoint_apns_channel" "test_apns_channel" {
   team_id        = %s
   token_key      = %s
   token_key_id   = %s
-}`, conf.BundleId, conf.TeamId, conf.TokenKey, conf.TokenKeyId)
+}
+`, conf.BundleId, conf.TeamId, conf.TokenKey, conf.TokenKeyId)
 }
 
 func testAccCheckAWSPinpointAPNSChannelDestroy(s *terraform.State) error {

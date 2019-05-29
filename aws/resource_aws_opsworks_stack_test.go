@@ -1027,7 +1027,8 @@ EOT
 resource "aws_iam_instance_profile" "opsworks_instance" {
   name = "%s_opsworks_instance"
   roles = ["${aws_iam_role.opsworks_instance.name}"]
-}`, name, name, name, name, name, name, name)
+}
+`, name, name, name, name, name, name, name)
 }
 
 ////////////////////////////

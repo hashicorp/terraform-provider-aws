@@ -1076,7 +1076,8 @@ resource "aws_vpc" "test" {
   tags = {
     Name = "terraform-testacc-lb-target-group-alb-defaults"
   }
-}`, name)
+}
+`, name)
 }
 
 func testAccNLB_defaults(name, healthCheckBlock string) string {
@@ -1105,7 +1106,8 @@ resource "aws_vpc" "test" {
   tags = {
     Name = "terraform-testacc-lb-target-group-nlb-defaults"
   }
-}`, name, healthCheckBlock)
+}
+`, name, healthCheckBlock)
 }
 
 func testAccAWSLBTargetGroupConfig_basic(targetGroupName string) string {
@@ -1145,14 +1147,16 @@ resource "aws_vpc" "test" {
   tags = {
     TestName = "terraform-testacc-lb-target-group-basic"
   }
-}`, targetGroupName)
+}
+`, targetGroupName)
 }
 
 func testAccAWSLBTargetGroupConfig_withoutHealthcheck(targetGroupName string) string {
 	return fmt.Sprintf(`resource "aws_lb_target_group" "test" {
   name = "%s"
   target_type = "lambda"
-}`, targetGroupName)
+}
+`, targetGroupName)
 }
 
 func testAccAWSLBTargetGroupConfigBackwardsCompatibility(targetGroupName string) string {
@@ -1192,7 +1196,8 @@ resource "aws_vpc" "test" {
   tags = {
     TestName = "terraform-testacc-lb-target-group-bc"
   }
-}`, targetGroupName)
+}
+`, targetGroupName)
 }
 
 func testAccAWSLBTargetGroupConfig_enableHealthcheck(targetGroupName string) string {
@@ -1204,7 +1209,8 @@ func testAccAWSLBTargetGroupConfig_enableHealthcheck(targetGroupName string) str
     path = "/health"
     interval = 60
   }
-}`, targetGroupName)
+}
+`, targetGroupName)
 }
 
 func testAccAWSLBTargetGroupConfig_updatedPort(targetGroupName string) string {
@@ -1243,7 +1249,8 @@ resource "aws_vpc" "test" {
   tags = {
     TestName = "terraform-testacc-lb-target-group-basic"
   }
-}`, targetGroupName)
+}
+`, targetGroupName)
 }
 
 func testAccAWSLBTargetGroupConfig_updatedProtocol(targetGroupName string) string {
@@ -1290,7 +1297,8 @@ resource "aws_vpc" "test" {
   tags = {
     TestName = "terraform-testacc-lb-target-group-basic"
   }
-}`, targetGroupName)
+}
+`, targetGroupName)
 }
 
 func testAccAWSLBTargetGroupConfig_updatedVpc(targetGroupName string) string {
@@ -1329,7 +1337,8 @@ resource "aws_vpc" "test" {
   tags = {
     TestName = "terraform-testacc-lb-target-group-updated-vpc"
   }
-}`, targetGroupName)
+}
+`, targetGroupName)
 }
 
 func testAccAWSLBTargetGroupConfig_updateTags(targetGroupName string) string {
@@ -1369,7 +1378,8 @@ resource "aws_vpc" "test" {
   tags = {
     TestName = "terraform-testacc-lb-target-group-update-tags"
   }
-}`, targetGroupName)
+}
+`, targetGroupName)
 }
 
 func testAccAWSLBTargetGroupConfig_updateHealthCheck(targetGroupName string) string {
@@ -1404,7 +1414,8 @@ resource "aws_vpc" "test" {
   tags = {
     TestName = "terraform-testacc-lb-target-group-update-health-check"
   }
-}`, targetGroupName)
+}
+`, targetGroupName)
 }
 
 func testAccAWSLBTargetGroupConfig_Protocol_Tls(targetGroupName string) string {
@@ -1466,7 +1477,8 @@ resource "aws_vpc" "test" {
   tags = {
     Name = "terraform-testacc-lb-target-group-type-tcp"
   }
-}`, targetGroupName)
+}
+`, targetGroupName)
 }
 
 func testAccAWSLBTargetGroupConfig_typeTCP_withProxyProtocol(targetGroupName string) string {
@@ -1498,7 +1510,8 @@ resource "aws_vpc" "test" {
   tags = {
     Name = "terraform-testacc-lb-target-group-type-tcp"
   }
-}`, targetGroupName)
+}
+`, targetGroupName)
 }
 
 func testAccAWSLBTargetGroupConfig_typeTCPInvalidThreshold(targetGroupName string) string {
@@ -1529,7 +1542,8 @@ resource "aws_vpc" "test" {
   tags = {
     Name = "terraform-testacc-lb-target-group-type-tcp"
   }
-}`, targetGroupName)
+}
+`, targetGroupName)
 }
 
 func testAccAWSLBTargetGroupConfig_typeTCPThresholdUpdated(targetGroupName string) string {
@@ -1560,7 +1574,8 @@ resource "aws_vpc" "test" {
   tags = {
     Name = "terraform-testacc-lb-target-group-type-tcp-threshold-updated"
   }
-}`, targetGroupName)
+}
+`, targetGroupName)
 }
 
 func testAccAWSLBTargetGroupConfig_typeTCPIntervalUpdated(targetGroupName string) string {
@@ -1591,7 +1606,8 @@ resource "aws_vpc" "test" {
   tags = {
     Name = "terraform-testacc-lb-target-group-type-tcp-interval-updated"
   }
-}`, targetGroupName)
+}
+`, targetGroupName)
 }
 
 func testAccAWSLBTargetGroupConfig_typeTCP_HTTPHealthCheck(targetGroupName, path string, threshold int) string {
@@ -1622,7 +1638,8 @@ resource "aws_vpc" "test" {
   tags = {
     Name = "terraform-testacc-lb-target-group-type-tcp-http-health-check"
   }
-}`, targetGroupName, threshold, path)
+}
+`, targetGroupName, threshold, path)
 }
 
 func testAccAWSLBTargetGroupConfig_stickiness(targetGroupName string, addStickinessBlock bool, enabled bool) string {
@@ -1664,7 +1681,8 @@ resource "aws_vpc" "test" {
   tags = {
     TestName = "terraform-testacc-lb-target-group-stickiness"
   }
-}`, targetGroupName, stickinessBlock)
+}
+`, targetGroupName, stickinessBlock)
 }
 
 const testAccAWSLBTargetGroupConfig_namePrefix = `

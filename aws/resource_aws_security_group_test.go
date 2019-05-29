@@ -3267,7 +3267,8 @@ resource "aws_security_group" "web" {
   tags = {
     Name = "tf-acc-test"
   }
-}`, acctest.RandInt(), acctest.RandInt())
+}
+`, acctest.RandInt(), acctest.RandInt())
 }
 
 const testAccAWSSecurityGroupInvalidIngressCidr = `

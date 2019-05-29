@@ -1108,7 +1108,8 @@ resource "aws_security_group" "alb_test" {
   tags = {
     Name = "TestAccAWSALB_basic"
   }
-}`, lbName, lbName)
+}
+`, lbName, lbName)
 }
 
 func testAccAWSLBConfigWithIpAddressType(lbName string) string {
@@ -1219,7 +1220,8 @@ resource "aws_security_group" "alb_test" {
   tags = {
     Name = "TestAccAWSALB_basic"
   }
-}`, lbName, lbName)
+}
+`, lbName, lbName)
 }
 
 func testAccAWSLBConfig_basic(lbName string) string {
@@ -1286,7 +1288,8 @@ resource "aws_security_group" "alb_test" {
   tags = {
     Name = "TestAccAWSALB_basic"
   }
-}`, lbName)
+}
+`, lbName)
 }
 
 func testAccAWSLBConfig_enableHttp2(lbName string, http2 bool) string {
@@ -1355,7 +1358,8 @@ resource "aws_security_group" "alb_test" {
   tags = {
     Name = "TestAccAWSALB_basic"
   }
-}`, lbName, http2)
+}
+`, lbName, http2)
 }
 
 func testAccAWSLBConfig_enableDeletionProtection(lbName string, deletion_protection bool) string {
@@ -1422,7 +1426,8 @@ resource "aws_security_group" "alb_test" {
   tags = {
     Name = "TestAccAWSALB_basic"
   }
-}`, lbName, deletion_protection)
+}
+`, lbName, deletion_protection)
 }
 
 func testAccAWSLBConfig_networkLoadbalancer_subnets(lbName string) string {
@@ -1655,7 +1660,8 @@ resource "aws_security_group" "alb_test" {
   tags = {
     Name = "TestAccAWSALB_basic"
   }
-}`, lbName)
+}
+`, lbName)
 }
 
 func testAccAWSLBConfig_updateSubnets(lbName string) string {
@@ -1722,7 +1728,8 @@ resource "aws_security_group" "alb_test" {
   tags = {
     Name = "TestAccAWSALB_basic"
   }
-}`, lbName)
+}
+`, lbName)
 }
 
 func testAccAWSLBConfig_generatedName() string {
@@ -2013,7 +2020,8 @@ resource "aws_security_group" "alb_test" {
   tags = {
     Name = "TestAccAWSALB_basic"
   }
-}`, lbName)
+}
+`, lbName)
 }
 
 func testAccAWSLBConfigALBAccessLogsBase(bucketName string) string {
@@ -2222,7 +2230,8 @@ resource "aws_subnet" "alb_test" {
   tags = {
     Name = "tf-acc-lb-no-sg-${count.index}"
   }
-}`, lbName)
+}
+`, lbName)
 }
 
 func testAccAWSLBConfig_updateSecurityGroups(lbName string) string {
@@ -2306,5 +2315,6 @@ resource "aws_security_group" "alb_test" {
   tags = {
     Name = "TestAccAWSALB_basic"
   }
-}`, lbName)
+}
+`, lbName)
 }

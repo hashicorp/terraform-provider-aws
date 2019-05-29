@@ -259,7 +259,8 @@ resource "aws_neptune_parameter_group" "test" {
   description = %q
   family      = "neptune1"
   name        = %q
-}`, description, rName)
+}
+`, description, rName)
 }
 
 func testAccAWSNeptuneParameterGroupConfig_Required(rName string) string {

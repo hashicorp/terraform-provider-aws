@@ -160,7 +160,8 @@ data "aws_lb" "alb_test_with_arn" {
 
 data "aws_lb" "alb_test_with_name" {
 	name = "${aws_lb.alb_test.name}"
-}`, lbName)
+}
+`, lbName)
 }
 
 func testAccDataSourceAWSLBConfigBackardsCompatibility(albName string) string {
@@ -235,5 +236,6 @@ data "aws_alb" "alb_test_with_arn" {
 
 data "aws_alb" "alb_test_with_name" {
 	name = "${aws_alb.alb_test.name}"
-}`, albName)
+}
+`, albName)
 }

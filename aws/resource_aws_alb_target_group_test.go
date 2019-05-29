@@ -644,7 +644,8 @@ resource "aws_vpc" "test" {
   tags = {
     Name = "terraform-testacc-alb-target-group-basic"
   }
-}`, targetGroupName)
+}
+`, targetGroupName)
 }
 
 func testAccAWSALBTargetGroupConfig_updatedPort(targetGroupName string) string {
@@ -683,7 +684,8 @@ resource "aws_vpc" "test" {
   tags = {
     Name = "terraform-testacc-alb-target-group-basic"
   }
-}`, targetGroupName)
+}
+`, targetGroupName)
 }
 
 func testAccAWSALBTargetGroupConfig_updatedProtocol(targetGroupName string) string {
@@ -730,7 +732,8 @@ resource "aws_vpc" "test" {
   tags = {
     Name = "terraform-testacc-alb-target-group-basic"
   }
-}`, targetGroupName)
+}
+`, targetGroupName)
 }
 
 func testAccAWSALBTargetGroupConfig_updatedVpc(targetGroupName string) string {
@@ -769,7 +772,8 @@ resource "aws_vpc" "test" {
   tags = {
     Name = "terraform-testacc-alb-target-group-basic"
   }
-}`, targetGroupName)
+}
+`, targetGroupName)
 }
 
 func testAccAWSALBTargetGroupConfig_updateTags(targetGroupName string) string {
@@ -809,7 +813,8 @@ resource "aws_vpc" "test" {
   tags = {
     Name = "terraform-testacc-alb-target-group-basic"
   }
-}`, targetGroupName)
+}
+`, targetGroupName)
 }
 
 func testAccAWSALBTargetGroupConfig_updateHealthCheck(targetGroupName string) string {
@@ -844,7 +849,8 @@ resource "aws_vpc" "test" {
   tags = {
     Name = "terraform-testacc-alb-target-group-basic"
   }
-}`, targetGroupName)
+}
+`, targetGroupName)
 }
 
 func testAccAWSALBTargetGroupConfig_stickiness(targetGroupName string, addStickinessBlock bool, enabled bool) string {
@@ -886,7 +892,8 @@ resource "aws_vpc" "test" {
   tags = {
     Name = "terraform-testacc-alb-target-group-stickiness"
   }
-}`, targetGroupName, stickinessBlock)
+}
+`, targetGroupName, stickinessBlock)
 }
 
 func testAccAWSALBTargetGroupConfig_updateSlowStart(targetGroupName string, slowStartDuration int) string {
@@ -926,7 +933,8 @@ resource "aws_vpc" "test" {
   tags = {
     Name = "terraform-testacc-alb-target-group-slowstart"
   }
-}`, targetGroupName, slowStartDuration)
+}
+`, targetGroupName, slowStartDuration)
 }
 
 const testAccAWSALBTargetGroupConfig_namePrefix = `
@@ -974,7 +982,8 @@ func testAccAWSALBTargetGroupConfig_lambda(targetGroupName string) string {
 	return fmt.Sprintf(`resource "aws_alb_target_group" "test" {
 	name = "%s"
 	target_type = "lambda"
-}`, targetGroupName)
+}
+`, targetGroupName)
 }
 
 func testAccAWSALBTargetGroupConfig_lambdaMultiValueHeadersEnabled(rName string, lambdaMultiValueHadersEnabled bool) string {
@@ -996,7 +1005,8 @@ func testAccAWSALBTargetGroupConfig_missing_port(targetGroupName string) string 
 
 resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"
-}`, targetGroupName)
+}
+`, targetGroupName)
 }
 
 func testAccAWSALBTargetGroupConfig_missing_protocol(targetGroupName string) string {
@@ -1008,7 +1018,8 @@ func testAccAWSALBTargetGroupConfig_missing_protocol(targetGroupName string) str
 
 resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"
-}`, targetGroupName)
+}
+`, targetGroupName)
 }
 
 func testAccAWSALBTargetGroupConfig_missing_vpc(targetGroupName string) string {

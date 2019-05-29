@@ -656,7 +656,8 @@ resource "aws_mq_broker" "test" {
     username = "Test"
     password = "TestTest1234"
   }
-}`, sgName, brokerName)
+}
+`, sgName, brokerName)
 }
 
 func testAccMqBrokerConfig_allFieldsDefaultVpc(sgName, cfgName, cfgBody, brokerName string) string {
@@ -707,7 +708,8 @@ resource "aws_mq_broker" "test" {
     console_access = true
     groups = ["first", "second", "third"]
   }
-}`, sgName, sgName, cfgName, cfgBody, brokerName)
+}
+`, sgName, sgName, cfgName, cfgBody, brokerName)
 }
 
 func testAccMqBrokerConfig_allFieldsCustomVpc(sgName, cfgName, cfgBody, brokerName string) string {
@@ -805,7 +807,8 @@ resource "aws_mq_broker" "test" {
   }
 
   depends_on = ["aws_internet_gateway.test"]
-}`, sgName, sgName, cfgName, cfgBody, brokerName)
+}
+`, sgName, sgName, cfgName, cfgBody, brokerName)
 }
 
 func testAccMqBrokerConfig_updateUsers1(sgName, brokerName string) string {
@@ -825,7 +828,8 @@ resource "aws_mq_broker" "test" {
     username = "first"
     password = "TestTest1111"
   }
-}`, sgName, brokerName)
+}
+`, sgName, brokerName)
 }
 
 func testAccMqBrokerConfig_updateUsers2(sgName, brokerName string) string {
@@ -850,7 +854,8 @@ resource "aws_mq_broker" "test" {
     username = "second"
     password = "TestTest2222"
   }
-}`, sgName, brokerName)
+}
+`, sgName, brokerName)
 }
 
 func testAccMqBrokerConfig_updateUsers3(sgName, brokerName string) string {
@@ -871,7 +876,8 @@ resource "aws_mq_broker" "test" {
     password = "TestTest2222"
     groups = ["admin"]
   }
-}`, sgName, brokerName)
+}
+`, sgName, brokerName)
 }
 
 func testAccMqBrokerConfig_updateTags1(sgName, brokerName string) string {
@@ -895,7 +901,8 @@ resource "aws_mq_broker" "test" {
   tags = {
     env = "test"
   }
-}`, sgName, brokerName)
+}
+`, sgName, brokerName)
 }
 
 func testAccMqBrokerConfig_updateTags2(sgName, brokerName string) string {
@@ -920,7 +927,8 @@ resource "aws_mq_broker" "test" {
 		env = "test2"
 		role = "test-role"
   }
-}`, sgName, brokerName)
+}
+`, sgName, brokerName)
 }
 
 func testAccMqBrokerConfig_updateTags3(sgName, brokerName string) string {
@@ -944,5 +952,6 @@ resource "aws_mq_broker" "test" {
   tags = {
 		role = "test-role"
   }
-}`, sgName, brokerName)
+}
+`, sgName, brokerName)
 }

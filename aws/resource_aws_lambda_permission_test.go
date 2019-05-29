@@ -603,7 +603,8 @@ resource "aws_iam_role" "iam_for_lambda" {
   ]
 }
 EOF
-}`, funcName, roleName)
+}
+`, funcName, roleName)
 }
 
 func testAccAWSLambdaPermissionConfigStatementIdDuplicate(rName string) string {
@@ -836,7 +837,8 @@ resource "aws_lambda_permission" "third" {
     action = "lambda:*"
     function_name = "${aws_lambda_function.test_lambda.arn}"
     principal = "events.amazonaws.com"
-}`, funcName, roleName)
+}
+`, funcName, roleName)
 }
 
 func testAccAWSLambdaPermissionConfig_withS3(bucketName, funcName, roleName string) string {

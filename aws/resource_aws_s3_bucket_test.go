@@ -2063,7 +2063,8 @@ func testAccAWSS3BucketPolicy(randInt int, partition string) string {
 			"Resource": "arn:%s:s3:::tf-test-bucket-%d/*"
 		}
 	]
-}`, partition, randInt)
+}
+`, partition, randInt)
 }
 
 func testAccAWSS3BucketConfig(randInt int) string {

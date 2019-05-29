@@ -208,7 +208,8 @@ func testAccAWSGroupConfig(groupName string) string {
 resource "aws_iam_group" "group" {
 	name = "%s"
 	path = "/"
-}`, groupName)
+}
+`, groupName)
 }
 
 func testAccAWSGroupConfig2(groupName string) string {
@@ -216,5 +217,6 @@ func testAccAWSGroupConfig2(groupName string) string {
 resource "aws_iam_group" "group2" {
 	name = "%s"
 	path = "/funnypath/"
-}`, groupName)
+}
+`, groupName)
 }

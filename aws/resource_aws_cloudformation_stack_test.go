@@ -363,7 +363,8 @@ resource "aws_cloudformation_stack" "network" {
   }
 }
 STACK
-}`, stackName)
+}
+`, stackName)
 }
 
 func testAccAWSCloudFormationStackConfig_yaml(stackName string) string {
@@ -389,7 +390,8 @@ Outputs:
     Description: The VPC ID
     Value: !Ref MyVPC
 STACK
-}`, stackName)
+}
+`, stackName)
 }
 
 func testAccAWSCloudFormationStackConfig_defaultParams(stackName string) string {

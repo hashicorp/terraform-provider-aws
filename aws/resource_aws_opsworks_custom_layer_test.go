@@ -306,7 +306,8 @@ resource "aws_security_group" "tf-ops-acc-layer2" {
     protocol = "icmp"
     cidr_blocks = ["0.0.0.0/0"]
   }
-}`, name, name)
+}
+`, name, name)
 }
 
 func testAccAwsOpsworksCustomLayerConfigNoVpcCreate(name string) string {

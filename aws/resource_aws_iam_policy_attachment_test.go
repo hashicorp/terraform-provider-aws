@@ -202,7 +202,8 @@ resource "aws_iam_policy_attachment" "test-attach" {
     roles = ["${aws_iam_role.role.name}"]
     groups = ["${aws_iam_group.group.name}"]
     policy_arn = "${aws_iam_policy.policy.arn}"
-}`, userName, roleName, groupName, policyName, attachmentName)
+}
+`, userName, roleName, groupName, policyName, attachmentName)
 }
 
 func testAccAWSPolicyAttachConfigUpdate(userName, userName2, userName3,
@@ -320,7 +321,8 @@ resource "aws_iam_policy_attachment" "test-attach" {
         "${aws_iam_group.group3.name}"
     ]
     policy_arn = "${aws_iam_policy.policy.arn}"
-}`, userName, userName2, userName3,
+}
+`, userName, userName2, userName3,
 		roleName, roleName2, roleName3,
 		groupName, groupName2, groupName3,
 		policyName, attachmentName)
@@ -457,5 +459,6 @@ resource "aws_iam_policy_attachment" "test-paginated-attach" {
 		"${aws_iam_user.user.*.name[99]}",
 		"${aws_iam_user.user.*.name[100]}",
 	]
-}`, userNamePrefix, policyName, attachmentName)
+}
+`, userNamePrefix, policyName, attachmentName)
 }

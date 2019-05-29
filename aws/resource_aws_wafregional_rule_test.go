@@ -403,7 +403,8 @@ resource "aws_wafregional_rule" "wafrule" {
     negated = false
     type = "IPMatch"
   }
-}`, name, name, name)
+}
+`, name, name, name)
 }
 
 func testAccAWSWafRegionalRuleConfigChangeName(name string) string {
@@ -426,7 +427,8 @@ resource "aws_wafregional_rule" "wafrule" {
     negated = false
     type = "IPMatch"
   }
-}`, name, name, name)
+}
+`, name, name, name)
 }
 
 func testAccAWSWafRegionalRule_noPredicates(name string) string {
@@ -474,5 +476,6 @@ resource "aws_wafregional_rule" "wafrule" {
     negated = true
     type = "IPMatch"
   }
-}`, name, name, name, name)
+}
+`, name, name, name, name)
 }

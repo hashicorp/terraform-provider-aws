@@ -424,5 +424,6 @@ func testAccAWSWafRuleGroupConfig_noActivatedRules(groupName string) string {
 resource "aws_waf_rule_group" "test" {
   name = "%[1]s"
   metric_name = "%[1]s"
-}`, groupName)
+}
+`, groupName)
 }

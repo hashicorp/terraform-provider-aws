@@ -336,7 +336,8 @@ func testAccAWSDocDBClusterParameterGroupConfig(name string) string {
 	return fmt.Sprintf(`resource "aws_docdb_cluster_parameter_group" "bar" {
 	family = "docdb3.6"
 	name   = "%s"
-}`, name)
+}
+`, name)
 }
 
 func testAccAWSDocDBClusterParameterGroupConfig_Description(name, description string) string {
@@ -344,7 +345,8 @@ func testAccAWSDocDBClusterParameterGroupConfig_Description(name, description st
   family = "docdb3.6"
   description = "%s"
   name        = "%s"
-}`, description, name)
+}
+`, description, name)
 }
 
 func testAccAWSDocDBClusterParameterGroupConfig_Parameter(name, pName, pValue string) string {

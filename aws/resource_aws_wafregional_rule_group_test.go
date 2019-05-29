@@ -401,5 +401,6 @@ func testAccAWSWafRegionalRuleGroupConfig_noActivatedRules(groupName string) str
 resource "aws_wafregional_rule_group" "test" {
   name = "%[1]s"
   metric_name = "%[1]s"
-}`, groupName)
+}
+`, groupName)
 }

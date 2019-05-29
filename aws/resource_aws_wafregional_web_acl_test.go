@@ -576,7 +576,8 @@ resource "aws_wafregional_web_acl" "waf_acl" {
     priority = 1 
     rule_id = "${aws_wafregional_rule.wafrule.id}"
   }
-}`, name, name, name, name)
+}
+`, name, name, name, name)
 }
 
 func testAccAWSWafRegionalWebAclConfigRateBased(name string) string {
@@ -604,7 +605,8 @@ resource "aws_wafregional_web_acl" "waf_acl" {
     type = "RATE_BASED"
     rule_id = "${aws_wafregional_rate_based_rule.wafrule.id}"
   }
-}`, name, name, name, name)
+}
+`, name, name, name, name)
 }
 
 func testAccAWSWafRegionalWebAclConfigGroup(name string) string {
@@ -629,7 +631,8 @@ resource "aws_wafregional_web_acl" "waf_acl" {
     type = "GROUP"
     rule_id = "${aws_wafregional_rule_group.wafrulegroup.id}" # todo
   }
-}`, name, name, name, name)
+}
+`, name, name, name, name)
 }
 
 func testAccAWSWafRegionalWebAclConfig_changeName(name string) string {
@@ -652,7 +655,8 @@ resource "aws_wafregional_web_acl" "waf_acl" {
     priority = 1 
     rule_id = "${aws_wafregional_rule.wafrule.id}"
   }
-}`, name, name, name, name)
+}
+`, name, name, name, name)
 }
 
 func testAccAWSWafRegionalWebAclConfig_changeDefaultAction(name string) string {
@@ -675,7 +679,8 @@ resource "aws_wafregional_web_acl" "waf_acl" {
     priority = 1 
     rule_id = "${aws_wafregional_rule.wafrule.id}"
   }
-}`, name, name, name, name)
+}
+`, name, name, name, name)
 }
 
 func testAccAWSWafRegionalWebAclConfig_noRules(name string) string {
@@ -686,7 +691,8 @@ resource "aws_wafregional_web_acl" "waf_acl" {
   default_action {
     type = "ALLOW"
   }
-}`, name, name)
+}
+`, name, name)
 }
 
 func testAccAWSWafRegionalWebAclConfig_changeRules(name string) string {
@@ -717,7 +723,8 @@ resource "aws_wafregional_web_acl" "waf_acl" {
     priority = 99
     rule_id = "${aws_wafregional_rule.wafrule.id}"
   }
-}`, name, name, name, name)
+}
+`, name, name, name, name)
 }
 
 func testAccAWSWafRegionalWebAclConfigLoggingConfiguration(rName string) string {

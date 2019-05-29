@@ -282,7 +282,8 @@ resource "aws_waf_geo_match_set" "geo_match_set" {
     type = "Country"
     value = "CA"
   }
-}`, name)
+}
+`, name)
 }
 
 func testAccAWSWafGeoMatchSetConfigChangeName(name string) string {
@@ -298,7 +299,8 @@ resource "aws_waf_geo_match_set" "geo_match_set" {
     type = "Country"
     value = "CA"
   }
-}`, name)
+}
+`, name)
 }
 
 func testAccAWSWafGeoMatchSetConfig_changeConstraints(name string) string {
@@ -314,12 +316,14 @@ resource "aws_waf_geo_match_set" "geo_match_set" {
     type = "Country"
     value = "CN"
   }
-}`, name)
+}
+`, name)
 }
 
 func testAccAWSWafGeoMatchSetConfig_noConstraints(name string) string {
 	return fmt.Sprintf(`
 resource "aws_waf_geo_match_set" "geo_match_set" {
   name = "%s"
-}`, name)
+}
+`, name)
 }

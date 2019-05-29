@@ -207,7 +207,8 @@ resource "aws_pinpoint_apns_voip_sandbox_channel" "test_channel" {
   default_authentication_method = "CERTIFICATE"
   certificate                   = %s
   private_key                   = %s
-}`, conf.Certificate, conf.PrivateKey)
+}
+`, conf.Certificate, conf.PrivateKey)
 }
 
 func testAccAWSPinpointAPNSVoipSandboxChannelConfig_basicToken(conf *testAccAwsPinpointAPNSVoipSandboxChannelTokenConfiguration) string {
@@ -228,7 +229,8 @@ resource "aws_pinpoint_apns_voip_sandbox_channel" "test_channel" {
   team_id        = %s
   token_key      = %s
   token_key_id   = %s
-}`, conf.BundleId, conf.TeamId, conf.TokenKey, conf.TokenKeyId)
+}
+`, conf.BundleId, conf.TeamId, conf.TokenKey, conf.TokenKeyId)
 }
 
 func testAccCheckAWSPinpointAPNSVoipSandboxChannelDestroy(s *terraform.State) error {

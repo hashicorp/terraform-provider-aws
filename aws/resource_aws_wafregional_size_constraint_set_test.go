@@ -295,7 +295,8 @@ resource "aws_wafregional_size_constraint_set" "size_constraint_set" {
       type = "BODY"
     }
   }
-}`, name)
+}
+`, name)
 }
 
 func testAccAWSWafRegionalSizeConstraintSetConfigChangeName(name string) string {
@@ -310,7 +311,8 @@ resource "aws_wafregional_size_constraint_set" "size_constraint_set" {
       type = "BODY"
     }
   }
-}`, name)
+}
+`, name)
 }
 
 func testAccAWSWafRegionalSizeConstraintSetConfig_changeConstraints(name string) string {
@@ -325,12 +327,14 @@ resource "aws_wafregional_size_constraint_set" "size_constraint_set" {
       type = "BODY"
     }
   }
-}`, name)
+}
+`, name)
 }
 
 func testAccAWSWafRegionalSizeConstraintSetConfig_noConstraints(name string) string {
 	return fmt.Sprintf(`
 resource "aws_wafregional_size_constraint_set" "size_constraint_set" {
   name = "%s"
-}`, name)
+}
+`, name)
 }

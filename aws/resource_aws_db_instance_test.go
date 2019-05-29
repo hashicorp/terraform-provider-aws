@@ -2273,7 +2273,8 @@ resource "aws_db_instance" "bar" {
 	skip_final_snapshot = true
 	parameter_group_name = "default.mysql5.6"
 	iam_database_authentication_enabled = true
-}`, n)
+}
+`, n)
 }
 
 func testAccAWSDBInstanceConfig_FinalSnapshotIdentifier_SkipFinalSnapshot() string {
@@ -2296,7 +2297,8 @@ resource "aws_db_instance" "snapshot" {
 
 	skip_final_snapshot = true
 	final_snapshot_identifier = "foobarbaz-test-terraform-final-snapshot-1"
-}`, acctest.RandInt())
+}
+`, acctest.RandInt())
 }
 
 func testAccAWSDBInstanceConfig_S3Import(bucketName string, bucketPrefix string, uniqueId string) string {

@@ -79,5 +79,6 @@ resource "aws_db_subnet_group" "test" {
 
 data "aws_rds_cluster" "test" {
 	cluster_identifier = "${aws_rds_cluster.test.cluster_identifier}"
-}`, clusterName, clusterName)
+}
+`, clusterName, clusterName)
 }

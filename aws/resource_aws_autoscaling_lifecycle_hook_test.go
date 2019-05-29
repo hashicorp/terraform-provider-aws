@@ -278,5 +278,6 @@ EOF
 
   notification_target_arn = "${aws_sqs_queue.foobar.arn}"
   role_arn                = "${aws_iam_role.foobar.arn}"
-}`, name, rInt, rInt, rInt, name, rInt)
+}
+`, name, rInt, rInt, rInt, name, rInt)
 }

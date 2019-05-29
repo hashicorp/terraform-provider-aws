@@ -479,7 +479,8 @@ resource "aws_neptune_cluster" "default" {
   tags = {
     Environment = "production"
   }
-}`, n)
+}
+`, n)
 }
 
 func testAccAWSNeptuneClusterConfig_namePrefix() string {
@@ -503,7 +504,8 @@ resource "aws_neptune_cluster" "default" {
   tags = {
     Environment = "production"
   }
-}`, n, n)
+}
+`, n, n)
 }
 
 func testAccAWSNeptuneClusterConfigUpdatedTags(n int) string {
@@ -517,7 +519,8 @@ resource "aws_neptune_cluster" "default" {
     Environment = "production"
     AnotherTag = "test"
   }
-}`, n)
+}
+`, n)
 }
 
 func testAccAWSNeptuneClusterConfigIncludingIamRoles(n int) string {
@@ -598,7 +601,8 @@ resource "aws_neptune_cluster" "default" {
   }
   depends_on = ["aws_iam_role.another_neptune_sample_role", "aws_iam_role.neptune_sample_role"]
 
-}`, n, n, n, n, n)
+}
+`, n, n, n, n, n)
 }
 
 func testAccAWSNeptuneClusterConfigAddIamRoles(n int) string {
@@ -679,7 +683,8 @@ resource "aws_neptune_cluster" "default" {
   }
   depends_on = ["aws_iam_role.another_neptune_sample_role", "aws_iam_role.neptune_sample_role"]
 
-}`, n, n, n, n, n)
+}
+`, n, n, n, n, n)
 }
 
 func testAccAWSNeptuneClusterConfigRemoveIamRoles(n int) string {
@@ -727,7 +732,8 @@ resource "aws_neptune_cluster" "default" {
   }
 
   depends_on = ["aws_iam_role.another_neptune_sample_role"]
-}`, n, n, n)
+}
+`, n, n, n)
 }
 
 func testAccAWSNeptuneClusterConfig_kmsKey(n int) string {
@@ -771,7 +777,8 @@ resource "aws_neptune_cluster" "default" {
   availability_zones = ["us-west-2a","us-west-2b","us-west-2c"]
   storage_encrypted = true
   skip_final_snapshot = true
-}`, n)
+}
+`, n)
 }
 
 func testAccAWSNeptuneClusterConfig_backups(n int) string {
@@ -783,7 +790,8 @@ resource "aws_neptune_cluster" "default" {
   preferred_backup_window = "07:00-09:00"
   preferred_maintenance_window = "tue:04:00-tue:04:30"
   skip_final_snapshot = true
-}`, n)
+}
+`, n)
 }
 
 func testAccAWSNeptuneClusterConfig_backupsUpdate(n int) string {
@@ -796,7 +804,8 @@ resource "aws_neptune_cluster" "default" {
   preferred_maintenance_window = "wed:01:00-wed:01:30"
   apply_immediately = true
   skip_final_snapshot = true
-}`, n)
+}
+`, n)
 }
 
 func testAccAWSNeptuneClusterConfig_iamAuth(n int) string {
@@ -806,5 +815,6 @@ resource "aws_neptune_cluster" "default" {
   availability_zones = ["us-west-2a","us-west-2b","us-west-2c"]
   iam_database_authentication_enabled = true
   skip_final_snapshot = true
-}`, n)
+}
+`, n)
 }

@@ -297,7 +297,8 @@ func testAccAWSNeptuneClusterParameterGroupConfig_Description(name, description 
   description = "%s"
   family      = "neptune1"
   name        = "%s"
-}`, description, name)
+}
+`, description, name)
 }
 
 func testAccAWSNeptuneClusterParameterGroupConfig_Parameter(name, pName, pValue string) string {
@@ -331,7 +332,8 @@ func testAccAWSNeptuneClusterParameterGroupConfig(name string) string {
 	return fmt.Sprintf(`resource "aws_neptune_cluster_parameter_group" "bar" {
   family = "neptune1"
   name   = "%s"
-}`, name)
+}
+`, name)
 }
 
 const testAccAWSNeptuneClusterParameterGroupConfig_namePrefix = `

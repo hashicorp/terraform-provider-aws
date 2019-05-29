@@ -363,5 +363,6 @@ func testAccAWSWafRegionalRegexMatchSetConfig_noPatterns(matchSetName string) st
 	return fmt.Sprintf(`
 resource "aws_wafregional_regex_match_set" "test" {
   name = "%s"
-}`, matchSetName)
+}
+`, matchSetName)
 }

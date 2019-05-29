@@ -180,7 +180,8 @@ resource "aws_load_balancer_listener_policy" "test-lb-listener-policies-80" {
   policy_names = [
     "${aws_load_balancer_policy.magic-cookie-sticky.policy_name}",
   ]
-}`, lbName, mcName)
+}
+`, lbName, mcName)
 }
 
 func testAccAWSLoadBalancerListenerPolicyConfig_basic1(lbName, mcName string) string {
@@ -217,7 +218,8 @@ resource "aws_load_balancer_listener_policy" "test-lb-listener-policies-80" {
   policy_names = [
     "${aws_load_balancer_policy.magic-cookie-sticky.policy_name}"
   ]
-}`, lbName, mcName)
+}
+`, lbName, mcName)
 }
 
 func testAccAWSLoadBalancerListenerPolicyConfig_basic2(lbName string) string {
@@ -236,5 +238,6 @@ resource "aws_elb" "test-lb" {
   tags = {
     Name = "tf-acc-test"
   }
-}`, lbName)
+}
+`, lbName)
 }

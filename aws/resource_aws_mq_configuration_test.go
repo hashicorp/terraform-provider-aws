@@ -159,7 +159,8 @@ resource "aws_mq_configuration" "test" {
 <broker xmlns="http://activemq.apache.org/schema/core">
 </broker>
 DATA
-}`, configurationName)
+}
+`, configurationName)
 }
 
 func testAccMqConfigurationConfig_descriptionUpdated(configurationName string) string {
@@ -174,7 +175,8 @@ resource "aws_mq_configuration" "test" {
 <broker xmlns="http://activemq.apache.org/schema/core">
 </broker>
 DATA
-}`, configurationName)
+}
+`, configurationName)
 }
 
 func testAccMqConfigurationWithDataConfig(configurationName string) string {
@@ -207,7 +209,8 @@ resource "aws_mq_configuration" "test" {
   </plugins>
 </broker>
 DATA
-}`, configurationName)
+}
+`, configurationName)
 }
 
 func testAccMqConfigurationConfig_updateTags1(configurationName string) string {
@@ -226,7 +229,8 @@ DATA
 	tags = {
 		env = "test"
 	}
-}`, configurationName)
+}
+`, configurationName)
 }
 
 func testAccMqConfigurationConfig_updateTags2(configurationName string) string {
@@ -246,7 +250,8 @@ DATA
 		env = "test2"
 		role = "test-role"
 	}
-}`, configurationName)
+}
+`, configurationName)
 }
 
 func testAccMqConfigurationConfig_updateTags3(configurationName string) string {
@@ -265,5 +270,6 @@ DATA
 	tags = {
 		role = "test-role"
 	}
-}`, configurationName)
+}
+`, configurationName)
 }

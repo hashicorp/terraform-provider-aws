@@ -369,7 +369,8 @@ resource "aws_elasticache_parameter_group" "bar" {
   description = %q
   family      = "redis2.8"
   name        = %q
-}`, description, rName)
+}
+`, description, rName)
 }
 
 func testAccAWSElasticacheParameterGroupConfigParameter1(rName, family, parameterName1, parameterValue1 string) string {
@@ -382,7 +383,8 @@ resource "aws_elasticache_parameter_group" "bar" {
     name  = %q
     value = %q
   }
-}`, family, rName, parameterName1, parameterValue1)
+}
+`, family, rName, parameterName1, parameterValue1)
 }
 
 func testAccAWSElasticacheParameterGroupConfigParameter2(rName, family, parameterName1, parameterValue1, parameterName2, parameterValue2 string) string {
@@ -400,5 +402,6 @@ resource "aws_elasticache_parameter_group" "bar" {
     name  = %q
     value = %q
   }
-}`, family, rName, parameterName1, parameterValue1, parameterName2, parameterValue2)
+}
+`, family, rName, parameterName1, parameterValue1, parameterName2, parameterValue2)
 }

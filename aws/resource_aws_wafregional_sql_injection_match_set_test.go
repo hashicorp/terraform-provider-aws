@@ -279,7 +279,8 @@ resource "aws_wafregional_sql_injection_match_set" "sql_injection_match_set" {
       type = "QUERY_STRING"
     }
   }
-}`, name)
+}
+`, name)
 }
 
 func testAccAWSWafRegionalSqlInjectionMatchSetConfig_changeTuples(name string) string {
@@ -293,12 +294,14 @@ resource "aws_wafregional_sql_injection_match_set" "sql_injection_match_set" {
       data = "User-Agent"
     }
   }
-}`, name)
+}
+`, name)
 }
 
 func testAccAWSWafRegionalSqlInjectionMatchSetConfig_noTuples(name string) string {
 	return fmt.Sprintf(`
 resource "aws_wafregional_sql_injection_match_set" "sql_injection_match_set" {
   name = "%s"
-}`, name)
+}
+`, name)
 }

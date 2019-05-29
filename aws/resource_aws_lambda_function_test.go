@@ -1672,7 +1672,8 @@ resource "aws_security_group" "sg_for_lambda" {
       protocol = "-1"
       cidr_blocks = ["0.0.0.0/0"]
   }
-}`, policyName, roleName, sgName)
+}
+`, policyName, roleName, sgName)
 }
 
 func testAccAWSLambdaConfigBasic(funcName, policyName, roleName, sgName string) string {
@@ -2054,7 +2055,8 @@ resource "aws_lambda_function" "lambda_function_test" {
         subnet_ids = ["${aws_subnet.subnet_for_lambda.id}"]
         security_group_ids = ["${aws_security_group.sg_for_lambda.id}"]
     }
-}`, funcName)
+}
+`, funcName)
 }
 
 func testAccAWSLambdaConfigWithVPCUpdated(funcName, policyName, roleName, sgName, sgName2 string) string {
@@ -2118,7 +2120,8 @@ resource "aws_lambda_function" "test" {
         subnet_ids         = []
         security_group_ids = []
     }
-}`, funcName)
+}
+`, funcName)
 }
 
 func testAccAWSLambdaConfigS3(bucketName, roleName, funcName string) string {
@@ -2463,5 +2466,6 @@ resource "aws_lambda_function" "lambda_function_s3" {
     role = "${aws_iam_role.iam_for_lambda.arn}"
     handler = "exports.example"
     runtime = "nodejs8.10"
-}`, bucketName, key, path, path, roleName, funcName)
+}
+`, bucketName, key, path, path, roleName, funcName)
 }

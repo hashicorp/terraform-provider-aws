@@ -501,7 +501,8 @@ resource "aws_security_group" "alb_test" {
   tags = {
     Name = "TestAccAWSALB_basic"
   }
-}`, lbName, targetGroupName)
+}
+`, lbName, targetGroupName)
 }
 
 func testAccAWSLBListenerConfigBackwardsCompatibility(lbName, targetGroupName string) string {
@@ -597,7 +598,8 @@ resource "aws_security_group" "alb_test" {
   tags = {
     Name = "TestAccAWSALB_basic"
   }
-}`, lbName, targetGroupName)
+}
+`, lbName, targetGroupName)
 }
 
 func testAccAWSLBListenerConfig_https(lbName, targetGroupName string) string {
@@ -911,7 +913,8 @@ resource "aws_security_group" "alb_test" {
   tags = {
     Name = "TestAccAWSALB_redirect"
   }
-}`, lbName)
+}
+`, lbName)
 }
 
 func testAccAWSLBListenerConfig_fixedResponse(lbName string) string {
@@ -993,7 +996,8 @@ resource "aws_security_group" "alb_test" {
   tags = {
     Name = "TestAccAWSALB_fixedresponse"
   }
-}`, lbName)
+}
+`, lbName)
 }
 
 func testAccAWSLBListenerConfig_cognito(rName string) string {

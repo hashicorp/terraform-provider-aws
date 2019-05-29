@@ -432,7 +432,8 @@ resource "aws_api_gateway_authorizer" "acctest" {
   authorizer_credentials = "${aws_iam_role.invocation_role.arn}"
   authorizer_result_ttl_in_seconds = 360
   identity_validation_expression = ".*"
-}`, authorizerName)
+}
+`, authorizerName)
 }
 
 func testAccAWSAPIGatewayAuthorizerConfig_cognito(apiGatewayName, authorizerName, cognitoName string) string {

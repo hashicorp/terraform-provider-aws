@@ -305,7 +305,8 @@ resource "aws_waf_byte_match_set" "byte_set" {
       data = "referer"
     }
   }
-}`, name)
+}
+`, name)
 }
 
 func testAccAWSWafByteMatchSetConfigChangeName(name string) string {
@@ -331,7 +332,8 @@ resource "aws_waf_byte_match_set" "byte_set" {
       data = "referer"
     }
   }
-}`, name)
+}
+`, name)
 }
 
 func testAccAWSWafByteMatchSetConfig_changeTuples(name string) string {
@@ -357,12 +359,14 @@ resource "aws_waf_byte_match_set" "byte_set" {
       data = "GET"
     }
   }
-}`, name)
+}
+`, name)
 }
 
 func testAccAWSWafByteMatchSetConfig_noTuples(name string) string {
 	return fmt.Sprintf(`
 resource "aws_waf_byte_match_set" "byte_set" {
   name = "%s"
-}`, name)
+}
+`, name)
 }

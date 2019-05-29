@@ -197,7 +197,8 @@ resource "aws_kms_alias" "nothing" {
 resource "aws_kms_alias" "single" {
     name = "alias/tf-acc-key-alias-%d"
     target_key_id = "${aws_kms_key.one.key_id}"
-}`, timestamp, timestamp, rInt, rInt)
+}
+`, timestamp, timestamp, rInt, rInt)
 }
 
 func testAccAWSKmsSingleAlias_modified(rInt int, timestamp string) string {
@@ -214,7 +215,8 @@ resource "aws_kms_key" "two" {
 resource "aws_kms_alias" "single" {
     name = "alias/tf-acc-key-alias-%d"
     target_key_id = "${aws_kms_key.two.key_id}"
-}`, timestamp, timestamp, rInt)
+}
+`, timestamp, timestamp, rInt)
 }
 
 func testAccAWSKmsMultipleAliases(rInt int, timestamp string) string {
@@ -231,7 +233,8 @@ resource "aws_kms_alias" "one" {
 resource "aws_kms_alias" "two" {
     name = "alias/tf-acc-alias-two-%d"
     target_key_id = "${aws_kms_key.single.key_id}"
-}`, timestamp, rInt, rInt)
+}
+`, timestamp, rInt, rInt)
 }
 
 func testAccAWSKmsArnDiffSuppress(rInt int, timestamp string) string {
@@ -244,5 +247,6 @@ resource "aws_kms_key" "foo" {
 resource "aws_kms_alias" "bar" {
 	name = "alias/tf-acc-key-alias-%d"
 	target_key_id = "${aws_kms_key.foo.arn}"
-}`, timestamp, rInt)
+}
+`, timestamp, rInt)
 }

@@ -147,7 +147,8 @@ resource "aws_vpc" "test" {
 
 data "aws_vpc" "by_id" {
   id = "${aws_vpc.test.id}"
-}`, cidr, tag)
+}
+`, cidr, tag)
 }
 
 func testAccDataSourceAwsVpcConfig(cidr, tag string) string {
@@ -183,7 +184,8 @@ data "aws_vpc" "by_filter" {
     name = "cidr"
     values = ["${aws_vpc.test.cidr_block}"]
   }
-}`, cidr, tag)
+}
+`, cidr, tag)
 }
 
 func testAccDataSourceAwsVpcConfigMultipleCidr(octet int) string {

@@ -2623,7 +2623,8 @@ resource "aws_codedeploy_deployment_group" "foo_group" {
     trigger_name = "foo-trigger"
     trigger_target_arn = "${aws_sns_topic.foo_topic.arn}"
   }
-}`, baseCodeDeployConfig(rName), rName)
+}
+`, baseCodeDeployConfig(rName), rName)
 }
 
 func testAccAWSCodeDeployDeploymentGroup_triggerConfiguration_update(rName string) string {
@@ -2641,7 +2642,8 @@ resource "aws_codedeploy_deployment_group" "foo_group" {
     trigger_name = "foo-trigger"
     trigger_target_arn = "${aws_sns_topic.foo_topic.arn}"
   }
-}`, baseCodeDeployConfig(rName), rName)
+}
+`, baseCodeDeployConfig(rName), rName)
 }
 
 func testAccAWSCodeDeployDeploymentGroup_triggerConfiguration_createMultiple(rName string) string {
@@ -2669,7 +2671,8 @@ resource "aws_codedeploy_deployment_group" "foo_group" {
     trigger_name = "bar-trigger"
     trigger_target_arn = "${aws_sns_topic.bar_topic.arn}"
   }
-}`, baseCodeDeployConfig(rName), rName, rName)
+}
+`, baseCodeDeployConfig(rName), rName, rName)
 }
 
 func testAccAWSCodeDeployDeploymentGroup_triggerConfiguration_updateMultiple(rName string) string {
@@ -2701,7 +2704,8 @@ resource "aws_codedeploy_deployment_group" "foo_group" {
     trigger_name = "bar-trigger"
     trigger_target_arn = "${aws_sns_topic.baz_topic.arn}"
   }
-}`, baseCodeDeployConfig(rName), rName, rName, rName)
+}
+`, baseCodeDeployConfig(rName), rName, rName, rName)
 }
 
 func test_config_auto_rollback_configuration_create(rName string) string {
@@ -2718,7 +2722,8 @@ resource "aws_codedeploy_deployment_group" "foo_group" {
     enabled = true
     events = ["DEPLOYMENT_FAILURE"]
   }
-}`, baseCodeDeployConfig(rName), rName)
+}
+`, baseCodeDeployConfig(rName), rName)
 }
 
 func test_config_auto_rollback_configuration_update(rName string) string {
@@ -2735,7 +2740,8 @@ resource "aws_codedeploy_deployment_group" "foo_group" {
     enabled = true
     events = ["DEPLOYMENT_FAILURE", "DEPLOYMENT_STOP_ON_ALARM"]
   }
-}`, baseCodeDeployConfig(rName), rName)
+}
+`, baseCodeDeployConfig(rName), rName)
 }
 
 func test_config_auto_rollback_configuration_delete(rName string) string {
@@ -2747,7 +2753,8 @@ resource "aws_codedeploy_deployment_group" "foo_group" {
   app_name = "${aws_codedeploy_app.foo_app.name}"
   deployment_group_name = "foo-group-%s"
   service_role_arn = "${aws_iam_role.foo_role.arn}"
-}`, baseCodeDeployConfig(rName), rName)
+}
+`, baseCodeDeployConfig(rName), rName)
 }
 
 func test_config_auto_rollback_configuration_disable(rName string) string {
@@ -2764,7 +2771,8 @@ resource "aws_codedeploy_deployment_group" "foo_group" {
     enabled = false
     events = ["DEPLOYMENT_FAILURE"]
   }
-}`, baseCodeDeployConfig(rName), rName)
+}
+`, baseCodeDeployConfig(rName), rName)
 }
 
 func test_config_alarm_configuration_create(rName string) string {
@@ -2781,7 +2789,8 @@ resource "aws_codedeploy_deployment_group" "foo_group" {
     alarms = ["foo"]
     enabled = true
   }
-}`, baseCodeDeployConfig(rName), rName)
+}
+`, baseCodeDeployConfig(rName), rName)
 }
 
 func test_config_alarm_configuration_update(rName string) string {
@@ -2799,7 +2808,8 @@ resource "aws_codedeploy_deployment_group" "foo_group" {
     enabled = true
     ignore_poll_alarm_failure = true
   }
-}`, baseCodeDeployConfig(rName), rName)
+}
+`, baseCodeDeployConfig(rName), rName)
 }
 
 func test_config_alarm_configuration_delete(rName string) string {
@@ -2811,7 +2821,8 @@ resource "aws_codedeploy_deployment_group" "foo_group" {
   app_name = "${aws_codedeploy_app.foo_app.name}"
   deployment_group_name = "foo-group-%s"
   service_role_arn = "${aws_iam_role.foo_role.arn}"
-}`, baseCodeDeployConfig(rName), rName)
+}
+`, baseCodeDeployConfig(rName), rName)
 }
 
 func test_config_alarm_configuration_disable(rName string) string {
@@ -2828,7 +2839,8 @@ resource "aws_codedeploy_deployment_group" "foo_group" {
     alarms = ["foo"]
     enabled = false
   }
-}`, baseCodeDeployConfig(rName), rName)
+}
+`, baseCodeDeployConfig(rName), rName)
 }
 
 func test_config_deployment_style_default(rName string) string {
@@ -2840,7 +2852,8 @@ resource "aws_codedeploy_deployment_group" "foo_group" {
   app_name = "${aws_codedeploy_app.foo_app.name}"
   deployment_group_name = "foo-group-%s"
   service_role_arn = "${aws_iam_role.foo_role.arn}"
-}`, baseCodeDeployConfig(rName), rName)
+}
+`, baseCodeDeployConfig(rName), rName)
 }
 
 func test_config_deployment_style_create(rName string) string {
@@ -2863,7 +2876,8 @@ resource "aws_codedeploy_deployment_group" "foo_group" {
       name = "foo-elb"
     }
   }
-}`, baseCodeDeployConfig(rName), rName)
+}
+`, baseCodeDeployConfig(rName), rName)
 }
 
 func test_config_deployment_style_update(rName string) string {
@@ -2880,7 +2894,8 @@ resource "aws_codedeploy_deployment_group" "foo_group" {
     deployment_option = "WITHOUT_TRAFFIC_CONTROL"
     deployment_type = "IN_PLACE"
   }
-}`, baseCodeDeployConfig(rName), rName)
+}
+`, baseCodeDeployConfig(rName), rName)
 }
 
 func test_config_load_balancer_info_default(rName string) string {
@@ -2892,7 +2907,8 @@ resource "aws_codedeploy_deployment_group" "foo_group" {
   app_name = "${aws_codedeploy_app.foo_app.name}"
   deployment_group_name = "foo-group-%s"
   service_role_arn = "${aws_iam_role.foo_role.arn}"
-}`, baseCodeDeployConfig(rName), rName)
+}
+`, baseCodeDeployConfig(rName), rName)
 }
 
 func test_config_load_balancer_info_create(rName string) string {
@@ -2910,7 +2926,8 @@ resource "aws_codedeploy_deployment_group" "foo_group" {
       name = "foo-elb"
     }
   }
-}`, baseCodeDeployConfig(rName), rName)
+}
+`, baseCodeDeployConfig(rName), rName)
 }
 
 func test_config_load_balancer_info_update(rName string) string {
@@ -2928,7 +2945,8 @@ resource "aws_codedeploy_deployment_group" "foo_group" {
       name = "bar-elb"
     }
   }
-}`, baseCodeDeployConfig(rName), rName)
+}
+`, baseCodeDeployConfig(rName), rName)
 }
 
 func test_config_load_balancer_info_delete(rName string) string {
@@ -2940,7 +2958,8 @@ resource "aws_codedeploy_deployment_group" "foo_group" {
   app_name = "${aws_codedeploy_app.foo_app.name}"
   deployment_group_name = "foo-group-%s"
   service_role_arn = "${aws_iam_role.foo_role.arn}"
-}`, baseCodeDeployConfig(rName), rName)
+}
+`, baseCodeDeployConfig(rName), rName)
 }
 
 func test_config_load_balancer_info_target_group_info_create(rName string) string {
@@ -2958,7 +2977,8 @@ resource "aws_codedeploy_deployment_group" "foo_group" {
       name = "foo-tg"
     }
   }
-}`, baseCodeDeployConfig(rName), rName)
+}
+`, baseCodeDeployConfig(rName), rName)
 }
 
 func test_config_load_balancer_info_target_group_info_update(rName string) string {
@@ -2976,7 +2996,8 @@ resource "aws_codedeploy_deployment_group" "foo_group" {
       name = "bar-tg"
     }
   }
-}`, baseCodeDeployConfig(rName), rName)
+}
+`, baseCodeDeployConfig(rName), rName)
 }
 
 func test_config_load_balancer_info_target_group_info_delete(rName string) string {
@@ -2988,7 +3009,8 @@ resource "aws_codedeploy_deployment_group" "foo_group" {
   app_name = "${aws_codedeploy_app.foo_app.name}"
   deployment_group_name = "foo-group-%s"
   service_role_arn = "${aws_iam_role.foo_role.arn}"
-}`, baseCodeDeployConfig(rName), rName)
+}
+`, baseCodeDeployConfig(rName), rName)
 }
 
 func test_config_in_place_deployment_with_traffic_control_create(rName string) string {
@@ -3011,7 +3033,8 @@ resource "aws_codedeploy_deployment_group" "foo_group" {
       name = "foo-elb"
     }
   }
-}`, baseCodeDeployConfig(rName), rName)
+}
+`, baseCodeDeployConfig(rName), rName)
 }
 
 func test_config_in_place_deployment_with_traffic_control_update(rName string) string {
@@ -3048,7 +3071,8 @@ resource "aws_codedeploy_deployment_group" "foo_group" {
       action = "KEEP_ALIVE"
     }
   }
-}`, baseCodeDeployConfig(rName), rName)
+}
+`, baseCodeDeployConfig(rName), rName)
 }
 
 func test_config_blue_green_deployment_config_default(rName string) string {
@@ -3060,7 +3084,8 @@ resource "aws_codedeploy_deployment_group" "foo_group" {
   app_name = "${aws_codedeploy_app.foo_app.name}"
   deployment_group_name = "foo-group-%s"
   service_role_arn = "${aws_iam_role.foo_role.arn}"
-}`, baseCodeDeployConfig(rName), rName)
+}
+`, baseCodeDeployConfig(rName), rName)
 }
 
 func test_config_blue_green_deployment_config_create_with_asg(rName string) string {
@@ -3136,7 +3161,8 @@ resource "aws_codedeploy_deployment_group" "foo_group" {
       termination_wait_time_in_minutes = 120
     }
   }
-}`, baseCodeDeployConfig(rName), rName, rName)
+}
+`, baseCodeDeployConfig(rName), rName, rName)
 }
 
 func test_config_blue_green_deployment_config_update_with_asg(rName string) string {
@@ -3211,7 +3237,8 @@ resource "aws_codedeploy_deployment_group" "foo_group" {
       action = "KEEP_ALIVE"
     }
   }
-}`, baseCodeDeployConfig(rName), rName, rName)
+}
+`, baseCodeDeployConfig(rName), rName, rName)
 }
 
 func test_config_blue_green_deployment_config_create_no_asg(rName string) string {
@@ -3239,7 +3266,8 @@ resource "aws_codedeploy_deployment_group" "foo_group" {
       termination_wait_time_in_minutes = 120
     }
   }
-}`, baseCodeDeployConfig(rName), rName)
+}
+`, baseCodeDeployConfig(rName), rName)
 }
 
 func test_config_blue_green_deployment_config_update_no_asg(rName string) string {
@@ -3265,7 +3293,8 @@ resource "aws_codedeploy_deployment_group" "foo_group" {
       action = "KEEP_ALIVE"
     }
   }
-}`, baseCodeDeployConfig(rName), rName)
+}
+`, baseCodeDeployConfig(rName), rName)
 }
 
 func test_config_blue_green_deployment_complete(rName string) string {
@@ -3303,7 +3332,8 @@ resource "aws_codedeploy_deployment_group" "foo_group" {
       action = "KEEP_ALIVE"
     }
   }
-}`, baseCodeDeployConfig(rName), rName)
+}
+`, baseCodeDeployConfig(rName), rName)
 }
 
 func test_config_blue_green_deployment_complete_updated(rName string) string {
@@ -3340,7 +3370,8 @@ resource "aws_codedeploy_deployment_group" "foo_group" {
       action = "KEEP_ALIVE"
     }
   }
-}`, baseCodeDeployConfig(rName), rName)
+}
+`, baseCodeDeployConfig(rName), rName)
 }
 
 func testAccAWSCodeDeployDeploymentGroupConfigEcsBase(rName string) string {

@@ -685,7 +685,8 @@ resource "aws_security_group" "alb_test" {
   tags = {
     Name = "TestAccAWSALB_basic"
   }
-}`, lbName, targetGroupName)
+}
+`, lbName, targetGroupName)
 }
 
 func testAccAWSLBListenerRuleConfig_basic(lbName, targetGroupName string) string {
@@ -796,7 +797,8 @@ resource "aws_security_group" "alb_test" {
   tags = {
     Name = "TestAccAWSALB_basic"
   }
-}`, lbName, targetGroupName)
+}
+`, lbName, targetGroupName)
 }
 
 func testAccAWSLBListenerRuleConfigBackwardsCompatibility(lbName, targetGroupName string) string {
@@ -907,7 +909,8 @@ resource "aws_security_group" "alb_test" {
   tags = {
     Name = "TestAccAWSALB_basic"
   }
-}`, lbName, targetGroupName)
+}
+`, lbName, targetGroupName)
 }
 
 func testAccAWSLBListenerRuleConfig_redirect(lbName string) string {
@@ -1008,7 +1011,8 @@ resource "aws_security_group" "alb_test" {
   tags = {
     Name = "TestAccAWSALB_redirect"
   }
-}`, lbName)
+}
+`, lbName)
 }
 
 func testAccAWSLBListenerRuleConfig_fixedResponse(lbName string) string {
@@ -1109,7 +1113,8 @@ resource "aws_security_group" "alb_test" {
   tags = {
     Name = "TestAccAWSALB_fixedresponse"
   }
-}`, lbName)
+}
+`, lbName)
 }
 
 func testAccAWSLBListenerRuleConfig_updateRulePriority(lbName, targetGroupName string) string {
@@ -1221,7 +1226,8 @@ resource "aws_security_group" "alb_test" {
   tags = {
     Name = "TestAccAWSALB_basic"
   }
-}`, lbName, targetGroupName)
+}
+`, lbName, targetGroupName)
 }
 
 func testAccAWSLBListenerRuleConfig_changeRuleArn(lbName, targetGroupName string) string {
@@ -1344,7 +1350,8 @@ resource "aws_security_group" "alb_test" {
   tags = {
     Name = "TestAccAWSALB_basic"
   }
-}`, lbName, targetGroupName)
+}
+`, lbName, targetGroupName)
 }
 
 func testAccAWSLBListenerRuleConfig_priorityBase(lbName, targetGroupName string) string {
@@ -1441,7 +1448,8 @@ resource "aws_security_group" "alb_test" {
   tags = {
     Name = "TestAccAWSALB_basic"
   }
-}`, lbName, targetGroupName)
+}
+`, lbName, targetGroupName)
 }
 
 func testAccAWSLBListenerRuleConfig_priorityFirst(lbName, targetGroupName string) string {
@@ -1765,7 +1773,8 @@ resource "aws_cognito_user_pool_client" "test" {
 resource "aws_cognito_user_pool_domain" "test" {
   domain = "%s-pool-domain"
   user_pool_id = "${aws_cognito_user_pool.test.id}"
-}`, lbName, targetGroupName, certificateName, cognitoPrefix, cognitoPrefix, cognitoPrefix)
+}
+`, lbName, targetGroupName, certificateName, cognitoPrefix, cognitoPrefix, cognitoPrefix)
 }
 
 func testAccAWSLBListenerRuleConfig_oidc(lbName string, targetGroupName string, certificateName string) string {
@@ -1922,7 +1931,8 @@ resource "aws_security_group" "alb_test" {
   tags = {
     Name = "TestAccAWSALB_cognito"
   }
-}`, lbName, targetGroupName, certificateName)
+}
+`, lbName, targetGroupName, certificateName)
 }
 
 func testAccAWSLBListenerRuleConfig_Action_Order(rName string) string {

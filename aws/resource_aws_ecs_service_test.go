@@ -2026,7 +2026,8 @@ resource "aws_ecs_service" "jenkins" {
   cluster = "${aws_ecs_cluster.default.id}"
   task_definition = "${aws_ecs_task_definition.jenkins.family}:${aws_ecs_task_definition.jenkins.revision}"
   desired_count = 1
-}`, clusterName, tdName, svcName)
+}
+`, clusterName, tdName, svcName)
 }
 
 func testAccAWSEcsServiceWithFamilyAndRevisionModified(clusterName, tdName, svcName string) string {
@@ -2055,7 +2056,8 @@ resource "aws_ecs_service" "jenkins" {
   cluster = "${aws_ecs_cluster.default.id}"
   task_definition = "${aws_ecs_task_definition.jenkins.family}:${aws_ecs_task_definition.jenkins.revision}"
   desired_count = 1
-}`, clusterName, tdName, svcName)
+}
+`, clusterName, tdName, svcName)
 }
 
 func testAccAWSEcsServiceWithRenamedCluster(clusterName, tdName, svcName string) string {

@@ -591,7 +591,8 @@ resource "aws_db_parameter_group" "bar" {
 	tags = {
 		foo = "bar"
 	}
-}`, n)
+}
+`, n)
 }
 
 func testAccAWSDBParameterGroupConfigWithApplyMethod(n string) string {
@@ -611,7 +612,8 @@ resource "aws_db_parameter_group" "bar" {
 	tags = {
 		foo = "bar"
 	}
-}`, n)
+}
+`, n)
 }
 
 func testAccAWSDBParameterGroupAddParametersConfig(n string) string {
@@ -644,7 +646,8 @@ resource "aws_db_parameter_group" "bar" {
 		foo = "bar"
 		baz = "foo"
 	}
-}`, n)
+}
+`, n)
 }
 
 func testAccAWSDBParameterGroupOnlyConfig(n string) string {
@@ -653,7 +656,8 @@ resource "aws_db_parameter_group" "bar" {
 	name = "%s"
 	family = "mysql5.6"
 	description = "Test parameter group for terraform"
-}`, n)
+}
+`, n)
 }
 
 func createAwsDbParameterGroupsExceedDefaultAwsLimit(n string) string {
@@ -832,7 +836,8 @@ resource "aws_db_parameter_group" "large" {
       name = "tx_isolation"
       value = "REPEATABLE-READ"
     }
-}`, n)
+}
+`, n)
 }
 
 func updateAwsDbParameterGroupsExceedDefaultAwsLimit(n string) string {
@@ -1010,7 +1015,8 @@ resource "aws_db_parameter_group" "large" {
       name = "tx_isolation"
       value = "REPEATABLE-READ"
     }
-}`, n)
+}
+`, n)
 }
 
 func testAccAWSDBParameterGroupIncludeDefaultConfig(n string) string {
@@ -1024,7 +1030,8 @@ resource "aws_db_parameter_group" "bar" {
     value = "UTF8"
     apply_method = "pending-reboot"
   }
-}`, n)
+}
+`, n)
 }
 
 const testAccDBParameterGroupConfig_namePrefix = `

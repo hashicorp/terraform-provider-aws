@@ -313,7 +313,8 @@ resource "aws_waf_xss_match_set" "xss_match_set" {
       type = "QUERY_STRING"
     }
   }
-}`, name)
+}
+`, name)
 }
 
 func testAccAWSWafXssMatchSetConfigChangeName(name string) string {
@@ -333,7 +334,8 @@ resource "aws_waf_xss_match_set" "xss_match_set" {
       type = "QUERY_STRING"
     }
   }
-}`, name)
+}
+`, name)
 }
 
 func testAccAWSWafXssMatchSetConfig_changeTuples(name string) string {
@@ -354,12 +356,14 @@ resource "aws_waf_xss_match_set" "xss_match_set" {
       data = "GET"
     }
   }
-}`, name)
+}
+`, name)
 }
 
 func testAccAWSWafXssMatchSetConfig_noTuples(name string) string {
 	return fmt.Sprintf(`
 resource "aws_waf_xss_match_set" "xss_match_set" {
   name = "%s"
-}`, name)
+}
+`, name)
 }

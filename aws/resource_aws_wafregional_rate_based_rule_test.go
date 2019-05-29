@@ -465,7 +465,8 @@ resource "aws_wafregional_rate_based_rule" "wafrule" {
     negated = false
     type = "IPMatch"
   }
-}`, name, name, name)
+}
+`, name, name, name)
 }
 
 func testAccAWSWafRegionalRateBasedRuleConfigChangeName(name string) string {
@@ -488,7 +489,8 @@ resource "aws_wafregional_rate_based_rule" "wafrule" {
     negated = false
     type = "IPMatch"
   }
-}`, name, name, name)
+}
+`, name, name, name)
 }
 
 func testAccAWSWafRegionalRateBasedRuleConfig_changePredicates(name string) string {
@@ -525,7 +527,8 @@ resource "aws_wafregional_rate_based_rule" "wafrule" {
     negated = true
     type = "ByteMatch"
   }
-}`, name, name, name, name)
+}
+`, name, name, name, name)
 }
 
 func testAccAWSWafRegionalRateBasedRuleConfig_noPredicates(name string) string {
@@ -535,7 +538,8 @@ resource "aws_wafregional_rate_based_rule" "wafrule" {
   metric_name = "%s"
   rate_key = "IP"
   rate_limit = 2000
-}`, name, name)
+}
+`, name, name)
 }
 
 func testAccAWSWafRegionalRateBasedRuleWithRateLimitConfig(name string, limit string) string {
@@ -545,5 +549,6 @@ resource "aws_wafregional_rate_based_rule" "wafrule" {
   metric_name = "%s"
   rate_key = "IP"
   rate_limit = %s
-}`, name, name, limit)
+}
+`, name, name, limit)
 }

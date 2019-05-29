@@ -111,7 +111,8 @@ func testAccDataSourceAwsKmsAlias_name(name string) string {
 	return fmt.Sprintf(`
 data "aws_kms_alias" "test" {
   name = "%s"
-}`, name)
+}
+`, name)
 }
 
 func testAccDataSourceAwsKmsAlias_CMK(rInt int) string {

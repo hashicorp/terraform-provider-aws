@@ -237,7 +237,8 @@ resource "aws_vpc" "test" {
 	tags = {
 		Name = "terraform-testacc-lb-target-group-attachment-without-port"
 	}
-}`, targetGroupName)
+}
+`, targetGroupName)
 }
 
 func testAccAWSLBTargetGroupAttachmentConfig_basic(targetGroupName string) string {
@@ -289,7 +290,8 @@ resource "aws_vpc" "test" {
 	tags = {
 		Name = "terraform-testacc-lb-target-group-attachment-basic"
 	}
-}`, targetGroupName)
+}
+`, targetGroupName)
 }
 
 func testAccAWSLBTargetGroupAttachmentConfigBackwardsCompatibility(targetGroupName string) string {
@@ -341,7 +343,8 @@ resource "aws_vpc" "test" {
 	tags = {
 		Name = "terraform-testacc-lb-target-group-attachment-bc"
 	}
-}`, targetGroupName)
+}
+`, targetGroupName)
 }
 
 func testAccAWSLBTargetGroupAttachmentConfigWithIpAddress(targetGroupName string) string {
@@ -390,7 +393,8 @@ resource "aws_vpc" "test" {
 	tags = {
 		Name = "terraform-testacc-lb-target-group-attachment-with-ip-address"
 	}
-}`, targetGroupName)
+}
+`, targetGroupName)
 }
 
 func testAccAWSLBTargetGroupAttachmentConfigWithLambda(targetGroupName string) string {

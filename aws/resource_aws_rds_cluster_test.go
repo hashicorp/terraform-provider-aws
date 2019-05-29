@@ -1599,7 +1599,8 @@ resource "aws_rds_cluster" "default" {
 	"audit",
 	"error",
   ]
-}`, n)
+}
+`, n)
 }
 
 func testAccAWSClusterConfig_BacktrackWindow(backtrackWindow int) string {
@@ -1837,7 +1838,8 @@ resource "aws_rds_cluster" "default" {
   tags = {
     Environment = "production"
   }
-}`, n, n)
+}
+`, n, n)
 }
 
 func testAccAWSClusterConfigWithoutUserNameAndPassword(n int) string {
@@ -1847,7 +1849,8 @@ resource "aws_rds_cluster" "default" {
   availability_zones = ["us-west-2a","us-west-2b","us-west-2c"]
   database_name = "mydb"
   skip_final_snapshot = true
-}`, n)
+}
+`, n)
 }
 
 func testAccAWSClusterConfigUpdatedTags(n int) string {
@@ -1864,7 +1867,8 @@ resource "aws_rds_cluster" "default" {
     Environment = "production"
     AnotherTag = "test"
   }
-}`, n)
+}
+`, n)
 }
 
 func testAccAWSClusterConfigUpdatedCloudwatchLogsExports(n int) string {
@@ -1881,7 +1885,8 @@ resource "aws_rds_cluster" "default" {
     "error",
     "slowquery"
   ]
-}`, n)
+}
+`, n)
 }
 
 func testAccAWSClusterConfig_kmsKey(n int) string {
@@ -1931,7 +1936,8 @@ resource "aws_rds_cluster" "default" {
   master_password = "mustbeeightcharaters"
   storage_encrypted = true
   skip_final_snapshot = true
-}`, n)
+}
+`, n)
 }
 
 func testAccAWSClusterConfig_backups(n int) string {
@@ -1946,7 +1952,8 @@ resource "aws_rds_cluster" "default" {
   preferred_backup_window = "07:00-09:00"
   preferred_maintenance_window = "tue:04:00-tue:04:30"
   skip_final_snapshot = true
-}`, n)
+}
+`, n)
 }
 
 func testAccAWSClusterConfig_backupsUpdate(n int) string {
@@ -1962,7 +1969,8 @@ resource "aws_rds_cluster" "default" {
   preferred_maintenance_window = "wed:01:00-wed:01:30"
   apply_immediately = true
   skip_final_snapshot = true
-}`, n)
+}
+`, n)
 }
 
 func testAccAWSClusterConfig_iamAuth(n int) string {
@@ -1975,7 +1983,8 @@ resource "aws_rds_cluster" "default" {
   master_password = "mustbeeightcharaters"
   iam_database_authentication_enabled = true
   skip_final_snapshot = true
-}`, n)
+}
+`, n)
 }
 
 func testAccAWSClusterConfig_EngineVersion(rInt int, engine, engineVersion string) string {
@@ -2113,7 +2122,8 @@ resource "aws_rds_cluster" "default" {
   }
   depends_on = ["aws_iam_role.another_rds_sample_role", "aws_iam_role.rds_sample_role"]
 
-}`, n, n, n, n, n)
+}
+`, n, n, n, n, n)
 }
 
 func testAccAWSClusterConfigAddIamRoles(n int) string {
@@ -2198,7 +2208,8 @@ resource "aws_rds_cluster" "default" {
   }
   depends_on = ["aws_iam_role.another_rds_sample_role", "aws_iam_role.rds_sample_role"]
 
-}`, n, n, n, n, n)
+}
+`, n, n, n, n, n)
 }
 
 func testAccAWSClusterConfigRemoveIamRoles(n int) string {
@@ -2250,7 +2261,8 @@ resource "aws_rds_cluster" "default" {
   }
 
   depends_on = ["aws_iam_role.another_rds_sample_role"]
-}`, n, n, n)
+}
+`, n, n, n)
 }
 
 func testAccAWSClusterConfigEncryptedCrossRegionReplica(n int) string {
@@ -2720,5 +2732,6 @@ resource "aws_rds_cluster" "default" {
   db_cluster_parameter_group_name = "default.aurora5.6"
 	copy_tags_to_snapshot = %[2]t
 	skip_final_snapshot = true
-}`, n, f)
+}
+`, n, f)
 }
