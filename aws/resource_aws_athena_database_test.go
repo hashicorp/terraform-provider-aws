@@ -332,16 +332,16 @@ func testAccAthenaDatabaseFindBucketName(s *terraform.State, dbName string) (buc
 
 func testAccAthenaDatabaseConfig(randInt int, dbName string, forceDestroy bool) string {
 	return fmt.Sprintf(`
-    resource "aws_s3_bucket" "hoge" {
-      bucket = "tf-athena-db-%[1]d"
-      force_destroy = true
-    }
+resource "aws_s3_bucket" "hoge" {
+  bucket        = "tf-athena-db-%[1]d"
+  force_destroy = true
+}
 
-    resource "aws_athena_database" "hoge" {
-      name = "%[2]s"
-	  bucket = "${aws_s3_bucket.hoge.bucket}"
-	  force_destroy = %[3]t
-    }
+resource "aws_athena_database" "hoge" {
+  name          = "%[2]s"
+  bucket        = "${aws_s3_bucket.hoge.bucket}"
+  force_destroy = %[3]t
+}
 `, randInt, dbName, forceDestroy)
 }
 
@@ -372,7 +372,7 @@ resource "aws_athena_database" "hoge" {
 
   encryption_configuration {
     encryption_option = "SSE_KMS"
-    kms_key           = "${aws_kms_key.hoge.arn}" 
+    kms_key           = "${aws_kms_key.hoge.arn}"
   }
 }
 `, randInt, dbName, forceDestroy)

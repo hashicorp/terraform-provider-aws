@@ -619,5 +619,6 @@ resource "aws_appsync_datasource" "test" {
 }
 
 %s
+
 `, rName, queryFields, rName, resolverResources)
 }

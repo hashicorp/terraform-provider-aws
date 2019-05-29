@@ -387,19 +387,20 @@ resource "aws_vpn_gateway" "vpn_gateway" {
 }
 
 resource "aws_customer_gateway" "customer_gateway" {
-  bgp_asn = %d
+  bgp_asn    = %d
   ip_address = "178.0.0.1"
-  type = "ipsec.1"
+  type       = "ipsec.1"
+
   tags = {
     Name = "main-customer-gateway"
   }
 }
 
 resource "aws_vpn_connection" "foo" {
-  vpn_gateway_id = "${aws_vpn_gateway.vpn_gateway.id}"
+  vpn_gateway_id      = "${aws_vpn_gateway.vpn_gateway.id}"
   customer_gateway_id = "${aws_customer_gateway.customer_gateway.id}"
-  type = "ipsec.1"
-  static_routes_only = true
+  type                = "ipsec.1"
+  static_routes_only  = true
 }
 `, rBgpAsn)
 }
@@ -414,19 +415,20 @@ resource "aws_vpn_gateway" "vpn_gateway" {
 }
 
 resource "aws_customer_gateway" "customer_gateway" {
-  bgp_asn = %d
+  bgp_asn    = %d
   ip_address = "178.0.0.1"
-  type = "ipsec.1"
+  type       = "ipsec.1"
+
   tags = {
     Name = "main-customer-gateway-%d"
   }
 }
 
 resource "aws_vpn_connection" "foo" {
-  vpn_gateway_id = "${aws_vpn_gateway.vpn_gateway.id}"
+  vpn_gateway_id      = "${aws_vpn_gateway.vpn_gateway.id}"
   customer_gateway_id = "${aws_customer_gateway.customer_gateway.id}"
-  type = "ipsec.1"
-  static_routes_only = false
+  type                = "ipsec.1"
+  static_routes_only  = false
 }
 `, rBgpAsn, rInt)
 }
@@ -440,21 +442,22 @@ resource "aws_vpn_gateway" "vpn_gateway" {
 }
 
 resource "aws_customer_gateway" "customer_gateway" {
-  bgp_asn = %d
+  bgp_asn    = %d
   ip_address = "178.0.0.1"
-  type = "ipsec.1"
+  type       = "ipsec.1"
+
   tags = {
     Name = "main-customer-gateway"
   }
 }
 
 resource "aws_vpn_connection" "foo" {
-  vpn_gateway_id = "${aws_vpn_gateway.vpn_gateway.id}"
+  vpn_gateway_id      = "${aws_vpn_gateway.vpn_gateway.id}"
   customer_gateway_id = "${aws_customer_gateway.customer_gateway.id}"
-  type = "ipsec.1"
-    static_routes_only = false
+  type                = "ipsec.1"
+  static_routes_only  = false
 
-  tunnel1_inside_cidr = "%s"
+  tunnel1_inside_cidr   = "%s"
   tunnel1_preshared_key = "%s"
 }
 `, rBgpAsn, tunnelCidr, psk)
@@ -491,24 +494,25 @@ resource "aws_vpn_gateway" "vpn_gateway" {
 }
 
 resource "aws_customer_gateway" "customer_gateway" {
-  bgp_asn = %d
+  bgp_asn    = %d
   ip_address = "178.0.0.1"
-  type = "ipsec.1"
+  type       = "ipsec.1"
+
   tags = {
     Name = "main-customer-gateway"
   }
 }
 
 resource "aws_vpn_connection" "foo" {
-  vpn_gateway_id = "${aws_vpn_gateway.vpn_gateway.id}"
+  vpn_gateway_id      = "${aws_vpn_gateway.vpn_gateway.id}"
   customer_gateway_id = "${aws_customer_gateway.customer_gateway.id}"
-  type = "ipsec.1"
-    static_routes_only = false
+  type                = "ipsec.1"
+  static_routes_only  = false
 
-  tunnel1_inside_cidr = "%s"
+  tunnel1_inside_cidr   = "%s"
   tunnel1_preshared_key = "%s"
 
-  tunnel2_inside_cidr = "%s"
+  tunnel2_inside_cidr   = "%s"
   tunnel2_preshared_key = "%s"
 }
 `, rBgpAsn, tunnelCidr, psk, tunnelCidr2, psk2)

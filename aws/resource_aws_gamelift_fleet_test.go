@@ -505,6 +505,7 @@ resource "aws_gamelift_fleet" "test" {
 }
 
 %s
+
 `, fleetName, launchPath, params, testAccAWSGameliftFleetBasicTemplate(buildName, bucketName, key, roleArn))
 }
 
@@ -533,6 +534,7 @@ resource "aws_gamelift_fleet" "test" {
 }
 
 %s
+
 `, desc, fleetName, launchPath, params, testAccAWSGameliftFleetBasicTemplate(buildName, bucketName, key, roleArn))
 }
 
@@ -586,6 +588,7 @@ resource "aws_gamelift_fleet" "test" {
 }
 
 %s
+
 `, fleetName, desc, launchPath, params,
 		testAccAWSGameliftFleetBasicTemplate(buildName, bucketName, key, roleArn))
 }
@@ -640,6 +643,7 @@ resource "aws_gamelift_fleet" "test" {
 }
 
 %s
+
 `, fleetName, desc, launchPath, params,
 		testAccAWSGameliftFleetBasicTemplate(buildName, bucketName, key, roleArn))
 }

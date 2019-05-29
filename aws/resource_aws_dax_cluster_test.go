@@ -311,58 +311,58 @@ EOF
 
 func testAccAWSDAXClusterConfig(rString string) string {
 	return fmt.Sprintf(`%s
-		resource "aws_dax_cluster" "test" {
-		  cluster_name       = "tf-%s"
-		  iam_role_arn       = "${aws_iam_role.test.arn}"
-		  node_type          = "dax.t2.small"
-		  replication_factor = 1
-		  description        = "test cluster"
+resource "aws_dax_cluster" "test" {
+  cluster_name       = "tf-%s"
+  iam_role_arn       = "${aws_iam_role.test.arn}"
+  node_type          = "dax.t2.small"
+  replication_factor = 1
+  description        = "test cluster"
 
-		  tags = {
-		    foo = "bar"
-		  }
-		}
+  tags = {
+    foo = "bar"
+  }
+}
 `, baseConfig, rString)
 }
 
 func testAccAWSDAXClusterConfigWithEncryption(rString string, enabled bool) string {
 	return fmt.Sprintf(`%s
-		resource "aws_dax_cluster" "test" {
-		  cluster_name       = "tf-%s"
-		  iam_role_arn       = "${aws_iam_role.test.arn}"
-		  node_type          = "dax.t2.small"
-		  replication_factor = 1
-		  description        = "test cluster"
+resource "aws_dax_cluster" "test" {
+  cluster_name       = "tf-%s"
+  iam_role_arn       = "${aws_iam_role.test.arn}"
+  node_type          = "dax.t2.small"
+  replication_factor = 1
+  description        = "test cluster"
 
-		  tags = {
-		    foo = "bar"
-		  }
+  tags = {
+    foo = "bar"
+  }
 
-		  server_side_encryption {
-		    enabled = %t
-		  }
-		}
+  server_side_encryption {
+    enabled = %t
+  }
+}
 `, baseConfig, rString, enabled)
 }
 
 func testAccAWSDAXClusterConfigResize_singleNode(rString string) string {
 	return fmt.Sprintf(`%s
-		resource "aws_dax_cluster" "test" {
-		  cluster_name       = "tf-%s"
-		  iam_role_arn       = "${aws_iam_role.test.arn}"
-		  node_type          = "dax.r3.large"
-		  replication_factor = 1
-		}
+resource "aws_dax_cluster" "test" {
+  cluster_name       = "tf-%s"
+  iam_role_arn       = "${aws_iam_role.test.arn}"
+  node_type          = "dax.r3.large"
+  replication_factor = 1
+}
 `, baseConfig, rString)
 }
 
 func testAccAWSDAXClusterConfigResize_multiNode(rString string) string {
 	return fmt.Sprintf(`%s
-		resource "aws_dax_cluster" "test" {
-		  cluster_name       = "tf-%s"
-		  iam_role_arn       = "${aws_iam_role.test.arn}"
-		  node_type          = "dax.r3.large"
-		  replication_factor = 2
-		}
+resource "aws_dax_cluster" "test" {
+  cluster_name       = "tf-%s"
+  iam_role_arn       = "${aws_iam_role.test.arn}"
+  node_type          = "dax.r3.large"
+  replication_factor = 2
+}
 `, baseConfig, rString)
 }
