@@ -24,9 +24,7 @@ func TestAccAWSIotRoleAlias_basic(t *testing.T) {
 				Config: testAccAWSIotRoleAliasConfig(alias),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSIotRoleAliasExists("aws_iot_role_alias.ra"),
-					resource.TestCheckResourceAttrSet("aws_iot_role_alias.ra", "arn"),
-					resource.TestCheckResourceAttrSet("aws_iot_role_alias.ra", "role_arn"),
-					resource.TestCheckResourceAttrSet("aws_iot_role_alias.ra", "alias"),
+					testAccCheckResourceAttrRegionalARN("aws_iot_role_alias.ra", "arn", "iot", fmt.Sprintf("rolealias/%s", alias)),
 					resource.TestCheckResourceAttr(
 						"aws_iot_role_alias.ra", "credential_duration", "3600"),
 				),
@@ -36,9 +34,7 @@ func TestAccAWSIotRoleAlias_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSIotRoleAliasExists("aws_iot_role_alias.ra"),
 					testAccCheckAWSIotRoleAliasExists("aws_iot_role_alias.ra2"),
-					resource.TestCheckResourceAttrSet("aws_iot_role_alias.ra", "arn"),
-					resource.TestCheckResourceAttrSet("aws_iot_role_alias.ra", "role_arn"),
-					resource.TestCheckResourceAttrSet("aws_iot_role_alias.ra", "alias"),
+					testAccCheckResourceAttrRegionalARN("aws_iot_role_alias.ra", "arn", "iot", fmt.Sprintf("rolealias/%s", alias)),
 					resource.TestCheckResourceAttr(
 						"aws_iot_role_alias.ra", "credential_duration", "1800"),
 				),
