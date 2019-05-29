@@ -610,9 +610,9 @@ resource "aws_dms_endpoint" "dms_endpoint" {
   }
 
   mongodb_settings {
-    auth_type           = "PASSWORD"
-    auth_mechanism      = "DEFAULT"
-    nesting_level       = "NONE"
+    auth_type           = "password"
+    auth_mechanism      = "default"
+    nesting_level       = "none"
     extract_doc_id      = "false"
     docs_to_investigate = "1000"
     auth_source         = "admin"
@@ -648,7 +648,7 @@ resource "aws_dms_endpoint" "dms_endpoint" {
 
   mongodb_settings {
     auth_mechanism      = "SCRAM_SHA_1"
-    nesting_level       = "ONE"
+    nesting_level       = "one"
     extract_doc_id      = "true"
     docs_to_investigate = "1001"
   }
