@@ -72,7 +72,8 @@ resource "aws_elasticache_replication_group" "bar" {
 
 data "aws_elasticache_replication_group" "bar" {
 	replication_group_id = "${aws_elasticache_replication_group.bar.replication_group_id}"
-}`, rName)
+}
+`, rName)
 }
 
 func testAccDataSourceAwsElasticacheReplicationGroupConfig_ClusterMode(rName string) string {
@@ -91,5 +92,6 @@ resource "aws_elasticache_replication_group" "cluster" {
 
 data "aws_elasticache_replication_group" "cluster" {
 	replication_group_id = "${aws_elasticache_replication_group.cluster.replication_group_id}"
-}`, rName)
+}
+`, rName)
 }

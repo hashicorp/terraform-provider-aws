@@ -281,7 +281,8 @@ func testAccAWSRedshiftSecurityGroupConfig_ingressCidr(rInt int) string {
 			ingress {
 					cidr = "10.0.0.1/24"
 			}
-	}`, rInt)
+	}
+`, rInt)
 }
 
 func testAccAWSRedshiftSecurityGroupConfig_ingressCidrAdd(rInt int) string {
@@ -305,7 +306,8 @@ func testAccAWSRedshiftSecurityGroupConfig_ingressCidrAdd(rInt int) string {
 			ingress {
 					cidr = "10.0.20.1/24"
 			}
-	}`, rInt)
+	}
+`, rInt)
 }
 
 func testAccAWSRedshiftSecurityGroupConfig_ingressCidrReduce(rInt int) string {
@@ -325,7 +327,8 @@ func testAccAWSRedshiftSecurityGroupConfig_ingressCidrReduce(rInt int) string {
 			ingress {
 					cidr = "10.0.10.1/24"
 			}
-	}`, rInt)
+	}
+`, rInt)
 }
 
 func testAccAWSRedshiftSecurityGroupConfig_ingressSgId(rInt int) string {
@@ -354,7 +357,8 @@ func testAccAWSRedshiftSecurityGroupConfig_ingressSgId(rInt int) string {
 					security_group_name = "${aws_security_group.redshift.name}"
 					security_group_owner_id = "${aws_security_group.redshift.owner_id}"
 			}
-	}`, rInt, rInt)
+	}
+`, rInt, rInt)
 }
 
 func testAccAWSRedshiftSecurityGroupConfig_ingressSgIdAdd(rInt int) string {
@@ -417,7 +421,8 @@ func testAccAWSRedshiftSecurityGroupConfig_ingressSgIdAdd(rInt int) string {
 					security_group_name = "${aws_security_group.redshift3.name}"
 					security_group_owner_id = "${aws_security_group.redshift.owner_id}"
 			}
-	}`, rInt, rInt, rInt, rInt)
+	}
+`, rInt, rInt, rInt, rInt)
 }
 
 func testAccAWSRedshiftSecurityGroupConfig_ingressSgIdReduce(rInt int) string {
@@ -463,5 +468,6 @@ func testAccAWSRedshiftSecurityGroupConfig_ingressSgIdReduce(rInt int) string {
 					security_group_name = "${aws_security_group.redshift2.name}"
 					security_group_owner_id = "${aws_security_group.redshift.owner_id}"
 			}
-	}`, rInt, rInt, rInt)
+	}
+`, rInt, rInt, rInt)
 }

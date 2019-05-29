@@ -275,7 +275,8 @@ EOT
 resource "aws_iam_instance_profile" "opsworks_instance" {
   name  = "%s_profile"
   roles = ["${aws_iam_role.opsworks_instance.name}"]
-}`, rName, rInt, rInt, rInt, rName)
+}
+`, rName, rInt, rInt, rInt, rName)
 }
 
 func testAccAwsOpsWorksStack_regional_endpoint(rName string, rInt int) string {
@@ -360,7 +361,8 @@ EOT
 resource "aws_iam_instance_profile" "opsworks_instance" {
   name  = "%s_profile"
   roles = ["${aws_iam_role.opsworks_instance.name}"]
-}`, rName, rInt, rInt, rInt, rName)
+}
+`, rName, rInt, rInt, rInt, rName)
 }
 
 ////////////////////////////

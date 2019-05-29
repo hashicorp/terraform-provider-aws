@@ -265,7 +265,8 @@ resource "aws_subnet" "test" {
   tags = {
     Name = "tf-acc-lb-listener-certificate-${count.index}"
   }
-}`, rName, suffix, suffix, suffix, suffix)
+}
+`, rName, suffix, suffix, suffix, suffix)
 }
 
 func testAccLbListenerCertificateAddNew(rName, prefix string) string {

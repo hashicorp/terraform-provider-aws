@@ -2073,5 +2073,6 @@ resource "aws_security_group" "test" {
   tags = {
     Name = "${var.rName}"
   }
-}`, rName)
+}
+`, rName)
 }

@@ -433,7 +433,8 @@ resource "aws_cloudwatch_metric_alarm" "foobar" {
   dimensions = {
     InstanceId = "i-abc123"
   }
-}`, rInt)
+}
+`, rInt)
 }
 
 func testAccAWSCloudWatchMetricAlarmConfigDatapointsToAlarm(rInt int) string {
@@ -453,7 +454,8 @@ resource "aws_cloudwatch_metric_alarm" "foobar" {
   dimensions = {
     InstanceId = "i-abc123"
   }
-}`, rInt)
+}
+`, rInt)
 }
 
 func testAccAWSCloudWatchMetricAlarmConfigTreatMissingData(rInt int) string {
@@ -473,7 +475,8 @@ resource "aws_cloudwatch_metric_alarm" "foobar" {
   dimensions = {
     InstanceId = "i-abc123"
   }
-}`, rInt)
+}
+`, rInt)
 }
 
 func testAccAWSCloudWatchMetricAlarmConfigTreatMissingDataUpdate(rInt int) string {
@@ -493,7 +496,8 @@ resource "aws_cloudwatch_metric_alarm" "foobar" {
   dimensions = {
     InstanceId = "i-abc123"
   }
-}`, rInt)
+}
+`, rInt)
 }
 
 func testAccAWSCloudWatchMetricAlarmConfigTreatEvaluateLowSampleCountPercentiles(rInt int) string {
@@ -513,7 +517,8 @@ resource "aws_cloudwatch_metric_alarm" "foobar" {
   dimensions = {
     InstanceId = "i-abc123"
   }
-}`, rInt)
+}
+`, rInt)
 }
 
 func testAccAWSCloudWatchMetricAlarmConfigTreatEvaluateLowSampleCountPercentilesUpdated(rInt int) string {
@@ -533,7 +538,8 @@ resource "aws_cloudwatch_metric_alarm" "foobar" {
   dimensions = {
     InstanceId = "i-abc123"
   }
-}`, rInt)
+}
+`, rInt)
 }
 
 func testAccAWSCloudWatchMetricAlarmConfigExtendedStatistic(rInt int) string {
@@ -552,7 +558,8 @@ resource "aws_cloudwatch_metric_alarm" "foobar" {
   dimensions = {
     InstanceId = "i-abc123"
   }
-}`, rInt)
+}
+`, rInt)
 }
 
 func testAccAWSCloudWatchMetricAlarmConfigMissingStatistic(rInt int) string {
@@ -570,7 +577,8 @@ resource "aws_cloudwatch_metric_alarm" "foobar" {
   dimensions = {
     InstanceId = "i-abc123"
   }
-}`, rInt)
+}
+`, rInt)
 }
 
 func testAccAWSCloudWatchMetricAlarmConfigWithExpression(rInt int) string {
@@ -601,7 +609,8 @@ resource "aws_cloudwatch_metric_alarm" "foobar" {
 			}
 		}
 	}
-}`, rInt)
+}
+`, rInt)
 }
 
 func testAccAWSCloudWatchMetricAlarmConfigWithExpressionUpdated(rInt int) string {
@@ -637,7 +646,8 @@ resource "aws_cloudwatch_metric_alarm" "foobar" {
 			}
 		}
 	}
-}`, rInt)
+}
+`, rInt)
 }
 
 func testAccAWSCloudWatchMetricAlarmConfigWithExpressionWithQueryUpdated(rInt int) string {
@@ -668,7 +678,8 @@ resource "aws_cloudwatch_metric_alarm" "foobar" {
 			}
 		}
 	}
-}`, rInt)
+}
+`, rInt)
 }
 
 func testAccAWSCloudWatchMetricAlarmConfigWithBadExpression(rInt int) string {
@@ -695,7 +706,8 @@ resource "aws_cloudwatch_metric_alarm" "foobar" {
 			}
 		}
 	}
-}`, rInt)
+}
+`, rInt)
 }
 
 // EC2 Automate requires a valid EC2 instance
@@ -842,7 +854,8 @@ resource "aws_cloudwatch_metric_alarm" "foobar" {
 		fizz 	= "buzz"
 		foo		= "bar"
 	}
-}`, rInt)
+}
+`, rInt)
 }
 
 func testAccAWSCloudWatchMetricAlarmConfigUpdateTags(rInt int) string {
@@ -867,7 +880,8 @@ resource "aws_cloudwatch_metric_alarm" "foobar" {
 		foo		= "bar2"
 		good	= "bad"
 	}
-}`, rInt)
+}
+`, rInt)
 }
 
 func testAccAWSCloudWatchMetricAlarmConfigRemoveTags(rInt int) string {
@@ -890,5 +904,6 @@ resource "aws_cloudwatch_metric_alarm" "foobar" {
 		Name	= "terraform-test-foobar%[1]d"
 		fizz 	= "buzz"
 	}
-}`, rInt)
+}
+`, rInt)
 }

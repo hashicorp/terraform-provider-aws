@@ -263,7 +263,8 @@ resource "aws_docdb_subnet_group" "foo" {
 	tags = {
 		Name = "tf-docdb-subnet-group-test"
 	}
-}`, rName)
+}
+`, rName)
 }
 
 func testAccDocDBSubnetGroupConfig_updatedDescription(rName string) string {
@@ -300,7 +301,8 @@ resource "aws_docdb_subnet_group" "foo" {
 	tags = {
 		Name = "tf-docdb-subnet-group-test"
 	}
-}`, rName)
+}
+`, rName)
 }
 
 const testAccDocDBSubnetGroupConfig_namePrefix = `

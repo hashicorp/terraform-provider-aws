@@ -210,7 +210,8 @@ func testAccAWSRedshiftParameterGroupOnlyConfig(rInt int) string {
 		name = "test-terraform-%d"
 		family = "redshift-1.0"
 		description = "Test parameter group for terraform"
-	}`, rInt)
+	}
+`, rInt)
 }
 
 func testAccAWSRedshiftParameterGroupConfig(rInt int) string {
@@ -230,5 +231,6 @@ func testAccAWSRedshiftParameterGroupConfig(rInt int) string {
 			name = "enable_user_activity_logging"
 			value = "true"
 		}
-	}`, rInt)
+	}
+`, rInt)
 }

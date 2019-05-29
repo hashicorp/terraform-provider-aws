@@ -644,7 +644,8 @@ resource "aws_lambda_event_source_mapping" "lambda_event_source_mapping_test" {
     depends_on = ["aws_iam_policy_attachment.policy_attachment_for_role"]
     function_name = "${aws_lambda_function.lambda_function_test_create.arn}"
     starting_position = "TRIM_HORIZON"
-}`, roleName, policyName, attName, streamName, funcName, uFuncName)
+}
+`, roleName, policyName, attName, streamName, funcName, uFuncName)
 }
 
 func testAccAWSLambdaEventSourceMappingConfigUpdate_kinesis_removeBatchSize(roleName, policyName, attName, streamName,
@@ -731,7 +732,8 @@ resource "aws_lambda_event_source_mapping" "lambda_event_source_mapping_test" {
 	depends_on = ["aws_iam_policy_attachment.policy_attachment_for_role"]
 	function_name = "${aws_lambda_function.lambda_function_test_create.arn}"
 	starting_position = "TRIM_HORIZON"
-}`, roleName, policyName, attName, streamName, funcName, uFuncName)
+}
+`, roleName, policyName, attName, streamName, funcName, uFuncName)
 }
 
 func testAccAWSLambdaEventSourceMappingConfigUpdate_kinesis(roleName, policyName, attName, streamName,
@@ -820,7 +822,8 @@ resource "aws_lambda_event_source_mapping" "lambda_event_source_mapping_test" {
     depends_on = ["aws_iam_policy_attachment.policy_attachment_for_role"]
     function_name = "${aws_lambda_function.lambda_function_test_update.arn}"
     starting_position = "TRIM_HORIZON"
-}`, roleName, policyName, attName, streamName, funcName, uFuncName)
+}
+`, roleName, policyName, attName, streamName, funcName, uFuncName)
 }
 
 func testAccAWSLambdaEventSourceMappingConfig_sqs(roleName, policyName, attName, streamName,
@@ -897,7 +900,8 @@ resource "aws_lambda_event_source_mapping" "lambda_event_source_mapping_test" {
     enabled = true
     depends_on = ["aws_iam_policy_attachment.policy_attachment_for_role"]
     function_name = "${aws_lambda_function.lambda_function_test_create.arn}"
-}`, roleName, policyName, attName, streamName, funcName, uFuncName)
+}
+`, roleName, policyName, attName, streamName, funcName, uFuncName)
 }
 
 func testAccAWSLambdaEventSourceMappingConfigUpdate_sqs(roleName, policyName, attName, streamName,
@@ -975,7 +979,8 @@ resource "aws_lambda_event_source_mapping" "lambda_event_source_mapping_test" {
     enabled = false
     depends_on = ["aws_iam_policy_attachment.policy_attachment_for_role"]
     function_name = "${aws_lambda_function.lambda_function_test_update.arn}"
-}`, roleName, policyName, attName, streamName, funcName, uFuncName)
+}
+`, roleName, policyName, attName, streamName, funcName, uFuncName)
 }
 
 func testAccAWSLambdaEventSourceMappingConfig_sqs_testWithFunctionName(roleName, policyName, attName, streamName, funcName string) string {
@@ -1044,5 +1049,6 @@ resource "aws_lambda_event_source_mapping" "lambda_event_source_mapping_test" {
     depends_on = ["aws_iam_policy_attachment.policy_attachment_for_role"]
     enabled = false
     function_name = "%[5]s"
-}`, roleName, policyName, attName, streamName, funcName)
+}
+`, roleName, policyName, attName, streamName, funcName)
 }

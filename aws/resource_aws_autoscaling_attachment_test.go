@@ -285,7 +285,8 @@ resource "aws_autoscaling_group" "asg" {
     value = "terraform-asg-lg-assoc-test"
     propagate_at_launch = true
   }
-}`, rInt, rInt)
+}
+`, rInt, rInt)
 }
 
 func testAccAWSAutoscalingAttachment_elb_associated(rInt int) string {

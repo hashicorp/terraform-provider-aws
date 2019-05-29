@@ -168,7 +168,8 @@ resource "aws_cloudwatch_dashboard" "foobar" {
   dashboard_body = <<EOF
   %s
   EOF
-}`, rInt, basicWidget)
+}
+`, rInt, basicWidget)
 }
 
 func testAccAWSCloudWatchDashboardConfig_updateBody(rInt int) string {
@@ -178,7 +179,8 @@ resource "aws_cloudwatch_dashboard" "foobar" {
   dashboard_body = <<EOF
   %s
   EOF
-}`, rInt, updatedWidget)
+}
+`, rInt, updatedWidget)
 }
 
 func testAccCloudWatchCheckDashboardBodyIsExpected(resourceName, expected string) resource.TestCheckFunc {

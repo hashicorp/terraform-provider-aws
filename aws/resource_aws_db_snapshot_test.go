@@ -107,7 +107,8 @@ resource "aws_db_instance" "bar" {
 resource "aws_db_snapshot" "test" {
 	db_instance_identifier = "${aws_db_instance.bar.id}"
 	db_snapshot_identifier = "testsnapshot%d"
-}`, rInt)
+}
+`, rInt)
 }
 
 func testAccAwsDbSnapshotConfigTags1(rInt int, tag1Key, tag1Value string) string {
@@ -137,7 +138,8 @@ resource "aws_db_snapshot" "test" {
 	tags = {
 		%q = %q
 	  }
-	}`, rInt, tag1Key, tag1Value)
+	}
+`, rInt, tag1Key, tag1Value)
 }
 
 func testAccAwsDbSnapshotConfigTags2(rInt int, tag1Key, tag1Value, tag2Key, tag2Value string) string {
@@ -168,5 +170,6 @@ resource "aws_db_snapshot" "test" {
 		%q = %q
 		%q = %q
 	  }
-	}`, rInt, tag1Key, tag1Value, tag2Key, tag2Value)
+	}
+`, rInt, tag1Key, tag1Value, tag2Key, tag2Value)
 }

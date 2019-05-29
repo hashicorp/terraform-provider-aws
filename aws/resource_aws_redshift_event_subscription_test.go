@@ -264,7 +264,8 @@ resource "aws_redshift_event_subscription" "bar" {
   tags = {
     Name = "name"
   }
-}`, rInt, rInt)
+}
+`, rInt, rInt)
 }
 
 func testAccAWSRedshiftEventSubscriptionConfigUpdate(rInt int) string {
@@ -285,7 +286,8 @@ resource "aws_redshift_event_subscription" "bar" {
   tags = {
     Name = "new-name"
   }
-}`, rInt, rInt)
+}
+`, rInt, rInt)
 }
 
 func testAccAWSRedshiftEventSubscriptionConfigWithSourceIds(rInt int) string {
@@ -312,7 +314,8 @@ resource "aws_redshift_event_subscription" "bar" {
   tags = {
     Name = "name"
   }
-}`, rInt, rInt, rInt)
+}
+`, rInt, rInt, rInt)
 }
 
 func testAccAWSRedshiftEventSubscriptionConfigUpdateSourceIds(rInt int) string {
@@ -345,7 +348,8 @@ func testAccAWSRedshiftEventSubscriptionConfigUpdateSourceIds(rInt int) string {
   tags = {
             Name = "name"
         }
-    }`, rInt, rInt, rInt, rInt)
+    }
+`, rInt, rInt, rInt, rInt)
 }
 
 func testAccAWSRedshiftEventSubscriptionConfigUpdateCategories(rInt int) string {
@@ -365,5 +369,6 @@ resource "aws_redshift_event_subscription" "bar" {
   tags = {
     Name = "name"
   }
-}`, rInt, rInt)
+}
+`, rInt, rInt)
 }

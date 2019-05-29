@@ -2392,7 +2392,8 @@ resource "aws_codedeploy_deployment_group" "foo" {
   deployment_group_name = "foo_%s"
   service_role_arn = "${aws_iam_role.foo_role.arn}"
   %s
-}`, rName, rName, rName, rName, tagGroupOrFilter)
+}
+`, rName, rName, rName, rName, tagGroupOrFilter)
 }
 
 func testAccAWSCodeDeployDeploymentGroupModified(rName string, tagGroup bool) string {
@@ -2474,7 +2475,8 @@ resource "aws_codedeploy_deployment_group" "foo" {
   deployment_group_name = "bar_%s"
   service_role_arn = "${aws_iam_role.bar_role.arn}"
   %s
-}`, rName, rName, rName, rName, tagGroupOrFilter)
+}
+`, rName, rName, rName, rName, tagGroupOrFilter)
 }
 
 func testAccAWSCodeDeployDeploymentGroupOnPremiseTags(rName string) string {
@@ -2541,7 +2543,8 @@ resource "aws_codedeploy_deployment_group" "foo" {
     type = "KEY_AND_VALUE"
     value = "filtervalue"
   }
-}`, rName, rName, rName, rName)
+}
+`, rName, rName, rName, rName)
 }
 
 func baseCodeDeployConfig(rName string) string {
@@ -2601,7 +2604,8 @@ EOF
 
 resource "aws_sns_topic" "foo_topic" {
   name = "foo-topic-%s"
-}`, rName, rName, rName, rName)
+}
+`, rName, rName, rName, rName)
 }
 
 func testAccAWSCodeDeployDeploymentGroup_triggerConfiguration_create(rName string) string {

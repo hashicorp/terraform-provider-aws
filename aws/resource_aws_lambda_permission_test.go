@@ -649,7 +649,8 @@ resource "aws_iam_role" "test" {
   ]
 }
 EOF
-}`, rName, rName)
+}
+`, rName, rName)
 }
 
 func testAccAWSLambdaPermissionConfig_withRawFunctionName(funcName, roleName string) string {

@@ -263,7 +263,8 @@ func testAccAWSLoadBalancerPolicyConfig_basic(rInt int) string {
 			name = "CookieName"
 			value = "magic_cookie"
 		}
-	}`, rInt, rInt)
+	}
+`, rInt, rInt)
 }
 
 func testAccAWSLoadBalancerPolicyConfig_updateWhileAssigned0(rInt int) string {
@@ -300,7 +301,8 @@ func testAccAWSLoadBalancerPolicyConfig_updateWhileAssigned0(rInt int) string {
 		policy_names = [
 			"${aws_load_balancer_policy.test-policy.policy_name}"
 		]
-	}`, rInt, rInt)
+	}
+`, rInt, rInt)
 }
 
 func testAccAWSLoadBalancerPolicyConfig_updateWhileAssigned1(rInt int) string {
@@ -337,5 +339,6 @@ func testAccAWSLoadBalancerPolicyConfig_updateWhileAssigned1(rInt int) string {
 		policy_names = [
 			"${aws_load_balancer_policy.test-policy.policy_name}"
 		]
-	}`, rInt, rInt)
+	}
+`, rInt, rInt)
 }

@@ -724,5 +724,6 @@ resource "aws_docdb_cluster" "test" {
   master_username                 = "foo"
   port                            = %d
   skip_final_snapshot             = true
-}`, rInt, port)
+}
+`, rInt, port)
 }

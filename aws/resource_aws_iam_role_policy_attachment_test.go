@@ -262,7 +262,8 @@ EOF
 	resource "aws_iam_role_policy_attachment" "test-attach" {
 			role = "${aws_iam_role.role.name}"
 			policy_arn = "${aws_iam_policy.policy.arn}"
-	}`, rInt, rInt)
+	}
+`, rInt, rInt)
 }
 
 func testAccAWSRolePolicyAttachConfigUpdate(rInt int) string {
@@ -351,7 +352,8 @@ EOF
 	resource "aws_iam_role_policy_attachment" "test-attach2" {
 			role = "${aws_iam_role.role.name}"
 			policy_arn = "${aws_iam_policy.policy3.arn}"
-	}`, rInt, rInt, rInt, rInt)
+	}
+`, rInt, rInt, rInt, rInt)
 }
 
 func testAccAWSIAMRolePolicyAttachmentConfig(rName string) string {

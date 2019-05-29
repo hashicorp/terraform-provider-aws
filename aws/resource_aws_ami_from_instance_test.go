@@ -159,5 +159,6 @@ func testAccAWSAMIFromInstanceConfig(rInt int) string {
 			name = "terraform-acc-ami-from-instance-%d"
 			description = "Testing Terraform aws_ami_from_instance resource"
 			source_instance_id = "${aws_instance.test.id}"
-	}`, rInt)
+	}
+`, rInt)
 }

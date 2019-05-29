@@ -1163,7 +1163,8 @@ TASK_DEFINITION
 		volume {
 		name = "database_scratch"
 	}
-}`, roleName, policyName, tdName)
+}
+`, roleName, policyName, tdName)
 }
 
 func testAccAWSEcsTaskDefinitionWithIpcMode(roleName, policyName, tdName string) string {
@@ -1229,7 +1230,8 @@ TASK_DEFINITION
 	 volume {
 		 name = "database_scratch"
 	 }
- }`, roleName, policyName, tdName)
+ }
+`, roleName, policyName, tdName)
 }
 
 func testAccAWSEcsTaskDefinitionWithPidMode(roleName, policyName, tdName string) string {
@@ -1295,7 +1297,8 @@ TASK_DEFINITION
 	 volume {
 		 name = "database_scratch"
 	 }
- }`, roleName, policyName, tdName)
+ }
+`, roleName, policyName, tdName)
 }
 
 func testAccAWSEcsTaskDefinitionWithNetworkMode(roleName, policyName, tdName string) string {
@@ -1360,7 +1363,8 @@ TASK_DEFINITION
 	 volume {
 		 name = "database_scratch"
 	 }
- }`, roleName, policyName, tdName)
+ }
+`, roleName, policyName, tdName)
 }
 
 func testAccAWSEcsTaskDefinitionWithEcsService(clusterName, svcName, tdName string) string {

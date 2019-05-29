@@ -1592,7 +1592,8 @@ resource "aws_dynamodb_table" "basic-dynamodb-table" {
     projection_type = "INCLUDE"
     non_key_attributes = ["TestNonKeyAttribute"]
   }
-}`, rName)
+}
+`, rName)
 }
 
 func testAccAWSDynamoDbConfigStreamSpecification(tableName string, enabled bool, viewType string) string {

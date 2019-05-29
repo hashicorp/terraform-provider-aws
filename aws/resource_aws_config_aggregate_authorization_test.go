@@ -116,5 +116,6 @@ func testAccAWSConfigAggregateAuthorizationConfig_basic(rString string) string {
 resource "aws_config_aggregate_authorization" "example" {
   account_id = "%s"
   region = "eu-west-1"
-}`, rString)
+}
+`, rString)
 }

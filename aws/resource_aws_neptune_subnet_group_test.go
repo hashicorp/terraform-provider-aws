@@ -224,7 +224,8 @@ resource "aws_neptune_subnet_group" "foo" {
 	tags = {
 		Name = "tf-neptunesubnet-group-test"
 	}
-}`, rName)
+}
+`, rName)
 }
 
 func testAccNeptuneSubnetGroupConfig_updatedDescription(rName string) string {
@@ -261,7 +262,8 @@ resource "aws_neptune_subnet_group" "foo" {
 	tags = {
 		Name = "tf-neptunesubnet-group-test"
 	}
-}`, rName)
+}
+`, rName)
 }
 
 const testAccNeptuneSubnetGroupConfig_namePrefix = `

@@ -952,7 +952,8 @@ resource "aws_redshift_cluster" "default" {
   timeouts {
 	create = "30m"
   }
-}`, rInt)
+}
+`, rInt)
 }
 
 func testAccAWSRedshiftClusterConfig_encrypted(rInt int) string {
@@ -990,7 +991,8 @@ resource "aws_redshift_cluster" "default" {
   skip_final_snapshot = true
   encrypted = true
   kms_key_id = "${aws_kms_key.foo.arn}"
-}`, rInt, rInt)
+}
+`, rInt, rInt)
 }
 
 func testAccAWSRedshiftClusterConfig_unencrypted(rInt int) string {
@@ -1028,7 +1030,8 @@ resource "aws_redshift_cluster" "default" {
   automated_snapshot_retention_period = 0
   allow_version_upgrade = false
   skip_final_snapshot = true
-}`, rInt, rInt)
+}
+`, rInt, rInt)
 }
 
 func testAccAWSRedshiftClusterConfigWithFinalSnapshot(rInt int) string {
@@ -1044,7 +1047,8 @@ resource "aws_redshift_cluster" "default" {
   allow_version_upgrade = false
   skip_final_snapshot = false
   final_snapshot_identifier = "tf-acctest-snapshot-%d"
-}`, rInt, rInt)
+}
+`, rInt, rInt)
 }
 
 func testAccAWSRedshiftClusterConfig_kmsKey(rInt int) string {
@@ -1082,7 +1086,8 @@ resource "aws_redshift_cluster" "default" {
   kms_key_id = "${aws_kms_key.foo.arn}"
   encrypted = true
   skip_final_snapshot = true
-}`, rInt, rInt)
+}
+`, rInt, rInt)
 }
 
 func testAccAWSRedshiftClusterConfig_enhancedVpcRoutingEnabled(rInt int) string {
@@ -1134,7 +1139,8 @@ func testAccAWSRedshiftClusterConfig_loggingDisabled(rInt int) string {
 			enable = false
 		}
 		skip_final_snapshot = true
-	}`, rInt)
+	}
+`, rInt)
 }
 
 func testAccAWSRedshiftClusterConfig_loggingEnabled(rInt int) string {
@@ -1186,7 +1192,8 @@ EOF
 		bucket_name = "${aws_s3_bucket.bucket.bucket}"
 	 }
 	 skip_final_snapshot = true
- }`, rInt, rInt, rInt, rInt)
+ }
+`, rInt, rInt, rInt, rInt)
 }
 
 func testAccAWSRedshiftClusterConfig_snapshotCopyDisabled(rInt int) string {
@@ -1201,7 +1208,8 @@ func testAccAWSRedshiftClusterConfig_snapshotCopyDisabled(rInt int) string {
 		automated_snapshot_retention_period = 0
 		allow_version_upgrade = false
 		skip_final_snapshot = true
-	}`, rInt)
+	}
+`, rInt)
 }
 
 func testAccAWSRedshiftClusterConfig_snapshotCopyEnabled(rInt int) string {
@@ -1220,7 +1228,8 @@ func testAccAWSRedshiftClusterConfig_snapshotCopyEnabled(rInt int) string {
 		retention_period = 1
 	 }
 	 skip_final_snapshot = true
- }`, rInt)
+ }
+`, rInt)
 }
 
 func testAccAWSRedshiftClusterConfig_tags(rInt int) string {
@@ -1240,7 +1249,8 @@ resource "aws_redshift_cluster" "default" {
     cluster = "reader"
     Type = "master"
   }
-}`, rInt)
+}
+`, rInt)
 }
 
 func testAccAWSRedshiftClusterConfig_updatedTags(rInt int) string {
@@ -1258,7 +1268,8 @@ resource "aws_redshift_cluster" "default" {
   tags = {
     environment = "Production"
   }
-}`, rInt)
+}
+`, rInt)
 }
 
 func testAccAWSRedshiftClusterConfig_notPubliclyAccessible(rInt int) string {
@@ -1318,7 +1329,8 @@ func testAccAWSRedshiftClusterConfig_notPubliclyAccessible(rInt int) string {
 		skip_final_snapshot = true
 
 		depends_on = ["aws_internet_gateway.foo"]
-	}`, rInt, rInt)
+	}
+`, rInt, rInt)
 }
 
 func testAccAWSRedshiftClusterConfig_updatePubliclyAccessible(rInt int) string {
@@ -1378,7 +1390,8 @@ func testAccAWSRedshiftClusterConfig_updatePubliclyAccessible(rInt int) string {
 		skip_final_snapshot = true
 
 		depends_on = ["aws_internet_gateway.foo"]
-	}`, rInt, rInt)
+	}
+`, rInt, rInt)
 }
 
 func testAccAWSRedshiftClusterConfig_iamRoles(rInt int) string {
@@ -1406,7 +1419,8 @@ resource "aws_redshift_cluster" "default" {
    allow_version_upgrade = false
    iam_roles = ["${aws_iam_role.ec2-role.arn}", "${aws_iam_role.lambda-role.arn}"]
    skip_final_snapshot = true
-}`, rInt, rInt, rInt)
+}
+`, rInt, rInt, rInt)
 }
 
 func testAccAWSRedshiftClusterConfig_updateIamRoles(rInt int) string {
@@ -1434,7 +1448,8 @@ resource "aws_iam_role" "ec2-role" {
    allow_version_upgrade = false
    iam_roles = ["${aws_iam_role.ec2-role.arn}"]
    skip_final_snapshot = true
- }`, rInt, rInt, rInt)
+ }
+`, rInt, rInt, rInt)
 }
 
 func testAccAWSRedshiftClusterConfig_updatedUsername(rInt int) string {
@@ -1449,7 +1464,8 @@ resource "aws_redshift_cluster" "default" {
   automated_snapshot_retention_period = 0
   allow_version_upgrade = false
   skip_final_snapshot = true
-}`, rInt)
+}
+`, rInt)
 }
 
 func testAccAWSRedshiftClusterConfig_updatedAvailabilityZone(rInt int) string {
@@ -1464,5 +1480,6 @@ func testAccAWSRedshiftClusterConfig_updatedAvailabilityZone(rInt int) string {
 		automated_snapshot_retention_period = 0
 		allow_version_upgrade = false
 		skip_final_snapshot = true
-	}`, rInt)
+	}
+`, rInt)
 }

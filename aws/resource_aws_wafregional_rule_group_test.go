@@ -347,7 +347,8 @@ resource "aws_wafregional_rule_group" "test" {
     priority = 50
     rule_id = "${aws_wafregional_rule.test.id}"
   }
-}`, ruleName, groupName)
+}
+`, ruleName, groupName)
 }
 
 func testAccAWSWafRegionalRuleGroupConfig_changeActivatedRules(ruleName1, ruleName2, ruleName3, groupName string) string {
@@ -391,7 +392,8 @@ resource "aws_wafregional_rule_group" "test" {
     priority = 15
     rule_id = "${aws_wafregional_rule.test3.id}"
   }
-}`, ruleName1, ruleName2, ruleName3, groupName)
+}
+`, ruleName1, ruleName2, ruleName3, groupName)
 }
 
 func testAccAWSWafRegionalRuleGroupConfig_noActivatedRules(groupName string) string {

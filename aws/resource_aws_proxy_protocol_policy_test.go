@@ -96,7 +96,8 @@ resource "aws_elb" "lb" {
 resource "aws_proxy_protocol_policy" "smtp" {
 	load_balancer = "${aws_elb.lb.name}"
 	instance_ports = ["25"]
-}`, rName)
+}
+`, rName)
 }
 
 func testAccProxyProtocolPolicyConfigUpdate(rName string) string {
@@ -123,5 +124,6 @@ resource "aws_elb" "lb" {
 resource "aws_proxy_protocol_policy" "smtp" {
 	load_balancer = "${aws_elb.lb.name}"
 	instance_ports = ["25", "587"]
-}`, rName)
+}
+`, rName)
 }

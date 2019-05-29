@@ -1784,7 +1784,8 @@ data "template_file" "testscript" {
 #!/bin/bash
 echo $@
 POLICY
-}`, r, r, r, r, r, r, r)
+}
+`, r, r, r, r, r, r, r)
 }
 
 func testAccAWSEmrClusterConfig(r int) string {

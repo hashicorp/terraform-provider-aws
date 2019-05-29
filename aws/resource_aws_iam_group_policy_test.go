@@ -259,7 +259,8 @@ func testAccIAMGroupPolicyConfig(rInt int) string {
 	}
 }
 EOF
-	}`, rInt, rInt)
+	}
+`, rInt, rInt)
 }
 
 func testAccIAMGroupPolicyConfig_namePrefix(rInt int, policyAction string) string {
@@ -282,7 +283,8 @@ func testAccIAMGroupPolicyConfig_namePrefix(rInt int, policyAction string) strin
 	}
 }
 EOF
-	}`, rInt, rInt, policyAction)
+	}
+`, rInt, rInt, policyAction)
 }
 
 func testAccIAMGroupPolicyConfig_generatedName(rInt int, policyAction string) string {
@@ -304,7 +306,8 @@ func testAccIAMGroupPolicyConfig_generatedName(rInt int, policyAction string) st
 	}
 }
 EOF
-	}`, rInt, policyAction)
+	}
+`, rInt, policyAction)
 }
 
 func testAccIAMGroupPolicyConfigUpdate(rInt int) string {
@@ -324,5 +327,6 @@ func testAccIAMGroupPolicyConfigUpdate(rInt int) string {
 		name = "bar_policy_%d"
 		group = "${aws_iam_group.group.name}"
 		policy = "{\"Version\":\"2012-10-17\",\"Statement\":{\"Effect\":\"Allow\",\"Action\":\"*\",\"Resource\":\"*\"}}"
-	}`, rInt, rInt, rInt)
+	}
+`, rInt, rInt, rInt)
 }

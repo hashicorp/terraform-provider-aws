@@ -370,7 +370,8 @@ resource "aws_waf_rule_group" "test" {
     priority = 50
     rule_id = "${aws_waf_rule.test.id}"
   }
-}`, ruleName, groupName)
+}
+`, ruleName, groupName)
 }
 
 func testAccAWSWafRuleGroupConfig_changeActivatedRules(ruleName1, ruleName2, ruleName3, groupName string) string {
@@ -414,7 +415,8 @@ resource "aws_waf_rule_group" "test" {
     priority = 15
     rule_id = "${aws_waf_rule.test3.id}"
   }
-}`, ruleName1, ruleName2, ruleName3, groupName)
+}
+`, ruleName1, ruleName2, ruleName3, groupName)
 }
 
 func testAccAWSWafRuleGroupConfig_noActivatedRules(groupName string) string {

@@ -299,7 +299,8 @@ resource "aws_autoscaling_schedule" "foobar" {
     start_time = "%s"
     end_time = "%s"
     autoscaling_group_name = "${aws_autoscaling_group.foobar.name}"
-}`, r, r, start, end)
+}
+`, r, r, start, end)
 }
 
 func testAccAWSAutoscalingScheduleConfig_recurrence(r string) string {
@@ -334,7 +335,8 @@ resource "aws_autoscaling_schedule" "foobar" {
     desired_capacity = 0
     recurrence = "0 8 * * *"
     autoscaling_group_name = "${aws_autoscaling_group.foobar.name}"
-}`, r, r)
+}
+`, r, r)
 }
 
 func testAccAWSAutoscalingScheduleConfig_zeroValues(r, start, end string) string {
@@ -370,7 +372,8 @@ resource "aws_autoscaling_schedule" "foobar" {
     start_time = "%s"
     end_time = "%s"
     autoscaling_group_name = "${aws_autoscaling_group.foobar.name}"
-}`, r, r, start, end)
+}
+`, r, r, start, end)
 }
 
 func testAccAWSAutoscalingScheduleConfig_negativeOne(r, start, end string) string {
@@ -406,5 +409,6 @@ resource "aws_autoscaling_schedule" "foobar" {
     start_time = "%s"
     end_time = "%s"
     autoscaling_group_name = "${aws_autoscaling_group.foobar.name}"
-}`, r, r, start, end)
+}
+`, r, r, start, end)
 }

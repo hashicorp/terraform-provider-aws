@@ -468,7 +468,8 @@ resource "aws_ssm_association" "foo" {
     key = "tag:Name"
     values = ["acceptanceTest"]
   }
-}`, rName)
+}
+`, rName)
 }
 
 func testAccAWSSSMAssociationBasicConfigWithParametersUpdated(rName string) string {
@@ -511,7 +512,8 @@ resource "aws_ssm_association" "foo" {
     key = "tag:Name"
     values = ["acceptanceTest"]
   }
-}`, rName)
+}
+`, rName)
 }
 
 func testAccAWSSSMAssociationBasicConfigWithTargets(rName, targetsStr string) string {
@@ -543,7 +545,8 @@ DOC
 resource "aws_ssm_association" "foo" {
   name = "${aws_ssm_document.foo_document.name}"
   %s
-}`, rName, targetsStr)
+}
+`, rName, targetsStr)
 }
 
 func testAccAWSSSMAssociationBasicConfig(rName string) string {
@@ -701,7 +704,8 @@ resource "aws_ssm_association" "foo" {
     key = "tag:Name"
     values = ["acceptanceTest"]
   }
-}`, rName)
+}
+`, rName)
 }
 
 func testAccAWSSSMAssociationBasicConfigWithScheduleExpressionUpdated(rName string) string {
@@ -737,7 +741,8 @@ resource "aws_ssm_association" "foo" {
     key = "tag:Name"
     values = ["acceptanceTest"]
   }
-}`, rName)
+}
+`, rName)
 }
 
 func testAccAWSSSMAssociationBasicConfigWithOutPutLocation(rName string) string {
@@ -781,7 +786,8 @@ resource "aws_ssm_association" "foo" {
     s3_bucket_name = "${aws_s3_bucket.output_location.id}"
     s3_key_prefix = "SSMAssociation"
   }
-}`, rName, rName)
+}
+`, rName, rName)
 }
 
 func testAccAWSSSMAssociationBasicConfigWithOutPutLocationUpdateBucketName(rName string) string {
@@ -830,7 +836,8 @@ resource "aws_ssm_association" "foo" {
     s3_bucket_name = "${aws_s3_bucket.output_location_updated.id}"
     s3_key_prefix = "SSMAssociation"
   }
-}`, rName, rName, rName)
+}
+`, rName, rName, rName)
 }
 
 func testAccAWSSSMAssociationBasicConfigWithOutPutLocationUpdateKeyPrefix(rName string) string {
@@ -879,7 +886,8 @@ resource "aws_ssm_association" "foo" {
     s3_bucket_name = "${aws_s3_bucket.output_location_updated.id}"
     s3_key_prefix = "UpdatedAssociation"
   }
-}`, rName, rName, rName)
+}
+`, rName, rName, rName)
 }
 
 func testAccAWSSSMAssociationBasicConfigWithAssociationName(rName, assocName string) string {

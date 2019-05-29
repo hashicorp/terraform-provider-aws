@@ -427,7 +427,8 @@ resource "aws_kinesis_stream" "test_stream" {
 	tags = {
 		Name = "tf-test"
 	}
-}`, rInt)
+}
+`, rInt)
 }
 
 func testAccKinesisStreamConfigConcurrent(rInt int) string {
@@ -439,7 +440,8 @@ resource "aws_kinesis_stream" "test_stream" {
 	tags = {
 		Name = "tf-test"
 	}
-}`, rInt)
+}
+`, rInt)
 }
 
 func testAccKinesisStreamConfigWithEncryptionAndNoKmsKey(rInt int) string {
@@ -451,7 +453,8 @@ resource "aws_kinesis_stream" "test_stream" {
 	tags = {
 		Name = "tf-test"
 	}
-}`, rInt)
+}
+`, rInt)
 }
 
 func testAccKinesisStreamConfigWithEncryption(rInt int) string {
@@ -499,7 +502,8 @@ resource "aws_kinesis_stream" "test_stream" {
 	tags = {
 		Name = "tf-test"
 	}
-}`, rInt)
+}
+`, rInt)
 }
 
 func testAccKinesisStreamConfigUpdateRetentionPeriod(rInt int) string {
@@ -511,7 +515,8 @@ resource "aws_kinesis_stream" "test_stream" {
 	tags = {
 		Name = "tf-test"
 	}
-}`, rInt)
+}
+`, rInt)
 }
 
 func testAccKinesisStreamConfigDecreaseRetentionPeriod(rInt int) string {
@@ -523,7 +528,8 @@ resource "aws_kinesis_stream" "test_stream" {
 	tags = {
 		Name = "tf-test"
 	}
-}`, rInt)
+}
+`, rInt)
 }
 
 func testAccKinesisStreamConfigAllShardLevelMetrics(rInt int) string {
@@ -543,7 +549,8 @@ resource "aws_kinesis_stream" "test_stream" {
 		"ReadProvisionedThroughputExceeded",
 		"IteratorAgeMilliseconds"
 	]
-}`, rInt)
+}
+`, rInt)
 }
 
 func testAccKinesisStreamConfigSingleShardLevelMetric(rInt int) string {
@@ -557,7 +564,8 @@ resource "aws_kinesis_stream" "test_stream" {
 	shard_level_metrics = [
 		"IncomingBytes"
 	]
-}`, rInt)
+}
+`, rInt)
 }
 
 func testAccKinesisStreamConfig_Tags(rInt, tagCount int) string {
@@ -573,7 +581,8 @@ resource "aws_kinesis_stream" "test" {
 	tags = {
 %s
 	}
-}`, rInt, tagPairs)
+}
+`, rInt, tagPairs)
 }
 
 func testAccKinesisStreamConfigWithEnforceConsumerDeletion(rInt int) string {
@@ -586,5 +595,6 @@ resource "aws_kinesis_stream" "test_stream" {
 	tags = {
 		Name = "tf-test"
 	}
-}`, rInt)
+}
+`, rInt)
 }

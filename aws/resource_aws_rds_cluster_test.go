@@ -1990,7 +1990,8 @@ resource "aws_rds_cluster" "test" {
   master_username                 = "foo"
 	skip_final_snapshot             = true
 	apply_immediately               = true
-}`, rInt, engine, engineVersion)
+}
+`, rInt, engine, engineVersion)
 }
 
 func testAccAWSClusterConfig_EngineVersionWithPrimaryInstance(rInt int, engine, engineVersion string) string {
@@ -2012,7 +2013,8 @@ resource "aws_rds_cluster_instance" "test" {
   cluster_identifier = "${aws_rds_cluster.test.cluster_identifier}"
   engine             = "${aws_rds_cluster.test.engine}"
   instance_class     = "db.r4.large"
-}`, rInt, engine, engineVersion, rInt)
+}
+`, rInt, engine, engineVersion, rInt)
 }
 
 func testAccAWSClusterConfig_Port(rInt, port int) string {
@@ -2026,7 +2028,8 @@ resource "aws_rds_cluster" "test" {
   master_username                 = "foo"
   port                            = %d
   skip_final_snapshot             = true
-}`, rInt, port)
+}
+`, rInt, port)
 }
 
 func testAccAWSClusterConfigIncludingIamRoles(n int) string {

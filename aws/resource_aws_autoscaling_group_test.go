@@ -2758,7 +2758,8 @@ resource "aws_autoscaling_group" "bar" {
   force_delete              = true
   termination_policies      = ["OldestInstance"]
   launch_configuration      = "${aws_launch_configuration.foobar.name}"
-}`, rInt)
+}
+`, rInt)
 }
 
 func testAccAWSAutoScalingGroupConfigWithSuspendedProcesses(name string) string {

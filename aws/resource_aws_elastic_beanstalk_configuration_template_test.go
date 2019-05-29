@@ -153,7 +153,8 @@ resource "aws_elastic_beanstalk_configuration_template" "tf_template" {
   name = "tf-test-template-config"
   application = "${aws_elastic_beanstalk_application.tftest.name}"
   solution_stack_name = "64bit Amazon Linux running Python"
-}`, r, r)
+}
+`, r, r)
 }
 
 func testAccBeanstalkConfigurationTemplateConfig_VPC(name string) string {

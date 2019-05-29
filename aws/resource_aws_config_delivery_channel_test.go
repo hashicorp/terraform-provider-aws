@@ -268,7 +268,8 @@ resource "aws_config_delivery_channel" "foo" {
   name           = "tf-acc-test-awsconfig-%d"
   s3_bucket_name = "${aws_s3_bucket.b.bucket}"
   depends_on     = ["aws_config_configuration_recorder.foo"]
-}`, randInt, randInt, randInt, randInt, randInt)
+}
+`, randInt, randInt, randInt, randInt, randInt)
 }
 
 func testAccConfigDeliveryChannelConfig_allParams(randInt int) string {
@@ -337,5 +338,6 @@ resource "aws_config_delivery_channel" "foo" {
   	delivery_frequency = "Six_Hours"
   }
   depends_on     = ["aws_config_configuration_recorder.foo"]
-}`, randInt, randInt, randInt, randInt, randInt, randInt)
+}
+`, randInt, randInt, randInt, randInt, randInt, randInt)
 }

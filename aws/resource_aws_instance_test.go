@@ -2924,7 +2924,8 @@ resource "aws_instance" "foo" {
 	tags = {
 		bar = "baz"
 	}
-}`, rName)
+}
+`, rName)
 }
 
 func testAccInstanceConfigWithInstanceProfile(rName string) string {
@@ -2946,7 +2947,8 @@ resource "aws_instance" "foo" {
 	tags = {
 		bar = "baz"
 	}
-}`, rName, rName)
+}
+`, rName, rName)
 }
 
 const testAccInstanceConfigPrivateIP = `
@@ -3568,7 +3570,8 @@ resource "aws_instance" "foo" {
   tags = {
     Name = "tf-acctest-%d"
   }
-}`, rInt)
+}
+`, rInt)
 }
 
 func testAccInstanceConfig_associatePublic_defaultPublic(rInt int) string {
@@ -3597,7 +3600,8 @@ resource "aws_instance" "foo" {
   tags = {
     Name = "tf-acctest-%d"
   }
-}`, rInt)
+}
+`, rInt)
 }
 
 func testAccInstanceConfig_associatePublic_explicitPublic(rInt int) string {
@@ -3627,7 +3631,8 @@ resource "aws_instance" "foo" {
   tags = {
     Name = "tf-acctest-%d"
   }
-}`, rInt)
+}
+`, rInt)
 }
 
 func testAccInstanceConfig_associatePublic_explicitPrivate(rInt int) string {
@@ -3657,7 +3662,8 @@ resource "aws_instance" "foo" {
   tags = {
     Name = "tf-acctest-%d"
   }
-}`, rInt)
+}
+`, rInt)
 }
 
 func testAccInstanceConfig_associatePublic_overridePublic(rInt int) string {
@@ -3687,7 +3693,8 @@ resource "aws_instance" "foo" {
   tags = {
     Name = "tf-acctest-%d"
   }
-}`, rInt)
+}
+`, rInt)
 }
 
 func testAccInstanceConfig_associatePublic_overridePrivate(rInt int) string {
@@ -3717,7 +3724,8 @@ resource "aws_instance" "foo" {
   tags = {
     Name = "tf-acctest-%d"
   }
-}`, rInt)
+}
+`, rInt)
 }
 
 func testAccInstanceConfig_getPasswordData(val bool, rInt int) string {

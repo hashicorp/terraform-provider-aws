@@ -315,7 +315,8 @@ resource "aws_db_subnet_group" "foo" {
 	tags = {
 		Name = "tf-dbsubnet-group-test"
 	}
-}`, rName)
+}
+`, rName)
 }
 
 func testAccDBSubnetGroupConfig_updatedDescription(rName string) string {
@@ -352,7 +353,8 @@ resource "aws_db_subnet_group" "foo" {
 	tags = {
 		Name = "tf-dbsubnet-group-test"
 	}
-}`, rName)
+}
+`, rName)
 }
 
 const testAccDBSubnetGroupConfig_namePrefix = `

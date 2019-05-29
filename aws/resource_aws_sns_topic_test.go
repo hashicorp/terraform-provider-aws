@@ -684,7 +684,8 @@ resource "aws_sns_topic" "test_topic" {
 	tags = {
 		%q = %q
 	}
-	}`, r, tag1Key, tag1Value)
+	}
+`, r, tag1Key, tag1Value)
 }
 
 func testAccAWSSNSTopicConfigTags2(r, tag1Key, tag1Value, tag2Key, tag2Value string) string {
@@ -695,5 +696,6 @@ resource "aws_sns_topic" "test_topic" {
 		%q = %q
 		%q = %q
 	  }
-	}`, r, tag1Key, tag1Value, tag2Key, tag2Value)
+	}
+`, r, tag1Key, tag1Value, tag2Key, tag2Value)
 }

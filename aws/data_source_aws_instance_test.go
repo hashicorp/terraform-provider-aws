@@ -553,7 +553,8 @@ data "aws_instance" "foo" {
     name = "key-name"
     values = ["${aws_instance.foo.key_name}"]
   }
-}`, rName)
+}
+`, rName)
 }
 
 const testAccInstanceDataSourceConfig_VPC = `

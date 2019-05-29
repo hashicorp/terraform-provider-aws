@@ -295,7 +295,8 @@ resource "aws_autoscaling_notification" "example" {
 		"autoscaling:EC2_INSTANCE_LAUNCH_ERROR"
 	]
 	topic_arn = "${aws_sns_topic.topic_example.arn}"
-}`, rName, rName, rName, rName)
+}
+`, rName, rName, rName, rName)
 }
 
 const testAccASGNotificationConfig_pagination = `

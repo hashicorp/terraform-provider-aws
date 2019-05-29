@@ -248,7 +248,8 @@ resource "aws_neptune_event_subscription" "bar" {
   tags = {
     Name = "tf-acc-test"
   }
-}`, rInt, rInt)
+}
+`, rInt, rInt)
 }
 
 func testAccAWSNeptuneEventSubscriptionConfigUpdate(rInt int) string {
@@ -268,7 +269,8 @@ resource "aws_neptune_event_subscription" "bar" {
   tags = {
     Name = "tf-acc-test1"
   }
-}`, rInt, rInt)
+}
+`, rInt, rInt)
 }
 
 func testAccAWSNeptuneEventSubscriptionConfigWithPrefix(rInt int) string {
@@ -291,7 +293,8 @@ resource "aws_neptune_event_subscription" "bar" {
   tags = {
     Name = "tf-acc-test"
   }
-}`, rInt)
+}
+`, rInt)
 }
 
 func testAccAWSNeptuneEventSubscriptionConfigWithSourceIds(rInt int) string {
@@ -317,7 +320,8 @@ resource "aws_neptune_event_subscription" "bar" {
   tags = {
     Name = "tf-acc-test"
   }
-}`, rInt, rInt, rInt)
+}
+`, rInt, rInt, rInt)
 }
 
 func testAccAWSNeptuneEventSubscriptionConfigUpdateSourceIds(rInt int) string {
@@ -349,7 +353,8 @@ func testAccAWSNeptuneEventSubscriptionConfigUpdateSourceIds(rInt int) string {
 	tags = {
 			Name = "tf-acc-test"
 		}
-	}`, rInt, rInt, rInt, rInt)
+	}
+`, rInt, rInt, rInt, rInt)
 }
 
 func testAccAWSNeptuneEventSubscriptionConfigUpdateCategories(rInt int) string {
@@ -368,5 +373,6 @@ resource "aws_neptune_event_subscription" "bar" {
   tags = {
     Name = "tf-acc-test"
   }
-}`, rInt, rInt)
+}
+`, rInt, rInt)
 }

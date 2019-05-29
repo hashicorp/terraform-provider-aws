@@ -802,7 +802,8 @@ resource "aws_elasticache_replication_group" "bar" {
     auto_minor_version_upgrade = false
     maintenance_window = "tue:06:30-tue:07:30"
     snapshot_window = "01:00-02:00"
-}`, rName, rName, rName)
+}
+`, rName, rName, rName)
 }
 
 func testAccAWSElasticacheReplicationGroupConfig_Uppercase(rgName string) string {
@@ -813,7 +814,8 @@ resource "aws_elasticache_replication_group" "bar" {
   node_type = "cache.t2.micro"
   number_cache_clusters = 1
   port = 6379
-}`, rgName)
+}
+`, rgName)
 }
 
 func testAccAWSElasticacheReplicationGroupConfigEnableSnapshotting(rName string) string {
@@ -850,7 +852,8 @@ resource "aws_elasticache_replication_group" "bar" {
     maintenance_window = "tue:06:30-tue:07:30"
     snapshot_window = "01:00-02:00"
     snapshot_retention_limit = 2
-}`, rName, rName, rName)
+}
+`, rName, rName, rName)
 }
 
 func testAccAWSElasticacheReplicationGroupConfigParameterGroupName(rName string, parameterGroupNameIndex int) string {
@@ -911,7 +914,8 @@ resource "aws_elasticache_replication_group" "bar" {
     security_group_names = ["${aws_elasticache_security_group.bar.name}"]
     apply_immediately = true
     auto_minor_version_upgrade = true
-}`, rName, rName, rName)
+}
+`, rName, rName, rName)
 }
 
 func testAccAWSElasticacheReplicationGroupConfigUpdatedMaintenanceWindow(rName string) string {
@@ -947,7 +951,8 @@ resource "aws_elasticache_replication_group" "bar" {
     auto_minor_version_upgrade = true
     maintenance_window = "wed:03:00-wed:06:00"
     snapshot_window = "01:00-02:00"
-}`, rName, rName, rName)
+}
+`, rName, rName, rName)
 }
 
 func testAccAWSElasticacheReplicationGroupConfigUpdatedNodeSize(rName string) string {
@@ -980,7 +985,8 @@ resource "aws_elasticache_replication_group" "bar" {
     port = 6379
     security_group_names = ["${aws_elasticache_security_group.bar.name}"]
     apply_immediately = true
-}`, rName, rName, rName)
+}
+`, rName, rName, rName)
 }
 
 var testAccAWSElasticacheReplicationGroupInVPCConfig = fmt.Sprintf(`
@@ -1219,7 +1225,8 @@ resource "aws_elasticache_replication_group" "bar" {
       num_node_groups = 2
     }
     number_cache_clusters = 3
-}`, rInt, rInt, rName)
+}
+`, rInt, rInt, rName)
 }
 
 func testAccAWSElasticacheReplicationGroupNativeRedisClusterConfig(rName string, numNodeGroups, replicasPerNodeGroup int) string {
@@ -1282,7 +1289,8 @@ resource "aws_elasticache_replication_group" "bar" {
       num_node_groups         = %d
       replicas_per_node_group = %d
     }
-}`, rName, numNodeGroups, replicasPerNodeGroup)
+}
+`, rName, numNodeGroups, replicasPerNodeGroup)
 }
 
 func testAccAWSElasticacheReplicationGroup_EnableAtRestEncryptionConfig(rInt int, rString string) string {
@@ -1430,5 +1438,6 @@ resource "aws_elasticache_replication_group" "test" {
   replication_group_id          = "%[1]s"
   replication_group_description = "Terraform Acceptance Testing - number_cache_clusters"
   subnet_group_name             = "${aws_elasticache_subnet_group.test.name}"
-}`, rName, autoFailover, numberCacheClusters)
+}
+`, rName, autoFailover, numberCacheClusters)
 }

@@ -70,5 +70,6 @@ data "aws_db_snapshot" "snapshot" {
 resource "aws_db_snapshot" "test" {
 	db_instance_identifier = "${aws_db_instance.bar.id}"
 	db_snapshot_identifier = "testsnapshot%d"
-}`, rInt)
+}
+`, rInt)
 }

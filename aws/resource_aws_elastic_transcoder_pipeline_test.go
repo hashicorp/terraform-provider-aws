@@ -379,7 +379,8 @@ resource "aws_s3_bucket" "input_bucket" {
 resource "aws_s3_bucket" "thumb_bucket" {
   bucket = "tf-pipeline-thumb-%d"
   acl    = "private"
-}`, rInt, rInt, rInt, rInt, rInt)
+}
+`, rInt, rInt, rInt, rInt, rInt)
 }
 
 func awsElasticTranscoderPipelineWithContentConfigUpdate(rInt int) string {
@@ -433,7 +434,8 @@ resource "aws_s3_bucket" "input_bucket" {
 resource "aws_s3_bucket" "thumb_bucket" {
   bucket = "tf-pipeline-thumb-%d"
   acl    = "private"
-}`, rInt, rInt, rInt, rInt, rInt)
+}
+`, rInt, rInt, rInt, rInt, rInt)
 }
 
 func awsElasticTranscoderPipelineWithPerms(rInt int) string {
@@ -489,7 +491,8 @@ EOF
 resource "aws_s3_bucket" "content_bucket" {
   bucket = "tf-transcoding-pipe-%d"
   acl    = "private"
-}`, rInt, rInt, rInt)
+}
+`, rInt, rInt, rInt)
 }
 
 func awsElasticTranscoderNotifications(r int) string {
@@ -549,7 +552,8 @@ resource "aws_sns_topic" "topic_example" {
   ]
 }
 EOF
-}`, r, r, r, r)
+}
+`, r, r, r, r)
 }
 
 func awsElasticTranscoderNotifications_update(r int) string {
@@ -608,5 +612,6 @@ resource "aws_sns_topic" "topic_example" {
   ]
 }
 EOF
-}`, r, r, r, r)
+}
+`, r, r, r, r)
 }

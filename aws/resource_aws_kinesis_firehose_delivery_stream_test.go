@@ -1452,7 +1452,8 @@ func testAccKinesisFirehoseDeliveryStreamConfig_s3basicWithTags(rName string, rI
 			Environment = "production"
 			Usage = "original"
 		}
-	}`, rName)
+	}
+`, rName)
 }
 
 func testAccKinesisFirehoseDeliveryStreamConfig_s3basicWithTagsChanged(rName string, rInt int) string {
@@ -1469,7 +1470,8 @@ func testAccKinesisFirehoseDeliveryStreamConfig_s3basicWithTagsChanged(rName str
 	tags = {
 			Usage = "changed"
 		}
-	}`, rName)
+	}
+`, rName)
 }
 
 var testAccKinesisFirehoseDeliveryStreamConfig_s3KinesisStreamSource = testAccKinesisFirehoseDeliveryStreamBaseConfig + testAccFirehoseKinesisStreamSource + `

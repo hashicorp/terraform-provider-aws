@@ -391,7 +391,8 @@ resource "aws_iam_role_policy" "p" {
   ]
 }
 EOF
-}`, randInt, randInt, randInt, randInt)
+}
+`, randInt, randInt, randInt, randInt)
 }
 
 func testAccConfigConfigRuleConfig_ownerAws(randInt int) string {
@@ -453,7 +454,8 @@ resource "aws_iam_role_policy" "p" {
   ]
 }
 EOF
-}`, randInt, randInt, randInt, randInt)
+}
+`, randInt, randInt, randInt, randInt)
 }
 
 func testAccConfigConfigRuleConfig_customLambda(randInt int, path string) string {
@@ -585,7 +587,8 @@ resource "aws_iam_role_policy" "p" {
   ]
 }
 POLICY
-}`, randInt, path, randInt, randInt, randInt, randInt, randInt, randInt, randInt)
+}
+`, randInt, path, randInt, randInt, randInt, randInt, randInt, randInt, randInt)
 }
 
 func testAccConfigConfigRuleConfig_Scope_TagKey(rName, tagKey string) string {

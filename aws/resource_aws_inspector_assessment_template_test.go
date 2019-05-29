@@ -101,7 +101,8 @@ resource "aws_inspector_assessment_template" "foo" {
 	  "arn:aws:inspector:us-west-2:758058086616:rulespackage/0-JJOtZiqQ",
 	  "arn:aws:inspector:us-west-2:758058086616:rulespackage/0-vg5GGHSD",
   ]
-}`, rInt, rInt, rInt)
+}
+`, rInt, rInt, rInt)
 }
 
 func testAccCheckAWSInspectorTemplatetModified(rInt int) string {
@@ -128,5 +129,6 @@ resource "aws_inspector_assessment_template" "foo" {
 	  "arn:aws:inspector:us-west-2:758058086616:rulespackage/0-JJOtZiqQ",
 	  "arn:aws:inspector:us-west-2:758058086616:rulespackage/0-vg5GGHSD",
   ]
-}`, rInt, rInt, rInt)
+}
+`, rInt, rInt, rInt)
 }

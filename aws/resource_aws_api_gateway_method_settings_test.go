@@ -511,7 +511,8 @@ resource "aws_api_gateway_deployment" "test" {
   depends_on = ["aws_api_gateway_integration.test"]
   rest_api_id = "${aws_api_gateway_rest_api.test.id}"
   stage_name = "dev"
-}`, rName)
+}
+`, rName)
 }
 
 func testAccAWSAPIGatewayMethodSettingsConfigSettingsCacheDataEncrypted(rName string, cacheDataEncrypted bool) string {

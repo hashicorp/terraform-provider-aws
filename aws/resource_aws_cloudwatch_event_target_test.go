@@ -430,7 +430,8 @@ INPUT
 resource "aws_kinesis_stream" "test_stream" {
     name = "%s_kinesis_test"
     shard_count = 1
-}`, ruleName, rName, rName, targetName, rName)
+}
+`, ruleName, rName, rName, targetName, rName)
 }
 
 func testAccAWSCloudWatchEventTargetConfigSsmDocument(rName string) string {
@@ -523,7 +524,8 @@ resource "aws_iam_role_policy" "test_policy" {
     ]
 }
 EOF
-}`, rName, rName, rName, rName)
+}
+`, rName, rName, rName, rName)
 }
 
 func testAccAWSCloudWatchEventTargetConfigEcs(rName string) string {
@@ -623,7 +625,8 @@ resource "aws_ecs_task_definition" "task" {
   }
 ]
 EOF
-}`, rName, rName, rName, rName, rName)
+}
+`, rName, rName, rName, rName, rName)
 }
 
 func testAccAWSCloudWatchEventTargetConfigBatch(rName string) string {
@@ -845,7 +848,8 @@ resource "aws_cloudwatch_event_target" "test" {
 resource "aws_sqs_queue" "sqs_queue" {
   name       = "%[1]s.fifo"
   fifo_queue = true
-}`, rName)
+}
+`, rName)
 }
 
 func testAccAWSCloudWatchEventTargetConfigInputTransformer(rName string) string {
@@ -905,5 +909,6 @@ resource "aws_cloudwatch_event_target" "test" {
 }
 EOF
   }
-}`, rName)
+}
+`, rName)
 }

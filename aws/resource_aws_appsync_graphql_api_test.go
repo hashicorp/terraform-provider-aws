@@ -965,7 +965,8 @@ resource "aws_appsync_graphql_api" "test" {
     Key1 = "Value One"
     Description = "Very interesting"
   }
-}`, rName)
+}
+`, rName)
 }
 
 func testAccAppsyncGraphqlApiConfig_TagsModified(rName string) string {
@@ -978,5 +979,6 @@ resource "aws_appsync_graphql_api" "test" {
     Key2 = "Value Two"
     Key3 = "Value Three"
   }
-}`, rName)
+}
+`, rName)
 }

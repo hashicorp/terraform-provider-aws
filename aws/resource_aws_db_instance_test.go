@@ -2254,7 +2254,8 @@ resource "aws_db_instance" "bar" {
 
 	parameter_group_name = "default.mysql5.6"
 	option_group_name = "${aws_db_option_group.bar.name}"
-}`, rName, acctest.RandInt())
+}
+`, rName, acctest.RandInt())
 }
 
 func testAccCheckAWSDBIAMAuth(n int) string {
@@ -2542,7 +2543,8 @@ resource "aws_db_instance" "enhanced_monitoring" {
 	monitoring_interval = "5"
 
 	skip_final_snapshot = true
-}`, rName, rName, rName, rName)
+}
+`, rName, rName, rName, rName)
 }
 
 func testAccSnapshotInstanceConfig_iopsUpdate(rName string, iops int) string {
@@ -2563,7 +2565,8 @@ resource "aws_db_instance" "bar" {
   storage_type      = "io1"
   allocated_storage = 200
   iops              = %d
-}`, rName, iops)
+}
+`, rName, iops)
 }
 
 func testAccSnapshotInstanceConfig_mysqlPort(rName string) string {
@@ -2582,7 +2585,8 @@ resource "aws_db_instance" "bar" {
   skip_final_snapshot = true
 
   apply_immediately = true
-}`, rName)
+}
+`, rName)
 }
 
 func testAccSnapshotInstanceConfig_updateMysqlPort(rName string) string {
@@ -2601,7 +2605,8 @@ resource "aws_db_instance" "bar" {
   skip_final_snapshot = true
 
   apply_immediately = true
-}`, rName)
+}
+`, rName)
 }
 
 func testAccAWSDBInstanceConfigWithSubnetGroup(rName string) string {
@@ -2655,7 +2660,8 @@ resource "aws_db_instance" "bar" {
 
 	backup_retention_period = 0
   apply_immediately = true
-}`, rName, rName)
+}
+`, rName, rName)
 }
 
 func testAccAWSDBInstanceConfigWithSubnetGroupUpdated(rName string) string {
@@ -2743,7 +2749,8 @@ resource "aws_db_instance" "bar" {
 	backup_retention_period = 0
 
   apply_immediately = true
-}`, rName, rName, rName)
+}
+`, rName, rName, rName)
 }
 
 func testAccAWSDBMSSQL_timezone(rInt int) string {

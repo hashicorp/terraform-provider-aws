@@ -359,7 +359,8 @@ func testAccAWSElasticacheParameterGroupConfig(rName string) string {
 resource "aws_elasticache_parameter_group" "bar" {
   family = "redis2.8"
   name   = %q
-}`, rName)
+}
+`, rName)
 }
 
 func testAccAWSElasticacheParameterGroupConfigDescription(rName, description string) string {

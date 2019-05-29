@@ -2375,7 +2375,8 @@ resource "aws_lambda_function" "lambda_function_local" {
     role = "${aws_iam_role.iam_for_lambda.arn}"
     handler = "exports.example"
     runtime = "nodejs8.10"
-}`, roleName, filePath, funcName)
+}
+`, roleName, filePath, funcName)
 }
 
 func genAWSLambdaFunctionConfig_s3(bucketName, key, path, roleName, funcName string) string {

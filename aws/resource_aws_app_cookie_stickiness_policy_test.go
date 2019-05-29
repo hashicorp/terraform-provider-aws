@@ -206,7 +206,8 @@ resource "aws_app_cookie_stickiness_policy" "foo" {
 	load_balancer = "${aws_elb.lb.id}"
 	lb_port = 80
 	cookie_name = "MyAppCookie"
-}`, rName)
+}
+`, rName)
 }
 
 // Change the cookie_name to "MyOtherAppCookie".
@@ -228,7 +229,8 @@ resource "aws_app_cookie_stickiness_policy" "foo" {
 	load_balancer = "${aws_elb.lb.id}"
 	lb_port = 80
 	cookie_name = "MyOtherAppCookie"
-}`, rName)
+}
+`, rName)
 }
 
 // attempt to destroy the policy, but we'll delete the LB in the PreConfig
@@ -243,5 +245,6 @@ resource "aws_elb" "lb" {
 		lb_port = 80
 		lb_protocol = "http"
 	}
-}`, rName)
+}
+`, rName)
 }

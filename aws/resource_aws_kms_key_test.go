@@ -347,7 +347,8 @@ POLICY
 	tags = {
 		Name = "tf-acc-test-kms-key-%s"
 	}
-}`, rName, rName)
+}
+`, rName, rName)
 }
 
 func testAccAWSKmsKey_other_region(rName string) string {
@@ -378,7 +379,8 @@ POLICY
 	tags = {
 		Name = "tf-acc-test-kms-key-%s"
 	}
-}`, rName, rName)
+}
+`, rName, rName)
 }
 
 func testAccAWSKmsKey_removedPolicy(rName string) string {
@@ -389,7 +391,8 @@ resource "aws_kms_key" "foo" {
   tags = {
 		Name = "tf-acc-test-kms-key-%s"
 	}
-}`, rName, rName)
+}
+`, rName, rName)
 }
 
 func testAccAWSKmsKey_enabledRotation(rName string) string {
@@ -401,7 +404,8 @@ resource "aws_kms_key" "bar" {
   tags = {
 		Name = "tf-acc-test-kms-key-%s"
 	}
-}`, rName, rName)
+}
+`, rName, rName)
 }
 
 func testAccAWSKmsKey_disabled(rName string) string {
@@ -414,7 +418,8 @@ resource "aws_kms_key" "bar" {
   tags = {
 		Name = "tf-acc-test-kms-key-%s"
 	}
-}`, rName, rName)
+}
+`, rName, rName)
 }
 
 func testAccAWSKmsKey_enabled(rName string) string {
@@ -427,7 +432,8 @@ resource "aws_kms_key" "bar" {
   tags = {
 		Name = "tf-acc-test-kms-key-%s"
 	}
-}`, rName, rName)
+}
+`, rName, rName)
 }
 
 func testAccAWSKmsKey_tags(rName string) string {
@@ -439,5 +445,6 @@ resource "aws_kms_key" "foo" {
 		Key1 = "Value One"
 		Description = "Very interesting"
 	}
-}`, rName, rName)
+}
+`, rName, rName)
 }

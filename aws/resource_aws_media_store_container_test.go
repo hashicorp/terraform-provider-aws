@@ -97,5 +97,6 @@ func testAccMediaStoreContainerConfig(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_media_store_container" "test" {
   name = "tf_mediastore_%s"
-}`, rName)
+}
+`, rName)
 }

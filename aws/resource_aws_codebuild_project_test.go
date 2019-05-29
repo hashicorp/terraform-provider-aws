@@ -989,7 +989,8 @@ func testAccAWSCodeBuildProjectConfig_Base_Bucket(rName string) string {
 resource "aws_s3_bucket" "test" {
   bucket = "%s"
   force_destroy = true
-}`, rName)
+}
+`, rName)
 }
 
 func testAccAWSCodeBuildProjectConfig_Base_ServiceRole(rName string) string {
@@ -1052,7 +1053,8 @@ resource "aws_iam_role_policy" "test" {
   ]
 }
 POLICY
-}`, rName)
+}
+`, rName)
 }
 
 func testAccAWSCodeBuildProjectConfig_basic(rName string) string {

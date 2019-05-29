@@ -151,7 +151,8 @@ resource "aws_autoscaling_group" "barbaz" {
     value = "foo-bar"
     propagate_at_launch = true
   }
-}`, rInt1, rInt2, rInt3)
+}
+`, rInt1, rInt2, rInt3)
 }
 
 func testAccCheckAwsAutoscalingGroupsConfigWithDataSource(rInt1, rInt2, rInt3 int) string {

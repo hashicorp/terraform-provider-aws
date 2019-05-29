@@ -192,14 +192,16 @@ resource "aws_iam_role" "test" {
 resource "aws_iam_instance_profile" "test" {
 	name = "test"
 	roles = ["${aws_iam_role.test.name}"]
-}`, rName)
+}
+`, rName)
 }
 
 func testAccAwsIamInstanceProfileConfigMissingRole(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_iam_instance_profile" "test" {
 	name = "test-%s"
-}`, rName)
+}
+`, rName)
 }
 
 func testAccAWSInstanceProfilePrefixNameConfig(rName string) string {
@@ -212,7 +214,8 @@ resource "aws_iam_role" "test" {
 resource "aws_iam_instance_profile" "test" {
 	name_prefix = "test-"
 	roles = ["${aws_iam_role.test.name}"]
-}`, rName)
+}
+`, rName)
 }
 
 func testAccAWSInstanceProfileWithRoleSpecified(rName string) string {
@@ -225,5 +228,6 @@ resource "aws_iam_role" "test" {
 resource "aws_iam_instance_profile" "test" {
 	name_prefix = "test-"
 	role = "${aws_iam_role.test.name}"
-}`, rName)
+}
+`, rName)
 }

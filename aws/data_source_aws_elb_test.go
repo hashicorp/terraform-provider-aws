@@ -110,5 +110,6 @@ resource "aws_security_group" "elb_test" {
 
 data "aws_elb" "elb_test" {
 	name = "${aws_elb.elb_test.name}"
-}`, rName, testName)
+}
+`, rName, testName)
 }

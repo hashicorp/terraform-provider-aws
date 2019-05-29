@@ -146,5 +146,6 @@ func testAccDataSourceAwsSecurityGroupConfig(rInt int) string {
 			name = "group-name"
 			values = ["${aws_security_group.test.name}"]
 		}
-	}`, rInt, rInt)
+	}
+`, rInt, rInt)
 }

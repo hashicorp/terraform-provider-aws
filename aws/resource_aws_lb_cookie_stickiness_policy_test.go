@@ -198,7 +198,8 @@ resource "aws_lb_cookie_stickiness_policy" "foo" {
 	name = "foo-policy"
 	load_balancer = "${aws_elb.lb.id}"
 	lb_port = 80
-}`, rName)
+}
+`, rName)
 }
 
 // Sets the cookie_expiration_period to 300s.
@@ -220,7 +221,8 @@ resource "aws_lb_cookie_stickiness_policy" "foo" {
 	load_balancer = "${aws_elb.lb.id}"
 	lb_port = 80
 	cookie_expiration_period = 300
-}`, rName)
+}
+`, rName)
 }
 
 // attempt to destroy the policy, but we'll delete the LB in the PreConfig
@@ -235,5 +237,6 @@ resource "aws_elb" "lb" {
 		lb_port = 80
 		lb_protocol = "http"
 	}
-}`, rName)
+}
+`, rName)
 }

@@ -153,7 +153,8 @@ EOF
 resource "aws_iam_user_policy_attachment" "test-attach" {
     user = "${aws_iam_user.user.name}"
     policy_arn = "${aws_iam_policy.policy.arn}"
-}`, rName, policyName)
+}
+`, rName, policyName)
 }
 
 func testAccAWSUserPolicyAttachConfigUpdate(rName, policyName1, policyName2, policyName3 string) string {
@@ -227,5 +228,6 @@ resource "aws_iam_user_policy_attachment" "test-attach" {
 resource "aws_iam_user_policy_attachment" "test-attach2" {
     user = "${aws_iam_user.user.name}"
     policy_arn = "${aws_iam_policy.policy3.arn}"
-}`, rName, policyName1, policyName2, policyName3)
+}
+`, rName, policyName1, policyName2, policyName3)
 }

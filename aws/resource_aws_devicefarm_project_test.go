@@ -115,5 +115,6 @@ func testAccDeviceFarmProjectConfig(rInt int) string {
 	return fmt.Sprintf(`
 resource "aws_devicefarm_project" "foo" {
 	name = "tf-testproject-%d"
-}`, rInt)
+}
+`, rInt)
 }

@@ -415,7 +415,8 @@ resource "aws_api_gateway_method" "test" {
     "method.request.header.Content-Type" = false
 	  "method.request.querystring.page" = true
   }
-}`, rInt, rInt, rInt, rInt, rInt)
+}
+`, rInt, rInt, rInt, rInt, rInt)
 }
 
 func testAccAWSAPIGatewayMethodConfigWithCognitoAuthorizer(rInt int) string {
@@ -498,7 +499,8 @@ resource "aws_api_gateway_method" "test" {
     "method.request.header.Content-Type" = false
 	  "method.request.querystring.page" = true
   }
-}`, rInt, rInt, rInt, rInt)
+}
+`, rInt, rInt, rInt, rInt)
 }
 
 func testAccAWSAPIGatewayMethodConfigWithCognitoAuthorizerUpdate(rInt int) string {
@@ -580,7 +582,8 @@ resource "aws_api_gateway_method" "test" {
   request_parameters = {
 	  "method.request.querystring.page" = false
   }
-}`, rInt, rInt, rInt, rInt)
+}
+`, rInt, rInt, rInt, rInt)
 }
 
 func testAccAWSAPIGatewayMethodConfig(rInt int) string {

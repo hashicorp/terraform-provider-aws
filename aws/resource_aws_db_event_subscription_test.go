@@ -268,7 +268,8 @@ resource "aws_db_event_subscription" "bar" {
   tags = {
     Name = "name"
   }
-}`, rInt, rInt)
+}
+`, rInt, rInt)
 }
 
 func testAccAWSDBEventSubscriptionConfigWithPrefix(rInt int) string {
@@ -291,7 +292,8 @@ resource "aws_db_event_subscription" "bar" {
   tags = {
     Name = "name"
   }
-}`, rInt)
+}
+`, rInt)
 }
 
 func testAccAWSDBEventSubscriptionConfigUpdate(rInt int) string {
@@ -311,7 +313,8 @@ resource "aws_db_event_subscription" "bar" {
   tags = {
     Name = "new-name"
   }
-}`, rInt, rInt)
+}
+`, rInt, rInt)
 }
 
 func testAccAWSDBEventSubscriptionConfigWithSourceIds(rInt int) string {
@@ -337,7 +340,8 @@ resource "aws_db_event_subscription" "bar" {
   tags = {
     Name = "name"
   }
-}`, rInt, rInt, rInt)
+}
+`, rInt, rInt, rInt)
 }
 
 func testAccAWSDBEventSubscriptionConfigUpdateSourceIds(rInt int) string {
@@ -369,7 +373,8 @@ func testAccAWSDBEventSubscriptionConfigUpdateSourceIds(rInt int) string {
 	tags = {
 			Name = "name"
 		}
-	}`, rInt, rInt, rInt, rInt)
+	}
+`, rInt, rInt, rInt, rInt)
 }
 
 func testAccAWSDBEventSubscriptionConfigUpdateCategories(rInt int) string {
@@ -388,5 +393,6 @@ resource "aws_db_event_subscription" "bar" {
   tags = {
     Name = "name"
   }
-}`, rInt, rInt)
+}
+`, rInt, rInt)
 }
