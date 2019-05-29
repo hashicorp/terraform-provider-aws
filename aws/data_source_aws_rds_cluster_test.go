@@ -25,6 +25,7 @@ func TestAccDataSourceAWSRDSCluster_basic(t *testing.T) {
 					resource.TestCheckResourceAttrPair(dataSourceName, "database_name", resourceName, "database_name"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "db_cluster_parameter_group_name", resourceName, "db_cluster_parameter_group_name"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "db_subnet_group_name", resourceName, "db_subnet_group_name"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "hosted_zone_id", resourceName, "hosted_zone_id"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "master_username", resourceName, "master_username"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "tags.%", resourceName, "tags.%"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "tags.Environment", resourceName, "tags.Environment"),
