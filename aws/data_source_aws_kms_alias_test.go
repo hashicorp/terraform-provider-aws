@@ -128,6 +128,5 @@ resource "aws_kms_alias" "test" {
 }
 
 %s
-
 `, rInt, testAccDataSourceAwsKmsAlias_name("${aws_kms_alias.test.name}"))
 }

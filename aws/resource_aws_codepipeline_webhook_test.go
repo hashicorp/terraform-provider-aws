@@ -292,6 +292,5 @@ resource "aws_codepipeline" "bar" {
 }
 
 %s
-
 `, rName, rName, rName, webhook)
 }

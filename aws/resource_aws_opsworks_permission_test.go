@@ -195,6 +195,5 @@ resource "aws_iam_user" "user" {
 }
 
 %s
-
 `, ssh, sudo, level, name, testAccAwsOpsworksStackConfigVpcCreate(name))
 }

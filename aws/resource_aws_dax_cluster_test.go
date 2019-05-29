@@ -322,7 +322,7 @@ func testAccAWSDAXClusterConfig(rString string) string {
 		    foo = "bar"
 		  }
 		}
-		`, baseConfig, rString)
+`, baseConfig, rString)
 }
 
 func testAccAWSDAXClusterConfigWithEncryption(rString string, enabled bool) string {
@@ -342,7 +342,7 @@ func testAccAWSDAXClusterConfigWithEncryption(rString string, enabled bool) stri
 		    enabled = %t
 		  }
 		}
-		`, baseConfig, rString, enabled)
+`, baseConfig, rString, enabled)
 }
 
 func testAccAWSDAXClusterConfigResize_singleNode(rString string) string {
@@ -353,7 +353,7 @@ func testAccAWSDAXClusterConfigResize_singleNode(rString string) string {
 		  node_type          = "dax.r3.large"
 		  replication_factor = 1
 		}
-		`, baseConfig, rString)
+`, baseConfig, rString)
 }
 
 func testAccAWSDAXClusterConfigResize_multiNode(rString string) string {
@@ -364,5 +364,5 @@ func testAccAWSDAXClusterConfigResize_multiNode(rString string) string {
 		  node_type          = "dax.r3.large"
 		  replication_factor = 2
 		}
-		`, baseConfig, rString)
+`, baseConfig, rString)
 }

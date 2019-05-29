@@ -780,5 +780,5 @@ resource "aws_vpc_endpoint" "foo" {
   private_dns_enabled = false
   auto_accept = true
 }
-  `, lbName)
+`, lbName)
 }

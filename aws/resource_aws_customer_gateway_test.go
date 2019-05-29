@@ -230,7 +230,7 @@ func testAccCustomerGatewayConfig(rInt, rBgpAsn int) string {
 				Name = "foo-gateway-%d"
 			}
 		}
-		`, rBgpAsn, rInt)
+`, rBgpAsn, rInt)
 }
 
 func testAccCustomerGatewayConfigIdentical(randInt, rBgpAsn int) string {
@@ -251,7 +251,7 @@ func testAccCustomerGatewayConfigIdentical(randInt, rBgpAsn int) string {
 				Name = "foo-gateway-identical-%d"
 			}
 		}
-		`, rBgpAsn, randInt, rBgpAsn, randInt)
+`, rBgpAsn, randInt, rBgpAsn, randInt)
 }
 
 // Add the Another: "tag" tag.
@@ -281,5 +281,5 @@ func testAccCustomerGatewayConfigForceReplace(rInt, rBgpAsn int) string {
 				Another = "tag"
 			}
 		}
-		`, rBgpAsn, rInt)
+`, rBgpAsn, rInt)
 }

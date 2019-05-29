@@ -193,7 +193,7 @@ func testAccDxGatewayConfig(rName string, rBgpAsn int) string {
       name = "terraform-testacc-dxgw-%s"
       amazon_side_asn = "%d"
     }
-    `, rName, rBgpAsn)
+`, rName, rBgpAsn)
 }
 
 // Local copy of acctest.RandIntRange until https://github.com/hashicorp/terraform/pull/17438 is merged.

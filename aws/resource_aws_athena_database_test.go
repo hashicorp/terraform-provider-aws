@@ -342,7 +342,7 @@ func testAccAthenaDatabaseConfig(randInt int, dbName string, forceDestroy bool) 
 	  bucket = "${aws_s3_bucket.hoge.bucket}"
 	  force_destroy = %[3]t
     }
-    `, randInt, dbName, forceDestroy)
+`, randInt, dbName, forceDestroy)
 }
 
 func testAccAthenaDatabaseWithKMSConfig(randInt int, dbName string, forceDestroy bool) string {
@@ -375,5 +375,5 @@ resource "aws_athena_database" "hoge" {
     kms_key           = "${aws_kms_key.hoge.arn}" 
   }
 }
-    `, randInt, dbName, forceDestroy)
+`, randInt, dbName, forceDestroy)
 }

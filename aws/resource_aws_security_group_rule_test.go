@@ -1390,7 +1390,7 @@ resource "aws_security_group_rule" "ingress_1" {
 
     security_group_id = "${aws_security_group.web.id}"
 }
-    `, rInt)
+`, rInt)
 }
 
 const testAccAWSSecurityGroupRuleIngress_ipv6Config = `
@@ -1486,7 +1486,7 @@ resource "aws_security_group_rule" "ingress_1" {
 
     security_group_id = "${aws_security_group.web.id}"
 }
-    `, rInt)
+`, rInt)
 }
 
 func testAccAWSSecurityGroupRuleEgressConfig(rInt int) string {
@@ -1509,7 +1509,7 @@ resource "aws_security_group_rule" "egress_1" {
 
     security_group_id = "${aws_security_group.web.id}"
 }
-    `, rInt)
+`, rInt)
 }
 
 const testAccAWSSecurityGroupRuleConfigMultiIngress = `
@@ -1603,7 +1603,7 @@ resource "aws_security_group_rule" "%[2]s_rule_3" {
     to_port = 22
     source_security_group_id = "${aws_security_group.nat.id}"
 }
-    `, rInt, rType))
+`, rInt, rType))
 
 	if rType == "egress" {
 		b.WriteString(fmt.Sprintf(`
@@ -1704,7 +1704,7 @@ resource "aws_security_group_rule" "nat_ingress" {
 
         security_group_id = "${aws_security_group.nat.id}"
 }
-    `, rInt, rInt)
+`, rInt, rInt)
 }
 
 func testAccAWSSecurityGroupRulePartialMatching_SourceConfig(rInt int) string {
@@ -1751,7 +1751,7 @@ resource "aws_security_group_rule" "other_ingress" {
 
         security_group_id = "${aws_security_group.web.id}"
 }
-    `, rInt, rInt)
+`, rInt, rInt)
 }
 
 const testAccAWSSecurityGroupRulePrefixListEgressConfig = `
@@ -1824,7 +1824,7 @@ resource "aws_security_group_rule" "ingress_1" {
 
     security_group_id = "${aws_security_group.web.id}"
 }
-    `, rInt)
+`, rInt)
 }
 
 func testAccAWSSecurityGroupRuleIngress_updateDescriptionConfig(rInt int) string {
@@ -1848,7 +1848,7 @@ resource "aws_security_group_rule" "ingress_1" {
 
     security_group_id = "${aws_security_group.web.id}"
 }
-    `, rInt)
+`, rInt)
 }
 
 func testAccAWSSecurityGroupRuleEgressDescriptionConfig(rInt int) string {
@@ -1872,7 +1872,7 @@ resource "aws_security_group_rule" "egress_1" {
 
     security_group_id = "${aws_security_group.web.id}"
 }
-    `, rInt)
+`, rInt)
 }
 
 func testAccAWSSecurityGroupRuleEgress_updateDescriptionConfig(rInt int) string {
@@ -1896,7 +1896,7 @@ resource "aws_security_group_rule" "egress_1" {
 
     security_group_id = "${aws_security_group.web.id}"
 }
-    `, rInt)
+`, rInt)
 }
 
 func testAccAWSSecurityGroupRuleConfigDescriptionAllPorts(rName, description string) string {
@@ -1988,7 +1988,7 @@ resource "aws_security_group" "race" {
     name   = "tf-sg-rule-race-group-%d"
     vpc_id = "${aws_vpc.default.id}"
 }
-    `, acctest.RandInt()))
+`, acctest.RandInt()))
 	for i := 1; i < iterations; i++ {
 		b.WriteString(fmt.Sprintf(`
 resource "aws_security_group_rule" "ingress%d" {
@@ -2008,7 +2008,7 @@ resource "aws_security_group_rule" "egress%d" {
     protocol          = "tcp"
     cidr_blocks       = ["10.0.0.%d/32"]
 }
-        `, i, i, i, i, i, i, i, i))
+`, i, i, i, i, i, i, i, i))
 	}
 	return b.String()
 }()
@@ -2037,7 +2037,7 @@ resource "aws_security_group_rule" "allow_self" {
     security_group_id        = "${aws_security_group.web.id}"
     source_security_group_id = "${aws_security_group.web.id}"
 }
-    `, rInt)
+`, rInt)
 }
 
 func testAccAWSSecurityGroupRuleExpectInvalidType(rInt int) string {
@@ -2064,7 +2064,7 @@ resource "aws_security_group_rule" "allow_self" {
     security_group_id        = "${aws_security_group.web.id}"
     source_security_group_id = "${aws_security_group.web.id}"
 }
-    `, rInt)
+`, rInt)
 }
 
 func testAccAWSSecurityGroupRuleInvalidIPv4CIDR(rInt int) string {
@@ -2081,7 +2081,7 @@ resource "aws_security_group_rule" "ing" {
   cidr_blocks = ["1.2.3.4/33"]
   security_group_id = "${aws_security_group.foo.id}"
 }
-    `, rInt)
+`, rInt)
 }
 
 func testAccAWSSecurityGroupRuleInvalidIPv6CIDR(rInt int) string {
@@ -2098,5 +2098,5 @@ resource "aws_security_group_rule" "ing" {
   ipv6_cidr_blocks = ["::/244"]
   security_group_id = "${aws_security_group.foo.id}"
 }
-    `, rInt)
+`, rInt)
 }

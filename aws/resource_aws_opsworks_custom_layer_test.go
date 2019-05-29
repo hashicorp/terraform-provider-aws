@@ -383,7 +383,6 @@ resource "aws_opsworks_custom_layer" "tf-acc" {
 
 
 %s
-
 `, name, testAccAwsOpsworksStackConfigVpcCreate(name), testAccAwsOpsworksCustomLayerSecurityGroups(name))
 }
 

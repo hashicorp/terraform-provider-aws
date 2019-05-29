@@ -148,7 +148,7 @@ func testAccSsmResourceDataSyncConfig(rInt int, rName string) string {
         region = "${aws_s3_bucket.hoge.region}"
       }
     }
-    `, rInt, rInt, rInt, rName)
+`, rInt, rInt, rInt, rName)
 }
 
 func testAccSsmResourceDataSyncConfigUpdate(rInt int, rName string) string {
@@ -201,5 +201,5 @@ func testAccSsmResourceDataSyncConfigUpdate(rInt int, rName string) string {
         prefix = "test-"
       }
     }
-    `, rInt, rInt, rInt, rName)
+`, rInt, rInt, rInt, rName)
 }

@@ -3525,7 +3525,7 @@ func testAccAWSDBInstanceConfigCloudwatchLogsExportConfigurationAdd(rInt int) st
 				"general",
 			]
 		}
-		`, rInt, rInt)
+`, rInt, rInt)
 }
 
 func testAccAWSDBInstanceConfigCloudwatchLogsExportConfigurationModify(rInt int) string {
@@ -3585,7 +3585,7 @@ func testAccAWSDBInstanceConfigCloudwatchLogsExportConfigurationModify(rInt int)
 				"slowquery",
 			]
 		}
-		`, rInt, rInt)
+`, rInt, rInt)
 }
 
 func testAccAWSDBInstanceConfigCloudwatchLogsExportConfigurationDelete(rInt int) string {
@@ -3640,7 +3640,7 @@ func testAccAWSDBInstanceConfigCloudwatchLogsExportConfigurationDelete(rInt int)
 			apply_immediately = true
 
 		}
-		`, rInt, rInt)
+`, rInt, rInt)
 }
 
 func testAccAWSDBInstanceConfigEc2Classic(rInt int) string {

@@ -288,7 +288,6 @@ resource "aws_opsworks_instance" "tf-acc" {
 }
 
 %s
-
 `, name, name, testAccAwsOpsworksStackConfigVpcCreate(name))
 }
 
@@ -345,7 +344,6 @@ resource "aws_opsworks_instance" "tf-acc" {
 }
 
 %s
-
 `, name, name, testAccAwsOpsworksStackConfigVpcCreate(name))
 }
 
@@ -408,6 +406,5 @@ resource "aws_opsworks_instance" "tf-acc" {
 }
 
 %s
-
 `, name, name, testAccAwsOpsworksStackConfigVpcCreate(name))
 }

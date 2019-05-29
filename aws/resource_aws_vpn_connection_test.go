@@ -401,7 +401,7 @@ resource "aws_vpn_connection" "foo" {
   type = "ipsec.1"
   static_routes_only = true
 }
-    `, rBgpAsn)
+`, rBgpAsn)
 }
 
 // Change static_routes_only to be false, forcing a refresh.
@@ -428,7 +428,7 @@ resource "aws_vpn_connection" "foo" {
   type = "ipsec.1"
   static_routes_only = false
 }
-  `, rBgpAsn, rInt)
+`, rBgpAsn, rInt)
 }
 
 func testAccAwsVpnConnectionConfigSingleTunnelOptions(rBgpAsn int, psk string, tunnelCidr string) string {
@@ -457,7 +457,7 @@ resource "aws_vpn_connection" "foo" {
   tunnel1_inside_cidr = "%s"
   tunnel1_preshared_key = "%s"
 }
-    `, rBgpAsn, tunnelCidr, psk)
+`, rBgpAsn, tunnelCidr, psk)
 }
 
 func testAccAwsVpnConnectionConfigTransitGatewayID(rBgpAsn int) string {
@@ -511,7 +511,7 @@ resource "aws_vpn_connection" "foo" {
   tunnel2_inside_cidr = "%s"
   tunnel2_preshared_key = "%s"
 }
-    `, rBgpAsn, tunnelCidr, psk, tunnelCidr2, psk2)
+`, rBgpAsn, tunnelCidr, psk, tunnelCidr2, psk2)
 }
 
 // Test our VPN tunnel config XML parsing

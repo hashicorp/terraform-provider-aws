@@ -109,5 +109,5 @@ resource "aws_athena_named_query" "foo" {
   query = "SELECT * FROM ${aws_athena_database.hoge.name} limit 10;"
   description = "tf test"
 }
-		`, rName, rInt, rName, rName)
+`, rName, rInt, rName, rName)
 }
