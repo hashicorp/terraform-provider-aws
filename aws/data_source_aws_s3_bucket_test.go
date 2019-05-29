@@ -63,11 +63,11 @@ func TestAccDataSourceS3Bucket_website(t *testing.T) {
 func testAccAWSDataSourceS3BucketConfig_basic(randInt int) string {
 	return fmt.Sprintf(`
 resource "aws_s3_bucket" "bucket" {
-	bucket = "tf-test-bucket-%d"
+  bucket = "tf-test-bucket-%d"
 }
 
 data "aws_s3_bucket" "bucket" {
-	bucket = "${aws_s3_bucket.bucket.id}"
+  bucket = "${aws_s3_bucket.bucket.id}"
 }
 `, randInt)
 }
@@ -75,17 +75,17 @@ data "aws_s3_bucket" "bucket" {
 func testAccAWSDataSourceS3BucketWebsiteConfig(randInt int) string {
 	return fmt.Sprintf(`
 resource "aws_s3_bucket" "bucket" {
-	bucket = "tf-test-bucket-%d"
-	acl = "public-read"
+  bucket = "tf-test-bucket-%d"
+  acl    = "public-read"
 
-	website {
-		index_document = "index.html"
-		error_document = "error.html"
-	}
+  website {
+    index_document = "index.html"
+    error_document = "error.html"
+  }
 }
 
 data "aws_s3_bucket" "bucket" {
-	bucket = "${aws_s3_bucket.bucket.id}"
+  bucket = "${aws_s3_bucket.bucket.id}"
 }
 `, randInt)
 }

@@ -431,8 +431,9 @@ func testAccCheckAWSSSMAssociationDestroy(s *terraform.State) error {
 func testAccAWSSSMAssociationBasicConfigWithParameters(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_ssm_document" "foo_document" {
-  name = "test_document_association-%s"
+  name          = "test_document_association-%s"
   document_type = "Command"
+
   content = <<-DOC
   {
     "schemaVersion": "1.2",
@@ -461,11 +462,13 @@ resource "aws_ssm_document" "foo_document" {
 
 resource "aws_ssm_association" "foo" {
   name = "${aws_ssm_document.foo_document.name}"
+
   parameters = {
-  	Directory = "myWorkSpace"
+    Directory = "myWorkSpace"
   }
+
   targets {
-    key = "tag:Name"
+    key    = "tag:Name"
     values = ["acceptanceTest"]
   }
 }
@@ -475,8 +478,9 @@ resource "aws_ssm_association" "foo" {
 func testAccAWSSSMAssociationBasicConfigWithParametersUpdated(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_ssm_document" "foo_document" {
-  name = "test_document_association-%s"
+  name          = "test_document_association-%s"
   document_type = "Command"
+
   content = <<-DOC
   {
     "schemaVersion": "1.2",
@@ -505,11 +509,13 @@ resource "aws_ssm_document" "foo_document" {
 
 resource "aws_ssm_association" "foo" {
   name = "${aws_ssm_document.foo_document.name}"
+
   parameters = {
-  	Directory = "myWorkSpaceUpdated"
+    Directory = "myWorkSpaceUpdated"
   }
+
   targets {
-    key = "tag:Name"
+    key    = "tag:Name"
     values = ["acceptanceTest"]
   }
 }
@@ -551,13 +557,15 @@ resource "aws_ssm_association" "foo" {
 
 func testAccAWSSSMAssociationBasicConfig(rName string) string {
 	return fmt.Sprintf(`
-variable "name" { default = "%s" }
+variable "name" {
+  default = "%s"
+}
 
 data "aws_availability_zones" "available" {}
 
 data "aws_ami" "amzn" {
-  most_recent      = true
-  owners     = ["amazon"]
+  most_recent = true
+  owners      = ["amazon"]
 
   filter {
     name   = "name"
@@ -567,43 +575,47 @@ data "aws_ami" "amzn" {
 
 resource "aws_vpc" "main" {
   cidr_block = "10.0.0.0/16"
+
   tags = {
     Name = "${var.name}"
   }
 }
 
 resource "aws_subnet" "first" {
-  vpc_id = "${aws_vpc.main.id}"
-  cidr_block = "10.0.0.0/24"
+  vpc_id            = "${aws_vpc.main.id}"
+  cidr_block        = "10.0.0.0/24"
   availability_zone = "${data.aws_availability_zones.available.names[0]}"
 }
 
 resource "aws_security_group" "tf_test_foo" {
-  name = "${var.name}"
+  name        = "${var.name}"
   description = "foo"
-  vpc_id = "${aws_vpc.main.id}"
+  vpc_id      = "${aws_vpc.main.id}"
+
   ingress {
-    protocol = "icmp"
-    from_port = -1
-    to_port = -1
+    protocol    = "icmp"
+    from_port   = -1
+    to_port     = -1
     cidr_blocks = ["0.0.0.0/0"]
   }
 }
 
 resource "aws_instance" "foo" {
-  ami = "${data.aws_ami.amzn.image_id}"
-  availability_zone = "${data.aws_availability_zones.available.names[0]}"
-  instance_type = "t2.micro"
+  ami                    = "${data.aws_ami.amzn.image_id}"
+  availability_zone      = "${data.aws_availability_zones.available.names[0]}"
+  instance_type          = "t2.micro"
   vpc_security_group_ids = ["${aws_security_group.tf_test_foo.id}"]
-  subnet_id = "${aws_subnet.first.id}"
+  subnet_id              = "${aws_subnet.first.id}"
+
   tags = {
     Name = "${var.name}"
   }
 }
 
 resource "aws_ssm_document" "foo_document" {
-  name    = "${var.name}"
-	document_type = "Command"
+  name          = "${var.name}"
+  document_type = "Command"
+
   content = <<DOC
   {
     "schemaVersion": "1.2",
@@ -674,8 +686,9 @@ resource "aws_ssm_association" "foo" {
 func testAccAWSSSMAssociationBasicConfigWithScheduleExpression(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_ssm_document" "foo_document" {
-  name = "test_document_association-%s"
+  name          = "test_document_association-%s"
   document_type = "Command"
+
   content = <<DOC
   {
     "schemaVersion": "1.2",
@@ -698,10 +711,11 @@ DOC
 }
 
 resource "aws_ssm_association" "foo" {
-  name = "${aws_ssm_document.foo_document.name}"
+  name                = "${aws_ssm_document.foo_document.name}"
   schedule_expression = "cron(0 16 ? * TUE *)"
+
   targets {
-    key = "tag:Name"
+    key    = "tag:Name"
     values = ["acceptanceTest"]
   }
 }
@@ -711,8 +725,9 @@ resource "aws_ssm_association" "foo" {
 func testAccAWSSSMAssociationBasicConfigWithScheduleExpressionUpdated(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_ssm_document" "foo_document" {
-  name = "test_document_association-%s"
+  name          = "test_document_association-%s"
   document_type = "Command"
+
   content = <<DOC
   {
     "schemaVersion": "1.2",
@@ -735,10 +750,11 @@ DOC
 }
 
 resource "aws_ssm_association" "foo" {
-  name = "${aws_ssm_document.foo_document.name}"
+  name                = "${aws_ssm_document.foo_document.name}"
   schedule_expression = "cron(0 16 ? * WED *)"
+
   targets {
-    key = "tag:Name"
+    key    = "tag:Name"
     values = ["acceptanceTest"]
   }
 }
@@ -748,13 +764,14 @@ resource "aws_ssm_association" "foo" {
 func testAccAWSSSMAssociationBasicConfigWithOutPutLocation(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_s3_bucket" "output_location" {
-  bucket = "tf-acc-test-ssmoutput-%s"
+  bucket        = "tf-acc-test-ssmoutput-%s"
   force_destroy = true
 }
 
 resource "aws_ssm_document" "foo_document" {
-  name = "test_document_association-%s"
+  name          = "test_document_association-%s"
   document_type = "Command"
+
   content = <<DOC
   {
     "schemaVersion": "1.2",
@@ -778,13 +795,15 @@ DOC
 
 resource "aws_ssm_association" "foo" {
   name = "${aws_ssm_document.foo_document.name}"
+
   targets {
-    key = "tag:Name"
+    key    = "tag:Name"
     values = ["acceptanceTest"]
   }
+
   output_location {
     s3_bucket_name = "${aws_s3_bucket.output_location.id}"
-    s3_key_prefix = "SSMAssociation"
+    s3_key_prefix  = "SSMAssociation"
   }
 }
 `, rName, rName)
@@ -793,18 +812,19 @@ resource "aws_ssm_association" "foo" {
 func testAccAWSSSMAssociationBasicConfigWithOutPutLocationUpdateBucketName(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_s3_bucket" "output_location" {
-  bucket = "tf-acc-test-ssmoutput-%s"
+  bucket        = "tf-acc-test-ssmoutput-%s"
   force_destroy = true
 }
 
 resource "aws_s3_bucket" "output_location_updated" {
-  bucket = "tf-acc-test-ssmoutput-updated-%s"
+  bucket        = "tf-acc-test-ssmoutput-updated-%s"
   force_destroy = true
 }
 
 resource "aws_ssm_document" "foo_document" {
-  name = "test_document_association-%s"
+  name          = "test_document_association-%s"
   document_type = "Command"
+
   content = <<DOC
   {
     "schemaVersion": "1.2",
@@ -828,13 +848,15 @@ DOC
 
 resource "aws_ssm_association" "foo" {
   name = "${aws_ssm_document.foo_document.name}"
+
   targets {
-    key = "tag:Name"
+    key    = "tag:Name"
     values = ["acceptanceTest"]
   }
+
   output_location {
     s3_bucket_name = "${aws_s3_bucket.output_location_updated.id}"
-    s3_key_prefix = "SSMAssociation"
+    s3_key_prefix  = "SSMAssociation"
   }
 }
 `, rName, rName, rName)
@@ -843,18 +865,19 @@ resource "aws_ssm_association" "foo" {
 func testAccAWSSSMAssociationBasicConfigWithOutPutLocationUpdateKeyPrefix(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_s3_bucket" "output_location" {
-  bucket = "tf-acc-test-ssmoutput-%s"
+  bucket        = "tf-acc-test-ssmoutput-%s"
   force_destroy = true
 }
 
 resource "aws_s3_bucket" "output_location_updated" {
-  bucket = "tf-acc-test-ssmoutput-updated-%s"
+  bucket        = "tf-acc-test-ssmoutput-updated-%s"
   force_destroy = true
 }
 
 resource "aws_ssm_document" "foo_document" {
-  name = "test_document_association-%s"
+  name          = "test_document_association-%s"
   document_type = "Command"
+
   content = <<DOC
   {
     "schemaVersion": "1.2",
@@ -878,13 +901,15 @@ DOC
 
 resource "aws_ssm_association" "foo" {
   name = "${aws_ssm_document.foo_document.name}"
+
   targets {
-    key = "tag:Name"
+    key    = "tag:Name"
     values = ["acceptanceTest"]
   }
+
   output_location {
     s3_bucket_name = "${aws_s3_bucket.output_location_updated.id}"
-    s3_key_prefix = "UpdatedAssociation"
+    s3_key_prefix  = "UpdatedAssociation"
   }
 }
 `, rName, rName, rName)
@@ -893,8 +918,9 @@ resource "aws_ssm_association" "foo" {
 func testAccAWSSSMAssociationBasicConfigWithAssociationName(rName, assocName string) string {
 	return fmt.Sprintf(`
 resource "aws_ssm_document" "foo_document" {
-  name = "test_document_association-%s"
+  name          = "test_document_association-%s"
   document_type = "Command"
+
   content = <<DOC
   {
     "schemaVersion": "1.2",
@@ -916,10 +942,11 @@ DOC
 }
 
 resource "aws_ssm_association" "foo" {
-  name = "${aws_ssm_document.foo_document.name}"
+  name             = "${aws_ssm_document.foo_document.name}"
   association_name = "%s"
+
   targets {
-    key = "tag:Name"
+    key    = "tag:Name"
     values = ["acceptanceTest"]
   }
 }

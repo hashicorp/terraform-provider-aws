@@ -671,8 +671,8 @@ EOF
 func testAccAWSSNSTopicConfig_withEncryption(r string) string {
 	return fmt.Sprintf(`
 resource "aws_sns_topic" "test_topic" {
-	name = "terraform-test-topic-%s"
-	kms_master_key_id = "alias/aws/sns"
+  name              = "terraform-test-topic-%s"
+  kms_master_key_id = "alias/aws/sns"
 }
 `, r)
 }

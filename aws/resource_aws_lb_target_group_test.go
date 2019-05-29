@@ -1050,7 +1050,7 @@ resource "aws_lb_target_group" "test" {
   vpc_id   = "${aws_vpc.test.id}"
 
   deregistration_delay = 200
-  slow_start = 0
+  slow_start           = 0
 
   # HTTP Only
   stickiness {
@@ -1059,12 +1059,13 @@ resource "aws_lb_target_group" "test" {
   }
 
   health_check {
-    interval = 10
-    port     = 8081
-    protocol = "HTTP"
-    healthy_threshold = 3
+    interval            = 10
+    port                = 8081
+    protocol            = "HTTP"
+    healthy_threshold   = 3
     unhealthy_threshold = 3
   }
+
   tags = {
     Name = "TestAccAWSLBTargetGroup_application_LB_defaults"
   }
@@ -1113,28 +1114,28 @@ resource "aws_vpc" "test" {
 func testAccAWSLBTargetGroupConfig_basic(targetGroupName string) string {
 	return fmt.Sprintf(`
 resource "aws_lb_target_group" "test" {
-  name = "%s"
-  port = 443
+  name     = "%s"
+  port     = 443
   protocol = "HTTPS"
-  vpc_id = "${aws_vpc.test.id}"
+  vpc_id   = "${aws_vpc.test.id}"
 
   deregistration_delay = 200
-  slow_start = 0
+  slow_start           = 0
 
   stickiness {
-    type = "lb_cookie"
+    type            = "lb_cookie"
     cookie_duration = 10000
   }
 
   health_check {
-    path = "/health"
-    interval = 60
-    port = 8081
-    protocol = "HTTP"
-    timeout = 3
-    healthy_threshold = 3
+    path                = "/health"
+    interval            = 60
+    port                = 8081
+    protocol            = "HTTP"
+    timeout             = 3
+    healthy_threshold   = 3
     unhealthy_threshold = 3
-    matcher = "200-299"
+    matcher             = "200-299"
   }
 
   tags = {
@@ -1155,7 +1156,7 @@ resource "aws_vpc" "test" {
 func testAccAWSLBTargetGroupConfig_withoutHealthcheck(targetGroupName string) string {
 	return fmt.Sprintf(`
 resource "aws_lb_target_group" "test" {
-  name = "%s"
+  name        = "%s"
   target_type = "lambda"
 }
 `, targetGroupName)
@@ -1164,28 +1165,28 @@ resource "aws_lb_target_group" "test" {
 func testAccAWSLBTargetGroupConfigBackwardsCompatibility(targetGroupName string) string {
 	return fmt.Sprintf(`
 resource "aws_alb_target_group" "test" {
-  name = "%s"
-  port = 443
+  name     = "%s"
+  port     = 443
   protocol = "HTTPS"
-  vpc_id = "${aws_vpc.test.id}"
+  vpc_id   = "${aws_vpc.test.id}"
 
   deregistration_delay = 200
-  slow_start = 0
+  slow_start           = 0
 
   stickiness {
-    type = "lb_cookie"
+    type            = "lb_cookie"
     cookie_duration = 10000
   }
 
   health_check {
-    path = "/health"
-    interval = 60
-    port = 8081
-    protocol = "HTTP"
-    timeout = 3
-    healthy_threshold = 3
+    path                = "/health"
+    interval            = 60
+    port                = 8081
+    protocol            = "HTTP"
+    timeout             = 3
+    healthy_threshold   = 3
     unhealthy_threshold = 3
-    matcher = "200-299"
+    matcher             = "200-299"
   }
 
   tags = {
@@ -1206,11 +1207,11 @@ resource "aws_vpc" "test" {
 func testAccAWSLBTargetGroupConfig_enableHealthcheck(targetGroupName string) string {
 	return fmt.Sprintf(`
 resource "aws_lb_target_group" "test" {
-  name = "%s"
+  name        = "%s"
   target_type = "lambda"
 
   health_check {
-    path = "/health"
+    path     = "/health"
     interval = 60
   }
 }
@@ -1220,27 +1221,27 @@ resource "aws_lb_target_group" "test" {
 func testAccAWSLBTargetGroupConfig_updatedPort(targetGroupName string) string {
 	return fmt.Sprintf(`
 resource "aws_lb_target_group" "test" {
-  name = "%s"
-  port = 442
+  name     = "%s"
+  port     = 442
   protocol = "HTTPS"
-  vpc_id = "${aws_vpc.test.id}"
+  vpc_id   = "${aws_vpc.test.id}"
 
   deregistration_delay = 200
 
   stickiness {
-    type = "lb_cookie"
+    type            = "lb_cookie"
     cookie_duration = 10000
   }
 
   health_check {
-    path = "/health"
-    interval = 60
-    port = 8081
-    protocol = "HTTP"
-    timeout = 3
-    healthy_threshold = 3
+    path                = "/health"
+    interval            = 60
+    port                = 8081
+    protocol            = "HTTP"
+    timeout             = 3
+    healthy_threshold   = 3
     unhealthy_threshold = 3
-    matcher = "200-299"
+    matcher             = "200-299"
   }
 
   tags = {
@@ -1261,27 +1262,27 @@ resource "aws_vpc" "test" {
 func testAccAWSLBTargetGroupConfig_updatedProtocol(targetGroupName string) string {
 	return fmt.Sprintf(`
 resource "aws_lb_target_group" "test" {
-  name = "%s"
-  port = 443
+  name     = "%s"
+  port     = 443
   protocol = "HTTP"
-  vpc_id = "${aws_vpc.test2.id}"
+  vpc_id   = "${aws_vpc.test2.id}"
 
   deregistration_delay = 200
 
   stickiness {
-    type = "lb_cookie"
+    type            = "lb_cookie"
     cookie_duration = 10000
   }
 
   health_check {
-    path = "/health"
-    interval = 60
-    port = 8081
-    protocol = "HTTP"
-    timeout = 3
-    healthy_threshold = 3
+    path                = "/health"
+    interval            = 60
+    port                = 8081
+    protocol            = "HTTP"
+    timeout             = 3
+    healthy_threshold   = 3
     unhealthy_threshold = 3
-    matcher = "200-299"
+    matcher             = "200-299"
   }
 
   tags = {
@@ -1310,27 +1311,27 @@ resource "aws_vpc" "test" {
 func testAccAWSLBTargetGroupConfig_updatedVpc(targetGroupName string) string {
 	return fmt.Sprintf(`
 resource "aws_lb_target_group" "test" {
-  name = "%s"
-  port = 443
+  name     = "%s"
+  port     = 443
   protocol = "HTTPS"
-  vpc_id = "${aws_vpc.test.id}"
+  vpc_id   = "${aws_vpc.test.id}"
 
   deregistration_delay = 200
 
   stickiness {
-    type = "lb_cookie"
+    type            = "lb_cookie"
     cookie_duration = 10000
   }
 
   health_check {
-    path = "/health"
-    interval = 60
-    port = 8081
-    protocol = "HTTP"
-    timeout = 3
-    healthy_threshold = 3
+    path                = "/health"
+    interval            = 60
+    port                = 8081
+    protocol            = "HTTP"
+    timeout             = 3
+    healthy_threshold   = 3
     unhealthy_threshold = 3
-    matcher = "200-299"
+    matcher             = "200-299"
   }
 
   tags = {
@@ -1351,32 +1352,32 @@ resource "aws_vpc" "test" {
 func testAccAWSLBTargetGroupConfig_updateTags(targetGroupName string) string {
 	return fmt.Sprintf(`
 resource "aws_lb_target_group" "test" {
-  name = "%s"
-  port = 443
+  name     = "%s"
+  port     = 443
   protocol = "HTTPS"
-  vpc_id = "${aws_vpc.test.id}"
+  vpc_id   = "${aws_vpc.test.id}"
 
   deregistration_delay = 200
 
   stickiness {
-    type = "lb_cookie"
+    type            = "lb_cookie"
     cookie_duration = 10000
   }
 
   health_check {
-    path = "/health"
-    interval = 60
-    port = 8081
-    protocol = "HTTP"
-    timeout = 3
-    healthy_threshold = 3
+    path                = "/health"
+    interval            = 60
+    port                = 8081
+    protocol            = "HTTP"
+    timeout             = 3
+    healthy_threshold   = 3
     unhealthy_threshold = 3
-    matcher = "200-299"
+    matcher             = "200-299"
   }
 
   tags = {
     Environment = "Production"
-    Type = "ALB Target Group"
+    Type        = "ALB Target Group"
   }
 }
 
@@ -1393,27 +1394,27 @@ resource "aws_vpc" "test" {
 func testAccAWSLBTargetGroupConfig_updateHealthCheck(targetGroupName string) string {
 	return fmt.Sprintf(`
 resource "aws_lb_target_group" "test" {
-  name = "%s"
-  port = 443
+  name     = "%s"
+  port     = 443
   protocol = "HTTPS"
-  vpc_id = "${aws_vpc.test.id}"
+  vpc_id   = "${aws_vpc.test.id}"
 
   deregistration_delay = 200
 
   stickiness {
-    type = "lb_cookie"
+    type            = "lb_cookie"
     cookie_duration = 10000
   }
 
   health_check {
-    path = "/health2"
-    interval = 30
-    port = 8082
-    protocol = "HTTPS"
-    timeout = 4
-    healthy_threshold = 4
+    path                = "/health2"
+    interval            = 30
+    port                = 8082
+    protocol            = "HTTPS"
+    timeout             = 4
+    healthy_threshold   = 4
     unhealthy_threshold = 4
-    matcher = "200"
+    matcher             = "200"
   }
 }
 
@@ -1461,18 +1462,18 @@ resource "aws_lb_target_group" "test" {
 func testAccAWSLBTargetGroupConfig_typeTCP(targetGroupName string) string {
 	return fmt.Sprintf(`
 resource "aws_lb_target_group" "test" {
-  name = "%s"
-  port = 8082
+  name     = "%s"
+  port     = 8082
   protocol = "TCP"
-  vpc_id = "${aws_vpc.test.id}"
+  vpc_id   = "${aws_vpc.test.id}"
 
   deregistration_delay = 200
 
   health_check {
-    interval = 10
-    port = "traffic-port"
-    protocol = "TCP"
-    healthy_threshold = 3
+    interval            = 10
+    port                = "traffic-port"
+    protocol            = "TCP"
+    healthy_threshold   = 3
     unhealthy_threshold = 3
   }
 
@@ -1494,19 +1495,19 @@ resource "aws_vpc" "test" {
 func testAccAWSLBTargetGroupConfig_typeTCP_withProxyProtocol(targetGroupName string) string {
 	return fmt.Sprintf(`
 resource "aws_lb_target_group" "test" {
-  name = "%s"
-  port = 8082
+  name     = "%s"
+  port     = 8082
   protocol = "TCP"
-  vpc_id = "${aws_vpc.test.id}"
-	
-	proxy_protocol_v2 = "true"    
-	deregistration_delay = 200
+  vpc_id   = "${aws_vpc.test.id}"
+
+  proxy_protocol_v2    = "true"
+  deregistration_delay = 200
 
   health_check {
-    interval = 10
-    port = "traffic-port"
-    protocol = "TCP"
-    healthy_threshold = 3
+    interval            = 10
+    port                = "traffic-port"
+    protocol            = "TCP"
+    healthy_threshold   = 3
     unhealthy_threshold = 3
   }
 
@@ -1528,18 +1529,18 @@ resource "aws_vpc" "test" {
 func testAccAWSLBTargetGroupConfig_typeTCPInvalidThreshold(targetGroupName string) string {
 	return fmt.Sprintf(`
 resource "aws_lb_target_group" "test" {
-  name = "%s"
-  port = 8082
+  name     = "%s"
+  port     = 8082
   protocol = "TCP"
-  vpc_id = "${aws_vpc.test.id}"
+  vpc_id   = "${aws_vpc.test.id}"
 
   deregistration_delay = 200
 
   health_check {
-    interval = 10
-    port = "traffic-port"
-    protocol = "TCP"
-    healthy_threshold = 3
+    interval            = 10
+    port                = "traffic-port"
+    protocol            = "TCP"
+    healthy_threshold   = 3
     unhealthy_threshold = 4
   }
 
@@ -1561,18 +1562,18 @@ resource "aws_vpc" "test" {
 func testAccAWSLBTargetGroupConfig_typeTCPThresholdUpdated(targetGroupName string) string {
 	return fmt.Sprintf(`
 resource "aws_lb_target_group" "test" {
-  name = "%s"
-  port = 8082
+  name     = "%s"
+  port     = 8082
   protocol = "TCP"
-  vpc_id = "${aws_vpc.test.id}"
+  vpc_id   = "${aws_vpc.test.id}"
 
   deregistration_delay = 200
 
   health_check {
-    interval = 10
-    port = "traffic-port"
-    protocol = "TCP"
-    healthy_threshold = 5
+    interval            = 10
+    port                = "traffic-port"
+    protocol            = "TCP"
+    healthy_threshold   = 5
     unhealthy_threshold = 5
   }
 
@@ -1594,18 +1595,18 @@ resource "aws_vpc" "test" {
 func testAccAWSLBTargetGroupConfig_typeTCPIntervalUpdated(targetGroupName string) string {
 	return fmt.Sprintf(`
 resource "aws_lb_target_group" "test" {
-  name = "%s"
-  port = 8082
+  name     = "%s"
+  port     = 8082
   protocol = "TCP"
-  vpc_id = "${aws_vpc.test.id}"
+  vpc_id   = "${aws_vpc.test.id}"
 
   deregistration_delay = 200
 
   health_check {
-    interval = 30
-    port = "traffic-port"
-    protocol = "TCP"
-    healthy_threshold = 5
+    interval            = 30
+    port                = "traffic-port"
+    protocol            = "TCP"
+    healthy_threshold   = 5
     unhealthy_threshold = 5
   }
 
@@ -1650,6 +1651,7 @@ resource "aws_lb_target_group" "test" {
 
 resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"
+
   tags = {
     Name = "terraform-testacc-lb-target-group-type-tcp-http-health-check"
   }
@@ -1670,24 +1672,22 @@ func testAccAWSLBTargetGroupConfig_stickiness(targetGroupName string, addStickin
 
 	return fmt.Sprintf(`
 resource "aws_lb_target_group" "test" {
-  name = "%s"
-  port = 443
+  name     = "%s"
+  port     = 443
   protocol = "HTTPS"
-  vpc_id = "${aws_vpc.test.id}"
+  vpc_id   = "${aws_vpc.test.id}"
 
   deregistration_delay = 200
 
-  %s
-
-  health_check {
-    path = "/health2"
-    interval = 30
-    port = 8082
-    protocol = "HTTPS"
-    timeout = 4
-    healthy_threshold = 4
+  %s#_#" health_check {
+    path                = "/health2"
+    interval            = 30
+    port                = 8082
+    protocol            = "HTTPS"
+    timeout             = 4
+    healthy_threshold   = 4
     unhealthy_threshold = 4
-    matcher = "200"
+    matcher             = "200"
   }
 }
 

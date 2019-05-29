@@ -651,11 +651,12 @@ resource "aws_gamelift_fleet" "test" {
 func testAccAWSGameliftFleetBasicTemplate(buildName, bucketName, key, roleArn string) string {
 	return fmt.Sprintf(`
 resource "aws_gamelift_build" "test" {
-  name = "%s"
+  name             = "%s"
   operating_system = "WINDOWS_2012"
+
   storage_location {
-    bucket = "%s"
-    key = "%s"
+    bucket   = "%s"
+    key      = "%s"
     role_arn = "%s"
   }
 }

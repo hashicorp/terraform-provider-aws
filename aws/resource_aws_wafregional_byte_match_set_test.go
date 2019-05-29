@@ -367,10 +367,12 @@ func testAccAWSWafRegionalByteMatchSetConfig(name string) string {
 	return fmt.Sprintf(`
 resource "aws_wafregional_byte_match_set" "byte_set" {
   name = "%s"
+
   byte_match_tuples {
-    text_transformation = "NONE"
-    target_string = "badrefer1"
+    text_transformation   = "NONE"
+    target_string         = "badrefer1"
     positional_constraint = "CONTAINS"
+
     field_to_match {
       type = "HEADER"
       data = "referer"
@@ -378,9 +380,10 @@ resource "aws_wafregional_byte_match_set" "byte_set" {
   }
 
   byte_match_tuples {
-    text_transformation = "NONE"
-    target_string = "badrefer2"
+    text_transformation   = "NONE"
+    target_string         = "badrefer2"
     positional_constraint = "CONTAINS"
+
     field_to_match {
       type = "HEADER"
       data = "referer"
@@ -394,10 +397,12 @@ func testAccAWSWafRegionalByteMatchSetConfigChangeName(name string) string {
 	return fmt.Sprintf(`
 resource "aws_wafregional_byte_match_set" "byte_set" {
   name = "%s"
+
   byte_match_tuples {
-    text_transformation = "NONE"
-    target_string = "badrefer1"
+    text_transformation   = "NONE"
+    target_string         = "badrefer1"
     positional_constraint = "CONTAINS"
+
     field_to_match {
       type = "HEADER"
       data = "referer"
@@ -405,9 +410,10 @@ resource "aws_wafregional_byte_match_set" "byte_set" {
   }
 
   byte_match_tuples {
-    text_transformation = "NONE"
-    target_string = "badrefer2"
+    text_transformation   = "NONE"
+    target_string         = "badrefer2"
     positional_constraint = "CONTAINS"
+
     field_to_match {
       type = "HEADER"
       data = "referer"
@@ -420,7 +426,7 @@ resource "aws_wafregional_byte_match_set" "byte_set" {
 func testAccAWSWafRegionalByteMatchSetConfig_noDescriptors(name string) string {
 	return fmt.Sprintf(`
 resource "aws_wafregional_byte_match_set" "byte_match_set" {
-	name = "%s"
+  name = "%s"
 }
 `, name)
 }
@@ -429,19 +435,22 @@ func testAccAWSWafRegionalByteMatchSetConfigChangeByteMatchTuples(name string) s
 	return fmt.Sprintf(`
 resource "aws_wafregional_byte_match_set" "byte_set" {
   name = "%s"
+
   byte_match_tuples {
-    text_transformation = "NONE"
-    target_string = "GET"
+    text_transformation   = "NONE"
+    target_string         = "GET"
     positional_constraint = "EXACTLY"
+
     field_to_match {
       type = "METHOD"
     }
   }
 
   byte_match_tuples {
-    text_transformation = "LOWERCASE"
-    target_string = "badrefer2+"
+    text_transformation   = "LOWERCASE"
+    target_string         = "badrefer2+"
     positional_constraint = "ENDS_WITH"
+
     field_to_match {
       type = "URI"
     }

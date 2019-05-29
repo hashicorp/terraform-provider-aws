@@ -172,7 +172,7 @@ resource "aws_media_package_channel" "test" {
 func testAccMediaPackageChannelConfigDescription(rName, description string) string {
 	return fmt.Sprintf(`
 resource "aws_media_package_channel" "test" {
-  channel_id = %q
+  channel_id  = %q
   description = %q
 }
 `, rName, description)

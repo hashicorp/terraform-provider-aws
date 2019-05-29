@@ -222,13 +222,13 @@ resource "aws_pinpoint_app" "test_app" {}
 resource "aws_pinpoint_apns_voip_channel" "test_channel" {
   application_id = "${aws_pinpoint_app.test_app.application_id}"
   enabled        = false
-  
+
   default_authentication_method = "TOKEN"
 
-  bundle_id      = %s
-  team_id        = %s
-  token_key      = %s
-  token_key_id   = %s
+  bundle_id    = %s
+  team_id      = %s
+  token_key    = %s
+  token_key_id = %s
 }
 `, conf.BundleId, conf.TeamId, conf.TokenKey, conf.TokenKeyId)
 }

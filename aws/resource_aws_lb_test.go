@@ -1009,7 +1009,7 @@ resource "aws_lb" "lb_test" {
 
   ip_address_type = "dualstack"
 
-  idle_timeout = 30
+  idle_timeout               = 30
   enable_deletion_protection = false
 
   tags = {
@@ -1018,38 +1018,38 @@ resource "aws_lb" "lb_test" {
 }
 
 resource "aws_lb_listener" "test" {
-   load_balancer_arn = "${aws_lb.lb_test.id}"
-   protocol = "HTTP"
-   port = "80"
+  load_balancer_arn = "${aws_lb.lb_test.id}"
+  protocol          = "HTTP"
+  port              = "80"
 
-   default_action {
-     target_group_arn = "${aws_lb_target_group.test.id}"
-     type = "forward"
-   }
+  default_action {
+    target_group_arn = "${aws_lb_target_group.test.id}"
+    type             = "forward"
+  }
 }
 
 resource "aws_lb_target_group" "test" {
-  name = "%s"
-  port = 80
+  name     = "%s"
+  port     = 80
   protocol = "HTTP"
-  vpc_id = "${aws_vpc.alb_test.id}"
+  vpc_id   = "${aws_vpc.alb_test.id}"
 
   deregistration_delay = 200
 
   stickiness {
-    type = "lb_cookie"
+    type            = "lb_cookie"
     cookie_duration = 10000
   }
 
   health_check {
-    path = "/health2"
-    interval = 30
-    port = 8082
-    protocol = "HTTPS"
-    timeout = 4
-    healthy_threshold = 4
+    path                = "/health2"
+    interval            = 30
+    port                = 8082
+    protocol            = "HTTPS"
+    timeout             = 4
+    healthy_threshold   = 4
     unhealthy_threshold = 4
-    matcher = "200"
+    matcher             = "200"
   }
 }
 
@@ -1058,7 +1058,7 @@ resource "aws_egress_only_internet_gateway" "igw" {
 }
 
 resource "aws_vpc" "alb_test" {
-  cidr_block = "10.0.0.0/16"
+  cidr_block                       = "10.0.0.0/16"
   assign_generated_ipv6_cidr_block = true
 
   tags = {
@@ -1075,7 +1075,7 @@ resource "aws_subnet" "alb_test_1" {
   cidr_block              = "10.0.1.0/24"
   map_public_ip_on_launch = true
   availability_zone       = "us-west-2a"
-  ipv6_cidr_block = "${cidrsubnet(aws_vpc.alb_test.ipv6_cidr_block, 8, 1)}"
+  ipv6_cidr_block         = "${cidrsubnet(aws_vpc.alb_test.ipv6_cidr_block, 8, 1)}"
 
   tags = {
     Name = "tf-acc-lb-with-ip-address-type-updated-1"
@@ -1087,7 +1087,7 @@ resource "aws_subnet" "alb_test_2" {
   cidr_block              = "10.0.2.0/24"
   map_public_ip_on_launch = true
   availability_zone       = "us-west-2b"
-  ipv6_cidr_block = "${cidrsubnet(aws_vpc.alb_test.ipv6_cidr_block, 8, 2)}"
+  ipv6_cidr_block         = "${cidrsubnet(aws_vpc.alb_test.ipv6_cidr_block, 8, 2)}"
 
   tags = {
     Name = "tf-acc-lb-with-ip-address-type-updated-2"
@@ -1122,7 +1122,7 @@ resource "aws_lb" "lb_test" {
 
   ip_address_type = "ipv4"
 
-  idle_timeout = 30
+  idle_timeout               = 30
   enable_deletion_protection = false
 
   tags = {
@@ -1131,38 +1131,38 @@ resource "aws_lb" "lb_test" {
 }
 
 resource "aws_lb_listener" "test" {
-   load_balancer_arn = "${aws_lb.lb_test.id}"
-   protocol = "HTTP"
-   port = "80"
+  load_balancer_arn = "${aws_lb.lb_test.id}"
+  protocol          = "HTTP"
+  port              = "80"
 
-   default_action {
-     target_group_arn = "${aws_lb_target_group.test.id}"
-     type = "forward"
-   }
+  default_action {
+    target_group_arn = "${aws_lb_target_group.test.id}"
+    type             = "forward"
+  }
 }
 
 resource "aws_lb_target_group" "test" {
-  name = "%s"
-  port = 80
+  name     = "%s"
+  port     = 80
   protocol = "HTTP"
-  vpc_id = "${aws_vpc.alb_test.id}"
+  vpc_id   = "${aws_vpc.alb_test.id}"
 
   deregistration_delay = 200
 
   stickiness {
-    type = "lb_cookie"
+    type            = "lb_cookie"
     cookie_duration = 10000
   }
 
   health_check {
-    path = "/health2"
-    interval = 30
-    port = 8082
-    protocol = "HTTPS"
-    timeout = 4
-    healthy_threshold = 4
+    path                = "/health2"
+    interval            = 30
+    port                = 8082
+    protocol            = "HTTPS"
+    timeout             = 4
+    healthy_threshold   = 4
     unhealthy_threshold = 4
-    matcher = "200"
+    matcher             = "200"
   }
 }
 
@@ -1171,7 +1171,7 @@ resource "aws_egress_only_internet_gateway" "igw" {
 }
 
 resource "aws_vpc" "alb_test" {
-  cidr_block = "10.0.0.0/16"
+  cidr_block                       = "10.0.0.0/16"
   assign_generated_ipv6_cidr_block = true
 
   tags = {
@@ -1188,7 +1188,7 @@ resource "aws_subnet" "alb_test_1" {
   cidr_block              = "10.0.1.0/24"
   map_public_ip_on_launch = true
   availability_zone       = "us-west-2a"
-  ipv6_cidr_block = "${cidrsubnet(aws_vpc.alb_test.ipv6_cidr_block, 8, 1)}"
+  ipv6_cidr_block         = "${cidrsubnet(aws_vpc.alb_test.ipv6_cidr_block, 8, 1)}"
 
   tags = {
     Name = "tf-acc-lb-with-ip-address-type-1"
@@ -1200,7 +1200,7 @@ resource "aws_subnet" "alb_test_2" {
   cidr_block              = "10.0.2.0/24"
   map_public_ip_on_launch = true
   availability_zone       = "us-west-2b"
-  ipv6_cidr_block = "${cidrsubnet(aws_vpc.alb_test.ipv6_cidr_block, 8, 2)}"
+  ipv6_cidr_block         = "${cidrsubnet(aws_vpc.alb_test.ipv6_cidr_block, 8, 2)}"
 
   tags = {
     Name = "tf-acc-lb-with-ip-address-type-2"
@@ -1234,7 +1234,7 @@ resource "aws_lb" "lb_test" {
   security_groups = ["${aws_security_group.alb_test.id}"]
   subnets         = ["${aws_subnet.alb_test.*.id[0]}", "${aws_subnet.alb_test.*.id[1]}"]
 
-  idle_timeout = 30
+  idle_timeout               = 30
   enable_deletion_protection = false
 
   tags = {
@@ -1302,8 +1302,8 @@ resource "aws_lb" "lb_test" {
   internal        = true
   security_groups = ["${aws_security_group.alb_test.id}"]
   subnets         = ["${aws_subnet.alb_test.*.id[0]}", "${aws_subnet.alb_test.*.id[1]}"]
-  
-  idle_timeout = 30
+
+  idle_timeout               = 30
   enable_deletion_protection = false
 
   enable_http2 = %t
@@ -1373,8 +1373,8 @@ resource "aws_lb" "lb_test" {
   internal        = true
   security_groups = ["${aws_security_group.alb_test.id}"]
   subnets         = ["${aws_subnet.alb_test.*.id[0]}", "${aws_subnet.alb_test.*.id[1]}"]
-  
-  idle_timeout = 30
+
+  idle_timeout               = 30
   enable_deletion_protection = %t
 
   tags = {
@@ -1500,15 +1500,15 @@ resource "aws_subnet" "alb_test_3" {
 func testAccAWSLBConfig_networkLoadbalancer(lbName string, cz bool) string {
 	return fmt.Sprintf(`
 resource "aws_lb" "lb_test" {
-  name            = "%s"
-  internal        = true
+  name               = "%s"
+  internal           = true
   load_balancer_type = "network"
 
-  enable_deletion_protection      = false
+  enable_deletion_protection       = false
   enable_cross_zone_load_balancing = %t
 
   subnet_mapping {
-  	subnet_id = "${aws_subnet.alb_test.id}"
+    subnet_id = "${aws_subnet.alb_test.id}"
   }
 
   tags = {
@@ -1534,7 +1534,6 @@ resource "aws_subnet" "alb_test" {
     Name = "tf-acc-network-load-balancer"
   }
 }
-
 `, lbName, cz)
 }
 
@@ -1611,7 +1610,7 @@ resource "aws_alb" "lb_test" {
   security_groups = ["${aws_security_group.alb_test.id}"]
   subnets         = ["${aws_subnet.alb_test.*.id[0]}", "${aws_subnet.alb_test.*.id[1]}"]
 
-  idle_timeout = 30
+  idle_timeout               = 30
   enable_deletion_protection = false
 
   tags = {
@@ -1680,7 +1679,7 @@ resource "aws_lb" "lb_test" {
   security_groups = ["${aws_security_group.alb_test.id}"]
   subnets         = ["${aws_subnet.alb_test.*.id[0]}", "${aws_subnet.alb_test.*.id[1]}"]
 
-  idle_timeout = 30
+  idle_timeout               = 30
   enable_deletion_protection = false
 
   tags = {
@@ -2204,11 +2203,11 @@ resource "aws_lb" "test" {
 func testAccAWSLBConfig_nosg(lbName string) string {
 	return fmt.Sprintf(`
 resource "aws_lb" "lb_test" {
-  name            = "%s"
-  internal        = true
-  subnets         = ["${aws_subnet.alb_test.*.id[0]}", "${aws_subnet.alb_test.*.id[1]}"]
+  name     = "%s"
+  internal = true
+  subnets  = ["${aws_subnet.alb_test.*.id[0]}", "${aws_subnet.alb_test.*.id[1]}"]
 
-  idle_timeout = 30
+  idle_timeout               = 30
   enable_deletion_protection = false
 
   tags = {
@@ -2253,7 +2252,7 @@ resource "aws_lb" "lb_test" {
   security_groups = ["${aws_security_group.alb_test.id}", "${aws_security_group.alb_test_2.id}"]
   subnets         = ["${aws_subnet.alb_test.*.id[0]}", "${aws_subnet.alb_test.*.id[1]}"]
 
-  idle_timeout = 30
+  idle_timeout               = 30
   enable_deletion_protection = false
 
   tags = {

@@ -1551,11 +1551,11 @@ resource "aws_dynamodb_table" "basic-dynamodb-table" {
 func testAccAWSDynamoDbConfigAddSecondaryGSI(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_dynamodb_table" "basic-dynamodb-table" {
-  name = "%s"
-  read_capacity = 2
+  name           = "%s"
+  read_capacity  = 2
   write_capacity = 2
-  hash_key = "TestTableHashKey"
-  range_key = "TestTableRangeKey"
+  hash_key       = "TestTableHashKey"
+  range_key      = "TestTableRangeKey"
 
   attribute {
     name = "TestTableHashKey"
@@ -1578,18 +1578,18 @@ resource "aws_dynamodb_table" "basic-dynamodb-table" {
   }
 
   local_secondary_index {
-    name = "TestTableLSI"
-    range_key = "TestLSIRangeKey"
+    name            = "TestTableLSI"
+    range_key       = "TestLSIRangeKey"
     projection_type = "ALL"
   }
 
   global_secondary_index {
-    name = "ReplacementTestTableGSI"
-    hash_key = "TestTableHashKey"
-    range_key = "ReplacementGSIRangeKey"
-    write_capacity = 5
-    read_capacity = 5
-    projection_type = "INCLUDE"
+    name               = "ReplacementTestTableGSI"
+    hash_key           = "TestTableHashKey"
+    range_key          = "ReplacementGSIRangeKey"
+    write_capacity     = 5
+    read_capacity      = 5
+    projection_type    = "INCLUDE"
     non_key_attributes = ["TestNonKeyAttribute"]
   }
 }
@@ -1599,17 +1599,17 @@ resource "aws_dynamodb_table" "basic-dynamodb-table" {
 func testAccAWSDynamoDbConfigStreamSpecification(tableName string, enabled bool, viewType string) string {
 	return fmt.Sprintf(`
 resource "aws_dynamodb_table" "basic-dynamodb-table" {
-  name = "%s"
-  read_capacity = 1
+  name           = "%s"
+  read_capacity  = 1
   write_capacity = 2
-  hash_key = "TestTableHashKey"
+  hash_key       = "TestTableHashKey"
 
   attribute {
     name = "TestTableHashKey"
     type = "S"
   }
 
-  stream_enabled = %t
+  stream_enabled   = %t
   stream_view_type = "%s"
 }
 `, tableName, enabled, viewType)

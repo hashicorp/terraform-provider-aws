@@ -298,8 +298,10 @@ func testAccAWSWafRegionalXssMatchSetConfig(name string) string {
 	return fmt.Sprintf(`
 resource "aws_wafregional_xss_match_set" "xss_match_set" {
   name = "%s"
+
   xss_match_tuple {
     text_transformation = "NONE"
+
     field_to_match {
       type = "URI"
     }
@@ -307,6 +309,7 @@ resource "aws_wafregional_xss_match_set" "xss_match_set" {
 
   xss_match_tuple {
     text_transformation = "NONE"
+
     field_to_match {
       type = "QUERY_STRING"
     }
@@ -319,8 +322,10 @@ func testAccAWSWafRegionalXssMatchSetConfigChangeName(name string) string {
 	return fmt.Sprintf(`
 resource "aws_wafregional_xss_match_set" "xss_match_set" {
   name = "%s"
+
   xss_match_tuple {
     text_transformation = "NONE"
+
     field_to_match {
       type = "URI"
     }
@@ -328,6 +333,7 @@ resource "aws_wafregional_xss_match_set" "xss_match_set" {
 
   xss_match_tuple {
     text_transformation = "NONE"
+
     field_to_match {
       type = "QUERY_STRING"
     }
@@ -340,14 +346,18 @@ func testAccAWSWafRegionalXssMatchSetConfig_changeTuples(name string) string {
 	return fmt.Sprintf(`
 resource "aws_wafregional_xss_match_set" "xss_match_set" {
   name = "%s"
+
   xss_match_tuple {
     text_transformation = "CMD_LINE"
+
     field_to_match {
       type = "BODY"
     }
   }
+
   xss_match_tuple {
     text_transformation = "HTML_ENTITY_DECODE"
+
     field_to_match {
       type = "METHOD"
       data = "GET"

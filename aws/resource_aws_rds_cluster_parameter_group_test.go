@@ -488,8 +488,8 @@ resource "aws_rds_cluster_parameter_group" "bar" {
 func testAccAWSDBClusterParameterGroupOnlyConfig(name string) string {
 	return fmt.Sprintf(`
 resource "aws_rds_cluster_parameter_group" "bar" {
-  name        = "%s"
-  family      = "aurora5.6"
+  name   = "%s"
+  family = "aurora5.6"
 }
 `, name)
 }

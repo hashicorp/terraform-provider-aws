@@ -543,17 +543,19 @@ func testAccCheckDocDBClusterSnapshot(rInt int) resource.TestCheckFunc {
 func testAccDocDBClusterConfig(n int) string {
 	return fmt.Sprintf(`
 resource "aws_docdb_cluster" "default" {
-  cluster_identifier = "tf-docdb-cluster-%d"
-  availability_zones = ["us-west-2a","us-west-2b","us-west-2c"]
-  master_username = "foo"
-  master_password = "mustbeeightcharaters"
+  cluster_identifier              = "tf-docdb-cluster-%d"
+  availability_zones              = ["us-west-2a", "us-west-2b", "us-west-2c"]
+  master_username                 = "foo"
+  master_password                 = "mustbeeightcharaters"
   db_cluster_parameter_group_name = "default.docdb3.6"
-  skip_final_snapshot = true
+  skip_final_snapshot             = true
+
   tags = {
     Environment = "production"
   }
+
   enabled_cloudwatch_logs_exports = [
-	"audit",
+    "audit",
   ]
 }
 `, n)
@@ -583,12 +585,13 @@ resource "aws_docdb_cluster" "test" {
 func testAccDocDBClusterConfigWithFinalSnapshot(n int) string {
 	return fmt.Sprintf(`
 resource "aws_docdb_cluster" "default" {
-  cluster_identifier = "tf-docdb-cluster-%d"
-  availability_zones = ["us-west-2a","us-west-2b","us-west-2c"]
-  master_username = "foo"
-  master_password = "mustbeeightcharaters"
+  cluster_identifier              = "tf-docdb-cluster-%d"
+  availability_zones              = ["us-west-2a", "us-west-2b", "us-west-2c"]
+  master_username                 = "foo"
+  master_password                 = "mustbeeightcharaters"
   db_cluster_parameter_group_name = "default.docdb3.6"
-  final_snapshot_identifier = "tf-acctest-docdbcluster-snapshot-%d"
+  final_snapshot_identifier       = "tf-acctest-docdbcluster-snapshot-%d"
+
   tags = {
     Environment = "production"
   }
@@ -599,8 +602,8 @@ resource "aws_docdb_cluster" "default" {
 func testAccDocDBClusterConfigWithoutUserNameAndPassword(n int) string {
 	return fmt.Sprintf(`
 resource "aws_docdb_cluster" "default" {
-  cluster_identifier = "tf-docdb-cluster-%d"
-  availability_zones = ["us-west-2a","us-west-2b","us-west-2c"]
+  cluster_identifier  = "tf-docdb-cluster-%d"
+  availability_zones  = ["us-west-2a", "us-west-2b", "us-west-2c"]
   skip_final_snapshot = true
 }
 `, n)
@@ -609,15 +612,16 @@ resource "aws_docdb_cluster" "default" {
 func testAccDocDBClusterConfigUpdatedTags(n int) string {
 	return fmt.Sprintf(`
 resource "aws_docdb_cluster" "default" {
-  cluster_identifier = "tf-docdb-cluster-%d"
-  availability_zones = ["us-west-2a","us-west-2b","us-west-2c"]
-  master_username = "foo"
-  master_password = "mustbeeightcharaters"
+  cluster_identifier              = "tf-docdb-cluster-%d"
+  availability_zones              = ["us-west-2a", "us-west-2b", "us-west-2c"]
+  master_username                 = "foo"
+  master_password                 = "mustbeeightcharaters"
   db_cluster_parameter_group_name = "default.docdb3.6"
-  skip_final_snapshot = true
+  skip_final_snapshot             = true
+
   tags = {
     Environment = "production"
-    AnotherTag = "test"
+    AnotherTag  = "test"
   }
 }
 `, n)
@@ -626,12 +630,13 @@ resource "aws_docdb_cluster" "default" {
 func testAccDocDBClusterNoCloudwatchLogsConfig(n int) string {
 	return fmt.Sprintf(`
 resource "aws_docdb_cluster" "default" {
-  cluster_identifier = "tf-docdb-cluster-%d"
-  availability_zones = ["us-west-2a","us-west-2b","us-west-2c"]
-  master_username = "foo"
-  master_password = "mustbeeightcharaters"
+  cluster_identifier              = "tf-docdb-cluster-%d"
+  availability_zones              = ["us-west-2a", "us-west-2b", "us-west-2c"]
+  master_username                 = "foo"
+  master_password                 = "mustbeeightcharaters"
   db_cluster_parameter_group_name = "default.docdb3.6"
-  skip_final_snapshot = true
+  skip_final_snapshot             = true
+
   tags = {
     Environment = "production"
   }
@@ -691,14 +696,14 @@ resource "aws_docdb_cluster" "default" {
 func testAccDocDBClusterConfig_backups(n int) string {
 	return fmt.Sprintf(`
 resource "aws_docdb_cluster" "default" {
-  cluster_identifier = "tf-docdb-cluster-%d"
-  availability_zones = ["us-west-2a","us-west-2b","us-west-2c"]
-  master_username = "foo"
-  master_password = "mustbeeightcharaters"
-  backup_retention_period = 5
-  preferred_backup_window = "07:00-09:00"
+  cluster_identifier           = "tf-docdb-cluster-%d"
+  availability_zones           = ["us-west-2a", "us-west-2b", "us-west-2c"]
+  master_username              = "foo"
+  master_password              = "mustbeeightcharaters"
+  backup_retention_period      = 5
+  preferred_backup_window      = "07:00-09:00"
   preferred_maintenance_window = "tue:04:00-tue:04:30"
-  skip_final_snapshot = true
+  skip_final_snapshot          = true
 }
 `, n)
 }
@@ -706,15 +711,15 @@ resource "aws_docdb_cluster" "default" {
 func testAccDocDBClusterConfig_backupsUpdate(n int) string {
 	return fmt.Sprintf(`
 resource "aws_docdb_cluster" "default" {
-  cluster_identifier = "tf-docdb-cluster-%d"
-  availability_zones = ["us-west-2a","us-west-2b","us-west-2c"]
-  master_username = "foo"
-  master_password = "mustbeeightcharaters"
-  backup_retention_period = 10
-  preferred_backup_window = "03:00-09:00"
+  cluster_identifier           = "tf-docdb-cluster-%d"
+  availability_zones           = ["us-west-2a", "us-west-2b", "us-west-2c"]
+  master_username              = "foo"
+  master_password              = "mustbeeightcharaters"
+  backup_retention_period      = 10
+  preferred_backup_window      = "03:00-09:00"
   preferred_maintenance_window = "wed:01:00-wed:01:30"
-  apply_immediately = true
-  skip_final_snapshot = true
+  apply_immediately            = true
+  skip_final_snapshot          = true
 }
 `, n)
 }

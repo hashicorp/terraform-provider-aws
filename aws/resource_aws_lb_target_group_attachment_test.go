@@ -193,40 +193,43 @@ func testAccAWSLBTargetGroupAttachmentConfigWithoutPort(targetGroupName string) 
 	return fmt.Sprintf(`
 resource "aws_lb_target_group_attachment" "test" {
   target_group_arn = "${aws_lb_target_group.test.arn}"
-  target_id = "${aws_instance.test.id}"
+  target_id        = "${aws_instance.test.id}"
 }
 
 resource "aws_instance" "test" {
-  ami = "ami-f701cb97"
+  ami           = "ami-f701cb97"
   instance_type = "t2.micro"
-  subnet_id = "${aws_subnet.subnet.id}"
+  subnet_id     = "${aws_subnet.subnet.id}"
 }
 
 resource "aws_lb_target_group" "test" {
-  name = "%s"
-  port = 443
-  protocol = "HTTPS"
-  vpc_id = "${aws_vpc.test.id}"
+  name                 = "%s"
+  port                 = 443
+  protocol             = "HTTPS"
+  vpc_id               = "${aws_vpc.test.id}"
   deregistration_delay = 200
+
   stickiness {
-    type = "lb_cookie"
+    type            = "lb_cookie"
     cookie_duration = 10000
   }
+
   health_check {
-    path = "/health"
-    interval = 60
-    port = 8081
-    protocol = "HTTP"
-    timeout = 3
-    healthy_threshold = 3
+    path                = "/health"
+    interval            = 60
+    port                = 8081
+    protocol            = "HTTP"
+    timeout             = 3
+    healthy_threshold   = 3
     unhealthy_threshold = 3
-    matcher = "200-299"
+    matcher             = "200-299"
   }
 }
 
 resource "aws_subnet" "subnet" {
   cidr_block = "10.0.1.0/24"
-  vpc_id = "${aws_vpc.test.id}"
+  vpc_id     = "${aws_vpc.test.id}"
+
   tags = {
     Name = "tf-acc-lb-target-group-attachment-without-port"
   }
@@ -234,9 +237,10 @@ resource "aws_subnet" "subnet" {
 
 resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"
-	tags = {
-		Name = "terraform-testacc-lb-target-group-attachment-without-port"
-	}
+
+  tags = {
+    Name = "terraform-testacc-lb-target-group-attachment-without-port"
+  }
 }
 `, targetGroupName)
 }
@@ -245,41 +249,44 @@ func testAccAWSLBTargetGroupAttachmentConfig_basic(targetGroupName string) strin
 	return fmt.Sprintf(`
 resource "aws_lb_target_group_attachment" "test" {
   target_group_arn = "${aws_lb_target_group.test.arn}"
-  target_id = "${aws_instance.test.id}"
-  port = 80
+  target_id        = "${aws_instance.test.id}"
+  port             = 80
 }
 
 resource "aws_instance" "test" {
-  ami = "ami-f701cb97"
+  ami           = "ami-f701cb97"
   instance_type = "t2.micro"
-  subnet_id = "${aws_subnet.subnet.id}"
+  subnet_id     = "${aws_subnet.subnet.id}"
 }
 
 resource "aws_lb_target_group" "test" {
-  name = "%s"
-  port = 443
-  protocol = "HTTPS"
-  vpc_id = "${aws_vpc.test.id}"
+  name                 = "%s"
+  port                 = 443
+  protocol             = "HTTPS"
+  vpc_id               = "${aws_vpc.test.id}"
   deregistration_delay = 200
+
   stickiness {
-    type = "lb_cookie"
+    type            = "lb_cookie"
     cookie_duration = 10000
   }
+
   health_check {
-    path = "/health"
-    interval = 60
-    port = 8081
-    protocol = "HTTP"
-    timeout = 3
-    healthy_threshold = 3
+    path                = "/health"
+    interval            = 60
+    port                = 8081
+    protocol            = "HTTP"
+    timeout             = 3
+    healthy_threshold   = 3
     unhealthy_threshold = 3
-    matcher = "200-299"
+    matcher             = "200-299"
   }
 }
 
 resource "aws_subnet" "subnet" {
   cidr_block = "10.0.1.0/24"
-  vpc_id = "${aws_vpc.test.id}"
+  vpc_id     = "${aws_vpc.test.id}"
+
   tags = {
     Name = "tf-acc-lb-target-group-attachment-basic"
   }
@@ -287,9 +294,10 @@ resource "aws_subnet" "subnet" {
 
 resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"
-	tags = {
-		Name = "terraform-testacc-lb-target-group-attachment-basic"
-	}
+
+  tags = {
+    Name = "terraform-testacc-lb-target-group-attachment-basic"
+  }
 }
 `, targetGroupName)
 }
@@ -298,41 +306,44 @@ func testAccAWSLBTargetGroupAttachmentConfigBackwardsCompatibility(targetGroupNa
 	return fmt.Sprintf(`
 resource "aws_alb_target_group_attachment" "test" {
   target_group_arn = "${aws_alb_target_group.test.arn}"
-  target_id = "${aws_instance.test.id}"
-  port = 80
+  target_id        = "${aws_instance.test.id}"
+  port             = 80
 }
 
 resource "aws_instance" "test" {
-  ami = "ami-f701cb97"
+  ami           = "ami-f701cb97"
   instance_type = "t2.micro"
-  subnet_id = "${aws_subnet.subnet.id}"
+  subnet_id     = "${aws_subnet.subnet.id}"
 }
 
 resource "aws_alb_target_group" "test" {
-  name = "%s"
-  port = 443
-  protocol = "HTTPS"
-  vpc_id = "${aws_vpc.test.id}"
+  name                 = "%s"
+  port                 = 443
+  protocol             = "HTTPS"
+  vpc_id               = "${aws_vpc.test.id}"
   deregistration_delay = 200
+
   stickiness {
-    type = "lb_cookie"
+    type            = "lb_cookie"
     cookie_duration = 10000
   }
+
   health_check {
-    path = "/health"
-    interval = 60
-    port = 8081
-    protocol = "HTTP"
-    timeout = 3
-    healthy_threshold = 3
+    path                = "/health"
+    interval            = 60
+    port                = 8081
+    protocol            = "HTTP"
+    timeout             = 3
+    healthy_threshold   = 3
     unhealthy_threshold = 3
-    matcher = "200-299"
+    matcher             = "200-299"
   }
 }
 
 resource "aws_subnet" "subnet" {
   cidr_block = "10.0.1.0/24"
-  vpc_id = "${aws_vpc.test.id}"
+  vpc_id     = "${aws_vpc.test.id}"
+
   tags = {
     Name = "tf-acc-lb-target-group-attachment-bc"
   }
@@ -340,9 +351,10 @@ resource "aws_subnet" "subnet" {
 
 resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"
-	tags = {
-		Name = "terraform-testacc-lb-target-group-attachment-bc"
-	}
+
+  tags = {
+    Name = "terraform-testacc-lb-target-group-attachment-bc"
+  }
 }
 `, targetGroupName)
 }
@@ -350,49 +362,57 @@ resource "aws_vpc" "test" {
 func testAccAWSLBTargetGroupAttachmentConfigWithIpAddress(targetGroupName string) string {
 	return fmt.Sprintf(`
 resource "aws_lb_target_group_attachment" "test" {
-  target_group_arn = "${aws_lb_target_group.test.arn}"
-  target_id = "${aws_instance.test.private_ip}"
+  target_group_arn  = "${aws_lb_target_group.test.arn}"
+  target_id         = "${aws_instance.test.private_ip}"
   availability_zone = "${aws_instance.test.availability_zone}"
 }
+
 resource "aws_instance" "test" {
-  ami = "ami-f701cb97"
+  ami           = "ami-f701cb97"
   instance_type = "t2.micro"
-  subnet_id = "${aws_subnet.subnet.id}"
+  subnet_id     = "${aws_subnet.subnet.id}"
 }
+
 resource "aws_lb_target_group" "test" {
-  name = "%s"
-  port = 443
-  protocol = "HTTPS"
-  vpc_id = "${aws_vpc.test.id}"
-  target_type = "ip"
+  name                 = "%s"
+  port                 = 443
+  protocol             = "HTTPS"
+  vpc_id               = "${aws_vpc.test.id}"
+  target_type          = "ip"
   deregistration_delay = 200
+
   stickiness {
-    type = "lb_cookie"
+    type            = "lb_cookie"
     cookie_duration = 10000
   }
+
   health_check {
-    path = "/health"
-    interval = 60
-    port = 8081
-    protocol = "HTTP"
-    timeout = 3
-    healthy_threshold = 3
+    path                = "/health"
+    interval            = 60
+    port                = 8081
+    protocol            = "HTTP"
+    timeout             = 3
+    healthy_threshold   = 3
     unhealthy_threshold = 3
-    matcher = "200-299"
+    matcher             = "200-299"
   }
 }
+
 resource "aws_subnet" "subnet" {
   cidr_block = "10.0.1.0/24"
-  vpc_id = "${aws_vpc.test.id}"
+  vpc_id     = "${aws_vpc.test.id}"
+
   tags = {
     Name = "tf-acc-lb-target-group-attachment-with-ip-address"
   }
 }
+
 resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"
-	tags = {
-		Name = "terraform-testacc-lb-target-group-attachment-with-ip-address"
-	}
+
+  tags = {
+    Name = "terraform-testacc-lb-target-group-attachment-with-ip-address"
+  }
 }
 `, targetGroupName)
 }
@@ -401,38 +421,37 @@ func testAccAWSLBTargetGroupAttachmentConfigWithLambda(targetGroupName string) s
 	funcName := fmt.Sprintf("tf_acc_lambda_func_%s", acctest.RandString(8))
 
 	return fmt.Sprintf(`
+resource "aws_lambda_permission" "with_lb" {
+  statement_id  = "AllowExecutionFromlb"
+  action        = "lambda:InvokeFunction"
+  function_name = "${aws_lambda_function.test.arn}"
+  principal     = "elasticloadbalancing.amazonaws.com"
+  source_arn    = "${aws_lb_target_group.test.arn}"
+  qualifier     = "${aws_lambda_alias.test.name}"
+}
 
-	resource "aws_lambda_permission" "with_lb" {
-		statement_id = "AllowExecutionFromlb"
-		action = "lambda:InvokeFunction"
-		function_name = "${aws_lambda_function.test.arn}"
-		principal = "elasticloadbalancing.amazonaws.com"
-		source_arn = "${aws_lb_target_group.test.arn}"
-		qualifier     = "${aws_lambda_alias.test.name}"
-	}
+resource "aws_lb_target_group" "test" {
+  name        = "%s"
+  target_type = "lambda"
+}
 
-	resource "aws_lb_target_group" "test" {
-		name = "%s"
-		target_type = "lambda" 
-	}
+resource "aws_lambda_function" "test" {
+  filename      = "test-fixtures/lambda_elb.zip"
+  function_name = "%s"
+  role          = "${aws_iam_role.iam_for_lambda.arn}"
+  handler       = "lambda_elb.lambda_handler"
+  runtime       = "python3.7"
+}
 
-	resource "aws_lambda_function" "test" {
-		filename = "test-fixtures/lambda_elb.zip"
-		function_name = "%s"
-		role = "${aws_iam_role.iam_for_lambda.arn}"
-		handler = "lambda_elb.lambda_handler"
-		runtime = "python3.7"
-	}
+resource "aws_lambda_alias" "test" {
+  name             = "test"
+  description      = "a sample description"
+  function_name    = "${aws_lambda_function.test.function_name}"
+  function_version = "$LATEST"
+}
 
-	resource "aws_lambda_alias" "test" {
-		name             = "test"
-		description      = "a sample description"
-		function_name    = "${aws_lambda_function.test.function_name}"
-		function_version = "$LATEST"
-	}
-	
-	resource "aws_iam_role" "iam_for_lambda" {
-			assume_role_policy = <<EOF
+resource "aws_iam_role" "iam_for_lambda" {
+  assume_role_policy = <<EOF
 {
 		"Version": "2012-10-17",
 		"Statement": [
@@ -449,10 +468,10 @@ func testAccAWSLBTargetGroupAttachmentConfigWithLambda(targetGroupName string) s
 	EOF
 }
 
-	resource "aws_lb_target_group_attachment" "test" {
-		target_group_arn = "${aws_lb_target_group.test.arn}"
-		target_id = "${aws_lambda_alias.test.arn}"
-		depends_on = ["aws_lambda_permission.with_lb"]
-	}
+resource "aws_lb_target_group_attachment" "test" {
+  target_group_arn = "${aws_lb_target_group.test.arn}"
+  target_id        = "${aws_lambda_alias.test.arn}"
+  depends_on       = ["aws_lambda_permission.with_lb"]
+}
 `, targetGroupName, funcName)
 }

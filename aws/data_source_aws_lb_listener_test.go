@@ -302,10 +302,10 @@ resource "aws_security_group" "alb_test" {
   vpc_id      = "${aws_vpc.alb_test.id}"
 
   ingress {
-    from_port   = 0
-    to_port     = 0
-    protocol    = "-1"
-    self        = true
+    from_port = 0
+    to_port   = 0
+    protocol  = "-1"
+    self      = true
   }
 
   egress {
@@ -422,10 +422,10 @@ resource "aws_security_group" "alb_test" {
   vpc_id      = "${aws_vpc.alb_test.id}"
 
   ingress {
-    from_port   = 0
-    to_port     = 0
-    protocol    = "-1"
-    self        = true
+    from_port = 0
+    to_port   = 0
+    protocol  = "-1"
+    self      = true
   }
 
   egress {

@@ -585,7 +585,7 @@ provider "aws" {
   skip_requesting_account_id  = true
 
   endpoints {
-%[1]s
+    %[1]s
   }
 }
 

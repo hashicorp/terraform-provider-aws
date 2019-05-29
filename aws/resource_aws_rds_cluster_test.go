@@ -1585,19 +1585,21 @@ func testAccCheckAWSClusterRecreated(i, j *rds.DBCluster) resource.TestCheckFunc
 func testAccAWSClusterConfig(n int) string {
 	return fmt.Sprintf(`
 resource "aws_rds_cluster" "default" {
-  cluster_identifier = "tf-aurora-cluster-%d"
-  availability_zones = ["us-west-2a","us-west-2b","us-west-2c"]
-  database_name = "mydb"
-  master_username = "foo"
-  master_password = "mustbeeightcharaters"
+  cluster_identifier              = "tf-aurora-cluster-%d"
+  availability_zones              = ["us-west-2a", "us-west-2b", "us-west-2c"]
+  database_name                   = "mydb"
+  master_username                 = "foo"
+  master_password                 = "mustbeeightcharaters"
   db_cluster_parameter_group_name = "default.aurora5.6"
-  skip_final_snapshot = true
+  skip_final_snapshot             = true
+
   tags = {
     Environment = "production"
   }
+
   enabled_cloudwatch_logs_exports = [
-	"audit",
-	"error",
+    "audit",
+    "error",
   ]
 }
 `, n)
@@ -1828,13 +1830,14 @@ resource "aws_db_subnet_group" "test" {
 func testAccAWSClusterConfigWithFinalSnapshot(n int) string {
 	return fmt.Sprintf(`
 resource "aws_rds_cluster" "default" {
-  cluster_identifier = "tf-aurora-cluster-%d"
-  availability_zones = ["us-west-2a","us-west-2b","us-west-2c"]
-  database_name = "mydb"
-  master_username = "foo"
-  master_password = "mustbeeightcharaters"
+  cluster_identifier              = "tf-aurora-cluster-%d"
+  availability_zones              = ["us-west-2a", "us-west-2b", "us-west-2c"]
+  database_name                   = "mydb"
+  master_username                 = "foo"
+  master_password                 = "mustbeeightcharaters"
   db_cluster_parameter_group_name = "default.aurora5.6"
-  final_snapshot_identifier = "tf-acctest-rdscluster-snapshot-%d"
+  final_snapshot_identifier       = "tf-acctest-rdscluster-snapshot-%d"
+
   tags = {
     Environment = "production"
   }
@@ -1845,9 +1848,9 @@ resource "aws_rds_cluster" "default" {
 func testAccAWSClusterConfigWithoutUserNameAndPassword(n int) string {
 	return fmt.Sprintf(`
 resource "aws_rds_cluster" "default" {
-  cluster_identifier = "tf-aurora-cluster-%d"
-  availability_zones = ["us-west-2a","us-west-2b","us-west-2c"]
-  database_name = "mydb"
+  cluster_identifier  = "tf-aurora-cluster-%d"
+  availability_zones  = ["us-west-2a", "us-west-2b", "us-west-2c"]
+  database_name       = "mydb"
   skip_final_snapshot = true
 }
 `, n)
@@ -1856,16 +1859,17 @@ resource "aws_rds_cluster" "default" {
 func testAccAWSClusterConfigUpdatedTags(n int) string {
 	return fmt.Sprintf(`
 resource "aws_rds_cluster" "default" {
-  cluster_identifier = "tf-aurora-cluster-%d"
-  availability_zones = ["us-west-2a","us-west-2b","us-west-2c"]
-  database_name = "mydb"
-  master_username = "foo"
-  master_password = "mustbeeightcharaters"
+  cluster_identifier              = "tf-aurora-cluster-%d"
+  availability_zones              = ["us-west-2a", "us-west-2b", "us-west-2c"]
+  database_name                   = "mydb"
+  master_username                 = "foo"
+  master_password                 = "mustbeeightcharaters"
   db_cluster_parameter_group_name = "default.aurora5.6"
-  skip_final_snapshot = true
+  skip_final_snapshot             = true
+
   tags = {
     Environment = "production"
-    AnotherTag = "test"
+    AnotherTag  = "test"
   }
 }
 `, n)
@@ -1874,16 +1878,17 @@ resource "aws_rds_cluster" "default" {
 func testAccAWSClusterConfigUpdatedCloudwatchLogsExports(n int) string {
 	return fmt.Sprintf(`
 resource "aws_rds_cluster" "default" {
-  cluster_identifier = "tf-aurora-cluster-%d"
-  availability_zones = ["us-west-2a","us-west-2b","us-west-2c"]
-  database_name = "mydb"
-  master_username = "foo"
-  master_password = "mustbeeightcharaters"
+  cluster_identifier              = "tf-aurora-cluster-%d"
+  availability_zones              = ["us-west-2a", "us-west-2b", "us-west-2c"]
+  database_name                   = "mydb"
+  master_username                 = "foo"
+  master_password                 = "mustbeeightcharaters"
   db_cluster_parameter_group_name = "default.aurora5.6"
-  skip_final_snapshot = true
+  skip_final_snapshot             = true
+
   enabled_cloudwatch_logs_exports = [
     "error",
-    "slowquery"
+    "slowquery",
   ]
 }
 `, n)
@@ -1943,15 +1948,15 @@ resource "aws_rds_cluster" "default" {
 func testAccAWSClusterConfig_backups(n int) string {
 	return fmt.Sprintf(`
 resource "aws_rds_cluster" "default" {
-  cluster_identifier = "tf-aurora-cluster-%d"
-  availability_zones = ["us-west-2a","us-west-2b","us-west-2c"]
-  database_name = "mydb"
-  master_username = "foo"
-  master_password = "mustbeeightcharaters"
-  backup_retention_period = 5
-  preferred_backup_window = "07:00-09:00"
+  cluster_identifier           = "tf-aurora-cluster-%d"
+  availability_zones           = ["us-west-2a", "us-west-2b", "us-west-2c"]
+  database_name                = "mydb"
+  master_username              = "foo"
+  master_password              = "mustbeeightcharaters"
+  backup_retention_period      = 5
+  preferred_backup_window      = "07:00-09:00"
   preferred_maintenance_window = "tue:04:00-tue:04:30"
-  skip_final_snapshot = true
+  skip_final_snapshot          = true
 }
 `, n)
 }
@@ -1959,16 +1964,16 @@ resource "aws_rds_cluster" "default" {
 func testAccAWSClusterConfig_backupsUpdate(n int) string {
 	return fmt.Sprintf(`
 resource "aws_rds_cluster" "default" {
-  cluster_identifier = "tf-aurora-cluster-%d"
-  availability_zones = ["us-west-2a","us-west-2b","us-west-2c"]
-  database_name = "mydb"
-  master_username = "foo"
-  master_password = "mustbeeightcharaters"
-  backup_retention_period = 10
-  preferred_backup_window = "03:00-09:00"
+  cluster_identifier           = "tf-aurora-cluster-%d"
+  availability_zones           = ["us-west-2a", "us-west-2b", "us-west-2c"]
+  database_name                = "mydb"
+  master_username              = "foo"
+  master_password              = "mustbeeightcharaters"
+  backup_retention_period      = 10
+  preferred_backup_window      = "03:00-09:00"
   preferred_maintenance_window = "wed:01:00-wed:01:30"
-  apply_immediately = true
-  skip_final_snapshot = true
+  apply_immediately            = true
+  skip_final_snapshot          = true
 }
 `, n)
 }
@@ -1976,13 +1981,13 @@ resource "aws_rds_cluster" "default" {
 func testAccAWSClusterConfig_iamAuth(n int) string {
 	return fmt.Sprintf(`
 resource "aws_rds_cluster" "default" {
-  cluster_identifier = "tf-aurora-cluster-%d"
-  availability_zones = ["us-west-2a","us-west-2b","us-west-2c"]
-  database_name = "mydb"
-  master_username = "foo"
-  master_password = "mustbeeightcharaters"
+  cluster_identifier                  = "tf-aurora-cluster-%d"
+  availability_zones                  = ["us-west-2a", "us-west-2b", "us-west-2c"]
+  database_name                       = "mydb"
+  master_username                     = "foo"
+  master_password                     = "mustbeeightcharaters"
   iam_database_authentication_enabled = true
-  skip_final_snapshot = true
+  skip_final_snapshot                 = true
 }
 `, n)
 }
@@ -1997,8 +2002,8 @@ resource "aws_rds_cluster" "test" {
   engine_version                  = "%s"
   master_password                 = "mustbeeightcharaters"
   master_username                 = "foo"
-	skip_final_snapshot             = true
-	apply_immediately               = true
+  skip_final_snapshot             = true
+  apply_immediately               = true
 }
 `, rInt, engine, engineVersion)
 }
@@ -2046,6 +2051,7 @@ func testAccAWSClusterConfigIncludingIamRoles(n int) string {
 resource "aws_iam_role" "rds_sample_role" {
   name = "rds_sample_role_%d"
   path = "/"
+
   assume_role_policy = <<EOF
 {
   "Version": "2012-10-17",
@@ -2062,10 +2068,12 @@ resource "aws_iam_role" "rds_sample_role" {
 }
 EOF
 }
+
 resource "aws_iam_role_policy" "rds_policy" {
-	name = "rds_sample_role_policy_%d"
-	role = "${aws_iam_role.rds_sample_role.name}"
-	policy = <<EOF
+  name = "rds_sample_role_policy_%d"
+  role = "${aws_iam_role.rds_sample_role.name}"
+
+  policy = <<EOF
 {
   "Version": "2012-10-17",
   "Statement": {
@@ -2076,9 +2084,11 @@ resource "aws_iam_role_policy" "rds_policy" {
 }
 EOF
 }
+
 resource "aws_iam_role" "another_rds_sample_role" {
   name = "another_rds_sample_role_%d"
   path = "/"
+
   assume_role_policy = <<EOF
 {
   "Version": "2012-10-17",
@@ -2095,10 +2105,12 @@ resource "aws_iam_role" "another_rds_sample_role" {
 }
 EOF
 }
+
 resource "aws_iam_role_policy" "another_rds_policy" {
-	name = "another_rds_sample_role_policy_%d"
-	role = "${aws_iam_role.another_rds_sample_role.name}"
-	policy = <<EOF
+  name = "another_rds_sample_role_policy_%d"
+  role = "${aws_iam_role.another_rds_sample_role.name}"
+
+  policy = <<EOF
 {
   "Version": "2012-10-17",
   "Statement": {
@@ -2109,19 +2121,21 @@ resource "aws_iam_role_policy" "another_rds_policy" {
 }
 EOF
 }
+
 resource "aws_rds_cluster" "default" {
-  cluster_identifier = "tf-aurora-cluster-%d"
-  availability_zones = ["us-west-2a","us-west-2b","us-west-2c"]
-  database_name = "mydb"
-  master_username = "foo"
-  master_password = "mustbeeightcharaters"
+  cluster_identifier              = "tf-aurora-cluster-%d"
+  availability_zones              = ["us-west-2a", "us-west-2b", "us-west-2c"]
+  database_name                   = "mydb"
+  master_username                 = "foo"
+  master_password                 = "mustbeeightcharaters"
   db_cluster_parameter_group_name = "default.aurora5.6"
-  skip_final_snapshot = true
+  skip_final_snapshot             = true
+
   tags = {
     Environment = "production"
   }
-  depends_on = ["aws_iam_role.another_rds_sample_role", "aws_iam_role.rds_sample_role"]
 
+  depends_on = ["aws_iam_role.another_rds_sample_role", "aws_iam_role.rds_sample_role"]
 }
 `, n, n, n, n, n)
 }
@@ -2131,6 +2145,7 @@ func testAccAWSClusterConfigAddIamRoles(n int) string {
 resource "aws_iam_role" "rds_sample_role" {
   name = "rds_sample_role_%d"
   path = "/"
+
   assume_role_policy = <<EOF
 {
   "Version": "2012-10-17",
@@ -2147,10 +2162,12 @@ resource "aws_iam_role" "rds_sample_role" {
 }
 EOF
 }
+
 resource "aws_iam_role_policy" "rds_policy" {
-	name = "rds_sample_role_policy_%d"
-	role = "${aws_iam_role.rds_sample_role.name}"
-	policy = <<EOF
+  name = "rds_sample_role_policy_%d"
+  role = "${aws_iam_role.rds_sample_role.name}"
+
+  policy = <<EOF
 {
   "Version": "2012-10-17",
   "Statement": {
@@ -2161,9 +2178,11 @@ resource "aws_iam_role_policy" "rds_policy" {
 }
 EOF
 }
+
 resource "aws_iam_role" "another_rds_sample_role" {
   name = "another_rds_sample_role_%d"
   path = "/"
+
   assume_role_policy = <<EOF
 {
   "Version": "2012-10-17",
@@ -2180,10 +2199,12 @@ resource "aws_iam_role" "another_rds_sample_role" {
 }
 EOF
 }
+
 resource "aws_iam_role_policy" "another_rds_policy" {
-	name = "another_rds_sample_role_policy_%d"
-	role = "${aws_iam_role.another_rds_sample_role.name}"
-	policy = <<EOF
+  name = "another_rds_sample_role_policy_%d"
+  role = "${aws_iam_role.another_rds_sample_role.name}"
+
+  policy = <<EOF
 {
   "Version": "2012-10-17",
   "Statement": {
@@ -2194,20 +2215,22 @@ resource "aws_iam_role_policy" "another_rds_policy" {
 }
 EOF
 }
+
 resource "aws_rds_cluster" "default" {
-  cluster_identifier = "tf-aurora-cluster-%d"
-  availability_zones = ["us-west-2a","us-west-2b","us-west-2c"]
-  database_name = "mydb"
-  master_username = "foo"
-  master_password = "mustbeeightcharaters"
+  cluster_identifier              = "tf-aurora-cluster-%d"
+  availability_zones              = ["us-west-2a", "us-west-2b", "us-west-2c"]
+  database_name                   = "mydb"
+  master_username                 = "foo"
+  master_password                 = "mustbeeightcharaters"
   db_cluster_parameter_group_name = "default.aurora5.6"
-  skip_final_snapshot = true
-  iam_roles = ["${aws_iam_role.rds_sample_role.arn}","${aws_iam_role.another_rds_sample_role.arn}"]
+  skip_final_snapshot             = true
+  iam_roles                       = ["${aws_iam_role.rds_sample_role.arn}", "${aws_iam_role.another_rds_sample_role.arn}"]
+
   tags = {
     Environment = "production"
   }
-  depends_on = ["aws_iam_role.another_rds_sample_role", "aws_iam_role.rds_sample_role"]
 
+  depends_on = ["aws_iam_role.another_rds_sample_role", "aws_iam_role.rds_sample_role"]
 }
 `, n, n, n, n, n)
 }
@@ -2217,6 +2240,7 @@ func testAccAWSClusterConfigRemoveIamRoles(n int) string {
 resource "aws_iam_role" "another_rds_sample_role" {
   name = "another_rds_sample_role_%d"
   path = "/"
+
   assume_role_policy = <<EOF
 {
   "Version": "2012-10-17",
@@ -2233,10 +2257,12 @@ resource "aws_iam_role" "another_rds_sample_role" {
 }
 EOF
 }
+
 resource "aws_iam_role_policy" "another_rds_policy" {
-	name = "another_rds_sample_role_policy_%d"
-	role = "${aws_iam_role.another_rds_sample_role.name}"
-	policy = <<EOF
+  name = "another_rds_sample_role_policy_%d"
+  role = "${aws_iam_role.another_rds_sample_role.name}"
+
+  policy = <<EOF
 {
   "Version": "2012-10-17",
   "Statement": {
@@ -2247,15 +2273,17 @@ resource "aws_iam_role_policy" "another_rds_policy" {
 }
 EOF
 }
+
 resource "aws_rds_cluster" "default" {
-  cluster_identifier = "tf-aurora-cluster-%d"
-  availability_zones = ["us-west-2a","us-west-2b","us-west-2c"]
-  database_name = "mydb"
-  master_username = "foo"
-  master_password = "mustbeeightcharaters"
+  cluster_identifier              = "tf-aurora-cluster-%d"
+  availability_zones              = ["us-west-2a", "us-west-2b", "us-west-2c"]
+  database_name                   = "mydb"
+  master_username                 = "foo"
+  master_password                 = "mustbeeightcharaters"
   db_cluster_parameter_group_name = "default.aurora5.6"
-  skip_final_snapshot = true
-  iam_roles = ["${aws_iam_role.another_rds_sample_role.arn}"]
+  skip_final_snapshot             = true
+  iam_roles                       = ["${aws_iam_role.another_rds_sample_role.arn}"]
+
   tags = {
     Environment = "production"
   }
@@ -2282,41 +2310,42 @@ data "aws_availability_zones" "us-east-1" {
 }
 
 resource "aws_rds_cluster_instance" "test_instance" {
-  provider = "aws.uswest2"
-  identifier = "tf-aurora-instance-%[1]d"
+  provider           = "aws.uswest2"
+  identifier         = "tf-aurora-instance-%[1]d"
   cluster_identifier = "${aws_rds_cluster.test_primary.id}"
-  instance_class = "db.t2.small"
+  instance_class     = "db.t2.small"
 }
 
 resource "aws_rds_cluster_parameter_group" "default" {
-  provider = "aws.uswest2"
+  provider    = "aws.uswest2"
   name        = "tf-aurora-prm-grp-%[1]d"
   family      = "aurora5.6"
   description = "RDS default cluster parameter group"
 
   parameter {
-    name  = "binlog_format"
-    value = "STATEMENT"
+    name         = "binlog_format"
+    value        = "STATEMENT"
     apply_method = "pending-reboot"
   }
 }
 
 resource "aws_rds_cluster" "test_primary" {
-  provider = "aws.uswest2"
-  cluster_identifier = "tf-test-primary-%[1]d"
+  provider                        = "aws.uswest2"
+  cluster_identifier              = "tf-test-primary-%[1]d"
   db_cluster_parameter_group_name = "${aws_rds_cluster_parameter_group.default.name}"
-  database_name = "mydb"
-  master_username = "foo"
-  master_password = "mustbeeightcharaters"
-  storage_encrypted = true
-  skip_final_snapshot = true
+  database_name                   = "mydb"
+  master_username                 = "foo"
+  master_password                 = "mustbeeightcharaters"
+  storage_encrypted               = true
+  skip_final_snapshot             = true
 }
 
 data "aws_caller_identity" "current" {}
 
 resource "aws_kms_key" "kms_key_east" {
-  provider = "aws.useast1"
+  provider    = "aws.useast1"
   description = "Terraform acc test %[1]d"
+
   policy = <<POLICY
   {
     "Version": "2012-10-17",
@@ -2339,8 +2368,9 @@ resource "aws_kms_key" "kms_key_east" {
 resource "aws_vpc" "main" {
   provider   = "aws.useast1"
   cidr_block = "10.0.0.0/16"
+
   tags = {
-  	Name = "terraform-acctest-rds-cluster-encrypted-cross-region-replica"
+    Name = "terraform-acctest-rds-cluster-encrypted-cross-region-replica"
   }
 }
 
@@ -2350,6 +2380,7 @@ resource "aws_subnet" "db" {
   vpc_id            = "${aws_vpc.main.id}"
   availability_zone = "${data.aws_availability_zones.us-east-1.names[count.index]}"
   cidr_block        = "10.0.${count.index}.0/24"
+
   tags = {
     Name = "tf-acc-rds-cluster-encrypted-cross-region-replica-${count.index}"
   }
@@ -2362,19 +2393,20 @@ resource "aws_db_subnet_group" "replica" {
 }
 
 resource "aws_rds_cluster" "test_replica" {
-  provider = "aws.useast1"
-  cluster_identifier = "tf-test-replica-%[1]d"
-  db_subnet_group_name = "${aws_db_subnet_group.replica.name}"
-  database_name = "mydb"
-  master_username = "foo"
-  master_password = "mustbeeightcharaters"
-  kms_key_id = "${aws_kms_key.kms_key_east.arn}"
-  storage_encrypted = true
-  skip_final_snapshot = true
+  provider                      = "aws.useast1"
+  cluster_identifier            = "tf-test-replica-%[1]d"
+  db_subnet_group_name          = "${aws_db_subnet_group.replica.name}"
+  database_name                 = "mydb"
+  master_username               = "foo"
+  master_password               = "mustbeeightcharaters"
+  kms_key_id                    = "${aws_kms_key.kms_key_east.arn}"
+  storage_encrypted             = true
+  skip_final_snapshot           = true
   replication_source_identifier = "arn:aws:rds:us-west-2:${data.aws_caller_identity.current.account_id}:cluster:${aws_rds_cluster.test_primary.cluster_identifier}"
-  source_region = "us-west-2"
+  source_region                 = "us-west-2"
+
   depends_on = [
-  	"aws_rds_cluster_instance.test_instance"
+    "aws_rds_cluster_instance.test_instance",
   ]
 }
 `, n)
@@ -2716,7 +2748,7 @@ resource "aws_rds_cluster" "test" {
   snapshot_identifier = "${aws_db_cluster_snapshot.test.id}"
 
   storage_encrypted = true
-  kms_key_id = "${aws_kms_key.test.arn}"
+  kms_key_id        = "${aws_kms_key.test.arn}"
 }
 `, rName, rName, rName)
 }
@@ -2724,14 +2756,14 @@ resource "aws_rds_cluster" "test" {
 func testAccAWSClusterConfigWithCopyTagsToSnapshot(n int, f bool) string {
 	return fmt.Sprintf(`
 resource "aws_rds_cluster" "default" {
-  cluster_identifier = "tf-aurora-cluster-%[1]d"
-  availability_zones = ["us-west-2a","us-west-2b","us-west-2c"]
-  database_name = "mydb"
-  master_username = "foo"
-  master_password = "mustbeeightcharaters"
+  cluster_identifier              = "tf-aurora-cluster-%[1]d"
+  availability_zones              = ["us-west-2a", "us-west-2b", "us-west-2c"]
+  database_name                   = "mydb"
+  master_username                 = "foo"
+  master_password                 = "mustbeeightcharaters"
   db_cluster_parameter_group_name = "default.aurora5.6"
-	copy_tags_to_snapshot = %[2]t
-	skip_final_snapshot = true
+  copy_tags_to_snapshot           = %[2]t
+  skip_final_snapshot             = true
 }
 `, n, f)
 }

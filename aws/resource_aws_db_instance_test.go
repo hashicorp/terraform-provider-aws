@@ -2233,27 +2233,27 @@ resource "aws_db_instance" "bar" {
 func testAccAWSDBInstanceConfigWithOptionGroup(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_db_option_group" "bar" {
-	name = "%s"
-	option_group_description = "Test option group for terraform"
-	engine_name = "mysql"
-	major_engine_version = "5.6"
+  name                     = "%s"
+  option_group_description = "Test option group for terraform"
+  engine_name              = "mysql"
+  major_engine_version     = "5.6"
 }
 
 resource "aws_db_instance" "bar" {
-	identifier = "foobarbaz-test-terraform-%d"
+  identifier = "foobarbaz-test-terraform-%d"
 
-	allocated_storage = 10
-	engine = "MySQL"
-	instance_class = "db.t2.micro"
-	name = "baz"
-	password = "barbarbarbar"
-	username = "foo"
+  allocated_storage = 10
+  engine            = "MySQL"
+  instance_class    = "db.t2.micro"
+  name              = "baz"
+  password          = "barbarbarbar"
+  username          = "foo"
 
-	backup_retention_period = 0
-	skip_final_snapshot = true
+  backup_retention_period = 0
+  skip_final_snapshot     = true
 
-	parameter_group_name = "default.mysql5.6"
-	option_group_name = "${aws_db_option_group.bar.name}"
+  parameter_group_name = "default.mysql5.6"
+  option_group_name    = "${aws_db_option_group.bar.name}"
 }
 `, rName, acctest.RandInt())
 }
@@ -2261,18 +2261,18 @@ resource "aws_db_instance" "bar" {
 func testAccCheckAWSDBIAMAuth(n int) string {
 	return fmt.Sprintf(`
 resource "aws_db_instance" "bar" {
-	identifier = "foobarbaz-test-terraform-%d"
-	allocated_storage = 10
-	engine = "mysql"
-	engine_version = "5.6.34"
-	instance_class = "db.t2.micro"
-	name = "baz"
-	password = "barbarbarbar"
-	username = "foo"
-	backup_retention_period = 0
-	skip_final_snapshot = true
-	parameter_group_name = "default.mysql5.6"
-	iam_database_authentication_enabled = true
+  identifier                          = "foobarbaz-test-terraform-%d"
+  allocated_storage                   = 10
+  engine                              = "mysql"
+  engine_version                      = "5.6.34"
+  instance_class                      = "db.t2.micro"
+  name                                = "baz"
+  password                            = "barbarbarbar"
+  username                            = "foo"
+  backup_retention_period             = 0
+  skip_final_snapshot                 = true
+  parameter_group_name                = "default.mysql5.6"
+  iam_database_authentication_enabled = true
 }
 `, n)
 }
@@ -2280,30 +2280,29 @@ resource "aws_db_instance" "bar" {
 func testAccAWSDBInstanceConfig_FinalSnapshotIdentifier_SkipFinalSnapshot() string {
 	return fmt.Sprintf(`
 resource "aws_db_instance" "snapshot" {
-	identifier = "tf-test-%d"
+  identifier = "tf-test-%d"
 
-	allocated_storage = 5
-	engine = "mysql"
-	engine_version = "5.6.35"
-	instance_class = "db.t2.micro"
-	name = "baz"
-	password = "barbarbarbar"
-	username = "foo"
-	backup_retention_period = 1
+  allocated_storage       = 5
+  engine                  = "mysql"
+  engine_version          = "5.6.35"
+  instance_class          = "db.t2.micro"
+  name                    = "baz"
+  password                = "barbarbarbar"
+  username                = "foo"
+  backup_retention_period = 1
 
-	publicly_accessible = true
+  publicly_accessible = true
 
-	parameter_group_name = "default.mysql5.6"
+  parameter_group_name = "default.mysql5.6"
 
-	skip_final_snapshot = true
-	final_snapshot_identifier = "foobarbaz-test-terraform-final-snapshot-1"
+  skip_final_snapshot       = true
+  final_snapshot_identifier = "foobarbaz-test-terraform-final-snapshot-1"
 }
 `, acctest.RandInt())
 }
 
 func testAccAWSDBInstanceConfig_S3Import(bucketName string, bucketPrefix string, uniqueId string) string {
 	return fmt.Sprintf(`
-
 resource "aws_s3_bucket" "xtrabackup" {
   bucket = "%s"
 }
@@ -2315,11 +2314,10 @@ resource "aws_s3_bucket_object" "xtrabackup_db" {
   etag   = "${filemd5("../files/mysql-5-6-xtrabackup.tar.gz")}"
 }
 
-
-
 resource "aws_iam_role" "rds_s3_access_role" {
-    name = "%s-role"
-    assume_role_policy = <<EOF
+  name = "%s-role"
+
+  assume_role_policy = <<EOF
 {
   "Version": "2012-10-17",
   "Statement": [
@@ -2337,7 +2335,8 @@ EOF
 }
 
 resource "aws_iam_policy" "test" {
-  name   = "%s-policy"
+  name = "%s-policy"
+
   policy = <<POLICY
 {
     "Version": "2012-10-17",
@@ -2358,77 +2357,80 @@ POLICY
 }
 
 resource "aws_iam_policy_attachment" "test-attach" {
-    name = "%s-policy-attachment"
-    roles = [
-        "${aws_iam_role.rds_s3_access_role.name}"
-    ]
+  name = "%s-policy-attachment"
 
-    policy_arn = "${aws_iam_policy.test.arn}"
+  roles = [
+    "${aws_iam_role.rds_s3_access_role.name}",
+  ]
+
+  policy_arn = "${aws_iam_policy.test.arn}"
 }
-
 
 //  Make sure EVERYTHING required is here...
 resource "aws_vpc" "foo" {
-	cidr_block = "10.1.0.0/16"
-	tags = {
-		Name = "terraform-testacc-db-instance-with-subnet-group"
-	}
+  cidr_block = "10.1.0.0/16"
+
+  tags = {
+    Name = "terraform-testacc-db-instance-with-subnet-group"
+  }
 }
 
 resource "aws_subnet" "foo" {
-	cidr_block = "10.1.1.0/24"
-	availability_zone = "us-west-2a"
-	vpc_id = "${aws_vpc.foo.id}"
-	tags = {
-		Name = "tf-acc-db-instance-with-subnet-group-1"
-	}
+  cidr_block        = "10.1.1.0/24"
+  availability_zone = "us-west-2a"
+  vpc_id            = "${aws_vpc.foo.id}"
+
+  tags = {
+    Name = "tf-acc-db-instance-with-subnet-group-1"
+  }
 }
 
 resource "aws_subnet" "bar" {
-	cidr_block = "10.1.2.0/24"
-	availability_zone = "us-west-2b"
-	vpc_id = "${aws_vpc.foo.id}"
-	tags = {
-		Name = "tf-acc-db-instance-with-subnet-group-2"
-	}
+  cidr_block        = "10.1.2.0/24"
+  availability_zone = "us-west-2b"
+  vpc_id            = "${aws_vpc.foo.id}"
+
+  tags = {
+    Name = "tf-acc-db-instance-with-subnet-group-2"
+  }
 }
 
 resource "aws_db_subnet_group" "foo" {
-	name = "%s-subnet-group"
-	subnet_ids = ["${aws_subnet.foo.id}", "${aws_subnet.bar.id}"]
-	tags = {
-		Name = "tf-dbsubnet-group-test"
-	}
+  name       = "%s-subnet-group"
+  subnet_ids = ["${aws_subnet.foo.id}", "${aws_subnet.bar.id}"]
+
+  tags = {
+    Name = "tf-dbsubnet-group-test"
+  }
 }
 
-
 resource "aws_db_instance" "s3" {
-	identifier = "%s-db"
+  identifier = "%s-db"
 
-	allocated_storage = 5
-	engine = "mysql"
-	engine_version = "5.6"
-    auto_minor_version_upgrade = true
-	instance_class = "db.t2.small"
-	name = "baz"
-	password = "barbarbarbar"
-	publicly_accessible = false
-	username = "foo"
-	backup_retention_period = 0
+  allocated_storage          = 5
+  engine                     = "mysql"
+  engine_version             = "5.6"
+  auto_minor_version_upgrade = true
+  instance_class             = "db.t2.small"
+  name                       = "baz"
+  password                   = "barbarbarbar"
+  publicly_accessible        = false
+  username                   = "foo"
+  backup_retention_period    = 0
 
-	parameter_group_name = "default.mysql5.6"
-    skip_final_snapshot = true
-    multi_az = false
-    db_subnet_group_name = "${aws_db_subnet_group.foo.id}"
+  parameter_group_name = "default.mysql5.6"
+  skip_final_snapshot  = true
+  multi_az             = false
+  db_subnet_group_name = "${aws_db_subnet_group.foo.id}"
 
-	s3_import {
-        source_engine = "mysql"
-        source_engine_version = "5.6"
+  s3_import {
+    source_engine         = "mysql"
+    source_engine_version = "5.6"
 
-		bucket_name = "${aws_s3_bucket.xtrabackup.bucket}"
-		bucket_prefix = "%s"
-		ingestion_role = "${aws_iam_role.rds_s3_access_role.arn}"
-	}
+    bucket_name    = "${aws_s3_bucket.xtrabackup.bucket}"
+    bucket_prefix  = "%s"
+    ingestion_role = "${aws_iam_role.rds_s3_access_role.arn}"
+  }
 }
 `, bucketName, bucketPrefix, uniqueId, uniqueId, uniqueId, uniqueId, uniqueId, bucketPrefix)
 }
@@ -2463,8 +2465,9 @@ resource "aws_db_instance" "snapshot" {
 func testAccSnapshotInstanceConfig_enhancedMonitoring(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_iam_role" "enhanced_policy_role" {
-    name = "enhanced-monitoring-role-%s"
-    assume_role_policy = <<EOF
+  name = "enhanced-monitoring-role-%s"
+
+  assume_role_policy = <<EOF
 {
   "Version": "2012-10-17",
   "Statement": [
@@ -2479,20 +2482,21 @@ resource "aws_iam_role" "enhanced_policy_role" {
   ]
 }
 EOF
-
 }
 
 resource "aws_iam_policy_attachment" "test-attach" {
-    name = "enhanced-monitoring-attachment-%s"
-    roles = [
-        "${aws_iam_role.enhanced_policy_role.name}",
-    ]
+  name = "enhanced-monitoring-attachment-%s"
 
-    policy_arn = "${aws_iam_policy.test.arn}"
+  roles = [
+    "${aws_iam_role.enhanced_policy_role.name}",
+  ]
+
+  policy_arn = "${aws_iam_policy.test.arn}"
 }
 
 resource "aws_iam_policy" "test" {
-  name   = "tf-enhanced-monitoring-policy-%s"
+  name = "tf-enhanced-monitoring-policy-%s"
+
   policy = <<POLICY
 {
     "Version": "2012-10-17",
@@ -2527,24 +2531,24 @@ POLICY
 }
 
 resource "aws_db_instance" "enhanced_monitoring" {
-	identifier = "foobarbaz-enhanced-monitoring-%s"
-	depends_on = ["aws_iam_policy_attachment.test-attach"]
+  identifier = "foobarbaz-enhanced-monitoring-%s"
+  depends_on = ["aws_iam_policy_attachment.test-attach"]
 
-	allocated_storage = 5
-	engine = "mysql"
-	engine_version = "5.6.35"
-	instance_class = "db.t2.micro"
-	name = "baz"
-	password = "barbarbarbar"
-	username = "foo"
-	backup_retention_period = 1
+  allocated_storage       = 5
+  engine                  = "mysql"
+  engine_version          = "5.6.35"
+  instance_class          = "db.t2.micro"
+  name                    = "baz"
+  password                = "barbarbarbar"
+  username                = "foo"
+  backup_retention_period = 1
 
-	parameter_group_name = "default.mysql5.6"
+  parameter_group_name = "default.mysql5.6"
 
-	monitoring_role_arn = "${aws_iam_role.enhanced_policy_role.arn}"
-	monitoring_interval = "5"
+  monitoring_role_arn = "${aws_iam_role.enhanced_policy_role.arn}"
+  monitoring_interval = "5"
 
-	skip_final_snapshot = true
+  skip_final_snapshot = true
 }
 `, rName, rName, rName, rName)
 }
@@ -2560,7 +2564,7 @@ resource "aws_db_instance" "bar" {
   username             = "foo"
   password             = "barbarbar"
   parameter_group_name = "default.mysql5.6"
-  skip_final_snapshot = true
+  skip_final_snapshot  = true
 
   apply_immediately = true
 
@@ -2582,9 +2586,9 @@ resource "aws_db_instance" "bar" {
   username             = "foo"
   password             = "barbarbar"
   parameter_group_name = "default.mysql5.6"
-  port = 3306
-  allocated_storage = 10
-  skip_final_snapshot = true
+  port                 = 3306
+  allocated_storage    = 10
+  skip_final_snapshot  = true
 
   apply_immediately = true
 }
@@ -2602,9 +2606,9 @@ resource "aws_db_instance" "bar" {
   username             = "foo"
   password             = "barbarbar"
   parameter_group_name = "default.mysql5.6"
-  port = 3305
-  allocated_storage = 10
-  skip_final_snapshot = true
+  port                 = 3305
+  allocated_storage    = 10
+  skip_final_snapshot  = true
 
   apply_immediately = true
 }
@@ -2614,36 +2618,40 @@ resource "aws_db_instance" "bar" {
 func testAccAWSDBInstanceConfigWithSubnetGroup(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_vpc" "foo" {
-	cidr_block = "10.1.0.0/16"
-	tags = {
-		Name = "terraform-testacc-db-instance-with-subnet-group"
-	}
+  cidr_block = "10.1.0.0/16"
+
+  tags = {
+    Name = "terraform-testacc-db-instance-with-subnet-group"
+  }
 }
 
 resource "aws_subnet" "foo" {
-	cidr_block = "10.1.1.0/24"
-	availability_zone = "us-west-2a"
-	vpc_id = "${aws_vpc.foo.id}"
-	tags = {
-		Name = "tf-acc-db-instance-with-subnet-group-1"
-	}
+  cidr_block        = "10.1.1.0/24"
+  availability_zone = "us-west-2a"
+  vpc_id            = "${aws_vpc.foo.id}"
+
+  tags = {
+    Name = "tf-acc-db-instance-with-subnet-group-1"
+  }
 }
 
 resource "aws_subnet" "bar" {
-	cidr_block = "10.1.2.0/24"
-	availability_zone = "us-west-2b"
-	vpc_id = "${aws_vpc.foo.id}"
-	tags = {
-		Name = "tf-acc-db-instance-with-subnet-group-2"
-	}
+  cidr_block        = "10.1.2.0/24"
+  availability_zone = "us-west-2b"
+  vpc_id            = "${aws_vpc.foo.id}"
+
+  tags = {
+    Name = "tf-acc-db-instance-with-subnet-group-2"
+  }
 }
 
 resource "aws_db_subnet_group" "foo" {
-	name = "foo-%s"
-	subnet_ids = ["${aws_subnet.foo.id}", "${aws_subnet.bar.id}"]
-	tags = {
-		Name = "tf-dbsubnet-group-test"
-	}
+  name       = "foo-%s"
+  subnet_ids = ["${aws_subnet.foo.id}", "${aws_subnet.bar.id}"]
+
+  tags = {
+    Name = "tf-dbsubnet-group-test"
+  }
 }
 
 resource "aws_db_instance" "bar" {
@@ -2656,12 +2664,12 @@ resource "aws_db_instance" "bar" {
   password             = "barbarbar"
   parameter_group_name = "default.mysql5.6"
   db_subnet_group_name = "${aws_db_subnet_group.foo.name}"
-  port = 3305
-  allocated_storage = 10
-  skip_final_snapshot = true
+  port                 = 3305
+  allocated_storage    = 10
+  skip_final_snapshot  = true
 
-	backup_retention_period = 0
-  apply_immediately = true
+  backup_retention_period = 0
+  apply_immediately       = true
 }
 `, rName, rName)
 }
@@ -2669,69 +2677,77 @@ resource "aws_db_instance" "bar" {
 func testAccAWSDBInstanceConfigWithSubnetGroupUpdated(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_vpc" "foo" {
-	cidr_block = "10.1.0.0/16"
-	tags = {
-		Name = "terraform-testacc-db-instance-with-subnet-group-updated-foo"
-	}
+  cidr_block = "10.1.0.0/16"
+
+  tags = {
+    Name = "terraform-testacc-db-instance-with-subnet-group-updated-foo"
+  }
 }
 
 resource "aws_vpc" "bar" {
-	cidr_block = "10.10.0.0/16"
-	tags = {
-		Name = "terraform-testacc-db-instance-with-subnet-group-updated-bar"
-	}
+  cidr_block = "10.10.0.0/16"
+
+  tags = {
+    Name = "terraform-testacc-db-instance-with-subnet-group-updated-bar"
+  }
 }
 
 resource "aws_subnet" "foo" {
-	cidr_block = "10.1.1.0/24"
-	availability_zone = "us-west-2a"
-	vpc_id = "${aws_vpc.foo.id}"
-	tags = {
-		Name = "tf-acc-db-instance-with-subnet-group-1"
-	}
+  cidr_block        = "10.1.1.0/24"
+  availability_zone = "us-west-2a"
+  vpc_id            = "${aws_vpc.foo.id}"
+
+  tags = {
+    Name = "tf-acc-db-instance-with-subnet-group-1"
+  }
 }
 
 resource "aws_subnet" "bar" {
-	cidr_block = "10.1.2.0/24"
-	availability_zone = "us-west-2b"
-	vpc_id = "${aws_vpc.foo.id}"
-	tags = {
-		Name = "tf-acc-db-instance-with-subnet-group-2"
-	}
+  cidr_block        = "10.1.2.0/24"
+  availability_zone = "us-west-2b"
+  vpc_id            = "${aws_vpc.foo.id}"
+
+  tags = {
+    Name = "tf-acc-db-instance-with-subnet-group-2"
+  }
 }
 
 resource "aws_subnet" "test" {
-	cidr_block = "10.10.3.0/24"
-	availability_zone = "us-west-2b"
-	vpc_id = "${aws_vpc.bar.id}"
-	tags = {
-		Name = "tf-acc-db-instance-with-subnet-group-3"
-	}
+  cidr_block        = "10.10.3.0/24"
+  availability_zone = "us-west-2b"
+  vpc_id            = "${aws_vpc.bar.id}"
+
+  tags = {
+    Name = "tf-acc-db-instance-with-subnet-group-3"
+  }
 }
 
 resource "aws_subnet" "another_test" {
-	cidr_block = "10.10.4.0/24"
-	availability_zone = "us-west-2a"
-	vpc_id = "${aws_vpc.bar.id}"
-	tags = {
-		Name = "tf-acc-db-instance-with-subnet-group-4"
-	}
+  cidr_block        = "10.10.4.0/24"
+  availability_zone = "us-west-2a"
+  vpc_id            = "${aws_vpc.bar.id}"
+
+  tags = {
+    Name = "tf-acc-db-instance-with-subnet-group-4"
+  }
 }
 
 resource "aws_db_subnet_group" "foo" {
-	name = "foo-%s"
-	subnet_ids = ["${aws_subnet.foo.id}", "${aws_subnet.bar.id}"]
-	tags = {
-		Name = "tf-dbsubnet-group-test"
-	}
+  name       = "foo-%s"
+  subnet_ids = ["${aws_subnet.foo.id}", "${aws_subnet.bar.id}"]
+
+  tags = {
+    Name = "tf-dbsubnet-group-test"
+  }
 }
 
 resource "aws_db_subnet_group" "bar" {
-	name = "bar-%s"
-	subnet_ids = ["${aws_subnet.test.id}", "${aws_subnet.another_test.id}"]
-	tags = {
-		Name = "tf-dbsubnet-group-test-updated"
-	}
+  name       = "bar-%s"
+  subnet_ids = ["${aws_subnet.test.id}", "${aws_subnet.another_test.id}"]
+
+  tags = {
+    Name = "tf-dbsubnet-group-test-updated"
+  }
 }
 
 resource "aws_db_instance" "bar" {
@@ -2744,11 +2760,11 @@ resource "aws_db_instance" "bar" {
   password             = "barbarbar"
   parameter_group_name = "default.mysql5.6"
   db_subnet_group_name = "${aws_db_subnet_group.bar.name}"
-  port = 3305
-  allocated_storage = 10
-  skip_final_snapshot = true
+  port                 = 3305
+  allocated_storage    = 10
+  skip_final_snapshot  = true
 
-	backup_retention_period = 0
+  backup_retention_period = 0
 
   apply_immediately = true
 }
@@ -2760,6 +2776,7 @@ func testAccAWSDBMSSQL_timezone(rInt int) string {
 resource "aws_vpc" "foo" {
   cidr_block           = "10.1.0.0/16"
   enable_dns_hostnames = true
+
   tags = {
     Name = "terraform-testacc-db-instance-mssql-timezone"
   }
@@ -2776,6 +2793,7 @@ resource "aws_subnet" "main" {
   vpc_id            = "${aws_vpc.foo.id}"
   availability_zone = "us-west-2a"
   cidr_block        = "10.1.1.0/24"
+
   tags = {
     Name = "tf-acc-db-instance-mssql-timezone-main"
   }
@@ -2785,6 +2803,7 @@ resource "aws_subnet" "other" {
   vpc_id            = "${aws_vpc.foo.id}"
   availability_zone = "us-west-2b"
   cidr_block        = "10.1.2.0/24"
+
   tags = {
     Name = "tf-acc-db-instance-mssql-timezone-other"
   }
@@ -2801,7 +2820,7 @@ resource "aws_db_instance" "mssql" {
   password                = "somecrazypassword"
   engine                  = "sqlserver-ex"
   backup_retention_period = 0
-  skip_final_snapshot = true
+  skip_final_snapshot     = true
 
   #publicly_accessible = true
 

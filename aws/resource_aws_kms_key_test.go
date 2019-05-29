@@ -325,9 +325,10 @@ func testAccCheckAWSKmsKeyIsEnabled(key *kms.KeyMetadata, isEnabled bool) resour
 func testAccAWSKmsKey(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_kms_key" "foo" {
-    description = "Terraform acc test %s"
-    deletion_window_in_days = 7
-    policy = <<POLICY
+  description             = "Terraform acc test %s"
+  deletion_window_in_days = 7
+
+  policy = <<POLICY
 {
   "Version": "2012-10-17",
   "Id": "kms-tf-1",
@@ -344,22 +345,25 @@ resource "aws_kms_key" "foo" {
   ]
 }
 POLICY
-	tags = {
-		Name = "tf-acc-test-kms-key-%s"
-	}
+
+  tags = {
+    Name = "tf-acc-test-kms-key-%s"
+  }
 }
 `, rName, rName)
 }
 
 func testAccAWSKmsKey_other_region(rName string) string {
 	return fmt.Sprintf(`
-provider "aws" { 
-	region = "us-east-1"
+provider "aws" {
+  region = "us-east-1"
 }
+
 resource "aws_kms_key" "foo" {
-    description = "Terraform acc test %s"
-    deletion_window_in_days = 7
-    policy = <<POLICY
+  description             = "Terraform acc test %s"
+  deletion_window_in_days = 7
+
+  policy = <<POLICY
 {
   "Version": "2012-10-17",
   "Id": "kms-tf-1",
@@ -376,9 +380,10 @@ resource "aws_kms_key" "foo" {
   ]
 }
 POLICY
-	tags = {
-		Name = "tf-acc-test-kms-key-%s"
-	}
+
+  tags = {
+    Name = "tf-acc-test-kms-key-%s"
+  }
 }
 `, rName, rName)
 }
@@ -386,11 +391,12 @@ POLICY
 func testAccAWSKmsKey_removedPolicy(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_kms_key" "foo" {
-    description = "Terraform acc test %s"
-    deletion_window_in_days = 7
+  description             = "Terraform acc test %s"
+  deletion_window_in_days = 7
+
   tags = {
-		Name = "tf-acc-test-kms-key-%s"
-	}
+    Name = "tf-acc-test-kms-key-%s"
+  }
 }
 `, rName, rName)
 }
@@ -398,12 +404,13 @@ resource "aws_kms_key" "foo" {
 func testAccAWSKmsKey_enabledRotation(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_kms_key" "bar" {
-    description = "Terraform acc test is_enabled %s"
-    deletion_window_in_days = 7
-    enable_key_rotation = true
+  description             = "Terraform acc test is_enabled %s"
+  deletion_window_in_days = 7
+  enable_key_rotation     = true
+
   tags = {
-		Name = "tf-acc-test-kms-key-%s"
-	}
+    Name = "tf-acc-test-kms-key-%s"
+  }
 }
 `, rName, rName)
 }
@@ -411,13 +418,14 @@ resource "aws_kms_key" "bar" {
 func testAccAWSKmsKey_disabled(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_kms_key" "bar" {
-    description = "Terraform acc test is_enabled %s"
-    deletion_window_in_days = 7
-    enable_key_rotation = false
-    is_enabled = false
+  description             = "Terraform acc test is_enabled %s"
+  deletion_window_in_days = 7
+  enable_key_rotation     = false
+  is_enabled              = false
+
   tags = {
-		Name = "tf-acc-test-kms-key-%s"
-	}
+    Name = "tf-acc-test-kms-key-%s"
+  }
 }
 `, rName, rName)
 }
@@ -425,13 +433,14 @@ resource "aws_kms_key" "bar" {
 func testAccAWSKmsKey_enabled(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_kms_key" "bar" {
-    description = "Terraform acc test is_enabled %s"
-    deletion_window_in_days = 7
-    enable_key_rotation = true
-    is_enabled = true
+  description             = "Terraform acc test is_enabled %s"
+  deletion_window_in_days = 7
+  enable_key_rotation     = true
+  is_enabled              = true
+
   tags = {
-		Name = "tf-acc-test-kms-key-%s"
-	}
+    Name = "tf-acc-test-kms-key-%s"
+  }
 }
 `, rName, rName)
 }
@@ -439,12 +448,13 @@ resource "aws_kms_key" "bar" {
 func testAccAWSKmsKey_tags(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_kms_key" "foo" {
-    description = "Terraform acc test %s"
-	tags = {
-		Name = "tf-acc-test-kms-key-%s"
-		Key1 = "Value One"
-		Description = "Very interesting"
-	}
+  description = "Terraform acc test %s"
+
+  tags = {
+    Name        = "tf-acc-test-kms-key-%s"
+    Key1        = "Value One"
+    Description = "Very interesting"
+  }
 }
 `, rName, rName)
 }

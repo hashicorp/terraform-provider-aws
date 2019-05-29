@@ -241,15 +241,16 @@ func testAccCheckAWSIAMGroupPolicyNameMatches(i, j *iam.GetGroupPolicyOutput) re
 
 func testAccIAMGroupPolicyConfig(rInt int) string {
 	return fmt.Sprintf(`
-	resource "aws_iam_group" "group" {
-		name = "test_group_%d"
-		path = "/"
-	}
+resource "aws_iam_group" "group" {
+  name = "test_group_%d"
+  path = "/"
+}
 
-	resource "aws_iam_group_policy" "foo" {
-		name = "foo_policy_%d"
-		group = "${aws_iam_group.group.name}"
-		policy = <<EOF
+resource "aws_iam_group_policy" "foo" {
+  name  = "foo_policy_%d"
+  group = "${aws_iam_group.group.name}"
+
+  policy = <<EOF
 {
 	"Version": "2012-10-17",
 	"Statement": {
@@ -259,21 +260,22 @@ func testAccIAMGroupPolicyConfig(rInt int) string {
 	}
 }
 EOF
-	}
+}
 `, rInt, rInt)
 }
 
 func testAccIAMGroupPolicyConfig_namePrefix(rInt int, policyAction string) string {
 	return fmt.Sprintf(`
-	resource "aws_iam_group" "test" {
-		name = "test_group_%d"
-		path = "/"
-	}
+resource "aws_iam_group" "test" {
+  name = "test_group_%d"
+  path = "/"
+}
 
-	resource "aws_iam_group_policy" "test" {
-		name_prefix = "test-%d"
-		group = "${aws_iam_group.test.name}"
-		policy = <<EOF
+resource "aws_iam_group_policy" "test" {
+  name_prefix = "test-%d"
+  group       = "${aws_iam_group.test.name}"
+
+  policy = <<EOF
 {
 	"Version": "2012-10-17",
 	"Statement": {
@@ -283,20 +285,21 @@ func testAccIAMGroupPolicyConfig_namePrefix(rInt int, policyAction string) strin
 	}
 }
 EOF
-	}
+}
 `, rInt, rInt, policyAction)
 }
 
 func testAccIAMGroupPolicyConfig_generatedName(rInt int, policyAction string) string {
 	return fmt.Sprintf(`
-	resource "aws_iam_group" "test" {
-		name = "test_group_%d"
-		path = "/"
-	}
+resource "aws_iam_group" "test" {
+  name = "test_group_%d"
+  path = "/"
+}
 
-	resource "aws_iam_group_policy" "test" {
-		group = "${aws_iam_group.test.name}"
-		policy = <<EOF
+resource "aws_iam_group_policy" "test" {
+  group = "${aws_iam_group.test.name}"
+
+  policy = <<EOF
 {
 	"Version": "2012-10-17",
 	"Statement": {
@@ -306,27 +309,27 @@ func testAccIAMGroupPolicyConfig_generatedName(rInt int, policyAction string) st
 	}
 }
 EOF
-	}
+}
 `, rInt, policyAction)
 }
 
 func testAccIAMGroupPolicyConfigUpdate(rInt int) string {
 	return fmt.Sprintf(`
-	resource "aws_iam_group" "group" {
-		name = "test_group_%d"
-		path = "/"
-	}
+resource "aws_iam_group" "group" {
+  name = "test_group_%d"
+  path = "/"
+}
 
-	resource "aws_iam_group_policy" "foo" {
-		name = "foo_policy_%d"
-		group = "${aws_iam_group.group.name}"
-		policy = "{\"Version\":\"2012-10-17\",\"Statement\":{\"Effect\":\"Allow\",\"Action\":\"*\",\"Resource\":\"*\"}}"
-	}
+resource "aws_iam_group_policy" "foo" {
+  name   = "foo_policy_%d"
+  group  = "${aws_iam_group.group.name}"
+  policy = "{\"Version\":\"2012-10-17\",\"Statement\":{\"Effect\":\"Allow\",\"Action\":\"*\",\"Resource\":\"*\"}}"
+}
 
-	resource "aws_iam_group_policy" "bar" {
-		name = "bar_policy_%d"
-		group = "${aws_iam_group.group.name}"
-		policy = "{\"Version\":\"2012-10-17\",\"Statement\":{\"Effect\":\"Allow\",\"Action\":\"*\",\"Resource\":\"*\"}}"
-	}
+resource "aws_iam_group_policy" "bar" {
+  name   = "bar_policy_%d"
+  group  = "${aws_iam_group.group.name}"
+  policy = "{\"Version\":\"2012-10-17\",\"Statement\":{\"Effect\":\"Allow\",\"Action\":\"*\",\"Resource\":\"*\"}}"
+}
 `, rInt, rInt, rInt)
 }

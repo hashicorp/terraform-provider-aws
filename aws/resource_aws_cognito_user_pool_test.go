@@ -806,12 +806,12 @@ resource "aws_cognito_user_pool" "pool" {
 func testAccAWSCognitoUserPoolConfig_withEmailVerificationMessage(name, subject, message string) string {
 	return fmt.Sprintf(`
 resource "aws_cognito_user_pool" "pool" {
-  name = "terraform-test-pool-%s"
+  name                       = "terraform-test-pool-%s"
   email_verification_subject = "%s"
   email_verification_message = "%s"
 
   verification_message_template {
-    default_email_option  = "CONFIRM_WITH_CODE"
+    default_email_option = "CONFIRM_WITH_CODE"
   }
 }
 `, name, subject, message)
@@ -820,7 +820,7 @@ resource "aws_cognito_user_pool" "pool" {
 func testAccAWSCognitoUserPoolConfig_withSmsVerificationMessage(name, authenticationMessage, verificationMessage string) string {
 	return fmt.Sprintf(`
 resource "aws_cognito_user_pool" "pool" {
-  name = "terraform-test-pool-%s"
+  name                       = "terraform-test-pool-%s"
   sms_authentication_message = "%s"
   sms_verification_message   = "%s"
 }
@@ -843,7 +843,6 @@ func testAccAWSCognitoUserPoolConfig_withEmailConfiguration(name string) string 
 	return fmt.Sprintf(`
 resource "aws_cognito_user_pool" "pool" {
   name = "terraform-test-pool-%s"
-
 
   email_configuration {
     reply_to_email_address = "foo.bar@baz"
@@ -985,6 +984,7 @@ func testAccAWSCognitoUserPoolConfig_withLambdaConfig(name string) string {
 	return fmt.Sprintf(`
 resource "aws_iam_role" "main" {
   name = "%s"
+
   assume_role_policy = <<EOF
 {
   "Version": "2012-10-17",
@@ -1033,6 +1033,7 @@ func testAccAWSCognitoUserPoolConfig_withLambdaConfigUpdated(name string) string
 	return fmt.Sprintf(`
 resource "aws_iam_role" "main" {
   name = "%s"
+
   assume_role_policy = <<EOF
 {
   "Version": "2012-10-17",
@@ -1251,9 +1252,9 @@ EOF
 }
 
 resource "aws_cognito_user_pool" "pool" {
-  name = "terraform-test-pool-%s"
+  name                     = "terraform-test-pool-%s"
   auto_verified_attributes = ["email"]
-  mfa_configuration = "%s"
+  mfa_configuration        = "%s"
 
   email_verification_message = "Foo {####} Bar"
   email_verification_subject = "FooBar {####}"

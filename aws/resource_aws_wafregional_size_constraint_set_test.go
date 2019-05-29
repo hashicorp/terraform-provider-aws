@@ -287,10 +287,12 @@ func testAccAWSWafRegionalSizeConstraintSetConfig(name string) string {
 	return fmt.Sprintf(`
 resource "aws_wafregional_size_constraint_set" "size_constraint_set" {
   name = "%s"
+
   size_constraints {
     text_transformation = "NONE"
     comparison_operator = "EQ"
-    size = "4096"
+    size                = "4096"
+
     field_to_match {
       type = "BODY"
     }
@@ -303,10 +305,12 @@ func testAccAWSWafRegionalSizeConstraintSetConfigChangeName(name string) string 
 	return fmt.Sprintf(`
 resource "aws_wafregional_size_constraint_set" "size_constraint_set" {
   name = "%s"
+
   size_constraints {
     text_transformation = "NONE"
     comparison_operator = "EQ"
-    size = "4096"
+    size                = "4096"
+
     field_to_match {
       type = "BODY"
     }
@@ -319,10 +323,12 @@ func testAccAWSWafRegionalSizeConstraintSetConfig_changeConstraints(name string)
 	return fmt.Sprintf(`
 resource "aws_wafregional_size_constraint_set" "size_constraint_set" {
   name = "%s"
+
   size_constraints {
     text_transformation = "NONE"
     comparison_operator = "GE"
-    size = "1024"
+    size                = "1024"
+
     field_to_match {
       type = "BODY"
     }

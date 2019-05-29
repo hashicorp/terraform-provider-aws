@@ -214,9 +214,11 @@ func testAccAWSLightsailKeyPairConfig_prefixed() string {
 provider "aws" {
   region = "us-east-1"
 }
+
 resource "aws_lightsail_key_pair" "lightsail_key_pair_test_omit" {}
+
 resource "aws_lightsail_key_pair" "lightsail_key_pair_test_prefixed" {
-	name_prefix = "cts"
+  name_prefix = "cts"
 }
 `)
 }

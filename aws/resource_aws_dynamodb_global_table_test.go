@@ -251,7 +251,7 @@ func testAccDynamoDbGlobalTableConfig_multipleRegions1(tableName string) string 
 
 resource "aws_dynamodb_global_table" "test" {
   depends_on = ["aws_dynamodb_table.us-east-1"]
-  provider = "aws.us-east-1"
+  provider   = "aws.us-east-1"
 
   name = "%s"
 
@@ -268,7 +268,7 @@ func testAccDynamoDbGlobalTableConfig_multipleRegions2(tableName string) string 
 
 resource "aws_dynamodb_global_table" "test" {
   depends_on = ["aws_dynamodb_table.us-east-1", "aws_dynamodb_table.us-east-2"]
-  provider = "aws.us-east-1"
+  provider   = "aws.us-east-1"
 
   name = "%s"
 
@@ -289,7 +289,7 @@ func testAccDynamoDbGlobalTableConfig_multipleRegions3(tableName string) string 
 
 resource "aws_dynamodb_global_table" "test" {
   depends_on = ["aws_dynamodb_table.us-east-1", "aws_dynamodb_table.us-west-2"]
-  provider = "aws.us-east-1"
+  provider   = "aws.us-east-1"
 
   name = "%s"
 

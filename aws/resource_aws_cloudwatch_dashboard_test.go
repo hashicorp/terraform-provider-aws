@@ -165,6 +165,7 @@ func testAccAWSCloudWatchDashboardConfig(rInt int) string {
 	return fmt.Sprintf(`
 resource "aws_cloudwatch_dashboard" "foobar" {
   dashboard_name = "terraform-test-dashboard-%d"
+
   dashboard_body = <<EOF
   %s
   EOF
@@ -176,6 +177,7 @@ func testAccAWSCloudWatchDashboardConfig_updateBody(rInt int) string {
 	return fmt.Sprintf(`
 resource "aws_cloudwatch_dashboard" "foobar" {
   dashboard_name = "terraform-test-dashboard-%d"
+
   dashboard_body = <<EOF
   %s
   EOF

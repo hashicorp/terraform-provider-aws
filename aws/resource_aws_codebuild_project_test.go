@@ -987,7 +987,7 @@ func testAccPreCheckAWSCodeBuild(t *testing.T) {
 func testAccAWSCodeBuildProjectConfig_Base_Bucket(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_s3_bucket" "test" {
-  bucket = "%s"
+  bucket        = "%s"
   force_destroy = true
 }
 `, rName)
@@ -997,6 +997,7 @@ func testAccAWSCodeBuildProjectConfig_Base_ServiceRole(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_iam_role" "test" {
   name = "%s"
+
   assume_role_policy = <<EOF
 {
   "Version": "2012-10-17",
@@ -1014,7 +1015,8 @@ EOF
 }
 
 resource "aws_iam_role_policy" "test" {
-  role   = "${aws_iam_role.test.name}"
+  role = "${aws_iam_role.test.name}"
+
   policy = <<POLICY
 {
   "Version": "2012-10-17",

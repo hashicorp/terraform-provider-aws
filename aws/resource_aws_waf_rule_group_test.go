@@ -361,14 +361,16 @@ resource "aws_waf_rule" "test" {
 }
 
 resource "aws_waf_rule_group" "test" {
-  name = "%[2]s"
+  name        = "%[2]s"
   metric_name = "%[2]s"
+
   activated_rule {
-  	action {
+    action {
       type = "COUNT"
     }
+
     priority = 50
-    rule_id = "${aws_waf_rule.test.id}"
+    rule_id  = "${aws_waf_rule.test.id}"
   }
 }
 `, ruleName, groupName)
@@ -392,28 +394,34 @@ resource "aws_waf_rule" "test3" {
 }
 
 resource "aws_waf_rule_group" "test" {
-  name = "%[4]s"
+  name        = "%[4]s"
   metric_name = "%[4]s"
+
   activated_rule {
     action {
       type = "BLOCK"
     }
+
     priority = 10
-    rule_id = "${aws_waf_rule.test.id}"
+    rule_id  = "${aws_waf_rule.test.id}"
   }
+
   activated_rule {
-  	action {
+    action {
       type = "COUNT"
     }
+
     priority = 1
-    rule_id = "${aws_waf_rule.test2.id}"
+    rule_id  = "${aws_waf_rule.test2.id}"
   }
+
   activated_rule {
-  	action {
+    action {
       type = "BLOCK"
     }
+
     priority = 15
-    rule_id = "${aws_waf_rule.test3.id}"
+    rule_id  = "${aws_waf_rule.test3.id}"
   }
 }
 `, ruleName1, ruleName2, ruleName3, groupName)
@@ -422,7 +430,7 @@ resource "aws_waf_rule_group" "test" {
 func testAccAWSWafRuleGroupConfig_noActivatedRules(groupName string) string {
 	return fmt.Sprintf(`
 resource "aws_waf_rule_group" "test" {
-  name = "%[1]s"
+  name        = "%[1]s"
   metric_name = "%[1]s"
 }
 `, groupName)

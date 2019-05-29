@@ -206,31 +206,34 @@ func testAccCheckAWSRedshiftParameterGroupExists(n string, v *redshift.ClusterPa
 
 func testAccAWSRedshiftParameterGroupOnlyConfig(rInt int) string {
 	return fmt.Sprintf(`
-	resource "aws_redshift_parameter_group" "bar" {
-		name = "test-terraform-%d"
-		family = "redshift-1.0"
-		description = "Test parameter group for terraform"
-	}
+resource "aws_redshift_parameter_group" "bar" {
+  name        = "test-terraform-%d"
+  family      = "redshift-1.0"
+  description = "Test parameter group for terraform"
+}
 `, rInt)
 }
 
 func testAccAWSRedshiftParameterGroupConfig(rInt int) string {
 	return fmt.Sprintf(`
-	resource "aws_redshift_parameter_group" "bar" {
-		name = "test-terraform-%d"
-		family = "redshift-1.0"
-		parameter {
-			name = "require_ssl"
-			value = "true"
-		}
-		parameter {
-			name = "query_group"
-			value = "example"
-		}
-		parameter{
-			name = "enable_user_activity_logging"
-			value = "true"
-		}
-	}
+resource "aws_redshift_parameter_group" "bar" {
+  name   = "test-terraform-%d"
+  family = "redshift-1.0"
+
+  parameter {
+    name  = "require_ssl"
+    value = "true"
+  }
+
+  parameter {
+    name  = "query_group"
+    value = "example"
+  }
+
+  parameter {
+    name  = "enable_user_activity_logging"
+    value = "true"
+  }
+}
 `, rInt)
 }

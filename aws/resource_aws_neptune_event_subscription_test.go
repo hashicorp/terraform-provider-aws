@@ -235,16 +235,18 @@ resource "aws_sns_topic" "aws_sns_topic" {
 }
 
 resource "aws_neptune_event_subscription" "bar" {
-  name = "tf-acc-test-neptune-event-subs-%d"
+  name          = "tf-acc-test-neptune-event-subs-%d"
   sns_topic_arn = "${aws_sns_topic.aws_sns_topic.arn}"
-  source_type = "db-instance"
+  source_type   = "db-instance"
+
   event_categories = [
     "availability",
     "backup",
     "creation",
     "deletion",
-    "maintenance"
+    "maintenance",
   ]
+
   tags = {
     Name = "tf-acc-test"
   }
@@ -259,13 +261,15 @@ resource "aws_sns_topic" "aws_sns_topic" {
 }
 
 resource "aws_neptune_event_subscription" "bar" {
-  name = "tf-acc-test-neptune-event-subs-%d"
+  name          = "tf-acc-test-neptune-event-subs-%d"
   sns_topic_arn = "${aws_sns_topic.aws_sns_topic.arn}"
-  enabled = false
-  source_type = "db-parameter-group"
+  enabled       = false
+  source_type   = "db-parameter-group"
+
   event_categories = [
-    "configuration change"
+    "configuration change",
   ]
+
   tags = {
     Name = "tf-acc-test1"
   }
@@ -280,16 +284,18 @@ resource "aws_sns_topic" "aws_sns_topic" {
 }
 
 resource "aws_neptune_event_subscription" "bar" {
-  name_prefix = "tf-acc-test-neptune-event-subs-"
+  name_prefix   = "tf-acc-test-neptune-event-subs-"
   sns_topic_arn = "${aws_sns_topic.aws_sns_topic.arn}"
-  source_type = "db-instance"
+  source_type   = "db-instance"
+
   event_categories = [
     "availability",
     "backup",
     "creation",
     "deletion",
-    "maintenance"
+    "maintenance",
   ]
+
   tags = {
     Name = "tf-acc-test"
   }
@@ -304,19 +310,21 @@ resource "aws_sns_topic" "aws_sns_topic" {
 }
 
 resource "aws_neptune_parameter_group" "bar" {
-  name = "neptune-parameter-group-event-%d"
-  family = "neptune1"
+  name        = "neptune-parameter-group-event-%d"
+  family      = "neptune1"
   description = "Test parameter group for terraform"
 }
 
 resource "aws_neptune_event_subscription" "bar" {
-  name = "tf-acc-test-neptune-event-subs-with-ids-%d"
+  name          = "tf-acc-test-neptune-event-subs-with-ids-%d"
   sns_topic_arn = "${aws_sns_topic.aws_sns_topic.arn}"
-  source_type = "db-parameter-group"
-  source_ids = ["${aws_neptune_parameter_group.bar.id}"]
+  source_type   = "db-parameter-group"
+  source_ids    = ["${aws_neptune_parameter_group.bar.id}"]
+
   event_categories = [
-    "configuration change"
+    "configuration change",
   ]
+
   tags = {
     Name = "tf-acc-test"
   }
@@ -326,34 +334,36 @@ resource "aws_neptune_event_subscription" "bar" {
 
 func testAccAWSNeptuneEventSubscriptionConfigUpdateSourceIds(rInt int) string {
 	return fmt.Sprintf(`
-	resource "aws_sns_topic" "aws_sns_topic" {
-		name = "tf-acc-test-neptune-event-subs-sns-topic-%d"
-	}
+resource "aws_sns_topic" "aws_sns_topic" {
+  name = "tf-acc-test-neptune-event-subs-sns-topic-%d"
+}
 
-	resource "aws_neptune_parameter_group" "bar" {
-		name = "neptune-parameter-group-event-%d"
-		family = "neptune1"
-		description = "Test parameter group for terraform"
-	}
+resource "aws_neptune_parameter_group" "bar" {
+  name        = "neptune-parameter-group-event-%d"
+  family      = "neptune1"
+  description = "Test parameter group for terraform"
+}
 
-	resource "aws_neptune_parameter_group" "foo" {
-		name = "neptune-parameter-group-event-2-%d"
-		family = "neptune1"
-		description = "Test parameter group for terraform"
-	}
+resource "aws_neptune_parameter_group" "foo" {
+  name        = "neptune-parameter-group-event-2-%d"
+  family      = "neptune1"
+  description = "Test parameter group for terraform"
+}
 
-	resource "aws_neptune_event_subscription" "bar" {
-		name = "tf-acc-test-neptune-event-subs-with-ids-%d"
-		sns_topic_arn = "${aws_sns_topic.aws_sns_topic.arn}"
-		source_type = "db-parameter-group"
-		source_ids = ["${aws_neptune_parameter_group.bar.id}","${aws_neptune_parameter_group.foo.id}"]
-		event_categories = [
-			"configuration change"
-		]
-	tags = {
-			Name = "tf-acc-test"
-		}
-	}
+resource "aws_neptune_event_subscription" "bar" {
+  name          = "tf-acc-test-neptune-event-subs-with-ids-%d"
+  sns_topic_arn = "${aws_sns_topic.aws_sns_topic.arn}"
+  source_type   = "db-parameter-group"
+  source_ids    = ["${aws_neptune_parameter_group.bar.id}", "${aws_neptune_parameter_group.foo.id}"]
+
+  event_categories = [
+    "configuration change",
+  ]
+
+  tags = {
+    Name = "tf-acc-test"
+  }
+}
 `, rInt, rInt, rInt, rInt)
 }
 
@@ -364,12 +374,14 @@ resource "aws_sns_topic" "aws_sns_topic" {
 }
 
 resource "aws_neptune_event_subscription" "bar" {
-  name = "tf-acc-test-neptune-event-subs-%d"
+  name          = "tf-acc-test-neptune-event-subs-%d"
   sns_topic_arn = "${aws_sns_topic.aws_sns_topic.arn}"
-  source_type = "db-instance"
+  source_type   = "db-instance"
+
   event_categories = [
     "availability",
   ]
+
   tags = {
     Name = "tf-acc-test"
   }

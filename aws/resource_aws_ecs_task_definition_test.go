@@ -1106,9 +1106,10 @@ TASK_DEFINITION
 func testAccAWSEcsTaskDefinitionWithTaskRoleArn(roleName, policyName, tdName string) string {
 	return fmt.Sprintf(`
 resource "aws_iam_role" "role_test" {
-	name = "%s"
-	path = "/test/"
-	assume_role_policy = <<EOF
+  name = "%s"
+  path = "/test/"
+
+  assume_role_policy = <<EOF
 {
 	"Version": "2012-10-17",
 	"Statement": [
@@ -1126,9 +1127,10 @@ EOF
 }
 
 resource "aws_iam_role_policy" "role_test" {
-	name = "%s"
-	role = "${aws_iam_role.role_test.id}"
-	policy = <<EOF
+  name = "%s"
+  role = "${aws_iam_role.role_test.id}"
+
+  policy = <<EOF
 {
 	"Version": "2012-10-17",
 	"Statement": [
@@ -1146,9 +1148,10 @@ EOF
 }
 
 resource "aws_ecs_task_definition" "sleep" {
-	family = "%s"
-	task_role_arn = "${aws_iam_role.role_test.arn}"
-	container_definitions = <<TASK_DEFINITION
+  family        = "%s"
+  task_role_arn = "${aws_iam_role.role_test.arn}"
+
+  container_definitions = <<TASK_DEFINITION
 [
 	{
 		"name": "sleep",
@@ -1160,19 +1163,21 @@ resource "aws_ecs_task_definition" "sleep" {
 	}
 ]
 TASK_DEFINITION
-		volume {
-		name = "database_scratch"
-	}
+
+  volume {
+    name = "database_scratch"
+  }
 }
 `, roleName, policyName, tdName)
 }
 
 func testAccAWSEcsTaskDefinitionWithIpcMode(roleName, policyName, tdName string) string {
 	return fmt.Sprintf(`
- resource "aws_iam_role" "role_test" {
-	 name = "%s"
-	 path = "/test/"
-	 assume_role_policy = <<EOF
+resource "aws_iam_role" "role_test" {
+  name = "%s"
+  path = "/test/"
+
+  assume_role_policy = <<EOF
 {
  "Version": "2012-10-17",
  "Statement": [
@@ -1187,12 +1192,13 @@ func testAccAWSEcsTaskDefinitionWithIpcMode(roleName, policyName, tdName string)
  ]
 }
 EOF
- }
+}
 
- resource "aws_iam_role_policy" "role_test" {
-	 name = "%s"
-	 role = "${aws_iam_role.role_test.id}"
-	 policy = <<EOF
+resource "aws_iam_role_policy" "role_test" {
+  name = "%s"
+  role = "${aws_iam_role.role_test.id}"
+
+  policy = <<EOF
 {
  "Version": "2012-10-17",
  "Statement": [
@@ -1207,14 +1213,15 @@ EOF
  ]
 }
  EOF
- }
+}
 
- resource "aws_ecs_task_definition" "sleep" {
-	 family = "%s"
-	 task_role_arn = "${aws_iam_role.role_test.arn}"
-	 network_mode = "bridge"
-	 ipc_mode = "host"
-	 container_definitions = <<TASK_DEFINITION
+resource "aws_ecs_task_definition" "sleep" {
+  family        = "%s"
+  task_role_arn = "${aws_iam_role.role_test.arn}"
+  network_mode  = "bridge"
+  ipc_mode      = "host"
+
+  container_definitions = <<TASK_DEFINITION
 [
  {
 	 "name": "sleep",
@@ -1227,19 +1234,20 @@ EOF
 ]
 TASK_DEFINITION
 
-	 volume {
-		 name = "database_scratch"
-	 }
- }
+  volume {
+    name = "database_scratch"
+  }
+}
 `, roleName, policyName, tdName)
 }
 
 func testAccAWSEcsTaskDefinitionWithPidMode(roleName, policyName, tdName string) string {
 	return fmt.Sprintf(`
- resource "aws_iam_role" "role_test" {
-	 name = "%s"
-	 path = "/test/"
-	 assume_role_policy = <<EOF
+resource "aws_iam_role" "role_test" {
+  name = "%s"
+  path = "/test/"
+
+  assume_role_policy = <<EOF
 {
  "Version": "2012-10-17",
  "Statement": [
@@ -1254,12 +1262,13 @@ func testAccAWSEcsTaskDefinitionWithPidMode(roleName, policyName, tdName string)
  ]
 }
 EOF
- }
+}
 
- resource "aws_iam_role_policy" "role_test" {
-	 name = "%s"
-	 role = "${aws_iam_role.role_test.id}"
-	 policy = <<EOF
+resource "aws_iam_role_policy" "role_test" {
+  name = "%s"
+  role = "${aws_iam_role.role_test.id}"
+
+  policy = <<EOF
 {
  "Version": "2012-10-17",
  "Statement": [
@@ -1274,14 +1283,15 @@ EOF
  ]
 }
  EOF
- }
+}
 
- resource "aws_ecs_task_definition" "sleep" {
-	 family = "%s"
-	 task_role_arn = "${aws_iam_role.role_test.arn}"
-	 network_mode = "bridge"
-	 pid_mode = "host"
-	 container_definitions = <<TASK_DEFINITION
+resource "aws_ecs_task_definition" "sleep" {
+  family        = "%s"
+  task_role_arn = "${aws_iam_role.role_test.arn}"
+  network_mode  = "bridge"
+  pid_mode      = "host"
+
+  container_definitions = <<TASK_DEFINITION
 [
  {
 	 "name": "sleep",
@@ -1294,19 +1304,20 @@ EOF
 ]
 TASK_DEFINITION
 
-	 volume {
-		 name = "database_scratch"
-	 }
- }
+  volume {
+    name = "database_scratch"
+  }
+}
 `, roleName, policyName, tdName)
 }
 
 func testAccAWSEcsTaskDefinitionWithNetworkMode(roleName, policyName, tdName string) string {
 	return fmt.Sprintf(`
- resource "aws_iam_role" "role_test" {
-	 name = "%s"
-	 path = "/test/"
-	 assume_role_policy = <<EOF
+resource "aws_iam_role" "role_test" {
+  name = "%s"
+  path = "/test/"
+
+  assume_role_policy = <<EOF
 {
  "Version": "2012-10-17",
  "Statement": [
@@ -1321,12 +1332,13 @@ func testAccAWSEcsTaskDefinitionWithNetworkMode(roleName, policyName, tdName str
  ]
 }
 EOF
- }
+}
 
- resource "aws_iam_role_policy" "role_test" {
-	 name = "%s"
-	 role = "${aws_iam_role.role_test.id}"
-	 policy = <<EOF
+resource "aws_iam_role_policy" "role_test" {
+  name = "%s"
+  role = "${aws_iam_role.role_test.id}"
+
+  policy = <<EOF
 {
  "Version": "2012-10-17",
  "Statement": [
@@ -1341,13 +1353,14 @@ EOF
  ]
 }
  EOF
- }
+}
 
- resource "aws_ecs_task_definition" "sleep" {
-	 family = "%s"
-	 task_role_arn = "${aws_iam_role.role_test.arn}"
-	 network_mode = "bridge"
-	 container_definitions = <<TASK_DEFINITION
+resource "aws_ecs_task_definition" "sleep" {
+  family        = "%s"
+  task_role_arn = "${aws_iam_role.role_test.arn}"
+  network_mode  = "bridge"
+
+  container_definitions = <<TASK_DEFINITION
 [
  {
 	 "name": "sleep",
@@ -1360,10 +1373,10 @@ EOF
 ]
 TASK_DEFINITION
 
-	 volume {
-		 name = "database_scratch"
-	 }
- }
+  volume {
+    name = "database_scratch"
+  }
+}
 `, roleName, policyName, tdName)
 }
 
@@ -1374,14 +1387,15 @@ resource "aws_ecs_cluster" "default" {
 }
 
 resource "aws_ecs_service" "sleep-svc" {
-  name = "%s"
-  cluster = "${aws_ecs_cluster.default.id}"
+  name            = "%s"
+  cluster         = "${aws_ecs_cluster.default.id}"
   task_definition = "${aws_ecs_task_definition.sleep.arn}"
-  desired_count = 1
+  desired_count   = 1
 }
 
 resource "aws_ecs_task_definition" "sleep" {
   family = "%s"
+
   container_definitions = <<TASK_DEFINITION
 [
   {

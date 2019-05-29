@@ -2775,32 +2775,32 @@ data "aws_ami" "test_ami" {
 }
 
 resource "aws_launch_configuration" "foobar" {
-  image_id = "${data.aws_ami.test_ami.id}"
+  image_id      = "${data.aws_ami.test_ami.id}"
   instance_type = "t2.micro"
 }
 
 resource "aws_placement_group" "test" {
-  name = "asg_pg_%s"
+  name     = "asg_pg_%s"
   strategy = "cluster"
 }
 
 resource "aws_autoscaling_group" "bar" {
-  availability_zones = ["us-west-2a"]
-  name = "%s"
-  max_size = 5
-  min_size = 2
-  health_check_type = "ELB"
-  desired_capacity = 4
-  force_delete = true
-  termination_policies = ["OldestInstance","ClosestToNextInstanceHour"]
+  availability_zones   = ["us-west-2a"]
+  name                 = "%s"
+  max_size             = 5
+  min_size             = 2
+  health_check_type    = "ELB"
+  desired_capacity     = 4
+  force_delete         = true
+  termination_policies = ["OldestInstance", "ClosestToNextInstanceHour"]
 
   launch_configuration = "${aws_launch_configuration.foobar.name}"
 
-  suspended_processes = ["AlarmNotification","ScheduledActions"]
+  suspended_processes = ["AlarmNotification", "ScheduledActions"]
 
   tag {
-    key = "Foo"
-    value = "foo-bar"
+    key                 = "Foo"
+    value               = "foo-bar"
     propagate_at_launch = true
   }
 }

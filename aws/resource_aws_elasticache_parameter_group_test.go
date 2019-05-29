@@ -376,8 +376,8 @@ resource "aws_elasticache_parameter_group" "bar" {
 func testAccAWSElasticacheParameterGroupConfigParameter1(rName, family, parameterName1, parameterValue1 string) string {
 	return fmt.Sprintf(`
 resource "aws_elasticache_parameter_group" "bar" {
-  family      = %q
-  name        = %q
+  family = %q
+  name   = %q
 
   parameter {
     name  = %q
@@ -390,8 +390,8 @@ resource "aws_elasticache_parameter_group" "bar" {
 func testAccAWSElasticacheParameterGroupConfigParameter2(rName, family, parameterName1, parameterValue1, parameterName2, parameterValue2 string) string {
 	return fmt.Sprintf(`
 resource "aws_elasticache_parameter_group" "bar" {
-  family      = %q
-  name        = %q
+  family = %q
+  name   = %q
 
   parameter {
     name  = %q

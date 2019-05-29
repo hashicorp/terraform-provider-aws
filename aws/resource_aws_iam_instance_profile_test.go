@@ -185,13 +185,13 @@ func testAccCheckAWSInstanceProfileExists(n string, res *iam.GetInstanceProfileO
 func testAccAwsIamInstanceProfileConfig(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_iam_role" "test" {
-	name = "test-%s"
-	assume_role_policy = "{\"Version\":\"2012-10-17\",\"Statement\":[{\"Effect\":\"Allow\",\"Principal\":{\"Service\":[\"ec2.amazonaws.com\"]},\"Action\":[\"sts:AssumeRole\"]}]}"
+  name               = "test-%s"
+  assume_role_policy = "{\"Version\":\"2012-10-17\",\"Statement\":[{\"Effect\":\"Allow\",\"Principal\":{\"Service\":[\"ec2.amazonaws.com\"]},\"Action\":[\"sts:AssumeRole\"]}]}"
 }
 
 resource "aws_iam_instance_profile" "test" {
-	name = "test"
-	roles = ["${aws_iam_role.test.name}"]
+  name  = "test"
+  roles = ["${aws_iam_role.test.name}"]
 }
 `, rName)
 }
@@ -199,7 +199,7 @@ resource "aws_iam_instance_profile" "test" {
 func testAccAwsIamInstanceProfileConfigMissingRole(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_iam_instance_profile" "test" {
-	name = "test-%s"
+  name = "test-%s"
 }
 `, rName)
 }
@@ -207,13 +207,13 @@ resource "aws_iam_instance_profile" "test" {
 func testAccAWSInstanceProfilePrefixNameConfig(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_iam_role" "test" {
-	name = "test-%s"
-	assume_role_policy = "{\"Version\":\"2012-10-17\",\"Statement\":[{\"Effect\":\"Allow\",\"Principal\":{\"Service\":[\"ec2.amazonaws.com\"]},\"Action\":[\"sts:AssumeRole\"]}]}"
+  name               = "test-%s"
+  assume_role_policy = "{\"Version\":\"2012-10-17\",\"Statement\":[{\"Effect\":\"Allow\",\"Principal\":{\"Service\":[\"ec2.amazonaws.com\"]},\"Action\":[\"sts:AssumeRole\"]}]}"
 }
 
 resource "aws_iam_instance_profile" "test" {
-	name_prefix = "test-"
-	roles = ["${aws_iam_role.test.name}"]
+  name_prefix = "test-"
+  roles       = ["${aws_iam_role.test.name}"]
 }
 `, rName)
 }
@@ -221,13 +221,13 @@ resource "aws_iam_instance_profile" "test" {
 func testAccAWSInstanceProfileWithRoleSpecified(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_iam_role" "test" {
-	name = "test-%s"
-	assume_role_policy = "{\"Version\":\"2012-10-17\",\"Statement\":[{\"Effect\":\"Allow\",\"Principal\":{\"Service\":[\"ec2.amazonaws.com\"]},\"Action\":[\"sts:AssumeRole\"]}]}"
+  name               = "test-%s"
+  assume_role_policy = "{\"Version\":\"2012-10-17\",\"Statement\":[{\"Effect\":\"Allow\",\"Principal\":{\"Service\":[\"ec2.amazonaws.com\"]},\"Action\":[\"sts:AssumeRole\"]}]}"
 }
 
 resource "aws_iam_instance_profile" "test" {
-	name_prefix = "test-"
-	role = "${aws_iam_role.test.name}"
+  name_prefix = "test-"
+  role        = "${aws_iam_role.test.name}"
 }
 `, rName)
 }

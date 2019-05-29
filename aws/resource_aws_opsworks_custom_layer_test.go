@@ -291,19 +291,22 @@ func testAccAwsOpsworksCustomLayerSecurityGroups(name string) string {
 	return fmt.Sprintf(`
 resource "aws_security_group" "tf-ops-acc-layer1" {
   name = "%s-layer1"
+
   ingress {
-    from_port = 8
-    to_port = -1
-    protocol = "icmp"
+    from_port   = 8
+    to_port     = -1
+    protocol    = "icmp"
     cidr_blocks = ["0.0.0.0/0"]
   }
 }
+
 resource "aws_security_group" "tf-ops-acc-layer2" {
   name = "%s-layer2"
+
   ingress {
-    from_port = 8
-    to_port = -1
-    protocol = "icmp"
+    from_port   = 8
+    to_port     = -1
+    protocol    = "icmp"
     cidr_blocks = ["0.0.0.0/0"]
   }
 }

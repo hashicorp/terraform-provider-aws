@@ -306,22 +306,24 @@ func testAccAWSWafRateBasedRuleConfig(name string) string {
 	return fmt.Sprintf(`
 resource "aws_waf_ipset" "ipset" {
   name = "%s"
+
   ip_set_descriptors {
-    type = "IPV4"
+    type  = "IPV4"
     value = "192.0.7.0/24"
   }
 }
 
 resource "aws_waf_rate_based_rule" "wafrule" {
-  depends_on = ["aws_waf_ipset.ipset"]
-  name = "%s"
+  depends_on  = ["aws_waf_ipset.ipset"]
+  name        = "%s"
   metric_name = "%s"
-  rate_key = "IP"
-  rate_limit = 2000
+  rate_key    = "IP"
+  rate_limit  = 2000
+
   predicates {
     data_id = "${aws_waf_ipset.ipset.id}"
     negated = false
-    type = "IPMatch"
+    type    = "IPMatch"
   }
 }
 `, name, name, name)
@@ -331,22 +333,24 @@ func testAccAWSWafRateBasedRuleConfigChangeName(name string) string {
 	return fmt.Sprintf(`
 resource "aws_waf_ipset" "ipset" {
   name = "%s"
+
   ip_set_descriptors {
-    type = "IPV4"
+    type  = "IPV4"
     value = "192.0.7.0/24"
   }
 }
 
 resource "aws_waf_rate_based_rule" "wafrule" {
-  depends_on = ["aws_waf_ipset.ipset"]
-  name = "%s"
+  depends_on  = ["aws_waf_ipset.ipset"]
+  name        = "%s"
   metric_name = "%s"
-  rate_key = "IP"
-  rate_limit = 2000
+  rate_key    = "IP"
+  rate_limit  = 2000
+
   predicates {
     data_id = "${aws_waf_ipset.ipset.id}"
     negated = false
-    type = "IPMatch"
+    type    = "IPMatch"
   }
 }
 `, name, name, name)
@@ -356,14 +360,16 @@ func testAccAWSWafRateBasedRuleConfig_changePredicates(name string) string {
 	return fmt.Sprintf(`
 resource "aws_waf_ipset" "ipset" {
   name = "%s"
+
   ip_set_descriptors {
-    type = "IPV4"
+    type  = "IPV4"
     value = "192.0.7.0/24"
   }
 }
 
 resource "aws_waf_byte_match_set" "set" {
   name = "%s"
+
   byte_match_tuples {
     text_transformation   = "NONE"
     target_string         = "badrefer1"
@@ -377,14 +383,15 @@ resource "aws_waf_byte_match_set" "set" {
 }
 
 resource "aws_waf_rate_based_rule" "wafrule" {
-  name = "%s"
+  name        = "%s"
   metric_name = "%s"
-  rate_key = "IP"
-  rate_limit = 2000
+  rate_key    = "IP"
+  rate_limit  = 2000
+
   predicates {
     data_id = "${aws_waf_byte_match_set.set.id}"
     negated = true
-    type = "ByteMatch"
+    type    = "ByteMatch"
   }
 }
 `, name, name, name, name)
@@ -393,10 +400,10 @@ resource "aws_waf_rate_based_rule" "wafrule" {
 func testAccAWSWafRateBasedRuleConfig_noPredicates(name string) string {
 	return fmt.Sprintf(`
 resource "aws_waf_rate_based_rule" "wafrule" {
-  name = "%s"
+  name        = "%s"
   metric_name = "%s"
-  rate_key = "IP"
-  rate_limit = 2000
+  rate_key    = "IP"
+  rate_limit  = 2000
 }
 `, name, name)
 }

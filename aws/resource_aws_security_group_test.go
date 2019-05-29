@@ -3205,22 +3205,23 @@ resource "aws_security_group" "web" {
 func testAccAWSSecurityGroupConfig_drift_complex() string {
 	return fmt.Sprintf(`
 resource "aws_vpc" "foo" {
-	cidr_block = "10.1.0.0/16"
-	tags = {
-		Name = "terraform-testacc-security-group-drift-complex"
-	}
+  cidr_block = "10.1.0.0/16"
+
+  tags = {
+    Name = "terraform-testacc-security-group-drift-complex"
+  }
 }
 
 resource "aws_security_group" "otherweb" {
   name        = "tf_acc_%d"
   description = "Used in the terraform acceptance tests"
-  vpc_id = "${aws_vpc.foo.id}"
+  vpc_id      = "${aws_vpc.foo.id}"
 }
 
 resource "aws_security_group" "web" {
   name        = "tf_acc_%d"
   description = "Used in the terraform acceptance tests"
-  vpc_id = "${aws_vpc.foo.id}"
+  vpc_id      = "${aws_vpc.foo.id}"
 
   ingress {
     protocol    = "tcp"
@@ -4010,15 +4011,17 @@ func testAccAWSSecurityGroupConfigEgressConfigModeBlocks() string {
 	return fmt.Sprintf(`
 resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"
-  tags       = {
+
+  tags = {
     Name = "terraform-testacc-security-group-egress-config-mode"
   }
 }
 
 resource "aws_security_group" "test" {
-  tags   = {
+  tags = {
     Name = "terraform-testacc-security-group-egress-config-mode"
   }
+
   vpc_id = "${aws_vpc.test.id}"
 
   egress {
@@ -4042,15 +4045,17 @@ func testAccAWSSecurityGroupConfigEgressConfigModeNoBlocks() string {
 	return fmt.Sprintf(`
 resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"
-  tags       = {
+
+  tags = {
     Name = "terraform-testacc-security-group-egress-config-mode"
   }
 }
 
 resource "aws_security_group" "test" {
-  tags   = {
+  tags = {
     Name = "terraform-testacc-security-group-egress-config-mode"
   }
+
   vpc_id = "${aws_vpc.test.id}"
 }
 `)
@@ -4060,17 +4065,20 @@ func testAccAWSSecurityGroupConfigEgressConfigModeZeroed() string {
 	return fmt.Sprintf(`
 resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"
-  tags       = {
+
+  tags = {
     Name = "terraform-testacc-security-group-egress-config-mode"
   }
 }
 
 resource "aws_security_group" "test" {
   egress = []
-  tags    = {
+
+  tags = {
     Name = "terraform-testacc-security-group-egress-config-mode"
   }
-  vpc_id  = "${aws_vpc.test.id}"
+
+  vpc_id = "${aws_vpc.test.id}"
 }
 `)
 }
@@ -4079,15 +4087,17 @@ func testAccAWSSecurityGroupConfigIngressConfigModeBlocks() string {
 	return fmt.Sprintf(`
 resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"
-  tags       = {
+
+  tags = {
     Name = "terraform-testacc-security-group-ingress-config-mode"
   }
 }
 
 resource "aws_security_group" "test" {
-  tags   = {
+  tags = {
     Name = "terraform-testacc-security-group-ingress-config-mode"
   }
+
   vpc_id = "${aws_vpc.test.id}"
 
   ingress {
@@ -4111,15 +4121,17 @@ func testAccAWSSecurityGroupConfigIngressConfigModeNoBlocks() string {
 	return fmt.Sprintf(`
 resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"
-  tags       = {
+
+  tags = {
     Name = "terraform-testacc-security-group-ingress-config-mode"
   }
 }
 
 resource "aws_security_group" "test" {
-  tags   = {
+  tags = {
     Name = "terraform-testacc-security-group-ingress-config-mode"
   }
+
   vpc_id = "${aws_vpc.test.id}"
 }
 `)
@@ -4129,17 +4141,20 @@ func testAccAWSSecurityGroupConfigIngressConfigModeZeroed() string {
 	return fmt.Sprintf(`
 resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"
-  tags       = {
+
+  tags = {
     Name = "terraform-testacc-security-group-ingress-config-mode"
   }
 }
 
 resource "aws_security_group" "test" {
   ingress = []
-  tags    = {
+
+  tags = {
     Name = "terraform-testacc-security-group-ingress-config-mode"
   }
-  vpc_id  = "${aws_vpc.test.id}"
+
+  vpc_id = "${aws_vpc.test.id}"
 }
 `)
 }

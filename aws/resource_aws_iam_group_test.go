@@ -206,8 +206,8 @@ func testAccCheckAWSGroupAttributes(group *iam.GetGroupOutput, name string, path
 func testAccAWSGroupConfig(groupName string) string {
 	return fmt.Sprintf(`
 resource "aws_iam_group" "group" {
-	name = "%s"
-	path = "/"
+  name = "%s"
+  path = "/"
 }
 `, groupName)
 }
@@ -215,8 +215,8 @@ resource "aws_iam_group" "group" {
 func testAccAWSGroupConfig2(groupName string) string {
 	return fmt.Sprintf(`
 resource "aws_iam_group" "group2" {
-	name = "%s"
-	path = "/funnypath/"
+  name = "%s"
+  path = "/funnypath/"
 }
 `, groupName)
 }
