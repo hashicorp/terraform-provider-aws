@@ -431,7 +431,8 @@ resource "aws_waf_ipset" "ipset" {
 }
 
 func testAccAWSWafIPSetConfigChangeName(name string) string {
-	return fmt.Sprintf(`resource "aws_waf_ipset" "ipset" {
+	return fmt.Sprintf(`
+resource "aws_waf_ipset" "ipset" {
   name = "%s"
   ip_set_descriptors {
     type = "IPV4"
@@ -442,7 +443,8 @@ func testAccAWSWafIPSetConfigChangeName(name string) string {
 }
 
 func testAccAWSWafIPSetConfigChangeIPSetDescriptors(name string) string {
-	return fmt.Sprintf(`resource "aws_waf_ipset" "ipset" {
+	return fmt.Sprintf(`
+resource "aws_waf_ipset" "ipset" {
   name = "%s"
   ip_set_descriptors {
     type = "IPV4"
@@ -453,7 +455,8 @@ func testAccAWSWafIPSetConfigChangeIPSetDescriptors(name string) string {
 }
 
 func testAccAWSWafIPSetConfig_IpSetDescriptors(name, ipSetDescriptors string) string {
-	return fmt.Sprintf(`resource "aws_waf_ipset" "ipset" {
+	return fmt.Sprintf(`
+resource "aws_waf_ipset" "ipset" {
   name = "%s"
 %s
 }
@@ -461,7 +464,8 @@ func testAccAWSWafIPSetConfig_IpSetDescriptors(name, ipSetDescriptors string) st
 }
 
 func testAccAWSWafIPSetConfig_noDescriptors(name string) string {
-	return fmt.Sprintf(`resource "aws_waf_ipset" "ipset" {
+	return fmt.Sprintf(`
+resource "aws_waf_ipset" "ipset" {
   name = "%s"
 }
 `, name)

@@ -89,7 +89,8 @@ func TestAccDataSourceAWSLBBackwardsCompatibility(t *testing.T) {
 }
 
 func testAccDataSourceAWSLBConfigBasic(lbName string) string {
-	return fmt.Sprintf(`resource "aws_lb" "alb_test" {
+	return fmt.Sprintf(`
+resource "aws_lb" "alb_test" {
   name            = "%s"
   internal        = true
   security_groups = ["${aws_security_group.alb_test.id}"]
@@ -165,7 +166,8 @@ data "aws_lb" "alb_test_with_name" {
 }
 
 func testAccDataSourceAWSLBConfigBackardsCompatibility(albName string) string {
-	return fmt.Sprintf(`resource "aws_alb" "alb_test" {
+	return fmt.Sprintf(`
+resource "aws_alb" "alb_test" {
   name            = "%s"
   internal        = true
   security_groups = ["${aws_security_group.alb_test.id}"]

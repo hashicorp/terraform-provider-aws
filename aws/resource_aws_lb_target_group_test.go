@@ -1111,7 +1111,8 @@ resource "aws_vpc" "test" {
 }
 
 func testAccAWSLBTargetGroupConfig_basic(targetGroupName string) string {
-	return fmt.Sprintf(`resource "aws_lb_target_group" "test" {
+	return fmt.Sprintf(`
+resource "aws_lb_target_group" "test" {
   name = "%s"
   port = 443
   protocol = "HTTPS"
@@ -1152,7 +1153,8 @@ resource "aws_vpc" "test" {
 }
 
 func testAccAWSLBTargetGroupConfig_withoutHealthcheck(targetGroupName string) string {
-	return fmt.Sprintf(`resource "aws_lb_target_group" "test" {
+	return fmt.Sprintf(`
+resource "aws_lb_target_group" "test" {
   name = "%s"
   target_type = "lambda"
 }
@@ -1160,7 +1162,8 @@ func testAccAWSLBTargetGroupConfig_withoutHealthcheck(targetGroupName string) st
 }
 
 func testAccAWSLBTargetGroupConfigBackwardsCompatibility(targetGroupName string) string {
-	return fmt.Sprintf(`resource "aws_alb_target_group" "test" {
+	return fmt.Sprintf(`
+resource "aws_alb_target_group" "test" {
   name = "%s"
   port = 443
   protocol = "HTTPS"
@@ -1201,7 +1204,8 @@ resource "aws_vpc" "test" {
 }
 
 func testAccAWSLBTargetGroupConfig_enableHealthcheck(targetGroupName string) string {
-	return fmt.Sprintf(`resource "aws_lb_target_group" "test" {
+	return fmt.Sprintf(`
+resource "aws_lb_target_group" "test" {
   name = "%s"
   target_type = "lambda"
 
@@ -1214,7 +1218,8 @@ func testAccAWSLBTargetGroupConfig_enableHealthcheck(targetGroupName string) str
 }
 
 func testAccAWSLBTargetGroupConfig_updatedPort(targetGroupName string) string {
-	return fmt.Sprintf(`resource "aws_lb_target_group" "test" {
+	return fmt.Sprintf(`
+resource "aws_lb_target_group" "test" {
   name = "%s"
   port = 442
   protocol = "HTTPS"
@@ -1254,7 +1259,8 @@ resource "aws_vpc" "test" {
 }
 
 func testAccAWSLBTargetGroupConfig_updatedProtocol(targetGroupName string) string {
-	return fmt.Sprintf(`resource "aws_lb_target_group" "test" {
+	return fmt.Sprintf(`
+resource "aws_lb_target_group" "test" {
   name = "%s"
   port = 443
   protocol = "HTTP"
@@ -1302,7 +1308,8 @@ resource "aws_vpc" "test" {
 }
 
 func testAccAWSLBTargetGroupConfig_updatedVpc(targetGroupName string) string {
-	return fmt.Sprintf(`resource "aws_lb_target_group" "test" {
+	return fmt.Sprintf(`
+resource "aws_lb_target_group" "test" {
   name = "%s"
   port = 443
   protocol = "HTTPS"
@@ -1342,7 +1349,8 @@ resource "aws_vpc" "test" {
 }
 
 func testAccAWSLBTargetGroupConfig_updateTags(targetGroupName string) string {
-	return fmt.Sprintf(`resource "aws_lb_target_group" "test" {
+	return fmt.Sprintf(`
+resource "aws_lb_target_group" "test" {
   name = "%s"
   port = 443
   protocol = "HTTPS"
@@ -1383,7 +1391,8 @@ resource "aws_vpc" "test" {
 }
 
 func testAccAWSLBTargetGroupConfig_updateHealthCheck(targetGroupName string) string {
-	return fmt.Sprintf(`resource "aws_lb_target_group" "test" {
+	return fmt.Sprintf(`
+resource "aws_lb_target_group" "test" {
   name = "%s"
   port = 443
   protocol = "HTTPS"
@@ -1450,7 +1459,8 @@ resource "aws_lb_target_group" "test" {
 }
 
 func testAccAWSLBTargetGroupConfig_typeTCP(targetGroupName string) string {
-	return fmt.Sprintf(`resource "aws_lb_target_group" "test" {
+	return fmt.Sprintf(`
+resource "aws_lb_target_group" "test" {
   name = "%s"
   port = 8082
   protocol = "TCP"
@@ -1482,7 +1492,8 @@ resource "aws_vpc" "test" {
 }
 
 func testAccAWSLBTargetGroupConfig_typeTCP_withProxyProtocol(targetGroupName string) string {
-	return fmt.Sprintf(`resource "aws_lb_target_group" "test" {
+	return fmt.Sprintf(`
+resource "aws_lb_target_group" "test" {
   name = "%s"
   port = 8082
   protocol = "TCP"
@@ -1515,7 +1526,8 @@ resource "aws_vpc" "test" {
 }
 
 func testAccAWSLBTargetGroupConfig_typeTCPInvalidThreshold(targetGroupName string) string {
-	return fmt.Sprintf(`resource "aws_lb_target_group" "test" {
+	return fmt.Sprintf(`
+resource "aws_lb_target_group" "test" {
   name = "%s"
   port = 8082
   protocol = "TCP"
@@ -1547,7 +1559,8 @@ resource "aws_vpc" "test" {
 }
 
 func testAccAWSLBTargetGroupConfig_typeTCPThresholdUpdated(targetGroupName string) string {
-	return fmt.Sprintf(`resource "aws_lb_target_group" "test" {
+	return fmt.Sprintf(`
+resource "aws_lb_target_group" "test" {
   name = "%s"
   port = 8082
   protocol = "TCP"
@@ -1579,7 +1592,8 @@ resource "aws_vpc" "test" {
 }
 
 func testAccAWSLBTargetGroupConfig_typeTCPIntervalUpdated(targetGroupName string) string {
-	return fmt.Sprintf(`resource "aws_lb_target_group" "test" {
+	return fmt.Sprintf(`
+resource "aws_lb_target_group" "test" {
   name = "%s"
   port = 8082
   protocol = "TCP"
@@ -1611,7 +1625,8 @@ resource "aws_vpc" "test" {
 }
 
 func testAccAWSLBTargetGroupConfig_typeTCP_HTTPHealthCheck(targetGroupName, path string, threshold int) string {
-	return fmt.Sprintf(`resource "aws_lb_target_group" "test" {
+	return fmt.Sprintf(`
+resource "aws_lb_target_group" "test" {
   name     = "%[1]s"
   port     = 8082
   protocol = "TCP"
@@ -1653,7 +1668,8 @@ func testAccAWSLBTargetGroupConfig_stickiness(targetGroupName string, addStickin
 	  }`, enabled)
 	}
 
-	return fmt.Sprintf(`resource "aws_lb_target_group" "test" {
+	return fmt.Sprintf(`
+resource "aws_lb_target_group" "test" {
   name = "%s"
   port = 443
   protocol = "HTTPS"

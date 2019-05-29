@@ -120,7 +120,8 @@ func TestAWSElasticBeanstalkEnvironment_importBasic(t *testing.T) {
 }
 
 func testAccBeanstalkEnvImportConfig(appName, envName string) string {
-	return fmt.Sprintf(`resource "aws_elastic_beanstalk_application" "tftest" {
+	return fmt.Sprintf(`
+resource "aws_elastic_beanstalk_application" "tftest" {
 	  name = "%s"
 	  description = "tf-test-desc"
 	}

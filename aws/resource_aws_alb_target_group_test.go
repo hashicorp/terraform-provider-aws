@@ -609,7 +609,8 @@ func TestAccAWSALBTargetGroup_missingPortProtocolVpc(t *testing.T) {
 }
 
 func testAccAWSALBTargetGroupConfig_basic(targetGroupName string) string {
-	return fmt.Sprintf(`resource "aws_alb_target_group" "test" {
+	return fmt.Sprintf(`
+resource "aws_alb_target_group" "test" {
   name = "%s"
   port = 443
   protocol = "HTTPS"
@@ -649,7 +650,8 @@ resource "aws_vpc" "test" {
 }
 
 func testAccAWSALBTargetGroupConfig_updatedPort(targetGroupName string) string {
-	return fmt.Sprintf(`resource "aws_alb_target_group" "test" {
+	return fmt.Sprintf(`
+resource "aws_alb_target_group" "test" {
   name = "%s"
   port = 442
   protocol = "HTTPS"
@@ -689,7 +691,8 @@ resource "aws_vpc" "test" {
 }
 
 func testAccAWSALBTargetGroupConfig_updatedProtocol(targetGroupName string) string {
-	return fmt.Sprintf(`resource "aws_alb_target_group" "test" {
+	return fmt.Sprintf(`
+resource "aws_alb_target_group" "test" {
   name = "%s"
   port = 443
   protocol = "HTTP"
@@ -737,7 +740,8 @@ resource "aws_vpc" "test" {
 }
 
 func testAccAWSALBTargetGroupConfig_updatedVpc(targetGroupName string) string {
-	return fmt.Sprintf(`resource "aws_alb_target_group" "test" {
+	return fmt.Sprintf(`
+resource "aws_alb_target_group" "test" {
   name = "%s"
   port = 443
   protocol = "HTTPS"
@@ -777,7 +781,8 @@ resource "aws_vpc" "test" {
 }
 
 func testAccAWSALBTargetGroupConfig_updateTags(targetGroupName string) string {
-	return fmt.Sprintf(`resource "aws_alb_target_group" "test" {
+	return fmt.Sprintf(`
+resource "aws_alb_target_group" "test" {
   name = "%s"
   port = 443
   protocol = "HTTPS"
@@ -818,7 +823,8 @@ resource "aws_vpc" "test" {
 }
 
 func testAccAWSALBTargetGroupConfig_updateHealthCheck(targetGroupName string) string {
-	return fmt.Sprintf(`resource "aws_alb_target_group" "test" {
+	return fmt.Sprintf(`
+resource "aws_alb_target_group" "test" {
   name = "%s"
   port = 443
   protocol = "HTTPS"
@@ -864,7 +870,8 @@ func testAccAWSALBTargetGroupConfig_stickiness(targetGroupName string, addSticki
 	  }`, enabled)
 	}
 
-	return fmt.Sprintf(`resource "aws_alb_target_group" "test" {
+	return fmt.Sprintf(`
+resource "aws_alb_target_group" "test" {
   name = "%s"
   port = 443
   protocol = "HTTPS"
@@ -897,7 +904,8 @@ resource "aws_vpc" "test" {
 }
 
 func testAccAWSALBTargetGroupConfig_updateSlowStart(targetGroupName string, slowStartDuration int) string {
-	return fmt.Sprintf(`resource "aws_alb_target_group" "test" {
+	return fmt.Sprintf(`
+resource "aws_alb_target_group" "test" {
   name = "%s"
   port = 443
   protocol = "HTTP"
@@ -979,7 +987,8 @@ resource "aws_vpc" "test" {
 `
 
 func testAccAWSALBTargetGroupConfig_lambda(targetGroupName string) string {
-	return fmt.Sprintf(`resource "aws_alb_target_group" "test" {
+	return fmt.Sprintf(`
+resource "aws_alb_target_group" "test" {
 	name = "%s"
 	target_type = "lambda"
 }
@@ -997,7 +1006,8 @@ resource "aws_alb_target_group" "test" {
 }
 
 func testAccAWSALBTargetGroupConfig_missing_port(targetGroupName string) string {
-	return fmt.Sprintf(`resource "aws_alb_target_group" "test" {
+	return fmt.Sprintf(`
+resource "aws_alb_target_group" "test" {
   name = "%s"
   protocol = "HTTPS"
   vpc_id = "${aws_vpc.test.id}"
@@ -1010,7 +1020,8 @@ resource "aws_vpc" "test" {
 }
 
 func testAccAWSALBTargetGroupConfig_missing_protocol(targetGroupName string) string {
-	return fmt.Sprintf(`resource "aws_alb_target_group" "test" {
+	return fmt.Sprintf(`
+resource "aws_alb_target_group" "test" {
 	name = "%s"
 	port = 443
   vpc_id = "${aws_vpc.test.id}"
@@ -1023,7 +1034,8 @@ resource "aws_vpc" "test" {
 }
 
 func testAccAWSALBTargetGroupConfig_missing_vpc(targetGroupName string) string {
-	return fmt.Sprintf(`resource "aws_alb_target_group" "test" {
+	return fmt.Sprintf(`
+resource "aws_alb_target_group" "test" {
 	name = "%s"
 	port = 443
   protocol = "HTTPS"

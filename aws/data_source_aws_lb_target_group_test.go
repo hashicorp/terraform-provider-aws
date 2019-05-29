@@ -123,7 +123,8 @@ func TestAccDataSourceAWSLBTargetGroupBackwardsCompatibility(t *testing.T) {
 }
 
 func testAccDataSourceAWSLBTargetGroupConfigBasic(lbName string, targetGroupName string) string {
-	return fmt.Sprintf(`resource "aws_lb_listener" "front_end" {
+	return fmt.Sprintf(`
+resource "aws_lb_listener" "front_end" {
    load_balancer_arn = "${aws_lb.alb_test.id}"
    protocol = "HTTP"
    port = "80"
@@ -232,7 +233,8 @@ data "aws_lb_target_group" "alb_tg_test_with_name" {
 }
 
 func testAccDataSourceAWSLBTargetGroupConfigBackwardsCompatibility(lbName string, targetGroupName string) string {
-	return fmt.Sprintf(`resource "aws_alb_listener" "front_end" {
+	return fmt.Sprintf(`
+resource "aws_alb_listener" "front_end" {
    load_balancer_arn = "${aws_alb.alb_test.id}"
    protocol = "HTTP"
    port = "80"

@@ -35,7 +35,8 @@ func TestAccDataSourceAWSRDSCluster_basic(t *testing.T) {
 }
 
 func testAccDataSourceAwsRdsClusterConfigBasic(clusterName string) string {
-	return fmt.Sprintf(`resource "aws_rds_cluster" "test" {
+	return fmt.Sprintf(`
+resource "aws_rds_cluster" "test" {
 	cluster_identifier = "%s"
 	database_name = "mydb"
 	db_cluster_parameter_group_name = "default.aurora5.6"

@@ -40,7 +40,8 @@ func TestAccDataSourceAwsDynamoDbTable_basic(t *testing.T) {
 }
 
 func testAccDataSourceAwsDynamoDbTableConfigBasic(tableName string) string {
-	return fmt.Sprintf(`resource "aws_dynamodb_table" "dynamodb_table_test" {
+	return fmt.Sprintf(`
+resource "aws_dynamodb_table" "dynamodb_table_test" {
   name           = "%s"
   read_capacity  = 20
   write_capacity = 20

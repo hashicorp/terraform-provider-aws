@@ -578,7 +578,8 @@ func testAccCheckAWSLBListenerRuleDestroy(s *terraform.State) error {
 }
 
 func testAccAWSLBListenerRuleConfig_multipleConditions(lbName, targetGroupName string) string {
-	return fmt.Sprintf(`resource "aws_lb_listener_rule" "static" {
+	return fmt.Sprintf(`
+resource "aws_lb_listener_rule" "static" {
   listener_arn = "${aws_lb_listener.front_end.arn}"
   priority = 100
 
@@ -690,7 +691,8 @@ resource "aws_security_group" "alb_test" {
 }
 
 func testAccAWSLBListenerRuleConfig_basic(lbName, targetGroupName string) string {
-	return fmt.Sprintf(`resource "aws_lb_listener_rule" "static" {
+	return fmt.Sprintf(`
+resource "aws_lb_listener_rule" "static" {
   listener_arn = "${aws_lb_listener.front_end.arn}"
   priority = 100
 
@@ -802,7 +804,8 @@ resource "aws_security_group" "alb_test" {
 }
 
 func testAccAWSLBListenerRuleConfigBackwardsCompatibility(lbName, targetGroupName string) string {
-	return fmt.Sprintf(`resource "aws_alb_listener_rule" "static" {
+	return fmt.Sprintf(`
+resource "aws_alb_listener_rule" "static" {
   listener_arn = "${aws_alb_listener.front_end.arn}"
   priority = 100
 
@@ -914,7 +917,8 @@ resource "aws_security_group" "alb_test" {
 }
 
 func testAccAWSLBListenerRuleConfig_redirect(lbName string) string {
-	return fmt.Sprintf(`resource "aws_lb_listener_rule" "static" {
+	return fmt.Sprintf(`
+resource "aws_lb_listener_rule" "static" {
   listener_arn = "${aws_lb_listener.front_end.arn}"
   priority = 100
 
@@ -1016,7 +1020,8 @@ resource "aws_security_group" "alb_test" {
 }
 
 func testAccAWSLBListenerRuleConfig_fixedResponse(lbName string) string {
-	return fmt.Sprintf(`resource "aws_lb_listener_rule" "static" {
+	return fmt.Sprintf(`
+resource "aws_lb_listener_rule" "static" {
   listener_arn = "${aws_lb_listener.front_end.arn}"
   priority = 100
 
@@ -1602,7 +1607,8 @@ resource "aws_lb_listener_rule" "priority50000_in_use" {
 }
 
 func testAccAWSLBListenerRuleConfig_cognito(lbName string, targetGroupName string, certificateName string, cognitoPrefix string) string {
-	return fmt.Sprintf(`resource "aws_lb_listener_rule" "cognito" {
+	return fmt.Sprintf(`
+resource "aws_lb_listener_rule" "cognito" {
   listener_arn = "${aws_lb_listener.front_end.arn}"
   priority = 100
 
@@ -1778,7 +1784,8 @@ resource "aws_cognito_user_pool_domain" "test" {
 }
 
 func testAccAWSLBListenerRuleConfig_oidc(lbName string, targetGroupName string, certificateName string) string {
-	return fmt.Sprintf(`resource "aws_lb_listener_rule" "oidc" {
+	return fmt.Sprintf(`
+resource "aws_lb_listener_rule" "oidc" {
   listener_arn = "${aws_lb_listener.front_end.arn}"
   priority = 100
 

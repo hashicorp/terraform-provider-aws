@@ -409,7 +409,8 @@ func testAccCheckAWSLBListenerDestroy(s *terraform.State) error {
 }
 
 func testAccAWSLBListenerConfig_basic(lbName, targetGroupName string) string {
-	return fmt.Sprintf(`resource "aws_lb_listener" "front_end" {
+	return fmt.Sprintf(`
+resource "aws_lb_listener" "front_end" {
    load_balancer_arn = "${aws_lb.alb_test.id}"
    protocol = "HTTP"
    port = "80"
@@ -506,7 +507,8 @@ resource "aws_security_group" "alb_test" {
 }
 
 func testAccAWSLBListenerConfigBackwardsCompatibility(lbName, targetGroupName string) string {
-	return fmt.Sprintf(`resource "aws_alb_listener" "front_end" {
+	return fmt.Sprintf(`
+resource "aws_alb_listener" "front_end" {
    load_balancer_arn = "${aws_alb.alb_test.id}"
    protocol = "HTTP"
    port = "80"
@@ -603,7 +605,8 @@ resource "aws_security_group" "alb_test" {
 }
 
 func testAccAWSLBListenerConfig_https(lbName, targetGroupName string) string {
-	return fmt.Sprintf(`resource "aws_lb_listener" "front_end" {
+	return fmt.Sprintf(`
+resource "aws_lb_listener" "front_end" {
    load_balancer_arn = "${aws_lb.alb_test.id}"
    protocol = "HTTPS"
    port = "443"
@@ -835,7 +838,8 @@ resource "aws_lb_listener" "test" {
 }
 
 func testAccAWSLBListenerConfig_redirect(lbName string) string {
-	return fmt.Sprintf(`resource "aws_lb_listener" "front_end" {
+	return fmt.Sprintf(`
+resource "aws_lb_listener" "front_end" {
   load_balancer_arn = "${aws_lb.alb_test.id}"
   protocol = "HTTP"
   port = "80"
@@ -918,7 +922,8 @@ resource "aws_security_group" "alb_test" {
 }
 
 func testAccAWSLBListenerConfig_fixedResponse(lbName string) string {
-	return fmt.Sprintf(`resource "aws_lb_listener" "front_end" {
+	return fmt.Sprintf(`
+resource "aws_lb_listener" "front_end" {
   load_balancer_arn = "${aws_lb.alb_test.id}"
   protocol = "HTTP"
   port = "80"

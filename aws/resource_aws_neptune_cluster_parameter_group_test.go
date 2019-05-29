@@ -293,7 +293,8 @@ func testAccCheckAWSNeptuneClusterParameterGroupExists(n string, v *neptune.DBCl
 }
 
 func testAccAWSNeptuneClusterParameterGroupConfig_Description(name, description string) string {
-	return fmt.Sprintf(`resource "aws_neptune_cluster_parameter_group" "bar" {
+	return fmt.Sprintf(`
+resource "aws_neptune_cluster_parameter_group" "bar" {
   description = "%s"
   family      = "neptune1"
   name        = "%s"
@@ -329,7 +330,8 @@ resource "aws_neptune_cluster_parameter_group" "bar" {
 }
 
 func testAccAWSNeptuneClusterParameterGroupConfig(name string) string {
-	return fmt.Sprintf(`resource "aws_neptune_cluster_parameter_group" "bar" {
+	return fmt.Sprintf(`
+resource "aws_neptune_cluster_parameter_group" "bar" {
   family = "neptune1"
   name   = "%s"
 }

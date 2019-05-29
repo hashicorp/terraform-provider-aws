@@ -1001,7 +1001,8 @@ func testAccCheckAWSLBDestroy(s *terraform.State) error {
 }
 
 func testAccAWSLBConfigWithIpAddressTypeUpdated(lbName string) string {
-	return fmt.Sprintf(`resource "aws_lb" "lb_test" {
+	return fmt.Sprintf(`
+resource "aws_lb" "lb_test" {
   name            = "%s"
   security_groups = ["${aws_security_group.alb_test.id}"]
   subnets         = ["${aws_subnet.alb_test_1.id}", "${aws_subnet.alb_test_2.id}"]
@@ -1113,7 +1114,8 @@ resource "aws_security_group" "alb_test" {
 }
 
 func testAccAWSLBConfigWithIpAddressType(lbName string) string {
-	return fmt.Sprintf(`resource "aws_lb" "lb_test" {
+	return fmt.Sprintf(`
+resource "aws_lb" "lb_test" {
   name            = "%s"
   security_groups = ["${aws_security_group.alb_test.id}"]
   subnets         = ["${aws_subnet.alb_test_1.id}", "${aws_subnet.alb_test_2.id}"]
@@ -1225,7 +1227,8 @@ resource "aws_security_group" "alb_test" {
 }
 
 func testAccAWSLBConfig_basic(lbName string) string {
-	return fmt.Sprintf(`resource "aws_lb" "lb_test" {
+	return fmt.Sprintf(`
+resource "aws_lb" "lb_test" {
   name            = "%s"
   internal        = true
   security_groups = ["${aws_security_group.alb_test.id}"]
@@ -1293,7 +1296,8 @@ resource "aws_security_group" "alb_test" {
 }
 
 func testAccAWSLBConfig_enableHttp2(lbName string, http2 bool) string {
-	return fmt.Sprintf(`resource "aws_lb" "lb_test" {
+	return fmt.Sprintf(`
+resource "aws_lb" "lb_test" {
   name            = "%s"
   internal        = true
   security_groups = ["${aws_security_group.alb_test.id}"]
@@ -1363,7 +1367,8 @@ resource "aws_security_group" "alb_test" {
 }
 
 func testAccAWSLBConfig_enableDeletionProtection(lbName string, deletion_protection bool) string {
-	return fmt.Sprintf(`resource "aws_lb" "lb_test" {
+	return fmt.Sprintf(`
+resource "aws_lb" "lb_test" {
   name            = "%s"
   internal        = true
   security_groups = ["${aws_security_group.alb_test.id}"]
@@ -1431,7 +1436,8 @@ resource "aws_security_group" "alb_test" {
 }
 
 func testAccAWSLBConfig_networkLoadbalancer_subnets(lbName string) string {
-	return fmt.Sprintf(`resource "aws_vpc" "alb_test" {
+	return fmt.Sprintf(`
+resource "aws_vpc" "alb_test" {
   cidr_block = "10.0.0.0/16"
 
   tags = {
@@ -1492,7 +1498,8 @@ resource "aws_subnet" "alb_test_3" {
 }
 
 func testAccAWSLBConfig_networkLoadbalancer(lbName string, cz bool) string {
-	return fmt.Sprintf(`resource "aws_lb" "lb_test" {
+	return fmt.Sprintf(`
+resource "aws_lb" "lb_test" {
   name            = "%s"
   internal        = true
   load_balancer_type = "network"
@@ -1597,7 +1604,8 @@ resource "aws_eip" "lb" {
 }
 
 func testAccAWSLBConfigBackwardsCompatibility(lbName string) string {
-	return fmt.Sprintf(`resource "aws_alb" "lb_test" {
+	return fmt.Sprintf(`
+resource "aws_alb" "lb_test" {
   name            = "%s"
   internal        = true
   security_groups = ["${aws_security_group.alb_test.id}"]
@@ -1665,7 +1673,8 @@ resource "aws_security_group" "alb_test" {
 }
 
 func testAccAWSLBConfig_updateSubnets(lbName string) string {
-	return fmt.Sprintf(`resource "aws_lb" "lb_test" {
+	return fmt.Sprintf(`
+resource "aws_lb" "lb_test" {
   name            = "%s"
   internal        = true
   security_groups = ["${aws_security_group.alb_test.id}"]
@@ -1956,7 +1965,8 @@ resource "aws_security_group" "alb_test" {
 }`)
 }
 func testAccAWSLBConfig_updatedTags(lbName string) string {
-	return fmt.Sprintf(`resource "aws_lb" "lb_test" {
+	return fmt.Sprintf(`
+resource "aws_lb" "lb_test" {
   name            = "%s"
   internal        = true
   security_groups = ["${aws_security_group.alb_test.id}"]
@@ -2192,7 +2202,8 @@ resource "aws_lb" "test" {
 }
 
 func testAccAWSLBConfig_nosg(lbName string) string {
-	return fmt.Sprintf(`resource "aws_lb" "lb_test" {
+	return fmt.Sprintf(`
+resource "aws_lb" "lb_test" {
   name            = "%s"
   internal        = true
   subnets         = ["${aws_subnet.alb_test.*.id[0]}", "${aws_subnet.alb_test.*.id[1]}"]
@@ -2235,7 +2246,8 @@ resource "aws_subnet" "alb_test" {
 }
 
 func testAccAWSLBConfig_updateSecurityGroups(lbName string) string {
-	return fmt.Sprintf(`resource "aws_lb" "lb_test" {
+	return fmt.Sprintf(`
+resource "aws_lb" "lb_test" {
   name            = "%s"
   internal        = true
   security_groups = ["${aws_security_group.alb_test.id}", "${aws_security_group.alb_test_2.id}"]
