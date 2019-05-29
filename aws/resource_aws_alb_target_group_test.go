@@ -609,29 +609,28 @@ func TestAccAWSALBTargetGroup_missingPortProtocolVpc(t *testing.T) {
 }
 
 func testAccAWSALBTargetGroupConfig_basic(targetGroupName string) string {
-	return fmt.Sprintf(`
-resource "aws_alb_target_group" "test" {
-  name     = "%s"
-  port     = 443
+	return fmt.Sprintf(`resource "aws_alb_target_group" "test" {
+  name = "%s"
+  port = 443
   protocol = "HTTPS"
-  vpc_id   = "${aws_vpc.test.id}"
+  vpc_id = "${aws_vpc.test.id}"
 
   deregistration_delay = 200
 
   stickiness {
-    type            = "lb_cookie"
+    type = "lb_cookie"
     cookie_duration = 10000
   }
 
   health_check {
-    path                = "/health"
-    interval            = 60
-    port                = 8081
-    protocol            = "HTTP"
-    timeout             = 3
-    healthy_threshold   = 3
+    path = "/health"
+    interval = 60
+    port = 8081
+    protocol = "HTTP"
+    timeout = 3
+    healthy_threshold = 3
     unhealthy_threshold = 3
-    matcher             = "200-299"
+    matcher = "200-299"
   }
 
   tags = {
@@ -645,34 +644,32 @@ resource "aws_vpc" "test" {
   tags = {
     Name = "terraform-testacc-alb-target-group-basic"
   }
-}
-`, targetGroupName)
+}`, targetGroupName)
 }
 
 func testAccAWSALBTargetGroupConfig_updatedPort(targetGroupName string) string {
-	return fmt.Sprintf(`
-resource "aws_alb_target_group" "test" {
-  name     = "%s"
-  port     = 442
+	return fmt.Sprintf(`resource "aws_alb_target_group" "test" {
+  name = "%s"
+  port = 442
   protocol = "HTTPS"
-  vpc_id   = "${aws_vpc.test.id}"
+  vpc_id = "${aws_vpc.test.id}"
 
   deregistration_delay = 200
 
   stickiness {
-    type            = "lb_cookie"
+    type = "lb_cookie"
     cookie_duration = 10000
   }
 
   health_check {
-    path                = "/health"
-    interval            = 60
-    port                = 8081
-    protocol            = "HTTP"
-    timeout             = 3
-    healthy_threshold   = 3
+    path = "/health"
+    interval = 60
+    port = 8081
+    protocol = "HTTP"
+    timeout = 3
+    healthy_threshold = 3
     unhealthy_threshold = 3
-    matcher             = "200-299"
+    matcher = "200-299"
   }
 
   tags = {
@@ -686,34 +683,32 @@ resource "aws_vpc" "test" {
   tags = {
     Name = "terraform-testacc-alb-target-group-basic"
   }
-}
-`, targetGroupName)
+}`, targetGroupName)
 }
 
 func testAccAWSALBTargetGroupConfig_updatedProtocol(targetGroupName string) string {
-	return fmt.Sprintf(`
-resource "aws_alb_target_group" "test" {
-  name     = "%s"
-  port     = 443
+	return fmt.Sprintf(`resource "aws_alb_target_group" "test" {
+  name = "%s"
+  port = 443
   protocol = "HTTP"
-  vpc_id   = "${aws_vpc.test2.id}"
+  vpc_id = "${aws_vpc.test2.id}"
 
   deregistration_delay = 200
 
   stickiness {
-    type            = "lb_cookie"
+    type = "lb_cookie"
     cookie_duration = 10000
   }
 
   health_check {
-    path                = "/health"
-    interval            = 60
-    port                = 8081
-    protocol            = "HTTP"
-    timeout             = 3
-    healthy_threshold   = 3
+    path = "/health"
+    interval = 60
+    port = 8081
+    protocol = "HTTP"
+    timeout = 3
+    healthy_threshold = 3
     unhealthy_threshold = 3
-    matcher             = "200-299"
+    matcher = "200-299"
   }
 
   tags = {
@@ -735,34 +730,32 @@ resource "aws_vpc" "test" {
   tags = {
     Name = "terraform-testacc-alb-target-group-basic"
   }
-}
-`, targetGroupName)
+}`, targetGroupName)
 }
 
 func testAccAWSALBTargetGroupConfig_updatedVpc(targetGroupName string) string {
-	return fmt.Sprintf(`
-resource "aws_alb_target_group" "test" {
-  name     = "%s"
-  port     = 443
+	return fmt.Sprintf(`resource "aws_alb_target_group" "test" {
+  name = "%s"
+  port = 443
   protocol = "HTTPS"
-  vpc_id   = "${aws_vpc.test.id}"
+  vpc_id = "${aws_vpc.test.id}"
 
   deregistration_delay = 200
 
   stickiness {
-    type            = "lb_cookie"
+    type = "lb_cookie"
     cookie_duration = 10000
   }
 
   health_check {
-    path                = "/health"
-    interval            = 60
-    port                = 8081
-    protocol            = "HTTP"
-    timeout             = 3
-    healthy_threshold   = 3
+    path = "/health"
+    interval = 60
+    port = 8081
+    protocol = "HTTP"
+    timeout = 3
+    healthy_threshold = 3
     unhealthy_threshold = 3
-    matcher             = "200-299"
+    matcher = "200-299"
   }
 
   tags = {
@@ -776,39 +769,37 @@ resource "aws_vpc" "test" {
   tags = {
     Name = "terraform-testacc-alb-target-group-basic"
   }
-}
-`, targetGroupName)
+}`, targetGroupName)
 }
 
 func testAccAWSALBTargetGroupConfig_updateTags(targetGroupName string) string {
-	return fmt.Sprintf(`
-resource "aws_alb_target_group" "test" {
-  name     = "%s"
-  port     = 443
+	return fmt.Sprintf(`resource "aws_alb_target_group" "test" {
+  name = "%s"
+  port = 443
   protocol = "HTTPS"
-  vpc_id   = "${aws_vpc.test.id}"
+  vpc_id = "${aws_vpc.test.id}"
 
   deregistration_delay = 200
 
   stickiness {
-    type            = "lb_cookie"
+    type = "lb_cookie"
     cookie_duration = 10000
   }
 
   health_check {
-    path                = "/health"
-    interval            = 60
-    port                = 8081
-    protocol            = "HTTP"
-    timeout             = 3
-    healthy_threshold   = 3
+    path = "/health"
+    interval = 60
+    port = 8081
+    protocol = "HTTP"
+    timeout = 3
+    healthy_threshold = 3
     unhealthy_threshold = 3
-    matcher             = "200-299"
+    matcher = "200-299"
   }
 
   tags = {
     Environment = "Production"
-    Type        = "ALB Target Group"
+    Type = "ALB Target Group"
   }
 }
 
@@ -818,34 +809,32 @@ resource "aws_vpc" "test" {
   tags = {
     Name = "terraform-testacc-alb-target-group-basic"
   }
-}
-`, targetGroupName)
+}`, targetGroupName)
 }
 
 func testAccAWSALBTargetGroupConfig_updateHealthCheck(targetGroupName string) string {
-	return fmt.Sprintf(`
-resource "aws_alb_target_group" "test" {
-  name     = "%s"
-  port     = 443
+	return fmt.Sprintf(`resource "aws_alb_target_group" "test" {
+  name = "%s"
+  port = 443
   protocol = "HTTPS"
-  vpc_id   = "${aws_vpc.test.id}"
+  vpc_id = "${aws_vpc.test.id}"
 
   deregistration_delay = 200
 
   stickiness {
-    type            = "lb_cookie"
+    type = "lb_cookie"
     cookie_duration = 10000
   }
 
   health_check {
-    path                = "/health2"
-    interval            = 30
-    port                = 8082
-    protocol            = "HTTPS"
-    timeout             = 4
-    healthy_threshold   = 4
+    path = "/health2"
+    interval = 30
+    port = 8082
+    protocol = "HTTPS"
+    timeout = 4
+    healthy_threshold = 4
     unhealthy_threshold = 4
-    matcher             = "200"
+    matcher = "200"
   }
 }
 
@@ -855,8 +844,7 @@ resource "aws_vpc" "test" {
   tags = {
     Name = "terraform-testacc-alb-target-group-basic"
   }
-}
-`, targetGroupName)
+}`, targetGroupName)
 }
 
 func testAccAWSALBTargetGroupConfig_stickiness(targetGroupName string, addStickinessBlock bool, enabled bool) string {
@@ -870,24 +858,25 @@ func testAccAWSALBTargetGroupConfig_stickiness(targetGroupName string, addSticki
 	  }`, enabled)
 	}
 
-	return fmt.Sprintf(`
-resource "aws_alb_target_group" "test" {
-  name     = "%s"
-  port     = 443
+	return fmt.Sprintf(`resource "aws_alb_target_group" "test" {
+  name = "%s"
+  port = 443
   protocol = "HTTPS"
-  vpc_id   = "${aws_vpc.test.id}"
+  vpc_id = "${aws_vpc.test.id}"
 
   deregistration_delay = 200
 
-  %s#_#" health_check {
-    path                = "/health2"
-    interval            = 30
-    port                = 8082
-    protocol            = "HTTPS"
-    timeout             = 4
-    healthy_threshold   = 4
+  %s
+
+  health_check {
+    path = "/health2"
+    interval = 30
+    port = 8082
+    protocol = "HTTPS"
+    timeout = 4
+    healthy_threshold = 4
     unhealthy_threshold = 4
-    matcher             = "200"
+    matcher = "200"
   }
 }
 
@@ -897,35 +886,33 @@ resource "aws_vpc" "test" {
   tags = {
     Name = "terraform-testacc-alb-target-group-stickiness"
   }
-}
-`, targetGroupName, stickinessBlock)
+}`, targetGroupName, stickinessBlock)
 }
 
 func testAccAWSALBTargetGroupConfig_updateSlowStart(targetGroupName string, slowStartDuration int) string {
-	return fmt.Sprintf(`
-resource "aws_alb_target_group" "test" {
-  name     = "%s"
-  port     = 443
+	return fmt.Sprintf(`resource "aws_alb_target_group" "test" {
+  name = "%s"
+  port = 443
   protocol = "HTTP"
-  vpc_id   = "${aws_vpc.test.id}"
+  vpc_id = "${aws_vpc.test.id}"
 
   deregistration_delay = 200
-  slow_start           = %d
+  slow_start = %d
 
   stickiness {
-    type            = "lb_cookie"
+    type = "lb_cookie"
     cookie_duration = 10000
   }
 
   health_check {
-    path                = "/health"
-    interval            = 60
-    port                = 8081
-    protocol            = "HTTP"
-    timeout             = 3
-    healthy_threshold   = 3
+    path = "/health"
+    interval = 60
+    port = 8081
+    protocol = "HTTP"
+    timeout = 3
+    healthy_threshold = 3
     unhealthy_threshold = 3
-    matcher             = "200-299"
+    matcher = "200-299"
   }
 
   tags = {
@@ -939,8 +926,7 @@ resource "aws_vpc" "test" {
   tags = {
     Name = "terraform-testacc-alb-target-group-slowstart"
   }
-}
-`, targetGroupName, slowStartDuration)
+}`, targetGroupName, slowStartDuration)
 }
 
 const testAccAWSALBTargetGroupConfig_namePrefix = `
@@ -985,12 +971,10 @@ resource "aws_vpc" "test" {
 `
 
 func testAccAWSALBTargetGroupConfig_lambda(targetGroupName string) string {
-	return fmt.Sprintf(`
-resource "aws_alb_target_group" "test" {
-  name        = "%s"
-  target_type = "lambda"
-}
-`, targetGroupName)
+	return fmt.Sprintf(`resource "aws_alb_target_group" "test" {
+	name = "%s"
+	target_type = "lambda"
+}`, targetGroupName)
 }
 
 func testAccAWSALBTargetGroupConfig_lambdaMultiValueHeadersEnabled(rName string, lambdaMultiValueHadersEnabled bool) string {
@@ -1004,38 +988,33 @@ resource "aws_alb_target_group" "test" {
 }
 
 func testAccAWSALBTargetGroupConfig_missing_port(targetGroupName string) string {
-	return fmt.Sprintf(`
-resource "aws_alb_target_group" "test" {
-  name     = "%s"
+	return fmt.Sprintf(`resource "aws_alb_target_group" "test" {
+  name = "%s"
   protocol = "HTTPS"
-  vpc_id   = "${aws_vpc.test.id}"
-}
-
-resource "aws_vpc" "test" {
-  cidr_block = "10.0.0.0/16"
-}
-`, targetGroupName)
-}
-
-func testAccAWSALBTargetGroupConfig_missing_protocol(targetGroupName string) string {
-	return fmt.Sprintf(`
-resource "aws_alb_target_group" "test" {
-  name   = "%s"
-  port   = 443
   vpc_id = "${aws_vpc.test.id}"
 }
 
 resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"
+}`, targetGroupName)
 }
-`, targetGroupName)
+
+func testAccAWSALBTargetGroupConfig_missing_protocol(targetGroupName string) string {
+	return fmt.Sprintf(`resource "aws_alb_target_group" "test" {
+	name = "%s"
+	port = 443
+  vpc_id = "${aws_vpc.test.id}"
+}
+
+resource "aws_vpc" "test" {
+  cidr_block = "10.0.0.0/16"
+}`, targetGroupName)
 }
 
 func testAccAWSALBTargetGroupConfig_missing_vpc(targetGroupName string) string {
-	return fmt.Sprintf(`
-resource "aws_alb_target_group" "test" {
-  name     = "%s"
-  port     = 443
+	return fmt.Sprintf(`resource "aws_alb_target_group" "test" {
+	name = "%s"
+	port = 443
   protocol = "HTTPS"
 }
 `, targetGroupName)
