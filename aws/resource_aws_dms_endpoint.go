@@ -138,17 +138,17 @@ func resourceAwsDmsEndpoint() *schema.Resource {
 						"auth_type": {
 							Type:     schema.TypeString,
 							Optional: true,
-							Default:  "password",
+							Default:  dms.AuthTypeValuePassword,
 						},
 						"auth_mechanism": {
 							Type:     schema.TypeString,
 							Optional: true,
-							Default:  "default",
+							Default:  dms.AuthMechanismValueDefault,
 						},
 						"nesting_level": {
 							Type:     schema.TypeString,
 							Optional: true,
-							Default:  "none",
+							Default:  dms.NestingLevelValueNone,
 						},
 						"extract_doc_id": {
 							Type:     schema.TypeString,
