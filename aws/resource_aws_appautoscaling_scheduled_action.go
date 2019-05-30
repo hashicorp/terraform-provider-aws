@@ -145,14 +145,17 @@ func resourceAwsAppautoscalingScheduledActionRead(d *schema.ResourceData, meta i
 	conn := meta.(*AWSClient).appautoscalingconn
 
 	saName := d.Get("name").(string)
+	saResourceId := d.Get("resource_id").(string)
 	input := &applicationautoscaling.DescribeScheduledActionsInput{
 		ScheduledActionNames: []*string{aws.String(saName)},
 		ServiceNamespace:     aws.String(d.Get("service_namespace").(string)),
+		ResourceId:           aws.String(saResourceId),
 	}
 	resp, err := conn.DescribeScheduledActions(input)
 	if err != nil {
 		return err
 	}
+
 	if len(resp.ScheduledActions) < 1 {
 		log.Printf("[WARN] Application Autoscaling Scheduled Action (%s) not found, removing from state", d.Id())
 		d.SetId("")
