@@ -164,10 +164,18 @@ func resourceAwsAppautoscalingScheduledActionRead(d *schema.ResourceData, meta i
 	if len(resp.ScheduledActions) != 1 {
 		return fmt.Errorf("Expected 1 scheduled action under %s, found %d", saName, len(resp.ScheduledActions))
 	}
-	if *resp.ScheduledActions[0].ScheduledActionName != saName {
+	sa := resp.ScheduledActions[0]
+	if *sa.ScheduledActionName != saName {
 		return fmt.Errorf("Scheduled Action (%s) not found", saName)
 	}
-	d.Set("arn", resp.ScheduledActions[0].ScheduledActionARN)
+
+	if err := d.Set("scalable_target_action", flattenScalableTargetActionConfiguration(sa.ScalableTargetAction)); err != nil {
+		return fmt.Errorf("error setting scalable_target_action: %s", err)
+	}
+	d.Set("schedule", sa.Schedule)
+	d.Set("start_time", sa.StartTime)
+	d.Set("end_time", sa.EndTime)
+	d.Set("arn", sa.ScheduledActionARN)
 	return nil
 }
 
@@ -192,4 +200,20 @@ func resourceAwsAppautoscalingScheduledActionDelete(d *schema.ResourceData, meta
 	}
 
 	return nil
+}
+
+func flattenScalableTargetActionConfiguration(cfg *applicationautoscaling.ScalableTargetAction) []interface{} {
+	if cfg == nil {
+		return []interface{}{}
+	}
+
+	m := make(map[string]interface{})
+	if cfg.MaxCapacity != nil {
+		m["max_capacity"] = *cfg.MaxCapacity
+	}
+	if cfg.MinCapacity != nil {
+		m["min_capacity"] = *cfg.MinCapacity
+	}
+
+	return []interface{}{m}
 }
