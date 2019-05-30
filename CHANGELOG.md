@@ -4,6 +4,10 @@ FEATURES:
 
 * **New Resource:** `aws_ec2_transit_gateway_vpc_attachment_accepter` [GH-8679]
 
+ENHANCEMENTS:
+
+* resource/aws_iot_role_alias: Add `arn` attribute [GH-8812]
+
 BUG FIXES:
 
 * data-source/aws_rds_cluster: Add missing `hosted_zone_id` attribute [GH-8799]
