@@ -162,11 +162,10 @@ func resourceAwsAppautoscalingScheduledActionRead(d *schema.ResourceData, meta i
 	conn := meta.(*AWSClient).appautoscalingconn
 
 	saName := d.Get("name").(string)
-	saResourceId := d.Get("resource_id").(string)
 	input := &applicationautoscaling.DescribeScheduledActionsInput{
 		ScheduledActionNames: []*string{aws.String(saName)},
 		ServiceNamespace:     aws.String(d.Get("service_namespace").(string)),
-		ResourceId:           aws.String(saResourceId),
+		ResourceId:           aws.String(d.Get("resource_id").(string)),
 	}
 	resp, err := conn.DescribeScheduledActions(input)
 	if err != nil {
