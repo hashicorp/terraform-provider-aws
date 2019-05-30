@@ -17,6 +17,7 @@ func resourceAwsAppautoscalingScheduledAction() *schema.Resource {
 	return &schema.Resource{
 		Create: resourceAwsAppautoscalingScheduledActionPut,
 		Read:   resourceAwsAppautoscalingScheduledActionRead,
+		Update: resourceAwsAppautoscalingScheduledActionPut,
 		Delete: resourceAwsAppautoscalingScheduledActionDelete,
 
 		Schema: map[string]*schema.Schema{
@@ -43,19 +44,19 @@ func resourceAwsAppautoscalingScheduledAction() *schema.Resource {
 			"scalable_target_action": {
 				Type:     schema.TypeList,
 				Optional: true,
-				ForceNew: true,
+				ForceNew: false,
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"max_capacity": {
 							Type:     schema.TypeInt,
 							Optional: true,
-							ForceNew: true,
+							ForceNew: false,
 						},
 						"min_capacity": {
 							Type:     schema.TypeInt,
 							Optional: true,
-							ForceNew: true,
+							ForceNew: false,
 						},
 					},
 				},
@@ -63,17 +64,17 @@ func resourceAwsAppautoscalingScheduledAction() *schema.Resource {
 			"schedule": {
 				Type:     schema.TypeString,
 				Optional: true,
-				ForceNew: true,
+				ForceNew: false,
 			},
 			"start_time": {
 				Type:     schema.TypeString,
 				Optional: true,
-				ForceNew: true,
+				ForceNew: false,
 			},
 			"end_time": {
 				Type:     schema.TypeString,
 				Optional: true,
-				ForceNew: true,
+				ForceNew: false,
 			},
 			"arn": {
 				Type:     schema.TypeString,
