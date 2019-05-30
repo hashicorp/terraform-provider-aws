@@ -13,16 +13,24 @@ import (
 )
 
 func TestAccAWSAppautoscalingScheduledAction_dynamo(t *testing.T) {
-	ts := time.Now().AddDate(0, 0, 1).Format("2006-01-02T15:04:05")
+	rName := acctest.RandString(5)
+	schedule1 := fmt.Sprintf("at(%s)", time.Now().AddDate(0, 0, 1).Format("2006-01-02T15:04:05"))
+	schedule2 := fmt.Sprintf("at(%s)", time.Now().AddDate(0, 0, 2).Format("2006-01-02T15:04:05"))
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsAppautoscalingScheduledActionDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAppautoscalingScheduledActionConfig_DynamoDB(acctest.RandString(5), ts),
+				Config: testAccAppautoscalingScheduledActionConfig_DynamoDB(rName, schedule1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsAppautoscalingScheduledActionExists("aws_appautoscaling_scheduled_action.scale_down"),
+				),
+			},
+			{
+				Config: testAccAppautoscalingScheduledActionConfig_DynamoDB(rName, schedule2),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("aws_appautoscaling_scheduled_action.scale_down", "schedule", schedule2),
 				),
 			},
 		},
@@ -113,7 +121,7 @@ func testAccCheckAwsAppautoscalingScheduledActionExists(name string) resource.Te
 	}
 }
 
-func testAccAppautoscalingScheduledActionConfig_DynamoDB(rName, ts string) string {
+func testAccAppautoscalingScheduledActionConfig_DynamoDB(rName, schedule string) string {
 	return fmt.Sprintf(`
 resource "aws_dynamodb_table" "hoge" {
   name           = "tf-ddb-%s"
@@ -140,7 +148,7 @@ resource "aws_appautoscaling_scheduled_action" "scale_down" {
   service_namespace  = "${aws_appautoscaling_target.read.service_namespace}"
   resource_id        = "${aws_appautoscaling_target.read.resource_id}"
   scalable_dimension = "${aws_appautoscaling_target.read.scalable_dimension}"
-  schedule           = "at(%s)"
+  schedule           = "%s"
 
   scalable_target_action {
     min_capacity = 1
@@ -149,7 +157,7 @@ resource "aws_appautoscaling_scheduled_action" "scale_down" {
     # "ValidationException: Maximum capacity cannot be less than minimum capacity"
   }
 }
-`, rName, rName, ts)
+`, rName, rName, schedule)
 }
 
 func testAccAppautoscalingScheduledActionConfig_ECS(rName, ts string) string {
