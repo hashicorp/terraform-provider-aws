@@ -226,7 +226,7 @@ resource "aws_vpc" "test" {
 }
 
 resource "aws_lb" "test1" {
-  name =  %[1]q
+  name = %[1]q
 
   subnets = [
     "${aws_subnet.test1.id}",
@@ -239,7 +239,7 @@ resource "aws_lb" "test1" {
   enable_deletion_protection = false
 
   tags = {
-    Name =  %[1]q
+    Name = %[1]q
   }
 }
 
@@ -251,7 +251,7 @@ resource "aws_subnet" "test1" {
   availability_zone = "${data.aws_availability_zones.available.names[0]}"
 
   tags = {
-    Name =  %[1]q
+    Name = %[1]q
   }
 }
 
@@ -261,7 +261,7 @@ resource "aws_subnet" "test2" {
   availability_zone = "${data.aws_availability_zones.available.names[1]}"
 
   tags = {
-    Name =  %[1]q
+    Name = %[1]q
   }
 }
 
@@ -275,7 +275,7 @@ resource "aws_vpc_endpoint_service" "test" {
   ]
 
   allowed_principals = [
-    "${data.aws_caller_identity.current.arn}"
+    "${data.aws_caller_identity.current.arn}",
   ]
 
   tags = {

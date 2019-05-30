@@ -510,7 +510,7 @@ data "aws_region" "current" {}
 
 resource "aws_vpc_endpoint" "test" {
   vpc_id       = "${aws_vpc.test.id}"
-	service_name = "com.amazonaws.${data.aws_region.current.name}.s3"
+  service_name = "com.amazonaws.${data.aws_region.current.name}.s3"
 
   route_table_ids = [
     "${aws_route_table.test.id}",
@@ -574,7 +574,7 @@ data "aws_region" "current" {}
 
 resource "aws_vpc_endpoint" "test" {
   vpc_id       = "${aws_vpc.test.id}"
-	service_name = "com.amazonaws.${data.aws_region.current.name}.s3"
+  service_name = "com.amazonaws.${data.aws_region.current.name}.s3"
 
   route_table_ids = []
 
@@ -634,7 +634,7 @@ data "aws_region" "current" {}
 resource "aws_vpc_endpoint" "test" {
   vpc_id            = "${aws_vpc.test.id}"
   service_name      = "com.amazonaws.${data.aws_region.current.name}.ec2"
-	vpc_endpoint_type = "Interface"
+  vpc_endpoint_type = "Interface"
 
   security_group_ids = [
     "${data.aws_security_group.test.id}",
@@ -730,12 +730,12 @@ resource "aws_security_group" "test2" {
 resource "aws_vpc_endpoint" "test" {
   vpc_id              = "${aws_vpc.test.id}"
   service_name        = "com.amazonaws.${data.aws_region.current.name}.ec2"
-	vpc_endpoint_type   = "Interface"
-	private_dns_enabled = false
+  vpc_endpoint_type   = "Interface"
+  private_dns_enabled = false
 
   subnet_ids = [
     "${aws_subnet.test1.id}",
-	]
+  ]
 
   security_group_ids = [
     "${aws_security_group.test1.id}",
