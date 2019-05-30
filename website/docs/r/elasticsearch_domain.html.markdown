@@ -6,7 +6,7 @@ description: |-
   Terraform resource for managing an AWS Elasticsearch Domain.
 ---
 
-# aws_elasticsearch_domain
+# Resource: aws_elasticsearch_domain
 
 Manages an AWS Elasticsearch Domain.
 
@@ -48,6 +48,7 @@ data "aws_caller_identity" "current" {}
 
 resource "aws_elasticsearch_domain" "example" {
   domain_name = "${var.domain}"
+
   # ... other configuration ...
 
   access_policies = <<POLICY
@@ -78,6 +79,7 @@ resource "aws_cloudwatch_log_group" "example" {
 
 resource "aws_cloudwatch_log_resource_policy" "example" {
   policy_name = "example"
+
   policy_document = <<CONFIG
 {
   "Version": "2012-10-17",
@@ -152,7 +154,7 @@ resource "aws_security_group" "es" {
 }
 
 resource "aws_iam_service_linked_role" "es" {
-  aws_service_name = "elasticsearch.amazonaws.com"
+  aws_service_name = "es.amazonaws.com"
 }
 
 resource "aws_elasticsearch_domain" "es" {
@@ -172,7 +174,7 @@ resource "aws_elasticsearch_domain" "es" {
     security_group_ids = ["${aws_security_group.elasticsearch.id}"]
   }
 
-  advanced_options {
+  advanced_options = {
     "rest.action.multi.allow_explicit_index" = "true"
   }
 

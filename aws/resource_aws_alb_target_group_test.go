@@ -505,20 +505,79 @@ func testAccCheckAWSALBTargetGroupDestroy(s *terraform.State) error {
 }
 
 func TestAccAWSALBTargetGroup_lambda(t *testing.T) {
-	var conf elbv2.TargetGroup
-	targetGroupName := fmt.Sprintf("test-target-group-%s", acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum))
+	var targetGroup1 elbv2.TargetGroup
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_alb_target_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:      func() { testAccPreCheck(t) },
-		IDRefreshName: "aws_alb_target_group.test",
-		Providers:     testAccProviders,
-		CheckDestroy:  testAccCheckAWSALBTargetGroupDestroy,
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSALBTargetGroupDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSALBTargetGroupConfig_lambda(targetGroupName),
+				Config: testAccAWSALBTargetGroupConfig_lambda(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSALBTargetGroupExists("aws_alb_target_group.test", &conf),
-					resource.TestCheckResourceAttr("aws_alb_target_group.test", "target_type", "lambda"),
+					testAccCheckAWSALBTargetGroupExists(resourceName, &targetGroup1),
+					resource.TestCheckResourceAttr(resourceName, "lambda_multi_value_headers_enabled", "false"),
+					resource.TestCheckResourceAttr(resourceName, "target_type", "lambda"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"deregistration_delay",
+					"proxy_protocol_v2",
+					"slow_start",
+				},
+			},
+		},
+	})
+}
+
+func TestAccAWSALBTargetGroup_lambdaMultiValueHeadersEnabled(t *testing.T) {
+	var targetGroup1 elbv2.TargetGroup
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_alb_target_group.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSALBTargetGroupDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSALBTargetGroupConfig_lambdaMultiValueHeadersEnabled(rName, true),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSALBTargetGroupExists(resourceName, &targetGroup1),
+					resource.TestCheckResourceAttr(resourceName, "lambda_multi_value_headers_enabled", "true"),
+					resource.TestCheckResourceAttr(resourceName, "target_type", "lambda"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"deregistration_delay",
+					"proxy_protocol_v2",
+					"slow_start",
+				},
+			},
+			{
+				Config: testAccAWSALBTargetGroupConfig_lambdaMultiValueHeadersEnabled(rName, false),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSALBTargetGroupExists(resourceName, &targetGroup1),
+					resource.TestCheckResourceAttr(resourceName, "lambda_multi_value_headers_enabled", "false"),
+					resource.TestCheckResourceAttr(resourceName, "target_type", "lambda"),
+				),
+			},
+			{
+				Config: testAccAWSALBTargetGroupConfig_lambdaMultiValueHeadersEnabled(rName, true),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSALBTargetGroupExists(resourceName, &targetGroup1),
+					resource.TestCheckResourceAttr(resourceName, "lambda_multi_value_headers_enabled", "true"),
+					resource.TestCheckResourceAttr(resourceName, "target_type", "lambda"),
 				),
 			},
 		},
@@ -916,6 +975,16 @@ func testAccAWSALBTargetGroupConfig_lambda(targetGroupName string) string {
 	name = "%s"
 	target_type = "lambda"
 }`, targetGroupName)
+}
+
+func testAccAWSALBTargetGroupConfig_lambdaMultiValueHeadersEnabled(rName string, lambdaMultiValueHadersEnabled bool) string {
+	return fmt.Sprintf(`
+resource "aws_alb_target_group" "test" {
+  lambda_multi_value_headers_enabled = %[1]t
+  name                               = %[2]q
+  target_type                        = "lambda"
+}
+`, lambdaMultiValueHadersEnabled, rName)
 }
 
 func testAccAWSALBTargetGroupConfig_missing_port(targetGroupName string) string {

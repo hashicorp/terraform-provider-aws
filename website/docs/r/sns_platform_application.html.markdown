@@ -6,7 +6,7 @@ description: |-
   Provides an SNS platform application resource.
 ---
 
-# aws_sns_platform_application
+# Resource: aws_sns_platform_application
 
 Provides an SNS platform application resource
 

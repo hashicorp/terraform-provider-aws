@@ -220,7 +220,7 @@ func resourceAwsApiGatewayUsagePlanCreate(d *schema.ResourceData, meta interface
 			},
 		}
 
-		up, err = conn.UpdateUsagePlan(updateParameters)
+		_, err = conn.UpdateUsagePlan(updateParameters)
 		if err != nil {
 			return fmt.Errorf("Error creating the API Gateway Usage Plan product code: %s", err)
 		}

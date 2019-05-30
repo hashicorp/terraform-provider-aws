@@ -150,40 +150,45 @@ func testAccCheckAwsMqConfigurationExists(name string) resource.TestCheckFunc {
 func testAccMqConfigurationConfig(configurationName string) string {
 	return fmt.Sprintf(`
 resource "aws_mq_configuration" "test" {
-  description = "TfAccTest MQ Configuration"
-  name = "%s"
-  engine_type = "ActiveMQ"
+  description    = "TfAccTest MQ Configuration"
+  name           = "%s"
+  engine_type    = "ActiveMQ"
   engine_version = "5.15.0"
+
   data = <<DATA
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <broker xmlns="http://activemq.apache.org/schema/core">
 </broker>
 DATA
-}`, configurationName)
+}
+`, configurationName)
 }
 
 func testAccMqConfigurationConfig_descriptionUpdated(configurationName string) string {
 	return fmt.Sprintf(`
 resource "aws_mq_configuration" "test" {
-  description = "TfAccTest MQ Configuration Updated"
-  name = "%s"
-  engine_type = "ActiveMQ"
+  description    = "TfAccTest MQ Configuration Updated"
+  name           = "%s"
+  engine_type    = "ActiveMQ"
   engine_version = "5.15.0"
+
   data = <<DATA
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <broker xmlns="http://activemq.apache.org/schema/core">
 </broker>
 DATA
-}`, configurationName)
+}
+`, configurationName)
 }
 
 func testAccMqConfigurationWithDataConfig(configurationName string) string {
 	return fmt.Sprintf(`
 resource "aws_mq_configuration" "test" {
-  description = "TfAccTest MQ Configuration"
-  name = "%s"
-  engine_type = "ActiveMQ"
+  description    = "TfAccTest MQ Configuration"
+  name           = "%s"
+  engine_type    = "ActiveMQ"
   engine_version = "5.15.0"
+
   data = <<DATA
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <broker xmlns="http://activemq.apache.org/schema/core">
@@ -207,63 +212,70 @@ resource "aws_mq_configuration" "test" {
   </plugins>
 </broker>
 DATA
-}`, configurationName)
+}
+`, configurationName)
 }
 
 func testAccMqConfigurationConfig_updateTags1(configurationName string) string {
 	return fmt.Sprintf(`
 resource "aws_mq_configuration" "test" {
-  description = "TfAccTest MQ Configuration"
-  name = "%s"
-  engine_type = "ActiveMQ"
+  description    = "TfAccTest MQ Configuration"
+  name           = "%s"
+  engine_type    = "ActiveMQ"
   engine_version = "5.15.0"
+
   data = <<DATA
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <broker xmlns="http://activemq.apache.org/schema/core">
 </broker>
 DATA
 
-	tags {
-		env = "test"
-	}
-}`, configurationName)
+  tags = {
+    env = "test"
+  }
+}
+`, configurationName)
 }
 
 func testAccMqConfigurationConfig_updateTags2(configurationName string) string {
 	return fmt.Sprintf(`
 resource "aws_mq_configuration" "test" {
-  description = "TfAccTest MQ Configuration"
-  name = "%s"
-  engine_type = "ActiveMQ"
+  description    = "TfAccTest MQ Configuration"
+  name           = "%s"
+  engine_type    = "ActiveMQ"
   engine_version = "5.15.0"
+
   data = <<DATA
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <broker xmlns="http://activemq.apache.org/schema/core">
 </broker>
 DATA
 
-	tags {
-		env = "test2"
-		role = "test-role"
-	}
-}`, configurationName)
+  tags = {
+    env  = "test2"
+    role = "test-role"
+  }
+}
+`, configurationName)
 }
 
 func testAccMqConfigurationConfig_updateTags3(configurationName string) string {
 	return fmt.Sprintf(`
 resource "aws_mq_configuration" "test" {
-  description = "TfAccTest MQ Configuration"
-  name = "%s"
-  engine_type = "ActiveMQ"
+  description    = "TfAccTest MQ Configuration"
+  name           = "%s"
+  engine_type    = "ActiveMQ"
   engine_version = "5.15.0"
+
   data = <<DATA
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <broker xmlns="http://activemq.apache.org/schema/core">
 </broker>
 DATA
 
-	tags {
-		role = "test-role"
-	}
-}`, configurationName)
+  tags = {
+    role = "test-role"
+  }
+}
+`, configurationName)
 }

@@ -215,10 +215,14 @@ func resourceAwsEc2TransitGatewayDelete(d *schema.ResourceData, meta interface{}
 	}
 
 	log.Printf("[DEBUG] Deleting EC2 Transit Gateway (%s): %s", d.Id(), input)
-	err := resource.Retry(1*time.Minute, func() *resource.RetryError {
+	err := resource.Retry(2*time.Minute, func() *resource.RetryError {
 		_, err := conn.DeleteTransitGateway(input)
 
 		if isAWSErr(err, "IncorrectState", "has non-deleted Transit Gateway Attachments") {
+			return resource.RetryableError(err)
+		}
+
+		if isAWSErr(err, "IncorrectState", "has non-deleted DirectConnect Gateway Attachments") {
 			return resource.RetryableError(err)
 		}
 
@@ -232,6 +236,10 @@ func resourceAwsEc2TransitGatewayDelete(d *schema.ResourceData, meta interface{}
 
 		return nil
 	})
+
+	if isResourceTimeoutError(err) {
+		_, err = conn.DeleteTransitGateway(input)
+	}
 
 	if isAWSErr(err, "InvalidTransitGatewayID.NotFound", "") {
 		return nil

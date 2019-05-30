@@ -1,27 +1,114 @@
 package aws
 
 import (
-	"bytes"
 	"encoding/json"
 	"fmt"
+	"log"
 	"reflect"
 	"regexp"
 	"sort"
 	"strconv"
-	"testing"
-	"text/template"
-
-	"github.com/hashicorp/terraform/helper/acctest"
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/terraform"
-
 	"strings"
+	"testing"
+	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/s3"
+	"github.com/hashicorp/terraform/helper/acctest"
+	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/helper/schema"
+	"github.com/hashicorp/terraform/terraform"
 )
+
+func init() {
+	resource.AddTestSweepers("aws_s3_bucket", &resource.Sweeper{
+		Name: "aws_s3_bucket",
+		F:    testSweepS3Buckets,
+		Dependencies: []string{
+			"aws_s3_bucket_object",
+		},
+	})
+}
+
+func testSweepS3Buckets(region string) error {
+	client, err := sharedClientForRegion(region)
+	if err != nil {
+		return fmt.Errorf("error getting client: %s", err)
+	}
+
+	conn := client.(*AWSClient).s3conn
+	input := &s3.ListBucketsInput{}
+
+	output, err := conn.ListBuckets(input)
+
+	if testSweepSkipSweepError(err) {
+		log.Printf("[WARN] Skipping S3 Buckets sweep for %s: %s", region, err)
+		return nil
+	}
+
+	if err != nil {
+		return fmt.Errorf("error listing S3 Buckets: %s", err)
+	}
+
+	if len(output.Buckets) == 0 {
+		log.Print("[DEBUG] No S3 Buckets to sweep")
+		return nil
+	}
+
+	for _, bucket := range output.Buckets {
+		name := aws.StringValue(bucket.Name)
+
+		hasPrefix := false
+		prefixes := []string{"mybucket.", "mylogs.", "tf-acc", "tf-object-test", "tf-test"}
+
+		for _, prefix := range prefixes {
+			if strings.HasPrefix(name, prefix) {
+				hasPrefix = true
+				break
+			}
+		}
+
+		if !hasPrefix {
+			log.Printf("[INFO] Skipping S3 Bucket: %s", name)
+			continue
+		}
+
+		input := &s3.DeleteBucketInput{
+			Bucket: bucket.Name,
+		}
+
+		log.Printf("[INFO] Deleting S3 Bucket: %s", name)
+		err := resource.Retry(1*time.Minute, func() *resource.RetryError {
+			_, err := conn.DeleteBucket(input)
+
+			if isAWSErr(err, s3.ErrCodeNoSuchBucket, "") {
+				return nil
+			}
+
+			if isAWSErr(err, "AuthorizationHeaderMalformed", "region") || isAWSErr(err, "BucketRegionError", "") {
+				log.Printf("[INFO] Skipping S3 Bucket (%s): %s", name, err)
+				return nil
+			}
+
+			if isAWSErr(err, "BucketNotEmpty", "") {
+				return resource.RetryableError(err)
+			}
+
+			if err != nil {
+				return resource.NonRetryableError(err)
+			}
+
+			return nil
+		})
+
+		if err != nil {
+			return fmt.Errorf("error deleting S3 Bucket (%s): %s", name, err)
+		}
+	}
+
+	return nil
+}
 
 func TestAccAWSS3Bucket_importBasic(t *testing.T) {
 	resourceName := "aws_s3_bucket.bucket"
@@ -130,6 +217,27 @@ func TestAccAWSS3Bucket_basic(t *testing.T) {
 	})
 }
 
+// Support for common Terraform 0.11 pattern
+// Reference: https://github.com/terraform-providers/terraform-provider-aws/issues/7868
+func TestAccAWSS3Bucket_Bucket_EmptyString(t *testing.T) {
+	resourceName := "aws_s3_bucket.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSS3BucketDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSS3BucketConfigBucketEmptyString,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSS3BucketExists(resourceName),
+					resource.TestMatchResourceAttr(resourceName, "bucket", regexp.MustCompile("^terraform-")),
+				),
+			},
+		},
+	})
+}
+
 func TestAccAWSS3MultiBucket_withTags(t *testing.T) {
 	rInt := acctest.RandInt()
 	resource.ParallelTest(t, resource.TestCase{
@@ -179,21 +287,25 @@ func TestAccAWSS3Bucket_generatedName(t *testing.T) {
 }
 
 func TestAccAWSS3Bucket_region(t *testing.T) {
+	resourceName := "aws_s3_bucket.bucket"
 	rInt := acctest.RandInt()
+	bucketName := fmt.Sprintf("tf-test-bucket-%d", rInt)
+	region := "eu-west-1"
+	var providers []*schema.Provider
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			testAccPreCheck(t)
 			testAccMultipleRegionsPreCheck(t)
 		},
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckAWSS3BucketDestroy,
+		ProviderFactories: testAccProviderFactories(&providers),
+		CheckDestroy:      testAccCheckWithProviders(testAccCheckAWSS3BucketDestroyWithProvider, &providers),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSS3BucketConfigWithRegion(rInt),
+				Config: testAccAWSS3BucketConfigWithRegion(bucketName, region),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSS3BucketExists("aws_s3_bucket.bucket"),
-					resource.TestCheckResourceAttr("aws_s3_bucket.bucket", "region", "eu-west-1"),
+					testAccCheckAWSS3BucketExistsWithProvider(resourceName, testAccAwsRegionProviderFunc(region, &providers)),
+					resource.TestCheckResourceAttr(resourceName, "region", region),
 				),
 			},
 		},
@@ -800,6 +912,12 @@ func TestAccAWSS3Bucket_Lifecycle(t *testing.T) {
 						"aws_s3_bucket.bucket", "lifecycle_rule.0.transition.962205413.days", "120"),
 					resource.TestCheckResourceAttr(
 						"aws_s3_bucket.bucket", "lifecycle_rule.0.transition.962205413.storage_class", "GLACIER"),
+					resource.TestCheckResourceAttr(
+						"aws_s3_bucket.bucket", "lifecycle_rule.0.transition.1571523406.date", ""),
+					resource.TestCheckResourceAttr(
+						"aws_s3_bucket.bucket", "lifecycle_rule.0.transition.1571523406.days", "210"),
+					resource.TestCheckResourceAttr(
+						"aws_s3_bucket.bucket", "lifecycle_rule.0.transition.1571523406.storage_class", "DEEP_ARCHIVE"),
 					resource.TestCheckResourceAttr(
 						"aws_s3_bucket.bucket", "lifecycle_rule.1.id", "id2"),
 					resource.TestCheckResourceAttr(
@@ -1516,13 +1634,31 @@ func testAccCheckAWSS3BucketDestroyWithProvider(s *terraform.State, provider *sc
 		if rs.Type != "aws_s3_bucket" {
 			continue
 		}
-		_, err := conn.DeleteBucket(&s3.DeleteBucketInput{
+
+		input := &s3.HeadBucketInput{
 			Bucket: aws.String(rs.Primary.ID),
-		})
-		if err != nil {
-			if isAWSErr(err, s3.ErrCodeNoSuchBucket, "") {
+		}
+
+		// Retry for S3 eventual consistency
+		err := resource.Retry(1*time.Minute, func() *resource.RetryError {
+			_, err := conn.HeadBucket(input)
+
+			if isAWSErr(err, s3.ErrCodeNoSuchBucket, "") || isAWSErr(err, "NotFound", "") {
 				return nil
 			}
+
+			if err != nil {
+				return resource.NonRetryableError(err)
+			}
+
+			return resource.RetryableError(fmt.Errorf("AWS S3 Bucket still exists: %s", rs.Primary.ID))
+		})
+
+		if isResourceTimeoutError(err) {
+			_, err = conn.HeadBucket(input)
+		}
+
+		if err != nil {
 			return err
 		}
 	}
@@ -1927,110 +2063,113 @@ func testAccAWSS3BucketPolicy(randInt int, partition string) string {
 			"Resource": "arn:%s:s3:::tf-test-bucket-%d/*"
 		}
 	]
-}`, partition, randInt)
+}
+`, partition, randInt)
 }
 
 func testAccAWSS3BucketConfig(randInt int) string {
 	return fmt.Sprintf(`
 resource "aws_s3_bucket" "bucket" {
-	bucket = "tf-test-bucket-%d"
-	acl = "public-read"
+  bucket = "tf-test-bucket-%d"
+  acl    = "public-read"
 }
 `, randInt)
 }
 
 func testAccAWSS3MultiBucketConfigWithTags(randInt int) string {
-	t := template.Must(template.New("t1").
-		Parse(`
+	return fmt.Sprintf(`
 resource "aws_s3_bucket" "bucket1" {
-	bucket = "tf-test-bucket-1-{{.GUID}}"
-	acl = "private"
-	force_destroy = true
-	tags = {
-		Name = "tf-test-bucket-1-{{.GUID}}"
-		Environment = "{{.GUID}}"
-	}
+  bucket        = "tf-test-bucket-1-%[1]d"
+  acl           = "private"
+  force_destroy = true
+
+  tags = {
+    Name        = "tf-test-bucket-1-%[1]d"
+    Environment = "%[1]d"
+  }
 }
 
 resource "aws_s3_bucket" "bucket2" {
-	bucket = "tf-test-bucket-2-{{.GUID}}"
-	acl = "private"
-	force_destroy = true
-	tags = {
-		Name = "tf-test-bucket-2-{{.GUID}}"
-		Environment = "{{.GUID}}"
-	}
+  bucket        = "tf-test-bucket-2-%[1]d"
+  acl           = "private"
+  force_destroy = true
+
+  tags = {
+    Name        = "tf-test-bucket-2-%[1]d"
+    Environment = "%[1]d"
+  }
 }
 
 resource "aws_s3_bucket" "bucket3" {
-	bucket = "tf-test-bucket-3-{{.GUID}}"
-	acl = "private"
-	force_destroy = true
-	tags = {
-		Name = "tf-test-bucket-3-{{.GUID}}"
-		Environment = "{{.GUID}}"
-	}
+  bucket        = "tf-test-bucket-3-%[1]d"
+  acl           = "private"
+  force_destroy = true
+
+  tags = {
+    Name        = "tf-test-bucket-3-%[1]d"
+    Environment = "%[1]d"
+  }
 }
 
 resource "aws_s3_bucket" "bucket4" {
-	bucket = "tf-test-bucket-4-{{.GUID}}"
-	acl = "private"
-	force_destroy = true
-	tags = {
-		Name = "tf-test-bucket-4-{{.GUID}}"
-		Environment = "{{.GUID}}"
-	}
+  bucket        = "tf-test-bucket-4-%[1]d"
+  acl           = "private"
+  force_destroy = true
+
+  tags = {
+    Name        = "tf-test-bucket-4-%[1]d"
+    Environment = "%[1]d"
+  }
 }
 
 resource "aws_s3_bucket" "bucket5" {
-	bucket = "tf-test-bucket-5-{{.GUID}}"
-	acl = "private"
-	force_destroy = true
-	tags = {
-		Name = "tf-test-bucket-5-{{.GUID}}"
-		Environment = "{{.GUID}}"
-	}
+  bucket        = "tf-test-bucket-5-%[1]d"
+  acl           = "private"
+  force_destroy = true
+
+  tags = {
+    Name        = "tf-test-bucket-5-%[1]d"
+    Environment = "%[1]d"
+  }
 }
 
 resource "aws_s3_bucket" "bucket6" {
-	bucket = "tf-test-bucket-6-{{.GUID}}"
-	acl = "private"
-	force_destroy = true
-	tags = {
-		Name = "tf-test-bucket-6-{{.GUID}}"
-		Environment = "{{.GUID}}"
-	}
+  bucket        = "tf-test-bucket-6-%[1]d"
+  acl           = "private"
+  force_destroy = true
+
+  tags = {
+    Name        = "tf-test-bucket-6-%[1]d"
+    Environment = "%[1]d"
+  }
 }
-`))
-	var doc bytes.Buffer
-	t.Execute(&doc, struct{ GUID int }{GUID: randInt})
-	return doc.String()
+`, randInt)
 }
 
-func testAccAWSS3BucketConfigWithRegion(randInt int) string {
+func testAccAWSS3BucketConfigWithRegion(bucketName, region string) string {
 	return fmt.Sprintf(`
 provider "aws" {
-	alias = "west"
-	region = "eu-west-1"
+  alias  = "west"
+  region = "%s"
 }
 
 resource "aws_s3_bucket" "bucket" {
-	provider = "aws.west"
-	bucket = "tf-test-bucket-%d"
-	region = "eu-west-1"
+  provider = "aws.west"
+  bucket   = "%s"
+  region   = "%s"
 }
-`, randInt)
+`, region, bucketName, region)
 }
 
 func testAccAWSS3BucketWebsiteConfig(randInt int) string {
 	return fmt.Sprintf(`
 resource "aws_s3_bucket" "bucket" {
-	bucket = "tf-test-bucket-%d"
-	acl = "public-read"
+  bucket = "tf-test-bucket-%d"
+  acl    = "public-read"
 
-	website {
-		index_document = "index.html"
-	}
+  website {
+    index_document = "index.html"
+  }
 }
 `, randInt)
 }
@@ -2038,13 +2177,13 @@ resource "aws_s3_bucket" "bucket" {
 func testAccAWSS3BucketWebsiteConfigWithError(randInt int) string {
 	return fmt.Sprintf(`
 resource "aws_s3_bucket" "bucket" {
-	bucket = "tf-test-bucket-%d"
-	acl = "public-read"
+  bucket = "tf-test-bucket-%d"
+  acl    = "public-read"
 
-	website {
-		index_document = "index.html"
-		error_document = "error.html"
-	}
+  website {
+    index_document = "index.html"
+    error_document = "error.html"
+  }
 }
 `, randInt)
 }
@@ -2052,12 +2191,12 @@ resource "aws_s3_bucket" "bucket" {
 func testAccAWSS3BucketWebsiteConfigWithRedirect(randInt int) string {
 	return fmt.Sprintf(`
 resource "aws_s3_bucket" "bucket" {
-	bucket = "tf-test-bucket-%d"
-	acl = "public-read"
+  bucket = "tf-test-bucket-%d"
+  acl    = "public-read"
 
-	website {
-		redirect_all_requests_to = "hashicorp.com?my=query"
-	}
+  website {
+    redirect_all_requests_to = "hashicorp.com?my=query"
+  }
 }
 `, randInt)
 }
@@ -2065,12 +2204,12 @@ resource "aws_s3_bucket" "bucket" {
 func testAccAWSS3BucketWebsiteConfigWithHttpsRedirect(randInt int) string {
 	return fmt.Sprintf(`
 resource "aws_s3_bucket" "bucket" {
-	bucket = "tf-test-bucket-%d"
-	acl = "public-read"
+  bucket = "tf-test-bucket-%d"
+  acl    = "public-read"
 
-	website {
-		redirect_all_requests_to = "https://hashicorp.com?my=query"
-	}
+  website {
+    redirect_all_requests_to = "https://hashicorp.com?my=query"
+  }
 }
 `, randInt)
 }
@@ -2078,13 +2217,14 @@ resource "aws_s3_bucket" "bucket" {
 func testAccAWSS3BucketWebsiteConfigWithRoutingRules(randInt int) string {
 	return fmt.Sprintf(`
 resource "aws_s3_bucket" "bucket" {
-	bucket = "tf-test-bucket-%d"
-	acl = "public-read"
+  bucket = "tf-test-bucket-%d"
+  acl    = "public-read"
 
-	website {
-		index_document = "index.html"
-		error_document = "error.html"
-		routing_rules = <<EOF
+  website {
+    index_document = "index.html"
+    error_document = "error.html"
+
+    routing_rules = <<EOF
 [{
 	"Condition": {
 		"KeyPrefixEquals": "docs/"
@@ -2094,7 +2234,7 @@ resource "aws_s3_bucket" "bucket" {
 	}
 }]
 EOF
-	}
+  }
 }
 `, randInt)
 }
@@ -2102,9 +2242,9 @@ EOF
 func testAccAWSS3BucketConfigWithAcceleration(randInt int) string {
 	return fmt.Sprintf(`
 resource "aws_s3_bucket" "bucket" {
-	bucket = "tf-test-bucket-%d"
-	acl = "public-read"
-	acceleration_status = "Enabled"
+  bucket              = "tf-test-bucket-%d"
+  acl                 = "public-read"
+  acceleration_status = "Enabled"
 }
 `, randInt)
 }
@@ -2112,9 +2252,9 @@ resource "aws_s3_bucket" "bucket" {
 func testAccAWSS3BucketConfigWithoutAcceleration(randInt int) string {
 	return fmt.Sprintf(`
 resource "aws_s3_bucket" "bucket" {
-	bucket = "tf-test-bucket-%d"
-	acl = "public-read"
-	acceleration_status = "Suspended"
+  bucket              = "tf-test-bucket-%d"
+  acl                 = "public-read"
+  acceleration_status = "Suspended"
 }
 `, randInt)
 }
@@ -2122,9 +2262,9 @@ resource "aws_s3_bucket" "bucket" {
 func testAccAWSS3BucketConfigRequestPayerBucketOwner(randInt int) string {
 	return fmt.Sprintf(`
 resource "aws_s3_bucket" "bucket" {
-	bucket = "tf-test-bucket-%d"
-	acl = "public-read"
-	request_payer = "BucketOwner"
+  bucket        = "tf-test-bucket-%d"
+  acl           = "public-read"
+  request_payer = "BucketOwner"
 }
 `, randInt)
 }
@@ -2132,9 +2272,9 @@ resource "aws_s3_bucket" "bucket" {
 func testAccAWSS3BucketConfigRequestPayerRequester(randInt int) string {
 	return fmt.Sprintf(`
 resource "aws_s3_bucket" "bucket" {
-	bucket = "tf-test-bucket-%d"
-	acl = "public-read"
-	request_payer = "Requester"
+  bucket        = "tf-test-bucket-%d"
+  acl           = "public-read"
+  request_payer = "Requester"
 }
 `, randInt)
 }
@@ -2142,9 +2282,9 @@ resource "aws_s3_bucket" "bucket" {
 func testAccAWSS3BucketConfigWithPolicy(randInt int, partition string) string {
 	return fmt.Sprintf(`
 resource "aws_s3_bucket" "bucket" {
-	bucket = "tf-test-bucket-%d"
-	acl = "public-read"
-	policy = %s
+  bucket = "tf-test-bucket-%d"
+  acl    = "public-read"
+  policy = %s
 }
 `, randInt, strconv.Quote(testAccAWSS3BucketPolicy(randInt, partition)))
 }
@@ -2152,8 +2292,8 @@ resource "aws_s3_bucket" "bucket" {
 func testAccAWSS3BucketDestroyedConfig(randInt int) string {
 	return fmt.Sprintf(`
 resource "aws_s3_bucket" "bucket" {
-	bucket = "tf-test-bucket-%d"
-	acl = "public-read"
+  bucket = "tf-test-bucket-%d"
+  acl    = "public-read"
 }
 `, randInt)
 }
@@ -2167,13 +2307,14 @@ resource "aws_kms_key" "arbitrary" {
 
 resource "aws_s3_bucket" "arbitrary" {
   bucket = "tf-test-bucket-%d"
+
   server_side_encryption_configuration {
-	rule {
-	  apply_server_side_encryption_by_default {
-		kms_master_key_id = "${aws_kms_key.arbitrary.arn}"
-	  	sse_algorithm     = "aws:kms"
-	  }
-	}
+    rule {
+      apply_server_side_encryption_by_default {
+        kms_master_key_id = "${aws_kms_key.arbitrary.arn}"
+        sse_algorithm     = "aws:kms"
+      }
+    }
   }
 }
 `, randInt, randInt)
@@ -2183,12 +2324,13 @@ func testAccAWSS3BucketEnableDefaultEncryptionWithAES256(randInt int) string {
 	return fmt.Sprintf(`
 resource "aws_s3_bucket" "arbitrary" {
   bucket = "tf-test-bucket-%d"
+
   server_side_encryption_configuration {
-	rule {
-	  apply_server_side_encryption_by_default {
-	  	sse_algorithm     = "AES256"
-	  }
-	}
+    rule {
+      apply_server_side_encryption_by_default {
+        sse_algorithm = "AES256"
+      }
+    }
   }
 }
 `, randInt)
@@ -2198,12 +2340,13 @@ func testAccAWSS3BucketEnableDefaultEncryptionWithDefaultKey(randInt int) string
 	return fmt.Sprintf(`
 resource "aws_s3_bucket" "arbitrary" {
   bucket = "tf-test-bucket-%d"
+
   server_side_encryption_configuration {
-	rule {
-	  apply_server_side_encryption_by_default {
-	  	sse_algorithm     = "aws:kms"
-	  }
-	}
+    rule {
+      apply_server_side_encryption_by_default {
+        sse_algorithm = "aws:kms"
+      }
+    }
   }
 }
 `, randInt)
@@ -2220,9 +2363,9 @@ resource "aws_s3_bucket" "arbitrary" {
 func testAccAWSS3BucketConfigWithEmptyPolicy(randInt int) string {
 	return fmt.Sprintf(`
 resource "aws_s3_bucket" "bucket" {
-	bucket = "tf-test-bucket-%d"
-	acl = "public-read"
-	policy = ""
+  bucket = "tf-test-bucket-%d"
+  acl    = "public-read"
+  policy = ""
 }
 `, randInt)
 }
@@ -2230,11 +2373,12 @@ resource "aws_s3_bucket" "bucket" {
 func testAccAWSS3BucketConfigWithVersioning(randInt int) string {
 	return fmt.Sprintf(`
 resource "aws_s3_bucket" "bucket" {
-	bucket = "tf-test-bucket-%d"
-	acl = "public-read"
-	versioning {
-	  enabled = true
-	}
+  bucket = "tf-test-bucket-%d"
+  acl    = "public-read"
+
+  versioning {
+    enabled = true
+  }
 }
 `, randInt)
 }
@@ -2242,11 +2386,12 @@ resource "aws_s3_bucket" "bucket" {
 func testAccAWSS3BucketConfigWithDisableVersioning(randInt int) string {
 	return fmt.Sprintf(`
 resource "aws_s3_bucket" "bucket" {
-	bucket = "tf-test-bucket-%d"
-	acl = "public-read"
-	versioning {
-	  enabled = false
-	}
+  bucket = "tf-test-bucket-%d"
+  acl    = "public-read"
+
+  versioning {
+    enabled = false
+  }
 }
 `, randInt)
 }
@@ -2254,15 +2399,16 @@ resource "aws_s3_bucket" "bucket" {
 func testAccAWSS3BucketConfigWithCORS(randInt int) string {
 	return fmt.Sprintf(`
 resource "aws_s3_bucket" "bucket" {
-	bucket = "tf-test-bucket-%d"
-	acl = "public-read"
-	cors_rule {
-			allowed_headers = ["*"]
-			allowed_methods = ["PUT","POST"]
-			allowed_origins = ["https://www.example.com"]
-			expose_headers = ["x-amz-server-side-encryption","ETag"]
-			max_age_seconds = 3000
-	}
+  bucket = "tf-test-bucket-%d"
+  acl    = "public-read"
+
+  cors_rule {
+    allowed_headers = ["*"]
+    allowed_methods = ["PUT", "POST"]
+    allowed_origins = ["https://www.example.com"]
+    expose_headers  = ["x-amz-server-side-encryption", "ETag"]
+    max_age_seconds = 3000
+  }
 }
 `, randInt)
 }
@@ -2270,15 +2416,16 @@ resource "aws_s3_bucket" "bucket" {
 func testAccAWSS3BucketConfigWithCORSEmptyOrigin(randInt int) string {
 	return fmt.Sprintf(`
 resource "aws_s3_bucket" "bucket" {
-	bucket = "tf-test-bucket-%d"
-	acl = "public-read"
-	cors_rule {
-			allowed_headers = ["*"]
-			allowed_methods = ["PUT","POST"]
-			allowed_origins = [""]
-			expose_headers = ["x-amz-server-side-encryption","ETag"]
-			max_age_seconds = 3000
-	}
+  bucket = "tf-test-bucket-%d"
+  acl    = "public-read"
+
+  cors_rule {
+    allowed_headers = ["*"]
+    allowed_methods = ["PUT", "POST"]
+    allowed_origins = [""]
+    expose_headers  = ["x-amz-server-side-encryption", "ETag"]
+    max_age_seconds = 3000
+  }
 }
 `, randInt)
 }
@@ -2300,16 +2447,18 @@ resource "aws_s3_bucket" "bucket" {
 func testAccAWSS3BucketConfigWithLogging(randInt int) string {
 	return fmt.Sprintf(`
 resource "aws_s3_bucket" "log_bucket" {
-	bucket = "tf-test-log-bucket-%d"
-	acl = "log-delivery-write"
+  bucket = "tf-test-log-bucket-%d"
+  acl    = "log-delivery-write"
 }
+
 resource "aws_s3_bucket" "bucket" {
-	bucket = "tf-test-bucket-%d"
-	acl = "private"
-	logging {
-		target_bucket = "${aws_s3_bucket.log_bucket.id}"
-		target_prefix = "log/"
-	}
+  bucket = "tf-test-bucket-%d"
+  acl    = "private"
+
+  logging {
+    target_bucket = "${aws_s3_bucket.log_bucket.id}"
+    target_prefix = "log/"
+  }
 }
 `, randInt, randInt)
 }
@@ -2317,70 +2466,79 @@ resource "aws_s3_bucket" "bucket" {
 func testAccAWSS3BucketConfigWithLifecycle(randInt int) string {
 	return fmt.Sprintf(`
 resource "aws_s3_bucket" "bucket" {
-	bucket = "tf-test-bucket-%d"
-	acl = "private"
-	lifecycle_rule {
-		id = "id1"
-		prefix = "path1/"
-		enabled = true
+  bucket = "tf-test-bucket-%d"
+  acl    = "private"
 
-		expiration {
-			days = 365
-		}
+  lifecycle_rule {
+    id      = "id1"
+    prefix  = "path1/"
+    enabled = true
 
-		transition {
-			days = 30
-			storage_class = "STANDARD_IA"
-		}
+    expiration {
+      days = 365
+    }
 
-		transition {
-			days = 60
-			storage_class = "INTELLIGENT_TIERING"
-		}
+    transition {
+      days          = 30
+      storage_class = "STANDARD_IA"
+    }
 
-		transition {
-			days = 90
-			storage_class = "ONEZONE_IA"
-		}
+    transition {
+      days          = 60
+      storage_class = "INTELLIGENT_TIERING"
+    }
 
-		transition {
-			days = 120
-			storage_class = "GLACIER"
-		}
-	}
-	lifecycle_rule {
-		id = "id2"
-		prefix = "path2/"
-		enabled = true
+    transition {
+      days          = 90
+      storage_class = "ONEZONE_IA"
+    }
 
-		expiration {
-			date = "2016-01-12"
-		}
-	}
-	lifecycle_rule {
-		id = "id3"
-		prefix = "path3/"
-		enabled = true
+    transition {
+      days          = 120
+      storage_class = "GLACIER"
+    }
 
-		transition {
-			days = 0
-			storage_class = "GLACIER"
-		}
-	}
-	lifecycle_rule {
-		id = "id4"
-		prefix = "path4/"
-		enabled = true
+    transition {
+      days          = 210
+      storage_class = "DEEP_ARCHIVE"
+    }
+  }
 
-	tags = {
-			"tagKey" = "tagValue"
-			"terraform" = "hashicorp"
-		}
+  lifecycle_rule {
+    id      = "id2"
+    prefix  = "path2/"
+    enabled = true
 
-		expiration {
-			date = "2016-01-12"
-		}
-	}
+    expiration {
+      date = "2016-01-12"
+    }
+  }
+
+  lifecycle_rule {
+    id      = "id3"
+    prefix  = "path3/"
+    enabled = true
+
+    transition {
+      days          = 0
+      storage_class = "GLACIER"
+    }
+  }
+
+  lifecycle_rule {
+    id      = "id4"
+    prefix  = "path4/"
+    enabled = true
+
+    tags = {
+      "tagKey"    = "tagValue"
+      "terraform" = "hashicorp"
+    }
+
+    expiration {
+      date = "2016-01-12"
+    }
+  }
 }
 `, randInt)
 }
@@ -2388,17 +2546,18 @@ resource "aws_s3_bucket" "bucket" {
 func testAccAWSS3BucketConfigWithLifecycleExpireMarker(randInt int) string {
 	return fmt.Sprintf(`
 resource "aws_s3_bucket" "bucket" {
-	bucket = "tf-test-bucket-%d"
-	acl = "private"
-	lifecycle_rule {
-		id = "id1"
-		prefix = "path1/"
-		enabled = true
+  bucket = "tf-test-bucket-%d"
+  acl    = "private"
 
-		expiration {
-			expired_object_delete_marker = "true"
-		}
-	}
+  lifecycle_rule {
+    id      = "id1"
+    prefix  = "path1/"
+    enabled = true
+
+    expiration {
+      expired_object_delete_marker = "true"
+    }
+  }
 }
 `, randInt)
 }
@@ -2406,47 +2565,53 @@ resource "aws_s3_bucket" "bucket" {
 func testAccAWSS3BucketConfigWithVersioningLifecycle(randInt int) string {
 	return fmt.Sprintf(`
 resource "aws_s3_bucket" "bucket" {
-	bucket = "tf-test-bucket-%d"
-	acl = "private"
-	versioning {
-	  enabled = false
-	}
-	lifecycle_rule {
-		id = "id1"
-		prefix = "path1/"
-		enabled = true
+  bucket = "tf-test-bucket-%d"
+  acl    = "private"
 
-		noncurrent_version_expiration {
-			days = 365
-		}
-		noncurrent_version_transition {
-			days = 30
-			storage_class = "STANDARD_IA"
-		}
-		noncurrent_version_transition {
-			days = 60
-			storage_class = "GLACIER"
-		}
-	}
-	lifecycle_rule {
-		id = "id2"
-		prefix = "path2/"
-		enabled = false
+  versioning {
+    enabled = false
+  }
 
-		noncurrent_version_expiration {
-			days = 365
-		}
-	}
-	lifecycle_rule {
-		id = "id3"
-		prefix = "path3/"
-		enabled = true
+  lifecycle_rule {
+    id      = "id1"
+    prefix  = "path1/"
+    enabled = true
 
-		noncurrent_version_transition {
-			days = 0
-			storage_class = "GLACIER"
-		}
-	}
+    noncurrent_version_expiration {
+      days = 365
+    }
+
+    noncurrent_version_transition {
+      days          = 30
+      storage_class = "STANDARD_IA"
+    }
+
+    noncurrent_version_transition {
+      days          = 60
+      storage_class = "GLACIER"
+    }
+  }
+
+  lifecycle_rule {
+    id      = "id2"
+    prefix  = "path2/"
+    enabled = false
+
+    noncurrent_version_expiration {
+      days = 365
+    }
+  }
+
+  lifecycle_rule {
+    id      = "id3"
+    prefix  = "path3/"
+    enabled = true
+
+    noncurrent_version_transition {
+      days          = 0
+      storage_class = "GLACIER"
+    }
+  }
 }
 `, randInt)
 }
@@ -3015,6 +3180,12 @@ resource "aws_s3_bucket" "arbitrary" {
 }
 `, randInt)
 }
+
+const testAccAWSS3BucketConfigBucketEmptyString = `
+resource "aws_s3_bucket" "test" {
+  bucket = ""
+}
+`
 
 const testAccAWSS3BucketConfig_namePrefix = `
 resource "aws_s3_bucket" "test" {

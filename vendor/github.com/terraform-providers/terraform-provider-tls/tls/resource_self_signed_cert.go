@@ -73,7 +73,10 @@ func CreateSelfSignedCert(d *schema.ResourceData, meta interface{}) error {
 	if len(subjectConfs) != 1 {
 		return fmt.Errorf("must have exactly one 'subject' block")
 	}
-	subjectConf := subjectConfs[0].(map[string]interface{})
+	subjectConf, ok := subjectConfs[0].(map[string]interface{})
+	if !ok {
+		return fmt.Errorf("subject block cannot be empty")
+	}
 	subject, err := nameFromResourceData(subjectConf)
 	if err != nil {
 		return fmt.Errorf("invalid subject block: %s", err)

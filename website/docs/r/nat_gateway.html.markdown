@@ -6,7 +6,7 @@ description: |-
   Provides a resource to create a VPC NAT Gateway.
 ---
 
-# aws_nat_gateway
+# Resource: aws_nat_gateway
 
 Provides a resource to create a VPC NAT Gateway.
 

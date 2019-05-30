@@ -3,7 +3,8 @@
 // Package kafka provides the client and types for making API
 // requests to Managed Streaming for Kafka.
 //
-// The operations for managing an Amazon MSK cluster.
+// The operations for managing an Amazon MSK cluster. This is prerelease documentation
+// for a service in preview release. It is subject to change
 //
 // See https://docs.aws.amazon.com/goto/WebAPI/kafka-2018-11-14 for more information on this service.
 //

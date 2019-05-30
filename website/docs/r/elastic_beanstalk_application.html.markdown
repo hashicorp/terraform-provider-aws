@@ -6,7 +6,7 @@ description: |-
   Provides an Elastic Beanstalk Application Resource
 ---
 
-# aws_elastic_beanstalk_application
+# Resource: aws_elastic_beanstalk_application
 
 Provides an Elastic Beanstalk Application Resource. Elastic Beanstalk allows
 you to deploy and manage applications in the AWS cloud without worrying about
@@ -43,13 +43,13 @@ Application version lifecycle (`appversion_lifecycle`) supports the following se
 * `max_count` - (Optional) The maximum number of application versions to retain.
 * `max_age_in_days` - (Optional) The number of days to retain an application version.
 * `delete_source_from_s3` - (Optional) Set to `true` to delete a version's source bundle from S3 when the application version is deleted.
+* `tags` - Key-value mapping of tags for the Elastic Beanstalk Application.
 
 ## Attributes Reference
 
 In addition to all arguments above, the following attributes are exported:
 
-* `name`
-* `description`
+* `arn` - The ARN assigned by AWS for this Elastic Beanstalk Application.
 
 
 ## Import

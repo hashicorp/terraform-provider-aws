@@ -399,6 +399,10 @@ func resourceAwsS3BucketNotificationRead(d *schema.ResourceData, meta interface{
 
 func flattenNotificationConfigurationFilter(filter *s3.NotificationConfigurationFilter) map[string]interface{} {
 	filterRules := map[string]interface{}{}
+	if filter.Key == nil || filter.Key.FilterRules == nil {
+		return filterRules
+	}
+
 	for _, f := range filter.Key.FilterRules {
 		if strings.ToLower(*f.Name) == s3.FilterRuleNamePrefix {
 			filterRules["filter_prefix"] = *f.Value

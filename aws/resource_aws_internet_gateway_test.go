@@ -30,17 +30,7 @@ func testSweepInternetGateways(region string) error {
 	}
 	conn := client.(*AWSClient).ec2conn
 
-	req := &ec2.DescribeInternetGatewaysInput{
-		Filters: []*ec2.Filter{
-			{
-				Name: aws.String("tag-value"),
-				Values: []*string{
-					aws.String("terraform-testacc-*"),
-					aws.String("tf-acc-test-*"),
-				},
-			},
-		},
-	}
+	req := &ec2.DescribeInternetGatewaysInput{}
 	resp, err := conn.DescribeInternetGateways(req)
 	if err != nil {
 		if testSweepSkipSweepError(err) {
@@ -55,8 +45,35 @@ func testSweepInternetGateways(region string) error {
 		return nil
 	}
 
+	defaultVPCID := ""
+	describeVpcsInput := &ec2.DescribeVpcsInput{
+		Filters: []*ec2.Filter{
+			{
+				Name:   aws.String("isDefault"),
+				Values: aws.StringSlice([]string{"true"}),
+			},
+		},
+	}
+
+	describeVpcsOutput, err := conn.DescribeVpcs(describeVpcsInput)
+
+	if err != nil {
+		return fmt.Errorf("Error describing VPCs: %s", err)
+	}
+
+	if describeVpcsOutput != nil && len(describeVpcsOutput.Vpcs) == 1 {
+		defaultVPCID = aws.StringValue(describeVpcsOutput.Vpcs[0].VpcId)
+	}
+
 	for _, internetGateway := range resp.InternetGateways {
+		isDefaultVPCInternetGateway := false
+
 		for _, attachment := range internetGateway.Attachments {
+			if aws.StringValue(attachment.VpcId) == defaultVPCID {
+				isDefaultVPCInternetGateway = true
+				break
+			}
+
 			input := &ec2.DetachInternetGatewayInput{
 				InternetGatewayId: internetGateway.InternetGatewayId,
 				VpcId:             attachment.VpcId,
@@ -80,6 +97,11 @@ func testSweepInternetGateways(region string) error {
 			if _, err = stateConf.WaitForState(); err != nil {
 				return fmt.Errorf("error waiting for VPN Gateway (%s) to detach from VPC (%s): %s", aws.StringValue(internetGateway.InternetGatewayId), aws.StringValue(attachment.VpcId), err)
 			}
+		}
+
+		if isDefaultVPCInternetGateway {
+			log.Printf("[DEBUG] Skipping Default VPC Internet Gateway: %s", aws.StringValue(internetGateway.InternetGatewayId))
+			continue
 		}
 
 		input := &ec2.DeleteInternetGatewayInput{

@@ -11,31 +11,35 @@ description: |-
 Use this data source to get the ID of a registered AMI for use in other
 resources.
 
-~> **NOTE:** The `owners` argument will be **required** in the next major version.
-
 ## Example Usage
 
 ```hcl
-data "aws_ami" "nat_ami" {
-  most_recent      = true
+data "aws_ami" "example" {
   executable_users = ["self"]
-
-  filter {
-    name   = "owner-alias"
-    values = ["amazon"]
-  }
+  most_recent      = true
+  name_regex       = "^myami-\\d{3}"
+  owners           = ["self"]
 
   filter {
     name   = "name"
-    values = ["amzn-ami-vpc-nat*"]
+    values = ["myami-*"]
   }
 
-  name_regex = "^myami-\\d{3}"
-  owners     = ["self"]
+  filter {
+    name   = "root-device-type"
+    values = ["ebs"]
+  }
+
+  filter {
+    name   = "virtualization-type"
+    values = ["hvm"]
+  }
 }
 ```
 
 ## Argument Reference
+
+* `owners` - (Required) List of AMI owners to limit search. At least 1 value must be specified. Valid values: an AWS account ID, `self` (the current account), or an AWS owner alias (e.g. `amazon`, `aws-marketplace`, `microsoft`).
 
 * `most_recent` - (Optional) If more than one result is returned, use the most
 recent AMI.
@@ -47,17 +51,11 @@ recent AMI.
 several valid keys, for a full reference, check out
 [describe-images in the AWS CLI reference][1].
 
-* `owners` - (Optional) Limit search to specific AMI owners. Valid items are the numeric
-account ID, `amazon`, or `self`.
-
 * `name_regex` - (Optional) A regex string to apply to the AMI list returned
 by AWS. This allows more advanced filtering not supported from the AWS API. This
 filtering is done locally on what AWS returns, and could have a performance
 impact if the result is large. It is recommended to combine this with other
 options to narrow down the list AWS returns.
-
-~> **NOTE:** At least one of `executable_users`, `filter`, `owners`, or
-`name_regex` must be specified.
 
 ~> **NOTE:** If more or less than a single match is returned by the search,
 Terraform will fail. Ensure that your search is specific enough to return

@@ -54,6 +54,7 @@ func resourceAwsEcrRepositoryCreate(d *schema.ResourceData, meta interface{}) er
 
 	input := ecr.CreateRepositoryInput{
 		RepositoryName: aws.String(d.Get("name").(string)),
+		Tags:           tagsFromMapECR(d.Get("tags").(map[string]interface{})),
 	}
 
 	log.Printf("[DEBUG] Creating ECR repository: %#v", input)
@@ -67,12 +68,6 @@ func resourceAwsEcrRepositoryCreate(d *schema.ResourceData, meta interface{}) er
 	log.Printf("[DEBUG] ECR repository created: %q", *repository.RepositoryArn)
 
 	d.SetId(aws.StringValue(repository.RepositoryName))
-	// ARN required for setting any tags.
-	d.Set("arn", repository.RepositoryArn)
-
-	if err := setTagsECR(conn, d); err != nil {
-		return fmt.Errorf("error setting ECR repository tags: %s", err)
-	}
 
 	return resourceAwsEcrRepositoryRead(d, meta)
 }

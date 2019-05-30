@@ -9,6 +9,7 @@ import (
 	"strconv"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
@@ -37,70 +38,85 @@ func testSweepSecurityGroups(region string) error {
 	}
 	conn := client.(*AWSClient).ec2conn
 
-	req := &ec2.DescribeSecurityGroupsInput{
-		Filters: []*ec2.Filter{
-			{
-				Name: aws.String("tag-value"),
-				Values: []*string{
-					aws.String("tf-acc-revoke*"),
-					aws.String("tf-acc-test-*"),
-				},
-			},
-		},
-	}
-	resp, err := conn.DescribeSecurityGroups(req)
-	if err != nil {
-		if testSweepSkipSweepError(err) {
-			log.Printf("[WARN] Skipping EC2 Security Group sweep for %s: %s", region, err)
-			return nil
-		}
-		return fmt.Errorf("Error retrieving EC2 Security Groups: %s", err)
-	}
+	input := &ec2.DescribeSecurityGroupsInput{}
 
-	if len(resp.SecurityGroups) == 0 {
-		log.Print("[DEBUG] No aws security groups to sweep")
+	// Delete all non-default EC2 Security Group Rules to prevent DependencyViolation errors
+	err = conn.DescribeSecurityGroupsPages(input, func(page *ec2.DescribeSecurityGroupsOutput, lastPage bool) bool {
+		for _, sg := range page.SecurityGroups {
+			if aws.StringValue(sg.GroupName) == "default" {
+				log.Printf("[DEBUG] Skipping default EC2 Security Group: %s", aws.StringValue(sg.GroupId))
+				continue
+			}
+
+			if sg.IpPermissions != nil {
+				req := &ec2.RevokeSecurityGroupIngressInput{
+					GroupId:       sg.GroupId,
+					IpPermissions: sg.IpPermissions,
+				}
+
+				if _, err = conn.RevokeSecurityGroupIngress(req); err != nil {
+					log.Printf("[ERROR] Error revoking ingress rule for Security Group (%s): %s", aws.StringValue(sg.GroupId), err)
+				}
+			}
+
+			if sg.IpPermissionsEgress != nil {
+				req := &ec2.RevokeSecurityGroupEgressInput{
+					GroupId:       sg.GroupId,
+					IpPermissions: sg.IpPermissionsEgress,
+				}
+
+				if _, err = conn.RevokeSecurityGroupEgress(req); err != nil {
+					log.Printf("[ERROR] Error revoking egress rule for Security Group (%s): %s", aws.StringValue(sg.GroupId), err)
+				}
+			}
+		}
+
+		return !lastPage
+	})
+
+	if testSweepSkipSweepError(err) {
+		log.Printf("[WARN] Skipping EC2 Security Group sweep for %s: %s", region, err)
 		return nil
 	}
 
-	for _, sg := range resp.SecurityGroups {
-		// revoke the rules
-		if sg.IpPermissions != nil {
-			req := &ec2.RevokeSecurityGroupIngressInput{
-				GroupId:       sg.GroupId,
-				IpPermissions: sg.IpPermissions,
-			}
-
-			if _, err = conn.RevokeSecurityGroupIngress(req); err != nil {
-				return fmt.Errorf(
-					"Error revoking default egress rule for Security Group (%s): %s",
-					*sg.GroupId, err)
-			}
-		}
-
-		if sg.IpPermissionsEgress != nil {
-			req := &ec2.RevokeSecurityGroupEgressInput{
-				GroupId:       sg.GroupId,
-				IpPermissions: sg.IpPermissionsEgress,
-			}
-
-			if _, err = conn.RevokeSecurityGroupEgress(req); err != nil {
-				return fmt.Errorf(
-					"Error revoking default egress rule for Security Group (%s): %s",
-					*sg.GroupId, err)
-			}
-		}
+	if err != nil {
+		return fmt.Errorf("Error retrieving EC2 Security Groups: %s", err)
 	}
 
-	for _, sg := range resp.SecurityGroups {
-		// delete the group
-		_, err := conn.DeleteSecurityGroup(&ec2.DeleteSecurityGroupInput{
-			GroupId: sg.GroupId,
-		})
-		if err != nil {
-			return fmt.Errorf(
-				"Error deleting Security Group (%s): %s",
-				*sg.GroupId, err)
+	err = conn.DescribeSecurityGroupsPages(input, func(page *ec2.DescribeSecurityGroupsOutput, lastPage bool) bool {
+		for _, sg := range page.SecurityGroups {
+			if aws.StringValue(sg.GroupName) == "default" {
+				log.Printf("[DEBUG] Skipping default EC2 Security Group: %s", aws.StringValue(sg.GroupId))
+				continue
+			}
+
+			input := &ec2.DeleteSecurityGroupInput{
+				GroupId: sg.GroupId,
+			}
+
+			// Handle EC2 eventual consistency
+			err := resource.Retry(1*time.Minute, func() *resource.RetryError {
+				_, err := conn.DeleteSecurityGroup(input)
+
+				if isAWSErr(err, "DependencyViolation", "") {
+					return resource.RetryableError(err)
+				}
+				if err != nil {
+					return resource.NonRetryableError(err)
+				}
+				return nil
+			})
+
+			if err != nil {
+				log.Printf("[ERROR] Error deleting Security Group (%s): %s", aws.StringValue(sg.GroupId), err)
+			}
 		}
+
+		return !lastPage
+	})
+
+	if err != nil {
+		return fmt.Errorf("Error retrieving EC2 Security Groups: %s", err)
 	}
 
 	return nil
@@ -766,6 +782,74 @@ func TestAccAWSSecurityGroup_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("aws_security_group.web", "ingress.3629188364.security_groups.#", "0"),
 					resource.TestCheckResourceAttr("aws_security_group.web", "ingress.3629188364.self", "false"),
 					resource.TestCheckResourceAttr("aws_security_group.web", "ingress.3629188364.to_port", "8000"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAWSSecurityGroup_Egress_ConfigMode(t *testing.T) {
+	var securityGroup1, securityGroup2, securityGroup3 ec2.SecurityGroup
+	resourceName := "aws_security_group.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSNetworkAclDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSSecurityGroupConfigEgressConfigModeBlocks(),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckAWSSecurityGroupExists(resourceName, &securityGroup1),
+					resource.TestCheckResourceAttr(resourceName, "egress.#", "2"),
+				),
+			},
+			{
+				Config: testAccAWSSecurityGroupConfigEgressConfigModeNoBlocks(),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckAWSSecurityGroupExists(resourceName, &securityGroup2),
+					resource.TestCheckResourceAttr(resourceName, "egress.#", "2"),
+				),
+			},
+			{
+				Config: testAccAWSSecurityGroupConfigEgressConfigModeZeroed(),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckAWSSecurityGroupExists(resourceName, &securityGroup3),
+					resource.TestCheckResourceAttr(resourceName, "egress.#", "0"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAWSSecurityGroup_Ingress_ConfigMode(t *testing.T) {
+	var securityGroup1, securityGroup2, securityGroup3 ec2.SecurityGroup
+	resourceName := "aws_security_group.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSNetworkAclDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSSecurityGroupConfigIngressConfigModeBlocks(),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckAWSSecurityGroupExists(resourceName, &securityGroup1),
+					resource.TestCheckResourceAttr(resourceName, "ingress.#", "2"),
+				),
+			},
+			{
+				Config: testAccAWSSecurityGroupConfigIngressConfigModeNoBlocks(),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckAWSSecurityGroupExists(resourceName, &securityGroup2),
+					resource.TestCheckResourceAttr(resourceName, "ingress.#", "2"),
+				),
+			},
+			{
+				Config: testAccAWSSecurityGroupConfigIngressConfigModeZeroed(),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckAWSSecurityGroupExists(resourceName, &securityGroup3),
+					resource.TestCheckResourceAttr(resourceName, "ingress.#", "0"),
 				),
 			},
 		},
@@ -2796,35 +2880,36 @@ func testAccAWSSecurityGroupConfigRuleDescription(egressDescription, ingressDesc
 	return fmt.Sprintf(`
 resource "aws_vpc" "foo" {
   cidr_block = "10.1.0.0/16"
+
   tags = {
     Name = "terraform-testacc-security-group-description"
   }
 }
 
 resource "aws_security_group" "web" {
-  name = "terraform_acceptance_test_example"
+  name        = "terraform_acceptance_test_example"
   description = "Used in the terraform acceptance tests"
-  vpc_id = "${aws_vpc.foo.id}"
+  vpc_id      = "${aws_vpc.foo.id}"
 
   ingress {
-    protocol = "6"
-    from_port = 80
-    to_port = 8000
+    protocol    = "6"
+    from_port   = 80
+    to_port     = 8000
     cidr_blocks = ["10.0.0.0/8"]
     description = "%s"
   }
 
   egress {
-    protocol = "tcp"
-    from_port = 80
-    to_port = 8000
+    protocol    = "tcp"
+    from_port   = 80
+    to_port     = 8000
     cidr_blocks = ["10.0.0.0/8"]
     description = "%s"
   }
 
-	tags = {
-		Name = "tf-acc-test"
-	}
+  tags = {
+    Name = "tf-acc-test"
+  }
 }
 `, ingressDescription, egressDescription)
 }
@@ -3093,26 +3178,26 @@ resource "aws_security_group" "baz" {
 func testAccAWSSecurityGroupConfig_drift() string {
 	return fmt.Sprintf(`
 resource "aws_security_group" "web" {
-  name = "tf_acc_%d"
+  name        = "tf_acc_%d"
   description = "Used in the terraform acceptance tests"
 
   ingress {
-    protocol = "tcp"
-    from_port = 80
-    to_port = 8000
+    protocol    = "tcp"
+    from_port   = 80
+    to_port     = 8000
     cidr_blocks = ["10.0.0.0/8"]
   }
 
   ingress {
-    protocol = "tcp"
-    from_port = 80
-    to_port = 8000
+    protocol    = "tcp"
+    from_port   = 80
+    to_port     = 8000
     cidr_blocks = ["206.0.0.0/8"]
   }
 
   tags = {
-                Name = "tf-acc-test"
-        }
+    Name = "tf-acc-test"
+  }
 }
 `, acctest.RandInt())
 }
@@ -3120,22 +3205,23 @@ resource "aws_security_group" "web" {
 func testAccAWSSecurityGroupConfig_drift_complex() string {
 	return fmt.Sprintf(`
 resource "aws_vpc" "foo" {
-	cidr_block = "10.1.0.0/16"
-	tags = {
-		Name = "terraform-testacc-security-group-drift-complex"
-	}
+  cidr_block = "10.1.0.0/16"
+
+  tags = {
+    Name = "terraform-testacc-security-group-drift-complex"
+  }
 }
 
 resource "aws_security_group" "otherweb" {
   name        = "tf_acc_%d"
   description = "Used in the terraform acceptance tests"
-  vpc_id = "${aws_vpc.foo.id}"
+  vpc_id      = "${aws_vpc.foo.id}"
 }
 
 resource "aws_security_group" "web" {
   name        = "tf_acc_%d"
   description = "Used in the terraform acceptance tests"
-  vpc_id = "${aws_vpc.foo.id}"
+  vpc_id      = "${aws_vpc.foo.id}"
 
   ingress {
     protocol    = "tcp"
@@ -3182,7 +3268,8 @@ resource "aws_security_group" "web" {
   tags = {
     Name = "tf-acc-test"
   }
-}`, acctest.RandInt(), acctest.RandInt())
+}
+`, acctest.RandInt(), acctest.RandInt())
 }
 
 const testAccAWSSecurityGroupInvalidIngressCidr = `
@@ -3919,3 +4006,155 @@ resource "aws_security_group" "test" {
   }
 }
 `
+
+func testAccAWSSecurityGroupConfigEgressConfigModeBlocks() string {
+	return fmt.Sprintf(`
+resource "aws_vpc" "test" {
+  cidr_block = "10.0.0.0/16"
+
+  tags = {
+    Name = "terraform-testacc-security-group-egress-config-mode"
+  }
+}
+
+resource "aws_security_group" "test" {
+  tags = {
+    Name = "terraform-testacc-security-group-egress-config-mode"
+  }
+
+  vpc_id = "${aws_vpc.test.id}"
+
+  egress {
+    cidr_blocks = ["${aws_vpc.test.cidr_block}"]
+    from_port   = 0
+    protocol    = "tcp"
+    to_port     = 0
+  }
+
+  egress {
+    cidr_blocks = ["${aws_vpc.test.cidr_block}"]
+    from_port   = 0
+    protocol    = "udp"
+    to_port     = 0
+  }
+}
+`)
+}
+
+func testAccAWSSecurityGroupConfigEgressConfigModeNoBlocks() string {
+	return fmt.Sprintf(`
+resource "aws_vpc" "test" {
+  cidr_block = "10.0.0.0/16"
+
+  tags = {
+    Name = "terraform-testacc-security-group-egress-config-mode"
+  }
+}
+
+resource "aws_security_group" "test" {
+  tags = {
+    Name = "terraform-testacc-security-group-egress-config-mode"
+  }
+
+  vpc_id = "${aws_vpc.test.id}"
+}
+`)
+}
+
+func testAccAWSSecurityGroupConfigEgressConfigModeZeroed() string {
+	return fmt.Sprintf(`
+resource "aws_vpc" "test" {
+  cidr_block = "10.0.0.0/16"
+
+  tags = {
+    Name = "terraform-testacc-security-group-egress-config-mode"
+  }
+}
+
+resource "aws_security_group" "test" {
+  egress = []
+
+  tags = {
+    Name = "terraform-testacc-security-group-egress-config-mode"
+  }
+
+  vpc_id = "${aws_vpc.test.id}"
+}
+`)
+}
+
+func testAccAWSSecurityGroupConfigIngressConfigModeBlocks() string {
+	return fmt.Sprintf(`
+resource "aws_vpc" "test" {
+  cidr_block = "10.0.0.0/16"
+
+  tags = {
+    Name = "terraform-testacc-security-group-ingress-config-mode"
+  }
+}
+
+resource "aws_security_group" "test" {
+  tags = {
+    Name = "terraform-testacc-security-group-ingress-config-mode"
+  }
+
+  vpc_id = "${aws_vpc.test.id}"
+
+  ingress {
+    cidr_blocks = ["${aws_vpc.test.cidr_block}"]
+    from_port   = 0
+    protocol    = "tcp"
+    to_port     = 0
+  }
+
+  ingress {
+    cidr_blocks = ["${aws_vpc.test.cidr_block}"]
+    from_port   = 0
+    protocol    = "udp"
+    to_port     = 0
+  }
+}
+`)
+}
+
+func testAccAWSSecurityGroupConfigIngressConfigModeNoBlocks() string {
+	return fmt.Sprintf(`
+resource "aws_vpc" "test" {
+  cidr_block = "10.0.0.0/16"
+
+  tags = {
+    Name = "terraform-testacc-security-group-ingress-config-mode"
+  }
+}
+
+resource "aws_security_group" "test" {
+  tags = {
+    Name = "terraform-testacc-security-group-ingress-config-mode"
+  }
+
+  vpc_id = "${aws_vpc.test.id}"
+}
+`)
+}
+
+func testAccAWSSecurityGroupConfigIngressConfigModeZeroed() string {
+	return fmt.Sprintf(`
+resource "aws_vpc" "test" {
+  cidr_block = "10.0.0.0/16"
+
+  tags = {
+    Name = "terraform-testacc-security-group-ingress-config-mode"
+  }
+}
+
+resource "aws_security_group" "test" {
+  ingress = []
+
+  tags = {
+    Name = "terraform-testacc-security-group-ingress-config-mode"
+  }
+
+  vpc_id = "${aws_vpc.test.id}"
+}
+`)
+}

@@ -3,7 +3,6 @@ package aws
 import (
 	"fmt"
 	"log"
-	"strings"
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -46,10 +45,6 @@ func testSweepGameliftBuilds(region string) error {
 	log.Printf("[INFO] Found %d Gamelift Builds", len(resp.Builds))
 
 	for _, build := range resp.Builds {
-		if !strings.HasPrefix(*build.Name, testAccGameliftBuildPrefix) {
-			continue
-		}
-
 		log.Printf("[INFO] Deleting Gamelift Build %q", *build.BuildId)
 		_, err := conn.DeleteBuild(&gamelift.DeleteBuildInput{
 			BuildId: build.BuildId,
@@ -178,11 +173,12 @@ func testAccCheckAWSGameliftBuildDestroy(s *terraform.State) error {
 func testAccAWSGameliftBuildBasicConfig(buildName, bucketName, key, roleArn string) string {
 	return fmt.Sprintf(`
 resource "aws_gamelift_build" "test" {
-  name = "%s"
+  name             = "%s"
   operating_system = "WINDOWS_2012"
+
   storage_location {
-    bucket = "%s"
-    key = "%s"
+    bucket   = "%s"
+    key      = "%s"
     role_arn = "%s"
   }
 }

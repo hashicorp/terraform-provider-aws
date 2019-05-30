@@ -98,14 +98,15 @@ func testAccCheckAwsOrganizationsPolicyDestroy(s *terraform.State) error {
 
 		resp, err := conn.DescribePolicy(input)
 
+		if isAWSErr(err, organizations.ErrCodePolicyNotFoundException, "") {
+			return nil
+		}
+
 		if err != nil {
-			if isAWSErr(err, organizations.ErrCodePolicyNotFoundException, "") {
-				return nil
-			}
 			return err
 		}
 
-		if resp == nil && resp.Policy != nil {
+		if resp != nil && resp.Policy != nil {
 			return fmt.Errorf("Policy %q still exists", rs.Primary.ID)
 		}
 	}

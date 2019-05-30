@@ -6,7 +6,7 @@ description: |-
   Provides a Data Lifecycle Manager (DLM) lifecycle policy for managing snapshots.
 ---
 
-# aws_dlm_lifecycle_policy
+# Resource: aws_dlm_lifecycle_policy
 
 Provides a [Data Lifecycle Manager (DLM) lifecycle policy](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/snapshot-lifecycle.html) for managing snapshots.
 
@@ -36,6 +36,7 @@ EOF
 resource "aws_iam_role_policy" "dlm_lifecycle" {
   name = "dlm-lifecycle-policy"
   role = "${aws_iam_role.dlm_lifecycle_role.id}"
+
   policy = <<EOF
 {
    "Version": "2012-10-17",
@@ -124,7 +125,7 @@ The following arguments are supported:
 
 #### Create Rule arguments
 
-* `interval` - (Required) How often this lifecycle policy should be evaluated. `12` or `24` are valid values.
+* `interval` - (Required) How often this lifecycle policy should be evaluated. `2`,`3`,`4`,`6`,`8`,`12` or `24` are valid values.
 * `interval_unit` - (Optional) The unit for how often the lifecycle policy should be evaluated. `HOURS` is currently the only allowed value and also the default value.
 * `times` - (Optional) A list of times in 24 hour clock format that sets when the lifecycle policy should be evaluated. Max of 1.
 

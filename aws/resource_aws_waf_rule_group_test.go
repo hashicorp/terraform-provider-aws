@@ -3,7 +3,6 @@ package aws
 import (
 	"fmt"
 	"log"
-	"strings"
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -44,10 +43,6 @@ func testSweepWafRuleGroups(region string) error {
 	}
 
 	for _, group := range resp.RuleGroups {
-		if !strings.HasPrefix(*group.Name, "tfacc") {
-			continue
-		}
-
 		rResp, err := conn.ListActivatedRulesInRuleGroup(&waf.ListActivatedRulesInRuleGroupInput{
 			RuleGroupId: group.RuleGroupId,
 		})
@@ -366,16 +361,19 @@ resource "aws_waf_rule" "test" {
 }
 
 resource "aws_waf_rule_group" "test" {
-  name = "%[2]s"
+  name        = "%[2]s"
   metric_name = "%[2]s"
+
   activated_rule {
-  	action {
+    action {
       type = "COUNT"
     }
+
     priority = 50
-    rule_id = "${aws_waf_rule.test.id}"
+    rule_id  = "${aws_waf_rule.test.id}"
   }
-}`, ruleName, groupName)
+}
+`, ruleName, groupName)
 }
 
 func testAccAWSWafRuleGroupConfig_changeActivatedRules(ruleName1, ruleName2, ruleName3, groupName string) string {
@@ -396,36 +394,44 @@ resource "aws_waf_rule" "test3" {
 }
 
 resource "aws_waf_rule_group" "test" {
-  name = "%[4]s"
+  name        = "%[4]s"
   metric_name = "%[4]s"
+
   activated_rule {
     action {
       type = "BLOCK"
     }
+
     priority = 10
-    rule_id = "${aws_waf_rule.test.id}"
+    rule_id  = "${aws_waf_rule.test.id}"
   }
+
   activated_rule {
-  	action {
+    action {
       type = "COUNT"
     }
+
     priority = 1
-    rule_id = "${aws_waf_rule.test2.id}"
+    rule_id  = "${aws_waf_rule.test2.id}"
   }
+
   activated_rule {
-  	action {
+    action {
       type = "BLOCK"
     }
+
     priority = 15
-    rule_id = "${aws_waf_rule.test3.id}"
+    rule_id  = "${aws_waf_rule.test3.id}"
   }
-}`, ruleName1, ruleName2, ruleName3, groupName)
+}
+`, ruleName1, ruleName2, ruleName3, groupName)
 }
 
 func testAccAWSWafRuleGroupConfig_noActivatedRules(groupName string) string {
 	return fmt.Sprintf(`
 resource "aws_waf_rule_group" "test" {
-  name = "%[1]s"
+  name        = "%[1]s"
   metric_name = "%[1]s"
-}`, groupName)
+}
+`, groupName)
 }

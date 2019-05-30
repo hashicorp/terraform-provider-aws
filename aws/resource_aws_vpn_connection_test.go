@@ -51,6 +51,7 @@ func TestAccAWSVpnConnection_basic(t *testing.T) {
 				Config: testAccAwsVpnConnectionConfig(rBgpAsn),
 				Check: resource.ComposeTestCheckFunc(
 					testAccAwsVpnConnectionExists("aws_vpn_connection.foo", &vpn),
+					resource.TestCheckResourceAttr("aws_vpn_connection.foo", "transit_gateway_attachment_id", ""),
 				),
 			},
 			{
@@ -66,10 +67,14 @@ func TestAccAWSVpnConnection_basic(t *testing.T) {
 func TestAccAWSVpnConnection_TransitGatewayID(t *testing.T) {
 	var vpn ec2.VpnConnection
 	rBgpAsn := acctest.RandIntRange(64512, 65534)
+	transitGatewayResourceName := "aws_ec2_transit_gateway.test"
 	resourceName := "aws_vpn_connection.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck: func() {
+			testAccPreCheck(t)
+			testAccPreCheckAWSEc2TransitGateway(t)
+		},
 		Providers:    testAccProviders,
 		CheckDestroy: testAccAwsVpnConnectionDestroy,
 		Steps: []resource.TestStep{
@@ -77,6 +82,8 @@ func TestAccAWSVpnConnection_TransitGatewayID(t *testing.T) {
 				Config: testAccAwsVpnConnectionConfigTransitGatewayID(rBgpAsn),
 				Check: resource.ComposeTestCheckFunc(
 					testAccAwsVpnConnectionExists(resourceName, &vpn),
+					resource.TestMatchResourceAttr(resourceName, "transit_gateway_attachment_id", regexp.MustCompile(`tgw-attach-.+`)),
+					resource.TestCheckResourceAttrPair(resourceName, "transit_gateway_id", transitGatewayResourceName, "id"),
 				),
 			},
 		},
@@ -222,13 +229,9 @@ func testAccAWSVpnConnectionDisappears(connection *ec2.VpnConnection) resource.T
 		_, err := conn.DeleteVpnConnection(&ec2.DeleteVpnConnectionInput{
 			VpnConnectionId: connection.VpnConnectionId,
 		})
+
 		if err != nil {
-			if ec2err, ok := err.(awserr.Error); ok && ec2err.Code() == "InvalidVpnConnectionID.NotFound" {
-				return nil
-			}
-			if err != nil {
-				return err
-			}
+			return err
 		}
 
 		return resource.Retry(40*time.Minute, func() *resource.RetryError {
@@ -384,21 +387,22 @@ resource "aws_vpn_gateway" "vpn_gateway" {
 }
 
 resource "aws_customer_gateway" "customer_gateway" {
-  bgp_asn = %d
+  bgp_asn    = %d
   ip_address = "178.0.0.1"
-  type = "ipsec.1"
+  type       = "ipsec.1"
+
   tags = {
     Name = "main-customer-gateway"
   }
 }
 
 resource "aws_vpn_connection" "foo" {
-  vpn_gateway_id = "${aws_vpn_gateway.vpn_gateway.id}"
+  vpn_gateway_id      = "${aws_vpn_gateway.vpn_gateway.id}"
   customer_gateway_id = "${aws_customer_gateway.customer_gateway.id}"
-  type = "ipsec.1"
-  static_routes_only = true
+  type                = "ipsec.1"
+  static_routes_only  = true
 }
-    `, rBgpAsn)
+`, rBgpAsn)
 }
 
 // Change static_routes_only to be false, forcing a refresh.
@@ -411,21 +415,22 @@ resource "aws_vpn_gateway" "vpn_gateway" {
 }
 
 resource "aws_customer_gateway" "customer_gateway" {
-  bgp_asn = %d
+  bgp_asn    = %d
   ip_address = "178.0.0.1"
-  type = "ipsec.1"
+  type       = "ipsec.1"
+
   tags = {
     Name = "main-customer-gateway-%d"
   }
 }
 
 resource "aws_vpn_connection" "foo" {
-  vpn_gateway_id = "${aws_vpn_gateway.vpn_gateway.id}"
+  vpn_gateway_id      = "${aws_vpn_gateway.vpn_gateway.id}"
   customer_gateway_id = "${aws_customer_gateway.customer_gateway.id}"
-  type = "ipsec.1"
-  static_routes_only = false
+  type                = "ipsec.1"
+  static_routes_only  = false
 }
-  `, rBgpAsn, rInt)
+`, rBgpAsn, rInt)
 }
 
 func testAccAwsVpnConnectionConfigSingleTunnelOptions(rBgpAsn int, psk string, tunnelCidr string) string {
@@ -437,24 +442,25 @@ resource "aws_vpn_gateway" "vpn_gateway" {
 }
 
 resource "aws_customer_gateway" "customer_gateway" {
-  bgp_asn = %d
+  bgp_asn    = %d
   ip_address = "178.0.0.1"
-  type = "ipsec.1"
+  type       = "ipsec.1"
+
   tags = {
     Name = "main-customer-gateway"
   }
 }
 
 resource "aws_vpn_connection" "foo" {
-  vpn_gateway_id = "${aws_vpn_gateway.vpn_gateway.id}"
+  vpn_gateway_id      = "${aws_vpn_gateway.vpn_gateway.id}"
   customer_gateway_id = "${aws_customer_gateway.customer_gateway.id}"
-  type = "ipsec.1"
-    static_routes_only = false
+  type                = "ipsec.1"
+  static_routes_only  = false
 
-  tunnel1_inside_cidr = "%s"
+  tunnel1_inside_cidr   = "%s"
   tunnel1_preshared_key = "%s"
 }
-    `, rBgpAsn, tunnelCidr, psk)
+`, rBgpAsn, tunnelCidr, psk)
 }
 
 func testAccAwsVpnConnectionConfigTransitGatewayID(rBgpAsn int) string {
@@ -488,27 +494,28 @@ resource "aws_vpn_gateway" "vpn_gateway" {
 }
 
 resource "aws_customer_gateway" "customer_gateway" {
-  bgp_asn = %d
+  bgp_asn    = %d
   ip_address = "178.0.0.1"
-  type = "ipsec.1"
+  type       = "ipsec.1"
+
   tags = {
     Name = "main-customer-gateway"
   }
 }
 
 resource "aws_vpn_connection" "foo" {
-  vpn_gateway_id = "${aws_vpn_gateway.vpn_gateway.id}"
+  vpn_gateway_id      = "${aws_vpn_gateway.vpn_gateway.id}"
   customer_gateway_id = "${aws_customer_gateway.customer_gateway.id}"
-  type = "ipsec.1"
-    static_routes_only = false
+  type                = "ipsec.1"
+  static_routes_only  = false
 
-  tunnel1_inside_cidr = "%s"
+  tunnel1_inside_cidr   = "%s"
   tunnel1_preshared_key = "%s"
 
-  tunnel2_inside_cidr = "%s"
+  tunnel2_inside_cidr   = "%s"
   tunnel2_preshared_key = "%s"
 }
-    `, rBgpAsn, tunnelCidr, psk, tunnelCidr2, psk2)
+`, rBgpAsn, tunnelCidr, psk, tunnelCidr2, psk2)
 }
 
 // Test our VPN tunnel config XML parsing

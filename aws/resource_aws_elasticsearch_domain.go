@@ -10,7 +10,6 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	elasticsearch "github.com/aws/aws-sdk-go/service/elasticsearchservice"
-	"github.com/aws/aws-sdk-go/service/iam"
 	"github.com/hashicorp/terraform/helper/customdiff"
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/helper/schema"
@@ -320,37 +319,6 @@ func resourceAwsElasticSearchDomainImport(
 	return []*schema.ResourceData{d}, nil
 }
 
-// This would be created automatically if the domain is created via Console
-// see http://docs.aws.amazon.com/elasticsearch-service/latest/developerguide/es-vpc.html#es-enabling-slr
-func createAwsElasticsearchIAMServiceRoleIfMissing(meta interface{}) error {
-	serviceRoleName := "AWSServiceRoleForAmazonElasticsearchService"
-	serviceName := "es.amazonaws.com"
-
-	conn := meta.(*AWSClient).iamconn
-
-	getRequest := &iam.GetRoleInput{
-		RoleName: aws.String(serviceRoleName),
-	}
-	_, err := conn.GetRole(getRequest)
-	if err != nil {
-		if isAWSErr(err, iam.ErrCodeNoSuchEntityException, "Role not found") {
-			createRequest := &iam.CreateServiceLinkedRoleInput{
-				AWSServiceName: aws.String(serviceName),
-			}
-			_, err := conn.CreateServiceLinkedRole(createRequest)
-			if err != nil {
-				if isAWSErr(err, iam.ErrCodeInvalidInputException, "has been taken in this account") {
-					return nil
-				}
-				return fmt.Errorf("Error creating IAM Service-Linked Role %s: %s", serviceRoleName, err)
-			}
-			return nil
-		}
-		return fmt.Errorf("Error reading IAM Role %s: %s", serviceRoleName, err)
-	}
-	return nil
-}
-
 func resourceAwsElasticSearchDomainCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).esconn
 
@@ -438,11 +406,6 @@ func resourceAwsElasticSearchDomainCreate(d *schema.ResourceData, meta interface
 	}
 
 	if v, ok := d.GetOk("vpc_options"); ok {
-		err = createAwsElasticsearchIAMServiceRoleIfMissing(meta)
-		if err != nil {
-			return err
-		}
-
 		options := v.([]interface{})
 		if options[0] == nil {
 			return fmt.Errorf("At least one field is expected inside vpc_options")

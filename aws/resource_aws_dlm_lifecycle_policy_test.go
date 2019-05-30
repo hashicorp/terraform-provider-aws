@@ -180,7 +180,7 @@ resource "aws_dlm_lifecycle_policy" "basic" {
       name = "tf-acc-basic"
 
       create_rule {
-        interval      = 12
+        interval = 12
       }
 
       retain_rule {

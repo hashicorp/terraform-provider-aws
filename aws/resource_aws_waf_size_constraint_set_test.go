@@ -288,50 +288,60 @@ func testAccAWSWafSizeConstraintSetConfig(name string) string {
 	return fmt.Sprintf(`
 resource "aws_waf_size_constraint_set" "size_constraint_set" {
   name = "%s"
+
   size_constraints {
     text_transformation = "NONE"
     comparison_operator = "EQ"
-    size = "4096"
+    size                = "4096"
+
     field_to_match {
       type = "BODY"
     }
   }
-}`, name)
+}
+`, name)
 }
 
 func testAccAWSWafSizeConstraintSetConfigChangeName(name string) string {
 	return fmt.Sprintf(`
 resource "aws_waf_size_constraint_set" "size_constraint_set" {
   name = "%s"
+
   size_constraints {
     text_transformation = "NONE"
     comparison_operator = "EQ"
-    size = "4096"
+    size                = "4096"
+
     field_to_match {
       type = "BODY"
     }
   }
-}`, name)
+}
+`, name)
 }
 
 func testAccAWSWafSizeConstraintSetConfig_changeConstraints(name string) string {
 	return fmt.Sprintf(`
 resource "aws_waf_size_constraint_set" "size_constraint_set" {
   name = "%s"
+
   size_constraints {
     text_transformation = "NONE"
     comparison_operator = "GE"
-    size = "1024"
+    size                = "1024"
+
     field_to_match {
       type = "BODY"
     }
   }
-}`, name)
+}
+`, name)
 }
 
 func testAccAWSWafSizeConstraintSetConfig_noConstraints(name string) string {
 	return fmt.Sprintf(`
 resource "aws_waf_size_constraint_set" "size_constraint_set" {
   name = "%s"
-}`, name)
+}
+`, name)
 }

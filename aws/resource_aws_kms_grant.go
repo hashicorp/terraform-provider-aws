@@ -323,12 +323,11 @@ func findKmsGrantByIdWithRetry(conn *kms.KMS, keyId string, grantId string) (*km
 		var err error
 		grant, err = findKmsGrantById(conn, keyId, grantId, nil)
 
-		if err != nil {
-			if serr, ok := err.(KmsGrantMissingError); ok {
-				// Force a retry if the grant should exist
-				return resource.RetryableError(serr)
-			}
+		if isResourceNotFoundError(err) {
+			return resource.RetryableError(err)
+		}
 
+		if err != nil {
 			return resource.NonRetryableError(err)
 		}
 
@@ -342,10 +341,9 @@ func findKmsGrantByIdWithRetry(conn *kms.KMS, keyId string, grantId string) (*km
 func waitForKmsGrantToBeRevoked(conn *kms.KMS, keyId string, grantId string) error {
 	err := resource.Retry(3*time.Minute, func() *resource.RetryError {
 		grant, err := findKmsGrantById(conn, keyId, grantId, nil)
-		if err != nil {
-			if _, ok := err.(KmsGrantMissingError); ok {
-				return nil
-			}
+
+		if isResourceNotFoundError(err) {
+			return nil
 		}
 
 		if grant != nil {
@@ -402,7 +400,9 @@ func findKmsGrantById(conn *kms.KMS, keyId string, grantId string, marker *strin
 		return findKmsGrantById(conn, keyId, grantId, out.NextMarker)
 	}
 
-	return nil, NewKmsGrantMissingError(fmt.Sprintf("[DEBUG] Grant %s not found for key id: %s", grantId, keyId))
+	return nil, &resource.NotFoundError{
+		Message: fmt.Sprintf("grant %s not found for key id: %s", grantId, keyId),
+	}
 }
 
 // Can't have both constraint options set:
@@ -535,16 +535,4 @@ func decodeKmsGrantId(id string) (string, string, error) {
 		}
 		return parts[0], parts[1], nil
 	}
-}
-
-// Custom error, so we don't have to rely on
-// the content of an error message
-type KmsGrantMissingError string
-
-func (e KmsGrantMissingError) Error() string {
-	return e.Error()
-}
-
-func NewKmsGrantMissingError(msg string) KmsGrantMissingError {
-	return KmsGrantMissingError(msg)
 }

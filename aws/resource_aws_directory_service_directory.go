@@ -453,8 +453,10 @@ func resourceAwsDirectoryServiceDirectoryRead(d *schema.ResourceData, meta inter
 	d.Set("connect_settings", flattenDSConnectSettings(dir.DnsIpAddrs, dir.ConnectSettings))
 	d.Set("enable_sso", dir.SsoEnabled)
 
-	if dir.VpcSettings != nil {
-		d.Set("security_group_id", *dir.VpcSettings.SecurityGroupId)
+	if aws.StringValue(dir.Type) == directoryservice.DirectoryTypeAdconnector {
+		d.Set("security_group_id", aws.StringValue(dir.ConnectSettings.SecurityGroupId))
+	} else {
+		d.Set("security_group_id", aws.StringValue(dir.VpcSettings.SecurityGroupId))
 	}
 
 	tagList, err := dsconn.ListTagsForResource(&directoryservice.ListTagsForResourceInput{

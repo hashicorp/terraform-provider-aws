@@ -6,7 +6,7 @@ description: |-
   Provides a Step Function State Machine resource.
 ---
 
-# sfn_state_machine
+# Resource: sfn_state_machine
 
 Provides a Step Function State Machine resource
 

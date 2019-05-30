@@ -3,12 +3,12 @@ layout: "aws"
 page_title: "AWS: aws_wafregional_web_acl_association"
 sidebar_current: "docs-aws-resource-wafregional-web-acl-association"
 description: |-
-  Provides a resource to create an association between a WAF Regional WebACL and Application Load Balancer.
+  Manages an association with WAF Regional Web ACL
 ---
 
-# aws_wafregional_web_acl_association
+# Resource: aws_wafregional_web_acl_association
 
-Provides a resource to create an association between a WAF Regional WebACL and Application Load Balancer.
+Manages an association with WAF Regional Web ACL.
 
 -> **Note:** An Application Load Balancer can only be associated with one WAF Regional WebACL.
 
@@ -87,7 +87,7 @@ resource "aws_wafregional_web_acl_association" "foo" {
 The following arguments are supported:
 
 * `web_acl_id` - (Required) The ID of the WAF Regional WebACL to create an association.
-* `resource_arn` - (Required) Application Load Balancer ARN to associate with.
+* `resource_arn` - (Required) ARN of the resource to associate with. For example, an Application Load Balancer or API Gateway Stage.
 
 ## Attributes Reference
 

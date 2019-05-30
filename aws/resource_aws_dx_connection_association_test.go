@@ -83,21 +83,21 @@ func testAccCheckAwsDxConnectionAssociationExists(name string) resource.TestChec
 func testAccDxConnectionAssociationConfig(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_dx_connection" "test" {
-  name = "tf-dx-%s"
+  name      = "tf-dx-%s"
   bandwidth = "1Gbps"
-  location = "EqSe2"
+  location  = "EqSe2"
 }
 
 resource "aws_dx_lag" "test" {
-  name = "tf-dx-%s"
+  name                  = "tf-dx-%s"
   connections_bandwidth = "1Gbps"
-  location = "EqSe2"
-  force_destroy = true
+  location              = "EqSe2"
+  force_destroy         = true
 }
 
 resource "aws_dx_connection_association" "test" {
   connection_id = "${aws_dx_connection.test.id}"
-  lag_id = "${aws_dx_lag.test.id}"
+  lag_id        = "${aws_dx_lag.test.id}"
 }
 `, rName, rName)
 }
@@ -105,32 +105,32 @@ resource "aws_dx_connection_association" "test" {
 func testAccDxConnectionAssociationConfig_multiConns(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_dx_connection" "test1" {
-  name = "tf-dxconn1-%s"
+  name      = "tf-dxconn1-%s"
   bandwidth = "1Gbps"
-  location = "EqSe2"
+  location  = "EqSe2"
 }
 
 resource "aws_dx_connection" "test2" {
-  name = "tf-dxconn2-%s"
+  name      = "tf-dxconn2-%s"
   bandwidth = "1Gbps"
-  location = "EqSe2"
+  location  = "EqSe2"
 }
 
 resource "aws_dx_lag" "test" {
-  name = "tf-dx-%s"
+  name                  = "tf-dx-%s"
   connections_bandwidth = "1Gbps"
-  location = "EqSe2"
-  force_destroy = true
+  location              = "EqSe2"
+  force_destroy         = true
 }
 
 resource "aws_dx_connection_association" "test1" {
   connection_id = "${aws_dx_connection.test1.id}"
-  lag_id = "${aws_dx_lag.test.id}"
+  lag_id        = "${aws_dx_lag.test.id}"
 }
 
 resource "aws_dx_connection_association" "test2" {
   connection_id = "${aws_dx_connection.test2.id}"
-  lag_id = "${aws_dx_lag.test.id}"
+  lag_id        = "${aws_dx_lag.test.id}"
 }
 `, rName, rName, rName)
 }

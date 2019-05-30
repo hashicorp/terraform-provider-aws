@@ -3,10 +3,12 @@ package aws
 import (
 	"fmt"
 	"log"
+	"regexp"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ssm"
 	"github.com/hashicorp/terraform/helper/schema"
+	"github.com/hashicorp/terraform/helper/validation"
 )
 
 func resourceAwsSsmMaintenanceWindowTarget() *schema.Resource {
@@ -48,6 +50,20 @@ func resourceAwsSsmMaintenanceWindowTarget() *schema.Resource {
 				},
 			},
 
+			"name": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				ForceNew:     true,
+				ValidateFunc: validation.StringMatch(regexp.MustCompile(`^[a-zA-Z0-9_\-.]{3,128}$`), "Only alphanumeric characters, hyphens, dots & underscores allowed"),
+			},
+
+			"description": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				ForceNew:     true,
+				ValidateFunc: validation.StringLenBetween(3, 128),
+			},
+
 			"owner_information": {
 				Type:     schema.TypeString,
 				Optional: true,
@@ -65,6 +81,8 @@ func resourceAwsSsmMaintenanceWindowTargetCreate(d *schema.ResourceData, meta in
 		WindowId:     aws.String(d.Get("window_id").(string)),
 		ResourceType: aws.String(d.Get("resource_type").(string)),
 		Targets:      expandAwsSsmTargets(d.Get("targets").([]interface{})),
+		Name:         aws.String(d.Get("name").(string)),
+		Description:  aws.String(d.Get("description").(string)),
 	}
 
 	if v, ok := d.GetOk("owner_information"); ok {
@@ -107,6 +125,8 @@ func resourceAwsSsmMaintenanceWindowTargetRead(d *schema.ResourceData, meta inte
 			d.Set("owner_information", t.OwnerInformation)
 			d.Set("window_id", t.WindowId)
 			d.Set("resource_type", t.ResourceType)
+			d.Set("name", t.Name)
+			d.Set("description", t.Description)
 
 			if err := d.Set("targets", flattenAwsSsmTargets(t.Targets)); err != nil {
 				return fmt.Errorf("Error setting targets error: %#v", err)

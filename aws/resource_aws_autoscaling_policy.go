@@ -72,10 +72,9 @@ func resourceAwsAutoscalingPolicy() *schema.Resource {
 				ValidateFunc: validation.IntAtLeast(1),
 			},
 			"min_adjustment_step": {
-				Type:          schema.TypeInt,
-				Optional:      true,
-				Deprecated:    "Use min_adjustment_magnitude instead, otherwise you may see a perpetual diff on this resource.",
-				ConflictsWith: []string{"min_adjustment_magnitude"},
+				Type:     schema.TypeInt,
+				Optional: true,
+				Removed:  "Use `min_adjustment_magnitude` argument instead",
 			},
 			"scaling_adjustment": {
 				Type:          schema.TypeInt,
@@ -228,9 +227,6 @@ func resourceAwsAutoscalingPolicyRead(d *schema.ResourceData, meta interface{}) 
 	d.Set("policy_type", p.PolicyType)
 	if p.MinAdjustmentMagnitude != nil {
 		d.Set("min_adjustment_magnitude", p.MinAdjustmentMagnitude)
-		d.Set("min_adjustment_step", 0)
-	} else {
-		d.Set("min_adjustment_step", p.MinAdjustmentStep)
 	}
 	d.Set("arn", p.PolicyARN)
 	d.Set("name", p.PolicyName)
@@ -344,11 +340,8 @@ func getAwsAutoscalingPutScalingPolicyInput(d *schema.ResourceData) (autoscaling
 	}
 
 	// MinAdjustmentMagnitude is supported if the policy type is SimpleScaling or StepScaling.
-	// MinAdjustmentStep is available for backward compatibility. Use MinAdjustmentMagnitude instead.
 	if v, ok := d.GetOkExists("min_adjustment_magnitude"); ok && v.(int) != 0 && (policyType == "SimpleScaling" || policyType == "StepScaling") {
 		params.MinAdjustmentMagnitude = aws.Int64(int64(v.(int)))
-	} else if v, ok := d.GetOkExists("min_adjustment_step"); ok && v.(int) != 0 && (policyType == "SimpleScaling" || policyType == "StepScaling") {
-		params.MinAdjustmentStep = aws.Int64(int64(v.(int)))
 	}
 
 	// This parameter is required if the policy type is SimpleScaling and not supported otherwise.

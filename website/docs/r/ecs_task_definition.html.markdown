@@ -6,7 +6,7 @@ description: |-
   Manages a revision of an ECS task definition.
 ---
 
-# aws_ecs_task_definition
+# Resource: aws_ecs_task_definition
 
 Manages a revision of an ECS task definition to be used in `aws_ecs_service`.
 

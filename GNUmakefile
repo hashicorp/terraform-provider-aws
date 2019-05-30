@@ -32,11 +32,11 @@ websitefmtcheck:
 
 lint:
 	@echo "==> Checking source code against linters..."
-	@gometalinter ./$(PKG_NAME)
+	@GOGC=30 golangci-lint run ./$(PKG_NAME)
 
 tools:
-	GO111MODULE=off go get -u github.com/alecthomas/gometalinter
-	GO111MODULE=off gometalinter --install
+	GO111MODULE=on go install github.com/client9/misspell/cmd/misspell
+	GO111MODULE=on go install github.com/golangci/golangci-lint/cmd/golangci-lint
 
 test-compile:
 	@if [ "$(TEST)" = "./..." ]; then \

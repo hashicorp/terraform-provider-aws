@@ -6,7 +6,7 @@ description: |-
   Provides an Lightsail Static IP
 ---
 
-# aws_lightsail_static_ip
+# Resource: aws_lightsail_static_ip
 
 Allocates a static IP address.
 

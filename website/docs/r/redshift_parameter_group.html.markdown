@@ -6,7 +6,7 @@ description: |-
   Provides a Redshift Cluster parameter group resource.
 ---
 
-# aws_redshift_parameter_group
+# Resource: aws_redshift_parameter_group
 
 Provides a Redshift Cluster parameter group resource.
 

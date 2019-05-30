@@ -233,6 +233,9 @@ func (c *FSx) CreateFileSystemRequest(input *CreateFileSystemInput) (req *reques
 //   * ErrCodeInvalidImportPath "InvalidImportPath"
 //   The path provided for data repository import isn't valid.
 //
+//   * ErrCodeInvalidExportPath "InvalidExportPath"
+//   The path provided for data repository export isn't valid.
+//
 //   * ErrCodeInvalidNetworkSettings "InvalidNetworkSettings"
 //   One or more network settings specified in the request are invalid. InvalidVpcId
 //   means that the ID passed for the virtual private cloud (VPC) is invalid.
@@ -474,6 +477,10 @@ func (c *FSx) DeleteBackupRequest(input *DeleteBackupInput) (req *request.Reques
 // Returned Error Codes:
 //   * ErrCodeBadRequest "BadRequest"
 //   A generic error indicating a failure with a client request.
+//
+//   * ErrCodeBackupInProgress "BackupInProgress"
+//   Another backup is already under way. Wait for completion before initiating
+//   additional backups of this file system.
 //
 //   * ErrCodeBackupNotFound "BackupNotFound"
 //   No Amazon FSx backups were found based upon the supplied parameters.
@@ -748,7 +755,7 @@ func (c *FSx) DescribeBackupsWithContext(ctx aws.Context, input *DescribeBackups
 //    // Example iterating over at most 3 pages of a DescribeBackups operation.
 //    pageNum := 0
 //    err := client.DescribeBackupsPages(params,
-//        func(page *DescribeBackupsOutput, lastPage bool) bool {
+//        func(page *fsx.DescribeBackupsOutput, lastPage bool) bool {
 //            pageNum++
 //            fmt.Println(page)
 //            return pageNum <= 3
@@ -912,7 +919,7 @@ func (c *FSx) DescribeFileSystemsWithContext(ctx aws.Context, input *DescribeFil
 //    // Example iterating over at most 3 pages of a DescribeFileSystems operation.
 //    pageNum := 0
 //    err := client.DescribeFileSystemsPages(params,
-//        func(page *DescribeFileSystemsOutput, lastPage bool) bool {
+//        func(page *fsx.DescribeFileSystemsOutput, lastPage bool) bool {
 //            pageNum++
 //            fmt.Println(page)
 //            return pageNum <= 3
@@ -1748,7 +1755,7 @@ type CreateFileSystemInput struct {
 
 	// The ID of your AWS Key Management Service (AWS KMS) key. This ID is used
 	// to encrypt the data in your file system at rest. For more information, see
-	// Encrypt (http://docs.aws.amazon.com/kms/latest/APIReference/API_Encrypt.html)
+	// Encrypt (https://docs.aws.amazon.com/kms/latest/APIReference/API_Encrypt.html)
 	// in the AWS Key Management Service API Reference.
 	KmsKeyId *string `min:"1" type:"string"`
 
@@ -1770,7 +1777,7 @@ type CreateFileSystemInput struct {
 	// Storage capacity is provisioned in increments of 3,600 GiB.
 	//
 	// StorageCapacity is a required field
-	StorageCapacity *int64 `min:"300" type:"integer" required:"true"`
+	StorageCapacity *int64 `min:"1" type:"integer" required:"true"`
 
 	// A list of IDs for the subnets that the file system will be accessible from.
 	// File systems support only one subnet. The file server is also launched in
@@ -1812,8 +1819,8 @@ func (s *CreateFileSystemInput) Validate() error {
 	if s.StorageCapacity == nil {
 		invalidParams.Add(request.NewErrParamRequired("StorageCapacity"))
 	}
-	if s.StorageCapacity != nil && *s.StorageCapacity < 300 {
-		invalidParams.Add(request.NewErrParamMinValue("StorageCapacity", 300))
+	if s.StorageCapacity != nil && *s.StorageCapacity < 1 {
+		invalidParams.Add(request.NewErrParamMinValue("StorageCapacity", 1))
 	}
 	if s.SubnetIds == nil {
 		invalidParams.Add(request.NewErrParamRequired("SubnetIds"))
@@ -1907,11 +1914,28 @@ func (s *CreateFileSystemInput) SetWindowsConfiguration(v *CreateFileSystemWindo
 type CreateFileSystemLustreConfiguration struct {
 	_ struct{} `type:"structure"`
 
-	// (Optional) The path to the Amazon S3 bucket (and optional prefix) that you're
-	// using as the data repository for your FSx for Lustre file system, for example
-	// s3://import-bucket/optional-prefix. If you specify a prefix after the Amazon
-	// S3 bucket name, only object keys with that prefix are loaded into the file
-	// system.
+	// (Optional) The path in Amazon S3 where the root of your Amazon FSx file system
+	// is exported. The path must use the same Amazon S3 bucket as specified in
+	// ImportPath. You can provide an optional prefix to which new and changed data
+	// is to be exported from your Amazon FSx for Lustre file system. If an ExportPath
+	// value is not provided, Amazon FSx sets a default export path, s3://import-bucket/FSxLustre[creation-timestamp].
+	// The timestamp is in UTC format, for example s3://import-bucket/FSxLustre20181105T222312Z.
+	//
+	// The Amazon S3 export bucket must be the same as the import bucket specified
+	// by ImportPath. If you only specify a bucket name, such as s3://import-bucket,
+	// you get a 1:1 mapping of file system objects to S3 bucket objects. This mapping
+	// means that the input data in S3 is overwritten on export. If you provide
+	// a custom prefix in the export path, such as s3://import-bucket/[custom-optional-prefix],
+	// Amazon FSx exports the contents of your file system to that export prefix
+	// in the Amazon S3 bucket.
+	ExportPath *string `min:"3" type:"string"`
+
+	// (Optional) The path to the Amazon S3 bucket (including the optional prefix)
+	// that you're using as the data repository for your Amazon FSx for Lustre file
+	// system. The root of your FSx for Lustre file system will be mapped to the
+	// root of the Amazon S3 bucket you select. An example is s3://import-bucket/optional-prefix.
+	// If you specify a prefix after the Amazon S3 bucket name, only object keys
+	// with that prefix are loaded into the file system.
 	ImportPath *string `min:"3" type:"string"`
 
 	// (Optional) For files imported from a data repository, this value determines
@@ -1941,6 +1965,9 @@ func (s CreateFileSystemLustreConfiguration) GoString() string {
 // Validate inspects the fields of the type to determine if they are valid.
 func (s *CreateFileSystemLustreConfiguration) Validate() error {
 	invalidParams := request.ErrInvalidParams{Context: "CreateFileSystemLustreConfiguration"}
+	if s.ExportPath != nil && len(*s.ExportPath) < 3 {
+		invalidParams.Add(request.NewErrParamMinLen("ExportPath", 3))
+	}
 	if s.ImportPath != nil && len(*s.ImportPath) < 3 {
 		invalidParams.Add(request.NewErrParamMinLen("ImportPath", 3))
 	}
@@ -1955,6 +1982,12 @@ func (s *CreateFileSystemLustreConfiguration) Validate() error {
 		return invalidParams
 	}
 	return nil
+}
+
+// SetExportPath sets the ExportPath field's value.
+func (s *CreateFileSystemLustreConfiguration) SetExportPath(v string) *CreateFileSystemLustreConfiguration {
+	s.ExportPath = &v
+	return s
 }
 
 // SetImportPath sets the ImportPath field's value.
@@ -2108,12 +2141,8 @@ func (s *CreateFileSystemWindowsConfiguration) SetWeeklyMaintenanceStartTime(v s
 type DataRepositoryConfiguration struct {
 	_ struct{} `type:"structure"`
 
-	// The Amazon S3 commit path to use for storing new and changed Lustre file
-	// system files as part of the archive operation from the file system to Amazon
-	// S3. The value is s3://import-bucket/FSxLustre[creationtimestamp]. The timestamp
-	// is presented in UTC format, for example s3://import-bucket/FSxLustre20181105T222312Z.
-	// Files are archived to a different prefix in the Amazon S3 bucket, preventing
-	// input data from being overwritten.
+	// The export path to the Amazon S3 bucket (and prefix) that you are using to
+	// store new and changed Lustre file system files in S3.
 	ExportPath *string `min:"3" type:"string"`
 
 	// The import path to the Amazon S3 bucket (and optional prefix) that you're
@@ -2698,7 +2727,7 @@ type FileSystem struct {
 	// The IDs of the elastic network interface from which a specific file system
 	// is accessible. The elastic network interface is automatically created in
 	// the same VPC that the Amazon FSx file system was created in. For more information,
-	// see Elastic Network Interfaces (http://docs.aws.amazon.com/AWSEC2/latest/UserGuide/using-eni.html)
+	// see Elastic Network Interfaces (https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/using-eni.html)
 	// in the Amazon EC2 User Guide.
 	//
 	// For an Amazon FSx for Windows File Server file system, you can have one network
@@ -2714,7 +2743,7 @@ type FileSystem struct {
 	ResourceARN *string `min:"8" type:"string"`
 
 	// The storage capacity of the file system in gigabytes.
-	StorageCapacity *int64 `min:"300" type:"integer"`
+	StorageCapacity *int64 `min:"1" type:"integer"`
 
 	// The IDs of the subnets to contain the endpoint for the file system. One and
 	// only one is supported. The file system is launched in the Availability Zone
@@ -2722,7 +2751,7 @@ type FileSystem struct {
 	SubnetIds []*string `type:"list"`
 
 	// The tags to associate with the file system. For more information, see Tagging
-	// Your Amazon EC2 Resources (http://docs.aws.amazon.com/AWSEC2/latest/UserGuide/Using_Tags.html)
+	// Your Amazon EC2 Resources (https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/Using_Tags.html)
 	// in the Amazon EC2 User Guide.
 	Tags []*Tag `min:"1" type:"list"`
 

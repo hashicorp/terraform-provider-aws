@@ -34,6 +34,28 @@ func TestAccAWSSESDomainIdentity_basic(t *testing.T) {
 	})
 }
 
+func TestAccAWSSESDomainIdentity_disappears(t *testing.T) {
+	domain := fmt.Sprintf(
+		"%s.terraformtesting.com",
+		acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum))
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAwsSESDomainIdentityDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAwsSESDomainIdentityConfig(domain),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAwsSESDomainIdentityExists("aws_ses_domain_identity.test"),
+					testAccCheckAwsSESDomainIdentityDisappears(domain),
+				),
+				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}
+
 func TestAccAWSSESDomainIdentity_trailingPeriod(t *testing.T) {
 	domain := fmt.Sprintf(
 		"%s.terraformtesting.com.",
@@ -116,6 +138,20 @@ func testAccCheckAwsSESDomainIdentityExists(n string) resource.TestCheckFunc {
 	}
 }
 
+func testAccCheckAwsSESDomainIdentityDisappears(identity string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := testAccProvider.Meta().(*AWSClient).sesConn
+
+		input := &ses.DeleteIdentityInput{
+			Identity: aws.String(identity),
+		}
+
+		_, err := conn.DeleteIdentity(input)
+
+		return err
+	}
+}
+
 func testAccCheckAwsSESDomainIdentityArn(n string, domain string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs := s.RootModule().Resources[n]
@@ -140,7 +176,7 @@ func testAccCheckAwsSESDomainIdentityArn(n string, domain string) resource.TestC
 func testAccAwsSESDomainIdentityConfig(domain string) string {
 	return fmt.Sprintf(`
 resource "aws_ses_domain_identity" "test" {
-	domain = "%s"
+  domain = "%s"
 }
 `, domain)
 }

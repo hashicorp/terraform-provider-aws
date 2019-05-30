@@ -107,7 +107,7 @@ func testAccCheckAwsServiceDiscoveryPublicDnsNamespaceExists(name string) resour
 func testAccServiceDiscoveryPublicDnsNamespaceConfig(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_service_discovery_public_dns_namespace" "test" {
-  name = %q
+  name        = %q
   description = "test"
 }
 `, rName)

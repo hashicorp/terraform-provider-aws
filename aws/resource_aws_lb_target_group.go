@@ -100,6 +100,12 @@ func resourceAwsLbTargetGroup() *schema.Resource {
 				Default:  false,
 			},
 
+			"lambda_multi_value_headers_enabled": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				Default:  false,
+			},
+
 			"target_type": {
 				Type:     schema.TypeString,
 				Optional: true,
@@ -148,6 +154,12 @@ func resourceAwsLbTargetGroup() *schema.Resource {
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
+						"enabled": {
+							Type:     schema.TypeBool,
+							Optional: true,
+							Default:  true,
+						},
+
 						"interval": {
 							Type:     schema.TypeInt,
 							Optional: true,
@@ -162,10 +174,11 @@ func resourceAwsLbTargetGroup() *schema.Resource {
 						},
 
 						"port": {
-							Type:         schema.TypeString,
-							Optional:     true,
-							Default:      "traffic-port",
-							ValidateFunc: validateAwsLbTargetGroupHealthCheckPort,
+							Type:             schema.TypeString,
+							Optional:         true,
+							Default:          "traffic-port",
+							ValidateFunc:     validateAwsLbTargetGroupHealthCheckPort,
+							DiffSuppressFunc: suppressIfTargetType(elbv2.TargetTypeEnumLambda),
 						},
 
 						"protocol": {
@@ -180,6 +193,7 @@ func resourceAwsLbTargetGroup() *schema.Resource {
 								elbv2.ProtocolEnumHttps,
 								elbv2.ProtocolEnumTcp,
 							}, true),
+							DiffSuppressFunc: suppressIfTargetType(elbv2.TargetTypeEnumLambda),
 						},
 
 						"timeout": {
@@ -214,6 +228,12 @@ func resourceAwsLbTargetGroup() *schema.Resource {
 
 			"tags": tagsSchema(),
 		},
+	}
+}
+
+func suppressIfTargetType(t string) schema.SchemaDiffSuppressFunc {
+	return func(k string, old string, new string, d *schema.ResourceData) bool {
+		return d.Get("target_type").(string) == t
 	}
 }
 
@@ -253,6 +273,8 @@ func resourceAwsLbTargetGroupCreate(d *schema.ResourceData, meta interface{}) er
 
 	if healthChecks := d.Get("health_check").([]interface{}); len(healthChecks) == 1 {
 		healthCheck := healthChecks[0].(map[string]interface{})
+
+		params.HealthCheckEnabled = aws.Bool(healthCheck["enabled"].(bool))
 
 		params.HealthCheckIntervalSeconds = aws.Int64(int64(healthCheck["interval"].(int)))
 
@@ -335,6 +357,7 @@ func resourceAwsLbTargetGroupUpdate(d *schema.ResourceData, meta interface{}) er
 
 			params = &elbv2.ModifyTargetGroupInput{
 				TargetGroupArn:          aws.String(d.Id()),
+				HealthCheckEnabled:      aws.Bool(healthCheck["enabled"].(bool)),
 				HealthyThresholdCount:   aws.Int64(int64(healthCheck["healthy_threshold"].(int))),
 				UnhealthyThresholdCount: aws.Int64(int64(healthCheck["unhealthy_threshold"].(int))),
 			}
@@ -367,9 +390,10 @@ func resourceAwsLbTargetGroupUpdate(d *schema.ResourceData, meta interface{}) er
 		}
 	}
 
-	if d.Get("target_type").(string) != elbv2.TargetTypeEnumLambda {
-		var attrs []*elbv2.TargetGroupAttribute
+	var attrs []*elbv2.TargetGroupAttribute
 
+	switch d.Get("target_type").(string) {
+	case elbv2.TargetTypeEnumInstance, elbv2.TargetTypeEnumIp:
 		if d.HasChange("deregistration_delay") {
 			attrs = append(attrs, &elbv2.TargetGroupAttribute{
 				Key:   aws.String("deregistration_delay.timeout_seconds"),
@@ -395,7 +419,7 @@ func resourceAwsLbTargetGroupUpdate(d *schema.ResourceData, meta interface{}) er
 		// groups, so long as it's not enabled. This allows for better support for
 		// modules, but also means we need to completely skip sending the data to the
 		// API if it's defined on a TCP target group.
-		if d.HasChange("stickiness") && d.Get("protocol") != "TCP" && d.Get("target_type").(string) != elbv2.TargetTypeEnumLambda {
+		if d.HasChange("stickiness") && d.Get("protocol") != "TCP" {
 			stickinessBlocks := d.Get("stickiness").([]interface{})
 			if len(stickinessBlocks) == 1 {
 				stickiness := stickinessBlocks[0].(map[string]interface{})
@@ -420,17 +444,24 @@ func resourceAwsLbTargetGroupUpdate(d *schema.ResourceData, meta interface{}) er
 				})
 			}
 		}
+	case elbv2.TargetTypeEnumLambda:
+		if d.HasChange("lambda_multi_value_headers_enabled") {
+			attrs = append(attrs, &elbv2.TargetGroupAttribute{
+				Key:   aws.String("lambda.multi_value_headers.enabled"),
+				Value: aws.String(strconv.FormatBool(d.Get("lambda_multi_value_headers_enabled").(bool))),
+			})
+		}
+	}
 
-		if len(attrs) > 0 {
-			params := &elbv2.ModifyTargetGroupAttributesInput{
-				TargetGroupArn: aws.String(d.Id()),
-				Attributes:     attrs,
-			}
+	if len(attrs) > 0 {
+		params := &elbv2.ModifyTargetGroupAttributesInput{
+			TargetGroupArn: aws.String(d.Id()),
+			Attributes:     attrs,
+		}
 
-			_, err := elbconn.ModifyTargetGroupAttributes(params)
-			if err != nil {
-				return fmt.Errorf("Error modifying Target Group Attributes: %s", err)
-			}
+		_, err := elbconn.ModifyTargetGroupAttributes(params)
+		if err != nil {
+			return fmt.Errorf("Error modifying Target Group Attributes: %s", err)
 		}
 	}
 
@@ -519,6 +550,7 @@ func flattenAwsLbTargetGroupResource(d *schema.ResourceData, meta interface{}, t
 	d.Set("target_type", targetGroup.TargetType)
 
 	healthCheck := make(map[string]interface{})
+	healthCheck["enabled"] = aws.BoolValue(targetGroup.HealthCheckEnabled)
 	healthCheck["interval"] = int(aws.Int64Value(targetGroup.HealthCheckIntervalSeconds))
 	healthCheck["port"] = aws.StringValue(targetGroup.HealthCheckPort)
 	healthCheck["protocol"] = aws.StringValue(targetGroup.HealthCheckProtocol)
@@ -551,6 +583,12 @@ func flattenAwsLbTargetGroupResource(d *schema.ResourceData, meta interface{}, t
 
 	for _, attr := range attrResp.Attributes {
 		switch aws.StringValue(attr.Key) {
+		case "lambda.multi_value_headers.enabled":
+			enabled, err := strconv.ParseBool(aws.StringValue(attr.Value))
+			if err != nil {
+				return fmt.Errorf("Error converting lambda.multi_value_headers.enabled to bool: %s", aws.StringValue(attr.Value))
+			}
+			d.Set("lambda_multi_value_headers_enabled", enabled)
 		case "proxy_protocol_v2.enabled":
 			enabled, err := strconv.ParseBool(aws.StringValue(attr.Value))
 			if err != nil {

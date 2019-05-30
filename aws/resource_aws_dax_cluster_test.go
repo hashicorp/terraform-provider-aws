@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"log"
 	"regexp"
-	"strings"
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -47,10 +46,6 @@ func testSweepDAXClusters(region string) error {
 	log.Printf("[INFO] Found %d DAX clusters", len(resp.Clusters))
 
 	for _, cluster := range resp.Clusters {
-		if !strings.HasPrefix(*cluster.ClusterName, "tf-") {
-			continue
-		}
-
 		log.Printf("[INFO] Deleting DAX cluster %s", *cluster.ClusterName)
 		_, err := conn.DeleteCluster(&dax.DeleteClusterInput{
 			ClusterName: cluster.ClusterName,
@@ -316,58 +311,58 @@ EOF
 
 func testAccAWSDAXClusterConfig(rString string) string {
 	return fmt.Sprintf(`%s
-		resource "aws_dax_cluster" "test" {
-		  cluster_name       = "tf-%s"
-		  iam_role_arn       = "${aws_iam_role.test.arn}"
-		  node_type          = "dax.t2.small"
-		  replication_factor = 1
-		  description        = "test cluster"
+resource "aws_dax_cluster" "test" {
+  cluster_name       = "tf-%s"
+  iam_role_arn       = "${aws_iam_role.test.arn}"
+  node_type          = "dax.t2.small"
+  replication_factor = 1
+  description        = "test cluster"
 
-		  tags = {
-		    foo = "bar"
-		  }
-		}
-		`, baseConfig, rString)
+  tags = {
+    foo = "bar"
+  }
+}
+`, baseConfig, rString)
 }
 
 func testAccAWSDAXClusterConfigWithEncryption(rString string, enabled bool) string {
 	return fmt.Sprintf(`%s
-		resource "aws_dax_cluster" "test" {
-		  cluster_name       = "tf-%s"
-		  iam_role_arn       = "${aws_iam_role.test.arn}"
-		  node_type          = "dax.t2.small"
-		  replication_factor = 1
-		  description        = "test cluster"
+resource "aws_dax_cluster" "test" {
+  cluster_name       = "tf-%s"
+  iam_role_arn       = "${aws_iam_role.test.arn}"
+  node_type          = "dax.t2.small"
+  replication_factor = 1
+  description        = "test cluster"
 
-		  tags = {
-		    foo = "bar"
-		  }
+  tags = {
+    foo = "bar"
+  }
 
-		  server_side_encryption {
-		    enabled = %t
-		  }
-		}
-		`, baseConfig, rString, enabled)
+  server_side_encryption {
+    enabled = %t
+  }
+}
+`, baseConfig, rString, enabled)
 }
 
 func testAccAWSDAXClusterConfigResize_singleNode(rString string) string {
 	return fmt.Sprintf(`%s
-		resource "aws_dax_cluster" "test" {
-		  cluster_name       = "tf-%s"
-		  iam_role_arn       = "${aws_iam_role.test.arn}"
-		  node_type          = "dax.r3.large"
-		  replication_factor = 1
-		}
-		`, baseConfig, rString)
+resource "aws_dax_cluster" "test" {
+  cluster_name       = "tf-%s"
+  iam_role_arn       = "${aws_iam_role.test.arn}"
+  node_type          = "dax.r3.large"
+  replication_factor = 1
+}
+`, baseConfig, rString)
 }
 
 func testAccAWSDAXClusterConfigResize_multiNode(rString string) string {
 	return fmt.Sprintf(`%s
-		resource "aws_dax_cluster" "test" {
-		  cluster_name       = "tf-%s"
-		  iam_role_arn       = "${aws_iam_role.test.arn}"
-		  node_type          = "dax.r3.large"
-		  replication_factor = 2
-		}
-		`, baseConfig, rString)
+resource "aws_dax_cluster" "test" {
+  cluster_name       = "tf-%s"
+  iam_role_arn       = "${aws_iam_role.test.arn}"
+  node_type          = "dax.r3.large"
+  replication_factor = 2
+}
+`, baseConfig, rString)
 }

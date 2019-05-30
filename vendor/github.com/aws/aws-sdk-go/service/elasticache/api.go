@@ -270,55 +270,46 @@ func (c *ElastiCache) CopySnapshotRequest(input *CopySnapshotInput) (req *reques
 //
 // Error Messages
 //
-//    * Error Message: The S3 bucket %s is outside of the region.
-//
-// Solution: Create an Amazon S3 bucket in the same region as your snapshot.
-//    For more information, see Step 1: Create an Amazon S3 Bucket (http://docs.aws.amazon.com/AmazonElastiCache/latest/red-ug/Snapshots.Exporting.html#Snapshots.Exporting.CreateBucket)
+//    * Error Message: The S3 bucket %s is outside of the region. Solution:
+//    Create an Amazon S3 bucket in the same region as your snapshot. For more
+//    information, see Step 1: Create an Amazon S3 Bucket (http://docs.aws.amazon.com/AmazonElastiCache/latest/red-ug/Snapshots.Exporting.html#Snapshots.Exporting.CreateBucket)
 //    in the ElastiCache User Guide.
 //
-//    * Error Message: The S3 bucket %s does not exist.
-//
-// Solution: Create an Amazon S3 bucket in the same region as your snapshot.
-//    For more information, see Step 1: Create an Amazon S3 Bucket (http://docs.aws.amazon.com/AmazonElastiCache/latest/red-ug/Snapshots.Exporting.html#Snapshots.Exporting.CreateBucket)
+//    * Error Message: The S3 bucket %s does not exist. Solution: Create an
+//    Amazon S3 bucket in the same region as your snapshot. For more information,
+//    see Step 1: Create an Amazon S3 Bucket (http://docs.aws.amazon.com/AmazonElastiCache/latest/red-ug/Snapshots.Exporting.html#Snapshots.Exporting.CreateBucket)
 //    in the ElastiCache User Guide.
 //
 //    * Error Message: The S3 bucket %s is not owned by the authenticated user.
-//
-// Solution: Create an Amazon S3 bucket in the same region as your snapshot.
+//    Solution: Create an Amazon S3 bucket in the same region as your snapshot.
 //    For more information, see Step 1: Create an Amazon S3 Bucket (http://docs.aws.amazon.com/AmazonElastiCache/latest/red-ug/Snapshots.Exporting.html#Snapshots.Exporting.CreateBucket)
 //    in the ElastiCache User Guide.
 //
 //    * Error Message: The authenticated user does not have sufficient permissions
-//    to perform the desired activity.
-//
-// Solution: Contact your system administrator to get the needed permissions.
+//    to perform the desired activity. Solution: Contact your system administrator
+//    to get the needed permissions.
 //
 //    * Error Message: The S3 bucket %s already contains an object with key
-//    %s.
-//
-// Solution: Give the TargetSnapshotName a new and unique value. If exporting
+//    %s. Solution: Give the TargetSnapshotName a new and unique value. If exporting
 //    a snapshot, you could alternatively create a new Amazon S3 bucket and
 //    use this same value for TargetSnapshotName.
 //
-//    * Error Message:  ElastiCache has not been granted READ permissions %s
-//    on the S3 Bucket.
-//
-// Solution: Add List and Read permissions on the bucket. For more information,
-//    see Step 2: Grant ElastiCache Access to Your Amazon S3 Bucket (http://docs.aws.amazon.com/AmazonElastiCache/latest/red-ug/Snapshots.Exporting.html#Snapshots.Exporting.GrantAccess)
+//    * Error Message: ElastiCache has not been granted READ permissions %s
+//    on the S3 Bucket. Solution: Add List and Read permissions on the bucket.
+//    For more information, see Step 2: Grant ElastiCache Access to Your Amazon
+//    S3 Bucket (http://docs.aws.amazon.com/AmazonElastiCache/latest/red-ug/Snapshots.Exporting.html#Snapshots.Exporting.GrantAccess)
 //    in the ElastiCache User Guide.
 //
-//    * Error Message:  ElastiCache has not been granted WRITE permissions %s
-//    on the S3 Bucket.
-//
-// Solution: Add Upload/Delete permissions on the bucket. For more information,
-//    see Step 2: Grant ElastiCache Access to Your Amazon S3 Bucket (http://docs.aws.amazon.com/AmazonElastiCache/latest/red-ug/Snapshots.Exporting.html#Snapshots.Exporting.GrantAccess)
+//    * Error Message: ElastiCache has not been granted WRITE permissions %s
+//    on the S3 Bucket. Solution: Add Upload/Delete permissions on the bucket.
+//    For more information, see Step 2: Grant ElastiCache Access to Your Amazon
+//    S3 Bucket (http://docs.aws.amazon.com/AmazonElastiCache/latest/red-ug/Snapshots.Exporting.html#Snapshots.Exporting.GrantAccess)
 //    in the ElastiCache User Guide.
 //
-//    * Error Message:  ElastiCache has not been granted READ_ACP permissions
-//    %s on the S3 Bucket.
-//
-// Solution: Add View Permissions on the bucket. For more information, see Step
-//    2: Grant ElastiCache Access to Your Amazon S3 Bucket (http://docs.aws.amazon.com/AmazonElastiCache/latest/red-ug/Snapshots.Exporting.html#Snapshots.Exporting.GrantAccess)
+//    * Error Message: ElastiCache has not been granted READ_ACP permissions
+//    %s on the S3 Bucket. Solution: Add View Permissions on the bucket. For
+//    more information, see Step 2: Grant ElastiCache Access to Your Amazon
+//    S3 Bucket (http://docs.aws.amazon.com/AmazonElastiCache/latest/red-ug/Snapshots.Exporting.html#Snapshots.Exporting.GrantAccess)
 //    in the ElastiCache User Guide.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
@@ -1902,7 +1893,7 @@ func (c *ElastiCache) DescribeCacheClustersWithContext(ctx aws.Context, input *D
 //    // Example iterating over at most 3 pages of a DescribeCacheClusters operation.
 //    pageNum := 0
 //    err := client.DescribeCacheClustersPages(params,
-//        func(page *DescribeCacheClustersOutput, lastPage bool) bool {
+//        func(page *elasticache.DescribeCacheClustersOutput, lastPage bool) bool {
 //            pageNum++
 //            fmt.Println(page)
 //            return pageNum <= 3
@@ -2032,7 +2023,7 @@ func (c *ElastiCache) DescribeCacheEngineVersionsWithContext(ctx aws.Context, in
 //    // Example iterating over at most 3 pages of a DescribeCacheEngineVersions operation.
 //    pageNum := 0
 //    err := client.DescribeCacheEngineVersionsPages(params,
-//        func(page *DescribeCacheEngineVersionsOutput, lastPage bool) bool {
+//        func(page *elasticache.DescribeCacheEngineVersionsOutput, lastPage bool) bool {
 //            pageNum++
 //            fmt.Println(page)
 //            return pageNum <= 3
@@ -2176,7 +2167,7 @@ func (c *ElastiCache) DescribeCacheParameterGroupsWithContext(ctx aws.Context, i
 //    // Example iterating over at most 3 pages of a DescribeCacheParameterGroups operation.
 //    pageNum := 0
 //    err := client.DescribeCacheParameterGroupsPages(params,
-//        func(page *DescribeCacheParameterGroupsOutput, lastPage bool) bool {
+//        func(page *elasticache.DescribeCacheParameterGroupsOutput, lastPage bool) bool {
 //            pageNum++
 //            fmt.Println(page)
 //            return pageNum <= 3
@@ -2318,7 +2309,7 @@ func (c *ElastiCache) DescribeCacheParametersWithContext(ctx aws.Context, input 
 //    // Example iterating over at most 3 pages of a DescribeCacheParameters operation.
 //    pageNum := 0
 //    err := client.DescribeCacheParametersPages(params,
-//        func(page *DescribeCacheParametersOutput, lastPage bool) bool {
+//        func(page *elasticache.DescribeCacheParametersOutput, lastPage bool) bool {
 //            pageNum++
 //            fmt.Println(page)
 //            return pageNum <= 3
@@ -2461,7 +2452,7 @@ func (c *ElastiCache) DescribeCacheSecurityGroupsWithContext(ctx aws.Context, in
 //    // Example iterating over at most 3 pages of a DescribeCacheSecurityGroups operation.
 //    pageNum := 0
 //    err := client.DescribeCacheSecurityGroupsPages(params,
-//        func(page *DescribeCacheSecurityGroupsOutput, lastPage bool) bool {
+//        func(page *elasticache.DescribeCacheSecurityGroupsOutput, lastPage bool) bool {
 //            pageNum++
 //            fmt.Println(page)
 //            return pageNum <= 3
@@ -2598,7 +2589,7 @@ func (c *ElastiCache) DescribeCacheSubnetGroupsWithContext(ctx aws.Context, inpu
 //    // Example iterating over at most 3 pages of a DescribeCacheSubnetGroups operation.
 //    pageNum := 0
 //    err := client.DescribeCacheSubnetGroupsPages(params,
-//        func(page *DescribeCacheSubnetGroupsOutput, lastPage bool) bool {
+//        func(page *elasticache.DescribeCacheSubnetGroupsOutput, lastPage bool) bool {
 //            pageNum++
 //            fmt.Println(page)
 //            return pageNum <= 3
@@ -2737,7 +2728,7 @@ func (c *ElastiCache) DescribeEngineDefaultParametersWithContext(ctx aws.Context
 //    // Example iterating over at most 3 pages of a DescribeEngineDefaultParameters operation.
 //    pageNum := 0
 //    err := client.DescribeEngineDefaultParametersPages(params,
-//        func(page *DescribeEngineDefaultParametersOutput, lastPage bool) bool {
+//        func(page *elasticache.DescribeEngineDefaultParametersOutput, lastPage bool) bool {
 //            pageNum++
 //            fmt.Println(page)
 //            return pageNum <= 3
@@ -2880,7 +2871,7 @@ func (c *ElastiCache) DescribeEventsWithContext(ctx aws.Context, input *Describe
 //    // Example iterating over at most 3 pages of a DescribeEvents operation.
 //    pageNum := 0
 //    err := client.DescribeEventsPages(params,
-//        func(page *DescribeEventsOutput, lastPage bool) bool {
+//        func(page *elasticache.DescribeEventsOutput, lastPage bool) bool {
 //            pageNum++
 //            fmt.Println(page)
 //            return pageNum <= 3
@@ -3025,7 +3016,7 @@ func (c *ElastiCache) DescribeReplicationGroupsWithContext(ctx aws.Context, inpu
 //    // Example iterating over at most 3 pages of a DescribeReplicationGroups operation.
 //    pageNum := 0
 //    err := client.DescribeReplicationGroupsPages(params,
-//        func(page *DescribeReplicationGroupsOutput, lastPage bool) bool {
+//        func(page *elasticache.DescribeReplicationGroupsOutput, lastPage bool) bool {
 //            pageNum++
 //            fmt.Println(page)
 //            return pageNum <= 3
@@ -3167,7 +3158,7 @@ func (c *ElastiCache) DescribeReservedCacheNodesWithContext(ctx aws.Context, inp
 //    // Example iterating over at most 3 pages of a DescribeReservedCacheNodes operation.
 //    pageNum := 0
 //    err := client.DescribeReservedCacheNodesPages(params,
-//        func(page *DescribeReservedCacheNodesOutput, lastPage bool) bool {
+//        func(page *elasticache.DescribeReservedCacheNodesOutput, lastPage bool) bool {
 //            pageNum++
 //            fmt.Println(page)
 //            return pageNum <= 3
@@ -3308,7 +3299,7 @@ func (c *ElastiCache) DescribeReservedCacheNodesOfferingsWithContext(ctx aws.Con
 //    // Example iterating over at most 3 pages of a DescribeReservedCacheNodesOfferings operation.
 //    pageNum := 0
 //    err := client.DescribeReservedCacheNodesOfferingsPages(params,
-//        func(page *DescribeReservedCacheNodesOfferingsOutput, lastPage bool) bool {
+//        func(page *elasticache.DescribeReservedCacheNodesOfferingsOutput, lastPage bool) bool {
 //            pageNum++
 //            fmt.Println(page)
 //            return pageNum <= 3
@@ -3457,7 +3448,7 @@ func (c *ElastiCache) DescribeSnapshotsWithContext(ctx aws.Context, input *Descr
 //    // Example iterating over at most 3 pages of a DescribeSnapshots operation.
 //    pageNum := 0
 //    err := client.DescribeSnapshotsPages(params,
-//        func(page *DescribeSnapshotsOutput, lastPage bool) bool {
+//        func(page *elasticache.DescribeSnapshotsOutput, lastPage bool) bool {
 //            pageNum++
 //            fmt.Println(page)
 //            return pageNum <= 3
@@ -4868,26 +4859,14 @@ func (c *ElastiCache) TestFailoverRequest(input *TestFailoverInput) (req *reques
 //    * To determine whether the node replacement is complete you can check
 //    Events using the Amazon ElastiCache console, the AWS CLI, or the ElastiCache
 //    API. Look for the following automatic failover related events, listed
-//    here in order of occurrance:
-//
-// Replication group message: Test Failover API called for node group <node-group-id>
-//
-// Cache cluster message: Failover from master node <primary-node-id> to replica
-//    node <node-id> completed
-//
-// Replication group message: Failover from master node <primary-node-id> to
-//    replica node <node-id> completed
-//
-// Cache cluster message: Recovering cache nodes <node-id>
-//
-// Cache cluster message: Finished recovery for cache nodes <node-id>
-//
-// For more information see:
-//
-// Viewing ElastiCache Events (http://docs.aws.amazon.com/AmazonElastiCache/latest/red-ug/ECEvents.Viewing.html)
-//    in the ElastiCache User Guide
-//
-// DescribeEvents (http://docs.aws.amazon.com/AmazonElastiCache/latest/APIReference/API_DescribeEvents.html)
+//    here in order of occurrance: Replication group message: Test Failover
+//    API called for node group <node-group-id> Cache cluster message: Failover
+//    from master node <primary-node-id> to replica node <node-id> completed
+//    Replication group message: Failover from master node <primary-node-id>
+//    to replica node <node-id> completed Cache cluster message: Recovering
+//    cache nodes <node-id> Cache cluster message: Finished recovery for cache
+//    nodes <node-id> For more information see: Viewing ElastiCache Events (http://docs.aws.amazon.com/AmazonElastiCache/latest/red-ug/ECEvents.Viewing.html)
+//    in the ElastiCache User Guide DescribeEvents (http://docs.aws.amazon.com/AmazonElastiCache/latest/APIReference/API_DescribeEvents.html)
 //    in the ElastiCache API Reference
 //
 // Also see, Testing Multi-AZ with Automatic Failover (http://docs.aws.amazon.com/AmazonElastiCache/latest/red-ug/AutoFailover.html#auto-failover-test)
@@ -5174,42 +5153,21 @@ type CacheCluster struct {
 	// the current generation types provide more memory and computational power
 	// at lower cost when compared to their equivalent previous generation counterparts.
 	//
-	//    * General purpose:
+	//    * General purpose: Current generation: T2 node types: cache.t2.micro,
+	//    cache.t2.small, cache.t2.medium M3 node types: cache.m3.medium, cache.m3.large,
+	//    cache.m3.xlarge, cache.m3.2xlarge M4 node types: cache.m4.large, cache.m4.xlarge,
+	//    cache.m4.2xlarge, cache.m4.4xlarge, cache.m4.10xlarge Previous generation:
+	//    (not recommended) T1 node types: cache.t1.micro M1 node types: cache.m1.small,
+	//    cache.m1.medium, cache.m1.large, cache.m1.xlarge
 	//
-	// Current generation:
+	//    * Compute optimized: Previous generation: (not recommended) C1 node types:
+	//    cache.c1.xlarge
 	//
-	// T2 node types:cache.t2.micro, cache.t2.small, cache.t2.medium
-	//
-	// M3 node types:cache.m3.medium, cache.m3.large, cache.m3.xlarge, cache.m3.2xlarge
-	//
-	// M4 node types:cache.m4.large, cache.m4.xlarge, cache.m4.2xlarge, cache.m4.4xlarge,
-	//    cache.m4.10xlarge
-	//
-	// Previous generation: (not recommended)
-	//
-	// T1 node types:cache.t1.micro
-	//
-	// M1 node types:cache.m1.small, cache.m1.medium, cache.m1.large, cache.m1.xlarge
-	//
-	//    * Compute optimized:
-	//
-	// Previous generation: (not recommended)
-	//
-	// C1 node types:cache.c1.xlarge
-	//
-	//    * Memory optimized:
-	//
-	// Current generation:
-	//
-	// R3 node types:cache.r3.large, cache.r3.xlarge, cache.r3.2xlarge, cache.r3.4xlarge,
-	//    cache.r3.8xlarge
-	//
-	// R4 node types;cache.r4.large, cache.r4.xlarge, cache.r4.2xlarge, cache.r4.4xlarge,
-	//    cache.r4.8xlarge, cache.r4.16xlarge
-	//
-	// Previous generation: (not recommended)
-	//
-	// M2 node types:cache.m2.xlarge, cache.m2.2xlarge, cache.m2.4xlarge
+	//    * Memory optimized: Current generation: R3 node types: cache.r3.large,
+	//    cache.r3.xlarge, cache.r3.2xlarge, cache.r3.4xlarge, cache.r3.8xlarge
+	//    R4 node types; cache.r4.large, cache.r4.xlarge, cache.r4.2xlarge, cache.r4.4xlarge,
+	//    cache.r4.8xlarge, cache.r4.16xlarge Previous generation: (not recommended)
+	//    M2 node types: cache.m2.xlarge, cache.m2.2xlarge, cache.m2.4xlarge
 	//
 	// Notes:
 	//
@@ -5569,42 +5527,21 @@ func (s *CacheEngineVersion) SetEngineVersion(v string) *CacheEngineVersion {
 // the current generation types provide more memory and computational power
 // at lower cost when compared to their equivalent previous generation counterparts.
 //
-//    * General purpose:
+//    * General purpose: Current generation: T2 node types: cache.t2.micro,
+//    cache.t2.small, cache.t2.medium M3 node types: cache.m3.medium, cache.m3.large,
+//    cache.m3.xlarge, cache.m3.2xlarge M4 node types: cache.m4.large, cache.m4.xlarge,
+//    cache.m4.2xlarge, cache.m4.4xlarge, cache.m4.10xlarge Previous generation:
+//    (not recommended) T1 node types: cache.t1.micro M1 node types: cache.m1.small,
+//    cache.m1.medium, cache.m1.large, cache.m1.xlarge
 //
-// Current generation:
+//    * Compute optimized: Previous generation: (not recommended) C1 node types:
+//    cache.c1.xlarge
 //
-// T2 node types:cache.t2.micro, cache.t2.small, cache.t2.medium
-//
-// M3 node types:cache.m3.medium, cache.m3.large, cache.m3.xlarge, cache.m3.2xlarge
-//
-// M4 node types:cache.m4.large, cache.m4.xlarge, cache.m4.2xlarge, cache.m4.4xlarge,
-//    cache.m4.10xlarge
-//
-// Previous generation: (not recommended)
-//
-// T1 node types:cache.t1.micro
-//
-// M1 node types:cache.m1.small, cache.m1.medium, cache.m1.large, cache.m1.xlarge
-//
-//    * Compute optimized:
-//
-// Previous generation: (not recommended)
-//
-// C1 node types:cache.c1.xlarge
-//
-//    * Memory optimized:
-//
-// Current generation:
-//
-// R3 node types:cache.r3.large, cache.r3.xlarge, cache.r3.2xlarge, cache.r3.4xlarge,
-//    cache.r3.8xlarge
-//
-// R4 node types;cache.r4.large, cache.r4.xlarge, cache.r4.2xlarge, cache.r4.4xlarge,
-//    cache.r4.8xlarge, cache.r4.16xlarge
-//
-// Previous generation: (not recommended)
-//
-// M2 node types:cache.m2.xlarge, cache.m2.2xlarge, cache.m2.4xlarge
+//    * Memory optimized: Current generation: R3 node types: cache.r3.large,
+//    cache.r3.xlarge, cache.r3.2xlarge, cache.r3.4xlarge, cache.r3.8xlarge
+//    R4 node types; cache.r4.large, cache.r4.xlarge, cache.r4.2xlarge, cache.r4.4xlarge,
+//    cache.r4.8xlarge, cache.r4.16xlarge Previous generation: (not recommended)
+//    M2 node types: cache.m2.xlarge, cache.m2.2xlarge, cache.m2.4xlarge
 //
 // Notes:
 //
@@ -6120,11 +6057,8 @@ type ConfigureShard struct {
 	//
 	// The minimum number of replicas in a shard or replication group is:
 	//
-	//    * Redis (cluster mode disabled)
-	//
-	// If Multi-AZ with Automatic Failover is enabled: 1
-	//
-	// If Multi-AZ with Automatic Failover is not enable: 0
+	//    * Redis (cluster mode disabled) If Multi-AZ with Automatic Failover is
+	//    enabled: 1 If Multi-AZ with Automatic Failover is not enable: 0
 	//
 	//    * Redis (cluster mode enabled): 0 (though you will not be able to failover
 	//    to a replica if your primary node fails)
@@ -6343,42 +6277,21 @@ type CreateCacheClusterInput struct {
 	// the current generation types provide more memory and computational power
 	// at lower cost when compared to their equivalent previous generation counterparts.
 	//
-	//    * General purpose:
+	//    * General purpose: Current generation: T2 node types: cache.t2.micro,
+	//    cache.t2.small, cache.t2.medium M3 node types: cache.m3.medium, cache.m3.large,
+	//    cache.m3.xlarge, cache.m3.2xlarge M4 node types: cache.m4.large, cache.m4.xlarge,
+	//    cache.m4.2xlarge, cache.m4.4xlarge, cache.m4.10xlarge Previous generation:
+	//    (not recommended) T1 node types: cache.t1.micro M1 node types: cache.m1.small,
+	//    cache.m1.medium, cache.m1.large, cache.m1.xlarge
 	//
-	// Current generation:
+	//    * Compute optimized: Previous generation: (not recommended) C1 node types:
+	//    cache.c1.xlarge
 	//
-	// T2 node types:cache.t2.micro, cache.t2.small, cache.t2.medium
-	//
-	// M3 node types:cache.m3.medium, cache.m3.large, cache.m3.xlarge, cache.m3.2xlarge
-	//
-	// M4 node types:cache.m4.large, cache.m4.xlarge, cache.m4.2xlarge, cache.m4.4xlarge,
-	//    cache.m4.10xlarge
-	//
-	// Previous generation: (not recommended)
-	//
-	// T1 node types:cache.t1.micro
-	//
-	// M1 node types:cache.m1.small, cache.m1.medium, cache.m1.large, cache.m1.xlarge
-	//
-	//    * Compute optimized:
-	//
-	// Previous generation: (not recommended)
-	//
-	// C1 node types:cache.c1.xlarge
-	//
-	//    * Memory optimized:
-	//
-	// Current generation:
-	//
-	// R3 node types:cache.r3.large, cache.r3.xlarge, cache.r3.2xlarge, cache.r3.4xlarge,
-	//    cache.r3.8xlarge
-	//
-	// R4 node types;cache.r4.large, cache.r4.xlarge, cache.r4.2xlarge, cache.r4.4xlarge,
-	//    cache.r4.8xlarge, cache.r4.16xlarge
-	//
-	// Previous generation: (not recommended)
-	//
-	// M2 node types:cache.m2.xlarge, cache.m2.2xlarge, cache.m2.4xlarge
+	//    * Memory optimized: Current generation: R3 node types: cache.r3.large,
+	//    cache.r3.xlarge, cache.r3.2xlarge, cache.r3.4xlarge, cache.r3.8xlarge
+	//    R4 node types; cache.r4.large, cache.r4.xlarge, cache.r4.2xlarge, cache.r4.4xlarge,
+	//    cache.r4.8xlarge, cache.r4.16xlarge Previous generation: (not recommended)
+	//    M2 node types: cache.m2.xlarge, cache.m2.2xlarge, cache.m2.4xlarge
 	//
 	// Notes:
 	//
@@ -7103,42 +7016,21 @@ type CreateReplicationGroupInput struct {
 	// the current generation types provide more memory and computational power
 	// at lower cost when compared to their equivalent previous generation counterparts.
 	//
-	//    * General purpose:
+	//    * General purpose: Current generation: T2 node types: cache.t2.micro,
+	//    cache.t2.small, cache.t2.medium M3 node types: cache.m3.medium, cache.m3.large,
+	//    cache.m3.xlarge, cache.m3.2xlarge M4 node types: cache.m4.large, cache.m4.xlarge,
+	//    cache.m4.2xlarge, cache.m4.4xlarge, cache.m4.10xlarge Previous generation:
+	//    (not recommended) T1 node types: cache.t1.micro M1 node types: cache.m1.small,
+	//    cache.m1.medium, cache.m1.large, cache.m1.xlarge
 	//
-	// Current generation:
+	//    * Compute optimized: Previous generation: (not recommended) C1 node types:
+	//    cache.c1.xlarge
 	//
-	// T2 node types:cache.t2.micro, cache.t2.small, cache.t2.medium
-	//
-	// M3 node types:cache.m3.medium, cache.m3.large, cache.m3.xlarge, cache.m3.2xlarge
-	//
-	// M4 node types:cache.m4.large, cache.m4.xlarge, cache.m4.2xlarge, cache.m4.4xlarge,
-	//    cache.m4.10xlarge
-	//
-	// Previous generation: (not recommended)
-	//
-	// T1 node types:cache.t1.micro
-	//
-	// M1 node types:cache.m1.small, cache.m1.medium, cache.m1.large, cache.m1.xlarge
-	//
-	//    * Compute optimized:
-	//
-	// Previous generation: (not recommended)
-	//
-	// C1 node types:cache.c1.xlarge
-	//
-	//    * Memory optimized:
-	//
-	// Current generation:
-	//
-	// R3 node types:cache.r3.large, cache.r3.xlarge, cache.r3.2xlarge, cache.r3.4xlarge,
-	//    cache.r3.8xlarge
-	//
-	// R4 node types;cache.r4.large, cache.r4.xlarge, cache.r4.2xlarge, cache.r4.4xlarge,
-	//    cache.r4.8xlarge, cache.r4.16xlarge
-	//
-	// Previous generation: (not recommended)
-	//
-	// M2 node types:cache.m2.xlarge, cache.m2.2xlarge, cache.m2.4xlarge
+	//    * Memory optimized: Current generation: R3 node types: cache.r3.large,
+	//    cache.r3.xlarge, cache.r3.2xlarge, cache.r3.4xlarge, cache.r3.8xlarge
+	//    R4 node types; cache.r4.large, cache.r4.xlarge, cache.r4.2xlarge, cache.r4.4xlarge,
+	//    cache.r4.8xlarge, cache.r4.16xlarge Previous generation: (not recommended)
+	//    M2 node types: cache.m2.xlarge, cache.m2.2xlarge, cache.m2.4xlarge
 	//
 	// Notes:
 	//
@@ -7709,11 +7601,8 @@ type DecreaseReplicaCountInput struct {
 	//
 	// The minimum number of replicas in a shard or replication group is:
 	//
-	//    * Redis (cluster mode disabled)
-	//
-	// If Multi-AZ with Automatic Failover is enabled: 1
-	//
-	// If Multi-AZ with Automatic Failover is not enabled: 0
+	//    * Redis (cluster mode disabled) If Multi-AZ with Automatic Failover is
+	//    enabled: 1 If Multi-AZ with Automatic Failover is not enabled: 0
 	//
 	//    * Redis (cluster mode enabled): 0 (though you will not be able to failover
 	//    to a replica if your primary node fails)
@@ -9129,42 +9018,21 @@ type DescribeReservedCacheNodesInput struct {
 	// the current generation types provide more memory and computational power
 	// at lower cost when compared to their equivalent previous generation counterparts.
 	//
-	//    * General purpose:
+	//    * General purpose: Current generation: T2 node types: cache.t2.micro,
+	//    cache.t2.small, cache.t2.medium M3 node types: cache.m3.medium, cache.m3.large,
+	//    cache.m3.xlarge, cache.m3.2xlarge M4 node types: cache.m4.large, cache.m4.xlarge,
+	//    cache.m4.2xlarge, cache.m4.4xlarge, cache.m4.10xlarge Previous generation:
+	//    (not recommended) T1 node types: cache.t1.micro M1 node types: cache.m1.small,
+	//    cache.m1.medium, cache.m1.large, cache.m1.xlarge
 	//
-	// Current generation:
+	//    * Compute optimized: Previous generation: (not recommended) C1 node types:
+	//    cache.c1.xlarge
 	//
-	// T2 node types:cache.t2.micro, cache.t2.small, cache.t2.medium
-	//
-	// M3 node types:cache.m3.medium, cache.m3.large, cache.m3.xlarge, cache.m3.2xlarge
-	//
-	// M4 node types:cache.m4.large, cache.m4.xlarge, cache.m4.2xlarge, cache.m4.4xlarge,
-	//    cache.m4.10xlarge
-	//
-	// Previous generation: (not recommended)
-	//
-	// T1 node types:cache.t1.micro
-	//
-	// M1 node types:cache.m1.small, cache.m1.medium, cache.m1.large, cache.m1.xlarge
-	//
-	//    * Compute optimized:
-	//
-	// Previous generation: (not recommended)
-	//
-	// C1 node types:cache.c1.xlarge
-	//
-	//    * Memory optimized:
-	//
-	// Current generation:
-	//
-	// R3 node types:cache.r3.large, cache.r3.xlarge, cache.r3.2xlarge, cache.r3.4xlarge,
-	//    cache.r3.8xlarge
-	//
-	// R4 node types;cache.r4.large, cache.r4.xlarge, cache.r4.2xlarge, cache.r4.4xlarge,
-	//    cache.r4.8xlarge, cache.r4.16xlarge
-	//
-	// Previous generation: (not recommended)
-	//
-	// M2 node types:cache.m2.xlarge, cache.m2.2xlarge, cache.m2.4xlarge
+	//    * Memory optimized: Current generation: R3 node types: cache.r3.large,
+	//    cache.r3.xlarge, cache.r3.2xlarge, cache.r3.4xlarge, cache.r3.8xlarge
+	//    R4 node types; cache.r4.large, cache.r4.xlarge, cache.r4.2xlarge, cache.r4.4xlarge,
+	//    cache.r4.8xlarge, cache.r4.16xlarge Previous generation: (not recommended)
+	//    M2 node types: cache.m2.xlarge, cache.m2.2xlarge, cache.m2.4xlarge
 	//
 	// Notes:
 	//
@@ -9297,42 +9165,21 @@ type DescribeReservedCacheNodesOfferingsInput struct {
 	// the current generation types provide more memory and computational power
 	// at lower cost when compared to their equivalent previous generation counterparts.
 	//
-	//    * General purpose:
+	//    * General purpose: Current generation: T2 node types: cache.t2.micro,
+	//    cache.t2.small, cache.t2.medium M3 node types: cache.m3.medium, cache.m3.large,
+	//    cache.m3.xlarge, cache.m3.2xlarge M4 node types: cache.m4.large, cache.m4.xlarge,
+	//    cache.m4.2xlarge, cache.m4.4xlarge, cache.m4.10xlarge Previous generation:
+	//    (not recommended) T1 node types: cache.t1.micro M1 node types: cache.m1.small,
+	//    cache.m1.medium, cache.m1.large, cache.m1.xlarge
 	//
-	// Current generation:
+	//    * Compute optimized: Previous generation: (not recommended) C1 node types:
+	//    cache.c1.xlarge
 	//
-	// T2 node types:cache.t2.micro, cache.t2.small, cache.t2.medium
-	//
-	// M3 node types:cache.m3.medium, cache.m3.large, cache.m3.xlarge, cache.m3.2xlarge
-	//
-	// M4 node types:cache.m4.large, cache.m4.xlarge, cache.m4.2xlarge, cache.m4.4xlarge,
-	//    cache.m4.10xlarge
-	//
-	// Previous generation: (not recommended)
-	//
-	// T1 node types:cache.t1.micro
-	//
-	// M1 node types:cache.m1.small, cache.m1.medium, cache.m1.large, cache.m1.xlarge
-	//
-	//    * Compute optimized:
-	//
-	// Previous generation: (not recommended)
-	//
-	// C1 node types:cache.c1.xlarge
-	//
-	//    * Memory optimized:
-	//
-	// Current generation:
-	//
-	// R3 node types:cache.r3.large, cache.r3.xlarge, cache.r3.2xlarge, cache.r3.4xlarge,
-	//    cache.r3.8xlarge
-	//
-	// R4 node types;cache.r4.large, cache.r4.xlarge, cache.r4.2xlarge, cache.r4.4xlarge,
-	//    cache.r4.8xlarge, cache.r4.16xlarge
-	//
-	// Previous generation: (not recommended)
-	//
-	// M2 node types:cache.m2.xlarge, cache.m2.2xlarge, cache.m2.4xlarge
+	//    * Memory optimized: Current generation: R3 node types: cache.r3.large,
+	//    cache.r3.xlarge, cache.r3.2xlarge, cache.r3.4xlarge, cache.r3.8xlarge
+	//    R4 node types; cache.r4.large, cache.r4.xlarge, cache.r4.2xlarge, cache.r4.4xlarge,
+	//    cache.r4.8xlarge, cache.r4.16xlarge Previous generation: (not recommended)
+	//    M2 node types: cache.m2.xlarge, cache.m2.2xlarge, cache.m2.4xlarge
 	//
 	// Notes:
 	//
@@ -10173,41 +10020,19 @@ type ModifyCacheClusterInput struct {
 	//
 	// Impact of new add/remove requests upon pending requests
 	//
-	//    * Scenario-1
+	//    * Scenario-1 Pending Action: Delete New Request: Delete Result: The new
+	//    delete, pending or immediate, replaces the pending delete.
 	//
-	// Pending Action: Delete
+	//    * Scenario-2 Pending Action: Delete New Request: Create Result: The new
+	//    create, pending or immediate, replaces the pending delete.
 	//
-	// New Request: Delete
+	//    * Scenario-3 Pending Action: Create New Request: Delete Result: The new
+	//    delete, pending or immediate, replaces the pending create.
 	//
-	// Result: The new delete, pending or immediate, replaces the pending delete.
-	//
-	//    * Scenario-2
-	//
-	// Pending Action: Delete
-	//
-	// New Request: Create
-	//
-	// Result: The new create, pending or immediate, replaces the pending delete.
-	//
-	//    * Scenario-3
-	//
-	// Pending Action: Create
-	//
-	// New Request: Delete
-	//
-	// Result: The new delete, pending or immediate, replaces the pending create.
-	//
-	//    * Scenario-4
-	//
-	// Pending Action: Create
-	//
-	// New Request: Create
-	//
-	// Result: The new create is added to the pending create.
-	//
-	// Important: If the new create request is Apply Immediately - Yes, all creates
-	//    are performed immediately. If the new create request is Apply Immediately
-	//    - No, all creates are pending.
+	//    * Scenario-4 Pending Action: Create New Request: Create Result: The new
+	//    create is added to the pending create. Important: If the new create request
+	//    is Apply Immediately - Yes, all creates are performed immediately. If
+	//    the new create request is Apply Immediately - No, all creates are pending.
 	NewAvailabilityZones []*string `locationNameList:"PreferredAvailabilityZone" type:"list"`
 
 	// The Amazon Resource Name (ARN) of the Amazon SNS topic to which notifications
@@ -12097,42 +11922,21 @@ type ReservedCacheNode struct {
 	// the current generation types provide more memory and computational power
 	// at lower cost when compared to their equivalent previous generation counterparts.
 	//
-	//    * General purpose:
+	//    * General purpose: Current generation: T2 node types: cache.t2.micro,
+	//    cache.t2.small, cache.t2.medium M3 node types: cache.m3.medium, cache.m3.large,
+	//    cache.m3.xlarge, cache.m3.2xlarge M4 node types: cache.m4.large, cache.m4.xlarge,
+	//    cache.m4.2xlarge, cache.m4.4xlarge, cache.m4.10xlarge Previous generation:
+	//    (not recommended) T1 node types: cache.t1.micro M1 node types: cache.m1.small,
+	//    cache.m1.medium, cache.m1.large, cache.m1.xlarge
 	//
-	// Current generation:
+	//    * Compute optimized: Previous generation: (not recommended) C1 node types:
+	//    cache.c1.xlarge
 	//
-	// T2 node types:cache.t2.micro, cache.t2.small, cache.t2.medium
-	//
-	// M3 node types:cache.m3.medium, cache.m3.large, cache.m3.xlarge, cache.m3.2xlarge
-	//
-	// M4 node types:cache.m4.large, cache.m4.xlarge, cache.m4.2xlarge, cache.m4.4xlarge,
-	//    cache.m4.10xlarge
-	//
-	// Previous generation: (not recommended)
-	//
-	// T1 node types:cache.t1.micro
-	//
-	// M1 node types:cache.m1.small, cache.m1.medium, cache.m1.large, cache.m1.xlarge
-	//
-	//    * Compute optimized:
-	//
-	// Previous generation: (not recommended)
-	//
-	// C1 node types:cache.c1.xlarge
-	//
-	//    * Memory optimized:
-	//
-	// Current generation:
-	//
-	// R3 node types:cache.r3.large, cache.r3.xlarge, cache.r3.2xlarge, cache.r3.4xlarge,
-	//    cache.r3.8xlarge
-	//
-	// R4 node types;cache.r4.large, cache.r4.xlarge, cache.r4.2xlarge, cache.r4.4xlarge,
-	//    cache.r4.8xlarge, cache.r4.16xlarge
-	//
-	// Previous generation: (not recommended)
-	//
-	// M2 node types:cache.m2.xlarge, cache.m2.2xlarge, cache.m2.4xlarge
+	//    * Memory optimized: Current generation: R3 node types: cache.r3.large,
+	//    cache.r3.xlarge, cache.r3.2xlarge, cache.r3.4xlarge, cache.r3.8xlarge
+	//    R4 node types; cache.r4.large, cache.r4.xlarge, cache.r4.2xlarge, cache.r4.4xlarge,
+	//    cache.r4.8xlarge, cache.r4.16xlarge Previous generation: (not recommended)
+	//    M2 node types: cache.m2.xlarge, cache.m2.2xlarge, cache.m2.4xlarge
 	//
 	// Notes:
 	//
@@ -12291,42 +12095,21 @@ type ReservedCacheNodesOffering struct {
 	// the current generation types provide more memory and computational power
 	// at lower cost when compared to their equivalent previous generation counterparts.
 	//
-	//    * General purpose:
+	//    * General purpose: Current generation: T2 node types: cache.t2.micro,
+	//    cache.t2.small, cache.t2.medium M3 node types: cache.m3.medium, cache.m3.large,
+	//    cache.m3.xlarge, cache.m3.2xlarge M4 node types: cache.m4.large, cache.m4.xlarge,
+	//    cache.m4.2xlarge, cache.m4.4xlarge, cache.m4.10xlarge Previous generation:
+	//    (not recommended) T1 node types: cache.t1.micro M1 node types: cache.m1.small,
+	//    cache.m1.medium, cache.m1.large, cache.m1.xlarge
 	//
-	// Current generation:
+	//    * Compute optimized: Previous generation: (not recommended) C1 node types:
+	//    cache.c1.xlarge
 	//
-	// T2 node types:cache.t2.micro, cache.t2.small, cache.t2.medium
-	//
-	// M3 node types:cache.m3.medium, cache.m3.large, cache.m3.xlarge, cache.m3.2xlarge
-	//
-	// M4 node types:cache.m4.large, cache.m4.xlarge, cache.m4.2xlarge, cache.m4.4xlarge,
-	//    cache.m4.10xlarge
-	//
-	// Previous generation: (not recommended)
-	//
-	// T1 node types:cache.t1.micro
-	//
-	// M1 node types:cache.m1.small, cache.m1.medium, cache.m1.large, cache.m1.xlarge
-	//
-	//    * Compute optimized:
-	//
-	// Previous generation: (not recommended)
-	//
-	// C1 node types:cache.c1.xlarge
-	//
-	//    * Memory optimized:
-	//
-	// Current generation:
-	//
-	// R3 node types:cache.r3.large, cache.r3.xlarge, cache.r3.2xlarge, cache.r3.4xlarge,
-	//    cache.r3.8xlarge
-	//
-	// R4 node types;cache.r4.large, cache.r4.xlarge, cache.r4.2xlarge, cache.r4.4xlarge,
-	//    cache.r4.8xlarge, cache.r4.16xlarge
-	//
-	// Previous generation: (not recommended)
-	//
-	// M2 node types:cache.m2.xlarge, cache.m2.2xlarge, cache.m2.4xlarge
+	//    * Memory optimized: Current generation: R3 node types: cache.r3.large,
+	//    cache.r3.xlarge, cache.r3.2xlarge, cache.r3.4xlarge, cache.r3.8xlarge
+	//    R4 node types; cache.r4.large, cache.r4.xlarge, cache.r4.2xlarge, cache.r4.4xlarge,
+	//    cache.r4.8xlarge, cache.r4.16xlarge Previous generation: (not recommended)
+	//    M2 node types: cache.m2.xlarge, cache.m2.2xlarge, cache.m2.4xlarge
 	//
 	// Notes:
 	//
@@ -12755,42 +12538,21 @@ type Snapshot struct {
 	// the current generation types provide more memory and computational power
 	// at lower cost when compared to their equivalent previous generation counterparts.
 	//
-	//    * General purpose:
+	//    * General purpose: Current generation: T2 node types: cache.t2.micro,
+	//    cache.t2.small, cache.t2.medium M3 node types: cache.m3.medium, cache.m3.large,
+	//    cache.m3.xlarge, cache.m3.2xlarge M4 node types: cache.m4.large, cache.m4.xlarge,
+	//    cache.m4.2xlarge, cache.m4.4xlarge, cache.m4.10xlarge Previous generation:
+	//    (not recommended) T1 node types: cache.t1.micro M1 node types: cache.m1.small,
+	//    cache.m1.medium, cache.m1.large, cache.m1.xlarge
 	//
-	// Current generation:
+	//    * Compute optimized: Previous generation: (not recommended) C1 node types:
+	//    cache.c1.xlarge
 	//
-	// T2 node types:cache.t2.micro, cache.t2.small, cache.t2.medium
-	//
-	// M3 node types:cache.m3.medium, cache.m3.large, cache.m3.xlarge, cache.m3.2xlarge
-	//
-	// M4 node types:cache.m4.large, cache.m4.xlarge, cache.m4.2xlarge, cache.m4.4xlarge,
-	//    cache.m4.10xlarge
-	//
-	// Previous generation: (not recommended)
-	//
-	// T1 node types:cache.t1.micro
-	//
-	// M1 node types:cache.m1.small, cache.m1.medium, cache.m1.large, cache.m1.xlarge
-	//
-	//    * Compute optimized:
-	//
-	// Previous generation: (not recommended)
-	//
-	// C1 node types:cache.c1.xlarge
-	//
-	//    * Memory optimized:
-	//
-	// Current generation:
-	//
-	// R3 node types:cache.r3.large, cache.r3.xlarge, cache.r3.2xlarge, cache.r3.4xlarge,
-	//    cache.r3.8xlarge
-	//
-	// R4 node types;cache.r4.large, cache.r4.xlarge, cache.r4.2xlarge, cache.r4.4xlarge,
-	//    cache.r4.8xlarge, cache.r4.16xlarge
-	//
-	// Previous generation: (not recommended)
-	//
-	// M2 node types:cache.m2.xlarge, cache.m2.2xlarge, cache.m2.4xlarge
+	//    * Memory optimized: Current generation: R3 node types: cache.r3.large,
+	//    cache.r3.xlarge, cache.r3.2xlarge, cache.r3.4xlarge, cache.r3.8xlarge
+	//    R4 node types; cache.r4.large, cache.r4.xlarge, cache.r4.2xlarge, cache.r4.4xlarge,
+	//    cache.r4.8xlarge, cache.r4.16xlarge Previous generation: (not recommended)
+	//    M2 node types: cache.m2.xlarge, cache.m2.2xlarge, cache.m2.4xlarge
 	//
 	// Notes:
 	//

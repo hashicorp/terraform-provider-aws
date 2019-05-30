@@ -124,11 +124,11 @@ func resourceAwsIotTopicRule() *schema.Resource {
 						},
 						"range_key_field": {
 							Type:     schema.TypeString,
-							Required: true,
+							Optional: true,
 						},
 						"range_key_value": {
 							Type:     schema.TypeString,
-							Required: true,
+							Optional: true,
 						},
 						"range_key_type": {
 							Type:     schema.TypeString,
@@ -380,12 +380,10 @@ func createTopicRulePayload(d *schema.ResourceData) *iot.TopicRulePayload {
 		raw := a.(map[string]interface{})
 		act := &iot.Action{
 			DynamoDB: &iot.DynamoDBAction{
-				HashKeyField:  aws.String(raw["hash_key_field"].(string)),
-				HashKeyValue:  aws.String(raw["hash_key_value"].(string)),
-				RangeKeyField: aws.String(raw["range_key_field"].(string)),
-				RangeKeyValue: aws.String(raw["range_key_value"].(string)),
-				RoleArn:       aws.String(raw["role_arn"].(string)),
-				TableName:     aws.String(raw["table_name"].(string)),
+				HashKeyField: aws.String(raw["hash_key_field"].(string)),
+				HashKeyValue: aws.String(raw["hash_key_value"].(string)),
+				RoleArn:      aws.String(raw["role_arn"].(string)),
+				TableName:    aws.String(raw["table_name"].(string)),
 			},
 		}
 		if v, ok := raw["hash_key_type"].(string); ok && v != "" {
@@ -393,6 +391,12 @@ func createTopicRulePayload(d *schema.ResourceData) *iot.TopicRulePayload {
 		}
 		if v, ok := raw["range_key_type"].(string); ok && v != "" {
 			act.DynamoDB.RangeKeyType = aws.String(v)
+		}
+		if v, ok := raw["range_key_field"].(string); ok && v != "" {
+			act.DynamoDB.RangeKeyField = aws.String(v)
+		}
+		if v, ok := raw["range_key_value"].(string); ok && v != "" {
+			act.DynamoDB.RangeKeyValue = aws.String(v)
 		}
 		if v, ok := raw["payload_field"].(string); ok && v != "" {
 			act.DynamoDB.PayloadField = aws.String(v)

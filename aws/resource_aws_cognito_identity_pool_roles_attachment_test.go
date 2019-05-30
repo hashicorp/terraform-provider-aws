@@ -189,7 +189,7 @@ resource "aws_cognito_identity_pool" "main" {
   identity_pool_name               = "identity pool %[1]s"
   allow_unauthenticated_identities = false
 
-  supported_login_providers {
+  supported_login_providers = {
     "graph.facebook.com" = "7346241598935555"
   }
 }
@@ -304,7 +304,7 @@ func testAccAWSCognitoIdentityPoolRolesAttachmentConfig_basic(name string) strin
 resource "aws_cognito_identity_pool_roles_attachment" "main" {
   identity_pool_id = "${aws_cognito_identity_pool.main.id}"
 
-  roles {
+  roles = {
     "authenticated" = "${aws_iam_role.authenticated.arn}"
   }
 }
@@ -329,7 +329,7 @@ resource "aws_cognito_identity_pool_roles_attachment" "main" {
     }
   }
 
-  roles {
+  roles = {
     "authenticated" = "${aws_iam_role.authenticated.arn}"
   }
 }
@@ -361,7 +361,7 @@ resource "aws_cognito_identity_pool_roles_attachment" "main" {
     }
   }
 
-  roles {
+  roles = {
     "authenticated" = "${aws_iam_role.authenticated.arn}"
   }
 }
@@ -385,7 +385,7 @@ resource "aws_cognito_identity_pool_roles_attachment" "main" {
     }
   }
 
-  roles {
+  roles = {
     "authenticated" = "${aws_iam_role.authenticated.arn}"
   }
 }
@@ -403,7 +403,7 @@ resource "aws_cognito_identity_pool_roles_attachment" "main" {
     type                      = "Rules"
   }
 
-  roles {
+  roles = {
     "authenticated" = "${aws_iam_role.authenticated.arn}"
   }
 }
@@ -428,7 +428,7 @@ resource "aws_cognito_identity_pool_roles_attachment" "main" {
     }
   }
 
-  roles {
+  roles = {
     "authenticated" = "${aws_iam_role.authenticated.arn}"
   }
 }

@@ -1,6 +1,7 @@
 package aws
 
 import (
+	"fmt"
 	"log"
 	"regexp"
 
@@ -73,6 +74,23 @@ func diffTagsDocDB(oldTags, newTags []*docdb.Tag) ([]*docdb.Tag, []*docdb.Tag) {
 	}
 
 	return tagsFromMapDocDB(create), remove
+}
+
+func saveTagsDocDB(conn *docdb.DocDB, d *schema.ResourceData, arn string) error {
+	resp, err := conn.ListTagsForResource(&docdb.ListTagsForResourceInput{
+		ResourceName: aws.String(arn),
+	})
+
+	if err != nil {
+		return fmt.Errorf("Error retreiving tags for ARN: %s", arn)
+	}
+
+	var dt []*docdb.Tag
+	if len(resp.TagList) > 0 {
+		dt = resp.TagList
+	}
+
+	return d.Set("tags", tagsToMapDocDB(dt))
 }
 
 // tagsFromMap returns the tags for the given map of data.

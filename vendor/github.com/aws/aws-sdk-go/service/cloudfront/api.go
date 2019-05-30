@@ -2947,7 +2947,7 @@ func (c *CloudFront) ListCloudFrontOriginAccessIdentitiesWithContext(ctx aws.Con
 //    // Example iterating over at most 3 pages of a ListCloudFrontOriginAccessIdentities operation.
 //    pageNum := 0
 //    err := client.ListCloudFrontOriginAccessIdentitiesPages(params,
-//        func(page *ListCloudFrontOriginAccessIdentitiesOutput, lastPage bool) bool {
+//        func(page *cloudfront.ListCloudFrontOriginAccessIdentitiesOutput, lastPage bool) bool {
 //            pageNum++
 //            fmt.Println(page)
 //            return pageNum <= 3
@@ -3082,7 +3082,7 @@ func (c *CloudFront) ListDistributionsWithContext(ctx aws.Context, input *ListDi
 //    // Example iterating over at most 3 pages of a ListDistributions operation.
 //    pageNum := 0
 //    err := client.ListDistributionsPages(params,
-//        func(page *ListDistributionsOutput, lastPage bool) bool {
+//        func(page *cloudfront.ListDistributionsOutput, lastPage bool) bool {
 //            pageNum++
 //            fmt.Println(page)
 //            return pageNum <= 3
@@ -3464,7 +3464,7 @@ func (c *CloudFront) ListInvalidationsWithContext(ctx aws.Context, input *ListIn
 //    // Example iterating over at most 3 pages of a ListInvalidations operation.
 //    pageNum := 0
 //    err := client.ListInvalidationsPages(params,
-//        func(page *ListInvalidationsOutput, lastPage bool) bool {
+//        func(page *cloudfront.ListInvalidationsOutput, lastPage bool) bool {
 //            pageNum++
 //            fmt.Println(page)
 //            return pageNum <= 3
@@ -3678,7 +3678,7 @@ func (c *CloudFront) ListStreamingDistributionsWithContext(ctx aws.Context, inpu
 //    // Example iterating over at most 3 pages of a ListStreamingDistributions operation.
 //    pageNum := 0
 //    err := client.ListStreamingDistributionsPages(params,
-//        func(page *ListStreamingDistributionsOutput, lastPage bool) bool {
+//        func(page *cloudfront.ListStreamingDistributionsOutput, lastPage bool) bool {
 //            pageNum++
 //            fmt.Println(page)
 //            return pageNum <= 3
@@ -4153,32 +4153,33 @@ func (c *CloudFront) UpdateDistributionRequest(input *UpdateDistributionInput) (
 //
 // When you edit the XML file, be aware of the following:
 //
-// You must strip out the ETag parameter that is returned.
+//    * You must strip out the ETag parameter that is returned.
 //
-// Additional fields are required when you update a distribution. There may
-// be fields included in the XML file for features that you haven't configured
-// for your distribution. This is expected and required to successfully update
-// the distribution.
+//    * Additional fields are required when you update a distribution. There
+//    may be fields included in the XML file for features that you haven't configured
+//    for your distribution. This is expected and required to successfully update
+//    the distribution.
 //
-// You can't change the value of CallerReference. If you try to change this
-// value, CloudFront returns an IllegalUpdate error.
+//    * You can't change the value of CallerReference. If you try to change
+//    this value, CloudFront returns an IllegalUpdate error.
 //
-// The new configuration replaces the existing configuration; the values that
-// you specify in an UpdateDistribution request are not merged into your existing
-// configuration. When you add, delete, or replace values in an element that
-// allows multiple values (for example, CNAME), you must specify all of the
-// values that you want to appear in the updated distribution. In addition,
-// you must update the corresponding Quantity element.
+//    * The new configuration replaces the existing configuration; the values
+//    that you specify in an UpdateDistribution request are not merged into
+//    your existing configuration. When you add, delete, or replace values in
+//    an element that allows multiple values (for example, CNAME), you must
+//    specify all of the values that you want to appear in the updated distribution.
+//    In addition, you must update the corresponding Quantity element.
 //
 // Submit an UpdateDistribution request to update the configuration for your
 // distribution:
 //
-// In the request body, include the XML document that you updated in Step 2.
-// The request body must include an XML document with a DistributionConfig element.
+//    * In the request body, include the XML document that you updated in Step
+//    2. The request body must include an XML document with a DistributionConfig
+//    element.
 //
-// Set the value of the HTTP If-Match header to the value of the ETag header
-// that CloudFront returned when you submitted the GetDistributionConfig request
-// in Step 1.
+//    * Set the value of the HTTP If-Match header to the value of the ETag header
+//    that CloudFront returned when you submitted the GetDistributionConfig
+//    request in Step 1.
 //
 // Review the response to the UpdateDistribution request to confirm that the
 // configuration was successfully updated.
@@ -5109,7 +5110,7 @@ type CacheBehavior struct {
 	// behaviors, CloudFront applies the behavior in the default cache behavior.
 	//
 	// For more information, see Path Pattern (http://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/distribution-web-values-specify.html#DownloadDistValuesPathPattern)
-	// in the  Amazon CloudFront Developer Guide.
+	// in the Amazon CloudFront Developer Guide.
 	//
 	// PathPattern is a required field
 	PathPattern *string `type:"string" required:"true"`
@@ -5156,7 +5157,6 @@ type CacheBehavior struct {
 	//    * redirect-to-https: If a viewer submits an HTTP request, CloudFront returns
 	//    an HTTP status code of 301 (Moved Permanently) to the viewer along with
 	//    the HTTPS URL. The viewer then resubmits the request using the new URL.
-	//
 	//
 	//    * https-only: If a viewer sends an HTTP request, CloudFront returns an
 	//    HTTP status code of 403 (Forbidden).
@@ -6495,7 +6495,7 @@ type CreateStreamingDistributionWithTagsOutput struct {
 	ETag *string `location:"header" locationName:"ETag" type:"string"`
 
 	// The fully qualified URI of the new streaming distribution resource just created.
-	// For example: https://cloudfront.amazonaws.com/2010-11-01/streaming-distribution/EGTXBD79H29TRA8.
+	// For example:https://cloudfront.amazonaws.com/2010-11-01/streaming-distribution/EGTXBD79H29TRA8.
 	Location *string `location:"header" locationName:"Location" type:"string"`
 
 	// The streaming distribution's information.
@@ -6534,7 +6534,6 @@ func (s *CreateStreamingDistributionWithTagsOutput) SetStreamingDistribution(v *
 //
 //    * Whether CloudFront replaces HTTP status codes in the 4xx and 5xx range
 //    with custom error messages before returning the response to the viewer.
-//
 //
 //    * How long CloudFront caches HTTP status codes in the 4xx and 5xx range.
 //
@@ -6595,7 +6594,6 @@ type CustomErrorResponse struct {
 	//    Amazon S3 bucket in a directory named /4xx-errors. Your distribution must
 	//    include a cache behavior for which the path pattern routes requests for
 	//    your custom error pages to that location, for example, /4xx-errors/*.
-	//
 	//
 	//    * The value of TargetOriginId specifies the value of the ID element for
 	//    the origin that contains your custom error pages.
@@ -7904,41 +7902,31 @@ type DistributionConfig struct {
 	//    * If you're using an alternate domain name, such as example.com: Specify
 	//    one of the following values, depending on whether ACM provided your certificate
 	//    or you purchased your certificate from third-party certificate authority:
-	//
-	// <ACMCertificateArn>ARN for ACM SSL/TLS certificate<ACMCertificateArn> where
-	//    ARN for ACM SSL/TLS certificate is the ARN for the ACM SSL/TLS certificate
-	//    that you want to use for this distribution.
-	//
-	// <IAMCertificateId>IAM certificate ID<IAMCertificateId> where IAM certificate
-	//    ID is the ID that IAM returned when you added the certificate to the IAM
-	//    certificate store.
-	//
-	// If you specify ACMCertificateArn or IAMCertificateId, you must also specify
-	//    a value for SSLSupportMethod.
-	//
-	// If you choose to use an ACM certificate or a certificate in the IAM certificate
-	//    store, we recommend that you use only an alternate domain name in your
-	//    object URLs (https://example.com/logo.jpg). If you use the domain name
-	//    that is associated with your CloudFront distribution (such as https://d111111abcdef8.cloudfront.net/logo.jpg)
-	//    and the viewer supports SNI, then CloudFront behaves normally. However,
-	//    if the browser does not support SNI, the user's experience depends on
-	//    the value that you choose for SSLSupportMethod:
-	//
-	// vip: The viewer displays a warning because there is a mismatch between the
-	//    CloudFront domain name and the domain name in your SSL/TLS certificate.
-	//
-	// sni-only: CloudFront drops the connection with the browser without returning
-	//    the object.
+	//    <ACMCertificateArn>ARN for ACM SSL/TLS certificate<ACMCertificateArn>
+	//    where ARN for ACM SSL/TLS certificate is the ARN for the ACM SSL/TLS certificate
+	//    that you want to use for this distribution. <IAMCertificateId>IAM certificate
+	//    ID<IAMCertificateId> where IAM certificate ID is the ID that IAM returned
+	//    when you added the certificate to the IAM certificate store. If you specify
+	//    ACMCertificateArn or IAMCertificateId, you must also specify a value for
+	//    SSLSupportMethod. If you choose to use an ACM certificate or a certificate
+	//    in the IAM certificate store, we recommend that you use only an alternate
+	//    domain name in your object URLs (https://example.com/logo.jpg). If you
+	//    use the domain name that is associated with your CloudFront distribution
+	//    (such as https://d111111abcdef8.cloudfront.net/logo.jpg) and the viewer
+	//    supports SNI, then CloudFront behaves normally. However, if the browser
+	//    does not support SNI, the user's experience depends on the value that
+	//    you choose for SSLSupportMethod: vip: The viewer displays a warning because
+	//    there is a mismatch between the CloudFront domain name and the domain
+	//    name in your SSL/TLS certificate. sni-only: CloudFront drops the connection
+	//    with the browser without returning the object.
 	//
 	//    * If you're using the CloudFront domain name for your distribution, such
-	//    as d111111abcdef8.cloudfront.net: Specify the following value:
-	//
-	// <CloudFrontDefaultCertificate>true<CloudFrontDefaultCertificate>
+	//    as d111111abcdef8.cloudfront.net : Specify the following value: <CloudFrontDefaultCertificate>true<CloudFrontDefaultCertificate>
 	//
 	// If you want viewers to use HTTPS, you must also specify one of the following
 	// values in your cache behaviors:
 	//
-	//    *  <ViewerProtocolPolicy>https-only<ViewerProtocolPolicy>
+	//    * <ViewerProtocolPolicy>https-only<ViewerProtocolPolicy>
 	//
 	//    * <ViewerProtocolPolicy>redirect-to-https<ViewerProtocolPolicy>
 	//
@@ -8427,41 +8415,31 @@ type DistributionSummary struct {
 	//    * If you're using an alternate domain name, such as example.com: Specify
 	//    one of the following values, depending on whether ACM provided your certificate
 	//    or you purchased your certificate from third-party certificate authority:
-	//
-	// <ACMCertificateArn>ARN for ACM SSL/TLS certificate<ACMCertificateArn> where
-	//    ARN for ACM SSL/TLS certificate is the ARN for the ACM SSL/TLS certificate
-	//    that you want to use for this distribution.
-	//
-	// <IAMCertificateId>IAM certificate ID<IAMCertificateId> where IAM certificate
-	//    ID is the ID that IAM returned when you added the certificate to the IAM
-	//    certificate store.
-	//
-	// If you specify ACMCertificateArn or IAMCertificateId, you must also specify
-	//    a value for SSLSupportMethod.
-	//
-	// If you choose to use an ACM certificate or a certificate in the IAM certificate
-	//    store, we recommend that you use only an alternate domain name in your
-	//    object URLs (https://example.com/logo.jpg). If you use the domain name
-	//    that is associated with your CloudFront distribution (such as https://d111111abcdef8.cloudfront.net/logo.jpg)
-	//    and the viewer supports SNI, then CloudFront behaves normally. However,
-	//    if the browser does not support SNI, the user's experience depends on
-	//    the value that you choose for SSLSupportMethod:
-	//
-	// vip: The viewer displays a warning because there is a mismatch between the
-	//    CloudFront domain name and the domain name in your SSL/TLS certificate.
-	//
-	// sni-only: CloudFront drops the connection with the browser without returning
-	//    the object.
+	//    <ACMCertificateArn>ARN for ACM SSL/TLS certificate<ACMCertificateArn>
+	//    where ARN for ACM SSL/TLS certificate is the ARN for the ACM SSL/TLS certificate
+	//    that you want to use for this distribution. <IAMCertificateId>IAM certificate
+	//    ID<IAMCertificateId> where IAM certificate ID is the ID that IAM returned
+	//    when you added the certificate to the IAM certificate store. If you specify
+	//    ACMCertificateArn or IAMCertificateId, you must also specify a value for
+	//    SSLSupportMethod. If you choose to use an ACM certificate or a certificate
+	//    in the IAM certificate store, we recommend that you use only an alternate
+	//    domain name in your object URLs (https://example.com/logo.jpg). If you
+	//    use the domain name that is associated with your CloudFront distribution
+	//    (such as https://d111111abcdef8.cloudfront.net/logo.jpg) and the viewer
+	//    supports SNI, then CloudFront behaves normally. However, if the browser
+	//    does not support SNI, the user's experience depends on the value that
+	//    you choose for SSLSupportMethod: vip: The viewer displays a warning because
+	//    there is a mismatch between the CloudFront domain name and the domain
+	//    name in your SSL/TLS certificate. sni-only: CloudFront drops the connection
+	//    with the browser without returning the object.
 	//
 	//    * If you're using the CloudFront domain name for your distribution, such
-	//    as d111111abcdef8.cloudfront.net: Specify the following value:
-	//
-	// <CloudFrontDefaultCertificate>true<CloudFrontDefaultCertificate>
+	//    as d111111abcdef8.cloudfront.net : Specify the following value: <CloudFrontDefaultCertificate>true<CloudFrontDefaultCertificate>
 	//
 	// If you want viewers to use HTTPS, you must also specify one of the following
 	// values in your cache behaviors:
 	//
-	//    *  <ViewerProtocolPolicy>https-only<ViewerProtocolPolicy>
+	//    * <ViewerProtocolPolicy>https-only<ViewerProtocolPolicy>
 	//
 	//    * <ViewerProtocolPolicy>redirect-to-https<ViewerProtocolPolicy>
 	//
@@ -10517,10 +10495,8 @@ type Headers struct {
 	// distribution to do one of the following:
 	//
 	//    * Forward all headers to your origin: Specify 1 for Quantity and * for
-	//    Name.
-	//
-	// CloudFront doesn't cache the objects that are associated with this cache
-	//    behavior. Instead, CloudFront sends every request to the origin.
+	//    Name. CloudFront doesn't cache the objects that are associated with this
+	//    cache behavior. Instead, CloudFront sends every request to the origin.
 	//
 	//    * Forward a whitelist of headers you specify: Specify the number of headers
 	//    that you want CloudFront to base caching on. Then specify the header names
@@ -10912,10 +10888,8 @@ type LambdaFunctionAssociation struct {
 	//
 	//    * viewer-response: The function executes before CloudFront returns the
 	//    requested object to the viewer. The function executes regardless of whether
-	//    the object was already in the edge cache.
-	//
-	// If the origin returns an HTTP status code other than HTTP 200 (OK), the function
-	//    doesn't execute.
+	//    the object was already in the edge cache. If the origin returns an HTTP
+	//    status code other than HTTP 200 (OK), the function doesn't execute.
 	//
 	// EventType is a required field
 	EventType *string `type:"string" required:"true" enum:"EventType"`
@@ -14301,8 +14275,7 @@ func (s *Tags) SetItems(v []*Tag) *Tags {
 // true (if it's currently false), change Quantity as applicable, and specify
 // all of the trusted signers that you want to include in the updated distribution.
 //
-// For more information about updating the distribution configuration, see DistributionConfig
-// .
+// For more information about updating the distribution configuration, see DistributionConfig .
 type TrustedSigners struct {
 	_ struct{} `type:"structure"`
 
@@ -15090,41 +15063,31 @@ func (s *UpdateStreamingDistributionOutput) SetStreamingDistribution(v *Streamin
 //    * If you're using an alternate domain name, such as example.com: Specify
 //    one of the following values, depending on whether ACM provided your certificate
 //    or you purchased your certificate from third-party certificate authority:
-//
-// <ACMCertificateArn>ARN for ACM SSL/TLS certificate<ACMCertificateArn> where
-//    ARN for ACM SSL/TLS certificate is the ARN for the ACM SSL/TLS certificate
-//    that you want to use for this distribution.
-//
-// <IAMCertificateId>IAM certificate ID<IAMCertificateId> where IAM certificate
-//    ID is the ID that IAM returned when you added the certificate to the IAM
-//    certificate store.
-//
-// If you specify ACMCertificateArn or IAMCertificateId, you must also specify
-//    a value for SSLSupportMethod.
-//
-// If you choose to use an ACM certificate or a certificate in the IAM certificate
-//    store, we recommend that you use only an alternate domain name in your
-//    object URLs (https://example.com/logo.jpg). If you use the domain name
-//    that is associated with your CloudFront distribution (such as https://d111111abcdef8.cloudfront.net/logo.jpg)
-//    and the viewer supports SNI, then CloudFront behaves normally. However,
-//    if the browser does not support SNI, the user's experience depends on
-//    the value that you choose for SSLSupportMethod:
-//
-// vip: The viewer displays a warning because there is a mismatch between the
-//    CloudFront domain name and the domain name in your SSL/TLS certificate.
-//
-// sni-only: CloudFront drops the connection with the browser without returning
-//    the object.
+//    <ACMCertificateArn>ARN for ACM SSL/TLS certificate<ACMCertificateArn>
+//    where ARN for ACM SSL/TLS certificate is the ARN for the ACM SSL/TLS certificate
+//    that you want to use for this distribution. <IAMCertificateId>IAM certificate
+//    ID<IAMCertificateId> where IAM certificate ID is the ID that IAM returned
+//    when you added the certificate to the IAM certificate store. If you specify
+//    ACMCertificateArn or IAMCertificateId, you must also specify a value for
+//    SSLSupportMethod. If you choose to use an ACM certificate or a certificate
+//    in the IAM certificate store, we recommend that you use only an alternate
+//    domain name in your object URLs (https://example.com/logo.jpg). If you
+//    use the domain name that is associated with your CloudFront distribution
+//    (such as https://d111111abcdef8.cloudfront.net/logo.jpg) and the viewer
+//    supports SNI, then CloudFront behaves normally. However, if the browser
+//    does not support SNI, the user's experience depends on the value that
+//    you choose for SSLSupportMethod: vip: The viewer displays a warning because
+//    there is a mismatch between the CloudFront domain name and the domain
+//    name in your SSL/TLS certificate. sni-only: CloudFront drops the connection
+//    with the browser without returning the object.
 //
 //    * If you're using the CloudFront domain name for your distribution, such
-//    as d111111abcdef8.cloudfront.net: Specify the following value:
-//
-// <CloudFrontDefaultCertificate>true<CloudFrontDefaultCertificate>
+//    as d111111abcdef8.cloudfront.net : Specify the following value: <CloudFrontDefaultCertificate>true<CloudFrontDefaultCertificate>
 //
 // If you want viewers to use HTTPS, you must also specify one of the following
 // values in your cache behaviors:
 //
-//    *  <ViewerProtocolPolicy>https-only<ViewerProtocolPolicy>
+//    * <ViewerProtocolPolicy>https-only<ViewerProtocolPolicy>
 //
 //    * <ViewerProtocolPolicy>redirect-to-https<ViewerProtocolPolicy>
 //
@@ -15201,7 +15164,7 @@ type ViewerCertificate struct {
 	//
 	// For information about the relationship between the security policy that you
 	// choose and the protocols and ciphers that CloudFront uses to communicate
-	// with viewers, see  Supported SSL/TLS Protocols and Ciphers for Communication
+	// with viewers, see Supported SSL/TLS Protocols and Ciphers for Communication
 	// Between Viewers and CloudFront (http://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/secure-connections-supported-viewer-protocols-ciphers.html#secure-connections-supported-ciphers)
 	// in the Amazon CloudFront Developer Guide.
 	MinimumProtocolVersion *string `type:"string" enum:"MinimumProtocolVersion"`
@@ -15218,17 +15181,12 @@ type ViewerCertificate struct {
 	//    support Server Name Indication (SNI). All modern browsers support SNI,
 	//    but some browsers still in use don't support SNI. If some of your users'
 	//    browsers don't support SNI, we recommend that you do one of the following:
-	//
-	// Use the vip option (dedicated IP addresses) instead of sni-only.
-	//
-	// Use the CloudFront SSL/TLS certificate instead of a custom certificate. This
-	//    requires that you use the CloudFront domain name of your distribution
-	//    in the URLs for your objects, for example, https://d111111abcdef8.cloudfront.net/logo.png.
-	//
-	// If you can control which browser your users use, upgrade the browser to one
-	//    that supports SNI.
-	//
-	// Use HTTP instead of HTTPS.
+	//    Use the vip option (dedicated IP addresses) instead of sni-only. Use the
+	//    CloudFront SSL/TLS certificate instead of a custom certificate. This requires
+	//    that you use the CloudFront domain name of your distribution in the URLs
+	//    for your objects, for example, https://d111111abcdef8.cloudfront.net/logo.png.
+	//    If you can control which browser your users use, upgrade the browser to
+	//    one that supports SNI. Use HTTP instead of HTTPS.
 	//
 	// Don't specify a value for SSLSupportMethod if you specified <CloudFrontDefaultCertificate>true<CloudFrontDefaultCertificate>.
 	//

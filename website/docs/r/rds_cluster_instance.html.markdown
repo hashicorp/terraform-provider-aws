@@ -6,9 +6,9 @@ description: |-
   Provides an RDS Cluster Resource Instance
 ---
 
-# aws_rds_cluster_instance
+# Resource: aws_rds_cluster_instance
 
-Provides an RDS Cluster Resource Instance. A Cluster Instance Resource defines
+Provides an RDS Cluster Instance Resource. A Cluster Instance Resource defines
 attributes that are specific to a single instance in a [RDS Cluster][3],
 specifically running Amazon Aurora.
 
@@ -50,7 +50,7 @@ the [AWS official documentation](https://docs.aws.amazon.com/cli/latest/referenc
 The following arguments are supported:
 
 * `identifier` - (Optional, Forces new resource) The indentifier for the RDS instance, if omitted, Terraform will assign a random, unique identifier.
-* `identifier_prefix` - (Optional, Forces new resource) Creates a unique identifier beginning with the specified prefix. Conflicts with `identifer`.
+* `identifier_prefix` - (Optional, Forces new resource) Creates a unique identifier beginning with the specified prefix. Conflicts with `identifier`.
 * `cluster_identifier` - (Required) The identifier of the [`aws_rds_cluster`](/docs/providers/aws/r/rds_cluster.html) in which to launch this instance.
 * `engine` - (Optional) The name of the database engine to be used for the RDS instance. Defaults to `aurora`. Valid Values: `aurora`, `aurora-mysql`, `aurora-postgresql`.
 For information on the difference between the available Aurora MySQL engines
@@ -58,21 +58,7 @@ see [Comparison between Aurora MySQL 1 and Aurora MySQL 2](https://docs.aws.amaz
 in the Amazon RDS User Guide.
 * `engine_version` - (Optional) The database engine version.
 * `instance_class` - (Required) The instance class to use. For details on CPU
-and memory, see [Scaling Aurora DB Instances][4]. Aurora currently
-  supports the below instance classes. Please see [AWS Documentation][7] for complete details.
-  - db.t2.small
-  - db.t2.medium
-  - db.r3.large
-  - db.r3.xlarge
-  - db.r3.2xlarge
-  - db.r3.4xlarge
-  - db.r3.8xlarge
-  - db.r4.large
-  - db.r4.xlarge
-  - db.r4.2xlarge
-  - db.r4.4xlarge
-  - db.r4.8xlarge
-  - db.r4.16xlarge
+and memory, see [Scaling Aurora DB Instances][4]. Aurora uses `db.*` instance classes/types. Please see [AWS Documentation][7] for currently available instance classes and complete details.
 * `publicly_accessible` - (Optional) Bool to control if instance is publicly accessible.
 Default `false`. See the documentation on [Creating DB Instances][6] for more
 details on controlling this property.

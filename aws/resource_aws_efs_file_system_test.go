@@ -15,23 +15,6 @@ import (
 	"github.com/hashicorp/terraform/terraform"
 )
 
-func TestResourceAWSEFSFileSystem_validateReferenceName(t *testing.T) {
-	var value string
-	var errors []error
-
-	value = acctest.RandString(128)
-	_, errors = validateReferenceName(value, "reference_name")
-	if len(errors) == 0 {
-		t.Fatalf("Expected to trigger a validation error")
-	}
-
-	value = acctest.RandString(32)
-	_, errors = validateReferenceName(value, "reference_name")
-	if len(errors) != 0 {
-		t.Fatalf("Expected not to trigger a validation error")
-	}
-}
-
 func TestResourceAWSEFSFileSystem_hasEmptyFileSystems(t *testing.T) {
 	fs := &efs.DescribeFileSystemsOutput{
 		FileSystems: []*efs.FileSystemDescription{},
@@ -69,7 +52,7 @@ func TestAccAWSEFSFileSystem_importBasic(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"reference_name", "creation_token"},
+				ImportStateVerifyIgnore: []string{"creation_token"},
 			},
 		},
 	})
@@ -238,7 +221,7 @@ func TestAccAWSEFSFileSystem_ProvisionedThroughputInMibps(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"reference_name", "creation_token"},
+				ImportStateVerifyIgnore: []string{"creation_token"},
 			},
 		},
 	})
@@ -272,7 +255,7 @@ func TestAccAWSEFSFileSystem_ThroughputMode(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"reference_name", "creation_token"},
+				ImportStateVerifyIgnore: []string{"creation_token"},
 			},
 		},
 	})
@@ -416,33 +399,33 @@ resource "aws_efs_file_system" "foo" {
 
 func testAccAWSEFSFileSystemConfigPagedTags(rInt int) string {
 	return fmt.Sprintf(`
-	resource "aws_efs_file_system" "foo" {
-	tags = {
-			Name = "foo-efs-%d"
-			Another = "tag"
-			Test = "yes"
-			User = "root"
-			Page = "1"
-			Environment = "prod"
-			CostCenter = "terraform"
-			AcceptanceTest = "PagedTags"
-			CreationToken = "radek"
-			PerfMode = "max"
-			Region = "us-west-2"
-		}
-	}
-	`, rInt)
+resource "aws_efs_file_system" "foo" {
+  tags = {
+    Name           = "foo-efs-%d"
+    Another        = "tag"
+    Test           = "yes"
+    User           = "root"
+    Page           = "1"
+    Environment    = "prod"
+    CostCenter     = "terraform"
+    AcceptanceTest = "PagedTags"
+    CreationToken  = "radek"
+    PerfMode       = "max"
+    Region         = "us-west-2"
+  }
+}
+`, rInt)
 }
 
 func testAccAWSEFSFileSystemConfigWithTags(rInt int) string {
 	return fmt.Sprintf(`
-	resource "aws_efs_file_system" "foo-with-tags" {
-	tags = {
-			Name = "foo-efs-%d"
-			Another = "tag"
-		}
-	}
-	`, rInt)
+resource "aws_efs_file_system" "foo-with-tags" {
+  tags = {
+    Name    = "foo-efs-%d"
+    Another = "tag"
+  }
+}
+`, rInt)
 }
 
 const testAccAWSEFSFileSystemConfigWithPerformanceMode = `
@@ -459,7 +442,7 @@ resource "aws_kms_key" "foo" {
 }
 
 resource "aws_efs_file_system" "foo-with-kms" {
-  encrypted = true
+  encrypted  = true
   kms_key_id = "${aws_kms_key.foo.arn}"
 }
 `, rInt)
@@ -472,7 +455,7 @@ resource "aws_kms_key" "foo" {
 }
 
 resource "aws_efs_file_system" "foo-with-kms" {
-  encrypted = false
+  encrypted  = false
   kms_key_id = "${aws_kms_key.foo.arn}"
 }
 `, rInt)

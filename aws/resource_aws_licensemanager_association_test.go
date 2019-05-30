@@ -95,12 +95,8 @@ func testAccCheckLicenseManagerAssociationDestroy(s *terraform.State) error {
 
 const testAccLicenseManagerAssociationConfig_basic = `
 data "aws_ami" "example" {
-  most_recent      = true
-
-  filter {
-    name   = "owner-alias"
-    values = ["amazon"]
-  }
+  most_recent = true
+  owners      = ["amazon"]
 
   filter {
     name   = "name"

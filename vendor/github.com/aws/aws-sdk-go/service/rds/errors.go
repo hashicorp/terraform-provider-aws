@@ -29,8 +29,6 @@ const (
 
 	// ErrCodeBackupPolicyNotFoundFault for service response error code
 	// "BackupPolicyNotFoundFault".
-	//
-	// The backup policy was not found.
 	ErrCodeBackupPolicyNotFoundFault = "BackupPolicyNotFoundFault"
 
 	// ErrCodeCertificateNotFoundFault for service response error code

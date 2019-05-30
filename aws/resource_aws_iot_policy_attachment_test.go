@@ -179,12 +179,13 @@ func testAccCheckAWSIotPolicyAttachmentCertStatus(n string, policies []string) r
 func testAccAWSIotPolicyAttachmentConfig(policyName string) string {
 	return fmt.Sprintf(`
 resource "aws_iot_certificate" "cert" {
-  csr = "${file("test-fixtures/iot-csr.pem")}"
+  csr    = "${file("test-fixtures/iot-csr.pem")}"
   active = true
 }
 
 resource "aws_iot_policy" "policy" {
   name = "%s"
+
   policy = <<EOF
 {
   "Version": "2012-10-17",
@@ -207,12 +208,13 @@ resource "aws_iot_policy_attachment" "att" {
 func testAccAWSIotPolicyAttachmentConfigUpdate1(policyName, policyName2 string) string {
 	return fmt.Sprintf(`
 resource "aws_iot_certificate" "cert" {
-  csr = "${file("test-fixtures/iot-csr.pem")}"
+  csr    = "${file("test-fixtures/iot-csr.pem")}"
   active = true
 }
 
 resource "aws_iot_policy" "policy" {
   name = "%s"
+
   policy = <<EOF
 {
   "Version": "2012-10-17",
@@ -227,6 +229,7 @@ EOF
 
 resource "aws_iot_policy" "policy2" {
   name = "%s"
+
   policy = <<EOF
 {
   "Version": "2012-10-17",
@@ -254,12 +257,13 @@ resource "aws_iot_policy_attachment" "att2" {
 func testAccAWSIotPolicyAttachmentConfigUpdate2(policyName2 string) string {
 	return fmt.Sprintf(`
 resource "aws_iot_certificate" "cert" {
-  csr = "${file("test-fixtures/iot-csr.pem")}"
+  csr    = "${file("test-fixtures/iot-csr.pem")}"
   active = true
 }
 
 resource "aws_iot_policy" "policy2" {
   name = "%s"
+
   policy = <<EOF
 {
   "Version": "2012-10-17",
@@ -282,17 +286,18 @@ resource "aws_iot_policy_attachment" "att2" {
 func testAccAWSIotPolicyAttachmentConfigUpdate3(policyName2 string) string {
 	return fmt.Sprintf(`
 resource "aws_iot_certificate" "cert" {
-  csr = "${file("test-fixtures/iot-csr.pem")}"
+  csr    = "${file("test-fixtures/iot-csr.pem")}"
   active = true
 }
 
 resource "aws_iot_certificate" "cert2" {
-  csr = "${file("test-fixtures/iot-csr.pem")}"
+  csr    = "${file("test-fixtures/iot-csr.pem")}"
   active = true
 }
 
 resource "aws_iot_policy" "policy2" {
   name = "%s"
+
   policy = <<EOF
 {
   "Version": "2012-10-17",

@@ -6,7 +6,7 @@ description: |-
   Manage the default VPC resource.
 ---
 
-# aws_default_vpc
+# Resource: aws_default_vpc
 
 Provides a resource to manage the [default AWS VPC](http://docs.aws.amazon.com/AmazonVPC/latest/UserGuide/default-vpc.html)
 in the current region.

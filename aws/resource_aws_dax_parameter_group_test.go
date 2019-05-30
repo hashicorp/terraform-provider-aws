@@ -108,12 +108,14 @@ func testAccDaxParameterGroupConfig_parameters(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_dax_parameter_group" "test" {
   name = "%s"
+
   parameters {
-    name = "query-ttl-millis"
+    name  = "query-ttl-millis"
     value = "100000"
   }
+
   parameters {
-    name = "record-ttl-millis"
+    name  = "record-ttl-millis"
     value = "100000"
   }
 }

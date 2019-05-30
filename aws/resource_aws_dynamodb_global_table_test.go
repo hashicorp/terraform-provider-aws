@@ -150,9 +150,7 @@ func testAccCheckAwsDynamoDbGlobalTableExists(name string) resource.TestCheckFun
 
 func testAccDynamoDbGlobalTableConfig_basic(tableName string) string {
 	return fmt.Sprintf(`
-data "aws_region" "current" {
-  current = true
-}
+data "aws_region" "current" {}
 
 resource "aws_dynamodb_table" "test" {
   hash_key         = "myAttribute"
@@ -243,7 +241,8 @@ resource "aws_dynamodb_table" "us-west-2" {
     name = "myAttribute"
     type = "S"
   }
-}`, tableName, tableName, tableName)
+}
+`, tableName, tableName, tableName)
 }
 
 func testAccDynamoDbGlobalTableConfig_multipleRegions1(tableName string) string {
@@ -252,14 +251,15 @@ func testAccDynamoDbGlobalTableConfig_multipleRegions1(tableName string) string 
 
 resource "aws_dynamodb_global_table" "test" {
   depends_on = ["aws_dynamodb_table.us-east-1"]
-  provider = "aws.us-east-1"
+  provider   = "aws.us-east-1"
 
   name = "%s"
 
   replica {
     region_name = "us-east-1"
   }
-}`, testAccDynamoDbGlobalTableConfig_multipleRegions_dynamodb_tables(tableName), tableName)
+}
+`, testAccDynamoDbGlobalTableConfig_multipleRegions_dynamodb_tables(tableName), tableName)
 }
 
 func testAccDynamoDbGlobalTableConfig_multipleRegions2(tableName string) string {
@@ -268,7 +268,7 @@ func testAccDynamoDbGlobalTableConfig_multipleRegions2(tableName string) string 
 
 resource "aws_dynamodb_global_table" "test" {
   depends_on = ["aws_dynamodb_table.us-east-1", "aws_dynamodb_table.us-east-2"]
-  provider = "aws.us-east-1"
+  provider   = "aws.us-east-1"
 
   name = "%s"
 
@@ -279,7 +279,8 @@ resource "aws_dynamodb_global_table" "test" {
   replica {
     region_name = "us-east-2"
   }
-}`, testAccDynamoDbGlobalTableConfig_multipleRegions_dynamodb_tables(tableName), tableName)
+}
+`, testAccDynamoDbGlobalTableConfig_multipleRegions_dynamodb_tables(tableName), tableName)
 }
 
 func testAccDynamoDbGlobalTableConfig_multipleRegions3(tableName string) string {
@@ -288,7 +289,7 @@ func testAccDynamoDbGlobalTableConfig_multipleRegions3(tableName string) string 
 
 resource "aws_dynamodb_global_table" "test" {
   depends_on = ["aws_dynamodb_table.us-east-1", "aws_dynamodb_table.us-west-2"]
-  provider = "aws.us-east-1"
+  provider   = "aws.us-east-1"
 
   name = "%s"
 
@@ -299,7 +300,8 @@ resource "aws_dynamodb_global_table" "test" {
   replica {
     region_name = "us-west-2"
   }
-}`, testAccDynamoDbGlobalTableConfig_multipleRegions_dynamodb_tables(tableName), tableName)
+}
+`, testAccDynamoDbGlobalTableConfig_multipleRegions_dynamodb_tables(tableName), tableName)
 }
 
 func testAccDynamoDbGlobalTableConfig_invalidName(tableName string) string {
@@ -310,5 +312,6 @@ resource "aws_dynamodb_global_table" "test" {
   replica {
     region_name = "us-east-1"
   }
-}`, tableName)
+}
+`, tableName)
 }

@@ -6,7 +6,7 @@ description: |-
   Provides a CodeDeploy application.
 ---
 
-# aws_codedeploy_app
+# Resource: aws_codedeploy_app
 
 Provides a CodeDeploy application to be used as a basis for deployments
 

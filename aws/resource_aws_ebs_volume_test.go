@@ -3,10 +3,8 @@ package aws
 import (
 	"fmt"
 	"log"
-	"strings"
-	"testing"
-
 	"regexp"
+	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
@@ -34,23 +32,10 @@ func testSweepEbsVolumes(region string) error {
 
 	err = conn.DescribeVolumesPages(&ec2.DescribeVolumesInput{}, func(page *ec2.DescribeVolumesOutput, lastPage bool) bool {
 		for _, volume := range page.Volumes {
-			var nameTag string
 			id := aws.StringValue(volume.VolumeId)
 
 			if aws.StringValue(volume.State) != ec2.VolumeStateAvailable {
 				log.Printf("[INFO] Skipping unavailable EC2 EBS Volume: %s", id)
-				continue
-			}
-
-			for _, volumeTag := range volume.Tags {
-				if aws.StringValue(volumeTag.Key) == "Name" {
-					nameTag = aws.StringValue(volumeTag.Value)
-					break
-				}
-			}
-
-			if !strings.HasPrefix(nameTag, "tf-acc-test-") {
-				log.Printf("[INFO] Skipping EC2 EBS Volume: %s", id)
 				continue
 			}
 
@@ -96,8 +81,8 @@ func TestAccAWSEBSVolume_basic(t *testing.T) {
 					testAccCheckVolumeExists(resourceName, &v),
 					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "ec2", regexp.MustCompile(`volume/vol-.+`)),
 					resource.TestCheckResourceAttr(resourceName, "encrypted", "false"),
-					resource.TestCheckNoResourceAttr(resourceName, "iops"),
-					resource.TestCheckNoResourceAttr(resourceName, "kms_key_id"),
+					resource.TestCheckResourceAttr(resourceName, "iops", "100"),
+					resource.TestCheckResourceAttr(resourceName, "kms_key_id", ""),
 					resource.TestCheckResourceAttr(resourceName, "size", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 					resource.TestCheckResourceAttr(resourceName, "type", "gp2"),
@@ -284,10 +269,9 @@ func TestAccAWSEBSVolume_NoIops(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"iops"},
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})

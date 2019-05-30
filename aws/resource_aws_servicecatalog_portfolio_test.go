@@ -167,9 +167,10 @@ func testAccCheckServiceCatlaogPortfolioDestroy(s *terraform.State) error {
 func testAccCheckAwsServiceCatalogPortfolioResourceConfigBasic1(name string) string {
 	return fmt.Sprintf(`
 resource "aws_servicecatalog_portfolio" "test" {
-  name = "%s"
-  description = "test-2"
+  name          = "%s"
+  description   = "test-2"
   provider_name = "test-3"
+
   tags = {
     Key1 = "Value One"
   }
@@ -180,9 +181,10 @@ resource "aws_servicecatalog_portfolio" "test" {
 func testAccCheckAwsServiceCatalogPortfolioResourceConfigBasic2(name string) string {
 	return fmt.Sprintf(`
 resource "aws_servicecatalog_portfolio" "test" {
-  name = "%s"
-  description = "test-b"
+  name          = "%s"
+  description   = "test-b"
   provider_name = "test-c"
+
   tags = {
     Key1 = "Value 1"
     Key2 = "Value Two"
@@ -194,9 +196,10 @@ resource "aws_servicecatalog_portfolio" "test" {
 func testAccCheckAwsServiceCatalogPortfolioResourceConfigBasic3(name string) string {
 	return fmt.Sprintf(`
 resource "aws_servicecatalog_portfolio" "test" {
-  name = "%s"
-  description = "test-only-change-me"
+  name          = "%s"
+  description   = "test-only-change-me"
   provider_name = "test-c"
+
   tags = {
     Key3 = "Value Three"
   }

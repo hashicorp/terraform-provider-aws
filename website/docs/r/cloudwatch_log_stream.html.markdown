@@ -6,7 +6,7 @@ description: |-
   Provides a CloudWatch Log Stream resource.
 ---
 
-# aws_cloudwatch_log_stream
+# Resource: aws_cloudwatch_log_stream
 
 Provides a CloudWatch Log Stream resource.
 

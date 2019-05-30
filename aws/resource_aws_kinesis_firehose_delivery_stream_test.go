@@ -15,6 +15,69 @@ import (
 	"github.com/hashicorp/terraform/terraform"
 )
 
+func init() {
+	resource.AddTestSweepers("aws_kinesis_firehose_delivery_stream", &resource.Sweeper{
+		Name: "aws_kinesis_firehose_delivery_stream",
+		F:    testSweepKinesisFirehoseDeliveryStreams,
+	})
+}
+
+func testSweepKinesisFirehoseDeliveryStreams(region string) error {
+	client, err := sharedClientForRegion(region)
+	if err != nil {
+		return fmt.Errorf("error getting client: %s", err)
+	}
+
+	conn := client.(*AWSClient).firehoseconn
+	input := &firehose.ListDeliveryStreamsInput{}
+
+	for {
+		output, err := conn.ListDeliveryStreams(input)
+
+		if testSweepSkipSweepError(err) {
+			log.Printf("[WARN] Skipping Kinesis Firehose Delivery Streams sweep for %s: %s", region, err)
+			return nil
+		}
+
+		if err != nil {
+			return fmt.Errorf("error listing Kinesis Firehose Delivery Streams: %s", err)
+		}
+
+		if len(output.DeliveryStreamNames) == 0 {
+			log.Print("[DEBUG] No Kinesis Firehose Delivery Streams to sweep")
+			return nil
+		}
+
+		for _, deliveryStreamNamePtr := range output.DeliveryStreamNames {
+			input := &firehose.DeleteDeliveryStreamInput{
+				DeliveryStreamName: deliveryStreamNamePtr,
+			}
+			name := aws.StringValue(deliveryStreamNamePtr)
+
+			log.Printf("[INFO] Deleting Kinesis Firehose Delivery Stream: %s", name)
+			_, err := conn.DeleteDeliveryStream(input)
+
+			if isAWSErr(err, firehose.ErrCodeResourceNotFoundException, "") {
+				continue
+			}
+
+			if err != nil {
+				return fmt.Errorf("error deleting Kinesis Firehose Delivery Stream (%s): %s", name, err)
+			}
+
+			if err := waitForKinesisFirehoseDeliveryStreamDeletion(conn, name); err != nil {
+				return fmt.Errorf("error waiting for Kinesis Firehose Delivery Stream (%s) deletion: %s", name, err)
+			}
+		}
+
+		if !aws.BoolValue(output.HasMoreDeliveryStreams) {
+			break
+		}
+	}
+
+	return nil
+}
+
 func TestAccAWSKinesisFirehoseDeliveryStream_importBasic(t *testing.T) {
 	resName := "aws_kinesis_firehose_delivery_stream.test_stream"
 	rInt := acctest.RandInt()
@@ -1071,9 +1134,10 @@ func testAccCheckFirehoseLambdaFunctionDestroy(s *terraform.State) error {
 func baseAccFirehoseAWSLambdaConfig(policyName, roleName string) string {
 	return fmt.Sprintf(`
 resource "aws_iam_role_policy" "iam_policy_for_lambda" {
-    name = "%s"
-    role = "${aws_iam_role.iam_for_lambda.id}"
-    policy = <<EOF
+  name = "%s"
+  role = "${aws_iam_role.iam_for_lambda.id}"
+
+  policy = <<EOF
 {
   "Version": "2012-10-17",
   "Statement": [
@@ -1101,8 +1165,9 @@ EOF
 }
 
 resource "aws_iam_role" "iam_for_lambda" {
-    name = "%s"
-    assume_role_policy = <<EOF
+  name = "%s"
+
+  assume_role_policy = <<EOF
 {
   "Version": "2012-10-17",
   "Statement": [
@@ -1267,6 +1332,7 @@ data "aws_caller_identity" "current" {}
 
 resource "aws_iam_role" "firehose" {
   name = "tf_acctest_firehose_delivery_role_%d"
+
   assume_role_policy = <<EOF
 {
   "Version": "2012-10-17",
@@ -1292,6 +1358,7 @@ EOF
 resource "aws_iam_role_policy" "firehose" {
   name = "tf_acctest_firehose_delivery_policy_%d"
   role = "${aws_iam_role.firehose.id}"
+
   policy = <<EOF
 {
   "Version": "2012-10-17",
@@ -1328,7 +1395,7 @@ EOF
 
 resource "aws_s3_bucket" "bucket" {
   bucket = "tf-test-bucket-%d"
-  acl = "private"
+  acl    = "private"
 }
 
 resource "aws_cloudwatch_log_group" "test" {
@@ -1336,21 +1403,23 @@ resource "aws_cloudwatch_log_group" "test" {
 }
 
 resource "aws_cloudwatch_log_stream" "test" {
-  name = "sample-log-stream-test-%d"
+  name           = "sample-log-stream-test-%d"
   log_group_name = "${aws_cloudwatch_log_group.test.name}"
 }
 
 resource "aws_kinesis_firehose_delivery_stream" "test_stream" {
-  depends_on = ["aws_iam_role_policy.firehose"]
-  name = "terraform-kinesis-firehose-cloudwatch-%d"
+  depends_on  = ["aws_iam_role_policy.firehose"]
+  name        = "terraform-kinesis-firehose-cloudwatch-%d"
   destination = "s3"
+
   s3_configuration {
-    role_arn = "${aws_iam_role.firehose.arn}"
+    role_arn   = "${aws_iam_role.firehose.arn}"
     bucket_arn = "${aws_s3_bucket.bucket.arn}"
+
     cloudwatch_logging_options {
-	enabled = true
-	log_group_name = "${aws_cloudwatch_log_group.test.name}"
-	log_stream_name = "${aws_cloudwatch_log_stream.test.name}"
+      enabled         = true
+      log_group_name  = "${aws_cloudwatch_log_group.test.name}"
+      log_stream_name = "${aws_cloudwatch_log_stream.test.name}"
     }
   }
 }
@@ -1383,7 +1452,8 @@ func testAccKinesisFirehoseDeliveryStreamConfig_s3basicWithTags(rName string, rI
 			Environment = "production"
 			Usage = "original"
 		}
-	}`, rName)
+	}
+`, rName)
 }
 
 func testAccKinesisFirehoseDeliveryStreamConfig_s3basicWithTagsChanged(rName string, rInt int) string {
@@ -1400,7 +1470,8 @@ func testAccKinesisFirehoseDeliveryStreamConfig_s3basicWithTagsChanged(rName str
 	tags = {
 			Usage = "changed"
 		}
-	}`, rName)
+	}
+`, rName)
 }
 
 var testAccKinesisFirehoseDeliveryStreamConfig_s3KinesisStreamSource = testAccKinesisFirehoseDeliveryStreamBaseConfig + testAccFirehoseKinesisStreamSource + `
@@ -2053,6 +2124,7 @@ func testAccKinesisFirehoseDeliveryStreamConfig_missingProcessingConfiguration(r
 	return fmt.Sprintf(`
 resource "aws_iam_role" "firehose" {
   name = "tf_acctest_firehose_delivery_role_%d"
+
   assume_role_policy = <<EOF
 {
   "Version": "2012-10-17",
@@ -2073,6 +2145,7 @@ EOF
 resource "aws_iam_role_policy" "firehose" {
   name = "tf_acctest_firehose_delivery_policy_%d"
   role = "${aws_iam_role.firehose.id}"
+
   policy = <<EOF
 {
   "Version": "2012-10-17",
@@ -2109,7 +2182,7 @@ EOF
 
 resource "aws_s3_bucket" "bucket" {
   bucket = "tf-test-bucket-%d"
-  acl = "private"
+  acl    = "private"
 }
 
 resource "aws_kinesis_firehose_delivery_stream" "test_stream" {

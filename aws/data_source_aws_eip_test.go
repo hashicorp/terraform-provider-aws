@@ -21,6 +21,7 @@ func TestAccDataSourceAwsEip_Filter(t *testing.T) {
 				Config: testAccDataSourceAwsEipConfigFilter(rName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(dataSourceName, "id", resourceName, "id"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "public_dns", resourceName, "public_dns"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "public_ip", resourceName, "public_ip"),
 				),
 			},
@@ -40,6 +41,7 @@ func TestAccDataSourceAwsEip_Id(t *testing.T) {
 				Config: testAccDataSourceAwsEipConfigId,
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(dataSourceName, "id", resourceName, "id"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "public_dns", resourceName, "public_dns"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "public_ip", resourceName, "public_ip"),
 				),
 			},
@@ -61,6 +63,7 @@ func TestAccDataSourceAwsEip_PublicIP_EC2Classic(t *testing.T) {
 				Config: testAccDataSourceAwsEipConfigPublicIpEc2Classic,
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(dataSourceName, "id", resourceName, "id"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "public_dns", resourceName, "public_dns"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "public_ip", resourceName, "public_ip"),
 				),
 			},
@@ -80,6 +83,7 @@ func TestAccDataSourceAwsEip_PublicIP_VPC(t *testing.T) {
 				Config: testAccDataSourceAwsEipConfigPublicIpVpc,
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(dataSourceName, "id", resourceName, "id"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "public_dns", resourceName, "public_dns"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "public_ip", resourceName, "public_ip"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "domain", resourceName, "domain"),
 				),
@@ -101,6 +105,7 @@ func TestAccDataSourceAwsEip_Tags(t *testing.T) {
 				Config: testAccDataSourceAwsEipConfigTags(rName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(dataSourceName, "id", resourceName, "id"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "public_dns", resourceName, "public_dns"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "public_ip", resourceName, "public_ip"),
 				),
 			},
@@ -121,6 +126,7 @@ func TestAccDataSourceAwsEip_NetworkInterface(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(dataSourceName, "id", resourceName, "id"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "network_interface_id", resourceName, "network_interface"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "private_dns", resourceName, "private_dns"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "private_ip", resourceName, "private_ip"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "domain", resourceName, "domain"),
 				),

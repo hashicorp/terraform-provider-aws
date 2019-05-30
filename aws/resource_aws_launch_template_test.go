@@ -73,6 +73,7 @@ func TestAccAWSLaunchTemplate_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resName, "latest_version", "1"),
 					resource.TestCheckResourceAttrSet(resName, "arn"),
 					resource.TestCheckResourceAttr(resName, "ebs_optimized", ""),
+					resource.TestCheckResourceAttr(resName, "elastic_inference_accelerator.#", "0"),
 				),
 			},
 		},
@@ -225,6 +226,41 @@ func TestAccAWSLaunchTemplate_EbsOptimized(t *testing.T) {
 	})
 }
 
+func TestAccAWSLaunchTemplate_ElasticInferenceAccelerator(t *testing.T) {
+	var template1 ec2.LaunchTemplate
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_launch_template.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSLaunchTemplateDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSLaunchTemplateConfigElasticInferenceAccelerator(rName, "eia1.medium"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSLaunchTemplateExists(resourceName, &template1),
+					resource.TestCheckResourceAttr(resourceName, "elastic_inference_accelerator.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "elastic_inference_accelerator.0.type", "eia1.medium"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccAWSLaunchTemplateConfigElasticInferenceAccelerator(rName, "eia1.large"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSLaunchTemplateExists(resourceName, &template1),
+					resource.TestCheckResourceAttr(resourceName, "elastic_inference_accelerator.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "elastic_inference_accelerator.0.type", "eia1.large"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccAWSLaunchTemplate_data(t *testing.T) {
 	var template ec2.LaunchTemplate
 	resName := "aws_launch_template.foo"
@@ -257,6 +293,34 @@ func TestAccAWSLaunchTemplate_data(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resName, "ram_disk_id"),
 					resource.TestCheckResourceAttr(resName, "vpc_security_group_ids.#", "1"),
 					resource.TestCheckResourceAttr(resName, "tag_specifications.#", "1"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAWSLaunchTemplate_description(t *testing.T) {
+	var template ec2.LaunchTemplate
+	resName := "aws_launch_template.foo"
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSLaunchTemplateDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSLaunchTemplateConfig_description(rName, "Test Description 1"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSLaunchTemplateExists(resName, &template),
+					resource.TestCheckResourceAttr(resName, "description", "Test Description 1"),
+				),
+			},
+			{
+				Config: testAccAWSLaunchTemplateConfig_description(rName, "Test Description 2"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSLaunchTemplateExists(resName, &template),
+					resource.TestCheckResourceAttr(resName, "description", "Test Description 2"),
 				),
 			},
 		},
@@ -692,8 +756,9 @@ data "aws_ami" "test" {
 data "aws_availability_zones" "available" {}
 
 resource "aws_launch_template" "test" {
-  image_id = "${data.aws_ami.test.id}"
-  name     = %q
+  image_id      = "${data.aws_ami.test.id}"
+  instance_type = "t2.micro"
+  name          = %q
 
   block_device_mappings {
     device_name = "/dev/sda1"
@@ -708,10 +773,10 @@ resource "aws_launch_template" "test" {
 # ValidationError: You must use a valid fully-formed launch template. the encrypted flag cannot be specified since device /dev/sda1 has a snapshot specified.
 resource "aws_autoscaling_group" "test" {
   availability_zones = ["${data.aws_availability_zones.available.names[0]}"]
-  desired_capacity = 0
-  max_size         = 0
-  min_size         = 0
-  name             = %q
+  desired_capacity   = 0
+  max_size           = 0
+  min_size           = 0
+  name               = %q
 
   launch_template {
     id      = "${aws_launch_template.test.id}"
@@ -741,8 +806,9 @@ data "aws_ami" "test" {
 data "aws_availability_zones" "available" {}
 
 resource "aws_launch_template" "test" {
-  image_id = "${data.aws_ami.test.id}"
-  name     = %q
+  image_id      = "${data.aws_ami.test.id}"
+  instance_type = "t2.micro"
+  name          = %q
 
   block_device_mappings {
     device_name = "/dev/sda1"
@@ -758,10 +824,10 @@ resource "aws_launch_template" "test" {
 # ValidationError: You must use a valid fully-formed launch template. the encrypted flag cannot be specified since device /dev/sda1 has a snapshot specified.
 resource "aws_autoscaling_group" "test" {
   availability_zones = ["${data.aws_availability_zones.available.names[0]}"]
-  desired_capacity = 0
-  max_size         = 0
-  min_size         = 0
-  name             = %q
+  desired_capacity   = 0
+  max_size           = 0
+  min_size           = 0
+  name               = %q
 
   launch_template {
     id      = "${aws_launch_template.test.id}"
@@ -778,6 +844,18 @@ resource "aws_launch_template" "test" {
   name          = %q
 }
 `, ebsOptimized, rName)
+}
+
+func testAccAWSLaunchTemplateConfigElasticInferenceAccelerator(rName, elasticInferenceAcceleratorType string) string {
+	return fmt.Sprintf(`
+resource "aws_launch_template" "test" {
+  name = %[1]q
+
+  elastic_inference_accelerator {
+    type = %[2]q
+  }
+}
+`, rName, elasticInferenceAcceleratorType)
 }
 
 func testAccAWSLaunchTemplateConfig_data(rInt int) string {
@@ -821,7 +899,7 @@ resource "aws_launch_template" "foo" {
 
   network_interfaces {
     network_interface_id = "eni-123456ab"
-    security_groups = ["sg-1a23bc45"]
+    security_groups      = ["sg-1a23bc45"]
   }
 
   placement {
@@ -834,7 +912,8 @@ resource "aws_launch_template" "foo" {
 
   tag_specifications {
     resource_type = "instance"
-  tags = {
+
+    tags = {
       Name = "test"
     }
   }
@@ -859,9 +938,9 @@ func testAccAWSLaunchTemplateConfig_capacityReservation_preference(rInt int, pre
 resource "aws_launch_template" "foo" {
   name = "foo_%d"
 
-	capacity_reservation_specification {
-		capacity_reservation_preference = %q
-	}
+  capacity_reservation_specification {
+    capacity_reservation_preference = %q
+  }
 }
 `, rInt, preference)
 }
@@ -871,20 +950,20 @@ func testAccAWSLaunchTemplateConfig_capacityReservation_target(rInt int) string 
 data "aws_availability_zones" "available" {}
 
 resource "aws_ec2_capacity_reservation" "test" {
-	availability_zone = "${data.aws_availability_zones.available.names[0]}"
-	instance_count    = 1
-	instance_platform = "Linux/UNIX"
-	instance_type     = "t2.micro"
+  availability_zone = "${data.aws_availability_zones.available.names[0]}"
+  instance_count    = 1
+  instance_platform = "Linux/UNIX"
+  instance_type     = "t2.micro"
 }
 
 resource "aws_launch_template" "foo" {
   name = "foo_%d"
 
-	capacity_reservation_specification {
-		capacity_reservation_target {
-			capacity_reservation_id = "${aws_ec2_capacity_reservation.test.id}"
-		}
-	}
+  capacity_reservation_specification {
+    capacity_reservation_target {
+      capacity_reservation_id = "${aws_ec2_capacity_reservation.test.id}"
+    }
+  }
 }
 `, rInt)
 }
@@ -922,11 +1001,20 @@ resource "aws_licensemanager_license_configuration" "example" {
 resource "aws_launch_template" "example" {
   name = "foo_%d"
 
-	license_specification {
-		license_configuration_arn = "${aws_licensemanager_license_configuration.example.id}"
-	}
+  license_specification {
+    license_configuration_arn = "${aws_licensemanager_license_configuration.example.id}"
+  }
 }
 `, rInt)
+}
+
+func testAccAWSLaunchTemplateConfig_description(rName, description string) string {
+	return fmt.Sprintf(`
+resource "aws_launch_template" "foo" {
+  name        = "%s"
+  description = "%s"
+}
+`, rName, description)
 }
 
 const testAccAWSLaunchTemplateConfig_networkInterface = `
@@ -969,11 +1057,7 @@ resource "aws_launch_template" "test" {
 const testAccAWSLaunchTemplateConfig_asg_basic = `
 data "aws_ami" "test_ami" {
   most_recent = true
-
-  filter {
-    name   = "owner-alias"
-    values = ["amazon"]
-  }
+  owners      = ["amazon"]
 
   filter {
     name   = "name"
@@ -984,6 +1068,7 @@ data "aws_ami" "test_ami" {
 resource "aws_launch_template" "foo" {
   name_prefix = "foobar"
   image_id = "${data.aws_ami.test_ami.id}"
+  instance_type = "t2.micro"
 }
 
 data "aws_availability_zones" "available" {}
@@ -1003,11 +1088,7 @@ resource "aws_autoscaling_group" "bar" {
 const testAccAWSLaunchTemplateConfig_asg_update = `
 data "aws_ami" "test_ami" {
   most_recent = true
-
-  filter {
-    name   = "owner-alias"
-    values = ["amazon"]
-  }
+  owners      = ["amazon"]
 
   filter {
     name   = "name"
@@ -1038,11 +1119,7 @@ resource "aws_autoscaling_group" "bar" {
 const testAccAWSLaunchTemplateConfig_instanceMarketOptions_basic = `
 data "aws_ami" "test" {
   most_recent = true
-
-  filter {
-    name = "owner-alias"
-    values = ["amazon"]
-  }
+  owners      = ["amazon"]
 
   filter {
     name = "name"
@@ -1053,6 +1130,7 @@ data "aws_ami" "test" {
 resource "aws_launch_template" "test" {
   name_prefix = "instance_market_options"
   image_id = "${data.aws_ami.test.id}"
+  instance_type = "t2.micro"
 
   instance_market_options {
     market_type = "spot"
@@ -1080,11 +1158,7 @@ resource "aws_autoscaling_group" "test" {
 const testAccAWSLaunchTemplateConfig_instanceMarketOptions_update = `
 data "aws_ami" "test" {
   most_recent = true
-
-  filter {
-    name = "owner-alias"
-    values = ["amazon"]
-  }
+  owners      = ["amazon"]
 
   filter {
     name = "name"
@@ -1100,6 +1174,7 @@ resource "aws_launch_template" "test" {
   instance_market_options {
     market_type = "spot"
     spot_options {
+      max_price          = "0.5"
       spot_instance_type = "one-time"
     }
   }

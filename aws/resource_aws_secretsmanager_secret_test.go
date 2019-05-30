@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"log"
 	"regexp"
-	"strings"
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -37,10 +36,7 @@ func testSweepSecretsManagerSecrets(region string) error {
 
 		for _, secret := range page.SecretList {
 			name := aws.StringValue(secret.Name)
-			if !strings.HasPrefix(name, "tf-acc-test-") {
-				log.Printf("[INFO] Skipping Secrets Manager Secret: %s", name)
-				continue
-			}
+
 			log.Printf("[INFO] Deleting Secrets Manager Secret: %s", name)
 			input := &secretsmanager.DeleteSecretInput{
 				ForceDeleteWithoutRecovery: aws.Bool(true),

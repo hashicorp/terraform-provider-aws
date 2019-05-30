@@ -32,6 +32,10 @@ func resourceAwsGlueCrawler() *schema.Resource {
 				ForceNew: true,
 				Required: true,
 			},
+			"arn": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"database_name": {
 				Type:     schema.TypeString,
 				ForceNew: true,
@@ -251,6 +255,51 @@ func createCrawlerInput(crawlerName string, d *schema.ResourceData) (*glue.Creat
 	return crawlerInput, nil
 }
 
+func updateCrawlerInput(crawlerName string, d *schema.ResourceData) (*glue.UpdateCrawlerInput, error) {
+	crawlerTargets, err := expandGlueCrawlerTargets(d)
+	if err != nil {
+		return nil, err
+	}
+	crawlerInput := &glue.UpdateCrawlerInput{
+		Name:         aws.String(crawlerName),
+		DatabaseName: aws.String(d.Get("database_name").(string)),
+		Role:         aws.String(d.Get("role").(string)),
+		Targets:      crawlerTargets,
+	}
+	if description, ok := d.GetOk("description"); ok {
+		crawlerInput.Description = aws.String(description.(string))
+	}
+	if schedule, ok := d.GetOk("schedule"); ok {
+		crawlerInput.Schedule = aws.String(schedule.(string))
+	}
+	if classifiers, ok := d.GetOk("classifiers"); ok {
+		crawlerInput.Classifiers = expandStringList(classifiers.([]interface{}))
+	}
+
+	crawlerInput.SchemaChangePolicy = expandGlueSchemaChangePolicy(d.Get("schema_change_policy").([]interface{}))
+
+	if tablePrefix, ok := d.GetOk("table_prefix"); ok {
+		crawlerInput.TablePrefix = aws.String(tablePrefix.(string))
+	}
+	if configuration, ok := d.GetOk("configuration"); ok {
+		crawlerInput.Configuration = aws.String(configuration.(string))
+	}
+
+	if v, ok := d.GetOk("configuration"); ok {
+		configuration, err := structure.NormalizeJsonString(v)
+		if err != nil {
+			return nil, fmt.Errorf("Configuration contains an invalid JSON: %v", err)
+		}
+		crawlerInput.Configuration = aws.String(configuration)
+	}
+
+	if securityConfiguration, ok := d.GetOk("security_configuration"); ok {
+		crawlerInput.CrawlerSecurityConfiguration = aws.String(securityConfiguration.(string))
+	}
+
+	return crawlerInput, nil
+}
+
 func expandGlueSchemaChangePolicy(v []interface{}) *glue.SchemaChangePolicy {
 	if len(v) == 0 {
 		return nil
@@ -362,15 +411,14 @@ func resourceAwsGlueCrawlerUpdate(d *schema.ResourceData, meta interface{}) erro
 	glueConn := meta.(*AWSClient).glueconn
 	name := d.Get("name").(string)
 
-	crawlerInput, err := createCrawlerInput(name, d)
+	updateCrawlerInput, err := updateCrawlerInput(name, d)
 	if err != nil {
 		return err
 	}
-	updateCrawlerInput := glue.UpdateCrawlerInput(*crawlerInput)
 
 	// Retry for IAM eventual consistency
 	err = resource.Retry(1*time.Minute, func() *resource.RetryError {
-		_, err := glueConn.UpdateCrawler(&updateCrawlerInput)
+		_, err := glueConn.UpdateCrawler(updateCrawlerInput)
 		if err != nil {
 			if isAWSErr(err, glue.ErrCodeInvalidInputException, "Service is unable to assume role") {
 				return resource.RetryableError(err)
@@ -415,6 +463,14 @@ func resourceAwsGlueCrawlerRead(d *schema.ResourceData, meta interface{}) error 
 		return nil
 	}
 
+	crawlerARN := arn.ARN{
+		Partition: meta.(*AWSClient).partition,
+		Service:   "glue",
+		Region:    meta.(*AWSClient).region,
+		AccountID: meta.(*AWSClient).accountid,
+		Resource:  fmt.Sprintf("crawler/%s", d.Id()),
+	}.String()
+	d.Set("arn", crawlerARN)
 	d.Set("name", crawlerOutput.Crawler.Name)
 	d.Set("database_name", crawlerOutput.Crawler.DatabaseName)
 	d.Set("role", crawlerOutput.Crawler.Role)

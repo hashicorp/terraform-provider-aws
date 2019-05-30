@@ -255,20 +255,23 @@ resource "aws_sns_topic" "aws_sns_topic" {
 }
 
 resource "aws_db_event_subscription" "bar" {
-  name = "tf-acc-test-rds-event-subs-%d"
-  sns_topic = "${aws_sns_topic.aws_sns_topic.arn}"
+  name        = "tf-acc-test-rds-event-subs-%d"
+  sns_topic   = "${aws_sns_topic.aws_sns_topic.arn}"
   source_type = "db-instance"
+
   event_categories = [
     "availability",
     "backup",
     "creation",
     "deletion",
-    "maintenance"
+    "maintenance",
   ]
+
   tags = {
     Name = "name"
   }
-}`, rInt, rInt)
+}
+`, rInt, rInt)
 }
 
 func testAccAWSDBEventSubscriptionConfigWithPrefix(rInt int) string {
@@ -279,19 +282,22 @@ resource "aws_sns_topic" "aws_sns_topic" {
 
 resource "aws_db_event_subscription" "bar" {
   name_prefix = "tf-acc-test-rds-event-subs-"
-  sns_topic = "${aws_sns_topic.aws_sns_topic.arn}"
+  sns_topic   = "${aws_sns_topic.aws_sns_topic.arn}"
   source_type = "db-instance"
+
   event_categories = [
     "availability",
     "backup",
     "creation",
     "deletion",
-    "maintenance"
+    "maintenance",
   ]
+
   tags = {
     Name = "name"
   }
-}`, rInt)
+}
+`, rInt)
 }
 
 func testAccAWSDBEventSubscriptionConfigUpdate(rInt int) string {
@@ -301,17 +307,20 @@ resource "aws_sns_topic" "aws_sns_topic" {
 }
 
 resource "aws_db_event_subscription" "bar" {
-  name = "tf-acc-test-rds-event-subs-%d"
-  sns_topic = "${aws_sns_topic.aws_sns_topic.arn}"
-  enabled = false
+  name        = "tf-acc-test-rds-event-subs-%d"
+  sns_topic   = "${aws_sns_topic.aws_sns_topic.arn}"
+  enabled     = false
   source_type = "db-parameter-group"
+
   event_categories = [
-    "configuration change"
+    "configuration change",
   ]
+
   tags = {
     Name = "new-name"
   }
-}`, rInt, rInt)
+}
+`, rInt, rInt)
 }
 
 func testAccAWSDBEventSubscriptionConfigWithSourceIds(rInt int) string {
@@ -321,55 +330,61 @@ resource "aws_sns_topic" "aws_sns_topic" {
 }
 
 resource "aws_db_parameter_group" "bar" {
-  name = "db-parameter-group-event-%d"
-  family = "mysql5.6"
+  name        = "db-parameter-group-event-%d"
+  family      = "mysql5.6"
   description = "Test parameter group for terraform"
 }
 
 resource "aws_db_event_subscription" "bar" {
-  name = "tf-acc-test-rds-event-subs-with-ids-%d"
-  sns_topic = "${aws_sns_topic.aws_sns_topic.arn}"
+  name        = "tf-acc-test-rds-event-subs-with-ids-%d"
+  sns_topic   = "${aws_sns_topic.aws_sns_topic.arn}"
   source_type = "db-parameter-group"
-  source_ids = ["${aws_db_parameter_group.bar.id}"]
+  source_ids  = ["${aws_db_parameter_group.bar.id}"]
+
   event_categories = [
-    "configuration change"
+    "configuration change",
   ]
+
   tags = {
     Name = "name"
   }
-}`, rInt, rInt, rInt)
+}
+`, rInt, rInt, rInt)
 }
 
 func testAccAWSDBEventSubscriptionConfigUpdateSourceIds(rInt int) string {
 	return fmt.Sprintf(`
-	resource "aws_sns_topic" "aws_sns_topic" {
-		name = "tf-acc-test-rds-event-subs-sns-topic-%d"
-	}
+resource "aws_sns_topic" "aws_sns_topic" {
+  name = "tf-acc-test-rds-event-subs-sns-topic-%d"
+}
 
-	resource "aws_db_parameter_group" "bar" {
-		name = "db-parameter-group-event-%d"
-		family = "mysql5.6"
-		description = "Test parameter group for terraform"
-	}
+resource "aws_db_parameter_group" "bar" {
+  name        = "db-parameter-group-event-%d"
+  family      = "mysql5.6"
+  description = "Test parameter group for terraform"
+}
 
-	resource "aws_db_parameter_group" "foo" {
-		name = "db-parameter-group-event-2-%d"
-		family = "mysql5.6"
-		description = "Test parameter group for terraform"
-	}
+resource "aws_db_parameter_group" "foo" {
+  name        = "db-parameter-group-event-2-%d"
+  family      = "mysql5.6"
+  description = "Test parameter group for terraform"
+}
 
-	resource "aws_db_event_subscription" "bar" {
-		name = "tf-acc-test-rds-event-subs-with-ids-%d"
-		sns_topic = "${aws_sns_topic.aws_sns_topic.arn}"
-		source_type = "db-parameter-group"
-		source_ids = ["${aws_db_parameter_group.bar.id}","${aws_db_parameter_group.foo.id}"]
-		event_categories = [
-			"configuration change"
-		]
-	tags = {
-			Name = "name"
-		}
-	}`, rInt, rInt, rInt, rInt)
+resource "aws_db_event_subscription" "bar" {
+  name        = "tf-acc-test-rds-event-subs-with-ids-%d"
+  sns_topic   = "${aws_sns_topic.aws_sns_topic.arn}"
+  source_type = "db-parameter-group"
+  source_ids  = ["${aws_db_parameter_group.bar.id}", "${aws_db_parameter_group.foo.id}"]
+
+  event_categories = [
+    "configuration change",
+  ]
+
+  tags = {
+    Name = "name"
+  }
+}
+`, rInt, rInt, rInt, rInt)
 }
 
 func testAccAWSDBEventSubscriptionConfigUpdateCategories(rInt int) string {
@@ -379,14 +394,17 @@ resource "aws_sns_topic" "aws_sns_topic" {
 }
 
 resource "aws_db_event_subscription" "bar" {
-  name = "tf-acc-test-rds-event-subs-%d"
-  sns_topic = "${aws_sns_topic.aws_sns_topic.arn}"
+  name        = "tf-acc-test-rds-event-subs-%d"
+  sns_topic   = "${aws_sns_topic.aws_sns_topic.arn}"
   source_type = "db-instance"
+
   event_categories = [
     "availability",
   ]
+
   tags = {
     Name = "name"
   }
-}`, rInt, rInt)
+}
+`, rInt, rInt)
 }
