@@ -3,6 +3,7 @@ package aws
 import (
 	"fmt"
 	"log"
+	"strconv"
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -49,14 +50,20 @@ func resourceAwsAppautoscalingScheduledAction() *schema.Resource {
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"max_capacity": {
-							Type:     schema.TypeInt,
-							Optional: true,
-							ForceNew: false,
+							// Use TypeString to allow an "unspecified" value,
+							// since TypeInt only has allows numbers with 0 as default.
+							Type:         schema.TypeString,
+							Optional:     true,
+							ForceNew:     false,
+							ValidateFunc: validateTypeStringNullableInteger,
 						},
 						"min_capacity": {
-							Type:     schema.TypeInt,
-							Optional: true,
-							ForceNew: false,
+							// Use TypeString to allow an "unspecified" value,
+							// since TypeInt only has allows numbers with 0 as default.
+							Type:         schema.TypeString,
+							Optional:     true,
+							ForceNew:     false,
+							ValidateFunc: validateTypeStringNullableInteger,
 						},
 					},
 				},
@@ -98,13 +105,22 @@ func resourceAwsAppautoscalingScheduledActionPut(d *schema.ResourceData, meta in
 	if v, ok := d.GetOk("schedule"); ok {
 		input.Schedule = aws.String(v.(string))
 	}
-	if _, ok := d.GetOk("scalable_target_action"); ok {
+	if v, ok := d.GetOk("scalable_target_action"); ok {
 		sta := &applicationautoscaling.ScalableTargetAction{}
-		if max, ok := d.GetOkExists("scalable_target_action.0.max_capacity"); ok {
-			sta.MaxCapacity = aws.Int64(int64(max.(int)))
+		raw := v.([]interface{})[0].(map[string]interface{})
+		if max, ok := raw["max_capacity"]; ok && max.(string) != "" {
+			maxInt, err := strconv.ParseInt(max.(string), 10, 64)
+			if err != nil {
+				return fmt.Errorf("error converting max_capacity %q from string to integer: %s", v.(string), err)
+			}
+			sta.MaxCapacity = aws.Int64(maxInt)
 		}
-		if min, ok := d.GetOkExists("scalable_target_action.0.min_capacity"); ok {
-			sta.MinCapacity = aws.Int64(int64(min.(int)))
+		if min, ok := raw["min_capacity"]; ok && min.(string) != "" {
+			minInt, err := strconv.ParseInt(min.(string), 10, 64)
+			if err != nil {
+				return fmt.Errorf("error converting min_capacity %q from string to integer: %s", v.(string), err)
+			}
+			sta.MinCapacity = aws.Int64(minInt)
 		}
 		input.ScalableTargetAction = sta
 	}
@@ -210,10 +226,10 @@ func flattenScalableTargetActionConfiguration(cfg *applicationautoscaling.Scalab
 
 	m := make(map[string]interface{})
 	if cfg.MaxCapacity != nil {
-		m["max_capacity"] = *cfg.MaxCapacity
+		m["max_capacity"] = strconv.FormatInt(aws.Int64Value(cfg.MaxCapacity), 10)
 	}
 	if cfg.MinCapacity != nil {
-		m["min_capacity"] = *cfg.MinCapacity
+		m["min_capacity"] = strconv.FormatInt(aws.Int64Value(cfg.MinCapacity), 10)
 	}
 
 	return []interface{}{m}
