@@ -25,12 +25,6 @@ func resourceAwsGlobalAcceleratorEndpointGroup() *schema.Resource {
 			State: schema.ImportStatePassthrough,
 		},
 
-		Timeouts: &schema.ResourceTimeout{
-			Create: schema.DefaultTimeout(5 * time.Minute),
-			Update: schema.DefaultTimeout(5 * time.Minute),
-			Delete: schema.DefaultTimeout(5 * time.Minute),
-		},
-
 		Schema: map[string]*schema.Schema{
 			"listener_arn": {
 				Type:     schema.TypeString,
@@ -39,28 +33,29 @@ func resourceAwsGlobalAcceleratorEndpointGroup() *schema.Resource {
 			},
 			"endpoint_group_region": {
 				Type:     schema.TypeString,
-				Required: true,
+				Optional: true,
+				Computed: true,
 				ForceNew: true,
 			},
 			"health_check_interval_seconds": {
-				Type:     schema.TypeInt,
-				Optional: true,
-				Computed: true,
+				Type:         schema.TypeInt,
+				Optional:     true,
+				Default:      30,
+				ValidateFunc: validation.IntBetween(10, 30),
 			},
 			"health_check_path": {
 				Type:     schema.TypeString,
 				Optional: true,
-				Computed: true,
+				Default:  "/",
 			},
 			"health_check_port": {
 				Type:     schema.TypeInt,
 				Optional: true,
-				Computed: true,
 			},
 			"health_check_protocol": {
 				Type:     schema.TypeString,
 				Optional: true,
-				Computed: true,
+				Default:  globalaccelerator.HealthCheckProtocolTcp,
 				ValidateFunc: validation.StringInSlice([]string{
 					globalaccelerator.HealthCheckProtocolTcp,
 					globalaccelerator.HealthCheckProtocolHttp,
@@ -68,17 +63,19 @@ func resourceAwsGlobalAcceleratorEndpointGroup() *schema.Resource {
 				}, false),
 			},
 			"threshold_count": {
-				Type:     schema.TypeInt,
-				Optional: true,
-				Computed: true,
+				Type:         schema.TypeInt,
+				Optional:     true,
+				Default:      3,
+				ValidateFunc: validation.IntBetween(1, 10),
 			},
 			"traffic_dial_percentage": {
-				Type:     schema.TypeFloat,
-				Optional: true,
-				Computed: true,
+				Type:         schema.TypeFloat,
+				Optional:     true,
+				Default:      100,
+				ValidateFunc: validation.IntBetween(0, 100),
 			},
-			"endpoint_configurations": {
-				Type:     schema.TypeList,
+			"endpoint_configuration": {
+				Type:     schema.TypeSet,
 				Optional: true,
 				MaxItems: 10,
 				Elem: &schema.Resource{
@@ -100,11 +97,16 @@ func resourceAwsGlobalAcceleratorEndpointGroup() *schema.Resource {
 
 func resourceAwsGlobalAcceleratorEndpointGroupCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).globalacceleratorconn
+	region := meta.(*AWSClient).region
 
 	opts := &globalaccelerator.CreateEndpointGroupInput{
 		ListenerArn:         aws.String(d.Get("listener_arn").(string)),
 		IdempotencyToken:    aws.String(resource.UniqueId()),
-		EndpointGroupRegion: aws.String(d.Get("endpoint_group_region").(string)),
+		EndpointGroupRegion: aws.String(region),
+	}
+
+	if v, ok := d.GetOk("endpoint_group_region"); ok {
+		opts.EndpointGroupRegion = aws.String(v.(string))
 	}
 
 	if v, ok := d.GetOk("health_check_interval_seconds"); ok {
@@ -146,7 +148,10 @@ func resourceAwsGlobalAcceleratorEndpointGroupCreate(d *schema.ResourceData, met
 
 	acceleratorArn, err := resourceAwsGlobalAcceleratorListenerParseAcceleratorArn(d.Id())
 	if err != nil {
-		return err
+		err = resourceAwsGlobalAcceleratorAcceleratorWaitForState(conn, acceleratorArn)
+		if err != nil {
+			return err
+		}
 	}
 
 	// Creating an endpoint group triggers the accelerator to change status to InPending
@@ -154,7 +159,7 @@ func resourceAwsGlobalAcceleratorEndpointGroupCreate(d *schema.ResourceData, met
 		Pending: []string{globalaccelerator.AcceleratorStatusInProgress},
 		Target:  []string{globalaccelerator.AcceleratorStatusDeployed},
 		Refresh: resourceAwsGlobalAcceleratorAcceleratorStateRefreshFunc(conn, acceleratorArn),
-		Timeout: d.Timeout(schema.TimeoutCreate),
+		Timeout: 5 * time.Minute,
 	}
 
 	log.Printf("[DEBUG] Waiting for Global Accelerator endpoint group (%s) availability", d.Id())
@@ -195,7 +200,9 @@ func resourceAwsGlobalAcceleratorEndpointGroupRead(d *schema.ResourceData, meta 
 	d.Set("health_check_protocol", endpointGroup.HealthCheckProtocol)
 	d.Set("threshold_count", endpointGroup.ThresholdCount)
 	d.Set("traffic_dial_percentage", endpointGroup.TrafficDialPercentage)
-	d.Set("endpoint_configurations", resourceAwsGlobalAcceleratorEndpointGroupFlattenEndpointDescriptions(endpointGroup.EndpointDescriptions))
+	if err := d.Set("endpoint_configuration", resourceAwsGlobalAcceleratorEndpointGroupFlattenEndpointDescriptions(endpointGroup.EndpointDescriptions)); err != nil {
+		return fmt.Errorf("error setting endpoint_configuration: %s", err)
+	}
 
 	return nil
 }
@@ -302,7 +309,10 @@ func resourceAwsGlobalAcceleratorEndpointGroupUpdate(d *schema.ResourceData, met
 
 	acceleratorArn, err := resourceAwsGlobalAcceleratorListenerParseAcceleratorArn(d.Id())
 	if err != nil {
-		return err
+		err = resourceAwsGlobalAcceleratorAcceleratorWaitForState(conn, acceleratorArn)
+		if err != nil {
+			return err
+		}
 	}
 
 	// Creating an endpoint group triggers the accelerator to change status to InPending
@@ -310,7 +320,7 @@ func resourceAwsGlobalAcceleratorEndpointGroupUpdate(d *schema.ResourceData, met
 		Pending: []string{globalaccelerator.AcceleratorStatusInProgress},
 		Target:  []string{globalaccelerator.AcceleratorStatusDeployed},
 		Refresh: resourceAwsGlobalAcceleratorAcceleratorStateRefreshFunc(conn, acceleratorArn),
-		Timeout: d.Timeout(schema.TimeoutUpdate),
+		Timeout: 5 * time.Minute,
 	}
 
 	log.Printf("[DEBUG] Waiting for Global Accelerator endpoint group (%s) availability", d.Id())
@@ -339,7 +349,10 @@ func resourceAwsGlobalAcceleratorEndpointGroupDelete(d *schema.ResourceData, met
 
 	acceleratorArn, err := resourceAwsGlobalAcceleratorListenerParseAcceleratorArn(d.Id())
 	if err != nil {
-		return err
+		err = resourceAwsGlobalAcceleratorAcceleratorWaitForState(conn, acceleratorArn)
+		if err != nil {
+			return err
+		}
 	}
 
 	// Deleting an endpoint group triggers the accelerator to change status to InPending
@@ -347,7 +360,7 @@ func resourceAwsGlobalAcceleratorEndpointGroupDelete(d *schema.ResourceData, met
 		Pending: []string{globalaccelerator.AcceleratorStatusInProgress},
 		Target:  []string{globalaccelerator.AcceleratorStatusDeployed},
 		Refresh: resourceAwsGlobalAcceleratorAcceleratorStateRefreshFunc(conn, acceleratorArn),
-		Timeout: d.Timeout(schema.TimeoutDelete),
+		Timeout: 5 * time.Minute,
 	}
 
 	log.Printf("[DEBUG] Waiting for Global Accelerator endpoint group (%s) deletion", d.Id())
