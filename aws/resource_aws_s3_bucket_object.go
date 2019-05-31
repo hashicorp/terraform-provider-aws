@@ -93,12 +93,14 @@ func resourceAwsS3BucketObject() *schema.Resource {
 				Type:          schema.TypeString,
 				Optional:      true,
 				ConflictsWith: []string{"source", "content_base64"},
+				Sensitive:     true,
 			},
 
 			"content_base64": {
 				Type:          schema.TypeString,
 				Optional:      true,
 				ConflictsWith: []string{"source", "content"},
+				Sensitive:     true,
 			},
 
 			"storage_class": {
