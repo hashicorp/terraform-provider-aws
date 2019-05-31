@@ -133,7 +133,7 @@ func resourceAwsGlobalAcceleratorEndpointGroupCreate(d *schema.ResourceData, met
 		opts.TrafficDialPercentage = aws.Float64(v.(float64))
 	}
 
-	if v, ok := d.GetOk("endpoint_configurations"); ok {
+	if v, ok := d.GetOk("endpoint_configuration"); ok {
 		opts.EndpointConfigurations = resourceAwsGlobalAcceleratorEndpointGroupExpandEndpointConfigurations(v.([]interface{}))
 	}
 
@@ -228,7 +228,7 @@ func resourceAwsGlobalAcceleratorEndpointGroupExpandEndpointConfigurations(confi
 		out[i] = &m
 	}
 
-	log.Printf("[DEBUG] Expand endpoint_configurations: %s", out)
+	log.Printf("[DEBUG] Expand endpoint_configuration: %s", out)
 	return out
 }
 
@@ -244,7 +244,7 @@ func resourceAwsGlobalAcceleratorEndpointGroupFlattenEndpointDescriptions(config
 		out[i] = m
 	}
 
-	log.Printf("[DEBUG] Flatten endpoint_configurations: %s", out)
+	log.Printf("[DEBUG] Flatten endpoint_configuration: %s", out)
 	return out
 }
 
@@ -294,7 +294,7 @@ func resourceAwsGlobalAcceleratorEndpointGroupUpdate(d *schema.ResourceData, met
 		opts.TrafficDialPercentage = aws.Float64(v.(float64))
 	}
 
-	if v, ok := d.GetOk("endpoint_configurations"); ok {
+	if v, ok := d.GetOk("endpoint_configuration"); ok {
 		opts.EndpointConfigurations = resourceAwsGlobalAcceleratorEndpointGroupExpandEndpointConfigurations(v.([]interface{}))
 	} else {
 		opts.EndpointConfigurations = []*globalaccelerator.EndpointConfiguration{}
