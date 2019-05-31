@@ -231,7 +231,8 @@ func resourceAwsEcsTaskDefinition() *schema.Resource {
 			},
 
 			"proxy_configuration": {
-				Type:     schema.TypeSet,
+				Type:     schema.TypeList,
+				MaxItems: 1,
 				Optional: true,
 				ForceNew: true,
 				Elem: &schema.Resource{
@@ -276,21 +277,6 @@ func resourceAwsEcsTaskDefinition() *schema.Resource {
 							}, false),
 						},
 					},
-				},
-				Set: func(v interface{}) int {
-					var buf bytes.Buffer
-					m := v.(map[string]interface{})
-					buf.WriteString(fmt.Sprintf("%s-", m["container_name"].(string)))
-					buf.WriteString(fmt.Sprintf("%s-", m["type"].(string)))
-
-					rawProps := m["properties"].(*schema.Set).List()
-					for _, rawProp := range rawProps {
-						property := rawProp.(map[string]interface{})
-						buf.WriteString(fmt.Sprintf("%s-", property["name"].(string)))
-						buf.WriteString(fmt.Sprintf("%s-", property["value"].(string)))
-					}
-
-					return hashcode.String(buf.String())
 				},
 			},
 
@@ -385,7 +371,7 @@ func resourceAwsEcsTaskDefinitionCreate(d *schema.ResourceData, meta interface{}
 		input.RequiresCompatibilities = expandStringList(v.(*schema.Set).List())
 	}
 
-	proxyConfigs := d.Get("proxy_configuration").(*schema.Set).List()
+	proxyConfigs := d.Get("proxy_configuration").([]interface{})
 	if len(proxyConfigs) > 0 {
 		proxyConfig := proxyConfigs[0]
 		configMap := proxyConfig.(map[string]interface{})
