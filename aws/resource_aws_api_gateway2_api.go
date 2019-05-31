@@ -13,12 +13,12 @@ import (
 	"github.com/hashicorp/terraform/helper/schema"
 )
 
-func resourceAwsApiGatewayV2() *schema.Resource {
+func resourceAwsApiGateway2Api() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsApiGatewayV2Create,
-		Read:   resourceAwsApiGatewayV2Read,
-		Update: resourceAwsApiGatewayV2Update,
-		Delete: resourceAwsApiGatewayV2Delete,
+		Create: resourceAwsApiGateway2ApiCreate,
+		Read:   resourceAwsApiGateway2ApiRead,
+		Update: resourceAwsApiGateway2ApiUpdate,
+		Delete: resourceAwsApiGateway2ApiDelete,
 		Importer: &schema.ResourceImporter{
 			State: func(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
 				idParts := strings.Split(d.Id(), "/")
@@ -65,7 +65,7 @@ func resourceAwsApiGatewayV2() *schema.Resource {
 	}
 }
 
-func resourceAwsApiGatewayV2Create(d *schema.ResourceData, meta interface{}) error {
+func resourceAwsApiGateway2ApiCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).apigatewayv2conn
 	log.Printf("[DEBUG] Creating API Gateway V2 for API %s", d.Get("name").(string))
 
@@ -87,10 +87,10 @@ func resourceAwsApiGatewayV2Create(d *schema.ResourceData, meta interface{}) err
 
 	d.SetId(*resource.ApiId)
 
-	return resourceAwsApiGatewayV2Read(d, meta)
+	return resourceAwsApiGateway2ApiRead(d, meta)
 }
 
-func resourceAwsApiGatewayV2Read(d *schema.ResourceData, meta interface{}) error {
+func resourceAwsApiGateway2ApiRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).apigatewayv2conn
 
 	log.Printf("[DEBUG] Reading API Gateway V2 %s", d.Id())
@@ -117,7 +117,7 @@ func resourceAwsApiGatewayV2Read(d *schema.ResourceData, meta interface{}) error
 	return nil
 }
 
-func resourceAwsApiGatewayV2Update(d *schema.ResourceData, meta interface{}) error {
+func resourceAwsApiGateway2ApiUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).apigatewayv2conn
 
 	log.Printf("[DEBUG] Updating API Gateway Resource %s", d.Id())
@@ -138,10 +138,10 @@ func resourceAwsApiGatewayV2Update(d *schema.ResourceData, meta interface{}) err
 		return err
 	}
 
-	return resourceAwsApiGatewayV2Read(d, meta)
+	return resourceAwsApiGateway2ApiRead(d, meta)
 }
 
-func resourceAwsApiGatewayV2Delete(d *schema.ResourceData, meta interface{}) error {
+func resourceAwsApiGateway2ApiDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).apigatewayv2conn
 	log.Printf("[DEBUG] Deleting API Gateway V2: %s", d.Id())
 
