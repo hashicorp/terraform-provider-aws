@@ -1,17 +1,17 @@
-## 2.13.0 (Unreleased)
+## 2.13.0 (May 31, 2019)
 
 FEATURES:
 
-* **New Resource:** `aws_ec2_transit_gateway_vpc_attachment_accepter` [GH-8679]
+* **New Resource:** `aws_ec2_transit_gateway_vpc_attachment_accepter` ([#8679](https://github.com/terraform-providers/terraform-provider-aws/issues/8679))
 
 ENHANCEMENTS:
 
-* resource/aws_iot_role_alias: Add `arn` attribute [GH-8812]
+* resource/aws_iot_role_alias: Add `arn` attribute ([#8812](https://github.com/terraform-providers/terraform-provider-aws/issues/8812))
 
 BUG FIXES:
 
-* data-source/aws_rds_cluster: Add missing `hosted_zone_id` attribute [GH-8799]
-* resource/aws_dms_endpoint: Fix casing for `mongodb_settings` configuration block `auth_type`, `auth_mechanism`, and `nesting_level` argument defaults [GH-8008] / [GH-8795]
+* data-source/aws_rds_cluster: Add missing `hosted_zone_id` attribute ([#8799](https://github.com/terraform-providers/terraform-provider-aws/issues/8799))
+* resource/aws_dms_endpoint: Fix casing for `mongodb_settings` configuration block `auth_type`, `auth_mechanism`, and `nesting_level` argument defaults ([#8008](https://github.com/terraform-providers/terraform-provider-aws/issues/8008)] / [[#8795](https://github.com/terraform-providers/terraform-provider-aws/issues/8795))
 
 ## 2.12.0 (May 24, 2019)
 
