@@ -88,7 +88,7 @@ func testAccCheckAWSAPIGatewayV2Exists(n string, res *apigatewayv2.Api) resource
 			return fmt.Errorf("No API Gateway V2 ID is set")
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).apigatewayv2
+		conn := testAccProvider.Meta().(*AWSClient).apigatewayv2conn
 
 		req := &apigatewayv2.GetApiInput{
 			ApiId: aws.String(rs.Primary.ID),
@@ -109,7 +109,7 @@ func testAccCheckAWSAPIGatewayV2Exists(n string, res *apigatewayv2.Api) resource
 }
 
 func testAccCheckAWSAPIGatewayV2Destroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).apigatewayv2
+	conn := testAccProvider.Meta().(*AWSClient).apigatewayv2conn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_api_gateway_v2" {
