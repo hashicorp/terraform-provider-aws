@@ -78,6 +78,91 @@ resource "aws_spot_fleet_request" "foo" {
 }
 ```
 
+### Example with a dynamic block
+
+```hcl
+resource "aws_spot_fleet_request" "cheap_compute" {
+  iam_fleet_role                      = "${aws_iam_role.aws-ec2-spot-fleet-tagging-role.arn}"
+  target_capacity                     = var.target_capacity
+  valid_until                         = "${timeadd(timestamp(), var.timeadd)}"
+  allocation_strategy                 = var.allocation_strategy
+  fleet_type                          = var.fleet_type
+  wait_for_fulfillment                = true
+  terminate_instances_with_expiration = true
+
+  launch_specification {
+    instance_type            = "m4.10xlarge"
+    ami                      = "ami-1234"
+    spot_price               = "2.793"
+    placement_tenancy        = "dedicated"
+    iam_instance_profile_arn = "${aws_iam_instance_profile.example.arn}"
+  }
+
+  launch_specification {
+    for_each = [for i in local.instances_x_subnets : {
+      instance_type = i[0]
+      subnet_id     = i[1]
+    }]
+    content {
+      ami                         = var.ami_id
+      instance_type               = launch_specification.value.instance_type
+      subnet_id                   = launch_specification.value.subnet_id
+      vpc_security_group_ids      = var.vpc_security_group_ids
+      iam_instance_profile        = var.instance_profile_name
+      associate_public_ip_address = var.associate_public_ip_address
+      user_data                   = var.user_data
+      ebs_optimized               = var.ebs_optimized
+
+      root_block_device {
+        volume_size           = "8"
+        volume_type           = "gp2"
+        delete_on_termination = "true"
+      }
+
+      tags = {
+        Name        = var.name
+        tag_builder = "builder"
+      }
+    }
+  }
+}
+
+# merge two lists into a larger map
+locals {
+  instances_x_subnets = "${setproduct(var.instance_type, var.subnets)}"
+}
+```
+
+Here's a snippet of the output of `instances_x_subnets`
+```hcl
+instances_x_subnet = [
+  [
+    "c5d.2xlarge",
+    "subnet-12a74574",
+  ],
+  [
+    "c5d.2xlarge",
+    "subnet-f07187b8",
+  ],
+  [
+    "c5d.2xlarge",
+    "subnet-32183769",
+  ],
+  [
+    "c5d.4xlarge",
+    "subnet-12a74574",
+  ],
+  [
+    "c5d.4xlarge",
+    "subnet-f07187b8",
+  ],
+  [
+    "c5d.4xlarge",
+    "subnet-32183769",
+  ],
+  ....
+  ```
+
 ## Argument Reference
 
 Most of these arguments directly correspond to the
