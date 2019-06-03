@@ -16,7 +16,7 @@ func TestAccAwsBackupSelection_basic(t *testing.T) {
 	resourceName := "aws_backup_selection.test"
 	rInt := acctest.RandInt()
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSBackup(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsBackupSelectionDestroy,
 		Steps: []resource.TestStep{
@@ -40,7 +40,7 @@ func TestAccAwsBackupSelection_disappears(t *testing.T) {
 	var selection1 backup.GetBackupSelectionOutput
 	rInt := acctest.RandInt()
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSBackup(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsBackupSelectionDestroy,
 		Steps: []resource.TestStep{
@@ -61,7 +61,7 @@ func TestAccAwsBackupSelection_withTags(t *testing.T) {
 	resourceName := "aws_backup_selection.test"
 	rInt := acctest.RandInt()
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSBackup(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsBackupSelectionDestroy,
 		Steps: []resource.TestStep{
@@ -87,7 +87,7 @@ func TestAccAwsBackupSelection_withResources(t *testing.T) {
 	resourceName := "aws_backup_selection.test"
 	rInt := acctest.RandInt()
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSBackup(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsBackupSelectionDestroy,
 		Steps: []resource.TestStep{
@@ -113,7 +113,7 @@ func TestAccAwsBackupSelection_updateTag(t *testing.T) {
 	resourceName := "aws_backup_selection.test"
 	rInt := acctest.RandInt()
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSBackup(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsBackupSelectionDestroy,
 		Steps: []resource.TestStep{
