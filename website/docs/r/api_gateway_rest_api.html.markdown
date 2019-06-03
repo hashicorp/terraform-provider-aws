@@ -10,6 +10,8 @@ description: |-
 
 Provides an API Gateway REST API.
 
+-> **Note:** Amazon API Gateway Version 1 resources are used for creating and deploying REST APIs. To create and deploy WebSocket APIs, use Amazon API Gateway Version 2 [resources](https://www.terraform.io/docs/providers/aws/r/api_gateway_v2_api.html).
+
 ## Example Usage
 
 ### Basic
