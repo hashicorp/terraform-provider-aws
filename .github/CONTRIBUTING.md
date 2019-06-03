@@ -475,6 +475,14 @@ export AWS_SECRET_ACCESS_KEY=...
 export AWS_DEFAULT_REGION=...
 ```
 
+Please note that the default region for the testing is `us-west-2` and must be
+overriden via the `AWS_DEFAULT_REGION` environment variable, if necessary. This
+is especially important for testing AWS GovCloud (US), which requires:
+
+```sh
+export AWS_DEFAULT_REGION=us-gov-west-1
+```
+
 Tests can then be run by specifying the target provider and a regular
 expression defining the tests to run:
 
