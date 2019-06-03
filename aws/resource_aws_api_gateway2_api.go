@@ -3,14 +3,11 @@ package aws
 import (
 	"fmt"
 	"log"
-	"strings"
-	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/apigatewayv2"
-	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/helper/schema"
+	"github.com/hashicorp/terraform/helper/validation"
 )
 
 func resourceAwsApiGateway2Api() *schema.Resource {
@@ -20,46 +17,49 @@ func resourceAwsApiGateway2Api() *schema.Resource {
 		Update: resourceAwsApiGateway2ApiUpdate,
 		Delete: resourceAwsApiGateway2ApiDelete,
 		Importer: &schema.ResourceImporter{
-			State: func(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
-				idParts := strings.Split(d.Id(), "/")
-				if len(idParts) != 2 || idParts[0] == "" || idParts[1] == "" {
-					return nil, fmt.Errorf("Unexpected format of ID (%q), expected REST-API-ID/RESOURCE-ID", d.Id())
-				}
-				restApiID := idParts[0]
-				resourceID := idParts[1]
-				d.Set("request_validator_id", resourceID)
-				d.Set("rest_api_id", restApiID)
-				d.SetId(resourceID)
-				return []*schema.ResourceData{d}, nil
-			},
+			State: schema.ImportStatePassthrough,
 		},
 
 		Schema: map[string]*schema.Schema{
-			"api_id": {
+			"api_endpoint": {
 				Type:     schema.TypeString,
 				Computed: true,
-			},
-			"name": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
-			"description": {
-				Type:     schema.TypeString,
-				Required: true,
-			},
-			"protocol_type": {
-				Type:     schema.TypeString,
-				Required: true,
-			},
-
-			"route_selection_expression": {
-				Type:     schema.TypeString,
-				Required: true,
 			},
 			"api_key_selection_expression": {
 				Type:     schema.TypeString,
 				Optional: true,
+				Default:  "$request.header.x-api-key",
+				ValidateFunc: validation.StringInSlice([]string{
+					"$context.authorizer.usageIdentifierKey",
+					"$request.header.x-api-key",
+				}, false),
+			},
+			"description": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				ValidateFunc: validation.StringLenBetween(0, 1024),
+			},
+			"name": {
+				Type:         schema.TypeString,
+				Required:     true,
+				ValidateFunc: validation.StringLenBetween(1, 128),
+			},
+			"protocol_type": {
+				Type:     schema.TypeString,
+				Required: true,
+				ForceNew: true,
+				ValidateFunc: validation.StringInSlice([]string{
+					apigatewayv2.ProtocolTypeWebsocket,
+				}, false),
+			},
+			"route_selection_expression": {
+				Type:     schema.TypeString,
+				Required: true,
+			},
+			"version": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				ValidateFunc: validation.StringLenBetween(1, 64),
 			},
 		},
 	}
@@ -67,25 +67,29 @@ func resourceAwsApiGateway2Api() *schema.Resource {
 
 func resourceAwsApiGateway2ApiCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).apigatewayv2conn
-	log.Printf("[DEBUG] Creating API Gateway V2 for API %s", d.Get("name").(string))
 
-	var err error
-	createApiInput := &apigatewayv2.CreateApiInput{
+	req := &apigatewayv2.CreateApiInput{
 		Name:                     aws.String(d.Get("name").(string)),
 		ProtocolType:             aws.String(d.Get("protocol_type").(string)),
 		RouteSelectionExpression: aws.String(d.Get("route_selection_expression").(string)),
-		Description:              aws.String(d.Get("description").(string)),
 	}
 	if v, ok := d.GetOk("api_key_selection_expression"); ok {
-		createApiInput.ApiKeySelectionExpression = aws.String(v.(string))
+		req.ApiKeySelectionExpression = aws.String(v.(string))
 	}
-	resource, err := conn.CreateApi(createApiInput)
+	if v, ok := d.GetOk("description"); ok {
+		req.Description = aws.String(v.(string))
+	}
+	if v, ok := d.GetOk("version"); ok {
+		req.Version = aws.String(v.(string))
+	}
 
+	log.Printf("[DEBUG] Creating API Gateway v2 API: %s", req)
+	resp, err := conn.CreateApi(req)
 	if err != nil {
-		return fmt.Errorf("Error creating API Gateway V2: %s", err)
+		return fmt.Errorf("error creating API Gateway v2 API: %s", err)
 	}
 
-	d.SetId(*resource.ApiId)
+	d.SetId(aws.StringValue(resp.ApiId))
 
 	return resourceAwsApiGateway2ApiRead(d, meta)
 }
@@ -93,26 +97,25 @@ func resourceAwsApiGateway2ApiCreate(d *schema.ResourceData, meta interface{}) e
 func resourceAwsApiGateway2ApiRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).apigatewayv2conn
 
-	log.Printf("[DEBUG] Reading API Gateway V2 %s", d.Id())
-	resource, err := conn.GetApi(&apigatewayv2.GetApiInput{
+	resp, err := conn.GetApi(&apigatewayv2.GetApiInput{
 		ApiId: aws.String(d.Id()),
 	})
-
+	if isAWSErr(err, apigatewayv2.ErrCodeNotFoundException, "") {
+		log.Printf("[WARN] API Gateway v2 API (%s) not found, removing from state", d.Id())
+		d.SetId("")
+		return nil
+	}
 	if err != nil {
-		if awsErr, ok := err.(awserr.Error); ok && awsErr.Code() == "NotFoundException" {
-			log.Printf("[WARN] API Gateway V2 (%s) not found, removing from state", d.Id())
-			d.SetId("")
-			return nil
-		}
-		return err
+		return fmt.Errorf("error reading API Gateway v2 API: %s", err)
 	}
 
-	d.Set("name", resource.Name)
-	d.Set("api_id", resource.ApiId)
-	d.Set("description", resource.Description)
-	d.Set("route_selection_expression", resource.RouteSelectionExpression)
-	d.Set("protocol_type", resource.ProtocolType)
-	d.Set("api_key_selection_expression", resource.ApiKeySelectionExpression)
+	d.Set("api_endpoint", resp.ApiEndpoint)
+	d.Set("api_key_selection_expression", resp.ApiKeySelectionExpression)
+	d.Set("description", resp.Description)
+	d.Set("name", resp.Name)
+	d.Set("protocol_type", resp.ProtocolType)
+	d.Set("route_selection_expression", resp.RouteSelectionExpression)
+	d.Set("version", resp.Version)
 
 	return nil
 }
@@ -120,22 +123,29 @@ func resourceAwsApiGateway2ApiRead(d *schema.ResourceData, meta interface{}) err
 func resourceAwsApiGateway2ApiUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).apigatewayv2conn
 
-	log.Printf("[DEBUG] Updating API Gateway Resource %s", d.Id())
-	updateApiConfig := &apigatewayv2.UpdateApiInput{
-		ApiId:                    aws.String(d.Get("api_id").(string)),
-		Description:              aws.String(d.Get("description").(string)),
-		Name:                     aws.String(d.Get("name").(string)),
-		RouteSelectionExpression: aws.String(d.Get("route_selection_expression").(string)),
+	req := &apigatewayv2.UpdateApiInput{
+		ApiId: aws.String(d.Id()),
+	}
+	if d.HasChange("api_key_selection_expression") {
+		req.ApiKeySelectionExpression = aws.String(d.Get("api_key_selection_expression").(string))
+	}
+	if d.HasChange("description") {
+		req.Description = aws.String(d.Get("description").(string))
+	}
+	if d.HasChange("name") {
+		req.Name = aws.String(d.Get("name").(string))
+	}
+	if d.HasChange("route_selection_expression") {
+		req.RouteSelectionExpression = aws.String(d.Get("route_selection_expression").(string))
+	}
+	if d.HasChange("version") {
+		req.Version = aws.String(d.Get("version").(string))
 	}
 
-	if v, ok := d.GetOk("api_key_selection_expression"); ok {
-		updateApiConfig.ApiKeySelectionExpression = aws.String(v.(string))
-	}
-
-	_, err := conn.UpdateApi(updateApiConfig)
-
+	log.Printf("[DEBUG] Updating API Gateway v2 API: %s", req)
+	_, err := conn.UpdateApi(req)
 	if err != nil {
-		return err
+		return fmt.Errorf("error updating API Gateway v2 API: %s", err)
 	}
 
 	return resourceAwsApiGateway2ApiRead(d, meta)
@@ -143,21 +153,17 @@ func resourceAwsApiGateway2ApiUpdate(d *schema.ResourceData, meta interface{}) e
 
 func resourceAwsApiGateway2ApiDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).apigatewayv2conn
-	log.Printf("[DEBUG] Deleting API Gateway V2: %s", d.Id())
 
-	return resource.Retry(5*time.Minute, func() *resource.RetryError {
-		log.Printf("[DEBUG] schema is %#v", d)
-		_, err := conn.DeleteApi(&apigatewayv2.DeleteApiInput{
-			ApiId: aws.String(d.Id()),
-		})
-		if err == nil {
-			return nil
-		}
-
-		if apigatewayErr, ok := err.(awserr.Error); ok && apigatewayErr.Code() == "NotFoundException" {
-			return nil
-		}
-
-		return resource.NonRetryableError(err)
+	log.Printf("[DEBUG] Deleting API Gateway v2 API (%s)", d.Id())
+	_, err := conn.DeleteApi(&apigatewayv2.DeleteApiInput{
+		ApiId: aws.String(d.Id()),
 	})
+	if isAWSErr(err, apigatewayv2.ErrCodeNotFoundException, "") {
+		return nil
+	}
+	if err != nil {
+		return fmt.Errorf("error deleting API Gateway v2 API: %s", err)
+	}
+
+	return nil
 }
