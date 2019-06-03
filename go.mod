@@ -3,7 +3,6 @@ module github.com/terraform-providers/terraform-provider-aws
 require (
 	github.com/aws/aws-sdk-go v1.19.39
 	github.com/beevik/etree v1.1.0
-	github.com/boombuler/barcode v1.0.0 // indirect
 	github.com/client9/misspell v0.3.4
 	github.com/go-toolsmith/pkgload v0.0.0-20181120203407-5122569a890b // indirect
 	github.com/golangci/go-tools v0.0.0-20190124090046-35a9f45a5db0 // indirect
@@ -23,7 +22,7 @@ require (
 	github.com/mitchellh/go-homedir v1.1.0
 	github.com/modern-go/concurrent v0.0.0-20180306012644-bacd9c7ef1dd // indirect
 	github.com/modern-go/reflect2 v1.0.1 // indirect
-	github.com/pquerna/otp v1.1.0
+	github.com/pquerna/otp v1.2.0
 	github.com/spf13/pflag v1.0.3 // indirect
 	github.com/terraform-providers/terraform-provider-template v1.0.0
 	github.com/terraform-providers/terraform-provider-tls v1.2.0
