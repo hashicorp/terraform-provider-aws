@@ -1560,6 +1560,32 @@ func stringMapToPointers(m map[string]interface{}) map[string]*string {
 	return list
 }
 
+// diffStringMaps returns the set of keys and values that must be created,
+// and the set of keys and values that must be destroyed.
+// Equivalent to 'diffTagsGeneric'.
+func diffStringMaps(oldMap, newMap map[string]interface{}) (map[string]*string, map[string]*string) {
+	// First, we're creating everything we have
+	create := map[string]*string{}
+	for k, v := range newMap {
+		create[k] = aws.String(v.(string))
+	}
+
+	// Build the map of what to remove
+	remove := map[string]*string{}
+	for k, v := range oldMap {
+		old, ok := create[k]
+		if !ok || aws.StringValue(old) != v.(string) {
+			// Delete it!
+			remove[k] = aws.String(v.(string))
+		} else if ok {
+			// already present so remove from new
+			delete(create, k)
+		}
+	}
+
+	return create, remove
+}
+
 func flattenDSVpcSettings(
 	s *directoryservice.DirectoryVpcSettingsDescription) []map[string]interface{} {
 	settings := make(map[string]interface{})
