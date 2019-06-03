@@ -9,9 +9,11 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/elasticache"
+
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/helper/schema"
 	"github.com/hashicorp/terraform/helper/validation"
+	"github.com/hashicorp/terraform/terraform"
 )
 
 func resourceAwsElasticacheReplicationGroup() *schema.Resource {
@@ -223,12 +225,29 @@ func resourceAwsElasticacheReplicationGroup() *schema.Resource {
 			},
 		},
 		SchemaVersion: 1,
+		MigrateState: resourceAwsElasticacheReplicationGroupMigrateState,
 
 		Timeouts: &schema.ResourceTimeout{
 			Create: schema.DefaultTimeout(60 * time.Minute),
 			Delete: schema.DefaultTimeout(40 * time.Minute),
 			Update: schema.DefaultTimeout(40 * time.Minute),
 		},
+	}
+}
+
+func resourceAwsElasticacheReplicationGroupMigrateState(v int, inst *terraform.InstanceState, meta interface {}) (*terraform.InstanceState, error) {
+	switch v {
+	case 0:
+	log.Printf("[WARN] Elasticache Replication Group (%s) v%d; migrating to v1 (noop)", inst, v)
+
+	fallthrough
+
+	case 1:
+	// Current version
+	return inst, nil
+
+	default:
+	return inst, fmt.Errorf("Unexpected schema version: %d", v)
 	}
 }
 
