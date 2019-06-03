@@ -255,7 +255,7 @@ const (
 	//
 	// The specified file exceeds the file size limit for AWS CodeCommit. For more
 	// information about limits in AWS CodeCommit, see AWS CodeCommit User Guide
-	// (http://docs.aws.amazon.com/codecommit/latest/userguide/limits.html).
+	// (https://docs.aws.amazon.com/codecommit/latest/userguide/limits.html).
 	ErrCodeFileTooLargeException = "FileTooLargeException"
 
 	// ErrCodeFolderContentSizeLimitExceededException for service response error code
@@ -520,6 +520,14 @@ const (
 	// Triggers must be created in the same region as the target for the trigger.
 	ErrCodeInvalidRepositoryTriggerRegionException = "InvalidRepositoryTriggerRegionException"
 
+	// ErrCodeInvalidResourceArnException for service response error code
+	// "InvalidResourceArnException".
+	//
+	// The value for the resource ARN is not valid. For more information about resources
+	// in AWS CodeCommit, see CodeCommit Resources and Operations (https://docs.aws.amazon.com/codecommit/latest/userguide/auth-and-access-control-iam-access-control-identity-based.html#arn-formats)
+	// in the AWS CodeCommit User Guide.
+	ErrCodeInvalidResourceArnException = "InvalidResourceArnException"
+
 	// ErrCodeInvalidSortByException for service response error code
 	// "InvalidSortByException".
 	//
@@ -532,6 +540,24 @@ const (
 	// The source commit specifier is not valid. You must provide a valid branch
 	// name, tag, or full commit ID.
 	ErrCodeInvalidSourceCommitSpecifierException = "InvalidSourceCommitSpecifierException"
+
+	// ErrCodeInvalidSystemTagUsageException for service response error code
+	// "InvalidSystemTagUsageException".
+	//
+	// The specified tag is not valid. Key names cannot be prefixed with aws:.
+	ErrCodeInvalidSystemTagUsageException = "InvalidSystemTagUsageException"
+
+	// ErrCodeInvalidTagKeysListException for service response error code
+	// "InvalidTagKeysListException".
+	//
+	// The list of tags is not valid.
+	ErrCodeInvalidTagKeysListException = "InvalidTagKeysListException"
+
+	// ErrCodeInvalidTagsMapException for service response error code
+	// "InvalidTagsMapException".
+	//
+	// The map of tags is not valid.
+	ErrCodeInvalidTagsMapException = "InvalidTagsMapException"
 
 	// ErrCodeInvalidTargetException for service response error code
 	// "InvalidTargetException".
@@ -783,6 +809,15 @@ const (
 	// The list of triggers for the repository is required but was not specified.
 	ErrCodeRepositoryTriggersListRequiredException = "RepositoryTriggersListRequiredException"
 
+	// ErrCodeResourceArnRequiredException for service response error code
+	// "ResourceArnRequiredException".
+	//
+	// A valid Amazon Resource Name (ARN) for an AWS CodeCommit resource is required.
+	// For a list of valid resources in AWS CodeCommit, see CodeCommit Resources
+	// and Operations (https://docs.aws.amazon.com/codecommit/latest/userguide/auth-and-access-control-iam-access-control-identity-based.html#arn-formats)
+	// in the AWS CodeCommit User Guide.
+	ErrCodeResourceArnRequiredException = "ResourceArnRequiredException"
+
 	// ErrCodeRestrictedSourceFileException for service response error code
 	// "RestrictedSourceFileException".
 	//
@@ -821,6 +856,24 @@ const (
 	// been specified for the commit.
 	ErrCodeSourceFileOrContentRequiredException = "SourceFileOrContentRequiredException"
 
+	// ErrCodeTagKeysListRequiredException for service response error code
+	// "TagKeysListRequiredException".
+	//
+	// A list of tag keys is required. The list cannot be empty or null.
+	ErrCodeTagKeysListRequiredException = "TagKeysListRequiredException"
+
+	// ErrCodeTagPolicyException for service response error code
+	// "TagPolicyException".
+	//
+	// The tag policy is not valid.
+	ErrCodeTagPolicyException = "TagPolicyException"
+
+	// ErrCodeTagsMapRequiredException for service response error code
+	// "TagsMapRequiredException".
+	//
+	// A map of tags is required.
+	ErrCodeTagsMapRequiredException = "TagsMapRequiredException"
+
 	// ErrCodeTargetRequiredException for service response error code
 	// "TargetRequiredException".
 	//
@@ -856,4 +909,10 @@ const (
 	//
 	// A pull request title is required. It cannot be empty or null.
 	ErrCodeTitleRequiredException = "TitleRequiredException"
+
+	// ErrCodeTooManyTagsException for service response error code
+	// "TooManyTagsException".
+	//
+	// The maximum number of tags for an AWS CodeCommit resource has been exceeded.
+	ErrCodeTooManyTagsException = "TooManyTagsException"
 )
