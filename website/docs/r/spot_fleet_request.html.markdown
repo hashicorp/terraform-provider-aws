@@ -82,36 +82,24 @@ resource "aws_spot_fleet_request" "foo" {
 
 ```hcl
 resource "aws_spot_fleet_request" "cheap_compute" {
-  iam_fleet_role                      = "${aws_iam_role.aws-ec2-spot-fleet-tagging-role.arn}"
-  target_capacity                     = var.target_capacity
-  valid_until                         = "${timeadd(timestamp(), var.timeadd)}"
-  allocation_strategy                 = var.allocation_strategy
-  fleet_type                          = var.fleet_type
+  iam_fleet_role                      = "arn:aws:iam::12345678:role/spot-fleet"
+  target_capacity                     = 9
+  valid_until                         = "2019-11-04T20:44:20Z"
+  allocation_strategy                 = lowestPrice
+  fleet_type                          = request
   wait_for_fulfillment                = true
   terminate_instances_with_expiration = true
-
-  launch_specification {
-    instance_type            = "m4.10xlarge"
-    ami                      = "ami-1234"
-    spot_price               = "2.793"
-    placement_tenancy        = "dedicated"
-    iam_instance_profile_arn = "${aws_iam_instance_profile.example.arn}"
-  }
-
-  launch_specification {
+  
+  dynamic "launch_specification" {
     for_each = [for i in local.instances_x_subnets : {
       instance_type = i[0]
       subnet_id     = i[1]
     }]
     content {
-      ami                         = var.ami_id
+      ami                         = "ami-1234"
       instance_type               = launch_specification.value.instance_type
       subnet_id                   = launch_specification.value.subnet_id
-      vpc_security_group_ids      = var.vpc_security_group_ids
-      iam_instance_profile        = var.instance_profile_name
-      associate_public_ip_address = var.associate_public_ip_address
-      user_data                   = var.user_data
-      ebs_optimized               = var.ebs_optimized
+      vpc_security_group_ids      = "${aws_security_group.id}"
 
       root_block_device {
         volume_size           = "8"
@@ -120,7 +108,7 @@ resource "aws_spot_fleet_request" "cheap_compute" {
       }
 
       tags = {
-        Name        = var.name
+        Name        = "Spot Node"
         tag_builder = "builder"
       }
     }
