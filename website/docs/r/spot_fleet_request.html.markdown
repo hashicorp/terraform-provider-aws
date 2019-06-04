@@ -96,7 +96,7 @@ resource "aws_spot_fleet_request" "cheap_compute" {
       ami                         = "ami-1234"
       instance_type               = "m4.4xlarge"
       subnet_id                   = launch_specification.value.subnet_id
-      vpc_security_group_ids      = "${aws_security_group.id}"
+      vpc_security_group_ids      = "sg-123456"
 
       root_block_device {
         volume_size           = "8"
