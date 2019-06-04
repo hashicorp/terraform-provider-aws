@@ -19,7 +19,7 @@ func TestAccAWSMacieMemberAccountAssociation_basic(t *testing.T) {
 	}
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSMacie(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSMacieMemberAccountAssociationDestroy,
 		Steps: []resource.TestStep{
@@ -35,7 +35,7 @@ func TestAccAWSMacieMemberAccountAssociation_basic(t *testing.T) {
 
 func TestAccAWSMacieMemberAccountAssociation_self(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:  func() { testAccPreCheck(t) },
+		PreCheck:  func() { testAccPreCheck(t); testAccPreCheckAWSMacie(t) },
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
 			{
