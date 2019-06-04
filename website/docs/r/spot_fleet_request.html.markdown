@@ -78,8 +78,6 @@ resource "aws_spot_fleet_request" "foo" {
 }
 ```
 
-### Example with a dynamic block
-
 ```hcl
 resource "aws_spot_fleet_request" "cheap_compute" {
   iam_fleet_role                      = "arn:aws:iam::12345678:role/spot-fleet"
@@ -91,13 +89,12 @@ resource "aws_spot_fleet_request" "cheap_compute" {
   terminate_instances_with_expiration = true
   
   dynamic "launch_specification" {
-    for_each = [for i in local.instances_x_subnets : {
-      instance_type = i[0]
-      subnet_id     = i[1]
+    for_each = [for s in var.subnets : {
+      subnet_id     = s[1]
     }]
     content {
       ami                         = "ami-1234"
-      instance_type               = launch_specification.value.instance_type
+      instance_type               = "m4.4xlarge"
       subnet_id                   = launch_specification.value.subnet_id
       vpc_security_group_ids      = "${aws_security_group.id}"
 
@@ -114,42 +111,7 @@ resource "aws_spot_fleet_request" "cheap_compute" {
     }
   }
 }
-
-# merge two lists into a larger map
-locals {
-  instances_x_subnets = "${setproduct(var.instance_type, var.subnets)}"
-}
 ```
-
-Here's a snippet of the output of `instances_x_subnets`
-```hcl
-instances_x_subnet = [
-  [
-    "c5d.2xlarge",
-    "subnet-12a74574",
-  ],
-  [
-    "c5d.2xlarge",
-    "subnet-f07187b8",
-  ],
-  [
-    "c5d.2xlarge",
-    "subnet-32183769",
-  ],
-  [
-    "c5d.4xlarge",
-    "subnet-12a74574",
-  ],
-  [
-    "c5d.4xlarge",
-    "subnet-f07187b8",
-  ],
-  [
-    "c5d.4xlarge",
-    "subnet-32183769",
-  ],
-  ....
-  ```
 
 ## Argument Reference
 
