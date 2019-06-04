@@ -81,7 +81,7 @@ resource "aws_spot_fleet_request" "foo" {
 ```hcl
 resource "aws_spot_fleet_request" "cheap_compute" {
   iam_fleet_role                      = "arn:aws:iam::12345678:role/spot-fleet"
-  target_capacity                     = 9
+  target_capacity                     = 3
   valid_until                         = "2019-11-04T20:44:20Z"
   allocation_strategy                 = lowestPrice
   fleet_type                          = request
