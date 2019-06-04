@@ -2020,9 +2020,9 @@ func (c *EC2) AuthorizeSecurityGroupEgressRequest(input *AuthorizeSecurityGroupE
 // [VPC only] Adds the specified egress rules to a security group for use with
 // a VPC.
 //
-// An outbound rule permits instances to send traffic to the specified destination
-// IPv4 or IPv6 CIDR address ranges, or to the specified destination security
-// groups for the same VPC.
+// An outbound rule permits instances to send traffic to the specified IPv4
+// or IPv6 CIDR address ranges, or to the instances associated with the specified
+// destination security groups.
 //
 // You specify a protocol for each rule (for example, TCP). For the TCP and
 // UDP protocols, you must also specify the destination port or port range.
@@ -2110,9 +2110,9 @@ func (c *EC2) AuthorizeSecurityGroupIngressRequest(input *AuthorizeSecurityGroup
 //
 // Adds the specified ingress rules to a security group.
 //
-// An inbound rule permits instances to receive traffic from the specified destination
-// IPv4 or IPv6 CIDR address ranges, or from the specified destination security
-// groups.
+// An inbound rule permits instances to receive traffic from the specified IPv4
+// or IPv6 CIDR address ranges, or from the instances associated with the specified
+// destination security groups.
 //
 // You specify a protocol for each rule (for example, TCP). For TCP and UDP,
 // you must also specify the destination port or port range. For ICMP/ICMPv6,
@@ -5573,6 +5573,83 @@ func (c *EC2) CreateSnapshot(input *CreateSnapshotInput) (*Snapshot, error) {
 // for more information on using Contexts.
 func (c *EC2) CreateSnapshotWithContext(ctx aws.Context, input *CreateSnapshotInput, opts ...request.Option) (*Snapshot, error) {
 	req, out := c.CreateSnapshotRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
+const opCreateSnapshots = "CreateSnapshots"
+
+// CreateSnapshotsRequest generates a "aws/request.Request" representing the
+// client's request for the CreateSnapshots operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See CreateSnapshots for more information on using the CreateSnapshots
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the CreateSnapshotsRequest method.
+//    req, resp := client.CreateSnapshotsRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/ec2-2016-11-15/CreateSnapshots
+func (c *EC2) CreateSnapshotsRequest(input *CreateSnapshotsInput) (req *request.Request, output *CreateSnapshotsOutput) {
+	op := &request.Operation{
+		Name:       opCreateSnapshots,
+		HTTPMethod: "POST",
+		HTTPPath:   "/",
+	}
+
+	if input == nil {
+		input = &CreateSnapshotsInput{}
+	}
+
+	output = &CreateSnapshotsOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// CreateSnapshots API operation for Amazon Elastic Compute Cloud.
+//
+// Creates crash-consistent snapshots of multiple EBS volumes and stores the
+// data in S3. Volumes are chosen by specifying an instance. Any attached volumes
+// will produce one snapshot each that is crash-consistent across the instance.
+// Boot volumes can be excluded by changing the paramaters.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for Amazon Elastic Compute Cloud's
+// API operation CreateSnapshots for usage and error information.
+// See also, https://docs.aws.amazon.com/goto/WebAPI/ec2-2016-11-15/CreateSnapshots
+func (c *EC2) CreateSnapshots(input *CreateSnapshotsInput) (*CreateSnapshotsOutput, error) {
+	req, out := c.CreateSnapshotsRequest(input)
+	return out, req.Send()
+}
+
+// CreateSnapshotsWithContext is the same as CreateSnapshots with the addition of
+// the ability to pass a context and additional request options.
+//
+// See CreateSnapshots for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *EC2) CreateSnapshotsWithContext(ctx aws.Context, input *CreateSnapshotsInput, opts ...request.Option) (*CreateSnapshotsOutput, error) {
+	req, out := c.CreateSnapshotsRequest(input)
 	req.SetContext(ctx)
 	req.ApplyOptions(opts...)
 	return out, req.Send()
@@ -22348,7 +22425,7 @@ func (c *EC2) EnableEbsEncryptionByDefaultRequest(input *EnableEbsEncryptionByDe
 // snapshot is also encrypted. For more information, see Amazon EBS Snapshots
 // (https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/EBSSnapshots.html).
 //
-// Once EBS encryption by default is enabled, you can no longer launch older-generation
+// After EBS encryption by default is enabled, you can no longer launch older-generation
 // instance types that do not support encryption. For more information, see
 // Supported Instance Types (https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/EBSEncryption.html#EBSEncryption_supported_instances).
 //
@@ -24696,7 +24773,7 @@ func (c *EC2) ModifyEbsDefaultKmsKeyIdRequest(input *ModifyEbsDefaultKmsKeyIdInp
 // ModifyEbsDefaultKmsKeyId API operation for Amazon Elastic Compute Cloud.
 //
 // Changes the default customer master key (CMK) that your account uses to encrypt
-// EBS volumes if you don’t specify a CMK in the API call.
+// EBS volumes if you don't specify a CMK in the API call.
 //
 // Your account has an AWS-managed default CMK that is used for encrypting an
 // EBS volume when no CMK is specified in the API call that creates the volume.
@@ -36826,17 +36903,16 @@ type CopyImageInput struct {
 	// the default CMK for EBS is used. If a KmsKeyId is specified, the Encrypted
 	// flag must also be set.
 	//
-	// The CMK identifier may be provided in any of the following formats:
+	// To specify a CMK, use its key ID, Amazon Resource Name (ARN), alias name,
+	// or alias ARN. When using an alias name, prefix it with "alias/". For example:
 	//
-	//    * Key ID
+	//    * Key ID: 1234abcd-12ab-34cd-56ef-1234567890ab
 	//
-	//    * ARN using key ID. The ID ARN contains the arn:aws:kms namespace, followed
-	//    by the Region of the CMK, the AWS account ID of the CMK owner, the key
-	//    namespace, and then the CMK ID. For example, arn:aws:kms:us-east-1:012345678910:key/abcd1234-a123-456a-a12b-a123b4cd56ef.
+	//    * Key ARN: arn:aws:kms:us-east-2:111122223333:key/1234abcd-12ab-34cd-56ef-1234567890ab
 	//
-	//    * ARN using key alias. The alias ARN contains the arn:aws:kms namespace,
-	//    followed by the Region of the CMK, the AWS account ID of the CMK owner,
-	//    the alias namespace, and then the CMK alias. For example, arn:aws:kms:us-east-1:012345678910:alias/ExampleAlias.
+	//    * Alias name: alias/ExampleAlias
+	//
+	//    * Alias ARN: arn:aws:kms:us-east-2:111122223333:alias/ExampleAlias
 	//
 	// AWS parses KmsKeyId asynchronously, meaning that the action you call may
 	// appear to complete even though you provided an invalid identifier. This action
@@ -40655,6 +40731,105 @@ func (s *CreateSnapshotInput) SetVolumeId(v string) *CreateSnapshotInput {
 	return s
 }
 
+type CreateSnapshotsInput struct {
+	_ struct{} `type:"structure"`
+
+	// Copies the tags from the specified instance to all snapshots.
+	CopyTagsFromSource *string `type:"string" enum:"CopyTagsFromSource"`
+
+	// A description propagated to every snapshot specified by the instance.
+	Description *string `type:"string"`
+
+	// Checks whether you have the required permissions for the action without actually
+	// making the request. Provides an error response. If you have the required
+	// permissions, the error response is DryRunOperation. Otherwise, it is UnauthorizedOperation.
+	DryRun *bool `type:"boolean"`
+
+	// The instance to specify which volumes should be included in the snapshots.
+	//
+	// InstanceSpecification is a required field
+	InstanceSpecification *InstanceSpecification `type:"structure" required:"true"`
+
+	// Tags to apply to every snapshot specified by the instance.
+	TagSpecifications []*TagSpecification `locationName:"TagSpecification" locationNameList:"item" type:"list"`
+}
+
+// String returns the string representation
+func (s CreateSnapshotsInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s CreateSnapshotsInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *CreateSnapshotsInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "CreateSnapshotsInput"}
+	if s.InstanceSpecification == nil {
+		invalidParams.Add(request.NewErrParamRequired("InstanceSpecification"))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetCopyTagsFromSource sets the CopyTagsFromSource field's value.
+func (s *CreateSnapshotsInput) SetCopyTagsFromSource(v string) *CreateSnapshotsInput {
+	s.CopyTagsFromSource = &v
+	return s
+}
+
+// SetDescription sets the Description field's value.
+func (s *CreateSnapshotsInput) SetDescription(v string) *CreateSnapshotsInput {
+	s.Description = &v
+	return s
+}
+
+// SetDryRun sets the DryRun field's value.
+func (s *CreateSnapshotsInput) SetDryRun(v bool) *CreateSnapshotsInput {
+	s.DryRun = &v
+	return s
+}
+
+// SetInstanceSpecification sets the InstanceSpecification field's value.
+func (s *CreateSnapshotsInput) SetInstanceSpecification(v *InstanceSpecification) *CreateSnapshotsInput {
+	s.InstanceSpecification = v
+	return s
+}
+
+// SetTagSpecifications sets the TagSpecifications field's value.
+func (s *CreateSnapshotsInput) SetTagSpecifications(v []*TagSpecification) *CreateSnapshotsInput {
+	s.TagSpecifications = v
+	return s
+}
+
+type CreateSnapshotsOutput struct {
+	_ struct{} `type:"structure"`
+
+	// List of snapshots.
+	Snapshots []*SnapshotInfo `locationName:"snapshotSet" locationNameList:"item" type:"list"`
+}
+
+// String returns the string representation
+func (s CreateSnapshotsOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s CreateSnapshotsOutput) GoString() string {
+	return s.String()
+}
+
+// SetSnapshots sets the Snapshots field's value.
+func (s *CreateSnapshotsOutput) SetSnapshots(v []*SnapshotInfo) *CreateSnapshotsOutput {
+	s.Snapshots = v
+	return s
+}
+
 // Contains the parameters for CreateSpotDatafeedSubscription.
 type CreateSpotDatafeedSubscriptionInput struct {
 	_ struct{} `type:"structure"`
@@ -41375,13 +41550,13 @@ type CreateVolumeInput struct {
 	DryRun *bool `locationName:"dryRun" type:"boolean"`
 
 	// Specifies the encryption state of the volume. The default effect of setting
-	// the Encrypted parameter to true through the console, API, or CLI depends
-	// on the volume's origin (new or from a snapshot), starting encryption state,
-	// ownership, and whether account-level encryption (https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/account-level-encryption.html)
+	// the Encrypted parameter to true depends on the volume origin (new or from
+	// a snapshot), starting encryption state, ownership, and whether account-level
+	// encryption (https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/account-level-encryption.html)
 	// is enabled. Each default case can be overridden by specifying a customer
-	// master key (CMK) with the KmsKeyId parameter in addition to setting Encrypted
+	// master key (CMK) using the KmsKeyId parameter, in addition to setting Encrypted
 	// to true. For a complete list of possible encryption cases, see Amazon EBS
-	// Encryption (AWSEC2/latest/UserGuide/EBSEncryption.htm).
+	// Encryption (https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/EBSEncryption.html).
 	//
 	// Encrypted Amazon EBS volumes may only be attached to instances that support
 	// Amazon EBS encryption. For more information, see Supported Instance Types
@@ -43210,6 +43385,8 @@ type DeleteFlowLogsInput struct {
 	DryRun *bool `type:"boolean"`
 
 	// One or more flow log IDs.
+	//
+	// Constraint: Maximum of 1000 flow log IDs.
 	//
 	// FlowLogIds is a required field
 	FlowLogIds []*string `locationName:"FlowLogId" locationNameList:"item" type:"list" required:"true"`
@@ -48123,6 +48300,8 @@ type DescribeFlowLogsInput struct {
 	Filter []*Filter `locationNameList:"Filter" type:"list"`
 
 	// One or more flow log IDs.
+	//
+	// Constraint: Maximum of 1000 flow log IDs.
 	FlowLogIds []*string `locationName:"FlowLogId" locationNameList:"item" type:"list"`
 
 	// The maximum number of results to return with a single call. To retrieve the
@@ -66211,7 +66390,7 @@ type InstanceNetworkInterfaceSpecification struct {
 	//
 	// If you are not creating an EFA, specify interface or omit this parameter.
 	//
-	// Valide values: interface | efa
+	// Valid values: interface | efa
 	InterfaceType *string `type:"string"`
 
 	// A number of IPv6 addresses to assign to the network interface. Amazon EC2
@@ -66392,6 +66571,39 @@ func (s *InstancePrivateIpAddress) SetPrivateDnsName(v string) *InstancePrivateI
 // SetPrivateIpAddress sets the PrivateIpAddress field's value.
 func (s *InstancePrivateIpAddress) SetPrivateIpAddress(v string) *InstancePrivateIpAddress {
 	s.PrivateIpAddress = &v
+	return s
+}
+
+// The instance details to specify which volumes should be snapshotted.
+type InstanceSpecification struct {
+	_ struct{} `type:"structure"`
+
+	// Excludes the root volume from being snapshotted.
+	ExcludeBootVolume *bool `type:"boolean"`
+
+	// The instance to specify which volumes should be snapshotted.
+	InstanceId *string `type:"string"`
+}
+
+// String returns the string representation
+func (s InstanceSpecification) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s InstanceSpecification) GoString() string {
+	return s.String()
+}
+
+// SetExcludeBootVolume sets the ExcludeBootVolume field's value.
+func (s *InstanceSpecification) SetExcludeBootVolume(v bool) *InstanceSpecification {
+	s.ExcludeBootVolume = &v
+	return s
+}
+
+// SetInstanceId sets the InstanceId field's value.
+func (s *InstanceSpecification) SetInstanceId(v string) *InstanceSpecification {
+	s.InstanceId = &v
 	return s
 }
 
@@ -68253,7 +68465,13 @@ type LaunchTemplateInstanceNetworkInterfaceSpecificationRequest struct {
 	// The IDs of one or more security groups.
 	Groups []*string `locationName:"SecurityGroupId" locationNameList:"SecurityGroupId" type:"list"`
 
-	// The type of networking interface.
+	// The type of network interface. To create an Elastic Fabric Adapter (EFA),
+	// specify efa. For more information, see Elastic Fabric Adapter (https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/efa.html)
+	// in the Amazon Elastic Compute Cloud User Guide.
+	//
+	// If you are not creating an EFA, specify interface or omit this parameter.
+	//
+	// Valid values: interface | efa
 	InterfaceType *string `type:"string"`
 
 	// The number of IPv6 addresses to assign to a network interface. Amazon EC2
@@ -75448,7 +75666,10 @@ type RegisterImageInput struct {
 	// PV AMI can make instances launched from the AMI unreachable.
 	EnaSupport *bool `locationName:"enaSupport" type:"boolean"`
 
-	// The full path to your AMI manifest in Amazon S3 storage.
+	// The full path to your AMI manifest in Amazon S3 storage. The specified bucket
+	// must have the aws-exec-read canned access control list (ACL) to ensure that
+	// it can be accessed by Amazon EC2. For more information, see Canned ACLs (https://docs.aws.amazon.com/AmazonS3/latest/dev/acl-overview.html#canned-acl)
+	// in the Amazon S3 Service Developer Guide.
 	ImageLocation *string `type:"string"`
 
 	// The ID of the kernel.
@@ -82569,6 +82790,113 @@ func (s *SnapshotDiskContainer) SetUserBucket(v *UserBucket) *SnapshotDiskContai
 	return s
 }
 
+// Object that contains information about a snapshot.
+type SnapshotInfo struct {
+	_ struct{} `type:"structure"`
+
+	// Description specified by the CreateSnapshotRequest that has been applied
+	// to all snapshots.
+	Description *string `locationName:"description" type:"string"`
+
+	// Boolean that specifies whether or not this snapshot is encrypted.
+	Encrypted *bool `locationName:"encrypted" type:"boolean"`
+
+	// Account id used when creating this snapshot.
+	OwnerId *string `locationName:"ownerId" type:"string"`
+
+	// Progress this snapshot has made towards completing.
+	Progress *string `locationName:"progress" type:"string"`
+
+	// Snapshot id that can be used to describe this snapshot.
+	SnapshotId *string `locationName:"snapshotId" type:"string"`
+
+	// Time this snapshot was started. This is the same for all snapshots initiated
+	// by the same request.
+	StartTime *time.Time `locationName:"startTime" type:"timestamp"`
+
+	// Current state of the snapshot.
+	State *string `locationName:"state" type:"string" enum:"SnapshotState"`
+
+	// Tags associated with this snapshot.
+	Tags []*Tag `locationName:"tagSet" locationNameList:"item" type:"list"`
+
+	// Source volume from which this snapshot was created.
+	VolumeId *string `locationName:"volumeId" type:"string"`
+
+	// Size of the volume from which this snapshot was created.
+	VolumeSize *int64 `locationName:"volumeSize" type:"integer"`
+}
+
+// String returns the string representation
+func (s SnapshotInfo) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s SnapshotInfo) GoString() string {
+	return s.String()
+}
+
+// SetDescription sets the Description field's value.
+func (s *SnapshotInfo) SetDescription(v string) *SnapshotInfo {
+	s.Description = &v
+	return s
+}
+
+// SetEncrypted sets the Encrypted field's value.
+func (s *SnapshotInfo) SetEncrypted(v bool) *SnapshotInfo {
+	s.Encrypted = &v
+	return s
+}
+
+// SetOwnerId sets the OwnerId field's value.
+func (s *SnapshotInfo) SetOwnerId(v string) *SnapshotInfo {
+	s.OwnerId = &v
+	return s
+}
+
+// SetProgress sets the Progress field's value.
+func (s *SnapshotInfo) SetProgress(v string) *SnapshotInfo {
+	s.Progress = &v
+	return s
+}
+
+// SetSnapshotId sets the SnapshotId field's value.
+func (s *SnapshotInfo) SetSnapshotId(v string) *SnapshotInfo {
+	s.SnapshotId = &v
+	return s
+}
+
+// SetStartTime sets the StartTime field's value.
+func (s *SnapshotInfo) SetStartTime(v time.Time) *SnapshotInfo {
+	s.StartTime = &v
+	return s
+}
+
+// SetState sets the State field's value.
+func (s *SnapshotInfo) SetState(v string) *SnapshotInfo {
+	s.State = &v
+	return s
+}
+
+// SetTags sets the Tags field's value.
+func (s *SnapshotInfo) SetTags(v []*Tag) *SnapshotInfo {
+	s.Tags = v
+	return s
+}
+
+// SetVolumeId sets the VolumeId field's value.
+func (s *SnapshotInfo) SetVolumeId(v string) *SnapshotInfo {
+	s.VolumeId = &v
+	return s
+}
+
+// SetVolumeSize sets the VolumeSize field's value.
+func (s *SnapshotInfo) SetVolumeSize(v int64) *SnapshotInfo {
+	s.VolumeSize = &v
+	return s
+}
+
 // Details about the import snapshot task.
 type SnapshotTaskDetail struct {
 	_ struct{} `type:"structure"`
@@ -89325,6 +89653,11 @@ const (
 )
 
 const (
+	// CopyTagsFromSourceVolume is a CopyTagsFromSource enum value
+	CopyTagsFromSourceVolume = "volume"
+)
+
+const (
 	// CurrencyCodeValuesUsd is a CurrencyCodeValues enum value
 	CurrencyCodeValuesUsd = "USD"
 )
@@ -90099,6 +90432,27 @@ const (
 
 	// InstanceTypeI3Metal is a InstanceType enum value
 	InstanceTypeI3Metal = "i3.metal"
+
+	// InstanceTypeI3enLarge is a InstanceType enum value
+	InstanceTypeI3enLarge = "i3en.large"
+
+	// InstanceTypeI3enXlarge is a InstanceType enum value
+	InstanceTypeI3enXlarge = "i3en.xlarge"
+
+	// InstanceTypeI3en2xlarge is a InstanceType enum value
+	InstanceTypeI3en2xlarge = "i3en.2xlarge"
+
+	// InstanceTypeI3en3xlarge is a InstanceType enum value
+	InstanceTypeI3en3xlarge = "i3en.3xlarge"
+
+	// InstanceTypeI3en6xlarge is a InstanceType enum value
+	InstanceTypeI3en6xlarge = "i3en.6xlarge"
+
+	// InstanceTypeI3en12xlarge is a InstanceType enum value
+	InstanceTypeI3en12xlarge = "i3en.12xlarge"
+
+	// InstanceTypeI3en24xlarge is a InstanceType enum value
+	InstanceTypeI3en24xlarge = "i3en.24xlarge"
 
 	// InstanceTypeHi14xlarge is a InstanceType enum value
 	InstanceTypeHi14xlarge = "hi1.4xlarge"
