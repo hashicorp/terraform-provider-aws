@@ -1,4 +1,13 @@
 ## 2.14.0 (Unreleased)
+
+ENHANCEMENTS:
+
+* resource/aws_subnet: Use customizable timeouts for pending creation and waiting for `DependencyViolation` errors on deletion [GH-6322]
+
+BUG FIXES:
+
+* resource/aws_subnet: Bump default timeout for deletion from 10 to 20 minutes to better handle ELBv2 ENI deletions [GH-6322]
+
 ## 2.13.0 (May 31, 2019)
 
 FEATURES:
