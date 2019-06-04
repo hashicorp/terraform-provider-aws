@@ -18,7 +18,7 @@ func TestAccAWSWafSizeConstraintSet_basic(t *testing.T) {
 	sizeConstraintSet := fmt.Sprintf("sizeConstraintSet-%s", acctest.RandString(5))
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSWaf(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSWafSizeConstraintSetDestroy,
 		Steps: []resource.TestStep{
@@ -54,7 +54,7 @@ func TestAccAWSWafSizeConstraintSet_changeNameForceNew(t *testing.T) {
 	sizeConstraintSetNewName := fmt.Sprintf("sizeConstraintSet-%s", acctest.RandString(5))
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSWaf(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSWafSizeConstraintSetDestroy,
 		Steps: []resource.TestStep{
@@ -87,7 +87,7 @@ func TestAccAWSWafSizeConstraintSet_disappears(t *testing.T) {
 	sizeConstraintSet := fmt.Sprintf("sizeConstraintSet-%s", acctest.RandString(5))
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSWaf(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSWafSizeConstraintSetDestroy,
 		Steps: []resource.TestStep{
@@ -108,7 +108,7 @@ func TestAccAWSWafSizeConstraintSet_changeConstraints(t *testing.T) {
 	setName := fmt.Sprintf("sizeConstraintSet-%s", acctest.RandString(5))
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSWaf(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSWafSizeConstraintSetDestroy,
 		Steps: []resource.TestStep{
@@ -165,7 +165,7 @@ func TestAccAWSWafSizeConstraintSet_noConstraints(t *testing.T) {
 	setName := fmt.Sprintf("sizeConstraintSet-%s", acctest.RandString(5))
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSWaf(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSWafSizeConstraintSetDestroy,
 		Steps: []resource.TestStep{

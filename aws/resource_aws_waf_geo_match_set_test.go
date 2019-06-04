@@ -17,7 +17,7 @@ func TestAccAWSWafGeoMatchSet_basic(t *testing.T) {
 	geoMatchSet := fmt.Sprintf("geoMatchSet-%s", acctest.RandString(5))
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSWaf(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSWafGeoMatchSetDestroy,
 		Steps: []resource.TestStep{
@@ -49,7 +49,7 @@ func TestAccAWSWafGeoMatchSet_changeNameForceNew(t *testing.T) {
 	geoMatchSetNewName := fmt.Sprintf("geoMatchSetNewName-%s", acctest.RandString(5))
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSWaf(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSWafGeoMatchSetDestroy,
 		Steps: []resource.TestStep{
@@ -82,7 +82,7 @@ func TestAccAWSWafGeoMatchSet_disappears(t *testing.T) {
 	geoMatchSet := fmt.Sprintf("geoMatchSet-%s", acctest.RandString(5))
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSWaf(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSWafGeoMatchSetDestroy,
 		Steps: []resource.TestStep{
@@ -103,7 +103,7 @@ func TestAccAWSWafGeoMatchSet_changeConstraints(t *testing.T) {
 	setName := fmt.Sprintf("geoMatchSet-%s", acctest.RandString(5))
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSWaf(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSWafGeoMatchSetDestroy,
 		Steps: []resource.TestStep{
@@ -152,7 +152,7 @@ func TestAccAWSWafGeoMatchSet_noConstraints(t *testing.T) {
 	setName := fmt.Sprintf("geoMatchSet-%s", acctest.RandString(5))
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSWaf(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSWafGeoMatchSetDestroy,
 		Steps: []resource.TestStep{

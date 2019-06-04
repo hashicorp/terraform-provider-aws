@@ -34,7 +34,7 @@ func testAccAWSWafRegexPatternSet_basic(t *testing.T) {
 	patternSetName := fmt.Sprintf("tfacc-%s", acctest.RandString(5))
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSWaf(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSWafRegexPatternSetDestroy,
 		Steps: []resource.TestStep{
@@ -57,7 +57,7 @@ func testAccAWSWafRegexPatternSet_changePatterns(t *testing.T) {
 	patternSetName := fmt.Sprintf("tfacc-%s", acctest.RandString(5))
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSWaf(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSWafRegexPatternSetDestroy,
 		Steps: []resource.TestStep{
@@ -91,7 +91,7 @@ func testAccAWSWafRegexPatternSet_noPatterns(t *testing.T) {
 	patternSetName := fmt.Sprintf("tfacc-%s", acctest.RandString(5))
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSWaf(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSWafRegexPatternSetDestroy,
 		Steps: []resource.TestStep{
@@ -112,7 +112,7 @@ func testAccAWSWafRegexPatternSet_disappears(t *testing.T) {
 	patternSetName := fmt.Sprintf("tfacc-%s", acctest.RandString(5))
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSWaf(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSWafRegexPatternSetDestroy,
 		Steps: []resource.TestStep{
