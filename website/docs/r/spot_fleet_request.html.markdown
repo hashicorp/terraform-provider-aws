@@ -90,7 +90,7 @@ resource "aws_spot_fleet_request" "cheap_compute" {
   
   dynamic "launch_specification" {
     for_each = [for s in var.subnets : {
-      subnet_id     = s[1]
+      subnet_id = s[1]
     }]
     content {
       ami                         = "ami-1234"
