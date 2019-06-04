@@ -285,7 +285,7 @@ github.com/golangci/gocyclo/pkg/gocyclo
 # github.com/golangci/gofmt v0.0.0-20181105071733-0b8337e80d98
 github.com/golangci/gofmt/gofmt
 github.com/golangci/gofmt/goimports
-# github.com/golangci/golangci-lint v1.16.0
+# github.com/golangci/golangci-lint v1.16.1-0.20190402065613-de1d1ad903cd
 github.com/golangci/golangci-lint/cmd/golangci-lint
 github.com/golangci/golangci-lint/pkg/commands
 github.com/golangci/golangci-lint/pkg/config
