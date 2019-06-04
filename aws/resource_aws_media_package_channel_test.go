@@ -16,7 +16,7 @@ func TestAccAWSMediaPackageChannel_basic(t *testing.T) {
 	resourceName := "aws_media_package_channel.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSMediaPackage(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsMediaPackageChannelDestroy,
 		Steps: []resource.TestStep{
@@ -47,7 +47,7 @@ func TestAccAWSMediaPackageChannel_description(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSMediaPackage(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsMediaPackageChannelDestroy,
 		Steps: []resource.TestStep{
@@ -79,7 +79,7 @@ func TestAccAWSMediaPackageChannel_tags(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSMediaPackage(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsMediaPackageChannelDestroy,
 		Steps: []resource.TestStep{
@@ -158,6 +158,22 @@ func testAccCheckAwsMediaPackageChannelExists(name string) resource.TestCheckFun
 		_, err := conn.DescribeChannel(input)
 
 		return err
+	}
+}
+
+func testAccPreCheckAWSMediaPackage(t *testing.T) {
+	conn := testAccProvider.Meta().(*AWSClient).mediapackageconn
+
+	input := &mediapackage.ListChannelsInput{}
+
+	_, err := conn.ListChannels(input)
+
+	if testAccPreCheckSkipError(err) {
+		t.Skipf("skipping acceptance testing: %s", err)
+	}
+
+	if err != nil {
+		t.Fatalf("unexpected PreCheck error: %s", err)
 	}
 }
 
