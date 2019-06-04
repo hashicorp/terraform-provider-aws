@@ -1702,7 +1702,7 @@ func (c *AppMesh) ListMeshesWithContext(ctx aws.Context, input *ListMeshesInput,
 //    // Example iterating over at most 3 pages of a ListMeshes operation.
 //    pageNum := 0
 //    err := client.ListMeshesPages(params,
-//        func(page *ListMeshesOutput, lastPage bool) bool {
+//        func(page *appmesh.ListMeshesOutput, lastPage bool) bool {
 //            pageNum++
 //            fmt.Println(page)
 //            return pageNum <= 3
@@ -1855,7 +1855,7 @@ func (c *AppMesh) ListRoutesWithContext(ctx aws.Context, input *ListRoutesInput,
 //    // Example iterating over at most 3 pages of a ListRoutes operation.
 //    pageNum := 0
 //    err := client.ListRoutesPages(params,
-//        func(page *ListRoutesOutput, lastPage bool) bool {
+//        func(page *appmesh.ListRoutesOutput, lastPage bool) bool {
 //            pageNum++
 //            fmt.Println(page)
 //            return pageNum <= 3
@@ -2000,7 +2000,7 @@ func (c *AppMesh) ListTagsForResourceWithContext(ctx aws.Context, input *ListTag
 //    // Example iterating over at most 3 pages of a ListTagsForResource operation.
 //    pageNum := 0
 //    err := client.ListTagsForResourcePages(params,
-//        func(page *ListTagsForResourceOutput, lastPage bool) bool {
+//        func(page *appmesh.ListTagsForResourceOutput, lastPage bool) bool {
 //            pageNum++
 //            fmt.Println(page)
 //            return pageNum <= 3
@@ -2153,7 +2153,7 @@ func (c *AppMesh) ListVirtualNodesWithContext(ctx aws.Context, input *ListVirtua
 //    // Example iterating over at most 3 pages of a ListVirtualNodes operation.
 //    pageNum := 0
 //    err := client.ListVirtualNodesPages(params,
-//        func(page *ListVirtualNodesOutput, lastPage bool) bool {
+//        func(page *appmesh.ListVirtualNodesOutput, lastPage bool) bool {
 //            pageNum++
 //            fmt.Println(page)
 //            return pageNum <= 3
@@ -2306,7 +2306,7 @@ func (c *AppMesh) ListVirtualRoutersWithContext(ctx aws.Context, input *ListVirt
 //    // Example iterating over at most 3 pages of a ListVirtualRouters operation.
 //    pageNum := 0
 //    err := client.ListVirtualRoutersPages(params,
-//        func(page *ListVirtualRoutersOutput, lastPage bool) bool {
+//        func(page *appmesh.ListVirtualRoutersOutput, lastPage bool) bool {
 //            pageNum++
 //            fmt.Println(page)
 //            return pageNum <= 3
@@ -2459,7 +2459,7 @@ func (c *AppMesh) ListVirtualServicesWithContext(ctx aws.Context, input *ListVir
 //    // Example iterating over at most 3 pages of a ListVirtualServices operation.
 //    pageNum := 0
 //    err := client.ListVirtualServicesPages(params,
-//        func(page *ListVirtualServicesOutput, lastPage bool) bool {
+//        func(page *appmesh.ListVirtualServicesOutput, lastPage bool) bool {
 //            pageNum++
 //            fmt.Println(page)
 //            return pageNum <= 3

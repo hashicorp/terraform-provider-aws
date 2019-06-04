@@ -283,53 +283,60 @@ func testAccAWSWafRegionalGeoMatchSetConfig(name string) string {
 	return fmt.Sprintf(`
 resource "aws_wafregional_geo_match_set" "test" {
   name = "%s"
+
   geo_match_constraint {
-    type = "Country"
+    type  = "Country"
     value = "US"
   }
 
   geo_match_constraint {
-    type = "Country"
+    type  = "Country"
     value = "CA"
   }
-}`, name)
+}
+`, name)
 }
 
 func testAccAWSWafRegionalGeoMatchSetConfigChangeName(name string) string {
 	return fmt.Sprintf(`
 resource "aws_wafregional_geo_match_set" "test" {
   name = "%s"
+
   geo_match_constraint {
-    type = "Country"
+    type  = "Country"
     value = "US"
   }
 
   geo_match_constraint {
-    type = "Country"
+    type  = "Country"
     value = "CA"
   }
-}`, name)
+}
+`, name)
 }
 
 func testAccAWSWafRegionalGeoMatchSetConfig_changeConstraints(name string) string {
 	return fmt.Sprintf(`
 resource "aws_wafregional_geo_match_set" "test" {
   name = "%s"
+
   geo_match_constraint {
-    type = "Country"
+    type  = "Country"
     value = "RU"
   }
 
   geo_match_constraint {
-    type = "Country"
+    type  = "Country"
     value = "CN"
   }
-}`, name)
+}
+`, name)
 }
 
 func testAccAWSWafRegionalGeoMatchSetConfig_noConstraints(name string) string {
 	return fmt.Sprintf(`
 resource "aws_wafregional_geo_match_set" "test" {
   name = "%s"
-}`, name)
+}
+`, name)
 }

@@ -138,13 +138,13 @@ func testAccCheckAwsDirectoryServiceConditionalForwarderExists(name string, dnsI
 func testAccDirectoryServiceConditionalForwarderConfig(ip1, ip2 string) string {
 	return fmt.Sprintf(`
 resource "aws_directory_service_directory" "bar" {
-  name = "corp.notexample.com"
+  name     = "corp.notexample.com"
   password = "SuperSecretPassw0rd"
-  type = "MicrosoftAD"
-  edition = "Standard"
+  type     = "MicrosoftAD"
+  edition  = "Standard"
 
   vpc_settings {
-    vpc_id = "${aws_vpc.main.id}"
+    vpc_id     = "${aws_vpc.main.id}"
     subnet_ids = ["${aws_subnet.foo.id}", "${aws_subnet.bar.id}"]
   }
 
@@ -155,24 +155,27 @@ resource "aws_directory_service_directory" "bar" {
 
 resource "aws_vpc" "main" {
   cidr_block = "10.0.0.0/16"
+
   tags = {
     Name = "terraform-testacc-directory-service-conditional-forwarder"
   }
 }
 
 resource "aws_subnet" "foo" {
-  vpc_id = "${aws_vpc.main.id}"
+  vpc_id            = "${aws_vpc.main.id}"
   availability_zone = "us-west-2a"
-  cidr_block = "10.0.1.0/24"
+  cidr_block        = "10.0.1.0/24"
+
   tags = {
     Name = "terraform-testacc-directory-service-conditional-forwarder"
   }
 }
 
 resource "aws_subnet" "bar" {
-  vpc_id = "${aws_vpc.main.id}"
+  vpc_id            = "${aws_vpc.main.id}"
   availability_zone = "us-west-2b"
-  cidr_block = "10.0.2.0/24"
+  cidr_block        = "10.0.2.0/24"
+
   tags = {
     Name = "terraform-testacc-directory-service-conditional-forwarder"
   }

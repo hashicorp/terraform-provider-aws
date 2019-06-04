@@ -6,7 +6,7 @@ description: |-
   Subscribes to a Security Hub product.
 ---
 
-# aws_securityhub_product_subscription
+# Resource: aws_securityhub_product_subscription
 
 Subscribes to a Security Hub product.
 

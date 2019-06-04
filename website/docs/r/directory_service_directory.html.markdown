@@ -6,7 +6,7 @@ description: |-
   Provides a directory in AWS Directory Service.
 ---
 
-# aws_directory_service_directory
+# Resource: aws_directory_service_directory
 
 Provides a Simple or Managed Microsoft directory in AWS Directory Service.
 

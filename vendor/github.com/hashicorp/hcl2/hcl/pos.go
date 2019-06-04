@@ -31,6 +31,9 @@ type Pos struct {
 	Byte int
 }
 
+// InitialPos is a suitable position to use to mark the start of a file.
+var InitialPos = Pos{Byte: 0, Line: 1, Column: 1}
+
 // Range represents a span of characters between two positions in a source
 // file.
 //
@@ -92,6 +95,16 @@ func RangeOver(a, b Range) Range {
 		Start:    start,
 		End:      end,
 	}
+}
+
+// ContainsPos returns true if and only if the given position is contained within
+// the receiving range.
+//
+// In the unlikely case that the line/column information disagree with the byte
+// offset information in the given position or receiving range, the byte
+// offsets are given priority.
+func (r Range) ContainsPos(pos Pos) bool {
+	return r.ContainsOffset(pos.Byte)
 }
 
 // ContainsOffset returns true if and only if the given byte offset is within

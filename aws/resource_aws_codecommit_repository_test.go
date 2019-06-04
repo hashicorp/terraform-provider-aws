@@ -184,7 +184,7 @@ func testAccCodeCommitRepository_basic(rInt int) string {
 	return fmt.Sprintf(`
 resource "aws_codecommit_repository" "test" {
   repository_name = "test_repository_%d"
-  description = "This is a test description"
+  description     = "This is a test description"
 }
 `, rInt)
 }
@@ -193,7 +193,7 @@ func testAccCodeCommitRepository_withChanges(rInt int) string {
 	return fmt.Sprintf(`
 resource "aws_codecommit_repository" "test" {
   repository_name = "test_repository_%d"
-  description = "This is a test description - with changes"
+  description     = "This is a test description - with changes"
 }
 `, rInt)
 }
@@ -202,8 +202,8 @@ func testAccCodeCommitRepository_with_default_branch(rInt int) string {
 	return fmt.Sprintf(`
 resource "aws_codecommit_repository" "test" {
   repository_name = "test_repository_%d"
-  description = "This is a test description"
-  default_branch = "master"
+  description     = "This is a test description"
+  default_branch  = "master"
 }
 `, rInt)
 }

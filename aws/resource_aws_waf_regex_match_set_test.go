@@ -330,18 +330,20 @@ func testAccAWSWafRegexMatchSetConfig(matchSetName, patternSetName string) strin
 	return fmt.Sprintf(`
 resource "aws_waf_regex_match_set" "test" {
   name = "%s"
+
   regex_match_tuple {
     field_to_match {
       data = "User-Agent"
       type = "HEADER"
     }
+
     regex_pattern_set_id = "${aws_waf_regex_pattern_set.test.id}"
-    text_transformation = "NONE"
+    text_transformation  = "NONE"
   }
 }
 
 resource "aws_waf_regex_pattern_set" "test" {
-  name = "%s"
+  name                  = "%s"
   regex_pattern_strings = ["one", "two"]
 }
 `, matchSetName, patternSetName)
@@ -357,13 +359,14 @@ resource "aws_waf_regex_match_set" "test" {
       data = "Referer"
       type = "HEADER"
     }
+
     regex_pattern_set_id = "${aws_waf_regex_pattern_set.test.id}"
-    text_transformation = "COMPRESS_WHITE_SPACE"
+    text_transformation  = "COMPRESS_WHITE_SPACE"
   }
 }
 
 resource "aws_waf_regex_pattern_set" "test" {
-  name = "%s"
+  name                  = "%s"
   regex_pattern_strings = ["one", "two"]
 }
 `, matchSetName, patternSetName)
@@ -373,5 +376,6 @@ func testAccAWSWafRegexMatchSetConfig_noPatterns(matchSetName string) string {
 	return fmt.Sprintf(`
 resource "aws_waf_regex_match_set" "test" {
   name = "%s"
-}`, matchSetName)
+}
+`, matchSetName)
 }

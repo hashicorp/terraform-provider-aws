@@ -90,7 +90,7 @@ func TestAccAWSGameliftAlias_basic(t *testing.T) {
 	uMessage := fmt.Sprintf("tf test updated message %s", rString)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSGamelift(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSGameliftAliasDestroy,
 		Steps: []resource.TestStep{
@@ -130,7 +130,7 @@ func TestAccAWSGameliftAlias_importBasic(t *testing.T) {
 	message := fmt.Sprintf("tf test message %s", rString)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSGamelift(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSGameliftAliasDestroy,
 		Steps: []resource.TestStep{
@@ -158,6 +158,11 @@ func TestAccAWSGameliftAlias_fleetRouting(t *testing.T) {
 
 	region := testAccGetRegion()
 	g, err := testAccAWSGameliftSampleGame(region)
+
+	if isResourceNotFoundError(err) {
+		t.Skip(err)
+	}
+
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -171,7 +176,7 @@ func TestAccAWSGameliftAlias_fleetRouting(t *testing.T) {
 	params := g.Parameters(33435)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSGamelift(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSGameliftAliasDestroy,
 		Steps: []resource.TestStep{
@@ -251,11 +256,12 @@ func testAccCheckAWSGameliftAliasDestroy(s *terraform.State) error {
 func testAccAWSGameliftAliasBasicConfig(aliasName, description, message string) string {
 	return fmt.Sprintf(`
 resource "aws_gamelift_alias" "test" {
-  name = "%s"
+  name        = "%s"
   description = "%s"
+
   routing_strategy {
     message = "%s"
-    type = "TERMINAL"
+    type    = "TERMINAL"
   }
 }
 `, aliasName, description, message)
@@ -265,14 +271,17 @@ func testAccAWSGameliftAliasAllFieldsConfig(aliasName, description,
 	fleetName, launchPath, params, buildName, bucketName, key, roleArn string) string {
 	return fmt.Sprintf(`
 resource "aws_gamelift_alias" "test" {
-  name = "%s"
+  name        = "%s"
   description = "%s"
+
   routing_strategy {
     fleet_id = "${aws_gamelift_fleet.test.id}"
-    type = "SIMPLE"
+    type     = "SIMPLE"
   }
 }
+
 %s
+
 `, aliasName, description,
 		testAccAWSGameliftFleetBasicConfig(fleetName, launchPath, params, buildName, bucketName, key, roleArn))
 }

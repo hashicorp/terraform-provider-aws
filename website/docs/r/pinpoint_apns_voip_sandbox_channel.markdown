@@ -6,7 +6,7 @@ description: |-
   Provides a Pinpoint APNs VoIP Sandbox Channel resource.
 ---
 
-# aws_pinpoint_apns_voip_sandbox_channel
+# Resource: aws_pinpoint_apns_voip_sandbox_channel
 
 Provides a Pinpoint APNs VoIP Sandbox Channel resource.
 

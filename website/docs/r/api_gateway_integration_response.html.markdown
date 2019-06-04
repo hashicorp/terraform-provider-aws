@@ -6,7 +6,7 @@ description: |-
   Provides an HTTP Method Integration Response for an API Gateway Resource.
 ---
 
-# aws_api_gateway_integration_response
+# Resource: aws_api_gateway_integration_response
 
 Provides an HTTP Method Integration Response for an API Gateway Resource.
 

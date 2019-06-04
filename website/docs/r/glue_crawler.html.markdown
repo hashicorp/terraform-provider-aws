@@ -6,7 +6,7 @@ description: |-
   Manages a Glue Crawler
 ---
 
-# aws_glue_crawler
+# Resource: aws_glue_crawler
 
 Manages a Glue Crawler. More information can be found in the [AWS Glue Developer Guide](https://docs.aws.amazon.com/glue/latest/dg/add-crawler.html)
 

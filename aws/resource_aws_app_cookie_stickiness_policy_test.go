@@ -191,57 +191,63 @@ func TestAccAWSAppCookieStickinessPolicy_drift(t *testing.T) {
 func testAccAppCookieStickinessPolicyConfig(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_elb" "lb" {
-	name = "%s"
-	availability_zones = ["us-west-2a"]
-	listener {
-		instance_port = 8000
-		instance_protocol = "http"
-		lb_port = 80
-		lb_protocol = "http"
-	}
+  name               = "%s"
+  availability_zones = ["us-west-2a"]
+
+  listener {
+    instance_port     = 8000
+    instance_protocol = "http"
+    lb_port           = 80
+    lb_protocol       = "http"
+  }
 }
 
 resource "aws_app_cookie_stickiness_policy" "foo" {
-	name = "foo-policy"
-	load_balancer = "${aws_elb.lb.id}"
-	lb_port = 80
-	cookie_name = "MyAppCookie"
-}`, rName)
+  name          = "foo-policy"
+  load_balancer = "${aws_elb.lb.id}"
+  lb_port       = 80
+  cookie_name   = "MyAppCookie"
+}
+`, rName)
 }
 
 // Change the cookie_name to "MyOtherAppCookie".
 func testAccAppCookieStickinessPolicyConfigUpdate(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_elb" "lb" {
-	name = "%s"
-	availability_zones = ["us-west-2a"]
-	listener {
-		instance_port = 8000
-		instance_protocol = "http"
-		lb_port = 80
-		lb_protocol = "http"
-	}
+  name               = "%s"
+  availability_zones = ["us-west-2a"]
+
+  listener {
+    instance_port     = 8000
+    instance_protocol = "http"
+    lb_port           = 80
+    lb_protocol       = "http"
+  }
 }
 
 resource "aws_app_cookie_stickiness_policy" "foo" {
-	name = "foo-policy"
-	load_balancer = "${aws_elb.lb.id}"
-	lb_port = 80
-	cookie_name = "MyOtherAppCookie"
-}`, rName)
+  name          = "foo-policy"
+  load_balancer = "${aws_elb.lb.id}"
+  lb_port       = 80
+  cookie_name   = "MyOtherAppCookie"
+}
+`, rName)
 }
 
 // attempt to destroy the policy, but we'll delete the LB in the PreConfig
 func testAccAppCookieStickinessPolicyConfigDestroy(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_elb" "lb" {
-	name = "%s"
-	availability_zones = ["us-west-2a"]
-	listener {
-		instance_port = 8000
-		instance_protocol = "http"
-		lb_port = 80
-		lb_protocol = "http"
-	}
-}`, rName)
+  name               = "%s"
+  availability_zones = ["us-west-2a"]
+
+  listener {
+    instance_port     = 8000
+    instance_protocol = "http"
+    lb_port           = 80
+    lb_protocol       = "http"
+  }
+}
+`, rName)
 }

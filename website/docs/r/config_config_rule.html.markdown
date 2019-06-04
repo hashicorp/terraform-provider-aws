@@ -6,7 +6,7 @@ description: |-
   Provides an AWS Config Rule.
 ---
 
-# aws_config_config_rule
+# Resource: aws_config_config_rule
 
 Provides an AWS Config Rule.
 

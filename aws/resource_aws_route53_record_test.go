@@ -1274,20 +1274,21 @@ resource "aws_route53_zone" "main" {
 
 resource "aws_s3_bucket" "website" {
   bucket = %q
-	acl = "public-read"
-	website {
-		index_document = "index.html"
-	}
+  acl    = "public-read"
+
+  website {
+    index_document = "index.html"
+  }
 }
 
 resource "aws_route53_record" "alias" {
   zone_id = "${aws_route53_zone.main.zone_id}"
-  name = "www"
-  type = "A"
+  name    = "www"
+  type    = "A"
 
   alias {
-    zone_id = "${aws_s3_bucket.website.hosted_zone_id}"
-    name = "${aws_s3_bucket.website.website_domain}"
+    zone_id                = "${aws_s3_bucket.website.hosted_zone_id}"
+    name                   = "${aws_s3_bucket.website.website_domain}"
     evaluate_target_health = true
   }
 }

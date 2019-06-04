@@ -121,6 +121,7 @@ resource "aws_media_store_container" "test" {
 
 resource "aws_media_store_container_policy" "test" {
   container_name = "${aws_media_store_container.test.name}"
+
   policy = <<EOF
 {
   "Version": "2012-10-17",

@@ -6,7 +6,7 @@ description: |-
   Provides a CloudFront web distribution resource.
 ---
 
-# aws_cloudfront_distribution
+# Resource: aws_cloudfront_distribution
 
 Creates an Amazon CloudFront web distribution.
 
@@ -184,7 +184,7 @@ resource "aws_cloudfront_distribution" "s3_distribution" {
 
   default_cache_behavior {
     # ... other configuration ...
-    target_origin_id       = "groupS3"
+    target_origin_id = "groupS3"
   }
 
   # ... other configuration ...

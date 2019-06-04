@@ -18,7 +18,7 @@ func TestAccAwsAppsyncResolver_basic(t *testing.T) {
 	resourceName := "aws_appsync_resolver.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSAppSync(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsAppsyncResolverDestroy,
 		Steps: []resource.TestStep{
@@ -48,7 +48,7 @@ func TestAccAwsAppsyncResolver_disappears(t *testing.T) {
 	resourceName := "aws_appsync_resolver.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSAppSync(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsAppsyncResolverDestroy,
 		Steps: []resource.TestStep{
@@ -71,7 +71,7 @@ func TestAccAwsAppsyncResolver_DataSource(t *testing.T) {
 	resourceName := "aws_appsync_resolver.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSAppSync(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsAppsyncResolverDestroy,
 		Steps: []resource.TestStep{
@@ -104,7 +104,7 @@ func TestAccAwsAppsyncResolver_RequestTemplate(t *testing.T) {
 	resourceName := "aws_appsync_resolver.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSAppSync(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsAppsyncResolverDestroy,
 		Steps: []resource.TestStep{
@@ -137,7 +137,7 @@ func TestAccAwsAppsyncResolver_ResponseTemplate(t *testing.T) {
 	resourceName := "aws_appsync_resolver.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSAppSync(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsAppsyncResolverDestroy,
 		Steps: []resource.TestStep{
@@ -170,7 +170,7 @@ func TestAccAwsAppsyncResolver_multipleResolvers(t *testing.T) {
 	resourceName := "aws_appsync_resolver.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSAppSync(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsAppsyncResolverDestroy,
 		Steps: []resource.TestStep{
@@ -282,7 +282,8 @@ func testAccAppsyncResolver_basic(rName string) string {
 resource "aws_appsync_graphql_api" "test" {
   authentication_type = "API_KEY"
   name                = %q
-  schema              = <<EOF
+
+  schema = <<EOF
 type Mutation {
 	putPost(id: ID!, title: String!): Post
 }
@@ -304,9 +305,9 @@ EOF
 }
 
 resource "aws_appsync_datasource" "test" {
-  api_id      = "${aws_appsync_graphql_api.test.id}"
-  name        = %q
-  type        = "HTTP"
+  api_id = "${aws_appsync_graphql_api.test.id}"
+  name   = %q
+  type   = "HTTP"
 
   http_config {
     endpoint = "http://example.com"
@@ -314,10 +315,11 @@ resource "aws_appsync_datasource" "test" {
 }
 
 resource "aws_appsync_resolver" "test" {
-  api_id           = "${aws_appsync_graphql_api.test.id}"
-  field            = "singlePost"
-  type             = "Query"
-  data_source      = "${aws_appsync_datasource.test.name}"
+  api_id      = "${aws_appsync_graphql_api.test.id}"
+  field       = "singlePost"
+  type        = "Query"
+  data_source = "${aws_appsync_datasource.test.name}"
+
   request_template = <<EOF
 {
     "version": "2018-05-29",
@@ -328,6 +330,7 @@ resource "aws_appsync_resolver" "test" {
     }
 }
 EOF
+
   response_template = <<EOF
 #if($ctx.result.statusCode == 200)
     $ctx.result.body
@@ -344,7 +347,8 @@ func testAccAppsyncResolver_DataSource(rName, dataSource string) string {
 resource "aws_appsync_graphql_api" "test" {
   authentication_type = "API_KEY"
   name                = %q
-  schema              = <<EOF
+
+  schema = <<EOF
 type Mutation {
 	putPost(id: ID!, title: String!): Post
 }
@@ -366,9 +370,9 @@ EOF
 }
 
 resource "aws_appsync_datasource" "test_ds_1" {
-  api_id      = "${aws_appsync_graphql_api.test.id}"
-  name        = "test_ds_1"
-  type        = "HTTP"
+  api_id = "${aws_appsync_graphql_api.test.id}"
+  name   = "test_ds_1"
+  type   = "HTTP"
 
   http_config {
     endpoint = "http://example.com"
@@ -376,9 +380,9 @@ resource "aws_appsync_datasource" "test_ds_1" {
 }
 
 resource "aws_appsync_datasource" "test_ds_2" {
-  api_id      = "${aws_appsync_graphql_api.test.id}"
-  name        = "test_ds_2"
-  type        = "HTTP"
+  api_id = "${aws_appsync_graphql_api.test.id}"
+  name   = "test_ds_2"
+  type   = "HTTP"
 
   http_config {
     endpoint = "http://example.com"
@@ -386,10 +390,11 @@ resource "aws_appsync_datasource" "test_ds_2" {
 }
 
 resource "aws_appsync_resolver" "test" {
-  api_id           = "${aws_appsync_graphql_api.test.id}"
-  field            = "singlePost"
-  type             = "Query"
-  data_source      = "${aws_appsync_datasource.%s.name}"
+  api_id      = "${aws_appsync_graphql_api.test.id}"
+  field       = "singlePost"
+  type        = "Query"
+  data_source = "${aws_appsync_datasource.%s.name}"
+
   request_template = <<EOF
 {
     "version": "2018-05-29",
@@ -400,6 +405,7 @@ resource "aws_appsync_resolver" "test" {
     }
 }
 EOF
+
   response_template = <<EOF
 #if($ctx.result.statusCode == 200)
     $ctx.result.body
@@ -416,7 +422,8 @@ func testAccAppsyncResolver_RequestTemplate(rName, resourcePath string) string {
 resource "aws_appsync_graphql_api" "test" {
   authentication_type = "API_KEY"
   name                = %q
-  schema              = <<EOF
+
+  schema = <<EOF
 type Mutation {
 	putPost(id: ID!, title: String!): Post
 }
@@ -438,9 +445,9 @@ EOF
 }
 
 resource "aws_appsync_datasource" "test" {
-  api_id      = "${aws_appsync_graphql_api.test.id}"
-  name        = %q
-  type        = "HTTP"
+  api_id = "${aws_appsync_graphql_api.test.id}"
+  name   = %q
+  type   = "HTTP"
 
   http_config {
     endpoint = "http://example.com"
@@ -448,10 +455,11 @@ resource "aws_appsync_datasource" "test" {
 }
 
 resource "aws_appsync_resolver" "test" {
-  api_id           = "${aws_appsync_graphql_api.test.id}"
-  field            = "singlePost"
-  type             = "Query"
-  data_source      = "${aws_appsync_datasource.test.name}"
+  api_id      = "${aws_appsync_graphql_api.test.id}"
+  field       = "singlePost"
+  type        = "Query"
+  data_source = "${aws_appsync_datasource.test.name}"
+
   request_template = <<EOF
 {
     "version": "2018-05-29",
@@ -462,6 +470,7 @@ resource "aws_appsync_resolver" "test" {
     }
 }
 EOF
+
   response_template = <<EOF
 #if($ctx.result.statusCode == 200)
     $ctx.result.body
@@ -478,7 +487,8 @@ func testAccAppsyncResolver_ResponseTemplate(rName string, statusCode int) strin
 resource "aws_appsync_graphql_api" "test" {
   authentication_type = "API_KEY"
   name                = %q
-  schema              = <<EOF
+
+  schema = <<EOF
 type Mutation {
 	putPost(id: ID!, title: String!): Post
 }
@@ -500,9 +510,9 @@ EOF
 }
 
 resource "aws_appsync_datasource" "test" {
-  api_id      = "${aws_appsync_graphql_api.test.id}"
-  name        = %q
-  type        = "HTTP"
+  api_id = "${aws_appsync_graphql_api.test.id}"
+  name   = %q
+  type   = "HTTP"
 
   http_config {
     endpoint = "http://example.com"
@@ -510,10 +520,11 @@ resource "aws_appsync_datasource" "test" {
 }
 
 resource "aws_appsync_resolver" "test" {
-  api_id           = "${aws_appsync_graphql_api.test.id}"
-  field            = "singlePost"
-  type             = "Query"
-  data_source      = "${aws_appsync_datasource.test.name}"
+  api_id      = "${aws_appsync_graphql_api.test.id}"
+  field       = "singlePost"
+  type        = "Query"
+  data_source = "${aws_appsync_datasource.test.name}"
+
   request_template = <<EOF
 {
     "version": "2018-05-29",
@@ -568,7 +579,6 @@ EOF
 #end
 EOF
 }
-
 `, i, i)
 	}
 
@@ -576,7 +586,8 @@ EOF
 resource "aws_appsync_graphql_api" "test" {
   authentication_type = "API_KEY"
   name                = %q
-  schema              = <<EOF
+
+  schema = <<EOF
 type Mutation {
 	putPost(id: ID!, title: String!): Post
 }
@@ -598,9 +609,9 @@ EOF
 }
 
 resource "aws_appsync_datasource" "test" {
-  api_id      = "${aws_appsync_graphql_api.test.id}"
-  name        = %q
-  type        = "HTTP"
+  api_id = "${aws_appsync_graphql_api.test.id}"
+  name   = %q
+  type   = "HTTP"
 
   http_config {
     endpoint = "http://example.com"

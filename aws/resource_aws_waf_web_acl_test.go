@@ -374,7 +374,7 @@ resource "aws_waf_web_acl" "test" {
     rule_id  = "${aws_waf_rule.test.id}"
 
     action {
-       type = "BLOCK"
+      type = "BLOCK"
     }
   }
 }
@@ -402,7 +402,7 @@ resource "aws_waf_web_acl" "test" {
     type     = "GROUP"
 
     override_action {
-       type = "NONE"
+      type = "NONE"
     }
   }
 }
@@ -449,7 +449,7 @@ resource "aws_waf_web_acl" "test" {
     rule_id  = "${aws_waf_rule.test.id}"
 
     action {
-       type = "BLOCK"
+      type = "BLOCK"
     }
   }
 
@@ -459,7 +459,7 @@ resource "aws_waf_web_acl" "test" {
     type     = "GROUP"
 
     override_action {
-       type = "NONE"
+      type = "NONE"
     }
   }
 }
@@ -477,11 +477,9 @@ resource "aws_waf_web_acl" "test" {
   }
 
   logging_configuration {
-
     log_destination = "${aws_kinesis_firehose_delivery_stream.test.arn}"
 
     redacted_fields {
-
       field_to_match {
         type = "URI"
       }
@@ -491,7 +489,6 @@ resource "aws_waf_web_acl" "test" {
         type = "HEADER"
       }
     }
-
   }
 }
 
@@ -502,6 +499,7 @@ resource "aws_s3_bucket" "test" {
 
 resource "aws_iam_role" "test" {
   name = %[1]q
+
   assume_role_policy = <<EOF
 {
   "Version": "2012-10-17",
@@ -582,6 +580,5 @@ resource "aws_kinesis_firehose_delivery_stream" "test" {
     bucket_arn = "${aws_s3_bucket.test.arn}"
   }
 }
-
 `, rName)
 }

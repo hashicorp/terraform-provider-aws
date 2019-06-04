@@ -1398,7 +1398,7 @@ func (c *ELBV2) DescribeListenersWithContext(ctx aws.Context, input *DescribeLis
 //    // Example iterating over at most 3 pages of a DescribeListeners operation.
 //    pageNum := 0
 //    err := client.DescribeListenersPages(params,
-//        func(page *DescribeListenersOutput, lastPage bool) bool {
+//        func(page *elbv2.DescribeListenersOutput, lastPage bool) bool {
 //            pageNum++
 //            fmt.Println(page)
 //            return pageNum <= 3
@@ -1620,7 +1620,7 @@ func (c *ELBV2) DescribeLoadBalancersWithContext(ctx aws.Context, input *Describ
 //    // Example iterating over at most 3 pages of a DescribeLoadBalancers operation.
 //    pageNum := 0
 //    err := client.DescribeLoadBalancersPages(params,
-//        func(page *DescribeLoadBalancersOutput, lastPage bool) bool {
+//        func(page *elbv2.DescribeLoadBalancersOutput, lastPage bool) bool {
 //            pageNum++
 //            fmt.Println(page)
 //            return pageNum <= 3
@@ -2105,7 +2105,7 @@ func (c *ELBV2) DescribeTargetGroupsWithContext(ctx aws.Context, input *Describe
 //    // Example iterating over at most 3 pages of a DescribeTargetGroups operation.
 //    pageNum := 0
 //    err := client.DescribeTargetGroupsPages(params,
-//        func(page *DescribeTargetGroupsOutput, lastPage bool) bool {
+//        func(page *elbv2.DescribeTargetGroupsOutput, lastPage bool) bool {
 //            pageNum++
 //            fmt.Println(page)
 //            return pageNum <= 3
@@ -3671,7 +3671,8 @@ type AuthenticateCognitoActionConfig struct {
 	//
 	//    * allow - Allow the request to be forwarded to the target.
 	//
-	// authenticate
+	//    * authenticate - Redirect the request to the IdP authorization endpoint.
+	//    This is the default value.
 	OnUnauthenticatedRequest *string `type:"string" enum:"AuthenticateCognitoActionConditionalBehaviorEnum"`
 
 	// The set of user claims to be requested from the IdP. The default is openid.
@@ -3820,7 +3821,8 @@ type AuthenticateOidcActionConfig struct {
 	//
 	//    * allow - Allow the request to be forwarded to the target.
 	//
-	// authenticate
+	//    * authenticate - Redirect the request to the IdP authorization endpoint.
+	//    This is the default value.
 	OnUnauthenticatedRequest *string `type:"string" enum:"AuthenticateOidcActionConditionalBehaviorEnum"`
 
 	// The set of user claims to be requested from the IdP. The default is openid.
@@ -4568,10 +4570,10 @@ type CreateTargetGroupInput struct {
 	HealthCheckEnabled *bool `type:"boolean"`
 
 	// The approximate amount of time, in seconds, between health checks of an individual
-	// target. For Application Load Balancers, the range is 5–300 seconds. For Network
-	// Load Balancers, the supported values are 10 or 30 seconds. If the target
-	// type is instance or ip, the default is 30 seconds. If the target type is
-	// lambda, the default is 35 seconds.
+	// target. For Application Load Balancers, the range is 5–300 seconds. For
+	// Network Load Balancers, the supported values are 10 or 30 seconds. If the
+	// target type is instance or ip, the default is 30 seconds. If the target type
+	// is lambda, the default is 35 seconds.
 	HealthCheckIntervalSeconds *int64 `min:"5" type:"integer"`
 
 	// [HTTP/HTTPS health checks] The ping path that is the destination on the targets
@@ -7021,8 +7023,8 @@ type ModifyTargetGroupInput struct {
 	HealthCheckEnabled *bool `type:"boolean"`
 
 	// The approximate amount of time, in seconds, between health checks of an individual
-	// target. For Application Load Balancers, the range is 5–300 seconds. For Network
-	// Load Balancers, the supported values are 10 or 30 seconds.
+	// target. For Application Load Balancers, the range is 5–300 seconds. For
+	// Network Load Balancers, the supported values are 10 or 30 seconds.
 	//
 	// If the protocol of the target group is TCP, you can't modify this setting.
 	HealthCheckIntervalSeconds *int64 `min:"5" type:"integer"`

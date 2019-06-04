@@ -891,6 +891,7 @@ func testAccGlueCrawlerConfig_Base(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_iam_role" "test" {
   name = %q
+
   assume_role_policy = <<EOF
 {
   "Version": "2012-10-17",

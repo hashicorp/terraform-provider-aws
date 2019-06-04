@@ -246,17 +246,14 @@ func (c *ECS) CreateServiceRequest(input *CreateServiceInput) (req *request.Requ
 //
 //    * By default, the service scheduler attempts to balance tasks across Availability
 //    Zones in this manner (although you can choose a different placement strategy)
-//    with the placementStrategy parameter):
-//
-// Sort the valid container instances, giving priority to instances that have
-//    the fewest number of running tasks for this service in their respective
-//    Availability Zone. For example, if zone A has one running service task
-//    and zones B and C each have zero, valid container instances in either
-//    zone B or C are considered optimal for placement.
-//
-// Place the new service task on a valid container instance in an optimal Availability
-//    Zone (based on the previous steps), favoring container instances with
-//    the fewest number of running tasks for this service.
+//    with the placementStrategy parameter): Sort the valid container instances,
+//    giving priority to instances that have the fewest number of running tasks
+//    for this service in their respective Availability Zone. For example, if
+//    zone A has one running service task and zones B and C each have zero,
+//    valid container instances in either zone B or C are considered optimal
+//    for placement. Place the new service task on a valid container instance
+//    in an optimal Availability Zone (based on the previous steps), favoring
+//    container instances with the fewest number of running tasks for this service.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -1766,6 +1763,7 @@ func (c *ECS) DiscoverPollEndpointRequest(input *DiscoverPollEndpointInput) (req
 
 // DiscoverPollEndpoint API operation for Amazon EC2 Container Service.
 //
+//
 // This action is only used by the Amazon ECS agent, and it is not intended
 // for use outside of the agent.
 //
@@ -2092,7 +2090,7 @@ func (c *ECS) ListClustersWithContext(ctx aws.Context, input *ListClustersInput,
 //    // Example iterating over at most 3 pages of a ListClusters operation.
 //    pageNum := 0
 //    err := client.ListClustersPages(params,
-//        func(page *ListClustersOutput, lastPage bool) bool {
+//        func(page *ecs.ListClustersOutput, lastPage bool) bool {
 //            pageNum++
 //            fmt.Println(page)
 //            return pageNum <= 3
@@ -2244,7 +2242,7 @@ func (c *ECS) ListContainerInstancesWithContext(ctx aws.Context, input *ListCont
 //    // Example iterating over at most 3 pages of a ListContainerInstances operation.
 //    pageNum := 0
 //    err := client.ListContainerInstancesPages(params,
-//        func(page *ListContainerInstancesOutput, lastPage bool) bool {
+//        func(page *ecs.ListContainerInstancesOutput, lastPage bool) bool {
 //            pageNum++
 //            fmt.Println(page)
 //            return pageNum <= 3
@@ -2392,7 +2390,7 @@ func (c *ECS) ListServicesWithContext(ctx aws.Context, input *ListServicesInput,
 //    // Example iterating over at most 3 pages of a ListServices operation.
 //    pageNum := 0
 //    err := client.ListServicesPages(params,
-//        func(page *ListServicesOutput, lastPage bool) bool {
+//        func(page *ecs.ListServicesOutput, lastPage bool) bool {
 //            pageNum++
 //            fmt.Println(page)
 //            return pageNum <= 3
@@ -2634,7 +2632,7 @@ func (c *ECS) ListTaskDefinitionFamiliesWithContext(ctx aws.Context, input *List
 //    // Example iterating over at most 3 pages of a ListTaskDefinitionFamilies operation.
 //    pageNum := 0
 //    err := client.ListTaskDefinitionFamiliesPages(params,
-//        func(page *ListTaskDefinitionFamiliesOutput, lastPage bool) bool {
+//        func(page *ecs.ListTaskDefinitionFamiliesOutput, lastPage bool) bool {
 //            pageNum++
 //            fmt.Println(page)
 //            return pageNum <= 3
@@ -2780,7 +2778,7 @@ func (c *ECS) ListTaskDefinitionsWithContext(ctx aws.Context, input *ListTaskDef
 //    // Example iterating over at most 3 pages of a ListTaskDefinitions operation.
 //    pageNum := 0
 //    err := client.ListTaskDefinitionsPages(params,
-//        func(page *ListTaskDefinitionsOutput, lastPage bool) bool {
+//        func(page *ecs.ListTaskDefinitionsOutput, lastPage bool) bool {
 //            pageNum++
 //            fmt.Println(page)
 //            return pageNum <= 3
@@ -2937,7 +2935,7 @@ func (c *ECS) ListTasksWithContext(ctx aws.Context, input *ListTasksInput, opts 
 //    // Example iterating over at most 3 pages of a ListTasks operation.
 //    pageNum := 0
 //    err := client.ListTasksPages(params,
-//        func(page *ListTasksOutput, lastPage bool) bool {
+//        func(page *ecs.ListTasksOutput, lastPage bool) bool {
 //            pageNum++
 //            fmt.Println(page)
 //            return pageNum <= 3
@@ -3305,6 +3303,7 @@ func (c *ECS) RegisterContainerInstanceRequest(input *RegisterContainerInstanceI
 }
 
 // RegisterContainerInstance API operation for Amazon EC2 Container Service.
+//
 //
 // This action is only used by the Amazon ECS agent, and it is not intended
 // for use outside of the agent.
@@ -3844,6 +3843,7 @@ func (c *ECS) SubmitContainerStateChangeRequest(input *SubmitContainerStateChang
 
 // SubmitContainerStateChange API operation for Amazon EC2 Container Service.
 //
+//
 // This action is only used by the Amazon ECS agent, and it is not intended
 // for use outside of the agent.
 //
@@ -3933,6 +3933,7 @@ func (c *ECS) SubmitTaskStateChangeRequest(input *SubmitTaskStateChangeInput) (r
 }
 
 // SubmitTaskStateChange API operation for Amazon EC2 Container Service.
+//
 //
 // This action is only used by the Amazon ECS agent, and it is not intended
 // for use outside of the agent.
@@ -4544,16 +4545,13 @@ func (c *ECS) UpdateServiceRequest(input *UpdateServiceInput) (req *request.Requ
 //
 //    * By default, the service scheduler attempts to balance tasks across Availability
 //    Zones in this manner (although you can choose a different placement strategy):
-//
-// Sort the valid container instances by the fewest number of running tasks
+//    Sort the valid container instances by the fewest number of running tasks
 //    for this service in the same Availability Zone as the instance. For example,
 //    if zone A has one running service task and zones B and C each have zero,
 //    valid container instances in either zone B or C are considered optimal
-//    for placement.
-//
-// Place the new service task on a valid container instance in an optimal Availability
-//    Zone (based on the previous steps), favoring container instances with
-//    the fewest number of running tasks for this service.
+//    for placement. Place the new service task on a valid container instance
+//    in an optimal Availability Zone (based on the previous steps), favoring
+//    container instances with the fewest number of running tasks for this service.
 //
 // When the service scheduler stops running tasks, it attempts to maintain balance
 // across the Availability Zones in your cluster using the following logic:
@@ -5123,7 +5121,7 @@ type Cluster struct {
 	// The Amazon Resource Name (ARN) that identifies the cluster. The ARN contains
 	// the arn:aws:ecs namespace, followed by the Region of the cluster, the AWS
 	// account ID of the cluster owner, the cluster namespace, and then the cluster
-	// name. For example, arn:aws:ecs:region:012345678910:cluster/test..
+	// name. For example, arn:aws:ecs:region:012345678910:cluster/test ..
 	ClusterArn *string `locationName:"clusterArn" type:"string"`
 
 	// A user-generated string that you use to identify your cluster.
@@ -5446,11 +5444,11 @@ type ContainerDefinition struct {
 	// can contain multiple dependencies. When a dependency is defined for container
 	// startup, for container shutdown it is reversed.
 	//
-	// Your Amazon ECS container instances require at least version 1.26.0 of the
-	// container agent to enable container dependencies. However, we recommend using
-	// the latest container agent version. For information about checking your agent
-	// version and updating to the latest version, see Updating the Amazon ECS Container
-	// Agent (http://docs.aws.amazon.com/AmazonECS/latest/developerguide/ecs-agent-update.html)
+	// For tasks using the EC2 launch type, the container instances require at least
+	// version 1.26.0 of the container agent to enable container dependencies. However,
+	// we recommend using the latest container agent version. For information about
+	// checking your agent version and updating to the latest version, see Updating
+	// the Amazon ECS Container Agent (http://docs.aws.amazon.com/AmazonECS/latest/developerguide/ecs-agent-update.html)
 	// in the Amazon Elastic Container Service Developer Guide. If you are using
 	// an Amazon ECS-optimized Linux AMI, your instance needs at least version 1.26.0-1
 	// of the ecs-init package. If your container instances are launched from version
@@ -5458,6 +5456,10 @@ type ContainerDefinition struct {
 	// agent and ecs-init. For more information, see Amazon ECS-optimized Linux
 	// AMI (http://docs.aws.amazon.com/AmazonECS/latest/developerguide/ecs-optimized_AMI.html)
 	// in the Amazon Elastic Container Service Developer Guide.
+	//
+	// This parameter is available for tasks using the Fargate launch type in the
+	// Ohio (us-east-2) region only and the task or service requires platform version
+	// 1.3.0 or later.
 	DependsOn []*ContainerDependency `locationName:"dependsOn" type:"list"`
 
 	// When this parameter is true, networking is disabled within the container.
@@ -5511,6 +5513,7 @@ type ContainerDefinition struct {
 	// This parameter is not supported for Windows containers.
 	DockerSecurityOptions []*string `locationName:"dockerSecurityOptions" type:"list"`
 
+	//
 	// Early versions of the Amazon ECS container agent do not properly handle entryPoint
 	// parameters. If you have problems using entryPoint, update your container
 	// agent or enter your commands and arguments as command array items instead.
@@ -5574,7 +5577,7 @@ type ContainerDefinition struct {
 	// The image used to start a container. This string is passed directly to the
 	// Docker daemon. Images in the Docker Hub registry are available by default.
 	// Other repositories are specified with either repository-url/image:tag or
-	// repository-url/image@digest. Up to 255 letters (uppercase and lowercase),
+	// repository-url/image@digest . Up to 255 letters (uppercase and lowercase),
 	// numbers, hyphens, underscores, colons, periods, forward slashes, and number
 	// signs are allowed. This parameter maps to Image in the Create a container
 	// (https://docs.docker.com/engine/api/v1.35/#operation/ContainerCreate) section
@@ -5590,7 +5593,6 @@ type ContainerDefinition struct {
 	//    full registry/repository:tag or registry/repository@digest. For example,
 	//    012345678910.dkr.ecr.<region-name>.amazonaws.com/<repository-name>:latest
 	//    or 012345678910.dkr.ecr.<region-name>.amazonaws.com/<repository-name>@sha256:94afd1f2e64d908bc90dbca0035a5b567EXAMPLE.
-	//
 	//
 	//    * Images in official repositories on Docker Hub use a single name (for
 	//    example, ubuntu or mongo).
@@ -5636,7 +5638,11 @@ type ContainerDefinition struct {
 
 	// The log configuration specification for the container.
 	//
-	// If you are using the Fargate launch type, the only supported value is awslogs.
+	// For tasks using the Fargate launch type, the supported log drivers are awslogs
+	// and splunk.
+	//
+	// For tasks using the EC2 launch type, the supported log drivers are awslogs,
+	// syslog, gelf, fluentd, splunk, journald, and json-file.
 	//
 	// This parameter maps to LogConfig in the Create a container (https://docs.docker.com/engine/api/v1.35/#operation/ContainerCreate)
 	// section of the Docker Remote API (https://docs.docker.com/engine/api/v1.35/)
@@ -5804,11 +5810,11 @@ type ContainerDefinition struct {
 	// reach the desired status within that time then containerA will give up and
 	// not start. This results in the task transitioning to a STOPPED state.
 	//
-	// Your Amazon ECS container instances require at least version 1.26.0 of the
-	// container agent to enable a container start timeout value. However, we recommend
-	// using the latest container agent version. For information about checking
-	// your agent version and updating to the latest version, see Updating the Amazon
-	// ECS Container Agent (http://docs.aws.amazon.com/AmazonECS/latest/developerguide/ecs-agent-update.html)
+	// For tasks using the EC2 launch type, the container instances require at least
+	// version 1.26.0 of the container agent to enable a container start timeout
+	// value. However, we recommend using the latest container agent version. For
+	// information about checking your agent version and updating to the latest
+	// version, see Updating the Amazon ECS Container Agent (http://docs.aws.amazon.com/AmazonECS/latest/developerguide/ecs-agent-update.html)
 	// in the Amazon Elastic Container Service Developer Guide. If you are using
 	// an Amazon ECS-optimized Linux AMI, your instance needs at least version 1.26.0-1
 	// of the ecs-init package. If your container instances are launched from version
@@ -5816,18 +5822,25 @@ type ContainerDefinition struct {
 	// agent and ecs-init. For more information, see Amazon ECS-optimized Linux
 	// AMI (http://docs.aws.amazon.com/AmazonECS/latest/developerguide/ecs-optimized_AMI.html)
 	// in the Amazon Elastic Container Service Developer Guide.
+	//
+	// This parameter is available for tasks using the Fargate launch type in the
+	// Ohio (us-east-2) region only and the task or service requires platform version
+	// 1.3.0 or later.
 	StartTimeout *int64 `locationName:"startTimeout" type:"integer"`
 
 	// Time duration to wait before the container is forcefully killed if it doesn't
-	// exit normally on its own. The stop timeout value for the container takes
-	// precedence over the ECS_CONTAINER_STOP_TIMEOUT container agent configuration
-	// parameter, if used.
+	// exit normally on its own. For tasks using the Fargate launch type, the max
+	// stopTimeout value is 2 minutes. This parameter is available for tasks using
+	// the Fargate launch type in the Ohio (us-east-2) region only and the task
+	// or service requires platform version 1.3.0 or later.
 	//
-	// Your Amazon ECS container instances require at least version 1.26.0 of the
-	// container agent to enable a container stop timeout value. However, we recommend
-	// using the latest container agent version. For information about checking
-	// your agent version and updating to the latest version, see Updating the Amazon
-	// ECS Container Agent (http://docs.aws.amazon.com/AmazonECS/latest/developerguide/ecs-agent-update.html)
+	// For tasks using the EC2 launch type, the stop timeout value for the container
+	// takes precedence over the ECS_CONTAINER_STOP_TIMEOUT container agent configuration
+	// parameter, if used. Container instances require at least version 1.26.0 of
+	// the container agent to enable a container stop timeout value. However, we
+	// recommend using the latest container agent version. For information about
+	// checking your agent version and updating to the latest version, see Updating
+	// the Amazon ECS Container Agent (http://docs.aws.amazon.com/AmazonECS/latest/developerguide/ecs-agent-update.html)
 	// in the Amazon Elastic Container Service Developer Guide. If you are using
 	// an Amazon ECS-optimized Linux AMI, your instance needs at least version 1.26.0-1
 	// of the ecs-init package. If your container instances are launched from version
@@ -6323,7 +6336,7 @@ type ContainerInstance struct {
 	// The Amazon Resource Name (ARN) of the container instance. The ARN contains
 	// the arn:aws:ecs namespace, followed by the Region of the container instance,
 	// the AWS account ID of the container instance owner, the container-instance
-	// namespace, and then the container instance ID. For example, arn:aws:ecs:region:aws_account_id:container-instance/container_instance_ID.
+	// namespace, and then the container instance ID. For example, arn:aws:ecs:region:aws_account_id:container-instance/container_instance_ID .
 	ContainerInstanceArn *string `locationName:"containerInstanceArn" type:"string"`
 
 	// The EC2 instance ID of the container instance.
@@ -6892,10 +6905,9 @@ type CreateServiceInput struct {
 	//    active container instance that meets all of the task placement constraints
 	//    that you specify in your cluster. When you're using this strategy, you
 	//    don't need to specify a desired number of tasks, a task placement strategy,
-	//    or use Service Auto Scaling policies.
-	//
-	// Tasks using the Fargate launch type or the CODE_DEPLOY or EXTERNAL deployment
-	//    controller types don't support the DAEMON scheduling strategy.
+	//    or use Service Auto Scaling policies. Tasks using the Fargate launch type
+	//    or the CODE_DEPLOY or EXTERNAL deployment controller types don't support
+	//    the DAEMON scheduling strategy.
 	SchedulingStrategy *string `locationName:"schedulingStrategy" type:"string" enum:"SchedulingStrategy"`
 
 	// The name of your service. Up to 255 letters (uppercase and lowercase), numbers,
@@ -7756,12 +7768,18 @@ type Deployment struct {
 
 	// The status of the deployment. The following describes each state:
 	//
-	// PRIMARYThe most recent deployment of a service.
+	// PRIMARY
 	//
-	// ACTIVEA service deployment that still has running tasks, but are in the process
+	// The most recent deployment of a service.
+	//
+	// ACTIVE
+	//
+	// A service deployment that still has running tasks, but are in the process
 	// of being replaced with a new PRIMARY deployment.
 	//
-	// INACTIVEA deployment that has been completely replaced.
+	// INACTIVE
+	//
+	// A deployment that has been completely replaced.
 	Status *string `locationName:"status" type:"string"`
 
 	// The most recent task definition that was specified for the tasks in the service
@@ -7931,17 +7949,23 @@ type DeploymentController struct {
 	//
 	// There are three deployment controller types available:
 	//
-	// ECSThe rolling update (ECS) deployment type involves replacing the current
-	// running version of the container with the latest version. The number of containers
+	// ECS
+	//
+	// The rolling update (ECS) deployment type involves replacing the current running
+	// version of the container with the latest version. The number of containers
 	// Amazon ECS adds or removes from the service during a rolling update is controlled
 	// by adjusting the minimum and maximum number of healthy tasks allowed during
 	// a service deployment, as specified in the DeploymentConfiguration.
 	//
-	// CODE_DEPLOYThe blue/green (CODE_DEPLOY) deployment type uses the blue/green
-	// deployment model powered by AWS CodeDeploy, which allows you to verify a
-	// new deployment of a service before sending production traffic to it.
+	// CODE_DEPLOY
 	//
-	// EXTERNALThe external (EXTERNAL) deployment type enables you to use any third-party
+	// The blue/green (CODE_DEPLOY) deployment type uses the blue/green deployment
+	// model powered by AWS CodeDeploy, which allows you to verify a new deployment
+	// of a service before sending production traffic to it.
+	//
+	// EXTERNAL
+	//
+	// The external (EXTERNAL) deployment type enables you to use any third-party
 	// deployment controller for full control over the deployment process for an
 	// Amazon ECS service.
 	//
@@ -7990,7 +8014,7 @@ type DeregisterContainerInstanceInput struct {
 	// The ARN contains the arn:aws:ecs namespace, followed by the Region of the
 	// container instance, the AWS account ID of the container instance owner, the
 	// container-instance namespace, and then the container instance ID. For example,
-	// arn:aws:ecs:region:aws_account_id:container-instance/container_instance_ID.
+	// arn:aws:ecs:region:aws_account_id:container-instance/container_instance_ID .
 	//
 	// ContainerInstance is a required field
 	ContainerInstance *string `locationName:"containerInstance" type:"string" required:"true"`
@@ -8745,7 +8769,7 @@ type DiscoverPollEndpointInput struct {
 	// The container instance ID or full ARN of the container instance. The ARN
 	// contains the arn:aws:ecs namespace, followed by the Region of the container
 	// instance, the AWS account ID of the container instance owner, the container-instance
-	// namespace, and then the container instance ID. For example, arn:aws:ecs:region:aws_account_id:container-instance/container_instance_ID.
+	// namespace, and then the container instance ID. For example, arn:aws:ecs:region:aws_account_id:container-instance/container_instance_ID .
 	ContainerInstance *string `locationName:"containerInstance" type:"string"`
 }
 
@@ -10429,9 +10453,16 @@ type LogConfiguration struct {
 
 	// The log driver to use for the container. The valid values listed for this
 	// parameter are log drivers that the Amazon ECS container agent can communicate
-	// with by default. If you are using the Fargate launch type, the only supported
-	// value is awslogs. For more information about using the awslogs driver, see
-	// Using the awslogs Log Driver (https://docs.aws.amazon.com/AmazonECS/latest/developerguide/using_awslogs.html)
+	// with by default.
+	//
+	// For tasks using the Fargate launch type, the supported log drivers are awslogs
+	// and splunk.
+	//
+	// For tasks using the EC2 launch type, the supported log drivers are awslogs,
+	// syslog, gelf, fluentd, splunk, journald, and json-file.
+	//
+	// For more information about using the awslogs log driver, see Using the awslogs
+	// Log Driver (https://docs.aws.amazon.com/AmazonECS/latest/developerguide/using_awslogs.html)
 	// in the Amazon Elastic Container Service Developer Guide.
 	//
 	// If you have a custom driver that is not listed above that you would like
@@ -10455,6 +10486,9 @@ type LogConfiguration struct {
 	// to your container instance and run the following command: sudo docker version
 	// --format '{{.Server.APIVersion}}'
 	Options map[string]*string `locationName:"options" type:"map"`
+
+	// The secrets to pass to the log configuration.
+	SecretOptions []*Secret `locationName:"secretOptions" type:"list"`
 }
 
 // String returns the string representation
@@ -10473,6 +10507,16 @@ func (s *LogConfiguration) Validate() error {
 	if s.LogDriver == nil {
 		invalidParams.Add(request.NewErrParamRequired("LogDriver"))
 	}
+	if s.SecretOptions != nil {
+		for i, v := range s.SecretOptions {
+			if v == nil {
+				continue
+			}
+			if err := v.Validate(); err != nil {
+				invalidParams.AddNested(fmt.Sprintf("%s[%v]", "SecretOptions", i), err.(request.ErrInvalidParams))
+			}
+		}
+	}
 
 	if invalidParams.Len() > 0 {
 		return invalidParams
@@ -10489,6 +10533,12 @@ func (s *LogConfiguration) SetLogDriver(v string) *LogConfiguration {
 // SetOptions sets the Options field's value.
 func (s *LogConfiguration) SetOptions(v map[string]*string) *LogConfiguration {
 	s.Options = v
+	return s
+}
+
+// SetSecretOptions sets the SecretOptions field's value.
+func (s *LogConfiguration) SetSecretOptions(v []*Secret) *LogConfiguration {
+	s.SecretOptions = v
 	return s
 }
 
@@ -10912,13 +10962,17 @@ func (s *PortMapping) SetProtocol(v string) *PortMapping {
 
 // The configuration details for the App Mesh proxy.
 //
-// Your Amazon ECS container instances require at least version 1.26.0 of the
-// container agent and at least version 1.26.0-1 of the ecs-init package to
-// enable a proxy configuration. If your container instances are launched from
-// the Amazon ECS-optimized AMI version 20190301 or later, then they contain
-// the required versions of the container agent and ecs-init. For more information,
-// see Amazon ECS-optimized Linux AMI (http://docs.aws.amazon.com/AmazonECS/latest/developerguide/ecs-optimized_AMI.html)
+// For tasks using the EC2 launch type, the container instances require at least
+// version 1.26.0 of the container agent and at least version 1.26.0-1 of the
+// ecs-init package to enable a proxy configuration. If your container instances
+// are launched from the Amazon ECS-optimized AMI version 20190301 or later,
+// then they contain the required versions of the container agent and ecs-init.
+// For more information, see Amazon ECS-optimized Linux AMI (http://docs.aws.amazon.com/AmazonECS/latest/developerguide/ecs-optimized_AMI.html)
 // in the Amazon Elastic Container Service Developer Guide.
+//
+// This parameter is available for tasks using the Fargate launch type in the
+// Ohio (us-east-2) region only and the task or service requires platform version
+// 1.3.0 or later.
 type ProxyConfiguration struct {
 	_ struct{} `type:"structure"`
 
@@ -11602,13 +11656,17 @@ type RegisterTaskDefinitionInput struct {
 
 	// The configuration details for the App Mesh proxy.
 	//
-	// Your Amazon ECS container instances require at least version 1.26.0 of the
-	// container agent and at least version 1.26.0-1 of the ecs-init package to
-	// enable a proxy configuration. If your container instances are launched from
-	// the Amazon ECS-optimized AMI version 20190301 or later, then they contain
-	// the required versions of the container agent and ecs-init. For more information,
-	// see Amazon ECS-optimized Linux AMI (http://docs.aws.amazon.com/AmazonECS/latest/developerguide/ecs-optimized_AMI.html)
+	// For tasks using the EC2 launch type, the container instances require at least
+	// version 1.26.0 of the container agent and at least version 1.26.0-1 of the
+	// ecs-init package to enable a proxy configuration. If your container instances
+	// are launched from the Amazon ECS-optimized AMI version 20190301 or later,
+	// then they contain the required versions of the container agent and ecs-init.
+	// For more information, see Amazon ECS-optimized Linux AMI (http://docs.aws.amazon.com/AmazonECS/latest/developerguide/ecs-optimized_AMI.html)
 	// in the Amazon Elastic Container Service Developer Guide.
+	//
+	// This parameter is available for tasks using the Fargate launch type in the
+	// Ohio (us-east-2) region only and the task or service requires platform version
+	// 1.3.0 or later.
 	ProxyConfiguration *ProxyConfiguration `locationName:"proxyConfiguration" type:"structure"`
 
 	// The launch type required by the task. If no value is specified, it defaults
@@ -12267,23 +12325,28 @@ func (s *Scale) SetValue(v float64) *Scale {
 	return s
 }
 
-// An object representing the secret to expose to your container. For more information,
-// see Specifying Sensitive Data (http://docs.aws.amazon.com/AmazonECS/latest/developerguide/specifying-sensitive-data.html)
+// An object representing the secret to expose to your container. Secrets can
+// be exposed to a container in the following ways:
+//
+//    * To inject sensitive data into your containers as environment variables,
+//    use the secrets container definition parameter.
+//
+//    * To reference sensitive information in the log configuration of a container,
+//    use the secretOptions container definition parameter.
+//
+// For more information, see Specifying Sensitive Data (http://docs.aws.amazon.com/AmazonECS/latest/developerguide/specifying-sensitive-data.html)
 // in the Amazon Elastic Container Service Developer Guide.
 type Secret struct {
 	_ struct{} `type:"structure"`
 
-	// The value to set as the environment variable on the container.
+	// The name of the secret.
 	//
 	// Name is a required field
 	Name *string `locationName:"name" type:"string" required:"true"`
 
-	// The secret to expose to the container. If your task is using the EC2 launch
-	// type, then supported values are either the full ARN of the AWS Secrets Manager
-	// secret or the full ARN of the parameter in the AWS Systems Manager Parameter
-	// Store. If your task is using the Fargate launch type, then the only supported
-	// value is the full ARN of the parameter in the AWS Systems Manager Parameter
-	// Store.
+	// The secret to expose to the container. The supported values are either the
+	// full ARN of the AWS Secrets Manager secret or the full ARN of the parameter
+	// in the AWS Systems Manager Parameter Store.
 	//
 	// If the AWS Systems Manager Parameter Store parameter exists in the same Region
 	// as the task you are launching, then you can use either the full ARN or name
@@ -12436,13 +12499,12 @@ type Service struct {
 	//    * DAEMON-The daemon scheduling strategy deploys exactly one task on each
 	//    container instance in your cluster. When you are using this strategy,
 	//    do not specify a desired number of tasks or any task placement strategies.
-	//
-	// Fargate tasks do not support the DAEMON scheduling strategy.
+	//    Fargate tasks do not support the DAEMON scheduling strategy.
 	SchedulingStrategy *string `locationName:"schedulingStrategy" type:"string" enum:"SchedulingStrategy"`
 
 	// The ARN that identifies the service. The ARN contains the arn:aws:ecs namespace,
 	// followed by the Region of the service, the AWS account ID of the service
-	// owner, the service namespace, and then the service name. For example, arn:aws:ecs:region:012345678910:service/my-service.
+	// owner, the service namespace, and then the service name. For example, arn:aws:ecs:region:012345678910:service/my-service .
 	ServiceArn *string `locationName:"serviceArn" type:"string"`
 
 	// The name of your service. Up to 255 letters (uppercase and lowercase), numbers,
@@ -14413,12 +14475,18 @@ type TaskSet struct {
 
 	// The status of the task set. The following describes each state:
 	//
-	// PRIMARYThe task set is serving production traffic.
+	// PRIMARY
 	//
-	// ACTIVEThe task set is not serving production traffic.
+	// The task set is serving production traffic.
 	//
-	// DRAININGThe tasks in the task set are being stopped and their corresponding
-	// targets are being deregistered from their target group.
+	// ACTIVE
+	//
+	// The task set is not serving production traffic.
+	//
+	// DRAINING
+	//
+	// The tasks in the task set are being stopped and their corresponding targets
+	// are being deregistered from their target group.
 	Status *string `locationName:"status" type:"string"`
 
 	// The task definition the task set is using.
@@ -15320,7 +15388,7 @@ type VersionInfo struct {
 	_ struct{} `type:"structure"`
 
 	// The Git commit hash for the Amazon ECS container agent build on the amazon-ecs-agent
-	//  (https://github.com/aws/amazon-ecs-agent/commits/master) GitHub repository.
+	// (https://github.com/aws/amazon-ecs-agent/commits/master) GitHub repository.
 	AgentHash *string `locationName:"agentHash" type:"string"`
 
 	// The version number of the Amazon ECS container agent.

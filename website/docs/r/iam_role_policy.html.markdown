@@ -6,7 +6,7 @@ description: |-
   Provides an IAM role policy.
 ---
 
-# aws_iam_role_policy
+# Resource: aws_iam_role_policy
 
 Provides an IAM role policy.
 

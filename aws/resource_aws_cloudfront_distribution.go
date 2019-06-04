@@ -83,7 +83,7 @@ func resourceAwsCloudFrontDistribution() *schema.Resource {
 													Required: true,
 												},
 												"whitelisted_names": {
-													Type:     schema.TypeList,
+													Type:     schema.TypeSet,
 													Optional: true,
 													Elem:     &schema.Schema{Type: schema.TypeString},
 												},
@@ -91,7 +91,7 @@ func resourceAwsCloudFrontDistribution() *schema.Resource {
 										},
 									},
 									"headers": {
-										Type:     schema.TypeList,
+										Type:     schema.TypeSet,
 										Optional: true,
 										Elem:     &schema.Schema{Type: schema.TypeString},
 									},
@@ -207,9 +207,14 @@ func resourceAwsCloudFrontDistribution() *schema.Resource {
 												"forward": {
 													Type:     schema.TypeString,
 													Required: true,
+													ValidateFunc: validation.StringInSlice([]string{
+														cloudfront.ItemSelectionAll,
+														cloudfront.ItemSelectionNone,
+														cloudfront.ItemSelectionWhitelist,
+													}, false),
 												},
 												"whitelisted_names": {
-													Type:     schema.TypeList,
+													Type:     schema.TypeSet,
 													Optional: true,
 													Elem:     &schema.Schema{Type: schema.TypeString},
 												},
@@ -217,7 +222,7 @@ func resourceAwsCloudFrontDistribution() *schema.Resource {
 										},
 									},
 									"headers": {
-										Type:     schema.TypeList,
+										Type:     schema.TypeSet,
 										Optional: true,
 										Elem:     &schema.Schema{Type: schema.TypeString},
 									},
@@ -364,9 +369,14 @@ func resourceAwsCloudFrontDistribution() *schema.Resource {
 												"forward": {
 													Type:     schema.TypeString,
 													Required: true,
+													ValidateFunc: validation.StringInSlice([]string{
+														cloudfront.ItemSelectionAll,
+														cloudfront.ItemSelectionNone,
+														cloudfront.ItemSelectionWhitelist,
+													}, false),
 												},
 												"whitelisted_names": {
-													Type:     schema.TypeList,
+													Type:     schema.TypeSet,
 													Optional: true,
 													Elem:     &schema.Schema{Type: schema.TypeString},
 												},
@@ -374,7 +384,7 @@ func resourceAwsCloudFrontDistribution() *schema.Resource {
 										},
 									},
 									"headers": {
-										Type:     schema.TypeList,
+										Type:     schema.TypeSet,
 										Optional: true,
 										Elem:     &schema.Schema{Type: schema.TypeString},
 									},

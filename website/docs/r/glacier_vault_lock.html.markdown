@@ -6,7 +6,7 @@ description: |-
   Manages a Glacier Vault Lock.
 ---
 
-# aws_glacier_vault_lock
+# Resource: aws_glacier_vault_lock
 
 Manages a Glacier Vault Lock. You can refer to the [Glacier Developer Guide](https://docs.aws.amazon.com/amazonglacier/latest/dev/vault-lock.html) for a full explanation of the Glacier Vault Lock functionality.
 

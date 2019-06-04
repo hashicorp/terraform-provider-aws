@@ -682,6 +682,7 @@ func (c *ACM) ListCertificatesRequest(input *ListCertificatesInput) (req *reques
 //
 // Returned Error Codes:
 //   * ErrCodeInvalidArgsException "InvalidArgsException"
+//   One or more of of request parameters specified is not valid.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/acm-2015-12-08/ListCertificates
 func (c *ACM) ListCertificates(input *ListCertificatesInput) (*ListCertificatesOutput, error) {
@@ -716,7 +717,7 @@ func (c *ACM) ListCertificatesWithContext(ctx aws.Context, input *ListCertificat
 //    // Example iterating over at most 3 pages of a ListCertificates operation.
 //    pageNum := 0
 //    err := client.ListCertificatesPages(params,
-//        func(page *ListCertificatesOutput, lastPage bool) bool {
+//        func(page *acm.ListCertificatesOutput, lastPage bool) bool {
 //            pageNum++
 //            fmt.Println(page)
 //            return pageNum <= 3
@@ -984,9 +985,9 @@ func (c *ACM) RenewCertificateRequest(input *RenewCertificateInput) (req *reques
 // Renews an eligable ACM certificate. At this time, only exported private certificates
 // can be renewed with this operation. In order to renew your ACM PCA certificates
 // with ACM, you must first grant the ACM service principal permission to do
-// so (acm-pca/latest/userguide/PcaPermissions.html). For more information,
-// see Testing Managed Renewal (acm/latest/userguide/manuel-renewal.html) in
-// the ACM User Guide.
+// so (https://docs.aws.amazon.com/acm-pca/latest/userguide/PcaPermissions.html).
+// For more information, see Testing Managed Renewal (https://docs.aws.amazon.com/acm/latest/userguide/manual-renewal.html)
+// in the ACM User Guide.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -1268,7 +1269,7 @@ func (c *ACM) UpdateCertificateOptionsRequest(input *UpdateCertificateOptionsInp
 //
 // Updates a certificate. Currently, you can use this function to specify whether
 // to opt in to or out of recording your certificate in a certificate transparency
-// log. For more information, see  Opting Out of Certificate Transparency Logging
+// log. For more information, see Opting Out of Certificate Transparency Logging
 // (https://docs.aws.amazon.com/acm/latest/userguide/acm-bestpractices.html#best-practices-transparency).
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions

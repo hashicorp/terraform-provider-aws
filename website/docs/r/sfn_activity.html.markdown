@@ -6,7 +6,7 @@ description: |-
   Provides a Step Function Activity resource.
 ---
 
-# sfn_activity
+# Resource: sfn_activity
 
 Provides a Step Function Activity resource
 

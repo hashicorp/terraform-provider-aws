@@ -6,7 +6,7 @@ description: |-
   Provides a resource-based access control mechanism for KMS Customer Master Keys.
 ---
 
-# aws_kms_grant
+# Resource: aws_kms_grant
 
 Provides a resource-based access control mechanism for a KMS customer master key.
 

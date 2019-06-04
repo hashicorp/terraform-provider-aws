@@ -91,7 +91,7 @@ func TestAccAWSGameliftGameSessionQueue_basic(t *testing.T) {
 	uTimeoutInSeconds := int64(600)
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSGamelift(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSGameliftGameSessionQueueDestroy,
 		Steps: []resource.TestStep{
@@ -256,15 +256,18 @@ func testAccAWSGameliftGameSessionQueueBasicConfig(queueName string,
 	playerLatencyPolicies []gamelift.PlayerLatencyPolicy, timeoutInSeconds int64) string {
 	return fmt.Sprintf(`
 resource "aws_gamelift_game_session_queue" "test" {
-  name = "%s"
+  name         = "%s"
   destinations = []
+
   player_latency_policy {
     maximum_individual_player_latency_milliseconds = %d
-    policy_duration_seconds = %d
+    policy_duration_seconds                        = %d
   }
+
   player_latency_policy {
     maximum_individual_player_latency_milliseconds = %d
   }
+
   timeout_in_seconds = %d
 }
 `,
