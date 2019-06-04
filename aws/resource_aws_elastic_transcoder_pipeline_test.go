@@ -22,7 +22,7 @@ func TestAccAWSElasticTranscoderPipeline_basic(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:      func() { testAccPreCheck(t) },
+		PreCheck:      func() { testAccPreCheck(t); testAccPreCheckAWSElasticTranscoder(t) },
 		IDRefreshName: "aws_elastictranscoder_pipeline.bar",
 		Providers:     testAccProviders,
 		CheckDestroy:  testAccCheckElasticTranscoderPipelineDestroy,
@@ -49,7 +49,7 @@ func TestAccAWSElasticTranscoderPipeline_kmsKey(t *testing.T) {
 	keyRegex := regexp.MustCompile(`^arn:aws:([a-zA-Z0-9\-])+:([a-z]{2}-[a-z]+-\d{1})?:(\d{12})?:(.*)$`)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:      func() { testAccPreCheck(t) },
+		PreCheck:      func() { testAccPreCheck(t); testAccPreCheckAWSElasticTranscoder(t) },
 		IDRefreshName: "aws_elastictranscoder_pipeline.bar",
 		Providers:     testAccProviders,
 		CheckDestroy:  testAccCheckElasticTranscoderPipelineDestroy,
@@ -71,7 +71,7 @@ func TestAccAWSElasticTranscoderPipeline_notifications(t *testing.T) {
 	rInt := acctest.RandInt()
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:      func() { testAccPreCheck(t) },
+		PreCheck:      func() { testAccPreCheck(t); testAccPreCheckAWSElasticTranscoder(t) },
 		IDRefreshName: "aws_elastictranscoder_pipeline.bar",
 		Providers:     testAccProviders,
 		CheckDestroy:  testAccCheckElasticTranscoderPipelineDestroy,
@@ -136,7 +136,7 @@ func TestAccAWSElasticTranscoderPipeline_withContentConfig(t *testing.T) {
 	rInt := acctest.RandInt()
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:      func() { testAccPreCheck(t) },
+		PreCheck:      func() { testAccPreCheck(t); testAccPreCheckAWSElasticTranscoder(t) },
 		IDRefreshName: "aws_elastictranscoder_pipeline.bar",
 		Providers:     testAccProviders,
 		CheckDestroy:  testAccCheckElasticTranscoderPipelineDestroy,
@@ -163,7 +163,7 @@ func TestAccAWSElasticTranscoderPipeline_withPermissions(t *testing.T) {
 	rInt := acctest.RandInt()
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:      func() { testAccPreCheck(t) },
+		PreCheck:      func() { testAccPreCheck(t); testAccPreCheckAWSElasticTranscoder(t) },
 		IDRefreshName: "aws_elastictranscoder_pipeline.baz",
 		Providers:     testAccProviders,
 		CheckDestroy:  testAccCheckElasticTranscoderPipelineDestroy,
@@ -234,6 +234,22 @@ func testAccCheckElasticTranscoderPipelineDestroy(s *terraform.State) error {
 
 	}
 	return nil
+}
+
+func testAccPreCheckAWSElasticTranscoder(t *testing.T) {
+	conn := testAccProvider.Meta().(*AWSClient).elastictranscoderconn
+
+	input := &elastictranscoder.ListPipelinesInput{}
+
+	_, err := conn.ListPipelines(input)
+
+	if testAccPreCheckSkipError(err) {
+		t.Skipf("skipping acceptance testing: %s", err)
+	}
+
+	if err != nil {
+		t.Fatalf("unexpected PreCheck error: %s", err)
+	}
 }
 
 func awsElasticTranscoderPipelineConfigBasic(rName string) string {
