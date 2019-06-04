@@ -217,7 +217,7 @@ resource "aws_cloudwatch_event_target" "ecs_scheduled_task" {
   rule      = "${aws_cloudwatch_event_rule.every_hour.name}"
   role_arn  = "${aws_iam_role.ecs_events.arn}"
 
-  ecs_target = {
+  ecs_target {
     task_count          = 1
     task_definition_arn = "${aws_ecs_task_definition.task_name.arn}"
   }
