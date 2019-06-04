@@ -14,7 +14,7 @@ import (
 func TestAccAWSServiceDiscoveryService_private(t *testing.T) {
 	rName := acctest.RandString(5)
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSServiceDiscovery(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsServiceDiscoveryServiceDestroy,
 		Steps: []resource.TestStep{
@@ -49,7 +49,7 @@ func TestAccAWSServiceDiscoveryService_private(t *testing.T) {
 func TestAccAWSServiceDiscoveryService_public(t *testing.T) {
 	rName := acctest.RandString(5)
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSServiceDiscovery(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsServiceDiscoveryServiceDestroy,
 		Steps: []resource.TestStep{
@@ -82,7 +82,7 @@ func TestAccAWSServiceDiscoveryService_import(t *testing.T) {
 	resourceName := "aws_service_discovery_service.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSServiceDiscovery(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsServiceDiscoveryServiceDestroy,
 		Steps: []resource.TestStep{
