@@ -16,7 +16,7 @@ func TestAccAWSDlmLifecyclePolicy_Basic(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSDlm(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: dlmLifecyclePolicyDestroy,
 		Steps: []resource.TestStep{
@@ -50,7 +50,7 @@ func TestAccAWSDlmLifecyclePolicy_Full(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSDlm(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: dlmLifecyclePolicyDestroy,
 		Steps: []resource.TestStep{
@@ -144,6 +144,22 @@ func checkDlmLifecyclePolicyExists(name string) resource.TestCheckFunc {
 		}
 
 		return nil
+	}
+}
+
+func testAccPreCheckAWSDlm(t *testing.T) {
+	conn := testAccProvider.Meta().(*AWSClient).dlmconn
+
+	input := &dlm.GetLifecyclePoliciesInput{}
+
+	_, err := conn.GetLifecyclePolicies(input)
+
+	if testAccPreCheckSkipError(err) {
+		t.Skipf("skipping acceptance testing: %s", err)
+	}
+
+	if err != nil {
+		t.Fatalf("unexpected PreCheck error: %s", err)
 	}
 }
 
