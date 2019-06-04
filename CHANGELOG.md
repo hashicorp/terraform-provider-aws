@@ -7,6 +7,7 @@ ENHANCEMENTS:
 BUG FIXES:
 
 * resource/aws_subnet: Bump default timeout for deletion from 10 to 20 minutes to better handle ELBv2 ENI deletions [GH-6322]
+* resource/aws_launch_template: Add a nil check for `spot_options` to avoiding panicking if options are empty [GH-8844]
 
 ## 2.13.0 (May 31, 2019)
 
