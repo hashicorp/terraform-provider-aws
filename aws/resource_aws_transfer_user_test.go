@@ -18,7 +18,7 @@ func TestAccAWSTransferUser_basic(t *testing.T) {
 	rName := acctest.RandString(10)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:      func() { testAccPreCheck(t) },
+		PreCheck:      func() { testAccPreCheck(t); testAccPreCheckAWSTransfer(t) },
 		IDRefreshName: "aws_transfer_user.foo",
 		Providers:     testAccProviders,
 		CheckDestroy:  testAccCheckAWSTransferUserDestroy,
@@ -49,7 +49,7 @@ func TestAccAWSTransferUser_modifyWithOptions(t *testing.T) {
 	rName2 := acctest.RandString(10)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:      func() { testAccPreCheck(t) },
+		PreCheck:      func() { testAccPreCheck(t); testAccPreCheckAWSTransfer(t) },
 		IDRefreshName: "aws_transfer_user.foo",
 		Providers:     testAccProviders,
 		CheckDestroy:  testAccCheckAWSTransferUserDestroy,
@@ -108,7 +108,7 @@ func TestAccAWSTransferUser_disappears(t *testing.T) {
 	rName := acctest.RandString(10)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSTransfer(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSTransferUserDestroy,
 		Steps: []resource.TestStep{
@@ -127,7 +127,7 @@ func TestAccAWSTransferUser_disappears(t *testing.T) {
 
 func TestAccAWSTransferUser_UserName_Validation(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSTransfer(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSTransferUserDestroy,
 		Steps: []resource.TestStep{
