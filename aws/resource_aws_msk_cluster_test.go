@@ -57,9 +57,8 @@ func testSweepMskClusters(region string) error {
 
 func TestAccAWSMskCluster_basic(t *testing.T) {
 	var cluster kafka.ClusterInfo
-	var td kafka.ListTagsForResourceOutput
-	ri := acctest.RandInt()
-	resourceName := "aws_msk_cluster.example"
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_msk_cluster.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -67,28 +66,35 @@ func TestAccAWSMskCluster_basic(t *testing.T) {
 		CheckDestroy: testAccCheckMskClusterDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccMskClusterConfig_basic(ri),
+				Config: testAccMskClusterConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckMskClusterExists(resourceName, &cluster),
 					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "kafka", regexp.MustCompile(`cluster/.+`)),
-					testAccMatchResourceAttrRegionalARN(resourceName, "encryption_info.0.encryption_at_rest_kms_key_arn", "kms", regexp.MustCompile(`key/.+`)),
-					resource.TestCheckResourceAttr(resourceName, "cluster_name", fmt.Sprintf("tf-test-%d", ri)),
-					resource.TestCheckResourceAttr(resourceName, "broker_node_group_info.0.az_distribution", kafka.BrokerAZDistributionDefault),
-					resource.TestCheckResourceAttr(resourceName, "kafka_version", "1.1.1"),
-					resource.TestCheckResourceAttr(resourceName, "number_of_broker_nodes", "3"),
-					resource.TestCheckResourceAttr(resourceName, "broker_node_group_info.0.instance_type", "kafka.m5.large"),
-					resource.TestCheckResourceAttr(resourceName, "broker_node_group_info.0.ebs_volume_size", "10"),
-					resource.TestMatchResourceAttr(resourceName, "zookeeper_connect_string", regexp.MustCompile(`^\d+\.\d+\.\d+\.\d+:\d+,\d+\.\d+\.\d+\.\d+:\d+,\d+\.\d+\.\d+\.\d+:\d+$`)),
 					resource.TestMatchResourceAttr(resourceName, "bootstrap_brokers", regexp.MustCompile(`^(([-\w]+\.){1,}[\w]+:\d+,){2,}([-\w]+\.){1,}[\w]+:\d+$`)),
-					resource.TestCheckResourceAttr(resourceName, "enhanced_monitoring", kafka.EnhancedMonitoringDefault),
+					resource.TestMatchResourceAttr(resourceName, "bootstrap_brokers_tls", regexp.MustCompile(`^(([-\w]+\.){1,}[\w]+:\d+,){2,}([-\w]+\.){1,}[\w]+:\d+$`)),
+					resource.TestCheckResourceAttr(resourceName, "broker_node_group_info.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "broker_node_group_info.0.az_distribution", kafka.BrokerAZDistributionDefault),
+					resource.TestCheckResourceAttr(resourceName, "broker_node_group_info.0.ebs_volume_size", "10"),
 					resource.TestCheckResourceAttr(resourceName, "broker_node_group_info.0.client_subnets.#", "3"),
 					resource.TestCheckResourceAttrPair(resourceName, "broker_node_group_info.0.client_subnets.0", "aws_subnet.example_subnet_az1", "id"),
 					resource.TestCheckResourceAttrPair(resourceName, "broker_node_group_info.0.client_subnets.1", "aws_subnet.example_subnet_az2", "id"),
 					resource.TestCheckResourceAttrPair(resourceName, "broker_node_group_info.0.client_subnets.2", "aws_subnet.example_subnet_az3", "id"),
+					resource.TestCheckResourceAttr(resourceName, "broker_node_group_info.0.instance_type", "kafka.m5.large"),
 					resource.TestCheckResourceAttr(resourceName, "broker_node_group_info.0.security_groups.#", "1"),
 					resource.TestCheckResourceAttrPair(resourceName, "broker_node_group_info.0.security_groups.0", "aws_security_group.example_sg", "id"),
-					testAccLoadMskTags(&cluster, &td),
-					testAccCheckMskClusterTags(&td, "foo", "bar"),
+					resource.TestCheckResourceAttr(resourceName, "client_authentication.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "cluster_name", rName),
+					resource.TestCheckResourceAttr(resourceName, "configuration_info.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "encryption_info.#", "1"),
+					testAccMatchResourceAttrRegionalARN(resourceName, "encryption_info.0.encryption_at_rest_kms_key_arn", "kms", regexp.MustCompile(`key/.+`)),
+					resource.TestCheckResourceAttr(resourceName, "encryption_info.0.encryption_in_transit.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "encryption_info.0.encryption_in_transit.0.client_broker", "TLS_PLAINTEXT"),
+					resource.TestCheckResourceAttr(resourceName, "encryption_info.0.encryption_in_transit.0.in_cluster", "true"),
+					resource.TestCheckResourceAttr(resourceName, "enhanced_monitoring", kafka.EnhancedMonitoringDefault),
+					resource.TestCheckResourceAttr(resourceName, "kafka_version", "2.1.0"),
+					resource.TestCheckResourceAttr(resourceName, "number_of_broker_nodes", "3"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestMatchResourceAttr(resourceName, "zookeeper_connect_string", regexp.MustCompile(`^\d+\.\d+\.\d+\.\d+:\d+,\d+\.\d+\.\d+\.\d+:\d+,\d+\.\d+\.\d+\.\d+:\d+$`)),
 				),
 			},
 			{
@@ -96,16 +102,18 @@ func TestAccAWSMskCluster_basic(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
-					"bootstrap_brokers", // API may mutate ordering and selection of brokers to return
+					"bootstrap_brokers",     // API may mutate ordering and selection of brokers to return
+					"bootstrap_brokers_tls", // API may mutate ordering and selection of brokers to return
 				},
 			},
 		},
 	})
 }
-func TestAccAWSMskCluster_kms(t *testing.T) {
-	var cluster kafka.ClusterInfo
-	ri := acctest.RandInt()
-	resourceName := "aws_msk_cluster.example"
+
+func TestAccAWSMskCluster_BrokerNodeGroupInfo_EbsVolumeSize(t *testing.T) {
+	var cluster1, cluster2 kafka.ClusterInfo
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_msk_cluster.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -113,7 +121,127 @@ func TestAccAWSMskCluster_kms(t *testing.T) {
 		CheckDestroy: testAccCheckMskClusterDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccMskClusterConfig_kms(ri),
+				Config: testAccMskClusterConfigBrokerNodeGroupInfoEbsVolumeSize(rName, 11),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckMskClusterExists(resourceName, &cluster1),
+					resource.TestCheckResourceAttr(resourceName, "broker_node_group_info.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "broker_node_group_info.0.ebs_volume_size", "11"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"bootstrap_brokers",     // API may mutate ordering and selection of brokers to return
+					"bootstrap_brokers_tls", // API may mutate ordering and selection of brokers to return
+				},
+			},
+			{
+				// BadRequestException: The minimum increase in storage size of the cluster should be atleast 100GB
+				Config: testAccMskClusterConfigBrokerNodeGroupInfoEbsVolumeSize(rName, 112),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckMskClusterExists(resourceName, &cluster2),
+					testAccCheckMskClusterNotRecreated(&cluster1, &cluster2),
+					resource.TestCheckResourceAttr(resourceName, "broker_node_group_info.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "broker_node_group_info.0.ebs_volume_size", "112"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAWSMskCluster_ClientAuthentication_Tls_CertificateAuthorityArns(t *testing.T) {
+	t.Skip("Requires the aws_acmpca_certificate_authority resource to support importing the root CA certificate")
+
+	var cluster1 kafka.ClusterInfo
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_msk_cluster.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckMskClusterDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccMskClusterConfigClientAuthenticationTlsCertificateAuthorityArns(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckMskClusterExists(resourceName, &cluster1),
+					resource.TestCheckResourceAttr(resourceName, "client_authentication.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "client_authentication.0.tls.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "configuration_info.0.tls.0.certificate_authority_arns.#", "1"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"bootstrap_brokers",     // API may mutate ordering and selection of brokers to return
+					"bootstrap_brokers_tls", // API may mutate ordering and selection of brokers to return
+				},
+			},
+		},
+	})
+}
+
+func TestAccAWSMskCluster_ConfigurationInfo_Revision(t *testing.T) {
+	t.Skip("aws_msk_cluster is correctly calling UpdateClusterConfiguration however API is always returning 429 and 500 errors")
+
+	var cluster1, cluster2 kafka.ClusterInfo
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	configurationResourceName := "aws_msk_configuration.test"
+	resourceName := "aws_msk_cluster.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckMskClusterDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccMskClusterConfigConfigurationInfoRevision1(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckMskClusterExists(resourceName, &cluster1),
+					resource.TestCheckResourceAttr(resourceName, "configuration_info.#", "1"),
+					resource.TestCheckResourceAttrPair(resourceName, "configuration_info.0.arn", configurationResourceName, "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "configuration_info.0.revision", configurationResourceName, "latest_revision"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"bootstrap_brokers",     // API may mutate ordering and selection of brokers to return
+					"bootstrap_brokers_tls", // API may mutate ordering and selection of brokers to return
+				},
+			},
+			{
+				Config: testAccMskClusterConfigConfigurationInfoRevision2(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckMskClusterExists(resourceName, &cluster2),
+					testAccCheckMskClusterNotRecreated(&cluster1, &cluster2),
+					resource.TestCheckResourceAttr(resourceName, "configuration_info.#", "1"),
+					resource.TestCheckResourceAttrPair(resourceName, "configuration_info.0.arn", configurationResourceName, "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "configuration_info.0.revision", configurationResourceName, "latest_revision"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAWSMskCluster_EncryptionInfo_EncryptionAtRestKmsKeyArn(t *testing.T) {
+	var cluster kafka.ClusterInfo
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_msk_cluster.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckMskClusterDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccMskClusterConfigEncryptionInfoEncryptionAtRestKmsKeyArn(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckMskClusterExists(resourceName, &cluster),
 					resource.TestCheckResourceAttrPair(resourceName, "encryption_info.0.encryption_at_rest_kms_key_arn", "aws_kms_key.example_key", "arn"),
@@ -124,17 +252,18 @@ func TestAccAWSMskCluster_kms(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
-					"bootstrap_brokers", // API may mutate ordering and selection of brokers to return
+					"bootstrap_brokers",     // API may mutate ordering and selection of brokers to return
+					"bootstrap_brokers_tls", // API may mutate ordering and selection of brokers to return
 				},
 			},
 		},
 	})
 }
 
-func TestAccAWSMskCluster_enhancedMonitoring(t *testing.T) {
-	var cluster kafka.ClusterInfo
-	ri := acctest.RandInt()
-	resourceName := "aws_msk_cluster.example"
+func TestAccAWSMskCluster_EncryptionInfo_EncryptionInTransit_ClientBroker(t *testing.T) {
+	var cluster1 kafka.ClusterInfo
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_msk_cluster.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -142,7 +271,71 @@ func TestAccAWSMskCluster_enhancedMonitoring(t *testing.T) {
 		CheckDestroy: testAccCheckMskClusterDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccMskClusterConfig_enhancedMonitoring(ri),
+				Config: testAccMskClusterConfigEncryptionInfoEncryptionInTransitClientBroker(rName, "PLAINTEXT"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckMskClusterExists(resourceName, &cluster1),
+					resource.TestCheckResourceAttr(resourceName, "encryption_info.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "encryption_info.0.encryption_in_transit.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "encryption_info.0.encryption_in_transit.0.client_broker", "PLAINTEXT"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"bootstrap_brokers",     // API may mutate ordering and selection of brokers to return
+					"bootstrap_brokers_tls", // API may mutate ordering and selection of brokers to return
+				},
+			},
+		},
+	})
+}
+
+func TestAccAWSMskCluster_EncryptionInfo_EncryptionInTransit_InCluster(t *testing.T) {
+	var cluster1 kafka.ClusterInfo
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_msk_cluster.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckMskClusterDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccMskClusterConfigEncryptionInfoEncryptionInTransitInCluster(rName, false),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckMskClusterExists(resourceName, &cluster1),
+					resource.TestCheckResourceAttr(resourceName, "encryption_info.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "encryption_info.0.encryption_in_transit.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "encryption_info.0.encryption_in_transit.0.in_cluster", "false"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"bootstrap_brokers",     // API may mutate ordering and selection of brokers to return
+					"bootstrap_brokers_tls", // API may mutate ordering and selection of brokers to return
+				},
+			},
+		},
+	})
+}
+
+func TestAccAWSMskCluster_EnhancedMonitoring(t *testing.T) {
+	var cluster kafka.ClusterInfo
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_msk_cluster.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckMskClusterDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccMskClusterConfigEnhancedMonitoring(rName, "PER_BROKER"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckMskClusterExists(resourceName, &cluster),
 					resource.TestCheckResourceAttr(resourceName, "enhanced_monitoring", kafka.EnhancedMonitoringPerBroker),
@@ -153,17 +346,18 @@ func TestAccAWSMskCluster_enhancedMonitoring(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
-					"bootstrap_brokers",
+					"bootstrap_brokers",     // API may mutate ordering and selection of brokers to return
+					"bootstrap_brokers_tls", // API may mutate ordering and selection of brokers to return
 				},
 			},
 		},
 	})
 }
-func TestAccAWSMskCluster_tagsUpdate(t *testing.T) {
+
+func TestAccAWSMskCluster_NumberOfBrokerNodes(t *testing.T) {
 	var cluster kafka.ClusterInfo
-	var td kafka.ListTagsForResourceOutput
-	ri := acctest.RandInt()
-	resourceName := "aws_msk_cluster.example"
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_msk_cluster.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -171,50 +365,17 @@ func TestAccAWSMskCluster_tagsUpdate(t *testing.T) {
 		CheckDestroy: testAccCheckMskClusterDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccMskClusterConfig_basic(ri),
+				Config: testAccMskClusterConfigNumberOfBrokerNodes(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckMskClusterExists(resourceName, &cluster),
-					testAccLoadMskTags(&cluster, &td),
-					testAccCheckMskClusterTags(&td, "foo", "bar"),
-				),
-			},
-			{
-				Config: testAccMskClusterConfig_tagsUpdate(ri),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckMskClusterExists(resourceName, &cluster),
-					testAccLoadMskTags(&cluster, &td),
-					testAccCheckMskClusterTags(&td, "foo", "baz"),
-					testAccCheckMskClusterTags(&td, "new", "type"),
-				),
-			},
-		},
-	})
-}
-
-func TestAccAWSMskCluster_brokerNodes(t *testing.T) {
-	var cluster kafka.ClusterInfo
-	ri := acctest.RandInt()
-	resourceName := "aws_msk_cluster.example"
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckMskClusterDestroy,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccMskClusterConfig_brokerNodes(ri),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckMskClusterExists(resourceName, &cluster),
-					resource.TestCheckResourceAttr(resourceName, "number_of_broker_nodes", "6"),
-					resource.TestCheckResourceAttr(resourceName, "broker_node_group_info.0.instance_type", "kafka.m5.large"),
-					resource.TestCheckResourceAttr(resourceName, "broker_node_group_info.0.ebs_volume_size", "1"),
+					resource.TestMatchResourceAttr(resourceName, "bootstrap_brokers", regexp.MustCompile(`^(([-\w]+\.){1,}[\w]+:\d+,){2,}([-\w]+\.){1,}[\w]+:\d+$`)),
+					resource.TestMatchResourceAttr(resourceName, "bootstrap_brokers_tls", regexp.MustCompile(`^(([-\w]+\.){1,}[\w]+:\d+,){2,}([-\w]+\.){1,}[\w]+:\d+$`)),
+					resource.TestCheckResourceAttr(resourceName, "broker_node_group_info.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "broker_node_group_info.0.client_subnets.#", "3"),
 					resource.TestCheckResourceAttrPair(resourceName, "broker_node_group_info.0.client_subnets.0", "aws_subnet.example_subnet_az1", "id"),
 					resource.TestCheckResourceAttrPair(resourceName, "broker_node_group_info.0.client_subnets.1", "aws_subnet.example_subnet_az2", "id"),
 					resource.TestCheckResourceAttrPair(resourceName, "broker_node_group_info.0.client_subnets.2", "aws_subnet.example_subnet_az3", "id"),
-					resource.TestCheckResourceAttr(resourceName, "broker_node_group_info.0.security_groups.#", "1"),
-					resource.TestCheckResourceAttrPair(resourceName, "broker_node_group_info.0.security_groups.0", "aws_security_group.example_sg", "id"),
-					resource.TestCheckResourceAttr(resourceName, "kafka_version", "2.1.0"),
+					resource.TestCheckResourceAttr(resourceName, "number_of_broker_nodes", "6"),
 				),
 			},
 			{
@@ -222,7 +383,49 @@ func TestAccAWSMskCluster_brokerNodes(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
-					"bootstrap_brokers", // API may mutate ordering and selection of brokers to return
+					"bootstrap_brokers",     // API may mutate ordering and selection of brokers to return
+					"bootstrap_brokers_tls", // API may mutate ordering and selection of brokers to return
+				},
+			},
+		},
+	})
+}
+
+func TestAccAWSMskCluster_Tags(t *testing.T) {
+	var cluster kafka.ClusterInfo
+	var td kafka.ListTagsForResourceOutput
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_msk_cluster.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckMskClusterDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccMskClusterConfigTags1(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckMskClusterExists(resourceName, &cluster),
+					testAccLoadMskTags(&cluster, &td),
+					testAccCheckMskClusterTags(&td, "foo", "bar"),
+				),
+			},
+			{
+				Config: testAccMskClusterConfigTags2(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckMskClusterExists(resourceName, &cluster),
+					testAccLoadMskTags(&cluster, &td),
+					testAccCheckMskClusterTags(&td, "foo", "baz"),
+					testAccCheckMskClusterTags(&td, "new", "type"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"bootstrap_brokers",     // API may mutate ordering and selection of brokers to return
+					"bootstrap_brokers_tls", // API may mutate ordering and selection of brokers to return
 				},
 			},
 		},
@@ -271,6 +474,16 @@ func testAccCheckMskClusterExists(n string, cluster *kafka.ClusterInfo) resource
 		}
 
 		*cluster = *resp.ClusterInfo
+		return nil
+	}
+}
+
+func testAccCheckMskClusterNotRecreated(i, j *kafka.ClusterInfo) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		if aws.StringValue(i.ClusterArn) != aws.StringValue(j.ClusterArn) {
+			return fmt.Errorf("MSK Cluster (%s) recreated", aws.StringValue(i.ClusterArn))
+		}
+
 		return nil
 	}
 }
@@ -362,109 +575,295 @@ resource "aws_security_group" "example_sg" {
 `)
 
 }
-func testAccMskClusterConfig_basic(randInt int) string {
+func testAccMskClusterConfig_basic(rName string) string {
 	return testAccMskClusterBaseConfig() + fmt.Sprintf(`
+resource "aws_msk_cluster" "test" {
+  cluster_name           = %[1]q
+  kafka_version          = "2.1.0"
+  number_of_broker_nodes = 3
 
-resource "aws_msk_cluster" "example" {
-	cluster_name = "tf-test-%d"
-	kafka_version = "1.1.1"
-	number_of_broker_nodes = 3
-	broker_node_group_info {
-		instance_type = "kafka.m5.large"
-		ebs_volume_size = 10
-		client_subnets = [ "${aws_subnet.example_subnet_az1.id}", "${aws_subnet.example_subnet_az2.id}", "${aws_subnet.example_subnet_az3.id}" ] 
-		security_groups = [ "${aws_security_group.example_sg.id}" ]
-	}
-	tags = {
-		foo = "bar"
-	}
+  broker_node_group_info {
+    client_subnets  = ["${aws_subnet.example_subnet_az1.id}", "${aws_subnet.example_subnet_az2.id}", "${aws_subnet.example_subnet_az3.id}"]
+    ebs_volume_size = 10
+    instance_type   = "kafka.m5.large"
+    security_groups = ["${aws_security_group.example_sg.id}"]
+  }
 }
-`, randInt)
+`, rName)
 }
 
-func testAccMskClusterConfig_kms(randInt int) string {
+func testAccMskClusterConfigBrokerNodeGroupInfoEbsVolumeSize(rName string, ebsVolumeSize int) string {
 	return testAccMskClusterBaseConfig() + fmt.Sprintf(`
+resource "aws_msk_cluster" "test" {
+  cluster_name           = %[1]q
+  kafka_version          = "2.1.0"
+  number_of_broker_nodes = 3
 
+  broker_node_group_info {
+    client_subnets  = ["${aws_subnet.example_subnet_az1.id}", "${aws_subnet.example_subnet_az2.id}", "${aws_subnet.example_subnet_az3.id}"]
+    ebs_volume_size = %[2]d
+    instance_type   = "kafka.m5.large"
+    security_groups = ["${aws_security_group.example_sg.id}"]
+  }
+}
+`, rName, ebsVolumeSize)
+}
+
+func testAccMskClusterConfigClientAuthenticationTlsCertificateAuthorityArns(rName string) string {
+	return testAccMskClusterBaseConfig() + fmt.Sprintf(`
+resource "aws_acmpca_certificate_authority" "test" {
+  certificate_authority_configuration {
+    key_algorithm     = "RSA_4096"
+    signing_algorithm = "SHA512WITHRSA"
+
+    subject {
+      common_name = "terraformtesting.com"
+    }
+  }
+}
+
+resource "aws_msk_cluster" "test" {
+  cluster_name           = %[1]q
+  kafka_version          = "2.1.0"
+  number_of_broker_nodes = 3
+
+  broker_node_group_info {
+    client_subnets  = ["${aws_subnet.example_subnet_az1.id}", "${aws_subnet.example_subnet_az2.id}", "${aws_subnet.example_subnet_az3.id}"]
+    ebs_volume_size = 10
+    instance_type   = "kafka.m5.large"
+    security_groups = ["${aws_security_group.example_sg.id}"]
+  }
+
+  client_authentication {
+    tls {
+      certificate_authority_arns = ["${aws_acmpca_certificate_authority.test.arn}"]
+    }
+  }
+
+  encryption_info {
+    encryption_in_transit {
+      client_broker = "TLS"
+    }
+  }
+}
+`, rName)
+}
+
+func testAccMskClusterConfigConfigurationInfoRevision1(rName string) string {
+	return testAccMskClusterBaseConfig() + fmt.Sprintf(`
+resource "aws_msk_configuration" "test" {
+  kafka_versions = ["2.1.0"]
+  name           = "%[1]s-1"
+
+  server_properties = <<PROPERTIES
+log.cleaner.delete.retention.ms = 86400000
+PROPERTIES
+}
+
+resource "aws_msk_cluster" "test" {
+  cluster_name           = %[1]q
+  kafka_version          = "2.1.0"
+  number_of_broker_nodes = 3
+
+  broker_node_group_info {
+    client_subnets  = ["${aws_subnet.example_subnet_az1.id}", "${aws_subnet.example_subnet_az2.id}", "${aws_subnet.example_subnet_az3.id}"]
+    ebs_volume_size = 10
+    instance_type   = "kafka.m5.large"
+    security_groups = ["${aws_security_group.example_sg.id}"]
+  }
+
+  configuration_info {
+    arn      = "${aws_msk_configuration.test.arn}"
+    revision = "${aws_msk_configuration.test.latest_revision}"
+  }
+}
+`, rName)
+}
+
+func testAccMskClusterConfigConfigurationInfoRevision2(rName string) string {
+	return testAccMskClusterBaseConfig() + fmt.Sprintf(`
+resource "aws_msk_configuration" "test" {
+  kafka_versions = ["2.1.0"]
+  name           = "%[1]s-2"
+
+  server_properties = <<PROPERTIES
+log.cleaner.delete.retention.ms = 86400001
+PROPERTIES
+}
+
+resource "aws_msk_cluster" "test" {
+  cluster_name           = %[1]q
+  kafka_version          = "2.1.0"
+  number_of_broker_nodes = 3
+
+  broker_node_group_info {
+    client_subnets  = ["${aws_subnet.example_subnet_az1.id}", "${aws_subnet.example_subnet_az2.id}", "${aws_subnet.example_subnet_az3.id}"]
+    ebs_volume_size = 10
+    instance_type   = "kafka.m5.large"
+    security_groups = ["${aws_security_group.example_sg.id}"]
+  }
+
+  configuration_info {
+    arn      = "${aws_msk_configuration.test.arn}"
+    revision = "${aws_msk_configuration.test.latest_revision}"
+  }
+}
+`, rName)
+}
+
+func testAccMskClusterConfigEncryptionInfoEncryptionAtRestKmsKeyArn(rName string) string {
+	return testAccMskClusterBaseConfig() + fmt.Sprintf(`
 resource "aws_kms_key" "example_key" {
-	description = "tf-testacc-msk-cluster-kms"
-	tags = {
-		Name = "tf-testacc-msk-cluster-kms"
-	}
+  description = "tf-testacc-msk-cluster-kms"
+
+  tags = {
+    Name = "tf-testacc-msk-cluster-kms"
+  }
 }
 
-resource "aws_msk_cluster" "example" {
-	cluster_name = "tf-test-%d"
-	kafka_version = "1.1.1"
-	number_of_broker_nodes = 3
-	encryption_info {
-		encryption_at_rest_kms_key_arn = "${aws_kms_key.example_key.arn}"
-	}
-	broker_node_group_info {
-		instance_type = "kafka.m5.large"
-		ebs_volume_size = 10
-		client_subnets = [ "${aws_subnet.example_subnet_az1.id}", "${aws_subnet.example_subnet_az2.id}", "${aws_subnet.example_subnet_az3.id}" ] 
-		security_groups = [ "${aws_security_group.example_sg.id}" ]
-	}
+resource "aws_msk_cluster" "test" {
+  cluster_name           = %[1]q
+  kafka_version          = "2.1.0"
+  number_of_broker_nodes = 3
+
+  broker_node_group_info {
+    client_subnets  = ["${aws_subnet.example_subnet_az1.id}", "${aws_subnet.example_subnet_az2.id}", "${aws_subnet.example_subnet_az3.id}"]
+    ebs_volume_size = 10
+    instance_type   = "kafka.m5.large"
+    security_groups = ["${aws_security_group.example_sg.id}"]
+  }
+
+  encryption_info {
+    encryption_at_rest_kms_key_arn = "${aws_kms_key.example_key.arn}"
+  }
 }
-`, randInt)
+`, rName)
 
 }
 
-func testAccMskClusterConfig_enhancedMonitoring(randInt int) string {
+func testAccMskClusterConfigEncryptionInfoEncryptionInTransitClientBroker(rName, clientBroker string) string {
 	return testAccMskClusterBaseConfig() + fmt.Sprintf(`
+resource "aws_msk_cluster" "test" {
+  cluster_name           = %[1]q
+  kafka_version          = "2.1.0"
+  number_of_broker_nodes = 3
 
-resource "aws_msk_cluster" "example" {
-	cluster_name = "tf-test-%d"
-	kafka_version = "1.1.1"
-	number_of_broker_nodes = 3
-	broker_node_group_info {
-		instance_type = "kafka.m5.large"
-		ebs_volume_size = 10
-		client_subnets = [ "${aws_subnet.example_subnet_az1.id}", "${aws_subnet.example_subnet_az2.id}", "${aws_subnet.example_subnet_az3.id}" ] 
-		security_groups = [ "${aws_security_group.example_sg.id}" ]
-	}
-	enhanced_monitoring = "PER_BROKER"
+  broker_node_group_info {
+    client_subnets  = ["${aws_subnet.example_subnet_az1.id}", "${aws_subnet.example_subnet_az2.id}", "${aws_subnet.example_subnet_az3.id}"]
+    ebs_volume_size = 10
+    instance_type   = "kafka.m5.large"
+    security_groups = ["${aws_security_group.example_sg.id}"]
+  }
+
+  encryption_info {
+    encryption_in_transit {
+      client_broker = %[2]q
+    }
+  }
 }
-`, randInt)
-
+`, rName, clientBroker)
 }
 
-func testAccMskClusterConfig_brokerNodes(randInt int) string {
+func testAccMskClusterConfigEncryptionInfoEncryptionInTransitInCluster(rName string, inCluster bool) string {
 	return testAccMskClusterBaseConfig() + fmt.Sprintf(`
+resource "aws_msk_cluster" "test" {
+  cluster_name           = %[1]q
+  kafka_version          = "2.1.0"
+  number_of_broker_nodes = 3
 
-resource "aws_msk_cluster" "example" {
-	cluster_name = "tf-test-%d"
-	kafka_version = "2.1.0"
-	number_of_broker_nodes = 6
-	broker_node_group_info {
-		instance_type = "kafka.m5.large"
-		ebs_volume_size = 1
-		client_subnets = [ "${aws_subnet.example_subnet_az1.id}", "${aws_subnet.example_subnet_az2.id}", "${aws_subnet.example_subnet_az3.id}" ] 
-		security_groups = [ "${aws_security_group.example_sg.id}" ]
-	}
+  broker_node_group_info {
+    client_subnets  = ["${aws_subnet.example_subnet_az1.id}", "${aws_subnet.example_subnet_az2.id}", "${aws_subnet.example_subnet_az3.id}"]
+    ebs_volume_size = 10
+    instance_type   = "kafka.m5.large"
+    security_groups = ["${aws_security_group.example_sg.id}"]
+  }
+
+  encryption_info {
+    encryption_in_transit {
+      in_cluster = %[2]t
+    }
+  }
 }
-`, randInt)
-
+`, rName, inCluster)
 }
 
-func testAccMskClusterConfig_tagsUpdate(randInt int) string {
+func testAccMskClusterConfigEnhancedMonitoring(rName, enhancedMonitoring string) string {
 	return testAccMskClusterBaseConfig() + fmt.Sprintf(`
+resource "aws_msk_cluster" "test" {
+  cluster_name           = %[1]q
+  enhanced_monitoring    = %[2]q
+  kafka_version          = "2.1.0"
+  number_of_broker_nodes = 3
 
-resource "aws_msk_cluster" "example" {
-	cluster_name = "tf-test-%d"
-	kafka_version = "1.1.1"
-	number_of_broker_nodes = 3
-	broker_node_group_info {
-		instance_type = "kafka.m5.large"
-		ebs_volume_size = 10
-		client_subnets = [ "${aws_subnet.example_subnet_az1.id}", "${aws_subnet.example_subnet_az2.id}", "${aws_subnet.example_subnet_az3.id}" ] 
-		security_groups = [ "${aws_security_group.example_sg.id}" ]
-	}
-	tags = {
-		foo = "baz"
-		new = "type"
-	}
+  broker_node_group_info {
+    client_subnets  = ["${aws_subnet.example_subnet_az1.id}", "${aws_subnet.example_subnet_az2.id}", "${aws_subnet.example_subnet_az3.id}"]
+    ebs_volume_size = 10
+    instance_type   = "kafka.m5.large"
+    security_groups = ["${aws_security_group.example_sg.id}"]
+  }
 }
-`, randInt)
+`, rName, enhancedMonitoring)
+
+}
+
+func testAccMskClusterConfigNumberOfBrokerNodes(rName string) string {
+	return testAccMskClusterBaseConfig() + fmt.Sprintf(`
+resource "aws_msk_cluster" "test" {
+  cluster_name           = %[1]q
+  kafka_version          = "2.1.0"
+  number_of_broker_nodes = 6
+
+  broker_node_group_info {
+    client_subnets  = ["${aws_subnet.example_subnet_az1.id}", "${aws_subnet.example_subnet_az2.id}", "${aws_subnet.example_subnet_az3.id}"]
+    ebs_volume_size = 10
+    instance_type   = "kafka.m5.large"
+    security_groups = ["${aws_security_group.example_sg.id}"]
+  }
+}
+`, rName)
+
+}
+
+func testAccMskClusterConfigTags1(rName string) string {
+	return testAccMskClusterBaseConfig() + fmt.Sprintf(`
+resource "aws_msk_cluster" "test" {
+  cluster_name           = %[1]q
+  kafka_version          = "2.1.0"
+  number_of_broker_nodes = 3
+
+  broker_node_group_info {
+    client_subnets  = ["${aws_subnet.example_subnet_az1.id}", "${aws_subnet.example_subnet_az2.id}", "${aws_subnet.example_subnet_az3.id}"]
+    ebs_volume_size = 10
+    instance_type   = "kafka.m5.large"
+    security_groups = ["${aws_security_group.example_sg.id}"]
+  }
+
+  tags = {
+    foo = "bar"
+  }
+}
+`, rName)
+}
+
+func testAccMskClusterConfigTags2(rName string) string {
+	return testAccMskClusterBaseConfig() + fmt.Sprintf(`
+resource "aws_msk_cluster" "test" {
+  cluster_name           = %[1]q
+  kafka_version          = "2.1.0"
+  number_of_broker_nodes = 3
+
+  broker_node_group_info {
+    client_subnets  = ["${aws_subnet.example_subnet_az1.id}", "${aws_subnet.example_subnet_az2.id}", "${aws_subnet.example_subnet_az3.id}"]
+    ebs_volume_size = 10
+    instance_type   = "kafka.m5.large"
+    security_groups = ["${aws_security_group.example_sg.id}"]
+  }
+
+  tags = {
+    foo = "baz"
+    new = "type"
+  }
+}
+`, rName)
 
 }

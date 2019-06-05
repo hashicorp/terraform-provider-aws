@@ -23,6 +23,7 @@ func TestAccAWSMskClusterDataSource_Name(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(resourceName, "arn", dataSourceName, "arn"),
 					resource.TestCheckResourceAttrSet(dataSourceName, "bootstrap_brokers"),
+					resource.TestCheckResourceAttrSet(dataSourceName, "bootstrap_brokers_tls"),
 					resource.TestCheckResourceAttrPair(resourceName, "cluster_name", dataSourceName, "cluster_name"),
 					resource.TestCheckResourceAttrPair(resourceName, "kafka_version", dataSourceName, "kafka_version"),
 					resource.TestCheckResourceAttrPair(resourceName, "number_of_broker_nodes", dataSourceName, "number_of_broker_nodes"),
