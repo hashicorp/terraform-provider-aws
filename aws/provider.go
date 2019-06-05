@@ -148,6 +148,7 @@ func Provider() terraform.ResourceProvider {
 			"aws_api_gateway_api_key":                       dataSourceAwsApiGatewayApiKey(),
 			"aws_api_gateway_resource":                      dataSourceAwsApiGatewayResource(),
 			"aws_api_gateway_rest_api":                      dataSourceAwsApiGatewayRestApi(),
+			"aws_api_gateway_stage":                         dataSourceAwsApiGatewayStage(),
 			"aws_api_gateway_vpc_link":                      dataSourceAwsApiGatewayVpcLink(),
 			"aws_arn":                                       dataSourceAwsArn(),
 			"aws_autoscaling_group":                         dataSourceAwsAutoscalingGroup(),
