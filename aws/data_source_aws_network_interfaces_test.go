@@ -46,6 +46,7 @@ func testAccDataSourceAwsNetworkInterfacesConfig_Base(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"
+
   tags = {
     Name = "terraform-testacc-eni-data-source-basic-%s"
   }
@@ -53,7 +54,8 @@ resource "aws_vpc" "test" {
 
 resource "aws_subnet" "test" {
   cidr_block = "10.0.0.0/24"
-  vpc_id = "${aws_vpc.test.id}"
+  vpc_id     = "${aws_vpc.test.id}"
+
   tags = {
     Name = "terraform-testacc-eni-data-source-basic-%s"
   }
@@ -65,11 +67,11 @@ resource "aws_network_interface" "test" {
 
 resource "aws_network_interface" "test1" {
   subnet_id = "${aws_subnet.test.id}"
+
   tags = {
-  	Name = "${aws_vpc.test.tags.Name}"
+    Name = "${aws_vpc.test.tags.Name}"
   }
 }
-
 `, rName, rName)
 }
 

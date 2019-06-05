@@ -90,10 +90,10 @@ resource "aws_security_group" "elb_test" {
   vpc_id      = "${aws_vpc.elb_test.id}"
 
   ingress {
-    from_port   = 0
-    to_port     = 0
-    protocol    = "-1"
-    self        = true
+    from_port = 0
+    to_port   = 0
+    protocol  = "-1"
+    self      = true
   }
 
   egress {
@@ -109,6 +109,7 @@ resource "aws_security_group" "elb_test" {
 }
 
 data "aws_elb" "elb_test" {
-	name = "${aws_elb.elb_test.name}"
-}`, rName, testName)
+  name = "${aws_elb.elb_test.name}"
+}
+`, rName, testName)
 }

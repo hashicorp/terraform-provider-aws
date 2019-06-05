@@ -19,7 +19,7 @@ func TestAccAWSSESDomainIdentity_basic(t *testing.T) {
 		acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum))
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSSES(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsSESDomainIdentityDestroy,
 		Steps: []resource.TestStep{
@@ -40,7 +40,7 @@ func TestAccAWSSESDomainIdentity_disappears(t *testing.T) {
 		acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum))
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSSES(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsSESDomainIdentityDestroy,
 		Steps: []resource.TestStep{
@@ -62,7 +62,7 @@ func TestAccAWSSESDomainIdentity_trailingPeriod(t *testing.T) {
 		acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum))
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSSES(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsSESDomainIdentityDestroy,
 		Steps: []resource.TestStep{
@@ -173,10 +173,26 @@ func testAccCheckAwsSESDomainIdentityArn(n string, domain string) resource.TestC
 	}
 }
 
+func testAccPreCheckAWSSES(t *testing.T) {
+	conn := testAccProvider.Meta().(*AWSClient).sesConn
+
+	input := &ses.ListIdentitiesInput{}
+
+	_, err := conn.ListIdentities(input)
+
+	if testAccPreCheckSkipError(err) {
+		t.Skipf("skipping acceptance testing: %s", err)
+	}
+
+	if err != nil {
+		t.Fatalf("unexpected PreCheck error: %s", err)
+	}
+}
+
 func testAccAwsSESDomainIdentityConfig(domain string) string {
 	return fmt.Sprintf(`
 resource "aws_ses_domain_identity" "test" {
-	domain = "%s"
+  domain = "%s"
 }
 `, domain)
 }

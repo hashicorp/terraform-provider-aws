@@ -371,14 +371,15 @@ func testAccCheckIAMUserPolicyExpectedPolicies(iamUserResource string, expected 
 func testAccAwsIamUserPolicyConfig(suffix string) string {
 	return fmt.Sprintf(`
 resource "aws_iam_user" "user_%[1]s" {
-	name = "tf_test_user_test_%[1]s"
-	path = "/"
+  name = "tf_test_user_test_%[1]s"
+  path = "/"
 }
 
 resource "aws_iam_user_policy" "foo_%[1]s" {
-	name = "tf_test_policy_test_%[1]s"
-	user = "${aws_iam_user.user_%[1]s.name}"
-	policy = <<EOF
+  name = "tf_test_policy_test_%[1]s"
+  user = "${aws_iam_user.user_%[1]s.name}"
+
+  policy = <<EOF
 {
   "Version": "2012-10-17",
   "Statement": {
@@ -400,7 +401,8 @@ resource "aws_iam_user_policy" "foo" {
   name = "foo_policy_%d"
   user = "${aws_iam_user.user.name}"
   policy = %v
-}`, testAccAWSUserConfig(fmt.Sprintf("test_user_%d", rInt), "/"), rInt, policy)
+}
+`, testAccAWSUserConfig(fmt.Sprintf("test_user_%d", rInt), "/"), rInt, policy)
 }
 
 func testAccIAMUserPolicyConfig_namePrefix(rInt int, policy string) string {
@@ -411,7 +413,8 @@ resource "aws_iam_user_policy" "foo" {
   name_prefix = "foo_policy_"
   user = "${aws_iam_user.user.name}"
   policy = %v
-}`, testAccAWSUserConfig(fmt.Sprintf("test_user_%d", rInt), "/"), policy)
+}
+`, testAccAWSUserConfig(fmt.Sprintf("test_user_%d", rInt), "/"), policy)
 }
 
 func testAccIAMUserPolicyConfig_generatedName(rInt int, policy string) string {
@@ -421,7 +424,8 @@ func testAccIAMUserPolicyConfig_generatedName(rInt int, policy string) string {
 resource "aws_iam_user_policy" "foo" {
   user = "${aws_iam_user.user.name}"
   policy = %v
-}`, testAccAWSUserConfig(fmt.Sprintf("test_user_%d", rInt), "/"), policy)
+}
+`, testAccAWSUserConfig(fmt.Sprintf("test_user_%d", rInt), "/"), policy)
 }
 
 func testAccIAMUserPolicyConfig_multiplePolicies(rInt int, policy1, policy2 string) string {
@@ -438,5 +442,6 @@ resource "aws_iam_user_policy" "bar" {
   name = "bar_policy_%[2]d"
   user = "${aws_iam_user.user.name}"
   policy = %[4]v
-}`, testAccAWSUserConfig(fmt.Sprintf("test_user_%d", rInt), "/"), rInt, policy1, policy2)
+}
+`, testAccAWSUserConfig(fmt.Sprintf("test_user_%d", rInt), "/"), rInt, policy1, policy2)
 }

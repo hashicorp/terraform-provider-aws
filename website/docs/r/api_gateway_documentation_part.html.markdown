@@ -6,7 +6,7 @@ description: |-
   Provides a settings of an API Gateway Documentation Part.
 ---
 
-# aws_api_gateway_documentation_part
+# Resource: aws_api_gateway_documentation_part
 
 Provides a settings of an API Gateway Documentation Part.
 

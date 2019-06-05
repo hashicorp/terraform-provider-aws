@@ -6,7 +6,7 @@ description: |-
   Manages selection conditions for AWS Backup plan resources.
 ---
 
-# aws_backup_selection
+# Resource: aws_backup_selection
 
 Manages selection conditions for AWS Backup plan resources.
 
@@ -14,7 +14,7 @@ Manages selection conditions for AWS Backup plan resources.
 
 ```hcl
 resource "aws_backup_selection" "example" {
-  plan_id      = "${aws_backup_plan.example.id}"
+  plan_id = "${aws_backup_plan.example.id}"
 
   name         = "tf_example_backup_selection"
   iam_role_arn = "arn:aws:iam::123456789012:role/service-role/AWSBackupDefaultServiceRole"
@@ -26,7 +26,7 @@ resource "aws_backup_selection" "example" {
   }
 
   resources = [
-    "arn:aws:ec2:us-east-1:123456789012:volume/"
+    "arn:aws:ec2:us-east-1:123456789012:volume/",
   ]
 }
 ```
@@ -52,3 +52,11 @@ Tag conditions (`selection_tag`) support the following:
 In addition to all arguments above, the following attributes are exported:
 
 * `id` - Backup Selection identifier
+
+## Import
+
+Backup selection can be imported using the role plan_id and id separated by `|`.
+
+```
+$ terraform import aws_backup_selection.example plan-id|selection-id
+```

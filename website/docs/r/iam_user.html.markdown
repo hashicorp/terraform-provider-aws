@@ -6,7 +6,7 @@ description: |-
   Provides an IAM user.
 ---
 
-# aws_iam_user
+# Resource: aws_iam_user
 
 Provides an IAM user.
 
@@ -16,6 +16,7 @@ Provides an IAM user.
 resource "aws_iam_user" "lb" {
   name = "loadbalancer"
   path = "/system/"
+
   tags = {
     tag-key = "tag-value"
   }

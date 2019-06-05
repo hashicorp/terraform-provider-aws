@@ -377,20 +377,27 @@ func testAccCheckAWSSagemakerNotebookInstanceDisappears(instance *sagemaker.Desc
 
 func testagemakerNotebookInstanceConfig_Base(rName string) string {
 	return fmt.Sprintf(`
+resource "aws_sagemaker_notebook_instance" "foo" {
+  name          = "%s"
+  role_arn      = "${aws_iam_role.foo.arn}"
+  instance_type = "ml.t2.medium"
+}
+
 resource "aws_iam_role" "foo" {
-	name = %q
-	path = "/"
-	assume_role_policy = "${data.aws_iam_policy_document.assume_role.json}"
+  name               = "%s"
+  path               = "/"
+  assume_role_policy = "${data.aws_iam_policy_document.assume_role.json}"
 }
 
 data "aws_iam_policy_document" "assume_role" {
-	statement {
-		actions = [ "sts:AssumeRole" ]
-		principals {
-			type = "Service"
-			identifiers = [ "sagemaker.amazonaws.com" ]
-		}
-	}
+  statement {
+    actions = ["sts:AssumeRole"]
+
+    principals {
+      type        = "Service"
+      identifiers = ["sagemaker.amazonaws.com"]
+    }
+  }
 }
 `, rName)
 }
@@ -398,31 +405,26 @@ data "aws_iam_policy_document" "assume_role" {
 func testAccAWSSagemakerNotebookInstanceConfig_Basic(notebookName string) string {
 	return testagemakerNotebookInstanceConfig_Base(notebookName) + fmt.Sprintf(`
 resource "aws_sagemaker_notebook_instance" "foo" {
-	name = %q
-	role_arn = "${aws_iam_role.foo.arn}"
-	instance_type = "ml.t2.medium"
-}
-`, notebookName)
+  name          = "%s"
+  role_arn      = "${aws_iam_role.foo.arn}"
+  instance_type = "ml.m4.xlarge"
 }
 
-func testAccAWSSagemakerNotebookInstanceConfig_VolumeSize(notebookName string) string {
-	return testagemakerNotebookInstanceConfig_Base(notebookName) + fmt.Sprintf(`
-resource "aws_sagemaker_notebook_instance" "foo" {
-	name = "%s"
-	role_arn = "${aws_iam_role.foo.arn}"
-	instance_type = "ml.t2.medium"
-	kms_key_id = "foo"
-}
-`, notebookName)
+resource "aws_iam_role" "foo" {
+  name               = "%s"
+  path               = "/"
+  assume_role_policy = "${data.aws_iam_policy_document.assume_role.json}"
 }
 
-func testAccAWSSagemakerNotebookInstanceConfig_KmsKeyID(notebookName string) string {
-	return testagemakerNotebookInstanceConfig_Base(notebookName) + fmt.Sprintf(`
-resource "aws_sagemaker_notebook_instance" "foo" {
-	name = "%s"
-	role_arn = "${aws_iam_role.foo.arn}"
-	instance_type = "ml.t2.medium"
-	volume_size = "7"
+data "aws_iam_policy_document" "assume_role" {
+  statement {
+    actions = ["sts:AssumeRole"]
+
+    principals {
+      type        = "Service"
+      identifiers = ["sagemaker.amazonaws.com"]
+    }
+  }
 }
 `, notebookName)
 }
@@ -431,7 +433,8 @@ func testAccAWSSagemakerNotebookInstanceConfigLifecycleConfigName(rName string) 
 	return fmt.Sprintf(`
 data "aws_iam_policy_document" "assume_role" {
   statement {
-    actions = [ "sts:AssumeRole" ]
+    actions = ["sts:AssumeRole"]
+
     principals {
       identifiers = ["sagemaker.amazonaws.com"]
       type        = "Service"
@@ -461,26 +464,30 @@ resource "aws_sagemaker_notebook_instance" "test" {
 func testAccAWSSagemakerNotebookInstanceConfig_DirectInternetAccess(notebookName string) string {
 	return testagemakerNotebookInstanceConfig_Base(notebookName) + fmt.Sprintf(`
 resource "aws_sagemaker_notebook_instance" "foo" {
-	name = %q
-	role_arn = "${aws_iam_role.foo.arn}"
-	instance_type = "ml.t2.medium"
-	direct_internet_access = "Disabled"
-}
-`, notebookName)
+  name          = "%s"
+  role_arn      = "${aws_iam_role.foo.arn}"
+  instance_type = "ml.t2.medium"
+
+  tags = {
+    foo = "bar"
+  }
 }
 
-func testAccAWSSagemakerNotebookInstanceConfig_LifecycleConfigName(notebookName string) string {
-	return testagemakerNotebookInstanceConfig_Base(notebookName) + fmt.Sprintf(`
-resource "aws_sagemaker_notebook_instance" "foo" {
-	name = %q
-	role_arn = "${aws_iam_role.foo.arn}"
-	instance_type = "ml.t2.medium"
-	lifecycle_config_name = "${aws_sagemaker_lifecycle_config.foo.name}"
+resource "aws_iam_role" "foo" {
+  name               = "%s"
+  path               = "/"
+  assume_role_policy = "${data.aws_iam_policy_document.assume_role.json}"
 }
 
-resource "aws_sagemaker_lifecycle_config" "foo" {
-  name = %q
-  on_create = "${base64encode("echo foo")}"
+data "aws_iam_policy_document" "assume_role" {
+  statement {
+    actions = ["sts:AssumeRole"]
+
+    principals {
+      type        = "Service"
+      identifiers = ["sagemaker.amazonaws.com"]
+    }
+  }
 }
 `, notebookName, notebookName)
 }
@@ -488,35 +495,30 @@ resource "aws_sagemaker_lifecycle_config" "foo" {
 func testAccAWSSagemakerNotebookInstanceUpdateInstanceConfig(notebookName string) string {
 	return testagemakerNotebookInstanceConfig_Base(notebookName) + fmt.Sprintf(`
 resource "aws_sagemaker_notebook_instance" "foo" {
-	name = %q
-	role_arn = "${aws_iam_role.foo.arn}"
-	instance_type = "ml.m4.xlarge"
-}
-`, notebookName)
+  name          = "%s"
+  role_arn      = "${aws_iam_role.foo.arn}"
+  instance_type = "ml.t2.medium"
+
+  tags = {
+    bar = "baz"
+  }
 }
 
-func testAccAWSSagemakerNotebookInstanceTagsConfig(notebookName string) string {
-	return testagemakerNotebookInstanceConfig_Base(notebookName) + fmt.Sprintf(`
-resource "aws_sagemaker_notebook_instance" "foo" {
-	name = %q
-	role_arn = "${aws_iam_role.foo.arn}"
-	instance_type = "ml.t2.medium"
-	tags = {
-		foo = "bar"
-	}
-}
-`, notebookName)
+resource "aws_iam_role" "foo" {
+  name               = "%s"
+  path               = "/"
+  assume_role_policy = "${data.aws_iam_policy_document.assume_role.json}"
 }
 
-func testAccAWSSagemakerNotebookInstanceTagsUpdateConfig(notebookName string) string {
-	return testagemakerNotebookInstanceConfig_Base(notebookName) + fmt.Sprintf(`
-resource "aws_sagemaker_notebook_instance" "foo" {
-	name = %q
-	role_arn = "${aws_iam_role.foo.arn}"
-	instance_type = "ml.t2.medium"
-	tags = {
-		bar = "baz"
-	}
+data "aws_iam_policy_document" "assume_role" {
+  statement {
+    actions = ["sts:AssumeRole"]
+
+    principals {
+      type        = "Service"
+      identifiers = ["sagemaker.amazonaws.com"]
+    }
+  }
 }
 `, notebookName)
 }

@@ -6,7 +6,7 @@ description: |-
   Manages an AWS Storage Gateway upload buffer
 ---
 
-# aws_storagegateway_upload_buffer
+# Resource: aws_storagegateway_upload_buffer
 
 Manages an AWS Storage Gateway upload buffer.
 

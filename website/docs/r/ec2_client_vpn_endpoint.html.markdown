@@ -6,7 +6,7 @@ description: |-
   Provides an AWS Client VPN endpoint for OpenVPN clients.
 ---
 
-# aws_ec2_client_vpn_endpoint
+# Resource: aws_ec2_client_vpn_endpoint
 
 Provides an AWS Client VPN endpoint for OpenVPN clients. For more information on usage, please see the
 [AWS Client VPN Administrator's Guide](https://docs.aws.amazon.com/vpn/latest/clientvpn-admin/what-is.html).
@@ -15,18 +15,18 @@ Provides an AWS Client VPN endpoint for OpenVPN clients. For more information on
 
 ```hcl
 resource "aws_ec2_client_vpn_endpoint" "example" {
-  description = "terraform-clientvpn-example"
+  description            = "terraform-clientvpn-example"
   server_certificate_arn = "${aws_acm_certificate.cert.arn}"
-  client_cidr_block = "10.0.0.0/16"
+  client_cidr_block      = "10.0.0.0/16"
 
   authentication_options {
-    type = "certificate-authentication"
+    type                       = "certificate-authentication"
     root_certificate_chain_arn = "${aws_acm_certificate.root_cert.arn}"
   }
 
   connection_log_options {
-    enabled = true
-    cloudwatch_log_group = "${aws_cloudwatch_log_group.lg.name}"
+    enabled               = true
+    cloudwatch_log_group  = "${aws_cloudwatch_log_group.lg.name}"
     cloudwatch_log_stream = "${aws_cloudwatch_log_stream.ls.name}"
   }
 }

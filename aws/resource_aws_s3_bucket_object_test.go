@@ -806,9 +806,9 @@ resource "aws_s3_bucket" "object_bucket" {
 }
 
 resource "aws_s3_bucket_object" "object" {
-  bucket = "${aws_s3_bucket.object_bucket.bucket}"
-  key = "test-key"
-  source = "%s"
+  bucket       = "${aws_s3_bucket.object_bucket.bucket}"
+  key          = "test-key"
+  source       = "%s"
   content_type = "binary/octet-stream"
 }
 `, randInt, source)
@@ -821,11 +821,11 @@ resource "aws_s3_bucket" "object_bucket" {
 }
 
 resource "aws_s3_bucket_object" "object" {
-  bucket = "${aws_s3_bucket.object_bucket.bucket}"
-  key = "test-key"
-  source = "%s"
+  bucket           = "${aws_s3_bucket.object_bucket.bucket}"
+  key              = "test-key"
+  source           = "%s"
   content_language = "en"
-  content_type = "binary/octet-stream"
+  content_type     = "binary/octet-stream"
   website_redirect = "http://google.com"
 }
 `, randInt, source)
@@ -838,8 +838,8 @@ resource "aws_s3_bucket" "object_bucket" {
 }
 
 resource "aws_s3_bucket_object" "object" {
-  bucket = "${aws_s3_bucket.object_bucket.bucket}"
-  key = "test-key"
+  bucket  = "${aws_s3_bucket.object_bucket.bucket}"
+  key     = "test-key"
   content = "%s"
 }
 `, randInt, content)
@@ -852,8 +852,8 @@ resource "aws_s3_bucket" "object_bucket" {
 }
 
 resource "aws_s3_bucket_object" "object" {
-  bucket = "${aws_s3_bucket.object_bucket.bucket}"
-  key = "test-key"
+  bucket         = "${aws_s3_bucket.object_bucket.bucket}"
+  key            = "test-key"
   content_base64 = "%s"
 }
 `, randInt, contentBase64)
@@ -863,6 +863,7 @@ func testAccAWSS3BucketObjectConfig_updateable(randInt int, bucketVersioning boo
 	return fmt.Sprintf(`
 resource "aws_s3_bucket" "object_bucket_3" {
   bucket = "tf-object-test-bucket-%d"
+
   versioning {
     enabled = %t
   }
@@ -870,9 +871,9 @@ resource "aws_s3_bucket" "object_bucket_3" {
 
 resource "aws_s3_bucket_object" "object" {
   bucket = "${aws_s3_bucket.object_bucket_3.bucket}"
-  key = "updateable-key"
+  key    = "updateable-key"
   source = "%s"
-  etag = "${filemd5("%s")}"
+  etag   = "${filemd5("%s")}"
 }
 `, randInt, bucketVersioning, source, source)
 }
@@ -886,9 +887,9 @@ resource "aws_s3_bucket" "object_bucket" {
 }
 
 resource "aws_s3_bucket_object" "object" {
-  bucket = "${aws_s3_bucket.object_bucket.bucket}"
-  key = "test-key"
-  source = "%s"
+  bucket     = "${aws_s3_bucket.object_bucket.bucket}"
+  key        = "test-key"
+  source     = "%s"
   kms_key_id = "${aws_kms_key.kms_key_1.arn}"
 }
 `, randInt, source)
@@ -901,9 +902,9 @@ resource "aws_s3_bucket" "object_bucket" {
 }
 
 resource "aws_s3_bucket_object" "object" {
-  bucket = "${aws_s3_bucket.object_bucket.bucket}"
-  key = "test-key"
-  source = "%s"
+  bucket                 = "${aws_s3_bucket.object_bucket.bucket}"
+  key                    = "test-key"
+  source                 = "%s"
   server_side_encryption = "AES256"
 }
 `, randInt, source)
@@ -913,16 +914,17 @@ func testAccAWSS3BucketObjectConfig_acl(randInt int, content, acl string) string
 	return fmt.Sprintf(`
 resource "aws_s3_bucket" "object_bucket" {
   bucket = "tf-object-test-bucket-%d"
+
   versioning {
     enabled = true
   }
 }
 
 resource "aws_s3_bucket_object" "object" {
-  bucket = "${aws_s3_bucket.object_bucket.bucket}"
-  key = "test-key"
+  bucket  = "${aws_s3_bucket.object_bucket.bucket}"
+  key     = "test-key"
   content = "%s"
-  acl = "%s"
+  acl     = "%s"
 }
 `, randInt, content, acl)
 }
@@ -934,9 +936,9 @@ resource "aws_s3_bucket" "object_bucket" {
 }
 
 resource "aws_s3_bucket_object" "object" {
-  bucket = "${aws_s3_bucket.object_bucket.bucket}"
-  key = "test-key"
-  content = "some_bucket_content"
+  bucket        = "${aws_s3_bucket.object_bucket.bucket}"
+  key           = "test-key"
+  content       = "some_bucket_content"
   storage_class = "%s"
 }
 `, randInt, storage_class)
@@ -946,15 +948,17 @@ func testAccAWSS3BucketObjectConfig_withTags(randInt int, key, content string) s
 	return fmt.Sprintf(`
 resource "aws_s3_bucket" "object_bucket" {
   bucket = "tf-object-test-bucket-%d"
+
   versioning {
     enabled = true
   }
 }
 
 resource "aws_s3_bucket_object" "object" {
-  bucket = "${aws_s3_bucket.object_bucket.bucket}"
-  key = "%s"
+  bucket  = "${aws_s3_bucket.object_bucket.bucket}"
+  key     = "%s"
   content = "%s"
+
   tags = {
     Key1 = "AAA"
     Key2 = "BBB"
@@ -968,15 +972,17 @@ func testAccAWSS3BucketObjectConfig_withUpdatedTags(randInt int, key, content st
 	return fmt.Sprintf(`
 resource "aws_s3_bucket" "object_bucket" {
   bucket = "tf-object-test-bucket-%d"
+
   versioning {
     enabled = true
   }
 }
 
 resource "aws_s3_bucket_object" "object" {
-  bucket = "${aws_s3_bucket.object_bucket.bucket}"
-  key = "%s"
+  bucket  = "${aws_s3_bucket.object_bucket.bucket}"
+  key     = "%s"
   content = "%s"
+
   tags = {
     Key2 = "BBB"
     Key3 = "XXX"
@@ -991,14 +997,15 @@ func testAccAWSS3BucketObjectConfig_withNoTags(randInt int, key, content string)
 	return fmt.Sprintf(`
 resource "aws_s3_bucket" "object_bucket" {
   bucket = "tf-object-test-bucket-%d"
+
   versioning {
     enabled = true
   }
 }
 
 resource "aws_s3_bucket_object" "object" {
-  bucket = "${aws_s3_bucket.object_bucket.bucket}"
-  key = "%s"
+  bucket  = "${aws_s3_bucket.object_bucket.bucket}"
+  key     = "%s"
   content = "%s"
 }
 `, randInt, key, content)

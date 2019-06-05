@@ -6,7 +6,7 @@ description: |-
   Provides an API Gateway Deployment.
 ---
 
-# aws_api_gateway_deployment
+# Resource: aws_api_gateway_deployment
 
 Provides an API Gateway Deployment.
 

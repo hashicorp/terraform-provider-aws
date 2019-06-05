@@ -45,6 +45,8 @@ If multiple, different Terraform AWS Provider configurations are required, see t
 
 The Terraform AWS Provider allows the following endpoints to be customized:
 
+<div style="column-width: 14em;">
+
 - `acm`
 - `acmpca`
 - `apigateway`
@@ -109,12 +111,14 @@ The Terraform AWS Provider allows the following endpoints to be customized:
 - `kinesis_analytics` (**DEPRECATED** Use `kinesisanalytics` instead)
 - `kinesis`
 - `kinesisanalytics`
+- `kinesisvideo`
 - `kms`
 - `lambda`
 - `lexmodels`
 - `licensemanager`
 - `lightsail`
 - `macie`
+- `managedblockchain`
 - `mediaconnect`
 - `mediaconvert`
 - `medialive`
@@ -158,6 +162,9 @@ The Terraform AWS Provider allows the following endpoints to be customized:
 - `wafregional`
 - `worklink`
 - `workspaces`
+- `xray`
+
+</div>
 
 ## Connecting to Local AWS Compatible Solutions
 

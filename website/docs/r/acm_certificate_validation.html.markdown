@@ -6,7 +6,7 @@ description: |-
   Waits for and checks successful validation of an ACM certificate.
 ---
 
-# aws_acm_certificate_validation
+# Resource: aws_acm_certificate_validation
 
 This resource represents a successful validation of an ACM certificate in concert
 with other resources.

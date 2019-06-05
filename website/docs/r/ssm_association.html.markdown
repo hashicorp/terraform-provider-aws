@@ -6,7 +6,7 @@ description: |-
   Associates an SSM Document to an instance or EC2 tag.
 ---
 
-# aws_ssm_association
+# Resource: aws_ssm_association
 
 Associates an SSM Document to an instance or EC2 tag.
 

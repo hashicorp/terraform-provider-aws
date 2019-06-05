@@ -55,10 +55,11 @@ func resourceAwsAppmeshRoute() *schema.Resource {
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"http_route": {
-							Type:     schema.TypeList,
-							Optional: true,
-							MinItems: 0,
-							MaxItems: 1,
+							Type:          schema.TypeList,
+							Optional:      true,
+							MinItems:      0,
+							MaxItems:      1,
+							ConflictsWith: []string{"spec.0.tcp_route"},
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"action": {
@@ -72,6 +73,7 @@ func resourceAwsAppmeshRoute() *schema.Resource {
 													Type:     schema.TypeSet,
 													Required: true,
 													MinItems: 1,
+													MaxItems: 10,
 													Elem: &schema.Resource{
 														Schema: map[string]*schema.Schema{
 															"virtual_node": {
@@ -79,6 +81,7 @@ func resourceAwsAppmeshRoute() *schema.Resource {
 																Required:     true,
 																ValidateFunc: validation.StringLenBetween(1, 255),
 															},
+
 															"weight": {
 																Type:         schema.TypeInt,
 																Required:     true,
@@ -103,6 +106,50 @@ func resourceAwsAppmeshRoute() *schema.Resource {
 													Type:         schema.TypeString,
 													Required:     true,
 													ValidateFunc: validation.StringMatch(regexp.MustCompile(`^/`), "must start with /"),
+												},
+											},
+										},
+									},
+								},
+							},
+						},
+
+						"tcp_route": {
+							Type:          schema.TypeList,
+							Optional:      true,
+							MinItems:      0,
+							MaxItems:      1,
+							ConflictsWith: []string{"spec.0.http_route"},
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"action": {
+										Type:     schema.TypeList,
+										Required: true,
+										MinItems: 1,
+										MaxItems: 1,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"weighted_target": {
+													Type:     schema.TypeSet,
+													Required: true,
+													MinItems: 1,
+													MaxItems: 10,
+													Elem: &schema.Resource{
+														Schema: map[string]*schema.Schema{
+															"virtual_node": {
+																Type:         schema.TypeString,
+																Required:     true,
+																ValidateFunc: validation.StringLenBetween(1, 255),
+															},
+
+															"weight": {
+																Type:         schema.TypeInt,
+																Required:     true,
+																ValidateFunc: validation.IntBetween(0, 100),
+															},
+														},
+													},
+													Set: appmeshRouteWeightedTargetHash,
 												},
 											},
 										},

@@ -6,7 +6,7 @@ description: |-
   Waits for and checks successful verification of an SES domain identity.
 ---
 
-# aws_ses_domain_identity_verification
+# Resource: aws_ses_domain_identity_verification
 
 Represents a successful verification of an SES domain identity.
 

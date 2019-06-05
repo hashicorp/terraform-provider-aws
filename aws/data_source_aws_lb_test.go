@@ -89,13 +89,14 @@ func TestAccDataSourceAWSLBBackwardsCompatibility(t *testing.T) {
 }
 
 func testAccDataSourceAWSLBConfigBasic(lbName string) string {
-	return fmt.Sprintf(`resource "aws_lb" "alb_test" {
+	return fmt.Sprintf(`
+resource "aws_lb" "alb_test" {
   name            = "%s"
   internal        = true
   security_groups = ["${aws_security_group.alb_test.id}"]
   subnets         = ["${aws_subnet.alb_test.0.id}", "${aws_subnet.alb_test.1.id}"]
 
-  idle_timeout = 30
+  idle_timeout               = 30
   enable_deletion_protection = false
 
   tags = {
@@ -155,22 +156,24 @@ resource "aws_security_group" "alb_test" {
 }
 
 data "aws_lb" "alb_test_with_arn" {
-	arn = "${aws_lb.alb_test.arn}"
+  arn = "${aws_lb.alb_test.arn}"
 }
 
 data "aws_lb" "alb_test_with_name" {
-	name = "${aws_lb.alb_test.name}"
-}`, lbName)
+  name = "${aws_lb.alb_test.name}"
+}
+`, lbName)
 }
 
 func testAccDataSourceAWSLBConfigBackardsCompatibility(albName string) string {
-	return fmt.Sprintf(`resource "aws_alb" "alb_test" {
+	return fmt.Sprintf(`
+resource "aws_alb" "alb_test" {
   name            = "%s"
   internal        = true
   security_groups = ["${aws_security_group.alb_test.id}"]
   subnets         = ["${aws_subnet.alb_test.0.id}", "${aws_subnet.alb_test.1.id}"]
 
-  idle_timeout = 30
+  idle_timeout               = 30
   enable_deletion_protection = false
 
   tags = {
@@ -230,10 +233,11 @@ resource "aws_security_group" "alb_test" {
 }
 
 data "aws_alb" "alb_test_with_arn" {
-	arn = "${aws_alb.alb_test.arn}"
+  arn = "${aws_alb.alb_test.arn}"
 }
 
 data "aws_alb" "alb_test_with_name" {
-	name = "${aws_alb.alb_test.name}"
-}`, albName)
+  name = "${aws_alb.alb_test.name}"
+}
+`, albName)
 }

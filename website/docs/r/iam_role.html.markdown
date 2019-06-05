@@ -6,7 +6,7 @@ description: |-
   Provides an IAM role.
 ---
 
-# aws_iam_role
+# Resource: aws_iam_role
 
 Provides an IAM role.
 
@@ -33,7 +33,7 @@ resource "aws_iam_role" "test_role" {
 EOF
 
   tags = {
-      tag-key = "tag-value"
+    tag-key = "tag-value"
   }
 }
 ```

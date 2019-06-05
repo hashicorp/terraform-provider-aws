@@ -707,7 +707,7 @@ func testAccAWSUserConfigForceDestroy(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_iam_user" "test" {
   force_destroy = true
-  name = %q
+  name          = %q
 }
 `, rName)
 }
@@ -716,6 +716,7 @@ func testAccAWSUserConfig_tags(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_iam_user" "test" {
   name = %q
+
   tags = {
     Name = "test-Name"
     tag2 = "test-tag2"
@@ -728,6 +729,7 @@ func testAccAWSUserConfig_tagsUpdate(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_iam_user" "test" {
   name = %q
+
   tags = {
     tag2 = "test-tagUpdate"
   }

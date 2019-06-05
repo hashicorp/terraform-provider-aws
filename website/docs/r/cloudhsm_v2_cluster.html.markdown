@@ -6,7 +6,7 @@ description: |-
   Provides a CloudHSM v2 resource.
 ---
 
-# aws_cloudhsm_v2_cluster
+# Resource: aws_cloudhsm_v2_cluster
 
 Creates an Amazon CloudHSM v2 cluster.
 

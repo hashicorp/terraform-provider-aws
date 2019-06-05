@@ -20,7 +20,7 @@ func TestAccAWSLightsailStaticIpAttachment_basic(t *testing.T) {
 	keypairName := fmt.Sprintf("tf-test-lightsail-%s", acctest.RandString(5))
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSLightsail(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSLightsailStaticIpAttachmentDestroy,
 		Steps: []resource.TestStep{
@@ -54,7 +54,7 @@ func TestAccAWSLightsailStaticIpAttachment_disappears(t *testing.T) {
 	}
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSLightsail(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSLightsailStaticIpAttachmentDestroy,
 		Steps: []resource.TestStep{
@@ -141,7 +141,7 @@ provider "aws" {
 
 resource "aws_lightsail_static_ip_attachment" "test" {
   static_ip_name = "${aws_lightsail_static_ip.test.name}"
-  instance_name = "${aws_lightsail_instance.test.name}"
+  instance_name  = "${aws_lightsail_instance.test.name}"
 }
 
 resource "aws_lightsail_static_ip" "test" {

@@ -6,7 +6,7 @@ description: |-
   Provides an AWS Backup vault resource.
 ---
 
-# aws_backup_vault
+# Resource: aws_backup_vault
 
 Provides an AWS Backup vault resource.
 

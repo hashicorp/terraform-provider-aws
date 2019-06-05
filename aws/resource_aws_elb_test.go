@@ -1247,9 +1247,10 @@ func testAccAWSELBAccessLogsOn(r string) string {
 # The 797873946194 is the AWS ID for us-west-2, so this test
 # must be ran in us-west-2
 resource "aws_s3_bucket" "acceslogs_bucket" {
-  bucket = "%s"
-  acl = "private"
+  bucket        = "%s"
+  acl           = "private"
   force_destroy = true
+
   policy = <<EOF
 {
   "Id": "Policy1446577137248",
@@ -1273,16 +1274,16 @@ resource "aws_elb" "foo" {
   availability_zones = ["us-west-2a", "us-west-2b", "us-west-2c"]
 
   listener {
-    instance_port = 8000
+    instance_port     = 8000
     instance_protocol = "http"
-    lb_port = 80
-    lb_protocol = "http"
+    lb_port           = 80
+    lb_protocol       = "http"
   }
 
-	access_logs {
-		interval = 5
-		bucket = "${aws_s3_bucket.acceslogs_bucket.bucket}"
-	}
+  access_logs {
+    interval = 5
+    bucket   = "${aws_s3_bucket.acceslogs_bucket.bucket}"
+  }
 }
 `, r, r)
 }
@@ -1293,9 +1294,10 @@ func testAccAWSELBAccessLogsDisabled(r string) string {
 # The 797873946194 is the AWS ID for us-west-2, so this test
 # must be ran in us-west-2
 resource "aws_s3_bucket" "acceslogs_bucket" {
-  bucket = "%s"
-  acl = "private"
+  bucket        = "%s"
+  acl           = "private"
   force_destroy = true
+
   policy = <<EOF
 {
   "Id": "Policy1446577137248",
@@ -1319,17 +1321,17 @@ resource "aws_elb" "foo" {
   availability_zones = ["us-west-2a", "us-west-2b", "us-west-2c"]
 
   listener {
-    instance_port = 8000
+    instance_port     = 8000
     instance_protocol = "http"
-    lb_port = 80
-    lb_protocol = "http"
+    lb_port           = 80
+    lb_protocol       = "http"
   }
 
-	access_logs {
-		interval = 5
-		bucket = "${aws_s3_bucket.acceslogs_bucket.bucket}"
-		enabled = false
-	}
+  access_logs {
+    interval = 5
+    bucket   = "${aws_s3_bucket.acceslogs_bucket.bucket}"
+    enabled  = false
+  }
 }
 `, r, r)
 }

@@ -253,69 +253,75 @@ func testAccCheckRedshiftSubnetGroupExists(n string, v *redshift.ClusterSubnetGr
 func testAccRedshiftSubnetGroupConfig(rInt int) string {
 	return fmt.Sprintf(`
 resource "aws_vpc" "foo" {
-	cidr_block = "10.1.0.0/16"
-	tags = {
-		Name = "terraform-testacc-redshift-subnet-group"
-	}
+  cidr_block = "10.1.0.0/16"
+
+  tags = {
+    Name = "terraform-testacc-redshift-subnet-group"
+  }
 }
 
 resource "aws_subnet" "foo" {
-	cidr_block = "10.1.1.0/24"
-	availability_zone = "us-west-2a"
-	vpc_id = "${aws_vpc.foo.id}"
-	tags = {
-		Name = "tf-acc-redshift-subnet-group-foo"
-	}
+  cidr_block        = "10.1.1.0/24"
+  availability_zone = "us-west-2a"
+  vpc_id            = "${aws_vpc.foo.id}"
+
+  tags = {
+    Name = "tf-acc-redshift-subnet-group-foo"
+  }
 }
 
 resource "aws_subnet" "bar" {
-	cidr_block = "10.1.2.0/24"
-	availability_zone = "us-west-2b"
-	vpc_id = "${aws_vpc.foo.id}"
-	tags = {
-		Name = "tf-acc-redshift-subnet-group-bar"
-	}
+  cidr_block        = "10.1.2.0/24"
+  availability_zone = "us-west-2b"
+  vpc_id            = "${aws_vpc.foo.id}"
+
+  tags = {
+    Name = "tf-acc-redshift-subnet-group-bar"
+  }
 }
 
 resource "aws_redshift_subnet_group" "foo" {
-	name = "foo-%d"
-	description = "foo description"
-	subnet_ids = ["${aws_subnet.foo.id}", "${aws_subnet.bar.id}"]
+  name        = "foo-%d"
+  description = "foo description"
+  subnet_ids  = ["${aws_subnet.foo.id}", "${aws_subnet.bar.id}"]
 }
-	`, rInt)
+`, rInt)
 }
 
 func testAccRedshiftSubnetGroup_updateDescription(rInt int) string {
 	return fmt.Sprintf(`
 resource "aws_vpc" "foo" {
-	cidr_block = "10.1.0.0/16"
-	tags = {
-		Name = "terraform-testacc-redshift-subnet-group-upd-description"
-	}
+  cidr_block = "10.1.0.0/16"
+
+  tags = {
+    Name = "terraform-testacc-redshift-subnet-group-upd-description"
+  }
 }
 
 resource "aws_subnet" "foo" {
-	cidr_block = "10.1.1.0/24"
-	availability_zone = "us-west-2a"
-	vpc_id = "${aws_vpc.foo.id}"
-	tags = {
-		Name = "tf-acc-redshift-subnet-group-upd-description-foo"
-	}
+  cidr_block        = "10.1.1.0/24"
+  availability_zone = "us-west-2a"
+  vpc_id            = "${aws_vpc.foo.id}"
+
+  tags = {
+    Name = "tf-acc-redshift-subnet-group-upd-description-foo"
+  }
 }
 
 resource "aws_subnet" "bar" {
-	cidr_block = "10.1.2.0/24"
-	availability_zone = "us-west-2b"
-	vpc_id = "${aws_vpc.foo.id}"
-	tags = {
-		Name = "tf-acc-redshift-subnet-group-upd-description-bar"
-	}
+  cidr_block        = "10.1.2.0/24"
+  availability_zone = "us-west-2b"
+  vpc_id            = "${aws_vpc.foo.id}"
+
+  tags = {
+    Name = "tf-acc-redshift-subnet-group-upd-description-bar"
+  }
 }
 
 resource "aws_redshift_subnet_group" "foo" {
-	name = "foo-%d"
-	description = "foo description updated"
-	subnet_ids = ["${aws_subnet.foo.id}", "${aws_subnet.bar.id}"]
+  name        = "foo-%d"
+  description = "foo description updated"
+  subnet_ids  = ["${aws_subnet.foo.id}", "${aws_subnet.bar.id}"]
 }
 `, rInt)
 }
@@ -323,36 +329,40 @@ resource "aws_redshift_subnet_group" "foo" {
 func testAccRedshiftSubnetGroupConfigWithTags(rInt int) string {
 	return fmt.Sprintf(`
 resource "aws_vpc" "foo" {
-	cidr_block = "10.1.0.0/16"
-	tags = {
-		Name = "terraform-testacc-redshift-subnet-group-with-tags"
-	}
+  cidr_block = "10.1.0.0/16"
+
+  tags = {
+    Name = "terraform-testacc-redshift-subnet-group-with-tags"
+  }
 }
 
 resource "aws_subnet" "foo" {
-	cidr_block = "10.1.1.0/24"
-	availability_zone = "us-west-2a"
-	vpc_id = "${aws_vpc.foo.id}"
-	tags = {
-		Name = "tf-acc-redshift-subnet-group-with-tags-foo"
-	}
+  cidr_block        = "10.1.1.0/24"
+  availability_zone = "us-west-2a"
+  vpc_id            = "${aws_vpc.foo.id}"
+
+  tags = {
+    Name = "tf-acc-redshift-subnet-group-with-tags-foo"
+  }
 }
 
 resource "aws_subnet" "bar" {
-	cidr_block = "10.1.2.0/24"
-	availability_zone = "us-west-2b"
-	vpc_id = "${aws_vpc.foo.id}"
-	tags = {
-		Name = "tf-acc-redshift-subnet-group-with-tags-bar"
-	}
+  cidr_block        = "10.1.2.0/24"
+  availability_zone = "us-west-2b"
+  vpc_id            = "${aws_vpc.foo.id}"
+
+  tags = {
+    Name = "tf-acc-redshift-subnet-group-with-tags-bar"
+  }
 }
 
 resource "aws_redshift_subnet_group" "foo" {
-	name = "foo-%d"
-	subnet_ids = ["${aws_subnet.foo.id}", "${aws_subnet.bar.id}"]
-	tags = {
-		Name = "tf-redshift-subnetgroup"
-	}
+  name       = "foo-%d"
+  subnet_ids = ["${aws_subnet.foo.id}", "${aws_subnet.bar.id}"]
+
+  tags = {
+    Name = "tf-redshift-subnetgroup"
+  }
 }
 `, rInt)
 }
@@ -360,38 +370,42 @@ resource "aws_redshift_subnet_group" "foo" {
 func testAccRedshiftSubnetGroupConfigWithTagsUpdated(rInt int) string {
 	return fmt.Sprintf(`
 resource "aws_vpc" "foo" {
-	cidr_block = "10.1.0.0/16"
-	tags = {
-		Name = "terraform-testacc-redshift-subnet-group-with-tags"
-	}
+  cidr_block = "10.1.0.0/16"
+
+  tags = {
+    Name = "terraform-testacc-redshift-subnet-group-with-tags"
+  }
 }
 
 resource "aws_subnet" "foo" {
-	cidr_block = "10.1.1.0/24"
-	availability_zone = "us-west-2a"
-	vpc_id = "${aws_vpc.foo.id}"
-	tags = {
-		Name = "tf-acc-redshift-subnet-group-with-tags-foo"
-	}
+  cidr_block        = "10.1.1.0/24"
+  availability_zone = "us-west-2a"
+  vpc_id            = "${aws_vpc.foo.id}"
+
+  tags = {
+    Name = "tf-acc-redshift-subnet-group-with-tags-foo"
+  }
 }
 
 resource "aws_subnet" "bar" {
-	cidr_block = "10.1.2.0/24"
-	availability_zone = "us-west-2b"
-	vpc_id = "${aws_vpc.foo.id}"
-	tags = {
-		Name = "tf-acc-redshift-subnet-group-with-tags-bar"
-	}
+  cidr_block        = "10.1.2.0/24"
+  availability_zone = "us-west-2b"
+  vpc_id            = "${aws_vpc.foo.id}"
+
+  tags = {
+    Name = "tf-acc-redshift-subnet-group-with-tags-bar"
+  }
 }
 
 resource "aws_redshift_subnet_group" "foo" {
-	name = "foo-%d"
-	subnet_ids = ["${aws_subnet.foo.id}", "${aws_subnet.bar.id}"]
-	tags = {
-		Name = "tf-redshift-subnetgroup"
-		environment = "production"
-		foo = "bar"
-	}
+  name       = "foo-%d"
+  subnet_ids = ["${aws_subnet.foo.id}", "${aws_subnet.bar.id}"]
+
+  tags = {
+    Name        = "tf-redshift-subnetgroup"
+    environment = "production"
+    foo         = "bar"
+  }
 }
 `, rInt)
 }
@@ -399,42 +413,46 @@ resource "aws_redshift_subnet_group" "foo" {
 func testAccRedshiftSubnetGroupConfig_updateSubnetIds(rInt int) string {
 	return fmt.Sprintf(`
 resource "aws_vpc" "foo" {
-	cidr_block = "10.1.0.0/16"
-	tags = {
-		Name = "terraform-testacc-redshift-subnet-group-upd-subnet-ids"
-	}
+  cidr_block = "10.1.0.0/16"
+
+  tags = {
+    Name = "terraform-testacc-redshift-subnet-group-upd-subnet-ids"
+  }
 }
 
 resource "aws_subnet" "foo" {
-	cidr_block = "10.1.1.0/24"
-	availability_zone = "us-west-2a"
-	vpc_id = "${aws_vpc.foo.id}"
-	tags = {
-		Name = "tf-acc-redshift-subnet-group-upd-subnet-ids-foo"
-	}
+  cidr_block        = "10.1.1.0/24"
+  availability_zone = "us-west-2a"
+  vpc_id            = "${aws_vpc.foo.id}"
+
+  tags = {
+    Name = "tf-acc-redshift-subnet-group-upd-subnet-ids-foo"
+  }
 }
 
 resource "aws_subnet" "bar" {
-	cidr_block = "10.1.2.0/24"
-	availability_zone = "us-west-2b"
-	vpc_id = "${aws_vpc.foo.id}"
-	tags = {
-		Name = "tf-acc-redshift-subnet-group-upd-subnet-ids-bar"
-	}
+  cidr_block        = "10.1.2.0/24"
+  availability_zone = "us-west-2b"
+  vpc_id            = "${aws_vpc.foo.id}"
+
+  tags = {
+    Name = "tf-acc-redshift-subnet-group-upd-subnet-ids-bar"
+  }
 }
 
 resource "aws_subnet" "foobar" {
-	cidr_block = "10.1.3.0/24"
-	availability_zone = "us-west-2c"
-	vpc_id = "${aws_vpc.foo.id}"
-	tags = {
-		Name = "tf-acc-redshift-subnet-group-upd-subnet-ids-foobar"
-	}
+  cidr_block        = "10.1.3.0/24"
+  availability_zone = "us-west-2c"
+  vpc_id            = "${aws_vpc.foo.id}"
+
+  tags = {
+    Name = "tf-acc-redshift-subnet-group-upd-subnet-ids-foobar"
+  }
 }
 
 resource "aws_redshift_subnet_group" "foo" {
-	name = "foo-%d"
-	subnet_ids = ["${aws_subnet.foo.id}", "${aws_subnet.bar.id}", "${aws_subnet.foobar.id}"]
+  name       = "foo-%d"
+  subnet_ids = ["${aws_subnet.foo.id}", "${aws_subnet.bar.id}", "${aws_subnet.foobar.id}"]
 }
 `, rInt)
 }

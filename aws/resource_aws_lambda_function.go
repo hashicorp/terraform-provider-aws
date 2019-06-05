@@ -32,6 +32,7 @@ var validLambdaRuntimes = []string{
 	lambda.RuntimeNodejs43Edge,
 	lambda.RuntimeNodejs610,
 	lambda.RuntimeNodejs810,
+	lambda.RuntimeNodejs10X,
 	lambda.RuntimeProvided,
 	lambda.RuntimePython27,
 	lambda.RuntimePython36,

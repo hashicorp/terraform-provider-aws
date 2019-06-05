@@ -1038,7 +1038,7 @@ func (c *Glue) CreateClassifierRequest(input *CreateClassifierInput) (req *reque
 
 // CreateClassifier API operation for AWS Glue.
 //
-// Creates a classifier in the user's account. This may be a GrokClassifier,
+// Creates a classifier in the user's account. This can be a GrokClassifier,
 // an XMLClassifier, a JsonClassifier, or a CsvClassifier, depending on which
 // field of the request is present.
 //
@@ -2334,8 +2334,8 @@ func (c *Glue) DeleteCrawlerRequest(input *DeleteCrawlerInput) (req *request.Req
 
 // DeleteCrawler API operation for AWS Glue.
 //
-// Removes a specified crawler from the Data Catalog, unless the crawler state
-// is RUNNING.
+// Removes a specified crawler from the AWS Glue Data Catalog, unless the crawler
+// state is RUNNING.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -3549,7 +3549,7 @@ func (c *Glue) GetClassifiersWithContext(ctx aws.Context, input *GetClassifiersI
 //    // Example iterating over at most 3 pages of a GetClassifiers operation.
 //    pageNum := 0
 //    err := client.GetClassifiersPages(params,
-//        func(page *GetClassifiersOutput, lastPage bool) bool {
+//        func(page *glue.GetClassifiersOutput, lastPage bool) bool {
 //            pageNum++
 //            fmt.Println(page)
 //            return pageNum <= 3
@@ -3781,7 +3781,7 @@ func (c *Glue) GetConnectionsWithContext(ctx aws.Context, input *GetConnectionsI
 //    // Example iterating over at most 3 pages of a GetConnections operation.
 //    pageNum := 0
 //    err := client.GetConnectionsPages(params,
-//        func(page *GetConnectionsOutput, lastPage bool) bool {
+//        func(page *glue.GetConnectionsOutput, lastPage bool) bool {
 //            pageNum++
 //            fmt.Println(page)
 //            return pageNum <= 3
@@ -3998,7 +3998,7 @@ func (c *Glue) GetCrawlerMetricsWithContext(ctx aws.Context, input *GetCrawlerMe
 //    // Example iterating over at most 3 pages of a GetCrawlerMetrics operation.
 //    pageNum := 0
 //    err := client.GetCrawlerMetricsPages(params,
-//        func(page *GetCrawlerMetricsOutput, lastPage bool) bool {
+//        func(page *glue.GetCrawlerMetricsOutput, lastPage bool) bool {
 //            pageNum++
 //            fmt.Println(page)
 //            return pageNum <= 3
@@ -4133,7 +4133,7 @@ func (c *Glue) GetCrawlersWithContext(ctx aws.Context, input *GetCrawlersInput, 
 //    // Example iterating over at most 3 pages of a GetCrawlers operation.
 //    pageNum := 0
 //    err := client.GetCrawlersPages(params,
-//        func(page *GetCrawlersOutput, lastPage bool) bool {
+//        func(page *glue.GetCrawlersOutput, lastPage bool) bool {
 //            pageNum++
 //            fmt.Println(page)
 //            return pageNum <= 3
@@ -4453,7 +4453,7 @@ func (c *Glue) GetDatabasesWithContext(ctx aws.Context, input *GetDatabasesInput
 //    // Example iterating over at most 3 pages of a GetDatabases operation.
 //    pageNum := 0
 //    err := client.GetDatabasesPages(params,
-//        func(page *GetDatabasesOutput, lastPage bool) bool {
+//        func(page *glue.GetDatabasesOutput, lastPage bool) bool {
 //            pageNum++
 //            fmt.Println(page)
 //            return pageNum <= 3
@@ -4780,7 +4780,7 @@ func (c *Glue) GetDevEndpointsWithContext(ctx aws.Context, input *GetDevEndpoint
 //    // Example iterating over at most 3 pages of a GetDevEndpoints operation.
 //    pageNum := 0
 //    err := client.GetDevEndpointsPages(params,
-//        func(page *GetDevEndpointsOutput, lastPage bool) bool {
+//        func(page *glue.GetDevEndpointsOutput, lastPage bool) bool {
 //            pageNum++
 //            fmt.Println(page)
 //            return pageNum <= 3
@@ -5100,7 +5100,7 @@ func (c *Glue) GetJobRunsWithContext(ctx aws.Context, input *GetJobRunsInput, op
 //    // Example iterating over at most 3 pages of a GetJobRuns operation.
 //    pageNum := 0
 //    err := client.GetJobRunsPages(params,
-//        func(page *GetJobRunsOutput, lastPage bool) bool {
+//        func(page *glue.GetJobRunsOutput, lastPage bool) bool {
 //            pageNum++
 //            fmt.Println(page)
 //            return pageNum <= 3
@@ -5244,7 +5244,7 @@ func (c *Glue) GetJobsWithContext(ctx aws.Context, input *GetJobsInput, opts ...
 //    // Example iterating over at most 3 pages of a GetJobs operation.
 //    pageNum := 0
 //    err := client.GetJobsPages(params,
-//        func(page *GetJobsOutput, lastPage bool) bool {
+//        func(page *glue.GetJobsOutput, lastPage bool) bool {
 //            pageNum++
 //            fmt.Println(page)
 //            return pageNum <= 3
@@ -5570,7 +5570,7 @@ func (c *Glue) GetPartitionsWithContext(ctx aws.Context, input *GetPartitionsInp
 //    // Example iterating over at most 3 pages of a GetPartitions operation.
 //    pageNum := 0
 //    err := client.GetPartitionsPages(params,
-//        func(page *GetPartitionsOutput, lastPage bool) bool {
+//        func(page *glue.GetPartitionsOutput, lastPage bool) bool {
 //            pageNum++
 //            fmt.Println(page)
 //            return pageNum <= 3
@@ -5975,7 +5975,7 @@ func (c *Glue) GetSecurityConfigurationsWithContext(ctx aws.Context, input *GetS
 //    // Example iterating over at most 3 pages of a GetSecurityConfigurations operation.
 //    pageNum := 0
 //    err := client.GetSecurityConfigurationsPages(params,
-//        func(page *GetSecurityConfigurationsOutput, lastPage bool) bool {
+//        func(page *glue.GetSecurityConfigurationsOutput, lastPage bool) bool {
 //            pageNum++
 //            fmt.Println(page)
 //            return pageNum <= 3
@@ -6305,7 +6305,7 @@ func (c *Glue) GetTableVersionsWithContext(ctx aws.Context, input *GetTableVersi
 //    // Example iterating over at most 3 pages of a GetTableVersions operation.
 //    pageNum := 0
 //    err := client.GetTableVersionsPages(params,
-//        func(page *GetTableVersionsOutput, lastPage bool) bool {
+//        func(page *glue.GetTableVersionsOutput, lastPage bool) bool {
 //            pageNum++
 //            fmt.Println(page)
 //            return pageNum <= 3
@@ -6452,7 +6452,7 @@ func (c *Glue) GetTablesWithContext(ctx aws.Context, input *GetTablesInput, opts
 //    // Example iterating over at most 3 pages of a GetTables operation.
 //    pageNum := 0
 //    err := client.GetTablesPages(params,
-//        func(page *GetTablesOutput, lastPage bool) bool {
+//        func(page *glue.GetTablesOutput, lastPage bool) bool {
 //            pageNum++
 //            fmt.Println(page)
 //            return pageNum <= 3
@@ -6772,7 +6772,7 @@ func (c *Glue) GetTriggersWithContext(ctx aws.Context, input *GetTriggersInput, 
 //    // Example iterating over at most 3 pages of a GetTriggers operation.
 //    pageNum := 0
 //    err := client.GetTriggersPages(params,
-//        func(page *GetTriggersOutput, lastPage bool) bool {
+//        func(page *glue.GetTriggersOutput, lastPage bool) bool {
 //            pageNum++
 //            fmt.Println(page)
 //            return pageNum <= 3
@@ -7010,7 +7010,7 @@ func (c *Glue) GetUserDefinedFunctionsWithContext(ctx aws.Context, input *GetUse
 //    // Example iterating over at most 3 pages of a GetUserDefinedFunctions operation.
 //    pageNum := 0
 //    err := client.GetUserDefinedFunctionsPages(params,
-//        func(page *GetUserDefinedFunctionsOutput, lastPage bool) bool {
+//        func(page *glue.GetUserDefinedFunctionsOutput, lastPage bool) bool {
 //            pageNum++
 //            fmt.Println(page)
 //            return pageNum <= 3
@@ -7234,7 +7234,7 @@ func (c *Glue) ListCrawlersWithContext(ctx aws.Context, input *ListCrawlersInput
 //    // Example iterating over at most 3 pages of a ListCrawlers operation.
 //    pageNum := 0
 //    err := client.ListCrawlersPages(params,
-//        func(page *ListCrawlersOutput, lastPage bool) bool {
+//        func(page *glue.ListCrawlersOutput, lastPage bool) bool {
 //            pageNum++
 //            fmt.Println(page)
 //            return pageNum <= 3
@@ -7384,7 +7384,7 @@ func (c *Glue) ListDevEndpointsWithContext(ctx aws.Context, input *ListDevEndpoi
 //    // Example iterating over at most 3 pages of a ListDevEndpoints operation.
 //    pageNum := 0
 //    err := client.ListDevEndpointsPages(params,
-//        func(page *ListDevEndpointsOutput, lastPage bool) bool {
+//        func(page *glue.ListDevEndpointsOutput, lastPage bool) bool {
 //            pageNum++
 //            fmt.Println(page)
 //            return pageNum <= 3
@@ -7534,7 +7534,7 @@ func (c *Glue) ListJobsWithContext(ctx aws.Context, input *ListJobsInput, opts .
 //    // Example iterating over at most 3 pages of a ListJobs operation.
 //    pageNum := 0
 //    err := client.ListJobsPages(params,
-//        func(page *ListJobsOutput, lastPage bool) bool {
+//        func(page *glue.ListJobsOutput, lastPage bool) bool {
 //            pageNum++
 //            fmt.Println(page)
 //            return pageNum <= 3
@@ -7684,7 +7684,7 @@ func (c *Glue) ListTriggersWithContext(ctx aws.Context, input *ListTriggersInput
 //    // Example iterating over at most 3 pages of a ListTriggers operation.
 //    pageNum := 0
 //    err := client.ListTriggersPages(params,
-//        func(page *ListTriggersOutput, lastPage bool) bool {
+//        func(page *glue.ListTriggersOutput, lastPage bool) bool {
 //            pageNum++
 //            fmt.Println(page)
 //            return pageNum <= 3
@@ -10448,7 +10448,7 @@ func (s *BatchDeleteTableVersionOutput) SetErrors(v []*TableVersionError) *Batch
 type BatchGetCrawlersInput struct {
 	_ struct{} `type:"structure"`
 
-	// A list of crawler names, which may be the names returned from the ListCrawlers
+	// A list of crawler names, which might be the names returned from the ListCrawlers
 	// operation.
 	//
 	// CrawlerNames is a required field
@@ -10490,7 +10490,7 @@ type BatchGetCrawlersOutput struct {
 	// A list of crawler definitions.
 	Crawlers []*Crawler `type:"list"`
 
-	// A list of names of crawlers not found.
+	// A list of names of crawlers that were not found.
 	CrawlersNotFound []*string `type:"list"`
 }
 
@@ -11025,7 +11025,7 @@ func (s *BatchStopJobRunSuccessfulSubmission) SetJobRunId(v string) *BatchStopJo
 	return s
 }
 
-// Specifies a table definition in the Data Catalog.
+// Specifies a table definition in the AWS Glue Data Catalog.
 type CatalogEntry struct {
 	_ struct{} `type:"structure"`
 
@@ -11126,28 +11126,87 @@ func (s *CatalogImportStatus) SetImportedBy(v string) *CatalogImportStatus {
 	return s
 }
 
+// Specifies an AWS Glue Data Catalog target.
+type CatalogTarget struct {
+	_ struct{} `type:"structure"`
+
+	// The name of the database to be synchronized.
+	//
+	// DatabaseName is a required field
+	DatabaseName *string `min:"1" type:"string" required:"true"`
+
+	// A list of the tables to be synchronized.
+	//
+	// Tables is a required field
+	Tables []*string `min:"1" type:"list" required:"true"`
+}
+
+// String returns the string representation
+func (s CatalogTarget) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s CatalogTarget) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *CatalogTarget) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "CatalogTarget"}
+	if s.DatabaseName == nil {
+		invalidParams.Add(request.NewErrParamRequired("DatabaseName"))
+	}
+	if s.DatabaseName != nil && len(*s.DatabaseName) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("DatabaseName", 1))
+	}
+	if s.Tables == nil {
+		invalidParams.Add(request.NewErrParamRequired("Tables"))
+	}
+	if s.Tables != nil && len(s.Tables) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("Tables", 1))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetDatabaseName sets the DatabaseName field's value.
+func (s *CatalogTarget) SetDatabaseName(v string) *CatalogTarget {
+	s.DatabaseName = &v
+	return s
+}
+
+// SetTables sets the Tables field's value.
+func (s *CatalogTarget) SetTables(v []*string) *CatalogTarget {
+	s.Tables = v
+	return s
+}
+
 // Classifiers are triggered during a crawl task. A classifier checks whether
-// a given file is in a format it can handle, and if it is, the classifier creates
+// a given file is in a format it can handle. If it is, the classifier creates
 // a schema in the form of a StructType object that matches that data format.
 //
-// You can use the standard classifiers that AWS Glue supplies, or you can write
+// You can use the standard classifiers that AWS Glue provides, or you can write
 // your own classifiers to best categorize your data sources and specify the
 // appropriate schemas to use for them. A classifier can be a grok classifier,
-// an XML classifier, a JSON classifier, or a custom CSV classifier as specified
+// an XML classifier, a JSON classifier, or a custom CSV classifier, as specified
 // in one of the fields in the Classifier object.
 type Classifier struct {
 	_ struct{} `type:"structure"`
 
-	// A CSVClassifier object.
+	// A classifier for comma-separated values (CSV).
 	CsvClassifier *CsvClassifier `type:"structure"`
 
-	// A GrokClassifier object.
+	// A classifier that uses grok.
 	GrokClassifier *GrokClassifier `type:"structure"`
 
-	// A JsonClassifier object.
+	// A classifier for JSON content.
 	JsonClassifier *JsonClassifier `type:"structure"`
 
-	// An XMLClassifier object.
+	// A classifier for XML content.
 	XMLClassifier *XMLClassifier `type:"structure"`
 }
 
@@ -11303,7 +11362,7 @@ type CodeGenNode struct {
 	// The line number of the node.
 	LineNumber *int64 `type:"integer"`
 
-	// The type of node this is.
+	// The type of node that this is.
 	//
 	// NodeType is a required field
 	NodeType *string `type:"string" required:"true"`
@@ -11892,7 +11951,8 @@ func (s *ConnectionsList) SetConnections(v []*string) *ConnectionsList {
 type Crawler struct {
 	_ struct{} `type:"structure"`
 
-	// A list of custom classifiers associated with the crawler.
+	// A list of UTF-8 strings that specify the custom classifiers that are associated
+	// with the crawler.
 	Classifiers []*string `type:"list"`
 
 	// Crawler configuration information. This versioned JSON string allows users
@@ -11904,13 +11964,13 @@ type Crawler struct {
 	// crawl began.
 	CrawlElapsedTime *int64 `type:"long"`
 
-	// The name of the SecurityConfiguration structure to be used by this Crawler.
+	// The name of the SecurityConfiguration structure to be used by this crawler.
 	CrawlerSecurityConfiguration *string `type:"string"`
 
-	// The time when the crawler was created.
+	// The time that the crawler was created.
 	CreationTime *time.Time `type:"timestamp"`
 
-	// The database where metadata is written by this crawler.
+	// The name of the database in which the crawler's output is stored.
 	DatabaseName *string `type:"string"`
 
 	// A description of the crawler.
@@ -11920,20 +11980,20 @@ type Crawler struct {
 	// occurred.
 	LastCrawl *LastCrawlInfo `type:"structure"`
 
-	// The time the crawler was last updated.
+	// The time that the crawler was last updated.
 	LastUpdated *time.Time `type:"timestamp"`
 
-	// The crawler name.
+	// The name of the crawler.
 	Name *string `min:"1" type:"string"`
 
-	// The IAM role (or ARN of an IAM role) used to access customer resources, such
-	// as data in Amazon S3.
+	// The Amazon Resource Name (ARN) of an IAM role that's used to access customer
+	// resources, such as Amazon Simple Storage Service (Amazon S3) data.
 	Role *string `type:"string"`
 
 	// For scheduled crawlers, the schedule when the crawler runs.
 	Schedule *Schedule `type:"structure"`
 
-	// Sets the behavior when the crawler finds a changed or deleted object.
+	// The policy that specifies update and delete behaviors for the crawler.
 	SchemaChangePolicy *SchemaChangePolicy `type:"structure"`
 
 	// Indicates whether the crawler is running, or whether a run is pending.
@@ -12153,13 +12213,16 @@ func (s *CrawlerMetrics) SetTimeLeftSeconds(v float64) *CrawlerMetrics {
 type CrawlerTargets struct {
 	_ struct{} `type:"structure"`
 
-	// Specifies DynamoDB targets.
+	// Specifies AWS Glue Data Catalog targets.
+	CatalogTargets []*CatalogTarget `type:"list"`
+
+	// Specifies Amazon DynamoDB targets.
 	DynamoDBTargets []*DynamoDBTarget `type:"list"`
 
 	// Specifies JDBC targets.
 	JdbcTargets []*JdbcTarget `type:"list"`
 
-	// Specifies Amazon S3 targets.
+	// Specifies Amazon Simple Storage Service (Amazon S3) targets.
 	S3Targets []*S3Target `type:"list"`
 }
 
@@ -12171,6 +12234,32 @@ func (s CrawlerTargets) String() string {
 // GoString returns the string representation
 func (s CrawlerTargets) GoString() string {
 	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *CrawlerTargets) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "CrawlerTargets"}
+	if s.CatalogTargets != nil {
+		for i, v := range s.CatalogTargets {
+			if v == nil {
+				continue
+			}
+			if err := v.Validate(); err != nil {
+				invalidParams.AddNested(fmt.Sprintf("%s[%v]", "CatalogTargets", i), err.(request.ErrInvalidParams))
+			}
+		}
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetCatalogTargets sets the CatalogTargets field's value.
+func (s *CrawlerTargets) SetCatalogTargets(v []*CatalogTarget) *CrawlerTargets {
+	s.CatalogTargets = v
+	return s
 }
 
 // SetDynamoDBTargets sets the DynamoDBTargets field's value.
@@ -12363,18 +12452,16 @@ type CreateCrawlerInput struct {
 	// always override the default classifiers for a given classification.
 	Classifiers []*string `type:"list"`
 
-	// Crawler configuration information. This versioned JSON string allows users
-	// to specify aspects of a crawler's behavior. For more information, see Configuring
-	// a Crawler (http://docs.aws.amazon.com/glue/latest/dg/crawler-configuration.html).
+	// The crawler configuration information. This versioned JSON string allows
+	// users to specify aspects of a crawler's behavior. For more information, see
+	// Configuring a Crawler (http://docs.aws.amazon.com/glue/latest/dg/crawler-configuration.html).
 	Configuration *string `type:"string"`
 
-	// The name of the SecurityConfiguration structure to be used by this Crawler.
+	// The name of the SecurityConfiguration structure to be used by this crawler.
 	CrawlerSecurityConfiguration *string `type:"string"`
 
 	// The AWS Glue database where results are written, such as: arn:aws:daylight:us-east-1::database/sometable/*.
-	//
-	// DatabaseName is a required field
-	DatabaseName *string `type:"string" required:"true"`
+	DatabaseName *string `type:"string"`
 
 	// A description of the new crawler.
 	Description *string `type:"string"`
@@ -12384,28 +12471,26 @@ type CreateCrawlerInput struct {
 	// Name is a required field
 	Name *string `min:"1" type:"string" required:"true"`
 
-	// The IAM role (or ARN of an IAM role) used by the new crawler to access customer
-	// resources.
+	// The IAM role or Amazon Resource Name (ARN) of an IAM role used by the new
+	// crawler to access customer resources.
 	//
 	// Role is a required field
 	Role *string `type:"string" required:"true"`
 
-	// A cron expression used to specify the schedule (see Time-Based Schedules
-	// for Jobs and Crawlers (http://docs.aws.amazon.com/glue/latest/dg/monitor-data-warehouse-schedule.html).
-	// For example, to run something every day at 12:15 UTC, you would specify:
-	// cron(15 12 * * ? *).
+	// A cron expression used to specify the schedule. For more information, see
+	// Time-Based Schedules for Jobs and Crawlers (http://docs.aws.amazon.com/glue/latest/dg/monitor-data-warehouse-schedule.html).
+	// For example, to run something every day at 12:15 UTC, specify cron(15 12
+	// * * ? *).
 	Schedule *string `type:"string"`
 
-	// Policy for the crawler's update and deletion behavior.
+	// The policy for the crawler's update and deletion behavior.
 	SchemaChangePolicy *SchemaChangePolicy `type:"structure"`
 
 	// The table prefix used for catalog tables that are created.
 	TablePrefix *string `type:"string"`
 
-	// The tags to use with this crawler request. You may use tags to limit access
-	// to the crawler. For more information about tags in AWS Glue, see AWS Tags
-	// in AWS Glue (http://docs.aws.amazon.com/glue/latest/dg/monitor-tags.html)
-	// in the developer guide.
+	// The tags to use with this crawler request. You can use tags to limit access
+	// to the crawler. For more information, see AWS Tags in AWS Glue (http://docs.aws.amazon.com/glue/latest/dg/monitor-tags.html).
 	Tags map[string]*string `type:"map"`
 
 	// A list of collection of targets to crawl.
@@ -12427,9 +12512,6 @@ func (s CreateCrawlerInput) GoString() string {
 // Validate inspects the fields of the type to determine if they are valid.
 func (s *CreateCrawlerInput) Validate() error {
 	invalidParams := request.ErrInvalidParams{Context: "CreateCrawlerInput"}
-	if s.DatabaseName == nil {
-		invalidParams.Add(request.NewErrParamRequired("DatabaseName"))
-	}
 	if s.Name == nil {
 		invalidParams.Add(request.NewErrParamRequired("Name"))
 	}
@@ -12441,6 +12523,11 @@ func (s *CreateCrawlerInput) Validate() error {
 	}
 	if s.Targets == nil {
 		invalidParams.Add(request.NewErrParamRequired("Targets"))
+	}
+	if s.Targets != nil {
+		if err := s.Targets.Validate(); err != nil {
+			invalidParams.AddNested("Targets", err.(request.ErrInvalidParams))
+		}
 	}
 
 	if invalidParams.Len() > 0 {
@@ -13167,6 +13254,8 @@ type CreateJobInput struct {
 	// consists of 4 vCPUs of compute capacity and 16 GB of memory. For more information,
 	// see the AWS Glue pricing page (https://aws.amazon.com/glue/pricing/).
 	//
+	// Do not set Max Capacity if using WorkerType and NumberOfWorkers.
+	//
 	// The value that can be allocated for MaxCapacity depends on whether you are
 	// running a python shell job, or an Apache Spark ETL job:
 	//
@@ -13189,6 +13278,13 @@ type CreateJobInput struct {
 	// Specifies configuration properties of a job notification.
 	NotificationProperty *NotificationProperty `type:"structure"`
 
+	// The number of workers of a defined workerType that are allocated when a job
+	// runs.
+	//
+	// The maximum number of workers you can define are 299 for G.1X, and 149 for
+	// G.2X.
+	NumberOfWorkers *int64 `type:"integer"`
+
 	// The name or ARN of the IAM role associated with this job.
 	//
 	// Role is a required field
@@ -13206,6 +13302,19 @@ type CreateJobInput struct {
 	// resources before it is terminated and enters TIMEOUT status. The default
 	// is 2,880 minutes (48 hours).
 	Timeout *int64 `min:"1" type:"integer"`
+
+	// The type of predefined worker that is allocated when a job runs. Accepts
+	// a value of Standard, G.1X, or G.2X.
+	//
+	//    * For the Standard worker type, each worker provides 4 vCPU, 16 GB of
+	//    memory and a 50GB disk, and 2 executors per worker.
+	//
+	//    * For the G.1X worker type, each worker provides 4 vCPU, 16 GB of memory
+	//    and a 64GB disk, and 1 executor per worker.
+	//
+	//    * For the G.2X worker type, each worker provides 8 vCPU, 32 GB of memory
+	//    and a 128GB disk, and 1 executor per worker.
+	WorkerType *string `type:"string" enum:"WorkerType"`
 }
 
 // String returns the string representation
@@ -13317,6 +13426,12 @@ func (s *CreateJobInput) SetNotificationProperty(v *NotificationProperty) *Creat
 	return s
 }
 
+// SetNumberOfWorkers sets the NumberOfWorkers field's value.
+func (s *CreateJobInput) SetNumberOfWorkers(v int64) *CreateJobInput {
+	s.NumberOfWorkers = &v
+	return s
+}
+
 // SetRole sets the Role field's value.
 func (s *CreateJobInput) SetRole(v string) *CreateJobInput {
 	s.Role = &v
@@ -13338,6 +13453,12 @@ func (s *CreateJobInput) SetTags(v map[string]*string) *CreateJobInput {
 // SetTimeout sets the Timeout field's value.
 func (s *CreateJobInput) SetTimeout(v int64) *CreateJobInput {
 	s.Timeout = &v
+	return s
+}
+
+// SetWorkerType sets the WorkerType field's value.
+func (s *CreateJobInput) SetWorkerType(v string) *CreateJobInput {
+	s.WorkerType = &v
 	return s
 }
 
@@ -14069,9 +14190,9 @@ type CreateXMLClassifierRequest struct {
 	Name *string `min:"1" type:"string" required:"true"`
 
 	// The XML tag designating the element that contains each record in an XML document
-	// being parsed. Note that this cannot identify a self-closing element (closed
-	// by />). An empty row element that contains only attributes can be parsed
-	// as long as it ends with a closing tag (for example, <row item_a="A" item_b="B"></row>
+	// being parsed. This can't identify a self-closing element (closed by />).
+	// An empty row element that contains only attributes can be parsed as long
+	// as it ends with a closing tag (for example, <row item_a="A" item_b="B"></row>
 	// is okay, but <row item_a="A" item_b="B" /> is not).
 	RowTag *string `type:"string"`
 }
@@ -14133,7 +14254,7 @@ type CsvClassifier struct {
 	// Indicates whether the CSV file contains a header.
 	ContainsHeader *string `type:"string" enum:"CsvHeaderOption"`
 
-	// The time this classifier was registered.
+	// The time that this classifier was registered.
 	CreationTime *time.Time `type:"timestamp"`
 
 	// A custom symbol to denote what separates each column entry in the row.
@@ -14146,7 +14267,7 @@ type CsvClassifier struct {
 	// A list of strings representing column names.
 	Header []*string `type:"list"`
 
-	// The time this classifier was last updated.
+	// The time that this classifier was last updated.
 	LastUpdated *time.Time `type:"timestamp"`
 
 	// The name of the classifier.
@@ -14155,7 +14276,7 @@ type CsvClassifier struct {
 	Name *string `min:"1" type:"string" required:"true"`
 
 	// A custom symbol to denote what combines content into a single column value.
-	// Must be different from the column delimiter.
+	// It must be different from the column delimiter.
 	QuoteSymbol *string `min:"1" type:"string"`
 
 	// The version of this classifier.
@@ -14551,7 +14672,7 @@ func (s DeleteConnectionOutput) GoString() string {
 type DeleteCrawlerInput struct {
 	_ struct{} `type:"structure"`
 
-	// Name of the crawler to remove.
+	// The name of the crawler to remove.
 	//
 	// Name is a required field
 	Name *string `min:"1" type:"string" required:"true"`
@@ -15613,7 +15734,7 @@ func (s *DevEndpointCustomLibraries) SetExtraPythonLibsS3Path(v string) *DevEndp
 	return s
 }
 
-// Specifies a DynamoDB table to crawl.
+// Specifies an Amazon DynamoDB table to crawl.
 type DynamoDBTarget struct {
 	_ struct{} `type:"structure"`
 
@@ -15916,7 +16037,7 @@ func (s *GetClassifierOutput) SetClassifier(v *Classifier) *GetClassifierOutput 
 type GetClassifiersInput struct {
 	_ struct{} `type:"structure"`
 
-	// Size of the list to return (optional).
+	// The size of the list to return (optional).
 	MaxResults *int64 `min:"1" type:"integer"`
 
 	// An optional continuation token.
@@ -16232,7 +16353,7 @@ func (s *GetConnectionsOutput) SetNextToken(v string) *GetConnectionsOutput {
 type GetCrawlerInput struct {
 	_ struct{} `type:"structure"`
 
-	// Name of the crawler to retrieve metadata for.
+	// The name of the crawler to retrieve metadata for.
 	//
 	// Name is a required field
 	Name *string `min:"1" type:"string" required:"true"`
@@ -17437,39 +17558,53 @@ type GetPartitionsInput struct {
 	// Operators: The following are the operators that you can use in the Expression
 	// API call:
 	//
-	// =Checks if the values of the two operands are equal or not; if yes, then
-	// the condition becomes true.
+	// =
+	//
+	// Checks if the values of the two operands are equal or not; if yes, then the
+	// condition becomes true.
 	//
 	// Example: Assume 'variable a' holds 10 and 'variable b' holds 20.
 	//
 	// (a = b) is not true.
 	//
-	// < >Checks if the values of two operands are equal or not; if the values are
+	// < >
+	//
+	// Checks if the values of two operands are equal or not; if the values are
 	// not equal, then the condition becomes true.
 	//
 	// Example: (a < > b) is true.
 	//
-	// >Checks if the value of the left operand is greater than the value of the
+	// >
+	//
+	// Checks if the value of the left operand is greater than the value of the
 	// right operand; if yes, then the condition becomes true.
 	//
 	// Example: (a > b) is not true.
 	//
-	// <Checks if the value of the left operand is less than the value of the right
+	// <
+	//
+	// Checks if the value of the left operand is less than the value of the right
 	// operand; if yes, then the condition becomes true.
 	//
 	// Example: (a < b) is true.
 	//
-	// >=Checks if the value of the left operand is greater than or equal to the
-	// value of the right operand; if yes, then the condition becomes true.
+	// >=
+	//
+	// Checks if the value of the left operand is greater than or equal to the value
+	// of the right operand; if yes, then the condition becomes true.
 	//
 	// Example: (a >= b) is not true.
 	//
-	// <=Checks if the value of the left operand is less than or equal to the value
+	// <=
+	//
+	// Checks if the value of the left operand is less than or equal to the value
 	// of the right operand; if yes, then the condition becomes true.
 	//
 	// Example: (a <= b) is true.
 	//
-	// AND, OR, IN, BETWEEN, LIKE, NOT, IS NULLLogical operators.
+	// AND, OR, IN, BETWEEN, LIKE, NOT, IS NULL
+	//
+	// Logical operators.
 	//
 	// Supported Partition Key Types: The following are the the supported partition
 	// keys.
@@ -17640,7 +17775,7 @@ type GetPlanInput struct {
 	// The programming language of the code to perform the mapping.
 	Language *string `type:"string" enum:"Language"`
 
-	// Parameters for the mapping.
+	// The parameters for the mapping.
 	Location *Location `type:"structure"`
 
 	// The list of mappings from a source table to target tables.
@@ -17739,7 +17874,7 @@ type GetPlanOutput struct {
 	// A Python script to perform the mapping.
 	PythonScript *string `type:"string"`
 
-	// Scala code to perform the mapping.
+	// The Scala code to perform the mapping.
 	ScalaCode *string `type:"string"`
 }
 
@@ -18867,20 +19002,20 @@ type GrokClassifier struct {
 	// Classification is a required field
 	Classification *string `type:"string" required:"true"`
 
-	// The time this classifier was registered.
+	// The time that this classifier was registered.
 	CreationTime *time.Time `type:"timestamp"`
 
 	// Optional custom grok patterns defined by this classifier. For more information,
-	// see custom patterns in Writing Custom Classifers (http://docs.aws.amazon.com/glue/latest/dg/custom-classifier.html).
+	// see custom patterns in Writing Custom Classifiers (http://docs.aws.amazon.com/glue/latest/dg/custom-classifier.html).
 	CustomPatterns *string `type:"string"`
 
 	// The grok pattern applied to a data store by this classifier. For more information,
-	// see built-in patterns in Writing Custom Classifers (http://docs.aws.amazon.com/glue/latest/dg/custom-classifier.html).
+	// see built-in patterns in Writing Custom Classifiers (http://docs.aws.amazon.com/glue/latest/dg/custom-classifier.html).
 	//
 	// GrokPattern is a required field
 	GrokPattern *string `min:"1" type:"string" required:"true"`
 
-	// The time this classifier was last updated.
+	// The time that this classifier was last updated.
 	LastUpdated *time.Time `type:"timestamp"`
 
 	// The name of the classifier.
@@ -19094,6 +19229,8 @@ type Job struct {
 	// consists of 4 vCPUs of compute capacity and 16 GB of memory. For more information,
 	// see the AWS Glue pricing page (https://aws.amazon.com/glue/pricing/).
 	//
+	// Do not set Max Capacity if using WorkerType and NumberOfWorkers.
+	//
 	// The value that can be allocated for MaxCapacity depends on whether you are
 	// running a python shell job, or an Apache Spark ETL job:
 	//
@@ -19114,6 +19251,13 @@ type Job struct {
 	// Specifies configuration properties of a job notification.
 	NotificationProperty *NotificationProperty `type:"structure"`
 
+	// The number of workers of a defined workerType that are allocated when a job
+	// runs.
+	//
+	// The maximum number of workers you can define are 299 for G.1X, and 149 for
+	// G.2X.
+	NumberOfWorkers *int64 `type:"integer"`
+
 	// The name or ARN of the IAM role associated with this job.
 	Role *string `type:"string"`
 
@@ -19124,6 +19268,19 @@ type Job struct {
 	// resources before it is terminated and enters TIMEOUT status. The default
 	// is 2,880 minutes (48 hours).
 	Timeout *int64 `min:"1" type:"integer"`
+
+	// The type of predefined worker that is allocated when a job runs. Accepts
+	// a value of Standard, G.1X, or G.2X.
+	//
+	//    * For the Standard worker type, each worker provides 4 vCPU, 16 GB of
+	//    memory and a 50GB disk, and 2 executors per worker.
+	//
+	//    * For the G.1X worker type, each worker provides 4 vCPU, 16 GB of memory
+	//    and a 64GB disk, and 1 executor per worker.
+	//
+	//    * For the G.2X worker type, each worker provides 8 vCPU, 32 GB of memory
+	//    and a 128GB disk, and 1 executor per worker.
+	WorkerType *string `type:"string" enum:"WorkerType"`
 }
 
 // String returns the string representation
@@ -19214,6 +19371,12 @@ func (s *Job) SetNotificationProperty(v *NotificationProperty) *Job {
 	return s
 }
 
+// SetNumberOfWorkers sets the NumberOfWorkers field's value.
+func (s *Job) SetNumberOfWorkers(v int64) *Job {
+	s.NumberOfWorkers = &v
+	return s
+}
+
 // SetRole sets the Role field's value.
 func (s *Job) SetRole(v string) *Job {
 	s.Role = &v
@@ -19229,6 +19392,12 @@ func (s *Job) SetSecurityConfiguration(v string) *Job {
 // SetTimeout sets the Timeout field's value.
 func (s *Job) SetTimeout(v int64) *Job {
 	s.Timeout = &v
+	return s
+}
+
+// SetWorkerType sets the WorkerType field's value.
+func (s *Job) SetWorkerType(v string) *Job {
+	s.WorkerType = &v
 	return s
 }
 
@@ -19425,6 +19594,8 @@ type JobRun struct {
 	// consists of 4 vCPUs of compute capacity and 16 GB of memory. For more information,
 	// see the AWS Glue pricing page (https://aws.amazon.com/glue/pricing/).
 	//
+	// Do not set Max Capacity if using WorkerType and NumberOfWorkers.
+	//
 	// The value that can be allocated for MaxCapacity depends on whether you are
 	// running a python shell job, or an Apache Spark ETL job:
 	//
@@ -19438,6 +19609,13 @@ type JobRun struct {
 
 	// Specifies configuration properties of a job run notification.
 	NotificationProperty *NotificationProperty `type:"structure"`
+
+	// The number of workers of a defined workerType that are allocated when a job
+	// runs.
+	//
+	// The maximum number of workers you can define are 299 for G.1X, and 149 for
+	// G.2X.
+	NumberOfWorkers *int64 `type:"integer"`
 
 	// A list of predecessors to this job run.
 	PredecessorRuns []*Predecessor `type:"list"`
@@ -19461,6 +19639,19 @@ type JobRun struct {
 
 	// The name of the trigger that started this job run.
 	TriggerName *string `min:"1" type:"string"`
+
+	// The type of predefined worker that is allocated when a job runs. Accepts
+	// a value of Standard, G.1X, or G.2X.
+	//
+	//    * For the Standard worker type, each worker provides 4 vCPU, 16 GB of
+	//    memory and a 50GB disk, and 2 executors per worker.
+	//
+	//    * For the G.1X worker type, each worker provides 4 vCPU, 16 GB of memory
+	//    and a 64GB disk, and 1 executor per worker.
+	//
+	//    * For the G.2X worker type, each worker provides 8 vCPU, 32 GB of memory
+	//    and a 128GB disk, and 1 executor per worker.
+	WorkerType *string `type:"string" enum:"WorkerType"`
 }
 
 // String returns the string representation
@@ -19551,6 +19742,12 @@ func (s *JobRun) SetNotificationProperty(v *NotificationProperty) *JobRun {
 	return s
 }
 
+// SetNumberOfWorkers sets the NumberOfWorkers field's value.
+func (s *JobRun) SetNumberOfWorkers(v int64) *JobRun {
+	s.NumberOfWorkers = &v
+	return s
+}
+
 // SetPredecessorRuns sets the PredecessorRuns field's value.
 func (s *JobRun) SetPredecessorRuns(v []*Predecessor) *JobRun {
 	s.PredecessorRuns = v
@@ -19584,6 +19781,12 @@ func (s *JobRun) SetTimeout(v int64) *JobRun {
 // SetTriggerName sets the TriggerName field's value.
 func (s *JobRun) SetTriggerName(v string) *JobRun {
 	s.TriggerName = &v
+	return s
+}
+
+// SetWorkerType sets the WorkerType field's value.
+func (s *JobRun) SetWorkerType(v string) *JobRun {
+	s.WorkerType = &v
 	return s
 }
 
@@ -19638,6 +19841,8 @@ type JobUpdate struct {
 	// consists of 4 vCPUs of compute capacity and 16 GB of memory. For more information,
 	// see the AWS Glue pricing page (https://aws.amazon.com/glue/pricing/).
 	//
+	// Do not set Max Capacity if using WorkerType and NumberOfWorkers.
+	//
 	// The value that can be allocated for MaxCapacity depends on whether you are
 	// running a python shell job, or an Apache Spark ETL job:
 	//
@@ -19655,6 +19860,13 @@ type JobUpdate struct {
 	// Specifies configuration properties of a job notification.
 	NotificationProperty *NotificationProperty `type:"structure"`
 
+	// The number of workers of a defined workerType that are allocated when a job
+	// runs.
+	//
+	// The maximum number of workers you can define are 299 for G.1X, and 149 for
+	// G.2X.
+	NumberOfWorkers *int64 `type:"integer"`
+
 	// The name or ARN of the IAM role associated with this job (required).
 	Role *string `type:"string"`
 
@@ -19665,6 +19877,19 @@ type JobUpdate struct {
 	// resources before it is terminated and enters TIMEOUT status. The default
 	// is 2,880 minutes (48 hours).
 	Timeout *int64 `min:"1" type:"integer"`
+
+	// The type of predefined worker that is allocated when a job runs. Accepts
+	// a value of Standard, G.1X, or G.2X.
+	//
+	//    * For the Standard worker type, each worker provides 4 vCPU, 16 GB of
+	//    memory and a 50GB disk, and 2 executors per worker.
+	//
+	//    * For the G.1X worker type, each worker provides 4 vCPU, 16 GB of memory
+	//    and a 64GB disk, and 1 executor per worker.
+	//
+	//    * For the G.2X worker type, each worker provides 8 vCPU, 32 GB of memory
+	//    and a 128GB disk, and 1 executor per worker.
+	WorkerType *string `type:"string" enum:"WorkerType"`
 }
 
 // String returns the string representation
@@ -19758,6 +19983,12 @@ func (s *JobUpdate) SetNotificationProperty(v *NotificationProperty) *JobUpdate 
 	return s
 }
 
+// SetNumberOfWorkers sets the NumberOfWorkers field's value.
+func (s *JobUpdate) SetNumberOfWorkers(v int64) *JobUpdate {
+	s.NumberOfWorkers = &v
+	return s
+}
+
 // SetRole sets the Role field's value.
 func (s *JobUpdate) SetRole(v string) *JobUpdate {
 	s.Role = &v
@@ -19776,11 +20007,17 @@ func (s *JobUpdate) SetTimeout(v int64) *JobUpdate {
 	return s
 }
 
+// SetWorkerType sets the WorkerType field's value.
+func (s *JobUpdate) SetWorkerType(v string) *JobUpdate {
+	s.WorkerType = &v
+	return s
+}
+
 // A classifier for JSON content.
 type JsonClassifier struct {
 	_ struct{} `type:"structure"`
 
-	// The time this classifier was registered.
+	// The time that this classifier was registered.
 	CreationTime *time.Time `type:"timestamp"`
 
 	// A JsonPath string defining the JSON data for the classifier to classify.
@@ -19790,7 +20027,7 @@ type JsonClassifier struct {
 	// JsonPath is a required field
 	JsonPath *string `type:"string" required:"true"`
 
-	// The time this classifier was last updated.
+	// The time that this classifier was last updated.
 	LastUpdated *time.Time `type:"timestamp"`
 
 	// The name of the classifier.
@@ -20280,13 +20517,13 @@ func (s *ListTriggersOutput) SetTriggerNames(v []*string) *ListTriggersOutput {
 type Location struct {
 	_ struct{} `type:"structure"`
 
-	// A DynamoDB Table location.
+	// An Amazon DynamoDB table location.
 	DynamoDB []*CodeGenNodeArg `type:"list"`
 
 	// A JDBC location.
 	Jdbc []*CodeGenNodeArg `type:"list"`
 
-	// An Amazon S3 location.
+	// An Amazon Simple Storage Service (Amazon S3) location.
 	S3 []*CodeGenNodeArg `type:"list"`
 }
 
@@ -21205,7 +21442,7 @@ func (s *S3Encryption) SetS3EncryptionMode(v string) *S3Encryption {
 	return s
 }
 
-// Specifies a data store in Amazon S3.
+// Specifies a data store in Amazon Simple Storage Service (Amazon S3).
 type S3Target struct {
 	_ struct{} `type:"structure"`
 
@@ -21243,10 +21480,10 @@ func (s *S3Target) SetPath(v string) *S3Target {
 type Schedule struct {
 	_ struct{} `type:"structure"`
 
-	// A cron expression used to specify the schedule (see Time-Based Schedules
-	// for Jobs and Crawlers (http://docs.aws.amazon.com/glue/latest/dg/monitor-data-warehouse-schedule.html).
-	// For example, to run something every day at 12:15 UTC, you would specify:
-	// cron(15 12 * * ? *).
+	// A cron expression used to specify the schedule. For more information, see
+	// Time-Based Schedules for Jobs and Crawlers (http://docs.aws.amazon.com/glue/latest/dg/monitor-data-warehouse-schedule.html).
+	// For example, to run something every day at 12:15 UTC, specify cron(15 12
+	// * * ? *).
 	ScheduleExpression *string `type:"string"`
 
 	// The state of the schedule.
@@ -21275,7 +21512,7 @@ func (s *Schedule) SetState(v string) *Schedule {
 	return s
 }
 
-// Crawler policy for update and deletion behavior.
+// A policy that specifies update and deletion behaviors for the crawler.
 type SchemaChangePolicy struct {
 	_ struct{} `type:"structure"`
 
@@ -21663,6 +21900,8 @@ type StartJobRunInput struct {
 	// consists of 4 vCPUs of compute capacity and 16 GB of memory. For more information,
 	// see the AWS Glue pricing page (https://aws.amazon.com/glue/pricing/).
 	//
+	// Do not set Max Capacity if using WorkerType and NumberOfWorkers.
+	//
 	// The value that can be allocated for MaxCapacity depends on whether you are
 	// running a python shell job, or an Apache Spark ETL job:
 	//
@@ -21677,6 +21916,13 @@ type StartJobRunInput struct {
 	// Specifies configuration properties of a job run notification.
 	NotificationProperty *NotificationProperty `type:"structure"`
 
+	// The number of workers of a defined workerType that are allocated when a job
+	// runs.
+	//
+	// The maximum number of workers you can define are 299 for G.1X, and 149 for
+	// G.2X.
+	NumberOfWorkers *int64 `type:"integer"`
+
 	// The name of the SecurityConfiguration structure to be used with this job
 	// run.
 	SecurityConfiguration *string `min:"1" type:"string"`
@@ -21686,6 +21932,19 @@ type StartJobRunInput struct {
 	// default is 2,880 minutes (48 hours). This overrides the timeout value set
 	// in the parent job.
 	Timeout *int64 `min:"1" type:"integer"`
+
+	// The type of predefined worker that is allocated when a job runs. Accepts
+	// a value of Standard, G.1X, or G.2X.
+	//
+	//    * For the Standard worker type, each worker provides 4 vCPU, 16 GB of
+	//    memory and a 50GB disk, and 2 executors per worker.
+	//
+	//    * For the G.1X worker type, each worker provides 4 vCPU, 16 GB of memory
+	//    and a 64GB disk, and 1 executor per worker.
+	//
+	//    * For the G.2X worker type, each worker provides 8 vCPU, 32 GB of memory
+	//    and a 128GB disk, and 1 executor per worker.
+	WorkerType *string `type:"string" enum:"WorkerType"`
 }
 
 // String returns the string representation
@@ -21764,6 +22023,12 @@ func (s *StartJobRunInput) SetNotificationProperty(v *NotificationProperty) *Sta
 	return s
 }
 
+// SetNumberOfWorkers sets the NumberOfWorkers field's value.
+func (s *StartJobRunInput) SetNumberOfWorkers(v int64) *StartJobRunInput {
+	s.NumberOfWorkers = &v
+	return s
+}
+
 // SetSecurityConfiguration sets the SecurityConfiguration field's value.
 func (s *StartJobRunInput) SetSecurityConfiguration(v string) *StartJobRunInput {
 	s.SecurityConfiguration = &v
@@ -21773,6 +22038,12 @@ func (s *StartJobRunInput) SetSecurityConfiguration(v string) *StartJobRunInput 
 // SetTimeout sets the Timeout field's value.
 func (s *StartJobRunInput) SetTimeout(v int64) *StartJobRunInput {
 	s.Timeout = &v
+	return s
+}
+
+// SetWorkerType sets the WorkerType field's value.
+func (s *StartJobRunInput) SetWorkerType(v string) *StartJobRunInput {
+	s.WorkerType = &v
 	return s
 }
 
@@ -23158,12 +23429,12 @@ type UpdateCrawlerInput struct {
 	// always override the default classifiers for a given classification.
 	Classifiers []*string `type:"list"`
 
-	// Crawler configuration information. This versioned JSON string allows users
-	// to specify aspects of a crawler's behavior. For more information, see Configuring
-	// a Crawler (http://docs.aws.amazon.com/glue/latest/dg/crawler-configuration.html).
+	// The crawler configuration information. This versioned JSON string allows
+	// users to specify aspects of a crawler's behavior. For more information, see
+	// Configuring a Crawler (http://docs.aws.amazon.com/glue/latest/dg/crawler-configuration.html).
 	Configuration *string `type:"string"`
 
-	// The name of the SecurityConfiguration structure to be used by this Crawler.
+	// The name of the SecurityConfiguration structure to be used by this crawler.
 	CrawlerSecurityConfiguration *string `type:"string"`
 
 	// The AWS Glue database where results are stored, such as: arn:aws:daylight:us-east-1::database/sometable/*.
@@ -23177,17 +23448,17 @@ type UpdateCrawlerInput struct {
 	// Name is a required field
 	Name *string `min:"1" type:"string" required:"true"`
 
-	// The IAM role (or ARN of an IAM role) used by the new crawler to access customer
-	// resources.
+	// The IAM role or Amazon Resource Name (ARN) of an IAM role that is used by
+	// the new crawler to access customer resources.
 	Role *string `type:"string"`
 
-	// A cron expression used to specify the schedule (see Time-Based Schedules
-	// for Jobs and Crawlers (http://docs.aws.amazon.com/glue/latest/dg/monitor-data-warehouse-schedule.html).
-	// For example, to run something every day at 12:15 UTC, you would specify:
-	// cron(15 12 * * ? *).
+	// A cron expression used to specify the schedule. For more information, see
+	// Time-Based Schedules for Jobs and Crawlers (http://docs.aws.amazon.com/glue/latest/dg/monitor-data-warehouse-schedule.html).
+	// For example, to run something every day at 12:15 UTC, specify cron(15 12
+	// * * ? *).
 	Schedule *string `type:"string"`
 
-	// Policy for the crawler's update and deletion behavior.
+	// The policy for the crawler's update and deletion behavior.
 	SchemaChangePolicy *SchemaChangePolicy `type:"structure"`
 
 	// The table prefix used for catalog tables that are created.
@@ -23215,6 +23486,11 @@ func (s *UpdateCrawlerInput) Validate() error {
 	}
 	if s.Name != nil && len(*s.Name) < 1 {
 		invalidParams.Add(request.NewErrParamMinLen("Name", 1))
+	}
+	if s.Targets != nil {
+		if err := s.Targets.Validate(); err != nil {
+			invalidParams.AddNested("Targets", err.(request.ErrInvalidParams))
+		}
 	}
 
 	if invalidParams.Len() > 0 {
@@ -23306,15 +23582,15 @@ func (s UpdateCrawlerOutput) GoString() string {
 type UpdateCrawlerScheduleInput struct {
 	_ struct{} `type:"structure"`
 
-	// Name of the crawler whose schedule to update.
+	// The name of the crawler whose schedule to update.
 	//
 	// CrawlerName is a required field
 	CrawlerName *string `min:"1" type:"string" required:"true"`
 
-	// The updated cron expression used to specify the schedule (see Time-Based
-	// Schedules for Jobs and Crawlers (http://docs.aws.amazon.com/glue/latest/dg/monitor-data-warehouse-schedule.html).
-	// For example, to run something every day at 12:15 UTC, you would specify:
-	// cron(15 12 * * ? *).
+	// The updated cron expression used to specify the schedule. For more information,
+	// see Time-Based Schedules for Jobs and Crawlers (http://docs.aws.amazon.com/glue/latest/dg/monitor-data-warehouse-schedule.html).
+	// For example, to run something every day at 12:15 UTC, specify cron(15 12
+	// * * ? *).
 	Schedule *string `type:"string"`
 }
 
@@ -23396,7 +23672,7 @@ type UpdateCsvClassifierRequest struct {
 	Name *string `min:"1" type:"string" required:"true"`
 
 	// A custom symbol to denote what combines content into a single column value.
-	// Must be different from the column delimiter.
+	// It must be different from the column delimiter.
 	QuoteSymbol *string `min:"1" type:"string"`
 }
 
@@ -24306,9 +24582,9 @@ type UpdateXMLClassifierRequest struct {
 	Name *string `min:"1" type:"string" required:"true"`
 
 	// The XML tag designating the element that contains each record in an XML document
-	// being parsed. Note that this cannot identify a self-closing element (closed
-	// by />). An empty row element that contains only attributes can be parsed
-	// as long as it ends with a closing tag (for example, <row item_a="A" item_b="B"></row>
+	// being parsed. This cannot identify a self-closing element (closed by />).
+	// An empty row element that contains only attributes can be parsed as long
+	// as it ends with a closing tag (for example, <row item_a="A" item_b="B"></row>
 	// is okay, but <row item_a="A" item_b="B" /> is not).
 	RowTag *string `type:"string"`
 }
@@ -24524,10 +24800,10 @@ type XMLClassifier struct {
 	// Classification is a required field
 	Classification *string `type:"string" required:"true"`
 
-	// The time this classifier was registered.
+	// The time that this classifier was registered.
 	CreationTime *time.Time `type:"timestamp"`
 
-	// The time this classifier was last updated.
+	// The time that this classifier was last updated.
 	LastUpdated *time.Time `type:"timestamp"`
 
 	// The name of the classifier.
@@ -24536,9 +24812,9 @@ type XMLClassifier struct {
 	Name *string `min:"1" type:"string" required:"true"`
 
 	// The XML tag designating the element that contains each record in an XML document
-	// being parsed. Note that this cannot identify a self-closing element (closed
-	// by />). An empty row element that contains only attributes can be parsed
-	// as long as it ends with a closing tag (for example, <row item_a="A" item_b="B"></row>
+	// being parsed. This can't identify a self-closing element (closed by />).
+	// An empty row element that contains only attributes can be parsed as long
+	// as it ends with a closing tag (for example, <row item_a="A" item_b="B"></row>
 	// is okay, but <row item_a="A" item_b="B" /> is not).
 	RowTag *string `type:"string"`
 
@@ -24851,4 +25127,15 @@ const (
 
 	// UpdateBehaviorUpdateInDatabase is a UpdateBehavior enum value
 	UpdateBehaviorUpdateInDatabase = "UPDATE_IN_DATABASE"
+)
+
+const (
+	// WorkerTypeStandard is a WorkerType enum value
+	WorkerTypeStandard = "Standard"
+
+	// WorkerTypeG1x is a WorkerType enum value
+	WorkerTypeG1x = "G.1X"
+
+	// WorkerTypeG2x is a WorkerType enum value
+	WorkerTypeG2x = "G.2X"
 )

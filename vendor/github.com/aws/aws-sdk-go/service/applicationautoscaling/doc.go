@@ -47,7 +47,6 @@
 //    * Custom resources provided by your own applications or services. More
 //    information is available in our GitHub repository (https://github.com/aws/aws-auto-scaling-custom-resource).
 //
-//
 // To learn more about Application Auto Scaling, including information about
 // granting IAM users required permissions for Application Auto Scaling actions,
 // see the Application Auto Scaling User Guide (https://docs.aws.amazon.com/autoscaling/application/userguide/what-is-application-auto-scaling.html).

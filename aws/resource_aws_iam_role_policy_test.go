@@ -306,15 +306,16 @@ func testAccCheckAWSIAMRolePolicyNameMatches(i, j *iam.GetRolePolicyOutput) reso
 func testAccAwsIamRolePolicyConfig(suffix string) string {
 	return fmt.Sprintf(`
 resource "aws_iam_role" "role_%[1]s" {
-	name = "tf_test_role_test_%[1]s"
-	path = "/"
-	assume_role_policy = "{\"Version\":\"2012-10-17\",\"Statement\":[{\"Sid\":\"\",\"Effect\":\"Allow\",\"Principal\":{\"Service\":\"ec2.amazonaws.com\"},\"Action\":\"sts:AssumeRole\"}]}"
+  name               = "tf_test_role_test_%[1]s"
+  path               = "/"
+  assume_role_policy = "{\"Version\":\"2012-10-17\",\"Statement\":[{\"Sid\":\"\",\"Effect\":\"Allow\",\"Principal\":{\"Service\":\"ec2.amazonaws.com\"},\"Action\":\"sts:AssumeRole\"}]}"
 }
 
 resource "aws_iam_role_policy" "foo_%[1]s" {
-	name = "tf_test_policy_test_%[1]s"
-	role = "${aws_iam_role.role_%[1]s.name}"
-	policy = <<EOF
+  name = "tf_test_policy_test_%[1]s"
+  role = "${aws_iam_role.role_%[1]s.name}"
+
+  policy = <<EOF
 {
   "Version": "2012-10-17",
   "Statement": {
@@ -331,9 +332,10 @@ EOF
 func testAccIAMRolePolicyConfig(role, policy1 string) string {
 	return fmt.Sprintf(`
 resource "aws_iam_role" "role" {
-	name = "tf_test_role_%s"
-	path = "/"
-	assume_role_policy = <<EOF
+  name = "tf_test_role_%s"
+  path = "/"
+
+  assume_role_policy = <<EOF
 {
   "Version": "2012-10-17",
   "Statement": [
@@ -351,9 +353,10 @@ EOF
 }
 
 resource "aws_iam_role_policy" "foo" {
-	name = "tf_test_policy_%s"
-	role = "${aws_iam_role.role.name}"
-	policy = <<EOF
+  name = "tf_test_policy_%s"
+  role = "${aws_iam_role.role.name}"
+
+  policy = <<EOF
 {
   "Version": "2012-10-17",
   "Statement": {
@@ -370,9 +373,10 @@ EOF
 func testAccIAMRolePolicyConfig_namePrefix(role, policyAction string) string {
 	return fmt.Sprintf(`
 resource "aws_iam_role" "test" {
-    name = "tf_test_role_%s"
-    path = "/"
-    assume_role_policy = <<EOF
+  name = "tf_test_role_%s"
+  path = "/"
+
+  assume_role_policy = <<EOF
 {
   "Version": "2012-10-17",
   "Statement": [
@@ -390,9 +394,10 @@ EOF
 }
 
 resource "aws_iam_role_policy" "test" {
-    name_prefix = "tf_test_policy_"
-    role = "${aws_iam_role.test.name}"
-    policy = <<EOF
+  name_prefix = "tf_test_policy_"
+  role        = "${aws_iam_role.test.name}"
+
+  policy = <<EOF
 {
   "Version": "2012-10-17",
   "Statement": {
@@ -409,9 +414,10 @@ EOF
 func testAccIAMRolePolicyConfig_generatedName(role, policyAction string) string {
 	return fmt.Sprintf(`
 resource "aws_iam_role" "test" {
-    name = "tf_test_role_%s"
-    path = "/"
-    assume_role_policy = <<EOF
+  name = "tf_test_role_%s"
+  path = "/"
+
+  assume_role_policy = <<EOF
 {
   "Version": "2012-10-17",
   "Statement": [
@@ -429,8 +435,9 @@ EOF
 }
 
 resource "aws_iam_role_policy" "test" {
-    role = "${aws_iam_role.test.name}"
-    policy = <<EOF
+  role = "${aws_iam_role.test.name}"
+
+  policy = <<EOF
 {
   "Version": "2012-10-17",
   "Statement": {
@@ -447,9 +454,10 @@ EOF
 func testAccIAMRolePolicyConfigUpdate(role, policy1, policy2 string) string {
 	return fmt.Sprintf(`
 resource "aws_iam_role" "role" {
-	name = "tf_test_role_%s"
-	path = "/"
-	assume_role_policy = <<EOF
+  name = "tf_test_role_%s"
+  path = "/"
+
+  assume_role_policy = <<EOF
 {
   "Version": "2012-10-17",
   "Statement": [
@@ -467,9 +475,10 @@ EOF
 }
 
 resource "aws_iam_role_policy" "foo" {
-	name = "tf_test_policy_%s"
-	role = "${aws_iam_role.role.name}"
-	policy = <<EOF
+  name = "tf_test_policy_%s"
+  role = "${aws_iam_role.role.name}"
+
+  policy = <<EOF
 {
   "Version": "2012-10-17",
   "Statement": {
@@ -482,9 +491,10 @@ EOF
 }
 
 resource "aws_iam_role_policy" "bar" {
-	name = "tf_test_policy_2_%s"
-	role = "${aws_iam_role.role.name}"
-	policy = <<EOF
+  name = "tf_test_policy_2_%s"
+  role = "${aws_iam_role.role.name}"
+
+  policy = <<EOF
 {
   "Version": "2012-10-17",
   "Statement": {
@@ -501,9 +511,10 @@ EOF
 func testAccIAMRolePolicyConfig_invalidJSON(role string) string {
 	return fmt.Sprintf(`
 resource "aws_iam_role" "role" {
-	name = "tf_test_role_%s"
-	path = "/"
-	assume_role_policy = <<EOF
+  name = "tf_test_role_%s"
+  path = "/"
+
+  assume_role_policy = <<EOF
 {
   "Version": "2012-10-17",
   "Statement": [
@@ -521,9 +532,10 @@ EOF
 }
 
 resource "aws_iam_role_policy" "foo" {
-	name = "tf_test_policy_%s"
-	role = "${aws_iam_role.role.name}"
-	policy = <<EOF
+  name = "tf_test_policy_%s"
+  role = "${aws_iam_role.role.name}"
+
+  policy = <<EOF
   {
     "Version": "2012-10-17",
     "Statement": {
