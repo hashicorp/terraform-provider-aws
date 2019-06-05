@@ -180,6 +180,28 @@ github.com/aws/aws-sdk-go/private/protocol/query/queryutil
 github.com/aws/aws-sdk-go/internal/sdkuri
 # github.com/beevik/etree v1.1.0
 github.com/beevik/etree
+# github.com/bflad/tfproviderlint v0.2.0
+github.com/bflad/tfproviderlint/cmd/tfproviderlint
+github.com/bflad/tfproviderlint/passes/AT001
+github.com/bflad/tfproviderlint/passes/AT002
+github.com/bflad/tfproviderlint/passes/AT003
+github.com/bflad/tfproviderlint/passes/AT004
+github.com/bflad/tfproviderlint/passes/R001
+github.com/bflad/tfproviderlint/passes/R002
+github.com/bflad/tfproviderlint/passes/R003
+github.com/bflad/tfproviderlint/passes/R004
+github.com/bflad/tfproviderlint/passes/S001
+github.com/bflad/tfproviderlint/passes/S002
+github.com/bflad/tfproviderlint/passes/S003
+github.com/bflad/tfproviderlint/passes/S004
+github.com/bflad/tfproviderlint/passes/S005
+github.com/bflad/tfproviderlint/passes/S006
+github.com/bflad/tfproviderlint/passes/acctestcase
+github.com/bflad/tfproviderlint/passes/commentignore
+github.com/bflad/tfproviderlint/passes/acctestfunc
+github.com/bflad/tfproviderlint/passes/resourcedataset
+github.com/bflad/tfproviderlint/passes/schemaresource
+github.com/bflad/tfproviderlint/passes/schemaschema
 # github.com/bgentry/go-netrc v0.0.0-20140422174119-9fd32a8b3d3d
 github.com/bgentry/go-netrc/netrc
 # github.com/bgentry/speakeasy v0.1.0
@@ -613,20 +635,28 @@ golang.org/x/text/transform
 golang.org/x/text/width
 golang.org/x/text/secure/bidirule
 golang.org/x/text/unicode/bidi
-# golang.org/x/tools v0.0.0-20190425150028-36563e24a262
-golang.org/x/tools/go/loader
+# golang.org/x/tools v0.0.0-20190510151030-63859f3815cb
+golang.org/x/tools/go/analysis/multichecker
+golang.org/x/tools/go/analysis
+golang.org/x/tools/go/analysis/passes/inspect
+golang.org/x/tools/go/ast/inspector
+golang.org/x/tools/go/analysis/internal/analysisflags
+golang.org/x/tools/go/analysis/internal/checker
+golang.org/x/tools/go/analysis/unitchecker
 golang.org/x/tools/go/packages
+golang.org/x/tools/go/analysis/internal/facts
+golang.org/x/tools/go/loader
 golang.org/x/tools/go/ssa
 golang.org/x/tools/go/ssa/ssautil
-golang.org/x/tools/go/ast/astutil
-golang.org/x/tools/go/buildutil
-golang.org/x/tools/go/internal/cgo
 golang.org/x/tools/go/gcexportdata
 golang.org/x/tools/go/internal/packagesdriver
 golang.org/x/tools/internal/gopathwalk
 golang.org/x/tools/internal/semver
+golang.org/x/tools/go/types/objectpath
+golang.org/x/tools/go/ast/astutil
+golang.org/x/tools/go/buildutil
+golang.org/x/tools/go/internal/cgo
 golang.org/x/tools/go/types/typeutil
-golang.org/x/tools/go/analysis
 golang.org/x/tools/go/analysis/passes/asmdecl
 golang.org/x/tools/go/analysis/passes/assign
 golang.org/x/tools/go/analysis/passes/atomic
@@ -655,8 +685,6 @@ golang.org/x/tools/go/internal/gcimporter
 golang.org/x/tools/internal/fastwalk
 golang.org/x/tools/go/analysis/passes/buildssa
 golang.org/x/tools/go/analysis/passes/internal/analysisutil
-golang.org/x/tools/go/analysis/passes/inspect
-golang.org/x/tools/go/ast/inspector
 golang.org/x/tools/go/analysis/passes/ctrlflow
 golang.org/x/tools/go/cfg
 golang.org/x/tools/internal/module
