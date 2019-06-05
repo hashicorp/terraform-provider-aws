@@ -370,7 +370,7 @@ func TestAccAWSElasticacheCluster_vpc(t *testing.T) {
 					testAccCheckAWSElasticacheClusterExists("aws_elasticache_cluster.bar", &ec),
 					testAccCheckAWSElasticacheClusterAttributes(&ec),
 					resource.TestCheckResourceAttr(
-						"aws_elasticache_cluster.bar", "availability_zone", "us-west-2a"),
+						"aws_elasticache_cluster.bar", "availability_zone", "us-east-1a"),
 				),
 			},
 		},
@@ -1105,7 +1105,7 @@ resource "aws_vpc" "foo" {
 resource "aws_subnet" "foo" {
     vpc_id = "${aws_vpc.foo.id}"
     cidr_block = "192.168.0.0/20"
-    availability_zone = "us-west-2a"
+    availability_zone = "us-east-1a"
   tags = {
         Name = "tf-acc-elasticache-cluster-in-vpc"
     }
@@ -1143,7 +1143,7 @@ resource "aws_elasticache_cluster" "bar" {
     security_group_ids = ["${aws_security_group.bar.id}"]
     parameter_group_name = "default.redis2.8"
     notification_topic_arn      = "${aws_sns_topic.topic_example.arn}"
-    availability_zone = "us-west-2a"
+    availability_zone = "us-east-1a"
 }
 
 resource "aws_sns_topic" "topic_example" {
@@ -1162,7 +1162,7 @@ resource "aws_vpc" "foo" {
 resource "aws_subnet" "foo" {
     vpc_id = "${aws_vpc.foo.id}"
     cidr_block = "192.168.0.0/20"
-    availability_zone = "us-west-2a"
+    availability_zone = "us-east-1a"
   tags = {
         Name = "tf-acc-elasticache-cluster-multi-az-in-vpc-foo"
     }
@@ -1171,7 +1171,7 @@ resource "aws_subnet" "foo" {
 resource "aws_subnet" "bar" {
     vpc_id = "${aws_vpc.foo.id}"
     cidr_block = "192.168.16.0/20"
-    availability_zone = "us-west-2b"
+    availability_zone = "us-east-1c"
   tags = {
         Name = "tf-acc-elasticache-cluster-multi-az-in-vpc-bar"
     }
@@ -1208,8 +1208,8 @@ resource "aws_elasticache_cluster" "bar" {
     security_group_ids = ["${aws_security_group.bar.id}"]
     az_mode = "cross-az"
     preferred_availability_zones = [
-        "us-west-2a",
-        "us-west-2b"
+        "us-east-1a",
+        "us-east-1c"
     ]
 }
 `, acctest.RandInt(), acctest.RandInt(), acctest.RandString(10))
