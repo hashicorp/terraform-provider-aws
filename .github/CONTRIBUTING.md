@@ -233,7 +233,7 @@ Implementing a new resource is a good way to learn more about how Terraform
 interacts with upstream APIs. There are plenty of examples to draw from in the
 existing resources, but you still get to implement something completely new.
 
-In addition to the below checklist, please see the [Common Review Items](#common-review-items] sections for more specific coding and testing guidelines.
+In addition to the below checklist, please see the [Common Review Items](#common-review-items) sections for more specific coding and testing guidelines.
 
  - [ ] __Minimal LOC__: It can be inefficient for both the reviewer
    and author to go through long feedback cycles on a big PR with many
