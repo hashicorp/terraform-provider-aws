@@ -249,6 +249,10 @@ func subscribeToSNSTopic(d *schema.ResourceData, snsconn *sns.SNS) (output *sns.
 				fmt.Errorf("Endpoint (%s) did not autoconfirm the subscription for topic %s", endpoint, topic_arn))
 		})
 
+		if isResourceTimeoutError(err) {
+			_, err = findSubscriptionByNonID(d, snsconn)
+		}
+
 		if err != nil {
 			return nil, err
 		}
