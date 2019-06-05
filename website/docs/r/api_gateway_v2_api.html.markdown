@@ -14,6 +14,8 @@ Manages an Amazon API Gateway Version 2 API.
 
 ## Example Usage
 
+### Basic
+
 ```hcl
 resource "aws_api_gateway_v2_api" "example" {
   name                       = "example-websocket-api"
@@ -45,5 +47,5 @@ In addition to all arguments above, the following attributes are exported:
 `aws_api_gateway_v2_api` can be imported by using the API identifier, e.g.
 
 ```
-$ terraform import aws_api_gateway_v2_api.example 40anslgfc0
+$ terraform import aws_api_gateway_v2_api.example aabbccddee
 ```
