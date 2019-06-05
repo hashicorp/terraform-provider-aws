@@ -16,7 +16,7 @@ func TestAccAwsDaxSubnetGroup_basic(t *testing.T) {
 	resourceName := "aws_dax_subnet_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSDax(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsDaxSubnetGroupDestroy,
 		Steps: []resource.TestStep{
