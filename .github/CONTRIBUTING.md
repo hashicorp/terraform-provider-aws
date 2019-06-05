@@ -202,7 +202,7 @@ Working on existing resources is a great way to get started as a Terraform
 contributor because you can work within existing code and tests to get a feel
 for what to do.
 
-In addition to the below checklist, please see the [Common Review Items](#common-review-items] sections for more specific coding and testing guidelines.
+In addition to the below checklist, please see the [Common Review Items](#common-review-items) sections for more specific coding and testing guidelines.
 
  - [ ] __Acceptance test coverage of new behavior__: Existing resources each
    have a set of [acceptance tests][acctests] covering their functionality.
