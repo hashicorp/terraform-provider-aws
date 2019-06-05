@@ -97,16 +97,22 @@ resource "aws_eip" "byoip-ip" {
 
 The following arguments are supported:
 
+* `address` - (Optional) IP address from an EC2 BYOIP pool. This option is only available for VPC EIPs.
 * `associate_with_private_ip` - (Optional) User-specified primary or secondary private IP address to associate with the Elastic IP address. If no private IP address is specified, the Elastic IP address is associated with the primary private IP address.
 * `customer_owned_ipv4_pool` - (Optional) ID  of a customer-owned address pool. For more on customer owned IP addressed check out [Customer-owned IP addresses guide](https://docs.aws.amazon.com/outposts/latest/userguide/outposts-networking-components.html#ip-addressing).
+* `customer_owned_ipv4_pool` - The  ID  of a customer-owned address pool. For more on customer owned IP addressed check out [Customer-owned IP addresses guide](https://docs.aws.amazon.com/outposts/latest/userguide/outposts-networking-components.html#ip-addressing)
 * `instance` - (Optional) EC2 instance ID.
 * `network_border_group` - (Optional) Location from which the IP address is advertised. Use this parameter to limit the address to this location.
+* `network_border_group` - The location from which the IP address is advertised. Use this parameter to limit the address to this location.
 * `network_interface` - (Optional) Network interface ID to associate with.
 * `public_ipv4_pool` - (Optional) EC2 IPv4 address pool identifier or `amazon`. This option is only available for VPC EIPs.
 * `tags` - (Optional) Map of tags to assign to the resource. Tags can only be applied to EIPs in a VPC. If configured with a provider [`default_tags` configuration block](https://www.terraform.io/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 * `vpc` - (Optional) Boolean if the EIP is in a VPC or not.
 
 ~> **NOTE:** You can specify either the `instance` ID or the `network_interface` ID, but not both. Including both will **not** return an error from the AWS API, but will have undefined behavior. See the relevant [AssociateAddress API Call][1] for more information.
+
+~> **NOTE:** Specifying both `public_ipv4_pool` and `address` won't cause an error but `address` will be used in the
+case both options are defined as the api only requires one or the other.
 
 ## Attributes Reference
 
