@@ -63,21 +63,6 @@ resource "aws_dynamodb_table" "basic-dynamodb-table" {
 }
 ```
 
-Notes: `attribute` can be lists
-
-```
-  attribute = [{
-    name = "UserId"
-    type = "S"
-  }, {
-    name = "GameTitle"
-    type = "S"
-  }, {
-    name = "TopScore"
-    type = "N"
-  }]
-```
-
 ## Argument Reference
 
 The following arguments are supported:
