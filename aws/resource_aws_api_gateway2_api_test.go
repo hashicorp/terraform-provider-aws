@@ -13,7 +13,7 @@ import (
 
 func TestAccAWSAPIGateway2Api_basic(t *testing.T) {
 	resourceName := "aws_api_gateway_v2_api.test"
-	rName := fmt.Sprintf("terraform-testacc-apigwv2api-%d", acctest.RandInt())
+	rName := fmt.Sprintf("terraform-testacc-apigwv2-%d", acctest.RandInt())
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -44,8 +44,8 @@ func TestAccAWSAPIGateway2Api_basic(t *testing.T) {
 
 func TestAccAWSAPIGateway2Api_update(t *testing.T) {
 	resourceName := "aws_api_gateway_v2_api.test"
-	rName1 := fmt.Sprintf("terraform-testacc-apigwv2api-%d", acctest.RandInt())
-	rName2 := fmt.Sprintf("terraform-testacc-apigwv2api-%d", acctest.RandInt())
+	rName1 := fmt.Sprintf("terraform-testacc-apigwv2-%d", acctest.RandInt())
+	rName2 := fmt.Sprintf("terraform-testacc-apigwv2-%d", acctest.RandInt())
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
