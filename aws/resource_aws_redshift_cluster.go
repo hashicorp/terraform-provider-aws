@@ -610,7 +610,9 @@ func resourceAwsRedshiftClusterRead(d *schema.ResourceData, meta interface{}) er
 
 	d.Set("cluster_public_key", rsc.ClusterPublicKey)
 	d.Set("cluster_revision_number", rsc.ClusterRevisionNumber)
-	d.Set("tags", tagsToMapRedshift(rsc.Tags))
+	if err := d.Set("tags", tagsToMapRedshift(rsc.Tags)); err != nil {
+		return fmt.Errorf("Error setting Redshift Cluster Tags: %#v", err)
+	}
 
 	d.Set("snapshot_copy", flattenRedshiftSnapshotCopy(rsc.ClusterSnapshotCopyStatus))
 

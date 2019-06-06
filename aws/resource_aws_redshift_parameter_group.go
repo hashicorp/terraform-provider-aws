@@ -112,7 +112,9 @@ func resourceAwsRedshiftParameterGroupRead(d *schema.ResourceData, meta interfac
 	d.Set("name", describeResp.ParameterGroups[0].ParameterGroupName)
 	d.Set("family", describeResp.ParameterGroups[0].ParameterGroupFamily)
 	d.Set("description", describeResp.ParameterGroups[0].Description)
-	d.Set("tags", tagsToMapRedshift(describeResp.ParameterGroups[0].Tags))
+	if err := d.Set("tags", tagsToMapRedshift(describeResp.ParameterGroups[0].Tags)); err != nil {
+		return fmt.Errorf("Error setting Redshift Parameter Group Tags: %#v", err)
+	}
 
 	describeParametersOpts := redshift.DescribeClusterParametersInput{
 		ParameterGroupName: aws.String(d.Id()),
