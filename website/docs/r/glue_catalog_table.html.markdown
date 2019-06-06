@@ -31,8 +31,8 @@ resource "aws_glue_catalog_table" "aws_glue_catalog_table" {
   table_type = "EXTERNAL_TABLE"
 
   parameters = {
-    EXTERNAL            = "TRUE"
-    parquet.compression = "SNAPPY"
+    EXTERNAL              = "TRUE"
+    "parquet.compression" = "SNAPPY"
   }
 
   storage_descriptor {
@@ -45,7 +45,7 @@ resource "aws_glue_catalog_table" "aws_glue_catalog_table" {
       serialization_library = "org.apache.hadoop.hive.ql.io.parquet.serde.ParquetHiveSerDe"
 
       parameters = {
-        serialization.format = 1
+        "serialization.format" = 1
       }
     }
 
