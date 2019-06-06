@@ -1,25 +1,25 @@
-## 2.14.0 (Unreleased)
+## 2.14.0 (June 06, 2019)
 
 FEATURES:
 
-* **New Data Source:** `aws_ec2_transit_gateway_dx_gateway_attachment` [GH-8678]
+* **New Data Source:** `aws_ec2_transit_gateway_dx_gateway_attachment` ([#8678](https://github.com/terraform-providers/terraform-provider-aws/issues/8678))
 
 ENHANCEMENTS:
 
 * data-source/aws_msk_cluster: Add `bootstrap_brokers_tls` attribute
-* resource/aws_codebuild_webhook: Add `filter_groups` configuration blocks [GH-8110]
-* resource/aws_msk_cluster: Add `client_authentication`, `configuration_info`, and `encryption_in_transit` configuration blocks [GH-8850]
-* resource/aws_msk_cluster: Add `bootstrap_brokers_tls` and `current_version` attributes [GH-8850]
-* resource/aws_msk_cluster: Support `broker_node_group_into` configuration block `ebs_volume_size` argument updates [GH-8850]
-* resource/aws_msk_cluster: Support tagging on creation [GH-8850]
-* resource/aws_subnet: Use customizable timeouts for pending creation and waiting for `DependencyViolation` errors on deletion [GH-6322]
+* resource/aws_codebuild_webhook: Add `filter_groups` configuration blocks ([#8110](https://github.com/terraform-providers/terraform-provider-aws/issues/8110))
+* resource/aws_msk_cluster: Add `client_authentication`, `configuration_info`, and `encryption_in_transit` configuration blocks ([#8850](https://github.com/terraform-providers/terraform-provider-aws/issues/8850))
+* resource/aws_msk_cluster: Add `bootstrap_brokers_tls` and `current_version` attributes ([#8850](https://github.com/terraform-providers/terraform-provider-aws/issues/8850))
+* resource/aws_msk_cluster: Support `broker_node_group_into` configuration block `ebs_volume_size` argument updates ([#8850](https://github.com/terraform-providers/terraform-provider-aws/issues/8850))
+* resource/aws_msk_cluster: Support tagging on creation ([#8850](https://github.com/terraform-providers/terraform-provider-aws/issues/8850))
+* resource/aws_subnet: Use customizable timeouts for pending creation and waiting for `DependencyViolation` errors on deletion ([#6322](https://github.com/terraform-providers/terraform-provider-aws/issues/6322))
 
 BUG FIXES:
 
-* resource/aws_acmpca_certificate_authority: Add retry after timeout when creating CA [GH-8856]
-* resource/aws_launch_template: Add a nil check for `spot_options` to avoiding panicking if options are empty [GH-8844]
-* resource/aws_s3_bucket_metric: Add a nil check for `filter` to avoid panicking if empty [GH-8852]
-* resource/aws_subnet: Bump default timeout for deletion from 10 to 20 minutes to better handle ELBv2 ENI deletions [GH-6322]
+* resource/aws_acmpca_certificate_authority: Add retry after timeout when creating CA ([#8856](https://github.com/terraform-providers/terraform-provider-aws/issues/8856))
+* resource/aws_launch_template: Add a nil check for `spot_options` to avoiding panicking if options are empty ([#8844](https://github.com/terraform-providers/terraform-provider-aws/issues/8844))
+* resource/aws_s3_bucket_metric: Add a nil check for `filter` to avoid panicking if empty ([#8852](https://github.com/terraform-providers/terraform-provider-aws/issues/8852))
+* resource/aws_subnet: Bump default timeout for deletion from 10 to 20 minutes to better handle ELBv2 ENI deletions ([#6322](https://github.com/terraform-providers/terraform-provider-aws/issues/6322))
 
 ## 2.13.0 (May 31, 2019)
 
