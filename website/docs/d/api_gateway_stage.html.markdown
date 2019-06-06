@@ -37,4 +37,4 @@ resource "aws_api_gateway_stage" "production" {
 
 ## Attributes Reference
 
- * `current_deployment_id` - Set to the ID of the currently deployed deployment.
+ * `deployment_id` - Set to the ID of the currently deployed deployment.
