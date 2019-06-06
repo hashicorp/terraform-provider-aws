@@ -1,5 +1,9 @@
 ## 2.14.0 (Unreleased)
 
+FEATURES:
+
+* **New Data Source:** `aws_ec2_transit_gateway_dx_gateway_attachment` [GH-8678]
+
 ENHANCEMENTS:
 
 * data-source/aws_msk_cluster: Add `bootstrap_brokers_tls` attribute
