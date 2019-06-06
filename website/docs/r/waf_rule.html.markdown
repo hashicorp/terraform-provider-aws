@@ -1,6 +1,6 @@
 ---
 layout: "aws"
-page_title: "AWS: waf_rule"
+page_title: "AWS: aws_waf_rule"
 sidebar_current: "docs-aws-resource-waf-rule"
 description: |-
   Provides a AWS WAF rule resource.

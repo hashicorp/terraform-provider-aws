@@ -1,12 +1,12 @@
 ---
 layout: "aws"
-page_title: "AWS: ses_email_identity"
+page_title: "AWS: aws_ses_email_identity"
 sidebar_current: "docs-aws-resource-ses-email-identity"
 description: |-
   Provides an SES email identity resource
 ---
 
-# aws_ses_email_identity
+# Resource: aws_ses_email_identity
 
 Provides an SES email identity resource
 
