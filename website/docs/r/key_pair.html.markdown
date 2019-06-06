@@ -49,3 +49,5 @@ Key Pairs can be imported using the `key_name`, e.g.
 ```
 $ terraform import aws_key_pair.deployer deployer-key
 ```
+
+~> **WARNING:** For security reasons, the `public_key` attribute is never exposed by the AWS API. Thus, if a resource is imported and the configuration defines this attribute, a following plan results in the resource being recreated to correct the new value. To work around this, edit the Terraform state to set the right value for this attribute.
