@@ -225,7 +225,7 @@ func resourceAwsElasticacheReplicationGroup() *schema.Resource {
 			},
 		},
 		SchemaVersion: 1,
-		MigrateState: resourceAwsElasticacheReplicationGroupMigrateState,
+		MigrateState:  resourceAwsElasticacheReplicationGroupMigrateState,
 
 		Timeouts: &schema.ResourceTimeout{
 			Create: schema.DefaultTimeout(60 * time.Minute),
@@ -235,19 +235,19 @@ func resourceAwsElasticacheReplicationGroup() *schema.Resource {
 	}
 }
 
-func resourceAwsElasticacheReplicationGroupMigrateState(v int, inst *terraform.InstanceState, meta interface {}) (*terraform.InstanceState, error) {
+func resourceAwsElasticacheReplicationGroupMigrateState(v int, inst *terraform.InstanceState, meta interface{}) (*terraform.InstanceState, error) {
 	switch v {
 	case 0:
-	log.Printf("[WARN] Elasticache Replication Group (%s) v%d; migrating to v1 (noop)", inst, v)
+		log.Printf("[WARN] Elasticache Replication Group (%s) v%d; migrating to v1 (noop)", inst, v)
 
-	fallthrough
+		fallthrough
 
 	case 1:
-	// Current version
-	return inst, nil
+		// Current version
+		return inst, nil
 
 	default:
-	return inst, fmt.Errorf("Unexpected schema version: %d", v)
+		return inst, fmt.Errorf("Unexpected schema version: %d", v)
 	}
 }
 
