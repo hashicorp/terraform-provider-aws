@@ -53,10 +53,22 @@ func TestAccAWSAPIGateway2Api_update(t *testing.T) {
 		CheckDestroy: testAccCheckAWSAPIGateway2ApiDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSAPIGateway2ApiConfig_basic(rName1),
+				Config: testAccAWSAPIGateway2ApiConfig_allAttributes(rName1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSAPIGateway2ApiExists(resourceName),
 					resource.TestCheckResourceAttrSet(resourceName, "api_endpoint"),
+					resource.TestCheckResourceAttr(resourceName, "api_key_selection_expression", "$context.authorizer.usageIdentifierKey"),
+					resource.TestCheckResourceAttr(resourceName, "description", "test description"),
+					resource.TestCheckResourceAttr(resourceName, "name", rName1),
+					resource.TestCheckResourceAttr(resourceName, "protocol_type", apigatewayv2.ProtocolTypeWebsocket),
+					resource.TestCheckResourceAttr(resourceName, "route_selection_expression", "$request.body.service"),
+					resource.TestCheckResourceAttr(resourceName, "version", "v1"),
+				),
+			},
+			{
+				Config: testAccAWSAPIGateway2ApiConfig_basic(rName1),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSAPIGateway2ApiExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "api_key_selection_expression", "$request.header.x-api-key"),
 					resource.TestCheckResourceAttr(resourceName, "description", ""),
 					resource.TestCheckResourceAttr(resourceName, "name", rName1),
@@ -66,7 +78,7 @@ func TestAccAWSAPIGateway2Api_update(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccAWSAPIGateway2ApiConfig_update(rName2),
+				Config: testAccAWSAPIGateway2ApiConfig_allAttributes(rName2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSAPIGateway2ApiExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "api_key_selection_expression", "$context.authorizer.usageIdentifierKey"),
@@ -77,7 +89,7 @@ func TestAccAWSAPIGateway2Api_update(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccAWSAPIGateway2ApiConfig_update(rName1),
+				Config: testAccAWSAPIGateway2ApiConfig_allAttributes(rName1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSAPIGateway2ApiExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "api_key_selection_expression", "$context.authorizer.usageIdentifierKey"),
@@ -154,7 +166,7 @@ resource "aws_api_gateway_v2_api" "test" {
 `, rName)
 }
 
-func testAccAWSAPIGateway2ApiConfig_update(rName string) string {
+func testAccAWSAPIGateway2ApiConfig_allAttributes(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_api_gateway_v2_api" "test" {
   api_key_selection_expression = "$context.authorizer.usageIdentifierKey"
