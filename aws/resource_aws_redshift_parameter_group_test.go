@@ -290,9 +290,9 @@ resource "aws_redshift_parameter_group" "default" {
   description = "Test parameter group for terraform"
 
   tags = {
-    environment = "Production"
-	name     	= "test-terraform-%[1]d"
-	description = "Test parameter group for terraform %[2]s"
+		environment = "Production"
+		name     		= "test-terraform-%[1]d"
+		description = "Test parameter group for terraform %[2]s"
   }
 }
 `, rInt, rString)
@@ -306,7 +306,7 @@ resource "aws_redshift_parameter_group" "default" {
   description = "Test parameter group for terraform"
 
   tags = {
-	name     	= "test-terraform-%[1]d"
+		name     	= "test-terraform-%[1]d"
   }
 }
 `, rInt)
