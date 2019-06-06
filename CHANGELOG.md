@@ -7,6 +7,7 @@ FEATURES:
 ENHANCEMENTS:
 
 * data-source/aws_msk_cluster: Add `bootstrap_brokers_tls` attribute
+* resource/aws_codebuild_webhook: Add `filter_groups` configuration blocks [GH-8110]
 * resource/aws_msk_cluster: Add `client_authentication`, `configuration_info`, and `encryption_in_transit` configuration blocks [GH-8850]
 * resource/aws_msk_cluster: Add `bootstrap_brokers_tls` and `current_version` attributes [GH-8850]
 * resource/aws_msk_cluster: Support `broker_node_group_into` configuration block `ebs_volume_size` argument updates [GH-8850]
