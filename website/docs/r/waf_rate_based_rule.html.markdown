@@ -1,6 +1,6 @@
 ---
 layout: "aws"
-page_title: "AWS: waf_rate_based_rule"
+page_title: "AWS: aws_waf_rate_based_rule"
 sidebar_current: "docs-aws-resource-waf-rate-based-rule"
 description: |-
   Provides a AWS WAF rule resource.

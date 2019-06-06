@@ -1,12 +1,12 @@
 ---
 layout: "aws"
-page_title: "AWS: sfn_activity"
+page_title: "AWS: aws_sfn_activity"
 sidebar_current: "docs-aws-resource-sfn-activity"
 description: |-
   Provides a Step Function Activity resource.
 ---
 
-# Resource: sfn_activity
+# Resource: aws_sfn_activity
 
 Provides a Step Function Activity resource
 

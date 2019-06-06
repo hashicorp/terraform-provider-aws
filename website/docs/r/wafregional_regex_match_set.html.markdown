@@ -1,6 +1,6 @@
 ---
 layout: "aws"
-page_title: "AWS: wafregional_regex_match_set"
+page_title: "AWS: aws_wafregional_regex_match_set"
 sidebar_current: "docs-aws-resource-wafregional-regex-match-set"
 description: |-
   Provides a AWS WAF Regional Regex Match Set resource.

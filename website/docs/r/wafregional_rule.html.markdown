@@ -1,6 +1,6 @@
 ---
 layout: "aws"
-page_title: "AWS: wafregional_rule"
+page_title: "AWS: aws_wafregional_rule"
 sidebar_current: "docs-aws-resource-wafregional-rule"
 description: |-
   Provides an AWS WAF Regional rule resource for use with ALB.
