@@ -20,7 +20,7 @@ func TestAccDataSourceAwsApiGatewayStage(t *testing.T) {
 			{
 				Config: testAccDataSourceAwsApiGatewayStageConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttrPair(deploymentName, "id", dataSourceName, "current_deployment_id"),
+					resource.TestCheckResourceAttrPair(deploymentName, "id", dataSourceName, "deployment_id"),
 				),
 			},
 		},
