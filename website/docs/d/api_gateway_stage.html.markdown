@@ -26,7 +26,7 @@ data "aws_api_gateway_stage" "production" {
 resource "aws_api_gateway_stage" "production" {
   stage_name    = "prod"
   rest_api_id   = "${aws_api_gateway_rest_api.test.id}"
-  deployment_id = "${data.aws_api_gateway_stage.current_deployment_id}"
+  deployment_id = "${data.aws_api_gateway_stage.deployment_id}"
 }
 ```
 
