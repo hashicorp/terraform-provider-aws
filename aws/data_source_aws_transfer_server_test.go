@@ -13,7 +13,7 @@ func TestAccDataSourceAwsTransferServer_basic(t *testing.T) {
 	datasourceName := "data.aws_transfer_server.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:  func() { testAccPreCheck(t) },
+		PreCheck:  func() { testAccPreCheck(t); testAccPreCheckAWSTransfer(t) },
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
 			{
@@ -35,7 +35,7 @@ func TestAccDataSourceAwsTransferServer_service_managed(t *testing.T) {
 	datasourceName := "data.aws_transfer_server.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:  func() { testAccPreCheck(t) },
+		PreCheck:  func() { testAccPreCheck(t); testAccPreCheckAWSTransfer(t) },
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
 			{
@@ -57,7 +57,7 @@ func TestAccDataSourceAwsTransferServer_apigateway(t *testing.T) {
 	datasourceName := "data.aws_transfer_server.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:  func() { testAccPreCheck(t) },
+		PreCheck:  func() { testAccPreCheck(t); testAccPreCheckAWSTransfer(t) },
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
 			{

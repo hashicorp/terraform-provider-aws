@@ -19,7 +19,7 @@ func TestAccAWSLightsailInstance_basic(t *testing.T) {
 	lightsailName := fmt.Sprintf("tf-test-lightsail-%d", acctest.RandInt())
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:      func() { testAccPreCheck(t) },
+		PreCheck:      func() { testAccPreCheck(t); testAccPreCheckAWSLightsail(t) },
 		IDRefreshName: "aws_lightsail_instance.lightsail_instance_test",
 		Providers:     testAccProviders,
 		CheckDestroy:  testAccCheckAWSLightsailInstanceDestroy,
@@ -43,7 +43,7 @@ func TestAccAWSLightsailInstance_euRegion(t *testing.T) {
 	lightsailName := fmt.Sprintf("tf-test-lightsail-%d", acctest.RandInt())
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:      func() { testAccPreCheck(t) },
+		PreCheck:      func() { testAccPreCheck(t); testAccPreCheckAWSLightsail(t) },
 		IDRefreshName: "aws_lightsail_instance.lightsail_instance_test",
 		Providers:     testAccProviders,
 		CheckDestroy:  testAccCheckAWSLightsailInstanceDestroy,
@@ -84,7 +84,7 @@ func TestAccAWSLightsailInstance_disapear(t *testing.T) {
 	}
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSLightsail(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSLightsailInstanceDestroy,
 		Steps: []resource.TestStep{
@@ -158,6 +158,22 @@ func testAccCheckAWSLightsailInstanceDestroy(s *terraform.State) error {
 	}
 
 	return nil
+}
+
+func testAccPreCheckAWSLightsail(t *testing.T) {
+	conn := testAccProvider.Meta().(*AWSClient).lightsailconn
+
+	input := &lightsail.GetInstancesInput{}
+
+	_, err := conn.GetInstances(input)
+
+	if testAccPreCheckSkipError(err) {
+		t.Skipf("skipping acceptance testing: %s", err)
+	}
+
+	if err != nil {
+		t.Fatalf("unexpected PreCheck error: %s", err)
+	}
 }
 
 func testAccAWSLightsailInstanceConfig_basic(lightsailName string) string {

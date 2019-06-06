@@ -67,7 +67,7 @@ func TestAccAWSBatchComputeEnvironment_createEc2(t *testing.T) {
 	rInt := acctest.RandInt()
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSBatch(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckBatchComputeEnvironmentDestroy,
 		Steps: []resource.TestStep{
@@ -85,7 +85,7 @@ func TestAccAWSBatchComputeEnvironment_createEc2WithTags(t *testing.T) {
 	rInt := acctest.RandInt()
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSBatch(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckBatchComputeEnvironmentDestroy,
 		Steps: []resource.TestStep{
@@ -105,7 +105,7 @@ func TestAccAWSBatchComputeEnvironment_createSpot(t *testing.T) {
 	rInt := acctest.RandInt()
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSBatch(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckBatchComputeEnvironmentDestroy,
 		Steps: []resource.TestStep{
@@ -123,7 +123,7 @@ func TestAccAWSBatchComputeEnvironment_createUnmanaged(t *testing.T) {
 	rInt := acctest.RandInt()
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSBatch(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckBatchComputeEnvironmentDestroy,
 		Steps: []resource.TestStep{
@@ -141,7 +141,7 @@ func TestAccAWSBatchComputeEnvironment_updateMaxvCpus(t *testing.T) {
 	rInt := acctest.RandInt()
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSBatch(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckBatchComputeEnvironmentDestroy,
 		Steps: []resource.TestStep{
@@ -167,7 +167,7 @@ func TestAccAWSBatchComputeEnvironment_updateInstanceType(t *testing.T) {
 	rInt := acctest.RandInt()
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSBatch(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckBatchComputeEnvironmentDestroy,
 		Steps: []resource.TestStep{
@@ -195,7 +195,7 @@ func TestAccAWSBatchComputeEnvironment_updateComputeEnvironmentName(t *testing.T
 	expectedUpdatedName := fmt.Sprintf("tf_acc_test_updated_%d", rInt)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSBatch(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckBatchComputeEnvironmentDestroy,
 		Steps: []resource.TestStep{
@@ -221,7 +221,7 @@ func TestAccAWSBatchComputeEnvironment_createEc2WithoutComputeResources(t *testi
 	rInt := acctest.RandInt()
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSBatch(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckBatchComputeEnvironmentDestroy,
 		Steps: []resource.TestStep{
@@ -237,7 +237,7 @@ func TestAccAWSBatchComputeEnvironment_createUnmanagedWithComputeResources(t *te
 	rInt := acctest.RandInt()
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSBatch(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckBatchComputeEnvironmentDestroy,
 		Steps: []resource.TestStep{
@@ -256,7 +256,7 @@ func TestAccAWSBatchComputeEnvironment_launchTemplate(t *testing.T) {
 	rInt := acctest.RandInt()
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSBatch(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckBatchComputeEnvironmentDestroy,
 		Steps: []resource.TestStep{
@@ -280,7 +280,7 @@ func TestAccAWSBatchComputeEnvironment_createSpotWithoutBidPercentage(t *testing
 	rInt := acctest.RandInt()
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSBatch(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckBatchComputeEnvironmentDestroy,
 		Steps: []resource.TestStep{
@@ -296,7 +296,7 @@ func TestAccAWSBatchComputeEnvironment_updateState(t *testing.T) {
 	rInt := acctest.RandInt()
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSBatch(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckBatchComputeEnvironmentDestroy,
 		Steps: []resource.TestStep{
@@ -370,6 +370,22 @@ func testAccCheckAwsBatchComputeEnvironmentExists() resource.TestCheckFunc {
 		}
 
 		return nil
+	}
+}
+
+func testAccPreCheckAWSBatch(t *testing.T) {
+	conn := testAccProvider.Meta().(*AWSClient).batchconn
+
+	input := &batch.DescribeComputeEnvironmentsInput{}
+
+	_, err := conn.DescribeComputeEnvironments(input)
+
+	if testAccPreCheckSkipError(err) {
+		t.Skipf("skipping acceptance testing: %s", err)
+	}
+
+	if err != nil {
+		t.Fatalf("unexpected PreCheck error: %s", err)
 	}
 }
 

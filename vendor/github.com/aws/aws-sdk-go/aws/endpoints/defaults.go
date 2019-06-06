@@ -959,10 +959,13 @@ var awsPartition = partition{
 		"comprehendmedical": service{
 
 			Endpoints: endpoints{
-				"eu-west-1": endpoint{},
-				"us-east-1": endpoint{},
-				"us-east-2": endpoint{},
-				"us-west-2": endpoint{},
+				"ap-southeast-2": endpoint{},
+				"ca-central-1":   endpoint{},
+				"eu-west-1":      endpoint{},
+				"eu-west-2":      endpoint{},
+				"us-east-1":      endpoint{},
+				"us-east-2":      endpoint{},
+				"us-west-2":      endpoint{},
 			},
 		},
 		"config": service{
@@ -1586,6 +1589,13 @@ var awsPartition = partition{
 				"us-west-2":      endpoint{},
 			},
 		},
+		"groundstation": service{
+
+			Endpoints: endpoints{
+				"us-east-2": endpoint{},
+				"us-west-2": endpoint{},
+			},
+		},
 		"guardduty": service{
 			IsRegionalized: boxedTrue,
 			Defaults: endpoint{
@@ -1653,6 +1663,7 @@ var awsPartition = partition{
 				"ap-southeast-2": endpoint{},
 				"eu-central-1":   endpoint{},
 				"eu-west-1":      endpoint{},
+				"eu-west-2":      endpoint{},
 				"us-east-1":      endpoint{},
 				"us-east-2":      endpoint{},
 				"us-west-1":      endpoint{},
@@ -1690,13 +1701,30 @@ var awsPartition = partition{
 				"us-west-2":      endpoint{},
 			},
 		},
+		"iotthingsgraph": service{
+			Defaults: endpoint{
+				CredentialScope: credentialScope{
+					Service: "iotthingsgraph",
+				},
+			},
+			Endpoints: endpoints{
+				"ap-northeast-1": endpoint{},
+				"ap-southeast-2": endpoint{},
+				"eu-west-1":      endpoint{},
+				"us-east-1":      endpoint{},
+				"us-west-2":      endpoint{},
+			},
+		},
 		"kafka": service{
 
 			Endpoints: endpoints{
 				"ap-northeast-1": endpoint{},
 				"ap-southeast-1": endpoint{},
 				"ap-southeast-2": endpoint{},
+				"eu-central-1":   endpoint{},
 				"eu-west-1":      endpoint{},
+				"eu-west-2":      endpoint{},
+				"eu-west-3":      endpoint{},
 				"us-east-1":      endpoint{},
 				"us-east-2":      endpoint{},
 				"us-west-2":      endpoint{},

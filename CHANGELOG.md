@@ -1,4 +1,19 @@
 ## 2.14.0 (Unreleased)
+
+ENHANCEMENTS:
+
+* data-source/aws_msk_cluster: Add `bootstrap_brokers_tls` attribute
+* resource/aws_msk_cluster: Add `client_authentication`, `configuration_info`, and `encryption_in_transit` configuration blocks [GH-8850]
+* resource/aws_msk_cluster: Add `bootstrap_brokers_tls` and `current_version` attributes [GH-8850]
+* resource/aws_msk_cluster: Support `broker_node_group_into` configuration block `ebs_volume_size` argument updates [GH-8850]
+* resource/aws_msk_cluster: Support tagging on creation [GH-8850]
+* resource/aws_subnet: Use customizable timeouts for pending creation and waiting for `DependencyViolation` errors on deletion [GH-6322]
+
+BUG FIXES:
+
+* resource/aws_subnet: Bump default timeout for deletion from 10 to 20 minutes to better handle ELBv2 ENI deletions [GH-6322]
+* resource/aws_launch_template: Add a nil check for `spot_options` to avoiding panicking if options are empty [GH-8844]
+
 ## 2.13.0 (May 31, 2019)
 
 FEATURES:

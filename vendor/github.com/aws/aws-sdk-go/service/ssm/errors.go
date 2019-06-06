@@ -126,8 +126,8 @@ const (
 	// ErrCodeDoesNotExistException for service response error code
 	// "DoesNotExistException".
 	//
-	// Error returned when the ID specified for a resource, such as a Maintenance
-	// Window or Patch baseline, doesn't exist.
+	// Error returned when the ID specified for a resource, such as a maintenance
+	// window or Patch baseline, doesn't exist.
 	//
 	// For information about resource limits in Systems Manager, see AWS Systems
 	// Manager Limits (http://docs.aws.amazon.com/general/latest/gr/aws_service_limits.html#limits_ssm).
@@ -272,7 +272,7 @@ const (
 	// ErrCodeInvalidDeletionIdException for service response error code
 	// "InvalidDeletionIdException".
 	//
-	// The ID specified for the delete operation does not exist or is not valide.
+	// The ID specified for the delete operation does not exist or is not valid.
 	// Verify the ID and try again.
 	ErrCodeInvalidDeletionIdException = "InvalidDeletionIdException"
 
@@ -513,7 +513,7 @@ const (
 	// "InvocationDoesNotExist".
 	//
 	// The command ID and instance ID you specified did not match any invocations.
-	// Verify the command ID adn the instance ID and try again.
+	// Verify the command ID and the instance ID and try again.
 	ErrCodeInvocationDoesNotExist = "InvocationDoesNotExist"
 
 	// ErrCodeItemContentMismatchException for service response error code
@@ -620,7 +620,7 @@ const (
 	// "ResourceLimitExceededException".
 	//
 	// Error returned when the caller has exceeded the default resource limits.
-	// For example, too many Maintenance Windows or Patch baselines have been created.
+	// For example, too many maintenance windows or patch baselines have been created.
 	//
 	// For information about resource limits in Systems Manager, see AWS Systems
 	// Manager Limits (http://docs.aws.amazon.com/general/latest/gr/aws_service_limits.html#limits_ssm).
@@ -683,6 +683,12 @@ const (
 
 	// ErrCodeUnsupportedFeatureRequiredException for service response error code
 	// "UnsupportedFeatureRequiredException".
+	//
+	// Microsoft application patching is only available on EC2 instances and Advanced
+	// Instances. To patch Microsoft applications on on-premises servers and VMs,
+	// you must enable Advanced Instances. For more information, see Using the Advanced-Instances
+	// Tier (http://docs.aws.amazon.com/systems-manager/latest/userguide/systems-manager-managedinstances-advanced.html)
+	// in the AWS Systems Manager User Guide.
 	ErrCodeUnsupportedFeatureRequiredException = "UnsupportedFeatureRequiredException"
 
 	// ErrCodeUnsupportedInventoryItemContextException for service response error code

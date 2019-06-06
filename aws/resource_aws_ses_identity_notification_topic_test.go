@@ -22,6 +22,7 @@ func TestAccAwsSESIdentityNotificationTopic_basic(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			testAccPreCheck(t)
+			testAccPreCheckAWSSES(t)
 		},
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsSESIdentityNotificationTopicDestroy,

@@ -12,7 +12,7 @@ import (
 func TestAccDataSourceAwsCognitoUserPools_basic(t *testing.T) {
 	rName := fmt.Sprintf("tf_acc_ds_cognito_user_pools_%s", acctest.RandString(7))
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:  func() { testAccPreCheck(t) },
+		PreCheck:  func() { testAccPreCheck(t); testAccPreCheckAWSCognitoIdentityProvider(t) },
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
 			{

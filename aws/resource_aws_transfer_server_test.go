@@ -19,7 +19,7 @@ func TestAccAWSTransferServer_basic(t *testing.T) {
 	rName := acctest.RandString(5)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:      func() { testAccPreCheck(t) },
+		PreCheck:      func() { testAccPreCheck(t); testAccPreCheckAWSTransfer(t) },
 		IDRefreshName: "aws_transfer_server.foo",
 		Providers:     testAccProviders,
 		CheckDestroy:  testAccCheckAWSTransferServerDestroy,
@@ -65,7 +65,7 @@ func TestAccAWSTransferServer_apigateway(t *testing.T) {
 	rName := acctest.RandString(5)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:      func() { testAccPreCheck(t) },
+		PreCheck:      func() { testAccPreCheck(t); testAccPreCheckAWSTransfer(t) },
 		IDRefreshName: "aws_transfer_server.foo",
 		Providers:     testAccProviders,
 		CheckDestroy:  testAccCheckAWSTransferServerDestroy,
@@ -94,7 +94,7 @@ func TestAccAWSTransferServer_disappears(t *testing.T) {
 	var conf transfer.DescribedServer
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSTransfer(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSTransferServerDestroy,
 		Steps: []resource.TestStep{
@@ -116,7 +116,7 @@ func TestAccAWSTransferServer_forcedestroy(t *testing.T) {
 	rName := acctest.RandString(5)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:      func() { testAccPreCheck(t) },
+		PreCheck:      func() { testAccPreCheck(t); testAccPreCheckAWSTransfer(t) },
 		IDRefreshName: "aws_transfer_server.foo",
 		Providers:     testAccProviders,
 		CheckDestroy:  testAccCheckAWSTransferServerDestroy,
@@ -149,7 +149,7 @@ func TestAccAWSTransferServer_vpcEndpointId(t *testing.T) {
 	resourceName := "aws_transfer_server.default"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:      func() { testAccPreCheck(t) },
+		PreCheck:      func() { testAccPreCheck(t); testAccPreCheckAWSTransfer(t) },
 		IDRefreshName: resourceName,
 		Providers:     testAccProviders,
 		CheckDestroy:  testAccCheckAWSTransferServerDestroy,
@@ -274,6 +274,22 @@ func testAccCheckAWSTransferCreateSshKey(describedServer *transfer.DescribedServ
 		}
 
 		return nil
+	}
+}
+
+func testAccPreCheckAWSTransfer(t *testing.T) {
+	conn := testAccProvider.Meta().(*AWSClient).transferconn
+
+	input := &transfer.ListServersInput{}
+
+	_, err := conn.ListServers(input)
+
+	if testAccPreCheckSkipError(err) {
+		t.Skipf("skipping acceptance testing: %s", err)
+	}
+
+	if err != nil {
+		t.Fatalf("unexpected PreCheck error: %s", err)
 	}
 }
 

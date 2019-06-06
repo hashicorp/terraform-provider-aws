@@ -21,6 +21,7 @@ func TestAccAWSSESDomainDkim_basic(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			testAccPreCheck(t)
+			testAccPreCheckAWSSES(t)
 		},
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{

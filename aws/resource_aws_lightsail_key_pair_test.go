@@ -18,7 +18,7 @@ func TestAccAWSLightsailKeyPair_basic(t *testing.T) {
 	lightsailName := fmt.Sprintf("tf-test-lightsail-%d", acctest.RandInt())
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSLightsail(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSLightsailKeyPairDestroy,
 		Steps: []resource.TestStep{
@@ -41,7 +41,7 @@ func TestAccAWSLightsailKeyPair_imported(t *testing.T) {
 	lightsailName := fmt.Sprintf("tf-test-lightsail-%d", acctest.RandInt())
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSLightsail(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSLightsailKeyPairDestroy,
 		Steps: []resource.TestStep{
@@ -66,7 +66,7 @@ func TestAccAWSLightsailKeyPair_encrypted(t *testing.T) {
 	lightsailName := fmt.Sprintf("tf-test-lightsail-%d", acctest.RandInt())
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSLightsail(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSLightsailKeyPairDestroy,
 		Steps: []resource.TestStep{
@@ -90,7 +90,7 @@ func TestAccAWSLightsailKeyPair_nameprefix(t *testing.T) {
 	var conf1, conf2 lightsail.KeyPair
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSLightsail(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSLightsailKeyPairDestroy,
 		Steps: []resource.TestStep{

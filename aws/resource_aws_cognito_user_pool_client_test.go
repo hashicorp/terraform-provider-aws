@@ -18,7 +18,7 @@ func TestAccAWSCognitoUserPoolClient_basic(t *testing.T) {
 	clientName := acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSCognitoIdentityProvider(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSCognitoUserPoolClientDestroy,
 		Steps: []resource.TestStep{
@@ -71,7 +71,7 @@ func TestAccAWSCognitoUserPoolClient_importBasic(t *testing.T) {
 	}
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSCognitoIdentityProvider(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSEcsServiceDestroy,
 		Steps: []resource.TestStep{
@@ -92,7 +92,7 @@ func TestAccAWSCognitoUserPoolClient_RefreshTokenValidity(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSCognitoIdentityProvider(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSCognitoUserPoolClientDestroy,
 		Steps: []resource.TestStep{
@@ -119,7 +119,7 @@ func TestAccAWSCognitoUserPoolClient_allFields(t *testing.T) {
 	clientName := acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSCognitoIdentityProvider(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSCognitoUserPoolClientDestroy,
 		Steps: []resource.TestStep{
@@ -165,7 +165,7 @@ func TestAccAWSCognitoUserPoolClient_allFieldsUpdatingOneField(t *testing.T) {
 	clientName := acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSCognitoIdentityProvider(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSCognitoUserPoolClientDestroy,
 		Steps: []resource.TestStep{

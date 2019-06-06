@@ -6232,6 +6232,90 @@ func (c *ServiceCatalog) ListServiceActionsForProvisioningArtifactPagesWithConte
 	return p.Err()
 }
 
+const opListStackInstancesForProvisionedProduct = "ListStackInstancesForProvisionedProduct"
+
+// ListStackInstancesForProvisionedProductRequest generates a "aws/request.Request" representing the
+// client's request for the ListStackInstancesForProvisionedProduct operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See ListStackInstancesForProvisionedProduct for more information on using the ListStackInstancesForProvisionedProduct
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the ListStackInstancesForProvisionedProductRequest method.
+//    req, resp := client.ListStackInstancesForProvisionedProductRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/servicecatalog-2015-12-10/ListStackInstancesForProvisionedProduct
+func (c *ServiceCatalog) ListStackInstancesForProvisionedProductRequest(input *ListStackInstancesForProvisionedProductInput) (req *request.Request, output *ListStackInstancesForProvisionedProductOutput) {
+	op := &request.Operation{
+		Name:       opListStackInstancesForProvisionedProduct,
+		HTTPMethod: "POST",
+		HTTPPath:   "/",
+	}
+
+	if input == nil {
+		input = &ListStackInstancesForProvisionedProductInput{}
+	}
+
+	output = &ListStackInstancesForProvisionedProductOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// ListStackInstancesForProvisionedProduct API operation for AWS Service Catalog.
+//
+// Returns summary information about stack instances that are associated with
+// the specified CFN_STACKSET type provisioned product. You can filter for stack
+// instances that are associated with a specific AWS account name or region.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for AWS Service Catalog's
+// API operation ListStackInstancesForProvisionedProduct for usage and error information.
+//
+// Returned Error Codes:
+//   * ErrCodeInvalidParametersException "InvalidParametersException"
+//   One or more parameters provided to the operation are not valid.
+//
+//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   The specified resource was not found.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/servicecatalog-2015-12-10/ListStackInstancesForProvisionedProduct
+func (c *ServiceCatalog) ListStackInstancesForProvisionedProduct(input *ListStackInstancesForProvisionedProductInput) (*ListStackInstancesForProvisionedProductOutput, error) {
+	req, out := c.ListStackInstancesForProvisionedProductRequest(input)
+	return out, req.Send()
+}
+
+// ListStackInstancesForProvisionedProductWithContext is the same as ListStackInstancesForProvisionedProduct with the addition of
+// the ability to pass a context and additional request options.
+//
+// See ListStackInstancesForProvisionedProduct for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *ServiceCatalog) ListStackInstancesForProvisionedProductWithContext(ctx aws.Context, input *ListStackInstancesForProvisionedProductInput, opts ...request.Option) (*ListStackInstancesForProvisionedProductOutput, error) {
+	req, out := c.ListStackInstancesForProvisionedProductRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
 const opListTagOptions = "ListTagOptions"
 
 // ListTagOptionsRequest generates a "aws/request.Request" representing the
@@ -14745,6 +14829,114 @@ func (s *ListServiceActionsOutput) SetServiceActionSummaries(v []*ServiceActionS
 	return s
 }
 
+type ListStackInstancesForProvisionedProductInput struct {
+	_ struct{} `type:"structure"`
+
+	// The language code.
+	//
+	//    * en - English (default)
+	//
+	//    * jp - Japanese
+	//
+	//    * zh - Chinese
+	AcceptLanguage *string `type:"string"`
+
+	// The maximum number of items to return with this call.
+	PageSize *int64 `type:"integer"`
+
+	// The page token for the next set of results. To retrieve the first set of
+	// results, use null.
+	PageToken *string `type:"string"`
+
+	// The identifier of the provisioned product.
+	//
+	// ProvisionedProductId is a required field
+	ProvisionedProductId *string `min:"1" type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s ListStackInstancesForProvisionedProductInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ListStackInstancesForProvisionedProductInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *ListStackInstancesForProvisionedProductInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "ListStackInstancesForProvisionedProductInput"}
+	if s.ProvisionedProductId == nil {
+		invalidParams.Add(request.NewErrParamRequired("ProvisionedProductId"))
+	}
+	if s.ProvisionedProductId != nil && len(*s.ProvisionedProductId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("ProvisionedProductId", 1))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetAcceptLanguage sets the AcceptLanguage field's value.
+func (s *ListStackInstancesForProvisionedProductInput) SetAcceptLanguage(v string) *ListStackInstancesForProvisionedProductInput {
+	s.AcceptLanguage = &v
+	return s
+}
+
+// SetPageSize sets the PageSize field's value.
+func (s *ListStackInstancesForProvisionedProductInput) SetPageSize(v int64) *ListStackInstancesForProvisionedProductInput {
+	s.PageSize = &v
+	return s
+}
+
+// SetPageToken sets the PageToken field's value.
+func (s *ListStackInstancesForProvisionedProductInput) SetPageToken(v string) *ListStackInstancesForProvisionedProductInput {
+	s.PageToken = &v
+	return s
+}
+
+// SetProvisionedProductId sets the ProvisionedProductId field's value.
+func (s *ListStackInstancesForProvisionedProductInput) SetProvisionedProductId(v string) *ListStackInstancesForProvisionedProductInput {
+	s.ProvisionedProductId = &v
+	return s
+}
+
+type ListStackInstancesForProvisionedProductOutput struct {
+	_ struct{} `type:"structure"`
+
+	// The page token to use to retrieve the next set of results. If there are no
+	// additional results, this value is null.
+	NextPageToken *string `type:"string"`
+
+	// List of stack instances.
+	StackInstances []*StackInstance `type:"list"`
+}
+
+// String returns the string representation
+func (s ListStackInstancesForProvisionedProductOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ListStackInstancesForProvisionedProductOutput) GoString() string {
+	return s.String()
+}
+
+// SetNextPageToken sets the NextPageToken field's value.
+func (s *ListStackInstancesForProvisionedProductOutput) SetNextPageToken(v string) *ListStackInstancesForProvisionedProductOutput {
+	s.NextPageToken = &v
+	return s
+}
+
+// SetStackInstances sets the StackInstances field's value.
+func (s *ListStackInstancesForProvisionedProductOutput) SetStackInstances(v []*StackInstance) *ListStackInstancesForProvisionedProductOutput {
+	s.StackInstances = v
+	return s
+}
+
 // Filters to use when listing TagOptions.
 type ListTagOptionsFilters struct {
 	_ struct{} `type:"structure"`
@@ -17928,6 +18120,68 @@ func (s *ShareError) SetMessage(v string) *ShareError {
 	return s
 }
 
+// An AWS CloudFormation stack, in a specific account and region, that's part
+// of a stack set operation. A stack instance is a reference to an attempted
+// or actual stack in a given account within a given region. A stack instance
+// can exist without a stack—for example, if the stack couldn't be created
+// for some reason. A stack instance is associated with only one stack set.
+// Each stack instance contains the ID of its associated stack set, as well
+// as the ID of the actual stack and the stack status.
+type StackInstance struct {
+	_ struct{} `type:"structure"`
+
+	// The name of the AWS account that the stack instance is associated with.
+	Account *string `type:"string"`
+
+	// The name of the AWS region that the stack instance is associated with.
+	Region *string `type:"string"`
+
+	// The status of the stack instance, in terms of its synchronization with its
+	// associated stack set.
+	//
+	//    * INOPERABLE: A DeleteStackInstances operation has failed and left the
+	//    stack in an unstable state. Stacks in this state are excluded from further
+	//    UpdateStackSet operations. You might need to perform a DeleteStackInstances
+	//    operation, with RetainStacks set to true, to delete the stack instance,
+	//    and then delete the stack manually.
+	//
+	//    * OUTDATED: The stack isn't currently up to date with the stack set because
+	//    either the associated stack failed during a CreateStackSet or UpdateStackSet
+	//    operation, or the stack was part of a CreateStackSet or UpdateStackSet
+	//    operation that failed or was stopped before the stack was created or updated.
+	//
+	//    * CURRENT: The stack is currently up to date with the stack set.
+	StackInstanceStatus *string `type:"string" enum:"StackInstanceStatus"`
+}
+
+// String returns the string representation
+func (s StackInstance) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s StackInstance) GoString() string {
+	return s.String()
+}
+
+// SetAccount sets the Account field's value.
+func (s *StackInstance) SetAccount(v string) *StackInstance {
+	s.Account = &v
+	return s
+}
+
+// SetRegion sets the Region field's value.
+func (s *StackInstance) SetRegion(v string) *StackInstance {
+	s.Region = &v
+	return s
+}
+
+// SetStackInstanceStatus sets the StackInstanceStatus field's value.
+func (s *StackInstance) SetStackInstanceStatus(v string) *StackInstance {
+	s.StackInstanceStatus = &v
+	return s
+}
+
 // Information about a tag. A tag is a key-value pair. Tags are propagated to
 // the resources created when provisioning a product.
 type Tag struct {
@@ -19933,6 +20187,17 @@ const (
 
 	// SortOrderDescending is a SortOrder enum value
 	SortOrderDescending = "DESCENDING"
+)
+
+const (
+	// StackInstanceStatusCurrent is a StackInstanceStatus enum value
+	StackInstanceStatusCurrent = "CURRENT"
+
+	// StackInstanceStatusOutdated is a StackInstanceStatus enum value
+	StackInstanceStatusOutdated = "OUTDATED"
+
+	// StackInstanceStatusInoperable is a StackInstanceStatus enum value
+	StackInstanceStatusInoperable = "INOPERABLE"
 )
 
 const (

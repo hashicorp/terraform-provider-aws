@@ -21,7 +21,7 @@ func TestAccAWSCognitoResourceServer_basic(t *testing.T) {
 	resourceName := "aws_cognito_resource_server.main"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSCognitoIdentityProvider(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSCognitoResourceServerDestroy,
 		Steps: []resource.TestStep{
@@ -62,7 +62,7 @@ func TestAccAWSCognitoResourceServer_scope(t *testing.T) {
 	resourceName := "aws_cognito_resource_server.main"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSCognitoIdentityProvider(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSCognitoResourceServerDestroy,
 		Steps: []resource.TestStep{

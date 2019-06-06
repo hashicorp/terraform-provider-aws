@@ -18,7 +18,7 @@ func TestAccAWSSesTemplate_Basic(t *testing.T) {
 	name := acctest.RandString(5)
 	var template ses.Template
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSSES(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckSesTemplateDestroy,
 		Steps: []resource.TestStep{
@@ -41,7 +41,7 @@ func TestAccAWSSesTemplate_Update(t *testing.T) {
 	name := acctest.RandString(5)
 	var template ses.Template
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSSES(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckSesTemplateDestroy,
 		Steps: []resource.TestStep{
@@ -85,7 +85,7 @@ func TestAccAWSSesTemplate_Import(t *testing.T) {
 	name := acctest.RandString(5)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSSES(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckSesTemplateDestroy,
 		Steps: []resource.TestStep{
