@@ -44,6 +44,6 @@ func dataSourceAwsApiGatewayStageRead(d *schema.ResourceData, meta interface{}) 
 	}
 
 	d.SetId(fmt.Sprintf("ags-%s-%s", restApiID, stageName))
-	d.Set("current_deployment_id", *stage.DeploymentId)
+	d.Set("current_deployment_id", stage.DeploymentId)
 	return nil
 }
