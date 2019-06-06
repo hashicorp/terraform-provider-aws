@@ -188,7 +188,7 @@ func TestAccAWSKinesisFirehoseDeliveryStream_s3KinesisStreamSource(t *testing.T)
 	var stream firehose.DeliveryStreamDescription
 	ri := acctest.RandInt()
 	config := fmt.Sprintf(testAccKinesisFirehoseDeliveryStreamConfig_s3KinesisStreamSource,
-		ri, ri, ri, ri, ri, ri, ri, ri)
+		ri, ri, ri, ri, ri, ri, ri)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -621,7 +621,7 @@ func TestAccAWSKinesisFirehoseDeliveryStream_ExtendedS3InvalidProcessorType(t *t
 		Steps: []resource.TestStep{
 			{
 				Config:      config,
-				ExpectError: regexp.MustCompile("must be 'Lambda'"),
+				ExpectError: regexp.MustCompile("(must be 'Lambda'|Member must satisfy enum value set)"),
 			},
 		},
 	})
@@ -645,7 +645,7 @@ func TestAccAWSKinesisFirehoseDeliveryStream_ExtendedS3InvalidParameterName(t *t
 		Steps: []resource.TestStep{
 			{
 				Config:      config,
-				ExpectError: regexp.MustCompile("must be one of 'LambdaArn', 'NumberOfRetries'"),
+				ExpectError: regexp.MustCompile("(must be one of 'LambdaArn', 'NumberOfRetries'|Member must satisfy enum value set)"),
 			},
 		},
 	})
@@ -1148,7 +1148,7 @@ resource "aws_iam_role_policy" "iam_policy_for_lambda" {
 			"logs:CreateLogStream",
 			"logs:PutLogEvents"
 		],
-		"Resource": "arn:aws:logs:*:*:*"
+		"Resource": "arn:${data.aws_partition.current.partition}:logs:*:*:*"
 	},
     {
       "Effect": "Allow",
@@ -1201,6 +1201,8 @@ resource "aws_lambda_function" "lambda_function_test" {
 const testAccKinesisFirehoseDeliveryStreamBaseConfig = `
 data "aws_caller_identity" "current" {}
 
+data "aws_partition" "current" {}
+
 resource "aws_iam_role" "firehose" {
   name = "tf_acctest_firehose_delivery_role_%d"
   assume_role_policy = <<EOF
@@ -1249,8 +1251,8 @@ resource "aws_iam_role_policy" "firehose" {
         "s3:PutObject"
       ],
       "Resource": [
-        "arn:aws:s3:::${aws_s3_bucket.bucket.id}",
-        "arn:aws:s3:::${aws_s3_bucket.bucket.id}/*"
+        "${aws_s3_bucket.bucket.arn}",
+        "${aws_s3_bucket.bucket.arn}/*"
       ]
     },
     {
@@ -1316,7 +1318,7 @@ resource "aws_iam_role_policy" "kinesis_source" {
         "kinesis:GetRecords"
       ],
       "Resource": [
-        "arn:aws:kinesis:*:*:stream/terraform-kinesis-source-stream-basictest-%d"
+        "${aws_kinesis_stream.source.arn}"
       ]
     }
   ]
@@ -1329,6 +1331,8 @@ EOF
 func testAccKinesisFirehoseDeliveryStreamConfig_s3WithCloudwatchLogging(rInt int) string {
 	return fmt.Sprintf(`
 data "aws_caller_identity" "current" {}
+
+data "aws_partition" "current" {}
 
 resource "aws_iam_role" "firehose" {
   name = "tf_acctest_firehose_delivery_role_%d"
@@ -1375,8 +1379,8 @@ resource "aws_iam_role_policy" "firehose" {
         "s3:PutObject"
       ],
       "Resource": [
-        "arn:aws:s3:::${aws_s3_bucket.bucket.id}",
-        "arn:aws:s3:::${aws_s3_bucket.bucket.id}/*"
+        "${aws_s3_bucket.bucket.arn}",
+        "${aws_s3_bucket.bucket.arn}/*"
       ]
     },
     {
@@ -1385,7 +1389,7 @@ resource "aws_iam_role_policy" "firehose" {
         "logs:putLogEvents"
       ],
       "Resource": [
-        "arn:aws:logs::log-group:/aws/kinesisfirehose/*"
+        "arn:${data.aws_partition.current.partition}:logs::log-group:/aws/kinesisfirehose/*"
       ]
     }
   ]
@@ -2045,8 +2049,14 @@ resource "aws_kinesis_firehose_delivery_stream" "test_stream" {
 var testAccKinesisFirehoseDeliveryStreamBaseElasticsearchConfig = testAccKinesisFirehoseDeliveryStreamBaseConfig + `
 resource "aws_elasticsearch_domain" "test_cluster" {
   domain_name = "es-test-%d"
+
   cluster_config {
-    instance_type = "m3.medium.elasticsearch"
+    instance_type = "m4.large.elasticsearch"
+  }
+
+  ebs_options {
+    ebs_enabled = true
+    volume_size = 10
   }
 }
 
@@ -2122,6 +2132,8 @@ resource "aws_kinesis_firehose_delivery_stream" "test_stream_es" {
 
 func testAccKinesisFirehoseDeliveryStreamConfig_missingProcessingConfiguration(rInt int) string {
 	return fmt.Sprintf(`
+data "aws_partition" "current" {}
+
 resource "aws_iam_role" "firehose" {
   name = "tf_acctest_firehose_delivery_role_%d"
 
@@ -2162,8 +2174,8 @@ resource "aws_iam_role_policy" "firehose" {
         "s3:PutObject"
       ],
       "Resource": [
-        "arn:aws:s3:::${aws_s3_bucket.bucket.id}",
-        "arn:aws:s3:::${aws_s3_bucket.bucket.id}/*"
+        "${aws_s3_bucket.bucket.arn}",
+        "${aws_s3_bucket.bucket.arn}/*"
       ]
     },
     {
@@ -2172,7 +2184,7 @@ resource "aws_iam_role_policy" "firehose" {
         "logs:putLogEvents"
       ],
       "Resource": [
-        "arn:aws:logs::log-group:/aws/kinesisfirehose/*"
+        "arn:${data.aws_partition.current.partition}:logs::log-group:/aws/kinesisfirehose/*"
       ]
     }
   ]
