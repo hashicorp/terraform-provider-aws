@@ -13,6 +13,7 @@ description: |-
 ## Example Usage
 ```hcl
 data "aws_ram_resource_share" "example" {
+  resource_owner = "SELF"
   name = "example"
 }
 ```
