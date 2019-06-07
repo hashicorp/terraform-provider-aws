@@ -2,6 +2,7 @@ package aws
 
 import (
 	"fmt"
+	"log"
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -10,6 +11,82 @@ import (
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/terraform"
 )
+
+func init() {
+	resource.AddTestSweepers("aws_vpc_dhcp_options", &resource.Sweeper{
+		Name: "aws_vpc_dhcp_options",
+		F:    testSweepVpcDhcpOptions,
+	})
+}
+
+func testSweepVpcDhcpOptions(region string) error {
+	client, err := sharedClientForRegion(region)
+	if err != nil {
+		return fmt.Errorf("error getting client: %s", err)
+	}
+	conn := client.(*AWSClient).ec2conn
+
+	input := &ec2.DescribeDhcpOptionsInput{}
+
+	err = conn.DescribeDhcpOptionsPages(input, func(page *ec2.DescribeDhcpOptionsOutput, lastPage bool) bool {
+		for _, dhcpOption := range page.DhcpOptions {
+			var domainName string
+			var defaultDomainNameFound, defaultDomainNameServersFound bool
+
+			if region == "us-east-1" {
+				domainName = "ec2.internal"
+			} else {
+				domainName = region + ".compute.internal"
+			}
+
+			for _, dhcpConfiguration := range dhcpOption.DhcpConfigurations {
+				if aws.StringValue(dhcpConfiguration.Key) == "domain-name" {
+					if len(dhcpConfiguration.Values) == 0 || len(dhcpConfiguration.Values) > 1 {
+						continue
+					}
+
+					if dhcpConfiguration.Values[0] != nil && aws.StringValue(dhcpConfiguration.Values[0].Value) == domainName {
+						defaultDomainNameFound = true
+					}
+				} else if aws.StringValue(dhcpConfiguration.Key) == "domain-name-servers" {
+					if len(dhcpConfiguration.Values) == 0 || len(dhcpConfiguration.Values) > 1 {
+						continue
+					}
+
+					if dhcpConfiguration.Values[0] != nil && aws.StringValue(dhcpConfiguration.Values[0].Value) == "AmazonProvidedDNS" {
+						defaultDomainNameServersFound = true
+					}
+				}
+			}
+
+			if defaultDomainNameFound && defaultDomainNameServersFound {
+				continue
+			}
+
+			input := &ec2.DeleteDhcpOptionsInput{
+				DhcpOptionsId: dhcpOption.DhcpOptionsId,
+			}
+
+			_, err := conn.DeleteDhcpOptions(input)
+
+			if err != nil {
+				log.Printf("[ERROR] Error deleting EC2 DHCP Option (%s): %s", aws.StringValue(dhcpOption.DhcpOptionsId), err)
+			}
+		}
+		return !lastPage
+	})
+
+	if testSweepSkipSweepError(err) {
+		log.Printf("[WARN] Skipping EC2 DHCP Option sweep for %s: %s", region, err)
+		return nil
+	}
+
+	if err != nil {
+		return fmt.Errorf("error describing DHCP Options: %s", err)
+	}
+
+	return nil
+}
 
 func TestAccAWSDHCPOptions_importBasic(t *testing.T) {
 	resourceName := "aws_vpc_dhcp_options.foo"
