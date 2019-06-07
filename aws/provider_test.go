@@ -343,6 +343,9 @@ func testAccPreCheckSkipError(err error) bool {
 		return true
 	}
 	// Ignore unsupported API calls
+	if isAWSErr(err, "UnknownOperationException", "") {
+		return true
+	}
 	if isAWSErr(err, "UnsupportedOperation", "") {
 		return true
 	}
