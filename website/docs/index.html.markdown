@@ -104,6 +104,9 @@ provider "aws" {
 }
 ```
 
+If specifying the profile through the `AWS_PROFILE` environment variable, you
+must also set `AWS_SDK_LOAD_CONFIG` to a truthy value, e.g. `AWS_SDK_LOAD_CONFIG=1`
+
 ### ECS and CodeBuild Task Roles
 
 If you're running Terraform on ECS or CodeBuild and you have configured an [IAM Task Role](http://docs.aws.amazon.com/AmazonECS/latest/developerguide/task-iam-roles.html),
