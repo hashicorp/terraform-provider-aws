@@ -252,7 +252,7 @@ func subscribeToSNSTopic(d *schema.ResourceData, snsconn *sns.SNS) (output *sns.
 		if isResourceTimeoutError(err) {
 			var subscription *sns.Subscription
 			subscription, err = findSubscriptionByNonID(d, snsconn)
-			
+
 			if subscription != nil {
 				output.SubscriptionArn = subscription.SubscriptionArn
 			}
