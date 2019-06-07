@@ -1763,15 +1763,12 @@ func (c *EC2) AttachVolumeRequest(input *AttachVolumeInput) (req *request.Reques
 // Attaches an EBS volume to a running or stopped instance and exposes it to
 // the instance with the specified device name.
 //
-// Encrypted EBS volumes may only be attached to instances that support Amazon
-// EBS encryption. For more information, see Amazon EBS Encryption (https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/EBSEncryption.html)
+// Encrypted EBS volumes must be attached to instances that support Amazon EBS
+// encryption. For more information, see Amazon EBS Encryption (https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/EBSEncryption.html)
 // in the Amazon Elastic Compute Cloud User Guide.
 //
-// For a list of supported device names, see Attaching an EBS Volume to an Instance
-// (https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/ebs-attaching-volume.html).
-// Any device names that aren't reserved for instance store volumes can be used
-// for EBS volumes. For more information, see Amazon EC2 Instance Store (https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/InstanceStorage.html)
-// in the Amazon Elastic Compute Cloud User Guide.
+// After you attach an EBS volume, you must make it available. For more information,
+// see Making an EBS Volume Available For Use (https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/ebs-using-volumes.html).
 //
 // If a volume has an AWS Marketplace product code:
 //
@@ -1785,8 +1782,7 @@ func (c *EC2) AttachVolumeRequest(input *AttachVolumeInput) (req *request.Reques
 //    the product. For example, you can't detach a volume from a Windows instance
 //    and attach it to a Linux instance.
 //
-// For more information about EBS volumes, see Attaching Amazon EBS Volumes
-// (https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/ebs-attaching-volume.html)
+// For more information, see Attaching Amazon EBS Volumes (https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/ebs-attaching-volume.html)
 // in the Amazon Elastic Compute Cloud User Guide.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
@@ -3140,14 +3136,13 @@ func (c *EC2) CopySnapshotRequest(input *CopySnapshotInput) (req *request.Reques
 // Copies a point-in-time snapshot of an EBS volume and stores it in Amazon
 // S3. You can copy the snapshot within the same Region or from one Region to
 // another. You can use the snapshot to create EBS volumes or Amazon Machine
-// Images (AMIs). The snapshot is copied to the regional endpoint that you send
-// the HTTP request to.
+// Images (AMIs).
 //
 // Copies of encrypted EBS snapshots remain encrypted. Copies of unencrypted
-// snapshots remain unencrypted, unless the Encrypted flag is specified during
-// the snapshot copy operation. By default, encrypted snapshot copies use the
-// default AWS Key Management Service (AWS KMS) customer master key (CMK); however,
-// you can specify a non-default CMK with the KmsKeyId parameter.
+// snapshots remain unencrypted, unless you enable encryption for the snapshot
+// copy operation. By default, encrypted snapshot copies use the default AWS
+// Key Management Service (AWS KMS) customer master key (CMK); however, you
+// can specify a different CMK.
 //
 // To copy an encrypted snapshot that has been shared from another account,
 // you must have permissions for the CMK used to encrypt the snapshot.
@@ -6289,10 +6284,10 @@ func (c *EC2) CreateVolumeRequest(input *CreateVolumeInput) (req *request.Reques
 // Any AWS Marketplace product codes from the snapshot are propagated to the
 // volume.
 //
-// You can create encrypted volumes with the Encrypted parameter. Encrypted
-// volumes may only be attached to instances that support Amazon EBS encryption.
-// Volumes that are created from encrypted snapshots are also automatically
-// encrypted. For more information, see Amazon EBS Encryption (https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/EBSEncryption.html)
+// You can create encrypted volumes. Encrypted volumes must be attached to instances
+// that support Amazon EBS encryption. Volumes that are created from encrypted
+// snapshots are also automatically encrypted. For more information, see Amazon
+// EBS Encryption (https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/EBSEncryption.html)
 // in the Amazon Elastic Compute Cloud User Guide.
 //
 // You can tag your volumes during creation. For more information, see Tagging
@@ -21462,16 +21457,16 @@ func (c *EC2) DisableEbsEncryptionByDefaultRequest(input *DisableEbsEncryptionBy
 
 // DisableEbsEncryptionByDefault API operation for Amazon Elastic Compute Cloud.
 //
-// Disables default encryption for EBS volumes that are created in your account
-// in the current region.
+// Disables EBS encryption by default for your account in the current Region.
 //
-// Call this API if you have enabled default encryption using EnableEbsEncryptionByDefault
-// and want to disable default EBS encryption. Once default EBS encryption is
-// disabled, you can still create an encrypted volume by setting encrypted to
-// true in the API call that creates the volume.
+// After you disable encryption by default, you can still create encrypted volumes
+// by enabling encryption when you create each volume.
 //
-// Disabling default EBS encryption will not change the encryption status of
-// any of your existing volumes.
+// Disabling encryption by default does not change the encryption status of
+// your existing volumes.
+//
+// For more information, see Amazon EBS Encryption (https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/EBSEncryption.html)
+// in the Amazon Elastic Compute Cloud User Guide.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -22402,32 +22397,23 @@ func (c *EC2) EnableEbsEncryptionByDefaultRequest(input *EnableEbsEncryptionByDe
 
 // EnableEbsEncryptionByDefault API operation for Amazon Elastic Compute Cloud.
 //
-// Enables default encryption for EBS volumes that are created in your account
-// in the current region.
+// Enables EBS encryption by default for your account in the current Region.
 //
-// Once encryption is enabled with this action, EBS volumes that are created
-// in your account will always be encrypted even if encryption is not specified
-// at launch. This setting overrides the encrypted setting to true in all API
-// calls that create EBS volumes in your account. A volume will be encrypted
-// even if you specify encryption to be false in the API call that creates the
-// volume.
+// After you enable encryption by default, the EBS volumes that you create are
+// are always encrypted, either using the default CMK or the CMK that you specified
+// when you created each volume. For more information, see Amazon EBS Encryption
+// (https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/EBSEncryption.html)
+// in the Amazon Elastic Compute Cloud User Guide.
 //
-// If you do not specify a customer master key (CMK) in the API call that creates
-// the EBS volume, then the volume is encrypted to your AWS account's default
-// CMK.
+// You can specify the default CMK for encryption by default using ModifyEbsDefaultKmsKeyId
+// or ResetEbsDefaultKmsKeyId.
 //
-// You can specify a default CMK of your choice using ModifyEbsDefaultKmsKeyId.
+// Enabling encryption by default has no effect on the encryption status of
+// your existing volumes.
 //
-// Enabling default encryption for EBS volumes has no effect on existing unencrypted
-// volumes in your account. Encrypting the data in these requires manual action.
-// You can either create an encrypted snapshot of an unencrypted volume, or
-// encrypt a copy of an unencrypted snapshot. Any volume restored from an encrypted
-// snapshot is also encrypted. For more information, see Amazon EBS Snapshots
-// (https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/EBSSnapshots.html).
-//
-// After EBS encryption by default is enabled, you can no longer launch older-generation
-// instance types that do not support encryption. For more information, see
-// Supported Instance Types (https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/EBSEncryption.html#EBSEncryption_supported_instances).
+// After you enable encryption by default, you can no longer launch instances
+// using instance types that do not support encryption. For more information,
+// see Supported Instance Types (https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/EBSEncryption.html#EBSEncryption_supported_instances).
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -23282,9 +23268,12 @@ func (c *EC2) GetEbsDefaultKmsKeyIdRequest(input *GetEbsDefaultKmsKeyIdInput) (r
 
 // GetEbsDefaultKmsKeyId API operation for Amazon Elastic Compute Cloud.
 //
-// Describes the default customer master key (CMK) that your account uses to
-// encrypt EBS volumes if you don’t specify a CMK in the API call. You can
-// change this default using ModifyEbsDefaultKmsKeyId.
+// Describes the default customer master key (CMK) for EBS encryption by default
+// for your account in this Region. You can change the default CMK for encryption
+// by default using ModifyEbsDefaultKmsKeyId or ResetEbsDefaultKmsKeyId.
+//
+// For more information, see Amazon EBS Encryption (https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/EBSEncryption.html)
+// in the Amazon Elastic Compute Cloud User Guide.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -23358,8 +23347,11 @@ func (c *EC2) GetEbsEncryptionByDefaultRequest(input *GetEbsEncryptionByDefaultI
 
 // GetEbsEncryptionByDefault API operation for Amazon Elastic Compute Cloud.
 //
-// Describes whether default EBS encryption is enabled for your account in the
-// current region.
+// Describes whether EBS encryption by default is enabled for your account in
+// the current Region.
+//
+// For more information, see Amazon EBS Encryption (https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/EBSEncryption.html)
+// in the Amazon Elastic Compute Cloud User Guide.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -24772,16 +24764,19 @@ func (c *EC2) ModifyEbsDefaultKmsKeyIdRequest(input *ModifyEbsDefaultKmsKeyIdInp
 
 // ModifyEbsDefaultKmsKeyId API operation for Amazon Elastic Compute Cloud.
 //
-// Changes the default customer master key (CMK) that your account uses to encrypt
-// EBS volumes if you don't specify a CMK in the API call.
+// Changes the default customer master key (CMK) for EBS encryption by default
+// for your account in this Region.
 //
-// Your account has an AWS-managed default CMK that is used for encrypting an
-// EBS volume when no CMK is specified in the API call that creates the volume.
-// By calling this API, you can specify a customer-managed CMK to use in place
-// of the AWS-managed default CMK.
+// AWS creates a unique AWS managed CMK in each Region for use with encryption
+// by default. If you change the default CMK to a customer managed CMK, it is
+// used instead of the AWS managed CMK. To reset the default CMK to the AWS
+// managed CMK for EBS, use ResetEbsDefaultKmsKeyId.
 //
-// Note: Deleting or disabling the custom CMK that you have specified to act
-// as your default CMK will result in instance-launch failures.
+// If you delete or disable the customer managed CMK that you specified for
+// use with encryption by default, your instances will fail to launch.
+//
+// For more information, see Amazon EBS Encryption (https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/EBSEncryption.html)
+// in the Amazon Elastic Compute Cloud User Guide.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -26009,9 +26004,8 @@ func (c *EC2) ModifySnapshotAttributeRequest(input *ModifySnapshotAttributeInput
 //
 // Adds or removes permission settings for the specified snapshot. You may add
 // or remove specified AWS account IDs from a snapshot's list of create volume
-// permissions, but you cannot do both in a single API call. If you need to
-// both add and remove account IDs for a snapshot, you must use multiple API
-// calls.
+// permissions, but you cannot do both in a single operation. If you need to
+// both add and remove account IDs for a snapshot, you must use multiple operations.
 //
 // Encrypted snapshots and snapshots with AWS Marketplace product codes cannot
 // be made public. Snapshots encrypted with your default CMK cannot be shared
@@ -26359,9 +26353,9 @@ func (c *EC2) ModifyVolumeRequest(input *ModifyVolumeInput) (req *request.Reques
 // You can use CloudWatch Events to check the status of a modification to an
 // EBS volume. For information about CloudWatch Events, see the Amazon CloudWatch
 // Events User Guide (https://docs.aws.amazon.com/AmazonCloudWatch/latest/events/).
-// You can also track the status of a modification using the DescribeVolumesModifications
-// API. For information about tracking status changes using either method, see
-// Monitoring Volume Modifications (https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/ebs-expand-volume.html#monitoring_mods).
+// You can also track the status of a modification using DescribeVolumesModifications.
+// For information about tracking status changes using either method, see Monitoring
+// Volume Modifications (https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/ebs-expand-volume.html#monitoring_mods).
 //
 // With previous-generation instance types, resizing an EBS volume may require
 // detaching and reattaching the volume or stopping and restarting the instance.
@@ -29025,19 +29019,13 @@ func (c *EC2) ResetEbsDefaultKmsKeyIdRequest(input *ResetEbsDefaultKmsKeyIdInput
 
 // ResetEbsDefaultKmsKeyId API operation for Amazon Elastic Compute Cloud.
 //
-// Resets the account's default customer master key (CMK) to the account's AWS-managed
-// default CMK. This default CMK is used to encrypt EBS volumes when you have
-// enabled EBS encryption by default without specifying a CMK in the API call.
-// If you have not enabled encryption by default, then this CMK is used when
-// you set the Encrypted parameter to true without specifying a custom CMK in
-// the API call.
+// Resets the default customer master key (CMK) for EBS encryption for your
+// account in this Region to the AWS managed CMK for EBS.
 //
-// Call this API if you have modified the default CMK that is used for encrypting
-// your EBS volume using ModifyEbsDefaultKmsKeyId and you want to reset it to
-// the AWS-managed default CMK. After resetting, you can continue to provide
-// a CMK of your choice in the API call that creates the volume. However, if
-// no CMK is specified, your account will encrypt the volume to the AWS-managed
-// default CMK.
+// After resetting the default CMK to the AWS managed CMK, you can continue
+// to encrypt by a customer managed CMK by specifying it when you create the
+// volume. For more information, see Amazon EBS Encryption (https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/EBSEncryption.html)
+// in the Amazon Elastic Compute Cloud User Guide.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -31657,9 +31645,16 @@ type AllocateHostsInput struct {
 	AvailabilityZone *string `locationName:"availabilityZone" type:"string" required:"true"`
 
 	// Unique, case-sensitive identifier that you provide to ensure the idempotency
-	// of the request. For more information, see How to Ensure Idempotency (https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/Run_Instance_Idempotency.html)
-	// in the Amazon Elastic Compute Cloud User Guide.
+	// of the request. For more information, see How to Ensure Idempotency (https://docs.aws.amazon.com/AWSEC2/latest/APIReference/Run_Instance_Idempotency.html).
 	ClientToken *string `locationName:"clientToken" type:"string"`
+
+	// Indicates whether to enable or disable host recovery for the Dedicated Host.
+	// Host recovery is disabled by default. For more information, see Host Recovery
+	// (https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/dedicated-hosts-recovery.html)
+	// in the Amazon Elastic Compute Cloud User Guide.
+	//
+	// Default: off
+	HostRecovery *string `type:"string" enum:"HostRecovery"`
 
 	// Specifies the instance type for which to configure your Dedicated Hosts.
 	// When you specify the instance type, that is the only instance type that you
@@ -31721,6 +31716,12 @@ func (s *AllocateHostsInput) SetAvailabilityZone(v string) *AllocateHostsInput {
 // SetClientToken sets the ClientToken field's value.
 func (s *AllocateHostsInput) SetClientToken(v string) *AllocateHostsInput {
 	s.ClientToken = &v
+	return s
+}
+
+// SetHostRecovery sets the HostRecovery field's value.
+func (s *AllocateHostsInput) SetHostRecovery(v string) *AllocateHostsInput {
+	s.HostRecovery = &v
 	return s
 }
 
@@ -37064,37 +37065,29 @@ type CopySnapshotInput struct {
 
 	// Specifies whether the destination snapshot should be encrypted. You can encrypt
 	// a copy of an unencrypted snapshot, but you cannot use it to create an unencrypted
-	// copy of an encrypted snapshot. Your default CMK for EBS is used unless you
-	// specify a non-default AWS Key Management Service (AWS KMS) CMK using KmsKeyId.
-	// For more information, see Amazon EBS Encryption (https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/EBSEncryption.html)
+	// copy of an encrypted snapshot. For more information, see Amazon EBS Encryption
+	// (https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/EBSEncryption.html)
 	// in the Amazon Elastic Compute Cloud User Guide.
 	Encrypted *bool `locationName:"encrypted" type:"boolean"`
 
-	// An identifier for the AWS Key Management Service (AWS KMS) customer master
-	// key (CMK) to use when creating the encrypted volume. This parameter is only
-	// required if you want to use a non-default CMK; if this parameter is not specified,
-	// the default CMK for EBS is used. If a KmsKeyId is specified, the Encrypted
-	// flag must also be set.
+	// The identifier of the AWS Key Management Service (AWS KMS) customer master
+	// key (CMK) to use for Amazon EBS encryption. If this parameter is not specified,
+	// your AWS managed CMK for EBS is used. If KmsKeyId is specified, the encrypted
+	// state must be true.
 	//
-	// The CMK identifier may be provided in any of the following formats:
+	// You can specify the CMK using any of the following:
 	//
-	//    * Key ID
+	//    * Key ID. For example, key/1234abcd-12ab-34cd-56ef-1234567890ab.
 	//
-	//    * Key alias. The alias ARN contains the arn:aws:kms namespace, followed
-	//    by the Region of the CMK, the AWS account ID of the CMK owner, the alias
-	//    namespace, and then the CMK alias. For example, arn:aws:kms:us-east-1:012345678910:alias/ExampleAlias.
+	//    * Key alias. For example, alias/ExampleAlias.
 	//
-	//    * ARN using key ID. The ID ARN contains the arn:aws:kms namespace, followed
-	//    by the Region of the CMK, the AWS account ID of the CMK owner, the key
-	//    namespace, and then the CMK ID. For example, arn:aws:kms:us-east-1:012345678910:key/abcd1234-a123-456a-a12b-a123b4cd56ef.
+	//    * Key ARN. For example, arn:aws:kms:us-east-1:012345678910:key/abcd1234-a123-456a-a12b-a123b4cd56ef.
 	//
-	//    * ARN using key alias. The alias ARN contains the arn:aws:kms namespace,
-	//    followed by the Region of the CMK, the AWS account ID of the CMK owner,
-	//    the alias namespace, and then the CMK alias. For example, arn:aws:kms:us-east-1:012345678910:alias/ExampleAlias.
+	//    * Alias ARN. For example, arn:aws:kms:us-east-1:012345678910:alias/ExampleAlias.
 	//
-	// AWS parses KmsKeyId asynchronously, meaning that the action you call may
-	// appear to complete even though you provided an invalid identifier. The action
-	// will eventually fail.
+	// AWS authenticates the CMK asynchronously. Therefore, if you specify an ID,
+	// alias, or ARN that is not valid, the action can appear to complete, but eventually
+	// fails.
 	KmsKeyId *string `locationName:"kmsKeyId" type:"string"`
 
 	// When you copy an encrypted source snapshot using the Amazon EC2 Query API,
@@ -38923,7 +38916,7 @@ func (s *CreateFpgaImageOutput) SetFpgaImageId(v string) *CreateFpgaImageOutput 
 type CreateImageInput struct {
 	_ struct{} `type:"structure"`
 
-	// Tthe block device mappings. This parameter cannot be used to modify the encryption
+	// The block device mappings. This parameter cannot be used to modify the encryption
 	// status of existing volumes or snapshots. To create an AMI with encrypted
 	// snapshots, use the CopyImage action.
 	BlockDeviceMappings []*BlockDeviceMapping `locationName:"blockDeviceMapping" locationNameList:"BlockDeviceMapping" type:"list"`
@@ -41549,18 +41542,14 @@ type CreateVolumeInput struct {
 	// it is UnauthorizedOperation.
 	DryRun *bool `locationName:"dryRun" type:"boolean"`
 
-	// Specifies the encryption state of the volume. The default effect of setting
-	// the Encrypted parameter to true depends on the volume origin (new or from
-	// a snapshot), starting encryption state, ownership, and whether account-level
-	// encryption (https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/account-level-encryption.html)
-	// is enabled. Each default case can be overridden by specifying a customer
-	// master key (CMK) using the KmsKeyId parameter, in addition to setting Encrypted
-	// to true. For a complete list of possible encryption cases, see Amazon EBS
-	// Encryption (https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/EBSEncryption.html).
+	// Specifies whether the volume should be encrypted. The effect of setting the
+	// encryption state to true depends on the volume origin (new or from a snapshot),
+	// starting encryption state, ownership, and whether encryption by default is
+	// enabled. For more information, see Encryption by Default (https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/EBSEncryption.html#encryption-by-default)
+	// in the Amazon Elastic Compute Cloud User Guide.
 	//
-	// Encrypted Amazon EBS volumes may only be attached to instances that support
-	// Amazon EBS encryption. For more information, see Supported Instance Types
-	// (https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/EBSEncryption.html#EBSEncryption_supported_instances).
+	// Encrypted Amazon EBS volumes must be attached to instances that support Amazon
+	// EBS encryption. For more information, see Supported Instance Types (https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/EBSEncryption.html#EBSEncryption_supported_instances).
 	Encrypted *bool `locationName:"encrypted" type:"boolean"`
 
 	// The number of I/O operations per second (IOPS) to provision for the volume,
@@ -41574,31 +41563,24 @@ type CreateVolumeInput struct {
 	// This parameter is valid only for Provisioned IOPS SSD (io1) volumes.
 	Iops *int64 `type:"integer"`
 
-	// An identifier for the AWS Key Management Service (AWS KMS) customer master
-	// key (CMK) to use to encrypt the volume. This parameter is only required if
-	// you want to use a non-default CMK; if this parameter is not specified, the
-	// default CMK for EBS is used. If a KmsKeyId is specified, the Encrypted flag
-	// must also be set.
+	// The identifier of the AWS Key Management Service (AWS KMS) customer master
+	// key (CMK) to use for Amazon EBS encryption. If this parameter is not specified,
+	// your AWS managed CMK for EBS is used. If KmsKeyId is specified, the encrypted
+	// state must be true.
 	//
-	// The CMK identifier may be provided in any of the following formats:
+	// You can specify the CMK using any of the following:
 	//
-	//    * Key ID
+	//    * Key ID. For example, key/1234abcd-12ab-34cd-56ef-1234567890ab.
 	//
-	//    * Key alias. The alias ARN contains the arn:aws:kms namespace, followed
-	//    by the Region of the CMK, the AWS account ID of the CMK owner, the alias
-	//    namespace, and then the CMK alias. For example, arn:aws:kms:us-east-1:012345678910:alias/ExampleAlias.
+	//    * Key alias. For example, alias/ExampleAlias.
 	//
-	//    * ARN using key ID. The ID ARN contains the arn:aws:kms namespace, followed
-	//    by the Region of the CMK, the AWS account ID of the CMK owner, the key
-	//    namespace, and then the CMK ID. For example, arn:aws:kms:us-east-1:012345678910:key/abcd1234-a123-456a-a12b-a123b4cd56ef.
+	//    * Key ARN. For example, arn:aws:kms:us-east-1:012345678910:key/abcd1234-a123-456a-a12b-a123b4cd56ef.
 	//
-	//    * ARN using key alias. The alias ARN contains the arn:aws:kms namespace,
-	//    followed by the Region of the CMK, the AWS account ID of the CMK owner,
-	//    the alias namespace, and then the CMK alias. For example, arn:aws:kms:us-east-1:012345678910:alias/ExampleAlias.
+	//    * Alias ARN. For example, arn:aws:kms:us-east-1:012345678910:alias/ExampleAlias.
 	//
-	// AWS parses KmsKeyId asynchronously, meaning that the action you call may
-	// appear to complete even though you provided an invalid identifier. The action
-	// will eventually fail.
+	// AWS authenticates the CMK asynchronously. Therefore, if you specify an ID,
+	// alias, or ARN that is not valid, the action can appear to complete, but eventually
+	// fails.
 	KmsKeyId *string `type:"string"`
 
 	// The size of the volume, in GiBs.
@@ -48887,11 +48869,13 @@ type DescribeHostsInput struct {
 	// The maximum number of results to return for the request in a single page.
 	// The remaining results can be seen by sending another request with the returned
 	// nextToken value. This value can be between 5 and 500. If maxResults is given
-	// a larger value than 500, you receive an error. You cannot specify this parameter
-	// and the host IDs parameter in the same request.
+	// a larger value than 500, you receive an error.
+	//
+	// You cannot specify this parameter and the host IDs parameter in the same
+	// request.
 	MaxResults *int64 `locationName:"maxResults" type:"integer"`
 
-	// The token to retrieve the next page of results.
+	// The token to use to retrieve the next page of results.
 	NextToken *string `locationName:"nextToken" type:"string"`
 }
 
@@ -49368,7 +49352,7 @@ type DescribeImagesInput struct {
 
 	// The filters.
 	//
-	//    * architecture - The image architecture (i386 | x86_64).
+	//    * architecture - The image architecture (i386 | x86_64 | arm64).
 	//
 	//    * block-device-mapping.delete-on-termination - A Boolean value that indicates
 	//    whether the Amazon EBS volume is deleted on instance termination.
@@ -50228,7 +50212,7 @@ type DescribeInstancesInput struct {
 	//    * affinity - The affinity setting for an instance running on a Dedicated
 	//    Host (default | host).
 	//
-	//    * architecture - The instance architecture (i386 | x86_64).
+	//    * architecture - The instance architecture (i386 | x86_64 | arm64).
 	//
 	//    * availability-zone - The Availability Zone of the instance.
 	//
@@ -58055,7 +58039,7 @@ func (s *DisableEbsEncryptionByDefaultInput) SetDryRun(v bool) *DisableEbsEncryp
 type DisableEbsEncryptionByDefaultOutput struct {
 	_ struct{} `type:"structure"`
 
-	// Account-level encryption status after performing the action.
+	// The updated status of encryption by default.
 	EbsEncryptionByDefault *bool `locationName:"ebsEncryptionByDefault" type:"boolean"`
 }
 
@@ -59731,7 +59715,7 @@ func (s *EnableEbsEncryptionByDefaultInput) SetDryRun(v bool) *EnableEbsEncrypti
 type EnableEbsEncryptionByDefaultOutput struct {
 	_ struct{} `type:"structure"`
 
-	// Account-level encryption status after performing the action.
+	// The updated status of encryption by default.
 	EbsEncryptionByDefault *bool `locationName:"ebsEncryptionByDefault" type:"boolean"`
 }
 
@@ -60539,7 +60523,7 @@ type ExportTransitGatewayRoutesInput struct {
 
 	// One or more filters. The possible values are:
 	//
-	//    * attachment.transit-gateway-attachment-id- The id of the transit gateway
+	//    * attachment.transit-gateway-attachment-id - The id of the transit gateway
 	//    attachment.
 	//
 	//    * attachment.resource-id - The resource id of the transit gateway attachment.
@@ -60563,7 +60547,7 @@ type ExportTransitGatewayRoutesInput struct {
 	//
 	//    * transit-gateway-route-destination-cidr-block - The CIDR range.
 	//
-	//    * type - The type of roue (active | blackhole).
+	//    * type - The type of route (active | blackhole).
 	Filters []*Filter `locationName:"Filter" locationNameList:"Filter" type:"list"`
 
 	// The name of the S3 bucket.
@@ -61247,7 +61231,8 @@ type FleetLaunchTemplateSpecificationRequest struct {
 	// The name of the launch template.
 	LaunchTemplateName *string `min:"3" type:"string"`
 
-	// The version number of the launch template.
+	// The version number of the launch template. Note: This is a required parameter
+	// and will be updated soon.
 	Version *string `type:"string"`
 }
 
@@ -61893,8 +61878,7 @@ func (s *GetEbsDefaultKmsKeyIdInput) SetDryRun(v bool) *GetEbsDefaultKmsKeyIdInp
 type GetEbsDefaultKmsKeyIdOutput struct {
 	_ struct{} `type:"structure"`
 
-	// The full ARN of the default CMK that your account uses to encrypt an EBS
-	// volume when no CMK is specified in the API call that creates the volume.
+	// The Amazon Resource Name (ARN) of the default CMK for encryption by default.
 	KmsKeyId *string `locationName:"kmsKeyId" type:"string"`
 }
 
@@ -61943,7 +61927,7 @@ func (s *GetEbsEncryptionByDefaultInput) SetDryRun(v bool) *GetEbsEncryptionByDe
 type GetEbsEncryptionByDefaultOutput struct {
 	_ struct{} `type:"structure"`
 
-	// Indicates whether default encryption for EBS volumes is enabled or disabled.
+	// Indicates whether encryption by default is enabled.
 	EbsEncryptionByDefault *bool `locationName:"ebsEncryptionByDefault" type:"boolean"`
 }
 
@@ -62957,9 +62941,8 @@ type Host struct {
 	// The number of new instances that can be launched onto the Dedicated Host.
 	AvailableCapacity *AvailableCapacity `locationName:"availableCapacity" type:"structure"`
 
-	// Unique, case-sensitive identifier that you provide to ensure idempotency
-	// of the request. For more information, see How to Ensure Idempotency (https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/Run_Instance_Idempotency.html)
-	// in the Amazon Elastic Compute Cloud User Guide.
+	// Unique, case-sensitive identifier that you provide to ensure the idempotency
+	// of the request. For more information, see How to Ensure Idempotency (https://docs.aws.amazon.com/AWSEC2/latest/APIReference/Run_Instance_Idempotency.html).
 	ClientToken *string `locationName:"clientToken" type:"string"`
 
 	// The ID of the Dedicated Host.
@@ -62967,6 +62950,10 @@ type Host struct {
 
 	// The hardware specifications of the Dedicated Host.
 	HostProperties *HostProperties `locationName:"hostProperties" type:"structure"`
+
+	// Indicates whether host recovery is enabled or disabled for the Dedicated
+	// Host.
+	HostRecovery *string `locationName:"hostRecovery" type:"string" enum:"HostRecovery"`
 
 	// The reservation ID of the Dedicated Host. This returns a null response if
 	// the Dedicated Host doesn't have an associated reservation.
@@ -63034,6 +63021,12 @@ func (s *Host) SetHostId(v string) *Host {
 // SetHostProperties sets the HostProperties field's value.
 func (s *Host) SetHostProperties(v *HostProperties) *Host {
 	s.HostProperties = v
+	return s
+}
+
+// SetHostRecovery sets the HostRecovery field's value.
+func (s *Host) SetHostRecovery(v string) *Host {
+	s.HostRecovery = &v
 	return s
 }
 
@@ -63985,7 +63978,7 @@ type ImportImageInput struct {
 
 	// The architecture of the virtual machine.
 	//
-	// Valid values: i386 | x86_64
+	// Valid values: i386 | x86_64 | arm64
 	Architecture *string `type:"string"`
 
 	// The client-specific data.
@@ -64296,7 +64289,7 @@ type ImportImageTask struct {
 
 	// The architecture of the virtual machine.
 	//
-	// Valid values: i386 | x86_64
+	// Valid values: i386 | x86_64 | arm64
 	Architecture *string `locationName:"architecture" type:"string"`
 
 	// A description of the import task.
@@ -69679,25 +69672,24 @@ type ModifyEbsDefaultKmsKeyIdInput struct {
 	// it is UnauthorizedOperation.
 	DryRun *bool `type:"boolean"`
 
-	// An identifier for the AWS Key Management Service (AWS KMS) customer master
-	// key (CMK) to use to encrypt the volume. This parameter is only required if
-	// you want to use a non-default CMK; if this parameter is not specified, the
-	// default CMK for EBS is used. If a KmsKeyId is specified, the Encrypted flag
-	// must also be set.
+	// The identifier of the AWS Key Management Service (AWS KMS) customer master
+	// key (CMK) to use for Amazon EBS encryption. If this parameter is not specified,
+	// your AWS managed CMK for EBS is used. If KmsKeyId is specified, the encrypted
+	// state must be true.
 	//
-	// The CMK identifier may be provided in any of the following formats:
+	// You can specify the CMK using any of the following:
 	//
-	//    * Key ID
+	//    * Key ID. For example, key/1234abcd-12ab-34cd-56ef-1234567890ab.
 	//
-	//    * Key alias
+	//    * Key alias. For example, alias/ExampleAlias.
 	//
-	//    * ARN using key ID. The ID ARN contains the arn:aws:kms namespace, followed
-	//    by the Region of the CMK, the AWS account ID of the CMK owner, the key
-	//    namespace, and then the CMK ID. For example, arn:aws:kms:us-east-1:012345678910:key/abcd1234-a123-456a-a12b-a123b4cd56ef.
+	//    * Key ARN. For example, arn:aws:kms:us-east-1:012345678910:key/abcd1234-a123-456a-a12b-a123b4cd56ef.
 	//
-	//    * ARN using key alias. The alias ARN contains the arn:aws:kms namespace,
-	//    followed by the Region of the CMK, the AWS account ID of the CMK owner,
-	//    the alias namespace, and then the CMK alias. For example, arn:aws:kms:us-east-1:012345678910:alias/ExampleAlias.
+	//    * Alias ARN. For example, arn:aws:kms:us-east-1:012345678910:alias/ExampleAlias.
+	//
+	// AWS authenticates the CMK asynchronously. Therefore, if you specify an ID,
+	// alias, or ARN that is not valid, the action can appear to complete, but eventually
+	// fails.
 	//
 	// KmsKeyId is a required field
 	KmsKeyId *string `type:"string" required:"true"`
@@ -69741,8 +69733,7 @@ func (s *ModifyEbsDefaultKmsKeyIdInput) SetKmsKeyId(v string) *ModifyEbsDefaultK
 type ModifyEbsDefaultKmsKeyIdOutput struct {
 	_ struct{} `type:"structure"`
 
-	// The full ARN of the default CMK that your account uses to encrypt an EBS
-	// volume when no CMK is specified in the API call that creates the volume.
+	// The Amazon Resource Name (ARN) of the default CMK for encryption by default.
 	KmsKeyId *string `locationName:"kmsKeyId" type:"string"`
 }
 
@@ -70017,14 +70008,17 @@ type ModifyHostsInput struct {
 	_ struct{} `type:"structure"`
 
 	// Specify whether to enable or disable auto-placement.
-	//
-	// AutoPlacement is a required field
-	AutoPlacement *string `locationName:"autoPlacement" type:"string" required:"true" enum:"AutoPlacement"`
+	AutoPlacement *string `locationName:"autoPlacement" type:"string" enum:"AutoPlacement"`
 
 	// The IDs of the Dedicated Hosts to modify.
 	//
 	// HostIds is a required field
 	HostIds []*string `locationName:"hostId" locationNameList:"item" type:"list" required:"true"`
+
+	// Indicates whether to enable or disable host recovery for the Dedicated Host.
+	// For more information, see Host Recovery (https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/dedicated-hosts-recovery.html)
+	// in the Amazon Elastic Compute Cloud User Guide.
+	HostRecovery *string `type:"string" enum:"HostRecovery"`
 }
 
 // String returns the string representation
@@ -70040,9 +70034,6 @@ func (s ModifyHostsInput) GoString() string {
 // Validate inspects the fields of the type to determine if they are valid.
 func (s *ModifyHostsInput) Validate() error {
 	invalidParams := request.ErrInvalidParams{Context: "ModifyHostsInput"}
-	if s.AutoPlacement == nil {
-		invalidParams.Add(request.NewErrParamRequired("AutoPlacement"))
-	}
 	if s.HostIds == nil {
 		invalidParams.Add(request.NewErrParamRequired("HostIds"))
 	}
@@ -70062,6 +70053,12 @@ func (s *ModifyHostsInput) SetAutoPlacement(v string) *ModifyHostsInput {
 // SetHostIds sets the HostIds field's value.
 func (s *ModifyHostsInput) SetHostIds(v []*string) *ModifyHostsInput {
 	s.HostIds = v
+	return s
+}
+
+// SetHostRecovery sets the HostRecovery field's value.
+func (s *ModifyHostsInput) SetHostRecovery(v string) *ModifyHostsInput {
+	s.HostRecovery = &v
 	return s
 }
 
@@ -75105,9 +75102,8 @@ func (s *Purchase) SetUpfrontPrice(v string) *Purchase {
 type PurchaseHostReservationInput struct {
 	_ struct{} `type:"structure"`
 
-	// Unique, case-sensitive identifier you provide to ensure idempotency of the
-	// request. For more information, see How to Ensure Idempotency (https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/Run_Instance_Idempotency.html)
-	// in the Amazon Elastic Compute Cloud User Guide.
+	// Unique, case-sensitive identifier that you provide to ensure the idempotency
+	// of the request. For more information, see How to Ensure Idempotency (https://docs.aws.amazon.com/AWSEC2/latest/APIReference/Run_Instance_Idempotency.html).
 	ClientToken *string `type:"string"`
 
 	// The currency in which the totalUpfrontPrice, LimitPrice, and totalHourlyPrice
@@ -75192,9 +75188,8 @@ func (s *PurchaseHostReservationInput) SetOfferingId(v string) *PurchaseHostRese
 type PurchaseHostReservationOutput struct {
 	_ struct{} `type:"structure"`
 
-	// Unique, case-sensitive identifier you provide to ensure idempotency of the
-	// request. For more information, see How to Ensure Idempotency (https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/Run_Instance_Idempotency.html)
-	// in the Amazon Elastic Compute Cloud User Guide.
+	// Unique, case-sensitive identifier that you provide to ensure the idempotency
+	// of the request. For more information, see How to Ensure Idempotency (https://docs.aws.amazon.com/AWSEC2/latest/APIReference/Run_Instance_Idempotency.html).
 	ClientToken *string `locationName:"clientToken" type:"string"`
 
 	// The currency in which the totalUpfrontPrice and totalHourlyPrice amounts
@@ -78674,8 +78669,7 @@ func (s *ResetEbsDefaultKmsKeyIdInput) SetDryRun(v bool) *ResetEbsDefaultKmsKeyI
 type ResetEbsDefaultKmsKeyIdOutput struct {
 	_ struct{} `type:"structure"`
 
-	// The full ARN of the default CMK that your account uses to encrypt an EBS
-	// volume when no CMK is specified in the API call that creates the volume.
+	// The Amazon Resource Name (ARN) of the default CMK for EBS encryption by default.
 	KmsKeyId *string `locationName:"kmsKeyId" type:"string"`
 }
 
@@ -80106,10 +80100,7 @@ type RunInstancesInput struct {
 	// Reserved.
 	AdditionalInfo *string `locationName:"additionalInfo" type:"string"`
 
-	// The block device mapping entries. You can't specify both a snapshot ID and
-	// an encryption value. This is because only blank volumes can be encrypted
-	// on creation. If a snapshot is the basis for a volume, it is not blank and
-	// its encryption status is used for the volume encryption status.
+	// The block device mapping entries.
 	BlockDeviceMappings []*BlockDeviceMapping `locationName:"BlockDeviceMapping" locationNameList:"BlockDeviceMapping" type:"list"`
 
 	// Information about the Capacity Reservation targeting option. If you do not
@@ -81864,11 +81855,9 @@ type SearchTransitGatewayRoutesInput struct {
 	//    routes in your route table and you specify supernet-of-match as 10.0.1.0/30,
 	//    then the result returns 10.0.1.0/29.
 	//
-	//    * state - The state of the attachment (available | deleted | deleting
-	//    | failed | modifying | pendingAcceptance | pending | rollingBack | rejected
-	//    | rejecting).
+	//    * state - The state of the route (active | blackhole).
 	//
-	//    * type - The type of roue (active | blackhole).
+	//    * type - The type of roue (propagated | static).
 	//
 	// Filters is a required field
 	Filters []*Filter `locationName:"Filter" locationNameList:"Filter" type:"list" required:"true"`
@@ -82483,7 +82472,7 @@ type Snapshot struct {
 	// the original volume or snapshot copy. Because data encryption keys are inherited
 	// by volumes created from snapshots, and vice versa, if snapshots share the
 	// same data encryption key identifier, then they belong to the same volume/snapshot
-	// lineage. This parameter is only returned by the DescribeSnapshots API operation.
+	// lineage. This parameter is only returned by DescribeSnapshots.
 	DataEncryptionKeyId *string `locationName:"dataEncryptionKeyId" type:"string"`
 
 	// The description for the snapshot.
@@ -82492,9 +82481,9 @@ type Snapshot struct {
 	// Indicates whether the snapshot is encrypted.
 	Encrypted *bool `locationName:"encrypted" type:"boolean"`
 
-	// The full ARN of the AWS Key Management Service (AWS KMS) customer master
-	// key (CMK) that was used to protect the volume encryption key for the parent
-	// volume.
+	// The Amazon Resource Name (ARN) of the AWS Key Management Service (AWS KMS)
+	// customer master key (CMK) that was used to protect the volume encryption
+	// key for the parent volume.
 	KmsKeyId *string `locationName:"kmsKeyId" type:"string"`
 
 	// Value from an Amazon-maintained list (amazon | self | all | aws-marketplace
@@ -82522,7 +82511,7 @@ type Snapshot struct {
 	// operation fails (for example, if the proper AWS Key Management Service (AWS
 	// KMS) permissions are not obtained) this field displays error state details
 	// to help you diagnose why the error occurred. This parameter is only returned
-	// by the DescribeSnapshots API operation.
+	// by DescribeSnapshots.
 	StateMessage *string `locationName:"statusMessage" type:"string"`
 
 	// Any tags assigned to the snapshot.
@@ -82790,7 +82779,7 @@ func (s *SnapshotDiskContainer) SetUserBucket(v *UserBucket) *SnapshotDiskContai
 	return s
 }
 
-// Object that contains information about a snapshot.
+// Information about a snapshot.
 type SnapshotInfo struct {
 	_ struct{} `type:"structure"`
 
@@ -82798,7 +82787,7 @@ type SnapshotInfo struct {
 	// to all snapshots.
 	Description *string `locationName:"description" type:"string"`
 
-	// Boolean that specifies whether or not this snapshot is encrypted.
+	// Indicates whether the snapshot is encrypted.
 	Encrypted *bool `locationName:"encrypted" type:"boolean"`
 
 	// Account id used when creating this snapshot.
@@ -87473,7 +87462,7 @@ type Volume struct {
 	// The time stamp when volume creation was initiated.
 	CreateTime *time.Time `locationName:"createTime" type:"timestamp"`
 
-	// Indicates whether the volume will be encrypted.
+	// Indicates whether the volume is encrypted.
 	Encrypted *bool `locationName:"encrypted" type:"boolean"`
 
 	// The number of I/O operations per second (IOPS) that the volume supports.
@@ -87493,8 +87482,9 @@ type Volume struct {
 	// it is not used in requests to create gp2, st1, sc1, or standard volumes.
 	Iops *int64 `locationName:"iops" type:"integer"`
 
-	// The full ARN of the AWS Key Management Service (AWS KMS) customer master
-	// key (CMK) that was used to protect the volume encryption key for the volume.
+	// The Amazon Resource Name (ARN) of the AWS Key Management Service (AWS KMS)
+	// customer master key (CMK) that was used to protect the volume encryption
+	// key for the volume.
 	KmsKeyId *string `locationName:"kmsKeyId" type:"string"`
 
 	// The size of the volume, in GiBs.
@@ -88344,6 +88334,9 @@ type VpcEndpoint struct {
 	// (Interface endpoint) One or more network interfaces for the endpoint.
 	NetworkInterfaceIds []*string `locationName:"networkInterfaceIdSet" locationNameList:"item" type:"list"`
 
+	// The ID of the AWS account that owns the VPC endpoint.
+	OwnerId *string `locationName:"ownerId" type:"string"`
+
 	// The policy document associated with the endpoint, if applicable.
 	PolicyDocument *string `locationName:"policyDocument" type:"string"`
 
@@ -88410,6 +88403,12 @@ func (s *VpcEndpoint) SetGroups(v []*SecurityGroupIdentifier) *VpcEndpoint {
 // SetNetworkInterfaceIds sets the NetworkInterfaceIds field's value.
 func (s *VpcEndpoint) SetNetworkInterfaceIds(v []*string) *VpcEndpoint {
 	s.NetworkInterfaceIds = v
+	return s
+}
+
+// SetOwnerId sets the OwnerId field's value.
+func (s *VpcEndpoint) SetOwnerId(v string) *VpcEndpoint {
+	s.OwnerId = &v
 	return s
 }
 
@@ -88486,6 +88485,12 @@ type VpcEndpointConnection struct {
 	// The date and time the VPC endpoint was created.
 	CreationTimestamp *time.Time `locationName:"creationTimestamp" type:"timestamp"`
 
+	// The DNS entries for the VPC endpoint.
+	DnsEntries []*DnsEntry `locationName:"dnsEntrySet" locationNameList:"item" type:"list"`
+
+	// The Amazon Resource Names (ARNs) of the network load balancers for the service.
+	NetworkLoadBalancerArns []*string `locationName:"networkLoadBalancerArnSet" locationNameList:"item" type:"list"`
+
 	// The ID of the service to which the endpoint is connected.
 	ServiceId *string `locationName:"serviceId" type:"string"`
 
@@ -88512,6 +88517,18 @@ func (s VpcEndpointConnection) GoString() string {
 // SetCreationTimestamp sets the CreationTimestamp field's value.
 func (s *VpcEndpointConnection) SetCreationTimestamp(v time.Time) *VpcEndpointConnection {
 	s.CreationTimestamp = &v
+	return s
+}
+
+// SetDnsEntries sets the DnsEntries field's value.
+func (s *VpcEndpointConnection) SetDnsEntries(v []*DnsEntry) *VpcEndpointConnection {
+	s.DnsEntries = v
+	return s
+}
+
+// SetNetworkLoadBalancerArns sets the NetworkLoadBalancerArns field's value.
+func (s *VpcEndpointConnection) SetNetworkLoadBalancerArns(v []*string) *VpcEndpointConnection {
+	s.NetworkLoadBalancerArns = v
 	return s
 }
 
@@ -89293,6 +89310,9 @@ const (
 
 	// AllocationStateReleasedPermanentFailure is a AllocationState enum value
 	AllocationStateReleasedPermanentFailure = "released-permanent-failure"
+
+	// AllocationStatePending is a AllocationState enum value
+	AllocationStatePending = "pending"
 )
 
 const (
@@ -89942,6 +89962,14 @@ const (
 const (
 	// GatewayTypeIpsec1 is a GatewayType enum value
 	GatewayTypeIpsec1 = "ipsec.1"
+)
+
+const (
+	// HostRecoveryOn is a HostRecovery enum value
+	HostRecoveryOn = "on"
+
+	// HostRecoveryOff is a HostRecovery enum value
+	HostRecoveryOff = "off"
 )
 
 const (
@@ -91513,6 +91541,9 @@ const (
 
 	// TransitGatewayAttachmentResourceTypeVpn is a TransitGatewayAttachmentResourceType enum value
 	TransitGatewayAttachmentResourceTypeVpn = "vpn"
+
+	// TransitGatewayAttachmentResourceTypeDirectConnectGateway is a TransitGatewayAttachmentResourceType enum value
+	TransitGatewayAttachmentResourceTypeDirectConnectGateway = "direct-connect-gateway"
 )
 
 const (

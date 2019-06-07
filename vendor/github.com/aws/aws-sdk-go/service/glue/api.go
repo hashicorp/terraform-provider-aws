@@ -7186,9 +7186,9 @@ func (c *Glue) ListCrawlersRequest(input *ListCrawlersInput) (req *request.Reque
 // resources with the specified tag. This operation allows you to see which
 // resources are available in your account, and their names.
 //
-// This operation takes the optional Tags field which you can use as a filter
+// This operation takes the optional Tags field, which you can use as a filter
 // on the response so that tagged resources can be retrieved as a group. If
-// you choose to use tags filtering, only resources with the tag will be retrieved.
+// you choose to use tags filtering, only resources with the tag are retrieved.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -7327,9 +7327,9 @@ func (c *Glue) ListDevEndpointsRequest(input *ListDevEndpointsInput) (req *reque
 // the resources with the specified tag. This operation allows you to see which
 // resources are available in your account, and their names.
 //
-// This operation takes the optional Tags field which you can use as a filter
+// This operation takes the optional Tags field, which you can use as a filter
 // on the response so that tagged resources can be retrieved as a group. If
-// you choose to use tags filtering, only resources with the tag will be retrieved.
+// you choose to use tags filtering, only resources with the tag are retrieved.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -7477,9 +7477,9 @@ func (c *Glue) ListJobsRequest(input *ListJobsInput) (req *request.Request, outp
 // with the specified tag. This operation allows you to see which resources
 // are available in your account, and their names.
 //
-// This operation takes the optional Tags field which you can use as a filter
+// This operation takes the optional Tags field, which you can use as a filter
 // on the response so that tagged resources can be retrieved as a group. If
-// you choose to use tags filtering, only resources with the tag will be retrieved.
+// you choose to use tags filtering, only resources with the tag are retrieved.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -7627,9 +7627,9 @@ func (c *Glue) ListTriggersRequest(input *ListTriggersInput) (req *request.Reque
 // resources with the specified tag. This operation allows you to see which
 // resources are available in your account, and their names.
 //
-// This operation takes the optional Tags field which you can use as a filter
+// This operation takes the optional Tags field, which you can use as a filter
 // on the response so that tagged resources can be retrieved as a group. If
-// you choose to use tags filtering, only resources with the tag will be retrieved.
+// you choose to use tags filtering, only resources with the tag are retrieved.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -8308,7 +8308,7 @@ func (c *Glue) StartTriggerRequest(input *StartTriggerInput) (req *request.Reque
 
 // StartTrigger API operation for AWS Glue.
 //
-// Starts an existing trigger. See Triggering Jobs (http://docs.aws.amazon.com/glue/latest/dg/trigger-job.html)
+// Starts an existing trigger. See Triggering Jobs (https://docs.aws.amazon.com/glue/latest/dg/trigger-job.html)
 // for information about how different types of trigger are started.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
@@ -8676,7 +8676,7 @@ func (c *Glue) TagResourceRequest(input *TagResourceInput) (req *request.Request
 //
 // Adds tags to a resource. A tag is a label you can assign to an AWS resource.
 // In AWS Glue, you can tag only certain resources. For information about what
-// resources you can tag, see AWS Tags in AWS Glue (http://docs.aws.amazon.com/glue/latest/dg/monitor-tags.html).
+// resources you can tag, see AWS Tags in AWS Glue (https://docs.aws.amazon.com/glue/latest/dg/monitor-tags.html).
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -9835,11 +9835,11 @@ type Action struct {
 	// as well as arguments that AWS Glue itself consumes.
 	//
 	// For information about how to specify and consume your own Job arguments,
-	// see the Calling AWS Glue APIs in Python (http://docs.aws.amazon.com/glue/latest/dg/aws-glue-programming-python-calling.html)
+	// see the Calling AWS Glue APIs in Python (https://docs.aws.amazon.com/glue/latest/dg/aws-glue-programming-python-calling.html)
 	// topic in the developer guide.
 	//
 	// For information about the key-value pairs that AWS Glue consumes to set up
-	// your job, see the Special Parameters Used by AWS Glue (http://docs.aws.amazon.com/glue/latest/dg/aws-glue-programming-etl-glue-arguments.html)
+	// your job, see the Special Parameters Used by AWS Glue (https://docs.aws.amazon.com/glue/latest/dg/aws-glue-programming-etl-glue-arguments.html)
 	// topic in the developer guide.
 	Arguments map[string]*string `type:"map"`
 
@@ -10593,7 +10593,8 @@ func (s *BatchGetDevEndpointsOutput) SetDevEndpointsNotFound(v []*string) *Batch
 type BatchGetJobsInput struct {
 	_ struct{} `type:"structure"`
 
-	// A list of job names, which may be the names returned from the ListJobs operation.
+	// A list of job names, which might be the names returned from the ListJobs
+	// operation.
 	//
 	// JobNames is a required field
 	JobNames []*string `type:"list" required:"true"`
@@ -10866,7 +10867,7 @@ type BatchStopJobRunError struct {
 	// Specifies details about the error that was encountered.
 	ErrorDetail *ErrorDetail `type:"structure"`
 
-	// The name of the job definition used in the job run in question.
+	// The name of the job definition that is used in the job run in question.
 	JobName *string `min:"1" type:"string"`
 
 	// The JobRunId of the job run in question.
@@ -10962,7 +10963,7 @@ func (s *BatchStopJobRunInput) SetJobRunIds(v []*string) *BatchStopJobRunInput {
 type BatchStopJobRunOutput struct {
 	_ struct{} `type:"structure"`
 
-	// A list of the errors that were encountered in tryng to stop JobRuns, including
+	// A list of the errors that were encountered in trying to stop JobRuns, including
 	// the JobRunId for which each error was encountered and details about the error.
 	Errors []*BatchStopJobRunError `type:"list"`
 
@@ -11560,7 +11561,7 @@ func (s *Column) SetType(v string) *Column {
 type Condition struct {
 	_ struct{} `type:"structure"`
 
-	// The name of the Job to whose JobRuns this condition applies and on which
+	// The name of the job whose JobRuns this condition applies to, and on which
 	// this trigger waits.
 	JobName *string `min:"1" type:"string"`
 
@@ -11568,7 +11569,7 @@ type Condition struct {
 	LogicalOperator *string `type:"string" enum:"LogicalOperator"`
 
 	// The condition state. Currently, the values supported are SUCCEEDED, STOPPED,
-	// TIMEOUT and FAILED.
+	// TIMEOUT, and FAILED.
 	State *string `type:"string" enum:"JobRunState"`
 }
 
@@ -13209,7 +13210,7 @@ type CreateJobInput struct {
 	// This parameter is deprecated. Use MaxCapacity instead.
 	//
 	// The number of AWS Glue data processing units (DPUs) to allocate to this Job.
-	// From 2 to 100 DPUs can be allocated; the default is 10. A DPU is a relative
+	// You can allocate from 2 to 100 DPUs; the default is 10. A DPU is a relative
 	// measure of processing power that consists of 4 vCPUs of compute capacity
 	// and 16 GB of memory. For more information, see the AWS Glue pricing page
 	// (https://aws.amazon.com/glue/pricing/).
@@ -13231,11 +13232,11 @@ type CreateJobInput struct {
 	// as well as arguments that AWS Glue itself consumes.
 	//
 	// For information about how to specify and consume your own Job arguments,
-	// see the Calling AWS Glue APIs in Python (http://docs.aws.amazon.com/glue/latest/dg/aws-glue-programming-python-calling.html)
+	// see the Calling AWS Glue APIs in Python (https://docs.aws.amazon.com/glue/latest/dg/aws-glue-programming-python-calling.html)
 	// topic in the developer guide.
 	//
 	// For information about the key-value pairs that AWS Glue consumes to set up
-	// your job, see the Special Parameters Used by AWS Glue (http://docs.aws.amazon.com/glue/latest/dg/aws-glue-programming-etl-glue-arguments.html)
+	// your job, see the Special Parameters Used by AWS Glue (https://docs.aws.amazon.com/glue/latest/dg/aws-glue-programming-etl-glue-arguments.html)
 	// topic in the developer guide.
 	DefaultArguments map[string]*string `type:"map"`
 
@@ -13257,9 +13258,9 @@ type CreateJobInput struct {
 	// Do not set Max Capacity if using WorkerType and NumberOfWorkers.
 	//
 	// The value that can be allocated for MaxCapacity depends on whether you are
-	// running a python shell job, or an Apache Spark ETL job:
+	// running a Python shell job or an Apache Spark ETL job:
 	//
-	//    * When you specify a python shell job (JobCommand.Name="pythonshell"),
+	//    * When you specify a Python shell job (JobCommand.Name="pythonshell"),
 	//    you can allocate either 0.0625 or 1 DPU. The default is 0.0625 DPU.
 	//
 	//    * When you specify an Apache Spark ETL job (JobCommand.Name="glueetl"),
@@ -13285,7 +13286,8 @@ type CreateJobInput struct {
 	// G.2X.
 	NumberOfWorkers *int64 `type:"integer"`
 
-	// The name or ARN of the IAM role associated with this job.
+	// The name or Amazon Resource Name (ARN) of the IAM role associated with this
+	// job.
 	//
 	// Role is a required field
 	Role *string `type:"string" required:"true"`
@@ -13294,7 +13296,7 @@ type CreateJobInput struct {
 	SecurityConfiguration *string `min:"1" type:"string"`
 
 	// The tags to use with this job. You may use tags to limit access to the job.
-	// For more information about tags in AWS Glue, see AWS Tags in AWS Glue (http://docs.aws.amazon.com/glue/latest/dg/monitor-tags.html)
+	// For more information about tags in AWS Glue, see AWS Tags in AWS Glue (https://docs.aws.amazon.com/glue/latest/dg/monitor-tags.html)
 	// in the developer guide.
 	Tags map[string]*string `type:"map"`
 
@@ -13309,11 +13311,13 @@ type CreateJobInput struct {
 	//    * For the Standard worker type, each worker provides 4 vCPU, 16 GB of
 	//    memory and a 50GB disk, and 2 executors per worker.
 	//
-	//    * For the G.1X worker type, each worker provides 4 vCPU, 16 GB of memory
-	//    and a 64GB disk, and 1 executor per worker.
+	//    * For the G.1X worker type, each worker maps to 1 DPU (4 vCPU, 16 GB of
+	//    memory, 64 GB disk), and provides 1 executor per worker. We recommend
+	//    this worker type for memory-intensive jobs.
 	//
-	//    * For the G.2X worker type, each worker provides 8 vCPU, 32 GB of memory
-	//    and a 128GB disk, and 1 executor per worker.
+	//    * For the G.2X worker type, each worker maps to 2 DPU (8 vCPU, 32 GB of
+	//    memory, 128 GB disk), and provides 1 executor per worker. We recommend
+	//    this worker type for memory-intensive jobs.
 	WorkerType *string `type:"string" enum:"WorkerType"`
 }
 
@@ -13947,7 +13951,7 @@ type CreateTriggerInput struct {
 	Predicate *Predicate `type:"structure"`
 
 	// A cron expression used to specify the schedule (see Time-Based Schedules
-	// for Jobs and Crawlers (http://docs.aws.amazon.com/glue/latest/dg/monitor-data-warehouse-schedule.html).
+	// for Jobs and Crawlers (https://docs.aws.amazon.com/glue/latest/dg/monitor-data-warehouse-schedule.html).
 	// For example, to run something every day at 12:15 UTC, you would specify:
 	// cron(15 12 * * ? *).
 	//
@@ -13955,12 +13959,12 @@ type CreateTriggerInput struct {
 	Schedule *string `type:"string"`
 
 	// Set to true to start SCHEDULED and CONDITIONAL triggers when created. True
-	// not supported for ON_DEMAND triggers.
+	// is not supported for ON_DEMAND triggers.
 	StartOnCreation *bool `type:"boolean"`
 
 	// The tags to use with this trigger. You may use tags to limit access to the
 	// trigger. For more information about tags in AWS Glue, see AWS Tags in AWS
-	// Glue (http://docs.aws.amazon.com/glue/latest/dg/monitor-tags.html) in the
+	// Glue (https://docs.aws.amazon.com/glue/latest/dg/monitor-tags.html) in the
 	// developer guide.
 	Tags map[string]*string `type:"map"`
 
@@ -17222,10 +17226,10 @@ func (s *GetJobRunsInput) SetNextToken(v string) *GetJobRunsInput {
 type GetJobRunsOutput struct {
 	_ struct{} `type:"structure"`
 
-	// A list of job-run metatdata objects.
+	// A list of job-run metadata objects.
 	JobRuns []*JobRun `type:"list"`
 
-	// A continuation token, if not all reequested job runs have been returned.
+	// A continuation token, if not all requested job runs have been returned.
 	NextToken *string `type:"string"`
 }
 
@@ -18556,7 +18560,7 @@ func (s *GetTablesOutput) SetTableList(v []*Table) *GetTablesOutput {
 type GetTagsInput struct {
 	_ struct{} `type:"structure"`
 
-	// The Amazon ARN of the resource for which to retrieve tags.
+	// The Amazon Resource Name (ARN) of the resource for which to retrieve tags.
 	//
 	// ResourceArn is a required field
 	ResourceArn *string `min:"1" type:"string" required:"true"`
@@ -18684,9 +18688,8 @@ func (s *GetTriggerOutput) SetTrigger(v *Trigger) *GetTriggerOutput {
 type GetTriggersInput struct {
 	_ struct{} `type:"structure"`
 
-	// The name of the job for which to retrieve triggers. The trigger that can
-	// start this job will be returned, and if there is no such trigger, all triggers
-	// will be returned.
+	// The name of the job to retrieve triggers for. The trigger that can start
+	// this job is returned, and if there is no such trigger, all triggers are returned.
 	DependentJobName *string `min:"1" type:"string"`
 
 	// The maximum size of the response.
@@ -19177,10 +19180,10 @@ func (s *JdbcTarget) SetPath(v string) *JdbcTarget {
 type Job struct {
 	_ struct{} `type:"structure"`
 
-	// This field is deprecated, use MaxCapacity instead.
+	// This field is deprecated. Use MaxCapacity instead.
 	//
 	// The number of AWS Glue data processing units (DPUs) allocated to runs of
-	// this job. From 2 to 100 DPUs can be allocated; the default is 10. A DPU is
+	// this job. You can allocate from 2 to 100 DPUs; the default is 10. A DPU is
 	// a relative measure of processing power that consists of 4 vCPUs of compute
 	// capacity and 16 GB of memory. For more information, see the AWS Glue pricing
 	// page (https://aws.amazon.com/glue/pricing/).
@@ -19203,15 +19206,15 @@ type Job struct {
 	// as well as arguments that AWS Glue itself consumes.
 	//
 	// For information about how to specify and consume your own Job arguments,
-	// see the Calling AWS Glue APIs in Python (http://docs.aws.amazon.com/glue/latest/dg/aws-glue-programming-python-calling.html)
+	// see the Calling AWS Glue APIs in Python (https://docs.aws.amazon.com/glue/latest/dg/aws-glue-programming-python-calling.html)
 	// topic in the developer guide.
 	//
 	// For information about the key-value pairs that AWS Glue consumes to set up
-	// your job, see the Special Parameters Used by AWS Glue (http://docs.aws.amazon.com/glue/latest/dg/aws-glue-programming-etl-glue-arguments.html)
+	// your job, see the Special Parameters Used by AWS Glue (https://docs.aws.amazon.com/glue/latest/dg/aws-glue-programming-etl-glue-arguments.html)
 	// topic in the developer guide.
 	DefaultArguments map[string]*string `type:"map"`
 
-	// Description of the job being defined.
+	// A description of the job.
 	Description *string `type:"string"`
 
 	// An ExecutionProperty specifying the maximum number of concurrent runs allowed
@@ -19232,9 +19235,9 @@ type Job struct {
 	// Do not set Max Capacity if using WorkerType and NumberOfWorkers.
 	//
 	// The value that can be allocated for MaxCapacity depends on whether you are
-	// running a python shell job, or an Apache Spark ETL job:
+	// running a Python shell job or an Apache Spark ETL job:
 	//
-	//    * When you specify a python shell job (JobCommand.Name="pythonshell"),
+	//    * When you specify a Python shell job (JobCommand.Name="pythonshell"),
 	//    you can allocate either 0.0625 or 1 DPU. The default is 0.0625 DPU.
 	//
 	//    * When you specify an Apache Spark ETL job (JobCommand.Name="glueetl"),
@@ -19258,7 +19261,8 @@ type Job struct {
 	// G.2X.
 	NumberOfWorkers *int64 `type:"integer"`
 
-	// The name or ARN of the IAM role associated with this job.
+	// The name or Amazon Resource Name (ARN) of the IAM role associated with this
+	// job.
 	Role *string `type:"string"`
 
 	// The name of the SecurityConfiguration structure to be used with this job.
@@ -19275,11 +19279,13 @@ type Job struct {
 	//    * For the Standard worker type, each worker provides 4 vCPU, 16 GB of
 	//    memory and a 50GB disk, and 2 executors per worker.
 	//
-	//    * For the G.1X worker type, each worker provides 4 vCPU, 16 GB of memory
-	//    and a 64GB disk, and 1 executor per worker.
+	//    * For the G.1X worker type, each worker maps to 1 DPU (4 vCPU, 16 GB of
+	//    memory, 64 GB disk), and provides 1 executor per worker. We recommend
+	//    this worker type for memory-intensive jobs.
 	//
-	//    * For the G.2X worker type, each worker provides 8 vCPU, 32 GB of memory
-	//    and a 128GB disk, and 1 executor per worker.
+	//    * For the G.2X worker type, each worker maps to 2 DPU (8 vCPU, 32 GB of
+	//    memory, 128 GB disk), and provides 1 executor per worker. We recommend
+	//    this worker type for memory-intensive jobs.
 	WorkerType *string `type:"string" enum:"WorkerType"`
 }
 
@@ -19498,11 +19504,16 @@ func (s *JobBookmarksEncryption) SetKmsKeyArn(v string) *JobBookmarksEncryption 
 type JobCommand struct {
 	_ struct{} `type:"structure"`
 
-	// The name of the job command: this must be glueetl, for an Apache Spark ETL
-	// job, or pythonshell, for a Python shell job.
+	// The name of the job command. For an Apache Spark ETL job, this must be glueetl.
+	// For a Python shell job, it must be pythonshell.
 	Name *string `type:"string"`
 
-	// Specifies the S3 path to a script that executes a job (required).
+	// The Python version being used to execute a Python shell job. Allowed values
+	// are 2 or 3.
+	PythonVersion *string `type:"string"`
+
+	// Specifies the Amazon Simple Storage Service (Amazon S3) path to a script
+	// that executes a job (required).
 	ScriptLocation *string `type:"string"`
 }
 
@@ -19522,6 +19533,12 @@ func (s *JobCommand) SetName(v string) *JobCommand {
 	return s
 }
 
+// SetPythonVersion sets the PythonVersion field's value.
+func (s *JobCommand) SetPythonVersion(v string) *JobCommand {
+	s.PythonVersion = &v
+	return s
+}
+
 // SetScriptLocation sets the ScriptLocation field's value.
 func (s *JobCommand) SetScriptLocation(v string) *JobCommand {
 	s.ScriptLocation = &v
@@ -19532,7 +19549,7 @@ func (s *JobCommand) SetScriptLocation(v string) *JobCommand {
 type JobRun struct {
 	_ struct{} `type:"structure"`
 
-	// This field is deprecated, use MaxCapacity instead.
+	// This field is deprecated. Use MaxCapacity instead.
 	//
 	// The number of AWS Glue data processing units (DPUs) allocated to this JobRun.
 	// From 2 to 100 DPUs can be allocated; the default is 10. A DPU is a relative
@@ -19550,18 +19567,18 @@ type JobRun struct {
 	// as well as arguments that AWS Glue itself consumes.
 	//
 	// For information about how to specify and consume your own job arguments,
-	// see the Calling AWS Glue APIs in Python (http://docs.aws.amazon.com/glue/latest/dg/aws-glue-programming-python-calling.html)
+	// see the Calling AWS Glue APIs in Python (https://docs.aws.amazon.com/glue/latest/dg/aws-glue-programming-python-calling.html)
 	// topic in the developer guide.
 	//
 	// For information about the key-value pairs that AWS Glue consumes to set up
-	// your job, see the Special Parameters Used by AWS Glue (http://docs.aws.amazon.com/glue/latest/dg/aws-glue-programming-etl-glue-arguments.html)
+	// your job, see the Special Parameters Used by AWS Glue (https://docs.aws.amazon.com/glue/latest/dg/aws-glue-programming-etl-glue-arguments.html)
 	// topic in the developer guide.
 	Arguments map[string]*string `type:"map"`
 
 	// The number of the attempt to run this job.
 	Attempt *int64 `type:"integer"`
 
-	// The date and time this job run completed.
+	// The date and time that this job run completed.
 	CompletedOn *time.Time `type:"timestamp"`
 
 	// An error message associated with this job run.
@@ -19579,27 +19596,27 @@ type JobRun struct {
 	// The current state of the job run.
 	JobRunState *string `type:"string" enum:"JobRunState"`
 
-	// The last time this job run was modified.
+	// The last time that this job run was modified.
 	LastModifiedOn *time.Time `type:"timestamp"`
 
-	// The name of the log group for secure logging, that can be server-side encrypted
-	// in CloudWatch using KMS. This name can be /aws-glue/jobs/, in which case
-	// the default encryption is NONE. If you add a role name and SecurityConfiguration
+	// The name of the log group for secure logging that can be server-side encrypted
+	// in Amazon CloudWatch using AWS KMS. This name can be /aws-glue/jobs/, in
+	// which case the default encryption is NONE. If you add a role name and SecurityConfiguration
 	// name (in other words, /aws-glue/jobs-yourRoleName-yourSecurityConfigurationName/),
-	// then that security configuration will be used to encrypt the log group.
+	// then that security configuration is used to encrypt the log group.
 	LogGroupName *string `type:"string"`
 
 	// The number of AWS Glue data processing units (DPUs) that can be allocated
 	// when this job runs. A DPU is a relative measure of processing power that
 	// consists of 4 vCPUs of compute capacity and 16 GB of memory. For more information,
-	// see the AWS Glue pricing page (https://aws.amazon.com/glue/pricing/).
+	// see the AWS Glue pricing page (https://docs.aws.amazon.com/https:/aws.amazon.com/glue/pricing/).
 	//
 	// Do not set Max Capacity if using WorkerType and NumberOfWorkers.
 	//
 	// The value that can be allocated for MaxCapacity depends on whether you are
-	// running a python shell job, or an Apache Spark ETL job:
+	// running a Python shell job or an Apache Spark ETL job:
 	//
-	//    * When you specify a python shell job (JobCommand.Name="pythonshell"),
+	//    * When you specify a Python shell job (JobCommand.Name="pythonshell"),
 	//    you can allocate either 0.0625 or 1 DPU. The default is 0.0625 DPU.
 	//
 	//    * When you specify an Apache Spark ETL job (JobCommand.Name="glueetl"),
@@ -19790,15 +19807,15 @@ func (s *JobRun) SetWorkerType(v string) *JobRun {
 	return s
 }
 
-// Specifies information used to update an existing job definition. Note that
-// the previous job definition will be completely overwritten by this information.
+// Specifies information used to update an existing job definition. The previous
+// job definition is completely overwritten by this information.
 type JobUpdate struct {
 	_ struct{} `type:"structure"`
 
 	// This field is deprecated. Use MaxCapacity instead.
 	//
-	// The number of AWS Glue data processing units (DPUs) to allocate to this Job.
-	// From 2 to 100 DPUs can be allocated; the default is 10. A DPU is a relative
+	// The number of AWS Glue data processing units (DPUs) to allocate to this job.
+	// You can allocate from 2 to 100 DPUs; the default is 10. A DPU is a relative
 	// measure of processing power that consists of 4 vCPUs of compute capacity
 	// and 16 GB of memory. For more information, see the AWS Glue pricing page
 	// (https://aws.amazon.com/glue/pricing/).
@@ -19818,11 +19835,11 @@ type JobUpdate struct {
 	// as well as arguments that AWS Glue itself consumes.
 	//
 	// For information about how to specify and consume your own Job arguments,
-	// see the Calling AWS Glue APIs in Python (http://docs.aws.amazon.com/glue/latest/dg/aws-glue-programming-python-calling.html)
+	// see the Calling AWS Glue APIs in Python (https://docs.aws.amazon.com/glue/latest/dg/aws-glue-programming-python-calling.html)
 	// topic in the developer guide.
 	//
 	// For information about the key-value pairs that AWS Glue consumes to set up
-	// your job, see the Special Parameters Used by AWS Glue (http://docs.aws.amazon.com/glue/latest/dg/aws-glue-programming-etl-glue-arguments.html)
+	// your job, see the Special Parameters Used by AWS Glue (https://docs.aws.amazon.com/glue/latest/dg/aws-glue-programming-etl-glue-arguments.html)
 	// topic in the developer guide.
 	DefaultArguments map[string]*string `type:"map"`
 
@@ -19844,9 +19861,9 @@ type JobUpdate struct {
 	// Do not set Max Capacity if using WorkerType and NumberOfWorkers.
 	//
 	// The value that can be allocated for MaxCapacity depends on whether you are
-	// running a python shell job, or an Apache Spark ETL job:
+	// running a Python shell job or an Apache Spark ETL job:
 	//
-	//    * When you specify a python shell job (JobCommand.Name="pythonshell"),
+	//    * When you specify a Python shell job (JobCommand.Name="pythonshell"),
 	//    you can allocate either 0.0625 or 1 DPU. The default is 0.0625 DPU.
 	//
 	//    * When you specify an Apache Spark ETL job (JobCommand.Name="glueetl"),
@@ -19857,7 +19874,7 @@ type JobUpdate struct {
 	// The maximum number of times to retry this job if it fails.
 	MaxRetries *int64 `type:"integer"`
 
-	// Specifies configuration properties of a job notification.
+	// Specifies the configuration properties of a job notification.
 	NotificationProperty *NotificationProperty `type:"structure"`
 
 	// The number of workers of a defined workerType that are allocated when a job
@@ -19867,7 +19884,8 @@ type JobUpdate struct {
 	// G.2X.
 	NumberOfWorkers *int64 `type:"integer"`
 
-	// The name or ARN of the IAM role associated with this job (required).
+	// The name or Amazon Resource Name (ARN) of the IAM role associated with this
+	// job (required).
 	Role *string `type:"string"`
 
 	// The name of the SecurityConfiguration structure to be used with this job.
@@ -19884,11 +19902,13 @@ type JobUpdate struct {
 	//    * For the Standard worker type, each worker provides 4 vCPU, 16 GB of
 	//    memory and a 50GB disk, and 2 executors per worker.
 	//
-	//    * For the G.1X worker type, each worker provides 4 vCPU, 16 GB of memory
-	//    and a 64GB disk, and 1 executor per worker.
+	//    * For the G.1X worker type, each worker maps to 1 DPU (4 vCPU, 16 GB of
+	//    memory, 64 GB disk), and provides 1 executor per worker. We recommend
+	//    this worker type for memory-intensive jobs.
 	//
-	//    * For the G.2X worker type, each worker provides 8 vCPU, 32 GB of memory
-	//    and a 128GB disk, and 1 executor per worker.
+	//    * For the G.2X worker type, each worker maps to 2 DPU (8 vCPU, 32 GB of
+	//    memory, 128 GB disk), and provides 1 executor per worker. We recommend
+	//    this worker type for memory-intensive jobs.
 	WorkerType *string `type:"string" enum:"WorkerType"`
 }
 
@@ -20293,8 +20313,8 @@ func (s *ListDevEndpointsInput) SetTags(v map[string]*string) *ListDevEndpointsI
 type ListDevEndpointsOutput struct {
 	_ struct{} `type:"structure"`
 
-	// The names of all DevEndpoints in the account, or the DevEndpoints with the
-	// specified tags.
+	// The names of all the DevEndpoints in the account, or the DevEndpoints with
+	// the specified tags.
 	DevEndpointNames []*string `type:"list"`
 
 	// A continuation token, if the returned list does not contain the last metric
@@ -20415,8 +20435,8 @@ type ListTriggersInput struct {
 	_ struct{} `type:"structure"`
 
 	// The name of the job for which to retrieve triggers. The trigger that can
-	// start this job will be returned, and if there is no such trigger, all triggers
-	// will be returned.
+	// start this job is returned. If there is no such trigger, all triggers are
+	// returned.
 	DependentJobName *string `min:"1" type:"string"`
 
 	// The maximum size of a list to return.
@@ -21095,8 +21115,8 @@ type Predicate struct {
 	// A list of the conditions that determine when the trigger will fire.
 	Conditions []*Condition `type:"list"`
 
-	// Optional field if only one condition is listed. If multiple conditions are
-	// listed, then this field is required.
+	// An optional field if only one condition is listed. If multiple conditions
+	// are listed, then this field is required.
 	Logical *string `type:"string" enum:"Logical"`
 }
 
@@ -21861,13 +21881,13 @@ func (s StartCrawlerScheduleOutput) GoString() string {
 type StartJobRunInput struct {
 	_ struct{} `type:"structure"`
 
-	// This field is deprecated, use MaxCapacity instead.
+	// This field is deprecated. Use MaxCapacity instead.
 	//
 	// The number of AWS Glue data processing units (DPUs) to allocate to this JobRun.
 	// From 2 to 100 DPUs can be allocated; the default is 10. A DPU is a relative
 	// measure of processing power that consists of 4 vCPUs of compute capacity
 	// and 16 GB of memory. For more information, see the AWS Glue pricing page
-	// (https://aws.amazon.com/glue/pricing/).
+	// (https://docs.aws.amazon.com/https:/aws.amazon.com/glue/pricing/).
 	//
 	// Deprecated: This property is deprecated, use MaxCapacity instead.
 	AllocatedCapacity *int64 `deprecated:"true" type:"integer"`
@@ -21879,11 +21899,11 @@ type StartJobRunInput struct {
 	// as well as arguments that AWS Glue itself consumes.
 	//
 	// For information about how to specify and consume your own Job arguments,
-	// see the Calling AWS Glue APIs in Python (http://docs.aws.amazon.com/glue/latest/dg/aws-glue-programming-python-calling.html)
+	// see the Calling AWS Glue APIs in Python (https://docs.aws.amazon.com/glue/latest/dg/aws-glue-programming-python-calling.html)
 	// topic in the developer guide.
 	//
 	// For information about the key-value pairs that AWS Glue consumes to set up
-	// your job, see the Special Parameters Used by AWS Glue (http://docs.aws.amazon.com/glue/latest/dg/aws-glue-programming-etl-glue-arguments.html)
+	// your job, see the Special Parameters Used by AWS Glue (https://docs.aws.amazon.com/glue/latest/dg/aws-glue-programming-etl-glue-arguments.html)
 	// topic in the developer guide.
 	Arguments map[string]*string `type:"map"`
 
@@ -21898,14 +21918,14 @@ type StartJobRunInput struct {
 	// The number of AWS Glue data processing units (DPUs) that can be allocated
 	// when this job runs. A DPU is a relative measure of processing power that
 	// consists of 4 vCPUs of compute capacity and 16 GB of memory. For more information,
-	// see the AWS Glue pricing page (https://aws.amazon.com/glue/pricing/).
+	// see the AWS Glue pricing page (https://docs.aws.amazon.com/https:/aws.amazon.com/glue/pricing/).
 	//
 	// Do not set Max Capacity if using WorkerType and NumberOfWorkers.
 	//
 	// The value that can be allocated for MaxCapacity depends on whether you are
-	// running a python shell job, or an Apache Spark ETL job:
+	// running a Python shell job, or an Apache Spark ETL job:
 	//
-	//    * When you specify a python shell job (JobCommand.Name="pythonshell"),
+	//    * When you specify a Python shell job (JobCommand.Name="pythonshell"),
 	//    you can allocate either 0.0625 or 1 DPU. The default is 0.0625 DPU.
 	//
 	//    * When you specify an Apache Spark ETL job (JobCommand.Name="glueetl"),
@@ -22923,7 +22943,7 @@ type TagResourceInput struct {
 	_ struct{} `type:"structure"`
 
 	// The ARN of the AWS Glue resource to which to add the tags. For more information
-	// about AWS Glue resource ARNs, see the AWS Glue ARN string pattern (http://docs.aws.amazon.com/glue/latest/dg/aws-glue-api-common.html#aws-glue-api-regex-aws-glue-arn-id).
+	// about AWS Glue resource ARNs, see the AWS Glue ARN string pattern (https://docs.aws.amazon.com/glue/latest/dg/aws-glue-api-common.html#aws-glue-api-regex-aws-glue-arn-id).
 	//
 	// ResourceArn is a required field
 	ResourceArn *string `min:"1" type:"string" required:"true"`
@@ -23002,14 +23022,14 @@ type Trigger struct {
 	// Reserved for future use.
 	Id *string `min:"1" type:"string"`
 
-	// Name of the trigger.
+	// The name of the trigger.
 	Name *string `min:"1" type:"string"`
 
 	// The predicate of this trigger, which defines when it will fire.
 	Predicate *Predicate `type:"structure"`
 
 	// A cron expression used to specify the schedule (see Time-Based Schedules
-	// for Jobs and Crawlers (http://docs.aws.amazon.com/glue/latest/dg/monitor-data-warehouse-schedule.html).
+	// for Jobs and Crawlers (https://docs.aws.amazon.com/glue/latest/dg/monitor-data-warehouse-schedule.html).
 	// For example, to run something every day at 12:15 UTC, you would specify:
 	// cron(15 12 * * ? *).
 	Schedule *string `type:"string"`
@@ -23080,7 +23100,7 @@ func (s *Trigger) SetType(v string) *Trigger {
 }
 
 // A structure used to provide information used to update a trigger. This object
-// will update the the previous trigger definition by overwriting it completely.
+// updates the previous trigger definition by overwriting it completely.
 type TriggerUpdate struct {
 	_ struct{} `type:"structure"`
 
@@ -23097,7 +23117,7 @@ type TriggerUpdate struct {
 	Predicate *Predicate `type:"structure"`
 
 	// A cron expression used to specify the schedule (see Time-Based Schedules
-	// for Jobs and Crawlers (http://docs.aws.amazon.com/glue/latest/dg/monitor-data-warehouse-schedule.html).
+	// for Jobs and Crawlers (https://docs.aws.amazon.com/glue/latest/dg/monitor-data-warehouse-schedule.html).
 	// For example, to run something every day at 12:15 UTC, you would specify:
 	// cron(15 12 * * ? *).
 	Schedule *string `type:"string"`
@@ -23174,7 +23194,7 @@ func (s *TriggerUpdate) SetSchedule(v string) *TriggerUpdate {
 type UntagResourceInput struct {
 	_ struct{} `type:"structure"`
 
-	// The ARN of the resource from which to remove the tags.
+	// The Amazon Resource Name (ARN) of the resource from which to remove the tags.
 	//
 	// ResourceArn is a required field
 	ResourceArn *string `min:"1" type:"string" required:"true"`
@@ -24032,7 +24052,7 @@ func (s *UpdateGrokClassifierRequest) SetName(v string) *UpdateGrokClassifierReq
 type UpdateJobInput struct {
 	_ struct{} `type:"structure"`
 
-	// Name of the job definition to update.
+	// The name of the job definition to update.
 	//
 	// JobName is a required field
 	JobName *string `min:"1" type:"string" required:"true"`
