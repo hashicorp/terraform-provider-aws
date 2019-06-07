@@ -1,4 +1,9 @@
 ## 2.15.0 (Unreleased)
+
+ENHANCEMENTS:
+
+* resource/aws_cognito_user_pool: Add `email_sending_account` attribute to the email configuration block [GH-8626]
+
 ## 2.14.0 (June 06, 2019)
 
 FEATURES:
