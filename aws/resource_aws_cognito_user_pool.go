@@ -3,6 +3,7 @@ package aws
 import (
 	"fmt"
 	"log"
+	"regexp"
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -128,16 +129,20 @@ func resourceAwsCognitoUserPool() *schema.Resource {
 			},
 
 			"email_configuration": {
-				Type:     schema.TypeList,
-				Optional: true,
-				MaxItems: 1,
-				Computed: true,
+				Type:             schema.TypeList,
+				Optional:         true,
+				MaxItems:         1,
+				DiffSuppressFunc: suppressMissingOptionalConfigurationBlock,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"reply_to_email_address": {
-							Type:         schema.TypeString,
-							Optional:     true,
-							ValidateFunc: validateCognitoUserPoolReplyEmailAddress,
+							Type:     schema.TypeString,
+							Optional: true,
+							ValidateFunc: validation.Any(
+								validation.StringInSlice([]string{""}, false),
+								validation.StringMatch(regexp.MustCompile(`[\p{L}\p{M}\p{S}\p{N}\p{P}]+@[\p{L}\p{M}\p{S}\p{N}\p{P}]+`),
+									`must satisfy regular expression pattern: [\p{L}\p{M}\p{S}\p{N}\p{P}]+@[\p{L}\p{M}\p{S}\p{N}\p{P}]+`),
+							),
 						},
 						"source_arn": {
 							Type:         schema.TypeString,
@@ -147,7 +152,7 @@ func resourceAwsCognitoUserPool() *schema.Resource {
 						"email_sending_account": {
 							Type:     schema.TypeString,
 							Optional: true,
-							Computed: true,
+							Default:  cognitoidentityprovider.EmailSendingAccountTypeCognitoDefault,
 							ValidateFunc: validation.StringInSlice([]string{
 								cognitoidentityprovider.EmailSendingAccountTypeCognitoDefault,
 								cognitoidentityprovider.EmailSendingAccountTypeDeveloper,
@@ -814,7 +819,6 @@ func resourceAwsCognitoUserPoolUpdate(d *schema.ResourceData, meta interface{}) 
 
 		configs := v.([]interface{})
 		config, ok := configs[0].(map[string]interface{})
-
 
 		if ok && config != nil {
 			log.Printf("[DEBUG] Set Values to update from configs")
