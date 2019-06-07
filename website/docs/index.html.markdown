@@ -105,7 +105,7 @@ provider "aws" {
 ```
 
 If specifying the profile through the `AWS_PROFILE` environment variable, you
-must also set `AWS_SDK_LOAD_CONFIG` to a truthy value, e.g. `AWS_SDK_LOAD_CONFIG=1`
+may also need to set `AWS_SDK_LOAD_CONFIG` to a truthy value (e.g. `AWS_SDK_LOAD_CONFIG=1`) for advanced AWS client configurations, such as profiles that use the `source_profile` or `role_arn` configurations.
 
 ### ECS and CodeBuild Task Roles
 
