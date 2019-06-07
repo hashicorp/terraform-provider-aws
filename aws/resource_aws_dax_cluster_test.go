@@ -285,7 +285,7 @@ func testAccPreCheckAWSDax(t *testing.T) {
 	}
 }
 
-var baseConfig = `
+const baseConfig = `
 resource "aws_iam_role" "test" {
   assume_role_policy = <<EOF
 {
