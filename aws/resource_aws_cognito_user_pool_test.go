@@ -284,9 +284,11 @@ func TestAccAWSCognitoUserPool_withEmailConfiguration(t *testing.T) {
 		CheckDestroy: testAccCheckAWSCognitoUserPoolDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSCognitoUserPoolConfig_basic(name),
+				Config: testAccAWSCognitoUserPoolConfig_withEmailConfiguration(name, "", "", "COGNITO_DEFAULT"),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAWSCognitoUserPoolExists("aws_cognito_user_pool.pool"),
+					resource.TestCheckResourceAttr("aws_cognito_user_pool.pool", "email_configuration.#", "1"),
+					resource.TestCheckResourceAttr("aws_cognito_user_pool.pool", "email_configuration.0.reply_to_email_address", ""),
+					resource.TestCheckResourceAttr("aws_cognito_user_pool.pool", "email_configuration.0.email_sending_account", "COGNITO_DEFAULT"),
 				),
 			},
 			{
@@ -868,15 +870,15 @@ resource "aws_cognito_user_pool" "pool" {
 
 func testAccAWSCognitoUserPoolConfig_withEmailConfiguration(name, email, arn, account string) string {
 	return fmt.Sprintf(`
-resource "aws_cognito_user_pool" "pool" {                                                                                                                                                                                                                                                                                
-    name = "terraform-test-pool-%[1]s"                                                                                                                                                                                                                                                                
-                                                                                                                                                                                                                                                                                                      
-                                                                                                                                                                                                                                                                                                      
-    email_configuration {                                                                                                                                                                                                                                                                             
-      reply_to_email_address = %[2]q                                                                                                                                                                                                                                                                  
-      source_arn = %[3]q                                                                                                                                                                                                                                                                              
-      email_sending_account = %[4]q                                                                                                                                                                                                                                                                   
-    }                                                                                                                                                                                                                                                                                                 
+resource "aws_cognito_user_pool" "pool" {
+    name = "terraform-test-pool-%[1]s"
+
+
+    email_configuration {
+      reply_to_email_address = %[2]q
+      source_arn = %[3]q
+      email_sending_account = %[4]q
+    }
   }`, name, email, arn, account)
 }
 
