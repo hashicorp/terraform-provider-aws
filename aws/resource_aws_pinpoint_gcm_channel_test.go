@@ -103,7 +103,8 @@ resource "aws_pinpoint_gcm_channel" "test_gcm_channel" {
   application_id = "${aws_pinpoint_app.test_app.application_id}"
   enabled        = "false"
   api_key        = "%s"
-}`, apiKey)
+}
+`, apiKey)
 }
 
 func testAccCheckAWSPinpointGCMChannelDestroy(s *terraform.State) error {

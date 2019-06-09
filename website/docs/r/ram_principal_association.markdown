@@ -6,7 +6,7 @@ description: |-
   Provides a Resource Access Manager (RAM) principal association.
 ---
 
-# aws_ram_principal_association
+# Resource: aws_ram_principal_association
 
 Provides a Resource Access Manager (RAM) principal association.
 
@@ -52,8 +52,8 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-RAM Resource Associations can be imported using their Resource Share ARN and the `principal` separated by a comma, e.g.
+RAM Principal Associations can be imported using their Resource Share ARN and the `principal` separated by a comma, e.g.
 
 ```
-$ terraform import aws_ram_resource_share.example arn:aws:ram:eu-west-1:123456789012:resource-share/73da1ab9-b94a-4ba3-8eb4-45917f7f4b12,123456789012
+$ terraform import aws_ram_principal_association.example arn:aws:ram:eu-west-1:123456789012:resource-share/73da1ab9-b94a-4ba3-8eb4-45917f7f4b12,123456789012
 ```

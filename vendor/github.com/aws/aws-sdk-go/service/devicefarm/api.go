@@ -3,6 +3,7 @@
 package devicefarm
 
 import (
+	"fmt"
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -342,6 +343,9 @@ func (c *DeviceFarm) CreateProjectRequest(input *CreateProjectInput) (req *reque
 //
 //   * ErrCodeServiceAccountException "ServiceAccountException"
 //   There was a problem with the service account.
+//
+//   * ErrCodeTagOperationException "TagOperationException"
+//   The operation was not successful. Try again.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/devicefarm-2015-06-23/CreateProject
 func (c *DeviceFarm) CreateProject(input *CreateProjectInput) (*CreateProjectOutput, error) {
@@ -2165,7 +2169,7 @@ func (c *DeviceFarm) GetOfferingStatusWithContext(ctx aws.Context, input *GetOff
 //    // Example iterating over at most 3 pages of a GetOfferingStatus operation.
 //    pageNum := 0
 //    err := client.GetOfferingStatusPages(params,
-//        func(page *GetOfferingStatusOutput, lastPage bool) bool {
+//        func(page *devicefarm.GetOfferingStatusOutput, lastPage bool) bool {
 //            pageNum++
 //            fmt.Println(page)
 //            return pageNum <= 3
@@ -3013,7 +3017,7 @@ func (c *DeviceFarm) ListArtifactsWithContext(ctx aws.Context, input *ListArtifa
 //    // Example iterating over at most 3 pages of a ListArtifacts operation.
 //    pageNum := 0
 //    err := client.ListArtifactsPages(params,
-//        func(page *ListArtifactsOutput, lastPage bool) bool {
+//        func(page *devicefarm.ListArtifactsOutput, lastPage bool) bool {
 //            pageNum++
 //            fmt.Println(page)
 //            return pageNum <= 3
@@ -3246,7 +3250,7 @@ func (c *DeviceFarm) ListDevicePoolsWithContext(ctx aws.Context, input *ListDevi
 //    // Example iterating over at most 3 pages of a ListDevicePools operation.
 //    pageNum := 0
 //    err := client.ListDevicePoolsPages(params,
-//        func(page *ListDevicePoolsOutput, lastPage bool) bool {
+//        func(page *devicefarm.ListDevicePoolsOutput, lastPage bool) bool {
 //            pageNum++
 //            fmt.Println(page)
 //            return pageNum <= 3
@@ -3390,7 +3394,7 @@ func (c *DeviceFarm) ListDevicesWithContext(ctx aws.Context, input *ListDevicesI
 //    // Example iterating over at most 3 pages of a ListDevices operation.
 //    pageNum := 0
 //    err := client.ListDevicesPages(params,
-//        func(page *ListDevicesOutput, lastPage bool) bool {
+//        func(page *devicefarm.ListDevicesOutput, lastPage bool) bool {
 //            pageNum++
 //            fmt.Println(page)
 //            return pageNum <= 3
@@ -3622,7 +3626,7 @@ func (c *DeviceFarm) ListJobsWithContext(ctx aws.Context, input *ListJobsInput, 
 //    // Example iterating over at most 3 pages of a ListJobs operation.
 //    pageNum := 0
 //    err := client.ListJobsPages(params,
-//        func(page *ListJobsOutput, lastPage bool) bool {
+//        func(page *devicefarm.ListJobsOutput, lastPage bool) bool {
 //            pageNum++
 //            fmt.Println(page)
 //            return pageNum <= 3
@@ -3959,7 +3963,7 @@ func (c *DeviceFarm) ListOfferingTransactionsWithContext(ctx aws.Context, input 
 //    // Example iterating over at most 3 pages of a ListOfferingTransactions operation.
 //    pageNum := 0
 //    err := client.ListOfferingTransactionsPages(params,
-//        func(page *ListOfferingTransactionsOutput, lastPage bool) bool {
+//        func(page *devicefarm.ListOfferingTransactionsOutput, lastPage bool) bool {
 //            pageNum++
 //            fmt.Println(page)
 //            return pageNum <= 3
@@ -4112,7 +4116,7 @@ func (c *DeviceFarm) ListOfferingsWithContext(ctx aws.Context, input *ListOfferi
 //    // Example iterating over at most 3 pages of a ListOfferings operation.
 //    pageNum := 0
 //    err := client.ListOfferingsPages(params,
-//        func(page *ListOfferingsOutput, lastPage bool) bool {
+//        func(page *devicefarm.ListOfferingsOutput, lastPage bool) bool {
 //            pageNum++
 //            fmt.Println(page)
 //            return pageNum <= 3
@@ -4256,7 +4260,7 @@ func (c *DeviceFarm) ListProjectsWithContext(ctx aws.Context, input *ListProject
 //    // Example iterating over at most 3 pages of a ListProjects operation.
 //    pageNum := 0
 //    err := client.ListProjectsPages(params,
-//        func(page *ListProjectsOutput, lastPage bool) bool {
+//        func(page *devicefarm.ListProjectsOutput, lastPage bool) bool {
 //            pageNum++
 //            fmt.Println(page)
 //            return pageNum <= 3
@@ -4488,7 +4492,7 @@ func (c *DeviceFarm) ListRunsWithContext(ctx aws.Context, input *ListRunsInput, 
 //    // Example iterating over at most 3 pages of a ListRuns operation.
 //    pageNum := 0
 //    err := client.ListRunsPages(params,
-//        func(page *ListRunsOutput, lastPage bool) bool {
+//        func(page *devicefarm.ListRunsOutput, lastPage bool) bool {
 //            pageNum++
 //            fmt.Println(page)
 //            return pageNum <= 3
@@ -4632,7 +4636,7 @@ func (c *DeviceFarm) ListSamplesWithContext(ctx aws.Context, input *ListSamplesI
 //    // Example iterating over at most 3 pages of a ListSamples operation.
 //    pageNum := 0
 //    err := client.ListSamplesPages(params,
-//        func(page *ListSamplesOutput, lastPage bool) bool {
+//        func(page *devicefarm.ListSamplesOutput, lastPage bool) bool {
 //            pageNum++
 //            fmt.Println(page)
 //            return pageNum <= 3
@@ -4776,7 +4780,7 @@ func (c *DeviceFarm) ListSuitesWithContext(ctx aws.Context, input *ListSuitesInp
 //    // Example iterating over at most 3 pages of a ListSuites operation.
 //    pageNum := 0
 //    err := client.ListSuitesPages(params,
-//        func(page *ListSuitesOutput, lastPage bool) bool {
+//        func(page *devicefarm.ListSuitesOutput, lastPage bool) bool {
 //            pageNum++
 //            fmt.Println(page)
 //            return pageNum <= 3
@@ -4813,6 +4817,88 @@ func (c *DeviceFarm) ListSuitesPagesWithContext(ctx aws.Context, input *ListSuit
 		cont = fn(p.Page().(*ListSuitesOutput), !p.HasNextPage())
 	}
 	return p.Err()
+}
+
+const opListTagsForResource = "ListTagsForResource"
+
+// ListTagsForResourceRequest generates a "aws/request.Request" representing the
+// client's request for the ListTagsForResource operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See ListTagsForResource for more information on using the ListTagsForResource
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the ListTagsForResourceRequest method.
+//    req, resp := client.ListTagsForResourceRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/devicefarm-2015-06-23/ListTagsForResource
+func (c *DeviceFarm) ListTagsForResourceRequest(input *ListTagsForResourceInput) (req *request.Request, output *ListTagsForResourceOutput) {
+	op := &request.Operation{
+		Name:       opListTagsForResource,
+		HTTPMethod: "POST",
+		HTTPPath:   "/",
+	}
+
+	if input == nil {
+		input = &ListTagsForResourceInput{}
+	}
+
+	output = &ListTagsForResourceOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// ListTagsForResource API operation for AWS Device Farm.
+//
+// List the tags for an AWS Device Farm resource.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for AWS Device Farm's
+// API operation ListTagsForResource for usage and error information.
+//
+// Returned Error Codes:
+//   * ErrCodeNotFoundException "NotFoundException"
+//   The specified entity was not found.
+//
+//   * ErrCodeTagOperationException "TagOperationException"
+//   The operation was not successful. Try again.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/devicefarm-2015-06-23/ListTagsForResource
+func (c *DeviceFarm) ListTagsForResource(input *ListTagsForResourceInput) (*ListTagsForResourceOutput, error) {
+	req, out := c.ListTagsForResourceRequest(input)
+	return out, req.Send()
+}
+
+// ListTagsForResourceWithContext is the same as ListTagsForResource with the addition of
+// the ability to pass a context and additional request options.
+//
+// See ListTagsForResource for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *DeviceFarm) ListTagsForResourceWithContext(ctx aws.Context, input *ListTagsForResourceInput, opts ...request.Option) (*ListTagsForResourceOutput, error) {
+	req, out := c.ListTagsForResourceRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
 }
 
 const opListTests = "ListTests"
@@ -4920,7 +5006,7 @@ func (c *DeviceFarm) ListTestsWithContext(ctx aws.Context, input *ListTestsInput
 //    // Example iterating over at most 3 pages of a ListTests operation.
 //    pageNum := 0
 //    err := client.ListTestsPages(params,
-//        func(page *ListTestsOutput, lastPage bool) bool {
+//        func(page *devicefarm.ListTestsOutput, lastPage bool) bool {
 //            pageNum++
 //            fmt.Println(page)
 //            return pageNum <= 3
@@ -5064,7 +5150,7 @@ func (c *DeviceFarm) ListUniqueProblemsWithContext(ctx aws.Context, input *ListU
 //    // Example iterating over at most 3 pages of a ListUniqueProblems operation.
 //    pageNum := 0
 //    err := client.ListUniqueProblemsPages(params,
-//        func(page *ListUniqueProblemsOutput, lastPage bool) bool {
+//        func(page *devicefarm.ListUniqueProblemsOutput, lastPage bool) bool {
 //            pageNum++
 //            fmt.Println(page)
 //            return pageNum <= 3
@@ -5208,7 +5294,7 @@ func (c *DeviceFarm) ListUploadsWithContext(ctx aws.Context, input *ListUploadsI
 //    // Example iterating over at most 3 pages of a ListUploads operation.
 //    pageNum := 0
 //    err := client.ListUploadsPages(params,
-//        func(page *ListUploadsOutput, lastPage bool) bool {
+//        func(page *devicefarm.ListUploadsOutput, lastPage bool) bool {
 //            pageNum++
 //            fmt.Println(page)
 //            return pageNum <= 3
@@ -5883,6 +5969,183 @@ func (c *DeviceFarm) StopRun(input *StopRunInput) (*StopRunOutput, error) {
 // for more information on using Contexts.
 func (c *DeviceFarm) StopRunWithContext(ctx aws.Context, input *StopRunInput, opts ...request.Option) (*StopRunOutput, error) {
 	req, out := c.StopRunRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
+const opTagResource = "TagResource"
+
+// TagResourceRequest generates a "aws/request.Request" representing the
+// client's request for the TagResource operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See TagResource for more information on using the TagResource
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the TagResourceRequest method.
+//    req, resp := client.TagResourceRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/devicefarm-2015-06-23/TagResource
+func (c *DeviceFarm) TagResourceRequest(input *TagResourceInput) (req *request.Request, output *TagResourceOutput) {
+	op := &request.Operation{
+		Name:       opTagResource,
+		HTTPMethod: "POST",
+		HTTPPath:   "/",
+	}
+
+	if input == nil {
+		input = &TagResourceInput{}
+	}
+
+	output = &TagResourceOutput{}
+	req = c.newRequest(op, input, output)
+	req.Handlers.Unmarshal.Swap(jsonrpc.UnmarshalHandler.Name, protocol.UnmarshalDiscardBodyHandler)
+	return
+}
+
+// TagResource API operation for AWS Device Farm.
+//
+// Associates the specified tags to a resource with the specified resourceArn.
+// If existing tags on a resource are not specified in the request parameters,
+// they are not changed. When a resource is deleted, the tags associated with
+// that resource are deleted as well.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for AWS Device Farm's
+// API operation TagResource for usage and error information.
+//
+// Returned Error Codes:
+//   * ErrCodeNotFoundException "NotFoundException"
+//   The specified entity was not found.
+//
+//   * ErrCodeTagOperationException "TagOperationException"
+//   The operation was not successful. Try again.
+//
+//   * ErrCodeTooManyTagsException "TooManyTagsException"
+//   The list of tags on the repository is over the limit. The maximum number
+//   of tags that can be applied to a repository is 50.
+//
+//   * ErrCodeTagPolicyException "TagPolicyException"
+//   The request doesn't comply with the AWS Identity and Access Management (IAM)
+//   tag policy. Correct your request and then retry it.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/devicefarm-2015-06-23/TagResource
+func (c *DeviceFarm) TagResource(input *TagResourceInput) (*TagResourceOutput, error) {
+	req, out := c.TagResourceRequest(input)
+	return out, req.Send()
+}
+
+// TagResourceWithContext is the same as TagResource with the addition of
+// the ability to pass a context and additional request options.
+//
+// See TagResource for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *DeviceFarm) TagResourceWithContext(ctx aws.Context, input *TagResourceInput, opts ...request.Option) (*TagResourceOutput, error) {
+	req, out := c.TagResourceRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
+const opUntagResource = "UntagResource"
+
+// UntagResourceRequest generates a "aws/request.Request" representing the
+// client's request for the UntagResource operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See UntagResource for more information on using the UntagResource
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the UntagResourceRequest method.
+//    req, resp := client.UntagResourceRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/devicefarm-2015-06-23/UntagResource
+func (c *DeviceFarm) UntagResourceRequest(input *UntagResourceInput) (req *request.Request, output *UntagResourceOutput) {
+	op := &request.Operation{
+		Name:       opUntagResource,
+		HTTPMethod: "POST",
+		HTTPPath:   "/",
+	}
+
+	if input == nil {
+		input = &UntagResourceInput{}
+	}
+
+	output = &UntagResourceOutput{}
+	req = c.newRequest(op, input, output)
+	req.Handlers.Unmarshal.Swap(jsonrpc.UnmarshalHandler.Name, protocol.UnmarshalDiscardBodyHandler)
+	return
+}
+
+// UntagResource API operation for AWS Device Farm.
+//
+// Deletes the specified tags from a resource.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for AWS Device Farm's
+// API operation UntagResource for usage and error information.
+//
+// Returned Error Codes:
+//   * ErrCodeNotFoundException "NotFoundException"
+//   The specified entity was not found.
+//
+//   * ErrCodeTagOperationException "TagOperationException"
+//   The operation was not successful. Try again.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/devicefarm-2015-06-23/UntagResource
+func (c *DeviceFarm) UntagResource(input *UntagResourceInput) (*UntagResourceOutput, error) {
+	req, out := c.UntagResourceRequest(input)
+	return out, req.Send()
+}
+
+// UntagResourceWithContext is the same as UntagResource with the addition of
+// the ability to pass a context and additional request options.
+//
+// See UntagResource for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *DeviceFarm) UntagResourceWithContext(ctx aws.Context, input *UntagResourceInput, opts ...request.Option) (*UntagResourceOutput, error) {
+	req, out := c.UntagResourceRequest(input)
 	req.SetContext(ctx)
 	req.ApplyOptions(opts...)
 	return out, req.Send()
@@ -8584,55 +8847,79 @@ type DeviceFilter struct {
 	// The supported operators for each attribute are provided in the following
 	// list.
 	//
-	// ARNThe Amazon Resource Name (ARN) of the device. For example, "arn:aws:devicefarm:us-west-2::device:12345Example".
+	// ARN
+	//
+	// The Amazon Resource Name (ARN) of the device. For example, "arn:aws:devicefarm:us-west-2::device:12345Example".
 	//
 	// Supported operators: EQUALS, IN, NOT_IN
 	//
-	// PLATFORMThe device platform. Valid values are "ANDROID" or "IOS".
+	// PLATFORM
+	//
+	// The device platform. Valid values are "ANDROID" or "IOS".
 	//
 	// Supported operators: EQUALS
 	//
-	// OS_VERSIONThe operating system version. For example, "10.3.2".
+	// OS_VERSION
+	//
+	// The operating system version. For example, "10.3.2".
 	//
 	// Supported operators: EQUALS, GREATER_THAN, GREATER_THAN_OR_EQUALS, IN, LESS_THAN,
 	// LESS_THAN_OR_EQUALS, NOT_IN
 	//
-	// MODELThe device model. For example, "iPad 5th Gen".
+	// MODEL
+	//
+	// The device model. For example, "iPad 5th Gen".
 	//
 	// Supported operators: CONTAINS, EQUALS, IN, NOT_IN
 	//
-	// AVAILABILITYThe current availability of the device. Valid values are "AVAILABLE",
-	// "HIGHLY_AVAILABLE", "BUSY", or "TEMPORARY_NOT_AVAILABLE".
+	// AVAILABILITY
+	//
+	// The current availability of the device. Valid values are "AVAILABLE", "HIGHLY_AVAILABLE",
+	// "BUSY", or "TEMPORARY_NOT_AVAILABLE".
 	//
 	// Supported operators: EQUALS
 	//
-	// FORM_FACTORThe device form factor. Valid values are "PHONE" or "TABLET".
+	// FORM_FACTOR
+	//
+	// The device form factor. Valid values are "PHONE" or "TABLET".
 	//
 	// Supported operators: EQUALS
 	//
-	// MANUFACTURERThe device manufacturer. For example, "Apple".
+	// MANUFACTURER
+	//
+	// The device manufacturer. For example, "Apple".
 	//
 	// Supported operators: EQUALS, IN, NOT_IN
 	//
-	// REMOTE_ACCESS_ENABLEDWhether the device is enabled for remote access. Valid
-	// values are "TRUE" or "FALSE".
+	// REMOTE_ACCESS_ENABLED
+	//
+	// Whether the device is enabled for remote access. Valid values are "TRUE"
+	// or "FALSE".
 	//
 	// Supported operators: EQUALS
 	//
-	// REMOTE_DEBUG_ENABLEDWhether the device is enabled for remote debugging. Valid
-	// values are "TRUE" or "FALSE".
+	// REMOTE_DEBUG_ENABLED
+	//
+	// Whether the device is enabled for remote debugging. Valid values are "TRUE"
+	// or "FALSE".
 	//
 	// Supported operators: EQUALS
 	//
-	// INSTANCE_ARNThe Amazon Resource Name (ARN) of the device instance.
+	// INSTANCE_ARN
+	//
+	// The Amazon Resource Name (ARN) of the device instance.
 	//
 	// Supported operators: EQUALS, IN, NOT_IN
 	//
-	// INSTANCE_LABELSThe label of the device instance.
+	// INSTANCE_LABELS
+	//
+	// The label of the device instance.
 	//
 	// Supported operators: CONTAINS
 	//
-	// FLEET_TYPEThe fleet type. Valid values are "PUBLIC" or "PRIVATE".
+	// FLEET_TYPE
+	//
+	// The fleet type. Valid values are "PUBLIC" or "PRIVATE".
 	//
 	// Supported operators: EQUALS
 	Attribute *string `locationName:"attribute" type:"string" enum:"DeviceFilterAttribute"`
@@ -8940,75 +9227,36 @@ type DeviceSelectionConfiguration struct {
 	// Used to dynamically select a set of devices for a test run. A filter is made
 	// up of an attribute, an operator, and one or more values.
 	//
-	//    * Attribute
+	//    * Attribute The aspect of a device such as platform or model used as the
+	//    selection criteria in a device filter. Allowed values include: ARN: The
+	//    Amazon Resource Name (ARN) of the device. For example, "arn:aws:devicefarm:us-west-2::device:12345Example".
+	//    PLATFORM: The device platform. Valid values are "ANDROID" or "IOS". OS_VERSION:
+	//    The operating system version. For example, "10.3.2". MODEL: The device
+	//    model. For example, "iPad 5th Gen". AVAILABILITY: The current availability
+	//    of the device. Valid values are "AVAILABLE", "HIGHLY_AVAILABLE", "BUSY",
+	//    or "TEMPORARY_NOT_AVAILABLE". FORM_FACTOR: The device form factor. Valid
+	//    values are "PHONE" or "TABLET". MANUFACTURER: The device manufacturer.
+	//    For example, "Apple". REMOTE_ACCESS_ENABLED: Whether the device is enabled
+	//    for remote access. Valid values are "TRUE" or "FALSE". REMOTE_DEBUG_ENABLED:
+	//    Whether the device is enabled for remote debugging. Valid values are "TRUE"
+	//    or "FALSE". INSTANCE_ARN: The Amazon Resource Name (ARN) of the device
+	//    instance. INSTANCE_LABELS: The label of the device instance. FLEET_TYPE:
+	//    The fleet type. Valid values are "PUBLIC" or "PRIVATE".
 	//
-	// The aspect of a device such as platform or model used as the selection criteria
-	//    in a device filter.
-	//
-	// Allowed values include:
-	//
-	// ARN: The Amazon Resource Name (ARN) of the device. For example, "arn:aws:devicefarm:us-west-2::device:12345Example".
-	//
-	// PLATFORM: The device platform. Valid values are "ANDROID" or "IOS".
-	//
-	// OS_VERSION: The operating system version. For example, "10.3.2".
-	//
-	// MODEL: The device model. For example, "iPad 5th Gen".
-	//
-	// AVAILABILITY: The current availability of the device. Valid values are "AVAILABLE",
-	//    "HIGHLY_AVAILABLE", "BUSY", or "TEMPORARY_NOT_AVAILABLE".
-	//
-	// FORM_FACTOR: The device form factor. Valid values are "PHONE" or "TABLET".
-	//
-	// MANUFACTURER: The device manufacturer. For example, "Apple".
-	//
-	// REMOTE_ACCESS_ENABLED: Whether the device is enabled for remote access. Valid
-	//    values are "TRUE" or "FALSE".
-	//
-	// REMOTE_DEBUG_ENABLED: Whether the device is enabled for remote debugging.
-	//    Valid values are "TRUE" or "FALSE".
-	//
-	// INSTANCE_ARN: The Amazon Resource Name (ARN) of the device instance.
-	//
-	// INSTANCE_LABELS: The label of the device instance.
-	//
-	// FLEET_TYPE: The fleet type. Valid values are "PUBLIC" or "PRIVATE".
-	//
-	//    * Operator
-	//
-	// The filter operator.
-	//
-	// The EQUALS operator is available for every attribute except INSTANCE_LABELS.
-	//
-	// The CONTAINS operator is available for the INSTANCE_LABELS and MODEL attributes.
-	//
-	// The IN and NOT_IN operators are available for the ARN, OS_VERSION, MODEL,
-	//    MANUFACTURER, and INSTANCE_ARN attributes.
-	//
-	// The LESS_THAN, GREATER_THAN, LESS_THAN_OR_EQUALS, and GREATER_THAN_OR_EQUALS
+	//    * Operator The filter operator. The EQUALS operator is available for every
+	//    attribute except INSTANCE_LABELS. The CONTAINS operator is available for
+	//    the INSTANCE_LABELS and MODEL attributes. The IN and NOT_IN operators
+	//    are available for the ARN, OS_VERSION, MODEL, MANUFACTURER, and INSTANCE_ARN
+	//    attributes. The LESS_THAN, GREATER_THAN, LESS_THAN_OR_EQUALS, and GREATER_THAN_OR_EQUALS
 	//    operators are also available for the OS_VERSION attribute.
 	//
-	//    * Values
-	//
-	// An array of one or more filter values.
-	//
-	// Operator Values
-	//
-	// The IN and NOT_IN operators can take a values array that has more than one
-	//    element.
-	//
-	// The other operators require an array with a single element.
-	//
-	// Attribute Values
-	//
-	// The PLATFORM attribute can be set to "ANDROID" or "IOS".
-	//
-	// The AVAILABILITY attribute can be set to "AVAILABLE", "HIGHLY_AVAILABLE",
-	//    "BUSY", or "TEMPORARY_NOT_AVAILABLE".
-	//
-	// The FORM_FACTOR attribute can be set to "PHONE" or "TABLET".
-	//
-	// The FLEET_TYPE attribute can be set to "PUBLIC" or "PRIVATE".
+	//    * Values An array of one or more filter values. Operator Values The IN
+	//    and NOT_IN operators can take a values array that has more than one element.
+	//    The other operators require an array with a single element. Attribute
+	//    Values The PLATFORM attribute can be set to "ANDROID" or "IOS". The AVAILABILITY
+	//    attribute can be set to "AVAILABLE", "HIGHLY_AVAILABLE", "BUSY", or "TEMPORARY_NOT_AVAILABLE".
+	//    The FORM_FACTOR attribute can be set to "PHONE" or "TABLET". The FLEET_TYPE
+	//    attribute can be set to "PUBLIC" or "PRIVATE".
 	//
 	// Filters is a required field
 	Filters []*DeviceFilter `locationName:"filters" type:"list" required:"true"`
@@ -11058,57 +11306,33 @@ type ListDevicesInput struct {
 	// operator, and one or more values.
 	//
 	//    * Attribute: The aspect of a device such as platform or model used as
-	//    the selction criteria in a device filter.
+	//    the selction criteria in a device filter. Allowed values include: ARN:
+	//    The Amazon Resource Name (ARN) of the device. For example, "arn:aws:devicefarm:us-west-2::device:12345Example".
+	//    PLATFORM: The device platform. Valid values are "ANDROID" or "IOS". OS_VERSION:
+	//    The operating system version. For example, "10.3.2". MODEL: The device
+	//    model. For example, "iPad 5th Gen". AVAILABILITY: The current availability
+	//    of the device. Valid values are "AVAILABLE", "HIGHLY_AVAILABLE", "BUSY",
+	//    or "TEMPORARY_NOT_AVAILABLE". FORM_FACTOR: The device form factor. Valid
+	//    values are "PHONE" or "TABLET". MANUFACTURER: The device manufacturer.
+	//    For example, "Apple". REMOTE_ACCESS_ENABLED: Whether the device is enabled
+	//    for remote access. Valid values are "TRUE" or "FALSE". REMOTE_DEBUG_ENABLED:
+	//    Whether the device is enabled for remote debugging. Valid values are "TRUE"
+	//    or "FALSE". INSTANCE_ARN: The Amazon Resource Name (ARN) of the device
+	//    instance. INSTANCE_LABELS: The label of the device instance. FLEET_TYPE:
+	//    The fleet type. Valid values are "PUBLIC" or "PRIVATE".
 	//
-	// Allowed values include:
-	//
-	// ARN: The Amazon Resource Name (ARN) of the device. For example, "arn:aws:devicefarm:us-west-2::device:12345Example".
-	//
-	// PLATFORM: The device platform. Valid values are "ANDROID" or "IOS".
-	//
-	// OS_VERSION: The operating system version. For example, "10.3.2".
-	//
-	// MODEL: The device model. For example, "iPad 5th Gen".
-	//
-	// AVAILABILITY: The current availability of the device. Valid values are "AVAILABLE",
-	//    "HIGHLY_AVAILABLE", "BUSY", or "TEMPORARY_NOT_AVAILABLE".
-	//
-	// FORM_FACTOR: The device form factor. Valid values are "PHONE" or "TABLET".
-	//
-	// MANUFACTURER: The device manufacturer. For example, "Apple".
-	//
-	// REMOTE_ACCESS_ENABLED: Whether the device is enabled for remote access. Valid
-	//    values are "TRUE" or "FALSE".
-	//
-	// REMOTE_DEBUG_ENABLED: Whether the device is enabled for remote debugging.
-	//    Valid values are "TRUE" or "FALSE".
-	//
-	// INSTANCE_ARN: The Amazon Resource Name (ARN) of the device instance.
-	//
-	// INSTANCE_LABELS: The label of the device instance.
-	//
-	// FLEET_TYPE: The fleet type. Valid values are "PUBLIC" or "PRIVATE".
-	//
-	//    * Operator: The filter operator.
-	//
-	// The EQUALS operator is available for every attribute except INSTANCE_LABELS.
-	//
-	// The CONTAINS operator is available for the INSTANCE_LABELS and MODEL attributes.
-	//
-	// The IN and NOT_IN operators are available for the ARN, OS_VERSION, MODEL,
-	//    MANUFACTURER, and INSTANCE_ARN attributes.
-	//
-	// The LESS_THAN, GREATER_THAN, LESS_THAN_OR_EQUALS, and GREATER_THAN_OR_EQUALS
+	//    * Operator: The filter operator. The EQUALS operator is available for
+	//    every attribute except INSTANCE_LABELS. The CONTAINS operator is available
+	//    for the INSTANCE_LABELS and MODEL attributes. The IN and NOT_IN operators
+	//    are available for the ARN, OS_VERSION, MODEL, MANUFACTURER, and INSTANCE_ARN
+	//    attributes. The LESS_THAN, GREATER_THAN, LESS_THAN_OR_EQUALS, and GREATER_THAN_OR_EQUALS
 	//    operators are also available for the OS_VERSION attribute.
 	//
-	//    * Values: An array of one or more filter values.
-	//
-	// The IN and NOT_IN operators take a values array that has one or more elements.
-	//
-	// The other operators require an array with a single element.
-	//
-	// In a request, the AVAILABILITY attribute takes "AVAILABLE", "HIGHLY_AVAILABLE",
-	//    "BUSY", or "TEMPORARY_NOT_AVAILABLE" as values.
+	//    * Values: An array of one or more filter values. The IN and NOT_IN operators
+	//    take a values array that has one or more elements. The other operators
+	//    require an array with a single element. In a request, the AVAILABILITY
+	//    attribute takes "AVAILABLE", "HIGHLY_AVAILABLE", "BUSY", or "TEMPORARY_NOT_AVAILABLE"
+	//    as values.
 	Filters []*DeviceFilter `locationName:"filters" type:"list"`
 
 	// An identifier that was returned from the previous call to this operation,
@@ -12128,6 +12352,75 @@ func (s *ListSuitesOutput) SetSuites(v []*Suite) *ListSuitesOutput {
 	return s
 }
 
+type ListTagsForResourceInput struct {
+	_ struct{} `type:"structure"`
+
+	// The Amazon Resource Name (ARN) of the resource(s) for which to list tags.
+	// You can associate tags with the following Device Farm resources: PROJECT,
+	// RUN, NETWORK_PROFILE, INSTANCE_PROFILE, DEVICE_INSTANCE, SESSION, DEVICE_POOL,
+	// DEVICE, and VPCE_CONFIGURATION.
+	//
+	// ResourceARN is a required field
+	ResourceARN *string `min:"32" type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s ListTagsForResourceInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ListTagsForResourceInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *ListTagsForResourceInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "ListTagsForResourceInput"}
+	if s.ResourceARN == nil {
+		invalidParams.Add(request.NewErrParamRequired("ResourceARN"))
+	}
+	if s.ResourceARN != nil && len(*s.ResourceARN) < 32 {
+		invalidParams.Add(request.NewErrParamMinLen("ResourceARN", 32))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetResourceARN sets the ResourceARN field's value.
+func (s *ListTagsForResourceInput) SetResourceARN(v string) *ListTagsForResourceInput {
+	s.ResourceARN = &v
+	return s
+}
+
+type ListTagsForResourceOutput struct {
+	_ struct{} `type:"structure"`
+
+	// The tags to add to the resource. A tag is an array of key-value pairs. Tag
+	// keys can have a maximum character length of 128 characters, and tag values
+	// can have a maximum length of 256 characters.
+	Tags []*Tag `type:"list"`
+}
+
+// String returns the string representation
+func (s ListTagsForResourceOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ListTagsForResourceOutput) GoString() string {
+	return s.String()
+}
+
+// SetTags sets the Tags field's value.
+func (s *ListTagsForResourceOutput) SetTags(v []*Tag) *ListTagsForResourceOutput {
+	s.Tags = v
+	return s
+}
+
 // Represents a request to the list tests operation.
 type ListTestsInput struct {
 	_ struct{} `type:"structure"`
@@ -12396,7 +12689,7 @@ type ListUploadsInput struct {
 	//
 	//    * APPIUM_NODE_TEST_SPEC: An Appium Node.js test spec upload.
 	//
-	//    *  APPIUM_RUBY_TEST_SPEC: An Appium Ruby test spec upload.
+	//    * APPIUM_RUBY_TEST_SPEC: An Appium Ruby test spec upload.
 	//
 	//    * APPIUM_WEB_JAVA_JUNIT_TEST_SPEC: An Appium Java JUnit test spec upload
 	//    for a web app.
@@ -13724,59 +14017,85 @@ type Rule struct {
 	// The supported operators for each attribute are provided in the following
 	// list.
 	//
-	// APPIUM_VERSIONThe Appium version for the test.
+	// APPIUM_VERSION
+	//
+	// The Appium version for the test.
 	//
 	// Supported operators: CONTAINS
 	//
-	// ARNThe Amazon Resource Name (ARN) of the device. For example, "arn:aws:devicefarm:us-west-2::device:12345Example".
+	// ARN
+	//
+	// The Amazon Resource Name (ARN) of the device. For example, "arn:aws:devicefarm:us-west-2::device:12345Example".
 	//
 	// Supported operators: EQUALS, IN, NOT_IN
 	//
-	// AVAILABILITYThe current availability of the device. Valid values are "AVAILABLE",
-	// "HIGHLY_AVAILABLE", "BUSY", or "TEMPORARY_NOT_AVAILABLE".
+	// AVAILABILITY
+	//
+	// The current availability of the device. Valid values are "AVAILABLE", "HIGHLY_AVAILABLE",
+	// "BUSY", or "TEMPORARY_NOT_AVAILABLE".
 	//
 	// Supported operators: EQUALS
 	//
-	// FLEET_TYPEThe fleet type. Valid values are "PUBLIC" or "PRIVATE".
+	// FLEET_TYPE
+	//
+	// The fleet type. Valid values are "PUBLIC" or "PRIVATE".
 	//
 	// Supported operators: EQUALS
 	//
-	// FORM_FACTORThe device form factor. Valid values are "PHONE" or "TABLET".
+	// FORM_FACTOR
+	//
+	// The device form factor. Valid values are "PHONE" or "TABLET".
 	//
 	// Supported operators: EQUALS, IN, NOT_IN
 	//
-	// INSTANCE_ARNThe Amazon Resource Name (ARN) of the device instance.
+	// INSTANCE_ARN
+	//
+	// The Amazon Resource Name (ARN) of the device instance.
 	//
 	// Supported operators: IN, NOT_IN
 	//
-	// INSTANCE_LABELSThe label of the device instance.
+	// INSTANCE_LABELS
+	//
+	// The label of the device instance.
 	//
 	// Supported operators: CONTAINS
 	//
-	// MANUFACTURERThe device manufacturer. For example, "Apple".
+	// MANUFACTURER
+	//
+	// The device manufacturer. For example, "Apple".
 	//
 	// Supported operators: EQUALS, IN, NOT_IN
 	//
-	// MODELThe device model, such as "Apple iPad Air 2" or "Google Pixel".
+	// MODEL
+	//
+	// The device model, such as "Apple iPad Air 2" or "Google Pixel".
 	//
 	// Supported operators: CONTAINS, EQUALS, IN, NOT_IN
 	//
-	// OS_VERSIONThe operating system version. For example, "10.3.2".
+	// OS_VERSION
+	//
+	// The operating system version. For example, "10.3.2".
 	//
 	// Supported operators: EQUALS, GREATER_THAN, GREATER_THAN_OR_EQUALS, IN, LESS_THAN,
 	// LESS_THAN_OR_EQUALS, NOT_IN
 	//
-	// PLATFORMThe device platform. Valid values are "ANDROID" or "IOS".
+	// PLATFORM
+	//
+	// The device platform. Valid values are "ANDROID" or "IOS".
 	//
 	// Supported operators: EQUALS, IN, NOT_IN
 	//
-	// REMOTE_ACCESS_ENABLEDWhether the device is enabled for remote access. Valid
-	// values are "TRUE" or "FALSE".
+	// REMOTE_ACCESS_ENABLED
+	//
+	// Whether the device is enabled for remote access. Valid values are "TRUE"
+	// or "FALSE".
 	//
 	// Supported operators: EQUALS
 	//
-	// REMOTE_DEBUG_ENABLEDWhether the device is enabled for remote debugging. Valid
-	// values are "TRUE" or "FALSE".
+	// REMOTE_DEBUG_ENABLED
+	//
+	// Whether the device is enabled for remote debugging. Valid values are "TRUE"
+	// or "FALSE".
 	//
 	// Supported operators: EQUALS
 	Attribute *string `locationName:"attribute" type:"string" enum:"DeviceAttribute"`
@@ -14597,15 +14916,11 @@ type ScheduleRunTest struct {
 	// For Appium tests (all types):
 	//
 	//    * appium_version: The Appium version. Currently supported values are "1.6.5"
-	//    (and higher), "latest", and "default".
-	//
-	// “latest” will run the latest Appium version supported by Device Farm (1.9.1).
-	//
-	// For “default”, Device Farm will choose a compatible version of Appium for
-	//    the device. The current behavior is to run 1.7.2 on Android devices and
-	//    iOS 9 and earlier, 1.7.2 for iOS 10 and later.
-	//
-	// This behavior is subject to change.
+	//    (and higher), "latest", and "default". “latest” will run the latest
+	//    Appium version supported by Device Farm (1.9.1). For “default”, Device
+	//    Farm will choose a compatible version of Appium for the device. The current
+	//    behavior is to run 1.7.2 on Android devices and iOS 9 and earlier, 1.7.2
+	//    for iOS 10 and later. This behavior is subject to change.
 	//
 	// For Fuzz tests (Android only):
 	//
@@ -14628,35 +14943,22 @@ type ScheduleRunTest struct {
 	//
 	// For Instrumentation:
 	//
-	//    * filter: A test filter string. Examples:
-	//
-	// Running a single test case: "com.android.abc.Test1"
-	//
-	// Running a single test: "com.android.abc.Test1#smoke"
-	//
-	// Running multiple tests: "com.android.abc.Test1,com.android.abc.Test2"
+	//    * filter: A test filter string. Examples: Running a single test case:
+	//    "com.android.abc.Test1" Running a single test: "com.android.abc.Test1#smoke"
+	//    Running multiple tests: "com.android.abc.Test1,com.android.abc.Test2"
 	//
 	// For XCTest and XCTestUI:
 	//
-	//    * filter: A test filter string. Examples:
-	//
-	// Running a single test class: "LoginTests"
-	//
-	// Running a multiple test classes: "LoginTests,SmokeTests"
-	//
-	// Running a single test: "LoginTests/testValid"
-	//
-	// Running multiple tests: "LoginTests/testValid,LoginTests/testInvalid"
+	//    * filter: A test filter string. Examples: Running a single test class:
+	//    "LoginTests" Running a multiple test classes: "LoginTests,SmokeTests"
+	//    Running a single test: "LoginTests/testValid" Running multiple tests:
+	//    "LoginTests/testValid,LoginTests/testInvalid"
 	//
 	// For UIAutomator:
 	//
-	//    * filter: A test filter string. Examples:
-	//
-	// Running a single test case: "com.android.abc.Test1"
-	//
-	// Running a single test: "com.android.abc.Test1#smoke"
-	//
-	// Running multiple tests: "com.android.abc.Test1,com.android.abc.Test2"
+	//    * filter: A test filter string. Examples: Running a single test case:
+	//    "com.android.abc.Test1" Running a single test: "com.android.abc.Test1#smoke"
+	//    Running multiple tests: "com.android.abc.Test1,com.android.abc.Test2"
 	Parameters map[string]*string `locationName:"parameters" type:"map"`
 
 	// The ARN of the uploaded test that will be run.
@@ -15160,6 +15462,151 @@ func (s *Suite) SetType(v string) *Suite {
 	return s
 }
 
+// The metadata that you apply to a resource to help you categorize and organize
+// it. Each tag consists of a key and an optional value, both of which you define.
+// Tag keys can have a maximum character length of 128 characters, and tag values
+// can have a maximum length of 256 characters.
+type Tag struct {
+	_ struct{} `type:"structure"`
+
+	// One part of a key-value pair that make up a tag. A key is a general label
+	// that acts like a category for more specific tag values.
+	//
+	// Key is a required field
+	Key *string `min:"1" type:"string" required:"true"`
+
+	// The optional part of a key-value pair that make up a tag. A value acts as
+	// a descriptor within a tag category (key).
+	//
+	// Value is a required field
+	Value *string `type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s Tag) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s Tag) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *Tag) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "Tag"}
+	if s.Key == nil {
+		invalidParams.Add(request.NewErrParamRequired("Key"))
+	}
+	if s.Key != nil && len(*s.Key) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("Key", 1))
+	}
+	if s.Value == nil {
+		invalidParams.Add(request.NewErrParamRequired("Value"))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetKey sets the Key field's value.
+func (s *Tag) SetKey(v string) *Tag {
+	s.Key = &v
+	return s
+}
+
+// SetValue sets the Value field's value.
+func (s *Tag) SetValue(v string) *Tag {
+	s.Value = &v
+	return s
+}
+
+type TagResourceInput struct {
+	_ struct{} `type:"structure"`
+
+	// The Amazon Resource Name (ARN) of the resource(s) to which to add tags. You
+	// can associate tags with the following Device Farm resources: PROJECT, RUN,
+	// NETWORK_PROFILE, INSTANCE_PROFILE, DEVICE_INSTANCE, SESSION, DEVICE_POOL,
+	// DEVICE, and VPCE_CONFIGURATION.
+	//
+	// ResourceARN is a required field
+	ResourceARN *string `min:"32" type:"string" required:"true"`
+
+	// The tags to add to the resource. A tag is an array of key-value pairs. Tag
+	// keys can have a maximum character length of 128 characters, and tag values
+	// can have a maximum length of 256 characters.
+	//
+	// Tags is a required field
+	Tags []*Tag `type:"list" required:"true"`
+}
+
+// String returns the string representation
+func (s TagResourceInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s TagResourceInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *TagResourceInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "TagResourceInput"}
+	if s.ResourceARN == nil {
+		invalidParams.Add(request.NewErrParamRequired("ResourceARN"))
+	}
+	if s.ResourceARN != nil && len(*s.ResourceARN) < 32 {
+		invalidParams.Add(request.NewErrParamMinLen("ResourceARN", 32))
+	}
+	if s.Tags == nil {
+		invalidParams.Add(request.NewErrParamRequired("Tags"))
+	}
+	if s.Tags != nil {
+		for i, v := range s.Tags {
+			if v == nil {
+				continue
+			}
+			if err := v.Validate(); err != nil {
+				invalidParams.AddNested(fmt.Sprintf("%s[%v]", "Tags", i), err.(request.ErrInvalidParams))
+			}
+		}
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetResourceARN sets the ResourceARN field's value.
+func (s *TagResourceInput) SetResourceARN(v string) *TagResourceInput {
+	s.ResourceARN = &v
+	return s
+}
+
+// SetTags sets the Tags field's value.
+func (s *TagResourceInput) SetTags(v []*Tag) *TagResourceInput {
+	s.Tags = v
+	return s
+}
+
+type TagResourceOutput struct {
+	_ struct{} `type:"structure"`
+}
+
+// String returns the string representation
+func (s TagResourceOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s TagResourceOutput) GoString() string {
+	return s.String()
+}
+
 // Represents a condition that is evaluated.
 type Test struct {
 	_ struct{} `type:"structure"`
@@ -15414,6 +15861,78 @@ func (s *UniqueProblem) SetMessage(v string) *UniqueProblem {
 func (s *UniqueProblem) SetProblems(v []*Problem) *UniqueProblem {
 	s.Problems = v
 	return s
+}
+
+type UntagResourceInput struct {
+	_ struct{} `type:"structure"`
+
+	// The Amazon Resource Name (ARN) of the resource(s) from which to delete tags.
+	// You can associate tags with the following Device Farm resources: PROJECT,
+	// RUN, NETWORK_PROFILE, INSTANCE_PROFILE, DEVICE_INSTANCE, SESSION, DEVICE_POOL,
+	// DEVICE, and VPCE_CONFIGURATION.
+	//
+	// ResourceARN is a required field
+	ResourceARN *string `min:"32" type:"string" required:"true"`
+
+	// The keys of the tags to be removed.
+	//
+	// TagKeys is a required field
+	TagKeys []*string `type:"list" required:"true"`
+}
+
+// String returns the string representation
+func (s UntagResourceInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s UntagResourceInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *UntagResourceInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "UntagResourceInput"}
+	if s.ResourceARN == nil {
+		invalidParams.Add(request.NewErrParamRequired("ResourceARN"))
+	}
+	if s.ResourceARN != nil && len(*s.ResourceARN) < 32 {
+		invalidParams.Add(request.NewErrParamMinLen("ResourceARN", 32))
+	}
+	if s.TagKeys == nil {
+		invalidParams.Add(request.NewErrParamRequired("TagKeys"))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetResourceARN sets the ResourceARN field's value.
+func (s *UntagResourceInput) SetResourceARN(v string) *UntagResourceInput {
+	s.ResourceARN = &v
+	return s
+}
+
+// SetTagKeys sets the TagKeys field's value.
+func (s *UntagResourceInput) SetTagKeys(v []*string) *UntagResourceInput {
+	s.TagKeys = v
+	return s
+}
+
+type UntagResourceOutput struct {
+	_ struct{} `type:"structure"`
+}
+
+// String returns the string representation
+func (s UntagResourceOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s UntagResourceOutput) GoString() string {
+	return s.String()
 }
 
 type UpdateDeviceInstanceInput struct {

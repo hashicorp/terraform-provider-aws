@@ -60,36 +60,39 @@ func testAccDataSourceAwsElasticacheReplicationGroupConfig_basic(rName string) s
 data "aws_availability_zones" "available" {}
 
 resource "aws_elasticache_replication_group" "bar" {
-	replication_group_id = "tf-%s"
-	replication_group_description = "test description"
-	node_type = "cache.m1.small"
-	number_cache_clusters = 2
-	port = 6379
-	availability_zones = ["${data.aws_availability_zones.available.names[0]}", "${data.aws_availability_zones.available.names[1]}"]
-	automatic_failover_enabled = true
-	snapshot_window = "01:00-02:00"
+  replication_group_id          = "tf-%s"
+  replication_group_description = "test description"
+  node_type                     = "cache.m1.small"
+  number_cache_clusters         = 2
+  port                          = 6379
+  availability_zones            = ["${data.aws_availability_zones.available.names[0]}", "${data.aws_availability_zones.available.names[1]}"]
+  automatic_failover_enabled    = true
+  snapshot_window               = "01:00-02:00"
 }
 
 data "aws_elasticache_replication_group" "bar" {
-	replication_group_id = "${aws_elasticache_replication_group.bar.replication_group_id}"
-}`, rName)
+  replication_group_id = "${aws_elasticache_replication_group.bar.replication_group_id}"
+}
+`, rName)
 }
 
 func testAccDataSourceAwsElasticacheReplicationGroupConfig_ClusterMode(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_elasticache_replication_group" "cluster" {
-	replication_group_id = "tf-%s"
-	replication_group_description = "test description"
-	node_type = "cache.m1.small"
-	port = 6379
-	automatic_failover_enabled = true
-	cluster_mode {
-		replicas_per_node_group     = 1
-		num_node_groups             = 2
-	}
+  replication_group_id          = "tf-%s"
+  replication_group_description = "test description"
+  node_type                     = "cache.m1.small"
+  port                          = 6379
+  automatic_failover_enabled    = true
+
+  cluster_mode {
+    replicas_per_node_group = 1
+    num_node_groups         = 2
+  }
 }
 
 data "aws_elasticache_replication_group" "cluster" {
-	replication_group_id = "${aws_elasticache_replication_group.cluster.replication_group_id}"
-}`, rName)
+  replication_group_id = "${aws_elasticache_replication_group.cluster.replication_group_id}"
+}
+`, rName)
 }

@@ -6,7 +6,7 @@ description: |-
   Provides a CodePipeline Webhook
 ---
 
-# aws_codepipeline_webhook
+# Resource: aws_codepipeline_webhook
 
 Provides a CodePipeline Webhook.
 
@@ -96,7 +96,7 @@ resource "github_repository_webhook" "bar" {
 
   configuration {
     url          = "${aws_codepipeline_webhook.bar.url}"
-    content_type = "form"
+    content_type = "json"
     insecure_ssl = true
     secret       = "${local.webhook_secret}"
   }

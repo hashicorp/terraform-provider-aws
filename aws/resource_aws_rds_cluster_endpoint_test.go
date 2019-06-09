@@ -163,41 +163,41 @@ func testAccCheckAWSRDSClusterEndpointExistsWithProvider(resourceName string, en
 func testAccAWSClusterEndpointConfig(n int) string {
 	return fmt.Sprintf(`
 resource "aws_rds_cluster" "default" {
-  cluster_identifier = "tf-aurora-cluster-%d"
-  availability_zones = ["us-west-2a","us-west-2b","us-west-2c"]
-  database_name = "mydb"
-  master_username = "foo"
-  master_password = "mustbeeightcharaters"
+  cluster_identifier              = "tf-aurora-cluster-%d"
+  availability_zones              = ["us-west-2a", "us-west-2b", "us-west-2c"]
+  database_name                   = "mydb"
+  master_username                 = "foo"
+  master_password                 = "mustbeeightcharaters"
   db_cluster_parameter_group_name = "default.aurora5.6"
-  skip_final_snapshot = true
+  skip_final_snapshot             = true
 }
 
 resource "aws_rds_cluster_instance" "test1" {
-  apply_immediately = true
+  apply_immediately  = true
   cluster_identifier = "${aws_rds_cluster.default.id}"
-  identifier = "tf-aurora-cluster-instance-test1-%d"
-  instance_class = "db.t2.small"
+  identifier         = "tf-aurora-cluster-instance-test1-%d"
+  instance_class     = "db.t2.small"
 }
 
 resource "aws_rds_cluster_instance" "test2" {
-  apply_immediately = true
+  apply_immediately  = true
   cluster_identifier = "${aws_rds_cluster.default.id}"
-  identifier = "tf-aurora-cluster-instance-test2-%d"
-  instance_class = "db.t2.small"
+  identifier         = "tf-aurora-cluster-instance-test2-%d"
+  instance_class     = "db.t2.small"
 }
 
 resource "aws_rds_cluster_endpoint" "reader" {
-  cluster_identifier = "${aws_rds_cluster.default.id}"
+  cluster_identifier          = "${aws_rds_cluster.default.id}"
   cluster_endpoint_identifier = "reader-%d"
-  custom_endpoint_type = "READER"
+  custom_endpoint_type        = "READER"
 
   static_members = ["${aws_rds_cluster_instance.test2.id}"]
 }
 
 resource "aws_rds_cluster_endpoint" "default" {
-  cluster_identifier = "${aws_rds_cluster.default.id}"
+  cluster_identifier          = "${aws_rds_cluster.default.id}"
   cluster_endpoint_identifier = "default-%d"
-  custom_endpoint_type = "ANY"
+  custom_endpoint_type        = "ANY"
 
   excluded_members = ["${aws_rds_cluster_instance.test2.id}"]
 }

@@ -6,7 +6,7 @@ description: |-
   Provides an RDS instance resource.
 ---
 
-# aws_db_instance
+# Resource: aws_db_instance
 
 Provides an RDS instance resource.  A DB instance is an isolated database
 environment in the cloud.  A DB instance can contain multiple user-created
@@ -168,8 +168,7 @@ is ignored and you should instead declare `kms_key_id` with a valid ARN. The
 default is `false` if not specified.
 * `storage_type` - (Optional) One of "standard" (magnetic), "gp2" (general
 purpose SSD), or "io1" (provisioned IOPS SSD). The default is "io1" if `iops` is
-specified, "standard" if not. Note that this behaviour is different from the AWS
-web console, where the default is "gp2".
+specified, "gp2" if not.
 * `tags` - (Optional) A mapping of tags to assign to the resource.
 * `timezone` - (Optional) Time zone of the DB instance. `timezone` is currently
 only supported by Microsoft SQL Server. The `timezone` can only be set on
@@ -181,6 +180,9 @@ is provided) Username for the master DB user.
 * `vpc_security_group_ids` - (Optional) List of VPC security groups to
 associate.
 * `s3_import` - (Optional) Restore from a Percona Xtrabackup in S3.  See [Importing Data into an Amazon RDS MySQL DB Instance](http://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/MySQL.Procedural.Importing.html)
+* `performance_insights_enabled` - (Optional) Specifies whether Performance Insights are enabled. Defaults to false.
+* `performance_insights_kms_key_id` - (Optional) The ARN for the KMS key to encrypt Performance Insights data. When specifying `performance_insights_kms_key_id`, `performance_insights_enabled` needs to be set to true. Once KMS key is set, it can never be changed.
+* `performance_insights_retention_period` - (Optional) The amount of time in days to retain Performance Insights data. Either 7 (7 days) or 731 (2 years). When specifying `performance_insights_retention_period`, `performance_insights_enabled` needs to be set to true. Defaults to '7'.
 
 ~> **NOTE:** Removing the `replicate_source_db` attribute from an existing RDS
 Replicate database managed by Terraform will promote the database to a fully

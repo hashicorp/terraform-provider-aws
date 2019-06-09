@@ -773,12 +773,12 @@ resource "aws_security_group" "sg1" {
 }
 
 resource "aws_vpc_endpoint" "foo" {
-  vpc_id = "${aws_vpc.foo.id}"
-  service_name = "${aws_vpc_endpoint_service.foo.service_name}"
-  vpc_endpoint_type = "Interface"
-  security_group_ids = ["${aws_security_group.sg1.id}"]
+  vpc_id              = "${aws_vpc.foo.id}"
+  service_name        = "${aws_vpc_endpoint_service.foo.service_name}"
+  vpc_endpoint_type   = "Interface"
+  security_group_ids  = ["${aws_security_group.sg1.id}"]
   private_dns_enabled = false
-  auto_accept = true
+  auto_accept         = true
 }
-  `, lbName)
+`, lbName)
 }

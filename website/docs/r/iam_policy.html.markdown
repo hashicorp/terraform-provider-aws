@@ -6,7 +6,7 @@ description: |-
   Provides an IAM policy.
 ---
 
-# aws_iam_policy
+# Resource: aws_iam_policy
 
 Provides an IAM policy.
 

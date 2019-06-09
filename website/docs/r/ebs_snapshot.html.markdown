@@ -6,7 +6,7 @@ description: |-
   Provides an elastic block storage snapshot resource.
 ---
 
-# aws_ebs_snapshot
+# Resource: aws_ebs_snapshot
 
 Creates a Snapshot of an EBS Volume.
 

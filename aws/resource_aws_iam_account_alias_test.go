@@ -163,12 +163,14 @@ resource "aws_iam_account_alias" "test" {
 
 data "aws_iam_account_alias" "current" {
   depends_on = ["aws_iam_account_alias.test"]
-}`, rstring)
+}
+`, rstring)
 }
 
 func testAccAWSIAMAccountAliasConfig(rstring string) string {
 	return fmt.Sprintf(`
 resource "aws_iam_account_alias" "test" {
   account_alias = "terraform-%s-alias"
-}`, rstring)
+}
+`, rstring)
 }

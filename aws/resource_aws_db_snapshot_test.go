@@ -87,27 +87,28 @@ func testAccCheckDbSnapshotExists(n string, v *rds.DBSnapshot) resource.TestChec
 func testAccAwsDbSnapshotConfig(rInt int) string {
 	return fmt.Sprintf(`
 resource "aws_db_instance" "bar" {
-	allocated_storage = 10
-	engine = "MySQL"
-	engine_version = "5.6.35"
-	instance_class = "db.t2.micro"
-	name = "baz"
-	password = "barbarbarbar"
-	username = "foo"
+  allocated_storage = 10
+  engine            = "MySQL"
+  engine_version    = "5.6.35"
+  instance_class    = "db.t2.micro"
+  name              = "baz"
+  password          = "barbarbarbar"
+  username          = "foo"
 
-	maintenance_window = "Fri:09:00-Fri:09:30"
+  maintenance_window = "Fri:09:00-Fri:09:30"
 
-	backup_retention_period = 0
+  backup_retention_period = 0
 
-	parameter_group_name = "default.mysql5.6"
+  parameter_group_name = "default.mysql5.6"
 
-	skip_final_snapshot = true
+  skip_final_snapshot = true
 }
 
 resource "aws_db_snapshot" "test" {
-	db_instance_identifier = "${aws_db_instance.bar.id}"
-	db_snapshot_identifier = "testsnapshot%d"
-}`, rInt)
+  db_instance_identifier = "${aws_db_instance.bar.id}"
+  db_snapshot_identifier = "testsnapshot%d"
+}
+`, rInt)
 }
 
 func testAccAwsDbSnapshotConfigTags1(rInt int, tag1Key, tag1Value string) string {
@@ -137,7 +138,8 @@ resource "aws_db_snapshot" "test" {
 	tags = {
 		%q = %q
 	  }
-	}`, rInt, tag1Key, tag1Value)
+	}
+`, rInt, tag1Key, tag1Value)
 }
 
 func testAccAwsDbSnapshotConfigTags2(rInt int, tag1Key, tag1Value, tag2Key, tag2Value string) string {
@@ -168,5 +170,6 @@ resource "aws_db_snapshot" "test" {
 		%q = %q
 		%q = %q
 	  }
-	}`, rInt, tag1Key, tag1Value, tag2Key, tag2Value)
+	}
+`, rInt, tag1Key, tag1Value, tag2Key, tag2Value)
 }

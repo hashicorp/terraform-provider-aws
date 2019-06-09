@@ -119,9 +119,9 @@ each accept the following arguments:
 Each policy may have either zero or more `principals` blocks or zero or more
 `not_principals` blocks, both of which each accept the following arguments:
 
-* `type` (Required) The type of principal. For AWS accounts this is "AWS".
+* `type` (Required) The type of principal. For AWS ARNs this is "AWS".  For AWS services (e.g. Lambda), this is "Service".
 * `identifiers` (Required) List of identifiers for principals. When `type`
-  is "AWS", these are IAM user or role ARNs.
+  is "AWS", these are IAM user or role ARNs.  When `type` is "Service", these are AWS Service roles e.g. `lambda.amazonaws.com`.
 
 Each policy statement may have zero or more `condition` blocks, which each
 accept the following arguments:

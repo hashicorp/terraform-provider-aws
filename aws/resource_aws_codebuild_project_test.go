@@ -216,6 +216,15 @@ func TestAccAWSCodeBuildProject_Cache(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "cache.0.type", "NO_CACHE"),
 				),
 			},
+			{
+				Config: testAccAWSCodeBuildProjectConfig_LocalCache(rName, "LOCAL_DOCKER_LAYER_CACHE"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSCodeBuildProjectExists(resourceName, &project),
+					resource.TestCheckResourceAttr(resourceName, "cache.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "cache.0.modes.0", "LOCAL_DOCKER_LAYER_CACHE"),
+					resource.TestCheckResourceAttr(resourceName, "cache.0.type", "LOCAL"),
+				),
+			},
 		},
 	})
 }
@@ -637,7 +646,6 @@ func TestAccAWSCodeBuildProject_Source_Type_S3(t *testing.T) {
 				Config: testAccAWSCodeBuildProjectConfig_Source_Type_S3(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSCodeBuildProjectExists(resourceName, &project),
-					resource.TestCheckResourceAttr(resourceName, "source.2751363124.type", "S3"),
 				),
 			},
 		},
@@ -979,15 +987,17 @@ func testAccPreCheckAWSCodeBuild(t *testing.T) {
 func testAccAWSCodeBuildProjectConfig_Base_Bucket(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_s3_bucket" "test" {
-  bucket = "%s"
+  bucket        = "%s"
   force_destroy = true
-}`, rName)
+}
+`, rName)
 }
 
 func testAccAWSCodeBuildProjectConfig_Base_ServiceRole(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_iam_role" "test" {
   name = "%s"
+
   assume_role_policy = <<EOF
 {
   "Version": "2012-10-17",
@@ -1005,7 +1015,8 @@ EOF
 }
 
 resource "aws_iam_role_policy" "test" {
-  role   = "${aws_iam_role.test.name}"
+  role = "${aws_iam_role.test.name}"
+
   policy = <<POLICY
 {
   "Version": "2012-10-17",
@@ -1044,7 +1055,8 @@ resource "aws_iam_role_policy" "test" {
   ]
 }
 POLICY
-}`, rName)
+}
+`, rName)
 }
 
 func testAccAWSCodeBuildProjectConfig_basic(rName string) string {
@@ -1148,6 +1160,35 @@ resource "aws_codebuild_project" "test" {
   }
 }
 `, rName, cacheLocation, cacheType)
+}
+
+func testAccAWSCodeBuildProjectConfig_LocalCache(rName, modeType string) string {
+	return testAccAWSCodeBuildProjectConfig_Base_ServiceRole(rName) + fmt.Sprintf(`
+resource "aws_codebuild_project" "test" {
+  name         = "%s"
+  service_role = "${aws_iam_role.test.arn}"
+
+  artifacts {
+    type = "NO_ARTIFACTS"
+  }
+
+  cache {
+		type     = "LOCAL"
+		modes    = ["%s"]
+  }
+
+  environment {
+    compute_type = "BUILD_GENERAL1_SMALL"
+    image        = "2"
+    type         = "LINUX_CONTAINER"
+  }
+
+  source {
+    type     = "GITHUB"
+    location = "https://github.com/hashicorp/packer.git"
+  }
+}
+`, rName, modeType)
 }
 
 func testAccAWSCodeBuildProjectConfig_Description(rName, description string) string {
@@ -1609,8 +1650,18 @@ resource "aws_codebuild_project" "test" {
 
 func testAccAWSCodeBuildProjectConfig_Source_Type_S3(rName string) string {
 	return testAccAWSCodeBuildProjectConfig_Base_ServiceRole(rName) + fmt.Sprintf(`
+resource "aws_s3_bucket" "test" {
+  bucket = %[1]q
+}
+
+resource "aws_s3_bucket_object" "test" {
+  bucket  = "${aws_s3_bucket.test.bucket}"
+  content = "test"
+  key     = "test.txt"
+}
+
 resource "aws_codebuild_project" "test" {
-  name         = %q
+  name         = %[1]q
   service_role = "${aws_iam_role.test.arn}"
 
   artifacts {
@@ -1624,7 +1675,7 @@ resource "aws_codebuild_project" "test" {
   }
 
   source {
-    location = "bucket-name/object-name.zip"
+    location = "${aws_s3_bucket.test.bucket}/${aws_s3_bucket_object.test.key}"
     type     = "S3"
   }
 }

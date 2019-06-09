@@ -6,7 +6,7 @@ description: |-
   Manages a Resource Access Manager (RAM) Resource Association.
 ---
 
-# aws_ram_resource_association
+# Resource: aws_ram_resource_association
 
 Manages a Resource Access Manager (RAM) Resource Association.
 

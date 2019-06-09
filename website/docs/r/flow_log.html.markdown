@@ -6,7 +6,7 @@ description: |-
   Provides a VPC/Subnet/ENI Flow Log
 ---
 
-# aws_flow_log
+# Resource: aws_flow_log
 
 Provides a VPC/Subnet/ENI Flow Log to capture IP traffic for a specific network
 interface, subnet, or VPC. Logs are sent to a CloudWatch Log Group or a S3 Bucket.

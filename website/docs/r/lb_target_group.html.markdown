@@ -6,7 +6,7 @@ description: |-
   Provides a Target Group resource for use with Load Balancers.
 ---
 
-# aws_lb_target_group
+# Resource: aws_lb_target_group
 
 Provides a Target Group resource for use with Load Balancer resources.
 

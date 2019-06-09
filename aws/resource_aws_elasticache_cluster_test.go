@@ -96,6 +96,9 @@ func TestAccAWSElasticacheCluster_Engine_Memcached_Ec2Classic(t *testing.T) {
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"apply_immediately",
+				},
 			},
 		},
 	})
@@ -128,6 +131,9 @@ func TestAccAWSElasticacheCluster_Engine_Redis_Ec2Classic(t *testing.T) {
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"apply_immediately",
+				},
 			},
 		},
 	})
@@ -156,6 +162,9 @@ func TestAccAWSElasticacheCluster_ParameterGroupName_Default(t *testing.T) {
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"apply_immediately",
+				},
 			},
 		},
 	})
@@ -191,6 +200,9 @@ func TestAccAWSElasticacheCluster_Port_Ec2Classic(t *testing.T) {
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"apply_immediately",
+				},
 			},
 		},
 	})
@@ -904,10 +916,10 @@ func testAccCheckAWSElasticacheClusterExists(n string, v *elasticache.CacheClust
 func testAccAWSElasticacheClusterConfig_Engine_Memcached(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_elasticache_cluster" "bar" {
-  cluster_id           = "%s"
-  engine               = "memcached"
-  node_type            = "cache.m1.small"
-  num_cache_nodes      = 1
+  cluster_id      = "%s"
+  engine          = "memcached"
+  node_type       = "cache.m1.small"
+  num_cache_nodes = 1
 }
 `, rName)
 }
@@ -915,10 +927,10 @@ resource "aws_elasticache_cluster" "bar" {
 func testAccAWSElasticacheClusterConfig_Engine_Redis(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_elasticache_cluster" "bar" {
-  cluster_id           = "%s"
-  engine               = "redis"
-  node_type            = "cache.m1.small"
-  num_cache_nodes      = 1
+  cluster_id      = "%s"
+  engine          = "redis"
+  node_type       = "cache.m1.small"
+  num_cache_nodes = 1
 }
 `, rName)
 }
@@ -939,11 +951,11 @@ resource "aws_elasticache_cluster" "test" {
 func testAccAWSElasticacheClusterConfig_Port(rName string, port int) string {
 	return fmt.Sprintf(`
 resource "aws_elasticache_cluster" "bar" {
-  cluster_id           = "%s"
-  engine               = "memcached"
-  node_type            = "cache.m1.small"
-  num_cache_nodes      = 1
-  port                 = %d
+  cluster_id      = "%s"
+  engine          = "memcached"
+  node_type       = "cache.m1.small"
+  num_cache_nodes = 1
+  port            = %d
 }
 `, rName, port)
 }
@@ -1053,11 +1065,11 @@ resource "aws_elasticache_cluster" "bar" {
 func testAccAWSElasticacheClusterConfig_NumCacheNodes(rName string, numCacheNodes int) string {
 	return fmt.Sprintf(`
 resource "aws_elasticache_cluster" "bar" {
-  apply_immediately    = true
-  cluster_id           = "%s"
-  engine               = "memcached"
-  node_type            = "cache.m1.small"
-  num_cache_nodes      = %d
+  apply_immediately = true
+  cluster_id        = "%s"
+  engine            = "memcached"
+  node_type         = "cache.m1.small"
+  num_cache_nodes   = %d
 }
 `, rName, numCacheNodes)
 }
@@ -1205,13 +1217,13 @@ resource "aws_elasticache_cluster" "bar" {
 func testAccAWSElasticacheClusterConfig_AZMode_Memcached_Ec2Classic(rName, azMode string) string {
 	return fmt.Sprintf(`
 resource "aws_elasticache_cluster" "bar" {
-  apply_immediately    = true
-  az_mode              = "%[2]s"
-  cluster_id           = "%[1]s"
-  engine               = "memcached"
-  node_type            = "cache.m3.medium"
-  num_cache_nodes      = 1
-  port                 = 11211
+  apply_immediately = true
+  az_mode           = "%[2]s"
+  cluster_id        = "%[1]s"
+  engine            = "memcached"
+  node_type         = "cache.m3.medium"
+  num_cache_nodes   = 1
+  port              = 11211
 }
 `, rName, azMode)
 }
@@ -1219,13 +1231,13 @@ resource "aws_elasticache_cluster" "bar" {
 func testAccAWSElasticacheClusterConfig_AZMode_Redis_Ec2Classic(rName, azMode string) string {
 	return fmt.Sprintf(`
 resource "aws_elasticache_cluster" "bar" {
-  apply_immediately    = true
-  az_mode              = "%[2]s"
-  cluster_id           = "%[1]s"
-  engine               = "redis"
-  node_type            = "cache.m3.medium"
-  num_cache_nodes      = 1
-  port                 = 6379
+  apply_immediately = true
+  az_mode           = "%[2]s"
+  cluster_id        = "%[1]s"
+  engine            = "redis"
+  node_type         = "cache.m3.medium"
+  num_cache_nodes   = 1
+  port              = 6379
 }
 `, rName, azMode)
 }
@@ -1233,13 +1245,13 @@ resource "aws_elasticache_cluster" "bar" {
 func testAccAWSElasticacheClusterConfig_EngineVersion_Memcached_Ec2Classic(rName, engineVersion string) string {
 	return fmt.Sprintf(`
 resource "aws_elasticache_cluster" "bar" {
-  apply_immediately    = true
-  cluster_id           = "%[1]s"
-  engine               = "memcached"
-  engine_version       = "%[2]s"
-  node_type            = "cache.m3.medium"
-  num_cache_nodes      = 1
-  port                 = 11211
+  apply_immediately = true
+  cluster_id        = "%[1]s"
+  engine            = "memcached"
+  engine_version    = "%[2]s"
+  node_type         = "cache.m3.medium"
+  num_cache_nodes   = 1
+  port              = 11211
 }
 `, rName, engineVersion)
 }
@@ -1247,13 +1259,13 @@ resource "aws_elasticache_cluster" "bar" {
 func testAccAWSElasticacheClusterConfig_EngineVersion_Redis_Ec2Classic(rName, engineVersion string) string {
 	return fmt.Sprintf(`
 resource "aws_elasticache_cluster" "bar" {
-  apply_immediately    = true
-  cluster_id           = "%[1]s"
-  engine               = "redis"
-  engine_version       = "%[2]s"
-  node_type            = "cache.m3.medium"
-  num_cache_nodes      = 1
-  port                 = 6379
+  apply_immediately = true
+  cluster_id        = "%[1]s"
+  engine            = "redis"
+  engine_version    = "%[2]s"
+  node_type         = "cache.m3.medium"
+  num_cache_nodes   = 1
+  port              = 6379
 }
 `, rName, engineVersion)
 }
@@ -1261,12 +1273,12 @@ resource "aws_elasticache_cluster" "bar" {
 func testAccAWSElasticacheClusterConfig_NodeType_Memcached_Ec2Classic(rName, nodeType string) string {
 	return fmt.Sprintf(`
 resource "aws_elasticache_cluster" "bar" {
-  apply_immediately    = true
-  cluster_id           = "%[1]s"
-  engine               = "memcached"
-  node_type            = "%[2]s"
-  num_cache_nodes      = 1
-  port                 = 11211
+  apply_immediately = true
+  cluster_id        = "%[1]s"
+  engine            = "memcached"
+  node_type         = "%[2]s"
+  num_cache_nodes   = 1
+  port              = 11211
 }
 `, rName, nodeType)
 }
@@ -1274,12 +1286,12 @@ resource "aws_elasticache_cluster" "bar" {
 func testAccAWSElasticacheClusterConfig_NodeType_Redis_Ec2Classic(rName, nodeType string) string {
 	return fmt.Sprintf(`
 resource "aws_elasticache_cluster" "bar" {
-  apply_immediately    = true
-  cluster_id           = "%[1]s"
-  engine               = "redis"
-  node_type            = "%[2]s"
-  num_cache_nodes      = 1
-  port                 = 6379
+  apply_immediately = true
+  cluster_id        = "%[1]s"
+  engine            = "redis"
+  node_type         = "%[2]s"
+  num_cache_nodes   = 1
+  port              = 6379
 }
 `, rName, nodeType)
 }
@@ -1287,12 +1299,12 @@ resource "aws_elasticache_cluster" "bar" {
 func testAccAWSElasticacheClusterConfig_NumCacheNodes_Redis_Ec2Classic(rName string, numCacheNodes int) string {
 	return fmt.Sprintf(`
 resource "aws_elasticache_cluster" "bar" {
-  apply_immediately    = true
-  cluster_id           = "%[1]s"
-  engine               = "redis"
-  node_type            = "cache.m3.medium"
-  num_cache_nodes      = %[2]d
-  port                 = 6379
+  apply_immediately = true
+  cluster_id        = "%[1]s"
+  engine            = "redis"
+  node_type         = "cache.m3.medium"
+  num_cache_nodes   = %[2]d
+  port              = 6379
 }
 `, rName, numCacheNodes)
 }
@@ -1312,11 +1324,11 @@ func testAccAWSElasticacheClusterConfig_ReplicationGroupID_AvailabilityZone_Ec2C
 data "aws_availability_zones" "available" {}
 
 resource "aws_elasticache_replication_group" "test" {
-  replication_group_description  = "Terraform Acceptance Testing"
-  replication_group_id           = "%[1]s"
-  node_type                      = "cache.m3.medium"
-  number_cache_clusters          = 1
-  port                           = 6379
+  replication_group_description = "Terraform Acceptance Testing"
+  replication_group_id          = "%[1]s"
+  node_type                     = "cache.m3.medium"
+  number_cache_clusters         = 1
+  port                          = 6379
 
   lifecycle {
     ignore_changes = ["number_cache_clusters"]
@@ -1334,11 +1346,11 @@ resource "aws_elasticache_cluster" "replica" {
 func testAccAWSElasticacheClusterConfig_ReplicationGroupID_Replica_Ec2Classic(rName string, count int) string {
 	return fmt.Sprintf(`
 resource "aws_elasticache_replication_group" "test" {
-  replication_group_description  = "Terraform Acceptance Testing"
-  replication_group_id           = "%[1]s"
-  node_type                      = "cache.m3.medium"
-  number_cache_clusters          = 1
-  port                           = 6379
+  replication_group_description = "Terraform Acceptance Testing"
+  replication_group_id          = "%[1]s"
+  node_type                     = "cache.m3.medium"
+  number_cache_clusters         = 1
+  port                          = 6379
 
   lifecycle {
     ignore_changes = ["number_cache_clusters"]

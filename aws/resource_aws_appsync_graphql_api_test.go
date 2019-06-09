@@ -70,7 +70,7 @@ func TestAccAWSAppsyncGraphqlApi_basic(t *testing.T) {
 	resourceName := "aws_appsync_graphql_api.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSAppSync(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsAppsyncGraphqlApiDestroy,
 		Steps: []resource.TestStep{
@@ -86,6 +86,7 @@ func TestAccAWSAppsyncGraphqlApi_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "user_pool_config.#", "0"),
 					resource.TestCheckResourceAttrSet(resourceName, "uris.%"),
 					resource.TestCheckResourceAttrSet(resourceName, "uris.GRAPHQL"),
+					resource.TestCheckNoResourceAttr(resourceName, "tags"),
 				),
 			},
 			{
@@ -103,7 +104,7 @@ func TestAccAWSAppsyncGraphqlApi_disappears(t *testing.T) {
 	resourceName := "aws_appsync_graphql_api.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSAppSync(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsAppsyncGraphqlApiDestroy,
 		Steps: []resource.TestStep{
@@ -125,7 +126,7 @@ func TestAccAWSAppsyncGraphqlApi_Schema(t *testing.T) {
 	resourceName := "aws_appsync_graphql_api.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSAppSync(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsAppsyncGraphqlApiDestroy,
 		Steps: []resource.TestStep{
@@ -168,7 +169,7 @@ func TestAccAWSAppsyncGraphqlApi_AuthenticationType(t *testing.T) {
 	resourceName := "aws_appsync_graphql_api.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSAppSync(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsAppsyncGraphqlApiDestroy,
 		Steps: []resource.TestStep{
@@ -201,7 +202,7 @@ func TestAccAWSAppsyncGraphqlApi_AuthenticationType_APIKey(t *testing.T) {
 	resourceName := "aws_appsync_graphql_api.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSAppSync(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsAppsyncGraphqlApiDestroy,
 		Steps: []resource.TestStep{
@@ -229,7 +230,7 @@ func TestAccAWSAppsyncGraphqlApi_AuthenticationType_AWSIAM(t *testing.T) {
 	resourceName := "aws_appsync_graphql_api.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSAppSync(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsAppsyncGraphqlApiDestroy,
 		Steps: []resource.TestStep{
@@ -258,7 +259,7 @@ func TestAccAWSAppsyncGraphqlApi_AuthenticationType_AmazonCognitoUserPools(t *te
 	resourceName := "aws_appsync_graphql_api.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSAppSync(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsAppsyncGraphqlApiDestroy,
 		Steps: []resource.TestStep{
@@ -288,7 +289,7 @@ func TestAccAWSAppsyncGraphqlApi_AuthenticationType_OpenIDConnect(t *testing.T) 
 	resourceName := "aws_appsync_graphql_api.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSAppSync(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsAppsyncGraphqlApiDestroy,
 		Steps: []resource.TestStep{
@@ -317,7 +318,7 @@ func TestAccAWSAppsyncGraphqlApi_LogConfig(t *testing.T) {
 	resourceName := "aws_appsync_graphql_api.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSAppSync(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsAppsyncGraphqlApiDestroy,
 		Steps: []resource.TestStep{
@@ -346,7 +347,7 @@ func TestAccAWSAppsyncGraphqlApi_LogConfig_FieldLogLevel(t *testing.T) {
 	resourceName := "aws_appsync_graphql_api.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSAppSync(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsAppsyncGraphqlApiDestroy,
 		Steps: []resource.TestStep{
@@ -392,7 +393,7 @@ func TestAccAWSAppsyncGraphqlApi_OpenIDConnectConfig_AuthTTL(t *testing.T) {
 	resourceName := "aws_appsync_graphql_api.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSAppSync(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsAppsyncGraphqlApiDestroy,
 		Steps: []resource.TestStep{
@@ -431,7 +432,7 @@ func TestAccAWSAppsyncGraphqlApi_OpenIDConnectConfig_ClientID(t *testing.T) {
 	resourceName := "aws_appsync_graphql_api.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSAppSync(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsAppsyncGraphqlApiDestroy,
 		Steps: []resource.TestStep{
@@ -470,7 +471,7 @@ func TestAccAWSAppsyncGraphqlApi_OpenIDConnectConfig_IatTTL(t *testing.T) {
 	resourceName := "aws_appsync_graphql_api.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSAppSync(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsAppsyncGraphqlApiDestroy,
 		Steps: []resource.TestStep{
@@ -509,7 +510,7 @@ func TestAccAWSAppsyncGraphqlApi_OpenIDConnectConfig_Issuer(t *testing.T) {
 	resourceName := "aws_appsync_graphql_api.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSAppSync(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsAppsyncGraphqlApiDestroy,
 		Steps: []resource.TestStep{
@@ -547,7 +548,7 @@ func TestAccAWSAppsyncGraphqlApi_Name(t *testing.T) {
 	resourceName := "aws_appsync_graphql_api.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSAppSync(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsAppsyncGraphqlApiDestroy,
 		Steps: []resource.TestStep{
@@ -576,7 +577,7 @@ func TestAccAWSAppsyncGraphqlApi_UserPoolConfig_AwsRegion(t *testing.T) {
 	resourceName := "aws_appsync_graphql_api.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSAppSync(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsAppsyncGraphqlApiDestroy,
 		Steps: []resource.TestStep{
@@ -618,7 +619,7 @@ func TestAccAWSAppsyncGraphqlApi_UserPoolConfig_DefaultAction(t *testing.T) {
 	resourceName := "aws_appsync_graphql_api.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSAppSync(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsAppsyncGraphqlApiDestroy,
 		Steps: []resource.TestStep{
@@ -648,6 +649,46 @@ func TestAccAWSAppsyncGraphqlApi_UserPoolConfig_DefaultAction(t *testing.T) {
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccAWSAppsyncGraphqlApi_Tags(t *testing.T) {
+	var api1 appsync.GraphqlApi
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_appsync_graphql_api.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSAppSync(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAwsAppsyncGraphqlApiDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAppsyncGraphqlApiConfig_Tags(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAwsAppsyncGraphqlApiExists(resourceName, &api1),
+					resource.TestCheckResourceAttr(resourceName, "authentication_type", "API_KEY"),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, "tags.Key1", "Value One"),
+					resource.TestCheckResourceAttr(resourceName, "tags.Description", "Very interesting"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccAppsyncGraphqlApiConfig_TagsModified(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAwsAppsyncGraphqlApiExists(resourceName, &api1),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "3"),
+					resource.TestCheckResourceAttr(resourceName, "tags.Key1", "Value One Changed"),
+					resource.TestCheckResourceAttr(resourceName, "tags.Key2", "Value Two"),
+					resource.TestCheckResourceAttr(resourceName, "tags.Key3", "Value Three"),
+				),
 			},
 		},
 	})
@@ -735,6 +776,22 @@ func testAccCheckAwsAppsyncTypeExists(name, typeName string) resource.TestCheckF
 		}
 
 		return nil
+	}
+}
+
+func testAccPreCheckAWSAppSync(t *testing.T) {
+	conn := testAccProvider.Meta().(*AWSClient).appsyncconn
+
+	input := &appsync.ListGraphqlApisInput{}
+
+	_, err := conn.ListGraphqlApis(input)
+
+	if testAccPreCheckSkipError(err) {
+		t.Skipf("skipping acceptance testing: %s", err)
+	}
+
+	if err != nil {
+		t.Fatalf("unexpected PreCheck error: %s", err)
 	}
 }
 
@@ -895,6 +952,35 @@ resource "aws_appsync_graphql_api" "test" {
   authentication_type = "API_KEY"
   name                = %q
   schema              = "type Mutation {\n\tputPostV2(id: ID!, title: String!): PostV2\n}\n\ntype PostV2 {\n\tid: ID!\n\ttitle: String!\n}\n\ntype Query {\n\tsinglePostV2(id: ID!): PostV2\n}\n\nschema {\n\tquery: Query\n\tmutation: Mutation\n\n}\n"
+}
+`, rName)
+}
+
+func testAccAppsyncGraphqlApiConfig_Tags(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_appsync_graphql_api" "test" {
+  authentication_type = "API_KEY"
+  name                = %q
+
+  tags = {
+    Key1        = "Value One"
+    Description = "Very interesting"
+  }
+}
+`, rName)
+}
+
+func testAccAppsyncGraphqlApiConfig_TagsModified(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_appsync_graphql_api" "test" {
+  authentication_type = "API_KEY"
+  name                = %q
+
+  tags = {
+    Key1 = "Value One Changed"
+    Key2 = "Value Two"
+    Key3 = "Value Three"
+  }
 }
 `, rName)
 }

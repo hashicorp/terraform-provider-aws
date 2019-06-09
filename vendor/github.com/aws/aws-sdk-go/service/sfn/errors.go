@@ -132,7 +132,7 @@ const (
 	// ErrCodeTooManyTags for service response error code
 	// "TooManyTags".
 	//
-	// You've exceeded the number of tags allowed for a resource. See the  Limits
+	// You've exceeded the number of tags allowed for a resource. See the Limits
 	// Topic (https://docs.aws.amazon.com/step-functions/latest/dg/limits.html)
 	// in the AWS Step Functions Developer Guide.
 	ErrCodeTooManyTags = "TooManyTags"

@@ -1,12 +1,12 @@
 ---
 layout: "aws"
-page_title: "AWS: cloudfront_distribution"
+page_title: "AWS: aws_cloudfront_distribution"
 sidebar_current: "docs-aws-resource-cloudfront-distribution"
 description: |-
   Provides a CloudFront web distribution resource.
 ---
 
-# aws_cloudfront_distribution
+# Resource: aws_cloudfront_distribution
 
 Creates an Amazon CloudFront web distribution.
 
@@ -184,7 +184,7 @@ resource "aws_cloudfront_distribution" "s3_distribution" {
 
   default_cache_behavior {
     # ... other configuration ...
-    target_origin_id       = "groupS3"
+    target_origin_id = "groupS3"
   }
 
   # ... other configuration ...

@@ -6,7 +6,7 @@ description: |-
   Provides a Data Lifecycle Manager (DLM) lifecycle policy for managing snapshots.
 ---
 
-# aws_dlm_lifecycle_policy
+# Resource: aws_dlm_lifecycle_policy
 
 Provides a [Data Lifecycle Manager (DLM) lifecycle policy](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/snapshot-lifecycle.html) for managing snapshots.
 
@@ -36,6 +36,7 @@ EOF
 resource "aws_iam_role_policy" "dlm_lifecycle" {
   name = "dlm-lifecycle-policy"
   role = "${aws_iam_role.dlm_lifecycle_role.id}"
+
   policy = <<EOF
 {
    "Version": "2012-10-17",

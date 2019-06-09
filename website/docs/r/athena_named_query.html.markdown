@@ -6,7 +6,7 @@ description: |-
   Provides an Athena Named Query resource.
 ---
 
-# aws_athena_named_query
+# Resource: aws_athena_named_query
 
 Provides an Athena Named Query resource.
 

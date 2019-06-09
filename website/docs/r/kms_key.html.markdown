@@ -6,7 +6,7 @@ description: |-
   Provides a KMS customer master key.
 ---
 
-# aws_kms_key
+# Resource: aws_kms_key
 
 Provides a KMS customer master key.
 

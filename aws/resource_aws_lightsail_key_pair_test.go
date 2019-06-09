@@ -18,7 +18,7 @@ func TestAccAWSLightsailKeyPair_basic(t *testing.T) {
 	lightsailName := fmt.Sprintf("tf-test-lightsail-%d", acctest.RandInt())
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSLightsail(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSLightsailKeyPairDestroy,
 		Steps: []resource.TestStep{
@@ -41,7 +41,7 @@ func TestAccAWSLightsailKeyPair_imported(t *testing.T) {
 	lightsailName := fmt.Sprintf("tf-test-lightsail-%d", acctest.RandInt())
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSLightsail(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSLightsailKeyPairDestroy,
 		Steps: []resource.TestStep{
@@ -66,7 +66,7 @@ func TestAccAWSLightsailKeyPair_encrypted(t *testing.T) {
 	lightsailName := fmt.Sprintf("tf-test-lightsail-%d", acctest.RandInt())
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSLightsail(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSLightsailKeyPairDestroy,
 		Steps: []resource.TestStep{
@@ -90,7 +90,7 @@ func TestAccAWSLightsailKeyPair_nameprefix(t *testing.T) {
 	var conf1, conf2 lightsail.KeyPair
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSLightsail(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSLightsailKeyPairDestroy,
 		Steps: []resource.TestStep{
@@ -172,6 +172,7 @@ func testAccAWSLightsailKeyPairConfig_basic(lightsailName string) string {
 provider "aws" {
   region = "us-east-1"
 }
+
 resource "aws_lightsail_key_pair" "lightsail_key_pair_test" {
   name = "%s"
 }
@@ -183,10 +184,11 @@ func testAccAWSLightsailKeyPairConfig_imported(lightsailName, key string) string
 provider "aws" {
   region = "us-east-1"
 }
+
 resource "aws_lightsail_key_pair" "lightsail_key_pair_test" {
   name = "%s"
-	
-	public_key = "%s"
+
+  public_key = "%s"
 }
 `, lightsailName, lightsailPubKey)
 }
@@ -196,10 +198,11 @@ func testAccAWSLightsailKeyPairConfig_encrypted(lightsailName, key string) strin
 provider "aws" {
   region = "us-east-1"
 }
+
 resource "aws_lightsail_key_pair" "lightsail_key_pair_test" {
   name = "%s"
-	
-	pgp_key = <<EOF
+
+  pgp_key = <<EOF
 %s
 EOF
 }
@@ -211,9 +214,11 @@ func testAccAWSLightsailKeyPairConfig_prefixed() string {
 provider "aws" {
   region = "us-east-1"
 }
+
 resource "aws_lightsail_key_pair" "lightsail_key_pair_test_omit" {}
+
 resource "aws_lightsail_key_pair" "lightsail_key_pair_test_prefixed" {
-	name_prefix = "cts"
+  name_prefix = "cts"
 }
 `)
 }

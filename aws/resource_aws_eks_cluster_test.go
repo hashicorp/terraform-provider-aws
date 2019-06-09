@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"regexp"
+	"strings"
 	"testing"
 	"time"
 
@@ -77,7 +78,7 @@ func TestAccAWSEksCluster_basic(t *testing.T) {
 	resourceName := "aws_eks_cluster.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSEks(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSEksClusterDestroy,
 		Steps: []resource.TestStep{
@@ -117,7 +118,7 @@ func TestAccAWSEksCluster_Version(t *testing.T) {
 	resourceName := "aws_eks_cluster.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSEks(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSEksClusterDestroy,
 		Steps: []resource.TestStep{
@@ -145,6 +146,53 @@ func TestAccAWSEksCluster_Version(t *testing.T) {
 	})
 }
 
+func TestAccAWSEksCluster_Logging(t *testing.T) {
+	var cluster1, cluster2 eks.Cluster
+
+	rName := fmt.Sprintf("tf-acc-test-%s", acctest.RandString(5))
+	resourceName := "aws_eks_cluster.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSEks(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSEksClusterDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSEksClusterConfig_Logging(rName, []string{"api"}),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSEksClusterExists(resourceName, &cluster1),
+					resource.TestCheckResourceAttr(resourceName, "enabled_cluster_log_types.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "enabled_cluster_log_types.2902841359", "api"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccAWSEksClusterConfig_Logging(rName, []string{"api", "audit"}),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSEksClusterExists(resourceName, &cluster2),
+					testAccCheckAWSEksClusterNotRecreated(&cluster1, &cluster2),
+					resource.TestCheckResourceAttr(resourceName, "enabled_cluster_log_types.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "enabled_cluster_log_types.2902841359", "api"),
+					resource.TestCheckResourceAttr(resourceName, "enabled_cluster_log_types.2451111801", "audit"),
+				),
+			},
+			// Disable all log types.
+			{
+				Config: testAccAWSEksClusterConfig_Required(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSEksClusterExists(resourceName, &cluster2),
+					testAccCheckAWSEksClusterNotRecreated(&cluster1, &cluster2),
+					resource.TestCheckResourceAttr(resourceName, "enabled_cluster_log_types.#", "0"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccAWSEksCluster_VpcConfig_SecurityGroupIds(t *testing.T) {
 	var cluster eks.Cluster
 
@@ -152,7 +200,7 @@ func TestAccAWSEksCluster_VpcConfig_SecurityGroupIds(t *testing.T) {
 	resourceName := "aws_eks_cluster.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSEks(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSEksClusterDestroy,
 		Steps: []resource.TestStep{
@@ -180,7 +228,7 @@ func TestAccAWSEksCluster_VpcConfig_EndpointPrivateAccess(t *testing.T) {
 	resourceName := "aws_eks_cluster.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSEks(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSEksClusterDestroy,
 		Steps: []resource.TestStep{
@@ -226,7 +274,7 @@ func TestAccAWSEksCluster_VpcConfig_EndpointPublicAccess(t *testing.T) {
 	resourceName := "aws_eks_cluster.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSEks(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSEksClusterDestroy,
 		Steps: []resource.TestStep{
@@ -342,6 +390,22 @@ func testAccCheckAWSEksClusterNotRecreated(i, j *eks.Cluster) resource.TestCheck
 	}
 }
 
+func testAccPreCheckAWSEks(t *testing.T) {
+	conn := testAccProvider.Meta().(*AWSClient).eksconn
+
+	input := &eks.ListClustersInput{}
+
+	_, err := conn.ListClusters(input)
+
+	if testAccPreCheckSkipError(err) {
+		t.Skipf("skipping acceptance testing: %s", err)
+	}
+
+	if err != nil {
+		t.Fatalf("unexpected PreCheck error: %s", err)
+	}
+}
+
 func testAccAWSEksClusterConfig_Base(rName string) string {
 	return fmt.Sprintf(`
 data "aws_availability_zones" "available" {}
@@ -432,6 +496,24 @@ resource "aws_eks_cluster" "test" {
   depends_on = ["aws_iam_role_policy_attachment.test-AmazonEKSClusterPolicy", "aws_iam_role_policy_attachment.test-AmazonEKSServicePolicy"]
 }
 `, testAccAWSEksClusterConfig_Base(rName), rName, version)
+}
+
+func testAccAWSEksClusterConfig_Logging(rName string, logTypes []string) string {
+	return fmt.Sprintf(`
+%s
+
+resource "aws_eks_cluster" "test" {
+  name                      = "%s"
+  role_arn                  = "${aws_iam_role.test.arn}"
+  enabled_cluster_log_types = ["%v"]
+
+  vpc_config {
+    subnet_ids = ["${aws_subnet.test.*.id[0]}", "${aws_subnet.test.*.id[1]}"]
+  }
+
+  depends_on = ["aws_iam_role_policy_attachment.test-AmazonEKSClusterPolicy", "aws_iam_role_policy_attachment.test-AmazonEKSServicePolicy"]
+}
+`, testAccAWSEksClusterConfig_Base(rName), rName, strings.Join(logTypes, "\", \""))
 }
 
 func testAccAWSEksClusterConfig_VpcConfig_SecurityGroupIds(rName string) string {

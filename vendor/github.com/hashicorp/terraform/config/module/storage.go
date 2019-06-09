@@ -7,7 +7,6 @@ import (
 	"log"
 	"os"
 	"path/filepath"
-	"strings"
 
 	getter "github.com/hashicorp/go-getter"
 	"github.com/hashicorp/terraform/registry"
@@ -101,26 +100,6 @@ func (s Storage) loadManifest() (moduleManifest, error) {
 	if err := json.Unmarshal(data, &manifest); err != nil {
 		return manifest, err
 	}
-
-	filtered := manifest.Modules[:0]
-	for i, rec := range manifest.Modules {
-		// If the path was recorded before we changed to always using a
-		// slash as separator, we filter the record from the manifest so
-		// it can be discovered again and will be recorded using a slash.
-		if strings.Contains(rec.Dir, "\\") {
-			continue
-		}
-
-		// Make sure we use the correct path separator.
-		rec.Dir = filepath.FromSlash(rec.Dir)
-
-		// Add the module to the filtered module slice.
-		filtered = append(filtered, manifest.Modules[i])
-	}
-
-	// Update the manifest modules.
-	manifest.Modules = filtered
-
 	return manifest, nil
 }
 
@@ -131,18 +110,18 @@ func (s Storage) loadManifest() (moduleManifest, error) {
 func (s Storage) recordModule(rec moduleRecord) error {
 	manifest, err := s.loadManifest()
 	if err != nil {
-		// If there was a problem with the file, we will attempt to write a new
+		// if there was a problem with the file, we will attempt to write a new
 		// one. Any non-data related error should surface there.
 		log.Printf("[WARN] error reading module manifest: %s", err)
 	}
 
-	// Do nothing if we already have the exact module.
+	// do nothing if we already have the exact module
 	for i, stored := range manifest.Modules {
 		if rec == stored {
 			return nil
 		}
 
-		// They are not equal, but if the storage path is the same we need to
+		// they are not equal, but if the storage path is the same we need to
 		// remove this rec to be replaced.
 		if rec.Dir == stored.Dir {
 			manifest.Modules[i] = manifest.Modules[len(manifest.Modules)-1]
@@ -150,9 +129,6 @@ func (s Storage) recordModule(rec moduleRecord) error {
 			break
 		}
 	}
-
-	// Make sure we always use a slash separator.
-	rec.Dir = filepath.ToSlash(rec.Dir)
 
 	manifest.Modules = append(manifest.Modules, rec)
 
@@ -336,7 +312,7 @@ func (s Storage) findRegistryModule(mSource, constraint string) (moduleRecord, e
 	// we need to lookup available versions
 	// Only on Get if it's not found, on unconditionally on Update
 	if (s.Mode == GetModeGet && !found) || (s.Mode == GetModeUpdate) {
-		resp, err := s.registry.Versions(mod)
+		resp, err := s.registry.ModuleVersions(mod)
 		if err != nil {
 			return rec, err
 		}
@@ -356,7 +332,7 @@ func (s Storage) findRegistryModule(mSource, constraint string) (moduleRecord, e
 
 		rec.Version = match.Version
 
-		rec.url, err = s.registry.Location(mod, rec.Version)
+		rec.url, err = s.registry.ModuleLocation(mod, rec.Version)
 		if err != nil {
 			return rec, err
 		}

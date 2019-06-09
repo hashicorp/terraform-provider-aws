@@ -70,6 +70,14 @@ const (
 	// The service cannot complete the request.
 	ErrCodeServiceUnavailableException = "ServiceUnavailableException"
 
+	// ErrCodeTooManyTagsException for service response error code
+	// "TooManyTagsException".
+	//
+	// Application created with too many tags, or too many tags added to an application.
+	// Note that the maximum number of application tags includes system tags. The
+	// maximum number of user-defined application tags is 50.
+	ErrCodeTooManyTagsException = "TooManyTagsException"
+
 	// ErrCodeUnableToDetectSchemaException for service response error code
 	// "UnableToDetectSchemaException".
 	//

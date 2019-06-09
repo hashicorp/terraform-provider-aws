@@ -6,7 +6,7 @@ description: |-
   Provides a Resource Group.
 ---
 
-# aws_resourcegroups_group
+# Resource: aws_resourcegroups_group
 
 Provides a Resource Group.
 
@@ -14,7 +14,7 @@ Provides a Resource Group.
 
 ```hcl
 resource "aws_resourcegroups_group" "test" {
-  name        = "test-group"
+  name = "test-group"
 
   resource_query {
     query = <<JSON

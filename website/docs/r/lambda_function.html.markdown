@@ -6,7 +6,7 @@ description: |-
   Provides a Lambda Function resource. Lambda allows you to trigger execution of code in response to events in AWS. The Lambda Function itself includes source code and runtime configuration.
 ---
 
-# aws_lambda_function
+# Resource: aws_lambda_function
 
 Provides a Lambda Function resource. Lambda allows you to trigger execution of code in response to events in AWS. The Lambda Function itself includes source code and runtime configuration.
 
@@ -38,15 +38,17 @@ EOF
 }
 
 resource "aws_lambda_function" "test_lambda" {
-  filename         = "lambda_function_payload.zip"
-  function_name    = "lambda_function_name"
-  role             = "${aws_iam_role.iam_for_lambda.arn}"
-  handler          = "exports.test"
+  filename      = "lambda_function_payload.zip"
+  function_name = "lambda_function_name"
+  role          = "${aws_iam_role.iam_for_lambda.arn}"
+  handler       = "exports.test"
+
   # The filebase64sha256() function is available in Terraform 0.11.12 and later
   # For Terraform 0.11.11 and earlier, use the base64sha256() function and the file() function:
   # source_code_hash = "${base64sha256(file("lambda_function_payload.zip"))}"
   source_code_hash = "${filebase64sha256("lambda_function_payload.zip")}"
-  runtime          = "nodejs8.10"
+
+  runtime = "nodejs8.10"
 
   environment {
     variables = {
@@ -76,10 +78,16 @@ resource "aws_lambda_function" "example" {
 For more information about CloudWatch Logs for Lambda, see the [Lambda User Guide](https://docs.aws.amazon.com/lambda/latest/dg/monitoring-functions-logs.html).
 
 ```hcl
+resource "aws_lambda_function" "test_lambda" {
+  function_name = "${var.lambda_function_name}"
+  ...
+  depends_on    = ["aws_iam_role_policy_attachment.lambda_logs", "aws_cloudwatch_log_group.example"]
+}
+
 # This is to optionally manage the CloudWatch Log Group for the Lambda Function.
 # If skipping this resource configuration, also add "logs:CreateLogGroup" to the IAM policy below.
 resource "aws_cloudwatch_log_group" "example" {
-  name              = "/aws/lambda/${aws_lambda_function.test_lambda.function_name}"
+  name              = "/aws/lambda/${var.lambda_function_name}"
   retention_in_days = 14
 }
 

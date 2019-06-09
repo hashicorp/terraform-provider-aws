@@ -6,7 +6,7 @@ description: |-
   Provides a Glue Catalog Table.
 ---
 
-# aws_glue_catalog_table
+# Resource: aws_glue_catalog_table
 
 Provides a Glue Catalog Table Resource. You can refer to the [Glue Developer Guide](http://docs.aws.amazon.com/glue/latest/dg/populate-data-catalog.html) for a full explanation of the Glue Data Catalog functionality.
 
@@ -28,7 +28,7 @@ resource "aws_glue_catalog_table" "aws_glue_catalog_table" {
   name          = "MyCatalogTable"
   database_name = "MyCatalogDatabase"
 
-  table_type  = "EXTERNAL_TABLE"
+  table_type = "EXTERNAL_TABLE"
 
   parameters = {
     EXTERNAL            = "TRUE"
@@ -51,12 +51,12 @@ resource "aws_glue_catalog_table" "aws_glue_catalog_table" {
 
     columns = [
       {
-        name    = "my_string"
-        type    = "string"
+        name = "my_string"
+        type = "string"
       },
       {
-        name    = "my_double"
-        type    = "double"
+        name = "my_double"
+        type = "double"
       },
       {
         name    = "my_date"

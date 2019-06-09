@@ -207,6 +207,11 @@ func resourceAwsCloudFrontDistribution() *schema.Resource {
 												"forward": {
 													Type:     schema.TypeString,
 													Required: true,
+													ValidateFunc: validation.StringInSlice([]string{
+														cloudfront.ItemSelectionAll,
+														cloudfront.ItemSelectionNone,
+														cloudfront.ItemSelectionWhitelist,
+													}, false),
 												},
 												"whitelisted_names": {
 													Type:     schema.TypeSet,
@@ -364,6 +369,11 @@ func resourceAwsCloudFrontDistribution() *schema.Resource {
 												"forward": {
 													Type:     schema.TypeString,
 													Required: true,
+													ValidateFunc: validation.StringInSlice([]string{
+														cloudfront.ItemSelectionAll,
+														cloudfront.ItemSelectionNone,
+														cloudfront.ItemSelectionWhitelist,
+													}, false),
 												},
 												"whitelisted_names": {
 													Type:     schema.TypeSet,

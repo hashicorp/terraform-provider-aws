@@ -341,7 +341,7 @@ func (c *OpsWorks) AttachElasticLoadBalancerRequest(input *AttachElasticLoadBala
 //
 // You must create the Elastic Load Balancing instance separately, by using
 // the Elastic Load Balancing console, API, or CLI. For more information, see
-//  Elastic Load Balancing Developer Guide (http://docs.aws.amazon.com/ElasticLoadBalancing/latest/DeveloperGuide/Welcome.html).
+// Elastic Load Balancing Developer Guide (http://docs.aws.amazon.com/ElasticLoadBalancing/latest/DeveloperGuide/Welcome.html).
 //
 // Required Permissions: To use this action, an IAM user must have a Manage
 // permissions level for the stack, or an attached policy that explicitly grants
@@ -1489,7 +1489,7 @@ func (c *OpsWorks) DeregisterEcsClusterRequest(input *DeregisterEcsClusterInput)
 // DeregisterEcsCluster API operation for AWS OpsWorks.
 //
 // Deregisters a specified Amazon ECS cluster from a stack. For more information,
-// see  Resource Management (http://docs.aws.amazon.com/opsworks/latest/userguide/workinglayers-ecscluster.html#workinglayers-ecscluster-delete).
+// see Resource Management (http://docs.aws.amazon.com/opsworks/latest/userguide/workinglayers-ecscluster.html#workinglayers-ecscluster-delete).
 //
 // Required Permissions: To use this action, an IAM user must have a Manage
 // permissions level for the stack or an attached policy that explicitly grants
@@ -2348,7 +2348,7 @@ func (c *OpsWorks) DescribeEcsClustersWithContext(ctx aws.Context, input *Descri
 //    // Example iterating over at most 3 pages of a DescribeEcsClusters operation.
 //    pageNum := 0
 //    err := client.DescribeEcsClustersPages(params,
-//        func(page *DescribeEcsClustersOutput, lastPage bool) bool {
+//        func(page *opsworks.DescribeEcsClustersOutput, lastPage bool) bool {
 //            pageNum++
 //            fmt.Println(page)
 //            return pageNum <= 3
@@ -4171,6 +4171,7 @@ func (c *OpsWorks) GrantAccessRequest(input *GrantAccessInput) (req *request.Req
 
 // GrantAccess API operation for AWS OpsWorks.
 //
+//
 // This action can be used only with Windows stacks.
 //
 // Grants RDP access to a Windows instance for a specified time period.
@@ -4428,11 +4429,11 @@ func (c *OpsWorks) RegisterEcsClusterRequest(input *RegisterEcsClusterInput) (re
 //
 // Registers a specified Amazon ECS cluster with a stack. You can register only
 // one cluster with a stack. A cluster can be registered with only one stack.
-// For more information, see  Resource Management (http://docs.aws.amazon.com/opsworks/latest/userguide/workinglayers-ecscluster.html).
+// For more information, see Resource Management (http://docs.aws.amazon.com/opsworks/latest/userguide/workinglayers-ecscluster.html).
 //
 // Required Permissions: To use this action, an IAM user must have a Manage
 // permissions level for the stack or an attached policy that explicitly grants
-// permissions. For more information on user permissions, see  Managing User
+// permissions. For more information on user permissions, see Managing User
 // Permissions (http://docs.aws.amazon.com/opsworks/latest/userguide/opsworks-security-users.html).
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
@@ -4613,13 +4614,13 @@ func (c *OpsWorks) RegisterInstanceRequest(input *RegisterInstanceInput) (req *r
 // agent on the instance, and registering the instance with the stack. RegisterInstance
 // handles only the second step. You should instead use the AWS CLI register
 // command, which performs the entire registration operation. For more information,
-// see  Registering an Instance with an AWS OpsWorks Stacks Stack (http://docs.aws.amazon.com/opsworks/latest/userguide/registered-instances-register.html).
+// see Registering an Instance with an AWS OpsWorks Stacks Stack (http://docs.aws.amazon.com/opsworks/latest/userguide/registered-instances-register.html).
 //
 // Registered instances have the same requirements as instances that are created
 // by using the CreateInstance API. For example, registered instances must be
 // running a supported Linux-based operating system, and they must have a supported
 // instance type. For more information about requirements for instances that
-// you want to register, see  Preparing the Instance (http://docs.aws.amazon.com/opsworks/latest/userguide/registered-instances-register-registering-preparer.html).
+// you want to register, see Preparing the Instance (http://docs.aws.amazon.com/opsworks/latest/userguide/registered-instances-register-registering-preparer.html).
 //
 // Required Permissions: To use this action, an IAM user must have a Manage
 // permissions level for the stack or an attached policy that explicitly grants
@@ -6672,7 +6673,7 @@ type App struct {
 	// An array of EnvironmentVariable objects that specify environment variables
 	// to be associated with the app. After you deploy the app, these variables
 	// are defined on the associated app server instances. For more information,
-	// see  Environment Variables (http://docs.aws.amazon.com/opsworks/latest/userguide/workingapps-creating.html#workingapps-creating-environment).
+	// see Environment Variables (http://docs.aws.amazon.com/opsworks/latest/userguide/workingapps-creating.html#workingapps-creating-environment).
 	//
 	// There is no specific limit on the number of environment variables. However,
 	// the size of the associated data structure - which includes the variable names,
@@ -7357,10 +7358,10 @@ type CloneStackInput struct {
 	// A default Amazon EC2 key pair name. The default value is none. If you specify
 	// a key pair name, AWS OpsWorks installs the public key on the instance and
 	// you can use the private key with an SSH client to log in to the instance.
-	// For more information, see  Using SSH to Communicate with an Instance (http://docs.aws.amazon.com/opsworks/latest/userguide/workinginstances-ssh.html)
-	// and  Managing SSH Access (http://docs.aws.amazon.com/opsworks/latest/userguide/security-ssh-access.html).
+	// For more information, see Using SSH to Communicate with an Instance (http://docs.aws.amazon.com/opsworks/latest/userguide/workinginstances-ssh.html)
+	// and Managing SSH Access (http://docs.aws.amazon.com/opsworks/latest/userguide/security-ssh-access.html).
 	// You can override this setting by specifying a different key pair, or no key
-	// pair, when you  create an instance (http://docs.aws.amazon.com/opsworks/latest/userguide/workinginstances-add.html).
+	// pair, when you create an instance (http://docs.aws.amazon.com/opsworks/latest/userguide/workinginstances-add.html).
 	DefaultSshKeyName *string `type:"string"`
 
 	// The stack's default VPC subnet ID. This parameter is required if you specify
@@ -8005,7 +8006,7 @@ type CreateAppInput struct {
 	// An array of EnvironmentVariable objects that specify environment variables
 	// to be associated with the app. After you deploy the app, these variables
 	// are defined on the associated app server instance. For more information,
-	// see  Environment Variables (http://docs.aws.amazon.com/opsworks/latest/userguide/workingapps-creating.html#workingapps-creating-environment).
+	// see Environment Variables (http://docs.aws.amazon.com/opsworks/latest/userguide/workingapps-creating.html#workingapps-creating-environment).
 	//
 	// There is no specific limit on the number of environment variables. However,
 	// the size of the associated data structure - which includes the variables'
@@ -8649,7 +8650,7 @@ type CreateLayerInput struct {
 
 	// A JSON-formatted string containing custom stack configuration and deployment
 	// attributes to be installed on the layer's instances. For more information,
-	// see  Using Custom JSON (http://docs.aws.amazon.com/opsworks/latest/userguide/workingcookbook-json-override.html).
+	// see Using Custom JSON (http://docs.aws.amazon.com/opsworks/latest/userguide/workingcookbook-json-override.html).
 	// This feature is supported as of version 1.7.42 of the AWS CLI.
 	CustomJson *string `type:"string"`
 
@@ -8976,7 +8977,7 @@ type CreateStackInput struct {
 	//    Windows Server 2012 R2 with SQL Server Web.
 	//
 	//    * A custom AMI: Custom. You specify the custom AMI you want to use when
-	//    you create instances. For more information, see  Using Custom AMIs (http://docs.aws.amazon.com/opsworks/latest/userguide/workinginstances-custom-ami.html).
+	//    you create instances. For more information, see Using Custom AMIs (http://docs.aws.amazon.com/opsworks/latest/userguide/workinginstances-custom-ami.html).
 	//
 	// The default option is the current Amazon Linux version. For more information
 	// about supported operating systems, see AWS OpsWorks Stacks Operating Systems
@@ -8992,10 +8993,10 @@ type CreateStackInput struct {
 	// A default Amazon EC2 key pair name. The default value is none. If you specify
 	// a key pair name, AWS OpsWorks installs the public key on the instance and
 	// you can use the private key with an SSH client to log in to the instance.
-	// For more information, see  Using SSH to Communicate with an Instance (http://docs.aws.amazon.com/opsworks/latest/userguide/workinginstances-ssh.html)
-	// and  Managing SSH Access (http://docs.aws.amazon.com/opsworks/latest/userguide/security-ssh-access.html).
+	// For more information, see Using SSH to Communicate with an Instance (http://docs.aws.amazon.com/opsworks/latest/userguide/workinginstances-ssh.html)
+	// and Managing SSH Access (http://docs.aws.amazon.com/opsworks/latest/userguide/security-ssh-access.html).
 	// You can override this setting by specifying a different key pair, or no key
-	// pair, when you  create an instance (http://docs.aws.amazon.com/opsworks/latest/userguide/workinginstances-add.html).
+	// pair, when you create an instance (http://docs.aws.amazon.com/opsworks/latest/userguide/workinginstances-add.html).
 	DefaultSshKeyName *string `type:"string"`
 
 	// The stack's default VPC subnet ID. This parameter is required if you specify
@@ -12261,7 +12262,7 @@ type Instance struct {
 	// For container instances, the instance's ARN.
 	EcsContainerInstanceArn *string `type:"string"`
 
-	// The instance Elastic IP address  (http://docs.aws.amazon.com/AWSEC2/latest/UserGuide/elastic-ip-addresses-eip.html).
+	// The instance Elastic IP address (http://docs.aws.amazon.com/AWSEC2/latest/UserGuide/elastic-ip-addresses-eip.html).
 	ElasticIp *string `type:"string"`
 
 	// The instance host name.
@@ -15814,7 +15815,7 @@ type UpdateAppInput struct {
 	// An array of EnvironmentVariable objects that specify environment variables
 	// to be associated with the app. After you deploy the app, these variables
 	// are defined on the associated app server instances.For more information,
-	// see  Environment Variables (http://docs.aws.amazon.com/opsworks/latest/userguide/workingapps-creating.html#workingapps-creating-environment).
+	// see Environment Variables (http://docs.aws.amazon.com/opsworks/latest/userguide/workingapps-creating.html#workingapps-creating-environment).
 	//
 	// There is no specific limit on the number of environment variables. However,
 	// the size of the associated data structure - which includes the variables'
@@ -16253,7 +16254,7 @@ type UpdateLayerInput struct {
 
 	// A JSON-formatted string containing custom stack configuration and deployment
 	// attributes to be installed on the layer's instances. For more information,
-	// see  Using Custom JSON (http://docs.aws.amazon.com/opsworks/latest/userguide/workingcookbook-json-override.html).
+	// see Using Custom JSON (http://docs.aws.amazon.com/opsworks/latest/userguide/workingcookbook-json-override.html).
 	CustomJson *string `type:"string"`
 
 	// A LayerCustomRecipes object that specifies the layer's custom recipes.
@@ -16660,10 +16661,10 @@ type UpdateStackInput struct {
 	// A default Amazon EC2 key-pair name. The default value is none. If you specify
 	// a key-pair name, AWS OpsWorks Stacks installs the public key on the instance
 	// and you can use the private key with an SSH client to log in to the instance.
-	// For more information, see  Using SSH to Communicate with an Instance (http://docs.aws.amazon.com/opsworks/latest/userguide/workinginstances-ssh.html)
-	// and  Managing SSH Access (http://docs.aws.amazon.com/opsworks/latest/userguide/security-ssh-access.html).
+	// For more information, see Using SSH to Communicate with an Instance (http://docs.aws.amazon.com/opsworks/latest/userguide/workinginstances-ssh.html)
+	// and Managing SSH Access (http://docs.aws.amazon.com/opsworks/latest/userguide/security-ssh-access.html).
 	// You can override this setting by specifying a different key pair, or no key
-	// pair, when you  create an instance (http://docs.aws.amazon.com/opsworks/latest/userguide/workinginstances-add.html).
+	// pair, when you create an instance (http://docs.aws.amazon.com/opsworks/latest/userguide/workinginstances-add.html).
 	DefaultSshKeyName *string `type:"string"`
 
 	// The stack's default VPC subnet ID. This parameter is required if you specify
@@ -17148,7 +17149,7 @@ type Volume struct {
 	// The volume ID.
 	VolumeId *string `type:"string"`
 
-	// The volume type. For more information, see  Amazon EBS Volume Types (http://docs.aws.amazon.com/AWSEC2/latest/UserGuide/EBSVolumeTypes.html).
+	// The volume type. For more information, see Amazon EBS Volume Types (http://docs.aws.amazon.com/AWSEC2/latest/UserGuide/EBSVolumeTypes.html).
 	//
 	//    * standard - Magnetic. Magnetic volumes must have a minimum size of 1
 	//    GiB and a maximum size of 1024 GiB.
@@ -17291,7 +17292,7 @@ type VolumeConfiguration struct {
 	// Size is a required field
 	Size *int64 `type:"integer" required:"true"`
 
-	// The volume type. For more information, see  Amazon EBS Volume Types (http://docs.aws.amazon.com/AWSEC2/latest/UserGuide/EBSVolumeTypes.html).
+	// The volume type. For more information, see Amazon EBS Volume Types (http://docs.aws.amazon.com/AWSEC2/latest/UserGuide/EBSVolumeTypes.html).
 	//
 	//    * standard - Magnetic. Magnetic volumes must have a minimum size of 1
 	//    GiB and a maximum size of 1024 GiB.

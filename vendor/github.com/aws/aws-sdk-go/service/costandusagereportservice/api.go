@@ -190,7 +190,7 @@ func (c *CostandUsageReportService) DescribeReportDefinitionsWithContext(ctx aws
 //    // Example iterating over at most 3 pages of a DescribeReportDefinitions operation.
 //    pageNum := 0
 //    err := client.DescribeReportDefinitionsPages(params,
-//        func(page *DescribeReportDefinitionsOutput, lastPage bool) bool {
+//        func(page *costandusagereportservice.DescribeReportDefinitionsOutput, lastPage bool) bool {
 //            pageNum++
 //            fmt.Println(page)
 //            return pageNum <= 3
