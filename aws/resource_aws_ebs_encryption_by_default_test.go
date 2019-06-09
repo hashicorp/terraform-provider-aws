@@ -14,8 +14,9 @@ func TestAccAWSEBSEncryptionByDefault_basic(t *testing.T) {
 	resourceName := "aws_ebs_encryption_by_default.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:  func() { testAccPreCheck(t) },
-		Providers: testAccProviders,
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAwsEncryptionByDefaultDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAwsEbsEncryptionByDefaultConfig(false),
@@ -33,6 +34,21 @@ func TestAccAWSEBSEncryptionByDefault_basic(t *testing.T) {
 			},
 		},
 	})
+}
+
+func testAccCheckAwsEncryptionByDefaultDestroy(s *terraform.State) error {
+	conn := testAccProvider.Meta().(*AWSClient).ec2conn
+
+	response, err := conn.GetEbsEncryptionByDefault(&ec2.GetEbsEncryptionByDefaultInput{})
+	if err != nil {
+		return err
+	}
+
+	if aws.BoolValue(response.EbsEncryptionByDefault) != false {
+		return fmt.Errorf("EBS encryption by default not disabled on resource removal")
+	}
+
+	return nil
 }
 
 func testAccCheckEbsEncryptionByDefault(n string, enabled bool) resource.TestCheckFunc {

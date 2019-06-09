@@ -65,6 +65,13 @@ func resourceAwsEbsEncryptionByDefaultUpdate(d *schema.ResourceData, meta interf
 }
 
 func resourceAwsEbsEncryptionByDefaultDelete(d *schema.ResourceData, meta interface{}) error {
+	conn := meta.(*AWSClient).ec2conn
+
+	// Removing the resource disables default encryption.
+	if err := setEbsEncryptionByDefault(conn, false); err != nil {
+		return fmt.Errorf("error disabling EBS encryption by default: %s", err)
+	}
+
 	return nil
 }
 
