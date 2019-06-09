@@ -2,6 +2,8 @@ package aws
 
 import (
 	"fmt"
+	"log"
+	"regexp"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/lexmodelbuildingservice"
@@ -39,10 +41,6 @@ func resourceAwsLexIntent() *schema.Resource {
 				MaxItems: 1,
 				Elem:     lexPromptResource,
 			},
-			"created_date": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
 			"description": {
 				Type:         schema.TypeString,
 				Optional:     true,
@@ -71,15 +69,14 @@ func resourceAwsLexIntent() *schema.Resource {
 				MaxItems: 1,
 				Elem:     lexFulfilmentActivityResource,
 			},
-			"last_updated_date": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
 			"name": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: validateStringMinMaxRegex(lexNameMinLength, lexNameMaxLength, lexNameRegex),
+				Type:     schema.TypeString,
+				Required: true,
+				ForceNew: true,
+				ValidateFunc: validation.All(
+					validation.StringLenBetween(lexNameMinLength, lexNameMaxLength),
+					validation.StringMatch(regexp.MustCompile(lexNameRegex), ""),
+				),
 			},
 			"parent_intent_signature": {
 				Type:     schema.TypeString,
@@ -110,10 +107,13 @@ func resourceAwsLexIntent() *schema.Resource {
 				Elem:     lexSlotResource,
 			},
 			"version": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Default:      lexVersionDefault,
-				ValidateFunc: validateStringMinMaxRegex(lexVersionMinLength, lexVersionMaxLength, lexVersionRegex),
+				Type:     schema.TypeString,
+				Optional: true,
+				Default:  lexVersionDefault,
+				ValidateFunc: validation.All(
+					validation.StringLenBetween(lexVersionMinLength, lexVersionMaxLength),
+					validation.StringMatch(regexp.MustCompile(lexVersionRegex), ""),
+				),
 			},
 		},
 	}
@@ -191,12 +191,16 @@ func resourceAwsLexIntentRead(d *schema.ResourceData, meta interface{}) error {
 		Version: aws.String(version),
 	})
 	if err != nil {
-		return fmt.Errorf("error getting Lex Intent: %s", err)
+		if isAWSErr(err, "NotFoundException", "") {
+			log.Printf("[WARN] Intent (%s) not found, removing from state", d.Id())
+			d.SetId("")
+			return nil
+		}
+
+		return fmt.Errorf("error getting intent %s: %s", d.Id(), err)
 	}
 
 	d.Set("checksum", resp.Checksum)
-	d.Set("created_date", resp.CreatedDate.UTC().String())
-	d.Set("last_updated_date", resp.LastUpdatedDate.UTC().String())
 	d.Set("name", resp.Name)
 	d.Set("version", resp.Version)
 
@@ -239,7 +243,7 @@ func resourceAwsLexIntentRead(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if resp.Slots != nil {
-		d.Set("slots", flattenLexSlots(resp.Slots))
+		d.Set("slot", flattenLexSlots(resp.Slots))
 	}
 
 	return nil
@@ -295,8 +299,11 @@ func resourceAwsLexIntentUpdate(d *schema.ResourceData, meta interface{}) error 
 		input.Slots = expandLexSlots(expandLexSet(v.(*schema.Set)))
 	}
 
-	if _, err := conn.PutIntent(input); err != nil {
-		return fmt.Errorf("error updating Lex Intent %s: %s", d.Id(), err)
+	_, err := RetryOnAwsCodes([]string{"ConflictException"}, func() (interface{}, error) {
+		return conn.PutIntent(input)
+	})
+	if err != nil {
+		return fmt.Errorf("error updating intent %s: %s", d.Id(), err)
 	}
 
 	return resourceAwsLexIntentRead(d, meta)
@@ -305,14 +312,14 @@ func resourceAwsLexIntentUpdate(d *schema.ResourceData, meta interface{}) error 
 func resourceAwsLexIntentDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).lexmodelconn
 
-	_, err := retryOnAwsCode("ConflictException", func() (interface{}, error) {
+	_, err := RetryOnAwsCodes([]string{"ConflictException"}, func() (interface{}, error) {
 		return conn.DeleteIntent(&lexmodelbuildingservice.DeleteIntentInput{
 			Name: aws.String(d.Id()),
 		})
 	})
 
 	if err != nil {
-		return fmt.Errorf("error deleteing Lex Intent %s: %s", d.Id(), err)
+		return fmt.Errorf("error deleteing intent %s: %s", d.Id(), err)
 	}
 
 	return nil

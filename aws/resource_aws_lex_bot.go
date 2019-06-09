@@ -2,6 +2,8 @@ package aws
 
 import (
 	"fmt"
+	"log"
+	"regexp"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/lexmodelbuildingservice"
@@ -42,10 +44,6 @@ func resourceAwsLexBot() *schema.Resource {
 				MaxItems: 1,
 				Elem:     lexPromptResource,
 			},
-			"created_date": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
 			"description": {
 				Type:         schema.TypeString,
 				Optional:     true,
@@ -69,10 +67,6 @@ func resourceAwsLexBot() *schema.Resource {
 				MaxItems: lexBotMaxIntents,
 				Elem:     lexIntentResource,
 			},
-			"last_updated_date": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
 			"locale": {
 				Type:     schema.TypeString,
 				Optional: true,
@@ -80,10 +74,13 @@ func resourceAwsLexBot() *schema.Resource {
 				Default:  lexmodelbuildingservice.LocaleEnUs,
 			},
 			"name": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: validateStringMinMaxRegex(lexNameMinLength, lexNameMaxLength, lexNameRegex),
+				Type:     schema.TypeString,
+				Required: true,
+				ForceNew: true,
+				ValidateFunc: validation.All(
+					validation.StringLenBetween(lexNameMinLength, lexNameMaxLength),
+					validation.StringMatch(regexp.MustCompile(lexNameRegex), ""),
+				),
 			},
 			"process_behavior": {
 				Type:     schema.TypeString,
@@ -99,10 +96,13 @@ func resourceAwsLexBot() *schema.Resource {
 				Computed: true,
 			},
 			"version": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Default:      lexVersionDefault,
-				ValidateFunc: validateStringMinMaxRegex(lexVersionMinLength, lexVersionMaxLength, lexVersionRegex),
+				Type:     schema.TypeString,
+				Optional: true,
+				Default:  lexVersionDefault,
+				ValidateFunc: validation.All(
+					validation.StringLenBetween(lexVersionMinLength, lexVersionMaxLength),
+					validation.StringMatch(regexp.MustCompile(lexVersionRegex), ""),
+				),
 			},
 			"voice_id": {
 				Type:     schema.TypeString,
@@ -139,7 +139,7 @@ func resourceAwsLexBotCreate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if _, err := conn.PutBot(input); err != nil {
-		return fmt.Errorf("error creating Lex Bot %s: %s", name, err)
+		return fmt.Errorf("error creating bot %s: %s", name, err)
 	}
 
 	d.SetId(name)
@@ -160,7 +160,13 @@ func resourceAwsLexBotRead(d *schema.ResourceData, meta interface{}) error {
 		VersionOrAlias: aws.String(version),
 	})
 	if err != nil {
-		return fmt.Errorf("error getting Lex Bot: %s", err)
+		if isAWSErr(err, "NotFoundException", "") {
+			log.Printf("[WARN] Bot (%s) not found, removing from state", d.Id())
+			d.SetId("")
+			return nil
+		}
+
+		return fmt.Errorf("error getting bot: %s", err)
 	}
 
 	// Process behavior is not returned from the API but is used for create and update.
@@ -174,11 +180,9 @@ func resourceAwsLexBotRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("checksum", resp.Checksum)
 	d.Set("child_directed", resp.ChildDirected)
 	d.Set("clarification_prompt", flattenLexObject(flattenLexPrompt(resp.ClarificationPrompt)))
-	d.Set("created_date", resp.CreatedDate.UTC().String())
 	d.Set("failure_reason", resp.FailureReason)
 	d.Set("idle_session_ttl_in_seconds", resp.IdleSessionTTLInSeconds)
 	d.Set("intent", flattenLexIntents(resp.Intents))
-	d.Set("last_updated_date", resp.LastUpdatedDate.UTC().String())
 	d.Set("locale", resp.Locale)
 	d.Set("name", resp.Name)
 	d.Set("process_behavior", processBehavior)
@@ -223,8 +227,11 @@ func resourceAwsLexBotUpdate(d *schema.ResourceData, meta interface{}) error {
 		input.VoiceId = aws.String(v.(string))
 	}
 
-	if _, err := conn.PutBot(input); err != nil {
-		return fmt.Errorf("error creating Lex Bot %s: %s", d.Id(), err)
+	_, err := RetryOnAwsCodes([]string{"ConflictException"}, func() (interface{}, error) {
+		return conn.PutBot(input)
+	})
+	if err != nil {
+		return fmt.Errorf("error updating bot %s: %s", d.Id(), err)
 	}
 
 	return resourceAwsLexBotRead(d, meta)
@@ -233,14 +240,13 @@ func resourceAwsLexBotUpdate(d *schema.ResourceData, meta interface{}) error {
 func resourceAwsLexBotDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).lexmodelconn
 
-	_, err := retryOnAwsCode("ConflictException", func() (interface{}, error) {
+	_, err := RetryOnAwsCodes([]string{"ConflictException"}, func() (interface{}, error) {
 		return conn.DeleteBot(&lexmodelbuildingservice.DeleteBotInput{
 			Name: aws.String(d.Id()),
 		})
 	})
-
 	if err != nil {
-		return fmt.Errorf("error deleteing Lex Bot %s: %s", d.Id(), err)
+		return fmt.Errorf("error deleteing bot %s: %s", d.Id(), err)
 	}
 
 	return nil

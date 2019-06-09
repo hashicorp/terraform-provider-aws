@@ -1,7 +1,13 @@
 package aws
 
 import (
+	"fmt"
+	"regexp"
+
+	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/service/lexmodelbuildingservice"
 	"github.com/hashicorp/terraform/helper/schema"
+	"github.com/hashicorp/terraform/helper/validation"
 )
 
 func dataSourceAwsLexBot() *schema.Resource {
@@ -42,24 +48,26 @@ func dataSourceAwsLexBot() *schema.Resource {
 				Computed: true,
 			},
 			"name": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: validateStringMinMaxRegex(lexNameMinLength, lexNameMaxLength, lexNameRegex),
-			},
-			"process_behavior": {
 				Type:     schema.TypeString,
-				Computed: true,
+				Required: true,
+				ForceNew: true,
+				ValidateFunc: validation.All(
+					validation.StringLenBetween(lexNameMinLength, lexNameMaxLength),
+					validation.StringMatch(regexp.MustCompile(lexNameRegex), ""),
+				),
 			},
 			"status": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
 			"version": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ForceNew:     true,
-				ValidateFunc: validateStringMinMaxRegex(lexVersionMinLength, lexVersionMaxLength, lexVersionRegex),
+				Type:     schema.TypeString,
+				Optional: true,
+				ForceNew: true,
+				ValidateFunc: validation.All(
+					validation.StringLenBetween(lexVersionMinLength, lexVersionMaxLength),
+					validation.StringMatch(regexp.MustCompile(lexVersionRegex), ""),
+				),
 			},
 			"voice_id": {
 				Type:     schema.TypeString,
@@ -70,8 +78,36 @@ func dataSourceAwsLexBot() *schema.Resource {
 }
 
 func dataSourceAwsLexBotRead(d *schema.ResourceData, meta interface{}) error {
-	// The data source and resource read functions are the same except the resource read expects to have the id set.
-	d.SetId(d.Get("name").(string))
+	botName := d.Get("name").(string)
+	botVersion := "$LATEST"
+	if v, ok := d.GetOk("version"); ok {
+		botVersion = v.(string)
+	}
 
-	return resourceAwsLexBotRead(d, meta)
+	conn := meta.(*AWSClient).lexmodelconn
+
+	resp, err := conn.GetBot(&lexmodelbuildingservice.GetBotInput{
+		Name:           aws.String(botName),
+		VersionOrAlias: aws.String(botVersion),
+	})
+	if err != nil {
+		return fmt.Errorf("error getting bot %s: %s", botName, err)
+	}
+
+	d.Set("checksum", resp.Checksum)
+	d.Set("child_directed", resp.ChildDirected)
+	d.Set("created_date", resp.CreatedDate.UTC().String())
+	d.Set("description", resp.Description)
+	d.Set("failure_reason", resp.FailureReason)
+	d.Set("idle_session_ttl_in_seconds", resp.IdleSessionTTLInSeconds)
+	d.Set("last_updated_date", resp.LastUpdatedDate.UTC().String())
+	d.Set("locale", resp.Locale)
+	d.Set("name", resp.Name)
+	d.Set("status", resp.Status)
+	d.Set("version", resp.Version)
+	d.Set("voice_id", resp.VoiceId)
+
+	d.SetId(botName)
+
+	return nil
 }

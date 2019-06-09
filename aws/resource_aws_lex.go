@@ -1,6 +1,8 @@
 package aws
 
 import (
+	"regexp"
+
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/lexmodelbuildingservice"
 	"github.com/hashicorp/terraform/helper/schema"
@@ -182,14 +184,20 @@ func expandLexPrompt(m map[string]interface{}) (prompt *lexmodelbuildingservice.
 var lexIntentResource = &schema.Resource{
 	Schema: map[string]*schema.Schema{
 		"intent_name": {
-			Type:         schema.TypeString,
-			Required:     true,
-			ValidateFunc: validateStringMinMaxRegex(lexNameMinLength, lexNameMaxLength, lexNameRegex),
+			Type:     schema.TypeString,
+			Required: true,
+			ValidateFunc: validation.All(
+				validation.StringLenBetween(lexNameMinLength, lexNameMaxLength),
+				validation.StringMatch(regexp.MustCompile(lexNameRegex), ""),
+			),
 		},
 		"intent_version": {
-			Type:         schema.TypeString,
-			Required:     true,
-			ValidateFunc: validateStringMinMaxRegex(lexVersionMinLength, lexVersionMaxLength, lexVersionRegex),
+			Type:     schema.TypeString,
+			Required: true,
+			ValidateFunc: validation.All(
+				validation.StringLenBetween(lexVersionMinLength, lexVersionMaxLength),
+				validation.StringMatch(regexp.MustCompile(lexVersionRegex), ""),
+			),
 		},
 	},
 }
@@ -332,9 +340,12 @@ var lexSlotResource = &schema.Resource{
 			ValidateFunc: validation.StringLenBetween(lexDescriptionMinLength, lexDescriptionMaxLength),
 		},
 		"name": {
-			Type:         schema.TypeString,
-			Required:     true,
-			ValidateFunc: validateStringMinMaxRegex(lexNameMinLength, lexNameMaxLength, lexNameRegex),
+			Type:     schema.TypeString,
+			Required: true,
+			ValidateFunc: validation.All(
+				validation.StringLenBetween(lexNameMinLength, lexNameMaxLength),
+				validation.StringMatch(regexp.MustCompile(lexNameRegex), ""),
+			),
 		},
 		"priority": {
 			Type:         schema.TypeInt,
@@ -366,14 +377,20 @@ var lexSlotResource = &schema.Resource{
 			}, false),
 		},
 		"slot_type": {
-			Type:         schema.TypeString,
-			Required:     true,
-			ValidateFunc: validateStringMinMaxRegex(lexSlotTypeMinLength, lexSlotTypeMaxLength, lexSlotTypeRegex),
+			Type:     schema.TypeString,
+			Required: true,
+			ValidateFunc: validation.All(
+				validation.StringLenBetween(lexSlotTypeMinLength, lexSlotTypeMaxLength),
+				validation.StringMatch(regexp.MustCompile(lexSlotTypeRegex), ""),
+			),
 		},
 		"slot_type_version": {
-			Type:         schema.TypeString,
-			Optional:     true,
-			ValidateFunc: validateStringMinMaxRegex(lexVersionMinLength, lexVersionMaxLength, lexVersionRegex),
+			Type:     schema.TypeString,
+			Optional: true,
+			ValidateFunc: validation.All(
+				validation.StringLenBetween(lexVersionMinLength, lexVersionMaxLength),
+				validation.StringMatch(regexp.MustCompile(lexVersionRegex), ""),
+			),
 		},
 		"value_elicitation_prompt": {
 			Type:     schema.TypeList,

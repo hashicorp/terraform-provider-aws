@@ -1,7 +1,13 @@
 package aws
 
 import (
+	"fmt"
+	"regexp"
+
+	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/service/lexmodelbuildingservice"
 	"github.com/hashicorp/terraform/helper/schema"
+	"github.com/hashicorp/terraform/helper/validation"
 )
 
 func dataSourceAwsLexIntent() *schema.Resource {
@@ -26,28 +32,57 @@ func dataSourceAwsLexIntent() *schema.Resource {
 				Computed: true,
 			},
 			"name": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: validateStringMinMaxRegex(lexNameMinLength, lexNameMaxLength, lexNameRegex),
+				Type:     schema.TypeString,
+				Required: true,
+				ForceNew: true,
+				ValidateFunc: validation.All(
+					validation.StringLenBetween(lexNameMinLength, lexNameMaxLength),
+					validation.StringMatch(regexp.MustCompile(lexNameRegex), ""),
+				),
 			},
 			"parent_intent_signature": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
 			"version": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Default:      "$LATEST",
-				ValidateFunc: validateStringMinMaxRegex(lexVersionMinLength, lexVersionMaxLength, lexVersionRegex),
+				Type:     schema.TypeString,
+				Optional: true,
+				Default:  "$LATEST",
+				ValidateFunc: validation.All(
+					validation.StringLenBetween(lexVersionMinLength, lexVersionMaxLength),
+					validation.StringMatch(regexp.MustCompile(lexVersionRegex), ""),
+				),
 			},
 		},
 	}
 }
 
 func dataSourceAwsLexIntentRead(d *schema.ResourceData, meta interface{}) error {
-	// The data source and resource read functions are the same except the resource read expects to have the id set.
-	d.SetId(d.Get("name").(string))
+	intentName := d.Get("name").(string)
+	intentVersion := "$LATEST"
+	if v, ok := d.GetOk("version"); ok {
+		intentVersion = v.(string)
+	}
 
-	return resourceAwsLexIntentRead(d, meta)
+	conn := meta.(*AWSClient).lexmodelconn
+
+	resp, err := conn.GetIntent(&lexmodelbuildingservice.GetIntentInput{
+		Name:    aws.String(intentName),
+		Version: aws.String(intentVersion),
+	})
+	if err != nil {
+		return fmt.Errorf("error getting intent %s: %s", intentName, err)
+	}
+
+	d.Set("checksum", resp.Checksum)
+	d.Set("created_date", resp.CreatedDate.UTC().String())
+	d.Set("description", resp.Description)
+	d.Set("last_updated_date", resp.LastUpdatedDate.UTC().String())
+	d.Set("name", resp.Name)
+	d.Set("parent_intent_signature", resp.ParentIntentSignature)
+	d.Set("version", resp.Version)
+
+	d.SetId(intentName)
+
+	return nil
 }

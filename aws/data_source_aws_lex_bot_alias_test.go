@@ -8,25 +8,32 @@ import (
 	"github.com/hashicorp/terraform/helper/resource"
 )
 
-func TestAccDataSourceLexBotAlias(t *testing.T) {
+func TestAccDataSourceAwsLexBotAlias(t *testing.T) {
 	resourceName := "aws_lex_bot_alias.test"
-	testId := acctest.RandStringFromCharSet(8, acctest.CharSetAlpha)
+	dataSourceName := "data." + resourceName
+	testID := acctest.RandStringFromCharSet(8, acctest.CharSetAlpha)
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:  func() { testAccPreCheck(t) },
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
 			{
-				Config: fmt.Sprintf(testDataSourceLexBotAliasConfig, testId),
-				Check: resource.ComposeTestCheckFunc(
-					checkResourceStateComputedAttr(resourceName, dataSourceAwsLexBotAlias()),
+				Config: fmt.Sprintf(testDataSourceAwsLexBotAliasConfig, testID),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttrPair(dataSourceName, "bot_name", resourceName, "bot_name"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "bot_version", resourceName, "bot_version"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "checksum", resourceName, "checksum"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "description", resourceName, "description"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "name", resourceName, "name"),
+					resource.TestCheckResourceAttrSet(dataSourceName, "created_date"),
+					resource.TestCheckResourceAttrSet(dataSourceName, "last_updated_date"),
 				),
 			},
 		},
 	})
 }
 
-const testDataSourceLexBotAliasConfig = `
+const testDataSourceAwsLexBotAliasConfig = `
 resource "aws_lex_intent" "test" {
   fulfillment_activity {
     type = "ReturnIntent"
@@ -66,6 +73,7 @@ resource "aws_lex_bot_alias" "test" {
   bot_name    = "${aws_lex_bot.test.name}"
   bot_version = "${aws_lex_bot.test.version}"
   name        = "test_bot_alias_%[1]s"
+  description = "A test bot alias"
 }
 
 data "aws_lex_bot_alias" "test" {

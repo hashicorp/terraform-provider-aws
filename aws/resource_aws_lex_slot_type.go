@@ -2,6 +2,8 @@ package aws
 
 import (
 	"fmt"
+	"log"
+	"regexp"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/lexmodelbuildingservice"
@@ -24,10 +26,6 @@ func resourceAwsLexSlotType() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"created_date": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
 			"description": {
 				Type:         schema.TypeString,
 				Optional:     true,
@@ -40,15 +38,14 @@ func resourceAwsLexSlotType() *schema.Resource {
 				MaxItems: lexEnumerationValuesMax,
 				Elem:     lexEnumerationValueResource,
 			},
-			"last_updated_date": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
 			"name": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: validateStringMinMaxRegex(lexSlotTypeMinLength, lexSlotTypeMaxLength, lexSlotTypeRegex),
+				Type:     schema.TypeString,
+				Required: true,
+				ForceNew: true,
+				ValidateFunc: validation.All(
+					validation.StringLenBetween(lexSlotTypeMinLength, lexSlotTypeMaxLength),
+					validation.StringMatch(regexp.MustCompile(lexSlotTypeRegex), ""),
+				),
 			},
 			"value_selection_strategy": {
 				Type:     schema.TypeString,
@@ -60,10 +57,13 @@ func resourceAwsLexSlotType() *schema.Resource {
 				}, false),
 			},
 			"version": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Default:      lexVersionDefault,
-				ValidateFunc: validateStringMinMaxRegex(lexSlotTypeMinLength, lexSlotTypeMaxLength, lexSlotTypeRegex),
+				Type:     schema.TypeString,
+				Optional: true,
+				Default:  lexVersionDefault,
+				ValidateFunc: validation.All(
+					validation.StringLenBetween(lexVersionMinLength, lexVersionMaxLength),
+					validation.StringMatch(regexp.MustCompile(lexVersionRegex), ""),
+				),
 			},
 		},
 	}
@@ -89,7 +89,7 @@ func resourceAwsLexSlotTypeCreate(d *schema.ResourceData, meta interface{}) erro
 	}
 
 	if _, err := conn.PutSlotType(input); err != nil {
-		return fmt.Errorf("error creating Lex Slot Type %s: %s", name, err)
+		return fmt.Errorf("error creating slot type %s: %s", name, err)
 	}
 
 	d.SetId(name)
@@ -110,12 +110,16 @@ func resourceAwsLexSlotTypeRead(d *schema.ResourceData, meta interface{}) error 
 		Version: aws.String(version),
 	})
 	if err != nil {
-		return fmt.Errorf("error getting Lex Slot Type: %s", err)
+		if isAWSErr(err, "NotFoundException", "") {
+			log.Printf("[WARN] Slot type (%s) not found, removing from state", d.Id())
+			d.SetId("")
+			return nil
+		}
+
+		return fmt.Errorf("error getting slot type %s: %s", d.Id(), err)
 	}
 
 	d.Set("checksum", resp.Checksum)
-	d.Set("created_date", resp.CreatedDate.UTC().String())
-	d.Set("last_updated_date", resp.LastUpdatedDate.UTC().String())
 	d.Set("name", resp.Name)
 	d.Set("value_selection_strategy", resp.ValueSelectionStrategy)
 	d.Set("version", resp.Version)
@@ -153,8 +157,11 @@ func resourceAwsLexSlotTypeUpdate(d *schema.ResourceData, meta interface{}) erro
 		input.EnumerationValues = expandLexEnumerationValues(expandLexSet(v.(*schema.Set)))
 	}
 
-	if _, err := conn.PutSlotType(input); err != nil {
-		return fmt.Errorf("error updating Lex Slot Type %s: %s", d.Id(), err)
+	_, err := RetryOnAwsCodes([]string{"ConflictException"}, func() (interface{}, error) {
+		return conn.PutSlotType(input)
+	})
+	if err != nil {
+		return fmt.Errorf("error updating slot type %s: %s", d.Id(), err)
 	}
 
 	return resourceAwsLexSlotTypeRead(d, meta)
@@ -163,14 +170,14 @@ func resourceAwsLexSlotTypeUpdate(d *schema.ResourceData, meta interface{}) erro
 func resourceAwsLexSlotTypeDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).lexmodelconn
 
-	out, err := retryOnAwsCode("ConflictException", func() (interface{}, error) {
+	out, err := RetryOnAwsCodes([]string{"ConflictException"}, func() (interface{}, error) {
 		return conn.DeleteSlotType(&lexmodelbuildingservice.DeleteSlotTypeInput{
 			Name: aws.String(d.Id()),
 		})
 	})
 
 	if err != nil {
-		return fmt.Errorf("error deleteing Lex Slot Type %s: %s %#v", d.Id(), err, out)
+		return fmt.Errorf("error deleteing slot type %s: %s %#v", d.Id(), err, out)
 	}
 
 	return nil

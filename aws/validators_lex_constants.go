@@ -1,12 +1,5 @@
 package aws
 
-import (
-	"regexp"
-
-	"github.com/hashicorp/terraform/helper/schema"
-	"github.com/hashicorp/terraform/helper/validation"
-)
-
 // Amazon Lex Resource Constants. Data models are documented here
 // https://docs.aws.amazon.com/lex/latest/dg/API_Types_Amazon_Lex_Model_Building_Service.html
 
@@ -77,6 +70,7 @@ const (
 	lexSlotTypeMaxLength                     = 100
 	lexSlotTypeRegex                         = "^((AMAZON\\.)_?|[A-Za-z]_?)+"
 	lexSlotTypeValueSelectionStrategyDefault = "ORIGINAL_VALUE"
+	lexSlotTypeDeleteRetryTimeoutMinutes     = 5
 
 	// Utterance
 
@@ -94,14 +88,3 @@ const (
 	lexEnumerationValueMinLength        = 1
 	lexEnumerationValueMaxLength        = 140
 )
-
-func validateStringMinMaxRegex(min, max int, regex string) schema.SchemaValidateFunc {
-	return func(v interface{}, k string) (ws []string, errors []error) {
-		ws, errors = validation.StringLenBetween(min, max)(v, k)
-		if len(errors) > 0 {
-			return ws, errors
-		}
-
-		return validation.StringMatch(regexp.MustCompile(regex), "")(v, k)
-	}
-}

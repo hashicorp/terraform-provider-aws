@@ -7,7 +7,6 @@ import (
 
 	"github.com/hashicorp/terraform/helper/acctest"
 	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/helper/schema"
 	"github.com/hashicorp/terraform/terraform"
 )
 
@@ -30,47 +29,36 @@ func testCheckResourceAttrPrefixSet(resourceName, prefix string) resource.TestCh
 	}
 }
 
-func checkResourceStateComputedAttr(resourceName string, expectedResource *schema.Resource) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		actualResource, ok := s.RootModule().Resources[resourceName]
-		if !ok {
-			return fmt.Errorf("root module has no resource called %s", resourceName)
-		}
-
-		// Ensure the state is populated with all the computed attributes defined by the resource schema.
-		for k, v := range expectedResource.Schema {
-			if !v.Computed {
-				continue
-			}
-
-			if _, ok := actualResource.Primary.Attributes[k]; !ok {
-				return fmt.Errorf("state missing attribute %s", k)
-			}
-		}
-
-		return nil
-	}
-}
-
-func TestAccDataSourceLexBot(t *testing.T) {
+func TestAccDataSourceAwsLexBot(t *testing.T) {
 	resourceName := "aws_lex_bot.test"
-	testId := acctest.RandStringFromCharSet(8, acctest.CharSetAlpha)
+	dataSourceName := "data." + resourceName
+	testID := acctest.RandStringFromCharSet(8, acctest.CharSetAlpha)
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:  func() { testAccPreCheck(t) },
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
 			{
-				Config: fmt.Sprintf(testDataSourceLexBotConfig, testId),
-				Check: resource.ComposeTestCheckFunc(
-					checkResourceStateComputedAttr(resourceName, dataSourceAwsLexBot()),
+				Config: fmt.Sprintf(testDataSourceAwsLexBotConfig, testID),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttrPair(dataSourceName, "checksum", resourceName, "checksum"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "child_directed", resourceName, "child_directed"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "description", resourceName, "description"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "idle_session_ttl_in_seconds", resourceName, "idle_session_ttl_in_seconds"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "locale", resourceName, "locale"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "name", resourceName, "name"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "status", resourceName, "status"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "version", resourceName, "version"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "voice_id", resourceName, "voice_id"),
+					resource.TestCheckResourceAttrSet(dataSourceName, "created_date"),
+					resource.TestCheckResourceAttrSet(dataSourceName, "last_updated_date"),
 				),
 			},
 		},
 	})
 }
 
-const testDataSourceLexBotConfig = `
+const testDataSourceAwsLexBotConfig = `
 resource "aws_lex_intent" "test" {
   fulfillment_activity {
     type = "ReturnIntent"

@@ -1,7 +1,13 @@
 package aws
 
 import (
+	"fmt"
+	"regexp"
+
+	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/service/lexmodelbuildingservice"
 	"github.com/hashicorp/terraform/helper/schema"
+	"github.com/hashicorp/terraform/helper/validation"
 )
 
 func dataSourceAwsLexBotAlias() *schema.Resource {
@@ -10,9 +16,12 @@ func dataSourceAwsLexBotAlias() *schema.Resource {
 
 		Schema: map[string]*schema.Schema{
 			"bot_name": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ValidateFunc: validateStringMinMaxRegex(lexBotNameMinLength, lexBotNameMaxLength, lexNameRegex),
+				Type:     schema.TypeString,
+				Required: true,
+				ValidateFunc: validation.All(
+					validation.StringLenBetween(lexBotNameMinLength, lexBotNameMaxLength),
+					validation.StringMatch(regexp.MustCompile(lexNameRegex), ""),
+				),
 			},
 			"bot_version": {
 				Type:     schema.TypeString,
@@ -35,17 +44,40 @@ func dataSourceAwsLexBotAlias() *schema.Resource {
 				Computed: true,
 			},
 			"name": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ValidateFunc: validateStringMinMaxRegex(lexNameMinLength, lexNameMaxLength, lexNameRegex),
+				Type:     schema.TypeString,
+				Required: true,
+				ValidateFunc: validation.All(
+					validation.StringLenBetween(lexNameMinLength, lexNameMaxLength),
+					validation.StringMatch(regexp.MustCompile(lexNameRegex), ""),
+				),
 			},
 		},
 	}
 }
 
 func dataSourceAwsLexBotAliasRead(d *schema.ResourceData, meta interface{}) error {
-	// The data source and resource read functions are the same except the resource read expects to have the id set.
-	d.SetId(d.Get("name").(string))
+	botName := d.Get("bot_name").(string)
+	botAliasName := d.Get("name").(string)
 
-	return resourceAwsLexBotAliasRead(d, meta)
+	conn := meta.(*AWSClient).lexmodelconn
+
+	resp, err := conn.GetBotAlias(&lexmodelbuildingservice.GetBotAliasInput{
+		BotName: aws.String(botName),
+		Name:    aws.String(botAliasName),
+	})
+	if err != nil {
+		return fmt.Errorf("error getting bot alias %s: %s", botAliasName, err)
+	}
+
+	d.Set("bot_name", resp.BotName)
+	d.Set("bot_version", resp.BotVersion)
+	d.Set("checksum", resp.Checksum)
+	d.Set("created_date", resp.CreatedDate.UTC().String())
+	d.Set("description", resp.Description)
+	d.Set("last_updated_date", resp.LastUpdatedDate.UTC().String())
+	d.Set("name", resp.Name)
+
+	d.SetId(fmt.Sprintf("%s.%s", botName, botAliasName))
+
+	return nil
 }

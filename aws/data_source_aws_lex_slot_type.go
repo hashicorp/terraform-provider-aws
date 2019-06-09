@@ -1,7 +1,13 @@
 package aws
 
 import (
+	"fmt"
+	"regexp"
+
+	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/service/lexmodelbuildingservice"
 	"github.com/hashicorp/terraform/helper/schema"
+	"github.com/hashicorp/terraform/helper/validation"
 )
 
 func dataSourceAwsLexSlotType() *schema.Resource {
@@ -26,28 +32,57 @@ func dataSourceAwsLexSlotType() *schema.Resource {
 				Computed: true,
 			},
 			"name": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: validateStringMinMaxRegex(lexNameMinLength, lexNameMaxLength, lexNameRegex),
+				Type:     schema.TypeString,
+				Required: true,
+				ForceNew: true,
+				ValidateFunc: validation.All(
+					validation.StringLenBetween(lexNameMinLength, lexNameMaxLength),
+					validation.StringMatch(regexp.MustCompile(lexNameRegex), ""),
+				),
 			},
 			"value_selection_strategy": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
 			"version": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: validateStringMinMaxRegex(lexVersionMinLength, lexVersionMaxLength, lexVersionRegex),
+				Type:     schema.TypeString,
+				Required: true,
+				ForceNew: true,
+				ValidateFunc: validation.All(
+					validation.StringLenBetween(lexVersionMinLength, lexVersionMaxLength),
+					validation.StringMatch(regexp.MustCompile(lexVersionRegex), ""),
+				),
 			},
 		},
 	}
 }
 
 func dataSourceAwsLexSlotTypeRead(d *schema.ResourceData, meta interface{}) error {
-	// The data source and resource read functions are the same except the resource read expects to have the id set.
-	d.SetId(d.Get("name").(string))
+	slotTypeName := d.Get("name").(string)
+	slotTypeVersion := "$LATEST"
+	if v, ok := d.GetOk("version"); ok {
+		slotTypeVersion = v.(string)
+	}
 
-	return resourceAwsLexSlotTypeRead(d, meta)
+	conn := meta.(*AWSClient).lexmodelconn
+
+	resp, err := conn.GetSlotType(&lexmodelbuildingservice.GetSlotTypeInput{
+		Name:    aws.String(slotTypeName),
+		Version: aws.String(slotTypeVersion),
+	})
+	if err != nil {
+		return fmt.Errorf("error getting slot type %s: %s", slotTypeName, err)
+	}
+
+	d.Set("checksum", resp.Checksum)
+	d.Set("created_date", resp.CreatedDate.UTC().String())
+	d.Set("description", resp.Description)
+	d.Set("last_updated_date", resp.LastUpdatedDate.UTC().String())
+	d.Set("name", resp.Name)
+	d.Set("value_selection_strategy", resp.ValueSelectionStrategy)
+	d.Set("version", resp.Version)
+
+	d.SetId(slotTypeName)
+
+	return nil
 }

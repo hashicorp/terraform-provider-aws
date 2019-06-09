@@ -5,76 +5,99 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/lexmodelbuildingservice"
 	"github.com/hashicorp/terraform/helper/acctest"
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/terraform"
 )
 
-func TestAccLexBotAlias(t *testing.T) {
+func TestAccAwsLexBotAlias(t *testing.T) {
 	resourceName := "aws_lex_bot_alias.test"
-	testId := acctest.RandStringFromCharSet(8, acctest.CharSetAlpha)
-	testBotId := "test_bot_" + testId
-	testBotAliasId := "test_bot_alias_" + testId
+	testID := acctest.RandStringFromCharSet(8, acctest.CharSetAlpha)
+	testBotID := "test_bot_" + testID
+	testBotAliasID := "test_bot_alias_" + testID
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
-		CheckDestroy: checkLexBotAliasDestroy(testBotAliasId),
+		CheckDestroy: testAccCheckAwsLexBotAliasDestroy(testBotID, testBotAliasID),
 		Steps: []resource.TestStep{
 			{
-				Config: fmt.Sprintf(testLexBotAliasConfig, testId),
-				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttrSet(resourceName, "bot_name"),
-					resource.TestCheckResourceAttrSet(resourceName, "bot_version"),
-					resource.TestCheckResourceAttrSet(resourceName, "description"),
-					resource.TestCheckResourceAttrSet(resourceName, "name"),
+				Config: fmt.Sprintf(testAccAwsLexBotAliasConfig, testID),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckAwsLexBotAliasExists(testBotID, testBotAliasID),
 
-					checkResourceStateComputedAttr(resourceName, resourceAwsLexBotAlias()),
+					// user provided attributes
+					resource.TestCheckResourceAttr(resourceName, "description", "Testing lex bot alias create."),
+					resource.TestCheckResourceAttr(resourceName, "bot_name", testBotID),
+					resource.TestCheckResourceAttr(resourceName, "bot_version", "$LATEST"),
+					resource.TestCheckResourceAttr(resourceName, "name", testBotAliasID),
+
+					// computed attributes
+					resource.TestCheckResourceAttrSet(resourceName, "checksum"),
 				),
 			},
 			{
 				ResourceName:      resourceName,
-				ImportStateId:     fmt.Sprintf("%s.%s", testBotId, testBotAliasId),
+				ImportStateId:     fmt.Sprintf("%s.%s", testBotID, testBotAliasID),
 				ImportState:       true,
 				ImportStateVerify: true,
 			},
 			{
-				Config: fmt.Sprintf(testLexBotAliasUpdateConfig, testId),
-				Check: resource.ComposeTestCheckFunc(
+				Config: fmt.Sprintf(testAccAwsLexBotAliasUpdateConfig, testID),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					// user updated attributes
 					resource.TestCheckResourceAttr(resourceName, "description", "Testing lex bot alias update."),
+					resource.TestCheckResourceAttr(resourceName, "bot_name", testBotID),
+					resource.TestCheckResourceAttr(resourceName, "bot_version", "$LATEST"),
+					resource.TestCheckResourceAttr(resourceName, "name", testBotAliasID),
 
-					checkResourceStateComputedAttr(resourceName, resourceAwsLexBotAlias()),
+					// computed attributes
+					resource.TestCheckResourceAttrSet(resourceName, "checksum"),
 				),
 			},
 		},
 	})
 }
 
-func checkLexBotAliasDestroy(id string) resource.TestCheckFunc {
+func testAccCheckAwsLexBotAliasExists(botName, botAliasName string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := testAccProvider.Meta().(*AWSClient).lexmodelconn
 
-		_, err := conn.GetBot(&lexmodelbuildingservice.GetBotInput{
-			Name:           aws.String(id),
-			VersionOrAlias: aws.String("$LATEST"),
+		_, err := conn.GetBotAlias(&lexmodelbuildingservice.GetBotAliasInput{
+			BotName: aws.String(botName),
+			Name:    aws.String(botAliasName),
 		})
-
 		if err != nil {
-			aerr, ok := err.(awserr.Error)
-			if ok && aerr.Code() == "NotFoundException" {
-				return nil
-			}
-
-			return fmt.Errorf("could not get Lex bot alias, %s", id)
+			return fmt.Errorf("error getting bot alias %s: %s", botAliasName, err)
 		}
 
-		return fmt.Errorf("bot alias still exists after delete, %s", id)
+		return nil
 	}
 }
 
-const testLexBotAliasConfig = `
+func testAccCheckAwsLexBotAliasDestroy(botName, botAliasName string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := testAccProvider.Meta().(*AWSClient).lexmodelconn
+
+		_, err := conn.GetBotAlias(&lexmodelbuildingservice.GetBotAliasInput{
+			BotName: aws.String(botName),
+			Name:    aws.String(botAliasName),
+		})
+
+		if err != nil {
+			if isAWSErr(err, "NotFoundException", "") {
+				return nil
+			}
+
+			return fmt.Errorf("error getting bot alias %s: %s", botAliasName, err)
+		}
+
+		return fmt.Errorf("error bot alias still exists after delete, %s", botAliasName)
+	}
+}
+
+const testAccAwsLexBotAliasConfig = `
 resource "aws_lex_intent" "test_intent_one" {
   fulfillment_activity {
     type = "ReturnIntent"
@@ -125,7 +148,7 @@ resource "aws_lex_bot_alias" "test" {
 }
 `
 
-const testLexBotAliasUpdateConfig = `
+const testAccAwsLexBotAliasUpdateConfig = `
 resource "aws_lex_intent" "test_intent_one" {
   fulfillment_activity {
     type = "ReturnIntent"

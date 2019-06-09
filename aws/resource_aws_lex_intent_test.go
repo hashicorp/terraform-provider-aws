@@ -5,7 +5,6 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/lexmodelbuildingservice"
 	"github.com/hashicorp/terraform/helper/acctest"
 	"github.com/hashicorp/terraform/helper/resource"
@@ -16,21 +15,29 @@ import (
 // This means we cannot reference the SlotType in the Intent with interpolation because Terraform will try to delete
 // the SlotType first which will fail. So we do not have a test for custom slot types.
 
-func TestAccLexIntent(t *testing.T) {
+func TestAccAwsLexIntent(t *testing.T) {
 	resourceName := "aws_lex_intent.test"
-	testId := acctest.RandStringFromCharSet(8, acctest.CharSetAlpha)
-	testIntentId := "test_intent_" + testId
+	testID := acctest.RandStringFromCharSet(8, acctest.CharSetAlpha)
+	testIntentID := "test_intent_" + testID
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
-		CheckDestroy: checkLexIntentDestroy(testIntentId),
+		CheckDestroy: testAccCheckAwsLexIntentDestroy(testIntentID, "$LATEST"),
 		Steps: []resource.TestStep{
 			{
-				Config: fmt.Sprintf(testLexIntentMinConfig, testId),
-				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttrSet(resourceName, "name"),
-					checkResourceStateComputedAttr(resourceName, resourceAwsLexIntent()),
+				Config: fmt.Sprintf(testAccAwsLexIntentMinConfig, testID),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckAwsLexIntentExists(testIntentID, "$LATEST"),
+
+					// user provided attributes
+					resource.TestCheckResourceAttr(resourceName, "fulfillment_activity.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "fulfillment_activity.0.type", "ReturnIntent"),
+					resource.TestCheckResourceAttr(resourceName, "name", testIntentID),
+
+					// computed attributes
+					resource.TestCheckResourceAttrSet(resourceName, "checksum"),
+					resource.TestCheckResourceAttrSet(resourceName, "version"),
 				),
 			},
 			{
@@ -39,70 +46,122 @@ func TestAccLexIntent(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: fmt.Sprintf(testLexIntentUpdateWithConclusionConfig, testId),
-				Check: resource.ComposeTestCheckFunc(
-					testCheckResourceAttrPrefixSet(resourceName, "conclusion_statement"),
-					testCheckResourceAttrPrefixSet(resourceName, "confirmation_prompt"),
-					testCheckResourceAttrPrefixSet(resourceName, "fulfillment_activity"),
-					testCheckResourceAttrPrefixSet(resourceName, "rejection_statement"),
-					testCheckResourceAttrPrefixSet(resourceName, "sample_utterances"),
-					testCheckResourceAttrPrefixSet(resourceName, "slot"),
-
+				Config: fmt.Sprintf(testAccAwsLexIntentUpdateWithConclusionConfig, testID),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					// user updated attributes
+					resource.TestCheckResourceAttr(resourceName, "name", testIntentID),
+					resource.TestCheckResourceAttr(resourceName, "conclusion_statement.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "conclusion_statement.0.message.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "confirmation_prompt.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "confirmation_prompt.0.max_attempts", "2"),
+					resource.TestCheckResourceAttr(resourceName, "confirmation_prompt.0.message.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "description", "Intent to order a bouquet of flowers for pick up"),
-					resource.TestCheckResourceAttrSet(resourceName, "version"),
+					resource.TestCheckResourceAttr(resourceName, "fulfillment_activity.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "fulfillment_activity.0.type", "ReturnIntent"),
+					resource.TestCheckResourceAttr(resourceName, "rejection_statement.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "rejection_statement.0.message.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "sample_utterances.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "slot.#", "1"),
 
-					checkResourceStateComputedAttr(resourceName, resourceAwsLexIntent()),
+					// computed attributes
+					resource.TestCheckResourceAttrSet(resourceName, "checksum"),
+					resource.TestCheckResourceAttrSet(resourceName, "version"),
 				),
 			},
 			{
-				Config: fmt.Sprintf(testLexIntentUpdateWithConclusionSlotsConfig, testId),
-				Check: resource.ComposeTestCheckFunc(
-					testCheckResourceAttrPrefixSet(resourceName, "slot"),
+				Config: fmt.Sprintf(testAccAwsLexIntentUpdateWithConclusionSlotsConfig, testID),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					// user updated attributes
+					resource.TestCheckResourceAttr(resourceName, "name", testIntentID),
+					resource.TestCheckResourceAttr(resourceName, "conclusion_statement.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "conclusion_statement.0.message.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "confirmation_prompt.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "confirmation_prompt.0.max_attempts", "2"),
+					resource.TestCheckResourceAttr(resourceName, "confirmation_prompt.0.message.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "description", "Intent to order a bouquet of flowers for pick up"),
+					resource.TestCheckResourceAttr(resourceName, "fulfillment_activity.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "fulfillment_activity.0.type", "ReturnIntent"),
+					resource.TestCheckResourceAttr(resourceName, "rejection_statement.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "rejection_statement.0.message.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "sample_utterances.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "slot.#", "2"),
 
-					checkResourceStateComputedAttr(resourceName, resourceAwsLexIntent()),
+					// computed attributes
+					resource.TestCheckResourceAttrSet(resourceName, "checksum"),
+					resource.TestCheckResourceAttrSet(resourceName, "version"),
 				),
 			},
 			{
-				Config: fmt.Sprintf(testLexIntentUpdateWithFollowUpConfig, testId),
-				Check: resource.ComposeTestCheckFunc(
-					testCheckResourceAttrPrefixSet(resourceName, "confirmation_prompt"),
-					testCheckResourceAttrPrefixSet(resourceName, "follow_up_prompt"),
-					testCheckResourceAttrPrefixSet(resourceName, "fulfillment_activity"),
-					testCheckResourceAttrPrefixSet(resourceName, "rejection_statement"),
-
+				Config: fmt.Sprintf(testAccAwsLexIntentUpdateWithFollowUpConfig, testID),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					// user provided attributes
+					resource.TestCheckResourceAttr(resourceName, "name", testIntentID),
+					resource.TestCheckResourceAttr(resourceName, "confirmation_prompt.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "confirmation_prompt.0.max_attempts", "2"),
+					resource.TestCheckResourceAttr(resourceName, "confirmation_prompt.0.message.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "description", "Intent to order a bouquet of flowers for pick up"),
-					resource.TestCheckResourceAttrSet(resourceName, "version"),
+					resource.TestCheckResourceAttr(resourceName, "follow_up_prompt.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "follow_up_prompt.0.prompt.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "follow_up_prompt.0.prompt.0.max_attempts", "2"),
+					resource.TestCheckResourceAttr(resourceName, "follow_up_prompt.0.prompt.0.message.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "follow_up_prompt.0.rejection_statement.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "follow_up_prompt.0.rejection_statement.0.message.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "fulfillment_activity.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "fulfillment_activity.0.type", "ReturnIntent"),
+					resource.TestCheckResourceAttr(resourceName, "rejection_statement.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "rejection_statement.0.message.#", "1"),
 
-					checkResourceStateComputedAttr(resourceName, resourceAwsLexIntent()),
+					// computed attributes
+					resource.TestCheckResourceAttrSet(resourceName, "checksum"),
+					resource.TestCheckResourceAttrSet(resourceName, "version"),
 				),
 			},
 		},
 	})
 }
 
-func checkLexIntentDestroy(id string) resource.TestCheckFunc {
+func testAccCheckAwsLexIntentExists(intentName, intentVersion string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := testAccProvider.Meta().(*AWSClient).lexmodelconn
 
 		_, err := conn.GetIntent(&lexmodelbuildingservice.GetIntentInput{
-			Name:    aws.String(id),
+			Name:    aws.String(intentName),
+			Version: aws.String(intentVersion),
+		})
+		if err != nil {
+			if isAWSErr(err, "NotFoundException", "") {
+				return fmt.Errorf("error intent %s not found, %s", intentName, err)
+			}
+
+			return fmt.Errorf("error getting intent %s: %s", intentName, err)
+		}
+
+		return nil
+	}
+}
+
+func testAccCheckAwsLexIntentDestroy(intentName, intentVersion string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := testAccProvider.Meta().(*AWSClient).lexmodelconn
+
+		_, err := conn.GetIntent(&lexmodelbuildingservice.GetIntentInput{
+			Name:    aws.String(intentName),
 			Version: aws.String("$LATEST"),
 		})
 
 		if err != nil {
-			aerr, ok := err.(awserr.Error)
-			if ok && aerr.Code() == "NotFoundException" {
+			if isAWSErr(err, "NotFoundException", "") {
 				return nil
 			}
 
-			return fmt.Errorf("could not get intent, %s", id)
+			return fmt.Errorf("error getting intent %s: %s", intentName, err)
 		}
 
-		return fmt.Errorf("the intent still exists after delete, %s", id)
+		return fmt.Errorf("error intent still exists after delete, %s", intentName)
 	}
 }
 
-const testLexIntentMinConfig = `
+const testAccAwsLexIntentMinConfig = `
 resource "aws_lex_intent" "test" {
   fulfillment_activity {
     type = "ReturnIntent"
@@ -114,7 +173,7 @@ resource "aws_lex_intent" "test" {
 
 // with conclusion statement
 
-const testLexIntentUpdateWithConclusionConfig = `
+const testAccAwsLexIntentUpdateWithConclusionConfig = `
 resource "aws_lex_intent" "test" {
   conclusion_statement {
     message {
@@ -186,7 +245,7 @@ resource "aws_lex_intent" "test" {
 
 // with conclusion update slots
 
-const testLexIntentUpdateWithConclusionSlotsConfig = `
+const testAccAwsLexIntentUpdateWithConclusionSlotsConfig = `
 resource "aws_lex_intent" "test" {
   conclusion_statement {
     message {
@@ -272,7 +331,7 @@ resource "aws_lex_intent" "test" {
 
 // with follow up prompt
 
-const testLexIntentUpdateWithFollowUpConfig = `
+const testAccAwsLexIntentUpdateWithFollowUpConfig = `
 resource "aws_lex_intent" "test" {
   confirmation_prompt {
     max_attempts = 2

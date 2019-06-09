@@ -8,25 +8,31 @@ import (
 	"github.com/hashicorp/terraform/helper/resource"
 )
 
-func TestAccDataSourceLexIntent(t *testing.T) {
+func TestAccDataSourceAwsLexIntent(t *testing.T) {
 	resourceName := "aws_lex_intent.test"
-	testId := acctest.RandStringFromCharSet(8, acctest.CharSetAlpha)
+	dataSourceName := "data." + resourceName
+	testID := acctest.RandStringFromCharSet(8, acctest.CharSetAlpha)
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:  func() { testAccPreCheck(t) },
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
 			{
-				Config: fmt.Sprintf(testDataSourceLexIntentConfig, testId),
-				Check: resource.ComposeTestCheckFunc(
-					checkResourceStateComputedAttr(resourceName, dataSourceAwsLexIntent()),
+				Config: fmt.Sprintf(testDataSourceAwsLexIntentConfig, testID),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttrPair(dataSourceName, "checksum", resourceName, "checksum"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "description", resourceName, "description"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "name", resourceName, "name"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "version", resourceName, "version"),
+					resource.TestCheckResourceAttrSet(dataSourceName, "created_date"),
+					resource.TestCheckResourceAttrSet(dataSourceName, "last_updated_date"),
 				),
 			},
 		},
 	})
 }
 
-const testDataSourceLexIntentConfig = `
+const testDataSourceAwsLexIntentConfig = `
 resource "aws_lex_intent" "test" {
   description = "Intent to order a bouquet of flowers for pick up"
 
@@ -35,7 +41,6 @@ resource "aws_lex_intent" "test" {
   }
 
   name                    = "test_intent_%s"
-  parent_intent_signature = "AMAZON.FallbackIntent"
 }
 
 data "aws_lex_intent" "test" {
