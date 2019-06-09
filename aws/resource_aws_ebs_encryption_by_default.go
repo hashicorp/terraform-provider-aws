@@ -20,7 +20,8 @@ func resourceAwsEbsEncryptionByDefault() *schema.Resource {
 		Schema: map[string]*schema.Schema{
 			"enabled": {
 				Type:     schema.TypeBool,
-				Required: true,
+				Optional: true,
+				Default:  true,
 			},
 		},
 	}
