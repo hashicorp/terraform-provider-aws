@@ -13,8 +13,7 @@ import (
 
 func TestAccAWSEBSDefaultKmsKey_basic(t *testing.T) {
 	resourceName := "aws_ebs_default_kms_key.test"
-	resourceNameKey1 := "aws_kms_key.test1"
-	resourceNameKey2 := "aws_kms_key.test2"
+	resourceNameKey := "aws_kms_key.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -25,32 +24,83 @@ func TestAccAWSEBSDefaultKmsKey_basic(t *testing.T) {
 				Config: testAccAwsEbsDefaultKmsKeyConfig_basic,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEbsDefaultKmsKey(resourceName),
-					resource.TestCheckResourceAttrPair(resourceName, "key_id", resourceNameKey1, "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "key_arn", resourceNameKey, "arn"),
 				),
 			},
 			{
-				Config: testAccAwsEbsDefaultKmsKeyConfig_updated,
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckEbsDefaultKmsKey(resourceName),
-					resource.TestCheckResourceAttrPair(resourceName, "key_id", resourceNameKey2, "arn"),
-				),
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})
 }
 
 func testAccCheckAwsEbsDefaultKmsKeyDestroy(s *terraform.State) error {
-	ec2conn := testAccProvider.Meta().(*AWSClient).ec2conn
-	kmsconn := testAccProvider.Meta().(*AWSClient).kmsconn
-
-	alias, err := findKmsAliasByName(kmsconn, "alias/aws/ebs", nil)
+	arn, err := testAccAwsEbsDefaultKmsKeyAwsManagedDefaultKey()
 	if err != nil {
 		return err
 	}
 
-	aliasARN, err := arn.Parse(aws.StringValue(alias.AliasArn))
+	conn := testAccProvider.Meta().(*AWSClient).ec2conn
+
+	resp, err := conn.GetEbsDefaultKmsKeyId(&ec2.GetEbsDefaultKmsKeyIdInput{})
 	if err != nil {
 		return err
+	}
+
+	// Verify that the default key is now the account's AWS-managed default CMK.
+	if aws.StringValue(resp.KmsKeyId) != arn.String() {
+		return fmt.Errorf("Default CMK (%s) is not the account's AWS-managed default CMK (%s)", aws.StringValue(resp.KmsKeyId), arn.String())
+	}
+
+	return nil
+}
+
+func testAccCheckEbsDefaultKmsKey(name string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		rs, ok := s.RootModule().Resources[name]
+		if !ok {
+			return fmt.Errorf("Not found: %s", name)
+		}
+
+		if rs.Primary.ID == "" {
+			return fmt.Errorf("No ID is set")
+		}
+
+		arn, err := testAccAwsEbsDefaultKmsKeyAwsManagedDefaultKey()
+		if err != nil {
+			return err
+		}
+
+		conn := testAccProvider.Meta().(*AWSClient).ec2conn
+
+		resp, err := conn.GetEbsDefaultKmsKeyId(&ec2.GetEbsDefaultKmsKeyIdInput{})
+		if err != nil {
+			return err
+		}
+
+		// Verify that the default key is not the account's AWS-managed default CMK.
+		if aws.StringValue(resp.KmsKeyId) == arn.String() {
+			return fmt.Errorf("Default CMK (%s) is the account's AWS-managed default CMK (%s)", aws.StringValue(resp.KmsKeyId), arn.String())
+		}
+
+		return nil
+	}
+}
+
+// testAccAwsEbsDefaultKmsKeyAwsManagedDefaultKey returns' the account's AWS-managed default CMK.
+func testAccAwsEbsDefaultKmsKeyAwsManagedDefaultKey() (*arn.ARN, error) {
+	conn := testAccProvider.Meta().(*AWSClient).kmsconn
+
+	alias, err := findKmsAliasByName(conn, "alias/aws/ebs", nil)
+	if err != nil {
+		return nil, err
+	}
+
+	aliasARN, err := arn.Parse(aws.StringValue(alias.AliasArn))
+	if err != nil {
+		return nil, err
 	}
 
 	arn := arn.ARN{
@@ -61,43 +111,13 @@ func testAccCheckAwsEbsDefaultKmsKeyDestroy(s *terraform.State) error {
 		Resource:  fmt.Sprintf("key/%s", aws.StringValue(alias.TargetKeyId)),
 	}
 
-	resp, err := ec2conn.GetEbsDefaultKmsKeyId(&ec2.GetEbsDefaultKmsKeyIdInput{})
-	if err != nil {
-		return err
-	}
-
-	if aws.StringValue(resp.KmsKeyId) != arn.String() {
-		return fmt.Errorf("Default CMK (%s) is not the account's AWS-managed default CMK (%s)", aws.StringValue(resp.KmsKeyId), arn.String())
-	}
-
-	return nil
+	return &arn, nil
 }
 
-func testAccCheckEbsDefaultKmsKey(name string) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		_, ok := s.RootModule().Resources[name]
-		if !ok {
-			return fmt.Errorf("Not found: %s", name)
-		}
+const testAccAwsEbsDefaultKmsKeyConfig_basic = `
+resource "aws_kms_key" "test" {}
 
-		return nil
-	}
-}
-
-const testAccAwsEbsDefaultKmsKeyConfigBase = `
-resource "aws_kms_key" "test1" {}
-
-resource "aws_kms_key" "test2" {}
-`
-
-const testAccAwsEbsDefaultKmsKeyConfig_basic = testAccAwsEbsDefaultKmsKeyConfigBase + `
 resource "aws_ebs_default_kms_key" "test" {
-  key_id = "${aws_kms_key.test1.arn}"
-}
-`
-
-const testAccAwsEbsDefaultKmsKeyConfig_updated = testAccAwsEbsDefaultKmsKeyConfigBase + `
-resource "aws_ebs_default_kms_key" "test" {
-  key_id = "${aws_kms_key.test2.arn}"
+  key_arn = "${aws_kms_key.test.arn}"
 }
 `
