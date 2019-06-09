@@ -2,32 +2,11 @@ package aws
 
 import (
 	"fmt"
-	"strings"
 	"testing"
 
 	"github.com/hashicorp/terraform/helper/acctest"
 	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/terraform"
 )
-
-func testCheckResourceAttrPrefixSet(resourceName, prefix string) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		rm := s.RootModule()
-		rs, ok := rm.Resources[resourceName]
-
-		if !ok {
-			return fmt.Errorf("resource does not exist in state, %s", resourceName)
-		}
-
-		for attr := range rs.Primary.Attributes {
-			if strings.HasPrefix(attr, prefix+".") {
-				return nil
-			}
-		}
-
-		return fmt.Errorf("resource attribute prefix does not exist in state, %s", prefix)
-	}
-}
 
 func TestAccDataSourceAwsLexBot(t *testing.T) {
 	resourceName := "aws_lex_bot.test"
