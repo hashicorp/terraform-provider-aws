@@ -25,6 +25,11 @@ func resourceAwsRedshiftParameterGroup() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
+			"arn": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+
 			"name": {
 				Type:         schema.TypeString,
 				ForceNew:     true,
@@ -109,6 +114,16 @@ func resourceAwsRedshiftParameterGroupRead(d *schema.ResourceData, meta interfac
 		return fmt.Errorf("Unable to find Parameter Group: %#v", describeResp.ParameterGroups)
 	}
 
+	arn := arn.ARN{
+		Partition: meta.(*AWSClient).partition,
+		Service:   "redshift",
+		Region:    meta.(*AWSClient).region,
+		AccountID: meta.(*AWSClient).accountid,
+		Resource:  fmt.Sprintf("parametergroup:%s", d.Id()),
+	}.String()
+
+	d.Set("arn", arn)
+
 	d.Set("name", describeResp.ParameterGroups[0].ParameterGroupName)
 	d.Set("family", describeResp.ParameterGroups[0].ParameterGroupFamily)
 	d.Set("description", describeResp.ParameterGroups[0].Description)
@@ -168,14 +183,7 @@ func resourceAwsRedshiftParameterGroupUpdate(d *schema.ResourceData, meta interf
 		d.SetPartial("parameter")
 	}
 
-	arn := arn.ARN{
-		Partition: meta.(*AWSClient).partition,
-		Service:   "redshift",
-		Region:    meta.(*AWSClient).region,
-		AccountID: meta.(*AWSClient).accountid,
-		Resource:  fmt.Sprintf("parametergroup:%s", d.Id()),
-	}.String()
-	if tagErr := setTagsRedshift(conn, d, arn); tagErr != nil {
+	if tagErr := setTagsRedshift(conn, d); tagErr != nil {
 		return tagErr
 	} else {
 		d.SetPartial("tags")

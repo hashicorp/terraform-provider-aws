@@ -55,6 +55,7 @@ You can read more about the parameters that Redshift supports in the [documentat
 
 In addition to all arguments above, the following attributes are exported:
 
+* `arn` - Amazon Resource Name (ARN) of parameter group
 * `id` - The Redshift parameter group name.
 
 ## Import
