@@ -8,6 +8,7 @@ import (
 	"strings"
 
 	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/redshift"
 	"github.com/hashicorp/terraform/helper/hashcode"
 	"github.com/hashicorp/terraform/helper/schema"
@@ -24,6 +25,11 @@ func resourceAwsRedshiftParameterGroup() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
+			"arn": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+
 			"name": {
 				Type:         schema.TypeString,
 				ForceNew:     true,
@@ -62,6 +68,8 @@ func resourceAwsRedshiftParameterGroup() *schema.Resource {
 				},
 				Set: resourceAwsRedshiftParameterHash,
 			},
+
+			"tags": tagsSchema(),
 		},
 	}
 }
@@ -73,6 +81,7 @@ func resourceAwsRedshiftParameterGroupCreate(d *schema.ResourceData, meta interf
 		ParameterGroupName:   aws.String(d.Get("name").(string)),
 		ParameterGroupFamily: aws.String(d.Get("family").(string)),
 		Description:          aws.String(d.Get("description").(string)),
+		Tags:                 tagsFromMapRedshift(d.Get("tags").(map[string]interface{})),
 	}
 
 	log.Printf("[DEBUG] Create Redshift Parameter Group: %#v", createOpts)
@@ -105,9 +114,22 @@ func resourceAwsRedshiftParameterGroupRead(d *schema.ResourceData, meta interfac
 		return fmt.Errorf("Unable to find Parameter Group: %#v", describeResp.ParameterGroups)
 	}
 
+	arn := arn.ARN{
+		Partition: meta.(*AWSClient).partition,
+		Service:   "redshift",
+		Region:    meta.(*AWSClient).region,
+		AccountID: meta.(*AWSClient).accountid,
+		Resource:  fmt.Sprintf("parametergroup:%s", d.Id()),
+	}.String()
+
+	d.Set("arn", arn)
+
 	d.Set("name", describeResp.ParameterGroups[0].ParameterGroupName)
 	d.Set("family", describeResp.ParameterGroups[0].ParameterGroupFamily)
 	d.Set("description", describeResp.ParameterGroups[0].Description)
+	if err := d.Set("tags", tagsToMapRedshift(describeResp.ParameterGroups[0].Tags)); err != nil {
+		return fmt.Errorf("Error setting Redshift Parameter Group Tags: %#v", err)
+	}
 
 	describeParametersOpts := redshift.DescribeClusterParametersInput{
 		ParameterGroupName: aws.String(d.Id()),
@@ -159,6 +181,12 @@ func resourceAwsRedshiftParameterGroupUpdate(d *schema.ResourceData, meta interf
 			}
 		}
 		d.SetPartial("parameter")
+	}
+
+	if tagErr := setTagsRedshift(conn, d); tagErr != nil {
+		return tagErr
+	} else {
+		d.SetPartial("tags")
 	}
 
 	d.Partial(false)
