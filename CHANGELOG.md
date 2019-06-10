@@ -3,6 +3,11 @@
 ENHANCEMENTS:
 
 * resource/aws_cognito_user_pool: Add `email_sending_account` attribute to the email configuration block [GH-8626]
+* resource/aws_redshift_cluster: Add `arn` attribute [GH-8894]
+* resource/aws_redshift_event_subscription: Add `arn` attribute and support `tags` updates [GH-8894]
+* resource/aws_redshift_parameter_group: Add `arn` attribute and `tags` argument [GH-8894]
+* resource/aws_redshift_snapshot_copy_grant: Add `arn` attribute and support `tags` updates [GH-8894]
+* resource/aws_redshift_subnet_group: Add `arn` attribute [GH-8894]
 
 BUG FIXES:
 
