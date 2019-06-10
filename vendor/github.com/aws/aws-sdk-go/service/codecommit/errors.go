@@ -208,8 +208,8 @@ const (
 	// "FileContentSizeLimitExceededException".
 	//
 	// The file cannot be added because it is too large. The maximum file size that
-	// can be added using PutFile is 6 MB, and the combined file content change
-	// size is 7 MB. Consider making these changes using a Git client.
+	// can be added is 6 MB, and the combined file content change size is 7 MB.
+	// Consider making these changes using a Git client.
 	ErrCodeFileContentSizeLimitExceededException = "FileContentSizeLimitExceededException"
 
 	// ErrCodeFileDoesNotExistException for service response error code
@@ -262,9 +262,9 @@ const (
 	// "FolderContentSizeLimitExceededException".
 	//
 	// The commit cannot be created because at least one of the overall changes
-	// in the commit result in a folder contents exceeding the limit of 6 MB. Either
-	// reduce the number and size of your changes, or split the changes across multiple
-	// folders.
+	// in the commit results in a folder whose contents exceed the limit of 6 MB.
+	// Either reduce the number and size of your changes, or split the changes across
+	// multiple folders.
 	ErrCodeFolderContentSizeLimitExceededException = "FolderContentSizeLimitExceededException"
 
 	// ErrCodeFolderDoesNotExistException for service response error code
@@ -333,6 +333,24 @@ const (
 	// The specified commit ID is not valid.
 	ErrCodeInvalidCommitIdException = "InvalidCommitIdException"
 
+	// ErrCodeInvalidConflictDetailLevelException for service response error code
+	// "InvalidConflictDetailLevelException".
+	//
+	// The specified conflict detail level is not valid.
+	ErrCodeInvalidConflictDetailLevelException = "InvalidConflictDetailLevelException"
+
+	// ErrCodeInvalidConflictResolutionException for service response error code
+	// "InvalidConflictResolutionException".
+	//
+	// The specified conflict resolution list is not valid.
+	ErrCodeInvalidConflictResolutionException = "InvalidConflictResolutionException"
+
+	// ErrCodeInvalidConflictResolutionStrategyException for service response error code
+	// "InvalidConflictResolutionStrategyException".
+	//
+	// The specified conflict resolution strategy is not valid.
+	ErrCodeInvalidConflictResolutionStrategyException = "InvalidConflictResolutionStrategyException"
+
 	// ErrCodeInvalidContinuationTokenException for service response error code
 	// "InvalidContinuationTokenException".
 	//
@@ -388,6 +406,18 @@ const (
 	// of the file you want to comment on.
 	ErrCodeInvalidFilePositionException = "InvalidFilePositionException"
 
+	// ErrCodeInvalidMaxConflictFilesException for service response error code
+	// "InvalidMaxConflictFilesException".
+	//
+	// The specified value for the number of conflict files to return is not valid.
+	ErrCodeInvalidMaxConflictFilesException = "InvalidMaxConflictFilesException"
+
+	// ErrCodeInvalidMaxMergeHunksException for service response error code
+	// "InvalidMaxMergeHunksException".
+	//
+	// The specified value for the number of merge hunks to return is not valid.
+	ErrCodeInvalidMaxMergeHunksException = "InvalidMaxMergeHunksException"
+
 	// ErrCodeInvalidMaxResultsException for service response error code
 	// "InvalidMaxResultsException".
 	//
@@ -397,7 +427,8 @@ const (
 	// ErrCodeInvalidMergeOptionException for service response error code
 	// "InvalidMergeOptionException".
 	//
-	// The specified merge option is not valid. The only valid value is FAST_FORWARD_MERGE.
+	// The specified merge option is not valid for this operation. Not all merge
+	// strategies are supported for all operations.
 	ErrCodeInvalidMergeOptionException = "InvalidMergeOptionException"
 
 	// ErrCodeInvalidOrderException for service response error code
@@ -463,6 +494,20 @@ const (
 	// Either the enum is not in a valid format, or the specified file version enum
 	// is not valid in respect to the current file version.
 	ErrCodeInvalidRelativeFileVersionEnumException = "InvalidRelativeFileVersionEnumException"
+
+	// ErrCodeInvalidReplacementContentException for service response error code
+	// "InvalidReplacementContentException".
+	//
+	// Automerge was specified for resolving the conflict, but the replacement type
+	// is not valid or content is missing.
+	ErrCodeInvalidReplacementContentException = "InvalidReplacementContentException"
+
+	// ErrCodeInvalidReplacementTypeException for service response error code
+	// "InvalidReplacementTypeException".
+	//
+	// Automerge was specified for resolving the conflict, but the specified replacement
+	// type is not valid.
+	ErrCodeInvalidReplacementTypeException = "InvalidReplacementTypeException"
 
 	// ErrCodeInvalidRepositoryDescriptionException for service response error code
 	// "InvalidRepositoryDescriptionException".
@@ -559,6 +604,12 @@ const (
 	// The map of tags is not valid.
 	ErrCodeInvalidTagsMapException = "InvalidTagsMapException"
 
+	// ErrCodeInvalidTargetBranchException for service response error code
+	// "InvalidTargetBranchException".
+	//
+	// The specified target branch is not valid.
+	ErrCodeInvalidTargetBranchException = "InvalidTargetBranchException"
+
 	// ErrCodeInvalidTargetException for service response error code
 	// "InvalidTargetException".
 	//
@@ -596,6 +647,18 @@ const (
 	// The number of branches for the trigger was exceeded.
 	ErrCodeMaximumBranchesExceededException = "MaximumBranchesExceededException"
 
+	// ErrCodeMaximumConflictResolutionEntriesExceededException for service response error code
+	// "MaximumConflictResolutionEntriesExceededException".
+	//
+	// The number of allowed conflict resolution entries was exceeded.
+	ErrCodeMaximumConflictResolutionEntriesExceededException = "MaximumConflictResolutionEntriesExceededException"
+
+	// ErrCodeMaximumFileContentToLoadExceededException for service response error code
+	// "MaximumFileContentToLoadExceededException".
+	//
+	// The number of files to load exceeds the allowed limit.
+	ErrCodeMaximumFileContentToLoadExceededException = "MaximumFileContentToLoadExceededException"
+
 	// ErrCodeMaximumFileEntriesExceededException for service response error code
 	// "MaximumFileEntriesExceededException".
 	//
@@ -630,6 +693,13 @@ const (
 	//
 	// A merge option or stategy is required, and none was provided.
 	ErrCodeMergeOptionRequiredException = "MergeOptionRequiredException"
+
+	// ErrCodeMultipleConflictResolutionEntriesException for service response error code
+	// "MultipleConflictResolutionEntriesException".
+	//
+	// More than one conflict resolution entries exists for the conflict. A conflict
+	// can have only one conflict resolution entry.
+	ErrCodeMultipleConflictResolutionEntriesException = "MultipleConflictResolutionEntriesException"
 
 	// ErrCodeMultipleRepositoriesInPullRequestException for service response error code
 	// "MultipleRepositoriesInPullRequestException".
@@ -738,6 +808,18 @@ const (
 	//
 	// The specified reference is not a supported type.
 	ErrCodeReferenceTypeNotSupportedException = "ReferenceTypeNotSupportedException"
+
+	// ErrCodeReplacementContentRequiredException for service response error code
+	// "ReplacementContentRequiredException".
+	//
+	// USE_NEW_CONTENT was specified but no replacement content has been provided.
+	ErrCodeReplacementContentRequiredException = "ReplacementContentRequiredException"
+
+	// ErrCodeReplacementTypeRequiredException for service response error code
+	// "ReplacementTypeRequiredException".
+	//
+	// A replacement type is required.
+	ErrCodeReplacementTypeRequiredException = "ReplacementTypeRequiredException"
 
 	// ErrCodeRepositoryDoesNotExistException for service response error code
 	// "RepositoryDoesNotExistException".
