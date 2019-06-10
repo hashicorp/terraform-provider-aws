@@ -16,6 +16,7 @@ func TestAccAWSDBClusterSnapshot_basic(t *testing.T) {
 	var dbClusterSnapshot rds.DBClusterSnapshot
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_db_cluster_snapshot.test"
+	var v rds.DBClusterSnapshot
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -23,7 +24,7 @@ func TestAccAWSDBClusterSnapshot_basic(t *testing.T) {
 		CheckDestroy: testAccCheckDbClusterSnapshotDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAwsDbClusterSnapshotConfig(rName),
+				Config: testAccAwsDbClusterSnapshotConfig(rName, "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDbClusterSnapshotExists(resourceName, &dbClusterSnapshot),
 					resource.TestCheckResourceAttrSet(resourceName, "allocated_storage"),
@@ -39,6 +40,8 @@ func TestAccAWSDBClusterSnapshot_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "status", "available"),
 					resource.TestCheckResourceAttr(resourceName, "storage_encrypted", "false"),
 					resource.TestMatchResourceAttr(resourceName, "vpc_id", regexp.MustCompile(`^vpc-.+`)),
+					testAccCheckDbClusterSnapshotExists("aws_db_cluster_snapshot.test", &v),
+					resource.TestCheckResourceAttr("aws_db_cluster_snapshot.test", "tags.Name", "value1"),
 				),
 			},
 			{
@@ -110,7 +113,7 @@ func testAccCheckDbClusterSnapshotExists(resourceName string, dbClusterSnapshot 
 	}
 }
 
-func testAccAwsDbClusterSnapshotConfig(rName string) string {
+func testAccAwsDbClusterSnapshotConfig(rName string, tag1Value string) string {
 	return fmt.Sprintf(`
 data "aws_availability_zones" "available" {}
 
@@ -150,6 +153,9 @@ resource "aws_rds_cluster" "test" {
 resource "aws_db_cluster_snapshot" "test" {
   db_cluster_identifier          = "${aws_rds_cluster.test.id}"
   db_cluster_snapshot_identifier = %q
+  tags = {
+	Name = %q
+  }
 }
-`, rName, rName, rName, rName, rName)
+`, rName, rName, rName, rName, rName, tag1Value)
 }

@@ -89,16 +89,18 @@ func resourceAwsDbClusterSnapshot() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"tags": tagsSchemaForceNew(),
 		},
 	}
 }
 
 func resourceAwsDbClusterSnapshotCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).rdsconn
-
+	tags := tagsFromMapRDS(d.Get("tags").(map[string]interface{}))
 	params := &rds.CreateDBClusterSnapshotInput{
 		DBClusterIdentifier:         aws.String(d.Get("db_cluster_identifier").(string)),
 		DBClusterSnapshotIdentifier: aws.String(d.Get("db_cluster_snapshot_identifier").(string)),
+		Tags:                        tags,
 	}
 
 	_, err := conn.CreateDBClusterSnapshot(params)
@@ -127,7 +129,6 @@ func resourceAwsDbClusterSnapshotCreate(d *schema.ResourceData, meta interface{}
 
 func resourceAwsDbClusterSnapshotRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).rdsconn
-
 	params := &rds.DescribeDBClusterSnapshotsInput{
 		DBClusterSnapshotIdentifier: aws.String(d.Id()),
 	}
@@ -166,6 +167,9 @@ func resourceAwsDbClusterSnapshotRead(d *schema.ResourceData, meta interface{}) 
 	d.Set("status", snapshot.Status)
 	d.Set("storage_encrypted", snapshot.StorageEncrypted)
 	d.Set("vpc_id", snapshot.VpcId)
+	if err := saveTagsRDS(conn, d, aws.StringValue(snapshot.DBClusterSnapshotArn)); err != nil {
+		log.Printf("[WARN] Failed to save tags for RDS Snapshot (%s): %s", d.Id(), err)
+	}
 
 	return nil
 }

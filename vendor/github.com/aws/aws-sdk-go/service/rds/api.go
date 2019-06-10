@@ -21378,6 +21378,7 @@ type DescribeDBClusterSnapshotsInput struct {
 	// when SnapshotType is set to shared. The IncludeShared parameter doesn't apply
 	// when SnapshotType is set to public.
 	SnapshotType *string `type:"string"`
+	Tags []*Tag `locationNameList:"Tag" type:"list"`
 }
 
 // String returns the string representation
