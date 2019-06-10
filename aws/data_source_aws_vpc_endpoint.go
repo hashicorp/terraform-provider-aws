@@ -47,6 +47,10 @@ func dataSourceAwsVpcEndpoint() *schema.Resource {
 				Elem:     &schema.Schema{Type: schema.TypeString},
 				Set:      schema.HashString,
 			},
+			"owner_id": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"policy": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -176,6 +180,7 @@ func dataSourceAwsVpcEndpointRead(d *schema.ResourceData, meta interface{}) erro
 	if err != nil {
 		return fmt.Errorf("error setting network_interface_ids: %s", err)
 	}
+	d.Set("owner_id", vpce.OwnerId)
 	policy, err := structure.NormalizeJsonString(aws.StringValue(vpce.PolicyDocument))
 	if err != nil {
 		return fmt.Errorf("policy contains an invalid JSON: %s", err)

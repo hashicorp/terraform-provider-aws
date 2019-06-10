@@ -104,6 +104,7 @@ func TestAccAWSVpcEndpoint_gatewayBasic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "private_dns_enabled", "false"),
 					resource.TestCheckResourceAttr(resourceName, "requester_managed", "false"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					testAccCheckResourceAttrAccountID(resourceName, "owner_id"),
 				),
 			},
 		},
@@ -139,6 +140,7 @@ func TestAccAWSVpcEndpoint_gatewayWithRouteTableAndPolicyAndTags(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "tags.Environment", "test"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Usage", "original"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Name", rName),
+					testAccCheckResourceAttrAccountID(resourceName, "owner_id"),
 				),
 			},
 			{
@@ -157,6 +159,7 @@ func TestAccAWSVpcEndpoint_gatewayWithRouteTableAndPolicyAndTags(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Usage", "changed"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Name", rName),
+					testAccCheckResourceAttrAccountID(resourceName, "owner_id"),
 				),
 			},
 			{
@@ -254,6 +257,7 @@ func TestAccAWSVpcEndpoint_interfaceBasic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "private_dns_enabled", "false"),
 					resource.TestCheckResourceAttr(resourceName, "requester_managed", "false"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					testAccCheckResourceAttrAccountID(resourceName, "owner_id"),
 				),
 			},
 		},
@@ -285,6 +289,7 @@ func TestAccAWSVpcEndpoint_interfaceWithSubnetAndSecurityGroup(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "requester_managed", "false"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Name", rName),
+					testAccCheckResourceAttrAccountID(resourceName, "owner_id"),
 				),
 			},
 			{
@@ -301,6 +306,7 @@ func TestAccAWSVpcEndpoint_interfaceWithSubnetAndSecurityGroup(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "private_dns_enabled", "true"),
 					resource.TestCheckResourceAttr(resourceName, "requester_managed", "false"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					testAccCheckResourceAttrAccountID(resourceName, "owner_id"),
 				),
 			},
 			{
@@ -338,6 +344,7 @@ func TestAccAWSVpcEndpoint_interfaceNonAWSService(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "state", "available"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Name", rName),
+					testAccCheckResourceAttrAccountID(resourceName, "owner_id"),
 				),
 			},
 		},
