@@ -694,7 +694,7 @@ func TestAccAWSEIP_BYOIPAddress_custom(t *testing.T) {
 
 	address := os.Getenv("AWS_EC2_EIP_BYOIP_ADDRESS")
 
-	resource.ParallelTest(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 		PreCheck:      func() { testAccPreCheck(t) },
 		IDRefreshName: resourceName,
 		Providers:     testAccProviders,
@@ -728,7 +728,7 @@ func TestAccAWSEIP_BYOIPAddress_custom_with_PublicIpv4Pool(t *testing.T) {
 	address := os.Getenv("AWS_EC2_EIP_BYOIP_ADDRESS")
 	poolName := os.Getenv("AWS_EC2_EIP_PUBLIC_IPV4_POOL")
 
-	resource.ParallelTest(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 		PreCheck:      func() { testAccPreCheck(t) },
 		IDRefreshName: resourceName,
 		Providers:     testAccProviders,
@@ -740,6 +740,7 @@ func TestAccAWSEIP_BYOIPAddress_custom_with_PublicIpv4Pool(t *testing.T) {
 					testAccCheckAWSEIPExists(resourceName, &conf),
 					testAccCheckAWSEIPAttributes(&conf),
 					resource.TestCheckResourceAttr(resourceName, "public_ip", address),
+					resource.TestCheckResourceAttr(resourceName, "public_ipv4_pool", poolName),
 				),
 			},
 		},
@@ -1034,8 +1035,8 @@ func testAccAWSEIPConfig_BYOIPAddress_custom_with_PublicIpv4Pool(address string,
 	return fmt.Sprintf(`
 resource "aws_eip" "bar" {
   vpc     = true
-  address = "%s"
-  public_ipv4_pool = %s
+  address = "%[1]s"
+  public_ipv4_pool = "%[2]s"
 }
 `, address, poolname)
 }
