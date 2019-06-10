@@ -13,6 +13,7 @@ ENHANCEMENTS:
 BUG FIXES:
 
 * resource/aws_eks_cluster: Increase default creation timeout to 30 minutes [GH-8909]
+* resource/aws_iam_service_linked_role: Automatically suppress Application Autoscaling `custom_suffix` differences [GH-8931]
 
 ## 2.14.0 (June 06, 2019)
 
