@@ -18,16 +18,16 @@ The following shows outputing all cidr blocks for every subnet id in a vpc.
 
 ```hcl
 data "aws_subnet_ids" "example" {
-  vpc_id = "${var.vpc_id}"
+  vpc_id = var.vpc_id
 }
 
 data "aws_subnet" "example" {
-  count = "${length(data.aws_subnet_ids.example.ids)}"
-  id    = "${data.aws_subnet_ids.example.ids[count.index]}"
+  count = length(data.aws_subnet_ids.example.ids)
+  id    = tolist(data.aws_subnet_ids.example.ids)[count.index]
 }
 
 output "subnet_cidr_blocks" {
-  value = ["${data.aws_subnet.example.*.cidr_block}"]
+  value = data.aws_subnet.example.*.cidr_block
 }
 ```
 
@@ -37,7 +37,7 @@ can loop through the subnets, putting instances across availability zones.
 
 ```hcl
 data "aws_subnet_ids" "private" {
-  vpc_id = "${var.vpc_id}"
+  vpc_id = var.vpc_id
 
   tags = {
     Tier = "Private"
@@ -46,9 +46,9 @@ data "aws_subnet_ids" "private" {
 
 resource "aws_instance" "app" {
   count         = "3"
-  ami           = "${var.ami}"
+  ami           = var.ami
   instance_type = "t2.micro"
-  subnet_id     = "${element(data.aws_subnet_ids.private.ids, count.index)}"
+  subnet_id     = element(data.aws_subnet_ids.private.ids, count.index)
 }
 ```
 
