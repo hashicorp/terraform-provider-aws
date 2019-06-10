@@ -8,6 +8,7 @@ ENHANCEMENTS:
 * resource/aws_redshift_parameter_group: Add `arn` attribute and `tags` argument [GH-8894]
 * resource/aws_redshift_snapshot_copy_grant: Add `arn` attribute and support `tags` updates [GH-8894]
 * resource/aws_redshift_subnet_group: Add `arn` attribute [GH-8894]
+* resource/aws_ses_identity_notification_topic: Add `include_original_headers` argument [GH-7293]
 
 BUG FIXES:
 
