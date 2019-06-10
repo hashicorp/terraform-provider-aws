@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/redshift"
 	"github.com/hashicorp/terraform/helper/schema"
 )
@@ -25,6 +26,11 @@ func resourceAwsRedshiftEventSubscription() *schema.Resource {
 			Update: schema.DefaultTimeout(40 * time.Minute),
 		},
 		Schema: map[string]*schema.Schema{
+			"arn": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+
 			"name": {
 				Type:     schema.TypeString,
 				Required: true,
@@ -68,11 +74,7 @@ func resourceAwsRedshiftEventSubscription() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"tags": {
-				Type:     schema.TypeMap,
-				Optional: true,
-				ForceNew: true,
-			},
+			"tags": tagsSchema(),
 		},
 	}
 }
@@ -105,6 +107,16 @@ func resourceAwsRedshiftEventSubscriptionCreate(d *schema.ResourceData, meta int
 
 func resourceAwsRedshiftEventSubscriptionRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).redshiftconn
+
+	arn := arn.ARN{
+		Partition: meta.(*AWSClient).partition,
+		Service:   "redshift",
+		Region:    meta.(*AWSClient).region,
+		AccountID: meta.(*AWSClient).accountid,
+		Resource:  fmt.Sprintf("eventsubscription:%s", d.Id()),
+	}.String()
+
+	d.Set("arn", arn)
 
 	sub, err := resourceAwsRedshiftEventSubscriptionRetrieve(d.Id(), conn)
 	if err != nil {
@@ -175,6 +187,8 @@ func resourceAwsRedshiftEventSubscriptionRetrieve(name string, conn *redshift.Re
 func resourceAwsRedshiftEventSubscriptionUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).redshiftconn
 
+	d.Partial(true)
+
 	req := &redshift.ModifyEventSubscriptionInput{
 		SubscriptionName: aws.String(d.Id()),
 		SnsTopicArn:      aws.String(d.Get("sns_topic_arn").(string)),
@@ -190,6 +204,14 @@ func resourceAwsRedshiftEventSubscriptionUpdate(d *schema.ResourceData, meta int
 	if err != nil {
 		return fmt.Errorf("Modifying Redshift Event Subscription %s failed: %s", d.Id(), err)
 	}
+
+	if tagErr := setTagsRedshift(conn, d); tagErr != nil {
+		return tagErr
+	} else {
+		d.SetPartial("tags")
+	}
+
+	d.Partial(false)
 
 	return nil
 }
