@@ -91,9 +91,25 @@ func resourceAwsRedshiftParameterGroupCreate(d *schema.ResourceData, meta interf
 	}
 
 	d.SetId(*createOpts.ParameterGroupName)
-	log.Printf("[INFO] Redshift Parameter Group ID: %s", d.Id())
 
-	return resourceAwsRedshiftParameterGroupUpdate(d, meta)
+	if v := d.Get("parameter").(*schema.Set); v.Len() > 0 {
+		parameters, err := expandRedshiftParameters(v.List())
+
+		if err != nil {
+			return fmt.Errorf("error expanding parameter: %s", err)
+		}
+
+		modifyOpts := redshift.ModifyClusterParameterGroupInput{
+			ParameterGroupName: aws.String(d.Id()),
+			Parameters:         parameters,
+		}
+
+		if _, err := conn.ModifyClusterParameterGroup(&modifyOpts); err != nil {
+			return fmt.Errorf("error adding Redshift Parameter Group (%s) parameters: %s", d.Id(), err)
+		}
+	}
+
+	return resourceAwsRedshiftParameterGroupRead(d, meta)
 }
 
 func resourceAwsRedshiftParameterGroupRead(d *schema.ResourceData, meta interface{}) error {
