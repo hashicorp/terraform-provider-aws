@@ -208,6 +208,7 @@ The following arguments are supported:
 * `namespace_type` - (Optional) The namespace to use in storing build artifacts. If `type` is set to `S3`, then valid values for this parameter are: `BUILD_ID` or `NONE`.
 * `packaging` - (Optional) The type of build output artifact to create. If `type` is set to `S3`, valid values for this parameter are: `NONE` or `ZIP`
 * `path` - (Optional) If `type` is set to `S3`, this is the path to the output artifact
+* `override_artifact_name` - (Optional) If the flag is set, a name specified in the buildspec file overrides the artifact name.
 
 `cache` supports the following:
 

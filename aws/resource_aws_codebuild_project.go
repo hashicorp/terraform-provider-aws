@@ -604,6 +604,10 @@ func expandProjectArtifactData(data map[string]interface{}) codebuild.ProjectArt
 		projectArtifacts.Path = aws.String(data["path"].(string))
 	}
 
+	if data["override_artifact_name"] != nil {
+		projectArtifacts.OverrideArtifactName = aws.Bool(data["override_artifact_name"].(bool))
+	}
+
 	return projectArtifacts
 }
 
