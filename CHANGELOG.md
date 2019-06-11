@@ -15,6 +15,7 @@ BUG FIXES:
 * resource/aws_eks_cluster: Increase default creation timeout to 30 minutes [GH-8909]
 * resource/aws_elasticache_replication_group: Implement passthrough state migration for upstream `missing MigrateState function` error in Terraform 0.12 [GH-8887]
 * resource/aws_iam_service_linked_role: Automatically suppress Application Autoscaling `custom_suffix` differences [GH-8931]
+* resource/aws_dynamodb_table_item: add a nil check when building the table item ID [GH-8900]
 
 ## 2.14.0 (June 06, 2019)
 
