@@ -279,6 +279,7 @@ resource "aws_route53_health_check" "foo" {
   request_interval = "30"
   measure_latency = true
   invert_healthcheck = true
+  disabled = false
 
   tags = {
     Name = "tf-test-health-check"
@@ -296,6 +297,7 @@ resource "aws_route53_health_check" "foo" {
   request_interval = "30"
   measure_latency = true
   invert_healthcheck = false
+  disabled = false
 
   tags = {
     Name = "tf-test-health-check"
@@ -387,6 +389,7 @@ resource "aws_route53_health_check" "foo" {
   request_interval = "30"
   measure_latency = true
   invert_healthcheck = false
+  disabled = false
   search_string = "OK"
 
   tags = {
@@ -405,6 +408,7 @@ resource "aws_route53_health_check" "foo" {
   request_interval = "30"
   measure_latency = true
   invert_healthcheck = true
+  disabled = false
   search_string = "FAILED"
 
   tags = {
@@ -423,6 +427,7 @@ resource "aws_route53_health_check" "foo" {
   request_interval = "30"
   measure_latency = true
   invert_healthcheck = true
+  disabled = false
 
   tags = {
     Name = "tf-test-health-check"
@@ -441,6 +446,7 @@ resource "aws_route53_health_check" "foo" {
   measure_latency = true
   invert_healthcheck = true
   enable_sni = true
+  disabled = false
 
   tags = {
     Name = "tf-test-health-check"
@@ -459,6 +465,7 @@ resource "aws_route53_health_check" "foo" {
   measure_latency = true
   invert_healthcheck = true
   enable_sni = false
+  disabled = false
 
   tags = {
     Name = "tf-test-health-check"
