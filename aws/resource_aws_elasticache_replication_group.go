@@ -225,29 +225,19 @@ func resourceAwsElasticacheReplicationGroup() *schema.Resource {
 			},
 		},
 		SchemaVersion: 1,
-		MigrateState:  resourceAwsElasticacheReplicationGroupMigrateState,
+
+		// SchemaVersion: 1 did not include any state changes via MigrateState.
+		// Perform a no-operation state upgrade for Terraform 0.12 compatibility.
+		// Future state migrations should be performed with StateUpgraders.
+		MigrateState: func(v int, inst *terraform.InstanceState, meta interface{}) (*terraform.InstanceState, error) {
+			return inst, nil
+		},
 
 		Timeouts: &schema.ResourceTimeout{
 			Create: schema.DefaultTimeout(60 * time.Minute),
 			Delete: schema.DefaultTimeout(40 * time.Minute),
 			Update: schema.DefaultTimeout(40 * time.Minute),
 		},
-	}
-}
-
-func resourceAwsElasticacheReplicationGroupMigrateState(v int, inst *terraform.InstanceState, meta interface{}) (*terraform.InstanceState, error) {
-	switch v {
-	case 0:
-		log.Printf("[WARN] Elasticache Replication Group (%s) v%d; migrating to v1 (noop)", inst, v)
-
-		fallthrough
-
-	case 1:
-		// Current version
-		return inst, nil
-
-	default:
-		return inst, fmt.Errorf("Unexpected schema version: %d", v)
 	}
 }
 
