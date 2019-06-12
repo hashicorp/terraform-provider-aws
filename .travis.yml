@@ -5,29 +5,33 @@ services:
 language: go
 go:
   - "1.12.x"
-env: GOFLAGS=-mod=vendor
-
 git:
   depth: 1
 
-install:
-  # This script is used by the Travis build to install a cookie for
-  # go.googlesource.com so rate limits are higher when using `go get` to fetch
-  # packages that live there.
-  # See: https://github.com/golang/go/issues/12933
-  - bash scripts/gogetcookie.sh
-  - make tools
+env:
+  global:
+    GOFLAGS=-mod=vendor
 
-script:
-  - make lint
-  - make test
-  - make website-lint
-  - make website-test
-
-branches:
-  only:
-    - master
 matrix:
   fast_finish: true
   allow_failures:
     - go: tip
+  include:
+  - go:
+    script: make test
+  - go:
+    script: make lint
+  - go:
+    script: make website-test
+
+install:
+# This script is used by the Travis build to install a cookie for
+# go.googlesource.com so rate limits are higher when using `go get` to fetch
+# packages that live there.
+# See: https://github.com/golang/go/issues/12933
+- bash scripts/gogetcookie.sh
+- make tools
+
+branches:
+  only:
+    - master
