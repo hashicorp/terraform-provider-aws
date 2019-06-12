@@ -105,14 +105,14 @@ resource "aws_codebuild_project" "example" {
     image_pull_credentials_type = "CODEBUILD"
 
     environment_variable {
-      "name"  = "SOME_KEY1"
-      "value" = "SOME_VALUE1"
+      name  = "SOME_KEY1"
+      value = "SOME_VALUE1"
     }
 
     environment_variable {
-      "name"  = "SOME_KEY2"
-      "value" = "SOME_VALUE2"
-      "type"  = "PARAMETER_STORE"
+      name  = "SOME_KEY2"
+      value = "SOME_VALUE2"
+      type  = "PARAMETER_STORE"
     }
   }
 
@@ -137,7 +137,7 @@ resource "aws_codebuild_project" "example" {
   }
 
   tags = {
-    "Environment" = "Test"
+    Environment = "Test"
   }
 }
 
@@ -163,8 +163,8 @@ resource "aws_codebuild_project" "project-with-cache" {
     image_pull_credentials_type = "CODEBUILD"
 
     environment_variable {
-      "name"  = "SOME_KEY1"
-      "value" = "SOME_VALUE1"
+      name  = "SOME_KEY1"
+      value = "SOME_VALUE1"
     }
   }
 
@@ -175,7 +175,7 @@ resource "aws_codebuild_project" "project-with-cache" {
   }
 
   tags = {
-    "Environment" = "Test"
+    Environment = "Test"
   }
 }
 ```
