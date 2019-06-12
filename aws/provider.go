@@ -868,6 +868,7 @@ func init() {
 		"appsync",
 		"athena",
 		"autoscaling",
+		"autoscalingplans",
 		"backup",
 		"batch",
 		"budgets",
