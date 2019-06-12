@@ -455,6 +455,10 @@ func resourceAwsEcsTaskDefinitionRead(d *schema.ResourceData, meta interface{}) 
 		return err
 	}
 
+	if err := d.Set("proxy_configuration", flattenProxyConfiguration(taskDefinition.ProxyConfiguration)); err != nil {
+		return err
+	}
+
 	return nil
 }
 
@@ -470,6 +474,28 @@ func flattenPlacementConstraints(pcs []*ecs.TaskDefinitionPlacementConstraint) [
 		results = append(results, c)
 	}
 	return results
+}
+
+func flattenProxyConfiguration(pc *ecs.ProxyConfiguration) []map[string]interface{} {
+	if pc == nil {
+		return nil
+	}
+
+	meshProperties := make(map[string]string)
+	if pc.Properties != nil {
+		for _, prop := range pc.Properties {
+			meshProperties[*prop.Name] = *prop.Value
+		}
+	}
+
+	config := make(map[string]interface{})
+	config["container_name"] = *pc.ContainerName
+	config["type"] = *pc.Type
+	config["properties"] = meshProperties
+
+	return []map[string]interface{} {
+		config,
+	}
 }
 
 func resourceAwsEcsTaskDefinitionUpdate(d *schema.ResourceData, meta interface{}) error {
