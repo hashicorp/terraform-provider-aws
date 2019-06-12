@@ -24,7 +24,7 @@ require (
 	github.com/modern-go/reflect2 v1.0.1 // indirect
 	github.com/pquerna/otp v1.2.0
 	github.com/spf13/pflag v1.0.3 // indirect
-	github.com/terraform-providers/terraform-provider-template v1.0.0
+	github.com/terraform-providers/terraform-provider-template v2.1.2+incompatible
 	github.com/terraform-providers/terraform-provider-tls v1.2.0
 	gopkg.in/yaml.v2 v2.2.2
 	k8s.io/apimachinery v0.0.0-20190204010555-a98ff070d70e // indirect

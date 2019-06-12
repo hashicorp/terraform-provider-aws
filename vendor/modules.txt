@@ -383,7 +383,7 @@ github.com/hashicorp/go-safetemp
 github.com/hashicorp/go-uuid
 # github.com/hashicorp/go-version v1.2.0
 github.com/hashicorp/go-version
-# github.com/hashicorp/hcl v0.0.0-20180404174102-ef8a98b0bbce
+# github.com/hashicorp/hcl v1.0.0
 github.com/hashicorp/hcl
 github.com/hashicorp/hcl/hcl/ast
 github.com/hashicorp/hcl/hcl/parser
@@ -563,7 +563,7 @@ github.com/spf13/jwalterweatherman
 github.com/spf13/pflag
 # github.com/spf13/viper v1.0.2
 github.com/spf13/viper
-# github.com/terraform-providers/terraform-provider-template v1.0.0
+# github.com/terraform-providers/terraform-provider-template v2.1.2+incompatible
 github.com/terraform-providers/terraform-provider-template/template
 # github.com/terraform-providers/terraform-provider-tls v1.2.0
 github.com/terraform-providers/terraform-provider-tls/tls
