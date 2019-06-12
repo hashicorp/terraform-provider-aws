@@ -55,6 +55,7 @@ The Terraform AWS Provider allows the following endpoints to be customized:
 - `appsync`
 - `athena`
 - `autoscaling`
+- `autoscalingplans`
 - `backup`
 - `batch`
 - `budgets`

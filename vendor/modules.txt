@@ -39,6 +39,7 @@ github.com/aws/aws-sdk-go/service/appmesh
 github.com/aws/aws-sdk-go/service/appsync
 github.com/aws/aws-sdk-go/service/athena
 github.com/aws/aws-sdk-go/service/autoscaling
+github.com/aws/aws-sdk-go/service/autoscalingplans
 github.com/aws/aws-sdk-go/service/backup
 github.com/aws/aws-sdk-go/service/batch
 github.com/aws/aws-sdk-go/service/budgets
