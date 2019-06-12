@@ -548,39 +548,18 @@ resource "aws_ecs_task_definition" "test" {
   family = %q
   network_mode = "awsvpc"
 
-  proxy_configuration = {
+  proxy_configuration {
     type = %q
     container_name = %q
-    properties = [
-      {
-        name = "IgnoredUID"
-        value = %q
-      },
-      {
-        name = "IgnoredGID"
-        value = %q
-      },
-      {
-        name = "AppPorts"
-        value = %q
-      },
-      {
-        name = "ProxyIngressPort",
-        value = %q
-      },
-      {
-        name = "ProxyEgressPort",
-        value = %q
-      },
-      {
-        name = "EgressIgnoredPorts"
-        value = %q
-      },
-      {
-        name = "EgressIgnoredIPs",
-        value = %q
-      }
-    ]
+    properties = {
+      IgnoredUID = %q
+      IgnoredGID = %q
+      AppPorts = %q
+      ProxyIngressPort = %q
+      ProxyEgressPort = %q
+      EgressIgnoredPorts = %q
+      EgressIgnoredIPs = %q
+    }
   }
 
   container_definitions = <<DEFINITION
@@ -596,7 +575,7 @@ resource "aws_ecs_task_definition" "test" {
 DEFINITION
 
 }
-`, rName, rName, containerName, proxyType, containerName, ignoredUid, ignoredGid, appPorts, proxyIngressPort, proxyEgressPort, egressIgnoredPorts, egressIgnoredIPs)
+`, rName, rName, proxyType, containerName,  ignoredUid, ignoredGid, appPorts, proxyIngressPort, proxyEgressPort, egressIgnoredPorts, egressIgnoredIPs, containerName)
 }
 
 func testAccCheckAWSEcsTaskDefinitionProxyConfiguration(after *ecs.TaskDefinition, containerName string, proxyType string,

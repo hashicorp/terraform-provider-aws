@@ -65,6 +65,27 @@ contains only a small subset of the available parameters.
 ]
 ```
 
+### With AppMesh Proxy
+
+```hcl
+resource "aws_ecs_task_definition" "service" {
+  family                = "service"
+  container_definitions = "${file("task-definitions/service.json")}"
+
+  proxy_configuration {
+    type = "APPMESH"
+    container_name = "applicationContainerName"
+    properties = {
+      IgnoredUID = "1337"
+      AppPorts = "8080"
+      ProxyIngressPort = 15000
+      ProxyEgressPort = 15001
+      EgressIgnoredIPs = "169.254.170.2,169.254.169.254"
+    }
+  }
+}
+```
+
 ## Argument Reference
 
 ### Top-Level Arguments
@@ -139,48 +160,7 @@ Guide](http://docs.aws.amazon.com/AmazonECS/latest/developerguide/cluster-query-
 
 * `type` - (Optional) The proxy type. The only supported value is `APPMESH`.
 * `container_name` - (Required) The name of the container that will serve as the App Mesh proxy.
-* `properties` - (Required) The set of network configuration parameters to provide the Container Network Interface (CNI) plugin, specified as a list of [Proxy Configuration Properties](#proxy-configuration-property-arguments).
-
-  
-##### Proxy Configuration Property Arguments
-* `name` - (Required) Variable name. The only supported names names are: `IgnoredUID`, `IgnoredGID`, `AppPorts`, `ProxyIngressPort`, `ProxyEgressPort`, `EgressIgnoredPorts`, `EgressIgnoredIPs` 
-* `value` - (Required) Variable value. Separate multiple values with a comma.
-
-
-##### Example Usage:
-```hcl
-resource "aws_ecs_task_definition" "service" {
-  family                = "service"
-  container_definitions = "${file("task-definitions/service.json")}"
-
-  proxy_configuration = {
-    type = "APPMESH"
-    container_name = "applicationContainerName"
-    properties = [
-      {
-        name = "IgnoredUID"
-        value = "1337"
-      },
-      {
-        name = "AppPorts"
-        value = "8080"
-      },
-      {
-        name = "ProxyIngressPort",
-        value = "15000"
-      },
-      {
-        name = "ProxyEgressPort",
-        value = "15001"
-      },
-      {
-        name = "EgressIgnoredIPs",
-        value = "169.254.170.2,169.254.169.254"
-      }
-    ]
-  }
-}
-```
+* `properties` - (Required) The set of network configuration parameters to provide the Container Network Interface (CNI) plugin, specified a key-value mapping.
 
 ## Attributes Reference
 

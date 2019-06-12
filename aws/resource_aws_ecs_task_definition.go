@@ -243,33 +243,14 @@ func resourceAwsEcsTaskDefinition() *schema.Resource {
 							ForceNew: true,
 						},
 						"properties": {
-							Type:     schema.TypeSet,
+							Type:     schema.TypeMap,
+							Elem:     &schema.Schema{Type: schema.TypeString},
 							Optional: true,
 							ForceNew: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"name": {
-										Type:     schema.TypeString,
-										Required: true,
-										ForceNew: true,
-									},
-									"value": {
-										Type:     schema.TypeString,
-										Required: true,
-										ForceNew: true,
-									},
-								},
-							},
-							Set: func(v interface{}) int {
-								var buf bytes.Buffer
-								m := v.(map[string]interface{})
-								buf.WriteString(fmt.Sprintf("%s-", m["name"].(string)))
-								buf.WriteString(fmt.Sprintf("%s-", m["value"].(string)))
-								return hashcode.String(buf.String())
-							},
 						},
 						"type": {
 							Type:     schema.TypeString,
+							Default:  ecs.ProxyConfigurationTypeAppmesh,
 							Optional: true,
 							ForceNew: true,
 							ValidateFunc: validation.StringInSlice([]string{
@@ -379,19 +360,16 @@ func resourceAwsEcsTaskDefinitionCreate(d *schema.ResourceData, meta interface{}
 		containerName := configMap["container_name"].(string)
 		proxyType := configMap["type"].(string)
 
-		rawProperties := configMap["properties"].(*schema.Set).List()
+		rawProperties := configMap["properties"].(map[string]interface{})
 
 		properties := make([]*ecs.KeyValuePair, len(rawProperties))
-
-		for i, rawProperty := range rawProperties {
-			propertyMap := rawProperty.(map[string]interface{})
-			propertyName := propertyMap["name"].(string)
-			propertyValue := propertyMap["value"].(string)
-
+		i := 0
+		for name, value := range rawProperties {
 			properties[i] = &ecs.KeyValuePair{
-				Name:  aws.String(propertyName),
-				Value: aws.String(propertyValue),
+				Name:  aws.String(name),
+				Value: aws.String(value.(string)),
 			}
+			i++
 		}
 
 		var ecsProxyConfig ecs.ProxyConfiguration
