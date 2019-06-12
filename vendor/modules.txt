@@ -180,7 +180,7 @@ github.com/aws/aws-sdk-go/private/protocol/query/queryutil
 github.com/aws/aws-sdk-go/internal/sdkuri
 # github.com/beevik/etree v1.1.0
 github.com/beevik/etree
-# github.com/bflad/tfproviderlint v0.2.0
+# github.com/bflad/tfproviderlint v0.3.0
 github.com/bflad/tfproviderlint/cmd/tfproviderlint
 github.com/bflad/tfproviderlint/passes/AT001
 github.com/bflad/tfproviderlint/passes/AT002
@@ -202,6 +202,8 @@ github.com/bflad/tfproviderlint/passes/acctestfunc
 github.com/bflad/tfproviderlint/passes/resourcedataset
 github.com/bflad/tfproviderlint/passes/schemaresource
 github.com/bflad/tfproviderlint/passes/schemaschema
+github.com/bflad/tfproviderlint/helper/terraformtype
+github.com/bflad/tfproviderlint/passes/schemamap
 # github.com/bgentry/go-netrc v0.0.0-20140422174119-9fd32a8b3d3d
 github.com/bgentry/go-netrc/netrc
 # github.com/bgentry/speakeasy v0.1.0
