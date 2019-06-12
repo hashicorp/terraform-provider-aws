@@ -3,8 +3,7 @@ sudo: required
 services:
   - docker
 language: go
-go:
-  - "1.12.x"
+
 git:
   depth: 1
 
@@ -17,13 +16,13 @@ matrix:
   allow_failures:
     - go: tip
   include:
-  - go:
+  - go: "1.12.x"
     name: "Code Lint"
     script: make lint
-  - go:
+  - go: "1.12.x"
     name: "Code UnitTest"
     script: make test
-  - go:
+  - go: "1.12.x"
     name: "Website"
     script:
       - make website-test
