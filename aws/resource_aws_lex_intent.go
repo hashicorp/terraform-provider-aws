@@ -437,7 +437,7 @@ func resourceAwsLexIntentDelete(d *schema.ResourceData, meta interface{}) error 
 	})
 
 	if err != nil {
-		return fmt.Errorf("error deleteing intent %s: %s", d.Id(), err)
+		return fmt.Errorf("error deleting intent %s: %s", d.Id(), err)
 	}
 
 	return nil
