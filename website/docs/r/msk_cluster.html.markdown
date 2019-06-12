@@ -77,7 +77,7 @@ output "zookeeper_connect_string" {
 }
 
 output "bootstrap_brokers" {
-    value = "${aws_msk_cluster.example.bootstrap_brokers"}
+    value = "${aws_msk_cluster.example.bootstrap_brokers}"
 }
 
 ```
