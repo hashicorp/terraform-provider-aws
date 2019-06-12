@@ -23,13 +23,13 @@ func TestAccAwsLexIntent(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckAwsLexIntentDestroy(testIntentID, lexVersionLatest),
+		CheckDestroy: testAccCheckAwsLexIntentDestroy(testIntentID, "$LATEST"),
 
 		Steps: []resource.TestStep{
 			{
 				Config: fmt.Sprintf(testAccAwsLexIntentMinConfig, testID),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAwsLexIntentExists(testIntentID, lexVersionLatest),
+					testAccCheckAwsLexIntentExists(testIntentID, "$LATEST"),
 
 					// user provided attributes
 					resource.TestCheckResourceAttr(resourceName, "fulfillment_activity.#", "1"),
@@ -147,7 +147,7 @@ func testAccCheckAwsLexIntentDestroy(intentName, intentVersion string) resource.
 
 		_, err := conn.GetIntent(&lexmodelbuildingservice.GetIntentInput{
 			Name:    aws.String(intentName),
-			Version: aws.String(lexVersionLatest),
+			Version: aws.String("$LATEST"),
 		})
 
 		if err != nil {

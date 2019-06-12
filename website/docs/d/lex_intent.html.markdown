@@ -23,7 +23,7 @@ data "aws_lex_intent" "order_flowers" {
 
 The following arguments are supported:
 
-* `name` _(Required)_:
+* `name` _(**Required**)_:
 
     The name of the slot type. The name is case sensitive.
 

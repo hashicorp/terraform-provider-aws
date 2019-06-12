@@ -4,9 +4,11 @@ import (
 	"fmt"
 	"log"
 	"regexp"
+	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/lexmodelbuildingservice"
+	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/helper/schema"
 	"github.com/hashicorp/terraform/helper/validation"
 )
@@ -19,7 +21,16 @@ func resourceAwsLexIntent() *schema.Resource {
 		Delete: resourceAwsLexIntentDelete,
 
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			State: func(d *schema.ResourceData, m interface{}) ([]*schema.ResourceData, error) {
+				// The version is not required for import but it is required for the get request.
+				d.Set("version", "$LATEST")
+				return []*schema.ResourceData{d}, nil
+			},
+		},
+
+		Timeouts: &schema.ResourceTimeout{
+			Update: schema.DefaultTimeout(time.Minute),
+			Delete: schema.DefaultTimeout(5 * time.Minute),
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -44,8 +55,8 @@ func resourceAwsLexIntent() *schema.Resource {
 			"description": {
 				Type:         schema.TypeString,
 				Optional:     true,
-				Default:      lexDescriptionDefault,
-				ValidateFunc: validation.StringLenBetween(lexDescriptionMinLength, lexDescriptionMaxLength),
+				Default:      "",
+				ValidateFunc: validation.StringLenBetween(0, 200),
 			},
 			"dialog_code_hook": {
 				Type:     schema.TypeList,
@@ -59,7 +70,24 @@ func resourceAwsLexIntent() *schema.Resource {
 				Optional: true,
 				MinItems: 1,
 				MaxItems: 1,
-				Elem:     lexFollowUpPromptResource,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"prompt": {
+							Type:     schema.TypeList,
+							Required: true,
+							MinItems: 1,
+							MaxItems: 1,
+							Elem:     lexPromptResource,
+						},
+						"rejection_statement": {
+							Type:     schema.TypeList,
+							Required: true,
+							MinItems: 1,
+							MaxItems: 1,
+							Elem:     lexStatementResource,
+						},
+					},
+				},
 			},
 			// Must be required because required by updates even though optional for creates
 			"fulfillment_activity": {
@@ -67,15 +95,33 @@ func resourceAwsLexIntent() *schema.Resource {
 				Required: true,
 				MinItems: 1,
 				MaxItems: 1,
-				Elem:     lexFulfilmentActivityResource,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"code_hook": {
+							Type:     schema.TypeList,
+							Optional: true,
+							MinItems: 1,
+							MaxItems: 1,
+							Elem:     lexCodeHookResource,
+						},
+						"type": {
+							Type:     schema.TypeString,
+							Required: true,
+							ValidateFunc: validation.StringInSlice([]string{
+								lexmodelbuildingservice.FulfillmentActivityTypeCodeHook,
+								lexmodelbuildingservice.FulfillmentActivityTypeReturnIntent,
+							}, false),
+						},
+					},
+				},
 			},
 			"name": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
 				ValidateFunc: validation.All(
-					validation.StringLenBetween(lexNameMinLength, lexNameMaxLength),
-					validation.StringMatch(regexp.MustCompile(lexNameRegex), ""),
+					validation.StringLenBetween(1, 100),
+					validation.StringMatch(regexp.MustCompile(`^([A-Za-z]_?)+$`), ""),
 				),
 			},
 			"parent_intent_signature": {
@@ -92,27 +138,96 @@ func resourceAwsLexIntent() *schema.Resource {
 			"sample_utterances": {
 				Type:     schema.TypeList,
 				Optional: true,
-				MinItems: lexUtterancesMin,
-				MaxItems: lexUtterancesMax,
+				MinItems: 0,
+				MaxItems: 1500,
 				Elem: &schema.Schema{
 					Type:         schema.TypeString,
-					ValidateFunc: validation.StringLenBetween(lexUtteranceMinLength, lexUtteranceMaxLength),
+					ValidateFunc: validation.StringLenBetween(1, 200),
 				},
 			},
 			"slot": {
 				Type:     schema.TypeSet,
 				Optional: true,
-				MinItems: lexSlotsMin,
-				MaxItems: lexSlotsMax,
-				Elem:     lexSlotResource,
+				MinItems: 0,
+				MaxItems: 100,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"description": {
+							Type:         schema.TypeString,
+							Optional:     true,
+							Default:      "",
+							ValidateFunc: validation.StringLenBetween(0, 200),
+						},
+						"name": {
+							Type:     schema.TypeString,
+							Required: true,
+							ValidateFunc: validation.All(
+								validation.StringLenBetween(1, 100),
+								validation.StringMatch(regexp.MustCompile(`^([A-Za-z]_?)+$`), ""),
+							),
+						},
+						"priority": {
+							Type:         schema.TypeInt,
+							Optional:     true,
+							Default:      0,
+							ValidateFunc: validation.IntBetween(0, 100),
+						},
+						"response_card": {
+							Type:         schema.TypeString,
+							Optional:     true,
+							ValidateFunc: validation.StringLenBetween(1, 50000),
+						},
+						"sample_utterances": {
+							Type:     schema.TypeList,
+							Optional: true,
+							MinItems: 1,
+							MaxItems: 10,
+							Elem: &schema.Schema{
+								Type:         schema.TypeString,
+								ValidateFunc: validation.StringLenBetween(1, 200),
+							},
+						},
+						"slot_constraint": {
+							Type:     schema.TypeString,
+							Required: true,
+							ValidateFunc: validation.StringInSlice([]string{
+								lexmodelbuildingservice.SlotConstraintOptional,
+								lexmodelbuildingservice.SlotConstraintRequired,
+							}, false),
+						},
+						"slot_type": {
+							Type:     schema.TypeString,
+							Required: true,
+							ValidateFunc: validation.All(
+								validation.StringLenBetween(1, 100),
+								validation.StringMatch(regexp.MustCompile(`^((AMAZON\.)_?|[A-Za-z]_?)+`), ""),
+							),
+						},
+						"slot_type_version": {
+							Type:     schema.TypeString,
+							Optional: true,
+							ValidateFunc: validation.All(
+								validation.StringLenBetween(1, 64),
+								validation.StringMatch(regexp.MustCompile(`\$LATEST|[0-9]+`), ""),
+							),
+						},
+						"value_elicitation_prompt": {
+							Type:     schema.TypeList,
+							Optional: true,
+							MinItems: 1,
+							MaxItems: 1,
+							Elem:     lexPromptResource,
+						},
+					},
+				},
 			},
 			"version": {
 				Type:     schema.TypeString,
 				Optional: true,
-				Default:  lexVersionDefault,
+				Default:  "$LATEST",
 				ValidateFunc: validation.All(
-					validation.StringLenBetween(lexVersionMinLength, lexVersionMaxLength),
-					validation.StringMatch(regexp.MustCompile(lexVersionRegex), ""),
+					validation.StringLenBetween(1, 64),
+					validation.StringMatch(regexp.MustCompile(`\$LATEST|[0-9]+`), ""),
 				),
 			},
 		},
@@ -126,8 +241,6 @@ func resourceAwsLexIntentCreate(d *schema.ResourceData, meta interface{}) error 
 	input := &lexmodelbuildingservice.PutIntentInput{
 		Name: aws.String(name),
 	}
-
-	// optional attributes
 
 	if v, ok := d.GetOk("conclusion_statement"); ok {
 		input.ConclusionStatement = expandLexStatement(expandLexObject(v))
@@ -181,30 +294,23 @@ func resourceAwsLexIntentCreate(d *schema.ResourceData, meta interface{}) error 
 func resourceAwsLexIntentRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).lexmodelconn
 
-	version := lexVersionLatest
-	if v, ok := d.GetOk("version"); ok {
-		version = v.(string)
-	}
-
 	resp, err := conn.GetIntent(&lexmodelbuildingservice.GetIntentInput{
 		Name:    aws.String(d.Id()),
-		Version: aws.String(version),
+		Version: aws.String(d.Get("version").(string)),
 	})
+	if isAWSErr(err, lexmodelbuildingservice.ErrCodeNotFoundException, "") {
+		log.Printf("[WARN] Intent (%s) not found, removing from state", d.Id())
+		d.SetId("")
+		return nil
+	}
 	if err != nil {
-		if isAWSErr(err, lexmodelbuildingservice.ErrCodeNotFoundException, "") {
-			log.Printf("[WARN] Intent (%s) not found, removing from state", d.Id())
-			d.SetId("")
-			return nil
-		}
-
 		return fmt.Errorf("error getting intent %s: %s", d.Id(), err)
 	}
 
 	d.Set("checksum", resp.Checksum)
+	d.Set("description", resp.Description)
 	d.Set("name", resp.Name)
 	d.Set("version", resp.Version)
-
-	// optional attributes
 
 	if resp.ConclusionStatement != nil {
 		d.Set("conclusion_statement", flattenLexObject(flattenLexStatement(resp.ConclusionStatement)))
@@ -212,10 +318,6 @@ func resourceAwsLexIntentRead(d *schema.ResourceData, meta interface{}) error {
 
 	if resp.ConfirmationPrompt != nil {
 		d.Set("confirmation_prompt", flattenLexObject(flattenLexPrompt(resp.ConfirmationPrompt)))
-	}
-
-	if resp.Description != nil {
-		d.Set("description", resp.Description)
 	}
 
 	if resp.DialogCodeHook != nil {
@@ -257,8 +359,6 @@ func resourceAwsLexIntentUpdate(d *schema.ResourceData, meta interface{}) error 
 		Name:     aws.String(d.Id()),
 	}
 
-	// optional attributes
-
 	if v, ok := d.GetOk("conclusion_statement"); ok {
 		input.ConclusionStatement = expandLexStatement(expandLexObject(v))
 	}
@@ -299,8 +399,17 @@ func resourceAwsLexIntentUpdate(d *schema.ResourceData, meta interface{}) error 
 		input.Slots = expandLexSlots(expandLexSet(v.(*schema.Set)))
 	}
 
-	_, err := RetryOnAwsCodes([]string{lexmodelbuildingservice.ErrCodeConflictException}, func() (interface{}, error) {
-		return conn.PutIntent(input)
+	err := resource.Retry(d.Timeout(schema.TimeoutUpdate), func() *resource.RetryError {
+		_, err := conn.PutIntent(input)
+
+		if isAWSErr(err, lexmodelbuildingservice.ErrCodeConflictException, "") {
+			return resource.RetryableError(fmt.Errorf("%q: intent still updating", d.Id()))
+		}
+		if err != nil {
+			return resource.NonRetryableError(err)
+		}
+
+		return nil
 	})
 	if err != nil {
 		return fmt.Errorf("error updating intent %s: %s", d.Id(), err)
@@ -312,10 +421,19 @@ func resourceAwsLexIntentUpdate(d *schema.ResourceData, meta interface{}) error 
 func resourceAwsLexIntentDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).lexmodelconn
 
-	_, err := RetryOnAwsCodes([]string{lexmodelbuildingservice.ErrCodeConflictException}, func() (interface{}, error) {
-		return conn.DeleteIntent(&lexmodelbuildingservice.DeleteIntentInput{
+	err := resource.Retry(d.Timeout(schema.TimeoutDelete), func() *resource.RetryError {
+		_, err := conn.DeleteIntent(&lexmodelbuildingservice.DeleteIntentInput{
 			Name: aws.String(d.Id()),
 		})
+
+		if isAWSErr(err, lexmodelbuildingservice.ErrCodeConflictException, "") {
+			return resource.RetryableError(fmt.Errorf("%q: intent still deleting", d.Id()))
+		}
+		if err != nil {
+			return resource.NonRetryableError(err)
+		}
+
+		return nil
 	})
 
 	if err != nil {

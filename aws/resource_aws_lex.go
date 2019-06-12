@@ -1,8 +1,6 @@
 package aws
 
 import (
-	"regexp"
-
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/lexmodelbuildingservice"
 	"github.com/hashicorp/terraform/helper/schema"
@@ -45,7 +43,7 @@ var lexMessageResource = &schema.Resource{
 		"content": {
 			Type:         schema.TypeString,
 			Required:     true,
-			ValidateFunc: validation.StringLenBetween(lexMessageContentMinLength, lexMessageContentMaxLength),
+			ValidateFunc: validation.StringLenBetween(1, 1000),
 		},
 		"content_type": {
 			Type:     schema.TypeString,
@@ -59,7 +57,7 @@ var lexMessageResource = &schema.Resource{
 		"group_number": {
 			Type:         schema.TypeInt,
 			Optional:     true,
-			ValidateFunc: validation.IntBetween(lexMessageGroupNumberMin, lexMessageGroupNumberMax),
+			ValidateFunc: validation.IntBetween(1, 5),
 		},
 	},
 }
@@ -101,14 +99,14 @@ var lexStatementResource = &schema.Resource{
 		"message": {
 			Type:     schema.TypeSet,
 			Required: true,
-			MinItems: lexStatementMessagesMin,
-			MaxItems: lexStatementMessagesMax,
+			MinItems: 1,
+			MaxItems: 15,
 			Elem:     lexMessageResource,
 		},
 		"response_card": {
 			Type:         schema.TypeString,
 			Optional:     true,
-			ValidateFunc: validation.StringLenBetween(lexResponseCardMinLength, lexResponseCardMaxLength),
+			ValidateFunc: validation.StringLenBetween(1, 50000),
 		},
 	},
 }
@@ -140,19 +138,19 @@ var lexPromptResource = &schema.Resource{
 		"max_attempts": {
 			Type:         schema.TypeInt,
 			Required:     true,
-			ValidateFunc: validation.IntBetween(lexPromptMaxAttemptsMin, lexPromptMaxAttemptsMax),
+			ValidateFunc: validation.IntBetween(1, 5),
 		},
 		"message": {
 			Type:     schema.TypeSet,
 			Required: true,
-			MinItems: lexStatementMessagesMin,
-			MaxItems: lexStatementMessagesMax,
+			MinItems: 1,
+			MaxItems: 15,
 			Elem:     lexMessageResource,
 		},
 		"response_card": {
 			Type:         schema.TypeString,
 			Optional:     true,
-			ValidateFunc: validation.StringLenBetween(lexResponseCardMinLength, lexResponseCardMaxLength),
+			ValidateFunc: validation.StringLenBetween(1, 50000),
 		},
 	},
 }
@@ -186,7 +184,7 @@ var lexCodeHookResource = &schema.Resource{
 		"message_version": {
 			Type:         schema.TypeString,
 			Required:     true,
-			ValidateFunc: validation.StringLenBetween(lexCodeHookMessageVersionMinLength, lexCodeHookMessageVersionMaxLength),
+			ValidateFunc: validation.StringLenBetween(1, 5),
 		},
 		"uri": {
 			Type:         schema.TypeString,
@@ -210,25 +208,6 @@ func expandLexCodeHook(m map[string]interface{}) (hook *lexmodelbuildingservice.
 	}
 }
 
-var lexFollowUpPromptResource = &schema.Resource{
-	Schema: map[string]*schema.Schema{
-		"prompt": {
-			Type:     schema.TypeList,
-			Required: true,
-			MinItems: 1,
-			MaxItems: 1,
-			Elem:     lexPromptResource,
-		},
-		"rejection_statement": {
-			Type:     schema.TypeList,
-			Required: true,
-			MinItems: 1,
-			MaxItems: 1,
-			Elem:     lexStatementResource,
-		},
-	},
-}
-
 func flattenLexFollowUpPrompt(followUp *lexmodelbuildingservice.FollowUpPrompt) (flattened map[string]interface{}) {
 	return map[string]interface{}{
 		"prompt":              flattenLexObject(flattenLexPrompt(followUp.Prompt)),
@@ -241,26 +220,6 @@ func expandLexFollowUpPrompt(m map[string]interface{}) (followUp *lexmodelbuildi
 		Prompt:             expandLexPrompt(expandLexObject(m["prompt"])),
 		RejectionStatement: expandLexStatement(expandLexObject(m["rejection_statement"])),
 	}
-}
-
-var lexFulfilmentActivityResource = &schema.Resource{
-	Schema: map[string]*schema.Schema{
-		"code_hook": {
-			Type:     schema.TypeList,
-			Optional: true,
-			MinItems: 1,
-			MaxItems: 1,
-			Elem:     lexCodeHookResource,
-		},
-		"type": {
-			Type:     schema.TypeString,
-			Required: true,
-			ValidateFunc: validation.StringInSlice([]string{
-				lexmodelbuildingservice.FulfillmentActivityTypeCodeHook,
-				lexmodelbuildingservice.FulfillmentActivityTypeReturnIntent,
-			}, false),
-		},
-	},
 }
 
 func flattenLexFulfilmentActivity(activity *lexmodelbuildingservice.FulfillmentActivity) (flattened map[string]interface{}) {
@@ -283,77 +242,6 @@ func expandLexFulfilmentActivity(m map[string]interface{}) (activity *lexmodelbu
 	}
 
 	return
-}
-
-var lexSlotResource = &schema.Resource{
-	Schema: map[string]*schema.Schema{
-		"description": {
-			Type:         schema.TypeString,
-			Optional:     true,
-			Default:      lexDescriptionDefault,
-			ValidateFunc: validation.StringLenBetween(lexDescriptionMinLength, lexDescriptionMaxLength),
-		},
-		"name": {
-			Type:     schema.TypeString,
-			Required: true,
-			ValidateFunc: validation.All(
-				validation.StringLenBetween(lexNameMinLength, lexNameMaxLength),
-				validation.StringMatch(regexp.MustCompile(lexNameRegex), ""),
-			),
-		},
-		"priority": {
-			Type:         schema.TypeInt,
-			Optional:     true,
-			Default:      lexSlotPriorityDefault,
-			ValidateFunc: validation.IntBetween(lexSlotPriorityMin, lexSlotPriorityMax),
-		},
-		"response_card": {
-			Type:         schema.TypeString,
-			Optional:     true,
-			ValidateFunc: validation.StringLenBetween(lexResponseCardMinLength, lexResponseCardMaxLength),
-		},
-		"sample_utterances": {
-			Type:     schema.TypeList,
-			Optional: true,
-			MinItems: lexSlotSampleUtterancesMin,
-			MaxItems: lexSlotSampleUtterancesMax,
-			Elem: &schema.Schema{
-				Type:         schema.TypeString,
-				ValidateFunc: validation.StringLenBetween(lexUtteranceMinLength, lexUtteranceMaxLength),
-			},
-		},
-		"slot_constraint": {
-			Type:     schema.TypeString,
-			Required: true,
-			ValidateFunc: validation.StringInSlice([]string{
-				lexmodelbuildingservice.SlotConstraintOptional,
-				lexmodelbuildingservice.SlotConstraintRequired,
-			}, false),
-		},
-		"slot_type": {
-			Type:     schema.TypeString,
-			Required: true,
-			ValidateFunc: validation.All(
-				validation.StringLenBetween(lexSlotTypeMinLength, lexSlotTypeMaxLength),
-				validation.StringMatch(regexp.MustCompile(lexSlotTypeRegex), ""),
-			),
-		},
-		"slot_type_version": {
-			Type:     schema.TypeString,
-			Optional: true,
-			ValidateFunc: validation.All(
-				validation.StringLenBetween(lexVersionMinLength, lexVersionMaxLength),
-				validation.StringMatch(regexp.MustCompile(lexVersionRegex), ""),
-			),
-		},
-		"value_elicitation_prompt": {
-			Type:     schema.TypeList,
-			Optional: true,
-			MinItems: 1,
-			MaxItems: 1,
-			Elem:     lexPromptResource,
-		},
-	},
 }
 
 func flattenLexSlots(slots []*lexmodelbuildingservice.Slot) (flattenedSlots []map[string]interface{}) {

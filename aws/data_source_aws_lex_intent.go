@@ -34,10 +34,9 @@ func dataSourceAwsLexIntent() *schema.Resource {
 			"name": {
 				Type:     schema.TypeString,
 				Required: true,
-				ForceNew: true,
 				ValidateFunc: validation.All(
-					validation.StringLenBetween(lexNameMinLength, lexNameMaxLength),
-					validation.StringMatch(regexp.MustCompile(lexNameRegex), ""),
+					validation.StringLenBetween(1, 100),
+					validation.StringMatch(regexp.MustCompile(`^([A-Za-z]_?)+$`), ""),
 				),
 			},
 			"parent_intent_signature": {
@@ -47,10 +46,10 @@ func dataSourceAwsLexIntent() *schema.Resource {
 			"version": {
 				Type:     schema.TypeString,
 				Optional: true,
-				Default:  lexVersionDefault,
+				Default:  "$LATEST",
 				ValidateFunc: validation.All(
-					validation.StringLenBetween(lexVersionMinLength, lexVersionMaxLength),
-					validation.StringMatch(regexp.MustCompile(lexVersionRegex), ""),
+					validation.StringLenBetween(1, 64),
+					validation.StringMatch(regexp.MustCompile(`\$LATEST|[0-9]+`), ""),
 				),
 			},
 		},
@@ -59,16 +58,12 @@ func dataSourceAwsLexIntent() *schema.Resource {
 
 func dataSourceAwsLexIntentRead(d *schema.ResourceData, meta interface{}) error {
 	intentName := d.Get("name").(string)
-	intentVersion := lexVersionLatest
-	if v, ok := d.GetOk("version"); ok {
-		intentVersion = v.(string)
-	}
 
 	conn := meta.(*AWSClient).lexmodelconn
 
 	resp, err := conn.GetIntent(&lexmodelbuildingservice.GetIntentInput{
 		Name:    aws.String(intentName),
-		Version: aws.String(intentVersion),
+		Version: aws.String(d.Get("version").(string)),
 	})
 	if err != nil {
 		return fmt.Errorf("error getting intent %s: %s", intentName, err)

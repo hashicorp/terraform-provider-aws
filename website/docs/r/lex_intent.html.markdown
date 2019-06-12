@@ -117,7 +117,7 @@ resource "aws_lex_intent" "order_flowers_intent" {
 
 The following arguments are supported:
 
-* `conclusion_statement` _(Optional, Type: map)_:
+* `conclusion_statement` _(Optional)_:
 
     The statement that you want Amazon Lex to convey to the user after the intent is successfully
     fulfilled by the Lambda function.
@@ -129,22 +129,22 @@ The following arguments are supported:
 
     Attributes are documented under [statement](#statement).
 
-* `confirmation_prompt` _(Optional, Type: map)_:
+* `confirmation_prompt` _(Optional)_:
 
     Prompts the user to confirm the intent. This question should have a yes or no answer. You you 
     must provide both the `rejection_statement` and `confirmation_prompt`, or neither. Attributes 
     are documented under [prompt](#prompt-1).
 
-* `description` _(Optional, Type: string, Min: 0, Max: 200)_:
+* `description` _(Optional)_:
 
     A description of the intent.
 
-* `dialog_code_hook` _(Optional, Type: map)_:
+* `dialog_code_hook` _(Optional)_:
 
     Specifies a Lambda function to invoke for each user input. You can invoke this Lambda function to
     personalize user interaction. Attributes are documented under [code_hook](#code_hook-1).
 
-* `follow_up_prompt` _(Optional, Type: map)_:
+* `follow_up_prompt` _(Optional)_:
 
     Amazon Lex uses this prompt to solicit additional activity after fulfilling an intent. For 
     example, after the OrderPizza intent is fulfilled, you might prompt the user to order a drink.
@@ -154,24 +154,24 @@ The following arguments are supported:
 
     Attributes are documented under [follow_up_prompt](#follow_up_prompt-1).
 
-* `fulfillment_activity` _(Optional, Type: map)_:
+* `fulfillment_activity` _(Optional)_:
 
     Describes how the intent is fulfilled. For example, after a user provides all of the information
     for a pizza order, `fulfillment_activity` defines how the bot places an order with a local pizza store.
 
     Attributes are documented under [fulfillment_activity](#fulfillment_activity-1).
 
-* `name` _(**Required**, Type: string, Min: 1, Max: 100, Regex: \^([A-Za-z]\_?)+$)_:
+* `name` _(**Required**)_:
 
     The name of the intent, not case sensitive.
 
-* `parent_intent_signature` _(Optional, Type: string)_:
+* `parent_intent_signature` _(Optional)_:
 
     A unique identifier for the built-in intent to base this intent on. To find the signature for an
     intent, see [Standard Built-in Intents](https://developer.amazon.com/public/solutions/alexa/alexa-skills-kit/docs/built-in-intent-ref/standard-intents)
     in the Alexa Skills Kit.
 
-* `rejection_statement` _(Optional, Type: map)_:
+* `rejection_statement` _(Optional)_:
 
     When the user answers "no" to the question defined in `confirmation_prompt`, Amazon Lex responds
     with this statement to acknowledge that the intent was canceled.
@@ -180,14 +180,14 @@ The following arguments are supported:
 
     Attributes are documented under [statement](#statement).
 
-* `sample_utterances` _(Optional, Type: list of strings, Min: 0, Max: 1500, Min Length: 1, Max Length: 200)_:
+* `sample_utterances` _(Optional)_:
 
     An array of utterances (strings) that a user might say to signal the intent. For example, "I want
     {PizzaSize} pizza", "Order {Quantity} {PizzaSize} pizzas".
 
     In each utterance, a slot name is enclosed in curly braces.
 
-* `slot` _(Optional, Type: list, Min: 0, Max 100)_:
+* `slot` _(Optional)_:
 
     An list of intent slots. At runtime, Amazon Lex elicits required slot values from the user using
     prompts defined in the slots. Attributes are documented under [slot](#slot-1).
@@ -196,13 +196,13 @@ The following arguments are supported:
 
 Specifies a Lambda function that verifies requests to a bot or fulfills the user's request to a bot.
 
-* `message_version` _(Required, Type: string, Min: 1, Max: 5)_:
+* `message_version` _(**Required**)_:
 
     The version of the request-response that you want Amazon Lex to use to invoke your Lambda 
     function. For more information, see 
     [Using Lambda Functions](https://docs.aws.amazon.com/lex/latest/dg/using-lambda.html).
 
-* `uri` _(Required, Type: string, Min: 20, Max: 2048, Regex:_ arn:aws:lambda:[a-z]+-[a-z]+-[0-9]:[0-9]{12}:function:[a-zA-Z0-9-\_]+(/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})?(:[a-zA-Z0-9-\_]+)?):-
+* `uri` _(**Required**)_:
 
     The Amazon Resource Name (ARN) of the Lambda function.
 
@@ -211,11 +211,11 @@ Specifies a Lambda function that verifies requests to a bot or fulfills the user
 A prompt for additional activity after an intent is fulfilled. For example, after the OrderPizza
 intent is fulfilled, you might prompt the user to find out whether the user wants to order drinks.
 
-* `prompt` _(Required, Type: map)_:
+* `prompt` _(**Required**)_:
 
     Prompts for information from the user. Attributes are documented under [prompt](#prompt-1).
 
-* `rejectionStatement` _(Optional, Type: map)_:
+* `rejectionStatement` _(Optional)_:
 
     If the user answers "no" to the question defined in the prompt field, Amazon Lex responds with
     this statement to acknowledge that the intent was canceled. Attributes are documented below 
@@ -225,12 +225,12 @@ intent is fulfilled, you might prompt the user to find out whether the user want
 
 Describes how the intent is fulfilled after the user provides all of the information required for the intent.
 
-* `type` _(Required, Type: string, Values: ReturnIntent | CodeHook)_:
+* `type` _(**Required**)_:
 
     How the intent should be fulfilled, either by running a Lambda function or by returning the
     slot data to the client application.
 
-* `code_hook` _(Optional, Type: map)_:
+* `code_hook` _(Optional)_:
 
     A description of the Lambda function that is run to fulfill the intent. Required if type is CodeHook. Attributes are documented under [code_hook](#code_hook-1).
 
@@ -238,15 +238,15 @@ Describes how the intent is fulfilled after the user provides all of the informa
 
 The message object that provides the message text and its type.
 
-* `content` _(**Required**, Type: string, Min: 1, Max: 1000)_:
+* `content` _(**Required**)_:
 
 	  The text of the message.
 
-* `content_type` _(**Required**, Type: string, Values: PlainText | SSML | CustomPayload)_:
+* `content_type` _(**Required**)_:
 
 	  The content type of the message string.
 
-* `group_number` _(Optional, Type: number, Min: 1, Max: 5)_:
+* `group_number` _(Optional)_:
 
     Identifies the message group that the message belongs to. When a group is assigned to a message,
     Amazon Lex returns one message from each group in the response.
@@ -257,17 +257,17 @@ Obtains information from the user. To define a prompt, provide one or more messa
 number of attempts to get information from the user. If you provide more than one message, Amazon
 Lex chooses one of the messages to use to prompt the user.
 
-* `max_attempts` _(**Required**, Type: number, Min: 1, Max: 5)_:
+* `max_attempts` _(**Required**)_:
 
     The number of times to prompt the user for information.
 
-* `message` _(**Required**, Type: Set, Min: 1, Max: 15)_:
+* `message` _(**Required**)_:
 
     A set of messages, each of which provides a message string and its type. You can specify the
 	  message string in plain text or in Speech Synthesis Markup Language (SSML). Attributes are 
     documented under [message](#message-1).
 
-* `response_card` _(Optional, Type: string, Min: 1, Max: 50000)_:
+* `response_card` _(Optional)_:
 
     The response card. Amazon Lex will substitute session attributes and slot values into the
     response card. For more information, see 
@@ -277,19 +277,19 @@ Lex chooses one of the messages to use to prompt the user.
 
 Identifies the version of a specific slot.
 
-* `name` _(Required, Type: string, Min: 2, Max: 50, Regex: \^([A-Za-z]\_?)+$)_:
+* `name` _(**Required**)_:
 
 	  The name of the intent slot that you want to create. The name is case sensitive.
 
-* `slot_constraint` _(Required, Type: string, Values: Required | Optional)_:
+* `slot_constraint` _(**Required**)_:
 
 	  Specifies whether the slot is required or optional.
 
-* `description` _(Optional, Type: string, Min: 0, Max: 200)_:
+* `description` _(Optional)_:
 
 	  A description of the bot.
 
-* `priority` _(Optional, Type: number, Min: 0, Max: 100)_:
+* `priority` _(Optional)_:
 
     Directs Lex the order in which to elicit this slot value from the user. For example, if the
     intent has two slots with priorities 1 and 2, AWS Lex first elicits a value for the slot
@@ -297,27 +297,27 @@ Identifies the version of a specific slot.
 
 	  If multiple slots share the same priority, the order in which Lex elicits values is arbitrary.
 
-* `response_card` _(Optional, Type: string, Min: 1, Max: 50000)_:
+* `response_card` _(Optional)_:
 
     The response card. Amazon Lex will substitute session attributes and slot values into the
     response card. For more information, see
     [Example: Using a Response Card](https://docs.aws.amazon.com/lex/latest/dg/ex-resp-card.html).
 
-* `sample_utterances` _(Optional, Type: list of strings, Min: 0, Max: 10, Min Length: 1, Max Length: 200)_:
+* `sample_utterances` _(Optional)_:
 
     If you know a specific pattern with which users might respond to an Amazon Lex request
     for a slot value, you can provide those utterances to improve accuracy. This is optional.
     In most cases, Amazon Lex is capable of understanding user utterances.
 
-* `slot_type` _(Optional, Type: string, Min: 1, Max: 100, Regex: \^((AMAZON\\.)\_?|[A-Za-z]\_?)+)_:
+* `slot_type` _(Optional)_:
 
     The type of the slot, either a custom slot type that you defined or one of the built-in slot types.
 
-* `slot_type_version` _(Optional, Type: string, Min: 1, Max: 64, Regex: \$LATEST|[0-9]+)_:
+* `slot_type_version` _(Optional)_:
 
     The version of the slot type.
 
-* `value_elicitation_prompt` _(Optional, Type: map)_:
+* `value_elicitation_prompt` _(Optional)_:
 
     The prompt that Amazon Lex uses to elicit the slot value from the user. Attributes are 
     documented under [prompt](#prompt-1).
@@ -327,17 +327,25 @@ Identifies the version of a specific slot.
 A statement is a map with a set of message maps and an optional response card string. Messages
 convey information to the user. At runtime, Amazon Lex selects the message to convey.
 
-* `message` _(**Required**, Type: Set, Min: 1, Max: 15)_:
+* `message` _(**Required**)_:
 
     A set of messages, each of which provides a message string and its type. You can specify the
 	  message string in plain text or in Speech Synthesis Markup Language (SSML). Attributes are 
     documented under [message](#message-1).
 
-* `response_card` _(Optional, Type: string, Min: 1, Max: 50000)_:
+* `response_card` _(Optional)_:
 
     The response card. Amazon Lex will substitute session attributes and slot values into the
     response card. For more information, see 
     [Example: Using a Response Card](https://docs.aws.amazon.com/lex/latest/dg/ex-resp-card.html).
+
+### Timeouts
+
+The `timeouts` block allows you to specify [timeouts](https://www.terraform.io/docs/configuration/resources.html#timeouts) for certain actions:
+
+* `update` - (Defaults to 1 mins) Used when updating the intent
+* `delete` - (Defaults to 5 mins) Used when deleting the intent
+
 
 ## Attributes Reference
 
