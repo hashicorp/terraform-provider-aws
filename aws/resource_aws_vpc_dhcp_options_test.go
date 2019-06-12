@@ -30,30 +30,29 @@ func testSweepVpcDhcpOptions(region string) error {
 
 	err = conn.DescribeDhcpOptionsPages(input, func(page *ec2.DescribeDhcpOptionsOutput, lastPage bool) bool {
 		for _, dhcpOption := range page.DhcpOptions {
-			var domainName string
 			var defaultDomainNameFound, defaultDomainNameServersFound bool
 
+			domainName := region + ".compute.internal"
 			if region == "us-east-1" {
 				domainName = "ec2.internal"
-			} else {
-				domainName = region + ".compute.internal"
 			}
 
+			// This skips the default dhcp configurations so they don't get deleted
 			for _, dhcpConfiguration := range dhcpOption.DhcpConfigurations {
 				if aws.StringValue(dhcpConfiguration.Key) == "domain-name" {
-					if len(dhcpConfiguration.Values) == 0 || len(dhcpConfiguration.Values) > 1 {
+					if len(dhcpConfiguration.Values) != 1 || dhcpConfiguration.Values[0] == nil {
 						continue
 					}
 
-					if dhcpConfiguration.Values[0] != nil && aws.StringValue(dhcpConfiguration.Values[0].Value) == domainName {
+					if aws.StringValue(dhcpConfiguration.Values[0].Value) == domainName {
 						defaultDomainNameFound = true
 					}
 				} else if aws.StringValue(dhcpConfiguration.Key) == "domain-name-servers" {
-					if len(dhcpConfiguration.Values) == 0 || len(dhcpConfiguration.Values) > 1 {
+					if len(dhcpConfiguration.Values) != 1 || dhcpConfiguration.Values[0] == nil {
 						continue
 					}
 
-					if dhcpConfiguration.Values[0] != nil && aws.StringValue(dhcpConfiguration.Values[0].Value) == "AmazonProvidedDNS" {
+					if aws.StringValue(dhcpConfiguration.Values[0].Value) == "AmazonProvidedDNS" {
 						defaultDomainNameServersFound = true
 					}
 				}
