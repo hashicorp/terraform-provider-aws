@@ -10,6 +10,34 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 )
 
+func TestValidateStringDoesNotContainAny(t *testing.T) {
+	chars := "|:/"
+
+	validStrings := []string{
+		"HelloWorld",
+		"ABC_*&^%123",
+	}
+	for _, v := range validStrings {
+		_, errors := validateStringDoesNotContainAny(chars)(v, "name")
+		if len(errors) != 0 {
+			t.Fatalf("%q should not contain any of %q", v, chars)
+		}
+	}
+
+	invalidStrings := []string{
+		"Hello/World",
+		"ABC|123",
+		"This will fail:",
+		chars,
+	}
+	for _, v := range invalidStrings {
+		_, errors := validateStringDoesNotContainAny(chars)(v, "name")
+		if len(errors) == 0 {
+			t.Fatalf("%q should contain one of %q", v, chars)
+		}
+	}
+}
+
 func TestValidateTypeStringNullableBoolean(t *testing.T) {
 	testCases := []struct {
 		val         interface{}
