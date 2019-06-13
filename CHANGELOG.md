@@ -1,37 +1,37 @@
-## 2.15.0 (Unreleased)
+## 2.15.0 (June 13, 2019)
 
 FEATURES:
 
-* **New Data Source:** `aws_customer_gateway` [GH-8977]
+* **New Data Source:** `aws_customer_gateway` ([#8977](https://github.com/terraform-providers/terraform-provider-aws/issues/8977))
 
 ENHANCEMENTS:
 
-* resource/aws_cognito_user_pool: Add `email_sending_account` attribute to the email configuration block [GH-8626]
-* resource/aws_redshift_cluster: Add `arn` attribute [GH-8894]
-* resource/aws_redshift_event_subscription: Add `arn` attribute and support `tags` updates [GH-8894]
-* resource/aws_redshift_parameter_group: Add `arn` attribute and `tags` argument [GH-8894]
-* resource/aws_redshift_snapshot_copy_grant: Add `arn` attribute and support `tags` updates [GH-8894]
-* resource/aws_redshift_subnet_group: Add `arn` attribute [GH-8894]
-* resource/aws_ses_identity_notification_topic: Add `include_original_headers` argument [GH-7293]
+* resource/aws_cognito_user_pool: Add `email_sending_account` attribute to the email configuration block ([#8626](https://github.com/terraform-providers/terraform-provider-aws/issues/8626))
+* resource/aws_redshift_cluster: Add `arn` attribute ([#8894](https://github.com/terraform-providers/terraform-provider-aws/issues/8894))
+* resource/aws_redshift_event_subscription: Add `arn` attribute and support `tags` updates ([#8894](https://github.com/terraform-providers/terraform-provider-aws/issues/8894))
+* resource/aws_redshift_parameter_group: Add `arn` attribute and `tags` argument ([#8894](https://github.com/terraform-providers/terraform-provider-aws/issues/8894))
+* resource/aws_redshift_snapshot_copy_grant: Add `arn` attribute and support `tags` updates ([#8894](https://github.com/terraform-providers/terraform-provider-aws/issues/8894))
+* resource/aws_redshift_subnet_group: Add `arn` attribute ([#8894](https://github.com/terraform-providers/terraform-provider-aws/issues/8894))
+* resource/aws_ses_identity_notification_topic: Add `include_original_headers` argument ([#7293](https://github.com/terraform-providers/terraform-provider-aws/issues/7293))
 
 BUG FIXES:
 
-* resource/aws_api_gateway_resource: Final retry for deleting api gateway resource [GH-8893]
-* resource/aws_appautoscaling_target: Final retry for registering autoscaling target [GH-8893]
-* resource/aws_default_vpc_dhcp_options: Add pagination to get the default DHCP options correctly [GH-8907]
-* resource/aws_docdb_cluster: Retries after timeout errors for docdb cluster operations [GH-8986]
-* resource/aws_dx_connection_association: Final retry for deleting dx connection association [GH-8893]
-* resource/aws_dynamodb_table_item: add a nil check when building the table item ID [GH-8900]
-* resource/aws_eks_cluster: Increase default creation timeout to 30 minutes [GH-8909]
-* resource/aws_elasticache_cluster: Final retry when deleting elasticache cluster [GH-8893]
-* resource/aws_elasticache_replication_group: Implement passthrough state migration for upstream `missing MigrateState function` error in Terraform 0.12 [GH-8887]
-* resource/aws_elasticache_security_group: Final retry for deleting elasticache security group [GH-8981]
-* resource/aws_iam_server_certificate: Final retry for deleting IAM server cert [GH-8893]
-* resource/aws_iam_service_linked_role: Automatically suppress Application Autoscaling `custom_suffix` differences [GH-8931]
-* resource/aws_kinesis_analytics_application: Final retries for kinesis applications [GH-8984]
-* resource/aws_sns_topic_subscription: Final retry for SNS topic subscription [GH-8893]
-* resource/aws_ssm_activation: Final retry for creating SSM activation [GH-8893]
-* resource/aws_vpc_dhcp_options: Add final retry to deleting DHCP options [GH-8907]
+* resource/aws_api_gateway_resource: Final retry for deleting api gateway resource ([#8893](https://github.com/terraform-providers/terraform-provider-aws/issues/8893))
+* resource/aws_appautoscaling_target: Final retry for registering autoscaling target ([#8893](https://github.com/terraform-providers/terraform-provider-aws/issues/8893))
+* resource/aws_default_vpc_dhcp_options: Add pagination to get the default DHCP options correctly ([#8907](https://github.com/terraform-providers/terraform-provider-aws/issues/8907))
+* resource/aws_docdb_cluster: Retries after timeout errors for docdb cluster operations ([#8986](https://github.com/terraform-providers/terraform-provider-aws/issues/8986))
+* resource/aws_dx_connection_association: Final retry for deleting dx connection association ([#8893](https://github.com/terraform-providers/terraform-provider-aws/issues/8893))
+* resource/aws_dynamodb_table_item: add a nil check when building the table item ID ([#8900](https://github.com/terraform-providers/terraform-provider-aws/issues/8900))
+* resource/aws_eks_cluster: Increase default creation timeout to 30 minutes ([#8909](https://github.com/terraform-providers/terraform-provider-aws/issues/8909))
+* resource/aws_elasticache_cluster: Final retry when deleting elasticache cluster ([#8893](https://github.com/terraform-providers/terraform-provider-aws/issues/8893))
+* resource/aws_elasticache_replication_group: Implement passthrough state migration for upstream `missing MigrateState function` error in Terraform 0.12 ([#8887](https://github.com/terraform-providers/terraform-provider-aws/issues/8887))
+* resource/aws_elasticache_security_group: Final retry for deleting elasticache security group ([#8981](https://github.com/terraform-providers/terraform-provider-aws/issues/8981))
+* resource/aws_iam_server_certificate: Final retry for deleting IAM server cert ([#8893](https://github.com/terraform-providers/terraform-provider-aws/issues/8893))
+* resource/aws_iam_service_linked_role: Automatically suppress Application Autoscaling `custom_suffix` differences ([#8931](https://github.com/terraform-providers/terraform-provider-aws/issues/8931))
+* resource/aws_kinesis_analytics_application: Final retries for kinesis applications ([#8984](https://github.com/terraform-providers/terraform-provider-aws/issues/8984))
+* resource/aws_sns_topic_subscription: Final retry for SNS topic subscription ([#8893](https://github.com/terraform-providers/terraform-provider-aws/issues/8893))
+* resource/aws_ssm_activation: Final retry for creating SSM activation ([#8893](https://github.com/terraform-providers/terraform-provider-aws/issues/8893))
+* resource/aws_vpc_dhcp_options: Add final retry to deleting DHCP options ([#8907](https://github.com/terraform-providers/terraform-provider-aws/issues/8907))
 
 ## 2.14.0 (June 06, 2019)
 
