@@ -614,6 +614,13 @@ func resourceAwsKinesisAnalyticsApplicationCreate(d *schema.ResourceData, meta i
 		d.SetId(aws.StringValue(output.ApplicationSummary.ApplicationARN))
 		return nil
 	})
+
+	if isResourceTimeoutError(err) {
+		var output *kinesisanalytics.CreateApplicationOutput
+		output, err = conn.CreateApplication(createOpts)
+		d.SetId(aws.StringValue(output.ApplicationSummary.ApplicationARN))
+	}
+
 	if err != nil {
 		return fmt.Errorf("Unable to create Kinesis Analytics application: %s", err)
 	}
@@ -722,6 +729,10 @@ func resourceAwsKinesisAnalyticsApplicationUpdate(d *schema.ResourceData, meta i
 					}
 					return nil
 				})
+				if isResourceTimeoutError(err) {
+					_, err = conn.AddApplicationCloudWatchLoggingOption(addOpts)
+				}
+
 				if err != nil {
 					return fmt.Errorf("Unable to add CloudWatch logging options: %s", err)
 				}
@@ -754,6 +765,10 @@ func resourceAwsKinesisAnalyticsApplicationUpdate(d *schema.ResourceData, meta i
 					}
 					return nil
 				})
+				if isResourceTimeoutError(err) {
+					_, err = conn.AddApplicationInput(addOpts)
+				}
+
 				if err != nil {
 					return fmt.Errorf("Unable to add application inputs: %s", err)
 				}
@@ -786,6 +801,9 @@ func resourceAwsKinesisAnalyticsApplicationUpdate(d *schema.ResourceData, meta i
 					}
 					return nil
 				})
+				if isResourceTimeoutError(err) {
+					_, err = conn.AddApplicationOutput(addOpts)
+				}
 				if err != nil {
 					return fmt.Errorf("Unable to add application outputs: %s", err)
 				}
@@ -821,6 +839,9 @@ func resourceAwsKinesisAnalyticsApplicationUpdate(d *schema.ResourceData, meta i
 					}
 					return nil
 				})
+				if isResourceTimeoutError(err) {
+					_, err = conn.AddApplicationReferenceDataSource(addOpts)
+				}
 				if err != nil {
 					return fmt.Errorf("Unable to add application reference data source: %s", err)
 				}
