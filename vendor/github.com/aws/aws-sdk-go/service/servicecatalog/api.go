@@ -9687,6 +9687,10 @@ type CreateProvisionedProductPlanInput struct {
 	ProvisioningParameters []*UpdateProvisioningParameter `type:"list"`
 
 	// One or more tags.
+	//
+	// If the plan is for an existing provisioned product, the product must have
+	// a RESOURCE_UPDATE constraint with TagUpdatesOnProvisionedProduct set to ALLOWED
+	// to allow tag updates.
 	Tags []*Tag `type:"list"`
 }
 
@@ -16206,6 +16210,10 @@ type ProvisioningArtifact struct {
 	// The description of the provisioning artifact.
 	Description *string `type:"string"`
 
+	// Information set by the administrator to provide guidance to end users about
+	// which provisioning artifacts to use.
+	Guidance *string `type:"string" enum:"ProvisioningArtifactGuidance"`
+
 	// The identifier of the provisioning artifact.
 	Id *string `min:"1" type:"string"`
 
@@ -16235,6 +16243,12 @@ func (s *ProvisioningArtifact) SetDescription(v string) *ProvisioningArtifact {
 	return s
 }
 
+// SetGuidance sets the Guidance field's value.
+func (s *ProvisioningArtifact) SetGuidance(v string) *ProvisioningArtifact {
+	s.Guidance = &v
+	return s
+}
+
 // SetId sets the Id field's value.
 func (s *ProvisioningArtifact) SetId(v string) *ProvisioningArtifact {
 	s.Id = &v
@@ -16260,6 +16274,10 @@ type ProvisioningArtifactDetail struct {
 
 	// The description of the provisioning artifact.
 	Description *string `type:"string"`
+
+	// Information set by the administrator to provide guidance to end users about
+	// which provisioning artifacts to use.
+	Guidance *string `type:"string" enum:"ProvisioningArtifactGuidance"`
 
 	// The identifier of the provisioning artifact.
 	Id *string `min:"1" type:"string"`
@@ -16302,6 +16320,12 @@ func (s *ProvisioningArtifactDetail) SetCreatedTime(v time.Time) *ProvisioningAr
 // SetDescription sets the Description field's value.
 func (s *ProvisioningArtifactDetail) SetDescription(v string) *ProvisioningArtifactDetail {
 	s.Description = &v
+	return s
+}
+
+// SetGuidance sets the Guidance field's value.
+func (s *ProvisioningArtifactDetail) SetGuidance(v string) *ProvisioningArtifactDetail {
+	s.Guidance = &v
 	return s
 }
 
@@ -19290,6 +19314,17 @@ type UpdateProvisioningArtifactInput struct {
 	// The updated description of the provisioning artifact.
 	Description *string `type:"string"`
 
+	// Information set by the administrator to provide guidance to end users about
+	// which provisioning artifacts to use.
+	//
+	// The DEFAULT value indicates that the product version is active.
+	//
+	// The administrator can set the guidance to DEPRECATED to inform users that
+	// the product version is deprecated. Users are able to make updates to a provisioned
+	// product of a deprecated version but cannot launch new provisioned products
+	// using a deprecated version.
+	Guidance *string `type:"string" enum:"ProvisioningArtifactGuidance"`
+
 	// The updated name of the provisioning artifact.
 	Name *string `type:"string"`
 
@@ -19351,6 +19386,12 @@ func (s *UpdateProvisioningArtifactInput) SetActive(v bool) *UpdateProvisioningA
 // SetDescription sets the Description field's value.
 func (s *UpdateProvisioningArtifactInput) SetDescription(v string) *UpdateProvisioningArtifactInput {
 	s.Description = &v
+	return s
+}
+
+// SetGuidance sets the Guidance field's value.
+func (s *UpdateProvisioningArtifactInput) SetGuidance(v string) *UpdateProvisioningArtifactInput {
+	s.Guidance = &v
 	return s
 }
 
@@ -20051,6 +20092,14 @@ const (
 const (
 	// ProvisionedProductViewFilterBySearchQuery is a ProvisionedProductViewFilterBy enum value
 	ProvisionedProductViewFilterBySearchQuery = "SearchQuery"
+)
+
+const (
+	// ProvisioningArtifactGuidanceDefault is a ProvisioningArtifactGuidance enum value
+	ProvisioningArtifactGuidanceDefault = "DEFAULT"
+
+	// ProvisioningArtifactGuidanceDeprecated is a ProvisioningArtifactGuidance enum value
+	ProvisioningArtifactGuidanceDeprecated = "DEPRECATED"
 )
 
 const (

@@ -1,5 +1,9 @@
 ## 2.15.0 (Unreleased)
 
+FEATURES:
+
+* **New Data Source:** `aws_customer_gateway` [GH-8977]
+
 ENHANCEMENTS:
 
 * resource/aws_cognito_user_pool: Add `email_sending_account` attribute to the email configuration block [GH-8626]
@@ -16,6 +20,17 @@ BUG FIXES:
 * resource/aws_elasticache_replication_group: Implement passthrough state migration for upstream `missing MigrateState function` error in Terraform 0.12 [GH-8887]
 * resource/aws_iam_service_linked_role: Automatically suppress Application Autoscaling `custom_suffix` differences [GH-8931]
 * resource/aws_dynamodb_table_item: add a nil check when building the table item ID [GH-8900]
+* resource/aws_api_gateway_resource - Final retry for deleting api gateway resource [GH-8893]
+* resource/aws_appautoscaling_target - Final retry for registering autoscaling target [GH-8893]
+* resource/aws_dx_connection_association - Final retry for deleting dx connection association [GH-8893]
+* resource/aws_elasticache_cluster - Final retry when deleting elasticache cluster [GH-8893]
+* resource/aws_elasticache_security_group: Final retry for deleting elasticache security group [GH-8981]
+* resource/aws_kinesis_analytics_application: Final retries for kinesis applications [GH-8984]
+* resource/aws_iam_server_certificate - Final retry for deleting IAM server cert [GH-8893]
+* resource/aws_sns_topic_subscription - Final retry for SNS topic subscription [GH-8893]
+* resource/aws_ssm_activation - Final retry for creating SSM activation [GH-8893]
+* resource/default_vpc_dhcp_options: Add pagination to get the default DHCP options correctly [GH-8907]
+* resource/vpc_dhcp_options: Add final retry to deleting DHCP options [GH-8907]
 
 ## 2.14.0 (June 06, 2019)
 

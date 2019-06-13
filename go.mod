@@ -1,7 +1,7 @@
 module github.com/terraform-providers/terraform-provider-aws
 
 require (
-	github.com/aws/aws-sdk-go v1.19.47
+	github.com/aws/aws-sdk-go v1.19.49
 	github.com/beevik/etree v1.1.0
 	github.com/bflad/tfproviderlint v0.3.0
 	github.com/client9/misspell v0.3.4
@@ -24,8 +24,8 @@ require (
 	github.com/modern-go/reflect2 v1.0.1 // indirect
 	github.com/pquerna/otp v1.2.0
 	github.com/spf13/pflag v1.0.3 // indirect
-	github.com/terraform-providers/terraform-provider-template v1.0.0
-	github.com/terraform-providers/terraform-provider-tls v1.2.0
+	github.com/terraform-providers/terraform-provider-template v2.1.2+incompatible
+	github.com/terraform-providers/terraform-provider-tls v2.0.1+incompatible
 	gopkg.in/yaml.v2 v2.2.2
 	k8s.io/apimachinery v0.0.0-20190204010555-a98ff070d70e // indirect
 	k8s.io/client-go v10.0.0+incompatible // indirect
