@@ -493,7 +493,7 @@ func flattenProxyConfiguration(pc *ecs.ProxyConfiguration) []map[string]interfac
 	config["type"] = *pc.Type
 	config["properties"] = meshProperties
 
-	return []map[string]interface{} {
+	return []map[string]interface{}{
 		config,
 	}
 }
