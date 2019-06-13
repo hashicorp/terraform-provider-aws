@@ -24,6 +24,7 @@ BUG FIXES:
 * resource/aws_appautoscaling_target - Final retry for registering autoscaling target [GH-8893]
 * resource/aws_dx_connection_association - Final retry for deleting dx connection association [GH-8893]
 * resource/aws_elasticache_cluster - Final retry when deleting elasticache cluster [GH-8893]
+* resource/aws_elasticache_security_group: Final retry for deleting elasticache security group [GH-8981]
 * resource/aws_iam_server_certificate - Final retry for deleting IAM server cert [GH-8893]
 * resource/aws_sns_topic_subscription - Final retry for SNS topic subscription [GH-8893]
 * resource/aws_ssm_activation - Final retry for creating SSM activation [GH-8893]
