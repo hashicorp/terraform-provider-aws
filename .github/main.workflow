@@ -5,7 +5,7 @@ workflow "Pull Request Updates" {
 
 action "pr-filter-sync" {
     uses = "actions/bin/filter@master"
-    args = "action 'opened|review_requested|synchronize'"
+    args = "action 'opened|synchronize'"
 }
 
 action "pr-label" {
