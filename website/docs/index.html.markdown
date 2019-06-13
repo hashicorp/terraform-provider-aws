@@ -66,8 +66,10 @@ You can provide your credentials via the `AWS_ACCESS_KEY_ID` and
 Access Key and AWS Secret Key, respectively.  Note that setting your
 AWS credentials using either these (or legacy) environment variables
 will override the use of `AWS_SHARED_CREDENTIALS_FILE` and `AWS_PROFILE`.
-The `AWS_DEFAULT_REGION` and `AWS_SESSION_TOKEN` environment variables
-are also used, if applicable:
+The `AWS_DEFAULT_REGION`, `AWS_SESSION_TOKEN`, `AWS_ROLE_ARN`,
+`AWS_SESSION_NAME`, and `AWS_EXTERNAL_ID` environment variables
+can also be used, if applicable. The last three can be used to provide values
+to the `assume_role` block.
 
 ```hcl
 provider "aws" {}
@@ -278,13 +280,13 @@ for more information about connecting to alternate AWS endpoints or AWS compatib
 
 The nested `assume_role` block supports the following:
 
-* `role_arn` - (Required) The ARN of the role to assume.
+* `role_arn` - (Required) The ARN of the role to assume. This can also be sourced from the `AWS_ROLE_ARN` environment variable as long as the `assume_role` block is included in the AWS provider block.
 
 * `session_name` - (Optional) The session name to use when making the
-  AssumeRole call.
+  AssumeRole call. This can also be sourced from the `AWS_SESSION_NAME` environment variable as long as the `assume_role` block is included in the AWS provider block.
 
 * `external_id` - (Optional) The external ID to use when making the
-  AssumeRole call.
+  AssumeRole call. This can also be sourced from the `AWS_EXTERNAL_ID` environment variable as long as the `assume_role` block is included in the AWS provider block.
 
 * `policy` - (Optional) A more restrictive policy to apply to the temporary credentials.
 This gives you a way to further restrict the permissions for the resulting temporary

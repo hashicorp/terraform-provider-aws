@@ -1060,18 +1060,21 @@ func assumeRoleSchema() *schema.Schema {
 					Type:        schema.TypeString,
 					Optional:    true,
 					Description: descriptions["assume_role_role_arn"],
+					DefaultFunc: schema.EnvDefaultFunc("AWS_ROLE_ARN", ""),
 				},
 
 				"session_name": {
 					Type:        schema.TypeString,
 					Optional:    true,
 					Description: descriptions["assume_role_session_name"],
+					DefaultFunc: schema.EnvDefaultFunc("AWS_SESSION_NAME", ""),
 				},
 
 				"external_id": {
 					Type:        schema.TypeString,
 					Optional:    true,
 					Description: descriptions["assume_role_external_id"],
+					DefaultFunc: schema.EnvDefaultFunc("AWS_EXTERNAL_ID", ""),
 				},
 
 				"policy": {
