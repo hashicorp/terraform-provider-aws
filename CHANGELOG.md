@@ -22,6 +22,7 @@ BUG FIXES:
 * resource/aws_dynamodb_table_item: add a nil check when building the table item ID [GH-8900]
 * resource/aws_api_gateway_resource - Final retry for deleting api gateway resource [GH-8893]
 * resource/aws_appautoscaling_target - Final retry for registering autoscaling target [GH-8893]
+* resource/aws_docdb_cluster: Retries after timeout errors for docdb cluster operations [GH-8986]
 * resource/aws_dx_connection_association - Final retry for deleting dx connection association [GH-8893]
 * resource/aws_elasticache_cluster - Final retry when deleting elasticache cluster [GH-8893]
 * resource/aws_elasticache_security_group: Final retry for deleting elasticache security group [GH-8981]
