@@ -340,6 +340,9 @@ func resourceAwsDocDBClusterCreate(d *schema.ResourceData, meta interface{}) err
 			}
 			return nil
 		})
+		if isResourceTimeoutError(err) {
+			_, err = conn.RestoreDBClusterFromSnapshot(&opts)
+		}
 		if err != nil {
 			return fmt.Errorf("Error creating DocDB Cluster: %s", err)
 		}
@@ -421,6 +424,9 @@ func resourceAwsDocDBClusterCreate(d *schema.ResourceData, meta interface{}) err
 			}
 			return nil
 		})
+		if isResourceTimeoutError(err) {
+			resp, err = conn.CreateDBCluster(createOpts)
+		}
 		if err != nil {
 			return fmt.Errorf("error creating DocDB cluster: %s", err)
 		}
@@ -636,6 +642,9 @@ func resourceAwsDocDBClusterUpdate(d *schema.ResourceData, meta interface{}) err
 			}
 			return nil
 		})
+		if isResourceTimeoutError(err) {
+			_, err = conn.ModifyDBCluster(req)
+		}
 		if err != nil {
 			return fmt.Errorf("Failed to modify DocDB Cluster (%s): %s", d.Id(), err)
 		}
@@ -692,6 +701,9 @@ func resourceAwsDocDBClusterDelete(d *schema.ResourceData, meta interface{}) err
 		}
 		return nil
 	})
+	if isResourceTimeoutError(err) {
+		_, err = conn.DeleteDBCluster(&deleteOpts)
+	}
 	if err != nil {
 		return fmt.Errorf("DocDB Cluster cannot be deleted: %s", err)
 	}
