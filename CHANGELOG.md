@@ -18,6 +18,7 @@ BUG FIXES:
 
 * resource/aws_api_gateway_resource - Final retry for deleting api gateway resource [GH-8893]
 * resource/aws_appautoscaling_target - Final retry for registering autoscaling target [GH-8893]
+* resource/aws_default_vpc_dhcp_options: Add pagination to get the default DHCP options correctly [GH-8907]
 * resource/aws_docdb_cluster: Retries after timeout errors for docdb cluster operations [GH-8986]
 * resource/aws_dx_connection_association - Final retry for deleting dx connection association [GH-8893]
 * resource/aws_dynamodb_table_item: add a nil check when building the table item ID [GH-8900]
@@ -30,8 +31,7 @@ BUG FIXES:
 * resource/aws_kinesis_analytics_application: Final retries for kinesis applications [GH-8984]
 * resource/aws_sns_topic_subscription - Final retry for SNS topic subscription [GH-8893]
 * resource/aws_ssm_activation - Final retry for creating SSM activation [GH-8893]
-* resource/default_vpc_dhcp_options: Add pagination to get the default DHCP options correctly [GH-8907]
-* resource/vpc_dhcp_options: Add final retry to deleting DHCP options [GH-8907]
+* resource/aws_vpc_dhcp_options: Add final retry to deleting DHCP options [GH-8907]
 
 ## 2.14.0 (June 06, 2019)
 
