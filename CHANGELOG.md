@@ -23,6 +23,8 @@ BUG FIXES:
 * resource/aws_iam_server_certificate - Final retry for deleting IAM server cert [GH-8893]
 * resource/aws_sns_topic_subscription - Final retry for SNS topic subscription [GH-8893]
 * resource/aws_ssm_activation - Final retry for creating SSM activation [GH-8893]
+* resource/default_vpc_dhcp_options: Add pagination to get the default DHCP options correctly [GH-8907]
+* resource/vpc_dhcp_options: Add final retry to deleting DHCP options [GH-8907]
 
 ## 2.14.0 (June 06, 2019)
 
