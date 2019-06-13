@@ -128,7 +128,7 @@ func resourceAwsElasticacheSecurityGroupDelete(d *schema.ResourceData, meta inte
 
 	log.Printf("[DEBUG] Cache security group delete: %s", d.Id())
 
-	return resource.Retry(5*time.Minute, func() *resource.RetryError {
+	err := resource.Retry(5*time.Minute, func() *resource.RetryError {
 		_, err := conn.DeleteCacheSecurityGroup(&elasticache.DeleteCacheSecurityGroupInput{
 			CacheSecurityGroupName: aws.String(d.Id()),
 		})
@@ -150,4 +150,12 @@ func resourceAwsElasticacheSecurityGroupDelete(d *schema.ResourceData, meta inte
 		}
 		return nil
 	})
+
+	if isResourceTimeoutError(err) {
+		_, err = conn.DeleteCacheSecurityGroup(&elasticache.DeleteCacheSecurityGroupInput{
+			CacheSecurityGroupName: aws.String(d.Id()),
+		})
+	}
+
+	return err
 }
