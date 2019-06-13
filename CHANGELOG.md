@@ -1,5 +1,9 @@
 ## 2.15.0 (Unreleased)
 
+FEATURES:
+
+* **New Data Source:** `aws_customer_gateway` [GH-8977]
+
 ENHANCEMENTS:
 
 * resource/aws_cognito_user_pool: Add `email_sending_account` attribute to the email configuration block [GH-8626]
