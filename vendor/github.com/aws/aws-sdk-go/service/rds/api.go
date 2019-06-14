@@ -21378,8 +21378,9 @@ type DescribeDBClusterSnapshotsInput struct {
 	// when SnapshotType is set to shared. The IncludeShared parameter doesn't apply
 	// when SnapshotType is set to public.
 	SnapshotType *string `type:"string"`
-	const Tags = "ListTagsForResource"
 }
+
+const Tags = "ListTagsForResource"
 
 func (c *RDS) ListTagsForResourceRequest(input *ListTagsForResourceInput) (req *request.Request, output *ListTagsForResourceOutput) {
 	op := &request.Operation{

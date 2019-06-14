@@ -16,7 +16,6 @@ func TestAccAWSDBClusterSnapshot_basic(t *testing.T) {
 	var dbClusterSnapshot rds.DBClusterSnapshot
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_db_cluster_snapshot.test"
-	var v rds.DBClusterSnapshot
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
