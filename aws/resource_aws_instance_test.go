@@ -1693,6 +1693,50 @@ func TestAccAWSInstance_creditSpecification_unlimitedCpuCredits(t *testing.T) {
 	})
 }
 
+func TestAccAWSInstance_creditSpecification_unknownCpuCredits_t2(t *testing.T) {
+	var instance ec2.Instance
+	rInt := acctest.RandInt()
+	resName := "aws_instance.foo"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckInstanceDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccInstanceConfig_creditSpecification_unknownCpuCredits(rInt, "t2.micro"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckInstanceExists(resName, &instance),
+					resource.TestCheckResourceAttr(resName, "credit_specification.#", "1"),
+					resource.TestCheckResourceAttr(resName, "credit_specification.0.cpu_credits", "standard"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAWSInstance_creditSpecification_unknownCpuCredits_t3(t *testing.T) {
+	var instance ec2.Instance
+	rInt := acctest.RandInt()
+	resName := "aws_instance.foo"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckInstanceDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccInstanceConfig_creditSpecification_unknownCpuCredits(rInt, "t3.micro"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckInstanceExists(resName, &instance),
+					resource.TestCheckResourceAttr(resName, "credit_specification.#", "1"),
+					resource.TestCheckResourceAttr(resName, "credit_specification.0.cpu_credits", "unlimited"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccAWSInstance_creditSpecification_updateCpuCredits(t *testing.T) {
 	var first, second, third ec2.Instance
 	resName := "aws_instance.foo"
@@ -3827,6 +3871,7 @@ resource "aws_instance" "foo" {
   ami           = "ami-51537029"               # us-west-2
   instance_type = "t3.micro"
   subnet_id     = "${aws_subnet.my_subnet.id}"
+
 }
 `, rInt)
 }
@@ -3969,6 +4014,33 @@ resource "aws_instance" "foo" {
   }
 }
 `, rInt)
+}
+
+func testAccInstanceConfig_creditSpecification_unknownCpuCredits(rInt int, instanceType string) string {
+	return fmt.Sprintf(`
+resource "aws_vpc" "my_vpc" {
+  cidr_block = "172.16.0.0/16"
+
+  tags = {
+    Name = "tf-acctest-%d"
+  }
+}
+
+resource "aws_subnet" "my_subnet" {
+  vpc_id            = "${aws_vpc.my_vpc.id}"
+  cidr_block        = "172.16.20.0/24"
+  availability_zone = "us-west-2a"
+}
+
+resource "aws_instance" "foo" {
+  ami           = "ami-51537029"               # us-west-2
+  instance_type = %q
+  subnet_id     = "${aws_subnet.my_subnet.id}"
+
+  credit_specification {
+  }
+}
+`, rInt, instanceType)
 }
 
 func testAccInstanceConfig_UserData_Base(rInt int) string {
