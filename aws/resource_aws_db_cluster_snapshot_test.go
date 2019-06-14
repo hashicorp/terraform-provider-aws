@@ -40,7 +40,6 @@ func TestAccAWSDBClusterSnapshot_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "status", "available"),
 					resource.TestCheckResourceAttr(resourceName, "storage_encrypted", "false"),
 					resource.TestMatchResourceAttr(resourceName, "vpc_id", regexp.MustCompile(`^vpc-.+`)),
-					testAccCheckDbClusterSnapshotExists("aws_db_cluster_snapshot.test", &v),
 					resource.TestCheckResourceAttr("aws_db_cluster_snapshot.test", "tags.Name", "value1"),
 				),
 			},
