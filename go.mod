@@ -3,7 +3,7 @@ module github.com/terraform-providers/terraform-provider-aws
 require (
 	github.com/aws/aws-sdk-go v1.19.49
 	github.com/beevik/etree v1.1.0
-	github.com/bflad/tfproviderlint v0.3.0
+	github.com/bflad/tfproviderlint v0.4.0
 	github.com/client9/misspell v0.3.4
 	github.com/golangci/go-tools v0.0.0-20190124090046-35a9f45a5db0 // indirect
 	github.com/golangci/golangci-lint v1.17.1

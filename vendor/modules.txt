@@ -181,7 +181,7 @@ github.com/aws/aws-sdk-go/private/protocol/query/queryutil
 github.com/aws/aws-sdk-go/internal/sdkuri
 # github.com/beevik/etree v1.1.0
 github.com/beevik/etree
-# github.com/bflad/tfproviderlint v0.3.0
+# github.com/bflad/tfproviderlint v0.4.0
 github.com/bflad/tfproviderlint/cmd/tfproviderlint
 github.com/bflad/tfproviderlint/passes/AT001
 github.com/bflad/tfproviderlint/passes/AT002
@@ -197,14 +197,27 @@ github.com/bflad/tfproviderlint/passes/S003
 github.com/bflad/tfproviderlint/passes/S004
 github.com/bflad/tfproviderlint/passes/S005
 github.com/bflad/tfproviderlint/passes/S006
+github.com/bflad/tfproviderlint/passes/S007
+github.com/bflad/tfproviderlint/passes/S008
+github.com/bflad/tfproviderlint/passes/S009
+github.com/bflad/tfproviderlint/passes/S010
+github.com/bflad/tfproviderlint/passes/S011
+github.com/bflad/tfproviderlint/passes/S012
+github.com/bflad/tfproviderlint/passes/S013
+github.com/bflad/tfproviderlint/passes/S014
+github.com/bflad/tfproviderlint/passes/S015
+github.com/bflad/tfproviderlint/passes/S016
+github.com/bflad/tfproviderlint/passes/S017
+github.com/bflad/tfproviderlint/passes/S018
+github.com/bflad/tfproviderlint/passes/S019
 github.com/bflad/tfproviderlint/passes/acctestcase
 github.com/bflad/tfproviderlint/passes/commentignore
 github.com/bflad/tfproviderlint/passes/acctestfunc
 github.com/bflad/tfproviderlint/passes/resourcedataset
 github.com/bflad/tfproviderlint/passes/schemaresource
 github.com/bflad/tfproviderlint/passes/schemaschema
-github.com/bflad/tfproviderlint/helper/terraformtype
 github.com/bflad/tfproviderlint/passes/schemamap
+github.com/bflad/tfproviderlint/helper/terraformtype
 # github.com/bgentry/go-netrc v0.0.0-20140422174119-9fd32a8b3d3d
 github.com/bgentry/go-netrc/netrc
 # github.com/bgentry/speakeasy v0.1.0

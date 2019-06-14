@@ -54,8 +54,8 @@ github.com/aws/aws-sdk-go v1.19.49/go.mod h1:KmX6BPdI08NWTb3/sm4ZGu5ShLoqVDhKgpi
 github.com/beevik/etree v1.1.0 h1:T0xke/WvNtMoCqgzPhkX2r4rjY3GDZFi+FjpRZY2Jbs=
 github.com/beevik/etree v1.1.0/go.mod h1:r8Aw8JqVegEf0w2fDnATrX9VpkMcyFeM0FhwO62wh+A=
 github.com/beorn7/perks v0.0.0-20180321164747-3a771d992973/go.mod h1:Dwedo/Wpr24TaqPxmxbtue+5NUziq4I4S80YR8gNf3Q=
-github.com/bflad/tfproviderlint v0.3.0 h1:8QarkW8DSOgTI/r60yaf+YCxB7R6Ejb8h4fJDTIdPj0=
-github.com/bflad/tfproviderlint v0.3.0/go.mod h1:dhfYzvaPNGm7yzUXj/wEwVzwe+LQAOkmXnwQw8D4rio=
+github.com/bflad/tfproviderlint v0.4.0 h1:Pu6ascgpZKUPk0ZYx8scf658K2jJbxT1A/zCfdZamt0=
+github.com/bflad/tfproviderlint v0.4.0/go.mod h1:WKh84vz0JS/2Pb4vHrk3kUMIli2jO5Kqc6sgW1azOQM=
 github.com/bgentry/go-netrc v0.0.0-20140422174119-9fd32a8b3d3d h1:xDfNPAt8lFiC1UJrqV3uuy861HCTo708pDMbjHHdCas=
 github.com/bgentry/go-netrc v0.0.0-20140422174119-9fd32a8b3d3d/go.mod h1:6QX/PXZ00z/TKoufEY6K/a0k6AhaJrQKdFe6OfVXsa4=
 github.com/bgentry/speakeasy v0.1.0 h1:ByYyxL9InA1OWqxJqqp2A5pYHUrCiAL6K3J+LKSsQkY=
