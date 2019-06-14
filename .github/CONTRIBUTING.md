@@ -214,7 +214,7 @@ guidelines.
    to exercise the behavior of your code.
  - [ ] __Documentation updates__: If your code makes any changes that need to
    be documented, you should include those doc updates in the same PR. This
-   includes things like new resource elements or changes in default values.
+   includes things like new resource attributes or changes in default values.
    The [Terraform website][website] source is in this repo and includes
    instructions for getting a local copy of the site up and running if you'd
    like to preview your changes.
