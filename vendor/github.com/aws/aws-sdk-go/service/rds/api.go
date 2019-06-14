@@ -21382,22 +21382,6 @@ type DescribeDBClusterSnapshotsInput struct {
 
 const Tags = "ListTagsForResource"
 
-func (c *RDS) ListTagsForResourceRequest(input *ListTagsForResourceInput) (req *request.Request, output *ListTagsForResourceOutput) {
-	op := &request.Operation{
-		Name:       Tags,
-		HTTPMethod: "POST",
-		HTTPPath:   "/",
-	}
-
-	if input == nil {
-		input = &ListTagsForResourceInput{}
-	}
-
-	output = &ListTagsForResourceOutput{}
-	req = c.newRequest(op, input, output)
-	return
-}
-
 // String returns the string representation
 func (s DescribeDBClusterSnapshotsInput) String() string {
 	return awsutil.Prettify(s)
