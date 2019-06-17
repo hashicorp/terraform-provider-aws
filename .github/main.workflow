@@ -20,3 +20,14 @@ action "pr-label" {
         LABEL_SPEC_FILE = ".github/PULL_REQUEST_LABELS.yml"
     }
 }
+
+workflow "Issue triage" {
+  on = "issue"
+  resolves = "Apply Triage Label"
+}
+
+action "Apply Triage Label" {
+  uses = "actions/github@v1.0.0"
+  args = "label needs-triage --action=opened" # Only when issues are opened!
+  secrets = ["GITHUB_TOKEN"]
+}
