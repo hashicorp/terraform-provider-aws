@@ -7,6 +7,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
+	"github.com/aws/aws-sdk-go/aws/endpoints"
 	"github.com/aws/aws-sdk-go/aws/request"
 	"github.com/aws/aws-sdk-go/service/acm"
 	"github.com/aws/aws-sdk-go/service/acmpca"
@@ -393,7 +394,6 @@ func (c *Config) Client() (interface{}, error) {
 		fsxconn:                             fsx.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["fsx"])})),
 		gameliftconn:                        gamelift.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["gamelift"])})),
 		glacierconn:                         glacier.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["glacier"])})),
-		globalacceleratorconn:               globalaccelerator.New(sess.Copy(&aws.Config{Region: aws.String("us-west-2"), Endpoint: aws.String(c.Endpoints["globalaccelerator"])})),
 		glueconn:                            glue.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["glue"])})),
 		guarddutyconn:                       guardduty.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["guardduty"])})),
 		iamconn:                             iam.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["iam"])})),
@@ -425,7 +425,6 @@ func (c *Config) Client() (interface{}, error) {
 		pinpointconn:                        pinpoint.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["pinpoint"])})),
 		pricingconn:                         pricing.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["pricing"])})),
 		quicksightconn:                      quicksight.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["quicksight"])})),
-		r53conn:                             route53.New(sess.Copy(&aws.Config{Region: aws.String("us-east-1"), Endpoint: aws.String(c.Endpoints["route53"])})),
 		ramconn:                             ram.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["ram"])})),
 		rdsconn:                             rds.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["rds"])})),
 		redshiftconn:                        redshift.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["redshift"])})),
@@ -442,7 +441,6 @@ func (c *Config) Client() (interface{}, error) {
 		serverlessapplicationrepositoryconn: serverlessapplicationrepository.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["serverlessrepo"])})),
 		sesConn:                             ses.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["ses"])})),
 		sfnconn:                             sfn.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["stepfunctions"])})),
-		shieldconn:                          shield.New(sess.Copy(&aws.Config{Region: aws.String("us-east-1"), Endpoint: aws.String(c.Endpoints["shield"])})),
 		simpledbconn:                        simpledb.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["sdb"])})),
 		snsconn:                             sns.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["sns"])})),
 		sqsconn:                             sqs.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["sqs"])})),
@@ -458,13 +456,43 @@ func (c *Config) Client() (interface{}, error) {
 		xrayconn:                            xray.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["xray"])})),
 	}
 
+	// "Global" services that require customizations
+	globalAcceleratorConfig := &aws.Config{
+		Endpoint: aws.String(c.Endpoints["globalaccelerator"]),
+	}
+	route53Config := &aws.Config{
+		Endpoint: aws.String(c.Endpoints["route53"]),
+	}
+	shieldConfig := &aws.Config{
+		Endpoint: aws.String(c.Endpoints["shield"]),
+	}
+
 	// Handle deprecated endpoint configurations
 	if c.Endpoints["kinesis_analytics"] != "" {
 		client.kinesisanalyticsconn = kinesisanalytics.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["kinesis_analytics"])}))
 	}
 	if c.Endpoints["r53"] != "" {
-		client.r53conn = route53.New(sess.Copy(&aws.Config{Region: aws.String("us-east-1"), Endpoint: aws.String(c.Endpoints["r53"])}))
+		route53Config.Endpoint = aws.String(c.Endpoints["r53"])
 	}
+
+	// Force "global" services to correct regions
+	switch partition {
+	case endpoints.AwsPartitionID:
+		globalAcceleratorConfig.Region = aws.String(endpoints.UsWest2RegionID)
+		route53Config.Region = aws.String(endpoints.UsEast1RegionID)
+		shieldConfig.Region = aws.String(endpoints.UsEast1RegionID)
+	case endpoints.AwsUsGovPartitionID:
+		// The AWS Go SDK is missing endpoint information for Route 53 in the AWS GovCloud (US) partition.
+		// This can likely be removed in the future.
+		if aws.StringValue(route53Config.Endpoint) == "" {
+			route53Config.Endpoint = aws.String("https://route53.us-gov.amazonaws.com")
+		}
+		route53Config.Region = aws.String(endpoints.UsGovWest1RegionID)
+	}
+
+	client.globalacceleratorconn = globalaccelerator.New(sess.Copy(globalAcceleratorConfig))
+	client.r53conn = route53.New(sess.Copy(route53Config))
+	client.shieldconn = shield.New(sess.Copy(shieldConfig))
 
 	// Workaround for https://github.com/aws/aws-sdk-go/issues/1376
 	client.kinesisconn.Handlers.Retry.PushBack(func(r *request.Request) {
