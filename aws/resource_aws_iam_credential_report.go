@@ -6,6 +6,7 @@ package aws
 import (
 	"bytes"
 	"log"
+	"regexp"
 	"time"
 
 	"encoding/csv"
@@ -54,29 +55,29 @@ func resourceAwsIamCredentialReport() *schema.Resource {
 							Type:     schema.TypeBool,
 							Computed: true,
 						},
-						"access_key_1_active": {
+						"mfa_virtual": {
 							Type:     schema.TypeBool,
 							Computed: true,
 						},
-						"access_key_1_last_used_date": {
-							Type:     schema.TypeString,
+						"access_keys": {
+							Type:     schema.TypeList,
 							Computed: true,
-						},
-						"access_key_1_last_rotated": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"access_key_2_active": {
-							Type:     schema.TypeBool,
-							Computed: true,
-						},
-						"access_key_2_last_used_date": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"access_key_2_last_rotated": {
-							Type:     schema.TypeString,
-							Computed: true,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"active": {
+										Type:     schema.TypeBool,
+										Computed: true,
+									},
+									"last_used_date": {
+										Type:     schema.TypeString,
+										Computed: true,
+									},
+									"last_rotated": {
+										Type:     schema.TypeString,
+										Computed: true,
+									},
+								},
+							},
 						},
 					},
 				},
@@ -121,6 +122,37 @@ func resourceAwsIamCredentialReportRead(d *schema.ResourceData, meta interface{}
 			return resource.NonRetryableError(err)
 		}
 
+		// Retrieve info about virtual MFA devices.
+		listMfaInput := &iam.ListVirtualMFADevicesInput{}
+		listMfaOutput, err := iamconn.ListVirtualMFADevices(listMfaInput)
+		if err != nil {
+			return resource.NonRetryableError(err)
+		}
+
+		// Run through the virtual MFA devices to create a set of users that
+		// have them enabled.  The user names are constructed to match those in
+		// the credential report.
+		accountsWithVirtualMfa := map[string]bool{}
+		serial, _ := regexp.Compile("^arn:aws:iam::[0-9]+:mfa/(.*)$")
+		for _, virtualMfa := range listMfaOutput.VirtualMFADevices {
+			match := serial.FindStringSubmatch(*virtualMfa.SerialNumber)
+			if match != nil && len(match) > 1 {
+				accountName := match[1]
+				if accountName == "root-account-mfa-device" {
+					accountName = "<root_account>"
+				}
+
+				accountsWithVirtualMfa[accountName] = true
+			}
+		}
+
+		// Extend the report with the virtual MFA info.
+		for _, row := range report {
+			if _, ok := accountsWithVirtualMfa[row.User]; ok {
+				row.MfaVirtual = true
+			}
+		}
+
 		// Store report in the resource state.
 		d.Set("report", flattenCredentialReport(report))
 
@@ -132,20 +164,22 @@ func resourceAwsIamCredentialReportDelete(d *schema.ResourceData, meta interface
 	return nil
 }
 
-type CredentialReport = []ReportRow
+type CredentialReport = []*ReportRow
 
 type ReportRow struct {
-	User                   string
-	PasswordEnabled        bool
-	PasswordLastUsed       string
-	PasswordLastChanged    string
-	MfaActive              bool
-	AccessKey1Active       bool
-	AccessKey1LastUsedDate string
-	AccessKey1LastRotated  string
-	AccessKey2Active       bool
-	AccessKey2LastUsedDate string
-	AccessKey2LastRotated  string
+	User                string
+	PasswordEnabled     bool
+	PasswordLastUsed    string
+	PasswordLastChanged string
+	MfaActive           bool
+	MfaVirtual          bool
+	AccessKeys          []AccessKey
+}
+
+type AccessKey struct {
+	Active       bool
+	LastUsedDate string
+	LastRotated  string
 }
 
 func parseCsvCredentialReport(content []byte) (CredentialReport, error) {
@@ -168,20 +202,26 @@ func parseCsvCredentialReport(content []byte) (CredentialReport, error) {
 	}
 
 	// Copy rows into the datatype.
-	rows := make([]ReportRow, len(lines))
+	rows := make([]*ReportRow, len(lines))
 	for i, line := range lines {
-		rows[i] = ReportRow{
-			User:                   line[header["user"]],
-			PasswordEnabled:        parseCsvBool(line[header["password_enabled"]]),
-			PasswordLastUsed:       line[header["password_last_used"]],
-			PasswordLastChanged:    line[header["password_last_changed"]],
-			MfaActive:              parseCsvBool(line[header["mfa_active"]]),
-			AccessKey1Active:       parseCsvBool(line[header["access_key_1_active"]]),
-			AccessKey1LastUsedDate: line[header["access_key_1_last_used_date"]],
-			AccessKey1LastRotated:  line[header["access_key_1_last_rotated"]],
-			AccessKey2Active:       parseCsvBool(line[header["access_key_2_active"]]),
-			AccessKey2LastUsedDate: line[header["access_key_2_last_used_date"]],
-			AccessKey2LastRotated:  line[header["access_key_2_last_rotated"]],
+		rows[i] = &ReportRow{
+			User:                line[header["user"]],
+			PasswordEnabled:     parseCsvBool(line[header["password_enabled"]]),
+			PasswordLastUsed:    line[header["password_last_used"]],
+			PasswordLastChanged: line[header["password_last_changed"]],
+			MfaActive:           parseCsvBool(line[header["mfa_active"]]),
+			AccessKeys: []AccessKey{
+				AccessKey{
+					Active:       parseCsvBool(line[header["access_key_1_active"]]),
+					LastUsedDate: line[header["access_key_1_last_used_date"]],
+					LastRotated:  line[header["access_key_1_last_rotated"]],
+				},
+				AccessKey{
+					Active:       parseCsvBool(line[header["access_key_2_active"]]),
+					LastUsedDate: line[header["access_key_2_last_used_date"]],
+					LastRotated:  line[header["access_key_2_last_rotated"]],
+				},
+			},
 		}
 	}
 
@@ -193,22 +233,31 @@ func parseCsvBool(csv string) bool {
 }
 
 func flattenCredentialReport(report CredentialReport) []map[string]interface{} {
-	result := make([]map[string]interface{}, 0, len(report))
+	out := make([]map[string]interface{}, 0)
 	for _, row := range report {
-		r := map[string]interface{}{
-			"user":                        row.User,
-			"password_enabled":            row.PasswordEnabled,
-			"password_last_used":          row.PasswordLastUsed,
-			"password_last_changed":       row.PasswordLastChanged,
-			"mfa_active":                  row.MfaActive,
-			"access_key_1_active":         row.AccessKey1Active,
-			"access_key_1_last_used_date": row.AccessKey1LastUsedDate,
-			"access_key_1_last_rotated":   row.AccessKey1LastRotated,
-			"access_key_2_active":         row.AccessKey2Active,
-			"access_key_2_last_used_date": row.AccessKey2LastUsedDate,
-			"access_key_2_last_rotated":   row.AccessKey2LastRotated,
+		m := map[string]interface{}{
+			"user":                  row.User,
+			"password_enabled":      row.PasswordEnabled,
+			"password_last_used":    row.PasswordLastUsed,
+			"password_last_changed": row.PasswordLastChanged,
+			"mfa_active":            row.MfaActive,
+			"mfa_virtual":           row.MfaVirtual,
+			"access_keys":           flattenAccessKeys(row.AccessKeys),
 		}
-		result = append(result, r)
+		out = append(out, m)
 	}
-	return result
+	return out
+}
+
+func flattenAccessKeys(accessKeys []AccessKey) []map[string]interface{} {
+	out := make([]map[string]interface{}, 0)
+	for _, accessKey := range accessKeys {
+		m := map[string]interface{}{
+			"active":         accessKey.Active,
+			"last_used_date": accessKey.LastUsedDate,
+			"last_rotated":   accessKey.LastRotated,
+		}
+		out = append(out, m)
+	}
+	return out
 }
