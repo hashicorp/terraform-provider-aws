@@ -337,7 +337,7 @@ func flattenFirehoseDataFormatConversionConfiguration(dfcc *firehose.DataFormatC
 	// 1. With a nil value
 	// 2. With enabled set to false and nil for ALL the config sections.
 	// These two cases are equivalent so we use the same state description, to avoid diffs.
-	if enabled == false && len(ifc) == 0 && len(ofc) == 0 && len(sc) == 0 {
+	if !enabled && len(ifc) == 0 && len(ofc) == 0 && len(sc) == 0 {
 		log.Printf("Found ambiguous AWS response")
 		return []map[string]interface{}{}
 	}
@@ -551,7 +551,7 @@ func flattenProcessingConfiguration(pc *firehose.ProcessingConfiguration, roleAr
 	// 1. With a nil value
 	// 2. With an empty processor list and enabled set to false.
 	// These are equivalent so we use the same state description, to avoid diffs.
-	if enabled == false && len(pc.Processors) == 0 {
+	if !enabled && len(pc.Processors) == 0 {
 		return []map[string]interface{}{}
 	}
 
