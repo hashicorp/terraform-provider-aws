@@ -318,10 +318,10 @@ func resourceAwsElasticacheParameterGroupUpdate(d *schema.ResourceData, meta int
 func resourceAwsElasticacheParameterGroupDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).elasticacheconn
 
-	return resource.Retry(3*time.Minute, func() *resource.RetryError {
-		deleteOpts := elasticache.DeleteCacheParameterGroupInput{
-			CacheParameterGroupName: aws.String(d.Id()),
-		}
+	deleteOpts := elasticache.DeleteCacheParameterGroupInput{
+		CacheParameterGroupName: aws.String(d.Id()),
+	}
+	err := resource.Retry(3*time.Minute, func() *resource.RetryError {
 		_, err := conn.DeleteCacheParameterGroup(&deleteOpts)
 		if err != nil {
 			awsErr, ok := err.(awserr.Error)
@@ -335,6 +335,10 @@ func resourceAwsElasticacheParameterGroupDelete(d *schema.ResourceData, meta int
 		}
 		return nil
 	})
+	if isResourceTimeoutError(err) {
+		_, err = conn.DeleteCacheParameterGroup(&deleteOpts)
+	}
+	return err
 }
 
 func resourceAwsElasticacheParameterHash(v interface{}) int {

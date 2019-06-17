@@ -852,8 +852,11 @@ func deleteElasticacheReplicationGroup(replicationGroupID string, conn *elastica
 		}
 		return nil
 	})
+	if isResourceTimeoutError(err) {
+		_, err = conn.DeleteReplicationGroup(input)
+	}
 	if err != nil {
-		return err
+		return fmt.Errorf("error deleting Elasticache Replication Group: %s", err)
 	}
 
 	log.Printf("[DEBUG] Waiting for deletion: %s", replicationGroupID)

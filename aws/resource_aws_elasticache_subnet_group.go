@@ -153,7 +153,7 @@ func resourceAwsElasticacheSubnetGroupDelete(d *schema.ResourceData, meta interf
 
 	log.Printf("[DEBUG] Cache subnet group delete: %s", d.Id())
 
-	return resource.Retry(5*time.Minute, func() *resource.RetryError {
+	err := resource.Retry(5*time.Minute, func() *resource.RetryError {
 		_, err := conn.DeleteCacheSubnetGroup(&elasticache.DeleteCacheSubnetGroupInput{
 			CacheSubnetGroupName: aws.String(d.Id()),
 		})
@@ -173,4 +173,10 @@ func resourceAwsElasticacheSubnetGroupDelete(d *schema.ResourceData, meta interf
 		}
 		return nil
 	})
+	if isResourceTimeoutError(err) {
+		_, err = conn.DeleteCacheSubnetGroup(&elasticache.DeleteCacheSubnetGroupInput{
+			CacheSubnetGroupName: aws.String(d.Id()),
+		})
+	}
+	return err
 }
