@@ -328,11 +328,25 @@ func flattenFirehoseDataFormatConversionConfiguration(dfcc *firehose.DataFormatC
 		return []map[string]interface{}{}
 	}
 
+	enabled := aws.BoolValue(dfcc.Enabled)
+	ifc := flattenFirehoseInputFormatConfiguration(dfcc.InputFormatConfiguration)
+	ofc := flattenFirehoseOutputFormatConfiguration(dfcc.OutputFormatConfiguration)
+	sc := flattenFirehoseSchemaConfiguration(dfcc.SchemaConfiguration)
+
+	// The AWS SDK can represent "no data format conversion configuration" in two ways:
+	// 1. With a nil value
+	// 2. With enabled set to false and nil for ALL the config sections.
+	// These two cases are equivalent so we use the same state description, to avoid diffs.
+	if enabled == false && len(ifc) == 0 && len(ofc) == 0 && len(sc) == 0 {
+		log.Printf("Found ambiguous AWS response")
+		return []map[string]interface{}{}
+	}
+
 	m := map[string]interface{}{
-		"enabled":                     aws.BoolValue(dfcc.Enabled),
-		"input_format_configuration":  flattenFirehoseInputFormatConfiguration(dfcc.InputFormatConfiguration),
-		"output_format_configuration": flattenFirehoseOutputFormatConfiguration(dfcc.OutputFormatConfiguration),
-		"schema_configuration":        flattenFirehoseSchemaConfiguration(dfcc.SchemaConfiguration),
+		"enabled":                     enabled,
+		"input_format_configuration":  ifc,
+		"output_format_configuration": ofc,
+		"schema_configuration":        sc,
 	}
 
 	return []map[string]interface{}{m}
@@ -531,6 +545,16 @@ func flattenProcessingConfiguration(pc *firehose.ProcessingConfiguration, roleAr
 		return []map[string]interface{}{}
 	}
 
+	enabled := aws.BoolValue(pc.Enabled)
+
+	// The AWS SDK can represent "no processing configuration" in two ways:
+	// 1. With a nil value
+	// 2. With an empty processor list and enabled set to false.
+	// These are equivalent so we use the same state description, to avoid diffs.
+	if enabled == false && len(pc.Processors) == 0 {
+		return []map[string]interface{}{}
+	}
+
 	processingConfiguration := make([]map[string]interface{}, 1)
 
 	// It is necessary to explicitly filter this out
@@ -571,7 +595,7 @@ func flattenProcessingConfiguration(pc *firehose.ProcessingConfiguration, roleAr
 		}
 	}
 	processingConfiguration[0] = map[string]interface{}{
-		"enabled":    aws.BoolValue(pc.Enabled),
+		"enabled":    enabled,
 		"processors": processors,
 	}
 	return processingConfiguration
