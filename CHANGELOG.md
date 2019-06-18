@@ -1,5 +1,9 @@
 ## 2.16.0 (Unreleased)
 
+ENHANCEMENTS:
+
+* resource/aws_secretsmanager_secret: Tag on create (support tag limiting IAM policies) [GH-9023]
+
 BUG FIXES:
 
 * resource/aws_dx_gateway: Fix resource import with associations [GH-8970]
