@@ -1,4 +1,9 @@
 ## 2.16.0 (Unreleased)
+
+BUG FIXES:
+
+* resource/aws_dx_gateway: Fix resource import with associations [GH-8970]
+
 ## 2.15.0 (June 13, 2019)
 
 FEATURES:
