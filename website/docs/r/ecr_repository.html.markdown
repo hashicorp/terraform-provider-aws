@@ -3,12 +3,12 @@ layout: "aws"
 page_title: "AWS: aws_ecr_repository"
 sidebar_current: "docs-aws-resource-ecr-repository"
 description: |-
-  Provides an EC2 Container Registry Repository.
+  Provides an Elastic Container Registry Repository.
 ---
 
 # Resource: aws_ecr_repository
 
-Provides an EC2 Container Registry Repository.
+Provides an Elastic Container Registry Repository.
 
 ## Example Usage
 
