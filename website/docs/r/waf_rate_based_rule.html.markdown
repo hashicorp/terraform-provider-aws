@@ -46,7 +46,7 @@ The following arguments are supported:
 * `name` - (Required) The name or description of the rule.
 * `rate_key` - (Required) Valid value is IP.
 * `rate_limit` - (Required) The maximum number of requests, which have an identical value in the field specified by the RateKey, allowed in a five-minute period. Minimum value is 2000.
-* `predicates` - (Optional) One of ByteMatchSet, IPSet, SizeConstraintSet, SqlInjectionMatchSet, or XssMatchSet objects to include in a rule.
+* `predicates` - (Optional) The objects to include in a rule (documented below).
 
 ## Nested Blocks
 
