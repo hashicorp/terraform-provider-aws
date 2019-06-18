@@ -3,6 +3,7 @@
 The AT001 analyzer reports likely incorrect uses of `TestCase`
 which do not define a `CheckDestroy` function. `CheckDestroy` is used to verify
 that test infrastructure has been removed at the end of an acceptance test.
+Ignores file names that begin with `data_source_`.
 
 More information can be found at:
 https://www.terraform.io/docs/extend/testing/acceptance-tests/testcase.html#checkdestroy
