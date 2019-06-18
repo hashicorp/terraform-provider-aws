@@ -22,7 +22,7 @@ action "pr-label" {
 }
 
 workflow "Issue triage" {
-  on = "issue"
+  on = "issues"
   resolves = "Apply Triage Label"
 }
 
