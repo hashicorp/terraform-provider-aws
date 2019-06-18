@@ -353,36 +353,33 @@ func resourceAwsSsmDocumentDelete(d *schema.ResourceData, meta interface{}) erro
 		return err
 	}
 
+	input := &ssm.DescribeDocumentInput{
+		Name: aws.String(d.Get("name").(string)),
+	}
 	log.Printf("[DEBUG] Waiting for SSM Document %q to be deleted", d.Get("name").(string))
 	err = resource.Retry(10*time.Minute, func() *resource.RetryError {
-		_, err := ssmconn.DescribeDocument(&ssm.DescribeDocumentInput{
-			Name: aws.String(d.Get("name").(string)),
-		})
+		_, err := ssmconn.DescribeDocument(input)
+
+		if isAWSErr(err, ssm.ErrCodeInvalidDocument, "") {
+			return nil
+		}
 
 		if err != nil {
-			awsErr, ok := err.(awserr.Error)
-			if !ok {
-				return resource.NonRetryableError(err)
-			}
-
-			if awsErr.Code() == "InvalidDocument" {
-				return nil
-			}
-
 			return resource.NonRetryableError(err)
 		}
 
 		return resource.RetryableError(fmt.Errorf("SSM Document (%s) still exists", d.Id()))
 	})
+
 	if isResourceTimeoutError(err) {
-		_, err = ssmconn.DescribeDocument(&ssm.DescribeDocumentInput{
-			Name: aws.String(d.Get("name").(string)),
-		})
+		_, err = ssmconn.DescribeDocument(input)
+	}
+	if isAWSErr(err, ssm.ErrCodeInvalidDocument, "") {
+		return nil
 	}
 	if err != nil {
 		return fmt.Errorf("error waiting for SSM Document (%s) deletion: %s", d.Id(), err)
 	}
-
 	return nil
 }
 
