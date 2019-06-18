@@ -3,7 +3,7 @@ layout: "aws"
 page_title: "AWS: aws_ecr_repository_policy"
 sidebar_current: "docs-aws-resource-ecr-repository-policy"
 description: |-
-  Provides an ECR Repository Policy.
+  Provides an Elastic Container Registry Repository Policy.
 ---
 
 # Resource: aws_ecr_repository_policy
