@@ -12,6 +12,7 @@ BUG FIXES:
 * resource/aws_rds_cluster: Final retries after timeout creating and updating cluster [GH-8994]
 * resource/aws_rds_cluster_instance: Final retry after timeout creating cluster instance [GH-8994]
 * resource/aws_rds_global_cluster: Final retry after timeout deleting global cluster [GH-8994]
+* resource/aws_kinesis_firehose_delivery_stream: Add final retries when creating and updating firehose delivery streams [GH-9017]
 
 ## 2.15.0 (June 13, 2019)
 
