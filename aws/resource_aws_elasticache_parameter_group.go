@@ -338,7 +338,7 @@ func resourceAwsElasticacheParameterGroupDelete(d *schema.ResourceData, meta int
 	if isResourceTimeoutError(err) {
 		_, err = conn.DeleteCacheParameterGroup(&deleteOpts)
 	}
-	if isAWSErr(err, elasticache.ErrCodeCacheParameterGroupNotFoundFault, "")
+	if isAWSErr(err, elasticache.ErrCodeCacheParameterGroupNotFoundFault, "") {
 		return nil
 	}
 
