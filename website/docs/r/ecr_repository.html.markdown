@@ -8,7 +8,7 @@ description: |-
 
 # Resource: aws_ecr_repository
 
-Provides an EC2 Container Registry Repository.
+Provides an Elastic Container Registry Repository.
 
 ## Example Usage
 
