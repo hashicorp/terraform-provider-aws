@@ -13,7 +13,6 @@ ability to merge PRs and respond to issues.
 
 <!-- TOC depthFrom:2 -->
 
-- [HashiCorp vs. Community Providers](#hashicorp-vs-community-providers)
 - [Issues](#issues)
     - [Issue Reporting Checklists](#issue-reporting-checklists)
         - [Bug Reports](#bug-reports)
@@ -29,6 +28,7 @@ ability to merge PRs and respond to issues.
         - [New Service](#new-service)
         - [New Region](#new-region)
     - [Common Review Items](#common-review-items)
+        - [Go Coding Style](#go-coding-style)
         - [Resource Contribution Guidelines](#resource-contribution-guidelines)
         - [Acceptance Testing Guidelines](#acceptance-testing-guidelines)
     - [Writing Acceptance Tests](#writing-acceptance-tests)
@@ -38,38 +38,6 @@ ability to merge PRs and respond to issues.
         - [Writing and running Cross-Account Acceptance Tests](#writing-and-running-cross-account-acceptance-tests)
 
 <!-- /TOC -->
-
-## HashiCorp vs. Community Providers
-
-We separate providers out into what we call "HashiCorp Providers" and
-"Community Providers".
-
-HashiCorp providers are providers that we dedicate full-time resources to
-improving, supporting the latest features, and fixing bugs. These are providers
-we understand deeply and are confident we have the resources to manage
-ourselves.
-
-Community providers are providers where we depend on the community to contribute
-fixes and enhancements to improve. HashiCorp will run automated tests and ensure
-these providers continue to work, but will not dedicate full-time resources to
-add new features to these providers. These providers are available in official
-Terraform releases, but the functionality is primarily contributed.
-
-The current list of HashiCorp Providers is as follows:
-
- * `aws`
- * `azurerm`
- * `google`
- * `opc`
-
-Our testing standards are the same for both HashiCorp and Community providers,
-and HashiCorp runs full acceptance test suites for every provider nightly to
-ensure Terraform remains stable.
-
-We make the distinction between these two types of providers to help
-highlight the vast amounts of community effort that goes in to making Terraform
-great, and to help contributors better understand the role HashiCorp employees
-play in the various areas of the code base.
 
 ## Issues
 
@@ -153,27 +121,28 @@ expect:
 
 ### Pull Request Lifecycle
 
-1. You are welcome to submit your pull request for commentary or review before
-   it is fully completed. Please prefix the title of your pull request with
-   "[WIP]" to indicate this. It's also a good idea to include specific
-   questions or items you'd like feedback on.
+1. [Fork the GitHub repository](https://help.github.com/en/articles/fork-a-repo),
+   modify the code, and [create a pull request](https://help.github.com/en/articles/creating-a-pull-request-from-a-fork).
+   You are welcome to submit your pull request for commentary or review before
+   it is fully completed by creating a [draft pull request](https://help.github.com/en/articles/about-pull-requests#draft-pull-requests)
+   and including specific questions or items you'd like feedback on.
 
-2. Once you believe your pull request is ready to be merged, you can remove the
-   "[WIP]" prefix from the title and a team member will review. Follow [the
-   checklists below](#checklists-for-contribution) to help ensure that your
-   contribution will be merged quickly.
+1. Once you believe your pull request is ready to be reviewed, ensure the
+   pull request is not a draft pull request, and a team member will review. Follow
+   [the checklists below](#checklists-for-contribution) to help ensure that your
+   contribution can be easily reviewed and potentially merged.
 
-3. One of Terraform's provider team members will look over your contribution and
+1. One of Terraform's provider team members will look over your contribution and
    either approve it or provide comments letting you know if there is anything
    left to do. We do our best to keep up with the volume of PRs waiting for
    review, but it may take some time depending on the complexity of the work.
 
-4. Once all outstanding comments and checklist items have been addressed, your
+1. Once all outstanding comments and checklist items have been addressed, your
    contribution will be merged! Merged PRs will be included in the next
    Terraform release. The provider team takes care of updating the CHANGELOG as
    they merge.
 
-5. In some cases, we might decide that a PR should be closed without merging.
+1. In some cases, we might decide that a PR should be closed without merging.
    We'll make sure to provide clear reasoning when this happens.
 
 ### Checklists for Contribution
@@ -332,6 +301,13 @@ are generally expected to adhere to these items to maintain Terraform Provider
 quality. For any guidelines listed, contributors are encouraged to ask any
 questions and community reviewers are encouraged to provide review suggestions
 based on these guidelines to speed up the review and merge process.
+
+#### Go Coding Style
+
+The following Go language resources provide common coding preferences that may be referenced during review, if not automatically handled by the project's linting tools.
+
+- [Effective Go](https://golang.org/doc/effective_go.html)
+- [Go Code Review Comments](https://github.com/golang/go/wiki/CodeReviewComments)
 
 #### Resource Contribution Guidelines
 
