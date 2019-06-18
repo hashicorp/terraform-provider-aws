@@ -12,7 +12,6 @@ import (
 	"encoding/csv"
 
 	"github.com/aws/aws-sdk-go/aws/awserr"
-	"github.com/aws/aws-sdk-go/service/iam"
 
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/helper/schema"
@@ -95,15 +94,13 @@ func resourceAwsIamCredentialReportRead(d *schema.ResourceData, meta interface{}
 	iamconn := meta.(*AWSClient).iamconn
 
 	// Send a request to generate a credential report.
-	generateReportInput := &iam.GenerateCredentialReportInput{}
-	if _, err := iamconn.GenerateCredentialReport(generateReportInput); err != nil {
+	if _, err := iamconn.GenerateCredentialReport(nil); err != nil {
 		return err
 	}
 
 	return resource.Retry(time.Duration(1)*time.Minute, func() *resource.RetryError {
 		// Prepare a request to actually get the credential report.
-		getReportInput := &iam.GetCredentialReportInput{}
-		getReportOutput, err := iamconn.GetCredentialReport(getReportInput)
+		getReportOutput, err := iamconn.GetCredentialReport(nil)
 		if err != nil {
 			if awserr, ok := err.(awserr.Error); ok {
 				switch awserr.Code() {
@@ -123,8 +120,7 @@ func resourceAwsIamCredentialReportRead(d *schema.ResourceData, meta interface{}
 		}
 
 		// Retrieve info about virtual MFA devices.
-		listMfaInput := &iam.ListVirtualMFADevicesInput{}
-		listMfaOutput, err := iamconn.ListVirtualMFADevices(listMfaInput)
+		listMfaOutput, err := iamconn.ListVirtualMFADevices(nil)
 		if err != nil {
 			return resource.NonRetryableError(err)
 		}
