@@ -178,5 +178,14 @@ func resourceAwsElasticacheSubnetGroupDelete(d *schema.ResourceData, meta interf
 			CacheSubnetGroupName: aws.String(d.Id()),
 		})
 	}
-	return err
+
+	if isAWSErr(err, elasticache.ErrCodeCacheSubnetGroupNotFoundFault, "") {
+		return nil
+	}
+
+	if err != nil {
+		return fmt.Errorf("error deleting Elasticache Subnet Group (%s): %s", d.Id(), err)
+	}
+
+	return nil
 }
