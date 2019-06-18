@@ -4,6 +4,7 @@ ENHANCEMENTS:
 
 * resource/aws_codepipeline: Add `tags` argument [GH-8993]
 * resource/aws_codepipeline_webhook: Add `tags` argument [GH-8993]
+* resource/aws_organizations_organization: Add `non_master_accounts` attribute [GH-8926]
 * resource/aws_secretsmanager_secret: Tag on create (support tag limiting IAM policies) [GH-9023]
 
 BUG FIXES:
