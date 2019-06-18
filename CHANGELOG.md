@@ -9,9 +9,9 @@ ENHANCEMENTS:
 BUG FIXES:
 
 * resource/aws_dx_gateway: Fix resource import with associations [GH-8970]
-* resource/aws_rds_cluster: Final retries after timeout creating and updating cluster
-* resource/aws_rds_cluster_instance: Final retry after timeout creating cluster instance
-* resource/aws_rds_global_cluster: Final retry after timeout deleting global cluster
+* resource/aws_rds_cluster: Final retries after timeout creating and updating cluster [GH-8994]
+* resource/aws_rds_cluster_instance: Final retry after timeout creating cluster instance [GH-8994]
+* resource/aws_rds_global_cluster: Final retry after timeout deleting global cluster [GH-8994]
 
 ## 2.15.0 (June 13, 2019)
 
