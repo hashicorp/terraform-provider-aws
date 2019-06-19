@@ -296,6 +296,10 @@ func resourceAwsNeptuneParameterGroupDelete(d *schema.ResourceData, meta interfa
 		_, err = conn.DeleteDBParameterGroup(&deleteOpts)
 	}
 
+	if isAWSErr(err, neptune.ErrCodeDBParameterGroupNotFoundFault, "") {
+		return nil
+	}
+
 	if err != nil {
 		return fmt.Errorf("Error deleting Neptune Parameter Group: %s", err)
 	}
