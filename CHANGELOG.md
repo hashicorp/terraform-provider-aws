@@ -1,5 +1,9 @@
 ## 2.16.0 (Unreleased)
 
+FEATURES:
+
+* **New Resource:** `aws_ses_identity_policy` [GH-5128]
+
 ENHANCEMENTS:
 
 * resource/aws_codepipeline: Add `tags` argument [GH-8993]
