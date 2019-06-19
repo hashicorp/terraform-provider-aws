@@ -12,6 +12,7 @@ Requirements
 
 - [Terraform](https://www.terraform.io/downloads.html) 0.10+
 - [Go](https://golang.org/doc/install) 1.12 (to build the provider plugin)
+- [bzr](https://bazaar.canonical.com/en/) (to satisfy `make tools`)
 
 Developing the Provider
 ---------------------
