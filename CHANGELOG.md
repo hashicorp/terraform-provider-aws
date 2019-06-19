@@ -13,6 +13,7 @@ ENHANCEMENTS:
 
 BUG FIXES:
 
+* provider: Properly configure Route 53 service client in AWS GovCloud (US) [GH-9010]
 * resource/aws_cloudwatch_event_permission: Prevent not found error when deleted outside Terraform [GH-9044]
 * resource/aws_dx_gateway: Fix resource import with associations [GH-8970]
 * resource/aws_rds_cluster: Final retries after timeout creating and updating cluster [GH-8994]
