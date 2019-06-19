@@ -225,7 +225,6 @@ func resourceAwsRDSCluster() *schema.Resource {
 						},
 						"bucket_prefix": {
 							Type:     schema.TypeString,
-							Required: false,
 							Optional: true,
 							ForceNew: true,
 						},
@@ -288,7 +287,6 @@ func resourceAwsRDSCluster() *schema.Resource {
 
 			"snapshot_identifier": {
 				Type:     schema.TypeString,
-				Computed: false,
 				Optional: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
@@ -382,7 +380,6 @@ func resourceAwsRDSCluster() *schema.Resource {
 
 			"enabled_cloudwatch_logs_exports": {
 				Type:     schema.TypeList,
-				Computed: false,
 				Optional: true,
 				Elem: &schema.Schema{
 					Type: schema.TypeString,

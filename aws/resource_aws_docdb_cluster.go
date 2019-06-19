@@ -226,7 +226,6 @@ func resourceAwsDocDBCluster() *schema.Resource {
 
 			"enabled_cloudwatch_logs_exports": {
 				Type:     schema.TypeList,
-				Computed: false,
 				Optional: true,
 				Elem: &schema.Schema{
 					Type: schema.TypeString,

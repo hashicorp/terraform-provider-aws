@@ -51,6 +51,7 @@ lint:
 		-S015 \
 		-S016 \
 		-S017 \
+		-S019 \
 		./$(PKG_NAME)
 
 tools:
