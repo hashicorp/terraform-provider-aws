@@ -6,6 +6,7 @@ FEATURES:
 
 ENHANCEMENTS:
 
+* resource/aws_backup_vault: Support resource import [GH-9041]
 * resource/aws_codepipeline: Add `tags` argument [GH-8993]
 * resource/aws_codepipeline_webhook: Add `tags` argument [GH-8993]
 * resource/aws_organizations_organization: Add `non_master_accounts` attribute [GH-8926]
