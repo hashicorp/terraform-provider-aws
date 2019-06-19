@@ -247,7 +247,7 @@ func TestAccAWSDirectoryServiceDirectory_connector(t *testing.T) {
 }
 
 func TestAccAWSDirectoryServiceDirectory_withAliasAndSso(t *testing.T) {
-	randomInteger := acctest.RandInt()
+	alias := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
@@ -259,29 +259,26 @@ func TestAccAWSDirectoryServiceDirectory_withAliasAndSso(t *testing.T) {
 		CheckDestroy: testAccCheckDirectoryServiceDirectoryDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDirectoryServiceDirectoryConfig_withAlias(randomInteger),
+				Config: testAccDirectoryServiceDirectoryConfig_withAlias(alias),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceDirectoryExists("aws_directory_service_directory.bar_a"),
-					testAccCheckServiceDirectoryAlias("aws_directory_service_directory.bar_a",
-						fmt.Sprintf("tf-d-%d", randomInteger)),
+					testAccCheckServiceDirectoryAlias("aws_directory_service_directory.bar_a", alias),
 					testAccCheckServiceDirectorySso("aws_directory_service_directory.bar_a", false),
 				),
 			},
 			{
-				Config: testAccDirectoryServiceDirectoryConfig_withSso(randomInteger),
+				Config: testAccDirectoryServiceDirectoryConfig_withSso(alias),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceDirectoryExists("aws_directory_service_directory.bar_a"),
-					testAccCheckServiceDirectoryAlias("aws_directory_service_directory.bar_a",
-						fmt.Sprintf("tf-d-%d", randomInteger)),
+					testAccCheckServiceDirectoryAlias("aws_directory_service_directory.bar_a", alias),
 					testAccCheckServiceDirectorySso("aws_directory_service_directory.bar_a", true),
 				),
 			},
 			{
-				Config: testAccDirectoryServiceDirectoryConfig_withSso_modified(randomInteger),
+				Config: testAccDirectoryServiceDirectoryConfig_withSso_modified(alias),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceDirectoryExists("aws_directory_service_directory.bar_a"),
-					testAccCheckServiceDirectoryAlias("aws_directory_service_directory.bar_a",
-						fmt.Sprintf("tf-d-%d", randomInteger)),
+					testAccCheckServiceDirectoryAlias("aws_directory_service_directory.bar_a", alias),
 					testAccCheckServiceDirectorySso("aws_directory_service_directory.bar_a", false),
 				),
 			},
@@ -673,7 +670,7 @@ resource "aws_subnet" "bar" {
 }
 `
 
-func testAccDirectoryServiceDirectoryConfig_withAlias(randomInteger int) string {
+func testAccDirectoryServiceDirectoryConfig_withAlias(alias string) string {
 	return fmt.Sprintf(`
 data "aws_availability_zones" "available" {
   state = "available"
@@ -683,7 +680,7 @@ resource "aws_directory_service_directory" "bar_a" {
   name = "corp.notexample.com"
   password = "SuperSecretPassw0rd"
   size = "Small"
-  alias = "tf-d-%d"
+  alias = %[1]q
 
   vpc_settings {
     vpc_id = "${aws_vpc.main.id}"
@@ -714,10 +711,10 @@ resource "aws_subnet" "bar" {
     Name = "tf-acc-directory-service-directory-with-alias-bar"
   }
 }
-`, randomInteger)
+`, alias)
 }
 
-func testAccDirectoryServiceDirectoryConfig_withSso(randomInteger int) string {
+func testAccDirectoryServiceDirectoryConfig_withSso(alias string) string {
 	return fmt.Sprintf(`
 data "aws_availability_zones" "available" {
   state = "available"
@@ -727,7 +724,7 @@ resource "aws_directory_service_directory" "bar_a" {
   name = "corp.notexample.com"
   password = "SuperSecretPassw0rd"
   size = "Small"
-  alias = "tf-d-%d"
+  alias = %[1]q
   enable_sso = true
 
   vpc_settings {
@@ -759,10 +756,10 @@ resource "aws_subnet" "bar" {
     Name = "tf-acc-directory-service-directory-with-sso-bar"
   }
 }
-`, randomInteger)
+`, alias)
 }
 
-func testAccDirectoryServiceDirectoryConfig_withSso_modified(randomInteger int) string {
+func testAccDirectoryServiceDirectoryConfig_withSso_modified(alias string) string {
 	return fmt.Sprintf(`
 data "aws_availability_zones" "available" {
   state = "available"
@@ -772,7 +769,7 @@ resource "aws_directory_service_directory" "bar_a" {
   name = "corp.notexample.com"
   password = "SuperSecretPassw0rd"
   size = "Small"
-  alias = "tf-d-%d"
+  alias = %[1]q
   enable_sso = false
 
   vpc_settings {
@@ -804,5 +801,5 @@ resource "aws_subnet" "bar" {
     Name = "tf-acc-directory-service-directory-with-sso-bar"
   }
 }
-`, randomInteger)
+`, alias)
 }
