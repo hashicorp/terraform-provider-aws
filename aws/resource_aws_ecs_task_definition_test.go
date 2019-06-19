@@ -531,6 +531,12 @@ func TestAccAWSEcsTaskDefinition_ProxyConfiguration(t *testing.T) {
 					testAccCheckAWSEcsTaskDefinitionProxyConfiguration(&taskDefinition, containerName, proxyType, ignoredUid, ignoredGid, appPorts, proxyIngressPort, proxyEgressPort, egressIgnoredPorts, egressIgnoredIPs),
 				),
 			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateIdFunc: testAccAWSEcsTaskDefinitionImportStateIdFunc(resourceName),
+				ImportStateVerify: true,
+			},
 		},
 	})
 }

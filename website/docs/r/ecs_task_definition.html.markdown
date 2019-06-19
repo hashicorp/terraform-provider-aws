@@ -73,14 +73,14 @@ resource "aws_ecs_task_definition" "service" {
   container_definitions = "${file("task-definitions/service.json")}"
 
   proxy_configuration {
-    type = "APPMESH"
+    type           = "APPMESH"
     container_name = "applicationContainerName"
     properties = {
-      IgnoredUID = "1337"
-      AppPorts = "8080"
-      ProxyIngressPort = 15000
-      ProxyEgressPort = 15001
+      AppPorts         = "8080"
       EgressIgnoredIPs = "169.254.170.2,169.254.169.254"
+      IgnoredUID       = "1337"
+      ProxyEgressPort  = 15001
+      ProxyIngressPort = 15000
     }
   }
 }
@@ -158,9 +158,9 @@ Guide](http://docs.aws.amazon.com/AmazonECS/latest/developerguide/cluster-query-
 
 #### Proxy Configuration Arguments
 
-* `type` - (Optional) The proxy type. The only supported value is `APPMESH`.
 * `container_name` - (Required) The name of the container that will serve as the App Mesh proxy.
 * `properties` - (Required) The set of network configuration parameters to provide the Container Network Interface (CNI) plugin, specified a key-value mapping.
+* `type` - (Optional) The proxy type. The default value is `APPMESH`. The only supported value is `APPMESH`.
 
 ## Attributes Reference
 

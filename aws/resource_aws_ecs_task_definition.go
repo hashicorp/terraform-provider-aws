@@ -452,11 +452,11 @@ func resourceAwsEcsTaskDefinitionRead(d *schema.ResourceData, meta interface{}) 
 	}
 
 	if err := d.Set("requires_compatibilities", flattenStringList(taskDefinition.RequiresCompatibilities)); err != nil {
-		return err
+		return fmt.Errorf("error setting requires_compatibilities: %s", err)
 	}
 
 	if err := d.Set("proxy_configuration", flattenProxyConfiguration(taskDefinition.ProxyConfiguration)); err != nil {
-		return err
+		return fmt.Errorf("error setting proxy_configuration: %s", err)
 	}
 
 	return nil
@@ -484,13 +484,13 @@ func flattenProxyConfiguration(pc *ecs.ProxyConfiguration) []map[string]interfac
 	meshProperties := make(map[string]string)
 	if pc.Properties != nil {
 		for _, prop := range pc.Properties {
-			meshProperties[*prop.Name] = *prop.Value
+			meshProperties[aws.StringValue(prop.Name)] = aws.StringValue(prop.Value)
 		}
 	}
 
 	config := make(map[string]interface{})
-	config["container_name"] = *pc.ContainerName
-	config["type"] = *pc.Type
+	config["container_name"] = aws.StringValue(pc.ContainerName)
+	config["type"] = aws.StringValue(pc.Type)
 	config["properties"] = meshProperties
 
 	return []map[string]interface{}{
