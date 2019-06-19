@@ -158,8 +158,6 @@ func resourceAwsGlobalAcceleratorEndpointGroupCreate(d *schema.ResourceData, met
 		return err
 	}
 
-	return resourceAwsGlobalAcceleratorEndpointGroupRead(d, meta)
-
 	// Creating an endpoint group triggers the accelerator to change status to InPending
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{globalaccelerator.AcceleratorStatusInProgress},
@@ -325,8 +323,6 @@ func resourceAwsGlobalAcceleratorEndpointGroupUpdate(d *schema.ResourceData, met
 		return err
 	}
 
-	return resourceAwsGlobalAcceleratorEndpointGroupRead(d, meta)
-
 	// Creating an endpoint group triggers the accelerator to change status to InPending
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{globalaccelerator.AcceleratorStatusInProgress},
@@ -370,8 +366,6 @@ func resourceAwsGlobalAcceleratorEndpointGroupDelete(d *schema.ResourceData, met
 	if err != nil {
 		return err
 	}
-
-	return nil
 
 	// Deleting an endpoint group triggers the accelerator to change status to InPending
 	stateConf := &resource.StateChangeConf{
