@@ -1,12 +1,12 @@
 ---
 layout: "aws"
-page_title: "AWS: globalaccelerator_endpoint_group"
+page_title: "AWS: globalaaws_globalaccelerator_endpoint_groupccelerator_endpoint_group"
 sidebar_current: "docs-aws-resource-globalaccelerator-endpoint-group"
 description: |-
   Provides a Global Accelerator endpoint group.
 ---
 
-# Resource: globalaccelerator_endpoint_group
+# Resource: aws_globalaccelerator_endpoint_group
 
 Provides a Global Accelerator endpoint group.
 
@@ -14,16 +14,16 @@ Provides a Global Accelerator endpoint group.
 
 In addition to all arguments above, the following attributes are exported:
 
-* `id` - The Amazon Resource Name (ARN) of the accelerator.
+* `id` - The Amazon Resource Name (ARN) of the endpoint group.
 
 ## Example Usage
 
 ```hcl
 resource "globalaccelerator_endpoint_group" "example" {
-  listener_arn            = "arn:aws:globalaccelerator::123456789012:accelerator/1234abcd-abcd-1234-abcd-1234abcdefgh/listener/0123vxyz"
+  listener_arn            = "${aws_globalaccelerator_listener.example.id}"
   endpoint_configuration {
-    EndpointId   = "arn:aws:elasticloadbalancing:us-east-1:123456789012:loadbalancer/app/my-load-balancer/50dc6c495c0c9188"
-    Weight = "100"
+    endpoint_id   = "${aws_lb.example.arn}"
+    weight = 100
   }
 }
 ```
@@ -43,8 +43,8 @@ The following arguments are supported:
 
 **endpoint_configuration** supports the following attributes:
 
-* `EndpointId` - (Optional) An ID for the endpoint. If the endpoint is a Network Load Balancer or Application Load Balancer, this is the Amazon Resource Name (ARN) of the resource. If the endpoint is an Elastic IP address, this is the Elastic IP address allocation ID.
-* `Weight` - (Optional) The weight associated with the endpoint. When you add weights to endpoints, you configure AWS Global Accelerator to route traffic based on proportions that you specify. 
+* `endpoint_id` - (Optional) An ID for the endpoint. If the endpoint is a Network Load Balancer or Application Load Balancer, this is the Amazon Resource Name (ARN) of the resource. If the endpoint is an Elastic IP address, this is the Elastic IP address allocation ID.
+* `weight` - (Optional) The weight associated with the endpoint. When you add weights to endpoints, you configure AWS Global Accelerator to route traffic based on proportions that you specify. 
 
 ## Import
 

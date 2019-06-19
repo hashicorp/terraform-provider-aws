@@ -147,12 +147,18 @@ func resourceAwsGlobalAcceleratorEndpointGroupCreate(d *schema.ResourceData, met
 	d.SetId(*resp.EndpointGroup.EndpointGroupArn)
 
 	acceleratorArn, err := resourceAwsGlobalAcceleratorListenerParseAcceleratorArn(d.Id())
+
 	if err != nil {
-		err = resourceAwsGlobalAcceleratorAcceleratorWaitForState(conn, acceleratorArn)
-		if err != nil {
-			return err
-		}
+		return err
 	}
+
+	err = resourceAwsGlobalAcceleratorAcceleratorWaitForState(conn, acceleratorArn)
+
+	if err != nil {
+		return err
+	}
+
+	return resourceAwsGlobalAcceleratorEndpointGroupRead(d, meta)
 
 	// Creating an endpoint group triggers the accelerator to change status to InPending
 	stateConf := &resource.StateChangeConf{
@@ -238,8 +244,8 @@ func resourceAwsGlobalAcceleratorEndpointGroupFlattenEndpointDescriptions(config
 	for i, configuration := range configurations {
 		m := make(map[string]interface{})
 
-		m["endpoint_id"] = *configuration.EndpointId
-		m["weight"] = *configuration.Weight
+		m["endpoint_id"] = aws.StringValue(configuration.EndpointId)
+		m["weight"] = aws.Int64Value(configuration.Weight)
 
 		out[i] = m
 	}
@@ -308,12 +314,18 @@ func resourceAwsGlobalAcceleratorEndpointGroupUpdate(d *schema.ResourceData, met
 	}
 
 	acceleratorArn, err := resourceAwsGlobalAcceleratorListenerParseAcceleratorArn(d.Id())
+
 	if err != nil {
-		err = resourceAwsGlobalAcceleratorAcceleratorWaitForState(conn, acceleratorArn)
-		if err != nil {
-			return err
-		}
+		return err
 	}
+
+	err = resourceAwsGlobalAcceleratorAcceleratorWaitForState(conn, acceleratorArn)
+
+	if err != nil {
+		return err
+	}
+
+	return resourceAwsGlobalAcceleratorEndpointGroupRead(d, meta)
 
 	// Creating an endpoint group triggers the accelerator to change status to InPending
 	stateConf := &resource.StateChangeConf{
@@ -348,12 +360,18 @@ func resourceAwsGlobalAcceleratorEndpointGroupDelete(d *schema.ResourceData, met
 	}
 
 	acceleratorArn, err := resourceAwsGlobalAcceleratorListenerParseAcceleratorArn(d.Id())
+
 	if err != nil {
-		err = resourceAwsGlobalAcceleratorAcceleratorWaitForState(conn, acceleratorArn)
-		if err != nil {
-			return err
-		}
+		return err
 	}
+
+	err = resourceAwsGlobalAcceleratorAcceleratorWaitForState(conn, acceleratorArn)
+
+	if err != nil {
+		return err
+	}
+
+	return nil
 
 	// Deleting an endpoint group triggers the accelerator to change status to InPending
 	stateConf := &resource.StateChangeConf{
