@@ -99,7 +99,7 @@ func testAccCheckAWSCloudwatchLogDestinationPolicyExists(n string, d *cloudwatch
 func testAccAWSCloudwatchLogDestinationPolicyConfig(rstring string) string {
 	return fmt.Sprintf(`
 resource "aws_kinesis_stream" "test" {
-  name = "RootAccess_%s"
+  name        = "RootAccess_%s"
   shard_count = 1
 }
 
@@ -108,12 +108,15 @@ data "aws_region" "current" {}
 data "aws_iam_policy_document" "role" {
   statement {
     effect = "Allow"
+
     principals {
       type = "Service"
+
       identifiers = [
-        "logs.${data.aws_region.current.name}.amazonaws.com"
+        "logs.${data.aws_region.current.name}.amazonaws.com",
       ]
     }
+
     actions = [
       "sts:AssumeRole",
     ]
@@ -121,65 +124,74 @@ data "aws_iam_policy_document" "role" {
 }
 
 resource "aws_iam_role" "test" {
-  name = "CWLtoKinesisRole_%s"
+  name               = "CWLtoKinesisRole_%s"
   assume_role_policy = "${data.aws_iam_policy_document.role.json}"
 }
 
 data "aws_iam_policy_document" "policy" {
   statement {
     effect = "Allow"
+
     actions = [
       "kinesis:PutRecord",
     ]
+
     resources = [
-      "${aws_kinesis_stream.test.arn}"
+      "${aws_kinesis_stream.test.arn}",
     ]
   }
+
   statement {
     effect = "Allow"
+
     actions = [
-      "iam:PassRole"
+      "iam:PassRole",
     ]
+
     resources = [
-      "${aws_iam_role.test.arn}"
+      "${aws_iam_role.test.arn}",
     ]
   }
 }
 
 resource "aws_iam_role_policy" "test" {
-  name = "Permissions-Policy-For-CWL_%s"
-  role = "${aws_iam_role.test.id}"
+  name   = "Permissions-Policy-For-CWL_%s"
+  role   = "${aws_iam_role.test.id}"
   policy = "${data.aws_iam_policy_document.policy.json}"
 }
 
 resource "aws_cloudwatch_log_destination" "test" {
-  name = "testDestination_%s"
+  name       = "testDestination_%s"
   target_arn = "${aws_kinesis_stream.test.arn}"
-  role_arn = "${aws_iam_role.test.arn}"
+  role_arn   = "${aws_iam_role.test.arn}"
   depends_on = ["aws_iam_role_policy.test"]
 }
 
 data "aws_iam_policy_document" "access" {
   statement {
     effect = "Allow"
+
     principals {
       type = "AWS"
+
       identifiers = [
-        "000000000000"
+        "000000000000",
       ]
     }
+
     actions = [
-      "logs:PutSubscriptionFilter"
+      "logs:PutSubscriptionFilter",
     ]
+
     resources = [
-      "${aws_cloudwatch_log_destination.test.arn}"
+      "${aws_cloudwatch_log_destination.test.arn}",
     ]
   }
 }
 
 resource "aws_cloudwatch_log_destination_policy" "test" {
   destination_name = "${aws_cloudwatch_log_destination.test.name}"
-  access_policy = "${data.aws_iam_policy_document.access.json}"
+  access_policy    = "${data.aws_iam_policy_document.access.json}"
 }
 `, rstring, rstring, rstring, rstring)
 }

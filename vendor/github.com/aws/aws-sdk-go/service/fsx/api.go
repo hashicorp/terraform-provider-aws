@@ -755,7 +755,7 @@ func (c *FSx) DescribeBackupsWithContext(ctx aws.Context, input *DescribeBackups
 //    // Example iterating over at most 3 pages of a DescribeBackups operation.
 //    pageNum := 0
 //    err := client.DescribeBackupsPages(params,
-//        func(page *DescribeBackupsOutput, lastPage bool) bool {
+//        func(page *fsx.DescribeBackupsOutput, lastPage bool) bool {
 //            pageNum++
 //            fmt.Println(page)
 //            return pageNum <= 3
@@ -919,7 +919,7 @@ func (c *FSx) DescribeFileSystemsWithContext(ctx aws.Context, input *DescribeFil
 //    // Example iterating over at most 3 pages of a DescribeFileSystems operation.
 //    pageNum := 0
 //    err := client.DescribeFileSystemsPages(params,
-//        func(page *DescribeFileSystemsOutput, lastPage bool) bool {
+//        func(page *fsx.DescribeFileSystemsOutput, lastPage bool) bool {
 //            pageNum++
 //            fmt.Println(page)
 //            return pageNum <= 3

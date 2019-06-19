@@ -12,7 +12,7 @@ import (
 
 func TestAccDataSourceAwsSecretsManagerSecret_Basic(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:  func() { testAccPreCheck(t) },
+		PreCheck:  func() { testAccPreCheck(t); testAccPreCheckAWSSecretsManager(t) },
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
 			{
@@ -37,7 +37,7 @@ func TestAccDataSourceAwsSecretsManagerSecret_ARN(t *testing.T) {
 	datasourceName := "data.aws_secretsmanager_secret.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:  func() { testAccPreCheck(t) },
+		PreCheck:  func() { testAccPreCheck(t); testAccPreCheckAWSSecretsManager(t) },
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
 			{
@@ -56,7 +56,7 @@ func TestAccDataSourceAwsSecretsManagerSecret_Name(t *testing.T) {
 	datasourceName := "data.aws_secretsmanager_secret.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:  func() { testAccPreCheck(t) },
+		PreCheck:  func() { testAccPreCheck(t); testAccPreCheckAWSSecretsManager(t) },
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
 			{
@@ -75,7 +75,7 @@ func TestAccDataSourceAwsSecretsManagerSecret_Policy(t *testing.T) {
 	datasourceName := "data.aws_secretsmanager_secret.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:  func() { testAccPreCheck(t) },
+		PreCheck:  func() { testAccPreCheck(t); testAccPreCheckAWSSecretsManager(t) },
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
 			{
@@ -132,6 +132,7 @@ func testAccDataSourceAwsSecretsManagerSecretConfig_ARN(rName string) string {
 resource "aws_secretsmanager_secret" "wrong" {
   name = "%[1]s-wrong"
 }
+
 resource "aws_secretsmanager_secret" "test" {
   name = "%[1]s"
 }
@@ -158,6 +159,7 @@ func testAccDataSourceAwsSecretsManagerSecretConfig_Name(rName string) string {
 resource "aws_secretsmanager_secret" "wrong" {
   name = "%[1]s-wrong"
 }
+
 resource "aws_secretsmanager_secret" "test" {
   name = "%[1]s"
 }
@@ -171,9 +173,9 @@ data "aws_secretsmanager_secret" "test" {
 func testAccDataSourceAwsSecretsManagerSecretConfig_Policy(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_secretsmanager_secret" "test" {
-  name   = "%[1]s"
+  name = "%[1]s"
 
-	policy = <<POLICY
+  policy = <<POLICY
 {
   "Version": "2012-10-17",
   "Statement": [
@@ -192,7 +194,7 @@ POLICY
 }
 
 data "aws_secretsmanager_secret" "test" {
-  name   = "${aws_secretsmanager_secret.test.name}"
+  name = "${aws_secretsmanager_secret.test.name}"
 }
 `, rName)
 }

@@ -66,8 +66,9 @@ resource "aws_subnet" "cloudhsm2_test_subnets" {
 }
 
 resource "aws_cloudhsm_v2_cluster" "cluster" {
-  hsm_type = "hsm1.medium"  
+  hsm_type   = "hsm1.medium"
   subnet_ids = ["${aws_subnet.cloudhsm2_test_subnets.*.id[0]}", "${aws_subnet.cloudhsm2_test_subnets.*.id[1]}"]
+
   tags = {
     Name = "tf-acc-aws_cloudhsm_v2_cluster-resource-basic-%d"
   }

@@ -224,10 +224,10 @@ resource "aws_s3_bucket_inventory" "test" {
 
   destination {
     bucket {
-      format = "ORC"
+      format     = "ORC"
       bucket_arn = "${aws_s3_bucket.bucket.arn}"
       account_id = "${data.aws_caller_identity.current.account_id}"
-      prefix = "inventory"
+      prefix     = "inventory"
     }
   }
 }
@@ -249,7 +249,7 @@ resource "aws_s3_bucket_inventory" "test" {
 
   destination {
     bucket {
-      format = "CSV"
+      format     = "CSV"
       bucket_arn = "${aws_s3_bucket.bucket.arn}"
 
       encryption {
@@ -281,7 +281,7 @@ resource "aws_s3_bucket_inventory" "test" {
 
   destination {
     bucket {
-      format = "Parquet"
+      format     = "Parquet"
       bucket_arn = "${aws_s3_bucket.bucket.arn}"
 
       encryption {

@@ -72,7 +72,7 @@ resource "aws_wafregional_web_acl" "example" {
     type     = "GROUP"
 
     override_action {
-       type = "NONE"
+      type = "NONE"
     }
   }
 }

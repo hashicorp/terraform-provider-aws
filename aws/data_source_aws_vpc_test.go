@@ -137,7 +137,7 @@ provider "aws" {
 }
 
 resource "aws_vpc" "test" {
-  cidr_block = "%s"
+  cidr_block                       = "%s"
   assign_generated_ipv6_cidr_block = true
 
   tags = {
@@ -147,7 +147,8 @@ resource "aws_vpc" "test" {
 
 data "aws_vpc" "by_id" {
   id = "${aws_vpc.test.id}"
-}`, cidr, tag)
+}
+`, cidr, tag)
 }
 
 func testAccDataSourceAwsVpcConfig(cidr, tag string) string {
@@ -180,10 +181,11 @@ data "aws_vpc" "by_tag" {
 
 data "aws_vpc" "by_filter" {
   filter {
-    name = "cidr"
+    name   = "cidr"
     values = ["${aws_vpc.test.cidr_block}"]
   }
-}`, cidr, tag)
+}
+`, cidr, tag)
 }
 
 func testAccDataSourceAwsVpcConfigMultipleCidr(octet int) string {
@@ -193,13 +195,13 @@ resource "aws_vpc" "test" {
 }
 
 resource "aws_vpc_ipv4_cidr_block_association" "test" {
-  vpc_id = "${aws_vpc.test.id}"
+  vpc_id     = "${aws_vpc.test.id}"
   cidr_block = "172.%d.0.0/16"
 }
 
 data "aws_vpc" "test" {
   filter {
-    name = "cidr-block-association.cidr-block"
+    name   = "cidr-block-association.cidr-block"
     values = ["${aws_vpc_ipv4_cidr_block_association.test.cidr_block}"]
   }
 }

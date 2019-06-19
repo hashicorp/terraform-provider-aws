@@ -145,15 +145,14 @@ resource "aws_globalaccelerator_accelerator" "example" {
 }
 
 resource "aws_globalaccelerator_listener" "example" {
-	accelerator_arn = "${aws_globalaccelerator_accelerator.example.id}"
-	client_affinity = "SOURCE_IP"
-	protocol        = "UDP"
+  accelerator_arn = "${aws_globalaccelerator_accelerator.example.id}"
+  client_affinity = "SOURCE_IP"
+  protocol        = "UDP"
 
-	port_range {
-	  from_port = 443
-	  to_port   = 444
-	}
+  port_range {
+    from_port = 443
+    to_port   = 444
   }
-
+}
 `, rInt)
 }

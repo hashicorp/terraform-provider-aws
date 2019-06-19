@@ -1,6 +1,6 @@
 ---
 layout: "aws"
-page_title: "AWS: waf_rule"
+page_title: "AWS: aws_waf_rule"
 sidebar_current: "docs-aws-resource-waf-rule"
 description: |-
   Provides a AWS WAF rule resource.
@@ -41,7 +41,7 @@ The following arguments are supported:
 
 * `metric_name` - (Required) The name or description for the Amazon CloudWatch metric of this rule. The name can contain only alphanumeric characters (A-Z, a-z, 0-9); the name can't contain whitespace.
 * `name` - (Required) The name or description of the rule.
-* `predicates` - (Optional) One of ByteMatchSet, IPSet, SizeConstraintSet, SqlInjectionMatchSet, or XssMatchSet objects to include in a rule.
+* `predicates` - (Optional) The objects to include in a rule (documented below).
 
 ## Nested Blocks
 

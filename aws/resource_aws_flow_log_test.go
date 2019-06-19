@@ -228,6 +228,7 @@ resource "aws_vpc" "test" {
 
 resource "aws_iam_role" "test" {
   name = %q
+
   assume_role_policy = <<EOF
 {
   "Version": "2012-10-17",
@@ -326,6 +327,7 @@ resource "aws_subnet" "test" {
 
 resource "aws_iam_role" "test" {
   name = %q
+
   assume_role_policy = <<EOF
 {
   "Version": "2012-10-17",
@@ -371,6 +373,7 @@ resource "aws_vpc" "test" {
 
 resource "aws_iam_role" "test" {
   name = %q
+
   assume_role_policy = <<EOF
 {
   "Version": "2012-10-17",

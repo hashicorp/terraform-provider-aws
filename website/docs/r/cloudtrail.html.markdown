@@ -1,6 +1,6 @@
 ---
 layout: "aws"
-page_title: "AWS: cloudtrail"
+page_title: "AWS: aws_cloudtrail"
 sidebar_current: "docs-aws-resource-cloudtrail"
 description: |-
   Provides a CloudTrail resource.
@@ -22,6 +22,8 @@ Enable CloudTrail to capture all compatible management events in region.
 For capturing events from services like IAM, `include_global_service_events` must be enabled.
 
 ```hcl
+data "aws_caller_identity" "current" {}
+
 resource "aws_cloudtrail" "foobar" {
   name                          = "tf-trail-foobar"
   s3_bucket_name                = "${aws_s3_bucket.foo.id}"
@@ -53,7 +55,7 @@ resource "aws_s3_bucket" "foo" {
               "Service": "cloudtrail.amazonaws.com"
             },
             "Action": "s3:PutObject",
-            "Resource": "arn:aws:s3:::tf-test-trail/*",
+            "Resource": "arn:aws:s3:::tf-test-trail/prefix/AWSLogs/${data.aws_caller_identity.current.account_id}/*",
             "Condition": {
                 "StringEquals": {
                     "s3:x-amz-acl": "bucket-owner-full-control"

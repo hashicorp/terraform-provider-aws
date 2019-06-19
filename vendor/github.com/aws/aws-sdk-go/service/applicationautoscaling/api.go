@@ -422,7 +422,7 @@ func (c *ApplicationAutoScaling) DescribeScalableTargetsWithContext(ctx aws.Cont
 //    // Example iterating over at most 3 pages of a DescribeScalableTargets operation.
 //    pageNum := 0
 //    err := client.DescribeScalableTargetsPages(params,
-//        func(page *DescribeScalableTargetsOutput, lastPage bool) bool {
+//        func(page *applicationautoscaling.DescribeScalableTargetsOutput, lastPage bool) bool {
 //            pageNum++
 //            fmt.Println(page)
 //            return pageNum <= 3
@@ -576,7 +576,7 @@ func (c *ApplicationAutoScaling) DescribeScalingActivitiesWithContext(ctx aws.Co
 //    // Example iterating over at most 3 pages of a DescribeScalingActivities operation.
 //    pageNum := 0
 //    err := client.DescribeScalingActivitiesPages(params,
-//        func(page *DescribeScalingActivitiesOutput, lastPage bool) bool {
+//        func(page *applicationautoscaling.DescribeScalingActivitiesOutput, lastPage bool) bool {
 //            pageNum++
 //            fmt.Println(page)
 //            return pageNum <= 3
@@ -736,7 +736,7 @@ func (c *ApplicationAutoScaling) DescribeScalingPoliciesWithContext(ctx aws.Cont
 //    // Example iterating over at most 3 pages of a DescribeScalingPolicies operation.
 //    pageNum := 0
 //    err := client.DescribeScalingPoliciesPages(params,
-//        func(page *DescribeScalingPoliciesOutput, lastPage bool) bool {
+//        func(page *applicationautoscaling.DescribeScalingPoliciesOutput, lastPage bool) bool {
 //            pageNum++
 //            fmt.Println(page)
 //            return pageNum <= 3
@@ -3056,7 +3056,7 @@ type PutScheduledActionInput struct {
 	//
 	//    * At expressions - "at(yyyy-mm-ddThh:mm:ss)"
 	//
-	//    * Rate expressions - "rate(valueunit)"
+	//    * Rate expressions - "rate(value unit)"
 	//
 	//    * Cron expressions - "cron(fields)"
 	//
@@ -4048,7 +4048,7 @@ type ScheduledAction struct {
 	//
 	//    * At expressions - "at(yyyy-mm-ddThh:mm:ss)"
 	//
-	//    * Rate expressions - "rate(valueunit)"
+	//    * Rate expressions - "rate(value unit)"
 	//
 	//    * Cron expressions - "cron(fields)"
 	//

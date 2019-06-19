@@ -1,6 +1,6 @@
 ---
 layout: "aws"
-page_title: "AWS: cloudwatch_metric_alarm"
+page_title: "AWS: aws_cloudwatch_metric_alarm"
 sidebar_current: "docs-aws-resource-cloudwatch-metric-alarm"
 description: |-
   Provides a CloudWatch Metric Alarm resource.
@@ -61,44 +61,51 @@ resource "aws_cloudwatch_metric_alarm" "bat" {
 
 ```hcl
 resource "aws_cloudwatch_metric_alarm" "foobar" {
-  alarm_name                = "terraform-test-foobar%d"
+  alarm_name                = "terraform-test-foobar"
   comparison_operator       = "GreaterThanOrEqualToThreshold"
   evaluation_periods        = "2"
   threshold                 = "10"
   alarm_description         = "Request error rate has exceeded 10%"
   insufficient_data_actions = []
-	metric_query {
-		id = "e1"
-		expression = "m2/m1*100"
-		label = "Error Rate"
-		return_data = "true"
-	}
-	metric_query {
-		id = "m1"
-		metric {
-			metric_name = "RequestCount"
-			namespace   = "AWS/ApplicationELB"
-			period      = "120"
-			stat        = "Sum"
-			unit        = "Count"
-			dimensions = {
-				LoadBalancer = "app/web"
-			}
-		}
-	}
-	metric_query {
-		id = "m2"
-		metric {
-			metric_name = "HTTPCode_ELB_5XX_Count"
-			namespace   = "AWS/ApplicationELB"
-			period      = "120"
-			stat        = "Sum"
-			unit        = "Count"
-			dimensions = {
-				LoadBalancer = "app/web"
-			}
-		}
-	}
+
+  metric_query {
+    id          = "e1"
+    expression  = "m2/m1*100"
+    label       = "Error Rate"
+    return_data = "true"
+  }
+
+  metric_query {
+    id = "m1"
+
+    metric {
+      metric_name = "RequestCount"
+      namespace   = "AWS/ApplicationELB"
+      period      = "120"
+      stat        = "Sum"
+      unit        = "Count"
+
+      dimensions = {
+        LoadBalancer = "app/web"
+      }
+    }
+  }
+
+  metric_query {
+    id = "m2"
+
+    metric {
+      metric_name = "HTTPCode_ELB_5XX_Count"
+      namespace   = "AWS/ApplicationELB"
+      period      = "120"
+      stat        = "Sum"
+      unit        = "Count"
+
+      dimensions = {
+        LoadBalancer = "app/web"
+      }
+    }
+  }
 }
 ```
 
@@ -148,8 +155,8 @@ The following values are supported: `ignore`, and `evaluate`.
 
 #### `metric_query`
 
-* `id` - (Required) A short name used to tie this object to the results in the response. If you are performing math expressions on this set of data, this name represents that data and can serve as a variable in the mathematical expression. The valid characters are letters, numbers, and underscore. The first character must be a lowercase letter. 
-* `expression` - (Optional) The math expression to be performed on the returned data, if this object is performing a math expression. This expression can use the id of the other metrics to refer to those metrics, and can also use the id of other expressions to use the result of those expressions. For more information about metric math expressions, see Metric Math Syntax and Functions in the [Amazon CloudWatch User Guide](https://docs.aws.amazon.com/AmazonCloudWatch/latest/monitoring/using-metric-math.html#metric-math-syntax). 
+* `id` - (Required) A short name used to tie this object to the results in the response. If you are performing math expressions on this set of data, this name represents that data and can serve as a variable in the mathematical expression. The valid characters are letters, numbers, and underscore. The first character must be a lowercase letter.
+* `expression` - (Optional) The math expression to be performed on the returned data, if this object is performing a math expression. This expression can use the id of the other metrics to refer to those metrics, and can also use the id of other expressions to use the result of those expressions. For more information about metric math expressions, see Metric Math Syntax and Functions in the [Amazon CloudWatch User Guide](https://docs.aws.amazon.com/AmazonCloudWatch/latest/monitoring/using-metric-math.html#metric-math-syntax).
 * `label` - (Optional) A human-readable label for this metric or expression. This is especially useful if this is an expression, so that you know what the value represents.
 * `return_data` (Optional) Specify exactly one `metric_query` to be `true` to use that `metric_query` result as the alarm.
 * `metric` (Optional) The metric to be returned, along with statistics, period, and units. Use this parameter only if this object is retrieving a metric and not performing a math expression on returned data.

@@ -1323,7 +1323,7 @@ func (c *ACMPCA) ListCertificateAuthoritiesWithContext(ctx aws.Context, input *L
 //    // Example iterating over at most 3 pages of a ListCertificateAuthorities operation.
 //    pageNum := 0
 //    err := client.ListCertificateAuthoritiesPages(params,
-//        func(page *ListCertificateAuthoritiesOutput, lastPage bool) bool {
+//        func(page *acmpca.ListCertificateAuthoritiesOutput, lastPage bool) bool {
 //            pageNum++
 //            fmt.Println(page)
 //            return pageNum <= 3
@@ -1475,7 +1475,7 @@ func (c *ACMPCA) ListPermissionsWithContext(ctx aws.Context, input *ListPermissi
 //    // Example iterating over at most 3 pages of a ListPermissions operation.
 //    pageNum := 0
 //    err := client.ListPermissionsPages(params,
-//        func(page *ListPermissionsOutput, lastPage bool) bool {
+//        func(page *acmpca.ListPermissionsOutput, lastPage bool) bool {
 //            pageNum++
 //            fmt.Println(page)
 //            return pageNum <= 3
@@ -1618,7 +1618,7 @@ func (c *ACMPCA) ListTagsWithContext(ctx aws.Context, input *ListTagsInput, opts
 //    // Example iterating over at most 3 pages of a ListTags operation.
 //    pageNum := 0
 //    err := client.ListTagsPages(params,
-//        func(page *ListTagsOutput, lastPage bool) bool {
+//        func(page *acmpca.ListTagsOutput, lastPage bool) bool {
 //            pageNum++
 //            fmt.Println(page)
 //            return pageNum <= 3
@@ -2342,7 +2342,7 @@ type CertificateAuthority struct {
 	_ struct{} `type:"structure"`
 
 	// Amazon Resource Name (ARN) for your private certificate authority (CA). The
-	// format is 12345678-1234-1234-1234-123456789012.
+	// format is 12345678-1234-1234-1234-123456789012 .
 	Arn *string `min:"5" type:"string"`
 
 	// Your private CA configuration.
@@ -2548,7 +2548,7 @@ type CreateCertificateAuthorityAuditReportInput struct {
 
 	// The Amazon Resource Name (ARN) of the CA to be audited. This is of the form:
 	//
-	// arn:aws:acm-pca:region:account:certificate-authority/12345678-1234-1234-1234-123456789012.
+	// arn:aws:acm-pca:region:account:certificate-authority/12345678-1234-1234-1234-123456789012 .
 	//
 	// CertificateAuthorityArn is a required field
 	CertificateAuthorityArn *string `min:"5" type:"string" required:"true"`
@@ -2763,7 +2763,7 @@ type CreateCertificateAuthorityOutput struct {
 	// If successful, the Amazon Resource Name (ARN) of the certificate authority
 	// (CA). This is of the form:
 	//
-	// arn:aws:acm-pca:region:account:certificate-authority/12345678-1234-1234-1234-123456789012.
+	// arn:aws:acm-pca:region:account:certificate-authority/12345678-1234-1234-1234-123456789012 .
 	CertificateAuthorityArn *string `min:"5" type:"string"`
 }
 
@@ -2796,7 +2796,7 @@ type CreatePermissionInput struct {
 	// can find the ARN by calling the ListCertificateAuthorities operation. This
 	// must have the following form:
 	//
-	// arn:aws:acm-pca:region:account:certificate-authority/12345678-1234-1234-1234-123456789012.
+	// arn:aws:acm-pca:region:account:certificate-authority/12345678-1234-1234-1234-123456789012 .
 	//
 	// CertificateAuthorityArn is a required field
 	CertificateAuthorityArn *string `min:"5" type:"string" required:"true"`
@@ -2919,22 +2919,15 @@ func (s CreatePermissionOutput) GoString() string {
 //    * Next Update: The day and time by which the next CRL will be issued.
 //
 //    * Revoked Certificates: List of revoked certificates. Each list item contains
-//    the following information.
+//    the following information. Serial Number: The serial number, in hexadecimal
+//    format, of the revoked certificate. Revocation Date: Date and time the
+//    certificate was revoked. CRL Entry Extensions: Optional extensions for
+//    the CRL entry. X509v3 CRL Reason Code: Reason the certificate was revoked.
 //
-// Serial Number: The serial number, in hexadecimal format, of the revoked certificate.
-//
-// Revocation Date: Date and time the certificate was revoked.
-//
-// CRL Entry Extensions: Optional extensions for the CRL entry.
-//
-// X509v3 CRL Reason Code: Reason the certificate was revoked.
-//
-//    * CRL Extensions: Optional extensions for the CRL.
-//
-// X509v3 Authority Key Identifier: Identifies the public key associated with
-//    the private key used to sign the certificate.
-//
-// X509v3 CRL Number:: Decimal sequence number for the CRL.
+//    * CRL Extensions: Optional extensions for the CRL. X509v3 Authority Key
+//    Identifier: Identifies the public key associated with the private key
+//    used to sign the certificate. X509v3 CRL Number:: Decimal sequence number
+//    for the CRL.
 //
 //    * Signature Algorithm: Algorithm used by your private CA to sign the CRL.
 //
@@ -3031,7 +3024,7 @@ type DeleteCertificateAuthorityInput struct {
 	// The Amazon Resource Name (ARN) that was returned when you called CreateCertificateAuthority.
 	// This must have the following form:
 	//
-	// arn:aws:acm-pca:region:account:certificate-authority/12345678-1234-1234-1234-123456789012.
+	// arn:aws:acm-pca:region:account:certificate-authority/12345678-1234-1234-1234-123456789012 .
 	//
 	// CertificateAuthorityArn is a required field
 	CertificateAuthorityArn *string `min:"5" type:"string" required:"true"`
@@ -3103,7 +3096,7 @@ type DeletePermissionInput struct {
 	// You can find the CA's ARN by calling the ListCertificateAuthorities operation.
 	// This must have the following form:
 	//
-	// arn:aws:acm-pca:region:account:certificate-authority/12345678-1234-1234-1234-123456789012.
+	// arn:aws:acm-pca:region:account:certificate-authority/12345678-1234-1234-1234-123456789012 .
 	//
 	// CertificateAuthorityArn is a required field
 	CertificateAuthorityArn *string `min:"5" type:"string" required:"true"`
@@ -3193,7 +3186,7 @@ type DescribeCertificateAuthorityAuditReportInput struct {
 
 	// The Amazon Resource Name (ARN) of the private CA. This must be of the form:
 	//
-	// arn:aws:acm-pca:region:account:certificate-authority/12345678-1234-1234-1234-123456789012.
+	// arn:aws:acm-pca:region:account:certificate-authority/12345678-1234-1234-1234-123456789012 .
 	//
 	// CertificateAuthorityArn is a required field
 	CertificateAuthorityArn *string `min:"5" type:"string" required:"true"`
@@ -3299,7 +3292,7 @@ type DescribeCertificateAuthorityInput struct {
 	// The Amazon Resource Name (ARN) that was returned when you called CreateCertificateAuthority.
 	// This must be of the form:
 	//
-	// arn:aws:acm-pca:region:account:certificate-authority/12345678-1234-1234-1234-123456789012.
+	// arn:aws:acm-pca:region:account:certificate-authority/12345678-1234-1234-1234-123456789012 .
 	//
 	// CertificateAuthorityArn is a required field
 	CertificateAuthorityArn *string `min:"5" type:"string" required:"true"`
@@ -3366,7 +3359,7 @@ type GetCertificateAuthorityCertificateInput struct {
 
 	// The Amazon Resource Name (ARN) of your private CA. This is of the form:
 	//
-	// arn:aws:acm-pca:region:account:certificate-authority/12345678-1234-1234-1234-123456789012.
+	// arn:aws:acm-pca:region:account:certificate-authority/12345678-1234-1234-1234-123456789012 .
 	//
 	// CertificateAuthorityArn is a required field
 	CertificateAuthorityArn *string `min:"5" type:"string" required:"true"`
@@ -3520,7 +3513,7 @@ type GetCertificateInput struct {
 	// The Amazon Resource Name (ARN) that was returned when you called CreateCertificateAuthority.
 	// This must be of the form:
 	//
-	// arn:aws:acm-pca:region:account:certificate-authority/12345678-1234-1234-1234-123456789012.
+	// arn:aws:acm-pca:region:account:certificate-authority/12345678-1234-1234-1234-123456789012 .
 	//
 	// CertificateAuthorityArn is a required field
 	CertificateAuthorityArn *string `min:"5" type:"string" required:"true"`

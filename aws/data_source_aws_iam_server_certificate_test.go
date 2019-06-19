@@ -102,7 +102,7 @@ func testAccAwsDataIAMServerCertConfig(rInt int) string {
 %s
 
 data "aws_iam_server_certificate" "test" {
-  name = "${aws_iam_server_certificate.test_cert.name}"
+  name   = "${aws_iam_server_certificate.test_cert.name}"
   latest = true
 }
 `, testAccIAMServerCertConfig(rInt))
@@ -113,9 +113,9 @@ func testAccAwsDataIAMServerCertConfigPath(rInt int, path, pathPrefix string) st
 %s
 
 data "aws_iam_server_certificate" "test" {
-  name = "${aws_iam_server_certificate.test_cert.name}"
+  name        = "${aws_iam_server_certificate.test_cert.name}"
   path_prefix = "%s"
-  latest = true
+  latest      = true
 }
 `, testAccIAMServerCertConfig_path(rInt, path), pathPrefix)
 }
