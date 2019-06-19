@@ -13,7 +13,7 @@ ENHANCEMENTS:
 
 BUG FIXES:
 
-* resource/aws_cloudwatch_event_permission: Properly trigger resource recreation when deleted outside Terraform [GH-9044]
+* resource/aws_cloudwatch_event_permission: Prevent not found error when deleted outside Terraform [GH-9044]
 * resource/aws_dx_gateway: Fix resource import with associations [GH-8970]
 * resource/aws_rds_cluster: Final retries after timeout creating and updating cluster [GH-8994]
 * resource/aws_rds_cluster_instance: Final retry after timeout creating cluster instance [GH-8994]
