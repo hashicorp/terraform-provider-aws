@@ -1,57 +1,57 @@
-## 2.16.0 (Unreleased)
+## 2.16.0 (June 20, 2019)
 
 FEATURES:
 
-* **New Resource:** `aws_globalaccelerator_endpoint_group` [GH-8328]
-* **New Resource:** `aws_ebs_default_kms_key` [GH-8771]
-* **New Resource:** `aws_ebs_encryption_by_default` [GH-8771]
-* **New Resource:** `aws_ses_identity_policy` [GH-5128]
+* **New Resource:** `aws_globalaccelerator_endpoint_group` ([#8328](https://github.com/terraform-providers/terraform-provider-aws/issues/8328))
+* **New Resource:** `aws_ebs_default_kms_key` ([#8771](https://github.com/terraform-providers/terraform-provider-aws/issues/8771))
+* **New Resource:** `aws_ebs_encryption_by_default` ([#8771](https://github.com/terraform-providers/terraform-provider-aws/issues/8771))
+* **New Resource:** `aws_ses_identity_policy` ([#5128](https://github.com/terraform-providers/terraform-provider-aws/issues/5128))
 
 ENHANCEMENTS:
 
-* data-source/aws_vpc_endpoint: Add `owner_id` and `tags` attributes [GH-8674]
-* data-source/aws_vpc_endpoint: Add `requester_managed` attribute [GH-8396]
-* data-source/aws_vpc_endpoint_service: Add `manages_vpc_endpoints` attribute [GH-8396]
-* data-source/aws_vpc_endpoint_service: Add `service_id` and `tags` attributes [GH-8674]
-* provider: Support for chaining assume IAM role from AWS shared configuration files [GH-8987]
-* resource/aws_backup_vault: Support resource import [GH-9041]
-* resource/aws_codepipeline: Add `tags` argument [GH-8993]
-* resource/aws_codepipeline_webhook: Add `tags` argument [GH-8993]
-* resource/aws_ecs_task_definition: Add `proxy_configuration` configuration block (support AppMesh proxying) [GH-8780] 
-* resource/aws_instance: Prevent panic when `credit_specification` configuration block is missing arguments [GH-9003]
-* resource/aws_organizations_organization: Add `non_master_accounts` attribute [GH-8926]
-* resource/aws_secretsmanager_secret: Tag on create (support tag limiting IAM policies) [GH-9023]
-* resource/aws_vpc_endpoint: Add `owner_id` attribute [GH-8674]
-* resource/aws_vpc_endpoint: Add `requester_managed` attribute [GH-8396]
-* resource/aws_vpc_endpoint: Add `tags` argument [GH-8674]
-* resource/aws_vpc_endpoint_service: Add `manages_vpc_endpoints` attribute [GH-8396]
-* resource/aws_vpc_endpoint_service: Add `tags` argument [GH-8674]
+* data-source/aws_vpc_endpoint: Add `owner_id` and `tags` attributes ([#8674](https://github.com/terraform-providers/terraform-provider-aws/issues/8674))
+* data-source/aws_vpc_endpoint: Add `requester_managed` attribute ([#8396](https://github.com/terraform-providers/terraform-provider-aws/issues/8396))
+* data-source/aws_vpc_endpoint_service: Add `manages_vpc_endpoints` attribute ([#8396](https://github.com/terraform-providers/terraform-provider-aws/issues/8396))
+* data-source/aws_vpc_endpoint_service: Add `service_id` and `tags` attributes ([#8674](https://github.com/terraform-providers/terraform-provider-aws/issues/8674))
+* provider: Support for chaining assume IAM role from AWS shared configuration files ([#8987](https://github.com/terraform-providers/terraform-provider-aws/issues/8987))
+* resource/aws_backup_vault: Support resource import ([#9041](https://github.com/terraform-providers/terraform-provider-aws/issues/9041))
+* resource/aws_codepipeline: Add `tags` argument ([#8993](https://github.com/terraform-providers/terraform-provider-aws/issues/8993))
+* resource/aws_codepipeline_webhook: Add `tags` argument ([#8993](https://github.com/terraform-providers/terraform-provider-aws/issues/8993))
+* resource/aws_ecs_task_definition: Add `proxy_configuration` configuration block (support AppMesh proxying) [[#8780](https://github.com/terraform-providers/terraform-provider-aws/issues/8780)] 
+* resource/aws_instance: Prevent panic when `credit_specification` configuration block is missing arguments ([#9003](https://github.com/terraform-providers/terraform-provider-aws/issues/9003))
+* resource/aws_organizations_organization: Add `non_master_accounts` attribute ([#8926](https://github.com/terraform-providers/terraform-provider-aws/issues/8926))
+* resource/aws_secretsmanager_secret: Tag on create (support tag limiting IAM policies) ([#9023](https://github.com/terraform-providers/terraform-provider-aws/issues/9023))
+* resource/aws_vpc_endpoint: Add `owner_id` attribute ([#8674](https://github.com/terraform-providers/terraform-provider-aws/issues/8674))
+* resource/aws_vpc_endpoint: Add `requester_managed` attribute ([#8396](https://github.com/terraform-providers/terraform-provider-aws/issues/8396))
+* resource/aws_vpc_endpoint: Add `tags` argument ([#8674](https://github.com/terraform-providers/terraform-provider-aws/issues/8674))
+* resource/aws_vpc_endpoint_service: Add `manages_vpc_endpoints` attribute ([#8396](https://github.com/terraform-providers/terraform-provider-aws/issues/8396))
+* resource/aws_vpc_endpoint_service: Add `tags` argument ([#8674](https://github.com/terraform-providers/terraform-provider-aws/issues/8674))
 
 BUG FIXES:
 
-* provider: Fix AWS shared configuration file credential source not assuming a role with environment and ECS credentials [GH-8987]
-* provider: Properly configure Route 53 service client in AWS GovCloud (US) [GH-9010]
-* provider: Properly configure Route 53 service client in AWS China [GH-9060]
-* resource/aws_api_gateway_resource: Removes an extraneous retry when deleting API gateway resource [GH-9054]
-* resource/aws_appautoscaling_policy: Retries after timeouts in creating and reading policies [GH-9039]
-* resource/aws_appautoscaling_scheduled_action: Retry after timeout putting scheduled actions [GH-9039]
-* resource/aws_cloudwatch_event_permission: Prevent not found error when deleted outside Terraform [GH-9044]
-* resource/aws_dx_gateway: Fix resource import with associations [GH-8970]
-* resource/aws_elasticache_parameter_group: Final retry deleting parameter group [GH-9013]
-* resource/aws_elasticache_replication_group: Final retry deleting replication group [GH-9013]
-* resource/aws_elasticache_subnet_group: Final retry deleting subnet group [GH-9013]
-* resource/aws_emr_cluster: Final retry after timeout error when deleting EMR cluster [GH-9053]
-* resource/aws_kinesis_firehose_delivery_stream: Add final retries when creating and updating firehose delivery streams [GH-9017]
-* resource/aws_neptune_cluster: Final retries when creating, updating, and deleting Neptune clusters [GH-9036]
-* resource/aws_neptune_cluster_instance: Final retries creating and updating cluster instances [GH-9036]
-* resource/aws_neptune_parameter_group: Final retries updating and deleting parameter groups [GH-9036]
-* resource/aws_opsworks_permission: Improves error handing when setting opsworks permissions [GH-9055]
-* resource/aws_rds_cluster: Final retries after timeout creating and updating cluster [GH-8994]
-* resource/aws_rds_cluster_instance: Final retry after timeout creating cluster instance [GH-8994]
-* resource/aws_rds_global_cluster: Final retry after timeout deleting global cluster [GH-8994]
-* resource/aws_ses_receipt_rule_set: Prevent missing Terraform state for newly created resources [GH-9045]
-* resource/aws_ssm_document: Final retries when creating and deleting SSM documents [GH-8992]
-* resource/aws_ssm_resource_data_sync: Final retry when creating SSM resource data sync [GH-8992]
+* provider: Fix AWS shared configuration file credential source not assuming a role with environment and ECS credentials ([#8987](https://github.com/terraform-providers/terraform-provider-aws/issues/8987))
+* provider: Properly configure Route 53 service client in AWS GovCloud (US) ([#9010](https://github.com/terraform-providers/terraform-provider-aws/issues/9010))
+* provider: Properly configure Route 53 service client in AWS China ([#9060](https://github.com/terraform-providers/terraform-provider-aws/issues/9060))
+* resource/aws_api_gateway_resource: Removes an extraneous retry when deleting API gateway resource ([#9054](https://github.com/terraform-providers/terraform-provider-aws/issues/9054))
+* resource/aws_appautoscaling_policy: Retries after timeouts in creating and reading policies ([#9039](https://github.com/terraform-providers/terraform-provider-aws/issues/9039))
+* resource/aws_appautoscaling_scheduled_action: Retry after timeout putting scheduled actions ([#9039](https://github.com/terraform-providers/terraform-provider-aws/issues/9039))
+* resource/aws_cloudwatch_event_permission: Prevent not found error when deleted outside Terraform ([#9044](https://github.com/terraform-providers/terraform-provider-aws/issues/9044))
+* resource/aws_dx_gateway: Fix resource import with associations ([#8970](https://github.com/terraform-providers/terraform-provider-aws/issues/8970))
+* resource/aws_elasticache_parameter_group: Final retry deleting parameter group ([#9013](https://github.com/terraform-providers/terraform-provider-aws/issues/9013))
+* resource/aws_elasticache_replication_group: Final retry deleting replication group ([#9013](https://github.com/terraform-providers/terraform-provider-aws/issues/9013))
+* resource/aws_elasticache_subnet_group: Final retry deleting subnet group ([#9013](https://github.com/terraform-providers/terraform-provider-aws/issues/9013))
+* resource/aws_emr_cluster: Final retry after timeout error when deleting EMR cluster ([#9053](https://github.com/terraform-providers/terraform-provider-aws/issues/9053))
+* resource/aws_kinesis_firehose_delivery_stream: Add final retries when creating and updating firehose delivery streams ([#9017](https://github.com/terraform-providers/terraform-provider-aws/issues/9017))
+* resource/aws_neptune_cluster: Final retries when creating, updating, and deleting Neptune clusters ([#9036](https://github.com/terraform-providers/terraform-provider-aws/issues/9036))
+* resource/aws_neptune_cluster_instance: Final retries creating and updating cluster instances ([#9036](https://github.com/terraform-providers/terraform-provider-aws/issues/9036))
+* resource/aws_neptune_parameter_group: Final retries updating and deleting parameter groups ([#9036](https://github.com/terraform-providers/terraform-provider-aws/issues/9036))
+* resource/aws_opsworks_permission: Improves error handing when setting opsworks permissions ([#9055](https://github.com/terraform-providers/terraform-provider-aws/issues/9055))
+* resource/aws_rds_cluster: Final retries after timeout creating and updating cluster ([#8994](https://github.com/terraform-providers/terraform-provider-aws/issues/8994))
+* resource/aws_rds_cluster_instance: Final retry after timeout creating cluster instance ([#8994](https://github.com/terraform-providers/terraform-provider-aws/issues/8994))
+* resource/aws_rds_global_cluster: Final retry after timeout deleting global cluster ([#8994](https://github.com/terraform-providers/terraform-provider-aws/issues/8994))
+* resource/aws_ses_receipt_rule_set: Prevent missing Terraform state for newly created resources ([#9045](https://github.com/terraform-providers/terraform-provider-aws/issues/9045))
+* resource/aws_ssm_document: Final retries when creating and deleting SSM documents ([#8992](https://github.com/terraform-providers/terraform-provider-aws/issues/8992))
+* resource/aws_ssm_resource_data_sync: Final retry when creating SSM resource data sync ([#8992](https://github.com/terraform-providers/terraform-provider-aws/issues/8992))
 
 
 ## 2.15.0 (June 13, 2019)
