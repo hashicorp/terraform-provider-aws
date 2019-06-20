@@ -481,6 +481,13 @@ func (c *Config) Client() (interface{}, error) {
 		globalAcceleratorConfig.Region = aws.String(endpoints.UsWest2RegionID)
 		route53Config.Region = aws.String(endpoints.UsEast1RegionID)
 		shieldConfig.Region = aws.String(endpoints.UsEast1RegionID)
+	case endpoints.AwsCnPartitionID:
+		// The AWS Go SDK is missing endpoint information for Route 53 in the AWS China partition.
+		// This can likely be removed in the future.
+		if aws.StringValue(route53Config.Endpoint) == "" {
+			route53Config.Endpoint = aws.String("https://api.route53.cn")
+		}
+		route53Config.Region = aws.String(endpoints.CnNorthwest1RegionID)
 	case endpoints.AwsUsGovPartitionID:
 		// The AWS Go SDK is missing endpoint information for Route 53 in the AWS GovCloud (US) partition.
 		// This can likely be removed in the future.
