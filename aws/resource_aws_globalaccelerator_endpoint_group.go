@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"log"
 	"strings"
-	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/globalaccelerator"
@@ -71,8 +70,8 @@ func resourceAwsGlobalAcceleratorEndpointGroup() *schema.Resource {
 			"traffic_dial_percentage": {
 				Type:         schema.TypeFloat,
 				Optional:     true,
-				Default:      100,
-				ValidateFunc: validation.IntBetween(0, 100),
+				Default:      100.0,
+				ValidateFunc: validation.FloatBetween(0.0, 100.0),
 			},
 			"endpoint_configuration": {
 				Type:     schema.TypeSet,
@@ -134,7 +133,7 @@ func resourceAwsGlobalAcceleratorEndpointGroupCreate(d *schema.ResourceData, met
 	}
 
 	if v, ok := d.GetOk("endpoint_configuration"); ok {
-		opts.EndpointConfigurations = resourceAwsGlobalAcceleratorEndpointGroupExpandEndpointConfigurations(v.([]interface{}))
+		opts.EndpointConfigurations = resourceAwsGlobalAcceleratorEndpointGroupExpandEndpointConfigurations(v.(*schema.Set).List())
 	}
 
 	log.Printf("[DEBUG] Create Global Accelerator endpoint group: %s", opts)
@@ -156,20 +155,6 @@ func resourceAwsGlobalAcceleratorEndpointGroupCreate(d *schema.ResourceData, met
 
 	if err != nil {
 		return err
-	}
-
-	// Creating an endpoint group triggers the accelerator to change status to InPending
-	stateConf := &resource.StateChangeConf{
-		Pending: []string{globalaccelerator.AcceleratorStatusInProgress},
-		Target:  []string{globalaccelerator.AcceleratorStatusDeployed},
-		Refresh: resourceAwsGlobalAcceleratorAcceleratorStateRefreshFunc(conn, acceleratorArn),
-		Timeout: 5 * time.Minute,
-	}
-
-	log.Printf("[DEBUG] Waiting for Global Accelerator endpoint group (%s) availability", d.Id())
-	_, err = stateConf.WaitForState()
-	if err != nil {
-		return fmt.Errorf("Error waiting for Global Accelerator endpoint group (%s) availability: %s", d.Id(), err)
 	}
 
 	return resourceAwsGlobalAcceleratorEndpointGroupRead(d, meta)
@@ -299,7 +284,7 @@ func resourceAwsGlobalAcceleratorEndpointGroupUpdate(d *schema.ResourceData, met
 	}
 
 	if v, ok := d.GetOk("endpoint_configuration"); ok {
-		opts.EndpointConfigurations = resourceAwsGlobalAcceleratorEndpointGroupExpandEndpointConfigurations(v.([]interface{}))
+		opts.EndpointConfigurations = resourceAwsGlobalAcceleratorEndpointGroupExpandEndpointConfigurations(v.(*schema.Set).List())
 	} else {
 		opts.EndpointConfigurations = []*globalaccelerator.EndpointConfiguration{}
 	}
@@ -321,20 +306,6 @@ func resourceAwsGlobalAcceleratorEndpointGroupUpdate(d *schema.ResourceData, met
 
 	if err != nil {
 		return err
-	}
-
-	// Creating an endpoint group triggers the accelerator to change status to InPending
-	stateConf := &resource.StateChangeConf{
-		Pending: []string{globalaccelerator.AcceleratorStatusInProgress},
-		Target:  []string{globalaccelerator.AcceleratorStatusDeployed},
-		Refresh: resourceAwsGlobalAcceleratorAcceleratorStateRefreshFunc(conn, acceleratorArn),
-		Timeout: 5 * time.Minute,
-	}
-
-	log.Printf("[DEBUG] Waiting for Global Accelerator endpoint group (%s) availability", d.Id())
-	_, err = stateConf.WaitForState()
-	if err != nil {
-		return fmt.Errorf("Error waiting for Global Accelerator endpoint group (%s) availability: %s", d.Id(), err)
 	}
 
 	return resourceAwsGlobalAcceleratorEndpointGroupRead(d, meta)
@@ -365,20 +336,6 @@ func resourceAwsGlobalAcceleratorEndpointGroupDelete(d *schema.ResourceData, met
 
 	if err != nil {
 		return err
-	}
-
-	// Deleting an endpoint group triggers the accelerator to change status to InPending
-	stateConf := &resource.StateChangeConf{
-		Pending: []string{globalaccelerator.AcceleratorStatusInProgress},
-		Target:  []string{globalaccelerator.AcceleratorStatusDeployed},
-		Refresh: resourceAwsGlobalAcceleratorAcceleratorStateRefreshFunc(conn, acceleratorArn),
-		Timeout: 5 * time.Minute,
-	}
-
-	log.Printf("[DEBUG] Waiting for Global Accelerator endpoint group (%s) deletion", d.Id())
-	_, err = stateConf.WaitForState()
-	if err != nil {
-		return fmt.Errorf("Error waiting for Global Accelerator endpoint group (%s) deletion: %s", d.Id(), err)
 	}
 
 	return nil

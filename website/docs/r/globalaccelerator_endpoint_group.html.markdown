@@ -1,6 +1,6 @@
 ---
 layout: "aws"
-page_title: "AWS: globalaaws_globalaccelerator_endpoint_groupccelerator_endpoint_group"
+page_title: "AWS: aws_globalaccelerator_endpoint_group"
 sidebar_current: "docs-aws-resource-globalaccelerator-endpoint-group"
 description: |-
   Provides a Global Accelerator endpoint group.
@@ -10,20 +10,15 @@ description: |-
 
 Provides a Global Accelerator endpoint group.
 
-## Attributes Reference
-
-In addition to all arguments above, the following attributes are exported:
-
-* `id` - The Amazon Resource Name (ARN) of the endpoint group.
-
 ## Example Usage
 
 ```hcl
-resource "globalaccelerator_endpoint_group" "example" {
-  listener_arn            = "${aws_globalaccelerator_listener.example.id}"
+resource "aws_globalaccelerator_endpoint_group" "example" {
+  listener_arn = "${aws_globalaccelerator_listener.example.id}"
+
   endpoint_configuration {
-    endpoint_id   = "${aws_lb.example.arn}"
-    weight = 100
+    endpoint_id = "${aws_lb.example.arn}"
+    weight      = 100
   }
 }
 ```
@@ -45,6 +40,12 @@ The following arguments are supported:
 
 * `endpoint_id` - (Optional) An ID for the endpoint. If the endpoint is a Network Load Balancer or Application Load Balancer, this is the Amazon Resource Name (ARN) of the resource. If the endpoint is an Elastic IP address, this is the Elastic IP address allocation ID.
 * `weight` - (Optional) The weight associated with the endpoint. When you add weights to endpoints, you configure AWS Global Accelerator to route traffic based on proportions that you specify. 
+
+## Attributes Reference
+
+In addition to all arguments above, the following attributes are exported:
+
+* `id` - The Amazon Resource Name (ARN) of the endpoint group.
 
 ## Import
 

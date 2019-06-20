@@ -29,7 +29,6 @@ func TestAccAwsGlobalAcceleratorEndpointGroup_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "threshold_count", "3"),
 					resource.TestCheckResourceAttr(resourceName, "traffic_dial_percentage", "100"),
 					resource.TestCheckResourceAttr(resourceName, "endpoint_configuration.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "endpoint_configuration.0.weight", "10"),
 				),
 			},
 			{
@@ -63,7 +62,7 @@ func TestAccAwsGlobalAcceleratorEndpointGroup_update(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "health_check_protocol", "HTTPS"),
 					resource.TestCheckResourceAttr(resourceName, "threshold_count", "1"),
 					resource.TestCheckResourceAttr(resourceName, "traffic_dial_percentage", "50"),
-					resource.TestCheckResourceAttr(resourceName, "endpoint_configuration.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "endpoint_configuration.#", "1"),
 				),
 			},
 			{
@@ -182,8 +181,15 @@ resource "aws_globalaccelerator_listener" "example" {
 
 data "aws_region" "current" {}
 
+resource "aws_eip" "example" {}
+
 resource "aws_globalaccelerator_endpoint_group" "example" {
   listener_arn = "${aws_globalaccelerator_listener.example.id}"
+
+  endpoint_configuration {
+    endpoint_id = "${aws_eip.example.id}"
+    weight      = 20
+  }
 
   endpoint_group_region         = "${data.aws_region.current.name}"
   health_check_interval_seconds = 10
