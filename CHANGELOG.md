@@ -10,6 +10,7 @@ ENHANCEMENTS:
 * resource/aws_backup_vault: Support resource import [GH-9041]
 * resource/aws_codepipeline: Add `tags` argument [GH-8993]
 * resource/aws_codepipeline_webhook: Add `tags` argument [GH-8993]
+* resource/aws_ecs_task_definition: Add `proxy_configuration` configuration block (support AppMesh proxying) [GH-8780]
 * resource/aws_organizations_organization: Add `non_master_accounts` attribute [GH-8926]
 * resource/aws_secretsmanager_secret: Tag on create (support tag limiting IAM policies) [GH-9023]
 
