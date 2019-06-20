@@ -90539,8 +90539,14 @@ const (
 	// InstanceTypeC59xlarge is a InstanceType enum value
 	InstanceTypeC59xlarge = "c5.9xlarge"
 
+	// InstanceTypeC512xlarge is a InstanceType enum value
+	InstanceTypeC512xlarge = "c5.12xlarge"
+
 	// InstanceTypeC518xlarge is a InstanceType enum value
 	InstanceTypeC518xlarge = "c5.18xlarge"
+
+	// InstanceTypeC524xlarge is a InstanceType enum value
+	InstanceTypeC524xlarge = "c5.24xlarge"
 
 	// InstanceTypeC5dLarge is a InstanceType enum value
 	InstanceTypeC5dLarge = "c5d.large"
