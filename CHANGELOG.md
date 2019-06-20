@@ -32,6 +32,8 @@ BUG FIXES:
 * provider: Properly configure Route 53 service client in AWS GovCloud (US) [GH-9010]
 * provider: Properly configure Route 53 service client in AWS China [GH-9060]
 * resource/aws_api_gateway_resource: Removes an extraneous retry when deleting API gateway resource [GH-9054]
+* resource/aws_appautoscaling_policy: Retries after timeouts in creating and reading policies [GH-9039]
+* resource/aws_appautoscaling_scheduled_action: Retry after timeout putting scheduled actions [GH-9039]
 * resource/aws_cloudwatch_event_permission: Prevent not found error when deleted outside Terraform [GH-9044]
 * resource/aws_dx_gateway: Fix resource import with associations [GH-8970]
 * resource/aws_elasticache_parameter_group: Final retry deleting parameter group [GH-9013]
