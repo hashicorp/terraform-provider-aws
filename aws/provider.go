@@ -480,6 +480,7 @@ func Provider() terraform.ResourceProvider {
 			"aws_glacier_vault":                                       resourceAwsGlacierVault(),
 			"aws_glacier_vault_lock":                                  resourceAwsGlacierVaultLock(),
 			"aws_globalaccelerator_accelerator":                       resourceAwsGlobalAcceleratorAccelerator(),
+			"aws_globalaccelerator_endpoint_group":                    resourceAwsGlobalAcceleratorEndpointGroup(),
 			"aws_globalaccelerator_listener":                          resourceAwsGlobalAcceleratorListener(),
 			"aws_glue_catalog_database":                               resourceAwsGlueCatalogDatabase(),
 			"aws_glue_catalog_table":                                  resourceAwsGlueCatalogTable(),
