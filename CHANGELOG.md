@@ -13,6 +13,7 @@ ENHANCEMENTS:
 * data-source/aws_vpc_endpoint: Add `requester_managed` attribute [GH-8396]
 * data-source/aws_vpc_endpoint_service: Add `manages_vpc_endpoints` attribute [GH-8396]
 * data-source/aws_vpc_endpoint_service: Add `service_id` and `tags` attributes [GH-8674]
+* provider: Support for chaining assume IAM role from AWS shared configuration files [GH-8987]
 * resource/aws_backup_vault: Support resource import [GH-9041]
 * resource/aws_codepipeline: Add `tags` argument [GH-8993]
 * resource/aws_codepipeline_webhook: Add `tags` argument [GH-8993]
@@ -27,6 +28,7 @@ ENHANCEMENTS:
 
 BUG FIXES:
 
+* provider: Fix AWS shared configuration file credential source not assuming a role with environment and ECS credentials [GH-8987]
 * provider: Properly configure Route 53 service client in AWS GovCloud (US) [GH-9010]
 * provider: Properly configure Route 53 service client in AWS China [GH-9060]
 * resource/aws_cloudwatch_event_permission: Prevent not found error when deleted outside Terraform [GH-9044]
