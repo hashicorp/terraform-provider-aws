@@ -883,7 +883,7 @@ func resourceAwsEMRClusterCreate(d *schema.ResourceData, meta interface{}) error
 		resp, err = conn.RunJobFlow(params)
 	}
 	if err != nil {
-		return fmt.Errorf("Error with instance profile: %s", err)
+		return fmt.Errorf("error running EMR Job Flow: %s", err)
 	}
 
 	d.SetId(*resp.JobFlowId)
