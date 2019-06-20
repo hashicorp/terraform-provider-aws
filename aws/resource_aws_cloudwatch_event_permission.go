@@ -154,47 +154,6 @@ func resourceAwsCloudWatchEventPermissionRead(d *schema.ResourceData, meta inter
 		return err
 	}
 
-	/*	err := resource.Retry(1*time.Minute, func() *resource.RetryError {
-			log.Printf("[DEBUG] Reading CloudWatch Events bus: %s", input)
-			debo, err := conn.DescribeEventBus(&input)
-			if err != nil {
-				return resource.NonRetryableError(fmt.Errorf("Reading CloudWatch Events permission '%s' failed: %s", d.Id(), err.Error()))
-			}
-
-			if debo.Policy == nil {
-				return resource.RetryableError(&resource.NotFoundError{
-					Message: fmt.Sprintf("CloudWatch Events permission %q not found"+
-						"in given results from DescribeEventBus", d.Id()),
-					LastResponse: debo,
-					LastRequest:  input,
-				})
-			}
-
-			// TODO maybe this should be out of the block?
-			err = json.Unmarshal([]byte(*debo.Policy), &policyDoc)
-			if err != nil {
-				return resource.NonRetryableError(fmt.Errorf("Reading CloudWatch Events permission '%s' failed: %s", d.Id(), err.Error()))
-			}
-
-			// TODO This feels like it should be a separate retry block
-			policyStatement, err = findCloudWatchEventPermissionPolicyStatementByID(&policyDoc, d.Id())
-			// TODO also what if err is nil here?
-			return resource.RetryableError(err)
-		})
-
-		if err != nil {
-			// Missing statement inside valid policy
-			// TODO use isAWSErr here
-			if nfErr, ok := err.(*resource.NotFoundError); ok {
-				log.Printf("[WARN] %s", nfErr)
-				d.SetId("")
-				return nil
-			}
-
-			return err
-		}
-	*/
-
 	d.Set("action", policyStatement.Action)
 
 	if err := d.Set("condition", flattenCloudWatchEventPermissionPolicyStatementCondition(policyStatement.Condition)); err != nil {
