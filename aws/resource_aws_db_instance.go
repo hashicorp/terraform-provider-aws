@@ -240,7 +240,6 @@ func resourceAwsDbInstance() *schema.Resource {
 						},
 						"bucket_prefix": {
 							Type:     schema.TypeString,
-							Required: false,
 							Optional: true,
 							ForceNew: true,
 						},
@@ -329,7 +328,6 @@ func resourceAwsDbInstance() *schema.Resource {
 
 			"snapshot_identifier": {
 				Type:     schema.TypeString,
-				Computed: false,
 				Optional: true,
 				ForceNew: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
@@ -343,7 +341,6 @@ func resourceAwsDbInstance() *schema.Resource {
 
 			"allow_major_version_upgrade": {
 				Type:     schema.TypeBool,
-				Computed: false,
 				Optional: true,
 			},
 
