@@ -82,6 +82,27 @@ func validateTypeStringNullableFloat(v interface{}, k string) (ws []string, es [
 	return
 }
 
+// validateTypeStringNullableInt provides custom error messaging for TypeString ints
+// Some arguments require an integer value or an unspecified, empty field.
+func validateTypeStringNullableInt(v interface{}, k string) (s []string, es []error) {
+	value, ok := v.(string)
+	if !ok {
+		es = append(es, fmt.Errorf("expected type of %s to be string", k))
+		return
+	}
+
+	if value == "" {
+		return
+	}
+
+	if _, err := strconv.ParseInt(value, 10, 64); err != nil {
+		es = append(es, fmt.Errorf("%s: cannot parse '%s' as int: %s", k, value, err))
+		return
+	}
+
+	return
+}
+
 func validateTransferServerID(v interface{}, k string) (ws []string, errors []error) {
 	value := v.(string)
 
