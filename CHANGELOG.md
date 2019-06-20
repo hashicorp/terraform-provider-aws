@@ -2,6 +2,7 @@
 
 FEATURES:
 
+* **New Resource:** `aws_globalaccelerator_endpoint_group` [GH-8328]
 * **New Resource:** `aws_ses_identity_policy` [GH-5128]
 
 ENHANCEMENTS:
