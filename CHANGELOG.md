@@ -3,6 +3,8 @@
 FEATURES:
 
 * **New Resource:** `aws_globalaccelerator_endpoint_group` [GH-8328]
+* **New Resource:** `aws_ebs_default_kms_key` [GH-8771]
+* **New Resource:** `aws_ebs_encryption_by_default` [GH-8771]
 * **New Resource:** `aws_ses_identity_policy` [GH-5128]
 
 ENHANCEMENTS:
