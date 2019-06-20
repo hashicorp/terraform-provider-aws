@@ -30,11 +30,20 @@ BUG FIXES:
 * provider: Properly configure Route 53 service client in AWS GovCloud (US) [GH-9010]
 * resource/aws_cloudwatch_event_permission: Prevent not found error when deleted outside Terraform [GH-9044]
 * resource/aws_dx_gateway: Fix resource import with associations [GH-8970]
+* resource/aws_elasticache_parameter_group: Final retry deleting parameter group [GH-9013]
+* resource/aws_elasticache_replication_group: Final retry deleting replication group [GH-9013]
+* resource/aws_elasticache_subnet_group: Final retry deleting subnet group [GH-9013]
+* resource/aws_kinesis_firehose_delivery_stream: Add final retries when creating and updating firehose delivery streams [GH-9017]
+* resource/aws_neptune_cluster: Final retries when creating, updating, and deleting Neptune clusters [GH-9036]
+* resource/aws_neptune_cluster_instance: Final retries creating and updating cluster instances [GH-9036]
+* resource/aws_neptune_parameter_group: Final retries updating and deleting parameter groups [GH-9036]
 * resource/aws_rds_cluster: Final retries after timeout creating and updating cluster [GH-8994]
 * resource/aws_rds_cluster_instance: Final retry after timeout creating cluster instance [GH-8994]
 * resource/aws_rds_global_cluster: Final retry after timeout deleting global cluster [GH-8994]
 * resource/aws_ses_receipt_rule_set: Prevent missing Terraform state for newly created resources [GH-9045]
-* resource/aws_kinesis_firehose_delivery_stream: Add final retries when creating and updating firehose delivery streams [GH-9017]
+* resource/aws_ssm_document: Final retries when creating and deleting SSM documents [GH-8992]
+* resource/aws_ssm_resource_data_sync: Final retry when creating SSM resource data sync [GH-8992]
+
 
 ## 2.15.0 (June 13, 2019)
 
