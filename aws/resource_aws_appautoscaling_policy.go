@@ -277,6 +277,9 @@ func resourceAwsAppautoscalingPolicyCreate(d *schema.ResourceData, meta interfac
 		}
 		return nil
 	})
+	if isResourceTimeoutError(err) {
+		resp, err = conn.PutScalingPolicy(&params)
+	}
 	if err != nil {
 		return fmt.Errorf("Failed to create scaling policy: %s", err)
 	}
@@ -302,6 +305,9 @@ func resourceAwsAppautoscalingPolicyRead(d *schema.ResourceData, meta interface{
 		}
 		return nil
 	})
+	if isResourceTimeoutError(err) {
+		p, err = getAwsAppautoscalingPolicy(d, meta)
+	}
 	if err != nil {
 		return fmt.Errorf("Failed to read scaling policy: %s", err)
 	}
@@ -353,6 +359,9 @@ func resourceAwsAppautoscalingPolicyUpdate(d *schema.ResourceData, meta interfac
 		}
 		return nil
 	})
+	if isResourceTimeoutError(err) {
+		_, err = conn.PutScalingPolicy(&params)
+	}
 	if err != nil {
 		return fmt.Errorf("Failed to update scaling policy: %s", err)
 	}
