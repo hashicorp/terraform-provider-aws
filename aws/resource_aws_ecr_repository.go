@@ -164,7 +164,7 @@ func resourceAwsEcrRepositoryDelete(d *schema.ResourceData, meta interface{}) er
 	if isResourceTimeoutError(err) {
 		_, err = conn.DescribeRepositories(input)
 	}
-	
+
 	if isAWSErr(err, ecr.ErrCodeRepositoryNotFoundException, "") {
 		return nil
 	}
