@@ -347,10 +347,6 @@ resource "aws_opsworks_custom_layer" "tf-acc" {
 
 func testAccAwsOpsworksCustomLayerConfigVpcCreate(name string) string {
 	return fmt.Sprintf(`
-provider "aws" {
-  region = "us-west-2"
-}
-
 resource "aws_opsworks_custom_layer" "tf-acc" {
   stack_id               = "${aws_opsworks_stack.tf-acc.id}"
   name                   = "%s"

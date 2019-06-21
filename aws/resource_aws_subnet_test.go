@@ -454,10 +454,6 @@ resource "aws_subnet" "foo" {
 `
 
 const testAccSubnetConfigAvailabilityZoneId = `
-provider "aws" {
-  region = "us-west-2"
-}
-
 resource "aws_vpc" "foo" {
   cidr_block = "10.1.0.0/16"
   tags = {

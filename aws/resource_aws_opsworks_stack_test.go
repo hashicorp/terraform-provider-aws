@@ -724,10 +724,6 @@ resource "aws_iam_instance_profile" "opsworks_instance" {
 
 func testAccAwsOpsworksStackConfigNoVpcCreateTags(name string) string {
 	return fmt.Sprintf(`
-provider "aws" {
-  region = "us-west-2"
-}
-
 resource "aws_opsworks_stack" "tf-acc" {
   name                          = "%s"
   region                        = "us-west-2"
@@ -817,10 +813,6 @@ resource "aws_iam_instance_profile" "opsworks_instance" {
 
 func testAccAwsOpsworksStackConfigNoVpcUpdateTags(name string) string {
 	return fmt.Sprintf(`
-provider "aws" {
-  region = "us-west-2"
-}
-
 resource "aws_opsworks_stack" "tf-acc" {
   name                          = "%s"
   region                        = "us-west-2"
