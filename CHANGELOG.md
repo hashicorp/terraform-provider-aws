@@ -1,5 +1,14 @@
 ## 2.17.0 (Unreleased)
 
+BUG FIXES:
+* resource/aws_api_gateway_account: Fix error handling during update [#9068]
+* resource/aws_api_gateway_base_path_mapping: Fix error handling during create [#9068]
+* resource/aws_api_gateway_domain_name: Remove unnecessary retry during delete [#9068]
+* resource/aws_api_gateway_gateway_response: Remove unnecessary retry during delete [#9068]
+* resource/aws_api_gateway_model: Remove unnecessary retry during delete [#9068]
+* resource/aws_api_gateway_usage_plan: Remove unnecessary retry during delete [#9068]
+* resource/aws_api_gateway_usage_plan_key: Remove unnecessary retry during delete [#9068]
+
 ## 2.16.0 (June 20, 2019)
 
 FEATURES:
