@@ -18,7 +18,7 @@ interface, subnet, or VPC. Logs are sent to a CloudWatch Log Group or a S3 Bucke
 ```hcl
 resource "aws_flow_log" "example" {
   iam_role_arn    = "${aws_iam_role.example.arn}"
-  log_destination = "${aws_cloudwatch_log_group.test_role.arn}"
+  log_destination = "${aws_cloudwatch_log_group.example.arn}"
   traffic_type    = "ALL"
   vpc_id          = "${aws_vpc.example.id}"
 }
@@ -27,7 +27,7 @@ resource "aws_cloudwatch_log_group" "example" {
   name = "example"
 }
 
-resource "aws_iam_role" "test_role" {
+resource "aws_iam_role" "example" {
   name = "example"
 
   assume_role_policy = <<EOF
@@ -49,7 +49,7 @@ EOF
 
 resource "aws_iam_role_policy" "example" {
   name = "example"
-  role = "${aws_iam_role.test_role.id}"
+  role = "${aws_iam_role.example.id}"
 
   policy = <<EOF
 {
