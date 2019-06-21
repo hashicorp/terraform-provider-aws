@@ -73,13 +73,10 @@ func resourceAwsCloudwatchLogSubscriptionFilterCreate(d *schema.ResourceData, me
 		if isAWSErr(err, cloudwatchlogs.ErrCodeInvalidParameterException, "Could not execute the lambda function") {
 			return resource.RetryableError(err)
 		}
-		if isAWSErr(err, cloudwatchlogs.ErrCodeInvalidParameterException, "") {
+		if err != nil {
 			return resource.NonRetryableError(err)
 		}
-		if isAWSErr(err, "", "") {
-			return resource.NonRetryableError(err)
-		}
-		return resource.RetryableError(err)
+		return nil
 	})
 
 	if isResourceTimeoutError(err) {

@@ -70,14 +70,8 @@ func resourceAwsCloudWatchLogDestinationPut(d *schema.ResourceData, meta interfa
 		if isAWSErr(err, cloudwatchlogs.ErrCodeInvalidParameterException, "Could not deliver test message to specified") {
 			return resource.RetryableError(err)
 		}
-		if isAWSErr(err, cloudwatchlogs.ErrCodeInvalidParameterException, "") {
-			return resource.NonRetryableError(err)
-		}
-		if isAWSErr(err, "", "") {
-			return resource.NonRetryableError(err)
-		}
 		if err != nil {
-			return resource.RetryableError(err)
+			return resource.NonRetryableError(err)
 		}
 		return nil
 	})
