@@ -8,6 +8,8 @@ BUG FIXES:
 * resource/aws_api_gateway_model: Remove unnecessary retry during delete [#9068]
 * resource/aws_api_gateway_usage_plan: Remove unnecessary retry during delete [#9068]
 * resource/aws_api_gateway_usage_plan_key: Remove unnecessary retry during delete [#9068]
+* resource/aws_spot_fleet_request: Add final retry when creating spot fleet request [#9078]
+* resource/aws_spot_instance_request: Add final retry when creating spot instance request [#9078]
 
 ## 2.16.0 (June 20, 2019)
 
