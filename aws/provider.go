@@ -445,6 +445,7 @@ func Provider() terraform.ResourceProvider {
 			"aws_iam_access_key":                               resourceAwsIamAccessKey(),
 			"aws_iam_account_alias":                            resourceAwsIamAccountAlias(),
 			"aws_iam_account_password_policy":                  resourceAwsIamAccountPasswordPolicy(),
+			"aws_iam_credential_report":                        resourceAwsIamCredentialReport(),
 			"aws_iam_group_policy":                             resourceAwsIamGroupPolicy(),
 			"aws_iam_group":                                    resourceAwsIamGroup(),
 			"aws_iam_group_membership":                         resourceAwsIamGroupMembership(),
