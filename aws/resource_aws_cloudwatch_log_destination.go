@@ -88,7 +88,7 @@ func resourceAwsCloudWatchLogDestinationPut(d *schema.ResourceData, meta interfa
 		return fmt.Errorf("Error putting cloudwatch log destination: %s", err)
 	}
 	d.SetId(name)
-	d.Set("arn", *resp.Destination.Arn)
+	d.Set("arn", resp.Destination.Arn)
 	return nil
 }
 
