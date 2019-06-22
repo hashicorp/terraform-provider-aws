@@ -229,6 +229,7 @@ func Provider() terraform.ResourceProvider {
 			"aws_launch_template":                           dataSourceAwsLaunchTemplate(),
 			"aws_mq_broker":                                 dataSourceAwsMqBroker(),
 			"aws_msk_cluster":                               dataSourceAwsMskCluster(),
+			"aws_msk_configuration":                         dataSourceAwsMskConfiguration(),
 			"aws_nat_gateway":                               dataSourceAwsNatGateway(),
 			"aws_network_acls":                              dataSourceAwsNetworkAcls(),
 			"aws_network_interface":                         dataSourceAwsNetworkInterface(),
