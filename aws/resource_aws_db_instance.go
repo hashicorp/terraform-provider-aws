@@ -198,7 +198,6 @@ func resourceAwsDbInstance() *schema.Resource {
 			"max_allocated_storage": {
 				Type:     schema.TypeInt,
 				Optional: true,
-				Computed: true,
 				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
 					if old == "0" && new == fmt.Sprintf("%d", d.Get("allocated_storage").(int)) {
 						return true
