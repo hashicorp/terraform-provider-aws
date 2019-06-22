@@ -750,11 +750,6 @@ func resourceAwsDbInstanceCreate(d *schema.ResourceData, meta interface{}) error
 			opts.AvailabilityZone = aws.String(attr.(string))
 		}
 
-		if attr, ok := d.GetOk("max_allocated_storage"); ok {
-			modifyDbInstanceInput.MaxAllocatedStorage = aws.Int64(int64(attr.(int)))
-			requiresModifyDbInstance = true
-		}
-
 		if attr, ok := d.GetOk("monitoring_role_arn"); ok {
 			opts.MonitoringRoleArn = aws.String(attr.(string))
 		}
