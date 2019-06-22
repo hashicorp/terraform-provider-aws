@@ -145,7 +145,6 @@ In addition to all arguments above, the following attributes are exported:
 * `id` - id of resource.
 * `arn` - The ARN of the budget.
 
-
 ### Cost Types
 
 Valid keys for `cost_types` parameter.
@@ -187,7 +186,7 @@ Refer to [AWS CostFilter documentation](http://docs.aws.amazon.com/awsaccountbil
 
 ### Cost Filters
 
-Valid key for `cost_filters` is same as `cost_filter`. Please refer to [CostFilter](#Cost-Filter).
+Valid key for `cost_filters` is same as `cost_filter`. Please refer to [Cost Filter](#Cost-Filter).
 
 ### Budget Notification
 
@@ -199,7 +198,6 @@ Valid keys for `notification` parameter.
 * `notification_type` - (Required) What kind of budget value to notify on. Can be `ACTUAL` or `FORECASTED`
 * `subscriber_email_addresses` - (Optional) E-Mail addresses to notify. Either this or `subscriber_sns_topic_arns` is required.
 * `subscriber_sns_topic_arns` - (Optional) SNS topics to notify. Either this or `subscriber_email_addresses` is required.
-
 
 ## Import
 
