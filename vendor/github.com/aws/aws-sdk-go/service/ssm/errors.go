@@ -551,7 +551,7 @@ const (
 	// "OpsItemLimitExceededException".
 	//
 	// The request caused OpsItems to exceed one or more limits. For information
-	// about OpsItem limits, see What are the resource limits for OpsItems? (http://docs.aws.amazon.com/systems-manager/latest/userguide/OpsItems-learn-more.html#OpsItems-learn-more-limits).
+	// about OpsItem limits, see What are the resource limits for OpsCenter? (http://docs.aws.amazon.com/systems-manager/latest/userguide/OpsCenter-learn-more.html#OpsCenter-learn-more-limits).
 	ErrCodeOpsItemLimitExceededException = "OpsItemLimitExceededException"
 
 	// ErrCodeOpsItemNotFoundException for service response error code
