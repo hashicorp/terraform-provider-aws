@@ -98,6 +98,8 @@ interpolation.
   * `iops` - `0` If the volume is not a provisioned IOPS image, otherwise the supported IOPS count.
   * `volume_size` - The size of the volume, in GiB.
   * `volume_type` - The type of the volume.
+  * `encrypted` - If the volume is encrypted.
+  * `kms_key_id` - The ID of the KMS Key that was used to encrypt the volume.
 * `security_groups` - The associated security groups.
 * `source_dest_check` - Whether the network interface performs source/destination checking (Boolean).
 * `subnet_id` - The VPC subnet ID.

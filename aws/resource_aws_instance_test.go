@@ -417,6 +417,38 @@ func TestAccAWSInstance_GP2WithIopsValue(t *testing.T) {
 	})
 }
 
+func TestAccAWSInstance_encryptedRootDevice(t *testing.T) {
+	rName := acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum)
+
+	var v ec2.Instance
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:        func() { testAccPreCheck(t) },
+		IDRefreshName:   "aws_instance.foo",
+		IDRefreshIgnore: []string{"ephemeral_block_device", "user_data"},
+		Providers:       testAccProviders,
+		CheckDestroy:    testAccCheckInstanceDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccInstanceEncryptedRootDevice(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckInstanceExists(
+						"aws_instance.foo", &v),
+					resource.TestCheckResourceAttr(
+						"aws_instance.foo", "root_block_device.#", "1"),
+					resource.TestMatchResourceAttr(
+						"aws_instance.foo", "root_block_device.0.volume_id", regexp.MustCompile("vol-[a-z0-9]+")),
+					resource.TestCheckResourceAttr(
+						"aws_instance.foo", "root_block_device.0.volume_size", "11"),
+					resource.TestCheckResourceAttr(
+						"aws_instance.foo", "root_block_device.0.volume_type", "gp2"),
+					resource.TestCheckResourceAttr(
+						"aws_instance.foo", "root_block_device.0.encrypted", "true"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccAWSInstance_blockDevices(t *testing.T) {
 	var v ec2.Instance
 
@@ -2465,6 +2497,56 @@ resource "aws_instance" "foo" {
 	}
 }
 `
+
+func testAccInstanceEncryptedRootDevice(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_kms_key" "foo" {
+  description             = "Terraform acc test %s"
+  deletion_window_in_days = 7
+
+  policy = <<POLICY
+{
+  "Version": "2012-10-17",
+  "Id": "kms-tf-1",
+  "Statement": [
+    {
+      "Sid": "Enable IAM User Permissions",
+      "Effect": "Allow",
+      "Principal": {
+        "AWS": "*"
+      },
+      "Action": "kms:*",
+      "Resource": "*"
+    }
+  ]
+}
+POLICY
+
+  tags = {
+    Name = "tf-acc-test-kms-key-%s"
+  }
+}
+
+resource "aws_instance" "foo" {
+	# us-west-2
+	ami = "ami-55a7ea65"
+
+	# In order to attach an encrypted volume to an instance you need to have an
+	# m3.medium or larger. See "Supported Instance Types" in:
+	# http://docs.aws.amazon.com/AWSEC2/latest/UserGuide/EBSEncryption.html
+	instance_type = "m3.medium"
+
+	root_block_device {
+		volume_type = "gp2"
+		volume_size = 11
+        # configured explicitly
+		iops        = 10
+		encrypted   = true
+		kms_key_id  = "${aws_kms_key.foo.arn}"
+	}
+}
+`, rName, rName)
+}
 
 const testAccInstanceConfigBlockDevices = `
 resource "aws_instance" "foo" {

@@ -131,6 +131,11 @@ The `root_block_device` mapping supports the following:
   using that type
 * `delete_on_termination` - (Optional) Whether the volume should be destroyed
   on instance termination (Default: `true`).
+* `encrypted` - (Optional) Enables [EBS
+  encryption](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/EBSEncryption.html)
+  on the volume (Default: `false`).
+* `kms_key_id` - (Optional) Identifier (key ID, key alias, ID ARN, or alias ARN) for a user-managed CMK
+  under which the EBS volume is encrypted.
 
 Modifying any of the `root_block_device` settings requires resource
 replacement.

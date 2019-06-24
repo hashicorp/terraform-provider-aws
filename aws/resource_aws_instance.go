@@ -458,6 +458,19 @@ func resourceAwsInstance() *schema.Resource {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
+
+						"encrypted": {
+							Type:     schema.TypeBool,
+							Optional: true,
+							Default:  false,
+							ForceNew: true,
+						},
+
+						"kms_key_id": {
+							Type:     schema.TypeString,
+							Optional: true,
+							ForceNew: true,
+						},
 					},
 				},
 			},
@@ -1329,14 +1342,19 @@ func readBlockDevicesFromInstance(instance *ec2.Instance, conn *ec2.EC2) (map[st
 			bd["iops"] = *vol.Iops
 		}
 
+		if vol.Encrypted != nil {
+			bd["encrypted"] = *vol.Encrypted
+		}
+
 		if blockDeviceIsRoot(instanceBd, instance) {
 			blockDevices["root"] = bd
+
+			if vol.KmsKeyId != nil {
+				bd["kms_key_id"] = *vol.KmsKeyId
+			}
 		} else {
 			if instanceBd.DeviceName != nil {
 				bd["device_name"] = *instanceBd.DeviceName
-			}
-			if vol.Encrypted != nil {
-				bd["encrypted"] = *vol.Encrypted
 			}
 			if vol.SnapshotId != nil {
 				bd["snapshot_id"] = *vol.SnapshotId
@@ -1561,6 +1579,14 @@ func readBlockDeviceMappingsFromConfig(
 
 			if v, ok := bd["volume_type"].(string); ok && v != "" {
 				ebs.VolumeType = aws.String(v)
+			}
+
+			if v, ok := bd["encrypted"].(bool); ok {
+				ebs.Encrypted = aws.Bool(v)
+			}
+
+			if v, ok := bd["kms_key_id"].(string); ok && v != "" {
+				ebs.KmsKeyId = aws.String(v)
 			}
 
 			if v, ok := bd["iops"].(int); ok && v > 0 && *ebs.VolumeType == "io1" {

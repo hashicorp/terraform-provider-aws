@@ -238,6 +238,16 @@ func dataSourceAwsInstance() *schema.Resource {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
+
+						"encrypted": {
+							Type:     schema.TypeBool,
+							Computed: true,
+						},
+
+						"kms_key_id": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
 					},
 				},
 			},
