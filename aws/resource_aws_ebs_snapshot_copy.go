@@ -116,7 +116,7 @@ func resourceAwsEbsSnapshotCopyRead(d *schema.ResourceData, meta interface{}) er
 		SnapshotIds: []*string{aws.String(d.Id())},
 	}
 	res, err := conn.DescribeSnapshots(req)
-	if ec2err, ok := err.(awserr.Error); ok && ec2err.Code() == "InvalidSnapshotID.NotFound" {
+	if ec2err, ok := err.(awserr.Error); ok && ec2err.Code() == "InvalidSnapshot.NotFound" {
 		log.Printf("Snapshot %q Not found - removing from state", d.Id())
 		d.SetId("")
 		return nil
@@ -153,8 +153,12 @@ func resourceAwsEbsSnapshotCopyDelete(d *schema.ResourceData, meta interface{}) 
 		}
 
 		ebsErr, ok := err.(awserr.Error)
-		if ebsErr.Code() == "SnapshotInUse" {
+		if ok && ebsErr.Code() == "SnapshotInUse" {
 			return resource.RetryableError(fmt.Errorf("EBS SnapshotInUse - trying again while it detaches"))
+		}
+
+		if ok && ebsErr.Code() == "InvalidSnapshot.NotFound" {
+			return nil
 		}
 
 		if !ok {

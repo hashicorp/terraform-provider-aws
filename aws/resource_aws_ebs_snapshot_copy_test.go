@@ -98,6 +98,25 @@ func TestAccAWSEbsSnapshotCopy_withKms(t *testing.T) {
 	})
 }
 
+func TestAccAWSEbsSnapshotCopy_disappears(t *testing.T) {
+	var v ec2.Snapshot
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckEbsSnapshotCopyDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAwsEbsSnapshotCopyConfig,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckEbsSnapshotCopyExists("aws_ebs_snapshot_copy.test", &v),
+					testAccCheckEbsSnapshotCopyDisappears(&v),
+				),
+				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}
+
 func testAccCheckEbsSnapshotCopyDestroy(s *terraform.State) error {
 	conn := testAccProvider.Meta().(*AWSClient).ec2conn
 
@@ -126,6 +145,18 @@ func testAccCheckEbsSnapshotCopyDestroy(s *terraform.State) error {
 	}
 
 	return nil
+}
+
+func testAccCheckEbsSnapshotCopyDisappears(snapshot *ec2.Snapshot) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := testAccProvider.Meta().(*AWSClient).ec2conn
+
+		_, err := conn.DeleteSnapshot(&ec2.DeleteSnapshotInput{
+			SnapshotId: snapshot.SnapshotId,
+		})
+
+		return err
+	}
 }
 
 func testAccCheckEbsSnapshotCopyExists(n string, v *ec2.Snapshot) resource.TestCheckFunc {
