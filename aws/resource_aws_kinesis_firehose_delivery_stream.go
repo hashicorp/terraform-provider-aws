@@ -1426,8 +1426,12 @@ func createExtendedS3Config(d *schema.ResourceData) *firehose.ExtendedS3Destinat
 		configuration.CloudWatchLoggingOptions = extractCloudWatchLoggingConfiguration(s3)
 	}
 
-	if v, ok := s3["error_output_prefix"]; ok && v.(string) != "" {
+	if v, ok := s3["error_output_prefix"]; ok {
 		configuration.ErrorOutputPrefix = aws.String(v.(string))
+	} else {
+		// It is possible to just pass nil here, but this seems to be the
+		// canonical form that AWS uses, and is less likely to produce diffs.
+		configuration.ErrorOutputPrefix = aws.String("")
 	}
 
 	if s3BackupMode, ok := s3["s3_backup_mode"]; ok {
@@ -1511,8 +1515,12 @@ func updateExtendedS3Config(d *schema.ResourceData) *firehose.ExtendedS3Destinat
 		configuration.CloudWatchLoggingOptions = extractCloudWatchLoggingConfiguration(s3)
 	}
 
-	if v, ok := s3["error_output_prefix"]; ok && v.(string) != "" {
+	if v, ok := s3["error_output_prefix"]; ok {
 		configuration.ErrorOutputPrefix = aws.String(v.(string))
+	} else {
+		// It is possible to just pass nil here, but this seems to be the
+		// canonical form that AWS uses, and is less likely to produce diffs.
+		configuration.ErrorOutputPrefix = aws.String("")
 	}
 
 	if s3BackupMode, ok := s3["s3_backup_mode"]; ok {
@@ -1525,7 +1533,11 @@ func updateExtendedS3Config(d *schema.ResourceData) *firehose.ExtendedS3Destinat
 
 func expandFirehoseDataFormatConversionConfiguration(l []interface{}) *firehose.DataFormatConversionConfiguration {
 	if len(l) == 0 || l[0] == nil {
-		return nil
+		// It is possible to just pass nil here, but this seems to be the
+		// canonical form that AWS uses, and is less likely to produce diffs.
+		return &firehose.DataFormatConversionConfiguration{
+			Enabled: aws.Bool(false),
+		}
 	}
 
 	m := l[0].(map[string]interface{})
@@ -1700,7 +1712,12 @@ func expandFirehoseSchemaConfiguration(l []interface{}) *firehose.SchemaConfigur
 func extractProcessingConfiguration(s3 map[string]interface{}) *firehose.ProcessingConfiguration {
 	config := s3["processing_configuration"].([]interface{})
 	if len(config) == 0 {
-		return nil
+		// It is possible to just pass nil here, but this seems to be the
+		// canonical form that AWS uses, and is less likely to produce diffs.
+		return &firehose.ProcessingConfiguration{
+			Enabled:    aws.Bool(false),
+			Processors: []*firehose.Processor{},
+		}
 	}
 
 	processingConfiguration := config[0].(map[string]interface{})
