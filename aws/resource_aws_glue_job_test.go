@@ -766,7 +766,7 @@ resource "aws_glue_job" "test" {
   name                   = "%s"
   role_arn               = "${aws_iam_role.test.arn}"
   worker_type 			 = "%s"
-  allocated_capacity     = 10
+  number_of_workers      = 10
 
   command {
     script_location = "testscriptlocation"
