@@ -58,6 +58,28 @@ func TestAccAWSDBSnapshot_tags(t *testing.T) {
 	})
 }
 
+func TestAccAWSDBSnapshot_disappears(t *testing.T) {
+	var v rds.DBSnapshot
+	rInt := acctest.RandInt()
+	resourceName := "aws_db_snapshot.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckDbSnapshotDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAwsDbSnapshotConfig(rInt),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDbSnapshotExists(resourceName, &v),
+					testAccCheckDbSnapshotDisappears(&v),
+				),
+				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}
+
 func testAccCheckDbSnapshotDestroy(s *terraform.State) error {
 	conn := testAccProvider.Meta().(*AWSClient).rdsconn
 
@@ -115,6 +137,20 @@ func testAccCheckDbSnapshotExists(n string, v *rds.DBSnapshot) resource.TestChec
 			}
 		}
 		return fmt.Errorf("Error finding RDS DB Snapshot %s", rs.Primary.ID)
+	}
+}
+
+func testAccCheckDbSnapshotDisappears(snapshot *rds.DBSnapshot) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := testAccProvider.Meta().(*AWSClient).rdsconn
+
+		if _, err := conn.DeleteDBSnapshot(&rds.DeleteDBSnapshotInput{
+			DBSnapshotIdentifier: snapshot.DBSnapshotIdentifier,
+		}); err != nil {
+			return err
+		}
+
+		return nil
 	}
 }
 
