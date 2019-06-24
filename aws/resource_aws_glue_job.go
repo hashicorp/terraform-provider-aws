@@ -3,6 +3,7 @@ package aws
 import (
 	"fmt"
 	"log"
+	"regexp"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/glue"
@@ -107,6 +108,12 @@ func resourceAwsGlueJob() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
+			"worker_type": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				Default:      "Standard",
+				ValidateFunc: validation.StringMatch(regexp.MustCompile(`^Standard|G.1X|G.2X`), "Must be one of Standard, G.1X or G.2X. See https://docs.aws.amazon.com/glue/latest/dg/aws-glue-api-jobs-job.html"),
+			},
 		},
 	}
 }
@@ -159,6 +166,10 @@ func resourceAwsGlueJobCreate(d *schema.ResourceData, meta interface{}) error {
 
 	if v, ok := d.GetOk("security_configuration"); ok {
 		input.SecurityConfiguration = aws.String(v.(string))
+	}
+
+	if v, ok := d.GetOk("worker_type"); ok {
+		input.WorkerType = aws.String(v.(string))
 	}
 
 	log.Printf("[DEBUG] Creating Glue Job: %s", input)
@@ -219,6 +230,8 @@ func resourceAwsGlueJobRead(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("error setting security_configuration: %s", err)
 	}
 
+	d.Set("worker_type", job.WorkerType)
+
 	// TODO: Deprecated fields - remove in next major version
 	d.Set("allocated_capacity", int(aws.Int64Value(job.AllocatedCapacity)))
 
@@ -271,6 +284,10 @@ func resourceAwsGlueJobUpdate(d *schema.ResourceData, meta interface{}) error {
 
 	if v, ok := d.GetOk("security_configuration"); ok {
 		jobUpdate.SecurityConfiguration = aws.String(v.(string))
+	}
+
+	if v, ok := d.GetOk("worker_type"); ok {
+		jobUpdate.WorkerType = aws.String(v.(string))
 	}
 
 	input := &glue.UpdateJobInput{
