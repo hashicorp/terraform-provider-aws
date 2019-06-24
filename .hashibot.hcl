@@ -60,6 +60,10 @@ behavior "pull_request_path_labeler" "service_labels" {
     # 	"**/*_applicationdiscoveryservice_*",
     # 	"**/applicationdiscoveryservice_*"
     # ]
+    "service/applicationinsights" = [
+      "**/*_applicationinsights_*",
+      "**/applicationinsights_*"
+    ]
     "service/appmesh" = [
       "**/*_appmesh_*",
       "**/appmesh_*"
@@ -545,6 +549,10 @@ behavior "pull_request_path_labeler" "service_labels" {
     "service/servicediscovery" = [
       "**/*_service_discovery_*",
       "**/service_discovery_*"
+    ]
+    "service/servicequotas" = [
+      "**/*_servicequotas_*",
+      "**/servicequotas_*"
     ]
     "service/ses" = [
       "**/*_ses_*",
