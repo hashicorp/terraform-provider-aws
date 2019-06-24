@@ -899,13 +899,13 @@ func (c *SSM) CreateOpsItemRequest(input *CreateOpsItemInput) (req *request.Requ
 //
 // Creates a new OpsItem. You must have permission in AWS Identity and Access
 // Management (IAM) to create a new OpsItem. For more information, see Getting
-// Started with OpsItems (http://docs.aws.amazon.com/systems-manager/latest/userguide/OpsItems-getting-started.html)
+// Started with OpsCenter (http://docs.aws.amazon.com/systems-manager/latest/userguide/OpsCenter-getting-started.html)
 // in the AWS Systems Manager User Guide.
 //
-// Operations engineers and IT professionals use the Systems Manager OpsItems
-// capability to view, investigate, and remediate operational issues impacting
-// the performance and health of their AWS resources. For more information,
-// see AWS Systems Manager OpsItems (http://docs.aws.amazon.com/systems-manager/latest/userguide/OpsItems.html)
+// Operations engineers and IT professionals use OpsCenter to view, investigate,
+// and remediate operational issues impacting the performance and health of
+// their AWS resources. For more information, see AWS Systems Manager OpsCenter
+// (http://docs.aws.amazon.com/systems-manager/latest/userguide/OpsCenter.html)
 // in the AWS Systems Manager User Guide.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
@@ -924,7 +924,7 @@ func (c *SSM) CreateOpsItemRequest(input *CreateOpsItemInput) (req *request.Requ
 //
 //   * ErrCodeOpsItemLimitExceededException "OpsItemLimitExceededException"
 //   The request caused OpsItems to exceed one or more limits. For information
-//   about OpsItem limits, see What are the resource limits for OpsItems? (http://docs.aws.amazon.com/systems-manager/latest/userguide/OpsItems-learn-more.html#OpsItems-learn-more-limits).
+//   about OpsItem limits, see What are the resource limits for OpsCenter? (http://docs.aws.amazon.com/systems-manager/latest/userguide/OpsCenter-learn-more.html#OpsCenter-learn-more-limits).
 //
 //   * ErrCodeOpsItemInvalidParameterException "OpsItemInvalidParameterException"
 //   A specified parameter argument isn't valid. Verify the available arguments
@@ -4699,13 +4699,13 @@ func (c *SSM) DescribeOpsItemsRequest(input *DescribeOpsItemsInput) (req *reques
 //
 // Query a set of OpsItems. You must have permission in AWS Identity and Access
 // Management (IAM) to query a list of OpsItems. For more information, see Getting
-// Started with OpsItems (http://docs.aws.amazon.com/systems-manager/latest/userguide/OpsItems-getting-started.html)
+// Started with OpsCenter (http://docs.aws.amazon.com/systems-manager/latest/userguide/OpsCenter-getting-started.html)
 // in the AWS Systems Manager User Guide.
 //
-// Operations engineers and IT professionals use the Systems Manager OpsItems
-// capability to view, investigate, and remediate operational issues impacting
-// the performance and health of their AWS resources. For more information,
-// see AWS Systems Manager OpsItems (http://docs.aws.amazon.com/systems-manager/latest/userguide/OpsItems.html)
+// Operations engineers and IT professionals use OpsCenter to view, investigate,
+// and remediate operational issues impacting the performance and health of
+// their AWS resources. For more information, see AWS Systems Manager OpsCenter
+// (http://docs.aws.amazon.com/systems-manager/latest/userguide/OpsCenter.html)
 // in the AWS Systems Manager User Guide.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
@@ -6529,13 +6529,13 @@ func (c *SSM) GetOpsItemRequest(input *GetOpsItemInput) (req *request.Request, o
 //
 // Get information about an OpsItem by using the ID. You must have permission
 // in AWS Identity and Access Management (IAM) to view information about an
-// OpsItem. For more information, see Getting Started with OpsItems (http://docs.aws.amazon.com/systems-manager/latest/userguide/OpsItems-getting-started.html)
+// OpsItem. For more information, see Getting Started with OpsCenter (http://docs.aws.amazon.com/systems-manager/latest/userguide/OpsCenter-getting-started.html)
 // in the AWS Systems Manager User Guide.
 //
-// Operations engineers and IT professionals use the Systems Manager OpsItems
-// capability to view, investigate, and remediate operational issues impacting
-// the performance and health of their AWS resources. For more information,
-// see AWS Systems Manager OpsItems (http://docs.aws.amazon.com/systems-manager/latest/userguide/OpsItems.html)
+// Operations engineers and IT professionals use OpsCenter to view, investigate,
+// and remediate operational issues impacting the performance and health of
+// their AWS resources. For more information, see AWS Systems Manager OpsCenter
+// (http://docs.aws.amazon.com/systems-manager/latest/userguide/OpsCenter.html)
 // in the AWS Systems Manager User Guide.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
@@ -11577,13 +11577,13 @@ func (c *SSM) UpdateOpsItemRequest(input *UpdateOpsItemInput) (req *request.Requ
 //
 // Edit or change an OpsItem. You must have permission in AWS Identity and Access
 // Management (IAM) to update an OpsItem. For more information, see Getting
-// Started with OpsItems (http://docs.aws.amazon.com/systems-manager/latest/userguide/OpsItems-getting-started.html)
+// Started with OpsCenter (http://docs.aws.amazon.com/systems-manager/latest/userguide/OpsCenter-getting-started.html)
 // in the AWS Systems Manager User Guide.
 //
-// Operations engineers and IT professionals use the Systems Manager OpsItems
-// capability to view, investigate, and remediate operational issues impacting
-// the performance and health of their AWS resources. For more information,
-// see AWS Systems Manager OpsItems (http://docs.aws.amazon.com/systems-manager/latest/userguide/OpsItems.html)
+// Operations engineers and IT professionals use OpsCenter to view, investigate,
+// and remediate operational issues impacting the performance and health of
+// their AWS resources. For more information, see AWS Systems Manager OpsCenter
+// (http://docs.aws.amazon.com/systems-manager/latest/userguide/OpsCenter.html)
 // in the AWS Systems Manager User Guide.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
@@ -11605,7 +11605,7 @@ func (c *SSM) UpdateOpsItemRequest(input *UpdateOpsItemInput) (req *request.Requ
 //
 //   * ErrCodeOpsItemLimitExceededException "OpsItemLimitExceededException"
 //   The request caused OpsItems to exceed one or more limits. For information
-//   about OpsItem limits, see What are the resource limits for OpsItems? (http://docs.aws.amazon.com/systems-manager/latest/userguide/OpsItems-learn-more.html#OpsItems-learn-more-limits).
+//   about OpsItem limits, see What are the resource limits for OpsCenter? (http://docs.aws.amazon.com/systems-manager/latest/userguide/OpsCenter-learn-more.html#OpsCenter-learn-more-limits).
 //
 //   * ErrCodeOpsItemInvalidParameterException "OpsItemInvalidParameterException"
 //   A specified parameter argument isn't valid. Verify the available arguments
@@ -16107,12 +16107,21 @@ type CreateOpsItemInput struct {
 	// data as key-value pairs. The key has a maximum length of 128 characters.
 	// The value has a maximum size of 20 KB.
 	//
-	// This custom data is searchable, but with restrictions. For the Searchable
-	// operational data feature, all users with access to the OpsItem Overview page
-	// (as provided by the DescribeOpsItems API action) can view and search on the
-	// specified data. For the Private operational data feature, the data is only
-	// viewable by users who have access to the OpsItem (as provided by the GetOpsItem
-	// API action).
+	// Operational data keys can't begin with the following: amazon, aws, amzn,
+	// ssm, /amazon, /aws, /amzn, /ssm.
+	//
+	// You can choose to make the data searchable by other users in the account
+	// or you can restrict search access. Searchable data means that all users with
+	// access to the OpsItem Overview page (as provided by the DescribeOpsItems
+	// API action) can view and search on the specified data. Operational data that
+	// is not searchable is only viewable by users who have access to the OpsItem
+	// (as provided by the GetOpsItem API action).
+	//
+	// Use the /aws/resources key in OperationalData to specify a related resource
+	// in the request. Use the /aws/automations key in OperationalData to associate
+	// an Automation runbook with the OpsItem. To view AWS CLI example commands
+	// that use these keys, see Creating OpsItems Manually (http://docs.aws.amazon.com/systems-manager/latest/userguide/OpsCenter-creating-OpsItems.html#OpsCenter-manually-create-OpsItems)
+	// in the AWS Systems Manager User Guide.
 	OperationalData map[string]*OpsItemDataValue `type:"map"`
 
 	// The importance of this OpsItem in relation to other OpsItems in the system.
@@ -16128,15 +16137,14 @@ type CreateOpsItemInput struct {
 	// Source is a required field
 	Source *string `min:"1" type:"string" required:"true"`
 
-	// Optional metadata that you assign to a resource. Tags enable you to categorize
-	// a resource in different ways, such as by purpose, owner, or environment.
-	// For example, you might want to tag an OpsItem to identify the AWS resource
-	// or the type of issue. In this case, you could specify the following key name/value
-	// pairs:
+	// Optional metadata that you assign to a resource. You can restrict access
+	// to OpsItems by using an inline IAM policy that specifies tags. For more information,
+	// see Getting Started with OpsCenter (http://docs.aws.amazon.com/systems-manager/latest/userguide/OpsCenter-getting-started.html#OpsCenter-getting-started-user-permissions)
+	// in the AWS Systems Manager User Guide.
 	//
-	//    * Key=source,Value=EC2-instance
+	// Tags use a key-value pair. For example:
 	//
-	//    * Key=status,Value=stopped
+	// Key=Department,Value=Finance
 	//
 	// To add tags to an existing OpsItem, use the AddTagsToResource action.
 	Tags []*Tag `type:"list"`
@@ -16710,10 +16718,18 @@ func (s DeleteAssociationOutput) GoString() string {
 type DeleteDocumentInput struct {
 	_ struct{} `type:"structure"`
 
+	// (Optional) The version of the document that you want to delete. If not provided,
+	// all versions of the document are deleted.
+	DocumentVersion *string `type:"string"`
+
 	// The name of the document.
 	//
 	// Name is a required field
 	Name *string `type:"string" required:"true"`
+
+	// (Optional) The version name of the document that you want to delete. If not
+	// provided, all versions of the document are deleted.
+	VersionName *string `type:"string"`
 }
 
 // String returns the string representation
@@ -16739,9 +16755,21 @@ func (s *DeleteDocumentInput) Validate() error {
 	return nil
 }
 
+// SetDocumentVersion sets the DocumentVersion field's value.
+func (s *DeleteDocumentInput) SetDocumentVersion(v string) *DeleteDocumentInput {
+	s.DocumentVersion = &v
+	return s
+}
+
 // SetName sets the Name field's value.
 func (s *DeleteDocumentInput) SetName(v string) *DeleteDocumentInput {
 	s.Name = &v
+	return s
+}
+
+// SetVersionName sets the VersionName field's value.
+func (s *DeleteDocumentInput) SetVersionName(v string) *DeleteDocumentInput {
+	s.VersionName = &v
 	return s
 }
 
@@ -20344,7 +20372,7 @@ type DescribeOpsItemsInput struct {
 	//
 	//    * Key: Title Operations: Contains
 	//
-	//    * Key: OperationalData Operations: Equals
+	//    * Key: OperationalData* Operations: Equals
 	//
 	//    * Key: OperationalDataKey Operations: Equals
 	//
@@ -20355,6 +20383,9 @@ type DescribeOpsItemsInput struct {
 	//    * Key: ResourceId Operations: Contains
 	//
 	//    * Key: AutomationId Operations: Equals
+	//
+	// *If you filter the response by using the OperationalData operator, specify
+	// a key-value pair by using the following JSON format: {"key":"key_name","value":"a_value"}
 	OpsItemFilters []*OpsItemFilter `type:"list"`
 }
 
@@ -29445,10 +29476,10 @@ func (s *OpsFilter) SetValues(v []*string) *OpsFilter {
 	return s
 }
 
-// Operations engineers and IT professionals use the Systems Manager OpsItems
-// capability to view, investigate, and remediate operational issues impacting
-// the performance and health of their AWS resources. For more information,
-// see AWS Systems Manager OpsItems (http://docs.aws.amazon.com/systems-manager/latest/userguide/OpsItems.html)
+// Operations engineers and IT professionals use OpsCenter to view, investigate,
+// and remediate operational issues impacting the performance and health of
+// their AWS resources. For more information, see AWS Systems Manager OpsCenter
+// (http://docs.aws.amazon.com/systems-manager/latest/userguide/OpsCenter.html)
 // in the AWS Systems Manager User Guide.
 type OpsItem struct {
 	_ struct{} `type:"structure"`
@@ -29478,12 +29509,21 @@ type OpsItem struct {
 	// data as key-value pairs. The key has a maximum length of 128 characters.
 	// The value has a maximum size of 20 KB.
 	//
-	// This custom data is searchable, but with restrictions. For the Searchable
-	// operational data feature, all users with access to the OpsItem Overview page
-	// (as provided by the DescribeOpsItems API action) can view and search on the
-	// specified data. For the Private operational data feature, the data is only
-	// viewable by users who have access to the OpsItem (as provided by the GetOpsItem
-	// API action).
+	// Operational data keys can't begin with the following: amazon, aws, amzn,
+	// ssm, /amazon, /aws, /amzn, /ssm.
+	//
+	// You can choose to make the data searchable by other users in the account
+	// or you can restrict search access. Searchable data means that all users with
+	// access to the OpsItem Overview page (as provided by the DescribeOpsItems
+	// API action) can view and search on the specified data. Operational data that
+	// is not searchable is only viewable by users who have access to the OpsItem
+	// (as provided by the GetOpsItem API action).
+	//
+	// Use the /aws/resources key in OperationalData to specify a related resource
+	// in the request. Use the /aws/automations key in OperationalData to associate
+	// an Automation runbook with the OpsItem. To view AWS CLI example commands
+	// that use these keys, see Creating OpsItems Manually (http://docs.aws.amazon.com/systems-manager/latest/userguide/OpsCenter-creating-OpsItems.html#OpsCenter-manually-create-OpsItems)
+	// in the AWS Systems Manager User Guide.
 	OperationalData map[string]*OpsItemDataValue `type:"map"`
 
 	// The ID of the OpsItem.
@@ -29492,7 +29532,7 @@ type OpsItem struct {
 	// The importance of this OpsItem in relation to other OpsItems in the system.
 	Priority *int64 `min:"1" type:"integer"`
 
-	// One or more OpsItems that share something in common with the current OpsItems.
+	// One or more OpsItems that share something in common with the current OpsItem.
 	// For example, related OpsItems can include OpsItems with similar error messages,
 	// impacted resources, or statuses for the impacted resource.
 	RelatedOpsItems []*RelatedOpsItem `type:"list"`
@@ -29502,7 +29542,7 @@ type OpsItem struct {
 	Source *string `min:"1" type:"string"`
 
 	// The OpsItem status. Status can be Open, In Progress, or Resolved. For more
-	// information, see Editing OpsItem Details (http://docs.aws.amazon.com/systems-manager/latest/userguide/OpsItems-working-with-OpsItems-editing-details.html)
+	// information, see Editing OpsItem Details (http://docs.aws.amazon.com/systems-manager/latest/userguide/OpsCenter-working-with-OpsItems-editing-details.html)
 	// in the AWS Systems Manager User Guide.
 	Status *string `type:"string" enum:"OpsItemStatus"`
 
@@ -29643,7 +29683,7 @@ func (s *OpsItemDataValue) SetValue(v string) *OpsItemDataValue {
 	return s
 }
 
-// Describes an OpsCenter filter.
+// Describes an OpsItem filter.
 type OpsItemFilter struct {
 	_ struct{} `type:"structure"`
 
@@ -29752,17 +29792,7 @@ type OpsItemSummary struct {
 	LastModifiedTime *time.Time `type:"timestamp"`
 
 	// Operational data is custom data that provides useful reference details about
-	// the OpsItem. For example, you can specify log files, error strings, license
-	// keys, troubleshooting tips, or other relevant data. You enter operational
-	// data as key-value pairs. The key has a maximum length of 128 characters.
-	// The value has a maximum size of 20 KB.
-	//
-	// This custom data is searchable, but with restrictions. For the Searchable
-	// operational data feature, all users with access to the OpsItem Overview page
-	// (as provided by the DescribeOpsItems API action) can view and search on the
-	// specified data. For the Private operational data feature, the data is only
-	// viewable by users who have access to the OpsItem (as provided by the GetOpsItem
-	// API action).
+	// the OpsItem.
 	OperationalData map[string]*OpsItemDataValue `type:"map"`
 
 	// The ID of the OpsItem.
@@ -32329,7 +32359,7 @@ func (s *RegisterTaskWithMaintenanceWindowOutput) SetWindowTaskId(v string) *Reg
 	return s
 }
 
-// An OpsItems that shares something in common with the current OpsItems. For
+// An OpsItems that shares something in common with the current OpsItem. For
 // example, related OpsItems can include OpsItems with similar error messages,
 // impacted resources, or statuses for the impacted resource.
 type RelatedOpsItem struct {
@@ -36336,12 +36366,21 @@ type UpdateOpsItemInput struct {
 	// data as key-value pairs. The key has a maximum length of 128 characters.
 	// The value has a maximum size of 20 KB.
 	//
-	// This custom data is searchable, but with restrictions. For the Searchable
-	// operational data feature, all users with access to the OpsItem Overview page
-	// (as provided by the DescribeOpsItems API action) can view and search on the
-	// specified data. For the Private operational data feature, the data is only
-	// viewable by users who have access to the OpsItem (as provided by the GetOpsItem
-	// API action).
+	// Operational data keys can't begin with the following: amazon, aws, amzn,
+	// ssm, /amazon, /aws, /amzn, /ssm.
+	//
+	// You can choose to make the data searchable by other users in the account
+	// or you can restrict search access. Searchable data means that all users with
+	// access to the OpsItem Overview page (as provided by the DescribeOpsItems
+	// API action) can view and search on the specified data. Operational data that
+	// is not searchable is only viewable by users who have access to the OpsItem
+	// (as provided by the GetOpsItem API action).
+	//
+	// Use the /aws/resources key in OperationalData to specify a related resource
+	// in the request. Use the /aws/automations key in OperationalData to associate
+	// an Automation runbook with the OpsItem. To view AWS CLI example commands
+	// that use these keys, see Creating OpsItems Manually (http://docs.aws.amazon.com/systems-manager/latest/userguide/OpsCenter-creating-OpsItems.html#OpsCenter-manually-create-OpsItems)
+	// in the AWS Systems Manager User Guide.
 	OperationalData map[string]*OpsItemDataValue `type:"map"`
 
 	// Keys that you want to remove from the OperationalData map.
@@ -36361,7 +36400,7 @@ type UpdateOpsItemInput struct {
 	RelatedOpsItems []*RelatedOpsItem `type:"list"`
 
 	// The OpsItem status. Status can be Open, In Progress, or Resolved. For more
-	// information, see Editing OpsItem Details (http://docs.aws.amazon.com/systems-manager/latest/userguide/OpsItems-working-with-OpsItems-editing-details.html)
+	// information, see Editing OpsItem Details (http://docs.aws.amazon.com/systems-manager/latest/userguide/OpsCenter-working-with-OpsItems-editing-details.html)
 	// in the AWS Systems Manager User Guide.
 	Status *string `type:"string" enum:"OpsItemStatus"`
 
