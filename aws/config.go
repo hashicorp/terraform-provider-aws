@@ -14,6 +14,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/apigateway"
 	"github.com/aws/aws-sdk-go/service/apigatewayv2"
 	"github.com/aws/aws-sdk-go/service/applicationautoscaling"
+	"github.com/aws/aws-sdk-go/service/applicationinsights"
 	"github.com/aws/aws-sdk-go/service/appmesh"
 	"github.com/aws/aws-sdk-go/service/appsync"
 	"github.com/aws/aws-sdk-go/service/athena"
@@ -111,6 +112,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/serverlessapplicationrepository"
 	"github.com/aws/aws-sdk-go/service/servicecatalog"
 	"github.com/aws/aws-sdk-go/service/servicediscovery"
+	"github.com/aws/aws-sdk-go/service/servicequotas"
 	"github.com/aws/aws-sdk-go/service/ses"
 	"github.com/aws/aws-sdk-go/service/sfn"
 	"github.com/aws/aws-sdk-go/service/shield"
@@ -167,6 +169,7 @@ type AWSClient struct {
 	apigateway                          *apigateway.APIGateway
 	apigatewayv2conn                    *apigatewayv2.ApiGatewayV2
 	appautoscalingconn                  *applicationautoscaling.ApplicationAutoScaling
+	applicationinsightsconn             *applicationinsights.ApplicationInsights
 	appmeshconn                         *appmesh.AppMesh
 	appsyncconn                         *appsync.AppSync
 	athenaconn                          *athena.Athena
@@ -266,6 +269,7 @@ type AWSClient struct {
 	secretsmanagerconn                  *secretsmanager.SecretsManager
 	securityhubconn                     *securityhub.SecurityHub
 	serverlessapplicationrepositoryconn *serverlessapplicationrepository.ServerlessApplicationRepository
+	servicequotasconn                   *servicequotas.ServiceQuotas
 	sesConn                             *ses.SES
 	sfnconn                             *sfn.SFN
 	shieldconn                          *shield.Shield
@@ -342,6 +346,7 @@ func (c *Config) Client() (interface{}, error) {
 		apigateway:                          apigateway.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["apigateway"])})),
 		apigatewayv2conn:                    apigatewayv2.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["apigateway"])})),
 		appautoscalingconn:                  applicationautoscaling.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["applicationautoscaling"])})),
+		applicationinsightsconn:             applicationinsights.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["applicationinsights"])})),
 		appmeshconn:                         appmesh.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["appmesh"])})),
 		appsyncconn:                         appsync.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["appsync"])})),
 		athenaconn:                          athena.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["athena"])})),
@@ -439,6 +444,7 @@ func (c *Config) Client() (interface{}, error) {
 		secretsmanagerconn:                  secretsmanager.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["secretsmanager"])})),
 		securityhubconn:                     securityhub.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["securityhub"])})),
 		serverlessapplicationrepositoryconn: serverlessapplicationrepository.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["serverlessrepo"])})),
+		servicequotasconn:                   servicequotas.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["servicequotas"])})),
 		sesConn:                             ses.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["ses"])})),
 		sfnconn:                             sfn.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["stepfunctions"])})),
 		simpledbconn:                        simpledb.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["sdb"])})),
