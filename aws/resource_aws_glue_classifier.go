@@ -24,6 +24,18 @@ func resourceAwsGlueClassifier() *schema.Resource {
 			func(diff *schema.ResourceDiff, v interface{}) error {
 				// ForceNew when changing classifier type
 				// InvalidInputException: UpdateClassifierRequest can't change the type of the classifier
+				if diff.HasChange("csv_classifier") && diff.HasChange("grok_classifier") {
+					diff.ForceNew("csv_classifier")
+					diff.ForceNew("grok_classifier")
+				}
+				if diff.HasChange("csv_classifier") && diff.HasChange("json_classifier") {
+					diff.ForceNew("csv_classifier")
+					diff.ForceNew("json_classifier")
+				}
+				if diff.HasChange("csv_classifier") && diff.HasChange("xml_classifier") {
+					diff.ForceNew("csv_classifier")
+					diff.ForceNew("xml_classifier")
+				}
 				if diff.HasChange("grok_classifier") && diff.HasChange("json_classifier") {
 					diff.ForceNew("grok_classifier")
 					diff.ForceNew("json_classifier")
