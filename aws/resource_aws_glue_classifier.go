@@ -151,6 +151,11 @@ func resourceAwsGlueClassifierCreate(d *schema.ResourceData, meta interface{}) e
 
 	input := &glue.CreateClassifierInput{}
 
+	if v, ok := d.GetOk("csv_classifier"); ok {
+		m := v.([]interface{})[0].(map[string]interface{})
+		input.CsvClassifier = expandGlueCsvClassifierCreate(name, m)
+	}
+
 	if v, ok := d.GetOk("grok_classifier"); ok {
 		m := v.([]interface{})[0].(map[string]interface{})
 		input.GrokClassifier = expandGlueGrokClassifierCreate(name, m)
@@ -202,6 +207,10 @@ func resourceAwsGlueClassifierRead(d *schema.ResourceData, meta interface{}) err
 		return nil
 	}
 
+	if err := d.Set("csv_classifier", flattenGlueCsvClassifier(classifier.CsvClassifier)); err != nil {
+		return fmt.Errorf("error setting match_criteria: %s", err)
+	}
+
 	if err := d.Set("grok_classifier", flattenGlueGrokClassifier(classifier.GrokClassifier)); err != nil {
 		return fmt.Errorf("error setting match_criteria: %s", err)
 	}
@@ -223,6 +232,11 @@ func resourceAwsGlueClassifierUpdate(d *schema.ResourceData, meta interface{}) e
 	conn := meta.(*AWSClient).glueconn
 
 	input := &glue.UpdateClassifierInput{}
+
+	if v, ok := d.GetOk("csv_classifier"); ok {
+		m := v.([]interface{})[0].(map[string]interface{})
+		input.CsvClassifier = expandGlueCsvClassifierUpdate(d.Id(), m)
+	}
 
 	if v, ok := d.GetOk("grok_classifier"); ok {
 		m := v.([]interface{})[0].(map[string]interface{})
