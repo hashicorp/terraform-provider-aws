@@ -6,7 +6,6 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/helper/schema"
@@ -129,8 +128,8 @@ func testAccCheckEbsSnapshotCopyDestroy(s *terraform.State) error {
 			SnapshotIds: []*string{aws.String(rs.Primary.ID)},
 		})
 
-		if ec2err, ok := err.(awserr.Error); ok && ec2err.Code() == "InvalidSnapshot.NotFound" {
-			return nil
+		if isAWSErr(err, "InvalidSnapshot.NotFound", "") {
+			continue
 		}
 
 		if err == nil {
