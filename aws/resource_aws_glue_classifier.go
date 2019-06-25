@@ -83,7 +83,7 @@ func resourceAwsGlueClassifier() *schema.Resource {
 				Type:          schema.TypeList,
 				Optional:      true,
 				MaxItems:      1,
-				ConflictsWith: []string{"json_classifier", "xml_classifier"},
+				ConflictsWith: []string{"csv_classifier", "json_classifier", "xml_classifier"},
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"classification": {
@@ -107,7 +107,7 @@ func resourceAwsGlueClassifier() *schema.Resource {
 				Type:          schema.TypeList,
 				Optional:      true,
 				MaxItems:      1,
-				ConflictsWith: []string{"grok_classifier", "xml_classifier"},
+				ConflictsWith: []string{"csv_classifier", "grok_classifier", "xml_classifier"},
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"json_path": {
@@ -127,7 +127,7 @@ func resourceAwsGlueClassifier() *schema.Resource {
 				Type:          schema.TypeList,
 				Optional:      true,
 				MaxItems:      1,
-				ConflictsWith: []string{"grok_classifier", "json_classifier"},
+				ConflictsWith: []string{"csv_classifier", "grok_classifier", "json_classifier"},
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"classification": {
