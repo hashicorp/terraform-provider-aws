@@ -898,8 +898,9 @@ func TestAccAWSLBTargetGroup_stickinessWithTCPDisabled(t *testing.T) {
 
 func TestAccAWSLBTargetGroup_stickinessWithTCPEnabledShouldError(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:  func() { testAccPreCheck(t) },
-		Providers: testAccProviders,
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSLBTargetGroupDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccAWSLBTargetGroupConfig_stickinessWithTCP(true),
