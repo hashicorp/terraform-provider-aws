@@ -628,7 +628,7 @@ resource "aws_alb_listener" "front_end" {
 
 resource "aws_alb" "alb_test" {
   name            = "%s"
-  internal        = false
+  internal        = true
   security_groups = ["${aws_security_group.alb_test.id}"]
   subnets         = ["${aws_subnet.alb_test.*.id[0]}", "${aws_subnet.alb_test.*.id[1]}"]
 
