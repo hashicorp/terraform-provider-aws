@@ -127,7 +127,7 @@ Each policy statement may have zero or more `condition` blocks, which each
 accept the following arguments:
 
 * `test` (Required) The name of the
-  [IAM condition type](http://docs.aws.amazon.com/IAM/latest/UserGuide/reference_policies_elements.html#AccessPolicyLanguage_ConditionType)
+  [IAM condition operator](https://docs.aws.amazon.com/IAM/latest/UserGuide/reference_policies_elements_condition_operators.html)
   to evaluate.
 * `variable` (Required) The name of a
   [Context Variable](http://docs.aws.amazon.com/IAM/latest/UserGuide/reference_policies_elements.html#AvailableKeys)
