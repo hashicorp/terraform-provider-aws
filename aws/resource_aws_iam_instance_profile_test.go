@@ -42,8 +42,9 @@ func TestAccAWSIAMInstanceProfile_basic(t *testing.T) {
 
 	rName := acctest.RandString(5)
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:  func() { testAccPreCheck(t) },
-		Providers: testAccProviders,
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSInstanceProfileDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAwsIamInstanceProfileConfig(rName),
@@ -60,8 +61,9 @@ func TestAccAWSIAMInstanceProfile_withRoleNotRoles(t *testing.T) {
 
 	rName := acctest.RandString(5)
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:  func() { testAccPreCheck(t) },
-		Providers: testAccProviders,
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSInstanceProfileDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSInstanceProfileWithRoleSpecified(rName),
@@ -76,8 +78,9 @@ func TestAccAWSIAMInstanceProfile_withRoleNotRoles(t *testing.T) {
 func TestAccAWSIAMInstanceProfile_missingRoleThrowsError(t *testing.T) {
 	rName := acctest.RandString(5)
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:  func() { testAccPreCheck(t) },
-		Providers: testAccProviders,
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSInstanceProfileDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccAwsIamInstanceProfileConfigMissingRole(rName),
