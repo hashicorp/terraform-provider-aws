@@ -681,6 +681,7 @@ func Provider() terraform.ResourceProvider {
 			"aws_service_discovery_private_dns_namespace":             resourceAwsServiceDiscoveryPrivateDnsNamespace(),
 			"aws_service_discovery_public_dns_namespace":              resourceAwsServiceDiscoveryPublicDnsNamespace(),
 			"aws_service_discovery_service":                           resourceAwsServiceDiscoveryService(),
+			"aws_servicequotas_service_quota":                         resourceAwsServiceQuotasServiceQuota(),
 			"aws_shield_protection":                                   resourceAwsShieldProtection(),
 			"aws_simpledb_domain":                                     resourceAwsSimpleDBDomain(),
 			"aws_ssm_activation":                                      resourceAwsSsmActivation(),
