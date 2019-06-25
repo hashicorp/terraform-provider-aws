@@ -76,9 +76,10 @@ func resourceAwsGlueClassifier() *schema.Resource {
 							Type     schema.TypeString,
 							Optional: true
 						},
-						"header": { //list of string
-							Type     schema.TypeString,
-							Optional: true
+						"header": {
+							Type     schema.TypeList,
+							Optional: true,
+							Elem:    &schema.Schema{Type: schema.TypeString}
 						},
 						"name": {
 							Type     schema.TypeString,
