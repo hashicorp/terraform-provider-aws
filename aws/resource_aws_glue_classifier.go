@@ -60,8 +60,8 @@ func resourceAwsGlueClassifier() *schema.Resource {
 				ConflictsWith: []string{"grok_classifier","json_classifier", "xml_classifier"}
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"allow_single_column": { //bool
-							Type:    schema.TypeString,
+						"allow_single_column": {
+							Type:    schema.TypeBool,
 							Optional: true
 						},
 						"contains_header": {
@@ -72,8 +72,8 @@ func resourceAwsGlueClassifier() *schema.Resource {
 							Type     schema.TypeString,
 							Optional: true
 						},
-						"disable_value_trimming": { //bool
-							Type     schema.TypeString,
+						"disable_value_trimming": {
+							Type     schema.TypeBool,
 							Optional: true
 						},
 						"header": {
