@@ -31,6 +31,11 @@
 //    * GetPipelineState, which returns information about the current state
 //    of the stages and actions of a pipeline.
 //
+//    * ListActionExecutions, which returns action-level details for past executions.
+//    The details include full stage and action-level details, including individual
+//    action duration, status, any errors which occurred during the execution,
+//    and input and output artifact location details.
+//
 //    * ListPipelines, which gets a summary of all of the pipelines associated
 //    with your account.
 //
@@ -104,7 +109,6 @@
 //    * GetJobDetails, which returns the details of a job,
 //
 //    * PollForJobs, which determines whether there are any jobs to act upon,
-//
 //
 //    * PutJobFailureResult, which provides details of a job failure, and
 //

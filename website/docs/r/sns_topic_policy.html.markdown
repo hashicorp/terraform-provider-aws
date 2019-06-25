@@ -1,12 +1,12 @@
 ---
 layout: "aws"
-page_title: "AWS: sns_topic_policy"
+page_title: "AWS: aws_sns_topic_policy"
 sidebar_current: "docs-aws-resource-sns-topic-policy"
 description: |-
   Provides an SNS topic policy resource.
 ---
 
-# aws_sns_topic_policy
+# Resource: aws_sns_topic_policy
 
 Provides an SNS topic policy resource
 

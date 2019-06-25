@@ -8305,11 +8305,25 @@ type DomainNameConfiguration struct {
 	// for this domain name was uploaded.
 	CertificateUploadDate *time.Time `locationName:"certificateUploadDate" type:"timestamp" timestampFormat:"iso8601"`
 
+	// The status of the domain name migration. The valid values are AVAILABLE and
+	// UPDATING. If the status is UPDATING, the domain cannot be modified further
+	// until the existing operation is complete. If it is AVAILABLE, the domain
+	// can be updated.
+	DomainNameStatus *string `locationName:"domainNameStatus" type:"string" enum:"DomainNameStatus"`
+
+	// An optional text message containing detailed information about status of
+	// the domain name migration.
+	DomainNameStatusMessage *string `locationName:"domainNameStatusMessage" type:"string"`
+
 	// The endpoint type.
 	EndpointType *string `locationName:"endpointType" type:"string" enum:"EndpointType"`
 
 	// The Amazon Route 53 Hosted Zone ID of the endpoint.
 	HostedZoneId *string `locationName:"hostedZoneId" type:"string"`
+
+	// The Transport Layer Security (TLS) version of the security policy for this
+	// domain name. The valid values are TLS_1_0 and TLS_1_2.
+	SecurityPolicy *string `locationName:"securityPolicy" type:"string" enum:"SecurityPolicy"`
 }
 
 // String returns the string representation
@@ -8346,6 +8360,18 @@ func (s *DomainNameConfiguration) SetCertificateUploadDate(v time.Time) *DomainN
 	return s
 }
 
+// SetDomainNameStatus sets the DomainNameStatus field's value.
+func (s *DomainNameConfiguration) SetDomainNameStatus(v string) *DomainNameConfiguration {
+	s.DomainNameStatus = &v
+	return s
+}
+
+// SetDomainNameStatusMessage sets the DomainNameStatusMessage field's value.
+func (s *DomainNameConfiguration) SetDomainNameStatusMessage(v string) *DomainNameConfiguration {
+	s.DomainNameStatusMessage = &v
+	return s
+}
+
 // SetEndpointType sets the EndpointType field's value.
 func (s *DomainNameConfiguration) SetEndpointType(v string) *DomainNameConfiguration {
 	s.EndpointType = &v
@@ -8355,6 +8381,12 @@ func (s *DomainNameConfiguration) SetEndpointType(v string) *DomainNameConfigura
 // SetHostedZoneId sets the HostedZoneId field's value.
 func (s *DomainNameConfiguration) SetHostedZoneId(v string) *DomainNameConfiguration {
 	s.HostedZoneId = &v
+	return s
+}
+
+// SetSecurityPolicy sets the SecurityPolicy field's value.
+func (s *DomainNameConfiguration) SetSecurityPolicy(v string) *DomainNameConfiguration {
+	s.SecurityPolicy = &v
 	return s
 }
 
@@ -13990,6 +14022,14 @@ const (
 	DeploymentStatusDeployed = "DEPLOYED"
 )
 
+const (
+	// DomainNameStatusAvailable is a DomainNameStatus enum value
+	DomainNameStatusAvailable = "AVAILABLE"
+
+	// DomainNameStatusUpdating is a DomainNameStatus enum value
+	DomainNameStatusUpdating = "UPDATING"
+)
+
 // Represents an endpoint type.
 const (
 	// EndpointTypeRegional is a EndpointType enum value
@@ -14044,4 +14084,12 @@ const (
 const (
 	// ProtocolTypeWebsocket is a ProtocolType enum value
 	ProtocolTypeWebsocket = "WEBSOCKET"
+)
+
+const (
+	// SecurityPolicyTls10 is a SecurityPolicy enum value
+	SecurityPolicyTls10 = "TLS_1_0"
+
+	// SecurityPolicyTls12 is a SecurityPolicy enum value
+	SecurityPolicyTls12 = "TLS_1_2"
 )

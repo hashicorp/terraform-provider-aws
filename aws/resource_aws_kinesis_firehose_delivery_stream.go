@@ -2103,6 +2103,9 @@ func resourceAwsKinesisFirehoseDeliveryStreamCreate(d *schema.ResourceData, meta
 
 		return nil
 	})
+	if isResourceTimeoutError(err) {
+		_, err = conn.CreateDeliveryStream(createInput)
+	}
 	if err != nil {
 		return fmt.Errorf("error creating Kinesis Firehose Delivery Stream: %s", err)
 	}
@@ -2237,6 +2240,10 @@ func resourceAwsKinesisFirehoseDeliveryStreamUpdate(d *schema.ResourceData, meta
 
 		return nil
 	})
+
+	if isResourceTimeoutError(err) {
+		_, err = conn.UpdateDestination(updateInput)
+	}
 
 	if err != nil {
 		return fmt.Errorf(

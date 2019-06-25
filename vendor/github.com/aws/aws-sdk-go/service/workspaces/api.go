@@ -351,7 +351,7 @@ func (c *WorkSpaces) CreateTagsRequest(input *CreateTagsInput) (req *request.Req
 
 // CreateTags API operation for Amazon WorkSpaces.
 //
-// Creates the specified tags for the specified WorkSpace.
+// Creates the specified tags for the specified WorkSpaces resource.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -612,7 +612,7 @@ func (c *WorkSpaces) DeleteTagsRequest(input *DeleteTagsInput) (req *request.Req
 
 // DeleteTags API operation for Amazon WorkSpaces.
 //
-// Deletes the specified tags from the specified WorkSpace.
+// Deletes the specified tags from the specified WorkSpaces resource.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -1108,7 +1108,7 @@ func (c *WorkSpaces) DescribeTagsRequest(input *DescribeTagsInput) (req *request
 
 // DescribeTags API operation for Amazon WorkSpaces.
 //
-// Describes the specified tags for the specified WorkSpace.
+// Describes the specified tags for the specified WorkSpaces resource.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -1241,7 +1241,7 @@ func (c *WorkSpaces) DescribeWorkspaceBundlesWithContext(ctx aws.Context, input 
 //    // Example iterating over at most 3 pages of a DescribeWorkspaceBundles operation.
 //    pageNum := 0
 //    err := client.DescribeWorkspaceBundlesPages(params,
-//        func(page *DescribeWorkspaceBundlesOutput, lastPage bool) bool {
+//        func(page *workspaces.DescribeWorkspaceBundlesOutput, lastPage bool) bool {
 //            pageNum++
 //            fmt.Println(page)
 //            return pageNum <= 3
@@ -1377,7 +1377,7 @@ func (c *WorkSpaces) DescribeWorkspaceDirectoriesWithContext(ctx aws.Context, in
 //    // Example iterating over at most 3 pages of a DescribeWorkspaceDirectories operation.
 //    pageNum := 0
 //    err := client.DescribeWorkspaceDirectoriesPages(params,
-//        func(page *DescribeWorkspaceDirectoriesOutput, lastPage bool) bool {
+//        func(page *workspaces.DescribeWorkspaceDirectoriesOutput, lastPage bool) bool {
 //            pageNum++
 //            fmt.Println(page)
 //            return pageNum <= 3
@@ -1598,7 +1598,7 @@ func (c *WorkSpaces) DescribeWorkspacesWithContext(ctx aws.Context, input *Descr
 //    // Example iterating over at most 3 pages of a DescribeWorkspaces operation.
 //    pageNum := 0
 //    err := client.DescribeWorkspacesPages(params,
-//        func(page *DescribeWorkspacesOutput, lastPage bool) bool {
+//        func(page *workspaces.DescribeWorkspacesOutput, lastPage bool) bool {
 //            pageNum++
 //            fmt.Println(page)
 //            return pageNum <= 3
@@ -1875,6 +1875,9 @@ func (c *WorkSpaces) ImportWorkspaceImageRequest(input *ImportWorkspaceImageInpu
 //
 //   * ErrCodeAccessDeniedException "AccessDeniedException"
 //   The user is not authorized to access a resource.
+//
+//   * ErrCodeInvalidParameterValuesException "InvalidParameterValuesException"
+//   One or more parameter values are not valid.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/workspaces-2015-04-08/ImportWorkspaceImage
 func (c *WorkSpaces) ImportWorkspaceImage(input *ImportWorkspaceImageInput) (*ImportWorkspaceImageOutput, error) {
@@ -3324,12 +3327,14 @@ func (s *CreateIpGroupOutput) SetGroupId(v string) *CreateIpGroupOutput {
 type CreateTagsInput struct {
 	_ struct{} `type:"structure"`
 
-	// The identifier of the WorkSpace. To find this ID, use DescribeWorkspaces.
+	// The identifier of the WorkSpaces resource. The supported resource types are
+	// WorkSpaces, registered directories, images, custom bundles, and IP access
+	// control groups.
 	//
 	// ResourceId is a required field
 	ResourceId *string `min:"1" type:"string" required:"true"`
 
-	// The tags. Each WorkSpace can have a maximum of 50 tags.
+	// The tags. Each WorkSpaces resource can have a maximum of 50 tags.
 	//
 	// Tags is a required field
 	Tags []*Tag `type:"list" required:"true"`
@@ -3603,7 +3608,9 @@ func (s DeleteIpGroupOutput) GoString() string {
 type DeleteTagsInput struct {
 	_ struct{} `type:"structure"`
 
-	// The identifier of the WorkSpace. To find this ID, use DescribeWorkspaces.
+	// The identifier of the WorkSpaces resource. The supported resource types are
+	// WorkSpaces, registered directories, images, custom bundles, and IP access
+	// control groups.
 	//
 	// ResourceId is a required field
 	ResourceId *string `min:"1" type:"string" required:"true"`
@@ -4001,7 +4008,9 @@ func (s *DescribeIpGroupsOutput) SetResult(v []*IpGroup) *DescribeIpGroupsOutput
 type DescribeTagsInput struct {
 	_ struct{} `type:"structure"`
 
-	// The identifier of the WorkSpace. To find this ID, use DescribeWorkspaces.
+	// The identifier of the WorkSpaces resource. The supported resource types are
+	// WorkSpaces, registered directories, images, custom bundles, and IP access
+	// control groups.
 	//
 	// ResourceId is a required field
 	ResourceId *string `min:"1" type:"string" required:"true"`
@@ -5481,6 +5490,9 @@ func (s *RebuildRequest) SetWorkspaceId(v string) *RebuildRequest {
 type RebuildWorkspacesInput struct {
 	_ struct{} `type:"structure"`
 
+	// Reserved.
+	AdditionalInfo *string `type:"string"`
+
 	// The WorkSpace to rebuild. You can specify a single WorkSpace.
 	//
 	// RebuildWorkspaceRequests is a required field
@@ -5521,6 +5533,12 @@ func (s *RebuildWorkspacesInput) Validate() error {
 		return invalidParams
 	}
 	return nil
+}
+
+// SetAdditionalInfo sets the AdditionalInfo field's value.
+func (s *RebuildWorkspacesInput) SetAdditionalInfo(v string) *RebuildWorkspacesInput {
+	s.AdditionalInfo = &v
+	return s
 }
 
 // SetRebuildWorkspaceRequests sets the RebuildWorkspaceRequests field's value.

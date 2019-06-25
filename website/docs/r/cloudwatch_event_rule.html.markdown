@@ -6,7 +6,7 @@ description: |-
   Provides a CloudWatch Event Rule resource.
 ---
 
-# aws_cloudwatch_event_rule
+# Resource: aws_cloudwatch_event_rule
 
 Provides a CloudWatch Event Rule resource.
 

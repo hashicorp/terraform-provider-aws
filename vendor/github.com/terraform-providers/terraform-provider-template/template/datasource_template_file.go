@@ -8,11 +8,13 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/hashicorp/hil"
-	"github.com/hashicorp/hil/ast"
-	"github.com/hashicorp/terraform/config"
+	"github.com/hashicorp/hcl2/hcl"
+	"github.com/hashicorp/hcl2/hcl/hclsyntax"
 	"github.com/hashicorp/terraform/helper/pathorcontents"
 	"github.com/hashicorp/terraform/helper/schema"
+	tflang "github.com/hashicorp/terraform/lang"
+	"github.com/zclconf/go-cty/cty"
+	ctyconvert "github.com/zclconf/go-cty/cty/convert"
 )
 
 func dataSourceFile() *schema.Resource {
@@ -20,16 +22,15 @@ func dataSourceFile() *schema.Resource {
 		Read: dataSourceFileRead,
 
 		Schema: map[string]*schema.Schema{
-			"template": &schema.Schema{
+			"template": {
 				Type:          schema.TypeString,
 				Optional:      true,
 				Description:   "Contents of the template",
 				ConflictsWith: []string{"filename"},
 			},
-			"filename": &schema.Schema{
-				Type:        schema.TypeString,
-				Optional:    true,
-				Description: "file to read template from",
+			"filename": {
+				Type:     schema.TypeString,
+				Optional: true,
 				// Make a "best effort" attempt to relativize the file path.
 				StateFunc: func(v interface{}) string {
 					if v == nil || v.(string) == "" {
@@ -45,17 +46,17 @@ func dataSourceFile() *schema.Resource {
 					}
 					return rel
 				},
-				Deprecated:    "Use the 'template' attribute instead.",
+				Removed:       "Use the 'template' attribute instead.",
 				ConflictsWith: []string{"template"},
 			},
-			"vars": &schema.Schema{
+			"vars": {
 				Type:         schema.TypeMap,
 				Optional:     true,
 				Default:      make(map[string]interface{}),
 				Description:  "variables to substitute",
 				ValidateFunc: validateVarsAttribute,
 			},
-			"rendered": &schema.Schema{
+			"rendered": {
 				Type:        schema.TypeString,
 				Computed:    true,
 				Description: "rendered template",
@@ -103,41 +104,49 @@ func renderFile(d *schema.ResourceData) (string, error) {
 
 // execute parses and executes a template using vars.
 func execute(s string, vars map[string]interface{}) (string, error) {
-	root, err := hil.Parse(s)
-	if err != nil {
-		return "", err
+	expr, diags := hclsyntax.ParseTemplate([]byte(s), "<template_file>", hcl.Pos{Line: 1, Column: 1})
+	if diags.HasErrors() {
+		return "", diags
 	}
 
-	varmap := make(map[string]ast.Variable)
+	ctx := &hcl.EvalContext{
+		Variables: map[string]cty.Value{},
+	}
 	for k, v := range vars {
-		// As far as I can tell, v is always a string.
-		// If it's not, tell the user gracefully.
+		// In practice today this is always a string due to limitations of
+		// the schema system. In future we'd like to support other types here.
 		s, ok := v.(string)
 		if !ok {
 			return "", fmt.Errorf("unexpected type for variable %q: %T", k, v)
 		}
-		varmap[k] = ast.Variable{
-			Value: s,
-			Type:  ast.TypeString,
-		}
+		ctx.Variables[k] = cty.StringVal(s)
 	}
 
-	cfg := hil.EvalConfig{
-		GlobalScope: &ast.BasicScope{
-			VarMap:  varmap,
-			FuncMap: config.Funcs(),
-		},
+	// We borrow the functions from Terraform itself here. This is convenient
+	// but note that this is coming from whatever version of Terraform we
+	// have vendored in to this codebase, not from the version of Terraform
+	// the user is running, and so the set of functions won't always match
+	// between Terraform itself and this provider.
+	// (Over time users will hopefully transition over to Terraform's built-in
+	// templatefile function instead and we can phase this provider out.)
+	scope := &tflang.Scope{
+		BaseDir: ".",
+	}
+	ctx.Functions = scope.Functions()
+
+	result, diags := expr.Value(ctx)
+	if diags.HasErrors() {
+		return "", diags
 	}
 
-	result, err := hil.Eval(root, &cfg)
+	// Our result must always be a string, so we'll try to convert it.
+	var err error
+	result, err = ctyconvert.Convert(result, cty.String)
 	if err != nil {
-		return "", err
-	}
-	if result.Type != hil.TypeString {
-		return "", fmt.Errorf("unexpected output hil.Type: %v", result.Type)
+		return "", fmt.Errorf("invalid template result: %s", err)
 	}
 
-	return result.Value.(string), nil
+	return result.AsString(), nil
 }
 
 func hash(s string) string {

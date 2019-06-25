@@ -180,7 +180,7 @@ func TestAccAWSAcmCertificateDataSource_noMatchReturnsError(t *testing.T) {
 func testAccCheckAwsAcmCertificateDataSourceConfig(domain string) string {
 	return fmt.Sprintf(`
 data "aws_acm_certificate" "test" {
-	domain = "%s"
+  domain = "%s"
 }
 `, domain)
 }
@@ -188,8 +188,8 @@ data "aws_acm_certificate" "test" {
 func testAccCheckAwsAcmCertificateDataSourceConfigWithStatus(domain, status string) string {
 	return fmt.Sprintf(`
 data "aws_acm_certificate" "test" {
-	domain = "%s"
-	statuses = ["%s"]
+  domain   = "%s"
+  statuses = ["%s"]
 }
 `, domain, status)
 }
@@ -197,8 +197,8 @@ data "aws_acm_certificate" "test" {
 func testAccCheckAwsAcmCertificateDataSourceConfigWithTypes(domain, certType string) string {
 	return fmt.Sprintf(`
 data "aws_acm_certificate" "test" {
-	domain = "%s"
-	types = ["%s"]
+  domain = "%s"
+  types  = ["%s"]
 }
 `, domain, certType)
 }

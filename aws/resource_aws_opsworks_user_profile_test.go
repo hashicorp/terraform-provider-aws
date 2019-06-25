@@ -133,32 +133,32 @@ func testAccCheckAwsOpsworksUserProfileDestroy(s *terraform.State) error {
 func testAccAwsOpsworksUserProfileCreate(rn string) string {
 	return fmt.Sprintf(`
 resource "aws_opsworks_user_profile" "user" {
-  user_arn = "${aws_iam_user.user.arn}"
+  user_arn     = "${aws_iam_user.user.arn}"
   ssh_username = "${aws_iam_user.user.name}"
 }
 
 resource "aws_iam_user" "user" {
-	name = "%s"
-	path = "/"
+  name = "%s"
+  path = "/"
 }
-	`, rn)
+`, rn)
 }
 
 func testAccAwsOpsworksUserProfileUpdate(rn, updateRn string) string {
 	return fmt.Sprintf(`
 resource "aws_opsworks_user_profile" "user" {
-  user_arn = "${aws_iam_user.new-user.arn}"
+  user_arn     = "${aws_iam_user.new-user.arn}"
   ssh_username = "${aws_iam_user.new-user.name}"
 }
 
 resource "aws_iam_user" "user" {
-	name = "%s"
-	path = "/"
+  name = "%s"
+  path = "/"
 }
 
 resource "aws_iam_user" "new-user" {
-	name = "%s"
-	path = "/"
+  name = "%s"
+  path = "/"
 }
-	`, rn, updateRn)
+`, rn, updateRn)
 }

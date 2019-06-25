@@ -6,7 +6,7 @@ description: |-
   Provides an AWS Cognito Identity Pool.
 ---
 
-# aws_cognito_identity_pool
+# Resource: aws_cognito_identity_pool
 
 Provides an AWS Cognito Identity Pool.
 

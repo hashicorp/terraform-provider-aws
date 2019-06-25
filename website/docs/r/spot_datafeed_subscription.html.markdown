@@ -6,7 +6,7 @@ description: |-
   Provides a Spot Datafeed Subscription resource.
 ---
 
-# aws_spot_datafeed_subscription
+# Resource: aws_spot_datafeed_subscription
 
 -> **Note:** There is only a single subscription allowed per account.
 

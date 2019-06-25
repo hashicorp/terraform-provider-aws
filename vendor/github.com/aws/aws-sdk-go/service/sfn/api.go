@@ -83,7 +83,7 @@ func (c *SFN) CreateActivityRequest(input *CreateActivityInput) (req *request.Re
 //   The provided name is invalid.
 //
 //   * ErrCodeTooManyTags "TooManyTags"
-//   You've exceeded the number of tags allowed for a resource. See the  Limits
+//   You've exceeded the number of tags allowed for a resource. See the Limits
 //   Topic (https://docs.aws.amazon.com/step-functions/latest/dg/limits.html)
 //   in the AWS Step Functions Developer Guide.
 //
@@ -190,7 +190,7 @@ func (c *SFN) CreateStateMachineRequest(input *CreateStateMachineInput) (req *re
 //   must be deleted before a new state machine can be created.
 //
 //   * ErrCodeTooManyTags "TooManyTags"
-//   You've exceeded the number of tags allowed for a resource. See the  Limits
+//   You've exceeded the number of tags allowed for a resource. See the Limits
 //   Topic (https://docs.aws.amazon.com/step-functions/latest/dg/limits.html)
 //   in the AWS Step Functions Developer Guide.
 //
@@ -930,7 +930,7 @@ func (c *SFN) GetExecutionHistoryWithContext(ctx aws.Context, input *GetExecutio
 //    // Example iterating over at most 3 pages of a GetExecutionHistory operation.
 //    pageNum := 0
 //    err := client.GetExecutionHistoryPages(params,
-//        func(page *GetExecutionHistoryOutput, lastPage bool) bool {
+//        func(page *sfn.GetExecutionHistoryOutput, lastPage bool) bool {
 //            pageNum++
 //            fmt.Println(page)
 //            return pageNum <= 3
@@ -1074,7 +1074,7 @@ func (c *SFN) ListActivitiesWithContext(ctx aws.Context, input *ListActivitiesIn
 //    // Example iterating over at most 3 pages of a ListActivities operation.
 //    pageNum := 0
 //    err := client.ListActivitiesPages(params,
-//        func(page *ListActivitiesOutput, lastPage bool) bool {
+//        func(page *sfn.ListActivitiesOutput, lastPage bool) bool {
 //            pageNum++
 //            fmt.Println(page)
 //            return pageNum <= 3
@@ -1225,7 +1225,7 @@ func (c *SFN) ListExecutionsWithContext(ctx aws.Context, input *ListExecutionsIn
 //    // Example iterating over at most 3 pages of a ListExecutions operation.
 //    pageNum := 0
 //    err := client.ListExecutionsPages(params,
-//        func(page *ListExecutionsOutput, lastPage bool) bool {
+//        func(page *sfn.ListExecutionsOutput, lastPage bool) bool {
 //            pageNum++
 //            fmt.Println(page)
 //            return pageNum <= 3
@@ -1369,7 +1369,7 @@ func (c *SFN) ListStateMachinesWithContext(ctx aws.Context, input *ListStateMach
 //    // Example iterating over at most 3 pages of a ListStateMachines operation.
 //    pageNum := 0
 //    err := client.ListStateMachinesPages(params,
-//        func(page *ListStateMachinesOutput, lastPage bool) bool {
+//        func(page *sfn.ListStateMachinesOutput, lastPage bool) bool {
 //            pageNum++
 //            fmt.Println(page)
 //            return pageNum <= 3
@@ -2010,7 +2010,7 @@ func (c *SFN) TagResourceRequest(input *TagResourceInput) (req *request.Request,
 //   are supported.
 //
 //   * ErrCodeTooManyTags "TooManyTags"
-//   You've exceeded the number of tags allowed for a resource. See the  Limits
+//   You've exceeded the number of tags allowed for a resource. See the Limits
 //   Topic (https://docs.aws.amazon.com/step-functions/latest/dg/limits.html)
 //   in the AWS Step Functions Developer Guide.
 //
@@ -2486,7 +2486,7 @@ type CreateActivityInput struct {
 	_ struct{} `type:"structure"`
 
 	// The name of the activity to create. This name must be unique for your AWS
-	// account and region for 90 days. For more information, see  Limits Related
+	// account and region for 90 days. For more information, see Limits Related
 	// to State Machine Executions (https://docs.aws.amazon.com/step-functions/latest/dg/limits.html#service-limits-state-machine-executions)
 	// in the AWS Step Functions Developer Guide.
 	//
@@ -4886,8 +4886,8 @@ type StartExecutionInput struct {
 	Input *string `locationName:"input" type:"string" sensitive:"true"`
 
 	// The name of the execution. This name must be unique for your AWS account,
-	// region, and state machine for 90 days. For more information, see  Limits
-	// Related to State Machine Executions (https://docs.aws.amazon.com/step-functions/latest/dg/limits.html#service-limits-state-machine-executions)
+	// region, and state machine for 90 days. For more information, see Limits Related
+	// to State Machine Executions (https://docs.aws.amazon.com/step-functions/latest/dg/limits.html#service-limits-state-machine-executions)
 	// in the AWS Step Functions Developer Guide.
 	//
 	// A name must not contain:

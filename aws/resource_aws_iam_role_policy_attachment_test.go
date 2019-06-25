@@ -221,9 +221,10 @@ func testAccAWSIAMRolePolicyAttachmentImportStateIdFunc(resourceName string) res
 
 func testAccAWSRolePolicyAttachConfig(rInt int) string {
 	return fmt.Sprintf(`
-	resource "aws_iam_role" "role" {
-			name = "test-role-%d"
-			assume_role_policy = <<EOF
+resource "aws_iam_role" "role" {
+  name = "test-role-%d"
+
+  assume_role_policy = <<EOF
 {
 	"Version": "2012-10-17",
 	"Statement": [
@@ -238,12 +239,13 @@ func testAccAWSRolePolicyAttachConfig(rInt int) string {
 	]
 }
 EOF
-	}
+}
 
-	resource "aws_iam_policy" "policy" {
-			name = "tf-acctest-%d"
-			description = "A test policy"
-			policy = <<EOF
+resource "aws_iam_policy" "policy" {
+  name        = "tf-acctest-%d"
+  description = "A test policy"
+
+  policy = <<EOF
 {
 	"Version": "2012-10-17",
 	"Statement": [
@@ -257,19 +259,21 @@ EOF
 	]
 }
 EOF
-	}
+}
 
-	resource "aws_iam_role_policy_attachment" "test-attach" {
-			role = "${aws_iam_role.role.name}"
-			policy_arn = "${aws_iam_policy.policy.arn}"
-	}`, rInt, rInt)
+resource "aws_iam_role_policy_attachment" "test-attach" {
+  role       = "${aws_iam_role.role.name}"
+  policy_arn = "${aws_iam_policy.policy.arn}"
+}
+`, rInt, rInt)
 }
 
 func testAccAWSRolePolicyAttachConfigUpdate(rInt int) string {
 	return fmt.Sprintf(`
-	resource "aws_iam_role" "role" {
-			name = "test-role-%d"
-			assume_role_policy = <<EOF
+resource "aws_iam_role" "role" {
+  name = "test-role-%d"
+
+  assume_role_policy = <<EOF
 {
 	"Version": "2012-10-17",
 	"Statement": [
@@ -284,12 +288,13 @@ func testAccAWSRolePolicyAttachConfigUpdate(rInt int) string {
 	]
 }
 EOF
-	}
+}
 
-	resource "aws_iam_policy" "policy" {
-			name = "tf-acctest-%d"
-			description = "A test policy"
-			policy = <<EOF
+resource "aws_iam_policy" "policy" {
+  name        = "tf-acctest-%d"
+  description = "A test policy"
+
+  policy = <<EOF
 {
 	"Version": "2012-10-17",
 	"Statement": [
@@ -303,12 +308,13 @@ EOF
 	]
 }
 EOF
-	}
+}
 
-	resource "aws_iam_policy" "policy2" {
-			name = "tf-acctest2-%d"
-			description = "A test policy"
-			policy = <<EOF
+resource "aws_iam_policy" "policy2" {
+  name        = "tf-acctest2-%d"
+  description = "A test policy"
+
+  policy = <<EOF
 {
 	"Version": "2012-10-17",
 	"Statement": [
@@ -322,12 +328,13 @@ EOF
 	]
 }
 EOF
-	}
+}
 
-	resource "aws_iam_policy" "policy3" {
-			name = "tf-acctest3-%d"
-			description = "A test policy"
-			policy = <<EOF
+resource "aws_iam_policy" "policy3" {
+  name        = "tf-acctest3-%d"
+  description = "A test policy"
+
+  policy = <<EOF
 {
 	"Version": "2012-10-17",
 	"Statement": [
@@ -341,17 +348,18 @@ EOF
 	]
 }
 EOF
-	}
+}
 
-	resource "aws_iam_role_policy_attachment" "test-attach" {
-			role = "${aws_iam_role.role.name}"
-			policy_arn = "${aws_iam_policy.policy2.arn}"
-	}
+resource "aws_iam_role_policy_attachment" "test-attach" {
+  role       = "${aws_iam_role.role.name}"
+  policy_arn = "${aws_iam_policy.policy2.arn}"
+}
 
-	resource "aws_iam_role_policy_attachment" "test-attach2" {
-			role = "${aws_iam_role.role.name}"
-			policy_arn = "${aws_iam_policy.policy3.arn}"
-	}`, rInt, rInt, rInt, rInt)
+resource "aws_iam_role_policy_attachment" "test-attach2" {
+  role       = "${aws_iam_role.role.name}"
+  policy_arn = "${aws_iam_policy.policy3.arn}"
+}
+`, rInt, rInt, rInt, rInt)
 }
 
 func testAccAWSIAMRolePolicyAttachmentConfig(rName string) string {

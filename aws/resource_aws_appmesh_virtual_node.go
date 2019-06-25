@@ -61,6 +61,7 @@ func resourceAwsAppmeshVirtualNode() *schema.Resource {
 							Type:     schema.TypeSet,
 							Optional: true,
 							MinItems: 0,
+							MaxItems: 25,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"virtual_service": {
@@ -172,6 +173,42 @@ func resourceAwsAppmeshVirtualNode() *schema.Resource {
 								},
 							},
 							Set: appmeshVirtualNodeListenerHash,
+						},
+
+						"logging": {
+							Type:     schema.TypeList,
+							Optional: true,
+							MinItems: 0,
+							MaxItems: 1,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"access_log": {
+										Type:     schema.TypeList,
+										Optional: true,
+										MinItems: 0,
+										MaxItems: 1,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"file": {
+													Type:     schema.TypeList,
+													Optional: true,
+													MinItems: 0,
+													MaxItems: 1,
+													Elem: &schema.Resource{
+														Schema: map[string]*schema.Schema{
+															"path": {
+																Type:         schema.TypeString,
+																Required:     true,
+																ValidateFunc: validation.StringLenBetween(1, 255),
+															},
+														},
+													},
+												},
+											},
+										},
+									},
+								},
+							},
 						},
 
 						"service_discovery": {

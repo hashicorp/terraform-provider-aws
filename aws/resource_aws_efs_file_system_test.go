@@ -399,33 +399,33 @@ resource "aws_efs_file_system" "foo" {
 
 func testAccAWSEFSFileSystemConfigPagedTags(rInt int) string {
 	return fmt.Sprintf(`
-	resource "aws_efs_file_system" "foo" {
-	tags = {
-			Name = "foo-efs-%d"
-			Another = "tag"
-			Test = "yes"
-			User = "root"
-			Page = "1"
-			Environment = "prod"
-			CostCenter = "terraform"
-			AcceptanceTest = "PagedTags"
-			CreationToken = "radek"
-			PerfMode = "max"
-			Region = "us-west-2"
-		}
-	}
-	`, rInt)
+resource "aws_efs_file_system" "foo" {
+  tags = {
+    Name           = "foo-efs-%d"
+    Another        = "tag"
+    Test           = "yes"
+    User           = "root"
+    Page           = "1"
+    Environment    = "prod"
+    CostCenter     = "terraform"
+    AcceptanceTest = "PagedTags"
+    CreationToken  = "radek"
+    PerfMode       = "max"
+    Region         = "us-west-2"
+  }
+}
+`, rInt)
 }
 
 func testAccAWSEFSFileSystemConfigWithTags(rInt int) string {
 	return fmt.Sprintf(`
-	resource "aws_efs_file_system" "foo-with-tags" {
-	tags = {
-			Name = "foo-efs-%d"
-			Another = "tag"
-		}
-	}
-	`, rInt)
+resource "aws_efs_file_system" "foo-with-tags" {
+  tags = {
+    Name    = "foo-efs-%d"
+    Another = "tag"
+  }
+}
+`, rInt)
 }
 
 const testAccAWSEFSFileSystemConfigWithPerformanceMode = `
@@ -442,7 +442,7 @@ resource "aws_kms_key" "foo" {
 }
 
 resource "aws_efs_file_system" "foo-with-kms" {
-  encrypted = true
+  encrypted  = true
   kms_key_id = "${aws_kms_key.foo.arn}"
 }
 `, rInt)
@@ -455,7 +455,7 @@ resource "aws_kms_key" "foo" {
 }
 
 resource "aws_efs_file_system" "foo-with-kms" {
-  encrypted = false
+  encrypted  = false
   kms_key_id = "${aws_kms_key.foo.arn}"
 }
 `, rInt)

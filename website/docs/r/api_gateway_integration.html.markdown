@@ -6,7 +6,7 @@ description: |-
   Provides an HTTP Method Integration for an API Gateway Integration.
 ---
 
-# aws_api_gateway_integration
+# Resource: aws_api_gateway_integration
 
 Provides an HTTP Method Integration for an API Gateway Integration.
 
@@ -94,7 +94,7 @@ resource "aws_api_gateway_integration" "integration" {
 resource "aws_lambda_permission" "apigw_lambda" {
   statement_id  = "AllowExecutionFromAPIGateway"
   action        = "lambda:InvokeFunction"
-  function_name = "${aws_lambda_function.lambda.arn}"
+  function_name = "${aws_lambda_function.lambda.function_name}"
   principal     = "apigateway.amazonaws.com"
 
   # More: http://docs.aws.amazon.com/apigateway/latest/developerguide/api-gateway-control-access-using-iam-policies-to-invoke-api.html
@@ -102,11 +102,12 @@ resource "aws_lambda_permission" "apigw_lambda" {
 }
 
 resource "aws_lambda_function" "lambda" {
-  filename         = "lambda.zip"
-  function_name    = "mylambda"
-  role             = "${aws_iam_role.role.arn}"
-  handler          = "lambda.lambda_handler"
-  runtime          = "python2.7"
+  filename      = "lambda.zip"
+  function_name = "mylambda"
+  role          = "${aws_iam_role.role.arn}"
+  handler       = "lambda.lambda_handler"
+  runtime       = "python2.7"
+
   # The filebase64sha256() function is available in Terraform 0.11.12 and later
   # For Terraform 0.11.11 and earlier, use the base64sha256() function and the file() function:
   # source_code_hash = "${base64sha256(file("lambda.zip"))}"

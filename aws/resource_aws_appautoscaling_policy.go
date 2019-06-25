@@ -261,19 +261,25 @@ func resourceAwsAppautoscalingPolicyCreate(d *schema.ResourceData, meta interfac
 		var err error
 		resp, err = conn.PutScalingPolicy(&params)
 		if err != nil {
-			if isAWSErr(err, "FailedResourceAccessException", "Rate exceeded") {
+			if isAWSErr(err, applicationautoscaling.ErrCodeFailedResourceAccessException, "Rate exceeded") {
 				return resource.RetryableError(err)
 			}
-			if isAWSErr(err, "FailedResourceAccessException", "is not authorized to perform") {
+			if isAWSErr(err, applicationautoscaling.ErrCodeFailedResourceAccessException, "is not authorized to perform") {
 				return resource.RetryableError(err)
 			}
-			if isAWSErr(err, "FailedResourceAccessException", "token included in the request is invalid") {
+			if isAWSErr(err, applicationautoscaling.ErrCodeFailedResourceAccessException, "token included in the request is invalid") {
+				return resource.RetryableError(err)
+			}
+			if isAWSErr(err, applicationautoscaling.ErrCodeObjectNotFoundException, "") {
 				return resource.RetryableError(err)
 			}
 			return resource.NonRetryableError(fmt.Errorf("Error putting scaling policy: %s", err))
 		}
 		return nil
 	})
+	if isResourceTimeoutError(err) {
+		resp, err = conn.PutScalingPolicy(&params)
+	}
 	if err != nil {
 		return fmt.Errorf("Failed to create scaling policy: %s", err)
 	}
@@ -299,6 +305,9 @@ func resourceAwsAppautoscalingPolicyRead(d *schema.ResourceData, meta interface{
 		}
 		return nil
 	})
+	if isResourceTimeoutError(err) {
+		p, err = getAwsAppautoscalingPolicy(d, meta)
+	}
 	if err != nil {
 		return fmt.Errorf("Failed to read scaling policy: %s", err)
 	}
@@ -343,10 +352,16 @@ func resourceAwsAppautoscalingPolicyUpdate(d *schema.ResourceData, meta interfac
 			if isAWSErr(err, applicationautoscaling.ErrCodeFailedResourceAccessException, "") {
 				return resource.RetryableError(err)
 			}
+			if isAWSErr(err, applicationautoscaling.ErrCodeObjectNotFoundException, "") {
+				return resource.RetryableError(err)
+			}
 			return resource.NonRetryableError(err)
 		}
 		return nil
 	})
+	if isResourceTimeoutError(err) {
+		_, err = conn.PutScalingPolicy(&params)
+	}
 	if err != nil {
 		return fmt.Errorf("Failed to update scaling policy: %s", err)
 	}

@@ -12,7 +12,7 @@ import (
 	"github.com/hashicorp/terraform/terraform"
 )
 
-func TestAccAWSOpsworksPermission(t *testing.T) {
+func TestAccAWSOpsworksPermission_basic(t *testing.T) {
 	sName := fmt.Sprintf("tf-ops-perm-%d", acctest.RandInt())
 	var opsperm opsworks.Permission
 	resource.ParallelTest(t, resource.TestCase{
@@ -178,22 +178,23 @@ func testAccAwsOpsworksPermissionCreate(name, ssh, sudo, level string) string {
 resource "aws_opsworks_permission" "tf-acc-perm" {
   stack_id = "${aws_opsworks_stack.tf-acc.id}"
 
-  allow_ssh = %s
+  allow_ssh  = %s
   allow_sudo = %s
-  user_arn = "${aws_opsworks_user_profile.user.user_arn}"
-  level = "%s"
+  user_arn   = "${aws_opsworks_user_profile.user.user_arn}"
+  level      = "%s"
 }
 
 resource "aws_opsworks_user_profile" "user" {
-  user_arn = "${aws_iam_user.user.arn}"
+  user_arn     = "${aws_iam_user.user.arn}"
   ssh_username = "${aws_iam_user.user.name}"
 }
 
 resource "aws_iam_user" "user" {
-	name = "%s"
-	path = "/"
+  name = "%s"
+  path = "/"
 }
-	
+
 %s
+
 `, ssh, sudo, level, name, testAccAwsOpsworksStackConfigVpcCreate(name))
 }

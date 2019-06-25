@@ -6,7 +6,7 @@ description: |-
   Provides a Cognito User Pool Client resource.
 ---
 
-# aws_cognito_user_pool_client
+# Resource: aws_cognito_user_pool_client
 
 Provides a Cognito User Pool Client resource.
 
