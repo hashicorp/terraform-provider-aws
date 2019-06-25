@@ -1,5 +1,9 @@
 ## 2.17.0 (Unreleased)
 
+ENHANCEMENTS:
+
+* resource_aws_dms_endpoint: Support `db2` in `engine_name` validation [GH-9097]
+
 BUG FIXES:
 * resource/aws_api_gateway_account: Fix error handling during update [#9068]
 * resource/aws_api_gateway_base_path_mapping: Fix error handling during create [#9068]
