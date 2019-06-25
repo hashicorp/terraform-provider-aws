@@ -324,7 +324,7 @@ func Provider() terraform.ResourceProvider {
 			"aws_appsync_resolver":                                    resourceAwsAppsyncResolver(),
 			"aws_athena_database":                                     resourceAwsAthenaDatabase(),
 			"aws_athena_named_query":                                  resourceAwsAthenaNamedQuery(),
-      "aws_athena_workgroup":                                    resourceAwsAthenaWorkgroup(),
+			"aws_athena_workgroup":                                    resourceAwsAthenaWorkgroup(),
 			"aws_autoscaling_attachment":                              resourceAwsAutoscalingAttachment(),
 			"aws_autoscaling_group":                                   resourceAwsAutoscalingGroup(),
 			"aws_autoscaling_lifecycle_hook":                          resourceAwsAutoscalingLifecycleHook(),
