@@ -62,23 +62,23 @@ func resourceAwsGlueClassifier() *schema.Resource {
 					Schema: map[string]*schema.Schema{
 						"allow_single_column": { //bool
 							Type:    schema.TypeString,
-							Required: true,
+							Required: false,
 						},
 						"contains_header": {
 							Type:    schema.TypeString,
-							Required: true
+							Required: false
 						},
 						"delimiter": {
 							Type     schema.TypeString,
-							Required: true
+							Required: false
 						},
 						"disable_value_trimming": { //bool
 							Type     schema.TypeString,
-							Required: true
+							Required: false
 						},
 						"header": { //list of string
 							Type     schema.TypeString,
-							Required: true
+							Required: false
 						},
 						"name": {
 							Type     schema.TypeString,
@@ -86,7 +86,7 @@ func resourceAwsGlueClassifier() *schema.Resource {
 						},
 						"quote_symbol": {
 							Type     schema.TypeString,
-							Required: true
+							Required: false
 						},
 					},
 				},
