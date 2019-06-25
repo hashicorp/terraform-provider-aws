@@ -7,7 +7,6 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/iam"
 	"github.com/hashicorp/terraform/helper/acctest"
 	"github.com/hashicorp/terraform/helper/resource"
@@ -146,14 +145,11 @@ func testAccCheckAWSInstanceProfileDestroy(s *terraform.State) error {
 			return fmt.Errorf("still exist.")
 		}
 
-		// Verify the error is what we want
-		ec2err, ok := err.(awserr.Error)
-		if !ok {
-			return err
+		if isAWSErr(err, "NoSuchEntity", "") {
+			continue
 		}
-		if ec2err.Code() != "NoSuchEntity" {
-			return err
-		}
+
+		return err
 	}
 
 	return nil
