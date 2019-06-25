@@ -41,6 +41,44 @@ func resourceAwsGlueClassifier() *schema.Resource {
 		),
 
 		Schema: map[string]*schema.Schema{
+			"csv_classifier": {
+				Type:          schema.TypeList,
+				Optional:      true,
+				MaxItems:      1,
+				ConflictsWith: []string{"grok_classifier","json_classifier", "xml_classifier"}
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"allow_single_column": { //bool
+							Type:    schema.TypeString,
+							Required: true,
+						},
+						"contains_header": {
+							Type:    schema.TypeString,
+							Required: true
+						},
+						"delimiter": {
+							Type     schema.TypeString,
+							Required: true
+						},
+						"disable_value_trimming": { //bool
+							Type     schema.TypeString,
+							Required: true
+						},
+						"header": { //list of string
+							Type     schema.TypeString,
+							Required: true
+						},
+						"name": {
+							Type     schema.TypeString,
+							Required: true
+						},
+						"quote_symbol": {
+							Type     schema.TypeString,
+							Required: true
+						},
+					},
+				},
+			},
 			"grok_classifier": {
 				Type:          schema.TypeList,
 				Optional:      true,
