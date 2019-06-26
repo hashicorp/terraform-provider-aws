@@ -42,7 +42,7 @@ func testAccCheckDataSourceAwsEBSDefaultKmsKey(n string) resource.TestCheckFunc 
 			return fmt.Errorf("Error reading EBS default KMS key: %q", err)
 		}
 
-		attr := rs.Primary.Attributes["key_id"]
+		attr := rs.Primary.Attributes["key_arn"]
 
 		if attr != *actual.KmsKeyId {
 			return fmt.Errorf("EBS default KMS key is not the expected value (%v)", actual.KmsKeyId)

@@ -13,7 +13,7 @@ func dataSourceAwsEbsDefaultKmsKey() *schema.Resource {
 		Read: dataSourceAwsEbsDefaultKmsKeyRead,
 
 		Schema: map[string]*schema.Schema{
-			"key_id": {
+			"key_arn": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -29,7 +29,7 @@ func dataSourceAwsEbsDefaultKmsKeyRead(d *schema.ResourceData, meta interface{})
 	}
 
 	d.SetId(time.Now().UTC().String())
-	d.Set("key_id", *res.KmsKeyId)
+	d.Set("key_arn", res.KmsKeyId)
 
 	return nil
 }

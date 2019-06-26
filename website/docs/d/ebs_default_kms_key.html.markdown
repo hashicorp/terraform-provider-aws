@@ -24,4 +24,4 @@ resource "aws_ebs_volume" "example" {
 
 ## Attributes Reference
 The following attributes are exported:
-* `key_id` - The full ARN of the default KMS key that your account uses to encrypt an EBS volume when no key is specified in an API call that creates the volume.
+* `key_arn` - Amazon Resource Name (ARN) of the default KMS key uses to encrypt an EBS volume in this region when no key is specified in an API call that creates the volume and encryption by default is enabled.
