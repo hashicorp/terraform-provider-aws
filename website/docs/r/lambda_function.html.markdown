@@ -6,13 +6,15 @@ description: |-
   Provides a Lambda Function resource. Lambda allows you to trigger execution of code in response to events in AWS. The Lambda Function itself includes source code and runtime configuration.
 ---
 
-# aws_lambda_function
+# Resource: aws_lambda_function
 
 Provides a Lambda Function resource. Lambda allows you to trigger execution of code in response to events in AWS. The Lambda Function itself includes source code and runtime configuration.
 
 For information about Lambda and how to use it, see [What is AWS Lambda?][1]
 
 ## Example Usage
+
+### Basic Example
 
 ```hcl
 resource "aws_iam_role" "iam_for_lambda" {
@@ -36,18 +38,85 @@ EOF
 }
 
 resource "aws_lambda_function" "test_lambda" {
-  filename         = "lambda_function_payload.zip"
-  function_name    = "lambda_function_name"
-  role             = "${aws_iam_role.iam_for_lambda.arn}"
-  handler          = "exports.test"
-  source_code_hash = "${base64sha256(file("lambda_function_payload.zip"))}"
-  runtime          = "nodejs8.10"
+  filename      = "lambda_function_payload.zip"
+  function_name = "lambda_function_name"
+  role          = "${aws_iam_role.iam_for_lambda.arn}"
+  handler       = "exports.test"
+
+  # The filebase64sha256() function is available in Terraform 0.11.12 and later
+  # For Terraform 0.11.11 and earlier, use the base64sha256() function and the file() function:
+  # source_code_hash = "${base64sha256(file("lambda_function_payload.zip"))}"
+  source_code_hash = "${filebase64sha256("lambda_function_payload.zip")}"
+
+  runtime = "nodejs8.10"
 
   environment {
     variables = {
       foo = "bar"
     }
   }
+}
+```
+
+### Lambda Layers
+
+~> **NOTE:** The `aws_lambda_layer_version` attribute values for `arn` and `layer_arn` were swapped in version 2.0.0 of the Terraform AWS Provider. For version 1.x, use `layer_arn` references. For version 2.x, use `arn` references.
+
+```hcl
+resource "aws_lambda_layer_version" "example" {
+  # ... other configuration ...
+}
+
+resource "aws_lambda_function" "example" {
+  # ... other configuration ...
+  layers = ["${aws_lambda_layer_version.example.arn}"]
+}
+```
+
+## CloudWatch Logging and Permissions
+
+For more information about CloudWatch Logs for Lambda, see the [Lambda User Guide](https://docs.aws.amazon.com/lambda/latest/dg/monitoring-functions-logs.html).
+
+```hcl
+resource "aws_lambda_function" "test_lambda" {
+  function_name = "${var.lambda_function_name}"
+  ...
+  depends_on    = ["aws_iam_role_policy_attachment.lambda_logs", "aws_cloudwatch_log_group.example"]
+}
+
+# This is to optionally manage the CloudWatch Log Group for the Lambda Function.
+# If skipping this resource configuration, also add "logs:CreateLogGroup" to the IAM policy below.
+resource "aws_cloudwatch_log_group" "example" {
+  name              = "/aws/lambda/${var.lambda_function_name}"
+  retention_in_days = 14
+}
+
+# See also the following AWS managed policy: AWSLambdaBasicExecutionRole
+resource "aws_iam_policy" "lambda_logging" {
+  name = "lambda_logging"
+  path = "/"
+  description = "IAM policy for logging from a lambda"
+
+  policy = <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Action": [
+        "logs:CreateLogStream",
+        "logs:PutLogEvents"
+      ],
+      "Resource": "arn:aws:logs:*:*:*",
+      "Effect": "Allow"
+    }
+  ]
+}
+EOF
+}
+
+resource "aws_iam_role_policy_attachment" "lambda_logs" {
+  role = "${aws_iam_role.iam_for_lambda.name}"
+  policy_arn = "${aws_iam_policy.lambda_logging.arn}"
 }
 ```
 
@@ -75,15 +144,16 @@ large files efficiently.
 * `handler` - (Required) The function [entrypoint][3] in your code.
 * `role` - (Required) IAM role attached to the Lambda Function. This governs both who / what can invoke your Lambda Function, as well as what resources our Lambda Function has access to. See [Lambda Permission Model][4] for more details.
 * `description` - (Optional) Description of what your Lambda Function does.
+* `layers` - (Optional) List of Lambda Layer Version ARNs (maximum of 5) to attach to your Lambda Function. See [Lambda Layers][10]
 * `memory_size` - (Optional) Amount of memory in MB your Lambda Function can use at runtime. Defaults to `128`. See [Limits][5]
 * `runtime` - (Required) See [Runtimes][6] for valid values.
 * `timeout` - (Optional) The amount of time your Lambda Function has to run in seconds. Defaults to `3`. See [Limits][5]
-* `reserved_concurrent_executions` - (Optional) The amount of reserved concurrent executions for this lambda function. Defaults to Unreserved Concurrency Limits. See [Managing Concurrency][9]
+* `reserved_concurrent_executions` - (Optional) The amount of reserved concurrent executions for this lambda function. A value of `0` disables lambda from being triggered and `-1` removes any concurrency limitations. Defaults to Unreserved Concurrency Limits `-1`. See [Managing Concurrency][9]
 * `publish` - (Optional) Whether to publish creation/change as new Lambda Function Version. Defaults to `false`.
 * `vpc_config` - (Optional) Provide this to allow your function to access your VPC. Fields documented below. See [Lambda in VPC][7]
 * `environment` - (Optional) The Lambda environment's configuration settings. Fields documented below.
 * `kms_key_arn` - (Optional) The ARN for the KMS encryption key.
-* `source_code_hash` - (Optional) Used to trigger updates. Must be set to a base64-encoded SHA256 hash of the package file specified with either `filename` or `s3_key`. The usual way to set this is `${base64sha256(file("file.zip"))}`, where "file.zip" is the local filename of the lambda function source archive.
+* `source_code_hash` - (Optional) Used to trigger updates. Must be set to a base64-encoded SHA256 hash of the package file specified with either `filename` or `s3_key`. The usual way to set this is `filebase64sha256("file.zip")` (Terraform 0.11.12 and later) or `base64sha256(file("file.zip"))` (Terraform 0.11.11 and earlier), where "file.zip" is the local filename of the lambda function source archive.
 * `tags` - (Optional) A mapping of tags to assign to the object.
 
 **dead_letter_config** is a child block with a single argument:
@@ -133,6 +203,13 @@ For **environment** the following attributes are supported:
 [7]: http://docs.aws.amazon.com/lambda/latest/dg/vpc.html
 [8]: https://docs.aws.amazon.com/lambda/latest/dg/deployment-package-v2.html
 [9]: https://docs.aws.amazon.com/lambda/latest/dg/concurrent-executions.html
+[10]: https://docs.aws.amazon.com/lambda/latest/dg/configuration-layers.html
+
+## Timeouts
+
+`aws_lambda_function` provides the following [Timeouts](/docs/configuration/resources.html#timeouts) configuration options:
+
+* `create` - (Default `10m`) How long to wait for slow uploads or EC2 throttling errors.
 
 ## Import
 

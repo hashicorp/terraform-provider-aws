@@ -16,12 +16,12 @@ ASGs within a specific region. This will allow you to pass a list of AutoScaling
 ```hcl
 data "aws_autoscaling_groups" "groups" {
   filter {
-    name = "key"
+    name   = "key"
     values = ["Team"]
   }
 
   filter {
-    name = "value"
+    name   = "value"
     values = ["Pets"]
   }
 }

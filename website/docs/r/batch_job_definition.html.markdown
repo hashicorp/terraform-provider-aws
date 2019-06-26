@@ -1,12 +1,12 @@
 ---
 layout: "aws"
-page_title: "AWS: batch"
+page_title: "AWS: aws_batch_job_definition"
 sidebar_current: "docs-aws-resource-batch-job-definition"
 description: |-
   Provides a Batch Job Definition resource.
 ---
 
-# aws_batch_job_definition
+# Resource: aws_batch_job_definition
 
 Provides a Batch Job Definition resource.
 
@@ -14,9 +14,10 @@ Provides a Batch Job Definition resource.
 
 ```hcl
 resource "aws_batch_job_definition" "test" {
-	name = "tf_test_batch_job_definition"
-	type = "container"
-	container_properties = <<CONTAINER_PROPERTIES
+  name = "tf_test_batch_job_definition"
+  type = "container"
+
+  container_properties = <<CONTAINER_PROPERTIES
 {
 	"command": ["ls", "-la"],
 	"image": "busybox",

@@ -14,8 +14,8 @@ import (
 func TestAccAWSMacieS3BucketAssociation_basic(t *testing.T) {
 	rInt := acctest.RandInt()
 
-	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSMacie(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSMacieS3BucketAssociationDestroy,
 		Steps: []resource.TestStep{
@@ -42,8 +42,8 @@ func TestAccAWSMacieS3BucketAssociation_basic(t *testing.T) {
 func TestAccAWSMacieS3BucketAssociation_accountIdAndPrefix(t *testing.T) {
 	rInt := acctest.RandInt()
 
-	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSMacie(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSMacieS3BucketAssociationDestroy,
 		Steps: []resource.TestStep{
@@ -138,6 +138,22 @@ func testAccCheckAWSMacieS3BucketAssociationExists(name string) resource.TestChe
 		}
 
 		return nil
+	}
+}
+
+func testAccPreCheckAWSMacie(t *testing.T) {
+	conn := testAccProvider.Meta().(*AWSClient).macieconn
+
+	input := &macie.ListS3ResourcesInput{}
+
+	_, err := conn.ListS3Resources(input)
+
+	if testAccPreCheckSkipError(err) {
+		t.Skipf("skipping acceptance testing: %s", err)
+	}
+
+	if err != nil {
+		t.Fatalf("unexpected PreCheck error: %s", err)
 	}
 }
 

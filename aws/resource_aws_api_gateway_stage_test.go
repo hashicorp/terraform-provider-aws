@@ -17,7 +17,7 @@ func TestAccAWSAPIGatewayStage_basic(t *testing.T) {
 	var conf apigateway.Stage
 	rName := acctest.RandString(5)
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSAPIGatewayStageDestroy,
@@ -77,7 +77,7 @@ func TestAccAWSAPIGatewayStage_accessLogSettings(t *testing.T) {
 	xml := `<request id="$context.requestId"> <ip>$context.identity.sourceIp</ip> <caller>$context.identity.caller</caller> <user>$context.identity.user</user> <requestTime>$context.requestTime</requestTime> <httpMethod>$context.httpMethod</httpMethod> <resourcePath>$context.resourcePath</resourcePath> <status>$context.status</status> <protocol>$context.protocol</protocol> <responseLength>$context.responseLength</responseLength> </request>`
 	csv := `$context.identity.sourceIp,$context.identity.caller,$context.identity.user,$context.requestTime,$context.httpMethod,$context.resourcePath,$context.protocol,$context.status,$context.responseLength,$context.requestId`
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSAPIGatewayStageDestroy,
@@ -208,14 +208,14 @@ resource "aws_api_gateway_rest_api" "test" {
 
 resource "aws_api_gateway_resource" "test" {
   rest_api_id = "${aws_api_gateway_rest_api.test.id}"
-  parent_id = "${aws_api_gateway_rest_api.test.root_resource_id}"
-  path_part = "test"
+  parent_id   = "${aws_api_gateway_rest_api.test.root_resource_id}"
+  path_part   = "test"
 }
 
 resource "aws_api_gateway_method" "test" {
-  rest_api_id = "${aws_api_gateway_rest_api.test.id}"
-  resource_id = "${aws_api_gateway_resource.test.id}"
-  http_method = "GET"
+  rest_api_id   = "${aws_api_gateway_rest_api.test.id}"
+  resource_id   = "${aws_api_gateway_resource.test.id}"
+  http_method   = "GET"
   authorization = "NONE"
 }
 
@@ -231,8 +231,8 @@ resource "aws_api_gateway_integration" "test" {
   resource_id = "${aws_api_gateway_resource.test.id}"
   http_method = "${aws_api_gateway_method.test.http_method}"
 
-  type = "HTTP"
-  uri = "https://www.google.co.uk"
+  type                    = "HTTP"
+  uri                     = "https://www.google.co.uk"
   integration_http_method = "GET"
 }
 
@@ -247,7 +247,7 @@ resource "aws_api_gateway_deployment" "dev" {
   depends_on = ["aws_api_gateway_integration.test"]
 
   rest_api_id = "${aws_api_gateway_rest_api.test.id}"
-  stage_name = "dev"
+  stage_name  = "dev"
   description = "This is a dev env"
 
   variables = {
@@ -266,11 +266,11 @@ resource "aws_api_gateway_stage" "test" {
   cache_cluster_enabled = true
   cache_cluster_size = "0.5"
   xray_tracing_enabled = true
-  variables {
+  variables = {
     one = "1"
     two = "2"
   }
-  tags {
+  tags = {
     Name = "tf-test"
   }
 }
@@ -286,11 +286,11 @@ resource "aws_api_gateway_stage" "test" {
   cache_cluster_enabled = false
   description = "Hello world"
   xray_tracing_enabled = false
-  variables {
+  variables = {
     one = "1"
     three = "3"
   }
-  tags {
+  tags = {
     Name = "tf-test"
     ExtraName = "tf-test"
   }
@@ -310,11 +310,11 @@ resource "aws_api_gateway_stage" "test" {
   deployment_id = "${aws_api_gateway_deployment.dev.id}"
   cache_cluster_enabled = true
   cache_cluster_size = "0.5"
-  variables {
+  variables = {
     one = "1"
     two = "2"
   }
-  tags {
+  tags = {
     Name = "tf-test"
 	}
   access_log_settings {

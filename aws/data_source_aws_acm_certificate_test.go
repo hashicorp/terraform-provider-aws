@@ -34,7 +34,7 @@ func TestAccAWSAcmCertificateDataSource_singleIssued(t *testing.T) {
 
 	resourceName := "data.aws_acm_certificate.test"
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:  func() { testAccPreCheck(t) },
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
@@ -105,7 +105,7 @@ func TestAccAWSAcmCertificateDataSource_multipleIssued(t *testing.T) {
 
 	resourceName := "data.aws_acm_certificate.test"
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:  func() { testAccPreCheck(t) },
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
@@ -157,7 +157,7 @@ func TestAccAWSAcmCertificateDataSource_noMatchReturnsError(t *testing.T) {
 	domain := fmt.Sprintf("tf-acc-nonexistent.%s", os.Getenv("ACM_CERTIFICATE_ROOT_DOMAIN"))
 	name := fmt.Sprintf("tf-acc-nonexistent.%s", os.Getenv("ACM_CERTIFICATE_NAME"))
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:  func() { testAccPreCheck(t) },
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
@@ -196,7 +196,7 @@ func TestAccAWSAcmCertificateDataSource_noMatchReturnsError(t *testing.T) {
 func testAccCheckAwsAcmCertificateDataSourceConfig(domain string) string {
 	return fmt.Sprintf(`
 data "aws_acm_certificate" "test" {
-	domain = "%s"
+  domain = "%s"
 }
 `, domain)
 }
@@ -204,8 +204,8 @@ data "aws_acm_certificate" "test" {
 func testAccCheckAwsAcmCertificateDataSourceConfigWithStatus(domain, status string) string {
 	return fmt.Sprintf(`
 data "aws_acm_certificate" "test" {
-	domain = "%s"
-	statuses = ["%s"]
+  domain   = "%s"
+  statuses = ["%s"]
 }
 `, domain, status)
 }
@@ -213,8 +213,8 @@ data "aws_acm_certificate" "test" {
 func testAccCheckAwsAcmCertificateDataSourceConfigWithTypes(domain, certType string) string {
 	return fmt.Sprintf(`
 data "aws_acm_certificate" "test" {
-	domain = "%s"
-	types = ["%s"]
+  domain = "%s"
+  types  = ["%s"]
 }
 `, domain, certType)
 }

@@ -15,8 +15,8 @@ func TestAccAWSSESReceiptRuleSet_basic(t *testing.T) {
 	resourceName := "aws_ses_receipt_rule_set.test"
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 
-	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSSES(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckSESReceiptRuleSetDestroy,
 		Steps: []resource.TestStep{
@@ -83,11 +83,7 @@ func testAccCheckAwsSESReceiptRuleSetExists(n string) resource.TestCheckFunc {
 		}
 
 		_, err := conn.DescribeReceiptRuleSet(params)
-		if err != nil {
-			return err
-		}
-
-		return nil
+		return err
 	}
 }
 

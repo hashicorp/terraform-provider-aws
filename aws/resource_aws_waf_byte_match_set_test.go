@@ -17,8 +17,8 @@ func TestAccAWSWafByteMatchSet_basic(t *testing.T) {
 	var v waf.ByteMatchSet
 	byteMatchSet := fmt.Sprintf("byteMatchSet-%s", acctest.RandString(5))
 
-	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSWaf(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSWafByteMatchSetDestroy,
 		Steps: []resource.TestStep{
@@ -51,8 +51,8 @@ func TestAccAWSWafByteMatchSet_changeNameForceNew(t *testing.T) {
 	byteMatchSet := fmt.Sprintf("byteMatchSet-%s", acctest.RandString(5))
 	byteMatchSetNewName := fmt.Sprintf("byteMatchSet-%s", acctest.RandString(5))
 
-	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSWaf(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSWafByteMatchSetDestroy,
 		Steps: []resource.TestStep{
@@ -84,8 +84,8 @@ func TestAccAWSWafByteMatchSet_changeTuples(t *testing.T) {
 	var before, after waf.ByteMatchSet
 	byteMatchSetName := fmt.Sprintf("byteMatchSet-%s", acctest.RandString(5))
 
-	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSWaf(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSWafByteMatchSetDestroy,
 		Steps: []resource.TestStep{
@@ -137,8 +137,8 @@ func TestAccAWSWafByteMatchSet_noTuples(t *testing.T) {
 	var byteSet waf.ByteMatchSet
 	byteMatchSetName := fmt.Sprintf("byteMatchSet-%s", acctest.RandString(5))
 
-	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSWaf(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSWafByteMatchSetDestroy,
 		Steps: []resource.TestStep{
@@ -160,8 +160,8 @@ func TestAccAWSWafByteMatchSet_disappears(t *testing.T) {
 	var v waf.ByteMatchSet
 	byteMatchSet := fmt.Sprintf("byteMatchSet-%s", acctest.RandString(5))
 
-	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSWaf(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSWafByteMatchSetDestroy,
 		Steps: []resource.TestStep{
@@ -181,7 +181,7 @@ func testAccCheckAWSWafByteMatchSetDisappears(v *waf.ByteMatchSet) resource.Test
 	return func(s *terraform.State) error {
 		conn := testAccProvider.Meta().(*AWSClient).wafconn
 
-		wr := newWafRetryer(conn, "global")
+		wr := newWafRetryer(conn)
 		_, err := wr.RetryWithToken(func(token *string) (interface{}, error) {
 			req := &waf.UpdateByteMatchSetInput{
 				ChangeToken:    token,
@@ -286,10 +286,12 @@ func testAccAWSWafByteMatchSetConfig(name string) string {
 	return fmt.Sprintf(`
 resource "aws_waf_byte_match_set" "byte_set" {
   name = "%s"
+
   byte_match_tuples {
-    text_transformation = "NONE"
-    target_string = "badrefer1"
+    text_transformation   = "NONE"
+    target_string         = "badrefer1"
     positional_constraint = "CONTAINS"
+
     field_to_match {
       type = "HEADER"
       data = "referer"
@@ -297,25 +299,29 @@ resource "aws_waf_byte_match_set" "byte_set" {
   }
 
   byte_match_tuples {
-    text_transformation = "NONE"
-    target_string = "badrefer2"
+    text_transformation   = "NONE"
+    target_string         = "badrefer2"
     positional_constraint = "CONTAINS"
+
     field_to_match {
       type = "HEADER"
       data = "referer"
     }
   }
-}`, name)
+}
+`, name)
 }
 
 func testAccAWSWafByteMatchSetConfigChangeName(name string) string {
 	return fmt.Sprintf(`
 resource "aws_waf_byte_match_set" "byte_set" {
   name = "%s"
+
   byte_match_tuples {
-    text_transformation = "NONE"
-    target_string = "badrefer1"
+    text_transformation   = "NONE"
+    target_string         = "badrefer1"
     positional_constraint = "CONTAINS"
+
     field_to_match {
       type = "HEADER"
       data = "referer"
@@ -323,25 +329,29 @@ resource "aws_waf_byte_match_set" "byte_set" {
   }
 
   byte_match_tuples {
-    text_transformation = "NONE"
-    target_string = "badrefer2"
+    text_transformation   = "NONE"
+    target_string         = "badrefer2"
     positional_constraint = "CONTAINS"
+
     field_to_match {
       type = "HEADER"
       data = "referer"
     }
   }
-}`, name)
+}
+`, name)
 }
 
 func testAccAWSWafByteMatchSetConfig_changeTuples(name string) string {
 	return fmt.Sprintf(`
 resource "aws_waf_byte_match_set" "byte_set" {
   name = "%s"
+
   byte_match_tuples {
-    text_transformation = "NONE"
-    target_string = "badrefer1"
+    text_transformation   = "NONE"
+    target_string         = "badrefer1"
     positional_constraint = "CONTAINS"
+
     field_to_match {
       type = "HEADER"
       data = "referer"
@@ -349,20 +359,23 @@ resource "aws_waf_byte_match_set" "byte_set" {
   }
 
   byte_match_tuples {
-    text_transformation = "URL_DECODE"
-    target_string = "blah"
+    text_transformation   = "URL_DECODE"
+    target_string         = "blah"
     positional_constraint = "CONTAINS_WORD"
+
     field_to_match {
       type = "METHOD"
       data = "GET"
     }
   }
-}`, name)
+}
+`, name)
 }
 
 func testAccAWSWafByteMatchSetConfig_noTuples(name string) string {
 	return fmt.Sprintf(`
 resource "aws_waf_byte_match_set" "byte_set" {
   name = "%s"
-}`, name)
+}
+`, name)
 }

@@ -6,7 +6,7 @@ description: |-
   Provides a Direct Connect hosted public virtual interface resource.
 ---
 
-# aws_dx_hosted_public_virtual_interface
+# Resource: aws_dx_hosted_public_virtual_interface
 
 Provides a Direct Connect hosted public virtual interface resource. This resource represents the allocator's side of the hosted virtual interface.
 A hosted virtual interface is a virtual interface that is owned by another AWS account.
@@ -15,7 +15,7 @@ A hosted virtual interface is a virtual interface that is owned by another AWS a
 
 ```hcl
 resource "aws_dx_hosted_public_virtual_interface" "foo" {
-  connection_id    = "dxcon-zzzzzzzz"
+  connection_id = "dxcon-zzzzzzzz"
 
   name           = "vif-foo"
   vlan           = 4094
@@ -24,9 +24,10 @@ resource "aws_dx_hosted_public_virtual_interface" "foo" {
 
   customer_address = "175.45.176.1/30"
   amazon_address   = "175.45.176.2/30"
+
   route_filter_prefixes = [
-      "210.52.109.0/24",
-      "175.45.176.0/22"
+    "210.52.109.0/24",
+    "175.45.176.0/22",
   ]
 }
 ```
@@ -52,6 +53,7 @@ In addition to all arguments above, the following attributes are exported:
 
 * `id` - The ID of the virtual interface.
 * `arn` - The ARN of the virtual interface.
+* `aws_device` - The Direct Connect endpoint on which the virtual interface terminates.
 
 ## Timeouts
 

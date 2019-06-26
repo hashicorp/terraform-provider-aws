@@ -8,6 +8,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/servicediscovery"
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/helper/schema"
+	"github.com/hashicorp/terraform/helper/validation"
 )
 
 func resourceAwsServiceDiscoveryService() *schema.Resource {
@@ -55,12 +56,12 @@ func resourceAwsServiceDiscoveryService() *schema.Resource {
 										Type:     schema.TypeString,
 										Required: true,
 										ForceNew: true,
-										ValidateFunc: validateStringIn(
+										ValidateFunc: validation.StringInSlice([]string{
 											servicediscovery.RecordTypeSrv,
 											servicediscovery.RecordTypeA,
 											servicediscovery.RecordTypeAaaa,
 											servicediscovery.RecordTypeCname,
-										),
+										}, false),
 									},
 								},
 							},
@@ -70,10 +71,10 @@ func resourceAwsServiceDiscoveryService() *schema.Resource {
 							Optional: true,
 							ForceNew: true,
 							Default:  servicediscovery.RoutingPolicyMultivalue,
-							ValidateFunc: validateStringIn(
+							ValidateFunc: validation.StringInSlice([]string{
 								servicediscovery.RoutingPolicyMultivalue,
 								servicediscovery.RoutingPolicyWeighted,
-							),
+							}, false),
 						},
 					},
 				},
@@ -96,11 +97,11 @@ func resourceAwsServiceDiscoveryService() *schema.Resource {
 							Type:     schema.TypeString,
 							Optional: true,
 							ForceNew: true,
-							ValidateFunc: validateStringIn(
+							ValidateFunc: validation.StringInSlice([]string{
 								servicediscovery.HealthCheckTypeHttp,
 								servicediscovery.HealthCheckTypeHttps,
 								servicediscovery.HealthCheckTypeTcp,
-							),
+							}, false),
 						},
 					},
 				},
@@ -238,11 +239,7 @@ func resourceAwsServiceDiscoveryServiceDelete(d *schema.ResourceData, meta inter
 	}
 
 	_, err := conn.DeleteService(input)
-	if err != nil {
-		return err
-	}
-
-	return nil
+	return err
 }
 
 func expandServiceDiscoveryDnsConfig(configured map[string]interface{}) *servicediscovery.DnsConfig {

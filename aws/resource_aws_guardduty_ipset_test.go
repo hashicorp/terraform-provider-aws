@@ -127,11 +127,7 @@ func testAccCheckAwsGuardDutyIpsetExists(name string) resource.TestCheckFunc {
 
 		conn := testAccProvider.Meta().(*AWSClient).guarddutyconn
 		_, err = conn.GetIPSet(input)
-		if err != nil {
-			return err
-		}
-
-		return nil
+		return err
 	}
 }
 
@@ -140,8 +136,8 @@ func testAccGuardDutyIpsetConfig_basic(bucketName, keyName, ipsetName string, ac
 %s
 
 resource "aws_s3_bucket" "test" {
-  acl = "private"
-  bucket = "%s"
+  acl           = "private"
+  bucket        = "%s"
   force_destroy = true
 }
 
@@ -153,11 +149,11 @@ resource "aws_s3_bucket_object" "test" {
 }
 
 resource "aws_guardduty_ipset" "test" {
-  name = "%s"
+  name        = "%s"
   detector_id = "${aws_guardduty_detector.test.id}"
-  format = "TXT"
-  location = "https://s3.amazonaws.com/${aws_s3_bucket_object.test.bucket}/${aws_s3_bucket_object.test.key}"
-  activate = %t
+  format      = "TXT"
+  location    = "https://s3.amazonaws.com/${aws_s3_bucket_object.test.bucket}/${aws_s3_bucket_object.test.key}"
+  activate    = %t
 }
 `, testAccGuardDutyDetectorConfig_basic1, bucketName, keyName, ipsetName, activate)
 }

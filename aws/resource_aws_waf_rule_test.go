@@ -17,8 +17,8 @@ import (
 func TestAccAWSWafRule_basic(t *testing.T) {
 	var v waf.Rule
 	wafRuleName := fmt.Sprintf("wafrule%s", acctest.RandString(5))
-	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSWaf(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSWafRuleDestroy,
 		Steps: []resource.TestStep{
@@ -34,6 +34,11 @@ func TestAccAWSWafRule_basic(t *testing.T) {
 						"aws_waf_rule.wafrule", "metric_name", wafRuleName),
 				),
 			},
+			{
+				ResourceName:      "aws_waf_rule.wafrule",
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
 		},
 	})
 }
@@ -43,8 +48,8 @@ func TestAccAWSWafRule_changeNameForceNew(t *testing.T) {
 	wafRuleName := fmt.Sprintf("wafrule%s", acctest.RandString(5))
 	wafRuleNewName := fmt.Sprintf("wafrulenew%s", acctest.RandString(5))
 
-	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSWaf(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSWafIPSetDestroy,
 		Steps: []resource.TestStep{
@@ -79,8 +84,8 @@ func TestAccAWSWafRule_changeNameForceNew(t *testing.T) {
 func TestAccAWSWafRule_disappears(t *testing.T) {
 	var v waf.Rule
 	wafRuleName := fmt.Sprintf("wafrule%s", acctest.RandString(5))
-	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSWaf(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSWafRuleDestroy,
 		Steps: []resource.TestStep{
@@ -104,8 +109,8 @@ func TestAccAWSWafRule_changePredicates(t *testing.T) {
 	var idx int
 	ruleName := fmt.Sprintf("wafrule%s", acctest.RandString(5))
 
-	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSWaf(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSWafRuleDestroy,
 		Steps: []resource.TestStep{
@@ -144,8 +149,8 @@ func TestAccAWSWafRule_geoMatchSetPredicate(t *testing.T) {
 	var idx int
 	ruleName := fmt.Sprintf("wafrule%s", acctest.RandString(5))
 
-	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSWaf(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSWafRuleDestroy,
 		Steps: []resource.TestStep{
@@ -232,8 +237,8 @@ func TestAccAWSWafRule_noPredicates(t *testing.T) {
 	var rule waf.Rule
 	ruleName := fmt.Sprintf("wafrule%s", acctest.RandString(5))
 
-	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSWaf(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSWafRuleDestroy,
 		Steps: []resource.TestStep{
@@ -255,7 +260,7 @@ func testAccCheckAWSWafRuleDisappears(v *waf.Rule) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := testAccProvider.Meta().(*AWSClient).wafconn
 
-		wr := newWafRetryer(conn, "global")
+		wr := newWafRetryer(conn)
 		_, err := wr.RetryWithToken(func(token *string) (interface{}, error) {
 			req := &waf.UpdateRuleInput{
 				ChangeToken: token,
@@ -354,62 +359,86 @@ func testAccCheckAWSWafRuleExists(n string, v *waf.Rule) resource.TestCheckFunc 
 	}
 }
 
+func testAccPreCheckAWSWaf(t *testing.T) {
+	conn := testAccProvider.Meta().(*AWSClient).wafconn
+
+	input := &waf.ListRulesInput{}
+
+	_, err := conn.ListRules(input)
+
+	if testAccPreCheckSkipError(err) {
+		t.Skipf("skipping acceptance testing: %s", err)
+	}
+
+	if err != nil {
+		t.Fatalf("unexpected PreCheck error: %s", err)
+	}
+}
+
 func testAccAWSWafRuleConfig(name string) string {
 	return fmt.Sprintf(`
 resource "aws_waf_ipset" "ipset" {
   name = "%s"
+
   ip_set_descriptors {
-    type = "IPV4"
+    type  = "IPV4"
     value = "192.0.7.0/24"
   }
 }
 
 resource "aws_waf_rule" "wafrule" {
-  depends_on = ["aws_waf_ipset.ipset"]
-  name = "%s"
+  depends_on  = ["aws_waf_ipset.ipset"]
+  name        = "%s"
   metric_name = "%s"
+
   predicates {
     data_id = "${aws_waf_ipset.ipset.id}"
     negated = false
-    type = "IPMatch"
+    type    = "IPMatch"
   }
-}`, name, name, name)
+}
+`, name, name, name)
 }
 
 func testAccAWSWafRuleConfigChangeName(name string) string {
 	return fmt.Sprintf(`
 resource "aws_waf_ipset" "ipset" {
   name = "%s"
+
   ip_set_descriptors {
-    type = "IPV4"
+    type  = "IPV4"
     value = "192.0.7.0/24"
   }
 }
 
 resource "aws_waf_rule" "wafrule" {
-  depends_on = ["aws_waf_ipset.ipset"]
-  name = "%s"
+  depends_on  = ["aws_waf_ipset.ipset"]
+  name        = "%s"
   metric_name = "%s"
+
   predicates {
     data_id = "${aws_waf_ipset.ipset.id}"
     negated = false
-    type = "IPMatch"
+    type    = "IPMatch"
   }
-}`, name, name, name)
+}
+`, name, name, name)
 }
 
 func testAccAWSWafRuleConfig_changePredicates(name string) string {
 	return fmt.Sprintf(`
 resource "aws_waf_ipset" "ipset" {
   name = "%s"
+
   ip_set_descriptors {
-    type = "IPV4"
+    type  = "IPV4"
     value = "192.0.7.0/24"
   }
 }
 
 resource "aws_waf_byte_match_set" "set" {
   name = "%s"
+
   byte_match_tuples {
     text_transformation   = "NONE"
     target_string         = "badrefer1"
@@ -423,41 +452,47 @@ resource "aws_waf_byte_match_set" "set" {
 }
 
 resource "aws_waf_rule" "wafrule" {
-  name = "%s"
+  name        = "%s"
   metric_name = "%s"
+
   predicates {
     data_id = "${aws_waf_byte_match_set.set.id}"
     negated = true
-    type = "ByteMatch"
+    type    = "ByteMatch"
   }
-}`, name, name, name, name)
+}
+`, name, name, name, name)
 }
 
 func testAccAWSWafRuleConfig_noPredicates(name string) string {
 	return fmt.Sprintf(`
 resource "aws_waf_rule" "wafrule" {
-  name = "%s"
+  name        = "%s"
   metric_name = "%s"
-}`, name, name)
+}
+`, name, name)
 }
 
 func testAccAWSWafRuleConfig_geoMatchSetPredicate(name string) string {
 	return fmt.Sprintf(`
 resource "aws_waf_geo_match_set" "geo_match_set" {
   name = "%s"
+
   geo_match_constraint {
     type  = "Country"
-    value	= "US"
+    value = "US"
   }
 }
 
 resource "aws_waf_rule" "wafrule" {
-  name = "%s"
+  name        = "%s"
   metric_name = "%s"
+
   predicates {
     data_id = "${aws_waf_geo_match_set.geo_match_set.id}"
     negated = true
-    type = "GeoMatch"
+    type    = "GeoMatch"
   }
-}`, name, name, name)
+}
+`, name, name, name)
 }

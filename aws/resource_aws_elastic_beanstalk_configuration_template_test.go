@@ -15,7 +15,7 @@ import (
 func TestAccAWSBeanstalkConfigurationTemplate_basic(t *testing.T) {
 	var config elasticbeanstalk.ConfigurationSettingsDescription
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckBeanstalkConfigurationTemplateDestroy,
@@ -33,7 +33,7 @@ func TestAccAWSBeanstalkConfigurationTemplate_basic(t *testing.T) {
 func TestAccAWSBeanstalkConfigurationTemplate_VPC(t *testing.T) {
 	var config elasticbeanstalk.ConfigurationSettingsDescription
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckBeanstalkConfigurationTemplateDestroy,
@@ -51,7 +51,7 @@ func TestAccAWSBeanstalkConfigurationTemplate_VPC(t *testing.T) {
 func TestAccAWSBeanstalkConfigurationTemplate_Setting(t *testing.T) {
 	var config elasticbeanstalk.ConfigurationSettingsDescription
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckBeanstalkConfigurationTemplateDestroy,
@@ -145,15 +145,16 @@ func testAccCheckBeanstalkConfigurationTemplateExists(n string, config *elasticb
 func testAccBeanstalkConfigurationTemplateConfig(r string) string {
 	return fmt.Sprintf(`
 resource "aws_elastic_beanstalk_application" "tftest" {
-  name = "tf-test-%s"
+  name        = "tf-test-%s"
   description = "tf-test-desc-%s"
 }
 
 resource "aws_elastic_beanstalk_configuration_template" "tf_template" {
-  name = "tf-test-template-config"
-  application = "${aws_elastic_beanstalk_application.tftest.name}"
+  name                = "tf-test-template-config"
+  application         = "${aws_elastic_beanstalk_application.tftest.name}"
   solution_stack_name = "64bit Amazon Linux running Python"
-}`, r, r)
+}
+`, r, r)
 }
 
 func testAccBeanstalkConfigurationTemplateConfig_VPC(name string) string {
@@ -161,7 +162,7 @@ func testAccBeanstalkConfigurationTemplateConfig_VPC(name string) string {
 resource "aws_vpc" "tf_b_test" {
   cidr_block = "10.0.0.0/16"
 
-  tags {
+  tags = {
     Name = "terraform-testacc-elastic-beanstalk-cfg-tpl-vpc"
   }
 }
@@ -170,7 +171,7 @@ resource "aws_subnet" "main" {
   vpc_id     = "${aws_vpc.tf_b_test.id}"
   cidr_block = "10.0.0.0/24"
 
-  tags {
+  tags = {
     Name = "tf-acc-elastic-beanstalk-cfg-tpl-vpc"
   }
 }
@@ -219,7 +220,6 @@ resource "aws_elastic_beanstalk_configuration_template" "tf_template" {
     name      = "InstanceType"
     value     = "m1.small"
   }
-
 }
 `, name, name)
 }

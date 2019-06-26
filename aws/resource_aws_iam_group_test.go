@@ -56,7 +56,7 @@ func TestAccAWSIAMGroup_importBasic(t *testing.T) {
 	rString := acctest.RandString(8)
 	groupName := fmt.Sprintf("tf-acc-group-import-%s", rString)
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSGroupDestroy,
@@ -81,7 +81,7 @@ func TestAccAWSIAMGroup_basic(t *testing.T) {
 	groupName := fmt.Sprintf("tf-acc-group-basic-%s", rString)
 	groupName2 := fmt.Sprintf("tf-acc-group-basic-2-%s", rString)
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSGroupDestroy,
@@ -98,6 +98,36 @@ func TestAccAWSIAMGroup_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSGroupExists("aws_iam_group.group2", &conf),
 					testAccCheckAWSGroupAttributes(&conf, groupName2, "/funnypath/"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAWSIAMGroup_nameChange(t *testing.T) {
+	var conf iam.GetGroupOutput
+
+	rString := acctest.RandString(8)
+	groupName := fmt.Sprintf("tf-acc-group-basic-%s", rString)
+	groupName2 := fmt.Sprintf("tf-acc-group-basic-2-%s", rString)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSGroupDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSGroupConfig(groupName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSGroupExists("aws_iam_group.group", &conf),
+					testAccCheckAWSGroupAttributes(&conf, groupName, "/"),
+				),
+			},
+			{
+				Config: testAccAWSGroupConfig(groupName2),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSGroupExists("aws_iam_group.group", &conf),
+					testAccCheckAWSGroupAttributes(&conf, groupName2, "/"),
 				),
 			},
 		},
@@ -176,15 +206,17 @@ func testAccCheckAWSGroupAttributes(group *iam.GetGroupOutput, name string, path
 func testAccAWSGroupConfig(groupName string) string {
 	return fmt.Sprintf(`
 resource "aws_iam_group" "group" {
-	name = "%s"
-	path = "/"
-}`, groupName)
+  name = "%s"
+  path = "/"
+}
+`, groupName)
 }
 
 func testAccAWSGroupConfig2(groupName string) string {
 	return fmt.Sprintf(`
 resource "aws_iam_group" "group2" {
-	name = "%s"
-	path = "/funnypath/"
-}`, groupName)
+  name = "%s"
+  path = "/funnypath/"
+}
+`, groupName)
 }

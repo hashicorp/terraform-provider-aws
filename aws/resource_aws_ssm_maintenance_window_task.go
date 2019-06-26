@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"log"
 
+	"github.com/hashicorp/terraform/helper/validation"
+
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ssm"
 	"github.com/hashicorp/terraform/helper/schema"
@@ -71,6 +73,20 @@ func resourceAwsSsmMaintenanceWindowTask() *schema.Resource {
 						},
 					},
 				},
+			},
+
+			"name": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				ForceNew:     true,
+				ValidateFunc: validateAwsSSMMaintenanceWindowTaskName,
+			},
+
+			"description": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				ForceNew:     true,
+				ValidateFunc: validation.StringLenBetween(1, 128),
 			},
 
 			"priority": {
@@ -194,6 +210,14 @@ func resourceAwsSsmMaintenanceWindowTaskCreate(d *schema.ResourceData, meta inte
 		Targets:        expandAwsSsmTargets(d.Get("targets").([]interface{})),
 	}
 
+	if v, ok := d.GetOk("name"); ok {
+		params.Name = aws.String(v.(string))
+	}
+
+	if v, ok := d.GetOk("description"); ok {
+		params.Description = aws.String(v.(string))
+	}
+
 	if v, ok := d.GetOk("priority"); ok {
 		params.Priority = aws.Int64(int64(v.(int)))
 	}
@@ -240,6 +264,8 @@ func resourceAwsSsmMaintenanceWindowTaskRead(d *schema.ResourceData, meta interf
 			d.Set("service_role_arn", t.ServiceRoleArn)
 			d.Set("task_arn", t.TaskArn)
 			d.Set("priority", t.Priority)
+			d.Set("name", t.Name)
+			d.Set("description", t.Description)
 
 			if t.LoggingInfo != nil {
 				if err := d.Set("logging_info", flattenAwsSsmMaintenanceWindowLoggingInfo(t.LoggingInfo)); err != nil {
@@ -280,7 +306,7 @@ func resourceAwsSsmMaintenanceWindowTaskDelete(d *schema.ResourceData, meta inte
 
 	_, err := ssmconn.DeregisterTaskFromMaintenanceWindow(params)
 	if err != nil {
-		return err
+		return fmt.Errorf("error deregistering SSM Maintenance Window Task (%s): %s", d.Id(), err)
 	}
 
 	return nil

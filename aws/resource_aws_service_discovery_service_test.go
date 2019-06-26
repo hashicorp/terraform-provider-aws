@@ -13,8 +13,8 @@ import (
 
 func TestAccAWSServiceDiscoveryService_private(t *testing.T) {
 	rName := acctest.RandString(5)
-	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSServiceDiscovery(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsServiceDiscoveryServiceDestroy,
 		Steps: []resource.TestStep{
@@ -48,8 +48,8 @@ func TestAccAWSServiceDiscoveryService_private(t *testing.T) {
 
 func TestAccAWSServiceDiscoveryService_public(t *testing.T) {
 	rName := acctest.RandString(5)
-	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSServiceDiscovery(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsServiceDiscoveryServiceDestroy,
 		Steps: []resource.TestStep{
@@ -81,8 +81,8 @@ func TestAccAWSServiceDiscoveryService_public(t *testing.T) {
 func TestAccAWSServiceDiscoveryService_import(t *testing.T) {
 	resourceName := "aws_service_discovery_service.test"
 
-	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSServiceDiscovery(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsServiceDiscoveryServiceDestroy,
 		Steps: []resource.TestStep{
@@ -136,11 +136,7 @@ func testAccCheckAwsServiceDiscoveryServiceExists(name string) resource.TestChec
 		}
 
 		_, err := conn.GetService(input)
-		if err != nil {
-			return err
-		}
-
-		return nil
+		return err
 	}
 }
 
@@ -148,26 +144,30 @@ func testAccServiceDiscoveryServiceConfig_private(rName string, th int) string {
 	return fmt.Sprintf(`
 resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"
-  tags {
+
+  tags = {
     Name = "terraform-testacc-service-discovery-service-private"
   }
 }
 
 resource "aws_service_discovery_private_dns_namespace" "test" {
-  name = "tf-sd-%s.terraform.local"
+  name        = "tf-sd-%s.terraform.local"
   description = "test"
-  vpc = "${aws_vpc.test.id}"
+  vpc         = "${aws_vpc.test.id}"
 }
 
 resource "aws_service_discovery_service" "test" {
   name = "tf-sd-%s"
+
   dns_config {
     namespace_id = "${aws_service_discovery_private_dns_namespace.test.id}"
+
     dns_records {
-      ttl = 5
+      ttl  = 5
       type = "A"
     }
   }
+
   health_check_custom_config {
     failure_threshold = %d
   }
@@ -179,31 +179,37 @@ func testAccServiceDiscoveryServiceConfig_private_update(rName string, th int) s
 	return fmt.Sprintf(`
 resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"
-  tags {
+
+  tags = {
     Name = "terraform-testacc-service-discovery-service-private"
   }
 }
 
 resource "aws_service_discovery_private_dns_namespace" "test" {
-  name = "tf-sd-%s.terraform.local"
+  name        = "tf-sd-%s.terraform.local"
   description = "test"
-  vpc = "${aws_vpc.test.id}"
+  vpc         = "${aws_vpc.test.id}"
 }
 
 resource "aws_service_discovery_service" "test" {
   name = "tf-sd-%s"
+
   dns_config {
     namespace_id = "${aws_service_discovery_private_dns_namespace.test.id}"
+
     dns_records {
-      ttl = 10
+      ttl  = 10
       type = "A"
     }
+
     dns_records {
-      ttl = 5
+      ttl  = 5
       type = "AAAA"
     }
+
     routing_policy = "MULTIVALUE"
   }
+
   health_check_custom_config {
     failure_threshold = %d
   }
@@ -214,24 +220,28 @@ resource "aws_service_discovery_service" "test" {
 func testAccServiceDiscoveryServiceConfig_public(rName string, th int, path string) string {
 	return fmt.Sprintf(`
 resource "aws_service_discovery_public_dns_namespace" "test" {
-  name = "tf-sd-%s.terraform.com"
+  name        = "tf-sd-%s.terraform.com"
   description = "test"
 }
 
 resource "aws_service_discovery_service" "test" {
   name = "tf-sd-%s"
+
   dns_config {
     namespace_id = "${aws_service_discovery_public_dns_namespace.test.id}"
+
     dns_records {
-      ttl = 5
+      ttl  = 5
       type = "A"
     }
+
     routing_policy = "WEIGHTED"
   }
+
   health_check_config {
     failure_threshold = %d
-    resource_path = "%s"
-    type = "HTTP"
+    resource_path     = "%s"
+    type              = "HTTP"
   }
 }
 `, rName, rName, th, path)

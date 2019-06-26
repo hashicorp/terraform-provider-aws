@@ -3,7 +3,6 @@ package aws
 import (
 	"fmt"
 	"log"
-	"strings"
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -44,10 +43,6 @@ func testSweepWafRegionalRegexMatchSet(region string) error {
 	}
 
 	for _, s := range resp.RegexMatchSets {
-		if !strings.HasPrefix(*s.Name, "tfacc") {
-			continue
-		}
-
 		resp, err := conn.GetRegexMatchSet(&waf.GetRegexMatchSetInput{
 			RegexMatchSetId: s.RegexMatchSetId,
 		})
@@ -323,18 +318,20 @@ func testAccAWSWafRegionalRegexMatchSetConfig(matchSetName, patternSetName strin
 	return fmt.Sprintf(`
 resource "aws_wafregional_regex_match_set" "test" {
   name = "%s"
+
   regex_match_tuple {
     field_to_match {
       data = "User-Agent"
       type = "HEADER"
     }
+
     regex_pattern_set_id = "${aws_wafregional_regex_pattern_set.test.id}"
-    text_transformation = "NONE"
+    text_transformation  = "NONE"
   }
 }
 
 resource "aws_wafregional_regex_pattern_set" "test" {
-  name = "%s"
+  name                  = "%s"
   regex_pattern_strings = ["one", "two"]
 }
 `, matchSetName, patternSetName)
@@ -350,13 +347,14 @@ resource "aws_wafregional_regex_match_set" "test" {
       data = "Referer"
       type = "HEADER"
     }
+
     regex_pattern_set_id = "${aws_wafregional_regex_pattern_set.test.id}"
-    text_transformation = "COMPRESS_WHITE_SPACE"
+    text_transformation  = "COMPRESS_WHITE_SPACE"
   }
 }
 
 resource "aws_wafregional_regex_pattern_set" "test" {
-  name = "%s"
+  name                  = "%s"
   regex_pattern_strings = ["one", "two"]
 }
 `, matchSetName, patternSetName)
@@ -366,5 +364,6 @@ func testAccAWSWafRegionalRegexMatchSetConfig_noPatterns(matchSetName string) st
 	return fmt.Sprintf(`
 resource "aws_wafregional_regex_match_set" "test" {
   name = "%s"
-}`, matchSetName)
+}
+`, matchSetName)
 }

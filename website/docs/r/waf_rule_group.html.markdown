@@ -1,12 +1,12 @@
 ---
 layout: "aws"
-page_title: "AWS: waf_rule_group"
+page_title: "AWS: aws_waf_rule_group"
 sidebar_current: "docs-aws-resource-waf-rule-group"
 description: |-
   Provides a AWS WAF rule group resource.
 ---
 
-# aws_waf_rule_group
+# Resource: aws_waf_rule_group
 
 Provides a WAF Rule Group Resource
 
@@ -19,14 +19,16 @@ resource "aws_waf_rule" "example" {
 }
 
 resource "aws_waf_rule_group" "example" {
-  name = "example"
+  name        = "example"
   metric_name = "example"
+
   activated_rule {
     action {
       type = "COUNT"
     }
+
     priority = 50
-    rule_id = "${aws_waf_rule.example.id}"
+    rule_id  = "${aws_waf_rule.example.id}"
   }
 }
 ```

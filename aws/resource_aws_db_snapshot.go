@@ -6,7 +6,6 @@ import (
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/rds"
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/helper/schema"
@@ -16,6 +15,7 @@ func resourceAwsDbSnapshot() *schema.Resource {
 	return &schema.Resource{
 		Create: resourceAwsDbSnapshotCreate,
 		Read:   resourceAwsDbSnapshotRead,
+		Update: resourceAwsDbSnapshotUpdate,
 		Delete: resourceAwsDbSnapshotDelete,
 
 		Timeouts: &schema.ResourceTimeout{
@@ -102,21 +102,25 @@ func resourceAwsDbSnapshot() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"tags": tagsSchema(),
 		},
 	}
 }
 
 func resourceAwsDbSnapshotCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).rdsconn
+	tags := tagsFromMapRDS(d.Get("tags").(map[string]interface{}))
+	dBInstanceIdentifier := d.Get("db_instance_identifier").(string)
 
 	params := &rds.CreateDBSnapshotInput{
-		DBInstanceIdentifier: aws.String(d.Get("db_instance_identifier").(string)),
+		DBInstanceIdentifier: aws.String(dBInstanceIdentifier),
 		DBSnapshotIdentifier: aws.String(d.Get("db_snapshot_identifier").(string)),
+		Tags:                 tags,
 	}
 
 	_, err := conn.CreateDBSnapshot(params)
 	if err != nil {
-		return err
+		return fmt.Errorf("Error creating AWS DB Snapshot %s: %s", dBInstanceIdentifier, err)
 	}
 	d.SetId(d.Get("db_snapshot_identifier").(string))
 
@@ -145,8 +149,15 @@ func resourceAwsDbSnapshotRead(d *schema.ResourceData, meta interface{}) error {
 		DBSnapshotIdentifier: aws.String(d.Id()),
 	}
 	resp, err := conn.DescribeDBSnapshots(params)
+
+	if isAWSErr(err, rds.ErrCodeDBSnapshotNotFoundFault, "") {
+		log.Printf("[WARN] AWS DB Snapshot (%s) is already gone", d.Id())
+		d.SetId("")
+		return nil
+	}
+
 	if err != nil {
-		return err
+		return fmt.Errorf("Error describing AWS DB Snapshot %s: %s", d.Id(), err)
 	}
 
 	snapshot := resp.DBSnapshots[0]
@@ -167,6 +178,9 @@ func resourceAwsDbSnapshotRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("snapshot_type", snapshot.SnapshotType)
 	d.Set("status", snapshot.Status)
 	d.Set("vpc_id", snapshot.VpcId)
+	if err := saveTagsRDS(conn, d, aws.StringValue(snapshot.DBSnapshotArn)); err != nil {
+		log.Printf("[WARN] Failed to save tags for RDS Snapshot (%s): %s", d.Id(), err)
+	}
 
 	return nil
 }
@@ -178,8 +192,54 @@ func resourceAwsDbSnapshotDelete(d *schema.ResourceData, meta interface{}) error
 		DBSnapshotIdentifier: aws.String(d.Id()),
 	}
 	_, err := conn.DeleteDBSnapshot(params)
+	if isAWSErr(err, rds.ErrCodeDBSnapshotNotFoundFault, "") {
+		return nil
+	}
+
 	if err != nil {
-		return err
+		return fmt.Errorf("Error deleting AWS DB Snapshot %s: %s", d.Id(), err)
+	}
+
+	return nil
+}
+
+func resourceAwsDbSnapshotUpdate(d *schema.ResourceData, meta interface{}) error {
+	conn := meta.(*AWSClient).rdsconn
+	arn := d.Get("db_snapshot_arn").(string)
+	if d.HasChange("tags") {
+		oldTagsRaw, newTagsRaw := d.GetChange("tags")
+		oldTagsMap := oldTagsRaw.(map[string]interface{})
+		newTagsMap := newTagsRaw.(map[string]interface{})
+		createTags, removeTags := diffTagsRDS(tagsFromMapRDS(oldTagsMap), tagsFromMapRDS(newTagsMap))
+
+		if len(removeTags) > 0 {
+			removeTagKeys := make([]*string, len(removeTags))
+			for i, removeTag := range removeTags {
+				removeTagKeys[i] = removeTag.Key
+			}
+
+			input := &rds.RemoveTagsFromResourceInput{
+				ResourceName: aws.String(arn),
+				TagKeys:      removeTagKeys,
+			}
+
+			log.Printf("[DEBUG] Untagging DB Snapshot: %s", input)
+			if _, err := conn.RemoveTagsFromResource(input); err != nil {
+				return fmt.Errorf("error untagging DB Snapshot (%s): %s", d.Id(), err)
+			}
+		}
+
+		if len(createTags) > 0 {
+			input := &rds.AddTagsToResourceInput{
+				ResourceName: aws.String(arn),
+				Tags:         createTags,
+			}
+
+			log.Printf("[DEBUG] Tagging DB Snapshot: %s", input)
+			if _, err := conn.AddTagsToResource(input); err != nil {
+				return fmt.Errorf("error tagging DB Snapshot (%s): %s", d.Id(), err)
+			}
+		}
 	}
 
 	return nil
@@ -197,11 +257,10 @@ func resourceAwsDbSnapshotStateRefreshFunc(
 		log.Printf("[DEBUG] DB Snapshot describe configuration: %#v", opts)
 
 		resp, err := conn.DescribeDBSnapshots(opts)
+		if isAWSErr(err, rds.ErrCodeDBSnapshotNotFoundFault, "") {
+			return nil, "", nil
+		}
 		if err != nil {
-			snapshoterr, ok := err.(awserr.Error)
-			if ok && snapshoterr.Code() == "DBSnapshotNotFound" {
-				return nil, "", nil
-			}
 			return nil, "", fmt.Errorf("Error retrieving DB Snapshots: %s", err)
 		}
 

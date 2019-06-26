@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"log"
 	"regexp"
-	"strings"
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -36,10 +35,7 @@ func testSweepStorageGatewayGateways(region string) error {
 
 		for _, gateway := range page.Gateways {
 			name := aws.StringValue(gateway.GatewayName)
-			if !strings.HasPrefix(name, "tf-acc-test-") {
-				log.Printf("[INFO] Skipping Storage Gateway Gateway: %s", name)
-				continue
-			}
+
 			log.Printf("[INFO] Deleting Storage Gateway Gateway: %s", name)
 			input := &storagegateway.DeleteGatewayInput{
 				GatewayARN: gateway.GatewayARN,
@@ -71,7 +67,7 @@ func TestAccAWSStorageGatewayGateway_GatewayType_Cached(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_storagegateway_gateway.test"
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSStorageGatewayGatewayDestroy,
@@ -106,7 +102,7 @@ func TestAccAWSStorageGatewayGateway_GatewayType_FileS3(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_storagegateway_gateway.test"
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSStorageGatewayGatewayDestroy,
@@ -141,7 +137,7 @@ func TestAccAWSStorageGatewayGateway_GatewayType_Stored(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_storagegateway_gateway.test"
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSStorageGatewayGatewayDestroy,
@@ -176,7 +172,7 @@ func TestAccAWSStorageGatewayGateway_GatewayType_Vtl(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_storagegateway_gateway.test"
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSStorageGatewayGatewayDestroy,
@@ -212,7 +208,7 @@ func TestAccAWSStorageGatewayGateway_GatewayName(t *testing.T) {
 	rName2 := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_storagegateway_gateway.test"
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSStorageGatewayGatewayDestroy,
@@ -246,7 +242,7 @@ func TestAccAWSStorageGatewayGateway_GatewayTimezone(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_storagegateway_gateway.test"
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSStorageGatewayGatewayDestroy,
@@ -280,7 +276,7 @@ func TestAccAWSStorageGatewayGateway_SmbActiveDirectorySettings(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_storagegateway_gateway.test"
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSStorageGatewayGatewayDestroy,
@@ -308,7 +304,7 @@ func TestAccAWSStorageGatewayGateway_SmbGuestPassword(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_storagegateway_gateway.test"
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSStorageGatewayGatewayDestroy,
@@ -398,7 +394,7 @@ func testAccAWSStorageGateway_VPCBase(rName string) string {
 resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"
 
-  tags {
+  tags = {
     Name = %q
   }
 }
@@ -407,7 +403,7 @@ resource "aws_subnet" "test" {
   cidr_block = "10.0.0.0/24"
   vpc_id     = "${aws_vpc.test.id}"
 
-  tags {
+  tags = {
     Name = %q
   }
 }
@@ -415,7 +411,7 @@ resource "aws_subnet" "test" {
 resource "aws_internet_gateway" "test" {
   vpc_id = "${aws_vpc.test.id}"
 
-  tags {
+  tags = {
     Name = %q
   }
 }
@@ -428,7 +424,7 @@ resource "aws_route_table" "test" {
     gateway_id = "${aws_internet_gateway.test.id}"
   }
 
-  tags {
+  tags = {
     Name = %q
   }
 }
@@ -455,7 +451,7 @@ resource "aws_security_group" "test" {
     cidr_blocks = ["0.0.0.0/0"]
   }
 
-  tags {
+  tags = {
     Name = %q
   }
 }
@@ -468,11 +464,7 @@ func testAccAWSStorageGateway_FileGatewayBase(rName string) string {
 	return testAccAWSStorageGateway_VPCBase(rName) + fmt.Sprintf(`
 data "aws_ami" "aws-thinstaller" {
   most_recent = true
-
-  filter {
-    name   = "owner-alias"
-    values = ["amazon"]
-  }
+  owners      = ["amazon"]
 
   filter {
     name   = "name"
@@ -490,7 +482,7 @@ resource "aws_instance" "test" {
   vpc_security_group_ids      = ["${aws_security_group.test.id}"]
   subnet_id                   = "${aws_subnet.test.id}"
 
-  tags {
+  tags = {
     Name = %q
   }
 }
@@ -503,11 +495,7 @@ func testAccAWSStorageGateway_TapeAndVolumeGatewayBase(rName string) string {
 	return testAccAWSStorageGateway_VPCBase(rName) + fmt.Sprintf(`
 data "aws_ami" "aws-storage-gateway-2" {
   most_recent = true
-
-  filter {
-    name   = "owner-alias"
-    values = ["amazon"]
-  }
+  owners      = ["amazon"]
 
   filter {
     name   = "name"
@@ -525,7 +513,7 @@ resource "aws_instance" "test" {
   vpc_security_group_ids      = ["${aws_security_group.test.id}"]
   subnet_id                   = "${aws_subnet.test.id}"
 
-  tags {
+  tags = {
     Name = %q
   }
 }
@@ -594,7 +582,7 @@ data "aws_availability_zones" "available" {}
 resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"
 
-  tags {
+  tags = {
     Name = %q
   }
 }
@@ -606,7 +594,7 @@ resource "aws_subnet" "test" {
   cidr_block        = "10.0.${count.index}.0/24"
   vpc_id            = "${aws_vpc.test.id}"
 
-  tags {
+  tags = {
     Name = %q
   }
 }
@@ -614,7 +602,7 @@ resource "aws_subnet" "test" {
 resource "aws_internet_gateway" "test" {
   vpc_id = "${aws_vpc.test.id}"
 
-  tags {
+  tags = {
     Name = %q
   }
 }
@@ -627,7 +615,7 @@ resource "aws_route_table" "test" {
     gateway_id = "${aws_internet_gateway.test.id}"
   }
 
-  tags {
+  tags = {
     Name = %q
   }
 }
@@ -656,7 +644,7 @@ resource "aws_security_group" "test" {
     cidr_blocks = ["0.0.0.0/0"]
   }
 
-  tags {
+  tags = {
     Name = %q
   }
 }
@@ -671,7 +659,7 @@ resource "aws_directory_service_directory" "test" {
     vpc_id     = "${aws_vpc.test.id}"
   }
 
-  tags {
+  tags = {
     Name = %q
   }
 }
@@ -680,7 +668,7 @@ resource "aws_vpc_dhcp_options" "test" {
   domain_name         = "${aws_directory_service_directory.test.name}"
   domain_name_servers = ["${aws_directory_service_directory.test.dns_ip_addresses}"]
 
-  tags {
+  tags = {
     Name = %q
   }
 }
@@ -692,11 +680,7 @@ resource "aws_vpc_dhcp_options_association" "test" {
 
 data "aws_ami" "aws-thinstaller" {
   most_recent = true
-
-  filter {
-    name   = "owner-alias"
-    values = ["amazon"]
-  }
+  owners      = ["amazon"]
 
   filter {
     name   = "name"
@@ -709,12 +693,13 @@ resource "aws_instance" "test" {
 
   ami                         = "${data.aws_ami.aws-thinstaller.id}"
   associate_public_ip_address = true
-  # https://docs.aws.amazon.com/storagegateway/latest/userguide/Requirements.html
-  instance_type               = "m4.xlarge"
-  vpc_security_group_ids      = ["${aws_security_group.test.id}"]
-  subnet_id                   = "${aws_subnet.test.*.id[0]}"
 
-  tags {
+  # https://docs.aws.amazon.com/storagegateway/latest/userguide/Requirements.html
+  instance_type          = "m4.xlarge"
+  vpc_security_group_ids = ["${aws_security_group.test.id}"]
+  subnet_id              = "${aws_subnet.test.*.id[0]}"
+
+  tags = {
     Name = %q
   }
 }

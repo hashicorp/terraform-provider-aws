@@ -16,7 +16,7 @@ func TestAccDataSourceAwsRoute53Zone(t *testing.T) {
 	privateResourceName := "aws_route53_zone.test_private"
 	privateDomain := fmt.Sprintf("test.acc-%d.", rInt)
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckRoute53ZoneDestroy,
@@ -72,47 +72,54 @@ func testAccDataSourceAwsRoute53ZoneCheck(rsName, dsName, zName string) resource
 
 func testAccDataSourceAwsRoute53ZoneConfig(rInt int) string {
 	return fmt.Sprintf(`
-	provider "aws" {
-		region = "us-east-1"
-	}
+provider "aws" {
+  region = "us-east-1"
+}
 
-	resource "aws_vpc" "test" {
-		cidr_block = "172.16.0.0/16"
-		tags {
-			Name = "terraform-testacc-r53-zone-data-source"
-		}
-	}
+resource "aws_vpc" "test" {
+  cidr_block = "172.16.0.0/16"
 
-	resource "aws_route53_zone" "test_private" {
-		name = "test.acc-%d."
-		vpc_id = "${aws_vpc.test.id}"
-		tags {
-			Environment = "dev-%d"
-		}
-	}
+  tags = {
+    Name = "terraform-testacc-r53-zone-data-source"
+  }
+}
 
-	data "aws_route53_zone" "by_vpc" {
-	 name = "${aws_route53_zone.test_private.name}"
-	 vpc_id = "${aws_vpc.test.id}"
-	}
+resource "aws_route53_zone" "test_private" {
+  name = "test.acc-%d."
 
-	data "aws_route53_zone" "by_tag" {
-	 name = "${aws_route53_zone.test_private.name}"
-	 private_zone = true
-	 tags {
-		 Environment = "dev-%d"
-	 }
-	}
+  vpc {
+    vpc_id = "${aws_vpc.test.id}"
+  }
 
-	resource "aws_route53_zone" "test" {
-		name = "terraformtestacchz-%d.com."
-	}
+  tags = {
+    Environment = "dev-%d"
+  }
+}
 
-	data "aws_route53_zone" "by_zone_id" {
-		zone_id = "${aws_route53_zone.test.zone_id}"
-	}
+data "aws_route53_zone" "by_vpc" {
+  name   = "${aws_route53_zone.test_private.name}"
+  vpc_id = "${aws_vpc.test.id}"
+}
 
-	data "aws_route53_zone" "by_name" {
-		name = "${data.aws_route53_zone.by_zone_id.name}"
-	}`, rInt, rInt, rInt, rInt)
+data "aws_route53_zone" "by_tag" {
+  name         = "${aws_route53_zone.test_private.name}"
+  private_zone = true
+
+  tags = {
+    Environment = "dev-%d"
+  }
+}
+
+resource "aws_route53_zone" "test" {
+  name = "terraformtestacchz-%d.com."
+}
+
+data "aws_route53_zone" "by_zone_id" {
+  zone_id = "${aws_route53_zone.test.zone_id}"
+}
+
+data "aws_route53_zone" "by_name" {
+  name = "${data.aws_route53_zone.by_zone_id.name}"
+}
+`, rInt, rInt, rInt, rInt)
 }

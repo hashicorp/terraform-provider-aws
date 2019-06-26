@@ -94,14 +94,14 @@ func resourceAwsSpotInstanceRequest() *schema.Resource {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ForceNew:     true,
-				ValidateFunc: validateRFC3339TimeString,
+				ValidateFunc: validation.ValidateRFC3339TimeString,
 				Computed:     true,
 			}
 			s["valid_until"] = &schema.Schema{
 				Type:         schema.TypeString,
 				Optional:     true,
 				ForceNew:     true,
-				ValidateFunc: validateRFC3339TimeString,
+				ValidateFunc: validation.ValidateRFC3339TimeString,
 				Computed:     true,
 			}
 			return s
@@ -177,7 +177,6 @@ func resourceAwsSpotInstanceRequestCreate(d *schema.ResourceData, meta interface
 
 	var resp *ec2.RequestSpotInstancesOutput
 	err = resource.Retry(1*time.Minute, func() *resource.RetryError {
-		var err error
 		resp, err = conn.RequestSpotInstances(spotOpts)
 		// IAM instance profiles can take ~10 seconds to propagate in AWS:
 		// http://docs.aws.amazon.com/AWSEC2/latest/UserGuide/iam-roles-for-amazon-ec2.html#launch-instance-with-role-console
@@ -192,6 +191,10 @@ func resourceAwsSpotInstanceRequestCreate(d *schema.ResourceData, meta interface
 		}
 		return resource.NonRetryableError(err)
 	})
+
+	if isResourceTimeoutError(err) {
+		resp, err = conn.RequestSpotInstances(spotOpts)
+	}
 
 	if err != nil {
 		return fmt.Errorf("Error requesting spot instances: %s", err)

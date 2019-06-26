@@ -14,7 +14,7 @@ import (
 func TestAccAWSAPIGatewayRequestValidator_basic(t *testing.T) {
 	var conf apigateway.UpdateRequestValidatorOutput
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSAPIGatewayRequestValidatorDestroy,

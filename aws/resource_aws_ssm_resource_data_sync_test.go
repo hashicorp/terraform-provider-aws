@@ -11,7 +11,7 @@ import (
 )
 
 func TestAccAWSSsmResourceDataSync_basic(t *testing.T) {
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSSsmResourceDataSyncDestroy,
@@ -26,10 +26,33 @@ func TestAccAWSSsmResourceDataSync_basic(t *testing.T) {
 	})
 }
 
+func TestAccAWSSsmResourceDataSync_update(t *testing.T) {
+	rName := acctest.RandString(5)
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSSsmResourceDataSyncDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccSsmResourceDataSyncConfig(acctest.RandInt(), rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSSsmResourceDataSyncExists("aws_ssm_resource_data_sync.foo"),
+				),
+			},
+			{
+				Config: testAccSsmResourceDataSyncConfigUpdate(acctest.RandInt(), rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSSsmResourceDataSyncExists("aws_ssm_resource_data_sync.foo"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccAWSSsmResourceDataSync_import(t *testing.T) {
 	resourceName := "aws_ssm_resource_data_sync.foo"
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSSsmResourceDataSyncDestroy,
@@ -78,15 +101,16 @@ func testAccCheckAWSSsmResourceDataSyncExists(name string) resource.TestCheckFun
 
 func testAccSsmResourceDataSyncConfig(rInt int, rName string) string {
 	return fmt.Sprintf(`
-    resource "aws_s3_bucket" "hoge" {
-      bucket = "tf-test-bucket-%d"
-      region = "us-west-2"
-      force_destroy = true
-    }
+resource "aws_s3_bucket" "hoge" {
+  bucket        = "tf-test-bucket-%d"
+  region        = "us-west-2"
+  force_destroy = true
+}
 
-    resource "aws_s3_bucket_policy" "hoge" {
-    	bucket = "${aws_s3_bucket.hoge.bucket}"
-    	policy = <<EOF
+resource "aws_s3_bucket_policy" "hoge" {
+  bucket = "${aws_s3_bucket.hoge.bucket}"
+
+  policy = <<EOF
 {
         "Version": "2012-10-17",
         "Statement": [
@@ -116,14 +140,70 @@ func testAccSsmResourceDataSyncConfig(rInt int, rName string) string {
           ]
       }
       EOF
-    }
+}
 
-    resource "aws_ssm_resource_data_sync" "foo" {
-      name = "tf-test-ssm-%s"
-      s3_destination = {
-        bucket_name = "${aws_s3_bucket.hoge.bucket}"
-        region = "${aws_s3_bucket.hoge.region}"
+resource "aws_ssm_resource_data_sync" "foo" {
+  name = "tf-test-ssm-%s"
+
+  s3_destination {
+    bucket_name = "${aws_s3_bucket.hoge.bucket}"
+    region      = "${aws_s3_bucket.hoge.region}"
+  }
+}
+`, rInt, rInt, rInt, rName)
+}
+
+func testAccSsmResourceDataSyncConfigUpdate(rInt int, rName string) string {
+	return fmt.Sprintf(`
+resource "aws_s3_bucket" "hoge" {
+  bucket        = "tf-test-bucket-%d"
+  region        = "us-west-2"
+  force_destroy = true
+}
+
+resource "aws_s3_bucket_policy" "hoge" {
+  bucket = "${aws_s3_bucket.hoge.bucket}"
+
+  policy = <<EOF
+{
+        "Version": "2012-10-17",
+        "Statement": [
+            {
+                "Sid": "SSMBucketPermissionsCheck",
+                "Effect": "Allow",
+                "Principal": {
+                    "Service": "ssm.amazonaws.com"
+                },
+                "Action": "s3:GetBucketAcl",
+                "Resource": "arn:aws:s3:::tf-test-bucket-%d"
+            },
+            {
+                "Sid": " SSMBucketDelivery",
+                "Effect": "Allow",
+                "Principal": {
+                    "Service": "ssm.amazonaws.com"
+                },
+                "Action": "s3:PutObject",
+                "Resource": ["arn:aws:s3:::tf-test-bucket-%d/*"],
+                "Condition": {
+                    "StringEquals": {
+                        "s3:x-amz-acl": "bucket-owner-full-control"
+                    }
+                }
+            }
+          ]
       }
-    }
-    `, rInt, rInt, rInt, rName)
+      EOF
+}
+
+resource "aws_ssm_resource_data_sync" "foo" {
+  name = "tf-test-ssm-%s"
+
+  s3_destination {
+    bucket_name = "${aws_s3_bucket.hoge.bucket}"
+    region      = "${aws_s3_bucket.hoge.region}"
+    prefix      = "test-"
+  }
+}
+`, rInt, rInt, rInt, rName)
 }

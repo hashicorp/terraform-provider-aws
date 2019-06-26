@@ -27,17 +27,7 @@ func testSweepNatGateways(region string) error {
 	}
 	conn := client.(*AWSClient).ec2conn
 
-	req := &ec2.DescribeNatGatewaysInput{
-		Filter: []*ec2.Filter{
-			{
-				Name: aws.String("tag-value"),
-				Values: []*string{
-					aws.String("terraform-testacc-*"),
-					aws.String("tf-acc-test-*"),
-				},
-			},
-		},
-	}
+	req := &ec2.DescribeNatGatewaysInput{}
 	resp, err := conn.DescribeNatGateways(req)
 	if err != nil {
 		if testSweepSkipSweepError(err) {
@@ -66,18 +56,22 @@ func testSweepNatGateways(region string) error {
 	return nil
 }
 
-func TestAccAWSNatGateway_importBasic(t *testing.T) {
+func TestAccAWSNatGateway_basic(t *testing.T) {
+	var natGateway ec2.NatGateway
 	resourceName := "aws_nat_gateway.gateway"
 
-	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckNatGatewayDestroy,
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:      func() { testAccPreCheck(t) },
+		IDRefreshName: "aws_nat_gateway.gateway",
+		Providers:     testAccProviders,
+		CheckDestroy:  testAccCheckNatGatewayDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccNatGatewayConfig,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckNatGatewayExists(resourceName, &natGateway),
+				),
 			},
-
 			{
 				ResourceName:      resourceName,
 				ImportState:       true,
@@ -87,29 +81,11 @@ func TestAccAWSNatGateway_importBasic(t *testing.T) {
 	})
 }
 
-func TestAccAWSNatGateway_basic(t *testing.T) {
-	var natGateway ec2.NatGateway
-
-	resource.Test(t, resource.TestCase{
-		PreCheck:      func() { testAccPreCheck(t) },
-		IDRefreshName: "aws_nat_gateway.gateway",
-		Providers:     testAccProviders,
-		CheckDestroy:  testAccCheckNatGatewayDestroy,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccNatGatewayConfig,
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckNatGatewayExists("aws_nat_gateway.gateway", &natGateway),
-				),
-			},
-		},
-	})
-}
-
 func TestAccAWSNatGateway_tags(t *testing.T) {
 	var natGateway ec2.NatGateway
+	resourceName := "aws_nat_gateway.gateway"
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckNatGatewayDestroy,
@@ -117,7 +93,7 @@ func TestAccAWSNatGateway_tags(t *testing.T) {
 			{
 				Config: testAccNatGatewayConfigTags,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckNatGatewayExists("aws_nat_gateway.gateway", &natGateway),
+					testAccCheckNatGatewayExists(resourceName, &natGateway),
 					testAccCheckTags(&natGateway.Tags, "Name", "terraform-testacc-nat-gw-tags"),
 					testAccCheckTags(&natGateway.Tags, "foo", "bar"),
 				),
@@ -126,11 +102,16 @@ func TestAccAWSNatGateway_tags(t *testing.T) {
 			{
 				Config: testAccNatGatewayConfigTagsUpdate,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckNatGatewayExists("aws_nat_gateway.gateway", &natGateway),
+					testAccCheckNatGatewayExists(resourceName, &natGateway),
 					testAccCheckTags(&natGateway.Tags, "Name", "terraform-testacc-nat-gw-tags"),
 					testAccCheckTags(&natGateway.Tags, "foo", ""),
 					testAccCheckTags(&natGateway.Tags, "bar", "baz"),
 				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})
@@ -205,7 +186,7 @@ func testAccCheckNatGatewayExists(n string, ng *ec2.NatGateway) resource.TestChe
 const testAccNatGatewayConfig = `
 resource "aws_vpc" "vpc" {
   cidr_block = "10.0.0.0/16"
-  tags {
+  tags = {
     Name = "terraform-testacc-nat-gw-basic"
   }
 }
@@ -214,7 +195,7 @@ resource "aws_subnet" "private" {
   vpc_id = "${aws_vpc.vpc.id}"
   cidr_block = "10.0.1.0/24"
   map_public_ip_on_launch = false
-  tags {
+  tags = {
     Name = "tf-acc-nat-gw-basic-private"
   }
 }
@@ -223,7 +204,7 @@ resource "aws_subnet" "public" {
   vpc_id = "${aws_vpc.vpc.id}"
   cidr_block = "10.0.2.0/24"
   map_public_ip_on_launch = true
-  tags {
+  tags = {
     Name = "tf-acc-nat-gw-basic-public"
   }
 }
@@ -241,7 +222,7 @@ resource "aws_nat_gateway" "gateway" {
   allocation_id = "${aws_eip.nat_gateway.id}"
   subnet_id = "${aws_subnet.public.id}"
 
-  tags {
+  tags = {
     Name = "terraform-testacc-nat-gw-basic"
   }
 
@@ -280,7 +261,7 @@ resource "aws_route_table_association" "public" {
 const testAccNatGatewayConfigTags = `
 resource "aws_vpc" "vpc" {
   cidr_block = "10.0.0.0/16"
-  tags {
+  tags = {
     Name = "terraform-testacc-nat-gw-tags"
   }
 }
@@ -289,7 +270,7 @@ resource "aws_subnet" "private" {
   vpc_id = "${aws_vpc.vpc.id}"
   cidr_block = "10.0.1.0/24"
   map_public_ip_on_launch = false
-  tags {
+  tags = {
     Name = "tf-acc-nat-gw-tags-private"
   }
 }
@@ -298,7 +279,7 @@ resource "aws_subnet" "public" {
   vpc_id = "${aws_vpc.vpc.id}"
   cidr_block = "10.0.2.0/24"
   map_public_ip_on_launch = true
-  tags {
+  tags = {
     Name = "tf-acc-nat-gw-tags-public"
   }
 }
@@ -316,7 +297,7 @@ resource "aws_nat_gateway" "gateway" {
   allocation_id = "${aws_eip.nat_gateway.id}"
   subnet_id = "${aws_subnet.public.id}"
 
-  tags {
+  tags = {
     Name = "terraform-testacc-nat-gw-tags"
     foo = "bar"
   }
@@ -356,7 +337,7 @@ resource "aws_route_table_association" "public" {
 const testAccNatGatewayConfigTagsUpdate = `
 resource "aws_vpc" "vpc" {
   cidr_block = "10.0.0.0/16"
-  tags {
+  tags = {
     Name = "terraform-testacc-nat-gw-tags"
   }
 }
@@ -365,7 +346,7 @@ resource "aws_subnet" "private" {
   vpc_id = "${aws_vpc.vpc.id}"
   cidr_block = "10.0.1.0/24"
   map_public_ip_on_launch = false
-  tags {
+  tags = {
     Name = "tf-acc-nat-gw-tags-private"
   }
 }
@@ -374,7 +355,7 @@ resource "aws_subnet" "public" {
   vpc_id = "${aws_vpc.vpc.id}"
   cidr_block = "10.0.2.0/24"
   map_public_ip_on_launch = true
-  tags {
+  tags = {
     Name = "tf-acc-nat-gw-tags-public"
   }
 }
@@ -392,7 +373,7 @@ resource "aws_nat_gateway" "gateway" {
   allocation_id = "${aws_eip.nat_gateway.id}"
   subnet_id = "${aws_subnet.public.id}"
 
-  tags {
+  tags = {
     Name = "terraform-testacc-nat-gw-tags"
     bar = "baz"
   }

@@ -10,6 +10,7 @@ import (
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/helper/schema"
 	"github.com/hashicorp/terraform/helper/structure"
+	"github.com/hashicorp/terraform/helper/validation"
 )
 
 func resourceAwsSecretsManagerSecret() *schema.Resource {
@@ -36,14 +37,25 @@ func resourceAwsSecretsManagerSecret() *schema.Resource {
 				Optional: true,
 			},
 			"name": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
+				Type:          schema.TypeString,
+				Optional:      true,
+				Computed:      true,
+				ForceNew:      true,
+				ConflictsWith: []string{"name_prefix"},
+				ValidateFunc:  validateSecretManagerSecretName,
+			},
+			"name_prefix": {
+				Type:          schema.TypeString,
+				Optional:      true,
+				Computed:      true,
+				ForceNew:      true,
+				ConflictsWith: []string{"name"},
+				ValidateFunc:  validateSecretManagerSecretNamePrefix,
 			},
 			"policy": {
 				Type:             schema.TypeString,
 				Optional:         true,
-				ValidateFunc:     validateJsonString,
+				ValidateFunc:     validation.ValidateJsonString,
 				DiffSuppressFunc: suppressEquivalentAwsPolicyDiffs,
 			},
 			"recovery_window_in_days": {
@@ -91,9 +103,23 @@ func resourceAwsSecretsManagerSecret() *schema.Resource {
 func resourceAwsSecretsManagerSecretCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).secretsmanagerconn
 
+	var secretName string
+	if v, ok := d.GetOk("name"); ok {
+		secretName = v.(string)
+	} else if v, ok := d.GetOk("name_prefix"); ok {
+		secretName = resource.PrefixedUniqueId(v.(string))
+	} else {
+		secretName = resource.UniqueId()
+	}
+
 	input := &secretsmanager.CreateSecretInput{
 		Description: aws.String(d.Get("description").(string)),
-		Name:        aws.String(d.Get("name").(string)),
+		Name:        aws.String(secretName),
+	}
+
+	if v, ok := d.GetOk("tags"); ok {
+		input.Tags = tagsFromMapSecretsManager(v.(map[string]interface{}))
+		log.Printf("[DEBUG] Tagging Secrets Manager Secret: %s", input.Tags)
 	}
 
 	if v, ok := d.GetOk("kms_key_id"); ok && v.(string) != "" {
@@ -107,8 +133,10 @@ func resourceAwsSecretsManagerSecretCreate(d *schema.ResourceData, meta interfac
 	err := resource.Retry(2*time.Minute, func() *resource.RetryError {
 		var err error
 		output, err = conn.CreateSecret(input)
+		// Temporarily retry on these errors to support immediate secret recreation:
 		// InvalidRequestException: You can’t perform this operation on the secret because it was deleted.
-		if isAWSErr(err, secretsmanager.ErrCodeInvalidRequestException, "You can’t perform this operation on the secret because it was deleted") {
+		// InvalidRequestException: You can't create this secret because a secret with this name is already scheduled for deletion.
+		if isAWSErr(err, secretsmanager.ErrCodeInvalidRequestException, "scheduled for deletion") || isAWSErr(err, secretsmanager.ErrCodeInvalidRequestException, "was deleted") {
 			return resource.RetryableError(err)
 		}
 		if err != nil {
@@ -156,19 +184,6 @@ func resourceAwsSecretsManagerSecretCreate(d *schema.ResourceData, meta interfac
 		})
 		if err != nil {
 			return fmt.Errorf("error enabling Secrets Manager Secret %q rotation: %s", d.Id(), err)
-		}
-	}
-
-	if v, ok := d.GetOk("tags"); ok {
-		input := &secretsmanager.TagResourceInput{
-			SecretId: aws.String(d.Id()),
-			Tags:     tagsFromMapSecretsManager(v.(map[string]interface{})),
-		}
-
-		log.Printf("[DEBUG] Tagging Secrets Manager Secret: %s", input)
-		_, err := conn.TagResource(input)
-		if err != nil {
-			return fmt.Errorf("error tagging Secrets Manager Secret %q: %s", d.Id(), input)
 		}
 	}
 
@@ -327,7 +342,7 @@ func resourceAwsSecretsManagerSecretUpdate(d *schema.ResourceData, meta interfac
 
 		if len(remove) > 0 {
 			log.Printf("[DEBUG] Removing Secrets Manager Secret %q tags: %#v", d.Id(), remove)
-			k := make([]*string, len(remove), len(remove))
+			k := make([]*string, len(remove))
 			for i, t := range remove {
 				k[i] = t.Key
 			}

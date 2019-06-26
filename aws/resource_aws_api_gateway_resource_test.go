@@ -14,7 +14,7 @@ import (
 func TestAccAWSAPIGatewayResource_basic(t *testing.T) {
 	var conf apigateway.Resource
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSAPIGatewayResourceDestroy,
@@ -43,7 +43,7 @@ func TestAccAWSAPIGatewayResource_basic(t *testing.T) {
 func TestAccAWSAPIGatewayResource_update(t *testing.T) {
 	var conf apigateway.Resource
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSAPIGatewayResourceDestroy,

@@ -20,7 +20,7 @@ func TestAccAWSPinpointApp_basic(t *testing.T) {
 	var application pinpoint.ApplicationResponse
 	resourceName := "aws_pinpoint_app.test_app"
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:      func() { testAccPreCheck(t) },
 		IDRefreshName: resourceName,
 		Providers:     testAccProviders,
@@ -51,7 +51,7 @@ func TestAccAWSPinpointApp_CampaignHookLambda(t *testing.T) {
 	appName := "terraform-test-pinpointapp-campaignhooklambda"
 	lambdaName := "test-pinpoint-lambda"
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:      func() { testAccPreCheck(t) },
 		IDRefreshName: "aws_pinpoint_app.test_app",
 		Providers:     testAccProviders,
@@ -82,7 +82,7 @@ func TestAccAWSPinpointApp_Limits(t *testing.T) {
 	var application pinpoint.ApplicationResponse
 	resourceName := "aws_pinpoint_app.test_app"
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:      func() { testAccPreCheck(t) },
 		IDRefreshName: "aws_pinpoint_app.test_app",
 		Providers:     testAccProviders,
@@ -113,7 +113,7 @@ func TestAccAWSPinpointApp_QuietTime(t *testing.T) {
 	var application pinpoint.ApplicationResponse
 	resourceName := "aws_pinpoint_app.test_app"
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:      func() { testAccPreCheck(t) },
 		IDRefreshName: "aws_pinpoint_app.test_app",
 		Providers:     testAccProviders,
@@ -176,31 +176,31 @@ resource "aws_pinpoint_app" "test_app" {}
 func testAccAWSPinpointAppConfig_CampaignHookLambda(appName, funcName string) string {
 	return fmt.Sprintf(`
 provider "aws" {
-	region = "us-east-1"
+  region = "us-east-1"
 }
 
-
 resource "aws_pinpoint_app" "test_app" {
-    name = "%s"
+  name = "%s"
 
-    campaign_hook {
-        lambda_function_name = "${aws_lambda_function.test.arn}"
-        mode                 = "DELIVERY"
-    }
+  campaign_hook {
+    lambda_function_name = "${aws_lambda_function.test.arn}"
+    mode                 = "DELIVERY"
+  }
 }
 
 resource "aws_lambda_function" "test" {
-    filename      = "test-fixtures/lambdapinpoint.zip"
-    function_name = "%s"
-    role          = "${aws_iam_role.iam_for_lambda.arn}"
-    handler       = "lambdapinpoint.handler"
-    runtime       = "nodejs6.10"
-    publish       = true
+  filename      = "test-fixtures/lambdapinpoint.zip"
+  function_name = "%s"
+  role          = "${aws_iam_role.iam_for_lambda.arn}"
+  handler       = "lambdapinpoint.handler"
+  runtime       = "nodejs6.10"
+  publish       = true
 }
 
 resource "aws_iam_role" "iam_for_lambda" {
-    name = "test-role"
-    assume_role_policy = <<EOF
+  name = "test-role"
+
+  assume_role_policy = <<EOF
 {
   "Version": "2012-10-17",
   "Statement": [
@@ -220,11 +220,11 @@ EOF
 data "aws_caller_identity" "aws" {}
 
 resource "aws_lambda_permission" "permission" {
-  statement_id = "AllowExecutionFromPinpoint"
-  action = "lambda:InvokeFunction"
+  statement_id  = "AllowExecutionFromPinpoint"
+  action        = "lambda:InvokeFunction"
   function_name = "${aws_lambda_function.test.function_name}"
-  principal = "pinpoint.us-east-1.amazonaws.com"
-  source_arn = "arn:aws:mobiletargeting:us-east-1:${data.aws_caller_identity.aws.account_id}:/apps/*"
+  principal     = "pinpoint.us-east-1.amazonaws.com"
+  source_arn    = "arn:aws:mobiletargeting:us-east-1:${data.aws_caller_identity.aws.account_id}:/apps/*"
 }
 `, appName, funcName)
 }

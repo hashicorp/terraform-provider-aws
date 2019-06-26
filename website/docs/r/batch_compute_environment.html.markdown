@@ -6,7 +6,7 @@ description: |-
   Creates a AWS Batch compute environment.
 ---
 
-# aws_batch_compute_environment
+# Resource: aws_batch_compute_environment
 
 Creates a AWS Batch compute environment. Compute environments contain the Amazon ECS container instances that are used to run containerized batch jobs.
 
@@ -21,6 +21,7 @@ For information about compute environment, see [Compute Environments][2] .
 ```hcl
 resource "aws_iam_role" "ecs_instance_role" {
   name = "ecs_instance_role"
+
   assume_role_policy = <<EOF
 {
     "Version": "2012-10-17",
@@ -43,12 +44,13 @@ resource "aws_iam_role_policy_attachment" "ecs_instance_role" {
 }
 
 resource "aws_iam_instance_profile" "ecs_instance_role" {
-  name  = "ecs_instance_role"
+  name = "ecs_instance_role"
   role = "${aws_iam_role.ecs_instance_role.name}"
 }
 
 resource "aws_iam_role" "aws_batch_service_role" {
   name = "aws_batch_service_role"
+
   assume_role_policy = <<EOF
 {
     "Version": "2012-10-17",
@@ -79,30 +81,37 @@ resource "aws_vpc" "sample" {
 }
 
 resource "aws_subnet" "sample" {
-  vpc_id = "${aws_vpc.sample.id}"
+  vpc_id     = "${aws_vpc.sample.id}"
   cidr_block = "10.1.1.0/24"
 }
 
 resource "aws_batch_compute_environment" "sample" {
   compute_environment_name = "sample"
+
   compute_resources {
     instance_role = "${aws_iam_instance_profile.ecs_instance_role.arn}"
+
     instance_type = [
       "c4.large",
     ]
+
     max_vcpus = 16
     min_vcpus = 0
+
     security_group_ids = [
-      "${aws_security_group.sample.id}"
+      "${aws_security_group.sample.id}",
     ]
+
     subnets = [
-      "${aws_subnet.sample.id}"
+      "${aws_subnet.sample.id}",
     ]
+
     type = "EC2"
   }
+
   service_role = "${aws_iam_role.aws_batch_service_role.arn}"
-  type = "MANAGED"
-  depends_on = ["aws_iam_role_policy_attachment.aws_batch_service_role"]
+  type         = "MANAGED"
+  depends_on   = ["aws_iam_role_policy_attachment.aws_batch_service_role"]
 }
 ```
 
@@ -122,6 +131,7 @@ resource "aws_batch_compute_environment" "sample" {
 * `image_id` - (Optional) The Amazon Machine Image (AMI) ID used for instances launched in the compute environment.
 * `instance_role` - (Required) The Amazon ECS instance role applied to Amazon EC2 instances in a compute environment.
 * `instance_type` - (Required) A list of instance types that may be launched.
+* `launch_template` - (Optional) The launch template to use for your compute resources. See details below.
 * `max_vcpus` - (Required) The maximum number of EC2 vCPUs that an environment can reach.
 * `min_vcpus` - (Required) The minimum number of EC2 vCPUs that an environment should maintain.
 * `security_group_ids` - (Required) A list of EC2 security group that are associated with instances launched in the compute environment.
@@ -129,6 +139,14 @@ resource "aws_batch_compute_environment" "sample" {
 * `subnets` - (Required) A list of VPC subnets into which the compute resources are launched.
 * `tags` - (Optional) Key-value pair tags to be applied to resources that are launched in the compute environment.
 * `type` - (Required) The type of compute environment. Valid items are `EC2` or `SPOT`.
+
+### launch_template
+
+`launch_template` supports the following:
+
+* `launch_template_id` - (Optional) ID of the launch template. You must specify either the launch template ID or launch template name in the request, but not both.
+* `launch_template_name` - (Optional) Name of the launch template.
+* `version` - (Optional) The version number of the launch template. Default: The default version of the launch template.
 
 ## Attributes Reference
 

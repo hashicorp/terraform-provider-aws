@@ -16,7 +16,7 @@ import (
 func TestAccAWSIoTPolicy_basic(t *testing.T) {
 	rName := acctest.RandomWithPrefix("PubSubToAnyTopic-")
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSIoTPolicyDestroy_basic,
@@ -37,7 +37,7 @@ func TestAccAWSIoTPolicy_basic(t *testing.T) {
 func TestAccAWSIoTPolicy_invalidJson(t *testing.T) {
 	rName := acctest.RandomWithPrefix("PubSubToAnyTopic-")
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSIoTPolicyDestroy_basic,
@@ -87,6 +87,7 @@ func testAccAWSIoTPolicyConfigInitialState(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_iot_policy" "pubsub" {
   name = "%s"
+
   policy = <<EOF
 {
   "Version": "2012-10-17",
@@ -105,6 +106,7 @@ func testAccAWSIoTPolicyInvalidJsonConfig(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_iot_policy" "pubsub" {
   name = "%s"
+
   policy = <<EOF
 	{
 	  "Version": "2012-10-17",

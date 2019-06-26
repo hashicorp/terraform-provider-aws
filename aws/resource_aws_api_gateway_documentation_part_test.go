@@ -22,7 +22,7 @@ func TestAccAWSAPIGatewayDocumentationPart_basic(t *testing.T) {
 
 	resourceName := "aws_api_gateway_documentation_part.test"
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSAPIGatewayDocumentationPartDestroy,
@@ -61,7 +61,7 @@ func TestAccAWSAPIGatewayDocumentationPart_method(t *testing.T) {
 
 	resourceName := "aws_api_gateway_documentation_part.test"
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSAPIGatewayDocumentationPartDestroy,
@@ -104,7 +104,7 @@ func TestAccAWSAPIGatewayDocumentationPart_responseHeader(t *testing.T) {
 
 	resourceName := "aws_api_gateway_documentation_part.test"
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSAPIGatewayDocumentationPartDestroy,
@@ -150,7 +150,7 @@ func TestAccAWSAPIGatewayDocumentationPart_importBasic(t *testing.T) {
 
 	resourceName := "aws_api_gateway_documentation_part.test"
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSAPIGatewayDocumentationPartDestroy,

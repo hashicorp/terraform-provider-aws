@@ -12,7 +12,7 @@ import (
 )
 
 func TestAccAWSAthenaNamedQuery_basic(t *testing.T) {
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSAthenaNamedQueryDestroy,
@@ -30,7 +30,7 @@ func TestAccAWSAthenaNamedQuery_basic(t *testing.T) {
 func TestAccAWSAthenaNamedQuery_import(t *testing.T) {
 	resourceName := "aws_athena_named_query.foo"
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSAthenaNamedQueryDestroy,
@@ -87,31 +87,27 @@ func testAccCheckAWSAthenaNamedQueryExists(name string) resource.TestCheckFunc {
 		}
 
 		_, err := conn.GetNamedQuery(input)
-		if err != nil {
-			return err
-		}
-
-		return nil
+		return err
 	}
 }
 
 func testAccAthenaNamedQueryConfig(rInt int, rName string) string {
 	return fmt.Sprintf(`
 resource "aws_s3_bucket" "hoge" {
-	bucket = "tf-athena-db-%s-%d"
-	force_destroy = true
+  bucket        = "tf-athena-db-%s-%d"
+  force_destroy = true
 }
 
 resource "aws_athena_database" "hoge" {
-	name = "%s"
-	bucket = "${aws_s3_bucket.hoge.bucket}"
+  name   = "%s"
+  bucket = "${aws_s3_bucket.hoge.bucket}"
 }
 
 resource "aws_athena_named_query" "foo" {
-  name = "tf-athena-named-query-%s"
-  database = "${aws_athena_database.hoge.name}"
-  query = "SELECT * FROM ${aws_athena_database.hoge.name} limit 10;"
+  name        = "tf-athena-named-query-%s"
+  database    = "${aws_athena_database.hoge.name}"
+  query       = "SELECT * FROM ${aws_athena_database.hoge.name} limit 10;"
   description = "tf test"
 }
-		`, rName, rInt, rName, rName)
+`, rName, rInt, rName, rName)
 }

@@ -14,7 +14,7 @@ func TestAccAWSStorageGatewayLocalDiskDataSource_DiskNode(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 	dataSourceName := "data.aws_storagegateway_local_disk.test"
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:  func() { testAccPreCheck(t) },
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
@@ -37,7 +37,7 @@ func TestAccAWSStorageGatewayLocalDiskDataSource_DiskPath(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 	dataSourceName := "data.aws_storagegateway_local_disk.test"
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:  func() { testAccPreCheck(t) },
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
@@ -74,7 +74,7 @@ resource "aws_ebs_volume" "test" {
   size              = "10"
   type              = "gp2"
 
-  tags {
+  tags = {
     Name = %q
   }
 }
@@ -100,7 +100,7 @@ resource "aws_ebs_volume" "test" {
   size              = "10"
   type              = "gp2"
 
-  tags {
+  tags = {
     Name = %q
   }
 }
@@ -126,7 +126,7 @@ resource "aws_ebs_volume" "test" {
   size              = "10"
   type              = "gp2"
 
-  tags {
+  tags = {
     Name = %q
   }
 }
@@ -152,7 +152,7 @@ resource "aws_ebs_volume" "test" {
   size              = "10"
   type              = "gp2"
 
-  tags {
+  tags = {
     Name = %q
   }
 }

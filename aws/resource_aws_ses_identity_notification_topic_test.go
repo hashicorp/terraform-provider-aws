@@ -3,6 +3,7 @@ package aws
 import (
 	"fmt"
 	"log"
+	"strconv"
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -17,10 +18,12 @@ func TestAccAwsSESIdentityNotificationTopic_basic(t *testing.T) {
 		"%s.terraformtesting.com",
 		acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum))
 	topicName := fmt.Sprintf("test-topic-%d", acctest.RandInt())
+	resourceName := "aws_ses_identity_notification_topic.test"
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			testAccPreCheck(t)
+			testAccPreCheckAWSSES(t)
 		},
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsSESIdentityNotificationTopicDestroy,
@@ -28,14 +31,25 @@ func TestAccAwsSESIdentityNotificationTopic_basic(t *testing.T) {
 			{
 				Config: fmt.Sprintf(testAccAwsSESIdentityNotificationTopicConfig_basic, domain),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsSESIdentityNotificationTopicExists("aws_ses_identity_notification_topic.test"),
+					testAccCheckAwsSESIdentityNotificationTopicExists(resourceName),
 				),
 			},
 			{
 				Config: fmt.Sprintf(testAccAwsSESIdentityNotificationTopicConfig_update, domain, topicName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsSESIdentityNotificationTopicExists("aws_ses_identity_notification_topic.test"),
+					testAccCheckAwsSESIdentityNotificationTopicExists(resourceName),
 				),
+			},
+			{
+				Config: fmt.Sprintf(testAccAwsSESIdentityNotificationTopicConfig_headers, domain, topicName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAwsSESIdentityNotificationTopicExists(resourceName),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})
@@ -98,6 +112,23 @@ func testAccCheckAwsSESIdentityNotificationTopicExists(n string) resource.TestCh
 			return fmt.Errorf("SES Identity Notification Topic %s not found in AWS", identity)
 		}
 
+		notificationType := rs.Primary.Attributes["notification_type"]
+		headersExpected, _ := strconv.ParseBool(rs.Primary.Attributes["include_original_headers"])
+
+		var headersIncluded bool
+		switch notificationType {
+		case ses.NotificationTypeBounce:
+			headersIncluded = *response.NotificationAttributes[identity].HeadersInBounceNotificationsEnabled
+		case ses.NotificationTypeComplaint:
+			headersIncluded = *response.NotificationAttributes[identity].HeadersInComplaintNotificationsEnabled
+		case ses.NotificationTypeDelivery:
+			headersIncluded = *response.NotificationAttributes[identity].HeadersInDeliveryNotificationsEnabled
+		}
+
+		if headersIncluded != headersExpected {
+			return fmt.Errorf("Wrong value applied for include_original_headers for %s", identity)
+		}
+
 		return nil
 	}
 }
@@ -117,6 +148,23 @@ resource "aws_ses_identity_notification_topic" "test" {
 	topic_arn = "${aws_sns_topic.test.arn}"
 	identity = "${aws_ses_domain_identity.test.arn}"
 	notification_type = "Complaint"
+}
+
+resource "aws_ses_domain_identity" "test" {
+  domain = "%s"
+}
+
+resource "aws_sns_topic" "test" {
+  name = "%s"
+}
+`
+
+const testAccAwsSESIdentityNotificationTopicConfig_headers = `
+resource "aws_ses_identity_notification_topic" "test" {
+	topic_arn = "${aws_sns_topic.test.arn}"
+	identity = "${aws_ses_domain_identity.test.arn}"
+	notification_type = "Complaint"
+	include_original_headers = true
 }
 
 resource "aws_ses_domain_identity" "test" {

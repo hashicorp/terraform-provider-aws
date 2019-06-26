@@ -51,8 +51,8 @@ func TestAccAWSBatchJobDefinition_basic(t *testing.T) {
 	}
 	ri := acctest.RandInt()
 	config := fmt.Sprintf(testAccBatchJobDefinitionBaseConfig, ri)
-	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSBatch(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckBatchJobDefinitionDestroy,
 		Steps: []resource.TestStep{
@@ -73,8 +73,8 @@ func TestAccAWSBatchJobDefinition_updateForcesNewResource(t *testing.T) {
 	ri := acctest.RandInt()
 	config := fmt.Sprintf(testAccBatchJobDefinitionBaseConfig, ri)
 	updateConfig := fmt.Sprintf(testAccBatchJobDefinitionUpdateConfig, ri)
-	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSBatch(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckBatchJobDefinitionDestroy,
 		Steps: []resource.TestStep{
@@ -185,10 +185,10 @@ resource "aws_batch_job_definition" "test" {
 		param1 = "val1"
 		param2 = "val2"
 	}
-	retry_strategy = {
+	retry_strategy {
 		attempts = 1
 	}
-	timeout = {
+	timeout {
 		attempt_duration_seconds = 60
 	}
 	container_properties = <<CONTAINER_PROPERTIES

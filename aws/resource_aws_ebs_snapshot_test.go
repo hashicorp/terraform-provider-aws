@@ -39,7 +39,7 @@ func TestAccAWSEBSSnapshot_basic(t *testing.T) {
 		}
 	}
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSEbsSnapshotDestroy,
@@ -67,7 +67,7 @@ func TestAccAWSEBSSnapshot_withDescription(t *testing.T) {
 	var v ec2.Snapshot
 	rName := fmt.Sprintf("tf-acc-ebs-snapshot-desc-%s", acctest.RandString(7))
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSEbsSnapshotDestroy,
@@ -87,7 +87,7 @@ func TestAccAWSEBSSnapshot_withKms(t *testing.T) {
 	var v ec2.Snapshot
 	rName := fmt.Sprintf("tf-acc-ebs-snapshot-kms-%s", acctest.RandString(7))
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSEbsSnapshotDestroy,
@@ -97,7 +97,7 @@ func TestAccAWSEBSSnapshot_withKms(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSnapshotExists("aws_ebs_snapshot.test", &v),
 					resource.TestMatchResourceAttr("aws_ebs_snapshot.test", "kms_key_id",
-						regexp.MustCompile("^arn:aws:kms:[a-z]{2}-[a-z]+-\\d{1}:[0-9]{12}:key/[a-z0-9-]{36}$")),
+						regexp.MustCompile(`^arn:aws:kms:[a-z]{2}-[a-z]+-\d{1}:[0-9]{12}:key/[a-z0-9-]{36}$`)),
 				),
 			},
 		},
@@ -170,7 +170,7 @@ resource "aws_ebs_volume" "test" {
 resource "aws_ebs_snapshot" "test" {
   volume_id = "${aws_ebs_volume.test.id}"
 
-  tags {
+  tags = {
     Name = "%s"
   }
 }
@@ -187,7 +187,7 @@ resource "aws_ebs_volume" "description_test" {
 }
 
 resource "aws_ebs_snapshot" "test" {
-  volume_id = "${aws_ebs_volume.description_test.id}"
+  volume_id   = "${aws_ebs_volume.description_test.id}"
   description = "%s"
 }
 `, rName)
@@ -195,13 +195,16 @@ resource "aws_ebs_snapshot" "test" {
 
 func testAccAwsEbsSnapshotConfigWithKms(rName string) string {
 	return fmt.Sprintf(`
-variable "name" { default = "%s" }
+variable "name" {
+  default = "%s"
+}
+
 data "aws_region" "current" {}
 
 resource "aws_kms_key" "test" {
   deletion_window_in_days = 7
 
-  tags {
+  tags = {
     Name = "${var.name}"
   }
 }
@@ -212,7 +215,7 @@ resource "aws_ebs_volume" "test" {
   encrypted         = true
   kms_key_id        = "${aws_kms_key.test.arn}"
 
-  tags {
+  tags = {
     Name = "${var.name}"
   }
 }
@@ -220,7 +223,7 @@ resource "aws_ebs_volume" "test" {
 resource "aws_ebs_snapshot" "test" {
   volume_id = "${aws_ebs_volume.test.id}"
 
-  tags {
+  tags = {
     Name = "${var.name}"
   }
 }

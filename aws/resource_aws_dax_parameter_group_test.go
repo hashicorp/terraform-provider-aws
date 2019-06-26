@@ -13,8 +13,8 @@ import (
 
 func TestAccAwsDaxParameterGroup_basic(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
-	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSDax(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsDaxParameterGroupDestroy,
 		Steps: []resource.TestStep{
@@ -40,8 +40,8 @@ func TestAccAwsDaxParameterGroup_import(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_dax_parameter_group.test"
 
-	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSDax(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsDaxParameterGroupDestroy,
 		Steps: []resource.TestStep{
@@ -91,11 +91,8 @@ func testAccCheckAwsDaxParameterGroupExists(name string) resource.TestCheckFunc 
 		_, err := conn.DescribeParameterGroups(&dax.DescribeParameterGroupsInput{
 			ParameterGroupNames: []*string{aws.String(rs.Primary.ID)},
 		})
-		if err != nil {
-			return err
-		}
 
-		return nil
+		return err
 	}
 }
 
@@ -111,12 +108,14 @@ func testAccDaxParameterGroupConfig_parameters(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_dax_parameter_group" "test" {
   name = "%s"
+
   parameters {
-    name = "query-ttl-millis"
+    name  = "query-ttl-millis"
     value = "100000"
   }
+
   parameters {
-    name = "record-ttl-millis"
+    name  = "record-ttl-millis"
     value = "100000"
   }
 }

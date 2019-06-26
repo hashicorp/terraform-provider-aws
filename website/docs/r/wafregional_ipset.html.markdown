@@ -1,12 +1,12 @@
 ---
 layout: "aws"
-page_title: "AWS: wafregional_ipset"
+page_title: "AWS: aws_wafregional_ipset"
 sidebar_current: "docs-aws-resource-wafregional-ipset"
 description: |-
   Provides a AWS WAF Regional IPSet resource for use with ALB.
 ---
 
-# aws_wafregional_ipset
+# Resource: aws_wafregional_ipset
 
 Provides a WAF Regional IPSet Resource for use with Application Load Balancer.
 
@@ -17,7 +17,7 @@ resource "aws_wafregional_ipset" "ipset" {
   name = "tfIPSet"
 
   ip_set_descriptor {
-    type = "IPV4"
+    type  = "IPV4"
     value = "192.0.7.0/24"
   }
 

@@ -17,7 +17,7 @@ exports specified in the [Output](http://docs.aws.amazon.com/AWSCloudFormation/l
 
 ```hcl
 data "aws_cloudformation_export" "subnet_id" {
-  name = "my:subnet_id:export"
+  name = "mySubnetIdExportName"
 }
 
 resource "aws_instance" "web" {
@@ -29,7 +29,7 @@ resource "aws_instance" "web" {
 
 ## Argument Reference
 
-* `name` - (Required) The name of the cross stack reference
+* `name` - (Required) The name of the export as it appears in the console or from [list-exports](http://docs.aws.amazon.com/cli/latest/reference/cloudformation/list-exports.html)
 
 ## Attributes Reference
 

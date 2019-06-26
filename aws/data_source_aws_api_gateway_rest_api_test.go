@@ -11,7 +11,7 @@ import (
 
 func TestAccDataSourceAwsApiGatewayRestApi(t *testing.T) {
 	rName := acctest.RandString(8)
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:  func() { testAccPreCheck(t) },
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
@@ -62,19 +62,19 @@ func testAccDataSourceAwsApiGatewayRestApiCheck(name string) resource.TestCheckF
 func testAccDataSourceAwsApiGatewayRestApiConfig(r string) string {
 	return fmt.Sprintf(`
 resource "aws_api_gateway_rest_api" "tf_wrong1" {
-name        = "%s_wrong1"
+  name = "%s_wrong1"
 }
 
 resource "aws_api_gateway_rest_api" "tf_test" {
-name        = "%s_correct"
+  name = "%s_correct"
 }
 
 resource "aws_api_gateway_rest_api" "tf_wrong2" {
-name        = "%s_wrong1"
+  name = "%s_wrong1"
 }
 
 data "aws_api_gateway_rest_api" "by_name" {
-name = "${aws_api_gateway_rest_api.tf_test.name}"
+  name = "${aws_api_gateway_rest_api.tf_test.name}"
 }
 `, r, r, r)
 }

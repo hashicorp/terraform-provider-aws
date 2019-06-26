@@ -3,12 +3,12 @@ layout: "aws"
 page_title: "AWS: aws_ecs_task_definition"
 sidebar_current: "docs-aws-resource-ecs-task-definition"
 description: |-
-  Provides an ECS task definition.
+  Manages a revision of an ECS task definition.
 ---
 
-# aws_ecs_task_definition
+# Resource: aws_ecs_task_definition
 
-Provides an ECS task definition to be used in `aws_ecs_service`.
+Manages a revision of an ECS task definition to be used in `aws_ecs_service`.
 
 ## Example Usage
 
@@ -65,6 +65,27 @@ contains only a small subset of the available parameters.
 ]
 ```
 
+### With AppMesh Proxy
+
+```hcl
+resource "aws_ecs_task_definition" "service" {
+  family                = "service"
+  container_definitions = "${file("task-definitions/service.json")}"
+
+  proxy_configuration {
+    type           = "APPMESH"
+    container_name = "applicationContainerName"
+    properties = {
+      AppPorts         = "8080"
+      EgressIgnoredIPs = "169.254.170.2,169.254.169.254"
+      IgnoredUID       = "1337"
+      ProxyEgressPort  = 15001
+      ProxyIngressPort = 15000
+    }
+  }
+}
+```
+
 ## Argument Reference
 
 ### Top-Level Arguments
@@ -82,11 +103,15 @@ official [Developer Guide](https://docs.aws.amazon.com/AmazonECS/latest/develope
 * `task_role_arn` - (Optional) The ARN of IAM role that allows your Amazon ECS container task to make calls to other AWS services.
 * `execution_role_arn` - (Optional) The Amazon Resource Name (ARN) of the task execution role that the Amazon ECS container agent and the Docker daemon can assume.
 * `network_mode` - (Optional) The Docker networking mode to use for the containers in the task. The valid values are `none`, `bridge`, `awsvpc`, and `host`.
+* `ipc_mode` - (Optional) The IPC resource namespace to be used for the containers in the task The valid values are `host`, `task`, and `none`.
+* `pid_mode` - (Optional) The process namespace to use for the containers in the task. The valid values are `host` and `task`.
 * `volume` - (Optional) A set of [volume blocks](#volume-block-arguments) that containers in your task may use.
 * `placement_constraints` - (Optional) A set of [placement constraints](#placement-constraints-arguments) rules that are taken into consideration during task placement. Maximum number of `placement_constraints` is `10`.
 * `cpu` - (Optional) The number of cpu units used by the task. If the `requires_compatibilities` is `FARGATE` this field is required.
 * `memory` - (Optional) The amount (in MiB) of memory used by the task. If the `requires_compatibilities` is `FARGATE` this field is required.
 * `requires_compatibilities` - (Optional) A set of launch types required by the task. The valid values are `EC2` and `FARGATE`.
+* `proxy_configuration` - (Optional) The [proxy configuration](#proxy-configuration-arguments) details for the App Mesh proxy.
+* `tags` - (Optional) Key-value mapping of resource tags
 
 #### Volume Block Arguments
 
@@ -113,9 +138,10 @@ resource "aws_ecs_task_definition" "service" {
 
   volume {
     name = "service-storage"
+
     docker_volume_configuration {
-        scope         = "shared"
-        autoprovision = true
+      scope         = "shared"
+      autoprovision = true
     }
   }
 }
@@ -130,6 +156,11 @@ For more information, see [Cluster Query Language in the Amazon EC2 Container
 Service Developer
 Guide](http://docs.aws.amazon.com/AmazonECS/latest/developerguide/cluster-query-language.html).
 
+#### Proxy Configuration Arguments
+
+* `container_name` - (Required) The name of the container that will serve as the App Mesh proxy.
+* `properties` - (Required) The set of network configuration parameters to provide the Container Network Interface (CNI) plugin, specified a key-value mapping.
+* `type` - (Optional) The proxy type. The default value is `APPMESH`. The only supported value is `APPMESH`.
 
 ## Attributes Reference
 
@@ -138,3 +169,11 @@ In addition to all arguments above, the following attributes are exported:
 * `arn` - Full ARN of the Task Definition (including both `family` and `revision`).
 * `family` - The family of the Task Definition.
 * `revision` - The revision of the task in a particular family.
+
+## Import
+
+ECS Task Definitions can be imported via their Amazon Resource Name (ARN):
+
+```
+$ terraform import aws_ecs_task_definition.example arn:aws:ecs:us-east-1:012345678910:task-definition/mytaskfamily:123
+```

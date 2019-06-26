@@ -22,7 +22,7 @@ func TestAccAWSELBAttachment_basic(t *testing.T) {
 		}
 	}
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:      func() { testAccPreCheck(t) },
 		IDRefreshName: "aws_elb.bar",
 		Providers:     testAccProviders,
@@ -93,7 +93,7 @@ func TestAccAWSELBAttachment_drift(t *testing.T) {
 		}
 	}
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:      func() { testAccPreCheck(t) },
 		IDRefreshName: "aws_elb.bar",
 		Providers:     testAccProviders,

@@ -1,18 +1,15 @@
 package aws
 
 import (
-	"encoding/json"
 	"fmt"
 	"log"
 	"strconv"
 	"strings"
 	"sync"
-	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/apigateway"
-	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/helper/schema"
 )
 
@@ -75,17 +72,15 @@ func resourceAwsApiGatewayMethodResponse() *schema.Resource {
 			},
 
 			"response_parameters": {
-				Type:          schema.TypeMap,
-				Elem:          &schema.Schema{Type: schema.TypeBool},
-				Optional:      true,
-				ConflictsWith: []string{"response_parameters_in_json"},
+				Type:     schema.TypeMap,
+				Elem:     &schema.Schema{Type: schema.TypeBool},
+				Optional: true,
 			},
 
 			"response_parameters_in_json": {
-				Type:          schema.TypeString,
-				Optional:      true,
-				ConflictsWith: []string{"response_parameters"},
-				Deprecated:    "Use field response_parameters instead",
+				Type:     schema.TypeString,
+				Optional: true,
+				Removed:  "Use `response_parameters` argument instead",
 			},
 		},
 	}
@@ -107,11 +102,6 @@ func resourceAwsApiGatewayMethodResponseCreate(d *schema.ResourceData, meta inte
 				value, _ := strconv.ParseBool(v.(string))
 				parameters[k] = value
 			}
-		}
-	}
-	if v, ok := d.GetOk("response_parameters_in_json"); ok {
-		if err := json.Unmarshal([]byte(v.(string)), &parameters); err != nil {
-			return fmt.Errorf("Error unmarshaling request_parameters_in_json: %s", err)
 		}
 	}
 
@@ -168,14 +158,6 @@ func resourceAwsApiGatewayMethodResponseRead(d *schema.ResourceData, meta interf
 		return fmt.Errorf("error setting response_parameters: %s", err)
 	}
 
-	// KNOWN ISSUE: This next d.Set() is broken as it should be a JSON string of the map,
-	//              however leaving as-is since this attribute has been deprecated
-	//              for a very long time and will be removed soon in the next major release.
-	//              Not worth the effort of fixing, acceptance testing, and potential JSON equivalence bugs.
-	if _, ok := d.GetOk("response_parameters_in_json"); ok {
-		d.Set("response_parameters_in_json", aws.BoolValueMap(methodResponse.ResponseParameters))
-	}
-
 	return nil
 }
 
@@ -187,14 +169,6 @@ func resourceAwsApiGatewayMethodResponseUpdate(d *schema.ResourceData, meta inte
 
 	if d.HasChange("response_models") {
 		operations = append(operations, expandApiGatewayRequestResponseModelOperations(d, "response_models", "responseModels")...)
-	}
-
-	if d.HasChange("response_parameters_in_json") {
-		ops, err := deprecatedExpandApiGatewayMethodParametersJSONOperations(d, "response_parameters_in_json", "responseParameters")
-		if err != nil {
-			return err
-		}
-		operations = append(operations, ops...)
 	}
 
 	if d.HasChange("response_parameters") {
@@ -226,26 +200,20 @@ func resourceAwsApiGatewayMethodResponseDelete(d *schema.ResourceData, meta inte
 	conn := meta.(*AWSClient).apigateway
 	log.Printf("[DEBUG] Deleting API Gateway Method Response: %s", d.Id())
 
-	return resource.Retry(5*time.Minute, func() *resource.RetryError {
-		_, err := conn.DeleteMethodResponse(&apigateway.DeleteMethodResponseInput{
-			HttpMethod: aws.String(d.Get("http_method").(string)),
-			ResourceId: aws.String(d.Get("resource_id").(string)),
-			RestApiId:  aws.String(d.Get("rest_api_id").(string)),
-			StatusCode: aws.String(d.Get("status_code").(string)),
-		})
-		if err == nil {
-			return nil
-		}
-
-		apigatewayErr, ok := err.(awserr.Error)
-		if apigatewayErr.Code() == "NotFoundException" {
-			return nil
-		}
-
-		if !ok {
-			return resource.NonRetryableError(err)
-		}
-
-		return resource.NonRetryableError(err)
+	_, err := conn.DeleteMethodResponse(&apigateway.DeleteMethodResponseInput{
+		HttpMethod: aws.String(d.Get("http_method").(string)),
+		ResourceId: aws.String(d.Get("resource_id").(string)),
+		RestApiId:  aws.String(d.Get("rest_api_id").(string)),
+		StatusCode: aws.String(d.Get("status_code").(string)),
 	})
+
+	if isAWSErr(err, apigateway.ErrCodeNotFoundException, "") {
+		return nil
+	}
+
+	if err != nil {
+		return fmt.Errorf("error deleting API Gateway Method Response (%s): %s", d.Id(), err)
+	}
+
+	return nil
 }

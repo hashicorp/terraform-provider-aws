@@ -15,7 +15,7 @@ func TestAccAWSIAMSamlProvider_basic(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_iam_saml_provider.test"
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckIAMSamlProviderDestroy,
@@ -90,11 +90,7 @@ func testAccCheckIAMSamlProviderExists(id string) resource.TestCheckFunc {
 			SAMLProviderArn: aws.String(rs.Primary.ID),
 		})
 
-		if err != nil {
-			return err
-		}
-
-		return nil
+		return err
 	}
 }
 

@@ -13,7 +13,7 @@ import (
 func TestAccAWSEmrSecurityConfiguration_importBasic(t *testing.T) {
 	resourceName := "aws_emr_security_configuration.foo"
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckEmrSecurityConfigurationDestroy,
@@ -32,7 +32,7 @@ func TestAccAWSEmrSecurityConfiguration_importBasic(t *testing.T) {
 }
 
 func TestAccAWSEmrSecurityConfiguration_basic(t *testing.T) {
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckEmrSecurityConfigurationDestroy,
@@ -58,21 +58,20 @@ func testAccCheckEmrSecurityConfigurationDestroy(s *terraform.State) error {
 		resp, err := conn.DescribeSecurityConfiguration(&emr.DescribeSecurityConfigurationInput{
 			Name: aws.String(rs.Primary.ID),
 		})
-		if err == nil {
-			if resp.Name != nil && *resp.Name == rs.Primary.ID {
-				// assume this means the resource still exists
-				return fmt.Errorf("Error: EMR Security Configuration still exists: %s", *resp.Name)
-			}
+
+		if isAWSErr(err, "InvalidRequestException", "does not exist") {
 			return nil
 		}
 
-		// Verify the error is what we want
 		if err != nil {
-			if isAWSErr(err, "InvalidRequestException", "does not exist") {
-				return nil
-			}
 			return err
 		}
+
+		if resp != nil && aws.StringValue(resp.Name) == rs.Primary.ID {
+			return fmt.Errorf("Error: EMR Security Configuration still exists: %s", aws.StringValue(resp.Name))
+		}
+
+		return nil
 	}
 
 	return nil

@@ -9,7 +9,7 @@ import (
 )
 
 func TestAccDataSourceAwsEbsSnapshotIds_basic(t *testing.T) {
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:  func() { testAccPreCheck(t) },
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
@@ -26,7 +26,7 @@ func TestAccDataSourceAwsEbsSnapshotIds_basic(t *testing.T) {
 func TestAccDataSourceAwsEbsSnapshotIds_sorted(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:  func() { testAccPreCheck(t) },
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
@@ -55,7 +55,7 @@ func TestAccDataSourceAwsEbsSnapshotIds_sorted(t *testing.T) {
 }
 
 func TestAccDataSourceAwsEbsSnapshotIds_empty(t *testing.T) {
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:  func() { testAccPreCheck(t) },
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
@@ -88,25 +88,25 @@ data "aws_ebs_snapshot_ids" "test" {
 func testAccDataSourceAwsEbsSnapshotIdsConfig_sorted1(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_ebs_volume" "test" {
-    availability_zone = "us-west-2a"
-    size              = 1
+  availability_zone = "us-west-2a"
+  size              = 1
 
-    count = 2
+  count = 2
 }
 
 resource "aws_ebs_snapshot" "a" {
-    volume_id   = "${aws_ebs_volume.test.*.id[0]}"
-    description = %q
+  volume_id   = "${aws_ebs_volume.test.*.id[0]}"
+  description = %q
 }
 
 resource "aws_ebs_snapshot" "b" {
-    volume_id   = "${aws_ebs_volume.test.*.id[1]}"
-    description = %q
+  volume_id   = "${aws_ebs_volume.test.*.id[1]}"
+  description = %q
 
-    // We want to ensure that 'aws_ebs_snapshot.a.creation_date' is less than
-    // 'aws_ebs_snapshot.b.creation_date'/ so that we can ensure that the
-    // snapshots are being sorted correctly.
-    depends_on = ["aws_ebs_snapshot.a"]
+  // We want to ensure that 'aws_ebs_snapshot.a.creation_date' is less than
+  // 'aws_ebs_snapshot.b.creation_date'/ so that we can ensure that the
+  // snapshots are being sorted correctly.
+  depends_on = ["aws_ebs_snapshot.a"]
 }
 `, rName, rName)
 }

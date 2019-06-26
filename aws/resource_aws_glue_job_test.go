@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"log"
 	"regexp"
-	"strings"
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -28,10 +27,6 @@ func testSweepGlueJobs(region string) error {
 	}
 	conn := client.(*AWSClient).glueconn
 
-	prefixes := []string{
-		"tf-acc-test-",
-	}
-
 	input := &glue.GetJobsInput{}
 	err = conn.GetJobsPages(input, func(page *glue.GetJobsOutput, lastPage bool) bool {
 		if len(page.Jobs) == 0 {
@@ -39,23 +34,12 @@ func testSweepGlueJobs(region string) error {
 			return false
 		}
 		for _, job := range page.Jobs {
-			skip := true
-			name := job.Name
-			for _, prefix := range prefixes {
-				if strings.HasPrefix(*name, prefix) {
-					skip = false
-					break
-				}
-			}
-			if skip {
-				log.Printf("[INFO] Skipping Glue Job: %s", *name)
-				continue
-			}
+			name := aws.StringValue(job.Name)
 
-			log.Printf("[INFO] Deleting Glue Job: %s", *name)
-			err := deleteGlueJob(conn, *name)
+			log.Printf("[INFO] Deleting Glue Job: %s", name)
+			err := deleteGlueJob(conn, name)
 			if err != nil {
-				log.Printf("[ERROR] Failed to delete Glue Job %s: %s", *name, err)
+				log.Printf("[ERROR] Failed to delete Glue Job %s: %s", name, err)
 			}
 		}
 		return !lastPage
@@ -77,7 +61,7 @@ func TestAccAWSGlueJob_Basic(t *testing.T) {
 	rName := fmt.Sprintf("tf-acc-test-%s", acctest.RandString(5))
 	resourceName := "aws_glue_job.test"
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSGlueJobDestroy,
@@ -109,7 +93,7 @@ func TestAccAWSGlueJob_AllocatedCapacity(t *testing.T) {
 	rName := fmt.Sprintf("tf-acc-test-%s", acctest.RandString(5))
 	resourceName := "aws_glue_job.test"
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSGlueJobDestroy,
@@ -147,7 +131,7 @@ func TestAccAWSGlueJob_Command(t *testing.T) {
 	rName := fmt.Sprintf("tf-acc-test-%s", acctest.RandString(5))
 	resourceName := "aws_glue_job.test"
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSGlueJobDestroy,
@@ -183,7 +167,7 @@ func TestAccAWSGlueJob_DefaultArguments(t *testing.T) {
 	rName := fmt.Sprintf("tf-acc-test-%s", acctest.RandString(5))
 	resourceName := "aws_glue_job.test"
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSGlueJobDestroy,
@@ -221,7 +205,7 @@ func TestAccAWSGlueJob_Description(t *testing.T) {
 	rName := fmt.Sprintf("tf-acc-test-%s", acctest.RandString(5))
 	resourceName := "aws_glue_job.test"
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSGlueJobDestroy,
@@ -255,7 +239,7 @@ func TestAccAWSGlueJob_ExecutionProperty(t *testing.T) {
 	rName := fmt.Sprintf("tf-acc-test-%s", acctest.RandString(5))
 	resourceName := "aws_glue_job.test"
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSGlueJobDestroy,
@@ -295,7 +279,7 @@ func TestAccAWSGlueJob_MaxRetries(t *testing.T) {
 	rName := fmt.Sprintf("tf-acc-test-%s", acctest.RandString(5))
 	resourceName := "aws_glue_job.test"
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSGlueJobDestroy,
@@ -333,7 +317,7 @@ func TestAccAWSGlueJob_Timeout(t *testing.T) {
 	rName := fmt.Sprintf("tf-acc-test-%s", acctest.RandString(5))
 	resourceName := "aws_glue_job.test"
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSGlueJobDestroy,
@@ -350,6 +334,107 @@ func TestAccAWSGlueJob_Timeout(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSGlueJobExists(resourceName, &job),
 					resource.TestCheckResourceAttr(resourceName, "timeout", "2"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccAWSGlueJob_SecurityConfiguration(t *testing.T) {
+	var job glue.Job
+
+	rName := fmt.Sprintf("tf-acc-test-%s", acctest.RandString(5))
+	resourceName := "aws_glue_job.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSGlueJobDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSGlueJobConfig_SecurityConfiguration(rName, "default_encryption"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSGlueJobExists(resourceName, &job),
+					resource.TestCheckResourceAttr(resourceName, "security_configuration", "default_encryption"),
+				),
+			},
+			{
+				Config: testAccAWSGlueJobConfig_SecurityConfiguration(rName, "custom_encryption2"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSGlueJobExists(resourceName, &job),
+					resource.TestCheckResourceAttr(resourceName, "security_configuration", "custom_encryption2"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccAWSGlueJob_PythonShell(t *testing.T) {
+	var job glue.Job
+
+	rName := fmt.Sprintf("tf-acc-test-%s", acctest.RandString(5))
+	resourceName := "aws_glue_job.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSGlueJobDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSGlueJobConfig_PythonShell(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSGlueJobExists(resourceName, &job),
+					resource.TestCheckResourceAttr(resourceName, "max_capacity", "0.0625"),
+					resource.TestCheckResourceAttr(resourceName, "command.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "command.0.script_location", "testscriptlocation"),
+					resource.TestCheckResourceAttr(resourceName, "command.0.name", "pythonshell"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccAWSGlueJob_MaxCapacity(t *testing.T) {
+	var job glue.Job
+
+	rName := fmt.Sprintf("tf-acc-test-%s", acctest.RandString(5))
+	resourceName := "aws_glue_job.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSGlueJobDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSGlueJobConfig_MaxCapacity(rName, 10),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSGlueJobExists(resourceName, &job),
+					resource.TestCheckResourceAttr(resourceName, "max_capacity", "10"),
+					resource.TestCheckResourceAttr(resourceName, "command.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "command.0.script_location", "testscriptlocation"),
+					resource.TestCheckResourceAttr(resourceName, "command.0.name", "glueetl"),
+				),
+			},
+			{
+				Config: testAccAWSGlueJobConfig_MaxCapacity(rName, 15),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSGlueJobExists(resourceName, &job),
+					resource.TestCheckResourceAttr(resourceName, "max_capacity", "15"),
 				),
 			},
 			{
@@ -480,8 +565,9 @@ func testAccAWSGlueJobConfig_Command(rName, scriptLocation string) string {
 %s
 
 resource "aws_glue_job" "test" {
-  name     = "%s"
-  role_arn = "${aws_iam_role.test.arn}"
+  name               = "%s"
+  role_arn           = "${aws_iam_role.test.arn}"
+  allocated_capacity = 10
 
   command {
     script_location = "%s"
@@ -497,8 +583,9 @@ func testAccAWSGlueJobConfig_DefaultArguments(rName, jobBookmarkOption, jobLangu
 %s
 
 resource "aws_glue_job" "test" {
-  name     = "%s"
-  role_arn = "${aws_iam_role.test.arn}"
+  name               = "%s"
+  role_arn           = "${aws_iam_role.test.arn}"
+  allocated_capacity = 10
 
   command {
     script_location = "testscriptlocation"
@@ -519,9 +606,10 @@ func testAccAWSGlueJobConfig_Description(rName, description string) string {
 %s
 
 resource "aws_glue_job" "test" {
-  description = "%s"
-  name        = "%s"
-  role_arn    = "${aws_iam_role.test.arn}"
+  description        = "%s"
+  name               = "%s"
+  role_arn           = "${aws_iam_role.test.arn}"
+  allocated_capacity = 10
 
   command {
     script_location = "testscriptlocation"
@@ -537,8 +625,9 @@ func testAccAWSGlueJobConfig_ExecutionProperty(rName string, maxConcurrentRuns i
 %s
 
 resource "aws_glue_job" "test" {
-  name     = "%s"
-  role_arn = "${aws_iam_role.test.arn}"
+  name               = "%s"
+  role_arn           = "${aws_iam_role.test.arn}"
+  allocated_capacity = 10
 
   command {
     script_location = "testscriptlocation"
@@ -558,9 +647,10 @@ func testAccAWSGlueJobConfig_MaxRetries(rName string, maxRetries int) string {
 %s
 
 resource "aws_glue_job" "test" {
-  max_retries = %d
-  name        = "%s"
-  role_arn    = "${aws_iam_role.test.arn}"
+  max_retries        = %d
+  name               = "%s"
+  role_arn           = "${aws_iam_role.test.arn}"
+  allocated_capacity = 10
 
   command {
     script_location = "testscriptlocation"
@@ -576,8 +666,9 @@ func testAccAWSGlueJobConfig_Required(rName string) string {
 %s
 
 resource "aws_glue_job" "test" {
-  name     = "%s"
-  role_arn = "${aws_iam_role.test.arn}"
+  name               = "%s"
+  role_arn           = "${aws_iam_role.test.arn}"
+  allocated_capacity = 10
 
   command {
     script_location = "testscriptlocation"
@@ -593,9 +684,10 @@ func testAccAWSGlueJobConfig_Timeout(rName string, timeout int) string {
 %s
 
 resource "aws_glue_job" "test" {
-  name        = "%s"
-  role_arn    = "${aws_iam_role.test.arn}"
-  timeout     = %d
+  name               = "%s"
+  role_arn           = "${aws_iam_role.test.arn}"
+  timeout            = %d
+  allocated_capacity = 10
 
   command {
     script_location = "testscriptlocation"
@@ -604,4 +696,60 @@ resource "aws_glue_job" "test" {
   depends_on = ["aws_iam_role_policy_attachment.test"]
 }
 `, testAccAWSGlueJobConfig_Base(rName), rName, timeout)
+}
+
+func testAccAWSGlueJobConfig_SecurityConfiguration(rName string, securityConfiguration string) string {
+	return fmt.Sprintf(`
+%s
+
+resource "aws_glue_job" "test" {
+  name                   = "%s"
+  role_arn               = "${aws_iam_role.test.arn}"
+  security_configuration = "%s"
+  allocated_capacity     = 10
+
+  command {
+    script_location = "testscriptlocation"
+  }
+
+  depends_on = ["aws_iam_role_policy_attachment.test"]
+}
+`, testAccAWSGlueJobConfig_Base(rName), rName, securityConfiguration)
+}
+
+func testAccAWSGlueJobConfig_PythonShell(rName string) string {
+	return fmt.Sprintf(`
+%s
+
+resource "aws_glue_job" "test" {
+  name         = "%s"
+  role_arn     = "${aws_iam_role.test.arn}"
+  max_capacity = 0.0625
+
+  command {
+    name            = "pythonshell"
+    script_location = "testscriptlocation"
+  }
+
+  depends_on = ["aws_iam_role_policy_attachment.test"]
+}
+`, testAccAWSGlueJobConfig_Base(rName), rName)
+}
+
+func testAccAWSGlueJobConfig_MaxCapacity(rName string, maxCapacity float64) string {
+	return fmt.Sprintf(`
+%s
+
+resource "aws_glue_job" "test" {
+  name     = "%s"
+  role_arn = "${aws_iam_role.test.arn}"
+  max_capacity = %g
+
+  command {
+	script_location = "testscriptlocation"
+  }
+
+  depends_on = ["aws_iam_role_policy_attachment.test"]
+}
+`, testAccAWSGlueJobConfig_Base(rName), rName, maxCapacity)
 }

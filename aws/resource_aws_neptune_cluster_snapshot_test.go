@@ -17,7 +17,7 @@ func TestAccAWSNeptuneClusterSnapshot_basic(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_neptune_cluster_snapshot.test"
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckNeptuneClusterSnapshotDestroy,
@@ -113,8 +113,8 @@ func testAccCheckNeptuneClusterSnapshotExists(resourceName string, dbClusterSnap
 func testAccAwsNeptuneClusterSnapshotConfig(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_neptune_cluster" "test" {
-  cluster_identifier   = %q
-  skip_final_snapshot  = true
+  cluster_identifier  = %q
+  skip_final_snapshot = true
 }
 
 resource "aws_neptune_cluster_snapshot" "test" {

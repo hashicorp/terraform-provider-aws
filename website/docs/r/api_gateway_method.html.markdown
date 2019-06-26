@@ -6,7 +6,7 @@ description: |-
   Provides a HTTP Method for an API Gateway Resource.
 ---
 
-# aws_api_gateway_method
+# Resource: aws_api_gateway_method
 
 Provides a HTTP Method for an API Gateway Resource.
 
@@ -41,7 +41,7 @@ data "aws_cognito_user_pools" "this" {
 }
 
 resource "aws_api_gateway_rest_api" "this" {
-  name        = "with-authorizer"
+  name = "with-authorizer"
 }
 
 resource "aws_api_gateway_resource" "this" {
@@ -86,15 +86,7 @@ The following arguments are supported:
   and value is either `Error`, `Empty` (built-in models) or `aws_api_gateway_model`'s `name`.
 * `request_validator_id` - (Optional) The ID of a `aws_api_gateway_request_validator`
 * `request_parameters` - (Optional) A map of request query string parameters and headers that should be passed to the integration.
-  For example:
-```hcl
-request_parameters = {
-  "method.request.header.X-Some-Header" = true,
-  "method.request.querystring.some-query-param"  = true,
-}
-```
-would define that the header `X-Some-Header` and the query string `some-query-param` must be provided on the request, or
-* `request_parameters_in_json` - **Deprecated**, use `request_parameters` instead.
+  For example: `request_parameters = {"method.request.header.X-Some-Header" = true "method.request.querystring.some-query-param" = true}` would define that the header `X-Some-Header` and the query string `some-query-param` must be provided in the request
 
 ## Import
 

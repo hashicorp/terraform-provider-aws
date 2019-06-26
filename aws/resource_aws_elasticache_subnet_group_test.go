@@ -16,7 +16,7 @@ func TestAccAWSElasticacheSubnetGroup_importBasic(t *testing.T) {
 	resourceName := "aws_elasticache_subnet_group.bar"
 	config := fmt.Sprintf(testAccAWSElasticacheSubnetGroupConfig, acctest.RandInt())
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSElasticacheSubnetGroupDestroy,
@@ -40,7 +40,7 @@ func TestAccAWSElasticacheSubnetGroup_basic(t *testing.T) {
 	var csg elasticache.CacheSubnetGroup
 	config := fmt.Sprintf(testAccAWSElasticacheSubnetGroupConfig, acctest.RandInt())
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSElasticacheSubnetGroupDestroy,
@@ -64,7 +64,7 @@ func TestAccAWSElasticacheSubnetGroup_update(t *testing.T) {
 	preConfig := fmt.Sprintf(testAccAWSElasticacheSubnetGroupUpdateConfigPre, ri)
 	postConfig := fmt.Sprintf(testAccAWSElasticacheSubnetGroupUpdateConfigPost, ri)
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSElasticacheSubnetGroupDestroy,
@@ -167,7 +167,7 @@ func testAccCheckAWSElastiCacheSubnetGroupAttrs(csg *elasticache.CacheSubnetGrou
 var testAccAWSElasticacheSubnetGroupConfig = `
 resource "aws_vpc" "foo" {
     cidr_block = "192.168.0.0/16"
-    tags {
+  tags = {
         Name = "terraform-testacc-elasticache-subnet-group"
     }
 }
@@ -176,7 +176,7 @@ resource "aws_subnet" "foo" {
     vpc_id = "${aws_vpc.foo.id}"
     cidr_block = "192.168.0.0/20"
     availability_zone = "us-west-2a"
-    tags {
+  tags = {
         Name = "tf-acc-elasticache-subnet-group"
     }
 }
@@ -192,7 +192,7 @@ resource "aws_elasticache_subnet_group" "bar" {
 var testAccAWSElasticacheSubnetGroupUpdateConfigPre = `
 resource "aws_vpc" "foo" {
     cidr_block = "10.0.0.0/16"
-    tags {
+  tags = {
         Name = "terraform-testacc-elasticache-subnet-group-update"
     }
 }
@@ -201,7 +201,7 @@ resource "aws_subnet" "foo" {
     vpc_id = "${aws_vpc.foo.id}"
     cidr_block = "10.0.1.0/24"
     availability_zone = "us-west-2a"
-    tags {
+  tags = {
         Name = "tf-acc-elasticache-subnet-group-update-foo"
     }
 }
@@ -216,7 +216,7 @@ resource "aws_elasticache_subnet_group" "bar" {
 var testAccAWSElasticacheSubnetGroupUpdateConfigPost = `
 resource "aws_vpc" "foo" {
     cidr_block = "10.0.0.0/16"
-    tags {
+  tags = {
         Name = "terraform-testacc-elasticache-subnet-group-update"
     }
 }
@@ -225,7 +225,7 @@ resource "aws_subnet" "foo" {
     vpc_id = "${aws_vpc.foo.id}"
     cidr_block = "10.0.1.0/24"
     availability_zone = "us-west-2a"
-    tags {
+  tags = {
         Name = "tf-acc-elasticache-subnet-group-update-foo"
     }
 }
@@ -234,7 +234,7 @@ resource "aws_subnet" "bar" {
     vpc_id = "${aws_vpc.foo.id}"
     cidr_block = "10.0.2.0/24"
     availability_zone = "us-west-2a"
-    tags {
+  tags = {
         Name = "tf-acc-elasticache-subnet-group-update-bar"
     }
 }

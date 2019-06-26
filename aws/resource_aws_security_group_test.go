@@ -9,6 +9,7 @@ import (
 	"strconv"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
@@ -23,7 +24,10 @@ import (
 func init() {
 	resource.AddTestSweepers("aws_security_group", &resource.Sweeper{
 		Name: "aws_security_group",
-		F:    testSweepSecurityGroups,
+		Dependencies: []string{
+			"aws_subnet",
+		},
+		F: testSweepSecurityGroups,
 	})
 }
 
@@ -34,70 +38,85 @@ func testSweepSecurityGroups(region string) error {
 	}
 	conn := client.(*AWSClient).ec2conn
 
-	req := &ec2.DescribeSecurityGroupsInput{
-		Filters: []*ec2.Filter{
-			{
-				Name: aws.String("tag-value"),
-				Values: []*string{
-					aws.String("tf-acc-revoke*"),
-					aws.String("tf-acc-test-*"),
-				},
-			},
-		},
-	}
-	resp, err := conn.DescribeSecurityGroups(req)
-	if err != nil {
-		if testSweepSkipSweepError(err) {
-			log.Printf("[WARN] Skipping EC2 Security Group sweep for %s: %s", region, err)
-			return nil
-		}
-		return fmt.Errorf("Error retrieving EC2 Security Groups: %s", err)
-	}
+	input := &ec2.DescribeSecurityGroupsInput{}
 
-	if len(resp.SecurityGroups) == 0 {
-		log.Print("[DEBUG] No aws security groups to sweep")
+	// Delete all non-default EC2 Security Group Rules to prevent DependencyViolation errors
+	err = conn.DescribeSecurityGroupsPages(input, func(page *ec2.DescribeSecurityGroupsOutput, lastPage bool) bool {
+		for _, sg := range page.SecurityGroups {
+			if aws.StringValue(sg.GroupName) == "default" {
+				log.Printf("[DEBUG] Skipping default EC2 Security Group: %s", aws.StringValue(sg.GroupId))
+				continue
+			}
+
+			if sg.IpPermissions != nil {
+				req := &ec2.RevokeSecurityGroupIngressInput{
+					GroupId:       sg.GroupId,
+					IpPermissions: sg.IpPermissions,
+				}
+
+				if _, err = conn.RevokeSecurityGroupIngress(req); err != nil {
+					log.Printf("[ERROR] Error revoking ingress rule for Security Group (%s): %s", aws.StringValue(sg.GroupId), err)
+				}
+			}
+
+			if sg.IpPermissionsEgress != nil {
+				req := &ec2.RevokeSecurityGroupEgressInput{
+					GroupId:       sg.GroupId,
+					IpPermissions: sg.IpPermissionsEgress,
+				}
+
+				if _, err = conn.RevokeSecurityGroupEgress(req); err != nil {
+					log.Printf("[ERROR] Error revoking egress rule for Security Group (%s): %s", aws.StringValue(sg.GroupId), err)
+				}
+			}
+		}
+
+		return !lastPage
+	})
+
+	if testSweepSkipSweepError(err) {
+		log.Printf("[WARN] Skipping EC2 Security Group sweep for %s: %s", region, err)
 		return nil
 	}
 
-	for _, sg := range resp.SecurityGroups {
-		// revoke the rules
-		if sg.IpPermissions != nil {
-			req := &ec2.RevokeSecurityGroupIngressInput{
-				GroupId:       sg.GroupId,
-				IpPermissions: sg.IpPermissions,
-			}
-
-			if _, err = conn.RevokeSecurityGroupIngress(req); err != nil {
-				return fmt.Errorf(
-					"Error revoking default egress rule for Security Group (%s): %s",
-					*sg.GroupId, err)
-			}
-		}
-
-		if sg.IpPermissionsEgress != nil {
-			req := &ec2.RevokeSecurityGroupEgressInput{
-				GroupId:       sg.GroupId,
-				IpPermissions: sg.IpPermissionsEgress,
-			}
-
-			if _, err = conn.RevokeSecurityGroupEgress(req); err != nil {
-				return fmt.Errorf(
-					"Error revoking default egress rule for Security Group (%s): %s",
-					*sg.GroupId, err)
-			}
-		}
+	if err != nil {
+		return fmt.Errorf("Error retrieving EC2 Security Groups: %s", err)
 	}
 
-	for _, sg := range resp.SecurityGroups {
-		// delete the group
-		_, err := conn.DeleteSecurityGroup(&ec2.DeleteSecurityGroupInput{
-			GroupId: sg.GroupId,
-		})
-		if err != nil {
-			return fmt.Errorf(
-				"Error deleting Security Group (%s): %s",
-				*sg.GroupId, err)
+	err = conn.DescribeSecurityGroupsPages(input, func(page *ec2.DescribeSecurityGroupsOutput, lastPage bool) bool {
+		for _, sg := range page.SecurityGroups {
+			if aws.StringValue(sg.GroupName) == "default" {
+				log.Printf("[DEBUG] Skipping default EC2 Security Group: %s", aws.StringValue(sg.GroupId))
+				continue
+			}
+
+			input := &ec2.DeleteSecurityGroupInput{
+				GroupId: sg.GroupId,
+			}
+
+			// Handle EC2 eventual consistency
+			err := resource.Retry(1*time.Minute, func() *resource.RetryError {
+				_, err := conn.DeleteSecurityGroup(input)
+
+				if isAWSErr(err, "DependencyViolation", "") {
+					return resource.RetryableError(err)
+				}
+				if err != nil {
+					return resource.NonRetryableError(err)
+				}
+				return nil
+			})
+
+			if err != nil {
+				log.Printf("[ERROR] Error deleting Security Group (%s): %s", aws.StringValue(sg.GroupId), err)
+			}
 		}
+
+		return !lastPage
+	})
+
+	if err != nil {
+		return fmt.Errorf("Error retrieving EC2 Security Groups: %s", err)
 	}
 
 	return nil
@@ -565,7 +584,7 @@ func TestAccAWSSecurityGroup_importBasic(t *testing.T) {
 		return nil
 	}
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSSecurityGroupDestroy,
@@ -594,7 +613,7 @@ func TestAccAWSSecurityGroup_importIpv6(t *testing.T) {
 		return nil
 	}
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSSecurityGroupDestroy,
@@ -613,7 +632,7 @@ func TestAccAWSSecurityGroup_importIpv6(t *testing.T) {
 }
 
 func TestAccAWSSecurityGroup_importSelf(t *testing.T) {
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSSecurityGroupDestroy,
@@ -633,7 +652,7 @@ func TestAccAWSSecurityGroup_importSelf(t *testing.T) {
 }
 
 func TestAccAWSSecurityGroup_importSourceSecurityGroup(t *testing.T) {
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSSecurityGroupDestroy,
@@ -662,7 +681,7 @@ func TestAccAWSSecurityGroup_importIPRangeAndSecurityGroupWithSameRules(t *testi
 		return nil
 	}
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSSecurityGroupDestroy,
@@ -690,7 +709,7 @@ func TestAccAWSSecurityGroup_importIPRangesWithSameRules(t *testing.T) {
 		return nil
 	}
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSSecurityGroupDestroy,
@@ -718,7 +737,7 @@ func TestAccAWSSecurityGroup_importPrefixList(t *testing.T) {
 		return nil
 	}
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSSecurityGroupDestroy,
@@ -739,7 +758,7 @@ func TestAccAWSSecurityGroup_importPrefixList(t *testing.T) {
 func TestAccAWSSecurityGroup_basic(t *testing.T) {
 	var group ec2.SecurityGroup
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:      func() { testAccPreCheck(t) },
 		IDRefreshName: "aws_security_group.web",
 		Providers:     testAccProviders,
@@ -769,11 +788,79 @@ func TestAccAWSSecurityGroup_basic(t *testing.T) {
 	})
 }
 
+func TestAccAWSSecurityGroup_Egress_ConfigMode(t *testing.T) {
+	var securityGroup1, securityGroup2, securityGroup3 ec2.SecurityGroup
+	resourceName := "aws_security_group.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSNetworkAclDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSSecurityGroupConfigEgressConfigModeBlocks(),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckAWSSecurityGroupExists(resourceName, &securityGroup1),
+					resource.TestCheckResourceAttr(resourceName, "egress.#", "2"),
+				),
+			},
+			{
+				Config: testAccAWSSecurityGroupConfigEgressConfigModeNoBlocks(),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckAWSSecurityGroupExists(resourceName, &securityGroup2),
+					resource.TestCheckResourceAttr(resourceName, "egress.#", "2"),
+				),
+			},
+			{
+				Config: testAccAWSSecurityGroupConfigEgressConfigModeZeroed(),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckAWSSecurityGroupExists(resourceName, &securityGroup3),
+					resource.TestCheckResourceAttr(resourceName, "egress.#", "0"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAWSSecurityGroup_Ingress_ConfigMode(t *testing.T) {
+	var securityGroup1, securityGroup2, securityGroup3 ec2.SecurityGroup
+	resourceName := "aws_security_group.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSNetworkAclDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSSecurityGroupConfigIngressConfigModeBlocks(),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckAWSSecurityGroupExists(resourceName, &securityGroup1),
+					resource.TestCheckResourceAttr(resourceName, "ingress.#", "2"),
+				),
+			},
+			{
+				Config: testAccAWSSecurityGroupConfigIngressConfigModeNoBlocks(),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckAWSSecurityGroupExists(resourceName, &securityGroup2),
+					resource.TestCheckResourceAttr(resourceName, "ingress.#", "2"),
+				),
+			},
+			{
+				Config: testAccAWSSecurityGroupConfigIngressConfigModeZeroed(),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckAWSSecurityGroupExists(resourceName, &securityGroup3),
+					resource.TestCheckResourceAttr(resourceName, "ingress.#", "0"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccAWSSecurityGroup_ruleGathering(t *testing.T) {
 	var group ec2.SecurityGroup
 	sgName := fmt.Sprintf("tf-acc-security-group-%s", acctest.RandString(7))
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSSecurityGroupDestroy,
@@ -969,7 +1056,7 @@ func TestAccAWSSecurityGroup_forceRevokeRules_true(t *testing.T) {
 	// Remove the rules that created the cycle; Terraform/AWS can now destroy them
 	testRemoveCycle := testRemoveRuleCycle(&primary, &secondary)
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSSecurityGroupDestroy,
@@ -1040,7 +1127,7 @@ func TestAccAWSSecurityGroup_forceRevokeRules_false(t *testing.T) {
 	// Remove the rules that created the cycle; Terraform/AWS can now destroy them
 	testRemoveCycle := testRemoveRuleCycle(&primary, &secondary)
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSSecurityGroupDestroy,
@@ -1086,7 +1173,7 @@ func TestAccAWSSecurityGroup_forceRevokeRules_false(t *testing.T) {
 func TestAccAWSSecurityGroup_ipv6(t *testing.T) {
 	var group ec2.SecurityGroup
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:      func() { testAccPreCheck(t) },
 		IDRefreshName: "aws_security_group.web",
 		Providers:     testAccProviders,
@@ -1127,7 +1214,7 @@ func TestAccAWSSecurityGroup_ipv6(t *testing.T) {
 func TestAccAWSSecurityGroup_namePrefix(t *testing.T) {
 	var group ec2.SecurityGroup
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:        func() { testAccPreCheck(t) },
 		IDRefreshName:   "aws_security_group.baz",
 		IDRefreshIgnore: []string{"name_prefix"},
@@ -1163,7 +1250,7 @@ func TestAccAWSSecurityGroup_self(t *testing.T) {
 		return nil
 	}
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:      func() { testAccPreCheck(t) },
 		IDRefreshName: "aws_security_group.web",
 		Providers:     testAccProviders,
@@ -1197,7 +1284,7 @@ func TestAccAWSSecurityGroup_vpc(t *testing.T) {
 		return nil
 	}
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:      func() { testAccPreCheck(t) },
 		IDRefreshName: "aws_security_group.web",
 		Providers:     testAccProviders,
@@ -1250,7 +1337,7 @@ func TestAccAWSSecurityGroup_vpcNegOneIngress(t *testing.T) {
 		return nil
 	}
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:      func() { testAccPreCheck(t) },
 		IDRefreshName: "aws_security_group.web",
 		Providers:     testAccProviders,
@@ -1292,7 +1379,7 @@ func TestAccAWSSecurityGroup_vpcProtoNumIngress(t *testing.T) {
 		return nil
 	}
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:      func() { testAccPreCheck(t) },
 		IDRefreshName: "aws_security_group.web",
 		Providers:     testAccProviders,
@@ -1325,7 +1412,7 @@ func TestAccAWSSecurityGroup_vpcProtoNumIngress(t *testing.T) {
 func TestAccAWSSecurityGroup_MultiIngress(t *testing.T) {
 	var group ec2.SecurityGroup
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:      func() { testAccPreCheck(t) },
 		IDRefreshName: "aws_security_group.web",
 		Providers:     testAccProviders,
@@ -1344,7 +1431,7 @@ func TestAccAWSSecurityGroup_MultiIngress(t *testing.T) {
 func TestAccAWSSecurityGroup_Change(t *testing.T) {
 	var group ec2.SecurityGroup
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:      func() { testAccPreCheck(t) },
 		IDRefreshName: "aws_security_group.web",
 		Providers:     testAccProviders,
@@ -1370,7 +1457,7 @@ func TestAccAWSSecurityGroup_Change(t *testing.T) {
 func TestAccAWSSecurityGroup_RuleDescription(t *testing.T) {
 	var group ec2.SecurityGroup
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:      func() { testAccPreCheck(t) },
 		IDRefreshName: "aws_security_group.web",
 		Providers:     testAccProviders,
@@ -1463,7 +1550,7 @@ func TestAccAWSSecurityGroup_RuleDescription(t *testing.T) {
 func TestAccAWSSecurityGroup_generatedName(t *testing.T) {
 	var group ec2.SecurityGroup
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:      func() { testAccPreCheck(t) },
 		IDRefreshName: "aws_security_group.web",
 		Providers:     testAccProviders,
@@ -1493,7 +1580,7 @@ func TestAccAWSSecurityGroup_generatedName(t *testing.T) {
 func TestAccAWSSecurityGroup_DefaultEgress_VPC(t *testing.T) {
 
 	// VPC
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:      func() { testAccPreCheck(t) },
 		IDRefreshName: "aws_security_group.worker",
 		Providers:     testAccProviders,
@@ -1516,7 +1603,7 @@ func TestAccAWSSecurityGroup_DefaultEgress_Classic(t *testing.T) {
 	os.Setenv("AWS_DEFAULT_REGION", "us-east-1")
 	defer os.Setenv("AWS_DEFAULT_REGION", oldvar)
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:      func() { testAccPreCheck(t); testAccEC2ClassicPreCheck(t) },
 		IDRefreshName: "aws_security_group.web",
 		Providers:     testAccProviders,
@@ -1535,7 +1622,7 @@ func TestAccAWSSecurityGroup_DefaultEgress_Classic(t *testing.T) {
 // Testing drift detection with groups containing the same port and types
 func TestAccAWSSecurityGroup_drift(t *testing.T) {
 	var group ec2.SecurityGroup
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSSecurityGroupDestroy,
@@ -1574,7 +1661,7 @@ func TestAccAWSSecurityGroup_drift(t *testing.T) {
 func TestAccAWSSecurityGroup_drift_complex(t *testing.T) {
 	var group ec2.SecurityGroup
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSSecurityGroupDestroy,
@@ -1631,7 +1718,7 @@ func TestAccAWSSecurityGroup_drift_complex(t *testing.T) {
 }
 
 func TestAccAWSSecurityGroup_invalidCIDRBlock(t *testing.T) {
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSSecurityGroupDestroy,
@@ -1804,7 +1891,7 @@ func testAccCheckAWSSecurityGroupAttributesNegOneProtocol(group *ec2.SecurityGro
 func TestAccAWSSecurityGroup_tags(t *testing.T) {
 	var group ec2.SecurityGroup
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSSecurityGroupDestroy,
@@ -1833,7 +1920,7 @@ func TestAccAWSSecurityGroup_tags(t *testing.T) {
 func TestAccAWSSecurityGroup_CIDRandGroups(t *testing.T) {
 	var group ec2.SecurityGroup
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSSecurityGroupDestroy,
@@ -1852,7 +1939,7 @@ func TestAccAWSSecurityGroup_CIDRandGroups(t *testing.T) {
 func TestAccAWSSecurityGroup_ingressWithCidrAndSGs(t *testing.T) {
 	var group ec2.SecurityGroup
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSSecurityGroupDestroy,
@@ -1896,7 +1983,7 @@ func TestAccAWSSecurityGroup_ingressWithCidrAndSGs_classic(t *testing.T) {
 	os.Setenv("AWS_DEFAULT_REGION", "us-east-1")
 	defer os.Setenv("AWS_DEFAULT_REGION", oldvar)
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccEC2ClassicPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSSecurityGroupDestroy,
@@ -1926,7 +2013,7 @@ func TestAccAWSSecurityGroup_ingressWithCidrAndSGs_classic(t *testing.T) {
 func TestAccAWSSecurityGroup_egressWithPrefixList(t *testing.T) {
 	var group ec2.SecurityGroup
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSSecurityGroupDestroy,
@@ -1947,7 +2034,7 @@ func TestAccAWSSecurityGroup_egressWithPrefixList(t *testing.T) {
 func TestAccAWSSecurityGroup_ingressWithPrefixList(t *testing.T) {
 	var group ec2.SecurityGroup
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSSecurityGroupDestroy,
@@ -1968,7 +2055,7 @@ func TestAccAWSSecurityGroup_ingressWithPrefixList(t *testing.T) {
 func TestAccAWSSecurityGroup_ipv4andipv6Egress(t *testing.T) {
 	var group ec2.SecurityGroup
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSSecurityGroupDestroy,
@@ -2212,7 +2299,7 @@ func testAccCheckAWSSecurityGroupExistsWithoutDefault(n string) resource.TestChe
 func TestAccAWSSecurityGroup_failWithDiffMismatch(t *testing.T) {
 	var group ec2.SecurityGroup
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSSecurityGroupDestroy,
@@ -2233,7 +2320,7 @@ func TestAccAWSSecurityGroup_ruleLimitExceededAppend(t *testing.T) {
 	ruleLimit := testAccAWSSecurityGroupRulesPerGroupLimitFromEnv()
 
 	var group ec2.SecurityGroup
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSSecurityGroupDestroy,
@@ -2274,7 +2361,7 @@ func TestAccAWSSecurityGroup_ruleLimitCidrBlockExceededAppend(t *testing.T) {
 	ruleLimit := testAccAWSSecurityGroupRulesPerGroupLimitFromEnv()
 
 	var group ec2.SecurityGroup
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSSecurityGroupDestroy,
@@ -2339,7 +2426,7 @@ func TestAccAWSSecurityGroup_ruleLimitExceededPrepend(t *testing.T) {
 	ruleLimit := testAccAWSSecurityGroupRulesPerGroupLimitFromEnv()
 
 	var group ec2.SecurityGroup
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSSecurityGroupDestroy,
@@ -2380,7 +2467,7 @@ func TestAccAWSSecurityGroup_ruleLimitExceededAllNew(t *testing.T) {
 	ruleLimit := testAccAWSSecurityGroupRulesPerGroupLimitFromEnv()
 
 	var group ec2.SecurityGroup
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSSecurityGroupDestroy,
@@ -2420,7 +2507,7 @@ func TestAccAWSSecurityGroup_ruleLimitExceededAllNew(t *testing.T) {
 func TestAccAWSSecurityGroup_rulesDropOnError(t *testing.T) {
 	var group ec2.SecurityGroup
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSSecurityGroupDestroy,
@@ -2487,7 +2574,7 @@ func testAccAWSSecurityGroupConfigRuleLimit(egressStartIndex, egressRulesCount i
 	c := `
 resource "aws_vpc" "test" {
   cidr_block = "10.1.0.0/16"
-  tags {
+  tags = {
     Name = "terraform-testacc-security-group-rule-limit"
   }
 }
@@ -2497,7 +2584,7 @@ resource "aws_security_group" "test" {
   description = "Used in the terraform acceptance tests"
   vpc_id = "${aws_vpc.test.id}"
 
-	tags {
+	tags = {
     Name = "tf-acc-test"
   }
 
@@ -2524,7 +2611,7 @@ func testAccAWSSecurityGroupConfigCidrBlockRuleLimit(egressStartIndex, egressRul
 	c := `
 resource "aws_vpc" "test" {
   cidr_block = "10.1.0.0/16"
-  tags {
+  tags = {
     Name = "terraform-testacc-security-group-rule-limit"
   }
 }
@@ -2534,7 +2621,7 @@ resource "aws_security_group" "test" {
   description = "Used in the terraform acceptance tests"
   vpc_id = "${aws_vpc.test.id}"
 
-	tags {
+	tags = {
     Name = "tf-acc-test"
   }
 
@@ -2560,7 +2647,7 @@ resource "aws_security_group" "test" {
 const testAccAWSSecurityGroupConfigEmptyRuleDescription = `
 resource "aws_vpc" "foo" {
   cidr_block = "10.1.0.0/16"
-  tags {
+  tags = {
     Name = "terraform-testacc-security-group-empty-rule-description"
   }
 }
@@ -2586,7 +2673,7 @@ resource "aws_security_group" "web" {
     description = ""
   }
 
-  tags {
+  tags = {
     Name = "tf-acc-test"
   }
 }`
@@ -2594,7 +2681,7 @@ resource "aws_security_group" "web" {
 const testAccAWSSecurityGroupConfigIpv6 = `
 resource "aws_vpc" "foo" {
   cidr_block = "10.1.0.0/16"
-  tags {
+  tags = {
     Name = "terraform-testacc-security-group-ipv6"
   }
 }
@@ -2618,7 +2705,7 @@ resource "aws_security_group" "web" {
     ipv6_cidr_blocks = ["::/0"]
   }
 
-	tags {
+	tags = {
 		Name = "tf-acc-test"
 	}
 }
@@ -2627,7 +2714,7 @@ resource "aws_security_group" "web" {
 const testAccAWSSecurityGroupConfig = `
 resource "aws_vpc" "foo" {
   cidr_block = "10.1.0.0/16"
-	tags {
+	tags = {
 		Name = "terraform-testacc-security-group"
 	}
 }
@@ -2644,7 +2731,7 @@ resource "aws_security_group" "web" {
     cidr_blocks = ["10.0.0.0/8"]
   }
 
-	tags {
+	tags = {
 		Name = "tf-acc-revoke-test"
 	}
 }
@@ -2653,7 +2740,7 @@ resource "aws_security_group" "web" {
 const testAccAWSSecurityGroupConfig_revoke_base_removed = `
 resource "aws_vpc" "sg-race-revoke" {
   cidr_block = "10.1.0.0/16"
-	tags {
+	tags = {
 		Name = "terraform-testacc-security-group-revoke"
 	}
 }
@@ -2661,7 +2748,7 @@ resource "aws_vpc" "sg-race-revoke" {
 const testAccAWSSecurityGroupConfig_revoke_base = `
 resource "aws_vpc" "sg-race-revoke" {
   cidr_block = "10.1.0.0/16"
-	tags {
+	tags = {
 		Name = "terraform-testacc-security-group-revoke"
 	}
 }
@@ -2671,7 +2758,7 @@ resource "aws_security_group" "primary" {
   description = "Used in the terraform acceptance tests"
   vpc_id = "${aws_vpc.sg-race-revoke.id}"
 
-	tags {
+	tags = {
 		Name = "tf-acc-revoke-test-primary"
 	}
 }
@@ -2681,7 +2768,7 @@ resource "aws_security_group" "secondary" {
   description = "Used in the terraform acceptance tests"
   vpc_id = "${aws_vpc.sg-race-revoke.id}"
 
-	tags {
+	tags = {
 		Name = "tf-acc-revoke-test-secondary"
 	}
 }
@@ -2690,7 +2777,7 @@ resource "aws_security_group" "secondary" {
 const testAccAWSSecurityGroupConfig_revoke_false = `
 resource "aws_vpc" "sg-race-revoke" {
   cidr_block = "10.1.0.0/16"
-	tags {
+	tags = {
 		Name = "terraform-testacc-security-group-revoke"
 	}
 }
@@ -2700,7 +2787,7 @@ resource "aws_security_group" "primary" {
   description = "Used in the terraform acceptance tests"
   vpc_id = "${aws_vpc.sg-race-revoke.id}"
 
-	tags {
+	tags = {
 		Name = "tf-acc-revoke-test-primary"
 	}
 
@@ -2712,7 +2799,7 @@ resource "aws_security_group" "secondary" {
   description = "Used in the terraform acceptance tests"
   vpc_id = "${aws_vpc.sg-race-revoke.id}"
 
-	tags {
+	tags = {
 		Name = "tf-acc-revoke-test-secondary"
 	}
 
@@ -2723,7 +2810,7 @@ resource "aws_security_group" "secondary" {
 const testAccAWSSecurityGroupConfig_revoke_true = `
 resource "aws_vpc" "sg-race-revoke" {
   cidr_block = "10.1.0.0/16"
-	tags {
+	tags = {
 		Name = "terraform-testacc-security-group-revoke"
 	}
 }
@@ -2733,7 +2820,7 @@ resource "aws_security_group" "primary" {
   description = "Used in the terraform acceptance tests"
   vpc_id = "${aws_vpc.sg-race-revoke.id}"
 
-	tags {
+	tags = {
 		Name = "tf-acc-revoke-test-primary"
 	}
 
@@ -2745,7 +2832,7 @@ resource "aws_security_group" "secondary" {
   description = "Used in the terraform acceptance tests"
   vpc_id = "${aws_vpc.sg-race-revoke.id}"
 
-	tags {
+	tags = {
 		Name = "tf-acc-revoke-test-secondary"
 	}
 
@@ -2756,7 +2843,7 @@ resource "aws_security_group" "secondary" {
 const testAccAWSSecurityGroupConfigChange = `
 resource "aws_vpc" "foo" {
   cidr_block = "10.1.0.0/16"
-  tags {
+  tags = {
     Name = "terraform-testacc-security-group-change"
   }
 }
@@ -2793,35 +2880,36 @@ func testAccAWSSecurityGroupConfigRuleDescription(egressDescription, ingressDesc
 	return fmt.Sprintf(`
 resource "aws_vpc" "foo" {
   cidr_block = "10.1.0.0/16"
-  tags {
+
+  tags = {
     Name = "terraform-testacc-security-group-description"
   }
 }
 
 resource "aws_security_group" "web" {
-  name = "terraform_acceptance_test_example"
+  name        = "terraform_acceptance_test_example"
   description = "Used in the terraform acceptance tests"
-  vpc_id = "${aws_vpc.foo.id}"
+  vpc_id      = "${aws_vpc.foo.id}"
 
   ingress {
-    protocol = "6"
-    from_port = 80
-    to_port = 8000
+    protocol    = "6"
+    from_port   = 80
+    to_port     = 8000
     cidr_blocks = ["10.0.0.0/8"]
     description = "%s"
   }
 
   egress {
-    protocol = "tcp"
-    from_port = 80
-    to_port = 8000
+    protocol    = "tcp"
+    from_port   = 80
+    to_port     = 8000
     cidr_blocks = ["10.0.0.0/8"]
     description = "%s"
   }
 
-	tags {
-		Name = "tf-acc-test"
-	}
+  tags = {
+    Name = "tf-acc-test"
+  }
 }
 `, ingressDescription, egressDescription)
 }
@@ -2829,7 +2917,7 @@ resource "aws_security_group" "web" {
 const testAccAWSSecurityGroupConfigSelf = `
 resource "aws_vpc" "foo" {
   cidr_block = "10.1.0.0/16"
-  tags {
+  tags = {
     Name = "terraform-testacc-security-group-self"
   }
 }
@@ -2858,7 +2946,7 @@ resource "aws_security_group" "web" {
 const testAccAWSSecurityGroupConfigVpc = `
 resource "aws_vpc" "foo" {
   cidr_block = "10.1.0.0/16"
-  tags {
+  tags = {
     Name = "terraform-testacc-security-group-vpc"
   }
 }
@@ -2887,7 +2975,7 @@ resource "aws_security_group" "web" {
 const testAccAWSSecurityGroupConfigVpcNegOneIngress = `
 resource "aws_vpc" "foo" {
 	cidr_block = "10.1.0.0/16"
-	tags {
+	tags = {
 		Name = "terraform-testacc-security-group-vpc-neg-one-ingress"
 	}
 }
@@ -2909,7 +2997,7 @@ resource "aws_security_group" "web" {
 const testAccAWSSecurityGroupConfigVpcProtoNumIngress = `
 resource "aws_vpc" "foo" {
 	cidr_block = "10.1.0.0/16"
-	tags {
+	tags = {
 		Name = "terraform-testacc-security-group-vpc-proto-num-ingress"
 	}
 }
@@ -2931,7 +3019,7 @@ resource "aws_security_group" "web" {
 const testAccAWSSecurityGroupConfigMultiIngress = `
 resource "aws_vpc" "foo" {
 	cidr_block = "10.1.0.0/16"
-	tags {
+	tags = {
 		Name = "terraform-testacc-security-group-multi-ingress"
 	}
 }
@@ -2994,7 +3082,7 @@ resource "aws_security_group" "web" {
 const testAccAWSSecurityGroupConfigTags = `
 resource "aws_vpc" "foo" {
 	cidr_block = "10.1.0.0/16"
-	tags {
+	tags = {
 		Name = "terraform-testacc-security-group-tags"
 	}
 }
@@ -3004,7 +3092,7 @@ resource "aws_security_group" "foo" {
   description = "Used in the terraform acceptance tests"
   vpc_id = "${aws_vpc.foo.id}"
 
-  tags {
+  tags = {
     foo = "bar"
   }
 }
@@ -3013,7 +3101,7 @@ resource "aws_security_group" "foo" {
 const testAccAWSSecurityGroupConfigTagsUpdate = `
 resource "aws_vpc" "foo" {
 	cidr_block = "10.1.0.0/16"
-	tags {
+	tags = {
 		Name = "terraform-testacc-security-group-tags"
 	}
 }
@@ -3023,7 +3111,7 @@ resource "aws_security_group" "foo" {
   description = "Used in the terraform acceptance tests"
   vpc_id = "${aws_vpc.foo.id}"
 
-  tags {
+  tags = {
     bar = "baz"
     env = "Production"
   }
@@ -3033,7 +3121,7 @@ resource "aws_security_group" "foo" {
 const testAccAWSSecurityGroupConfig_generatedName = `
 resource "aws_vpc" "foo" {
 	cidr_block = "10.1.0.0/16"
-	tags {
+	tags = {
 		Name = "terraform-testacc-security-group-generated-name"
 	}
 }
@@ -3041,7 +3129,7 @@ resource "aws_vpc" "foo" {
 resource "aws_security_group" "web" {
   vpc_id = "${aws_vpc.foo.id}"
 
-	tags {
+	tags = {
 		Name = "tf-acc-test"
 	}
 }
@@ -3050,7 +3138,7 @@ resource "aws_security_group" "web" {
 const testAccAWSSecurityGroupConfigDefaultEgress = `
 resource "aws_vpc" "tf_sg_egress_test" {
     cidr_block = "10.0.0.0/16"
-    tags {
+  tags = {
         Name = "terraform-testacc-security-group-default-egress"
     }
 }
@@ -3090,26 +3178,26 @@ resource "aws_security_group" "baz" {
 func testAccAWSSecurityGroupConfig_drift() string {
 	return fmt.Sprintf(`
 resource "aws_security_group" "web" {
-  name = "tf_acc_%d"
+  name        = "tf_acc_%d"
   description = "Used in the terraform acceptance tests"
 
   ingress {
-    protocol = "tcp"
-    from_port = 80
-    to_port = 8000
+    protocol    = "tcp"
+    from_port   = 80
+    to_port     = 8000
     cidr_blocks = ["10.0.0.0/8"]
   }
 
   ingress {
-    protocol = "tcp"
-    from_port = 80
-    to_port = 8000
+    protocol    = "tcp"
+    from_port   = 80
+    to_port     = 8000
     cidr_blocks = ["206.0.0.0/8"]
   }
 
-        tags {
-                Name = "tf-acc-test"
-        }
+  tags = {
+    Name = "tf-acc-test"
+  }
 }
 `, acctest.RandInt())
 }
@@ -3117,22 +3205,23 @@ resource "aws_security_group" "web" {
 func testAccAWSSecurityGroupConfig_drift_complex() string {
 	return fmt.Sprintf(`
 resource "aws_vpc" "foo" {
-	cidr_block = "10.1.0.0/16"
-	tags {
-		Name = "terraform-testacc-security-group-drift-complex"
-	}
+  cidr_block = "10.1.0.0/16"
+
+  tags = {
+    Name = "terraform-testacc-security-group-drift-complex"
+  }
 }
 
 resource "aws_security_group" "otherweb" {
   name        = "tf_acc_%d"
   description = "Used in the terraform acceptance tests"
-  vpc_id = "${aws_vpc.foo.id}"
+  vpc_id      = "${aws_vpc.foo.id}"
 }
 
 resource "aws_security_group" "web" {
   name        = "tf_acc_%d"
   description = "Used in the terraform acceptance tests"
-  vpc_id = "${aws_vpc.foo.id}"
+  vpc_id      = "${aws_vpc.foo.id}"
 
   ingress {
     protocol    = "tcp"
@@ -3176,10 +3265,11 @@ resource "aws_security_group" "web" {
     security_groups = ["${aws_security_group.otherweb.id}"]
   }
 
-  tags {
+  tags = {
     Name = "tf-acc-test"
   }
-}`, acctest.RandInt(), acctest.RandInt())
+}
+`, acctest.RandInt(), acctest.RandInt())
 }
 
 const testAccAWSSecurityGroupInvalidIngressCidr = `
@@ -3233,7 +3323,7 @@ resource "aws_security_group" "foo" {
 const testAccAWSSecurityGroupCombindCIDRandGroups = `
 resource "aws_vpc" "foo" {
 	cidr_block = "10.1.0.0/16"
-	tags {
+	tags = {
 		Name = "terraform-testacc-security-group-combine-rand-groups"
 	}
 }
@@ -3241,7 +3331,7 @@ resource "aws_vpc" "foo" {
 resource "aws_security_group" "two" {
 	name = "tf-test-1"
 	vpc_id = "${aws_vpc.foo.id}"
-	tags {
+	tags = {
 		Name = "tf-test-1"
 	}
 }
@@ -3249,7 +3339,7 @@ resource "aws_security_group" "two" {
 resource "aws_security_group" "one" {
 	name = "tf-test-2"
 	vpc_id = "${aws_vpc.foo.id}"
-	tags {
+	tags = {
 		Name = "tf-test-w"
 	}
 }
@@ -3257,7 +3347,7 @@ resource "aws_security_group" "one" {
 resource "aws_security_group" "three" {
 	name = "tf-test-3"
 	vpc_id = "${aws_vpc.foo.id}"
-	tags {
+	tags = {
 		Name = "tf-test-3"
 	}
 }
@@ -3279,7 +3369,7 @@ resource "aws_security_group" "mixed" {
     ]
   }
 
-  tags {
+  tags = {
     Name = "tf-mix-test"
   }
 }
@@ -3288,7 +3378,7 @@ resource "aws_security_group" "mixed" {
 const testAccAWSSecurityGroupConfig_ingressWithCidrAndSGs = `
 resource "aws_vpc" "foo" {
 	cidr_block = "10.1.0.0/16"
-	tags {
+	tags = {
 		Name = "terraform-testacc-security-group-ingress-w-cidr-and-sg"
 	}
 }
@@ -3298,7 +3388,7 @@ resource "aws_security_group" "other_web" {
   description = "Used in the terraform acceptance tests"
   vpc_id = "${aws_vpc.foo.id}"
 
-  tags {
+  tags = {
     Name = "tf-acc-test"
   }
 }
@@ -3333,7 +3423,7 @@ resource "aws_security_group" "web" {
     cidr_blocks = ["10.0.0.0/8"]
   }
 
-  tags {
+  tags = {
     Name = "tf-acc-test"
   }
 }
@@ -3344,7 +3434,7 @@ resource "aws_security_group" "other_web" {
   name        = "tf_other_acc_tests"
   description = "Used in the terraform acceptance tests"
 
-  tags {
+  tags = {
     Name = "tf-acc-test"
   }
 }
@@ -3371,7 +3461,7 @@ resource "aws_security_group" "web" {
     security_groups = ["${aws_security_group.other_web.name}"]
   }
 
-  tags {
+  tags = {
     Name = "tf-acc-test"
   }
 }
@@ -3383,7 +3473,7 @@ const testAccAWSSecurityGroupConfig_failWithDiffMismatch = `
 resource "aws_vpc" "main" {
   cidr_block = "10.0.0.0/16"
 
-  tags {
+  tags = {
     Name = "terraform-testacc-security-group-fail-w-diff-mismatch"
   }
 }
@@ -3427,7 +3517,7 @@ const testAccAWSSecurityGroupConfig_importSelf = `
 resource "aws_vpc" "foo" {
   cidr_block = "10.1.0.0/16"
 
-  tags {
+  tags = {
     Name = "terraform-testacc-security-group-import-self"
   }
 }
@@ -3463,7 +3553,7 @@ const testAccAWSSecurityGroupConfig_importSourceSecurityGroup = `
 resource "aws_vpc" "foo" {
   cidr_block = "10.1.0.0/16"
 
-  tags {
+  tags = {
     Name = "terraform-testacc-security-group-import-source-sg"
   }
 }
@@ -3508,7 +3598,7 @@ const testAccAWSSecurityGroupConfig_importIPRangeAndSecurityGroupWithSameRules =
 resource "aws_vpc" "foo" {
   cidr_block = "10.1.0.0/16"
 
-  tags {
+  tags = {
     Name = "terraform-testacc-security-group-import-ip-range-and-sg"
   }
 }
@@ -3558,7 +3648,7 @@ const testAccAWSSecurityGroupConfig_importIPRangesWithSameRules = `
 resource "aws_vpc" "foo" {
   cidr_block = "10.1.0.0/16"
 
-  tags {
+  tags = {
     Name = "terraform-testacc-security-group-import-ip-ranges"
   }
 }
@@ -3593,7 +3683,7 @@ const testAccAWSSecurityGroupConfigIpv4andIpv6Egress = `
 resource "aws_vpc" "foo" {
   cidr_block = "10.1.0.0/16"
   assign_generated_ipv6_cidr_block = true
-  tags {
+  tags = {
       Name = "terraform-testacc-security-group-ipv4-and-ipv6-egress"
   }
 }
@@ -3622,7 +3712,7 @@ data "aws_region" "current" {}
 
 resource "aws_vpc" "tf_sg_prefix_list_egress_test" {
     cidr_block = "10.0.0.0/16"
-    tags {
+  tags = {
         Name = "terraform-testacc-security-group-prefix-list-egress"
     }
 }
@@ -3670,7 +3760,7 @@ data "aws_region" "current" {}
 
 resource "aws_vpc" "tf_sg_prefix_list_ingress_test" {
     cidr_block = "10.0.0.0/16"
-    tags {
+  tags = {
         Name = "terraform-testacc-security-group-prefix-list-ingress"
     }
 }
@@ -3724,7 +3814,7 @@ data "aws_region" "current" {}
 resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"
 
-  tags {
+  tags = {
     Name = "${var.name}"
   }
 }
@@ -3841,7 +3931,7 @@ resource "aws_security_group" "test" {
 const testAccAWSSecurityGroupConfig_rulesDropOnError_Init = `
 resource "aws_vpc" "test" {
   cidr_block = "10.1.0.0/16"
-  tags {
+  tags = {
     Name = "terraform-testacc-security-group-drop-rules-test"
   }
 }
@@ -3861,7 +3951,7 @@ resource "aws_security_group" "test" {
   description = "Used in the terraform acceptance tests"
   vpc_id = "${aws_vpc.test.id}"
 
-  tags {
+  tags = {
     Name = "tf-acc-test"
   }
 
@@ -3880,7 +3970,7 @@ resource "aws_security_group" "test" {
 const testAccAWSSecurityGroupConfig_rulesDropOnError_AddBadRule = `
 resource "aws_vpc" "test" {
   cidr_block = "10.1.0.0/16"
-  tags {
+  tags = {
     Name = "terraform-testacc-security-group-drop-rules-test"
   }
 }
@@ -3900,7 +3990,7 @@ resource "aws_security_group" "test" {
   description = "Used in the terraform acceptance tests"
   vpc_id = "${aws_vpc.test.id}"
 
-  tags {
+  tags = {
     Name = "tf-acc-test"
   }
 
@@ -3916,3 +4006,155 @@ resource "aws_security_group" "test" {
   }
 }
 `
+
+func testAccAWSSecurityGroupConfigEgressConfigModeBlocks() string {
+	return fmt.Sprintf(`
+resource "aws_vpc" "test" {
+  cidr_block = "10.0.0.0/16"
+
+  tags = {
+    Name = "terraform-testacc-security-group-egress-config-mode"
+  }
+}
+
+resource "aws_security_group" "test" {
+  tags = {
+    Name = "terraform-testacc-security-group-egress-config-mode"
+  }
+
+  vpc_id = "${aws_vpc.test.id}"
+
+  egress {
+    cidr_blocks = ["${aws_vpc.test.cidr_block}"]
+    from_port   = 0
+    protocol    = "tcp"
+    to_port     = 0
+  }
+
+  egress {
+    cidr_blocks = ["${aws_vpc.test.cidr_block}"]
+    from_port   = 0
+    protocol    = "udp"
+    to_port     = 0
+  }
+}
+`)
+}
+
+func testAccAWSSecurityGroupConfigEgressConfigModeNoBlocks() string {
+	return fmt.Sprintf(`
+resource "aws_vpc" "test" {
+  cidr_block = "10.0.0.0/16"
+
+  tags = {
+    Name = "terraform-testacc-security-group-egress-config-mode"
+  }
+}
+
+resource "aws_security_group" "test" {
+  tags = {
+    Name = "terraform-testacc-security-group-egress-config-mode"
+  }
+
+  vpc_id = "${aws_vpc.test.id}"
+}
+`)
+}
+
+func testAccAWSSecurityGroupConfigEgressConfigModeZeroed() string {
+	return fmt.Sprintf(`
+resource "aws_vpc" "test" {
+  cidr_block = "10.0.0.0/16"
+
+  tags = {
+    Name = "terraform-testacc-security-group-egress-config-mode"
+  }
+}
+
+resource "aws_security_group" "test" {
+  egress = []
+
+  tags = {
+    Name = "terraform-testacc-security-group-egress-config-mode"
+  }
+
+  vpc_id = "${aws_vpc.test.id}"
+}
+`)
+}
+
+func testAccAWSSecurityGroupConfigIngressConfigModeBlocks() string {
+	return fmt.Sprintf(`
+resource "aws_vpc" "test" {
+  cidr_block = "10.0.0.0/16"
+
+  tags = {
+    Name = "terraform-testacc-security-group-ingress-config-mode"
+  }
+}
+
+resource "aws_security_group" "test" {
+  tags = {
+    Name = "terraform-testacc-security-group-ingress-config-mode"
+  }
+
+  vpc_id = "${aws_vpc.test.id}"
+
+  ingress {
+    cidr_blocks = ["${aws_vpc.test.cidr_block}"]
+    from_port   = 0
+    protocol    = "tcp"
+    to_port     = 0
+  }
+
+  ingress {
+    cidr_blocks = ["${aws_vpc.test.cidr_block}"]
+    from_port   = 0
+    protocol    = "udp"
+    to_port     = 0
+  }
+}
+`)
+}
+
+func testAccAWSSecurityGroupConfigIngressConfigModeNoBlocks() string {
+	return fmt.Sprintf(`
+resource "aws_vpc" "test" {
+  cidr_block = "10.0.0.0/16"
+
+  tags = {
+    Name = "terraform-testacc-security-group-ingress-config-mode"
+  }
+}
+
+resource "aws_security_group" "test" {
+  tags = {
+    Name = "terraform-testacc-security-group-ingress-config-mode"
+  }
+
+  vpc_id = "${aws_vpc.test.id}"
+}
+`)
+}
+
+func testAccAWSSecurityGroupConfigIngressConfigModeZeroed() string {
+	return fmt.Sprintf(`
+resource "aws_vpc" "test" {
+  cidr_block = "10.0.0.0/16"
+
+  tags = {
+    Name = "terraform-testacc-security-group-ingress-config-mode"
+  }
+}
+
+resource "aws_security_group" "test" {
+  ingress = []
+
+  tags = {
+    Name = "terraform-testacc-security-group-ingress-config-mode"
+  }
+
+  vpc_id = "${aws_vpc.test.id}"
+}
+`)
+}

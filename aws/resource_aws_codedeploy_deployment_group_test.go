@@ -23,7 +23,7 @@ func TestAccAWSCodeDeployDeploymentGroup_basic(t *testing.T) {
 
 	rName := acctest.RandString(5)
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSCodeDeployDeploymentGroupDestroy,
@@ -109,7 +109,7 @@ func TestAccAWSCodeDeployDeploymentGroup_basic_tagSet(t *testing.T) {
 
 	rName := acctest.RandString(5)
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSCodeDeployDeploymentGroupDestroy,
@@ -199,7 +199,7 @@ func TestAccAWSCodeDeployDeploymentGroup_onPremiseTag(t *testing.T) {
 
 	rName := acctest.RandString(5)
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSCodeDeployDeploymentGroupDestroy,
@@ -239,7 +239,7 @@ func TestAccAWSCodeDeployDeploymentGroup_disappears(t *testing.T) {
 	var group codedeploy.DeploymentGroupInfo
 	rName := acctest.RandString(5)
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSCodeDeployDeploymentGroupDestroy,
@@ -261,7 +261,7 @@ func TestAccAWSCodeDeployDeploymentGroup_triggerConfiguration_basic(t *testing.T
 
 	rName := acctest.RandString(5)
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSCodeDeployDeploymentGroupDestroy,
@@ -308,7 +308,7 @@ func TestAccAWSCodeDeployDeploymentGroup_triggerConfiguration_multiple(t *testin
 
 	rName := acctest.RandString(5)
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSCodeDeployDeploymentGroupDestroy,
@@ -367,7 +367,7 @@ func TestAccAWSCodeDeployDeploymentGroup_autoRollbackConfiguration_create(t *tes
 
 	rName := acctest.RandString(5)
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSCodeDeployDeploymentGroupDestroy,
@@ -409,7 +409,7 @@ func TestAccAWSCodeDeployDeploymentGroup_autoRollbackConfiguration_update(t *tes
 
 	rName := acctest.RandString(5)
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSCodeDeployDeploymentGroupDestroy,
@@ -459,7 +459,7 @@ func TestAccAWSCodeDeployDeploymentGroup_autoRollbackConfiguration_delete(t *tes
 
 	rName := acctest.RandString(5)
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSCodeDeployDeploymentGroupDestroy,
@@ -501,7 +501,7 @@ func TestAccAWSCodeDeployDeploymentGroup_autoRollbackConfiguration_disable(t *te
 
 	rName := acctest.RandString(5)
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSCodeDeployDeploymentGroupDestroy,
@@ -549,7 +549,7 @@ func TestAccAWSCodeDeployDeploymentGroup_alarmConfiguration_create(t *testing.T)
 
 	rName := acctest.RandString(5)
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSCodeDeployDeploymentGroupDestroy,
@@ -593,7 +593,7 @@ func TestAccAWSCodeDeployDeploymentGroup_alarmConfiguration_update(t *testing.T)
 
 	rName := acctest.RandString(5)
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSCodeDeployDeploymentGroupDestroy,
@@ -647,7 +647,7 @@ func TestAccAWSCodeDeployDeploymentGroup_alarmConfiguration_delete(t *testing.T)
 
 	rName := acctest.RandString(5)
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSCodeDeployDeploymentGroupDestroy,
@@ -691,7 +691,7 @@ func TestAccAWSCodeDeployDeploymentGroup_alarmConfiguration_disable(t *testing.T
 
 	rName := acctest.RandString(5)
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSCodeDeployDeploymentGroupDestroy,
@@ -744,7 +744,7 @@ func TestAccAWSCodeDeployDeploymentGroup_deploymentStyle_default(t *testing.T) {
 
 	rName := acctest.RandString(5)
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSCodeDeployDeploymentGroupDestroy,
@@ -776,7 +776,7 @@ func TestAccAWSCodeDeployDeploymentGroup_deploymentStyle_create(t *testing.T) {
 
 	rName := acctest.RandString(5)
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSCodeDeployDeploymentGroupDestroy,
@@ -827,7 +827,7 @@ func TestAccAWSCodeDeployDeploymentGroup_deploymentStyle_update(t *testing.T) {
 
 	rName := acctest.RandString(5)
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSCodeDeployDeploymentGroupDestroy,
@@ -873,7 +873,7 @@ func TestAccAWSCodeDeployDeploymentGroup_deploymentStyle_delete(t *testing.T) {
 
 	rName := acctest.RandString(5)
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSCodeDeployDeploymentGroupDestroy,
@@ -917,7 +917,7 @@ func TestAccAWSCodeDeployDeploymentGroup_loadBalancerInfo_create(t *testing.T) {
 
 	rName := acctest.RandString(5)
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSCodeDeployDeploymentGroupDestroy,
@@ -957,7 +957,7 @@ func TestAccAWSCodeDeployDeploymentGroup_loadBalancerInfo_update(t *testing.T) {
 
 	rName := acctest.RandString(5)
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSCodeDeployDeploymentGroupDestroy,
@@ -1003,7 +1003,7 @@ func TestAccAWSCodeDeployDeploymentGroup_loadBalancerInfo_delete(t *testing.T) {
 
 	rName := acctest.RandString(5)
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSCodeDeployDeploymentGroupDestroy,
@@ -1043,7 +1043,7 @@ func TestAccAWSCodeDeployDeploymentGroup_loadBalancerInfo_targetGroupInfo_create
 
 	rName := acctest.RandString(5)
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSCodeDeployDeploymentGroupDestroy,
@@ -1084,7 +1084,7 @@ func TestAccAWSCodeDeployDeploymentGroup_loadBalancerInfo_targetGroupInfo_update
 
 	rName := acctest.RandString(5)
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSCodeDeployDeploymentGroupDestroy,
@@ -1128,7 +1128,7 @@ func TestAccAWSCodeDeployDeploymentGroup_loadBalancerInfo_targetGroupInfo_delete
 
 	rName := acctest.RandString(5)
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSCodeDeployDeploymentGroupDestroy,
@@ -1168,7 +1168,7 @@ func TestAccAWSCodeDeployDeploymentGroup_in_place_deployment_with_traffic_contro
 
 	rName := acctest.RandString(5)
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSCodeDeployDeploymentGroupDestroy,
@@ -1221,7 +1221,7 @@ func TestAccAWSCodeDeployDeploymentGroup_in_place_deployment_with_traffic_contro
 
 	rName := acctest.RandString(5)
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSCodeDeployDeploymentGroupDestroy,
@@ -1294,7 +1294,7 @@ func TestAccAWSCodeDeployDeploymentGroup_blueGreenDeploymentConfiguration_create
 
 	rName := acctest.RandString(5)
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSCodeDeployDeploymentGroupDestroy,
@@ -1349,7 +1349,7 @@ func TestAccAWSCodeDeployDeploymentGroup_blueGreenDeploymentConfiguration_update
 
 	rName := acctest.RandString(5)
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSCodeDeployDeploymentGroupDestroy,
@@ -1415,7 +1415,7 @@ func TestAccAWSCodeDeployDeploymentGroup_blueGreenDeploymentConfiguration_update
 
 	rName := acctest.RandString(5)
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSCodeDeployDeploymentGroupDestroy,
@@ -1481,7 +1481,7 @@ func TestAccAWSCodeDeployDeploymentGroup_blueGreenDeploymentConfiguration_delete
 
 	rName := acctest.RandString(5)
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSCodeDeployDeploymentGroupDestroy,
@@ -1536,7 +1536,7 @@ func TestAccAWSCodeDeployDeploymentGroup_blueGreenDeployment_complete(t *testing
 
 	rName := acctest.RandString(5)
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSCodeDeployDeploymentGroupDestroy,
@@ -1627,6 +1627,47 @@ func TestAccAWSCodeDeployDeploymentGroup_blueGreenDeployment_complete(t *testing
 				ResourceName:      "aws_codedeploy_deployment_group.foo_group",
 				ImportState:       true,
 				ImportStateIdFunc: testAccAWSCodeDeployDeploymentGroupImportStateIdFunc("aws_codedeploy_deployment_group.foo_group"),
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccAWSCodeDeployDeploymentGroup_ECS_BlueGreen(t *testing.T) {
+	var group codedeploy.DeploymentGroupInfo
+	rName := fmt.Sprintf("tf-acc-test-%s", acctest.RandString(5))
+	ecsClusterResourceName := "aws_ecs_cluster.test"
+	ecsServiceResourceName := "aws_ecs_service.test"
+	lbTargetGroupBlueResourceName := "aws_lb_target_group.blue"
+	lbTargetGroupGreenResourceName := "aws_lb_target_group.green"
+	resourceName := "aws_codedeploy_deployment_group.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSCodeDeployDeploymentGroupDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSCodeDeployDeploymentGroupConfigEcsBlueGreen(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSCodeDeployDeploymentGroupExists(resourceName, &group),
+					resource.TestCheckResourceAttr(resourceName, "ecs_service.#", "1"),
+					resource.TestCheckResourceAttrPair(resourceName, "ecs_service.0.cluster_name", ecsClusterResourceName, "name"),
+					resource.TestCheckResourceAttrPair(resourceName, "ecs_service.0.service_name", ecsServiceResourceName, "name"),
+					resource.TestCheckResourceAttr(resourceName, "load_balancer_info.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "load_balancer_info.0.target_group_pair_info.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "load_balancer_info.0.target_group_pair_info.0.prod_traffic_route.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "load_balancer_info.0.target_group_pair_info.0.prod_traffic_route.0.listener_arns.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "load_balancer_info.0.target_group_pair_info.0.target_group.#", "2"),
+					resource.TestCheckResourceAttrPair(resourceName, "load_balancer_info.0.target_group_pair_info.0.target_group.0.name", lbTargetGroupBlueResourceName, "name"),
+					resource.TestCheckResourceAttrPair(resourceName, "load_balancer_info.0.target_group_pair_info.0.target_group.1.name", lbTargetGroupGreenResourceName, "name"),
+					resource.TestCheckResourceAttr(resourceName, "load_balancer_info.0.target_group_pair_info.0.test_traffic_route.#", "0"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateIdFunc: testAccAWSCodeDeployDeploymentGroupImportStateIdFunc(resourceName),
 				ImportStateVerify: true,
 			},
 		},
@@ -1875,7 +1916,7 @@ func TestAWSCodeDeployDeploymentGroup_flattenLoadBalancerInfo(t *testing.T) {
 		}),
 	}
 
-	actual := flattenLoadBalancerInfo(input)[0]
+	actual := flattenLoadBalancerInfo(input)[0].(map[string]interface{})
 
 	fatal := false
 
@@ -2351,7 +2392,8 @@ resource "aws_codedeploy_deployment_group" "foo" {
   deployment_group_name = "foo_%s"
   service_role_arn = "${aws_iam_role.foo_role.arn}"
   %s
-}`, rName, rName, rName, rName, tagGroupOrFilter)
+}
+`, rName, rName, rName, rName, tagGroupOrFilter)
 }
 
 func testAccAWSCodeDeployDeploymentGroupModified(rName string, tagGroup bool) string {
@@ -2433,7 +2475,8 @@ resource "aws_codedeploy_deployment_group" "foo" {
   deployment_group_name = "bar_%s"
   service_role_arn = "${aws_iam_role.bar_role.arn}"
   %s
-}`, rName, rName, rName, rName, tagGroupOrFilter)
+}
+`, rName, rName, rName, rName, tagGroupOrFilter)
 }
 
 func testAccAWSCodeDeployDeploymentGroupOnPremiseTags(rName string) string {
@@ -2500,7 +2543,8 @@ resource "aws_codedeploy_deployment_group" "foo" {
     type = "KEY_AND_VALUE"
     value = "filtervalue"
   }
-}`, rName, rName, rName, rName)
+}
+`, rName, rName, rName, rName)
 }
 
 func baseCodeDeployConfig(rName string) string {
@@ -2560,7 +2604,8 @@ EOF
 
 resource "aws_sns_topic" "foo_topic" {
   name = "foo-topic-%s"
-}`, rName, rName, rName, rName)
+}
+`, rName, rName, rName, rName)
 }
 
 func testAccAWSCodeDeployDeploymentGroup_triggerConfiguration_create(rName string) string {
@@ -2578,7 +2623,8 @@ resource "aws_codedeploy_deployment_group" "foo_group" {
     trigger_name = "foo-trigger"
     trigger_target_arn = "${aws_sns_topic.foo_topic.arn}"
   }
-}`, baseCodeDeployConfig(rName), rName)
+}
+`, baseCodeDeployConfig(rName), rName)
 }
 
 func testAccAWSCodeDeployDeploymentGroup_triggerConfiguration_update(rName string) string {
@@ -2596,7 +2642,8 @@ resource "aws_codedeploy_deployment_group" "foo_group" {
     trigger_name = "foo-trigger"
     trigger_target_arn = "${aws_sns_topic.foo_topic.arn}"
   }
-}`, baseCodeDeployConfig(rName), rName)
+}
+`, baseCodeDeployConfig(rName), rName)
 }
 
 func testAccAWSCodeDeployDeploymentGroup_triggerConfiguration_createMultiple(rName string) string {
@@ -2624,7 +2671,8 @@ resource "aws_codedeploy_deployment_group" "foo_group" {
     trigger_name = "bar-trigger"
     trigger_target_arn = "${aws_sns_topic.bar_topic.arn}"
   }
-}`, baseCodeDeployConfig(rName), rName, rName)
+}
+`, baseCodeDeployConfig(rName), rName, rName)
 }
 
 func testAccAWSCodeDeployDeploymentGroup_triggerConfiguration_updateMultiple(rName string) string {
@@ -2656,7 +2704,8 @@ resource "aws_codedeploy_deployment_group" "foo_group" {
     trigger_name = "bar-trigger"
     trigger_target_arn = "${aws_sns_topic.baz_topic.arn}"
   }
-}`, baseCodeDeployConfig(rName), rName, rName, rName)
+}
+`, baseCodeDeployConfig(rName), rName, rName, rName)
 }
 
 func test_config_auto_rollback_configuration_create(rName string) string {
@@ -2673,7 +2722,8 @@ resource "aws_codedeploy_deployment_group" "foo_group" {
     enabled = true
     events = ["DEPLOYMENT_FAILURE"]
   }
-}`, baseCodeDeployConfig(rName), rName)
+}
+`, baseCodeDeployConfig(rName), rName)
 }
 
 func test_config_auto_rollback_configuration_update(rName string) string {
@@ -2690,7 +2740,8 @@ resource "aws_codedeploy_deployment_group" "foo_group" {
     enabled = true
     events = ["DEPLOYMENT_FAILURE", "DEPLOYMENT_STOP_ON_ALARM"]
   }
-}`, baseCodeDeployConfig(rName), rName)
+}
+`, baseCodeDeployConfig(rName), rName)
 }
 
 func test_config_auto_rollback_configuration_delete(rName string) string {
@@ -2702,7 +2753,8 @@ resource "aws_codedeploy_deployment_group" "foo_group" {
   app_name = "${aws_codedeploy_app.foo_app.name}"
   deployment_group_name = "foo-group-%s"
   service_role_arn = "${aws_iam_role.foo_role.arn}"
-}`, baseCodeDeployConfig(rName), rName)
+}
+`, baseCodeDeployConfig(rName), rName)
 }
 
 func test_config_auto_rollback_configuration_disable(rName string) string {
@@ -2719,7 +2771,8 @@ resource "aws_codedeploy_deployment_group" "foo_group" {
     enabled = false
     events = ["DEPLOYMENT_FAILURE"]
   }
-}`, baseCodeDeployConfig(rName), rName)
+}
+`, baseCodeDeployConfig(rName), rName)
 }
 
 func test_config_alarm_configuration_create(rName string) string {
@@ -2736,7 +2789,8 @@ resource "aws_codedeploy_deployment_group" "foo_group" {
     alarms = ["foo"]
     enabled = true
   }
-}`, baseCodeDeployConfig(rName), rName)
+}
+`, baseCodeDeployConfig(rName), rName)
 }
 
 func test_config_alarm_configuration_update(rName string) string {
@@ -2754,7 +2808,8 @@ resource "aws_codedeploy_deployment_group" "foo_group" {
     enabled = true
     ignore_poll_alarm_failure = true
   }
-}`, baseCodeDeployConfig(rName), rName)
+}
+`, baseCodeDeployConfig(rName), rName)
 }
 
 func test_config_alarm_configuration_delete(rName string) string {
@@ -2766,7 +2821,8 @@ resource "aws_codedeploy_deployment_group" "foo_group" {
   app_name = "${aws_codedeploy_app.foo_app.name}"
   deployment_group_name = "foo-group-%s"
   service_role_arn = "${aws_iam_role.foo_role.arn}"
-}`, baseCodeDeployConfig(rName), rName)
+}
+`, baseCodeDeployConfig(rName), rName)
 }
 
 func test_config_alarm_configuration_disable(rName string) string {
@@ -2783,7 +2839,8 @@ resource "aws_codedeploy_deployment_group" "foo_group" {
     alarms = ["foo"]
     enabled = false
   }
-}`, baseCodeDeployConfig(rName), rName)
+}
+`, baseCodeDeployConfig(rName), rName)
 }
 
 func test_config_deployment_style_default(rName string) string {
@@ -2795,7 +2852,8 @@ resource "aws_codedeploy_deployment_group" "foo_group" {
   app_name = "${aws_codedeploy_app.foo_app.name}"
   deployment_group_name = "foo-group-%s"
   service_role_arn = "${aws_iam_role.foo_role.arn}"
-}`, baseCodeDeployConfig(rName), rName)
+}
+`, baseCodeDeployConfig(rName), rName)
 }
 
 func test_config_deployment_style_create(rName string) string {
@@ -2818,7 +2876,8 @@ resource "aws_codedeploy_deployment_group" "foo_group" {
       name = "foo-elb"
     }
   }
-}`, baseCodeDeployConfig(rName), rName)
+}
+`, baseCodeDeployConfig(rName), rName)
 }
 
 func test_config_deployment_style_update(rName string) string {
@@ -2835,7 +2894,8 @@ resource "aws_codedeploy_deployment_group" "foo_group" {
     deployment_option = "WITHOUT_TRAFFIC_CONTROL"
     deployment_type = "IN_PLACE"
   }
-}`, baseCodeDeployConfig(rName), rName)
+}
+`, baseCodeDeployConfig(rName), rName)
 }
 
 func test_config_load_balancer_info_default(rName string) string {
@@ -2847,7 +2907,8 @@ resource "aws_codedeploy_deployment_group" "foo_group" {
   app_name = "${aws_codedeploy_app.foo_app.name}"
   deployment_group_name = "foo-group-%s"
   service_role_arn = "${aws_iam_role.foo_role.arn}"
-}`, baseCodeDeployConfig(rName), rName)
+}
+`, baseCodeDeployConfig(rName), rName)
 }
 
 func test_config_load_balancer_info_create(rName string) string {
@@ -2865,7 +2926,8 @@ resource "aws_codedeploy_deployment_group" "foo_group" {
       name = "foo-elb"
     }
   }
-}`, baseCodeDeployConfig(rName), rName)
+}
+`, baseCodeDeployConfig(rName), rName)
 }
 
 func test_config_load_balancer_info_update(rName string) string {
@@ -2883,7 +2945,8 @@ resource "aws_codedeploy_deployment_group" "foo_group" {
       name = "bar-elb"
     }
   }
-}`, baseCodeDeployConfig(rName), rName)
+}
+`, baseCodeDeployConfig(rName), rName)
 }
 
 func test_config_load_balancer_info_delete(rName string) string {
@@ -2895,7 +2958,8 @@ resource "aws_codedeploy_deployment_group" "foo_group" {
   app_name = "${aws_codedeploy_app.foo_app.name}"
   deployment_group_name = "foo-group-%s"
   service_role_arn = "${aws_iam_role.foo_role.arn}"
-}`, baseCodeDeployConfig(rName), rName)
+}
+`, baseCodeDeployConfig(rName), rName)
 }
 
 func test_config_load_balancer_info_target_group_info_create(rName string) string {
@@ -2913,7 +2977,8 @@ resource "aws_codedeploy_deployment_group" "foo_group" {
       name = "foo-tg"
     }
   }
-}`, baseCodeDeployConfig(rName), rName)
+}
+`, baseCodeDeployConfig(rName), rName)
 }
 
 func test_config_load_balancer_info_target_group_info_update(rName string) string {
@@ -2931,7 +2996,8 @@ resource "aws_codedeploy_deployment_group" "foo_group" {
       name = "bar-tg"
     }
   }
-}`, baseCodeDeployConfig(rName), rName)
+}
+`, baseCodeDeployConfig(rName), rName)
 }
 
 func test_config_load_balancer_info_target_group_info_delete(rName string) string {
@@ -2943,7 +3009,8 @@ resource "aws_codedeploy_deployment_group" "foo_group" {
   app_name = "${aws_codedeploy_app.foo_app.name}"
   deployment_group_name = "foo-group-%s"
   service_role_arn = "${aws_iam_role.foo_role.arn}"
-}`, baseCodeDeployConfig(rName), rName)
+}
+`, baseCodeDeployConfig(rName), rName)
 }
 
 func test_config_in_place_deployment_with_traffic_control_create(rName string) string {
@@ -2966,7 +3033,8 @@ resource "aws_codedeploy_deployment_group" "foo_group" {
       name = "foo-elb"
     }
   }
-}`, baseCodeDeployConfig(rName), rName)
+}
+`, baseCodeDeployConfig(rName), rName)
 }
 
 func test_config_in_place_deployment_with_traffic_control_update(rName string) string {
@@ -3003,7 +3071,8 @@ resource "aws_codedeploy_deployment_group" "foo_group" {
       action = "KEEP_ALIVE"
     }
   }
-}`, baseCodeDeployConfig(rName), rName)
+}
+`, baseCodeDeployConfig(rName), rName)
 }
 
 func test_config_blue_green_deployment_config_default(rName string) string {
@@ -3015,7 +3084,8 @@ resource "aws_codedeploy_deployment_group" "foo_group" {
   app_name = "${aws_codedeploy_app.foo_app.name}"
   deployment_group_name = "foo-group-%s"
   service_role_arn = "${aws_iam_role.foo_role.arn}"
-}`, baseCodeDeployConfig(rName), rName)
+}
+`, baseCodeDeployConfig(rName), rName)
 }
 
 func test_config_blue_green_deployment_config_create_with_asg(rName string) string {
@@ -3023,10 +3093,31 @@ func test_config_blue_green_deployment_config_create_with_asg(rName string) stri
 
   %s
 
+data "aws_ami" "amzn-ami-minimal-hvm-ebs" {
+  most_recent = true
+  owners      = ["amazon"]
+
+  filter {
+    name = "name"
+    values = ["amzn-ami-minimal-hvm-*"]
+  }
+  filter {
+    name = "root-device-type"
+    values = ["ebs"]
+  }
+}
+
+data "aws_availability_zones" "available" {}
+
+data "aws_subnet" "test" {
+  availability_zone = "${data.aws_availability_zones.available.names[0]}"
+  default_for_az    = "true"
+}
+
 resource "aws_launch_configuration" "foo_lc" {
-  image_id = "ami-21f78e11"
-  instance_type = "t1.micro"
-  "name_prefix" = "foo-lc-"
+  image_id = "${data.aws_ami.amzn-ami-minimal-hvm-ebs.id}"
+  instance_type = "t2.micro"
+  name_prefix = "foo-lc-"
 
   lifecycle {
     create_before_destroy = true
@@ -3039,7 +3130,7 @@ resource "aws_autoscaling_group" "foo_asg" {
   min_size = 0
   desired_capacity = 1
 
-  availability_zones = ["us-west-2a"]
+  vpc_zone_identifier = ["${data.aws_subnet.test.id}"]
 
   launch_configuration = "${aws_launch_configuration.foo_lc.name}"
 
@@ -3070,7 +3161,8 @@ resource "aws_codedeploy_deployment_group" "foo_group" {
       termination_wait_time_in_minutes = 120
     }
   }
-}`, baseCodeDeployConfig(rName), rName, rName)
+}
+`, baseCodeDeployConfig(rName), rName, rName)
 }
 
 func test_config_blue_green_deployment_config_update_with_asg(rName string) string {
@@ -3078,10 +3170,31 @@ func test_config_blue_green_deployment_config_update_with_asg(rName string) stri
 
   %s
 
+data "aws_ami" "amzn-ami-minimal-hvm-ebs" {
+  most_recent = true
+  owners      = ["amazon"]
+
+  filter {
+    name = "name"
+    values = ["amzn-ami-minimal-hvm-*"]
+  }
+  filter {
+    name = "root-device-type"
+    values = ["ebs"]
+  }
+}
+
+data "aws_availability_zones" "available" {}
+
+data "aws_subnet" "test" {
+  availability_zone = "${data.aws_availability_zones.available.names[0]}"
+  default_for_az    = "true"
+}
+
 resource "aws_launch_configuration" "foo_lc" {
-  image_id = "ami-21f78e11"
-  instance_type = "t1.micro"
-  "name_prefix" = "foo-lc-"
+  image_id = "${data.aws_ami.amzn-ami-minimal-hvm-ebs.id}"
+  instance_type = "t2.micro"
+  name_prefix = "foo-lc-"
 
   lifecycle {
     create_before_destroy = true
@@ -3094,7 +3207,7 @@ resource "aws_autoscaling_group" "foo_asg" {
   min_size = 0
   desired_capacity = 1
 
-  availability_zones = ["us-west-2a"]
+  vpc_zone_identifier = ["${data.aws_subnet.test.id}"]
 
   launch_configuration = "${aws_launch_configuration.foo_lc.name}"
 
@@ -3124,7 +3237,8 @@ resource "aws_codedeploy_deployment_group" "foo_group" {
       action = "KEEP_ALIVE"
     }
   }
-}`, baseCodeDeployConfig(rName), rName, rName)
+}
+`, baseCodeDeployConfig(rName), rName, rName)
 }
 
 func test_config_blue_green_deployment_config_create_no_asg(rName string) string {
@@ -3152,7 +3266,8 @@ resource "aws_codedeploy_deployment_group" "foo_group" {
       termination_wait_time_in_minutes = 120
     }
   }
-}`, baseCodeDeployConfig(rName), rName)
+}
+`, baseCodeDeployConfig(rName), rName)
 }
 
 func test_config_blue_green_deployment_config_update_no_asg(rName string) string {
@@ -3178,7 +3293,8 @@ resource "aws_codedeploy_deployment_group" "foo_group" {
       action = "KEEP_ALIVE"
     }
   }
-}`, baseCodeDeployConfig(rName), rName)
+}
+`, baseCodeDeployConfig(rName), rName)
 }
 
 func test_config_blue_green_deployment_complete(rName string) string {
@@ -3216,7 +3332,8 @@ resource "aws_codedeploy_deployment_group" "foo_group" {
       action = "KEEP_ALIVE"
     }
   }
-}`, baseCodeDeployConfig(rName), rName)
+}
+`, baseCodeDeployConfig(rName), rName)
 }
 
 func test_config_blue_green_deployment_complete_updated(rName string) string {
@@ -3253,5 +3370,243 @@ resource "aws_codedeploy_deployment_group" "foo_group" {
       action = "KEEP_ALIVE"
     }
   }
-}`, baseCodeDeployConfig(rName), rName)
+}
+`, baseCodeDeployConfig(rName), rName)
+}
+
+func testAccAWSCodeDeployDeploymentGroupConfigEcsBase(rName string) string {
+	return fmt.Sprintf(`
+data "aws_availability_zones" "available" {}
+
+resource "aws_vpc" "test" {
+  cidr_block = "10.0.0.0/16"
+
+  tags = {
+    Name = "tf-acc-test-codedeploy-deployment-group-ecs"
+  }
+}
+
+resource "aws_subnet" "test" {
+  count = 2
+
+  availability_zone = "${data.aws_availability_zones.available.names[count.index]}"
+  cidr_block        = "${cidrsubnet(aws_vpc.test.cidr_block, 8, count.index)}"
+  vpc_id            = "${aws_vpc.test.id}"
+
+  tags = {
+    Name = "tf-acc-test-codedeploy-deployment-group-ecs"
+  }
+}
+
+resource "aws_security_group" "test" {
+  name   = %q
+  vpc_id = "${aws_vpc.test.id}"
+
+  ingress {
+    cidr_blocks = ["${aws_vpc.test.cidr_block}"]
+    from_port   = 80
+    protocol    = "6"
+    to_port     = 8000
+  }
+}
+
+resource "aws_lb_target_group" "blue" {
+  name        = "${aws_lb.test.name}-blue"
+  port        = 80
+  protocol    = "HTTP"
+  target_type = "ip"
+  vpc_id      = "${aws_vpc.test.id}"
+}
+
+resource "aws_lb_target_group" "green" {
+  name        = "${aws_lb.test.name}-green"
+  port        = 80
+  protocol    = "HTTP"
+  target_type = "ip"
+  vpc_id      = "${aws_vpc.test.id}"
+}
+
+resource "aws_lb" "test" {
+  internal = true
+  name     = %q
+  subnets  = ["${aws_subnet.test.*.id[0]}", "${aws_subnet.test.*.id[1]}"]
+}
+
+resource "aws_lb_listener" "test" {
+  load_balancer_arn = "${aws_lb.test.arn}"
+  port              = "80"
+  protocol          = "HTTP"
+
+  default_action {
+    target_group_arn = "${aws_lb_target_group.blue.arn}"
+    type             = "forward"
+  }
+}
+
+resource "aws_ecs_cluster" "test" {
+  name = %q
+}
+
+resource "aws_ecs_task_definition" "test" {
+  cpu                      = "256"
+  family                   = %q
+  memory                   = "512"
+  network_mode             = "awsvpc"
+  requires_compatibilities = ["FARGATE"]
+
+  container_definitions = <<DEFINITION
+[
+  {
+    "cpu": 256,
+    "essential": true,
+    "image": "mongo:latest",
+    "memory": 512,
+    "name": "test",
+    "networkMode": "awsvpc",
+    "portMappings": [
+      {
+        "containerPort": 80,
+        "hostPort": 80
+      }
+    ]
+  }
+]
+DEFINITION
+}
+
+resource "aws_ecs_service" "test" {
+  cluster         = "${aws_ecs_cluster.test.id}"
+  desired_count   = 1
+  launch_type     = "FARGATE"
+  name            = %q
+  task_definition = "${aws_ecs_task_definition.test.arn}"
+
+  deployment_controller {
+    type = "CODE_DEPLOY"
+  }
+
+  load_balancer {
+    container_name   = "test"
+    container_port   = "80"
+    target_group_arn = "${aws_lb_target_group.blue.id}"
+  }
+
+  network_configuration {
+    assign_public_ip = true
+    security_groups  = ["${aws_security_group.test.id}"]
+    subnets          = ["${aws_subnet.test.*.id[0]}", "${aws_subnet.test.*.id[1]}"]
+  }
+}
+
+resource "aws_codedeploy_app" "test" {
+  compute_platform = "ECS"
+  name             = %q
+}
+
+resource "aws_iam_role" "test" {
+  name = %q
+
+  assume_role_policy = <<POLICY
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "",
+      "Effect": "Allow",
+      "Action": "sts:AssumeRole",
+      "Principal": {
+        "Service": ["codedeploy.amazonaws.com"]
+      }
+    }
+  ]
+}
+POLICY
+}
+
+resource "aws_iam_role_policy" "test" {
+  role = "${aws_iam_role.test.name}"
+
+  policy = <<POLICY
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Action": [
+        "cloudwatch:DescribeAlarms",
+        "ecs:CreateTaskSet",
+        "ecs:DeleteTaskSet",
+        "ecs:DescribeServices",
+        "ecs:UpdateServicePrimaryTaskSet",
+        "elasticloadbalancing:DescribeListeners",
+        "elasticloadbalancing:DescribeRules",
+        "elasticloadbalancing:DescribeTargetGroups",
+        "elasticloadbalancing:ModifyListener",
+        "elasticloadbalancing:ModifyRule",
+        "lambda:InvokeFunction",
+        "s3:GetObject",
+        "s3:GetObjectMetadata",
+        "s3:GetObjectVersion",
+        "sns:Publish"
+      ],
+      "Effect": "Allow",
+      "Resource": "*"
+    }
+  ]
+}
+POLICY
+}
+`, rName, rName, rName, rName, rName, rName, rName)
+}
+
+func testAccAWSCodeDeployDeploymentGroupConfigEcsBlueGreen(rName string) string {
+	return testAccAWSCodeDeployDeploymentGroupConfigEcsBase(rName) + fmt.Sprintf(`
+resource "aws_codedeploy_deployment_group" "test" {
+  app_name               = "${aws_codedeploy_app.test.name}"
+  deployment_config_name = "CodeDeployDefault.ECSAllAtOnce"
+  deployment_group_name  = %q
+  service_role_arn       = "${aws_iam_role.test.arn}"
+
+  auto_rollback_configuration {
+    enabled = true
+    events  = ["DEPLOYMENT_FAILURE"]
+  }
+
+  blue_green_deployment_config {
+    deployment_ready_option {
+      action_on_timeout = "CONTINUE_DEPLOYMENT"
+    }
+
+    terminate_blue_instances_on_deployment_success {
+      action                           = "TERMINATE"
+      termination_wait_time_in_minutes = 5
+    }
+  }
+
+  deployment_style {
+    deployment_option = "WITH_TRAFFIC_CONTROL"
+    deployment_type   = "BLUE_GREEN"
+  }
+
+  ecs_service {
+    cluster_name = "${aws_ecs_cluster.test.name}"
+    service_name = "${aws_ecs_service.test.name}"
+  }
+
+  load_balancer_info {
+    target_group_pair_info {
+      prod_traffic_route {
+        listener_arns = ["${aws_lb_listener.test.arn}"]
+      }
+
+      target_group {
+        name = "${aws_lb_target_group.blue.name}"
+      }
+
+      target_group {
+        name = "${aws_lb_target_group.green.name}"
+      }
+    }
+  }
+}
+`, rName)
 }

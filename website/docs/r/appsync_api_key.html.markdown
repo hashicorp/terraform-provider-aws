@@ -6,7 +6,7 @@ description: |-
   Provides an AppSync API Key.
 ---
 
-# aws_appsync_api_key
+# Resource: aws_appsync_api_key
 
 Provides an AppSync API Key.
 

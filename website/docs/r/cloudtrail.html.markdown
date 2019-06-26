@@ -1,14 +1,18 @@
 ---
 layout: "aws"
-page_title: "AWS: cloudtrail"
+page_title: "AWS: aws_cloudtrail"
 sidebar_current: "docs-aws-resource-cloudtrail"
 description: |-
   Provides a CloudTrail resource.
 ---
 
-# aws_cloudtrail
+# Resource: aws_cloudtrail
 
 Provides a CloudTrail resource.
+
+~> *NOTE:* For a multi-region trail, this resource must be in the home region of the trail.
+
+~> *NOTE:* For an organization trail, this resource must be in the master account of the organization.
 
 ## Example Usage
 
@@ -18,6 +22,8 @@ Enable CloudTrail to capture all compatible management events in region.
 For capturing events from services like IAM, `include_global_service_events` must be enabled.
 
 ```hcl
+data "aws_caller_identity" "current" {}
+
 resource "aws_cloudtrail" "foobar" {
   name                          = "tf-trail-foobar"
   s3_bucket_name                = "${aws_s3_bucket.foo.id}"
@@ -49,7 +55,7 @@ resource "aws_s3_bucket" "foo" {
               "Service": "cloudtrail.amazonaws.com"
             },
             "Action": "s3:PutObject",
-            "Resource": "arn:aws:s3:::tf-test-trail/*",
+            "Resource": "arn:aws:s3:::tf-test-trail/prefix/AWSLogs/${data.aws_caller_identity.current.account_id}/*",
             "Condition": {
                 "StringEquals": {
                     "s3:x-amz-acl": "bucket-owner-full-control"
@@ -73,7 +79,7 @@ resource "aws_cloudtrail" "example" {
   # ... other configuration ...
 
   event_selector {
-    read_write_type = "All"
+    read_write_type           = "All"
     include_management_events = true
 
     data_resource {
@@ -91,7 +97,7 @@ resource "aws_cloudtrail" "example" {
   # ... other configuration ...
 
   event_selector {
-    read_write_type = "All"
+    read_write_type           = "All"
     include_management_events = true
 
     data_resource {
@@ -113,11 +119,12 @@ resource "aws_cloudtrail" "example" {
   # ... other configuration ...
 
   event_selector {
-    read_write_type = "All"
+    read_write_type           = "All"
     include_management_events = true
 
     data_resource {
-      type   = "AWS::S3::Object"
+      type = "AWS::S3::Object"
+
       # Make sure to append a trailing '/' to your ARN if you want
       # to monitor all objects in a bucket.
       values = ["${data.aws_s3_bucket.important-bucket.arn}/"]
@@ -132,7 +139,7 @@ The following arguments are supported:
 
 * `name` - (Required) Specifies the name of the trail.
 * `s3_bucket_name` - (Required) Specifies the name of the S3 bucket designated for publishing log files.
-* `s3_key_prefix` - (Optional) Specifies the S3 key prefix that precedes
+* `s3_key_prefix` - (Optional) Specifies the S3 key prefix that follows
     the name of the bucket you have designated for log file delivery.
 * `cloud_watch_logs_role_arn` - (Optional) Specifies the role for the CloudWatch Logs
     endpoint to assume to write to a user’s log group.
@@ -144,6 +151,7 @@ The following arguments are supported:
     from global services such as IAM to the log files. Defaults to `true`.
 * `is_multi_region_trail` - (Optional) Specifies whether the trail is created in the current
     region or in all regions. Defaults to `false`.
+* `is_organization_trail` - (Optional) Specifies whether the trail is an AWS Organizations trail. Organization trails log events for the master account and all member accounts. Can only be created in the organization master account. Defaults to `false`.
 * `sns_topic_name` - (Optional) Specifies the name of the Amazon SNS topic
     defined for notification of log file delivery.
 * `enable_log_file_validation` - (Optional) Specifies whether log file integrity validation is enabled.

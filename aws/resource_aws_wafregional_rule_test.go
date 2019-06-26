@@ -2,6 +2,7 @@ package aws
 
 import (
 	"fmt"
+	"log"
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -13,10 +14,112 @@ import (
 	"github.com/hashicorp/terraform/terraform"
 )
 
+func init() {
+	resource.AddTestSweepers("aws_wafregional_rule", &resource.Sweeper{
+		Name: "aws_wafregional_rule",
+		F:    testSweepWafRegionalRules,
+		Dependencies: []string{
+			"aws_wafregional_web_acl",
+		},
+	})
+}
+
+func testSweepWafRegionalRules(region string) error {
+	client, err := sharedClientForRegion(region)
+	if err != nil {
+		return fmt.Errorf("error getting client: %s", err)
+	}
+	conn := client.(*AWSClient).wafregionalconn
+
+	input := &waf.ListRulesInput{}
+
+	for {
+		output, err := conn.ListRules(input)
+
+		if testSweepSkipSweepError(err) {
+			log.Printf("[WARN] Skipping WAF Regional Rule sweep for %s: %s", region, err)
+			return nil
+		}
+
+		if err != nil {
+			return fmt.Errorf("error listing WAF Regional Rules: %s", err)
+		}
+
+		for _, rule := range output.Rules {
+			deleteInput := &waf.DeleteRuleInput{
+				RuleId: rule.RuleId,
+			}
+			id := aws.StringValue(rule.RuleId)
+			wr := newWafRegionalRetryer(conn, region)
+
+			_, err := wr.RetryWithToken(func(token *string) (interface{}, error) {
+				deleteInput.ChangeToken = token
+				log.Printf("[INFO] Deleting WAF Regional Rule: %s", id)
+				return conn.DeleteRule(deleteInput)
+			})
+
+			if isAWSErr(err, wafregional.ErrCodeWAFNonEmptyEntityException, "") {
+				getRuleInput := &waf.GetRuleInput{
+					RuleId: rule.RuleId,
+				}
+
+				getRuleOutput, getRuleErr := conn.GetRule(getRuleInput)
+
+				if getRuleErr != nil {
+					return fmt.Errorf("error getting WAF Regional Rule (%s): %s", id, getRuleErr)
+				}
+
+				var updates []*waf.RuleUpdate
+				updateRuleInput := &waf.UpdateRuleInput{
+					RuleId:  rule.RuleId,
+					Updates: updates,
+				}
+
+				for _, predicate := range getRuleOutput.Rule.Predicates {
+					update := &waf.RuleUpdate{
+						Action:    aws.String(waf.ChangeActionDelete),
+						Predicate: predicate,
+					}
+
+					updateRuleInput.Updates = append(updateRuleInput.Updates, update)
+				}
+
+				_, updateWebACLErr := wr.RetryWithToken(func(token *string) (interface{}, error) {
+					updateRuleInput.ChangeToken = token
+					log.Printf("[INFO] Removing Predicates from WAF Regional Rule: %s", id)
+					return conn.UpdateRule(updateRuleInput)
+				})
+
+				if updateWebACLErr != nil {
+					return fmt.Errorf("error removing predicates from WAF Regional Rule (%s): %s", id, updateWebACLErr)
+				}
+
+				_, err = wr.RetryWithToken(func(token *string) (interface{}, error) {
+					deleteInput.ChangeToken = token
+					log.Printf("[INFO] Deleting WAF Regional Rule: %s", id)
+					return conn.DeleteRule(deleteInput)
+				})
+			}
+
+			if err != nil {
+				return fmt.Errorf("error deleting WAF Regional Rule (%s): %s", id, err)
+			}
+		}
+
+		if aws.StringValue(output.NextMarker) == "" {
+			break
+		}
+
+		input.NextMarker = output.NextMarker
+	}
+
+	return nil
+}
+
 func TestAccAWSWafRegionalRule_basic(t *testing.T) {
 	var v waf.Rule
 	wafRuleName := fmt.Sprintf("wafrule%s", acctest.RandString(5))
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSWafRegionalRuleDestroy,
@@ -42,7 +145,7 @@ func TestAccAWSWafRegionalRule_changeNameForceNew(t *testing.T) {
 	wafRuleName := fmt.Sprintf("wafrule%s", acctest.RandString(5))
 	wafRuleNewName := fmt.Sprintf("wafrulenew%s", acctest.RandString(5))
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSWafRegionalIPSetDestroy,
@@ -78,7 +181,7 @@ func TestAccAWSWafRegionalRule_changeNameForceNew(t *testing.T) {
 func TestAccAWSWafRegionalRule_disappears(t *testing.T) {
 	var v waf.Rule
 	wafRuleName := fmt.Sprintf("wafrule%s", acctest.RandString(5))
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSWafRegionalRuleDestroy,
@@ -98,7 +201,7 @@ func TestAccAWSWafRegionalRule_disappears(t *testing.T) {
 func TestAccAWSWafRegionalRule_noPredicates(t *testing.T) {
 	var v waf.Rule
 	wafRuleName := fmt.Sprintf("wafrule%s", acctest.RandString(5))
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSWafRegionalRuleDestroy,
@@ -125,7 +228,7 @@ func TestAccAWSWafRegionalRule_changePredicates(t *testing.T) {
 	var idx int
 	ruleName := fmt.Sprintf("wafrule%s", acctest.RandString(5))
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSWafRuleDestroy,
@@ -286,21 +389,22 @@ resource "aws_wafregional_ipset" "ipset" {
   name = "%s"
 
   ip_set_descriptor {
-    type = "IPV4"
+    type  = "IPV4"
     value = "192.0.7.0/24"
   }
 }
 
 resource "aws_wafregional_rule" "wafrule" {
-  name = "%s"
+  name        = "%s"
   metric_name = "%s"
 
   predicate {
     data_id = "${aws_wafregional_ipset.ipset.id}"
     negated = false
-    type = "IPMatch"
+    type    = "IPMatch"
   }
-}`, name, name, name)
+}
+`, name, name, name)
 }
 
 func testAccAWSWafRegionalRuleConfigChangeName(name string) string {
@@ -309,28 +413,29 @@ resource "aws_wafregional_ipset" "ipset" {
   name = "%s"
 
   ip_set_descriptor {
-    type = "IPV4"
+    type  = "IPV4"
     value = "192.0.7.0/24"
   }
 }
 
 resource "aws_wafregional_rule" "wafrule" {
-  name = "%s"
+  name        = "%s"
   metric_name = "%s"
 
   predicate {
     data_id = "${aws_wafregional_ipset.ipset.id}"
     negated = false
-    type = "IPMatch"
+    type    = "IPMatch"
   }
-}`, name, name, name)
+}
+`, name, name, name)
 }
 
 func testAccAWSWafRegionalRule_noPredicates(name string) string {
 	return fmt.Sprintf(`
 resource "aws_wafregional_rule" "wafrule" {
-	name = "%s"
-	metric_name = "%s"
+  name        = "%s"
+  metric_name = "%s"
 }
 `, name, name)
 }
@@ -341,35 +446,38 @@ resource "aws_wafregional_ipset" "ipset" {
   name = "%s"
 
   ip_set_descriptor {
-    type = "IPV4"
+    type  = "IPV4"
     value = "192.0.7.0/24"
   }
 }
 
 resource "aws_wafregional_xss_match_set" "xss_match_set" {
   name = "%s"
+
   xss_match_tuple {
-	text_transformation = "NONE"
-	field_to_match {
-	  type = "URI"
+    text_transformation = "NONE"
+
+    field_to_match {
+      type = "URI"
     }
   }
 }
 
 resource "aws_wafregional_rule" "wafrule" {
-  name = "%s"
+  name        = "%s"
   metric_name = "%s"
 
   predicate {
     data_id = "${aws_wafregional_xss_match_set.xss_match_set.id}"
     negated = true
-    type = "XssMatch"
+    type    = "XssMatch"
   }
 
   predicate {
     data_id = "${aws_wafregional_ipset.ipset.id}"
     negated = true
-    type = "IPMatch"
+    type    = "IPMatch"
   }
-}`, name, name, name, name)
+}
+`, name, name, name, name)
 }

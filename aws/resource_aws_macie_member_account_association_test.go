@@ -18,8 +18,8 @@ func TestAccAWSMacieMemberAccountAssociation_basic(t *testing.T) {
 		t.Skipf("Environment variable %s is not set", key)
 	}
 
-	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSMacie(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSMacieMemberAccountAssociationDestroy,
 		Steps: []resource.TestStep{
@@ -34,8 +34,8 @@ func TestAccAWSMacieMemberAccountAssociation_basic(t *testing.T) {
 }
 
 func TestAccAWSMacieMemberAccountAssociation_self(t *testing.T) {
-	resource.Test(t, resource.TestCase{
-		PreCheck:  func() { testAccPreCheck(t) },
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:  func() { testAccPreCheck(t); testAccPreCheckAWSMacie(t) },
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
 			{

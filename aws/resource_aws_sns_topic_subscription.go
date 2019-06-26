@@ -71,7 +71,7 @@ func resourceAwsSnsTopicSubscription() *schema.Resource {
 			"delivery_policy": {
 				Type:             schema.TypeString,
 				Optional:         true,
-				ValidateFunc:     validateJsonString,
+				ValidateFunc:     validation.ValidateJsonString,
 				DiffSuppressFunc: suppressEquivalentSnsTopicSubscriptionDeliveryPolicy,
 			},
 			"raw_message_delivery": {
@@ -86,7 +86,7 @@ func resourceAwsSnsTopicSubscription() *schema.Resource {
 			"filter_policy": {
 				Type:             schema.TypeString,
 				Optional:         true,
-				ValidateFunc:     validateJsonString,
+				ValidateFunc:     validation.ValidateJsonString,
 				DiffSuppressFunc: suppressEquivalentJsonDiffs,
 				StateFunc: func(v interface{}) string {
 					json, _ := structure.NormalizeJsonString(v)
@@ -197,10 +197,8 @@ func resourceAwsSnsTopicSubscriptionDelete(d *schema.ResourceData, meta interfac
 	_, err := snsconn.Unsubscribe(&sns.UnsubscribeInput{
 		SubscriptionArn: aws.String(d.Id()),
 	})
-	if err != nil {
-		return err
-	}
-	return nil
+
+	return err
 }
 
 func subscribeToSNSTopic(d *schema.ResourceData, snsconn *sns.SNS) (output *sns.SubscribeOutput, err error) {
@@ -250,6 +248,15 @@ func subscribeToSNSTopic(d *schema.ResourceData, snsconn *sns.SNS) (output *sns.
 			return resource.RetryableError(
 				fmt.Errorf("Endpoint (%s) did not autoconfirm the subscription for topic %s", endpoint, topic_arn))
 		})
+
+		if isResourceTimeoutError(err) {
+			var subscription *sns.Subscription
+			subscription, err = findSubscriptionByNonID(d, snsconn)
+
+			if subscription != nil {
+				output.SubscriptionArn = subscription.SubscriptionArn
+			}
+		}
 
 		if err != nil {
 			return nil, err

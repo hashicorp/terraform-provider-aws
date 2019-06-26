@@ -17,7 +17,8 @@ import (
 )
 
 const (
-	MINIMUM_VERSIONED_SCHEMA = 2.0
+	MINIMUM_VERSIONED_SCHEMA             = 2.0
+	SSM_DOCUMENT_PERMISSIONS_BATCH_LIMIT = 20
 )
 
 func resourceAwsSsmDocument() *schema.Resource {
@@ -158,21 +159,30 @@ func resourceAwsSsmDocumentCreate(d *schema.ResourceData, meta interface{}) erro
 		DocumentType:   aws.String(d.Get("document_type").(string)),
 	}
 
+	if v, ok := d.GetOk("tags"); ok {
+		docInput.Tags = tagsFromMapSSM(v.(map[string]interface{}))
+	}
+
 	log.Printf("[DEBUG] Waiting for SSM Document %q to be created", d.Get("name").(string))
+	var resp *ssm.CreateDocumentOutput
 	err := resource.Retry(5*time.Minute, func() *resource.RetryError {
-		resp, err := ssmconn.CreateDocument(docInput)
+		var err error
+		resp, err = ssmconn.CreateDocument(docInput)
 
 		if err != nil {
 			return resource.NonRetryableError(err)
 		}
-
-		d.SetId(*resp.DocumentDescription.Name)
 		return nil
 	})
 
+	if isResourceTimeoutError(err) {
+		resp, err = ssmconn.CreateDocument(docInput)
+	}
 	if err != nil {
 		return fmt.Errorf("Error creating SSM document: %s", err)
 	}
+
+	d.SetId(*resp.DocumentDescription.Name)
 
 	if v, ok := d.GetOk("permissions"); ok && v != nil {
 		if err := setDocumentPermissions(d, meta); err != nil {
@@ -343,32 +353,33 @@ func resourceAwsSsmDocumentDelete(d *schema.ResourceData, meta interface{}) erro
 		return err
 	}
 
+	input := &ssm.DescribeDocumentInput{
+		Name: aws.String(d.Get("name").(string)),
+	}
 	log.Printf("[DEBUG] Waiting for SSM Document %q to be deleted", d.Get("name").(string))
 	err = resource.Retry(10*time.Minute, func() *resource.RetryError {
-		_, err := ssmconn.DescribeDocument(&ssm.DescribeDocumentInput{
-			Name: aws.String(d.Get("name").(string)),
-		})
+		_, err := ssmconn.DescribeDocument(input)
+
+		if isAWSErr(err, ssm.ErrCodeInvalidDocument, "") {
+			return nil
+		}
 
 		if err != nil {
-			awsErr, ok := err.(awserr.Error)
-			if !ok {
-				return resource.NonRetryableError(err)
-			}
-
-			if awsErr.Code() == "InvalidDocument" {
-				return nil
-			}
-
 			return resource.NonRetryableError(err)
 		}
 
-		return resource.RetryableError(
-			fmt.Errorf("%q: Timeout while waiting for the document to be deleted", d.Id()))
+		return resource.RetryableError(fmt.Errorf("SSM Document (%s) still exists", d.Id()))
 	})
-	if err != nil {
-		return err
-	}
 
+	if isResourceTimeoutError(err) {
+		_, err = ssmconn.DescribeDocument(input)
+	}
+	if isAWSErr(err, ssm.ErrCodeInvalidDocument, "") {
+		return nil
+	}
+	if err != nil {
+		return fmt.Errorf("error waiting for SSM Document (%s) deletion: %s", d.Id(), err)
+	}
 	return nil
 }
 
@@ -377,8 +388,6 @@ func setDocumentPermissions(d *schema.ResourceData, meta interface{}) error {
 
 	log.Printf("[INFO] Setting permissions for document: %s", d.Id())
 
-	// Since AccountIdsToRemove has higher priority than AccountIdsToAdd,
-	// we filter out accounts from both lists
 	if d.HasChange("permissions") {
 		o, n := d.GetChange("permissions")
 		oldPermissions := o.(map[string]interface{})
@@ -400,31 +409,25 @@ func setDocumentPermissions(d *schema.ResourceData, meta interface{}) error {
 			}
 		}
 
-		accountIdsToRemove := make([]string, 0)
+		// Since AccountIdsToRemove has higher priority than AccountIdsToAdd,
+		// we filter out accounts from both lists
+		accountIdsToRemove := make([]interface{}, 0)
 		for _, oldPermissionsAccountId := range oldPermissionsAccountIds {
 			if _, contains := sliceContainsString(newPermissionsAccountIds, oldPermissionsAccountId.(string)); !contains {
 				accountIdsToRemove = append(accountIdsToRemove, oldPermissionsAccountId.(string))
 			}
 		}
-		accountIdsToAdd := make([]string, 0)
+		accountIdsToAdd := make([]interface{}, 0)
 		for _, newPermissionsAccountId := range newPermissionsAccountIds {
 			if _, contains := sliceContainsString(oldPermissionsAccountIds, newPermissionsAccountId.(string)); !contains {
 				accountIdsToAdd = append(accountIdsToAdd, newPermissionsAccountId.(string))
 			}
 		}
 
-		input := &ssm.ModifyDocumentPermissionInput{
-			Name:               aws.String(d.Get("name").(string)),
-			PermissionType:     aws.String("Share"),
-			AccountIdsToAdd:    aws.StringSlice(accountIdsToAdd),
-			AccountIdsToRemove: aws.StringSlice(accountIdsToRemove),
-		}
-
-		log.Printf("[DEBUG] Modifying SSM document permissions: %s", input)
-		_, err := ssmconn.ModifyDocumentPermission(input)
-		if err != nil {
+		if err := modifyDocumentPermissions(ssmconn, d.Get("name").(string), accountIdsToAdd, accountIdsToRemove); err != nil {
 			return fmt.Errorf("error modifying SSM document permissions: %s", err)
 		}
+
 	}
 
 	return nil
@@ -478,24 +481,79 @@ func deleteDocumentPermissions(d *schema.ResourceData, meta interface{}) error {
 	log.Printf("[INFO] Removing permissions from document: %s", d.Id())
 
 	permission := d.Get("permissions").(map[string]interface{})
-	var accountsToRemove []*string
+
+	accountIdsToRemove := make([]interface{}, 0)
+
 	if permission["account_ids"] != nil {
-		accountsToRemove = aws.StringSlice([]string{permission["account_ids"].(string)})
-		if strings.Contains(permission["account_ids"].(string), ",") {
-			accountsToRemove = aws.StringSlice(strings.Split(permission["account_ids"].(string), ","))
+
+		if v, ok := permission["account_ids"]; ok && v.(string) != "" {
+			parts := strings.Split(v.(string), ",")
+			accountIdsToRemove = make([]interface{}, len(parts))
+			for i, v := range parts {
+				accountIdsToRemove[i] = v
+			}
+		}
+
+		if err := modifyDocumentPermissions(ssmconn, d.Get("name").(string), nil, accountIdsToRemove); err != nil {
+			return fmt.Errorf("error removing SSM document permissions: %s", err)
+		}
+
+	}
+
+	return nil
+}
+
+func modifyDocumentPermissions(conn *ssm.SSM, name string, accountIdsToAdd []interface{}, accountIdstoRemove []interface{}) error {
+
+	if accountIdsToAdd != nil {
+
+		accountIdsToAddBatch := make([]string, 0, SSM_DOCUMENT_PERMISSIONS_BATCH_LIMIT)
+		accountIdsToAddBatches := make([][]string, 0, len(accountIdsToAdd)/SSM_DOCUMENT_PERMISSIONS_BATCH_LIMIT+1)
+		for _, accountId := range accountIdsToAdd {
+			if len(accountIdsToAddBatch) == SSM_DOCUMENT_PERMISSIONS_BATCH_LIMIT {
+				accountIdsToAddBatches = append(accountIdsToAddBatches, accountIdsToAddBatch)
+				accountIdsToAddBatch = make([]string, 0, SSM_DOCUMENT_PERMISSIONS_BATCH_LIMIT)
+			}
+			accountIdsToAddBatch = append(accountIdsToAddBatch, accountId.(string))
+		}
+		accountIdsToAddBatches = append(accountIdsToAddBatches, accountIdsToAddBatch)
+
+		for _, accountIdsToAdd := range accountIdsToAddBatches {
+			_, err := conn.ModifyDocumentPermission(&ssm.ModifyDocumentPermissionInput{
+				Name:            aws.String(name),
+				PermissionType:  aws.String("Share"),
+				AccountIdsToAdd: aws.StringSlice(accountIdsToAdd),
+			})
+			if err != nil {
+				return err
+			}
 		}
 	}
 
-	permInput := &ssm.ModifyDocumentPermissionInput{
-		Name:               aws.String(d.Get("name").(string)),
-		PermissionType:     aws.String("Share"),
-		AccountIdsToRemove: accountsToRemove,
-	}
+	if accountIdstoRemove != nil {
 
-	_, err := ssmconn.ModifyDocumentPermission(permInput)
+		accountIdsToRemoveBatch := make([]string, 0, SSM_DOCUMENT_PERMISSIONS_BATCH_LIMIT)
+		accountIdsToRemoveBatches := make([][]string, 0, len(accountIdstoRemove)/SSM_DOCUMENT_PERMISSIONS_BATCH_LIMIT+1)
+		for _, accountId := range accountIdstoRemove {
+			if len(accountIdsToRemoveBatch) == SSM_DOCUMENT_PERMISSIONS_BATCH_LIMIT {
+				accountIdsToRemoveBatches = append(accountIdsToRemoveBatches, accountIdsToRemoveBatch)
+				accountIdsToRemoveBatch = make([]string, 0, SSM_DOCUMENT_PERMISSIONS_BATCH_LIMIT)
+			}
+			accountIdsToRemoveBatch = append(accountIdsToRemoveBatch, accountId.(string))
+		}
+		accountIdsToRemoveBatches = append(accountIdsToRemoveBatches, accountIdsToRemoveBatch)
 
-	if err != nil {
-		return fmt.Errorf("Error removing permissions for SSM document: %s", err)
+		for _, accountIdsToRemove := range accountIdsToRemoveBatches {
+			_, err := conn.ModifyDocumentPermission(&ssm.ModifyDocumentPermissionInput{
+				Name:               aws.String(name),
+				PermissionType:     aws.String("Share"),
+				AccountIdsToRemove: aws.StringSlice(accountIdsToRemove),
+			})
+			if err != nil {
+				return err
+			}
+		}
+
 	}
 
 	return nil

@@ -6,7 +6,7 @@ description: |-
   Provides an Neptune Cluster Resource Instance
 ---
 
-# aws_neptune_cluster_instance
+# Resource: aws_neptune_cluster_instance
 
 A Cluster Instance Resource defines attributes that are specific to a single instance in a Neptune Cluster.
 
@@ -36,7 +36,6 @@ resource "aws_neptune_cluster_instance" "example" {
   instance_class     = "db.r4.large"
   apply_immediately  = true
 }
-
 ```
 
 ## Argument Reference
@@ -51,7 +50,7 @@ The following arguments are supported:
 * `engine` - (Optional) The name of the database engine to be used for the neptune instance. Defaults to `neptune`. Valid Values: `neptune`.
 * `engine_version` - (Optional) The neptune engine version.
 * `identifier` - (Optional, Forces new resource) The indentifier for the neptune instance, if omitted, Terraform will assign a random, unique identifier.
-* `identifier_prefix` - (Optional, Forces new resource) Creates a unique identifier beginning with the specified prefix. Conflicts with `identifer`.
+* `identifier_prefix` - (Optional, Forces new resource) Creates a unique identifier beginning with the specified prefix. Conflicts with `identifier`.
 * `instance_class` - (Required) The instance class to use.
 * `neptune_subnet_group_name` - (Required if `publicly_accessible = false`, Optional otherwise) A subnet group to associate with this neptune instance. **NOTE:** This must match the `neptune_subnet_group_name` of the attached [`aws_neptune_cluster`](/docs/providers/aws/r/neptune_cluster.html).
 * `neptune_parameter_group_name` - (Optional) The name of the neptune parameter group to associate with this instance.

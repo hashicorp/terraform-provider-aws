@@ -17,7 +17,7 @@ func TestAccAWSIAMPolicy_basic(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_iam_policy.test"
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSIAMPolicyDestroy,
@@ -47,7 +47,7 @@ func TestAccAWSIAMPolicy_description(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_iam_policy.test"
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSIAMPolicyDestroy,
@@ -68,12 +68,34 @@ func TestAccAWSIAMPolicy_description(t *testing.T) {
 	})
 }
 
+func TestAccAWSIAMPolicy_disappears(t *testing.T) {
+	var out iam.GetPolicyOutput
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_iam_policy.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSIAMPolicyDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSIAMPolicyConfigName(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSIAMPolicyExists(resourceName, &out),
+					testAccCheckAWSIAMPolicyDisappears(&out),
+				),
+				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}
+
 func TestAccAWSIAMPolicy_namePrefix(t *testing.T) {
 	var out iam.GetPolicyOutput
 	namePrefix := "tf-acc-test-"
 	resourceName := "aws_iam_policy.test"
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSIAMPolicyDestroy,
@@ -100,7 +122,7 @@ func TestAccAWSIAMPolicy_path(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_iam_policy.test"
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSIAMPolicyDestroy,
@@ -128,7 +150,7 @@ func TestAccAWSIAMPolicy_policy(t *testing.T) {
 	policy1 := "{\"Version\":\"2012-10-17\",\"Statement\":[{\"Action\":[\"ec2:Describe*\"],\"Effect\":\"Allow\",\"Resource\":\"*\"}]}"
 	policy2 := "{\"Version\":\"2012-10-17\",\"Statement\":[{\"Action\":[\"ec2:*\"],\"Effect\":\"Allow\",\"Resource\":\"*\"}]}"
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSIAMPolicyDestroy,
@@ -210,6 +232,19 @@ func testAccCheckAWSIAMPolicyDestroy(s *terraform.State) error {
 	}
 
 	return nil
+}
+
+func testAccCheckAWSIAMPolicyDisappears(out *iam.GetPolicyOutput) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		iamconn := testAccProvider.Meta().(*AWSClient).iamconn
+
+		params := &iam.DeletePolicyInput{
+			PolicyArn: out.Policy.Arn,
+		}
+
+		_, err := iamconn.DeletePolicy(params)
+		return err
+	}
 }
 
 func testAccAWSIAMPolicyConfigDescription(rName, description string) string {

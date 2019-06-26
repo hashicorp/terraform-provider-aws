@@ -1,12 +1,12 @@
 ---
 layout: "aws"
-page_title: "AWS: wafregional_regex_match_set"
+page_title: "AWS: aws_wafregional_regex_match_set"
 sidebar_current: "docs-aws-resource-wafregional-regex-match-set"
 description: |-
   Provides a AWS WAF Regional Regex Match Set resource.
 ---
 
-# aws_wafregional_regex_match_set
+# Resource: aws_wafregional_regex_match_set
 
 Provides a WAF Regional Regex Match Set Resource
 
@@ -15,18 +15,20 @@ Provides a WAF Regional Regex Match Set Resource
 ```hcl
 resource "aws_wafregional_regex_match_set" "example" {
   name = "example"
+
   regex_match_tuple {
     field_to_match {
       data = "User-Agent"
       type = "HEADER"
     }
+
     regex_pattern_set_id = "${aws_wafregional_regex_pattern_set.example.id}"
-    text_transformation = "NONE"
+    text_transformation  = "NONE"
   }
 }
 
 resource "aws_wafregional_regex_pattern_set" "example" {
-  name = "example"
+  name                  = "example"
   regex_pattern_strings = ["one", "two"]
 }
 ```

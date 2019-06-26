@@ -17,6 +17,9 @@ func resourceAwsSesNotificationTopic() *schema.Resource {
 		Read:   resourceAwsSesNotificationTopicRead,
 		Update: resourceAwsSesNotificationTopicSet,
 		Delete: resourceAwsSesNotificationTopicDelete,
+		Importer: &schema.ResourceImporter{
+			State: schema.ImportStatePassthrough,
+		},
 
 		Schema: map[string]*schema.Schema{
 			"topic_arn": {
@@ -42,6 +45,11 @@ func resourceAwsSesNotificationTopic() *schema.Resource {
 				ForceNew:     true,
 				ValidateFunc: validation.NoZeroValues,
 			},
+
+			"include_original_headers": {
+				Type:     schema.TypeBool,
+				Optional: true,
+			},
 		},
 	}
 }
@@ -50,6 +58,7 @@ func resourceAwsSesNotificationTopicSet(d *schema.ResourceData, meta interface{}
 	conn := meta.(*AWSClient).sesConn
 	notification := d.Get("notification_type").(string)
 	identity := d.Get("identity").(string)
+	includeOriginalHeaders := d.Get("include_original_headers").(bool)
 
 	setOpts := &ses.SetIdentityNotificationTopicInput{
 		Identity:         aws.String(identity),
@@ -68,6 +77,18 @@ func resourceAwsSesNotificationTopicSet(d *schema.ResourceData, meta interface{}
 		return fmt.Errorf("Error setting SES Identity Notification Topic: %s", err)
 	}
 
+	setHeadersOpts := &ses.SetIdentityHeadersInNotificationsEnabledInput{
+		Identity:         aws.String(identity),
+		NotificationType: aws.String(notification),
+		Enabled:          aws.Bool(includeOriginalHeaders),
+	}
+
+	log.Printf("[DEBUG] Setting SES Identity Notification Topic Headers: %#v", setHeadersOpts)
+
+	if _, err := conn.SetIdentityHeadersInNotificationsEnabled(setHeadersOpts); err != nil {
+		return fmt.Errorf("Error setting SES Identity Notification Topic Headers Forwarding: %s", err)
+	}
+
 	return resourceAwsSesNotificationTopicRead(d, meta)
 }
 
@@ -78,6 +99,9 @@ func resourceAwsSesNotificationTopicRead(d *schema.ResourceData, meta interface{
 	if err != nil {
 		return err
 	}
+
+	d.Set("identity", identity)
+	d.Set("notification_type", notificationType)
 
 	getOpts := &ses.GetIdentityNotificationAttributesInput{
 		Identities: []*string{aws.String(identity)},
@@ -104,10 +128,13 @@ func resourceAwsSesNotificationTopicRead(d *schema.ResourceData, meta interface{
 	switch notificationType {
 	case ses.NotificationTypeBounce:
 		d.Set("topic_arn", notificationAttributes.BounceTopic)
+		d.Set("include_original_headers", notificationAttributes.HeadersInBounceNotificationsEnabled)
 	case ses.NotificationTypeComplaint:
 		d.Set("topic_arn", notificationAttributes.ComplaintTopic)
+		d.Set("include_original_headers", notificationAttributes.HeadersInComplaintNotificationsEnabled)
 	case ses.NotificationTypeDelivery:
 		d.Set("topic_arn", notificationAttributes.DeliveryTopic)
+		d.Set("include_original_headers", notificationAttributes.HeadersInDeliveryNotificationsEnabled)
 	}
 
 	return nil

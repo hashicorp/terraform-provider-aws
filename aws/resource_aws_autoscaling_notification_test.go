@@ -17,7 +17,7 @@ func TestAccAWSASGNotification_basic(t *testing.T) {
 
 	rName := acctest.RandString(5)
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckASGNDestroy,
@@ -38,7 +38,7 @@ func TestAccAWSASGNotification_update(t *testing.T) {
 
 	rName := acctest.RandString(5)
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckASGNDestroy,
@@ -65,7 +65,7 @@ func TestAccAWSASGNotification_update(t *testing.T) {
 func TestAccAWSASGNotification_Pagination(t *testing.T) {
 	var asgn autoscaling.DescribeNotificationConfigurationsOutput
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckASGNDestroy,
@@ -217,30 +217,32 @@ resource "aws_sns_topic" "topic_example" {
 }
 
 resource "aws_launch_configuration" "foobar" {
-  name = "foobarautoscaling-terraform-test-%s"
-  image_id = "ami-21f78e11"
+  name          = "foobarautoscaling-terraform-test-%s"
+  image_id      = "ami-21f78e11"
   instance_type = "t1.micro"
 }
 
 resource "aws_autoscaling_group" "bar" {
-  availability_zones = ["us-west-2a"]
-  name = "foobar1-terraform-test-%s"
-  max_size = 1
-  min_size = 1
+  availability_zones        = ["us-west-2a"]
+  name                      = "foobar1-terraform-test-%s"
+  max_size                  = 1
+  min_size                  = 1
   health_check_grace_period = 100
-  health_check_type = "ELB"
-  desired_capacity = 1
-  force_delete = true
-  termination_policies = ["OldestInstance"]
-  launch_configuration = "${aws_launch_configuration.foobar.name}"
+  health_check_type         = "ELB"
+  desired_capacity          = 1
+  force_delete              = true
+  termination_policies      = ["OldestInstance"]
+  launch_configuration      = "${aws_launch_configuration.foobar.name}"
 }
 
 resource "aws_autoscaling_notification" "example" {
-  group_names     = ["${aws_autoscaling_group.bar.name}"]
-  notifications  = [
-	"autoscaling:EC2_INSTANCE_LAUNCH", 
-	"autoscaling:EC2_INSTANCE_TERMINATE", 
+  group_names = ["${aws_autoscaling_group.bar.name}"]
+
+  notifications = [
+    "autoscaling:EC2_INSTANCE_LAUNCH",
+    "autoscaling:EC2_INSTANCE_TERMINATE",
   ]
+
   topic_arn = "${aws_sns_topic.topic_example.arn}"
 }
 `, rName, rName, rName)
@@ -253,49 +255,52 @@ resource "aws_sns_topic" "topic_example" {
 }
 
 resource "aws_launch_configuration" "foobar" {
-  name = "foobarautoscaling-terraform-test-%s"
-  image_id = "ami-21f78e11"
+  name          = "foobarautoscaling-terraform-test-%s"
+  image_id      = "ami-21f78e11"
   instance_type = "t1.micro"
 }
 
 resource "aws_autoscaling_group" "bar" {
-  availability_zones = ["us-west-2a"]
-  name = "foobar1-terraform-test-%s"
-  max_size = 1
-  min_size = 1
+  availability_zones        = ["us-west-2a"]
+  name                      = "foobar1-terraform-test-%s"
+  max_size                  = 1
+  min_size                  = 1
   health_check_grace_period = 100
-  health_check_type = "ELB"
-  desired_capacity = 1
-  force_delete = true
-  termination_policies = ["OldestInstance"]
-  launch_configuration = "${aws_launch_configuration.foobar.name}"
+  health_check_type         = "ELB"
+  desired_capacity          = 1
+  force_delete              = true
+  termination_policies      = ["OldestInstance"]
+  launch_configuration      = "${aws_launch_configuration.foobar.name}"
 }
 
 resource "aws_autoscaling_group" "foo" {
-  availability_zones = ["us-west-2b"]
-  name = "barfoo-terraform-test-%s"
-  max_size = 1
-  min_size = 1
+  availability_zones        = ["us-west-2b"]
+  name                      = "barfoo-terraform-test-%s"
+  max_size                  = 1
+  min_size                  = 1
   health_check_grace_period = 200
-  health_check_type = "ELB"
-  desired_capacity = 1
-  force_delete = true
-  termination_policies = ["OldestInstance"]
-  launch_configuration = "${aws_launch_configuration.foobar.name}"
+  health_check_type         = "ELB"
+  desired_capacity          = 1
+  force_delete              = true
+  termination_policies      = ["OldestInstance"]
+  launch_configuration      = "${aws_launch_configuration.foobar.name}"
 }
 
 resource "aws_autoscaling_notification" "example" {
-	group_names     = [
-	"${aws_autoscaling_group.bar.name}",
-	"${aws_autoscaling_group.foo.name}",
-	]
-	notifications  = [
-		"autoscaling:EC2_INSTANCE_LAUNCH", 
-		"autoscaling:EC2_INSTANCE_TERMINATE",
-		"autoscaling:EC2_INSTANCE_LAUNCH_ERROR"
-	]
-	topic_arn = "${aws_sns_topic.topic_example.arn}"
-}`, rName, rName, rName, rName)
+  group_names = [
+    "${aws_autoscaling_group.bar.name}",
+    "${aws_autoscaling_group.foo.name}",
+  ]
+
+  notifications = [
+    "autoscaling:EC2_INSTANCE_LAUNCH",
+    "autoscaling:EC2_INSTANCE_TERMINATE",
+    "autoscaling:EC2_INSTANCE_LAUNCH_ERROR",
+  ]
+
+  topic_arn = "${aws_sns_topic.topic_example.arn}"
+}
+`, rName, rName, rName, rName)
 }
 
 const testAccASGNotificationConfig_pagination = `
@@ -323,8 +328,28 @@ resource "aws_autoscaling_group" "bar" {
 }
 
 resource "aws_autoscaling_notification" "example" {
+  # TODO: Switch back to simple list reference when test configurations are upgraded to 0.12 syntax
   group_names = [
-    "${aws_autoscaling_group.bar.*.name}",
+    "${aws_autoscaling_group.bar.*.name[0]}",
+    "${aws_autoscaling_group.bar.*.name[1]}",
+    "${aws_autoscaling_group.bar.*.name[2]}",
+    "${aws_autoscaling_group.bar.*.name[3]}",
+    "${aws_autoscaling_group.bar.*.name[4]}",
+    "${aws_autoscaling_group.bar.*.name[5]}",
+    "${aws_autoscaling_group.bar.*.name[6]}",
+    "${aws_autoscaling_group.bar.*.name[7]}",
+    "${aws_autoscaling_group.bar.*.name[8]}",
+    "${aws_autoscaling_group.bar.*.name[9]}",
+    "${aws_autoscaling_group.bar.*.name[10]}",
+    "${aws_autoscaling_group.bar.*.name[11]}",
+    "${aws_autoscaling_group.bar.*.name[12]}",
+    "${aws_autoscaling_group.bar.*.name[13]}",
+    "${aws_autoscaling_group.bar.*.name[14]}",
+    "${aws_autoscaling_group.bar.*.name[15]}",
+    "${aws_autoscaling_group.bar.*.name[16]}",
+    "${aws_autoscaling_group.bar.*.name[17]}",
+    "${aws_autoscaling_group.bar.*.name[18]}",
+    "${aws_autoscaling_group.bar.*.name[19]}",
   ]
   notifications  = [
     "autoscaling:EC2_INSTANCE_LAUNCH",

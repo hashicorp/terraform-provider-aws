@@ -11,7 +11,7 @@ import (
 func TestAccDataSourceAWSLB_basic(t *testing.T) {
 	lbName := fmt.Sprintf("testaccawslb-basic-%s", acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum))
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:  func() { testAccPreCheck(t) },
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
@@ -51,7 +51,7 @@ func TestAccDataSourceAWSLB_basic(t *testing.T) {
 func TestAccDataSourceAWSLBBackwardsCompatibility(t *testing.T) {
 	lbName := fmt.Sprintf("testaccawsalb-basic-%s", acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum))
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:  func() { testAccPreCheck(t) },
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
@@ -89,16 +89,17 @@ func TestAccDataSourceAWSLBBackwardsCompatibility(t *testing.T) {
 }
 
 func testAccDataSourceAWSLBConfigBasic(lbName string) string {
-	return fmt.Sprintf(`resource "aws_lb" "alb_test" {
+	return fmt.Sprintf(`
+resource "aws_lb" "alb_test" {
   name            = "%s"
   internal        = true
   security_groups = ["${aws_security_group.alb_test.id}"]
-  subnets         = ["${aws_subnet.alb_test.*.id}"]
+  subnets         = ["${aws_subnet.alb_test.0.id}", "${aws_subnet.alb_test.1.id}"]
 
-  idle_timeout = 30
+  idle_timeout               = 30
   enable_deletion_protection = false
 
-  tags {
+  tags = {
     TestName = "TestAccAWSALB_basic"
   }
 }
@@ -113,7 +114,7 @@ data "aws_availability_zones" "available" {}
 resource "aws_vpc" "alb_test" {
   cidr_block = "10.0.0.0/16"
 
-  tags {
+  tags = {
     Name = "terraform-testacc-lb-data-source-basic"
   }
 }
@@ -125,7 +126,7 @@ resource "aws_subnet" "alb_test" {
   map_public_ip_on_launch = true
   availability_zone       = "${element(data.aws_availability_zones.available.names, count.index)}"
 
-  tags {
+  tags = {
     Name = "tf-acc-lb-data-source-basic"
   }
 }
@@ -149,31 +150,33 @@ resource "aws_security_group" "alb_test" {
     cidr_blocks = ["0.0.0.0/0"]
   }
 
-  tags {
+  tags = {
     TestName = "TestAccAWSALB_basic"
   }
 }
 
 data "aws_lb" "alb_test_with_arn" {
-	arn = "${aws_lb.alb_test.arn}"
+  arn = "${aws_lb.alb_test.arn}"
 }
 
 data "aws_lb" "alb_test_with_name" {
-	name = "${aws_lb.alb_test.name}"
-}`, lbName)
+  name = "${aws_lb.alb_test.name}"
+}
+`, lbName)
 }
 
 func testAccDataSourceAWSLBConfigBackardsCompatibility(albName string) string {
-	return fmt.Sprintf(`resource "aws_alb" "alb_test" {
+	return fmt.Sprintf(`
+resource "aws_alb" "alb_test" {
   name            = "%s"
   internal        = true
   security_groups = ["${aws_security_group.alb_test.id}"]
-  subnets         = ["${aws_subnet.alb_test.*.id}"]
+  subnets         = ["${aws_subnet.alb_test.0.id}", "${aws_subnet.alb_test.1.id}"]
 
-  idle_timeout = 30
+  idle_timeout               = 30
   enable_deletion_protection = false
 
-  tags {
+  tags = {
     TestName = "TestAccAWSALB_basic"
   }
 }
@@ -188,7 +191,7 @@ data "aws_availability_zones" "available" {}
 resource "aws_vpc" "alb_test" {
   cidr_block = "10.0.0.0/16"
 
-  tags {
+  tags = {
     Name = "terraform-testacc-lb-data-source-bc"
   }
 }
@@ -200,7 +203,7 @@ resource "aws_subnet" "alb_test" {
   map_public_ip_on_launch = true
   availability_zone       = "${element(data.aws_availability_zones.available.names, count.index)}"
 
-  tags {
+  tags = {
     Name = "tf-acc-lb-data-source-bc"
   }
 }
@@ -224,16 +227,17 @@ resource "aws_security_group" "alb_test" {
     cidr_blocks = ["0.0.0.0/0"]
   }
 
-  tags {
+  tags = {
     TestName = "TestAccAWSALB_basic"
   }
 }
 
 data "aws_alb" "alb_test_with_arn" {
-	arn = "${aws_alb.alb_test.arn}"
+  arn = "${aws_alb.alb_test.arn}"
 }
 
 data "aws_alb" "alb_test_with_name" {
-	name = "${aws_alb.alb_test.name}"
-}`, albName)
+  name = "${aws_alb.alb_test.name}"
+}
+`, albName)
 }

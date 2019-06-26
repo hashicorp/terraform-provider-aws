@@ -44,7 +44,8 @@ func testSweepAcmpcaCertificateAuthorities(region string) error {
 		arn := aws.StringValue(certificateAuthority.Arn)
 		log.Printf("[INFO] Deleting ACMPCA Certificate Authority: %s", arn)
 		input := &acmpca.DeleteCertificateAuthorityInput{
-			CertificateAuthorityArn: aws.String(arn),
+			CertificateAuthorityArn:     aws.String(arn),
+			PermanentDeletionTimeInDays: aws.Int64(int64(7)),
 		}
 
 		_, err := conn.DeleteCertificateAuthority(input)
@@ -63,7 +64,7 @@ func TestAccAwsAcmpcaCertificateAuthority_Basic(t *testing.T) {
 	var certificateAuthority acmpca.CertificateAuthority
 	resourceName := "aws_acmpca_certificate_authority.test"
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsAcmpcaCertificateAuthorityDestroy,
@@ -84,6 +85,7 @@ func TestAccAwsAcmpcaCertificateAuthority_Basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "enabled", "true"),
 					resource.TestCheckResourceAttr(resourceName, "not_after", ""),
 					resource.TestCheckResourceAttr(resourceName, "not_before", ""),
+					resource.TestCheckResourceAttr(resourceName, "permanent_deletion_time_in_days", "30"),
 					resource.TestCheckResourceAttr(resourceName, "revocation_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "revocation_configuration.0.crl_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "revocation_configuration.0.crl_configuration.0.enabled", "false"),
@@ -109,7 +111,7 @@ func TestAccAwsAcmpcaCertificateAuthority_Enabled(t *testing.T) {
 	// error updating ACMPCA Certificate Authority: InvalidStateException: The certificate authority must be in the Active or DISABLED state to be updated
 	t.Skip("We need to fully sign the certificate authority CSR from another CA in order to test this functionality, which requires another resource")
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsAcmpcaCertificateAuthorityDestroy,
@@ -134,6 +136,9 @@ func TestAccAwsAcmpcaCertificateAuthority_Enabled(t *testing.T) {
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"permanent_deletion_time_in_days",
+				},
 			},
 		},
 	})
@@ -144,7 +149,7 @@ func TestAccAwsAcmpcaCertificateAuthority_RevocationConfiguration_CrlConfigurati
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_acmpca_certificate_authority.test"
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsAcmpcaCertificateAuthorityDestroy,
@@ -167,6 +172,9 @@ func TestAccAwsAcmpcaCertificateAuthority_RevocationConfiguration_CrlConfigurati
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"permanent_deletion_time_in_days",
+				},
 			},
 			// Test updating revocation configuration
 			{
@@ -226,7 +234,7 @@ func TestAccAwsAcmpcaCertificateAuthority_RevocationConfiguration_CrlConfigurati
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_acmpca_certificate_authority.test"
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsAcmpcaCertificateAuthorityDestroy,
@@ -249,6 +257,9 @@ func TestAccAwsAcmpcaCertificateAuthority_RevocationConfiguration_CrlConfigurati
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"permanent_deletion_time_in_days",
+				},
 			},
 			// Test disabling revocation configuration
 			{
@@ -292,7 +303,7 @@ func TestAccAwsAcmpcaCertificateAuthority_RevocationConfiguration_CrlConfigurati
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_acmpca_certificate_authority.test"
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsAcmpcaCertificateAuthorityDestroy,
@@ -315,6 +326,9 @@ func TestAccAwsAcmpcaCertificateAuthority_RevocationConfiguration_CrlConfigurati
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"permanent_deletion_time_in_days",
+				},
 			},
 			// Test updating revocation configuration
 			{
@@ -346,7 +360,7 @@ func TestAccAwsAcmpcaCertificateAuthority_Tags(t *testing.T) {
 	var certificateAuthority acmpca.CertificateAuthority
 	resourceName := "aws_acmpca_certificate_authority.test"
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsAcmpcaCertificateAuthorityDestroy,
@@ -388,6 +402,9 @@ func TestAccAwsAcmpcaCertificateAuthority_Tags(t *testing.T) {
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"permanent_deletion_time_in_days",
+				},
 			},
 		},
 	})
@@ -414,8 +431,8 @@ func testAccCheckAwsAcmpcaCertificateAuthorityDestroy(s *terraform.State) error 
 			return err
 		}
 
-		if output != nil {
-			return fmt.Errorf("ACMPCA Certificate Authority %q still exists", rs.Primary.ID)
+		if output != nil && output.CertificateAuthority != nil && aws.StringValue(output.CertificateAuthority.Arn) == rs.Primary.ID && aws.StringValue(output.CertificateAuthority.Status) != acmpca.CertificateAuthorityStatusDeleted {
+			return fmt.Errorf("ACMPCA Certificate Authority %q still exists in non-DELETED state: %s", rs.Primary.ID, aws.StringValue(output.CertificateAuthority.Status))
 		}
 	}
 
@@ -451,10 +468,30 @@ func testAccCheckAwsAcmpcaCertificateAuthorityExists(resourceName string, certif
 	}
 }
 
+func listAcmpcaCertificateAuthorities(conn *acmpca.ACMPCA) ([]*acmpca.CertificateAuthority, error) {
+	certificateAuthorities := []*acmpca.CertificateAuthority{}
+	input := &acmpca.ListCertificateAuthoritiesInput{}
+
+	for {
+		output, err := conn.ListCertificateAuthorities(input)
+		if err != nil {
+			return certificateAuthorities, err
+		}
+		certificateAuthorities = append(certificateAuthorities, output.CertificateAuthorities...)
+		if output.NextToken == nil {
+			break
+		}
+		input.NextToken = output.NextToken
+	}
+
+	return certificateAuthorities, nil
+}
+
 func testAccAwsAcmpcaCertificateAuthorityConfig_Enabled(enabled bool) string {
 	return fmt.Sprintf(`
 resource "aws_acmpca_certificate_authority" "test" {
-  enabled = %t
+  enabled                         = %[1]t
+  permanent_deletion_time_in_days = 7
 
   certificate_authority_configuration {
     key_algorithm     = "RSA_4096"
@@ -486,6 +523,8 @@ func testAccAwsAcmpcaCertificateAuthorityConfig_RevocationConfiguration_CrlConfi
 %s
 
 resource "aws_acmpca_certificate_authority" "test" {
+  permanent_deletion_time_in_days = 7
+
   certificate_authority_configuration {
     key_algorithm     = "RSA_4096"
     signing_algorithm = "SHA512WITHRSA"
@@ -514,6 +553,8 @@ func testAccAwsAcmpcaCertificateAuthorityConfig_RevocationConfiguration_CrlConfi
 %s
 
 resource "aws_acmpca_certificate_authority" "test" {
+  permanent_deletion_time_in_days = 7
+
   certificate_authority_configuration {
     key_algorithm     = "RSA_4096"
     signing_algorithm = "SHA512WITHRSA"
@@ -539,6 +580,8 @@ func testAccAwsAcmpcaCertificateAuthorityConfig_RevocationConfiguration_CrlConfi
 %s
 
 resource "aws_acmpca_certificate_authority" "test" {
+  permanent_deletion_time_in_days = 7
+
   certificate_authority_configuration {
     key_algorithm     = "RSA_4096"
     signing_algorithm = "SHA512WITHRSA"
@@ -596,6 +639,8 @@ resource "aws_s3_bucket_policy" "test" {
 
 const testAccAwsAcmpcaCertificateAuthorityConfig_Tags_Single = `
 resource "aws_acmpca_certificate_authority" "test" {
+  permanent_deletion_time_in_days = 7
+
   certificate_authority_configuration {
     key_algorithm     = "RSA_4096"
     signing_algorithm = "SHA512WITHRSA"
@@ -613,6 +658,8 @@ resource "aws_acmpca_certificate_authority" "test" {
 
 const testAccAwsAcmpcaCertificateAuthorityConfig_Tags_SingleUpdated = `
 resource "aws_acmpca_certificate_authority" "test" {
+  permanent_deletion_time_in_days = 7
+
   certificate_authority_configuration {
     key_algorithm     = "RSA_4096"
     signing_algorithm = "SHA512WITHRSA"
@@ -630,6 +677,8 @@ resource "aws_acmpca_certificate_authority" "test" {
 
 const testAccAwsAcmpcaCertificateAuthorityConfig_Tags_Multiple = `
 resource "aws_acmpca_certificate_authority" "test" {
+  permanent_deletion_time_in_days = 7
+
   certificate_authority_configuration {
     key_algorithm     = "RSA_4096"
     signing_algorithm = "SHA512WITHRSA"

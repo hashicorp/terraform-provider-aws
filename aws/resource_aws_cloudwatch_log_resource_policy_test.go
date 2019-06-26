@@ -14,7 +14,7 @@ import (
 func TestAccAWSCloudWatchLogResourcePolicy_Basic(t *testing.T) {
 	name := acctest.RandString(5)
 	var resourcePolicy cloudwatchlogs.ResourcePolicy
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckCloudWatchLogResourcePolicyDestroy,
@@ -44,7 +44,7 @@ func TestAccAWSCloudWatchLogResourcePolicy_Import(t *testing.T) {
 
 	name := acctest.RandString(5)
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckCloudWatchLogResourcePolicyDestroy,
@@ -128,7 +128,7 @@ data "aws_iam_policy_document" "test" {
 }
 
 resource "aws_cloudwatch_log_resource_policy" "test" {
-  policy_name = "%s"
+  policy_name     = "%s"
   policy_document = "${data.aws_iam_policy_document.test.json}"
 }
 `, name)
@@ -153,7 +153,7 @@ data "aws_iam_policy_document" "test" {
 }
 
 resource "aws_cloudwatch_log_resource_policy" "test" {
-  policy_name = "%s"
+  policy_name     = "%s"
   policy_document = "${data.aws_iam_policy_document.test.json}"
 }
 `, name)

@@ -43,7 +43,7 @@ func TestAccAWSElasticSearchDomainPolicy_basic(t *testing.T) {
 }`
 	name := fmt.Sprintf("tf-test-%d", ri)
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckESDomainDestroy,
@@ -83,19 +83,22 @@ func buildESDomainArn(name, partition, accId, region string) (string, error) {
 func testAccESDomainPolicyConfig(randInt int, policy string) string {
 	return fmt.Sprintf(`
 resource "aws_elasticsearch_domain" "example" {
-    domain_name = "tf-test-%d"
-    elasticsearch_version = "2.3"
-    cluster_config {
-        instance_type = "t2.micro.elasticsearch"
-    }
-    ebs_options {
-        ebs_enabled = true
-        volume_size = 10
-    }
+  domain_name           = "tf-test-%d"
+  elasticsearch_version = "2.3"
+
+  cluster_config {
+    instance_type = "t2.micro.elasticsearch"
+  }
+
+  ebs_options {
+    ebs_enabled = true
+    volume_size = 10
+  }
 }
 
 resource "aws_elasticsearch_domain_policy" "main" {
   domain_name = "${aws_elasticsearch_domain.example.domain_name}"
+
   access_policies = <<POLICIES
 %s
 POLICIES

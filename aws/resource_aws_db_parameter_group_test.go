@@ -19,7 +19,7 @@ func TestAccAWSDBParameterGroup_importBasic(t *testing.T) {
 	resourceName := "aws_db_parameter_group.bar"
 	groupName := fmt.Sprintf("parameter-group-test-terraform-%d", acctest.RandInt())
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSDBParameterGroupDestroy,
@@ -42,7 +42,7 @@ func TestAccAWSDBParameterGroup_limit(t *testing.T) {
 
 	groupName := fmt.Sprintf("parameter-group-test-terraform-%d", acctest.RandInt())
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSDBParameterGroupDestroy,
@@ -242,7 +242,7 @@ func TestAccAWSDBParameterGroup_basic(t *testing.T) {
 
 	groupName := fmt.Sprintf("parameter-group-test-terraform-%d", acctest.RandInt())
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSDBParameterGroupDestroy,
@@ -320,7 +320,7 @@ func TestAccAWSDBParameterGroup_basic(t *testing.T) {
 func TestAccAWSDBParameterGroup_Disappears(t *testing.T) {
 	var v rds.DBParameterGroup
 	groupName := fmt.Sprintf("parameter-group-test-terraform-%d", acctest.RandInt())
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSDBParameterGroupDestroy,
@@ -340,7 +340,7 @@ func TestAccAWSDBParameterGroup_Disappears(t *testing.T) {
 func TestAccAWSDBParameterGroup_namePrefix(t *testing.T) {
 	var v rds.DBParameterGroup
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSDBParameterGroupDestroy,
@@ -360,7 +360,7 @@ func TestAccAWSDBParameterGroup_namePrefix(t *testing.T) {
 func TestAccAWSDBParameterGroup_generatedName(t *testing.T) {
 	var v rds.DBParameterGroup
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSDBParameterGroupDestroy,
@@ -380,7 +380,7 @@ func TestAccAWSDBParameterGroup_withApplyMethod(t *testing.T) {
 
 	groupName := fmt.Sprintf("parameter-group-test-terraform-%d", acctest.RandInt())
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSDBParameterGroupDestroy,
@@ -418,7 +418,7 @@ func TestAccAWSDBParameterGroup_Only(t *testing.T) {
 	var v rds.DBParameterGroup
 
 	groupName := fmt.Sprintf("parameter-group-test-terraform-%d", acctest.RandInt())
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSDBParameterGroupDestroy,
@@ -442,7 +442,7 @@ func TestAccAWSDBParameterGroup_MatchDefault(t *testing.T) {
 	var v rds.DBParameterGroup
 
 	groupName := fmt.Sprintf("parameter-group-test-terraform-%d", acctest.RandInt())
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSDBParameterGroupDestroy,
@@ -574,201 +574,558 @@ func randomString(strlen int) string {
 func testAccAWSDBParameterGroupConfig(n string) string {
 	return fmt.Sprintf(`
 resource "aws_db_parameter_group" "bar" {
-	name = "%s"
-	family = "mysql5.6"
-	parameter {
-	  name = "character_set_server"
-	  value = "utf8"
-	}
-	parameter {
-	  name = "character_set_client"
-	  value = "utf8"
-	}
-	parameter{
-	  name = "character_set_results"
-	  value = "utf8"
-	}
-	tags {
-		foo = "bar"
-	}
-}`, n)
+  name   = "%s"
+  family = "mysql5.6"
+
+  parameter {
+    name  = "character_set_server"
+    value = "utf8"
+  }
+
+  parameter {
+    name  = "character_set_client"
+    value = "utf8"
+  }
+
+  parameter {
+    name  = "character_set_results"
+    value = "utf8"
+  }
+
+  tags = {
+    foo = "bar"
+  }
+}
+`, n)
 }
 
 func testAccAWSDBParameterGroupConfigWithApplyMethod(n string) string {
 	return fmt.Sprintf(`
 resource "aws_db_parameter_group" "bar" {
-	name = "%s"
-	family = "mysql5.6"
-	parameter {
-	  name = "character_set_server"
-	  value = "utf8"
-	}
-	parameter {
-	  name = "character_set_client"
-	  value = "utf8"
-	  apply_method = "pending-reboot"
-	}
-	tags {
-		foo = "bar"
-	}
-}`, n)
+  name   = "%s"
+  family = "mysql5.6"
+
+  parameter {
+    name  = "character_set_server"
+    value = "utf8"
+  }
+
+  parameter {
+    name         = "character_set_client"
+    value        = "utf8"
+    apply_method = "pending-reboot"
+  }
+
+  tags = {
+    foo = "bar"
+  }
+}
+`, n)
 }
 
 func testAccAWSDBParameterGroupAddParametersConfig(n string) string {
 	return fmt.Sprintf(`
 resource "aws_db_parameter_group" "bar" {
-	name = "%s"
-	family = "mysql5.6"
-	description = "Test parameter group for terraform"
-	parameter {
-	  name = "character_set_server"
-	  value = "utf8"
-	}
-	parameter {
-	  name = "character_set_client"
-	  value = "utf8"
-	}
-	parameter{
-	  name = "character_set_results"
-	  value = "utf8"
-	}
-	parameter {
-	  name = "collation_server"
-	  value = "utf8_unicode_ci"
-	}
-	parameter {
-	  name = "collation_connection"
-	  value = "utf8_unicode_ci"
-	}
-	tags {
-		foo = "bar"
-		baz = "foo"
-	}
-}`, n)
+  name        = "%s"
+  family      = "mysql5.6"
+  description = "Test parameter group for terraform"
+
+  parameter {
+    name  = "character_set_server"
+    value = "utf8"
+  }
+
+  parameter {
+    name  = "character_set_client"
+    value = "utf8"
+  }
+
+  parameter {
+    name  = "character_set_results"
+    value = "utf8"
+  }
+
+  parameter {
+    name  = "collation_server"
+    value = "utf8_unicode_ci"
+  }
+
+  parameter {
+    name  = "collation_connection"
+    value = "utf8_unicode_ci"
+  }
+
+  tags = {
+    foo = "bar"
+    baz = "foo"
+  }
+}
+`, n)
 }
 
 func testAccAWSDBParameterGroupOnlyConfig(n string) string {
 	return fmt.Sprintf(`
 resource "aws_db_parameter_group" "bar" {
-	name = "%s"
-	family = "mysql5.6"
-	description = "Test parameter group for terraform"
-}`, n)
+  name        = "%s"
+  family      = "mysql5.6"
+  description = "Test parameter group for terraform"
+}
+`, n)
 }
 
 func createAwsDbParameterGroupsExceedDefaultAwsLimit(n string) string {
 	return fmt.Sprintf(`
 resource "aws_db_parameter_group" "large" {
-	name = "%s"
-	family = "mysql5.6"
-	description = "RDS default parameter group: Exceed default AWS parameter group limit of twenty"
+  name        = "%s"
+  family      = "mysql5.6"
+  description = "RDS default parameter group: Exceed default AWS parameter group limit of twenty"
 
-    parameter { name = "binlog_cache_size"                   value = 131072                                            }
-    parameter { name = "character_set_client"                value = "utf8"                                            }
-    parameter { name = "character_set_connection"            value = "utf8"                                            }
-    parameter { name = "character_set_database"              value = "utf8"                                            }
-    parameter { name = "character_set_filesystem"            value = "utf8"                                            }
-    parameter { name = "character_set_results"               value = "utf8"                                            }
-    parameter { name = "character_set_server"                value = "utf8"                                            }
-    parameter { name = "collation_connection"                value = "utf8_general_ci"                                 }
-    parameter { name = "collation_server"                    value = "utf8_general_ci"                                 }
-    parameter { name = "event_scheduler"                     value = "ON"                                              }
-    parameter { name = "innodb_buffer_pool_dump_at_shutdown" value = 1                                                 }
-    parameter { name = "innodb_file_format"                  value = "Barracuda"                                       }
-    parameter { name = "innodb_flush_log_at_trx_commit"      value = 0                                                 }
-    parameter { name = "innodb_io_capacity"                  value = 2000                                              }
-    parameter { name = "innodb_io_capacity_max"              value = 3000                                              }
-    parameter { name = "innodb_lock_wait_timeout"            value = 120                                               }
-    parameter { name = "innodb_max_dirty_pages_pct"          value = 90                                                }
-    parameter { name = "innodb_open_files"                   value = 4000              apply_method = "pending-reboot" }
-    parameter { name = "innodb_read_io_threads"              value = 64                apply_method = "pending-reboot" }
-    parameter { name = "innodb_thread_concurrency"           value = 0                                                 }
-    parameter { name = "innodb_write_io_threads"             value = 64                apply_method = "pending-reboot" }
-    parameter { name = "join_buffer_size"                    value = 16777216                                          }
-    parameter { name = "key_buffer_size"                     value = 67108864                                          }
-    parameter { name = "log_bin_trust_function_creators"     value = 1                                                 }
-    parameter { name = "log_warnings"                        value = 2                                                 }
-    parameter { name = "log_output"                          value = "FILE"                                            }
-    parameter { name = "max_allowed_packet"                  value = 1073741824                                        }
-    parameter { name = "max_connect_errors"                  value = 100                                               }
-    parameter { name = "max_connections"                     value = 3200                                              }
-    parameter { name = "max_heap_table_size"                 value = 67108864                                          }
-    parameter { name = "performance_schema"                  value = 1                 apply_method = "pending-reboot" }
-    parameter { name = "performance_schema_users_size"       value = 1048576           apply_method = "pending-reboot" }
-    parameter { name = "query_cache_limit"                   value = 2097152                                           }
-    parameter { name = "query_cache_min_res_unit"            value = 512                                               }
-    parameter { name = "query_cache_size"                    value = 67108864                                          }
-    parameter { name = "slow_query_log"                      value = 1                                                 }
-    parameter { name = "sort_buffer_size"                    value = 16777216                                          }
-    parameter { name = "sync_binlog"                         value = 0                                                 }
-    parameter { name = "table_open_cache"                    value = 4096                                              }
-    parameter { name = "tmp_table_size"                      value = 67108864                                          }
-    parameter { name = "tx_isolation"                        value = "REPEATABLE-READ"                                 }
-}`, n)
+  parameter {
+    name  = "binlog_cache_size"
+    value = 131072
+  }
+
+  parameter {
+    name  = "character_set_client"
+    value = "utf8"
+  }
+
+  parameter {
+    name  = "character_set_connection"
+    value = "utf8"
+  }
+
+  parameter {
+    name  = "character_set_database"
+    value = "utf8"
+  }
+
+  parameter {
+    name  = "character_set_filesystem"
+    value = "utf8"
+  }
+
+  parameter {
+    name  = "character_set_results"
+    value = "utf8"
+  }
+
+  parameter {
+    name  = "character_set_server"
+    value = "utf8"
+  }
+
+  parameter {
+    name  = "collation_connection"
+    value = "utf8_general_ci"
+  }
+
+  parameter {
+    name  = "collation_server"
+    value = "utf8_general_ci"
+  }
+
+  parameter {
+    name  = "event_scheduler"
+    value = "ON"
+  }
+
+  parameter {
+    name  = "innodb_buffer_pool_dump_at_shutdown"
+    value = 1
+  }
+
+  parameter {
+    name  = "innodb_file_format"
+    value = "Barracuda"
+  }
+
+  parameter {
+    name  = "innodb_flush_log_at_trx_commit"
+    value = 0
+  }
+
+  parameter {
+    name  = "innodb_io_capacity"
+    value = 2000
+  }
+
+  parameter {
+    name  = "innodb_io_capacity_max"
+    value = 3000
+  }
+
+  parameter {
+    name  = "innodb_lock_wait_timeout"
+    value = 120
+  }
+
+  parameter {
+    name  = "innodb_max_dirty_pages_pct"
+    value = 90
+  }
+
+  parameter {
+    name         = "innodb_open_files"
+    value        = 4000
+    apply_method = "pending-reboot"
+  }
+
+  parameter {
+    name         = "innodb_read_io_threads"
+    value        = 64
+    apply_method = "pending-reboot"
+  }
+
+  parameter {
+    name  = "innodb_thread_concurrency"
+    value = 0
+  }
+
+  parameter {
+    name         = "innodb_write_io_threads"
+    value        = 64
+    apply_method = "pending-reboot"
+  }
+
+  parameter {
+    name  = "join_buffer_size"
+    value = 16777216
+  }
+
+  parameter {
+    name  = "key_buffer_size"
+    value = 67108864
+  }
+
+  parameter {
+    name  = "log_bin_trust_function_creators"
+    value = 1
+  }
+
+  parameter {
+    name  = "log_warnings"
+    value = 2
+  }
+
+  parameter {
+    name  = "log_output"
+    value = "FILE"
+  }
+
+  parameter {
+    name  = "max_allowed_packet"
+    value = 1073741824
+  }
+
+  parameter {
+    name  = "max_connect_errors"
+    value = 100
+  }
+
+  parameter {
+    name  = "max_connections"
+    value = 3200
+  }
+
+  parameter {
+    name  = "max_heap_table_size"
+    value = 67108864
+  }
+
+  parameter {
+    name         = "performance_schema"
+    value        = 1
+    apply_method = "pending-reboot"
+  }
+
+  parameter {
+    name         = "performance_schema_users_size"
+    value        = 1048576
+    apply_method = "pending-reboot"
+  }
+
+  parameter {
+    name  = "query_cache_limit"
+    value = 2097152
+  }
+
+  parameter {
+    name  = "query_cache_min_res_unit"
+    value = 512
+  }
+
+  parameter {
+    name  = "query_cache_size"
+    value = 67108864
+  }
+
+  parameter {
+    name  = "slow_query_log"
+    value = 1
+  }
+
+  parameter {
+    name  = "sort_buffer_size"
+    value = 16777216
+  }
+
+  parameter {
+    name  = "sync_binlog"
+    value = 0
+  }
+
+  parameter {
+    name  = "table_open_cache"
+    value = 4096
+  }
+
+  parameter {
+    name  = "tmp_table_size"
+    value = 67108864
+  }
+
+  parameter {
+    name  = "tx_isolation"
+    value = "REPEATABLE-READ"
+  }
+}
+`, n)
 }
 
 func updateAwsDbParameterGroupsExceedDefaultAwsLimit(n string) string {
 	return fmt.Sprintf(`
 resource "aws_db_parameter_group" "large" {
-	name = "%s"
-	family = "mysql5.6"
-	description = "Updated RDS default parameter group: Exceed default AWS parameter group limit of twenty"
-    parameter { name = "binlog_cache_size"                   value = 131072                                            }
-    parameter { name = "character_set_client"                value = "utf8"                                            }
-    parameter { name = "character_set_connection"            value = "utf8"                                            }
-    parameter { name = "character_set_database"              value = "utf8"                                            }
-    parameter { name = "character_set_filesystem"            value = "utf8"                                            }
-    parameter { name = "character_set_results"               value = "utf8"                                            }
-    parameter { name = "character_set_server"                value = "utf8"                                            }
-    parameter { name = "collation_connection"                value = "utf8_general_ci"                                 }
-    parameter { name = "collation_server"                    value = "utf8_general_ci"                                 }
-    parameter { name = "event_scheduler"                     value = "ON"                                              }
-    parameter { name = "innodb_buffer_pool_dump_at_shutdown" value = 1                                                 }
-    parameter { name = "innodb_file_format"                  value = "Barracuda"                                       }
-    parameter { name = "innodb_flush_log_at_trx_commit"      value = 0                                                 }
-    parameter { name = "innodb_io_capacity"                  value = 2000                                              }
-    parameter { name = "innodb_io_capacity_max"              value = 3000                                              }
-    parameter { name = "innodb_lock_wait_timeout"            value = 120                                               }
-    parameter { name = "innodb_max_dirty_pages_pct"          value = 90                                                }
-    parameter { name = "innodb_open_files"                   value = 4000              apply_method = "pending-reboot" }
-    parameter { name = "innodb_read_io_threads"              value = 64                apply_method = "pending-reboot" }
-    parameter { name = "innodb_thread_concurrency"           value = 0                                                 }
-    parameter { name = "innodb_write_io_threads"             value = 64                apply_method = "pending-reboot" }
-    parameter { name = "join_buffer_size"                    value = 16777216                                          }
-    parameter { name = "key_buffer_size"                     value = 67108864                                          }
-    parameter { name = "log_bin_trust_function_creators"     value = 1                                                 }
-    parameter { name = "log_warnings"                        value = 2                                                 }
-    parameter { name = "log_output"                          value = "FILE"                                            }
-    parameter { name = "max_allowed_packet"                  value = 1073741824                                        }
-    parameter { name = "max_connect_errors"                  value = 100                                               }
-    parameter { name = "max_connections"                     value = 3200                                              }
-    parameter { name = "max_heap_table_size"                 value = 67108864                                          }
-    parameter { name = "performance_schema"                  value = 1                 apply_method = "pending-reboot" }
-    parameter { name = "performance_schema_users_size"       value = 1048576           apply_method = "pending-reboot" }
-    parameter { name = "query_cache_limit"                   value = 2097152                                           }
-    parameter { name = "query_cache_min_res_unit"            value = 512                                               }
-    parameter { name = "query_cache_size"                    value = 67108864                                          }
-    parameter { name = "slow_query_log"                      value = 1                                                 }
-    parameter { name = "sort_buffer_size"                    value = 16777216                                          }
-    parameter { name = "sync_binlog"                         value = 0                                                 }
-    parameter { name = "table_open_cache"                    value = 4096                                              }
-    parameter { name = "tmp_table_size"                      value = 67108864                                          }
-    parameter { name = "tx_isolation"                        value = "REPEATABLE-READ"                                 }
-}`, n)
+  name        = "%s"
+  family      = "mysql5.6"
+  description = "Updated RDS default parameter group: Exceed default AWS parameter group limit of twenty"
+
+  parameter {
+    name  = "binlog_cache_size"
+    value = 131072
+  }
+
+  parameter {
+    name  = "character_set_client"
+    value = "utf8"
+  }
+
+  parameter {
+    name  = "character_set_connection"
+    value = "utf8"
+  }
+
+  parameter {
+    name  = "character_set_database"
+    value = "utf8"
+  }
+
+  parameter {
+    name  = "character_set_filesystem"
+    value = "utf8"
+  }
+
+  parameter {
+    name  = "character_set_results"
+    value = "utf8"
+  }
+
+  parameter {
+    name  = "character_set_server"
+    value = "utf8"
+  }
+
+  parameter {
+    name  = "collation_connection"
+    value = "utf8_general_ci"
+  }
+
+  parameter {
+    name  = "collation_server"
+    value = "utf8_general_ci"
+  }
+
+  parameter {
+    name  = "event_scheduler"
+    value = "ON"
+  }
+
+  parameter {
+    name  = "innodb_buffer_pool_dump_at_shutdown"
+    value = 1
+  }
+
+  parameter {
+    name  = "innodb_file_format"
+    value = "Barracuda"
+  }
+
+  parameter {
+    name  = "innodb_flush_log_at_trx_commit"
+    value = 0
+  }
+
+  parameter {
+    name  = "innodb_io_capacity"
+    value = 2000
+  }
+
+  parameter {
+    name  = "innodb_io_capacity_max"
+    value = 3000
+  }
+
+  parameter {
+    name  = "innodb_lock_wait_timeout"
+    value = 120
+  }
+
+  parameter {
+    name  = "innodb_max_dirty_pages_pct"
+    value = 90
+  }
+
+  parameter {
+    name         = "innodb_open_files"
+    value        = 4000
+    apply_method = "pending-reboot"
+  }
+
+  parameter {
+    name         = "innodb_read_io_threads"
+    value        = 64
+    apply_method = "pending-reboot"
+  }
+
+  parameter {
+    name  = "innodb_thread_concurrency"
+    value = 0
+  }
+
+  parameter {
+    name         = "innodb_write_io_threads"
+    value        = 64
+    apply_method = "pending-reboot"
+  }
+
+  parameter {
+    name  = "join_buffer_size"
+    value = 16777216
+  }
+
+  parameter {
+    name  = "key_buffer_size"
+    value = 67108864
+  }
+
+  parameter {
+    name  = "log_bin_trust_function_creators"
+    value = 1
+  }
+
+  parameter {
+    name  = "log_warnings"
+    value = 2
+  }
+
+  parameter {
+    name  = "log_output"
+    value = "FILE"
+  }
+
+  parameter {
+    name  = "max_allowed_packet"
+    value = 1073741824
+  }
+
+  parameter {
+    name  = "max_connect_errors"
+    value = 100
+  }
+
+  parameter {
+    name  = "max_connections"
+    value = 3200
+  }
+
+  parameter {
+    name  = "max_heap_table_size"
+    value = 67108864
+  }
+
+  parameter {
+    name         = "performance_schema"
+    value        = 1
+    apply_method = "pending-reboot"
+  }
+
+  parameter {
+    name         = "performance_schema_users_size"
+    value        = 1048576
+    apply_method = "pending-reboot"
+  }
+
+  parameter {
+    name  = "query_cache_limit"
+    value = 2097152
+  }
+
+  parameter {
+    name  = "query_cache_min_res_unit"
+    value = 512
+  }
+
+  parameter {
+    name  = "query_cache_size"
+    value = 67108864
+  }
+
+  parameter {
+    name  = "slow_query_log"
+    value = 1
+  }
+
+  parameter {
+    name  = "sort_buffer_size"
+    value = 16777216
+  }
+
+  parameter {
+    name  = "sync_binlog"
+    value = 0
+  }
+
+  parameter {
+    name  = "table_open_cache"
+    value = 4096
+  }
+
+  parameter {
+    name  = "tmp_table_size"
+    value = 67108864
+  }
+
+  parameter {
+    name  = "tx_isolation"
+    value = "REPEATABLE-READ"
+  }
+}
+`, n)
 }
 
 func testAccAWSDBParameterGroupIncludeDefaultConfig(n string) string {
 	return fmt.Sprintf(`
 resource "aws_db_parameter_group" "bar" {
-  name = "%s"
+  name   = "%s"
   family = "postgres9.4"
 
   parameter {
-    name = "client_encoding"
-    value = "UTF8"
+    name         = "client_encoding"
+    value        = "UTF8"
     apply_method = "pending-reboot"
   }
-}`, n)
+}
+`, n)
 }
 
 const testAccDBParameterGroupConfig_namePrefix = `

@@ -33,7 +33,7 @@ func TestAccAWSAPIGatewayDomainName_CertificateArn(t *testing.T) {
 	resourceName := "aws_api_gateway_domain_name.test"
 	rName := fmt.Sprintf("tf-acc-%s.terraformtest.com", acctest.RandString(8))
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProvidersWithTLS,
 		CheckDestroy: testAccCheckAWSAPIGatewayDomainNameDestroy,
@@ -61,7 +61,7 @@ func TestAccAWSAPIGatewayDomainName_CertificateName(t *testing.T) {
 	certRe := regexp.MustCompile("^-----BEGIN CERTIFICATE-----\n")
 	keyRe := regexp.MustCompile("^-----BEGIN RSA PRIVATE KEY-----\n")
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProvidersWithTLS,
 		CheckDestroy: testAccCheckAWSAPIGatewayDomainNameDestroy,
@@ -119,7 +119,7 @@ func TestAccAWSAPIGatewayDomainName_RegionalCertificateArn(t *testing.T) {
 	resourceName := "aws_api_gateway_domain_name.test"
 	rName := fmt.Sprintf("tf-acc-%s.terraformtest.com", acctest.RandString(8))
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProvidersWithTLS,
 		CheckDestroy: testAccCheckAWSAPIGatewayDomainNameDestroy,
@@ -159,7 +159,7 @@ func TestAccAWSAPIGatewayDomainName_RegionalCertificateName(t *testing.T) {
 	certRe := regexp.MustCompile("^-----BEGIN CERTIFICATE-----\n")
 	keyRe := regexp.MustCompile("^-----BEGIN RSA PRIVATE KEY-----\n")
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProvidersWithTLS,
 		CheckDestroy: testAccCheckAWSAPIGatewayDomainNameDestroy,
@@ -304,13 +304,15 @@ resource "aws_api_gateway_domain_name" "test" {
 func testAccAWSAPIGatewayDomainNameConfig_CertificateName(domainName, commonName string) string {
 	return fmt.Sprintf(`
 resource "aws_api_gateway_domain_name" "test" {
-  domain_name = "%s"
-  certificate_body = "${tls_locally_signed_cert.leaf.cert_pem}"
-  certificate_chain = "${tls_self_signed_cert.ca.cert_pem}"
-  certificate_name = "tf-acc-apigateway-domain-name"
+  domain_name             = "%s"
+  certificate_body        = "${tls_locally_signed_cert.leaf.cert_pem}"
+  certificate_chain       = "${tls_self_signed_cert.ca.cert_pem}"
+  certificate_name        = "tf-acc-apigateway-domain-name"
   certificate_private_key = "${tls_private_key.test.private_key_pem}"
 }
+
 %s
+
 `, domainName, testAccAWSAPIGatewayCerts(commonName))
 }
 
@@ -340,6 +342,8 @@ resource "aws_api_gateway_domain_name" "test" {
     types = ["REGIONAL"]
   }
 }
+
 %s
+
 `, domainName, testAccAWSAPIGatewayCerts(commonName))
 }

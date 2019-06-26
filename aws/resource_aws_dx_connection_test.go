@@ -14,7 +14,7 @@ import (
 func TestAccAWSDxConnection_importBasic(t *testing.T) {
 	resourceName := "aws_dx_connection.hoge"
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsDxConnectionDestroy,
@@ -35,7 +35,7 @@ func TestAccAWSDxConnection_importBasic(t *testing.T) {
 func TestAccAWSDxConnection_basic(t *testing.T) {
 	connectionName := fmt.Sprintf("tf-dx-%s", acctest.RandString(5))
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsDxConnectionDestroy,
@@ -57,7 +57,7 @@ func TestAccAWSDxConnection_basic(t *testing.T) {
 func TestAccAWSDxConnection_tags(t *testing.T) {
 	connectionName := fmt.Sprintf("tf-dx-%s", acctest.RandString(5))
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsDxConnectionDestroy,
@@ -123,9 +123,9 @@ func testAccCheckAwsDxConnectionExists(name string) resource.TestCheckFunc {
 func testAccDxConnectionConfig(n string) string {
 	return fmt.Sprintf(`
 resource "aws_dx_connection" "hoge" {
-  name = "%s"
+  name      = "%s"
   bandwidth = "1Gbps"
-  location = "EqSe2"
+  location  = "EqSe2"
 }
 `, n)
 }
@@ -133,13 +133,13 @@ resource "aws_dx_connection" "hoge" {
 func testAccDxConnectionConfig_tags(n string) string {
 	return fmt.Sprintf(`
 resource "aws_dx_connection" "hoge" {
-  name = "%s"
+  name      = "%s"
   bandwidth = "1Gbps"
-  location = "EqSe2"
+  location  = "EqSe2"
 
-  tags {
+  tags = {
     Environment = "production"
-    Usage = "original"
+    Usage       = "original"
   }
 }
 `, n)
@@ -148,11 +148,11 @@ resource "aws_dx_connection" "hoge" {
 func testAccDxConnectionConfig_tagsChanged(n string) string {
 	return fmt.Sprintf(`
 resource "aws_dx_connection" "hoge" {
-  name = "%s"
+  name      = "%s"
   bandwidth = "1Gbps"
-  location = "EqSe2"
+  location  = "EqSe2"
 
-  tags {
+  tags = {
     Usage = "changed"
   }
 }

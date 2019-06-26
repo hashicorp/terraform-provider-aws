@@ -14,7 +14,7 @@ import (
 func TestAccAWSDefaultSecurityGroup_basic(t *testing.T) {
 	var group ec2.SecurityGroup
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:      func() { testAccPreCheck(t) },
 		IDRefreshName: "aws_default_security_group.web",
 		Providers:     testAccProviders,
@@ -46,7 +46,7 @@ func TestAccAWSDefaultSecurityGroup_basic(t *testing.T) {
 func TestAccAWSDefaultSecurityGroup_classic(t *testing.T) {
 	var group ec2.SecurityGroup
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:      func() { testAccPreCheck(t) },
 		IDRefreshName: "aws_default_security_group.web",
 		Providers:     testAccProviders,
@@ -141,7 +141,7 @@ func testAccCheckAWSDefaultSecurityGroupAttributes(group *ec2.SecurityGroup) res
 const testAccAWSDefaultSecurityGroupConfig = `
 resource "aws_vpc" "foo" {
   cidr_block = "10.1.0.0/16"
-	tags {
+	tags = {
 		Name = "terraform-testacc-default-security-group"
 	}
 }
@@ -163,7 +163,7 @@ resource "aws_default_security_group" "web" {
     cidr_blocks = ["10.0.0.0/8"]
   }
 
-  tags {
+  tags = {
     Name = "tf-acc-test"
   }
 }
@@ -182,7 +182,7 @@ resource "aws_default_security_group" "web" {
     cidr_blocks = ["10.0.0.0/8"]
   }
 
-  tags {
+  tags = {
     Name = "tf-acc-test"
   }
 }`

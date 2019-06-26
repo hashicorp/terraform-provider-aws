@@ -81,6 +81,10 @@ func resourceAwsDxPublicVirtualInterface() *schema.Resource {
 				MinItems: 1,
 			},
 			"tags": tagsSchema(),
+			"aws_device": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 		},
 
 		Timeouts: &schema.ResourceTimeout{
@@ -112,7 +116,7 @@ func resourceAwsDxPublicVirtualInterfaceCreate(d *schema.ResourceData, meta inte
 		req.NewPublicVirtualInterface.AmazonAddress = aws.String(v.(string))
 	}
 	if v, ok := d.GetOk("route_filter_prefixes"); ok {
-		req.NewPublicVirtualInterface.RouteFilterPrefixes = expandDxRouteFilterPrefixes(v.(*schema.Set).List())
+		req.NewPublicVirtualInterface.RouteFilterPrefixes = expandDxRouteFilterPrefixes(v.(*schema.Set))
 	}
 
 	log.Printf("[DEBUG] Creating Direct Connect public virtual interface: %#v", req)
@@ -131,7 +135,7 @@ func resourceAwsDxPublicVirtualInterfaceCreate(d *schema.ResourceData, meta inte
 	}.String()
 	d.Set("arn", arn)
 
-	if err := dxPublicVirtualInterfaceWaitUntilAvailable(d, conn); err != nil {
+	if err := dxPublicVirtualInterfaceWaitUntilAvailable(conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
 		return err
 	}
 
@@ -160,11 +164,9 @@ func resourceAwsDxPublicVirtualInterfaceRead(d *schema.ResourceData, meta interf
 	d.Set("customer_address", vif.CustomerAddress)
 	d.Set("amazon_address", vif.AmazonAddress)
 	d.Set("route_filter_prefixes", flattenDxRouteFilterPrefixes(vif.RouteFilterPrefixes))
-	if err := getTagsDX(conn, d, d.Get("arn").(string)); err != nil {
-		return err
-	}
-
-	return nil
+	d.Set("aws_device", vif.AwsDeviceV2)
+	err1 := getTagsDX(conn, d, d.Get("arn").(string))
+	return err1
 }
 
 func resourceAwsDxPublicVirtualInterfaceUpdate(d *schema.ResourceData, meta interface{}) error {
@@ -208,10 +210,11 @@ func resourceAwsDxPublicVirtualInterfaceCustomizeDiff(diff *schema.ResourceDiff,
 	return nil
 }
 
-func dxPublicVirtualInterfaceWaitUntilAvailable(d *schema.ResourceData, conn *directconnect.DirectConnect) error {
+func dxPublicVirtualInterfaceWaitUntilAvailable(conn *directconnect.DirectConnect, vifId string, timeout time.Duration) error {
 	return dxVirtualInterfaceWaitUntilAvailable(
-		d,
 		conn,
+		vifId,
+		timeout,
 		[]string{
 			directconnect.VirtualInterfaceStatePending,
 		},

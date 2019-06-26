@@ -13,7 +13,7 @@ import (
 )
 
 func TestAccAWSDbEventCategories_basic(t *testing.T) {
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:  func() { testAccPreCheck(t) },
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
@@ -29,7 +29,7 @@ func TestAccAWSDbEventCategories_basic(t *testing.T) {
 }
 
 func TestAccAWSDbEventCategories_sourceType(t *testing.T) {
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:  func() { testAccPreCheck(t) },
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
@@ -62,7 +62,7 @@ func testAccAwsDbEventCategoriesAttrCheck(n string, expected []string) resource.
 
 		sort.Strings(actual)
 		sort.Strings(expected)
-		if reflect.DeepEqual(expected, actual) != true {
+		if !reflect.DeepEqual(expected, actual) {
 			return fmt.Errorf("DB Event Categories not matched: expected %v, got %v", expected, actual)
 		}
 
@@ -85,8 +85,9 @@ func testAccCheckAwsDbEventCategoriesBuild(attrs map[string]string) ([]string, e
 	}
 
 	var eventCategories []string
+	r := regexp.MustCompile("event_categories.[0-9]+")
 	for k, v := range attrs {
-		matched, _ := regexp.MatchString("event_categories.[0-9]+", k)
+		matched := r.MatchString(k)
 		if matched {
 			eventCategories = append(eventCategories, v)
 		}

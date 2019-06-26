@@ -16,7 +16,7 @@ func TestAccAWSWafRegionalXssMatchSet_basic(t *testing.T) {
 	var v waf.XssMatchSet
 	xssMatchSet := fmt.Sprintf("xssMatchSet-%s", acctest.RandString(5))
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSWafRegionalXssMatchSetDestroy,
@@ -56,7 +56,7 @@ func TestAccAWSWafRegionalXssMatchSet_changeNameForceNew(t *testing.T) {
 	xssMatchSet := fmt.Sprintf("xssMatchSet-%s", acctest.RandString(5))
 	xssMatchSetNewName := fmt.Sprintf("xssMatchSetNewName-%s", acctest.RandString(5))
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSWafRegionalXssMatchSetDestroy,
@@ -89,7 +89,7 @@ func TestAccAWSWafRegionalXssMatchSet_disappears(t *testing.T) {
 	var v waf.XssMatchSet
 	xssMatchSet := fmt.Sprintf("xssMatchSet-%s", acctest.RandString(5))
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSWafRegionalXssMatchSetDestroy,
@@ -110,7 +110,7 @@ func TestAccAWSWafRegionalXssMatchSet_changeTuples(t *testing.T) {
 	var before, after waf.XssMatchSet
 	setName := fmt.Sprintf("xssMatchSet-%s", acctest.RandString(5))
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSWafRegionalXssMatchSetDestroy,
@@ -175,7 +175,7 @@ func TestAccAWSWafRegionalXssMatchSet_noTuples(t *testing.T) {
 	var ipset waf.XssMatchSet
 	setName := fmt.Sprintf("xssMatchSet-%s", acctest.RandString(5))
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSWafRegionalXssMatchSetDestroy,
@@ -298,8 +298,10 @@ func testAccAWSWafRegionalXssMatchSetConfig(name string) string {
 	return fmt.Sprintf(`
 resource "aws_wafregional_xss_match_set" "xss_match_set" {
   name = "%s"
+
   xss_match_tuple {
     text_transformation = "NONE"
+
     field_to_match {
       type = "URI"
     }
@@ -307,19 +309,23 @@ resource "aws_wafregional_xss_match_set" "xss_match_set" {
 
   xss_match_tuple {
     text_transformation = "NONE"
+
     field_to_match {
       type = "QUERY_STRING"
     }
   }
-}`, name)
+}
+`, name)
 }
 
 func testAccAWSWafRegionalXssMatchSetConfigChangeName(name string) string {
 	return fmt.Sprintf(`
 resource "aws_wafregional_xss_match_set" "xss_match_set" {
   name = "%s"
+
   xss_match_tuple {
     text_transformation = "NONE"
+
     field_to_match {
       type = "URI"
     }
@@ -327,36 +333,44 @@ resource "aws_wafregional_xss_match_set" "xss_match_set" {
 
   xss_match_tuple {
     text_transformation = "NONE"
+
     field_to_match {
       type = "QUERY_STRING"
     }
   }
-}`, name)
+}
+`, name)
 }
 
 func testAccAWSWafRegionalXssMatchSetConfig_changeTuples(name string) string {
 	return fmt.Sprintf(`
 resource "aws_wafregional_xss_match_set" "xss_match_set" {
   name = "%s"
+
   xss_match_tuple {
     text_transformation = "CMD_LINE"
+
     field_to_match {
       type = "BODY"
     }
   }
+
   xss_match_tuple {
     text_transformation = "HTML_ENTITY_DECODE"
+
     field_to_match {
       type = "METHOD"
       data = "GET"
     }
   }
-}`, name)
+}
+`, name)
 }
 
 func testAccAWSWafRegionalXssMatchSetConfig_noTuples(name string) string {
 	return fmt.Sprintf(`
 resource "aws_wafregional_xss_match_set" "xss_match_set" {
   name = "%s"
-}`, name)
+}
+`, name)
 }

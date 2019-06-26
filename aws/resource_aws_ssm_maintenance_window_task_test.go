@@ -16,7 +16,7 @@ func TestAccAWSSSMMaintenanceWindowTask_basic(t *testing.T) {
 	var task ssm.MaintenanceWindowTask
 
 	name := acctest.RandString(10)
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSSSMMaintenanceWindowTaskDestroy,
@@ -34,7 +34,7 @@ func TestAccAWSSSMMaintenanceWindowTask_basic(t *testing.T) {
 func TestAccAWSSSMMaintenanceWindowTask_updateForcesNewResource(t *testing.T) {
 	var before, after ssm.MaintenanceWindowTask
 	name := acctest.RandString(10)
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSSSMMaintenanceWindowTaskDestroy,
@@ -49,6 +49,8 @@ func TestAccAWSSSMMaintenanceWindowTask_updateForcesNewResource(t *testing.T) {
 				Config: testAccAWSSSMMaintenanceWindowTaskBasicConfigUpdated(name),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSSSMMaintenanceWindowTaskExists("aws_ssm_maintenance_window_task.target", &after),
+					resource.TestCheckResourceAttr("aws_ssm_maintenance_window_task.target", "name", "TestMaintenanceWindowTask"),
+					resource.TestCheckResourceAttr("aws_ssm_maintenance_window_task.target", "description", "This resource is for test purpose only"),
 					testAccCheckAwsSsmWindowsTaskRecreated(t, &before, &after),
 				),
 			},
@@ -130,26 +132,28 @@ func testAccCheckAWSSSMMaintenanceWindowTaskDestroy(s *terraform.State) error {
 func testAccAWSSSMMaintenanceWindowTaskBasicConfig(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_ssm_maintenance_window" "foo" {
-  name = "maintenance-window-%s"
+  name     = "maintenance-window-%s"
   schedule = "cron(0 16 ? * TUE *)"
   duration = 3
-  cutoff = 1
+  cutoff   = 1
 }
 
 resource "aws_ssm_maintenance_window_task" "target" {
-  window_id = "${aws_ssm_maintenance_window.foo.id}"
-  task_type = "RUN_COMMAND"
-  task_arn = "AWS-RunShellScript"
-  priority = 1
+  window_id        = "${aws_ssm_maintenance_window.foo.id}"
+  task_type        = "RUN_COMMAND"
+  task_arn         = "AWS-RunShellScript"
+  priority         = 1
   service_role_arn = "${aws_iam_role.ssm_role.arn}"
-  max_concurrency = "2"
-  max_errors = "1"
+  max_concurrency  = "2"
+  max_errors       = "1"
+
   targets {
-    key = "InstanceIds"
+    key    = "InstanceIds"
     values = ["${aws_instance.foo.id}"]
   }
+
   task_parameters {
-    name = "commands"
+    name   = "commands"
     values = ["pwd"]
   }
 }
@@ -195,33 +199,36 @@ resource "aws_iam_role_policy" "bar" {
 }
 EOF
 }
-
 `, rName, rName, rName)
 }
 
 func testAccAWSSSMMaintenanceWindowTaskBasicConfigUpdated(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_ssm_maintenance_window" "foo" {
-  name = "maintenance-window-%s"
+  name     = "maintenance-window-%s"
   schedule = "cron(0 16 ? * TUE *)"
   duration = 3
-  cutoff = 1
+  cutoff   = 1
 }
 
 resource "aws_ssm_maintenance_window_task" "target" {
-  window_id = "${aws_ssm_maintenance_window.foo.id}"
-  task_type = "RUN_COMMAND"
-  task_arn = "AWS-RunShellScript"
-  priority = 1
+  window_id        = "${aws_ssm_maintenance_window.foo.id}"
+  task_type        = "RUN_COMMAND"
+  task_arn         = "AWS-RunShellScript"
+  priority         = 1
+  name             = "TestMaintenanceWindowTask"
+  description      = "This resource is for test purpose only"
   service_role_arn = "${aws_iam_role.ssm_role.arn}"
-  max_concurrency = "2"
-  max_errors = "1"
+  max_concurrency  = "2"
+  max_errors       = "1"
+
   targets {
-    key = "InstanceIds"
+    key    = "InstanceIds"
     values = ["${aws_instance.foo.id}"]
   }
+
   task_parameters {
-    name = "commands"
+    name   = "commands"
     values = ["date"]
   }
 }
@@ -267,6 +274,5 @@ resource "aws_iam_role_policy" "bar" {
 }
 EOF
 }
-
 `, rName, rName, rName)
 }

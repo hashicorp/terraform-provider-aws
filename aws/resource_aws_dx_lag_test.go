@@ -14,7 +14,7 @@ import (
 func TestAccAWSDxLag_importBasic(t *testing.T) {
 	resourceName := "aws_dx_lag.hoge"
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsDxLagDestroy,
@@ -37,7 +37,7 @@ func TestAccAWSDxLag_basic(t *testing.T) {
 	lagName1 := fmt.Sprintf("tf-dx-lag-%s", acctest.RandString(5))
 	lagName2 := fmt.Sprintf("tf-dx-lag-%s", acctest.RandString(5))
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsDxLagDestroy,
@@ -69,7 +69,7 @@ func TestAccAWSDxLag_basic(t *testing.T) {
 func TestAccAWSDxLag_tags(t *testing.T) {
 	lagName := fmt.Sprintf("tf-dx-lag-%s", acctest.RandString(5))
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsDxLagDestroy,
@@ -144,10 +144,10 @@ func testAccCheckAwsDxLagExists(name string) resource.TestCheckFunc {
 func testAccDxLagConfig(n string) string {
 	return fmt.Sprintf(`
 resource "aws_dx_lag" "hoge" {
-  name = "%s"
+  name                  = "%s"
   connections_bandwidth = "1Gbps"
-  location = "EqSe2"
-  force_destroy = true
+  location              = "EqSe2"
+  force_destroy         = true
 }
 `, n)
 }
@@ -155,14 +155,14 @@ resource "aws_dx_lag" "hoge" {
 func testAccDxLagConfig_tags(n string) string {
 	return fmt.Sprintf(`
 resource "aws_dx_lag" "hoge" {
-  name = "%s"
+  name                  = "%s"
   connections_bandwidth = "1Gbps"
-  location = "EqSe2"
-  force_destroy = true
+  location              = "EqSe2"
+  force_destroy         = true
 
-  tags {
+  tags = {
     Environment = "production"
-    Usage = "original"
+    Usage       = "original"
   }
 }
 `, n)
@@ -171,12 +171,12 @@ resource "aws_dx_lag" "hoge" {
 func testAccDxLagConfig_tagsChanged(n string) string {
 	return fmt.Sprintf(`
 resource "aws_dx_lag" "hoge" {
-  name = "%s"
+  name                  = "%s"
   connections_bandwidth = "1Gbps"
-  location = "EqSe2"
-  force_destroy = true
+  location              = "EqSe2"
+  force_destroy         = true
 
-  tags {
+  tags = {
     Usage = "changed"
   }
 }

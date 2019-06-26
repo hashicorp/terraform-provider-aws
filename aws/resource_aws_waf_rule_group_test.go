@@ -3,7 +3,6 @@ package aws
 import (
 	"fmt"
 	"log"
-	"strings"
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -44,10 +43,6 @@ func testSweepWafRuleGroups(region string) error {
 	}
 
 	for _, group := range resp.RuleGroups {
-		if !strings.HasPrefix(*group.Name, "tfacc") {
-			continue
-		}
-
 		rResp, err := conn.ListActivatedRulesInRuleGroup(&waf.ListActivatedRulesInRuleGroupInput{
 			RuleGroupId: group.RuleGroupId,
 		})
@@ -72,8 +67,8 @@ func TestAccAWSWafRuleGroup_basic(t *testing.T) {
 	ruleName := fmt.Sprintf("tfacc%s", acctest.RandString(5))
 	groupName := fmt.Sprintf("tfacc%s", acctest.RandString(5))
 
-	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSWaf(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSWafRuleGroupDestroy,
 		Steps: []resource.TestStep{
@@ -102,8 +97,8 @@ func TestAccAWSWafRuleGroup_changeNameForceNew(t *testing.T) {
 	groupName := fmt.Sprintf("tfacc%s", acctest.RandString(5))
 	newGroupName := fmt.Sprintf("tfacc%s", acctest.RandString(5))
 
-	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSWaf(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSWafRuleGroupDestroy,
 		Steps: []resource.TestStep{
@@ -134,8 +129,8 @@ func TestAccAWSWafRuleGroup_disappears(t *testing.T) {
 	ruleName := fmt.Sprintf("tfacc%s", acctest.RandString(5))
 	groupName := fmt.Sprintf("tfacc%s", acctest.RandString(5))
 
-	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSWaf(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSWafRuleGroupDestroy,
 		Steps: []resource.TestStep{
@@ -161,8 +156,8 @@ func TestAccAWSWafRuleGroup_changeActivatedRules(t *testing.T) {
 	ruleName2 := fmt.Sprintf("tfacc%s", acctest.RandString(5))
 	ruleName3 := fmt.Sprintf("tfacc%s", acctest.RandString(5))
 
-	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSWaf(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSWafRuleGroupDestroy,
 		Steps: []resource.TestStep{
@@ -237,8 +232,8 @@ func TestAccAWSWafRuleGroup_noActivatedRules(t *testing.T) {
 	var group waf.RuleGroup
 	groupName := fmt.Sprintf("test%s", acctest.RandString(5))
 
-	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSWaf(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSWafRuleGroupDestroy,
 		Steps: []resource.TestStep{
@@ -267,7 +262,7 @@ func testAccCheckAWSWafRuleGroupDisappears(group *waf.RuleGroup) resource.TestCh
 			return fmt.Errorf("error listing activated rules in WAF Rule Group (%s): %s", aws.StringValue(group.RuleGroupId), err)
 		}
 
-		wr := newWafRetryer(conn, "global")
+		wr := newWafRetryer(conn)
 		_, err = wr.RetryWithToken(func(token *string) (interface{}, error) {
 			req := &waf.UpdateRuleGroupInput{
 				ChangeToken: token,
@@ -366,16 +361,19 @@ resource "aws_waf_rule" "test" {
 }
 
 resource "aws_waf_rule_group" "test" {
-  name = "%[2]s"
+  name        = "%[2]s"
   metric_name = "%[2]s"
+
   activated_rule {
-  	action {
+    action {
       type = "COUNT"
     }
+
     priority = 50
-    rule_id = "${aws_waf_rule.test.id}"
+    rule_id  = "${aws_waf_rule.test.id}"
   }
-}`, ruleName, groupName)
+}
+`, ruleName, groupName)
 }
 
 func testAccAWSWafRuleGroupConfig_changeActivatedRules(ruleName1, ruleName2, ruleName3, groupName string) string {
@@ -396,36 +394,44 @@ resource "aws_waf_rule" "test3" {
 }
 
 resource "aws_waf_rule_group" "test" {
-  name = "%[4]s"
+  name        = "%[4]s"
   metric_name = "%[4]s"
+
   activated_rule {
     action {
       type = "BLOCK"
     }
+
     priority = 10
-    rule_id = "${aws_waf_rule.test.id}"
+    rule_id  = "${aws_waf_rule.test.id}"
   }
+
   activated_rule {
-  	action {
+    action {
       type = "COUNT"
     }
+
     priority = 1
-    rule_id = "${aws_waf_rule.test2.id}"
+    rule_id  = "${aws_waf_rule.test2.id}"
   }
+
   activated_rule {
-  	action {
+    action {
       type = "BLOCK"
     }
+
     priority = 15
-    rule_id = "${aws_waf_rule.test3.id}"
+    rule_id  = "${aws_waf_rule.test3.id}"
   }
-}`, ruleName1, ruleName2, ruleName3, groupName)
+}
+`, ruleName1, ruleName2, ruleName3, groupName)
 }
 
 func testAccAWSWafRuleGroupConfig_noActivatedRules(groupName string) string {
 	return fmt.Sprintf(`
 resource "aws_waf_rule_group" "test" {
-  name = "%[1]s"
+  name        = "%[1]s"
   metric_name = "%[1]s"
-}`, groupName)
+}
+`, groupName)
 }

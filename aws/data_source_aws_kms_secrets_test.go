@@ -96,9 +96,9 @@ data "aws_kms_secrets" "test" {
     name    = "secret1"
     payload = %q
 
-     context {
-       name = "value"
-     }
+    context = {
+      name = "value"
+    }
   }
 }
 `, payload)

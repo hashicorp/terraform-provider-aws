@@ -72,7 +72,7 @@ func TestAccAWSStorageGatewayUploadBuffer_Basic(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_storagegateway_upload_buffer.test"
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:  func() { testAccPreCheck(t) },
 		Providers: testAccProviders,
 		// Storage Gateway API does not support removing upload buffers
@@ -140,7 +140,7 @@ resource "aws_ebs_volume" "test" {
   size              = "10"
   type              = "gp2"
 
-  tags {
+  tags = {
     Name = %q
   }
 }

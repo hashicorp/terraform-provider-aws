@@ -1,12 +1,12 @@
 ---
 layout: "aws"
-page_title: "AWS: wafregional_regex_pattern_set"
+page_title: "AWS: aws_wafregional_regex_pattern_set"
 sidebar_current: "docs-aws-resource-wafregional-regex-pattern-set"
 description: |-
   Provides a AWS WAF Regional Regex Pattern Set resource.
 ---
 
-# aws_wafregional_regex_pattern_set
+# Resource: aws_wafregional_regex_pattern_set
 
 Provides a WAF Regional Regex Pattern Set Resource
 
@@ -14,7 +14,7 @@ Provides a WAF Regional Regex Pattern Set Resource
 
 ```hcl
 resource "aws_wafregional_regex_pattern_set" "example" {
-  name = "example"
+  name                  = "example"
   regex_pattern_strings = ["one", "two"]
 }
 ```

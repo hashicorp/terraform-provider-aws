@@ -12,7 +12,7 @@ import (
 func TestAccDataSourceAwsVpnGateway_unattached(t *testing.T) {
 	rInt := acctest.RandInt()
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:  func() { testAccPreCheck(t) },
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
@@ -41,7 +41,7 @@ func TestAccDataSourceAwsVpnGateway_unattached(t *testing.T) {
 func TestAccDataSourceAwsVpnGateway_attached(t *testing.T) {
 	rInt := acctest.RandInt()
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:  func() { testAccPreCheck(t) },
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
@@ -64,11 +64,12 @@ func TestAccDataSourceAwsVpnGateway_attached(t *testing.T) {
 func testAccDataSourceAwsVpnGatewayUnattachedConfig(rInt int) string {
 	return fmt.Sprintf(`
 resource "aws_vpn_gateway" "unattached" {
-  tags {
+  tags = {
     Name = "terraform-testacc-vpn-gateway-data-source-unattached-%d"
     ABC  = "testacc-%d"
     XYZ  = "testacc-%d"
   }
+
   amazon_side_asn = 4294967293
 }
 
@@ -92,19 +93,19 @@ func testAccDataSourceAwsVpnGatewayAttachedConfig(rInt int) string {
 resource "aws_vpc" "foo" {
   cidr_block = "10.1.0.0/16"
 
-  tags {
+  tags = {
     Name = "terraform-testacc-vpn-gateway-data-source-attached-%d"
   }
 }
 
 resource "aws_vpn_gateway" "attached" {
-  tags {
+  tags = {
     Name = "terraform-testacc-vpn-gateway-data-source-attached-%d"
   }
 }
 
 resource "aws_vpn_gateway_attachment" "vpn_attachment" {
-  vpc_id = "${aws_vpc.foo.id}"
+  vpc_id         = "${aws_vpc.foo.id}"
   vpn_gateway_id = "${aws_vpn_gateway.attached.id}"
 }
 

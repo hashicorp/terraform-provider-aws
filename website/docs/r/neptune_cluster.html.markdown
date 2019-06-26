@@ -6,7 +6,7 @@ description: |-
   Provides an Neptune Cluster Resource
 ---
 
-# aws_neptune_cluster
+# Resource: aws_neptune_cluster
 
 Provides an Neptune Cluster Resource. A Cluster Resource defines attributes that are
 applied to the entire cluster of Neptune Cluster Instances.
@@ -43,7 +43,7 @@ The following arguments are supported:
 * `availability_zones` - (Optional) A list of EC2 Availability Zones that instances in the Neptune cluster can be created in.
 * `backup_retention_period` - (Optional) The days to retain backups for. Default `1`
 * `cluster_identifier` - (Optional, Forces new resources) The cluster identifier. If omitted, Terraform will assign a random, unique identifier.
-* `cluster_identifier_prefix` - (Optional, Forces new resource) Creates a unique cluster identifier beginning with the specified prefix. Conflicts with `cluster_identifer`.
+* `cluster_identifier_prefix` - (Optional, Forces new resource) Creates a unique cluster identifier beginning with the specified prefix. Conflicts with `cluster_identifier`.
 * `engine` - (Optional) The name of the database engine to be used for this Neptune cluster. Defaults to `neptune`.
 * `engine_version` - (Optional) The database engine version.
 * `final_snapshot_identifier` - (Optional) The name of your final Neptune snapshot when this Neptune cluster is deleted. If omitted, no final snapshot will be made.

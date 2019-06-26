@@ -12,7 +12,7 @@ func TestAccAWSSsmParameterDataSource_basic(t *testing.T) {
 	resourceName := "data.aws_ssm_parameter.test"
 	name := "test.parameter"
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			testAccPreCheck(t)
 		},
@@ -48,7 +48,7 @@ func TestAccAWSSsmParameterDataSource_fullPath(t *testing.T) {
 	resourceName := "data.aws_ssm_parameter.test"
 	name := "/path/parameter"
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			testAccPreCheck(t)
 		},
@@ -72,14 +72,14 @@ func TestAccAWSSsmParameterDataSource_fullPath(t *testing.T) {
 func testAccCheckAwsSsmParameterDataSourceConfig(name string, withDecryption string) string {
 	return fmt.Sprintf(`
 resource "aws_ssm_parameter" "test" {
-	name = "%s"
-	type = "String"
-	value = "TestValue"
+  name  = "%s"
+  type  = "String"
+  value = "TestValue"
 }
 
 data "aws_ssm_parameter" "test" {
-	name = "${aws_ssm_parameter.test.name}"
-	with_decryption = %s
+  name            = "${aws_ssm_parameter.test.name}"
+  with_decryption = %s
 }
 `, name, withDecryption)
 }

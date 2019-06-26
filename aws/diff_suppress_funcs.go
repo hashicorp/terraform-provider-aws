@@ -33,6 +33,14 @@ func suppressEquivalentTypeStringBoolean(k, old, new string, d *schema.ResourceD
 	return false
 }
 
+// suppressMissingOptionalConfigurationBlock handles configuration block attributes in the following scenario:
+//  * The resource schema includes an optional configuration block with defaults
+//  * The API response includes those defaults to refresh into the Terraform state
+//  * The operator's configuration omits the optional configuration block
+func suppressMissingOptionalConfigurationBlock(k, old, new string, d *schema.ResourceData) bool {
+	return old == "1" && new == "0"
+}
+
 // Suppresses minor version changes to the db_instance engine_version attribute
 func suppressAwsDbEngineVersionDiffs(k, old, new string, d *schema.ResourceData) bool {
 	// First check if the old/new values are nil.
@@ -99,6 +107,28 @@ func suppressAutoscalingGroupAvailabilityZoneDiffs(k, old, new string, d *schema
 	return false
 }
 
+func suppressCloudFormationTemplateBodyDiffs(k, old, new string, d *schema.ResourceData) bool {
+	normalizedOld, err := normalizeCloudFormationTemplate(old)
+
+	if err != nil {
+		log.Printf("[WARN] Unable to normalize Terraform state CloudFormation template body: %s", err)
+		return false
+	}
+
+	normalizedNew, err := normalizeCloudFormationTemplate(new)
+
+	if err != nil {
+		log.Printf("[WARN] Unable to normalize Terraform configuration CloudFormation template body: %s", err)
+		return false
+	}
+
+	return normalizedOld == normalizedNew
+}
+
 func suppressRoute53ZoneNameWithTrailingDot(k, old, new string, d *schema.ResourceData) bool {
+	// "." is different from "".
+	if old == "." || new == "." {
+		return old == new
+	}
 	return strings.TrimSuffix(old, ".") == strings.TrimSuffix(new, ".")
 }

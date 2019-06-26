@@ -16,7 +16,7 @@ func TestAccAWSGlueCatalogDatabase_importBasic(t *testing.T) {
 	resourceName := "aws_glue_catalog_database.test"
 	rInt := acctest.RandInt()
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckGlueDatabaseDestroy,
@@ -35,7 +35,7 @@ func TestAccAWSGlueCatalogDatabase_importBasic(t *testing.T) {
 
 func TestAccAWSGlueCatalogDatabase_full(t *testing.T) {
 	rInt := acctest.RandInt()
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckGlueDatabaseDestroy,
@@ -138,7 +138,7 @@ func TestAccAWSGlueCatalogDatabase_recreates(t *testing.T) {
 	resourceName := "aws_glue_catalog_database.test"
 	rInt := acctest.RandInt()
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckGlueDatabaseDestroy,
@@ -210,13 +210,14 @@ resource "aws_glue_catalog_database" "test" {
 func testAccGlueCatalogDatabase_full(rInt int, desc string) string {
 	return fmt.Sprintf(`
 resource "aws_glue_catalog_database" "test" {
-  name = "my_test_catalog_database_%d"
-  description = "%s"
+  name         = "my_test_catalog_database_%d"
+  description  = "%s"
   location_uri = "my-location"
-  parameters {
-	param1 = "value1"
-	param2 = true
-	param3 = 50
+
+  parameters = {
+    param1 = "value1"
+    param2 = true
+    param3 = 50
   }
 }
 `, rInt, desc)

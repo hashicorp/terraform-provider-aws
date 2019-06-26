@@ -181,6 +181,23 @@ func dataSourceAwsDynamoDbTable() *schema.Resource {
 					},
 				},
 			},
+			"billing_mode": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"point_in_time_recovery": {
+				Type:     schema.TypeList,
+				Computed: true,
+				MaxItems: 1,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"enabled": {
+							Type:     schema.TypeBool,
+							Computed: true,
+						},
+					},
+				},
+			},
 		},
 	}
 }
@@ -207,13 +224,10 @@ func dataSourceAwsDynamoDbTableRead(d *schema.ResourceData, meta interface{}) er
 		TableName: aws.String(d.Id()),
 	})
 	if err != nil {
-		return err
+		return fmt.Errorf("error describing DynamoDB Table (%s) Time to Live: %s", d.Id(), err)
 	}
-	if ttlOut.TimeToLiveDescription != nil {
-		err := d.Set("ttl", flattenDynamoDbTtl(ttlOut.TimeToLiveDescription))
-		if err != nil {
-			return err
-		}
+	if err := d.Set("ttl", flattenDynamoDbTtl(ttlOut)); err != nil {
+		return fmt.Errorf("error setting ttl: %s", err)
 	}
 
 	tags, err := readDynamoDbTableTags(d.Get("arn").(string), conn)
@@ -221,6 +235,14 @@ func dataSourceAwsDynamoDbTableRead(d *schema.ResourceData, meta interface{}) er
 		return err
 	}
 	d.Set("tags", tags)
+
+	pitrOut, err := conn.DescribeContinuousBackups(&dynamodb.DescribeContinuousBackupsInput{
+		TableName: aws.String(d.Id()),
+	})
+	if err != nil && !isAWSErr(err, "UnknownOperationException", "") {
+		return err
+	}
+	d.Set("point_in_time_recovery", flattenDynamoDbPitr(pitrOut))
 
 	return nil
 }

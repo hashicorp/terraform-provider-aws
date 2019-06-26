@@ -16,7 +16,7 @@ import (
 func TestAccAWSAPIGatewayIntegration_basic(t *testing.T) {
 	var conf apigateway.Integration
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSAPIGatewayIntegrationDestroy,
@@ -128,7 +128,7 @@ func TestAccAWSAPIGatewayIntegration_basic(t *testing.T) {
 func TestAccAWSAPIGatewayIntegration_contentHandling(t *testing.T) {
 	var conf apigateway.Integration
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSAPIGatewayIntegrationDestroy,
@@ -202,7 +202,7 @@ func TestAccAWSAPIGatewayIntegration_contentHandling(t *testing.T) {
 func TestAccAWSAPIGatewayIntegration_cache_key_parameters(t *testing.T) {
 	var conf apigateway.Integration
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSAPIGatewayIntegrationDestroy,
@@ -244,7 +244,7 @@ func TestAccAWSAPIGatewayIntegration_integrationType(t *testing.T) {
 
 	rName := fmt.Sprintf("tf-acctest-apigw-int-%s", acctest.RandString(7))
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSAPIGatewayIntegrationDestroy,
@@ -685,7 +685,7 @@ data "aws_availability_zones" "test" {}
 resource "aws_vpc" "test" {
   cidr_block = "10.10.0.0/16"
 
-  tags {
+  tags = {
     Name = "${var.name}"
   }
 }
