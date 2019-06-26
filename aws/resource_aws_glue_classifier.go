@@ -57,38 +57,38 @@ func resourceAwsGlueClassifier() *schema.Resource {
 				Type:          schema.TypeList,
 				Optional:      true,
 				MaxItems:      1,
-				ConflictsWith: []string{"grok_classifier","json_classifier", "xml_classifier"}
+				ConflictsWith: []string{"grok_classifier", "json_classifier", "xml_classifier"},
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"allow_single_column": {
-							Type:    schema.TypeBool,
+							Type:     schema.TypeBool,
 							Optional: true,
 						},
 						"contains_header": {
-							Type:    schema.TypeString,
-							Optional: true,
+							Type:         schema.TypeString,
+							Optional:     true,
 							ValidateFunc: validateHeaderOptions(),
 						},
 						"delimiter": {
-							Type     schema.TypeString,
+							Type:     schema.TypeString,
 							Optional: true,
 						},
 						"disable_value_trimming": {
-							Type     schema.TypeBool,
+							Type:     schema.TypeBool,
 							Optional: true,
 						},
 						"header": {
-							Type     schema.TypeList,
+							Type:     schema.TypeList,
 							Optional: true,
-							Elem:    &schema.Schema{Type: schema.TypeString},
+							Elem:     &schema.Schema{Type: schema.TypeString},
 						},
 						"name": {
-							Type     schema.TypeString,
-							Required: true,
+							Type:         schema.TypeString,
+							Required:     true,
 							ValidateFunc: validation.StringLenBetween(1, 255),
 						},
 						"quote_symbol": {
-							Type     schema.TypeString,
+							Type:     schema.TypeString,
 							Optional: true,
 						},
 					},
@@ -315,13 +315,13 @@ func deleteGlueClassifier(conn *glue.Glue, name string) error {
 
 func expandGlueCsvClassifierCreate(name string, m map[string]interface{}) *glue.CreateCSVClassifierRequest {
 	csvClassifier := &glue.CreateCSVClassifierRequest{
-		AllowSingleColumn: aws.String(m["allow_single_column"].(string)),
-		ContainsHeader: aws.String(m["contains_header"].(string)),
-		Delimiter: aws.String(m["delimiter"].(string)),
+		AllowSingleColumn:    aws.String(m["allow_single_column"].(string)),
+		ContainsHeader:       aws.String(m["contains_header"].(string)),
+		Delimiter:            aws.String(m["delimiter"].(string)),
 		DisableValueTrimming: aws.String(m["disable_value_trimming"].(string)),
-		Header: aws.String(m["header"].(string)),
-		Name:           aws.String(name),
-		QuoteSymbol: aws.String(m["quote_symbol"].(string)),
+		Header:               aws.String(m["header"].(string)),
+		Name:                 aws.String(name),
+		QuoteSymbol:          aws.String(m["quote_symbol"].(string)),
 	}
 
 	return csvClassifier
@@ -329,16 +329,17 @@ func expandGlueCsvClassifierCreate(name string, m map[string]interface{}) *glue.
 
 func expandGlueCsvClassifierUpdate(name string, m map[string]interface{}) *glue.UpdateCSVClassifierRequest {
 	csvClassifier := &glue.UpdateCSVClassifierRequest{
-		AllowSingleColumn: aws.String(m["allow_single_column"].(string)),
-		ContainsHeader: aws.String(m["contains_header"].(string)),
-		Delimiter: aws.String(m["delimiter"].(string)),
+		AllowSingleColumn:    aws.String(m["allow_single_column"].(string)),
+		ContainsHeader:       aws.String(m["contains_header"].(string)),
+		Delimiter:            aws.String(m["delimiter"].(string)),
 		DisableValueTrimming: aws.String(m["disable_value_trimming"].(string)),
-		Header: aws.String(m["header"].(string)),
-		Name:           aws.String(name),
-		QuoteSymbol: aws.String(m["quote_symbol"].(string)),
+		Header:               aws.String(m["header"].(string)),
+		Name:                 aws.String(name),
+		QuoteSymbol:          aws.String(m["quote_symbol"].(string)),
 	}
 
 	return csvClassifier
+}
 
 func expandGlueGrokClassifierCreate(name string, m map[string]interface{}) *glue.CreateGrokClassifierRequest {
 	grokClassifier := &glue.CreateGrokClassifierRequest{
@@ -416,13 +417,13 @@ func flattenGlueCsvClassifier(xmlClassifier *glue.CSVClassifier) []map[string]in
 	}
 
 	m := map[string]interface{}{
-		"allow_single_column": aws.StringValue(csvClassifier.AllowSingleColumn),
-		"contains_header":     aws.StringValue(csvClassifier.ContainsHeader),
-		"delimiter":           aws.StringValue(csvClassifier.Delimiter),
+		"allow_single_column":    aws.StringValue(csvClassifier.AllowSingleColumn),
+		"contains_header":        aws.StringValue(csvClassifier.ContainsHeader),
+		"delimiter":              aws.StringValue(csvClassifier.Delimiter),
 		"disable_value_trimming": aws.StringValue(csvClassifier.DisableValueTrimming),
-		"header": aws.StringValue(csvClassifier.Header),
-		"name": aws.StringValue(csvClassifier.Name),
-		"quote_symbol": aws.StringValue(csvClassifier.QuoteSymbol)
+		"header":                 aws.StringValue(csvClassifier.Header),
+		"name":                   aws.StringValue(csvClassifier.Name),
+		"quote_symbol":           aws.StringValue(csvClassifier.QuoteSymbol),
 	}
 
 	return []map[string]interface{}{m}
