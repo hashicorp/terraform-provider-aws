@@ -2078,6 +2078,10 @@ func resourceAwsKinesisFirehoseDeliveryStreamCreate(d *schema.ResourceData, meta
 		}
 	}
 
+	if v, ok := d.GetOk("tags"); ok {
+		createInput.Tags = tagsFromMapKinesisFirehose(v.(map[string]interface{}))
+	}
+
 	err := resource.Retry(1*time.Minute, func() *resource.RetryError {
 		_, err := conn.CreateDeliveryStream(createInput)
 		if err != nil {
@@ -2129,12 +2133,6 @@ func resourceAwsKinesisFirehoseDeliveryStreamCreate(d *schema.ResourceData, meta
 	s := firehoseStream.(*firehose.DeliveryStreamDescription)
 	d.SetId(*s.DeliveryStreamARN)
 	d.Set("arn", s.DeliveryStreamARN)
-
-	if err := setTagsKinesisFirehose(conn, d, sn); err != nil {
-		return fmt.Errorf(
-			"Error setting for Kinesis Stream (%s) tags: %s",
-			sn, err)
-	}
 
 	return resourceAwsKinesisFirehoseDeliveryStreamRead(d, meta)
 }
