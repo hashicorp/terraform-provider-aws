@@ -202,7 +202,7 @@ func resourceAwsLbTargetGroup() *schema.Resource {
 							Type:         schema.TypeInt,
 							Optional:     true,
 							Computed:     true,
-							ValidateFunc: validation.IntBetween(2, 60),
+							ValidateFunc: validation.IntBetween(2, 120),
 						},
 
 						"healthy_threshold": {
