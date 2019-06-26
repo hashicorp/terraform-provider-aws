@@ -91,8 +91,9 @@ func TestAccAWSDHCPOptions_importBasic(t *testing.T) {
 	resourceName := "aws_vpc_dhcp_options.foo"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:  func() { testAccPreCheck(t) },
-		Providers: testAccProviders,
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckDHCPOptionsDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDHCPOptionsConfig,
