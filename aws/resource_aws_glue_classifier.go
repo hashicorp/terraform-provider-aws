@@ -313,8 +313,8 @@ func deleteGlueClassifier(conn *glue.Glue, name string) error {
 	return nil
 }
 
-func expandGlueCsvClassifierCreate(name string, m map[string]interface{}) *glue.CreateCSVClassifierRequest {
-	csvClassifier := &glue.CreateCSVClassifierRequest{
+func expandGlueCsvClassifierCreate(name string, m map[string]interface{}) *glue.CreateCsvClassifierRequest {
+	csvClassifier := &glue.CreateCsvClassifierRequest{
 		AllowSingleColumn:    aws.String(m["allow_single_column"].(string)),
 		ContainsHeader:       aws.String(m["contains_header"].(string)),
 		Delimiter:            aws.String(m["delimiter"].(string)),
@@ -327,8 +327,8 @@ func expandGlueCsvClassifierCreate(name string, m map[string]interface{}) *glue.
 	return csvClassifier
 }
 
-func expandGlueCsvClassifierUpdate(name string, m map[string]interface{}) *glue.UpdateCSVClassifierRequest {
-	csvClassifier := &glue.UpdateCSVClassifierRequest{
+func expandGlueCsvClassifierUpdate(name string, m map[string]interface{}) *glue.UpdateCsvClassifierRequest {
+	csvClassifier := &glue.UpdateCsvClassifierRequest{
 		AllowSingleColumn:    aws.String(m["allow_single_column"].(string)),
 		ContainsHeader:       aws.String(m["contains_header"].(string)),
 		Delimiter:            aws.String(m["delimiter"].(string)),
@@ -411,7 +411,7 @@ func expandGlueXmlClassifierUpdate(name string, m map[string]interface{}) *glue.
 	return xmlClassifier
 }
 
-func flattenGlueCsvClassifier(xmlClassifier *glue.CSVClassifier) []map[string]interface{} {
+func flattenGlueCsvClassifier(csvClassifier *glue.CSVClassifier) []map[string]interface{} {
 	if csvClassifier == nil {
 		return []map[string]interface{}{}
 	}
