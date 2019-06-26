@@ -1,5 +1,10 @@
 ## 2.17.0 (Unreleased)
 
+FEATURES:
+
+* **New Data Source:** `aws_ebs_default_kms_key` [GH-8884]
+* **New Data Source:** `aws_ebs_encryption_by_default` [GH-8884]
+
 ENHANCEMENTS:
 
 * resource/aws_dms_endpoint: Support `db2` in `engine_name` validation [GH-9097]
