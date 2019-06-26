@@ -7,6 +7,7 @@ FEATURES:
 
 ENHANCEMENTS:
 
+* resource/aws_directory_service_directory: Tag on create (support tag limiting IAM policies) [GH-7937]
 * resource/aws_dms_endpoint: Support `db2` in `engine_name` validation [GH-9097]
 * resource/aws_kinesis_firehose_delivery_stream: Tag on create (support tag limiting IAM policies) [GH-7981]
 * resource/aws_lb_listener: Support `TCP_UDP` and `UDP` in `protocol` validation [GH-9111]
