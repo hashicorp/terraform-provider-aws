@@ -553,6 +553,10 @@ resource "aws_subnet" "bar" {
 `
 
 const testAccDirectoryServiceDirectoryUpdateTagsConfig = `
+data "aws_availability_zones" "available" {
+  state = "available"
+}
+
 resource "aws_directory_service_directory" "bar" {
   name = "corp.notexample.com"
   password = "SuperSecretPassw0rd"
@@ -579,7 +583,7 @@ resource "aws_vpc" "main" {
 
 resource "aws_subnet" "foo" {
   vpc_id = "${aws_vpc.main.id}"
-  availability_zone = "us-west-2a"
+  availability_zone = "${data.aws_availability_zones.available.names[0]}"
   cidr_block = "10.0.1.0/24"
   tags = {
     Name = "tf-acc-directory-service-directory-tags-foo"
@@ -587,7 +591,7 @@ resource "aws_subnet" "foo" {
 }
 resource "aws_subnet" "bar" {
   vpc_id = "${aws_vpc.main.id}"
-  availability_zone = "us-west-2b"
+  availability_zone = "${data.aws_availability_zones.available.names[1]}"
   cidr_block = "10.0.2.0/24"
   tags = {
     Name = "tf-acc-directory-service-directory-tags-bar"
@@ -596,6 +600,10 @@ resource "aws_subnet" "bar" {
 `
 
 const testAccDirectoryServiceDirectoryRemoveTagsConfig = `
+data "aws_availability_zones" "available" {
+  state = "available"
+}
+
 resource "aws_directory_service_directory" "bar" {
   name = "corp.notexample.com"
   password = "SuperSecretPassw0rd"
@@ -620,7 +628,7 @@ resource "aws_vpc" "main" {
 
 resource "aws_subnet" "foo" {
   vpc_id = "${aws_vpc.main.id}"
-  availability_zone = "us-west-2a"
+  availability_zone = "${data.aws_availability_zones.available.names[0]}"
   cidr_block = "10.0.1.0/24"
   tags = {
     Name = "tf-acc-directory-service-directory-tags-foo"
@@ -628,7 +636,7 @@ resource "aws_subnet" "foo" {
 }
 resource "aws_subnet" "bar" {
   vpc_id = "${aws_vpc.main.id}"
-  availability_zone = "us-west-2b"
+  availability_zone = "${data.aws_availability_zones.available.names[1]}"
   cidr_block = "10.0.2.0/24"
   tags = {
     Name = "tf-acc-directory-service-directory-tags-bar"
