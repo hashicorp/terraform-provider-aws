@@ -1197,6 +1197,98 @@ func TestAccAWSInstance_ebsVolumeTags(t *testing.T) {
 	})
 }
 
+// This test attempts to expose the issues identified in #5080, #5609, #5878.
+//
+// All issues are associated with the use of aws_ebs_volumes and aws_volume_attachment
+// in managing additional EBS volumes (other than the root volume) attached to a given
+// instance.
+//
+// There are basically two (2) types of failure modes:
+//   1. ebs_block_device is not in configuration but ends up set and often presisted
+//      to state as the result of AWS interrogation.
+//   2. Instance volume_tags and attached volume tags settings drift between
+//      the tag sets, sometimes in a benign manner, and other times altering
+//      data.
+//
+// The error condition encountered can vacillate from one to the other between
+// instantiations of a given configuration or changes to a given configuration
+// due to what appears to be some sort of race condition that affects the ordering
+// of data returned from AWS.  As such it exposes flaws with the way the affected
+// data is handled.
+//
+// Running this test case (without the fix that will accompany this test) will
+// demonstrate the vacilation in error conditions between executions.
+//
+func TestAccAWSInstance_ebsVolumeTags(t *testing.T) {
+	var v ec2.Instance
+	var x ec2.Volume
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckInstanceDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccCheckInstanceConfigWithAttachedEbs,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckInstanceExists("aws_instance.foo", &v),
+					resource.TestCheckResourceAttr(
+						"aws_instance.foo", "ebs_block_device.#", "0"),
+					resource.TestCheckResourceAttr(
+						"aws_instance.foo", "volume_tags.%", "1"),
+					resource.TestCheckResourceAttr(
+						"aws_instance.foo", "volume_tags.Name", "tf-test-volumes-foo"),
+					testAccCheckVolumeExists("aws_ebs_volume.foovol", &x),
+					resource.TestCheckResourceAttr(
+						"aws_ebs_volume.foovol", "tags.%", "1"),
+					resource.TestCheckResourceAttr(
+						"aws_ebs_volume.foovol", "tags.Name", "tf-test-volume-foovol"),
+				),
+			},
+			{
+				Config: testAccCheckInstanceConfigWithAttachedEbsAddVolumeTags,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckInstanceExists("aws_instance.foo", &v),
+					resource.TestCheckResourceAttr(
+						"aws_instance.foo", "ebs_block_device.#", "0"),
+					resource.TestCheckResourceAttr(
+						"aws_instance.foo", "volume_tags.%", "2"),
+					resource.TestCheckResourceAttr(
+						"aws_instance.foo", "volume_tags.Name", "tf-test-volumes-foo"),
+					resource.TestCheckResourceAttr(
+						"aws_instance.foo", "volume_tags.group", "bar"),
+					testAccCheckVolumeExists("aws_ebs_volume.foovol", &x),
+					resource.TestCheckResourceAttr(
+						"aws_ebs_volume.foovol", "tags.%", "1"),
+					resource.TestCheckResourceAttr(
+						"aws_ebs_volume.foovol", "tags.Name", "tf-test-volume-foovol"),
+				),
+			},
+			{
+				Config: testAccCheckInstanceConfigWithAttachedEbsUpdateTags,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckInstanceExists("aws_instance.foo", &v),
+					resource.TestCheckResourceAttr(
+						"aws_instance.foo", "ebs_block_device.#", "0"),
+					resource.TestCheckResourceAttr(
+						"aws_instance.foo", "volume_tags.%", "2"),
+					resource.TestCheckResourceAttr(
+						"aws_instance.foo", "volume_tags.Name", "tf-test-volumes-foo"),
+					resource.TestCheckResourceAttr(
+						"aws_instance.foo", "volume_tags.group", "bar"),
+					testAccCheckVolumeExists("aws_ebs_volume.foovol", &x),
+					resource.TestCheckResourceAttr(
+						"aws_ebs_volume.foovol", "tags.%", "2"),
+					resource.TestCheckResourceAttr(
+						"aws_ebs_volume.foovol", "tags.Name", "tf-test-volume-foovol"),
+					resource.TestCheckResourceAttr(
+						"aws_ebs_volume.foovol", "tags.group", "blah"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccAWSInstance_instanceProfileChange(t *testing.T) {
 	var v ec2.Instance
 	rName := acctest.RandString(5)
@@ -3028,6 +3120,198 @@ resource "aws_instance" "foo" {
     encrypted             = true
     kms_key_id            = "${aws_kms_key.foo.arn}"
   }
+}
+`
+
+const testAccCheckInstanceConfigWithAttachedEbs = `
+data "aws_ami" "debian_jessie_latest" {
+  most_recent = true
+
+  filter {
+    name   = "name"
+    values = ["debian-jessie-*"]
+  }
+
+  filter {
+    name   = "virtualization-type"
+    values = ["hvm"]
+  }
+
+  filter {
+    name   = "architecture"
+    values = ["x86_64"]
+  }
+
+  filter {
+    name   = "root-device-type"
+    values = ["ebs"]
+  }
+
+  owners = ["379101102735"] # Debian
+}
+
+resource "aws_instance" "foo" {
+  ami           = "${data.aws_ami.debian_jessie_latest.id}"
+  instance_type = "t2.medium"
+
+  root_block_device {
+    delete_on_termination = true
+    volume_size           = "10"
+    volume_type           = "standard"
+  }
+
+  volume_tags = {
+    Name = "tf-test-volumes-foo"
+  }
+
+  tags = {
+    Name    = "tf-test-inst-foo"
+  }
+}
+
+resource "aws_ebs_volume" "foovol" {
+  availability_zone = "${aws_instance.foo.availability_zone}"
+  size              = "10"
+  type              = "gp2"
+
+  tags = {
+    Name = "tf-test-volume-foovol"
+  }
+}
+
+resource "aws_volume_attachment" "foovol" {
+  device_name = "/dev/xvdh"
+  volume_id   = "${aws_ebs_volume.foovol.id}"
+  instance_id = "${aws_instance.foo.id}"
+}
+`
+
+const testAccCheckInstanceConfigWithAttachedEbsAddVolumeTags = `
+data "aws_ami" "debian_jessie_latest" {
+  most_recent = true
+
+  filter {
+    name   = "name"
+    values = ["debian-jessie-*"]
+  }
+
+  filter {
+    name   = "virtualization-type"
+    values = ["hvm"]
+  }
+
+  filter {
+    name   = "architecture"
+    values = ["x86_64"]
+  }
+
+  filter {
+    name   = "root-device-type"
+    values = ["ebs"]
+  }
+
+  owners = ["379101102735"] # Debian
+}
+
+resource "aws_instance" "foo" {
+  ami           = "${data.aws_ami.debian_jessie_latest.id}"
+  instance_type = "t2.medium"
+
+  root_block_device {
+    delete_on_termination = true
+    volume_size           = "10"
+    volume_type           = "standard"
+  }
+
+  volume_tags = {
+    Name  = "tf-test-volumes-foo"
+    group = "bar"
+  }
+
+  tags = {
+    Name    = "tf-test-inst-foo"
+  }
+}
+
+resource "aws_ebs_volume" "foovol" {
+  availability_zone = "${aws_instance.foo.availability_zone}"
+  size              = "10"
+  type              = "gp2"
+
+  tags = {
+    Name = "tf-test-volume-foovol"
+  }
+}
+
+resource "aws_volume_attachment" "foovol" {
+  device_name = "/dev/xvdh"
+  volume_id   = "${aws_ebs_volume.foovol.id}"
+  instance_id = "${aws_instance.foo.id}"
+}
+`
+
+const testAccCheckInstanceConfigWithAttachedEbsUpdateTags = `
+data "aws_ami" "debian_jessie_latest" {
+  most_recent = true
+
+  filter {
+    name   = "name"
+    values = ["debian-jessie-*"]
+  }
+
+  filter {
+    name   = "virtualization-type"
+    values = ["hvm"]
+  }
+
+  filter {
+    name   = "architecture"
+    values = ["x86_64"]
+  }
+
+  filter {
+    name   = "root-device-type"
+    values = ["ebs"]
+  }
+
+  owners = ["379101102735"] # Debian
+}
+
+resource "aws_instance" "foo" {
+  ami           = "${data.aws_ami.debian_jessie_latest.id}"
+  instance_type = "t2.medium"
+
+  root_block_device {
+    delete_on_termination = true
+    volume_size           = "10"
+    volume_type           = "standard"
+  }
+
+  volume_tags = {
+    Name  = "tf-test-volumes-foo"
+    group = "bar"
+  }
+
+  tags = {
+    Name    = "tf-test-inst-foo"
+  }
+}
+
+resource "aws_ebs_volume" "foovol" {
+  availability_zone = "${aws_instance.foo.availability_zone}"
+  size              = "10"
+  type              = "gp2"
+
+  tags = {
+    Name = "tf-test-volume-foovol"
+    group = "blah"
+  }
+}
+
+resource "aws_volume_attachment" "foovol" {
+  device_name = "/dev/xvdh"
+  volume_id   = "${aws_ebs_volume.foovol.id}"
+  instance_id = "${aws_instance.foo.id}"
 }
 `
 
