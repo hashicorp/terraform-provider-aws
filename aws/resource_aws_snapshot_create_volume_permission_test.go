@@ -14,7 +14,8 @@ func TestAccAWSSnapshotCreateVolumePermission_Basic(t *testing.T) {
 	accountId := "111122223333"
 
 	resource.ParallelTest(t, resource.TestCase{
-		Providers: testAccProviders,
+		Providers:    testAccProviders,
+		CheckDestroy: testAccAWSSnapshotCreateVolumePermissionDestroy,
 		Steps: []resource.TestStep{
 			// Scaffold everything
 			{
@@ -33,6 +34,28 @@ func TestAccAWSSnapshotCreateVolumePermission_Basic(t *testing.T) {
 			},
 		},
 	})
+}
+
+func testAccAWSSnapshotCreateVolumePermissionDestroy(s *terraform.State) error {
+	conn := testAccProvider.Meta().(*AWSClient).ec2conn
+
+	for _, rs := range s.RootModule().Resources {
+		if rs.Type != "aws_snapshot_create_volume_permission" {
+			continue
+		}
+
+		snapshotID, accountID, err := resourceAwsSnapshotCreateVolumePermissionParseID(rs.Primary.ID)
+		if err != nil {
+			return err
+		}
+		if has, err := hasCreateVolumePermission(conn, snapshotID, accountID); err != nil {
+			return err
+		} else if has {
+			return fmt.Errorf("create volume permission still exist for '%s' on '%s'", accountID, snapshotID)
+		}
+	}
+
+	return nil
 }
 
 func testAccAWSSnapshotCreateVolumePermissionExists(accountId, snapshotId *string) resource.TestCheckFunc {
