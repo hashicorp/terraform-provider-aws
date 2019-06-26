@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/aws/aws-sdk-go/aws"
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/terraform"
 )
@@ -37,10 +38,10 @@ func TestAccAWSSnapshotCreateVolumePermission_Basic(t *testing.T) {
 func testAccAWSSnapshotCreateVolumePermissionExists(accountId, snapshotId *string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := testAccProvider.Meta().(*AWSClient).ec2conn
-		if has, err := hasCreateVolumePermission(conn, *snapshotId, *accountId); err != nil {
+		if has, err := hasCreateVolumePermission(conn, aws.StringValue(snapshotId), aws.StringValue(accountId)); err != nil {
 			return err
 		} else if !has {
-			return fmt.Errorf("create volume permission does not exist for '%s' on '%s'", *accountId, *snapshotId)
+			return fmt.Errorf("create volume permission does not exist for '%s' on '%s'", aws.StringValue(snapshotId), aws.StringValue(accountId))
 		}
 		return nil
 	}
@@ -49,10 +50,10 @@ func testAccAWSSnapshotCreateVolumePermissionExists(accountId, snapshotId *strin
 func testAccAWSSnapshotCreateVolumePermissionDestroyed(accountId, snapshotId *string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := testAccProvider.Meta().(*AWSClient).ec2conn
-		if has, err := hasCreateVolumePermission(conn, *snapshotId, *accountId); err != nil {
+		if has, err := hasCreateVolumePermission(conn, aws.StringValue(snapshotId), aws.StringValue(accountId)); err != nil {
 			return err
 		} else if has {
-			return fmt.Errorf("create volume permission still exists for '%s' on '%s'", *accountId, *snapshotId)
+			return fmt.Errorf("create volume permission still exists for '%s' on '%s'", aws.StringValue(snapshotId), aws.StringValue(accountId))
 		}
 		return nil
 	}

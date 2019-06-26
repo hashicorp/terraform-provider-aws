@@ -148,7 +148,7 @@ func resourceAwsSnapshotCreateVolumePermissionStateRefreshFunc(conn *ec2.EC2, sn
 		}
 
 		for _, vp := range attrs.CreateVolumePermissions {
-			if *vp.UserId == account_id {
+			if aws.StringValue(vp.UserId) == account_id {
 				return attrs, "granted", nil
 			}
 		}
