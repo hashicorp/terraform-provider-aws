@@ -304,6 +304,33 @@ func deleteGlueClassifier(conn *glue.Glue, name string) error {
 	return nil
 }
 
+func expandGlueCsvClassifierCreate(name string, m map[string]interface{}) *glue.CreateCSVClassifierRequest {
+	csvClassifier := &glue.CreateCSVClassifierRequest{
+		AllowSingleColumn: aws.String(m["allow_single_column"].(string)),
+		ContainsHeader: aws.String(m["contains_header"].(string)),
+		Delimiter: aws.String(m["delimiter"].(string)),
+		DisableValueTrimming: aws.String(m["disable_value_trimming"].(string)),
+		Header: aws.String(m["header"].(string)),
+		Name:           aws.String(name),
+		QuoteSymbol: aws.String(m["quote_symbol"].(string)),
+	}
+
+	return csvClassifier
+}
+
+func expandGlueCsvClassifierUpdate(name string, m map[string]interface{}) *glue.UpdateCSVClassifierRequest {
+	csvClassifier := &glue.UpdateCSVClassifierRequest{
+		AllowSingleColumn: aws.String(m["allow_single_column"].(string)),
+		ContainsHeader: aws.String(m["contains_header"].(string)),
+		Delimiter: aws.String(m["delimiter"].(string)),
+		DisableValueTrimming: aws.String(m["disable_value_trimming"].(string)),
+		Header: aws.String(m["header"].(string)),
+		Name:           aws.String(name),
+		QuoteSymbol: aws.String(m["quote_symbol"].(string)),
+	}
+
+	return csvClassifier
+
 func expandGlueGrokClassifierCreate(name string, m map[string]interface{}) *glue.CreateGrokClassifierRequest {
 	grokClassifier := &glue.CreateGrokClassifierRequest{
 		Classification: aws.String(m["classification"].(string)),
@@ -372,6 +399,24 @@ func expandGlueXmlClassifierUpdate(name string, m map[string]interface{}) *glue.
 	}
 
 	return xmlClassifier
+}
+
+func flattenGlueCsvClassifier(xmlClassifier *glue.CSVClassifier) []map[string]interface{} {
+	if csvClassifier == nil {
+		return []map[string]interface{}{}
+	}
+
+	m := map[string]interface{}{
+		"allow_single_column": aws.StringValue(csvClassifier.AllowSingleColumn),
+		"contains_header":     aws.StringValue(csvClassifier.ContainsHeader),
+		"delimiter":           aws.StringValue(csvClassifier.Delimiter),
+		"disable_value_trimming": aws.StringValue(csvClassifier.DisableValueTrimming),
+		"header": aws.StringValue(csvClassifier.Header),
+		"name": aws.StringValue(csvClassifier.Name),
+		"quote_symbol": aws.StringValue(csvClassifier.QuoteSymbol)
+	}
+
+	return []map[string]interface{}{m}
 }
 
 func flattenGlueGrokClassifier(grokClassifier *glue.GrokClassifier) []map[string]interface{} {
