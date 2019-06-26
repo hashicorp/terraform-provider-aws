@@ -64,9 +64,10 @@ func resourceAwsGlueClassifier() *schema.Resource {
 							Type:    schema.TypeBool,
 							Optional: true,
 						},
-						"contains_header": { //UNKNOWN, PRESENT, ABSENT
+						"contains_header": {
 							Type:    schema.TypeString,
 							Optional: true,
+							ValidateFunc: validateHeaderOptions(),
 						},
 						"delimiter": {
 							Type     schema.TypeString,
@@ -286,6 +287,14 @@ func resourceAwsGlueClassifierDelete(d *schema.ResourceData, meta interface{}) e
 	}
 
 	return nil
+}
+
+func validateHeaderOptions() schema.SchemaValidateFunc {
+	return validation.StringInSlice([]string{
+		"UNKNOWN",
+		"PRESENT",
+		"ABSENT",
+	}, true)
 }
 
 func deleteGlueClassifier(conn *glue.Glue, name string) error {
