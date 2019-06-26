@@ -215,6 +215,7 @@ func createDirectoryConnector(dsconn *directoryservice.DirectoryService, d *sche
 	input := directoryservice.ConnectDirectoryInput{
 		Name:     aws.String(d.Get("name").(string)),
 		Password: aws.String(d.Get("password").(string)),
+		Tags:     tagsFromMapDS(d.Get("tags").(map[string]interface{})),
 	}
 
 	if v, ok := d.GetOk("description"); ok {
@@ -249,6 +250,7 @@ func createSimpleDirectoryService(dsconn *directoryservice.DirectoryService, d *
 	input := directoryservice.CreateDirectoryInput{
 		Name:     aws.String(d.Get("name").(string)),
 		Password: aws.String(d.Get("password").(string)),
+		Tags:     tagsFromMapDS(d.Get("tags").(map[string]interface{})),
 	}
 
 	if v, ok := d.GetOk("description"); ok {
@@ -283,6 +285,7 @@ func createActiveDirectoryService(dsconn *directoryservice.DirectoryService, d *
 	input := directoryservice.CreateMicrosoftADInput{
 		Name:     aws.String(d.Get("name").(string)),
 		Password: aws.String(d.Get("password").(string)),
+		Tags:     tagsFromMapDS(d.Get("tags").(map[string]interface{})),
 	}
 
 	if v, ok := d.GetOk("description"); ok {
@@ -308,6 +311,28 @@ func createActiveDirectoryService(dsconn *directoryservice.DirectoryService, d *
 	log.Printf("[DEBUG] Microsoft AD Directory Service created: %s", out)
 
 	return *out.DirectoryId, nil
+}
+
+func enableDirectoryServiceSso(dsconn *directoryservice.DirectoryService, d *schema.ResourceData) error {
+	d.SetPartial("enable_sso")
+
+	if v, ok := d.GetOk("enable_sso"); ok && v.(bool) {
+		log.Printf("[DEBUG] Enabling SSO for DS directory %q", d.Id())
+		if _, err := dsconn.EnableSso(&directoryservice.EnableSsoInput{
+			DirectoryId: aws.String(d.Id()),
+		}); err != nil {
+			return fmt.Errorf("Error Enabling SSO for DS directory %s: %s", d.Id(), err)
+		}
+	} else {
+		log.Printf("[DEBUG] Disabling SSO for DS directory %q", d.Id())
+		if _, err := dsconn.DisableSso(&directoryservice.DisableSsoInput{
+			DirectoryId: aws.String(d.Id()),
+		}); err != nil {
+			return fmt.Errorf("Error Disabling SSO for DS directory %s: %s", d.Id(), err)
+		}
+	}
+
+	return nil
 }
 
 func resourceAwsDirectoryServiceDirectoryCreate(d *schema.ResourceData, meta interface{}) error {
@@ -380,29 +405,20 @@ func resourceAwsDirectoryServiceDirectoryCreate(d *schema.ResourceData, meta int
 			*out.Alias, *out.DirectoryId)
 	}
 
-	return resourceAwsDirectoryServiceDirectoryUpdate(d, meta)
+	if d.HasChange("enable_sso") {
+		if err := enableDirectoryServiceSso(dsconn, d); err != nil {
+			return err
+		}
+	}
+
+	return resourceAwsDirectoryServiceDirectoryRead(d, meta)
 }
 
 func resourceAwsDirectoryServiceDirectoryUpdate(d *schema.ResourceData, meta interface{}) error {
 	dsconn := meta.(*AWSClient).dsconn
 
 	if d.HasChange("enable_sso") {
-		d.SetPartial("enable_sso")
-		var err error
-
-		if v, ok := d.GetOk("enable_sso"); ok && v.(bool) {
-			log.Printf("[DEBUG] Enabling SSO for DS directory %q", d.Id())
-			_, err = dsconn.EnableSso(&directoryservice.EnableSsoInput{
-				DirectoryId: aws.String(d.Id()),
-			})
-		} else {
-			log.Printf("[DEBUG] Disabling SSO for DS directory %q", d.Id())
-			_, err = dsconn.DisableSso(&directoryservice.DisableSsoInput{
-				DirectoryId: aws.String(d.Id()),
-			})
-		}
-
-		if err != nil {
+		if err := enableDirectoryServiceSso(dsconn, d); err != nil {
 			return err
 		}
 	}
