@@ -173,6 +173,8 @@ func Provider() terraform.ResourceProvider {
 			"aws_db_snapshot":                               dataSourceAwsDbSnapshot(),
 			"aws_dx_gateway":                                dataSourceAwsDxGateway(),
 			"aws_dynamodb_table":                            dataSourceAwsDynamoDbTable(),
+			"aws_ebs_default_kms_key":                       dataSourceAwsEbsDefaultKmsKey(),
+			"aws_ebs_encryption_by_default":                 dataSourceAwsEbsEncryptionByDefault(),
 			"aws_ebs_snapshot":                              dataSourceAwsEbsSnapshot(),
 			"aws_ebs_snapshot_ids":                          dataSourceAwsEbsSnapshotIds(),
 			"aws_ebs_volume":                                dataSourceAwsEbsVolume(),
