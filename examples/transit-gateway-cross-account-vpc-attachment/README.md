@@ -16,3 +16,7 @@ terraform apply \
 	-var="aws_second_secret_key=SuperSecretKeyForAccount2" \
 	-var="aws_region=us-east-1"
 ```
+
+## Prerequisite 
+- In the AWS console of the owner of the TGW, enabling AWS Resource Access Manager by going into `Services`, `Organization`, `Settings` and `Enable Access` to AWS Resource Access Manager. 
+- In the AWS console of the owner of the TGW, enabling Resources Access Manager by going into `Services`, `Resource Access Manager`, `Settings` and tickle the `Enable sharing within your AWS Organization`. 
