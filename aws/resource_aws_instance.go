@@ -1290,8 +1290,10 @@ func readBlockDevices(d *schema.ResourceData, instance *ec2.Instance, conn *ec2.
 		return err
 	}
 
-	if err := d.Set("ebs_block_device", ibds["ebs"]); err != nil {
-		return err
+	if _, ok := d.GetOk("ebs_block_device"); ok {
+		if err := d.Set("ebs_block_device", ibds["ebs"]); err != nil {
+			return err
+		}
 	}
 
 	// This handles the import case which needs to be defaulted to empty
@@ -2018,22 +2020,56 @@ func userDataHashSum(user_data string) string {
 func getAwsInstanceVolumeIds(conn *ec2.EC2, d *schema.ResourceData) ([]*string, error) {
 	volumeIds := make([]*string, 0)
 
-	opts := &ec2.DescribeVolumesInput{
-		Filters: []*ec2.Filter{
-			{
-				Name:   aws.String("attachment.instance-id"),
-				Values: []*string{aws.String(d.Id())},
+	if _, ok := d.GetOk("ebs_block_device"); ok {
+		opts := &ec2.DescribeVolumesInput{
+			Filters: []*ec2.Filter{
+				{
+					Name:   aws.String("attachment.instance-id"),
+					Values: []*string{aws.String(d.Id())},
+				},
 			},
-		},
-	}
+		}
+		resp, err := conn.DescribeVolumes(opts)
+		if err != nil {
+			return nil, err
+		}
 
-	resp, err := conn.DescribeVolumes(opts)
-	if err != nil {
-		return nil, err
-	}
+		for _, v := range resp.Volumes {
+			volumeIds = append(volumeIds, v.VolumeId)
+		}
 
-	for _, v := range resp.Volumes {
-		volumeIds = append(volumeIds, v.VolumeId)
+	} else {
+		if dn, err := fetchRootDeviceName(d.Get("ami").(string), conn); err == nil {
+			if dn == nil {
+				return nil, fmt.Errorf(
+					"Expected 1 AMI for ID: %s, got none",
+					d.Get("ami").(string))
+			}
+			opts := &ec2.DescribeVolumesInput{
+				Filters: []*ec2.Filter{
+					{
+						Name:   aws.String("attachment.instance-id"),
+						Values: []*string{aws.String(d.Id())},
+					},
+					{
+						Name:   aws.String("attachment.device"),
+						Values: []*string{dn},
+					},
+				},
+			}
+
+			resp, err := conn.DescribeVolumes(opts)
+			if err != nil {
+				return nil, err
+			}
+
+			for _, v := range resp.Volumes {
+				volumeIds = append(volumeIds, v.VolumeId)
+			}
+
+		} else {
+			return nil, err
+		}
 	}
 
 	return volumeIds, nil
