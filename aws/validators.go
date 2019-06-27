@@ -486,17 +486,22 @@ func validatePolicyStatementId(v interface{}, k string) (ws []string, errors []e
 // represents a network address - it adds an error otherwise
 func validateCIDRNetworkAddress(v interface{}, k string) (ws []string, errors []error) {
 	value := v.(string)
-	_, ipnet, err := net.ParseCIDR(value)
+	// _, ipnet, err := net.ParseCIDR(value)
+	_, _, err := net.ParseCIDR(value)
 	if err != nil {
 		errors = append(errors, fmt.Errorf(
 			"%q must contain a valid CIDR, got error parsing: %s", k, err))
 		return
 	}
 
-	if ipnet == nil || value != ipnet.String() {
-		errors = append(errors, fmt.Errorf(
-			"%q must contain a valid network CIDR, got %q", k, value))
-	}
+	// REMOVED: (eric-luminal) removed for being overly strict when validating
+	// older resources that may have been allowed to be created with non-network
+	// CIDRS
+
+	// if ipnet == nil || value != ipnet.String() {
+	// 	errors = append(errors, fmt.Errorf(
+	// 		"%q must contain a valid network CIDR, got %q", k, value))
+	// }
 
 	return
 }
