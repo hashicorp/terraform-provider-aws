@@ -1506,6 +1506,9 @@ func resourceAwsDbInstanceUpdate(d *schema.ResourceData, meta interface{}) error
 		d.SetPartial("max_allocated_storage")
 		mas := d.Get("max_allocated_storage").(int)
 
+		// The API expects the max allocated storage value to be set to the allocated storage
+		// value when disabling autoscaling. This check ensures that value is set correctly
+		// if the update to the Terraform configuration was removing the argument completely.
 		if mas == 0 {
 			mas = d.Get("allocated_storage").(int)
 		}
