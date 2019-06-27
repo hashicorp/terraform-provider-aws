@@ -353,11 +353,12 @@ func resourceAwsLexIntent() *schema.Resource {
 				Computed: true,
 			},
 			"conclusion_statement": {
-				Type:     schema.TypeList,
-				Optional: true,
-				MinItems: 1,
-				MaxItems: 1,
-				Elem:     lexStatementResource,
+				Type:          schema.TypeList,
+				Optional:      true,
+				MinItems:      1,
+				MaxItems:      1,
+				ConflictsWith: []string{"follow_up_prompt"},
+				Elem:          lexStatementResource,
 			},
 			"confirmation_prompt": {
 				Type:     schema.TypeList,
@@ -369,7 +370,6 @@ func resourceAwsLexIntent() *schema.Resource {
 			"description": {
 				Type:         schema.TypeString,
 				Optional:     true,
-				Default:      "",
 				ValidateFunc: validation.StringLenBetween(0, 200),
 			},
 			"dialog_code_hook": {
@@ -380,10 +380,11 @@ func resourceAwsLexIntent() *schema.Resource {
 				Elem:     lexCodeHookResource,
 			},
 			"follow_up_prompt": {
-				Type:     schema.TypeList,
-				Optional: true,
-				MinItems: 1,
-				MaxItems: 1,
+				Type:          schema.TypeList,
+				Optional:      true,
+				MinItems:      1,
+				MaxItems:      1,
+				ConflictsWith: []string{"conclusion_statement"},
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"prompt": {
@@ -403,7 +404,6 @@ func resourceAwsLexIntent() *schema.Resource {
 					},
 				},
 			},
-			// Must be required because required by updates even though optional for creates
 			"fulfillment_activity": {
 				Type:     schema.TypeList,
 				Required: true,

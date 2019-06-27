@@ -40,7 +40,7 @@ resource "aws_lex_intent" "test" {
     type = "ReturnIntent"
   }
 
-  name                    = "test_intent_%s"
+  name = "test_intent_%s"
 }
 
 data "aws_lex_intent" "test" {

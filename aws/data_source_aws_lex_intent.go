@@ -57,10 +57,9 @@ func dataSourceAwsLexIntent() *schema.Resource {
 }
 
 func dataSourceAwsLexIntentRead(d *schema.ResourceData, meta interface{}) error {
-	intentName := d.Get("name").(string)
-
 	conn := meta.(*AWSClient).lexmodelconn
 
+	intentName := d.Get("name").(string)
 	resp, err := conn.GetIntent(&lexmodelbuildingservice.GetIntentInput{
 		Name:    aws.String(intentName),
 		Version: aws.String(d.Get("version").(string)),
