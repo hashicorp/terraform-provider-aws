@@ -27,6 +27,8 @@ BUG FIXES:
 * resource/aws_api_gateway_usage_plan_key: Remove unnecessary retry during delete [GH-9068]
 * resource/aws_db_snapshot: Prevent not found error when deleted outside Terraform [GH-9099]
 * resource/aws_ebs_snapshot_copy: Prevent error when resource is deleted outside Terraform [GH-9106]
+* resource/aws_ecr_repository: Final retries when reading and deleting ECR repositories [GH-9079]
+* resource/aws_ecr_repository_policy: Final retries when creating and updating ECR repository policies [GH-9079]
 * resource/aws_lb_target_group: Properly validate up to `120` seconds for `health_check` configuration block `timeout` argument [GH-9152]
 * resource/aws_spot_fleet_request: Add final retry when creating spot fleet request [GH-9078]
 * resource/aws_spot_instance_request: Add final retry when creating spot instance request [GH-9078]
