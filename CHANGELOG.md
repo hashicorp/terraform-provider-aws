@@ -7,11 +7,13 @@ FEATURES:
 
 ENHANCEMENTS:
 
+* data-source/aws_ssm_parameter: Add `version` attribute [GH-9127]
 * resource/aws_directory_service_directory: Tag on create (support tag limiting IAM policies) [GH-7937]
 * resource/aws_dms_endpoint: Support `db2` in `engine_name` validation [GH-9097]
 * resource/aws_kinesis_firehose_delivery_stream: Tag on create (support tag limiting IAM policies) [GH-7981]
 * resource/aws_lb_listener: Support `TCP_UDP` and `UDP` in `protocol` validation [GH-9111]
 * resource/aws_lb_target_group: Support `TCP_UDP` and `UDP` in `protocol` validation [GH-9111]
+* resource/aws_ssm_parameter: Add `version` attribute [GH-9127]
 
 BUG FIXES:
 * resource/aws_api_gateway_account: Fix error handling during update [GH-9068]
