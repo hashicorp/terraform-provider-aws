@@ -1448,12 +1448,12 @@ resource "aws_codebuild_project" "test" {
 }
 
 resource "aws_secretsmanager_secret" "test" {
-  name = "docker-auth"
+  name = "test"
   recovery_window_in_days = 0
 }
 
 resource "aws_secretsmanager_secret_version" "test" {
-  secret_id     = "${aws_secretsmanager_secret.docker-auth.id}"
+  secret_id     = "${aws_secretsmanager_secret.test.id}"
   secret_string = "${jsonencode(map("username", "user", "password", "pass"))}"
 }
 `, rName)
