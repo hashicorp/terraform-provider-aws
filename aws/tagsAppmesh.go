@@ -53,15 +53,18 @@ func diffTagsAppmesh(oldTags, newTags []*appmesh.TagRef) ([]*appmesh.TagRef, []*
 	// First, we're creating everything we have
 	create := make(map[string]interface{})
 	for _, t := range newTags {
-		create[*t.Key] = *t.Value
+		create[aws.StringValue(t.Key)] = aws.StringValue(t.Value)
 	}
 
 	// Build the list of what to remove
 	var remove []*string
 	for _, t := range oldTags {
-		if _, ok := create[*t.Key]; !ok {
-			// Delete it!
+		old, ok := create[aws.StringValue(t.Key)]
+		if !ok || old != aws.StringValue(t.Value) {
 			remove = append(remove, t.Key)
+		} else if ok {
+			// already present so remove from new
+			delete(create, aws.StringValue(t.Key))
 		}
 	}
 
@@ -89,7 +92,7 @@ func tagsToMapAppmesh(ts []*appmesh.TagRef) map[string]string {
 	result := make(map[string]string)
 	for _, t := range ts {
 		if !tagIgnoredAppmesh(t) {
-			result[*t.Key] = *t.Value
+			result[aws.StringValue(t.Key)] = aws.StringValue(t.Value)
 		}
 	}
 
@@ -115,12 +118,12 @@ func saveTagsAppmesh(conn *appmesh.AppMesh, d *schema.ResourceData, arn string) 
 // compare a tag against a list of strings and checks if it should
 // be ignored or not
 func tagIgnoredAppmesh(t *appmesh.TagRef) bool {
-	filter := []string{"^aws:", "^appmesh:", "Name"}
+	filter := []string{"^aws:"}
 	for _, v := range filter {
-		log.Printf("[DEBUG] Matching %v with %v\n", v, *t.Key)
-		r, _ := regexp.MatchString(v, *t.Key)
+		log.Printf("[DEBUG] Matching %v with %v\n", v, aws.StringValue(t.Key))
+		r, _ := regexp.MatchString(v, aws.StringValue(t.Key))
 		if r {
-			log.Printf("[DEBUG] Found AWS specific tag %s (val: %s), ignoring.\n", *t.Key, *t.Value)
+			log.Printf("[DEBUG] Found AWS specific tag %s (val: %s), ignoring.\n", aws.StringValue(t.Key), aws.StringValue(t.Value))
 			return true
 		}
 	}

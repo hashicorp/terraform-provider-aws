@@ -14,20 +14,19 @@ func TestDiffAppmeshTags(t *testing.T) {
 		Create   map[string]string
 		Remove   []string
 	}{
-		// Basic add/remove
+		// Add
 		{
 			Old: map[string]interface{}{
 				"foo": "bar",
 			},
 			New: map[string]interface{}{
+				"foo": "bar",
 				"bar": "baz",
 			},
 			Create: map[string]string{
 				"bar": "baz",
 			},
-			Remove: []string{
-				"foo",
-			},
+			Remove: map[string]string{},
 		},
 
 		// Modify
@@ -41,7 +40,42 @@ func TestDiffAppmeshTags(t *testing.T) {
 			Create: map[string]string{
 				"foo": "baz",
 			},
-			Remove: []string{},
+			Remove: map[string]string{
+				"foo": "bar",
+			},
+		},
+
+		// Overlap
+		{
+			Old: map[string]interface{}{
+				"foo":   "bar",
+				"hello": "world",
+			},
+			New: map[string]interface{}{
+				"foo":   "baz",
+				"hello": "world",
+			},
+			Create: map[string]string{
+				"foo": "baz",
+			},
+			Remove: map[string]string{
+				"foo": "bar",
+			},
+		},
+
+		// Remove
+		{
+			Old: map[string]interface{}{
+				"foo": "bar",
+				"bar": "baz",
+			},
+			New: map[string]interface{}{
+				"foo": "bar",
+			},
+			Create: map[string]string{},
+			Remove: map[string]string{
+				"bar": "baz",
+			},
 		},
 	}
 
