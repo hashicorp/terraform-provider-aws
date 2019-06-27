@@ -29,6 +29,7 @@ BUG FIXES:
 * resource/aws_lb_target_group: Properly validate up to `120` seconds for `health_check` configuration block `timeout` argument [GH-9152]
 * resource/aws_spot_fleet_request: Add final retry when creating spot fleet request [GH-9078]
 * resource/aws_spot_instance_request: Add final retry when creating spot instance request [GH-9078]
+* resource/aws_ssm_maintenance_window_target: Prevent `InvalidParameter` error on resource creation when optional `name` or `description` were missing [GH-9165]
 
 ## 2.16.0 (June 20, 2019)
 
