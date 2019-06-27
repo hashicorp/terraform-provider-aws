@@ -8,6 +8,7 @@ FEATURES:
 ENHANCEMENTS:
 
 * data-source/aws_ssm_parameter: Add `version` attribute [GH-9127]
+* resource/aws_db_instance: Add `max_allocated_storage` argument (support Storage Autoscaling) [GH-9087]
 * resource/aws_directory_service_directory: Tag on create (support tag limiting IAM policies) [GH-7937]
 * resource/aws_dms_endpoint: Support `db2` in `engine_name` validation [GH-9097]
 * resource/aws_kinesis_firehose_delivery_stream: Tag on create (support tag limiting IAM policies) [GH-7981]
