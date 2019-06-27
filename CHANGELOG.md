@@ -4,10 +4,12 @@ FEATURES:
 
 * **New Data Source:** `aws_ebs_default_kms_key` [GH-8884]
 * **New Data Source:** `aws_ebs_encryption_by_default` [GH-8884]
+* **New Resource:** `aws_appsync_function` [GH-8502]
 
 ENHANCEMENTS:
 
 * data-source/aws_ssm_parameter: Add `version` attribute [GH-9127]
+* resource/aws_appsync_resolver: Add `kind` argument and `pipeline_config` configuration block [GH-8502]
 * resource/aws_db_instance: Add `max_allocated_storage` argument (support Storage Autoscaling) [GH-9087]
 * resource/aws_directory_service_directory: Tag on create (support tag limiting IAM policies) [GH-7937]
 * resource/aws_dms_endpoint: Support `db2` in `engine_name` validation [GH-9097]
