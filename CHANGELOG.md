@@ -14,6 +14,7 @@ ENHANCEMENTS:
 * resource/aws_kinesis_firehose_delivery_stream: Tag on create (support tag limiting IAM policies) [GH-7981]
 * resource/aws_lb_listener: Support `TCP_UDP` and `UDP` in `protocol` validation [GH-9111]
 * resource/aws_lb_target_group: Support `TCP_UDP` and `UDP` in `protocol` validation [GH-9111]
+* resource/aws_route53_healthcheck: Add validation for `request_interval` argument [GH-9158]
 * resource/aws_ssm_parameter: Add `version` attribute [GH-9127]
 
 BUG FIXES:
