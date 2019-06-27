@@ -97,6 +97,7 @@ data "aws_subnet_ids" "selected" {
 
 data "aws_subnet_ids" "private" {
   vpc_id = "${aws_vpc.test.id}"
+
   tags = {
     Tier = "Private"
   }
@@ -153,33 +154,35 @@ func testAccDataSourceAwsSubnetIDs_filter(rInt int) string {
 	return fmt.Sprintf(`
 resource "aws_vpc" "test" {
   cidr_block = "172.%d.0.0/16"
+
   tags = {
     Name = "terraform-testacc-subnet-ids-data-source"
   }
 }
 
 resource "aws_subnet" "test_a_one" {
-  vpc_id = "${aws_vpc.test.id}"
-  cidr_block = "172.%d.1.0/24"
+  vpc_id            = "${aws_vpc.test.id}"
+  cidr_block        = "172.%d.1.0/24"
   availability_zone = "us-west-2a"
 }
 
 resource "aws_subnet" "test_a_two" {
-  vpc_id = "${aws_vpc.test.id}"
-  cidr_block = "172.%d.2.0/24"
+  vpc_id            = "${aws_vpc.test.id}"
+  cidr_block        = "172.%d.2.0/24"
   availability_zone = "us-west-2a"
 }
 
 resource "aws_subnet" "test_b" {
-  vpc_id = "${aws_vpc.test.id}"
-  cidr_block = "172.%d.3.0/24"
+  vpc_id            = "${aws_vpc.test.id}"
+  cidr_block        = "172.%d.3.0/24"
   availability_zone = "us-west-2b"
 }
 
 data "aws_subnet_ids" "test" {
   vpc_id = "${aws_subnet.test_a_two.vpc_id}"
+
   filter {
-    name = "availabilityZone"
+    name   = "availabilityZone"
     values = ["${aws_subnet.test_a_one.availability_zone}"]
   }
 }

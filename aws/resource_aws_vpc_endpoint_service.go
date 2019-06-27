@@ -27,13 +27,6 @@ func resourceAwsVpcEndpointService() *schema.Resource {
 				Type:     schema.TypeBool,
 				Required: true,
 			},
-			"network_load_balancer_arns": {
-				Type:     schema.TypeSet,
-				Required: true,
-				MinItems: 1,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-				Set:      schema.HashString,
-			},
 			"allowed_principals": {
 				Type:     schema.TypeSet,
 				Optional: true,
@@ -41,7 +34,30 @@ func resourceAwsVpcEndpointService() *schema.Resource {
 				Elem:     &schema.Schema{Type: schema.TypeString},
 				Set:      schema.HashString,
 			},
-			"state": {
+			"availability_zones": {
+				Type:     schema.TypeSet,
+				Elem:     &schema.Schema{Type: schema.TypeString},
+				Computed: true,
+				Set:      schema.HashString,
+			},
+			"base_endpoint_dns_names": {
+				Type:     schema.TypeSet,
+				Elem:     &schema.Schema{Type: schema.TypeString},
+				Computed: true,
+				Set:      schema.HashString,
+			},
+			"manages_vpc_endpoints": {
+				Type:     schema.TypeBool,
+				Computed: true,
+			},
+			"network_load_balancer_arns": {
+				Type:     schema.TypeSet,
+				Required: true,
+				MinItems: 1,
+				Elem:     &schema.Schema{Type: schema.TypeString},
+				Set:      schema.HashString,
+			},
+			"private_dns_name": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -53,22 +69,11 @@ func resourceAwsVpcEndpointService() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"availability_zones": {
-				Type:     schema.TypeSet,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-				Computed: true,
-				Set:      schema.HashString,
-			},
-			"private_dns_name": {
+			"state": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"base_endpoint_dns_names": {
-				Type:     schema.TypeSet,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-				Computed: true,
-				Set:      schema.HashString,
-			},
+			"tags": tagsSchema(),
 		},
 	}
 }
@@ -99,9 +104,9 @@ func resourceAwsVpcEndpointServiceCreate(d *schema.ResourceData, meta interface{
 func resourceAwsVpcEndpointServiceRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).ec2conn
 
-	svcCfg, state, err := vpcEndpointServiceStateRefresh(conn, d.Id())()
+	svcCfgRaw, state, err := vpcEndpointServiceStateRefresh(conn, d.Id())()
 	if err != nil && state != ec2.ServiceStateFailed {
-		return fmt.Errorf("Error reading VPC Endpoint Service: %s", err.Error())
+		return fmt.Errorf("error reading VPC Endpoint Service (%s): %s", d.Id(), err.Error())
 	}
 
 	terminalStates := map[string]bool{
@@ -115,7 +120,43 @@ func resourceAwsVpcEndpointServiceRead(d *schema.ResourceData, meta interface{})
 		return nil
 	}
 
-	return vpcEndpointServiceAttributes(d, svcCfg.(*ec2.ServiceConfiguration), conn)
+	svcCfg := svcCfgRaw.(*ec2.ServiceConfiguration)
+	d.Set("acceptance_required", svcCfg.AcceptanceRequired)
+	err = d.Set("network_load_balancer_arns", flattenStringSet(svcCfg.NetworkLoadBalancerArns))
+	if err != nil {
+		return fmt.Errorf("error setting network_load_balancer_arns: %s", err)
+	}
+	err = d.Set("availability_zones", flattenStringSet(svcCfg.AvailabilityZones))
+	if err != nil {
+		return fmt.Errorf("error setting availability_zones: %s", err)
+	}
+	err = d.Set("base_endpoint_dns_names", flattenStringSet(svcCfg.BaseEndpointDnsNames))
+	if err != nil {
+		return fmt.Errorf("error setting base_endpoint_dns_names: %s", err)
+	}
+	d.Set("manages_vpc_endpoints", svcCfg.ManagesVpcEndpoints)
+	d.Set("private_dns_name", svcCfg.PrivateDnsName)
+	d.Set("service_name", svcCfg.ServiceName)
+	d.Set("service_type", svcCfg.ServiceType[0].ServiceType)
+	d.Set("state", svcCfg.ServiceState)
+	err = d.Set("tags", tagsToMap(svcCfg.Tags))
+	if err != nil {
+		return fmt.Errorf("error setting tags: %s", err)
+	}
+
+	resp, err := conn.DescribeVpcEndpointServicePermissions(&ec2.DescribeVpcEndpointServicePermissionsInput{
+		ServiceId: aws.String(d.Id()),
+	})
+	if err != nil {
+		return fmt.Errorf("error reading VPC Endpoint Service permissions (%s): %s", d.Id(), err.Error())
+	}
+
+	err = d.Set("allowed_principals", flattenVpcEndpointServiceAllowedPrincipals(resp.AllowedPrincipals))
+	if err != nil {
+		return fmt.Errorf("error setting allowed_principals: %s", err)
+	}
+
+	return nil
 }
 
 func resourceAwsVpcEndpointServiceUpdate(d *schema.ResourceData, meta interface{}) error {
@@ -160,6 +201,11 @@ func resourceAwsVpcEndpointServiceUpdate(d *schema.ResourceData, meta interface{
 
 		d.SetPartial("allowed_principals")
 	}
+
+	if err := setTags(conn, d); err != nil {
+		return err
+	}
+	d.SetPartial("tags")
 
 	d.Partial(false)
 	return resourceAwsVpcEndpointServiceRead(d, meta)
@@ -242,27 +288,6 @@ func waitForVpcEndpointServiceDeletion(conn *ec2.EC2, serviceID string) error {
 	return err
 }
 
-func vpcEndpointServiceAttributes(d *schema.ResourceData, svcCfg *ec2.ServiceConfiguration, conn *ec2.EC2) error {
-	d.Set("acceptance_required", svcCfg.AcceptanceRequired)
-	d.Set("network_load_balancer_arns", flattenStringList(svcCfg.NetworkLoadBalancerArns))
-	d.Set("state", svcCfg.ServiceState)
-	d.Set("service_name", svcCfg.ServiceName)
-	d.Set("service_type", svcCfg.ServiceType[0].ServiceType)
-	d.Set("availability_zones", flattenStringList(svcCfg.AvailabilityZones))
-	d.Set("private_dns_name", svcCfg.PrivateDnsName)
-	d.Set("base_endpoint_dns_names", flattenStringList(svcCfg.BaseEndpointDnsNames))
-
-	resp, err := conn.DescribeVpcEndpointServicePermissions(&ec2.DescribeVpcEndpointServicePermissionsInput{
-		ServiceId: aws.String(d.Id()),
-	})
-	if err != nil {
-		return err
-	}
-	d.Set("allowed_principals", flattenVpcEndpointServiceAllowedPrincipals(resp.AllowedPrincipals))
-
-	return nil
-}
-
 func setVpcEndpointServiceUpdateLists(d *schema.ResourceData, key string, a, r *[]*string) bool {
 	if !d.HasChange(key) {
 		return false
@@ -283,4 +308,16 @@ func setVpcEndpointServiceUpdateLists(d *schema.ResourceData, key string, a, r *
 	}
 
 	return true
+}
+
+func flattenVpcEndpointServiceAllowedPrincipals(allowedPrincipals []*ec2.AllowedPrincipal) *schema.Set {
+	vPrincipals := []interface{}{}
+
+	for _, allowedPrincipal := range allowedPrincipals {
+		if allowedPrincipal.Principal != nil {
+			vPrincipals = append(vPrincipals, aws.StringValue(allowedPrincipal.Principal))
+		}
+	}
+
+	return schema.NewSet(schema.HashString, vPrincipals)
 }

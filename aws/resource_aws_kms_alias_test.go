@@ -177,72 +177,79 @@ func testAccCheckAWSKmsAliasExists(name string) resource.TestCheckFunc {
 func testAccAWSKmsSingleAlias(rInt int, timestamp string) string {
 	return fmt.Sprintf(`
 resource "aws_kms_key" "one" {
-    description = "Terraform acc test One %s"
-    deletion_window_in_days = 7
+  description             = "Terraform acc test One %s"
+  deletion_window_in_days = 7
 }
+
 resource "aws_kms_key" "two" {
-    description = "Terraform acc test Two %s"
-    deletion_window_in_days = 7
+  description             = "Terraform acc test Two %s"
+  deletion_window_in_days = 7
 }
 
 resource "aws_kms_alias" "name_prefix" {
-	name_prefix = "alias/tf-acc-key-alias-%d"
-	target_key_id = "${aws_kms_key.one.key_id}"
+  name_prefix   = "alias/tf-acc-key-alias-%d"
+  target_key_id = "${aws_kms_key.one.key_id}"
 }
 
 resource "aws_kms_alias" "nothing" {
-	target_key_id = "${aws_kms_key.one.key_id}"
+  target_key_id = "${aws_kms_key.one.key_id}"
 }
 
 resource "aws_kms_alias" "single" {
-    name = "alias/tf-acc-key-alias-%d"
-    target_key_id = "${aws_kms_key.one.key_id}"
-}`, timestamp, timestamp, rInt, rInt)
+  name          = "alias/tf-acc-key-alias-%d"
+  target_key_id = "${aws_kms_key.one.key_id}"
+}
+`, timestamp, timestamp, rInt, rInt)
 }
 
 func testAccAWSKmsSingleAlias_modified(rInt int, timestamp string) string {
 	return fmt.Sprintf(`
 resource "aws_kms_key" "one" {
-    description = "Terraform acc test One %s"
-    deletion_window_in_days = 7
+  description             = "Terraform acc test One %s"
+  deletion_window_in_days = 7
 }
+
 resource "aws_kms_key" "two" {
-    description = "Terraform acc test Two %s"
-    deletion_window_in_days = 7
+  description             = "Terraform acc test Two %s"
+  deletion_window_in_days = 7
 }
 
 resource "aws_kms_alias" "single" {
-    name = "alias/tf-acc-key-alias-%d"
-    target_key_id = "${aws_kms_key.two.key_id}"
-}`, timestamp, timestamp, rInt)
+  name          = "alias/tf-acc-key-alias-%d"
+  target_key_id = "${aws_kms_key.two.key_id}"
+}
+`, timestamp, timestamp, rInt)
 }
 
 func testAccAWSKmsMultipleAliases(rInt int, timestamp string) string {
 	return fmt.Sprintf(`
 resource "aws_kms_key" "single" {
-    description = "Terraform acc test One %s"
-    deletion_window_in_days = 7
+  description             = "Terraform acc test One %s"
+  deletion_window_in_days = 7
 }
 
 resource "aws_kms_alias" "one" {
-    name = "alias/tf-acc-alias-one-%d"
-    target_key_id = "${aws_kms_key.single.key_id}"
+  name          = "alias/tf-acc-alias-one-%d"
+  target_key_id = "${aws_kms_key.single.key_id}"
 }
+
 resource "aws_kms_alias" "two" {
-    name = "alias/tf-acc-alias-two-%d"
-    target_key_id = "${aws_kms_key.single.key_id}"
-}`, timestamp, rInt, rInt)
+  name          = "alias/tf-acc-alias-two-%d"
+  target_key_id = "${aws_kms_key.single.key_id}"
+}
+`, timestamp, rInt, rInt)
 }
 
 func testAccAWSKmsArnDiffSuppress(rInt int, timestamp string) string {
 	return fmt.Sprintf(`
 resource "aws_kms_key" "foo" {
-    description = "Terraform acc test foo %s"
-    deletion_window_in_days = 7
+  description             = "Terraform acc test foo %s"
+  deletion_window_in_days = 7
 }
 
 resource "aws_kms_alias" "bar" {
-	name = "alias/tf-acc-key-alias-%d"
-	target_key_id = "${aws_kms_key.foo.arn}"
-}`, timestamp, rInt)
+  name          = "alias/tf-acc-key-alias-%d"
+  target_key_id = "${aws_kms_key.foo.arn}"
+}
+`, timestamp, rInt)
 }

@@ -15,7 +15,7 @@ func TestAccAWSMediaStoreContainerPolicy_basic(t *testing.T) {
 	rname := acctest.RandString(5)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSMediaStore(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsMediaStoreContainerPolicyDestroy,
 		Steps: []resource.TestStep{
@@ -43,7 +43,7 @@ func TestAccAWSMediaStoreContainerPolicy_import(t *testing.T) {
 	resourceName := "aws_media_store_container_policy.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSMediaStore(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsMediaStoreContainerPolicyDestroy,
 		Steps: []resource.TestStep{
@@ -121,6 +121,7 @@ resource "aws_media_store_container" "test" {
 
 resource "aws_media_store_container_policy" "test" {
   container_name = "${aws_media_store_container.test.name}"
+
   policy = <<EOF
 {
   "Version": "2012-10-17",

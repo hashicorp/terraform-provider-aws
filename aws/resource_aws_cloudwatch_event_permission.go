@@ -111,7 +111,12 @@ func resourceAwsCloudWatchEventPermissionRead(d *schema.ResourceData, meta inter
 		}
 
 		if debo.Policy == nil {
-			return resource.RetryableError(fmt.Errorf("CloudWatch Events permission %q not found", d.Id()))
+			return resource.RetryableError(&resource.NotFoundError{
+				Message: fmt.Sprintf("CloudWatch Events permission %q not found"+
+					"in given results from DescribeEventBus", d.Id()),
+				LastResponse: debo,
+				LastRequest:  input,
+			})
 		}
 
 		err = json.Unmarshal([]byte(*debo.Policy), &policyDoc)
@@ -167,6 +172,11 @@ func resourceAwsCloudWatchEventPermissionUpdate(d *schema.ResourceData, meta int
 
 	log.Printf("[DEBUG] Update CloudWatch Events permission: %s", input)
 	_, err := conn.PutPermission(&input)
+	if isAWSErr(err, events.ErrCodeResourceNotFoundException, "") {
+		log.Printf("[WARN] CloudWatch Events permission %q not found, removing from state", d.Id())
+		d.SetId("")
+		return nil
+	}
 	if err != nil {
 		return fmt.Errorf("Updating CloudWatch Events permission '%s' failed: %s", d.Id(), err.Error())
 	}
@@ -182,6 +192,9 @@ func resourceAwsCloudWatchEventPermissionDelete(d *schema.ResourceData, meta int
 
 	log.Printf("[DEBUG] Delete CloudWatch Events permission: %s", input)
 	_, err := conn.RemovePermission(&input)
+	if isAWSErr(err, events.ErrCodeResourceNotFoundException, "") {
+		return nil
+	}
 	if err != nil {
 		return fmt.Errorf("Deleting CloudWatch Events permission '%s' failed: %s", d.Id(), err.Error())
 	}

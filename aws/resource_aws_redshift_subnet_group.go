@@ -22,6 +22,11 @@ func resourceAwsRedshiftSubnetGroup() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
+			"arn": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+
 			"name": {
 				Type:         schema.TypeString,
 				ForceNew:     true,
@@ -103,12 +108,6 @@ func resourceAwsRedshiftSubnetGroupRead(d *schema.ResourceData, meta interface{}
 		return fmt.Errorf("Error setting Redshift Subnet Group Tags: %#v", err)
 	}
 
-	return nil
-}
-
-func resourceAwsRedshiftSubnetGroupUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).redshiftconn
-
 	arn := arn.ARN{
 		Partition: meta.(*AWSClient).partition,
 		Service:   "redshift",
@@ -116,8 +115,20 @@ func resourceAwsRedshiftSubnetGroupUpdate(d *schema.ResourceData, meta interface
 		AccountID: meta.(*AWSClient).accountid,
 		Resource:  fmt.Sprintf("subnetgroup:%s", d.Id()),
 	}.String()
-	if tagErr := setTagsRedshift(conn, d, arn); tagErr != nil {
+
+	d.Set("arn", arn)
+
+	return nil
+}
+
+func resourceAwsRedshiftSubnetGroupUpdate(d *schema.ResourceData, meta interface{}) error {
+	conn := meta.(*AWSClient).redshiftconn
+	d.Partial(true)
+
+	if tagErr := setTagsRedshift(conn, d); tagErr != nil {
 		return tagErr
+	} else {
+		d.SetPartial("tags")
 	}
 
 	if d.HasChange("subnet_ids") || d.HasChange("description") {
@@ -143,7 +154,9 @@ func resourceAwsRedshiftSubnetGroupUpdate(d *schema.ResourceData, meta interface
 		}
 	}
 
-	return nil
+	d.Partial(false)
+
+	return resourceAwsRedshiftSubnetGroupRead(d, meta)
 }
 
 func resourceAwsRedshiftSubnetGroupDelete(d *schema.ResourceData, meta interface{}) error {

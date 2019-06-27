@@ -222,64 +222,70 @@ func testAccCheckCustomerGateway(gatewayResource string, cgw *ec2.CustomerGatewa
 
 func testAccCustomerGatewayConfig(rInt, rBgpAsn int) string {
 	return fmt.Sprintf(`
-		resource "aws_customer_gateway" "foo" {
-			bgp_asn = %d
-			ip_address = "172.0.0.1"
-			type = "ipsec.1"
-	tags = {
-				Name = "foo-gateway-%d"
-			}
-		}
-		`, rBgpAsn, rInt)
+resource "aws_customer_gateway" "foo" {
+  bgp_asn    = %d
+  ip_address = "172.0.0.1"
+  type       = "ipsec.1"
+
+  tags = {
+    Name = "foo-gateway-%d"
+  }
+}
+`, rBgpAsn, rInt)
 }
 
 func testAccCustomerGatewayConfigIdentical(randInt, rBgpAsn int) string {
 	return fmt.Sprintf(`
-		resource "aws_customer_gateway" "foo" {
-			bgp_asn = %d
-			ip_address = "172.0.0.1"
-			type = "ipsec.1"
-	tags = {
-				Name = "foo-gateway-%d"
-			}
-		}
-		resource "aws_customer_gateway" "identical" {
-			bgp_asn = %d
-			ip_address = "172.0.0.1"
-			type = "ipsec.1"
-	tags = {
-				Name = "foo-gateway-identical-%d"
-			}
-		}
-		`, rBgpAsn, randInt, rBgpAsn, randInt)
+resource "aws_customer_gateway" "foo" {
+  bgp_asn    = %d
+  ip_address = "172.0.0.1"
+  type       = "ipsec.1"
+
+  tags = {
+    Name = "foo-gateway-%d"
+  }
+}
+
+resource "aws_customer_gateway" "identical" {
+  bgp_asn    = %d
+  ip_address = "172.0.0.1"
+  type       = "ipsec.1"
+
+  tags = {
+    Name = "foo-gateway-identical-%d"
+  }
+}
+`, rBgpAsn, randInt, rBgpAsn, randInt)
 }
 
 // Add the Another: "tag" tag.
 func testAccCustomerGatewayConfigUpdateTags(rInt, rBgpAsn int) string {
 	return fmt.Sprintf(`
-	resource "aws_customer_gateway" "foo" {
-		bgp_asn = %d
-		ip_address = "172.0.0.1"
-		type = "ipsec.1"
-	tags = {
-			Name = "foo-gateway-%d"
-			Another = "tag"
-		}
-	}
-	`, rBgpAsn, rInt)
+resource "aws_customer_gateway" "foo" {
+  bgp_asn    = %d
+  ip_address = "172.0.0.1"
+  type       = "ipsec.1"
+
+  tags = {
+    Name    = "foo-gateway-%d"
+    Another = "tag"
+  }
+}
+`, rBgpAsn, rInt)
 }
 
 // Change the ip_address.
 func testAccCustomerGatewayConfigForceReplace(rInt, rBgpAsn int) string {
 	return fmt.Sprintf(`
-		resource "aws_customer_gateway" "foo" {
-			bgp_asn = %d
-			ip_address = "172.10.10.1"
-			type = "ipsec.1"
-	tags = {
-				Name = "foo-gateway-%d"
-				Another = "tag"
-			}
-		}
-		`, rBgpAsn, rInt)
+resource "aws_customer_gateway" "foo" {
+  bgp_asn    = %d
+  ip_address = "172.10.10.1"
+  type       = "ipsec.1"
+
+  tags = {
+    Name    = "foo-gateway-%d"
+    Another = "tag"
+  }
+}
+`, rBgpAsn, rInt)
 }

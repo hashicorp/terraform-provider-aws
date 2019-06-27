@@ -131,12 +131,12 @@ resource "aws_api_gateway_rest_api" "main" {
 }
 
 resource "aws_api_gateway_gateway_response" "test" {
-  rest_api_id = "${aws_api_gateway_rest_api.main.id}"
-  status_code = "401"
+  rest_api_id   = "${aws_api_gateway_rest_api.main.id}"
+  status_code   = "401"
   response_type = "UNAUTHORIZED"
 
   response_templates = {
-    "application/xml"  = "#set($inputRoot = $input.path('$'))\n{ }"
+    "application/xml" = "#set($inputRoot = $input.path('$'))\n{ }"
   }
 
   response_parameters = {
@@ -153,8 +153,8 @@ resource "aws_api_gateway_rest_api" "main" {
 }
 
 resource "aws_api_gateway_gateway_response" "test" {
-  rest_api_id = "${aws_api_gateway_rest_api.main.id}"
-  status_code = "477"
+  rest_api_id   = "${aws_api_gateway_rest_api.main.id}"
+  status_code   = "477"
   response_type = "UNAUTHORIZED"
 
   response_templates = {

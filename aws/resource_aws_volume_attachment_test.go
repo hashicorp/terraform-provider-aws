@@ -262,20 +262,20 @@ resource "aws_volume_attachment" "ebs_att" {
 func testAccVolumeAttachmentConfig_update(detach bool) string {
 	return fmt.Sprintf(`
 resource "aws_instance" "web" {
-  ami = "ami-21f78e11"
+  ami               = "ami-21f78e11"
   availability_zone = "us-west-2a"
-  instance_type = "t1.micro"
+  instance_type     = "t1.micro"
 }
 
 resource "aws_ebs_volume" "example" {
   availability_zone = "us-west-2a"
-  size = 1
+  size              = 1
 }
 
 resource "aws_volume_attachment" "ebs_att" {
-  device_name = "/dev/sdh"
-  volume_id = "${aws_ebs_volume.example.id}"
-  instance_id = "${aws_instance.web.id}"
+  device_name  = "/dev/sdh"
+  volume_id    = "${aws_ebs_volume.example.id}"
+  instance_id  = "${aws_instance.web.id}"
   force_detach = %t
   skip_destroy = %t
 }

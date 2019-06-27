@@ -922,7 +922,7 @@ func (c *MediaConvert) DescribeEndpointsWithContext(ctx aws.Context, input *Desc
 //    // Example iterating over at most 3 pages of a DescribeEndpoints operation.
 //    pageNum := 0
 //    err := client.DescribeEndpointsPages(params,
-//        func(page *DescribeEndpointsOutput, lastPage bool) bool {
+//        func(page *mediaconvert.DescribeEndpointsOutput, lastPage bool) bool {
 //            pageNum++
 //            fmt.Println(page)
 //            return pageNum <= 3
@@ -1510,7 +1510,7 @@ func (c *MediaConvert) ListJobTemplatesWithContext(ctx aws.Context, input *ListJ
 //    // Example iterating over at most 3 pages of a ListJobTemplates operation.
 //    pageNum := 0
 //    err := client.ListJobTemplatesPages(params,
-//        func(page *ListJobTemplatesOutput, lastPage bool) bool {
+//        func(page *mediaconvert.ListJobTemplatesOutput, lastPage bool) bool {
 //            pageNum++
 //            fmt.Println(page)
 //            return pageNum <= 3
@@ -1657,7 +1657,7 @@ func (c *MediaConvert) ListJobsWithContext(ctx aws.Context, input *ListJobsInput
 //    // Example iterating over at most 3 pages of a ListJobs operation.
 //    pageNum := 0
 //    err := client.ListJobsPages(params,
-//        func(page *ListJobsOutput, lastPage bool) bool {
+//        func(page *mediaconvert.ListJobsOutput, lastPage bool) bool {
 //            pageNum++
 //            fmt.Println(page)
 //            return pageNum <= 3
@@ -1803,7 +1803,7 @@ func (c *MediaConvert) ListPresetsWithContext(ctx aws.Context, input *ListPreset
 //    // Example iterating over at most 3 pages of a ListPresets operation.
 //    pageNum := 0
 //    err := client.ListPresetsPages(params,
-//        func(page *ListPresetsOutput, lastPage bool) bool {
+//        func(page *mediaconvert.ListPresetsOutput, lastPage bool) bool {
 //            pageNum++
 //            fmt.Println(page)
 //            return pageNum <= 3
@@ -1949,7 +1949,7 @@ func (c *MediaConvert) ListQueuesWithContext(ctx aws.Context, input *ListQueuesI
 //    // Example iterating over at most 3 pages of a ListQueues operation.
 //    pageNum := 0
 //    err := client.ListQueuesPages(params,
-//        func(page *ListQueuesOutput, lastPage bool) bool {
+//        func(page *mediaconvert.ListQueuesOutput, lastPage bool) bool {
 //            pageNum++
 //            fmt.Println(page)
 //            return pageNum <= 3

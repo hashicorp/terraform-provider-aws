@@ -32,7 +32,6 @@ func resourceAwsCloudHsm2Cluster() *schema.Resource {
 		Schema: map[string]*schema.Schema{
 			"source_backup_identifier": {
 				Type:     schema.TypeString,
-				Computed: false,
 				Optional: true,
 				ForceNew: true,
 			},

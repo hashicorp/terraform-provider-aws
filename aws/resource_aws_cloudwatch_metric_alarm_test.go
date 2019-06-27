@@ -430,10 +430,12 @@ resource "aws_cloudwatch_metric_alarm" "foobar" {
   threshold                 = "80"
   alarm_description         = "This metric monitors ec2 cpu utilization"
   insufficient_data_actions = []
+
   dimensions = {
     InstanceId = "i-abc123"
   }
-}`, rInt)
+}
+`, rInt)
 }
 
 func testAccAWSCloudWatchMetricAlarmConfigDatapointsToAlarm(rInt int) string {
@@ -450,10 +452,12 @@ resource "aws_cloudwatch_metric_alarm" "foobar" {
   threshold                 = "80"
   alarm_description         = "This metric monitors ec2 cpu utilization"
   insufficient_data_actions = []
+
   dimensions = {
     InstanceId = "i-abc123"
   }
-}`, rInt)
+}
+`, rInt)
 }
 
 func testAccAWSCloudWatchMetricAlarmConfigTreatMissingData(rInt int) string {
@@ -470,10 +474,12 @@ resource "aws_cloudwatch_metric_alarm" "foobar" {
   alarm_description         = "This metric monitors ec2 cpu utilization"
   treat_missing_data        = "missing"
   insufficient_data_actions = []
+
   dimensions = {
     InstanceId = "i-abc123"
   }
-}`, rInt)
+}
+`, rInt)
 }
 
 func testAccAWSCloudWatchMetricAlarmConfigTreatMissingDataUpdate(rInt int) string {
@@ -490,50 +496,56 @@ resource "aws_cloudwatch_metric_alarm" "foobar" {
   alarm_description         = "This metric monitors ec2 cpu utilization"
   treat_missing_data        = "breaching"
   insufficient_data_actions = []
+
   dimensions = {
     InstanceId = "i-abc123"
   }
-}`, rInt)
+}
+`, rInt)
 }
 
 func testAccAWSCloudWatchMetricAlarmConfigTreatEvaluateLowSampleCountPercentiles(rInt int) string {
 	return fmt.Sprintf(`
 resource "aws_cloudwatch_metric_alarm" "foobar" {
-  alarm_name                = "terraform-test-foobar%d"
-  comparison_operator       = "GreaterThanOrEqualToThreshold"
-  evaluation_periods        = "2"
-  metric_name               = "CPUUtilization"
-  namespace                 = "AWS/EC2"
-  period                    = "120"
-  extended_statistic        = "p88.0"
-  threshold                 = "80"
-  alarm_description         = "This metric monitors ec2 cpu utilization"
+  alarm_name                            = "terraform-test-foobar%d"
+  comparison_operator                   = "GreaterThanOrEqualToThreshold"
+  evaluation_periods                    = "2"
+  metric_name                           = "CPUUtilization"
+  namespace                             = "AWS/EC2"
+  period                                = "120"
+  extended_statistic                    = "p88.0"
+  threshold                             = "80"
+  alarm_description                     = "This metric monitors ec2 cpu utilization"
   evaluate_low_sample_count_percentiles = "evaluate"
-  insufficient_data_actions = []
+  insufficient_data_actions             = []
+
   dimensions = {
     InstanceId = "i-abc123"
   }
-}`, rInt)
+}
+`, rInt)
 }
 
 func testAccAWSCloudWatchMetricAlarmConfigTreatEvaluateLowSampleCountPercentilesUpdated(rInt int) string {
 	return fmt.Sprintf(`
 resource "aws_cloudwatch_metric_alarm" "foobar" {
-  alarm_name                = "terraform-test-foobar%d"
-  comparison_operator       = "GreaterThanOrEqualToThreshold"
-  evaluation_periods        = "2"
-  metric_name               = "CPUUtilization"
-  namespace                 = "AWS/EC2"
-  period                    = "120"
-  extended_statistic        = "p88.0"
-  threshold                 = "80"
-  alarm_description         = "This metric monitors ec2 cpu utilization"
+  alarm_name                            = "terraform-test-foobar%d"
+  comparison_operator                   = "GreaterThanOrEqualToThreshold"
+  evaluation_periods                    = "2"
+  metric_name                           = "CPUUtilization"
+  namespace                             = "AWS/EC2"
+  period                                = "120"
+  extended_statistic                    = "p88.0"
+  threshold                             = "80"
+  alarm_description                     = "This metric monitors ec2 cpu utilization"
   evaluate_low_sample_count_percentiles = "ignore"
-  insufficient_data_actions = []
+  insufficient_data_actions             = []
+
   dimensions = {
     InstanceId = "i-abc123"
   }
-}`, rInt)
+}
+`, rInt)
 }
 
 func testAccAWSCloudWatchMetricAlarmConfigExtendedStatistic(rInt int) string {
@@ -545,14 +557,16 @@ resource "aws_cloudwatch_metric_alarm" "foobar" {
   metric_name               = "CPUUtilization"
   namespace                 = "AWS/EC2"
   period                    = "120"
-  extended_statistic	    = "p88.0"
+  extended_statistic        = "p88.0"
   threshold                 = "80"
   alarm_description         = "This metric monitors ec2 cpu utilization"
   insufficient_data_actions = []
+
   dimensions = {
     InstanceId = "i-abc123"
   }
-}`, rInt)
+}
+`, rInt)
 }
 
 func testAccAWSCloudWatchMetricAlarmConfigMissingStatistic(rInt int) string {
@@ -567,10 +581,12 @@ resource "aws_cloudwatch_metric_alarm" "foobar" {
   threshold                 = "80"
   alarm_description         = "This metric monitors ec2 cpu utilization"
   insufficient_data_actions = []
+
   dimensions = {
     InstanceId = "i-abc123"
   }
-}`, rInt)
+}
+`, rInt)
 }
 
 func testAccAWSCloudWatchMetricAlarmConfigWithExpression(rInt int) string {
@@ -579,29 +595,34 @@ resource "aws_cloudwatch_metric_alarm" "foobar" {
   alarm_name                = "terraform-test-foobar%d"
   comparison_operator       = "GreaterThanOrEqualToThreshold"
   evaluation_periods        = "2"
-	threshold                 = "80"
+  threshold                 = "80"
   alarm_description         = "This metric monitors ec2 cpu utilization"
   insufficient_data_actions = []
-	metric_query {
-		id = "e1"
-		expression = "m1"
-		label = "cat"
-		return_data = "true"
-	}
-	metric_query {
-		id = "m1"
-		metric {
-			metric_name = "CPUUtilization"
-			namespace   = "AWS/EC2"
-			period      = "120"
-			stat        = "Average"
-			unit        = "Count"
-			dimensions = {
-				InstanceId = "i-abc123"
-			}
-		}
-	}
-}`, rInt)
+
+  metric_query {
+    id          = "e1"
+    expression  = "m1"
+    label       = "cat"
+    return_data = "true"
+  }
+
+  metric_query {
+    id = "m1"
+
+    metric {
+      metric_name = "CPUUtilization"
+      namespace   = "AWS/EC2"
+      period      = "120"
+      stat        = "Average"
+      unit        = "Count"
+
+      dimensions = {
+        InstanceId = "i-abc123"
+      }
+    }
+  }
+}
+`, rInt)
 }
 
 func testAccAWSCloudWatchMetricAlarmConfigWithExpressionUpdated(rInt int) string {
@@ -610,34 +631,40 @@ resource "aws_cloudwatch_metric_alarm" "foobar" {
   alarm_name                = "terraform-test-foobar%d"
   comparison_operator       = "GreaterThanOrEqualToThreshold"
   evaluation_periods        = "2"
-	threshold                 = "80"
+  threshold                 = "80"
   alarm_description         = "This metric monitors ec2 cpu utilization"
   insufficient_data_actions = []
-	metric_query {
-		id = "e1"
-		expression = "m1"
-		label = "cat"
-	}
-	metric_query {
-		id = "e2"
-		expression = "e1"
-		label = "bug"
-		return_data = "true"
-	}
-	metric_query {
-		id = "m1"
-		metric {
-			metric_name = "CPUUtilization"
-			namespace   = "AWS/EC2"
-			period      = "120"
-			stat        = "Average"
-			unit        = "Count"
-			dimensions = {
-				InstanceId = "i-abc123"
-			}
-		}
-	}
-}`, rInt)
+
+  metric_query {
+    id         = "e1"
+    expression = "m1"
+    label      = "cat"
+  }
+
+  metric_query {
+    id          = "e2"
+    expression  = "e1"
+    label       = "bug"
+    return_data = "true"
+  }
+
+  metric_query {
+    id = "m1"
+
+    metric {
+      metric_name = "CPUUtilization"
+      namespace   = "AWS/EC2"
+      period      = "120"
+      stat        = "Average"
+      unit        = "Count"
+
+      dimensions = {
+        InstanceId = "i-abc123"
+      }
+    }
+  }
+}
+`, rInt)
 }
 
 func testAccAWSCloudWatchMetricAlarmConfigWithExpressionWithQueryUpdated(rInt int) string {
@@ -646,29 +673,34 @@ resource "aws_cloudwatch_metric_alarm" "foobar" {
   alarm_name                = "terraform-test-foobar%d"
   comparison_operator       = "GreaterThanOrEqualToThreshold"
   evaluation_periods        = "2"
-	threshold                 = "80"
+  threshold                 = "80"
   alarm_description         = "This metric monitors ec2 cpu utilization"
   insufficient_data_actions = []
-	metric_query {
-		id = "e1"
-		expression = "m1"
-		label = "cat"
-		return_data = "true"
-	}
-	metric_query {
-		id = "m1"
-		metric {
-			metric_name = "CPUUtilization"
-			namespace   = "AWS/EC2"
-			period      = "120"
-			stat        = "Maximum"
-			unit        = "Count"
-			dimensions = {
-				InstanceId = "i-abc123"
-			}
-		}
-	}
-}`, rInt)
+
+  metric_query {
+    id          = "e1"
+    expression  = "m1"
+    label       = "cat"
+    return_data = "true"
+  }
+
+  metric_query {
+    id = "m1"
+
+    metric {
+      metric_name = "CPUUtilization"
+      namespace   = "AWS/EC2"
+      period      = "120"
+      stat        = "Maximum"
+      unit        = "Count"
+
+      dimensions = {
+        InstanceId = "i-abc123"
+      }
+    }
+  }
+}
+`, rInt)
 }
 
 func testAccAWSCloudWatchMetricAlarmConfigWithBadExpression(rInt int) string {
@@ -677,25 +709,29 @@ resource "aws_cloudwatch_metric_alarm" "foobar" {
   alarm_name                = "terraform-test-foobar%d"
   comparison_operator       = "GreaterThanOrEqualToThreshold"
   evaluation_periods        = "2"
-	threshold                 = "80"
+  threshold                 = "80"
   alarm_description         = "This metric monitors ec2 cpu utilization"
   insufficient_data_actions = []
-	metric_query {
-		id = "e1"
-		expression = "m1"
-		label = "cat"
-		metric {
-			metric_name = "CPUUtilization"
-			namespace   = "AWS/EC2"
-			period      = "120"
-			stat        = "Average"
-			unit        = "Count"
-			dimensions = {
-				InstanceId = "i-abc123"
-			}
-		}
-	}
-}`, rInt)
+
+  metric_query {
+    id         = "e1"
+    expression = "m1"
+    label      = "cat"
+
+    metric {
+      metric_name = "CPUUtilization"
+      namespace   = "AWS/EC2"
+      period      = "120"
+      stat        = "Average"
+      unit        = "Count"
+
+      dimensions = {
+        InstanceId = "i-abc123"
+      }
+    }
+  }
+}
+`, rInt)
 }
 
 // EC2 Automate requires a valid EC2 instance
@@ -707,11 +743,12 @@ data "aws_ami" "amzn-ami-minimal-hvm-ebs" {
   owners      = ["amazon"]
 
   filter {
-    name = "name"
+    name   = "name"
     values = ["amzn-ami-minimal-hvm-*"]
   }
+
   filter {
-    name = "root-device-type"
+    name   = "root-device-type"
     values = ["ebs"]
   }
 }
@@ -834,15 +871,18 @@ resource "aws_cloudwatch_metric_alarm" "foobar" {
   threshold                 = "80"
   alarm_description         = "This metric monitors ec2 cpu utilization"
   insufficient_data_actions = []
+
   dimensions = {
     InstanceId = "i-abc123"
-	}
-	tags = {
-		Name	= "terraform-test-foobar%[1]d"
-		fizz 	= "buzz"
-		foo		= "bar"
-	}
-}`, rInt)
+  }
+
+  tags = {
+    Name = "terraform-test-foobar%[1]d"
+    fizz = "buzz"
+    foo  = "bar"
+  }
+}
+`, rInt)
 }
 
 func testAccAWSCloudWatchMetricAlarmConfigUpdateTags(rInt int) string {
@@ -858,16 +898,19 @@ resource "aws_cloudwatch_metric_alarm" "foobar" {
   threshold                 = "80"
   alarm_description         = "This metric monitors ec2 cpu utilization"
   insufficient_data_actions = []
+
   dimensions = {
     InstanceId = "i-abc123"
-	}
-	tags = {
-		Name	= "terraform-test-foobar%[1]d"
-		fizz 	= "buzz"
-		foo		= "bar2"
-		good	= "bad"
-	}
-}`, rInt)
+  }
+
+  tags = {
+    Name = "terraform-test-foobar%[1]d"
+    fizz = "buzz"
+    foo  = "bar2"
+    good = "bad"
+  }
+}
+`, rInt)
 }
 
 func testAccAWSCloudWatchMetricAlarmConfigRemoveTags(rInt int) string {
@@ -883,12 +926,15 @@ resource "aws_cloudwatch_metric_alarm" "foobar" {
   threshold                 = "80"
   alarm_description         = "This metric monitors ec2 cpu utilization"
   insufficient_data_actions = []
+
   dimensions = {
     InstanceId = "i-abc123"
-	}
-	tags = {
-		Name	= "terraform-test-foobar%[1]d"
-		fizz 	= "buzz"
-	}
-}`, rInt)
+  }
+
+  tags = {
+    Name = "terraform-test-foobar%[1]d"
+    fizz = "buzz"
+  }
+}
+`, rInt)
 }

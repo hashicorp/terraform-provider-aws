@@ -27,6 +27,7 @@ resource "aws_autoscaling_notification" "example_notifications" {
     "autoscaling:EC2_INSTANCE_LAUNCH",
     "autoscaling:EC2_INSTANCE_TERMINATE",
     "autoscaling:EC2_INSTANCE_LAUNCH_ERROR",
+    "autoscaling:EC2_INSTANCE_TERMINATE_ERROR",
   ]
 
   topic_arn = "${aws_sns_topic.example.arn}"

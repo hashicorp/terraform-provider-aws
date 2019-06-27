@@ -27,8 +27,8 @@ The Terraform state associated with existing resources will automatically be mig
 
 ```hcl
 resource "aws_appmesh_virtual_node" "serviceb1" {
-  name                = "serviceBv1"
-  mesh_name           = "${aws_appmesh_mesh.simple.id}"
+  name      = "serviceBv1"
+  mesh_name = "${aws_appmesh_mesh.simple.id}"
 
   spec {
     backend {
@@ -57,8 +57,8 @@ resource "aws_appmesh_virtual_node" "serviceb1" {
 
 ```hcl
 resource "aws_appmesh_virtual_node" "serviceb1" {
-  name                = "serviceBv1"
-  mesh_name           = "${aws_appmesh_mesh.simple.id}"
+  name      = "serviceBv1"
+  mesh_name = "${aws_appmesh_mesh.simple.id}"
 
   spec {
     backend {
@@ -96,8 +96,8 @@ resource "aws_appmesh_virtual_node" "serviceb1" {
 
 ```hcl
 resource "aws_appmesh_virtual_node" "serviceb1" {
-  name                = "serviceBv1"
-  mesh_name           = "${aws_appmesh_mesh.simple.id}"
+  name      = "serviceBv1"
+  mesh_name = "${aws_appmesh_mesh.simple.id}"
 
   spec {
     backend {

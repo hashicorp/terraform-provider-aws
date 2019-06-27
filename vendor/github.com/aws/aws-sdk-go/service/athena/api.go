@@ -819,7 +819,7 @@ func (c *Athena) GetQueryResultsWithContext(ctx aws.Context, input *GetQueryResu
 //    // Example iterating over at most 3 pages of a GetQueryResults operation.
 //    pageNum := 0
 //    err := client.GetQueryResultsPages(params,
-//        func(page *GetQueryResultsOutput, lastPage bool) bool {
+//        func(page *athena.GetQueryResultsOutput, lastPage bool) bool {
 //            pageNum++
 //            fmt.Println(page)
 //            return pageNum <= 3
@@ -1048,7 +1048,7 @@ func (c *Athena) ListNamedQueriesWithContext(ctx aws.Context, input *ListNamedQu
 //    // Example iterating over at most 3 pages of a ListNamedQueries operation.
 //    pageNum := 0
 //    err := client.ListNamedQueriesPages(params,
-//        func(page *ListNamedQueriesOutput, lastPage bool) bool {
+//        func(page *athena.ListNamedQueriesOutput, lastPage bool) bool {
 //            pageNum++
 //            fmt.Println(page)
 //            return pageNum <= 3
@@ -1194,7 +1194,7 @@ func (c *Athena) ListQueryExecutionsWithContext(ctx aws.Context, input *ListQuer
 //    // Example iterating over at most 3 pages of a ListQueryExecutions operation.
 //    pageNum := 0
 //    err := client.ListQueryExecutionsPages(params,
-//        func(page *ListQueryExecutionsOutput, lastPage bool) bool {
+//        func(page *athena.ListQueryExecutionsOutput, lastPage bool) bool {
 //            pageNum++
 //            fmt.Println(page)
 //            return pageNum <= 3
@@ -1421,7 +1421,7 @@ func (c *Athena) ListWorkGroupsWithContext(ctx aws.Context, input *ListWorkGroup
 //    // Example iterating over at most 3 pages of a ListWorkGroups operation.
 //    pageNum := 0
 //    err := client.ListWorkGroupsPages(params,
-//        func(page *ListWorkGroupsOutput, lastPage bool) bool {
+//        func(page *athena.ListWorkGroupsOutput, lastPage bool) bool {
 //            pageNum++
 //            fmt.Println(page)
 //            return pageNum <= 3

@@ -63,9 +63,9 @@ func (c *ConfigService) BatchGetAggregateResourceConfigRequest(input *BatchGetAg
 // resources, the operation returns an empty unprocessedResourceIdentifiers
 // list.
 //
-// The API does not return results for deleted resources.
+//    * The API does not return results for deleted resources.
 //
-//  The API does not return tags and relationships.
+//    * The API does not return tags and relationships.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -152,10 +152,10 @@ func (c *ConfigService) BatchGetResourceConfigRequest(input *BatchGetResourceCon
 // current request. If there are no unprocessed resources, the operation returns
 // an empty unprocessedResourceKeys list.
 //
-// The API does not return results for deleted resources.
+//    * The API does not return results for deleted resources.
 //
-//  The API does not return any tags for the requested resources. This information
-// is filtered out of the supplementaryConfiguration section of the API response.
+//    * The API does not return any tags for the requested resources. This information
+//    is filtered out of the supplementaryConfiguration section of the API response.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -2407,7 +2407,7 @@ func (c *ConfigService) DescribeRemediationExecutionStatusWithContext(ctx aws.Co
 //    // Example iterating over at most 3 pages of a DescribeRemediationExecutionStatus operation.
 //    pageNum := 0
 //    err := client.DescribeRemediationExecutionStatusPages(params,
-//        func(page *DescribeRemediationExecutionStatusOutput, lastPage bool) bool {
+//        func(page *configservice.DescribeRemediationExecutionStatusOutput, lastPage bool) bool {
 //            pageNum++
 //            fmt.Println(page)
 //            return pageNum <= 3
@@ -3299,11 +3299,11 @@ func (c *ConfigService) GetDiscoveredResourceCountsRequest(input *GetDiscoveredR
 //
 // AWS Config returns the following:
 //
-// The resource types (EC2 instances, IAM users, and S3 buckets).
+//    * The resource types (EC2 instances, IAM users, and S3 buckets).
 //
-// The number of each resource type (25, 20, and 15).
+//    * The number of each resource type (25, 20, and 15).
 //
-// The total number of all resources (60).
+//    * The total number of all resources (60).
 //
 // The response is paginated. By default, AWS Config lists 100 ResourceCount
 // objects on each page. You can customize this number with the limit parameter.
@@ -3313,9 +3313,9 @@ func (c *ConfigService) GetDiscoveredResourceCountsRequest(input *GetDiscoveredR
 // If you make a call to the GetDiscoveredResourceCounts action, you might not
 // immediately receive resource counts in the following situations:
 //
-// You are a new AWS Config customer.
+//    * You are a new AWS Config customer.
 //
-// You just enabled resource recording.
+//    * You just enabled resource recording.
 //
 // It might take a few minutes for AWS Config to record and count your resources.
 // Wait a few minutes and then retry the GetDiscoveredResourceCounts action.
@@ -3487,7 +3487,7 @@ func (c *ConfigService) GetResourceConfigHistoryWithContext(ctx aws.Context, inp
 //    // Example iterating over at most 3 pages of a GetResourceConfigHistory operation.
 //    pageNum := 0
 //    err := client.GetResourceConfigHistoryPages(params,
-//        func(page *GetResourceConfigHistoryOutput, lastPage bool) bool {
+//        func(page *configservice.GetResourceConfigHistoryOutput, lastPage bool) bool {
 //            pageNum++
 //            fmt.Println(page)
 //            return pageNum <= 3

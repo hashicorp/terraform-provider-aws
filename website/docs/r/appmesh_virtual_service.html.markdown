@@ -16,8 +16,8 @@ Provides an AWS App Mesh virtual service resource.
 
 ```hcl
 resource "aws_appmesh_virtual_service" "servicea" {
-  name                = "servicea.simpleapp.local"
-  mesh_name           = "${aws_appmesh_mesh.simple.id}"
+  name      = "servicea.simpleapp.local"
+  mesh_name = "${aws_appmesh_mesh.simple.id}"
 
   spec {
     provider {
@@ -33,8 +33,8 @@ resource "aws_appmesh_virtual_service" "servicea" {
 
 ```hcl
 resource "aws_appmesh_virtual_service" "servicea" {
-  name                = "servicea.simpleapp.local"
-  mesh_name           = "${aws_appmesh_mesh.simple.id}"
+  name      = "servicea.simpleapp.local"
+  mesh_name = "${aws_appmesh_mesh.simple.id}"
 
   spec {
     provider {

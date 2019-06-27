@@ -1421,7 +1421,10 @@ func readInstanceMarketOptionsFromConfig(imo map[string]interface{}) (*ec2.Launc
 	if v, ok := imo["spot_options"]; ok {
 		vL := v.([]interface{})
 		for _, v := range vL {
-			so := v.(map[string]interface{})
+			so, ok := v.(map[string]interface{})
+			if !ok {
+				continue
+			}
 
 			if v, ok := so["block_duration_minutes"].(int); ok && v != 0 {
 				spotOptions.BlockDurationMinutes = aws.Int64(int64(v))

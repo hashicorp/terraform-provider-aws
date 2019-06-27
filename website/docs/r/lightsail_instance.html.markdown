@@ -19,7 +19,7 @@ for more information.
 ```hcl
 # Create a new GitLab Lightsail Instance
 resource "aws_lightsail_instance" "gitlab_test" {
-  name              = "custom gitlab"
+  name              = "custom_gitlab"
   availability_zone = "us-east-1b"
   blueprint_id      = "string"
   bundle_id         = "string"
@@ -37,7 +37,7 @@ instance (see list below)
 * `blueprint_id` - (Required) The ID for a virtual private server image
 (see list below)
 * `bundle_id` - (Required) The bundle of specification information (see list below)
-* `key_pair_name` - (Required) The name of your key pair. Created in the
+* `key_pair_name` - (Optional) The name of your key pair. Created in the
 Lightsail console (cannot use `aws_key_pair` at this time)
 * `user_data` - (Optional) launch script to configure server with additional user data
 

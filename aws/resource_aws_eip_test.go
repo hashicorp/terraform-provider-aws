@@ -561,8 +561,8 @@ resource "aws_eip" "bar" {
 func testAccAWSEIPConfig_PublicIpv4Pool_custom(poolName string) string {
 	return fmt.Sprintf(`
 resource "aws_eip" "bar" {
-   vpc = true
-   public_ipv4_pool = "%s"
+  vpc              = true
+  public_ipv4_pool = "%s"
 }
 `, poolName)
 }
@@ -959,7 +959,8 @@ resource "aws_route_table" "us-east-1-public" {
 resource "aws_route_table_association" "us-east-1b-public" {
   subnet_id      = "${aws_subnet.us-east-1b-public.id}"
   route_table_id = "${aws_route_table.us-east-1-public.id}"
-}`, rootDeviceType)
+}
+`, rootDeviceType)
 }
 
 const testAccAWSEIPAssociate_not_associated = `

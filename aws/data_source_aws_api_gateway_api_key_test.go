@@ -32,11 +32,11 @@ func TestAccDataSourceAwsApiGatewayApiKey(t *testing.T) {
 func testAccDataSourceAwsApiGatewayApiKeyConfig(r string) string {
 	return fmt.Sprintf(`
 resource "aws_api_gateway_api_key" "example_key" {
-    name = "%s"
+  name = "%s"
 }
 
 data "aws_api_gateway_api_key" "test_key" {
-    id = "${aws_api_gateway_api_key.example_key.id}"
+  id = "${aws_api_gateway_api_key.example_key.id}"
 }
 `, r)
 }

@@ -2,12 +2,13 @@ package aws
 
 import (
 	"fmt"
+	"regexp"
+	"testing"
+
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/organizations"
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/terraform"
-	"regexp"
-	"testing"
 )
 
 func testAccAwsOrganizationsOrganization_basic(t *testing.T) {
@@ -23,12 +24,17 @@ func testAccAwsOrganizationsOrganization_basic(t *testing.T) {
 				Config: testAccAwsOrganizationsOrganizationConfig,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsOrganizationsOrganizationExists(resourceName, &organization),
+					resource.TestCheckResourceAttr(resourceName, "accounts.#", "1"),
+					resource.TestCheckResourceAttrPair(resourceName, "accounts.0.arn", resourceName, "master_account_arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "accounts.0.email", resourceName, "master_account_email"),
+					resource.TestCheckResourceAttrPair(resourceName, "accounts.0.id", resourceName, "master_account_id"),
 					testAccMatchResourceAttrGlobalARN(resourceName, "arn", "organizations", regexp.MustCompile(`organization/o-.+`)),
 					resource.TestCheckResourceAttr(resourceName, "aws_service_access_principals.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "feature_set", organizations.OrganizationFeatureSetAll),
 					testAccMatchResourceAttrGlobalARN(resourceName, "master_account_arn", "organizations", regexp.MustCompile(`account/o-.+/.+`)),
 					resource.TestMatchResourceAttr(resourceName, "master_account_email", regexp.MustCompile(`.+@.+`)),
 					testAccCheckResourceAttrAccountID(resourceName, "master_account_id"),
+					resource.TestCheckResourceAttr(resourceName, "non_master_accounts.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "roots.#", "1"),
 					resource.TestMatchResourceAttr(resourceName, "roots.0.id", regexp.MustCompile(`r-[a-z0-9]{4,32}`)),
 					resource.TestCheckResourceAttrSet(resourceName, "roots.0.name"),
@@ -82,6 +88,45 @@ func testAccAwsOrganizationsOrganization_AwsServiceAccessPrincipals(t *testing.T
 					testAccCheckAwsOrganizationsOrganizationExists(resourceName, &organization),
 					resource.TestCheckResourceAttr(resourceName, "aws_service_access_principals.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "aws_service_access_principals.4066123156", "fms.amazonaws.com"),
+				),
+			},
+		},
+	})
+}
+
+func testAccAwsOrganizationsOrganization_EnabledPolicyTypes(t *testing.T) {
+	var organization organizations.Organization
+	resourceName := "aws_organizations_organization.test"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t); testAccOrganizationsAccountPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAwsOrganizationsOrganizationDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAwsOrganizationsOrganizationConfigEnabledPolicyTypes1(organizations.PolicyTypeServiceControlPolicy),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAwsOrganizationsOrganizationExists(resourceName, &organization),
+					resource.TestCheckResourceAttr(resourceName, "enabled_policy_types.#", "1"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccAwsOrganizationsOrganizationConfig,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAwsOrganizationsOrganizationExists(resourceName, &organization),
+					resource.TestCheckResourceAttr(resourceName, "enabled_policy_types.#", "0"),
+				),
+			},
+			{
+				Config: testAccAwsOrganizationsOrganizationConfigEnabledPolicyTypes1(organizations.PolicyTypeServiceControlPolicy),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAwsOrganizationsOrganizationExists(resourceName, &organization),
+					resource.TestCheckResourceAttr(resourceName, "enabled_policy_types.#", "1"),
 				),
 			},
 		},
@@ -187,6 +232,14 @@ resource "aws_organizations_organization" "test" {
   aws_service_access_principals = [%q, %q]
 }
 `, principal1, principal2)
+}
+
+func testAccAwsOrganizationsOrganizationConfigEnabledPolicyTypes1(policyType1 string) string {
+	return fmt.Sprintf(`
+resource "aws_organizations_organization" "test" {
+  enabled_policy_types = [%[1]q]
+}
+`, policyType1)
 }
 
 func testAccAwsOrganizationsOrganizationConfigFeatureSet(featureSet string) string {

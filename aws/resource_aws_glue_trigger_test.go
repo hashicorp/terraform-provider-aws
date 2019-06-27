@@ -366,8 +366,8 @@ resource "aws_glue_job" "test2" {
 }
 
 resource "aws_glue_trigger" "test" {
-  name     = "%s"
-  type     = "CONDITIONAL"
+  name = "%s"
+  type = "CONDITIONAL"
 
   actions {
     job_name = "${aws_glue_job.test2.name}"

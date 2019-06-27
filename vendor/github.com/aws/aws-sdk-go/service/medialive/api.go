@@ -1558,7 +1558,7 @@ func (c *MediaLive) DescribeScheduleWithContext(ctx aws.Context, input *Describe
 //    // Example iterating over at most 3 pages of a DescribeSchedule operation.
 //    pageNum := 0
 //    err := client.DescribeSchedulePages(params,
-//        func(page *DescribeScheduleOutput, lastPage bool) bool {
+//        func(page *medialive.DescribeScheduleOutput, lastPage bool) bool {
 //            pageNum++
 //            fmt.Println(page)
 //            return pageNum <= 3
@@ -1702,7 +1702,7 @@ func (c *MediaLive) ListChannelsWithContext(ctx aws.Context, input *ListChannels
 //    // Example iterating over at most 3 pages of a ListChannels operation.
 //    pageNum := 0
 //    err := client.ListChannelsPages(params,
-//        func(page *ListChannelsOutput, lastPage bool) bool {
+//        func(page *medialive.ListChannelsOutput, lastPage bool) bool {
 //            pageNum++
 //            fmt.Println(page)
 //            return pageNum <= 3
@@ -1846,7 +1846,7 @@ func (c *MediaLive) ListInputSecurityGroupsWithContext(ctx aws.Context, input *L
 //    // Example iterating over at most 3 pages of a ListInputSecurityGroups operation.
 //    pageNum := 0
 //    err := client.ListInputSecurityGroupsPages(params,
-//        func(page *ListInputSecurityGroupsOutput, lastPage bool) bool {
+//        func(page *medialive.ListInputSecurityGroupsOutput, lastPage bool) bool {
 //            pageNum++
 //            fmt.Println(page)
 //            return pageNum <= 3
@@ -1990,7 +1990,7 @@ func (c *MediaLive) ListInputsWithContext(ctx aws.Context, input *ListInputsInpu
 //    // Example iterating over at most 3 pages of a ListInputs operation.
 //    pageNum := 0
 //    err := client.ListInputsPages(params,
-//        func(page *ListInputsOutput, lastPage bool) bool {
+//        func(page *medialive.ListInputsOutput, lastPage bool) bool {
 //            pageNum++
 //            fmt.Println(page)
 //            return pageNum <= 3
@@ -2134,7 +2134,7 @@ func (c *MediaLive) ListOfferingsWithContext(ctx aws.Context, input *ListOfferin
 //    // Example iterating over at most 3 pages of a ListOfferings operation.
 //    pageNum := 0
 //    err := client.ListOfferingsPages(params,
-//        func(page *ListOfferingsOutput, lastPage bool) bool {
+//        func(page *medialive.ListOfferingsOutput, lastPage bool) bool {
 //            pageNum++
 //            fmt.Println(page)
 //            return pageNum <= 3
@@ -2278,7 +2278,7 @@ func (c *MediaLive) ListReservationsWithContext(ctx aws.Context, input *ListRese
 //    // Example iterating over at most 3 pages of a ListReservations operation.
 //    pageNum := 0
 //    err := client.ListReservationsPages(params,
-//        func(page *ListReservationsOutput, lastPage bool) bool {
+//        func(page *medialive.ListReservationsOutput, lastPage bool) bool {
 //            pageNum++
 //            fmt.Println(page)
 //            return pageNum <= 3

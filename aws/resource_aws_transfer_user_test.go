@@ -18,7 +18,7 @@ func TestAccAWSTransferUser_basic(t *testing.T) {
 	rName := acctest.RandString(10)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:      func() { testAccPreCheck(t) },
+		PreCheck:      func() { testAccPreCheck(t); testAccPreCheckAWSTransfer(t) },
 		IDRefreshName: "aws_transfer_user.foo",
 		Providers:     testAccProviders,
 		CheckDestroy:  testAccCheckAWSTransferUserDestroy,
@@ -49,7 +49,7 @@ func TestAccAWSTransferUser_modifyWithOptions(t *testing.T) {
 	rName2 := acctest.RandString(10)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:      func() { testAccPreCheck(t) },
+		PreCheck:      func() { testAccPreCheck(t); testAccPreCheckAWSTransfer(t) },
 		IDRefreshName: "aws_transfer_user.foo",
 		Providers:     testAccProviders,
 		CheckDestroy:  testAccCheckAWSTransferUserDestroy,
@@ -108,7 +108,7 @@ func TestAccAWSTransferUser_disappears(t *testing.T) {
 	rName := acctest.RandString(10)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSTransfer(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSTransferUserDestroy,
 		Steps: []resource.TestStep{
@@ -127,7 +127,7 @@ func TestAccAWSTransferUser_disappears(t *testing.T) {
 
 func TestAccAWSTransferUser_UserName_Validation(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSTransfer(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSTransferUserDestroy,
 		Steps: []resource.TestStep{
@@ -236,17 +236,17 @@ func testAccCheckAWSTransferUserDestroy(s *terraform.State) error {
 func testAccAWSTransferUserConfig_basic(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_transfer_server" "foo" {
-	identity_provider_type = "SERVICE_MANAGED"
+  identity_provider_type = "SERVICE_MANAGED"
 
-	tags = {
-		NAME     = "tf-acc-test-transfer-server"
-	}
+  tags = {
+    NAME = "tf-acc-test-transfer-server"
+  }
 }
 
 resource "aws_iam_role" "foo" {
-	name = "tf-test-transfer-user-iam-role-%s"
+  name = "tf-test-transfer-user-iam-role-%s"
 
-	assume_role_policy = <<EOF
+  assume_role_policy = <<EOF
 {
 	"Version": "2012-10-17",
 	"Statement": [
@@ -263,9 +263,10 @@ EOF
 }
 
 resource "aws_iam_role_policy" "foo" {
-	name = "tf-test-transfer-user-iam-policy-%s"
-	role = "${aws_iam_role.foo.id}"
-	policy = <<POLICY
+  name = "tf-test-transfer-user-iam-policy-%s"
+  role = "${aws_iam_role.foo.id}"
+
+  policy = <<POLICY
 {
 	"Version": "2012-10-17",
 	"Statement": [
@@ -283,31 +284,33 @@ POLICY
 }
 
 resource "aws_transfer_user" "foo" {
-	server_id      = "${aws_transfer_server.foo.id}"
-	user_name      = "tftestuser"
-	role           = "${aws_iam_role.foo.arn}"
+  server_id = "${aws_transfer_server.foo.id}"
+  user_name = "tftestuser"
+  role      = "${aws_iam_role.foo.arn}"
 }
-	
 `, rName, rName)
 }
 
 func testAccAWSTransferUserName_validation(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_transfer_server" "foo" {
-	identity_provider_type = "SERVICE_MANAGED"
-	tags = {
-		NAME     = "tf-acc-test-transfer-server"
-	}
-}
-resource "aws_transfer_user" "foo" {
-    server_id      = "${aws_transfer_server.foo.id}"
-    user_name      = "%s"
-    role           = "${aws_iam_role.foo.arn}"
-}
-resource "aws_iam_role" "foo" {
-	name = "tf-test-transfer-user-iam-role"
+  identity_provider_type = "SERVICE_MANAGED"
 
-	assume_role_policy = <<EOF
+  tags = {
+    NAME = "tf-acc-test-transfer-server"
+  }
+}
+
+resource "aws_transfer_user" "foo" {
+  server_id = "${aws_transfer_server.foo.id}"
+  user_name = "%s"
+  role      = "${aws_iam_role.foo.arn}"
+}
+
+resource "aws_iam_role" "foo" {
+  name = "tf-test-transfer-user-iam-role"
+
+  assume_role_policy = <<EOF
 {
 	"Version": "2012-10-17",
 	"Statement": [
@@ -328,17 +331,17 @@ EOF
 func testAccAWSTransferUserConfig_options(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_transfer_server" "foo" {
-	identity_provider_type = "SERVICE_MANAGED"
-	
-	tags = {
-		NAME     = "tf-acc-test-transfer-server"
-	}
+  identity_provider_type = "SERVICE_MANAGED"
+
+  tags = {
+    NAME = "tf-acc-test-transfer-server"
+  }
 }
 
 resource "aws_iam_role" "foo" {
-	name = "tf-test-transfer-user-iam-role-%s"
+  name = "tf-test-transfer-user-iam-role-%s"
 
-	assume_role_policy = <<EOF
+  assume_role_policy = <<EOF
 {
 	"Version": "2012-10-17",
 	"Statement": [
@@ -355,9 +358,10 @@ EOF
 }
 
 resource "aws_iam_role_policy" "foo" {
-	name = "tf-test-transfer-user-iam-policy-%s"
-	role = "${aws_iam_role.foo.id}"
-	policy = <<POLICY
+  name = "tf-test-transfer-user-iam-policy-%s"
+  role = "${aws_iam_role.foo.id}"
+
+  policy = <<POLICY
 {
 	"Version": "2012-10-17",
 	"Statement": [
@@ -375,80 +379,78 @@ POLICY
 }
 
 data "aws_iam_policy_document" "foo" {
-	statement {
-	  sid = "ListHomeDir"
-  
-	  actions = [
-		"s3:ListBucket",
-	  ]
-  
-	  resources = [
-		"arn:aws:s3:::&{transfer:HomeBucket}",
-	  ]
-	}
+  statement {
+    sid = "ListHomeDir"
 
-	statement {
-		sid = "AWSTransferRequirements"
-	
-		actions = [
-		  "s3:ListAllMyBuckets",
-		  "s3:GetBucketLocation",
-		]
-	
-		resources = [
-		  "*",
-		]
-	}
+    actions = [
+      "s3:ListBucket",
+    ]
 
-	statement {
-		sid = "HomeDirObjectAccess"
-	
-		actions = [
-		  "s3:PutObject",
-		  "s3:GetObject",
-		  "s3:DeleteObjectVersion",
-		  "s3:DeleteObject",
-		  "s3:GetObjectVersion",
-		]
-	
-		resources = [
-		  "arn:aws:s3:::&{transfer:HomeDirectory}*",
-		]
-	}
+    resources = [
+      "arn:aws:s3:::&{transfer:HomeBucket}",
+    ]
+  }
+
+  statement {
+    sid = "AWSTransferRequirements"
+
+    actions = [
+      "s3:ListAllMyBuckets",
+      "s3:GetBucketLocation",
+    ]
+
+    resources = [
+      "*",
+    ]
+  }
+
+  statement {
+    sid = "HomeDirObjectAccess"
+
+    actions = [
+      "s3:PutObject",
+      "s3:GetObject",
+      "s3:DeleteObjectVersion",
+      "s3:DeleteObject",
+      "s3:GetObjectVersion",
+    ]
+
+    resources = [
+      "arn:aws:s3:::&{transfer:HomeDirectory}*",
+    ]
+  }
 }
 
 resource "aws_transfer_user" "foo" {
-	server_id      = "${aws_transfer_server.foo.id}"
-	user_name      = "tftestuser"
-	role           = "${aws_iam_role.foo.arn}"
-	policy         = "${data.aws_iam_policy_document.foo.json}"
-	home_directory = "/home/tftestuser"
+  server_id      = "${aws_transfer_server.foo.id}"
+  user_name      = "tftestuser"
+  role           = "${aws_iam_role.foo.arn}"
+  policy         = "${data.aws_iam_policy_document.foo.json}"
+  home_directory = "/home/tftestuser"
 
-	tags = {
-		NAME  = "tftestuser"
-		ENV   = "test"
-		ADMIN = "test"
-	}
+  tags = {
+    NAME  = "tftestuser"
+    ENV   = "test"
+    ADMIN = "test"
+  }
 }
-
-
-	`, rName, rName)
+`, rName, rName)
 }
 
 func testAccAWSTransferUserConfig_modify(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_transfer_server" "foo" {
-	identity_provider_type = "SERVICE_MANAGED"
-	
-	tags = {
-		NAME     = "tf-acc-test-transfer-server"
-	}
+  identity_provider_type = "SERVICE_MANAGED"
+
+  tags = {
+    NAME = "tf-acc-test-transfer-server"
+  }
 }
 
 resource "aws_iam_role" "foo" {
-	name = "tf-test-transfer-user-iam-role-%s"
-  
-	assume_role_policy = <<EOF
+  name = "tf-test-transfer-user-iam-role-%s"
+
+  assume_role_policy = <<EOF
 {
 	"Version": "2012-10-17",
 	"Statement": [
@@ -465,9 +467,10 @@ EOF
 }
 
 resource "aws_iam_role_policy" "foo" {
-	name = "tf-test-transfer-user-iam-policy-%s"
-	role = "${aws_iam_role.foo.id}"
-	policy = <<POLICY
+  name = "tf-test-transfer-user-iam-policy-%s"
+  role = "${aws_iam_role.foo.id}"
+
+  policy = <<POLICY
 {
 	"Version": "2012-10-17",
 	"Statement": [
@@ -485,78 +488,75 @@ POLICY
 }
 
 data "aws_iam_policy_document" "foo" {
-	statement {
-	  sid = "ListHomeDir"
-  
-	  actions = [
-		"s3:ListBucket",
-	  ]
-  
-	  resources = [
-		"arn:aws:s3:::&{transfer:HomeBucket}",
-	  ]
-	}
+  statement {
+    sid = "ListHomeDir"
 
-	statement {
-		sid = "AWSTransferRequirements"
-	
-		actions = [
-		  "s3:ListAllMyBuckets",
-		  "s3:GetBucketLocation",
-		]
-	
-		resources = [
-		  "*",
-		]
-	}
+    actions = [
+      "s3:ListBucket",
+    ]
 
-	statement {
-		sid = "HomeDirObjectAccess"
-	
-		actions = [
-		  "s3:PutObject",
-		  "s3:GetObject",
-		  "s3:GetObjectVersion",
-		]
-	
-		resources = [
-		  "arn:aws:s3:::&{transfer:HomeDirectory}*",
-		]
-	}
+    resources = [
+      "arn:aws:s3:::&{transfer:HomeBucket}",
+    ]
+  }
+
+  statement {
+    sid = "AWSTransferRequirements"
+
+    actions = [
+      "s3:ListAllMyBuckets",
+      "s3:GetBucketLocation",
+    ]
+
+    resources = [
+      "*",
+    ]
+  }
+
+  statement {
+    sid = "HomeDirObjectAccess"
+
+    actions = [
+      "s3:PutObject",
+      "s3:GetObject",
+      "s3:GetObjectVersion",
+    ]
+
+    resources = [
+      "arn:aws:s3:::&{transfer:HomeDirectory}*",
+    ]
+  }
 }
 
 resource "aws_transfer_user" "foo" {
-	server_id      = "${aws_transfer_server.foo.id}"
-	user_name      = "tftestuser"
-	role           = "${aws_iam_role.foo.arn}"
-	policy         = "${data.aws_iam_policy_document.foo.json}"
-	home_directory = "/test"
+  server_id      = "${aws_transfer_server.foo.id}"
+  user_name      = "tftestuser"
+  role           = "${aws_iam_role.foo.arn}"
+  policy         = "${data.aws_iam_policy_document.foo.json}"
+  home_directory = "/test"
 
-	tags = {
-		NAME  = "tf-test-user"
-		TEST   = "test2"
-	}
+  tags = {
+    NAME = "tf-test-user"
+    TEST = "test2"
+  }
 }
-
-
-	`, rName, rName)
+`, rName, rName)
 }
 
 func testAccAWSTransferUserConfig_forceNew(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_transfer_server" "foo" {
-	identity_provider_type = "SERVICE_MANAGED"
-	
-	tags = {
-		NAME     = "tf-acc-test-transfer-server"
-	}
+  identity_provider_type = "SERVICE_MANAGED"
+
+  tags = {
+    NAME = "tf-acc-test-transfer-server"
+  }
 }
 
-
 resource "aws_iam_role" "foo" {
-	name = "tf-test-transfer-user-iam-role-%s"
-  
-	assume_role_policy = <<EOF
+  name = "tf-test-transfer-user-iam-role-%s"
+
+  assume_role_policy = <<EOF
 {
 	"Version": "2012-10-17",
 	"Statement": [
@@ -573,9 +573,10 @@ EOF
 }
 
 resource "aws_iam_role_policy" "foo" {
-	name = "tf-test-transfer-user-iam-policy-%s"
-	role = "${aws_iam_role.foo.id}"
-	policy = <<POLICY
+  name = "tf-test-transfer-user-iam-policy-%s"
+  role = "${aws_iam_role.foo.id}"
+
+  policy = <<POLICY
 {
 	"Version": "2012-10-17",
 	"Statement": [
@@ -593,59 +594,59 @@ POLICY
 }
 
 data "aws_iam_policy_document" "foo" {
-	statement {
-	  sid = "ListHomeDir"
-  
-	  actions = [
-		"s3:ListBucket",
-	  ]
-  
-	  resources = [
-		"arn:aws:s3:::&{transfer:HomeBucket}",
-	  ]
-	}
+  statement {
+    sid = "ListHomeDir"
 
-	statement {
-		sid = "AWSTransferRequirements"
-	
-		actions = [
-		  "s3:ListAllMyBuckets",
-		  "s3:GetBucketLocation",
-		]
-	
-		resources = [
-		  "*",
-		]
-	}
+    actions = [
+      "s3:ListBucket",
+    ]
 
-	statement {
-		sid = "HomeDirObjectAccess"
-	
-		actions = [
-		  "s3:PutObject",
-		  "s3:GetObject",
-		  "s3:DeleteObjectVersion",
-		  "s3:DeleteObject",
-		  "s3:GetObjectVersion",
-		]
-	
-		resources = [
-		  "arn:aws:s3:::&{transfer:HomeDirectory}*",
-		]
-	}
+    resources = [
+      "arn:aws:s3:::&{transfer:HomeBucket}",
+    ]
+  }
+
+  statement {
+    sid = "AWSTransferRequirements"
+
+    actions = [
+      "s3:ListAllMyBuckets",
+      "s3:GetBucketLocation",
+    ]
+
+    resources = [
+      "*",
+    ]
+  }
+
+  statement {
+    sid = "HomeDirObjectAccess"
+
+    actions = [
+      "s3:PutObject",
+      "s3:GetObject",
+      "s3:DeleteObjectVersion",
+      "s3:DeleteObject",
+      "s3:GetObjectVersion",
+    ]
+
+    resources = [
+      "arn:aws:s3:::&{transfer:HomeDirectory}*",
+    ]
+  }
 }
 
 resource "aws_transfer_user" "foo" {
-	server_id      = "${aws_transfer_server.foo.id}"
-	user_name      = "tftestuser2"
-	role           = "${aws_iam_role.foo.arn}"
-	policy         = "${data.aws_iam_policy_document.foo.json}"
-	home_directory = "/home/tftestuser2"
-	tags = {
-		NAME  = "tf-test-user"
-		TEST   = "test2"
-	}
-}
+  server_id      = "${aws_transfer_server.foo.id}"
+  user_name      = "tftestuser2"
+  role           = "${aws_iam_role.foo.arn}"
+  policy         = "${data.aws_iam_policy_document.foo.json}"
+  home_directory = "/home/tftestuser2"
 
-	`, rName, rName)
+  tags = {
+    NAME = "tf-test-user"
+    TEST = "test2"
+  }
+}
+`, rName, rName)
 }
