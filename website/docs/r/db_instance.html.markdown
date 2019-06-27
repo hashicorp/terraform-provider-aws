@@ -36,6 +36,8 @@ about [DB Instance Class Types](https://docs.aws.amazon.com/AmazonRDS/latest/Use
 
 ## Example Usage
 
+### Basic Usage
+
 ```hcl
 resource "aws_db_instance" "default" {
   allocated_storage    = 20
@@ -50,6 +52,19 @@ resource "aws_db_instance" "default" {
 }
 ```
 
+### Storage Autoscaling
+
+To enable Storage Autoscaling with instances that support the feature, define the `max_allocated_storage` argument higher than the `allocated_storage` argument. Terraform will automatically hide differences with the `allocated_storage` argument value if autoscaling occurs.
+
+```hcl
+resource "aws_db_instance" "example {
+  # ... other configuration ...
+
+  allocated_storage     = 50
+  max_allocated_storage = 100
+}
+```
+
 ## Argument Reference
 
 For more detailed documentation about each argument, refer to the [AWS official
@@ -57,8 +72,7 @@ documentation](http://docs.aws.amazon.com/AmazonRDS/latest/APIReference/API_Crea
 
 The following arguments are supported:
 
-* `allocated_storage` - (Required unless a `snapshot_identifier` or
-`replicate_source_db` is provided) The allocated storage in gibibytes.
+* `allocated_storage` - (Required unless a `snapshot_identifier` or `replicate_source_db` is provided) The allocated storage in gibibytes. If `max_allocated_storage` is configured, this argument represents the initial storage allocation and differences from the configuration will be ignored automatically when Storage Autoscaling occurs.
 * `allow_major_version_upgrade` - (Optional) Indicates that major version
 upgrades are allowed. Changing this parameter does not result in an outage and
 the change is asynchronously applied as soon as possible.
@@ -124,6 +138,7 @@ Syntax: "ddd:hh24:mi-ddd:hh24:mi". Eg: "Mon:00:00-Mon:03:00". See [RDS
 Maintenance Window
 docs](http://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/USER_UpgradeDBInstance.Maintenance.html#AdjustingTheMaintenanceWindow)
 for more information.
+* `max_allocated_storage` - (Optional) When configured, the upper limit to which Amazon RDS can automatically scale the storage of the DB instance. Configuring this will automatically ignore differences to `allocated_storage`. Must be greater than or equal to `allocated_storage` or `0` to disable Storage Autoscaling.
 * `monitoring_interval` - (Optional) The interval, in seconds, between points
 when Enhanced Monitoring metrics are collected for the DB instance. To disable
 collecting Enhanced Monitoring metrics, specify 0. The default is 0. Valid
