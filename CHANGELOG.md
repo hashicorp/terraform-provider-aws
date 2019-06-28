@@ -8,6 +8,7 @@ FEATURES:
 
 ENHANCEMENTS:
 
+* data-source/aws_acm_certificate: Add `key_types` argument (support searching for non-default key algorithm certificates such as RSA 4096 bit) [GH-8553]
 * data-source/aws_ssm_parameter: Add `version` attribute [GH-9127]
 * resource/aws_appmesh_mesh: Add `tags` argument [GH-8111]
 * resource/aws_appsync_resolver: Add `kind` argument and `pipeline_config` configuration block [GH-8502]
