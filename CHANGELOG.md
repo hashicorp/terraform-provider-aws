@@ -1,42 +1,42 @@
-## 2.17.0 (Unreleased)
+## 2.17.0 (June 28, 2019)
 
 FEATURES:
 
-* **New Data Source:** `aws_ebs_default_kms_key` [GH-8884]
-* **New Data Source:** `aws_ebs_encryption_by_default` [GH-8884]
-* **New Resource:** `aws_appsync_function` [GH-8502]
+* **New Data Source:** `aws_ebs_default_kms_key` ([#8884](https://github.com/terraform-providers/terraform-provider-aws/issues/8884))
+* **New Data Source:** `aws_ebs_encryption_by_default` ([#8884](https://github.com/terraform-providers/terraform-provider-aws/issues/8884))
+* **New Resource:** `aws_appsync_function` ([#8502](https://github.com/terraform-providers/terraform-provider-aws/issues/8502))
 
 ENHANCEMENTS:
 
-* data-source/aws_acm_certificate: Add `key_types` argument (support searching for non-default key algorithm certificates such as RSA 4096 bit) [GH-8553]
-* data-source/aws_ssm_parameter: Add `version` attribute [GH-9127]
-* resource/aws_appmesh_mesh: Add `tags` argument [GH-8111]
-* resource/aws_appsync_resolver: Add `kind` argument and `pipeline_config` configuration block [GH-8502]
-* resource/aws_db_instance: Add `max_allocated_storage` argument (support Storage Autoscaling) [GH-9087]
-* resource/aws_directory_service_directory: Tag on create (support tag limiting IAM policies) [GH-7937]
-* resource/aws_dms_endpoint: Support `db2` in `engine_name` validation [GH-9097]
-* resource/aws_kinesis_firehose_delivery_stream: Tag on create (support tag limiting IAM policies) [GH-7981]
-* resource/aws_lb_listener: Support `TCP_UDP` and `UDP` in `protocol` validation [GH-9111]
-* resource/aws_lb_target_group: Support `TCP_UDP` and `UDP` in `protocol` validation [GH-9111]
-* resource/aws_route53_healthcheck: Add validation for `request_interval` argument [GH-9158]
-* resource/aws_ssm_parameter: Add `version` attribute [GH-9127]
+* data-source/aws_acm_certificate: Add `key_types` argument (support searching for non-default key algorithm certificates such as RSA 4096 bit) ([#8553](https://github.com/terraform-providers/terraform-provider-aws/issues/8553))
+* data-source/aws_ssm_parameter: Add `version` attribute ([#9127](https://github.com/terraform-providers/terraform-provider-aws/issues/9127))
+* resource/aws_appmesh_mesh: Add `tags` argument ([#8111](https://github.com/terraform-providers/terraform-provider-aws/issues/8111))
+* resource/aws_appsync_resolver: Add `kind` argument and `pipeline_config` configuration block ([#8502](https://github.com/terraform-providers/terraform-provider-aws/issues/8502))
+* resource/aws_db_instance: Add `max_allocated_storage` argument (support Storage Autoscaling) ([#9087](https://github.com/terraform-providers/terraform-provider-aws/issues/9087))
+* resource/aws_directory_service_directory: Tag on create (support tag limiting IAM policies) ([#7937](https://github.com/terraform-providers/terraform-provider-aws/issues/7937))
+* resource/aws_dms_endpoint: Support `db2` in `engine_name` validation ([#9097](https://github.com/terraform-providers/terraform-provider-aws/issues/9097))
+* resource/aws_kinesis_firehose_delivery_stream: Tag on create (support tag limiting IAM policies) ([#7981](https://github.com/terraform-providers/terraform-provider-aws/issues/7981))
+* resource/aws_lb_listener: Support `TCP_UDP` and `UDP` in `protocol` validation ([#9111](https://github.com/terraform-providers/terraform-provider-aws/issues/9111))
+* resource/aws_lb_target_group: Support `TCP_UDP` and `UDP` in `protocol` validation ([#9111](https://github.com/terraform-providers/terraform-provider-aws/issues/9111))
+* resource/aws_route53_healthcheck: Add validation for `request_interval` argument ([#9158](https://github.com/terraform-providers/terraform-provider-aws/issues/9158))
+* resource/aws_ssm_parameter: Add `version` attribute ([#9127](https://github.com/terraform-providers/terraform-provider-aws/issues/9127))
 
 BUG FIXES:
-* resource/aws_api_gateway_account: Fix error handling during update [GH-9068]
-* resource/aws_api_gateway_base_path_mapping: Fix error handling during create [GH-9068]
-* resource/aws_api_gateway_domain_name: Remove unnecessary retry during delete [GH-9068]
-* resource/aws_api_gateway_gateway_response: Remove unnecessary retry during delete [GH-9068]
-* resource/aws_api_gateway_model: Remove unnecessary retry during delete [GH-9068]
-* resource/aws_api_gateway_usage_plan: Remove unnecessary retry during delete [GH-9068]
-* resource/aws_api_gateway_usage_plan_key: Remove unnecessary retry during delete [GH-9068]
-* resource/aws_db_snapshot: Prevent not found error when deleted outside Terraform [GH-9099]
-* resource/aws_ebs_snapshot_copy: Prevent error when resource is deleted outside Terraform [GH-9106]
-* resource/aws_ecr_repository: Final retries when reading and deleting ECR repositories [GH-9079]
-* resource/aws_ecr_repository_policy: Final retries when creating and updating ECR repository policies [GH-9079]
-* resource/aws_lb_target_group: Properly validate up to `120` seconds for `health_check` configuration block `timeout` argument [GH-9152]
-* resource/aws_spot_fleet_request: Add final retry when creating spot fleet request [GH-9078]
-* resource/aws_spot_instance_request: Add final retry when creating spot instance request [GH-9078]
-* resource/aws_ssm_maintenance_window_target: Prevent `InvalidParameter` error on resource creation when optional `name` or `description` were missing [GH-9165]
+* resource/aws_api_gateway_account: Fix error handling during update ([#9068](https://github.com/terraform-providers/terraform-provider-aws/issues/9068))
+* resource/aws_api_gateway_base_path_mapping: Fix error handling during create ([#9068](https://github.com/terraform-providers/terraform-provider-aws/issues/9068))
+* resource/aws_api_gateway_domain_name: Remove unnecessary retry during delete ([#9068](https://github.com/terraform-providers/terraform-provider-aws/issues/9068))
+* resource/aws_api_gateway_gateway_response: Remove unnecessary retry during delete ([#9068](https://github.com/terraform-providers/terraform-provider-aws/issues/9068))
+* resource/aws_api_gateway_model: Remove unnecessary retry during delete ([#9068](https://github.com/terraform-providers/terraform-provider-aws/issues/9068))
+* resource/aws_api_gateway_usage_plan: Remove unnecessary retry during delete ([#9068](https://github.com/terraform-providers/terraform-provider-aws/issues/9068))
+* resource/aws_api_gateway_usage_plan_key: Remove unnecessary retry during delete ([#9068](https://github.com/terraform-providers/terraform-provider-aws/issues/9068))
+* resource/aws_db_snapshot: Prevent not found error when deleted outside Terraform ([#9099](https://github.com/terraform-providers/terraform-provider-aws/issues/9099))
+* resource/aws_ebs_snapshot_copy: Prevent error when resource is deleted outside Terraform ([#9106](https://github.com/terraform-providers/terraform-provider-aws/issues/9106))
+* resource/aws_ecr_repository: Final retries when reading and deleting ECR repositories ([#9079](https://github.com/terraform-providers/terraform-provider-aws/issues/9079))
+* resource/aws_ecr_repository_policy: Final retries when creating and updating ECR repository policies ([#9079](https://github.com/terraform-providers/terraform-provider-aws/issues/9079))
+* resource/aws_lb_target_group: Properly validate up to `120` seconds for `health_check` configuration block `timeout` argument ([#9152](https://github.com/terraform-providers/terraform-provider-aws/issues/9152))
+* resource/aws_spot_fleet_request: Add final retry when creating spot fleet request ([#9078](https://github.com/terraform-providers/terraform-provider-aws/issues/9078))
+* resource/aws_spot_instance_request: Add final retry when creating spot instance request ([#9078](https://github.com/terraform-providers/terraform-provider-aws/issues/9078))
+* resource/aws_ssm_maintenance_window_target: Prevent `InvalidParameter` error on resource creation when optional `name` or `description` were missing ([#9165](https://github.com/terraform-providers/terraform-provider-aws/issues/9165))
 
 ## 2.16.0 (June 20, 2019)
 
