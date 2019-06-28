@@ -131,6 +131,60 @@ func testAccAwsAppmeshMesh_egressFilter(t *testing.T) {
 	})
 }
 
+func testAccAwsAppmeshMesh_tags(t *testing.T) {
+	var mesh appmesh.MeshData
+	resourceName := "aws_appmesh_mesh.foo"
+	rName := fmt.Sprintf("tf-test-%d", acctest.RandInt())
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAppmeshMeshDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAppmeshMeshConfigWithTags(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAppmeshMeshExists(
+						resourceName, &mesh),
+					resource.TestCheckResourceAttr(
+						resourceName, "tags.%", "2"),
+					resource.TestCheckResourceAttr(
+						resourceName, "tags.foo", "bar"),
+					resource.TestCheckResourceAttr(
+						resourceName, "tags.good", "bad"),
+				),
+			},
+			{
+				Config: testAccAppmeshMeshConfigWithUpdateTags(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAppmeshMeshExists(
+						resourceName, &mesh),
+					resource.TestCheckResourceAttr(
+						resourceName, "tags.%", "3"),
+					resource.TestCheckResourceAttr(
+						resourceName, "tags.good", "bad2"),
+					resource.TestCheckResourceAttr(
+						resourceName, "tags.fizz", "buzz"),
+				),
+			},
+			{
+				Config: testAccAppmeshMeshConfigWithRemoveTags(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAppmeshMeshExists(
+						resourceName, &mesh),
+					resource.TestCheckResourceAttr(
+						resourceName, "tags.%", "1"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func testAccCheckAppmeshMeshDestroy(s *terraform.State) error {
 	conn := testAccProvider.Meta().(*AWSClient).appmeshconn
 
@@ -199,4 +253,43 @@ resource "aws_appmesh_mesh" "foo" {
   }
 }
 `, name, egressFilterType)
+}
+
+func testAccAppmeshMeshConfigWithTags(name string) string {
+	return fmt.Sprintf(`
+resource "aws_appmesh_mesh" "foo" {
+  name = "%s"
+
+  tags = {
+	foo = "bar"
+	good = "bad"
+  }
+}
+`, name)
+}
+
+func testAccAppmeshMeshConfigWithUpdateTags(name string) string {
+	return fmt.Sprintf(`
+resource "aws_appmesh_mesh" "foo" {
+  name = "%s"
+
+  tags = {
+	foo = "bar"
+	good = "bad2"
+	fizz = "buzz"
+  }
+}
+`, name)
+}
+
+func testAccAppmeshMeshConfigWithRemoveTags(name string) string {
+	return fmt.Sprintf(`
+resource "aws_appmesh_mesh" "foo" {
+  name = "%s"
+
+  tags = {
+	foo = "bar"
+  }
+}
+`, name)
 }
