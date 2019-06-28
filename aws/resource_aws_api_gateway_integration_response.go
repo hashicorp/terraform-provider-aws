@@ -4,12 +4,15 @@ import (
 	"fmt"
 	"log"
 	"strings"
+	"sync"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/apigateway"
 	"github.com/hashicorp/terraform/helper/schema"
 )
+
+var resourceAwsApiGatewayIntegrationResponseMutex = &sync.Mutex{}
 
 func resourceAwsApiGatewayIntegrationResponse() *schema.Resource {
 	return &schema.Resource{
@@ -126,7 +129,13 @@ func resourceAwsApiGatewayIntegrationResponseCreate(d *schema.ResourceData, meta
 		input.SelectionPattern = aws.String(v.(string))
 	}
 
-	_, err := conn.PutIntegrationResponse(&input)
+	resourceAwsApiGatewayIntegrationResponseMutex.Lock()
+	defer resourceAwsApiGatewayIntegrationResponseMutex.Unlock()
+	
+	_, err := retryOnAwsCode(apigateway.ErrCodeConflictException, func() (interface{}, error) {
+		return conn.PutIntegrationResponse(&input)
+	})
+
 	if err != nil {
 		return fmt.Errorf("Error creating API Gateway Integration Response: %s", err)
 	}
