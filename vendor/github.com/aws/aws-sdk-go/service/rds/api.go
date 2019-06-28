@@ -14982,6 +14982,10 @@ type CreateDBInstanceInput struct {
 	//    * Can't be a reserved word for the chosen database engine.
 	MasterUsername *string `type:"string"`
 
+	// The upper limit to which Amazon RDS can automatically scale the storage of
+	// the DB instance.
+	MaxAllocatedStorage *int64 `type:"integer"`
+
 	// The interval, in seconds, between points when Enhanced Monitoring metrics
 	// are collected for the DB instance. To disable collecting Enhanced Monitoring
 	// metrics, specify 0. The default is 0.
@@ -15383,6 +15387,12 @@ func (s *CreateDBInstanceInput) SetMasterUserPassword(v string) *CreateDBInstanc
 // SetMasterUsername sets the MasterUsername field's value.
 func (s *CreateDBInstanceInput) SetMasterUsername(v string) *CreateDBInstanceInput {
 	s.MasterUsername = &v
+	return s
+}
+
+// SetMaxAllocatedStorage sets the MaxAllocatedStorage field's value.
+func (s *CreateDBInstanceInput) SetMaxAllocatedStorage(v int64) *CreateDBInstanceInput {
+	s.MaxAllocatedStorage = &v
 	return s
 }
 
@@ -18339,6 +18349,10 @@ type DBInstance struct {
 	// Contains the master username for the DB instance.
 	MasterUsername *string `type:"string"`
 
+	// The upper limit to which Amazon RDS can automatically scale the storage of
+	// the DB instance.
+	MaxAllocatedStorage *int64 `type:"integer"`
+
 	// The interval, in seconds, between points when Enhanced Monitoring metrics
 	// are collected for the DB instance.
 	MonitoringInterval *int64 `type:"integer"`
@@ -18650,6 +18664,12 @@ func (s *DBInstance) SetListenerEndpoint(v *Endpoint) *DBInstance {
 // SetMasterUsername sets the MasterUsername field's value.
 func (s *DBInstance) SetMasterUsername(v string) *DBInstance {
 	s.MasterUsername = &v
+	return s
+}
+
+// SetMaxAllocatedStorage sets the MaxAllocatedStorage field's value.
+func (s *DBInstance) SetMaxAllocatedStorage(v int64) *DBInstance {
+	s.MaxAllocatedStorage = &v
 	return s
 }
 
@@ -27358,6 +27378,10 @@ type ModifyDBInstanceInput struct {
 	// This includes restoring privileges that might have been accidentally revoked.
 	MasterUserPassword *string `type:"string"`
 
+	// The upper limit to which Amazon RDS can automatically scale the storage of
+	// the DB instance.
+	MaxAllocatedStorage *int64 `type:"integer"`
+
 	// The interval, in seconds, between points when Enhanced Monitoring metrics
 	// are collected for the DB instance. To disable collecting Enhanced Monitoring
 	// metrics, specify 0. The default is 0.
@@ -27701,6 +27725,12 @@ func (s *ModifyDBInstanceInput) SetLicenseModel(v string) *ModifyDBInstanceInput
 // SetMasterUserPassword sets the MasterUserPassword field's value.
 func (s *ModifyDBInstanceInput) SetMasterUserPassword(v string) *ModifyDBInstanceInput {
 	s.MasterUserPassword = &v
+	return s
+}
+
+// SetMaxAllocatedStorage sets the MaxAllocatedStorage field's value.
+func (s *ModifyDBInstanceInput) SetMaxAllocatedStorage(v int64) *ModifyDBInstanceInput {
+	s.MaxAllocatedStorage = &v
 	return s
 }
 
@@ -29271,6 +29301,10 @@ type OrderableDBInstanceOption struct {
 	// True if a DB instance supports Performance Insights, otherwise false.
 	SupportsPerformanceInsights *bool `type:"boolean"`
 
+	// Whether or not Amazon RDS can automatically scale storage for DB instances
+	// that use the specified instance class.
+	SupportsStorageAutoscaling *bool `type:"boolean"`
+
 	// Indicates whether a DB instance supports encrypted storage.
 	SupportsStorageEncryption *bool `type:"boolean"`
 
@@ -29405,6 +29439,12 @@ func (s *OrderableDBInstanceOption) SetSupportsIops(v bool) *OrderableDBInstance
 // SetSupportsPerformanceInsights sets the SupportsPerformanceInsights field's value.
 func (s *OrderableDBInstanceOption) SetSupportsPerformanceInsights(v bool) *OrderableDBInstanceOption {
 	s.SupportsPerformanceInsights = &v
+	return s
+}
+
+// SetSupportsStorageAutoscaling sets the SupportsStorageAutoscaling field's value.
+func (s *OrderableDBInstanceOption) SetSupportsStorageAutoscaling(v bool) *OrderableDBInstanceOption {
+	s.SupportsStorageAutoscaling = &v
 	return s
 }
 
@@ -34861,6 +34901,10 @@ type ValidStorageOptions struct {
 
 	// The valid storage types for your DB instance. For example, gp2, io1.
 	StorageType *string `type:"string"`
+
+	// Whether or not Amazon RDS can automatically scale storage for DB instances
+	// that use the new instance class.
+	SupportsStorageAutoscaling *bool `type:"boolean"`
 }
 
 // String returns the string representation
@@ -34894,6 +34938,12 @@ func (s *ValidStorageOptions) SetStorageSize(v []*Range) *ValidStorageOptions {
 // SetStorageType sets the StorageType field's value.
 func (s *ValidStorageOptions) SetStorageType(v string) *ValidStorageOptions {
 	s.StorageType = &v
+	return s
+}
+
+// SetSupportsStorageAutoscaling sets the SupportsStorageAutoscaling field's value.
+func (s *ValidStorageOptions) SetSupportsStorageAutoscaling(v bool) *ValidStorageOptions {
+	s.SupportsStorageAutoscaling = &v
 	return s
 }
 

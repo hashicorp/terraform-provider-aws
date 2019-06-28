@@ -67,12 +67,12 @@ func resourceAwsSsmResourceDataSync() *schema.Resource {
 
 func resourceAwsSsmResourceDataSyncCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).ssmconn
+	input := &ssm.CreateResourceDataSyncInput{
+		S3Destination: expandSsmResourceDataSyncS3Destination(d),
+		SyncName:      aws.String(d.Get("name").(string)),
+	}
 
 	err := resource.Retry(1*time.Minute, func() *resource.RetryError {
-		input := &ssm.CreateResourceDataSyncInput{
-			S3Destination: expandSsmResourceDataSyncS3Destination(d),
-			SyncName:      aws.String(d.Get("name").(string)),
-		}
 		_, err := conn.CreateResourceDataSync(input)
 		if err != nil {
 			if isAWSErr(err, ssm.ErrCodeResourceDataSyncInvalidConfigurationException, "S3 write failed for bucket") {
@@ -82,6 +82,9 @@ func resourceAwsSsmResourceDataSyncCreate(d *schema.ResourceData, meta interface
 		}
 		return nil
 	})
+	if isResourceTimeoutError(err) {
+		_, err = conn.CreateResourceDataSync(input)
+	}
 
 	if err != nil {
 		return err

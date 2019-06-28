@@ -407,6 +407,7 @@ func TestAccAWSProvider_Endpoints(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:          func() { testAccPreCheck(t) },
 		ProviderFactories: testAccProviderFactories(&providers),
+		CheckDestroy:      nil,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSProviderConfigEndpoints(endpoints.String()),
@@ -435,6 +436,7 @@ func TestAccAWSProvider_Endpoints_Deprecated(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:          func() { testAccPreCheck(t) },
 		ProviderFactories: testAccProviderFactories(&providers),
+		CheckDestroy:      nil,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSProviderConfigEndpoints(endpointsDeprecated.String()),

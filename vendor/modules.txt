@@ -21,7 +21,7 @@ github.com/apparentlymart/go-cidr/cidr
 github.com/apparentlymart/go-textseg/textseg
 # github.com/armon/go-radix v1.0.0
 github.com/armon/go-radix
-# github.com/aws/aws-sdk-go v1.19.49
+# github.com/aws/aws-sdk-go v1.20.8
 github.com/aws/aws-sdk-go/aws
 github.com/aws/aws-sdk-go/aws/arn
 github.com/aws/aws-sdk-go/aws/awserr
@@ -35,6 +35,7 @@ github.com/aws/aws-sdk-go/service/acmpca
 github.com/aws/aws-sdk-go/service/apigateway
 github.com/aws/aws-sdk-go/service/apigatewayv2
 github.com/aws/aws-sdk-go/service/applicationautoscaling
+github.com/aws/aws-sdk-go/service/applicationinsights
 github.com/aws/aws-sdk-go/service/appmesh
 github.com/aws/aws-sdk-go/service/appsync
 github.com/aws/aws-sdk-go/service/athena
@@ -132,6 +133,7 @@ github.com/aws/aws-sdk-go/service/securityhub
 github.com/aws/aws-sdk-go/service/serverlessapplicationrepository
 github.com/aws/aws-sdk-go/service/servicecatalog
 github.com/aws/aws-sdk-go/service/servicediscovery
+github.com/aws/aws-sdk-go/service/servicequotas
 github.com/aws/aws-sdk-go/service/ses
 github.com/aws/aws-sdk-go/service/sfn
 github.com/aws/aws-sdk-go/service/shield
@@ -181,7 +183,7 @@ github.com/aws/aws-sdk-go/private/protocol/query/queryutil
 github.com/aws/aws-sdk-go/internal/sdkuri
 # github.com/beevik/etree v1.1.0
 github.com/beevik/etree
-# github.com/bflad/tfproviderlint v0.3.0
+# github.com/bflad/tfproviderlint v0.4.0
 github.com/bflad/tfproviderlint/cmd/tfproviderlint
 github.com/bflad/tfproviderlint/passes/AT001
 github.com/bflad/tfproviderlint/passes/AT002
@@ -197,14 +199,27 @@ github.com/bflad/tfproviderlint/passes/S003
 github.com/bflad/tfproviderlint/passes/S004
 github.com/bflad/tfproviderlint/passes/S005
 github.com/bflad/tfproviderlint/passes/S006
+github.com/bflad/tfproviderlint/passes/S007
+github.com/bflad/tfproviderlint/passes/S008
+github.com/bflad/tfproviderlint/passes/S009
+github.com/bflad/tfproviderlint/passes/S010
+github.com/bflad/tfproviderlint/passes/S011
+github.com/bflad/tfproviderlint/passes/S012
+github.com/bflad/tfproviderlint/passes/S013
+github.com/bflad/tfproviderlint/passes/S014
+github.com/bflad/tfproviderlint/passes/S015
+github.com/bflad/tfproviderlint/passes/S016
+github.com/bflad/tfproviderlint/passes/S017
+github.com/bflad/tfproviderlint/passes/S018
+github.com/bflad/tfproviderlint/passes/S019
 github.com/bflad/tfproviderlint/passes/acctestcase
 github.com/bflad/tfproviderlint/passes/commentignore
 github.com/bflad/tfproviderlint/passes/acctestfunc
 github.com/bflad/tfproviderlint/passes/resourcedataset
 github.com/bflad/tfproviderlint/passes/schemaresource
 github.com/bflad/tfproviderlint/passes/schemaschema
-github.com/bflad/tfproviderlint/helper/terraformtype
 github.com/bflad/tfproviderlint/passes/schemamap
+github.com/bflad/tfproviderlint/helper/terraformtype
 # github.com/bgentry/go-netrc v0.0.0-20140422174119-9fd32a8b3d3d
 github.com/bgentry/go-netrc/netrc
 # github.com/bgentry/speakeasy v0.1.0
@@ -374,7 +389,7 @@ github.com/hashicorp/go-getter/helper/url
 github.com/hashicorp/go-hclog
 # github.com/hashicorp/go-multierror v1.0.0
 github.com/hashicorp/go-multierror
-# github.com/hashicorp/go-plugin v1.0.1-0.20190430211030-5692942914bb
+# github.com/hashicorp/go-plugin v1.0.1-0.20190610192547-a1bc61569a26
 github.com/hashicorp/go-plugin
 github.com/hashicorp/go-plugin/internal/plugin
 # github.com/hashicorp/go-safetemp v1.0.0
@@ -412,7 +427,7 @@ github.com/hashicorp/hil/parser
 github.com/hashicorp/hil/scanner
 # github.com/hashicorp/logutils v1.0.0
 github.com/hashicorp/logutils
-# github.com/hashicorp/terraform v0.12.1
+# github.com/hashicorp/terraform v0.12.2
 github.com/hashicorp/terraform/plugin
 github.com/hashicorp/terraform/flatmap
 github.com/hashicorp/terraform/helper/customdiff
@@ -546,6 +561,8 @@ github.com/posener/complete/match
 github.com/pquerna/otp/totp
 github.com/pquerna/otp
 github.com/pquerna/otp/hotp
+# github.com/satori/go.uuid v1.2.0
+github.com/satori/go.uuid
 # github.com/sirupsen/logrus v1.1.1
 github.com/sirupsen/logrus
 # github.com/sourcegraph/go-diff v0.5.1
@@ -586,6 +603,8 @@ github.com/zclconf/go-cty/cty/gocty
 github.com/zclconf/go-cty/cty/set
 github.com/zclconf/go-cty/cty/function
 github.com/zclconf/go-cty/cty/function/stdlib
+# github.com/zclconf/go-cty-yaml v0.1.0
+github.com/zclconf/go-cty-yaml
 # go.opencensus.io v0.18.0
 go.opencensus.io/trace
 go.opencensus.io/plugin/ochttp

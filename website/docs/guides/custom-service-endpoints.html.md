@@ -51,6 +51,7 @@ The Terraform AWS Provider allows the following endpoints to be customized:
 - `acmpca`
 - `apigateway`
 - `applicationautoscaling`
+- `applicationinsights`
 - `appmesh`
 - `appsync`
 - `athena`
@@ -149,6 +150,7 @@ The Terraform AWS Provider allows the following endpoints to be customized:
 - `serverlessrepo`
 - `servicecatalog`
 - `servicediscovery`
+- `servicequotas`
 - `ses`
 - `shield`
 - `sns`

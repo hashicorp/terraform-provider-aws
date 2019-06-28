@@ -84,3 +84,18 @@ func GetSchemaAttributes(schemamap *ast.CompositeLit) []*ast.CompositeLit {
 	}
 	return result
 }
+
+// GetSchemaAttributeNames returns all attribute names held in a map[string]*schema.Schema
+func GetSchemaAttributeNames(schemamap *ast.CompositeLit) []ast.Expr {
+	var result []ast.Expr
+
+	for _, elt := range schemamap.Elts {
+		switch v := elt.(type) {
+		default:
+			continue
+		case *ast.KeyValueExpr:
+			result = append(result, v.Key)
+		}
+	}
+	return result
+}

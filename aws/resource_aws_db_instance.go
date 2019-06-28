@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 	"regexp"
+	"strconv"
 	"strings"
 	"time"
 
@@ -97,6 +98,29 @@ func resourceAwsDbInstance() *schema.Resource {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
+				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+					mas := d.Get("max_allocated_storage").(int)
+
+					newInt, err := strconv.Atoi(new)
+
+					if err != nil {
+						return false
+					}
+
+					oldInt, err := strconv.Atoi(old)
+
+					if err != nil {
+						return false
+					}
+
+					// Allocated is higher than the configuration
+					// and autoscaling is enabled
+					if oldInt > newInt && mas > newInt {
+						return true
+					}
+
+					return false
+				},
 			},
 
 			"storage_type": {
@@ -171,6 +195,17 @@ func resourceAwsDbInstance() *schema.Resource {
 				ValidateFunc: validateOnceAWeekWindowFormat,
 			},
 
+			"max_allocated_storage": {
+				Type:     schema.TypeInt,
+				Optional: true,
+				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+					if old == "0" && new == fmt.Sprintf("%d", d.Get("allocated_storage").(int)) {
+						return true
+					}
+					return false
+				},
+			},
+
 			"multi_az": {
 				Type:     schema.TypeBool,
 				Optional: true,
@@ -240,7 +275,6 @@ func resourceAwsDbInstance() *schema.Resource {
 						},
 						"bucket_prefix": {
 							Type:     schema.TypeString,
-							Required: false,
 							Optional: true,
 							ForceNew: true,
 						},
@@ -329,7 +363,6 @@ func resourceAwsDbInstance() *schema.Resource {
 
 			"snapshot_identifier": {
 				Type:     schema.TypeString,
-				Computed: false,
 				Optional: true,
 				ForceNew: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
@@ -343,7 +376,6 @@ func resourceAwsDbInstance() *schema.Resource {
 
 			"allow_major_version_upgrade": {
 				Type:     schema.TypeBool,
-				Computed: false,
 				Optional: true,
 			},
 
@@ -544,6 +576,11 @@ func resourceAwsDbInstanceCreate(d *schema.ResourceData, meta interface{}) error
 
 		if attr, ok := d.GetOk("maintenance_window"); ok {
 			modifyDbInstanceInput.PreferredMaintenanceWindow = aws.String(attr.(string))
+			requiresModifyDbInstance = true
+		}
+
+		if attr, ok := d.GetOk("max_allocated_storage"); ok {
+			modifyDbInstanceInput.MaxAllocatedStorage = aws.Int64(int64(attr.(int)))
 			requiresModifyDbInstance = true
 		}
 
@@ -879,6 +916,11 @@ func resourceAwsDbInstanceCreate(d *schema.ResourceData, meta interface{}) error
 			requiresModifyDbInstance = true
 		}
 
+		if attr, ok := d.GetOk("max_allocated_storage"); ok {
+			modifyDbInstanceInput.MaxAllocatedStorage = aws.Int64(int64(attr.(int)))
+			requiresModifyDbInstance = true
+		}
+
 		if attr, ok := d.GetOk("monitoring_interval"); ok {
 			modifyDbInstanceInput.MonitoringInterval = aws.Int64(int64(attr.(int)))
 			requiresModifyDbInstance = true
@@ -1030,6 +1072,11 @@ func resourceAwsDbInstanceCreate(d *schema.ResourceData, meta interface{}) error
 		if attr, ok := d.GetOk("license_model"); ok {
 			opts.LicenseModel = aws.String(attr.(string))
 		}
+
+		if attr, ok := d.GetOk("max_allocated_storage"); ok {
+			opts.MaxAllocatedStorage = aws.Int64(int64(attr.(int)))
+		}
+
 		if attr, ok := d.GetOk("parameter_group_name"); ok {
 			opts.DBParameterGroupName = aws.String(attr.(string))
 		}
@@ -1217,6 +1264,7 @@ func resourceAwsDbInstanceRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("backup_window", v.PreferredBackupWindow)
 	d.Set("license_model", v.LicenseModel)
 	d.Set("maintenance_window", v.PreferredMaintenanceWindow)
+	d.Set("max_allocated_storage", v.MaxAllocatedStorage)
 	d.Set("publicly_accessible", v.PubliclyAccessible)
 	d.Set("multi_az", v.MultiAZ)
 	d.Set("kms_key_id", v.KmsKeyId)
@@ -1452,6 +1500,20 @@ func resourceAwsDbInstanceUpdate(d *schema.ResourceData, meta interface{}) error
 	if d.HasChange("maintenance_window") {
 		d.SetPartial("maintenance_window")
 		req.PreferredMaintenanceWindow = aws.String(d.Get("maintenance_window").(string))
+		requestUpdate = true
+	}
+	if d.HasChange("max_allocated_storage") {
+		d.SetPartial("max_allocated_storage")
+		mas := d.Get("max_allocated_storage").(int)
+
+		// The API expects the max allocated storage value to be set to the allocated storage
+		// value when disabling autoscaling. This check ensures that value is set correctly
+		// if the update to the Terraform configuration was removing the argument completely.
+		if mas == 0 {
+			mas = d.Get("allocated_storage").(int)
+		}
+
+		req.MaxAllocatedStorage = aws.Int64(int64(mas))
 		requestUpdate = true
 	}
 	if d.HasChange("password") {

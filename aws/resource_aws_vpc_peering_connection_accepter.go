@@ -20,7 +20,6 @@ func resourceAwsVpcPeeringConnectionAccepter() *schema.Resource {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
-				Computed: false,
 			},
 			"auto_accept": {
 				Type:     schema.TypeBool,

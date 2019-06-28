@@ -27,6 +27,7 @@ func TestAccAWSSsmParameterDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "type", "String"),
 					resource.TestCheckResourceAttr(resourceName, "value", "TestValue"),
 					resource.TestCheckResourceAttr(resourceName, "with_decryption", "false"),
+					resource.TestCheckResourceAttrSet(resourceName, "version"),
 				),
 			},
 			{

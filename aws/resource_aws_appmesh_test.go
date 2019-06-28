@@ -9,6 +9,7 @@ func TestAccAWSAppmesh(t *testing.T) {
 		"Mesh": {
 			"basic":        testAccAwsAppmeshMesh_basic,
 			"egressFilter": testAccAwsAppmeshMesh_egressFilter,
+			"tags":         testAccAwsAppmeshMesh_tags,
 		},
 		"Route": {
 			"httpRoute": testAccAwsAppmeshRoute_httpRoute,

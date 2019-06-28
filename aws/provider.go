@@ -2,6 +2,7 @@ package aws
 
 import (
 	"log"
+	"os"
 
 	"github.com/hashicorp/terraform/helper/mutexkv"
 	"github.com/hashicorp/terraform/helper/schema"
@@ -173,6 +174,8 @@ func Provider() terraform.ResourceProvider {
 			"aws_db_snapshot":                               dataSourceAwsDbSnapshot(),
 			"aws_dx_gateway":                                dataSourceAwsDxGateway(),
 			"aws_dynamodb_table":                            dataSourceAwsDynamoDbTable(),
+			"aws_ebs_default_kms_key":                       dataSourceAwsEbsDefaultKmsKey(),
+			"aws_ebs_encryption_by_default":                 dataSourceAwsEbsEncryptionByDefault(),
 			"aws_ebs_snapshot":                              dataSourceAwsEbsSnapshot(),
 			"aws_ebs_snapshot_ids":                          dataSourceAwsEbsSnapshotIds(),
 			"aws_ebs_volume":                                dataSourceAwsEbsVolume(),
@@ -187,6 +190,7 @@ func Provider() terraform.ResourceProvider {
 			"aws_ecs_container_definition":                  dataSourceAwsEcsContainerDefinition(),
 			"aws_ecs_service":                               dataSourceAwsEcsService(),
 			"aws_ecs_task_definition":                       dataSourceAwsEcsTaskDefinition(),
+			"aws_customer_gateway":                          dataSourceAwsCustomerGateway(),
 			"aws_efs_file_system":                           dataSourceAwsEfsFileSystem(),
 			"aws_efs_mount_target":                          dataSourceAwsEfsMountTarget(),
 			"aws_eip":                                       dataSourceAwsEip(),
@@ -319,6 +323,7 @@ func Provider() terraform.ResourceProvider {
 			"aws_appmesh_virtual_service":                             resourceAwsAppmeshVirtualService(),
 			"aws_appsync_api_key":                                     resourceAwsAppsyncApiKey(),
 			"aws_appsync_datasource":                                  resourceAwsAppsyncDatasource(),
+			"aws_appsync_function":                                    resourceAwsAppsyncFunction(),
 			"aws_appsync_graphql_api":                                 resourceAwsAppsyncGraphqlApi(),
 			"aws_appsync_resolver":                                    resourceAwsAppsyncResolver(),
 			"aws_athena_database":                                     resourceAwsAthenaDatabase(),
@@ -427,6 +432,8 @@ func Provider() terraform.ResourceProvider {
 			"aws_dynamodb_table":                                      resourceAwsDynamoDbTable(),
 			"aws_dynamodb_table_item":                                 resourceAwsDynamoDbTableItem(),
 			"aws_dynamodb_global_table":                               resourceAwsDynamoDbGlobalTable(),
+			"aws_ebs_default_kms_key":                                 resourceAwsEbsDefaultKmsKey(),
+			"aws_ebs_encryption_by_default":                           resourceAwsEbsEncryptionByDefault(),
 			"aws_ebs_snapshot":                                        resourceAwsEbsSnapshot(),
 			"aws_ebs_snapshot_copy":                                   resourceAwsEbsSnapshotCopy(),
 			"aws_ebs_volume":                                          resourceAwsEbsVolume(),
@@ -479,6 +486,7 @@ func Provider() terraform.ResourceProvider {
 			"aws_glacier_vault":                                       resourceAwsGlacierVault(),
 			"aws_glacier_vault_lock":                                  resourceAwsGlacierVaultLock(),
 			"aws_globalaccelerator_accelerator":                       resourceAwsGlobalAcceleratorAccelerator(),
+			"aws_globalaccelerator_endpoint_group":                    resourceAwsGlobalAcceleratorEndpointGroup(),
 			"aws_globalaccelerator_listener":                          resourceAwsGlobalAcceleratorListener(),
 			"aws_glue_catalog_database":                               resourceAwsGlueCatalogDatabase(),
 			"aws_glue_catalog_table":                                  resourceAwsGlueCatalogTable(),
@@ -644,6 +652,7 @@ func Provider() terraform.ResourceProvider {
 			"aws_ses_domain_dkim":                                     resourceAwsSesDomainDkim(),
 			"aws_ses_domain_mail_from":                                resourceAwsSesDomainMailFrom(),
 			"aws_ses_email_identity":                                  resourceAwsSesEmailIdentity(),
+			"aws_ses_identity_policy":                                 resourceAwsSesIdentityPolicy(),
 			"aws_ses_receipt_filter":                                  resourceAwsSesReceiptFilter(),
 			"aws_ses_receipt_rule":                                    resourceAwsSesReceiptRule(),
 			"aws_ses_receipt_rule_set":                                resourceAwsSesReceiptRuleSet(),
@@ -864,6 +873,7 @@ func init() {
 		"acmpca",
 		"apigateway",
 		"applicationautoscaling",
+		"applicationinsights",
 		"appmesh",
 		"appsync",
 		"athena",
@@ -962,6 +972,7 @@ func init() {
 		"serverlessrepo",
 		"servicecatalog",
 		"servicediscovery",
+		"servicequotas",
 		"ses",
 		"shield",
 		"sns",
@@ -1018,8 +1029,17 @@ func providerConfigure(d *schema.ResourceData) (interface{}, error) {
 
 		log.Printf("[INFO] assume_role configuration set: (ARN: %q, SessionID: %q, ExternalID: %q, Policy: %q)",
 			config.AssumeRoleARN, config.AssumeRoleSessionName, config.AssumeRoleExternalID, config.AssumeRolePolicy)
+	} else if os.Getenv("TF_AWS_ASSUME_ROLE_ARN") != "" {
+		config.AssumeRoleARN = os.Getenv("TF_AWS_ASSUME_ROLE_ARN")
+		config.AssumeRoleSessionName = os.Getenv("TF_AWS_ASSUME_ROLE_SESSION_NAME")
+		config.AssumeRoleExternalID = os.Getenv("TF_AWS_ASSUME_ROLE_EXTERNAL_ID")
+		// Setting policy with environment variable not supported since it would
+		// have multiple lines
+		config.AssumeRolePolicy = ""
+		log.Printf("[INFO] assume_role configuration set from environment variables: (ARN: %q, SessionID: %q, ExternalID: %q, Policy: %q)",
+			config.AssumeRoleARN, config.AssumeRoleSessionName, config.AssumeRoleExternalID, config.AssumeRolePolicy)
 	} else {
-		log.Printf("[INFO] No assume_role block read from configuration")
+		log.Printf("[INFO] No assume_role block read from configuration and no related environment variables set")
 	}
 
 	endpointsSet := d.Get("endpoints").(*schema.Set)
@@ -1060,21 +1080,18 @@ func assumeRoleSchema() *schema.Schema {
 					Type:        schema.TypeString,
 					Optional:    true,
 					Description: descriptions["assume_role_role_arn"],
-					DefaultFunc: schema.EnvDefaultFunc("AWS_ROLE_ARN", ""),
 				},
 
 				"session_name": {
 					Type:        schema.TypeString,
 					Optional:    true,
 					Description: descriptions["assume_role_session_name"],
-					DefaultFunc: schema.EnvDefaultFunc("AWS_SESSION_NAME", ""),
 				},
 
 				"external_id": {
 					Type:        schema.TypeString,
 					Optional:    true,
 					Description: descriptions["assume_role_external_id"],
-					DefaultFunc: schema.EnvDefaultFunc("AWS_EXTERNAL_ID", ""),
 				},
 
 				"policy": {
