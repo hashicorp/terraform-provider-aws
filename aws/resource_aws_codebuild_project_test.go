@@ -912,6 +912,11 @@ func TestAccAWSCodeBuildProject_Environment_RegistryCredential(t *testing.T) {
 					testAccCheckAWSCodeBuildProjectExists(resourceName, &project),
 				),
 			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
 		},
 	})
 }
@@ -1421,41 +1426,41 @@ resource "aws_codebuild_project" "test" {
 
 func testAccAWSCodeBuildProjectConfig_Environment_RegistryCredential(rName string) string {
 	return testAccAWSCodeBuildProjectConfig_Base_ServiceRole(rName) + fmt.Sprintf(`
-resource "aws_codebuild_project" "test" {
-  name         = %[1]q
-  service_role = "${aws_iam_role.test.arn}"
-
-  artifacts {
-    type = "NO_ARTIFACTS"
-  }
-
-  environment {
-    compute_type                = "BUILD_GENERAL1_SMALL"
-    image                       = "2"
-		type                        = "LINUX_CONTAINER"
-		image_pull_credentials_type = "SERVICE_ROLE"
-
-    registry_credential {
-      credential          = "${aws_secretsmanager_secret_version.test.arn}"
-      credential_provider = "SECRETS_MANAGER"
+  resource "aws_codebuild_project" "test" {
+    name         = %[1]q
+    service_role = "${aws_iam_role.test.arn}"
+  
+    artifacts {
+      type = "NO_ARTIFACTS"
+    }
+  
+    environment {
+      compute_type                = "BUILD_GENERAL1_SMALL"
+      image                       = "2"
+      type                        = "LINUX_CONTAINER"
+      image_pull_credentials_type = "SERVICE_ROLE"
+  
+      registry_credential {
+        credential          = "${aws_secretsmanager_secret_version.test.arn}"
+        credential_provider = "SECRETS_MANAGER"
+      }
+    }
+  
+    source {
+      type     = "GITHUB"
+      location = "https://github.com/hashicorp/packer.git"
     }
   }
-
-  source {
-    type     = "GITHUB"
-    location = "https://github.com/hashicorp/packer.git"
+  
+  resource "aws_secretsmanager_secret" "test" {
+    name = "test"
+    recovery_window_in_days = 0
   }
-}
-
-resource "aws_secretsmanager_secret" "test" {
-  name = "test"
-  recovery_window_in_days = 0
-}
-
-resource "aws_secretsmanager_secret_version" "test" {
-  secret_id     = "${aws_secretsmanager_secret.test.id}"
-  secret_string = "${jsonencode(map("username", "user", "password", "pass"))}"
-}
+  
+  resource "aws_secretsmanager_secret_version" "test" {
+    secret_id     = "${aws_secretsmanager_secret.test.id}"
+    secret_string = "${jsonencode(map("username", "user", "password", "pass"))}"
+  }
 `, rName)
 }
 

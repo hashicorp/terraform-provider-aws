@@ -198,7 +198,7 @@ func resourceAwsCodeBuildProject() *schema.Resource {
 							ValidateFunc: validation.StringMatch(regexp.MustCompile(`\.(pem|zip)$`), "must end in .pem or .zip"),
 						},
 						"registry_credential": {
-							Type:     schema.TypeSet,
+							Type:     schema.TypeList,
 							Optional: true,
 							MaxItems: 1,
 							Elem: &schema.Resource{
@@ -679,17 +679,17 @@ func expandProjectEnvironment(d *schema.ResourceData) *codebuild.ProjectEnvironm
 		projectEnv.ImagePullCredentialsType = aws.String(v.(string))
 	}
 
-	if v := envConfig["registry_credential"]; v != nil {
-		config := v.(*schema.Set).List()[0].(map[string]interface{})
+	if v, ok := envConfig["registry_credential"]; ok && len(v.([]interface{})) > 0 {
+		config := v.([]interface{})[0].(map[string]interface{})
 
 		projectRegistryCredential := &codebuild.RegistryCredential{}
 
-		if v := config["credential"].(string); v != "" {
-			projectRegistryCredential.Credential = &v
+		if v, ok := config["credential"]; ok && v.(string) != "" {
+			projectRegistryCredential.Credential = aws.String(v.(string))
 		}
 
-		if v := config["credential_provider"].(string); v != "" {
-			projectRegistryCredential.CredentialProvider = &v
+		if v, ok := config["credential_provider"]; ok && v.(string) != "" {
+			projectRegistryCredential.CredentialProvider = aws.String(v.(string))
 		}
 
 		projectEnv.RegistryCredential = projectRegistryCredential
