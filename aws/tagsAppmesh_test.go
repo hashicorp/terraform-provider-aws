@@ -26,7 +26,7 @@ func TestDiffAppmeshTags(t *testing.T) {
 			Create: map[string]string{
 				"bar": "baz",
 			},
-			Remove: map[string]string{},
+			Remove: []string{},
 		},
 
 		// Modify
@@ -40,8 +40,8 @@ func TestDiffAppmeshTags(t *testing.T) {
 			Create: map[string]string{
 				"foo": "baz",
 			},
-			Remove: map[string]string{
-				"foo": "bar",
+			Remove: []string{
+				"foo",
 			},
 		},
 
@@ -58,8 +58,8 @@ func TestDiffAppmeshTags(t *testing.T) {
 			Create: map[string]string{
 				"foo": "baz",
 			},
-			Remove: map[string]string{
-				"foo": "bar",
+			Remove: []string{
+				"foo",
 			},
 		},
 
@@ -73,8 +73,8 @@ func TestDiffAppmeshTags(t *testing.T) {
 				"foo": "bar",
 			},
 			Create: map[string]string{},
-			Remove: map[string]string{
-				"bar": "baz",
+			Remove: []string{
+				"bar",
 			},
 		},
 	}
