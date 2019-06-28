@@ -541,12 +541,10 @@ func resourceAwsLaunchConfigurationRead(d *schema.ResourceData, meta interface{}
 		return fmt.Errorf("error setting security_groups: %s", err)
 	}
 	if v := aws.StringValue(lc.UserData); v != "" {
-		_, b64 := d.GetOk("user_data_base64")
-		if b64 {
-			d.Set("user_data_base64", v)
-		} else {
-			d.Set("user_data", userDataHashSum(v))
-		}
+		// Always use `user_data_base64`. Otherwise we will always
+		// register drift as we will be comparing a hash (.tfstate)
+		// to a hash of the past (.tf.json).
+		d.Set("user_data_base64", v)
 	}
 
 	d.Set("vpc_classic_link_id", lc.ClassicLinkVPCId)
