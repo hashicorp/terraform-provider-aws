@@ -177,17 +177,16 @@ func TestAccAWSAcmCertificateDataSource_noMatchReturnsError(t *testing.T) {
 	})
 }
 
-func TestAccAWSAcmCertificateDataSource_Rsa4096(t *testing.T) {
+func TestAccAWSAcmCertificateDataSource_KeyTypes(t *testing.T) {
 	resourceName := "aws_acm_certificate.test"
 	dataSourceName := "data.aws_acm_certificate.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProvidersWithTLS,
-		CheckDestroy: testAccCheckAcmCertificateDestroy,
+		PreCheck:  func() { testAccPreCheck(t) },
+		Providers: testAccProvidersWithTLS,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAwsAcmCertificateDataSourceConfigRsa4096(),
+				Config: testAccAwsAcmCertificateDataSourceConfigKeyTypes(),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(resourceName, "arn", dataSourceName, "arn"),
 				),
@@ -251,7 +250,7 @@ data "aws_acm_certificate" "test" {
 `, domain, certType, mostRecent)
 }
 
-func testAccAwsAcmCertificateDataSourceConfigRsa4096() string {
+func testAccAwsAcmCertificateDataSourceConfigKeyTypes() string {
 	return fmt.Sprintf(`
 resource "tls_private_key" "test" {
   algorithm = "RSA"
@@ -281,7 +280,8 @@ resource "aws_acm_certificate" "test" {
 }
 
 data "aws_acm_certificate" "test" {
-  domain = "${aws_acm_certificate.test.domain_name}"
+  domain    = "${aws_acm_certificate.test.domain_name}"
+  key_types = ["RSA_4096"]
 }
 `)
 }

@@ -8,6 +8,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/acm"
 	"github.com/hashicorp/terraform/helper/schema"
+	"github.com/hashicorp/terraform/helper/validation"
 )
 
 func dataSourceAwsAcmCertificate() *schema.Resource {
@@ -27,6 +28,21 @@ func dataSourceAwsAcmCertificate() *schema.Resource {
 				Optional: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
+			"key_types": {
+				Type:     schema.TypeSet,
+				Optional: true,
+				Elem: &schema.Schema{
+					Type: schema.TypeString,
+					ValidateFunc: validation.StringInSlice([]string{
+						acm.KeyAlgorithmEcPrime256v1,
+						acm.KeyAlgorithmEcSecp384r1,
+						acm.KeyAlgorithmEcSecp521r1,
+						acm.KeyAlgorithmRsa1024,
+						acm.KeyAlgorithmRsa2048,
+						acm.KeyAlgorithmRsa4096,
+					}, false),
+				},
+			},
 			"types": {
 				Type:     schema.TypeList,
 				Optional: true,
@@ -44,21 +60,14 @@ func dataSourceAwsAcmCertificate() *schema.Resource {
 func dataSourceAwsAcmCertificateRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).acmconn
 
-	// Explicitly define algorithms, by default, the API does not return all types
-	// More information about the values present: https://docs.aws.amazon.com/acm/latest/APIReference/API_Filters.html#ACM-Type-Filters-keyTypes
-	keyAlgorithms := []string{
-		acm.KeyAlgorithmEcPrime256v1,
-		acm.KeyAlgorithmEcSecp384r1,
-		acm.KeyAlgorithmEcSecp521r1,
-		acm.KeyAlgorithmRsa1024,
-		acm.KeyAlgorithmRsa2048,
-		acm.KeyAlgorithmRsa4096,
+	params := &acm.ListCertificatesInput{}
+
+	if v := d.Get("key_types").(*schema.Set); v.Len() > 0 {
+		params.Includes = &acm.Filters{
+			KeyTypes: expandStringSet(v),
+		}
 	}
-	params := &acm.ListCertificatesInput{
-		Includes: &acm.Filters{
-			KeyTypes: aws.StringSlice(keyAlgorithms),
-		},
-	}
+
 	target := d.Get("domain")
 	statuses, ok := d.GetOk("statuses")
 	if ok {
