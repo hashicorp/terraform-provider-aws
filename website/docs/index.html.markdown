@@ -71,7 +71,7 @@ also be used, if applicable.
 
 The `TF_AWS_ASSUME_ROLE_ARN`, `TF_AWS_ASSUME_ROLE_SESSION_NAME`, and
 `TF_AWS_ASSUME_ROLE_EXTERNAL_ID` environment variables can be used to provide
-values to the `assume_role` block; however, that block can be ommitted if they are provided. 
+values to the `assume_role` block; however, that block can be omitted if they are provided. 
 
 ```hcl
 provider "aws" {}
