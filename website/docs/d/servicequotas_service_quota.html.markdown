@@ -38,6 +38,7 @@ In addition to all arguments above, the following attributes are exported:
 
 * `adjustable` - Whether the service quota is adjustable.
 * `arn` - Amazon Resource Name (ARN) of the service quota.
+* `default_value` - Default value of the service quota.
 * `global_quota` - Whether the service quota is global for the AWS account.
 * `id` - Amazon Resource Name (ARN) of the service quota.
 * `service_name` - Name of the service.

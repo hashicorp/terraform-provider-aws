@@ -21,6 +21,10 @@ func dataSourceAwsServiceQuotasServiceQuota() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"default_value": {
+				Type:     schema.TypeFloat,
+				Computed: true,
+			},
 			"global_quota": {
 				Type:     schema.TypeBool,
 				Computed: true,
@@ -66,24 +70,7 @@ func dataSourceAwsServiceQuotasServiceQuotaRead(d *schema.ResourceData, meta int
 
 	var serviceQuota *servicequotas.ServiceQuota
 
-	if quotaCode != "" {
-		input := &servicequotas.GetServiceQuotaInput{
-			QuotaCode:   aws.String(quotaCode),
-			ServiceCode: aws.String(serviceCode),
-		}
-
-		output, err := conn.GetServiceQuota(input)
-
-		if err != nil {
-			return fmt.Errorf("error getting Service (%s) Quota (%s): %s", serviceCode, quotaCode, err)
-		}
-
-		if output == nil {
-			return fmt.Errorf("error getting Service (%s) Quota (%s): empty result", serviceCode, quotaCode)
-		}
-
-		serviceQuota = output.Quota
-	} else {
+	if quotaCode == "" {
 		input := &servicequotas.ListServiceQuotasInput{
 			ServiceCode: aws.String(serviceCode),
 		}
@@ -106,10 +93,45 @@ func dataSourceAwsServiceQuotasServiceQuotaRead(d *schema.ResourceData, meta int
 		if serviceQuota == nil {
 			return fmt.Errorf("error finding Service (%s) Quota (%s): no results found", serviceCode, quotaName)
 		}
+	} else {
+		input := &servicequotas.GetServiceQuotaInput{
+			QuotaCode:   aws.String(quotaCode),
+			ServiceCode: aws.String(serviceCode),
+		}
+
+		output, err := conn.GetServiceQuota(input)
+
+		if err != nil {
+			return fmt.Errorf("error getting Service (%s) Quota (%s): %s", serviceCode, quotaCode, err)
+		}
+
+		if output == nil {
+			return fmt.Errorf("error getting Service (%s) Quota (%s): empty result", serviceCode, quotaCode)
+		}
+
+		serviceQuota = output.Quota
 	}
+
+	input := &servicequotas.GetAWSDefaultServiceQuotaInput{
+		QuotaCode:   serviceQuota.QuotaCode,
+		ServiceCode: serviceQuota.ServiceCode,
+	}
+
+	output, err := conn.GetAWSDefaultServiceQuota(input)
+
+	if err != nil {
+		return fmt.Errorf("error getting Service (%s) Default Quota (%s): %s", serviceCode, aws.StringValue(serviceQuota.QuotaCode), err)
+	}
+
+	if output == nil {
+		return fmt.Errorf("error getting Service (%s) Default Quota (%s): empty result", serviceCode, aws.StringValue(serviceQuota.QuotaCode))
+	}
+
+	defaultQuota := output.Quota
 
 	d.Set("adjustable", serviceQuota.Adjustable)
 	d.Set("arn", serviceQuota.QuotaArn)
+	d.Set("default_value", defaultQuota.Value)
 	d.Set("global_quota", serviceQuota.GlobalQuota)
 	d.Set("quota_code", serviceQuota.QuotaCode)
 	d.Set("quota_name", serviceQuota.QuotaName)

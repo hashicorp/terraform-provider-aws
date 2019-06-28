@@ -20,6 +20,7 @@ func TestAccAwsServiceQuotasServiceQuotaDataSource_QuotaCode(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(dataSourceName, "adjustable", "true"),
 					testAccCheckResourceAttrRegionalARN(dataSourceName, "arn", "servicequotas", "vpc/L-F678F1CE"),
+					resource.TestCheckResourceAttr(dataSourceName, "default_value", "5"),
 					resource.TestCheckResourceAttr(dataSourceName, "global_quota", "false"),
 					resource.TestCheckResourceAttr(dataSourceName, "quota_code", "L-F678F1CE"),
 					resource.TestCheckResourceAttr(dataSourceName, "quota_name", "VPCs per Region"),
@@ -44,6 +45,7 @@ func TestAccAwsServiceQuotasServiceQuotaDataSource_QuotaName(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(dataSourceName, "adjustable", "true"),
 					testAccCheckResourceAttrRegionalARN(dataSourceName, "arn", "servicequotas", "vpc/L-F678F1CE"),
+					resource.TestCheckResourceAttr(dataSourceName, "default_value", "5"),
 					resource.TestCheckResourceAttr(dataSourceName, "global_quota", "false"),
 					resource.TestCheckResourceAttr(dataSourceName, "quota_code", "L-F678F1CE"),
 					resource.TestCheckResourceAttr(dataSourceName, "quota_name", "VPCs per Region"),
