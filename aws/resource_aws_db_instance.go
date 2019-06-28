@@ -700,11 +700,6 @@ func resourceAwsDbInstanceCreate(d *schema.ResourceData, meta interface{}) error
 			return fmt.Errorf(`provider.aws: aws_db_instance: %s: "timezone" doesn't work with with restores"`, d.Get("name").(string))
 		}
 
-		if attr, ok := d.GetOk("allow_major_version_upgrade"); ok {
-			modifyDbInstanceInput.AllowMajorVersionUpgrade = aws.Bool(attr.(bool))
-			requiresModifyDbInstance = true
-		}
-
 		attr := d.Get("backup_retention_period")
 		opts.BackupRetentionPeriod = aws.Int64(int64(attr.(int)))
 
