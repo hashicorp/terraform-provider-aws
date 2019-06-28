@@ -539,7 +539,15 @@ func resourceAwsDbInstanceCreate(d *schema.ResourceData, meta interface{}) error
 
 		if attr, ok := d.GetOk("availability_zone"); ok {
 			opts.AvailabilityZone = aws.String(attr.(string))
-		}
+    }
+
+    if attr, ok := d.GetOk("auto_major_version_upgrade"); ok {
+      modifyDbInstanceInput.AutoMajorVersionUpgrade = aws.Bool(attr.(bool))
+      opts.AutoMajorVersionUpgrade = aws.Bool(attr.(bool))
+      requiresModifyDbInstance = true
+    }
+    
+    AutoMajorVersionUpgrade:    aws.Bool(d.Get("auto_major_version_upgrade").(bool)),
 
 		if attr, ok := d.GetOk("backup_retention_period"); ok {
 			modifyDbInstanceInput.BackupRetentionPeriod = aws.Int64(int64(attr.(int)))
@@ -686,7 +694,6 @@ func resourceAwsDbInstanceCreate(d *schema.ResourceData, meta interface{}) error
 
 		if attr, ok := d.GetOk("multi_az"); ok {
 			opts.MultiAZ = aws.Bool(attr.(bool))
-
 		}
 
 		if _, ok := d.GetOk("character_set_name"); ok {
@@ -694,7 +701,12 @@ func resourceAwsDbInstanceCreate(d *schema.ResourceData, meta interface{}) error
 		}
 		if _, ok := d.GetOk("timezone"); ok {
 			return fmt.Errorf(`provider.aws: aws_db_instance: %s: "timezone" doesn't work with with restores"`, d.Get("name").(string))
-		}
+    }
+    
+    if attr, ok := d.GetOk("auto_major_version_upgrade"); ok {
+      opts.AutoMajorVersionUpgrade = aws.Bool(attr.(bool))
+      requiresModifyDbInstance = true
+    }
 
 		attr := d.Get("backup_retention_period")
 		opts.BackupRetentionPeriod = aws.Int64(int64(attr.(int)))
@@ -861,7 +873,13 @@ func resourceAwsDbInstanceCreate(d *schema.ResourceData, meta interface{}) error
 
 		if attr, ok := d.GetOk("availability_zone"); ok {
 			opts.AvailabilityZone = aws.String(attr.(string))
-		}
+    }
+    
+    if attr, ok := d.GetOk("auto_major_version_upgrade"); ok {
+      modifyDbInstanceInput.AutoMajorVersionUpgrade = aws.Bool(attr.(bool))
+      opts.AutoMajorVersionUpgrade = aws.Bool(attr.(bool))
+      requiresModifyDbInstance = true
+    }
 
 		if attr, ok := d.GetOkExists("backup_retention_period"); ok {
 			modifyDbInstanceInput.BackupRetentionPeriod = aws.Int64(int64(attr.(int)))
@@ -1255,7 +1273,8 @@ func resourceAwsDbInstanceRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("engine_version", v.EngineVersion)
 	d.Set("allocated_storage", v.AllocatedStorage)
 	d.Set("iops", v.Iops)
-	d.Set("copy_tags_to_snapshot", v.CopyTagsToSnapshot)
+  d.Set("copy_tags_to_snapshot", v.CopyTagsToSnapshot)
+  d.Set("auto_major_version_upgrade", v.AutoMajorVersionUpgrade)
 	d.Set("auto_minor_version_upgrade", v.AutoMinorVersionUpgrade)
 	d.Set("storage_type", v.StorageType)
 	d.Set("instance_class", v.DBInstanceClass)
