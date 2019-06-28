@@ -10,7 +10,7 @@ import (
 
 func dataSourceAwsServiceQuotasService() *schema.Resource {
 	return &schema.Resource{
-		Read:   dataSourceAwsServiceQuotasServiceRead,
+		Read: dataSourceAwsServiceQuotasServiceRead,
 
 		Schema: map[string]*schema.Schema{
 			"service_code": {
@@ -24,7 +24,6 @@ func dataSourceAwsServiceQuotasService() *schema.Resource {
 		},
 	}
 }
-
 
 func dataSourceAwsServiceQuotasServiceRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).servicequotasconn
