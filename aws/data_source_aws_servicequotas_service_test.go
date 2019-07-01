@@ -11,7 +11,7 @@ func TestAccAwsServiceQuotasServiceDataSource_ServiceName(t *testing.T) {
 	dataSourceName := "data.aws_servicequotas_service.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:  func() { testAccPreCheck(t) },
+		PreCheck:  func() { testAccPreCheck(t); testAccPreCheckAWSServiceQuotas(t) },
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
 			{
