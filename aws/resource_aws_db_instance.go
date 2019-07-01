@@ -541,6 +541,12 @@ func resourceAwsDbInstanceCreate(d *schema.ResourceData, meta interface{}) error
 			opts.AvailabilityZone = aws.String(attr.(string))
 		}
 
+		if attr, ok := d.GetOk("allow_major_version_upgrade"); ok {
+			modifyDbInstanceInput.AllowMajorVersionUpgrade = aws.Bool(attr.(bool))
+			// Having allowing_major_version_upgrade by itself should not trigger ModifyDBInstance
+			// InvalidParameterCombination: No modifications were requested
+		}
+
 		if attr, ok := d.GetOk("backup_retention_period"); ok {
 			modifyDbInstanceInput.BackupRetentionPeriod = aws.Int64(int64(attr.(int)))
 			requiresModifyDbInstance = true
@@ -686,7 +692,6 @@ func resourceAwsDbInstanceCreate(d *schema.ResourceData, meta interface{}) error
 
 		if attr, ok := d.GetOk("multi_az"); ok {
 			opts.MultiAZ = aws.Bool(attr.(bool))
-
 		}
 
 		if _, ok := d.GetOk("character_set_name"); ok {
@@ -861,6 +866,12 @@ func resourceAwsDbInstanceCreate(d *schema.ResourceData, meta interface{}) error
 
 		if attr, ok := d.GetOk("availability_zone"); ok {
 			opts.AvailabilityZone = aws.String(attr.(string))
+		}
+
+		if attr, ok := d.GetOk("allow_major_version_upgrade"); ok {
+			modifyDbInstanceInput.AllowMajorVersionUpgrade = aws.Bool(attr.(bool))
+			// Having allowing_major_version_upgrade by itself should not trigger ModifyDBInstance
+			// InvalidParameterCombination: No modifications were requested
 		}
 
 		if attr, ok := d.GetOkExists("backup_retention_period"); ok {
