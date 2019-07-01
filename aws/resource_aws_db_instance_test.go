@@ -293,6 +293,13 @@ func TestAccAWSDBInstance_AllowMajorVersionUpgrade(t *testing.T) {
 					"skip_final_snapshot",
 				},
 			},
+			{
+				Config: testAccAWSDBInstanceConfigAllowMajorVersionUpgrade(rName, false),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSDBInstanceExists(resourceName, &dbInstance1),
+					resource.TestCheckResourceAttr(resourceName, "allow_major_version_upgrade", "false"),
+				),
+			},
 		},
 	})
 }
