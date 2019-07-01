@@ -1,4 +1,9 @@
 ## 2.18.0 (Unreleased)
+
+BUG FIXES:
+
+* resource/aws_emr_cluster: Skip refreshing the `kerberos_attributes` configuration block `ad_domain_join_user` argument from the API as it does not contain the real configuration value [GH-8559]
+
 ## 2.17.0 (June 28, 2019)
 
 FEATURES:
