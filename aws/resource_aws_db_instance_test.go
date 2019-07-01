@@ -78,7 +78,7 @@ func TestAccAWSDBInstance_basic(t *testing.T) {
 					testAccCheckAWSDBInstanceExists(resourceName, &dbInstance1),
 					testAccCheckAWSDBInstanceAttributes(&dbInstance1),
 					resource.TestCheckResourceAttr(resourceName, "allocated_storage", "10"),
-					resource.TestCheckResourceAttr(resourceName, "allow_major_version_upgrade", "true"),
+					resource.TestCheckNoResourceAttr(resourceName, "allow_major_version_upgrade"),
 					resource.TestCheckResourceAttr(resourceName, "auto_minor_version_upgrade", "true"),
 					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "rds", regexp.MustCompile(`db:.+`)),
 					resource.TestCheckResourceAttrSet(resourceName, "availability_zone"),
@@ -258,6 +258,40 @@ func TestAccAWSDBInstance_iamAuth(t *testing.T) {
 					resource.TestCheckResourceAttr(
 						"aws_db_instance.bar", "iam_database_authentication_enabled", "true"),
 				),
+			},
+		},
+	})
+}
+
+func TestAccAWSDBInstance_AllowMajorVersionUpgrade(t *testing.T) {
+	var dbInstance1 rds.DBInstance
+
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_db_instance.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSDBInstanceDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSDBInstanceConfigAllowMajorVersionUpgrade(rName, true),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSDBInstanceExists(resourceName, &dbInstance1),
+					resource.TestCheckResourceAttr(resourceName, "allow_major_version_upgrade", "true"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"allow_major_version_upgrade",
+					"apply_immediately",
+					"final_snapshot_identifier",
+					"password",
+					"skip_final_snapshot",
+				},
 			},
 		},
 	})
@@ -484,12 +518,12 @@ func TestAccAWSDBInstance_ReplicateSourceDb_AllowMajorVersionUpgrade(t *testing.
 		CheckDestroy: testAccCheckAWSDBInstanceDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSDBInstanceConfig_ReplicateSourceDb_AllowMajorVersionUpgrade(rName, false),
+				Config: testAccAWSDBInstanceConfig_ReplicateSourceDb_AllowMajorVersionUpgrade(rName, true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSDBInstanceExists(sourceResourceName, &sourceDbInstance),
 					testAccCheckAWSDBInstanceExists(resourceName, &dbInstance),
 					testAccCheckAWSDBInstanceReplicaAttributes(&sourceDbInstance, &dbInstance),
-					resource.TestCheckResourceAttr(resourceName, "allow_major_version_upgrade", "false"),
+					resource.TestCheckResourceAttr(resourceName, "allow_major_version_upgrade", "true"),
 				),
 			},
 		},
@@ -959,12 +993,12 @@ func TestAccAWSDBInstance_SnapshotIdentifier_AllowMajorVersionUpgrade(t *testing
 		CheckDestroy: testAccCheckAWSDBInstanceDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSDBInstanceConfig_SnapshotIdentifier_AllowMajorVersionUpgrade(rName, false),
+				Config: testAccAWSDBInstanceConfig_SnapshotIdentifier_AllowMajorVersionUpgrade(rName, true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSDBInstanceExists(sourceDbResourceName, &sourceDbInstance),
 					testAccCheckDbSnapshotExists(snapshotResourceName, &dbSnapshot),
 					testAccCheckAWSDBInstanceExists(resourceName, &dbInstance),
-					resource.TestCheckResourceAttr(resourceName, "allow_major_version_upgrade", "false"),
+					resource.TestCheckResourceAttr(resourceName, "allow_major_version_upgrade", "true"),
 				),
 			},
 		},
@@ -1674,24 +1708,6 @@ func TestAccAWSDBInstance_MySQL_SnapshotRestoreWithEngineVersion(t *testing.T) {
 						"aws_db_instance.mysql", "engine_version", "5.6.35"),
 					resource.TestCheckResourceAttr(
 						"aws_db_instance.mysql_restore", "engine_version", "5.6.41"),
-				),
-			},
-		},
-	})
-}
-
-func TestAccAWSDBInstance_MajorVersion(t *testing.T) {
-	var v rds.DBInstance
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckAWSDBInstanceDestroy,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccAWSDBInstanceConfigAllowMajorVersion,
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSDBInstanceExists("aws_db_instance.bar", &v),
 				),
 			},
 		},
@@ -3562,19 +3578,22 @@ resource "aws_security_group_rule" "rds-mysql-1" {
 `, rInt)
 }
 
-var testAccAWSDBInstanceConfigAllowMajorVersion = fmt.Sprintf(`
-resource "aws_db_instance" "bar" {
-  identifier = "foobarbaz-test-terraform-%d"
-	allocated_storage = 10
-	engine = "MySQL"
-	engine_version = "5.6"
-	instance_class = "db.t2.micro"
-	name = "baz"
-	password = "barbarbarbar"
-	username = "foo"
-	skip_final_snapshot = true
+func testAccAWSDBInstanceConfigAllowMajorVersionUpgrade(rName string, allowMajorVersionUpgrade bool) string {
+	return fmt.Sprintf(`
+resource "aws_db_instance" "test" {
+  allocated_storage           = 10
+  allow_major_version_upgrade = %[2]t
+  engine                      = "MySQL"
+  engine_version              = "5.6"
+  identifier                  = %[1]q
+  instance_class              = "db.t2.micro"
+  name                        = "baz"
+  password                    = "barbarbarbar"
+  skip_final_snapshot         = true
+  username                    = "foo"
 }
-`, acctest.RandInt())
+`, rName, allowMajorVersionUpgrade)
+}
 
 var testAccAWSDBInstanceConfigAutoMinorVersion = fmt.Sprintf(`
 resource "aws_db_instance" "bar" {
@@ -3996,7 +4015,7 @@ resource "aws_db_instance" "source" {
   allocated_storage       = 5
   backup_retention_period = 1
   engine                  = "mysql"
-  identifier              = "%s-source"
+  identifier              = "%[1]s-source"
   instance_class          = "db.t2.micro"
   password                = "avoid-plaintext-passwords"
   username                = "tfacctest"
@@ -4004,13 +4023,13 @@ resource "aws_db_instance" "source" {
 }
 
 resource "aws_db_instance" "test" {
-  allow_major_version_upgrade = %t
-  identifier                 = %q
-  instance_class             = "${aws_db_instance.source.instance_class}"
-  replicate_source_db        = "${aws_db_instance.source.id}"
-  skip_final_snapshot        = true
+  allow_major_version_upgrade = %[2]t
+  identifier                  = %[1]q
+  instance_class              = "${aws_db_instance.source.instance_class}"
+  replicate_source_db         = "${aws_db_instance.source.id}"
+  skip_final_snapshot         = true
 }
-`, rName, allowMajorVersionUpgrade, rName)
+`, rName, allowMajorVersionUpgrade)
 }
 
 func testAccAWSDBInstanceConfig_ReplicateSourceDb_AutoMinorVersionUpgrade(rName string, autoMinorVersionUpgrade bool) string {
@@ -4455,8 +4474,9 @@ func testAccAWSDBInstanceConfig_SnapshotIdentifier_AllowMajorVersionUpgrade(rNam
 	return fmt.Sprintf(`
 resource "aws_db_instance" "source" {
   allocated_storage   = 5
-  engine              = "mariadb"
-  identifier          = "%s-source"
+  engine              = "postgres"
+  engine_version      = "10.1"
+  identifier          = "%[1]s-source"
   instance_class      = "db.t2.micro"
   password            = "avoid-plaintext-passwords"
   username            = "tfacctest"
@@ -4465,17 +4485,19 @@ resource "aws_db_instance" "source" {
 
 resource "aws_db_snapshot" "test" {
   db_instance_identifier = "${aws_db_instance.source.id}"
-  db_snapshot_identifier = %q
+  db_snapshot_identifier = %[1]q
 }
 
 resource "aws_db_instance" "test" {
-  allow_major_version_upgrade = %t
-  identifier                 = %q
-  instance_class             = "${aws_db_instance.source.instance_class}"
-  snapshot_identifier        = "${aws_db_snapshot.test.id}"
-  skip_final_snapshot        = true
+  allow_major_version_upgrade = %[2]t
+  engine                      = "postgres"
+  engine_version              = "11.1"
+  identifier                  = %[1]q
+  instance_class              = "${aws_db_instance.source.instance_class}"
+  snapshot_identifier         = "${aws_db_snapshot.test.id}"
+  skip_final_snapshot         = true
 }
-`, rName, rName, allowMajorVersionUpgrade, rName)
+`, rName, allowMajorVersionUpgrade)
 }
 
 func testAccAWSDBInstanceConfig_SnapshotIdentifier_AutoMinorVersionUpgrade(rName string, autoMinorVersionUpgrade bool) string {

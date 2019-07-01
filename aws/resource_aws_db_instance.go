@@ -543,7 +543,8 @@ func resourceAwsDbInstanceCreate(d *schema.ResourceData, meta interface{}) error
 
 		if attr, ok := d.GetOk("allow_major_version_upgrade"); ok {
 			modifyDbInstanceInput.AllowMajorVersionUpgrade = aws.Bool(attr.(bool))
-			requiresModifyDbInstance = true
+			// Having allowing_major_version_upgrade by itself should not trigger ModifyDBInstance
+			// InvalidParameterCombination: No modifications were requested
 		}
 
 		if attr, ok := d.GetOk("backup_retention_period"); ok {
@@ -869,7 +870,8 @@ func resourceAwsDbInstanceCreate(d *schema.ResourceData, meta interface{}) error
 
 		if attr, ok := d.GetOk("allow_major_version_upgrade"); ok {
 			modifyDbInstanceInput.AllowMajorVersionUpgrade = aws.Bool(attr.(bool))
-			requiresModifyDbInstance = true
+			// Having allowing_major_version_upgrade by itself should not trigger ModifyDBInstance
+			// InvalidParameterCombination: No modifications were requested
 		}
 
 		if attr, ok := d.GetOkExists("backup_retention_period"); ok {
