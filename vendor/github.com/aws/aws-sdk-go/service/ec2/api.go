@@ -48411,10 +48411,10 @@ type DescribeByoipCidrsInput struct {
 	// remaining results, make another call with the returned nextToken value.
 	//
 	// MaxResults is a required field
-	MaxResults *int64 `min:"5" type:"integer" required:"true"`
+	MaxResults *int64 `min:"1" type:"integer" required:"true"`
 
 	// The token for the next page of results.
-	NextToken *string `min:"1" type:"string"`
+	NextToken *string `type:"string"`
 }
 
 // String returns the string representation
@@ -48433,11 +48433,8 @@ func (s *DescribeByoipCidrsInput) Validate() error {
 	if s.MaxResults == nil {
 		invalidParams.Add(request.NewErrParamRequired("MaxResults"))
 	}
-	if s.MaxResults != nil && *s.MaxResults < 5 {
-		invalidParams.Add(request.NewErrParamMinValue("MaxResults", 5))
-	}
-	if s.NextToken != nil && len(*s.NextToken) < 1 {
-		invalidParams.Add(request.NewErrParamMinLen("NextToken", 1))
+	if s.MaxResults != nil && *s.MaxResults < 1 {
+		invalidParams.Add(request.NewErrParamMinValue("MaxResults", 1))
 	}
 
 	if invalidParams.Len() > 0 {
@@ -48644,7 +48641,7 @@ type DescribeClassicLinkInstancesInput struct {
 	// remaining results, make another call with the returned nextToken value.
 	//
 	// Constraint: If the value is greater than 1000, we return only 1000 items.
-	MaxResults *int64 `locationName:"maxResults" type:"integer"`
+	MaxResults *int64 `locationName:"maxResults" min:"5" type:"integer"`
 
 	// The token for the next page of results.
 	NextToken *string `locationName:"nextToken" type:"string"`
@@ -48658,6 +48655,19 @@ func (s DescribeClassicLinkInstancesInput) String() string {
 // GoString returns the string representation
 func (s DescribeClassicLinkInstancesInput) GoString() string {
 	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *DescribeClassicLinkInstancesInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "DescribeClassicLinkInstancesInput"}
+	if s.MaxResults != nil && *s.MaxResults < 5 {
+		invalidParams.Add(request.NewErrParamMinValue("MaxResults", 5))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
 }
 
 // SetDryRun sets the DryRun field's value.
@@ -48746,7 +48756,7 @@ type DescribeClientVpnAuthorizationRulesInput struct {
 	MaxResults *int64 `min:"5" type:"integer"`
 
 	// The token to retrieve the next page of results.
-	NextToken *string `min:"1" type:"string"`
+	NextToken *string `type:"string"`
 }
 
 // String returns the string representation
@@ -48767,9 +48777,6 @@ func (s *DescribeClientVpnAuthorizationRulesInput) Validate() error {
 	}
 	if s.MaxResults != nil && *s.MaxResults < 5 {
 		invalidParams.Add(request.NewErrParamMinValue("MaxResults", 5))
-	}
-	if s.NextToken != nil && len(*s.NextToken) < 1 {
-		invalidParams.Add(request.NewErrParamMinLen("NextToken", 1))
 	}
 
 	if invalidParams.Len() > 0 {
@@ -48816,7 +48823,7 @@ type DescribeClientVpnAuthorizationRulesOutput struct {
 
 	// The token to use to retrieve the next page of results. This value is null
 	// when there are no more results to return.
-	NextToken *string `locationName:"nextToken" min:"1" type:"string"`
+	NextToken *string `locationName:"nextToken" type:"string"`
 }
 
 // String returns the string representation
@@ -48864,7 +48871,7 @@ type DescribeClientVpnConnectionsInput struct {
 	MaxResults *int64 `min:"5" type:"integer"`
 
 	// The token to retrieve the next page of results.
-	NextToken *string `min:"1" type:"string"`
+	NextToken *string `type:"string"`
 }
 
 // String returns the string representation
@@ -48885,9 +48892,6 @@ func (s *DescribeClientVpnConnectionsInput) Validate() error {
 	}
 	if s.MaxResults != nil && *s.MaxResults < 5 {
 		invalidParams.Add(request.NewErrParamMinValue("MaxResults", 5))
-	}
-	if s.NextToken != nil && len(*s.NextToken) < 1 {
-		invalidParams.Add(request.NewErrParamMinLen("NextToken", 1))
 	}
 
 	if invalidParams.Len() > 0 {
@@ -48934,7 +48938,7 @@ type DescribeClientVpnConnectionsOutput struct {
 
 	// The token to use to retrieve the next page of results. This value is null
 	// when there are no more results to return.
-	NextToken *string `locationName:"nextToken" min:"1" type:"string"`
+	NextToken *string `locationName:"nextToken" type:"string"`
 }
 
 // String returns the string representation
@@ -48980,7 +48984,7 @@ type DescribeClientVpnEndpointsInput struct {
 	MaxResults *int64 `min:"5" type:"integer"`
 
 	// The token to retrieve the next page of results.
-	NextToken *string `min:"1" type:"string"`
+	NextToken *string `type:"string"`
 }
 
 // String returns the string representation
@@ -48998,9 +49002,6 @@ func (s *DescribeClientVpnEndpointsInput) Validate() error {
 	invalidParams := request.ErrInvalidParams{Context: "DescribeClientVpnEndpointsInput"}
 	if s.MaxResults != nil && *s.MaxResults < 5 {
 		invalidParams.Add(request.NewErrParamMinValue("MaxResults", 5))
-	}
-	if s.NextToken != nil && len(*s.NextToken) < 1 {
-		invalidParams.Add(request.NewErrParamMinLen("NextToken", 1))
 	}
 
 	if invalidParams.Len() > 0 {
@@ -49047,7 +49048,7 @@ type DescribeClientVpnEndpointsOutput struct {
 
 	// The token to use to retrieve the next page of results. This value is null
 	// when there are no more results to return.
-	NextToken *string `locationName:"nextToken" min:"1" type:"string"`
+	NextToken *string `locationName:"nextToken" type:"string"`
 }
 
 // String returns the string representation
@@ -49095,7 +49096,7 @@ type DescribeClientVpnRoutesInput struct {
 	MaxResults *int64 `min:"5" type:"integer"`
 
 	// The token to retrieve the next page of results.
-	NextToken *string `min:"1" type:"string"`
+	NextToken *string `type:"string"`
 }
 
 // String returns the string representation
@@ -49116,9 +49117,6 @@ func (s *DescribeClientVpnRoutesInput) Validate() error {
 	}
 	if s.MaxResults != nil && *s.MaxResults < 5 {
 		invalidParams.Add(request.NewErrParamMinValue("MaxResults", 5))
-	}
-	if s.NextToken != nil && len(*s.NextToken) < 1 {
-		invalidParams.Add(request.NewErrParamMinLen("NextToken", 1))
 	}
 
 	if invalidParams.Len() > 0 {
@@ -49162,7 +49160,7 @@ type DescribeClientVpnRoutesOutput struct {
 
 	// The token to use to retrieve the next page of results. This value is null
 	// when there are no more results to return.
-	NextToken *string `locationName:"nextToken" min:"1" type:"string"`
+	NextToken *string `locationName:"nextToken" type:"string"`
 
 	// Information about the Client VPN endpoint routes.
 	Routes []*ClientVpnRoute `locationName:"routes" locationNameList:"item" type:"list"`
@@ -49216,7 +49214,7 @@ type DescribeClientVpnTargetNetworksInput struct {
 	MaxResults *int64 `min:"5" type:"integer"`
 
 	// The token to retrieve the next page of results.
-	NextToken *string `min:"1" type:"string"`
+	NextToken *string `type:"string"`
 }
 
 // String returns the string representation
@@ -49237,9 +49235,6 @@ func (s *DescribeClientVpnTargetNetworksInput) Validate() error {
 	}
 	if s.MaxResults != nil && *s.MaxResults < 5 {
 		invalidParams.Add(request.NewErrParamMinValue("MaxResults", 5))
-	}
-	if s.NextToken != nil && len(*s.NextToken) < 1 {
-		invalidParams.Add(request.NewErrParamMinLen("NextToken", 1))
 	}
 
 	if invalidParams.Len() > 0 {
@@ -49292,7 +49287,7 @@ type DescribeClientVpnTargetNetworksOutput struct {
 
 	// The token to use to retrieve the next page of results. This value is null
 	// when there are no more results to return.
-	NextToken *string `locationName:"nextToken" min:"1" type:"string"`
+	NextToken *string `locationName:"nextToken" type:"string"`
 }
 
 // String returns the string representation
@@ -49613,7 +49608,7 @@ type DescribeEgressOnlyInternetGatewaysInput struct {
 
 	// The maximum number of results to return with a single call. To retrieve the
 	// remaining results, make another call with the returned nextToken value.
-	MaxResults *int64 `type:"integer"`
+	MaxResults *int64 `min:"5" type:"integer"`
 
 	// The token for the next page of results.
 	NextToken *string `type:"string"`
@@ -49627,6 +49622,19 @@ func (s DescribeEgressOnlyInternetGatewaysInput) String() string {
 // GoString returns the string representation
 func (s DescribeEgressOnlyInternetGatewaysInput) GoString() string {
 	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *DescribeEgressOnlyInternetGatewaysInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "DescribeEgressOnlyInternetGatewaysInput"}
+	if s.MaxResults != nil && *s.MaxResults < 5 {
+		invalidParams.Add(request.NewErrParamMinValue("MaxResults", 5))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
 }
 
 // SetDryRun sets the DryRun field's value.
@@ -50622,7 +50630,7 @@ type DescribeFpgaImagesInput struct {
 	MaxResults *int64 `min:"5" type:"integer"`
 
 	// The token to retrieve the next page of results.
-	NextToken *string `min:"1" type:"string"`
+	NextToken *string `type:"string"`
 
 	// Filters the AFI by owner. Specify an AWS account ID, self (owner is the sender
 	// of the request), or an AWS owner alias (valid values are amazon | aws-marketplace).
@@ -50644,9 +50652,6 @@ func (s *DescribeFpgaImagesInput) Validate() error {
 	invalidParams := request.ErrInvalidParams{Context: "DescribeFpgaImagesInput"}
 	if s.MaxResults != nil && *s.MaxResults < 5 {
 		invalidParams.Add(request.NewErrParamMinValue("MaxResults", 5))
-	}
-	if s.NextToken != nil && len(*s.NextToken) < 1 {
-		invalidParams.Add(request.NewErrParamMinLen("NextToken", 1))
 	}
 
 	if invalidParams.Len() > 0 {
@@ -50699,7 +50704,7 @@ type DescribeFpgaImagesOutput struct {
 
 	// The token to use to retrieve the next page of results. This value is null
 	// when there are no more results to return.
-	NextToken *string `locationName:"nextToken" min:"1" type:"string"`
+	NextToken *string `locationName:"nextToken" type:"string"`
 }
 
 // String returns the string representation
@@ -51085,7 +51090,7 @@ type DescribeIamInstanceProfileAssociationsInput struct {
 	MaxResults *int64 `min:"5" type:"integer"`
 
 	// The token to request the next page of results.
-	NextToken *string `min:"1" type:"string"`
+	NextToken *string `type:"string"`
 }
 
 // String returns the string representation
@@ -51103,9 +51108,6 @@ func (s *DescribeIamInstanceProfileAssociationsInput) Validate() error {
 	invalidParams := request.ErrInvalidParams{Context: "DescribeIamInstanceProfileAssociationsInput"}
 	if s.MaxResults != nil && *s.MaxResults < 5 {
 		invalidParams.Add(request.NewErrParamMinValue("MaxResults", 5))
-	}
-	if s.NextToken != nil && len(*s.NextToken) < 1 {
-		invalidParams.Add(request.NewErrParamMinLen("NextToken", 1))
 	}
 
 	if invalidParams.Len() > 0 {
@@ -51146,7 +51148,7 @@ type DescribeIamInstanceProfileAssociationsOutput struct {
 
 	// The token to use to retrieve the next page of results. This value is null
 	// when there are no more results to return.
-	NextToken *string `locationName:"nextToken" min:"1" type:"string"`
+	NextToken *string `locationName:"nextToken" type:"string"`
 }
 
 // String returns the string representation
@@ -53173,7 +53175,7 @@ type DescribeMovingAddressesInput struct {
 	// 1000; if MaxResults is given a value outside of this range, an error is returned.
 	//
 	// Default: If no value is provided, the default is 1000.
-	MaxResults *int64 `locationName:"maxResults" type:"integer"`
+	MaxResults *int64 `locationName:"maxResults" min:"5" type:"integer"`
 
 	// The token for the next page of results.
 	NextToken *string `locationName:"nextToken" type:"string"`
@@ -53190,6 +53192,19 @@ func (s DescribeMovingAddressesInput) String() string {
 // GoString returns the string representation
 func (s DescribeMovingAddressesInput) GoString() string {
 	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *DescribeMovingAddressesInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "DescribeMovingAddressesInput"}
+	if s.MaxResults != nil && *s.MaxResults < 5 {
+		invalidParams.Add(request.NewErrParamMinValue("MaxResults", 5))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
 }
 
 // SetDryRun sets the DryRun field's value.
@@ -53282,7 +53297,7 @@ type DescribeNatGatewaysInput struct {
 
 	// The maximum number of results to return with a single call. To retrieve the
 	// remaining results, make another call with the returned nextToken value.
-	MaxResults *int64 `type:"integer"`
+	MaxResults *int64 `min:"5" type:"integer"`
 
 	// One or more NAT gateway IDs.
 	NatGatewayIds []*string `locationName:"NatGatewayId" locationNameList:"item" type:"list"`
@@ -53299,6 +53314,19 @@ func (s DescribeNatGatewaysInput) String() string {
 // GoString returns the string representation
 func (s DescribeNatGatewaysInput) GoString() string {
 	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *DescribeNatGatewaysInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "DescribeNatGatewaysInput"}
+	if s.MaxResults != nil && *s.MaxResults < 5 {
+		invalidParams.Add(request.NewErrParamMinValue("MaxResults", 5))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
 }
 
 // SetFilter sets the Filter field's value.
@@ -54153,7 +54181,7 @@ type DescribePrincipalIdFormatInput struct {
 
 	// The maximum number of results to return in a single call. To retrieve the
 	// remaining results, make another call with the returned NextToken value.
-	MaxResults *int64 `type:"integer"`
+	MaxResults *int64 `min:"1" type:"integer"`
 
 	// The token to request the next page of results.
 	NextToken *string `type:"string"`
@@ -54176,6 +54204,19 @@ func (s DescribePrincipalIdFormatInput) String() string {
 // GoString returns the string representation
 func (s DescribePrincipalIdFormatInput) GoString() string {
 	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *DescribePrincipalIdFormatInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "DescribePrincipalIdFormatInput"}
+	if s.MaxResults != nil && *s.MaxResults < 1 {
+		invalidParams.Add(request.NewErrParamMinValue("MaxResults", 1))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
 }
 
 // SetDryRun sets the DryRun field's value.
@@ -54243,7 +54284,7 @@ type DescribePublicIpv4PoolsInput struct {
 	MaxResults *int64 `min:"1" type:"integer"`
 
 	// The token for the next page of results.
-	NextToken *string `min:"1" type:"string"`
+	NextToken *string `type:"string"`
 
 	// The IDs of the address pools.
 	PoolIds []*string `locationName:"PoolId" locationNameList:"item" type:"list"`
@@ -54264,9 +54305,6 @@ func (s *DescribePublicIpv4PoolsInput) Validate() error {
 	invalidParams := request.ErrInvalidParams{Context: "DescribePublicIpv4PoolsInput"}
 	if s.MaxResults != nil && *s.MaxResults < 1 {
 		invalidParams.Add(request.NewErrParamMinValue("MaxResults", 1))
-	}
-	if s.NextToken != nil && len(*s.NextToken) < 1 {
-		invalidParams.Add(request.NewErrParamMinLen("NextToken", 1))
 	}
 
 	if invalidParams.Len() > 0 {
@@ -55167,7 +55205,7 @@ type DescribeScheduledInstanceAvailabilityInput struct {
 	// The maximum number of results to return in a single call. This value can
 	// be between 5 and 300. The default value is 300. To retrieve the remaining
 	// results, make another call with the returned NextToken value.
-	MaxResults *int64 `type:"integer"`
+	MaxResults *int64 `min:"5" type:"integer"`
 
 	// The maximum available duration, in hours. This value must be greater than
 	// MinSlotDurationInHours and less than 1,720.
@@ -55203,6 +55241,9 @@ func (s *DescribeScheduledInstanceAvailabilityInput) Validate() error {
 	invalidParams := request.ErrInvalidParams{Context: "DescribeScheduledInstanceAvailabilityInput"}
 	if s.FirstSlotStartTimeRange == nil {
 		invalidParams.Add(request.NewErrParamRequired("FirstSlotStartTimeRange"))
+	}
+	if s.MaxResults != nil && *s.MaxResults < 5 {
+		invalidParams.Add(request.NewErrParamMinValue("MaxResults", 5))
 	}
 	if s.Recurrence == nil {
 		invalidParams.Add(request.NewErrParamRequired("Recurrence"))
@@ -56029,7 +56070,7 @@ type DescribeSpotFleetInstancesInput struct {
 	// The maximum number of results to return in a single call. Specify a value
 	// between 1 and 1000. The default value is 1000. To retrieve the remaining
 	// results, make another call with the returned NextToken value.
-	MaxResults *int64 `locationName:"maxResults" type:"integer"`
+	MaxResults *int64 `locationName:"maxResults" min:"1" type:"integer"`
 
 	// The token for the next set of results.
 	NextToken *string `locationName:"nextToken" type:"string"`
@@ -56053,6 +56094,9 @@ func (s DescribeSpotFleetInstancesInput) GoString() string {
 // Validate inspects the fields of the type to determine if they are valid.
 func (s *DescribeSpotFleetInstancesInput) Validate() error {
 	invalidParams := request.ErrInvalidParams{Context: "DescribeSpotFleetInstancesInput"}
+	if s.MaxResults != nil && *s.MaxResults < 1 {
+		invalidParams.Add(request.NewErrParamMinValue("MaxResults", 1))
+	}
 	if s.SpotFleetRequestId == nil {
 		invalidParams.Add(request.NewErrParamRequired("SpotFleetRequestId"))
 	}
@@ -56147,7 +56191,7 @@ type DescribeSpotFleetRequestHistoryInput struct {
 	// The maximum number of results to return in a single call. Specify a value
 	// between 1 and 1000. The default value is 1000. To retrieve the remaining
 	// results, make another call with the returned NextToken value.
-	MaxResults *int64 `locationName:"maxResults" type:"integer"`
+	MaxResults *int64 `locationName:"maxResults" min:"1" type:"integer"`
 
 	// The token for the next set of results.
 	NextToken *string `locationName:"nextToken" type:"string"`
@@ -56176,6 +56220,9 @@ func (s DescribeSpotFleetRequestHistoryInput) GoString() string {
 // Validate inspects the fields of the type to determine if they are valid.
 func (s *DescribeSpotFleetRequestHistoryInput) Validate() error {
 	invalidParams := request.ErrInvalidParams{Context: "DescribeSpotFleetRequestHistoryInput"}
+	if s.MaxResults != nil && *s.MaxResults < 1 {
+		invalidParams.Add(request.NewErrParamMinValue("MaxResults", 1))
+	}
 	if s.SpotFleetRequestId == nil {
 		invalidParams.Add(request.NewErrParamRequired("SpotFleetRequestId"))
 	}
@@ -57129,7 +57176,7 @@ type DescribeTrafficMirrorFiltersInput struct {
 	MaxResults *int64 `min:"5" type:"integer"`
 
 	// The token for the next page of results.
-	NextToken *string `min:"1" type:"string"`
+	NextToken *string `type:"string"`
 
 	// The ID of the Traffic Mirror filter.
 	TrafficMirrorFilterIds []*string `locationName:"TrafficMirrorFilterId" locationNameList:"item" type:"list"`
@@ -57150,9 +57197,6 @@ func (s *DescribeTrafficMirrorFiltersInput) Validate() error {
 	invalidParams := request.ErrInvalidParams{Context: "DescribeTrafficMirrorFiltersInput"}
 	if s.MaxResults != nil && *s.MaxResults < 5 {
 		invalidParams.Add(request.NewErrParamMinValue("MaxResults", 5))
-	}
-	if s.NextToken != nil && len(*s.NextToken) < 1 {
-		invalidParams.Add(request.NewErrParamMinLen("NextToken", 1))
 	}
 
 	if invalidParams.Len() > 0 {
@@ -57259,7 +57303,7 @@ type DescribeTrafficMirrorSessionsInput struct {
 	MaxResults *int64 `min:"5" type:"integer"`
 
 	// The token for the next page of results.
-	NextToken *string `min:"1" type:"string"`
+	NextToken *string `type:"string"`
 
 	// The ID of the Traffic Mirror session.
 	TrafficMirrorSessionIds []*string `locationName:"TrafficMirrorSessionId" locationNameList:"item" type:"list"`
@@ -57280,9 +57324,6 @@ func (s *DescribeTrafficMirrorSessionsInput) Validate() error {
 	invalidParams := request.ErrInvalidParams{Context: "DescribeTrafficMirrorSessionsInput"}
 	if s.MaxResults != nil && *s.MaxResults < 5 {
 		invalidParams.Add(request.NewErrParamMinValue("MaxResults", 5))
-	}
-	if s.NextToken != nil && len(*s.NextToken) < 1 {
-		invalidParams.Add(request.NewErrParamMinLen("NextToken", 1))
 	}
 
 	if invalidParams.Len() > 0 {
@@ -57383,7 +57424,7 @@ type DescribeTrafficMirrorTargetsInput struct {
 	MaxResults *int64 `min:"5" type:"integer"`
 
 	// The token for the next page of results.
-	NextToken *string `min:"1" type:"string"`
+	NextToken *string `type:"string"`
 
 	// The ID of the Traffic Mirror targets.
 	TrafficMirrorTargetIds []*string `locationName:"TrafficMirrorTargetId" locationNameList:"item" type:"list"`
@@ -57404,9 +57445,6 @@ func (s *DescribeTrafficMirrorTargetsInput) Validate() error {
 	invalidParams := request.ErrInvalidParams{Context: "DescribeTrafficMirrorTargetsInput"}
 	if s.MaxResults != nil && *s.MaxResults < 5 {
 		invalidParams.Add(request.NewErrParamMinValue("MaxResults", 5))
-	}
-	if s.NextToken != nil && len(*s.NextToken) < 1 {
-		invalidParams.Add(request.NewErrParamMinLen("NextToken", 1))
 	}
 
 	if invalidParams.Len() > 0 {
@@ -93132,6 +93170,9 @@ const (
 
 	// EventTypeError is a EventType enum value
 	EventTypeError = "error"
+
+	// EventTypeInformation is a EventType enum value
+	EventTypeInformation = "information"
 )
 
 const (
@@ -93654,8 +93695,14 @@ const (
 	// InstanceTypeR54xlarge is a InstanceType enum value
 	InstanceTypeR54xlarge = "r5.4xlarge"
 
+	// InstanceTypeR58xlarge is a InstanceType enum value
+	InstanceTypeR58xlarge = "r5.8xlarge"
+
 	// InstanceTypeR512xlarge is a InstanceType enum value
 	InstanceTypeR512xlarge = "r5.12xlarge"
+
+	// InstanceTypeR516xlarge is a InstanceType enum value
+	InstanceTypeR516xlarge = "r5.16xlarge"
 
 	// InstanceTypeR524xlarge is a InstanceType enum value
 	InstanceTypeR524xlarge = "r5.24xlarge"
@@ -93675,8 +93722,14 @@ const (
 	// InstanceTypeR5a4xlarge is a InstanceType enum value
 	InstanceTypeR5a4xlarge = "r5a.4xlarge"
 
+	// InstanceTypeR5a8xlarge is a InstanceType enum value
+	InstanceTypeR5a8xlarge = "r5a.8xlarge"
+
 	// InstanceTypeR5a12xlarge is a InstanceType enum value
 	InstanceTypeR5a12xlarge = "r5a.12xlarge"
+
+	// InstanceTypeR5a16xlarge is a InstanceType enum value
+	InstanceTypeR5a16xlarge = "r5a.16xlarge"
 
 	// InstanceTypeR5a24xlarge is a InstanceType enum value
 	InstanceTypeR5a24xlarge = "r5a.24xlarge"
@@ -93693,8 +93746,14 @@ const (
 	// InstanceTypeR5d4xlarge is a InstanceType enum value
 	InstanceTypeR5d4xlarge = "r5d.4xlarge"
 
+	// InstanceTypeR5d8xlarge is a InstanceType enum value
+	InstanceTypeR5d8xlarge = "r5d.8xlarge"
+
 	// InstanceTypeR5d12xlarge is a InstanceType enum value
 	InstanceTypeR5d12xlarge = "r5d.12xlarge"
+
+	// InstanceTypeR5d16xlarge is a InstanceType enum value
+	InstanceTypeR5d16xlarge = "r5d.16xlarge"
 
 	// InstanceTypeR5d24xlarge is a InstanceType enum value
 	InstanceTypeR5d24xlarge = "r5d.24xlarge"
@@ -93870,6 +93929,9 @@ const (
 	// InstanceTypeC524xlarge is a InstanceType enum value
 	InstanceTypeC524xlarge = "c5.24xlarge"
 
+	// InstanceTypeC5Metal is a InstanceType enum value
+	InstanceTypeC5Metal = "c5.metal"
+
 	// InstanceTypeC5dLarge is a InstanceType enum value
 	InstanceTypeC5dLarge = "c5d.large"
 
@@ -93987,8 +94049,14 @@ const (
 	// InstanceTypeM54xlarge is a InstanceType enum value
 	InstanceTypeM54xlarge = "m5.4xlarge"
 
+	// InstanceTypeM58xlarge is a InstanceType enum value
+	InstanceTypeM58xlarge = "m5.8xlarge"
+
 	// InstanceTypeM512xlarge is a InstanceType enum value
 	InstanceTypeM512xlarge = "m5.12xlarge"
+
+	// InstanceTypeM516xlarge is a InstanceType enum value
+	InstanceTypeM516xlarge = "m5.16xlarge"
 
 	// InstanceTypeM524xlarge is a InstanceType enum value
 	InstanceTypeM524xlarge = "m5.24xlarge"
@@ -94008,8 +94076,14 @@ const (
 	// InstanceTypeM5a4xlarge is a InstanceType enum value
 	InstanceTypeM5a4xlarge = "m5a.4xlarge"
 
+	// InstanceTypeM5a8xlarge is a InstanceType enum value
+	InstanceTypeM5a8xlarge = "m5a.8xlarge"
+
 	// InstanceTypeM5a12xlarge is a InstanceType enum value
 	InstanceTypeM5a12xlarge = "m5a.12xlarge"
+
+	// InstanceTypeM5a16xlarge is a InstanceType enum value
+	InstanceTypeM5a16xlarge = "m5a.16xlarge"
 
 	// InstanceTypeM5a24xlarge is a InstanceType enum value
 	InstanceTypeM5a24xlarge = "m5a.24xlarge"
@@ -94026,8 +94100,14 @@ const (
 	// InstanceTypeM5d4xlarge is a InstanceType enum value
 	InstanceTypeM5d4xlarge = "m5d.4xlarge"
 
+	// InstanceTypeM5d8xlarge is a InstanceType enum value
+	InstanceTypeM5d8xlarge = "m5d.8xlarge"
+
 	// InstanceTypeM5d12xlarge is a InstanceType enum value
 	InstanceTypeM5d12xlarge = "m5d.12xlarge"
+
+	// InstanceTypeM5d16xlarge is a InstanceType enum value
+	InstanceTypeM5d16xlarge = "m5d.16xlarge"
 
 	// InstanceTypeM5d24xlarge is a InstanceType enum value
 	InstanceTypeM5d24xlarge = "m5d.24xlarge"
