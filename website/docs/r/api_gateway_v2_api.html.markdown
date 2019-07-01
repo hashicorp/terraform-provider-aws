@@ -33,6 +33,7 @@ The following arguments are supported:
 * `route_selection_expression` - (Required) The [route selection expression](https://docs.aws.amazon.com/apigateway/latest/developerguide/apigateway-websocket-api-selection-expressions.html#apigateway-websocket-api-route-selection-expressions) for the API.
 * `api_key_selection_expression` - (Optional) An [API key selection expression](https://docs.aws.amazon.com/apigateway/latest/developerguide/apigateway-websocket-api-selection-expressions.html#apigateway-websocket-api-apikey-selection-expressions). Valid values: `$context.authorizer.usageIdentifierKey`, `$request.header.x-api-key`. Defaults to `$request.header.x-api-key`.
 * `description` - (Optional) The description of the API.
+* `tags` - (Optional) A mapping of tags to assign to the API.
 * `version` - (Optional) A version identifier for the API.
 
 ## Attribute Reference
@@ -41,6 +42,7 @@ In addition to all arguments above, the following attributes are exported:
 
 * `id` - The API identifier.
 * `api_endpoint` - The URI of the API, of the form `{api-id}.execute-api.{region}.amazonaws.com`.
+* `arn` - The ARN of the API.
 
 ## Import
 

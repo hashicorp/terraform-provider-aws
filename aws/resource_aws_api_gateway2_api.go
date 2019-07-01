@@ -5,6 +5,7 @@ import (
 	"log"
 
 	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/apigatewayv2"
 	"github.com/hashicorp/terraform/helper/schema"
 	"github.com/hashicorp/terraform/helper/validation"
@@ -34,6 +35,10 @@ func resourceAwsApiGateway2Api() *schema.Resource {
 					"$request.header.x-api-key",
 				}, false),
 			},
+			"arn": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"description": {
 				Type:         schema.TypeString,
 				Optional:     true,
@@ -56,6 +61,7 @@ func resourceAwsApiGateway2Api() *schema.Resource {
 				Type:     schema.TypeString,
 				Required: true,
 			},
+			"tags": tagsSchema(),
 			"version": {
 				Type:         schema.TypeString,
 				Optional:     true,
@@ -91,6 +97,17 @@ func resourceAwsApiGateway2ApiCreate(d *schema.ResourceData, meta interface{}) e
 
 	d.SetId(aws.StringValue(resp.ApiId))
 
+	arn := arn.ARN{
+		Partition: meta.(*AWSClient).partition,
+		Region:    meta.(*AWSClient).region,
+		Service:   "apigateway",
+		Resource:  fmt.Sprintf("/apis/%s", d.Id()),
+	}.String()
+	err = setTagsApiGateway2(conn, d, arn)
+	if err != nil {
+		return fmt.Errorf("error creating API Gateway v2 API tags (%s): %s", d.Id(), err)
+	}
+
 	return resourceAwsApiGateway2ApiRead(d, meta)
 }
 
@@ -106,15 +123,26 @@ func resourceAwsApiGateway2ApiRead(d *schema.ResourceData, meta interface{}) err
 		return nil
 	}
 	if err != nil {
-		return fmt.Errorf("error reading API Gateway v2 API: %s", err)
+		return fmt.Errorf("error reading API Gateway v2 API (%s): %s", d.Id(), err)
 	}
 
 	d.Set("api_endpoint", resp.ApiEndpoint)
 	d.Set("api_key_selection_expression", resp.ApiKeySelectionExpression)
+	arn := arn.ARN{
+		Partition: meta.(*AWSClient).partition,
+		Region:    meta.(*AWSClient).region,
+		Service:   "apigateway",
+		Resource:  fmt.Sprintf("/apis/%s", d.Id()),
+	}.String()
+	d.Set("arn", arn)
 	d.Set("description", resp.Description)
 	d.Set("name", resp.Name)
 	d.Set("protocol_type", resp.ProtocolType)
 	d.Set("route_selection_expression", resp.RouteSelectionExpression)
+	err = d.Set("tags", tagsToMapGeneric(resp.Tags))
+	if err != nil {
+		return fmt.Errorf("error setting tags")
+	}
 	d.Set("version", resp.Version)
 
 	return nil
@@ -123,29 +151,42 @@ func resourceAwsApiGateway2ApiRead(d *schema.ResourceData, meta interface{}) err
 func resourceAwsApiGateway2ApiUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).apigatewayv2conn
 
+	updateApi := false
 	req := &apigatewayv2.UpdateApiInput{
 		ApiId: aws.String(d.Id()),
 	}
 	if d.HasChange("api_key_selection_expression") {
+		updateApi = true
 		req.ApiKeySelectionExpression = aws.String(d.Get("api_key_selection_expression").(string))
 	}
 	if d.HasChange("description") {
+		updateApi = true
 		req.Description = aws.String(d.Get("description").(string))
 	}
 	if d.HasChange("name") {
+		updateApi = true
 		req.Name = aws.String(d.Get("name").(string))
 	}
 	if d.HasChange("route_selection_expression") {
+		updateApi = true
 		req.RouteSelectionExpression = aws.String(d.Get("route_selection_expression").(string))
 	}
 	if d.HasChange("version") {
+		updateApi = true
 		req.Version = aws.String(d.Get("version").(string))
 	}
 
-	log.Printf("[DEBUG] Updating API Gateway v2 API: %s", req)
-	_, err := conn.UpdateApi(req)
+	if updateApi {
+		log.Printf("[DEBUG] Updating API Gateway v2 API: %s", req)
+		_, err := conn.UpdateApi(req)
+		if err != nil {
+			return fmt.Errorf("error updating API Gateway v2 API (%s): %s", d.Id(), err)
+		}
+	}
+
+	err := setTagsApiGateway2(conn, d, d.Get("arn").(string))
 	if err != nil {
-		return fmt.Errorf("error updating API Gateway v2 API: %s", err)
+		return fmt.Errorf("error updating API Gateway v2 API (%s) tags: %s", d.Id(), err)
 	}
 
 	return resourceAwsApiGateway2ApiRead(d, meta)
@@ -162,7 +203,7 @@ func resourceAwsApiGateway2ApiDelete(d *schema.ResourceData, meta interface{}) e
 		return nil
 	}
 	if err != nil {
-		return fmt.Errorf("error deleting API Gateway v2 API: %s", err)
+		return fmt.Errorf("error deleting API Gateway v2 API (%s): %s", d.Id(), err)
 	}
 
 	return nil
