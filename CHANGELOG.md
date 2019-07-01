@@ -1,5 +1,10 @@
 ## 2.18.0 (Unreleased)
 
+FEATURES:
+
+* **New Data Source:** `aws_servicequotas_service` [GH-9177]
+* **New Data Source:** `aws_servicequotas_service_quota` [GH-9177]
+
 BUG FIXES:
 
 * resource/aws_emr_cluster: Skip refreshing the `kerberos_attributes` configuration block `ad_domain_join_user` argument from the API as it does not contain the real configuration value [GH-8559]
