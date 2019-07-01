@@ -149,7 +149,7 @@ func resourceAwsServiceQuotasServiceQuotaRead(d *schema.ResourceData, meta inter
 		return fmt.Errorf("error getting Service Quotas Default Service Quota (%s): %s", d.Id(), err)
 	}
 
-	if output == nil {
+	if defaultOutput == nil {
 		return fmt.Errorf("error getting Service Quotas Default Service Quota (%s): empty result", d.Id())
 	}
 
