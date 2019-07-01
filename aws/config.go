@@ -586,6 +586,14 @@ func (c *Config) Client() (interface{}, error) {
 		}
 	})
 
+	client.organizationsconn.Handlers.Retry.PushBack(func(r *request.Request) {
+		// Retry on the following error:
+		// ConcurrentModificationException: AWS Organizations can't complete your request because it conflicts with another attempt to modify the same entity. Try again later.
+		if isAWSErr(r.Error, organizations.ErrCodeConcurrentModificationException, "Try again later") {
+			r.Retryable = aws.Bool(true)
+		}
+	})
+
 	client.storagegatewayconn.Handlers.Retry.PushBack(func(r *request.Request) {
 		// InvalidGatewayRequestException: The specified gateway proxy network connection is busy.
 		if isAWSErr(r.Error, storagegateway.ErrCodeInvalidGatewayRequestException, "The specified gateway proxy network connection is busy") {
