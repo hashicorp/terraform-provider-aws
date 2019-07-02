@@ -5,6 +5,10 @@ FEATURES:
 * **New Data Source:** `aws_servicequotas_service` [GH-9177]
 * **New Data Source:** `aws_servicequotas_service_quota` [GH-9177]
 
+ENHANCEMENTS:
+
+* resource/aws_appmesh_route: Add `tags` argument [GH-9206]
+
 BUG FIXES:
 
 * resource/aws_db_instance: Properly include `allow_major_version_upgrade` value when creating an RDS instance from a replica  or snapshot to allow RDS to perform a major version upgrade if necessary [GH-9178]
