@@ -1471,7 +1471,7 @@ func resourceAwsDbInstanceUpdate(d *schema.ResourceData, meta interface{}) error
 		d.SetPartial("allow_major_version_upgrade")
 		req.AllowMajorVersionUpgrade = aws.Bool(d.Get("allow_major_version_upgrade").(bool))
 		// Having allowing_major_version_upgrade by itself should not trigger ModifyDBInstance
-		// InvalidParameterCombination: No modifications were requested
+		// as it results in InvalidParameterCombination: No modifications were requested
 	}
 	if d.HasChange("backup_retention_period") {
 		d.SetPartial("backup_retention_period")
