@@ -278,13 +278,16 @@ for more information about connecting to alternate AWS endpoints or AWS compatib
 
 The nested `assume_role` block supports the following:
 
-* `role_arn` - (Required) The ARN of the role to assume.
+* `role_arn` - (Optional) The ARN of the role to assume. It must be provided, but
+  it can also be sourced from the `AWS_ASSUME_ROLE_ARN` environment variable.
 
 * `session_name` - (Optional) The session name to use when making the
-  AssumeRole call.
+  AssumeRole call. It can also be sourced from the `AWS_ASSUME_ROLE_SESSION_NAME`
+  environment variable.
 
 * `external_id` - (Optional) The external ID to use when making the
-  AssumeRole call.
+  AssumeRole call. It can also be sourced from the `AWS_ASSUME_ROLE_EXTERNAL_ID`
+  environment variable.
 
 * `policy` - (Optional) A more restrictive policy to apply to the temporary credentials.
 This gives you a way to further restrict the permissions for the resulting temporary
