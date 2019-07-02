@@ -139,6 +139,28 @@ func TestAccAWSIAMGroupPolicy_generatedName(t *testing.T) {
 	})
 }
 
+func TestAccAWSIAMGroupPolicy_importBasic(t *testing.T) {
+	suffix := randomString(10)
+	resourceName := fmt.Sprintf("aws_iam_group_policy.foo_%s", suffix)
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckIAMGroupPolicyDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAwsIamGroupPolicyConfig(suffix),
+			},
+
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func testAccCheckIAMGroupPolicyDestroy(s *terraform.State) error {
 	conn := testAccProvider.Meta().(*AWSClient).iamconn
 
@@ -147,23 +169,28 @@ func testAccCheckIAMGroupPolicyDestroy(s *terraform.State) error {
 			continue
 		}
 
-		group, name := resourceAwsIamGroupPolicyParseId(rs.Primary.ID)
+		group, name, err := resourceAwsIamGroupPolicyParseId(rs.Primary.ID)
+		if err != nil {
+			return err
+		}
 
 		request := &iam.GetGroupPolicyInput{
 			PolicyName: aws.String(name),
 			GroupName:  aws.String(group),
 		}
 
-		_, err := conn.GetGroupPolicy(request)
+		getResp, err := conn.GetGroupPolicy(request)
 		if err != nil {
-			// Verify the error is what we want
-			if ae, ok := err.(awserr.Error); ok && ae.Code() == "NoSuchEntity" {
-				continue
+			if iamerr, ok := err.(awserr.Error); ok && iamerr.Code() == "NoSuchEntity" {
+				// none found, that's good
+				return nil
 			}
-			return err
+			return fmt.Errorf("Error reading IAM policy %s from group %s: %s", name, group, err)
 		}
 
-		return fmt.Errorf("still exists")
+		if getResp != nil {
+			return fmt.Errorf("Found IAM group policy, expected none: %s", getResp)
+		}
 	}
 
 	return nil
@@ -203,7 +230,11 @@ func testAccCheckIAMGroupPolicyExists(
 		}
 
 		iamconn := testAccProvider.Meta().(*AWSClient).iamconn
-		group, name := resourceAwsIamGroupPolicyParseId(policy.Primary.ID)
+		group, name, err := resourceAwsIamGroupPolicyParseId(policy.Primary.ID)
+		if err != nil {
+			return err
+		}
+
 		output, err := iamconn.GetGroupPolicy(&iam.GetGroupPolicyInput{
 			GroupName:  aws.String(group),
 			PolicyName: aws.String(name),
@@ -332,4 +363,27 @@ resource "aws_iam_group_policy" "bar" {
   policy = "{\"Version\":\"2012-10-17\",\"Statement\":{\"Effect\":\"Allow\",\"Action\":\"*\",\"Resource\":\"*\"}}"
 }
 `, rInt, rInt, rInt)
+}
+
+func testAccAwsIamGroupPolicyConfig(suffix string) string {
+	return fmt.Sprintf(`
+resource "aws_iam_group" "group_%[1]s" {
+	name = "tf_test_group_test_%[1]s"
+	path = "/"
+}
+resource "aws_iam_group_policy" "foo_%[1]s" {
+	name = "tf_test_policy_test_%[1]s"
+	group = "${aws_iam_group.group_%[1]s.name}"
+	policy = <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": {
+    "Effect": "Allow",
+    "Action": "*",
+    "Resource": "*"
+  }
+}
+EOF
+}
+`, suffix)
 }
