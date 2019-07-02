@@ -113,7 +113,7 @@ resource "aws_spot_fleet_request" "cheap_compute" {
 }
 ```
 
-~> In this example, we use a [`dynamic` block](/docs/configuration/expressions.html#dynamic-blocks) to define zero or more `launch_specification` blocks, producing one for each element in the list of subnet ids.
+-> In this example, we use a [`dynamic` block](/docs/configuration/expressions.html#dynamic-blocks) to define zero or more `launch_specification` blocks, producing one for each element in the list of subnet ids.
 
 ## Argument Reference
 
