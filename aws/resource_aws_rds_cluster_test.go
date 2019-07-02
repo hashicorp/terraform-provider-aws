@@ -499,8 +499,9 @@ func TestAccAWSRDSCluster_updateIamRoles(t *testing.T) {
 }
 
 func TestAccAWSRDSCluster_kmsKey(t *testing.T) {
-	var v rds.DBCluster
-	keyRegex := regexp.MustCompile("^arn:aws:kms:")
+	var dbCluster1 rds.DBCluster
+	kmsKeyResourceName := "aws_kms_key.foo"
+	resourceName := "aws_rds_cluster.default"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -510,9 +511,8 @@ func TestAccAWSRDSCluster_kmsKey(t *testing.T) {
 			{
 				Config: testAccAWSClusterConfig_kmsKey(acctest.RandInt()),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSClusterExists("aws_rds_cluster.default", &v),
-					resource.TestMatchResourceAttr(
-						"aws_rds_cluster.default", "kms_key_id", keyRegex),
+					testAccCheckAWSClusterExists(resourceName, &dbCluster1),
+					resource.TestCheckResourceAttrPair(resourceName, "kms_key_id", kmsKeyResourceName, "arn"),
 				),
 			},
 		},
@@ -1519,9 +1519,8 @@ func TestAccAWSRDSCluster_SnapshotIdentifier_EncryptedRestore(t *testing.T) {
 	var dbCluster, sourceDbCluster rds.DBCluster
 	var dbClusterSnapshot rds.DBClusterSnapshot
 
-	keyRegex := regexp.MustCompile("^arn:aws:kms:")
-
 	rName := acctest.RandomWithPrefix("tf-acc-test")
+	kmsKeyResourceName := "aws_kms_key.test"
 	sourceDbResourceName := "aws_rds_cluster.source"
 	snapshotResourceName := "aws_db_cluster_snapshot.test"
 	resourceName := "aws_rds_cluster.test"
@@ -1537,10 +1536,8 @@ func TestAccAWSRDSCluster_SnapshotIdentifier_EncryptedRestore(t *testing.T) {
 					testAccCheckAWSClusterExists(sourceDbResourceName, &sourceDbCluster),
 					testAccCheckDbClusterSnapshotExists(snapshotResourceName, &dbClusterSnapshot),
 					testAccCheckAWSClusterExists(resourceName, &dbCluster),
-					resource.TestMatchResourceAttr(
-						"aws_rds_cluster.test", "kms_key_id", keyRegex),
-					resource.TestCheckResourceAttr(
-						"aws_rds_cluster.test", "storage_encrypted", "true"),
+					resource.TestCheckResourceAttrPair(resourceName, "kms_key_id", kmsKeyResourceName, "arn"),
+					resource.TestCheckResourceAttr(resourceName, "storage_encrypted", "true"),
 				),
 			},
 		},
