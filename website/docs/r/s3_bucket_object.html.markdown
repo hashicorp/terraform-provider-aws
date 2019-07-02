@@ -120,3 +120,13 @@ The following attributes are exported
 * `etag` - the ETag generated for the object (an MD5 sum of the object content). For plaintext objects or objects encrypted with an AWS-managed key, the hash is an MD5 digest of the object data. For objects encrypted with a KMS key or objects created by either the Multipart Upload or Part Copy operation, the hash is not an MD5 digest, regardless of the method of encryption. More information on possible values can be found on [Common Response Headers](https://docs.aws.amazon.com/AmazonS3/latest/API/RESTCommonResponseHeaders.html).
 * `version_id` - A unique version ID value for the object, if bucket versioning
 is enabled.
+
+## Import
+
+S3 objects cannot be imported at this stage. The state is updated when the object is created. 
+
+**Import alternatives:**
+
+1. Overwrite the object by running `apply` command to update your _.tfstate_ file. Consider S3 versioning, notifications and other unintended consequences before applying.
+
+2. Create the object by running `apply` in a different bucket and then modify your _.tfstate_ file to match the intended destination.
