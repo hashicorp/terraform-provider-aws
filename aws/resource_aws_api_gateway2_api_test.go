@@ -2,6 +2,7 @@ package aws
 
 import (
 	"fmt"
+	"log"
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -10,6 +11,53 @@ import (
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/terraform"
 )
+
+func init() {
+	resource.AddTestSweepers("aws_api_gateway_v2_api", &resource.Sweeper{
+		Name: "aws_api_gateway_v2_api",
+		F:    testSweepAPIGateway2Apis,
+	})
+}
+
+func testSweepAPIGateway2Apis(region string) error {
+	client, err := sharedClientForRegion(region)
+	if err != nil {
+		return fmt.Errorf("error getting client: %s", err)
+	}
+	conn := client.(*AWSClient).apigatewayv2conn
+	input := &apigatewayv2.GetApisInput{}
+
+	for {
+		output, err := conn.GetApis(input)
+		if testSweepSkipSweepError(err) {
+			log.Printf("[WARN] Skipping API Gateway v2 API sweep for %s: %s", region, err)
+			return nil
+		}
+		if err != nil {
+			return fmt.Errorf("error retrieving API Gateway v2 APIs: %s", err)
+		}
+
+		for _, api := range output.Items {
+			log.Printf("[INFO] Deleting API Gateway v2 API: %s", aws.StringValue(api.ApiId))
+			_, err := conn.DeleteApi(&apigatewayv2.DeleteApiInput{
+				ApiId: api.ApiId,
+			})
+			if isAWSErr(err, apigatewayv2.ErrCodeNotFoundException, "") {
+				continue
+			}
+			if err != nil {
+				return fmt.Errorf("error deleting API Gateway v2 API (%s): %s", aws.StringValue(api.ApiId), err)
+			}
+		}
+
+		if aws.StringValue(output.NextToken) == "" {
+			break
+		}
+		input.NextToken = output.NextToken
+	}
+
+	return nil
+}
 
 func TestAccAWSAPIGateway2Api_basic(t *testing.T) {
 	resourceName := "aws_api_gateway_v2_api.test"
