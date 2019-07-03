@@ -15,7 +15,7 @@ Provides an AppSync Resolver.
 ```hcl
 resource "aws_appsync_graphql_api" "test" {
   authentication_type = "API_KEY"
-  name                = "tf-example"
+  name                = "tf_example"
 
   schema = <<EOF
 type Mutation {
@@ -40,7 +40,7 @@ EOF
 
 resource "aws_appsync_datasource" "test" {
   api_id = "${aws_appsync_graphql_api.test.id}"
-  name   = "tf-example"
+  name   = "tf_example"
   type   = "HTTP"
 
   http_config {
