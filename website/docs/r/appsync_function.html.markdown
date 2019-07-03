@@ -50,7 +50,7 @@ resource "aws_appsync_datasource" "test" {
 resource "aws_appsync_function" "test" {
   api_id      = "${aws_appsync_graphql_api.test.id}"
   data_source = "${aws_appsync_datasource.test.name}"
-  name        = "tf-example"
+  name        = "tf_example"
   request_mapping_template = <<EOF
 {
     "version": "2018-05-29",
