@@ -71,7 +71,7 @@ func diffTagsCodeCommit(oldTags, newTags map[string]*string) (map[string]*string
 func tagsFromMapCodeCommit(m map[string]interface{}) map[string]*string {
 	result := make(map[string]*string)
 	for k, v := range m {
-		if !tagIgnoredMskCluster(k, v.(string)) {
+		if !tagIgnoredCodeCommit(k, v.(string)) {
 			result[k] = aws.String(v.(string))
 		}
 	}
@@ -83,7 +83,7 @@ func tagsFromMapCodeCommit(m map[string]interface{}) map[string]*string {
 func tagsToMapCodeCommit(ts map[string]*string) map[string]string {
 	result := make(map[string]string)
 	for k, v := range ts {
-		if !tagIgnoredMskCluster(k, aws.StringValue(v)) {
+		if !tagIgnoredCodeCommit(k, aws.StringValue(v)) {
 			result[k] = aws.StringValue(v)
 		}
 	}
