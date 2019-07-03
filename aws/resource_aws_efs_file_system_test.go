@@ -58,6 +58,29 @@ func TestAccAWSEFSFileSystem_importBasic(t *testing.T) {
 	})
 }
 
+func TestAccAWSEFSFileSystem_importWithLifecyclePolicy(t *testing.T) {
+	resourceName := "aws_efs_file_system.foo-with-lifecycle-policy"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckEfsFileSystemDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSEFSFileSystemConfigWithLifecyclePolicy(
+					"transition_to_ia",
+					efs.TransitionToIARulesAfter30Days,
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func TestAccAWSEFSFileSystem_basic(t *testing.T) {
 	rInt := acctest.RandInt()
 	resource.ParallelTest(t, resource.TestCase{
@@ -256,6 +279,38 @@ func TestAccAWSEFSFileSystem_ThroughputMode(t *testing.T) {
 				ImportState:             true,
 				ImportStateVerify:       true,
 				ImportStateVerifyIgnore: []string{"creation_token"},
+			},
+		},
+	})
+}
+
+func TestAccAWSEFSFileSystem_lifecyclePolicy(t *testing.T) {
+	resourceName := "aws_efs_file_system.foo-with-lifecycle-policy"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckEfsFileSystemDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSEFSFileSystemConfigWithLifecyclePolicy(
+					"transition_to_ia",
+					"invalid_value",
+				),
+				ExpectError: regexp.MustCompile(`got invalid_value`),
+			},
+			{
+				Config: testAccAWSEFSFileSystemConfigWithLifecyclePolicy(
+					"transition_to_ia",
+					efs.TransitionToIARulesAfter30Days,
+				),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckEfsFileSystem(resourceName),
+					resource.TestCheckResourceAttr(
+						resourceName,
+						"lifecycle_policy.0.transition_to_ia",
+						efs.TransitionToIARulesAfter30Days),
+				),
 			},
 		},
 	})
@@ -476,4 +531,14 @@ resource "aws_efs_file_system" "test" {
   throughput_mode                 = "provisioned"
 }
 `, provisionedThroughputInMibps)
+}
+
+func testAccAWSEFSFileSystemConfigWithLifecyclePolicy(lpName string, lpVal string) string {
+	return fmt.Sprintf(`
+resource "aws_efs_file_system" "foo-with-lifecycle-policy" {
+  lifecycle_policy {
+    %s = %q
+  }
+}
+`, lpName, lpVal)
 }
