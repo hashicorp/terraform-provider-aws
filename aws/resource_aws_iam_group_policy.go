@@ -118,12 +118,18 @@ func resourceAwsIamGroupPolicyRead(d *schema.ResourceData, meta interface{}) err
 	}
 
 	if err := d.Set("policy", policy); err != nil {
-		return err
+		return fmt.Errorf("error setting policy: %s", err)
 	}
+
 	if err := d.Set("name", name); err != nil {
-		return err
+		return fmt.Errorf("error setting name: %s", err)
 	}
-	return d.Set("group", group)
+
+	if err := d.Set("group", group); err != nil {
+		return fmt.Errorf("error setting group: %s", err)
+	}
+
+	return nil
 }
 
 func resourceAwsIamGroupPolicyDelete(d *schema.ResourceData, meta interface{}) error {
@@ -150,7 +156,7 @@ func resourceAwsIamGroupPolicyDelete(d *schema.ResourceData, meta interface{}) e
 
 func resourceAwsIamGroupPolicyParseId(id string) (groupName, policyName string, err error) {
 	parts := strings.SplitN(id, ":", 2)
-	if len(parts) != 2 {
+	if len(parts) != 2 || parts[0] == "" || parts[1] == "" {
 		err = fmt.Errorf("group_policy id must be of the form <group name>:<policy name>")
 		return
 	}
