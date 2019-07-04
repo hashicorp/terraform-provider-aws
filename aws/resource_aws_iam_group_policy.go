@@ -62,13 +62,7 @@ func resourceAwsIamGroupPolicyPut(d *schema.ResourceData, meta interface{}) erro
 	}
 
 	var policyName string
-	var err error
-	if !d.IsNewResource() {
-		_, policyName, err = resourceAwsIamGroupPolicyParseId(d.Id())
-		if err != nil {
-			return err
-		}
-	} else if v, ok := d.GetOk("name"); ok {
+	if v, ok := d.GetOk("name"); ok {
 		policyName = v.(string)
 	} else if v, ok := d.GetOk("name_prefix"); ok {
 		policyName = resource.PrefixedUniqueId(v.(string))
