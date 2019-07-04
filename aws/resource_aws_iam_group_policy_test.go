@@ -6,7 +6,6 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/iam"
 	"github.com/hashicorp/terraform/helper/acctest"
 	"github.com/hashicorp/terraform/helper/resource"
@@ -181,9 +180,9 @@ func testAccCheckIAMGroupPolicyDestroy(s *terraform.State) error {
 
 		getResp, err := conn.GetGroupPolicy(request)
 		if err != nil {
-			if iamerr, ok := err.(awserr.Error); ok && iamerr.Code() == "NoSuchEntity" {
+			if isAWSErr(err, iam.ErrCodeNoSuchEntityException, "") {
 				// none found, that's good
-				return nil
+				continue
 			}
 			return fmt.Errorf("Error reading IAM policy %s from group %s: %s", name, group, err)
 		}
