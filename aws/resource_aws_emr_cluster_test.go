@@ -727,6 +727,46 @@ func TestAccAWSEMRCluster_MasterInstanceGroup_BidPrice(t *testing.T) {
 	})
 }
 
+func TestAccAWSEMRCluster_MasterInstanceGroup_InstanceCount(t *testing.T) {
+	var cluster1, cluster2 emr.Cluster
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_emr_cluster.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSEmrDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSEmrClusterConfigMasterInstanceGroupInstanceCount(rName, 3),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSEmrClusterExists(resourceName, &cluster1),
+					resource.TestCheckResourceAttr(resourceName, "master_instance_group.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "master_instance_group.0.instance_count", "3"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"configurations",
+					"keep_job_flow_alive_when_no_steps",
+				},
+			},
+			{
+				Config: testAccAWSEmrClusterConfigMasterInstanceGroupInstanceCount(rName, 1),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSEmrClusterExists(resourceName, &cluster2),
+					testAccCheckAWSEmrClusterRecreated(&cluster1, &cluster2),
+					resource.TestCheckResourceAttr(resourceName, "master_instance_group.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "master_instance_group.0.instance_count", "1"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccAWSEMRCluster_MasterInstanceGroup_InstanceType(t *testing.T) {
 	var cluster1, cluster2 emr.Cluster
 	rName := acctest.RandomWithPrefix("tf-acc-test")
@@ -1451,7 +1491,7 @@ func testAccCheckAWSEmrClusterRecreated(i, j *emr.Cluster) resource.TestCheckFun
 	}
 }
 
-func testAccAWSEmrClusterConfigBaseVpc() string {
+func testAccAWSEmrClusterConfigBaseVpc(mapPublicIpOnLaunch bool) string {
 	return fmt.Sprintf(`
 data "aws_availability_zones" "current" {}
 
@@ -1500,9 +1540,10 @@ resource "aws_security_group" "test" {
 }
 
 resource "aws_subnet" "test" {
-  availability_zone = "${data.aws_availability_zones.current.names[0]}"
-  cidr_block        = "10.0.0.0/24"
-  vpc_id            = "${aws_vpc.test.id}"
+  availability_zone       = "${data.aws_availability_zones.current.names[0]}"
+  cidr_block              = "10.0.0.0/24"
+  map_public_ip_on_launch = %[1]t
+  vpc_id                  = "${aws_vpc.test.id}"
 
   tags = {
     Name = "tf-acc-test-emr-cluster"
@@ -1522,7 +1563,7 @@ resource "aws_route_table_association" "test" {
   route_table_id = "${aws_route_table.test.id}"
   subnet_id      = "${aws_subnet.test.id}"
 }
-`)
+`, mapPublicIpOnLaunch)
 }
 
 func testAccAWSEmrClusterConfig_bootstrap(r string) string {
@@ -3362,7 +3403,7 @@ resource "aws_main_route_table_association" "a" {
 }
 
 func testAccAWSEmrClusterConfigCoreInstanceGroupAutoscalingPolicy(rName, autoscalingPolicy string) string {
-	return testAccAWSEmrClusterConfigBaseVpc() + fmt.Sprintf(`
+	return testAccAWSEmrClusterConfigBaseVpc(false) + fmt.Sprintf(`
 data "aws_iam_policy_document" "test" {
   statement {
     actions = ["sts:AssumeRole"]
@@ -3420,7 +3461,7 @@ resource "aws_emr_cluster" "test" {
 }
 
 func testAccAWSEmrClusterConfigCoreInstanceGroupAutoscalingPolicyRemoved(rName string) string {
-	return testAccAWSEmrClusterConfigBaseVpc() + fmt.Sprintf(`
+	return testAccAWSEmrClusterConfigBaseVpc(false) + fmt.Sprintf(`
 data "aws_iam_policy_document" "test" {
   statement {
     actions = ["sts:AssumeRole"]
@@ -3477,7 +3518,7 @@ resource "aws_emr_cluster" "test" {
 }
 
 func testAccAWSEmrClusterConfigCoreInstanceGroupBidPrice(rName, bidPrice string) string {
-	return testAccAWSEmrClusterConfigBaseVpc() + fmt.Sprintf(`
+	return testAccAWSEmrClusterConfigBaseVpc(false) + fmt.Sprintf(`
 resource "aws_emr_cluster" "test" {
   applications                      = ["Spark"]
   keep_job_flow_alive_when_no_steps = true
@@ -3507,7 +3548,7 @@ resource "aws_emr_cluster" "test" {
 }
 
 func testAccAWSEmrClusterConfigCoreInstanceGroupInstanceCount(rName string, instanceCount int) string {
-	return testAccAWSEmrClusterConfigBaseVpc() + fmt.Sprintf(`
+	return testAccAWSEmrClusterConfigBaseVpc(false) + fmt.Sprintf(`
 resource "aws_emr_cluster" "test" {
   applications                      = ["Spark"]
   keep_job_flow_alive_when_no_steps = true
@@ -3537,7 +3578,7 @@ resource "aws_emr_cluster" "test" {
 }
 
 func testAccAWSEmrClusterConfigCoreInstanceGroupInstanceType(rName, instanceType string) string {
-	return testAccAWSEmrClusterConfigBaseVpc() + fmt.Sprintf(`
+	return testAccAWSEmrClusterConfigBaseVpc(false) + fmt.Sprintf(`
 resource "aws_emr_cluster" "test" {
   applications                      = ["Spark"]
   keep_job_flow_alive_when_no_steps = true
@@ -3566,7 +3607,7 @@ resource "aws_emr_cluster" "test" {
 }
 
 func testAccAWSEmrClusterConfigCoreInstanceGroupName(rName, instanceGroupName string) string {
-	return testAccAWSEmrClusterConfigBaseVpc() + fmt.Sprintf(`
+	return testAccAWSEmrClusterConfigBaseVpc(false) + fmt.Sprintf(`
 resource "aws_emr_cluster" "test" {
   applications                      = ["Spark"]
   keep_job_flow_alive_when_no_steps = true
@@ -3596,7 +3637,7 @@ resource "aws_emr_cluster" "test" {
 }
 
 func testAccAWSEmrClusterConfigCoreInstanceType(rName, coreInstanceType string) string {
-	return testAccAWSEmrClusterConfigBaseVpc() + fmt.Sprintf(`
+	return testAccAWSEmrClusterConfigBaseVpc(false) + fmt.Sprintf(`
 resource "aws_emr_cluster" "test" {
   applications                      = ["Spark"]
   keep_job_flow_alive_when_no_steps = true
@@ -3623,7 +3664,7 @@ resource "aws_emr_cluster" "test" {
 }
 
 func testAccAWSEmrClusterConfigInstanceGroupCoreInstanceType(rName, coreInstanceType string) string {
-	return testAccAWSEmrClusterConfigBaseVpc() + fmt.Sprintf(`
+	return testAccAWSEmrClusterConfigBaseVpc(false) + fmt.Sprintf(`
 resource "aws_emr_cluster" "test" {
   applications                      = ["Spark"]
   keep_job_flow_alive_when_no_steps = true
@@ -3656,7 +3697,7 @@ resource "aws_emr_cluster" "test" {
 }
 
 func testAccAWSEmrClusterConfigInstanceGroupMasterInstanceType(rName, masterInstanceType string) string {
-	return testAccAWSEmrClusterConfigBaseVpc() + fmt.Sprintf(`
+	return testAccAWSEmrClusterConfigBaseVpc(false) + fmt.Sprintf(`
 resource "aws_emr_cluster" "test" {
   applications                      = ["Spark"]
   keep_job_flow_alive_when_no_steps = true
@@ -5425,7 +5466,7 @@ resource "aws_iam_role_policy_attachment" "emr-autoscaling-role" {
 }
 
 func testAccAWSEmrClusterConfigMasterInstanceGroupBidPrice(rName, bidPrice string) string {
-	return testAccAWSEmrClusterConfigBaseVpc() + fmt.Sprintf(`
+	return testAccAWSEmrClusterConfigBaseVpc(false) + fmt.Sprintf(`
 resource "aws_emr_cluster" "test" {
   applications                      = ["Spark"]
   keep_job_flow_alive_when_no_steps = true
@@ -5450,8 +5491,42 @@ resource "aws_emr_cluster" "test" {
 `, rName, bidPrice)
 }
 
+func testAccAWSEmrClusterConfigMasterInstanceGroupInstanceCount(rName string, instanceCount int) string {
+	return testAccAWSEmrClusterConfigBaseVpc(true) + fmt.Sprintf(`
+resource "aws_emr_cluster" "test" {
+  applications                      = ["Spark"]
+  keep_job_flow_alive_when_no_steps = true
+  name                              = %[1]q
+  release_label                     = "emr-5.24.1"
+  service_role                      = "EMR_DefaultRole"
+
+  # Termination protection is automatically enabled for multiple master clusters
+  termination_protection = false
+
+  ec2_attributes {
+    emr_managed_master_security_group = "${aws_security_group.test.id}"
+    emr_managed_slave_security_group  = "${aws_security_group.test.id}"
+    instance_profile                  = "EMR_EC2_DefaultRole"
+    subnet_id                         = "${aws_subnet.test.id}"
+  }
+
+  master_instance_group {
+    instance_count = %[2]d
+    instance_type  = "m4.large"
+  }
+
+  # core_instance_group is required with multiple masters
+  core_instance_group {
+    instance_type = "m4.large"
+  }
+
+  depends_on = ["aws_route_table_association.test"]
+}
+`, rName, instanceCount)
+}
+
 func testAccAWSEmrClusterConfigMasterInstanceGroupInstanceType(rName, instanceType string) string {
-	return testAccAWSEmrClusterConfigBaseVpc() + fmt.Sprintf(`
+	return testAccAWSEmrClusterConfigBaseVpc(false) + fmt.Sprintf(`
 resource "aws_emr_cluster" "test" {
   applications                      = ["Spark"]
   keep_job_flow_alive_when_no_steps = true
@@ -5476,7 +5551,7 @@ resource "aws_emr_cluster" "test" {
 }
 
 func testAccAWSEmrClusterConfigMasterInstanceGroupName(rName, instanceGroupName string) string {
-	return testAccAWSEmrClusterConfigBaseVpc() + fmt.Sprintf(`
+	return testAccAWSEmrClusterConfigBaseVpc(false) + fmt.Sprintf(`
 resource "aws_emr_cluster" "test" {
   applications                      = ["Spark"]
   keep_job_flow_alive_when_no_steps = true
@@ -5502,7 +5577,7 @@ resource "aws_emr_cluster" "test" {
 }
 
 func testAccAWSEmrClusterConfigMasterInstanceType(rName, masterInstanceType string) string {
-	return testAccAWSEmrClusterConfigBaseVpc() + fmt.Sprintf(`
+	return testAccAWSEmrClusterConfigBaseVpc(false) + fmt.Sprintf(`
 resource "aws_emr_cluster" "test" {
   applications                      = ["Spark"]
   keep_job_flow_alive_when_no_steps = true
