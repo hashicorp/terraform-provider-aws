@@ -31,6 +31,11 @@ func TestAccAWSIAMGroupPolicy_basic(t *testing.T) {
 				),
 			},
 			{
+				ResourceName:      "aws_iam_group_policy.foo",
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
 				Config: testAccIAMGroupPolicyConfigUpdate(rInt),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckIAMGroupPolicyExists(
@@ -40,6 +45,11 @@ func TestAccAWSIAMGroupPolicy_basic(t *testing.T) {
 					),
 					testAccCheckAWSIAMGroupPolicyNameChanged(&groupPolicy1, &groupPolicy2),
 				),
+			},
+			{
+				ResourceName:      "aws_iam_group_policy.bar",
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})
@@ -100,6 +110,11 @@ func TestAccAWSIAMGroupPolicy_namePrefix(t *testing.T) {
 					testAccCheckAWSIAMGroupPolicyNameMatches(&groupPolicy1, &groupPolicy2),
 				),
 			},
+			{
+				ResourceName:      "aws_iam_group_policy.test",
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
 		},
 	})
 }
@@ -134,25 +149,8 @@ func TestAccAWSIAMGroupPolicy_generatedName(t *testing.T) {
 					testAccCheckAWSIAMGroupPolicyNameMatches(&groupPolicy1, &groupPolicy2),
 				),
 			},
-		},
-	})
-}
-
-func TestAccAWSIAMGroupPolicy_importBasic(t *testing.T) {
-	suffix := randomString(10)
-	resourceName := fmt.Sprintf("aws_iam_group_policy.foo_%s", suffix)
-
-	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckIAMGroupPolicyDestroy,
-		Steps: []resource.TestStep{
 			{
-				Config: testAccAwsIamGroupPolicyConfig(suffix),
-			},
-
-			{
-				ResourceName:      resourceName,
+				ResourceName:      "aws_iam_group_policy.test",
 				ImportState:       true,
 				ImportStateVerify: true,
 			},
@@ -362,27 +360,4 @@ resource "aws_iam_group_policy" "bar" {
   policy = "{\"Version\":\"2012-10-17\",\"Statement\":{\"Effect\":\"Allow\",\"Action\":\"*\",\"Resource\":\"*\"}}"
 }
 `, rInt, rInt, rInt)
-}
-
-func testAccAwsIamGroupPolicyConfig(suffix string) string {
-	return fmt.Sprintf(`
-resource "aws_iam_group" "group_%[1]s" {
-	name = "tf_test_group_test_%[1]s"
-	path = "/"
-}
-resource "aws_iam_group_policy" "foo_%[1]s" {
-	name = "tf_test_policy_test_%[1]s"
-	group = "${aws_iam_group.group_%[1]s.name}"
-	policy = <<EOF
-{
-  "Version": "2012-10-17",
-  "Statement": {
-    "Effect": "Allow",
-    "Action": "*",
-    "Resource": "*"
-  }
-}
-EOF
-}
-`, suffix)
 }
