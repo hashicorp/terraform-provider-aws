@@ -25,7 +25,37 @@ func TestAccAWSEc2TransitGatewayRoute_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSEc2TransitGatewayRouteExists(resourceName, &transitGatewayRoute1),
 					resource.TestCheckResourceAttr(resourceName, "destination_cidr_block", "0.0.0.0/0"),
+					resource.TestCheckResourceAttr(resourceName, "blackhole", "false"),
 					resource.TestCheckResourceAttrPair(resourceName, "transit_gateway_attachment_id", transitGatewayVpcAttachmentResourceName, "id"),
+					resource.TestCheckResourceAttrPair(resourceName, "transit_gateway_route_table_id", transitGatewayResourceName, "association_default_route_table_id"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccAWSEc2TransitGatewayRoute_blackhole(t *testing.T) {
+	var transitGatewayRoute1 ec2.TransitGatewayRoute
+	resourceName := "aws_ec2_transit_gateway_route.test_blackhole"
+	transitGatewayResourceName := "aws_ec2_transit_gateway.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSEc2TransitGateway(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSEc2TransitGatewayRouteDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSEc2TransitGatewayRouteConfigDestinationCidrBlock(),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSEc2TransitGatewayRouteExists(resourceName, &transitGatewayRoute1),
+					resource.TestCheckResourceAttr(resourceName, "destination_cidr_block", "10.1.0.0/16"),
+					resource.TestCheckResourceAttr(resourceName, "blackhole", "true"),
+					resource.TestCheckResourceAttr(resourceName, "transit_gateway_attachment_id", ""),
 					resource.TestCheckResourceAttrPair(resourceName, "transit_gateway_route_table_id", transitGatewayResourceName, "association_default_route_table_id"),
 				),
 			},
@@ -210,6 +240,12 @@ resource "aws_ec2_transit_gateway_vpc_attachment" "test" {
 resource "aws_ec2_transit_gateway_route" "test" {
   destination_cidr_block         = "0.0.0.0/0"
   transit_gateway_attachment_id  = "${aws_ec2_transit_gateway_vpc_attachment.test.id}"
+  transit_gateway_route_table_id = "${aws_ec2_transit_gateway.test.association_default_route_table_id}"
+}
+
+resource "aws_ec2_transit_gateway_route" "test_blackhole" {
+  destination_cidr_block         = "10.1.0.0/16"
+  blackhole                      = true
   transit_gateway_route_table_id = "${aws_ec2_transit_gateway.test.association_default_route_table_id}"
 }
 `)
