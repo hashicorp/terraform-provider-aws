@@ -274,10 +274,10 @@ for more information about the EMR-managed security group rules.
 
 Attributes for Kerberos configuration
 
-* `ad_domain_join_password` - (Optional) The Active Directory password for `ad_domain_join_user`
-* `ad_domain_join_user` - (Optional) Required only when establishing a cross-realm trust with an Active Directory domain. A user with sufficient privileges to join resources to the domain.
-* `cross_realm_trust_principal_password` - (Optional) Required only when establishing a cross-realm trust with a KDC in a different realm. The cross-realm principal password, which must be identical across realms.
-* `kdc_admin_password` - (Required) The password used within the cluster for the kadmin service on the cluster-dedicated KDC, which maintains Kerberos principals, password policies, and keytabs for the cluster.
+* `ad_domain_join_password` - (Optional) The Active Directory password for `ad_domain_join_user`. Terraform cannot perform drift detection of this configuration.
+* `ad_domain_join_user` - (Optional) Required only when establishing a cross-realm trust with an Active Directory domain. A user with sufficient privileges to join resources to the domain. Terraform cannot perform drift detection of this configuration.
+* `cross_realm_trust_principal_password` - (Optional) Required only when establishing a cross-realm trust with a KDC in a different realm. The cross-realm principal password, which must be identical across realms. Terraform cannot perform drift detection of this configuration.
+* `kdc_admin_password` - (Required) The password used within the cluster for the kadmin service on the cluster-dedicated KDC, which maintains Kerberos principals, password policies, and keytabs for the cluster. Terraform cannot perform drift detection of this configuration.
 * `realm` - (Required) The name of the Kerberos realm to which all nodes in a cluster belong. For example, `EC2.INTERNAL`
 
 ## instance_group
@@ -662,4 +662,16 @@ EMR clusters can be imported using the `id`, e.g.
 
 ```
 $ terraform import aws_emr_cluster.cluster j-123456ABCDEF
+```
+
+Since the API does not return the actual values for Kerberos configurations, environments with those Terraform configurations will need to use the [`lifecycle` configuration block `ignore_changes` argument](/docs/configuration/resources.html#ignore_changes) available to all Terraform resources to prevent perpetual differences, e.g.
+
+```hcl
+resource "aws_emr_cluster" "example" {
+  # ... other configuration ...
+
+  lifecycle {
+    ignore_changes = ["kerberos_attributes"]
+  }
+}
 ```

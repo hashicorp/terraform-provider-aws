@@ -193,6 +193,24 @@ func TestAccAWSAcmCertificateDataSource_noMatchReturnsError(t *testing.T) {
 	})
 }
 
+func TestAccAWSAcmCertificateDataSource_KeyTypes(t *testing.T) {
+	resourceName := "aws_acm_certificate.test"
+	dataSourceName := "data.aws_acm_certificate.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:  func() { testAccPreCheck(t) },
+		Providers: testAccProvidersWithTLS,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAwsAcmCertificateDataSourceConfigKeyTypes(),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttrPair(resourceName, "arn", dataSourceName, "arn"),
+				),
+			},
+		},
+	})
+}
+
 func testAccCheckAwsAcmCertificateDataSourceConfig(domain string) string {
 	return fmt.Sprintf(`
 data "aws_acm_certificate" "test" {
@@ -257,4 +275,40 @@ data "aws_acm_certificate" "test" {
 	most_recent = %v
 }
 `, domain, certType, mostRecent)
+}
+
+func testAccAwsAcmCertificateDataSourceConfigKeyTypes() string {
+	return fmt.Sprintf(`
+resource "tls_private_key" "test" {
+  algorithm = "RSA"
+  rsa_bits  = 4096
+}
+
+resource "tls_self_signed_cert" "test" {
+  allowed_uses = [
+    "key_encipherment",
+    "digital_signature",
+    "server_auth",
+  ]
+
+  key_algorithm         = "RSA"
+  private_key_pem       = "${tls_private_key.test.private_key_pem}"
+  validity_period_hours = 12
+
+  subject {
+    common_name  = "example.com"
+    organization = "ACME Examples, Inc"
+  }
+}
+
+resource "aws_acm_certificate" "test" {
+  certificate_body = "${tls_self_signed_cert.test.cert_pem}"
+  private_key      = "${tls_private_key.test.private_key_pem}"
+}
+
+data "aws_acm_certificate" "test" {
+  domain    = "${aws_acm_certificate.test.domain_name}"
+  key_types = ["RSA_4096"]
+}
+`)
 }

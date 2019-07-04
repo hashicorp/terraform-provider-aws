@@ -37,6 +37,8 @@ func TestAccAWSMacieMemberAccountAssociation_self(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:  func() { testAccPreCheck(t); testAccPreCheckAWSMacie(t) },
 		Providers: testAccProviders,
+		// master account associated with Macie it can't be disassociated.
+		CheckDestroy: nil,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSMacieMemberAccountAssociationConfig_self,

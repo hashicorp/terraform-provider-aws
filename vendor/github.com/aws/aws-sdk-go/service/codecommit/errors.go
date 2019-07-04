@@ -667,6 +667,13 @@ const (
 	// using a Git client for these changes.
 	ErrCodeMaximumFileEntriesExceededException = "MaximumFileEntriesExceededException"
 
+	// ErrCodeMaximumItemsToCompareExceededException for service response error code
+	// "MaximumItemsToCompareExceededException".
+	//
+	// The maximum number of items to compare between the source or destination
+	// branches and the merge base has exceeded the maximum allowed.
+	ErrCodeMaximumItemsToCompareExceededException = "MaximumItemsToCompareExceededException"
+
 	// ErrCodeMaximumOpenPullRequestsExceededException for service response error code
 	// "MaximumOpenPullRequestsExceededException".
 	//
@@ -713,8 +720,7 @@ const (
 	// "NameLengthExceededException".
 	//
 	// The user name is not valid because it has exceeded the character limit for
-	// file names. File names, including the path to the file, cannot exceed the
-	// character limit.
+	// author names.
 	ErrCodeNameLengthExceededException = "NameLengthExceededException"
 
 	// ErrCodeNoChangeException for service response error code

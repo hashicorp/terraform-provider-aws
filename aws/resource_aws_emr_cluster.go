@@ -1552,6 +1552,7 @@ func flattenEmrKerberosAttributes(d *schema.ResourceData, kerberosAttributes *em
 
 	// Do not set from API:
 	// * ad_domain_join_password
+	// * ad_domain_join_user
 	// * cross_realm_trust_principal_password
 	// * kdc_admin_password
 
@@ -1564,8 +1565,8 @@ func flattenEmrKerberosAttributes(d *schema.ResourceData, kerberosAttributes *em
 		m["ad_domain_join_password"] = v.(string)
 	}
 
-	if kerberosAttributes.ADDomainJoinUser != nil {
-		m["ad_domain_join_user"] = *kerberosAttributes.ADDomainJoinUser
+	if v, ok := d.GetOk("kerberos_attributes.0.ad_domain_join_user"); ok {
+		m["ad_domain_join_user"] = v.(string)
 	}
 
 	if v, ok := d.GetOk("kerberos_attributes.0.cross_realm_trust_principal_password"); ok {

@@ -81,8 +81,14 @@ func resourceAwsSsmMaintenanceWindowTargetCreate(d *schema.ResourceData, meta in
 		WindowId:     aws.String(d.Get("window_id").(string)),
 		ResourceType: aws.String(d.Get("resource_type").(string)),
 		Targets:      expandAwsSsmTargets(d.Get("targets").([]interface{})),
-		Name:         aws.String(d.Get("name").(string)),
-		Description:  aws.String(d.Get("description").(string)),
+	}
+
+	if v, ok := d.GetOk("name"); ok {
+		params.Name = aws.String(v.(string))
+	}
+
+	if v, ok := d.GetOk("description"); ok {
+		params.Description = aws.String(v.(string))
 	}
 
 	if v, ok := d.GetOk("owner_information"); ok {
@@ -152,6 +158,14 @@ func resourceAwsSsmMaintenanceWindowTargetUpdate(d *schema.ResourceData, meta in
 		Targets:        expandAwsSsmTargets(d.Get("targets").([]interface{})),
 		WindowId:       aws.String(d.Get("window_id").(string)),
 		WindowTargetId: aws.String(d.Id()),
+	}
+
+	if d.HasChange("name") {
+		params.Name = aws.String(d.Get("name").(string))
+	}
+
+	if d.HasChange("description") {
+		params.Description = aws.String(d.Get("description").(string))
 	}
 
 	if d.HasChange("owner_information") {
