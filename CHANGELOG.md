@@ -10,6 +10,7 @@ ENHANCEMENTS:
 * resource/aws_appmesh_route: Add `tags` argument [GH-9206]
 * resource/aws_appmesh_virtual_node: Add `tags` argument [GH-9207]
 * resource/aws_codecommit_repository: Add `tags` argument [GH-9215]
+* resource/aws_ec2_transit_gateway_route: Add `blackhole` argument [GH-9224]
 
 BUG FIXES:
 
