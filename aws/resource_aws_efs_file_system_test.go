@@ -474,8 +474,7 @@ func testAccCheckEfsFileSystemLifecyclePolicy(resourceID string, expectedVal str
 			FileSystemId: aws.String(rs.Primary.ID),
 		})
 		if err != nil {
-			return fmt.Errorf("Error describing EFS file system (%s): %s",
-				aws.StringValue(fs.FileSystemId), err.Error())
+			return fmt.Errorf("Error describing EFS file systems: %s", err.Error())
 		}
 
 		fs := resp.FileSystems[0]
