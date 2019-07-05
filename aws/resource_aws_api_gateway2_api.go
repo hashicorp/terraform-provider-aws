@@ -99,8 +99,8 @@ func resourceAwsApiGateway2ApiCreate(d *schema.ResourceData, meta interface{}) e
 
 	arn := arn.ARN{
 		Partition: meta.(*AWSClient).partition,
-		Region:    meta.(*AWSClient).region,
 		Service:   "apigateway",
+		Region:    meta.(*AWSClient).region,
 		Resource:  fmt.Sprintf("/apis/%s", d.Id()),
 	}.String()
 	err = setTagsApiGateway2(conn, d, arn)
@@ -130,8 +130,8 @@ func resourceAwsApiGateway2ApiRead(d *schema.ResourceData, meta interface{}) err
 	d.Set("api_key_selection_expression", resp.ApiKeySelectionExpression)
 	arn := arn.ARN{
 		Partition: meta.(*AWSClient).partition,
-		Region:    meta.(*AWSClient).region,
 		Service:   "apigateway",
+		Region:    meta.(*AWSClient).region,
 		Resource:  fmt.Sprintf("/apis/%s", d.Id()),
 	}.String()
 	d.Set("arn", arn)
