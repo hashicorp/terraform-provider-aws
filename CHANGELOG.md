@@ -3,6 +3,7 @@
 ENHANCEMENTS:
 
 * resource/aws_wafregional_rule: Support resource import [GH-9239]
+* resource/aws_wafregional_rule_group: Support resource import [GH-9240]
 
 ## 2.18.0 (July 05, 2019)
 
