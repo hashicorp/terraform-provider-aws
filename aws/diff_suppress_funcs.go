@@ -132,14 +132,3 @@ func suppressRoute53ZoneNameWithTrailingDot(k, old, new string, d *schema.Resour
 	}
 	return strings.TrimSuffix(old, ".") == strings.TrimSuffix(new, ".")
 }
-
-// suppressUnsetContainerAttribute ignores a container attribute being unset
-// in the Terraform configuration. All child attribute differences still apply.
-// Useful when an unset container attribute is equivalent to a container attribute
-// populated with default values.
-func suppressUnsetContainerAttribute(k, old, new string, d *schema.ResourceData) bool {
-	if old == "1" && new == "0" {
-		return true
-	}
-	return false
-}
