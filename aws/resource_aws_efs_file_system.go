@@ -344,8 +344,9 @@ func resourceAwsEfsFileSystemRead(d *schema.ResourceData, meta interface{}) erro
 		return fmt.Errorf("Error describing lifecycle configuration for EFS file system (%s): %s",
 			aws.StringValue(fs.FileSystemId), err.Error())
 	}
-	// FIXME need map[string]interface{}
-	resourceAwsEfsFileSystemSetLifecyclePolicy(d, res.LifecyclePolicies)
+	if err := resourceAwsEfsFileSystemSetLifecyclePolicy(d, res.LifecyclePolicies); err != nil {
+		return err
+	}
 
 	return nil
 }
@@ -430,11 +431,11 @@ func resourceEfsFileSystemCreateUpdateRefreshFunc(id string, conn *efs.EFS) reso
 	}
 }
 
-func resourceAwsEfsFileSystemSetLifecyclePolicy(d *schema.ResourceData, lp []*efs.LifecyclePolicy) {
+func resourceAwsEfsFileSystemSetLifecyclePolicy(d *schema.ResourceData, lp []*efs.LifecyclePolicy) error {
 	log.Printf("[DEBUG] lifecycle pols: %s %d", lp, len(lp))
 	if len(lp) == 0 {
 		d.Set("lifecycle_policy", nil)
-		return
+		return nil
 	}
 	newLP := make([]*map[string]interface{}, len(lp))
 
@@ -448,7 +449,10 @@ func resourceAwsEfsFileSystemSetLifecyclePolicy(d *schema.ResourceData, lp []*ef
 		log.Printf("[DEBUG] lp: %s", data)
 	}
 
-	d.Set("lifecycle_policy", newLP)
+	if err := d.Set("lifecycle_policy", newLP); err != nil {
+		return fmt.Errorf("error setting lifecycle_policy: %s", err)
+	}
+	return nil
 }
 
 func resourceAwsEfsFileSystemLifecyclePolicy(d *schema.ResourceData) []*efs.LifecyclePolicy {

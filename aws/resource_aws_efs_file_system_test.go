@@ -47,7 +47,6 @@ func TestAccAWSEFSFileSystem_importBasic(t *testing.T) {
 			{
 				Config: testAccAWSEFSFileSystemConfigWithTags(rInt),
 			},
-
 			{
 				ResourceName:            resourceName,
 				ImportState:             true,
@@ -306,11 +305,24 @@ func TestAccAWSEFSFileSystem_lifecyclePolicy(t *testing.T) {
 				),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEfsFileSystem(resourceName),
-					resource.TestCheckResourceAttr(
-						resourceName,
-						"lifecycle_policy.0.transition_to_ia",
-						efs.TransitionToIARulesAfter30Days),
+					testAccCheckEfsFileSystemLifecyclePolicy(resourceName, "badExpectation"),
 				),
+				ExpectError: regexp.MustCompile(`Expected: badExpectation`),
+			},
+			{
+				Config: testAccAWSEFSFileSystemConfigWithLifecyclePolicy(
+					"transition_to_ia",
+					efs.TransitionToIARulesAfter30Days,
+				),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckEfsFileSystem(resourceName),
+					testAccCheckEfsFileSystemLifecyclePolicy(resourceName, efs.TransitionToIARulesAfter30Days),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})
@@ -443,6 +455,47 @@ func testAccCheckEfsFileSystemPerformanceMode(resourceID string, expectedMode st
 		}
 
 		return nil
+	}
+}
+
+func testAccCheckEfsFileSystemLifecyclePolicy(resourceID string, expectedVal string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		rs, ok := s.RootModule().Resources[resourceID]
+		if !ok {
+			return fmt.Errorf("Not found: %s", resourceID)
+		}
+
+		if rs.Primary.ID == "" {
+			return fmt.Errorf("No ID is set")
+		}
+
+		conn := testAccProvider.Meta().(*AWSClient).efsconn
+		resp, err := conn.DescribeFileSystems(&efs.DescribeFileSystemsInput{
+			FileSystemId: aws.String(rs.Primary.ID),
+		})
+
+		fs := resp.FileSystems[0]
+
+		res, err := conn.DescribeLifecycleConfiguration(&efs.DescribeLifecycleConfigurationInput{
+			FileSystemId: fs.FileSystemId,
+		})
+		if err != nil {
+			return fmt.Errorf("Error describing lifecycle policy for EFS file system (%s): %s",
+				aws.StringValue(fs.FileSystemId), err.Error())
+		}
+		lp := res.LifecyclePolicies
+
+		newLP := make([]*map[string]interface{}, len(lp))
+
+		for i := 0; i < len(lp); i++ {
+			config := lp[i]
+			data := make(map[string]interface{})
+			newLP[i] = &data
+			if *config.TransitionToIA == expectedVal {
+				return nil
+			}
+		}
+		return fmt.Errorf("Lifecycle Policy mismatch.\nExpected: %s\nFound: %+v", expectedVal, lp)
 	}
 }
 
