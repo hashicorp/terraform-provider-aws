@@ -1,23 +1,23 @@
-## 2.18.0 (Unreleased)
+## 2.18.0 (July 05, 2019)
 
 FEATURES:
 
-* **New Data Source:** `aws_servicequotas_service` [GH-9177]
-* **New Data Source:** `aws_servicequotas_service_quota` [GH-9177]
+* **New Data Source:** `aws_servicequotas_service` ([#9177](https://github.com/terraform-providers/terraform-provider-aws/issues/9177))
+* **New Data Source:** `aws_servicequotas_service_quota` ([#9177](https://github.com/terraform-providers/terraform-provider-aws/issues/9177))
 
 ENHANCEMENTS:
 
-* resource/aws_appmesh_route: Add `tags` argument [GH-9206]
-* resource/aws_appmesh_virtual_node: Add `tags` argument [GH-9207]
-* resource/aws_codecommit_repository: Add `tags` argument [GH-9215]
-* resource/aws_ec2_transit_gateway_route: Add `blackhole` argument [GH-9224]
-* resource/aws_iam_group_policy: Support resource import [GH-9217]
+* resource/aws_appmesh_route: Add `tags` argument ([#9206](https://github.com/terraform-providers/terraform-provider-aws/issues/9206))
+* resource/aws_appmesh_virtual_node: Add `tags` argument ([#9207](https://github.com/terraform-providers/terraform-provider-aws/issues/9207))
+* resource/aws_codecommit_repository: Add `tags` argument ([#9215](https://github.com/terraform-providers/terraform-provider-aws/issues/9215))
+* resource/aws_ec2_transit_gateway_route: Add `blackhole` argument ([#9224](https://github.com/terraform-providers/terraform-provider-aws/issues/9224))
+* resource/aws_iam_group_policy: Support resource import ([#9217](https://github.com/terraform-providers/terraform-provider-aws/issues/9217))
 
 BUG FIXES:
 
-* resource/aws_db_instance: Properly include `allow_major_version_upgrade` value when creating an RDS instance from a replica  or snapshot to allow RDS to perform a major version upgrade if necessary [GH-9178]
-* resource/aws_db_instance: Prevent `InvalidParameterCombination: No modifications were requested` error when updating only `allow_major_version_upgrade` argument [GH-9193]
-* resource/aws_emr_cluster: Skip refreshing the `kerberos_attributes` configuration block `ad_domain_join_user` argument from the API as it does not contain the real configuration value [GH-8559]
+* resource/aws_db_instance: Properly include `allow_major_version_upgrade` value when creating an RDS instance from a replica  or snapshot to allow RDS to perform a major version upgrade if necessary ([#9178](https://github.com/terraform-providers/terraform-provider-aws/issues/9178))
+* resource/aws_db_instance: Prevent `InvalidParameterCombination: No modifications were requested` error when updating only `allow_major_version_upgrade` argument ([#9193](https://github.com/terraform-providers/terraform-provider-aws/issues/9193))
+* resource/aws_emr_cluster: Skip refreshing the `kerberos_attributes` configuration block `ad_domain_join_user` argument from the API as it does not contain the real configuration value ([#8559](https://github.com/terraform-providers/terraform-provider-aws/issues/8559))
 
 ## 2.17.0 (June 28, 2019)
 
