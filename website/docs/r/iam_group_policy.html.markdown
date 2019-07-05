@@ -56,3 +56,11 @@ assign a random, unique name.
 * `group` - The group to which this policy applies.
 * `name` - The name of the policy.
 * `policy` - The policy document attached to the group.
+
+## Import
+
+IAM Group Policies can be imported using the `group_name:group_policy_name`, e.g.
+
+```
+$ terraform import aws_iam_group_policy.mypolicy group_of_mypolicy_name:mypolicy_name
+```
