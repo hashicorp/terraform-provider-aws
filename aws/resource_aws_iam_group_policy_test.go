@@ -111,9 +111,10 @@ func TestAccAWSIAMGroupPolicy_namePrefix(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      "aws_iam_group_policy.test",
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:            "aws_iam_group_policy.test",
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"name_prefix"},
 			},
 		},
 	})
