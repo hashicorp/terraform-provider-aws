@@ -103,8 +103,7 @@ func resourceAwsCloudWatchEventPermissionRead(d *schema.ResourceData, meta inter
 	var policyStatement *CloudWatchEventPermissionPolicyStatement
 
 	// Especially with concurrent PutPermission calls there can be a slight delay
-	var err error
-	err = resource.Retry(1*time.Minute, func() *resource.RetryError {
+	err := resource.Retry(1*time.Minute, func() *resource.RetryError {
 		log.Printf("[DEBUG] Reading CloudWatch Events bus: %s", input)
 		output, err := conn.DescribeEventBus(&input)
 		if err != nil {
