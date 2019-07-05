@@ -167,7 +167,7 @@ func (c *Organizations) AcceptHandshakeRequest(input *AcceptHandshakeInput) (req
 //
 //      * INPUT_REQUIRED: You must include a value for all required parameters.
 //
-//      * INVALID_ENUM: You specified a value that isn't valid for that parameter.
+//      * INVALID_ENUM: You specified an invalid value.
 //
 //      * INVALID_FULL_NAME_TARGET: You specified a full name that contains invalid
 //      characters.
@@ -476,7 +476,7 @@ func (c *Organizations) AttachPolicyRequest(input *AttachPolicyInput) (req *requ
 //
 //      * INPUT_REQUIRED: You must include a value for all required parameters.
 //
-//      * INVALID_ENUM: You specified a value that isn't valid for that parameter.
+//      * INVALID_ENUM: You specified an invalid value.
 //
 //      * INVALID_FULL_NAME_TARGET: You specified a full name that contains invalid
 //      characters.
@@ -672,7 +672,7 @@ func (c *Organizations) CancelHandshakeRequest(input *CancelHandshakeInput) (req
 //
 //      * INPUT_REQUIRED: You must include a value for all required parameters.
 //
-//      * INVALID_ENUM: You specified a value that isn't valid for that parameter.
+//      * INVALID_ENUM: You specified an invalid value.
 //
 //      * INVALID_FULL_NAME_TARGET: You specified a full name that contains invalid
 //      characters.
@@ -1000,7 +1000,7 @@ func (c *Organizations) CreateAccountRequest(input *CreateAccountInput) (req *re
 //
 //      * INPUT_REQUIRED: You must include a value for all required parameters.
 //
-//      * INVALID_ENUM: You specified a value that isn't valid for that parameter.
+//      * INVALID_ENUM: You specified an invalid value.
 //
 //      * INVALID_FULL_NAME_TARGET: You specified a full name that contains invalid
 //      characters.
@@ -1373,7 +1373,7 @@ func (c *Organizations) CreateGovCloudAccountRequest(input *CreateGovCloudAccoun
 //
 //      * INPUT_REQUIRED: You must include a value for all required parameters.
 //
-//      * INVALID_ENUM: You specified a value that isn't valid for that parameter.
+//      * INVALID_ENUM: You specified an invalid value.
 //
 //      * INVALID_FULL_NAME_TARGET: You specified a full name that contains invalid
 //      characters.
@@ -1660,7 +1660,7 @@ func (c *Organizations) CreateOrganizationRequest(input *CreateOrganizationInput
 //
 //      * INPUT_REQUIRED: You must include a value for all required parameters.
 //
-//      * INVALID_ENUM: You specified a value that isn't valid for that parameter.
+//      * INVALID_ENUM: You specified an invalid value.
 //
 //      * INVALID_FULL_NAME_TARGET: You specified a full name that contains invalid
 //      characters.
@@ -1942,7 +1942,7 @@ func (c *Organizations) CreateOrganizationalUnitRequest(input *CreateOrganizatio
 //
 //      * INPUT_REQUIRED: You must include a value for all required parameters.
 //
-//      * INVALID_ENUM: You specified a value that isn't valid for that parameter.
+//      * INVALID_ENUM: You specified an invalid value.
 //
 //      * INVALID_FULL_NAME_TARGET: You specified a full name that contains invalid
 //      characters.
@@ -2219,7 +2219,7 @@ func (c *Organizations) CreatePolicyRequest(input *CreatePolicyInput) (req *requ
 //
 //      * INPUT_REQUIRED: You must include a value for all required parameters.
 //
-//      * INVALID_ENUM: You specified a value that isn't valid for that parameter.
+//      * INVALID_ENUM: You specified an invalid value.
 //
 //      * INVALID_FULL_NAME_TARGET: You specified a full name that contains invalid
 //      characters.
@@ -2416,7 +2416,7 @@ func (c *Organizations) DeclineHandshakeRequest(input *DeclineHandshakeInput) (r
 //
 //      * INPUT_REQUIRED: You must include a value for all required parameters.
 //
-//      * INVALID_ENUM: You specified a value that isn't valid for that parameter.
+//      * INVALID_ENUM: You specified an invalid value.
 //
 //      * INVALID_FULL_NAME_TARGET: You specified a full name that contains invalid
 //      characters.
@@ -2585,7 +2585,7 @@ func (c *Organizations) DeleteOrganizationRequest(input *DeleteOrganizationInput
 //
 //      * INPUT_REQUIRED: You must include a value for all required parameters.
 //
-//      * INVALID_ENUM: You specified a value that isn't valid for that parameter.
+//      * INVALID_ENUM: You specified an invalid value.
 //
 //      * INVALID_FULL_NAME_TARGET: You specified a full name that contains invalid
 //      characters.
@@ -2760,7 +2760,7 @@ func (c *Organizations) DeleteOrganizationalUnitRequest(input *DeleteOrganizatio
 //
 //      * INPUT_REQUIRED: You must include a value for all required parameters.
 //
-//      * INVALID_ENUM: You specified a value that isn't valid for that parameter.
+//      * INVALID_ENUM: You specified an invalid value.
 //
 //      * INVALID_FULL_NAME_TARGET: You specified a full name that contains invalid
 //      characters.
@@ -2939,7 +2939,7 @@ func (c *Organizations) DeletePolicyRequest(input *DeletePolicyInput) (req *requ
 //
 //      * INPUT_REQUIRED: You must include a value for all required parameters.
 //
-//      * INVALID_ENUM: You specified a value that isn't valid for that parameter.
+//      * INVALID_ENUM: You specified an invalid value.
 //
 //      * INVALID_FULL_NAME_TARGET: You specified a full name that contains invalid
 //      characters.
@@ -3116,7 +3116,7 @@ func (c *Organizations) DescribeAccountRequest(input *DescribeAccountInput) (req
 //
 //      * INPUT_REQUIRED: You must include a value for all required parameters.
 //
-//      * INVALID_ENUM: You specified a value that isn't valid for that parameter.
+//      * INVALID_ENUM: You specified an invalid value.
 //
 //      * INVALID_FULL_NAME_TARGET: You specified a full name that contains invalid
 //      characters.
@@ -3285,7 +3285,7 @@ func (c *Organizations) DescribeCreateAccountStatusRequest(input *DescribeCreate
 //
 //      * INPUT_REQUIRED: You must include a value for all required parameters.
 //
-//      * INVALID_ENUM: You specified a value that isn't valid for that parameter.
+//      * INVALID_ENUM: You specified an invalid value.
 //
 //      * INVALID_FULL_NAME_TARGET: You specified a full name that contains invalid
 //      characters.
@@ -3462,7 +3462,7 @@ func (c *Organizations) DescribeHandshakeRequest(input *DescribeHandshakeInput) 
 //
 //      * INPUT_REQUIRED: You must include a value for all required parameters.
 //
-//      * INVALID_ENUM: You specified a value that isn't valid for that parameter.
+//      * INVALID_ENUM: You specified an invalid value.
 //
 //      * INVALID_FULL_NAME_TARGET: You specified a full name that contains invalid
 //      characters.
@@ -3737,7 +3737,7 @@ func (c *Organizations) DescribeOrganizationalUnitRequest(input *DescribeOrganiz
 //
 //      * INPUT_REQUIRED: You must include a value for all required parameters.
 //
-//      * INVALID_ENUM: You specified a value that isn't valid for that parameter.
+//      * INVALID_ENUM: You specified an invalid value.
 //
 //      * INVALID_FULL_NAME_TARGET: You specified a full name that contains invalid
 //      characters.
@@ -3905,7 +3905,7 @@ func (c *Organizations) DescribePolicyRequest(input *DescribePolicyInput) (req *
 //
 //      * INPUT_REQUIRED: You must include a value for all required parameters.
 //
-//      * INVALID_ENUM: You specified a value that isn't valid for that parameter.
+//      * INVALID_ENUM: You specified an invalid value.
 //
 //      * INVALID_FULL_NAME_TARGET: You specified a full name that contains invalid
 //      characters.
@@ -4188,7 +4188,7 @@ func (c *Organizations) DetachPolicyRequest(input *DetachPolicyInput) (req *requ
 //
 //      * INPUT_REQUIRED: You must include a value for all required parameters.
 //
-//      * INVALID_ENUM: You specified a value that isn't valid for that parameter.
+//      * INVALID_ENUM: You specified an invalid value.
 //
 //      * INVALID_FULL_NAME_TARGET: You specified a full name that contains invalid
 //      characters.
@@ -4489,7 +4489,7 @@ func (c *Organizations) DisableAWSServiceAccessRequest(input *DisableAWSServiceA
 //
 //      * INPUT_REQUIRED: You must include a value for all required parameters.
 //
-//      * INVALID_ENUM: You specified a value that isn't valid for that parameter.
+//      * INVALID_ENUM: You specified an invalid value.
 //
 //      * INVALID_FULL_NAME_TARGET: You specified a full name that contains invalid
 //      characters.
@@ -4765,7 +4765,7 @@ func (c *Organizations) DisablePolicyTypeRequest(input *DisablePolicyTypeInput) 
 //
 //      * INPUT_REQUIRED: You must include a value for all required parameters.
 //
-//      * INVALID_ENUM: You specified a value that isn't valid for that parameter.
+//      * INVALID_ENUM: You specified an invalid value.
 //
 //      * INVALID_FULL_NAME_TARGET: You specified a full name that contains invalid
 //      characters.
@@ -5060,7 +5060,7 @@ func (c *Organizations) EnableAWSServiceAccessRequest(input *EnableAWSServiceAcc
 //
 //      * INPUT_REQUIRED: You must include a value for all required parameters.
 //
-//      * INVALID_ENUM: You specified a value that isn't valid for that parameter.
+//      * INVALID_ENUM: You specified an invalid value.
 //
 //      * INVALID_FULL_NAME_TARGET: You specified a full name that contains invalid
 //      characters.
@@ -5296,7 +5296,7 @@ func (c *Organizations) EnableAllFeaturesRequest(input *EnableAllFeaturesInput) 
 //
 //      * INPUT_REQUIRED: You must include a value for all required parameters.
 //
-//      * INVALID_ENUM: You specified a value that isn't valid for that parameter.
+//      * INVALID_ENUM: You specified an invalid value.
 //
 //      * INVALID_FULL_NAME_TARGET: You specified a full name that contains invalid
 //      characters.
@@ -5572,7 +5572,7 @@ func (c *Organizations) EnablePolicyTypeRequest(input *EnablePolicyTypeInput) (r
 //
 //      * INPUT_REQUIRED: You must include a value for all required parameters.
 //
-//      * INVALID_ENUM: You specified a value that isn't valid for that parameter.
+//      * INVALID_ENUM: You specified an invalid value.
 //
 //      * INVALID_FULL_NAME_TARGET: You specified a full name that contains invalid
 //      characters.
@@ -5822,7 +5822,7 @@ func (c *Organizations) InviteAccountToOrganizationRequest(input *InviteAccountT
 //
 //      * INPUT_REQUIRED: You must include a value for all required parameters.
 //
-//      * INVALID_ENUM: You specified a value that isn't valid for that parameter.
+//      * INVALID_ENUM: You specified an invalid value.
 //
 //      * INVALID_FULL_NAME_TARGET: You specified a full name that contains invalid
 //      characters.
@@ -6127,7 +6127,7 @@ func (c *Organizations) LeaveOrganizationRequest(input *LeaveOrganizationInput) 
 //
 //      * INPUT_REQUIRED: You must include a value for all required parameters.
 //
-//      * INVALID_ENUM: You specified a value that isn't valid for that parameter.
+//      * INVALID_ENUM: You specified an invalid value.
 //
 //      * INVALID_FULL_NAME_TARGET: You specified a full name that contains invalid
 //      characters.
@@ -6409,7 +6409,7 @@ func (c *Organizations) ListAWSServiceAccessForOrganizationRequest(input *ListAW
 //
 //      * INPUT_REQUIRED: You must include a value for all required parameters.
 //
-//      * INVALID_ENUM: You specified a value that isn't valid for that parameter.
+//      * INVALID_ENUM: You specified an invalid value.
 //
 //      * INVALID_FULL_NAME_TARGET: You specified a full name that contains invalid
 //      characters.
@@ -6637,7 +6637,7 @@ func (c *Organizations) ListAccountsRequest(input *ListAccountsInput) (req *requ
 //
 //      * INPUT_REQUIRED: You must include a value for all required parameters.
 //
-//      * INVALID_ENUM: You specified a value that isn't valid for that parameter.
+//      * INVALID_ENUM: You specified an invalid value.
 //
 //      * INVALID_FULL_NAME_TARGET: You specified a full name that contains invalid
 //      characters.
@@ -6867,7 +6867,7 @@ func (c *Organizations) ListAccountsForParentRequest(input *ListAccountsForParen
 //
 //      * INPUT_REQUIRED: You must include a value for all required parameters.
 //
-//      * INVALID_ENUM: You specified a value that isn't valid for that parameter.
+//      * INVALID_ENUM: You specified an invalid value.
 //
 //      * INVALID_FULL_NAME_TARGET: You specified a full name that contains invalid
 //      characters.
@@ -7098,7 +7098,7 @@ func (c *Organizations) ListChildrenRequest(input *ListChildrenInput) (req *requ
 //
 //      * INPUT_REQUIRED: You must include a value for all required parameters.
 //
-//      * INVALID_ENUM: You specified a value that isn't valid for that parameter.
+//      * INVALID_ENUM: You specified an invalid value.
 //
 //      * INVALID_FULL_NAME_TARGET: You specified a full name that contains invalid
 //      characters.
@@ -7328,7 +7328,7 @@ func (c *Organizations) ListCreateAccountStatusRequest(input *ListCreateAccountS
 //
 //      * INPUT_REQUIRED: You must include a value for all required parameters.
 //
-//      * INVALID_ENUM: You specified a value that isn't valid for that parameter.
+//      * INVALID_ENUM: You specified an invalid value.
 //
 //      * INVALID_FULL_NAME_TARGET: You specified a full name that contains invalid
 //      characters.
@@ -7562,7 +7562,7 @@ func (c *Organizations) ListHandshakesForAccountRequest(input *ListHandshakesFor
 //
 //      * INPUT_REQUIRED: You must include a value for all required parameters.
 //
-//      * INVALID_ENUM: You specified a value that isn't valid for that parameter.
+//      * INVALID_ENUM: You specified an invalid value.
 //
 //      * INVALID_FULL_NAME_TARGET: You specified a full name that contains invalid
 //      characters.
@@ -7799,7 +7799,7 @@ func (c *Organizations) ListHandshakesForOrganizationRequest(input *ListHandshak
 //
 //      * INPUT_REQUIRED: You must include a value for all required parameters.
 //
-//      * INVALID_ENUM: You specified a value that isn't valid for that parameter.
+//      * INVALID_ENUM: You specified an invalid value.
 //
 //      * INVALID_FULL_NAME_TARGET: You specified a full name that contains invalid
 //      characters.
@@ -8025,7 +8025,7 @@ func (c *Organizations) ListOrganizationalUnitsForParentRequest(input *ListOrgan
 //
 //      * INPUT_REQUIRED: You must include a value for all required parameters.
 //
-//      * INVALID_ENUM: You specified a value that isn't valid for that parameter.
+//      * INVALID_ENUM: You specified an invalid value.
 //
 //      * INVALID_FULL_NAME_TARGET: You specified a full name that contains invalid
 //      characters.
@@ -8262,7 +8262,7 @@ func (c *Organizations) ListParentsRequest(input *ListParentsInput) (req *reques
 //
 //      * INPUT_REQUIRED: You must include a value for all required parameters.
 //
-//      * INVALID_ENUM: You specified a value that isn't valid for that parameter.
+//      * INVALID_ENUM: You specified an invalid value.
 //
 //      * INVALID_FULL_NAME_TARGET: You specified a full name that contains invalid
 //      characters.
@@ -8488,7 +8488,7 @@ func (c *Organizations) ListPoliciesRequest(input *ListPoliciesInput) (req *requ
 //
 //      * INPUT_REQUIRED: You must include a value for all required parameters.
 //
-//      * INVALID_ENUM: You specified a value that isn't valid for that parameter.
+//      * INVALID_ENUM: You specified an invalid value.
 //
 //      * INVALID_FULL_NAME_TARGET: You specified a full name that contains invalid
 //      characters.
@@ -8716,7 +8716,7 @@ func (c *Organizations) ListPoliciesForTargetRequest(input *ListPoliciesForTarge
 //
 //      * INPUT_REQUIRED: You must include a value for all required parameters.
 //
-//      * INVALID_ENUM: You specified a value that isn't valid for that parameter.
+//      * INVALID_ENUM: You specified an invalid value.
 //
 //      * INVALID_FULL_NAME_TARGET: You specified a full name that contains invalid
 //      characters.
@@ -8951,7 +8951,7 @@ func (c *Organizations) ListRootsRequest(input *ListRootsInput) (req *request.Re
 //
 //      * INPUT_REQUIRED: You must include a value for all required parameters.
 //
-//      * INVALID_ENUM: You specified a value that isn't valid for that parameter.
+//      * INVALID_ENUM: You specified an invalid value.
 //
 //      * INVALID_FULL_NAME_TARGET: You specified a full name that contains invalid
 //      characters.
@@ -9175,7 +9175,7 @@ func (c *Organizations) ListTagsForResourceRequest(input *ListTagsForResourceInp
 //
 //      * INPUT_REQUIRED: You must include a value for all required parameters.
 //
-//      * INVALID_ENUM: You specified a value that isn't valid for that parameter.
+//      * INVALID_ENUM: You specified an invalid value.
 //
 //      * INVALID_FULL_NAME_TARGET: You specified a full name that contains invalid
 //      characters.
@@ -9402,7 +9402,7 @@ func (c *Organizations) ListTargetsForPolicyRequest(input *ListTargetsForPolicyI
 //
 //      * INPUT_REQUIRED: You must include a value for all required parameters.
 //
-//      * INVALID_ENUM: You specified a value that isn't valid for that parameter.
+//      * INVALID_ENUM: You specified an invalid value.
 //
 //      * INVALID_FULL_NAME_TARGET: You specified a full name that contains invalid
 //      characters.
@@ -9618,7 +9618,7 @@ func (c *Organizations) MoveAccountRequest(input *MoveAccountInput) (req *reques
 //
 //      * INPUT_REQUIRED: You must include a value for all required parameters.
 //
-//      * INVALID_ENUM: You specified a value that isn't valid for that parameter.
+//      * INVALID_ENUM: You specified an invalid value.
 //
 //      * INVALID_FULL_NAME_TARGET: You specified a full name that contains invalid
 //      characters.
@@ -9936,7 +9936,7 @@ func (c *Organizations) RemoveAccountFromOrganizationRequest(input *RemoveAccoun
 //
 //      * INPUT_REQUIRED: You must include a value for all required parameters.
 //
-//      * INVALID_ENUM: You specified a value that isn't valid for that parameter.
+//      * INVALID_ENUM: You specified an invalid value.
 //
 //      * INVALID_FULL_NAME_TARGET: You specified a full name that contains invalid
 //      characters.
@@ -10212,7 +10212,7 @@ func (c *Organizations) TagResourceRequest(input *TagResourceInput) (req *reques
 //
 //      * INPUT_REQUIRED: You must include a value for all required parameters.
 //
-//      * INVALID_ENUM: You specified a value that isn't valid for that parameter.
+//      * INVALID_ENUM: You specified an invalid value.
 //
 //      * INVALID_FULL_NAME_TARGET: You specified a full name that contains invalid
 //      characters.
@@ -10483,7 +10483,7 @@ func (c *Organizations) UntagResourceRequest(input *UntagResourceInput) (req *re
 //
 //      * INPUT_REQUIRED: You must include a value for all required parameters.
 //
-//      * INVALID_ENUM: You specified a value that isn't valid for that parameter.
+//      * INVALID_ENUM: You specified an invalid value.
 //
 //      * INVALID_FULL_NAME_TARGET: You specified a full name that contains invalid
 //      characters.
@@ -10657,7 +10657,7 @@ func (c *Organizations) UpdateOrganizationalUnitRequest(input *UpdateOrganizatio
 //
 //      * INPUT_REQUIRED: You must include a value for all required parameters.
 //
-//      * INVALID_ENUM: You specified a value that isn't valid for that parameter.
+//      * INVALID_ENUM: You specified an invalid value.
 //
 //      * INVALID_FULL_NAME_TARGET: You specified a full name that contains invalid
 //      characters.
@@ -10932,7 +10932,7 @@ func (c *Organizations) UpdatePolicyRequest(input *UpdatePolicyInput) (req *requ
 //
 //      * INPUT_REQUIRED: You must include a value for all required parameters.
 //
-//      * INVALID_ENUM: You specified a value that isn't valid for that parameter.
+//      * INVALID_ENUM: You specified an invalid value.
 //
 //      * INVALID_FULL_NAME_TARGET: You specified a full name that contains invalid
 //      characters.
@@ -15648,10 +15648,16 @@ type Tag struct {
 	_ struct{} `type:"structure"`
 
 	// The key identifier, or name, of the tag.
-	Key *string `min:"1" type:"string"`
+	//
+	// Key is a required field
+	Key *string `min:"1" type:"string" required:"true"`
 
-	// The string value that's associated with the key of the tag.
-	Value *string `type:"string"`
+	// The string value that's associated with the key of the tag. You can set the
+	// value of a tag to an empty string, but you can't set the value of a tag to
+	// null.
+	//
+	// Value is a required field
+	Value *string `type:"string" required:"true"`
 }
 
 // String returns the string representation
@@ -15667,8 +15673,14 @@ func (s Tag) GoString() string {
 // Validate inspects the fields of the type to determine if they are valid.
 func (s *Tag) Validate() error {
 	invalidParams := request.ErrInvalidParams{Context: "Tag"}
+	if s.Key == nil {
+		invalidParams.Add(request.NewErrParamRequired("Key"))
+	}
 	if s.Key != nil && len(*s.Key) < 1 {
 		invalidParams.Add(request.NewErrParamMinLen("Key", 1))
+	}
+	if s.Value == nil {
+		invalidParams.Add(request.NewErrParamRequired("Value"))
 	}
 
 	if invalidParams.Len() > 0 {
@@ -15697,7 +15709,9 @@ type TagResourceInput struct {
 	// ResourceId is a required field
 	ResourceId *string `type:"string" required:"true"`
 
-	// The tag to add to the specified resource.
+	// The tag to add to the specified resource. Specifying the tag key is required.
+	// You can set the value of a tag to an empty string, but you can't set the
+	// value of a tag to null.
 	//
 	// Tags is a required field
 	Tags []*Tag `type:"list" required:"true"`
