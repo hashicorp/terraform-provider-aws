@@ -1,4 +1,9 @@
 ## 2.19.0 (Unreleased)
+
+ENHANCEMENTS:
+
+* resource/aws_wafregional_rule: Support resource import [GH-9239]
+
 ## 2.18.0 (July 05, 2019)
 
 FEATURES:
