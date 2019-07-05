@@ -778,7 +778,6 @@ func (c *EC2) AssignPrivateIpAddressesRequest(input *AssignPrivateIpAddressesInp
 
 	output = &AssignPrivateIpAddressesOutput{}
 	req = c.newRequest(op, input, output)
-	req.Handlers.Unmarshal.Swap(ec2query.UnmarshalHandler.Name, protocol.UnmarshalDiscardBodyHandler)
 	return
 }
 
@@ -14942,7 +14941,7 @@ func (c *EC2) DescribeInstancesRequest(input *DescribeInstancesInput) (req *requ
 
 // DescribeInstances API operation for Amazon Elastic Compute Cloud.
 //
-// Describes the specified instances or all of your instances.
+// Describes the specified instances or all of AWS account's instances.
 //
 // If you specify one or more instance IDs, Amazon EC2 returns information for
 // those instances. If you do not specify instance IDs, Amazon EC2 returns information
@@ -33324,6 +33323,12 @@ func (s *AssignPrivateIpAddressesInput) SetSecondaryPrivateIpAddressCount(v int6
 
 type AssignPrivateIpAddressesOutput struct {
 	_ struct{} `type:"structure"`
+
+	// The private IP addresses assigned to the network interface.
+	AssignedPrivateIpAddresses []*AssignedPrivateIpAddress `locationName:"assignedPrivateIpAddressesSet" locationNameList:"item" type:"list"`
+
+	// The ID of the network interface.
+	NetworkInterfaceId *string `locationName:"networkInterfaceId" type:"string"`
 }
 
 // String returns the string representation
@@ -33334,6 +33339,42 @@ func (s AssignPrivateIpAddressesOutput) String() string {
 // GoString returns the string representation
 func (s AssignPrivateIpAddressesOutput) GoString() string {
 	return s.String()
+}
+
+// SetAssignedPrivateIpAddresses sets the AssignedPrivateIpAddresses field's value.
+func (s *AssignPrivateIpAddressesOutput) SetAssignedPrivateIpAddresses(v []*AssignedPrivateIpAddress) *AssignPrivateIpAddressesOutput {
+	s.AssignedPrivateIpAddresses = v
+	return s
+}
+
+// SetNetworkInterfaceId sets the NetworkInterfaceId field's value.
+func (s *AssignPrivateIpAddressesOutput) SetNetworkInterfaceId(v string) *AssignPrivateIpAddressesOutput {
+	s.NetworkInterfaceId = &v
+	return s
+}
+
+// Describes the private IP addresses assigned to a network interface.
+type AssignedPrivateIpAddress struct {
+	_ struct{} `type:"structure"`
+
+	// The private IP address assigned to the network interface.
+	PrivateIpAddress *string `locationName:"privateIpAddress" type:"string"`
+}
+
+// String returns the string representation
+func (s AssignedPrivateIpAddress) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s AssignedPrivateIpAddress) GoString() string {
+	return s.String()
+}
+
+// SetPrivateIpAddress sets the PrivateIpAddress field's value.
+func (s *AssignedPrivateIpAddress) SetPrivateIpAddress(v string) *AssignedPrivateIpAddress {
+	s.PrivateIpAddress = &v
+	return s
 }
 
 type AssociateAddressInput struct {
@@ -38314,10 +38355,11 @@ type CopySnapshotInput struct {
 	// it is UnauthorizedOperation.
 	DryRun *bool `locationName:"dryRun" type:"boolean"`
 
-	// Specifies whether the destination snapshot should be encrypted. You can encrypt
-	// a copy of an unencrypted snapshot, but you cannot use it to create an unencrypted
-	// copy of an encrypted snapshot. For more information, see Amazon EBS Encryption
-	// (https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/EBSEncryption.html)
+	// To encrypt a copy of an unencrypted snapshot if encryption by default is
+	// not enabled, enable encryption using this parameter. Otherwise, omit this
+	// parameter. Encrypted snapshots are encrypted, even if you omit this parameter
+	// and encryption by default is not enabled. You cannot set this parameter to
+	// false. For more information, see Amazon EBS Encryption (https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/EBSEncryption.html)
 	// in the Amazon Elastic Compute Cloud User Guide.
 	Encrypted *bool `locationName:"encrypted" type:"boolean"`
 
@@ -39574,7 +39616,7 @@ type CreateFleetInput struct {
 	// LaunchTemplateConfigs is a required field
 	LaunchTemplateConfigs []*FleetLaunchTemplateConfigRequest `locationNameList:"item" type:"list" required:"true"`
 
-	// The allocation strategy of On-Demand Instances in an EC2 Fleet.
+	// Describes the configuration of On-Demand Instances in an EC2 Fleet.
 	OnDemandOptions *OnDemandOptionsRequest `type:"structure"`
 
 	// Indicates whether EC2 Fleet should replace unhealthy instances.
@@ -39589,8 +39631,7 @@ type CreateFleetInput struct {
 	// For information about tagging after launch, see Tagging Your Resources (https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/Using_Tags.html#tag-resources).
 	TagSpecifications []*TagSpecification `locationName:"TagSpecification" locationNameList:"item" type:"list"`
 
-	// The TotalTargetCapacity, OnDemandTargetCapacity, SpotTargetCapacity, and
-	// DefaultCapacityType structure.
+	// The number of units to request.
 	//
 	// TargetCapacitySpecification is a required field
 	TargetCapacitySpecification *TargetCapacitySpecificationRequest `type:"structure" required:"true"`
@@ -41128,8 +41169,6 @@ type CreateNetworkInterfaceInput struct {
 	// Indicates the type of network interface. To create an Elastic Fabric Adapter
 	// (EFA), specify efa. For more information, see Elastic Fabric Adapter (https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/efa.html)
 	// in the Amazon Elastic Compute Cloud User Guide.
-	//
-	// If you are not creating an EFA, specify interface or omit this parameter.
 	InterfaceType *string `type:"string" enum:"NetworkInterfaceCreationType"`
 
 	// The number of IPv6 addresses to assign to a network interface. Amazon EC2
@@ -73952,6 +73991,9 @@ type ModifySpotFleetRequestInput struct {
 	// the Spot Fleet.
 	ExcessCapacityTerminationPolicy *string `locationName:"excessCapacityTerminationPolicy" type:"string" enum:"ExcessCapacityTerminationPolicy"`
 
+	// The number of On-Demand Instances in the fleet.
+	OnDemandTargetCapacity *int64 `type:"integer"`
+
 	// The ID of the Spot Fleet request.
 	//
 	// SpotFleetRequestId is a required field
@@ -73987,6 +74029,12 @@ func (s *ModifySpotFleetRequestInput) Validate() error {
 // SetExcessCapacityTerminationPolicy sets the ExcessCapacityTerminationPolicy field's value.
 func (s *ModifySpotFleetRequestInput) SetExcessCapacityTerminationPolicy(v string) *ModifySpotFleetRequestInput {
 	s.ExcessCapacityTerminationPolicy = &v
+	return s
+}
+
+// SetOnDemandTargetCapacity sets the OnDemandTargetCapacity field's value.
+func (s *ModifySpotFleetRequestInput) SetOnDemandTargetCapacity(v int64) *ModifySpotFleetRequestInput {
+	s.OnDemandTargetCapacity = &v
 	return s
 }
 
@@ -76845,7 +76893,7 @@ func (s *NewDhcpConfiguration) SetValues(v []*string) *NewDhcpConfiguration {
 	return s
 }
 
-// The allocation strategy of On-Demand Instances in an EC2 Fleet.
+// Describes the configuration of On-Demand Instances in an EC2 Fleet.
 type OnDemandOptions struct {
 	_ struct{} `type:"structure"`
 
@@ -76856,6 +76904,10 @@ type OnDemandOptions struct {
 	// launching the highest priority first. If you do not specify a value, EC2
 	// Fleet defaults to lowest-price.
 	AllocationStrategy *string `locationName:"allocationStrategy" type:"string" enum:"FleetOnDemandAllocationStrategy"`
+
+	// The maximum amount per hour for On-Demand Instances that you're willing to
+	// pay.
+	MaxTotalPrice *string `locationName:"maxTotalPrice" type:"string"`
 
 	// The minimum target capacity for On-Demand Instances in the fleet. If the
 	// minimum target capacity is not reached, the fleet launches no instances.
@@ -76886,6 +76938,12 @@ func (s *OnDemandOptions) SetAllocationStrategy(v string) *OnDemandOptions {
 	return s
 }
 
+// SetMaxTotalPrice sets the MaxTotalPrice field's value.
+func (s *OnDemandOptions) SetMaxTotalPrice(v string) *OnDemandOptions {
+	s.MaxTotalPrice = &v
+	return s
+}
+
 // SetMinTargetCapacity sets the MinTargetCapacity field's value.
 func (s *OnDemandOptions) SetMinTargetCapacity(v int64) *OnDemandOptions {
 	s.MinTargetCapacity = &v
@@ -76904,7 +76962,7 @@ func (s *OnDemandOptions) SetSingleInstanceType(v bool) *OnDemandOptions {
 	return s
 }
 
-// The allocation strategy of On-Demand Instances in an EC2 Fleet.
+// Describes the configuration of On-Demand Instances in an EC2 Fleet.
 type OnDemandOptionsRequest struct {
 	_ struct{} `type:"structure"`
 
@@ -76915,6 +76973,10 @@ type OnDemandOptionsRequest struct {
 	// launching the highest priority first. If you do not specify a value, EC2
 	// Fleet defaults to lowest-price.
 	AllocationStrategy *string `type:"string" enum:"FleetOnDemandAllocationStrategy"`
+
+	// The maximum amount per hour for On-Demand Instances that you're willing to
+	// pay.
+	MaxTotalPrice *string `type:"string"`
 
 	// The minimum target capacity for On-Demand Instances in the fleet. If the
 	// minimum target capacity is not reached, the fleet launches no instances.
@@ -76942,6 +77004,12 @@ func (s OnDemandOptionsRequest) GoString() string {
 // SetAllocationStrategy sets the AllocationStrategy field's value.
 func (s *OnDemandOptionsRequest) SetAllocationStrategy(v string) *OnDemandOptionsRequest {
 	s.AllocationStrategy = &v
+	return s
+}
+
+// SetMaxTotalPrice sets the MaxTotalPrice field's value.
+func (s *OnDemandOptionsRequest) SetMaxTotalPrice(v string) *OnDemandOptionsRequest {
+	s.MaxTotalPrice = &v
 	return s
 }
 
@@ -86344,6 +86412,16 @@ type SpotFleetRequestConfigData struct {
 	// target On-Demand capacity.
 	OnDemandFulfilledCapacity *float64 `locationName:"onDemandFulfilledCapacity" type:"double"`
 
+	// The maximum amount per hour for On-Demand Instances that you're willing to
+	// pay. You can use the onDemandMaxTotalPrice parameter, the spotMaxTotalPrice
+	// parameter, or both parameters to ensure that your fleet cost does not exceed
+	// your budget. If you set a maximum price per hour for the On-Demand Instances
+	// and Spot Instances in your request, Spot Fleet will launch instances until
+	// it reaches the maximum amount you're willing to pay. When the maximum amount
+	// you're willing to pay is reached, the fleet stops launching instances even
+	// if it hasn’t met the target capacity.
+	OnDemandMaxTotalPrice *string `locationName:"onDemandMaxTotalPrice" type:"string"`
+
 	// The number of On-Demand units to request. You can choose to set the target
 	// capacity in terms of instances or a performance characteristic that is important
 	// to your application workload, such as vCPUs, memory, or I/O. If the request
@@ -86353,6 +86431,16 @@ type SpotFleetRequestConfigData struct {
 
 	// Indicates whether Spot Fleet should replace unhealthy instances.
 	ReplaceUnhealthyInstances *bool `locationName:"replaceUnhealthyInstances" type:"boolean"`
+
+	// The maximum amount per hour for Spot Instances that you're willing to pay.
+	// You can use the spotdMaxTotalPrice parameter, the onDemandMaxTotalPrice parameter,
+	// or both parameters to ensure that your fleet cost does not exceed your budget.
+	// If you set a maximum price per hour for the On-Demand Instances and Spot
+	// Instances in your request, Spot Fleet will launch instances until it reaches
+	// the maximum amount you're willing to pay. When the maximum amount you're
+	// willing to pay is reached, the fleet stops launching instances even if it
+	// hasn’t met the target capacity.
+	SpotMaxTotalPrice *string `locationName:"spotMaxTotalPrice" type:"string"`
 
 	// The maximum price per unit hour that you are willing to pay for a Spot Instance.
 	// The default is the On-Demand price.
@@ -86505,6 +86593,12 @@ func (s *SpotFleetRequestConfigData) SetOnDemandFulfilledCapacity(v float64) *Sp
 	return s
 }
 
+// SetOnDemandMaxTotalPrice sets the OnDemandMaxTotalPrice field's value.
+func (s *SpotFleetRequestConfigData) SetOnDemandMaxTotalPrice(v string) *SpotFleetRequestConfigData {
+	s.OnDemandMaxTotalPrice = &v
+	return s
+}
+
 // SetOnDemandTargetCapacity sets the OnDemandTargetCapacity field's value.
 func (s *SpotFleetRequestConfigData) SetOnDemandTargetCapacity(v int64) *SpotFleetRequestConfigData {
 	s.OnDemandTargetCapacity = &v
@@ -86514,6 +86608,12 @@ func (s *SpotFleetRequestConfigData) SetOnDemandTargetCapacity(v int64) *SpotFle
 // SetReplaceUnhealthyInstances sets the ReplaceUnhealthyInstances field's value.
 func (s *SpotFleetRequestConfigData) SetReplaceUnhealthyInstances(v bool) *SpotFleetRequestConfigData {
 	s.ReplaceUnhealthyInstances = &v
+	return s
+}
+
+// SetSpotMaxTotalPrice sets the SpotMaxTotalPrice field's value.
+func (s *SpotFleetRequestConfigData) SetSpotMaxTotalPrice(v string) *SpotFleetRequestConfigData {
+	s.SpotMaxTotalPrice = &v
 	return s
 }
 
@@ -86949,6 +87049,9 @@ type SpotOptions struct {
 	// the number of Spot pools that you specify.
 	InstancePoolsToUseCount *int64 `locationName:"instancePoolsToUseCount" type:"integer"`
 
+	// The maximum amount per hour for Spot Instances that you're willing to pay.
+	MaxTotalPrice *string `locationName:"maxTotalPrice" type:"string"`
+
 	// The minimum target capacity for Spot Instances in the fleet. If the minimum
 	// target capacity is not reached, the fleet launches no instances.
 	MinTargetCapacity *int64 `locationName:"minTargetCapacity" type:"integer"`
@@ -86990,6 +87093,12 @@ func (s *SpotOptions) SetInstancePoolsToUseCount(v int64) *SpotOptions {
 	return s
 }
 
+// SetMaxTotalPrice sets the MaxTotalPrice field's value.
+func (s *SpotOptions) SetMaxTotalPrice(v string) *SpotOptions {
+	s.MaxTotalPrice = &v
+	return s
+}
+
 // SetMinTargetCapacity sets the MinTargetCapacity field's value.
 func (s *SpotOptions) SetMinTargetCapacity(v int64) *SpotOptions {
 	s.MinTargetCapacity = &v
@@ -87024,6 +87133,9 @@ type SpotOptionsRequest struct {
 	// selects the cheapest Spot pools and evenly allocates your target Spot capacity
 	// across the number of Spot pools that you specify.
 	InstancePoolsToUseCount *int64 `type:"integer"`
+
+	// The maximum amount per hour for Spot Instances that you're willing to pay.
+	MaxTotalPrice *string `type:"string"`
 
 	// The minimum target capacity for Spot Instances in the fleet. If the minimum
 	// target capacity is not reached, the fleet launches no instances.
@@ -87063,6 +87175,12 @@ func (s *SpotOptionsRequest) SetInstanceInterruptionBehavior(v string) *SpotOpti
 // SetInstancePoolsToUseCount sets the InstancePoolsToUseCount field's value.
 func (s *SpotOptionsRequest) SetInstancePoolsToUseCount(v int64) *SpotOptionsRequest {
 	s.InstancePoolsToUseCount = &v
+	return s
+}
+
+// SetMaxTotalPrice sets the MaxTotalPrice field's value.
+func (s *SpotOptionsRequest) SetMaxTotalPrice(v string) *SpotOptionsRequest {
+	s.MaxTotalPrice = &v
 	return s
 }
 
@@ -88020,16 +88138,27 @@ func (s *TagSpecification) SetTags(v []*Tag) *TagSpecification {
 // your application workload, such as vCPUs, memory, or I/O. If the request
 // type is maintain, you can specify a target capacity of 0 and add capacity
 // later.
+//
+// You can use the On-Demand Instance MaxTotalPrice parameter, the Spot Instance
+// MaxTotalPrice, or both to ensure your fleet cost does not exceed your budget.
+// If you set a maximum price per hour for the On-Demand Instances and Spot
+// Instances in your request, EC2 Fleet will launch instances until it reaches
+// the maximum amount you're willing to pay. When the maximum amount you're
+// willing to pay is reached, the fleet stops launching instances even if it
+// hasn’t met the target capacity. The MaxTotalPrice parameters are located
+// in and
 type TargetCapacitySpecification struct {
 	_ struct{} `type:"structure"`
 
 	// The default TotalTargetCapacity, which is either Spot or On-Demand.
 	DefaultTargetCapacityType *string `locationName:"defaultTargetCapacityType" type:"string" enum:"DefaultTargetCapacityType"`
 
-	// The number of On-Demand units to request.
+	// The number of On-Demand units to request. If you specify a target capacity
+	// for Spot units, you cannot specify a target capacity for On-Demand units.
 	OnDemandTargetCapacity *int64 `locationName:"onDemandTargetCapacity" type:"integer"`
 
-	// The maximum number of Spot units to launch.
+	// The maximum number of Spot units to launch. If you specify a target capacity
+	// for On-Demand units, you cannot specify a target capacity for Spot units.
 	SpotTargetCapacity *int64 `locationName:"spotTargetCapacity" type:"integer"`
 
 	// The number of units to request, filled using DefaultTargetCapacityType.
@@ -88071,10 +88200,19 @@ func (s *TargetCapacitySpecification) SetTotalTargetCapacity(v int64) *TargetCap
 }
 
 // The number of units to request. You can choose to set the target capacity
-// in terms of instances or a performance characteristic that is important to
-// your application workload, such as vCPUs, memory, or I/O. If the request
-// type is maintain, you can specify a target capacity of 0 and add capacity
-// later.
+// as the number of instances. Or you can set the target capacity to a performance
+// characteristic that is important to your application workload, such as vCPUs,
+// memory, or I/O. If the request type is maintain, you can specify a target
+// capacity of 0 and add capacity later.
+//
+// You can use the On-Demand Instance MaxTotalPrice parameter, the Spot Instance
+// MaxTotalPrice parameter, or both parameters to ensure that your fleet cost
+// does not exceed your budget. If you set a maximum price per hour for the
+// On-Demand Instances and Spot Instances in your request, EC2 Fleet will launch
+// instances until it reaches the maximum amount you're willing to pay. When
+// the maximum amount you're willing to pay is reached, the fleet stops launching
+// instances even if it hasn’t met the target capacity. The MaxTotalPrice
+// parameters are located in and .
 type TargetCapacitySpecificationRequest struct {
 	_ struct{} `type:"structure"`
 

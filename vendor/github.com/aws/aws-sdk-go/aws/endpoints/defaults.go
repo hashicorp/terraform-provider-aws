@@ -478,6 +478,7 @@ var awsPartition = partition{
 				"ap-southeast-2": endpoint{},
 				"ca-central-1":   endpoint{},
 				"eu-central-1":   endpoint{},
+				"eu-north-1":     endpoint{},
 				"eu-west-1":      endpoint{},
 				"eu-west-2":      endpoint{},
 				"us-east-1":      endpoint{},
@@ -2184,6 +2185,12 @@ var awsPartition = partition{
 						Region: "eu-central-1",
 					},
 				},
+				"eu-north-1": endpoint{
+					Hostname: "rds.eu-north-1.amazonaws.com",
+					CredentialScope: credentialScope{
+						Region: "eu-north-1",
+					},
+				},
 				"eu-west-1": endpoint{
 					Hostname: "rds.eu-west-1.amazonaws.com",
 					CredentialScope: credentialScope{
@@ -2947,6 +2954,7 @@ var awsPartition = partition{
 		"sms": service{
 
 			Endpoints: endpoints{
+				"ap-east-1":      endpoint{},
 				"ap-northeast-1": endpoint{},
 				"ap-northeast-2": endpoint{},
 				"ap-south-1":     endpoint{},
@@ -4073,6 +4081,7 @@ var awsusgovPartition = partition{
 		"codebuild": service{
 
 			Endpoints: endpoints{
+				"us-gov-east-1": endpoint{},
 				"us-gov-west-1": endpoint{},
 			},
 		},
