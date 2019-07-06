@@ -16,6 +16,9 @@ func resourceAwsWafRegionalByteMatchSet() *schema.Resource {
 		Read:   resourceAwsWafRegionalByteMatchSetRead,
 		Update: resourceAwsWafRegionalByteMatchSetUpdate,
 		Delete: resourceAwsWafRegionalByteMatchSetDelete,
+		Importer: &schema.ResourceImporter{
+			State: schema.ImportStatePassthrough,
+		},
 
 		Schema: map[string]*schema.Schema{
 			"name": {
