@@ -69,7 +69,7 @@ func resourceAwsDirectoryServiceLogSubscriptionRead(d *schema.ResourceData, meta
 	}
 
 	if len(out.LogSubscriptions) == 0 {
-		log.Printf("[WARN] No log subscriptons for directory %s found", directoryId)
+		log.Printf("[WARN] No log subscriptions for directory %s found", directoryId)
 		return nil
 	}
 
