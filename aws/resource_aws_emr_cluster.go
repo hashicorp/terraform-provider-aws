@@ -140,7 +140,7 @@ func resourceAwsEMRCluster() *schema.Resource {
 				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
 					// EMR uses a proprietary filesystem called EMRFS
 					// and both s3n & s3 protocols are mapped to that FS
-					// so they're equvivalent in this context (confirmed by AWS support)
+					// so they're equivalent in this context (confirmed by AWS support)
 					old = strings.Replace(old, "s3n://", "s3://", -1)
 					return old == new
 				},
@@ -184,6 +184,11 @@ func resourceAwsEMRCluster() *schema.Resource {
 							Optional: true,
 							ForceNew: true,
 						},
+						"subnet_ids": {
+							Type:     schema.TypeString,
+							Optional: true,
+							Computed: true,
+						},
 						"additional_master_security_groups": {
 							Type:     schema.TypeString,
 							Optional: true,
@@ -213,6 +218,16 @@ func resourceAwsEMRCluster() *schema.Resource {
 							Type:     schema.TypeString,
 							Optional: true,
 							ForceNew: true,
+						},
+						"availability_zone": {
+							Type:     schema.TypeString,
+							Optional: true,
+							Computed: true,
+						},
+						"availability_zones": {
+							Type:     schema.TypeString,
+							Optional: true,
+							Computed: true,
 						},
 					},
 				},
@@ -251,6 +266,50 @@ func resourceAwsEMRCluster() *schema.Resource {
 							Type:     schema.TypeString,
 							Required: true,
 							ForceNew: true,
+						},
+					},
+				},
+			},
+			"instance_fleet": {
+				Type:     schema.TypeSet,
+				Optional: true,
+				ForceNew: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"instance_fleet_type": {
+							Type:         schema.TypeString,
+							Required:     true,
+							ForceNew:     true,
+							ValidateFunc: validateAwsEmrInstanceFleetType,
+						},
+						"instance_type_configs": {
+							Type:     schema.TypeSet,
+							Optional: true,
+							ForceNew: true,
+							Elem:     instanceTypeConfigSchema(),
+						},
+						"launch_specifications": {
+							Type:     schema.TypeSet,
+							Optional: true,
+							ForceNew: true,
+							MinItems: 1,
+							MaxItems: 1,
+							Elem:     launchSpecificationsSchema(),
+						},
+						"name": {
+							Type:     schema.TypeString,
+							Optional: true,
+							ForceNew: true,
+						},
+						"target_on_demand_capacity": {
+							Type:     schema.TypeInt,
+							Optional: true,
+							Default:  0,
+						},
+						"target_spot_capacity": {
+							Type:     schema.TypeInt,
+							Optional: true,
+							Default:  0,
 						},
 					},
 				},
@@ -735,6 +794,16 @@ func resourceAwsEMRClusterCreate(d *schema.ResourceData, meta interface{}) error
 		if v, ok := attributes["subnet_id"]; ok {
 			instanceConfig.Ec2SubnetId = aws.String(v.(string))
 		}
+		if v, ok := attributes["subnet_ids"]; ok {
+			if len(v.(string)) > 0 {
+				strSlice := strings.Split(v.(string), ",")
+				for i, s := range strSlice {
+					strSlice[i] = strings.TrimSpace(s)
+				}
+
+				instanceConfig.Ec2SubnetIds = aws.StringSlice(strSlice)
+			}
+		}
 
 		if v, ok := attributes["additional_master_security_groups"]; ok {
 			strSlice := strings.Split(v.(string), ",")
@@ -766,6 +835,24 @@ func resourceAwsEMRClusterCreate(d *schema.ResourceData, meta interface{}) error
 		if v, ok := attributes["service_access_security_group"]; ok {
 			instanceConfig.ServiceAccessSecurityGroup = aws.String(v.(string))
 		}
+		if v, ok := attributes["availability_zone"]; ok {
+			instanceConfig.Placement = &emr.PlacementType{
+				AvailabilityZone: aws.String(v.(string)),
+			}
+		}
+
+		if v, ok := attributes["availability_zones"]; ok {
+			if len(v.(string)) > 0 {
+				strSlice := strings.Split(v.(string), ",")
+				for i, s := range strSlice {
+					strSlice[i] = strings.TrimSpace(s)
+				}
+
+				instanceConfig.Placement = &emr.PlacementType{
+					AvailabilityZones: aws.StringSlice(strSlice),
+				}
+			}
+		}
 	}
 
 	// DEPRECATED: Remove in a future major version
@@ -779,7 +866,10 @@ func resourceAwsEMRClusterCreate(d *schema.ResourceData, meta interface{}) error
 
 		instanceConfig.InstanceGroups = instanceGroups
 	}
-
+	if v, ok := d.GetOk("instance_fleet"); ok {
+		instanceFleetConfigs := v.(*schema.Set).List()
+		instanceConfig.InstanceFleets = expandInstanceFleetConfigs(instanceFleetConfigs)
+	}
 	emrApps := expandApplications(applications)
 
 	params := &emr.RunJobFlowInput{
@@ -946,51 +1036,65 @@ func resourceAwsEMRClusterRead(d *schema.ResourceData, meta interface{}) error {
 
 		d.Set("cluster_state", state)
 	}
+	if _, ok := d.GetOk("instance_group"); ok {
 
-	instanceGroups, err := fetchAllEMRInstanceGroups(emrconn, d.Id())
+		instanceGroups, err := fetchAllEMRInstanceGroups(emrconn, d.Id())
 
-	if err != nil {
-		return err
+		if err != nil {
+			return err
+		}
+
+		coreGroup := emrCoreInstanceGroup(instanceGroups)
+		masterGroup := findMasterGroup(instanceGroups)
+
+		d.Set("core_instance_count", 0)
+		d.Set("core_instance_type", "")
+		d.Set("master_instance_type", "")
+
+		if coreGroup != nil {
+			d.Set("core_instance_type", coreGroup.InstanceType)
+			d.Set("core_instance_count", coreGroup.RequestedInstanceCount)
+		}
+
+		if masterGroup != nil {
+			d.Set("master_instance_type", masterGroup.InstanceType)
+		}
+
+		flattenedInstanceGroups, err := flattenInstanceGroups(instanceGroups)
+		if err != nil {
+			return fmt.Errorf("error flattening instance groups: %s", err)
+		}
+		if err := d.Set("instance_group", flattenedInstanceGroups); err != nil {
+			return fmt.Errorf("error setting instance_group: %s", err)
+		}
+
+		flattenedCoreInstanceGroup, err := flattenEmrCoreInstanceGroup(coreGroup)
+
+		if err != nil {
+			return fmt.Errorf("error flattening core_instance_group: %s", err)
+		}
+
+		if err := d.Set("core_instance_group", flattenedCoreInstanceGroup); err != nil {
+			return fmt.Errorf("error setting core_instance_group: %s", err)
+		}
+
+		if err := d.Set("master_instance_group", flattenEmrMasterInstanceGroup(masterGroup)); err != nil {
+			return fmt.Errorf("error setting master_instance_group: %s", err)
+		}
 	}
+	if _, ok := d.GetOk("instance_fleet"); ok {
 
-	coreGroup := emrCoreInstanceGroup(instanceGroups)
-	masterGroup := findMasterGroup(instanceGroups)
-
-	d.Set("core_instance_count", 0)
-	d.Set("core_instance_type", "")
-	d.Set("master_instance_type", "")
-
-	if coreGroup != nil {
-		d.Set("core_instance_type", coreGroup.InstanceType)
-		d.Set("core_instance_count", coreGroup.RequestedInstanceCount)
+		instanceFleets, err := fetchAllEMRInstanceFleets(emrconn, d.Id())
+		if err == nil {
+			coreFleet := emrCoreInstanceFleet(instanceFleets)
+			if coreFleet != nil {
+				d.Set("core_instance_type", coreFleet.InstanceFleetType)
+			}
+			if err := d.Set("instance_fleet", flattenInstanceFleets(instanceFleets)); err != nil {
+				log.Printf("[ERR] Error setting EMR instance fleets: %s", err)
+			}
+		}
 	}
-
-	if masterGroup != nil {
-		d.Set("master_instance_type", masterGroup.InstanceType)
-	}
-
-	flattenedInstanceGroups, err := flattenInstanceGroups(instanceGroups)
-	if err != nil {
-		return fmt.Errorf("error flattening instance groups: %s", err)
-	}
-	if err := d.Set("instance_group", flattenedInstanceGroups); err != nil {
-		return fmt.Errorf("error setting instance_group: %s", err)
-	}
-
-	flattenedCoreInstanceGroup, err := flattenEmrCoreInstanceGroup(coreGroup)
-
-	if err != nil {
-		return fmt.Errorf("error flattening core_instance_group: %s", err)
-	}
-
-	if err := d.Set("core_instance_group", flattenedCoreInstanceGroup); err != nil {
-		return fmt.Errorf("error setting core_instance_group: %s", err)
-	}
-
-	if err := d.Set("master_instance_group", flattenEmrMasterInstanceGroup(masterGroup)); err != nil {
-		return fmt.Errorf("error setting master_instance_group: %s", err)
-	}
-
 	d.Set("name", cluster.Name)
 
 	d.Set("service_role", cluster.ServiceRole)
@@ -1418,6 +1522,10 @@ func flattenEc2Attributes(ia *emr.Ec2InstanceAttributes) []map[string]interface{
 	if ia.Ec2SubnetId != nil {
 		attrs["subnet_id"] = *ia.Ec2SubnetId
 	}
+	if len(ia.RequestedEc2SubnetIds) > 0 {
+		strs := aws.StringValueSlice(ia.RequestedEc2SubnetIds)
+		attrs["subnet_ids"] = strings.Join(strs, ",")
+	}
 	if ia.IamInstanceProfile != nil {
 		attrs["instance_profile"] = *ia.IamInstanceProfile
 	}
@@ -1439,6 +1547,14 @@ func flattenEc2Attributes(ia *emr.Ec2InstanceAttributes) []map[string]interface{
 
 	if ia.ServiceAccessSecurityGroup != nil {
 		attrs["service_access_security_group"] = *ia.ServiceAccessSecurityGroup
+	}
+
+	if ia.Ec2AvailabilityZone != nil {
+		attrs["availability_zone"] = *ia.Ec2AvailabilityZone
+	}
+	if len(ia.RequestedEc2AvailabilityZones) > 0 {
+		strs := aws.StringValueSlice(ia.RequestedEc2AvailabilityZones)
+		attrs["availability_zones"] = strings.Join(strs, ",")
 	}
 
 	result = append(result, attrs)
@@ -1664,6 +1780,123 @@ func flattenInstanceGroups(igs []*emr.InstanceGroup) (*schema.Set, error) {
 	return schema.NewSet(resourceAwsEMRClusterInstanceGroupHash, instanceGroupSet), nil
 }
 
+func flattenInstanceFleets(ifleets []*emr.InstanceFleet) []map[string]interface{} {
+	result := make([]map[string]interface{}, 0)
+
+	for _, fleet := range ifleets {
+		attrs := make(map[string]interface{})
+
+		attrs["instance_fleet_type"] = *fleet.InstanceFleetType
+
+		instanceTypeConfigs := make([]map[string]interface{}, 0)
+		for _, its := range fleet.InstanceTypeSpecifications {
+			itsAttrs := make(map[string]interface{})
+
+			if its.BidPrice != nil {
+				itsAttrs["bid_price"] = *its.BidPrice
+			} else {
+				itsAttrs["bid_price"] = ""
+			}
+
+			if its.BidPriceAsPercentageOfOnDemandPrice != nil {
+				itsAttrs["bid_price_as_percentage_of_on_demand_price"] = *its.BidPriceAsPercentageOfOnDemandPrice
+			}
+
+			configurations := make([]map[string]interface{}, 0)
+			if its.Configurations != nil {
+				for _, cfg := range its.Configurations {
+					configurationsAttrs := make(map[string]interface{})
+
+					configurationsAttrs["classification"] = *cfg.Classification
+
+					additionalConfigurations := make([]map[string]interface{}, 0)
+					if cfg.Configurations != nil {
+						for _, additionalCfg := range cfg.Configurations {
+							additionalConfigurationsAttrs := make(map[string]interface{})
+
+							additionalConfigurationsAttrs["classification"] = *additionalCfg.Classification
+
+							additionalProperties := make(map[string]string)
+							for k, v := range additionalCfg.Properties {
+								additionalProperties[k] = *v
+							}
+							additionalConfigurationsAttrs["properties"] = additionalProperties
+
+							additionalConfigurations = append(additionalConfigurations, additionalConfigurationsAttrs)
+						}
+					}
+					configurationsAttrs["configurations"] = additionalConfigurations
+
+					properties := make(map[string]string)
+					for k, v := range cfg.Properties {
+						properties[k] = *v
+					}
+					configurationsAttrs["properties"] = properties
+
+					configurations = append(configurations, configurationsAttrs)
+				}
+			}
+			itsAttrs["configurations"] = configurations
+
+			ebsConfiguration := make([]map[string]interface{}, 0)
+			if its.EbsBlockDevices != nil {
+				for _, ebsbd := range its.EbsBlockDevices {
+					ebscAttrs := make(map[string]interface{})
+
+					if ebsbd.VolumeSpecification != nil {
+						if ebsbd.VolumeSpecification.Iops != nil {
+							ebscAttrs["iops"] = *ebsbd.VolumeSpecification.Iops
+						} else {
+							ebscAttrs["iops"] = ""
+						}
+						ebscAttrs["size"] = *ebsbd.VolumeSpecification.SizeInGB
+						ebscAttrs["type"] = *ebsbd.VolumeSpecification.VolumeType
+						ebscAttrs["volumes_per_instance"] = 1
+					}
+
+					ebsConfiguration = append(ebsConfiguration, ebscAttrs)
+				}
+			}
+			if len(ebsConfiguration) > 0 {
+				itsAttrs["ebs_config"] = ebsConfiguration
+			}
+
+			itsAttrs["instance_type"] = *its.InstanceType
+			itsAttrs["weighted_capacity"] = *its.WeightedCapacity
+
+			instanceTypeConfigs = append(instanceTypeConfigs, itsAttrs)
+		}
+		if len(instanceTypeConfigs) > 0 {
+			attrs["instance_type_configs"] = instanceTypeConfigs
+		}
+
+		launchSpecifications := make(map[string]interface{})
+		if fleet.LaunchSpecifications != nil {
+			spotSpecification := make(map[string]interface{})
+
+			if fleet.LaunchSpecifications.SpotSpecification.BlockDurationMinutes != nil {
+				spotSpecification["block_duration_minutes"] = *fleet.LaunchSpecifications.SpotSpecification.BlockDurationMinutes
+			} else {
+				spotSpecification["block_duration_minutes"] = ""
+			}
+
+			spotSpecification["timeout_action"] = *fleet.LaunchSpecifications.SpotSpecification.TimeoutAction
+			spotSpecification["timeout_duration_minutes"] = *fleet.LaunchSpecifications.SpotSpecification.TimeoutDurationMinutes
+
+			launchSpecifications["spot_specification"] = spotSpecification
+		}
+		attrs["launch_specifications"] = launchSpecifications
+
+		attrs["name"] = *fleet.Name
+		attrs["target_on_demand_capacity"] = *fleet.TargetOnDemandCapacity
+		attrs["target_spot_capacity"] = *fleet.TargetSpotCapacity
+
+		result = append(result, attrs)
+	}
+
+	return result
+}
+
 func flattenEBSConfig(ebsBlockDevices []*emr.EbsBlockDevice) *schema.Set {
 
 	ebsConfig := make([]interface{}, 0)
@@ -1704,6 +1937,15 @@ func emrCoreInstanceGroup(grps []*emr.InstanceGroup) *emr.InstanceGroup {
 	for _, grp := range grps {
 		if aws.StringValue(grp.InstanceGroupType) == emr.InstanceGroupTypeCore {
 			return grp
+		}
+	}
+	return nil
+}
+
+func emrCoreInstanceFleet(flts []*emr.InstanceFleet) *emr.InstanceFleet {
+	for _, flt := range flts {
+		if aws.StringValue(flt.InstanceFleetType) == emr.InstanceFleetTypeCore {
+			return flt
 		}
 	}
 	return nil
