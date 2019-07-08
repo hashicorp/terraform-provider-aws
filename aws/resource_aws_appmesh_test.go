@@ -17,10 +17,11 @@ func TestAccAWSAppmesh(t *testing.T) {
 			"tags":      testAccAwsAppmeshRoute_tags,
 		},
 		"VirtualNode": {
-			"basic":                testAccAwsAppmeshVirtualNode_basic,
-			"listenerHealthChecks": testAccAwsAppmeshVirtualNode_listenerHealthChecks,
-			"logging":              testAccAwsAppmeshVirtualNode_logging,
-			"tags":                 testAccAwsAppmeshVirtualNode_tags,
+			"basic":                    testAccAwsAppmeshVirtualNode_basic,
+			"cloudMapServiceDiscovery": testAccAwsAppmeshVirtualNode_cloudMapServiceDiscovery,
+			"listenerHealthChecks":     testAccAwsAppmeshVirtualNode_listenerHealthChecks,
+			"logging":                  testAccAwsAppmeshVirtualNode_logging,
+			"tags":                     testAccAwsAppmeshVirtualNode_tags,
 		},
 		"VirtualRouter": {
 			"basic": testAccAwsAppmeshVirtualRouter_basic,

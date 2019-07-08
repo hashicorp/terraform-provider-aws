@@ -5007,16 +5007,41 @@ func expandAppmeshVirtualNodeSpec(vSpec []interface{}) *appmesh.VirtualNodeSpec 
 	}
 
 	if vServiceDiscovery, ok := mSpec["service_discovery"].([]interface{}); ok && len(vServiceDiscovery) > 0 && vServiceDiscovery[0] != nil {
+		spec.ServiceDiscovery = &appmesh.ServiceDiscovery{}
+
 		mServiceDiscovery := vServiceDiscovery[0].(map[string]interface{})
+
+		if vAwsCloudMap, ok := mServiceDiscovery["aws_cloud_map"].([]interface{}); ok && len(vAwsCloudMap) > 0 && vAwsCloudMap[0] != nil {
+			spec.ServiceDiscovery.AwsCloudMap = &appmesh.AwsCloudMapServiceDiscovery{}
+
+			mAwsCloudMap := vAwsCloudMap[0].(map[string]interface{})
+
+			if vAttributes, ok := mAwsCloudMap["attributes"].(map[string]interface{}); ok && len(vAttributes) > 0 {
+				attributes := []*appmesh.AwsCloudMapInstanceAttribute{}
+
+				for k, v := range vAttributes {
+					attributes = append(attributes, &appmesh.AwsCloudMapInstanceAttribute{
+						Key:   aws.String(k),
+						Value: aws.String(v.(string)),
+					})
+				}
+
+				spec.ServiceDiscovery.AwsCloudMap.Attributes = attributes
+			}
+			if vNamespaceName, ok := mAwsCloudMap["namespace_name"].(string); ok && vNamespaceName != "" {
+				spec.ServiceDiscovery.AwsCloudMap.NamespaceName = aws.String(vNamespaceName)
+			}
+			if vServiceName, ok := mAwsCloudMap["service_name"].(string); ok && vServiceName != "" {
+				spec.ServiceDiscovery.AwsCloudMap.ServiceName = aws.String(vServiceName)
+			}
+		}
 
 		if vDns, ok := mServiceDiscovery["dns"].([]interface{}); ok && len(vDns) > 0 && vDns[0] != nil {
 			mDns := vDns[0].(map[string]interface{})
 
 			if vHostname, ok := mDns["hostname"].(string); ok && vHostname != "" {
-				spec.ServiceDiscovery = &appmesh.ServiceDiscovery{
-					Dns: &appmesh.DnsServiceDiscovery{
-						Hostname: aws.String(vHostname),
-					},
+				spec.ServiceDiscovery.Dns = &appmesh.DnsServiceDiscovery{
+					Hostname: aws.String(vHostname),
 				}
 			}
 		}
@@ -5100,16 +5125,34 @@ func flattenAppmeshVirtualNodeSpec(spec *appmesh.VirtualNodeSpec) []interface{} 
 		}
 	}
 
-	if spec.ServiceDiscovery != nil && spec.ServiceDiscovery.Dns != nil {
-		mSpec["service_discovery"] = []interface{}{
-			map[string]interface{}{
-				"dns": []interface{}{
-					map[string]interface{}{
-						"hostname": aws.StringValue(spec.ServiceDiscovery.Dns.Hostname),
-					},
+	if spec.ServiceDiscovery != nil {
+		mServiceDiscovery := map[string]interface{}{}
+
+		if spec.ServiceDiscovery.AwsCloudMap != nil {
+			vAttributes := map[string]interface{}{}
+
+			for _, attribute := range spec.ServiceDiscovery.AwsCloudMap.Attributes {
+				vAttributes[aws.StringValue(attribute.Key)] = aws.StringValue(attribute.Value)
+			}
+
+			mServiceDiscovery["aws_cloud_map"] = []interface{}{
+				map[string]interface{}{
+					"attributes":     vAttributes,
+					"namespace_name": aws.StringValue(spec.ServiceDiscovery.AwsCloudMap.NamespaceName),
+					"service_name":   aws.StringValue(spec.ServiceDiscovery.AwsCloudMap.ServiceName),
 				},
-			},
+			}
 		}
+
+		if spec.ServiceDiscovery.Dns != nil {
+			mServiceDiscovery["dns"] = []interface{}{
+				map[string]interface{}{
+					"hostname": aws.StringValue(spec.ServiceDiscovery.Dns.Hostname),
+				},
+			}
+		}
+
+		mSpec["service_discovery"] = []interface{}{mServiceDiscovery}
 	}
 
 	return []interface{}{mSpec}
