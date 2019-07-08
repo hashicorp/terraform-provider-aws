@@ -6,6 +6,7 @@ FEATURES:
 
 ENHANCEMENTS:
 
+* resource/aws_appmesh_virtual_service: Add `tags` argument [GH-9252]
 * resource/aws_wafregional_rule: Support resource import [GH-9239]
 * resource/aws_wafregional_rule_group: Support resource import [GH-9240]
 * resource/aws_wafregional_web_acl: Support resource import [GH-9248]
