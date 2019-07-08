@@ -6,6 +6,7 @@ FEATURES:
 
 ENHANCEMENTS:
 
+* resource/aws_appmesh_virtual_router: Add `tags` argument [GH-9249]
 * resource/aws_appmesh_virtual_service: Add `tags` argument [GH-9252]
 * resource/aws_waf_rule_group: Support resource import [GH-9254]
 * resource/aws_wafregional_byte_match_set: Support resource import [GH-9258]
