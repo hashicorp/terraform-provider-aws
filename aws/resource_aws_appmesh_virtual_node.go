@@ -219,10 +219,11 @@ func resourceAwsAppmeshVirtualNode() *schema.Resource {
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"aws_cloud_map": {
-										Type:     schema.TypeList,
-										Optional: true,
-										MinItems: 0,
-										MaxItems: 1,
+										Type:          schema.TypeList,
+										Optional:      true,
+										MinItems:      0,
+										MaxItems:      1,
+										ConflictsWith: []string{"spec.0.service_discovery.0.dns"},
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
 												"attributes": {
@@ -246,10 +247,11 @@ func resourceAwsAppmeshVirtualNode() *schema.Resource {
 									},
 
 									"dns": {
-										Type:     schema.TypeList,
-										Optional: true,
-										MinItems: 0,
-										MaxItems: 1,
+										Type:          schema.TypeList,
+										Optional:      true,
+										MinItems:      0,
+										MaxItems:      1,
+										ConflictsWith: []string{"spec.0.service_discovery.0.aws_cloud_map"},
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
 												"service_name": {
