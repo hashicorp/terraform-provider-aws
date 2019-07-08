@@ -15,6 +15,7 @@ func TestAccAWSOrganizations(t *testing.T) {
 		"Account": {
 			"basic":    testAccAwsOrganizationsAccount_basic,
 			"ParentId": testAccAwsOrganizationsAccount_ParentId,
+			"Tags":     testAccAwsOrganizationsAccount_Tags,
 		},
 		"OrganizationalUnit": {
 			"basic": testAccAwsOrganizationsOrganizationalUnit_basic,
