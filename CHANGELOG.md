@@ -16,7 +16,9 @@ ENHANCEMENTS:
 * resource/aws_wafregional_web_acl: Support resource import [GH-9248]
 
 BUG FIXES:
+
 * resource/aws_transfer_user: Final retry after timeout waiting for deletion of transfer user [GH-9241]
+* service/organizations: Automatically retry API calls on `ConcurrentModificationException` error [GH-9195]
 
 ## 2.18.0 (July 05, 2019)
 
