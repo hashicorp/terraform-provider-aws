@@ -1,6 +1,6 @@
 ---
 layout: "aws"
-page_title: "AWS: wafregional_xss_match_set"
+page_title: "AWS: aws_wafregional_xss_match_set"
 sidebar_current: "docs-aws-resource-wafregional-xss-match-set"
 description: |-
   Provides an AWS WAF Regional XSS Match Set resource for use with ALB.
@@ -15,8 +15,10 @@ Provides a WAF Regional XSS Match Set Resource for use with Application Load Bal
 ```hcl
 resource "aws_wafregional_xss_match_set" "xss_match_set" {
   name = "xss_match_set"
+
   xss_match_tuple {
     text_transformation = "NONE"
+
     field_to_match {
       type = "URI"
     }
@@ -24,6 +26,7 @@ resource "aws_wafregional_xss_match_set" "xss_match_set" {
 
   xss_match_tuple {
     text_transformation = "NONE"
+
     field_to_match {
       type = "QUERY_STRING"
     }

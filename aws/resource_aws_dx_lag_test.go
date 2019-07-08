@@ -144,10 +144,10 @@ func testAccCheckAwsDxLagExists(name string) resource.TestCheckFunc {
 func testAccDxLagConfig(n string) string {
 	return fmt.Sprintf(`
 resource "aws_dx_lag" "hoge" {
-  name = "%s"
+  name                  = "%s"
   connections_bandwidth = "1Gbps"
-  location = "EqSe2"
-  force_destroy = true
+  location              = "EqSe2"
+  force_destroy         = true
 }
 `, n)
 }
@@ -155,14 +155,14 @@ resource "aws_dx_lag" "hoge" {
 func testAccDxLagConfig_tags(n string) string {
 	return fmt.Sprintf(`
 resource "aws_dx_lag" "hoge" {
-  name = "%s"
+  name                  = "%s"
   connections_bandwidth = "1Gbps"
-  location = "EqSe2"
-  force_destroy = true
+  location              = "EqSe2"
+  force_destroy         = true
 
   tags = {
     Environment = "production"
-    Usage = "original"
+    Usage       = "original"
   }
 }
 `, n)
@@ -171,10 +171,10 @@ resource "aws_dx_lag" "hoge" {
 func testAccDxLagConfig_tagsChanged(n string) string {
 	return fmt.Sprintf(`
 resource "aws_dx_lag" "hoge" {
-  name = "%s"
+  name                  = "%s"
   connections_bandwidth = "1Gbps"
-  location = "EqSe2"
-  force_destroy = true
+  location              = "EqSe2"
+  force_destroy         = true
 
   tags = {
     Usage = "changed"

@@ -86,16 +86,16 @@ func (c *WAFRegional) AssociateWebACLRequest(input *AssociateWebACLInput) (req *
 //      * You tried to update an object (ByteMatchSet, IPSet, Rule, or WebACL)
 //      using an action other than INSERT or DELETE.
 //
-//      * You tried to create a WebACL with a DefaultActionType other than ALLOW,
+//      * You tried to create a WebACL with a DefaultAction Type other than ALLOW,
 //      BLOCK, or COUNT.
 //
 //      * You tried to create a RateBasedRule with a RateKey value other than
 //      IP.
 //
-//      * You tried to update a WebACL with a WafActionType other than ALLOW,
+//      * You tried to update a WebACL with a WafAction Type other than ALLOW,
 //      BLOCK, or COUNT.
 //
-//      * You tried to update a ByteMatchSet with a FieldToMatchType other than
+//      * You tried to update a ByteMatchSet with a FieldToMatch Type other than
 //      HEADER, METHOD, QUERY_STRING, URI, or BODY.
 //
 //      * You tried to update a ByteMatchSet with a Field of HEADER but no value
@@ -230,16 +230,16 @@ func (c *WAFRegional) CreateByteMatchSetRequest(input *waf.CreateByteMatchSetInp
 //      * You tried to update an object (ByteMatchSet, IPSet, Rule, or WebACL)
 //      using an action other than INSERT or DELETE.
 //
-//      * You tried to create a WebACL with a DefaultActionType other than ALLOW,
+//      * You tried to create a WebACL with a DefaultAction Type other than ALLOW,
 //      BLOCK, or COUNT.
 //
 //      * You tried to create a RateBasedRule with a RateKey value other than
 //      IP.
 //
-//      * You tried to update a WebACL with a WafActionType other than ALLOW,
+//      * You tried to update a WebACL with a WafAction Type other than ALLOW,
 //      BLOCK, or COUNT.
 //
-//      * You tried to update a ByteMatchSet with a FieldToMatchType other than
+//      * You tried to update a ByteMatchSet with a FieldToMatch Type other than
 //      HEADER, METHOD, QUERY_STRING, URI, or BODY.
 //
 //      * You tried to update a ByteMatchSet with a Field of HEADER but no value
@@ -380,16 +380,16 @@ func (c *WAFRegional) CreateGeoMatchSetRequest(input *waf.CreateGeoMatchSetInput
 //      * You tried to update an object (ByteMatchSet, IPSet, Rule, or WebACL)
 //      using an action other than INSERT or DELETE.
 //
-//      * You tried to create a WebACL with a DefaultActionType other than ALLOW,
+//      * You tried to create a WebACL with a DefaultAction Type other than ALLOW,
 //      BLOCK, or COUNT.
 //
 //      * You tried to create a RateBasedRule with a RateKey value other than
 //      IP.
 //
-//      * You tried to update a WebACL with a WafActionType other than ALLOW,
+//      * You tried to update a WebACL with a WafAction Type other than ALLOW,
 //      BLOCK, or COUNT.
 //
-//      * You tried to update a ByteMatchSet with a FieldToMatchType other than
+//      * You tried to update a ByteMatchSet with a FieldToMatch Type other than
 //      HEADER, METHOD, QUERY_STRING, URI, or BODY.
 //
 //      * You tried to update a ByteMatchSet with a Field of HEADER but no value
@@ -527,16 +527,16 @@ func (c *WAFRegional) CreateIPSetRequest(input *waf.CreateIPSetInput) (req *requ
 //      * You tried to update an object (ByteMatchSet, IPSet, Rule, or WebACL)
 //      using an action other than INSERT or DELETE.
 //
-//      * You tried to create a WebACL with a DefaultActionType other than ALLOW,
+//      * You tried to create a WebACL with a DefaultAction Type other than ALLOW,
 //      BLOCK, or COUNT.
 //
 //      * You tried to create a RateBasedRule with a RateKey value other than
 //      IP.
 //
-//      * You tried to update a WebACL with a WafActionType other than ALLOW,
+//      * You tried to update a WebACL with a WafAction Type other than ALLOW,
 //      BLOCK, or COUNT.
 //
-//      * You tried to update a ByteMatchSet with a FieldToMatchType other than
+//      * You tried to update a ByteMatchSet with a FieldToMatch Type other than
 //      HEADER, METHOD, QUERY_STRING, URI, or BODY.
 //
 //      * You tried to update a ByteMatchSet with a Field of HEADER but no value
@@ -709,16 +709,16 @@ func (c *WAFRegional) CreateRateBasedRuleRequest(input *waf.CreateRateBasedRuleI
 //      * You tried to update an object (ByteMatchSet, IPSet, Rule, or WebACL)
 //      using an action other than INSERT or DELETE.
 //
-//      * You tried to create a WebACL with a DefaultActionType other than ALLOW,
+//      * You tried to create a WebACL with a DefaultAction Type other than ALLOW,
 //      BLOCK, or COUNT.
 //
 //      * You tried to create a RateBasedRule with a RateKey value other than
 //      IP.
 //
-//      * You tried to update a WebACL with a WafActionType other than ALLOW,
+//      * You tried to update a WebACL with a WafAction Type other than ALLOW,
 //      BLOCK, or COUNT.
 //
-//      * You tried to update a ByteMatchSet with a FieldToMatchType other than
+//      * You tried to update a ByteMatchSet with a FieldToMatch Type other than
 //      HEADER, METHOD, QUERY_STRING, URI, or BODY.
 //
 //      * You tried to update a ByteMatchSet with a Field of HEADER but no value
@@ -1092,16 +1092,16 @@ func (c *WAFRegional) CreateRuleRequest(input *waf.CreateRuleInput) (req *reques
 //      * You tried to update an object (ByteMatchSet, IPSet, Rule, or WebACL)
 //      using an action other than INSERT or DELETE.
 //
-//      * You tried to create a WebACL with a DefaultActionType other than ALLOW,
+//      * You tried to create a WebACL with a DefaultAction Type other than ALLOW,
 //      BLOCK, or COUNT.
 //
 //      * You tried to create a RateBasedRule with a RateKey value other than
 //      IP.
 //
-//      * You tried to update a WebACL with a WafActionType other than ALLOW,
+//      * You tried to update a WebACL with a WafAction Type other than ALLOW,
 //      BLOCK, or COUNT.
 //
-//      * You tried to update a ByteMatchSet with a FieldToMatchType other than
+//      * You tried to update a ByteMatchSet with a FieldToMatch Type other than
 //      HEADER, METHOD, QUERY_STRING, URI, or BODY.
 //
 //      * You tried to update a ByteMatchSet with a Field of HEADER but no value
@@ -1346,16 +1346,16 @@ func (c *WAFRegional) CreateSizeConstraintSetRequest(input *waf.CreateSizeConstr
 //      * You tried to update an object (ByteMatchSet, IPSet, Rule, or WebACL)
 //      using an action other than INSERT or DELETE.
 //
-//      * You tried to create a WebACL with a DefaultActionType other than ALLOW,
+//      * You tried to create a WebACL with a DefaultAction Type other than ALLOW,
 //      BLOCK, or COUNT.
 //
 //      * You tried to create a RateBasedRule with a RateKey value other than
 //      IP.
 //
-//      * You tried to update a WebACL with a WafActionType other than ALLOW,
+//      * You tried to update a WebACL with a WafAction Type other than ALLOW,
 //      BLOCK, or COUNT.
 //
-//      * You tried to update a ByteMatchSet with a FieldToMatchType other than
+//      * You tried to update a ByteMatchSet with a FieldToMatch Type other than
 //      HEADER, METHOD, QUERY_STRING, URI, or BODY.
 //
 //      * You tried to update a ByteMatchSet with a Field of HEADER but no value
@@ -1486,16 +1486,16 @@ func (c *WAFRegional) CreateSqlInjectionMatchSetRequest(input *waf.CreateSqlInje
 //      * You tried to update an object (ByteMatchSet, IPSet, Rule, or WebACL)
 //      using an action other than INSERT or DELETE.
 //
-//      * You tried to create a WebACL with a DefaultActionType other than ALLOW,
+//      * You tried to create a WebACL with a DefaultAction Type other than ALLOW,
 //      BLOCK, or COUNT.
 //
 //      * You tried to create a RateBasedRule with a RateKey value other than
 //      IP.
 //
-//      * You tried to update a WebACL with a WafActionType other than ALLOW,
+//      * You tried to update a WebACL with a WafAction Type other than ALLOW,
 //      BLOCK, or COUNT.
 //
-//      * You tried to update a ByteMatchSet with a FieldToMatchType other than
+//      * You tried to update a ByteMatchSet with a FieldToMatch Type other than
 //      HEADER, METHOD, QUERY_STRING, URI, or BODY.
 //
 //      * You tried to update a ByteMatchSet with a Field of HEADER but no value
@@ -1646,16 +1646,16 @@ func (c *WAFRegional) CreateWebACLRequest(input *waf.CreateWebACLInput) (req *re
 //      * You tried to update an object (ByteMatchSet, IPSet, Rule, or WebACL)
 //      using an action other than INSERT or DELETE.
 //
-//      * You tried to create a WebACL with a DefaultActionType other than ALLOW,
+//      * You tried to create a WebACL with a DefaultAction Type other than ALLOW,
 //      BLOCK, or COUNT.
 //
 //      * You tried to create a RateBasedRule with a RateKey value other than
 //      IP.
 //
-//      * You tried to update a WebACL with a WafActionType other than ALLOW,
+//      * You tried to update a WebACL with a WafAction Type other than ALLOW,
 //      BLOCK, or COUNT.
 //
-//      * You tried to update a ByteMatchSet with a FieldToMatchType other than
+//      * You tried to update a ByteMatchSet with a FieldToMatch Type other than
 //      HEADER, METHOD, QUERY_STRING, URI, or BODY.
 //
 //      * You tried to update a ByteMatchSet with a Field of HEADER but no value
@@ -1787,16 +1787,16 @@ func (c *WAFRegional) CreateXssMatchSetRequest(input *waf.CreateXssMatchSetInput
 //      * You tried to update an object (ByteMatchSet, IPSet, Rule, or WebACL)
 //      using an action other than INSERT or DELETE.
 //
-//      * You tried to create a WebACL with a DefaultActionType other than ALLOW,
+//      * You tried to create a WebACL with a DefaultAction Type other than ALLOW,
 //      BLOCK, or COUNT.
 //
 //      * You tried to create a RateBasedRule with a RateKey value other than
 //      IP.
 //
-//      * You tried to update a WebACL with a WafActionType other than ALLOW,
+//      * You tried to update a WebACL with a WafAction Type other than ALLOW,
 //      BLOCK, or COUNT.
 //
-//      * You tried to update a ByteMatchSet with a FieldToMatchType other than
+//      * You tried to update a ByteMatchSet with a FieldToMatch Type other than
 //      HEADER, METHOD, QUERY_STRING, URI, or BODY.
 //
 //      * You tried to update a ByteMatchSet with a Field of HEADER but no value
@@ -3609,16 +3609,16 @@ func (c *WAFRegional) DisassociateWebACLRequest(input *DisassociateWebACLInput) 
 //      * You tried to update an object (ByteMatchSet, IPSet, Rule, or WebACL)
 //      using an action other than INSERT or DELETE.
 //
-//      * You tried to create a WebACL with a DefaultActionType other than ALLOW,
+//      * You tried to create a WebACL with a DefaultAction Type other than ALLOW,
 //      BLOCK, or COUNT.
 //
 //      * You tried to create a RateBasedRule with a RateKey value other than
 //      IP.
 //
-//      * You tried to update a WebACL with a WafActionType other than ALLOW,
+//      * You tried to update a WebACL with a WafAction Type other than ALLOW,
 //      BLOCK, or COUNT.
 //
-//      * You tried to update a ByteMatchSet with a FieldToMatchType other than
+//      * You tried to update a ByteMatchSet with a FieldToMatch Type other than
 //      HEADER, METHOD, QUERY_STRING, URI, or BODY.
 //
 //      * You tried to update a ByteMatchSet with a Field of HEADER but no value
@@ -4433,16 +4433,16 @@ func (c *WAFRegional) GetRateBasedRuleManagedKeysRequest(input *waf.GetRateBased
 //      * You tried to update an object (ByteMatchSet, IPSet, Rule, or WebACL)
 //      using an action other than INSERT or DELETE.
 //
-//      * You tried to create a WebACL with a DefaultActionType other than ALLOW,
+//      * You tried to create a WebACL with a DefaultAction Type other than ALLOW,
 //      BLOCK, or COUNT.
 //
 //      * You tried to create a RateBasedRule with a RateKey value other than
 //      IP.
 //
-//      * You tried to update a WebACL with a WafActionType other than ALLOW,
+//      * You tried to update a WebACL with a WafAction Type other than ALLOW,
 //      BLOCK, or COUNT.
 //
-//      * You tried to update a ByteMatchSet with a FieldToMatchType other than
+//      * You tried to update a ByteMatchSet with a FieldToMatch Type other than
 //      HEADER, METHOD, QUERY_STRING, URI, or BODY.
 //
 //      * You tried to update a ByteMatchSet with a Field of HEADER but no value
@@ -5252,16 +5252,16 @@ func (c *WAFRegional) GetWebACLForResourceRequest(input *GetWebACLForResourceInp
 //      * You tried to update an object (ByteMatchSet, IPSet, Rule, or WebACL)
 //      using an action other than INSERT or DELETE.
 //
-//      * You tried to create a WebACL with a DefaultActionType other than ALLOW,
+//      * You tried to create a WebACL with a DefaultAction Type other than ALLOW,
 //      BLOCK, or COUNT.
 //
 //      * You tried to create a RateBasedRule with a RateKey value other than
 //      IP.
 //
-//      * You tried to update a WebACL with a WafActionType other than ALLOW,
+//      * You tried to update a WebACL with a WafAction Type other than ALLOW,
 //      BLOCK, or COUNT.
 //
-//      * You tried to update a ByteMatchSet with a FieldToMatchType other than
+//      * You tried to update a ByteMatchSet with a FieldToMatch Type other than
 //      HEADER, METHOD, QUERY_STRING, URI, or BODY.
 //
 //      * You tried to update a ByteMatchSet with a Field of HEADER but no value
@@ -5455,16 +5455,16 @@ func (c *WAFRegional) ListActivatedRulesInRuleGroupRequest(input *waf.ListActiva
 //      * You tried to update an object (ByteMatchSet, IPSet, Rule, or WebACL)
 //      using an action other than INSERT or DELETE.
 //
-//      * You tried to create a WebACL with a DefaultActionType other than ALLOW,
+//      * You tried to create a WebACL with a DefaultAction Type other than ALLOW,
 //      BLOCK, or COUNT.
 //
 //      * You tried to create a RateBasedRule with a RateKey value other than
 //      IP.
 //
-//      * You tried to update a WebACL with a WafActionType other than ALLOW,
+//      * You tried to update a WebACL with a WafAction Type other than ALLOW,
 //      BLOCK, or COUNT.
 //
-//      * You tried to update a ByteMatchSet with a FieldToMatchType other than
+//      * You tried to update a ByteMatchSet with a FieldToMatch Type other than
 //      HEADER, METHOD, QUERY_STRING, URI, or BODY.
 //
 //      * You tried to update a ByteMatchSet with a Field of HEADER but no value
@@ -5819,16 +5819,16 @@ func (c *WAFRegional) ListLoggingConfigurationsRequest(input *waf.ListLoggingCon
 //      * You tried to update an object (ByteMatchSet, IPSet, Rule, or WebACL)
 //      using an action other than INSERT or DELETE.
 //
-//      * You tried to create a WebACL with a DefaultActionType other than ALLOW,
+//      * You tried to create a WebACL with a DefaultAction Type other than ALLOW,
 //      BLOCK, or COUNT.
 //
 //      * You tried to create a RateBasedRule with a RateKey value other than
 //      IP.
 //
-//      * You tried to update a WebACL with a WafActionType other than ALLOW,
+//      * You tried to update a WebACL with a WafAction Type other than ALLOW,
 //      BLOCK, or COUNT.
 //
-//      * You tried to update a ByteMatchSet with a FieldToMatchType other than
+//      * You tried to update a ByteMatchSet with a FieldToMatch Type other than
 //      HEADER, METHOD, QUERY_STRING, URI, or BODY.
 //
 //      * You tried to update a ByteMatchSet with a Field of HEADER but no value
@@ -6187,16 +6187,16 @@ func (c *WAFRegional) ListResourcesForWebACLRequest(input *ListResourcesForWebAC
 //      * You tried to update an object (ByteMatchSet, IPSet, Rule, or WebACL)
 //      using an action other than INSERT or DELETE.
 //
-//      * You tried to create a WebACL with a DefaultActionType other than ALLOW,
+//      * You tried to create a WebACL with a DefaultAction Type other than ALLOW,
 //      BLOCK, or COUNT.
 //
 //      * You tried to create a RateBasedRule with a RateKey value other than
 //      IP.
 //
-//      * You tried to update a WebACL with a WafActionType other than ALLOW,
+//      * You tried to update a WebACL with a WafAction Type other than ALLOW,
 //      BLOCK, or COUNT.
 //
-//      * You tried to update a ByteMatchSet with a FieldToMatchType other than
+//      * You tried to update a ByteMatchSet with a FieldToMatch Type other than
 //      HEADER, METHOD, QUERY_STRING, URI, or BODY.
 //
 //      * You tried to update a ByteMatchSet with a Field of HEADER but no value
@@ -6865,6 +6865,8 @@ func (c *WAFRegional) PutLoggingConfigurationRequest(input *waf.PutLoggingConfig
 // operating. However, if you are capturing logs for Amazon CloudFront, always
 // create the firehose in US East (N. Virginia).
 //
+// Do not create the data firehose using a Kinesis stream as your source.
+//
 // Associate that firehose to your web ACL using a PutLoggingConfiguration request.
 //
 // When you successfully enable logging using a PutLoggingConfiguration request,
@@ -7189,16 +7191,16 @@ func (c *WAFRegional) UpdateByteMatchSetRequest(input *waf.UpdateByteMatchSetInp
 //      * You tried to update an object (ByteMatchSet, IPSet, Rule, or WebACL)
 //      using an action other than INSERT or DELETE.
 //
-//      * You tried to create a WebACL with a DefaultActionType other than ALLOW,
+//      * You tried to create a WebACL with a DefaultAction Type other than ALLOW,
 //      BLOCK, or COUNT.
 //
 //      * You tried to create a RateBasedRule with a RateKey value other than
 //      IP.
 //
-//      * You tried to update a WebACL with a WafActionType other than ALLOW,
+//      * You tried to update a WebACL with a WafAction Type other than ALLOW,
 //      BLOCK, or COUNT.
 //
-//      * You tried to update a ByteMatchSet with a FieldToMatchType other than
+//      * You tried to update a ByteMatchSet with a FieldToMatch Type other than
 //      HEADER, METHOD, QUERY_STRING, URI, or BODY.
 //
 //      * You tried to update a ByteMatchSet with a Field of HEADER but no value
@@ -7380,16 +7382,16 @@ func (c *WAFRegional) UpdateGeoMatchSetRequest(input *waf.UpdateGeoMatchSetInput
 //      * You tried to update an object (ByteMatchSet, IPSet, Rule, or WebACL)
 //      using an action other than INSERT or DELETE.
 //
-//      * You tried to create a WebACL with a DefaultActionType other than ALLOW,
+//      * You tried to create a WebACL with a DefaultAction Type other than ALLOW,
 //      BLOCK, or COUNT.
 //
 //      * You tried to create a RateBasedRule with a RateKey value other than
 //      IP.
 //
-//      * You tried to update a WebACL with a WafActionType other than ALLOW,
+//      * You tried to update a WebACL with a WafAction Type other than ALLOW,
 //      BLOCK, or COUNT.
 //
-//      * You tried to update a ByteMatchSet with a FieldToMatchType other than
+//      * You tried to update a ByteMatchSet with a FieldToMatch Type other than
 //      HEADER, METHOD, QUERY_STRING, URI, or BODY.
 //
 //      * You tried to update a ByteMatchSet with a Field of HEADER but no value
@@ -7599,16 +7601,16 @@ func (c *WAFRegional) UpdateIPSetRequest(input *waf.UpdateIPSetInput) (req *requ
 //      * You tried to update an object (ByteMatchSet, IPSet, Rule, or WebACL)
 //      using an action other than INSERT or DELETE.
 //
-//      * You tried to create a WebACL with a DefaultActionType other than ALLOW,
+//      * You tried to create a WebACL with a DefaultAction Type other than ALLOW,
 //      BLOCK, or COUNT.
 //
 //      * You tried to create a RateBasedRule with a RateKey value other than
 //      IP.
 //
-//      * You tried to update a WebACL with a WafActionType other than ALLOW,
+//      * You tried to update a WebACL with a WafAction Type other than ALLOW,
 //      BLOCK, or COUNT.
 //
-//      * You tried to update a ByteMatchSet with a FieldToMatchType other than
+//      * You tried to update a ByteMatchSet with a FieldToMatch Type other than
 //      HEADER, METHOD, QUERY_STRING, URI, or BODY.
 //
 //      * You tried to update a ByteMatchSet with a Field of HEADER but no value
@@ -7804,16 +7806,16 @@ func (c *WAFRegional) UpdateRateBasedRuleRequest(input *waf.UpdateRateBasedRuleI
 //      * You tried to update an object (ByteMatchSet, IPSet, Rule, or WebACL)
 //      using an action other than INSERT or DELETE.
 //
-//      * You tried to create a WebACL with a DefaultActionType other than ALLOW,
+//      * You tried to create a WebACL with a DefaultAction Type other than ALLOW,
 //      BLOCK, or COUNT.
 //
 //      * You tried to create a RateBasedRule with a RateKey value other than
 //      IP.
 //
-//      * You tried to update a WebACL with a WafActionType other than ALLOW,
+//      * You tried to update a WebACL with a WafAction Type other than ALLOW,
 //      BLOCK, or COUNT.
 //
-//      * You tried to update a ByteMatchSet with a FieldToMatchType other than
+//      * You tried to update a ByteMatchSet with a FieldToMatch Type other than
 //      HEADER, METHOD, QUERY_STRING, URI, or BODY.
 //
 //      * You tried to update a ByteMatchSet with a Field of HEADER but no value
@@ -8265,7 +8267,7 @@ func (c *WAFRegional) UpdateRuleRequest(input *waf.UpdateRuleInput) (req *reques
 //
 // You then add the Rule to a WebACL and specify that you want to block requests
 // that satisfy the Rule. For a request to be blocked, the User-Agent header
-// in the request must contain the value BadBotand the request must originate
+// in the request must contain the value BadBot and the request must originate
 // from the IP address 192.0.2.44.
 //
 // To create and configure a Rule, perform the following steps:
@@ -8336,16 +8338,16 @@ func (c *WAFRegional) UpdateRuleRequest(input *waf.UpdateRuleInput) (req *reques
 //      * You tried to update an object (ByteMatchSet, IPSet, Rule, or WebACL)
 //      using an action other than INSERT or DELETE.
 //
-//      * You tried to create a WebACL with a DefaultActionType other than ALLOW,
+//      * You tried to create a WebACL with a DefaultAction Type other than ALLOW,
 //      BLOCK, or COUNT.
 //
 //      * You tried to create a RateBasedRule with a RateKey value other than
 //      IP.
 //
-//      * You tried to update a WebACL with a WafActionType other than ALLOW,
+//      * You tried to update a WebACL with a WafAction Type other than ALLOW,
 //      BLOCK, or COUNT.
 //
-//      * You tried to update a ByteMatchSet with a FieldToMatchType other than
+//      * You tried to update a ByteMatchSet with a FieldToMatch Type other than
 //      HEADER, METHOD, QUERY_STRING, URI, or BODY.
 //
 //      * You tried to update a ByteMatchSet with a Field of HEADER but no value
@@ -8547,16 +8549,16 @@ func (c *WAFRegional) UpdateRuleGroupRequest(input *waf.UpdateRuleGroupInput) (r
 //      * You tried to update an object (ByteMatchSet, IPSet, Rule, or WebACL)
 //      using an action other than INSERT or DELETE.
 //
-//      * You tried to create a WebACL with a DefaultActionType other than ALLOW,
+//      * You tried to create a WebACL with a DefaultAction Type other than ALLOW,
 //      BLOCK, or COUNT.
 //
 //      * You tried to create a RateBasedRule with a RateKey value other than
 //      IP.
 //
-//      * You tried to update a WebACL with a WafActionType other than ALLOW,
+//      * You tried to update a WebACL with a WafAction Type other than ALLOW,
 //      BLOCK, or COUNT.
 //
-//      * You tried to update a ByteMatchSet with a FieldToMatchType other than
+//      * You tried to update a ByteMatchSet with a FieldToMatch Type other than
 //      HEADER, METHOD, QUERY_STRING, URI, or BODY.
 //
 //      * You tried to update a ByteMatchSet with a Field of HEADER but no value
@@ -8644,9 +8646,8 @@ func (c *WAFRegional) UpdateSizeConstraintSetRequest(input *waf.UpdateSizeConstr
 //    * Whether to perform any transformations on the request, such as converting
 //    it to lowercase, before checking its length. Note that transformations
 //    of the request body are not supported because the AWS resource forwards
-//    only the first 8192 bytes of your request to AWS WAF.
-//
-// You can only specify a single type of TextTransformation.
+//    only the first 8192 bytes of your request to AWS WAF. You can only specify
+//    a single type of TextTransformation.
 //
 //    * A ComparisonOperator used for evaluating the selected part of the request
 //    against the specified Size, such as equals, greater than, less than, and
@@ -8722,16 +8723,16 @@ func (c *WAFRegional) UpdateSizeConstraintSetRequest(input *waf.UpdateSizeConstr
 //      * You tried to update an object (ByteMatchSet, IPSet, Rule, or WebACL)
 //      using an action other than INSERT or DELETE.
 //
-//      * You tried to create a WebACL with a DefaultActionType other than ALLOW,
+//      * You tried to create a WebACL with a DefaultAction Type other than ALLOW,
 //      BLOCK, or COUNT.
 //
 //      * You tried to create a RateBasedRule with a RateKey value other than
 //      IP.
 //
-//      * You tried to update a WebACL with a WafActionType other than ALLOW,
+//      * You tried to update a WebACL with a WafAction Type other than ALLOW,
 //      BLOCK, or COUNT.
 //
-//      * You tried to update a ByteMatchSet with a FieldToMatchType other than
+//      * You tried to update a ByteMatchSet with a FieldToMatch Type other than
 //      HEADER, METHOD, QUERY_STRING, URI, or BODY.
 //
 //      * You tried to update a ByteMatchSet with a Field of HEADER but no value
@@ -8852,9 +8853,7 @@ func (c *WAFRegional) UpdateSqlInjectionMatchSetRequest(input *waf.UpdateSqlInje
 //
 //    * TextTransformation: Which text transformation, if any, to perform on
 //    the web request before inspecting the request for snippets of malicious
-//    SQL code.
-//
-// You can only specify a single type of TextTransformation.
+//    SQL code. You can only specify a single type of TextTransformation.
 //
 // You use SqlInjectionMatchSet objects to specify which CloudFront requests
 // that you want to allow, block, or count. For example, if you're receiving
@@ -8920,16 +8919,16 @@ func (c *WAFRegional) UpdateSqlInjectionMatchSetRequest(input *waf.UpdateSqlInje
 //      * You tried to update an object (ByteMatchSet, IPSet, Rule, or WebACL)
 //      using an action other than INSERT or DELETE.
 //
-//      * You tried to create a WebACL with a DefaultActionType other than ALLOW,
+//      * You tried to create a WebACL with a DefaultAction Type other than ALLOW,
 //      BLOCK, or COUNT.
 //
 //      * You tried to create a RateBasedRule with a RateKey value other than
 //      IP.
 //
-//      * You tried to update a WebACL with a WafActionType other than ALLOW,
+//      * You tried to update a WebACL with a WafAction Type other than ALLOW,
 //      BLOCK, or COUNT.
 //
-//      * You tried to update a ByteMatchSet with a FieldToMatchType other than
+//      * You tried to update a ByteMatchSet with a FieldToMatch Type other than
 //      HEADER, METHOD, QUERY_STRING, URI, or BODY.
 //
 //      * You tried to update a ByteMatchSet with a Field of HEADER but no value
@@ -9139,16 +9138,16 @@ func (c *WAFRegional) UpdateWebACLRequest(input *waf.UpdateWebACLInput) (req *re
 //      * You tried to update an object (ByteMatchSet, IPSet, Rule, or WebACL)
 //      using an action other than INSERT or DELETE.
 //
-//      * You tried to create a WebACL with a DefaultActionType other than ALLOW,
+//      * You tried to create a WebACL with a DefaultAction Type other than ALLOW,
 //      BLOCK, or COUNT.
 //
 //      * You tried to create a RateBasedRule with a RateKey value other than
 //      IP.
 //
-//      * You tried to update a WebACL with a WafActionType other than ALLOW,
+//      * You tried to update a WebACL with a WafAction Type other than ALLOW,
 //      BLOCK, or COUNT.
 //
-//      * You tried to update a ByteMatchSet with a FieldToMatchType other than
+//      * You tried to update a ByteMatchSet with a FieldToMatch Type other than
 //      HEADER, METHOD, QUERY_STRING, URI, or BODY.
 //
 //      * You tried to update a ByteMatchSet with a Field of HEADER but no value
@@ -9272,9 +9271,7 @@ func (c *WAFRegional) UpdateXssMatchSetRequest(input *waf.UpdateXssMatchSetInput
 //
 //    * TextTransformation: Which text transformation, if any, to perform on
 //    the web request before inspecting the request for cross-site scripting
-//    attacks.
-//
-// You can only specify a single type of TextTransformation.
+//    attacks. You can only specify a single type of TextTransformation.
 //
 // You use XssMatchSet objects to specify which CloudFront requests that you
 // want to allow, block, or count. For example, if you're receiving requests
@@ -9340,16 +9337,16 @@ func (c *WAFRegional) UpdateXssMatchSetRequest(input *waf.UpdateXssMatchSetInput
 //      * You tried to update an object (ByteMatchSet, IPSet, Rule, or WebACL)
 //      using an action other than INSERT or DELETE.
 //
-//      * You tried to create a WebACL with a DefaultActionType other than ALLOW,
+//      * You tried to create a WebACL with a DefaultAction Type other than ALLOW,
 //      BLOCK, or COUNT.
 //
 //      * You tried to create a RateBasedRule with a RateKey value other than
 //      IP.
 //
-//      * You tried to update a WebACL with a WafActionType other than ALLOW,
+//      * You tried to update a WebACL with a WafAction Type other than ALLOW,
 //      BLOCK, or COUNT.
 //
-//      * You tried to update a ByteMatchSet with a FieldToMatchType other than
+//      * You tried to update a ByteMatchSet with a FieldToMatch Type other than
 //      HEADER, METHOD, QUERY_STRING, URI, or BODY.
 //
 //      * You tried to update a ByteMatchSet with a Field of HEADER but no value

@@ -16,7 +16,7 @@ func TestAccAWSMediaPackageChannel_basic(t *testing.T) {
 	resourceName := "aws_media_package_channel.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSMediaPackage(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsMediaPackageChannelDestroy,
 		Steps: []resource.TestStep{
@@ -47,7 +47,7 @@ func TestAccAWSMediaPackageChannel_description(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSMediaPackage(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsMediaPackageChannelDestroy,
 		Steps: []resource.TestStep{
@@ -79,7 +79,7 @@ func TestAccAWSMediaPackageChannel_tags(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSMediaPackage(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsMediaPackageChannelDestroy,
 		Steps: []resource.TestStep{
@@ -161,19 +161,37 @@ func testAccCheckAwsMediaPackageChannelExists(name string) resource.TestCheckFun
 	}
 }
 
+func testAccPreCheckAWSMediaPackage(t *testing.T) {
+	conn := testAccProvider.Meta().(*AWSClient).mediapackageconn
+
+	input := &mediapackage.ListChannelsInput{}
+
+	_, err := conn.ListChannels(input)
+
+	if testAccPreCheckSkipError(err) {
+		t.Skipf("skipping acceptance testing: %s", err)
+	}
+
+	if err != nil {
+		t.Fatalf("unexpected PreCheck error: %s", err)
+	}
+}
+
 func testAccMediaPackageChannelConfig(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_media_package_channel" "test" {
   channel_id = "tf_mediachannel_%s"
-}`, rName)
+}
+`, rName)
 }
 
 func testAccMediaPackageChannelConfigDescription(rName, description string) string {
 	return fmt.Sprintf(`
 resource "aws_media_package_channel" "test" {
-  channel_id = %q
+  channel_id  = %q
   description = %q
-}`, rName, description)
+}
+`, rName, description)
 }
 
 func testAccMediaPackageChannelConfigWithTags(rName, key, value string) string {
@@ -185,5 +203,6 @@ resource "aws_media_package_channel" "test" {
 	  Name = "%[1]s"
 	  %[2]s = "%[3]s"
   }
-}`, rName, key, value)
+}
+`, rName, key, value)
 }

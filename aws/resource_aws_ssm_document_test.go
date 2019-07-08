@@ -27,7 +27,9 @@ func TestAccAWSSSMDocument_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("aws_ssm_document.foo", "document_format", "JSON"),
 					resource.TestMatchResourceAttr("aws_ssm_document.foo", "arn",
 						regexp.MustCompile(`^arn:aws:ssm:[a-z]{2}-[a-z]+-\d{1}:\d{12}:document/.*$`)),
-					resource.TestCheckResourceAttr("aws_ssm_document.foo", "tags.%", "0"),
+					resource.TestCheckResourceAttr("aws_ssm_document.foo", "tags.%", "1"),
+					resource.TestCheckResourceAttr(
+						"aws_ssm_document.foo", "tags.Name", "My Document"),
 				),
 			},
 		},
@@ -381,15 +383,18 @@ Based on examples from here: https://docs.aws.amazon.com/AWSEC2/latest/WindowsGu
 func testAccAWSSSMDocumentBasicConfig(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_ssm_document" "foo" {
-  name = "test_document-%s"
-	document_type = "Command"
+  name          = "test_document-%s"
+  document_type = "Command"
+
+  tags = {
+    Name = "My Document"
+  }
 
   content = <<DOC
     {
       "schemaVersion": "1.2",
       "description": "Check ip configuration of a Linux instance.",
       "parameters": {
-
       },
       "runtimeConfig": {
         "aws:runShellScript": {
@@ -404,15 +409,14 @@ resource "aws_ssm_document" "foo" {
     }
 DOC
 }
-
 `, rName)
 }
 
 func testAccAWSSSMDocument20Config(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_ssm_document" "foo" {
-  name = "test_document-%s"
-         document_type = "Command"
+  name          = "test_document-%s"
+  document_type = "Command"
 
   content = <<DOC
     {
@@ -441,8 +445,8 @@ DOC
 func testAccAWSSSMDocument20UpdatedConfig(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_ssm_document" "foo" {
-  name = "test_document-%s"
-         document_type = "Command"
+  name          = "test_document-%s"
+  document_type = "Command"
 
   content = <<DOC
     {
@@ -471,8 +475,8 @@ DOC
 func testAccAWSSSMDocumentPublicPermissionConfig(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_ssm_document" "foo" {
-  name = "test_document-%s"
-	document_type = "Command"
+  name          = "test_document-%s"
+  document_type = "Command"
 
   permissions = {
     type        = "Share"
@@ -505,8 +509,8 @@ DOC
 func testAccAWSSSMDocumentPrivatePermissionConfig(rName string, rIds string) string {
 	return fmt.Sprintf(`
 resource "aws_ssm_document" "foo" {
-  name = "test_document-%s"
-	document_type = "Command"
+  name          = "test_document-%s"
+  document_type = "Command"
 
   permissions = {
     type        = "Share"
@@ -539,8 +543,8 @@ DOC
 func testAccAWSSSMDocumentParamConfig(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_ssm_document" "foo" {
-  name = "test_document-%s"
-	document_type = "Command"
+  name          = "test_document-%s"
+  document_type = "Command"
 
   content = <<DOC
 		{
@@ -581,20 +585,19 @@ resource "aws_ssm_document" "foo" {
 		}
 DOC
 }
-
 `, rName)
 }
 
 func testAccAWSSSMDocumentTypeAutomationConfig(rName string) string {
 	return fmt.Sprintf(`
 data "aws_ami" "ssm_ami" {
-	most_recent = true
-	owners      = ["099720109477"] # Canonical
+  most_recent = true
+  owners      = ["099720109477"] # Canonical
 
-	filter {
-		name = "name"
-		values = ["*hvm-ssd/ubuntu-trusty-14.04*"]
-	}
+  filter {
+    name   = "name"
+    values = ["*hvm-ssd/ubuntu-trusty-14.04*"]
+  }
 }
 
 resource "aws_iam_instance_profile" "ssm_profile" {
@@ -603,9 +606,10 @@ resource "aws_iam_instance_profile" "ssm_profile" {
 }
 
 resource "aws_iam_role" "ssm_role" {
-    name = "ssm_role-%s"
-    path = "/"
-    assume_role_policy = <<EOF
+  name = "ssm_role-%s"
+  path = "/"
+
+  assume_role_policy = <<EOF
 {
     "Version": "2012-10-17",
     "Statement": [
@@ -623,8 +627,9 @@ EOF
 }
 
 resource "aws_ssm_document" "foo" {
-  name = "test_document-%s"
-	document_type = "Automation"
+  name          = "test_document-%s"
+  document_type = "Automation"
+
   content = <<DOC
 	{
 	   "description": "Systems Manager Automation Demo",
@@ -673,15 +678,15 @@ resource "aws_ssm_document" "foo" {
 	}
 DOC
 }
-
 `, rName, rName, rName)
 }
 
 func testAccAWSSSMDocumentTypeSessionConfig(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_ssm_document" "foo" {
-  name = "test_document-%s"
-	document_type = "Session"
+  name          = "test_document-%s"
+  document_type = "Session"
+
   content = <<DOC
 {
     "schemaVersion": "1.0",

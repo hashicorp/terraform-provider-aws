@@ -75,7 +75,7 @@ func TestAccAWSRdsGlobalCluster_basic(t *testing.T) {
 	resourceName := "aws_rds_global_cluster.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSRdsGlobalCluster(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSRdsGlobalClusterDestroy,
 		Steps: []resource.TestStep{
@@ -108,7 +108,7 @@ func TestAccAWSRdsGlobalCluster_disappears(t *testing.T) {
 	resourceName := "aws_rds_global_cluster.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSRdsGlobalCluster(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSRdsGlobalClusterDestroy,
 		Steps: []resource.TestStep{
@@ -130,7 +130,7 @@ func TestAccAWSRdsGlobalCluster_DatabaseName(t *testing.T) {
 	resourceName := "aws_rds_global_cluster.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSRdsGlobalCluster(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSRdsGlobalClusterDestroy,
 		Steps: []resource.TestStep{
@@ -164,7 +164,7 @@ func TestAccAWSRdsGlobalCluster_DeletionProtection(t *testing.T) {
 	resourceName := "aws_rds_global_cluster.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSRdsGlobalCluster(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSRdsGlobalClusterDestroy,
 		Steps: []resource.TestStep{
@@ -198,7 +198,7 @@ func TestAccAWSRdsGlobalCluster_Engine_Aurora(t *testing.T) {
 	resourceName := "aws_rds_global_cluster.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSRdsGlobalCluster(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSRdsGlobalClusterDestroy,
 		Steps: []resource.TestStep{
@@ -224,7 +224,7 @@ func TestAccAWSRdsGlobalCluster_EngineVersion_Aurora(t *testing.T) {
 	resourceName := "aws_rds_global_cluster.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSRdsGlobalCluster(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSRdsGlobalClusterDestroy,
 		Steps: []resource.TestStep{
@@ -250,7 +250,7 @@ func TestAccAWSRdsGlobalCluster_StorageEncrypted(t *testing.T) {
 	resourceName := "aws_rds_global_cluster.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSRdsGlobalCluster(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSRdsGlobalClusterDestroy,
 		Steps: []resource.TestStep{
@@ -374,6 +374,22 @@ func testAccCheckAWSRdsGlobalClusterRecreated(i, j *rds.GlobalCluster) resource.
 		}
 
 		return nil
+	}
+}
+
+func testAccPreCheckAWSRdsGlobalCluster(t *testing.T) {
+	conn := testAccProvider.Meta().(*AWSClient).rdsconn
+
+	input := &rds.DescribeGlobalClustersInput{}
+
+	_, err := conn.DescribeGlobalClusters(input)
+
+	if testAccPreCheckSkipError(err) || isAWSErr(err, "InvalidParameterValue", "Access Denied to API Version: APIGlobalDatabases") {
+		t.Skipf("skipping acceptance testing: %s", err)
+	}
+
+	if err != nil {
+		t.Fatalf("unexpected PreCheck error: %s", err)
 	}
 }
 

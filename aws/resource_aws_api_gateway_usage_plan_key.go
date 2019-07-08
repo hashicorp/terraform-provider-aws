@@ -3,12 +3,10 @@ package aws
 import (
 	"fmt"
 	"log"
-	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/apigateway"
-	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/helper/schema"
 )
 
@@ -97,19 +95,17 @@ func resourceAwsApiGatewayUsagePlanKeyDelete(d *schema.ResourceData, meta interf
 	conn := meta.(*AWSClient).apigateway
 
 	log.Printf("[DEBUG] Deleting API Gateway Usage Plan Key: %s", d.Id())
-
-	return resource.Retry(5*time.Minute, func() *resource.RetryError {
-		_, err := conn.DeleteUsagePlanKey(&apigateway.DeleteUsagePlanKeyInput{
-			UsagePlanId: aws.String(d.Get("usage_plan_id").(string)),
-			KeyId:       aws.String(d.Get("key_id").(string)),
-		})
-		if err == nil {
-			return nil
-		}
-		if awsErr, ok := err.(awserr.Error); ok && awsErr.Code() == "NotFoundException" {
-			return nil
-		}
-
-		return resource.NonRetryableError(err)
+	_, err := conn.DeleteUsagePlanKey(&apigateway.DeleteUsagePlanKeyInput{
+		UsagePlanId: aws.String(d.Get("usage_plan_id").(string)),
+		KeyId:       aws.String(d.Get("key_id").(string)),
 	})
+	if isAWSErr(err, "NotFoundException", "") {
+		return nil
+	}
+	if err != nil {
+		return fmt.Errorf("Error deleting API Gateway usage plan key: %s", err)
+	}
+
+	return nil
+
 }

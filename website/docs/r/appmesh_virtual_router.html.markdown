@@ -26,8 +26,8 @@ The Terraform state associated with existing resources will automatically be mig
 
 ```hcl
 resource "aws_appmesh_virtual_router" "serviceb" {
-  name          = "serviceB"
-  mesh_name     = "${aws_appmesh_mesh.simple.id}"
+  name      = "serviceB"
+  mesh_name = "${aws_appmesh_mesh.simple.id}"
 
   spec {
     listener {

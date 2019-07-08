@@ -73,9 +73,9 @@ func resourceAwsLaunchConfiguration() *schema.Resource {
 				ForceNew:      true,
 				ConflictsWith: []string{"user_data_base64"},
 				StateFunc: func(v interface{}) string {
-					switch v.(type) {
+					switch v := v.(type) {
 					case string:
-						return userDataHashSum(v.(string))
+						return userDataHashSum(v)
 					default:
 						return ""
 					}

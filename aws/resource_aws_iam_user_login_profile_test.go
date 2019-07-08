@@ -306,34 +306,35 @@ func testAccCheckAWSUserLoginProfileExists(n string, res *iam.GetLoginProfileOut
 func testAccAWSUserLoginProfileConfig_base(rName, path string) string {
 	return fmt.Sprintf(`
 resource "aws_iam_user" "user" {
-	name = "%s"
-	path = "%s"
-	force_destroy = true
+  name          = "%s"
+  path          = "%s"
+  force_destroy = true
 }
 
 data "aws_caller_identity" "current" {}
 
 data "aws_iam_policy_document" "user" {
-	statement {
-		effect = "Allow"
-		actions = ["iam:GetAccountPasswordPolicy"]
-		resources = ["*"]
-	}
-	statement {
-		effect = "Allow"
-		actions = ["iam:ChangePassword"]
-		resources = ["arn:aws:iam::${data.aws_caller_identity.current.account_id}:user/&{aws:username}"]
-	}
+  statement {
+    effect    = "Allow"
+    actions   = ["iam:GetAccountPasswordPolicy"]
+    resources = ["*"]
+  }
+
+  statement {
+    effect    = "Allow"
+    actions   = ["iam:ChangePassword"]
+    resources = ["arn:aws:iam::${data.aws_caller_identity.current.account_id}:user/&{aws:username}"]
+  }
 }
 
 resource "aws_iam_user_policy" "user" {
-	name = "AllowChangeOwnPassword"
-	user = "${aws_iam_user.user.name}"
-	policy = "${data.aws_iam_policy_document.user.json}"
+  name   = "AllowChangeOwnPassword"
+  user   = "${aws_iam_user.user.name}"
+  policy = "${data.aws_iam_policy_document.user.json}"
 }
 
 resource "aws_iam_access_key" "user" {
-	user = "${aws_iam_user.user.name}"
+  user = "${aws_iam_user.user.name}"
 }
 `, rName, path)
 }
@@ -345,7 +346,8 @@ func testAccAWSUserLoginProfileConfig_PasswordLength(rName, path, pgpKey string,
 resource "aws_iam_user_login_profile" "user" {
   user            = "${aws_iam_user.user.name}"
   password_length = %d
-  pgp_key         = <<EOF
+
+  pgp_key = <<EOF
 %s
 EOF
 }
@@ -357,7 +359,8 @@ func testAccAWSUserLoginProfileConfig_Required(rName, path, pgpKey string) strin
 %s
 
 resource "aws_iam_user_login_profile" "user" {
-  user    = "${aws_iam_user.user.name}"
+  user = "${aws_iam_user.user.name}"
+
   pgp_key = <<EOF
 %s
 EOF

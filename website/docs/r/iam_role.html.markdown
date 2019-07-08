@@ -33,7 +33,7 @@ resource "aws_iam_role" "test_role" {
 EOF
 
   tags = {
-      tag-key = "tag-value"
+    tag-key = "tag-value"
   }
 }
 ```

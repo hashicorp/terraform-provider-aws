@@ -1784,7 +1784,7 @@ func (c *DocDB) DescribeDBClustersWithContext(ctx aws.Context, input *DescribeDB
 //    // Example iterating over at most 3 pages of a DescribeDBClusters operation.
 //    pageNum := 0
 //    err := client.DescribeDBClustersPages(params,
-//        func(page *DescribeDBClustersOutput, lastPage bool) bool {
+//        func(page *docdb.DescribeDBClustersOutput, lastPage bool) bool {
 //            pageNum++
 //            fmt.Println(page)
 //            return pageNum <= 3
@@ -1914,7 +1914,7 @@ func (c *DocDB) DescribeDBEngineVersionsWithContext(ctx aws.Context, input *Desc
 //    // Example iterating over at most 3 pages of a DescribeDBEngineVersions operation.
 //    pageNum := 0
 //    err := client.DescribeDBEngineVersionsPages(params,
-//        func(page *DescribeDBEngineVersionsOutput, lastPage bool) bool {
+//        func(page *docdb.DescribeDBEngineVersionsOutput, lastPage bool) bool {
 //            pageNum++
 //            fmt.Println(page)
 //            return pageNum <= 3
@@ -2050,7 +2050,7 @@ func (c *DocDB) DescribeDBInstancesWithContext(ctx aws.Context, input *DescribeD
 //    // Example iterating over at most 3 pages of a DescribeDBInstances operation.
 //    pageNum := 0
 //    err := client.DescribeDBInstancesPages(params,
-//        func(page *DescribeDBInstancesOutput, lastPage bool) bool {
+//        func(page *docdb.DescribeDBInstancesOutput, lastPage bool) bool {
 //            pageNum++
 //            fmt.Println(page)
 //            return pageNum <= 3
@@ -2186,7 +2186,7 @@ func (c *DocDB) DescribeDBSubnetGroupsWithContext(ctx aws.Context, input *Descri
 //    // Example iterating over at most 3 pages of a DescribeDBSubnetGroups operation.
 //    pageNum := 0
 //    err := client.DescribeDBSubnetGroupsPages(params,
-//        func(page *DescribeDBSubnetGroupsOutput, lastPage bool) bool {
+//        func(page *docdb.DescribeDBSubnetGroupsOutput, lastPage bool) bool {
 //            pageNum++
 //            fmt.Println(page)
 //            return pageNum <= 3
@@ -2470,7 +2470,7 @@ func (c *DocDB) DescribeEventsWithContext(ctx aws.Context, input *DescribeEvents
 //    // Example iterating over at most 3 pages of a DescribeEvents operation.
 //    pageNum := 0
 //    err := client.DescribeEventsPages(params,
-//        func(page *DescribeEventsOutput, lastPage bool) bool {
+//        func(page *docdb.DescribeEventsOutput, lastPage bool) bool {
 //            pageNum++
 //            fmt.Println(page)
 //            return pageNum <= 3
@@ -2600,7 +2600,7 @@ func (c *DocDB) DescribeOrderableDBInstanceOptionsWithContext(ctx aws.Context, i
 //    // Example iterating over at most 3 pages of a DescribeOrderableDBInstanceOptions operation.
 //    pageNum := 0
 //    err := client.DescribeOrderableDBInstanceOptionsPages(params,
-//        func(page *DescribeOrderableDBInstanceOptionsOutput, lastPage bool) bool {
+//        func(page *docdb.DescribeOrderableDBInstanceOptionsOutput, lastPage bool) bool {
 //            pageNum++
 //            fmt.Println(page)
 //            return pageNum <= 3
@@ -4578,7 +4578,6 @@ type CreateDBClusterInput struct {
 	//    * If ReplicationSourceIdentifier identifies an encrypted source, then
 	//    Amazon DocumentDB uses the encryption key that is used to encrypt the
 	//    source. Otherwise, Amazon DocumentDB uses your default encryption key.
-	//
 	//
 	//    * If the StorageEncrypted parameter is true and ReplicationSourceIdentifier
 	//    is not specified, Amazon DocumentDB uses your default encryption key.
