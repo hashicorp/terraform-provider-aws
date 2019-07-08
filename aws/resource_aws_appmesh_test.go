@@ -24,6 +24,7 @@ func TestAccAWSAppmesh(t *testing.T) {
 		},
 		"VirtualRouter": {
 			"basic": testAccAwsAppmeshVirtualRouter_basic,
+			"tags":  testAccAwsAppmeshVirtualRouter_tags,
 		},
 		"VirtualService": {
 			"virtualNode":   testAccAwsAppmeshVirtualService_virtualNode,
