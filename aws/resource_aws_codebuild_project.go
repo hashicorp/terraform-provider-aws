@@ -197,6 +197,26 @@ func resourceAwsCodeBuildProject() *schema.Resource {
 							Optional:     true,
 							ValidateFunc: validation.StringMatch(regexp.MustCompile(`\.(pem|zip)$`), "must end in .pem or .zip"),
 						},
+						"registry_credential": {
+							Type:     schema.TypeList,
+							Optional: true,
+							MaxItems: 1,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"credential": {
+										Type:     schema.TypeString,
+										Required: true,
+									},
+									"credential_provider": {
+										Type:     schema.TypeString,
+										Required: true,
+										ValidateFunc: validation.StringInSlice([]string{
+											codebuild.CredentialProviderTypeSecretsManager,
+										}, false),
+									},
+								},
+							},
+						},
 					},
 				},
 				Set: resourceAwsCodeBuildProjectEnvironmentHash,
@@ -659,6 +679,22 @@ func expandProjectEnvironment(d *schema.ResourceData) *codebuild.ProjectEnvironm
 		projectEnv.ImagePullCredentialsType = aws.String(v.(string))
 	}
 
+	if v, ok := envConfig["registry_credential"]; ok && len(v.([]interface{})) > 0 {
+		config := v.([]interface{})[0].(map[string]interface{})
+
+		projectRegistryCredential := &codebuild.RegistryCredential{}
+
+		if v, ok := config["credential"]; ok && v.(string) != "" {
+			projectRegistryCredential.Credential = aws.String(v.(string))
+		}
+
+		if v, ok := config["credential_provider"]; ok && v.(string) != "" {
+			projectRegistryCredential.CredentialProvider = aws.String(v.(string))
+		}
+
+		projectEnv.RegistryCredential = projectRegistryCredential
+	}
+
 	if v := envConfig["environment_variable"]; v != nil {
 		envVariables := v.([]interface{})
 		if len(envVariables) > 0 {
@@ -1027,12 +1063,26 @@ func flattenAwsCodeBuildProjectEnvironment(environment *codebuild.ProjectEnviron
 	envConfig["privileged_mode"] = *environment.PrivilegedMode
 	envConfig["image_pull_credentials_type"] = *environment.ImagePullCredentialsType
 
+	envConfig["registry_credential"] = flattenAwsCodebuildRegistryCredential(environment.RegistryCredential)
+
 	if environment.EnvironmentVariables != nil {
 		envConfig["environment_variable"] = environmentVariablesToMap(environment.EnvironmentVariables)
 	}
 
 	return []interface{}{envConfig}
+}
 
+func flattenAwsCodebuildRegistryCredential(registryCredential *codebuild.RegistryCredential) []interface{} {
+	if registryCredential == nil {
+		return []interface{}{}
+	}
+
+	values := map[string]interface{}{
+		"credential":          aws.StringValue(registryCredential.Credential),
+		"credential_provider": aws.StringValue(registryCredential.CredentialProvider),
+	}
+
+	return []interface{}{values}
 }
 
 func flattenAwsCodeBuildProjectSecondarySources(sourceList []*codebuild.ProjectSource) []interface{} {
@@ -1116,6 +1166,17 @@ func resourceAwsCodeBuildProjectEnvironmentHash(v interface{}) int {
 	buf.WriteString(fmt.Sprintf("%s-", imagePullCredentialsType))
 	if v, ok := m["certificate"]; ok && v.(string) != "" {
 		buf.WriteString(fmt.Sprintf("%s-", v.(string)))
+	}
+	if v, ok := m["registry_credential"]; ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+		m := v.([]interface{})[0].(map[string]interface{})
+
+		if v, ok := m["credential"]; ok && v.(string) != "" {
+			buf.WriteString(fmt.Sprintf("%s-", v.(string)))
+		}
+
+		if v, ok := m["credential_provider"]; ok && v.(string) != "" {
+			buf.WriteString(fmt.Sprintf("%s-", v.(string)))
+		}
 	}
 	for _, e := range environmentVariables {
 		if e != nil { // Old statefiles might have nil values in them

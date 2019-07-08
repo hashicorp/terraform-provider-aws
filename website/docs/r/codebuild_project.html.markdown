@@ -224,6 +224,7 @@ The following arguments are supported:
 * `environment_variable` - (Optional) A set of environment variables to make available to builds for this build project.
 * `privileged_mode` - (Optional) If set to true, enables running the Docker daemon inside a Docker container. Defaults to `false`.
 * `certificate` - (Optional) The ARN of the S3 bucket, path prefix and object key that contains the PEM-encoded certificate.
+* `registry_credential` - (Optional) Information about credentials for access to a private Docker registry. Registry Credential config blocks are documented below.
 
 `environment_variable` supports the following:
 
@@ -252,6 +253,10 @@ The following arguments are supported:
 * `subnets` - (Required) The subnet IDs within which to run builds.
 * `vpc_id` - (Required) The ID of the VPC within which to run builds.
 
+`registry_credential` supports the following:
+
+* `credential` - (Required) The Amazon Resource Name (ARN) or name of credentials created using AWS Secrets Manager.
+* `credential_provider` - (Required) The service that created the credentials to access a private Docker registry. The valid value, SECRETS_MANAGER, is for AWS Secrets Manager.
 
 `secondary_artifacts` supports the following:
 
