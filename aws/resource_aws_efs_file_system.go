@@ -96,8 +96,9 @@ func resourceAwsEfsFileSystem() *schema.Resource {
 			},
 
 			"lifecycle_policy": {
-				Type:     schema.TypeSet,
+				Type:     schema.TypeList,
 				Optional: true,
+				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"transition_to_ia": {
@@ -456,7 +457,7 @@ func resourceAwsEfsFileSystemSetLifecyclePolicy(d *schema.ResourceData, lp []*ef
 }
 
 func resourceAwsEfsFileSystemLifecyclePolicy(d *schema.ResourceData) []*efs.LifecyclePolicy {
-	lifecyclePolicies := d.Get("lifecycle_policy").(*schema.Set).List()
+	lifecyclePolicies := d.Get("lifecycle_policy").([]interface{})
 	result := make([]*efs.LifecyclePolicy, len(lifecyclePolicies))
 
 	for i := 0; i < len(lifecyclePolicies); i++ {
