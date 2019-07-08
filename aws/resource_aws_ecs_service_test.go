@@ -1122,6 +1122,7 @@ resource "aws_ecs_cluster" "default" {
 
 resource "aws_ecs_task_definition" "mongo" {
   family = "%s"
+
   container_definitions = <<DEFINITION
 [
   {
@@ -1136,10 +1137,10 @@ DEFINITION
 }
 
 resource "aws_ecs_service" "mongo" {
-  name = "%s"
-  cluster = "${aws_ecs_cluster.default.id}"
+  name            = "%s"
+  cluster         = "${aws_ecs_cluster.default.id}"
   task_definition = "${aws_ecs_task_definition.mongo.arn}"
-  desired_count = 1
+  desired_count   = 1
 }
 `, clusterName, tdName, svcName)
 }
@@ -1152,6 +1153,7 @@ resource "aws_ecs_cluster" "default" {
 
 resource "aws_ecs_task_definition" "mongo" {
   family = "%s"
+
   container_definitions = <<DEFINITION
 [
   {
@@ -1166,10 +1168,10 @@ DEFINITION
 }
 
 resource "aws_ecs_service" "mongo" {
-  name = "%s"
-  cluster = "${aws_ecs_cluster.default.id}"
+  name            = "%s"
+  cluster         = "${aws_ecs_cluster.default.id}"
   task_definition = "${aws_ecs_task_definition.mongo.arn}"
-  desired_count = 2
+  desired_count   = 2
 }
 `, clusterName, tdName, svcName)
 }
@@ -1182,6 +1184,7 @@ resource "aws_ecs_cluster" "default" {
 
 resource "aws_ecs_task_definition" "mongo" {
   family = "%s"
+
   container_definitions = <<DEFINITION
 [
   {
@@ -1196,13 +1199,14 @@ DEFINITION
 }
 
 resource "aws_ecs_service" "mongo" {
-  name = "%s"
-  cluster = "${aws_ecs_cluster.default.id}"
+  name            = "%s"
+  cluster         = "${aws_ecs_cluster.default.id}"
   task_definition = "${aws_ecs_task_definition.mongo.arn}"
-  desired_count = 1
+  desired_count   = 1
+
   ordered_placement_strategy {
     field = "host"
-    type = "spread"
+    type  = "spread"
   }
 }
 `, clusterName, tdName, svcName)
@@ -1216,6 +1220,7 @@ resource "aws_ecs_cluster" "default" {
 
 resource "aws_ecs_task_definition" "mongo" {
   family = "%s"
+
   container_definitions = <<DEFINITION
 [
   {
@@ -1230,12 +1235,13 @@ DEFINITION
 }
 
 resource "aws_ecs_service" "mongo" {
-  name = "%s"
-  cluster = "${aws_ecs_cluster.default.id}"
+  name            = "%s"
+  cluster         = "${aws_ecs_cluster.default.id}"
   task_definition = "${aws_ecs_task_definition.mongo.arn}"
-  desired_count = 1
+  desired_count   = 1
+
   ordered_placement_strategy {
-    type = "binpack"
+    type  = "binpack"
     field = "memory"
   }
 }
@@ -1250,6 +1256,7 @@ resource "aws_ecs_cluster" "default" {
 
 resource "aws_ecs_task_definition" "mongo" {
   family = "%s"
+
   container_definitions = <<DEFINITION
 [
   {
@@ -1264,10 +1271,11 @@ DEFINITION
 }
 
 resource "aws_ecs_service" "mongo" {
-  name = "%s"
-  cluster = "${aws_ecs_cluster.default.id}"
+  name            = "%s"
+  cluster         = "${aws_ecs_cluster.default.id}"
   task_definition = "${aws_ecs_task_definition.mongo.arn}"
-  desired_count = 1
+  desired_count   = 1
+
   ordered_placement_strategy {
     type = "random"
   }
@@ -1283,6 +1291,7 @@ resource "aws_ecs_cluster" "default" {
 
 resource "aws_ecs_task_definition" "mongo" {
   family = "%s"
+
   container_definitions = <<DEFINITION
 [
   {
@@ -1297,17 +1306,19 @@ DEFINITION
 }
 
 resource "aws_ecs_service" "mongo" {
-  name = "%s"
-  cluster = "${aws_ecs_cluster.default.id}"
+  name            = "%s"
+  cluster         = "${aws_ecs_cluster.default.id}"
   task_definition = "${aws_ecs_task_definition.mongo.arn}"
-  desired_count = 1
+  desired_count   = 1
+
   ordered_placement_strategy {
-    type = "binpack"
+    type  = "binpack"
     field = "memory"
   }
+
   ordered_placement_strategy {
     field = "host"
-    type = "spread"
+    type  = "spread"
   }
 }
 `, clusterName, tdName, svcName)
@@ -1323,6 +1334,7 @@ resource "aws_ecs_cluster" "default" {
 
 resource "aws_ecs_task_definition" "mongo" {
   family = "%s"
+
   container_definitions = <<DEFINITION
 [
   {
@@ -1337,16 +1349,17 @@ DEFINITION
 }
 
 resource "aws_ecs_service" "mongo" {
-  name = "%s"
-  cluster = "${aws_ecs_cluster.default.id}"
+  name            = "%s"
+  cluster         = "${aws_ecs_cluster.default.id}"
   task_definition = "${aws_ecs_task_definition.mongo.arn}"
-  desired_count = 1
+  desired_count   = 1
+
   placement_constraints {
-    type = "memberOf"
+    type       = "memberOf"
     expression = "attribute:ecs.availability-zone in [${data.aws_availability_zones.available.names[0]}]"
   }
 }
-	`, clusterName, tdName, svcName)
+`, clusterName, tdName, svcName)
 }
 
 func testAccAWSEcsServiceWithPlacementConstraintEmptyExpression(clusterName, tdName, svcName string) string {
@@ -1354,8 +1367,10 @@ func testAccAWSEcsServiceWithPlacementConstraintEmptyExpression(clusterName, tdN
 resource "aws_ecs_cluster" "default" {
   name = "%s"
 }
+
 resource "aws_ecs_task_definition" "mongo" {
   family = "%s"
+
   container_definitions = <<DEFINITION
 [
   {
@@ -1368,11 +1383,13 @@ resource "aws_ecs_task_definition" "mongo" {
 ]
 DEFINITION
 }
+
 resource "aws_ecs_service" "mongo" {
-  name = "%s"
-  cluster = "${aws_ecs_cluster.default.id}"
+  name            = "%s"
+  cluster         = "${aws_ecs_cluster.default.id}"
   task_definition = "${aws_ecs_task_definition.mongo.arn}"
-  desired_count = 1
+  desired_count   = 1
+
   placement_constraints {
     type = "distinctInstance"
   }
@@ -1386,16 +1403,18 @@ data "aws_availability_zones" "available" {}
 
 resource "aws_vpc" "main" {
   cidr_block = "10.10.0.0/16"
+
   tags = {
     Name = "terraform-testacc-ecs-service-with-launch-type-fargate"
   }
 }
 
 resource "aws_subnet" "main" {
-  count = 2
-  cidr_block = "${cidrsubnet(aws_vpc.main.cidr_block, 8, count.index)}"
+  count             = 2
+  cidr_block        = "${cidrsubnet(aws_vpc.main.cidr_block, 8, count.index)}"
   availability_zone = "${data.aws_availability_zones.available.names[count.index]}"
-  vpc_id = "${aws_vpc.main.id}"
+  vpc_id            = "${aws_vpc.main.id}"
+
   tags = {
     Name = "tf-acc-ecs-service-with-launch-type-fargate"
   }
@@ -1407,9 +1426,9 @@ resource "aws_security_group" "allow_all_a" {
   vpc_id      = "${aws_vpc.main.id}"
 
   ingress {
-    protocol = "6"
-    from_port = 80
-    to_port = 8000
+    protocol    = "6"
+    from_port   = 80
+    to_port     = 8000
     cidr_blocks = ["${aws_vpc.main.cidr_block}"]
   }
 }
@@ -1420,9 +1439,9 @@ resource "aws_security_group" "allow_all_b" {
   vpc_id      = "${aws_vpc.main.id}"
 
   ingress {
-    protocol = "6"
-    from_port = 80
-    to_port = 8000
+    protocol    = "6"
+    from_port   = 80
+    to_port     = 8000
     cidr_blocks = ["${aws_vpc.main.cidr_block}"]
   }
 }
@@ -1432,11 +1451,11 @@ resource "aws_ecs_cluster" "main" {
 }
 
 resource "aws_ecs_task_definition" "mongo" {
-  family = "%s"
-  network_mode = "awsvpc"
+  family                   = "%s"
+  network_mode             = "awsvpc"
   requires_compatibilities = ["FARGATE"]
-  cpu = "256"
-  memory = "512"
+  cpu                      = "256"
+  memory                   = "512"
 
   container_definitions = <<DEFINITION
 [
@@ -1453,14 +1472,15 @@ DEFINITION
 }
 
 resource "aws_ecs_service" "main" {
-  name = "%s"
-  cluster = "${aws_ecs_cluster.main.id}"
+  name            = "%s"
+  cluster         = "${aws_ecs_cluster.main.id}"
   task_definition = "${aws_ecs_task_definition.mongo.arn}"
-  desired_count = 1
-  launch_type = "FARGATE"
+  desired_count   = 1
+  launch_type     = "FARGATE"
+
   network_configuration {
-    security_groups = ["${aws_security_group.allow_all_a.id}", "${aws_security_group.allow_all_b.id}"]
-    subnets = ["${aws_subnet.main.*.id[0]}", "${aws_subnet.main.*.id[1]}"]
+    security_groups  = ["${aws_security_group.allow_all_a.id}", "${aws_security_group.allow_all_b.id}"]
+    subnets          = ["${aws_subnet.main.*.id[0]}", "${aws_subnet.main.*.id[1]}"]
     assign_public_ip = %s
   }
 }
@@ -1473,16 +1493,18 @@ data "aws_availability_zones" "available" {}
 
 resource "aws_vpc" "main" {
   cidr_block = "10.10.0.0/16"
+
   tags = {
     Name = "terraform-testacc-ecs-service-with-launch-type-fargate-and-platform-version"
   }
 }
 
 resource "aws_subnet" "main" {
-  count = 2
-  cidr_block = "${cidrsubnet(aws_vpc.main.cidr_block, 8, count.index)}"
+  count             = 2
+  cidr_block        = "${cidrsubnet(aws_vpc.main.cidr_block, 8, count.index)}"
   availability_zone = "${data.aws_availability_zones.available.names[count.index]}"
-  vpc_id = "${aws_vpc.main.id}"
+  vpc_id            = "${aws_vpc.main.id}"
+
   tags = {
     Name = "tf-acc-ecs-service-with-launch-type-fargate-and-platform-version"
   }
@@ -1494,9 +1516,9 @@ resource "aws_security_group" "allow_all_a" {
   vpc_id      = "${aws_vpc.main.id}"
 
   ingress {
-    protocol = "6"
-    from_port = 80
-    to_port = 8000
+    protocol    = "6"
+    from_port   = 80
+    to_port     = 8000
     cidr_blocks = ["${aws_vpc.main.cidr_block}"]
   }
 }
@@ -1507,9 +1529,9 @@ resource "aws_security_group" "allow_all_b" {
   vpc_id      = "${aws_vpc.main.id}"
 
   ingress {
-    protocol = "6"
-    from_port = 80
-    to_port = 8000
+    protocol    = "6"
+    from_port   = 80
+    to_port     = 8000
     cidr_blocks = ["${aws_vpc.main.cidr_block}"]
   }
 }
@@ -1519,11 +1541,11 @@ resource "aws_ecs_cluster" "main" {
 }
 
 resource "aws_ecs_task_definition" "mongo" {
-  family = "%s"
-  network_mode = "awsvpc"
+  family                   = "%s"
+  network_mode             = "awsvpc"
   requires_compatibilities = ["FARGATE"]
-  cpu = "256"
-  memory = "512"
+  cpu                      = "256"
+  memory                   = "512"
 
   container_definitions = <<DEFINITION
 [
@@ -1540,15 +1562,16 @@ DEFINITION
 }
 
 resource "aws_ecs_service" "main" {
-  name = "%s"
-  cluster = "${aws_ecs_cluster.main.id}"
-  task_definition = "${aws_ecs_task_definition.mongo.arn}"
-  desired_count = 1
-  launch_type = "FARGATE"
+  name             = "%s"
+  cluster          = "${aws_ecs_cluster.main.id}"
+  task_definition  = "${aws_ecs_task_definition.mongo.arn}"
+  desired_count    = 1
+  launch_type      = "FARGATE"
   platform_version = %q
+
   network_configuration {
-    security_groups = ["${aws_security_group.allow_all_a.id}", "${aws_security_group.allow_all_b.id}"]
-    subnets = ["${aws_subnet.main.*.id[0]}", "${aws_subnet.main.*.id[1]}"]
+    security_groups  = ["${aws_security_group.allow_all_a.id}", "${aws_security_group.allow_all_b.id}"]
+    subnets          = ["${aws_subnet.main.*.id[0]}", "${aws_subnet.main.*.id[1]}"]
     assign_public_ip = false
   }
 }
@@ -1562,16 +1585,18 @@ data "aws_availability_zones" "available" {}
 
 resource "aws_vpc" "main" {
   cidr_block = "10.10.0.0/16"
+
   tags = {
     Name = "%s"
   }
 }
 
 resource "aws_subnet" "main" {
-  count = 2
-  cidr_block = "${cidrsubnet(aws_vpc.main.cidr_block, 8, count.index)}"
+  count             = 2
+  cidr_block        = "${cidrsubnet(aws_vpc.main.cidr_block, 8, count.index)}"
   availability_zone = "${data.aws_availability_zones.available.names[count.index]}"
-  vpc_id = "${aws_vpc.main.id}"
+  vpc_id            = "${aws_vpc.main.id}"
+
   tags = {
     Name = "tf-acc-ecs-service-health-check-grace-period"
   }
@@ -1583,6 +1608,7 @@ resource "aws_ecs_cluster" "main" {
 
 resource "aws_ecs_task_definition" "with_lb_changes" {
   family = "%s"
+
   container_definitions = <<DEFINITION
 [
   {
@@ -1604,6 +1630,7 @@ DEFINITION
 
 resource "aws_iam_role" "ecs_service" {
   name = "%s"
+
   assume_role_policy = <<EOF
 {
   "Version": "2008-10-17",
@@ -1624,6 +1651,7 @@ EOF
 resource "aws_iam_role_policy" "ecs_service" {
   name = "%s"
   role = "${aws_iam_role.ecs_service.name}"
+
   policy = <<EOF
 {
   "Version": "2012-10-17",
@@ -1646,10 +1674,10 @@ EOF
 }
 
 resource "aws_lb_target_group" "test" {
-  name = "${aws_lb.main.name}"
-  port = 80
+  name     = "${aws_lb.main.name}"
+  port     = 80
   protocol = "HTTP"
-  vpc_id = "${aws_vpc.main.id}"
+  vpc_id   = "${aws_vpc.main.id}"
 }
 
 resource "aws_lb" "main" {
@@ -1660,8 +1688,8 @@ resource "aws_lb" "main" {
 
 resource "aws_lb_listener" "front_end" {
   load_balancer_arn = "${aws_lb.main.id}"
-  port = "80"
-  protocol = "HTTP"
+  port              = "80"
+  protocol          = "HTTP"
 
   default_action {
     target_group_arn = "${aws_lb_target_group.test.id}"
@@ -1670,17 +1698,17 @@ resource "aws_lb_listener" "front_end" {
 }
 
 resource "aws_ecs_service" "with_alb" {
-  name = "%s"
-  cluster = "${aws_ecs_cluster.main.id}"
-  task_definition = "${aws_ecs_task_definition.with_lb_changes.arn}"
-  desired_count = 1
+  name                              = "%s"
+  cluster                           = "${aws_ecs_cluster.main.id}"
+  task_definition                   = "${aws_ecs_task_definition.with_lb_changes.arn}"
+  desired_count                     = 1
   health_check_grace_period_seconds = %d
-  iam_role = "${aws_iam_role.ecs_service.name}"
+  iam_role                          = "${aws_iam_role.ecs_service.name}"
 
   load_balancer {
     target_group_arn = "${aws_lb_target_group.test.id}"
-    container_name = "ghost"
-    container_port = "2368"
+    container_name   = "ghost"
+    container_port   = "2368"
   }
 
   depends_on = [
@@ -1721,6 +1749,7 @@ resource "aws_ecs_cluster" "main" {
 
 resource "aws_ecs_task_definition" "ghost" {
   family = "%s"
+
   container_definitions = <<DEFINITION
 [
   {
@@ -1741,8 +1770,9 @@ DEFINITION
 }
 
 resource "aws_iam_role" "ecs_service" {
-    name = "%s"
-    assume_role_policy = <<EOF
+  name = "%s"
+
+  assume_role_policy = <<EOF
 {
     "Version": "2012-10-17",
     "Statement": [
@@ -1758,9 +1788,10 @@ EOF
 }
 
 resource "aws_iam_role_policy" "ecs_service" {
-    name = "%s"
-    role = "${aws_iam_role.ecs_service.name}"
-    policy = <<EOF
+  name = "%s"
+  role = "${aws_iam_role.ecs_service.name}"
+
+  policy = <<EOF
 {
   "Version": "2012-10-17",
   "Statement": [
@@ -1785,22 +1816,22 @@ resource "aws_elb" "main" {
   subnets  = ["${aws_subnet.test.*.id[0]}", "${aws_subnet.test.*.id[1]}"]
 
   listener {
-    instance_port = 8080
+    instance_port     = 8080
     instance_protocol = "http"
-    lb_port = 80
-    lb_protocol = "http"
+    lb_port           = 80
+    lb_protocol       = "http"
   }
 }
 
 resource "aws_ecs_service" "ghost" {
-  name = "%s"
-  cluster = "${aws_ecs_cluster.main.id}"
+  name            = "%s"
+  cluster         = "${aws_ecs_cluster.main.id}"
   task_definition = "${aws_ecs_task_definition.ghost.arn}"
-  desired_count = 1
-  iam_role = "${aws_iam_role.ecs_service.name}"
+  desired_count   = 1
+  iam_role        = "${aws_iam_role.ecs_service.name}"
 
   load_balancer {
-    elb_name = "${aws_elb.main.id}"
+    elb_name       = "${aws_elb.main.id}"
     container_name = "ghost"
     container_port = "2368"
   }
@@ -1818,6 +1849,7 @@ resource "aws_ecs_cluster" "default" {
 
 resource "aws_ecs_task_definition" "mongo" {
   family = "%s"
+
   container_definitions = <<DEFINITION
 [
   {
@@ -1832,10 +1864,10 @@ DEFINITION
 }
 
 resource "aws_ecs_service" "mongo" {
-  name = "%s"
-  cluster = "${aws_ecs_cluster.default.id}"
+  name            = "%s"
+  cluster         = "${aws_ecs_cluster.default.id}"
   task_definition = "${aws_ecs_task_definition.mongo.arn}"
-  desired_count = 1
+  desired_count   = 1
 }
 `, clusterName, tdName, svcName)
 }
@@ -1872,6 +1904,7 @@ resource "aws_ecs_cluster" "main" {
 
 resource "aws_ecs_task_definition" "with_lb_changes" {
   family = "%[2]s"
+
   container_definitions = <<DEFINITION
 [
   {
@@ -1892,8 +1925,9 @@ DEFINITION
 }
 
 resource "aws_iam_role" "ecs_service" {
-    name = "%[7]s"
-    assume_role_policy = <<EOF
+  name = "%[7]s"
+
+  assume_role_policy = <<EOF
 {
     "Version": "2012-10-17",
     "Statement": [
@@ -1909,9 +1943,10 @@ EOF
 }
 
 resource "aws_iam_role_policy" "ecs_service" {
-    name = "%[8]s"
-    role = "${aws_iam_role.ecs_service.name}"
-    policy = <<EOF
+  name = "%[8]s"
+  role = "${aws_iam_role.ecs_service.name}"
+
+  policy = <<EOF
 {
   "Version": "2012-10-17",
   "Statement": [
@@ -1936,22 +1971,22 @@ resource "aws_elb" "main" {
   subnets  = ["${aws_subnet.test.*.id[0]}", "${aws_subnet.test.*.id[1]}"]
 
   listener {
-    instance_port = %[6]d
+    instance_port     = %[6]d
     instance_protocol = "http"
-    lb_port = 80
-    lb_protocol = "http"
+    lb_port           = 80
+    lb_protocol       = "http"
   }
 }
 
 resource "aws_ecs_service" "with_lb_changes" {
-  name = "%[10]s"
-  cluster = "${aws_ecs_cluster.main.id}"
+  name            = "%[10]s"
+  cluster         = "${aws_ecs_cluster.main.id}"
   task_definition = "${aws_ecs_task_definition.with_lb_changes.arn}"
-  desired_count = 1
-  iam_role = "${aws_iam_role.ecs_service.name}"
+  desired_count   = 1
+  iam_role        = "${aws_iam_role.ecs_service.name}"
 
   load_balancer {
-    elb_name = "${aws_elb.main.id}"
+    elb_name       = "${aws_elb.main.id}"
     container_name = "%[4]s"
     container_port = "%[5]d"
   }
@@ -1979,6 +2014,7 @@ resource "aws_ecs_cluster" "default" {
 
 resource "aws_ecs_task_definition" "jenkins" {
   family = "%s"
+
   container_definitions = <<DEFINITION
 [
   {
@@ -1993,11 +2029,12 @@ DEFINITION
 }
 
 resource "aws_ecs_service" "jenkins" {
-  name = "%s"
-  cluster = "${aws_ecs_cluster.default.id}"
+  name            = "%s"
+  cluster         = "${aws_ecs_cluster.default.id}"
   task_definition = "${aws_ecs_task_definition.jenkins.family}:${aws_ecs_task_definition.jenkins.revision}"
-  desired_count = 1
-}`, clusterName, tdName, svcName)
+  desired_count   = 1
+}
+`, clusterName, tdName, svcName)
 }
 
 func testAccAWSEcsServiceWithFamilyAndRevisionModified(clusterName, tdName, svcName string) string {
@@ -2008,6 +2045,7 @@ resource "aws_ecs_cluster" "default" {
 
 resource "aws_ecs_task_definition" "jenkins" {
   family = "%s"
+
   container_definitions = <<DEFINITION
 [
   {
@@ -2022,11 +2060,12 @@ DEFINITION
 }
 
 resource "aws_ecs_service" "jenkins" {
-  name = "%s"
-  cluster = "${aws_ecs_cluster.default.id}"
+  name            = "%s"
+  cluster         = "${aws_ecs_cluster.default.id}"
   task_definition = "${aws_ecs_task_definition.jenkins.family}:${aws_ecs_task_definition.jenkins.revision}"
-  desired_count = 1
-}`, clusterName, tdName, svcName)
+  desired_count   = 1
+}
+`, clusterName, tdName, svcName)
 }
 
 func testAccAWSEcsServiceWithRenamedCluster(clusterName, tdName, svcName string) string {
@@ -2034,8 +2073,10 @@ func testAccAWSEcsServiceWithRenamedCluster(clusterName, tdName, svcName string)
 resource "aws_ecs_cluster" "default" {
   name = "%s"
 }
+
 resource "aws_ecs_task_definition" "ghost" {
   family = "%s"
+
   container_definitions = <<DEFINITION
 [
   {
@@ -2048,11 +2089,12 @@ resource "aws_ecs_task_definition" "ghost" {
 ]
 DEFINITION
 }
+
 resource "aws_ecs_service" "ghost" {
-  name = "%s"
-  cluster = "${aws_ecs_cluster.default.id}"
+  name            = "%s"
+  cluster         = "${aws_ecs_cluster.default.id}"
   task_definition = "${aws_ecs_task_definition.ghost.family}:${aws_ecs_task_definition.ghost.revision}"
-  desired_count = 1
+  desired_count   = 1
 }
 `, clusterName, tdName, svcName)
 }
@@ -2065,6 +2107,7 @@ resource "aws_ecs_cluster" "default" {
 
 resource "aws_ecs_task_definition" "jenkins" {
   family = "%s"
+
   container_definitions = <<DEFINITION
 [
   {
@@ -2079,10 +2122,10 @@ DEFINITION
 }
 
 resource "aws_ecs_service" "jenkins" {
-  name = "%s"
-  cluster = "${aws_ecs_cluster.default.name}"
+  name            = "%s"
+  cluster         = "${aws_ecs_cluster.default.name}"
   task_definition = "${aws_ecs_task_definition.jenkins.arn}"
-  desired_count = 1
+  desired_count   = 1
 }
 `, clusterName, tdName, svcName)
 }
@@ -2093,16 +2136,18 @@ data "aws_availability_zones" "available" {}
 
 resource "aws_vpc" "main" {
   cidr_block = "10.10.0.0/16"
+
   tags = {
     Name = "terraform-testacc-ecs-service-with-alb"
   }
 }
 
 resource "aws_subnet" "main" {
-  count = 2
-  cidr_block = "${cidrsubnet(aws_vpc.main.cidr_block, 8, count.index)}"
+  count             = 2
+  cidr_block        = "${cidrsubnet(aws_vpc.main.cidr_block, 8, count.index)}"
   availability_zone = "${data.aws_availability_zones.available.names[count.index]}"
-  vpc_id = "${aws_vpc.main.id}"
+  vpc_id            = "${aws_vpc.main.id}"
+
   tags = {
     Name = "tf-acc-ecs-service-with-alb"
   }
@@ -2114,6 +2159,7 @@ resource "aws_ecs_cluster" "main" {
 
 resource "aws_ecs_task_definition" "with_lb_changes" {
   family = "%s"
+
   container_definitions = <<DEFINITION
 [
   {
@@ -2134,8 +2180,9 @@ DEFINITION
 }
 
 resource "aws_iam_role" "ecs_service" {
-    name = "%s"
-    assume_role_policy = <<EOF
+  name = "%s"
+
+  assume_role_policy = <<EOF
 {
   "Version": "2008-10-17",
   "Statement": [
@@ -2153,9 +2200,10 @@ EOF
 }
 
 resource "aws_iam_role_policy" "ecs_service" {
-    name = "%s"
-    role = "${aws_iam_role.ecs_service.name}"
-    policy = <<EOF
+  name = "%s"
+  role = "${aws_iam_role.ecs_service.name}"
+
+  policy = <<EOF
 {
   "Version": "2012-10-17",
   "Statement": [
@@ -2177,40 +2225,40 @@ EOF
 }
 
 resource "aws_lb_target_group" "test" {
-  name = "${aws_lb.main.name}"
-  port = 80
+  name     = "${aws_lb.main.name}"
+  port     = 80
   protocol = "HTTP"
-  vpc_id = "${aws_vpc.main.id}"
+  vpc_id   = "${aws_vpc.main.id}"
 }
 
 resource "aws_lb" "main" {
-  name            = "%s"
-  internal        = true
-  subnets         = ["${aws_subnet.main.*.id[0]}", "${aws_subnet.main.*.id[1]}"]
+  name     = "%s"
+  internal = true
+  subnets  = ["${aws_subnet.main.*.id[0]}", "${aws_subnet.main.*.id[1]}"]
 }
 
 resource "aws_lb_listener" "front_end" {
   load_balancer_arn = "${aws_lb.main.id}"
-  port = "80"
-  protocol = "HTTP"
+  port              = "80"
+  protocol          = "HTTP"
 
   default_action {
     target_group_arn = "${aws_lb_target_group.test.id}"
-    type = "forward"
+    type             = "forward"
   }
 }
 
 resource "aws_ecs_service" "with_alb" {
-  name = "%s"
-  cluster = "${aws_ecs_cluster.main.id}"
+  name            = "%s"
+  cluster         = "${aws_ecs_cluster.main.id}"
   task_definition = "${aws_ecs_task_definition.with_lb_changes.arn}"
-  desired_count = 1
-  iam_role = "${aws_iam_role.ecs_service.name}"
+  desired_count   = 1
+  iam_role        = "${aws_iam_role.ecs_service.name}"
 
   load_balancer {
     target_group_arn = "${aws_lb_target_group.test.id}"
-    container_name = "ghost"
-    container_port = "2368"
+    container_name   = "ghost"
+    container_port   = "2368"
   }
 
   depends_on = [
@@ -2322,36 +2370,38 @@ resource "aws_vpc" "test" {
 }
 
 resource "aws_subnet" "test" {
-  count = 2
-  cidr_block = "${cidrsubnet(aws_vpc.test.cidr_block, 8, count.index)}"
+  count             = 2
+  cidr_block        = "${cidrsubnet(aws_vpc.test.cidr_block, 8, count.index)}"
   availability_zone = "${data.aws_availability_zones.test.names[count.index]}"
-  vpc_id = "${aws_vpc.test.id}"
+  vpc_id            = "${aws_vpc.test.id}"
 }
 
 resource "aws_security_group" "test" {
-  name        = "tf-acc-sg-%s"
-  vpc_id      = "${aws_vpc.test.id}"
+  name   = "tf-acc-sg-%s"
+  vpc_id = "${aws_vpc.test.id}"
 
   ingress {
-    protocol = "-1"
-    from_port = 0
-    to_port = 0
+    protocol    = "-1"
+    from_port   = 0
+    to_port     = 0
     cidr_blocks = ["${aws_vpc.test.cidr_block}"]
   }
 }
 
 resource "aws_service_discovery_private_dns_namespace" "test" {
-  name = "tf-acc-sd-%s.terraform.local"
+  name        = "tf-acc-sd-%s.terraform.local"
   description = "test"
-  vpc = "${aws_vpc.test.id}"
+  vpc         = "${aws_vpc.test.id}"
 }
 
 resource "aws_service_discovery_service" "test" {
   name = "tf-acc-sd-%s"
+
   dns_config {
     namespace_id = "${aws_service_discovery_private_dns_namespace.test.id}"
+
     dns_records {
-      ttl = 5
+      ttl  = 5
       type = "SRV"
     }
   }
@@ -2362,8 +2412,9 @@ resource "aws_ecs_cluster" "test" {
 }
 
 resource "aws_ecs_task_definition" "test" {
-  family = "%s"
+  family       = "%s"
   network_mode = "awsvpc"
+
   container_definitions = <<DEFINITION
 [
   {
@@ -2378,17 +2429,19 @@ DEFINITION
 }
 
 resource "aws_ecs_service" "test" {
-  name = "%s"
-  cluster = "${aws_ecs_cluster.test.id}"
+  name            = "%s"
+  cluster         = "${aws_ecs_cluster.test.id}"
   task_definition = "${aws_ecs_task_definition.test.arn}"
-  desired_count = 1
+  desired_count   = 1
+
   service_registries {
-    port = 34567
+    port         = 34567
     registry_arn = "${aws_service_discovery_service.test.arn}"
   }
+
   network_configuration {
     security_groups = ["${aws_security_group.test.id}"]
-    subnets = ["${aws_subnet.test.*.id[0]}", "${aws_subnet.test.*.id[1]}"]
+    subnets         = ["${aws_subnet.test.*.id[0]}", "${aws_subnet.test.*.id[1]}"]
   }
 }
 `, rName, rName, rName, clusterName, tdName, svcName)
@@ -2403,36 +2456,38 @@ resource "aws_vpc" "test" {
 }
 
 resource "aws_subnet" "test" {
-  count = 2
-  cidr_block = "${cidrsubnet(aws_vpc.test.cidr_block, 8, count.index)}"
+  count             = 2
+  cidr_block        = "${cidrsubnet(aws_vpc.test.cidr_block, 8, count.index)}"
   availability_zone = "${data.aws_availability_zones.test.names[count.index]}"
-  vpc_id = "${aws_vpc.test.id}"
+  vpc_id            = "${aws_vpc.test.id}"
 }
 
 resource "aws_security_group" "test" {
-  name        = "tf-acc-sg-%s"
-  vpc_id      = "${aws_vpc.test.id}"
+  name   = "tf-acc-sg-%s"
+  vpc_id = "${aws_vpc.test.id}"
 
   ingress {
-    protocol = "-1"
-    from_port = 0
-    to_port = 0
+    protocol    = "-1"
+    from_port   = 0
+    to_port     = 0
     cidr_blocks = ["${aws_vpc.test.cidr_block}"]
   }
 }
 
 resource "aws_service_discovery_private_dns_namespace" "test" {
-  name = "tf-acc-sd-%s.terraform.local"
+  name        = "tf-acc-sd-%s.terraform.local"
   description = "test"
-  vpc = "${aws_vpc.test.id}"
+  vpc         = "${aws_vpc.test.id}"
 }
 
 resource "aws_service_discovery_service" "test" {
   name = "tf-acc-sd-%s"
+
   dns_config {
     namespace_id = "${aws_service_discovery_private_dns_namespace.test.id}"
+
     dns_records {
-      ttl = 5
+      ttl  = 5
       type = "SRV"
     }
   }
@@ -2443,8 +2498,9 @@ resource "aws_ecs_cluster" "test" {
 }
 
 resource "aws_ecs_task_definition" "test" {
-  family = "%s"
+  family       = "%s"
   network_mode = "bridge"
+
   container_definitions = <<DEFINITION
 [
   {
@@ -2466,14 +2522,15 @@ DEFINITION
 }
 
 resource "aws_ecs_service" "test" {
-  name = "%s"
-  cluster = "${aws_ecs_cluster.test.id}"
+  name            = "%s"
+  cluster         = "${aws_ecs_cluster.test.id}"
   task_definition = "${aws_ecs_task_definition.test.arn}"
-  desired_count = 1
+  desired_count   = 1
+
   service_registries {
     container_name = "mongodb"
     container_port = 27017
-    registry_arn = "${aws_service_discovery_service.test.arn}"
+    registry_arn   = "${aws_service_discovery_service.test.arn}"
   }
 }
 `, rName, rName, rName, clusterName, tdName, svcName)
@@ -2484,8 +2541,10 @@ func testAccAWSEcsServiceWithDaemonSchedulingStrategy(clusterName, tdName, svcNa
 resource "aws_ecs_cluster" "default" {
   name = "%s"
 }
+
 resource "aws_ecs_task_definition" "ghost" {
   family = "%s"
+
   container_definitions = <<DEFINITION
 [
   {
@@ -2498,10 +2557,11 @@ resource "aws_ecs_task_definition" "ghost" {
 ]
 DEFINITION
 }
+
 resource "aws_ecs_service" "ghost" {
-  name = "%s"
-  cluster = "${aws_ecs_cluster.default.id}"
-  task_definition = "${aws_ecs_task_definition.ghost.family}:${aws_ecs_task_definition.ghost.revision}"
+  name                = "%s"
+  cluster             = "${aws_ecs_cluster.default.id}"
+  task_definition     = "${aws_ecs_task_definition.ghost.family}:${aws_ecs_task_definition.ghost.revision}"
   scheduling_strategy = "DAEMON"
 }
 `, clusterName, tdName, svcName)
@@ -2512,8 +2572,10 @@ func testAccAWSEcsServiceWithDaemonSchedulingStrategySetDeploymentMinimum(cluste
 resource "aws_ecs_cluster" "default" {
   name = "%s"
 }
+
 resource "aws_ecs_task_definition" "ghost" {
   family = "%s"
+
   container_definitions = <<DEFINITION
 [
   {
@@ -2526,11 +2588,12 @@ resource "aws_ecs_task_definition" "ghost" {
 ]
 DEFINITION
 }
+
 resource "aws_ecs_service" "ghost" {
-  name = "%s"
-  cluster = "${aws_ecs_cluster.default.id}"
-  task_definition = "${aws_ecs_task_definition.ghost.family}:${aws_ecs_task_definition.ghost.revision}"
-  scheduling_strategy = "DAEMON"
+  name                               = "%s"
+  cluster                            = "${aws_ecs_cluster.default.id}"
+  task_definition                    = "${aws_ecs_task_definition.ghost.family}:${aws_ecs_task_definition.ghost.revision}"
+  scheduling_strategy                = "DAEMON"
   deployment_minimum_healthy_percent = "50"
 }
 `, clusterName, tdName, svcName)
@@ -2756,11 +2819,11 @@ DEFINITION
 }
 
 resource "aws_ecs_service" "test" {
-  cluster                            = "${aws_ecs_cluster.test.id}"
-  desired_count                      = 0
-  name                               = %q
-  task_definition                    = "${aws_ecs_task_definition.test.arn}"
-  enable_ecs_managed_tags            = true
+  cluster                 = "${aws_ecs_cluster.test.id}"
+  desired_count           = 0
+  name                    = %q
+  task_definition         = "${aws_ecs_task_definition.test.arn}"
+  enable_ecs_managed_tags = true
 
   tags = {
     tag-key = "tag-value"
@@ -2796,12 +2859,12 @@ DEFINITION
 }
 
 resource "aws_ecs_service" "test" {
-  cluster                            = "${aws_ecs_cluster.test.id}"
-  desired_count                      = 0
-  name                               = %q
-  task_definition                    = "${aws_ecs_task_definition.test.arn}"
-  enable_ecs_managed_tags            = true
-  propagate_tags                     = "%s"
+  cluster                 = "${aws_ecs_cluster.test.id}"
+  desired_count           = 0
+  name                    = %q
+  task_definition         = "${aws_ecs_task_definition.test.arn}"
+  enable_ecs_managed_tags = true
+  propagate_tags          = "%s"
 
   tags = {
     tag-key = "service"
@@ -2815,8 +2878,10 @@ func testAccAWSEcsServiceWithReplicaSchedulingStrategy(clusterName, tdName, svcN
 resource "aws_ecs_cluster" "default" {
   name = "%s"
 }
+
 resource "aws_ecs_task_definition" "ghost" {
   family = "%s"
+
   container_definitions = <<DEFINITION
 [
   {
@@ -2829,12 +2894,13 @@ resource "aws_ecs_task_definition" "ghost" {
 ]
 DEFINITION
 }
+
 resource "aws_ecs_service" "ghost" {
-  name = "%s"
-  cluster = "${aws_ecs_cluster.default.id}"
-  task_definition = "${aws_ecs_task_definition.ghost.family}:${aws_ecs_task_definition.ghost.revision}"
+  name                = "%s"
+  cluster             = "${aws_ecs_cluster.default.id}"
+  task_definition     = "${aws_ecs_task_definition.ghost.family}:${aws_ecs_task_definition.ghost.revision}"
   scheduling_strategy = "REPLICA"
-  desired_count = 1
+  desired_count       = 1
 }
 `, clusterName, tdName, svcName)
 }

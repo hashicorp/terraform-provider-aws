@@ -17,7 +17,7 @@ func TestAccAWSDynamoDbGlobalTable_basic(t *testing.T) {
 	tableName := fmt.Sprintf("tf-acc-test-%s", acctest.RandString(5))
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSDynamodbGlobalTable(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsDynamoDbGlobalTableDestroy,
 		Steps: []resource.TestStep{
@@ -52,7 +52,7 @@ func TestAccAWSDynamoDbGlobalTable_multipleRegions(t *testing.T) {
 	tableName := fmt.Sprintf("tf-acc-test-%s", acctest.RandString(5))
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSDynamodbGlobalTable(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsDynamoDbGlobalTableDestroy,
 		Steps: []resource.TestStep{
@@ -94,7 +94,7 @@ func TestAccAWSDynamoDbGlobalTable_import(t *testing.T) {
 	tableName := fmt.Sprintf("tf-acc-test-%s", acctest.RandString(5))
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSDynamodbGlobalTable(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckSesTemplateDestroy,
 		Steps: []resource.TestStep{
@@ -145,6 +145,22 @@ func testAccCheckAwsDynamoDbGlobalTableExists(name string) resource.TestCheckFun
 		}
 
 		return nil
+	}
+}
+
+func testAccPreCheckAWSDynamodbGlobalTable(t *testing.T) {
+	conn := testAccProvider.Meta().(*AWSClient).dynamodbconn
+
+	input := &dynamodb.ListGlobalTablesInput{}
+
+	_, err := conn.ListGlobalTables(input)
+
+	if testAccPreCheckSkipError(err) {
+		t.Skipf("skipping acceptance testing: %s", err)
+	}
+
+	if err != nil {
+		t.Fatalf("unexpected PreCheck error: %s", err)
 	}
 }
 
@@ -241,7 +257,8 @@ resource "aws_dynamodb_table" "us-west-2" {
     name = "myAttribute"
     type = "S"
   }
-}`, tableName, tableName, tableName)
+}
+`, tableName, tableName, tableName)
 }
 
 func testAccDynamoDbGlobalTableConfig_multipleRegions1(tableName string) string {
@@ -250,14 +267,15 @@ func testAccDynamoDbGlobalTableConfig_multipleRegions1(tableName string) string 
 
 resource "aws_dynamodb_global_table" "test" {
   depends_on = ["aws_dynamodb_table.us-east-1"]
-  provider = "aws.us-east-1"
+  provider   = "aws.us-east-1"
 
   name = "%s"
 
   replica {
     region_name = "us-east-1"
   }
-}`, testAccDynamoDbGlobalTableConfig_multipleRegions_dynamodb_tables(tableName), tableName)
+}
+`, testAccDynamoDbGlobalTableConfig_multipleRegions_dynamodb_tables(tableName), tableName)
 }
 
 func testAccDynamoDbGlobalTableConfig_multipleRegions2(tableName string) string {
@@ -266,7 +284,7 @@ func testAccDynamoDbGlobalTableConfig_multipleRegions2(tableName string) string 
 
 resource "aws_dynamodb_global_table" "test" {
   depends_on = ["aws_dynamodb_table.us-east-1", "aws_dynamodb_table.us-east-2"]
-  provider = "aws.us-east-1"
+  provider   = "aws.us-east-1"
 
   name = "%s"
 
@@ -277,7 +295,8 @@ resource "aws_dynamodb_global_table" "test" {
   replica {
     region_name = "us-east-2"
   }
-}`, testAccDynamoDbGlobalTableConfig_multipleRegions_dynamodb_tables(tableName), tableName)
+}
+`, testAccDynamoDbGlobalTableConfig_multipleRegions_dynamodb_tables(tableName), tableName)
 }
 
 func testAccDynamoDbGlobalTableConfig_multipleRegions3(tableName string) string {
@@ -286,7 +305,7 @@ func testAccDynamoDbGlobalTableConfig_multipleRegions3(tableName string) string 
 
 resource "aws_dynamodb_global_table" "test" {
   depends_on = ["aws_dynamodb_table.us-east-1", "aws_dynamodb_table.us-west-2"]
-  provider = "aws.us-east-1"
+  provider   = "aws.us-east-1"
 
   name = "%s"
 
@@ -297,7 +316,8 @@ resource "aws_dynamodb_global_table" "test" {
   replica {
     region_name = "us-west-2"
   }
-}`, testAccDynamoDbGlobalTableConfig_multipleRegions_dynamodb_tables(tableName), tableName)
+}
+`, testAccDynamoDbGlobalTableConfig_multipleRegions_dynamodb_tables(tableName), tableName)
 }
 
 func testAccDynamoDbGlobalTableConfig_invalidName(tableName string) string {
@@ -308,5 +328,6 @@ resource "aws_dynamodb_global_table" "test" {
   replica {
     region_name = "us-east-1"
   }
-}`, tableName)
+}
+`, tableName)
 }

@@ -162,12 +162,12 @@ func TestValidateCloudWatchLogStreamName(t *testing.T) {
 func testAccAWSCloudWatchLogStreamConfig(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_cloudwatch_log_group" "foobar" {
-    name = "%s"
+  name = "%s"
 }
 
 resource "aws_cloudwatch_log_stream" "foobar" {
-    name = "%s"
-    log_group_name = "${aws_cloudwatch_log_group.foobar.id}"
+  name           = "%s"
+  log_group_name = "${aws_cloudwatch_log_group.foobar.id}"
 }
 `, rName, rName)
 }

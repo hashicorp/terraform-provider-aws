@@ -20,7 +20,7 @@ func TestAccAWSSESDomainMailFrom_basic(t *testing.T) {
 	resourceName := "aws_ses_domain_mail_from.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSSES(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckSESDomainMailFromDestroy,
 		Steps: []resource.TestStep{
@@ -59,7 +59,7 @@ func TestAccAWSSESDomainMailFrom_disappears(t *testing.T) {
 	resourceName := "aws_ses_domain_mail_from.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSSES(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckSESDomainMailFromDestroy,
 		Steps: []resource.TestStep{
@@ -83,7 +83,7 @@ func TestAccAWSSESDomainMailFrom_disappears_Identity(t *testing.T) {
 	resourceName := "aws_ses_domain_mail_from.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSSES(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckSESDomainMailFromDestroy,
 		Steps: []resource.TestStep{
@@ -106,7 +106,7 @@ func TestAccAWSSESDomainMailFrom_behaviorOnMxFailure(t *testing.T) {
 	resourceName := "aws_ses_domain_mail_from.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSSES(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckSESDomainMailFromDestroy,
 		Steps: []resource.TestStep{

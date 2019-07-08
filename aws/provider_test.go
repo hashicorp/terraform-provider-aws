@@ -39,6 +39,11 @@ func init() {
 				*providers = append(*providers, p.(*schema.Provider))
 				return p, nil
 			},
+			"tls": func() (terraform.ResourceProvider, error) {
+				p := tls.Provider()
+				*providers = append(*providers, p.(*schema.Provider))
+				return p, nil
+			},
 		}
 	}
 	testAccProvidersWithTLS = map[string]terraform.ResourceProvider{
@@ -61,13 +66,12 @@ func TestProvider_impl(t *testing.T) {
 }
 
 func testAccPreCheck(t *testing.T) {
-	if v := os.Getenv("AWS_PROFILE"); v == "" {
-		if v := os.Getenv("AWS_ACCESS_KEY_ID"); v == "" {
-			t.Fatal("AWS_ACCESS_KEY_ID must be set for acceptance tests")
-		}
-		if v := os.Getenv("AWS_SECRET_ACCESS_KEY"); v == "" {
-			t.Fatal("AWS_SECRET_ACCESS_KEY must be set for acceptance tests")
-		}
+	if os.Getenv("AWS_PROFILE") == "" && os.Getenv("AWS_ACCESS_KEY_ID") == "" {
+		t.Fatal("AWS_ACCESS_KEY_ID or AWS_PROFILE must be set for acceptance tests")
+	}
+
+	if os.Getenv("AWS_ACCESS_KEY_ID") != "" && os.Getenv("AWS_SECRET_ACCESS_KEY") == "" {
+		t.Fatal("AWS_SECRET_ACCESS_KEY must be set for acceptance tests")
 	}
 
 	region := testAccGetRegion()
@@ -254,6 +258,21 @@ provider "aws" {
 `, os.Getenv("AWS_ALTERNATE_ACCESS_KEY_ID"), os.Getenv("AWS_ALTERNATE_PROFILE"), os.Getenv("AWS_ALTERNATE_SECRET_ACCESS_KEY"))
 }
 
+// Provider configuration hardcoded for us-east-1.
+// This should only be necessary for testing ACM Certificates with CloudFront
+// related infrastucture such as API Gateway Domain Names for EDGE endpoints,
+// CloudFront Distribution Viewer Certificates, and Cognito User Pool Domains.
+// Other valid usage is for services only available in us-east-1 such as the
+// Cost and Usage Reporting and Pricing services.
+func testAccUsEast1RegionProviderConfig() string {
+	return fmt.Sprintf(`
+provider "aws" {
+  alias  = "us-east-1"
+  region = "us-east-1"
+}
+`)
+}
+
 func testAccAwsRegionProviderFunc(region string, providers *[]*schema.Provider) func() *schema.Provider {
 	return func() *schema.Provider {
 		if region == "" {
@@ -313,11 +332,20 @@ func testAccCheckWithProviders(f func(*terraform.State, *schema.Provider) error,
 // Check service API call error for reasons to skip acceptance testing
 // These include missing API endpoints and unsupported API calls
 func testAccPreCheckSkipError(err error) bool {
+	// GovCloud has endpoints that respond with (no message provided after the error code):
+	// AccessDeniedException:
+	// Ignore these API endpoints that exist but are not officially enabled
+	if isAWSErr(err, "AccessDeniedException", "") {
+		return true
+	}
 	// Ignore missing API endpoints
 	if isAWSErr(err, "RequestError", "send request failed") {
 		return true
 	}
 	// Ignore unsupported API calls
+	if isAWSErr(err, "UnknownOperationException", "") {
+		return true
+	}
 	if isAWSErr(err, "UnsupportedOperation", "") {
 		return true
 	}
@@ -338,6 +366,10 @@ func testSweepSkipSweepError(err error) bool {
 	// Ignore more unsupported API calls
 	// InvalidParameterValue: Use of cache security groups is not permitted in this API version for your account.
 	if isAWSErr(err, "InvalidParameterValue", "not permitted in this API version for your account") {
+		return true
+	}
+	// InvalidParameterValue: Access Denied to API Version: APIGlobalDatabases
+	if isAWSErr(err, "InvalidParameterValue", "Access Denied to API Version") {
 		return true
 	}
 	// GovCloud has endpoints that respond with (no message provided):
@@ -375,6 +407,7 @@ func TestAccAWSProvider_Endpoints(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:          func() { testAccPreCheck(t) },
 		ProviderFactories: testAccProviderFactories(&providers),
+		CheckDestroy:      nil,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSProviderConfigEndpoints(endpoints.String()),
@@ -403,6 +436,7 @@ func TestAccAWSProvider_Endpoints_Deprecated(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:          func() { testAccPreCheck(t) },
 		ProviderFactories: testAccProviderFactories(&providers),
+		CheckDestroy:      nil,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSProviderConfigEndpoints(endpointsDeprecated.String()),
@@ -556,7 +590,7 @@ provider "aws" {
   skip_requesting_account_id  = true
 
   endpoints {
-%[1]s
+    %[1]s
   }
 }
 

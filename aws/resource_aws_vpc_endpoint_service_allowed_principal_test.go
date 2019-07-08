@@ -158,5 +158,5 @@ resource "aws_vpc_endpoint_service_allowed_principal" "foo" {
 
   principal_arn = "${data.aws_caller_identity.current.arn}"
 }
-	`, lbName)
+`, lbName)
 }

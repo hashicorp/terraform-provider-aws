@@ -3,6 +3,7 @@ package aws
 import (
 	"fmt"
 	"log"
+	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/elb"
@@ -45,7 +46,20 @@ func resourceAwsElbAttachmentCreate(d *schema.ResourceData, meta interface{}) er
 
 	log.Printf("[INFO] registering instance %s with ELB %s", instance, elbName)
 
-	_, err := elbconn.RegisterInstancesWithLoadBalancer(&registerInstancesOpts)
+	err := resource.Retry(10*time.Minute, func() *resource.RetryError {
+		_, err := elbconn.RegisterInstancesWithLoadBalancer(&registerInstancesOpts)
+
+		if isAWSErr(err, "InvalidTarget", "") {
+			return resource.RetryableError(fmt.Errorf("Error attaching instance to ELB, retrying: %s", err))
+		}
+
+		if err != nil {
+			return resource.NonRetryableError(err)
+		}
+
+		return nil
+	})
+
 	if err != nil {
 		return fmt.Errorf("Failure registering instances with ELB: %s", err)
 	}

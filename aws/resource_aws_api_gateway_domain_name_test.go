@@ -304,13 +304,15 @@ resource "aws_api_gateway_domain_name" "test" {
 func testAccAWSAPIGatewayDomainNameConfig_CertificateName(domainName, commonName string) string {
 	return fmt.Sprintf(`
 resource "aws_api_gateway_domain_name" "test" {
-  domain_name = "%s"
-  certificate_body = "${tls_locally_signed_cert.leaf.cert_pem}"
-  certificate_chain = "${tls_self_signed_cert.ca.cert_pem}"
-  certificate_name = "tf-acc-apigateway-domain-name"
+  domain_name             = "%s"
+  certificate_body        = "${tls_locally_signed_cert.leaf.cert_pem}"
+  certificate_chain       = "${tls_self_signed_cert.ca.cert_pem}"
+  certificate_name        = "tf-acc-apigateway-domain-name"
   certificate_private_key = "${tls_private_key.test.private_key_pem}"
 }
+
 %s
+
 `, domainName, testAccAWSAPIGatewayCerts(commonName))
 }
 
@@ -340,6 +342,8 @@ resource "aws_api_gateway_domain_name" "test" {
     types = ["REGIONAL"]
   }
 }
+
 %s
+
 `, domainName, testAccAWSAPIGatewayCerts(commonName))
 }

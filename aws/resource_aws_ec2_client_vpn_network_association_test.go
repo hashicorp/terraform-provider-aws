@@ -137,19 +137,21 @@ func testAccCheckAwsEc2ClientVpnNetworkAssociationExists(name string, assoc *ec2
 func testAccEc2ClientVpnNetworkAssociationConfig(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_vpc" "test" {
-	cidr_block = "10.1.0.0/16"
-	tags = {
-		Name = "terraform-testacc-subnet-%s"
-	}
+  cidr_block = "10.1.0.0/16"
+
+  tags = {
+    Name = "terraform-testacc-subnet-%s"
+  }
 }
 
 resource "aws_subnet" "test" {
-	cidr_block = "10.1.1.0/24"
-	vpc_id = "${aws_vpc.test.id}"
-	map_public_ip_on_launch = true
-	tags = {
-		Name = "tf-acc-subnet-%s"
-	}
+  cidr_block              = "10.1.1.0/24"
+  vpc_id                  = "${aws_vpc.test.id}"
+  map_public_ip_on_launch = true
+
+  tags = {
+    Name = "tf-acc-subnet-%s"
+  }
 }
 
 resource "tls_private_key" "example" {
@@ -180,12 +182,12 @@ resource "aws_acm_certificate" "cert" {
 }
 
 resource "aws_ec2_client_vpn_endpoint" "test" {
-  description = "terraform-testacc-clientvpn-%s"
+  description            = "terraform-testacc-clientvpn-%s"
   server_certificate_arn = "${aws_acm_certificate.cert.arn}"
-  client_cidr_block = "10.0.0.0/16"
+  client_cidr_block      = "10.0.0.0/16"
 
   authentication_options {
-    type = "certificate-authentication"
+    type                       = "certificate-authentication"
     root_certificate_chain_arn = "${aws_acm_certificate.cert.arn}"
   }
 
@@ -196,7 +198,7 @@ resource "aws_ec2_client_vpn_endpoint" "test" {
 
 resource "aws_ec2_client_vpn_network_association" "test" {
   client_vpn_endpoint_id = "${aws_ec2_client_vpn_endpoint.test.id}"
-  subnet_id = "${aws_subnet.test.id}"
+  subnet_id              = "${aws_subnet.test.id}"
 }
 `, rName, rName, rName)
 }

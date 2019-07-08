@@ -27,8 +27,8 @@ The Terraform state associated with existing resources will automatically be mig
 
 ```hcl
 resource "aws_appmesh_virtual_node" "serviceb1" {
-  name                = "serviceBv1"
-  mesh_name           = "${aws_appmesh_mesh.simple.id}"
+  name      = "serviceBv1"
+  mesh_name = "${aws_appmesh_mesh.simple.id}"
 
   spec {
     backend {
@@ -57,8 +57,8 @@ resource "aws_appmesh_virtual_node" "serviceb1" {
 
 ```hcl
 resource "aws_appmesh_virtual_node" "serviceb1" {
-  name                = "serviceBv1"
-  mesh_name           = "${aws_appmesh_mesh.simple.id}"
+  name      = "serviceBv1"
+  mesh_name = "${aws_appmesh_mesh.simple.id}"
 
   spec {
     backend {
@@ -96,8 +96,8 @@ resource "aws_appmesh_virtual_node" "serviceb1" {
 
 ```hcl
 resource "aws_appmesh_virtual_node" "serviceb1" {
-  name                = "serviceBv1"
-  mesh_name           = "${aws_appmesh_mesh.simple.id}"
+  name      = "serviceBv1"
+  mesh_name = "${aws_appmesh_mesh.simple.id}"
 
   spec {
     backend {
@@ -137,6 +137,7 @@ The following arguments are supported:
 * `name` - (Required) The name to use for the virtual node.
 * `mesh_name` - (Required) The name of the service mesh in which to create the virtual node.
 * `spec` - (Required) The virtual node specification to apply.
+* `tags` - (Optional) A mapping of tags to assign to the resource.
 
 The `spec` object supports the following:
 

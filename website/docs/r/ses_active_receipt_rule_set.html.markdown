@@ -1,6 +1,6 @@
 ---
 layout: "aws"
-page_title: "AWS: ses_active_receipt_rule_set"
+page_title: "AWS: aws_ses_active_receipt_rule_set"
 sidebar_current: "docs-aws-resource-ses-active-receipt-rule-set"
 description: |-
   Provides a resource to designate the active SES receipt rule set

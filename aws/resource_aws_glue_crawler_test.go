@@ -889,8 +889,11 @@ func testAccCheckAWSGlueCrawlerConfiguration(crawler *glue.Crawler, acctestJSON 
 
 func testAccGlueCrawlerConfig_Base(rName string) string {
 	return fmt.Sprintf(`
+data "aws_partition" "current" {}
+
 resource "aws_iam_role" "test" {
   name = %q
+
   assume_role_policy = <<EOF
 {
   "Version": "2012-10-17",
@@ -909,7 +912,7 @@ EOF
 }
 
 resource "aws_iam_role_policy_attachment" "test-AWSGlueServiceRole" {
-  policy_arn = "arn:aws:iam::aws:policy/service-role/AWSGlueServiceRole"
+  policy_arn = "arn:${data.aws_partition.current.partition}:iam::aws:policy/service-role/AWSGlueServiceRole"
   role       = "${aws_iam_role.test.name}"
 }
 `, rName)
@@ -1208,6 +1211,8 @@ resource "aws_glue_crawler" "test" {
 
 func testAccGlueCrawlerConfig_Role_ARN_Path(rName string) string {
 	return fmt.Sprintf(`
+data "aws_partition" "current" {}
+
 resource "aws_iam_role" "test" {
   name = %q
   path = "/path/"
@@ -1230,7 +1235,7 @@ EOF
 }
 
 resource "aws_iam_role_policy_attachment" "test-AWSGlueServiceRole" {
-  policy_arn = "arn:aws:iam::aws:policy/service-role/AWSGlueServiceRole"
+  policy_arn = "arn:${data.aws_partition.current.partition}:iam::aws:policy/service-role/AWSGlueServiceRole"
   role       = "${aws_iam_role.test.name}"
 }
 
@@ -1254,6 +1259,8 @@ resource "aws_glue_crawler" "test" {
 
 func testAccGlueCrawlerConfig_Role_Name_Path(rName string) string {
 	return fmt.Sprintf(`
+data "aws_partition" "current" {}
+
 resource "aws_iam_role" "test" {
   name = %q
   path = "/path/"
@@ -1276,7 +1283,7 @@ EOF
 }
 
 resource "aws_iam_role_policy_attachment" "test-AWSGlueServiceRole" {
-  policy_arn = "arn:aws:iam::aws:policy/service-role/AWSGlueServiceRole"
+  policy_arn = "arn:${data.aws_partition.current.partition}:iam::aws:policy/service-role/AWSGlueServiceRole"
   role       = "${aws_iam_role.test.name}"
 }
 

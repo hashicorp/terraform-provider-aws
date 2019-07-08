@@ -1,6 +1,6 @@
 ---
 layout: "aws"
-page_title: "AWS: wafregional_size_constraint_set"
+page_title: "AWS: aws_wafregional_size_constraint_set"
 sidebar_current: "docs-aws-resource-wafregional-size-constraint-set"
 description: |-
   Provides an AWS WAF Regional Size Constraint Set resource for use with ALB.

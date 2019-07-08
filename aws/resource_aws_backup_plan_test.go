@@ -17,7 +17,7 @@ func TestAccAwsBackupPlan_basic(t *testing.T) {
 	rInt := acctest.RandInt()
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSBackup(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsBackupPlanDestroy,
 		Steps: []resource.TestStep{
@@ -40,7 +40,7 @@ func TestAccAwsBackupPlan_withTags(t *testing.T) {
 	rInt := acctest.RandInt()
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSBackup(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsBackupPlanDestroy,
 		Steps: []resource.TestStep{
@@ -78,7 +78,7 @@ func TestAccAwsBackupPlan_withRules(t *testing.T) {
 	rInt := acctest.RandInt()
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSBackup(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsBackupPlanDestroy,
 		Steps: []resource.TestStep{
@@ -98,7 +98,7 @@ func TestAccAwsBackupPlan_withRuleRemove(t *testing.T) {
 	rInt := acctest.RandInt()
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSBackup(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsBackupPlanDestroy,
 		Steps: []resource.TestStep{
@@ -125,7 +125,7 @@ func TestAccAwsBackupPlan_withRuleAdd(t *testing.T) {
 	rInt := acctest.RandInt()
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSBackup(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsBackupPlanDestroy,
 		Steps: []resource.TestStep{
@@ -152,7 +152,7 @@ func TestAccAwsBackupPlan_withLifecycle(t *testing.T) {
 	rStr := "lifecycle_policy"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSBackup(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsBackupPlanDestroy,
 		Steps: []resource.TestStep{
@@ -172,7 +172,7 @@ func TestAccAwsBackupPlan_withLifecycleDeleteAfterOnly(t *testing.T) {
 	rStr := "lifecycle_policy_two"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSBackup(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsBackupPlanDestroy,
 		Steps: []resource.TestStep{
@@ -194,7 +194,7 @@ func TestAccAwsBackupPlan_withLifecycleColdStorageAfterOnly(t *testing.T) {
 	rStr := "lifecycle_policy_three"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSBackup(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsBackupPlanDestroy,
 		Steps: []resource.TestStep{
@@ -216,7 +216,7 @@ func TestAccAwsBackupPlan_disappears(t *testing.T) {
 	rInt := acctest.RandInt()
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSBackup(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsBackupPlanDestroy,
 		Steps: []resource.TestStep{
@@ -309,9 +309,9 @@ resource "aws_backup_plan" "test" {
   name = "tf_acc_test_backup_plan_%[1]d"
 
   rule {
-    rule_name          = "tf_acc_test_backup_rule_%[1]d"
-    target_vault_name  = "${aws_backup_vault.test.name}"
-    schedule           = "cron(0 12 * * ? *)"
+    rule_name         = "tf_acc_test_backup_rule_%[1]d"
+    target_vault_name = "${aws_backup_vault.test.name}"
+    schedule          = "cron(0 12 * * ? *)"
   }
 }
 `, randInt)
@@ -327,13 +327,13 @@ resource "aws_backup_plan" "test" {
   name = "tf_acc_test_backup_plan_%[1]d"
 
   rule {
-    rule_name          = "tf_acc_test_backup_rule_%[1]d"
-    target_vault_name  = "${aws_backup_vault.test.name}"
-    schedule           = "cron(0 12 * * ? *)"
+    rule_name         = "tf_acc_test_backup_rule_%[1]d"
+    target_vault_name = "${aws_backup_vault.test.name}"
+    schedule          = "cron(0 12 * * ? *)"
   }
 
   tags = {
-	  env = "test"
+    env = "test"
   }
 }
 `, randInt)
@@ -349,14 +349,14 @@ resource "aws_backup_plan" "test" {
   name = "tf_acc_test_backup_plan_%[1]d"
 
   rule {
-    rule_name          = "tf_acc_test_backup_rule_%[1]d"
-    target_vault_name  = "${aws_backup_vault.test.name}"
-    schedule           = "cron(0 12 * * ? *)"
+    rule_name         = "tf_acc_test_backup_rule_%[1]d"
+    target_vault_name = "${aws_backup_vault.test.name}"
+    schedule          = "cron(0 12 * * ? *)"
   }
 
   tags = {
-	  env = "test"
-	  app = "widget"
+    env = "test"
+    app = "widget"
   }
 }
 `, randInt)
@@ -372,12 +372,13 @@ resource "aws_backup_plan" "test" {
   name = "tf_acc_test_backup_plan_%[1]s"
 
   rule {
-    rule_name          = "tf_acc_test_backup_rule_%[1]s"
-    target_vault_name  = "${aws_backup_vault.test.name}"
-    schedule           = "cron(0 12 * * ? *)"
+    rule_name         = "tf_acc_test_backup_rule_%[1]s"
+    target_vault_name = "${aws_backup_vault.test.name}"
+    schedule          = "cron(0 12 * * ? *)"
+
     lifecycle {
-        cold_storage_after = 30
-        delete_after       = 160
+      cold_storage_after = 30
+      delete_after       = 160
     }
   }
 }
@@ -394,11 +395,12 @@ resource "aws_backup_plan" "test" {
   name = "tf_acc_test_backup_plan_%[1]s"
 
   rule {
-    rule_name          = "tf_acc_test_backup_rule_%[1]s"
-    target_vault_name  = "${aws_backup_vault.test.name}"
-    schedule           = "cron(0 12 * * ? *)"
+    rule_name         = "tf_acc_test_backup_rule_%[1]s"
+    target_vault_name = "${aws_backup_vault.test.name}"
+    schedule          = "cron(0 12 * * ? *)"
+
     lifecycle {
-        delete_after   = "7"
+      delete_after = "7"
     }
   }
 }
@@ -415,11 +417,12 @@ resource "aws_backup_plan" "test" {
   name = "tf_acc_test_backup_plan_%[1]s"
 
   rule {
-    rule_name             = "tf_acc_test_backup_rule_%[1]s"
-    target_vault_name     = "${aws_backup_vault.test.name}"
-    schedule              = "cron(0 12 * * ? *)"
+    rule_name         = "tf_acc_test_backup_rule_%[1]s"
+    target_vault_name = "${aws_backup_vault.test.name}"
+    schedule          = "cron(0 12 * * ? *)"
+
     lifecycle {
-      cold_storage_after  = "7"
+      cold_storage_after = "7"
     }
   }
 }
@@ -436,15 +439,15 @@ resource "aws_backup_plan" "test" {
   name = "tf_acc_test_backup_plan_%[1]d"
 
   rule {
-    rule_name          = "tf_acc_test_backup_rule_%[1]d"
-    target_vault_name  = "${aws_backup_vault.test.name}"
-    schedule           = "cron(0 12 * * ? *)"
+    rule_name         = "tf_acc_test_backup_rule_%[1]d"
+    target_vault_name = "${aws_backup_vault.test.name}"
+    schedule          = "cron(0 12 * * ? *)"
   }
 
   rule {
-    rule_name          = "tf_acc_test_backup_rule_%[1]d_2"
-    target_vault_name  = "${aws_backup_vault.test.name}"
-    schedule           = "cron(0 6 * * ? *)"
+    rule_name         = "tf_acc_test_backup_rule_%[1]d_2"
+    target_vault_name = "${aws_backup_vault.test.name}"
+    schedule          = "cron(0 6 * * ? *)"
   }
 }
 `, randInt)

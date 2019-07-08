@@ -27,6 +27,7 @@ func TestAccAWSSsmParameterDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "type", "String"),
 					resource.TestCheckResourceAttr(resourceName, "value", "TestValue"),
 					resource.TestCheckResourceAttr(resourceName, "with_decryption", "false"),
+					resource.TestCheckResourceAttrSet(resourceName, "version"),
 				),
 			},
 			{
@@ -72,14 +73,14 @@ func TestAccAWSSsmParameterDataSource_fullPath(t *testing.T) {
 func testAccCheckAwsSsmParameterDataSourceConfig(name string, withDecryption string) string {
 	return fmt.Sprintf(`
 resource "aws_ssm_parameter" "test" {
-	name = "%s"
-	type = "String"
-	value = "TestValue"
+  name  = "%s"
+  type  = "String"
+  value = "TestValue"
 }
 
 data "aws_ssm_parameter" "test" {
-	name = "${aws_ssm_parameter.test.name}"
-	with_decryption = %s
+  name            = "${aws_ssm_parameter.test.name}"
+  with_decryption = %s
 }
 `, name, withDecryption)
 }

@@ -16,7 +16,7 @@ func TestAccAWSServiceDiscoveryPrivateDnsNamespace_basic(t *testing.T) {
 	rName := acctest.RandString(5) + ".example.com"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSServiceDiscovery(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsServiceDiscoveryPrivateDnsNamespaceDestroy,
 		Steps: []resource.TestStep{
@@ -36,7 +36,7 @@ func TestAccAWSServiceDiscoveryPrivateDnsNamespace_longname(t *testing.T) {
 	rName := acctest.RandString(64-len("example.com")) + ".example.com"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSServiceDiscovery(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsServiceDiscoveryPrivateDnsNamespaceDestroy,
 		Steps: []resource.TestStep{
@@ -60,7 +60,7 @@ func TestAccAWSServiceDiscoveryPrivateDnsNamespace_error_Overlap(t *testing.T) {
 	subDomain := acctest.RandString(5) + "." + rName
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSServiceDiscovery(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsServiceDiscoveryPrivateDnsNamespaceDestroy,
 		Steps: []resource.TestStep{
@@ -106,19 +106,36 @@ func testAccCheckAwsServiceDiscoveryPrivateDnsNamespaceExists(name string) resou
 	}
 }
 
+func testAccPreCheckAWSServiceDiscovery(t *testing.T) {
+	conn := testAccProvider.Meta().(*AWSClient).sdconn
+
+	input := &servicediscovery.ListNamespacesInput{}
+
+	_, err := conn.ListNamespaces(input)
+
+	if testAccPreCheckSkipError(err) {
+		t.Skipf("skipping acceptance testing: %s", err)
+	}
+
+	if err != nil {
+		t.Fatalf("unexpected PreCheck error: %s", err)
+	}
+}
+
 func testAccServiceDiscoveryPrivateDnsNamespaceConfig(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"
+
   tags = {
     Name = "terraform-testacc-service-discovery-private-dns-ns"
   }
 }
 
 resource "aws_service_discovery_private_dns_namespace" "test" {
-  name = "%s"
+  name        = "%s"
   description = "test"
-  vpc = "${aws_vpc.test.id}"
+  vpc         = "${aws_vpc.test.id}"
 }
 `, rName)
 }
@@ -127,6 +144,7 @@ func testAccServiceDiscoveryPrivateDnsNamespaceConfigOverlapping(topDomain, subD
 	return fmt.Sprintf(`
 resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"
+
   tags = {
     Name = "terraform-testacc-service-discovery-private-dns-ns"
   }

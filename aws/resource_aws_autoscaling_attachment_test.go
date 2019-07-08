@@ -16,8 +16,9 @@ func TestAccAWSAutoscalingAttachment_elb(t *testing.T) {
 	rInt := acctest.RandInt()
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:  func() { testAccPreCheck(t) },
-		Providers: testAccProviders,
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSAutocalingAttachmentDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSAutoscalingAttachment_elb(rInt),
@@ -58,8 +59,9 @@ func TestAccAWSAutoscalingAttachment_albTargetGroup(t *testing.T) {
 	rInt := acctest.RandInt()
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:  func() { testAccPreCheck(t) },
-		Providers: testAccProviders,
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSAutocalingAttachmentDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSAutoscalingAttachment_alb(rInt),
@@ -93,6 +95,32 @@ func TestAccAWSAutoscalingAttachment_albTargetGroup(t *testing.T) {
 			},
 		},
 	})
+}
+
+func testAccCheckAWSAutocalingAttachmentDestroy(s *terraform.State) error {
+	conn := testAccProvider.Meta().(*AWSClient).autoscalingconn
+
+	for _, rs := range s.RootModule().Resources {
+		if rs.Type != "aws_autoscaling_attachment" {
+			continue
+		}
+
+		resp, err := conn.DescribeAutoScalingGroups(&autoscaling.DescribeAutoScalingGroupsInput{
+			AutoScalingGroupNames: []*string{aws.String(rs.Primary.ID)},
+		})
+
+		if err == nil {
+			for _, autoscalingGroup := range resp.AutoScalingGroups {
+				if aws.StringValue(autoscalingGroup.AutoScalingGroupName) == rs.Primary.ID {
+					return fmt.Errorf("AWS Autoscaling Attachment is still exist: %s", rs.Primary.ID)
+				}
+			}
+		}
+
+		return err
+	}
+
+	return nil
 }
 
 func testAccCheckAWSAutocalingElbAttachmentExists(asgname string, loadBalancerCount int) resource.TestCheckFunc {
@@ -150,27 +178,27 @@ func testAccCheckAWSAutocalingAlbAttachmentExists(asgname string, targetGroupCou
 func testAccAWSAutoscalingAttachment_alb(rInt int) string {
 	return fmt.Sprintf(`
 resource "aws_lb_target_group" "test" {
-  name = "test-alb-%d"
-  port = 443
+  name     = "test-alb-%d"
+  port     = 443
   protocol = "HTTPS"
-  vpc_id = "${aws_vpc.test.id}"
+  vpc_id   = "${aws_vpc.test.id}"
 
   deregistration_delay = 200
 
   stickiness {
-    type = "lb_cookie"
+    type            = "lb_cookie"
     cookie_duration = 10000
   }
 
   health_check {
-    path = "/health"
-    interval = 60
-    port = 8081
-    protocol = "HTTP"
-    timeout = 3
-    healthy_threshold = 3
+    path                = "/health"
+    interval            = 60
+    port                = 8081
+    protocol            = "HTTP"
+    timeout             = 3
+    healthy_threshold   = 3
     unhealthy_threshold = 3
-    matcher = "200-299"
+    matcher             = "200-299"
   }
 
   tags = {
@@ -179,27 +207,27 @@ resource "aws_lb_target_group" "test" {
 }
 
 resource "aws_lb_target_group" "another_test" {
-  name = "atest-alb-%d"
-  port = 443
+  name     = "atest-alb-%d"
+  port     = 443
   protocol = "HTTPS"
-  vpc_id = "${aws_vpc.test.id}"
+  vpc_id   = "${aws_vpc.test.id}"
 
   deregistration_delay = 200
 
   stickiness {
-    type = "lb_cookie"
+    type            = "lb_cookie"
     cookie_duration = 10000
   }
 
   health_check {
-    path = "/health"
-    interval = 60
-    port = 8081
-    protocol = "HTTP"
-    timeout = 3
-    healthy_threshold = 3
+    path                = "/health"
+    interval            = 60
+    port                = 8081
+    protocol            = "HTTP"
+    timeout             = 3
+    healthy_threshold   = 3
     unhealthy_threshold = 3
-    matcher = "200-299"
+    matcher             = "200-299"
   }
 
   tags = {
@@ -208,26 +236,26 @@ resource "aws_lb_target_group" "another_test" {
 }
 
 resource "aws_autoscaling_group" "asg" {
-  availability_zones = ["us-west-2a", "us-west-2b", "us-west-2c"]
-  name = "asg-lb-assoc-terraform-test_%d"
-  max_size = 1
-  min_size = 0
-  desired_capacity = 0
+  availability_zones        = ["us-west-2a", "us-west-2b", "us-west-2c"]
+  name                      = "asg-lb-assoc-terraform-test_%d"
+  max_size                  = 1
+  min_size                  = 0
+  desired_capacity          = 0
   health_check_grace_period = 300
-  force_delete = true
-  launch_configuration = "${aws_launch_configuration.as_conf.name}"
+  force_delete              = true
+  launch_configuration      = "${aws_launch_configuration.as_conf.name}"
 
   tag {
-    key = "Name"
-    value = "terraform-asg-lg-assoc-test"
+    key                 = "Name"
+    value               = "terraform-asg-lg-assoc-test"
     propagate_at_launch = true
   }
 }
 
 resource "aws_launch_configuration" "as_conf" {
-    name = "test_config_%d"
-    image_id = "ami-f34032c3"
-    instance_type = "t1.micro"
+  name          = "test_config_%d"
+  image_id      = "ami-f34032c3"
+  instance_type = "t1.micro"
 }
 
 resource "aws_vpc" "test" {
@@ -265,27 +293,28 @@ resource "aws_elb" "bar" {
 }
 
 resource "aws_launch_configuration" "as_conf" {
-    name = "test_config_%d"
-    image_id = "ami-f34032c3"
-    instance_type = "t1.micro"
+  name          = "test_config_%d"
+  image_id      = "ami-f34032c3"
+  instance_type = "t1.micro"
 }
 
 resource "aws_autoscaling_group" "asg" {
-  availability_zones = ["us-west-2a", "us-west-2b", "us-west-2c"]
-  name = "asg-lb-assoc-terraform-test_%d"
-  max_size = 1
-  min_size = 0
-  desired_capacity = 0
+  availability_zones        = ["us-west-2a", "us-west-2b", "us-west-2c"]
+  name                      = "asg-lb-assoc-terraform-test_%d"
+  max_size                  = 1
+  min_size                  = 0
+  desired_capacity          = 0
   health_check_grace_period = 300
-  force_delete = true
-  launch_configuration = "${aws_launch_configuration.as_conf.name}"
+  force_delete              = true
+  launch_configuration      = "${aws_launch_configuration.as_conf.name}"
 
   tag {
-    key = "Name"
-    value = "terraform-asg-lg-assoc-test"
+    key                 = "Name"
+    value               = "terraform-asg-lg-assoc-test"
     propagate_at_launch = true
   }
-}`, rInt, rInt)
+}
+`, rInt, rInt)
 }
 
 func testAccAWSAutoscalingAttachment_elb_associated(rInt int) string {

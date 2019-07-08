@@ -1,6 +1,6 @@
 ---
 layout: "aws"
-page_title: "AWS: wafregional_geo_match_set"
+page_title: "AWS: aws_wafregional_geo_match_set"
 sidebar_current: "docs-aws-resource-wafregional-geo-match-set"
 description: |-
   Provides a AWS WAF Regional Geo Match Set resource.

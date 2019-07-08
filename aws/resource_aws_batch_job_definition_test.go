@@ -52,7 +52,7 @@ func TestAccAWSBatchJobDefinition_basic(t *testing.T) {
 	ri := acctest.RandInt()
 	config := fmt.Sprintf(testAccBatchJobDefinitionBaseConfig, ri)
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSBatch(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckBatchJobDefinitionDestroy,
 		Steps: []resource.TestStep{
@@ -74,7 +74,7 @@ func TestAccAWSBatchJobDefinition_updateForcesNewResource(t *testing.T) {
 	config := fmt.Sprintf(testAccBatchJobDefinitionBaseConfig, ri)
 	updateConfig := fmt.Sprintf(testAccBatchJobDefinitionUpdateConfig, ri)
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSBatch(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckBatchJobDefinitionDestroy,
 		Steps: []resource.TestStep{

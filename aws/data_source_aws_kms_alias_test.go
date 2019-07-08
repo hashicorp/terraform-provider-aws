@@ -111,21 +111,23 @@ func testAccDataSourceAwsKmsAlias_name(name string) string {
 	return fmt.Sprintf(`
 data "aws_kms_alias" "test" {
   name = "%s"
-}`, name)
+}
+`, name)
 }
 
 func testAccDataSourceAwsKmsAlias_CMK(rInt int) string {
 	return fmt.Sprintf(`
 resource "aws_kms_key" "test" {
-    description = "Terraform acc test"
-    deletion_window_in_days = 7
+  description             = "Terraform acc test"
+  deletion_window_in_days = 7
 }
 
 resource "aws_kms_alias" "test" {
-    name = "alias/tf-acc-key-alias-%d"
-    target_key_id = "${aws_kms_key.test.key_id}"
+  name          = "alias/tf-acc-key-alias-%d"
+  target_key_id = "${aws_kms_key.test.key_id}"
 }
 
 %s
+
 `, rInt, testAccDataSourceAwsKmsAlias_name("${aws_kms_alias.test.name}"))
 }

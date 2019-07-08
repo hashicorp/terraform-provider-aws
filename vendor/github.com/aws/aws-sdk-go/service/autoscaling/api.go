@@ -1744,7 +1744,7 @@ func (c *AutoScaling) DescribeAutoScalingGroupsWithContext(ctx aws.Context, inpu
 //    // Example iterating over at most 3 pages of a DescribeAutoScalingGroups operation.
 //    pageNum := 0
 //    err := client.DescribeAutoScalingGroupsPages(params,
-//        func(page *DescribeAutoScalingGroupsOutput, lastPage bool) bool {
+//        func(page *autoscaling.DescribeAutoScalingGroupsOutput, lastPage bool) bool {
 //            pageNum++
 //            fmt.Println(page)
 //            return pageNum <= 3
@@ -1883,7 +1883,7 @@ func (c *AutoScaling) DescribeAutoScalingInstancesWithContext(ctx aws.Context, i
 //    // Example iterating over at most 3 pages of a DescribeAutoScalingInstances operation.
 //    pageNum := 0
 //    err := client.DescribeAutoScalingInstancesPages(params,
-//        func(page *DescribeAutoScalingInstancesOutput, lastPage bool) bool {
+//        func(page *autoscaling.DescribeAutoScalingInstancesOutput, lastPage bool) bool {
 //            pageNum++
 //            fmt.Println(page)
 //            return pageNum <= 3
@@ -2102,7 +2102,7 @@ func (c *AutoScaling) DescribeLaunchConfigurationsWithContext(ctx aws.Context, i
 //    // Example iterating over at most 3 pages of a DescribeLaunchConfigurations operation.
 //    pageNum := 0
 //    err := client.DescribeLaunchConfigurationsPages(params,
-//        func(page *DescribeLaunchConfigurationsOutput, lastPage bool) bool {
+//        func(page *autoscaling.DescribeLaunchConfigurationsOutput, lastPage bool) bool {
 //            pageNum++
 //            fmt.Println(page)
 //            return pageNum <= 3
@@ -2655,7 +2655,7 @@ func (c *AutoScaling) DescribeNotificationConfigurationsWithContext(ctx aws.Cont
 //    // Example iterating over at most 3 pages of a DescribeNotificationConfigurations operation.
 //    pageNum := 0
 //    err := client.DescribeNotificationConfigurationsPages(params,
-//        func(page *DescribeNotificationConfigurationsOutput, lastPage bool) bool {
+//        func(page *autoscaling.DescribeNotificationConfigurationsOutput, lastPage bool) bool {
 //            pageNum++
 //            fmt.Println(page)
 //            return pageNum <= 3
@@ -2797,7 +2797,7 @@ func (c *AutoScaling) DescribePoliciesWithContext(ctx aws.Context, input *Descri
 //    // Example iterating over at most 3 pages of a DescribePolicies operation.
 //    pageNum := 0
 //    err := client.DescribePoliciesPages(params,
-//        func(page *DescribePoliciesOutput, lastPage bool) bool {
+//        func(page *autoscaling.DescribePoliciesOutput, lastPage bool) bool {
 //            pageNum++
 //            fmt.Println(page)
 //            return pageNum <= 3
@@ -2936,7 +2936,7 @@ func (c *AutoScaling) DescribeScalingActivitiesWithContext(ctx aws.Context, inpu
 //    // Example iterating over at most 3 pages of a DescribeScalingActivities operation.
 //    pageNum := 0
 //    err := client.DescribeScalingActivitiesPages(params,
-//        func(page *DescribeScalingActivitiesOutput, lastPage bool) bool {
+//        func(page *autoscaling.DescribeScalingActivitiesOutput, lastPage bool) bool {
 //            pageNum++
 //            fmt.Println(page)
 //            return pageNum <= 3
@@ -3156,7 +3156,7 @@ func (c *AutoScaling) DescribeScheduledActionsWithContext(ctx aws.Context, input
 //    // Example iterating over at most 3 pages of a DescribeScheduledActions operation.
 //    pageNum := 0
 //    err := client.DescribeScheduledActionsPages(params,
-//        func(page *DescribeScheduledActionsOutput, lastPage bool) bool {
+//        func(page *autoscaling.DescribeScheduledActionsOutput, lastPage bool) bool {
 //            pageNum++
 //            fmt.Println(page)
 //            return pageNum <= 3
@@ -3304,7 +3304,7 @@ func (c *AutoScaling) DescribeTagsWithContext(ctx aws.Context, input *DescribeTa
 //    // Example iterating over at most 3 pages of a DescribeTags operation.
 //    pageNum := 0
 //    err := client.DescribeTagsPages(params,
-//        func(page *DescribeTagsOutput, lastPage bool) bool {
+//        func(page *autoscaling.DescribeTagsOutput, lastPage bool) bool {
 //            pageNum++
 //            fmt.Println(page)
 //            return pageNum <= 3
@@ -11228,8 +11228,8 @@ type PredefinedMetricSpecification struct {
 	// and ASGAverageNetworkOut, the parameter must not be specified as the resource
 	// associated with the metric type is the Auto Scaling group. For predefined
 	// metric type ALBRequestCountPerTarget, the parameter must be specified in
-	// the format: app/load-balancer-name/load-balancer-id/targetgroup/target-group-name/target-group-id,
-	// where app/load-balancer-name/load-balancer-id is the final portion of the
+	// the format: app/load-balancer-name/load-balancer-id/targetgroup/target-group-name/target-group-id
+	// , where app/load-balancer-name/load-balancer-id is the final portion of the
 	// load balancer ARN, and targetgroup/target-group-name/target-group-id is the
 	// final portion of the target group ARN. The target group must be attached
 	// to the Auto Scaling group.

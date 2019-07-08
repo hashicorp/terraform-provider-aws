@@ -1376,7 +1376,7 @@ func (c *DatabaseMigrationService) DescribeCertificatesWithContext(ctx aws.Conte
 //    // Example iterating over at most 3 pages of a DescribeCertificates operation.
 //    pageNum := 0
 //    err := client.DescribeCertificatesPages(params,
-//        func(page *DescribeCertificatesOutput, lastPage bool) bool {
+//        func(page *databasemigrationservice.DescribeCertificatesOutput, lastPage bool) bool {
 //            pageNum++
 //            fmt.Println(page)
 //            return pageNum <= 3
@@ -1512,7 +1512,7 @@ func (c *DatabaseMigrationService) DescribeConnectionsWithContext(ctx aws.Contex
 //    // Example iterating over at most 3 pages of a DescribeConnections operation.
 //    pageNum := 0
 //    err := client.DescribeConnectionsPages(params,
-//        func(page *DescribeConnectionsOutput, lastPage bool) bool {
+//        func(page *databasemigrationservice.DescribeConnectionsOutput, lastPage bool) bool {
 //            pageNum++
 //            fmt.Println(page)
 //            return pageNum <= 3
@@ -1642,7 +1642,7 @@ func (c *DatabaseMigrationService) DescribeEndpointTypesWithContext(ctx aws.Cont
 //    // Example iterating over at most 3 pages of a DescribeEndpointTypes operation.
 //    pageNum := 0
 //    err := client.DescribeEndpointTypesPages(params,
-//        func(page *DescribeEndpointTypesOutput, lastPage bool) bool {
+//        func(page *databasemigrationservice.DescribeEndpointTypesOutput, lastPage bool) bool {
 //            pageNum++
 //            fmt.Println(page)
 //            return pageNum <= 3
@@ -1777,7 +1777,7 @@ func (c *DatabaseMigrationService) DescribeEndpointsWithContext(ctx aws.Context,
 //    // Example iterating over at most 3 pages of a DescribeEndpoints operation.
 //    pageNum := 0
 //    err := client.DescribeEndpointsPages(params,
-//        func(page *DescribeEndpointsOutput, lastPage bool) bool {
+//        func(page *databasemigrationservice.DescribeEndpointsOutput, lastPage bool) bool {
 //            pageNum++
 //            fmt.Println(page)
 //            return pageNum <= 3
@@ -1994,7 +1994,7 @@ func (c *DatabaseMigrationService) DescribeEventSubscriptionsWithContext(ctx aws
 //    // Example iterating over at most 3 pages of a DescribeEventSubscriptions operation.
 //    pageNum := 0
 //    err := client.DescribeEventSubscriptionsPages(params,
-//        func(page *DescribeEventSubscriptionsOutput, lastPage bool) bool {
+//        func(page *databasemigrationservice.DescribeEventSubscriptionsOutput, lastPage bool) bool {
 //            pageNum++
 //            fmt.Println(page)
 //            return pageNum <= 3
@@ -2127,7 +2127,7 @@ func (c *DatabaseMigrationService) DescribeEventsWithContext(ctx aws.Context, in
 //    // Example iterating over at most 3 pages of a DescribeEvents operation.
 //    pageNum := 0
 //    err := client.DescribeEventsPages(params,
-//        func(page *DescribeEventsOutput, lastPage bool) bool {
+//        func(page *databasemigrationservice.DescribeEventsOutput, lastPage bool) bool {
 //            pageNum++
 //            fmt.Println(page)
 //            return pageNum <= 3
@@ -2258,7 +2258,7 @@ func (c *DatabaseMigrationService) DescribeOrderableReplicationInstancesWithCont
 //    // Example iterating over at most 3 pages of a DescribeOrderableReplicationInstances operation.
 //    pageNum := 0
 //    err := client.DescribeOrderableReplicationInstancesPages(params,
-//        func(page *DescribeOrderableReplicationInstancesOutput, lastPage bool) bool {
+//        func(page *databasemigrationservice.DescribeOrderableReplicationInstancesOutput, lastPage bool) bool {
 //            pageNum++
 //            fmt.Println(page)
 //            return pageNum <= 3
@@ -2393,7 +2393,7 @@ func (c *DatabaseMigrationService) DescribePendingMaintenanceActionsWithContext(
 //    // Example iterating over at most 3 pages of a DescribePendingMaintenanceActions operation.
 //    pageNum := 0
 //    err := client.DescribePendingMaintenanceActionsPages(params,
-//        func(page *DescribePendingMaintenanceActionsOutput, lastPage bool) bool {
+//        func(page *databasemigrationservice.DescribePendingMaintenanceActionsOutput, lastPage bool) bool {
 //            pageNum++
 //            fmt.Println(page)
 //            return pageNum <= 3
@@ -2615,7 +2615,7 @@ func (c *DatabaseMigrationService) DescribeReplicationInstanceTaskLogsWithContex
 //    // Example iterating over at most 3 pages of a DescribeReplicationInstanceTaskLogs operation.
 //    pageNum := 0
 //    err := client.DescribeReplicationInstanceTaskLogsPages(params,
-//        func(page *DescribeReplicationInstanceTaskLogsOutput, lastPage bool) bool {
+//        func(page *databasemigrationservice.DescribeReplicationInstanceTaskLogsOutput, lastPage bool) bool {
 //            pageNum++
 //            fmt.Println(page)
 //            return pageNum <= 3
@@ -2751,7 +2751,7 @@ func (c *DatabaseMigrationService) DescribeReplicationInstancesWithContext(ctx a
 //    // Example iterating over at most 3 pages of a DescribeReplicationInstances operation.
 //    pageNum := 0
 //    err := client.DescribeReplicationInstancesPages(params,
-//        func(page *DescribeReplicationInstancesOutput, lastPage bool) bool {
+//        func(page *databasemigrationservice.DescribeReplicationInstancesOutput, lastPage bool) bool {
 //            pageNum++
 //            fmt.Println(page)
 //            return pageNum <= 3
@@ -2886,7 +2886,7 @@ func (c *DatabaseMigrationService) DescribeReplicationSubnetGroupsWithContext(ct
 //    // Example iterating over at most 3 pages of a DescribeReplicationSubnetGroups operation.
 //    pageNum := 0
 //    err := client.DescribeReplicationSubnetGroupsPages(params,
-//        func(page *DescribeReplicationSubnetGroupsOutput, lastPage bool) bool {
+//        func(page *databasemigrationservice.DescribeReplicationSubnetGroupsOutput, lastPage bool) bool {
 //            pageNum++
 //            fmt.Println(page)
 //            return pageNum <= 3
@@ -3022,7 +3022,7 @@ func (c *DatabaseMigrationService) DescribeReplicationTaskAssessmentResultsWithC
 //    // Example iterating over at most 3 pages of a DescribeReplicationTaskAssessmentResults operation.
 //    pageNum := 0
 //    err := client.DescribeReplicationTaskAssessmentResultsPages(params,
-//        func(page *DescribeReplicationTaskAssessmentResultsOutput, lastPage bool) bool {
+//        func(page *databasemigrationservice.DescribeReplicationTaskAssessmentResultsOutput, lastPage bool) bool {
 //            pageNum++
 //            fmt.Println(page)
 //            return pageNum <= 3
@@ -3158,7 +3158,7 @@ func (c *DatabaseMigrationService) DescribeReplicationTasksWithContext(ctx aws.C
 //    // Example iterating over at most 3 pages of a DescribeReplicationTasks operation.
 //    pageNum := 0
 //    err := client.DescribeReplicationTasksPages(params,
-//        func(page *DescribeReplicationTasksOutput, lastPage bool) bool {
+//        func(page *databasemigrationservice.DescribeReplicationTasksOutput, lastPage bool) bool {
 //            pageNum++
 //            fmt.Println(page)
 //            return pageNum <= 3
@@ -3297,7 +3297,7 @@ func (c *DatabaseMigrationService) DescribeSchemasWithContext(ctx aws.Context, i
 //    // Example iterating over at most 3 pages of a DescribeSchemas operation.
 //    pageNum := 0
 //    err := client.DescribeSchemasPages(params,
-//        func(page *DescribeSchemasOutput, lastPage bool) bool {
+//        func(page *databasemigrationservice.DescribeSchemasOutput, lastPage bool) bool {
 //            pageNum++
 //            fmt.Println(page)
 //            return pageNum <= 3
@@ -3441,7 +3441,7 @@ func (c *DatabaseMigrationService) DescribeTableStatisticsWithContext(ctx aws.Co
 //    // Example iterating over at most 3 pages of a DescribeTableStatistics operation.
 //    pageNum := 0
 //    err := client.DescribeTableStatisticsPages(params,
-//        func(page *DescribeTableStatisticsOutput, lastPage bool) bool {
+//        func(page *databasemigrationservice.DescribeTableStatisticsOutput, lastPage bool) bool {
 //            pageNum++
 //            fmt.Println(page)
 //            return pageNum <= 3
@@ -4521,7 +4521,7 @@ func (c *DatabaseMigrationService) StartReplicationTaskRequest(input *StartRepli
 // Starts the replication task.
 //
 // For more information about AWS DMS tasks, see Working with Migration Tasks
-//  (https://docs.aws.amazon.com/dms/latest/userguide/CHAP_Tasks.html) in the
+// (https://docs.aws.amazon.com/dms/latest/userguide/CHAP_Tasks.html) in the
 // AWS Database Migration Service User Guide.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
@@ -5303,8 +5303,8 @@ type CreateEndpointInput struct {
 
 	// Settings in JSON format for the target Amazon Kinesis Data Streams endpoint.
 	// For more information about the available settings, see Using Object Mapping
-	// to Migrate Data to a Kinesis Data Stream (https://docs.aws.amazon.com/dms/latest/userguide/CHAP_Target.Kinesis.html#CHAP_Target.Kinesis.ObjectMapping
-	// ) in the AWS Database Migration User Guide.
+	// to Migrate Data to a Kinesis Data Stream (https://docs.aws.amazon.com/dms/latest/userguide/CHAP_Target.Kinesis.html#CHAP_Target.Kinesis.ObjectMapping)
+	// in the AWS Database Migration User Guide.
 	KinesisSettings *KinesisSettings `type:"structure"`
 
 	// The AWS KMS key identifier to use to encrypt the connection parameters. If
@@ -5316,7 +5316,7 @@ type CreateEndpointInput struct {
 
 	// Settings in JSON format for the source MongoDB endpoint. For more information
 	// about the available settings, see the configuration properties section in
-	//  Using MongoDB as a Target for AWS Database Migration Service (https://docs.aws.amazon.com/dms/latest/userguide/CHAP_Source.MongoDB.html)
+	// Using MongoDB as a Target for AWS Database Migration Service (https://docs.aws.amazon.com/dms/latest/userguide/CHAP_Source.MongoDB.html)
 	// in the AWS Database Migration Service User Guide.
 	MongoDbSettings *MongoDbSettings `type:"structure"`
 
@@ -9319,13 +9319,13 @@ type ModifyEndpointInput struct {
 
 	// Settings in JSON format for the target Amazon Kinesis Data Streams endpoint.
 	// For more information about the available settings, see Using Object Mapping
-	// to Migrate Data to a Kinesis Data Stream (https://docs.aws.amazon.com/dms/latest/userguide/CHAP_Target.Kinesis.html#CHAP_Target.Kinesis.ObjectMapping
-	// ) in the AWS Database Migration User Guide.
+	// to Migrate Data to a Kinesis Data Stream (https://docs.aws.amazon.com/dms/latest/userguide/CHAP_Target.Kinesis.html#CHAP_Target.Kinesis.ObjectMapping)
+	// in the AWS Database Migration User Guide.
 	KinesisSettings *KinesisSettings `type:"structure"`
 
 	// Settings in JSON format for the source MongoDB endpoint. For more information
 	// about the available settings, see the configuration properties section in
-	//  Using MongoDB as a Target for AWS Database Migration Service (https://docs.aws.amazon.com/dms/latest/userguide/CHAP_Source.MongoDB.html)
+	// Using MongoDB as a Target for AWS Database Migration Service (https://docs.aws.amazon.com/dms/latest/userguide/CHAP_Source.MongoDB.html)
 	// in the AWS Database Migration Service User Guide.
 	MongoDbSettings *MongoDbSettings `type:"structure"`
 
@@ -10080,8 +10080,8 @@ type MongoDbSettings struct {
 	//
 	// Valid values: DEFAULT, MONGODB_CR, SCRAM_SHA_1
 	//
-	// DEFAULT – For MongoDB version 2.x, use MONGODB_CR. For MongoDB version 3.x,
-	// use SCRAM_SHA_1. This attribute is not used when authType=No.
+	// DEFAULT – For MongoDB version 2.x, use MONGODB_CR. For MongoDB version
+	// 3.x, use SCRAM_SHA_1. This attribute is not used when authType=No.
 	AuthMechanism *string `type:"string" enum:"AuthMechanismValue"`
 
 	// The MongoDB database name. This attribute is not used when authType=NO.
@@ -11789,7 +11789,7 @@ type ResourcePendingMaintenanceActions struct {
 	PendingMaintenanceActionDetails []*PendingMaintenanceAction `type:"list"`
 
 	// The Amazon Resource Name (ARN) of the DMS resource that the pending maintenance
-	// action applies to. For information about creating an ARN, see  Constructing
+	// action applies to. For information about creating an ARN, see Constructing
 	// an Amazon Resource Name (ARN) (https://docs.aws.amazon.com/dms/latest/UserGuide/USER_Tagging.html#USER_Tagging.ARN)
 	// in the DMS documentation.
 	ResourceIdentifier *string `type:"string"`
@@ -12450,16 +12450,16 @@ type TableStatistics struct {
 	//
 	//    * Pending records—Some records in the table are waiting for validation.
 	//
-	//    * Mismatched records—Some records in the table do not match between the
-	//    source and target.
+	//    * Mismatched records—Some records in the table do not match between
+	//    the source and target.
 	//
 	//    * Suspended records—Some records in the table could not be validated.
 	//
-	//    * No primary key—The table could not be validated because it had no primary
-	//    key.
+	//    * No primary key—The table could not be validated because it had no
+	//    primary key.
 	//
-	//    * Table error—The table was not validated because it was in an error state
-	//    and some data was not migrated.
+	//    * Table error—The table was not validated because it was in an error
+	//    state and some data was not migrated.
 	//
 	//    * Validated—All rows in the table were validated. If the table is updated,
 	//    the status can change from Validated.

@@ -1938,8 +1938,8 @@ type ComputeResource struct {
 
 	// The Amazon ECS instance profile applied to Amazon EC2 instances in a compute
 	// environment. You can specify the short name or full Amazon Resource Name
-	// (ARN) of an instance profile. For example, ecsInstanceRole or arn:aws:iam::<aws_account_id>:instance-profile/ecsInstanceRole.
-	// For more information, see Amazon ECS Instance Role (https://docs.aws.amazon.com/batch/latest/userguide/instance_IAM_role.html)
+	// (ARN) of an instance profile. For example, ecsInstanceRole or arn:aws:iam::<aws_account_id>:instance-profile/ecsInstanceRole
+	// . For more information, see Amazon ECS Instance Role (https://docs.aws.amazon.com/batch/latest/userguide/instance_IAM_role.html)
 	// in the AWS Batch User Guide.
 	//
 	// InstanceRole is a required field
@@ -1999,8 +1999,8 @@ type ComputeResource struct {
 
 	// Key-value pair tags to be applied to resources that are launched in the compute
 	// environment. For AWS Batch, these take the form of "String1": "String2",
-	// where String1 is the tag key and String2 is the tag value—for example, {
-	// "Name": "AWS Batch Instance - C4OnDemand" }.
+	// where String1 is the tag key and String2 is the tag value—for example,
+	// { "Name": "AWS Batch Instance - C4OnDemand" }.
 	Tags map[string]*string `locationName:"tags" type:"map"`
 
 	// The type of compute environment: EC2 or SPOT.
@@ -2515,7 +2515,7 @@ type ContainerProperties struct {
 
 	// The image used to start a container. This string is passed directly to the
 	// Docker daemon. Images in the Docker Hub registry are available by default.
-	// Other repositories are specified with repository-url/image:tag. Up to 255
+	// Other repositories are specified with repository-url/image:tag . Up to 255
 	// letters (uppercase and lowercase), numbers, hyphens, underscores, colons,
 	// periods, forward slashes, and number signs are allowed. This parameter maps
 	// to Image in the Create a container (https://docs.docker.com/engine/api/v1.23/#create-a-container)
@@ -3794,8 +3794,9 @@ type JobDetail struct {
 
 	// The current status for the job.
 	//
-	// If your jobs do not progress to STARTING, see Jobs Stuck in  (https://docs.aws.amazon.com/batch/latest/userguide/troubleshooting.html#job_stuck_in_runnable)RUNNABLE
-	// Status in the troubleshooting section of the AWS Batch User Guide.
+	// If your jobs do not progress to STARTING, see Jobs Stuck in RUNNABLE Status
+	// (https://docs.aws.amazon.com/batch/latest/userguide/troubleshooting.html#job_stuck_in_runnable)
+	// in the troubleshooting section of the AWS Batch User Guide.
 	//
 	// Status is a required field
 	Status *string `locationName:"status" type:"string" required:"true" enum:"JobStatus"`

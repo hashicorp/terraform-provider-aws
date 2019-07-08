@@ -18,7 +18,7 @@
 // Get Amazon GameLift Tools and Resources
 //
 // This reference guide describes the low-level service API for Amazon GameLift
-// and provides links to language-specific SDK reference topics. See also  Amazon
+// and provides links to language-specific SDK reference topics. See also Amazon
 // GameLift Tools and Resources (https://docs.aws.amazon.com/gamelift/latest/developerguide/gamelift-components.html).
 //
 // API Summary
@@ -35,7 +35,7 @@
 //    Set up matchmakers, configure auto-scaling, retrieve game logs, and get
 //    hosting and game metrics.
 //
-// Task-based list of API actions (https://docs.aws.amazon.com/gamelift/latest/developerguide/reference-awssdk.html)
+//   Task-based list of API actions (https://docs.aws.amazon.com/gamelift/latest/developerguide/reference-awssdk.html)
 //
 // See https://docs.aws.amazon.com/goto/WebAPI/gamelift-2015-10-01 for more information on this service.
 //

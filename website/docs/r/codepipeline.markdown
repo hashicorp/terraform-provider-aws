@@ -113,30 +113,30 @@ resource "aws_codepipeline" "codepipeline" {
     name = "Build"
 
     action {
-      name            = "Build"
-      category        = "Build"
-      owner           = "AWS"
-      provider        = "CodeBuild"
-      input_artifacts = ["source_output"]
+      name             = "Build"
+      category         = "Build"
+      owner            = "AWS"
+      provider         = "CodeBuild"
+      input_artifacts  = ["source_output"]
       output_artifacts = ["build_output"]
-      version         = "1"
+      version          = "1"
 
       configuration = {
         ProjectName = "test"
       }
     }
   }
-  
+
   stage {
     name = "Deploy"
 
     action {
-      name             = "Deploy"
-      category         = "Deploy"
-      owner            = "AWS"
-      provider         = "CloudFormation"
-      input_artifacts  = ["build_output"]
-      version          = "1"
+      name            = "Deploy"
+      category        = "Deploy"
+      owner           = "AWS"
+      provider        = "CloudFormation"
+      input_artifacts = ["build_output"]
+      version         = "1"
 
       configuration {
         ActionMode     = "REPLACE_ON_FAILURE"
@@ -158,6 +158,7 @@ The following arguments are supported:
 * `role_arn` - (Required) A service role Amazon Resource Name (ARN) that grants AWS CodePipeline permission to make calls to AWS services on your behalf.
 * `artifact_store` (Required) An artifact_store block. Artifact stores are documented below.
 * `stage` (Minimum of at least two `stage` blocks is required) A stage block. Stages are documented below.
+* `tags` - (Optional) A mapping of tags to assign to the resource.
 
 
 An `artifact_store` block supports the following arguments:

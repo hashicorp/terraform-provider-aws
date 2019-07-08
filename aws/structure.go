@@ -14,6 +14,7 @@ import (
 	"github.com/aws/aws-sdk-go/private/protocol/json/jsonutil"
 	"github.com/aws/aws-sdk-go/service/apigateway"
 	"github.com/aws/aws-sdk-go/service/appmesh"
+	"github.com/aws/aws-sdk-go/service/appsync"
 	"github.com/aws/aws-sdk-go/service/autoscaling"
 	"github.com/aws/aws-sdk-go/service/cloudformation"
 	"github.com/aws/aws-sdk-go/service/cloudwatchlogs"
@@ -2464,6 +2465,10 @@ func flattenCognitoUserPoolEmailConfiguration(s *cognitoidentityprovider.EmailCo
 		m["source_arn"] = *s.SourceArn
 	}
 
+	if s.EmailSendingAccount != nil {
+		m["email_sending_account"] = *s.EmailSendingAccount
+	}
+
 	if len(m) > 0 {
 		return []map[string]interface{}{m}
 	}
@@ -4467,16 +4472,6 @@ func expandDynamoDbEncryptAtRestOptions(m map[string]interface{}) *dynamodb.SSES
 	return &options
 }
 
-func flattenVpcEndpointServiceAllowedPrincipals(allowedPrincipals []*ec2.AllowedPrincipal) []string {
-	result := make([]string, 0, len(allowedPrincipals))
-	for _, allowedPrincipal := range allowedPrincipals {
-		if allowedPrincipal.Principal != nil {
-			result = append(result, *allowedPrincipal.Principal)
-		}
-	}
-	return result
-}
-
 func expandDynamoDbTableItemAttributes(input string) (map[string]*dynamodb.AttributeValue, error) {
 	var attributes map[string]*dynamodb.AttributeValue
 
@@ -5344,6 +5339,22 @@ func flattenAppmeshRouteSpec(spec *appmesh.RouteSpec) []interface{} {
 	}
 
 	return []interface{}{mSpec}
+}
+
+func flattenAppsyncPipelineConfig(c *appsync.PipelineConfig) []interface{} {
+	if c == nil {
+		return nil
+	}
+
+	if len(c.Functions) == 0 {
+		return nil
+	}
+
+	m := map[string]interface{}{
+		"functions": flattenStringList(c.Functions),
+	}
+
+	return []interface{}{m}
 }
 
 func expandRoute53ResolverEndpointIpAddresses(vIpAddresses *schema.Set) []*route53resolver.IpAddressRequest {

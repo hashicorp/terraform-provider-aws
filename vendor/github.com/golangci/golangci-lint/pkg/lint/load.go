@@ -11,6 +11,8 @@ import (
 	"strings"
 	"time"
 
+	"github.com/golangci/golangci-lint/pkg/fsutils"
+
 	"github.com/pkg/errors"
 	"golang.org/x/tools/go/loader"
 	"golang.org/x/tools/go/packages"
@@ -23,7 +25,6 @@ import (
 	"github.com/golangci/golangci-lint/pkg/lint/astcache"
 	"github.com/golangci/golangci-lint/pkg/lint/linter"
 	"github.com/golangci/golangci-lint/pkg/logutils"
-	libpackages "github.com/golangci/golangci-lint/pkg/packages"
 )
 
 type ContextLoader struct {
@@ -32,15 +33,21 @@ type ContextLoader struct {
 	debugf      logutils.DebugFunc
 	goenv       *goutil.Env
 	pkgTestIDRe *regexp.Regexp
+	lineCache   *fsutils.LineCache
+	fileCache   *fsutils.FileCache
 }
 
-func NewContextLoader(cfg *config.Config, log logutils.Log, goenv *goutil.Env) *ContextLoader {
+func NewContextLoader(cfg *config.Config, log logutils.Log, goenv *goutil.Env,
+	lineCache *fsutils.LineCache, fileCache *fsutils.FileCache) *ContextLoader {
+
 	return &ContextLoader{
 		cfg:         cfg,
 		log:         log,
 		debugf:      logutils.Debug("loader"),
 		goenv:       goenv,
 		pkgTestIDRe: regexp.MustCompile(`^(.*) \[(.*)\.test\]`),
+		lineCache:   lineCache,
+		fileCache:   fileCache,
 	}
 }
 
@@ -168,7 +175,9 @@ func stringifyLoadMode(mode packages.LoadMode) string {
 		return "load types"
 	case packages.LoadSyntax:
 		return "load types and syntax"
-	case packages.LoadAllSyntax:
+	}
+	// it may be an alias, and may be not
+	if mode == packages.LoadAllSyntax {
 		return "load deps types and syntax"
 	}
 	return "unknown"
@@ -263,6 +272,10 @@ func (cl ContextLoader) loadPackages(ctx context.Context, loadMode packages.Load
 			if strings.Contains(err.Msg, "no Go files") {
 				return nil, errors.Wrapf(exitcodes.ErrNoGoFiles, "package %s", pkg.PkgPath)
 			}
+			if strings.Contains(err.Msg, "cannot find package") {
+				// when analyzing not existing directory
+				return nil, errors.Wrap(exitcodes.ErrFailure, err.Msg)
+			}
 		}
 	}
 
@@ -351,34 +364,30 @@ func (cl ContextLoader) Load(ctx context.Context, linters []*linter.Config) (*li
 			Cwd:   "",  // used by depguard and fallbacked to os.Getcwd
 			Build: nil, // used by depguard and megacheck and fallbacked to build.Default
 		},
-		Cfg:      cl.cfg,
-		ASTCache: astCache,
-		Log:      cl.log,
+		Cfg:       cl.cfg,
+		ASTCache:  astCache,
+		Log:       cl.log,
+		FileCache: cl.fileCache,
+		LineCache: cl.lineCache,
 	}
 
-	if prog != nil {
-		saveNotCompilingPackages(ret)
-	} else {
-		for _, pkg := range pkgs {
-			if pkg.IllTyped {
-				cl.log.Infof("Pkg %s errors: %v", pkg.ID, libpackages.ExtractErrors(pkg, astCache))
-			}
-		}
-	}
-
+	separateNotCompilingPackages(ret)
 	return ret, nil
 }
 
-// saveNotCompilingPackages saves not compiling packages into separate slice:
-// a lot of linters crash on such packages. Leave them only for those linters
-// which can work with them.
-func saveNotCompilingPackages(lintCtx *linter.Context) {
+// separateNotCompilingPackages moves not compiling packages into separate slice:
+// a lot of linters crash on such packages
+func separateNotCompilingPackages(lintCtx *linter.Context) {
+	goodPkgs := make([]*packages.Package, 0, len(lintCtx.Packages))
 	for _, pkg := range lintCtx.Packages {
 		if pkg.IllTyped {
 			lintCtx.NotCompilingPackages = append(lintCtx.NotCompilingPackages, pkg)
+		} else {
+			goodPkgs = append(goodPkgs, pkg)
 		}
 	}
 
+	lintCtx.Packages = goodPkgs
 	if len(lintCtx.NotCompilingPackages) != 0 {
 		lintCtx.Log.Infof("Packages that do not compile: %+v", lintCtx.NotCompilingPackages)
 	}

@@ -28,7 +28,6 @@ func resourceAwsIamOpenIDConnectProvider() *schema.Resource {
 			},
 			"url": {
 				Type:             schema.TypeString,
-				Computed:         false,
 				Required:         true,
 				ForceNew:         true,
 				ValidateFunc:     validateOpenIdURL,
