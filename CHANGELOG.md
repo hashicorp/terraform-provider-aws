@@ -1,5 +1,9 @@
 ## 2.19.0 (Unreleased)
 
+FEATURES:
+
+* **New Data Source:** `aws_msk_configuration` [GH-9088]
+
 ENHANCEMENTS:
 
 * resource/aws_wafregional_rule: Support resource import [GH-9239]
