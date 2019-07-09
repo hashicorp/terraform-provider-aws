@@ -17,6 +17,7 @@ func resourceAwsLightsailInstance() *schema.Resource {
 	return &schema.Resource{
 		Create: resourceAwsLightsailInstanceCreate,
 		Read:   resourceAwsLightsailInstanceRead,
+		Update: resourceAwsLightsailInstanceUpdate,
 		Delete: resourceAwsLightsailInstanceDelete,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
@@ -103,6 +104,7 @@ func resourceAwsLightsailInstance() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"tags": tagsSchema(),
 		},
 	}
 }
@@ -124,6 +126,12 @@ func resourceAwsLightsailInstanceCreate(d *schema.ResourceData, meta interface{}
 	}
 	if v, ok := d.GetOk("user_data"); ok {
 		req.UserData = aws.String(v.(string))
+	}
+
+	tags := tagsFromMapLightsail(d.Get("tags").(map[string]interface{}))
+
+	if len(tags) != 0 {
+		req.Tags = tags
 	}
 
 	resp, err := conn.CreateInstances(&req)
@@ -199,6 +207,10 @@ func resourceAwsLightsailInstanceRead(d *schema.ResourceData, meta interface{}) 
 	d.Set("private_ip_address", i.PrivateIpAddress)
 	d.Set("public_ip_address", i.PublicIpAddress)
 
+	if err := d.Set("tags", tagsToMapLightsail(i.Tags)); err != nil {
+		return fmt.Errorf("Error setting tags: %s", err)
+	}
+
 	return nil
 }
 
@@ -231,6 +243,19 @@ func resourceAwsLightsailInstanceDelete(d *schema.ResourceData, meta interface{}
 	}
 
 	return nil
+}
+
+func resourceAwsLightsailInstanceUpdate(d *schema.ResourceData, meta interface{}) error {
+	conn := meta.(*AWSClient).lightsailconn
+
+	if d.HasChange("tags") {
+		if err := setTagsLightsail(conn, d); err != nil {
+			return err
+		}
+		d.SetPartial("tags")
+	}
+
+	return resourceAwsLightsailInstanceRead(d, meta)
 }
 
 // method to check the status of an Operation, which is returned from
