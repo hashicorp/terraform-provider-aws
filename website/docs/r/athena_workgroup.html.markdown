@@ -69,6 +69,7 @@ The `encryption_configuration` configuration block within the `result_configurat
 
 In addition to all arguments above, the following attributes are exported:
 
+* `arn` - Amazon Resource Name (ARN) of the workgroup
 * `id` - The workgroup name
 
 ## Import
