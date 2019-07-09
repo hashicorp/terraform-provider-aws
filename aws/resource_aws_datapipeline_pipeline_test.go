@@ -19,7 +19,7 @@ func TestAccAWSDataPipelinePipeline_basic(t *testing.T) {
 	resourceName := "aws_datapipeline_pipeline.default"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSDataPipeline(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSDataPipelinePipelineDestroy,
 		Steps: []resource.TestStep{
@@ -53,7 +53,7 @@ func TestAccAWSDataPipelinePipeline_description(t *testing.T) {
 	resourceName := "aws_datapipeline_pipeline.default"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSDataPipeline(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSDataPipelinePipelineDestroy,
 		Steps: []resource.TestStep{
@@ -87,7 +87,7 @@ func TestAccAWSDataPipelinePipeline_disappears(t *testing.T) {
 	resourceName := "aws_datapipeline_pipeline.default"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSDataPipeline(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSDataPipelinePipelineDestroy,
 		Steps: []resource.TestStep{
@@ -109,7 +109,7 @@ func TestAccAWSDataPipelinePipeline_tags(t *testing.T) {
 	resourceName := "aws_datapipeline_pipeline.default"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSDataPipeline(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSDataPipelinePipelineDestroy,
 		Steps: []resource.TestStep{
@@ -216,6 +216,22 @@ func testAccCheckAWSDataPipelinePipelineExists(n string, v *datapipeline.Pipelin
 
 		*v = *pipelineDescription
 		return nil
+	}
+}
+
+func testAccPreCheckAWSDataPipeline(t *testing.T) {
+	conn := testAccProvider.Meta().(*AWSClient).datapipelineconn
+
+	input := &datapipeline.ListPipelinesInput{}
+
+	_, err := conn.ListPipelines(input)
+
+	if testAccPreCheckSkipError(err) {
+		t.Skipf("skipping acceptance testing: %s", err)
+	}
+
+	if err != nil {
+		t.Fatalf("unexpected PreCheck error: %s", err)
 	}
 }
 
