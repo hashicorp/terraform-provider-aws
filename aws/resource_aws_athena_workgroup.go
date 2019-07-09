@@ -63,6 +63,15 @@ func resourceAwsAthenaWorkgroup() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
+			"state": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Default:  athena.WorkGroupStateEnabled,
+				ValidateFunc: validation.StringInSlice([]string{
+					athena.WorkGroupStateDisabled,
+					athena.WorkGroupStateEnabled,
+				}, false),
+			},
 			"arn": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -155,6 +164,17 @@ func resourceAwsAthenaWorkgroupCreate(d *schema.ResourceData, meta interface{}) 
 
 	d.SetId(name)
 
+	if v := d.Get("state").(string); v == athena.WorkGroupStateDisabled {
+		input := &athena.UpdateWorkGroupInput{
+			State:     aws.String(v),
+			WorkGroup: aws.String(d.Id()),
+		}
+
+		if _, err := conn.UpdateWorkGroup(input); err != nil {
+			return fmt.Errorf("error disabling Athena WorkGroup (%s): %s", d.Id(), err)
+		}
+	}
+
 	return resourceAwsAthenaWorkgroupRead(d, meta)
 }
 
@@ -188,6 +208,7 @@ func resourceAwsAthenaWorkgroupRead(d *schema.ResourceData, meta interface{}) er
 	d.Set("arn", arn.String())
 	d.Set("description", resp.WorkGroup.Description)
 	d.Set("name", resp.WorkGroup.Name)
+	d.Set("state", resp.WorkGroup.State)
 
 	if resp.WorkGroup.Configuration != nil {
 		d.Set("bytes_scanned_cutoff_per_query", resp.WorkGroup.Configuration.BytesScannedCutoffPerQuery)
@@ -318,6 +339,11 @@ func resourceAwsAthenaWorkgroupUpdate(d *schema.ResourceData, meta interface{}) 
 			removeEncryption = true
 			resultConfigurationUpdates.RemoveEncryptionConfiguration = aws.Bool(true)
 		}
+	}
+
+	if d.HasChange("state") {
+		workGroupUpdate = true
+		input.State = aws.String(d.Get("state").(string))
 	}
 
 	if workGroupUpdate {

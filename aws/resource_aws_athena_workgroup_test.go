@@ -26,6 +26,7 @@ func TestAccAWSAthenaWorkGroup_basic(t *testing.T) {
 				Config: testAccAthenaWorkGroupConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSAthenaWorkGroupExists(resourceName, &workgroup1),
+					resource.TestCheckResourceAttr(resourceName, "state", athena.WorkGroupStateEnabled),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 				),
 			},
@@ -297,6 +298,46 @@ func TestAccAWSAthenaWorkGroup_KmsEncryption(t *testing.T) {
 	})
 }
 
+func TestAccAWSAthenaWorkGroup_State(t *testing.T) {
+	var workgroup1, workgroup2, workgroup3 athena.WorkGroup
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_athena_workgroup.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSAthenaWorkGroupDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAthenaWorkGroupConfigState(rName, athena.WorkGroupStateDisabled),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSAthenaWorkGroupExists(resourceName, &workgroup1),
+					resource.TestCheckResourceAttr(resourceName, "state", athena.WorkGroupStateDisabled),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccAthenaWorkGroupConfigState(rName, athena.WorkGroupStateEnabled),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSAthenaWorkGroupExists(resourceName, &workgroup2),
+					resource.TestCheckResourceAttr(resourceName, "state", athena.WorkGroupStateEnabled),
+				),
+			},
+			{
+				Config: testAccAthenaWorkGroupConfigState(rName, athena.WorkGroupStateDisabled),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSAthenaWorkGroupExists(resourceName, &workgroup3),
+					resource.TestCheckResourceAttr(resourceName, "state", athena.WorkGroupStateDisabled),
+				),
+			},
+		},
+	})
+}
+
 func TestAccAWSAthenaWorkGroup_Tags(t *testing.T) {
 	var workgroup1, workgroup2, workgroup3 athena.WorkGroup
 	rName := acctest.RandomWithPrefix("tf-acc-test")
@@ -488,6 +529,15 @@ resource "aws_athena_workgroup" "test" {
   name              = %[1]q
 }
 `, rName, rEncryption)
+}
+
+func testAccAthenaWorkGroupConfigState(rName, state string) string {
+	return fmt.Sprintf(`
+resource "aws_athena_workgroup" "test" {
+  name  = %[1]q
+  state = %[2]q
+}
+`, rName, state)
 }
 
 func testAccAthenaWorkGroupConfigTags1(rName, tagKey1, tagValue1 string) string {
