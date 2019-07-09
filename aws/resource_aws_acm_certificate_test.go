@@ -32,6 +32,16 @@ func testAccAwsAcmCertificateDomainFromEnv(t *testing.T) string {
 	return os.Getenv("ACM_CERTIFICATE_ROOT_DOMAIN")
 }
 
+func testAccAwsAcmCertificateAuthorityFromEnv(t *testing.T) string {
+	if os.Getenv("ACM_CERTIFICATE_CERTIFICATE_AUTHORITY_ARN") == "" {
+		t.Skip(
+			"Environment variable ACM_CERTIFICATE_CERTIFICATE_AUTHORITY_ARN is not set. " +
+				"For private certificate requests, this ACM PCA must be available " +
+				"during testing the testing.")
+	}
+	return os.Getenv("ACM_CERTIFICATE_CERTIFICATE_AUTHORITY_ARN")
+}
+
 func TestAccAWSAcmCertificate_emailValidation(t *testing.T) {
 	rootDomain := testAccAwsAcmCertificateDomainFromEnv(t)
 
@@ -409,6 +419,37 @@ func TestAccAWSAcmCertificate_wildcardAndRootSan(t *testing.T) {
 	})
 }
 
+func TestAccAWSAcmCertificate_privateCert(t *testing.T) {
+	rootDomain := testAccAwsAcmCertificateDomainFromEnv(t)
+	certificateAuthorityArn := testAccAwsAcmCertificateAuthorityFromEnv(t)
+
+	rInt1 := acctest.RandInt()
+
+	domain := fmt.Sprintf("tf-acc-%d.%s", rInt1, rootDomain)
+	resourceName := "aws_acm_certificate.cert"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAcmCertificateDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAcmCertificateConfig_private(domain, certificateAuthorityArn),
+				Check: resource.ComposeTestCheckFunc(
+					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "acm", regexp.MustCompile(`certificate/.+`)),
+					resource.TestCheckResourceAttr(resourceName, "domain_name", domain),
+					resource.TestCheckResourceAttr(resourceName, "certificate_authority_arn", certificateAuthorityArn),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func TestAccAWSAcmCertificate_tags(t *testing.T) {
 	rootDomain := testAccAwsAcmCertificateDomainFromEnv(t)
 
@@ -539,6 +580,14 @@ resource "aws_acm_certificate" "cert" {
 `, domainName, subjectAlternativeNames, validationMethod)
 }
 
+func testAccAcmCertificateConfig_private(domainName, certificateAuthorityArn string) string {
+	return fmt.Sprintf(`
+resource "aws_acm_certificate" "cert" {
+	domain_name               = "%s"
+	certificate_authority_arn = "%s"
+}
+`, domainName, certificateAuthorityArn)
+}
 func testAccAcmCertificateConfig_oneTag(domainName, validationMethod, tag1Key, tag1Value string) string {
 	return fmt.Sprintf(`
 resource "aws_acm_certificate" "cert" {
