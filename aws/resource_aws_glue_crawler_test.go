@@ -73,6 +73,7 @@ func TestAccAWSGlueCrawler_DynamodbTarget(t *testing.T) {
 				Config: testAccGlueCrawlerConfig_DynamodbTarget(rName, "table1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSGlueCrawlerExists(resourceName, &crawler),
+					testAccCheckResourceAttrRegionalARN(resourceName, "arn", "glue", fmt.Sprintf("crawler/%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, "classifiers.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "configuration", ""),
 					resource.TestCheckResourceAttr(resourceName, "database_name", rName),
@@ -94,6 +95,7 @@ func TestAccAWSGlueCrawler_DynamodbTarget(t *testing.T) {
 				Config: testAccGlueCrawlerConfig_DynamodbTarget(rName, "table2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSGlueCrawlerExists(resourceName, &crawler),
+					testAccCheckResourceAttrRegionalARN(resourceName, "arn", "glue", fmt.Sprintf("crawler/%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, "classifiers.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "configuration", ""),
 					resource.TestCheckResourceAttr(resourceName, "database_name", rName),
@@ -134,6 +136,7 @@ func TestAccAWSGlueCrawler_JdbcTarget(t *testing.T) {
 				Config: testAccGlueCrawlerConfig_JdbcTarget(rName, "database-name/%"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSGlueCrawlerExists(resourceName, &crawler),
+					testAccCheckResourceAttrRegionalARN(resourceName, "arn", "glue", fmt.Sprintf("crawler/%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, "classifiers.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "configuration", ""),
 					resource.TestCheckResourceAttr(resourceName, "database_name", rName),
@@ -157,6 +160,7 @@ func TestAccAWSGlueCrawler_JdbcTarget(t *testing.T) {
 				Config: testAccGlueCrawlerConfig_JdbcTarget(rName, "database-name/table-name"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSGlueCrawlerExists(resourceName, &crawler),
+					testAccCheckResourceAttrRegionalARN(resourceName, "arn", "glue", fmt.Sprintf("crawler/%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, "classifiers.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "configuration", ""),
 					resource.TestCheckResourceAttr(resourceName, "database_name", rName),
@@ -199,6 +203,7 @@ func TestAccAWSGlueCrawler_JdbcTarget_Exclusions(t *testing.T) {
 				Config: testAccGlueCrawlerConfig_JdbcTarget_Exclusions2(rName, "exclusion1", "exclusion2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSGlueCrawlerExists(resourceName, &crawler),
+					testAccCheckResourceAttrRegionalARN(resourceName, "arn", "glue", fmt.Sprintf("crawler/%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, "jdbc_target.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "jdbc_target.0.exclusions.#", "2"),
 					resource.TestCheckResourceAttr(resourceName, "jdbc_target.0.exclusions.0", "exclusion1"),
@@ -209,6 +214,7 @@ func TestAccAWSGlueCrawler_JdbcTarget_Exclusions(t *testing.T) {
 				Config: testAccGlueCrawlerConfig_JdbcTarget_Exclusions1(rName, "exclusion1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSGlueCrawlerExists(resourceName, &crawler),
+					testAccCheckResourceAttrRegionalARN(resourceName, "arn", "glue", fmt.Sprintf("crawler/%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, "jdbc_target.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "jdbc_target.0.exclusions.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "jdbc_target.0.exclusions.0", "exclusion1"),
@@ -237,6 +243,7 @@ func TestAccAWSGlueCrawler_JdbcTarget_Multiple(t *testing.T) {
 				Config: testAccGlueCrawlerConfig_JdbcTarget_Multiple(rName, "database-name/table1", "database-name/table2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSGlueCrawlerExists(resourceName, &crawler),
+					testAccCheckResourceAttrRegionalARN(resourceName, "arn", "glue", fmt.Sprintf("crawler/%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, "jdbc_target.#", "2"),
 					resource.TestCheckResourceAttr(resourceName, "jdbc_target.0.connection_name", rName),
 					resource.TestCheckResourceAttr(resourceName, "jdbc_target.0.exclusions.#", "0"),
@@ -250,6 +257,7 @@ func TestAccAWSGlueCrawler_JdbcTarget_Multiple(t *testing.T) {
 				Config: testAccGlueCrawlerConfig_JdbcTarget(rName, "database-name/table1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSGlueCrawlerExists(resourceName, &crawler),
+					testAccCheckResourceAttrRegionalARN(resourceName, "arn", "glue", fmt.Sprintf("crawler/%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, "jdbc_target.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "jdbc_target.0.connection_name", rName),
 					resource.TestCheckResourceAttr(resourceName, "jdbc_target.0.exclusions.#", "0"),
@@ -261,6 +269,7 @@ func TestAccAWSGlueCrawler_JdbcTarget_Multiple(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSGlueCrawlerExists(resourceName, &crawler),
 					resource.TestCheckResourceAttr(resourceName, "jdbc_target.#", "2"),
+					testAccCheckResourceAttrRegionalARN(resourceName, "arn", "glue", fmt.Sprintf("crawler/%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, "jdbc_target.0.connection_name", rName),
 					resource.TestCheckResourceAttr(resourceName, "jdbc_target.0.exclusions.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "jdbc_target.0.path", "database-name/table1"),
@@ -292,6 +301,7 @@ func TestAccAWSGlueCrawler_S3Target(t *testing.T) {
 				Config: testAccGlueCrawlerConfig_S3Target(rName, "s3://bucket1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSGlueCrawlerExists(resourceName, &crawler),
+					testAccCheckResourceAttrRegionalARN(resourceName, "arn", "glue", fmt.Sprintf("crawler/%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, "classifiers.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "configuration", ""),
 					resource.TestCheckResourceAttr(resourceName, "database_name", rName),
@@ -314,6 +324,7 @@ func TestAccAWSGlueCrawler_S3Target(t *testing.T) {
 				Config: testAccGlueCrawlerConfig_S3Target(rName, "s3://bucket2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSGlueCrawlerExists(resourceName, &crawler),
+					testAccCheckResourceAttrRegionalARN(resourceName, "arn", "glue", fmt.Sprintf("crawler/%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, "classifiers.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "configuration", ""),
 					resource.TestCheckResourceAttr(resourceName, "database_name", rName),
@@ -355,6 +366,7 @@ func TestAccAWSGlueCrawler_S3Target_Exclusions(t *testing.T) {
 				Config: testAccGlueCrawlerConfig_S3Target_Exclusions2(rName, "exclusion1", "exclusion2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSGlueCrawlerExists(resourceName, &crawler),
+					testAccCheckResourceAttrRegionalARN(resourceName, "arn", "glue", fmt.Sprintf("crawler/%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, "s3_target.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "s3_target.0.exclusions.#", "2"),
 					resource.TestCheckResourceAttr(resourceName, "s3_target.0.exclusions.0", "exclusion1"),
@@ -365,6 +377,7 @@ func TestAccAWSGlueCrawler_S3Target_Exclusions(t *testing.T) {
 				Config: testAccGlueCrawlerConfig_S3Target_Exclusions1(rName, "exclusion1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSGlueCrawlerExists(resourceName, &crawler),
+					testAccCheckResourceAttrRegionalARN(resourceName, "arn", "glue", fmt.Sprintf("crawler/%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, "s3_target.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "s3_target.0.exclusions.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "s3_target.0.exclusions.0", "exclusion1"),
@@ -393,6 +406,7 @@ func TestAccAWSGlueCrawler_S3Target_Multiple(t *testing.T) {
 				Config: testAccGlueCrawlerConfig_S3Target_Multiple(rName, "s3://bucket1", "s3://bucket2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSGlueCrawlerExists(resourceName, &crawler),
+					testAccCheckResourceAttrRegionalARN(resourceName, "arn", "glue", fmt.Sprintf("crawler/%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, "s3_target.#", "2"),
 					resource.TestCheckResourceAttr(resourceName, "s3_target.0.exclusions.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "s3_target.0.path", "s3://bucket1"),
@@ -404,6 +418,7 @@ func TestAccAWSGlueCrawler_S3Target_Multiple(t *testing.T) {
 				Config: testAccGlueCrawlerConfig_S3Target(rName, "s3://bucket1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSGlueCrawlerExists(resourceName, &crawler),
+					testAccCheckResourceAttrRegionalARN(resourceName, "arn", "glue", fmt.Sprintf("crawler/%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, "s3_target.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "s3_target.0.exclusions.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "s3_target.0.path", "s3://bucket1"),
@@ -413,6 +428,7 @@ func TestAccAWSGlueCrawler_S3Target_Multiple(t *testing.T) {
 				Config: testAccGlueCrawlerConfig_S3Target_Multiple(rName, "s3://bucket1", "s3://bucket2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSGlueCrawlerExists(resourceName, &crawler),
+					testAccCheckResourceAttrRegionalARN(resourceName, "arn", "glue", fmt.Sprintf("crawler/%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, "s3_target.#", "2"),
 					resource.TestCheckResourceAttr(resourceName, "s3_target.0.exclusions.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "s3_target.0.path", "s3://bucket1"),
@@ -873,8 +889,11 @@ func testAccCheckAWSGlueCrawlerConfiguration(crawler *glue.Crawler, acctestJSON 
 
 func testAccGlueCrawlerConfig_Base(rName string) string {
 	return fmt.Sprintf(`
+data "aws_partition" "current" {}
+
 resource "aws_iam_role" "test" {
   name = %q
+
   assume_role_policy = <<EOF
 {
   "Version": "2012-10-17",
@@ -893,7 +912,7 @@ EOF
 }
 
 resource "aws_iam_role_policy_attachment" "test-AWSGlueServiceRole" {
-  policy_arn = "arn:aws:iam::aws:policy/service-role/AWSGlueServiceRole"
+  policy_arn = "arn:${data.aws_partition.current.partition}:iam::aws:policy/service-role/AWSGlueServiceRole"
   role       = "${aws_iam_role.test.name}"
 }
 `, rName)
@@ -1192,6 +1211,8 @@ resource "aws_glue_crawler" "test" {
 
 func testAccGlueCrawlerConfig_Role_ARN_Path(rName string) string {
 	return fmt.Sprintf(`
+data "aws_partition" "current" {}
+
 resource "aws_iam_role" "test" {
   name = %q
   path = "/path/"
@@ -1214,7 +1235,7 @@ EOF
 }
 
 resource "aws_iam_role_policy_attachment" "test-AWSGlueServiceRole" {
-  policy_arn = "arn:aws:iam::aws:policy/service-role/AWSGlueServiceRole"
+  policy_arn = "arn:${data.aws_partition.current.partition}:iam::aws:policy/service-role/AWSGlueServiceRole"
   role       = "${aws_iam_role.test.name}"
 }
 
@@ -1238,6 +1259,8 @@ resource "aws_glue_crawler" "test" {
 
 func testAccGlueCrawlerConfig_Role_Name_Path(rName string) string {
 	return fmt.Sprintf(`
+data "aws_partition" "current" {}
+
 resource "aws_iam_role" "test" {
   name = %q
   path = "/path/"
@@ -1260,7 +1283,7 @@ EOF
 }
 
 resource "aws_iam_role_policy_attachment" "test-AWSGlueServiceRole" {
-  policy_arn = "arn:aws:iam::aws:policy/service-role/AWSGlueServiceRole"
+  policy_arn = "arn:${data.aws_partition.current.partition}:iam::aws:policy/service-role/AWSGlueServiceRole"
   role       = "${aws_iam_role.test.name}"
 }
 

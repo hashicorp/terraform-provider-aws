@@ -33,13 +33,11 @@ func resourceAwsNetworkAcl() *schema.Resource {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
-				Computed: false,
 			},
 			"subnet_id": {
 				Type:     schema.TypeString,
 				Optional: true,
 				ForceNew: true,
-				Computed: false,
 				Removed:  "Use `subnet_ids` argument instead",
 			},
 			"subnet_ids": {
@@ -50,10 +48,10 @@ func resourceAwsNetworkAcl() *schema.Resource {
 				Set:      schema.HashString,
 			},
 			"ingress": {
-				Type:     schema.TypeSet,
-				Required: false,
-				Optional: true,
-				Computed: true,
+				Type:       schema.TypeSet,
+				Optional:   true,
+				Computed:   true,
+				ConfigMode: schema.SchemaConfigModeAttr,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"from_port": {
@@ -100,10 +98,10 @@ func resourceAwsNetworkAcl() *schema.Resource {
 				Set: resourceAwsNetworkAclEntryHash,
 			},
 			"egress": {
-				Type:     schema.TypeSet,
-				Required: false,
-				Optional: true,
-				Computed: true,
+				Type:       schema.TypeSet,
+				Optional:   true,
+				Computed:   true,
+				ConfigMode: schema.SchemaConfigModeAttr,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"from_port": {

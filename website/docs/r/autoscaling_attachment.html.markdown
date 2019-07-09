@@ -6,7 +6,7 @@ description: |-
   Provides an AutoScaling Group Attachment resource.
 ---
 
-# aws_autoscaling_attachment
+# Resource: aws_autoscaling_attachment
 
 Provides an AutoScaling Attachment resource.
 

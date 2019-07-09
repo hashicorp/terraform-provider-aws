@@ -6,7 +6,7 @@ description: |-
   Provides an SSM Patch Group resource
 ---
 
-# aws_ssm_patch_group
+# Resource: aws_ssm_patch_group
 
 Provides an SSM Patch Group resource
 

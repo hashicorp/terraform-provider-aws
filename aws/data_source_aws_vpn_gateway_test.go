@@ -69,6 +69,7 @@ resource "aws_vpn_gateway" "unattached" {
     ABC  = "testacc-%d"
     XYZ  = "testacc-%d"
   }
+
   amazon_side_asn = 4294967293
 }
 
@@ -104,7 +105,7 @@ resource "aws_vpn_gateway" "attached" {
 }
 
 resource "aws_vpn_gateway_attachment" "vpn_attachment" {
-  vpc_id = "${aws_vpc.foo.id}"
+  vpc_id         = "${aws_vpc.foo.id}"
   vpn_gateway_id = "${aws_vpn_gateway.attached.id}"
 }
 

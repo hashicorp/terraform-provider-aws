@@ -922,9 +922,9 @@ func dropGeneratedSecurityGroup(settingValue string, meta interface{}) string {
 
 	// Check to see if groups are ec2-classic or vpc security groups
 	ec2Classic := true
-	beanstalkSGRegexp := "sg-[0-9a-fA-F]{8}"
+	beanstalkSGRegexp := regexp.MustCompile("sg-[0-9a-fA-F]{8}")
 	for _, g := range groups {
-		if ok, _ := regexp.MatchString(beanstalkSGRegexp, g); ok {
+		if beanstalkSGRegexp.MatchString(g) {
 			ec2Classic = false
 			break
 		}

@@ -54,7 +54,15 @@ func resourceAwsDxLag() *schema.Resource {
 				Optional: true,
 				Default:  false,
 			},
+			"jumbo_frame_capable": {
+				Type:     schema.TypeBool,
+				Computed: true,
+			},
 			"tags": tagsSchema(),
+			"has_logical_redundancy": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 		},
 	}
 }
@@ -136,6 +144,8 @@ func resourceAwsDxLagRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("name", lag.LagName)
 	d.Set("connections_bandwidth", lag.ConnectionsBandwidth)
 	d.Set("location", lag.Location)
+	d.Set("jumbo_frame_capable", lag.JumboFrameCapable)
+	d.Set("has_logical_redundancy", lag.HasLogicalRedundancy)
 
 	err1 := getTagsDX(conn, d, arn)
 	return err1

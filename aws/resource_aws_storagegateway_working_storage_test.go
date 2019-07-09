@@ -76,7 +76,7 @@ func TestAccAWSStorageGatewayWorkingStorage_Basic(t *testing.T) {
 		PreCheck:  func() { testAccPreCheck(t) },
 		Providers: testAccProviders,
 		// Storage Gateway API does not support removing working storages
-		// CheckDestroy: testAccCheckAWSStorageGatewayWorkingStorageDestroy,
+		CheckDestroy: nil,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSStorageGatewayWorkingStorageConfig_Basic(rName),

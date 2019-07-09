@@ -6,7 +6,7 @@ description: |-
   Provides an AWS Cognito Identity Pool Roles Attachment.
 ---
 
-# aws_cognito_identity_pool_roles_attachment
+# Resource: aws_cognito_identity_pool_roles_attachment
 
 Provides an AWS Cognito Identity Pool Roles Attachment.
 

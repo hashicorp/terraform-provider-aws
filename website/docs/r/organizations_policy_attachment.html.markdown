@@ -6,7 +6,7 @@ description: |-
   Provides a resource to attach an AWS Organizations policy to an organization account, root, or unit.
 ---
 
-# aws_organizations_policy_attachment
+# Resource: aws_organizations_policy_attachment
 
 Provides a resource to attach an AWS Organizations policy to an organization account, root, or unit.
 
@@ -26,7 +26,7 @@ resource "aws_organizations_policy_attachment" "account" {
 ```hcl
 resource "aws_organizations_policy_attachment" "root" {
   policy_id = "${aws_organizations_policy.example.id}"
-  target_id = "r-12345678"
+  target_id = "${aws_organizations_organization.example.roots.0.id}"
 }
 ```
 
@@ -35,7 +35,7 @@ resource "aws_organizations_policy_attachment" "root" {
 ```hcl
 resource "aws_organizations_policy_attachment" "unit" {
   policy_id = "${aws_organizations_policy.example.id}"
-  target_id = "ou-12345678"
+  target_id = "${aws_organizations_organizational_unit.example.id}"
 }
 ```
 

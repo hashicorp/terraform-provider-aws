@@ -6,7 +6,7 @@ description: |-
   Provides a CloudWatch Event Rule resource.
 ---
 
-# aws_cloudwatch_event_rule
+# Resource: aws_cloudwatch_event_rule
 
 Provides a CloudWatch Event Rule resource.
 
@@ -70,6 +70,7 @@ The following arguments are supported:
 * `description` - (Optional) The description of the rule.
 * `role_arn` - (Optional) The Amazon Resource Name (ARN) associated with the role that is used for target invocation.
 * `is_enabled` - (Optional) Whether the rule should be enabled (defaults to `true`).
+* `tags` - (Optional) A mapping of tags to assign to the resource.
 
 ## Attributes Reference
 

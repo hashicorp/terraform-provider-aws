@@ -2,11 +2,11 @@ package aws
 
 import (
 	"fmt"
+	"log"
 	"regexp"
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/iam"
 
 	"github.com/hashicorp/terraform/helper/resource"
@@ -188,7 +188,7 @@ func instanceProfileRemoveRole(iamconn *iam.IAM, profileName, roleName string) e
 	}
 
 	_, err := iamconn.RemoveRoleFromInstanceProfile(request)
-	if iamerr, ok := err.(awserr.Error); ok && iamerr.Code() == "NoSuchEntity" {
+	if isAWSErr(err, "NoSuchEntity", "") {
 		return nil
 	}
 	return err
@@ -289,11 +289,12 @@ func resourceAwsIamInstanceProfileRead(d *schema.ResourceData, meta interface{})
 	}
 
 	result, err := iamconn.GetInstanceProfile(request)
+	if isAWSErr(err, "NoSuchEntity", "") {
+		log.Printf("[WARN] IAM Instance Profile %s is already gone", d.Id())
+		d.SetId("")
+		return nil
+	}
 	if err != nil {
-		if iamerr, ok := err.(awserr.Error); ok && iamerr.Code() == "NoSuchEntity" {
-			d.SetId("")
-			return nil
-		}
 		return fmt.Errorf("Error reading IAM instance profile %s: %s", d.Id(), err)
 	}
 

@@ -6,7 +6,7 @@ description: |-
   Provides a resource to create a SES template
 ---
 
-# aws_ses_template
+# Resource: aws_ses_template
 
 Provides a resource to create a SES template.
 

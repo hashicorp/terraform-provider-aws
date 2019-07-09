@@ -57,6 +57,7 @@ func resourceAwsSsmActivation() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"tags": tagsSchemaForceNew(),
 		},
 	}
 }
@@ -90,6 +91,9 @@ func resourceAwsSsmActivationCreate(d *schema.ResourceData, meta interface{}) er
 	if _, ok := d.GetOk("registration_limit"); ok {
 		activationInput.RegistrationLimit = aws.Int64(int64(d.Get("registration_limit").(int)))
 	}
+	if v, ok := d.GetOk("tags"); ok {
+		activationInput.Tags = tagsFromMapSSM(v.(map[string]interface{}))
+	}
 
 	// Retry to allow iam_role to be created and policy attachment to take place
 	var resp *ssm.CreateActivationOutput
@@ -104,6 +108,10 @@ func resourceAwsSsmActivationCreate(d *schema.ResourceData, meta interface{}) er
 
 		return resource.NonRetryableError(err)
 	})
+
+	if isResourceTimeoutError(err) {
+		resp, err = ssmconn.CreateActivation(activationInput)
+	}
 
 	if err != nil {
 		return fmt.Errorf("Error creating SSM activation: %s", err)

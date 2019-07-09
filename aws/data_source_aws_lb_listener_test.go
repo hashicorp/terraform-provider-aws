@@ -183,10 +183,10 @@ resource "aws_security_group" "alb_test" {
   vpc_id      = "${aws_vpc.alb_test.id}"
 
   ingress {
-    from_port   = 0
-    to_port     = 0
-    protocol    = "-1"
-    self        = true
+    from_port = 0
+    to_port   = 0
+    protocol  = "-1"
+    self      = true
   }
 
   egress {
@@ -302,10 +302,10 @@ resource "aws_security_group" "alb_test" {
   vpc_id      = "${aws_vpc.alb_test.id}"
 
   ingress {
-    from_port   = 0
-    to_port     = 0
-    protocol    = "-1"
-    self        = true
+    from_port = 0
+    to_port   = 0
+    protocol  = "-1"
+    self      = true
   }
 
   egress {
@@ -327,7 +327,8 @@ data "aws_alb_listener" "front_end" {
 data "aws_alb_listener" "from_lb_and_port" {
   load_balancer_arn = "${aws_alb.alb_test.arn}"
   port              = "${aws_alb_listener.front_end.port}"
-}`, lbName, targetGroupName)
+}
+`, lbName, targetGroupName)
 }
 
 func testAccDataSourceAWSLBListenerConfigHTTPS(lbName, targetGroupName string) string {
@@ -421,10 +422,10 @@ resource "aws_security_group" "alb_test" {
   vpc_id      = "${aws_vpc.alb_test.id}"
 
   ingress {
-    from_port   = 0
-    to_port     = 0
-    protocol    = "-1"
-    self        = true
+    from_port = 0
+    to_port   = 0
+    protocol  = "-1"
+    self      = true
   }
 
   egress {
@@ -474,5 +475,6 @@ data "aws_lb_listener" "front_end" {
 data "aws_lb_listener" "from_lb_and_port" {
   load_balancer_arn = "${aws_lb.alb_test.arn}"
   port              = "${aws_lb_listener.front_end.port}"
-}`, lbName, targetGroupName, acctest.RandInt())
+}
+`, lbName, targetGroupName, acctest.RandInt())
 }

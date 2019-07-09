@@ -362,28 +362,6 @@ func TestAccAWSDynamoDbTable_importTags(t *testing.T) {
 	})
 }
 
-func TestAccAWSDynamoDbTable_importTimeToLive(t *testing.T) {
-	resourceName := "aws_dynamodb_table.basic-dynamodb-table"
-	rName := acctest.RandomWithPrefix("TerraformTestTable-")
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckAWSDynamoDbTableDestroy,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccAWSDynamoDbConfigAddTimeToLive(rName),
-			},
-
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-			},
-		},
-	})
-}
-
 func TestAccAWSDynamoDbTable_basic(t *testing.T) {
 	var conf dynamodb.DescribeTableOutput
 
@@ -864,10 +842,12 @@ func TestAccAWSDynamoDbTable_gsiUpdateNonKeyAttributes(t *testing.T) {
 	})
 }
 
-func TestAccAWSDynamoDbTable_ttl(t *testing.T) {
-	var conf dynamodb.DescribeTableOutput
-
+// TTL tests must be split since it can only be updated once per hour
+// ValidationException: Time to live has been modified multiple times within a fixed interval
+func TestAccAWSDynamoDbTable_Ttl_Enabled(t *testing.T) {
+	var table dynamodb.DescribeTableOutput
 	rName := acctest.RandomWithPrefix("TerraformTestTable-")
+	resourceName := "aws_dynamodb_table.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -875,15 +855,53 @@ func TestAccAWSDynamoDbTable_ttl(t *testing.T) {
 		CheckDestroy: testAccCheckAWSDynamoDbTableDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSDynamoDbConfigInitialState(rName),
+				Config: testAccAWSDynamoDbConfigTimeToLive(rName, true),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckInitialAWSDynamoDbTableExists("aws_dynamodb_table.basic-dynamodb-table", &conf),
+					testAccCheckInitialAWSDynamoDbTableExists(resourceName, &table),
+					resource.TestCheckResourceAttr(resourceName, "ttl.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "ttl.0.enabled", "true"),
 				),
 			},
 			{
-				Config: testAccAWSDynamoDbConfigAddTimeToLive(rName),
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+// TTL tests must be split since it can only be updated once per hour
+// ValidationException: Time to live has been modified multiple times within a fixed interval
+func TestAccAWSDynamoDbTable_Ttl_Disabled(t *testing.T) {
+	var table dynamodb.DescribeTableOutput
+	rName := acctest.RandomWithPrefix("TerraformTestTable-")
+	resourceName := "aws_dynamodb_table.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSDynamoDbTableDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSDynamoDbConfigTimeToLive(rName, false),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDynamoDbTableTimeToLiveWasUpdated("aws_dynamodb_table.basic-dynamodb-table"),
+					testAccCheckInitialAWSDynamoDbTableExists(resourceName, &table),
+					resource.TestCheckResourceAttr(resourceName, "ttl.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "ttl.0.enabled", "false"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccAWSDynamoDbConfigTimeToLive(rName, true),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckInitialAWSDynamoDbTableExists(resourceName, &table),
+					resource.TestCheckResourceAttr(resourceName, "ttl.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "ttl.0.enabled", "true"),
 				),
 			},
 		},
@@ -946,46 +964,6 @@ func TestAccAWSDynamoDbTable_attributeUpdateValidation(t *testing.T) {
 			},
 		},
 	})
-}
-
-func testAccCheckDynamoDbTableTimeToLiveWasUpdated(n string) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		log.Printf("[DEBUG] Trying to create initial table state!")
-		rs, ok := s.RootModule().Resources[n]
-		if !ok {
-			return fmt.Errorf("Not found: %s", n)
-		}
-
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("No DynamoDB table name specified!")
-		}
-
-		conn := testAccProvider.Meta().(*AWSClient).dynamodbconn
-
-		params := &dynamodb.DescribeTimeToLiveInput{
-			TableName: aws.String(rs.Primary.ID),
-		}
-
-		resp, err := conn.DescribeTimeToLive(params)
-
-		if err != nil {
-			return fmt.Errorf("Problem describing time to live for table '%s': %s", rs.Primary.ID, err)
-		}
-
-		ttlDescription := resp.TimeToLiveDescription
-
-		log.Printf("[DEBUG] Checking on table %s", rs.Primary.ID)
-
-		if *ttlDescription.TimeToLiveStatus != dynamodb.TimeToLiveStatusEnabled {
-			return fmt.Errorf("TimeToLiveStatus %s, not ENABLED!", *ttlDescription.TimeToLiveStatus)
-		}
-
-		if *ttlDescription.AttributeName != "TestTTL" {
-			return fmt.Errorf("AttributeName was %s, not TestTTL!", *ttlDescription.AttributeName)
-		}
-
-		return nil
-	}
 }
 
 func TestAccAWSDynamoDbTable_encryption(t *testing.T) {
@@ -1381,10 +1359,10 @@ func dynamoDbAttributesToMap(attributes *[]*dynamodb.AttributeDefinition) map[st
 func testAccAWSDynamoDbConfig_basic(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_dynamodb_table" "basic-dynamodb-table" {
-  name = "%s"
-  read_capacity = 1
+  name           = "%s"
+  read_capacity  = 1
   write_capacity = 1
-  hash_key = "TestTableHashKey"
+  hash_key       = "TestTableHashKey"
 
   attribute {
     name = "TestTableHashKey"
@@ -1397,15 +1375,16 @@ resource "aws_dynamodb_table" "basic-dynamodb-table" {
 func testAccAWSDynamoDbConfig_backup(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_dynamodb_table" "basic-dynamodb-table" {
-  name = "%s"
-  read_capacity = 1
+  name           = "%s"
+  read_capacity  = 1
   write_capacity = 1
-  hash_key = "TestTableHashKey"
+  hash_key       = "TestTableHashKey"
 
   attribute {
     name = "TestTableHashKey"
     type = "S"
   }
+
   point_in_time_recovery {
     enabled = true
   }
@@ -1416,9 +1395,9 @@ resource "aws_dynamodb_table" "basic-dynamodb-table" {
 func testAccAWSDynamoDbBilling_PayPerRequest(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_dynamodb_table" "basic-dynamodb-table" {
-  name = "%s"
+  name         = "%s"
   billing_mode = "PAY_PER_REQUEST"
-  hash_key = "TestTableHashKey"
+  hash_key     = "TestTableHashKey"
 
   attribute {
     name = "TestTableHashKey"
@@ -1431,11 +1410,11 @@ resource "aws_dynamodb_table" "basic-dynamodb-table" {
 func testAccAWSDynamoDbBilling_Provisioned(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_dynamodb_table" "basic-dynamodb-table" {
-  name = "%s"
+  name         = "%s"
   billing_mode = "PROVISIONED"
-  hash_key = "TestTableHashKey"
+  hash_key     = "TestTableHashKey"
 
-  read_capacity = 5
+  read_capacity  = 5
   write_capacity = 5
 
   attribute {
@@ -1449,9 +1428,9 @@ resource "aws_dynamodb_table" "basic-dynamodb-table" {
 func testAccAWSDynamoDbBilling_PayPerRequestWithGSI(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_dynamodb_table" "basic-dynamodb-table" {
-  name = "%s"
+  name         = "%s"
   billing_mode = "PAY_PER_REQUEST"
-  hash_key = "TestTableHashKey"
+  hash_key     = "TestTableHashKey"
 
   attribute {
     name = "TestTableHashKey"
@@ -1505,11 +1484,11 @@ resource "aws_dynamodb_table" "basic-dynamodb-table" {
 func testAccAWSDynamoDbConfigInitialState(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_dynamodb_table" "basic-dynamodb-table" {
-  name = "%s"
-  read_capacity = 1
+  name           = "%s"
+  read_capacity  = 1
   write_capacity = 2
-  hash_key = "TestTableHashKey"
-  range_key = "TestTableRangeKey"
+  hash_key       = "TestTableHashKey"
+  range_key      = "TestTableRangeKey"
 
   attribute {
     name = "TestTableHashKey"
@@ -1532,17 +1511,17 @@ resource "aws_dynamodb_table" "basic-dynamodb-table" {
   }
 
   local_secondary_index {
-    name = "TestTableLSI"
-    range_key = "TestLSIRangeKey"
+    name            = "TestTableLSI"
+    range_key       = "TestLSIRangeKey"
     projection_type = "ALL"
   }
 
   global_secondary_index {
-    name = "InitialTestTableGSI"
-    hash_key = "TestTableHashKey"
-    range_key = "TestGSIRangeKey"
-    write_capacity = 1
-    read_capacity = 1
+    name            = "InitialTestTableGSI"
+    hash_key        = "TestTableHashKey"
+    range_key       = "TestGSIRangeKey"
+    write_capacity  = 1
+    read_capacity   = 1
     projection_type = "KEYS_ONLY"
   }
 }
@@ -1552,10 +1531,10 @@ resource "aws_dynamodb_table" "basic-dynamodb-table" {
 func testAccAWSDynamoDbConfigInitialStateWithEncryption(rName string, enabled bool) string {
 	return fmt.Sprintf(`
 resource "aws_dynamodb_table" "basic-dynamodb-table" {
-  name = "%s"
-  read_capacity = 1
+  name           = "%s"
+  read_capacity  = 1
   write_capacity = 1
-  hash_key = "TestTableHashKey"
+  hash_key       = "TestTableHashKey"
 
   attribute {
     name = "TestTableHashKey"
@@ -1572,11 +1551,11 @@ resource "aws_dynamodb_table" "basic-dynamodb-table" {
 func testAccAWSDynamoDbConfigAddSecondaryGSI(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_dynamodb_table" "basic-dynamodb-table" {
-  name = "%s"
-  read_capacity = 2
+  name           = "%s"
+  read_capacity  = 2
   write_capacity = 2
-  hash_key = "TestTableHashKey"
-  range_key = "TestTableRangeKey"
+  hash_key       = "TestTableHashKey"
+  range_key      = "TestTableRangeKey"
 
   attribute {
     name = "TestTableHashKey"
@@ -1599,37 +1578,38 @@ resource "aws_dynamodb_table" "basic-dynamodb-table" {
   }
 
   local_secondary_index {
-    name = "TestTableLSI"
-    range_key = "TestLSIRangeKey"
+    name            = "TestTableLSI"
+    range_key       = "TestLSIRangeKey"
     projection_type = "ALL"
   }
 
   global_secondary_index {
-    name = "ReplacementTestTableGSI"
-    hash_key = "TestTableHashKey"
-    range_key = "ReplacementGSIRangeKey"
-    write_capacity = 5
-    read_capacity = 5
-    projection_type = "INCLUDE"
+    name               = "ReplacementTestTableGSI"
+    hash_key           = "TestTableHashKey"
+    range_key          = "ReplacementGSIRangeKey"
+    write_capacity     = 5
+    read_capacity      = 5
+    projection_type    = "INCLUDE"
     non_key_attributes = ["TestNonKeyAttribute"]
   }
-}`, rName)
+}
+`, rName)
 }
 
 func testAccAWSDynamoDbConfigStreamSpecification(tableName string, enabled bool, viewType string) string {
 	return fmt.Sprintf(`
 resource "aws_dynamodb_table" "basic-dynamodb-table" {
-  name = "%s"
-  read_capacity = 1
+  name           = "%s"
+  read_capacity  = 1
   write_capacity = 2
-  hash_key = "TestTableHashKey"
+  hash_key       = "TestTableHashKey"
 
   attribute {
     name = "TestTableHashKey"
     type = "S"
   }
 
-  stream_enabled = %t
+  stream_enabled   = %t
   stream_view_type = "%s"
 }
 `, tableName, enabled, viewType)
@@ -1638,11 +1618,11 @@ resource "aws_dynamodb_table" "basic-dynamodb-table" {
 func testAccAWSDynamoDbConfigTags() string {
 	return fmt.Sprintf(`
 resource "aws_dynamodb_table" "basic-dynamodb-table" {
-  name = "TerraformTestTable-%d"
-  read_capacity = 1
+  name           = "TerraformTestTable-%d"
+  read_capacity  = 1
   write_capacity = 2
-  hash_key = "TestTableHashKey"
-  range_key = "TestTableRangeKey"
+  hash_key       = "TestTableHashKey"
+  range_key      = "TestTableRangeKey"
 
   attribute {
     name = "TestTableHashKey"
@@ -1665,22 +1645,22 @@ resource "aws_dynamodb_table" "basic-dynamodb-table" {
   }
 
   local_secondary_index {
-    name = "TestTableLSI"
-    range_key = "TestLSIRangeKey"
+    name            = "TestTableLSI"
+    range_key       = "TestLSIRangeKey"
     projection_type = "ALL"
   }
 
   global_secondary_index {
-    name = "InitialTestTableGSI"
-    hash_key = "TestTableHashKey"
-    range_key = "TestGSIRangeKey"
-    write_capacity = 1
-    read_capacity = 1
+    name            = "InitialTestTableGSI"
+    hash_key        = "TestTableHashKey"
+    range_key       = "TestGSIRangeKey"
+    write_capacity  = 1
+    read_capacity   = 1
     projection_type = "KEYS_ONLY"
   }
 
   tags = {
-    Name = "terraform-test-table-%d"
+    Name    = "terraform-test-table-%d"
     AccTest = "yes"
     Testing = "absolutely"
   }
@@ -1861,12 +1841,12 @@ resource "aws_dynamodb_table" "test" {
   }
 
   global_secondary_index {
-    name            = "att3-index"
-    hash_key        = "att3"
-    range_key       = "att4"
-    write_capacity  = "${var.capacity}"
-    read_capacity   = "${var.capacity}"
-    projection_type = "INCLUDE"
+    name               = "att3-index"
+    hash_key           = "att3"
+    range_key          = "att4"
+    write_capacity     = "${var.capacity}"
+    read_capacity      = "${var.capacity}"
+    projection_type    = "INCLUDE"
     non_key_attributes = ["RandomAttribute"]
   }
 }
@@ -1928,92 +1908,62 @@ resource "aws_dynamodb_table" "test" {
   }
 
   global_secondary_index {
-    name            = "att3-index"
-    hash_key        = "att3"
-    range_key       = "att4"
-    write_capacity  = "${var.capacity}"
-    read_capacity   = "${var.capacity}"
-    projection_type = "INCLUDE"
+    name               = "att3-index"
+    hash_key           = "att3"
+    range_key          = "att4"
+    write_capacity     = "${var.capacity}"
+    read_capacity      = "${var.capacity}"
+    projection_type    = "INCLUDE"
     non_key_attributes = ["RandomAttribute", "AnotherAttribute"]
   }
 }
 `, name)
 }
 
-func testAccAWSDynamoDbConfigAddTimeToLive(rName string) string {
+func testAccAWSDynamoDbConfigTimeToLive(rName string, ttlEnabled bool) string {
 	return fmt.Sprintf(`
-resource "aws_dynamodb_table" "basic-dynamodb-table" {
-  name = "%s"
-  read_capacity = 1
-  write_capacity = 2
-  hash_key = "TestTableHashKey"
-  range_key = "TestTableRangeKey"
+resource "aws_dynamodb_table" "test" {
+  hash_key       = "TestTableHashKey"
+  name           = %[1]q
+  read_capacity  = 1
+  write_capacity = 1
 
   attribute {
     name = "TestTableHashKey"
     type = "S"
   }
 
-  attribute {
-    name = "TestTableRangeKey"
-    type = "S"
-  }
-
-  attribute {
-    name = "TestLSIRangeKey"
-    type = "N"
-  }
-
-  attribute {
-    name = "TestGSIRangeKey"
-    type = "S"
-  }
-
-  local_secondary_index {
-    name = "TestTableLSI"
-    range_key = "TestLSIRangeKey"
-    projection_type = "ALL"
-  }
-
   ttl {
-    attribute_name = "TestTTL"
-    enabled = true
-  }
-
-  global_secondary_index {
-    name = "InitialTestTableGSI"
-    hash_key = "TestTableHashKey"
-    range_key = "TestGSIRangeKey"
-    write_capacity = 1
-    read_capacity = 1
-    projection_type = "KEYS_ONLY"
+    attribute_name = "${%[2]t ? "TestTTL" : ""}"
+    enabled        = %[2]t
   }
 }
-`, rName)
+`, rName, ttlEnabled)
 }
 
 func testAccAWSDynamoDbConfigOneAttribute(rName, hashKey, attrName, attrType string) string {
 	return fmt.Sprintf(`
 resource "aws_dynamodb_table" "basic-dynamodb-table" {
-  name = "%s"
-  read_capacity = 10
+  name           = "%s"
+  read_capacity  = 10
   write_capacity = 10
-  hash_key = "staticHashKey"
+  hash_key       = "staticHashKey"
 
   attribute {
     name = "staticHashKey"
     type = "S"
   }
+
   attribute {
     name = "%s"
     type = "%s"
   }
 
   global_secondary_index {
-    name = "gsiName"
-    hash_key = "%s"
-    write_capacity = 10
-    read_capacity = 10
+    name            = "gsiName"
+    hash_key        = "%s"
+    write_capacity  = 10
+    read_capacity   = 10
     projection_type = "KEYS_ONLY"
   }
 }
@@ -2023,10 +1973,10 @@ resource "aws_dynamodb_table" "basic-dynamodb-table" {
 func testAccAWSDynamoDbConfigTwoAttributes(rName, hashKey, rangeKey, attrName1, attrType1, attrName2, attrType2 string) string {
 	return fmt.Sprintf(`
 resource "aws_dynamodb_table" "basic-dynamodb-table" {
-  name = "%s"
-  read_capacity = 10
+  name           = "%s"
+  read_capacity  = 10
   write_capacity = 10
-  hash_key = "staticHashKey"
+  hash_key       = "staticHashKey"
 
   attribute {
     name = "staticHashKey"
@@ -2037,17 +1987,18 @@ resource "aws_dynamodb_table" "basic-dynamodb-table" {
     name = "%s"
     type = "%s"
   }
+
   attribute {
     name = "%s"
     type = "%s"
   }
 
   global_secondary_index {
-    name = "gsiName"
-    hash_key = "%s"
-    range_key = "%s"
-    write_capacity = 10
-    read_capacity = 10
+    name            = "gsiName"
+    hash_key        = "%s"
+    range_key       = "%s"
+    write_capacity  = 10
+    read_capacity   = 10
     projection_type = "KEYS_ONLY"
   }
 }

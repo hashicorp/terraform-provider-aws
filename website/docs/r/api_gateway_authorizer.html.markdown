@@ -6,7 +6,7 @@ description: |-
   Provides an API Gateway Authorizer.
 ---
 
-# aws_api_gateway_authorizer
+# Resource: aws_api_gateway_authorizer
 
 Provides an API Gateway Authorizer.
 
@@ -84,11 +84,15 @@ EOF
 }
 
 resource "aws_lambda_function" "authorizer" {
-  filename         = "lambda-function.zip"
-  source_code_hash = "${base64sha256(file("lambda-function.zip"))}"
-  function_name    = "api_gateway_authorizer"
-  role             = "${aws_iam_role.lambda.arn}"
-  handler          = "exports.example"
+  filename      = "lambda-function.zip"
+  function_name = "api_gateway_authorizer"
+  role          = "${aws_iam_role.lambda.arn}"
+  handler       = "exports.example"
+
+  # The filebase64sha256() function is available in Terraform 0.11.12 and later
+  # For Terraform 0.11.11 and earlier, use the base64sha256() function and the file() function:
+  # source_code_hash = "${base64sha256(file("lambda-function.zip"))}"
+  source_code_hash = "${filebase64sha256("lambda-function.zip")}"
 }
 ```
 

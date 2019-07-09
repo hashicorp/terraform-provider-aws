@@ -1,4 +1,573 @@
-## 2.1.0 (Unreleased)
+## 2.19.0 (Unreleased)
+
+FEATURES:
+
+* **New Data Source:** `aws_msk_configuration` [GH-9088]
+* **New Resource:** `aws_datapipeline_pipeline` [GH-9267]
+
+ENHANCEMENTS:
+
+* resource/aws_appmesh_virtual_node: Add `aws_cloud_map` configuration block under `spec` and `service_discovery` [GH-9271]
+* resource/aws_appmesh_virtual_router: Add `tags` argument [GH-9249]
+* resource/aws_appmesh_virtual_service: Add `tags` argument [GH-9252]
+* resource/aws_codebuild_project: Add `environment` configuration block `registry_credential` configuration block (support Secrets Manager registry credentials) [GH-9168]
+* resource/aws_ebs_snapshot: Support customizable create/delete timeouts and increase defaults to 10 minutes [GH-9157]
+* resource/aws_organizations_account: Add `tags` argument [GH-9202]
+* resource/aws_service_discovery_service: Add `namespace_id` argument (Support HTTP namespaces) [GH-7341]
+* resource/aws_waf_rule_group: Support resource import [GH-9254]
+* resource/aws_wafregional_byte_match_set: Support resource import [GH-9258]
+* resource/aws_wafregional_rule: Support resource import [GH-9239]
+* resource/aws_wafregional_rule_group: Support resource import [GH-9240]
+* resource/aws_wafregional_web_acl: Support resource import [GH-9248]
+
+BUG FIXES:
+
+* resource/aws_transfer_user: Final retry after timeout waiting for deletion of transfer user [GH-9241]
+* service/organizations: Automatically retry API calls on `ConcurrentModificationException` error [GH-9195]
+
+## 2.18.0 (July 05, 2019)
+
+FEATURES:
+
+* **New Data Source:** `aws_servicequotas_service` ([#9177](https://github.com/terraform-providers/terraform-provider-aws/issues/9177))
+* **New Data Source:** `aws_servicequotas_service_quota` ([#9177](https://github.com/terraform-providers/terraform-provider-aws/issues/9177))
+
+ENHANCEMENTS:
+
+* resource/aws_appmesh_route: Add `tags` argument ([#9206](https://github.com/terraform-providers/terraform-provider-aws/issues/9206))
+* resource/aws_appmesh_virtual_node: Add `tags` argument ([#9207](https://github.com/terraform-providers/terraform-provider-aws/issues/9207))
+* resource/aws_codecommit_repository: Add `tags` argument ([#9215](https://github.com/terraform-providers/terraform-provider-aws/issues/9215))
+* resource/aws_ec2_transit_gateway_route: Add `blackhole` argument ([#9224](https://github.com/terraform-providers/terraform-provider-aws/issues/9224))
+* resource/aws_iam_group_policy: Support resource import ([#9217](https://github.com/terraform-providers/terraform-provider-aws/issues/9217))
+
+BUG FIXES:
+
+* resource/aws_db_instance: Properly include `allow_major_version_upgrade` value when creating an RDS instance from a replica  or snapshot to allow RDS to perform a major version upgrade if necessary ([#9178](https://github.com/terraform-providers/terraform-provider-aws/issues/9178))
+* resource/aws_db_instance: Prevent `InvalidParameterCombination: No modifications were requested` error when updating only `allow_major_version_upgrade` argument ([#9193](https://github.com/terraform-providers/terraform-provider-aws/issues/9193))
+* resource/aws_emr_cluster: Skip refreshing the `kerberos_attributes` configuration block `ad_domain_join_user` argument from the API as it does not contain the real configuration value ([#8559](https://github.com/terraform-providers/terraform-provider-aws/issues/8559))
+
+## 2.17.0 (June 28, 2019)
+
+FEATURES:
+
+* **New Data Source:** `aws_ebs_default_kms_key` ([#8884](https://github.com/terraform-providers/terraform-provider-aws/issues/8884))
+* **New Data Source:** `aws_ebs_encryption_by_default` ([#8884](https://github.com/terraform-providers/terraform-provider-aws/issues/8884))
+* **New Resource:** `aws_appsync_function` ([#8502](https://github.com/terraform-providers/terraform-provider-aws/issues/8502))
+
+ENHANCEMENTS:
+
+* data-source/aws_acm_certificate: Add `key_types` argument (support searching for non-default key algorithm certificates such as RSA 4096 bit) ([#8553](https://github.com/terraform-providers/terraform-provider-aws/issues/8553))
+* data-source/aws_ssm_parameter: Add `version` attribute ([#9127](https://github.com/terraform-providers/terraform-provider-aws/issues/9127))
+* resource/aws_appmesh_mesh: Add `tags` argument ([#8111](https://github.com/terraform-providers/terraform-provider-aws/issues/8111))
+* resource/aws_appsync_resolver: Add `kind` argument and `pipeline_config` configuration block ([#8502](https://github.com/terraform-providers/terraform-provider-aws/issues/8502))
+* resource/aws_db_instance: Add `max_allocated_storage` argument (support Storage Autoscaling) ([#9087](https://github.com/terraform-providers/terraform-provider-aws/issues/9087))
+* resource/aws_directory_service_directory: Tag on create (support tag limiting IAM policies) ([#7937](https://github.com/terraform-providers/terraform-provider-aws/issues/7937))
+* resource/aws_dms_endpoint: Support `db2` in `engine_name` validation ([#9097](https://github.com/terraform-providers/terraform-provider-aws/issues/9097))
+* resource/aws_kinesis_firehose_delivery_stream: Tag on create (support tag limiting IAM policies) ([#7981](https://github.com/terraform-providers/terraform-provider-aws/issues/7981))
+* resource/aws_lb_listener: Support `TCP_UDP` and `UDP` in `protocol` validation ([#9111](https://github.com/terraform-providers/terraform-provider-aws/issues/9111))
+* resource/aws_lb_target_group: Support `TCP_UDP` and `UDP` in `protocol` validation ([#9111](https://github.com/terraform-providers/terraform-provider-aws/issues/9111))
+* resource/aws_route53_healthcheck: Add validation for `request_interval` argument ([#9158](https://github.com/terraform-providers/terraform-provider-aws/issues/9158))
+* resource/aws_ssm_parameter: Add `version` attribute ([#9127](https://github.com/terraform-providers/terraform-provider-aws/issues/9127))
+
+BUG FIXES:
+* resource/aws_api_gateway_account: Fix error handling during update ([#9068](https://github.com/terraform-providers/terraform-provider-aws/issues/9068))
+* resource/aws_api_gateway_base_path_mapping: Fix error handling during create ([#9068](https://github.com/terraform-providers/terraform-provider-aws/issues/9068))
+* resource/aws_api_gateway_domain_name: Remove unnecessary retry during delete ([#9068](https://github.com/terraform-providers/terraform-provider-aws/issues/9068))
+* resource/aws_api_gateway_gateway_response: Remove unnecessary retry during delete ([#9068](https://github.com/terraform-providers/terraform-provider-aws/issues/9068))
+* resource/aws_api_gateway_model: Remove unnecessary retry during delete ([#9068](https://github.com/terraform-providers/terraform-provider-aws/issues/9068))
+* resource/aws_api_gateway_usage_plan: Remove unnecessary retry during delete ([#9068](https://github.com/terraform-providers/terraform-provider-aws/issues/9068))
+* resource/aws_api_gateway_usage_plan_key: Remove unnecessary retry during delete ([#9068](https://github.com/terraform-providers/terraform-provider-aws/issues/9068))
+* resource/aws_db_snapshot: Prevent not found error when deleted outside Terraform ([#9099](https://github.com/terraform-providers/terraform-provider-aws/issues/9099))
+* resource/aws_ebs_snapshot_copy: Prevent error when resource is deleted outside Terraform ([#9106](https://github.com/terraform-providers/terraform-provider-aws/issues/9106))
+* resource/aws_ecr_repository: Final retries when reading and deleting ECR repositories ([#9079](https://github.com/terraform-providers/terraform-provider-aws/issues/9079))
+* resource/aws_ecr_repository_policy: Final retries when creating and updating ECR repository policies ([#9079](https://github.com/terraform-providers/terraform-provider-aws/issues/9079))
+* resource/aws_lb_target_group: Properly validate up to `120` seconds for `health_check` configuration block `timeout` argument ([#9152](https://github.com/terraform-providers/terraform-provider-aws/issues/9152))
+* resource/aws_spot_fleet_request: Add final retry when creating spot fleet request ([#9078](https://github.com/terraform-providers/terraform-provider-aws/issues/9078))
+* resource/aws_spot_instance_request: Add final retry when creating spot instance request ([#9078](https://github.com/terraform-providers/terraform-provider-aws/issues/9078))
+* resource/aws_ssm_maintenance_window_target: Prevent `InvalidParameter` error on resource creation when optional `name` or `description` were missing ([#9165](https://github.com/terraform-providers/terraform-provider-aws/issues/9165))
+
+## 2.16.0 (June 20, 2019)
+
+FEATURES:
+
+* **New Resource:** `aws_globalaccelerator_endpoint_group` ([#8328](https://github.com/terraform-providers/terraform-provider-aws/issues/8328))
+* **New Resource:** `aws_ebs_default_kms_key` ([#8771](https://github.com/terraform-providers/terraform-provider-aws/issues/8771))
+* **New Resource:** `aws_ebs_encryption_by_default` ([#8771](https://github.com/terraform-providers/terraform-provider-aws/issues/8771))
+* **New Resource:** `aws_ses_identity_policy` ([#5128](https://github.com/terraform-providers/terraform-provider-aws/issues/5128))
+
+ENHANCEMENTS:
+
+* data-source/aws_vpc_endpoint: Add `owner_id` and `tags` attributes ([#8674](https://github.com/terraform-providers/terraform-provider-aws/issues/8674))
+* data-source/aws_vpc_endpoint: Add `requester_managed` attribute ([#8396](https://github.com/terraform-providers/terraform-provider-aws/issues/8396))
+* data-source/aws_vpc_endpoint_service: Add `manages_vpc_endpoints` attribute ([#8396](https://github.com/terraform-providers/terraform-provider-aws/issues/8396))
+* data-source/aws_vpc_endpoint_service: Add `service_id` and `tags` attributes ([#8674](https://github.com/terraform-providers/terraform-provider-aws/issues/8674))
+* provider: Support for chaining assume IAM role from AWS shared configuration files ([#8987](https://github.com/terraform-providers/terraform-provider-aws/issues/8987))
+* resource/aws_backup_vault: Support resource import ([#9041](https://github.com/terraform-providers/terraform-provider-aws/issues/9041))
+* resource/aws_codepipeline: Add `tags` argument ([#8993](https://github.com/terraform-providers/terraform-provider-aws/issues/8993))
+* resource/aws_codepipeline_webhook: Add `tags` argument ([#8993](https://github.com/terraform-providers/terraform-provider-aws/issues/8993))
+* resource/aws_ecs_task_definition: Add `proxy_configuration` configuration block (support AppMesh proxying) [[#8780](https://github.com/terraform-providers/terraform-provider-aws/issues/8780)] 
+* resource/aws_instance: Prevent panic when `credit_specification` configuration block is missing arguments ([#9003](https://github.com/terraform-providers/terraform-provider-aws/issues/9003))
+* resource/aws_organizations_organization: Add `non_master_accounts` attribute ([#8926](https://github.com/terraform-providers/terraform-provider-aws/issues/8926))
+* resource/aws_secretsmanager_secret: Tag on create (support tag limiting IAM policies) ([#9023](https://github.com/terraform-providers/terraform-provider-aws/issues/9023))
+* resource/aws_vpc_endpoint: Add `owner_id` attribute ([#8674](https://github.com/terraform-providers/terraform-provider-aws/issues/8674))
+* resource/aws_vpc_endpoint: Add `requester_managed` attribute ([#8396](https://github.com/terraform-providers/terraform-provider-aws/issues/8396))
+* resource/aws_vpc_endpoint: Add `tags` argument ([#8674](https://github.com/terraform-providers/terraform-provider-aws/issues/8674))
+* resource/aws_vpc_endpoint_service: Add `manages_vpc_endpoints` attribute ([#8396](https://github.com/terraform-providers/terraform-provider-aws/issues/8396))
+* resource/aws_vpc_endpoint_service: Add `tags` argument ([#8674](https://github.com/terraform-providers/terraform-provider-aws/issues/8674))
+
+BUG FIXES:
+
+* provider: Fix AWS shared configuration file credential source not assuming a role with environment and ECS credentials ([#8987](https://github.com/terraform-providers/terraform-provider-aws/issues/8987))
+* provider: Properly configure Route 53 service client in AWS GovCloud (US) ([#9010](https://github.com/terraform-providers/terraform-provider-aws/issues/9010))
+* provider: Properly configure Route 53 service client in AWS China ([#9060](https://github.com/terraform-providers/terraform-provider-aws/issues/9060))
+* resource/aws_api_gateway_resource: Removes an extraneous retry when deleting API gateway resource ([#9054](https://github.com/terraform-providers/terraform-provider-aws/issues/9054))
+* resource/aws_appautoscaling_policy: Retries after timeouts in creating and reading policies ([#9039](https://github.com/terraform-providers/terraform-provider-aws/issues/9039))
+* resource/aws_appautoscaling_scheduled_action: Retry after timeout putting scheduled actions ([#9039](https://github.com/terraform-providers/terraform-provider-aws/issues/9039))
+* resource/aws_cloudwatch_event_permission: Prevent not found error when deleted outside Terraform ([#9044](https://github.com/terraform-providers/terraform-provider-aws/issues/9044))
+* resource/aws_dx_gateway: Fix resource import with associations ([#8970](https://github.com/terraform-providers/terraform-provider-aws/issues/8970))
+* resource/aws_elasticache_parameter_group: Final retry deleting parameter group ([#9013](https://github.com/terraform-providers/terraform-provider-aws/issues/9013))
+* resource/aws_elasticache_replication_group: Final retry deleting replication group ([#9013](https://github.com/terraform-providers/terraform-provider-aws/issues/9013))
+* resource/aws_elasticache_subnet_group: Final retry deleting subnet group ([#9013](https://github.com/terraform-providers/terraform-provider-aws/issues/9013))
+* resource/aws_emr_cluster: Final retry after timeout error when deleting EMR cluster ([#9053](https://github.com/terraform-providers/terraform-provider-aws/issues/9053))
+* resource/aws_kinesis_firehose_delivery_stream: Add final retries when creating and updating firehose delivery streams ([#9017](https://github.com/terraform-providers/terraform-provider-aws/issues/9017))
+* resource/aws_neptune_cluster: Final retries when creating, updating, and deleting Neptune clusters ([#9036](https://github.com/terraform-providers/terraform-provider-aws/issues/9036))
+* resource/aws_neptune_cluster_instance: Final retries creating and updating cluster instances ([#9036](https://github.com/terraform-providers/terraform-provider-aws/issues/9036))
+* resource/aws_neptune_parameter_group: Final retries updating and deleting parameter groups ([#9036](https://github.com/terraform-providers/terraform-provider-aws/issues/9036))
+* resource/aws_opsworks_permission: Improves error handing when setting opsworks permissions ([#9055](https://github.com/terraform-providers/terraform-provider-aws/issues/9055))
+* resource/aws_rds_cluster: Final retries after timeout creating and updating cluster ([#8994](https://github.com/terraform-providers/terraform-provider-aws/issues/8994))
+* resource/aws_rds_cluster_instance: Final retry after timeout creating cluster instance ([#8994](https://github.com/terraform-providers/terraform-provider-aws/issues/8994))
+* resource/aws_rds_global_cluster: Final retry after timeout deleting global cluster ([#8994](https://github.com/terraform-providers/terraform-provider-aws/issues/8994))
+* resource/aws_ses_receipt_rule_set: Prevent missing Terraform state for newly created resources ([#9045](https://github.com/terraform-providers/terraform-provider-aws/issues/9045))
+* resource/aws_ssm_document: Final retries when creating and deleting SSM documents ([#8992](https://github.com/terraform-providers/terraform-provider-aws/issues/8992))
+* resource/aws_ssm_resource_data_sync: Final retry when creating SSM resource data sync ([#8992](https://github.com/terraform-providers/terraform-provider-aws/issues/8992))
+
+
+## 2.15.0 (June 13, 2019)
+
+FEATURES:
+
+* **New Data Source:** `aws_customer_gateway` ([#8977](https://github.com/terraform-providers/terraform-provider-aws/issues/8977))
+
+ENHANCEMENTS:
+
+* resource/aws_cognito_user_pool: Add `email_sending_account` attribute to the email configuration block ([#8626](https://github.com/terraform-providers/terraform-provider-aws/issues/8626))
+* resource/aws_redshift_cluster: Add `arn` attribute ([#8894](https://github.com/terraform-providers/terraform-provider-aws/issues/8894))
+* resource/aws_redshift_event_subscription: Add `arn` attribute and support `tags` updates ([#8894](https://github.com/terraform-providers/terraform-provider-aws/issues/8894))
+* resource/aws_redshift_parameter_group: Add `arn` attribute and `tags` argument ([#8894](https://github.com/terraform-providers/terraform-provider-aws/issues/8894))
+* resource/aws_redshift_snapshot_copy_grant: Add `arn` attribute and support `tags` updates ([#8894](https://github.com/terraform-providers/terraform-provider-aws/issues/8894))
+* resource/aws_redshift_subnet_group: Add `arn` attribute ([#8894](https://github.com/terraform-providers/terraform-provider-aws/issues/8894))
+* resource/aws_ses_identity_notification_topic: Add `include_original_headers` argument ([#7293](https://github.com/terraform-providers/terraform-provider-aws/issues/7293))
+
+BUG FIXES:
+
+* resource/aws_api_gateway_resource: Final retry for deleting api gateway resource ([#8893](https://github.com/terraform-providers/terraform-provider-aws/issues/8893))
+* resource/aws_appautoscaling_target: Final retry for registering autoscaling target ([#8893](https://github.com/terraform-providers/terraform-provider-aws/issues/8893))
+* resource/aws_default_vpc_dhcp_options: Add pagination to get the default DHCP options correctly ([#8907](https://github.com/terraform-providers/terraform-provider-aws/issues/8907))
+* resource/aws_docdb_cluster: Retries after timeout errors for docdb cluster operations ([#8986](https://github.com/terraform-providers/terraform-provider-aws/issues/8986))
+* resource/aws_dx_connection_association: Final retry for deleting dx connection association ([#8893](https://github.com/terraform-providers/terraform-provider-aws/issues/8893))
+* resource/aws_dynamodb_table_item: add a nil check when building the table item ID ([#8900](https://github.com/terraform-providers/terraform-provider-aws/issues/8900))
+* resource/aws_eks_cluster: Increase default creation timeout to 30 minutes ([#8909](https://github.com/terraform-providers/terraform-provider-aws/issues/8909))
+* resource/aws_elasticache_cluster: Final retry when deleting elasticache cluster ([#8893](https://github.com/terraform-providers/terraform-provider-aws/issues/8893))
+* resource/aws_elasticache_replication_group: Implement passthrough state migration for upstream `missing MigrateState function` error in Terraform 0.12 ([#8887](https://github.com/terraform-providers/terraform-provider-aws/issues/8887))
+* resource/aws_elasticache_security_group: Final retry for deleting elasticache security group ([#8981](https://github.com/terraform-providers/terraform-provider-aws/issues/8981))
+* resource/aws_iam_server_certificate: Final retry for deleting IAM server cert ([#8893](https://github.com/terraform-providers/terraform-provider-aws/issues/8893))
+* resource/aws_iam_service_linked_role: Automatically suppress Application Autoscaling `custom_suffix` differences ([#8931](https://github.com/terraform-providers/terraform-provider-aws/issues/8931))
+* resource/aws_kinesis_analytics_application: Final retries for kinesis applications ([#8984](https://github.com/terraform-providers/terraform-provider-aws/issues/8984))
+* resource/aws_sns_topic_subscription: Final retry for SNS topic subscription ([#8893](https://github.com/terraform-providers/terraform-provider-aws/issues/8893))
+* resource/aws_ssm_activation: Final retry for creating SSM activation ([#8893](https://github.com/terraform-providers/terraform-provider-aws/issues/8893))
+* resource/aws_vpc_dhcp_options: Add final retry to deleting DHCP options ([#8907](https://github.com/terraform-providers/terraform-provider-aws/issues/8907))
+
+## 2.14.0 (June 06, 2019)
+
+FEATURES:
+
+* **New Data Source:** `aws_ec2_transit_gateway_dx_gateway_attachment` ([#8678](https://github.com/terraform-providers/terraform-provider-aws/issues/8678))
+
+ENHANCEMENTS:
+
+* data-source/aws_msk_cluster: Add `bootstrap_brokers_tls` attribute ([#8850](https://github.com/terraform-providers/terraform-provider-aws/issues/8850))
+* resource/aws_codebuild_webhook: Add `filter_groups` configuration blocks ([#8110](https://github.com/terraform-providers/terraform-provider-aws/issues/8110))
+* resource/aws_msk_cluster: Add `client_authentication`, `configuration_info`, and `encryption_in_transit` configuration blocks ([#8850](https://github.com/terraform-providers/terraform-provider-aws/issues/8850))
+* resource/aws_msk_cluster: Add `bootstrap_brokers_tls` and `current_version` attributes ([#8850](https://github.com/terraform-providers/terraform-provider-aws/issues/8850))
+* resource/aws_msk_cluster: Support `broker_node_group_into` configuration block `ebs_volume_size` argument updates ([#8850](https://github.com/terraform-providers/terraform-provider-aws/issues/8850))
+* resource/aws_msk_cluster: Support tagging on creation ([#8850](https://github.com/terraform-providers/terraform-provider-aws/issues/8850))
+* resource/aws_subnet: Use customizable timeouts for pending creation and waiting for `DependencyViolation` errors on deletion ([#6322](https://github.com/terraform-providers/terraform-provider-aws/issues/6322))
+
+BUG FIXES:
+
+* resource/aws_acmpca_certificate_authority: Add retry after timeout when creating CA ([#8856](https://github.com/terraform-providers/terraform-provider-aws/issues/8856))
+* resource/aws_launch_template: Add a nil check for `spot_options` to avoiding panicking if options are empty ([#8844](https://github.com/terraform-providers/terraform-provider-aws/issues/8844))
+* resource/aws_s3_bucket_metric: Add a nil check for `filter` to avoid panicking if empty ([#8852](https://github.com/terraform-providers/terraform-provider-aws/issues/8852))
+* resource/aws_subnet: Bump default timeout for deletion from 10 to 20 minutes to better handle ELBv2 ENI deletions ([#6322](https://github.com/terraform-providers/terraform-provider-aws/issues/6322))
+
+## 2.13.0 (May 31, 2019)
+
+FEATURES:
+
+* **New Resource:** `aws_ec2_transit_gateway_vpc_attachment_accepter` ([#8679](https://github.com/terraform-providers/terraform-provider-aws/issues/8679))
+
+ENHANCEMENTS:
+
+* resource/aws_iot_role_alias: Add `arn` attribute ([#8812](https://github.com/terraform-providers/terraform-provider-aws/issues/8812))
+
+BUG FIXES:
+
+* data-source/aws_rds_cluster: Add missing `hosted_zone_id` attribute ([#8799](https://github.com/terraform-providers/terraform-provider-aws/issues/8799))
+* resource/aws_dms_endpoint: Fix casing for `mongodb_settings` configuration block `auth_type`, `auth_mechanism`, and `nesting_level` argument defaults ([#8008](https://github.com/terraform-providers/terraform-provider-aws/issues/8008)] / [[#8795](https://github.com/terraform-providers/terraform-provider-aws/issues/8795))
+
+## 2.12.0 (May 24, 2019)
+
+NOTES:
+
+* resource/aws_dx_gateway_association: The `vpn_gateway_id` attribute is being deprecated in favor of the new `associated_gateway_id` attribute to support transit gateway associations ([#8528](https://github.com/terraform-providers/terraform-provider-aws/issues/8528))
+* resource/aws_dx_gateway_association_proposal: The `vpn_gateway_id` attribute is being deprecated in favor of the new `associated_gateway_id` attribute to support transit gateway associations ([#8528](https://github.com/terraform-providers/terraform-provider-aws/issues/8528))
+
+FEATURES:
+
+* **New Data Source:** `aws_msk_cluster` ([#8743](https://github.com/terraform-providers/terraform-provider-aws/issues/8743))
+* **New Resource:** `aws_msk_cluster` ([#8635](https://github.com/terraform-providers/terraform-provider-aws/issues/8635))
+* **New Resource:** `aws_msk_configuration` ([#8740](https://github.com/terraform-providers/terraform-provider-aws/issues/8740))
+
+ENHANCEMENTS:
+
+* resource/aws_codebuild_project: Add `cache` configuration block `modes` argument and add `type` argument validation of `local` (support local cache) ([#8215](https://github.com/terraform-providers/terraform-provider-aws/issues/8215))
+* resource/aws_db_instance: Add `performance_insights_enabled`, `performance_insights_kms_key_id`, and `performance_insights_retention_period` arguments ([#6453](https://github.com/terraform-providers/terraform-provider-aws/issues/6453))
+* resource/aws_dx_gateway_association: New attributes `associated_gateway_owner_account_id` and `proposal_id` added to support the acceptance of a Direct Connect gateway association proposal and create a cross-account Direct Connect gateway association. New exported attributes `associated_gateway_type` and `dx_gateway_owner_account_id` ([#8528](https://github.com/terraform-providers/terraform-provider-aws/issues/8528))
+* resource/aws_dx_gateway_association_proposal: New attribute `associated_gateway_id` replaces deprecated `vpn_gateway_id` attribute to support transit gateway associations. New exported attributes `associated_gateway_owner_account_id` and `associated_gateway_type` ([#8528](https://github.com/terraform-providers/terraform-provider-aws/issues/8528))
+* resource/aws_ec2_transit_gateway: Handle deletion of transit gateways with DirectConnect Attachments ([#8752](https://github.com/terraform-providers/terraform-provider-aws/issues/8752))
+* resource/aws_ec2_transit_gateway_route: Add retry to read method after timeout ([#8726](https://github.com/terraform-providers/terraform-provider-aws/issues/8726))
+* resource/aws_kinesis_stream: Add `enforce_consumer_deletion` argument ([#8682](https://github.com/terraform-providers/terraform-provider-aws/issues/8682))
+* resource/aws_ssm_maintenance_window_target: Add support for name and description for maintenance window targets ([#8671](https://github.com/terraform-providers/terraform-provider-aws/issues/8671))
+
+BUG FIXES:
+
+* resource/aws_iam_group: Prevent state removal during name attribute update ([#8707](https://github.com/terraform-providers/terraform-provider-aws/issues/8707))
+
+## 2.11.0 (May 17, 2019)
+
+NOTES:
+
+* resource/aws_emr_cluster: The `instance_group` configuration block, `master_instance_type` argument, `core_instance_count` argument, and `core_instance_type` argument have been deprecated in favor of new `master_instance_group` and `core_instance_group` configuration blocks. The older, conflicting configurations were problematic in update scenarios. Task instance groups can be managed with the `aws_emr_instance_group` resource. Upgrade instructions can be found in the new Version 3 Upgrade Guide. ([#8459](https://github.com/terraform-providers/terraform-provider-aws/issues/8459))
+* resrouce/aws_emr_instance_group: The addition of `autoscaling_policy` and `bid_price` arguments allow for the migration of task instance groups from the deprecated `instance_group` configuration block in the `aws_emr_cluster` resource. Import instructions for `aws_emr_instance_group` can be found in the resource documentation. ([#8078](https://github.com/terraform-providers/terraform-provider-aws/issues/8078))
+
+FEATURES:
+
+* **New Data Source:** `aws_ecr_image` ([#8403](https://github.com/terraform-providers/terraform-provider-aws/issues/8403))
+* **New Data Source:** `aws_ram_resource_share` ([#8491](https://github.com/terraform-providers/terraform-provider-aws/issues/8491))
+* **New Guide:** Version 3 Upgrade Guide ([#8459](https://github.com/terraform-providers/terraform-provider-aws/issues/8459))
+* **New Resource:** `aws_ses_email_identity` ([#6575](https://github.com/terraform-providers/terraform-provider-aws/issues/6575))
+* **New Resource:** `aws_shield_protection` ([#7721](https://github.com/terraform-providers/terraform-provider-aws/issues/7721))
+
+ENHANCEMENTS:
+
+* resource/aws_autoscaling_schedule: Support resource import ([#8300](https://github.com/terraform-providers/terraform-provider-aws/issues/8300))
+* resource/aws_backup_selection: Support resource import ([#8546](https://github.com/terraform-providers/terraform-provider-aws/issues/8546))
+* resource/aws_dynamodb_table: Support tagging on creation (where available) ([#8469](https://github.com/terraform-providers/terraform-provider-aws/issues/8469))
+* resource/aws_elastic_beanstalk_application: Add `tags` argument and `arn` attribute ([#8614](https://github.com/terraform-providers/terraform-provider-aws/issues/8614))
+* resource/aws_elastic_beanstalk_application_version: Add `tags` argument and `arn` attribute ([#8614](https://github.com/terraform-providers/terraform-provider-aws/issues/8614))
+* resource/aws_emr_cluster: Add `master_instance_group` and `core_instance_group` configuration blocks (deprecates other instance group configuration methods) ([#8459](https://github.com/terraform-providers/terraform-provider-aws/issues/8459))
+* resource/aws_emr_instance_group: Add support for `autoscaling_policy`, `bid_price`, and resource import [[#8078](https://github.com/terraform-providers/terraform-provider-aws/issues/8078)] 
+* resource/aws_kinesis_analytics_application: Add `tags` argument ([#8643](https://github.com/terraform-providers/terraform-provider-aws/issues/8643))
+* resource/aws_lambda_function: Support `nodejs10.x` in `runtime` validation ([#8622](https://github.com/terraform-providers/terraform-provider-aws/issues/8622))
+* resource/aws_organizations_account: Add parent_id argument (support moving accounts) ([#8583](https://github.com/terraform-providers/terraform-provider-aws/issues/8583))
+* resource/aws_sfn_activity: Support tagging on creation ([#8395](https://github.com/terraform-providers/terraform-provider-aws/issues/8395))
+* resource/aws_sfn_state_machine: Support tagging on creation ([#8395](https://github.com/terraform-providers/terraform-provider-aws/issues/8395))
+* resource/aws_sns_topic: Add `tags` argument ([#8468](https://github.com/terraform-providers/terraform-provider-aws/issues/8468))
+
+BUG FIXES:
+
+* resource/aws_backup_selection: Properly trigger resource recreation with `selection_tag` updates ([#8546](https://github.com/terraform-providers/terraform-provider-aws/issues/8546))
+* resource/aws_cloudwatch_event_rule: Ignore `UnknownOperationException` error on reading tags (fixes ap-east-1 support) ([#8659](https://github.com/terraform-providers/terraform-provider-aws/issues/8659))
+* resource/aws_ssm_parameter: Remove `Tier` from `PutParameter` if unsupported (fixes AWS China support) ([#8664](https://github.com/terraform-providers/terraform-provider-aws/issues/8664))
+* resource/aws_vpn_gateway: Handle `attaching` and `detaching` attachment status ([#8576](https://github.com/terraform-providers/terraform-provider-aws/issues/8576))
+* resource/aws_vpn_gateway_attachment: Handle `attaching` and `detaching` attachment status ([#8576](https://github.com/terraform-providers/terraform-provider-aws/issues/8576))
+
+## 2.10.0 (May 10, 2019)
+
+FEATURES:
+
+* **New Data Source:** `aws_lambda_layer_version` ([#8577](https://github.com/terraform-providers/terraform-provider-aws/issues/8577))
+* **New Resource:** `aws_organizations_organizational_unit` ([#4207](https://github.com/terraform-providers/terraform-provider-aws/issues/4207))
+* **New Resource:** `aws_xray_sampling_rule` ([#8535](https://github.com/terraform-providers/terraform-provider-aws/issues/8535))
+
+ENHANCEMENTS:
+
+* data-source/aws_rds_cluster: Add `resource_id` attribute ([#8317](https://github.com/terraform-providers/terraform-provider-aws/issues/8317))
+* resource/aws_appsync_graphql_api: Add `tags` argument ([#8567](https://github.com/terraform-providers/terraform-provider-aws/issues/8567))
+* resource/aws_cloudfront_distribution: Validate `*_cache_behavior` `forwarded_values` `cookies` configuration block `forward` argument ([#8563](https://github.com/terraform-providers/terraform-provider-aws/issues/8563))
+* resource/aws_glue_job: Add `pythonshell` job support by adding the `max_capacity` argument and deprecating the `allocated_capacity` argument ([#7340](https://github.com/terraform-providers/terraform-provider-aws/issues/7340))
+* resource/aws_lambda_alias: Support resource import ([#8513](https://github.com/terraform-providers/terraform-provider-aws/issues/8513))
+* resource/aws_organizations_organization: Add `roots` attribute ([#8399](https://github.com/terraform-providers/terraform-provider-aws/issues/8399))
+* resource/aws_organizations_organization: Add `accounts` attribute ([#8581](https://github.com/terraform-providers/terraform-provider-aws/issues/8581))
+* resource/aws_organizations_organization: Add `enabled_policy_types` argument ([#8588](https://github.com/terraform-providers/terraform-provider-aws/issues/8588))
+* resource/aws_rds_cluster: Add `copy_tags_to_snapshot` argument ([#8544](https://github.com/terraform-providers/terraform-provider-aws/issues/8544))
+* resource/aws_ssm_parameter: Add `tier` argument (support `Advanced` parameters) ([#8525](https://github.com/terraform-providers/terraform-provider-aws/issues/8525))
+
+## 2.9.0 (May 06, 2019)
+
+FEATURES:
+
+* **New Resource:** aws_db_instance_role_association ([#8466](https://github.com/terraform-providers/terraform-provider-aws/issues/8466))
+
+ENHANCEMENTS:
+
+* data-source/aws_availability_zones: Add blacklisted_names and blacklisted_zone_ids arguments ([#8463](https://github.com/terraform-providers/terraform-provider-aws/issues/8463))
+* resource/aws_elb_attachment: Retry ELB attachment on `InvalidTarget` error ([#8483](https://github.com/terraform-providers/terraform-provider-aws/issues/8483))
+* resource/aws_sfn_state_machine: Bypass `UnknownOperationException` error for `ListTagsForResource` API call (additional LocalStack support) ([#8467](https://github.com/terraform-providers/terraform-provider-aws/issues/8467))
+* resource/aws_ssm_activation: Add `tags` argument ([#8426](https://github.com/terraform-providers/terraform-provider-aws/issues/8426))
+* resource/aws_ssm_document: Add `tags` argument ([#8426](https://github.com/terraform-providers/terraform-provider-aws/issues/8426))
+* resource/aws_ssm_maintenance_window: Add `tags` argument ([#8426](https://github.com/terraform-providers/terraform-provider-aws/issues/8426))
+* resource/aws_ssm_patch_baseline: Add `tags` argument ([#8426](https://github.com/terraform-providers/terraform-provider-aws/issues/8426))
+
+## 2.8.0 (April 26, 2019)
+
+NOTES:
+
+* provider: Region validation now automatically supports the new `ap-east-1` Asia Pacific (Hong Kong) region. For AWS operations to work in the new region, the region must be explicitly enabled as outlined in the [announcement blog post](https://aws.amazon.com/blogs/aws/now-open-aws-asia-pacific-hong-kong-region/). When the region is not enabled, the Terraform AWS Provider will return errors during credential validation (e.g. `provider.aws: error validating provider credentials: error calling sts:GetCallerIdentity: InvalidClientTokenId: The security token included in the request is invalid`) or AWS operations will throw their own errors (e.g. `data.aws_availability_zones.current: Error fetching Availability Zones: AuthFailure: AWS was not able to validate the provided access credentials`).
+
+FEATURES:
+
+* **New Resource:** `aws_dx_gateway_association_proposal` ([#8320](https://github.com/terraform-providers/terraform-provider-aws/issues/8320))
+
+ENHANCEMENTS:
+
+* data-source/aws_cloudtrail_service_account: Support new `ap-east-1` region ([#8437](https://github.com/terraform-providers/terraform-provider-aws/issues/8437))
+* data-source/aws_dx_gateway: Add `owner_account_id` attribute ([#8320](https://github.com/terraform-providers/terraform-provider-aws/issues/8320))
+* data-source/aws_eks_cluster: Add `enabled_cluster_log_types` attribute ([#8402](https://github.com/terraform-providers/terraform-provider-aws/issues/8402))
+* data-source/aws_elb_hosted_zone_id: Support new `ap-east-1` region ([#8437](https://github.com/terraform-providers/terraform-provider-aws/issues/8437))
+* data-source/aws_elb_service_account: Support new `ap-east-1` region ([#8437](https://github.com/terraform-providers/terraform-provider-aws/issues/8437))
+* data-source/aws_redshift_service_account: Support new `ap-east-1` region ([#8437](https://github.com/terraform-providers/terraform-provider-aws/issues/8437))
+* data-source/aws_s3_bucket: Support new `ap-east-1` region in `hosted_zone_id` attribute ([#8437](https://github.com/terraform-providers/terraform-provider-aws/issues/8437))
+* provider: Support automatic region validation for `ap-east-1` ([#8440](https://github.com/terraform-providers/terraform-provider-aws/issues/8440))
+* resource/aws_dx_gateway: Add `owner_account_id` attribute ([#8320](https://github.com/terraform-providers/terraform-provider-aws/issues/8320))
+* resource/aws_dx_gateway_association: Support resource import ([#8222](https://github.com/terraform-providers/terraform-provider-aws/issues/8222))
+* resource/aws_dx_gateway_association: Add `allowed_prefixes` argument ([#8222](https://github.com/terraform-providers/terraform-provider-aws/issues/8222))
+* resource/aws_lb: Support Network Load Balancer (NLB) access logs ([#8282](https://github.com/terraform-providers/terraform-provider-aws/issues/8282))
+* resource/aws_s3_bucket: Support new `ap-east-1` region in `hosted_zone_id` attribute ([#8437](https://github.com/terraform-providers/terraform-provider-aws/issues/8437))
+* resource/aws_transfer_user: Support `user_name` containing uppercase letters, hyphens, and underscores ([#8304](https://github.com/terraform-providers/terraform-provider-aws/issues/8304))
+
+BUG FIXES:
+
+* resource/aws_eks_cluster: Ignore ordering and properly handle removals with `enabled_cluster_log_types` argument ([#8402](https://github.com/terraform-providers/terraform-provider-aws/issues/8402))
+* resource/aws_emr_cluster: Increase deletion timeout from 10 to 20 minutes to match AWS documentation ([#8428](https://github.com/terraform-providers/terraform-provider-aws/issues/8428))
+* resource/aws_lb: Prevent difference when `subnet_mapping` configuration block `allocation_id` argument was omitted ([#8282](https://github.com/terraform-providers/terraform-provider-aws/issues/8282))
+* resource/aws_lb: Properly disable access logs with `access_logs` configuration block `enabled` argument set to `false` ([#8282](https://github.com/terraform-providers/terraform-provider-aws/issues/8282))
+* resource/aws_network_interface: Refresh private_ips_count into Terraform state and allow for updates from 0 to greater than 0 ([#8353](https://github.com/terraform-providers/terraform-provider-aws/issues/8353))
+* resource/aws_vpc: Set ipv6_association_id and ipv6_cidr_block attributes as updated for assign_generated_ipv6_cidr_block updates ([#6721](https://github.com/terraform-providers/terraform-provider-aws/issues/6721))
+
+## 2.7.0 (April 18, 2019)
+
+NOTES:
+
+* provider: This release includes only a Terraform SDK upgrade with compatibility for Terraform v0.12. The provider remains backwards compatible with Terraform v0.11 and this update should have no significant changes in behavior for the provider. Please report any unexpected behavior in new GitHub issues (Terraform core: https://github.com/hashicorp/terraform/issues or Terraform AWS Provider: https://github.com/terraform-providers/terraform-provider-aws/issues) ([#8366](https://github.com/terraform-providers/terraform-provider-aws/issues/8366))
+
+## 2.6.0 (April 10, 2019)
+
+NOTES:
+
+* resource/aws_route53_record: Remove deprecation from `allow_overwrite` argument as there are some use cases where it is helpful. We discourage its usage in most environments (in preference of using `terraform import`) as it can easily cause conflicting management of the same Route53 Record. ([#8274](https://github.com/terraform-providers/terraform-provider-aws/issues/8274))
+
+FEATURES:
+
+* **New Resource:** `aws_worklink_website_certificate_authority_association` ([#7459](https://github.com/terraform-providers/terraform-provider-aws/issues/7459))
+
+ENHANCEMENTS:
+
+* resource/aws_appmesh_mesh: Add `spec` configuration block (support egress filter rules) ([#8119](https://github.com/terraform-providers/terraform-provider-aws/issues/8119))
+* resource/aws_appmesh_route: Add `spec` configuration block `tcp_route` configuration block (support TCP routing) ([#8119](https://github.com/terraform-providers/terraform-provider-aws/issues/8119))
+* resource/aws_appmesh_virtual_node: Add `spec` configuration block `logging` configuration block (support access logging) ([#8119](https://github.com/terraform-providers/terraform-provider-aws/issues/8119))
+* resource/aws_eks_cluster: Add `enabled_cluster_log_types` argument (support EKS control plane logging) ([#8216](https://github.com/terraform-providers/terraform-provider-aws/issues/8216))
+* resource/aws_iam_user_group_membership: Support resource import ([#6976](https://github.com/terraform-providers/terraform-provider-aws/issues/6976))
+* resource/aws_launch_template: Add `elastic_inference_accelerator` configuration block ([#8247](https://github.com/terraform-providers/terraform-provider-aws/issues/8247))
+* resource/aws_redshift_cluster: Add configurable timeouts ([#8241](https://github.com/terraform-providers/terraform-provider-aws/issues/8241))
+* resource/aws_transfer_server: Add `endpoint_details` configuration block and `endpoint_type` argument (support Private Link) ([#8121](https://github.com/terraform-providers/terraform-provider-aws/issues/8121))
+* resource/aws_wafregional_web_acl_association: Support additional `resource_arn` types (e.g. API Gateway) ([#7205](https://github.com/terraform-providers/terraform-provider-aws/issues/7205))
+
+BUG FIXES:
+
+* data-source/aws_lb_target_group: Add missing schema attributes ([#8213](https://github.com/terraform-providers/terraform-provider-aws/issues/8213))
+* resource/aws_appautoscaling_policy: Retry creation on `ObjectNotFound` errors for eventual consistency ([#8273](https://github.com/terraform-providers/terraform-provider-aws/issues/8273))
+* resource/aws_backup_plan: Prevent the sending of empty lifecycle attributes ([#8236](https://github.com/terraform-providers/terraform-provider-aws/issues/8236))
+* resource/aws_glue_catalog_table: Properly trigger resource recreation when deleted outside Terraform ([#8174](https://github.com/terraform-providers/terraform-provider-aws/issues/8174))
+* resource/aws_secretsmanager_secret: Handle additional scheduled for deletion error message on immediate secret recreation ([#8219](https://github.com/terraform-providers/terraform-provider-aws/issues/8219))
+* provider: Prevent panic when setting `endpoints` configuration ([#8226](https://github.com/terraform-providers/terraform-provider-aws/issues/8226))
+
+## 2.5.0 (April 05, 2019)
+
+FEATURES:
+
+* **New Guide:** [`Custom Service Endpoints`](https://www.terraform.io/docs/providers/aws/guides/custom-service-endpoints.html) ([#8092](https://github.com/terraform-providers/terraform-provider-aws/issues/8092))
+* **New Resource:** `aws_backup_selection` ([#7382](https://github.com/terraform-providers/terraform-provider-aws/issues/7382))
+* **New Resource:** `aws_sagemaker_endpoint` ([#2479](https://github.com/terraform-providers/terraform-provider-aws/issues/2479))
+* **New Resource:** `aws_sagemaker_notebook_instance_lifecycle_configuration` ([#7585](https://github.com/terraform-providers/terraform-provider-aws/issues/7585))
+
+ENHANCEMENTS:
+
+* provider: Support customization of all service endpoints ([#8096](https://github.com/terraform-providers/terraform-provider-aws/issues/8096))
+* resource/aws_acmpca_certificate_authority: Add `permanent_deletion_time_in_days` argument ([#7366](https://github.com/terraform-providers/terraform-provider-aws/issues/7366))
+* resource/aws_budgets_budget: Add `notification` configuration block (support notifications) ([#4523](https://github.com/terraform-providers/terraform-provider-aws/issues/4523))
+* resource/aws_cloudfront_distribution: Add `wait_for_deployment` argument ([#8116](https://github.com/terraform-providers/terraform-provider-aws/issues/8116))
+* resource/aws_cloudwatch_log_subscription_filter: Support resource import ([#8147](https://github.com/terraform-providers/terraform-provider-aws/issues/8147))
+* resource/aws_cloudwatch_metric_alarm: Add `tags` argument ([#8168](https://github.com/terraform-providers/terraform-provider-aws/issues/8168))
+* resource/aws_ecr_repository: Tag on creation (support tag limiting IAM policies) ([#8198](https://github.com/terraform-providers/terraform-provider-aws/issues/8198))
+* resource/aws_lb_target_group: Add `enabled` argument to target group health checks ([#7570](https://github.com/terraform-providers/terraform-provider-aws/issues/7570))
+* resource/aws_sagemaker_notebook_instance: Add `lifecycle_config_name` argument ([#7586](https://github.com/terraform-providers/terraform-provider-aws/issues/7586))
+* service/ec2: Automatically retry `CreateVpnConnection` and `CreateVpnGateway` requests for concurrency errors ([#8161](https://github.com/terraform-providers/terraform-provider-aws/issues/8161))
+
+BUG FIXES:
+
+* resource/aws_cloudfront_distribution: Ignore attribute ordering of cache behavior forwarded values `headers` and cookies `whitelisted_names` arguments ([#8150](https://github.com/terraform-providers/terraform-provider-aws/issues/8150))
+
+## 2.4.0 (March 29, 2019)
+
+NOTES:
+
+* service/ec2: Due to an upcoming update to the EC2 service, both the `aws_instance` data source and resource will no longer make the EC2 API call `DescribeInstanceCreditSpecifications` unless they are in the T2 or T3 instance families. Previously, the EC2 service would allow this API call for instance families that did not support credit specifications, however the upcoming update will return an error and prevent Terraform runs from completing.
+
+FEATURES:
+
+* **New Data Source:** `aws_ec2_transit_gateway_vpn_attachment` ([#8071](https://github.com/terraform-providers/terraform-provider-aws/issues/8071))
+* **New Resource:** `aws_appsync_resolver` ([#6451](https://github.com/terraform-providers/terraform-provider-aws/issues/6451))
+* **New Resource:** `aws_kms_ciphertext` ([#6993](https://github.com/terraform-providers/terraform-provider-aws/issues/6993))
+* **New Resource:** `aws_kms_external_key` ([#8066](https://github.com/terraform-providers/terraform-provider-aws/issues/8066))
+* **New Resource:** `aws_sagemaker_endpoint_configuration` ([#2477](https://github.com/terraform-providers/terraform-provider-aws/issues/2477))
+
+ENHANCEMENTS:
+
+* data-source/aws_instance: Only call `DescribeInstanceCreditSpecifications` for T2 and T3 Instance Families ([#8107](https://github.com/terraform-providers/terraform-provider-aws/issues/8107))
+* data-source/aws_kms_ciphertext: Hide `plaintext` in logs and user interface ([#6100](https://github.com/terraform-providers/terraform-provider-aws/issues/6100))
+* resource/aws_appsync_graphql_api: Add `schema` argument ([#4840](https://github.com/terraform-providers/terraform-provider-aws/issues/4840))
+* resource/aws_batch_compute_environment: Add `compute_resources` configuration block `launch_template` configuration block (support EC2 Launch Templates) ([#8026](https://github.com/terraform-providers/terraform-provider-aws/issues/8026))
+* resource/aws_cloudwatch_event_rule: Add `tags` argument ([#8076](https://github.com/terraform-providers/terraform-provider-aws/issues/8076))
+* resource/aws_instance: Only call `DescribeInstanceCreditSpecifications` for T2 and T3 Instance Families ([#8107](https://github.com/terraform-providers/terraform-provider-aws/issues/8107))
+* resource/aws_ram_principal_association: Validate `principal` as AWS Account ID or ARN ([#8048](https://github.com/terraform-providers/terraform-provider-aws/issues/8048))
+* resource/aws_s3_bucket: Support `DEEP_ARCHIVE` in storage class validations ([#8109](https://github.com/terraform-providers/terraform-provider-aws/issues/8109))
+* resource/aws_s3_bucket_object: Support `DEEP_ARCHIVE` in `storage_class` validation ([#8109](https://github.com/terraform-providers/terraform-provider-aws/issues/8109))
+* resource/aws_vpn_connection: Add `transit_gateway_attachment_id` attribute ([#8070](https://github.com/terraform-providers/terraform-provider-aws/issues/8070))
+
+BUG FIXES:
+
+* resource/aws_cloudwatch_metric_alarm: Prevent `ValidationError` when updating `metric_query` alarms ([#8085](https://github.com/terraform-providers/terraform-provider-aws/issues/8085))
+
+## 2.3.0 (March 21, 2019)
+
+BREAKING CHANGES:
+
+* service/appmesh: Changes to support AppMesh General Availability (GA) release. The AppMesh resources were added while the API was under Public Preview and the GA release earlier this month introduced breaking changes which prevented further AWS Go SDK updates. This is a very atypical situation for the Terraform AWS Provider as most AWS API and SDK changes are additive. To prevent this situation in the future we may introduce separate Terraform AWS Provider(s) specifically for Public Preview or Beta APIs. If or when this occurs, it will be separately announced. The maintainers will continue following Terraform Provider compatibility promises outlined on the [HashiCorp Blog](https://www.hashicorp.com/blog/hashicorp-terraform-provider-versioning) and [Extending Terraform documentation](https://www.terraform.io/docs/extend/best-practices/versioning.html) as best as possible except other existing Public Preview resources. ([#7659](https://github.com/terraform-providers/terraform-provider-aws/issues/7659))
+* resource/aws_appmesh_virtual_node: Replace `backends` configuration block(s) with `backend` configuration blocks ([#7858](https://github.com/terraform-providers/terraform-provider-aws/issues/7858))
+* resource/aws_appmesh_virtual_node: Replace `service_discovery` configuration block `service_name` argument with `service_discovery` configuration block `dns` configuration block ([#7858](https://github.com/terraform-providers/terraform-provider-aws/issues/7858))
+* resource/aws_appmesh_virtual_router: Remove `spec` configuration block `service_names` argument ([#7858](https://github.com/terraform-providers/terraform-provider-aws/issues/7858))
+
+FEATURES:
+
+* **New Data Source:** `aws_transfer_server` ([#7977](https://github.com/terraform-providers/terraform-provider-aws/issues/7977))
+* **New Resource:** `aws_appmesh_virtual_service` ([#7858](https://github.com/terraform-providers/terraform-provider-aws/issues/7858))
+* **New Resource:** `aws_backup_plan` ([#7350](https://github.com/terraform-providers/terraform-provider-aws/issues/7350))
+* **New Resource:** `aws_cloudformation_stack_set` ([#8020](https://github.com/terraform-providers/terraform-provider-aws/issues/8020))
+* **New Resource:** `aws_cloudformation_stack_set_instance` ([#8020](https://github.com/terraform-providers/terraform-provider-aws/issues/8020))
+
+ENHANCEMENTS:
+
+* data-source/aws_eks_cluster: Add `vpc_config` configuration block `endpoint_private_access` and `endpoint_public_access` attributes ([#8024](https://github.com/terraform-providers/terraform-provider-aws/issues/8024))
+* data-source/aws_instance: Add `get_user_data` argument and `user_data_base64` attribute ([#8001](https://github.com/terraform-providers/terraform-provider-aws/issues/8001))
+* provider: Support custom endpoint for `ses` ([#7986](https://github.com/terraform-providers/terraform-provider-aws/issues/7986))
+* provider: Support custom endpoints for `firehose` and `redshift` ([#8007](https://github.com/terraform-providers/terraform-provider-aws/issues/8007))
+* resource/aws_api_gateway_deployment: Allow `stage_name` argument to be optional ([#6459](https://github.com/terraform-providers/terraform-provider-aws/issues/6459))
+* resource/aws_appautoscaling_policy: Support resource import ([#8032](https://github.com/terraform-providers/terraform-provider-aws/issues/8032))
+* resource/aws_appautoscaling_target: Support resource import ([#8032](https://github.com/terraform-providers/terraform-provider-aws/issues/8032))
+* resource/aws_appmesh_route: Support resource import ([#7858](https://github.com/terraform-providers/terraform-provider-aws/issues/7858))
+* resource/aws_appmesh_virtual_node: Support resource import ([#7858](https://github.com/terraform-providers/terraform-provider-aws/issues/7858))
+* resource/aws_appmesh_virtual_router: Support resource import ([#7858](https://github.com/terraform-providers/terraform-provider-aws/issues/7858))
+* resource/aws_appmesh_virtual_router: Add `spec` configuration block `listener` configuration block ([#7858](https://github.com/terraform-providers/terraform-provider-aws/issues/7858))
+* resource/aws_cloudfront_distribution: Add `origin_group` configuration block (support Origin Groups and failover) ([#7202](https://github.com/terraform-providers/terraform-provider-aws/issues/7202))
+* resource/aws_codebuild_project: Add `project_environment` configuration block `image_pull_credentials_type` argument (support cross-account images) ([#7458](https://github.com/terraform-providers/terraform-provider-aws/issues/7458))
+* resource/aws_ecr_repository_policy: Support resource import ([#7974](https://github.com/terraform-providers/terraform-provider-aws/issues/7974))
+* resource/aws_eks_cluster: Add `vpc_config` configuration block `endpoint_private_access` and `endpoint_public_access` arguments (support disabling public access) ([#8024](https://github.com/terraform-providers/terraform-provider-aws/issues/8024))
+* resource/aws_iam_access_key: Support `status` updates (support disabling/enabling access keys) ([#7961](https://github.com/terraform-providers/terraform-provider-aws/issues/7961))
+* resource/aws_kinesis_analytics_application: Support resource import ([#8027](https://github.com/terraform-providers/terraform-provider-aws/issues/8027))
+* resource/aws_media_package_channel: Add `tags` argument ([#7984](https://github.com/terraform-providers/terraform-provider-aws/issues/7984))
+* resource/aws_route53_zone_association: Support resource import ([#7966](https://github.com/terraform-providers/terraform-provider-aws/issues/7966))
+* resource/aws_s3_bucket_inventory: Support plan-time validation of `optional_fields` values `ObjectLockRetainUntilDate`, `ObjectLockMode` and `ObjectLockLegalHoldStatus` ([#7952](https://github.com/terraform-providers/terraform-provider-aws/issues/7952))
+* resource/aws_ssm_association: Add `compliance_severity` argument ([#7852](https://github.com/terraform-providers/terraform-provider-aws/issues/7852))
+* resource/aws_ssm_association: Add `max_concurrency` and `max_errors` arguments ([#7970](https://github.com/terraform-providers/terraform-provider-aws/issues/7970))
+
+BUG FIXES:
+
+* resource/aws_appautoscaling_policy: Recreate resource for `resource_id` updates ([#7982](https://github.com/terraform-providers/terraform-provider-aws/issues/7982))
+* resource/aws_appautoscaling_policy: Ignore `ObjectNotFoundException` on deletion ([#7982](https://github.com/terraform-providers/terraform-provider-aws/issues/7982))
+* resource/aws_route53_zone_association: Properly trigger resource recreation on all updates ([#7966](https://github.com/terraform-providers/terraform-provider-aws/issues/7966))
+
+## 2.2.0 (March 15, 2019)
+
+FEATURES:
+
+* **New Resource:** `aws_globalaccelerator_listener` ([#7003](https://github.com/terraform-providers/terraform-provider-aws/issues/7003))
+* **New Resource:** `aws_guardduty_invite_accepter` ([#4610](https://github.com/terraform-providers/terraform-provider-aws/issues/4610))
+* **New Resource:** `aws_route53_resolver_rule` ([#7799](https://github.com/terraform-providers/terraform-provider-aws/issues/7799))
+* **New Resource:** `aws_route53_resolver_rule_association` ([#7799](https://github.com/terraform-providers/terraform-provider-aws/issues/7799))
+
+ENHANCEMENTS:
+
+* data-source/aws_eip: Add `private_dns` and `public_dns` attributes ([#7349](https://github.com/terraform-providers/terraform-provider-aws/issues/7349))
+* resource/aws_backup_vault: Support `tags` updates ([#7933](https://github.com/terraform-providers/terraform-provider-aws/issues/7933))
+* resource/aws_dx_bgp_peer: Add `aws_device` and `bgp_peer_id` attributes ([#7131](https://github.com/terraform-providers/terraform-provider-aws/issues/7131))
+* resource/aws_dx_connection: Add `aws_device` and `has_logical_redundancy` attributes ([#7131](https://github.com/terraform-providers/terraform-provider-aws/issues/7131))
+* resource/aws_dx_hosted_private_virtual_interface: Add `aws_device` attribute ([#7131](https://github.com/terraform-providers/terraform-provider-aws/issues/7131))
+* resource/aws_dx_hosted_public_virtual_interface: Add `aws_device` attribute ([#7131](https://github.com/terraform-providers/terraform-provider-aws/issues/7131))
+* resource/aws_dx_lag: Add `has_logical_redundancy` attribute ([#7131](https://github.com/terraform-providers/terraform-provider-aws/issues/7131))
+* resource/aws_dx_private_virtual_interface: Add `aws_device` attribute ([#7131](https://github.com/terraform-providers/terraform-provider-aws/issues/7131))
+* resource/aws_dx_public_virtual_interface: Add `aws_device` attribute ([#7131](https://github.com/terraform-providers/terraform-provider-aws/issues/7131))
+* resource/aws_eip: Add `private_dns` and `public_dns` attributes ([#7349](https://github.com/terraform-providers/terraform-provider-aws/issues/7349))
+* resource/aws_glue_crawler: Add `arn` attribute ([#7948](https://github.com/terraform-providers/terraform-provider-aws/issues/7948))
+* resource/aws_ssm_patch_baseline: Support resource import ([#7838](https://github.com/terraform-providers/terraform-provider-aws/issues/7838))
+
+BUG FIXES:
+
+* resource/aws_cloudfront_distribution: Ensure retain_on_delete disables the CloudFront Distribution before exiting ([#7875](https://github.com/terraform-providers/terraform-provider-aws/issues/7875))
+* resource/aws_cloudwatch_log_metric_filter: Serialize create, update, and delete operations on the same CloudWatch Log Group to prevent `OperationAbortedException` errors ([#7880](https://github.com/terraform-providers/terraform-provider-aws/issues/7880))
+* resource/aws_codebuild_webhook: Only pass BranchFilter configuration if non-empty ([#7841](https://github.com/terraform-providers/terraform-provider-aws/issues/7841))
+* resource/aws_ec2_transit_gateway_vpc_attachment: Prevent errors with Resource Access Manager shared EC2 Transit Gateways ([#7513](https://github.com/terraform-providers/terraform-provider-aws/issues/7513))
+* resource/aws_ecr_repository_policy: Properly read `policy` into the Terraform state ([#7853](https://github.com/terraform-providers/terraform-provider-aws/issues/7853))
+* resource/aws_iam_role_policy_attachment: Prevent `NoSuchEntity` errors from race conditions ([#7855](https://github.com/terraform-providers/terraform-provider-aws/issues/7855))
+* resource/aws_kms_alias: Prevent state removal of resource immediately after creation due to eventual consistency ([#7891](https://github.com/terraform-providers/terraform-provider-aws/issues/7891))
+* resource/aws_s3_bucket: Prevent empty `replication_configuration` `rules` `filter` crash ([#7887](https://github.com/terraform-providers/terraform-provider-aws/issues/7887))
+* resource/aws_s3_bucket: Continue supporting empty string (`""`) `bucket` argument ([#7881](https://github.com/terraform-providers/terraform-provider-aws/issues/7881))
+* resource/aws_s3_bucket: Prevent `NoSuchBucket` errors when putting lifecycle configuration on resource creation ([#7930](https://github.com/terraform-providers/terraform-provider-aws/issues/7930))
+* resource/aws_ses_domain_mail_from: Prevent crash with deleted SES Domain Identity ([#7883](https://github.com/terraform-providers/terraform-provider-aws/issues/7883))
+
+## 2.1.0 (March 07, 2019)
+
+FEATURES:
+
+* **New Resource:** `aws_route53_resolver_endpoint` ([#6563](https://github.com/terraform-providers/terraform-provider-aws/issues/6563))
+
+ENHANCEMENTS:
+
+* data-source/aws_elastic_beanstalk_hosted_zone: Add eu-north-1 region support ([#7829](https://github.com/terraform-providers/terraform-provider-aws/issues/7829))
+* data-source/aws_redshift_service_account: Add us-gov-east-1 and us-gov-west-1 region mappings ([#7635](https://github.com/terraform-providers/terraform-provider-aws/issues/7635))
+* data-source/aws_s3_bucket: Add `bucket_regional_domain_name` attribute ([#7765](https://github.com/terraform-providers/terraform-provider-aws/issues/7765))
+* resource/aws_autoscaling_group: Support new `mixed_instances_policy` `instance_distribution` `spot_max_price` ability to unset with empty string ([#7821](https://github.com/terraform-providers/terraform-provider-aws/issues/7821))
+* resource/aws_dlm_lifecycle_policy: Add validation support for 2, 3, 4, 6, and 8 in `policy_details` `schedule` `create_rule` `interval` argument (support shorter intervals) ([#7751](https://github.com/terraform-providers/terraform-provider-aws/issues/7751))
+* resource/aws_ec2_client_vpn_endpoint: Add `tags` argument ([#7619](https://github.com/terraform-providers/terraform-provider-aws/issues/7619))
+* resource/aws_ecs_service: Support plan time validation of new `health_check_grace_period_seconds` max of `2147483647` ([#7806](https://github.com/terraform-providers/terraform-provider-aws/issues/7806))
+* resource/aws_lb_target_group: Add `lambda_multi_value_headers_enabled` argument ([#7648](https://github.com/terraform-providers/terraform-provider-aws/issues/7648))
+* resource/aws_ram_resource_share: Add `arn` attribute ([#7634](https://github.com/terraform-providers/terraform-provider-aws/issues/7634))
+* resource/aws_s3_bucket: Add plan time length validation for `bucket` and `bucket_prefix` arguments ([#7778](https://github.com/terraform-providers/terraform-provider-aws/issues/7778))
+
+BUG FIXES:
+
+* resource/aws_autoscaling_group: Allow configuration of `mixed_instances_policy` `instance_distribution` `on_demand_base_capacity` argument to 0 ([#7821](https://github.com/terraform-providers/terraform-provider-aws/issues/7821))
+* resource/aws_cloudfront_distribution: Remove problematic `viewer_certificate` configuration block argument `ConflictsWith` usage from version 2.0.0 ([#7794](https://github.com/terraform-providers/terraform-provider-aws/issues/7794))
+* resource/aws_cloudfront_distribution: Skip disabling distributions on deletion for previously disabled distributions ([#7794](https://github.com/terraform-providers/terraform-provider-aws/issues/7794))
+* resource/aws_cloudfront_distribution: Retry on `PreconditionFailed` error messages after disabling distribution on deletion ([#7794](https://github.com/terraform-providers/terraform-provider-aws/issues/7794))
+* resource/aws_cloudfront_distribution: Wait for creation and update deployments to complete ([#7794](https://github.com/terraform-providers/terraform-provider-aws/issues/7794))
+* resource/aws_cloudfront_distribution: Prevent one minute timeout error for creation and update errors due to throttling ([#7809](https://github.com/terraform-providers/terraform-provider-aws/issues/7809))
+* resource/aws_db_instance: Properly set `engine_version` with `snapshot_identifier` ([#7738](https://github.com/terraform-providers/terraform-provider-aws/issues/7738))
+* resource/aws_dynamodb_table: Prevent perpetual plan differences with `ttl` configuration block `enabled` argument set to `false` ([#3960](https://github.com/terraform-providers/terraform-provider-aws/issues/3960))
+* resource/aws_ecs_service: Ensure `placement_strategy` removal in version 2.0.0 does not force recreation ([#7790](https://github.com/terraform-providers/terraform-provider-aws/issues/7790))
+* resource/aws_guardduty_detector: Prevent GuardDuty member accounts with unconfigured `finding_publishing_frequency` from triggering update errors ([#7804](https://github.com/terraform-providers/terraform-provider-aws/issues/7804))
+* resource/aws_launch_configuration: Prevent `ResourceInUse` errors caused by eventual consistency during deletion ([#7819](https://github.com/terraform-providers/terraform-provider-aws/issues/7819))
+* resource/aws_s3_bucket_notification: Prevent crash with empty filters configuration ([#7791](https://github.com/terraform-providers/terraform-provider-aws/issues/7791))
 
 ## 2.0.0 (February 27, 2019)
 
@@ -2107,7 +2676,7 @@ BUG FIXES:
 * resource/aws_batch_job_definition: `name` allows hyphens ([#2126](https://github.com/terraform-providers/terraform-provider-aws/issues/2126))
 * resource/aws_elasticache_parameter_group: Raise timeout for retry on pending changes ([#2134](https://github.com/terraform-providers/terraform-provider-aws/issues/2134))
 * resource/aws_kms_key: Retry GetKeyRotationStatus on NotFoundException ([#2133](https://github.com/terraform-providers/terraform-provider-aws/issues/2133))
-* resource/aws_lb_target_group: Fix issue that prevented using `aws_lb_target_group` with 
+* resource/aws_lb_target_group: Fix issue that prevented using `aws_lb_target_group` with
   Network type load balancers ([#2251](https://github.com/terraform-providers/terraform-provider-aws/issues/2251))
 * resource/aws_lb: mark subnets as `ForceNew` for network load balancers ([#2310](https://github.com/terraform-providers/terraform-provider-aws/issues/2310))
 * resource/aws_redshift_cluster: Make master_username ForceNew ([#2202](https://github.com/terraform-providers/terraform-provider-aws/issues/2202))
@@ -2148,7 +2717,7 @@ IMPROVEMENTS:
 * resource/aws_elasticsearch_domain: Support VPC configuration ([#1958](https://github.com/terraform-providers/terraform-provider-aws/issues/1958))
 * resource/aws_alb_target_group: Add support for `target_type` ([#1589](https://github.com/terraform-providers/terraform-provider-aws/issues/1589))
 * resource/aws_sqs_queue: Add support for `tags` ([#1987](https://github.com/terraform-providers/terraform-provider-aws/issues/1987))
-* resource/aws_security_group: Add `revoke_rules_on_delete` option to force a security group to revoke 
+* resource/aws_security_group: Add `revoke_rules_on_delete` option to force a security group to revoke
   rules before deleting the grou ([#2074](https://github.com/terraform-providers/terraform-provider-aws/issues/2074))
 * resource/aws_cloudwatch_log_metric_filter: Add support for DefaultValue ([#1578](https://github.com/terraform-providers/terraform-provider-aws/issues/1578))
 * resource/aws_emr_cluster: Expose error on `TERMINATED_WITH_ERRORS` ([#2081](https://github.com/terraform-providers/terraform-provider-aws/issues/2081))

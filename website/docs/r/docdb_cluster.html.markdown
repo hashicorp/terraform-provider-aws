@@ -6,7 +6,7 @@ description: |-
   Manages a DocDB Aurora Cluster
 ---
 
-# aws_docdb_cluster
+# Resource: aws_docdb_cluster
 
 Manages a DocDB Cluster.
 
@@ -50,7 +50,8 @@ The following arguments are supported:
 * `backup_retention_period` - (Optional) The days to retain backups for. Default `1`
 * `cluster_identifier_prefix` - (Optional, Forces new resource) Creates a unique cluster identifier beginning with the specified prefix. Conflicts with `cluster_identifer`.
 * `cluster_identifier` - (Optional, Forces new resources) The cluster identifier. If omitted, Terraform will assign a random, unique identifier.
-* `db_subnet_group_name` - (Optional) A DB subnet group to associate with this DB instance.* `db_cluster_parameter_group_name` - (Optional) A cluster parameter group to associate with the cluster.
+* `db_subnet_group_name` - (Optional) A DB subnet group to associate with this DB instance.
+* `db_cluster_parameter_group_name` - (Optional) A cluster parameter group to associate with the cluster.
 * `enabled_cloudwatch_logs_exports` - (Optional) List of log types to export to cloudwatch. If omitted, no logs will be exported.
    The following log types are supported: `audit`.
 * `engine_version` - (Optional) The database engine version. Updating this argument results in an outage.
@@ -63,7 +64,6 @@ The following arguments are supported:
     show up in logs, and it will be stored in the state file. Please refer to the DocDB Naming Constraints.
 * `master_username` - (Required unless a `snapshot_identifier` is provided) Username for the master DB user. 
 * `port` - (Optional) The port on which the DB accepts connections
-* `preferred_backup_window` - (Optional) The daily time range during which automated backups are created if automated backups are enabled using the BackupRetentionPeriod parameter.Time in UTC Default: A 30-minute window selected at random from an 8-hour block of time per region. e.g. 04:00-09:00
 * `preferred_backup_window` - (Optional) The daily time range during which automated backups are created if automated backups are enabled using the BackupRetentionPeriod parameter.Time in UTC
 Default: A 30-minute window selected at random from an 8-hour block of time per region. e.g. 04:00-09:00
 * `skip_final_snapshot` - (Optional) Determines whether a final DB snapshot is created before the DB cluster is deleted. If true is specified, no DB snapshot is created. If false is specified, a DB snapshot is created before the DB cluster is deleted, using the value from `final_snapshot_identifier`. Default is `false`.

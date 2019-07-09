@@ -133,9 +133,12 @@ func resourceAwsAppautoscalingScheduledActionPut(d *schema.ResourceData, meta in
 		}
 		return nil
 	})
+	if isResourceTimeoutError(err) {
+		_, err = conn.PutScheduledAction(input)
+	}
 
 	if err != nil {
-		return err
+		return fmt.Errorf("Error putting scheduled action: %s", err)
 	}
 
 	d.SetId(d.Get("name").(string) + "-" + d.Get("service_namespace").(string) + "-" + d.Get("resource_id").(string))

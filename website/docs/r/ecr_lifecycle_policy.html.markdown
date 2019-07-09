@@ -6,7 +6,7 @@ description: |-
   Manages an ECR repository lifecycle policy.
 ---
 
-# aws_ecr_lifecycle_policy
+# Resource: aws_ecr_lifecycle_policy
 
 Manages an ECR repository lifecycle policy.
 

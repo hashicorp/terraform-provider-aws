@@ -108,6 +108,7 @@ func resourceAwsEc2ClientVpnEndpoint() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"tags": tagsSchema(),
 		},
 	}
 }
@@ -119,6 +120,7 @@ func resourceAwsEc2ClientVpnEndpointCreate(d *schema.ResourceData, meta interfac
 		ClientCidrBlock:      aws.String(d.Get("client_cidr_block").(string)),
 		ServerCertificateArn: aws.String(d.Get("server_certificate_arn").(string)),
 		TransportProtocol:    aws.String(d.Get("transport_protocol").(string)),
+		TagSpecifications:    ec2TagSpecificationsFromMap(d.Get("tags").(map[string]interface{}), ec2.ResourceTypeClientVpnEndpoint),
 	}
 
 	if v, ok := d.GetOk("description"); ok {
@@ -227,12 +229,17 @@ func resourceAwsEc2ClientVpnEndpointRead(d *schema.ResourceData, meta interface{
 
 	err = d.Set("authentication_options", flattenAuthOptsConfig(result.ClientVpnEndpoints[0].AuthenticationOptions))
 	if err != nil {
-		return err
+		return fmt.Errorf("error setting authentication_options: %s", err)
 	}
 
 	err = d.Set("connection_log_options", flattenConnLoggingConfig(result.ClientVpnEndpoints[0].ConnectionLogOptions))
 	if err != nil {
-		return err
+		return fmt.Errorf("error setting connection_log_options: %s", err)
+	}
+
+	err = d.Set("tags", tagsToMap(result.ClientVpnEndpoints[0].Tags))
+	if err != nil {
+		return fmt.Errorf("error setting tags: %s", err)
 	}
 
 	return nil
@@ -253,6 +260,8 @@ func resourceAwsEc2ClientVpnEndpointDelete(d *schema.ResourceData, meta interfac
 
 func resourceAwsEc2ClientVpnEndpointUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).ec2conn
+
+	d.Partial(true)
 
 	req := &ec2.ModifyClientVpnEndpointInput{
 		ClientVpnEndpointId: aws.String(d.Id()),
@@ -304,11 +313,16 @@ func resourceAwsEc2ClientVpnEndpointUpdate(d *schema.ResourceData, meta interfac
 		}
 	}
 
-	_, err := conn.ModifyClientVpnEndpoint(req)
-	if err != nil {
+	if _, err := conn.ModifyClientVpnEndpoint(req); err != nil {
 		return fmt.Errorf("Error modifying Client VPN endpoint: %s", err)
 	}
 
+	if err := setTags(conn, d); err != nil {
+		return err
+	}
+	d.SetPartial("tags")
+
+	d.Partial(false)
 	return resourceAwsEc2ClientVpnEndpointRead(d, meta)
 }
 

@@ -108,7 +108,7 @@ resource "aws_iam_policy" "example" {
 
 ### file() Interpolation Function
 
-To decouple the IAM policy JSON from the Terraform configuration, Terraform has a built-in [`file()` interpolation function](/docs/configuration/interpolation.html#file-path-), which can read the contents of a local file into the configuration. Interpolation is _not_ available when using the `file()` function by itself.
+To decouple the IAM policy JSON from the Terraform configuration, Terraform has a built-in [`file()` function](https://www.terraform.io/docs/configuration/functions/file.html), which can read the contents of a local file into the configuration.
 
 For example, creating a file called `policy.json` with the contents:
 
@@ -156,7 +156,7 @@ Those contents can be read and interpolated into the Terraform configuration via
 data "template_file" "example" {
   template = "${file("policy.json.tpl")}"
 
-  vars {
+  vars = {
     resource = "${aws_vpc.example.arn}"
   }
 }

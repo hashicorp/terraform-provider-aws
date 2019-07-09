@@ -6,27 +6,27 @@ description: |-
   Provides an AWS Client VPN endpoint for OpenVPN clients.
 ---
 
-# aws_ec2_client_vpn_endpoint
+# Resource: aws_ec2_client_vpn_endpoint
 
-Provides an AWS Client VPN endpoint for OpenVPN clients. For more information on usage, please see the 
+Provides an AWS Client VPN endpoint for OpenVPN clients. For more information on usage, please see the
 [AWS Client VPN Administrator's Guide](https://docs.aws.amazon.com/vpn/latest/clientvpn-admin/what-is.html).
 
 ## Example Usage
 
 ```hcl
 resource "aws_ec2_client_vpn_endpoint" "example" {
-  description = "terraform-clientvpn-example"
+  description            = "terraform-clientvpn-example"
   server_certificate_arn = "${aws_acm_certificate.cert.arn}"
-  client_cidr_block = "10.0.0.0/16"
+  client_cidr_block      = "10.0.0.0/16"
 
   authentication_options {
-    type = "certificate-authentication"
+    type                       = "certificate-authentication"
     root_certificate_chain_arn = "${aws_acm_certificate.root_cert.arn}"
   }
 
   connection_log_options {
-    enabled = true
-    cloudwatch_log_group = "${aws_cloudwatch_log_group.lg.name}"
+    enabled               = true
+    cloudwatch_log_group  = "${aws_cloudwatch_log_group.lg.name}"
     cloudwatch_log_stream = "${aws_cloudwatch_log_stream.ls.name}"
   }
 }
@@ -43,6 +43,7 @@ The following arguments are supported:
 * `transport_protocol` - (Optional) The transport protocol to be used by the VPN session. Default value is `udp`.
 * `authentication_options` - (Required) Information about the authentication method to be used to authenticate clients.
 * `connection_log_options` - (Required) Information about the client connection logging options.
+* `tags` - (Optional) A mapping of tags to assign to the resource.
 
 ### `authentication_options` Argument Reference
 
@@ -64,7 +65,7 @@ One of the following arguments must be supplied:
 
 In addition to all arguments above, the following attributes are exported:
 
-* `id` - The ID of the Client VPN endpoint. 
+* `id` - The ID of the Client VPN endpoint.
 * `dns_name` - The DNS name to be used by clients when establishing their VPN session.
 * `status` - The current state of the Client VPN endpoint.
 

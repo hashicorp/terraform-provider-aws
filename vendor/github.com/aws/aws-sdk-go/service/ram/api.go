@@ -742,7 +742,7 @@ func (c *RAM) GetResourcePoliciesWithContext(ctx aws.Context, input *GetResource
 //    // Example iterating over at most 3 pages of a GetResourcePolicies operation.
 //    pageNum := 0
 //    err := client.GetResourcePoliciesPages(params,
-//        func(page *GetResourcePoliciesOutput, lastPage bool) bool {
+//        func(page *ram.GetResourcePoliciesOutput, lastPage bool) bool {
 //            pageNum++
 //            fmt.Println(page)
 //            return pageNum <= 3
@@ -895,7 +895,7 @@ func (c *RAM) GetResourceShareAssociationsWithContext(ctx aws.Context, input *Ge
 //    // Example iterating over at most 3 pages of a GetResourceShareAssociations operation.
 //    pageNum := 0
 //    err := client.GetResourceShareAssociationsPages(params,
-//        func(page *GetResourceShareAssociationsOutput, lastPage bool) bool {
+//        func(page *ram.GetResourceShareAssociationsOutput, lastPage bool) bool {
 //            pageNum++
 //            fmt.Println(page)
 //            return pageNum <= 3
@@ -1048,7 +1048,7 @@ func (c *RAM) GetResourceShareInvitationsWithContext(ctx aws.Context, input *Get
 //    // Example iterating over at most 3 pages of a GetResourceShareInvitations operation.
 //    pageNum := 0
 //    err := client.GetResourceShareInvitationsPages(params,
-//        func(page *GetResourceShareInvitationsOutput, lastPage bool) bool {
+//        func(page *ram.GetResourceShareInvitationsOutput, lastPage bool) bool {
 //            pageNum++
 //            fmt.Println(page)
 //            return pageNum <= 3
@@ -1198,7 +1198,7 @@ func (c *RAM) GetResourceSharesWithContext(ctx aws.Context, input *GetResourceSh
 //    // Example iterating over at most 3 pages of a GetResourceShares operation.
 //    pageNum := 0
 //    err := client.GetResourceSharesPages(params,
-//        func(page *GetResourceSharesOutput, lastPage bool) bool {
+//        func(page *ram.GetResourceSharesOutput, lastPage bool) bool {
 //            pageNum++
 //            fmt.Println(page)
 //            return pageNum <= 3
@@ -1348,7 +1348,7 @@ func (c *RAM) ListPrincipalsWithContext(ctx aws.Context, input *ListPrincipalsIn
 //    // Example iterating over at most 3 pages of a ListPrincipals operation.
 //    pageNum := 0
 //    err := client.ListPrincipalsPages(params,
-//        func(page *ListPrincipalsOutput, lastPage bool) bool {
+//        func(page *ram.ListPrincipalsOutput, lastPage bool) bool {
 //            pageNum++
 //            fmt.Println(page)
 //            return pageNum <= 3
@@ -1501,7 +1501,7 @@ func (c *RAM) ListResourcesWithContext(ctx aws.Context, input *ListResourcesInpu
 //    // Example iterating over at most 3 pages of a ListResources operation.
 //    pageNum := 0
 //    err := client.ListResourcesPages(params,
-//        func(page *ListResourcesOutput, lastPage bool) bool {
+//        func(page *ram.ListResourcesOutput, lastPage bool) bool {
 //            pageNum++
 //            fmt.Println(page)
 //            return pageNum <= 3

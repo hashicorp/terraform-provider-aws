@@ -8,7 +8,6 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/apigateway"
-	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/helper/schema"
 	"github.com/hashicorp/terraform/helper/validation"
 )
@@ -294,19 +293,17 @@ func resourceAwsApiGatewayDomainNameDelete(d *schema.ResourceData, meta interfac
 	conn := meta.(*AWSClient).apigateway
 	log.Printf("[DEBUG] Deleting API Gateway Domain Name: %s", d.Id())
 
-	return resource.Retry(5*time.Minute, func() *resource.RetryError {
-		_, err := conn.DeleteDomainName(&apigateway.DeleteDomainNameInput{
-			DomainName: aws.String(d.Id()),
-		})
-
-		if err == nil {
-			return nil
-		}
-
-		if apigatewayErr, ok := err.(awserr.Error); ok && apigatewayErr.Code() == "NotFoundException" {
-			return nil
-		}
-
-		return resource.NonRetryableError(err)
+	_, err := conn.DeleteDomainName(&apigateway.DeleteDomainNameInput{
+		DomainName: aws.String(d.Id()),
 	})
+
+	if isAWSErr(err, "NotFoundException", "") {
+		return nil
+	}
+
+	if err != nil {
+		return fmt.Errorf("Error deleting API Gateway domain name: %s", err)
+	}
+
+	return nil
 }

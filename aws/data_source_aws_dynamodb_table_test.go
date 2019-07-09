@@ -25,6 +25,7 @@ func TestAccDataSourceAwsDynamoDbTable_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("data.aws_dynamodb_table.dynamodb_table_test", "range_key", "GameTitle"),
 					resource.TestCheckResourceAttr("data.aws_dynamodb_table.dynamodb_table_test", "attribute.#", "3"),
 					resource.TestCheckResourceAttr("data.aws_dynamodb_table.dynamodb_table_test", "global_secondary_index.#", "1"),
+					resource.TestCheckResourceAttr("data.aws_dynamodb_table.dynamodb_table_test", "ttl.#", "1"),
 					resource.TestCheckResourceAttr("data.aws_dynamodb_table.dynamodb_table_test", "tags.%", "2"),
 					resource.TestCheckResourceAttr("data.aws_dynamodb_table.dynamodb_table_test", "tags.Name", "dynamodb-table-1"),
 					resource.TestCheckResourceAttr("data.aws_dynamodb_table.dynamodb_table_test", "tags.Environment", "test"),
@@ -39,7 +40,8 @@ func TestAccDataSourceAwsDynamoDbTable_basic(t *testing.T) {
 }
 
 func testAccDataSourceAwsDynamoDbTableConfigBasic(tableName string) string {
-	return fmt.Sprintf(`resource "aws_dynamodb_table" "dynamodb_table_test" {
+	return fmt.Sprintf(`
+resource "aws_dynamodb_table" "dynamodb_table_test" {
   name           = "%s"
   read_capacity  = 20
   write_capacity = 20
@@ -79,5 +81,6 @@ func testAccDataSourceAwsDynamoDbTableConfigBasic(tableName string) string {
 
 data "aws_dynamodb_table" "dynamodb_table_test" {
   name = "${aws_dynamodb_table.dynamodb_table_test.name}"
-}`, tableName)
+}
+`, tableName)
 }

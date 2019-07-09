@@ -6,7 +6,7 @@ description: |-
   Provides a Load Balancer Listener Certificate resource.
 ---
 
-# aws_lb_listener_certificate
+# Resource: aws_lb_listener_certificate
 
 Provides a Load Balancer Listener Certificate resource.
 

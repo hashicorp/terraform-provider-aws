@@ -10,8 +10,9 @@ import (
 
 func TestAccAWSInspectorResourceGroup_basic(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:  func() { testAccPreCheck(t) },
-		Providers: testAccProviders,
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: nil,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSInspectorResourceGroup,
