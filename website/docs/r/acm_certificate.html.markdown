@@ -80,10 +80,14 @@ resource "aws_acm_certificate" "cert" {
 
 The following arguments are supported:
 
-* Creating an amazon issued certificate
+* Creating an amazon issued public certificate
   * `domain_name` - (Required) A domain name for which the certificate should be issued
   * `subject_alternative_names` - (Optional) A list of domains that should be SANs in the issued certificate
   * `validation_method` - (Required) Which method to use for validation. `DNS` or `EMAIL` are valid, `NONE` can be used for certificates that were imported into ACM and then into Terraform.
+* Creating an amazon issued private certificate
+  * `domain_name` - (Required) A domain name for which the certificate should be issued
+  * `subject_alternative_names` - (Optional) A list of domains that should be SANs in the issued certificate
+  * `certificate_authority_arn` - (Required) The ARN of the private certificate authority (CA) that will be used to issue the certificate. If omitted, ACM will attempt to issue a public certificate (see above)
 * Importing an existing certificate
   * `private_key` - (Required) The certificate's PEM-formatted private key
   * `certificate_body` - (Required) The certificate's PEM-formatted public key

@@ -68,6 +68,12 @@ func resourceAwsAcmCertificate() *schema.Resource {
 					},
 				},
 			},
+			"certificate_authority_arn": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				ForceNew:     true,
+				ValidateFunc: validateArn,
+			},
 			"validation_method": {
 				Type:          schema.TypeString,
 				Optional:      true,
@@ -164,6 +170,10 @@ func resourceAwsAcmCertificateCreateRequested(d *schema.ResourceData, meta inter
 			subjectAlternativeNames[i] = aws.String(strings.TrimSuffix(sanRaw.(string), "."))
 		}
 		params.SubjectAlternativeNames = subjectAlternativeNames
+	}
+
+	if pca, ok := d.GetOk("certificate_authority_arn"); ok {
+		params.CertificateAuthorityArn = aws.String(pca.(string))
 	}
 
 	log.Printf("[DEBUG] ACM Certificate Request: %#v", params)
