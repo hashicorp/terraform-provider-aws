@@ -29,6 +29,11 @@ func TestAccAWSAthenaWorkGroup_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 				),
 			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
 		},
 	})
 }
@@ -75,6 +80,11 @@ func TestAccAWSAthenaWorkGroup_Description(t *testing.T) {
 				),
 			},
 			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
 				Config: testAccAthenaWorkGroupConfigDescription(rName, rDescriptionUpdate),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSAthenaWorkGroupExists(resourceName, &workgroup2),
@@ -103,6 +113,11 @@ func TestAccAWSAthenaWorkGroup_BytesScannedCutoffPerQuery(t *testing.T) {
 					testAccCheckAWSAthenaWorkGroupExists(resourceName, &workgroup1),
 					resource.TestCheckResourceAttr(resourceName, "bytes_scanned_cutoff_per_query", rBytesScannedCutoffPerQuery),
 				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 			{
 				Config: testAccAthenaWorkGroupConfigBytesScannedCutoffPerQuery(rName, rBytesScannedCutoffPerQueryUpdate),
@@ -135,6 +150,11 @@ func TestAccAWSAthenaWorkGroup_EnforceWorkgroupConfiguration(t *testing.T) {
 				),
 			},
 			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
 				Config: testAccAthenaWorkGroupConfigEnforceWorkgroupConfiguration(rName, rEnforceUpdate),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSAthenaWorkGroupExists(resourceName, &workgroup2),
@@ -163,6 +183,11 @@ func TestAccAWSAthenaWorkGroup_PublishCloudWatchMetricsEnabled(t *testing.T) {
 					testAccCheckAWSAthenaWorkGroupExists(resourceName, &workgroup1),
 					resource.TestCheckResourceAttr(resourceName, "publish_cloudwatch_metrics_enabled", rEnabled),
 				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 			{
 				Config: testAccAthenaWorkGroupConfigPublishCloudWatchMetricsEnabled(rName, rEnabledUpdate),
@@ -195,6 +220,11 @@ func TestAccAWSAthenaWorkGroup_OutputLocation(t *testing.T) {
 				),
 			},
 			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
 				Config: testAccAthenaWorkGroupConfigOutputLocation(rName, rOutputLocation2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSAthenaWorkGroupExists(resourceName, &workgroup2),
@@ -223,6 +253,11 @@ func TestAccAWSAthenaWorkGroup_SseS3Encryption(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "encryption_option", rEncryption),
 				),
 			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
 		},
 	})
 }
@@ -245,6 +280,11 @@ func TestAccAWSAthenaWorkGroup_KmsEncryption(t *testing.T) {
 					testAccCheckAWSAthenaWorkGroupExists(resourceName, &workgroup1),
 					resource.TestCheckResourceAttr(resourceName, "encryption_option", rEncryption),
 				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 			{
 				Config: testAccAthenaWorkGroupConfigEncryptionKms(rName, rEncryption2),
@@ -274,6 +314,11 @@ func TestAccAWSAthenaWorkGroup_Tags(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 			{
 				Config: testAccAthenaWorkGroupConfigTags2(rName, "key1", "value1updated", "key2", "value2"),

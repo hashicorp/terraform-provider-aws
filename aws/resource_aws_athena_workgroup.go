@@ -18,6 +18,9 @@ func resourceAwsAthenaWorkgroup() *schema.Resource {
 		Read:   resourceAwsAthenaWorkgroupRead,
 		Update: resourceAwsAthenaWorkgroupUpdate,
 		Delete: resourceAwsAthenaWorkgroupDelete,
+		Importer: &schema.ResourceImporter{
+			State: schema.ImportStatePassthrough,
+		},
 
 		Schema: map[string]*schema.Schema{
 			"name": {
