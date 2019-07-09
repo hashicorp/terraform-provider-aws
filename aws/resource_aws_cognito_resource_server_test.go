@@ -21,7 +21,7 @@ func TestAccAWSCognitoResourceServer_basic(t *testing.T) {
 	resourceName := "aws_cognito_resource_server.main"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSCognitoIdentityProvider(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSCognitoResourceServerDestroy,
 		Steps: []resource.TestStep{
@@ -62,7 +62,7 @@ func TestAccAWSCognitoResourceServer_scope(t *testing.T) {
 	resourceName := "aws_cognito_resource_server.main"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSCognitoIdentityProvider(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSCognitoResourceServerDestroy,
 		Steps: []resource.TestStep{
@@ -169,8 +169,8 @@ func testAccCheckAWSCognitoResourceServerDestroy(s *terraform.State) error {
 func testAccAWSCognitoResourceServerConfig_basic(identifier string, name string, poolName string) string {
 	return fmt.Sprintf(`
 resource "aws_cognito_resource_server" "main" {
-  identifier = "%s"
-  name = "%s"
+  identifier   = "%s"
+  name         = "%s"
   user_pool_id = "${aws_cognito_user_pool.main.id}"
 }
 
@@ -184,15 +184,15 @@ func testAccAWSCognitoResourceServerConfig_scope(identifier string, name string,
 	return fmt.Sprintf(`
 resource "aws_cognito_resource_server" "main" {
   identifier = "%s"
-  name = "%s"
+  name       = "%s"
 
   scope {
-    scope_name = "scope_1_name"
+    scope_name        = "scope_1_name"
     scope_description = "scope_1_description"
   }
 
   scope {
-    scope_name = "scope_2_name"
+    scope_name        = "scope_2_name"
     scope_description = "scope_2_description"
   }
 
@@ -209,10 +209,10 @@ func testAccAWSCognitoResourceServerConfig_scope_update(identifier string, name 
 	return fmt.Sprintf(`
 resource "aws_cognito_resource_server" "main" {
   identifier = "%s"
-  name = "%s"
+  name       = "%s"
 
   scope {
-    scope_name = "scope_1_name_updated"
+    scope_name        = "scope_1_name_updated"
     scope_description = "scope_1_description"
   }
 

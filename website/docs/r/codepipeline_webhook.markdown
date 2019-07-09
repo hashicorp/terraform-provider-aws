@@ -96,7 +96,7 @@ resource "github_repository_webhook" "bar" {
 
   configuration {
     url          = "${aws_codepipeline_webhook.bar.url}"
-    content_type = "form"
+    content_type = "json"
     insecure_ssl = true
     secret       = "${local.webhook_secret}"
   }
@@ -115,6 +115,7 @@ The following arguments are supported:
 * `filter` (Required) One or more `filter` blocks. Filter blocks are documented below.
 * `target_action` - (Required) The name of the action in a pipeline you want to connect to the webhook. The action must be from the source (first) stage of the pipeline.
 * `target_pipeline` - (Required) The name of the pipeline.
+* `tags` - (Optional) A mapping of tags to assign to the resource.
 
 An `authentication_configuration` block supports the following arguments:
 

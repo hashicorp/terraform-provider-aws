@@ -105,14 +105,14 @@ resource "aws_codebuild_project" "example" {
     image_pull_credentials_type = "CODEBUILD"
 
     environment_variable {
-      "name"  = "SOME_KEY1"
-      "value" = "SOME_VALUE1"
+      name  = "SOME_KEY1"
+      value = "SOME_VALUE1"
     }
 
     environment_variable {
-      "name"  = "SOME_KEY2"
-      "value" = "SOME_VALUE2"
-      "type"  = "PARAMETER_STORE"
+      name  = "SOME_KEY2"
+      value = "SOME_VALUE2"
+      type  = "PARAMETER_STORE"
     }
   }
 
@@ -137,7 +137,45 @@ resource "aws_codebuild_project" "example" {
   }
 
   tags = {
-    "Environment" = "Test"
+    Environment = "Test"
+  }
+}
+
+resource "aws_codebuild_project" "project-with-cache" {
+  name          = "test-project-cache"
+  description   = "test_codebuild_project_cache"
+  build_timeout = "5"
+  service_role  = "${aws_iam_role.example.arn}"
+
+  artifacts {
+    type = "NO_ARTIFACTS"
+  }
+
+  cache {
+    type  = "LOCAL"
+    modes = ["LOCAL_DOCKER_LAYER_CACHE", "LOCAL_SOURCE_CACHE"]
+  }
+
+  environment {
+    compute_type                = "BUILD_GENERAL1_SMALL"
+    image                       = "aws/codebuild/standard:1.0"
+    type                        = "LINUX_CONTAINER"
+    image_pull_credentials_type = "CODEBUILD"
+
+    environment_variable {
+      name  = "SOME_KEY1"
+      value = "SOME_VALUE1"
+    }
+  }
+
+  source {
+    type            = "GITHUB"
+    location        = "https://github.com/mitchellh/packer.git"
+    git_clone_depth = 1
+  }
+
+  tags = {
+    Environment = "Test"
   }
 }
 ```
@@ -173,8 +211,9 @@ The following arguments are supported:
 
 `cache` supports the following:
 
-* `type` - (Optional) The type of storage that will be used for the AWS CodeBuild project cache. Valid values: `NO_CACHE` and `S3`. Defaults to `NO_CACHE`.
+* `type` - (Optional) The type of storage that will be used for the AWS CodeBuild project cache. Valid values: `NO_CACHE`, `LOCAL`, and `S3`. Defaults to `NO_CACHE`.
 * `location` - (Required when cache type is `S3`) The location where the AWS CodeBuild project stores cached resources. For type `S3` the value must be a valid S3 bucket name/prefix.
+* `modes` - (Required when cache type is `LOCAL`) Specifies settings that AWS CodeBuild uses to store and reuse build dependencies. Valid values:  `LOCAL_SOURCE_CACHE`, `LOCAL_DOCKER_LAYER_CACHE`, and `LOCAL_CUSTOM_CACHE`
 
 `environment` supports the following:
 
@@ -185,6 +224,7 @@ The following arguments are supported:
 * `environment_variable` - (Optional) A set of environment variables to make available to builds for this build project.
 * `privileged_mode` - (Optional) If set to true, enables running the Docker daemon inside a Docker container. Defaults to `false`.
 * `certificate` - (Optional) The ARN of the S3 bucket, path prefix and object key that contains the PEM-encoded certificate.
+* `registry_credential` - (Optional) Information about credentials for access to a private Docker registry. Registry Credential config blocks are documented below.
 
 `environment_variable` supports the following:
 
@@ -213,6 +253,10 @@ The following arguments are supported:
 * `subnets` - (Required) The subnet IDs within which to run builds.
 * `vpc_id` - (Required) The ID of the VPC within which to run builds.
 
+`registry_credential` supports the following:
+
+* `credential` - (Required) The Amazon Resource Name (ARN) or name of credentials created using AWS Secrets Manager.
+* `credential_provider` - (Required) The service that created the credentials to access a private Docker registry. The valid value, SECRETS_MANAGER, is for AWS Secrets Manager.
 
 `secondary_artifacts` supports the following:
 

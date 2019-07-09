@@ -63,9 +63,9 @@ func (c *ConfigService) BatchGetAggregateResourceConfigRequest(input *BatchGetAg
 // resources, the operation returns an empty unprocessedResourceIdentifiers
 // list.
 //
-// The API does not return results for deleted resources.
+//    * The API does not return results for deleted resources.
 //
-//  The API does not return tags and relationships.
+//    * The API does not return tags and relationships.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -152,10 +152,10 @@ func (c *ConfigService) BatchGetResourceConfigRequest(input *BatchGetResourceCon
 // current request. If there are no unprocessed resources, the operation returns
 // an empty unprocessedResourceKeys list.
 //
-// The API does not return results for deleted resources.
+//    * The API does not return results for deleted resources.
 //
-//  The API does not return any tags for the requested resources. This information
-// is filtered out of the supplementaryConfiguration section of the API response.
+//    * The API does not return any tags for the requested resources. This information
+//    is filtered out of the supplementaryConfiguration section of the API response.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -2407,7 +2407,7 @@ func (c *ConfigService) DescribeRemediationExecutionStatusWithContext(ctx aws.Co
 //    // Example iterating over at most 3 pages of a DescribeRemediationExecutionStatus operation.
 //    pageNum := 0
 //    err := client.DescribeRemediationExecutionStatusPages(params,
-//        func(page *DescribeRemediationExecutionStatusOutput, lastPage bool) bool {
+//        func(page *configservice.DescribeRemediationExecutionStatusOutput, lastPage bool) bool {
 //            pageNum++
 //            fmt.Println(page)
 //            return pageNum <= 3
@@ -3299,11 +3299,11 @@ func (c *ConfigService) GetDiscoveredResourceCountsRequest(input *GetDiscoveredR
 //
 // AWS Config returns the following:
 //
-// The resource types (EC2 instances, IAM users, and S3 buckets).
+//    * The resource types (EC2 instances, IAM users, and S3 buckets).
 //
-// The number of each resource type (25, 20, and 15).
+//    * The number of each resource type (25, 20, and 15).
 //
-// The total number of all resources (60).
+//    * The total number of all resources (60).
 //
 // The response is paginated. By default, AWS Config lists 100 ResourceCount
 // objects on each page. You can customize this number with the limit parameter.
@@ -3313,9 +3313,9 @@ func (c *ConfigService) GetDiscoveredResourceCountsRequest(input *GetDiscoveredR
 // If you make a call to the GetDiscoveredResourceCounts action, you might not
 // immediately receive resource counts in the following situations:
 //
-// You are a new AWS Config customer.
+//    * You are a new AWS Config customer.
 //
-// You just enabled resource recording.
+//    * You just enabled resource recording.
 //
 // It might take a few minutes for AWS Config to record and count your resources.
 // Wait a few minutes and then retry the GetDiscoveredResourceCounts action.
@@ -3487,7 +3487,7 @@ func (c *ConfigService) GetResourceConfigHistoryWithContext(ctx aws.Context, inp
 //    // Example iterating over at most 3 pages of a GetResourceConfigHistory operation.
 //    pageNum := 0
 //    err := client.GetResourceConfigHistoryPages(params,
-//        func(page *GetResourceConfigHistoryOutput, lastPage bool) bool {
+//        func(page *configservice.GetResourceConfigHistoryOutput, lastPage bool) bool {
 //            pageNum++
 //            fmt.Println(page)
 //            return pageNum <= 3
@@ -3993,7 +3993,7 @@ func (c *ConfigService) PutConfigRuleRequest(input *PutConfigRuleInput) (req *re
 //
 //   * ErrCodeMaxNumberOfConfigRulesExceededException "MaxNumberOfConfigRulesExceededException"
 //   Failed to add the AWS Config rule because the account already contains the
-//   maximum number of 50 rules. Consider deleting any deactivated rules before
+//   maximum number of 150 rules. Consider deleting any deactivated rules before
 //   you add new rules.
 //
 //   * ErrCodeResourceInUseException "ResourceInUseException"
@@ -6839,9 +6839,6 @@ func (s *ConfigRuleEvaluationStatus) SetLastSuccessfulInvocationTime(v time.Time
 // Provides options for how often AWS Config delivers configuration snapshots
 // to the Amazon S3 bucket in your delivery channel.
 //
-// If you want to create a rule that triggers evaluations for your resources
-// when AWS Config delivers the configuration snapshot, see the following:
-//
 // The frequency for a rule that triggers evaluations for your resources when
 // AWS Config delivers the configuration snapshot is set by one of two values,
 // depending on which is less frequent:
@@ -8496,7 +8493,7 @@ type DescribeConfigRuleEvaluationStatusInput struct {
 	// The number of rule evaluation results that you want returned.
 	//
 	// This parameter is required if the rule limit for your account is more than
-	// the default of 50 rules.
+	// the default of 150 rules.
 	//
 	// For information about requesting a rule limit increase, see AWS Config Limits
 	// (http://docs.aws.amazon.com/general/latest/gr/aws_service_limits.html#limits_config)
@@ -11116,8 +11113,8 @@ func (s *ListTagsForResourceOutput) SetTags(v []*Tag) *ListTagsForResourceOutput
 	return s
 }
 
-// This object contains regions to setup the aggregator and an IAM role to retrieve
-// organization details.
+// This object contains regions to set up the aggregator and an IAM role to
+// retrieve organization details.
 type OrganizationAggregationSource struct {
 	_ struct{} `type:"structure"`
 
@@ -11127,7 +11124,7 @@ type OrganizationAggregationSource struct {
 	// The source regions being aggregated.
 	AwsRegions []*string `min:"1" type:"list"`
 
-	// ARN of the IAM role used to retreive AWS Organization details associated
+	// ARN of the IAM role used to retrieve AWS Organization details associated
 	// with the aggregator account.
 	//
 	// RoleArn is a required field
@@ -11224,6 +11221,8 @@ type PutAggregationAuthorizationInput struct {
 	//
 	// AuthorizedAwsRegion is a required field
 	AuthorizedAwsRegion *string `min:"1" type:"string" required:"true"`
+
+	Tags []*Tag `type:"list"`
 }
 
 // String returns the string representation
@@ -11248,6 +11247,16 @@ func (s *PutAggregationAuthorizationInput) Validate() error {
 	if s.AuthorizedAwsRegion != nil && len(*s.AuthorizedAwsRegion) < 1 {
 		invalidParams.Add(request.NewErrParamMinLen("AuthorizedAwsRegion", 1))
 	}
+	if s.Tags != nil {
+		for i, v := range s.Tags {
+			if v == nil {
+				continue
+			}
+			if err := v.Validate(); err != nil {
+				invalidParams.AddNested(fmt.Sprintf("%s[%v]", "Tags", i), err.(request.ErrInvalidParams))
+			}
+		}
+	}
 
 	if invalidParams.Len() > 0 {
 		return invalidParams
@@ -11264,6 +11273,12 @@ func (s *PutAggregationAuthorizationInput) SetAuthorizedAccountId(v string) *Put
 // SetAuthorizedAwsRegion sets the AuthorizedAwsRegion field's value.
 func (s *PutAggregationAuthorizationInput) SetAuthorizedAwsRegion(v string) *PutAggregationAuthorizationInput {
 	s.AuthorizedAwsRegion = &v
+	return s
+}
+
+// SetTags sets the Tags field's value.
+func (s *PutAggregationAuthorizationInput) SetTags(v []*Tag) *PutAggregationAuthorizationInput {
+	s.Tags = v
 	return s
 }
 
@@ -11297,6 +11312,8 @@ type PutConfigRuleInput struct {
 	//
 	// ConfigRule is a required field
 	ConfigRule *ConfigRule `type:"structure" required:"true"`
+
+	Tags []*Tag `type:"list"`
 }
 
 // String returns the string representation
@@ -11320,6 +11337,16 @@ func (s *PutConfigRuleInput) Validate() error {
 			invalidParams.AddNested("ConfigRule", err.(request.ErrInvalidParams))
 		}
 	}
+	if s.Tags != nil {
+		for i, v := range s.Tags {
+			if v == nil {
+				continue
+			}
+			if err := v.Validate(); err != nil {
+				invalidParams.AddNested(fmt.Sprintf("%s[%v]", "Tags", i), err.(request.ErrInvalidParams))
+			}
+		}
+	}
 
 	if invalidParams.Len() > 0 {
 		return invalidParams
@@ -11330,6 +11357,12 @@ func (s *PutConfigRuleInput) Validate() error {
 // SetConfigRule sets the ConfigRule field's value.
 func (s *PutConfigRuleInput) SetConfigRule(v *ConfigRule) *PutConfigRuleInput {
 	s.ConfigRule = v
+	return s
+}
+
+// SetTags sets the Tags field's value.
+func (s *PutConfigRuleInput) SetTags(v []*Tag) *PutConfigRuleInput {
+	s.Tags = v
 	return s
 }
 
@@ -11360,6 +11393,8 @@ type PutConfigurationAggregatorInput struct {
 
 	// An OrganizationAggregationSource object.
 	OrganizationAggregationSource *OrganizationAggregationSource `type:"structure"`
+
+	Tags []*Tag `type:"list"`
 }
 
 // String returns the string representation
@@ -11396,6 +11431,16 @@ func (s *PutConfigurationAggregatorInput) Validate() error {
 			invalidParams.AddNested("OrganizationAggregationSource", err.(request.ErrInvalidParams))
 		}
 	}
+	if s.Tags != nil {
+		for i, v := range s.Tags {
+			if v == nil {
+				continue
+			}
+			if err := v.Validate(); err != nil {
+				invalidParams.AddNested(fmt.Sprintf("%s[%v]", "Tags", i), err.(request.ErrInvalidParams))
+			}
+		}
+	}
 
 	if invalidParams.Len() > 0 {
 		return invalidParams
@@ -11418,6 +11463,12 @@ func (s *PutConfigurationAggregatorInput) SetConfigurationAggregatorName(v strin
 // SetOrganizationAggregationSource sets the OrganizationAggregationSource field's value.
 func (s *PutConfigurationAggregatorInput) SetOrganizationAggregationSource(v *OrganizationAggregationSource) *PutConfigurationAggregatorInput {
 	s.OrganizationAggregationSource = v
+	return s
+}
+
+// SetTags sets the Tags field's value.
+func (s *PutConfigurationAggregatorInput) SetTags(v []*Tag) *PutConfigurationAggregatorInput {
+	s.Tags = v
 	return s
 }
 

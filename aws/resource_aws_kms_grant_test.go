@@ -215,8 +215,8 @@ resource "aws_kms_grant" "%s" {
 func testAccAWSKmsGrant_withRetiringPrincipal(rName string, timestamp string) string {
 	return fmt.Sprintf(`
 resource "aws_kms_key" "tf-acc-test-key" {
-    description = "Terraform acc test key %s"
-    deletion_window_in_days = 7
+  description             = "Terraform acc test key %s"
+  deletion_window_in_days = 7
 }
 
 %s
@@ -228,11 +228,11 @@ resource "aws_iam_role" "tf-acc-test-role" {
 }
 
 resource "aws_kms_grant" "%s" {
-	name = "%s"
-	key_id = "${aws_kms_key.tf-acc-test-key.key_id}"
-	grantee_principal = "${aws_iam_role.tf-acc-test-role.arn}"
-	operations = [ "ReEncryptTo", "CreateGrant" ]
-	retiring_principal = "${aws_iam_role.tf-acc-test-role.arn}"
+  name               = "%s"
+  key_id             = "${aws_kms_key.tf-acc-test-key.key_id}"
+  grantee_principal  = "${aws_iam_role.tf-acc-test-role.arn}"
+  operations         = ["ReEncryptTo", "CreateGrant"]
+  retiring_principal = "${aws_iam_role.tf-acc-test-role.arn}"
 }
 `, timestamp, staticAssumeRolePolicyString, rName, rName, rName)
 }
@@ -240,8 +240,8 @@ resource "aws_kms_grant" "%s" {
 func testAccAWSKmsGrant_bare(rName string, timestamp string) string {
 	return fmt.Sprintf(`
 resource "aws_kms_key" "tf-acc-test-key" {
-    description = "Terraform acc test key %s"
-    deletion_window_in_days = 7
+  description             = "Terraform acc test key %s"
+  deletion_window_in_days = 7
 }
 
 %s
@@ -253,9 +253,9 @@ resource "aws_iam_role" "tf-acc-test-role" {
 }
 
 resource "aws_kms_grant" "%s" {
-	key_id = "${aws_kms_key.tf-acc-test-key.key_id}"
-	grantee_principal = "${aws_iam_role.tf-acc-test-role.arn}"
-	operations = [ "ReEncryptTo", "CreateGrant" ]
+  key_id            = "${aws_kms_key.tf-acc-test-key.key_id}"
+  grantee_principal = "${aws_iam_role.tf-acc-test-role.arn}"
+  operations        = ["ReEncryptTo", "CreateGrant"]
 }
 `, timestamp, staticAssumeRolePolicyString, rName, rName)
 }

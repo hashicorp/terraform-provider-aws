@@ -132,7 +132,7 @@ resource "aws_lb_listener_rule" "admin" {
 
 # Authenticate-oidc Action
 
-resource "aws_lb_listener" "admin" {
+resource "aws_lb_listener_rule" "admin" {
   listener_arn = "${aws_lb_listener.front_end.arn}"
 
   action {

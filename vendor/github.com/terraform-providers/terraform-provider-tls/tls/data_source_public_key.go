@@ -11,25 +11,25 @@ func dataSourcePublicKey() *schema.Resource {
 	return &schema.Resource{
 		Read: dataSourcePublicKeyRead,
 		Schema: map[string]*schema.Schema{
-			"private_key_pem": &schema.Schema{
+			"private_key_pem": {
 				Type:        schema.TypeString,
 				Required:    true,
 				Description: "PEM formatted string to use as the private key",
 			},
-			"algorithm": &schema.Schema{
+			"algorithm": {
 				Type:        schema.TypeString,
 				Computed:    true,
 				Description: "Name of the algorithm to use to generate the private key",
 			},
-			"public_key_pem": &schema.Schema{
+			"public_key_pem": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"public_key_openssh": &schema.Schema{
+			"public_key_openssh": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"public_key_fingerprint_md5": &schema.Schema{
+			"public_key_fingerprint_md5": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},

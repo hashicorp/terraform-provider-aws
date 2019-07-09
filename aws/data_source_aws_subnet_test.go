@@ -226,7 +226,7 @@ data "aws_subnet" "by_vpc" {
 
 data "aws_subnet" "by_filter" {
   filter {
-    name = "vpc-id"
+    name   = "vpc-id"
     values = ["${aws_subnet.test.vpc_id}"]
   }
 }
@@ -243,7 +243,7 @@ func testAccDataSourceAwsSubnetConfigIpv6(rInt int) string {
 data "aws_availability_zones" "available" {}
 
 resource "aws_vpc" "test" {
-  cidr_block = "172.%d.0.0/16"
+  cidr_block                       = "172.%d.0.0/16"
   assign_generated_ipv6_cidr_block = true
 
   tags = {
@@ -255,7 +255,7 @@ resource "aws_subnet" "test" {
   vpc_id            = "${aws_vpc.test.id}"
   cidr_block        = "172.%d.123.0/24"
   availability_zone = "${data.aws_availability_zones.available.names[0]}"
-  ipv6_cidr_block = "${cidrsubnet(aws_vpc.test.ipv6_cidr_block, 8, 1)}"
+  ipv6_cidr_block   = "${cidrsubnet(aws_vpc.test.ipv6_cidr_block, 8, 1)}"
 
   tags = {
     Name = "tf-acc-subnet-data-source-ipv6"
@@ -269,7 +269,7 @@ func testAccDataSourceAwsSubnetConfigIpv6WithDataSourceFilter(rInt int) string {
 data "aws_availability_zones" "available" {}
 
 resource "aws_vpc" "test" {
-  cidr_block = "172.%d.0.0/16"
+  cidr_block                       = "172.%d.0.0/16"
   assign_generated_ipv6_cidr_block = true
 
   tags = {
@@ -281,7 +281,7 @@ resource "aws_subnet" "test" {
   vpc_id            = "${aws_vpc.test.id}"
   cidr_block        = "172.%d.123.0/24"
   availability_zone = "${data.aws_availability_zones.available.names[0]}"
-  ipv6_cidr_block = "${cidrsubnet(aws_vpc.test.ipv6_cidr_block, 8, 1)}"
+  ipv6_cidr_block   = "${cidrsubnet(aws_vpc.test.ipv6_cidr_block, 8, 1)}"
 
   tags = {
     Name = "tf-acc-subnet-data-source-ipv6-with-ds-filter"
@@ -290,7 +290,7 @@ resource "aws_subnet" "test" {
 
 data "aws_subnet" "by_ipv6_cidr" {
   filter {
-    name = "ipv6-cidr-block-association.ipv6-cidr-block"
+    name   = "ipv6-cidr-block-association.ipv6-cidr-block"
     values = ["${aws_subnet.test.ipv6_cidr_block}"]
   }
 }
@@ -302,7 +302,7 @@ func testAccDataSourceAwsSubnetConfigIpv6WithDataSourceIpv6CidrBlock(rInt int) s
 data "aws_availability_zones" "available" {}
 
 resource "aws_vpc" "test" {
-  cidr_block = "172.%d.0.0/16"
+  cidr_block                       = "172.%d.0.0/16"
   assign_generated_ipv6_cidr_block = true
 
   tags = {
@@ -314,7 +314,7 @@ resource "aws_subnet" "test" {
   vpc_id            = "${aws_vpc.test.id}"
   cidr_block        = "172.%d.123.0/24"
   availability_zone = "${data.aws_availability_zones.available.names[0]}"
-  ipv6_cidr_block = "${cidrsubnet(aws_vpc.test.ipv6_cidr_block, 8, 1)}"
+  ipv6_cidr_block   = "${cidrsubnet(aws_vpc.test.ipv6_cidr_block, 8, 1)}"
 
   tags = {
     Name = "tf-acc-subnet-data-source-ipv6-cidr-block"

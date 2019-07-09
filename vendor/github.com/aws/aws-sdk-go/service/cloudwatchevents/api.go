@@ -4037,12 +4037,12 @@ func (s *RunCommandParameters) SetRunCommandTargets(v []*RunCommandTarget) *RunC
 type RunCommandTarget struct {
 	_ struct{} `type:"structure"`
 
-	// Can be either tag:tag-key or InstanceIds.
+	// Can be either tag: tag-key or InstanceIds.
 	//
 	// Key is a required field
 	Key *string `min:"1" type:"string" required:"true"`
 
-	// If Key is tag:tag-key, Values is a list of tag values. If Key is InstanceIds,
+	// If Key is tag: tag-key, Values is a list of tag values. If Key is InstanceIds,
 	// Values is a list of Amazon EC2 instance IDs.
 	//
 	// Values is a required field
@@ -4279,7 +4279,7 @@ type Target struct {
 
 	// Contains the Amazon ECS task definition and task count to be used, if the
 	// event target is an Amazon ECS task. For more information about Amazon ECS
-	// tasks, see Task Definitions  (https://docs.aws.amazon.com/AmazonECS/latest/developerguide/task_defintions.html)
+	// tasks, see Task Definitions (https://docs.aws.amazon.com/AmazonECS/latest/developerguide/task_defintions.html)
 	// in the Amazon EC2 Container Service Developer Guide.
 	EcsParameters *EcsParameters `type:"structure"`
 

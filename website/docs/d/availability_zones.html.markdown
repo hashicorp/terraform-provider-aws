@@ -19,7 +19,9 @@ which provides some details about a specific availability zone.
 
 ```hcl
 # Declare the data source
-data "aws_availability_zones" "available" {}
+data "aws_availability_zones" "available" {
+  state = "available"
+}
 
 # e.g. Create subnets in the first two available availability zones
 
@@ -40,6 +42,8 @@ resource "aws_subnet" "secondary" {
 
 The following arguments are supported:
 
+* `blacklisted_names` - (Optional) List of blacklisted Availability Zone names.
+* `blacklisted_zone_ids` - (Optional) List of blacklisted Availability Zone IDs.
 * `state` - (Optional) Allows to filter list of Availability Zones based on their
 current state. Can be either `"available"`, `"information"`, `"impaired"` or
 `"unavailable"`. By default the list includes a complete set of Availability Zones

@@ -207,7 +207,7 @@ resource "aws_vpc_endpoint_connection_notification" "foo" {
   connection_notification_arn = "${aws_sns_topic.topic.arn}"
   connection_events = ["Accept", "Reject"]
 }
-	`, lbName)
+`, lbName)
 }
 
 func testAccVpcEndpointConnectionNotificationModifiedConfig(lbName string) string {
@@ -296,5 +296,5 @@ func testAccVpcEndpointConnectionNotificationModifiedConfig(lbName string) strin
 			connection_notification_arn = "${aws_sns_topic.topic.arn}"
 			connection_events = ["Accept"]
 		}
-	`, lbName)
+`, lbName)
 }

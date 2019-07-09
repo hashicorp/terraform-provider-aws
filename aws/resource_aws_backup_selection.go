@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 	"regexp"
+	"strings"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/backup"
@@ -16,6 +17,9 @@ func resourceAwsBackupSelection() *schema.Resource {
 		Create: resourceAwsBackupSelectionCreate,
 		Read:   resourceAwsBackupSelectionRead,
 		Delete: resourceAwsBackupSelectionDelete,
+		Importer: &schema.ResourceImporter{
+			State: resourceAwsBackupSelectionImportState,
+		},
 
 		Schema: map[string]*schema.Schema{
 			"name": {
@@ -47,6 +51,7 @@ func resourceAwsBackupSelection() *schema.Resource {
 						"type": {
 							Type:     schema.TypeString,
 							Required: true,
+							ForceNew: true,
 							ValidateFunc: validation.StringInSlice([]string{
 								backup.ConditionTypeStringequals,
 							}, false),
@@ -54,10 +59,12 @@ func resourceAwsBackupSelection() *schema.Resource {
 						"key": {
 							Type:     schema.TypeString,
 							Required: true,
+							ForceNew: true,
 						},
 						"value": {
 							Type:     schema.TypeString,
 							Required: true,
+							ForceNew: true,
 						},
 					},
 				},
@@ -160,6 +167,21 @@ func resourceAwsBackupSelectionDelete(d *schema.ResourceData, meta interface{}) 
 	}
 
 	return nil
+}
+
+func resourceAwsBackupSelectionImportState(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
+	idParts := strings.Split(d.Id(), "|")
+	if len(idParts) != 2 || idParts[0] == "" || idParts[1] == "" {
+		return nil, fmt.Errorf("unexpected format of ID (%q), expected <plan-id>|<selection-id>", d.Id())
+	}
+
+	planID := idParts[0]
+	selectionID := idParts[1]
+
+	d.Set("plan_id", planID)
+	d.SetId(selectionID)
+
+	return []*schema.ResourceData{d}, nil
 }
 
 func expandBackupConditionTags(tagList []interface{}) []*backup.Condition {

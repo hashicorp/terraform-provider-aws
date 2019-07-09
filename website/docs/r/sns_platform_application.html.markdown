@@ -1,6 +1,6 @@
 ---
 layout: "aws"
-page_title: "AWS: sns_platform_application"
+page_title: "AWS: aws_sns_platform_application"
 sidebar_current: "docs-aws-resource-sns-platform-application"
 description: |-
   Provides an SNS platform application resource.
