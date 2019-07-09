@@ -3,9 +3,11 @@ package aws
 import (
 	"fmt"
 	"strings"
+	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
+	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/helper/schema"
 )
 
@@ -78,22 +80,34 @@ func resourceAwsEc2TagRead(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	key := d.Get("key").(string)
+	var tags *ec2.DescribeTagsOutput
 
-	tags, err := conn.DescribeTags(&ec2.DescribeTagsInput{
-		Filters: []*ec2.Filter{
-			{
-				Name:   aws.String("resource-id"),
-				Values: []*string{aws.String(id)},
+	// The EC2 API is eventually consistent. This means that writing a tag
+	// followed by an immediate describe call can sometimes fail. To address
+	// this we retry for a couple of minutes before failing.
+	retryError := resource.Retry(2*time.Minute, func() *resource.RetryError {
+		tags, err = conn.DescribeTags(&ec2.DescribeTagsInput{
+			Filters: []*ec2.Filter{
+				{
+					Name:   aws.String("resource-id"),
+					Values: []*string{aws.String(id)},
+				},
+				{
+					Name:   aws.String("key"),
+					Values: []*string{aws.String(key)},
+				},
 			},
-			{
-				Name:   aws.String("key"),
-				Values: []*string{aws.String(key)},
-			},
-		},
+		})
+
+		if err != nil {
+			return resource.RetryableError(err)
+		}
+
+		return nil
 	})
 
-	if err != nil {
-		return err
+	if retryError != nil {
+		return fmt.Errorf("[ERROR] Tag %s not found on resource %s", key, id)
 	}
 
 	if len(tags.Tags) != 1 {
