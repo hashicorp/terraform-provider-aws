@@ -219,7 +219,10 @@ func resourceAwsRouteTableRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("route", route)
 
 	// Tags
-	d.Set("tags", tagsToMap(rt.Tags))
+	_, tagsAreDefined := d.GetOk("tags")
+	if tagsAreDefined {
+		d.Set("tags", tagsToMap(rt.Tags))
+	}
 
 	d.Set("owner_id", rt.OwnerId)
 
@@ -400,10 +403,12 @@ func resourceAwsRouteTableUpdate(d *schema.ResourceData, meta interface{}) error
 		}
 	}
 
-	if err := setTags(conn, d); err != nil {
-		return err
-	} else {
-		d.SetPartial("tags")
+	if d.HasChange("tags") {
+		if err := setTags(conn, d); err != nil {
+			return err
+		} else {
+			d.SetPartial("tags")
+		}
 	}
 
 	return resourceAwsRouteTableRead(d, meta)
