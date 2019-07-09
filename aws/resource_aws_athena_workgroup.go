@@ -147,7 +147,7 @@ func resourceAwsAthenaWorkgroupCreate(d *schema.ResourceData, meta interface{}) 
 	_, err := conn.CreateWorkGroup(input)
 
 	if err != nil {
-		return err
+		return fmt.Errorf("error creating Athena WorkGroup: %s", err)
 	}
 
 	d.SetId(name)
@@ -171,7 +171,7 @@ func resourceAwsAthenaWorkgroupRead(d *schema.ResourceData, meta interface{}) er
 	}
 
 	if err != nil {
-		return err
+		return fmt.Errorf("error reading Athena WorkGroup (%s): %s", d.Id(), err)
 	}
 
 	d.Set("name", *resp.WorkGroup.Name)
@@ -246,7 +246,11 @@ func resourceAwsAthenaWorkgroupDelete(d *schema.ResourceData, meta interface{}) 
 
 	_, err := conn.DeleteWorkGroup(input)
 
-	return err
+	if err != nil {
+		return fmt.Errorf("error deleting Athena WorkGroup (%s): %s", d.Id(), err)
+	}
+
+	return nil
 }
 
 func resourceAwsAthenaWorkgroupUpdate(d *schema.ResourceData, meta interface{}) error {
@@ -350,7 +354,7 @@ func resourceAwsAthenaWorkgroupUpdate(d *schema.ResourceData, meta interface{}) 
 		_, err := conn.UpdateWorkGroup(input)
 
 		if err != nil {
-			return fmt.Errorf("Error updating Athena WorkGroup (%s): %s", d.Id(), err)
+			return fmt.Errorf("error updating Athena WorkGroup (%s): %s", d.Id(), err)
 		}
 	}
 
