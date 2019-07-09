@@ -291,20 +291,20 @@ func testAccAWSSSMMaintenanceWindowTaskImportStateIdFunc(resourceName string) re
 func testAccAWSSSMMaintenanceWindowTaskBasicConfig(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_ssm_maintenance_window" "foo" {
-  name     = "maintenance-window-%s"
+  name  = "maintenance-window-%s"
   schedule = "cron(0 16 ? * TUE *)"
   duration = 3
   cutoff   = 1
 }
 
 resource "aws_ssm_maintenance_window_task" "target" {
-  window_id        = "${aws_ssm_maintenance_window.foo.id}"
-  task_type        = "RUN_COMMAND"
-  task_arn         = "AWS-RunShellScript"
-  priority         = 1
+  window_id   = "${aws_ssm_maintenance_window.foo.id}"
+  task_type   = "RUN_COMMAND"
+  task_arn    = "AWS-RunShellScript"
+  priority    = 1
   service_role_arn = "${aws_iam_role.ssm_role.arn}"
   max_concurrency  = "2"
-  max_errors       = "1"
+  max_errors  = "1"
 
   targets {
     key    = "InstanceIds"
@@ -330,14 +330,14 @@ resource "aws_iam_role" "ssm_role" {
 {
     "Version": "2012-10-17",
     "Statement": [
-        {
-            "Action": "sts:AssumeRole",
-            "Principal": {
-                "Service": "events.amazonaws.com"
-            },
-            "Effect": "Allow",
-            "Sid": ""
-        }
+   {
+     "Action": "sts:AssumeRole",
+     "Principal": {
+      "Service": "events.amazonaws.com"
+     },
+     "Effect": "Allow",
+     "Sid": ""
+   }
     ]
 }
 POLICY
@@ -364,22 +364,22 @@ EOF
 func testAccAWSSSMMaintenanceWindowTaskBasicConfigUpdated(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_ssm_maintenance_window" "foo" {
-  name     = "maintenance-window-%s"
+  name  = "maintenance-window-%s"
   schedule = "cron(0 16 ? * TUE *)"
   duration = 3
   cutoff   = 1
 }
 
 resource "aws_ssm_maintenance_window_task" "target" {
-  window_id        = "${aws_ssm_maintenance_window.foo.id}"
-  task_type        = "RUN_COMMAND"
-  task_arn         = "AWS-RunShellScript"
-  priority         = 1
-  name             = "TestMaintenanceWindowTask"
-  description      = "This resource is for test purpose only"
+  window_id   = "${aws_ssm_maintenance_window.foo.id}"
+  task_type   = "RUN_COMMAND"
+  task_arn    = "AWS-RunShellScript"
+  priority    = 1
+  name      = "TestMaintenanceWindowTask"
+  description    = "This resource is for test purpose only"
   service_role_arn = "${aws_iam_role.ssm_role.arn}"
   max_concurrency  = "2"
-  max_errors       = "1"
+  max_errors  = "1"
 
   targets {
     key    = "InstanceIds"
@@ -405,14 +405,14 @@ resource "aws_iam_role" "ssm_role" {
 {
     "Version": "2012-10-17",
     "Statement": [
-        {
-            "Action": "sts:AssumeRole",
-            "Principal": {
-                "Service": "events.amazonaws.com"
-            },
-            "Effect": "Allow",
-            "Sid": ""
-        }
+   {
+     "Action": "sts:AssumeRole",
+     "Principal": {
+      "Service": "events.amazonaws.com"
+     },
+     "Effect": "Allow",
+     "Sid": ""
+   }
     ]
 }
 POLICY
@@ -458,17 +458,17 @@ resource "aws_ssm_maintenance_window_task" "target" {
     values = ["${aws_instance.foo.id}"]
   }
   task_invocation_parameters {
-		automation_parameters {
-			document_version = "%[2]s"
-			parameters {
-				name = "InstanceId"
-				values = ["${aws_instance.foo.id}"]
-			}
-			parameters {
-				name = "NoReboot"
-				values = ["false"]
-			}
-		}
+    automation_parameters {
+      document_version = "%[2]s"
+      parameters {
+        name = "InstanceId"
+        values = ["${aws_instance.foo.id}"]
+      }
+      parameters {
+        name = "NoReboot"
+        values = ["false"]
+      }
+    }
   }
 }
 
@@ -485,14 +485,14 @@ resource "aws_iam_role" "ssm_role" {
 {
     "Version": "2012-10-17",
     "Statement": [
-        {
-            "Action": "sts:AssumeRole",
-            "Principal": {
-                "Service": "events.amazonaws.com"
-            },
-            "Effect": "Allow",
-            "Sid": ""
-        }
+   {
+     "Action": "sts:AssumeRole",
+     "Principal": {
+      "Service": "events.amazonaws.com"
+     },
+     "Effect": "Allow",
+     "Sid": ""
+   }
     ]
 }
 POLICY
@@ -520,9 +520,9 @@ EOF
 func testAccAWSSSMMaintenanceWindowTaskAutomationConfigUpdate(rName, version string) string {
 	return fmt.Sprintf(`
 resource "aws_s3_bucket" "foo" {
-		bucket = "tf-s3-%[1]s"
-		acl = "private"
-		force_destroy = true
+    bucket = "tf-s3-%[1]s"
+    acl = "private"
+    force_destroy = true
 }
 
 resource "aws_ssm_maintenance_window" "foo" {
@@ -545,17 +545,17 @@ resource "aws_ssm_maintenance_window_task" "target" {
     values = ["${aws_instance.foo.id}"]
   }
   task_invocation_parameters {
-		automation_parameters {
-			document_version = "%[2]s"
-			parameters {
-				name = "InstanceId"
-				values = ["${aws_instance.foo.id}"]
-			}
-			parameters {
-				name = "NoReboot"
-				values = ["false"]
-			}
-		}
+    automation_parameters {
+      document_version = "%[2]s"
+      parameters {
+        name = "InstanceId"
+        values = ["${aws_instance.foo.id}"]
+      }
+      parameters {
+        name = "NoReboot"
+        values = ["false"]
+      }
+    }
   }
 }
 
@@ -572,14 +572,14 @@ resource "aws_iam_role" "ssm_role" {
 {
     "Version": "2012-10-17",
     "Statement": [
-        {
-            "Action": "sts:AssumeRole",
-            "Principal": {
-                "Service": "events.amazonaws.com"
-            },
-            "Effect": "Allow",
-            "Sid": ""
-        }
+   {
+     "Action": "sts:AssumeRole",
+     "Principal": {
+      "Service": "events.amazonaws.com"
+     },
+     "Effect": "Allow",
+     "Sid": ""
+   }
     ]
 }
 POLICY
@@ -626,10 +626,10 @@ resource "aws_ssm_maintenance_window_task" "target" {
     values = ["${aws_instance.foo.id}"]
   }
   task_invocation_parameters {
-		lambda_parameters {
-			client_context = "${base64encode(data.template_file.client_context.rendered)}"
-			payload = "${data.template_file.payload.rendered}"
-		}
+    lambda_parameters {
+      client_context = "${base64encode(data.template_file.client_context.rendered)}"
+      payload = "${data.template_file.payload.rendered}"
+    }
   }
 }
 
@@ -646,14 +646,14 @@ resource "aws_iam_role" "ssm_role" {
 {
     "Version": "2012-10-17",
     "Statement": [
-        {
-            "Action": "sts:AssumeRole",
-            "Principal": {
-                "Service": "events.amazonaws.com"
-            },
-            "Effect": "Allow",
-            "Sid": ""
-        }
+   {
+     "Action": "sts:AssumeRole",
+     "Principal": {
+      "Service": "events.amazonaws.com"
+     },
+     "Effect": "Allow",
+     "Sid": ""
+   }
     ]
 }
 POLICY
@@ -678,9 +678,9 @@ EOF
 data "template_file" "client_context" {
   template = <<EOF
 {
-	"key1": "value1",
-	"key2": "value2",
-	"key3": "value3"
+  "key1": "value1",
+  "key2": "value2",
+  "key3": "value3"
 }
 EOF
 }
@@ -688,7 +688,7 @@ EOF
 data "template_file" "payload" {
   template = <<EOF
 {
-	"number": %[2]d
+  "number": %[2]d
 }
 EOF
 }
@@ -718,17 +718,17 @@ resource "aws_ssm_maintenance_window_task" "target" {
     values = ["${aws_instance.foo.id}"]
   }
   task_invocation_parameters {
-		run_command_parameters {
-			comment 						= "%[2]s"
-			document_hash 			= "${sha256("COMMAND")}"
-			document_hash_type 	= "Sha256"
-			service_role_arn 		= "${aws_iam_role.ssm_role.arn}"
-			timeout_seconds			= %[3]d
-			parameters {
-				name = "commands"
-				values = ["date"]
-			}
-		}
+    run_command_parameters {
+      comment             = "%[2]s"
+      document_hash       = "${sha256("COMMAND")}"
+      document_hash_type  = "Sha256"
+      service_role_arn    = "${aws_iam_role.ssm_role.arn}"
+      timeout_seconds     = %[3]d
+      parameters {
+        name = "commands"
+        values = ["date"]
+      }
+    }
   }
 }
 
@@ -745,14 +745,14 @@ resource "aws_iam_role" "ssm_role" {
 {
     "Version": "2012-10-17",
     "Statement": [
-        {
-            "Action": "sts:AssumeRole",
-            "Principal": {
-                "Service": "events.amazonaws.com"
-            },
-            "Effect": "Allow",
-            "Sid": ""
-        }
+   {
+     "Action": "sts:AssumeRole",
+     "Principal": {
+      "Service": "events.amazonaws.com"
+     },
+     "Effect": "Allow",
+     "Sid": ""
+   }
     ]
 }
 POLICY
@@ -780,9 +780,9 @@ EOF
 func testAccAWSSSMMaintenanceWindowTaskRunCommandConfigUpdate(rName, comment string, timeoutSeconds int) string {
 	return fmt.Sprintf(`
 resource "aws_s3_bucket" "foo" {
-		bucket = "tf-s3-%[1]s"
-		acl = "private"
-		force_destroy = true
+    bucket = "tf-s3-%[1]s"
+    acl = "private"
+    force_destroy = true
 }
 
 resource "aws_ssm_maintenance_window" "foo" {
@@ -805,19 +805,19 @@ resource "aws_ssm_maintenance_window_task" "target" {
     values = ["${aws_instance.foo.id}"]
   }
   task_invocation_parameters {
-		run_command_parameters {
-			comment 							= "%[2]s"
-			document_hash 				= "${sha256("COMMAND")}"
-			document_hash_type 		= "Sha256"
-			service_role_arn 			= "${aws_iam_role.ssm_role.arn}"
-			timeout_seconds				= %[3]d
-			output_s3_bucket			= "${aws_s3_bucket.foo.id}"
-			output_s3_key_prefix	= "foo"
-			parameters {
-				name = "commands"
-				values = ["date"]
-			}
-		}
+    run_command_parameters {
+    comment                = "%[2]s"
+      document_hash        = "${sha256("COMMAND")}"
+      document_hash_type   = "Sha256"
+      service_role_arn     = "${aws_iam_role.ssm_role.arn}"
+      timeout_seconds      = %[3]d
+      output_s3_bucket     = "${aws_s3_bucket.foo.id}"
+      output_s3_key_prefix = "foo"
+      parameters {
+        name = "commands"
+        values = ["date"]
+      }
+    }
   }
 }
 
@@ -834,14 +834,14 @@ resource "aws_iam_role" "ssm_role" {
 {
     "Version": "2012-10-17",
     "Statement": [
-        {
-            "Action": "sts:AssumeRole",
-            "Principal": {
-                "Service": "events.amazonaws.com"
-            },
-            "Effect": "Allow",
-            "Sid": ""
-        }
+   {
+     "Action": "sts:AssumeRole",
+     "Principal": {
+      "Service": "events.amazonaws.com"
+     },
+     "Effect": "Allow",
+     "Sid": ""
+   }
     ]
 }
 POLICY
@@ -888,10 +888,10 @@ resource "aws_ssm_maintenance_window_task" "target" {
     values = ["${aws_instance.foo.id}"]
   }
   task_invocation_parameters {
-		step_functions_parameters {
-			input = "${data.template_file.input.rendered}"
-			name = "tf-step-function-%[1]s"
-		}
+    step_functions_parameters {
+      input = "${data.template_file.input.rendered}"
+      name = "tf-step-function-%[1]s"
+    }
   }
 }
 
@@ -908,14 +908,14 @@ resource "aws_iam_role" "ssm_role" {
 {
     "Version": "2012-10-17",
     "Statement": [
-        {
-            "Action": "sts:AssumeRole",
-            "Principal": {
-                "Service": "events.amazonaws.com"
-            },
-            "Effect": "Allow",
-            "Sid": ""
-        }
+     {
+       "Action": "sts:AssumeRole",
+       "Principal": {
+         "Service": "events.amazonaws.com"
+      },
+      "Effect": "Allow",
+      "Sid": ""
+     }
     ]
 }
 POLICY
@@ -940,9 +940,9 @@ EOF
 data "template_file" "input" {
   template = <<EOF
 {
-	"key1": "value1",
-	"key2": "value2",
-	"key3": "value3"
+  "key1": "value1",
+  "key2": "value2",
+  "key3": "value3"
 }
 EOF
 }
