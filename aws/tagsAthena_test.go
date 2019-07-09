@@ -11,23 +11,23 @@ import (
 // go test -v -run="TestDiffAthenaTags"
 func TestDiffAthenaTags(t *testing.T) {
 	cases := []struct {
-		Old, New       map[string]interface{}
-		Create, Remove map[string]string
+		Old, New map[string]interface{}
+		Create   map[string]string
+		Remove   []string
 	}{
-		// Basic add/remove
+		// Add
 		{
 			Old: map[string]interface{}{
 				"foo": "bar",
 			},
 			New: map[string]interface{}{
+				"foo": "bar",
 				"bar": "baz",
 			},
 			Create: map[string]string{
 				"bar": "baz",
 			},
-			Remove: map[string]string{
-				"foo": "bar",
-			},
+			Remove: []string{},
 		},
 
 		// Modify
@@ -41,8 +41,41 @@ func TestDiffAthenaTags(t *testing.T) {
 			Create: map[string]string{
 				"foo": "baz",
 			},
-			Remove: map[string]string{
+			Remove: []string{
+				"foo",
+			},
+		},
+
+		// Overlap
+		{
+			Old: map[string]interface{}{
+				"foo":   "bar",
+				"hello": "world",
+			},
+			New: map[string]interface{}{
+				"foo":   "baz",
+				"hello": "world",
+			},
+			Create: map[string]string{
+				"foo": "baz",
+			},
+			Remove: []string{
+				"foo",
+			},
+		},
+
+		// Remove
+		{
+			Old: map[string]interface{}{
 				"foo": "bar",
+				"bar": "baz",
+			},
+			New: map[string]interface{}{
+				"foo": "bar",
+			},
+			Create: map[string]string{},
+			Remove: []string{
+				"bar",
 			},
 		},
 	}
@@ -50,12 +83,15 @@ func TestDiffAthenaTags(t *testing.T) {
 	for i, tc := range cases {
 		c, r := diffTagsAthena(tagsFromMapAthena(tc.Old), tagsFromMapAthena(tc.New))
 		cm := tagsToMapAthena(c)
-		rm := tagsToMapAthena(r)
+		rl := []string{}
+		for _, tagName := range r {
+			rl = append(rl, *tagName)
+		}
 		if !reflect.DeepEqual(cm, tc.Create) {
 			t.Fatalf("%d: bad create: %#v", i, cm)
 		}
-		if !reflect.DeepEqual(rm, tc.Remove) {
-			t.Fatalf("%d: bad remove: %#v", i, rm)
+		if !reflect.DeepEqual(rl, tc.Remove) {
+			t.Fatalf("%d: bad remove: %#v", i, rl)
 		}
 	}
 }

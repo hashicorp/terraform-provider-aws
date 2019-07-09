@@ -21,26 +21,23 @@ func setTagsAthena(conn *athena.Athena, d *schema.ResourceData, arn string) erro
 
 		// Set tags
 		if len(remove) > 0 {
-			log.Printf("[DEBUG] Removing tags: %#v", remove)
-			k := make([]*string, len(remove))
-			for i, t := range remove {
-				k[i] = t.Key
-			}
-
-			_, err := conn.UntagResource(&athena.UntagResourceInput{
+			input := athena.UntagResourceInput{
 				ResourceARN: aws.String(arn),
-				TagKeys:     k,
-			})
+				TagKeys:     remove,
+			}
+			log.Printf("[DEBUG] Removing Athena tags: %s", input)
+			_, err := conn.UntagResource(&input)
 			if err != nil {
 				return err
 			}
 		}
 		if len(create) > 0 {
-			log.Printf("[DEBUG] Creating tags: %#v", create)
-			_, err := conn.TagResource(&athena.TagResourceInput{
+			input := athena.TagResourceInput{
 				ResourceARN: aws.String(arn),
 				Tags:        create,
-			})
+			}
+			log.Printf("[DEBUG] Adding Athena tags: %s", input)
+			_, err := conn.TagResource(&input)
 			if err != nil {
 				return err
 			}
@@ -53,7 +50,7 @@ func setTagsAthena(conn *athena.Athena, d *schema.ResourceData, arn string) erro
 // diffTags takes our tags locally and the ones remotely and returns
 // the set of tags that must be created, and the set of tags that must
 // be destroyed.
-func diffTagsAthena(oldTags, newTags []*athena.Tag) ([]*athena.Tag, []*athena.Tag) {
+func diffTagsAthena(oldTags, newTags []*athena.Tag) ([]*athena.Tag, []*string) {
 	// First, we're creating everything we have
 	create := make(map[string]interface{})
 	for _, t := range newTags {
@@ -61,12 +58,14 @@ func diffTagsAthena(oldTags, newTags []*athena.Tag) ([]*athena.Tag, []*athena.Ta
 	}
 
 	// Build the list of what to remove
-	var remove []*athena.Tag
+	var remove []*string
 	for _, t := range oldTags {
 		old, ok := create[aws.StringValue(t.Key)]
 		if !ok || old != aws.StringValue(t.Value) {
-			// Delete it!
-			remove = append(remove, t)
+			remove = append(remove, t.Key)
+		} else if ok {
+			// already present so remove from new
+			delete(create, aws.StringValue(t.Key))
 		}
 	}
 
