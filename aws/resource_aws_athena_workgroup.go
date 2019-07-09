@@ -164,12 +164,13 @@ func resourceAwsAthenaWorkgroupRead(d *schema.ResourceData, meta interface{}) er
 
 	resp, err := conn.GetWorkGroup(input)
 
+	if isAWSErr(err, athena.ErrCodeInvalidRequestException, "is not found") {
+		log.Printf("[WARN] Athena WorkGroup (%s) not found, removing from state", d.Id())
+		d.SetId("")
+		return nil
+	}
+
 	if err != nil {
-		if isAWSErr(err, athena.ErrCodeInvalidRequestException, d.Id()) {
-			log.Printf("[WARN] Athena WorkGroup (%s) not found, removing from state", d.Id())
-			d.SetId("")
-			return nil
-		}
 		return err
 	}
 
@@ -223,7 +224,7 @@ func resourceAwsAthenaWorkgroupRead(d *schema.ResourceData, meta interface{}) er
 
 	err = saveTagsAthena(conn, d, d.Get("arn").(string))
 
-	if isAWSErr(err, athena.ErrCodeInvalidRequestException, d.Id()) {
+	if isAWSErr(err, athena.ErrCodeInvalidRequestException, "is not found") {
 		log.Printf("[WARN] Athena WorkGroup (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
