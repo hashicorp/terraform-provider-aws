@@ -66,8 +66,8 @@ func TestAccAWSLightsailInstance_euRegion(t *testing.T) {
 func TestAccAWSLightsailInstance_Name(t *testing.T) {
 	var conf lightsail.Instance
 	lightsailName := fmt.Sprintf("tf-test-lightsail-%d", acctest.RandInt())
-	lightsailNameWithSpace := fmt.Sprint(lightsailName, "string with more spaces")
-	lightsailNameWithTrailingDot := fmt.Sprintf("%s.", lightsailName)
+	lightsailNameWithSpaces := fmt.Sprint(lightsailName, "string with spaces")
+	lightsailNameWithStartingDigit := fmt.Sprintf("01-%s", lightsailName)
 	lightsailNameWithUnderscore := fmt.Sprintf("%s_123456", lightsailName)
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -77,12 +77,12 @@ func TestAccAWSLightsailInstance_Name(t *testing.T) {
 		CheckDestroy:  testAccCheckAWSLightsailInstanceDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config:      testAccAWSLightsailInstanceConfig_basic(lightsailNameWithSpace),
-				ExpectError: regexp.MustCompile(`must begin with an alphabetic character.*`),
+				Config:      testAccAWSLightsailInstanceConfig_basic(lightsailNameWithSpaces),
+				ExpectError: regexp.MustCompile(`must contain only alphanumeric characters, underscores, hyphens, and dots`),
 			},
 			{
-				Config:      testAccAWSLightsailInstanceConfig_basic(lightsailNameWithTrailingDot),
-				ExpectError: regexp.MustCompile(`must begin with an alphabetic character.*`),
+				Config:      testAccAWSLightsailInstanceConfig_basic(lightsailNameWithStartingDigit),
+				ExpectError: regexp.MustCompile(`must begin with an alphabetic character`),
 			},
 			{
 				Config: testAccAWSLightsailInstanceConfig_basic(lightsailName),
