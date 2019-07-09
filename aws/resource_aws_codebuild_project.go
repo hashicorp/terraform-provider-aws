@@ -6,7 +6,6 @@ import (
 	"log"
 	"regexp"
 	"strconv"
-	"strings"
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -236,17 +235,12 @@ func resourceAwsCodeBuildProject() *schema.Resource {
 								Schema: map[string]*schema.Schema{
 									"status": {
 										Type:     schema.TypeString,
-										Required: true,
+										Optional: true,
+										Default:  codebuild.LogsConfigStatusTypeEnabled,
 										ValidateFunc: validation.StringInSlice([]string{
 											codebuild.LogsConfigStatusTypeDisabled,
 											codebuild.LogsConfigStatusTypeEnabled,
 										}, false),
-										DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
-											if old == codebuild.LogsConfigStatusTypeEnabled && new == "" {
-												return true
-											}
-											return false
-										},
 									},
 									"group_name": {
 										Type:     schema.TypeString,
@@ -258,12 +252,7 @@ func resourceAwsCodeBuildProject() *schema.Resource {
 									},
 								},
 							},
-							DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
-								if old == "1" && new == "0" {
-									return true
-								}
-								return false
-							},
+							DiffSuppressFunc: suppressMissingOptionalConfigurationBlock,
 						},
 						"s3_logs": {
 							Type:     schema.TypeList,
@@ -273,43 +262,30 @@ func resourceAwsCodeBuildProject() *schema.Resource {
 								Schema: map[string]*schema.Schema{
 									"status": {
 										Type:     schema.TypeString,
-										Required: true,
+										Optional: true,
+										Default:  codebuild.LogsConfigStatusTypeDisabled,
 										ValidateFunc: validation.StringInSlice([]string{
 											codebuild.LogsConfigStatusTypeDisabled,
 											codebuild.LogsConfigStatusTypeEnabled,
 										}, false),
-										DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
-											if old == codebuild.LogsConfigStatusTypeDisabled && new == "" {
-												return true
-											}
-											return false
-										},
 									},
 									"location": {
 										Type:         schema.TypeString,
 										Optional:     true,
 										ValidateFunc: validateAwsCodeBuildProjectS3LogsLocation,
-										DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
-											return strings.TrimPrefix(new, "arn:aws:s3:::") == old
-										},
+									},
+									"encryption_disabled": {
+										Type:     schema.TypeBool,
+										Optional: true,
+										Default:  false,
 									},
 								},
 							},
-							DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
-								if old == "1" && new == "0" {
-									return true
-								}
-								return false
-							},
+							DiffSuppressFunc: suppressMissingOptionalConfigurationBlock,
 						},
 					},
 				},
-				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
-					if old == "1" && new == "0" {
-						return true
-					}
-					return false
-				},
+				DiffSuppressFunc: suppressMissingOptionalConfigurationBlock,
 			},
 			"name": {
 				Type:         schema.TypeString,
@@ -822,7 +798,7 @@ func expandProjectEnvironment(d *schema.ResourceData) *codebuild.ProjectEnvironm
 func expandProjectLogsConfig(d *schema.ResourceData) *codebuild.LogsConfig {
 	logsConfig := &codebuild.LogsConfig{}
 
-	if v, ok := d.GetOk("logs_config"); ok {
+	if v, ok := d.GetOk("logs_config"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
 		configList := v.([]interface{})
 		data := configList[0].(map[string]interface{})
 
@@ -851,6 +827,10 @@ func expandProjectLogsConfig(d *schema.ResourceData) *codebuild.LogsConfig {
 }
 
 func expandCodeBuildCloudWatchLogsConfig(configList []interface{}) *codebuild.CloudWatchLogsConfig {
+	if len(configList) == 0 || configList[0] == nil {
+		return nil
+	}
+
 	data := configList[0].(map[string]interface{})
 
 	status := data["status"].(string)
@@ -877,6 +857,10 @@ func expandCodeBuildCloudWatchLogsConfig(configList []interface{}) *codebuild.Cl
 }
 
 func expandCodeBuildS3LogsConfig(configList []interface{}) *codebuild.S3LogsConfig {
+	if len(configList) == 0 || configList[0] == nil {
+		return nil
+	}
+
 	data := configList[0].(map[string]interface{})
 
 	status := data["status"].(string)
@@ -886,11 +870,13 @@ func expandCodeBuildS3LogsConfig(configList []interface{}) *codebuild.S3LogsConf
 	}
 
 	if v, ok := data["location"]; ok {
-		location := strings.TrimPrefix(v.(string), "arn:aws:s3:::")
+		location := v.(string)
 		if len(location) > 0 {
 			s3LogsConfig.Location = aws.String(location)
 		}
 	}
+
+	s3LogsConfig.EncryptionDisabled = aws.Bool(data["encryption_disabled"].(bool))
 
 	return s3LogsConfig
 }
@@ -994,35 +980,35 @@ func resourceAwsCodeBuildProjectRead(d *schema.ResourceData, meta interface{}) e
 	project := resp.Projects[0]
 
 	if err := d.Set("artifacts", flattenAwsCodeBuildProjectArtifacts(project.Artifacts)); err != nil {
-		return err
+		return fmt.Errorf("error setting artifacts: %s", err)
 	}
 
 	if err := d.Set("environment", schema.NewSet(resourceAwsCodeBuildProjectEnvironmentHash, flattenAwsCodeBuildProjectEnvironment(project.Environment))); err != nil {
-		return err
+		return fmt.Errorf("error setting environment: %s", err)
 	}
 
 	if err := d.Set("cache", flattenAwsCodebuildProjectCache(project.Cache)); err != nil {
-		return err
+		return fmt.Errorf("error setting cache: %s", err)
 	}
 
 	if err := d.Set("logs_config", flattenAwsCodeBuildLogsConfig(project.LogsConfig)); err != nil {
-		return err
+		return fmt.Errorf("error setting logs_config: %s", err)
 	}
 
 	if err := d.Set("secondary_artifacts", flattenAwsCodeBuildProjectSecondaryArtifacts(project.SecondaryArtifacts)); err != nil {
-		return err
+		return fmt.Errorf("error setting secondary_artifacts: %s", err)
 	}
 
 	if err := d.Set("secondary_sources", flattenAwsCodeBuildProjectSecondarySources(project.SecondarySources)); err != nil {
-		return err
+		return fmt.Errorf("error setting secondary_sources: %s", err)
 	}
 
 	if err := d.Set("source", flattenAwsCodeBuildProjectSource(project.Source)); err != nil {
-		return err
+		return fmt.Errorf("error setting source: %s", err)
 	}
 
 	if err := d.Set("vpc_config", flattenAwsCodeBuildVpcConfig(project.VpcConfig)); err != nil {
-		return err
+		return fmt.Errorf("error setting vpc_config: %s", err)
 	}
 
 	d.Set("arn", project.Arn)
@@ -1040,7 +1026,7 @@ func resourceAwsCodeBuildProjectRead(d *schema.ResourceData, meta interface{}) e
 	}
 
 	if err := d.Set("tags", tagsToMapCodeBuild(project.Tags)); err != nil {
-		return err
+		return fmt.Errorf("error setting tags: %s", err)
 	}
 
 	return nil
@@ -1177,27 +1163,28 @@ func flattenAwsCodeBuildLogsConfig(logsConfig *codebuild.LogsConfig) []interface
 }
 
 func flattenAwsCodeBuildCloudWatchLogs(cloudWatchLogsConfig *codebuild.CloudWatchLogsConfig) []interface{} {
-	if cloudWatchLogsConfig == nil {
-		return []interface{}{}
-	}
+	values := map[string]interface{}{}
 
-	values := map[string]interface{}{
-		"status":      aws.StringValue(cloudWatchLogsConfig.Status),
-		"group_name":  aws.StringValue(cloudWatchLogsConfig.GroupName),
-		"stream_name": aws.StringValue(cloudWatchLogsConfig.StreamName),
+	if cloudWatchLogsConfig == nil {
+		values["status"] = codebuild.LogsConfigStatusTypeDisabled
+	} else {
+		values["status"] = aws.StringValue(cloudWatchLogsConfig.Status)
+		values["group_name"] = aws.StringValue(cloudWatchLogsConfig.GroupName)
+		values["stream_name"] = aws.StringValue(cloudWatchLogsConfig.StreamName)
 	}
 
 	return []interface{}{values}
 }
 
 func flattenAwsCodeBuildS3Logs(s3LogsConfig *codebuild.S3LogsConfig) []interface{} {
-	if s3LogsConfig == nil {
-		return []interface{}{}
-	}
+	values := map[string]interface{}{}
 
-	values := map[string]interface{}{
-		"status":   aws.StringValue(s3LogsConfig.Status),
-		"location": aws.StringValue(s3LogsConfig.Location),
+	if s3LogsConfig == nil {
+		values["status"] = codebuild.LogsConfigStatusTypeDisabled
+	} else {
+		values["status"] = aws.StringValue(s3LogsConfig.Status)
+		values["location"] = aws.StringValue(s3LogsConfig.Location)
+		values["encryption_disabled"] = aws.BoolValue(s3LogsConfig.EncryptionDisabled)
 	}
 
 	return []interface{}{values}

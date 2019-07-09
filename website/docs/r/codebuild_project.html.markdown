@@ -118,14 +118,13 @@ resource "aws_codebuild_project" "example" {
 
   logs_config {
     cloudwatch_logs {
-      status = "ENABLED"
       group_name = "log-group"
       stream_name = "log-stream"
     }
 
     s3_logs {
       status = "ENABLED"
-      location = "${aws_s3_bucket.example.arn}/build-log"
+      location = "${aws_s3_bucket.example.id}/build-log"
     }
   }
 
@@ -253,14 +252,15 @@ The following arguments are supported:
 
 `cloudwatch_logs` supports the following:
 
-* `status` - (Required) Current status of logs in CloudWatch Logs for a build project. Valid values: `ENABLED`, `DISABLED`.
+* `status` - (Optional) Current status of logs in CloudWatch Logs for a build project. Valid values: `ENABLED`, `DISABLED`. Defaults to `ENABLED`.
 * `group_name` - (Optional) The group name of the logs in CloudWatch Logs.
 * `stream_name` - (Optional) The stream name of the logs in CloudWatch Logs.
 
 `s3_logs` supports the following:
 
-* `status` - (Required) Current status of logs in S3 for a build project. Valid values: `ENABLED`, `DISABLED`.
-* `location` - (Optional) The ARN of the S3 bucket and the path prefix for S3 logs.
+* `status` - (Optional) Current status of logs in S3 for a build project. Valid values: `ENABLED`, `DISABLED`. Defaults to `DISABLED`.
+* `location` - (Optional) The name of the S3 bucket and the path prefix for S3 logs. Must be set if status is `ENABLED`, otherwise it must be empty.
+* `encryption_disabled` - (Optional) Set to `true` if you do not want S3 logs encrypted. Defaults to `false`.
 
 `source` supports the following:
 
