@@ -63,9 +63,9 @@ The following arguments are supported:
 * `description` - (Optional) The description of the maintenance window task.
 * `targets` - (Required) The targets (either instances or window target ids). Instances are specified using Key=InstanceIds,Values=instanceid1,instanceid2. Window target ids are specified using Key=WindowTargetIds,Values=window target id1, window target id2.
 * `priority` - (Optional) The priority of the task in the Maintenance Window, the lower the number the higher the priority. Tasks in a Maintenance Window are scheduled in priority order with tasks that have the same priority scheduled in parallel.
-* `logging_info` - (Optional,**Deprecated**) A structure containing information about an Amazon S3 bucket to write instance-level logs to. Documented below.
-* `task_parameters` - (Optional,**Deprecated**) A structure containing information about parameters required by the particular `task_arn`. Documented below.
-* `task_invocation_parameters` - (Optional) The parameters for task execution.
+* `logging_info` - (Optional, **Deprecated**) A structure containing information about an Amazon S3 bucket to write instance-level logs to. Use `task_invocation_parameters` configuration block `run_command_parameters` configuration block `output_s3_*` arguments instead. Conflicts with `task_invocation_parameters`. Documented below.
+* `task_parameters` - (Optional, **Deprecated**) A structure containing information about parameters required by the particular `task_arn`. Use `parameter` configuration blocks under the `task_invocation_parameters` configuration block instead. Conflicts with `task_invocation_parameters`. Documented below.
+* `task_invocation_parameters` - (Optional) The parameters for task execution. This argument is conflict with `task_parameters` and `logging_info`.
 
 `logging_info` supports the following:
 
@@ -80,12 +80,10 @@ The following arguments are supported:
 
 `task_invocation_parameters` supports the following:
 
-This argument is conflict with `task_parameters` and `logging_info`.
-
 * `automation_parameters` - (Optional) The parameters for an AUTOMATION task type. Documented below.
 * `lambda_parameters` - (Optional) The parameters for a LAMBDA task type. Documented below.
 * `run_command_parameters` - (Optional) The parameters for a RUN_COMMAND task type. Documented below.
-* `step_functions_parameters` - (Optional)
+* `step_functions_parameters` - (Optional) The parameters for a STEP_FUNCTIONS task type. Documented below.
 
 `automation_parameters` supports the following:
 
