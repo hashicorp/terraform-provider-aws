@@ -138,6 +138,12 @@ func resourceAwsAthenaWorkgroupCreate(d *schema.ResourceData, meta interface{}) 
 		}
 	}
 
+	// Prevent the below error:
+	// InvalidRequestException: Tags provided upon WorkGroup creation must not be empty
+	if v := d.Get("tags").(map[string]interface{}); len(v) > 0 {
+		input.Tags = tagsFromMapAthena(v)
+	}
+
 	_, err := conn.CreateWorkGroup(input)
 
 	if err != nil {
@@ -213,6 +219,18 @@ func resourceAwsAthenaWorkgroupRead(d *schema.ResourceData, meta interface{}) er
 				}
 			}
 		}
+	}
+
+	err = saveTagsAthena(conn, d, d.Get("arn").(string))
+
+	if isAWSErr(err, athena.ErrCodeInvalidRequestException, d.Id()) {
+		log.Printf("[WARN] Athena WorkGroup (%s) not found, removing from state", d.Id())
+		d.SetId("")
+		return nil
+	}
+
+	if err != nil {
+		return fmt.Errorf("error setting tags: %s", err)
 	}
 
 	return nil
@@ -332,6 +350,14 @@ func resourceAwsAthenaWorkgroupUpdate(d *schema.ResourceData, meta interface{}) 
 
 		if err != nil {
 			return fmt.Errorf("Error updating Athena WorkGroup (%s): %s", d.Id(), err)
+		}
+	}
+
+	if d.HasChange("tags") {
+		err := setTagsAthena(conn, d, d.Get("arn").(string))
+
+		if err != nil {
+			return fmt.Errorf("error updating tags: %s", err)
 		}
 	}
 
