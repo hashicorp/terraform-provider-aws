@@ -174,50 +174,29 @@ func resourceAwsAthenaWorkgroupRead(d *schema.ResourceData, meta interface{}) er
 		return fmt.Errorf("error reading Athena WorkGroup (%s): %s", d.Id(), err)
 	}
 
-	d.Set("name", *resp.WorkGroup.Name)
-
-	if resp.WorkGroup.Description != nil {
-		d.Set("description", *resp.WorkGroup.Description)
-	}
-
-	client := meta.(*AWSClient)
-
 	arn := arn.ARN{
-		Partition: client.partition,
-		Region:    client.region,
+		Partition: meta.(*AWSClient).partition,
+		Region:    meta.(*AWSClient).region,
 		Service:   "athena",
-		AccountID: client.accountid,
+		AccountID: meta.(*AWSClient).accountid,
 		Resource:  fmt.Sprintf("workgroup/%s", d.Id()),
 	}
 
 	d.Set("arn", arn.String())
+	d.Set("description", resp.WorkGroup.Description)
+	d.Set("name", resp.WorkGroup.Name)
 
 	if resp.WorkGroup.Configuration != nil {
-		if resp.WorkGroup.Configuration.BytesScannedCutoffPerQuery != nil {
-			d.Set("bytes_scanned_cutoff_per_query", *resp.WorkGroup.Configuration.BytesScannedCutoffPerQuery)
-		}
-
-		if resp.WorkGroup.Configuration.EnforceWorkGroupConfiguration != nil {
-			d.Set("enforce_workgroup_configuration", *resp.WorkGroup.Configuration.EnforceWorkGroupConfiguration)
-		}
-
-		if resp.WorkGroup.Configuration.PublishCloudWatchMetricsEnabled != nil {
-			d.Set("publish_cloudwatch_metrics_enabled", *resp.WorkGroup.Configuration.PublishCloudWatchMetricsEnabled)
-		}
+		d.Set("bytes_scanned_cutoff_per_query", resp.WorkGroup.Configuration.BytesScannedCutoffPerQuery)
+		d.Set("enforce_workgroup_configuration", resp.WorkGroup.Configuration.EnforceWorkGroupConfiguration)
+		d.Set("publish_cloudwatch_metrics_enabled", resp.WorkGroup.Configuration.PublishCloudWatchMetricsEnabled)
 
 		if resp.WorkGroup.Configuration.ResultConfiguration != nil {
-			if resp.WorkGroup.Configuration.ResultConfiguration.OutputLocation != nil {
-				d.Set("output_location", *resp.WorkGroup.Configuration.ResultConfiguration.OutputLocation)
-			}
+			d.Set("output_location", resp.WorkGroup.Configuration.ResultConfiguration.OutputLocation)
 
 			if resp.WorkGroup.Configuration.ResultConfiguration.EncryptionConfiguration != nil {
-				if resp.WorkGroup.Configuration.ResultConfiguration.EncryptionConfiguration.EncryptionOption != nil {
-					d.Set("encryption_option", *resp.WorkGroup.Configuration.ResultConfiguration.EncryptionConfiguration.EncryptionOption)
-				}
-
-				if resp.WorkGroup.Configuration.ResultConfiguration.EncryptionConfiguration.KmsKey != nil {
-					d.Set("kms_key", *resp.WorkGroup.Configuration.ResultConfiguration.EncryptionConfiguration.KmsKey)
-				}
+				d.Set("encryption_option", resp.WorkGroup.Configuration.ResultConfiguration.EncryptionConfiguration.EncryptionOption)
+				d.Set("kms_key", resp.WorkGroup.Configuration.ResultConfiguration.EncryptionConfiguration.KmsKey)
 			}
 		}
 	}
