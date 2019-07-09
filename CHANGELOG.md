@@ -13,6 +13,7 @@ ENHANCEMENTS:
 * resource/aws_codebuild_project: Add `environment` configuration block `registry_credential` configuration block (support Secrets Manager registry credentials) [GH-9168]
 * resource/aws_ebs_snapshot: Support customizable create/delete timeouts and increase defaults to 10 minutes [GH-9157]
 * resource/aws_organizations_account: Add `tags` argument [GH-9202]
+* resource/aws_service_discovery_service: Add `namespace_id` argument (Support HTTP namespaces) [GH-7341]
 * resource/aws_waf_rule_group: Support resource import [GH-9254]
 * resource/aws_wafregional_byte_match_set: Support resource import [GH-9258]
 * resource/aws_wafregional_rule: Support resource import [GH-9239]
