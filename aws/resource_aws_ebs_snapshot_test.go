@@ -173,6 +173,11 @@ resource "aws_ebs_snapshot" "test" {
   tags = {
     Name = "%s"
   }
+
+  timeouts {
+	create = "10m"
+	delete = "10m"
+  }
 }
 `, rName)
 }
