@@ -8,7 +8,6 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
-	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/ssm"
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/helper/schema"
@@ -202,21 +201,45 @@ func resourceAwsSsmDocumentRead(d *schema.ResourceData, meta interface{}) error 
 
 	log.Printf("[DEBUG] Reading SSM Document: %s", d.Id())
 
-	docInput := &ssm.DescribeDocumentInput{
+	describeDocumentInput := &ssm.DescribeDocumentInput{
 		Name: aws.String(d.Get("name").(string)),
 	}
 
-	resp, err := ssmconn.DescribeDocument(docInput)
-	if err != nil {
-		if ssmErr, ok := err.(awserr.Error); ok && ssmErr.Code() == "InvalidDocument" {
-			log.Printf("[WARN] SSM Document not found so removing from state")
-			d.SetId("")
-			return nil
-		}
-		return fmt.Errorf("Error describing SSM document: %s", err)
+	describeDocumentOutput, err := ssmconn.DescribeDocument(describeDocumentInput)
+
+	if isAWSErr(err, ssm.ErrCodeInvalidDocument, "") {
+		log.Printf("[WARN] SSM Document not found so removing from state")
+		d.SetId("")
+		return nil
 	}
 
-	doc := resp.Document
+	if err != nil {
+		return fmt.Errorf("error describing SSM Document (%s): %s", d.Id(), err)
+	}
+
+	if describeDocumentOutput == nil || describeDocumentOutput.Document == nil {
+		return fmt.Errorf("error describing SSM Document (%s): empty result", d.Id())
+	}
+
+	getDocumentInput := &ssm.GetDocumentInput{
+		DocumentFormat:  describeDocumentOutput.Document.DocumentFormat,
+		DocumentVersion: aws.String("$LATEST"),
+		Name:            describeDocumentOutput.Document.Name,
+	}
+
+	getDocumentOutput, err := ssmconn.GetDocument(getDocumentInput)
+
+	if err != nil {
+		return fmt.Errorf("error getting SSM Document (%s): %s", d.Id(), err)
+	}
+
+	if getDocumentOutput == nil {
+		return fmt.Errorf("error getting SSM Document (%s): empty result", d.Id())
+	}
+
+	doc := describeDocumentOutput.Document
+
+	d.Set("content", getDocumentOutput.Content)
 	d.Set("created_date", doc.CreatedDate)
 	d.Set("default_version", doc.DefaultVersion)
 	d.Set("description", doc.Description)
