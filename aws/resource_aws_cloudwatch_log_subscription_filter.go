@@ -54,7 +54,13 @@ func resourceAwsCloudwatchLogSubscriptionFilter() *schema.Resource {
 			"distribution": {
 				Type:     schema.TypeString,
 				Optional: true,
-				Computed: true,
+				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+					// Ignore unsetting default value
+					if old == "ByLogStream" && new == "" {
+						return true
+					}
+					return false
+				},
 			},
 		},
 	}
