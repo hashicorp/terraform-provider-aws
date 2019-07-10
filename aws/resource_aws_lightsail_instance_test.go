@@ -3,6 +3,7 @@ package aws
 import (
 	"errors"
 	"fmt"
+	"regexp"
 	"testing"
 	"time"
 
@@ -62,6 +63,51 @@ func TestAccAWSLightsailInstance_euRegion(t *testing.T) {
 	})
 }
 
+func TestAccAWSLightsailInstance_Name(t *testing.T) {
+	var conf lightsail.Instance
+	lightsailName := fmt.Sprintf("tf-test-lightsail-%d", acctest.RandInt())
+	lightsailNameWithSpaces := fmt.Sprint(lightsailName, "string with spaces")
+	lightsailNameWithStartingDigit := fmt.Sprintf("01-%s", lightsailName)
+	lightsailNameWithUnderscore := fmt.Sprintf("%s_123456", lightsailName)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:      func() { testAccPreCheck(t) },
+		IDRefreshName: "aws_lightsail_instance.lightsail_instance_test",
+		Providers:     testAccProviders,
+		CheckDestroy:  testAccCheckAWSLightsailInstanceDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config:      testAccAWSLightsailInstanceConfig_basic(lightsailNameWithSpaces),
+				ExpectError: regexp.MustCompile(`must contain only alphanumeric characters, underscores, hyphens, and dots`),
+			},
+			{
+				Config:      testAccAWSLightsailInstanceConfig_basic(lightsailNameWithStartingDigit),
+				ExpectError: regexp.MustCompile(`must begin with an alphabetic character`),
+			},
+			{
+				Config: testAccAWSLightsailInstanceConfig_basic(lightsailName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckAWSLightsailInstanceExists("aws_lightsail_instance.lightsail_instance_test", &conf),
+					resource.TestCheckResourceAttrSet("aws_lightsail_instance.lightsail_instance_test", "availability_zone"),
+					resource.TestCheckResourceAttrSet("aws_lightsail_instance.lightsail_instance_test", "blueprint_id"),
+					resource.TestCheckResourceAttrSet("aws_lightsail_instance.lightsail_instance_test", "bundle_id"),
+					resource.TestCheckResourceAttrSet("aws_lightsail_instance.lightsail_instance_test", "key_pair_name"),
+				),
+			},
+			{
+				Config: testAccAWSLightsailInstanceConfig_basic(lightsailNameWithUnderscore),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckAWSLightsailInstanceExists("aws_lightsail_instance.lightsail_instance_test", &conf),
+					resource.TestCheckResourceAttrSet("aws_lightsail_instance.lightsail_instance_test", "availability_zone"),
+					resource.TestCheckResourceAttrSet("aws_lightsail_instance.lightsail_instance_test", "blueprint_id"),
+					resource.TestCheckResourceAttrSet("aws_lightsail_instance.lightsail_instance_test", "bundle_id"),
+					resource.TestCheckResourceAttrSet("aws_lightsail_instance.lightsail_instance_test", "key_pair_name"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccAWSLightsailInstance_disapear(t *testing.T) {
 	var conf lightsail.Instance
 	lightsailName := fmt.Sprintf("tf-test-lightsail-%d", acctest.RandInt())
@@ -74,7 +120,7 @@ func TestAccAWSLightsailInstance_disapear(t *testing.T) {
 		})
 
 		if err != nil {
-			return fmt.Errorf("Error deleting Lightsail Instance in disapear test")
+			return fmt.Errorf("error deleting Lightsail Instance in disappear test")
 		}
 
 		// sleep 7 seconds to give it time, so we don't have to poll
