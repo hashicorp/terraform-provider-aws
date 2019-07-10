@@ -22,6 +22,7 @@ ENHANCEMENTS:
 
 BUG FIXES:
 
+* resource/aws_db_event_subscription: Prevent `Unable to find RDS Event Subscription` error during deletion and refresh [GH-9274]
 * resource/aws_transfer_user: Final retry after timeout waiting for deletion of transfer user [GH-9241]
 * service/organizations: Automatically retry API calls on `ConcurrentModificationException` error [GH-9195]
 
