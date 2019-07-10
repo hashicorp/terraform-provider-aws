@@ -122,7 +122,9 @@ func resourceAwsAcmCertificate() *schema.Resource {
 func resourceAwsAcmCertificateCreate(d *schema.ResourceData, meta interface{}) error {
 	if _, ok := d.GetOk("domain_name"); ok {
 		if _, ok := d.GetOk("validation_method"); !ok {
-			return errors.New("validation_method must be set when creating a certificate")
+			if _, ok := d.GetOk("certificate_authority_arn"); !ok {
+				return errors.New("validation_method must be set when creating a public certificate")
+			}
 		}
 		return resourceAwsAcmCertificateCreateRequested(d, meta)
 	} else if _, ok := d.GetOk("private_key"); ok {
@@ -160,8 +162,11 @@ func resourceAwsAcmCertificateCreateImported(d *schema.ResourceData, meta interf
 func resourceAwsAcmCertificateCreateRequested(d *schema.ResourceData, meta interface{}) error {
 	acmconn := meta.(*AWSClient).acmconn
 	params := &acm.RequestCertificateInput{
-		DomainName:       aws.String(strings.TrimSuffix(d.Get("domain_name").(string), ".")),
-		ValidationMethod: aws.String(d.Get("validation_method").(string)),
+		DomainName: aws.String(strings.TrimSuffix(d.Get("domain_name").(string), ".")),
+	}
+
+	if validationMethod, ok := d.GetOk("validation_method"); ok {
+		params.ValidationMethod = aws.String(validationMethod.(string))
 	}
 
 	if sans, ok := d.GetOk("subject_alternative_names"); ok {
