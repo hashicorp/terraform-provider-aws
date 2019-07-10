@@ -14,6 +14,7 @@ ENHANCEMENTS:
 * resource/aws_codebuild_project: Add `logs_config` configuration block (support CloudWatch and S3 logging configuration) [GH-7534]
 * resource/aws_ebs_snapshot: Support customizable create/delete timeouts and increase defaults to 10 minutes [GH-9157]
 * resource/aws_lightsail_instance: Add validation for `name` argument [GH-8667]
+* resource/aws_lightsail_instance: Add `tags` argument [GH-9273]
 * resource/aws_organizations_account: Add `tags` argument [GH-9202]
 * resource/aws_service_discovery_service: Add `namespace_id` argument (Support HTTP namespaces) [GH-7341]
 * resource/aws_waf_rule_group: Support resource import [GH-9254]
