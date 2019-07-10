@@ -3,7 +3,6 @@ package aws
 import (
 	"fmt"
 	"log"
-	"strconv"
 	"strings"
 	"time"
 
@@ -17,7 +16,6 @@ import (
 )
 
 const (
-	MINIMUM_VERSIONED_SCHEMA             = 2.0
 	SSM_DOCUMENT_PERMISSIONS_BATCH_LIMIT = 20
 )
 
@@ -317,15 +315,6 @@ func resourceAwsSsmDocumentUpdate(d *schema.ResourceData, meta interface{}) erro
 
 	if !d.HasChange("content") {
 		return nil
-	}
-
-	if schemaVersion, ok := d.GetOk("schemaVersion"); ok {
-		schemaNumber, _ := strconv.ParseFloat(schemaVersion.(string), 64)
-
-		if schemaNumber < MINIMUM_VERSIONED_SCHEMA {
-			log.Printf("[DEBUG] Skipping document update because document version is not 2.0 %q", d.Id())
-			return nil
-		}
 	}
 
 	if err := updateAwsSSMDocument(d, meta); err != nil {

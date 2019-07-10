@@ -219,6 +219,33 @@ func TestAccAWSSSMDocument_automation(t *testing.T) {
 	})
 }
 
+func TestAccAWSSSMDocument_SchemaVersion_1(t *testing.T) {
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_ssm_document.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSSSMDocumentDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSSSMDocumentConfigSchemaVersion1(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSSSMDocumentExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "schema_version", "1.0"),
+				),
+			},
+			{
+				Config: testAccAWSSSMDocumentConfigSchemaVersion1Update(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSSSMDocumentExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "schema_version", "1.0"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccAWSSSMDocument_session(t *testing.T) {
 	name := acctest.RandString(10)
 	resource.ParallelTest(t, resource.TestCase{
@@ -717,6 +744,54 @@ resource "aws_ssm_document" "foo" {
 DOC
 }
 `, rName, content)
+}
+
+func testAccAWSSSMDocumentConfigSchemaVersion1(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_ssm_document" "test" {
+  name          = %[1]q
+  document_type = "Session"
+
+  content = <<DOC
+{
+    "schemaVersion": "1.0",
+    "description": "Document to hold regional settings for Session Manager",
+    "sessionType": "Standard_Stream",
+    "inputs": {
+        "s3BucketName": "test",
+        "s3KeyPrefix": "test",
+        "s3EncryptionEnabled": true,
+        "cloudWatchLogGroupName": "/logs/sessions",
+        "cloudWatchEncryptionEnabled": false
+    }
+}
+DOC
+}
+`, rName)
+}
+
+func testAccAWSSSMDocumentConfigSchemaVersion1Update(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_ssm_document" "test" {
+  name          = %[1]q
+  document_type = "Session"
+
+  content = <<DOC
+{
+    "schemaVersion": "1.0",
+    "description": "Document to hold regional settings for Session Manager",
+    "sessionType": "Standard_Stream",
+    "inputs": {
+        "s3BucketName": "test",
+        "s3KeyPrefix": "test",
+        "s3EncryptionEnabled": true,
+        "cloudWatchLogGroupName": "/logs/sessions-updated",
+        "cloudWatchEncryptionEnabled": false
+    }
+}
+DOC
+}
+`, rName)
 }
 
 func testAccAWSSSMDocumentConfig_Tags_Single(rName, key1, value1 string) string {
