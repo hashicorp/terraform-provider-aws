@@ -7,7 +7,7 @@ FEATURES:
 * **New Resource:** `aws_directory_service_log_subscription` [GH-9261]
 
 ENHANCEMENTS:
-
+* resource/aws_acmpca_certificate_authority: Support validation for `ROOT` certificate authority type [GH-9292]
 * resource/aws_appmesh_virtual_node: Add `aws_cloud_map` configuration block under `spec` and `service_discovery` [GH-9271]
 * resource/aws_appmesh_virtual_router: Add `tags` argument [GH-9249]
 * resource/aws_appmesh_virtual_service: Add `tags` argument [GH-9252]
