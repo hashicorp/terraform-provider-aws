@@ -116,6 +116,18 @@ resource "aws_codebuild_project" "example" {
     }
   }
 
+  logs_config {
+    cloudwatch_logs {
+      group_name = "log-group"
+      stream_name = "log-stream"
+    }
+
+    s3_logs {
+      status = "ENABLED"
+      location = "${aws_s3_bucket.example.id}/build-log"
+    }
+  }
+
   source {
     type            = "GITHUB"
     location        = "https://github.com/mitchellh/packer.git"
@@ -193,6 +205,7 @@ The following arguments are supported:
 * `cache` - (Optional) Information about the cache storage for the project. Cache blocks are documented below.
 * `description` - (Optional) A short description of the project.
 * `encryption_key` - (Optional) The AWS Key Management Service (AWS KMS) customer master key (CMK) to be used for encrypting the build project's build output artifacts.
+* `logs_config` - (Optional) Configuration for the builds to store log data to CloudWatch or S3.
 * `service_role` - (Required) The Amazon Resource Name (ARN) of the AWS Identity and Access Management (IAM) role that enables AWS CodeBuild to interact with dependent AWS services on behalf of the AWS account.
 * `tags` - (Optional) A mapping of tags to assign to the resource.
 * `vpc_config` - (Optional) Configuration for the builds to run inside a VPC. VPC config blocks are documented below.
@@ -231,6 +244,23 @@ The following arguments are supported:
 * `name` - (Required) The environment variable's name or key.
 * `value` - (Required) The environment variable's value.
 * `type` - (Optional) The type of environment variable. Valid values: `PARAMETER_STORE`, `PLAINTEXT`.
+
+`logs_config` supports the following:
+
+* `cloudwatch_logs` - (Optional) Configuration for the builds to store logs to CloudWatch
+* `s3_logs` - (Optional) Configuration for the builds to store logs to S3.
+
+`cloudwatch_logs` supports the following:
+
+* `status` - (Optional) Current status of logs in CloudWatch Logs for a build project. Valid values: `ENABLED`, `DISABLED`. Defaults to `ENABLED`.
+* `group_name` - (Optional) The group name of the logs in CloudWatch Logs.
+* `stream_name` - (Optional) The stream name of the logs in CloudWatch Logs.
+
+`s3_logs` supports the following:
+
+* `status` - (Optional) Current status of logs in S3 for a build project. Valid values: `ENABLED`, `DISABLED`. Defaults to `DISABLED`.
+* `location` - (Optional) The name of the S3 bucket and the path prefix for S3 logs. Must be set if status is `ENABLED`, otherwise it must be empty.
+* `encryption_disabled` - (Optional) Set to `true` if you do not want S3 logs encrypted. Defaults to `false`.
 
 `source` supports the following:
 
