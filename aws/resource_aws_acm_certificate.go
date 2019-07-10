@@ -243,6 +243,7 @@ func resourceAwsAcmCertificateRead(d *schema.ResourceData, meta interface{}) err
 		}
 
 		d.Set("validation_method", resourceAwsAcmCertificateGuessValidationMethod(domainValidationOptions, emailValidationOptions))
+		d.Set("certificate_authority_arn", resp.Certificate.CertificateAuthorityArn)
 
 		params := &acm.ListTagsForCertificateInput{
 			CertificateArn: aws.String(d.Id()),
