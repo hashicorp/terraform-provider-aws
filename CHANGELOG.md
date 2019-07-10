@@ -23,6 +23,7 @@ ENHANCEMENTS:
 BUG FIXES:
 
 * resource/aws_db_event_subscription: Prevent `Unable to find RDS Event Subscription` error during deletion and refresh [GH-9274]
+* resource/aws_iam_policy_attachment: Bypass `NoSuchEntity` error when detaching groups, roles, and users (support group, role (when `force_detach_policies` is enabled), and user renames (when `force_destroy` is enabled)) [GH-9278]
 * resource/aws_transfer_user: Final retry after timeout waiting for deletion of transfer user [GH-9241]
 * service/organizations: Automatically retry API calls on `ConcurrentModificationException` error [GH-9195]
 
