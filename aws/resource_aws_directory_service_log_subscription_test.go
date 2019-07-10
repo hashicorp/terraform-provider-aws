@@ -152,37 +152,36 @@ resource "aws_subnet" "bar" {
 }
 
 resource "aws_cloudwatch_log_group" "logs" {
-	name = "%s"
-	retention_in_days = 1
+  name = "%s"
+  retention_in_days = 1
 }
 
 data "aws_iam_policy_document" "ad-log-policy" {
-	statement {
-	  actions = [
-		"logs:CreateLogStream",
-		"logs:PutLogEvents"
-	  ]
+  statement {
+    actions = [
+      "logs:CreateLogStream",
+      "logs:PutLogEvents"
+    ]
   
-	  principals {
-		identifiers = ["ds.amazonaws.com"]
-		type = "Service"
-	  }
+    principals {
+      identifiers = ["ds.amazonaws.com"]
+      type = "Service"
+    }
   
-	  resources = ["${aws_cloudwatch_log_group.logs.arn}"]
+    resources = ["${aws_cloudwatch_log_group.logs.arn}"]
   
-	  effect = "Allow"
-	}
+    effect = "Allow"
   }
+}
   
-  resource "aws_cloudwatch_log_resource_policy" "ad-log-policy" {
-	policy_document = "${data.aws_iam_policy_document.ad-log-policy.json}"
-	policy_name = "ad-log-policy"
-  }
+resource "aws_cloudwatch_log_resource_policy" "ad-log-policy" {
+  policy_document = "${data.aws_iam_policy_document.ad-log-policy.json}"
+  policy_name = "ad-log-policy"
+}
 
 resource "aws_directory_service_log_subscription" "subscription" {
   directory_id = "${aws_directory_service_directory.bar.id}"
-  log_group_name = "${aws_cloudwatch_log_group.logs.name}
-
+  log_group_name = "${aws_cloudwatch_log_group.logs.name}"
 }
 `, logGroupName)
 }

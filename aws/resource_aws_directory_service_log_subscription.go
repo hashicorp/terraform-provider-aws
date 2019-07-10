@@ -1,6 +1,7 @@
 package aws
 
 import (
+	"fmt"
 	"log"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -12,7 +13,6 @@ func resourceAwsDirectoryServiceLogSubscription() *schema.Resource {
 	return &schema.Resource{
 		Create: resourceAwsDirectoryServiceLogSubscriptionCreate,
 		Read:   resourceAwsDirectoryServiceLogSubscriptionRead,
-		Update: nil,
 		Delete: resourceAwsDirectoryServiceLogSubscriptionDelete,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
@@ -46,7 +46,7 @@ func resourceAwsDirectoryServiceLogSubscriptionCreate(d *schema.ResourceData, me
 
 	_, err := dsconn.CreateLogSubscription(&input)
 	if err != nil {
-		return err
+		return fmt.Errorf("error creating Directory Service Log Subscription: %s", err)
 	}
 
 	d.SetId(directoryId.(string))
@@ -65,11 +65,12 @@ func resourceAwsDirectoryServiceLogSubscriptionRead(d *schema.ResourceData, meta
 
 	out, err := dsconn.ListLogSubscriptions(&input)
 	if err != nil {
-		return err
+		return fmt.Errorf("error listing Directory Service Log Subscription: %s", err)
 	}
 
 	if len(out.LogSubscriptions) == 0 {
 		log.Printf("[WARN] No log subscriptions for directory %s found", directoryId)
+		d.SetId("")
 		return nil
 	}
 
@@ -91,7 +92,7 @@ func resourceAwsDirectoryServiceLogSubscriptionDelete(d *schema.ResourceData, me
 
 	_, err := dsconn.DeleteLogSubscription(&input)
 	if err != nil {
-		return err
+		return fmt.Errorf("error deleting Directory Service Log Subscription: %s", err)
 	}
 
 	return nil
