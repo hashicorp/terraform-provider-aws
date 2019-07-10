@@ -11,6 +11,7 @@ ENHANCEMENTS:
 * resource/aws_appmesh_virtual_router: Add `tags` argument [GH-9249]
 * resource/aws_appmesh_virtual_service: Add `tags` argument [GH-9252]
 * resource/aws_codebuild_project: Add `environment` configuration block `registry_credential` configuration block (support Secrets Manager registry credentials) [GH-9168]
+* resource/aws_codebuild_project: Add `logs_config` configuration block (support CloudWatch and S3 logging configuration) [GH-7534]
 * resource/aws_ebs_snapshot: Support customizable create/delete timeouts and increase defaults to 10 minutes [GH-9157]
 * resource/aws_organizations_account: Add `tags` argument [GH-9202]
 * resource/aws_service_discovery_service: Add `namespace_id` argument (Support HTTP namespaces) [GH-7341]
