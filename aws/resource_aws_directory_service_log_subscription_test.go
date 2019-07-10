@@ -119,7 +119,7 @@ resource "aws_directory_service_directory" "bar" {
   }
 
   tags = {
-    Name = "terraform-testacc-directory-service-conditional-forwarder"
+    Name = "terraform-testacc-directory-service-log-subscription"
   }
 }
 
@@ -127,7 +127,7 @@ resource "aws_vpc" "main" {
   cidr_block = "10.0.0.0/16"
 
   tags = {
-    Name = "terraform-testacc-directory-service-conditional-forwarder"
+    Name = "terraform-testacc-directory-service-log-subscription"
   }
 }
 
@@ -137,7 +137,7 @@ resource "aws_subnet" "foo" {
   cidr_block        = "10.0.1.0/24"
 
   tags = {
-    Name = "terraform-testacc-directory-service-conditional-forwarder"
+    Name = "terraform-testacc-directory-service-log-subscription"
   }
 }
 
@@ -147,7 +147,7 @@ resource "aws_subnet" "bar" {
   cidr_block        = "10.0.2.0/24"
 
   tags = {
-    Name = "terraform-testacc-directory-service-conditional-forwarder"
+    Name = "terraform-testacc-directory-service-log-subscription"
   }
 }
 
