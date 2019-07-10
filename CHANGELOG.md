@@ -25,7 +25,7 @@ ENHANCEMENTS:
 * resource/aws_wafregional_web_acl: Support resource import [GH-9248]
 
 BUG FIXES:
-
+* resource/aws_backup_selection: Retry creation for IAM eventual consistency error [GH-9298]
 * resource/aws_db_event_subscription: Prevent `Unable to find RDS Event Subscription` error during deletion and refresh [GH-9274]
 * resource/aws_iam_policy_attachment: Bypass `NoSuchEntity` error when detaching groups, roles, and users (support group, role (when `force_detach_policies` is enabled), and user renames (when `force_destroy` is enabled)) [GH-9278]
 * resource/aws_transfer_user: Final retry after timeout waiting for deletion of transfer user [GH-9241]
