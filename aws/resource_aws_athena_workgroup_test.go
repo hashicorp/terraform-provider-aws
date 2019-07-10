@@ -26,6 +26,12 @@ func TestAccAWSAthenaWorkGroup_basic(t *testing.T) {
 				Config: testAccAthenaWorkGroupConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSAthenaWorkGroupExists(resourceName, &workgroup1),
+					testAccCheckResourceAttrRegionalARN(resourceName, "arn", "athena", fmt.Sprintf("workgroup/%s", rName)),
+					resource.TestCheckResourceAttr(resourceName, "configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.enforce_workgroup_configuration", "true"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.publish_cloudwatch_metrics_enabled", "true"),
+					resource.TestCheckResourceAttr(resourceName, "description", ""),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "state", athena.WorkGroupStateEnabled),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 				),
@@ -61,6 +67,220 @@ func TestAccAWSAthenaWorkGroup_disappears(t *testing.T) {
 	})
 }
 
+func TestAccAWSAthenaWorkGroup_Configuration_BytesScannedCutoffPerQuery(t *testing.T) {
+	var workgroup1, workgroup2 athena.WorkGroup
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_athena_workgroup.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSAthenaWorkGroupDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAthenaWorkGroupConfigConfigurationBytesScannedCutoffPerQuery(rName, 12582912),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSAthenaWorkGroupExists(resourceName, &workgroup1),
+					resource.TestCheckResourceAttr(resourceName, "configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.bytes_scanned_cutoff_per_query", "12582912"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccAthenaWorkGroupConfigConfigurationBytesScannedCutoffPerQuery(rName, 10485760),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSAthenaWorkGroupExists(resourceName, &workgroup2),
+					resource.TestCheckResourceAttr(resourceName, "configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.bytes_scanned_cutoff_per_query", "10485760"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAWSAthenaWorkGroup_Configuration_EnforceWorkgroupConfiguration(t *testing.T) {
+	var workgroup1, workgroup2 athena.WorkGroup
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_athena_workgroup.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSAthenaWorkGroupDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAthenaWorkGroupConfigConfigurationEnforceWorkgroupConfiguration(rName, false),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSAthenaWorkGroupExists(resourceName, &workgroup1),
+					resource.TestCheckResourceAttr(resourceName, "configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.enforce_workgroup_configuration", "false"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccAthenaWorkGroupConfigConfigurationEnforceWorkgroupConfiguration(rName, true),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSAthenaWorkGroupExists(resourceName, &workgroup2),
+					resource.TestCheckResourceAttr(resourceName, "configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.enforce_workgroup_configuration", "true"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAWSAthenaWorkGroup_Configuration_PublishCloudWatchMetricsEnabled(t *testing.T) {
+	var workgroup1, workgroup2 athena.WorkGroup
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_athena_workgroup.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSAthenaWorkGroupDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAthenaWorkGroupConfigConfigurationPublishCloudWatchMetricsEnabled(rName, false),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSAthenaWorkGroupExists(resourceName, &workgroup1),
+					resource.TestCheckResourceAttr(resourceName, "configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.publish_cloudwatch_metrics_enabled", "false"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccAthenaWorkGroupConfigConfigurationPublishCloudWatchMetricsEnabled(rName, true),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSAthenaWorkGroupExists(resourceName, &workgroup2),
+					resource.TestCheckResourceAttr(resourceName, "configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.publish_cloudwatch_metrics_enabled", "true"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAWSAthenaWorkGroup_Configuration_ResultConfiguration_EncryptionConfiguration_SseS3(t *testing.T) {
+	var workgroup1 athena.WorkGroup
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_athena_workgroup.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSAthenaWorkGroupDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAthenaWorkGroupConfigConfigurationResultConfigurationEncryptionConfigurationEncryptionOptionSseS3(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSAthenaWorkGroupExists(resourceName, &workgroup1),
+					resource.TestCheckResourceAttr(resourceName, "configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.result_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.result_configuration.0.encryption_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.result_configuration.0.encryption_configuration.0.encryption_option", athena.EncryptionOptionSseS3),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccAWSAthenaWorkGroup_Configuration_ResultConfiguration_EncryptionConfiguration_Kms(t *testing.T) {
+	var workgroup1, workgroup2 athena.WorkGroup
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_athena_workgroup.test"
+	rEncryption := athena.EncryptionOptionSseKms
+	rEncryption2 := athena.EncryptionOptionCseKms
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSAthenaWorkGroupDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAthenaWorkGroupConfigConfigurationResultConfigurationEncryptionConfigurationEncryptionOptionWithKms(rName, rEncryption),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSAthenaWorkGroupExists(resourceName, &workgroup1),
+					resource.TestCheckResourceAttr(resourceName, "configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.result_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.result_configuration.0.encryption_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.result_configuration.0.encryption_configuration.0.encryption_option", rEncryption),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccAthenaWorkGroupConfigConfigurationResultConfigurationEncryptionConfigurationEncryptionOptionWithKms(rName, rEncryption2),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSAthenaWorkGroupExists(resourceName, &workgroup2),
+					resource.TestCheckResourceAttr(resourceName, "configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.result_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.result_configuration.0.encryption_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.result_configuration.0.encryption_configuration.0.encryption_option", rEncryption2),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAWSAthenaWorkGroup_Configuration_ResultConfiguration_OutputLocation(t *testing.T) {
+	var workgroup1, workgroup2 athena.WorkGroup
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_athena_workgroup.test"
+	rOutputLocation1 := fmt.Sprintf("%s-1", rName)
+	rOutputLocation2 := fmt.Sprintf("%s-2", rName)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSAthenaWorkGroupDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAthenaWorkGroupConfigConfigurationResultConfigurationOutputLocation(rName, rOutputLocation1),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSAthenaWorkGroupExists(resourceName, &workgroup1),
+					resource.TestCheckResourceAttr(resourceName, "configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.result_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.result_configuration.0.output_location", "s3://"+rOutputLocation1+"/test/output"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccAthenaWorkGroupConfigConfigurationResultConfigurationOutputLocation(rName, rOutputLocation2),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSAthenaWorkGroupExists(resourceName, &workgroup2),
+					resource.TestCheckResourceAttr(resourceName, "configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.result_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.result_configuration.0.output_location", "s3://"+rOutputLocation2+"/test/output"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccAWSAthenaWorkGroup_Description(t *testing.T) {
 	var workgroup1, workgroup2 athena.WorkGroup
 	rName := acctest.RandomWithPrefix("tf-acc-test")
@@ -90,208 +310,6 @@ func TestAccAWSAthenaWorkGroup_Description(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSAthenaWorkGroupExists(resourceName, &workgroup2),
 					resource.TestCheckResourceAttr(resourceName, "description", rDescriptionUpdate),
-				),
-			},
-		},
-	})
-}
-
-func TestAccAWSAthenaWorkGroup_BytesScannedCutoffPerQuery(t *testing.T) {
-	var workgroup1, workgroup2 athena.WorkGroup
-	rName := acctest.RandomWithPrefix("tf-acc-test")
-	resourceName := "aws_athena_workgroup.test"
-	rBytesScannedCutoffPerQuery := "10485760"
-	rBytesScannedCutoffPerQueryUpdate := "12582912"
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckAWSAthenaWorkGroupDestroy,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccAthenaWorkGroupConfigBytesScannedCutoffPerQuery(rName, rBytesScannedCutoffPerQuery),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSAthenaWorkGroupExists(resourceName, &workgroup1),
-					resource.TestCheckResourceAttr(resourceName, "bytes_scanned_cutoff_per_query", rBytesScannedCutoffPerQuery),
-				),
-			},
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-			},
-			{
-				Config: testAccAthenaWorkGroupConfigBytesScannedCutoffPerQuery(rName, rBytesScannedCutoffPerQueryUpdate),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSAthenaWorkGroupExists(resourceName, &workgroup2),
-					resource.TestCheckResourceAttr(resourceName, "bytes_scanned_cutoff_per_query", rBytesScannedCutoffPerQueryUpdate),
-				),
-			},
-		},
-	})
-}
-
-func TestAccAWSAthenaWorkGroup_EnforceWorkgroupConfiguration(t *testing.T) {
-	var workgroup1, workgroup2 athena.WorkGroup
-	rName := acctest.RandomWithPrefix("tf-acc-test")
-	resourceName := "aws_athena_workgroup.test"
-	rEnforce := "true"
-	rEnforceUpdate := "false"
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckAWSAthenaWorkGroupDestroy,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccAthenaWorkGroupConfigEnforceWorkgroupConfiguration(rName, rEnforce),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSAthenaWorkGroupExists(resourceName, &workgroup1),
-					resource.TestCheckResourceAttr(resourceName, "enforce_workgroup_configuration", rEnforce),
-				),
-			},
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-			},
-			{
-				Config: testAccAthenaWorkGroupConfigEnforceWorkgroupConfiguration(rName, rEnforceUpdate),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSAthenaWorkGroupExists(resourceName, &workgroup2),
-					resource.TestCheckResourceAttr(resourceName, "enforce_workgroup_configuration", rEnforceUpdate),
-				),
-			},
-		},
-	})
-}
-
-func TestAccAWSAthenaWorkGroup_PublishCloudWatchMetricsEnabled(t *testing.T) {
-	var workgroup1, workgroup2 athena.WorkGroup
-	rName := acctest.RandomWithPrefix("tf-acc-test")
-	resourceName := "aws_athena_workgroup.test"
-	rEnabled := "true"
-	rEnabledUpdate := "false"
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckAWSAthenaWorkGroupDestroy,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccAthenaWorkGroupConfigPublishCloudWatchMetricsEnabled(rName, rEnabled),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSAthenaWorkGroupExists(resourceName, &workgroup1),
-					resource.TestCheckResourceAttr(resourceName, "publish_cloudwatch_metrics_enabled", rEnabled),
-				),
-			},
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-			},
-			{
-				Config: testAccAthenaWorkGroupConfigPublishCloudWatchMetricsEnabled(rName, rEnabledUpdate),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSAthenaWorkGroupExists(resourceName, &workgroup2),
-					resource.TestCheckResourceAttr(resourceName, "publish_cloudwatch_metrics_enabled", rEnabledUpdate),
-				),
-			},
-		},
-	})
-}
-
-func TestAccAWSAthenaWorkGroup_OutputLocation(t *testing.T) {
-	var workgroup1, workgroup2 athena.WorkGroup
-	rName := acctest.RandomWithPrefix("tf-acc-test")
-	resourceName := "aws_athena_workgroup.test"
-	rOutputLocation1 := fmt.Sprintf("%s-1", rName)
-	rOutputLocation2 := fmt.Sprintf("%s-2", rName)
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckAWSAthenaWorkGroupDestroy,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccAthenaWorkGroupConfigOutputLocation(rName, rOutputLocation1),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSAthenaWorkGroupExists(resourceName, &workgroup1),
-					resource.TestCheckResourceAttr(resourceName, "output_location", "s3://"+rOutputLocation1+"/test/output"),
-				),
-			},
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-			},
-			{
-				Config: testAccAthenaWorkGroupConfigOutputLocation(rName, rOutputLocation2),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSAthenaWorkGroupExists(resourceName, &workgroup2),
-					resource.TestCheckResourceAttr(resourceName, "output_location", "s3://"+rOutputLocation2+"/test/output"),
-				),
-			},
-		},
-	})
-}
-
-func TestAccAWSAthenaWorkGroup_SseS3Encryption(t *testing.T) {
-	var workgroup1 athena.WorkGroup
-	rName := acctest.RandomWithPrefix("tf-acc-test")
-	resourceName := "aws_athena_workgroup.test"
-	rEncryption := athena.EncryptionOptionSseS3
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckAWSAthenaWorkGroupDestroy,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccAthenaWorkGroupConfigEncryptionS3(rName, rEncryption),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSAthenaWorkGroupExists(resourceName, &workgroup1),
-					resource.TestCheckResourceAttr(resourceName, "encryption_option", rEncryption),
-				),
-			},
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-			},
-		},
-	})
-}
-
-func TestAccAWSAthenaWorkGroup_KmsEncryption(t *testing.T) {
-	var workgroup1, workgroup2 athena.WorkGroup
-	rName := acctest.RandomWithPrefix("tf-acc-test")
-	resourceName := "aws_athena_workgroup.test"
-	rEncryption := athena.EncryptionOptionSseKms
-	rEncryption2 := athena.EncryptionOptionCseKms
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckAWSAthenaWorkGroupDestroy,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccAthenaWorkGroupConfigEncryptionKms(rName, rEncryption),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSAthenaWorkGroupExists(resourceName, &workgroup1),
-					resource.TestCheckResourceAttr(resourceName, "encryption_option", rEncryption),
-				),
-			},
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-			},
-			{
-				Config: testAccAthenaWorkGroupConfigEncryptionKms(rName, rEncryption2),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSAthenaWorkGroupExists(resourceName, &workgroup2),
-					resource.TestCheckResourceAttr(resourceName, "encryption_option", rEncryption2),
 				),
 			},
 		},
@@ -457,43 +475,52 @@ resource "aws_athena_workgroup" "test" {
 `, rName)
 }
 
-func testAccAthenaWorkGroupConfigDescription(rName string, rDescription string) string {
+func testAccAthenaWorkGroupConfigDescription(rName string, description string) string {
 	return fmt.Sprintf(`
 resource "aws_athena_workgroup" "test" {
   description = %[2]q
   name        = %[1]q
 }
-`, rName, rDescription)
+`, rName, description)
 }
 
-func testAccAthenaWorkGroupConfigBytesScannedCutoffPerQuery(rName string, rBytesScannedCutoffPerQuery string) string {
+func testAccAthenaWorkGroupConfigConfigurationBytesScannedCutoffPerQuery(rName string, bytesScannedCutoffPerQuery int) string {
 	return fmt.Sprintf(`
 resource "aws_athena_workgroup" "test" {
-  bytes_scanned_cutoff_per_query = %[2]s
-  name                           = %[1]q
+  name = %[1]q
+
+  configuration {
+    bytes_scanned_cutoff_per_query = %[2]d
+  }
 }
-`, rName, rBytesScannedCutoffPerQuery)
+`, rName, bytesScannedCutoffPerQuery)
 }
 
-func testAccAthenaWorkGroupConfigEnforceWorkgroupConfiguration(rName string, rEnforce string) string {
+func testAccAthenaWorkGroupConfigConfigurationEnforceWorkgroupConfiguration(rName string, enforceWorkgroupConfiguration bool) string {
 	return fmt.Sprintf(`
 resource "aws_athena_workgroup" "test" {
-  enforce_workgroup_configuration = %[2]s
-  name                            = %[1]q
+  name = %[1]q
+
+  configuration {
+    enforce_workgroup_configuration = %[2]t
+  }
 }
-`, rName, rEnforce)
+`, rName, enforceWorkgroupConfiguration)
 }
 
-func testAccAthenaWorkGroupConfigPublishCloudWatchMetricsEnabled(rName string, rEnable string) string {
+func testAccAthenaWorkGroupConfigConfigurationPublishCloudWatchMetricsEnabled(rName string, publishCloudwatchMetricsEnabled bool) string {
 	return fmt.Sprintf(`
 resource "aws_athena_workgroup" "test" {
-  name                               = %[1]q
-  publish_cloudwatch_metrics_enabled = %[2]s
+  name = %[1]q
+
+  configuration {
+    publish_cloudwatch_metrics_enabled = %[2]t
+  }
 }
-`, rName, rEnable)
+`, rName, publishCloudwatchMetricsEnabled)
 }
 
-func testAccAthenaWorkGroupConfigOutputLocation(rName string, rOutputLocation string) string {
+func testAccAthenaWorkGroupConfigConfigurationResultConfigurationOutputLocation(rName string, bucketName string) string {
 	return fmt.Sprintf(`
 resource "aws_s3_bucket" "test"{
   bucket        = %[2]q
@@ -501,22 +528,34 @@ resource "aws_s3_bucket" "test"{
 }
 
 resource "aws_athena_workgroup" "test" {
-  name            = %[1]q
-  output_location = "s3://${aws_s3_bucket.test.bucket}/test/output"
+  name = %[1]q
+
+  configuration {
+    result_configuration {
+      output_location = "s3://${aws_s3_bucket.test.bucket}/test/output"
+    }
+  }
 }
-`, rName, rOutputLocation)
+`, rName, bucketName)
 }
 
-func testAccAthenaWorkGroupConfigEncryptionS3(rName string, rEncryption string) string {
+func testAccAthenaWorkGroupConfigConfigurationResultConfigurationEncryptionConfigurationEncryptionOptionSseS3(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_athena_workgroup" "test" {
-  encryption_option = %[2]q
-  name              = %[1]q
+  name = %[1]q
+
+  configuration {
+    result_configuration {
+      encryption_configuration {
+        encryption_option = "SSE_S3"
+      }
+    }
+  }
 }
-`, rName, rEncryption)
+`, rName)
 }
 
-func testAccAthenaWorkGroupConfigEncryptionKms(rName string, rEncryption string) string {
+func testAccAthenaWorkGroupConfigConfigurationResultConfigurationEncryptionConfigurationEncryptionOptionWithKms(rName, encryptionOption string) string {
 	return fmt.Sprintf(`
 resource "aws_kms_key" "test" {
   deletion_window_in_days = 7
@@ -524,11 +563,18 @@ resource "aws_kms_key" "test" {
 }
 
 resource "aws_athena_workgroup" "test" {
-  encryption_option = %[2]q
-  kms_key           = "${aws_kms_key.test.arn}"
-  name              = %[1]q
+  name = %[1]q
+
+  configuration {
+    result_configuration {
+      encryption_configuration {
+        encryption_option = %[2]q
+        kms_key_arn       = "${aws_kms_key.test.arn}"
+      }
+    }
+  }
 }
-`, rName, rEncryption)
+`, rName, encryptionOption)
 }
 
 func testAccAthenaWorkGroupConfigState(rName, state string) string {

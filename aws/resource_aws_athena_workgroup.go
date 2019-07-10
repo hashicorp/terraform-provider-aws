@@ -3,13 +3,13 @@ package aws
 import (
 	"fmt"
 	"log"
+	"regexp"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/athena"
-	"github.com/hashicorp/terraform/helper/validation"
-
 	"github.com/hashicorp/terraform/helper/schema"
+	"github.com/hashicorp/terraform/helper/validation"
 )
 
 func resourceAwsAthenaWorkgroup() *schema.Resource {
@@ -23,45 +23,87 @@ func resourceAwsAthenaWorkgroup() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
+			"arn": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"configuration": {
+				Type:             schema.TypeList,
+				Optional:         true,
+				MaxItems:         1,
+				DiffSuppressFunc: suppressMissingOptionalConfigurationBlock,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"bytes_scanned_cutoff_per_query": {
+							Type:     schema.TypeInt,
+							Optional: true,
+							ValidateFunc: validation.Any(
+								validation.IntAtLeast(10485760),
+								validation.IntInSlice([]int{0}),
+							),
+						},
+						"enforce_workgroup_configuration": {
+							Type:     schema.TypeBool,
+							Optional: true,
+							Default:  true,
+						},
+						"publish_cloudwatch_metrics_enabled": {
+							Type:     schema.TypeBool,
+							Optional: true,
+							Default:  true,
+						},
+						"result_configuration": {
+							Type:     schema.TypeList,
+							Optional: true,
+							MaxItems: 1,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"encryption_configuration": {
+										Type:     schema.TypeList,
+										Optional: true,
+										MaxItems: 1,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"encryption_option": {
+													Type:     schema.TypeString,
+													Optional: true,
+													ValidateFunc: validation.StringInSlice([]string{
+														athena.EncryptionOptionCseKms,
+														athena.EncryptionOptionSseKms,
+														athena.EncryptionOptionSseS3,
+													}, false),
+												},
+												"kms_key_arn": {
+													Type:         schema.TypeString,
+													Optional:     true,
+													ValidateFunc: validateArn,
+												},
+											},
+										},
+									},
+									"output_location": {
+										Type:     schema.TypeString,
+										Optional: true,
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+			"description": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				ValidateFunc: validation.StringLenBetween(0, 1024),
+			},
 			"name": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
-			},
-			"description": {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
-			"bytes_scanned_cutoff_per_query": {
-				Type:         schema.TypeInt,
-				Optional:     true,
-				ValidateFunc: validation.IntAtLeast(10485760),
-			},
-			"enforce_workgroup_configuration": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Default:  true,
-			},
-			"publish_cloudwatch_metrics_enabled": {
-				Type:     schema.TypeBool,
-				Optional: true,
-			},
-			"output_location": {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
-			"encryption_option": {
-				Type:     schema.TypeString,
-				Optional: true,
-				ValidateFunc: validation.StringInSlice([]string{
-					athena.EncryptionOptionCseKms,
-					athena.EncryptionOptionSseKms,
-					athena.EncryptionOptionSseS3,
-				}, false),
-			},
-			"kms_key": {
-				Type:     schema.TypeString,
-				Optional: true,
+				ValidateFunc: validation.All(
+					validation.StringLenBetween(1, 128),
+					validation.StringMatch(regexp.MustCompile(`^[a-zA-z0-9._-]+$`), "must contain only alphanumeric characters, periods, underscores, and hyphens"),
+				),
 			},
 			"state": {
 				Type:     schema.TypeString,
@@ -71,10 +113,6 @@ func resourceAwsAthenaWorkgroup() *schema.Resource {
 					athena.WorkGroupStateDisabled,
 					athena.WorkGroupStateEnabled,
 				}, false),
-			},
-			"arn": {
-				Type:     schema.TypeString,
-				Computed: true,
 			},
 			"tags": tagsSchema(),
 		},
@@ -87,67 +125,12 @@ func resourceAwsAthenaWorkgroupCreate(d *schema.ResourceData, meta interface{}) 
 	name := d.Get("name").(string)
 
 	input := &athena.CreateWorkGroupInput{
-		Name: aws.String(name),
+		Configuration: expandAthenaWorkGroupConfiguration(d.Get("configuration").([]interface{})),
+		Name:          aws.String(name),
 	}
-
-	basicConfig := false
-	resultConfig := false
-	encryptConfig := false
 
 	if v, ok := d.GetOk("description"); ok {
 		input.Description = aws.String(v.(string))
-	}
-
-	inputConfiguration := &athena.WorkGroupConfiguration{}
-
-	if v, ok := d.GetOk("bytes_scanned_cutoff_per_query"); ok {
-		basicConfig = true
-		inputConfiguration.BytesScannedCutoffPerQuery = aws.Int64(int64(v.(int)))
-	}
-
-	if v, ok := d.GetOk("enforce_workgroup_configuration"); ok {
-		basicConfig = true
-		inputConfiguration.EnforceWorkGroupConfiguration = aws.Bool(v.(bool))
-	}
-
-	if v, ok := d.GetOk("publish_cloudwatch_metrics_enabled"); ok {
-		basicConfig = true
-		inputConfiguration.PublishCloudWatchMetricsEnabled = aws.Bool(v.(bool))
-	}
-
-	resultConfiguration := &athena.ResultConfiguration{}
-
-	if v, ok := d.GetOk("output_location"); ok {
-		resultConfig = true
-		resultConfiguration.OutputLocation = aws.String(v.(string))
-	}
-
-	encryptionConfiguration := &athena.EncryptionConfiguration{}
-
-	if v, ok := d.GetOk("encryption_option"); ok {
-		resultConfig = true
-		encryptConfig = true
-		encryptionConfiguration.EncryptionOption = aws.String(v.(string))
-
-		if v.(string) == athena.EncryptionOptionCseKms || v.(string) == athena.EncryptionOptionSseKms {
-			if vkms, ok := d.GetOk("kms_key"); ok {
-				encryptionConfiguration.KmsKey = aws.String(vkms.(string))
-			} else {
-				return fmt.Errorf("KMS Key required but not provided for encryption_option: %s", v.(string))
-			}
-		}
-	}
-
-	if basicConfig {
-		input.Configuration = inputConfiguration
-	}
-
-	if resultConfig {
-		input.Configuration.ResultConfiguration = resultConfiguration
-
-		if encryptConfig {
-			input.Configuration.ResultConfiguration.EncryptionConfiguration = encryptionConfiguration
-		}
 	}
 
 	// Prevent the below error:
@@ -207,23 +190,13 @@ func resourceAwsAthenaWorkgroupRead(d *schema.ResourceData, meta interface{}) er
 
 	d.Set("arn", arn.String())
 	d.Set("description", resp.WorkGroup.Description)
+
+	if err := d.Set("configuration", flattenAthenaWorkGroupConfiguration(resp.WorkGroup.Configuration)); err != nil {
+		return fmt.Errorf("error setting configuration: %s", err)
+	}
+
 	d.Set("name", resp.WorkGroup.Name)
 	d.Set("state", resp.WorkGroup.State)
-
-	if resp.WorkGroup.Configuration != nil {
-		d.Set("bytes_scanned_cutoff_per_query", resp.WorkGroup.Configuration.BytesScannedCutoffPerQuery)
-		d.Set("enforce_workgroup_configuration", resp.WorkGroup.Configuration.EnforceWorkGroupConfiguration)
-		d.Set("publish_cloudwatch_metrics_enabled", resp.WorkGroup.Configuration.PublishCloudWatchMetricsEnabled)
-
-		if resp.WorkGroup.Configuration.ResultConfiguration != nil {
-			d.Set("output_location", resp.WorkGroup.Configuration.ResultConfiguration.OutputLocation)
-
-			if resp.WorkGroup.Configuration.ResultConfiguration.EncryptionConfiguration != nil {
-				d.Set("encryption_option", resp.WorkGroup.Configuration.ResultConfiguration.EncryptionConfiguration.EncryptionOption)
-				d.Set("kms_key", resp.WorkGroup.Configuration.ResultConfiguration.EncryptionConfiguration.KmsKey)
-			}
-		}
-	}
 
 	err = saveTagsAthena(conn, d, d.Get("arn").(string))
 
@@ -260,85 +233,19 @@ func resourceAwsAthenaWorkgroupUpdate(d *schema.ResourceData, meta interface{}) 
 	conn := meta.(*AWSClient).athenaconn
 
 	workGroupUpdate := false
-	resultConfigUpdate := false
-	configUpdate := false
-	encryptionUpdate := false
-	removeEncryption := false
 
 	input := &athena.UpdateWorkGroupInput{
 		WorkGroup: aws.String(d.Get("name").(string)),
 	}
 
+	if d.HasChange("configuration") {
+		workGroupUpdate = true
+		input.ConfigurationUpdates = expandAthenaWorkGroupConfigurationUpdates(d.Get("configuration").([]interface{}))
+	}
+
 	if d.HasChange("description") {
 		workGroupUpdate = true
 		input.Description = aws.String(d.Get("description").(string))
-	}
-
-	inputConfigurationUpdates := &athena.WorkGroupConfigurationUpdates{}
-
-	if d.HasChange("bytes_scanned_cutoff_per_query") {
-		workGroupUpdate = true
-		configUpdate = true
-
-		if v, ok := d.GetOk("bytes_scanned_cutoff_per_query"); ok {
-			inputConfigurationUpdates.BytesScannedCutoffPerQuery = aws.Int64(int64(v.(int)))
-		} else {
-			inputConfigurationUpdates.RemoveBytesScannedCutoffPerQuery = aws.Bool(true)
-		}
-	}
-
-	if d.HasChange("enforce_workgroup_configuration") {
-		workGroupUpdate = true
-		configUpdate = true
-
-		v := d.Get("enforce_workgroup_configuration")
-		inputConfigurationUpdates.EnforceWorkGroupConfiguration = aws.Bool(v.(bool))
-	}
-
-	if d.HasChange("publish_cloudwatch_metrics_enabled") {
-		workGroupUpdate = true
-		configUpdate = true
-
-		v := d.Get("publish_cloudwatch_metrics_enabled")
-		inputConfigurationUpdates.PublishCloudWatchMetricsEnabled = aws.Bool(v.(bool))
-	}
-
-	resultConfigurationUpdates := &athena.ResultConfigurationUpdates{}
-
-	if d.HasChange("output_location") {
-		workGroupUpdate = true
-		configUpdate = true
-		resultConfigUpdate = true
-
-		if v, ok := d.GetOk("output_location"); ok {
-			resultConfigurationUpdates.OutputLocation = aws.String(v.(string))
-		} else {
-			resultConfigurationUpdates.RemoveOutputLocation = aws.Bool(true)
-		}
-	}
-
-	encryptionConfiguration := &athena.EncryptionConfiguration{}
-
-	if d.HasChange("encryption_option") {
-		workGroupUpdate = true
-		configUpdate = true
-		resultConfigUpdate = true
-		encryptionUpdate = true
-
-		if v, ok := d.GetOk("encryption_option"); ok {
-			encryptionConfiguration.EncryptionOption = aws.String(v.(string))
-
-			if v.(string) == athena.EncryptionOptionCseKms || v.(string) == athena.EncryptionOptionSseKms {
-				if vkms, ok := d.GetOk("kms_key"); ok {
-					encryptionConfiguration.KmsKey = aws.String(vkms.(string))
-				} else {
-					return fmt.Errorf("KMS Key required but not provided for encryption_option: %s", v.(string))
-				}
-			}
-		} else {
-			removeEncryption = true
-			resultConfigurationUpdates.RemoveEncryptionConfiguration = aws.Bool(true)
-		}
 	}
 
 	if d.HasChange("state") {
@@ -347,18 +254,6 @@ func resourceAwsAthenaWorkgroupUpdate(d *schema.ResourceData, meta interface{}) 
 	}
 
 	if workGroupUpdate {
-		if configUpdate {
-			input.ConfigurationUpdates = inputConfigurationUpdates
-		}
-
-		if resultConfigUpdate {
-			input.ConfigurationUpdates.ResultConfigurationUpdates = resultConfigurationUpdates
-
-			if encryptionUpdate && !removeEncryption {
-				input.ConfigurationUpdates.ResultConfigurationUpdates.EncryptionConfiguration = encryptionConfiguration
-			}
-		}
-
 		_, err := conn.UpdateWorkGroup(input)
 
 		if err != nil {
@@ -375,4 +270,167 @@ func resourceAwsAthenaWorkgroupUpdate(d *schema.ResourceData, meta interface{}) 
 	}
 
 	return resourceAwsAthenaWorkgroupRead(d, meta)
+}
+
+func expandAthenaWorkGroupConfiguration(l []interface{}) *athena.WorkGroupConfiguration {
+	if len(l) == 0 || l[0] == nil {
+		return nil
+	}
+
+	m := l[0].(map[string]interface{})
+
+	configuration := &athena.WorkGroupConfiguration{}
+
+	if v, ok := m["bytes_scanned_cutoff_per_query"]; ok && v.(int) > 0 {
+		configuration.BytesScannedCutoffPerQuery = aws.Int64(int64(v.(int)))
+	}
+
+	if v, ok := m["enforce_workgroup_configuration"]; ok {
+		configuration.EnforceWorkGroupConfiguration = aws.Bool(v.(bool))
+	}
+
+	if v, ok := m["publish_cloudwatch_metrics_enabled"]; ok {
+		configuration.PublishCloudWatchMetricsEnabled = aws.Bool(v.(bool))
+	}
+
+	if v, ok := m["result_configuration"]; ok {
+		configuration.ResultConfiguration = expandAthenaWorkGroupResultConfiguration(v.([]interface{}))
+	}
+
+	return configuration
+}
+
+func expandAthenaWorkGroupConfigurationUpdates(l []interface{}) *athena.WorkGroupConfigurationUpdates {
+	if len(l) == 0 || l[0] == nil {
+		return nil
+	}
+
+	m := l[0].(map[string]interface{})
+
+	configurationUpdates := &athena.WorkGroupConfigurationUpdates{}
+
+	if v, ok := m["bytes_scanned_cutoff_per_query"]; ok && v.(int) > 0 {
+		configurationUpdates.BytesScannedCutoffPerQuery = aws.Int64(int64(v.(int)))
+	} else {
+		configurationUpdates.RemoveBytesScannedCutoffPerQuery = aws.Bool(true)
+	}
+
+	if v, ok := m["enforce_workgroup_configuration"]; ok {
+		configurationUpdates.EnforceWorkGroupConfiguration = aws.Bool(v.(bool))
+	}
+
+	if v, ok := m["publish_cloudwatch_metrics_enabled"]; ok {
+		configurationUpdates.PublishCloudWatchMetricsEnabled = aws.Bool(v.(bool))
+	}
+
+	if v, ok := m["result_configuration"]; ok {
+		configurationUpdates.ResultConfigurationUpdates = expandAthenaWorkGroupResultConfigurationUpdates(v.([]interface{}))
+	}
+
+	return configurationUpdates
+}
+
+func expandAthenaWorkGroupResultConfiguration(l []interface{}) *athena.ResultConfiguration {
+	if len(l) == 0 || l[0] == nil {
+		return nil
+	}
+
+	m := l[0].(map[string]interface{})
+
+	resultConfiguration := &athena.ResultConfiguration{}
+
+	if v, ok := m["encryption_configuration"]; ok {
+		resultConfiguration.EncryptionConfiguration = expandAthenaWorkGroupEncryptionConfiguration(v.([]interface{}))
+	}
+
+	if v, ok := m["output_location"]; ok && v.(string) != "" {
+		resultConfiguration.OutputLocation = aws.String(v.(string))
+	}
+
+	return resultConfiguration
+}
+
+func expandAthenaWorkGroupResultConfigurationUpdates(l []interface{}) *athena.ResultConfigurationUpdates {
+	if len(l) == 0 || l[0] == nil {
+		return nil
+	}
+
+	m := l[0].(map[string]interface{})
+
+	resultConfigurationUpdates := &athena.ResultConfigurationUpdates{}
+
+	if v, ok := m["encryption_configuration"]; ok {
+		resultConfigurationUpdates.EncryptionConfiguration = expandAthenaWorkGroupEncryptionConfiguration(v.([]interface{}))
+	} else {
+		resultConfigurationUpdates.RemoveEncryptionConfiguration = aws.Bool(true)
+	}
+
+	if v, ok := m["output_location"]; ok && v.(string) != "" {
+		resultConfigurationUpdates.OutputLocation = aws.String(v.(string))
+	} else {
+		resultConfigurationUpdates.RemoveOutputLocation = aws.Bool(true)
+	}
+
+	return resultConfigurationUpdates
+}
+
+func expandAthenaWorkGroupEncryptionConfiguration(l []interface{}) *athena.EncryptionConfiguration {
+	if len(l) == 0 || l[0] == nil {
+		return nil
+	}
+
+	m := l[0].(map[string]interface{})
+
+	encryptionConfiguration := &athena.EncryptionConfiguration{}
+
+	if v, ok := m["encryption_option"]; ok && v.(string) != "" {
+		encryptionConfiguration.EncryptionOption = aws.String(v.(string))
+	}
+
+	if v, ok := m["kms_key_arn"]; ok && v.(string) != "" {
+		encryptionConfiguration.KmsKey = aws.String(v.(string))
+	}
+
+	return encryptionConfiguration
+}
+
+func flattenAthenaWorkGroupConfiguration(configuration *athena.WorkGroupConfiguration) []interface{} {
+	if configuration == nil {
+		return []interface{}{}
+	}
+
+	m := map[string]interface{}{
+		"bytes_scanned_cutoff_per_query":     aws.Int64Value(configuration.BytesScannedCutoffPerQuery),
+		"enforce_workgroup_configuration":    aws.BoolValue(configuration.EnforceWorkGroupConfiguration),
+		"publish_cloudwatch_metrics_enabled": aws.BoolValue(configuration.PublishCloudWatchMetricsEnabled),
+		"result_configuration":               flattenAthenaWorkGroupResultConfiguration(configuration.ResultConfiguration),
+	}
+
+	return []interface{}{m}
+}
+
+func flattenAthenaWorkGroupResultConfiguration(resultConfiguration *athena.ResultConfiguration) []interface{} {
+	if resultConfiguration == nil {
+		return []interface{}{}
+	}
+
+	m := map[string]interface{}{
+		"encryption_configuration": flattenAthenaWorkGroupEncryptionConfiguration(resultConfiguration.EncryptionConfiguration),
+		"output_location":          aws.StringValue(resultConfiguration.OutputLocation),
+	}
+
+	return []interface{}{m}
+}
+
+func flattenAthenaWorkGroupEncryptionConfiguration(encryptionConfiguration *athena.EncryptionConfiguration) []interface{} {
+	if encryptionConfiguration == nil {
+		return []interface{}{}
+	}
+
+	m := map[string]interface{}{
+		"encryption_option": aws.StringValue(encryptionConfiguration.EncryptionOption),
+		"kms_key_arn":       aws.StringValue(encryptionConfiguration.KmsKey),
+	}
+
+	return []interface{}{m}
 }

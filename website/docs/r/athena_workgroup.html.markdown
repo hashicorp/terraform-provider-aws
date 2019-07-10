@@ -24,7 +24,7 @@ resource "aws_athena_workgroup" "example" {
       output_location = "s3://{aws_s3_bucket.example.bucket}/output/"
 
       encryption_configuration {
-        encryption_option = "SSE-KMS"
+        encryption_option = "SSE_KMS"
         kms_key_arn       = "${aws_kms_key.example.arn}"
       }
     }
@@ -47,8 +47,8 @@ The following arguments are supported:
 The `configuration` configuration block supports the following arguments:
 
 * `bytes_scanned_cutoff_per_query` - (Optional) Integer for the upper data usage limit (cutoff) for the amount of bytes a single query in a workgroup is allowed to scan. Must be at least `10485760`.
-* `enforce_workgroup_configuration` - (Optional) Boolean whether the settings for the workgroup override client-side settings. For more information, see [Workgroup Settings Override Client-Side Settings](https://docs.aws.amazon.com/athena/latest/ug/workgroups-settings-override.html).
-* `publish_cloudwatch_metrics_enabled` - (Optional) Boolean whether Amazon CloudWatch metrics are enabled for the workgroup.
+* `enforce_workgroup_configuration` - (Optional) Boolean whether the settings for the workgroup override client-side settings. For more information, see [Workgroup Settings Override Client-Side Settings](https://docs.aws.amazon.com/athena/latest/ug/workgroups-settings-override.html). Defaults to `true`.
+* `publish_cloudwatch_metrics_enabled` - (Optional) Boolean whether Amazon CloudWatch metrics are enabled for the workgroup. Defaults to `true`.
 * `result_configuration` - (Optional) Configuration block with result settings. Documented below.
 
 #### result_configuration Argument Reference
