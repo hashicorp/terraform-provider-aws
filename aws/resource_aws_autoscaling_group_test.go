@@ -2479,10 +2479,6 @@ resource "aws_security_group" "tf_test_self" {
 `
 
 const testAccAWSAutoScalingGroupConfig_ALB_TargetGroup_post_duo = `
-provider "aws" {
-  region = "us-west-2"
-}
-
 resource "aws_vpc" "default" {
   cidr_block = "10.0.0.0/16"
 
@@ -2622,10 +2618,6 @@ resource "aws_autoscaling_group" "bar" {
 
 func testAccAWSAutoScalingGroupConfig_ALB_TargetGroup_ELBCapacity(rInt int) string {
 	return fmt.Sprintf(`
-provider "aws" {
-  region = "us-west-2"
-}
-
 resource "aws_vpc" "default" {
   cidr_block           = "10.0.0.0/16"
   enable_dns_hostnames = "true"
