@@ -73,18 +73,13 @@
 // these parameters and commands:
 //
 //    * Use the following parameter with each command to specify both the endpoint
-//    and its region:
-//
-// --endpoint-url https://organizations.us-east-1.amazonaws.com
+//    and its region: --endpoint-url https://organizations.us-east-1.amazonaws.com
 //
 //    * Use the default endpoint, but configure your default region with this
-//    command:
-//
-// aws configure set default.region us-east-1
+//    command: aws configure set default.region us-east-1
 //
 //    * Use the following parameter with each command to specify the endpoint:
-//
-// --region us-east-1
+//    --region us-east-1
 //
 // For the various SDKs used to call the APIs, see the documentation for the
 // SDK of interest to learn how to direct the requests to a specific endpoint.

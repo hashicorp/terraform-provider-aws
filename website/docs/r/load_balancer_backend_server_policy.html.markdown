@@ -6,7 +6,7 @@ description: |-
   Attaches a load balancer policy to an ELB backend server.
 ---
 
-# aws_load_balancer_backend_server_policy
+# Resource: aws_load_balancer_backend_server_policy
 
 Attaches a load balancer policy to an ELB backend server.
 

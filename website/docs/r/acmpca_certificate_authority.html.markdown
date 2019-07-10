@@ -6,7 +6,7 @@ description: |-
   Provides a resource to manage AWS Certificate Manager Private Certificate Authorities
 ---
 
-# aws_acmpca_certificate_authority
+# Resource: aws_acmpca_certificate_authority
 
 Provides a resource to manage AWS Certificate Manager Private Certificate Authorities (ACM PCA Certificate Authorities).
 
@@ -26,6 +26,7 @@ resource "aws_acmpca_certificate_authority" "example" {
       common_name = "example.com"
     }
   }
+
   permanent_deletion_time_in_days = 7
 }
 ```

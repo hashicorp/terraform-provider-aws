@@ -6,7 +6,7 @@ description: |-
     Provides AWS IoT Thing Principal attachment.
 ---
 
-# aws_iot_thing_principal_attachment
+# Resource: aws_iot_thing_principal_attachment
 
 Attaches Principal to AWS IoT Thing.
 
@@ -22,7 +22,7 @@ resource "aws_iot_certificate" "cert" {
   active = true
 }
 
-resource "aws_iot_thing_attachment" "att" {
+resource "aws_iot_thing_principal_attachment" "att" {
   principal = "${aws_iot_certificate.cert.arn}"
   thing     = "${aws_iot_thing.example.name}"
 }

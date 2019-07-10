@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/redshift"
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/helper/schema"
@@ -17,10 +18,15 @@ func resourceAwsRedshiftSnapshotCopyGrant() *schema.Resource {
 		// Instead changes to most fields will force a new resource
 		Create: resourceAwsRedshiftSnapshotCopyGrantCreate,
 		Read:   resourceAwsRedshiftSnapshotCopyGrantRead,
+		Update: resourceAwsRedshiftSnapshotCopyGrantUpdate,
 		Delete: resourceAwsRedshiftSnapshotCopyGrantDelete,
 		Exists: resourceAwsRedshiftSnapshotCopyGrantExists,
 
 		Schema: map[string]*schema.Schema{
+			"arn": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"snapshot_copy_grant_name": {
 				Type:     schema.TypeString,
 				Required: true,
@@ -32,11 +38,7 @@ func resourceAwsRedshiftSnapshotCopyGrant() *schema.Resource {
 				ForceNew: true,
 				Computed: true,
 			},
-			"tags": {
-				Type:     schema.TypeMap,
-				Optional: true,
-				ForceNew: true,
-			},
+			"tags": tagsSchema(),
 		},
 	}
 }
@@ -90,6 +92,16 @@ func resourceAwsRedshiftSnapshotCopyGrantRead(d *schema.ResourceData, meta inter
 		return nil
 	}
 
+	arn := arn.ARN{
+		Partition: meta.(*AWSClient).partition,
+		Service:   "redshift",
+		Region:    meta.(*AWSClient).region,
+		AccountID: meta.(*AWSClient).accountid,
+		Resource:  fmt.Sprintf("snapshotcopygrant:%s", grantName),
+	}.String()
+
+	d.Set("arn", arn)
+
 	d.Set("kms_key_id", grant.KmsKeyId)
 	d.Set("snapshot_copy_grant_name", grant.SnapshotCopyGrantName)
 	if err := d.Set("tags", tagsToMapRedshift(grant.Tags)); err != nil {
@@ -97,6 +109,22 @@ func resourceAwsRedshiftSnapshotCopyGrantRead(d *schema.ResourceData, meta inter
 	}
 
 	return nil
+}
+
+func resourceAwsRedshiftSnapshotCopyGrantUpdate(d *schema.ResourceData, meta interface{}) error {
+	conn := meta.(*AWSClient).redshiftconn
+
+	d.Partial(true)
+
+	if tagErr := setTagsRedshift(conn, d); tagErr != nil {
+		return tagErr
+	} else {
+		d.SetPartial("tags")
+	}
+
+	d.Partial(false)
+
+	return resourceAwsRedshiftSnapshotCopyGrantRead(d, meta)
 }
 
 func resourceAwsRedshiftSnapshotCopyGrantDelete(d *schema.ResourceData, meta interface{}) error {

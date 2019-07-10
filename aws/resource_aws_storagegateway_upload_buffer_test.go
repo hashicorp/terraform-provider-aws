@@ -76,7 +76,7 @@ func TestAccAWSStorageGatewayUploadBuffer_Basic(t *testing.T) {
 		PreCheck:  func() { testAccPreCheck(t) },
 		Providers: testAccProviders,
 		// Storage Gateway API does not support removing upload buffers
-		// CheckDestroy: testAccCheckAWSStorageGatewayUploadBufferDestroy,
+		CheckDestroy: nil,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSStorageGatewayUploadBufferConfig_Basic(rName),

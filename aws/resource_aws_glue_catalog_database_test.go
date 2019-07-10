@@ -210,13 +210,14 @@ resource "aws_glue_catalog_database" "test" {
 func testAccGlueCatalogDatabase_full(rInt int, desc string) string {
 	return fmt.Sprintf(`
 resource "aws_glue_catalog_database" "test" {
-  name = "my_test_catalog_database_%d"
-  description = "%s"
+  name         = "my_test_catalog_database_%d"
+  description  = "%s"
   location_uri = "my-location"
+
   parameters = {
-	param1 = "value1"
-	param2 = true
-	param3 = 50
+    param1 = "value1"
+    param2 = true
+    param3 = 50
   }
 }
 `, rInt, desc)

@@ -5,6 +5,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/gamelift"
+	"github.com/hashicorp/terraform/helper/resource"
 )
 
 type testAccGameliftGame struct {
@@ -65,5 +66,5 @@ func testAccGameliftAccountIdByRegion(region string) (string, error) {
 		return accId, nil
 	}
 
-	return "", fmt.Errorf("Account ID not found for region %q", region)
+	return "", &resource.NotFoundError{Message: fmt.Sprintf("GameLift Account ID not found for region %q", region)}
 }

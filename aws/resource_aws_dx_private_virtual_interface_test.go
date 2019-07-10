@@ -170,7 +170,7 @@ resource "aws_vpn_gateway" "foo" {
 }
 
 resource "aws_dx_private_virtual_interface" "foo" {
-  connection_id    = "%s"
+  connection_id = "%s"
 
   vpn_gateway_id = "${aws_vpn_gateway.foo.id}"
   name           = "%s"
@@ -190,7 +190,7 @@ resource "aws_vpn_gateway" "foo" {
 }
 
 resource "aws_dx_private_virtual_interface" "foo" {
-  connection_id    = "%s"
+  connection_id = "%s"
 
   vpn_gateway_id = "${aws_vpn_gateway.foo.id}"
   name           = "%s"
@@ -213,7 +213,7 @@ resource "aws_dx_gateway" "foo" {
 }
 
 resource "aws_dx_private_virtual_interface" "foo" {
-  connection_id    = "%s"
+  connection_id = "%s"
 
   dx_gateway_id  = "${aws_dx_gateway.foo.id}"
   name           = "%s"
@@ -233,7 +233,7 @@ resource "aws_vpn_gateway" "foo" {
 }
 
 resource "aws_dx_private_virtual_interface" "foo" {
-  connection_id    = "%s"
+  connection_id = "%s"
 
   vpn_gateway_id = "${aws_vpn_gateway.foo.id}"
   name           = "%s"

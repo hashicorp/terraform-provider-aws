@@ -6,7 +6,7 @@ description: |-
   Manages an association with WAF Regional Web ACL
 ---
 
-# aws_wafregional_web_acl_association
+# Resource: aws_wafregional_web_acl_association
 
 Manages an association with WAF Regional Web ACL.
 

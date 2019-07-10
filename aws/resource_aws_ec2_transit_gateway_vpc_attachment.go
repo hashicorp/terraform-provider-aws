@@ -104,7 +104,7 @@ func resourceAwsEc2TransitGatewayVpcAttachmentCreate(d *schema.ResourceData, met
 
 	d.SetId(aws.StringValue(output.TransitGatewayVpcAttachment.TransitGatewayAttachmentId))
 
-	if err := waitForEc2TransitGatewayRouteTableAttachmentCreation(conn, d.Id()); err != nil {
+	if err := waitForEc2TransitGatewayVpcAttachmentCreation(conn, d.Id()); err != nil {
 		return fmt.Errorf("error waiting for EC2 Transit Gateway VPC Attachment (%s) availability: %s", d.Id(), err)
 	}
 
@@ -238,7 +238,7 @@ func resourceAwsEc2TransitGatewayVpcAttachmentUpdate(d *schema.ResourceData, met
 			return fmt.Errorf("error modifying EC2 Transit Gateway VPC Attachment (%s): %s", d.Id(), err)
 		}
 
-		if err := waitForEc2TransitGatewayRouteTableAttachmentUpdate(conn, d.Id()); err != nil {
+		if err := waitForEc2TransitGatewayVpcAttachmentUpdate(conn, d.Id()); err != nil {
 			return fmt.Errorf("error waiting for EC2 Transit Gateway VPC Attachment (%s) update: %s", d.Id(), err)
 		}
 	}
@@ -295,7 +295,7 @@ func resourceAwsEc2TransitGatewayVpcAttachmentDelete(d *schema.ResourceData, met
 		return fmt.Errorf("error deleting EC2 Transit Gateway VPC Attachment: %s", err)
 	}
 
-	if err := waitForEc2TransitGatewayRouteTableAttachmentDeletion(conn, d.Id()); err != nil {
+	if err := waitForEc2TransitGatewayVpcAttachmentDeletion(conn, d.Id()); err != nil {
 		return fmt.Errorf("error waiting for EC2 Transit Gateway VPC Attachment (%s) deletion: %s", d.Id(), err)
 	}
 

@@ -6,7 +6,7 @@ description: |-
   Provides a Pinpoint Baidu Channel resource.
 ---
 
-# aws_pinpoint_baidu_channel
+# Resource: aws_pinpoint_baidu_channel
 
 Provides a Pinpoint Baidu Channel resource.
 

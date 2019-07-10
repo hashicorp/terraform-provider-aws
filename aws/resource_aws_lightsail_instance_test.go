@@ -3,6 +3,7 @@ package aws
 import (
 	"errors"
 	"fmt"
+	"regexp"
 	"testing"
 	"time"
 
@@ -19,7 +20,7 @@ func TestAccAWSLightsailInstance_basic(t *testing.T) {
 	lightsailName := fmt.Sprintf("tf-test-lightsail-%d", acctest.RandInt())
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:      func() { testAccPreCheck(t) },
+		PreCheck:      func() { testAccPreCheck(t); testAccPreCheckAWSLightsail(t) },
 		IDRefreshName: "aws_lightsail_instance.lightsail_instance_test",
 		Providers:     testAccProviders,
 		CheckDestroy:  testAccCheckAWSLightsailInstanceDestroy,
@@ -32,6 +33,7 @@ func TestAccAWSLightsailInstance_basic(t *testing.T) {
 					resource.TestCheckResourceAttrSet("aws_lightsail_instance.lightsail_instance_test", "blueprint_id"),
 					resource.TestCheckResourceAttrSet("aws_lightsail_instance.lightsail_instance_test", "bundle_id"),
 					resource.TestCheckResourceAttrSet("aws_lightsail_instance.lightsail_instance_test", "key_pair_name"),
+					resource.TestCheckResourceAttr("aws_lightsail_instance.lightsail_instance_test", "tags.%", "0"),
 				),
 			},
 		},
@@ -43,7 +45,7 @@ func TestAccAWSLightsailInstance_euRegion(t *testing.T) {
 	lightsailName := fmt.Sprintf("tf-test-lightsail-%d", acctest.RandInt())
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:      func() { testAccPreCheck(t) },
+		PreCheck:      func() { testAccPreCheck(t); testAccPreCheckAWSLightsail(t) },
 		IDRefreshName: "aws_lightsail_instance.lightsail_instance_test",
 		Providers:     testAccProviders,
 		CheckDestroy:  testAccCheckAWSLightsailInstanceDestroy,
@@ -62,6 +64,87 @@ func TestAccAWSLightsailInstance_euRegion(t *testing.T) {
 	})
 }
 
+func TestAccAWSLightsailInstance_Name(t *testing.T) {
+	var conf lightsail.Instance
+	lightsailName := fmt.Sprintf("tf-test-lightsail-%d", acctest.RandInt())
+	lightsailNameWithSpaces := fmt.Sprint(lightsailName, "string with spaces")
+	lightsailNameWithStartingDigit := fmt.Sprintf("01-%s", lightsailName)
+	lightsailNameWithUnderscore := fmt.Sprintf("%s_123456", lightsailName)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:      func() { testAccPreCheck(t) },
+		IDRefreshName: "aws_lightsail_instance.lightsail_instance_test",
+		Providers:     testAccProviders,
+		CheckDestroy:  testAccCheckAWSLightsailInstanceDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config:      testAccAWSLightsailInstanceConfig_basic(lightsailNameWithSpaces),
+				ExpectError: regexp.MustCompile(`must contain only alphanumeric characters, underscores, hyphens, and dots`),
+			},
+			{
+				Config:      testAccAWSLightsailInstanceConfig_basic(lightsailNameWithStartingDigit),
+				ExpectError: regexp.MustCompile(`must begin with an alphabetic character`),
+			},
+			{
+				Config: testAccAWSLightsailInstanceConfig_basic(lightsailName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckAWSLightsailInstanceExists("aws_lightsail_instance.lightsail_instance_test", &conf),
+					resource.TestCheckResourceAttrSet("aws_lightsail_instance.lightsail_instance_test", "availability_zone"),
+					resource.TestCheckResourceAttrSet("aws_lightsail_instance.lightsail_instance_test", "blueprint_id"),
+					resource.TestCheckResourceAttrSet("aws_lightsail_instance.lightsail_instance_test", "bundle_id"),
+					resource.TestCheckResourceAttrSet("aws_lightsail_instance.lightsail_instance_test", "key_pair_name"),
+				),
+			},
+			{
+				Config: testAccAWSLightsailInstanceConfig_basic(lightsailNameWithUnderscore),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckAWSLightsailInstanceExists("aws_lightsail_instance.lightsail_instance_test", &conf),
+					resource.TestCheckResourceAttrSet("aws_lightsail_instance.lightsail_instance_test", "availability_zone"),
+					resource.TestCheckResourceAttrSet("aws_lightsail_instance.lightsail_instance_test", "blueprint_id"),
+					resource.TestCheckResourceAttrSet("aws_lightsail_instance.lightsail_instance_test", "bundle_id"),
+					resource.TestCheckResourceAttrSet("aws_lightsail_instance.lightsail_instance_test", "key_pair_name"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAWSLightsailInstance_Tags(t *testing.T) {
+	var conf lightsail.Instance
+	lightsailName := fmt.Sprintf("tf-test-lightsail-%d", acctest.RandInt())
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:      func() { testAccPreCheck(t); testAccPreCheckAWSLightsail(t) },
+		IDRefreshName: "aws_lightsail_instance.lightsail_instance_test",
+		Providers:     testAccProviders,
+		CheckDestroy:  testAccCheckAWSLightsailInstanceDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSLightsailInstanceConfig_tags1(lightsailName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckAWSLightsailInstanceExists("aws_lightsail_instance.lightsail_instance_test", &conf),
+					resource.TestCheckResourceAttrSet("aws_lightsail_instance.lightsail_instance_test", "availability_zone"),
+					resource.TestCheckResourceAttrSet("aws_lightsail_instance.lightsail_instance_test", "blueprint_id"),
+					resource.TestCheckResourceAttrSet("aws_lightsail_instance.lightsail_instance_test", "bundle_id"),
+					resource.TestCheckResourceAttrSet("aws_lightsail_instance.lightsail_instance_test", "key_pair_name"),
+					resource.TestCheckResourceAttr("aws_lightsail_instance.lightsail_instance_test", "tags.%", "1"),
+				),
+			},
+			{
+				Config: testAccAWSLightsailInstanceConfig_tags2(lightsailName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckAWSLightsailInstanceExists("aws_lightsail_instance.lightsail_instance_test", &conf),
+					resource.TestCheckResourceAttrSet("aws_lightsail_instance.lightsail_instance_test", "availability_zone"),
+					resource.TestCheckResourceAttrSet("aws_lightsail_instance.lightsail_instance_test", "blueprint_id"),
+					resource.TestCheckResourceAttrSet("aws_lightsail_instance.lightsail_instance_test", "bundle_id"),
+					resource.TestCheckResourceAttrSet("aws_lightsail_instance.lightsail_instance_test", "key_pair_name"),
+					resource.TestCheckResourceAttr("aws_lightsail_instance.lightsail_instance_test", "tags.%", "2"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccAWSLightsailInstance_disapear(t *testing.T) {
 	var conf lightsail.Instance
 	lightsailName := fmt.Sprintf("tf-test-lightsail-%d", acctest.RandInt())
@@ -74,7 +157,7 @@ func TestAccAWSLightsailInstance_disapear(t *testing.T) {
 		})
 
 		if err != nil {
-			return fmt.Errorf("Error deleting Lightsail Instance in disapear test")
+			return fmt.Errorf("error deleting Lightsail Instance in disappear test")
 		}
 
 		// sleep 7 seconds to give it time, so we don't have to poll
@@ -84,7 +167,7 @@ func TestAccAWSLightsailInstance_disapear(t *testing.T) {
 	}
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSLightsail(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSLightsailInstanceDestroy,
 		Steps: []resource.TestStep{
@@ -160,11 +243,28 @@ func testAccCheckAWSLightsailInstanceDestroy(s *terraform.State) error {
 	return nil
 }
 
+func testAccPreCheckAWSLightsail(t *testing.T) {
+	conn := testAccProvider.Meta().(*AWSClient).lightsailconn
+
+	input := &lightsail.GetInstancesInput{}
+
+	_, err := conn.GetInstances(input)
+
+	if testAccPreCheckSkipError(err) {
+		t.Skipf("skipping acceptance testing: %s", err)
+	}
+
+	if err != nil {
+		t.Fatalf("unexpected PreCheck error: %s", err)
+	}
+}
+
 func testAccAWSLightsailInstanceConfig_basic(lightsailName string) string {
 	return fmt.Sprintf(`
 provider "aws" {
   region = "us-east-1"
 }
+
 resource "aws_lightsail_instance" "lightsail_instance_test" {
   name              = "%s"
   availability_zone = "us-east-1b"
@@ -174,15 +274,53 @@ resource "aws_lightsail_instance" "lightsail_instance_test" {
 `, lightsailName)
 }
 
+func testAccAWSLightsailInstanceConfig_tags1(lightsailName string) string {
+	return fmt.Sprintf(`
+data "aws_availability_zones" "available" {
+  state = "available"
+}
+
+resource "aws_lightsail_instance" "lightsail_instance_test" {
+  name              = "%s"
+  availability_zone = "${data.aws_availability_zones.available.names[0]}"
+  blueprint_id      = "amazon_linux"
+  bundle_id         = "nano_1_0"
+  tags = {
+    Name = "tf-test"
+  }
+}
+`, lightsailName)
+}
+
+func testAccAWSLightsailInstanceConfig_tags2(lightsailName string) string {
+	return fmt.Sprintf(`
+data "aws_availability_zones" "available" {
+  state = "available"
+}
+
+resource "aws_lightsail_instance" "lightsail_instance_test" {
+  name              = "%s"
+  availability_zone = "${data.aws_availability_zones.available.names[0]}"
+  blueprint_id      = "amazon_linux"
+  bundle_id         = "nano_1_0"
+  tags = {
+    Name = "tf-test",
+    ExtraName = "tf-test"
+  }
+}
+`, lightsailName)
+}
+
 func testAccAWSLightsailInstanceConfig_euRegion(lightsailName string) string {
 	return fmt.Sprintf(`
 provider "aws" {
   region = "eu-west-1"
 }
+
 resource "aws_lightsail_instance" "lightsail_instance_test" {
   name              = "%s"
   availability_zone = "eu-west-1a"
-  blueprint_id = "joomla_3_6_5"
+  blueprint_id      = "joomla_3_6_5"
   bundle_id         = "nano_1_0"
 }
 `, lightsailName)

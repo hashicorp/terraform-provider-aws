@@ -1,12 +1,12 @@
 ---
 layout: "aws"
-page_title: "AWS: cloudhsm_v2_cluster"
+page_title: "AWS: aws_cloudhsm_v2_cluster"
 sidebar_current: "docs-aws-resource-cloudhsm-v2-cluster"
 description: |-
   Provides a CloudHSM v2 resource.
 ---
 
-# aws_cloudhsm_v2_cluster
+# Resource: aws_cloudhsm_v2_cluster
 
 Creates an Amazon CloudHSM v2 cluster.
 

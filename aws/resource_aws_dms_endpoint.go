@@ -65,6 +65,7 @@ func resourceAwsDmsEndpoint() *schema.Resource {
 					"aurora",
 					"aurora-postgresql",
 					"azuredb",
+					"db2",
 					"docdb",
 					"dynamodb",
 					"mariadb",
@@ -138,17 +139,17 @@ func resourceAwsDmsEndpoint() *schema.Resource {
 						"auth_type": {
 							Type:     schema.TypeString,
 							Optional: true,
-							Default:  "PASSWORD",
+							Default:  dms.AuthTypeValuePassword,
 						},
 						"auth_mechanism": {
 							Type:     schema.TypeString,
 							Optional: true,
-							Default:  "DEFAULT",
+							Default:  dms.AuthMechanismValueDefault,
 						},
 						"nesting_level": {
 							Type:     schema.TypeString,
 							Optional: true,
-							Default:  "NONE",
+							Default:  dms.NestingLevelValueNone,
 						},
 						"extract_doc_id": {
 							Type:     schema.TypeString,

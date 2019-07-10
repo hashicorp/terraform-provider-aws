@@ -68,6 +68,11 @@ func TestAccAWSGameliftBuild_basic(t *testing.T) {
 
 	region := testAccGetRegion()
 	g, err := testAccAWSGameliftSampleGame(region)
+
+	if isResourceNotFoundError(err) {
+		t.Skip(err)
+	}
+
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -78,7 +83,7 @@ func TestAccAWSGameliftBuild_basic(t *testing.T) {
 	key := *loc.Key
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSGamelift(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSGameliftBuildDestroy,
 		Steps: []resource.TestStep{
@@ -170,14 +175,31 @@ func testAccCheckAWSGameliftBuildDestroy(s *terraform.State) error {
 	return nil
 }
 
+func testAccPreCheckAWSGamelift(t *testing.T) {
+	conn := testAccProvider.Meta().(*AWSClient).gameliftconn
+
+	input := &gamelift.ListBuildsInput{}
+
+	_, err := conn.ListBuilds(input)
+
+	if testAccPreCheckSkipError(err) {
+		t.Skipf("skipping acceptance testing: %s", err)
+	}
+
+	if err != nil {
+		t.Fatalf("unexpected PreCheck error: %s", err)
+	}
+}
+
 func testAccAWSGameliftBuildBasicConfig(buildName, bucketName, key, roleArn string) string {
 	return fmt.Sprintf(`
 resource "aws_gamelift_build" "test" {
-  name = "%s"
+  name             = "%s"
   operating_system = "WINDOWS_2012"
+
   storage_location {
-    bucket = "%s"
-    key = "%s"
+    bucket   = "%s"
+    key      = "%s"
     role_arn = "%s"
   }
 }

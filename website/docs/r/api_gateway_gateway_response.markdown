@@ -6,7 +6,7 @@ description: |-
   Provides an API Gateway Gateway Response for a REST API Gateway.
 ---
 
-# aws_api_gateway_gateway_response
+# Resource: aws_api_gateway_gateway_response
 
 Provides an API Gateway Gateway Response for a REST API Gateway.
 

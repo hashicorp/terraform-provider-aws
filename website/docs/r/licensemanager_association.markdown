@@ -6,7 +6,7 @@ description: |-
   Provides a License Manager association resource.
 ---
 
-# aws_licensemanager_association
+# Resource: aws_licensemanager_association
 
 Provides a License Manager association.
 

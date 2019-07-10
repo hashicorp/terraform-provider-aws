@@ -14,6 +14,7 @@ import (
 	"github.com/aws/aws-sdk-go/private/protocol/json/jsonutil"
 	"github.com/aws/aws-sdk-go/service/apigateway"
 	"github.com/aws/aws-sdk-go/service/appmesh"
+	"github.com/aws/aws-sdk-go/service/appsync"
 	"github.com/aws/aws-sdk-go/service/autoscaling"
 	"github.com/aws/aws-sdk-go/service/cloudformation"
 	"github.com/aws/aws-sdk-go/service/cloudwatchlogs"
@@ -2464,6 +2465,10 @@ func flattenCognitoUserPoolEmailConfiguration(s *cognitoidentityprovider.EmailCo
 		m["source_arn"] = *s.SourceArn
 	}
 
+	if s.EmailSendingAccount != nil {
+		m["email_sending_account"] = *s.EmailSendingAccount
+	}
+
 	if len(m) > 0 {
 		return []map[string]interface{}{m}
 	}
@@ -4467,16 +4472,6 @@ func expandDynamoDbEncryptAtRestOptions(m map[string]interface{}) *dynamodb.SSES
 	return &options
 }
 
-func flattenVpcEndpointServiceAllowedPrincipals(allowedPrincipals []*ec2.AllowedPrincipal) []string {
-	result := make([]string, 0, len(allowedPrincipals))
-	for _, allowedPrincipal := range allowedPrincipals {
-		if allowedPrincipal.Principal != nil {
-			result = append(result, *allowedPrincipal.Principal)
-		}
-	}
-	return result
-}
-
 func expandDynamoDbTableItemAttributes(input string) (map[string]*dynamodb.AttributeValue, error) {
 	var attributes map[string]*dynamodb.AttributeValue
 
@@ -4537,16 +4532,17 @@ func expandIotThingTypeProperties(config map[string]interface{}) *iot.ThingTypeP
 }
 
 func flattenIotThingTypeProperties(s *iot.ThingTypeProperties) []map[string]interface{} {
-	m := map[string]interface{}{}
+	m := map[string]interface{}{
+		"description":           "",
+		"searchable_attributes": flattenStringSet(nil),
+	}
 
 	if s == nil {
-		return nil
+		return []map[string]interface{}{m}
 	}
 
-	if s.ThingTypeDescription != nil {
-		m["description"] = *s.ThingTypeDescription
-	}
-	m["searchable_attributes"] = flattenStringList(s.SearchableAttributes)
+	m["description"] = aws.StringValue(s.ThingTypeDescription)
+	m["searchable_attributes"] = flattenStringSet(s.SearchableAttributes)
 
 	return []map[string]interface{}{m}
 }
@@ -4642,23 +4638,26 @@ func expandVpcPeeringConnectionOptions(m map[string]interface{}) *ec2.PeeringCon
 	return options
 }
 
-func expandDxRouteFilterPrefixes(cfg []interface{}) []*directconnect.RouteFilterPrefix {
-	prefixes := make([]*directconnect.RouteFilterPrefix, len(cfg))
-	for i, p := range cfg {
-		prefix := &directconnect.RouteFilterPrefix{
-			Cidr: aws.String(p.(string)),
-		}
-		prefixes[i] = prefix
+func expandDxRouteFilterPrefixes(vPrefixes *schema.Set) []*directconnect.RouteFilterPrefix {
+	routeFilterPrefixes := []*directconnect.RouteFilterPrefix{}
+
+	for _, vPrefix := range vPrefixes.List() {
+		routeFilterPrefixes = append(routeFilterPrefixes, &directconnect.RouteFilterPrefix{
+			Cidr: aws.String(vPrefix.(string)),
+		})
 	}
-	return prefixes
+
+	return routeFilterPrefixes
 }
 
-func flattenDxRouteFilterPrefixes(prefixes []*directconnect.RouteFilterPrefix) *schema.Set {
-	out := make([]interface{}, 0)
-	for _, prefix := range prefixes {
-		out = append(out, aws.StringValue(prefix.Cidr))
+func flattenDxRouteFilterPrefixes(routeFilterPrefixes []*directconnect.RouteFilterPrefix) *schema.Set {
+	vPrefixes := []interface{}{}
+
+	for _, routeFilterPrefix := range routeFilterPrefixes {
+		vPrefixes = append(vPrefixes, aws.StringValue(routeFilterPrefix.Cidr))
 	}
-	return schema.NewSet(schema.HashString, out)
+
+	return schema.NewSet(schema.HashString, vPrefixes)
 }
 
 func expandMacieClassificationType(d *schema.ResourceData) *macie.ClassificationType {
@@ -5008,16 +5007,41 @@ func expandAppmeshVirtualNodeSpec(vSpec []interface{}) *appmesh.VirtualNodeSpec 
 	}
 
 	if vServiceDiscovery, ok := mSpec["service_discovery"].([]interface{}); ok && len(vServiceDiscovery) > 0 && vServiceDiscovery[0] != nil {
+		spec.ServiceDiscovery = &appmesh.ServiceDiscovery{}
+
 		mServiceDiscovery := vServiceDiscovery[0].(map[string]interface{})
+
+		if vAwsCloudMap, ok := mServiceDiscovery["aws_cloud_map"].([]interface{}); ok && len(vAwsCloudMap) > 0 && vAwsCloudMap[0] != nil {
+			spec.ServiceDiscovery.AwsCloudMap = &appmesh.AwsCloudMapServiceDiscovery{}
+
+			mAwsCloudMap := vAwsCloudMap[0].(map[string]interface{})
+
+			if vAttributes, ok := mAwsCloudMap["attributes"].(map[string]interface{}); ok && len(vAttributes) > 0 {
+				attributes := []*appmesh.AwsCloudMapInstanceAttribute{}
+
+				for k, v := range vAttributes {
+					attributes = append(attributes, &appmesh.AwsCloudMapInstanceAttribute{
+						Key:   aws.String(k),
+						Value: aws.String(v.(string)),
+					})
+				}
+
+				spec.ServiceDiscovery.AwsCloudMap.Attributes = attributes
+			}
+			if vNamespaceName, ok := mAwsCloudMap["namespace_name"].(string); ok && vNamespaceName != "" {
+				spec.ServiceDiscovery.AwsCloudMap.NamespaceName = aws.String(vNamespaceName)
+			}
+			if vServiceName, ok := mAwsCloudMap["service_name"].(string); ok && vServiceName != "" {
+				spec.ServiceDiscovery.AwsCloudMap.ServiceName = aws.String(vServiceName)
+			}
+		}
 
 		if vDns, ok := mServiceDiscovery["dns"].([]interface{}); ok && len(vDns) > 0 && vDns[0] != nil {
 			mDns := vDns[0].(map[string]interface{})
 
 			if vHostname, ok := mDns["hostname"].(string); ok && vHostname != "" {
-				spec.ServiceDiscovery = &appmesh.ServiceDiscovery{
-					Dns: &appmesh.DnsServiceDiscovery{
-						Hostname: aws.String(vHostname),
-					},
+				spec.ServiceDiscovery.Dns = &appmesh.DnsServiceDiscovery{
+					Hostname: aws.String(vHostname),
 				}
 			}
 		}
@@ -5101,16 +5125,34 @@ func flattenAppmeshVirtualNodeSpec(spec *appmesh.VirtualNodeSpec) []interface{} 
 		}
 	}
 
-	if spec.ServiceDiscovery != nil && spec.ServiceDiscovery.Dns != nil {
-		mSpec["service_discovery"] = []interface{}{
-			map[string]interface{}{
-				"dns": []interface{}{
-					map[string]interface{}{
-						"hostname": aws.StringValue(spec.ServiceDiscovery.Dns.Hostname),
-					},
+	if spec.ServiceDiscovery != nil {
+		mServiceDiscovery := map[string]interface{}{}
+
+		if spec.ServiceDiscovery.AwsCloudMap != nil {
+			vAttributes := map[string]interface{}{}
+
+			for _, attribute := range spec.ServiceDiscovery.AwsCloudMap.Attributes {
+				vAttributes[aws.StringValue(attribute.Key)] = aws.StringValue(attribute.Value)
+			}
+
+			mServiceDiscovery["aws_cloud_map"] = []interface{}{
+				map[string]interface{}{
+					"attributes":     vAttributes,
+					"namespace_name": aws.StringValue(spec.ServiceDiscovery.AwsCloudMap.NamespaceName),
+					"service_name":   aws.StringValue(spec.ServiceDiscovery.AwsCloudMap.ServiceName),
 				},
-			},
+			}
 		}
+
+		if spec.ServiceDiscovery.Dns != nil {
+			mServiceDiscovery["dns"] = []interface{}{
+				map[string]interface{}{
+					"hostname": aws.StringValue(spec.ServiceDiscovery.Dns.Hostname),
+				},
+			}
+		}
+
+		mSpec["service_discovery"] = []interface{}{mServiceDiscovery}
 	}
 
 	return []interface{}{mSpec}
@@ -5340,6 +5382,22 @@ func flattenAppmeshRouteSpec(spec *appmesh.RouteSpec) []interface{} {
 	}
 
 	return []interface{}{mSpec}
+}
+
+func flattenAppsyncPipelineConfig(c *appsync.PipelineConfig) []interface{} {
+	if c == nil {
+		return nil
+	}
+
+	if len(c.Functions) == 0 {
+		return nil
+	}
+
+	m := map[string]interface{}{
+		"functions": flattenStringList(c.Functions),
+	}
+
+	return []interface{}{m}
 }
 
 func expandRoute53ResolverEndpointIpAddresses(vIpAddresses *schema.Set) []*route53resolver.IpAddressRequest {

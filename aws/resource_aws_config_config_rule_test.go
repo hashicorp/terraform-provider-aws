@@ -343,22 +343,25 @@ resource "aws_iam_role_policy_attachment" "test" {
 func testAccConfigConfigRuleConfig_basic(randInt int) string {
 	return fmt.Sprintf(`
 resource "aws_config_config_rule" "foo" {
-    name = "tf-acc-test-%d"
-    source {
-        owner = "AWS"
-        source_identifier = "S3_BUCKET_VERSIONING_ENABLED"
-    }
-    depends_on = ["aws_config_configuration_recorder.foo"]
+  name = "tf-acc-test-%d"
+
+  source {
+    owner             = "AWS"
+    source_identifier = "S3_BUCKET_VERSIONING_ENABLED"
+  }
+
+  depends_on = ["aws_config_configuration_recorder.foo"]
 }
 
 resource "aws_config_configuration_recorder" "foo" {
-  name = "tf-acc-test-%d"
+  name     = "tf-acc-test-%d"
   role_arn = "${aws_iam_role.r.arn}"
 }
 
 resource "aws_iam_role" "r" {
-    name = "tf-acc-test-awsconfig-%d"
-    assume_role_policy = <<EOF
+  name = "tf-acc-test-awsconfig-%d"
+
+  assume_role_policy = <<EOF
 {
   "Version": "2012-10-17",
   "Statement": [
@@ -376,9 +379,10 @@ EOF
 }
 
 resource "aws_iam_role_policy" "p" {
-    name = "tf-acc-test-awsconfig-%d"
-    role = "${aws_iam_role.r.id}"
-    policy = <<EOF
+  name = "tf-acc-test-awsconfig-%d"
+  role = "${aws_iam_role.r.id}"
+
+  policy = <<EOF
 {
   "Version": "2012-10-17",
   "Statement": [
@@ -391,36 +395,42 @@ resource "aws_iam_role_policy" "p" {
   ]
 }
 EOF
-}`, randInt, randInt, randInt, randInt)
+}
+`, randInt, randInt, randInt, randInt)
 }
 
 func testAccConfigConfigRuleConfig_ownerAws(randInt int) string {
 	return fmt.Sprintf(`
 resource "aws_config_config_rule" "foo" {
-    name = "tf-acc-test-%d"
-    description = "Terraform Acceptance tests"
-    source {
-        owner = "AWS"
-        source_identifier = "REQUIRED_TAGS"
-    }
-    scope {
-    	compliance_resource_id = "blablah"
-    	compliance_resource_types = ["AWS::EC2::Instance"]
-    }
-    input_parameters = <<PARAMS
+  name        = "tf-acc-test-%d"
+  description = "Terraform Acceptance tests"
+
+  source {
+    owner             = "AWS"
+    source_identifier = "REQUIRED_TAGS"
+  }
+
+  scope {
+    compliance_resource_id    = "blablah"
+    compliance_resource_types = ["AWS::EC2::Instance"]
+  }
+
+  input_parameters = <<PARAMS
 {"tag1Key":"CostCenter", "tag2Key":"Owner"}
 PARAMS
-    depends_on = ["aws_config_configuration_recorder.foo"]
+
+  depends_on = ["aws_config_configuration_recorder.foo"]
 }
 
 resource "aws_config_configuration_recorder" "foo" {
-  name = "tf-acc-test-%d"
+  name     = "tf-acc-test-%d"
   role_arn = "${aws_iam_role.r.arn}"
 }
 
 resource "aws_iam_role" "r" {
-    name = "tf-acc-test-awsconfig-%d"
-    assume_role_policy = <<EOF
+  name = "tf-acc-test-awsconfig-%d"
+
+  assume_role_policy = <<EOF
 {
   "Version": "2012-10-17",
   "Statement": [
@@ -438,9 +448,10 @@ EOF
 }
 
 resource "aws_iam_role_policy" "p" {
-    name = "tf-acc-test-awsconfig-%d"
-    role = "${aws_iam_role.r.id}"
-    policy = <<EOF
+  name = "tf-acc-test-awsconfig-%d"
+  role = "${aws_iam_role.r.id}"
+
+  policy = <<EOF
 {
   "Version": "2012-10-17",
   "Statement": [
@@ -453,27 +464,32 @@ resource "aws_iam_role_policy" "p" {
   ]
 }
 EOF
-}`, randInt, randInt, randInt, randInt)
+}
+`, randInt, randInt, randInt, randInt)
 }
 
 func testAccConfigConfigRuleConfig_customLambda(randInt int, path string) string {
 	return fmt.Sprintf(`
 resource "aws_config_config_rule" "foo" {
-  name = "tf-acc-test-%d"
-  description = "Terraform Acceptance tests"
+  name                        = "tf-acc-test-%d"
+  description                 = "Terraform Acceptance tests"
   maximum_execution_frequency = "Six_Hours"
+
   source {
-      owner = "CUSTOM_LAMBDA"
-      source_identifier = "${aws_lambda_function.f.arn}"
-      source_detail {
-        event_source = "aws.config"
-        message_type = "ConfigurationSnapshotDeliveryCompleted"
-      }
+    owner             = "CUSTOM_LAMBDA"
+    source_identifier = "${aws_lambda_function.f.arn}"
+
+    source_detail {
+      event_source = "aws.config"
+      message_type = "ConfigurationSnapshotDeliveryCompleted"
+    }
   }
+
   scope {
-    tag_key = "IsTemporary"
+    tag_key   = "IsTemporary"
     tag_value = "yes"
   }
+
   depends_on = [
     "aws_config_configuration_recorder.foo",
     "aws_config_delivery_channel.foo",
@@ -481,22 +497,23 @@ resource "aws_config_config_rule" "foo" {
 }
 
 resource "aws_lambda_function" "f" {
-  filename = "%s"
+  filename      = "%s"
   function_name = "tf_acc_lambda_awsconfig_%d"
-  role = "${aws_iam_role.iam_for_lambda.arn}"
-  handler = "exports.example"
-  runtime = "nodejs8.10"
+  role          = "${aws_iam_role.iam_for_lambda.arn}"
+  handler       = "exports.example"
+  runtime       = "nodejs8.10"
 }
 
 resource "aws_lambda_permission" "p" {
-  statement_id = "AllowExecutionFromConfig"
-  action = "lambda:InvokeFunction"
+  statement_id  = "AllowExecutionFromConfig"
+  action        = "lambda:InvokeFunction"
   function_name = "${aws_lambda_function.f.arn}"
-  principal = "config.amazonaws.com"
+  principal     = "config.amazonaws.com"
 }
 
 resource "aws_iam_role" "iam_for_lambda" {
   name = "tf_acc_lambda_aws_config_%d"
+
   assume_role_policy = <<POLICY
 {
   "Version": "2012-10-17",
@@ -515,31 +532,34 @@ POLICY
 }
 
 resource "aws_iam_role_policy_attachment" "a" {
-  role = "${aws_iam_role.iam_for_lambda.name}"
+  role       = "${aws_iam_role.iam_for_lambda.name}"
   policy_arn = "arn:aws:iam::aws:policy/service-role/AWSConfigRulesExecutionRole"
 }
 
 resource "aws_config_delivery_channel" "foo" {
-  name = "tf-acc-test-%d"
+  name           = "tf-acc-test-%d"
   s3_bucket_name = "${aws_s3_bucket.b.bucket}"
+
   snapshot_delivery_properties {
     delivery_frequency = "Six_Hours"
   }
+
   depends_on = ["aws_config_configuration_recorder.foo"]
 }
 
 resource "aws_s3_bucket" "b" {
-  bucket = "tf-acc-awsconfig-%d"
+  bucket        = "tf-acc-awsconfig-%d"
   force_destroy = true
 }
 
 resource "aws_config_configuration_recorder" "foo" {
-  name = "tf-acc-test-%d"
+  name     = "tf-acc-test-%d"
   role_arn = "${aws_iam_role.r.arn}"
 }
 
 resource "aws_iam_role" "r" {
   name = "tf-acc-test-awsconfig-%d"
+
   assume_role_policy = <<POLICY
 {
   "Version": "2012-10-17",
@@ -560,6 +580,7 @@ POLICY
 resource "aws_iam_role_policy" "p" {
   name = "tf-acc-test-awsconfig-%d"
   role = "${aws_iam_role.r.id}"
+
   policy = <<POLICY
 {
   "Version": "2012-10-17",
@@ -585,7 +606,8 @@ resource "aws_iam_role_policy" "p" {
   ]
 }
 POLICY
-}`, randInt, path, randInt, randInt, randInt, randInt, randInt, randInt, randInt)
+}
+`, randInt, path, randInt, randInt, randInt, randInt, randInt, randInt, randInt)
 }
 
 func testAccConfigConfigRuleConfig_Scope_TagKey(rName, tagKey string) string {

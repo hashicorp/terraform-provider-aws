@@ -6,7 +6,7 @@ description: |-
   Provides an DAX Parameter Group resource.
 ---
 
-# aws_dax_parameter_group
+# Resource: aws_dax_parameter_group
 
 Provides a DAX Parameter Group resource.
 

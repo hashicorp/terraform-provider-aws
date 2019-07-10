@@ -586,6 +586,12 @@ func (c *MediaConnect) ListEntitlementsRequest(input *ListEntitlementsInput) (re
 		Name:       opListEntitlements,
 		HTTPMethod: "GET",
 		HTTPPath:   "/v1/entitlements",
+		Paginator: &request.Paginator{
+			InputTokens:     []string{"NextToken"},
+			OutputTokens:    []string{"NextToken"},
+			LimitToken:      "MaxResults",
+			TruncationToken: "",
+		},
 	}
 
 	if input == nil {
@@ -650,6 +656,56 @@ func (c *MediaConnect) ListEntitlementsWithContext(ctx aws.Context, input *ListE
 	req.SetContext(ctx)
 	req.ApplyOptions(opts...)
 	return out, req.Send()
+}
+
+// ListEntitlementsPages iterates over the pages of a ListEntitlements operation,
+// calling the "fn" function with the response data for each page. To stop
+// iterating, return false from the fn function.
+//
+// See ListEntitlements method for more information on how to use this operation.
+//
+// Note: This operation can generate multiple requests to a service.
+//
+//    // Example iterating over at most 3 pages of a ListEntitlements operation.
+//    pageNum := 0
+//    err := client.ListEntitlementsPages(params,
+//        func(page *mediaconnect.ListEntitlementsOutput, lastPage bool) bool {
+//            pageNum++
+//            fmt.Println(page)
+//            return pageNum <= 3
+//        })
+//
+func (c *MediaConnect) ListEntitlementsPages(input *ListEntitlementsInput, fn func(*ListEntitlementsOutput, bool) bool) error {
+	return c.ListEntitlementsPagesWithContext(aws.BackgroundContext(), input, fn)
+}
+
+// ListEntitlementsPagesWithContext same as ListEntitlementsPages except
+// it takes a Context and allows setting request options on the pages.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *MediaConnect) ListEntitlementsPagesWithContext(ctx aws.Context, input *ListEntitlementsInput, fn func(*ListEntitlementsOutput, bool) bool, opts ...request.Option) error {
+	p := request.Pagination{
+		NewRequest: func() (*request.Request, error) {
+			var inCpy *ListEntitlementsInput
+			if input != nil {
+				tmp := *input
+				inCpy = &tmp
+			}
+			req, _ := c.ListEntitlementsRequest(inCpy)
+			req.SetContext(ctx)
+			req.ApplyOptions(opts...)
+			return req, nil
+		},
+	}
+
+	cont := true
+	for p.Next() && cont {
+		cont = fn(p.Page().(*ListEntitlementsOutput), !p.HasNextPage())
+	}
+	return p.Err()
 }
 
 const opListFlows = "ListFlows"
@@ -766,7 +822,7 @@ func (c *MediaConnect) ListFlowsWithContext(ctx aws.Context, input *ListFlowsInp
 //    // Example iterating over at most 3 pages of a ListFlows operation.
 //    pageNum := 0
 //    err := client.ListFlowsPages(params,
-//        func(page *ListFlowsOutput, lastPage bool) bool {
+//        func(page *mediaconnect.ListFlowsOutput, lastPage bool) bool {
 //            pageNum++
 //            fmt.Println(page)
 //            return pageNum <= 3
@@ -849,7 +905,7 @@ func (c *MediaConnect) ListTagsForResourceRequest(input *ListTagsForResourceInpu
 
 // ListTagsForResource API operation for AWS MediaConnect.
 //
-// Lists all tags associated with the resource.
+// List all tags on an AWS Elemental MediaConnect resource
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -1370,8 +1426,10 @@ func (c *MediaConnect) TagResourceRequest(input *TagResourceInput) (req *request
 
 // TagResource API operation for AWS MediaConnect.
 //
-// Associates the specified tags to a resource. If the request does not mention
-// an existing tag associated with the resource, that tag is not changed.
+// Associates the specified tags to a resource with the specified resourceArn.
+// If existing tags on a resource are not specified in the request parameters,
+// they are not changed. When a resource is deleted, the tags associated with
+// that resource are deleted as well.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -1463,7 +1521,7 @@ func (c *MediaConnect) UntagResourceRequest(input *UntagResourceInput) (req *req
 
 // UntagResource API operation for AWS MediaConnect.
 //
-// Deletes the specified tags from a resource.
+// Deletes specified tags from a resource.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -2342,9 +2400,29 @@ type Encryption struct {
 	// Algorithm is a required field
 	Algorithm *string `locationName:"algorithm" type:"string" required:"true" enum:"Algorithm"`
 
+	// A 128-bit, 16-byte hex value represented by a 32-character string, to be
+	// used with the key for encrypting content. This parameter is not valid for
+	// static key encryption.
+	ConstantInitializationVector *string `locationName:"constantInitializationVector" type:"string"`
+
+	// The value of one of the devices that you configured with your digital rights
+	// management (DRM) platform key provider. This parameter is required for SPEKE
+	// encryption and is not valid for static key encryption.
+	DeviceId *string `locationName:"deviceId" type:"string"`
+
 	// The type of key that is used for the encryption. If no keyType is provided,
 	// the service will use the default setting (static-key).
 	KeyType *string `locationName:"keyType" type:"string" enum:"KeyType"`
+
+	// The AWS Region that the API Gateway proxy endpoint was created in. This parameter
+	// is required for SPEKE encryption and is not valid for static key encryption.
+	Region *string `locationName:"region" type:"string"`
+
+	// An identifier for the content. The service sends this value to the key server
+	// to identify the current endpoint. The resource ID is also known as the content
+	// ID. This parameter is required for SPEKE encryption and is not valid for
+	// static key encryption.
+	ResourceId *string `locationName:"resourceId" type:"string"`
 
 	// The ARN of the role that you created during setup (when you set up AWS Elemental
 	// MediaConnect as a trusted entity).
@@ -2352,11 +2430,15 @@ type Encryption struct {
 	// RoleArn is a required field
 	RoleArn *string `locationName:"roleArn" type:"string" required:"true"`
 
-	// The ARN that was assigned to the secret that you created in AWS Secrets Manager
-	// to store the encryption key.
-	//
-	// SecretArn is a required field
-	SecretArn *string `locationName:"secretArn" type:"string" required:"true"`
+	// The ARN of the secret that you created in AWS Secrets Manager to store the
+	// encryption key. This parameter is required for static key encryption and
+	// is not valid for SPEKE encryption.
+	SecretArn *string `locationName:"secretArn" type:"string"`
+
+	// The URL from the API Gateway proxy that you set up to talk to your key server.
+	// This parameter is required for SPEKE encryption and is not valid for static
+	// key encryption.
+	Url *string `locationName:"url" type:"string"`
 }
 
 // String returns the string representation
@@ -2378,9 +2460,6 @@ func (s *Encryption) Validate() error {
 	if s.RoleArn == nil {
 		invalidParams.Add(request.NewErrParamRequired("RoleArn"))
 	}
-	if s.SecretArn == nil {
-		invalidParams.Add(request.NewErrParamRequired("SecretArn"))
-	}
 
 	if invalidParams.Len() > 0 {
 		return invalidParams
@@ -2394,9 +2473,33 @@ func (s *Encryption) SetAlgorithm(v string) *Encryption {
 	return s
 }
 
+// SetConstantInitializationVector sets the ConstantInitializationVector field's value.
+func (s *Encryption) SetConstantInitializationVector(v string) *Encryption {
+	s.ConstantInitializationVector = &v
+	return s
+}
+
+// SetDeviceId sets the DeviceId field's value.
+func (s *Encryption) SetDeviceId(v string) *Encryption {
+	s.DeviceId = &v
+	return s
+}
+
 // SetKeyType sets the KeyType field's value.
 func (s *Encryption) SetKeyType(v string) *Encryption {
 	s.KeyType = &v
+	return s
+}
+
+// SetRegion sets the Region field's value.
+func (s *Encryption) SetRegion(v string) *Encryption {
+	s.Region = &v
+	return s
+}
+
+// SetResourceId sets the ResourceId field's value.
+func (s *Encryption) SetResourceId(v string) *Encryption {
+	s.ResourceId = &v
 	return s
 }
 
@@ -2409,6 +2512,12 @@ func (s *Encryption) SetRoleArn(v string) *Encryption {
 // SetSecretArn sets the SecretArn field's value.
 func (s *Encryption) SetSecretArn(v string) *Encryption {
 	s.SecretArn = &v
+	return s
+}
+
+// SetUrl sets the Url field's value.
+func (s *Encryption) SetUrl(v string) *Encryption {
+	s.Url = &v
 	return s
 }
 
@@ -2970,7 +3079,7 @@ func (s *ListTagsForResourceInput) SetResourceArn(v string) *ListTagsForResource
 	return s
 }
 
-// AWS Elemental MediaConnect listed the tags associated with the resource.
+// The tags for the resource.
 type ListTagsForResourceOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -4004,17 +4113,43 @@ type UpdateEncryption struct {
 	// or aes256).
 	Algorithm *string `locationName:"algorithm" type:"string" enum:"Algorithm"`
 
+	// A 128-bit, 16-byte hex value represented by a 32-character string, to be
+	// used with the key for encrypting content. This parameter is not valid for
+	// static key encryption.
+	ConstantInitializationVector *string `locationName:"constantInitializationVector" type:"string"`
+
+	// The value of one of the devices that you configured with your digital rights
+	// management (DRM) platform key provider. This parameter is required for SPEKE
+	// encryption and is not valid for static key encryption.
+	DeviceId *string `locationName:"deviceId" type:"string"`
+
 	// The type of key that is used for the encryption. If no keyType is provided,
 	// the service will use the default setting (static-key).
 	KeyType *string `locationName:"keyType" type:"string" enum:"KeyType"`
+
+	// The AWS Region that the API Gateway proxy endpoint was created in. This parameter
+	// is required for SPEKE encryption and is not valid for static key encryption.
+	Region *string `locationName:"region" type:"string"`
+
+	// An identifier for the content. The service sends this value to the key server
+	// to identify the current endpoint. The resource ID is also known as the content
+	// ID. This parameter is required for SPEKE encryption and is not valid for
+	// static key encryption.
+	ResourceId *string `locationName:"resourceId" type:"string"`
 
 	// The ARN of the role that you created during setup (when you set up AWS Elemental
 	// MediaConnect as a trusted entity).
 	RoleArn *string `locationName:"roleArn" type:"string"`
 
-	// The ARN that was assigned to the secret that you created in AWS Secrets Manager
-	// to store the encryption key.
+	// The ARN of the secret that you created in AWS Secrets Manager to store the
+	// encryption key. This parameter is required for static key encryption and
+	// is not valid for SPEKE encryption.
 	SecretArn *string `locationName:"secretArn" type:"string"`
+
+	// The URL from the API Gateway proxy that you set up to talk to your key server.
+	// This parameter is required for SPEKE encryption and is not valid for static
+	// key encryption.
+	Url *string `locationName:"url" type:"string"`
 }
 
 // String returns the string representation
@@ -4033,9 +4168,33 @@ func (s *UpdateEncryption) SetAlgorithm(v string) *UpdateEncryption {
 	return s
 }
 
+// SetConstantInitializationVector sets the ConstantInitializationVector field's value.
+func (s *UpdateEncryption) SetConstantInitializationVector(v string) *UpdateEncryption {
+	s.ConstantInitializationVector = &v
+	return s
+}
+
+// SetDeviceId sets the DeviceId field's value.
+func (s *UpdateEncryption) SetDeviceId(v string) *UpdateEncryption {
+	s.DeviceId = &v
+	return s
+}
+
 // SetKeyType sets the KeyType field's value.
 func (s *UpdateEncryption) SetKeyType(v string) *UpdateEncryption {
 	s.KeyType = &v
+	return s
+}
+
+// SetRegion sets the Region field's value.
+func (s *UpdateEncryption) SetRegion(v string) *UpdateEncryption {
+	s.Region = &v
+	return s
+}
+
+// SetResourceId sets the ResourceId field's value.
+func (s *UpdateEncryption) SetResourceId(v string) *UpdateEncryption {
+	s.ResourceId = &v
 	return s
 }
 
@@ -4048,6 +4207,12 @@ func (s *UpdateEncryption) SetRoleArn(v string) *UpdateEncryption {
 // SetSecretArn sets the SecretArn field's value.
 func (s *UpdateEncryption) SetSecretArn(v string) *UpdateEncryption {
 	s.SecretArn = &v
+	return s
+}
+
+// SetUrl sets the Url field's value.
+func (s *UpdateEncryption) SetUrl(v string) *UpdateEncryption {
+	s.Url = &v
 	return s
 }
 
@@ -4524,6 +4689,9 @@ const (
 )
 
 const (
+	// KeyTypeSpeke is a KeyType enum value
+	KeyTypeSpeke = "speke"
+
 	// KeyTypeStaticKey is a KeyType enum value
 	KeyTypeStaticKey = "static-key"
 )

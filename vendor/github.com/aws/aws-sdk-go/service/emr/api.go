@@ -766,7 +766,7 @@ func (c *EMR) DescribeJobFlowsRequest(input *DescribeJobFlowsInput) (req *reques
 //
 //    * Job flows created and completed in the last two weeks
 //
-//    *  Job flows created within the last two months that are in one of the
+//    * Job flows created within the last two months that are in one of the
 //    following states: RUNNING, WAITING, SHUTTING_DOWN, STARTING
 //
 // Amazon EMR can return a maximum of 512 job flow descriptions.
@@ -1073,7 +1073,7 @@ func (c *EMR) ListBootstrapActionsWithContext(ctx aws.Context, input *ListBootst
 //    // Example iterating over at most 3 pages of a ListBootstrapActions operation.
 //    pageNum := 0
 //    err := client.ListBootstrapActionsPages(params,
-//        func(page *ListBootstrapActionsOutput, lastPage bool) bool {
+//        func(page *emr.ListBootstrapActionsOutput, lastPage bool) bool {
 //            pageNum++
 //            fmt.Println(page)
 //            return pageNum <= 3
@@ -1215,7 +1215,7 @@ func (c *EMR) ListClustersWithContext(ctx aws.Context, input *ListClustersInput,
 //    // Example iterating over at most 3 pages of a ListClusters operation.
 //    pageNum := 0
 //    err := client.ListClustersPages(params,
-//        func(page *ListClustersOutput, lastPage bool) bool {
+//        func(page *emr.ListClustersOutput, lastPage bool) bool {
 //            pageNum++
 //            fmt.Println(page)
 //            return pageNum <= 3
@@ -1356,7 +1356,7 @@ func (c *EMR) ListInstanceFleetsWithContext(ctx aws.Context, input *ListInstance
 //    // Example iterating over at most 3 pages of a ListInstanceFleets operation.
 //    pageNum := 0
 //    err := client.ListInstanceFleetsPages(params,
-//        func(page *ListInstanceFleetsOutput, lastPage bool) bool {
+//        func(page *emr.ListInstanceFleetsOutput, lastPage bool) bool {
 //            pageNum++
 //            fmt.Println(page)
 //            return pageNum <= 3
@@ -1494,7 +1494,7 @@ func (c *EMR) ListInstanceGroupsWithContext(ctx aws.Context, input *ListInstance
 //    // Example iterating over at most 3 pages of a ListInstanceGroups operation.
 //    pageNum := 0
 //    err := client.ListInstanceGroupsPages(params,
-//        func(page *ListInstanceGroupsOutput, lastPage bool) bool {
+//        func(page *emr.ListInstanceGroupsOutput, lastPage bool) bool {
 //            pageNum++
 //            fmt.Println(page)
 //            return pageNum <= 3
@@ -1635,7 +1635,7 @@ func (c *EMR) ListInstancesWithContext(ctx aws.Context, input *ListInstancesInpu
 //    // Example iterating over at most 3 pages of a ListInstances operation.
 //    pageNum := 0
 //    err := client.ListInstancesPages(params,
-//        func(page *ListInstancesOutput, lastPage bool) bool {
+//        func(page *emr.ListInstancesOutput, lastPage bool) bool {
 //            pageNum++
 //            fmt.Println(page)
 //            return pageNum <= 3
@@ -1776,7 +1776,7 @@ func (c *EMR) ListSecurityConfigurationsWithContext(ctx aws.Context, input *List
 //    // Example iterating over at most 3 pages of a ListSecurityConfigurations operation.
 //    pageNum := 0
 //    err := client.ListSecurityConfigurationsPages(params,
-//        func(page *ListSecurityConfigurationsOutput, lastPage bool) bool {
+//        func(page *emr.ListSecurityConfigurationsOutput, lastPage bool) bool {
 //            pageNum++
 //            fmt.Println(page)
 //            return pageNum <= 3
@@ -1915,7 +1915,7 @@ func (c *EMR) ListStepsWithContext(ctx aws.Context, input *ListStepsInput, opts 
 //    // Example iterating over at most 3 pages of a ListSteps operation.
 //    pageNum := 0
 //    err := client.ListStepsPages(params,
-//        func(page *ListStepsOutput, lastPage bool) bool {
+//        func(page *emr.ListStepsOutput, lastPage bool) bool {
 //            pageNum++
 //            fmt.Println(page)
 //            return pageNum <= 3
@@ -2413,11 +2413,11 @@ func (c *EMR) RunJobFlowRequest(input *RunJobFlowInput) (req *request.Request, o
 // RunJobFlow creates and starts running a new cluster (job flow). The cluster
 // runs the steps specified. After the steps complete, the cluster stops and
 // the HDFS partition is lost. To prevent loss of data, configure the last step
-// of the job flow to store results in Amazon S3. If the JobFlowInstancesConfigKeepJobFlowAliveWhenNoSteps
-// parameter is set to TRUE, the cluster transitions to the WAITING state rather
-// than shutting down after the steps have completed.
+// of the job flow to store results in Amazon S3. If the JobFlowInstancesConfig
+// KeepJobFlowAliveWhenNoSteps parameter is set to TRUE, the cluster transitions
+// to the WAITING state rather than shutting down after the steps have completed.
 //
-// For additional protection, you can set the JobFlowInstancesConfigTerminationProtected
+// For additional protection, you can set the JobFlowInstancesConfig TerminationProtected
 // parameter to TRUE to lock the cluster and prevent it from being terminated
 // by API call, user intervention, or in the event of a job flow error.
 //
@@ -3696,6 +3696,7 @@ type Cluster struct {
 	// The unique identifier for the cluster.
 	Id *string `type:"string"`
 
+	//
 	// The instance fleet configuration is available only in Amazon EMR versions
 	// 4.8.0 and later, excluding 5.0.x versions.
 	//
@@ -4166,6 +4167,7 @@ func (s *Command) SetScriptPath(v string) *Command {
 	return s
 }
 
+//
 // Amazon EMR releases 4.x or later.
 //
 // An optional configuration specification to be used when provisioning cluster
@@ -5708,8 +5710,8 @@ type InstanceFleetStatus struct {
 
 	// A code representing the instance fleet status.
 	//
-	//    * PROVISIONING—The instance fleet is provisioning EC2 resources and is
-	//    not yet ready to run jobs.
+	//    * PROVISIONING—The instance fleet is provisioning EC2 resources and
+	//    is not yet ready to run jobs.
 	//
 	//    * BOOTSTRAPPING—EC2 instances and other resources have been provisioned
 	//    and the bootstrap actions specified for the instances are underway.
@@ -5717,8 +5719,8 @@ type InstanceFleetStatus struct {
 	//    * RUNNING—EC2 instances and other resources are running. They are either
 	//    executing jobs or waiting to execute jobs.
 	//
-	//    * RESIZING—A resize operation is underway. EC2 instances are either being
-	//    added or removed.
+	//    * RESIZING—A resize operation is underway. EC2 instances are either
+	//    being added or removed.
 	//
 	//    * SUSPENDED—A resize operation could not complete. Existing EC2 instances
 	//    are running, but instances can't be added or removed.
@@ -5830,6 +5832,7 @@ type InstanceGroup struct {
 	// to the On-Demand price.
 	BidPrice *string `type:"string"`
 
+	//
 	// Amazon EMR releases 4.x or later.
 	//
 	// The list of configurations supplied for an EMR cluster instance group. You
@@ -6016,6 +6019,7 @@ type InstanceGroupConfig struct {
 	// to the On-Demand price.
 	BidPrice *string `type:"string"`
 
+	//
 	// Amazon EMR releases 4.x or later.
 	//
 	// The list of configurations supplied for an EMR cluster instance group. You
@@ -7162,6 +7166,7 @@ type JobFlowInstancesConfig struct {
 	// The number of EC2 instances in the cluster.
 	InstanceCount *int64 `type:"integer"`
 
+	//
 	// The instance fleet configuration is available only in Amazon EMR versions
 	// 4.8.0 and later, excluding 5.0.x versions.
 	//
@@ -8769,6 +8774,7 @@ type RunJobFlowInput struct {
 	// Name is a required field
 	Name *string `type:"string" required:"true"`
 
+	//
 	// For Amazon EMR releases 3.x and 2.x. For Amazon EMR releases 4.x and later,
 	// use Applications.
 	//
@@ -8838,6 +8844,7 @@ type RunJobFlowInput struct {
 	// A list of steps to run.
 	Steps []*StepConfig `type:"list"`
 
+	//
 	// For Amazon EMR releases 3.x and 2.x. For Amazon EMR releases 4.x and later,
 	// use Applications.
 	//
@@ -9417,8 +9424,7 @@ type SetTerminationProtectionInput struct {
 	_ struct{} `type:"structure"`
 
 	// A list of strings that uniquely identify the clusters to protect. This identifier
-	// is returned by RunJobFlow and can also be obtained from DescribeJobFlows
-	// .
+	// is returned by RunJobFlow and can also be obtained from DescribeJobFlows .
 	//
 	// JobFlowIds is a required field
 	JobFlowIds []*string `type:"list" required:"true"`
@@ -10213,7 +10219,7 @@ type Tag struct {
 	_ struct{} `type:"structure"`
 
 	// A user-defined key, which is the minimum required information for a valid
-	// tag. For more information, see Tag  (https://docs.aws.amazon.com/emr/latest/ManagementGuide/emr-plan-tags.html).
+	// tag. For more information, see Tag (https://docs.aws.amazon.com/emr/latest/ManagementGuide/emr-plan-tags.html).
 	Key *string `type:"string"`
 
 	// A user-defined value, which is optional in a tag. For more information, see

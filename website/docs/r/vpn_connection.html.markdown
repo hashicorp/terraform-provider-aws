@@ -6,7 +6,7 @@ description: |-
   Manages an EC2 VPN connection. These objects can be connected to customer gateways, and allow you to establish tunnels between your network and Amazon.
 ---
 
-# aws_vpn_connection
+# Resource: aws_vpn_connection
 
 Manages an EC2 VPN connection. These objects can be connected to customer gateways, and allow you to establish tunnels between your network and Amazon.
 

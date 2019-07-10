@@ -1359,10 +1359,10 @@ func dynamoDbAttributesToMap(attributes *[]*dynamodb.AttributeDefinition) map[st
 func testAccAWSDynamoDbConfig_basic(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_dynamodb_table" "basic-dynamodb-table" {
-  name = "%s"
-  read_capacity = 1
+  name           = "%s"
+  read_capacity  = 1
   write_capacity = 1
-  hash_key = "TestTableHashKey"
+  hash_key       = "TestTableHashKey"
 
   attribute {
     name = "TestTableHashKey"
@@ -1375,15 +1375,16 @@ resource "aws_dynamodb_table" "basic-dynamodb-table" {
 func testAccAWSDynamoDbConfig_backup(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_dynamodb_table" "basic-dynamodb-table" {
-  name = "%s"
-  read_capacity = 1
+  name           = "%s"
+  read_capacity  = 1
   write_capacity = 1
-  hash_key = "TestTableHashKey"
+  hash_key       = "TestTableHashKey"
 
   attribute {
     name = "TestTableHashKey"
     type = "S"
   }
+
   point_in_time_recovery {
     enabled = true
   }
@@ -1394,9 +1395,9 @@ resource "aws_dynamodb_table" "basic-dynamodb-table" {
 func testAccAWSDynamoDbBilling_PayPerRequest(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_dynamodb_table" "basic-dynamodb-table" {
-  name = "%s"
+  name         = "%s"
   billing_mode = "PAY_PER_REQUEST"
-  hash_key = "TestTableHashKey"
+  hash_key     = "TestTableHashKey"
 
   attribute {
     name = "TestTableHashKey"
@@ -1409,11 +1410,11 @@ resource "aws_dynamodb_table" "basic-dynamodb-table" {
 func testAccAWSDynamoDbBilling_Provisioned(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_dynamodb_table" "basic-dynamodb-table" {
-  name = "%s"
+  name         = "%s"
   billing_mode = "PROVISIONED"
-  hash_key = "TestTableHashKey"
+  hash_key     = "TestTableHashKey"
 
-  read_capacity = 5
+  read_capacity  = 5
   write_capacity = 5
 
   attribute {
@@ -1427,9 +1428,9 @@ resource "aws_dynamodb_table" "basic-dynamodb-table" {
 func testAccAWSDynamoDbBilling_PayPerRequestWithGSI(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_dynamodb_table" "basic-dynamodb-table" {
-  name = "%s"
+  name         = "%s"
   billing_mode = "PAY_PER_REQUEST"
-  hash_key = "TestTableHashKey"
+  hash_key     = "TestTableHashKey"
 
   attribute {
     name = "TestTableHashKey"
@@ -1483,11 +1484,11 @@ resource "aws_dynamodb_table" "basic-dynamodb-table" {
 func testAccAWSDynamoDbConfigInitialState(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_dynamodb_table" "basic-dynamodb-table" {
-  name = "%s"
-  read_capacity = 1
+  name           = "%s"
+  read_capacity  = 1
   write_capacity = 2
-  hash_key = "TestTableHashKey"
-  range_key = "TestTableRangeKey"
+  hash_key       = "TestTableHashKey"
+  range_key      = "TestTableRangeKey"
 
   attribute {
     name = "TestTableHashKey"
@@ -1510,17 +1511,17 @@ resource "aws_dynamodb_table" "basic-dynamodb-table" {
   }
 
   local_secondary_index {
-    name = "TestTableLSI"
-    range_key = "TestLSIRangeKey"
+    name            = "TestTableLSI"
+    range_key       = "TestLSIRangeKey"
     projection_type = "ALL"
   }
 
   global_secondary_index {
-    name = "InitialTestTableGSI"
-    hash_key = "TestTableHashKey"
-    range_key = "TestGSIRangeKey"
-    write_capacity = 1
-    read_capacity = 1
+    name            = "InitialTestTableGSI"
+    hash_key        = "TestTableHashKey"
+    range_key       = "TestGSIRangeKey"
+    write_capacity  = 1
+    read_capacity   = 1
     projection_type = "KEYS_ONLY"
   }
 }
@@ -1530,10 +1531,10 @@ resource "aws_dynamodb_table" "basic-dynamodb-table" {
 func testAccAWSDynamoDbConfigInitialStateWithEncryption(rName string, enabled bool) string {
 	return fmt.Sprintf(`
 resource "aws_dynamodb_table" "basic-dynamodb-table" {
-  name = "%s"
-  read_capacity = 1
+  name           = "%s"
+  read_capacity  = 1
   write_capacity = 1
-  hash_key = "TestTableHashKey"
+  hash_key       = "TestTableHashKey"
 
   attribute {
     name = "TestTableHashKey"
@@ -1550,11 +1551,11 @@ resource "aws_dynamodb_table" "basic-dynamodb-table" {
 func testAccAWSDynamoDbConfigAddSecondaryGSI(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_dynamodb_table" "basic-dynamodb-table" {
-  name = "%s"
-  read_capacity = 2
+  name           = "%s"
+  read_capacity  = 2
   write_capacity = 2
-  hash_key = "TestTableHashKey"
-  range_key = "TestTableRangeKey"
+  hash_key       = "TestTableHashKey"
+  range_key      = "TestTableRangeKey"
 
   attribute {
     name = "TestTableHashKey"
@@ -1577,37 +1578,38 @@ resource "aws_dynamodb_table" "basic-dynamodb-table" {
   }
 
   local_secondary_index {
-    name = "TestTableLSI"
-    range_key = "TestLSIRangeKey"
+    name            = "TestTableLSI"
+    range_key       = "TestLSIRangeKey"
     projection_type = "ALL"
   }
 
   global_secondary_index {
-    name = "ReplacementTestTableGSI"
-    hash_key = "TestTableHashKey"
-    range_key = "ReplacementGSIRangeKey"
-    write_capacity = 5
-    read_capacity = 5
-    projection_type = "INCLUDE"
+    name               = "ReplacementTestTableGSI"
+    hash_key           = "TestTableHashKey"
+    range_key          = "ReplacementGSIRangeKey"
+    write_capacity     = 5
+    read_capacity      = 5
+    projection_type    = "INCLUDE"
     non_key_attributes = ["TestNonKeyAttribute"]
   }
-}`, rName)
+}
+`, rName)
 }
 
 func testAccAWSDynamoDbConfigStreamSpecification(tableName string, enabled bool, viewType string) string {
 	return fmt.Sprintf(`
 resource "aws_dynamodb_table" "basic-dynamodb-table" {
-  name = "%s"
-  read_capacity = 1
+  name           = "%s"
+  read_capacity  = 1
   write_capacity = 2
-  hash_key = "TestTableHashKey"
+  hash_key       = "TestTableHashKey"
 
   attribute {
     name = "TestTableHashKey"
     type = "S"
   }
 
-  stream_enabled = %t
+  stream_enabled   = %t
   stream_view_type = "%s"
 }
 `, tableName, enabled, viewType)
@@ -1616,11 +1618,11 @@ resource "aws_dynamodb_table" "basic-dynamodb-table" {
 func testAccAWSDynamoDbConfigTags() string {
 	return fmt.Sprintf(`
 resource "aws_dynamodb_table" "basic-dynamodb-table" {
-  name = "TerraformTestTable-%d"
-  read_capacity = 1
+  name           = "TerraformTestTable-%d"
+  read_capacity  = 1
   write_capacity = 2
-  hash_key = "TestTableHashKey"
-  range_key = "TestTableRangeKey"
+  hash_key       = "TestTableHashKey"
+  range_key      = "TestTableRangeKey"
 
   attribute {
     name = "TestTableHashKey"
@@ -1643,22 +1645,22 @@ resource "aws_dynamodb_table" "basic-dynamodb-table" {
   }
 
   local_secondary_index {
-    name = "TestTableLSI"
-    range_key = "TestLSIRangeKey"
+    name            = "TestTableLSI"
+    range_key       = "TestLSIRangeKey"
     projection_type = "ALL"
   }
 
   global_secondary_index {
-    name = "InitialTestTableGSI"
-    hash_key = "TestTableHashKey"
-    range_key = "TestGSIRangeKey"
-    write_capacity = 1
-    read_capacity = 1
+    name            = "InitialTestTableGSI"
+    hash_key        = "TestTableHashKey"
+    range_key       = "TestGSIRangeKey"
+    write_capacity  = 1
+    read_capacity   = 1
     projection_type = "KEYS_ONLY"
   }
 
   tags = {
-    Name = "terraform-test-table-%d"
+    Name    = "terraform-test-table-%d"
     AccTest = "yes"
     Testing = "absolutely"
   }
@@ -1839,12 +1841,12 @@ resource "aws_dynamodb_table" "test" {
   }
 
   global_secondary_index {
-    name            = "att3-index"
-    hash_key        = "att3"
-    range_key       = "att4"
-    write_capacity  = "${var.capacity}"
-    read_capacity   = "${var.capacity}"
-    projection_type = "INCLUDE"
+    name               = "att3-index"
+    hash_key           = "att3"
+    range_key          = "att4"
+    write_capacity     = "${var.capacity}"
+    read_capacity      = "${var.capacity}"
+    projection_type    = "INCLUDE"
     non_key_attributes = ["RandomAttribute"]
   }
 }
@@ -1906,12 +1908,12 @@ resource "aws_dynamodb_table" "test" {
   }
 
   global_secondary_index {
-    name            = "att3-index"
-    hash_key        = "att3"
-    range_key       = "att4"
-    write_capacity  = "${var.capacity}"
-    read_capacity   = "${var.capacity}"
-    projection_type = "INCLUDE"
+    name               = "att3-index"
+    hash_key           = "att3"
+    range_key          = "att4"
+    write_capacity     = "${var.capacity}"
+    read_capacity      = "${var.capacity}"
+    projection_type    = "INCLUDE"
     non_key_attributes = ["RandomAttribute", "AnotherAttribute"]
   }
 }
@@ -1942,25 +1944,26 @@ resource "aws_dynamodb_table" "test" {
 func testAccAWSDynamoDbConfigOneAttribute(rName, hashKey, attrName, attrType string) string {
 	return fmt.Sprintf(`
 resource "aws_dynamodb_table" "basic-dynamodb-table" {
-  name = "%s"
-  read_capacity = 10
+  name           = "%s"
+  read_capacity  = 10
   write_capacity = 10
-  hash_key = "staticHashKey"
+  hash_key       = "staticHashKey"
 
   attribute {
     name = "staticHashKey"
     type = "S"
   }
+
   attribute {
     name = "%s"
     type = "%s"
   }
 
   global_secondary_index {
-    name = "gsiName"
-    hash_key = "%s"
-    write_capacity = 10
-    read_capacity = 10
+    name            = "gsiName"
+    hash_key        = "%s"
+    write_capacity  = 10
+    read_capacity   = 10
     projection_type = "KEYS_ONLY"
   }
 }
@@ -1970,10 +1973,10 @@ resource "aws_dynamodb_table" "basic-dynamodb-table" {
 func testAccAWSDynamoDbConfigTwoAttributes(rName, hashKey, rangeKey, attrName1, attrType1, attrName2, attrType2 string) string {
 	return fmt.Sprintf(`
 resource "aws_dynamodb_table" "basic-dynamodb-table" {
-  name = "%s"
-  read_capacity = 10
+  name           = "%s"
+  read_capacity  = 10
   write_capacity = 10
-  hash_key = "staticHashKey"
+  hash_key       = "staticHashKey"
 
   attribute {
     name = "staticHashKey"
@@ -1984,17 +1987,18 @@ resource "aws_dynamodb_table" "basic-dynamodb-table" {
     name = "%s"
     type = "%s"
   }
+
   attribute {
     name = "%s"
     type = "%s"
   }
 
   global_secondary_index {
-    name = "gsiName"
-    hash_key = "%s"
-    range_key = "%s"
-    write_capacity = 10
-    read_capacity = 10
+    name            = "gsiName"
+    hash_key        = "%s"
+    range_key       = "%s"
+    write_capacity  = 10
+    read_capacity   = 10
     projection_type = "KEYS_ONLY"
   }
 }
