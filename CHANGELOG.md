@@ -4,6 +4,7 @@ FEATURES:
 
 * **New Data Source:** `aws_msk_configuration` [GH-9088]
 * **New Resource:** `aws_datapipeline_pipeline` [GH-9267]
+* **New Resource:** `aws_directory_service_log_subscription` [GH-9261]
 
 ENHANCEMENTS:
 
