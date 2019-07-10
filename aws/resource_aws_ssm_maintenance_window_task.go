@@ -1,6 +1,7 @@
 package aws
 
 import (
+	"errors"
 	"fmt"
 	"log"
 
@@ -95,6 +96,12 @@ func resourceAwsSsmMaintenanceWindowTask() *schema.Resource {
 				ForceNew: true,
 			},
 
+			"timeout_seconds": {
+				Type:     schema.TypeInt,
+				Optional: true,
+				ForceNew: true,
+			},
+
 			"logging_info": {
 				Type:     schema.TypeList,
 				MaxItems: 1,
@@ -182,6 +189,15 @@ func expandAwsSsmTaskParameters(config []interface{}) map[string]*ssm.Maintenanc
 	return params
 }
 
+func expandAwsSsmTaskInvocationParameters(config []interface{}) map[string][]*string {
+	params := make(map[string][]*string)
+	for _, v := range config {
+		paramConfig := v.(map[string]interface{})
+		params[paramConfig["name"].(string)] = expandStringList(paramConfig["values"].([]interface{}))
+	}
+	return params
+}
+
 func flattenAwsSsmTaskParameters(taskParameters map[string]*ssm.MaintenanceWindowTaskParameterValueExpression) []interface{} {
 	result := make([]interface{}, 0, len(taskParameters))
 	for k, v := range taskParameters {
@@ -210,6 +226,9 @@ func resourceAwsSsmMaintenanceWindowTaskCreate(d *schema.ResourceData, meta inte
 		Targets:        expandAwsSsmTargets(d.Get("targets").([]interface{})),
 	}
 
+	params.TaskInvocationParameters = &ssm.MaintenanceWindowTaskInvocationParameters{}
+	params.TaskInvocationParameters.RunCommand = &ssm.MaintenanceWindowRunCommandParameters{}
+
 	if v, ok := d.GetOk("name"); ok {
 		params.Name = aws.String(v.(string))
 	}
@@ -223,17 +242,37 @@ func resourceAwsSsmMaintenanceWindowTaskCreate(d *schema.ResourceData, meta inte
 	}
 
 	if v, ok := d.GetOk("logging_info"); ok {
+		if *params.TaskType == *aws.String("RUN_COMMAND") {
+			loggingConfig := v.([]interface{})[0].(map[string]interface{})
+			params.TaskInvocationParameters.RunCommand.OutputS3BucketName = aws.String(loggingConfig["s3_bucket_name"].(string))
+			params.TaskInvocationParameters.RunCommand.OutputS3KeyPrefix = aws.String(loggingConfig["s3_bucket_prefix"].(string))
+		}
 		params.LoggingInfo = expandAwsSsmMaintenanceWindowLoggingInfo(v.([]interface{}))
 	}
 
 	if v, ok := d.GetOk("task_parameters"); ok {
+		if *params.TaskType == *aws.String("RUN_COMMAND") {
+			params.TaskInvocationParameters.RunCommand.Parameters = expandAwsSsmTaskInvocationParameters(v.([]interface{}))
+		}
 		params.TaskParameters = expandAwsSsmTaskParameters(v.([]interface{}))
 	}
+
+	if v, ok := d.GetOk("timeout_seconds"); ok {
+		if *params.TaskType == *aws.String("RUN_COMMAND") {
+			params.TaskInvocationParameters.RunCommand.TimeoutSeconds = aws.Int64(int64(v.(int)))
+		} else {
+			return errors.New("use of \"timeout_seconds\" with anything other than \"RUN_COMMAND\" is not allowed")
+		}
+	}
+
+	log.Println("PARAMS", params)
 
 	resp, err := ssmconn.RegisterTaskWithMaintenanceWindow(params)
 	if err != nil {
 		return err
 	}
+
+	log.Println("RESP", resp)
 
 	d.SetId(*resp.WindowTaskId)
 

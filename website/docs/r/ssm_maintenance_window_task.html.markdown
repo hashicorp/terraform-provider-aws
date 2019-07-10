@@ -30,6 +30,8 @@ resource "aws_ssm_maintenance_window_task" "task" {
   service_role_arn = "arn:aws:iam::187416307283:role/service-role/AWS_Events_Invoke_Run_Command_112316643"
   max_concurrency  = "2"
   max_errors       = "1"
+  
+  timeout_seconds = 60
 
   targets {
     key    = "InstanceIds"
@@ -65,6 +67,9 @@ The following arguments are supported:
 * `priority` - (Optional) The priority of the task in the Maintenance Window, the lower the number the higher the priority. Tasks in a Maintenance Window are scheduled in priority order with tasks that have the same priority scheduled in parallel.
 * `logging_info` - (Optional) A structure containing information about an Amazon S3 bucket to write instance-level logs to. Documented below.
 * `task_parameters` - (Optional) A structure containing information about parameters required by the particular `task_arn`. Documented below.
+
+`RUN_COMMAND` task type supports the following:
+* `timeout_seconds` - (Optional) Specify timeout on the task
 
 `logging_info` supports the following:
 
