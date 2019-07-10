@@ -33,6 +33,7 @@ func TestAccAWSLightsailInstance_basic(t *testing.T) {
 					resource.TestCheckResourceAttrSet("aws_lightsail_instance.lightsail_instance_test", "blueprint_id"),
 					resource.TestCheckResourceAttrSet("aws_lightsail_instance.lightsail_instance_test", "bundle_id"),
 					resource.TestCheckResourceAttrSet("aws_lightsail_instance.lightsail_instance_test", "key_pair_name"),
+					resource.TestCheckResourceAttr("aws_lightsail_instance.lightsail_instance_test", "tags.%", "0"),
 				),
 			},
 		},
@@ -102,6 +103,42 @@ func TestAccAWSLightsailInstance_Name(t *testing.T) {
 					resource.TestCheckResourceAttrSet("aws_lightsail_instance.lightsail_instance_test", "blueprint_id"),
 					resource.TestCheckResourceAttrSet("aws_lightsail_instance.lightsail_instance_test", "bundle_id"),
 					resource.TestCheckResourceAttrSet("aws_lightsail_instance.lightsail_instance_test", "key_pair_name"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAWSLightsailInstance_Tags(t *testing.T) {
+	var conf lightsail.Instance
+	lightsailName := fmt.Sprintf("tf-test-lightsail-%d", acctest.RandInt())
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:      func() { testAccPreCheck(t); testAccPreCheckAWSLightsail(t) },
+		IDRefreshName: "aws_lightsail_instance.lightsail_instance_test",
+		Providers:     testAccProviders,
+		CheckDestroy:  testAccCheckAWSLightsailInstanceDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSLightsailInstanceConfig_tags1(lightsailName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckAWSLightsailInstanceExists("aws_lightsail_instance.lightsail_instance_test", &conf),
+					resource.TestCheckResourceAttrSet("aws_lightsail_instance.lightsail_instance_test", "availability_zone"),
+					resource.TestCheckResourceAttrSet("aws_lightsail_instance.lightsail_instance_test", "blueprint_id"),
+					resource.TestCheckResourceAttrSet("aws_lightsail_instance.lightsail_instance_test", "bundle_id"),
+					resource.TestCheckResourceAttrSet("aws_lightsail_instance.lightsail_instance_test", "key_pair_name"),
+					resource.TestCheckResourceAttr("aws_lightsail_instance.lightsail_instance_test", "tags.%", "1"),
+				),
+			},
+			{
+				Config: testAccAWSLightsailInstanceConfig_tags2(lightsailName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckAWSLightsailInstanceExists("aws_lightsail_instance.lightsail_instance_test", &conf),
+					resource.TestCheckResourceAttrSet("aws_lightsail_instance.lightsail_instance_test", "availability_zone"),
+					resource.TestCheckResourceAttrSet("aws_lightsail_instance.lightsail_instance_test", "blueprint_id"),
+					resource.TestCheckResourceAttrSet("aws_lightsail_instance.lightsail_instance_test", "bundle_id"),
+					resource.TestCheckResourceAttrSet("aws_lightsail_instance.lightsail_instance_test", "key_pair_name"),
+					resource.TestCheckResourceAttr("aws_lightsail_instance.lightsail_instance_test", "tags.%", "2"),
 				),
 			},
 		},
@@ -233,6 +270,43 @@ resource "aws_lightsail_instance" "lightsail_instance_test" {
   availability_zone = "us-east-1b"
   blueprint_id      = "gitlab_8_12_6"
   bundle_id         = "nano_1_0"
+}
+`, lightsailName)
+}
+
+func testAccAWSLightsailInstanceConfig_tags1(lightsailName string) string {
+	return fmt.Sprintf(`
+data "aws_availability_zones" "available" {
+  state = "available"
+}
+
+resource "aws_lightsail_instance" "lightsail_instance_test" {
+  name              = "%s"
+  availability_zone = "${data.aws_availability_zones.available.names[0]}"
+  blueprint_id      = "amazon_linux"
+  bundle_id         = "nano_1_0"
+  tags = {
+    Name = "tf-test"
+  }
+}
+`, lightsailName)
+}
+
+func testAccAWSLightsailInstanceConfig_tags2(lightsailName string) string {
+	return fmt.Sprintf(`
+data "aws_availability_zones" "available" {
+  state = "available"
+}
+
+resource "aws_lightsail_instance" "lightsail_instance_test" {
+  name              = "%s"
+  availability_zone = "${data.aws_availability_zones.available.names[0]}"
+  blueprint_id      = "amazon_linux"
+  bundle_id         = "nano_1_0"
+  tags = {
+    Name = "tf-test",
+    ExtraName = "tf-test"
+  }
 }
 `, lightsailName)
 }
