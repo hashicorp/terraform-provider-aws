@@ -278,10 +278,6 @@ func resourceAwsSsmDocumentRead(d *schema.ResourceData, meta interface{}) error 
 		params = append(params, param)
 	}
 
-	if len(params) == 0 {
-		params = make([]map[string]interface{}, 1)
-	}
-
 	if err := d.Set("parameter", params); err != nil {
 		return err
 	}
