@@ -207,6 +207,11 @@ func resourceAwsAcmCertificateCreateRequested(d *schema.ResourceData, meta inter
 func resourceAwsAcmCertificateRead(d *schema.ResourceData, meta interface{}) error {
 	acmconn := meta.(*AWSClient).acmconn
 
+	// Prior to the certificate being issued, fields such as DomainName aren't set
+	if err := waitForAcmCertificateIssuance(acmconn, d.Id()); err != nil {
+		return fmt.Errorf("Error waiting for certificate to reach ISSUED status: %s", err)
+	}
+
 	params := &acm.DescribeCertificateInput{
 		CertificateArn: aws.String(d.Id()),
 	}
@@ -373,4 +378,34 @@ func resourceAwsAcmCertificateImport(conn *acm.ACM, d *schema.ResourceData, upda
 
 	log.Printf("[DEBUG] ACM Certificate Import: %#v", params)
 	return conn.ImportCertificate(params)
+}
+
+func waitForAcmCertificateIssuance(conn *acm.ACM, certificateArn string) error {
+	stateConf := &resource.StateChangeConf{
+		Pending: []string{acm.CertificateStatusPendingValidation},
+		Target:  []string{acm.CertificateStatusIssued},
+		Refresh: acmCertificateRefreshFunc(conn, certificateArn),
+		Timeout: 60 * time.Second,
+	}
+
+	log.Printf("[DEBUG] Waiting for ACM certificate (%s) to be issued", certificateArn)
+	_, err := stateConf.WaitForState()
+
+	return err
+}
+
+func acmCertificateRefreshFunc(conn *acm.ACM, certificateArn string) resource.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		params := &acm.DescribeCertificateInput{
+			CertificateArn: aws.String(certificateArn),
+		}
+
+		acmCertificate, err := conn.DescribeCertificate(params)
+
+		if err != nil {
+			return nil, "", fmt.Errorf("error reading ACM Certificate (%s): %s", certificateArn, err)
+		}
+
+		return acmCertificate, aws.StringValue(acmCertificate.Certificate.Status), nil
+	}
 }
