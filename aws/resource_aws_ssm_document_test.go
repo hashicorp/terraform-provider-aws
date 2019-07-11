@@ -32,6 +32,11 @@ func TestAccAWSSSMDocument_basic(t *testing.T) {
 						"aws_ssm_document.foo", "tags.Name", "My Document"),
 				),
 			},
+			{
+				ResourceName:      "aws_ssm_document.foo",
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
 		},
 	})
 }
@@ -54,6 +59,11 @@ func TestAccAWSSSMDocument_update(t *testing.T) {
 					resource.TestCheckResourceAttr(
 						"aws_ssm_document.foo", "default_version", "1"),
 				),
+			},
+			{
+				ResourceName:      "aws_ssm_document.foo",
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 			{
 				Config: testAccAWSSSMDocument20UpdatedConfig(name),
@@ -86,6 +96,11 @@ func TestAccAWSSSMDocument_permission_public(t *testing.T) {
 						"aws_ssm_document.foo", "permissions.account_ids", "all"),
 				),
 			},
+			{
+				ResourceName:      "aws_ssm_document.foo",
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
 		},
 	})
 }
@@ -106,6 +121,11 @@ func TestAccAWSSSMDocument_permission_private(t *testing.T) {
 						"aws_ssm_document.foo", "permissions.type", "Share"),
 				),
 			},
+			{
+				ResourceName:      "aws_ssm_document.foo",
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
 		},
 	})
 }
@@ -125,6 +145,11 @@ func TestAccAWSSSMDocument_permission_batching(t *testing.T) {
 					resource.TestCheckResourceAttr(
 						"aws_ssm_document.foo", "permissions.type", "Share"),
 				),
+			},
+			{
+				ResourceName:      "aws_ssm_document.foo",
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})
@@ -148,6 +173,11 @@ func TestAccAWSSSMDocument_permission_change(t *testing.T) {
 						"aws_ssm_document.foo", "permissions.type", "Share"),
 					resource.TestCheckResourceAttr("aws_ssm_document.foo", "permissions.account_ids", idsInitial),
 				),
+			},
+			{
+				ResourceName:      "aws_ssm_document.foo",
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 			{
 				Config: testAccAWSSSMDocumentPrivatePermissionConfig(name, idsRemove),
@@ -196,6 +226,11 @@ func TestAccAWSSSMDocument_params(t *testing.T) {
 						"aws_ssm_document.foo", "parameter.2.type", "String"),
 				),
 			},
+			{
+				ResourceName:      "aws_ssm_document.foo",
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
 		},
 	})
 }
@@ -214,6 +249,11 @@ func TestAccAWSSSMDocument_automation(t *testing.T) {
 					resource.TestCheckResourceAttr(
 						"aws_ssm_document.foo", "document_type", "Automation"),
 				),
+			},
+			{
+				ResourceName:      "aws_ssm_document.foo",
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})
@@ -234,6 +274,11 @@ func TestAccAWSSSMDocument_SchemaVersion_1(t *testing.T) {
 					testAccCheckAWSSSMDocumentExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "schema_version", "1.0"),
 				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 			{
 				Config: testAccAWSSSMDocumentConfigSchemaVersion1Update(rName),
@@ -260,6 +305,11 @@ func TestAccAWSSSMDocument_session(t *testing.T) {
 					resource.TestCheckResourceAttr(
 						"aws_ssm_document.foo", "document_type", "Session"),
 				),
+			},
+			{
+				ResourceName:      "aws_ssm_document.foo",
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})
@@ -303,6 +353,11 @@ mainSteps:
 				),
 			},
 			{
+				ResourceName:      "aws_ssm_document.foo",
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
 				Config: testAccAWSSSMDocumentConfig_DocumentFormat_YAML(name, content2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSSSMDocumentExists("aws_ssm_document.foo"),
@@ -330,6 +385,11 @@ func TestAccAWSSSMDocument_Tags(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 			{
 				Config: testAccAWSSSMDocumentConfig_Tags_Multiple(rName, "key1", "value1updated", "key2", "value2"),

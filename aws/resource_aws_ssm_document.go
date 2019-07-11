@@ -24,6 +24,9 @@ func resourceAwsSsmDocument() *schema.Resource {
 		Read:   resourceAwsSsmDocumentRead,
 		Update: resourceAwsSsmDocumentUpdate,
 		Delete: resourceAwsSsmDocumentDelete,
+		Importer: &schema.ResourceImporter{
+			State: schema.ImportStatePassthrough,
+		},
 
 		Schema: map[string]*schema.Schema{
 			"arn": {
@@ -202,7 +205,7 @@ func resourceAwsSsmDocumentRead(d *schema.ResourceData, meta interface{}) error 
 	log.Printf("[DEBUG] Reading SSM Document: %s", d.Id())
 
 	describeDocumentInput := &ssm.DescribeDocumentInput{
-		Name: aws.String(d.Get("name").(string)),
+		Name: aws.String(d.Id()),
 	}
 
 	describeDocumentOutput, err := ssmconn.DescribeDocument(describeDocumentInput)
@@ -244,12 +247,8 @@ func resourceAwsSsmDocumentRead(d *schema.ResourceData, meta interface{}) error 
 	d.Set("default_version", doc.DefaultVersion)
 	d.Set("description", doc.Description)
 	d.Set("schema_version", doc.SchemaVersion)
-
-	if _, ok := d.GetOk("document_type"); ok {
-		d.Set("document_type", doc.DocumentType)
-	}
-
 	d.Set("document_format", doc.DocumentFormat)
+	d.Set("document_type", doc.DocumentType)
 	d.Set("document_version", doc.DocumentVersion)
 	d.Set("hash", doc.Hash)
 	d.Set("hash_type", doc.HashType)
