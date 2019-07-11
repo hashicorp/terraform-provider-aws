@@ -45,6 +45,7 @@ func TestAccAWSAPIGatewayDomainName_CertificateArn(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, "cloudfront_domain_name"),
 					resource.TestCheckResourceAttr(resourceName, "cloudfront_zone_id", "Z2FDTNDATAQYW2"),
 					resource.TestCheckResourceAttr(resourceName, "domain_name", rName),
+					resource.TestCheckResourceAttr(resourceName, "security_policy", "TLS_1_2"),
 				),
 			},
 		},
@@ -293,6 +294,7 @@ func testAccAWSAPIGatewayDomainNameConfig_CertificateArn(domainName, certificate
 resource "aws_api_gateway_domain_name" "test" {
   domain_name     = "%s"
   certificate_arn = "%s"
+  security_policy = "TLS_1_2"
 
   endpoint_configuration {
     types = ["EDGE"]
