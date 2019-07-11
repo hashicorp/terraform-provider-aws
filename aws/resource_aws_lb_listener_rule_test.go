@@ -486,6 +486,20 @@ func TestAccAWSLBListenerRule_Action_Order_Recreates(t *testing.T) {
 	})
 }
 
+func TestAccAWSLBListenerRule_conditionNoField(t *testing.T) {
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSLBListenerRuleDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config:      testAccAWSLBListenerRuleConfig_conditionNoField(),
+				ExpectError: regexp.MustCompile(`"condition.0.field": required field is not set`),
+			},
+		},
+	})
+}
+
 func TestAccAWSLBListenerRule_conditionHostHeader(t *testing.T) {
 	var conf elbv2.Rule
 	lbName := fmt.Sprintf("testrule-hostHeader-%s", acctest.RandStringFromCharSet(12, acctest.CharSetAlphaNum))
@@ -2519,6 +2533,28 @@ resource "aws_security_group" "test" {
   }
 }
 `, rName)
+}
+
+func testAccAWSLBListenerRuleConfig_conditionNoField() string {
+	return `resource "aws_lb_listener_rule" "static" {
+  listener_arn = "arn:aws:elasticloadbalancing:us-west-2:111111111111:listener/app/test/xxxxxxxxxxxxxxxx/xxxxxxxxxxxxxxxx"
+  priority = 100
+
+  action {
+    type = "fixed-response"
+    fixed_response {
+      content_type = "text/plain"
+      message_body = "Static"
+      status_code = 200
+    }
+  }
+
+  condition {
+    http_request_method {
+      values = ["GET"]
+    }
+  }
+}`
 }
 
 func testAccAWSLBListenerRuleConfig_conditionHostHeader(lbName string) string {
