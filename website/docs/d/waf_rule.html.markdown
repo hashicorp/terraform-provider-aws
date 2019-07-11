@@ -3,7 +3,7 @@ layout: "aws"
 page_title: "AWS: aws_waf_rule"
 sidebar_current: "docs-aws-datasource-waf-rule"
 description: |-
-  Retrieves a AWS WAF rule id.
+  Retrieves an AWS WAF rule id.
 ---
 
 # Data Source: aws_waf_rule
@@ -28,4 +28,4 @@ The following arguments are supported:
 ## Attributes Reference
 In addition to all arguments above, the following attributes are exported:
 
-* `id` - The WAF rule ID.
+* `id` - The ID of the WAF rule.
