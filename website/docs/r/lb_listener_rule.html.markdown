@@ -105,12 +105,14 @@ resource "aws_lb_listener_rule" "health_check" {
     field  = "query-string"
 
     query_string {
-      values = [
-        {
-          key   = "health"
-          value = "check"
-        },
-      ]
+      values {
+        key   = "health"
+        value = "check"
+      }
+
+      values {
+        values = "bar"
+      }
     }
   }
 }
