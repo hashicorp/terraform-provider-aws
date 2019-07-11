@@ -308,7 +308,7 @@ if err != nil {
 }
 ```
 
-More likely though, if the resource requires multiple attributes and they are not already in the resource ID, `Importer` `State` will require a custom function implementation beyond using `schema.ImportStatePassthrough`, seen below. The ID passed into `terraform import` should be parsed so `d.Set()` can be called the required attributes to make the `Read` function properly operate. The resource ID should also match the ID set during the resource `Create` function via `d.SetId()`.
+More likely though, if the resource requires multiple attributes and they are not already in the resource ID, `Importer` `State` will require a custom function implementation beyond using `schema.ImportStatePassthrough`, seen below. The ID passed into `terraform import` should be parsed so `d.Set()` can be called with the required attributes to make the `Read` function operate properly. The resource ID should match the ID set during the resource `Create` function via `d.SetId()`.
 
 ```go
 // Illustrative example of parsing the import ID during terraform import
