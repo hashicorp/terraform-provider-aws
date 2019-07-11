@@ -329,7 +329,7 @@ func resourceAwsLbbListenerRule() *schema.Resource {
 									"http_header_name": {
 										Type:         schema.TypeString,
 										Required:     true,
-										ValidateFunc: validation.StringLenBetween(1, 40),
+										ValidateFunc: validation.StringMatch(regexp.MustCompile("^[A-Za-z0-9!#$%&'*+-.^_`|~]{1,40}$"), ""),
 									},
 									"values": {
 										Type: schema.TypeList,

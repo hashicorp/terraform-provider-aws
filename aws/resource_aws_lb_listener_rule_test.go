@@ -591,18 +591,32 @@ func TestAccAWSLBListenerRule_conditionHttpHeader(t *testing.T) {
 					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.157374736.query_string.#", "0"),
 					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.157374736.source_ip.#", "0"),
 					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.157374736.values.#", "0"),
-					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.288415572.field", "http-header"),
-					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.288415572.host_header.#", "0"),
-					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.288415572.http_header.#", "1"),
-					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.288415572.http_header.0.http_header_name", "X-Clacks-Overhead"),
-					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.288415572.http_header.0.values.#", "1"),
-					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.288415572.http_header.0.values.0", "GNU Terry Pratchett"),
-					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.288415572.http_request_method.#", "0"),
-					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.288415572.path_pattern.#", "0"),
-					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.288415572.query_string.#", "0"),
-					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.288415572.source_ip.#", "0"),
-					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.288415572.values.#", "0"),
+					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.1011254991.field", "http-header"),
+					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.1011254991.host_header.#", "0"),
+					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.1011254991.http_header.#", "1"),
+					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.1011254991.http_header.0.http_header_name", "Zz9~|_^.-+*'&%$#!0aA"),
+					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.1011254991.http_header.0.values.#", "1"),
+					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.1011254991.http_header.0.values.0", "RFC7230 Validity"),
+					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.1011254991.http_request_method.#", "0"),
+					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.1011254991.path_pattern.#", "0"),
+					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.1011254991.query_string.#", "0"),
+					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.1011254991.source_ip.#", "0"),
+					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.1011254991.values.#", "0"),
 				),
+			},
+		},
+	})
+}
+
+func TestAccAWSLBListenerRule_conditionHttpHeader_invalid(t *testing.T) {
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSLBListenerRuleDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config:      testAccAWSLBListenerRuleConfig_conditionHttpHeader_invalid(),
+				ExpectError: regexp.MustCompile(`expected value of condition.0.http_header.0.http_header_name to match regular expression`),
 			},
 		},
 	})
@@ -2736,8 +2750,8 @@ func testAccAWSLBListenerRuleConfig_conditionHttpHeader(lbName string) string {
   condition {
     field = "http-header"
     http_header {
-      http_header_name = "X-Clacks-Overhead"
-      values = ["GNU Terry Pratchett"]
+      http_header_name = "Zz9~|_^.-+*'&%%$#!0aA"
+      values = ["RFC7230 Validity"]
     }
   }
 }
@@ -2821,6 +2835,30 @@ resource "aws_security_group" "alb_test" {
     Name = "TestAccAWSALB_conditionHttpHeader"
   }
 }`, lbName)
+}
+
+func testAccAWSLBListenerRuleConfig_conditionHttpHeader_invalid() string {
+	return `resource "aws_lb_listener_rule" "static" {
+  listener_arn = "arn:aws:elasticloadbalancing:us-west-2:111111111111:listener/app/test/xxxxxxxxxxxxxxxx/xxxxxxxxxxxxxxxx"
+  priority = 100
+
+  action {
+    type = "fixed-response"
+    fixed_response {
+      content_type = "text/plain"
+      message_body = "Static"
+      status_code = 200
+    }
+  }
+
+  condition {
+    field = "http-header"
+    http_header {
+      http_header_name = "Invalid@"
+      values = ["RFC7230 Validity"]
+    }
+  }
+}`
 }
 
 func testAccAWSLBListenerRuleConfig_conditionHttpRequestMethod(lbName string) string {
