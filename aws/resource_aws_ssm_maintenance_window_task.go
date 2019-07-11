@@ -265,14 +265,10 @@ func resourceAwsSsmMaintenanceWindowTaskCreate(d *schema.ResourceData, meta inte
 		}
 	}
 
-	log.Println("PARAMS", params)
-
 	resp, err := ssmconn.RegisterTaskWithMaintenanceWindow(params)
 	if err != nil {
 		return err
 	}
-
-	log.Println("RESP", resp)
 
 	d.SetId(*resp.WindowTaskId)
 
