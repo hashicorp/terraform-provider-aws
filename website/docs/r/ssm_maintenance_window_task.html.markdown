@@ -69,6 +69,7 @@ The following arguments are supported:
 * `task_parameters` - (Optional) A structure containing information about parameters required by the particular `task_arn`. Documented below.
 
 `RUN_COMMAND` task type supports the following:
+
 * `timeout_seconds` - (Optional) Specify timeout on the task
 
 `logging_info` supports the following:
