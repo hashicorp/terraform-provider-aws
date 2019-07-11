@@ -3,13 +3,11 @@ package aws
 import (
 	"fmt"
 	"log"
-	"strconv"
 	"strings"
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
-	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/ssm"
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/helper/schema"
@@ -17,7 +15,6 @@ import (
 )
 
 const (
-	MINIMUM_VERSIONED_SCHEMA             = 2.0
 	SSM_DOCUMENT_PERMISSIONS_BATCH_LIMIT = 20
 )
 
@@ -27,6 +24,9 @@ func resourceAwsSsmDocument() *schema.Resource {
 		Read:   resourceAwsSsmDocumentRead,
 		Update: resourceAwsSsmDocumentUpdate,
 		Delete: resourceAwsSsmDocumentDelete,
+		Importer: &schema.ResourceImporter{
+			State: schema.ImportStatePassthrough,
+		},
 
 		Schema: map[string]*schema.Schema{
 			"arn": {
@@ -204,31 +204,51 @@ func resourceAwsSsmDocumentRead(d *schema.ResourceData, meta interface{}) error 
 
 	log.Printf("[DEBUG] Reading SSM Document: %s", d.Id())
 
-	docInput := &ssm.DescribeDocumentInput{
-		Name: aws.String(d.Get("name").(string)),
+	describeDocumentInput := &ssm.DescribeDocumentInput{
+		Name: aws.String(d.Id()),
 	}
 
-	resp, err := ssmconn.DescribeDocument(docInput)
+	describeDocumentOutput, err := ssmconn.DescribeDocument(describeDocumentInput)
+
+	if isAWSErr(err, ssm.ErrCodeInvalidDocument, "") {
+		log.Printf("[WARN] SSM Document not found so removing from state")
+		d.SetId("")
+		return nil
+	}
+
 	if err != nil {
-		if ssmErr, ok := err.(awserr.Error); ok && ssmErr.Code() == "InvalidDocument" {
-			log.Printf("[WARN] SSM Document not found so removing from state")
-			d.SetId("")
-			return nil
-		}
-		return fmt.Errorf("Error describing SSM document: %s", err)
+		return fmt.Errorf("error describing SSM Document (%s): %s", d.Id(), err)
 	}
 
-	doc := resp.Document
+	if describeDocumentOutput == nil || describeDocumentOutput.Document == nil {
+		return fmt.Errorf("error describing SSM Document (%s): empty result", d.Id())
+	}
+
+	getDocumentInput := &ssm.GetDocumentInput{
+		DocumentFormat:  describeDocumentOutput.Document.DocumentFormat,
+		DocumentVersion: aws.String("$LATEST"),
+		Name:            describeDocumentOutput.Document.Name,
+	}
+
+	getDocumentOutput, err := ssmconn.GetDocument(getDocumentInput)
+
+	if err != nil {
+		return fmt.Errorf("error getting SSM Document (%s): %s", d.Id(), err)
+	}
+
+	if getDocumentOutput == nil {
+		return fmt.Errorf("error getting SSM Document (%s): empty result", d.Id())
+	}
+
+	doc := describeDocumentOutput.Document
+
+	d.Set("content", getDocumentOutput.Content)
 	d.Set("created_date", doc.CreatedDate)
 	d.Set("default_version", doc.DefaultVersion)
 	d.Set("description", doc.Description)
 	d.Set("schema_version", doc.SchemaVersion)
-
-	if _, ok := d.GetOk("document_type"); ok {
-		d.Set("document_type", doc.DocumentType)
-	}
-
 	d.Set("document_format", doc.DocumentFormat)
+	d.Set("document_type", doc.DocumentType)
 	d.Set("document_version", doc.DocumentVersion)
 	d.Set("hash", doc.Hash)
 	d.Set("hash_type", doc.HashType)
@@ -317,15 +337,6 @@ func resourceAwsSsmDocumentUpdate(d *schema.ResourceData, meta interface{}) erro
 
 	if !d.HasChange("content") {
 		return nil
-	}
-
-	if schemaVersion, ok := d.GetOk("schemaVersion"); ok {
-		schemaNumber, _ := strconv.ParseFloat(schemaVersion.(string), 64)
-
-		if schemaNumber < MINIMUM_VERSIONED_SCHEMA {
-			log.Printf("[DEBUG] Skipping document update because document version is not 2.0 %q", d.Id())
-			return nil
-		}
 	}
 
 	if err := updateAwsSSMDocument(d, meta); err != nil {
