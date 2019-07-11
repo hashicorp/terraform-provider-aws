@@ -578,7 +578,7 @@ func TestAccAWSLBListenerRule_conditionHttpHeader(t *testing.T) {
 					resource.TestCheckResourceAttrSet("aws_lb_listener_rule.static", "listener_arn"),
 					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "priority", "100"),
 					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "action.#", "1"),
-					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.#", "1"),
+					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.#", "2"),
 					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.157374736.field", "http-header"),
 					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.157374736.host_header.#", "0"),
 					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.157374736.http_header.#", "1"),
@@ -591,6 +591,17 @@ func TestAccAWSLBListenerRule_conditionHttpHeader(t *testing.T) {
 					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.157374736.query_string.#", "0"),
 					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.157374736.source_ip.#", "0"),
 					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.157374736.values.#", "0"),
+					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.288415572.field", "http-header"),
+					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.288415572.host_header.#", "0"),
+					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.288415572.http_header.#", "1"),
+					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.288415572.http_header.0.http_header_name", "X-Clacks-Overhead"),
+					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.288415572.http_header.0.values.#", "1"),
+					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.288415572.http_header.0.values.0", "GNU Terry Pratchett"),
+					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.288415572.http_request_method.#", "0"),
+					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.288415572.path_pattern.#", "0"),
+					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.288415572.query_string.#", "0"),
+					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.288415572.source_ip.#", "0"),
+					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.288415572.values.#", "0"),
 				),
 			},
 		},
@@ -725,7 +736,7 @@ func TestAccAWSLBListenerRule_conditionQueryString(t *testing.T) {
 					resource.TestCheckResourceAttrSet("aws_lb_listener_rule.static", "listener_arn"),
 					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "priority", "100"),
 					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "action.#", "1"),
-					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.#", "1"),
+					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.#", "2"),
 					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.2364351631.field", "query-string"),
 					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.2364351631.host_header.#", "0"),
 					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.2364351631.http_header.#", "0"),
@@ -741,6 +752,19 @@ func TestAccAWSLBListenerRule_conditionQueryString(t *testing.T) {
 					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.2364351631.query_string.0.values.2.value", "entry"),
 					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.2364351631.source_ip.#", "0"),
 					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.2364351631.values.#", "0"),
+					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.2394693602.field", "query-string"),
+					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.2394693602.host_header.#", "0"),
+					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.2394693602.http_header.#", "0"),
+					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.2394693602.http_request_method.#", "0"),
+					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.2394693602.path_pattern.#", "0"),
+					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.2394693602.query_string.#", "1"),
+					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.2394693602.query_string.0.values.#", "2"),
+					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.2394693602.query_string.0.values.0.key", "foo"),
+					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.2394693602.query_string.0.values.0.value", "bar"),
+					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.2394693602.query_string.0.values.1.key", "foo"),
+					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.2394693602.query_string.0.values.1.value", "baz"),
+					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.2394693602.source_ip.#", "0"),
+					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.2394693602.values.#", "0"),
 				),
 			},
 		},
@@ -2708,6 +2732,14 @@ func testAccAWSLBListenerRuleConfig_conditionHttpHeader(lbName string) string {
       values = ["192.168.1.*","10.0.0.*"]
     }
   }
+
+  condition {
+    field = "http-header"
+    http_header {
+      http_header_name = "X-Clacks-Overhead"
+      values = ["GNU Terry Pratchett"]
+    }
+  }
 }
 
 resource "aws_lb_listener" "front_end" {
@@ -3128,6 +3160,20 @@ func testAccAWSLBListenerRuleConfig_conditionQueryString(lbName string) string {
           value = "entry"
         },
       ]
+    }
+  }
+
+  condition {
+    field = "query-string"
+    query_string {
+      values {
+        key = "foo"
+        value = "bar"
+      }
+      values {
+        key = "foo"
+        value = "baz"
+      }
     }
   }
 }
