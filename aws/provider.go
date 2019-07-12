@@ -925,6 +925,7 @@ func init() {
 		"elb",
 		"emr",
 		"es",
+		"eventbridge",
 		"firehose",
 		"fms",
 		"fsx",

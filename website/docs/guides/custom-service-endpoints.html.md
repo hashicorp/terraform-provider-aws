@@ -98,6 +98,7 @@ The Terraform AWS Provider allows the following endpoints to be customized:
 - `elb`
 - `emr`
 - `es`
+- `eventbridge`
 - `firehose`
 - `fms`
 - `fsx`

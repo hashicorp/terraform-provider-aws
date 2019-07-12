@@ -62,6 +62,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/elb"
 	"github.com/aws/aws-sdk-go/service/elbv2"
 	"github.com/aws/aws-sdk-go/service/emr"
+	"github.com/aws/aws-sdk-go/service/eventbridge"
 	"github.com/aws/aws-sdk-go/service/firehose"
 	"github.com/aws/aws-sdk-go/service/fms"
 	"github.com/aws/aws-sdk-go/service/fsx"
@@ -217,6 +218,7 @@ type AWSClient struct {
 	elbv2conn                           *elbv2.ELBV2
 	emrconn                             *emr.EMR
 	esconn                              *elasticsearch.ElasticsearchService
+	eventbridgeconn                     *eventbridge.EventBridge
 	firehoseconn                        *firehose.Firehose
 	fmsconn                             *fms.FMS
 	fsxconn                             *fsx.FSx
@@ -394,6 +396,7 @@ func (c *Config) Client() (interface{}, error) {
 		elbv2conn:                           elbv2.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["elb"])})),
 		emrconn:                             emr.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["emr"])})),
 		esconn:                              elasticsearch.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["es"])})),
+		eventbridgeconn:                     eventbridge.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["eventbridge"])})),
 		firehoseconn:                        firehose.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["firehose"])})),
 		fmsconn:                             fms.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["fms"])})),
 		fsxconn:                             fsx.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["fsx"])})),
