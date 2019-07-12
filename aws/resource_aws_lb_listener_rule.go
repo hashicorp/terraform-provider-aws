@@ -547,9 +547,11 @@ func suppressIfActionTypeNot(t string) schema.SchemaDiffSuppressFunc {
 	}
 }
 
+// suppressIfConditionFieldNotIn will suppress the item in the diff plan if the condition's "field" is not found in the desired list fs[].
 func suppressIfConditionFieldNotIn(fs []string) schema.SchemaDiffSuppressFunc {
 	return func(k, old, new string, d *schema.ResourceData) bool {
 		take := 2
+		// Find the index of the take'th dot: `condition.$sethash.`
 		i := strings.IndexFunc(k, func(r rune) bool {
 			if r == '.' {
 				take -= 1
@@ -557,10 +559,12 @@ func suppressIfConditionFieldNotIn(fs []string) schema.SchemaDiffSuppressFunc {
 			}
 			return false
 		})
+		// Path to this condition's "field": `condition.$sethash.field`
 		at := k[:i+1] + "field"
-		condition := d.Get(at).(string)
+		field := d.Get(at).(string)
+		// Compare field against input list. Matches are not suppressed
 		for _, f := range fs {
-			if condition == f {
+			if field == f {
 				return false
 			}
 		}
