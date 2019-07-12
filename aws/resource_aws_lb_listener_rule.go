@@ -12,6 +12,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/elbv2"
+	"github.com/hashicorp/terraform/helper/customdiff"
 	"github.com/hashicorp/terraform/helper/hashcode"
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/helper/schema"
@@ -440,6 +441,20 @@ func resourceAwsLbbListenerRule() *schema.Resource {
 				},
 			},
 		},
+		// FIXME New diff is totally broken. The leaf list items are a list of length 1 containing nil.
+		// Example output:
+		// ...DDD o *schema.Set: &{0x3ddc210 map[3525442329:map[field:path-pattern host_header:[] http_header:[] http_request_method:[] path_pattern:[map[values:[1 2 3 4 5]]] query_string:[] source_ip:[] values:[1 2 3 4 5]]] {{0 0} 1}}
+		// ...DDD n *schema.Set, &{0x3ddc210 map[22963242:map[field:path-pattern host_header:[] http_header:[] http_request_method:[] path_pattern:[<nil>] query_string:[] source_ip:[] values:[]]] {{0 0} 1}}
+		CustomizeDiff: customdiff.All(
+			func(diff *schema.ResourceDiff, v interface{}) error {
+				if diff.HasChange("condition") {
+					o, n := diff.GetChange("condition")
+					log.Printf("DDD o %T: %v", o, o)
+					log.Printf("DDD n %T, %v", n, n)
+				}
+				return nil
+			},
+		),
 	}
 }
 
@@ -454,10 +469,12 @@ func lbListenerRuleConditionSetHash(v interface{}) int {
 	if m["field"].(string) == "host-header" {
 		hostHeader := m["host_header"].([]interface{})
 		if len(hostHeader) > 0 {
-			hostHeaderMap := hostHeader[0].(map[string]interface{})
-			hostHeaderValues := hostHeaderMap["values"].([]interface{})
-			for _, l := range hostHeaderValues {
-				fmt.Fprint(&buf, l, "-")
+			if hostHeader[0] != nil {
+				hostHeaderMap := hostHeader[0].(map[string]interface{})
+				hostHeaderValues := hostHeaderMap["values"].([]interface{})
+				for _, l := range hostHeaderValues {
+					fmt.Fprint(&buf, l, "-")
+				}
 			}
 		} else {
 			// Backwards compatibility
@@ -469,7 +486,7 @@ func lbListenerRuleConditionSetHash(v interface{}) int {
 
 	if m["field"].(string) == "http-header" {
 		httpHeader := m["http_header"].([]interface{})
-		if len(httpHeader) > 0 {
+		if len(httpHeader) > 0 && httpHeader[0] != nil {
 			httpHeaderMap := httpHeader[0].(map[string]interface{})
 			fmt.Fprint(&buf, httpHeaderMap["http_header_name"].(string), "-")
 			httpHeaderValues := httpHeaderMap["values"].([]interface{})
@@ -481,7 +498,7 @@ func lbListenerRuleConditionSetHash(v interface{}) int {
 
 	if m["field"].(string) == "http-request-method" {
 		httpRequestMethod := m["http_request_method"].([]interface{})
-		if len(httpRequestMethod) > 0 {
+		if len(httpRequestMethod) > 0 && httpRequestMethod[0] != nil {
 			httpRequestMethodMap := httpRequestMethod[0].(map[string]interface{})
 			httpRequestMethodValues := httpRequestMethodMap["values"].([]interface{})
 			for _, l := range httpRequestMethodValues {
@@ -493,10 +510,12 @@ func lbListenerRuleConditionSetHash(v interface{}) int {
 	if m["field"].(string) == "path-pattern" {
 		pathPattern := m["path_pattern"].([]interface{})
 		if len(pathPattern) > 0 {
-			pathPatternMap := pathPattern[0].(map[string]interface{})
-			pathPatternValues := pathPatternMap["values"].([]interface{})
-			for _, l := range pathPatternValues {
-				fmt.Fprint(&buf, l, "-")
+			if pathPattern[0] != nil {
+				pathPatternMap := pathPattern[0].(map[string]interface{})
+				pathPatternValues := pathPatternMap["values"].([]interface{})
+				for _, l := range pathPatternValues {
+					fmt.Fprint(&buf, l, "-")
+				}
 			}
 		} else {
 			// Backwards compatibility
@@ -508,7 +527,7 @@ func lbListenerRuleConditionSetHash(v interface{}) int {
 
 	if m["field"].(string) == "query-string" {
 		queryString := m["query_string"].([]interface{})
-		if len(queryString) > 0 {
+		if len(queryString) > 0 && queryString[0] != nil {
 			queryStringMap := queryString[0].(map[string]interface{})
 			queryStringValues := queryStringMap["values"].([]interface{})
 			for _, l := range queryStringValues {
@@ -520,7 +539,7 @@ func lbListenerRuleConditionSetHash(v interface{}) int {
 
 	if m["field"].(string) == "source-ip" {
 		sourceIp := m["source_ip"].([]interface{})
-		if len(sourceIp) > 0 {
+		if len(sourceIp) > 0 && sourceIp[0] != nil {
 			sourceIpMap := sourceIp[0].(map[string]interface{})
 			sourceIpValues := sourceIpMap["values"].([]interface{})
 			for _, l := range sourceIpValues {
