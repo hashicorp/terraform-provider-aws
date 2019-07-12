@@ -13,7 +13,7 @@ import (
 )
 
 func TestAccAWSSSMMaintenanceWindowTask_basic(t *testing.T) {
-	var task ssm.MaintenanceWindowTask
+	var before, after ssm.MaintenanceWindowTask
 	resourceName := "aws_ssm_maintenance_window_task.target"
 
 	name := acctest.RandString(10)
@@ -25,7 +25,18 @@ func TestAccAWSSSMMaintenanceWindowTask_basic(t *testing.T) {
 			{
 				Config: testAccAWSSSMMaintenanceWindowTaskBasicConfig(name),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSSSMMaintenanceWindowTaskExists(resourceName, &task),
+					testAccCheckAWSSSMMaintenanceWindowTaskExists(resourceName, &before),
+				),
+			},
+			{
+				Config: testAccAWSSSMMaintenanceWindowTaskBasicConfigUpdate(name, "RUN_COMMAND", "AWS-InstallPowerShellModule", 3, 2),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSSSMMaintenanceWindowTaskExists(resourceName, &after),
+					resource.TestCheckResourceAttr(resourceName, "task_type", "RUN_COMMAND"),
+					resource.TestCheckResourceAttr(resourceName, "task_arn", "AWS-InstallPowerShellModule"),
+					resource.TestCheckResourceAttr(resourceName, "max_concurrency", "3"),
+					resource.TestCheckResourceAttr(resourceName, "max_errors", "2"),
+					testAccCheckAwsSsmWindowsTaskNotRecreated(t, &before, &after),
 				),
 			},
 			{
@@ -206,6 +217,16 @@ func TestAccAWSSSMMaintenanceWindowTask_TaskInvocationStepFunctionParameters(t *
 	})
 }
 
+func testAccCheckAwsSsmWindowsTaskNotRecreated(t *testing.T,
+	before, after *ssm.MaintenanceWindowTask) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		if aws.StringValue(before.WindowTaskId) != aws.StringValue(after.WindowTaskId) {
+			t.Fatalf("Unexpected change of Windows Task IDs, but both were %s and %s", aws.StringValue(before.WindowTaskId), aws.StringValue(after.WindowTaskId))
+		}
+		return nil
+	}
+}
+
 func testAccCheckAwsSsmWindowsTaskRecreated(t *testing.T,
 	before, after *ssm.MaintenanceWindowTask) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
@@ -291,7 +312,7 @@ func testAccAWSSSMMaintenanceWindowTaskImportStateIdFunc(resourceName string) re
 func testAccAWSSSMMaintenanceWindowTaskBasicConfig(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_ssm_maintenance_window" "foo" {
-  name  = "maintenance-window-%s"
+  name  = "maintenance-window-%[1]s"
   schedule = "cron(0 16 ? * TUE *)"
   duration = 3
   cutoff   = 1
@@ -324,7 +345,7 @@ resource "aws_instance" "foo" {
 }
 
 resource "aws_iam_role" "ssm_role" {
-  name = "ssm-role-%s"
+  name = "ssm-role-%[1]s"
 
   assume_role_policy = <<POLICY
 {
@@ -344,7 +365,7 @@ POLICY
 }
 
 resource "aws_iam_role_policy" "bar" {
-  name = "ssm_role_policy_%s"
+  name = "ssm_role_policy_%[1]s"
   role = "${aws_iam_role.ssm_role.name}"
 
   policy = <<EOF
@@ -358,13 +379,86 @@ resource "aws_iam_role_policy" "bar" {
 }
 EOF
 }
-`, rName, rName, rName)
+`, rName)
+}
+
+func testAccAWSSSMMaintenanceWindowTaskBasicConfigUpdate(rName, taskType, taskArn string, maxConcurrency, maxErrors int) string {
+	return fmt.Sprintf(`
+resource "aws_ssm_maintenance_window" "foo" {
+  name  = "maintenance-window-%[1]s"
+  schedule = "cron(0 16 ? * TUE *)"
+  duration = 3
+  cutoff   = 1
+}
+
+resource "aws_ssm_maintenance_window_task" "target" {
+  window_id   = "${aws_ssm_maintenance_window.foo.id}"
+  task_type   = "%[2]s"
+  task_arn    = "%[3]s"
+  priority    = 1
+  service_role_arn = "${aws_iam_role.ssm_role_update.arn}"
+  max_concurrency  = %[4]d
+  max_errors  = %[5]d
+
+  targets {
+    key    = "InstanceIds"
+    values = ["${aws_instance.bar.id}"]
+  }
+
+  task_parameters {
+    name   = "commands"
+    values = ["pwd"]
+  }
+}
+
+resource "aws_instance" "bar" {
+  ami = "ami-4fccb37f"
+
+  instance_type = "m1.small"
+}
+
+resource "aws_iam_role" "ssm_role_update" {
+  name = "ssm-role-update-%[1]s"
+
+  assume_role_policy = <<POLICY
+{
+    "Version": "2012-10-17",
+    "Statement": [
+   {
+     "Action": "sts:AssumeRole",
+     "Principal": {
+      "Service": "events.amazonaws.com"
+     },
+     "Effect": "Allow",
+     "Sid": ""
+   }
+    ]
+}
+POLICY
+}
+
+resource "aws_iam_role_policy" "bar" {
+  name = "ssm_role_policy_update_%[1]s"
+  role = "${aws_iam_role.ssm_role_update.name}"
+
+  policy = <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": {
+    "Effect": "Allow",
+    "Action": "ssm:*",
+    "Resource": "*"
+  }
+}
+EOF
+}
+`, rName, taskType, taskArn, maxConcurrency, maxErrors)
 }
 
 func testAccAWSSSMMaintenanceWindowTaskBasicConfigUpdated(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_ssm_maintenance_window" "foo" {
-  name  = "maintenance-window-%s"
+  name  = "maintenance-window-%[1]s"
   schedule = "cron(0 16 ? * TUE *)"
   duration = 3
   cutoff   = 1
@@ -399,7 +493,7 @@ resource "aws_instance" "foo" {
 }
 
 resource "aws_iam_role" "ssm_role" {
-  name = "ssm-role-%s"
+  name = "ssm-role-%[1]s"
 
   assume_role_policy = <<POLICY
 {
@@ -419,7 +513,7 @@ POLICY
 }
 
 resource "aws_iam_role_policy" "bar" {
-  name = "ssm_role_policy_%s"
+  name = "ssm_role_policy_%[1]s"
   role = "${aws_iam_role.ssm_role.name}"
 
   policy = <<EOF
@@ -433,7 +527,7 @@ resource "aws_iam_role_policy" "bar" {
 }
 EOF
 }
-`, rName, rName, rName)
+`, rName)
 }
 
 func testAccAWSSSMMaintenanceWindowTaskAutomationConfig(rName, version string) string {
