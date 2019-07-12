@@ -18,6 +18,9 @@ func init() {
 	resource.AddTestSweepers("aws_dx_gateway_association", &resource.Sweeper{
 		Name: "aws_dx_gateway_association",
 		F:    testSweepDirectConnectGatewayAssociations,
+		Dependencies: []string{
+			"aws_dx_gateway_association_proposal",
+		},
 	})
 }
 
@@ -57,6 +60,11 @@ func testSweepDirectConnectGatewayAssociations(region string) error {
 
 				for _, association := range associationOutput.DirectConnectGatewayAssociations {
 					gatewayID := aws.StringValue(association.AssociatedGateway.Id)
+
+					if aws.StringValue(association.AssociatedGateway.Region) != region {
+						log.Printf("[INFO] Skipping Direct Connect Gateway (%s) Association (%s) in different home region: %s", directConnectGatewayID, gatewayID, aws.StringValue(association.AssociatedGateway.Region))
+						continue
+					}
 
 					if aws.StringValue(association.AssociationState) != directconnect.GatewayAssociationStateAssociated {
 						log.Printf("[INFO] Skipping Direct Connect Gateway (%s) Association in non-available (%s) state: %s", directConnectGatewayID, aws.StringValue(association.AssociationState), gatewayID)
