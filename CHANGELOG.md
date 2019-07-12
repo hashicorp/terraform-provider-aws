@@ -1,4 +1,9 @@
 ## 2.20.0 (Unreleased)
+
+ENHANCEMENTS:
+
+* provider: Support for assuming role using credential process from the shared AWS configuration file [GH-9305]
+
 ## 2.19.0 (July 11, 2019)
 
 FEATURES:
