@@ -12576,6 +12576,10 @@ type UpdateApiOutput struct {
 	// for more information.
 	RouteSelectionExpression *string `locationName:"routeSelectionExpression" type:"string"`
 
+	// A key value pair of string with key length between[1-128] and value length
+	// between[1-256]
+	Tags map[string]*string `locationName:"tags" type:"map"`
+
 	// A string with a length between [1-64].
 	Version *string `locationName:"version" type:"string"`
 
@@ -12643,6 +12647,12 @@ func (s *UpdateApiOutput) SetProtocolType(v string) *UpdateApiOutput {
 // SetRouteSelectionExpression sets the RouteSelectionExpression field's value.
 func (s *UpdateApiOutput) SetRouteSelectionExpression(v string) *UpdateApiOutput {
 	s.RouteSelectionExpression = &v
+	return s
+}
+
+// SetTags sets the Tags field's value.
+func (s *UpdateApiOutput) SetTags(v map[string]*string) *UpdateApiOutput {
+	s.Tags = v
 	return s
 }
 
@@ -13086,6 +13096,10 @@ type UpdateDomainNameOutput struct {
 
 	// The domain name configurations.
 	DomainNameConfigurations []*DomainNameConfiguration `locationName:"domainNameConfigurations" type:"list"`
+
+	// A key value pair of string with key length between[1-128] and value length
+	// between[1-256]
+	Tags map[string]*string `locationName:"tags" type:"map"`
 }
 
 // String returns the string representation
@@ -13113,6 +13127,12 @@ func (s *UpdateDomainNameOutput) SetDomainName(v string) *UpdateDomainNameOutput
 // SetDomainNameConfigurations sets the DomainNameConfigurations field's value.
 func (s *UpdateDomainNameOutput) SetDomainNameConfigurations(v []*DomainNameConfiguration) *UpdateDomainNameOutput {
 	s.DomainNameConfigurations = v
+	return s
+}
+
+// SetTags sets the Tags field's value.
+func (s *UpdateDomainNameOutput) SetTags(v map[string]*string) *UpdateDomainNameOutput {
+	s.Tags = v
 	return s
 }
 
@@ -14460,6 +14480,10 @@ type UpdateStageOutput struct {
 
 	// The stage variable map.
 	StageVariables map[string]*string `locationName:"stageVariables" type:"map"`
+
+	// A key value pair of string with key length between[1-128] and value length
+	// between[1-256]
+	Tags map[string]*string `locationName:"tags" type:"map"`
 }
 
 // String returns the string representation
@@ -14529,6 +14553,12 @@ func (s *UpdateStageOutput) SetStageName(v string) *UpdateStageOutput {
 // SetStageVariables sets the StageVariables field's value.
 func (s *UpdateStageOutput) SetStageVariables(v map[string]*string) *UpdateStageOutput {
 	s.StageVariables = v
+	return s
+}
+
+// SetTags sets the Tags field's value.
+func (s *UpdateStageOutput) SetTags(v map[string]*string) *UpdateStageOutput {
+	s.Tags = v
 	return s
 }
 
