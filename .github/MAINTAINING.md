@@ -22,7 +22,7 @@ Notes for each type of pull request are (or will be) available in subsections be
 - Add `bug`, `enhancement`, `new-data-source`, `new-resource`, or `technical-debt` labels to match expectations from change
 - Review the contents of the pull request and ensure the change follows the relevant section of the [Contributing Guide](https://github.com/terraform-providers/terraform-provider-aws/blob/master/.github/CONTRIBUTING.md#checklists-for-contribution)
 - If the change is not acceptable, leave a long form comment about the reasoning and close the pull request
-- If the change is acceptable with modifications, leave a pull request review marked using the `Request Changes` option (for minor maintainer modification requests, giving feedback with the `Approve` option is recommended so they do not need to wait for another round of review)
+- If the change is acceptable with modifications, leave a pull request review marked using the `Request Changes` option (for maintainer pull requests with minor modification requests, giving feedback with the `Approve` option is recommended so they do not need to wait for another round of review)
 - If the author is unresponsive for changes (generally we give two weeks), determine importance and level of effort to finish the pull request yourself including their commits or close the pull request
 - Run relevant acceptance testing (locally or in TeamCity) and ensure no new failures are being introduced
 - Approve the pull request with a comment outlining what steps you took that ensure the change is acceptable, e.g. acceptance testing output
