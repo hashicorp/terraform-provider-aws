@@ -29,7 +29,7 @@ func dataSourceAwsWafRegionalWebAclRead(d *schema.ResourceData, meta interface{}
 	name := d.Get("name").(string)
 
 	acls := make([]*waf.WebACLSummary, 0)
-	// ListRulesInput does not have a name parameter for filtering
+	// ListWebACLsInput does not have a name parameter for filtering
 	input := &waf.ListWebACLsInput{}
 	for {
 		output, err := conn.ListWebACLs(input)
