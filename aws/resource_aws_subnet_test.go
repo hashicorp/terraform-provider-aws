@@ -36,6 +36,7 @@ func init() {
 			"aws_lambda_function",
 			"aws_lb",
 			"aws_mq_broker",
+			"aws_msk_cluster",
 			"aws_network_interface",
 			"aws_redshift_cluster",
 			"aws_route53_resolver_endpoint",
