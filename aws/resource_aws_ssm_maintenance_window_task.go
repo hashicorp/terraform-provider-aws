@@ -146,6 +146,7 @@ func resourceAwsSsmMaintenanceWindowTask() *schema.Resource {
 						"automation_parameters": {
 							Type:     schema.TypeList,
 							Optional: true,
+							MaxItems: 1,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"document_version": {
@@ -177,6 +178,7 @@ func resourceAwsSsmMaintenanceWindowTask() *schema.Resource {
 						"lambda_parameters": {
 							Type:     schema.TypeList,
 							Optional: true,
+							MaxItems: 1,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"client_context": {
@@ -204,6 +206,7 @@ func resourceAwsSsmMaintenanceWindowTask() *schema.Resource {
 						"run_command_parameters": {
 							Type:     schema.TypeList,
 							Optional: true,
+							MaxItems: 1,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"comment": {
@@ -298,6 +301,7 @@ func resourceAwsSsmMaintenanceWindowTask() *schema.Resource {
 						"step_functions_parameters": {
 							Type:     schema.TypeList,
 							Optional: true,
+							MaxItems: 1,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"input": {
