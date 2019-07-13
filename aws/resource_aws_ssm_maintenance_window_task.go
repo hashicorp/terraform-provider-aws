@@ -383,16 +383,16 @@ func expandAwsSsmTaskInvocationParameters(config []interface{}) *ssm.Maintenance
 	params := &ssm.MaintenanceWindowTaskInvocationParameters{}
 	for _, v := range config {
 		paramConfig := v.(map[string]interface{})
-		if attr, ok := paramConfig["automation_parameters"]; ok && len(attr.([]interface{})) > 0 {
+		if attr, ok := paramConfig["automation_parameters"]; ok && len(attr.([]interface{})) > 0 && attr.([]interface{})[0] != nil {
 			params.Automation = expandAwsSsmTaskInvocationAutomationParameters(attr.([]interface{}))
 		}
-		if attr, ok := paramConfig["lambda_parameters"]; ok && len(attr.([]interface{})) > 0 {
+		if attr, ok := paramConfig["lambda_parameters"]; ok && len(attr.([]interface{})) > 0 && attr.([]interface{})[0] != nil {
 			params.Lambda = expandAwsSsmTaskInvocationLambdaParameters(attr.([]interface{}))
 		}
-		if attr, ok := paramConfig["run_command_parameters"]; ok && len(attr.([]interface{})) > 0 {
+		if attr, ok := paramConfig["run_command_parameters"]; ok && len(attr.([]interface{})) > 0 && attr.([]interface{})[0] != nil {
 			params.RunCommand = expandAwsSsmTaskInvocationRunCommandParameters(attr.([]interface{}))
 		}
-		if attr, ok := paramConfig["step_functions_parameters"]; ok && len(attr.([]interface{})) > 0 {
+		if attr, ok := paramConfig["step_functions_parameters"]; ok && len(attr.([]interface{})) > 0 && attr.([]interface{})[0] != nil {
 			params.StepFunctions = expandAwsSsmTaskInvocationStepFunctionsParameters(attr.([]interface{}))
 		}
 	}
