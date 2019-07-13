@@ -286,7 +286,7 @@ Path Pattern Blocks (for `path_pattern`) support the following:
 
 Query String Blocks (for `query_string`) support the following:
 
-* `values` - (Required) List of query string pairs or values to match. Query String Value blocks documented below. Maximum size of each string is 128 characters. Comparison is case insensitive. Wildcard characters supported: * (matches 0 or more characters) and ? (matches exactly 1 character). To search for a literal '\*' or '?' character in a query string, escape the character with a backslash (\\). Only one pair needs to match for the condition to be satisfied.
+* `values` - (Required) Query string pairs or values to match. Query String Value blocks documented below. Multiple `values` blocks can be specified, see example above. Maximum size of each string is 128 characters. Comparison is case insensitive. Wildcard characters supported: * (matches 0 or more characters) and ? (matches exactly 1 character). To search for a literal '\*' or '?' character in a query string, escape the character with a backslash (\\). Only one pair needs to match for the condition to be satisfied.
 
 Query String Value Blocks (for `query_string.values`) support the following:
 
