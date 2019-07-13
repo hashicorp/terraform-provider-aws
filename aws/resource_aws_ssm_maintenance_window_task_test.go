@@ -29,11 +29,14 @@ func TestAccAWSSSMMaintenanceWindowTask_basic(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccAWSSSMMaintenanceWindowTaskBasicConfigUpdate(name, "RUN_COMMAND", "AWS-InstallPowerShellModule", 3, 2),
+				Config: testAccAWSSSMMaintenanceWindowTaskBasicConfigUpdate(name, "test description", "RUN_COMMAND", "AWS-InstallPowerShellModule", 3, 3, 2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSSSMMaintenanceWindowTaskExists(resourceName, &after),
+					resource.TestCheckResourceAttr(resourceName, "name", fmt.Sprintf("maintenance-window-task-%s", name)),
+					resource.TestCheckResourceAttr(resourceName, "description", "test description"),
 					resource.TestCheckResourceAttr(resourceName, "task_type", "RUN_COMMAND"),
 					resource.TestCheckResourceAttr(resourceName, "task_arn", "AWS-InstallPowerShellModule"),
+					resource.TestCheckResourceAttr(resourceName, "priority", "3"),
 					resource.TestCheckResourceAttr(resourceName, "max_concurrency", "3"),
 					resource.TestCheckResourceAttr(resourceName, "max_errors", "2"),
 					testAccCheckAwsSsmWindowsTaskNotRecreated(t, &before, &after),
@@ -382,7 +385,7 @@ EOF
 `, rName)
 }
 
-func testAccAWSSSMMaintenanceWindowTaskBasicConfigUpdate(rName, taskType, taskArn string, maxConcurrency, maxErrors int) string {
+func testAccAWSSSMMaintenanceWindowTaskBasicConfigUpdate(rName, description, taskType, taskArn string, priority, maxConcurrency, maxErrors int) string {
 	return fmt.Sprintf(`
 resource "aws_ssm_maintenance_window" "foo" {
   name  = "maintenance-window-%[1]s"
@@ -395,10 +398,12 @@ resource "aws_ssm_maintenance_window_task" "target" {
   window_id   = "${aws_ssm_maintenance_window.foo.id}"
   task_type   = "%[2]s"
   task_arn    = "%[3]s"
-  priority    = 1
+  name        = "maintenance-window-task-%[1]s"
+  description = "%[4]s"
+  priority    = %[5]d
   service_role_arn = "${aws_iam_role.ssm_role_update.arn}"
-  max_concurrency  = %[4]d
-  max_errors  = %[5]d
+  max_concurrency  = %[6]d
+  max_errors  = %[7]d
 
   targets {
     key    = "InstanceIds"
@@ -452,7 +457,7 @@ resource "aws_iam_role_policy" "bar" {
 }
 EOF
 }
-`, rName, taskType, taskArn, maxConcurrency, maxErrors)
+`, rName, taskType, taskArn, description, priority, maxConcurrency, maxErrors)
 }
 
 func testAccAWSSSMMaintenanceWindowTaskBasicConfigUpdated(rName string) string {
