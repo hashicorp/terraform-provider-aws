@@ -93,10 +93,11 @@ func resourceAwsSsmMaintenanceWindowTask() *schema.Resource {
 			},
 
 			"logging_info": {
-				Type:       schema.TypeList,
-				MaxItems:   1,
-				Optional:   true,
-				Deprecated: "use 'task_invocation_parameters' argument instead",
+				Type:          schema.TypeList,
+				MaxItems:      1,
+				Optional:      true,
+				ConflictsWith: []string{"task_invocation_parameters"},
+				Deprecated:    "use 'task_invocation_parameters' argument instead",
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"s3_bucket_name": {
@@ -116,9 +117,10 @@ func resourceAwsSsmMaintenanceWindowTask() *schema.Resource {
 			},
 
 			"task_parameters": {
-				Type:       schema.TypeList,
-				Optional:   true,
-				Deprecated: "use 'task_invocation_parameters' argument instead",
+				Type:          schema.TypeList,
+				Optional:      true,
+				ConflictsWith: []string{"task_invocation_parameters"},
+				Deprecated:    "use 'task_invocation_parameters' argument instead",
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"name": {
