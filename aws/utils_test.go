@@ -72,3 +72,29 @@ func TestJsonBytesEqualWhitespaceAndNoWhitespace(t *testing.T) {
 		t.Errorf("Expected jsonBytesEqual to return false for %s == %s", noWhitespaceDiff, whitespaceDiff)
 	}
 }
+
+func TestInterfaceStringSlice(t *testing.T) {
+	data := []string{"a", "b", "c"}
+	var tests = []struct {
+		input []interface{}
+		want  []*string
+	}{
+		{nil, nil},
+		{
+			[]interface{}{"a", "b", "c"},
+			[]*string{&data[0], &data[1], &data[2]},
+		},
+	}
+	for _, test := range tests {
+		got := interfaceStringSlice(test.input)
+		if len(test.want) != len(got) {
+			t.Errorf("interfaceStringSlice(%v) returned len(%d), want len(%d)", test.input, len(got), len(test.want))
+		}
+		for j, v := range test.want {
+			if *v != *got[j] {
+				t.Errorf("interfaceStringSlice(%v) returned unexpected output", test.input)
+				break
+			}
+		}
+	}
+}
