@@ -3,6 +3,8 @@ package aws
 import (
 	"fmt"
 	"log"
+	"strconv"
+	"strings"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ssm"
@@ -67,11 +69,20 @@ func resourceAwsSsmParameterLabelCreate(d *schema.ResourceData, meta interface{}
 
 func resourceAwsSsmParameterLabelRead(d *schema.ResourceData, meta interface{}) error {
 	ssmconn := meta.(*AWSClient).ssmconn
-
 	log.Printf("[DEBUG] Reading SSM Parameter label: %s", d.Id())
 
+	parameterName, parameterVersion, err := decodeSSMParameterLevelID(d.Id())
+
+	if err != nil {
+		return err
+	}
+
+	parameterVersionInt, err := strconv.ParseInt(parameterVersion, 10, 64)
+	if err != nil {
+		return fmt.Errorf("Parameter version must be int64. Got: %s", parameterVersion)
+	}
 	result, err := ssmconn.GetParameterHistory(&ssm.GetParameterHistoryInput{
-		Name:           aws.String(d.Get("ssm_parameter_name").(string)),
+		Name:           aws.String(parameterName),
 		WithDecryption: aws.Bool(true),
 	})
 
@@ -88,7 +99,7 @@ func resourceAwsSsmParameterLabelRead(d *schema.ResourceData, meta interface{}) 
 	labels := make([]string, 0)
 	parameterVersionFound := false
 	for _, parameter := range result.Parameters {
-		if *parameter.Version == int64(d.Get("ssm_parameter_version").(int)) {
+		if *parameter.Version == parameterVersionInt {
 			parameterVersionFound = true
 			for _, label := range parameter.Labels {
 				labels = append(labels, *label)
@@ -101,7 +112,8 @@ func resourceAwsSsmParameterLabelRead(d *schema.ResourceData, meta interface{}) 
 		d.SetId("")
 		return nil
 	}
-
+	d.Set("ssm_parameter_name", parameterName)
+	d.Set("ssm_parameter_version", parameterVersion)
 	d.Set("labels", labels)
 
 	return nil
@@ -111,4 +123,12 @@ func resourceAwsSsmParameterLabelDelete(d *schema.ResourceData, meta interface{}
 	log.Printf("[INFO] Deleting SSM Parameter label: %s. The resource is just removed from the terraform state. SSM Parameter label cannot be deleted. They can only be moved.", d.Id())
 
 	return nil
+}
+
+func decodeSSMParameterLevelID(id string) (string, string, error) {
+	idParts := strings.Split(id, "|")
+	if len(idParts) != 2 {
+		return "", "", fmt.Errorf("expected ID in format SSMParameterName|SSMParameterVersion, received: %s", id)
+	}
+	return idParts[0], idParts[1], nil
 }
