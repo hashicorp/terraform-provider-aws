@@ -88,7 +88,7 @@ The following arguments are supported:
 `automation_parameters` supports the following:
 
 * `document_version` - (Optional) The version of an Automation document to use during task execution.
-* `parameters` - (Optional) The parameters for the RUN_COMMAND task execution. Documented below.
+* `parameter` - (Optional) The parameters for the RUN_COMMAND task execution. Documented below.
 
 `lambda_parameters` supports the following:
 
@@ -104,7 +104,7 @@ The following arguments are supported:
 * `notification_config` - (Optional) Configurations for sending notifications about command status changes on a per-instance basis. Documented below.
 * `output_s3_bucket` - (Optional) The name of the Amazon S3 bucket.
 * `output_s3_key_prefix` - (Optional) The Amazon S3 bucket subfolder.
-* `parameters` - (Optional) The parameters for the RUN_COMMAND task execution. Documented below.
+* `parameter` - (Optional) The parameters for the RUN_COMMAND task execution. Documented below.
 * `service_role_arn` - (Optional) The IAM service role to assume during task execution.
 * `timeout_seconds` - (Optional) If this time is reached and the command has not already started executing, it doesn't run.
 
@@ -119,7 +119,7 @@ The following arguments are supported:
 * `notification_events` - (Optional) The different events for which you can receive notifications.
 * `notification_type` - (Optional) Command: Receive notification when the status of a command changes. Invocation: For commands sent to multiple instances, receive notification on a per-instance basis when the status of a command changes.
 
-`parameters` supports the following:
+`parameter` supports the following:
 
 * `name` - (Required) The parameter name.
 * `values` - (Required) The array of strings.

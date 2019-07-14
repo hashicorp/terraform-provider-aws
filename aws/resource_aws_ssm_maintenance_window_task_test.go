@@ -559,11 +559,11 @@ resource "aws_ssm_maintenance_window_task" "target" {
   task_invocation_parameters {
     automation_parameters {
       document_version = "%[2]s"
-      parameters {
+      parameter {
         name = "InstanceId"
         values = ["${aws_instance.foo.id}"]
       }
-      parameters {
+      parameter {
         name = "NoReboot"
         values = ["false"]
       }
@@ -646,11 +646,11 @@ resource "aws_ssm_maintenance_window_task" "target" {
   task_invocation_parameters {
     automation_parameters {
       document_version = "%[2]s"
-      parameters {
+      parameter {
         name = "InstanceId"
         values = ["${aws_instance.foo.id}"]
       }
-      parameters {
+      parameter {
         name = "NoReboot"
         values = ["false"]
       }
@@ -823,7 +823,7 @@ resource "aws_ssm_maintenance_window_task" "target" {
       document_hash_type  = "Sha256"
       service_role_arn    = "${aws_iam_role.ssm_role.arn}"
       timeout_seconds     = %[3]d
-      parameters {
+      parameter {
         name = "commands"
         values = ["date"]
       }
@@ -912,7 +912,7 @@ resource "aws_ssm_maintenance_window_task" "target" {
       timeout_seconds      = %[3]d
       output_s3_bucket     = "${aws_s3_bucket.foo.id}"
       output_s3_key_prefix = "foo"
-      parameters {
+      parameter {
         name = "commands"
         values = ["date"]
       }

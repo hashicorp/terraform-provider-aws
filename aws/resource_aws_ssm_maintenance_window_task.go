@@ -154,8 +154,8 @@ func resourceAwsSsmMaintenanceWindowTask() *schema.Resource {
 										Optional:     true,
 										ValidateFunc: validation.StringMatch(regexp.MustCompile("([$]LATEST|[$]DEFAULT|^[1-9][0-9]*$)"), "see https://docs.aws.amazon.com/systems-manager/latest/APIReference/API_MaintenanceWindowAutomationParameters.html"),
 									},
-									"parameters": {
-										Type:     schema.TypeList,
+									"parameter": {
+										Type:     schema.TypeSet,
 										Optional: true,
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
@@ -163,6 +163,7 @@ func resourceAwsSsmMaintenanceWindowTask() *schema.Resource {
 													Type:     schema.TypeString,
 													Required: true,
 												},
+
 												"values": {
 													Type:     schema.TypeList,
 													Required: true,
@@ -267,8 +268,8 @@ func resourceAwsSsmMaintenanceWindowTask() *schema.Resource {
 										Optional: true,
 									},
 
-									"parameters": {
-										Type:     schema.TypeList,
+									"parameter": {
+										Type:     schema.TypeSet,
 										Optional: true,
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
@@ -276,6 +277,7 @@ func resourceAwsSsmMaintenanceWindowTask() *schema.Resource {
 													Type:     schema.TypeString,
 													Required: true,
 												},
+
 												"values": {
 													Type:     schema.TypeList,
 													Required: true,
@@ -426,8 +428,8 @@ func expandAwsSsmTaskInvocationAutomationParameters(config []interface{}) *ssm.M
 	if attr, ok := configParam["document_version"]; ok && len(attr.(string)) != 0 {
 		params.DocumentVersion = aws.String(attr.(string))
 	}
-	if attr, ok := configParam["parameters"]; ok && len(attr.([]interface{})) > 0 {
-		params.Parameters = expandAwsSsmTaskInvocationCommonParameters(attr.([]interface{}))
+	if attr, ok := configParam["parameter"]; ok && len(attr.(*schema.Set).List()) > 0 {
+		params.Parameters = expandAwsSsmTaskInvocationCommonParameters(attr.(*schema.Set).List())
 	}
 
 	return params
@@ -440,7 +442,7 @@ func flattenAwsSsmTaskInvocationAutomationParameters(parameters *ssm.Maintenance
 		result["document_version"] = aws.StringValue(parameters.DocumentVersion)
 	}
 	if parameters.Parameters != nil {
-		result["parameters"] = flattenAwsSsmTaskInvocationCommonParameters(parameters.Parameters)
+		result["parameter"] = flattenAwsSsmTaskInvocationCommonParameters(parameters.Parameters)
 	}
 
 	return []interface{}{result}
@@ -497,8 +499,8 @@ func expandAwsSsmTaskInvocationRunCommandParameters(config []interface{}) *ssm.M
 	if attr, ok := configParam["output_s3_key_prefix"]; ok && len(attr.(string)) != 0 {
 		params.OutputS3KeyPrefix = aws.String(attr.(string))
 	}
-	if attr, ok := configParam["parameters"]; ok && len(attr.([]interface{})) > 0 {
-		params.Parameters = expandAwsSsmTaskInvocationCommonParameters(attr.([]interface{}))
+	if attr, ok := configParam["parameter"]; ok && len(attr.(*schema.Set).List()) > 0 {
+		params.Parameters = expandAwsSsmTaskInvocationCommonParameters(attr.(*schema.Set).List())
 	}
 	if attr, ok := configParam["service_role_arn"]; ok && len(attr.(string)) != 0 {
 		params.ServiceRoleArn = aws.String(attr.(string))
@@ -531,7 +533,7 @@ func flattenAwsSsmTaskInvocationRunCommandParameters(parameters *ssm.Maintenance
 		result["output_s3_key_prefix"] = aws.StringValue(parameters.OutputS3KeyPrefix)
 	}
 	if parameters.Parameters != nil {
-		result["parameters"] = flattenAwsSsmTaskInvocationCommonParameters(parameters.Parameters)
+		result["parameter"] = flattenAwsSsmTaskInvocationCommonParameters(parameters.Parameters)
 	}
 	if parameters.ServiceRoleArn != nil {
 		result["service_role_arn"] = aws.StringValue(parameters.ServiceRoleArn)
@@ -614,7 +616,7 @@ func expandAwsSsmTaskInvocationCommonParameters(config []interface{}) map[string
 }
 
 func flattenAwsSsmTaskInvocationCommonParameters(parameters map[string][]*string) []interface{} {
-	result := make([]interface{}, 0, len(parameters))
+	attributes := make([]interface{}, 0, len(parameters))
 
 	keys := make([]string, 0, len(parameters))
 	for k := range parameters {
@@ -631,10 +633,10 @@ func flattenAwsSsmTaskInvocationCommonParameters(parameters map[string][]*string
 			"name":   key,
 			"values": values,
 		}
-		result = append(result, params)
+		attributes = append(attributes, params)
 	}
 
-	return result
+	return attributes
 }
 
 func resourceAwsSsmMaintenanceWindowTaskCreate(d *schema.ResourceData, meta interface{}) error {
