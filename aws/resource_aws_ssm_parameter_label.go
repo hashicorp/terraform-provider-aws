@@ -13,6 +13,7 @@ func resourceAwsSsmParameterLabel() *schema.Resource {
 	return &schema.Resource{
 		Create: resourceAwsSsmParameterLabelCreate,
 		Read:   resourceAwsSsmParameterLabelRead,
+		Delete: resourceAwsSsmParameterLabelDelete,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -29,10 +30,12 @@ func resourceAwsSsmParameterLabel() *schema.Resource {
 			},
 			"ssm_parameter_name": {
 				Type:     schema.TypeString,
+				ForceNew: true,
 				Required: true,
 			},
 			"ssm_parameter_version": {
 				Type:     schema.TypeInt,
+				ForceNew: true,
 				Required: true,
 			},
 		},
@@ -44,7 +47,7 @@ func resourceAwsSsmParameterLabelCreate(d *schema.ResourceData, meta interface{}
 	req := &ssm.LabelParameterVersionInput{
 		Labels:           expandStringList(d.Get("labels").([]interface{})),
 		Name:             aws.String(d.Get("ssm_parameter_name").(string)),
-		ParameterVersion: aws.Int64(d.Get("ssm_parameter_version").(int64)),
+		ParameterVersion: aws.Int64(int64(d.Get("ssm_parameter_version").(int))),
 	}
 
 	log.Printf("[DEBUG] Labeling Ssm Parameter version: %#v", req)
@@ -53,14 +56,13 @@ func resourceAwsSsmParameterLabelCreate(d *schema.ResourceData, meta interface{}
 		return fmt.Errorf("error labeling Ssm Parameter version: %s", err)
 	}
 
-	d.SetId(fmt.Sprintf("%s|%s", d.Get("ssm_parameter_name").(string), d.Get("ssm_parameter_version").(string)))
+	d.SetId(fmt.Sprintf("%s|%d", d.Get("ssm_parameter_name").(string), d.Get("ssm_parameter_version").(int)))
 
 	if len(output.InvalidLabels) > 0 {
 		log.Printf("[WARN] Some lavels were invalid: %v", output.InvalidLabels)
 	}
 
-	return nil
-
+	return resourceAwsSsmParameterLabelRead(d, meta)
 }
 
 func resourceAwsSsmParameterLabelRead(d *schema.ResourceData, meta interface{}) error {
@@ -86,7 +88,7 @@ func resourceAwsSsmParameterLabelRead(d *schema.ResourceData, meta interface{}) 
 	labels := make([]string, 0)
 	parameterVersionFound := false
 	for _, parameter := range result.Parameters {
-		if *parameter.Version == d.Get("ssm_parameter_version").(int64) {
+		if *parameter.Version == int64(d.Get("ssm_parameter_version").(int)) {
 			parameterVersionFound = true
 			for _, label := range parameter.Labels {
 				labels = append(labels, *label)
@@ -101,6 +103,12 @@ func resourceAwsSsmParameterLabelRead(d *schema.ResourceData, meta interface{}) 
 	}
 
 	d.Set("labels", labels)
+
+	return nil
+}
+
+func resourceAwsSsmParameterLabelDelete(d *schema.ResourceData, meta interface{}) error {
+	log.Printf("[INFO] Deleting SSM Parameter label: %s. The resource is just removed from the terraform state. SSM Parameter label cannot be deleted. They can only be moved.", d.Id())
 
 	return nil
 }
