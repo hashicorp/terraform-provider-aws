@@ -156,7 +156,7 @@ func TestAccAWSSSMMaintenanceWindowTask_TaskInvocationLambdaParameters(t *testin
 func TestAccAWSSSMMaintenanceWindowTask_TaskInvocationRunCommandParameters(t *testing.T) {
 	var task ssm.MaintenanceWindowTask
 	resourceName := "aws_ssm_maintenance_window_task.target"
-	serviceRoleResourceName := "aws_iam_role.ssm_role"
+	serviceRoleResourceName := "aws_iam_role.test"
 	s3BucketResourceName := "aws_s3_bucket.foo"
 
 	name := acctest.RandString(10)
@@ -312,66 +312,44 @@ func testAccAWSSSMMaintenanceWindowTaskImportStateIdFunc(resourceName string) re
 	}
 }
 
-func testAccAWSSSMMaintenanceWindowTaskBasicConfig(rName string) string {
+func testAccAWSSSMMaintenanceWindowTaskConfigBase(rName string) string {
 	return fmt.Sprintf(`
-resource "aws_ssm_maintenance_window" "foo" {
-  name  = "maintenance-window-%[1]s"
-  schedule = "cron(0 16 ? * TUE *)"
-  duration = 3
+resource "aws_ssm_maintenance_window" "test" {
   cutoff   = 1
+  duration = 3
+  name     = %[1]q
+  schedule = "cron(0 16 ? * TUE *)"
 }
 
-resource "aws_ssm_maintenance_window_task" "target" {
-  window_id   = "${aws_ssm_maintenance_window.foo.id}"
-  task_type   = "RUN_COMMAND"
-  task_arn    = "AWS-RunShellScript"
-  priority    = 1
-  service_role_arn = "${aws_iam_role.ssm_role.arn}"
-  max_concurrency  = "2"
-  max_errors  = "1"
-
-  targets {
-    key    = "InstanceIds"
-    values = ["${aws_instance.foo.id}"]
-  }
-
-  task_parameters {
-    name   = "commands"
-    values = ["pwd"]
-  }
-}
-
-resource "aws_instance" "foo" {
+resource "aws_instance" "test" {
   ami = "ami-4fccb37f"
 
   instance_type = "m1.small"
 }
 
-resource "aws_iam_role" "ssm_role" {
-  name = "ssm-role-%[1]s"
-
+resource "aws_iam_role" "test" {
+  name = %[1]q
   assume_role_policy = <<POLICY
 {
     "Version": "2012-10-17",
     "Statement": [
-   {
-     "Action": "sts:AssumeRole",
-     "Principal": {
-      "Service": "events.amazonaws.com"
-     },
-     "Effect": "Allow",
-     "Sid": ""
-   }
+        {
+            "Action": "sts:AssumeRole",
+            "Principal": {
+                "Service": "events.amazonaws.com"
+            },
+            "Effect": "Allow",
+            "Sid": ""
+        }
     ]
 }
 POLICY
 }
 
-resource "aws_iam_role_policy" "bar" {
-  name = "ssm_role_policy_%[1]s"
-  role = "${aws_iam_role.ssm_role.name}"
-
-  policy = <<EOF
+resource "aws_iam_role_policy" "test" {
+  name = %[1]q
+  role = "${aws_iam_role.test.name}"
+  policy = <<POLICY
 {
   "Version": "2012-10-17",
   "Statement": {
@@ -380,22 +358,42 @@ resource "aws_iam_role_policy" "bar" {
     "Resource": "*"
   }
 }
-EOF
+POLICY
 }
 `, rName)
 }
 
-func testAccAWSSSMMaintenanceWindowTaskBasicConfigUpdate(rName, description, taskType, taskArn string, priority, maxConcurrency, maxErrors int) string {
-	return fmt.Sprintf(`
-resource "aws_ssm_maintenance_window" "foo" {
-  name  = "maintenance-window-%[1]s"
-  schedule = "cron(0 16 ? * TUE *)"
-  duration = 3
-  cutoff   = 1
-}
+func testAccAWSSSMMaintenanceWindowTaskBasicConfig(rName string) string {
+	return fmt.Sprintf(testAccAWSSSMMaintenanceWindowTaskConfigBase(rName) + `
 
 resource "aws_ssm_maintenance_window_task" "target" {
-  window_id   = "${aws_ssm_maintenance_window.foo.id}"
+  window_id   = "${aws_ssm_maintenance_window.test.id}"
+  task_type   = "RUN_COMMAND"
+  task_arn    = "AWS-RunShellScript"
+  priority    = 1
+  service_role_arn = "${aws_iam_role.test.arn}"
+  max_concurrency  = "2"
+  max_errors  = "1"
+
+  targets {
+    key    = "InstanceIds"
+    values = ["${aws_instance.test.id}"]
+  }
+
+  task_parameters {
+    name   = "commands"
+    values = ["pwd"]
+  }
+}
+
+`)
+}
+
+func testAccAWSSSMMaintenanceWindowTaskBasicConfigUpdate(rName, description, taskType, taskArn string, priority, maxConcurrency, maxErrors int) string {
+	return fmt.Sprintf(testAccAWSSSMMaintenanceWindowTaskConfigBase(rName)+`
+
+resource "aws_ssm_maintenance_window_task" "target" {
+  window_id   = "${aws_ssm_maintenance_window.test.id}"
   task_type   = "%[2]s"
   task_arn    = "%[3]s"
   name        = "maintenance-window-task-%[1]s"
@@ -407,19 +405,13 @@ resource "aws_ssm_maintenance_window_task" "target" {
 
   targets {
     key    = "InstanceIds"
-    values = ["${aws_instance.bar.id}"]
+    values = ["${aws_instance.test.id}"]
   }
 
   task_parameters {
     name   = "commands"
     values = ["pwd"]
   }
-}
-
-resource "aws_instance" "bar" {
-  ami = "ami-4fccb37f"
-
-  instance_type = "m1.small"
 }
 
 resource "aws_iam_role" "ssm_role_update" {
@@ -461,28 +453,22 @@ EOF
 }
 
 func testAccAWSSSMMaintenanceWindowTaskBasicConfigUpdated(rName string) string {
-	return fmt.Sprintf(`
-resource "aws_ssm_maintenance_window" "foo" {
-  name  = "maintenance-window-%[1]s"
-  schedule = "cron(0 16 ? * TUE *)"
-  duration = 3
-  cutoff   = 1
-}
+	return fmt.Sprintf(testAccAWSSSMMaintenanceWindowTaskConfigBase(rName) + `
 
 resource "aws_ssm_maintenance_window_task" "target" {
-  window_id   = "${aws_ssm_maintenance_window.foo.id}"
+  window_id   = "${aws_ssm_maintenance_window.test.id}"
   task_type   = "RUN_COMMAND"
   task_arn    = "AWS-RunShellScript"
   priority    = 1
   name      = "TestMaintenanceWindowTask"
   description    = "This resource is for test purpose only"
-  service_role_arn = "${aws_iam_role.ssm_role.arn}"
+  service_role_arn = "${aws_iam_role.test.arn}"
   max_concurrency  = "2"
   max_errors  = "1"
 
   targets {
     key    = "InstanceIds"
-    values = ["${aws_instance.foo.id}"]
+    values = ["${aws_instance.test.id}"]
   }
 
   task_parameters {
@@ -491,77 +477,30 @@ resource "aws_ssm_maintenance_window_task" "target" {
   }
 }
 
-resource "aws_instance" "foo" {
-  ami = "ami-4fccb37f"
-
-  instance_type = "m1.small"
-}
-
-resource "aws_iam_role" "ssm_role" {
-  name = "ssm-role-%[1]s"
-
-  assume_role_policy = <<POLICY
-{
-    "Version": "2012-10-17",
-    "Statement": [
-   {
-     "Action": "sts:AssumeRole",
-     "Principal": {
-      "Service": "events.amazonaws.com"
-     },
-     "Effect": "Allow",
-     "Sid": ""
-   }
-    ]
-}
-POLICY
-}
-
-resource "aws_iam_role_policy" "bar" {
-  name = "ssm_role_policy_%[1]s"
-  role = "${aws_iam_role.ssm_role.name}"
-
-  policy = <<EOF
-{
-  "Version": "2012-10-17",
-  "Statement": {
-    "Effect": "Allow",
-    "Action": "ssm:*",
-    "Resource": "*"
-  }
-}
-EOF
-}
-`, rName)
+`)
 }
 
 func testAccAWSSSMMaintenanceWindowTaskAutomationConfig(rName, version string) string {
-	return fmt.Sprintf(`
-resource "aws_ssm_maintenance_window" "foo" {
-  name = "maintenance-window-%[1]s"
-  schedule = "cron(0 16 ? * TUE *)"
-  duration = 3
-  cutoff = 1
-}
+	return fmt.Sprintf(testAccAWSSSMMaintenanceWindowTaskConfigBase(rName)+`
 
 resource "aws_ssm_maintenance_window_task" "target" {
-  window_id = "${aws_ssm_maintenance_window.foo.id}"
+  window_id = "${aws_ssm_maintenance_window.test.id}"
   task_type = "AUTOMATION"
   task_arn = "AWS-CreateImage"
   priority = 1
-  service_role_arn = "${aws_iam_role.ssm_role.arn}"
+  service_role_arn = "${aws_iam_role.test.arn}"
   max_concurrency = "2"
   max_errors = "1"
   targets {
     key = "InstanceIds"
-    values = ["${aws_instance.foo.id}"]
+    values = ["${aws_instance.test.id}"]
   }
   task_invocation_parameters {
     automation_parameters {
       document_version = "%[2]s"
       parameter {
         name = "InstanceId"
-        values = ["${aws_instance.foo.id}"]
+        values = ["${aws_instance.test.id}"]
       }
       parameter {
         name = "NoReboot"
@@ -569,86 +508,37 @@ resource "aws_ssm_maintenance_window_task" "target" {
       }
     }
   }
-}
-
-resource "aws_instance" "foo" {
-  ami = "ami-4fccb37f"
-
-  instance_type = "m1.small"
-}
-
-resource "aws_iam_role" "ssm_role" {
-  name = "ssm-role-%[1]s"
-
-  assume_role_policy = <<POLICY
-{
-    "Version": "2012-10-17",
-    "Statement": [
-   {
-     "Action": "sts:AssumeRole",
-     "Principal": {
-      "Service": "events.amazonaws.com"
-     },
-     "Effect": "Allow",
-     "Sid": ""
-   }
-    ]
-}
-POLICY
-}
-
-resource "aws_iam_role_policy" "bar" {
-  name = "ssm_role_policy_%[1]s"
-  role = "${aws_iam_role.ssm_role.name}"
-
-  policy = <<EOF
-{
-  "Version": "2012-10-17",
-  "Statement": {
-    "Effect": "Allow",
-    "Action": "ssm:*",
-    "Resource": "*"
-  }
-}
-EOF
 }
 
 `, rName, version)
 }
 
 func testAccAWSSSMMaintenanceWindowTaskAutomationConfigUpdate(rName, version string) string {
-	return fmt.Sprintf(`
+	return fmt.Sprintf(testAccAWSSSMMaintenanceWindowTaskConfigBase(rName)+`
 resource "aws_s3_bucket" "foo" {
     bucket = "tf-s3-%[1]s"
     acl = "private"
     force_destroy = true
 }
 
-resource "aws_ssm_maintenance_window" "foo" {
-  name = "maintenance-window-%[1]s"
-  schedule = "cron(0 16 ? * TUE *)"
-  duration = 3
-  cutoff = 1
-}
-
 resource "aws_ssm_maintenance_window_task" "target" {
-  window_id = "${aws_ssm_maintenance_window.foo.id}"
+  window_id = "${aws_ssm_maintenance_window.test.id}"
   task_type = "AUTOMATION"
   task_arn = "AWS-CreateImage"
   priority = 1
-  service_role_arn = "${aws_iam_role.ssm_role.arn}"
+  service_role_arn = "${aws_iam_role.test.arn}"
   max_concurrency = "2"
   max_errors = "1"
   targets {
     key = "InstanceIds"
-    values = ["${aws_instance.foo.id}"]
+    values = ["${aws_instance.test.id}"]
   }
   task_invocation_parameters {
     automation_parameters {
       document_version = "%[2]s"
       parameter {
         name = "InstanceId"
-        values = ["${aws_instance.foo.id}"]
+        values = ["${aws_instance.test.id}"]
       }
       parameter {
         name = "NoReboot"
@@ -657,72 +547,24 @@ resource "aws_ssm_maintenance_window_task" "target" {
     }
   }
 }
-
-resource "aws_instance" "foo" {
-  ami = "ami-4fccb37f"
-
-  instance_type = "m1.small"
-}
-
-resource "aws_iam_role" "ssm_role" {
-  name = "ssm-role-%[1]s"
-
-  assume_role_policy = <<POLICY
-{
-    "Version": "2012-10-17",
-    "Statement": [
-   {
-     "Action": "sts:AssumeRole",
-     "Principal": {
-      "Service": "events.amazonaws.com"
-     },
-     "Effect": "Allow",
-     "Sid": ""
-   }
-    ]
-}
-POLICY
-}
-
-resource "aws_iam_role_policy" "bar" {
-  name = "ssm_role_policy_%[1]s"
-  role = "${aws_iam_role.ssm_role.name}"
-
-  policy = <<EOF
-{
-  "Version": "2012-10-17",
-  "Statement": {
-    "Effect": "Allow",
-    "Action": "ssm:*",
-    "Resource": "*"
-  }
-}
-EOF
-}
-
 `, rName, version)
 }
 
 func testAccAWSSSMMaintenanceWindowTaskLambdaConfig(funcName, policyName, roleName, sgName, rName string, rInt int) string {
-	return fmt.Sprintf(testAccAWSLambdaConfigBasic(funcName, policyName, roleName, sgName)+`
-resource "aws_ssm_maintenance_window" "foo" {
-  name = "maintenance-window-%[1]s"
-  schedule = "cron(0 16 ? * TUE *)"
-  duration = 3
-  cutoff = 1
-}
+	return fmt.Sprintf(testAccAWSLambdaConfigBasic(funcName, policyName, roleName, sgName)+
+		testAccAWSSSMMaintenanceWindowTaskConfigBase(rName)+`
 
 resource "aws_ssm_maintenance_window_task" "target" {
-  window_id = "${aws_ssm_maintenance_window.foo.id}"
+  window_id = "${aws_ssm_maintenance_window.test.id}"
   task_type = "LAMBDA"
   task_arn = "${aws_lambda_function.lambda_function_test.arn}"
   priority = 1
-  service_role_arn = "${aws_iam_role.ssm_role.arn}"
+  service_role_arn = "${aws_iam_role.test.arn}"
   max_concurrency = "2"
   max_errors = "1"
   targets {
     key = "InstanceIds"
-    values = ["${aws_instance.foo.id}"]
+    values = ["${aws_instance.test.id}"]
   }
   task_invocation_parameters {
     lambda_parameters {
@@ -730,48 +572,6 @@ resource "aws_ssm_maintenance_window_task" "target" {
       payload = "${data.template_file.payload.rendered}"
     }
   }
-}
-
-resource "aws_instance" "foo" {
-  ami = "ami-4fccb37f"
-
-  instance_type = "m1.small"
-}
-
-resource "aws_iam_role" "ssm_role" {
-  name = "ssm-role-%[1]s"
-
-  assume_role_policy = <<POLICY
-{
-    "Version": "2012-10-17",
-    "Statement": [
-   {
-     "Action": "sts:AssumeRole",
-     "Principal": {
-      "Service": "events.amazonaws.com"
-     },
-     "Effect": "Allow",
-     "Sid": ""
-   }
-    ]
-}
-POLICY
-}
-
-resource "aws_iam_role_policy" "bar" {
-  name = "ssm_role_policy_%[1]s"
-  role = "${aws_iam_role.ssm_role.name}"
-
-  policy = <<EOF
-{
-  "Version": "2012-10-17",
-  "Statement": {
-    "Effect": "Allow",
-    "Action": "ssm:*",
-    "Resource": "*"
-  }
-}
-EOF
 }
 
 data "template_file" "client_context" {
@@ -796,32 +596,26 @@ EOF
 }
 
 func testAccAWSSSMMaintenanceWindowTaskRunCommandConfig(rName, comment string, timeoutSeconds int) string {
-	return fmt.Sprintf(`
-resource "aws_ssm_maintenance_window" "foo" {
-  name = "maintenance-window-%[1]s"
-  schedule = "cron(0 16 ? * TUE *)"
-  duration = 3
-  cutoff = 1
-}
+	return fmt.Sprintf(testAccAWSSSMMaintenanceWindowTaskConfigBase(rName)+`
 
 resource "aws_ssm_maintenance_window_task" "target" {
-  window_id = "${aws_ssm_maintenance_window.foo.id}"
+  window_id = "${aws_ssm_maintenance_window.test.id}"
   task_type = "RUN_COMMAND"
   task_arn = "AWS-RunShellScript"
   priority = 1
-  service_role_arn = "${aws_iam_role.ssm_role.arn}"
+  service_role_arn = "${aws_iam_role.test.arn}"
   max_concurrency = "2"
   max_errors = "1"
   targets {
     key = "InstanceIds"
-    values = ["${aws_instance.foo.id}"]
+    values = ["${aws_instance.test.id}"]
   }
   task_invocation_parameters {
     run_command_parameters {
       comment             = "%[2]s"
       document_hash       = "${sha256("COMMAND")}"
       document_hash_type  = "Sha256"
-      service_role_arn    = "${aws_iam_role.ssm_role.arn}"
+      service_role_arn    = "${aws_iam_role.test.arn}"
       timeout_seconds     = %[3]d
       parameter {
         name = "commands"
@@ -831,84 +625,35 @@ resource "aws_ssm_maintenance_window_task" "target" {
   }
 }
 
-resource "aws_instance" "foo" {
-  ami = "ami-4fccb37f"
-
-  instance_type = "m1.small"
-}
-
-resource "aws_iam_role" "ssm_role" {
-  name = "ssm-role-%[1]s"
-
-  assume_role_policy = <<POLICY
-{
-    "Version": "2012-10-17",
-    "Statement": [
-   {
-     "Action": "sts:AssumeRole",
-     "Principal": {
-      "Service": "events.amazonaws.com"
-     },
-     "Effect": "Allow",
-     "Sid": ""
-   }
-    ]
-}
-POLICY
-}
-
-resource "aws_iam_role_policy" "bar" {
-  name = "ssm_role_policy_%[1]s"
-  role = "${aws_iam_role.ssm_role.name}"
-
-  policy = <<EOF
-{
-  "Version": "2012-10-17",
-  "Statement": {
-    "Effect": "Allow",
-    "Action": "ssm:*",
-    "Resource": "*"
-  }
-}
-EOF
-}
-
 `, rName, comment, timeoutSeconds)
 }
 
 func testAccAWSSSMMaintenanceWindowTaskRunCommandConfigUpdate(rName, comment string, timeoutSeconds int) string {
-	return fmt.Sprintf(`
+	return fmt.Sprintf(testAccAWSSSMMaintenanceWindowTaskConfigBase(rName)+`
 resource "aws_s3_bucket" "foo" {
     bucket = "tf-s3-%[1]s"
     acl = "private"
     force_destroy = true
 }
 
-resource "aws_ssm_maintenance_window" "foo" {
-  name = "maintenance-window-%[1]s"
-  schedule = "cron(0 16 ? * TUE *)"
-  duration = 3
-  cutoff = 1
-}
-
 resource "aws_ssm_maintenance_window_task" "target" {
-  window_id = "${aws_ssm_maintenance_window.foo.id}"
+  window_id = "${aws_ssm_maintenance_window.test.id}"
   task_type = "RUN_COMMAND"
   task_arn = "AWS-RunShellScript"
   priority = 1
-  service_role_arn = "${aws_iam_role.ssm_role.arn}"
+  service_role_arn = "${aws_iam_role.test.arn}"
   max_concurrency = "2"
   max_errors = "1"
   targets {
     key = "InstanceIds"
-    values = ["${aws_instance.foo.id}"]
+    values = ["${aws_instance.test.id}"]
   }
   task_invocation_parameters {
     run_command_parameters {
     comment                = "%[2]s"
       document_hash        = "${sha256("COMMAND")}"
       document_hash_type   = "Sha256"
-      service_role_arn     = "${aws_iam_role.ssm_role.arn}"
+      service_role_arn     = "${aws_iam_role.test.arn}"
       timeout_seconds      = %[3]d
       output_s3_bucket     = "${aws_s3_bucket.foo.id}"
       output_s3_key_prefix = "foo"
@@ -920,71 +665,25 @@ resource "aws_ssm_maintenance_window_task" "target" {
   }
 }
 
-resource "aws_instance" "foo" {
-  ami = "ami-4fccb37f"
-
-  instance_type = "m1.small"
-}
-
-resource "aws_iam_role" "ssm_role" {
-  name = "ssm-role-%[1]s"
-
-  assume_role_policy = <<POLICY
-{
-    "Version": "2012-10-17",
-    "Statement": [
-   {
-     "Action": "sts:AssumeRole",
-     "Principal": {
-      "Service": "events.amazonaws.com"
-     },
-     "Effect": "Allow",
-     "Sid": ""
-   }
-    ]
-}
-POLICY
-}
-
-resource "aws_iam_role_policy" "bar" {
-  name = "ssm_role_policy_%[1]s"
-  role = "${aws_iam_role.ssm_role.name}"
-
-  policy = <<EOF
-{
-  "Version": "2012-10-17",
-  "Statement": {
-    "Effect": "Allow",
-    "Action": "ssm:*",
-    "Resource": "*"
-  }
-}
-EOF
-}
 
 `, rName, comment, timeoutSeconds)
 }
 
 func testAccAWSSSMMaintenanceWindowTaskStepFunctionConfig(rName string) string {
-	return fmt.Sprintf(testAccAWSSfnActivityBasicConfig(rName)+`
-resource "aws_ssm_maintenance_window" "foo" {
-  name = "maintenance-window-%[1]s"
-  schedule = "cron(0 16 ? * TUE *)"
-  duration = 3
-  cutoff = 1
-}
+	return fmt.Sprintf(testAccAWSSfnActivityBasicConfig(rName)+
+		testAccAWSSSMMaintenanceWindowTaskConfigBase(rName)+`
 
 resource "aws_ssm_maintenance_window_task" "target" {
-  window_id = "${aws_ssm_maintenance_window.foo.id}"
+  window_id = "${aws_ssm_maintenance_window.test.id}"
   task_type = "STEP_FUNCTIONS"
   task_arn = "${aws_sfn_activity.foo.id}"
   priority = 1
-  service_role_arn = "${aws_iam_role.ssm_role.arn}"
+  service_role_arn = "${aws_iam_role.test.arn}"
   max_concurrency = "2"
   max_errors = "1"
   targets {
     key = "InstanceIds"
-    values = ["${aws_instance.foo.id}"]
+    values = ["${aws_instance.test.id}"]
   }
   task_invocation_parameters {
     step_functions_parameters {
@@ -992,48 +691,6 @@ resource "aws_ssm_maintenance_window_task" "target" {
       name = "tf-step-function-%[1]s"
     }
   }
-}
-
-resource "aws_instance" "foo" {
-  ami = "ami-4fccb37f"
-
-  instance_type = "m1.small"
-}
-
-resource "aws_iam_role" "ssm_role" {
-  name = "ssm-role-%[1]s"
-
-  assume_role_policy = <<POLICY
-{
-    "Version": "2012-10-17",
-    "Statement": [
-     {
-       "Action": "sts:AssumeRole",
-       "Principal": {
-         "Service": "events.amazonaws.com"
-      },
-      "Effect": "Allow",
-      "Sid": ""
-     }
-    ]
-}
-POLICY
-}
-
-resource "aws_iam_role_policy" "bar" {
-  name = "ssm_role_policy_%[1]s"
-  role = "${aws_iam_role.ssm_role.name}"
-
-  policy = <<EOF
-{
-  "Version": "2012-10-17",
-  "Statement": {
-    "Effect": "Allow",
-    "Action": "ssm:*",
-    "Resource": "*"
-  }
-}
-EOF
 }
 
 data "template_file" "input" {
