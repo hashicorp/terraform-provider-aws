@@ -62,6 +62,7 @@ In addition to all arguments above, the following attributes are exported:
 * `id` - The ID of the Route 53 Resolver endpoint.
 * `arn` - The ARN of the Route 53 Resolver endpoint.
 * `host_vpc_id` - The ID of the VPC that you want to create the resolver endpoint in.
+* `ip_address` - Map containing IP addresses and subnets for the resolver.
 
 ## Timeouts
 
