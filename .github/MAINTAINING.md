@@ -24,7 +24,7 @@ Notes for each type of pull request are (or will be) available in subsections be
 - If the change is not acceptable, leave a long form comment about the reasoning and close the pull request
 - If the change is acceptable with modifications, leave a pull request review marked using the `Request Changes` option (for maintainer pull requests with minor modification requests, giving feedback with the `Approve` option is recommended so they do not need to wait for another round of review)
 - If the author is unresponsive for changes (by default we give two weeks), determine importance and level of effort to finish the pull request yourself including their commits or close the pull request
-- Run relevant acceptance testing (locally or in TeamCity) and ensure no new failures are being introduced
+- Run relevant acceptance testing ([locally](https://github.com/terraform-providers/terraform-provider-aws/blob/master/.github/CONTRIBUTING.md#running-an-acceptance-test) or in TeamCity) against AWS Commercial and AWS GovCloud (US) to ensure no new failures are being introduced
 - Approve the pull request with a comment outlining what steps you took that ensure the change is acceptable, e.g. acceptance testing output
 
 ``````markdown
