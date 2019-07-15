@@ -9,97 +9,92 @@ import (
 	"github.com/hashicorp/terraform/helper/schema"
 )
 
-func resourceAwsTrafficMirroringFilterRule() *schema.Resource {
+func resourceAwsTrafficMirrorFilterRule() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsTrafficMirroringFilterRuleCreate,
-		Read: resourceAwsTrafficMirroringFilterRuleRead,
-		Delete: resourceAwsTrafficMirroringFilterRuleDelete,
+		Create: resourceAwsTrafficMirrorFilterRuleCreate,
+		Read:   resourceAwsTrafficMirrorFilterRuleRead,
+		Update: resourceAwsTrafficMirrorFilterRuleUpdate,
+		Delete: resourceAwsTrafficMirrorFilterRuleDelete,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
 		Schema: map[string]*schema.Schema{
 			"description": {
-				Type: schema.TypeString,
-				Required: false,
+				Type:     schema.TypeString,
+				Optional: true,
 				ForceNew: true,
 			},
 			"traffic_mirror_filter_id": {
-				Type: schema.TypeString,
+				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
 			},
 			"destination_cidr_block": {
-				Type:schema.TypeString,
-				Required:true,
-				ForceNew:true,
+				Type:         schema.TypeString,
+				Required:     true,
+				ForceNew:     true,
 				ValidateFunc: validateCIDRNetworkAddress,
 			},
 			"destination_port_range": {
-				Type:schema.TypeList,
-				Required: false,
-				ForceNew: true,
+				Type:     schema.TypeList,
+				Optional: true,
 				MaxItems: 1,
 				Elem: map[string]*schema.Schema{
 					"from_port": {
-						Type:schema.TypeInt,
-						Required:false,
-						ForceNew:true,
+						Type:     schema.TypeInt,
+						Optional: true,
 					},
 					"to_port": {
-						Type:schema.TypeInt,
-						Required:false,
-						ForceNew:true,
+						Type:     schema.TypeInt,
+						Optional: true,
 					},
 				},
 			},
 			"protocol": {
-				Type: schema.TypeInt,
-				Required: false,
+				Type:     schema.TypeInt,
+				Optional: true,
 				ForceNew: true,
 			},
 			"rule_action": {
-				Type:schema.TypeString,
-				Required:true,
-				ForceNew:true,
+				Type:     schema.TypeString,
+				Required: true,
+				ForceNew: true,
 				ValidateFunc: validation.StringInSlice([]string{
 					"accept",
 					"reject",
 				}, false),
 			},
 			"rule_number": {
-				Type:schema.TypeInt,
-				Required:true,
-				ForceNew:true,
+				Type:     schema.TypeInt,
+				Required: true,
+				ForceNew: true,
 			},
 			"source_cidr_block": {
-				Type:schema.TypeString,
-				Required:true,
-				ForceNew:true,
+				Type:         schema.TypeString,
+				Required:     true,
+				ForceNew:     true,
 				ValidateFunc: validateCIDRNetworkAddress,
 			},
 			"source_port_range": {
-				Type:schema.TypeList,
-				Required:false,
-				ForceNew:true,
+				Type:     schema.TypeList,
+				Optional: true,
 				MaxItems: 1,
 				Elem: map[string]*schema.Schema{
 					"from_port": {
-						Type:schema.TypeInt,
-						Required:false,
-						ForceNew:true,
+						Type:     schema.TypeInt,
+						Optional: true,
 					},
 					"to_port": {
-						Type:schema.TypeInt,
-						Required:false,
-						ForceNew:true,
+						Type:     schema.TypeInt,
+						Optional: true,
 					},
 				},
 			},
 			"traffic_direction": {
-				Type:schema.TypeString,
-				Required:true,
-				ForceNew:true,
-				ValidateFunc:validation.StringInSlice([]string{
+				Type:     schema.TypeString,
+				Required: true,
+				ForceNew: true,
+				ValidateFunc: validation.StringInSlice([]string{
 					"ingress",
 					"egress",
 				}, false),
@@ -108,18 +103,18 @@ func resourceAwsTrafficMirroringFilterRule() *schema.Resource {
 	}
 }
 
-func resourceAwsTrafficMirroringFilterRuleCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := d.(*AWSClient).ec2conn
+func resourceAwsTrafficMirrorFilterRuleCreate(d *schema.ResourceData, meta interface{}) error {
+	conn := meta.(*AWSClient).ec2conn
 
 	filterId := d.Get("traffic_mirror_filter_id")
 
 	input := &ec2.CreateTrafficMirrorFilterRuleInput{
 		TrafficMirrorFilterId: aws.String(filterId.(string)),
-		DestinationCidrBlock: aws.String(d.Get("destination_cidr_block").(string)),
-		SourceCidrBlock: aws.String(d.Get("source_cidr_block").(string)),
-		RuleAction:aws.String(d.Get("rule_action").(string)),
-		RuleNumber:aws.Int64(int64(d.Get("rule_number").(int))),
-		TrafficDirection:aws.String(d.Get("traffic_direction").(string)),
+		DestinationCidrBlock:  aws.String(d.Get("destination_cidr_block").(string)),
+		SourceCidrBlock:       aws.String(d.Get("source_cidr_block").(string)),
+		RuleAction:            aws.String(d.Get("rule_action").(string)),
+		RuleNumber:            aws.Int64(int64(d.Get("rule_number").(int))),
+		TrafficDirection:      aws.String(d.Get("traffic_direction").(string)),
 	}
 
 	if v, ok := d.GetOk("description"); ok {
@@ -138,16 +133,16 @@ func resourceAwsTrafficMirroringFilterRuleCreate(d *schema.ResourceData, meta in
 		return fmt.Errorf("Error creating traffic mirror filter rule for %v", filterId)
 	}
 
-	return resourceAwsTrafficMirroringFilterRuleRead(d, meta)
+	return resourceAwsTrafficMirrorFilterRuleRead(d, meta)
 }
 
-func resourceAwsTrafficMirroringFilterRuleRead(d *schema.ResourceData, meta interface{}) error  {
+func resourceAwsTrafficMirrorFilterRuleRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).ec2conn
 
 	ruleId := d.Id()
 	filterId := d.Get("traffic_mirror_filter_id").(string)
 
-	awsMutexKV.Lock(filterId);
+	awsMutexKV.Lock(filterId)
 	defer awsMutexKV.Unlock(filterId)
 
 	var filterIds []*string
@@ -188,12 +183,29 @@ func resourceAwsTrafficMirroringFilterRuleRead(d *schema.ResourceData, meta inte
 	return populateTrafficMirrorFilterRuleResource(d, rule)
 }
 
-func resourceAwsTrafficMirroringFilterRuleDelete(d *schema.ResourceData, meta interface{}) error  {
+func resourceAwsTrafficMirrorFilterRuleUpdate(d *schema.ResourceData, meta interface{}) error {
 
 	return nil
 }
 
-func buildTrafficMirrorPortRangeRequest(p []interface{}) (out *ec2.TrafficMirrorPortRangeRequest)  {
+func resourceAwsTrafficMirrorFilterRuleDelete(d *schema.ResourceData, meta interface{}) error {
+	conn := meta.(*AWSClient).ec2conn
+
+	ruleId := d.Id()
+	filterId := d.Get("traffic_mirror_filter_id")
+	input := &ec2.DeleteTrafficMirrorFilterRuleInput{
+		TrafficMirrorFilterRuleId: &ruleId,
+	}
+
+	_, err := conn.DeleteTrafficMirrorFilterRule(input)
+	if err != nil {
+		return fmt.Errorf("Error deleting traffic mirror filter rule %v (%v)", ruleId, filterId)
+	}
+
+	return nil
+}
+
+func buildTrafficMirrorPortRangeRequest(p []interface{}) (out *ec2.TrafficMirrorPortRangeRequest) {
 	portSchema := p[0].(map[string]interface{})
 
 	portRange := ec2.TrafficMirrorPortRangeRequest{}
@@ -210,7 +222,40 @@ func buildTrafficMirrorPortRangeRequest(p []interface{}) (out *ec2.TrafficMirror
 	return out
 }
 
-func populateTrafficMirrorFilterRuleResource(d *schema.ResourceData, filter *ec2.TrafficMirrorFilterRule) error {
-	d.SetId(rule.S)
+func populateTrafficMirrorFilterRuleResource(d *schema.ResourceData, rule *ec2.TrafficMirrorFilterRule) error {
+	d.SetId(*rule.TrafficMirrorFilterRuleId)
+	d.Set("traffic_mirror_filter_id", rule.TrafficMirrorFilterId)
+	d.Set("destination_cidr_range", rule.DestinationCidrBlock)
+	d.Set("source_cidr_block", rule.SourceCidrBlock)
+	d.Set("rule_action", rule.RuleAction)
+	d.Set("rule_number", rule.RuleNumber)
+	d.Set("traffic_direction", rule.TrafficDirection)
+
+	if rule.Description != nil {
+		d.Set("description", rule.Description)
+	}
+
+	if rule.Protocol != nil {
+		d.Set("protocol", rule.Protocol)
+	}
+
+	if rule.DestinationPortRange != nil {
+		d.Set("destination_port_range", buildTrafficMirrorFilterRulePortRangeSchema(rule.DestinationPortRange))
+	}
+
+	if rule.SourcePortRange != nil {
+		d.Set("source_port_range", buildTrafficMirrorFilterRulePortRangeSchema(rule.SourcePortRange))
+	}
+
 	return nil
+}
+
+func buildTrafficMirrorFilterRulePortRangeSchema(portRange *ec2.TrafficMirrorPortRange) interface{} {
+	var out [1]interface{}
+	elem := make(map[string]interface{})
+	elem["from_port"] = portRange.FromPort
+	elem["to_port"] = portRange.ToPort
+	out[0] = elem
+
+	return out
 }
