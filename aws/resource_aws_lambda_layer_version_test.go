@@ -345,7 +345,7 @@ resource "aws_lambda_layer_version" "lambda_layer_test" {
   filename   = "test-fixtures/lambdatest.zip"
   layer_name = "%s"
 
-  compatible_runtimes = ["nodejs8.10", "nodejs6.10"]
+  compatible_runtimes = ["nodejs8.10", "nodejs8.10"]
 }
 `, layerName)
 }
