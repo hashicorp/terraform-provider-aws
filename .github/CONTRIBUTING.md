@@ -15,9 +15,9 @@ ability to merge PRs and respond to issues.
 
 - [Issues](#issues)
     - [Issue Reporting Checklists](#issue-reporting-checklists)
-        - [Bug Reports](#bug-reports)
-        - [Feature Requests](#feature-requests)
-        - [Questions](#questions)
+        - [[Bug Reports](https://github.com/terraform-providers/terraform-provider-aws/issues/new?template=Bug_Report.md)](#bug-reportshttpsgithubcomterraform-providersterraform-provider-awsissuesnewtemplatebug_reportmd)
+        - [[Feature Requests](https://github.com/terraform-providers/terraform-provider-aws/issues/new?labels=enhancement&template=Feature_Request.md)](#feature-requestshttpsgithubcomterraform-providersterraform-provider-awsissuesnewlabelsenhancementtemplatefeature_requestmd)
+        - [[Questions](https://github.com/terraform-providers/terraform-provider-aws/issues/new?labels=question&template=Question.md)](#questionshttpsgithubcomterraform-providersterraform-provider-awsissuesnewlabelsquestiontemplatequestionmd)
     - [Issue Lifecycle](#issue-lifecycle)
 - [Pull Requests](#pull-requests)
     - [Pull Request Lifecycle](#pull-request-lifecycle)
@@ -202,179 +202,15 @@ guidelines.
 
 #### Adding Resource Import Support
 
-Adding import support for Terraform resources will allow existing
-infrastructure to be managed within Terraform. This type of enhancement
-generally requires a small to moderate amount of code changes.
+Adding import support for Terraform resources will allow existing infrastructure to be managed within Terraform. This type of enhancement generally requires a small to moderate amount of code changes.
 
-##### Required Import Support Items
+Comprehensive code examples and information about resource import support can be found in the [Extending Terraform documentation](https://www.terraform.io/docs/extend/resources/import.html).
 
-In addition to the below checklist, please see the [Common Review
-Items](#common-review-items) sections for more specific coding and testing
-guidelines.
+In addition to the below checklist and the items noted in the Extending Terraform documentation, please see the [Common Review Items](#common-review-items) sections for more specific coding and testing guidelines.
 
-- [ ] _Resource Code Implementation_: In the resource code (e.g. `aws/resource_aws_service_thing.go`), implementation of `Importer` `State` function, e.g.
-
-```go
-func resourceAwsServiceThing() *schema.Resource {
-  return &schema.Resource{
-    /* ... existing Resource functions ... */
-    Importer: &schema.ResourceImporter{
-      State: /* ... */,
-    },
-  }
-}
-```
-
-- [ ] _Resource Acceptance Testing Implementation_:  In the resource acceptance testing (e.g. `aws/resource_aws_service_thing_test.go`), implementation of `TestStep`s with `ImportState: true`, e.g.
-
-```go
-func TestAccAwsServiceThing_basic(t *testing.T) {
-  /* ... potentially existing acceptance testing logic ... */
-
-  resource.ParallelTest(t, resource.TestCase{
-    /* ... existing TestCase functions ... */
-    Steps: []resource.TestStep{
-      /* ... existing TestStep ... */
-      {
-        ResourceName:      "aws_service_thing.test",
-        ImportState:       true,
-        ImportStateVerify: true,
-      },
-    },
-  })
-}
-```
-
-- [ ] _Resource Documentation Implementation_:  In the resource documentation (e.g. `website/docs/r/service_thing.html.markdown`), addition of `Import` documentation section at the bottom of the page, e.g.
-
-``````markdown
-## Import
-
-Service Thing can be imported using the id, e.g.
-
-```
-$ terraform import aws_service_thing.example abc123
-```
-``````
-
-##### Resource Import Guidelines
-
-The items below are coding/testing styles that will be noted during submission review and prevent immediate merging:
-
-- The `TestStep` including `ImportState` testing should not be performed solely in a separate acceptance test. This duplicates testing infrastructure/time and does not check that all resource configurations import into Terraform properly.
-- The `TestStep` including `ImportState` should be included in all applicable resource acceptance tests (except those that delete the resource in question, e.g. `_disappears` tests)
-- Import implementations should not change existing `Create` function `d.SetId()` calls. [Versioning best practices for Terraform Provider development](https://www.terraform.io/docs/extend/best-practices/versioning.html#example-major-number-increments) notes that changing the resource ID is considered a breaking change for a major version upgrade as it makes the `id` attribute ambiguous between provider versions.
-- `ImportStateVerifyIgnore` should only be used where its not possible to `d.Set()` the attribute in the `Read` function (preferable) or `Importer` `State` function.
-
-##### Additional Information
-
-###### Importer State Function
-
-Where possible, prefer using `schema.ImportStatePassthrough` as the `Importer` `State` function:
-
-```go
-func resourceAwsServiceThing() *schema.Resource {
-  return &schema.Resource{
-    /* ... existing Resource functions ... */
-    Importer: &schema.ResourceImporter{
-      State: schema.ImportStatePassthrough,
-    },
-  }
-}
-```
-
-This function requires the `Read` function to be able to refresh the entire resource with `d.Id()` _ONLY_. Sometimes it is possible to adjust the resource `Read` function to replace `d.Get()` use with `d.Id()` if they exactly match or add a function that parses the resource ID into the necessary attributes:
-
-```go
-// Illustrative example of parsing a resource ID into two parts to match requirements for Read function
-// In this example, the resource ID is a combination of attribute1 and attribute2, separated by a colon (:) character
-
-func resourceServiceThingExampleThingParseId(id string) (string, string, error) {
-  parts := strings.SplitN(id, ":", 2)
-
-  if len(parts) != 2 || parts[0] == "" || parts[1] == "" {
-    return "", "", fmt.Errorf("unexpected format of ID (%s), expected attribute1:attribute2", id)
-  }
-
-  return parts[0], parts[1], nil
-}
-
-// In the resource Read function:
-
-attribute1, attribute2, err := resourceServiceThingExampleThingParseId(d.Id())
-
-if err != nil {
-  return err
-}
-```
-
-More likely though, if the resource requires multiple attributes and they are not already in the resource ID, `Importer` `State` will require a custom function implementation beyond using `schema.ImportStatePassthrough`, seen below. The ID passed into `terraform import` should be parsed so `d.Set()` can be called with the required attributes to make the `Read` function operate properly. The resource ID should match the ID set during the resource `Create` function via `d.SetId()`.
-
-```go
-// Illustrative example of parsing the import ID during terraform import
-// This should only be used where the resource ID cannot be solely used
-// during the resource Read function.
-func resourceAwsServiceThing() *schema.Resource {
-  return &schema.Resource{
-    /* ... other Resource functions ... */
-    Importer: &schema.ResourceImporter{
-      State:  func(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
-        // d.Id() here is the last argument passed to the `terraform import RESOURCE_TYPE.RESOURCE_NAME RESOURCE_ID` command
-        // Here we use a function to parse the import ID (like the example above) to simplify our logic
-        attribute1, attribute2, err := resourceServiceThingExampleThingParseId(d.Id())
-
-        if err != nil {
-          return err
-        }
-
-        d.Set("attribute1", attribute1)
-        d.Set("attribute2", attribute2)
-        d.SetId(fmt.Sprintf("%s:%s", attribute1, attribute2))
-
-        return []*schema.ResourceData{d}, nil
-      },
-    },
-```
-
-##### ImportStateVerifyIgnore
-
-Some resource attributes only exist within the context of the Terraform resource or are only used to modify an API request during resource `Create`, `Update`, and `Delete` functions. In these cases, if implementation of the resource cannot obtain the value for the attribute in the `Read` function or its not determined/defaulted to the correct value during the `Importer` `State` function, the acceptance testing may return an error like the following:
-
-```text
---- FAIL: TestAccAwsServiceThing_namePrefix (18.56s)
-    testing.go:568: Step 2 error: ImportStateVerify attributes not equivalent. Difference is shown below. Top is actual, bottom is expected.
-
-        (map[string]string) {
-        }
-
-
-        (map[string]string) (len=1) {
-         (string) (len=11) "name_prefix": (string) (len=24) "test-7166041588452991103"
-        }
-```
-
-To have the import testing ignore this attribute's value being missing during import, the `ImportStateVerifyIgnore` field can be used with the list containing the name(s) of the attributes, e.g.
-
-```go
-func TestAccAwsServiceThing_basic(t *testing.T) {
-  /* ... potentially existing acceptance testing logic ... */
-
-  resource.ParallelTest(t, resource.TestCase{
-    /* ... existing TestCase functions ... */
-    Steps: []resource.TestStep{
-      /* ... existing TestStep ... */
-      {
-        ResourceName:            "aws_service_thing.test",
-        ImportState:             true,
-        ImportStateVerify:       true,
-        ImportStateVerifyIgnore: []string{"name_prefix"},
-      },
-    },
-  })
-}
-```
-
-This should sparingly be used as it means Terraform will require a followup apply to the resource after import or operators must configure `lifecycle` configuration block `ignore_changes` argument (especially for attributes that are `ForceNew`).
+- [ ] _Resource Code Implementation_: In the resource code (e.g. `aws/resource_aws_service_thing.go`), implementation of `Importer` `State` function
+- [ ] _Resource Acceptance Testing Implementation_: In the resource acceptance testing (e.g. `aws/resource_aws_service_thing_test.go`), implementation of `TestStep`s with `ImportState: true`
+- [ ] _Resource Documentation Implementation_: In the resource documentation (e.g. `website/docs/r/service_thing.html.markdown`), addition of `Import` documentation section at the bottom of the page
 
 #### New Resource
 
