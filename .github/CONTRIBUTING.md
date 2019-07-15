@@ -15,9 +15,9 @@ ability to merge PRs and respond to issues.
 
 - [Issues](#issues)
     - [Issue Reporting Checklists](#issue-reporting-checklists)
-        - [[Bug Reports](https://github.com/terraform-providers/terraform-provider-aws/issues/new?template=Bug_Report.md)](#bug-reportshttpsgithubcomterraform-providersterraform-provider-awsissuesnewtemplatebug_reportmd)
-        - [[Feature Requests](https://github.com/terraform-providers/terraform-provider-aws/issues/new?labels=enhancement&template=Feature_Request.md)](#feature-requestshttpsgithubcomterraform-providersterraform-provider-awsissuesnewlabelsenhancementtemplatefeature_requestmd)
-        - [[Questions](https://github.com/terraform-providers/terraform-provider-aws/issues/new?labels=question&template=Question.md)](#questionshttpsgithubcomterraform-providersterraform-provider-awsissuesnewlabelsquestiontemplatequestionmd)
+        - [Bug Reports](#bug-reports)
+        - [Feature Requests](#feature-requests)
+        - [Questions](#questions)
     - [Issue Lifecycle](#issue-lifecycle)
 - [Pull Requests](#pull-requests)
     - [Pull Request Lifecycle](#pull-request-lifecycle)
