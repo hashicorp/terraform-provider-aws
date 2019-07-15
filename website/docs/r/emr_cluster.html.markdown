@@ -184,7 +184,7 @@ Available in EMR version 5.23.0 and later, an EMR Cluster can be launched with t
 # This configuration is for illustrative purposes and highlights
 # only relevant configurations for working with this functionality.
 
-# Map public IP on launch must be enabled for the subnet
+# Map public IP on launch must be enabled for public (Internet accessible) subnets
 resource "aws_subnet" "example" {
   # ... other configuration ...
 
@@ -344,7 +344,7 @@ Supported nested arguments for the `master_instance_group` configuration block:
 * `instance_type` - (Required) EC2 instance type for all instances in the instance group.
 * `bid_price` - (Optional) Bid price for each EC2 instance in the instance group, expressed in USD. By setting this attribute, the instance group is being declared as a Spot Instance, and will implicitly create a Spot request. Leave this blank to use On-Demand Instances.
 * `ebs_config` - (Optional) Configuration block(s) for EBS volumes attached to each instance in the instance group. Detailed below.
-* `instance_count` - (Optional) Target number of instances for the instance group. Must be 1 or 3. Defaults to 1. Launching with multiple master nodes is only supported in EMR version 5.23.0+, requires this resource's `core_instance_group` to be configured, and requires the VPC subnets to have map public IP on launch enabled. Termination protection is automatically enabled when launched with multiple master nodes and Terraform must have the `termination_protection = false` configuration applied before destroying this resource.
+* `instance_count` - (Optional) Target number of instances for the instance group. Must be 1 or 3. Defaults to 1. Launching with multiple master nodes is only supported in EMR version 5.23.0+, requires this resource's `core_instance_group` to be configured, and requires public (Internet accessible) VPC subnets to have map public IP on launch enabled. Termination protection is automatically enabled when launched with multiple master nodes and Terraform must have the `termination_protection = false` configuration applied before destroying this resource.
 * `name` - (Optional) Friendly name given to the instance group.
 
 ## ebs_config
