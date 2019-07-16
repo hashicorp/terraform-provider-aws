@@ -12,40 +12,124 @@ Provides an SSM Maintenance Window Task resource
 
 ## Example Usage
 
-```hcl
-resource "aws_ssm_maintenance_window" "window" {
-  name     = "maintenance-window-%s"
-  schedule = "cron(0 16 ? * TUE *)"
-  duration = 3
-  cutoff   = 1
-}
+### Automation Tasks
 
-resource "aws_ssm_maintenance_window_task" "task" {
-  window_id        = "${aws_ssm_maintenance_window.window.id}"
-  name             = "maintenance-window-task"
-  description      = "This is a maintenance window task"
-  task_type        = "RUN_COMMAND"
-  task_arn         = "AWS-RunShellScript"
+```hcl
+resource "aws_ssm_maintenance_window_task" "example" {
+  max_concurrency  = 2
+  max_errors       = 1
   priority         = 1
-  service_role_arn = "arn:aws:iam::187416307283:role/service-role/AWS_Events_Invoke_Run_Command_112316643"
-  max_concurrency  = "2"
-  max_errors       = "1"
+  service_role_arn = "${aws_iam_role.example.arn}"
+  task_arn         = "AWS-RestartEC2Instance"
+  task_type        = "AUTOMATION"
+  window_id        = "${aws_ssm_maintenance_window.example.id}"
 
   targets {
     key    = "InstanceIds"
-    values = ["${aws_instance.instance.id}"]
+    values = ["${aws_instance.example.id}"]
   }
 
-  task_parameters {
-    name   = "commands"
-    values = ["pwd"]
+  task_invocation_parameters {
+    automation_parameters {
+      document_version = "$LATEST"
+
+      parameter {
+        name   = "InstanceId"
+        values = ["${aws_instance.example.id}"]
+      }
+    }
   }
 }
+```
 
-resource "aws_instance" "instance" {
-  ami = "ami-4fccb37f"
+### Lambda Tasks
 
-  instance_type = "m1.small"
+```hcl
+resource "aws_ssm_maintenance_window_task" "example" {
+  max_concurrency  = 2
+  max_errors       = 1
+  priority         = 1
+  service_role_arn = "${aws_iam_role.example.arn}"
+  task_arn         = "${aws_lambda_function.example.arn}"
+  task_type        = "LAMBDA"
+  window_id        = "${aws_ssm_maintenance_window.example.id}"
+
+  targets {
+    key    = "InstanceIds"
+    values = ["${aws_instance.example.id}"]
+  }
+
+  task_invocation_parameters {
+    lambda_parameters {
+      client_context = "${base64encode("{\"key1\":\"value1\"}")}"
+      payload        = "{\"key1\":\"value1\"}"
+    }
+  }
+}
+```
+
+### Run Command Tasks
+
+```hcl
+resource "aws_ssm_maintenance_window_task" "example" {
+  max_concurrency  = 2
+  max_errors       = 1
+  priority         = 1
+  service_role_arn = "${aws_iam_role.example.arn}"
+  task_arn         = "AWS-RunShellScript"
+  task_type        = "RUN_COMMAND"
+  window_id        = "${aws_ssm_maintenance_window.example.id}"
+
+  targets {
+    key    = "InstanceIds"
+    values = ["${aws_instance.example.id}"]
+  }
+
+  task_invocation_parameters {
+    run_command_parameters {
+      output_s3_bucket = "${aws_s3_bucket.example.bucket}"
+      output_s3_prefix = "output"
+      service_role_arn = "${aws_iam_role.example.arn}"
+      timeout_seconds  = 600
+
+      notification_config {
+        notification_arn    = "${aws_sns_topic.example.arn}"
+        notification_events = ["All"]
+        notification_type   = ["Command"]
+      }
+
+      parameter {
+        name   = "commands"
+        values = ["date"]
+      }
+    }
+  }
+}
+```
+
+### Step Function Tasks
+
+```hcl
+resource "aws_ssm_maintenance_window_task" "example" {
+  max_concurrency  = 2
+  max_errors       = 1
+  priority         = 1
+  service_role_arn = "${aws_iam_role.example.arn}"
+  task_arn         = "${aws_sfn_activity.example.id}"
+  task_type        = "STEP_FUNCTIONS"
+  window_id        = "${aws_ssm_maintenance_window.example.id}"
+
+  targets {
+    key    = "InstanceIds"
+    values = ["${aws_instance.example.id}"]
+  }
+
+  task_invocation_parameters {
+    step_functions_parameters {
+      input = "{\"key1\":\"value1\"}"
+      name  = "example"
+    }
+  }
 }
 ```
 
@@ -100,7 +184,7 @@ The following arguments are supported:
 
 * `comment` - (Optional) Information about the command(s) to execute.
 * `document_hash` - (Optional) The SHA-256 or SHA-1 hash created by the system when the document was created. SHA-1 hashes have been deprecated.
-* `document_hash_type` - (Optional) SHA-256 or SHA-1. SHA-1 hashes have been deprecated.
+* `document_hash_type` - (Optional) SHA-256 or SHA-1. SHA-1 hashes have been deprecated. Valid values: `Sha256` and `Sha1`
 * `notification_config` - (Optional) Configurations for sending notifications about command status changes on a per-instance basis. Documented below.
 * `output_s3_bucket` - (Optional) The name of the Amazon S3 bucket.
 * `output_s3_key_prefix` - (Optional) The Amazon S3 bucket subfolder.
@@ -116,8 +200,8 @@ The following arguments are supported:
 `notification_config` supports the following:
 
 * `notification_arn` - (Optional) An Amazon Resource Name (ARN) for a Simple Notification Service (SNS) topic. Run Command pushes notifications about command status changes to this topic.
-* `notification_events` - (Optional) The different events for which you can receive notifications.
-* `notification_type` - (Optional) Command: Receive notification when the status of a command changes. Invocation: For commands sent to multiple instances, receive notification on a per-instance basis when the status of a command changes.
+* `notification_events` - (Optional) The different events for which you can receive notifications. Valid values: `All`, `InProgress`, `Success`, `TimedOut`, `Cancelled`, and `Failed`
+* `notification_type` - (Optional) When specified with `Command`, receive notification when the status of a command changes. When specified with `Invocation`, for commands sent to multiple instances, receive notification on a per-instance basis when the status of a command changes. Valid values: `Command` and `Invocation`
 
 `parameter` supports the following:
 
