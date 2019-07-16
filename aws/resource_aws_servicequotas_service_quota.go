@@ -116,7 +116,6 @@ func resourceAwsServiceQuotasServiceQuotaCreate(d *schema.ResourceData, meta int
 func resourceAwsServiceQuotasServiceQuotaRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).servicequotasconn
 
-	requestID := d.Get("request_id").(string)
 	serviceCode, quotaCode, err := resourceAwsServiceQuotasServiceQuotaParseID(d.Id())
 
 	if err != nil {
@@ -161,6 +160,8 @@ func resourceAwsServiceQuotasServiceQuotaRead(d *schema.ResourceData, meta inter
 	d.Set("service_code", output.Quota.ServiceCode)
 	d.Set("service_name", output.Quota.ServiceName)
 	d.Set("value", output.Quota.Value)
+
+	requestID := d.Get("request_id").(string)
 
 	if requestID != "" {
 		input := &servicequotas.GetRequestedServiceQuotaChangeInput{
