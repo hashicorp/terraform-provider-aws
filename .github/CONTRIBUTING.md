@@ -229,9 +229,22 @@ guidelines.
    covering their behavior. See [Writing Acceptance
    Tests](#writing-acceptance-tests) below for a detailed guide on how to
    approach these.
- - [ ] __Naming__: Resources should be named `aws_<service>_<name>` where
-   `service` is the AWS short service name and `name` is a short, preferably
-   single word, description of the resource. Use `_` as a separator.
+ - [ ] __Resource Naming__: Resources should be named `aws_<service>_<name>`,
+   using underscores (`_`) as the separator. Resources are namespaced with the
+   service name to allow easier searching of related resources, to align
+   the resource naming with the service for [Customizing Endpoints](https://www.terraform.io/docs/providers/aws/guides/custom-service-endpoints.html#available-endpoint-customizations),
+   and to prevent future conflicts with new AWS services/resources.
+   For reference:
+
+   - `service` is the AWS short service name that matches the entry in
+     `endpointServiceNames` (created via the [New Service](#new-service)
+     section)
+   - `name` represents the conceptual infrastructure represented by the
+     create, read, update, and delete methods of the service API. For example,
+     in an API that has methods such as `CreateThing`, `DeleteThing`,
+     `DescribeThing`, and `ModifyThing` the name of the resource would end in
+     `_thing`.
+
  - [ ] __Arguments_and_Attributes__: The HCL for arguments and attributes should
    mimic the types and structs presented by the AWS API. API arguments should be
    converted from `CamelCase` to `camel_case`.
