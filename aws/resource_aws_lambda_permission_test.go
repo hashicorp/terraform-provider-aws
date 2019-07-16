@@ -169,6 +169,7 @@ func TestAccAWSLambdaPermission_basic(t *testing.T) {
 	rString := acctest.RandString(8)
 	funcName := fmt.Sprintf("tf_acc_lambda_perm_basic_%s", rString)
 	roleName := fmt.Sprintf("tf_acc_role_lambda_perm_basic_%s", rString)
+	statementId := fmt.Sprintf("tf_acc_statement_lambda_perm_basic_%s", rString)
 	funcArnRe := regexp.MustCompile(":function:" + funcName + "$")
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -187,6 +188,12 @@ func TestAccAWSLambdaPermission_basic(t *testing.T) {
 					resource.TestMatchResourceAttr("aws_lambda_permission.allow_cloudwatch", "function_name", funcArnRe),
 					resource.TestCheckResourceAttr("aws_lambda_permission.allow_cloudwatch", "event_source_token", "test-event-source-token"),
 				),
+			},
+			{
+				ResourceName:      "aws_lambda_permission.allow_cloudwatch",
+				ImportState:       true,
+				ImportStateId:     fmt.Sprintf("%s/%s", funcName, statementId),
+				ImportStateVerify: true,
 			},
 		},
 	})
