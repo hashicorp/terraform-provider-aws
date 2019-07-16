@@ -2256,8 +2256,7 @@ func expandConfigRuleSource(configured []interface{}) *configservice.Source {
 
 func expandConfigRemediationConfigurationParameters(configured *schema.Set) map[string]*configservice.RemediationParameterValue {
 	var staticValues []*string
-	var results map[string]*configservice.RemediationParameterValue
-	results = make(map[string]*configservice.RemediationParameterValue)
+	results := make(map[string]*configservice.RemediationParameterValue)
 
 	emptyString := ""
 

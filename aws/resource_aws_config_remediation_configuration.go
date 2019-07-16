@@ -1,12 +1,10 @@
 package aws
 
 import (
-	//"bytes"
 	"fmt"
 	"log"
 	"time"
 
-	//"github.com/hashicorp/terraform/helper/hashcode"
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/helper/schema"
 	"github.com/hashicorp/terraform/helper/validation"
@@ -35,19 +33,19 @@ func resourceAwsConfigRemediationConfiguration() *schema.Resource {
 			},
 			"resource_type": {
 				Type:     schema.TypeString,
-				Computed: false,
+				Optional: true,
 			},
 			"target_id": {
 				Type:     schema.TypeString,
-				Computed: false,
+				Required: true,
 			},
 			"target_type": {
 				Type:     schema.TypeString,
-				Computed: false,
+				Required: true,
 			},
 			"target_version": {
 				Type:     schema.TypeString,
-				Computed: false,
+				Optional: true,
 			},
 			"parameters": {
 				Type:     schema.TypeSet,
@@ -67,11 +65,11 @@ func resourceAwsConfigRemediationConfiguration() *schema.Resource {
 								Schema: map[string]*schema.Schema{
 									"key": {
 										Type:     schema.TypeString,
-										Computed: false,
+										Required: true,
 									},
 									"value": {
 										Type:     schema.TypeString,
-										Computed: false,
+										Required: true,
 									},
 								},
 							},

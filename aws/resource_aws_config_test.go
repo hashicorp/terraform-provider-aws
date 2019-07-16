@@ -61,6 +61,10 @@ func TestAccAWSConfig(t *testing.T) {
 			"TagKeyScope":               testAccConfigOrganizationManagedRule_TagKeyScope,
 			"TagValueScope":             testAccConfigOrganizationManagedRule_TagValueScope,
 		},
+		"RemediationConfiguration": {
+			"basic":     testAccConfigRemediationConfiguration_basic,
+			"importAws": testAccConfigRemediationConfiguration_importAws,
+		},
 	}
 
 	for group, m := range testCases {
