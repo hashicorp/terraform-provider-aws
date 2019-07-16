@@ -8,6 +8,7 @@ ENHANCEMENTS:
 
 * provider: Support for assuming role using credential process from the shared AWS configuration file [GH-9305]
 * resource/aws_autoscaling_lifecycle_hook: Support resource import [GH-9336]
+* resource/aws_emr_cluster: Add `master_instance_group` configuration block `instance_count` argument (support multiple master nodes) [GH-9235]
 * resource/aws_ssm_maintenance_window_task: Support resource import and in-place updates [GH-7823]
 * resource/aws_ssm_maintenance_window_task: Add `task_invocation_parameters` configuration block and deprecate `logging_info` and `task_parameters` configuration blockss to match API [GH-7823]
 
