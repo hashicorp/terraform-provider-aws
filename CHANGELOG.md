@@ -4,6 +4,10 @@ NOTES:
 
 * resource/aws_ssm_maintenance_window_task: The `logging_info` and `task_parameters` configuration blocks have been deprecated in favor of a new `task_invocation_parameters` configuration block to match the API [GH-7823]
 
+FEATURES:
+
+* **New Resource:** `aws_servicequotas_service_quota` [GH-9192]
+
 ENHANCEMENTS:
 
 * provider: Support for assuming role using credential process from the shared AWS configuration file [GH-9305]
