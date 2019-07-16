@@ -1,9 +1,19 @@
 ## 2.20.0 (Unreleased)
 
+NOTES:
+
+* resource/aws_ssm_maintenance_window_task: The `logging_info` and `task_parameters` configuration blocks have been deprecated in favor of a new `task_invocation_parameters` configuration block to match the API [GH-7823]
+
 ENHANCEMENTS:
 
 * provider: Support for assuming role using credential process from the shared AWS configuration file [GH-9305]
 * resource/aws_autoscaling_lifecycle_hook: Support resource import [GH-9336]
+* resource/aws_ssm_maintenance_window_task: Support resource import and in-place updates [GH-7823]
+* resource/aws_ssm_maintenance_window_task: Add `task_invocation_parameters` configuration block and deprecate `logging_info` and `task_parameters` configuration blockss to match API [GH-7823]
+
+BUG FIXES:
+
+* resource/aws_ssm_maintenance_window_task: Bypass `DoesNotExistException` error on deletion [GH-7823]
 
 ## 2.19.0 (July 11, 2019)
 
