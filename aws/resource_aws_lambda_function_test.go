@@ -279,7 +279,7 @@ func TestAccAWSLambdaFunction_updateRuntime(t *testing.T) {
 				Config: testAccAWSLambdaConfigBasicUpdateRuntime(funcName, policyName, roleName, sgName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsLambdaFunctionExists("aws_lambda_function.lambda_function_test", funcName, &conf),
-					resource.TestCheckResourceAttr("aws_lambda_function.lambda_function_test", "runtime", "nodejs8.10"),
+					resource.TestCheckResourceAttr("aws_lambda_function.lambda_function_test", "runtime", "nodejs10.x"),
 				),
 			},
 		},
@@ -1724,7 +1724,7 @@ resource "aws_lambda_function" "lambda_function_test" {
     function_name = "%s"
     role = "${aws_iam_role.iam_for_lambda.arn}"
     handler = "exports.example"
-    runtime = "nodejs8.10"
+    runtime = "nodejs10.x"
 }
 `, funcName)
 }
