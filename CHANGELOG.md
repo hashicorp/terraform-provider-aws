@@ -3,6 +3,7 @@
 ENHANCEMENTS:
 
 * provider: Support for assuming role using credential process from the shared AWS configuration file [GH-9305]
+* resource/aws_autoscaling_lifecycle_hook: Support resource import [GH-9336]
 
 ## 2.19.0 (July 11, 2019)
 
