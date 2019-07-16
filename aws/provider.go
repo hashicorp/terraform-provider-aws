@@ -717,6 +717,7 @@ func Provider() terraform.ResourceProvider {
 			"aws_sagemaker_notebook_instance":                         resourceAwsSagemakerNotebookInstance(),
 			"aws_secretsmanager_secret":                               resourceAwsSecretsManagerSecret(),
 			"aws_secretsmanager_secret_version":                       resourceAwsSecretsManagerSecretVersion(),
+			"aws_secretsmanager_rotation":                             resourceAwsSecretsManagerRotation(),
 			"aws_ses_active_receipt_rule_set":                         resourceAwsSesActiveReceiptRuleSet(),
 			"aws_ses_domain_identity":                                 resourceAwsSesDomainIdentity(),
 			"aws_ses_domain_identity_verification":                    resourceAwsSesDomainIdentityVerification(),
