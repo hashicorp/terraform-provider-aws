@@ -9,7 +9,7 @@ import (
 	"github.com/hashicorp/terraform/helper/resource"
 )
 
-// This resource different than many since quotas are pre-existing
+// This resource is different than many since quotas are pre-existing
 // and the resource is only designed to help with increases.
 // In the basic case, we test that the resource can match the existing quota
 // without unexpected changes.
