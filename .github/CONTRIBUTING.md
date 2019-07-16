@@ -240,10 +240,10 @@ guidelines.
      `endpointServiceNames` (created via the [New Service](#new-service)
      section)
    - `name` represents the conceptual infrastructure represented by the
-     create, read, update, and delete methods of the service API. For example,
-     in an API that has methods such as `CreateThing`, `DeleteThing`,
-     `DescribeThing`, and `ModifyThing` the name of the resource would end in
-     `_thing`.
+     create, read, update, and delete methods of the service API. It should
+     be a singular noun. For example, in an API that has methods such as
+     `CreateThing`, `DeleteThing`, `DescribeThing`, and `ModifyThing` the name
+     of the resource would end in `_thing`.
 
  - [ ] __Arguments_and_Attributes__: The HCL for arguments and attributes should
    mimic the types and structs presented by the AWS API. API arguments should be
