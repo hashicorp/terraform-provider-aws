@@ -18,7 +18,7 @@
 
 Notes for each type of pull request are (or will be) available in subsections below.
 
-- If you are planning on owning the pull request through merge/closure, assign it to yourself
+- If you plan to be responsible for the pull request through the merge/closure process, assign it to yourself
 - Add `bug`, `enhancement`, `new-data-source`, `new-resource`, or `technical-debt` labels to match expectations from change
 - Review the contents of the pull request and ensure the change follows the relevant section of the [Contributing Guide](https://github.com/terraform-providers/terraform-provider-aws/blob/master/.github/CONTRIBUTING.md#checklists-for-contribution)
 - If the change is not acceptable, leave a long form comment about the reasoning and close the pull request
@@ -75,10 +75,10 @@ The fix for this has been merged and will release with version X.Y.Z of the Terr
 
 ## Release Process
 
-- Ensure a milestone exists for the next release after this release (Generally, the next milestone will be a minor version increase unless previously decided for a major or patch version)
-- Check the upcoming release milestone for open items and either work through them or move them to the next milestone
+- Create a milestone for the next release after this release (generally, the next milestone will be a minor version increase unless previously decided for a major or patch version)
+- Check the existing release milestone for open items and either work through them or move them to the next milestone
 - Run the HashiCorp (non-OSS) TeamCity release job with the `DEPLOYMENT_TARGET_VERSION` matching the expected release milestone and `DEPLOYMENT_NEXT_VERSION` matching the next release milestone
-- Wait for the TeamCity release job and TeamCity website deployment jobs to complete
+- Wait for the TeamCity release job and TeamCity website deployment jobs to complete either by watching the build logs or Slack notifications
 - For each item noted in the `CHANGELOG.md` for the release just completed (or milestone as a whole), add a comment to the pull request and any linked closed issues noting that it has been released, e.g.
 
 ```markdown
