@@ -84,7 +84,6 @@ func instanceTypeConfigSchema() *schema.Resource {
 			"bid_price": {
 				Type:     schema.TypeString,
 				Optional: true,
-				Required: false,
 				ForceNew: true,
 			},
 			"bid_price_as_percentage_of_on_demand_price": {
@@ -481,9 +480,8 @@ func fetchAllEMRInstanceFleets(conn *emr.EMR, clusterId string) ([]*emr.Instance
 		}
 
 		if respFleets.InstanceFleets != nil {
-			for _, f := range respFleets.InstanceFleets {
-				fleets = append(fleets, f)
-			}
+			fleets = append(fleets, respFleets.InstanceFleets...)
+
 		} else {
 			log.Printf("[DEBUG] EMR Instance Fleet list was empty")
 		}
