@@ -235,7 +235,7 @@ func resourceAwsTrafficMirrorFilterRuleUpdate(d *schema.ResourceData, meta inter
 		_, v := d.GetChange("destination_port_range")
 		n := v.([]interface{})
 		if 0 == len(n) {
-			removeFields = append(removeFields, aws.String("destination_port_range"))
+			removeFields = append(removeFields, aws.String("destination-port-range"))
 		} else {
 			//Modify request that adds port range seems to fail if protocol is not set in the request
 			input.Protocol = aws.Int64(int64(d.Get("protocol").(int)))
@@ -247,7 +247,7 @@ func resourceAwsTrafficMirrorFilterRuleUpdate(d *schema.ResourceData, meta inter
 		_, v := d.GetChange("source_port_range")
 		n := v.([]interface{})
 		if 0 == len(n) {
-			removeFields = append(removeFields, aws.String("source_port_range"))
+			removeFields = append(removeFields, aws.String("source-port-range"))
 		} else {
 			//Modify request that adds port range seems to fail if protocol is not set in the request
 			input.Protocol = aws.Int64(int64(d.Get("protocol").(int)))
