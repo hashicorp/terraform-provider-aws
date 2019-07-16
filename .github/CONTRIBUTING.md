@@ -24,6 +24,7 @@ ability to merge PRs and respond to issues.
     - [Checklists for Contribution](#checklists-for-contribution)
         - [Documentation Update](#documentation-update)
         - [Enhancement/Bugfix to a Resource](#enhancementbugfix-to-a-resource)
+        - [Adding Resource Import Support](#adding-resource-import-support)
         - [New Resource](#new-resource)
         - [New Service](#new-service)
         - [New Region](#new-region)
@@ -198,6 +199,18 @@ guidelines.
  - [ ] __Vendor additions__: Create a separate PR if you are updating the vendor
    folder. This is to avoid conflicts as the vendor versions tend to be fast-
    moving targets. We will plan to merge the PR with this change first.
+
+#### Adding Resource Import Support
+
+Adding import support for Terraform resources will allow existing infrastructure to be managed within Terraform. This type of enhancement generally requires a small to moderate amount of code changes.
+
+Comprehensive code examples and information about resource import support can be found in the [Extending Terraform documentation](https://www.terraform.io/docs/extend/resources/import.html).
+
+In addition to the below checklist and the items noted in the Extending Terraform documentation, please see the [Common Review Items](#common-review-items) sections for more specific coding and testing guidelines.
+
+- [ ] _Resource Code Implementation_: In the resource code (e.g. `aws/resource_aws_service_thing.go`), implementation of `Importer` `State` function
+- [ ] _Resource Acceptance Testing Implementation_: In the resource acceptance testing (e.g. `aws/resource_aws_service_thing_test.go`), implementation of `TestStep`s with `ImportState: true`
+- [ ] _Resource Documentation Implementation_: In the resource documentation (e.g. `website/docs/r/service_thing.html.markdown`), addition of `Import` documentation section at the bottom of the page
 
 #### New Resource
 
