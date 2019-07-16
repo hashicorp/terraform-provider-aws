@@ -66,11 +66,11 @@ Run the full acceptance testing suite against the pull request and verify there 
 - Add any linked issues that will be closed by the pull request to the same upcoming release milestone
 - Merge the pull request
 - Delete the branch (if the branch is on this repository)
-- Update the repository `CHANGELOG.md`. See also the [Extending Terraform documentation](https://www.terraform.io/docs/extend/best-practices/versioning.html) for more information about the expected CHANGELOG format.
+- Update the repository `CHANGELOG.md` by directly committing to the `master` branch. See also the [Extending Terraform documentation](https://www.terraform.io/docs/extend/best-practices/versioning.html) for more information about the expected CHANGELOG format.
 - Leave a comment on any issues closed by the pull request noting that it has been merged and when to expect the release containing it, e.g.
 
 ```markdown
-The fix for this has been merged and will release with version X.Y.Z of the Terraform AWS Provider, likely in the XXX timeframe.
+The fix for this has been merged and will release with version X.Y.Z of the Terraform AWS Provider, expected in the XXX timeframe.
 ```
 
 ## Release Process
