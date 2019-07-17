@@ -3,7 +3,7 @@ layout: "aws"
 page_title: "AWS: aws_wafregional_web_acl"
 sidebar_current: "docs-aws-datasource-wafregional-web-acl"
 description: |-
-Retrieves a WAF Regional Web ACL id.
+    Retrieves a WAF Regional Web ACL id.
 ---
 
 # Data Source: aws_wafregional_web_acl
@@ -14,7 +14,7 @@ Retrieves a WAF Regional Web ACL id.
 
 ```hcl
 data "aws_wafregional_web_acl" "example" {
-name = "tfWAFRule"
+    name = "tfWAFRule"
 }
 ```
 
