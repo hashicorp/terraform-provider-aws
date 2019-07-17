@@ -2,6 +2,7 @@ package aws
 
 import (
 	"fmt"
+	"github.com/hashicorp/terraform/helper/acctest"
 	"regexp"
 	"testing"
 
@@ -9,7 +10,7 @@ import (
 )
 
 func TestAccDataSourceAwsWafRegionalRule_Basic(t *testing.T) {
-	name := "tf-acc-test"
+	name := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_wafregional_rule.wafrule"
 	datasourceName := "data.aws_wafregional_rule.wafrule"
 
@@ -35,29 +36,14 @@ func TestAccDataSourceAwsWafRegionalRule_Basic(t *testing.T) {
 func testAccDataSourceAwsWafRegionalRuleConfig_Name(name string) string {
 	return fmt.Sprintf(`
 resource "aws_wafregional_rule" "wafrule" {
-  name        = "%s"
+  name        = %[1]q
   metric_name = "WafruleTest"
-
-  predicate {
-    data_id = "${aws_wafregional_ipset.test.id}"
-    negated = false
-    type    = "IPMatch"
-  }
-}
-
-resource "aws_wafregional_ipset" "test" {
-  name              = "%s"
-
-  ip_set_descriptor {
-    type  = "IPV4"
-    value = "10.0.0.0/8"
-  }
 }
 
 data "aws_wafregional_rule" "wafrule" {
   name = "${aws_wafregional_rule.wafrule.name}"
 }
-`, name, name)
+`, name)
 }
 
 const testAccDataSourceAwsWafRegionalRuleConfig_NonExistent = `
