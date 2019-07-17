@@ -77,6 +77,59 @@ func TestAccAWSElasticSearchDomain_basic(t *testing.T) {
 	})
 }
 
+func TestAccAWSElasticSearchDomain_ZoneAwareness(t *testing.T) {
+	var domain elasticsearch.ElasticsearchDomainStatus
+	ri := acctest.RandInt()
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckESDomainDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccESDomainConfig_ZoneAwareness(ri, 3, false),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckESDomainExists("aws_elasticsearch_domain.example", &domain),
+					resource.TestCheckResourceAttr("aws_elasticsearch_domain.example", "cluster_config.0.zone_awareness_enabled", "false"),
+					resource.TestCheckResourceAttr("aws_elasticsearch_domain.example", "cluster_config.0.zone_awareness_count", "3"),
+				),
+			},
+			{
+				Config: testAccESDomainConfig_ZoneAwareness(ri, 3, true),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckESDomainExists("aws_elasticsearch_domain.example", &domain),
+					resource.TestCheckResourceAttr("aws_elasticsearch_domain.example", "cluster_config.0.zone_awareness_enabled", "true"),
+					resource.TestCheckResourceAttr("aws_elasticsearch_domain.example", "cluster_config.0.zone_awareness_count", "3"),
+				),
+			},
+			{
+				Config: testAccESDomainConfig_ZoneAwareness(ri, 3, false),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckESDomainExists("aws_elasticsearch_domain.example", &domain),
+					resource.TestCheckResourceAttr("aws_elasticsearch_domain.example", "cluster_config.0.zone_awareness_enabled", "false"),
+					resource.TestCheckResourceAttr("aws_elasticsearch_domain.example", "cluster_config.0.zone_awareness_count", "3"),
+				),
+			},
+			{
+				Config: testAccESDomainConfig_ZoneAwareness(ri, 2, true),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckESDomainExists("aws_elasticsearch_domain.example", &domain),
+					resource.TestCheckResourceAttr("aws_elasticsearch_domain.example", "cluster_config.0.zone_awareness_enabled", "true"),
+					resource.TestCheckResourceAttr("aws_elasticsearch_domain.example", "cluster_config.0.zone_awareness_count", "2"),
+				),
+			},
+			{
+				Config: testAccESDomainConfig_ZoneAwareness(ri, 3, true),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckESDomainExists("aws_elasticsearch_domain.example", &domain),
+					resource.TestCheckResourceAttr("aws_elasticsearch_domain.example", "cluster_config.0.zone_awareness_enabled", "true"),
+					resource.TestCheckResourceAttr("aws_elasticsearch_domain.example", "cluster_config.0.zone_awareness_count", "3"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccAWSElasticSearchDomain_withDedicatedMaster(t *testing.T) {
 	var domain elasticsearch.ElasticsearchDomainStatus
 	ri := acctest.RandInt()
@@ -747,6 +800,26 @@ resource "aws_elasticsearch_domain" "example" {
   }
 }
 `, randInt)
+}
+
+func testAccESDomainConfig_ZoneAwareness(randInt int, azcount int, enabled bool) string {
+	return fmt.Sprintf(`
+resource "aws_elasticsearch_domain" "example" {
+  domain_name = "tf-test-%d"
+
+  ebs_options {
+    ebs_enabled = true
+    volume_size = 10
+  }
+  
+  cluster_config {
+    instance_type = "t2.micro.elasticsearch"
+    instance_count = "6"
+    zone_awareness_enabled = %t
+    zone_awareness_count = "%d"
+  }
+}
+`, randInt, enabled, azcount)
 }
 
 func testAccESDomainConfig_WithDedicatedClusterMaster(randInt int, enabled bool) string {
