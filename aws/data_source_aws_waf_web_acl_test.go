@@ -2,6 +2,7 @@ package aws
 
 import (
 	"fmt"
+	"github.com/hashicorp/terraform/helper/acctest"
 	"regexp"
 	"testing"
 
@@ -9,7 +10,7 @@ import (
 )
 
 func TestAccDataSourceAwsWafWebAcl_Basic(t *testing.T) {
-	name := "tf-acc-test"
+	name := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_waf_web_acl.web_acl"
 	datasourceName := "data.aws_waf_web_acl.web_acl"
 
@@ -34,39 +35,12 @@ func TestAccDataSourceAwsWafWebAcl_Basic(t *testing.T) {
 
 func testAccDataSourceAwsWafWebAclConfig_Name(name string) string {
 	return fmt.Sprintf(`
-resource "aws_waf_rule" "wafrule" {
-  name        = "%s"
-  metric_name = "WafruleTest"
-  predicates {
-    data_id = "${aws_waf_ipset.test.id}"
-    negated = false
-    type    = "IPMatch"
-  }
-}
-resource "aws_waf_ipset" "test" {
-  name              = "%s"
-  ip_set_descriptors {
-    type  = "IPV4"
-    value = "10.0.0.0/8"
-  }
-}
-
 resource "aws_waf_web_acl" "web_acl" {
-  name        = "%s"
+  name        = "%[1]q"
   metric_name = "tfWebACL"
 
   default_action {
     type = "ALLOW"
-  }
-
-  rules {
-    action {
-      type = "BLOCK"
-    }
-
-    priority = 1
-    rule_id  = "${aws_waf_rule.wafrule.id}"
-    type     = "REGULAR"
   }
 }
 
@@ -74,7 +48,7 @@ data "aws_waf_web_acl" "web_acl" {
   name = "${aws_waf_web_acl.web_acl.name}"
 }
 
-`, name, name, name)
+`, name)
 }
 
 const testAccDataSourceAwsWafWebAclConfig_NonExistent = `

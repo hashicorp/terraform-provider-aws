@@ -16,10 +16,6 @@ func dataSourceAwsWafWebAcl() *schema.Resource {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			"id": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
 		},
 	}
 }
