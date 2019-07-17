@@ -48,7 +48,7 @@ resource "aws_instance" "app" {
   count         = "3"
   ami           = "${var.ami}"
   instance_type = "t2.micro"
-  subnet_id     = "${element(data.aws_subnet_ids.private.ids, count.index)}"
+  subnet_id     = "${element(tolist(data.aws_subnet_ids.private.ids), count.index)}"
 }
 ```
 
