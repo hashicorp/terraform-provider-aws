@@ -23,6 +23,7 @@ BUG FIXES:
 * resource/aws_cloudwatch_event_rule: Retry error handling when creating and updating event rules [GH-9065]
 * resource/aws_cloudwatch_log_destination: Clean up error handling when putting log destination [GH-9065]
 * resource/aws_cloudwatch_log_subscription_filter: Clean up error handling when creating log subscription filter [GH-9065]
+* resource/aws_cognito_identity_provider: Properly pass all attributes during update [GH-9396]
 * resource/aws_ssm_maintenance_window_task: Bypass `DoesNotExistException` error on deletion [GH-7823]
 
 ## 2.19.0 (July 11, 2019)
