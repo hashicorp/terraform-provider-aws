@@ -64,7 +64,7 @@ func resourceAwsSsmParameterLabelCreate(d *schema.ResourceData, meta interface{}
 		log.Printf("[WARN] Some lavels were invalid: %v", output.InvalidLabels)
 	}
 
-	return resourceAwsSsmParameterLabelRead(d, meta)
+	return nil
 }
 
 func resourceAwsSsmParameterLabelRead(d *schema.ResourceData, meta interface{}) error {
@@ -112,6 +112,7 @@ func resourceAwsSsmParameterLabelRead(d *schema.ResourceData, meta interface{}) 
 		d.SetId("")
 		return nil
 	}
+
 	d.Set("ssm_parameter_name", parameterName)
 	d.Set("ssm_parameter_version", parameterVersion)
 	d.Set("labels", labels)
