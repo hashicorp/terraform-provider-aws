@@ -723,6 +723,7 @@ func Provider() terraform.ResourceProvider {
 			"aws_traffic_mirror_filter":                               resourceAwsTrafficMirrorFilter(),
 			"aws_traffic_mirror_filter_rule":                          resourceAwsTrafficMirrorFilterRule(),
 			"aws_traffic_mirror_target":                               resourceAwsTrafficMirrorTarget(),
+			"aws_traffic_mirror_session":                              resourceAwsTrafficMirrorSession(),
 			"aws_transfer_server":                                     resourceAwsTransferServer(),
 			"aws_transfer_ssh_key":                                    resourceAwsTransferSshKey(),
 			"aws_transfer_user":                                       resourceAwsTransferUser(),
