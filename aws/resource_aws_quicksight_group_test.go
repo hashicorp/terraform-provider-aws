@@ -2,7 +2,6 @@ package aws
 
 import (
 	"fmt"
-	"os"
 	"strings"
 	"testing"
 
@@ -16,10 +15,6 @@ import (
 )
 
 func TestAccAWSQuickSightGroup_basic(t *testing.T) {
-	oldvar := os.Getenv("AWS_DEFAULT_REGION")
-	os.Setenv("AWS_DEFAULT_REGION", "us-east-1")
-	defer os.Setenv("AWS_DEFAULT_REGION", oldvar)
-
 	var group quicksight.Group
 	resourceName := "aws_quicksight_group.default"
 	rName1 := acctest.RandomWithPrefix("tf-acc-test")
@@ -56,10 +51,6 @@ func TestAccAWSQuickSightGroup_basic(t *testing.T) {
 }
 
 func TestAccAWSQuickSightGroup_withDescription(t *testing.T) {
-	oldvar := os.Getenv("AWS_DEFAULT_REGION")
-	os.Setenv("AWS_DEFAULT_REGION", "us-east-1")
-	defer os.Setenv("AWS_DEFAULT_REGION", oldvar)
-
 	var group quicksight.Group
 	resourceName := "aws_quicksight_group.default"
 	rName := acctest.RandomWithPrefix("tf-acc-test")
@@ -93,10 +84,6 @@ func TestAccAWSQuickSightGroup_withDescription(t *testing.T) {
 }
 
 func TestAccAWSQuickSightGroup_disappears(t *testing.T) {
-	oldvar := os.Getenv("AWS_DEFAULT_REGION")
-	os.Setenv("AWS_DEFAULT_REGION", "us-east-1")
-	defer os.Setenv("AWS_DEFAULT_REGION", oldvar)
-
 	var group quicksight.Group
 	resourceName := "aws_quicksight_group.default"
 	rName := acctest.RandomWithPrefix("tf-acc-test")
@@ -213,11 +200,9 @@ func testAccCheckQuickSightGroupDisappears(v *quicksight.Group) resource.TestChe
 func testAccAWSQuickSightGroupConfig(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_quicksight_group" "default" {
-	group_name 		= "%[1]s"
+  group_name = %[1]q
 }
-
 `, rName)
-
 }
 
 func testAccAWSQuickSightGroupConfigWithDescription(rName, description string) string {
@@ -225,11 +210,9 @@ func testAccAWSQuickSightGroupConfigWithDescription(rName, description string) s
 data "aws_caller_identity" "current" {}
 
 resource "aws_quicksight_group" "default" {
-	aws_account_id 	= "${data.aws_caller_identity.current.account_id}"
-	group_name 		= "%[1]s"
-	description 	= "%[2]s"
+  aws_account_id = "${data.aws_caller_identity.current.account_id}"
+  group_name     = %[1]q
+  description    = %[2]q
 }
-
 `, rName, description)
-
 }
