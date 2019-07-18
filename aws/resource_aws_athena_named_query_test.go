@@ -36,7 +36,7 @@ func TestAccAWSAthenaNamedQuery_withWorkGroup(t *testing.T) {
 			{
 				Config: testAccAthenaNamedWorkGroupQueryConfig(acctest.RandInt(), acctest.RandString(5)),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSAthenaNamedQueryExists("aws_athena_named_query.foo"),
+					testAccCheckAWSAthenaNamedQueryExists("aws_athena_named_query.bar"),
 				),
 			},
 		},
