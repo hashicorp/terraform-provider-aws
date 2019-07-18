@@ -397,6 +397,7 @@ func TestAccAWSGlueJob_PythonShell(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "max_capacity", "0.0625"),
 					resource.TestCheckResourceAttr(resourceName, "command.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "command.0.script_location", "testscriptlocation"),
+					resource.TestCheckResourceAttr(resourceName, "command.0.python_version", "3"),
 					resource.TestCheckResourceAttr(resourceName, "command.0.name", "pythonshell"),
 				),
 			},
@@ -729,6 +730,7 @@ resource "aws_glue_job" "test" {
   command {
     name            = "pythonshell"
     script_location = "testscriptlocation"
+    python_verison =  "3"
   }
 
   depends_on = ["aws_iam_role_policy_attachment.test"]
