@@ -6,7 +6,7 @@ NOTES:
 * resource/aws_ssm_maintenance_window_task: The `logging_info` and `task_parameters` configuration blocks have been deprecated in favor of a new `task_invocation_parameters` configuration block to match the API [GH-7823]
 
 FEATURES:
-
+* **New datasource** `aws_waf_web_acl` [GH-9320]
 * **New Data Source** `aws_wafregional_web_acl` [GH-9321]
 * **New Resource:** `aws_servicequotas_service_quota` [GH-9192]
 
