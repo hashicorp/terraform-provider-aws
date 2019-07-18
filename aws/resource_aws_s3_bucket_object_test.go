@@ -155,6 +155,28 @@ func testSweepS3BucketObjects(region string) error {
 	return nil
 }
 
+func TestAccAWSS3BucketObject_empty(t *testing.T) {
+	var obj s3.GetObjectOutput
+	resourceName := "aws_s3_bucket_object.object"
+	rInt := acctest.RandInt()
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSS3BucketObjectDestroy,
+		Steps: []resource.TestStep{
+			{
+				PreConfig: func() {},
+				Config:    testAccAWSS3BucketObjectConfigEmpty(rInt),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSS3BucketObjectExists(resourceName, &obj),
+					testAccCheckAWSS3BucketObjectBody(&obj, ""),
+				),
+			},
+		},
+	})
+}
+
 func TestAccAWSS3BucketObject_source(t *testing.T) {
 	var obj s3.GetObjectOutput
 	resourceName := "aws_s3_bucket_object.object"
@@ -797,6 +819,19 @@ func testAccAWSS3BucketObjectCreateTempFile(t *testing.T, data string) string {
 	}
 
 	return filename
+}
+
+func testAccAWSS3BucketObjectConfigEmpty(randInt int) string {
+	return fmt.Sprintf(`
+resource "aws_s3_bucket" "object_bucket" {
+  bucket = "tf-object-test-bucket-%d"
+}
+
+resource "aws_s3_bucket_object" "object" {
+  bucket = "${aws_s3_bucket.object_bucket.bucket}"
+  key = "test-key"
+}
+`, randInt)
 }
 
 func testAccAWSS3BucketObjectConfigSource(randInt int, source string) string {

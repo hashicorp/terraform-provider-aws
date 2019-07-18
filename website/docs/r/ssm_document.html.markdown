@@ -82,3 +82,11 @@ The permissions mapping supports the following:
 
 * `type` - The permission type for the document. The permission type can be `Share`.
 * `account_ids` - The AWS user accounts that should have access to the document. The account IDs can either be a group of account IDs or `All`.
+
+## Import
+
+SSM Documents can be imported using the name, e.g.
+
+```
+$ terraform import aws_ssm_document.example example
+```

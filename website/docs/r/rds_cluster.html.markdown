@@ -169,6 +169,7 @@ resource "aws_rds_cluster" "example" {
     max_capacity             = 256
     min_capacity             = 2
     seconds_until_auto_pause = 300
+    timeout_action           = "ForceApplyCapacityChange"
   }
 }
 ```
@@ -177,6 +178,7 @@ resource "aws_rds_cluster" "example" {
 * `max_capacity` - (Optional) The maximum capacity. The maximum capacity must be greater than or equal to the minimum capacity. Valid capacity values are `1`, `2`, `4`, `8`, `16`, `32`, `64`, `128`, and `256`. Defaults to `16`.
 * `min_capacity` - (Optional) The minimum capacity. The minimum capacity must be lesser than or equal to the maximum capacity. Valid capacity values are `1`, `2`, `4`, `8`, `16`, `32`, `64`, `128`, and `256`. Defaults to `2`.
 * `seconds_until_auto_pause` - (Optional) The time, in seconds, before an Aurora DB cluster in serverless mode is paused. Valid values are `300` through `86400`. Defaults to `300`.
+* `timeout_action` - (Optional) The action to take when the timeout is reached. Valid values: `ForceApplyCapacityChange`, `RollbackCapacityChange`. Defaults to `RollbackCapacityChange`. See [documentation](https://docs.aws.amazon.com/AmazonRDS/latest/AuroraUserGuide/aurora-serverless.how-it-works.html#aurora-serverless.how-it-works.timeout-action).
 
 ## Attributes Reference
 
