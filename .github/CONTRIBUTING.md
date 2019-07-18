@@ -24,6 +24,7 @@ ability to merge PRs and respond to issues.
     - [Checklists for Contribution](#checklists-for-contribution)
         - [Documentation Update](#documentation-update)
         - [Enhancement/Bugfix to a Resource](#enhancementbugfix-to-a-resource)
+        - [Adding Resource Import Support](#adding-resource-import-support)
         - [New Resource](#new-resource)
         - [New Service](#new-service)
         - [New Region](#new-region)
@@ -199,6 +200,18 @@ guidelines.
    folder. This is to avoid conflicts as the vendor versions tend to be fast-
    moving targets. We will plan to merge the PR with this change first.
 
+#### Adding Resource Import Support
+
+Adding import support for Terraform resources will allow existing infrastructure to be managed within Terraform. This type of enhancement generally requires a small to moderate amount of code changes.
+
+Comprehensive code examples and information about resource import support can be found in the [Extending Terraform documentation](https://www.terraform.io/docs/extend/resources/import.html).
+
+In addition to the below checklist and the items noted in the Extending Terraform documentation, please see the [Common Review Items](#common-review-items) sections for more specific coding and testing guidelines.
+
+- [ ] _Resource Code Implementation_: In the resource code (e.g. `aws/resource_aws_service_thing.go`), implementation of `Importer` `State` function
+- [ ] _Resource Acceptance Testing Implementation_: In the resource acceptance testing (e.g. `aws/resource_aws_service_thing_test.go`), implementation of `TestStep`s with `ImportState: true`
+- [ ] _Resource Documentation Implementation_: In the resource documentation (e.g. `website/docs/r/service_thing.html.markdown`), addition of `Import` documentation section at the bottom of the page
+
 #### New Resource
 
 Implementing a new resource is a good way to learn more about how Terraform
@@ -216,9 +229,22 @@ guidelines.
    covering their behavior. See [Writing Acceptance
    Tests](#writing-acceptance-tests) below for a detailed guide on how to
    approach these.
- - [ ] __Naming__: Resources should be named `aws_<service>_<name>` where
-   `service` is the AWS short service name and `name` is a short, preferably
-   single word, description of the resource. Use `_` as a separator.
+ - [ ] __Resource Naming__: Resources should be named `aws_<service>_<name>`,
+   using underscores (`_`) as the separator. Resources are namespaced with the
+   service name to allow easier searching of related resources, to align
+   the resource naming with the service for [Customizing Endpoints](https://www.terraform.io/docs/providers/aws/guides/custom-service-endpoints.html#available-endpoint-customizations),
+   and to prevent future conflicts with new AWS services/resources.
+   For reference:
+
+   - `service` is the AWS short service name that matches the entry in
+     `endpointServiceNames` (created via the [New Service](#new-service)
+     section)
+   - `name` represents the conceptual infrastructure represented by the
+     create, read, update, and delete methods of the service API. It should
+     be a singular noun. For example, in an API that has methods such as
+     `CreateThing`, `DeleteThing`, `DescribeThing`, and `ModifyThing` the name
+     of the resource would end in `_thing`.
+
  - [ ] __Arguments_and_Attributes__: The HCL for arguments and attributes should
    mimic the types and structs presented by the AWS API. API arguments should be
    converted from `CamelCase` to `camel_case`.
