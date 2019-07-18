@@ -4770,6 +4770,10 @@ func expandRdsScalingConfiguration(l []interface{}) *rds.ScalingConfiguration {
 		SecondsUntilAutoPause: aws.Int64(int64(m["seconds_until_auto_pause"].(int))),
 	}
 
+	if vTimeoutAction, ok := m["timeout_action"].(string); ok && vTimeoutAction != "" {
+		scalingConfiguration.TimeoutAction = aws.String(vTimeoutAction)
+	}
+
 	return scalingConfiguration
 }
 
@@ -4783,6 +4787,7 @@ func flattenRdsScalingConfigurationInfo(scalingConfigurationInfo *rds.ScalingCon
 		"max_capacity":             aws.Int64Value(scalingConfigurationInfo.MaxCapacity),
 		"min_capacity":             aws.Int64Value(scalingConfigurationInfo.MinCapacity),
 		"seconds_until_auto_pause": aws.Int64Value(scalingConfigurationInfo.SecondsUntilAutoPause),
+		"timeout_action":           aws.StringValue(scalingConfigurationInfo.TimeoutAction),
 	}
 
 	return []interface{}{m}

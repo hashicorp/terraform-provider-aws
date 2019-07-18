@@ -188,6 +188,15 @@ func resourceAwsRDSCluster() *schema.Resource {
 							Default:      300,
 							ValidateFunc: validation.IntBetween(300, 86400),
 						},
+						"timeout_action": {
+							Type:     schema.TypeString,
+							Optional: true,
+							Default:  "RollbackCapacityChange",
+							ValidateFunc: validation.StringInSlice([]string{
+								"ForceApplyCapacityChange",
+								"RollbackCapacityChange",
+							}, false),
+						},
 					},
 				},
 			},
