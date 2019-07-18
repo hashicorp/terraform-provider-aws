@@ -1203,14 +1203,40 @@ func expandESClusterConfig(m map[string]interface{}) *elasticsearch.Elasticsearc
 	}
 
 	if v, ok := m["zone_awareness_enabled"]; ok {
-		config.ZoneAwarenessEnabled = aws.Bool(v.(bool))
+		isEnabled := v.(bool)
+		config.ZoneAwarenessEnabled = aws.Bool(isEnabled)
+
+		if isEnabled {
+			if v, ok := m["zone_awareness_config"]; ok {
+				config.ZoneAwarenessConfig = expandElasticsearchZoneAwarenessConfig(v.([]interface{}))
+			}
+		}
 	}
 
 	return &config
 }
 
+func expandElasticsearchZoneAwarenessConfig(l []interface{}) *elasticsearch.ZoneAwarenessConfig {
+	if len(l) == 0 || l[0] == nil {
+		return nil
+	}
+
+	m := l[0].(map[string]interface{})
+
+	zoneAwarenessConfig := &elasticsearch.ZoneAwarenessConfig{}
+
+	if v, ok := m["availability_zone_count"]; ok && v.(int) > 0 {
+		zoneAwarenessConfig.AvailabilityZoneCount = aws.Int64(int64(v.(int)))
+	}
+
+	return zoneAwarenessConfig
+}
+
 func flattenESClusterConfig(c *elasticsearch.ElasticsearchClusterConfig) []map[string]interface{} {
-	m := map[string]interface{}{}
+	m := map[string]interface{}{
+		"zone_awareness_config":  flattenElasticsearchZoneAwarenessConfig(c.ZoneAwarenessConfig),
+		"zone_awareness_enabled": aws.BoolValue(c.ZoneAwarenessEnabled),
+	}
 
 	if c.DedicatedMasterCount != nil {
 		m["dedicated_master_count"] = *c.DedicatedMasterCount
@@ -1227,11 +1253,20 @@ func flattenESClusterConfig(c *elasticsearch.ElasticsearchClusterConfig) []map[s
 	if c.InstanceType != nil {
 		m["instance_type"] = *c.InstanceType
 	}
-	if c.ZoneAwarenessEnabled != nil {
-		m["zone_awareness_enabled"] = *c.ZoneAwarenessEnabled
-	}
 
 	return []map[string]interface{}{m}
+}
+
+func flattenElasticsearchZoneAwarenessConfig(zoneAwarenessConfig *elasticsearch.ZoneAwarenessConfig) []interface{} {
+	if zoneAwarenessConfig == nil {
+		return []interface{}{}
+	}
+
+	m := map[string]interface{}{
+		"availability_zone_count": aws.Int64Value(zoneAwarenessConfig.AvailabilityZoneCount),
+	}
+
+	return []interface{}{m}
 }
 
 func expandESCognitoOptions(c []interface{}) *elasticsearch.CognitoOptions {
