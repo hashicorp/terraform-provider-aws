@@ -1335,6 +1335,10 @@ func readIamInstanceProfileFromConfig(iip map[string]interface{}) *ec2.LaunchTem
 		iamInstanceProfile.Name = aws.String(v)
 	}
 
+	if iamInstanceProfile.Arn == nil && iamInstanceProfile.Name == nil {
+		return nil
+	}
+
 	return iamInstanceProfile
 }
 

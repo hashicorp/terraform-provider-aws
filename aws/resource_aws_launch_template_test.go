@@ -512,6 +512,20 @@ func TestAccAWSLaunchTemplate_IamInstanceProfile_EmptyConfigurationBlock(t *test
 				),
 				ExpectNonEmptyPlan: true,
 			},
+			{
+				Config: testAccAWSLaunchTemplateConfigIamInstanceProfileEmptyArn(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSLaunchTemplateExists(resourceName, &template1),
+				),
+				ExpectNonEmptyPlan: true,
+			},
+			{
+				Config: testAccAWSLaunchTemplateConfigIamInstanceProfileEmptyName(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSLaunchTemplateExists(resourceName, &template1),
+				),
+				ExpectNonEmptyPlan: true,
+			},
 		},
 	})
 }
@@ -987,6 +1001,30 @@ resource "aws_launch_template" "test" {
   name = %q
 
   iam_instance_profile {}
+}
+`, rName)
+}
+
+func testAccAWSLaunchTemplateConfigIamInstanceProfileEmptyArn(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_launch_template" "test" {
+  name = %q
+
+  iam_instance_profile {
+	  name = ""
+  }
+}
+`, rName)
+}
+
+func testAccAWSLaunchTemplateConfigIamInstanceProfileEmptyName(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_launch_template" "test" {
+  name = %q
+
+  iam_instance_profile {
+	  name = ""
+  }
 }
 `, rName)
 }
