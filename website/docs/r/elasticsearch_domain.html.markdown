@@ -252,7 +252,7 @@ The following arguments are supported:
 
 **zone_awareness_config** supports the following attributes:
 
-* `availability_zone_count` - (Required) Number of Availability Zones for the domain to use when `zone_awareness_config` is enabled. Valid values: `2` or `3`.
+* `availability_zone_count` - (Optional) Number of Availability Zones for the domain to use with `zone_awareness_enabled`. Defaults to `2`. Valid values: `2` or `3`.
 
 **node_to_node_encryption** supports the following attributes:
 
