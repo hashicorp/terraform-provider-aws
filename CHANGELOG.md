@@ -15,6 +15,7 @@ FEATURES:
 
 ENHANCEMENTS:
 
+* data-source/aws_route53_zone: Add `linked_service_principal` and `linked_service_description` attributes [GH-9390]
 * provider: Support for assuming role using credential process from the shared AWS configuration file [GH-9305]
 * resource/aws_api_gateway_domain_name: Add `security_policy` argument [GH-9128]
 * resource/aws_athena_named_query: Add `workgroup` argument [GH-9383]
