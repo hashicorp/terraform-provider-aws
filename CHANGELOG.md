@@ -30,6 +30,7 @@ BUG FIXES:
 * resource/aws_cloudwatch_log_subscription_filter: Clean up error handling when creating log subscription filter [GH-9065]
 * resource/aws_cognito_identity_provider: Properly pass all attributes during update [GH-9396]
 * resource/aws_db_event_subscription: Handle `SubscriptionNotFound` errors during refresh and deletion [GH-9371]
+* resource/aws_s3_account_public_access_block: Retry after timeout when reading s3 account public access block [GH-9387]
 * resource/aws_ssm_maintenance_window_task: Bypass `DoesNotExistException` error on deletion [GH-7823]
 
 ## 2.19.0 (July 11, 2019)
