@@ -6,12 +6,13 @@ import (
 	"strconv"
 	"time"
 
+	"strings"
+
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/applicationautoscaling"
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/helper/schema"
 	"github.com/hashicorp/terraform/helper/validation"
-	"strings"
 )
 
 func resourceAwsAppautoscalingPolicy() *schema.Resource {
@@ -406,50 +407,51 @@ func resourceAwsAppautoscalingPolicyDelete(d *schema.ResourceData, meta interfac
 }
 
 func resourceAwsAppautoscalingPolicyImport(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
-	idParts := strings.Split(d.Id(), "/")
-	var serviceNamespace, resourceId, scalableDimension, policyName string
-	var err error
-
-	serviceNamespace, resourceId, scalableDimension, policyName, err = validateAppautoscalingPolicyImportInput(idParts)
-
+	idParts, err := validateAppautoscalingPolicyImportInput(d.Id())
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("unexpected format (%q), expected <service-namespace>/<resource-id>/<scalable-dimension>/<policy-name>", d.Id())
 	}
+
+	serviceNamespace := idParts[0]
+	resourceId := idParts[1]
+	scalableDimension := idParts[2]
+	policyName := idParts[3]
 
 	d.Set("service_namespace", serviceNamespace)
 	d.Set("resource_id", resourceId)
 	d.Set("scalable_dimension", scalableDimension)
 	d.Set("name", policyName)
 	d.SetId(policyName)
-
 	return []*schema.ResourceData{d}, nil
 }
 
-func validateAppautoscalingPolicyImportInput(idParts []string) (string, string, string, string, error) {
-	var serviceNamespace, resourceId, scalableDimension, policyName string
+func validateAppautoscalingPolicyImportInput(id string) ([]string, error) {
 
-	if len(idParts) < 4 || len(idParts) > 6 {
-		return serviceNamespace, resourceId, scalableDimension, policyName, fmt.Errorf("unexpected format (%q), expected <service-namespace>/<resource-id>/<scalable-dimension>/<policy-name>", idParts[0])
+	idParts := strings.Split(id, "/")
+	if len(idParts) < 4 {
+		return nil, fmt.Errorf("unexpected format (%q), expected <service-namespace>/<resource-id>/<scalable-dimension>/<policy-name>", id)
 	}
 
+	var serviceNamespace, resourceId, scalableDimension, policyName string
 	switch idParts[0] {
-	case "ecs", "rds":
+	case "dynamodb":
+		serviceNamespace = idParts[0]
+		resourceId = strings.Join(idParts[1:3], "/")
+		scalableDimension = idParts[3]
+		policyName = strings.Join(idParts[4:], "/")
+	default:
 		serviceNamespace = idParts[0]
 		resourceId = strings.Join(idParts[1:len(idParts)-2], "/")
 		scalableDimension = idParts[len(idParts)-2]
 		policyName = idParts[len(idParts)-1]
-	case "dynamodb":
-		serviceNamespace = idParts[0]
-		resourceId = strings.Join(idParts[1:3], "/")
-		scalableDimension = idParts[len(idParts)-3]
-		policyName = strings.Join(idParts[4:], "/")
+
 	}
 
 	if serviceNamespace == "" || resourceId == "" || scalableDimension == "" || policyName == "" {
-		return serviceNamespace, resourceId, scalableDimension, policyName, fmt.Errorf("unexpected format (%q), expected <service-namespace>/<resource-id>/<scalable-dimension>/<policy-name>", idParts[0])
+		return nil, fmt.Errorf("unexpected format (%q), expected <service-namespace>/<resource-id>/<scalable-dimension>/<policy-name>", id)
 	}
 
-	return serviceNamespace, resourceId, scalableDimension, policyName, nil
+	return []string{serviceNamespace, resourceId, scalableDimension, policyName}, nil
 }
 
 // Takes the result of flatmap.Expand for an array of step adjustments and

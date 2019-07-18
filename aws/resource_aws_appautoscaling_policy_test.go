@@ -2,6 +2,7 @@ package aws
 
 import (
 	"fmt"
+	"reflect"
 	"strings"
 	"testing"
 
@@ -12,81 +13,60 @@ import (
 	"github.com/hashicorp/terraform/terraform"
 )
 
-func TestValidateAppautoscalingPolicyImportInput_positiveCases(t *testing.T) {
+func TestValidateAppautoscalingPolicyImportInput(t *testing.T) {
 	testCases := []struct {
-		input                     string
-		expectedServiceNamespace  string
-		expectedResourceId        string
-		expectedScalableDimension string
-		expectedPolicyName        string
+		input         string
+		errorExpected bool
+		expected      []string
 	}{
 		{
-			"rds/cluster:id/rds:cluster:ReadReplicaCount/cpu-auto-scaling",
-			"rds", "cluster:id", "rds:cluster:ReadReplicaCount", "cpu-auto-scaling"},
+			input:         "appstream/fleet/sample-fleet/appstream:fleet:DesiredCapacity/test-policy-name",
+			expected:      []string{"appstream", "fleet/sample-fleet", "appstream:fleet:DesiredCapacity", "test-policy-name"},
+			errorExpected: false,
+		},
 		{
-			"ecs/service/clusterName/serviceName/ecs:service:DesiredCount/scale-down",
-			"ecs", "service/clusterName/serviceName", "ecs:service:DesiredCount", "scale-down"},
+			input:         "dynamodb/table/tableName/dynamodb:table:ReadCapacityUnits/DynamoDBReadCapacityUtilization:table/tableName",
+			expected:      []string{"dynamodb", "table/tableName", "dynamodb:table:ReadCapacityUnits", "DynamoDBReadCapacityUtilization:table/tableName"},
+			errorExpected: false,
+		},
 		{
-			"dynamodb/table/tableName/dynamodb:table:ReadCapacityUnits/DynamoDBReadCapacityUtilization:table/tableName",
-			"dynamodb", "table/tableName", "dynamodb:table:ReadCapacityUnits", "DynamoDBReadCapacityUtilization:table/tableName"},
+			input:         "ec2/spot-fleet-request/sfr-d77c6508-1c1d-4e79-8789-fc019ee44c96/ec2:spot-fleet-request:TargetCapacity/test-appautoscaling-policy-ruuhd",
+			expected:      []string{"ec2", "spot-fleet-request/sfr-d77c6508-1c1d-4e79-8789-fc019ee44c96", "ec2:spot-fleet-request:TargetCapacity", "test-appautoscaling-policy-ruuhd"},
+			errorExpected: false,
+		},
+		{
+			input:         "ecs/service/clusterName/serviceName/ecs:service:DesiredCount/scale-down",
+			expected:      []string{"ecs", "service/clusterName/serviceName", "ecs:service:DesiredCount", "scale-down"},
+			errorExpected: false,
+		},
+		{
+			input:         "elasticmapreduce/instancegroup/j-2EEZNYKUA1NTV/ig-1791Y4E1L8YI0/elasticmapreduce:instancegroup:InstanceCount/test-appautoscaling-policy-ruuhd",
+			expected:      []string{"elasticmapreduce", "instancegroup/j-2EEZNYKUA1NTV/ig-1791Y4E1L8YI0", "elasticmapreduce:instancegroup:InstanceCount", "test-appautoscaling-policy-ruuhd"},
+			errorExpected: false,
+		},
+		{
+			input:         "rds/cluster:id/rds:cluster:ReadReplicaCount/cpu-auto-scaling",
+			expected:      []string{"rds", "cluster:id", "rds:cluster:ReadReplicaCount", "cpu-auto-scaling"},
+			errorExpected: false,
+		},
+		{
+			input:         "dynamodb/missing/parts",
+			errorExpected: true,
+		},
 	}
 
-	for _, test := range testCases {
-		idParts := strings.Split(test.input, "/")
-		serviceNamespace, resourceId, scalableDimension, policyName, err := validateAppautoscalingPolicyImportInput(idParts)
+	for _, tc := range testCases {
+		idParts, err := validateAppautoscalingPolicyImportInput(tc.input)
+		if tc.errorExpected == false && err != nil {
+			t.Errorf("validateAppautoscalingPolicyImportInput(%q): resulted in an unexpected error: %s", tc.input, err)
+		}
 
-		if err != nil || serviceNamespace != test.expectedServiceNamespace {
-			t.Errorf("serviceNamespace interpolation error -> %s != %s", test.expectedServiceNamespace, serviceNamespace)
+		if tc.errorExpected == true && err == nil {
+			t.Errorf("validateAppautoscalingPolicyImportInput(%q): expected an error, but returned successfully", tc.input)
 		}
-		if err != nil && resourceId != test.expectedResourceId {
-			t.Errorf("resourceId interpolation error -> %s != %s", test.expectedResourceId, resourceId)
-		}
-		if err != nil || scalableDimension != test.expectedScalableDimension {
-			t.Errorf("scalableDimension interpolation error -> %s != %s", test.expectedScalableDimension, scalableDimension)
-		}
-		if err != nil || policyName != test.expectedPolicyName {
-			t.Errorf("policyName interpolation error -> %s != %s", test.expectedPolicyName, policyName)
-		}
-	}
-}
 
-func TestValidateAppautoscalingPolicyImportInput_negativeCases(t *testing.T) {
-	testCases := []struct {
-		input                     string
-		expectedServiceNamespace  string
-		expectedResourceId        string
-		expectedScalableDimension string
-		expectedPolicyName        string
-	}{
-		{
-			"wrongValue",
-			"", "", "", ""},
-		{
-			"",
-			"", "", "", ""},
-		{
-			"too/many/arguments/that/are/not/required",
-			"", "", "", ""},
-	}
-
-	for _, test := range testCases {
-		idParts := strings.Split(test.input, "/")
-		serviceNamespace, resourceId, scalableDimension, policyName, err := validateAppautoscalingPolicyImportInput(idParts)
-
-		if err == nil || serviceNamespace != test.expectedServiceNamespace {
-			t.Errorf("serviceNamespace interpolation error -> %s != %s", test.expectedServiceNamespace, serviceNamespace)
-		}
-		if err == nil || resourceId != test.expectedResourceId {
-			t.Errorf("resourceId interpolation error -> %s != %s", test.expectedResourceId, resourceId)
-		}
-		if err == nil || scalableDimension != test.expectedScalableDimension {
-			t.Errorf("scalableDimension interpolation error -> %s != %s", test.expectedScalableDimension, scalableDimension)
-		}
-		if err == nil || policyName != test.expectedPolicyName {
-			t.Errorf("policyName interpolation error -> %s != %s", test.expectedPolicyName, policyName)
-		}
-		if err != nil && err.Error() == "" {
-			t.Errorf("empty error -> error should describe outcome")
+		if !reflect.DeepEqual(tc.expected, idParts) {
+			t.Errorf("validateAppautoscalingPolicyImportInput(%q): expected %q, but got %q", tc.input, strings.Join(tc.expected, "/"), strings.Join(idParts, "/"))
 		}
 	}
 }
