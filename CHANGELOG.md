@@ -1,3 +1,4 @@
+
 ## 2.20.0 (Unreleased)
 
 NOTES:
@@ -6,6 +7,7 @@ NOTES:
 
 FEATURES:
 
+* **New Data Source** `aws_wafregional_web_acl` [GH-9321]
 * **New Resource:** `aws_servicequotas_service_quota` [GH-9192]
 
 ENHANCEMENTS:
