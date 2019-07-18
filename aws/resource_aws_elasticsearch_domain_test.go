@@ -99,6 +99,7 @@ func TestAccAWSElasticSearchDomain_ClusterConfig_ZoneAwarenessConfig(t *testing.
 			{
 				ResourceName:      resourceName,
 				ImportState:       true,
+				ImportStateId:     rName,
 				ImportStateVerify: true,
 			},
 			{
