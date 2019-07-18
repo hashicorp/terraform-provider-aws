@@ -29,6 +29,7 @@ ENHANCEMENTS:
 
 BUG FIXES:
 
+* resource/aws_appautoscaling_policy: Properly support importing of dynamodb policies [GH-8397] 
 * resource/aws_cloudwatch_event_permissions: Clean up error handling when reading event permissions [GH-9065]
 * resource/aws_cloudwatch_event_rule: Retry error handling when creating and updating event rules [GH-9065]
 * resource/aws_cloudwatch_log_destination: Clean up error handling when putting log destination [GH-9065]
