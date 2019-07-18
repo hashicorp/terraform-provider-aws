@@ -10,6 +10,7 @@ FEATURES:
 * **New Data Source:** `aws_waf_web_acl` [GH-9320]
 * **New Data Source** `aws_wafregional_rule` [GH-9319]
 * **New Data Source:** `aws_wafregional_web_acl` [GH-9321]
+* **New Resource:** `aws_quicksight_group` [GH-8233]
 * **New Resource:** `aws_servicequotas_service_quota` [GH-9192]
 
 ENHANCEMENTS:
