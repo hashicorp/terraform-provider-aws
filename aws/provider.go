@@ -272,6 +272,7 @@ func Provider() terraform.ResourceProvider {
 			"aws_vpc_endpoint_service":                      dataSourceAwsVpcEndpointService(),
 			"aws_vpc_peering_connection":                    dataSourceAwsVpcPeeringConnection(),
 			"aws_vpn_gateway":                               dataSourceAwsVpnGateway(),
+			"aws_waf_web_acl":                               dataSourceAwsWafWebAcl(),
 			"aws_wafregional_web_acl":                       dataSourceAwsWafRegionalWebAcl(),
 			"aws_workspaces_bundle":                         dataSourceAwsWorkspaceBundle(),
 
