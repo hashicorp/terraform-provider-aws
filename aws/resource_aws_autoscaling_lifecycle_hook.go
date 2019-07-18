@@ -20,6 +20,10 @@ func resourceAwsAutoscalingLifecycleHook() *schema.Resource {
 		Update: resourceAwsAutoscalingLifecycleHookPut,
 		Delete: resourceAwsAutoscalingLifecycleHookDelete,
 
+		Importer: &schema.ResourceImporter{
+			State: resourceAwsAutoscalingLifecycleHookImport,
+		},
+
 		Schema: map[string]*schema.Schema{
 			"name": {
 				Type:     schema.TypeString,
@@ -191,4 +195,20 @@ func getAwsAutoscalingLifecycleHook(d *schema.ResourceData, meta interface{}) (*
 
 	// lifecycle hook not found
 	return nil, nil
+}
+
+func resourceAwsAutoscalingLifecycleHookImport(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
+	idParts := strings.SplitN(d.Id(), "/", 2)
+	if len(idParts) != 2 || idParts[0] == "" || idParts[1] == "" {
+		return nil, fmt.Errorf("unexpected format (%q), expected <asg-name>/<lifecycle-hook-name>", d.Id())
+	}
+
+	asgName := idParts[0]
+	lifecycleHookName := idParts[1]
+
+	d.Set("name", lifecycleHookName)
+	d.Set("autoscaling_group_name", asgName)
+	d.SetId(lifecycleHookName)
+
+	return []*schema.ResourceData{d}, nil
 }
