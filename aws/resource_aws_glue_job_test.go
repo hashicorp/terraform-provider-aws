@@ -730,7 +730,7 @@ resource "aws_glue_job" "test" {
   command {
     name            = "pythonshell"
     script_location = "testscriptlocation"
-    python_verison =  "3"
+    python_version =  "3"
   }
 
   depends_on = ["aws_iam_role_policy_attachment.test"]
