@@ -409,6 +409,40 @@ func TestAccAWSAcmCertificate_wildcardAndRootSan(t *testing.T) {
 	})
 }
 
+func TestAccAWSAcmCertificate_disableCTLogging(t *testing.T) {
+	rootDomain := testAccAwsAcmCertificateDomainFromEnv(t)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAcmCertificateDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAcmCertificateConfig_disableCTLogging(rootDomain, acm.ValidationMethodDns),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestMatchResourceAttr("aws_acm_certificate.cert", "arn", certificateArnRegex),
+					resource.TestCheckResourceAttr("aws_acm_certificate.cert", "domain_name", rootDomain),
+					resource.TestCheckResourceAttr("aws_acm_certificate.cert", "domain_validation_options.#", "1"),
+					resource.TestCheckResourceAttr("aws_acm_certificate.cert", "domain_validation_options.0.domain_name", rootDomain),
+					resource.TestCheckResourceAttrSet("aws_acm_certificate.cert", "domain_validation_options.0.resource_record_name"),
+					resource.TestCheckResourceAttr("aws_acm_certificate.cert", "domain_validation_options.0.resource_record_type", "CNAME"),
+					resource.TestCheckResourceAttrSet("aws_acm_certificate.cert", "domain_validation_options.0.resource_record_value"),
+					resource.TestCheckResourceAttr("aws_acm_certificate.cert", "subject_alternative_names.#", "0"),
+					resource.TestCheckResourceAttr("aws_acm_certificate.cert", "validation_emails.#", "0"),
+					resource.TestCheckResourceAttr("aws_acm_certificate.cert", "validation_method", acm.ValidationMethodDns),
+					resource.TestCheckResourceAttr("aws_acm_certificate.cert", "options.#", "1"),
+					resource.TestCheckResourceAttr("aws_acm_certificate.cert", "options.0.certificate_transparency_logging_preference", acm.CertificateTransparencyLoggingPreferenceDisabled),
+				),
+			},
+			{
+				ResourceName:      "aws_acm_certificate.cert",
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func TestAccAWSAcmCertificate_tags(t *testing.T) {
 	rootDomain := testAccAwsAcmCertificateDomainFromEnv(t)
 
@@ -625,6 +659,19 @@ resource "aws_acm_certificate" "test" {
   private_key      = "${tls_private_key.test.private_key_pem}"
 }
 `, commonName)
+}
+
+func testAccAcmCertificateConfig_disableCTLogging(domainName, validationMethod string) string {
+	return fmt.Sprintf(`
+resource "aws_acm_certificate" "cert" {
+  domain_name       = "%s"
+  validation_method = "%s"
+  options {
+	  certificate_transparency_logging_preference = "DISABLED"
+  }
+}
+`, domainName, validationMethod)
+
 }
 
 func testAccCheckAcmCertificateDestroy(s *terraform.State) error {
