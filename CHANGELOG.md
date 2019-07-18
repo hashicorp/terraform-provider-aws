@@ -17,6 +17,7 @@ ENHANCEMENTS:
 * provider: Support for assuming role using credential process from the shared AWS configuration file [GH-9305]
 * resource/aws_api_gateway_domain_name: Add `security_policy` argument [GH-9128]
 * resource/aws_autoscaling_lifecycle_hook: Support resource import [GH-9336]
+* resource/aws_elasticsearch_domain: Add `cluster_config` configuration block `zone_awareness_config` configuration block (support three Availability Zone awareness) [GH-9398]
 * resource/aws_emr_cluster: Add `master_instance_group` configuration block `instance_count` argument (support multiple master nodes) [GH-9235]
 * resource/aws_media_store_container: Add `tags` argument [GH-9379]
 * resource/aws_rds_cluster: Support `scaling_configuration` configuration block `timeout_action` argument [GH-9374]
