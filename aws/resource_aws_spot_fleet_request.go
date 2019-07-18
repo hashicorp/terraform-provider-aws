@@ -239,9 +239,9 @@ func resourceAwsSpotFleetRequest() *schema.Resource {
 							Optional: true,
 							ForceNew: true,
 							StateFunc: func(v interface{}) string {
-								switch v.(type) {
+								switch v := v.(type) {
 								case string:
-									return userDataHashSum(v.(string))
+									return userDataHashSum(v)
 								default:
 									return ""
 								}
@@ -703,21 +703,20 @@ func resourceAwsSpotFleetRequestCreate(d *schema.ResourceData, meta interface{})
 	// take effect immediately, resulting in an InvalidSpotFleetRequestConfig error
 	var resp *ec2.RequestSpotFleetOutput
 	err = resource.Retry(10*time.Minute, func() *resource.RetryError {
-		var err error
 		resp, err = conn.RequestSpotFleet(spotFleetOpts)
 
+		if isAWSErr(err, "InvalidSpotFleetRequestConfig", "") {
+			return resource.RetryableError(fmt.Errorf("Error creating Spot fleet request, retrying: %s", err))
+		}
 		if err != nil {
-			if awsErr, ok := err.(awserr.Error); ok {
-				// IAM is eventually consistent :/
-				if awsErr.Code() == "InvalidSpotFleetRequestConfig" {
-					return resource.RetryableError(
-						fmt.Errorf("Error creating Spot fleet request, retrying: %s", err))
-				}
-			}
 			return resource.NonRetryableError(err)
 		}
 		return nil
 	})
+
+	if isResourceTimeoutError(err) {
+		resp, err = conn.RequestSpotFleet(spotFleetOpts)
+	}
 
 	if err != nil {
 		return fmt.Errorf("Error requesting spot fleet: %s", err)

@@ -45,14 +45,18 @@ If multiple, different Terraform AWS Provider configurations are required, see t
 
 The Terraform AWS Provider allows the following endpoints to be customized:
 
+<div style="column-width: 14em;">
+
 - `acm`
 - `acmpca`
 - `apigateway`
 - `applicationautoscaling`
+- `applicationinsights`
 - `appmesh`
 - `appsync`
 - `athena`
 - `autoscaling`
+- `autoscalingplans`
 - `backup`
 - `batch`
 - `budgets`
@@ -116,6 +120,7 @@ The Terraform AWS Provider allows the following endpoints to be customized:
 - `licensemanager`
 - `lightsail`
 - `macie`
+- `managedblockchain`
 - `mediaconnect`
 - `mediaconvert`
 - `medialive`
@@ -145,6 +150,7 @@ The Terraform AWS Provider allows the following endpoints to be customized:
 - `serverlessrepo`
 - `servicecatalog`
 - `servicediscovery`
+- `servicequotas`
 - `ses`
 - `shield`
 - `sns`
@@ -159,6 +165,9 @@ The Terraform AWS Provider allows the following endpoints to be customized:
 - `wafregional`
 - `worklink`
 - `workspaces`
+- `xray`
+
+</div>
 
 ## Connecting to Local AWS Compatible Solutions
 

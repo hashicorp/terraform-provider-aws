@@ -25,7 +25,8 @@ func TestAccAWSS3BucketPolicy_basic(t *testing.T) {
 		"Action": "s3:*",
 		"Resource": ["arn:%s:s3:::%s/*","arn:%s:s3:::%s"]
 	}]
-}`, partition, name, partition, name)
+}
+`, partition, name, partition, name)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -61,7 +62,8 @@ func TestAccAWSS3BucketPolicy_policyUpdate(t *testing.T) {
 		"Action": "s3:*",
 		"Resource": ["arn:%s:s3:::%s/*","arn:%s:s3:::%s"]
 	}]
-}`, partition, name, partition, name)
+}
+`, partition, name, partition, name)
 
 	expectedPolicyText2 := fmt.Sprintf(`{
 	"Version":"2012-10-17",
@@ -72,7 +74,8 @@ func TestAccAWSS3BucketPolicy_policyUpdate(t *testing.T) {
 		"Action": ["s3:DeleteBucket", "s3:ListBucket", "s3:ListBucketVersions"],
 		"Resource": ["arn:%s:s3:::%s/*","arn:%s:s3:::%s"]
 	}]
-}`, partition, name, partition, name)
+}
+`, partition, name, partition, name)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -142,15 +145,16 @@ func testAccCheckAWSS3BucketHasPolicy(n string, expectedPolicyText string) resou
 func testAccAWSS3BucketPolicyConfig(bucketName string) string {
 	return fmt.Sprintf(`
 resource "aws_s3_bucket" "bucket" {
-	bucket = "%s"
-	tags = {
-		TestName = "TestAccAWSS3BucketPolicy_basic"
-	}
+  bucket = "%s"
+
+  tags = {
+    TestName = "TestAccAWSS3BucketPolicy_basic"
+  }
 }
 
 resource "aws_s3_bucket_policy" "bucket" {
-	bucket = "${aws_s3_bucket.bucket.bucket}"
-	policy = "${data.aws_iam_policy_document.policy.json}"
+  bucket = "${aws_s3_bucket.bucket.bucket}"
+  policy = "${data.aws_iam_policy_document.policy.json}"
 }
 
 data "aws_iam_policy_document" "policy" {
@@ -178,15 +182,16 @@ data "aws_iam_policy_document" "policy" {
 func testAccAWSS3BucketPolicyConfig_updated(bucketName string) string {
 	return fmt.Sprintf(`
 resource "aws_s3_bucket" "bucket" {
-	bucket = "%s"
-	tags = {
-		TestName = "TestAccAWSS3BucketPolicy_basic"
-	}
+  bucket = "%s"
+
+  tags = {
+    TestName = "TestAccAWSS3BucketPolicy_basic"
+  }
 }
 
 resource "aws_s3_bucket_policy" "bucket" {
-	bucket = "${aws_s3_bucket.bucket.bucket}"
-	policy = "${data.aws_iam_policy_document.policy.json}"
+  bucket = "${aws_s3_bucket.bucket.bucket}"
+  policy = "${data.aws_iam_policy_document.policy.json}"
 }
 
 data "aws_iam_policy_document" "policy" {
@@ -196,7 +201,7 @@ data "aws_iam_policy_document" "policy" {
     actions = [
       "s3:DeleteBucket",
       "s3:ListBucket",
-      "s3:ListBucketVersions"
+      "s3:ListBucketVersions",
     ]
 
     resources = [

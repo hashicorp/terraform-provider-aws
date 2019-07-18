@@ -22,6 +22,8 @@ resource "aws_ssm_maintenance_window" "window" {
 
 resource "aws_ssm_maintenance_window_target" "target1" {
   window_id     = "${aws_ssm_maintenance_window.window.id}"
+  name          = "maintenance-window-target"
+  description   = "This is a maintenance window target"
   resource_type = "INSTANCE"
 
   targets {
@@ -36,8 +38,10 @@ resource "aws_ssm_maintenance_window_target" "target1" {
 The following arguments are supported:
 
 * `window_id` - (Required) The Id of the maintenance window to register the target with.
+* `name` - (Optional) The name of the maintenance window target.
+* `description` - (Optional) The description of the maintenance window target.
 * `resource_type` - (Required) The type of target being registered with the Maintenance Window. Possible values `INSTANCE`.
-* `targets` - (Required) The targets (either instances or tags). Instances are specified using Key=instanceids,Values=instanceid1,instanceid2. Tags are specified using Key=tag name,Values=tag value.
+* `targets` - (Required) The targets (either instances or tags). Instances are specified using Key=InstanceIds,Values=InstanceId1,InstanceId2. Tags are specified using Key=tag name,Values=tag value.
 * `owner_information` - (Optional) User-provided value that will be included in any CloudWatch events raised while running tasks for these targets in this Maintenance Window.
 
 ## Attributes Reference

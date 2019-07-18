@@ -87,6 +87,10 @@ func resourceAwsAppautoscalingTargetPut(d *schema.ResourceData, meta interface{}
 
 		return nil
 	})
+	if isResourceTimeoutError(err) {
+		_, err = conn.RegisterScalableTarget(&targetOpts)
+	}
+
 	if err != nil {
 		return fmt.Errorf("Error creating application autoscaling target: %s", err)
 	}

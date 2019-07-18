@@ -693,10 +693,11 @@ resource "aws_instance" "test" {
 
   ami                         = "${data.aws_ami.aws-thinstaller.id}"
   associate_public_ip_address = true
+
   # https://docs.aws.amazon.com/storagegateway/latest/userguide/Requirements.html
-  instance_type               = "m4.xlarge"
-  vpc_security_group_ids      = ["${aws_security_group.test.id}"]
-  subnet_id                   = "${aws_subnet.test.*.id[0]}"
+  instance_type          = "m4.xlarge"
+  vpc_security_group_ids = ["${aws_security_group.test.id}"]
+  subnet_id              = "${aws_subnet.test.*.id[0]}"
 
   tags = {
     Name = %q

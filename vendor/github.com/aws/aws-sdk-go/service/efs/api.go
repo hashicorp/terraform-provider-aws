@@ -251,28 +251,22 @@ func (c *EFS) CreateMountTargetRequest(input *CreateMountTargetInput) (req *requ
 //
 //    * Creates a new mount target in the specified subnet.
 //
-//    * Also creates a new network interface in the subnet as follows:
-//
-// If the request provides an IpAddress, Amazon EFS assigns that IP address
-//    to the network interface. Otherwise, Amazon EFS assigns a free address
-//    in the subnet (in the same way that the Amazon EC2 CreateNetworkInterface
-//    call does when a request does not specify a primary private IP address).
-//
-// If the request provides SecurityGroups, this network interface is associated
+//    * Also creates a new network interface in the subnet as follows: If the
+//    request provides an IpAddress, Amazon EFS assigns that IP address to the
+//    network interface. Otherwise, Amazon EFS assigns a free address in the
+//    subnet (in the same way that the Amazon EC2 CreateNetworkInterface call
+//    does when a request does not specify a primary private IP address). If
+//    the request provides SecurityGroups, this network interface is associated
 //    with those security groups. Otherwise, it belongs to the default security
-//    group for the subnet's VPC.
-//
-// Assigns the description Mount target fsmt-id for file system fs-id where
-//    fsmt-id is the mount target ID, and fs-id is the FileSystemId.
-//
-// Sets the requesterManaged property of the network interface to true, and
-//    the requesterId value to EFS.
-//
-// Each Amazon EFS mount target has one corresponding requester-managed EC2
-//    network interface. After the network interface is created, Amazon EFS
-//    sets the NetworkInterfaceId field in the mount target's description to
-//    the network interface ID, and the IpAddress field to its address. If network
-//    interface creation fails, the entire CreateMountTarget operation fails.
+//    group for the subnet's VPC. Assigns the description Mount target fsmt-id
+//    for file system fs-id where fsmt-id is the mount target ID, and fs-id
+//    is the FileSystemId. Sets the requesterManaged property of the network
+//    interface to true, and the requesterId value to EFS. Each Amazon EFS mount
+//    target has one corresponding requester-managed EC2 network interface.
+//    After the network interface is created, Amazon EFS sets the NetworkInterfaceId
+//    field in the mount target's description to the network interface ID, and
+//    the IpAddress field to its address. If network interface creation fails,
+//    the entire CreateMountTarget operation fails.
 //
 // The CreateMountTarget call returns only after creating the network interface,
 // but while the mount target state is still creating, you can check the mount
@@ -343,7 +337,7 @@ func (c *EFS) CreateMountTargetRequest(input *CreateMountTargetInput) (req *requ
 //   for the specific AWS Region. The client should try to delete some elastic
 //   network interfaces or get the account limit raised. For more information,
 //   see Amazon VPC Limits (https://docs.aws.amazon.com/AmazonVPC/latest/UserGuide/VPC_Appendix_Limits.html)
-//   in the Amazon VPC User Guide  (see the Network interfaces per VPC entry in
+//   in the Amazon VPC User Guide (see the Network interfaces per VPC entry in
 //   the table).
 //
 //   * ErrCodeSecurityGroupLimitExceeded "SecurityGroupLimitExceeded"
@@ -1453,17 +1447,14 @@ func (c *EFS) PutLifecycleConfigurationRequest(input *PutLifecycleConfigurationI
 // LifecyclePolicies array in the request body deletes any existing LifecycleConfiguration
 // and disables lifecycle management.
 //
-// You can enable lifecycle management only for EFS file systems created after
-// the release of EFS infrequent access.
-//
 // In the request, specify the following:
 //
-//    * The ID for the file system for which you are creating a lifecycle management
-//    configuration.
+//    * The ID for the file system for which you are enabling, disabling, or
+//    modifying lifecycle management.
 //
 //    * A LifecyclePolicies array of LifecyclePolicy objects that define when
 //    files are moved to the IA storage class. The array can contain only one
-//    "TransitionToIA": "AFTER_30_DAYS"LifecyclePolicy item.
+//    LifecyclePolicy item.
 //
 // This operation requires permissions for the elasticfilesystem:PutLifecycleConfiguration
 // operation.
@@ -1664,11 +1655,12 @@ type CreateFileSystemInput struct {
 	PerformanceMode *string `type:"string" enum:"PerformanceMode"`
 
 	// The throughput, measured in MiB/s, that you want to provision for a file
-	// system that you're creating. The limit on throughput is 1024 MiB/s. You can
-	// get these limits increased by contacting AWS Support. For more information,
+	// system that you're creating. Valid values are 1-1024. Required if ThroughputMode
+	// is set to provisioned. The upper limit for throughput is 1024 MiB/s. You
+	// can get this limit increased by contacting AWS Support. For more information,
 	// see Amazon EFS Limits That You Can Increase (https://docs.aws.amazon.com/efs/latest/ug/limits.html#soft-limits)
 	// in the Amazon EFS User Guide.
-	ProvisionedThroughputInMibps *float64 `type:"double"`
+	ProvisionedThroughputInMibps *float64 `min:"1" type:"double"`
 
 	// A value that specifies to create one or more tags associated with the file
 	// system. Each tag is a user-defined key-value pair. Name your file system
@@ -1676,10 +1668,13 @@ type CreateFileSystemInput struct {
 	Tags []*Tag `type:"list"`
 
 	// The throughput mode for the file system to be created. There are two throughput
-	// modes to choose from for your file system: bursting and provisioned. You
-	// can decrease your file system's throughput in Provisioned Throughput mode
-	// or change between the throughput modes as long as it’s been more than 24
-	// hours since the last decrease or throughput mode change.
+	// modes to choose from for your file system: bursting and provisioned. If you
+	// set ThroughputMode to provisioned, you must also set a value for ProvisionedThroughPutInMibps.
+	// You can decrease your file system's throughput in Provisioned Throughput
+	// mode or change between the throughput modes as long as it’s been more than
+	// 24 hours since the last decrease or throughput mode change. For more, see
+	// Specifying Throughput with Provisioned Mode (https://docs.aws.amazon.com/efs/latest/ug/performance.html#provisioned-throughput)
+	// in the Amazon EFS User Guide.
 	ThroughputMode *string `type:"string" enum:"ThroughputMode"`
 }
 
@@ -1704,6 +1699,9 @@ func (s *CreateFileSystemInput) Validate() error {
 	}
 	if s.KmsKeyId != nil && len(*s.KmsKeyId) < 1 {
 		invalidParams.Add(request.NewErrParamMinLen("KmsKeyId", 1))
+	}
+	if s.ProvisionedThroughputInMibps != nil && *s.ProvisionedThroughputInMibps < 1 {
+		invalidParams.Add(request.NewErrParamMinValue("ProvisionedThroughputInMibps", 1))
 	}
 	if s.Tags != nil {
 		for i, v := range s.Tags {
@@ -2111,7 +2109,9 @@ type DescribeFileSystemsInput struct {
 	Marker *string `location:"querystring" locationName:"Marker" type:"string"`
 
 	// (Optional) Specifies the maximum number of file systems to return in the
-	// response (integer). Currently, this number is automatically set to 10.
+	// response (integer). Currently, this number is automatically set to 10, and
+	// other values are ignored. The response is paginated at 10 per page if you
+	// have more than 10 file systems.
 	MaxItems *int64 `location:"querystring" locationName:"MaxItems" min:"1" type:"integer"`
 }
 
@@ -2352,7 +2352,8 @@ type DescribeMountTargetsInput struct {
 	Marker *string `location:"querystring" locationName:"Marker" type:"string"`
 
 	// (Optional) Maximum number of mount targets to return in the response. Currently,
-	// this number is automatically set to 10.
+	// this number is automatically set to 10, and other values are ignored. The
+	// response is paginated at 10 per page if you have more than 10 mount targets.
 	MaxItems *int64 `location:"querystring" locationName:"MaxItems" min:"1" type:"integer"`
 
 	// (Optional) ID of the mount target that you want to have described (String).
@@ -2466,7 +2467,8 @@ type DescribeTagsInput struct {
 	Marker *string `location:"querystring" locationName:"Marker" type:"string"`
 
 	// (Optional) The maximum number of file system tags to return in the response.
-	// Currently, this number is automatically set to 10.
+	// Currently, this number is automatically set to 10, and other values are ignored.
+	// The response is paginated at 10 per page if you have more than 10 tags.
 	MaxItems *int64 `location:"querystring" locationName:"MaxItems" min:"1" type:"integer"`
 }
 
@@ -2617,11 +2619,12 @@ type FileSystemDescription struct {
 	PerformanceMode *string `type:"string" required:"true" enum:"PerformanceMode"`
 
 	// The throughput, measured in MiB/s, that you want to provision for a file
-	// system. The limit on throughput is 1024 MiB/s. You can get these limits increased
+	// system. Valid values are 1-1024. Required if ThroughputMode is set to provisioned.
+	// The limit on throughput is 1024 MiB/s. You can get these limits increased
 	// by contacting AWS Support. For more information, see Amazon EFS Limits That
 	// You Can Increase (https://docs.aws.amazon.com/efs/latest/ug/limits.html#soft-limits)
 	// in the Amazon EFS User Guide.
-	ProvisionedThroughputInMibps *float64 `type:"double"`
+	ProvisionedThroughputInMibps *float64 `min:"1" type:"double"`
 
 	// The latest known metered size (in bytes) of data stored in the file system,
 	// in its Value field, and the time at which that size was determined in its
@@ -2642,10 +2645,11 @@ type FileSystemDescription struct {
 	Tags []*Tag `type:"list" required:"true"`
 
 	// The throughput mode for a file system. There are two throughput modes to
-	// choose from for your file system: bursting and provisioned. You can decrease
-	// your file system's throughput in Provisioned Throughput mode or change between
-	// the throughput modes as long as it’s been more than 24 hours since the last
-	// decrease or throughput mode change.
+	// choose from for your file system: bursting and provisioned. If you set ThroughputMode
+	// to provisioned, you must also set a value for ProvisionedThroughPutInMibps.
+	// You can decrease your file system's throughput in Provisioned Throughput
+	// mode or change between the throughput modes as long as it’s been more than
+	// 24 hours since the last decrease or throughput mode change.
 	ThroughputMode *string `type:"string" enum:"ThroughputMode"`
 }
 
@@ -2811,13 +2815,9 @@ func (s *FileSystemSize) SetValueInStandard(v int64) *FileSystemSize {
 type LifecyclePolicy struct {
 	_ struct{} `type:"structure"`
 
-	// A value that indicates how long it takes to transition files to the IA storage
-	// class. Currently, the only valid value is AFTER_30_DAYS.
-	//
-	// AFTER_30_DAYS indicates files that have not been read from or written to
-	// for 30 days are transitioned from the Standard storage class to the IA storage
-	// class. Metadata operations such as listing the contents of a directory don't
-	// count as a file access event.
+	// A value that describes the period of time that a file is not accessed, after
+	// which it transitions to the IA storage class. Metadata operations such as
+	// listing the contents of a directory don't count as file access events.
 	TransitionToIA *string `type:"string" enum:"TransitionToIARules"`
 }
 
@@ -3072,7 +3072,7 @@ func (s *PutLifecycleConfigurationOutput) SetLifecyclePolicies(v []*LifecyclePol
 }
 
 // A tag is a key-value pair. Allowed characters are letters, white space, and
-// numbers that can be represented in UTF-8, and the following characters: +
+// numbers that can be represented in UTF-8, and the following characters:+
 // - = . _ : /
 type Tag struct {
 	_ struct{} `type:"structure"`
@@ -3138,13 +3138,16 @@ type UpdateFileSystemInput struct {
 	FileSystemId *string `location:"uri" locationName:"FileSystemId" type:"string" required:"true"`
 
 	// (Optional) The amount of throughput, in MiB/s, that you want to provision
-	// for your file system. If you're not updating the amount of provisioned throughput
-	// for your file system, you don't need to provide this value in your request.
-	ProvisionedThroughputInMibps *float64 `type:"double"`
+	// for your file system. Valid values are 1-1024. Required if ThroughputMode
+	// is changed to provisioned on update. If you're not updating the amount of
+	// provisioned throughput for your file system, you don't need to provide this
+	// value in your request.
+	ProvisionedThroughputInMibps *float64 `min:"1" type:"double"`
 
 	// (Optional) The throughput mode that you want your file system to use. If
 	// you're not updating your throughput mode, you don't need to provide this
-	// value in your request.
+	// value in your request. If you are changing the ThroughputMode to provisioned,
+	// you must also set a value for ProvisionedThroughputInMibps.
 	ThroughputMode *string `type:"string" enum:"ThroughputMode"`
 }
 
@@ -3166,6 +3169,9 @@ func (s *UpdateFileSystemInput) Validate() error {
 	}
 	if s.FileSystemId != nil && len(*s.FileSystemId) < 1 {
 		invalidParams.Add(request.NewErrParamMinLen("FileSystemId", 1))
+	}
+	if s.ProvisionedThroughputInMibps != nil && *s.ProvisionedThroughputInMibps < 1 {
+		invalidParams.Add(request.NewErrParamMinValue("ProvisionedThroughputInMibps", 1))
 	}
 
 	if invalidParams.Len() > 0 {
@@ -3246,11 +3252,12 @@ type UpdateFileSystemOutput struct {
 	PerformanceMode *string `type:"string" required:"true" enum:"PerformanceMode"`
 
 	// The throughput, measured in MiB/s, that you want to provision for a file
-	// system. The limit on throughput is 1024 MiB/s. You can get these limits increased
+	// system. Valid values are 1-1024. Required if ThroughputMode is set to provisioned.
+	// The limit on throughput is 1024 MiB/s. You can get these limits increased
 	// by contacting AWS Support. For more information, see Amazon EFS Limits That
 	// You Can Increase (https://docs.aws.amazon.com/efs/latest/ug/limits.html#soft-limits)
 	// in the Amazon EFS User Guide.
-	ProvisionedThroughputInMibps *float64 `type:"double"`
+	ProvisionedThroughputInMibps *float64 `min:"1" type:"double"`
 
 	// The latest known metered size (in bytes) of data stored in the file system,
 	// in its Value field, and the time at which that size was determined in its
@@ -3271,10 +3278,11 @@ type UpdateFileSystemOutput struct {
 	Tags []*Tag `type:"list" required:"true"`
 
 	// The throughput mode for a file system. There are two throughput modes to
-	// choose from for your file system: bursting and provisioned. You can decrease
-	// your file system's throughput in Provisioned Throughput mode or change between
-	// the throughput modes as long as it’s been more than 24 hours since the last
-	// decrease or throughput mode change.
+	// choose from for your file system: bursting and provisioned. If you set ThroughputMode
+	// to provisioned, you must also set a value for ProvisionedThroughPutInMibps.
+	// You can decrease your file system's throughput in Provisioned Throughput
+	// mode or change between the throughput modes as long as it’s been more than
+	// 24 hours since the last decrease or throughput mode change.
 	ThroughputMode *string `type:"string" enum:"ThroughputMode"`
 }
 
@@ -3406,6 +3414,15 @@ const (
 )
 
 const (
+	// TransitionToIARulesAfter14Days is a TransitionToIARules enum value
+	TransitionToIARulesAfter14Days = "AFTER_14_DAYS"
+
 	// TransitionToIARulesAfter30Days is a TransitionToIARules enum value
 	TransitionToIARulesAfter30Days = "AFTER_30_DAYS"
+
+	// TransitionToIARulesAfter60Days is a TransitionToIARules enum value
+	TransitionToIARulesAfter60Days = "AFTER_60_DAYS"
+
+	// TransitionToIARulesAfter90Days is a TransitionToIARules enum value
+	TransitionToIARulesAfter90Days = "AFTER_90_DAYS"
 )

@@ -1791,7 +1791,7 @@ func (c *CognitoIdentityProvider) AdminListGroupsForUserWithContext(ctx aws.Cont
 //    // Example iterating over at most 3 pages of a AdminListGroupsForUser operation.
 //    pageNum := 0
 //    err := client.AdminListGroupsForUserPages(params,
-//        func(page *AdminListGroupsForUserOutput, lastPage bool) bool {
+//        func(page *cognitoidentityprovider.AdminListGroupsForUserOutput, lastPage bool) bool {
 //            pageNum++
 //            fmt.Println(page)
 //            return pageNum <= 3
@@ -1948,7 +1948,7 @@ func (c *CognitoIdentityProvider) AdminListUserAuthEventsWithContext(ctx aws.Con
 //    // Example iterating over at most 3 pages of a AdminListUserAuthEvents operation.
 //    pageNum := 0
 //    err := client.AdminListUserAuthEventsPages(params,
-//        func(page *AdminListUserAuthEventsOutput, lastPage bool) bool {
+//        func(page *cognitoidentityprovider.AdminListUserAuthEventsOutput, lastPage bool) bool {
 //            pageNum++
 //            fmt.Println(page)
 //            return pageNum <= 3
@@ -2478,6 +2478,106 @@ func (c *CognitoIdentityProvider) AdminSetUserMFAPreference(input *AdminSetUserM
 // for more information on using Contexts.
 func (c *CognitoIdentityProvider) AdminSetUserMFAPreferenceWithContext(ctx aws.Context, input *AdminSetUserMFAPreferenceInput, opts ...request.Option) (*AdminSetUserMFAPreferenceOutput, error) {
 	req, out := c.AdminSetUserMFAPreferenceRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
+const opAdminSetUserPassword = "AdminSetUserPassword"
+
+// AdminSetUserPasswordRequest generates a "aws/request.Request" representing the
+// client's request for the AdminSetUserPassword operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See AdminSetUserPassword for more information on using the AdminSetUserPassword
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the AdminSetUserPasswordRequest method.
+//    req, resp := client.AdminSetUserPasswordRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/cognito-idp-2016-04-18/AdminSetUserPassword
+func (c *CognitoIdentityProvider) AdminSetUserPasswordRequest(input *AdminSetUserPasswordInput) (req *request.Request, output *AdminSetUserPasswordOutput) {
+	op := &request.Operation{
+		Name:       opAdminSetUserPassword,
+		HTTPMethod: "POST",
+		HTTPPath:   "/",
+	}
+
+	if input == nil {
+		input = &AdminSetUserPasswordInput{}
+	}
+
+	output = &AdminSetUserPasswordOutput{}
+	req = c.newRequest(op, input, output)
+	req.Handlers.Unmarshal.Swap(jsonrpc.UnmarshalHandler.Name, protocol.UnmarshalDiscardBodyHandler)
+	return
+}
+
+// AdminSetUserPassword API operation for Amazon Cognito Identity Provider.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for Amazon Cognito Identity Provider's
+// API operation AdminSetUserPassword for usage and error information.
+//
+// Returned Error Codes:
+//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   This exception is thrown when the Amazon Cognito service cannot find the
+//   requested resource.
+//
+//   * ErrCodeNotAuthorizedException "NotAuthorizedException"
+//   This exception is thrown when a user is not authorized.
+//
+//   * ErrCodeUserNotFoundException "UserNotFoundException"
+//   This exception is thrown when a user is not found.
+//
+//   * ErrCodeInternalErrorException "InternalErrorException"
+//   This exception is thrown when Amazon Cognito encounters an internal error.
+//
+//   * ErrCodeTooManyRequestsException "TooManyRequestsException"
+//   This exception is thrown when the user has made too many requests for a given
+//   operation.
+//
+//   * ErrCodeInvalidParameterException "InvalidParameterException"
+//   This exception is thrown when the Amazon Cognito service encounters an invalid
+//   parameter.
+//
+//   * ErrCodeInvalidPasswordException "InvalidPasswordException"
+//   This exception is thrown when the Amazon Cognito service encounters an invalid
+//   password.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/cognito-idp-2016-04-18/AdminSetUserPassword
+func (c *CognitoIdentityProvider) AdminSetUserPassword(input *AdminSetUserPasswordInput) (*AdminSetUserPasswordOutput, error) {
+	req, out := c.AdminSetUserPasswordRequest(input)
+	return out, req.Send()
+}
+
+// AdminSetUserPasswordWithContext is the same as AdminSetUserPassword with the addition of
+// the ability to pass a context and additional request options.
+//
+// See AdminSetUserPassword for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *CognitoIdentityProvider) AdminSetUserPasswordWithContext(ctx aws.Context, input *AdminSetUserPasswordInput, opts ...request.Option) (*AdminSetUserPasswordOutput, error) {
+	req, out := c.AdminSetUserPasswordRequest(input)
 	req.SetContext(ctx)
 	req.ApplyOptions(opts...)
 	return out, req.Send()
@@ -5937,8 +6037,7 @@ func (c *CognitoIdentityProvider) ForgotPasswordRequest(input *ForgotPasswordInp
 // for the user, the confirmation code is sent to the phone number. Otherwise,
 // if a verified email exists, the confirmation code is sent to the email. If
 // neither a verified phone number nor a verified email exists, InvalidParameterException
-// is thrown. To use the confirmation code for resetting the password, call
-// .
+// is thrown. To use the confirmation code for resetting the password, call .
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -7371,7 +7470,7 @@ func (c *CognitoIdentityProvider) ListGroupsWithContext(ctx aws.Context, input *
 //    // Example iterating over at most 3 pages of a ListGroups operation.
 //    pageNum := 0
 //    err := client.ListGroupsPages(params,
-//        func(page *ListGroupsOutput, lastPage bool) bool {
+//        func(page *cognitoidentityprovider.ListGroupsOutput, lastPage bool) bool {
 //            pageNum++
 //            fmt.Println(page)
 //            return pageNum <= 3
@@ -7521,7 +7620,7 @@ func (c *CognitoIdentityProvider) ListIdentityProvidersWithContext(ctx aws.Conte
 //    // Example iterating over at most 3 pages of a ListIdentityProviders operation.
 //    pageNum := 0
 //    err := client.ListIdentityProvidersPages(params,
-//        func(page *ListIdentityProvidersOutput, lastPage bool) bool {
+//        func(page *cognitoidentityprovider.ListIdentityProvidersOutput, lastPage bool) bool {
 //            pageNum++
 //            fmt.Println(page)
 //            return pageNum <= 3
@@ -7671,7 +7770,7 @@ func (c *CognitoIdentityProvider) ListResourceServersWithContext(ctx aws.Context
 //    // Example iterating over at most 3 pages of a ListResourceServers operation.
 //    pageNum := 0
 //    err := client.ListResourceServersPages(params,
-//        func(page *ListResourceServersOutput, lastPage bool) bool {
+//        func(page *cognitoidentityprovider.ListResourceServersOutput, lastPage bool) bool {
 //            pageNum++
 //            fmt.Println(page)
 //            return pageNum <= 3
@@ -8015,7 +8114,7 @@ func (c *CognitoIdentityProvider) ListUserPoolClientsWithContext(ctx aws.Context
 //    // Example iterating over at most 3 pages of a ListUserPoolClients operation.
 //    pageNum := 0
 //    err := client.ListUserPoolClientsPages(params,
-//        func(page *ListUserPoolClientsOutput, lastPage bool) bool {
+//        func(page *cognitoidentityprovider.ListUserPoolClientsOutput, lastPage bool) bool {
 //            pageNum++
 //            fmt.Println(page)
 //            return pageNum <= 3
@@ -8161,7 +8260,7 @@ func (c *CognitoIdentityProvider) ListUserPoolsWithContext(ctx aws.Context, inpu
 //    // Example iterating over at most 3 pages of a ListUserPools operation.
 //    pageNum := 0
 //    err := client.ListUserPoolsPages(params,
-//        func(page *ListUserPoolsOutput, lastPage bool) bool {
+//        func(page *cognitoidentityprovider.ListUserPoolsOutput, lastPage bool) bool {
 //            pageNum++
 //            fmt.Println(page)
 //            return pageNum <= 3
@@ -8407,7 +8506,7 @@ func (c *CognitoIdentityProvider) ListUsersInGroupWithContext(ctx aws.Context, i
 //    // Example iterating over at most 3 pages of a ListUsersInGroup operation.
 //    pageNum := 0
 //    err := client.ListUsersInGroupPages(params,
-//        func(page *ListUsersInGroupOutput, lastPage bool) bool {
+//        func(page *cognitoidentityprovider.ListUsersInGroupOutput, lastPage bool) bool {
 //            pageNum++
 //            fmt.Println(page)
 //            return pageNum <= 3
@@ -10598,8 +10697,7 @@ func (c *CognitoIdentityProvider) UpdateUserPoolClientRequest(input *UpdateUserP
 //
 // Updates the specified user pool app client with the specified attributes.
 // If you don't provide a value for an attribute, it will be set to the default
-// value. You can get a list of the current user pool app client settings with
-// .
+// value. You can get a list of the current user pool app client settings with .
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -12798,10 +12896,12 @@ type AdminLinkProviderForUserInput struct {
 	// respectively. The ProviderAttributeValue for the user must be the same value
 	// as the id, sub, or user_id value found in the social identity provider token.
 	//
-	// For SAML, the ProviderAttributeNamecan be any value that matches a claim in the SAML assertion. If you wish
-	// to link SAML users based on the subject of the SAML assertion, you should
-	// map the subject to a claim through the SAML identity provider and submit
-	// that claim name as the ProviderAttributeName. If you set ProviderAttributeNameto Cognito_Subject
+	// For SAML, the ProviderAttributeName can be any value that matches a claim
+	// in the SAML assertion. If you wish to link SAML users based on the subject
+	// of the SAML assertion, you should map the subject to a claim through the
+	// SAML identity provider and submit that claim name as the ProviderAttributeName.
+	// If you set ProviderAttributeName to Cognito_Subject, Cognito will automatically
+	// parse the default unique identifier found in the subject from the SAML token.
 	//
 	// SourceUser is a required field
 	SourceUser *ProviderUserIdentifierType `type:"structure" required:"true"`
@@ -13413,7 +13513,6 @@ type AdminRespondToAuthChallengeInput struct {
 	//    * NEW_PASSWORD_REQUIRED: NEW_PASSWORD, any other required attributes,
 	//    USERNAME, SECRET_HASH (if app client is configured with client secret).
 	//
-	//
 	// The value of the USERNAME attribute must be the user's actual username, not
 	// an alias (such as email address or phone number). To make this easier, the
 	// AdminInitiateAuth response includes the actual username value in the USERNAMEUSER_ID_FOR_SRP
@@ -13670,6 +13769,97 @@ func (s AdminSetUserMFAPreferenceOutput) String() string {
 
 // GoString returns the string representation
 func (s AdminSetUserMFAPreferenceOutput) GoString() string {
+	return s.String()
+}
+
+type AdminSetUserPasswordInput struct {
+	_ struct{} `type:"structure"`
+
+	// Password is a required field
+	Password *string `min:"6" type:"string" required:"true" sensitive:"true"`
+
+	Permanent *bool `type:"boolean"`
+
+	// UserPoolId is a required field
+	UserPoolId *string `min:"1" type:"string" required:"true"`
+
+	// Username is a required field
+	Username *string `min:"1" type:"string" required:"true" sensitive:"true"`
+}
+
+// String returns the string representation
+func (s AdminSetUserPasswordInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s AdminSetUserPasswordInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *AdminSetUserPasswordInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "AdminSetUserPasswordInput"}
+	if s.Password == nil {
+		invalidParams.Add(request.NewErrParamRequired("Password"))
+	}
+	if s.Password != nil && len(*s.Password) < 6 {
+		invalidParams.Add(request.NewErrParamMinLen("Password", 6))
+	}
+	if s.UserPoolId == nil {
+		invalidParams.Add(request.NewErrParamRequired("UserPoolId"))
+	}
+	if s.UserPoolId != nil && len(*s.UserPoolId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("UserPoolId", 1))
+	}
+	if s.Username == nil {
+		invalidParams.Add(request.NewErrParamRequired("Username"))
+	}
+	if s.Username != nil && len(*s.Username) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("Username", 1))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetPassword sets the Password field's value.
+func (s *AdminSetUserPasswordInput) SetPassword(v string) *AdminSetUserPasswordInput {
+	s.Password = &v
+	return s
+}
+
+// SetPermanent sets the Permanent field's value.
+func (s *AdminSetUserPasswordInput) SetPermanent(v bool) *AdminSetUserPasswordInput {
+	s.Permanent = &v
+	return s
+}
+
+// SetUserPoolId sets the UserPoolId field's value.
+func (s *AdminSetUserPasswordInput) SetUserPoolId(v string) *AdminSetUserPasswordInput {
+	s.UserPoolId = &v
+	return s
+}
+
+// SetUsername sets the Username field's value.
+func (s *AdminSetUserPasswordInput) SetUsername(v string) *AdminSetUserPasswordInput {
+	s.Username = &v
+	return s
+}
+
+type AdminSetUserPasswordOutput struct {
+	_ struct{} `type:"structure"`
+}
+
+// String returns the string representation
+func (s AdminSetUserPasswordOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s AdminSetUserPasswordOutput) GoString() string {
 	return s.String()
 }
 
@@ -16154,10 +16344,10 @@ type CreateUserPoolInput struct {
 	// need permission to invoke a function. So you will need to make an extra call
 	// to add permission for these event sources to invoke your Lambda function.
 	//
-	// For more information on using the Lambda API to add permission, see  AddPermission
-	//  (https://docs.aws.amazon.com/lambda/latest/dg/API_AddPermission.html).
+	// For more information on using the Lambda API to add permission, see AddPermission
+	// (https://docs.aws.amazon.com/lambda/latest/dg/API_AddPermission.html).
 	//
-	// For adding permission using the AWS CLI, see  add-permission  (https://docs.aws.amazon.com/cli/latest/reference/lambda/add-permission.html).
+	// For adding permission using the AWS CLI, see add-permission (https://docs.aws.amazon.com/cli/latest/reference/lambda/add-permission.html).
 	LambdaConfig *LambdaConfigType `type:"structure"`
 
 	// Specifies MFA configuration details.
@@ -17777,12 +17967,14 @@ type EmailConfigurationType struct {
 	// email functionality or your Amazon SES email configuration. Specify one of
 	// the following values:
 	//
-	// COGNITO_DEFAULTWhen Amazon Cognito emails your users, it uses its built-in
-	// email functionality. When you use the default option, Amazon Cognito allows
-	// only a limited number of emails each day for your user pool. For typical
-	// production environments, the default email limit is below the required delivery
-	// volume. To achieve a higher delivery volume, specify DEVELOPER to use your
-	// Amazon SES email configuration.
+	// COGNITO_DEFAULT
+	//
+	// When Amazon Cognito emails your users, it uses its built-in email functionality.
+	// When you use the default option, Amazon Cognito allows only a limited number
+	// of emails each day for your user pool. For typical production environments,
+	// the default email limit is below the required delivery volume. To achieve
+	// a higher delivery volume, specify DEVELOPER to use your Amazon SES email
+	// configuration.
 	//
 	// To look up the email delivery limit for the default option, see Limits in
 	// Amazon Cognito (https://docs.aws.amazon.com/cognito/latest/developerguide/limits.html)
@@ -17792,7 +17984,9 @@ type EmailConfigurationType struct {
 	// the FROM address, provide the ARN of an Amazon SES verified email address
 	// for the SourceArn parameter.
 	//
-	// DEVELOPERWhen Amazon Cognito emails your users, it uses your Amazon SES configuration.
+	// DEVELOPER
+	//
+	// When Amazon Cognito emails your users, it uses your Amazon SES configuration.
 	// Amazon Cognito calls Amazon SES on your behalf to send email from your verified
 	// email address. When you use this option, the email delivery limits are the
 	// same limits that apply to your Amazon SES verified email address in your
@@ -20431,7 +20625,7 @@ type ListUsersInput struct {
 	// attributes are returned.
 	AttributesToGet []*string `type:"list"`
 
-	// A filter string of the form "AttributeNameFilter-Type "AttributeValue"".
+	// A filter string of the form "AttributeName Filter-Type "AttributeValue"".
 	// Quotation marks within the filter string must be escaped using the backslash
 	// (\) character. For example, "family_name = \"Reddy\"".
 	//
@@ -20951,6 +21145,8 @@ type PasswordPolicyType struct {
 	// In the password policy that you have set, refers to whether you have required
 	// users to use at least one uppercase letter in their password.
 	RequireUppercase *bool `type:"boolean"`
+
+	TemporaryPasswordValidityDays *int64 `type:"integer"`
 }
 
 // String returns the string representation
@@ -21003,6 +21199,12 @@ func (s *PasswordPolicyType) SetRequireSymbols(v bool) *PasswordPolicyType {
 // SetRequireUppercase sets the RequireUppercase field's value.
 func (s *PasswordPolicyType) SetRequireUppercase(v bool) *PasswordPolicyType {
 	s.RequireUppercase = &v
+	return s
+}
+
+// SetTemporaryPasswordValidityDays sets the TemporaryPasswordValidityDays field's value.
+func (s *PasswordPolicyType) SetTemporaryPasswordValidityDays(v int64) *PasswordPolicyType {
+	s.TemporaryPasswordValidityDays = &v
 	return s
 }
 

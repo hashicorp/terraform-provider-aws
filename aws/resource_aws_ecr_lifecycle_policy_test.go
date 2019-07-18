@@ -103,8 +103,10 @@ func testAccEcrLifecyclePolicyConfig(rName string) string {
 resource "aws_ecr_repository" "foo" {
   name = "%s"
 }
+
 resource "aws_ecr_lifecycle_policy" "foo" {
-	repository = "${aws_ecr_repository.foo.name}"
+  repository = "${aws_ecr_repository.foo.name}"
+
   policy = <<EOF
 {
   "rules": [

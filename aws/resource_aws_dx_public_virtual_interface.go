@@ -116,7 +116,7 @@ func resourceAwsDxPublicVirtualInterfaceCreate(d *schema.ResourceData, meta inte
 		req.NewPublicVirtualInterface.AmazonAddress = aws.String(v.(string))
 	}
 	if v, ok := d.GetOk("route_filter_prefixes"); ok {
-		req.NewPublicVirtualInterface.RouteFilterPrefixes = expandDxRouteFilterPrefixes(v.(*schema.Set).List())
+		req.NewPublicVirtualInterface.RouteFilterPrefixes = expandDxRouteFilterPrefixes(v.(*schema.Set))
 	}
 
 	log.Printf("[DEBUG] Creating Direct Connect public virtual interface: %#v", req)

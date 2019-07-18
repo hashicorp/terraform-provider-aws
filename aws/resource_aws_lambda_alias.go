@@ -17,6 +17,9 @@ func resourceAwsLambdaAlias() *schema.Resource {
 		Read:   resourceAwsLambdaAliasRead,
 		Update: resourceAwsLambdaAliasUpdate,
 		Delete: resourceAwsLambdaAliasDelete,
+		Importer: &schema.ResourceImporter{
+			State: resourceAwsLambdaAliasImport,
+		},
 
 		Schema: map[string]*schema.Schema{
 			"description": {
@@ -117,6 +120,7 @@ func resourceAwsLambdaAliasRead(d *schema.ResourceData, meta interface{}) error 
 	d.Set("function_version", aliasConfiguration.FunctionVersion)
 	d.Set("name", aliasConfiguration.Name)
 	d.Set("arn", aliasConfiguration.AliasArn)
+	d.SetId(*aliasConfiguration.AliasArn)
 
 	invokeArn := lambdaFunctionInvokeArn(*aliasConfiguration.AliasArn, meta)
 	d.Set("invoke_arn", invokeArn)
@@ -185,4 +189,26 @@ func expandLambdaAliasRoutingConfiguration(l []interface{}) *lambda.AliasRouting
 	}
 
 	return aliasRoutingConfiguration
+}
+
+func resourceAwsLambdaAliasImport(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
+	idParts := strings.Split(d.Id(), "/")
+	if len(idParts) != 2 || idParts[0] == "" || idParts[1] == "" {
+		return nil, fmt.Errorf("Unexpected format of ID (%q), expected FUNCTION_NAME/ALIAS", d.Id())
+	}
+
+	functionName := idParts[0]
+	alias := idParts[1]
+	log.Printf("[DEBUG] Importing Lambda Alias %s for function name %s", alias, functionName)
+
+	conn := meta.(*AWSClient).lambdaconn
+
+	getFunctionOutput, err := conn.GetFunction(&lambda.GetFunctionInput{FunctionName: &functionName})
+	if err != nil {
+		return nil, err
+	}
+
+	d.Set("function_name", getFunctionOutput.Configuration.FunctionArn)
+	d.Set("name", alias)
+	return []*schema.ResourceData{d}, nil
 }

@@ -224,7 +224,8 @@ data "aws_availability_zones" "available" {}
 
 resource "aws_ebs_volume" "foo" {
   availability_zone = "${data.aws_availability_zones.available.names[0]}"
-  size = 8
+  size              = 8
+
   tags = {
     Name = "testAccAmiConfig_basic"
   }
@@ -258,7 +259,8 @@ data "aws_availability_zones" "available" {}
 
 resource "aws_ebs_volume" "foo" {
   availability_zone = "${data.aws_availability_zones.available.names[0]}"
-  size = 20
+  size              = 20
+
   tags = {
     Name = "testAccAmiConfig_snapshotSize"
   }

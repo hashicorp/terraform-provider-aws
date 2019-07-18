@@ -50,41 +50,41 @@ resource "aws_vpc" "test2" {
 }
 
 resource "aws_route_table" "test_public_a" {
-  vpc_id            = "${aws_vpc.test.id}"
+  vpc_id = "${aws_vpc.test.id}"
 
   tags = {
-    Name = "tf-acc-route-tables-data-source-public-a"
-    Tier = "Public"
+    Name      = "tf-acc-route-tables-data-source-public-a"
+    Tier      = "Public"
     Component = "Frontend"
   }
 }
 
 resource "aws_route_table" "test_private_a" {
-  vpc_id            = "${aws_vpc.test.id}"
+  vpc_id = "${aws_vpc.test.id}"
 
   tags = {
-    Name = "tf-acc-route-tables-data-source-private-a"
-    Tier = "Private"
+    Name      = "tf-acc-route-tables-data-source-private-a"
+    Tier      = "Private"
     Component = "Database"
   }
 }
 
 resource "aws_route_table" "test_private_b" {
-  vpc_id            = "${aws_vpc.test.id}"
+  vpc_id = "${aws_vpc.test.id}"
 
   tags = {
-    Name = "tf-acc-route-tables-data-source-private-b"
-    Tier = "Private"
+    Name      = "tf-acc-route-tables-data-source-private-b"
+    Tier      = "Private"
     Component = "Backend-1"
   }
 }
 
 resource "aws_route_table" "test_private_c" {
-  vpc_id            = "${aws_vpc.test.id}"
+  vpc_id = "${aws_vpc.test.id}"
 
   tags = {
-    Name = "tf-acc-route-tables-data-source-private-c"
-    Tier = "Private"
+    Name      = "tf-acc-route-tables-data-source-private-c"
+    Tier      = "Private"
     Component = "Backend-2"
   }
 }
@@ -99,6 +99,7 @@ data "aws_route_tables" "test2" {
 
 data "aws_route_tables" "private" {
   vpc_id = "${aws_vpc.test.id}"
+
   tags = {
     Tier = "Private"
   }
@@ -108,7 +109,7 @@ data "aws_route_tables" "filter_test" {
   vpc_id = "${aws_vpc.test.id}"
 
   filter {
-    name = "tag:Component"
+    name   = "tag:Component"
     values = ["Backend*"]
   }
 }
@@ -126,41 +127,41 @@ resource "aws_vpc" "test" {
 }
 
 resource "aws_route_table" "test_public_a" {
-  vpc_id            = "${aws_vpc.test.id}"
+  vpc_id = "${aws_vpc.test.id}"
 
   tags = {
-    Name = "tf-acc-route-tables-data-source-public-a"
-    Tier = "Public"
+    Name      = "tf-acc-route-tables-data-source-public-a"
+    Tier      = "Public"
     Component = "Frontend"
   }
 }
 
 resource "aws_route_table" "test_private_a" {
-  vpc_id            = "${aws_vpc.test.id}"
+  vpc_id = "${aws_vpc.test.id}"
 
   tags = {
-    Name = "tf-acc-route-tables-data-source-private-a"
-    Tier = "Private"
+    Name      = "tf-acc-route-tables-data-source-private-a"
+    Tier      = "Private"
     Component = "Database"
   }
 }
 
 resource "aws_route_table" "test_private_b" {
-  vpc_id            = "${aws_vpc.test.id}"
+  vpc_id = "${aws_vpc.test.id}"
 
   tags = {
-    Name = "tf-acc-route-tables-data-source-private-b"
-    Tier = "Private"
+    Name      = "tf-acc-route-tables-data-source-private-b"
+    Tier      = "Private"
     Component = "Backend-1"
   }
 }
 
 resource "aws_route_table" "test_private_c" {
-  vpc_id            = "${aws_vpc.test.id}"
+  vpc_id = "${aws_vpc.test.id}"
 
   tags = {
-    Name = "tf-acc-route-tables-data-source-private-c"
-    Tier = "Private"
+    Name      = "tf-acc-route-tables-data-source-private-c"
+    Tier      = "Private"
     Component = "Backend-2"
   }
 }

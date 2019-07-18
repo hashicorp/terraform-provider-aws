@@ -105,16 +105,6 @@ func TestAccAWSAPIGatewayDomainName_CertificateName(t *testing.T) {
 }
 
 func TestAccAWSAPIGatewayDomainName_RegionalCertificateArn(t *testing.T) {
-	// For now, use an environment variable to limit running this test
-	regionalCertificateArn := os.Getenv("AWS_API_GATEWAY_DOMAIN_NAME_REGIONAL_CERTIFICATE_ARN")
-	if regionalCertificateArn == "" {
-		t.Skip(
-			"Environment variable AWS_API_GATEWAY_DOMAIN_NAME_REGIONAL_CERTIFICATE_ARN is not set. " +
-				"This environment variable must be set to the ARN of " +
-				"an ISSUED ACM certificate in the region where this test " +
-				"is running to enable the test.")
-	}
-
 	var domainName apigateway.DomainName
 	resourceName := "aws_api_gateway_domain_name.test"
 	rName := fmt.Sprintf("tf-acc-%s.terraformtest.com", acctest.RandString(8))
@@ -125,7 +115,7 @@ func TestAccAWSAPIGatewayDomainName_RegionalCertificateArn(t *testing.T) {
 		CheckDestroy: testAccCheckAWSAPIGatewayDomainNameDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSAPIGatewayDomainNameConfig_RegionalCertificateArn(rName, regionalCertificateArn),
+				Config: testAccAWSAPIGatewayDomainNameConfig_RegionalCertificateArn(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSAPIGatewayDomainNameExists(resourceName, &domainName),
 					resource.TestCheckResourceAttr(resourceName, "domain_name", rName),
@@ -177,6 +167,32 @@ func TestAccAWSAPIGatewayDomainName_RegionalCertificateName(t *testing.T) {
 					resource.TestMatchResourceAttr(resourceName, "regional_domain_name", regexp.MustCompile(`.*\.execute-api\..*`)),
 					resource.TestMatchResourceAttr(resourceName, "regional_zone_id", regexp.MustCompile(`^Z`)),
 				),
+			},
+		},
+	})
+}
+
+func TestAccAWSAPIGatewayDomainName_SecurityPolicy(t *testing.T) {
+	var domainName apigateway.DomainName
+	resourceName := "aws_api_gateway_domain_name.test"
+	rName := fmt.Sprintf("tf-acc-%s.terraformtest.com", acctest.RandString(8))
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProvidersWithTLS,
+		CheckDestroy: testAccCheckAWSAPIGatewayDomainNameDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSAPIGatewayDomainNameConfig_SecurityPolicy(rName, apigateway.SecurityPolicyTls12),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSAPIGatewayDomainNameExists(resourceName, &domainName),
+					resource.TestCheckResourceAttr(resourceName, "security_policy", apigateway.SecurityPolicyTls12),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})
@@ -263,11 +279,12 @@ resource "tls_self_signed_cert" "ca" {
 }
 
 resource "tls_cert_request" "test" {
+  dns_names       = [%[1]q]
   key_algorithm   = "RSA"
   private_key_pem = "${tls_private_key.test.private_key_pem}"
 
   subject {
-    common_name  = "%s"
+    common_name  = %[1]q
     organization = "ACME Example Holdings, Inc"
   }
 }
@@ -288,6 +305,37 @@ resource "tls_locally_signed_cert" "leaf" {
 `, commonName)
 }
 
+func testAccAWSAPIGatewayDomainNameConfigAcmCertificateBase(commonName string) string {
+	return fmt.Sprintf(`
+resource "tls_private_key" "test" {
+  algorithm = "RSA"
+}
+
+resource "tls_self_signed_cert" "test" {
+  allowed_uses = [
+    "key_encipherment",
+    "digital_signature",
+    "server_auth",
+  ]
+
+  dns_names             = [%[1]q]
+  key_algorithm         = "RSA"
+  private_key_pem       = "${tls_private_key.test.private_key_pem}"
+  validity_period_hours = 12
+
+  subject {
+    common_name  = %[1]q
+    organization = "ACME Examples, Inc"
+  }
+}
+
+resource "aws_acm_certificate" "test" {
+  certificate_body = "${tls_self_signed_cert.test.cert_pem}"
+  private_key      = "${tls_private_key.test.private_key_pem}"
+}
+`, commonName)
+}
+
 func testAccAWSAPIGatewayDomainNameConfig_CertificateArn(domainName, certificateArn string) string {
 	return fmt.Sprintf(`
 resource "aws_api_gateway_domain_name" "test" {
@@ -304,27 +352,29 @@ resource "aws_api_gateway_domain_name" "test" {
 func testAccAWSAPIGatewayDomainNameConfig_CertificateName(domainName, commonName string) string {
 	return fmt.Sprintf(`
 resource "aws_api_gateway_domain_name" "test" {
-  domain_name = "%s"
-  certificate_body = "${tls_locally_signed_cert.leaf.cert_pem}"
-  certificate_chain = "${tls_self_signed_cert.ca.cert_pem}"
-  certificate_name = "tf-acc-apigateway-domain-name"
+  domain_name             = "%s"
+  certificate_body        = "${tls_locally_signed_cert.leaf.cert_pem}"
+  certificate_chain       = "${tls_self_signed_cert.ca.cert_pem}"
+  certificate_name        = "tf-acc-apigateway-domain-name"
   certificate_private_key = "${tls_private_key.test.private_key_pem}"
 }
+
 %s
+
 `, domainName, testAccAWSAPIGatewayCerts(commonName))
 }
 
-func testAccAWSAPIGatewayDomainNameConfig_RegionalCertificateArn(domainName, regionalCertificateArn string) string {
-	return fmt.Sprintf(`
+func testAccAWSAPIGatewayDomainNameConfig_RegionalCertificateArn(domainName string) string {
+	return testAccAWSAPIGatewayDomainNameConfigAcmCertificateBase(domainName) + fmt.Sprintf(`
 resource "aws_api_gateway_domain_name" "test" {
-  domain_name              = "%s"
-  regional_certificate_arn = "%s"
+  domain_name              = %[1]q
+  regional_certificate_arn = "${aws_acm_certificate.test.arn}"
 
   endpoint_configuration {
     types = ["REGIONAL"]
   }
 }
-`, domainName, regionalCertificateArn)
+`, domainName)
 }
 
 func testAccAWSAPIGatewayDomainNameConfig_RegionalCertificateName(domainName, commonName string) string {
@@ -340,6 +390,22 @@ resource "aws_api_gateway_domain_name" "test" {
     types = ["REGIONAL"]
   }
 }
+
 %s
+
 `, domainName, testAccAWSAPIGatewayCerts(commonName))
+}
+
+func testAccAWSAPIGatewayDomainNameConfig_SecurityPolicy(domainName, securityPolicy string) string {
+	return testAccAWSAPIGatewayDomainNameConfigAcmCertificateBase(domainName) + fmt.Sprintf(`
+resource "aws_api_gateway_domain_name" "test" {
+  domain_name              = %[1]q
+  regional_certificate_arn = "${aws_acm_certificate.test.arn}"
+  security_policy          = %[2]q
+
+  endpoint_configuration {
+    types = ["REGIONAL"]
+  }
+}
+`, domainName, securityPolicy)
 }

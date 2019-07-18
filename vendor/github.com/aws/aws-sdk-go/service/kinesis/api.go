@@ -759,7 +759,7 @@ func (c *Kinesis) DescribeStreamWithContext(ctx aws.Context, input *DescribeStre
 //    // Example iterating over at most 3 pages of a DescribeStream operation.
 //    pageNum := 0
 //    err := client.DescribeStreamPages(params,
-//        func(page *DescribeStreamOutput, lastPage bool) bool {
+//        func(page *kinesis.DescribeStreamOutput, lastPage bool) bool {
 //            pageNum++
 //            fmt.Println(page)
 //            return pageNum <= 3
@@ -1793,7 +1793,7 @@ func (c *Kinesis) ListStreamConsumersWithContext(ctx aws.Context, input *ListStr
 //    // Example iterating over at most 3 pages of a ListStreamConsumers operation.
 //    pageNum := 0
 //    err := client.ListStreamConsumersPages(params,
-//        func(page *ListStreamConsumersOutput, lastPage bool) bool {
+//        func(page *kinesis.ListStreamConsumersOutput, lastPage bool) bool {
 //            pageNum++
 //            fmt.Println(page)
 //            return pageNum <= 3
@@ -1944,7 +1944,7 @@ func (c *Kinesis) ListStreamsWithContext(ctx aws.Context, input *ListStreamsInpu
 //    // Example iterating over at most 3 pages of a ListStreams operation.
 //    pageNum := 0
 //    err := client.ListStreamsPages(params,
-//        func(page *ListStreamsOutput, lastPage bool) bool {
+//        func(page *kinesis.ListStreamsOutput, lastPage bool) bool {
 //            pageNum++
 //            fmt.Println(page)
 //            return pageNum <= 3
@@ -7152,7 +7152,7 @@ type StreamDescriptionSummary struct {
 	//
 	//    * Key ARN example: arn:aws:kms:us-east-1:123456789012:key/12345678-1234-1234-1234-123456789012
 	//
-	//    * Alias ARN example:  arn:aws:kms:us-east-1:123456789012:alias/MyAliasName
+	//    * Alias ARN example: arn:aws:kms:us-east-1:123456789012:alias/MyAliasName
 	//
 	//    * Globally unique key ID example: 12345678-1234-1234-1234-123456789012
 	//

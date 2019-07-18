@@ -449,60 +449,68 @@ func testAccAWSWafRegionalRateBasedRuleConfig(name string) string {
 	return fmt.Sprintf(`
 resource "aws_wafregional_ipset" "ipset" {
   name = "%s"
+
   ip_set_descriptor {
-    type = "IPV4"
+    type  = "IPV4"
     value = "192.0.7.0/24"
   }
 }
 
 resource "aws_wafregional_rate_based_rule" "wafrule" {
-  name = "%s"
+  name        = "%s"
   metric_name = "%s"
-  rate_key = "IP"
-  rate_limit = 2000
+  rate_key    = "IP"
+  rate_limit  = 2000
+
   predicate {
     data_id = "${aws_wafregional_ipset.ipset.id}"
     negated = false
-    type = "IPMatch"
+    type    = "IPMatch"
   }
-}`, name, name, name)
+}
+`, name, name, name)
 }
 
 func testAccAWSWafRegionalRateBasedRuleConfigChangeName(name string) string {
 	return fmt.Sprintf(`
 resource "aws_wafregional_ipset" "ipset" {
   name = "%s"
+
   ip_set_descriptor {
-    type = "IPV4"
+    type  = "IPV4"
     value = "192.0.7.0/24"
   }
 }
 
 resource "aws_wafregional_rate_based_rule" "wafrule" {
-  name = "%s"
+  name        = "%s"
   metric_name = "%s"
-  rate_key = "IP"
-  rate_limit = 2000
+  rate_key    = "IP"
+  rate_limit  = 2000
+
   predicate {
     data_id = "${aws_wafregional_ipset.ipset.id}"
     negated = false
-    type = "IPMatch"
+    type    = "IPMatch"
   }
-}`, name, name, name)
+}
+`, name, name, name)
 }
 
 func testAccAWSWafRegionalRateBasedRuleConfig_changePredicates(name string) string {
 	return fmt.Sprintf(`
 resource "aws_wafregional_ipset" "ipset" {
   name = "%s"
+
   ip_set_descriptor {
-    type = "IPV4"
+    type  = "IPV4"
     value = "192.0.7.0/24"
   }
 }
 
 resource "aws_wafregional_byte_match_set" "set" {
   name = "%s"
+
   byte_match_tuples {
     text_transformation   = "NONE"
     target_string         = "badrefer1"
@@ -516,34 +524,38 @@ resource "aws_wafregional_byte_match_set" "set" {
 }
 
 resource "aws_wafregional_rate_based_rule" "wafrule" {
-  name = "%s"
+  name        = "%s"
   metric_name = "%s"
-  rate_key = "IP"
-  rate_limit = 2000
+  rate_key    = "IP"
+  rate_limit  = 2000
+
   predicate {
     data_id = "${aws_wafregional_byte_match_set.set.id}"
     negated = true
-    type = "ByteMatch"
+    type    = "ByteMatch"
   }
-}`, name, name, name, name)
+}
+`, name, name, name, name)
 }
 
 func testAccAWSWafRegionalRateBasedRuleConfig_noPredicates(name string) string {
 	return fmt.Sprintf(`
 resource "aws_wafregional_rate_based_rule" "wafrule" {
-  name = "%s"
+  name        = "%s"
   metric_name = "%s"
-  rate_key = "IP"
-  rate_limit = 2000
-}`, name, name)
+  rate_key    = "IP"
+  rate_limit  = 2000
+}
+`, name, name)
 }
 
 func testAccAWSWafRegionalRateBasedRuleWithRateLimitConfig(name string, limit string) string {
 	return fmt.Sprintf(`
 resource "aws_wafregional_rate_based_rule" "wafrule" {
-  name = "%s"
+  name        = "%s"
   metric_name = "%s"
-  rate_key = "IP"
-  rate_limit = %s
-}`, name, name, limit)
+  rate_key    = "IP"
+  rate_limit  = %s
+}
+`, name, name, limit)
 }

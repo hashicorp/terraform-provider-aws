@@ -167,7 +167,8 @@ resource "aws_pinpoint_sms_channel" "test_sms_channel" {
   enabled        = "false"
   sender_id      = "%s"
   short_code     = "%s"
-}`, senderId, shortCode)
+}
+`, senderId, shortCode)
 }
 
 func testAccCheckAWSPinpointSMSChannelDestroy(s *terraform.State) error {

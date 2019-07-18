@@ -198,25 +198,25 @@ func testAccAWSUserGroupMembershipImportStateIdFunc(resourceName string) resourc
 func testAccAWSUserGroupMembershipConfigUsersAndGroups(userName1, userName2, groupName1, groupName2, groupName3 string) string {
 	return fmt.Sprintf(`
 resource "aws_iam_user" "user1" {
-	name          = "%s"
-	force_destroy = true
+  name          = "%s"
+  force_destroy = true
 }
 
 resource "aws_iam_user" "user2" {
-	name          = "%s"
-	force_destroy = true
+  name          = "%s"
+  force_destroy = true
 }
 
 resource "aws_iam_group" "group1" {
-	name = "%s"
+  name = "%s"
 }
 
 resource "aws_iam_group" "group2" {
-	name = "%s"
+  name = "%s"
 }
 
 resource "aws_iam_group" "group3" {
-	name = "%s"
+  name = "%s"
 }
 `, userName1, userName2, groupName1, groupName2, groupName3)
 }

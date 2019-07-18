@@ -107,6 +107,12 @@ The following arguments are supported:
 
 At least one of either `fqdn` or `ip_address` must be specified.
 
+## Attributes Reference
+
+The following attributes are exported in addition to the arguments listed above:
+
+* `id` - The id of the health check
+
 
 ## Import
 

@@ -751,7 +751,8 @@ resource "aws_iam_role" "test2" {
 resource "aws_cloudformation_stack_set" "test" {
   administration_role_arn = "${aws_iam_role.test1.arn}"
   name                    = %[1]q
-  template_body           = <<TEMPLATE
+
+  template_body = <<TEMPLATE
 %[2]s
 TEMPLATE
 }
@@ -773,7 +774,8 @@ resource "aws_iam_role" "test2" {
 resource "aws_cloudformation_stack_set" "test" {
   administration_role_arn = "${aws_iam_role.test2.arn}"
   name                    = %[1]q
-  template_body           = <<TEMPLATE
+
+  template_body = <<TEMPLATE
 %[2]s
 TEMPLATE
 }
@@ -791,7 +793,8 @@ resource "aws_cloudformation_stack_set" "test" {
   administration_role_arn = "${aws_iam_role.test.arn}"
   description             = %[3]q
   name                    = %[1]q
-  template_body           = <<TEMPLATE
+
+  template_body = <<TEMPLATE
 %[2]s
 TEMPLATE
 }
@@ -809,7 +812,8 @@ resource "aws_cloudformation_stack_set" "test" {
   administration_role_arn = "${aws_iam_role.test.arn}"
   execution_role_name     = %[3]q
   name                    = %[1]q
-  template_body           = <<TEMPLATE
+
+  template_body = <<TEMPLATE
 %[2]s
 TEMPLATE
 }
@@ -826,7 +830,8 @@ resource "aws_iam_role" "test" {
 resource "aws_cloudformation_stack_set" "test" {
   administration_role_arn = "${aws_iam_role.test.arn}"
   name                    = %[1]q
-  template_body           = <<TEMPLATE
+
+  template_body = <<TEMPLATE
 %[2]s
 TEMPLATE
 }
@@ -843,10 +848,12 @@ resource "aws_iam_role" "test" {
 resource "aws_cloudformation_stack_set" "test" {
   administration_role_arn = "${aws_iam_role.test.arn}"
   name                    = %[1]q
-  parameters              = {
+
+  parameters = {
     Parameter1 = %[3]q
   }
-  template_body           = <<TEMPLATE
+
+  template_body = <<TEMPLATE
 %[2]s
 TEMPLATE
 }
@@ -863,11 +870,13 @@ resource "aws_iam_role" "test" {
 resource "aws_cloudformation_stack_set" "test" {
   administration_role_arn = "${aws_iam_role.test.arn}"
   name                    = %[1]q
-  parameters              = {
+
+  parameters = {
     Parameter1 = %[3]q
     Parameter2 = %[4]q
   }
-  template_body           = <<TEMPLATE
+
+  template_body = <<TEMPLATE
 %[2]s
 TEMPLATE
 }
@@ -884,7 +893,8 @@ resource "aws_iam_role" "test" {
 resource "aws_cloudformation_stack_set" "test" {
   administration_role_arn = "${aws_iam_role.test.arn}"
   name                    = %[1]q
-  template_body           = <<TEMPLATE
+
+  template_body = <<TEMPLATE
 %[2]s
 TEMPLATE
 }
@@ -901,10 +911,12 @@ resource "aws_iam_role" "test" {
 resource "aws_cloudformation_stack_set" "test" {
   administration_role_arn = "${aws_iam_role.test.arn}"
   name                    = %[1]q
-  parameters              = {
+
+  parameters = {
     Parameter1 = %[3]q
   }
-  template_body           = <<TEMPLATE
+
+  template_body = <<TEMPLATE
 %[2]s
 TEMPLATE
 }
@@ -921,10 +933,12 @@ resource "aws_iam_role" "test" {
 resource "aws_cloudformation_stack_set" "test" {
   administration_role_arn = "${aws_iam_role.test.arn}"
   name                    = %[1]q
-  parameters              = {
+
+  parameters = {
     Parameter1 = %[3]q
   }
-  template_body           = <<TEMPLATE
+
+  template_body = <<TEMPLATE
 %[2]s
 TEMPLATE
 }
@@ -941,10 +955,12 @@ resource "aws_iam_role" "test" {
 resource "aws_cloudformation_stack_set" "test" {
   administration_role_arn = "${aws_iam_role.test.arn}"
   name                    = %[1]q
-  tags                    = {
+
+  tags = {
     Key1 = %[3]q
   }
-  template_body           = <<TEMPLATE
+
+  template_body = <<TEMPLATE
 %[2]s
 TEMPLATE
 }
@@ -961,11 +977,13 @@ resource "aws_iam_role" "test" {
 resource "aws_cloudformation_stack_set" "test" {
   administration_role_arn = "${aws_iam_role.test.arn}"
   name                    = %[1]q
-  tags                    = {
+
+  tags = {
     Key1 = %[3]q
     Key2 = %[4]q
   }
-  template_body           = <<TEMPLATE
+
+  template_body = <<TEMPLATE
 %[2]s
 TEMPLATE
 }
@@ -982,7 +1000,8 @@ resource "aws_iam_role" "test" {
 resource "aws_cloudformation_stack_set" "test" {
   administration_role_arn = "${aws_iam_role.test.arn}"
   name                    = %[1]q
-  template_body           = <<TEMPLATE
+
+  template_body = <<TEMPLATE
 %[2]s
 TEMPLATE
 }
@@ -1002,12 +1021,14 @@ resource "aws_s3_bucket" "test" {
 }
 
 resource "aws_s3_bucket_object" "test" {
-  acl     = "public-read"
-  bucket  = "${aws_s3_bucket.test.bucket}"
+  acl    = "public-read"
+  bucket = "${aws_s3_bucket.test.bucket}"
+
   content = <<CONTENT
 %[2]s
 CONTENT
-  key     = "%[1]s-template1.yml"
+
+  key = "%[1]s-template1.yml"
 }
 
 resource "aws_cloudformation_stack_set" "test" {
@@ -1031,12 +1052,14 @@ resource "aws_s3_bucket" "test" {
 }
 
 resource "aws_s3_bucket_object" "test" {
-  acl     = "public-read"
-  bucket  = "${aws_s3_bucket.test.bucket}"
+  acl    = "public-read"
+  bucket = "${aws_s3_bucket.test.bucket}"
+
   content = <<CONTENT
 %[2]s
 CONTENT
-  key     = "%[1]s-template2.yml"
+
+  key = "%[1]s-template2.yml"
 }
 
 resource "aws_cloudformation_stack_set" "test" {

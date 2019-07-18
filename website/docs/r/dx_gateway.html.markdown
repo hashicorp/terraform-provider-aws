@@ -31,6 +31,7 @@ The following arguments are supported:
 In addition to all arguments above, the following attributes are exported:
 
 * `id` - The ID of the gateway.
+* `owner_account_id` - AWS Account ID of the gateway.
 
 ## Timeouts
 

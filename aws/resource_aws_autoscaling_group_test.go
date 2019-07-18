@@ -1875,41 +1875,41 @@ data "aws_ami" "test_ami" {
 }
 
 resource "aws_launch_configuration" "foobar" {
-  image_id = "${data.aws_ami.test_ami.id}"
+  image_id      = "${data.aws_ami.test_ami.id}"
   instance_type = "t2.micro"
 }
 
 resource "aws_placement_group" "test" {
-  name = "asg_pg_%s"
+  name     = "asg_pg_%s"
   strategy = "cluster"
 }
 
 resource "aws_autoscaling_group" "bar" {
-  availability_zones = ["us-west-2a"]
-  name = "%s"
-  max_size = 5
-  min_size = 2
-  health_check_type = "ELB"
-  desired_capacity = 4
-  force_delete = true
-  termination_policies = ["OldestInstance","ClosestToNextInstanceHour"]
+  availability_zones   = ["us-west-2a"]
+  name                 = "%s"
+  max_size             = 5
+  min_size             = 2
+  health_check_type    = "ELB"
+  desired_capacity     = 4
+  force_delete         = true
+  termination_policies = ["OldestInstance", "ClosestToNextInstanceHour"]
 
   launch_configuration = "${aws_launch_configuration.foobar.name}"
 
   tags = [
     {
-      key = "FromTags1"
-      value = "value1"
+      key                 = "FromTags1"
+      value               = "value1"
       propagate_at_launch = true
     },
     {
-      key = "FromTags2"
-      value = "value2"
+      key                 = "FromTags2"
+      value               = "value2"
       propagate_at_launch = true
     },
     {
-      key = "FromTags3"
-      value = "value3"
+      key                 = "FromTags3"
+      value               = "value3"
       propagate_at_launch = true
     },
   ]
@@ -1930,43 +1930,43 @@ data "aws_ami" "test_ami" {
 }
 
 resource "aws_launch_configuration" "foobar" {
-  image_id = "${data.aws_ami.test_ami.id}"
+  image_id      = "${data.aws_ami.test_ami.id}"
   instance_type = "t2.micro"
 }
 
 resource "aws_launch_configuration" "new" {
-  image_id = "${data.aws_ami.test_ami.id}"
+  image_id      = "${data.aws_ami.test_ami.id}"
   instance_type = "t2.micro"
 }
 
 resource "aws_autoscaling_group" "bar" {
-  availability_zones = ["us-west-2a"]
-  name = "%s"
-  max_size = 5
-  min_size = 2
+  availability_zones        = ["us-west-2a"]
+  name                      = "%s"
+  max_size                  = 5
+  min_size                  = 2
   health_check_grace_period = 300
-  health_check_type = "ELB"
-  desired_capacity = 5
-  force_delete = true
-  termination_policies = ["ClosestToNextInstanceHour"]
-  protect_from_scale_in = true
+  health_check_type         = "ELB"
+  desired_capacity          = 5
+  force_delete              = true
+  termination_policies      = ["ClosestToNextInstanceHour"]
+  protect_from_scale_in     = true
 
   launch_configuration = "${aws_launch_configuration.new.name}"
 
   tags = [
     {
-      key = "FromTags1Changed"
-      value = "value1changed"
+      key                 = "FromTags1Changed"
+      value               = "value1changed"
       propagate_at_launch = true
     },
     {
-      key = "FromTags2"
-      value = "value2changed"
+      key                 = "FromTags2"
+      value               = "value2changed"
       propagate_at_launch = true
     },
     {
-      key = "FromTags3"
-      value = "value3"
+      key                 = "FromTags3"
+      value               = "value3"
       propagate_at_launch = true
     },
   ]
@@ -2166,32 +2166,32 @@ data "aws_ami" "test_ami" {
 }
 
 resource "aws_launch_configuration" "foobar" {
-  image_id = "${data.aws_ami.test_ami.id}"
+  image_id      = "${data.aws_ami.test_ami.id}"
   instance_type = "c3.large"
 }
 
 resource "aws_placement_group" "test" {
-  name = "%s"
+  name     = "%s"
   strategy = "cluster"
 }
 
 resource "aws_autoscaling_group" "bar" {
-  availability_zones = ["us-west-2a"]
-  name = "%s"
-  max_size = 1
-  min_size = 1
+  availability_zones        = ["us-west-2a"]
+  name                      = "%s"
+  max_size                  = 1
+  min_size                  = 1
   health_check_grace_period = 300
-  health_check_type = "ELB"
-  desired_capacity = 1
-  force_delete = true
-  termination_policies = ["OldestInstance","ClosestToNextInstanceHour"]
-  placement_group = "${aws_placement_group.test.name}"
+  health_check_type         = "ELB"
+  desired_capacity          = 1
+  force_delete              = true
+  termination_policies      = ["OldestInstance", "ClosestToNextInstanceHour"]
+  placement_group           = "${aws_placement_group.test.name}"
 
   launch_configuration = "${aws_launch_configuration.foobar.name}"
 
   tag {
-    key = "Foo"
-    value = "foo-bar"
+    key                 = "Foo"
+    value               = "foo-bar"
     propagate_at_launch = true
   }
 }
@@ -2479,10 +2479,6 @@ resource "aws_security_group" "tf_test_self" {
 `
 
 const testAccAWSAutoScalingGroupConfig_ALB_TargetGroup_post_duo = `
-provider "aws" {
-  region = "us-west-2"
-}
-
 resource "aws_vpc" "default" {
   cidr_block = "10.0.0.0/16"
 
@@ -2594,26 +2590,26 @@ data "aws_ami" "test_ami" {
 }
 
 resource "aws_launch_configuration" "foobar" {
-  image_id = "${data.aws_ami.test_ami.id}"
+  image_id      = "${data.aws_ami.test_ami.id}"
   instance_type = "t2.micro"
 }
 
 resource "aws_autoscaling_group" "bar" {
-  availability_zones = ["us-west-2a"]
-  name = "%s"
-  max_size = 5
-  min_size = 2
-  health_check_type = "ELB"
-  desired_capacity = 4
-  force_delete = true
-  termination_policies = ["OldestInstance","ClosestToNextInstanceHour"]
+  availability_zones   = ["us-west-2a"]
+  name                 = "%s"
+  max_size             = 5
+  min_size             = 2
+  health_check_type    = "ELB"
+  desired_capacity     = 4
+  force_delete         = true
+  termination_policies = ["OldestInstance", "ClosestToNextInstanceHour"]
 
   launch_configuration = "${aws_launch_configuration.foobar.name}"
 
   initial_lifecycle_hook {
-    name = "launching"
-    default_result = "CONTINUE"
-    heartbeat_timeout = 30  # minimum value
+    name                 = "launching"
+    default_result       = "CONTINUE"
+    heartbeat_timeout    = 30                                   # minimum value
     lifecycle_transition = "autoscaling:EC2_INSTANCE_LAUNCHING"
   }
 }
@@ -2622,10 +2618,6 @@ resource "aws_autoscaling_group" "bar" {
 
 func testAccAWSAutoScalingGroupConfig_ALB_TargetGroup_ELBCapacity(rInt int) string {
 	return fmt.Sprintf(`
-provider "aws" {
-  region = "us-west-2"
-}
-
 resource "aws_vpc" "default" {
   cidr_block           = "10.0.0.0/16"
   enable_dns_hostnames = "true"
@@ -2758,7 +2750,8 @@ resource "aws_autoscaling_group" "bar" {
   force_delete              = true
   termination_policies      = ["OldestInstance"]
   launch_configuration      = "${aws_launch_configuration.foobar.name}"
-}`, rInt)
+}
+`, rInt)
 }
 
 func testAccAWSAutoScalingGroupConfigWithSuspendedProcesses(name string) string {
@@ -2774,32 +2767,32 @@ data "aws_ami" "test_ami" {
 }
 
 resource "aws_launch_configuration" "foobar" {
-  image_id = "${data.aws_ami.test_ami.id}"
+  image_id      = "${data.aws_ami.test_ami.id}"
   instance_type = "t2.micro"
 }
 
 resource "aws_placement_group" "test" {
-  name = "asg_pg_%s"
+  name     = "asg_pg_%s"
   strategy = "cluster"
 }
 
 resource "aws_autoscaling_group" "bar" {
-  availability_zones = ["us-west-2a"]
-  name = "%s"
-  max_size = 5
-  min_size = 2
-  health_check_type = "ELB"
-  desired_capacity = 4
-  force_delete = true
-  termination_policies = ["OldestInstance","ClosestToNextInstanceHour"]
+  availability_zones   = ["us-west-2a"]
+  name                 = "%s"
+  max_size             = 5
+  min_size             = 2
+  health_check_type    = "ELB"
+  desired_capacity     = 4
+  force_delete         = true
+  termination_policies = ["OldestInstance", "ClosestToNextInstanceHour"]
 
   launch_configuration = "${aws_launch_configuration.foobar.name}"
 
-  suspended_processes = ["AlarmNotification","ScheduledActions"]
+  suspended_processes = ["AlarmNotification", "ScheduledActions"]
 
   tag {
-    key = "Foo"
-    value = "foo-bar"
+    key                 = "Foo"
+    value               = "foo-bar"
     propagate_at_launch = true
   }
 }
@@ -2819,32 +2812,32 @@ data "aws_ami" "test_ami" {
 }
 
 resource "aws_launch_configuration" "foobar" {
-  image_id = "${data.aws_ami.test_ami.id}"
+  image_id      = "${data.aws_ami.test_ami.id}"
   instance_type = "t2.micro"
 }
 
 resource "aws_placement_group" "test" {
-  name = "asg_pg_%s"
+  name     = "asg_pg_%s"
   strategy = "cluster"
 }
 
 resource "aws_autoscaling_group" "bar" {
-  availability_zones = ["us-west-2a"]
-  name = "%s"
-  max_size = 5
-  min_size = 2
-  health_check_type = "ELB"
-  desired_capacity = 4
-  force_delete = true
-  termination_policies = ["OldestInstance","ClosestToNextInstanceHour"]
+  availability_zones   = ["us-west-2a"]
+  name                 = "%s"
+  max_size             = 5
+  min_size             = 2
+  health_check_type    = "ELB"
+  desired_capacity     = 4
+  force_delete         = true
+  termination_policies = ["OldestInstance", "ClosestToNextInstanceHour"]
 
   launch_configuration = "${aws_launch_configuration.foobar.name}"
 
-  suspended_processes = ["AZRebalance","ScheduledActions"]
+  suspended_processes = ["AZRebalance", "ScheduledActions"]
 
   tag {
-    key = "Foo"
-    value = "foo-bar"
+    key                 = "Foo"
+    value               = "foo-bar"
     propagate_at_launch = true
   }
 }

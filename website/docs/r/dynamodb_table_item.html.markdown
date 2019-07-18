@@ -1,6 +1,6 @@
 ---
 layout: "aws"
-page_title: "AWS: dynamodb_table_item"
+page_title: "AWS: aws_dynamodb_table_item"
 sidebar_current: "docs-aws-resource-dynamodb-table-item"
 description: |-
   Provides a DynamoDB table item resource

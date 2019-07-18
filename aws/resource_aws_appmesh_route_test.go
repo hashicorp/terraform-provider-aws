@@ -216,6 +216,62 @@ func testAccAwsAppmeshRoute_tcpRoute(t *testing.T) {
 	})
 }
 
+func testAccAwsAppmeshRoute_tags(t *testing.T) {
+	var r appmesh.RouteData
+	resourceName := "aws_appmesh_route.foo"
+	meshName := fmt.Sprintf("tf-test-mesh-%d", acctest.RandInt())
+	vrName := fmt.Sprintf("tf-test-router-%d", acctest.RandInt())
+	vn1Name := fmt.Sprintf("tf-test-node-%d", acctest.RandInt())
+	vn2Name := fmt.Sprintf("tf-test-node-%d", acctest.RandInt())
+	rName := fmt.Sprintf("tf-test-route-%d", acctest.RandInt())
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAppmeshRouteDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAppmeshRouteConfigWithTags(meshName, vrName, vn1Name, vn2Name, rName, "foo", "bar", "good", "bad"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAppmeshRouteExists(resourceName, &r),
+					resource.TestCheckResourceAttr(
+						resourceName, "tags.%", "2"),
+					resource.TestCheckResourceAttr(
+						resourceName, "tags.foo", "bar"),
+					resource.TestCheckResourceAttr(
+						resourceName, "tags.good", "bad"),
+				),
+			},
+			{
+				Config: testAccAppmeshRouteConfigWithTags(meshName, vrName, vn1Name, vn2Name, rName, "foo2", "bar", "good", "bad2"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAppmeshRouteExists(resourceName, &r),
+					resource.TestCheckResourceAttr(
+						resourceName, "tags.%", "2"),
+					resource.TestCheckResourceAttr(
+						resourceName, "tags.foo2", "bar"),
+					resource.TestCheckResourceAttr(
+						resourceName, "tags.good", "bad2"),
+				),
+			},
+			{
+				Config: testAccAppmeshRouteConfig_httpRoute(meshName, vrName, vn1Name, vn2Name, rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAppmeshRouteExists(resourceName, &r),
+					resource.TestCheckResourceAttr(
+						resourceName, "tags.%", "0"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportStateId:     fmt.Sprintf("%s/%s/%s", meshName, vrName, rName),
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func testAccCheckAppmeshRouteDestroy(s *terraform.State) error {
 	conn := testAccProvider.Meta().(*AWSClient).appmeshconn
 
@@ -268,42 +324,47 @@ func testAccCheckAppmeshRouteExists(name string, v *appmesh.RouteData) resource.
 	}
 }
 
-func testAccAppmeshRouteConfig_httpRoute(meshName, vrName, vn1Name, vn2Name, rName string) string {
+func testAccAppmeshRouteConfigBase(meshName, vrName, vn1Name, vn2Name string) string {
 	return fmt.Sprintf(`
 resource "aws_appmesh_mesh" "foo" {
-  name = %[1]q
+	name = %[1]q
 }
 
 resource "aws_appmesh_virtual_router" "foo" {
-  name      = %[2]q
-  mesh_name = "${aws_appmesh_mesh.foo.id}"
+	name      = %[2]q
+	mesh_name = "${aws_appmesh_mesh.foo.id}"
 
-  spec {
-    listener {
-      port_mapping {
-        port     = 8080
-        protocol = "http"
-      }
-    }
-  }
+	spec {
+		listener {
+			port_mapping {
+				port     = 8080
+				protocol = "http"
+			}
+		}
+	}
 }
 
 resource "aws_appmesh_virtual_node" "foo" {
-  name      = %[3]q
-  mesh_name = "${aws_appmesh_mesh.foo.id}"
+	name      = %[3]q
+	mesh_name = "${aws_appmesh_mesh.foo.id}"
 
-  spec {}
+	spec {}
 }
 
 resource "aws_appmesh_virtual_node" "bar" {
-  name      = %[4]q
-  mesh_name = "${aws_appmesh_mesh.foo.id}"
+	name      = %[4]q
+	mesh_name = "${aws_appmesh_mesh.foo.id}"
 
-  spec {}
+	spec {}
+}
+`, meshName, vrName, vn1Name, vn2Name)
 }
 
+func testAccAppmeshRouteConfig_httpRoute(meshName, vrName, vn1Name, vn2Name, rName string) string {
+	return testAccAppmeshRouteConfigBase(meshName, vrName, vn1Name, vn2Name) + fmt.Sprintf(`
+
 resource "aws_appmesh_route" "foo" {
-  name                = %[5]q
+  name                = %[1]q
   mesh_name           = "${aws_appmesh_mesh.foo.id}"
   virtual_router_name = "${aws_appmesh_virtual_router.foo.name}"
 
@@ -322,45 +383,14 @@ resource "aws_appmesh_route" "foo" {
     }
   }
 }
-`, meshName, vrName, vn1Name, vn2Name, rName)
+`, rName)
 }
 
 func testAccAppmeshRouteConfig_httpRouteUpdated(meshName, vrName, vn1Name, vn2Name, rName string) string {
-	return fmt.Sprintf(`
-resource "aws_appmesh_mesh" "foo" {
-  name = %[1]q
-}
-
-resource "aws_appmesh_virtual_router" "foo" {
-  name      = %[2]q
-  mesh_name = "${aws_appmesh_mesh.foo.id}"
-
-  spec {
-    listener {
-      port_mapping {
-        port     = 8080
-        protocol = "http"
-      }
-    }
-  }
-}
-
-resource "aws_appmesh_virtual_node" "foo" {
-  name      = %[3]q
-  mesh_name = "${aws_appmesh_mesh.foo.id}"
-
-  spec {}
-}
-
-resource "aws_appmesh_virtual_node" "bar" {
-  name      = %[4]q
-  mesh_name = "${aws_appmesh_mesh.foo.id}"
-
-  spec {}
-}
+	return testAccAppmeshRouteConfigBase(meshName, vrName, vn1Name, vn2Name) + fmt.Sprintf(`
 
 resource "aws_appmesh_route" "foo" {
-  name                = %[5]q
+  name                = %[1]q
   mesh_name           = "${aws_appmesh_mesh.foo.id}"
   virtual_router_name = "${aws_appmesh_virtual_router.foo.name}"
 
@@ -384,45 +414,14 @@ resource "aws_appmesh_route" "foo" {
     }
   }
 }
-`, meshName, vrName, vn1Name, vn2Name, rName)
+`, rName)
 }
 
 func testAccAppmeshRouteConfig_tcpRoute(meshName, vrName, vn1Name, vn2Name, rName string) string {
-	return fmt.Sprintf(`
-resource "aws_appmesh_mesh" "foo" {
-  name = %[1]q
-}
-
-resource "aws_appmesh_virtual_router" "foo" {
-  name      = %[2]q
-  mesh_name = "${aws_appmesh_mesh.foo.id}"
-
-  spec {
-    listener {
-      port_mapping {
-        port     = 8080
-        protocol = "tcp"
-      }
-    }
-  }
-}
-
-resource "aws_appmesh_virtual_node" "foo" {
-  name      = %[3]q
-  mesh_name = "${aws_appmesh_mesh.foo.id}"
-
-  spec {}
-}
-
-resource "aws_appmesh_virtual_node" "bar" {
-  name      = %[4]q
-  mesh_name = "${aws_appmesh_mesh.foo.id}"
-
-  spec {}
-}
+	return testAccAppmeshRouteConfigBase(meshName, vrName, vn1Name, vn2Name) + fmt.Sprintf(`
 
 resource "aws_appmesh_route" "foo" {
-  name                = %[5]q
+  name                = %[1]q
   mesh_name           = "${aws_appmesh_mesh.foo.id}"
   virtual_router_name = "${aws_appmesh_virtual_router.foo.name}"
 
@@ -437,45 +436,14 @@ resource "aws_appmesh_route" "foo" {
     }
   }
 }
-`, meshName, vrName, vn1Name, vn2Name, rName)
+`, rName)
 }
 
 func testAccAppmeshRouteConfig_tcpRouteUpdated(meshName, vrName, vn1Name, vn2Name, rName string) string {
-	return fmt.Sprintf(`
-resource "aws_appmesh_mesh" "foo" {
-  name = %[1]q
-}
-
-resource "aws_appmesh_virtual_router" "foo" {
-  name      = %[2]q
-  mesh_name = "${aws_appmesh_mesh.foo.id}"
-
-  spec {
-    listener {
-      port_mapping {
-        port     = 8080
-        protocol = "tcp"
-      }
-    }
-  }
-}
-
-resource "aws_appmesh_virtual_node" "foo" {
-  name      = %[3]q
-  mesh_name = "${aws_appmesh_mesh.foo.id}"
-
-  spec {}
-}
-
-resource "aws_appmesh_virtual_node" "bar" {
-  name      = %[4]q
-  mesh_name = "${aws_appmesh_mesh.foo.id}"
-
-  spec {}
-}
+	return testAccAppmeshRouteConfigBase(meshName, vrName, vn1Name, vn2Name) + fmt.Sprintf(`
 
 resource "aws_appmesh_route" "foo" {
-  name                = %[5]q
+  name                = %[1]q
   mesh_name           = "${aws_appmesh_mesh.foo.id}"
   virtual_router_name = "${aws_appmesh_virtual_router.foo.name}"
 
@@ -495,5 +463,36 @@ resource "aws_appmesh_route" "foo" {
     }
   }
 }
-`, meshName, vrName, vn1Name, vn2Name, rName)
+`, rName)
+}
+
+func testAccAppmeshRouteConfigWithTags(meshName, vrName, vn1Name, vn2Name, rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
+	return testAccAppmeshRouteConfigBase(meshName, vrName, vn1Name, vn2Name) + fmt.Sprintf(`
+
+resource "aws_appmesh_route" "foo" {
+  name                = %[1]q
+  mesh_name           = "${aws_appmesh_mesh.foo.id}"
+  virtual_router_name = "${aws_appmesh_virtual_router.foo.name}"
+
+  spec {
+    http_route {
+      match {
+        prefix = "/"
+      }
+
+      action {
+        weighted_target {
+          virtual_node = "${aws_appmesh_virtual_node.foo.name}"
+          weight       = 100
+        }
+      }
+    }
+  }
+
+  tags = {
+	%[2]s = %[3]q
+	%[4]s = %[5]q
+  }
+}
+`, rName, tagKey1, tagValue1, tagKey2, tagValue2)
 }

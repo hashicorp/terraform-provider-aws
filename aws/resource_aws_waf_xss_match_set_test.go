@@ -18,7 +18,7 @@ func TestAccAWSWafXssMatchSet_basic(t *testing.T) {
 	xssMatchSet := fmt.Sprintf("xssMatchSet-%s", acctest.RandString(5))
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSWaf(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSWafXssMatchSetDestroy,
 		Steps: []resource.TestStep{
@@ -58,7 +58,7 @@ func TestAccAWSWafXssMatchSet_changeNameForceNew(t *testing.T) {
 	xssMatchSetNewName := fmt.Sprintf("xssMatchSetNewName-%s", acctest.RandString(5))
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSWaf(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSWafXssMatchSetDestroy,
 		Steps: []resource.TestStep{
@@ -91,7 +91,7 @@ func TestAccAWSWafXssMatchSet_disappears(t *testing.T) {
 	xssMatchSet := fmt.Sprintf("xssMatchSet-%s", acctest.RandString(5))
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSWaf(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSWafXssMatchSetDestroy,
 		Steps: []resource.TestStep{
@@ -112,7 +112,7 @@ func TestAccAWSWafXssMatchSet_changeTuples(t *testing.T) {
 	setName := fmt.Sprintf("xssMatchSet-%s", acctest.RandString(5))
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSWaf(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSWafXssMatchSetDestroy,
 		Steps: []resource.TestStep{
@@ -177,7 +177,7 @@ func TestAccAWSWafXssMatchSet_noTuples(t *testing.T) {
 	setName := fmt.Sprintf("xssMatchSet-%s", acctest.RandString(5))
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSWaf(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSWafXssMatchSetDestroy,
 		Steps: []resource.TestStep{
@@ -300,8 +300,10 @@ func testAccAWSWafXssMatchSetConfig(name string) string {
 	return fmt.Sprintf(`
 resource "aws_waf_xss_match_set" "xss_match_set" {
   name = "%s"
+
   xss_match_tuples {
     text_transformation = "NONE"
+
     field_to_match {
       type = "URI"
     }
@@ -309,19 +311,23 @@ resource "aws_waf_xss_match_set" "xss_match_set" {
 
   xss_match_tuples {
     text_transformation = "NONE"
+
     field_to_match {
       type = "QUERY_STRING"
     }
   }
-}`, name)
+}
+`, name)
 }
 
 func testAccAWSWafXssMatchSetConfigChangeName(name string) string {
 	return fmt.Sprintf(`
 resource "aws_waf_xss_match_set" "xss_match_set" {
   name = "%s"
+
   xss_match_tuples {
     text_transformation = "NONE"
+
     field_to_match {
       type = "URI"
     }
@@ -329,19 +335,23 @@ resource "aws_waf_xss_match_set" "xss_match_set" {
 
   xss_match_tuples {
     text_transformation = "NONE"
+
     field_to_match {
       type = "QUERY_STRING"
     }
   }
-}`, name)
+}
+`, name)
 }
 
 func testAccAWSWafXssMatchSetConfig_changeTuples(name string) string {
 	return fmt.Sprintf(`
 resource "aws_waf_xss_match_set" "xss_match_set" {
   name = "%s"
+
   xss_match_tuples {
     text_transformation = "CMD_LINE"
+
     field_to_match {
       type = "BODY"
     }
@@ -349,17 +359,20 @@ resource "aws_waf_xss_match_set" "xss_match_set" {
 
   xss_match_tuples {
     text_transformation = "HTML_ENTITY_DECODE"
+
     field_to_match {
       type = "METHOD"
       data = "GET"
     }
   }
-}`, name)
+}
+`, name)
 }
 
 func testAccAWSWafXssMatchSetConfig_noTuples(name string) string {
 	return fmt.Sprintf(`
 resource "aws_waf_xss_match_set" "xss_match_set" {
   name = "%s"
-}`, name)
+}
+`, name)
 }
