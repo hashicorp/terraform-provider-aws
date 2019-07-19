@@ -117,7 +117,7 @@ func resourceAwsSsmMaintenanceWindowTask() *schema.Resource {
 			},
 
 			"task_parameters": {
-				Type:          schema.TypeList,
+				Type:          schema.TypeSet,
 				Optional:      true,
 				ConflictsWith: []string{"task_invocation_parameters"},
 				Deprecated:    "use 'task_invocation_parameters' argument instead",
@@ -671,7 +671,7 @@ func resourceAwsSsmMaintenanceWindowTaskCreate(d *schema.ResourceData, meta inte
 	}
 
 	if v, ok := d.GetOk("task_parameters"); ok {
-		params.TaskParameters = expandAwsSsmTaskParameters(v.([]interface{}))
+		params.TaskParameters = expandAwsSsmTaskParameters(v.(*schema.Set).List())
 	}
 
 	if v, ok := d.GetOk("task_invocation_parameters"); ok {
@@ -773,7 +773,7 @@ func resourceAwsSsmMaintenanceWindowTaskUpdate(d *schema.ResourceData, meta inte
 	}
 
 	if v, ok := d.GetOk("task_parameters"); ok {
-		params.TaskParameters = expandAwsSsmTaskParameters(v.([]interface{}))
+		params.TaskParameters = expandAwsSsmTaskParameters(v.(*schema.Set).List())
 	}
 
 	if v, ok := d.GetOk("task_invocation_parameters"); ok {
