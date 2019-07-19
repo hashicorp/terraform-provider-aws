@@ -1,46 +1,55 @@
 package aws
 
 import (
-	"regexp"
 	"testing"
 
 	"github.com/hashicorp/terraform/helper/resource"
 )
 
-func TestAccDataSourceAwsOrganizationsOrganization_basic(t *testing.T) {
-	resourceName := "data.aws_organizations_organization.test"
+func testAccDataSourceAwsOrganizationsOrganization_basic(t *testing.T) {
+	resourceName := "aws_organizations_organization.test"
+	dataSourceName := "data.aws_organizations_organization.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
 			testAccPreCheck(t)
 		},
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
 			{
+				Config: testAccCheckAwsOrganizationResourceOnlyConfig,
+			},
+			{
 				Config: testAccCheckAwsOrganizationConfig,
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestMatchResourceAttr(resourceName, "arn",
-						regexp.MustCompile(`^arn:aws:organizations::\d{12}:organization\/o-[a-z0-9]{10,32}$`),
-					),
-					resource.TestMatchResourceAttr(resourceName, "id",
-						regexp.MustCompile(`^o-[a-z0-9]{10,32}$`),
-					),
-					resource.TestMatchResourceAttr(resourceName, "master_account_arn",
-						regexp.MustCompile(`^arn:aws:organizations::\d{12}:account\/o-[a-z0-9]{10,32}\/\d{12}$`),
-					),
-					resource.TestMatchResourceAttr(resourceName, "master_account_email",
-						regexp.MustCompile(`[^\s@]+@[^\s@]+\.[^\s@]+`),
-					),
-					resource.TestMatchResourceAttr(resourceName, "master_account_id",
-						regexp.MustCompile(`^\d{12}$`),
-					),
-					resource.TestCheckResourceAttrSet(resourceName, "feature_set"),
+					resource.TestCheckResourceAttrPair(resourceName, "accounts.#", dataSourceName, "accounts.#"),
+					resource.TestCheckResourceAttrPair(resourceName, "arn", dataSourceName, "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "aws_service_access_principals.#", dataSourceName, "aws_service_access_principals.#"),
+					resource.TestCheckResourceAttrPair(resourceName, "enabled_policy_types.#", dataSourceName, "enabled_policy_types.#"),
+					resource.TestCheckResourceAttrPair(resourceName, "feature_set", dataSourceName, "feature_set"),
+					resource.TestCheckResourceAttrPair(resourceName, "id", dataSourceName, "id"),
+					resource.TestCheckResourceAttrPair(resourceName, "master_account_arn", dataSourceName, "master_account_arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "master_account_email", dataSourceName, "master_account_email"),
+					resource.TestCheckResourceAttrPair(resourceName, "master_account_id", dataSourceName, "master_account_id"),
+					resource.TestCheckResourceAttrPair(resourceName, "non_master_accounts.#", dataSourceName, "non_master_accounts.#"),
+					resource.TestCheckResourceAttrPair(resourceName, "roots.#", dataSourceName, "roots.#"),
 				),
+			},
+			{
+				// This is to make sure the data source isn't around trying to read the resource
+				// when the resource is being destroyed
+				Config: testAccCheckAwsOrganizationResourceOnlyConfig,
 			},
 		},
 	})
 }
 
+const testAccCheckAwsOrganizationResourceOnlyConfig = `
+resource "aws_organizations_organization" "test" {}
+`
+
 const testAccCheckAwsOrganizationConfig = `
+resource "aws_organizations_organization" "test" {}
+
 data "aws_organizations_organization" "test" {}
 `
