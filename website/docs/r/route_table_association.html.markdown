@@ -19,25 +19,12 @@ resource "aws_route_table_association" "a" {
 }
 ```
 
-## Example Replacement Usage
-
-If the subnet already has an associated route table, normally an error will be thrown if attempting to associate another route table. However, using `force_replace`, no error will be thrown and the subnet will become associated with the new route table instead.
-
-```hcl
-resource "aws_route_table_association" "a" {
-  subnet_id      = "${aws_subnet.foo.id}"
-  route_table_id = "${aws_route_table.bar.id}"
-  force_replace  = true
-}
-```
-
 ## Argument Reference
 
 The following arguments are supported:
 
 * `subnet_id` - (Required) The subnet ID to create an association.
 * `route_table_id` - (Required) The ID of the routing table to associate with.
-* `force_replace` - (Optional) Boolean indicating whether to replace an existing association or not.
 
 ## Attributes Reference
 
@@ -45,3 +32,17 @@ In addition to all arguments above, the following attributes are exported:
 
 * `id` - The ID of the association
 
+## Import
+
+~> **NOTE:** Attempting to associate a route table with a subnet, where either
+is already associated, will result in an error (e.g.,
+`Resource.AlreadyAssociated: the specified association for route table
+rtb-4176657279 conflicts with an existing association`) unless you first
+import the original association.
+
+Route table associations can be imported using the subnet and route table IDs.
+For example, use this command:
+
+```
+$ terraform import aws_route_table_association.assoc subnet-6777656e646f6c796e/rtb-656c65616e6f72
+```

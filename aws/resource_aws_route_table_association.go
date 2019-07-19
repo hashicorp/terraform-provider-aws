@@ -3,6 +3,7 @@ package aws
 import (
 	"fmt"
 	"log"
+	"strings"
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -18,23 +19,19 @@ func resourceAwsRouteTableAssociation() *schema.Resource {
 		Read:   resourceAwsRouteTableAssociationRead,
 		Update: resourceAwsRouteTableAssociationUpdate,
 		Delete: resourceAwsRouteTableAssociationDelete,
+		Importer: &schema.ResourceImporter{
+			State: resourceAwsRouteTableAssociationImport,
+		},
 
 		Schema: map[string]*schema.Schema{
 			"subnet_id": {
 				Type:     schema.TypeString,
 				Required: true,
-				ForceNew: true,
 			},
 
 			"route_table_id": {
 				Type:     schema.TypeString,
 				Required: true,
-			},
-
-			"force_replace": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Default:  false,
 			},
 		},
 	}
@@ -54,34 +51,12 @@ func resourceAwsRouteTableAssociationCreate(d *schema.ResourceData, meta interfa
 	}
 
 	var associationID string
-	var err error
-	err = resource.Retry(30*time.Second, func() *resource.RetryError {
+	err := resource.Retry(30*time.Second, func() *resource.RetryError {
 		resp, err := conn.AssociateRouteTable(&associationOpts)
 		if err != nil {
 			if awsErr, ok := err.(awserr.Error); ok {
 				if awsErr.Code() == "InvalidRouteTableID.NotFound" {
 					return resource.RetryableError(awsErr)
-				}
-				if awsErr.Code() == "Resource.AlreadyAssociated" && d.Get(
-					"force_replace").(bool) {
-
-					associationID, err = findExistingSubnetAssociationID(
-						conn,
-						d.Get("subnet_id").(string),
-					)
-					if err != nil {
-						return resource.NonRetryableError(err)
-					}
-
-					log.Print("[INFO] Replacing route table association")
-					input := &ec2.ReplaceRouteTableAssociationInput{
-						AssociationId: aws.String(associationID),
-						RouteTableId:  aws.String(d.Get("route_table_id").(string)),
-					}
-					_, err = conn.ReplaceRouteTableAssociation(input)
-					if err == nil {
-						return nil
-					}
 				}
 			}
 			return resource.NonRetryableError(err)
@@ -183,19 +158,30 @@ func resourceAwsRouteTableAssociationDelete(d *schema.ResourceData, meta interfa
 	return nil
 }
 
-func findExistingSubnetAssociationID(conn *ec2.EC2, subnetID string) (string, error) {
-	// only way to get association id is through the route table
+func resourceAwsRouteTableAssociationImport(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
+	parts := strings.Split(d.Id(), "/")
+	if len(parts) != 2 {
+		return []*schema.ResourceData{}, fmt.Errorf("Wrong format for import: %s. Use 'subnet ID/route table ID'", d.Id())
+	}
+
+	subnetID := parts[0]
+	routeTableID := parts[1]
+
+	log.Printf("[DEBUG] Importing route table association, subnet: %s, route table: %s", subnetID, routeTableID)
+
+	conn := meta.(*AWSClient).ec2conn
 
 	input := &ec2.DescribeRouteTablesInput{}
 	input.Filters = buildEC2AttributeFilterList(
 		map[string]string{
-			"association.subnet-id": subnetID,
+			"association.subnet-id":      subnetID,
+			"association.route-table-id": routeTableID,
 		},
 	)
 
 	output, err := conn.DescribeRouteTables(input)
 	if err != nil || len(output.RouteTables) == 0 {
-		return "", fmt.Errorf("Error finding route table: %v", err)
+		return nil, fmt.Errorf("Error finding route table: %v", err)
 	}
 
 	rt := output.RouteTables[0]
@@ -208,8 +194,12 @@ func findExistingSubnetAssociationID(conn *ec2.EC2, subnetID string) (string, er
 		}
 	}
 	if associationID == "" {
-		return "", fmt.Errorf("Error finding route table, ID: %v", *rt.RouteTableId)
+		return nil, fmt.Errorf("Error finding route table, ID: %v", *rt.RouteTableId)
 	}
 
-	return associationID, nil
+	d.SetId(associationID)
+	d.Set("subnet_id", subnetID)
+	d.Set("route_table_id", routeTableID)
+
+	return []*schema.ResourceData{d}, nil
 }

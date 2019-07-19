@@ -40,6 +40,7 @@ func TestAccAWSRouteTableAssociation_basic(t *testing.T) {
 
 func TestAccAWSRouteTableAssociation_replace(t *testing.T) {
 	var v, v2 ec2.RouteTable
+	resourceName := "aws_route_table_association.foo"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -50,15 +51,20 @@ func TestAccAWSRouteTableAssociation_replace(t *testing.T) {
 				Config: testAccRouteTableAssociationConfig,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRouteTableAssociationExists(
-						"aws_route_table_association.foo", &v),
+						resourceName, &v),
 				),
 			},
-
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateIdFunc: testAccAWSRouteTabAssocImportStateIdFunc(resourceName),
+				ImportStateVerify: true,
+			},
 			{
 				Config: testAccRouteTableAssociationConfigReplace,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRouteTableAssociationExists(
-						"aws_route_table_association.bar", &v2),
+						resourceName, &v2),
 				),
 			},
 		},
@@ -129,6 +135,17 @@ func testAccCheckRouteTableAssociationExists(n string, v *ec2.RouteTable) resour
 		}
 
 		return nil
+	}
+}
+
+func testAccAWSRouteTabAssocImportStateIdFunc(resourceName string) resource.ImportStateIdFunc {
+	return func(s *terraform.State) (string, error) {
+		rs, ok := s.RootModule().Resources[resourceName]
+		if !ok {
+			return "", fmt.Errorf("not found: %s", resourceName)
+		}
+
+		return fmt.Sprintf("%s/%s", rs.Primary.Attributes["subnet_id"], rs.Primary.Attributes["route_table_id"]), nil
 	}
 }
 
@@ -248,9 +265,8 @@ resource "aws_route_table" "bar" {
 	}
 }
 
-resource "aws_route_table_association" "bar" {
+resource "aws_route_table_association" "foo" {
 	route_table_id = "${aws_route_table.bar.id}"
 	subnet_id = "${aws_subnet.foo.id}"
-	force_replace = true
 }
 `
