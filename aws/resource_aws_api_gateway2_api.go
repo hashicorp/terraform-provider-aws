@@ -141,7 +141,7 @@ func resourceAwsApiGateway2ApiRead(d *schema.ResourceData, meta interface{}) err
 	d.Set("route_selection_expression", resp.RouteSelectionExpression)
 	err = d.Set("tags", tagsToMapGeneric(resp.Tags))
 	if err != nil {
-		return fmt.Errorf("error setting tags")
+		return fmt.Errorf("error setting tags: %s", err)
 	}
 	d.Set("version", resp.Version)
 

@@ -76,7 +76,6 @@ func TestAccAWSAPIGateway2Api_basic(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, "api_endpoint"),
 					resource.TestCheckResourceAttr(resourceName, "api_key_selection_expression", "$request.header.x-api-key"),
 					testAccMatchResourceAttrAnonymousRegionalARN(resourceName, "arn", "apigateway", regexp.MustCompile(`/apis/.+`)),
-					resource.TestCheckResourceAttrSet(resourceName, "arn"),
 					resource.TestCheckResourceAttr(resourceName, "description", ""),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "protocol_type", apigatewayv2.ProtocolTypeWebsocket),
