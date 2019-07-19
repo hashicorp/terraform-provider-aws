@@ -338,8 +338,7 @@ func updateKmsKeyRotationStatus(conn *kms.KMS, d *schema.ResourceData) error {
 	shouldEnableRotation := d.Get("enable_key_rotation").(bool)
 
 	err := resource.Retry(10*time.Minute, func() *resource.RetryError {
-		var err error
-		err = handleKeyRotation(conn, shouldEnableRotation, aws.String(d.Id()))
+		err := handleKeyRotation(conn, shouldEnableRotation, aws.String(d.Id()))
 
 		if err != nil {
 			awsErr, ok := err.(awserr.Error)
