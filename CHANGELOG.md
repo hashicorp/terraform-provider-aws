@@ -39,6 +39,7 @@ BUG FIXES:
 * resource/aws_db_event_subscription: Handle `SubscriptionNotFound` errors during refresh and deletion [GH-9371]
 * resource/aws_s3_account_public_access_block: Retry after timeout when reading s3 account public access block [GH-9387]
 * resource/aws_ssm_maintenance_window_task: Bypass `DoesNotExistException` error on deletion [GH-7823]
+* resource/aws_ssm_maintenance_window_task: Prevent `task_parameters` ordering differences [GH-9364]
 
 ## 2.19.0 (July 11, 2019)
 
