@@ -1,5 +1,8 @@
 ## 2.21.0 (Unreleased)
 
+FEATURES:
+* **New Data Source**: `aws_organizations_organization` [#9419]
+
 ## 2.20.0 (July 19, 2019)
 
 NOTES:
