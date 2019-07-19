@@ -196,7 +196,7 @@ func TestAccAWSWafRegionalIPSet_IpSetDescriptors_1000UpdateLimit(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      "aws_wafregional_ipset.ipset",
+				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
 			},
