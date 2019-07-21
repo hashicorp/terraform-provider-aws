@@ -551,6 +551,10 @@ func resourceAwsGlueCrawlerRead(d *schema.ResourceData, meta interface{}) error 
 		if err := d.Set("s3_target", flattenGlueS3Targets(crawlerOutput.Crawler.Targets.S3Targets)); err != nil {
 			return fmt.Errorf("error setting s3_target: %s", err)
 		}
+
+		if err := d.Set("catalog_target", flattenGlueCatalogTargets(crawlerOutput.Crawler.Targets.CatalogTargets)); err != nil {
+			return fmt.Errorf("error setting catalog_target: %s", err)
+		}
 	}
 
 	return nil
@@ -563,6 +567,19 @@ func flattenGlueS3Targets(s3Targets []*glue.S3Target) []map[string]interface{} {
 		attrs := make(map[string]interface{})
 		attrs["exclusions"] = flattenStringList(s3Target.Exclusions)
 		attrs["path"] = aws.StringValue(s3Target.Path)
+
+		result = append(result, attrs)
+	}
+	return result
+}
+
+func flattenGlueCatalogTargets(CatalogTargets []*glue.CatalogTarget) []map[string]interface{} {
+	result := make([]map[string]interface{}, 0)
+
+	for _, catalogTarget := range CatalogTargets {
+		attrs := make(map[string]interface{})
+		attrs["tables"] = flattenStringList(catalogTarget.Tables)
+		attrs["database_name"] = aws.StringValue(catalogTarget.DatabaseName)
 
 		result = append(result, attrs)
 	}
