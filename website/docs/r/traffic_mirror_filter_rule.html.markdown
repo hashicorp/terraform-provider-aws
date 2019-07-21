@@ -80,8 +80,8 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-Traffic mirror rules can be imported using the composite ID`<filter-id>:<rule-id>`, e.g.
+Traffic mirror rules can be imported using the `id`, e.g.
 
 ```
-$ terraform import aws_traffic_mirror_filter_rule.rule tmf-0fbb93ddf38198f64:tmfr-05a458f06445d0aee
+$ terraform import aws_traffic_mirror_filter_rule.rule tmfr-05a458f06445d0aee
 ```

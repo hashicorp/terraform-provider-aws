@@ -109,10 +109,8 @@ func testAccCheckAwsTrafficMirrorFilterRuleExists(name string) resource.TestChec
 			return fmt.Errorf("No ID set for %s", name)
 		}
 
-		filterId, ruleId, err := parseTrafficMirrorFilterRuleResourceId(rs.Primary.ID)
-		if err != nil {
-			return fmt.Errorf("Filter %s not found for rule %s", filterId, ruleId)
-		}
+		ruleId := rs.Primary.ID
+		filterId := rs.Primary.Attributes["traffic_mirror_filter_id"]
 
 		conn := testAccProvider.Meta().(*AWSClient).ec2conn
 		out, err := conn.DescribeTrafficMirrorFilters(&ec2.DescribeTrafficMirrorFiltersInput{
@@ -214,10 +212,8 @@ func testAccCheckAwsTrafficMirrorFilterRuleDestroy(s *terraform.State) error {
 			continue
 		}
 
-		filterId, ruleId, err := parseTrafficMirrorFilterRuleResourceId(rs.Primary.ID)
-		if err != nil {
-			return fmt.Errorf("Filter %s not found for rule %s", filterId, ruleId)
-		}
+		ruleId := rs.Primary.ID
+		filterId := rs.Primary.Attributes["traffic_mirror_filter_id"]
 
 		out, err := conn.DescribeTrafficMirrorFilters(&ec2.DescribeTrafficMirrorFiltersInput{
 			TrafficMirrorFilterIds: []*string{
