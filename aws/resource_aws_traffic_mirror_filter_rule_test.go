@@ -245,7 +245,6 @@ func testAccCheckAwsTrafficMirrorFilterRuleDestroy(s *terraform.State) error {
 		for _, rule := range ruleList {
 			if *rule.TrafficMirrorFilterRuleId == ruleId {
 				return fmt.Errorf("Rule %s still exists in filter %s", ruleId, filterId)
-				break
 			}
 		}
 	}
