@@ -123,6 +123,12 @@ func TestAccAWSCloudWatchEventTarget_basic(t *testing.T) {
 						regexp.MustCompile(fmt.Sprintf(":%s$", snsTopicName2))),
 				),
 			},
+			{
+				ResourceName:      "aws_cloudwatch_event_target.moobar",
+				ImportState:       true,
+				ImportStateIdFunc: testAccAWSCloudWatchEventTargetImportStateIdFunc("aws_cloudwatch_event_target.moobar"),
+				ImportStateVerify: true,
+			},
 		},
 	})
 }
@@ -330,6 +336,17 @@ func testAccCheckAWSCloudWatchEventTargetDestroy(s *terraform.State) error {
 	}
 
 	return nil
+}
+
+func testAccAWSCloudWatchEventTargetImportStateIdFunc(resourceName string) resource.ImportStateIdFunc {
+	return func(s *terraform.State) (string, error) {
+		rs, ok := s.RootModule().Resources[resourceName]
+		if !ok {
+			return "", fmt.Errorf("Not found: %s", resourceName)
+		}
+
+		return fmt.Sprintf("%s/%s", rs.Primary.Attributes["rule"], rs.Primary.Attributes["target_id"]), nil
+	}
 }
 
 func testAccAWSCloudWatchEventTargetConfig(ruleName, snsTopicName, targetID string) string {
