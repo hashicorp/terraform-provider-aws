@@ -325,27 +325,19 @@ func populateTrafficMirrorFilterRuleResource(d *schema.ResourceData, rule *ec2.T
 	d.Set("rule_action", rule.RuleAction)
 	d.Set("rule_number", rule.RuleNumber)
 	d.Set("traffic_direction", rule.TrafficDirection)
-
-	if rule.Description != nil {
-		d.Set("description", rule.Description)
-	}
-
-	if rule.Protocol != nil {
-		d.Set("protocol", rule.Protocol)
-	}
-
-	if rule.DestinationPortRange != nil {
-		d.Set("destination_port_range", buildTrafficMirrorFilterRulePortRangeSchema(rule.DestinationPortRange))
-	}
-
-	if rule.SourcePortRange != nil {
-		d.Set("source_port_range", buildTrafficMirrorFilterRulePortRangeSchema(rule.SourcePortRange))
-	}
+	d.Set("description", rule.Description)
+	d.Set("protocol", rule.Protocol)
+	d.Set("destination_port_range", buildTrafficMirrorFilterRulePortRangeSchema(rule.DestinationPortRange))
+	d.Set("source_port_range", buildTrafficMirrorFilterRulePortRangeSchema(rule.SourcePortRange))
 
 	return nil
 }
 
 func buildTrafficMirrorFilterRulePortRangeSchema(portRange *ec2.TrafficMirrorPortRange) interface{} {
+	if nil == portRange {
+		return nil
+	}
+
 	var out [1]interface{}
 	elem := make(map[string]interface{})
 	elem["from_port"] = portRange.FromPort
