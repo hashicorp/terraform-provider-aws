@@ -45,8 +45,9 @@ func resourceAwsGlueJob() *schema.Resource {
 							Required: true,
 						},
 						"python_version": {
-							Type:     schema.TypeString,
-							Optional: true,
+							Type:         schema.TypeString,
+							Optional:     true,
+							ValidateFunc: validation.StringInSlice([]string{"2", "3"}, true),
 						},
 					},
 				},
@@ -369,6 +370,7 @@ func flattenGlueJobCommand(jobCommand *glue.JobCommand) []map[string]interface{}
 	m := map[string]interface{}{
 		"name":            aws.StringValue(jobCommand.Name),
 		"script_location": aws.StringValue(jobCommand.ScriptLocation),
+		"python_version":  aws.StringValue(jobCommand.PythonVersion),
 	}
 
 	return []map[string]interface{}{m}
