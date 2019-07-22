@@ -1595,7 +1595,7 @@ func WebsiteDomainUrl(region string) string {
 	if isOldRegion(region) {
 		return fmt.Sprintf("s3-website-%s.amazonaws.com", region)
 	}
-	if isInChina(region) {
+	if isChineseRegion(region) {
 		return fmt.Sprintf("s3-website.%s.amazonaws.com.cn", region)
 	}
 	return fmt.Sprintf("s3-website.%s.amazonaws.com", region)
@@ -1621,9 +1621,15 @@ func isOldRegion(region string) bool {
 	return false
 }
 
-func isInChina(region string) bool {
-	if region == "cn-northwest-1" {
-		return true
+func isChineseRegion(region string) bool {
+	chineseRegions := []string{
+		"cn-north-1",
+		"cn-northwest-1",
+	}
+	for _, r := range chineseRegions {
+		if region == r {
+			return true
+		}
 	}
 	return false
 }
