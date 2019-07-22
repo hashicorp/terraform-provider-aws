@@ -3,6 +3,9 @@
 FEATURES:
 * **New Data Source**: `aws_organizations_organization` [#9419]
 
+ENHANCEMENTS:
+* resource/aws_wafregional_ipset: Support resource import [#9424]
+
 ## 2.20.0 (July 19, 2019)
 
 NOTES:
