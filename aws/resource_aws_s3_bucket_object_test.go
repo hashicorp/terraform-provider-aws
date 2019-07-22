@@ -223,6 +223,30 @@ func TestAccAWSS3BucketObject_content(t *testing.T) {
 	})
 }
 
+func TestAccAWSS3BucketObject_etagEncryption(t *testing.T) {
+	var obj s3.GetObjectOutput
+	resourceName := "aws_s3_bucket_object.object"
+	rInt := acctest.RandInt()
+	source := testAccAWSS3BucketObjectCreateTempFile(t, "{anything will do }")
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSS3BucketObjectDestroy,
+		Steps: []resource.TestStep{
+			{
+				PreConfig: func() {},
+				Config:    testAccAWSS3BucketObjectEtagEncryption(rInt, source),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSS3BucketObjectExists(resourceName, &obj),
+					testAccCheckAWSS3BucketObjectBody(&obj, "{anything will do }"),
+					resource.TestCheckResourceAttr(resourceName, "etag", "7b006ff4d70f68cc65061acf2f802e6f"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccAWSS3BucketObject_contentBase64(t *testing.T) {
 	var obj s3.GetObjectOutput
 	resourceName := "aws_s3_bucket_object.object"
@@ -878,6 +902,22 @@ resource "aws_s3_bucket_object" "object" {
   content = "%s"
 }
 `, randInt, content)
+}
+
+func testAccAWSS3BucketObjectEtagEncryption(randInt int, source string) string {
+	return fmt.Sprintf(`
+resource "aws_s3_bucket" "object_bucket" {
+  bucket = "tf-object-test-bucket-%d"
+}
+
+resource "aws_s3_bucket_object" "object" {
+  bucket  = "${aws_s3_bucket.object_bucket.bucket}"
+  key     = "test-key"
+  source = "%s"
+  server_side_encryption = "AES256"
+  etag = "${filemd5("%s")}"
+}
+`, randInt, source, source)
 }
 
 func testAccAWSS3BucketObjectConfigContentBase64(randInt int, contentBase64 string) string {
