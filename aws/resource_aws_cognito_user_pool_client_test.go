@@ -114,6 +114,33 @@ func TestAccAWSCognitoUserPoolClient_RefreshTokenValidity(t *testing.T) {
 	})
 }
 
+func TestAccAWSCognitoUserPoolClient_ClientName(t *testing.T) {
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName2 := acctest.RandomWithPrefix("tf-acc-test")
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSCognitoIdentityProvider(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSCognitoUserPoolClientDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSCognitoUserPoolClientConfig_ClientName(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckAWSCognitoUserPoolClientExists("aws_cognito_user_pool_client.client"),
+					resource.TestCheckResourceAttr("aws_cognito_user_pool_client.client", "name", rName),
+				),
+			},
+			{
+				Config: testAccAWSCognitoUserPoolClientConfig_ClientName(rName2),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckAWSCognitoUserPoolClientExists("aws_cognito_user_pool_client.client"),
+					resource.TestCheckResourceAttr("aws_cognito_user_pool_client.client", "name", rName2),
+				),
+			},
+		},
+	})
+}
+
 func TestAccAWSCognitoUserPoolClient_allFields(t *testing.T) {
 	userPoolName := fmt.Sprintf("tf-acc-cognito-user-pool-%s", acctest.RandString(7))
 	clientName := acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum)
@@ -285,6 +312,19 @@ resource "aws_cognito_user_pool_client" "client" {
   user_pool_id           = "${aws_cognito_user_pool.pool.id}"
 }
 `, rName, rName, refreshTokenValidity)
+}
+
+func testAccAWSCognitoUserPoolClientConfig_ClientName(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_cognito_user_pool" "pool" {
+  name = "%s"
+}
+
+resource "aws_cognito_user_pool_client" "client" {
+  name                   = "%s"
+  user_pool_id           = "${aws_cognito_user_pool.pool.id}"
+}
+`, rName, rName)
 }
 
 func testAccAWSCognitoUserPoolClientConfig_allFields(userPoolName, clientName string, refreshTokenValidity int) string {
