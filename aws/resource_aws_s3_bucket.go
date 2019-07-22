@@ -1589,10 +1589,14 @@ func WebsiteEndpoint(bucket string, region string) *S3Website {
 func WebsiteDomainUrl(region string) string {
 	region = normalizeRegion(region)
 
-	// New regions uses different syntax for website endpoints
-	// http://docs.aws.amazon.com/AmazonS3/latest/dev/WebsiteEndpoints.html
+	// Different regions have different syntax for website endpoints
+	// https://docs.aws.amazon.com/AmazonS3/latest/dev/WebsiteEndpoints.html
+	// https://docs.aws.amazon.com/general/latest/gr/rande.html#s3_website_region_endpoints
 	if isOldRegion(region) {
 		return fmt.Sprintf("s3-website-%s.amazonaws.com", region)
+	}
+	if isInChina(region) {
+		return fmt.Sprintf("s3-website.%s.amazonaws.com.cn", region)
 	}
 	return fmt.Sprintf("s3-website.%s.amazonaws.com", region)
 }
@@ -1613,6 +1617,13 @@ func isOldRegion(region string) bool {
 		if region == r {
 			return true
 		}
+	}
+	return false
+}
+
+func isInChina(region string) bool {
+	if region == "cn-northwest-1" {
+		return true
 	}
 	return false
 }
