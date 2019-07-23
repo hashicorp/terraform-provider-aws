@@ -18,6 +18,9 @@ func resourceAwsRouteTableAssociation() *schema.Resource {
 		Read:   resourceAwsRouteTableAssociationRead,
 		Update: resourceAwsRouteTableAssociationUpdate,
 		Delete: resourceAwsRouteTableAssociationDelete,
+		Importer: &schema.ResourceImporter{
+			State: resourceAwsRouteTableAssociationImport,
+		},
 
 		Schema: map[string]*schema.Schema{
 			"subnet_id": {
@@ -152,4 +155,36 @@ func resourceAwsRouteTableAssociationDelete(d *schema.ResourceData, meta interfa
 	}
 
 	return nil
+}
+
+const assocIdName = "association.route-table-association-id"
+
+func resourceAwsRouteTableAssociationImport(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
+	conn := meta.(*AWSClient).ec2conn
+
+	filter := ec2.Filter{
+		Name:   aws.String(assocIdName),
+		Values: aws.StringSlice([]string{d.Id()}),
+	}
+
+	input := ec2.DescribeRouteTablesInput{
+		Filters: []*ec2.Filter{&filter},
+	}
+
+	resp, err := conn.DescribeRouteTables(&input)
+
+	if err != nil {
+		log.Printf("Error on RouteTableAssociationImport: %s", err)
+		return nil, err
+	}
+
+	if resp == nil {
+		return nil, fmt.Errorf("Unable to find route table association %s", d.Id())
+	}
+
+	rt := resp.RouteTables[0]
+
+	d.Set("route_table_id", *rt.RouteTableId)
+
+	return []*schema.ResourceData{d}, nil
 }

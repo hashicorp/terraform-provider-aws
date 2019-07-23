@@ -34,6 +34,12 @@ func TestAccAWSRouteTableAssociation_basic(t *testing.T) {
 						"aws_route_table_association.foo", &v2),
 				),
 			},
+
+			{
+				ResourceName:      "aws_route_table_association.foo",
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
 		},
 	})
 }

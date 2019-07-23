@@ -32,3 +32,13 @@ In addition to all arguments above, the following attributes are exported:
 
 * `id` - The ID of the association
 
+## Import
+
+The route table association can be imported using the route table association id.
+
+For example:
+
+```
+$ terraform import aws_route_table_association.example rtbassoc-12345678
+```
+
