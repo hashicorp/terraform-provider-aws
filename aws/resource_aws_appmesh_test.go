@@ -14,7 +14,7 @@ func TestAccAWSAppmesh(t *testing.T) {
 		"Route": {
 			"httpRoute": testAccAwsAppmeshRoute_httpRoute,
 			"tcpRoute":  testAccAwsAppmeshRoute_tcpRoute,
-			"tags":      testAccAwsAppmeshRoute_tags,
+			// "tags":      testAccAwsAppmeshRoute_tags,
 		},
 		"VirtualNode": {
 			"basic":                    testAccAwsAppmeshVirtualNode_basic,

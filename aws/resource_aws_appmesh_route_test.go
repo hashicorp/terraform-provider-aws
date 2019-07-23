@@ -7,7 +7,7 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/appmesh"
+	"github.com/aws/aws-sdk-go/service/appmeshpreview"
 	"github.com/hashicorp/terraform/helper/acctest"
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/terraform"
@@ -25,38 +25,38 @@ func testSweepAppmeshRoutes(region string) error {
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-	conn := client.(*AWSClient).appmeshconn
+	conn := client.(*AWSClient).appmeshpreviewconn
 
-	err = conn.ListMeshesPages(&appmesh.ListMeshesInput{}, func(page *appmesh.ListMeshesOutput, isLast bool) bool {
+	err = conn.ListMeshesPages(&appmeshpreview.ListMeshesInput{}, func(page *appmeshpreview.ListMeshesOutput, isLast bool) bool {
 		if page == nil {
 			return !isLast
 		}
 
 		for _, mesh := range page.Meshes {
-			listVirtualRoutersInput := &appmesh.ListVirtualRoutersInput{
+			listVirtualRoutersInput := &appmeshpreview.ListVirtualRoutersInput{
 				MeshName: mesh.MeshName,
 			}
 			meshName := aws.StringValue(mesh.MeshName)
 
-			err := conn.ListVirtualRoutersPages(listVirtualRoutersInput, func(page *appmesh.ListVirtualRoutersOutput, isLast bool) bool {
+			err := conn.ListVirtualRoutersPages(listVirtualRoutersInput, func(page *appmeshpreview.ListVirtualRoutersOutput, isLast bool) bool {
 				if page == nil {
 					return !isLast
 				}
 
 				for _, virtualRouter := range page.VirtualRouters {
-					listRoutesInput := &appmesh.ListRoutesInput{
+					listRoutesInput := &appmeshpreview.ListRoutesInput{
 						MeshName:          mesh.MeshName,
 						VirtualRouterName: virtualRouter.VirtualRouterName,
 					}
 					virtualRouterName := aws.StringValue(virtualRouter.VirtualRouterName)
 
-					err := conn.ListRoutesPages(listRoutesInput, func(page *appmesh.ListRoutesOutput, isLast bool) bool {
+					err := conn.ListRoutesPages(listRoutesInput, func(page *appmeshpreview.ListRoutesOutput, isLast bool) bool {
 						if page == nil {
 							return !isLast
 						}
 
 						for _, route := range page.Routes {
-							input := &appmesh.DeleteRouteInput{
+							input := &appmeshpreview.DeleteRouteInput{
 								MeshName:          mesh.MeshName,
 								RouteName:         route.RouteName,
 								VirtualRouterName: virtualRouter.VirtualRouterName,
@@ -101,7 +101,7 @@ func testSweepAppmeshRoutes(region string) error {
 }
 
 func testAccAwsAppmeshRoute_httpRoute(t *testing.T) {
-	var r appmesh.RouteData
+	var r appmeshpreview.RouteData
 	resourceName := "aws_appmesh_route.foo"
 	meshName := fmt.Sprintf("tf-test-mesh-%d", acctest.RandInt())
 	vrName := fmt.Sprintf("tf-test-router-%d", acctest.RandInt())
@@ -161,7 +161,7 @@ func testAccAwsAppmeshRoute_httpRoute(t *testing.T) {
 }
 
 func testAccAwsAppmeshRoute_tcpRoute(t *testing.T) {
-	var r appmesh.RouteData
+	var r appmeshpreview.RouteData
 	resourceName := "aws_appmesh_route.foo"
 	meshName := fmt.Sprintf("tf-test-mesh-%d", acctest.RandInt())
 	vrName := fmt.Sprintf("tf-test-router-%d", acctest.RandInt())
@@ -217,7 +217,7 @@ func testAccAwsAppmeshRoute_tcpRoute(t *testing.T) {
 }
 
 func testAccAwsAppmeshRoute_tags(t *testing.T) {
-	var r appmesh.RouteData
+	var r appmeshpreview.RouteData
 	resourceName := "aws_appmesh_route.foo"
 	meshName := fmt.Sprintf("tf-test-mesh-%d", acctest.RandInt())
 	vrName := fmt.Sprintf("tf-test-router-%d", acctest.RandInt())
@@ -273,19 +273,19 @@ func testAccAwsAppmeshRoute_tags(t *testing.T) {
 }
 
 func testAccCheckAppmeshRouteDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).appmeshconn
+	conn := testAccProvider.Meta().(*AWSClient).appmeshpreviewconn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_appmesh_route" {
 			continue
 		}
 
-		_, err := conn.DescribeRoute(&appmesh.DescribeRouteInput{
+		_, err := conn.DescribeRoute(&appmeshpreview.DescribeRouteInput{
 			MeshName:          aws.String(rs.Primary.Attributes["mesh_name"]),
 			RouteName:         aws.String(rs.Primary.Attributes["name"]),
 			VirtualRouterName: aws.String(rs.Primary.Attributes["virtual_router_name"]),
 		})
-		if isAWSErr(err, appmesh.ErrCodeNotFoundException, "") {
+		if isAWSErr(err, appmeshpreview.ErrCodeNotFoundException, "") {
 			continue
 		}
 		if err != nil {
@@ -297,9 +297,9 @@ func testAccCheckAppmeshRouteDestroy(s *terraform.State) error {
 	return nil
 }
 
-func testAccCheckAppmeshRouteExists(name string, v *appmesh.RouteData) resource.TestCheckFunc {
+func testAccCheckAppmeshRouteExists(name string, v *appmeshpreview.RouteData) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := testAccProvider.Meta().(*AWSClient).appmeshconn
+		conn := testAccProvider.Meta().(*AWSClient).appmeshpreviewconn
 
 		rs, ok := s.RootModule().Resources[name]
 		if !ok {
@@ -309,7 +309,7 @@ func testAccCheckAppmeshRouteExists(name string, v *appmesh.RouteData) resource.
 			return fmt.Errorf("No ID is set")
 		}
 
-		resp, err := conn.DescribeRoute(&appmesh.DescribeRouteInput{
+		resp, err := conn.DescribeRoute(&appmeshpreview.DescribeRouteInput{
 			MeshName:          aws.String(rs.Primary.Attributes["mesh_name"]),
 			RouteName:         aws.String(rs.Primary.Attributes["name"]),
 			VirtualRouterName: aws.String(rs.Primary.Attributes["virtual_router_name"]),
