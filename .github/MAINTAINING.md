@@ -79,6 +79,7 @@ The fix for this has been merged and will release with version X.Y.Z of the Terr
 - Check the existing release milestone for open items and either work through them or move them to the next milestone
 - Run the HashiCorp (non-OSS) TeamCity release job with the `DEPLOYMENT_TARGET_VERSION` matching the expected release milestone and `DEPLOYMENT_NEXT_VERSION` matching the next release milestone
 - Wait for the TeamCity release job and TeamCity website deployment jobs to complete either by watching the build logs or Slack notifications
+- Close the release milestone
 - For each item noted in the `CHANGELOG.md` for the release just completed (or milestone as a whole), add a comment to the pull request and any linked closed issues noting that it has been released, e.g.
 
 ```markdown
