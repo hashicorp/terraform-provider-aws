@@ -9,6 +9,7 @@ ENHANCEMENTS:
 BUG FIXES:
 
 * resource/aws_cognito_user_pool_client: Properly update name value [GH-9437]
+* resource/aws_db_instance: Redact `MasterUserPassword` from user interface when displaying `InvalidParameterValue` error during resource creation [GH-9446]
 
 ## 2.20.0 (July 19, 2019)
 
