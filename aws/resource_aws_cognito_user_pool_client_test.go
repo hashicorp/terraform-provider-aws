@@ -114,9 +114,9 @@ func TestAccAWSCognitoUserPoolClient_RefreshTokenValidity(t *testing.T) {
 	})
 }
 
-func TestAccAWSCognitoUserPoolClient_ClientName(t *testing.T) {
+func TestAccAWSCognitoUserPoolClient_Name(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
-	rName2 := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_cognito_user_pool_client.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSCognitoIdentityProvider(t) },
@@ -124,17 +124,17 @@ func TestAccAWSCognitoUserPoolClient_ClientName(t *testing.T) {
 		CheckDestroy: testAccCheckAWSCognitoUserPoolClientDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSCognitoUserPoolClientConfig_ClientName(rName),
+				Config: testAccAWSCognitoUserPoolClientConfig_Name(rName, "name1"),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAWSCognitoUserPoolClientExists("aws_cognito_user_pool_client.client"),
-					resource.TestCheckResourceAttr("aws_cognito_user_pool_client.client", "name", rName),
+					testAccCheckAWSCognitoUserPoolClientExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "name", "name1"),
 				),
 			},
 			{
-				Config: testAccAWSCognitoUserPoolClientConfig_ClientName(rName2),
+				Config: testAccAWSCognitoUserPoolClientConfig_Name(rName, "name2"),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAWSCognitoUserPoolClientExists("aws_cognito_user_pool_client.client"),
-					resource.TestCheckResourceAttr("aws_cognito_user_pool_client.client", "name", rName2),
+					testAccCheckAWSCognitoUserPoolClientExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "name", "name2"),
 				),
 			},
 		},
@@ -314,17 +314,17 @@ resource "aws_cognito_user_pool_client" "client" {
 `, rName, rName, refreshTokenValidity)
 }
 
-func testAccAWSCognitoUserPoolClientConfig_ClientName(rName string) string {
+func testAccAWSCognitoUserPoolClientConfig_Name(rName, name string) string {
 	return fmt.Sprintf(`
-resource "aws_cognito_user_pool" "pool" {
-  name = "%s"
+resource "aws_cognito_user_pool" "test" {
+  name = %[1]q
 }
 
-resource "aws_cognito_user_pool_client" "client" {
-  name                   = "%s"
-  user_pool_id           = "${aws_cognito_user_pool.pool.id}"
+resource "aws_cognito_user_pool_client" "test" {
+  name                   = %[2]q
+  user_pool_id           = "${aws_cognito_user_pool.test.id}"
 }
-`, rName, rName)
+`, rName, name)
 }
 
 func testAccAWSCognitoUserPoolClientConfig_allFields(userPoolName, clientName string, refreshTokenValidity int) string {
