@@ -1,13 +1,20 @@
 ## 2.21.0 (Unreleased)
 
+NOTES:
+
+* provider: After this update, the AWS Go SDK will prefer credentials found via the `AWS_PROFILE` environment variable when both the `AWS_PROFILE` environment variable and the `AWS_ACCESS_KEY_ID` and `AWS_SECRET_ACCESS_KEY` environment variables are statically defined. Previously the SDK would ignore the `AWS_PROFILE` environment variable, if static environment credentials were also specified. This is listed as a bug fix in the AWS Go SDK release notes. [GH-9428]
+
 FEATURES:
 * **New Data Source**: `aws_organizations_organization` [#9419]
 
 ENHANCEMENTS:
+
+* provider: Add support for assuming role via web identity token via the `AWS_WEB_IDENTITY_TOKEN_FILE` and `AWS_ROLE_ARN` environment variables [GH-9428]
 * resource/aws_wafregional_ipset: Support resource import [#9424]
 
 BUG FIXES:
 
+* provider: Load credentials via the `AWS_PROFILE` environment variable (if available) when `AWS_PROFILE` is defined along with `AWS_ACCESS_KEY_ID` and `AWS_SECRET_ACCESS_KEY` [GH-9428]
 * resource/aws_cognito_user_pool_client: Properly update name value [GH-9437]
 * resource/aws_db_instance: Redact `MasterUserPassword` from user interface when displaying `InvalidParameterValue` error during resource creation [GH-9446]
 
