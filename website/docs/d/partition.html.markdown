@@ -37,5 +37,5 @@ There are no arguments available for this data source.
 
 ## Attributes Reference
 
-`partition` is set to the identifier of the current partition.
-`url_suffix` is set to the URL Suffix associated with the current partition.
+* `partition` is set to the identifier of the current partition.
+* `dns_suffix` is set to the base DNS domain name for the current partition (e.g. `amazonaws.com` in AWS Commercial, `amazonaws.com.cn` in AWS China).

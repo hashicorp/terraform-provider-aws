@@ -196,7 +196,7 @@ type AWSClient struct {
 	redshiftconn          *redshift.Redshift
 	r53conn               *route53.Route53
 	partition             string
-	urlsuffix             string
+	dnsSuffix             string
 	accountid             string
 	supportedplatforms    []string
 	region                string
@@ -466,12 +466,12 @@ func (c *Config) Client() (interface{}, error) {
 		return nil, fmt.Errorf("Failed to resolve endpoint. Errors: %s", err)
 	}
 
-	urlsuffix, err := parseURLSuffixFromEndpoint(endpoint.URL, client.region)
+	dnsSuffix, err := parseDNSSuffixFromEndpoint(endpoint.URL, client.region)
 	if err != nil {
 		return nil, fmt.Errorf("Failed to resolve URL Suffix. Errors: %s", err)
 	}
 
-	client.urlsuffix = aws.StringValue(urlsuffix)
+	client.dnsSuffix = aws.StringValue(dnsSuffix)
 
 	client.ec2conn = ec2.New(awsEc2Sess)
 
@@ -625,7 +625,7 @@ func (c *Config) Client() (interface{}, error) {
 	return &client, nil
 }
 
-func parseURLSuffixFromEndpoint(endpoint string, region string) (*string, error) {
+func parseDNSSuffixFromEndpoint(endpoint string, region string) (*string, error) {
 	e := strings.Split(endpoint, ".")
 
 	// Expect endpoints with at least three elements

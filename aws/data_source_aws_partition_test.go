@@ -17,7 +17,7 @@ func TestAccAWSPartition_basic(t *testing.T) {
 				Config: testAccCheckAwsPartitionConfig_basic,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsPartition("data.aws_partition.current"),
-					testAccCheckAwsUrlSuffix("data.aws_partition.current"),
+					testAccCheckAwsDnsSuffix("data.aws_partition.current"),
 				),
 			},
 		},
@@ -40,20 +40,20 @@ func testAccCheckAwsPartition(n string) resource.TestCheckFunc {
 	}
 }
 
-func testAccCheckAwsUrlSuffix(n string) resource.TestCheckFunc {
+func testAccCheckAwsDnsSuffix(n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Can't find resource: %s", n)
 		}
 
-		expected := testAccProvider.Meta().(*AWSClient).urlsuffix
-		if rs.Primary.Attributes["url_suffix"] != expected {
-			return fmt.Errorf("Incorrect URL Suffix: expected %q, got %q", expected, rs.Primary.Attributes["url_suffix"])
+		expected := testAccProvider.Meta().(*AWSClient).dnsSuffix
+		if rs.Primary.Attributes["dns_suffix"] != expected {
+			return fmt.Errorf("Incorrect DNS Suffix: expected %q, got %q", expected, rs.Primary.Attributes["dns_suffix"])
 		}
 
-		if rs.Primary.Attributes["url_suffix"] == "" {
-			return fmt.Errorf("URL Suffix expected to not be nil")
+		if rs.Primary.Attributes["dns_suffix"] == "" {
+			return fmt.Errorf("DNS Suffix expected to not be nil")
 		}
 
 		return nil
