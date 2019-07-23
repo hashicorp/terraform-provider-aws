@@ -96,11 +96,33 @@ The `match` object supports the following:
 
 * `prefix` - (Required) Specifies the path with which to match requests.
 This parameter must always start with /, which by itself matches all requests to the virtual router service name.
+* `header` - (Optional) The HTTP headers with which to match requests.
+* `method` - (Optional) The HTTP method with which to match requests. Valid values: `GET`, `HEAD`, `POST`, `PUT`, `DELETE`, `CONNECT`, `OPTIONS`, `TRACE`, `PATCH`.
+* `scheme` - (Optional) The URL scheme with which to match requests. Valid values: `HTTP`, `HTTPS`.
 
 The `weighted_target` object supports the following:
 
 * `virtual_node` - (Required) The virtual node to associate with the weighted target.
 * `weight` - (Required) The relative weight of the weighted target. An integer between 0 and 100.
+
+The `header` object supports the following:
+
+* `name` - (Required) HTTP header name
+* `invert` - (Optional) If `true`, the match is on the opposite of the match type and value.
+* `match` - (Optional) The match type and value.
+
+The `match` object supports the following:
+
+* `exact` - (Optional) Exact match
+* `prefix` - (Optional) Prefix match
+* `range`- (Optional) Range match
+* `regex` - (Optional) Regex match
+* `suffix` - (Optional) Suffix match
+
+The `range` object supports the following:
+
+* `end` - (Required) End of the range
+* `start` - (Requited) Start of the range
 
 ## Attributes Reference
 
