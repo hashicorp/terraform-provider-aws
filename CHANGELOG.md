@@ -6,6 +6,10 @@ FEATURES:
 ENHANCEMENTS:
 * resource/aws_wafregional_ipset: Support resource import [#9424]
 
+BUG FIXES:
+
+* resource/aws_cognito_user_pool_client: Properly update name value [GH-9437]
+
 ## 2.20.0 (July 19, 2019)
 
 NOTES:
