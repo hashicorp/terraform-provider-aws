@@ -37,7 +37,7 @@ func resourceAwsSecretsManagerSecretRotation() *schema.Resource {
 			},
 			"rotation_rules": {
 				Type:     schema.TypeList,
-				Optional: true,
+				Required: true,
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
@@ -95,15 +95,15 @@ func resourceAwsSecretsManagerSecretRotationRead(d *schema.ResourceData, meta in
 		SecretId: aws.String(secretID),
 	}
 
-	log.Printf("[DEBUG] Reading Secrets Manager Secret: %s", input)
+	log.Printf("[DEBUG] Reading Secrets Manager Secret Rotation: %s", input)
 	output, err := conn.DescribeSecret(input)
 	if err != nil {
 		if isAWSErr(err, secretsmanager.ErrCodeResourceNotFoundException, "") {
-			log.Printf("[WARN] Secrets Manager Secret %q not found - removing from state", d.Id())
+			log.Printf("[WARN] Secrets Manager Secret Rotation %q not found - removing from state", d.Id())
 			d.SetId("")
 			return nil
 		}
-		return fmt.Errorf("error reading Secrets Manager Secret: %s", err)
+		return fmt.Errorf("error reading Secrets Manager Secret Rotation: %s", err)
 	}
 
 	d.Set("rotation_enabled", output.RotationEnabled)
@@ -133,7 +133,7 @@ func resourceAwsSecretsManagerSecretRotationUpdate(d *schema.ResourceData, meta 
 				SecretId:          aws.String(secretID),
 			}
 
-			log.Printf("[DEBUG] Enabling Secrets Manager Secret rotation: %s", input)
+			log.Printf("[DEBUG] Enabling Secrets Manager Secret Rotation: %s", input)
 			err := resource.Retry(1*time.Minute, func() *resource.RetryError {
 				_, err := conn.RotateSecret(input)
 				if err != nil {
@@ -146,17 +146,17 @@ func resourceAwsSecretsManagerSecretRotationUpdate(d *schema.ResourceData, meta 
 				return nil
 			})
 			if err != nil {
-				return fmt.Errorf("error updating Secrets Manager Secret %q rotation: %s", d.Id(), err)
+				return fmt.Errorf("error updating Secrets Manager Secret Rotation %q : %s", d.Id(), err)
 			}
 		} else {
 			input := &secretsmanager.CancelRotateSecretInput{
 				SecretId: aws.String(d.Id()),
 			}
 
-			log.Printf("[DEBUG] Cancelling Secrets Manager Secret rotation: %s", input)
+			log.Printf("[DEBUG] Cancelling Secrets Manager Secret Rotation: %s", input)
 			_, err := conn.CancelRotateSecret(input)
 			if err != nil {
-				return fmt.Errorf("error cancelling Secret Manager Secret %q rotation: %s", d.Id(), err)
+				return fmt.Errorf("error cancelling Secret Manager Secret Rotation %q : %s", d.Id(), err)
 			}
 		}
 	}

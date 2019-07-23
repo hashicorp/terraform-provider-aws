@@ -11,7 +11,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/terraform"
-	"github.com/jen20/awspolicyequivalence"
+	awspolicy "github.com/jen20/awspolicyequivalence"
 )
 
 func init() {
@@ -225,112 +225,6 @@ func TestAccAwsSecretsManagerSecret_RecoveryWindowInDays_Recreate(t *testing.T) 
 				ImportState:             true,
 				ImportStateVerify:       true,
 				ImportStateVerifyIgnore: []string{"recovery_window_in_days"},
-			},
-		},
-	})
-}
-
-func TestAccAwsSecretsManagerSecret_RotationLambdaARN(t *testing.T) {
-	var secret secretsmanager.DescribeSecretOutput
-	rName := acctest.RandomWithPrefix("tf-acc-test")
-	resourceName := "aws_secretsmanager_secret.test"
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSSecretsManager(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckAwsSecretsManagerSecretDestroy,
-		Steps: []resource.TestStep{
-			// Test enabling rotation on resource creation
-			{
-				Config: testAccAwsSecretsManagerSecretConfig_RotationLambdaARN(rName),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsSecretsManagerSecretExists(resourceName, &secret),
-					resource.TestCheckResourceAttr(resourceName, "rotation_enabled", "true"),
-					resource.TestMatchResourceAttr(resourceName, "rotation_lambda_arn", regexp.MustCompile(fmt.Sprintf("^arn:[^:]+:lambda:[^:]+:[^:]+:function:%s-1$", rName))),
-				),
-			},
-			// Test updating rotation
-			// We need a valid rotation function for this testing
-			// InvalidRequestException: A previous rotation isn’t complete. That rotation will be reattempted.
-			/*
-				{
-					Config: testAccAwsSecretsManagerSecretConfig_RotationLambdaARN_Updated(rName),
-					Check: resource.ComposeTestCheckFunc(
-						testAccCheckAwsSecretsManagerSecretExists(resourceName, &secret),
-						resource.TestCheckResourceAttr(resourceName, "rotation_enabled", "true"),
-						resource.TestMatchResourceAttr(resourceName, "rotation_lambda_arn", regexp.MustCompile(fmt.Sprintf("^arn:[^:]+:lambda:[^:]+:[^:]+:function:%s-2$", rName))),
-					),
-				},
-			*/
-			// Test importing rotation
-			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"recovery_window_in_days"},
-			},
-			// Test removing rotation on resource update
-			{
-				Config: testAccAwsSecretsManagerSecretConfig_Name(rName),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsSecretsManagerSecretExists(resourceName, &secret),
-					resource.TestCheckResourceAttr(resourceName, "rotation_enabled", "false"),
-					resource.TestCheckResourceAttr(resourceName, "rotation_lambda_arn", ""),
-				),
-			},
-		},
-	})
-}
-
-func TestAccAwsSecretsManagerSecret_RotationRules(t *testing.T) {
-	var secret secretsmanager.DescribeSecretOutput
-	rName := acctest.RandomWithPrefix("tf-acc-test")
-	resourceName := "aws_secretsmanager_secret.test"
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSSecretsManager(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckAwsSecretsManagerSecretDestroy,
-		Steps: []resource.TestStep{
-			// Test creating rotation rules on resource creation
-			{
-				Config: testAccAwsSecretsManagerSecretConfig_RotationRules(rName, 7),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsSecretsManagerSecretExists(resourceName, &secret),
-					resource.TestCheckResourceAttr(resourceName, "rotation_enabled", "true"),
-					resource.TestCheckResourceAttr(resourceName, "rotation_rules.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "rotation_rules.0.automatically_after_days", "7"),
-				),
-			},
-			// Test updating rotation rules
-			// We need a valid rotation function for this testing
-			// InvalidRequestException: A previous rotation isn’t complete. That rotation will be reattempted.
-			/*
-				{
-					Config: testAccAwsSecretsManagerSecretConfig_RotationRules(rName, 1),
-					Check: resource.ComposeTestCheckFunc(
-						testAccCheckAwsSecretsManagerSecretExists(resourceName, &secret),
-						resource.TestCheckResourceAttr(resourceName, "rotation_enabled", "true"),
-						resource.TestCheckResourceAttr(resourceName, "rotation_rules.#", "1"),
-						resource.TestCheckResourceAttr(resourceName, "rotation_rules.0.automatically_after_days", "1"),
-					),
-				},
-			*/
-			// Test importing rotation rules
-			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"recovery_window_in_days"},
-			},
-			// Test removing rotation rules on resource update
-			{
-				Config: testAccAwsSecretsManagerSecretConfig_Name(rName),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsSecretsManagerSecretExists(resourceName, &secret),
-					resource.TestCheckResourceAttr(resourceName, "rotation_enabled", "false"),
-					resource.TestCheckResourceAttr(resourceName, "rotation_rules.#", "0"),
-				),
 			},
 		},
 	})
