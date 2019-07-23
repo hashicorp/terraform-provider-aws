@@ -1595,7 +1595,7 @@ func WebsiteDomainUrl(region string) string {
 	if isOldRegion(region) {
 		return fmt.Sprintf("s3-website-%s.amazonaws.com", region)
 	}
-	if isChineseRegion(region) {
+	if partition, ok := endpoints.PartitionForRegion(endpoints.DefaultPartitions(), region); ok && partition.ID() == endpoints.AwsCnPartitionID {
 		return fmt.Sprintf("s3-website.%s.amazonaws.com.cn", region)
 	}
 	return fmt.Sprintf("s3-website.%s.amazonaws.com", region)
@@ -1614,19 +1614,6 @@ func isOldRegion(region string) bool {
 		"us-west-2",
 	}
 	for _, r := range oldRegions {
-		if region == r {
-			return true
-		}
-	}
-	return false
-}
-
-func isChineseRegion(region string) bool {
-	chineseRegions := []string{
-		"cn-north-1",
-		"cn-northwest-1",
-	}
-	for _, r := range chineseRegions {
 		if region == r {
 			return true
 		}
