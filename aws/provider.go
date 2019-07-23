@@ -887,6 +887,7 @@ func init() {
 		"applicationautoscaling",
 		"applicationinsights",
 		"appmesh",
+		"appmeshpreview",
 		"appsync",
 		"athena",
 		"autoscaling",
