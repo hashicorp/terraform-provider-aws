@@ -77,6 +77,12 @@ func resourceAwsS3BucketObject() *schema.Resource {
 				Optional: true,
 			},
 
+			"metadata": {
+				Type:         schema.TypeMap,
+				ValidateFunc: validateMetadataIsLowerCase,
+				Optional:     true,
+			},
+
 			"content_type": {
 				Type:     schema.TypeString,
 				Optional: true,
@@ -216,6 +222,16 @@ func resourceAwsS3BucketObjectPut(d *schema.ResourceData, meta interface{}) erro
 		putInput.ContentType = aws.String(v.(string))
 	}
 
+	if v, ok := d.GetOk("metadata"); ok {
+		meta := make(map[string]*string)
+		for key, value := range v.(map[string]interface{}) {
+			valueStr := fmt.Sprintf("%v", value)
+			meta[key] = &valueStr
+		}
+
+		putInput.Metadata = meta
+	}
+
 	if v, ok := d.GetOk("content_encoding"); ok {
 		putInput.ContentEncoding = aws.String(v.(string))
 	}
@@ -290,6 +306,17 @@ func resourceAwsS3BucketObjectRead(d *schema.ResourceData, meta interface{}) err
 	d.Set("content_encoding", resp.ContentEncoding)
 	d.Set("content_language", resp.ContentLanguage)
 	d.Set("content_type", resp.ContentType)
+	metadata := pointersMapToStringList(resp.Metadata)
+
+	// AWS Go SDK capitalizes metadata, this is a workaround. https://github.com/aws/aws-sdk-go/issues/445
+	for k, v := range metadata {
+		delete(metadata, k)
+		metadata[strings.ToLower(k)] = v
+	}
+
+	if err := d.Set("metadata", metadata); err != nil {
+		return fmt.Errorf("error setting metadata: %s", err)
+	}
 	d.Set("version_id", resp.VersionId)
 	d.Set("server_side_encryption", resp.ServerSideEncryption)
 	d.Set("website_redirect", resp.WebsiteRedirectLocation)
@@ -413,6 +440,18 @@ func resourceAwsS3BucketObjectDelete(d *schema.ResourceData, meta interface{}) e
 	}
 
 	return nil
+}
+
+func validateMetadataIsLowerCase(v interface{}, k string) (ws []string, errors []error) {
+	value := v.(map[string]interface{})
+
+	for k := range value {
+		if k != strings.ToLower(k) {
+			errors = append(errors, fmt.Errorf(
+				"Metadata must be lowercase only. Offending key: %q", k))
+		}
+	}
+	return
 }
 
 func resourceAwsS3BucketObjectCustomizeDiff(d *schema.ResourceDiff, meta interface{}) error {
