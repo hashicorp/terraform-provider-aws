@@ -38,8 +38,8 @@ To enable automatic secret rotation, the Secrets Manager service requires usage 
 The following arguments are supported:
 
 * `secret_id` - (Required) Specifies the secret to which you want to add a new version. You can specify either the Amazon Resource Name (ARN) or the friendly name of the secret. The secret must already exist.
-* `rotation_lambda_arn` - (Optional) Specifies the ARN of the Lambda function that can rotate the secret.
-* `rotation_rules` - (Optional) A structure that defines the rotation configuration for this secret. Defined below.
+* `rotation_lambda_arn` - (Required) Specifies the ARN of the Lambda function that can rotate the secret.
+* `rotation_rules` - (Required) A structure that defines the rotation configuration for this secret. Defined below.
 
 ### rotation_rules
 
@@ -56,5 +56,5 @@ The following arguments are supported:
 `aws_secretsmanager_secret_rotation` can be imported by using the secret Amazon Resource Name (ARN), e.g.
 
 ```
-$ terraform import aws_secretsmanager_secret.example arn:aws:secretsmanager:us-east-1:123456789012:secret:example-123456
+$ terraform import aws_secretsmanager_secret_rotation.example arn:aws:secretsmanager:us-east-1:123456789012:secret:example-123456
 ```
