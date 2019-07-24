@@ -6,6 +6,7 @@ NOTES:
 
 FEATURES:
 * **New Data Source**: `aws_organizations_organization` [#9419]
+* **New Data Source**: `aws_ssm_patch_baseline` [#5116]
 
 ENHANCEMENTS:
 
