@@ -29,7 +29,7 @@ func migrateAppmeshVirtualNodeStateV0toV1(is *terraform.InstanceState) (*terrafo
 	delete(is.Attributes, "spec.0.backends.#")
 	for k, v := range is.Attributes {
 		if strings.HasPrefix(k, "spec.0.backends.") {
-			hash := appmeshVirtualNodeBackendHash(map[string]interface{}{
+			hash := appmeshBackendHash(map[string]interface{}{
 				"virtual_service": []interface{}{map[string]interface{}{
 					"virtual_service_name": v,
 				}},
