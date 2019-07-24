@@ -326,7 +326,7 @@ func resourceAwsDbParameterGroupDelete(d *schema.ResourceData, meta interface{})
 		_, err = conn.DeleteDBParameterGroup(&deleteOpts)
 	}
 	if err != nil {
-		return fmt.Errorf("Error deteing DB parameter group: %s", err)
+		return fmt.Errorf("Error deleting DB parameter group: %s", err)
 	}
 	return nil
 }
