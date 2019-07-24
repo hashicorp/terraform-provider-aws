@@ -107,7 +107,7 @@ func testAccCheckAwsSecretsManagerSecretRotationExists(resourceName string, secr
 			return fmt.Errorf("Secret %q does not exist", rs.Primary.ID)
 		}
 
-		if output != nil && !aws.BoolValue(output.RotationEnabled) {
+		if !aws.BoolValue(output.RotationEnabled) {
 			return fmt.Errorf("Secret rotation %q is not enabled", rs.Primary.ID)
 		}
 
