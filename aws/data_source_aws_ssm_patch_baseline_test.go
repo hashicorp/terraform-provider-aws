@@ -51,7 +51,7 @@ func testAccCheckAwsSsmPatchBaselineDataSourceConfig_existingBaseline() string {
 	return fmt.Sprintf(`
 data "aws_ssm_patch_baseline" "test_existing" {
 	owner            = "AWS"
-	name_prefix		 = "AWS-"
+	name_prefix	     = "AWS-"
 	operating_system = "CENTOS"
 }
 `)
