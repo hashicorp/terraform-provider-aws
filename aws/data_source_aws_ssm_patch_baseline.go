@@ -5,10 +5,9 @@ import (
 	"log"
 
 	"github.com/aws/aws-sdk-go/aws"
-	// "github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/ssm"
 	"github.com/hashicorp/terraform/helper/schema"
-	// "github.com/hashicorp/terraform/helper/validation"
+	"github.com/hashicorp/terraform/helper/validation"
 )
 
 func dataSourceAwsSsmPatchBaseline() *schema.Resource {
@@ -22,10 +21,10 @@ func dataSourceAwsSsmPatchBaseline() *schema.Resource {
 				ForceNew: true,
 			},
 			"operating_system": {
-				Type:     schema.TypeString,
-				Optional: true,
-				ForceNew: true,
-				// TODO validation on os?
+				Type:         schema.TypeString,
+				Optional:     true,
+				ForceNew:     true,
+				ValidateFunc: validation.NoZeroValues,
 			},
 			// Computed values
 			"description": {
