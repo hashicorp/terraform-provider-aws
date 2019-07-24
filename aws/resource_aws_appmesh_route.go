@@ -189,7 +189,8 @@ func resourceAwsAppmeshRouteCreate(d *schema.ResourceData, meta interface{}) err
 		RouteName:         aws.String(d.Get("name").(string)),
 		VirtualRouterName: aws.String(d.Get("virtual_router_name").(string)),
 		Spec:              expandAppmeshRouteSpec(d.Get("spec").([]interface{})),
-		Tags:              tagsFromMapAppmesh(d.Get("tags").(map[string]interface{})),
+		// TODO Reinstate AppMesh tagging support.
+		// Tags:              tagsFromMapAppmesh(d.Get("tags").(map[string]interface{})),
 	}
 
 	log.Printf("[DEBUG] Creating App Mesh route: %#v", req)
@@ -236,15 +237,16 @@ func resourceAwsAppmeshRouteRead(d *schema.ResourceData, meta interface{}) error
 		return fmt.Errorf("error setting spec: %s", err)
 	}
 
-	err = saveTagsAppmesh(conn, d, aws.StringValue(resp.Route.Metadata.Arn))
-	if isAWSErr(err, appmesh.ErrCodeNotFoundException, "") {
-		log.Printf("[WARN] App Mesh route (%s) not found, removing from state", d.Id())
-		d.SetId("")
-		return nil
-	}
-	if err != nil {
-		return fmt.Errorf("error saving tags: %s", err)
-	}
+	// TODO Reinstate AppMesh tagging support.
+	// err = saveTagsAppmesh(conn, d, aws.StringValue(resp.Route.Metadata.Arn))
+	// if isAWSErr(err, appmesh.ErrCodeNotFoundException, "") {
+	// 	log.Printf("[WARN] App Mesh route (%s) not found, removing from state", d.Id())
+	// 	d.SetId("")
+	// 	return nil
+	// }
+	// if err != nil {
+	// 	return fmt.Errorf("error saving tags: %s", err)
+	// }
 
 	return nil
 }
@@ -268,15 +270,16 @@ func resourceAwsAppmeshRouteUpdate(d *schema.ResourceData, meta interface{}) err
 		}
 	}
 
-	err := setTagsAppmesh(conn, d, d.Get("arn").(string))
-	if isAWSErr(err, appmesh.ErrCodeNotFoundException, "") {
-		log.Printf("[WARN] App Mesh route (%s) not found, removing from state", d.Id())
-		d.SetId("")
-		return nil
-	}
-	if err != nil {
-		return fmt.Errorf("error setting tags: %s", err)
-	}
+	// TODO Reinstate AppMesh tagging support.
+	// err := setTagsAppmesh(conn, d, d.Get("arn").(string))
+	// if isAWSErr(err, appmesh.ErrCodeNotFoundException, "") {
+	// 	log.Printf("[WARN] App Mesh route (%s) not found, removing from state", d.Id())
+	// 	d.SetId("")
+	// 	return nil
+	// }
+	// if err != nil {
+	// 	return fmt.Errorf("error setting tags: %s", err)
+	// }
 
 	return resourceAwsAppmeshRouteRead(d, meta)
 }
