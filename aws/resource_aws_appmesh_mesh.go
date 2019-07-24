@@ -189,3 +189,43 @@ func resourceAwsAppmeshMeshDelete(d *schema.ResourceData, meta interface{}) erro
 
 	return nil
 }
+
+func expandAppmeshMeshSpec(vSpec []interface{}) *appmesh.MeshSpec {
+	spec := &appmesh.MeshSpec{}
+
+	if len(vSpec) == 0 || vSpec[0] == nil {
+		// Empty Spec is allowed.
+		return spec
+	}
+	mSpec := vSpec[0].(map[string]interface{})
+
+	if vEgressFilter, ok := mSpec["egress_filter"].([]interface{}); ok && len(vEgressFilter) > 0 && vEgressFilter[0] != nil {
+		mEgressFilter := vEgressFilter[0].(map[string]interface{})
+
+		if vType, ok := mEgressFilter["type"].(string); ok && vType != "" {
+			spec.EgressFilter = &appmesh.EgressFilter{
+				Type: aws.String(vType),
+			}
+		}
+	}
+
+	return spec
+}
+
+func flattenAppmeshMeshSpec(spec *appmesh.MeshSpec) []interface{} {
+	if spec == nil {
+		return []interface{}{}
+	}
+
+	mSpec := map[string]interface{}{}
+
+	if spec.EgressFilter != nil {
+		mSpec["egress_filter"] = []interface{}{
+			map[string]interface{}{
+				"type": aws.StringValue(spec.EgressFilter.Type),
+			},
+		}
+	}
+
+	return []interface{}{mSpec}
+}
