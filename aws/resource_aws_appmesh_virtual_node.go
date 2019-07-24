@@ -8,7 +8,7 @@ import (
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/appmesh"
+	appmesh "github.com/aws/aws-sdk-go/service/appmeshpreview"
 	"github.com/hashicorp/terraform/helper/hashcode"
 	"github.com/hashicorp/terraform/helper/schema"
 	"github.com/hashicorp/terraform/helper/validation"
@@ -297,7 +297,7 @@ func resourceAwsAppmeshVirtualNode() *schema.Resource {
 }
 
 func resourceAwsAppmeshVirtualNodeCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).appmeshconn
+	conn := meta.(*AWSClient).appmeshpreviewconn
 
 	req := &appmesh.CreateVirtualNodeInput{
 		MeshName:        aws.String(d.Get("mesh_name").(string)),
@@ -318,7 +318,7 @@ func resourceAwsAppmeshVirtualNodeCreate(d *schema.ResourceData, meta interface{
 }
 
 func resourceAwsAppmeshVirtualNodeRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).appmeshconn
+	conn := meta.(*AWSClient).appmeshpreviewconn
 
 	resp, err := conn.DescribeVirtualNode(&appmesh.DescribeVirtualNodeInput{
 		MeshName:        aws.String(d.Get("mesh_name").(string)),
@@ -362,7 +362,7 @@ func resourceAwsAppmeshVirtualNodeRead(d *schema.ResourceData, meta interface{})
 }
 
 func resourceAwsAppmeshVirtualNodeUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).appmeshconn
+	conn := meta.(*AWSClient).appmeshpreviewconn
 
 	if d.HasChange("spec") {
 		_, v := d.GetChange("spec")
@@ -393,7 +393,7 @@ func resourceAwsAppmeshVirtualNodeUpdate(d *schema.ResourceData, meta interface{
 }
 
 func resourceAwsAppmeshVirtualNodeDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).appmeshconn
+	conn := meta.(*AWSClient).appmeshpreviewconn
 
 	log.Printf("[DEBUG] Deleting App Mesh virtual node: %s", d.Id())
 	_, err := conn.DeleteVirtualNode(&appmesh.DeleteVirtualNodeInput{
@@ -420,7 +420,7 @@ func resourceAwsAppmeshVirtualNodeImport(d *schema.ResourceData, meta interface{
 	name := parts[1]
 	log.Printf("[DEBUG] Importing App Mesh virtual node %s from mesh %s", name, mesh)
 
-	conn := meta.(*AWSClient).appmeshconn
+	conn := meta.(*AWSClient).appmeshpreviewconn
 
 	resp, err := conn.DescribeVirtualNode(&appmesh.DescribeVirtualNodeInput{
 		MeshName:        aws.String(mesh),

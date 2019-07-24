@@ -8,7 +8,7 @@ import (
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/appmesh"
+	appmesh "github.com/aws/aws-sdk-go/service/appmeshpreview"
 	"github.com/hashicorp/terraform/helper/hashcode"
 	"github.com/hashicorp/terraform/helper/schema"
 	"github.com/hashicorp/terraform/helper/validation"
@@ -117,7 +117,7 @@ func resourceAwsAppmeshVirtualRouter() *schema.Resource {
 }
 
 func resourceAwsAppmeshVirtualRouterCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).appmeshconn
+	conn := meta.(*AWSClient).appmeshpreviewconn
 
 	req := &appmesh.CreateVirtualRouterInput{
 		MeshName:          aws.String(d.Get("mesh_name").(string)),
@@ -138,7 +138,7 @@ func resourceAwsAppmeshVirtualRouterCreate(d *schema.ResourceData, meta interfac
 }
 
 func resourceAwsAppmeshVirtualRouterRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).appmeshconn
+	conn := meta.(*AWSClient).appmeshpreviewconn
 
 	resp, err := conn.DescribeVirtualRouter(&appmesh.DescribeVirtualRouterInput{
 		MeshName:          aws.String(d.Get("mesh_name").(string)),
@@ -182,7 +182,7 @@ func resourceAwsAppmeshVirtualRouterRead(d *schema.ResourceData, meta interface{
 }
 
 func resourceAwsAppmeshVirtualRouterUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).appmeshconn
+	conn := meta.(*AWSClient).appmeshpreviewconn
 
 	if d.HasChange("spec") {
 		_, v := d.GetChange("spec")
@@ -213,7 +213,7 @@ func resourceAwsAppmeshVirtualRouterUpdate(d *schema.ResourceData, meta interfac
 }
 
 func resourceAwsAppmeshVirtualRouterDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).appmeshconn
+	conn := meta.(*AWSClient).appmeshpreviewconn
 
 	log.Printf("[DEBUG] Deleting App Mesh virtual router: %s", d.Id())
 	_, err := conn.DeleteVirtualRouter(&appmesh.DeleteVirtualRouterInput{
@@ -240,7 +240,7 @@ func resourceAwsAppmeshVirtualRouterImport(d *schema.ResourceData, meta interfac
 	name := parts[1]
 	log.Printf("[DEBUG] Importing App Mesh virtual router %s from mesh %s", name, mesh)
 
-	conn := meta.(*AWSClient).appmeshconn
+	conn := meta.(*AWSClient).appmeshpreviewconn
 
 	resp, err := conn.DescribeVirtualRouter(&appmesh.DescribeVirtualRouterInput{
 		MeshName:          aws.String(mesh),

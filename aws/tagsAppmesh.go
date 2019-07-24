@@ -5,13 +5,13 @@ import (
 	"regexp"
 
 	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/appmesh"
+	"github.com/aws/aws-sdk-go/service/appmeshpreview"
 	"github.com/hashicorp/terraform/helper/schema"
 )
 
 // setTags is a helper to set the tags for a resource. It expects the
 // tags field to be named "tags"
-func setTagsAppmesh(conn *appmesh.AppMesh, d *schema.ResourceData, arn string) error {
+func setTagsAppmesh(conn *appmeshpreview.AppMeshPreview, d *schema.ResourceData, arn string) error {
 	if d.HasChange("tags") {
 		oraw, nraw := d.GetChange("tags")
 		o := oraw.(map[string]interface{})
@@ -20,7 +20,7 @@ func setTagsAppmesh(conn *appmesh.AppMesh, d *schema.ResourceData, arn string) e
 
 		// Set tags
 		if len(remove) > 0 {
-			input := appmesh.UntagResourceInput{
+			input := appmeshpreview.UntagResourceInput{
 				ResourceArn: aws.String(arn),
 				TagKeys:     remove,
 			}
@@ -31,7 +31,7 @@ func setTagsAppmesh(conn *appmesh.AppMesh, d *schema.ResourceData, arn string) e
 			}
 		}
 		if len(create) > 0 {
-			input := appmesh.TagResourceInput{
+			input := appmeshpreview.TagResourceInput{
 				ResourceArn: aws.String(arn),
 				Tags:        create,
 			}
@@ -49,7 +49,7 @@ func setTagsAppmesh(conn *appmesh.AppMesh, d *schema.ResourceData, arn string) e
 // diffTags takes our tags locally and the ones remotely and returns
 // the set of tags that must be created, and the set of tags that must
 // be destroyed.
-func diffTagsAppmesh(oldTags, newTags []*appmesh.TagRef) ([]*appmesh.TagRef, []*string) {
+func diffTagsAppmesh(oldTags, newTags []*appmeshpreview.TagRef) ([]*appmeshpreview.TagRef, []*string) {
 	// First, we're creating everything we have
 	create := make(map[string]interface{})
 	for _, t := range newTags {
@@ -72,10 +72,10 @@ func diffTagsAppmesh(oldTags, newTags []*appmesh.TagRef) ([]*appmesh.TagRef, []*
 }
 
 // tagsFromMap returns the tags for the given map of data.
-func tagsFromMapAppmesh(m map[string]interface{}) []*appmesh.TagRef {
-	var result []*appmesh.TagRef
+func tagsFromMapAppmesh(m map[string]interface{}) []*appmeshpreview.TagRef {
+	var result []*appmeshpreview.TagRef
 	for k, v := range m {
-		t := &appmesh.TagRef{
+		t := &appmeshpreview.TagRef{
 			Key:   aws.String(k),
 			Value: aws.String(v.(string)),
 		}
@@ -88,7 +88,7 @@ func tagsFromMapAppmesh(m map[string]interface{}) []*appmesh.TagRef {
 }
 
 // tagsToMap turns the list of tags into a map.
-func tagsToMapAppmesh(ts []*appmesh.TagRef) map[string]string {
+func tagsToMapAppmesh(ts []*appmeshpreview.TagRef) map[string]string {
 	result := make(map[string]string)
 	for _, t := range ts {
 		if !tagIgnoredAppmesh(t) {
@@ -99,15 +99,15 @@ func tagsToMapAppmesh(ts []*appmesh.TagRef) map[string]string {
 	return result
 }
 
-func saveTagsAppmesh(conn *appmesh.AppMesh, d *schema.ResourceData, arn string) error {
-	resp, err := conn.ListTagsForResource(&appmesh.ListTagsForResourceInput{
+func saveTagsAppmesh(conn *appmeshpreview.AppMeshPreview, d *schema.ResourceData, arn string) error {
+	resp, err := conn.ListTagsForResource(&appmeshpreview.ListTagsForResourceInput{
 		ResourceArn: aws.String(arn),
 	})
 	if err != nil {
 		return err
 	}
 
-	var dt []*appmesh.TagRef
+	var dt []*appmeshpreview.TagRef
 	if len(resp.Tags) > 0 {
 		dt = resp.Tags
 	}
@@ -117,7 +117,7 @@ func saveTagsAppmesh(conn *appmesh.AppMesh, d *schema.ResourceData, arn string) 
 
 // compare a tag against a list of strings and checks if it should
 // be ignored or not
-func tagIgnoredAppmesh(t *appmesh.TagRef) bool {
+func tagIgnoredAppmesh(t *appmeshpreview.TagRef) bool {
 	filter := []string{"^aws:"}
 	for _, v := range filter {
 		log.Printf("[DEBUG] Matching %v with %v\n", v, aws.StringValue(t.Key))

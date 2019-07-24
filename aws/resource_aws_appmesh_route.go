@@ -9,7 +9,7 @@ import (
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/appmesh"
+	appmesh "github.com/aws/aws-sdk-go/service/appmeshpreview"
 	"github.com/hashicorp/terraform/helper/hashcode"
 	"github.com/hashicorp/terraform/helper/schema"
 	"github.com/hashicorp/terraform/helper/validation"
@@ -182,7 +182,7 @@ func resourceAwsAppmeshRoute() *schema.Resource {
 }
 
 func resourceAwsAppmeshRouteCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).appmeshconn
+	conn := meta.(*AWSClient).appmeshpreviewconn
 
 	req := &appmesh.CreateRouteInput{
 		MeshName:          aws.String(d.Get("mesh_name").(string)),
@@ -204,7 +204,7 @@ func resourceAwsAppmeshRouteCreate(d *schema.ResourceData, meta interface{}) err
 }
 
 func resourceAwsAppmeshRouteRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).appmeshconn
+	conn := meta.(*AWSClient).appmeshpreviewconn
 
 	resp, err := conn.DescribeRoute(&appmesh.DescribeRouteInput{
 		MeshName:          aws.String(d.Get("mesh_name").(string)),
@@ -250,7 +250,7 @@ func resourceAwsAppmeshRouteRead(d *schema.ResourceData, meta interface{}) error
 }
 
 func resourceAwsAppmeshRouteUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).appmeshconn
+	conn := meta.(*AWSClient).appmeshpreviewconn
 
 	if d.HasChange("spec") {
 		_, v := d.GetChange("spec")
@@ -282,7 +282,7 @@ func resourceAwsAppmeshRouteUpdate(d *schema.ResourceData, meta interface{}) err
 }
 
 func resourceAwsAppmeshRouteDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).appmeshconn
+	conn := meta.(*AWSClient).appmeshpreviewconn
 
 	log.Printf("[DEBUG] Deleting App Mesh route: %s", d.Id())
 	_, err := conn.DeleteRoute(&appmesh.DeleteRouteInput{
@@ -311,7 +311,7 @@ func resourceAwsAppmeshRouteImport(d *schema.ResourceData, meta interface{}) ([]
 	name := parts[2]
 	log.Printf("[DEBUG] Importing App Mesh route %s from mesh %s/virtual router %s ", name, mesh, vrName)
 
-	conn := meta.(*AWSClient).appmeshconn
+	conn := meta.(*AWSClient).appmeshpreviewconn
 
 	resp, err := conn.DescribeRoute(&appmesh.DescribeRouteInput{
 		MeshName:          aws.String(mesh),

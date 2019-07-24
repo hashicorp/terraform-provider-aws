@@ -7,7 +7,7 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/appmesh"
+	appmesh "github.com/aws/aws-sdk-go/service/appmeshpreview"
 	"github.com/hashicorp/terraform/helper/acctest"
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/terraform"
@@ -25,7 +25,7 @@ func testSweepAppmeshRoutes(region string) error {
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-	conn := client.(*AWSClient).appmeshconn
+	conn := client.(*AWSClient).appmeshpreviewconn
 
 	err = conn.ListMeshesPages(&appmesh.ListMeshesInput{}, func(page *appmesh.ListMeshesOutput, isLast bool) bool {
 		if page == nil {
@@ -273,7 +273,7 @@ func testAccAwsAppmeshRoute_tags(t *testing.T) {
 }
 
 func testAccCheckAppmeshRouteDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).appmeshconn
+	conn := testAccProvider.Meta().(*AWSClient).appmeshpreviewconn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_appmesh_route" {
@@ -299,7 +299,7 @@ func testAccCheckAppmeshRouteDestroy(s *terraform.State) error {
 
 func testAccCheckAppmeshRouteExists(name string, v *appmesh.RouteData) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := testAccProvider.Meta().(*AWSClient).appmeshconn
+		conn := testAccProvider.Meta().(*AWSClient).appmeshpreviewconn
 
 		rs, ok := s.RootModule().Resources[name]
 		if !ok {

@@ -5,7 +5,7 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/appmesh"
+	"github.com/aws/aws-sdk-go/service/appmeshpreview"
 )
 
 func TestDiffAppmeshTags(t *testing.T) {
@@ -96,12 +96,12 @@ func TestDiffAppmeshTags(t *testing.T) {
 }
 
 func TestIgnoringTagsAppmesh(t *testing.T) {
-	var ignoredTags []*appmesh.TagRef
-	ignoredTags = append(ignoredTags, &appmesh.TagRef{
+	var ignoredTags []*appmeshpreview.TagRef
+	ignoredTags = append(ignoredTags, &appmeshpreview.TagRef{
 		Key:   aws.String("aws:cloudformation:logical-id"),
 		Value: aws.String("foo"),
 	})
-	ignoredTags = append(ignoredTags, &appmesh.TagRef{
+	ignoredTags = append(ignoredTags, &appmeshpreview.TagRef{
 		Key:   aws.String("aws:foo:bar"),
 		Value: aws.String("baz"),
 	})

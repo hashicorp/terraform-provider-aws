@@ -6,7 +6,7 @@ import (
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/appmesh"
+	appmesh "github.com/aws/aws-sdk-go/service/appmeshpreview"
 	"github.com/hashicorp/terraform/helper/schema"
 	"github.com/hashicorp/terraform/helper/validation"
 )
@@ -81,7 +81,7 @@ func resourceAwsAppmeshMesh() *schema.Resource {
 }
 
 func resourceAwsAppmeshMeshCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).appmeshconn
+	conn := meta.(*AWSClient).appmeshpreviewconn
 
 	meshName := d.Get("name").(string)
 	req := &appmesh.CreateMeshInput{
@@ -102,7 +102,7 @@ func resourceAwsAppmeshMeshCreate(d *schema.ResourceData, meta interface{}) erro
 }
 
 func resourceAwsAppmeshMeshRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).appmeshconn
+	conn := meta.(*AWSClient).appmeshpreviewconn
 
 	resp, err := conn.DescribeMesh(&appmesh.DescribeMeshInput{
 		MeshName: aws.String(d.Id()),
@@ -144,7 +144,7 @@ func resourceAwsAppmeshMeshRead(d *schema.ResourceData, meta interface{}) error 
 }
 
 func resourceAwsAppmeshMeshUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).appmeshconn
+	conn := meta.(*AWSClient).appmeshpreviewconn
 
 	if d.HasChange("spec") {
 		_, v := d.GetChange("spec")
@@ -174,7 +174,7 @@ func resourceAwsAppmeshMeshUpdate(d *schema.ResourceData, meta interface{}) erro
 }
 
 func resourceAwsAppmeshMeshDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).appmeshconn
+	conn := meta.(*AWSClient).appmeshpreviewconn
 
 	log.Printf("[DEBUG] Deleting App Mesh service mesh: %s", d.Id())
 	_, err := conn.DeleteMesh(&appmesh.DeleteMeshInput{
