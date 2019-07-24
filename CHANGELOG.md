@@ -17,6 +17,7 @@ ENHANCEMENTS:
 BUG FIXES:
 
 * provider: Load credentials via the `AWS_PROFILE` environment variable (if available) when `AWS_PROFILE` is defined along with `AWS_ACCESS_KEY_ID` and `AWS_SECRET_ACCESS_KEY` [GH-9428]
+* resource/aws_cloudfront_distribution: Prevent `DistributionAlreadyExists` errors during concurrent distribution creation [GH-9470]
 * resource/aws_cognito_user_pool_client: Properly update name value [GH-9437]
 * resource/aws_config_config_rule: Retries after timeouts when creating and deleting config rules [GH-9438]
 * resource/aws_config_delivery_channel: Retries after timeouts when creating and deleting config delivery channels [GH-9438]
