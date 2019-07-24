@@ -251,3 +251,73 @@ func resourceAwsAppmeshVirtualServiceImport(d *schema.ResourceData, meta interfa
 
 	return []*schema.ResourceData{d}, nil
 }
+
+func expandAppmeshVirtualServiceSpec(vSpec []interface{}) *appmesh.VirtualServiceSpec {
+	spec := &appmesh.VirtualServiceSpec{}
+
+	if len(vSpec) == 0 || vSpec[0] == nil {
+		// Empty Spec is allowed.
+		return spec
+	}
+	mSpec := vSpec[0].(map[string]interface{})
+
+	if vProvider, ok := mSpec["provider"].([]interface{}); ok && len(vProvider) > 0 && vProvider[0] != nil {
+		mProvider := vProvider[0].(map[string]interface{})
+
+		spec.Provider = &appmesh.VirtualServiceProvider{}
+
+		if vVirtualNode, ok := mProvider["virtual_node"].([]interface{}); ok && len(vVirtualNode) > 0 && vVirtualNode[0] != nil {
+			mVirtualNode := vVirtualNode[0].(map[string]interface{})
+
+			if vVirtualNodeName, ok := mVirtualNode["virtual_node_name"].(string); ok && vVirtualNodeName != "" {
+				spec.Provider.VirtualNode = &appmesh.VirtualNodeServiceProvider{
+					VirtualNodeName: aws.String(vVirtualNodeName),
+				}
+			}
+		}
+
+		if vVirtualRouter, ok := mProvider["virtual_router"].([]interface{}); ok && len(vVirtualRouter) > 0 && vVirtualRouter[0] != nil {
+			mVirtualRouter := vVirtualRouter[0].(map[string]interface{})
+
+			if vVirtualRouterName, ok := mVirtualRouter["virtual_router_name"].(string); ok && vVirtualRouterName != "" {
+				spec.Provider.VirtualRouter = &appmesh.VirtualRouterServiceProvider{
+					VirtualRouterName: aws.String(vVirtualRouterName),
+				}
+			}
+		}
+	}
+
+	return spec
+}
+
+func flattenAppmeshVirtualServiceSpec(spec *appmesh.VirtualServiceSpec) []interface{} {
+	if spec == nil {
+		return []interface{}{}
+	}
+
+	mSpec := map[string]interface{}{}
+
+	if spec.Provider != nil {
+		mProvider := map[string]interface{}{}
+
+		if spec.Provider.VirtualNode != nil {
+			mProvider["virtual_node"] = []interface{}{
+				map[string]interface{}{
+					"virtual_node_name": aws.StringValue(spec.Provider.VirtualNode.VirtualNodeName),
+				},
+			}
+		}
+
+		if spec.Provider.VirtualRouter != nil {
+			mProvider["virtual_router"] = []interface{}{
+				map[string]interface{}{
+					"virtual_router_name": aws.StringValue(spec.Provider.VirtualRouter.VirtualRouterName),
+				},
+			}
+		}
+
+		mSpec["provider"] = []interface{}{mProvider}
+	}
+
+	return []interface{}{mSpec}
+}
