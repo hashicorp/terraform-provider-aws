@@ -22,7 +22,7 @@ func TestAccAwsSecretsManagerSecretRotation(t *testing.T) {
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsSecretsManagerSecretRotationDestroy,
 		Steps: []resource.TestStep{
-			// Test creating rotation resource
+			// Test creating secret rotation resource
 			{
 				Config: testAccAwsSecretsManagerSecretRotationConfig(rName, 7),
 				Check: resource.ComposeTestCheckFunc(
@@ -47,11 +47,11 @@ func TestAccAwsSecretsManagerSecretRotation(t *testing.T) {
 				},
 			*/
 			// Test importing secret rotation
-			// {
-			// 	ResourceName:      resourceName,
-			// 	ImportState:       true,
-			// 	ImportStateVerify: true,
-			// },
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
 		},
 	})
 }

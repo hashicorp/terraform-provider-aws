@@ -89,10 +89,9 @@ func resourceAwsSecretsManagerSecretRotationCreate(d *schema.ResourceData, meta 
 
 func resourceAwsSecretsManagerSecretRotationRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).secretsmanagerconn
-	secretID := d.Get("secret_id").(string)
 
 	input := &secretsmanager.DescribeSecretInput{
-		SecretId: aws.String(secretID),
+		SecretId: aws.String(d.Id()),
 	}
 
 	log.Printf("[DEBUG] Reading Secrets Manager Secret Rotation: %s", input)
@@ -106,6 +105,7 @@ func resourceAwsSecretsManagerSecretRotationRead(d *schema.ResourceData, meta in
 		return fmt.Errorf("error reading Secrets Manager Secret Rotation: %s", err)
 	}
 
+	d.Set("secret_id", d.Id())
 	d.Set("rotation_enabled", output.RotationEnabled)
 
 	if aws.BoolValue(output.RotationEnabled) {
