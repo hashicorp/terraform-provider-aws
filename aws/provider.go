@@ -279,6 +279,7 @@ func Provider() terraform.ResourceProvider {
 			"aws_s3_bucket_objects":                         dataSourceAwsS3BucketObjects(),
 			"aws_secretsmanager_secret":                     dataSourceAwsSecretsManagerSecret(),
 			"aws_secretsmanager_secret_version":             dataSourceAwsSecretsManagerSecretVersion(),
+			"aws_secretsmanager_secret_rotation":            dataSourceAwsSecretsManagerSecretRotation(),
 			"aws_servicequotas_service":                     dataSourceAwsServiceQuotasService(),
 			"aws_servicequotas_service_quota":               dataSourceAwsServiceQuotasServiceQuota(),
 			"aws_sfn_activity":                              dataSourceAwsSfnActivity(),
