@@ -17,6 +17,7 @@ terraform apply \
 	-var="aws_region=us-east-1"
 ```
 
-## Prerequisite 
-- In the AWS console of the owner of the TGW, enabling AWS Resource Access Manager by going into `Services`, `Organization`, `Settings` and `Enable Access` to AWS Resource Access Manager. 
-- In the AWS console of the owner of the TGW, enabling Resources Access Manager by going into `Services`, `Resource Access Manager`, `Settings` and tickle the `Enable sharing within your AWS Organization`. 
+## Prerequisites
+
+- This example requires two AWS accounts within the same AWS Organizations Organization
+- Ensure Resource Access Manager is enabled in your organization. For more information, see the [Resource Access Manager User Guide](https://docs.aws.amazon.com/ram/latest/userguide/getting-started-sharing.html).
