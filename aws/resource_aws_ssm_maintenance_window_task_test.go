@@ -220,6 +220,32 @@ func TestAccAWSSSMMaintenanceWindowTask_TaskInvocationStepFunctionParameters(t *
 	})
 }
 
+func TestAccAWSSSMMaintenanceWindowTask_TaskParameters(t *testing.T) {
+	var task ssm.MaintenanceWindowTask
+	resourceName := "aws_ssm_maintenance_window_task.test"
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSSSMMaintenanceWindowTaskDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSSSMMaintenanceWindowTaskConfigTaskParametersMultiple(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSSSMMaintenanceWindowTaskExists(resourceName, &task),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateIdFunc: testAccAWSSSMMaintenanceWindowTaskImportStateIdFunc(resourceName),
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func testAccCheckAwsSsmWindowsTaskNotRecreated(t *testing.T,
 	before, after *ssm.MaintenanceWindowTask) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
@@ -321,10 +347,15 @@ resource "aws_ssm_maintenance_window" "test" {
   schedule = "cron(0 16 ? * TUE *)"
 }
 
-resource "aws_instance" "test" {
-  ami = "ami-4fccb37f"
+resource "aws_ssm_maintenance_window_target" "test" {
+  name          = %[1]q
+  resource_type = "INSTANCE"
+  window_id     = "${aws_ssm_maintenance_window.test.id}"
 
-  instance_type = "m1.small"
+  targets {
+    key    = "tag:Name"
+    values = ["tf-acc-test"]
+  }
 }
 
 resource "aws_iam_role" "test" {
@@ -376,8 +407,8 @@ resource "aws_ssm_maintenance_window_task" "target" {
   max_errors  = "1"
 
   targets {
-    key    = "InstanceIds"
-    values = ["${aws_instance.test.id}"]
+    key    = "WindowTargetIds"
+    values = ["${aws_ssm_maintenance_window_target.test.id}"]
   }
 
   task_parameters {
@@ -404,8 +435,8 @@ resource "aws_ssm_maintenance_window_task" "target" {
   max_errors  = %[7]d
 
   targets {
-    key    = "InstanceIds"
-    values = ["${aws_instance.test.id}"]
+    key    = "WindowTargetIds"
+    values = ["${aws_ssm_maintenance_window_target.test.id}"]
   }
 
   task_parameters {
@@ -467,8 +498,8 @@ resource "aws_ssm_maintenance_window_task" "target" {
   max_errors  = "1"
 
   targets {
-    key    = "InstanceIds"
-    values = ["${aws_instance.test.id}"]
+    key    = "WindowTargetIds"
+    values = ["${aws_ssm_maintenance_window_target.test.id}"]
   }
 
   task_parameters {
@@ -492,15 +523,15 @@ resource "aws_ssm_maintenance_window_task" "target" {
   max_concurrency = "2"
   max_errors = "1"
   targets {
-    key = "InstanceIds"
-    values = ["${aws_instance.test.id}"]
+    key    = "WindowTargetIds"
+    values = ["${aws_ssm_maintenance_window_target.test.id}"]
   }
   task_invocation_parameters {
     automation_parameters {
       document_version = "%[2]s"
       parameter {
         name = "InstanceId"
-        values = ["${aws_instance.test.id}"]
+        values = ["{{TARGET_ID}}"]
       }
       parameter {
         name = "NoReboot"
@@ -530,15 +561,15 @@ resource "aws_ssm_maintenance_window_task" "target" {
   max_concurrency = "2"
   max_errors = "1"
   targets {
-    key = "InstanceIds"
-    values = ["${aws_instance.test.id}"]
+    key    = "WindowTargetIds"
+    values = ["${aws_ssm_maintenance_window_target.test.id}"]
   }
   task_invocation_parameters {
     automation_parameters {
       document_version = "%[2]s"
       parameter {
         name = "InstanceId"
-        values = ["${aws_instance.test.id}"]
+        values = ["{{TARGET_ID}}"]
       }
       parameter {
         name = "NoReboot"
@@ -563,8 +594,8 @@ resource "aws_ssm_maintenance_window_task" "target" {
   max_concurrency = "2"
   max_errors = "1"
   targets {
-    key = "InstanceIds"
-    values = ["${aws_instance.test.id}"]
+    key    = "WindowTargetIds"
+    values = ["${aws_ssm_maintenance_window_target.test.id}"]
   }
   task_invocation_parameters {
     lambda_parameters {
@@ -607,8 +638,8 @@ resource "aws_ssm_maintenance_window_task" "target" {
   max_concurrency = "2"
   max_errors = "1"
   targets {
-    key = "InstanceIds"
-    values = ["${aws_instance.test.id}"]
+    key    = "WindowTargetIds"
+    values = ["${aws_ssm_maintenance_window_target.test.id}"]
   }
   task_invocation_parameters {
     run_command_parameters {
@@ -645,8 +676,8 @@ resource "aws_ssm_maintenance_window_task" "target" {
   max_concurrency = "2"
   max_errors = "1"
   targets {
-    key = "InstanceIds"
-    values = ["${aws_instance.test.id}"]
+    key    = "WindowTargetIds"
+    values = ["${aws_ssm_maintenance_window_target.test.id}"]
   }
   task_invocation_parameters {
     run_command_parameters {
@@ -682,8 +713,8 @@ resource "aws_ssm_maintenance_window_task" "target" {
   max_concurrency = "2"
   max_errors = "1"
   targets {
-    key = "InstanceIds"
-    values = ["${aws_instance.test.id}"]
+    key    = "WindowTargetIds"
+    values = ["${aws_ssm_maintenance_window_target.test.id}"]
   }
   task_invocation_parameters {
     step_functions_parameters {
@@ -703,5 +734,91 @@ data "template_file" "input" {
 EOF
 }
 
+`, rName)
+}
+
+func testAccAWSSSMMaintenanceWindowTaskConfigTaskParametersMultiple(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_ssm_maintenance_window" "test" {
+  cutoff   = 1
+  duration = 3
+  name     = %[1]q
+  schedule = "cron(0 16 ? * TUE *)"
+}
+
+resource "aws_ssm_maintenance_window_target" "test" {
+  name          = %[1]q
+  resource_type = "INSTANCE"
+  window_id     = "${aws_ssm_maintenance_window.test.id}"
+
+  targets {
+    key    = "tag:Name"
+    values = ["tf-acc-test"]
+  }
+}
+
+resource "aws_iam_role" "test" {
+  name = %[1]q
+  assume_role_policy = <<POLICY
+{
+    "Version": "2012-10-17",
+    "Statement": [
+        {
+            "Action": "sts:AssumeRole",
+            "Principal": {
+                "Service": "events.amazonaws.com"
+            },
+            "Effect": "Allow",
+            "Sid": ""
+        }
+    ]
+}
+POLICY
+}
+
+resource "aws_iam_role_policy" "test" {
+  name = %[1]q
+  role = "${aws_iam_role.test.name}"
+  policy = <<POLICY
+{
+  "Version": "2012-10-17",
+  "Statement": {
+    "Effect": "Allow",
+    "Action": "ssm:*",
+    "Resource": "*"
+  }
+}
+POLICY
+}
+
+resource "aws_ssm_maintenance_window_task" "test" {
+  max_concurrency  = 1
+  max_errors       = 1
+  priority         = 1
+  service_role_arn = "${aws_iam_role.test.arn}"
+  task_arn         = "AWS-RunRemoteScript"
+  task_type        = "RUN_COMMAND"
+  window_id        = "${aws_ssm_maintenance_window.test.id}"
+
+  targets {
+    key    = "WindowTargetIds"
+    values = ["${aws_ssm_maintenance_window_target.test.id}"]
+  }
+
+  task_parameters {
+    name   = "sourceType"
+    values = ["s3"]
+  }
+
+  task_parameters {
+    name   = "sourceInfo"
+    values = ["https://s3.amazonaws.com/bucket"]
+  }
+
+  task_parameters {
+    name   = "commandLine"
+    values = ["date"]
+  }
+}
 `, rName)
 }

@@ -4,9 +4,6 @@ services:
   - docker
 language: go
 
-git:
-  depth: 1
-
 env:
   global:
     GOFLAGS=-mod=vendor
