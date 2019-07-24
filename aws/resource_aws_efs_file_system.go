@@ -182,7 +182,7 @@ func resourceAwsEfsFileSystemCreate(d *schema.ResourceData, meta interface{}) er
 	if hasLifecyclePolicy {
 		_, err := conn.PutLifecycleConfiguration(&efs.PutLifecycleConfigurationInput{
 			FileSystemId:      aws.String(d.Id()),
-			LifecyclePolicies: resourceAwsEfsFileSystemLifecyclePolicy(d),
+			LifecyclePolicies: resourceAwsEfsFileSystemLifecyclePolicy(d.Get("lifecycle_policy").([]interface{})),
 		})
 		if err != nil {
 			return fmt.Errorf("Error creating lifecycle policy for EFS file system %q: %s",
