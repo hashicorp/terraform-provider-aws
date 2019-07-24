@@ -105,7 +105,10 @@ func resourceAwsEfsFileSystem() *schema.Resource {
 							Type:     schema.TypeString,
 							Optional: true,
 							ValidateFunc: validation.StringInSlice([]string{
+								efs.TransitionToIARulesAfter14Days,
 								efs.TransitionToIARulesAfter30Days,
+								efs.TransitionToIARulesAfter60Days,
+								efs.TransitionToIARulesAfter90Days,
 							}, false),
 						},
 					},
