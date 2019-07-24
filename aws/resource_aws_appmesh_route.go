@@ -9,7 +9,7 @@ import (
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/appmeshpreview"
+	"github.com/aws/aws-sdk-go/service/appmesh"
 	"github.com/hashicorp/terraform/helper/hashcode"
 	"github.com/hashicorp/terraform/helper/schema"
 	"github.com/hashicorp/terraform/helper/validation"
@@ -182,14 +182,14 @@ func resourceAwsAppmeshRoute() *schema.Resource {
 }
 
 func resourceAwsAppmeshRouteCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).appmeshpreviewconn
+	conn := meta.(*AWSClient).appmeshconn
 
-	req := &appmeshpreview.CreateRouteInput{
+	req := &appmesh.CreateRouteInput{
 		MeshName:          aws.String(d.Get("mesh_name").(string)),
 		RouteName:         aws.String(d.Get("name").(string)),
 		VirtualRouterName: aws.String(d.Get("virtual_router_name").(string)),
 		Spec:              expandAppmeshRouteSpec(d.Get("spec").([]interface{})),
-		// Tags:              tagsFromMapAppmesh(d.Get("tags").(map[string]interface{})),
+		Tags:              tagsFromMapAppmesh(d.Get("tags").(map[string]interface{})),
 	}
 
 	log.Printf("[DEBUG] Creating App Mesh route: %#v", req)
@@ -204,14 +204,14 @@ func resourceAwsAppmeshRouteCreate(d *schema.ResourceData, meta interface{}) err
 }
 
 func resourceAwsAppmeshRouteRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).appmeshpreviewconn
+	conn := meta.(*AWSClient).appmeshconn
 
-	resp, err := conn.DescribeRoute(&appmeshpreview.DescribeRouteInput{
+	resp, err := conn.DescribeRoute(&appmesh.DescribeRouteInput{
 		MeshName:          aws.String(d.Get("mesh_name").(string)),
 		RouteName:         aws.String(d.Get("name").(string)),
 		VirtualRouterName: aws.String(d.Get("virtual_router_name").(string)),
 	})
-	if isAWSErr(err, appmeshpreview.ErrCodeNotFoundException, "") {
+	if isAWSErr(err, appmesh.ErrCodeNotFoundException, "") {
 		log.Printf("[WARN] App Mesh route (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
@@ -219,7 +219,7 @@ func resourceAwsAppmeshRouteRead(d *schema.ResourceData, meta interface{}) error
 	if err != nil {
 		return fmt.Errorf("error reading App Mesh route: %s", err)
 	}
-	if aws.StringValue(resp.Route.Status.Status) == appmeshpreview.RouteStatusCodeDeleted {
+	if aws.StringValue(resp.Route.Status.Status) == appmesh.RouteStatusCodeDeleted {
 		log.Printf("[WARN] App Mesh route (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
@@ -236,25 +236,25 @@ func resourceAwsAppmeshRouteRead(d *schema.ResourceData, meta interface{}) error
 		return fmt.Errorf("error setting spec: %s", err)
 	}
 
-	// err = saveTagsAppmesh(conn, d, aws.StringValue(resp.Route.Metadata.Arn))
-	// if isAWSErr(err, appmeshpreview.ErrCodeNotFoundException, "") {
-	// 	log.Printf("[WARN] App Mesh route (%s) not found, removing from state", d.Id())
-	// 	d.SetId("")
-	// 	return nil
-	// }
-	// if err != nil {
-	// 	return fmt.Errorf("error saving tags: %s", err)
-	// }
+	err = saveTagsAppmesh(conn, d, aws.StringValue(resp.Route.Metadata.Arn))
+	if isAWSErr(err, appmesh.ErrCodeNotFoundException, "") {
+		log.Printf("[WARN] App Mesh route (%s) not found, removing from state", d.Id())
+		d.SetId("")
+		return nil
+	}
+	if err != nil {
+		return fmt.Errorf("error saving tags: %s", err)
+	}
 
 	return nil
 }
 
 func resourceAwsAppmeshRouteUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).appmeshpreviewconn
+	conn := meta.(*AWSClient).appmeshconn
 
 	if d.HasChange("spec") {
 		_, v := d.GetChange("spec")
-		req := &appmeshpreview.UpdateRouteInput{
+		req := &appmesh.UpdateRouteInput{
 			MeshName:          aws.String(d.Get("mesh_name").(string)),
 			RouteName:         aws.String(d.Get("name").(string)),
 			VirtualRouterName: aws.String(d.Get("virtual_router_name").(string)),
@@ -268,29 +268,29 @@ func resourceAwsAppmeshRouteUpdate(d *schema.ResourceData, meta interface{}) err
 		}
 	}
 
-	// err := setTagsAppmesh(conn, d, d.Get("arn").(string))
-	// if isAWSErr(err, appmeshpreview.ErrCodeNotFoundException, "") {
-	// 	log.Printf("[WARN] App Mesh route (%s) not found, removing from state", d.Id())
-	// 	d.SetId("")
-	// 	return nil
-	// }
-	// if err != nil {
-	// 	return fmt.Errorf("error setting tags: %s", err)
-	// }
+	err := setTagsAppmesh(conn, d, d.Get("arn").(string))
+	if isAWSErr(err, appmesh.ErrCodeNotFoundException, "") {
+		log.Printf("[WARN] App Mesh route (%s) not found, removing from state", d.Id())
+		d.SetId("")
+		return nil
+	}
+	if err != nil {
+		return fmt.Errorf("error setting tags: %s", err)
+	}
 
 	return resourceAwsAppmeshRouteRead(d, meta)
 }
 
 func resourceAwsAppmeshRouteDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).appmeshpreviewconn
+	conn := meta.(*AWSClient).appmeshconn
 
 	log.Printf("[DEBUG] Deleting App Mesh route: %s", d.Id())
-	_, err := conn.DeleteRoute(&appmeshpreview.DeleteRouteInput{
+	_, err := conn.DeleteRoute(&appmesh.DeleteRouteInput{
 		MeshName:          aws.String(d.Get("mesh_name").(string)),
 		RouteName:         aws.String(d.Get("name").(string)),
 		VirtualRouterName: aws.String(d.Get("virtual_router_name").(string)),
 	})
-	if isAWSErr(err, appmeshpreview.ErrCodeNotFoundException, "") {
+	if isAWSErr(err, appmesh.ErrCodeNotFoundException, "") {
 		return nil
 	}
 	if err != nil {
@@ -311,9 +311,9 @@ func resourceAwsAppmeshRouteImport(d *schema.ResourceData, meta interface{}) ([]
 	name := parts[2]
 	log.Printf("[DEBUG] Importing App Mesh route %s from mesh %s/virtual router %s ", name, mesh, vrName)
 
-	conn := meta.(*AWSClient).appmeshpreviewconn
+	conn := meta.(*AWSClient).appmeshconn
 
-	resp, err := conn.DescribeRoute(&appmeshpreview.DescribeRouteInput{
+	resp, err := conn.DescribeRoute(&appmesh.DescribeRouteInput{
 		MeshName:          aws.String(mesh),
 		RouteName:         aws.String(name),
 		VirtualRouterName: aws.String(vrName),
@@ -330,8 +330,8 @@ func resourceAwsAppmeshRouteImport(d *schema.ResourceData, meta interface{}) ([]
 	return []*schema.ResourceData{d}, nil
 }
 
-func expandAppmeshRouteSpec(vSpec []interface{}) *appmeshpreview.RouteSpec {
-	spec := &appmeshpreview.RouteSpec{}
+func expandAppmeshRouteSpec(vSpec []interface{}) *appmesh.RouteSpec {
+	spec := &appmesh.RouteSpec{}
 
 	if len(vSpec) == 0 || vSpec[0] == nil {
 		// Empty Spec is allowed.
@@ -342,16 +342,16 @@ func expandAppmeshRouteSpec(vSpec []interface{}) *appmeshpreview.RouteSpec {
 	if vHttpRoute, ok := mSpec["http_route"].([]interface{}); ok && len(vHttpRoute) > 0 && vHttpRoute[0] != nil {
 		mHttpRoute := vHttpRoute[0].(map[string]interface{})
 
-		spec.HttpRoute = &appmeshpreview.HttpRoute{}
+		spec.HttpRoute = &appmesh.HttpRoute{}
 
 		if vHttpRouteAction, ok := mHttpRoute["action"].([]interface{}); ok && len(vHttpRouteAction) > 0 && vHttpRouteAction[0] != nil {
 			mHttpRouteAction := vHttpRouteAction[0].(map[string]interface{})
 
 			if vWeightedTargets, ok := mHttpRouteAction["weighted_target"].(*schema.Set); ok && vWeightedTargets.Len() > 0 {
-				weightedTargets := []*appmeshpreview.WeightedTarget{}
+				weightedTargets := []*appmesh.WeightedTarget{}
 
 				for _, vWeightedTarget := range vWeightedTargets.List() {
-					weightedTarget := &appmeshpreview.WeightedTarget{}
+					weightedTarget := &appmesh.WeightedTarget{}
 
 					mWeightedTarget := vWeightedTarget.(map[string]interface{})
 
@@ -365,7 +365,7 @@ func expandAppmeshRouteSpec(vSpec []interface{}) *appmeshpreview.RouteSpec {
 					weightedTargets = append(weightedTargets, weightedTarget)
 				}
 
-				spec.HttpRoute.Action = &appmeshpreview.HttpRouteAction{
+				spec.HttpRoute.Action = &appmesh.HttpRouteAction{
 					WeightedTargets: weightedTargets,
 				}
 			}
@@ -375,7 +375,7 @@ func expandAppmeshRouteSpec(vSpec []interface{}) *appmeshpreview.RouteSpec {
 			mHttpRouteMatch := vHttpRouteMatch[0].(map[string]interface{})
 
 			if vPrefix, ok := mHttpRouteMatch["prefix"].(string); ok && vPrefix != "" {
-				spec.HttpRoute.Match = &appmeshpreview.HttpRouteMatch{
+				spec.HttpRoute.Match = &appmesh.HttpRouteMatch{
 					Prefix: aws.String(vPrefix),
 				}
 			}
@@ -385,16 +385,16 @@ func expandAppmeshRouteSpec(vSpec []interface{}) *appmeshpreview.RouteSpec {
 	if vTcpRoute, ok := mSpec["tcp_route"].([]interface{}); ok && len(vTcpRoute) > 0 && vTcpRoute[0] != nil {
 		mTcpRoute := vTcpRoute[0].(map[string]interface{})
 
-		spec.TcpRoute = &appmeshpreview.TcpRoute{}
+		spec.TcpRoute = &appmesh.TcpRoute{}
 
 		if vTcpRouteAction, ok := mTcpRoute["action"].([]interface{}); ok && len(vTcpRouteAction) > 0 && vTcpRouteAction[0] != nil {
 			mTcpRouteAction := vTcpRouteAction[0].(map[string]interface{})
 
 			if vWeightedTargets, ok := mTcpRouteAction["weighted_target"].(*schema.Set); ok && vWeightedTargets.Len() > 0 {
-				weightedTargets := []*appmeshpreview.WeightedTarget{}
+				weightedTargets := []*appmesh.WeightedTarget{}
 
 				for _, vWeightedTarget := range vWeightedTargets.List() {
-					weightedTarget := &appmeshpreview.WeightedTarget{}
+					weightedTarget := &appmesh.WeightedTarget{}
 
 					mWeightedTarget := vWeightedTarget.(map[string]interface{})
 
@@ -408,7 +408,7 @@ func expandAppmeshRouteSpec(vSpec []interface{}) *appmeshpreview.RouteSpec {
 					weightedTargets = append(weightedTargets, weightedTarget)
 				}
 
-				spec.TcpRoute.Action = &appmeshpreview.TcpRouteAction{
+				spec.TcpRoute.Action = &appmesh.TcpRouteAction{
 					WeightedTargets: weightedTargets,
 				}
 			}
@@ -418,7 +418,7 @@ func expandAppmeshRouteSpec(vSpec []interface{}) *appmeshpreview.RouteSpec {
 	return spec
 }
 
-func flattenAppmeshRouteSpec(spec *appmeshpreview.RouteSpec) []interface{} {
+func flattenAppmeshRouteSpec(spec *appmesh.RouteSpec) []interface{} {
 	if spec == nil {
 		return []interface{}{}
 	}
