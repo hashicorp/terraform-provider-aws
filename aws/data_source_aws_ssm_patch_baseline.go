@@ -14,7 +14,18 @@ func dataSourceAwsSsmPatchBaseline() *schema.Resource {
 	return &schema.Resource{
 		Read: dataAwsSsmPatchBaselineRead,
 		Schema: map[string]*schema.Schema{
-			"filter": dataSourceFiltersSchema(),
+			"owner": {
+				Type:         schema.TypeString,
+				Required:     true,
+				ForceNew:     true,
+				ValidateFunc: validation.NoZeroValues,
+			},
+			"name_prefix": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				ForceNew:     true,
+				ValidateFunc: validation.NoZeroValues,
+			},
 			"default_baseline": {
 				Type:     schema.TypeBool,
 				Optional: true,
@@ -42,9 +53,26 @@ func dataSourceAwsSsmPatchBaseline() *schema.Resource {
 func dataAwsSsmPatchBaselineRead(d *schema.ResourceData, meta interface{}) error {
 	ssmconn := meta.(*AWSClient).ssmconn
 
-	params := &ssm.DescribePatchBaselinesInput{}
-	if v, ok := d.GetOk("filter"); ok {
-		params.Filters = buildPatchBaselineFilters(v.(*schema.Set))
+	filters := []*ssm.PatchOrchestratorFilter{
+		{
+			Key: aws.String("OWNER"),
+			Values: []*string{
+				aws.String(d.Get("owner").(string)),
+			},
+		},
+	}
+
+	if v, ok := d.GetOk("name_prefix"); ok {
+		filters = append(filters, &ssm.PatchOrchestratorFilter{
+			Key: aws.String("NAME_PREFIX"),
+			Values: []*string{
+				aws.String(v.(string)),
+			},
+		})
+	}
+
+	params := &ssm.DescribePatchBaselinesInput{
+		Filters: filters,
 	}
 
 	log.Printf("[DEBUG] Reading DescribePatchBaselines: %s", params)
@@ -56,18 +84,18 @@ func dataAwsSsmPatchBaselineRead(d *schema.ResourceData, meta interface{}) error
 	}
 
 	var filteredBaselines []*ssm.PatchBaselineIdentity
-	if os, ok := d.GetOk("operating_system"); ok {
+	if v, ok := d.GetOk("operating_system"); ok {
 		for _, baseline := range resp.BaselineIdentities {
-			if os.(string) == *baseline.OperatingSystem {
+			if v.(string) == *baseline.OperatingSystem {
 				filteredBaselines = append(filteredBaselines, baseline)
 			}
 		}
 	}
 
-	if db, ok := d.GetOk("default_baseline"); ok {
+	if v, ok := d.GetOk("default_baseline"); ok {
 		var ln int
 		for _, baseline := range filteredBaselines {
-			if db.(bool) == *baseline.DefaultBaseline {
+			if v.(bool) == *baseline.DefaultBaseline {
 				filteredBaselines[ln] = baseline
 				ln++
 			}

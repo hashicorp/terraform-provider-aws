@@ -50,17 +50,9 @@ func TestAccAWSSsmPatchBaselineDataSource_newBaseline(t *testing.T) {
 func testAccCheckAwsSsmPatchBaselineDataSourceConfig_existingBaseline() string {
 	return fmt.Sprintf(`
 data "aws_ssm_patch_baseline" "test_existing" {
+	owner            = "AWS"
+	name_prefix		 = "AWS-"
 	operating_system = "CENTOS"
-
-	filter {
-		name   = "OWNER"
-		values = ["AWS"]
-	}
-
-	filter {
-		name   = "NAME_PREFIX"
-		values = ["AWS-"]
-	}
 }
 `)
 }
@@ -83,17 +75,9 @@ resource "aws_ssm_patch_baseline" "test_new" {
 }
 
 data "aws_ssm_patch_baseline" "test_new" {
+	owner            = "Self"
+	name_prefix      = "${aws_ssm_patch_baseline.test_new.name}"
 	operating_system = "AMAZON_LINUX_2"
-
-	filter {
-		name   = "OWNER"
-		values = ["Self"]
-	}
-
-	filter {
-		name   = "NAME_PREFIX"
-		values = ["${aws_ssm_patch_baseline.test_new.name}"]
-	}
 }
 `, name)
 }
