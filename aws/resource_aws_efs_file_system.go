@@ -346,7 +346,7 @@ func resourceAwsEfsFileSystemRead(d *schema.ResourceData, meta interface{}) erro
 	})
 	if err != nil {
 		return fmt.Errorf("Error describing lifecycle configuration for EFS file system (%s): %s",
-			aws.StringValue(fs.FileSystemId), err.Error())
+			aws.StringValue(fs.FileSystemId), err)
 	}
 	if err := resourceAwsEfsFileSystemSetLifecyclePolicy(d, res.LifecyclePolicies); err != nil {
 		return err
