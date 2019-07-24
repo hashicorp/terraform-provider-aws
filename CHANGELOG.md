@@ -10,6 +10,7 @@ FEATURES:
 ENHANCEMENTS:
 
 * provider: Add support for assuming role via web identity token via the `AWS_WEB_IDENTITY_TOKEN_FILE` and `AWS_ROLE_ARN` environment variables [GH-9428]
+* resource/aws_cloudwatch_event_target: Support resource import [GH-9431]
 * resource/aws_s3_bucket_object: Add `metadata` argument [GH-1945]
 * resource/aws_wafregional_ipset: Support resource import [#9424]
 
