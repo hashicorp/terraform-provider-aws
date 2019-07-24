@@ -17,7 +17,12 @@ BUG FIXES:
 
 * provider: Load credentials via the `AWS_PROFILE` environment variable (if available) when `AWS_PROFILE` is defined along with `AWS_ACCESS_KEY_ID` and `AWS_SECRET_ACCESS_KEY` [GH-9428]
 * resource/aws_cognito_user_pool_client: Properly update name value [GH-9437]
+* resource/aws_config_config_rule: Retries after timeouts when creating and deleting config rules [GH-9438]
+* resource/aws_config_delivery_channel: Retries after timeouts when creating and deleting config delivery channels [GH-9438]
+* resource/aws_customer_gateway: Final retry after timeout deleting customer gateway [GH-9421]
 * resource/aws_db_instance: Redact `MasterUserPassword` from user interface when displaying `InvalidParameterValue` error during resource creation [GH-9446]
+* resource/aws_kms_grant: Final retries after timeouts when creating, finding, and revoking grants [GH-9415]
+* resource/aws_kms_key: Final retries after timeouts when creating keys and updating key rotation status [GH-9415]
 * resource/aws_s3_bucket: Ensure `website_endpoint` and `website_domain` attributes have correct DNS suffix in AWS China [GH-9444]
 
 ## 2.20.0 (July 19, 2019)
