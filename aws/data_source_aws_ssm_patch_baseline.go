@@ -121,19 +121,3 @@ func dataAwsSsmPatchBaselineRead(d *schema.ResourceData, meta interface{}) error
 
 	return nil
 }
-
-func buildPatchBaselineFilters(set *schema.Set) []*ssm.PatchOrchestratorFilter {
-	var filters []*ssm.PatchOrchestratorFilter
-	for _, v := range set.List() {
-		m := v.(map[string]interface{})
-		var filterValues []*string
-		for _, e := range m["values"].([]interface{}) {
-			filterValues = append(filterValues, aws.String(e.(string)))
-		}
-		filters = append(filters, &ssm.PatchOrchestratorFilter{
-			Key:    aws.String(m["name"].(string)),
-			Values: filterValues,
-		})
-	}
-	return filters
-}
