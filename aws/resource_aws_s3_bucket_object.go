@@ -81,6 +81,7 @@ func resourceAwsS3BucketObject() *schema.Resource {
 				Type:         schema.TypeMap,
 				ValidateFunc: validateMetadataIsLowerCase,
 				Optional:     true,
+				Elem:         &schema.Schema{Type: schema.TypeString},
 			},
 
 			"content_type": {
@@ -223,13 +224,7 @@ func resourceAwsS3BucketObjectPut(d *schema.ResourceData, meta interface{}) erro
 	}
 
 	if v, ok := d.GetOk("metadata"); ok {
-		meta := make(map[string]*string)
-		for key, value := range v.(map[string]interface{}) {
-			valueStr := fmt.Sprintf("%v", value)
-			meta[key] = &valueStr
-		}
-
-		putInput.Metadata = meta
+		putInput.Metadata = stringMapToPointers(v.(map[string]interface{}))
 	}
 
 	if v, ok := d.GetOk("content_encoding"); ok {
@@ -358,17 +353,18 @@ func resourceAwsS3BucketObjectUpdate(d *schema.ResourceData, meta interface{}) e
 	// Changes to any of these attributes requires creation of a new object version (if bucket is versioned):
 	for _, key := range []string{
 		"cache_control",
+		"content_base64",
 		"content_disposition",
 		"content_encoding",
 		"content_language",
 		"content_type",
-		"source",
 		"content",
-		"content_base64",
-		"storage_class",
-		"server_side_encryption",
-		"kms_key_id",
 		"etag",
+		"kms_key_id",
+		"metadata",
+		"server_side_encryption",
+		"source",
+		"storage_class",
 		"website_redirect",
 	} {
 		if d.HasChange(key) {

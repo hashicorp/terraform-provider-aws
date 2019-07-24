@@ -440,6 +440,7 @@ func TestAccAWSS3BucketObject_acl(t *testing.T) {
 func TestAccAWSS3BucketObject_metadata(t *testing.T) {
 	rInt := acctest.RandInt()
 	var obj s3.GetObjectOutput
+	resourceName := "aws_s3_bucket_object.object"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -447,13 +448,28 @@ func TestAccAWSS3BucketObject_metadata(t *testing.T) {
 		CheckDestroy: testAccCheckAWSS3BucketObjectDestroy,
 		Steps: []resource.TestStep{
 			{
-				PreConfig: func() {},
-				Config:    testAccAWSS3BucketObjectConfig_withMetadata(rInt),
+				Config: testAccAWSS3BucketObjectConfig_withMetadata(rInt, "key1", "value1", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSS3BucketObjectExists("aws_s3_bucket_object.object", &obj),
-					resource.TestCheckResourceAttr("aws_s3_bucket_object.object", "metadata.%", "2"),
-					resource.TestCheckResourceAttr("aws_s3_bucket_object.object", "metadata.test", "Value One"),
-					resource.TestCheckResourceAttr("aws_s3_bucket_object.object", "metadata.description", "Very interesting"),
+					testAccCheckAWSS3BucketObjectExists(resourceName, &obj),
+					resource.TestCheckResourceAttr(resourceName, "metadata.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, "metadata.key1", "value1"),
+					resource.TestCheckResourceAttr(resourceName, "metadata.key2", "value2"),
+				),
+			},
+			{
+				Config: testAccAWSS3BucketObjectConfig_withMetadata(rInt, "key1", "value1updated", "key3", "value3"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSS3BucketObjectExists(resourceName, &obj),
+					resource.TestCheckResourceAttr(resourceName, "metadata.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, "metadata.key1", "value1updated"),
+					resource.TestCheckResourceAttr(resourceName, "metadata.key3", "value3"),
+				),
+			},
+			{
+				Config: testAccAWSS3BucketObjectConfigEmpty(rInt),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSS3BucketObjectExists(resourceName, &obj),
+					resource.TestCheckResourceAttr(resourceName, "metadata.%", "0"),
 				),
 			},
 		},
@@ -1069,20 +1085,20 @@ resource "aws_s3_bucket_object" "object" {
 `, randInt, key, content)
 }
 
-func testAccAWSS3BucketObjectConfig_withMetadata(randInt int) string {
+func testAccAWSS3BucketObjectConfig_withMetadata(randInt int, metadataKey1, metadataValue1, metadataKey2, metadataValue2 string) string {
 	return fmt.Sprintf(`
-resource "aws_s3_bucket" "object_bucket_2" {
-	bucket = "tf-object-test-bucket-%d"
+resource "aws_s3_bucket" "object_bucket" {
+  bucket = "tf-object-test-bucket-%d"
 }
 
 resource "aws_s3_bucket_object" "object" {
-	bucket = "${aws_s3_bucket.object_bucket_2.bucket}"
-	key = "test-key"
-	content = "stuff"
-	metadata {
-		test = "Value One"
-		description = "Very interesting"
-	}
+  bucket  = "${aws_s3_bucket.object_bucket.bucket}"
+  key     = "test-key"
+
+  metadata = {
+    %[2]s = %[3]q
+    %[4]s = %[5]q
+  }
 }
-`, randInt)
+`, randInt, metadataKey1, metadataValue1, metadataKey2, metadataValue2)
 }
