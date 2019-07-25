@@ -57,29 +57,6 @@ func TestAccAWSEFSFileSystem_importBasic(t *testing.T) {
 	})
 }
 
-func TestAccAWSEFSFileSystem_importWithLifecyclePolicy(t *testing.T) {
-	resourceName := "aws_efs_file_system.foo-with-lifecycle-policy"
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckEfsFileSystemDestroy,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccAWSEFSFileSystemConfigWithLifecyclePolicy(
-					"transition_to_ia",
-					efs.TransitionToIARulesAfter30Days,
-				),
-			},
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-			},
-		},
-	})
-}
-
 func TestAccAWSEFSFileSystem_basic(t *testing.T) {
 	rInt := acctest.RandInt()
 	resource.ParallelTest(t, resource.TestCase{
@@ -318,6 +295,78 @@ func TestAccAWSEFSFileSystem_lifecyclePolicy(t *testing.T) {
 					testAccCheckEfsFileSystem(resourceName),
 					testAccCheckEfsFileSystemLifecyclePolicy(resourceName, efs.TransitionToIARulesAfter30Days),
 				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccAWSEFSFileSystem_lifecyclePolicy_update(t *testing.T) {
+	resourceName := "aws_efs_file_system.foo-with-lifecycle-policy"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckEfsFileSystemDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSEFSFileSystemConfigWithLifecyclePolicy(
+					"transition_to_ia",
+					efs.TransitionToIARulesAfter30Days,
+				),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckEfsFileSystem(resourceName),
+					testAccCheckEfsFileSystemLifecyclePolicy(resourceName, efs.TransitionToIARulesAfter30Days),
+				),
+			},
+			{
+				Config: testAccAWSEFSFileSystemConfigWithLifecyclePolicy(
+					"transition_to_ia",
+					efs.TransitionToIARulesAfter90Days,
+				),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckEfsFileSystem(resourceName),
+					testAccCheckEfsFileSystemLifecyclePolicy(resourceName, efs.TransitionToIARulesAfter90Days),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccAWSEFSFileSystem_lifecyclePolicy_removal(t *testing.T) {
+	resourceName := "aws_efs_file_system.foo-with-lifecycle-policy"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckEfsFileSystemDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSEFSFileSystemConfigWithLifecyclePolicy(
+					"transition_to_ia",
+					efs.TransitionToIARulesAfter14Days,
+				),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckEfsFileSystem(resourceName),
+					testAccCheckEfsFileSystemLifecyclePolicy(resourceName, efs.TransitionToIARulesAfter14Days),
+				),
+			},
+			{
+				Config: testAccAWSEFSFileSystemConfigRemovedLifecyclePolicy,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckEfsFileSystem(resourceName),
+					testAccCheckEfsFileSystemLifecyclePolicy(resourceName, efs.TransitionToIARulesAfter14Days),
+				),
+				ExpectError: regexp.MustCompile(fmt.Sprintf(`Expected: %s`, efs.TransitionToIARulesAfter14Days)),
 			},
 			{
 				ResourceName:      resourceName,
@@ -598,3 +647,7 @@ resource "aws_efs_file_system" "foo-with-lifecycle-policy" {
 }
 `, lpName, lpVal)
 }
+
+const testAccAWSEFSFileSystemConfigRemovedLifecyclePolicy = `
+resource "aws_efs_file_system" "foo-with-lifecycle-policy" {}
+`

@@ -239,7 +239,7 @@ func resourceAwsEfsFileSystemUpdate(d *schema.ResourceData, meta interface{}) er
 	if d.HasChange("lifecycle_policy") {
 		_, err := conn.PutLifecycleConfiguration(&efs.PutLifecycleConfigurationInput{
 			FileSystemId:      aws.String(d.Id()),
-			LifecyclePolicies: resourceAwsEfsFileSystemLifecyclePolicy(d),
+			LifecyclePolicies: resourceAwsEfsFileSystemLifecyclePolicy(d.Get("lifecycle_policy").([]interface{})),
 		})
 		if err != nil {
 			return fmt.Errorf("Error updating lifecycle policy for EFS file system %q: %s",
@@ -459,12 +459,11 @@ func resourceAwsEfsFileSystemSetLifecyclePolicy(d *schema.ResourceData, lp []*ef
 	return nil
 }
 
-func resourceAwsEfsFileSystemLifecyclePolicy(d *schema.ResourceData) []*efs.LifecyclePolicy {
-	lifecyclePolicies := d.Get("lifecycle_policy").([]interface{})
-	result := make([]*efs.LifecyclePolicy, len(lifecyclePolicies))
+func resourceAwsEfsFileSystemLifecyclePolicy(lcPol []interface{}) []*efs.LifecyclePolicy {
+	result := make([]*efs.LifecyclePolicy, len(lcPol))
 
-	for i := 0; i < len(lifecyclePolicies); i++ {
-		lp := lifecyclePolicies[i].(map[string]interface{})
+	for i := 0; i < len(lcPol); i++ {
+		lp := lcPol[i].(map[string]interface{})
 		result[i] = &efs.LifecyclePolicy{TransitionToIA: aws.String(lp["transition_to_ia"].(string))}
 	}
 	return result
