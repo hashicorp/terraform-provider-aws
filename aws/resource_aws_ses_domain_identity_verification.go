@@ -77,7 +77,7 @@ func resourceAwsSesDomainIdentityVerificationCreate(d *schema.ResourceData, meta
 		var att *ses.IdentityVerificationAttributes
 		att, err = getAwsSesIdentityVerificationAttributes(conn, domainName)
 
-		if aws.StringValue(att.VerificationStatus) != ses.VerificationStatusSuccess {
+		if att != nil && aws.StringValue(att.VerificationStatus) != ses.VerificationStatusSuccess {
 			return fmt.Errorf("Expected domain verification Success, but was in state %s", aws.StringValue(att.VerificationStatus))
 		}
 	}
