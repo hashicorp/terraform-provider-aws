@@ -276,6 +276,7 @@ func Provider() terraform.ResourceProvider {
 			"aws_waf_ipset":                                 dataSourceAwsWafIpSet(),
 			"aws_waf_rule":                                  dataSourceAwsWafRule(),
 			"aws_waf_web_acl":                               dataSourceAwsWafWebAcl(),
+			"aws_wafregional_ipset":                         dataSourceAwsWafRegionalIpSet(),
 			"aws_wafregional_rule":                          dataSourceAwsWafRegionalRule(),
 			"aws_wafregional_web_acl":                       dataSourceAwsWafRegionalWebAcl(),
 			"aws_workspaces_bundle":                         dataSourceAwsWorkspaceBundle(),
