@@ -89,7 +89,7 @@ The following arguments are supported:
 * `deletion_protection` - (Optional) If the DB instance should have deletion protection enabled. The database can't be deleted when this value is set to `true`. The default is `false`.
 * `master_password` - (Required unless a `snapshot_identifier` or `global_cluster_identifier` is provided) Password for the master DB user. Note that this may
     show up in logs, and it will be stored in the state file. Please refer to the [RDS Naming Constraints][5]
-* `master_username` - (Required unless a `snapshot_identifier` or `global_cluster_identifier` is provided) Username for the master DB user. Please refer to the [RDS Naming Constraints][5]
+* `master_username` - (Required unless a `snapshot_identifier` or `global_cluster_identifier` is provided) Username for the master DB user. Please refer to the [RDS Naming Constraints][5]. This argument does not support in-place updates and cannot be changed during a restore from snapshot.
 * `final_snapshot_identifier` - (Optional) The name of your final DB snapshot
     when this DB cluster is deleted. If omitted, no final snapshot will be
     made.
