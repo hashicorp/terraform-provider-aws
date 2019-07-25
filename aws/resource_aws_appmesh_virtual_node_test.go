@@ -232,51 +232,51 @@ func testAccAwsAppmeshVirtualNode_logging(t *testing.T) {
 	})
 }
 
-func testAccAwsAppmeshVirtualNode_tags(t *testing.T) {
-	var vn appmesh.VirtualNodeData
-	resourceName := "aws_appmesh_virtual_node.test"
-	meshName := fmt.Sprintf("tf-test-mesh-%d", acctest.RandInt())
-	vnName := fmt.Sprintf("tf-test-node-%d", acctest.RandInt())
+// func testAccAwsAppmeshVirtualNode_tags(t *testing.T) {
+// 	var vn appmesh.VirtualNodeData
+// 	resourceName := "aws_appmesh_virtual_node.test"
+// 	meshName := fmt.Sprintf("tf-test-mesh-%d", acctest.RandInt())
+// 	vnName := fmt.Sprintf("tf-test-node-%d", acctest.RandInt())
 
-	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckAppmeshVirtualNodeDestroy,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccAppmeshVirtualNodeConfig_tags(meshName, vnName, "foo", "bar", "good", "bad"),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAppmeshVirtualNodeExists(resourceName, &vn),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
-					resource.TestCheckResourceAttr(resourceName, "tags.foo", "bar"),
-					resource.TestCheckResourceAttr(resourceName, "tags.good", "bad"),
-				),
-			},
-			{
-				Config: testAccAppmeshVirtualNodeConfig_tags(meshName, vnName, "foo2", "bar", "good", "bad2"),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAppmeshVirtualNodeExists(resourceName, &vn),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
-					resource.TestCheckResourceAttr(resourceName, "tags.foo2", "bar"),
-					resource.TestCheckResourceAttr(resourceName, "tags.good", "bad2"),
-				),
-			},
-			{
-				Config: testAccAppmeshVirtualNodeConfig_basic(meshName, vnName),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAppmeshVirtualNodeExists(resourceName, &vn),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
-				),
-			},
-			{
-				ResourceName:      resourceName,
-				ImportStateId:     fmt.Sprintf("%s/%s", meshName, vnName),
-				ImportState:       true,
-				ImportStateVerify: true,
-			},
-		},
-	})
-}
+// 	resource.Test(t, resource.TestCase{
+// 		PreCheck:     func() { testAccPreCheck(t) },
+// 		Providers:    testAccProviders,
+// 		CheckDestroy: testAccCheckAppmeshVirtualNodeDestroy,
+// 		Steps: []resource.TestStep{
+// 			{
+// 				Config: testAccAppmeshVirtualNodeConfig_tags(meshName, vnName, "foo", "bar", "good", "bad"),
+// 				Check: resource.ComposeTestCheckFunc(
+// 					testAccCheckAppmeshVirtualNodeExists(resourceName, &vn),
+// 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
+// 					resource.TestCheckResourceAttr(resourceName, "tags.foo", "bar"),
+// 					resource.TestCheckResourceAttr(resourceName, "tags.good", "bad"),
+// 				),
+// 			},
+// 			{
+// 				Config: testAccAppmeshVirtualNodeConfig_tags(meshName, vnName, "foo2", "bar", "good", "bad2"),
+// 				Check: resource.ComposeTestCheckFunc(
+// 					testAccCheckAppmeshVirtualNodeExists(resourceName, &vn),
+// 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
+// 					resource.TestCheckResourceAttr(resourceName, "tags.foo2", "bar"),
+// 					resource.TestCheckResourceAttr(resourceName, "tags.good", "bad2"),
+// 				),
+// 			},
+// 			{
+// 				Config: testAccAppmeshVirtualNodeConfig_basic(meshName, vnName),
+// 				Check: resource.ComposeTestCheckFunc(
+// 					testAccCheckAppmeshVirtualNodeExists(resourceName, &vn),
+// 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+// 				),
+// 			},
+// 			{
+// 				ResourceName:      resourceName,
+// 				ImportStateId:     fmt.Sprintf("%s/%s", meshName, vnName),
+// 				ImportState:       true,
+// 				ImportStateVerify: true,
+// 			},
+// 		},
+// 	})
+// }
 
 func testAccCheckAppmeshVirtualNodeDestroy(s *terraform.State) error {
 	conn := testAccProvider.Meta().(*AWSClient).appmeshpreviewconn
@@ -508,18 +508,18 @@ resource "aws_appmesh_virtual_node" "test" {
 `, vnName, path)
 }
 
-func testAccAppmeshVirtualNodeConfig_tags(meshName, vnName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
-	return testAccAppmeshVirtualNodeConfig_mesh(meshName) + fmt.Sprintf(`
-resource "aws_appmesh_virtual_node" "test" {
-  name      = %[1]q
-  mesh_name = "${aws_appmesh_mesh.test.id}"
+// func testAccAppmeshVirtualNodeConfig_tags(meshName, vnName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
+// 	return testAccAppmeshVirtualNodeConfig_mesh(meshName) + fmt.Sprintf(`
+// resource "aws_appmesh_virtual_node" "test" {
+//   name      = %[1]q
+//   mesh_name = "${aws_appmesh_mesh.test.id}"
 
-  spec {}
+//   spec {}
 
-  tags = {
-    %[2]s = %[3]q
-    %[4]s = %[5]q
-  }
-}
-`, vnName, tagKey1, tagValue1, tagKey2, tagValue2)
-}
+//   tags = {
+//     %[2]s = %[3]q
+//     %[4]s = %[5]q
+//   }
+// }
+// `, vnName, tagKey1, tagValue1, tagKey2, tagValue2)
+// }

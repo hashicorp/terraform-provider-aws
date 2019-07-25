@@ -87,7 +87,7 @@ func resourceAwsAppmeshMeshCreate(d *schema.ResourceData, meta interface{}) erro
 	req := &appmesh.CreateMeshInput{
 		MeshName: aws.String(meshName),
 		Spec:     expandAppmeshMeshSpec(d.Get("spec").([]interface{})),
-		Tags:     tagsFromMapAppmesh(d.Get("tags").(map[string]interface{})),
+		// Tags:     tagsFromMapAppmesh(d.Get("tags").(map[string]interface{})),
 	}
 
 	log.Printf("[DEBUG] Creating App Mesh service mesh: %#v", req)
@@ -130,15 +130,15 @@ func resourceAwsAppmeshMeshRead(d *schema.ResourceData, meta interface{}) error 
 		return fmt.Errorf("error setting spec: %s", err)
 	}
 
-	err = saveTagsAppmesh(conn, d, aws.StringValue(resp.Mesh.Metadata.Arn))
-	if isAWSErr(err, appmesh.ErrCodeNotFoundException, "") {
-		log.Printf("[WARN] App Mesh service mesh (%s) not found, removing from state", d.Id())
-		d.SetId("")
-		return nil
-	}
-	if err != nil {
-		return fmt.Errorf("error saving tags: %s", err)
-	}
+	// err = saveTagsAppmesh(conn, d, aws.StringValue(resp.Mesh.Metadata.Arn))
+	// if isAWSErr(err, appmesh.ErrCodeNotFoundException, "") {
+	// 	log.Printf("[WARN] App Mesh service mesh (%s) not found, removing from state", d.Id())
+	// 	d.SetId("")
+	// 	return nil
+	// }
+	// if err != nil {
+	// 	return fmt.Errorf("error saving tags: %s", err)
+	// }
 
 	return nil
 }
@@ -160,15 +160,15 @@ func resourceAwsAppmeshMeshUpdate(d *schema.ResourceData, meta interface{}) erro
 		}
 	}
 
-	err := setTagsAppmesh(conn, d, d.Get("arn").(string))
-	if isAWSErr(err, appmesh.ErrCodeNotFoundException, "") {
-		log.Printf("[WARN] App Mesh service mesh (%s) not found, removing from state", d.Id())
-		d.SetId("")
-		return nil
-	}
-	if err != nil {
-		return fmt.Errorf("error setting tags: %s", err)
-	}
+	// err := setTagsAppmesh(conn, d, d.Get("arn").(string))
+	// if isAWSErr(err, appmesh.ErrCodeNotFoundException, "") {
+	// 	log.Printf("[WARN] App Mesh service mesh (%s) not found, removing from state", d.Id())
+	// 	d.SetId("")
+	// 	return nil
+	// }
+	// if err != nil {
+	// 	return fmt.Errorf("error setting tags: %s", err)
+	// }
 
 	return resourceAwsAppmeshMeshRead(d, meta)
 }
