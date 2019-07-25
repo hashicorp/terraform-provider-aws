@@ -384,6 +384,7 @@ The following resource checks need to be addressed before your contribution can 
   ```
 
 - [ ] __Uses resource.NotFoundError__: Custom errors for missing resources should use [`resource.NotFoundError`](https://godoc.org/github.com/hashicorp/terraform/helper/resource#NotFoundError).
+- [ ] __Uses resource.UniqueId()__: API fields for concurrency protection such as `CallerReference` and `IdempotencyToken` should use [`resource.UniqueId()`](https://godoc.org/github.com/hashicorp/terraform/helper/resource#UniqueId). The implementation includes a monotonic counter which is safer for concurrent operations than solutions such as `time.Now()`.
 - [ ] __Skips Exists Function__: Implementing a resource `Exists` function is extraneous as it often duplicates resource `Read` functionality. Ensure `d.SetId("")` is used to appropriately trigger resource recreation in the resource `Read` function.
 - [ ] __Skips id Attribute__: The `id` attribute is implicit for all Terraform resources and does not need to be defined in the schema.
 

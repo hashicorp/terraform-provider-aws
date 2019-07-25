@@ -11,12 +11,12 @@ import (
 	"bytes"
 	"fmt"
 	"strconv"
-	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/cloudfront"
 	"github.com/hashicorp/terraform/flatmap"
 	"github.com/hashicorp/terraform/helper/hashcode"
+	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/helper/schema"
 )
 
@@ -33,7 +33,7 @@ const cloudFrontRoute53ZoneID = "Z2FDTNDATAQYW2"
 func expandDistributionConfig(d *schema.ResourceData) *cloudfront.DistributionConfig {
 	distributionConfig := &cloudfront.DistributionConfig{
 		CacheBehaviors:       expandCacheBehaviors(d.Get("ordered_cache_behavior").([]interface{})),
-		CallerReference:      aws.String(time.Now().Format(time.RFC3339Nano)),
+		CallerReference:      aws.String(resource.UniqueId()),
 		Comment:              aws.String(d.Get("comment").(string)),
 		CustomErrorResponses: expandCustomErrorResponses(d.Get("custom_error_response").(*schema.Set)),
 		DefaultCacheBehavior: expandCloudFrontDefaultCacheBehavior(d.Get("default_cache_behavior").([]interface{})[0].(map[string]interface{})),

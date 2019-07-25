@@ -238,8 +238,7 @@ func resourceAwsCustomerGatewayDelete(d *schema.ResourceData, meta interface{}) 
 		if ec2err, ok := err.(awserr.Error); ok && ec2err.Code() == "InvalidCustomerGatewayID.NotFound" {
 			return nil
 		} else {
-			log.Printf("[ERROR] Error deleting CustomerGateway: %s", err)
-			return err
+			return fmt.Errorf("[ERROR] Error deleting CustomerGateway: %s", err)
 		}
 	}
 
@@ -248,31 +247,53 @@ func resourceAwsCustomerGatewayDelete(d *schema.ResourceData, meta interface{}) 
 		Values: []*string{aws.String(d.Id())},
 	}
 
+	input := &ec2.DescribeCustomerGatewaysInput{
+		Filters: []*ec2.Filter{gatewayFilter},
+	}
 	err = resource.Retry(5*time.Minute, func() *resource.RetryError {
-		resp, err := conn.DescribeCustomerGateways(&ec2.DescribeCustomerGatewaysInput{
-			Filters: []*ec2.Filter{gatewayFilter},
-		})
+		resp, err := conn.DescribeCustomerGateways(input)
 
 		if err != nil {
-			if awserr, ok := err.(awserr.Error); ok && awserr.Code() == "InvalidCustomerGatewayID.NotFound" {
+			if isAWSErr(err, "InvalidCustomerGatewayID.NotFound", "") {
 				return nil
 			}
 			return resource.NonRetryableError(err)
 		}
 
-		if len(resp.CustomerGateways) != 1 {
-			return resource.RetryableError(fmt.Errorf("Error finding CustomerGateway for delete: %s", d.Id()))
+		err = checkGatewayDeleteResponse(resp, d.Id())
+		if err != nil {
+			return resource.RetryableError(err)
 		}
-
-		switch *resp.CustomerGateways[0].State {
-		case "pending", "available", "deleting":
-			return resource.RetryableError(fmt.Errorf("Gateway (%s) in state (%s), retrying", d.Id(), *resp.CustomerGateways[0].State))
-		case "deleted":
-			return nil
-		default:
-			return resource.RetryableError(fmt.Errorf("Unrecognized state (%s) for Customer Gateway delete on (%s)", *resp.CustomerGateways[0].State, d.Id()))
-		}
+		return nil
 	})
 
-	return err
+	if isResourceTimeoutError(err) {
+		var resp *ec2.DescribeCustomerGatewaysOutput
+		resp, err = conn.DescribeCustomerGateways(input)
+
+		if err != nil {
+			return checkGatewayDeleteResponse(resp, d.Id())
+		}
+	}
+
+	if err != nil {
+		return fmt.Errorf("Error deleting customer gateway: %s", err)
+	}
+	return nil
+
+}
+
+func checkGatewayDeleteResponse(resp *ec2.DescribeCustomerGatewaysOutput, id string) error {
+	if len(resp.CustomerGateways) != 1 {
+		return fmt.Errorf("Error finding CustomerGateway for delete: %s", id)
+	}
+
+	switch *resp.CustomerGateways[0].State {
+	case "pending", "available", "deleting":
+		return fmt.Errorf("Gateway (%s) in state (%s), retrying", id, *resp.CustomerGateways[0].State)
+	case "deleted":
+		return nil
+	default:
+		return fmt.Errorf("Unrecognized state (%s) for Customer Gateway delete on (%s)", *resp.CustomerGateways[0].State, id)
+	}
 }

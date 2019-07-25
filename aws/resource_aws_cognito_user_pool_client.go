@@ -269,6 +269,10 @@ func resourceAwsCognitoUserPoolClientUpdate(d *schema.ResourceData, meta interfa
 		UserPoolId: aws.String(d.Get("user_pool_id").(string)),
 	}
 
+	if v, ok := d.GetOk("name"); ok {
+		params.ClientName = aws.String(v.(string))
+	}
+
 	if v, ok := d.GetOk("explicit_auth_flows"); ok {
 		params.ExplicitAuthFlows = expandStringList(v.(*schema.Set).List())
 	}

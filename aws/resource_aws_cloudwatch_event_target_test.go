@@ -123,6 +123,12 @@ func TestAccAWSCloudWatchEventTarget_basic(t *testing.T) {
 						regexp.MustCompile(fmt.Sprintf(":%s$", snsTopicName2))),
 				),
 			},
+			{
+				ResourceName:      "aws_cloudwatch_event_target.moobar",
+				ImportState:       true,
+				ImportStateIdFunc: testAccAWSCloudWatchEventTargetImportStateIdFunc("aws_cloudwatch_event_target.moobar"),
+				ImportStateVerify: true,
+			},
 		},
 	})
 }
@@ -146,6 +152,12 @@ func TestAccAWSCloudWatchEventTarget_missingTargetId(t *testing.T) {
 					resource.TestMatchResourceAttr("aws_cloudwatch_event_target.moobar", "arn",
 						regexp.MustCompile(fmt.Sprintf(":%s$", snsTopicName))),
 				),
+			},
+			{
+				ResourceName:      "aws_cloudwatch_event_target.moobar",
+				ImportState:       true,
+				ImportStateIdFunc: testAccAWSCloudWatchEventTargetImportStateIdFunc("aws_cloudwatch_event_target.moobar"),
+				ImportStateVerify: true,
 			},
 		},
 	})
@@ -175,6 +187,12 @@ func TestAccAWSCloudWatchEventTarget_full(t *testing.T) {
 					resource.TestCheckResourceAttr("aws_cloudwatch_event_target.foobar", "input_path", ""),
 				),
 			},
+			{
+				ResourceName:      "aws_cloudwatch_event_target.foobar",
+				ImportState:       true,
+				ImportStateIdFunc: testAccAWSCloudWatchEventTargetImportStateIdFunc("aws_cloudwatch_event_target.foobar"),
+				ImportStateVerify: true,
+			},
 		},
 	})
 }
@@ -193,6 +211,12 @@ func TestAccAWSCloudWatchEventTarget_ssmDocument(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCloudWatchEventTargetExists("aws_cloudwatch_event_target.test", &target),
 				),
+			},
+			{
+				ResourceName:      "aws_cloudwatch_event_target.test",
+				ImportState:       true,
+				ImportStateIdFunc: testAccAWSCloudWatchEventTargetImportStateIdFunc("aws_cloudwatch_event_target.test"),
+				ImportStateVerify: true,
 			},
 		},
 	})
@@ -213,6 +237,12 @@ func TestAccAWSCloudWatchEventTarget_ecs(t *testing.T) {
 					testAccCheckCloudWatchEventTargetExists("aws_cloudwatch_event_target.test", &target),
 				),
 			},
+			{
+				ResourceName:      "aws_cloudwatch_event_target.test",
+				ImportState:       true,
+				ImportStateIdFunc: testAccAWSCloudWatchEventTargetImportStateIdFunc("aws_cloudwatch_event_target.test"),
+				ImportStateVerify: true,
+			},
 		},
 	})
 }
@@ -231,6 +261,12 @@ func TestAccAWSCloudWatchEventTarget_batch(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCloudWatchEventTargetExists("aws_cloudwatch_event_target.test", &target),
 				),
+			},
+			{
+				ResourceName:      "aws_cloudwatch_event_target.test",
+				ImportState:       true,
+				ImportStateIdFunc: testAccAWSCloudWatchEventTargetImportStateIdFunc("aws_cloudwatch_event_target.test"),
+				ImportStateVerify: true,
 			},
 		},
 	})
@@ -251,6 +287,12 @@ func TestAccAWSCloudWatchEventTarget_kinesis(t *testing.T) {
 					testAccCheckCloudWatchEventTargetExists("aws_cloudwatch_event_target.test", &target),
 				),
 			},
+			{
+				ResourceName:      "aws_cloudwatch_event_target.test",
+				ImportState:       true,
+				ImportStateIdFunc: testAccAWSCloudWatchEventTargetImportStateIdFunc("aws_cloudwatch_event_target.test"),
+				ImportStateVerify: true,
+			},
 		},
 	})
 }
@@ -270,6 +312,12 @@ func TestAccAWSCloudWatchEventTarget_sqs(t *testing.T) {
 					testAccCheckCloudWatchEventTargetExists("aws_cloudwatch_event_target.test", &target),
 				),
 			},
+			{
+				ResourceName:      "aws_cloudwatch_event_target.test",
+				ImportState:       true,
+				ImportStateIdFunc: testAccAWSCloudWatchEventTargetImportStateIdFunc("aws_cloudwatch_event_target.test"),
+				ImportStateVerify: true,
+			},
 		},
 	})
 }
@@ -288,6 +336,12 @@ func TestAccAWSCloudWatchEventTarget_input_transformer(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCloudWatchEventTargetExists("aws_cloudwatch_event_target.test", &target),
 				),
+			},
+			{
+				ResourceName:      "aws_cloudwatch_event_target.test",
+				ImportState:       true,
+				ImportStateIdFunc: testAccAWSCloudWatchEventTargetImportStateIdFunc("aws_cloudwatch_event_target.test"),
+				ImportStateVerify: true,
 			},
 		},
 	})
@@ -330,6 +384,17 @@ func testAccCheckAWSCloudWatchEventTargetDestroy(s *terraform.State) error {
 	}
 
 	return nil
+}
+
+func testAccAWSCloudWatchEventTargetImportStateIdFunc(resourceName string) resource.ImportStateIdFunc {
+	return func(s *terraform.State) (string, error) {
+		rs, ok := s.RootModule().Resources[resourceName]
+		if !ok {
+			return "", fmt.Errorf("Not found: %s", resourceName)
+		}
+
+		return fmt.Sprintf("%s/%s", rs.Primary.Attributes["rule"], rs.Primary.Attributes["target_id"]), nil
+	}
 }
 
 func testAccAWSCloudWatchEventTargetConfig(ruleName, snsTopicName, targetID string) string {
