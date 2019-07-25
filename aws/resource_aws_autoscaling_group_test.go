@@ -1668,7 +1668,7 @@ func TestAccAWSAutoScalingGroup_MixedInstancesPolicy_LaunchTemplate_LaunchTempla
 				},
 			},
 			{
-				Config: testAccAWSAutoScalingGroupConfig_MixedInstancesPolicy_LaunchTemplate_LaunchTemplateSpecification_Version(rName, "$$Latest"),
+				Config: testAccAWSAutoScalingGroupConfig_MixedInstancesPolicy_LaunchTemplate_LaunchTemplateSpecification_Version(rName, "$Latest"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSAutoScalingGroupExists(resourceName, &group),
 					resource.TestCheckResourceAttr(resourceName, "mixed_instances_policy.#", "1"),
@@ -3053,7 +3053,7 @@ resource "aws_autoscaling_group" "bar" {
   min_size = 0
   launch_template {
     id = "${aws_launch_template.foobar.id}"
-    version = "$$Latest"
+    version = "$Latest"
   }
 }
 `
