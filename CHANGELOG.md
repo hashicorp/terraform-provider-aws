@@ -31,6 +31,7 @@ BUG FIXES:
 * resource/aws_kms_grant: Final retries after timeouts when creating, finding, and revoking grants [GH-9415]
 * resource/aws_kms_key: Final retries after timeouts when creating keys and updating key rotation status [GH-9415]
 * resource/aws_s3_bucket: Ensure `website_endpoint` and `website_domain` attributes have correct DNS suffix in AWS China [GH-9444]
+* resource/aws_ses_domain_identity_verification: Retry after timeout when creating SES domain identity verification [GH-9417]
 
 ## 2.20.0 (July 19, 2019)
 
