@@ -117,7 +117,7 @@ func testAccAwsAppmeshVirtualRouter_basic(t *testing.T) {
 					resource.TestCheckResourceAttrSet(
 						resourceName, "last_updated_date"),
 					resource.TestMatchResourceAttr(
-						resourceName, "arn", regexp.MustCompile(fmt.Sprintf("^arn:[^:]+:appmesh:[^:]+:\\d{12}:mesh/%s/virtualRouter/%s", meshName, vrName))),
+						resourceName, "arn", regexp.MustCompile(fmt.Sprintf("^arn:[^:]+:appmesh-preview:[^:]+:\\d{12}:mesh/%s/virtualRouter/%s", meshName, vrName))),
 				),
 			},
 			{

@@ -38,7 +38,7 @@ func testAccAwsAppmeshVirtualService_virtualNode(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, "created_date"),
 					resource.TestCheckResourceAttrSet(resourceName, "last_updated_date"),
 					resource.TestMatchResourceAttr(
-						resourceName, "arn", regexp.MustCompile(fmt.Sprintf("^arn:[^:]+:appmesh:[^:]+:\\d{12}:mesh/%s/virtualService/%s", meshName, vsName))),
+						resourceName, "arn", regexp.MustCompile(fmt.Sprintf("^arn:[^:]+:appmesh-preview:[^:]+:\\d{12}:mesh/%s/virtualService/%s", meshName, vsName))),
 				),
 			},
 			{
@@ -89,7 +89,7 @@ func testAccAwsAppmeshVirtualService_virtualRouter(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, "created_date"),
 					resource.TestCheckResourceAttrSet(resourceName, "last_updated_date"),
 					resource.TestMatchResourceAttr(
-						resourceName, "arn", regexp.MustCompile(fmt.Sprintf("^arn:[^:]+:appmesh:[^:]+:\\d{12}:mesh/%s/virtualService/%s", meshName, vsName))),
+						resourceName, "arn", regexp.MustCompile(fmt.Sprintf("^arn:[^:]+:appmesh-preview:[^:]+:\\d{12}:mesh/%s/virtualService/%s", meshName, vsName))),
 				),
 			},
 			{
