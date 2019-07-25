@@ -108,7 +108,7 @@ The `weighted_target` object supports the following:
 The `header` object supports the following:
 
 * `name` - (Required) HTTP header name
-* `invert` - (Optional) If `true`, the match is on the opposite of the match type and value.
+* `invert` - (Optional) If `true`, the match is on the opposite of the match type and value. Default is `false`.
 * `match` - (Optional) The match type and value.
 
 The `match` object supports the following:
