@@ -6,6 +6,7 @@ NOTES:
 
 FEATURES:
 * **New Data Source**: `aws_organizations_organization` [#9419]
+* **New Data Source**: `aws_waf_ipset` [GH-9481]
 
 ENHANCEMENTS:
 
