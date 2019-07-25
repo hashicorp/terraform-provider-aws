@@ -2,7 +2,6 @@ package aws
 
 import (
 	"fmt"
-	"log"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
@@ -15,14 +14,14 @@ func dataSourceAwsVpcPeeringConnections() *schema.Resource {
 		Read: dataSourceAwsVpcPeeringConnectionsRead,
 
 		Schema: map[string]*schema.Schema{
+			"filter": ec2CustomFiltersSchema(),
+			"tags":   tagsSchemaComputed(),
 			"ids": {
 				Type:     schema.TypeSet,
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 				Set:      schema.HashString,
 			},
-			"filter": ec2CustomFiltersSchema(),
-			"tags":   tagsSchemaComputed(),
 		},
 	}
 }
@@ -30,13 +29,7 @@ func dataSourceAwsVpcPeeringConnections() *schema.Resource {
 func dataSourceAwsVpcPeeringConnectionsRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).ec2conn
 
-	log.Printf("[DEBUG] Reading VPC Peering Connections.")
-
 	req := &ec2.DescribeVpcPeeringConnectionsInput{}
-
-	if id, ok := d.GetOk("id"); ok {
-		req.VpcPeeringConnectionIds = aws.StringSlice([]string{id.(string)})
-	}
 
 	req.Filters = append(req.Filters, buildEC2TagFilterList(
 		tagsFromMap(d.Get("tags").(map[string]interface{})),
@@ -49,7 +42,6 @@ func dataSourceAwsVpcPeeringConnectionsRead(d *schema.ResourceData, meta interfa
 		req.Filters = nil
 	}
 
-	log.Printf("[DEBUG] Reading VPC Peering Connections: %s", req)
 	resp, err := conn.DescribeVpcPeeringConnections(req)
 	if err != nil {
 		return err
@@ -62,12 +54,6 @@ func dataSourceAwsVpcPeeringConnectionsRead(d *schema.ResourceData, meta interfa
 	for _, pcx := range resp.VpcPeeringConnections {
 		ids = append(ids, aws.StringValue(pcx.VpcPeeringConnectionId))
 	}
-
-	if len(ids) < 1 {
-		return fmt.Errorf("Your query returned no results. Please change your search criteria and try again.")
-	}
-
-	log.Printf("[DEBUG] Found %d peering connections via given filter: %s", len(ids), req)
 
 	d.SetId(resource.UniqueId())
 	err = d.Set("ids", ids)

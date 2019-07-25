@@ -26,7 +26,7 @@ const testAccDataSourceAwsVpcPeeringConnectionsConfig = `
 resource "aws_vpc" "foo" {
   cidr_block = "10.1.0.0/16"
 
-  tags {
+  tags = {
 	  Name = "terraform-testacc-vpc-peering-connection-data-source-foo"
 	  Type = "primary"
   }
@@ -35,7 +35,7 @@ resource "aws_vpc" "foo" {
 resource "aws_vpc" "bar" {
   cidr_block = "10.2.0.0/16"
 
-  tags {
+  tags = {
 	  Name = "terraform-testacc-vpc-peering-connection-data-source-bar"
 	  Type = "secondary"
   }
@@ -44,7 +44,7 @@ resource "aws_vpc" "bar" {
 resource "aws_vpc" "baz" {
   cidr_block = "10.3.0.0/16"
 
-  tags {
+  tags = {
 	  Name = "terraform-testacc-vpc-peering-connection-data-source-baz"
 	  Type = "secondary"
   }
@@ -55,7 +55,7 @@ resource "aws_vpc_peering_connection" "conn1" {
 	peer_vpc_id = "${aws_vpc.bar.id}"
 	auto_accept = true
 
-    tags {
+    tags = {
       Name = "terraform-testacc-vpc-peering-connection-data-source-foo-to-bar"
       Environment = "test"
     }
@@ -66,7 +66,7 @@ resource "aws_vpc_peering_connection" "conn2" {
 	peer_vpc_id = "${aws_vpc.baz.id}"
 	auto_accept = true
 
-    tags {
+    tags = {
       Name = "terraform-testacc-vpc-peering-connection-data-source-foo-to-baz"
       Environment = "test"
     }
