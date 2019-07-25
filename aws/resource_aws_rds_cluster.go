@@ -489,6 +489,11 @@ func resourceAwsRDSClusterCreate(d *schema.ResourceData, meta interface{}) error
 			opts.KmsKeyId = aws.String(attr.(string))
 		}
 
+		if attr, ok := d.GetOk("master_password"); ok {
+			modifyDbClusterInput.MasterUserPassword = aws.String(attr.(string))
+			requiresModifyDbCluster = true
+		}
+
 		if attr, ok := d.GetOk("option_group_name"); ok {
 			opts.OptionGroupName = aws.String(attr.(string))
 		}
