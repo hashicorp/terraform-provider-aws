@@ -59,6 +59,7 @@ resource "aws_iam_role_policy" "example" {
       "Effect": "Allow",
       "Action": [
         "ec2:CreateNetworkInterface",
+        "ec2:CreateNetworkInterfacePermission",
         "ec2:DescribeDhcpOptions",
         "ec2:DescribeNetworkInterfaces",
         "ec2:DeleteNetworkInterface",
