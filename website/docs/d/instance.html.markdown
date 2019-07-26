@@ -77,6 +77,7 @@ interpolation.
   * `virtual_name` - The virtual device name.
 * `iam_instance_profile` - The name of the instance profile associated with the Instance.
 * `ipv6_addresses` - The IPv6 addresses associated to the Instance, if applicable. **NOTE**: Unlike the IPv4 address, this doesn't change if you attach an EIP to the instance.
+* `instance_state` - The state of the instance. One of: `pending`, `running`, `shutting-down`, `terminated`, `stopping`, `stopped`. See [Instance Lifecycle](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/ec2-instance-lifecycle.html) for more information.
 * `instance_type` - The type of the Instance.
 * `key_name` - The key name of the Instance.
 * `monitoring` - Whether detailed monitoring is enabled or disabled for the Instance (Boolean).
