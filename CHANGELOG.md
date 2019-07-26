@@ -6,7 +6,7 @@ NOTES:
 * provider: After this update, the AWS Go SDK will prefer credentials found via the `AWS_PROFILE` environment variable when both the `AWS_PROFILE` environment variable and the `AWS_ACCESS_KEY_ID` and `AWS_SECRET_ACCESS_KEY` environment variables are statically defined. Previously the SDK would ignore the `AWS_PROFILE` environment variable, if static environment credentials were also specified. This is listed as a bug fix in the AWS Go SDK release notes. ([#9428](https://github.com/terraform-providers/terraform-provider-aws/issues/9428))
 
 FEATURES:
-* **New Data Source**: `aws_organizations_organization` [#9419]
+* **New Data Source**: `aws_organizations_organization` ([#9419](https://github.com/terraform-providers/terraform-provider-aws/issues/9419))
 * **New Data Source**: `aws_waf_ipset` ([#9481](https://github.com/terraform-providers/terraform-provider-aws/issues/9481))
 * **New Data Source**: `aws_wafregional_ipset` ([#9484](https://github.com/terraform-providers/terraform-provider-aws/issues/9484))
 
@@ -15,7 +15,7 @@ ENHANCEMENTS:
 * provider: Add support for assuming role via web identity token via the `AWS_WEB_IDENTITY_TOKEN_FILE` and `AWS_ROLE_ARN` environment variables ([#9428](https://github.com/terraform-providers/terraform-provider-aws/issues/9428))
 * resource/aws_cloudwatch_event_target: Support resource import ([#9431](https://github.com/terraform-providers/terraform-provider-aws/issues/9431))
 * resource/aws_s3_bucket_object: Add `metadata` argument ([#1945](https://github.com/terraform-providers/terraform-provider-aws/issues/1945))
-* resource/aws_wafregional_ipset: Support resource import [#9424]
+* resource/aws_wafregional_ipset: Support resource import ([#9424](https://github.com/terraform-providers/terraform-provider-aws/issues/9424))
 
 BUG FIXES:
 
