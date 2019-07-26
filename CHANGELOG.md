@@ -1,4 +1,9 @@
 ## 2.22.0 (Unreleased)
+
+BUG FIXES:
+
+* resource/aws_autoscaling_group: Revert change from version 2.21.0 to `load_balancers` and `target_group_arns` arguments that removes attachments when using the `aws_autoscaling_attachment` resource (https://github.com/terraform-providers/terraform-provider-aws/issues/9513) [GH-9518]
+
 ## 2.21.0 (July 25, 2019)
 
 NOTES:
