@@ -48,10 +48,6 @@ func testAccCheckAWSDefaultVpcDestroy(s *terraform.State) error {
 }
 
 const testAccAWSDefaultVpcConfigBasic = `
-provider "aws" {
-    region = "us-west-2"
-}
-
 resource "aws_default_vpc" "foo" {
 	tags = {
 		Name = "Default VPC"

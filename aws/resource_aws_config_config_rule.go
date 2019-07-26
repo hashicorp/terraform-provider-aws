@@ -179,8 +179,11 @@ func resourceAwsConfigConfigRulePut(d *schema.ResourceData, meta interface{}) er
 
 		return nil
 	})
+	if isResourceTimeoutError(err) {
+		_, err = conn.PutConfigRule(&input)
+	}
 	if err != nil {
-		return err
+		return fmt.Errorf("Error creating AWSConfig rule: %s", err)
 	}
 
 	d.SetId(name)
@@ -242,10 +245,11 @@ func resourceAwsConfigConfigRuleDelete(d *schema.ResourceData, meta interface{})
 	name := d.Get("name").(string)
 
 	log.Printf("[DEBUG] Deleting AWS Config config rule %q", name)
+	input := &configservice.DeleteConfigRuleInput{
+		ConfigRuleName: aws.String(name),
+	}
 	err := resource.Retry(2*time.Minute, func() *resource.RetryError {
-		_, err := conn.DeleteConfigRule(&configservice.DeleteConfigRuleInput{
-			ConfigRuleName: aws.String(name),
-		})
+		_, err := conn.DeleteConfigRule(input)
 		if err != nil {
 			if awsErr, ok := err.(awserr.Error); ok && awsErr.Code() == "ResourceInUseException" {
 				return resource.RetryableError(err)
@@ -254,6 +258,9 @@ func resourceAwsConfigConfigRuleDelete(d *schema.ResourceData, meta interface{})
 		}
 		return nil
 	})
+	if isResourceTimeoutError(err) {
+		_, err = conn.DeleteConfigRule(input)
+	}
 	if err != nil {
 		return fmt.Errorf("Deleting Config Rule failed: %s", err)
 	}

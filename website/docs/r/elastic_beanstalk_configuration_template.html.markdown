@@ -6,7 +6,7 @@ description: |-
   Provides an Elastic Beanstalk Configuration Template
 ---
 
-# aws_elastic_beanstalk_configuration_template
+# Resource: aws_elastic_beanstalk_configuration_template
 
 Provides an Elastic Beanstalk Configuration Template, which are associated with
 a specific application and are used to deploy different versions of the

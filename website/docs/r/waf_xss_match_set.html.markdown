@@ -1,12 +1,12 @@
 ---
 layout: "aws"
-page_title: "AWS: waf_xss_match_set"
+page_title: "AWS: aws_waf_xss_match_set"
 sidebar_current: "docs-aws-resource-waf-xss-match-set"
 description: |-
   Provides a AWS WAF XssMatchSet resource.
 ---
 
-# aws_waf_xss_match_set
+# Resource: aws_waf_xss_match_set
 
 Provides a WAF XSS Match Set Resource
 

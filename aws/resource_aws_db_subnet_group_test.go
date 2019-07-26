@@ -2,6 +2,7 @@ package aws
 
 import (
 	"fmt"
+	"log"
 	"regexp"
 	"testing"
 
@@ -13,6 +14,56 @@ import (
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/rds"
 )
+
+func init() {
+	resource.AddTestSweepers("aws_db_subnet_group", &resource.Sweeper{
+		Name: "aws_db_subnet_group",
+		F:    testSweepRdsDbSubnetGroups,
+		Dependencies: []string{
+			"aws_db_instance",
+		},
+	})
+}
+
+func testSweepRdsDbSubnetGroups(region string) error {
+	client, err := sharedClientForRegion(region)
+
+	if err != nil {
+		return fmt.Errorf("error getting client: %s", err)
+	}
+
+	conn := client.(*AWSClient).rdsconn
+	input := &rds.DescribeDBSubnetGroupsInput{}
+
+	err = conn.DescribeDBSubnetGroupsPages(input, func(out *rds.DescribeDBSubnetGroupsOutput, lastPage bool) bool {
+		for _, dbSubnetGroup := range out.DBSubnetGroups {
+			name := aws.StringValue(dbSubnetGroup.DBSubnetGroupName)
+			input := &rds.DeleteDBSubnetGroupInput{
+				DBSubnetGroupName: dbSubnetGroup.DBSubnetGroupName,
+			}
+
+			log.Printf("[INFO] Deleting RDS DB Subnet Group: %s", name)
+
+			_, err := conn.DeleteDBSubnetGroup(input)
+
+			if err != nil {
+				log.Printf("[ERROR] Failed to delete RDS DB Subnet Group (%s): %s", name, err)
+			}
+		}
+		return !lastPage
+	})
+
+	if testSweepSkipSweepError(err) {
+		log.Printf("[WARN] Skipping RDS DB Subnet Group sweep for %s: %s", region, err)
+		return nil
+	}
+
+	if err != nil {
+		return fmt.Errorf("error retrieving RDS DB Subnet Groups: %s", err)
+	}
+
+	return nil
+}
 
 func TestAccAWSDBSubnetGroup_importBasic(t *testing.T) {
 	resourceName := "aws_db_subnet_group.foo"
@@ -233,78 +284,100 @@ func testAccCheckDBSubnetGroupExists(n string, v *rds.DBSubnetGroup) resource.Te
 
 func testAccDBSubnetGroupConfig(rName string) string {
 	return fmt.Sprintf(`
+data "aws_availability_zones" "available" {
+  state = "available"
+}
+
 resource "aws_vpc" "foo" {
-	cidr_block = "10.1.0.0/16"
-	tags = {
-		Name = "terraform-testacc-db-subnet-group"
-	}
+  cidr_block = "10.1.0.0/16"
+
+  tags = {
+    Name = "terraform-testacc-db-subnet-group"
+  }
 }
 
 resource "aws_subnet" "foo" {
-	cidr_block = "10.1.1.0/24"
-	availability_zone = "us-west-2a"
-	vpc_id = "${aws_vpc.foo.id}"
-	tags = {
-		Name = "tf-acc-db-subnet-group-1"
-	}
+  cidr_block        = "10.1.1.0/24"
+  availability_zone = "${data.aws_availability_zones.available.names[0]}"
+  vpc_id            = "${aws_vpc.foo.id}"
+
+  tags = {
+    Name = "tf-acc-db-subnet-group-1"
+  }
 }
 
 resource "aws_subnet" "bar" {
-	cidr_block = "10.1.2.0/24"
-	availability_zone = "us-west-2b"
-	vpc_id = "${aws_vpc.foo.id}"
-	tags = {
-		Name = "tf-acc-db-subnet-group-2"
-	}
+  cidr_block        = "10.1.2.0/24"
+  availability_zone = "${data.aws_availability_zones.available.names[1]}"
+  vpc_id            = "${aws_vpc.foo.id}"
+
+  tags = {
+    Name = "tf-acc-db-subnet-group-2"
+  }
 }
 
 resource "aws_db_subnet_group" "foo" {
-	name = "%s"
-	subnet_ids = ["${aws_subnet.foo.id}", "${aws_subnet.bar.id}"]
-	tags = {
-		Name = "tf-dbsubnet-group-test"
-	}
-}`, rName)
+  name       = "%s"
+  subnet_ids = ["${aws_subnet.foo.id}", "${aws_subnet.bar.id}"]
+
+  tags = {
+    Name = "tf-dbsubnet-group-test"
+  }
+}
+`, rName)
 }
 
 func testAccDBSubnetGroupConfig_updatedDescription(rName string) string {
 	return fmt.Sprintf(`
+data "aws_availability_zones" "available" {
+  state = "available"
+}
+
 resource "aws_vpc" "foo" {
-	cidr_block = "10.1.0.0/16"
-	tags = {
-		Name = "terraform-testacc-db-subnet-group-updated-description"
-	}
+  cidr_block = "10.1.0.0/16"
+
+  tags = {
+    Name = "terraform-testacc-db-subnet-group-updated-description"
+  }
 }
 
 resource "aws_subnet" "foo" {
-	cidr_block = "10.1.1.0/24"
-	availability_zone = "us-west-2a"
-	vpc_id = "${aws_vpc.foo.id}"
-	tags = {
-		Name = "tf-acc-db-subnet-group-1"
-	}
+  cidr_block        = "10.1.1.0/24"
+  availability_zone = "${data.aws_availability_zones.available.names[0]}"
+  vpc_id            = "${aws_vpc.foo.id}"
+
+  tags = {
+    Name = "tf-acc-db-subnet-group-1"
+  }
 }
 
 resource "aws_subnet" "bar" {
-	cidr_block = "10.1.2.0/24"
-	availability_zone = "us-west-2b"
-	vpc_id = "${aws_vpc.foo.id}"
-	tags = {
-		Name = "tf-acc-db-subnet-group-2"
-	}
+  cidr_block        = "10.1.2.0/24"
+  availability_zone = "${data.aws_availability_zones.available.names[1]}"
+  vpc_id            = "${aws_vpc.foo.id}"
+
+  tags = {
+    Name = "tf-acc-db-subnet-group-2"
+  }
 }
 
 resource "aws_db_subnet_group" "foo" {
-	name = "%s"
-	description = "foo description updated"
-	subnet_ids = ["${aws_subnet.foo.id}", "${aws_subnet.bar.id}"]
-	tags = {
-		Name = "tf-dbsubnet-group-test"
-	}
-}`, rName)
+  name        = "%s"
+  description = "foo description updated"
+  subnet_ids  = ["${aws_subnet.foo.id}", "${aws_subnet.bar.id}"]
+
+  tags = {
+    Name = "tf-dbsubnet-group-test"
+  }
+}
+`, rName)
 }
 
 const testAccDBSubnetGroupConfig_namePrefix = `
+data "aws_availability_zones" "available" {
+  state = "available"
+}
+
 resource "aws_vpc" "test" {
 	cidr_block = "10.1.0.0/16"
 	tags = {
@@ -315,7 +388,7 @@ resource "aws_vpc" "test" {
 resource "aws_subnet" "a" {
 	vpc_id = "${aws_vpc.test.id}"
 	cidr_block = "10.1.1.0/24"
-	availability_zone = "us-west-2a"
+	availability_zone = "${data.aws_availability_zones.available.names[0]}"
 	tags = {
 		Name = "tf-acc-db-subnet-group-name-prefix-a"
 	}
@@ -324,7 +397,7 @@ resource "aws_subnet" "a" {
 resource "aws_subnet" "b" {
 	vpc_id = "${aws_vpc.test.id}"
 	cidr_block = "10.1.2.0/24"
-	availability_zone = "us-west-2b"
+	availability_zone = "${data.aws_availability_zones.available.names[1]}"
 	tags = {
 		Name = "tf-acc-db-subnet-group-name-prefix-b"
 	}
@@ -336,6 +409,10 @@ resource "aws_db_subnet_group" "test" {
 }`
 
 const testAccDBSubnetGroupConfig_generatedName = `
+data "aws_availability_zones" "available" {
+  state = "available"
+}
+
 resource "aws_vpc" "test" {
 	cidr_block = "10.1.0.0/16"
 	tags = {
@@ -346,7 +423,7 @@ resource "aws_vpc" "test" {
 resource "aws_subnet" "a" {
 	vpc_id = "${aws_vpc.test.id}"
 	cidr_block = "10.1.1.0/24"
-	availability_zone = "us-west-2a"
+	availability_zone = "${data.aws_availability_zones.available.names[0]}"
 	tags = {
 		Name = "tf-acc-db-subnet-group-generated-name-a"
 	}
@@ -355,7 +432,7 @@ resource "aws_subnet" "a" {
 resource "aws_subnet" "b" {
 	vpc_id = "${aws_vpc.test.id}"
 	cidr_block = "10.1.2.0/24"
-	availability_zone = "us-west-2b"
+	availability_zone = "${data.aws_availability_zones.available.names[1]}"
 	tags = {
 		Name = "tf-acc-db-subnet-group-generated-name-a"
 	}
@@ -366,6 +443,10 @@ resource "aws_db_subnet_group" "test" {
 }`
 
 const testAccDBSubnetGroupConfig_withUnderscoresAndPeriodsAndSpaces = `
+data "aws_availability_zones" "available" {
+  state = "available"
+}
+
 resource "aws_vpc" "main" {
     cidr_block = "192.168.0.0/16"
 	tags = {
@@ -375,7 +456,7 @@ resource "aws_vpc" "main" {
 
 resource "aws_subnet" "frontend" {
     vpc_id = "${aws_vpc.main.id}"
-    availability_zone = "us-west-2b"
+    availability_zone = "${data.aws_availability_zones.available.names[0]}"
     cidr_block = "192.168.1.0/24"
   tags = {
         Name = "tf-acc-db-subnet-group-w-underscores-etc-front"
@@ -384,7 +465,7 @@ resource "aws_subnet" "frontend" {
 
 resource "aws_subnet" "backend" {
     vpc_id = "${aws_vpc.main.id}"
-    availability_zone = "us-west-2c"
+    availability_zone = "${data.aws_availability_zones.available.names[1]}"
     cidr_block = "192.168.2.0/24"
   tags = {
         Name = "tf-acc-db-subnet-group-w-underscores-etc-back"

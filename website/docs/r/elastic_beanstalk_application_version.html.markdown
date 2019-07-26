@@ -6,7 +6,7 @@ description: |-
   Provides an Elastic Beanstalk Application Version Resource
 ---
 
-# aws_elastic_beanstalk_application_version
+# Resource: aws_elastic_beanstalk_application_version
 
 Provides an Elastic Beanstalk Application Version Resource. Elastic Beanstalk allows
 you to deploy and manage applications in the AWS cloud without worrying about
@@ -63,9 +63,10 @@ The following arguments are supported:
 * `key` - (Required) S3 object that is the Application Version source bundle.
 * `force_delete` - (Optional) On delete, force an Application Version to be deleted when it may be in use
   by multiple Elastic Beanstalk Environments.
+* `tags` - Key-value mapping of tags for the Elastic Beanstalk Application Version.
 
 ## Attributes Reference
 
 In addition to all arguments above, the following attributes are exported:
 
-* `name` - The Application Version name.
+* `arn` - The ARN assigned by AWS for this Elastic Beanstalk Application.

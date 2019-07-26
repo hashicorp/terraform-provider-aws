@@ -6,7 +6,7 @@ description: |-
   Manages S3 account-level Public Access Block Configuration
 ---
 
-# aws_s3_account_public_access_block
+# Resource: aws_s3_account_public_access_block
 
 Manages S3 account-level Public Access Block configuration. For more information about these settings, see the [AWS S3 Block Public Access documentation](https://docs.aws.amazon.com/AmazonS3/latest/dev/access-control-block-public-access.html).
 

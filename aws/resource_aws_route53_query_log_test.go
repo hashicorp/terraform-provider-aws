@@ -124,7 +124,7 @@ data "aws_iam_policy_document" "test" {
 }
 
 resource "aws_cloudwatch_log_resource_policy" "test" {
-  policy_name = "%[1]s"
+  policy_name     = "%[1]s"
   policy_document = "${data.aws_iam_policy_document.test.json}"
 }
 

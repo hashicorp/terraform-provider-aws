@@ -156,7 +156,7 @@ Those contents can be read and interpolated into the Terraform configuration via
 data "template_file" "example" {
   template = "${file("policy.json.tpl")}"
 
-  vars {
+  vars = {
     resource = "${aws_vpc.example.arn}"
   }
 }

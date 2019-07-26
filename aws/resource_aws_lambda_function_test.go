@@ -279,7 +279,7 @@ func TestAccAWSLambdaFunction_updateRuntime(t *testing.T) {
 				Config: testAccAWSLambdaConfigBasicUpdateRuntime(funcName, policyName, roleName, sgName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsLambdaFunctionExists("aws_lambda_function.lambda_function_test", funcName, &conf),
-					resource.TestCheckResourceAttr("aws_lambda_function.lambda_function_test", "runtime", "nodejs6.10"),
+					resource.TestCheckResourceAttr("aws_lambda_function.lambda_function_test", "runtime", "nodejs10.x"),
 				),
 			},
 		},
@@ -1153,6 +1153,32 @@ func TestAccAWSLambdaFunction_runtimeValidation_NodeJs810(t *testing.T) {
 	})
 }
 
+func TestAccAWSLambdaFunction_runtimeValidation_NodeJs10x(t *testing.T) {
+	var conf lambda.GetFunctionOutput
+
+	rString := acctest.RandString(8)
+
+	funcName := fmt.Sprintf("tf_acc_lambda_func_runtime_valid_nodejs10x_%s", rString)
+	policyName := fmt.Sprintf("tf_acc_policy_lambda_func_runtime_valid_nodejs10x_%s", rString)
+	roleName := fmt.Sprintf("tf_acc_role_lambda_func_runtime_valid_nodejs10x_%s", rString)
+	sgName := fmt.Sprintf("tf_acc_sg_lambda_func_runtime_valid_nodejs10x_%s", rString)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckLambdaFunctionDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSLambdaConfigNodeJs10xRuntime(funcName, policyName, roleName, sgName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAwsLambdaFunctionExists("aws_lambda_function.lambda_function_test", funcName, &conf),
+					resource.TestCheckResourceAttr("aws_lambda_function.lambda_function_test", "runtime", lambda.RuntimeNodejs10X),
+				),
+			},
+		},
+	})
+}
+
 func TestAccAWSLambdaFunction_runtimeValidation_python27(t *testing.T) {
 	var conf lambda.GetFunctionOutput
 
@@ -1544,9 +1570,10 @@ func baseAccAWSLambdaConfig(policyName, roleName, sgName string) string {
 data "aws_partition" "current" {}
 
 resource "aws_iam_role_policy" "iam_policy_for_lambda" {
-    name = "%s"
-    role = "${aws_iam_role.iam_for_lambda.id}"
-    policy = <<EOF
+  name = "%s"
+  role = "${aws_iam_role.iam_for_lambda.id}"
+
+  policy = <<EOF
 {
   "Version": "2012-10-17",
   "Statement": [
@@ -1594,8 +1621,9 @@ EOF
 }
 
 resource "aws_iam_role" "iam_for_lambda" {
-    name = "%s"
-    assume_role_policy = <<EOF
+  name = "%s"
+
+  assume_role_policy = <<EOF
 {
   "Version": "2012-10-17",
   "Statement": [
@@ -1613,40 +1641,42 @@ EOF
 }
 
 resource "aws_vpc" "vpc_for_lambda" {
-    cidr_block = "10.0.0.0/16"
-	tags = {
-		Name = "terraform-testacc-lambda-function"
-	}
+  cidr_block = "10.0.0.0/16"
+
+  tags = {
+    Name = "terraform-testacc-lambda-function"
+  }
 }
 
 resource "aws_subnet" "subnet_for_lambda" {
-    vpc_id = "${aws_vpc.vpc_for_lambda.id}"
-    cidr_block = "10.0.1.0/24"
+  vpc_id     = "${aws_vpc.vpc_for_lambda.id}"
+  cidr_block = "10.0.1.0/24"
 
   tags = {
-        Name = "tf-acc-lambda-function-1"
-    }
+    Name = "tf-acc-lambda-function-1"
+  }
 }
 
 resource "aws_security_group" "sg_for_lambda" {
-  name = "%s"
+  name        = "%s"
   description = "Allow all inbound traffic for lambda test"
-  vpc_id = "${aws_vpc.vpc_for_lambda.id}"
+  vpc_id      = "${aws_vpc.vpc_for_lambda.id}"
 
   ingress {
-      from_port = 0
-      to_port = 0
-      protocol = "-1"
-      cidr_blocks = ["0.0.0.0/0"]
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
   }
 
   egress {
-      from_port = 0
-      to_port = 0
-      protocol = "-1"
-      cidr_blocks = ["0.0.0.0/0"]
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
   }
-}`, policyName, roleName, sgName)
+}
+`, policyName, roleName, sgName)
 }
 
 func testAccAWSLambdaConfigBasic(funcName, policyName, roleName, sgName string) string {
@@ -1694,7 +1724,7 @@ resource "aws_lambda_function" "lambda_function_test" {
     function_name = "%s"
     role = "${aws_iam_role.iam_for_lambda.arn}"
     handler = "exports.example"
-    runtime = "nodejs6.10"
+    runtime = "nodejs10.x"
 }
 `, funcName)
 }
@@ -1884,7 +1914,6 @@ resource "aws_lambda_function" "lambda_function_test" {
         mode = "Active"
     }
 }
-
 `, funcName)
 }
 
@@ -1901,7 +1930,6 @@ resource "aws_lambda_function" "lambda_function_test" {
         mode = "PassThrough"
     }
 }
-
 `, funcName)
 }
 
@@ -1922,7 +1950,6 @@ resource "aws_lambda_function" "lambda_function_test" {
 resource "aws_sns_topic" "lambda_function_test" {
 	name = "%s"
 }
-
 `, funcName, topicName)
 }
 
@@ -1948,7 +1975,6 @@ resource "aws_sns_topic" "lambda_function_test" {
 resource "aws_sns_topic" "lambda_function_test_2" {
 	name = "%s"
 }
-
 `, uFuncName, topic1Name, topic2Name)
 }
 
@@ -2028,7 +2054,8 @@ resource "aws_lambda_function" "lambda_function_test" {
         subnet_ids = ["${aws_subnet.subnet_for_lambda.id}"]
         security_group_ids = ["${aws_security_group.sg_for_lambda.id}"]
     }
-}`, funcName)
+}
+`, funcName)
 }
 
 func testAccAWSLambdaConfigWithVPCUpdated(funcName, policyName, roleName, sgName, sgName2 string) string {
@@ -2074,8 +2101,6 @@ resource "aws_security_group" "sg_for_lambda_2" {
       cidr_blocks = ["0.0.0.0/0"]
   }
 }
-
-
 `, funcName, sgName2)
 }
 
@@ -2092,7 +2117,8 @@ resource "aws_lambda_function" "test" {
         subnet_ids         = []
         security_group_ids = []
     }
-}`, funcName)
+}
+`, funcName)
 }
 
 func testAccAWSLambdaConfigS3(bucketName, roleName, funcName string) string {
@@ -2103,13 +2129,14 @@ resource "aws_s3_bucket" "lambda_bucket" {
 
 resource "aws_s3_bucket_object" "lambda_code" {
   bucket = "${aws_s3_bucket.lambda_bucket.id}"
-  key = "lambdatest.zip"
+  key    = "lambdatest.zip"
   source = "test-fixtures/lambdatest.zip"
 }
 
 resource "aws_iam_role" "iam_for_lambda" {
-    name = "%s"
-    assume_role_policy = <<EOF
+  name = "%s"
+
+  assume_role_policy = <<EOF
 {
   "Version": "2012-10-17",
   "Statement": [
@@ -2127,12 +2154,12 @@ EOF
 }
 
 resource "aws_lambda_function" "lambda_function_s3test" {
-    s3_bucket = "${aws_s3_bucket.lambda_bucket.id}"
-    s3_key = "${aws_s3_bucket_object.lambda_code.id}"
-    function_name = "%s"
-    role = "${aws_iam_role.iam_for_lambda.arn}"
-    handler = "exports.example"
-    runtime = "nodejs8.10"
+  s3_bucket     = "${aws_s3_bucket.lambda_bucket.id}"
+  s3_key        = "${aws_s3_bucket_object.lambda_code.id}"
+  function_name = "%s"
+  role          = "${aws_iam_role.iam_for_lambda.arn}"
+  handler       = "exports.example"
+  runtime       = "nodejs8.10"
 }
 `, bucketName, roleName, funcName)
 }
@@ -2156,6 +2183,18 @@ resource "aws_lambda_function" "lambda_function_test" {
     role = "${aws_iam_role.iam_for_lambda.arn}"
     handler = "exports.example"
     runtime = "nodejs8.10"
+}
+`, funcName)
+}
+
+func testAccAWSLambdaConfigNodeJs10xRuntime(funcName, policyName, roleName, sgName string) string {
+	return fmt.Sprintf(baseAccAWSLambdaConfig(policyName, roleName, sgName)+`
+resource "aws_lambda_function" "lambda_function_test" {
+    filename = "test-fixtures/lambdatest.zip"
+    function_name = "%s"
+    role = "${aws_iam_role.iam_for_lambda.arn}"
+    handler = "exports.example"
+    runtime = "nodejs10.x"
 }
 `, funcName)
 }
@@ -2268,8 +2307,9 @@ resource "aws_lambda_function" "lambda_function_test" {
 func genAWSLambdaFunctionConfig_local(filePath, roleName, funcName string) string {
 	return fmt.Sprintf(`
 resource "aws_iam_role" "iam_for_lambda" {
-    name = "%s"
-    assume_role_policy = <<EOF
+  name = "%s"
+
+  assume_role_policy = <<EOF
 {
   "Version": "2012-10-17",
   "Statement": [
@@ -2285,13 +2325,14 @@ resource "aws_iam_role" "iam_for_lambda" {
 }
 EOF
 }
+
 resource "aws_lambda_function" "lambda_function_local" {
-    filename = "%s"
-    source_code_hash = "${filebase64sha256("%s")}"
-    function_name = "%s"
-    role = "${aws_iam_role.iam_for_lambda.arn}"
-    handler = "exports.example"
-    runtime = "nodejs8.10"
+  filename         = "%s"
+  source_code_hash = "${filebase64sha256("%s")}"
+  function_name    = "%s"
+  role             = "${aws_iam_role.iam_for_lambda.arn}"
+  handler          = "exports.example"
+  runtime          = "nodejs8.10"
 }
 
 data "template_file" "last_modified" {
@@ -2301,7 +2342,6 @@ data "template_file" "last_modified" {
     last_modified = "${aws_lambda_function.lambda_function_local.last_modified}"
   }
 }
-
 `, roleName, filePath, filePath, funcName)
 }
 
@@ -2312,8 +2352,9 @@ func genAWSLambdaFunctionConfig_local_name_only(filePath, roleName, funcName str
 func testAccAWSLambdaFunctionConfig_local_name_only_tpl(filePath, roleName, funcName string) string {
 	return fmt.Sprintf(`
 resource "aws_iam_role" "iam_for_lambda" {
-    name = "%s"
-    assume_role_policy = <<EOF
+  name = "%s"
+
+  assume_role_policy = <<EOF
 {
   "Version": "2012-10-17",
   "Statement": [
@@ -2329,34 +2370,40 @@ resource "aws_iam_role" "iam_for_lambda" {
 }
 EOF
 }
+
 resource "aws_lambda_function" "lambda_function_local" {
-    filename = "%s"
-    function_name = "%s"
-    role = "${aws_iam_role.iam_for_lambda.arn}"
-    handler = "exports.example"
-    runtime = "nodejs8.10"
-}`, roleName, filePath, funcName)
+  filename      = "%s"
+  function_name = "%s"
+  role          = "${aws_iam_role.iam_for_lambda.arn}"
+  handler       = "exports.example"
+  runtime       = "nodejs8.10"
+}
+`, roleName, filePath, funcName)
 }
 
 func genAWSLambdaFunctionConfig_s3(bucketName, key, path, roleName, funcName string) string {
 	return fmt.Sprintf(`
 resource "aws_s3_bucket" "artifacts" {
-    bucket = "%s"
-    acl = "private"
-    force_destroy = true
-    versioning {
-        enabled = true
-    }
+  bucket        = "%s"
+  acl           = "private"
+  force_destroy = true
+
+  versioning {
+    enabled = true
+  }
 }
+
 resource "aws_s3_bucket_object" "o" {
-    bucket = "${aws_s3_bucket.artifacts.bucket}"
-    key = "%s"
-    source = "%s"
-    etag = "${filemd5("%s")}"
+  bucket = "${aws_s3_bucket.artifacts.bucket}"
+  key    = "%s"
+  source = "%s"
+  etag   = "${filemd5("%s")}"
 }
+
 resource "aws_iam_role" "iam_for_lambda" {
-    name = "%s"
-    assume_role_policy = <<EOF
+  name = "%s"
+
+  assume_role_policy = <<EOF
 {
   "Version": "2012-10-17",
   "Statement": [
@@ -2372,14 +2419,15 @@ resource "aws_iam_role" "iam_for_lambda" {
 }
 EOF
 }
+
 resource "aws_lambda_function" "lambda_function_s3" {
-    s3_bucket = "${aws_s3_bucket_object.o.bucket}"
-    s3_key = "${aws_s3_bucket_object.o.key}"
-    s3_object_version = "${aws_s3_bucket_object.o.version_id}"
-    function_name = "%s"
-    role = "${aws_iam_role.iam_for_lambda.arn}"
-    handler = "exports.example"
-    runtime = "nodejs8.10"
+  s3_bucket         = "${aws_s3_bucket_object.o.bucket}"
+  s3_key            = "${aws_s3_bucket_object.o.key}"
+  s3_object_version = "${aws_s3_bucket_object.o.version_id}"
+  function_name     = "%s"
+  role              = "${aws_iam_role.iam_for_lambda.arn}"
+  handler           = "exports.example"
+  runtime           = "nodejs8.10"
 }
 `, bucketName, key, path, path, roleName, funcName)
 }
@@ -2387,19 +2435,22 @@ resource "aws_lambda_function" "lambda_function_s3" {
 func testAccAWSLambdaFunctionConfig_s3_unversioned_tpl(bucketName, roleName, funcName, key, path string) string {
 	return fmt.Sprintf(`
 resource "aws_s3_bucket" "artifacts" {
-    bucket = "%s"
-    acl = "private"
-    force_destroy = true
+  bucket        = "%s"
+  acl           = "private"
+  force_destroy = true
 }
+
 resource "aws_s3_bucket_object" "o" {
-    bucket = "${aws_s3_bucket.artifacts.bucket}"
-    key = "%s"
-    source = "%s"
-    etag = "${filemd5("%s")}"
+  bucket = "${aws_s3_bucket.artifacts.bucket}"
+  key    = "%s"
+  source = "%s"
+  etag   = "${filemd5("%s")}"
 }
+
 resource "aws_iam_role" "iam_for_lambda" {
-	name = "%s"
-    assume_role_policy = <<EOF
+  name = "%s"
+
+  assume_role_policy = <<EOF
 {
   "Version": "2012-10-17",
   "Statement": [
@@ -2415,12 +2466,14 @@ resource "aws_iam_role" "iam_for_lambda" {
 }
 EOF
 }
+
 resource "aws_lambda_function" "lambda_function_s3" {
-    s3_bucket = "${aws_s3_bucket_object.o.bucket}"
-    s3_key = "${aws_s3_bucket_object.o.key}"
-    function_name = "%s"
-    role = "${aws_iam_role.iam_for_lambda.arn}"
-    handler = "exports.example"
-    runtime = "nodejs8.10"
-}`, bucketName, key, path, path, roleName, funcName)
+  s3_bucket     = "${aws_s3_bucket_object.o.bucket}"
+  s3_key        = "${aws_s3_bucket_object.o.key}"
+  function_name = "%s"
+  role          = "${aws_iam_role.iam_for_lambda.arn}"
+  handler       = "exports.example"
+  runtime       = "nodejs8.10"
+}
+`, bucketName, key, path, path, roleName, funcName)
 }

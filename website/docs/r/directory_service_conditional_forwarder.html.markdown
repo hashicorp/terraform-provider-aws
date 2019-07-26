@@ -6,7 +6,7 @@ description: |-
   Provides a conditional forwarder for managed Microsoft AD in AWS Directory Service.
 ---
 
-# aws_directory_service_conditional_forwarder
+# Resource: aws_directory_service_conditional_forwarder
 
 Provides a conditional forwarder for managed Microsoft AD in AWS Directory Service.
 

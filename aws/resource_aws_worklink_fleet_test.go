@@ -18,7 +18,7 @@ func TestAccAWSWorkLinkFleet_Basic(t *testing.T) {
 	resourceName := "aws_worklink_fleet.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSWorkLink(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSWorkLinkFleetDestroy,
 		Steps: []resource.TestStep{
@@ -45,7 +45,7 @@ func TestAccAWSWorkLinkFleet_DisplayName(t *testing.T) {
 	resourceName := "aws_worklink_fleet.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSWorkLink(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSWorkLinkFleetDestroy,
 		Steps: []resource.TestStep{
@@ -77,7 +77,7 @@ func TestAccAWSWorkLinkFleet_OptimizeForEndUserLocation(t *testing.T) {
 	resourceName := "aws_worklink_fleet.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSWorkLink(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSWorkLinkFleetDestroy,
 		Steps: []resource.TestStep{
@@ -109,7 +109,7 @@ func TestAccAWSWorkLinkFleet_AuditStreamArn(t *testing.T) {
 	resourceName := "aws_worklink_fleet.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSWorkLink(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSWorkLinkFleetDestroy,
 		Steps: []resource.TestStep{
@@ -134,7 +134,7 @@ func TestAccAWSWorkLinkFleet_Network(t *testing.T) {
 	resourceName := "aws_worklink_fleet.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSWorkLink(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSWorkLinkFleetDestroy,
 		Steps: []resource.TestStep{
@@ -177,7 +177,7 @@ func TestAccAWSWorkLinkFleet_DeviceCaCertificate(t *testing.T) {
 	fName := "test-fixtures/worklink-device-ca-certificate.pem"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSWorkLink(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSWorkLinkFleetDestroy,
 		Steps: []resource.TestStep{
@@ -210,7 +210,7 @@ func TestAccAWSWorkLinkFleet_IdentityProvider(t *testing.T) {
 	fName := "test-fixtures/saml-metadata.xml"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSWorkLink(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSWorkLinkFleetDestroy,
 		Steps: []resource.TestStep{
@@ -240,7 +240,7 @@ func TestAccAWSWorkLinkFleet_Disappears(t *testing.T) {
 	resourceName := "aws_worklink_fleet.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSWorkLink(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSWorkLinkFleetDestroy,
 		Steps: []resource.TestStep{
@@ -339,35 +339,47 @@ func testAccCheckAWSWorkLinkFleetExists(n string) resource.TestCheckFunc {
 	}
 }
 
-func testAccAWSWorkLinkFleetConfig(r string) string {
-	return fmt.Sprintf(`
+func testAccPreCheckAWSWorkLink(t *testing.T) {
+	conn := testAccProvider.Meta().(*AWSClient).worklinkconn
 
-resource "aws_worklink_fleet" "test" {
-	name = "tf-worklink-fleet-%s"
+	input := &worklink.ListFleetsInput{
+		MaxResults: aws.Int64(1),
+	}
+
+	_, err := conn.ListFleets(input)
+
+	if testAccPreCheckSkipError(err) {
+		t.Skipf("skipping acceptance testing: %s", err)
+	}
+
+	if err != nil {
+		t.Fatalf("unexpected PreCheck error: %s", err)
+	}
 }
 
+func testAccAWSWorkLinkFleetConfig(r string) string {
+	return fmt.Sprintf(`
+resource "aws_worklink_fleet" "test" {
+  name = "tf-worklink-fleet-%s"
+}
 `, r)
 }
 
 func testAccAWSWorkLinkFleetConfigDisplayName(r, displayName string) string {
 	return fmt.Sprintf(`
-
 resource "aws_worklink_fleet" "test" {
-	name = "tf-worklink-fleet-%s"
-	display_name = "%s"
+  name         = "tf-worklink-fleet-%s"
+  display_name = "%s"
 }
-
 `, r, displayName)
 }
 
 func testAccAWSWorkLinkFleetConfigOptimizeForEndUserLocation(r string, b bool) string {
 	return fmt.Sprintf(`
-
 resource "aws_worklink_fleet" "test" {
-	name = "tf-worklink-fleet-%s"
-	optimize_for_end_user_location = %t
+  name                           = "tf-worklink-fleet-%s"
+  optimize_for_end_user_location = %t
 }
-
 `, r, b)
 }
 
@@ -376,36 +388,36 @@ func testAccAWSWorkLinkFleetConfigNetwork_Base(rName, cidrBlock string) string {
 data "aws_availability_zones" "available" {}
 
 resource "aws_vpc" "test" {
-	cidr_block = "%s"
+  cidr_block = "%s"
 
-	tags = {
-		Name = %q
-	}
+  tags = {
+    Name = %q
+  }
 }
 
 resource "aws_security_group" "test" {
-	name = "tf_test_foo"
-	description = "foo"
-	vpc_id="${aws_vpc.test.id}"
-  
-	ingress {
-	  protocol = "icmp"
-	  from_port = -1
-	  to_port = -1
-	  self = true
-	}
+  name        = "tf_test_foo"
+  description = "foo"
+  vpc_id      = "${aws_vpc.test.id}"
+
+  ingress {
+    protocol  = "icmp"
+    from_port = -1
+    to_port   = -1
+    self      = true
+  }
 }
 
 resource "aws_subnet" "test" {
-	count = 2
+  count = 2
 
-	availability_zone = "${data.aws_availability_zones.available.names[count.index]}"
-	cidr_block        = "${cidrsubnet(aws_vpc.test.cidr_block, 8, count.index)}"
-	vpc_id            = "${aws_vpc.test.id}"
+  availability_zone = "${data.aws_availability_zones.available.names[count.index]}"
+  cidr_block        = "${cidrsubnet(aws_vpc.test.cidr_block, 8, count.index)}"
+  vpc_id            = "${aws_vpc.test.id}"
 
-	tags = {
-		Name = %q
-	}
+  tags = {
+    Name = %q
+  }
 }
 `, cidrBlock, rName, rName)
 }
@@ -415,58 +427,51 @@ func testAccAWSWorkLinkFleetConfigNetwork(r, cidrBlock string) string {
 %s
 
 resource "aws_worklink_fleet" "test" {
-	name = "tf-worklink-fleet-%s"
+  name = "tf-worklink-fleet-%s"
 
-	network {
-		vpc_id = "${aws_vpc.test.id}"
-		subnet_ids = ["${aws_subnet.test.*.id[0]}", "${aws_subnet.test.*.id[1]}"]
-		security_group_ids = ["${aws_security_group.test.id}"]
-	}
+  network {
+    vpc_id             = "${aws_vpc.test.id}"
+    subnet_ids         = ["${aws_subnet.test.*.id[0]}", "${aws_subnet.test.*.id[1]}"]
+    security_group_ids = ["${aws_security_group.test.id}"]
+  }
 }
-
 `, testAccAWSWorkLinkFleetConfigNetwork_Base(r, cidrBlock), r)
 }
 
 func testAccAWSWorkLinkFleetConfigAuditStreamArn(r string) string {
 	return fmt.Sprintf(`
-
 resource "aws_kinesis_stream" "test_stream" {
-	name = "%s_kinesis_test"
-	shard_count = 1
+  name        = "%s_kinesis_test"
+  shard_count = 1
 }
 
 resource "aws_worklink_fleet" "test" {
-	name = "tf-worklink-fleet-%s"
+  name = "tf-worklink-fleet-%s"
 
-	audit_stream_arn = "${aws_kinesis_stream.test_stream.arn}"
+  audit_stream_arn = "${aws_kinesis_stream.test_stream.arn}"
 }
-
 `, r, r)
 }
 
 func testAccAWSWorkLinkFleetConfigDeviceCaCertificate(r string, fName string) string {
 	return fmt.Sprintf(`
-
 resource "aws_worklink_fleet" "test" {
-	name = "tf-worklink-fleet-%s"
+  name = "tf-worklink-fleet-%s"
 
-	device_ca_certificate = "${file("%s")}"
+  device_ca_certificate = "${file("%s")}"
 }
-
 `, r, fName)
 }
 
 func testAccAWSWorkLinkFleetConfigIdentityProvider(r string, fName string) string {
 	return fmt.Sprintf(`
-
 resource "aws_worklink_fleet" "test" {
-	name = "tf-worklink-fleet-%s"
+  name = "tf-worklink-fleet-%s"
 
-	identity_provider {
-		type = "SAML"
-		saml_metadata = "${file("%s")}"
-	}
+  identity_provider {
+    type          = "SAML"
+    saml_metadata = "${file("%s")}"
+  }
 }
-
 `, r, fName)
 }

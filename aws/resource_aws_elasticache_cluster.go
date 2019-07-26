@@ -801,6 +801,10 @@ func deleteElasticacheCacheCluster(conn *elasticache.ElastiCache, cacheClusterID
 		}
 		return nil
 	})
+	if isResourceTimeoutError(err) {
+		_, err = conn.DeleteCacheCluster(input)
+	}
+
 	return err
 }
 

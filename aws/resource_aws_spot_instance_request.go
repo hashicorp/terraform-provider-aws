@@ -188,6 +188,7 @@ func resourceAwsSpotInstanceRequestCreate(d *schema.ResourceData, meta interface
 	log.Printf("[DEBUG] Requesting spot bid opts: %s", spotOpts)
 
 	var resp *ec2.RequestSpotInstancesOutput
+
 	err = resource.Retry(waitForReadyTimeOut, func() *resource.RetryError {
 		var err error
 		resp, err = conn.RequestSpotInstances(spotOpts)
@@ -204,6 +205,10 @@ func resourceAwsSpotInstanceRequestCreate(d *schema.ResourceData, meta interface
 		}
 		return resource.NonRetryableError(err)
 	})
+
+	if isResourceTimeoutError(err) {
+		resp, err = conn.RequestSpotInstances(spotOpts)
+	}
 
 	if err != nil {
 		return fmt.Errorf("Error requesting spot instances: %s", err)

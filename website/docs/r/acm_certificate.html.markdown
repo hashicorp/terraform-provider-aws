@@ -6,7 +6,7 @@ description: |-
   Requests and manages a certificate from Amazon Certificate Manager (ACM).
 ---
 
-# aws_acm_certificate
+# Resource: aws_acm_certificate
 
 The ACM certificate resource allows requesting and management of certificates
 from the Amazon Certificate Manager.
@@ -74,7 +74,6 @@ resource "aws_acm_certificate" "cert" {
   private_key      = "${tls_private_key.example.private_key_pem}"
   certificate_body = "${tls_self_signed_cert.example.cert_pem}"
 }
-
 ```
 
 ## Argument Reference

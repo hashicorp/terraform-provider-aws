@@ -6,7 +6,7 @@ description: |-
   Provides a Load Balancer resource.
 ---
 
-# aws_lb
+# Resource: aws_lb
 
 Provides a Load Balancer resource.
 
@@ -85,7 +85,7 @@ Terraform will autogenerate a name beginning with `tf-lb`.
 * `internal` - (Optional) If true, the LB will be internal.
 * `load_balancer_type` - (Optional) The type of load balancer to create. Possible values are `application` or `network`. The default value is `application`.
 * `security_groups` - (Optional) A list of security group IDs to assign to the LB. Only valid for Load Balancers of type `application`.
-* `access_logs` - (Optional) An Access Logs block. Access Logs documented below. Only valid for Load Balancers of type `application`.
+* `access_logs` - (Optional) An Access Logs block. Access Logs documented below.
 * `subnets` - (Optional) A list of subnet IDs to attach to the LB. Subnets
 cannot be updated for Load Balancers of type `network`. Changing this value 
 for load balancers of type `network` will force a recreation of the resource. 

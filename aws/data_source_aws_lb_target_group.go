@@ -18,6 +18,7 @@ func dataSourceAwsLbTargetGroup() *schema.Resource {
 				Optional: true,
 				Computed: true,
 			},
+
 			"arn_suffix": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -49,13 +50,23 @@ func dataSourceAwsLbTargetGroup() *schema.Resource {
 				Computed: true,
 			},
 
+			"slow_start": {
+				Type:     schema.TypeInt,
+				Computed: true,
+			},
+
+			"proxy_protocol_v2": {
+				Type:     schema.TypeBool,
+				Computed: true,
+			},
+
 			"lambda_multi_value_headers_enabled": {
 				Type:     schema.TypeBool,
 				Computed: true,
 			},
 
-			"slow_start": {
-				Type:     schema.TypeInt,
+			"target_type": {
+				Type:     schema.TypeString,
 				Computed: true,
 			},
 
@@ -87,6 +98,11 @@ func dataSourceAwsLbTargetGroup() *schema.Resource {
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
+						"enabled": {
+							Type:     schema.TypeBool,
+							Computed: true,
+						},
+
 						"interval": {
 							Type:     schema.TypeInt,
 							Computed: true,

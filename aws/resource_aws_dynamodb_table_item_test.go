@@ -321,10 +321,10 @@ func testAccCheckAWSDynamoDbTableItemCount(tableName string, count int64) resour
 func testAccAWSDynamoDbItemConfigBasic(tableName, hashKey, item string) string {
 	return fmt.Sprintf(`
 resource "aws_dynamodb_table" "test" {
-  name = "%s"
-  read_capacity = 10
+  name           = "%s"
+  read_capacity  = 10
   write_capacity = 10
-  hash_key = "%s"
+  hash_key       = "%s"
 
   attribute {
     name = "%s"
@@ -334,7 +334,8 @@ resource "aws_dynamodb_table" "test" {
 
 resource "aws_dynamodb_table_item" "test" {
   table_name = "${aws_dynamodb_table.test.name}"
-  hash_key = "${aws_dynamodb_table.test.hash_key}"
+  hash_key   = "${aws_dynamodb_table.test.hash_key}"
+
   item = <<ITEM
 %s
 ITEM
@@ -345,16 +346,17 @@ ITEM
 func testAccAWSDynamoDbItemConfigWithRangeKey(tableName, hashKey, rangeKey, item string) string {
 	return fmt.Sprintf(`
 resource "aws_dynamodb_table" "test" {
-  name = "%s"
-  read_capacity = 10
+  name           = "%s"
+  read_capacity  = 10
   write_capacity = 10
-  hash_key = "%s"
-  range_key = "%s"
+  hash_key       = "%s"
+  range_key      = "%s"
 
   attribute {
     name = "%s"
     type = "S"
   }
+
   attribute {
     name = "%s"
     type = "S"
@@ -363,8 +365,9 @@ resource "aws_dynamodb_table" "test" {
 
 resource "aws_dynamodb_table_item" "test" {
   table_name = "${aws_dynamodb_table.test.name}"
-  hash_key = "${aws_dynamodb_table.test.hash_key}"
-  range_key = "${aws_dynamodb_table.test.range_key}"
+  hash_key   = "${aws_dynamodb_table.test.hash_key}"
+  range_key  = "${aws_dynamodb_table.test.range_key}"
+
   item = <<ITEM
 %s
 ITEM
@@ -375,16 +378,17 @@ ITEM
 func testAccAWSDynamoDbItemConfigWithMultipleItems(tableName, hashKey, rangeKey, firstItem, secondItem string) string {
 	return fmt.Sprintf(`
 resource "aws_dynamodb_table" "test" {
-  name = "%s"
-  read_capacity = 10
+  name           = "%s"
+  read_capacity  = 10
   write_capacity = 10
-  hash_key = "%s"
-  range_key = "%s"
+  hash_key       = "%s"
+  range_key      = "%s"
 
   attribute {
     name = "%s"
     type = "S"
   }
+
   attribute {
     name = "%s"
     type = "S"
@@ -393,8 +397,9 @@ resource "aws_dynamodb_table" "test" {
 
 resource "aws_dynamodb_table_item" "test1" {
   table_name = "${aws_dynamodb_table.test.name}"
-  hash_key = "${aws_dynamodb_table.test.hash_key}"
-  range_key = "${aws_dynamodb_table.test.range_key}"
+  hash_key   = "${aws_dynamodb_table.test.hash_key}"
+  range_key  = "${aws_dynamodb_table.test.range_key}"
+
   item = <<ITEM
 %s
 ITEM
@@ -402,8 +407,9 @@ ITEM
 
 resource "aws_dynamodb_table_item" "test2" {
   table_name = "${aws_dynamodb_table.test.name}"
-  hash_key = "${aws_dynamodb_table.test.hash_key}"
-  range_key = "${aws_dynamodb_table.test.range_key}"
+  hash_key   = "${aws_dynamodb_table.test.hash_key}"
+  range_key  = "${aws_dynamodb_table.test.range_key}"
+
   item = <<ITEM
 %s
 ITEM

@@ -18,6 +18,9 @@ func resourceAwsWafRegionalWebAcl() *schema.Resource {
 		Read:   resourceAwsWafRegionalWebAclRead,
 		Update: resourceAwsWafRegionalWebAclUpdate,
 		Delete: resourceAwsWafRegionalWebAclDelete,
+		Importer: &schema.ResourceImporter{
+			State: schema.ImportStatePassthrough,
+		},
 
 		Schema: map[string]*schema.Schema{
 			"arn": {

@@ -6,7 +6,7 @@ description: |-
   Manages an AWS DataSync S3 Location
 ---
 
-# aws_datasync_location_s3
+# Resource: aws_datasync_location_s3
 
 Manages an S3 Location within AWS DataSync.
 

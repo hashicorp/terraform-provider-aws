@@ -111,6 +111,9 @@ func resourceAwsApiGatewayAccountUpdate(d *schema.ResourceData, meta interface{}
 
 		return nil
 	})
+	if isResourceTimeoutError(err) {
+		out, err = conn.UpdateAccount(&input)
+	}
 	if err != nil {
 		return fmt.Errorf("Updating API Gateway Account failed: %s", err)
 	}

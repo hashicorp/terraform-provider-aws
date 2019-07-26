@@ -142,6 +142,7 @@ func resourceAwsSsmPatchBaseline() *schema.Resource {
 				Default:      ssm.PatchComplianceLevelUnspecified,
 				ValidateFunc: validation.StringInSlice(ssmPatchComplianceLevels, false),
 			},
+			"tags": tagsSchema(),
 		},
 	}
 }
@@ -153,6 +154,10 @@ func resourceAwsSsmPatchBaselineCreate(d *schema.ResourceData, meta interface{})
 		Name:                           aws.String(d.Get("name").(string)),
 		ApprovedPatchesComplianceLevel: aws.String(d.Get("approved_patches_compliance_level").(string)),
 		OperatingSystem:                aws.String(d.Get("operating_system").(string)),
+	}
+
+	if v, ok := d.GetOk("tags"); ok {
+		params.Tags = tagsFromMapSSM(v.(map[string]interface{}))
 	}
 
 	if v, ok := d.GetOk("description"); ok {
@@ -229,6 +234,12 @@ func resourceAwsSsmPatchBaselineUpdate(d *schema.ResourceData, meta interface{})
 		return err
 	}
 
+	if d.HasChange("tags") {
+		if err := setTagsSSM(ssmconn, d, d.Id(), ssm.ResourceTypeForTaggingPatchBaseline); err != nil {
+			return fmt.Errorf("error setting tags for SSM Patch Baseline (%s): %s", d.Id(), err)
+		}
+	}
+
 	return resourceAwsSsmPatchBaselineRead(d, meta)
 }
 func resourceAwsSsmPatchBaselineRead(d *schema.ResourceData, meta interface{}) error {
@@ -261,6 +272,10 @@ func resourceAwsSsmPatchBaselineRead(d *schema.ResourceData, meta interface{}) e
 
 	if err := d.Set("approval_rule", flattenAwsSsmPatchRuleGroup(resp.ApprovalRules)); err != nil {
 		return fmt.Errorf("Error setting approval rules error: %#v", err)
+	}
+
+	if err := saveTagsSSM(ssmconn, d, d.Id(), ssm.ResourceTypeForTaggingPatchBaseline); err != nil {
+		return fmt.Errorf("error saving tags for SSM Patch Baseline (%s): %s", d.Id(), err)
 	}
 
 	return nil
