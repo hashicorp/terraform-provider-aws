@@ -207,8 +207,6 @@ func TestAccAWSEc2TransitGatewayVpcAttachment_Ipv6Support(t *testing.T) {
 }
 
 func TestAccAWSEc2TransitGatewayVpcAttachment_SharedTransitGateway(t *testing.T) {
-	t.Skip("this test requires an aws_organizations_organization data source")
-
 	var providers []*schema.Provider
 	var transitGatewayVpcAttachment1 ec2.TransitGatewayVpcAttachment
 	resourceName := "aws_ec2_transit_gateway_vpc_attachment.test"
