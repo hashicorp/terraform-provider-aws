@@ -594,8 +594,8 @@ func (c *Glue) BatchGetDevEndpointsRequest(input *BatchGetDevEndpointsInput) (re
 
 // BatchGetDevEndpoints API operation for AWS Glue.
 //
-// Returns a list of resource metadata for a given list of DevEndpoint names.
-// After calling the ListDevEndpoints operation, you can call this operation
+// Returns a list of resource metadata for a given list of development endpoint
+// names. After calling the ListDevEndpoints operation, you can call this operation
 // to access the data to which you have been granted permissions. This operation
 // supports all IAM permissions, including permission conditions that uses tags.
 //
@@ -1491,7 +1491,7 @@ func (c *Glue) CreateDevEndpointRequest(input *CreateDevEndpointInput) (req *req
 
 // CreateDevEndpoint API operation for AWS Glue.
 //
-// Creates a new DevEndpoint.
+// Creates a new development endpoint.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -1871,7 +1871,11 @@ func (c *Glue) CreateSecurityConfigurationRequest(input *CreateSecurityConfigura
 
 // CreateSecurityConfiguration API operation for AWS Glue.
 //
-// Creates a new security configuration.
+// Creates a new security configuration. A security configuration is a set of
+// security properties that can be used by AWS Glue. You can use a security
+// configuration to encrypt data at rest. For information about using security
+// configurations in AWS Glue, see Encrypting Data Written by Crawlers, Jobs,
+// and Development Endpoints (https://docs.aws.amazon.com/glue/latest/dg/encryption-security-configuration.html).
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -2709,7 +2713,7 @@ func (c *Glue) DeleteDevEndpointRequest(input *DeleteDevEndpointInput) (req *req
 
 // DeleteDevEndpoint API operation for AWS Glue.
 //
-// Deletes a specified DevEndpoint.
+// Deletes a specified development endpoint.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -4894,7 +4898,7 @@ func (c *Glue) GetDevEndpointRequest(input *GetDevEndpointInput) (req *request.R
 
 // GetDevEndpoint API operation for AWS Glue.
 //
-// Retrieves information about a specified DevEndpoint.
+// Retrieves information about a specified development endpoint.
 //
 // When you create a development endpoint in a virtual private cloud (VPC),
 // AWS Glue returns only a private IP address, and the public IP address field
@@ -4993,7 +4997,7 @@ func (c *Glue) GetDevEndpointsRequest(input *GetDevEndpointsInput) (req *request
 
 // GetDevEndpoints API operation for AWS Glue.
 //
-// Retrieves all the DevEndpoints in this AWS account.
+// Retrieves all the development endpoints in this AWS account.
 //
 // When you create a development endpoint in a virtual private cloud (VPC),
 // AWS Glue returns only a private IP address and the public IP address field
@@ -5178,6 +5182,242 @@ func (c *Glue) GetJobWithContext(ctx aws.Context, input *GetJobInput, opts ...re
 	req.SetContext(ctx)
 	req.ApplyOptions(opts...)
 	return out, req.Send()
+}
+
+const opGetJobBookmark = "GetJobBookmark"
+
+// GetJobBookmarkRequest generates a "aws/request.Request" representing the
+// client's request for the GetJobBookmark operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See GetJobBookmark for more information on using the GetJobBookmark
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the GetJobBookmarkRequest method.
+//    req, resp := client.GetJobBookmarkRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/GetJobBookmark
+func (c *Glue) GetJobBookmarkRequest(input *GetJobBookmarkInput) (req *request.Request, output *GetJobBookmarkOutput) {
+	op := &request.Operation{
+		Name:       opGetJobBookmark,
+		HTTPMethod: "POST",
+		HTTPPath:   "/",
+	}
+
+	if input == nil {
+		input = &GetJobBookmarkInput{}
+	}
+
+	output = &GetJobBookmarkOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// GetJobBookmark API operation for AWS Glue.
+//
+// Returns information on a job bookmark entry.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for AWS Glue's
+// API operation GetJobBookmark for usage and error information.
+//
+// Returned Error Codes:
+//   * ErrCodeEntityNotFoundException "EntityNotFoundException"
+//   A specified entity does not exist
+//
+//   * ErrCodeInvalidInputException "InvalidInputException"
+//   The input provided was not valid.
+//
+//   * ErrCodeInternalServiceException "InternalServiceException"
+//   An internal service error occurred.
+//
+//   * ErrCodeOperationTimeoutException "OperationTimeoutException"
+//   The operation timed out.
+//
+//   * ErrCodeValidationException "ValidationException"
+//   A value could not be validated.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/GetJobBookmark
+func (c *Glue) GetJobBookmark(input *GetJobBookmarkInput) (*GetJobBookmarkOutput, error) {
+	req, out := c.GetJobBookmarkRequest(input)
+	return out, req.Send()
+}
+
+// GetJobBookmarkWithContext is the same as GetJobBookmark with the addition of
+// the ability to pass a context and additional request options.
+//
+// See GetJobBookmark for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *Glue) GetJobBookmarkWithContext(ctx aws.Context, input *GetJobBookmarkInput, opts ...request.Option) (*GetJobBookmarkOutput, error) {
+	req, out := c.GetJobBookmarkRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
+const opGetJobBookmarks = "GetJobBookmarks"
+
+// GetJobBookmarksRequest generates a "aws/request.Request" representing the
+// client's request for the GetJobBookmarks operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See GetJobBookmarks for more information on using the GetJobBookmarks
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the GetJobBookmarksRequest method.
+//    req, resp := client.GetJobBookmarksRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/GetJobBookmarks
+func (c *Glue) GetJobBookmarksRequest(input *GetJobBookmarksInput) (req *request.Request, output *GetJobBookmarksOutput) {
+	op := &request.Operation{
+		Name:       opGetJobBookmarks,
+		HTTPMethod: "POST",
+		HTTPPath:   "/",
+		Paginator: &request.Paginator{
+			InputTokens:     []string{"NextToken"},
+			OutputTokens:    []string{"NextToken"},
+			LimitToken:      "MaxResults",
+			TruncationToken: "",
+		},
+	}
+
+	if input == nil {
+		input = &GetJobBookmarksInput{}
+	}
+
+	output = &GetJobBookmarksOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// GetJobBookmarks API operation for AWS Glue.
+//
+// Returns information on the job bookmark entries. The list is ordered on decreasing
+// version numbers.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for AWS Glue's
+// API operation GetJobBookmarks for usage and error information.
+//
+// Returned Error Codes:
+//   * ErrCodeInvalidInputException "InvalidInputException"
+//   The input provided was not valid.
+//
+//   * ErrCodeEntityNotFoundException "EntityNotFoundException"
+//   A specified entity does not exist
+//
+//   * ErrCodeInternalServiceException "InternalServiceException"
+//   An internal service error occurred.
+//
+//   * ErrCodeOperationTimeoutException "OperationTimeoutException"
+//   The operation timed out.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/GetJobBookmarks
+func (c *Glue) GetJobBookmarks(input *GetJobBookmarksInput) (*GetJobBookmarksOutput, error) {
+	req, out := c.GetJobBookmarksRequest(input)
+	return out, req.Send()
+}
+
+// GetJobBookmarksWithContext is the same as GetJobBookmarks with the addition of
+// the ability to pass a context and additional request options.
+//
+// See GetJobBookmarks for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *Glue) GetJobBookmarksWithContext(ctx aws.Context, input *GetJobBookmarksInput, opts ...request.Option) (*GetJobBookmarksOutput, error) {
+	req, out := c.GetJobBookmarksRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
+// GetJobBookmarksPages iterates over the pages of a GetJobBookmarks operation,
+// calling the "fn" function with the response data for each page. To stop
+// iterating, return false from the fn function.
+//
+// See GetJobBookmarks method for more information on how to use this operation.
+//
+// Note: This operation can generate multiple requests to a service.
+//
+//    // Example iterating over at most 3 pages of a GetJobBookmarks operation.
+//    pageNum := 0
+//    err := client.GetJobBookmarksPages(params,
+//        func(page *glue.GetJobBookmarksOutput, lastPage bool) bool {
+//            pageNum++
+//            fmt.Println(page)
+//            return pageNum <= 3
+//        })
+//
+func (c *Glue) GetJobBookmarksPages(input *GetJobBookmarksInput, fn func(*GetJobBookmarksOutput, bool) bool) error {
+	return c.GetJobBookmarksPagesWithContext(aws.BackgroundContext(), input, fn)
+}
+
+// GetJobBookmarksPagesWithContext same as GetJobBookmarksPages except
+// it takes a Context and allows setting request options on the pages.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *Glue) GetJobBookmarksPagesWithContext(ctx aws.Context, input *GetJobBookmarksInput, fn func(*GetJobBookmarksOutput, bool) bool, opts ...request.Option) error {
+	p := request.Pagination{
+		NewRequest: func() (*request.Request, error) {
+			var inCpy *GetJobBookmarksInput
+			if input != nil {
+				tmp := *input
+				inCpy = &tmp
+			}
+			req, _ := c.GetJobBookmarksRequest(inCpy)
+			req.SetContext(ctx)
+			req.ApplyOptions(opts...)
+			return req, nil
+		},
+	}
+
+	cont := true
+	for p.Next() && cont {
+		cont = fn(p.Page().(*GetJobBookmarksOutput), !p.HasNextPage())
+	}
+	return p.Err()
 }
 
 const opGetJobRun = "GetJobRun"
@@ -10329,7 +10569,7 @@ func (c *Glue) UpdateDevEndpointRequest(input *UpdateDevEndpointInput) (req *req
 
 // UpdateDevEndpoint API operation for AWS Glue.
 //
-// Updates a specified DevEndpoint.
+// Updates a specified development endpoint.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -11638,8 +11878,8 @@ func (s *BatchGetCrawlersOutput) SetCrawlersNotFound(v []*string) *BatchGetCrawl
 type BatchGetDevEndpointsInput struct {
 	_ struct{} `type:"structure"`
 
-	// The list of DevEndpoint names, which may be the names returned from the ListDevEndpoint
-	// operation.
+	// The list of DevEndpoint names, which might be the names returned from the
+	// ListDevEndpoint operation.
 	//
 	// DevEndpointNames is a required field
 	DevEndpointNames []*string `min:"1" type:"list" required:"true"`
@@ -12448,14 +12688,14 @@ func (s *Classifier) SetXMLClassifier(v *XMLClassifier) *Classifier {
 	return s
 }
 
-// Specifies how CloudWatch data should be encrypted.
+// Specifies how Amazon CloudWatch data should be encrypted.
 type CloudWatchEncryption struct {
 	_ struct{} `type:"structure"`
 
 	// The encryption mode to use for CloudWatch data.
 	CloudWatchEncryptionMode *string `type:"string" enum:"CloudWatchEncryptionMode"`
 
-	// The AWS ARN of the KMS key to be used to encrypt the data.
+	// The Amazon Resource Name (ARN) of the KMS key to be used to encrypt the data.
 	KmsKeyArn *string `type:"string"`
 }
 
@@ -14125,33 +14365,40 @@ type CreateDevEndpointInput struct {
 	// EndpointName is a required field
 	EndpointName *string `type:"string" required:"true"`
 
-	// Path to one or more Java Jars in an S3 bucket that should be loaded in your
-	// DevEndpoint.
+	// The path to one or more Java .jar files in an S3 bucket that should be loaded
+	// in your DevEndpoint.
 	ExtraJarsS3Path *string `type:"string"`
 
-	// Path(s) to one or more Python libraries in an S3 bucket that should be loaded
-	// in your DevEndpoint. Multiple values must be complete paths separated by
-	// a comma.
+	// The paths to one or more Python libraries in an Amazon S3 bucket that should
+	// be loaded in your DevEndpoint. Multiple values must be complete paths separated
+	// by a comma.
 	//
-	// Please note that only pure Python libraries can currently be used on a DevEndpoint.
-	// Libraries that rely on C extensions, such as the pandas (http://pandas.pydata.org/)
-	// Python data analysis library, are not yet supported.
+	// You can only use pure Python libraries with a DevEndpoint. Libraries that
+	// rely on C extensions, such as the pandas (http://pandas.pydata.org/) Python
+	// data analysis library, are not yet supported.
 	ExtraPythonLibsS3Path *string `type:"string"`
 
 	// The number of AWS Glue Data Processing Units (DPUs) to allocate to this DevEndpoint.
 	NumberOfNodes *int64 `type:"integer"`
 
+	// The number of workers of a defined workerType that are allocated to the development
+	// endpoint.
+	//
+	// The maximum number of workers you can define are 299 for G.1X, and 149 for
+	// G.2X.
+	NumberOfWorkers *int64 `type:"integer"`
+
 	// The public key to be used by this DevEndpoint for authentication. This attribute
-	// is provided for backward compatibility, as the recommended attribute to use
-	// is public keys.
+	// is provided for backward compatibility because the recommended attribute
+	// to use is public keys.
 	PublicKey *string `type:"string"`
 
-	// A list of public keys to be used by the DevEndpoints for authentication.
+	// A list of public keys to be used by the development endpoints for authentication.
 	// The use of this attribute is preferred over a single public key because the
 	// public keys allow you to have a different private key per client.
 	//
 	// If you previously created an endpoint with a public key, you must remove
-	// that key to be able to set a list of public keys: call the UpdateDevEndpoint
+	// that key to be able to set a list of public keys. Call the UpdateDevEndpoint
 	// API with the public key content in the deletePublicKeys attribute, and the
 	// list of new keys in the addPublicKeys attribute.
 	PublicKeys []*string `type:"list"`
@@ -14172,9 +14419,24 @@ type CreateDevEndpointInput struct {
 
 	// The tags to use with this DevEndpoint. You may use tags to limit access to
 	// the DevEndpoint. For more information about tags in AWS Glue, see AWS Tags
-	// in AWS Glue (http://docs.aws.amazon.com/glue/latest/dg/monitor-tags.html)
+	// in AWS Glue (https://docs.aws.amazon.com/glue/latest/dg/monitor-tags.html)
 	// in the developer guide.
 	Tags map[string]*string `type:"map"`
+
+	// The type of predefined worker that is allocated to the development endpoint.
+	// Accepts a value of Standard, G.1X, or G.2X.
+	//
+	//    * For the Standard worker type, each worker provides 4 vCPU, 16 GB of
+	//    memory and a 50GB disk, and 2 executors per worker.
+	//
+	//    * For the G.1X worker type, each worker maps to 1 DPU (4 vCPU, 16 GB of
+	//    memory, 64 GB disk), and provides 1 executor per worker. We recommend
+	//    this worker type for memory-intensive jobs.
+	//
+	//    * For the G.2X worker type, each worker maps to 2 DPU (8 vCPU, 32 GB of
+	//    memory, 128 GB disk), and provides 1 executor per worker. We recommend
+	//    this worker type for memory-intensive jobs.
+	WorkerType *string `type:"string" enum:"WorkerType"`
 }
 
 // String returns the string representation
@@ -14236,6 +14498,12 @@ func (s *CreateDevEndpointInput) SetNumberOfNodes(v int64) *CreateDevEndpointInp
 	return s
 }
 
+// SetNumberOfWorkers sets the NumberOfWorkers field's value.
+func (s *CreateDevEndpointInput) SetNumberOfWorkers(v int64) *CreateDevEndpointInput {
+	s.NumberOfWorkers = &v
+	return s
+}
+
 // SetPublicKey sets the PublicKey field's value.
 func (s *CreateDevEndpointInput) SetPublicKey(v string) *CreateDevEndpointInput {
 	s.PublicKey = &v
@@ -14278,13 +14546,19 @@ func (s *CreateDevEndpointInput) SetTags(v map[string]*string) *CreateDevEndpoin
 	return s
 }
 
+// SetWorkerType sets the WorkerType field's value.
+func (s *CreateDevEndpointInput) SetWorkerType(v string) *CreateDevEndpointInput {
+	s.WorkerType = &v
+	return s
+}
+
 type CreateDevEndpointOutput struct {
 	_ struct{} `type:"structure"`
 
 	// The map of arguments used to configure this DevEndpoint.
 	Arguments map[string]*string `type:"map"`
 
-	// The AWS availability zone where this DevEndpoint is located.
+	// The AWS Availability Zone where this DevEndpoint is located.
 	AvailabilityZone *string `type:"string"`
 
 	// The point in time at which this DevEndpoint was created.
@@ -14293,11 +14567,11 @@ type CreateDevEndpointOutput struct {
 	// The name assigned to the new DevEndpoint.
 	EndpointName *string `type:"string"`
 
-	// Path to one or more Java Jars in an S3 bucket that will be loaded in your
-	// DevEndpoint.
+	// Path to one or more Java .jar files in an S3 bucket that will be loaded in
+	// your DevEndpoint.
 	ExtraJarsS3Path *string `type:"string"`
 
-	// Path(s) to one or more Python libraries in an S3 bucket that will be loaded
+	// The paths to one or more Python libraries in an S3 bucket that will be loaded
 	// in your DevEndpoint.
 	ExtraPythonLibsS3Path *string `type:"string"`
 
@@ -14307,7 +14581,11 @@ type CreateDevEndpointOutput struct {
 	// The number of AWS Glue Data Processing Units (DPUs) allocated to this DevEndpoint.
 	NumberOfNodes *int64 `type:"integer"`
 
-	// The AWS ARN of the role assigned to the new DevEndpoint.
+	// The number of workers of a defined workerType that are allocated to the development
+	// endpoint.
+	NumberOfWorkers *int64 `type:"integer"`
+
+	// The Amazon Resource Name (ARN) of the role assigned to the new DevEndpoint.
 	RoleArn *string `type:"string"`
 
 	// The name of the SecurityConfiguration structure being used with this DevEndpoint.
@@ -14322,8 +14600,12 @@ type CreateDevEndpointOutput struct {
 	// The subnet ID assigned to the new DevEndpoint.
 	SubnetId *string `type:"string"`
 
-	// The ID of the VPC used by this DevEndpoint.
+	// The ID of the virtual private cloud (VPC) used by this DevEndpoint.
 	VpcId *string `type:"string"`
+
+	// The type of predefined worker that is allocated to the development endpoint.
+	// May be a value of Standard, G.1X, or G.2X.
+	WorkerType *string `type:"string" enum:"WorkerType"`
 
 	// The address of the YARN endpoint used by this DevEndpoint.
 	YarnEndpointAddress *string `type:"string"`
@@ -14390,6 +14672,12 @@ func (s *CreateDevEndpointOutput) SetNumberOfNodes(v int64) *CreateDevEndpointOu
 	return s
 }
 
+// SetNumberOfWorkers sets the NumberOfWorkers field's value.
+func (s *CreateDevEndpointOutput) SetNumberOfWorkers(v int64) *CreateDevEndpointOutput {
+	s.NumberOfWorkers = &v
+	return s
+}
+
 // SetRoleArn sets the RoleArn field's value.
 func (s *CreateDevEndpointOutput) SetRoleArn(v string) *CreateDevEndpointOutput {
 	s.RoleArn = &v
@@ -14423,6 +14711,12 @@ func (s *CreateDevEndpointOutput) SetSubnetId(v string) *CreateDevEndpointOutput
 // SetVpcId sets the VpcId field's value.
 func (s *CreateDevEndpointOutput) SetVpcId(v string) *CreateDevEndpointOutput {
 	s.VpcId = &v
+	return s
+}
+
+// SetWorkerType sets the WorkerType field's value.
+func (s *CreateDevEndpointOutput) SetWorkerType(v string) *CreateDevEndpointOutput {
+	s.WorkerType = &v
 	return s
 }
 
@@ -14564,6 +14858,17 @@ type CreateJobInput struct {
 	// for this job.
 	ExecutionProperty *ExecutionProperty `type:"structure"`
 
+	// Glue version determines the versions of Apache Spark and Python that AWS
+	// Glue supports. The Python version indicates the version supported for jobs
+	// of type Spark.
+	//
+	// For more information about the available AWS Glue versions and corresponding
+	// Spark and Python versions, see Glue version (https://docs.aws.amazon.com/glue/latest/dg/add-job.html)
+	// in the developer guide.
+	//
+	// Jobs that are created without specifying a Glue version default to Glue 0.9.
+	GlueVersion *string `min:"1" type:"string"`
+
 	// This field is reserved for future use.
 	LogUri *string `type:"string"`
 
@@ -14635,7 +14940,7 @@ type CreateJobInput struct {
 	//    * For the G.2X worker type, each worker maps to 2 DPU (8 vCPU, 32 GB of
 	//    memory, 128 GB disk), and provides 1 executor per worker. We recommend
 	//    this worker type for memory-intensive jobs.
-	WorkerType *string `min:"1" type:"string"`
+	WorkerType *string `type:"string" enum:"WorkerType"`
 }
 
 // String returns the string representation
@@ -14654,6 +14959,9 @@ func (s *CreateJobInput) Validate() error {
 	if s.Command == nil {
 		invalidParams.Add(request.NewErrParamRequired("Command"))
 	}
+	if s.GlueVersion != nil && len(*s.GlueVersion) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("GlueVersion", 1))
+	}
 	if s.Name == nil {
 		invalidParams.Add(request.NewErrParamRequired("Name"))
 	}
@@ -14668,9 +14976,6 @@ func (s *CreateJobInput) Validate() error {
 	}
 	if s.Timeout != nil && *s.Timeout < 1 {
 		invalidParams.Add(request.NewErrParamMinValue("Timeout", 1))
-	}
-	if s.WorkerType != nil && len(*s.WorkerType) < 1 {
-		invalidParams.Add(request.NewErrParamMinLen("WorkerType", 1))
 	}
 	if s.NotificationProperty != nil {
 		if err := s.NotificationProperty.Validate(); err != nil {
@@ -14717,6 +15022,12 @@ func (s *CreateJobInput) SetDescription(v string) *CreateJobInput {
 // SetExecutionProperty sets the ExecutionProperty field's value.
 func (s *CreateJobInput) SetExecutionProperty(v *ExecutionProperty) *CreateJobInput {
 	s.ExecutionProperty = v
+	return s
+}
+
+// SetGlueVersion sets the GlueVersion field's value.
+func (s *CreateJobInput) SetGlueVersion(v string) *CreateJobInput {
+	s.GlueVersion = &v
 	return s
 }
 
@@ -16945,17 +17256,17 @@ func (s *DeleteWorkflowOutput) SetName(v string) *DeleteWorkflowOutput {
 	return s
 }
 
-// A development endpoint where a developer can remotely debug ETL scripts.
+// A development endpoint where a developer can remotely debug extract, transform,
+// and load (ETL) scripts.
 type DevEndpoint struct {
 	_ struct{} `type:"structure"`
 
 	// A map of arguments used to configure the DevEndpoint.
 	//
-	// Note that currently, we only support "--enable-glue-datacatalog": "" as a
-	// valid argument.
+	// Currently, only "--enable-glue-datacatalog": "" is supported as a valid argument.
 	Arguments map[string]*string `type:"map"`
 
-	// The AWS availability zone where this DevEndpoint is located.
+	// The AWS Availability Zone where this DevEndpoint is located.
 	AvailabilityZone *string `type:"string"`
 
 	// The point in time at which this DevEndpoint was created.
@@ -16964,20 +17275,19 @@ type DevEndpoint struct {
 	// The name of the DevEndpoint.
 	EndpointName *string `type:"string"`
 
-	// Path to one or more Java Jars in an S3 bucket that should be loaded in your
-	// DevEndpoint.
+	// The path to one or more Java .jar files in an S3 bucket that should be loaded
+	// in your DevEndpoint.
 	//
-	// Please note that only pure Java/Scala libraries can currently be used on
-	// a DevEndpoint.
+	// You can only use pure Java/Scala libraries with a DevEndpoint.
 	ExtraJarsS3Path *string `type:"string"`
 
-	// Path(s) to one or more Python libraries in an S3 bucket that should be loaded
-	// in your DevEndpoint. Multiple values must be complete paths separated by
-	// a comma.
+	// The paths to one or more Python libraries in an Amazon S3 bucket that should
+	// be loaded in your DevEndpoint. Multiple values must be complete paths separated
+	// by a comma.
 	//
-	// Please note that only pure Python libraries can currently be used on a DevEndpoint.
-	// Libraries that rely on C extensions, such as the pandas (http://pandas.pydata.org/)
-	// Python data analysis library, are not yet supported.
+	// You can only use pure Python libraries with a DevEndpoint. Libraries that
+	// rely on C extensions, such as the pandas (http://pandas.pydata.org/) Python
+	// data analysis library, are not currently supported.
 	ExtraPythonLibsS3Path *string `type:"string"`
 
 	// The reason for a current failure in this DevEndpoint.
@@ -16992,31 +17302,38 @@ type DevEndpoint struct {
 	// The number of AWS Glue Data Processing Units (DPUs) allocated to this DevEndpoint.
 	NumberOfNodes *int64 `type:"integer"`
 
-	// A private IP address to access the DevEndpoint within a VPC, if the DevEndpoint
+	// The number of workers of a defined workerType that are allocated to the development
+	// endpoint.
+	//
+	// The maximum number of workers you can define are 299 for G.1X, and 149 for
+	// G.2X.
+	NumberOfWorkers *int64 `type:"integer"`
+
+	// A private IP address to access the DevEndpoint within a VPC if the DevEndpoint
 	// is created within one. The PrivateAddress field is present only when you
-	// create the DevEndpoint within your virtual private cloud (VPC).
+	// create the DevEndpoint within your VPC.
 	PrivateAddress *string `type:"string"`
 
 	// The public IP address used by this DevEndpoint. The PublicAddress field is
-	// present only when you create a non-VPC (virtual private cloud) DevEndpoint.
+	// present only when you create a non-virtual private cloud (VPC) DevEndpoint.
 	PublicAddress *string `type:"string"`
 
 	// The public key to be used by this DevEndpoint for authentication. This attribute
-	// is provided for backward compatibility, as the recommended attribute to use
-	// is public keys.
+	// is provided for backward compatibility because the recommended attribute
+	// to use is public keys.
 	PublicKey *string `type:"string"`
 
 	// A list of public keys to be used by the DevEndpoints for authentication.
-	// The use of this attribute is preferred over a single public key because the
-	// public keys allow you to have a different private key per client.
+	// Using this attribute is preferred over a single public key because the public
+	// keys allow you to have a different private key per client.
 	//
 	// If you previously created an endpoint with a public key, you must remove
-	// that key to be able to set a list of public keys: call the UpdateDevEndpoint
-	// API with the public key content in the deletePublicKeys attribute, and the
-	// list of new keys in the addPublicKeys attribute.
+	// that key to be able to set a list of public keys. Call the UpdateDevEndpoint
+	// API operation with the public key content in the deletePublicKeys attribute,
+	// and the list of new keys in the addPublicKeys attribute.
 	PublicKeys []*string `type:"list"`
 
-	// The AWS ARN of the IAM role used in this DevEndpoint.
+	// The Amazon Resource Name (ARN) of the IAM role used in this DevEndpoint.
 	RoleArn *string `type:"string"`
 
 	// The name of the SecurityConfiguration structure to be used with this DevEndpoint.
@@ -17033,6 +17350,21 @@ type DevEndpoint struct {
 
 	// The ID of the virtual private cloud (VPC) used by this DevEndpoint.
 	VpcId *string `type:"string"`
+
+	// The type of predefined worker that is allocated to the development endpoint.
+	// Accepts a value of Standard, G.1X, or G.2X.
+	//
+	//    * For the Standard worker type, each worker provides 4 vCPU, 16 GB of
+	//    memory and a 50GB disk, and 2 executors per worker.
+	//
+	//    * For the G.1X worker type, each worker maps to 1 DPU (4 vCPU, 16 GB of
+	//    memory, 64 GB disk), and provides 1 executor per worker. We recommend
+	//    this worker type for memory-intensive jobs.
+	//
+	//    * For the G.2X worker type, each worker maps to 2 DPU (8 vCPU, 32 GB of
+	//    memory, 128 GB disk), and provides 1 executor per worker. We recommend
+	//    this worker type for memory-intensive jobs.
+	WorkerType *string `type:"string" enum:"WorkerType"`
 
 	// The YARN endpoint address used by this DevEndpoint.
 	YarnEndpointAddress *string `type:"string"`
@@ -17111,6 +17443,12 @@ func (s *DevEndpoint) SetNumberOfNodes(v int64) *DevEndpoint {
 	return s
 }
 
+// SetNumberOfWorkers sets the NumberOfWorkers field's value.
+func (s *DevEndpoint) SetNumberOfWorkers(v int64) *DevEndpoint {
+	s.NumberOfWorkers = &v
+	return s
+}
+
 // SetPrivateAddress sets the PrivateAddress field's value.
 func (s *DevEndpoint) SetPrivateAddress(v string) *DevEndpoint {
 	s.PrivateAddress = &v
@@ -17171,6 +17509,12 @@ func (s *DevEndpoint) SetVpcId(v string) *DevEndpoint {
 	return s
 }
 
+// SetWorkerType sets the WorkerType field's value.
+func (s *DevEndpoint) SetWorkerType(v string) *DevEndpoint {
+	s.WorkerType = &v
+	return s
+}
+
 // SetYarnEndpointAddress sets the YarnEndpointAddress field's value.
 func (s *DevEndpoint) SetYarnEndpointAddress(v string) *DevEndpoint {
 	s.YarnEndpointAddress = &v
@@ -17183,24 +17527,23 @@ func (s *DevEndpoint) SetZeppelinRemoteSparkInterpreterPort(v int64) *DevEndpoin
 	return s
 }
 
-// Custom libraries to be loaded into a DevEndpoint.
+// Custom libraries to be loaded into a development endpoint.
 type DevEndpointCustomLibraries struct {
 	_ struct{} `type:"structure"`
 
-	// Path to one or more Java Jars in an S3 bucket that should be loaded in your
-	// DevEndpoint.
+	// The path to one or more Java .jar files in an S3 bucket that should be loaded
+	// in your DevEndpoint.
 	//
-	// Please note that only pure Java/Scala libraries can currently be used on
-	// a DevEndpoint.
+	// You can only use pure Java/Scala libraries with a DevEndpoint.
 	ExtraJarsS3Path *string `type:"string"`
 
-	// Path(s) to one or more Python libraries in an S3 bucket that should be loaded
-	// in your DevEndpoint. Multiple values must be complete paths separated by
-	// a comma.
+	// The paths to one or more Python libraries in an Amazon Simple Storage Service
+	// (Amazon S3) bucket that should be loaded in your DevEndpoint. Multiple values
+	// must be complete paths separated by a comma.
 	//
-	// Please note that only pure Python libraries can currently be used on a DevEndpoint.
-	// Libraries that rely on C extensions, such as the pandas (http://pandas.pydata.org/)
-	// Python data analysis library, are not yet supported.
+	// You can only use pure Python libraries with a DevEndpoint. Libraries that
+	// rely on C extensions, such as the pandas (http://pandas.pydata.org/) Python
+	// data analysis library, are not currently supported.
 	ExtraPythonLibsS3Path *string `type:"string"`
 }
 
@@ -17339,13 +17682,14 @@ func (s *EncryptionAtRest) SetSseAwsKmsKeyId(v string) *EncryptionAtRest {
 type EncryptionConfiguration struct {
 	_ struct{} `type:"structure"`
 
-	// The encryption configuration for CloudWatch.
+	// The encryption configuration for Amazon CloudWatch.
 	CloudWatchEncryption *CloudWatchEncryption `type:"structure"`
 
-	// The encryption configuration for Job Bookmarks.
+	// The encryption configuration for job bookmarks.
 	JobBookmarksEncryption *JobBookmarksEncryption `type:"structure"`
 
-	// The encryption configuration for S3 data.
+	// The encryption configuration for Amazon Simple Storage Service (Amazon S3)
+	// data.
 	S3Encryption []*S3Encryption `type:"list"`
 }
 
@@ -18394,7 +18738,7 @@ func (s *GetDataflowGraphOutput) SetDagNodes(v []*CodeGenNode) *GetDataflowGraph
 type GetDevEndpointInput struct {
 	_ struct{} `type:"structure"`
 
-	// Name of the DevEndpoint for which to retrieve information.
+	// Name of the DevEndpoint to retrieve information for.
 	//
 	// EndpointName is a required field
 	EndpointName *string `type:"string" required:"true"`
@@ -18525,6 +18869,166 @@ func (s *GetDevEndpointsOutput) SetDevEndpoints(v []*DevEndpoint) *GetDevEndpoin
 
 // SetNextToken sets the NextToken field's value.
 func (s *GetDevEndpointsOutput) SetNextToken(v string) *GetDevEndpointsOutput {
+	s.NextToken = &v
+	return s
+}
+
+type GetJobBookmarkInput struct {
+	_ struct{} `type:"structure"`
+
+	// The name of the job in question.
+	//
+	// JobName is a required field
+	JobName *string `type:"string" required:"true"`
+
+	// The unique run identifier associated with this job run.
+	RunId *string `type:"string"`
+}
+
+// String returns the string representation
+func (s GetJobBookmarkInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s GetJobBookmarkInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *GetJobBookmarkInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "GetJobBookmarkInput"}
+	if s.JobName == nil {
+		invalidParams.Add(request.NewErrParamRequired("JobName"))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetJobName sets the JobName field's value.
+func (s *GetJobBookmarkInput) SetJobName(v string) *GetJobBookmarkInput {
+	s.JobName = &v
+	return s
+}
+
+// SetRunId sets the RunId field's value.
+func (s *GetJobBookmarkInput) SetRunId(v string) *GetJobBookmarkInput {
+	s.RunId = &v
+	return s
+}
+
+type GetJobBookmarkOutput struct {
+	_ struct{} `type:"structure"`
+
+	// A structure that defines a point that a job can resume processing.
+	JobBookmarkEntry *JobBookmarkEntry `type:"structure"`
+}
+
+// String returns the string representation
+func (s GetJobBookmarkOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s GetJobBookmarkOutput) GoString() string {
+	return s.String()
+}
+
+// SetJobBookmarkEntry sets the JobBookmarkEntry field's value.
+func (s *GetJobBookmarkOutput) SetJobBookmarkEntry(v *JobBookmarkEntry) *GetJobBookmarkOutput {
+	s.JobBookmarkEntry = v
+	return s
+}
+
+type GetJobBookmarksInput struct {
+	_ struct{} `type:"structure"`
+
+	// The name of the job in question.
+	//
+	// JobName is a required field
+	JobName *string `type:"string" required:"true"`
+
+	// The maximum size of the response.
+	MaxResults *int64 `type:"integer"`
+
+	// A continuation token, if this is a continuation call.
+	NextToken *int64 `type:"integer"`
+}
+
+// String returns the string representation
+func (s GetJobBookmarksInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s GetJobBookmarksInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *GetJobBookmarksInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "GetJobBookmarksInput"}
+	if s.JobName == nil {
+		invalidParams.Add(request.NewErrParamRequired("JobName"))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetJobName sets the JobName field's value.
+func (s *GetJobBookmarksInput) SetJobName(v string) *GetJobBookmarksInput {
+	s.JobName = &v
+	return s
+}
+
+// SetMaxResults sets the MaxResults field's value.
+func (s *GetJobBookmarksInput) SetMaxResults(v int64) *GetJobBookmarksInput {
+	s.MaxResults = &v
+	return s
+}
+
+// SetNextToken sets the NextToken field's value.
+func (s *GetJobBookmarksInput) SetNextToken(v int64) *GetJobBookmarksInput {
+	s.NextToken = &v
+	return s
+}
+
+type GetJobBookmarksOutput struct {
+	_ struct{} `type:"structure"`
+
+	// A list of job bookmark entries that defines a point that a job can resume
+	// processing.
+	JobBookmarkEntries []*JobBookmarkEntry `type:"list"`
+
+	// A continuation token, which has a value of 1 if all the entries are returned,
+	// or > 1 if not all requested job runs have been returned.
+	NextToken *int64 `type:"integer"`
+}
+
+// String returns the string representation
+func (s GetJobBookmarksOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s GetJobBookmarksOutput) GoString() string {
+	return s.String()
+}
+
+// SetJobBookmarkEntries sets the JobBookmarkEntries field's value.
+func (s *GetJobBookmarksOutput) SetJobBookmarkEntries(v []*JobBookmarkEntry) *GetJobBookmarksOutput {
+	s.JobBookmarkEntries = v
+	return s
+}
+
+// SetNextToken sets the NextToken field's value.
+func (s *GetJobBookmarksOutput) SetNextToken(v int64) *GetJobBookmarksOutput {
 	s.NextToken = &v
 	return s
 }
@@ -19534,7 +20038,7 @@ func (s *GetSecurityConfigurationInput) SetName(v string) *GetSecurityConfigurat
 type GetSecurityConfigurationOutput struct {
 	_ struct{} `type:"structure"`
 
-	// The requested security configuration
+	// The requested security configuration.
 	SecurityConfiguration *SecurityConfiguration `type:"structure"`
 }
 
@@ -21091,6 +21595,17 @@ type Job struct {
 	// for this job.
 	ExecutionProperty *ExecutionProperty `type:"structure"`
 
+	// Glue version determines the versions of Apache Spark and Python that AWS
+	// Glue supports. The Python version indicates the version supported for jobs
+	// of type Spark.
+	//
+	// For more information about the available AWS Glue versions and corresponding
+	// Spark and Python versions, see Glue version (https://docs.aws.amazon.com/glue/latest/dg/add-job.html)
+	// in the developer guide.
+	//
+	// Jobs that are created without specifying a Glue version default to Glue 0.9.
+	GlueVersion *string `min:"1" type:"string"`
+
 	// The last point in time when this job definition was modified.
 	LastModifiedOn *time.Time `type:"timestamp"`
 
@@ -21211,6 +21726,12 @@ func (s *Job) SetExecutionProperty(v *ExecutionProperty) *Job {
 	return s
 }
 
+// SetGlueVersion sets the GlueVersion field's value.
+func (s *Job) SetGlueVersion(v string) *Job {
+	s.GlueVersion = &v
+	return s
+}
+
 // SetLastModifiedOn sets the LastModifiedOn field's value.
 func (s *Job) SetLastModifiedOn(v time.Time) *Job {
 	s.LastModifiedOn = &v
@@ -21277,7 +21798,7 @@ func (s *Job) SetWorkerType(v string) *Job {
 	return s
 }
 
-// Defines a point which a job can resume processing.
+// Defines a point that a job can resume processing.
 type JobBookmarkEntry struct {
 	_ struct{} `type:"structure"`
 
@@ -21287,13 +21808,19 @@ type JobBookmarkEntry struct {
 	// The bookmark itself.
 	JobBookmark *string `type:"string"`
 
-	// Name of the job in question.
+	// The name of the job in question.
 	JobName *string `type:"string"`
+
+	// The unique run identifier associated with the previous job run..
+	PreviousRunId *string `type:"string"`
 
 	// The run ID number.
 	Run *int64 `type:"integer"`
 
-	// Version of the job.
+	// The unique run identifier associated with this job run.
+	RunId *string `type:"string"`
+
+	// The version of the job.
 	Version *int64 `type:"integer"`
 }
 
@@ -21325,9 +21852,21 @@ func (s *JobBookmarkEntry) SetJobName(v string) *JobBookmarkEntry {
 	return s
 }
 
+// SetPreviousRunId sets the PreviousRunId field's value.
+func (s *JobBookmarkEntry) SetPreviousRunId(v string) *JobBookmarkEntry {
+	s.PreviousRunId = &v
+	return s
+}
+
 // SetRun sets the Run field's value.
 func (s *JobBookmarkEntry) SetRun(v int64) *JobBookmarkEntry {
 	s.Run = &v
+	return s
+}
+
+// SetRunId sets the RunId field's value.
+func (s *JobBookmarkEntry) SetRunId(v string) *JobBookmarkEntry {
+	s.RunId = &v
 	return s
 }
 
@@ -21337,14 +21876,14 @@ func (s *JobBookmarkEntry) SetVersion(v int64) *JobBookmarkEntry {
 	return s
 }
 
-// Specifies how Job bookmark data should be encrypted.
+// Specifies how job bookmark data should be encrypted.
 type JobBookmarksEncryption struct {
 	_ struct{} `type:"structure"`
 
-	// The encryption mode to use for Job bookmarks data.
+	// The encryption mode to use for job bookmarks data.
 	JobBookmarksEncryptionMode *string `type:"string" enum:"JobBookmarksEncryptionMode"`
 
-	// The AWS ARN of the KMS key to be used to encrypt the data.
+	// The Amazon Resource Name (ARN) of the KMS key to be used to encrypt the data.
 	KmsKeyArn *string `type:"string"`
 }
 
@@ -21481,6 +22020,17 @@ type JobRun struct {
 	// The amount of time (in seconds) that the job run consumed resources.
 	ExecutionTime *int64 `type:"integer"`
 
+	// Glue version determines the versions of Apache Spark and Python that AWS
+	// Glue supports. The Python version indicates the version supported for jobs
+	// of type Spark.
+	//
+	// For more information about the available AWS Glue versions and corresponding
+	// Spark and Python versions, see Glue version (https://docs.aws.amazon.com/glue/latest/dg/add-job.html)
+	// in the developer guide.
+	//
+	// Jobs that are created without specifying a Glue version default to Glue 0.9.
+	GlueVersion *string `min:"1" type:"string"`
+
 	// The ID of this job run.
 	Id *string `min:"1" type:"string"`
 
@@ -21608,6 +22158,12 @@ func (s *JobRun) SetErrorMessage(v string) *JobRun {
 // SetExecutionTime sets the ExecutionTime field's value.
 func (s *JobRun) SetExecutionTime(v int64) *JobRun {
 	s.ExecutionTime = &v
+	return s
+}
+
+// SetGlueVersion sets the GlueVersion field's value.
+func (s *JobRun) SetGlueVersion(v string) *JobRun {
+	s.GlueVersion = &v
 	return s
 }
 
@@ -21744,6 +22300,15 @@ type JobUpdate struct {
 	// for this job.
 	ExecutionProperty *ExecutionProperty `type:"structure"`
 
+	// Glue version determines the versions of Apache Spark and Python that AWS
+	// Glue supports. The Python version indicates the version supported for jobs
+	// of type Spark.
+	//
+	// For more information about the available AWS Glue versions and corresponding
+	// Spark and Python versions, see Glue version (https://docs.aws.amazon.com/glue/latest/dg/add-job.html)
+	// in the developer guide.
+	GlueVersion *string `min:"1" type:"string"`
+
 	// This field is reserved for future use.
 	LogUri *string `type:"string"`
 
@@ -21819,6 +22384,9 @@ func (s JobUpdate) GoString() string {
 // Validate inspects the fields of the type to determine if they are valid.
 func (s *JobUpdate) Validate() error {
 	invalidParams := request.ErrInvalidParams{Context: "JobUpdate"}
+	if s.GlueVersion != nil && len(*s.GlueVersion) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("GlueVersion", 1))
+	}
 	if s.SecurityConfiguration != nil && len(*s.SecurityConfiguration) < 1 {
 		invalidParams.Add(request.NewErrParamMinLen("SecurityConfiguration", 1))
 	}
@@ -21870,6 +22438,12 @@ func (s *JobUpdate) SetDescription(v string) *JobUpdate {
 // SetExecutionProperty sets the ExecutionProperty field's value.
 func (s *JobUpdate) SetExecutionProperty(v *ExecutionProperty) *JobUpdate {
 	s.ExecutionProperty = v
+	return s
+}
+
+// SetGlueVersion sets the GlueVersion field's value.
+func (s *JobUpdate) SetGlueVersion(v string) *JobUpdate {
+	s.GlueVersion = &v
 	return s
 }
 
@@ -23456,6 +24030,9 @@ type ResetJobBookmarkInput struct {
 	//
 	// JobName is a required field
 	JobName *string `type:"string" required:"true"`
+
+	// The unique run identifier associated with this job run.
+	RunId *string `type:"string"`
 }
 
 // String returns the string representation
@@ -23484,6 +24061,12 @@ func (s *ResetJobBookmarkInput) Validate() error {
 // SetJobName sets the JobName field's value.
 func (s *ResetJobBookmarkInput) SetJobName(v string) *ResetJobBookmarkInput {
 	s.JobName = &v
+	return s
+}
+
+// SetRunId sets the RunId field's value.
+func (s *ResetJobBookmarkInput) SetRunId(v string) *ResetJobBookmarkInput {
+	s.RunId = &v
 	return s
 }
 
@@ -23556,14 +24139,14 @@ func (s *ResourceUri) SetUri(v string) *ResourceUri {
 	return s
 }
 
-// Specifies how S3 data should be encrypted.
+// Specifies how Amazon Simple Storage Service (Amazon S3) data should be encrypted.
 type S3Encryption struct {
 	_ struct{} `type:"structure"`
 
-	// The AWS ARN of the KMS key to be used to encrypt the data.
+	// The Amazon Resource Name (ARN) of the KMS key to be used to encrypt the data.
 	KmsKeyArn *string `type:"string"`
 
-	// The encryption mode to use for S3 data.
+	// The encryption mode to use for Amazon S3 data.
 	S3EncryptionMode *string `type:"string" enum:"S3EncryptionMode"`
 }
 
@@ -24091,7 +24674,7 @@ type StartJobRunInput struct {
 	//
 	//    * For the G.2X worker type, each worker provides 8 vCPU, 32 GB of memory
 	//    and a 128GB disk, and 1 executor per worker.
-	WorkerType *string `min:"1" type:"string"`
+	WorkerType *string `type:"string" enum:"WorkerType"`
 }
 
 // String returns the string representation
@@ -24121,9 +24704,6 @@ func (s *StartJobRunInput) Validate() error {
 	}
 	if s.Timeout != nil && *s.Timeout < 1 {
 		invalidParams.Add(request.NewErrParamMinValue("Timeout", 1))
-	}
-	if s.WorkerType != nil && len(*s.WorkerType) < 1 {
-		invalidParams.Add(request.NewErrParamMinLen("WorkerType", 1))
 	}
 	if s.NotificationProperty != nil {
 		if err := s.NotificationProperty.Validate(); err != nil {
@@ -26114,7 +26694,7 @@ type UpdateDevEndpointInput struct {
 	PublicKey *string `type:"string"`
 
 	// True if the list of custom libraries to be loaded in the development endpoint
-	// needs to be updated, or False otherwise.
+	// needs to be updated, or False if otherwise.
 	UpdateEtlLibraries *bool `type:"boolean"`
 }
 
