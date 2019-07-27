@@ -2330,7 +2330,7 @@ func TestValidateSecurityGroupRuleDescription(t *testing.T) {
 		"testrule",
 		"testRule",
 		"testRule 123",
-		`testRule 123 ._-:/()#,@[]+=;{}!$*`,
+		`testRule 123 ._-:/()#,@[]+=&;{}!$*`,
 	}
 	for _, v := range validDescriptions {
 		_, errors := validateSecurityGroupRuleDescription(v, "description")
@@ -2342,6 +2342,7 @@ func TestValidateSecurityGroupRuleDescription(t *testing.T) {
 	invalidDescriptions := []string{
 		"`",
 		"%%",
+		`\`,
 	}
 	for _, v := range invalidDescriptions {
 		_, errors := validateSecurityGroupRuleDescription(v, "description")
