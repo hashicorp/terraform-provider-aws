@@ -33,6 +33,7 @@ func resourceAwsEcsCluster() *schema.Resource {
 				Type:     schema.TypeBool,
 				Optional: true,
 				ForceNew: true,
+				Default:  false,
 			},
 			"tags": tagsSchema(),
 			"arn": {
