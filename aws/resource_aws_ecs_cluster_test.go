@@ -65,6 +65,7 @@ func TestAccAWSEcsCluster_basic(t *testing.T) {
 	var cluster1 ecs.Cluster
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_ecs_cluster.test"
+	countainerInsights := true
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -72,7 +73,7 @@ func TestAccAWSEcsCluster_basic(t *testing.T) {
 		CheckDestroy: testAccCheckAWSEcsClusterDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSEcsClusterConfig(rName),
+				Config: testAccAWSEcsClusterConfig(rName, countainerInsights),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSEcsClusterExists(resourceName, &cluster1),
 					testAccCheckResourceAttrRegionalARN(resourceName, "arn", "ecs", fmt.Sprintf("cluster/%s", rName)),
@@ -94,6 +95,7 @@ func TestAccAWSEcsCluster_disappears(t *testing.T) {
 	var cluster1 ecs.Cluster
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_ecs_cluster.test"
+	countainerInsights := true
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -101,7 +103,7 @@ func TestAccAWSEcsCluster_disappears(t *testing.T) {
 		CheckDestroy: testAccCheckAWSEcsClusterDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSEcsClusterConfig(rName),
+				Config: testAccAWSEcsClusterConfig(rName, countainerInsights),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSEcsClusterExists(resourceName, &cluster1),
 					testAccCheckAWSEcsClusterDisappears(&cluster1),
@@ -230,12 +232,13 @@ func testAccCheckAWSEcsClusterDisappears(cluster *ecs.Cluster) resource.TestChec
 	}
 }
 
-func testAccAWSEcsClusterConfig(rName string) string {
+func testAccAWSEcsClusterConfig(rName string, containerInsights bool) string {
 	return fmt.Sprintf(`
 resource "aws_ecs_cluster" "test" {
   name = %q
+	container_insights = %t
 }
-`, rName)
+`, rName, containerInsights)
 }
 
 func testAccAWSEcsClusterConfigTags1(rName, tag1Key, tag1Value string) string {
