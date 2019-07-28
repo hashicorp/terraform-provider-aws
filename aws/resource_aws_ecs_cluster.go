@@ -29,6 +29,11 @@ func resourceAwsEcsCluster() *schema.Resource {
 				Required: true,
 				ForceNew: true,
 			},
+			"container_insights": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				ForceNew: true,
+			},
 			"tags": tagsSchema(),
 			"arn": {
 				Type:     schema.TypeString,
