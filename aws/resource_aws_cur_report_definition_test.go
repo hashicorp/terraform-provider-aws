@@ -19,8 +19,10 @@ func TestAccAwsCurReportDefinition_basic(t *testing.T) {
 
 	resourceName := "aws_cur_report_definition.test"
 
-	reportName := acctest.RandomWithPrefix("tf_acc_test")
-	bucketName := fmt.Sprintf("tf-test-bucket-%d", acctest.RandInt())
+	redshiftQuicksightReportName := acctest.RandomWithPrefix("tf_acc_test")
+	redshiftQuicksightBucketName := fmt.Sprintf("tf-test-bucket-%d-%s", acctest.RandInt(), redshiftQuicksightReportName)
+	athenaReportName := acctest.RandomWithPrefix("tf_acc_test")
+	athenaBucketName := fmt.Sprintf("tf-test-bucket-%d-%s", acctest.RandInt(), athenaReportName)
 	bucketRegion := "us-east-1"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -29,17 +31,33 @@ func TestAccAwsCurReportDefinition_basic(t *testing.T) {
 		CheckDestroy: testAccCheckAwsCurReportDefinitionDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAwsCurReportDefinitionConfig_basic(reportName, bucketName, bucketRegion),
+				Config: testAccAwsCurReportDefinitionConfig_basic_redshift_quicksight(reportNameredshiftQuicksightReportName, bucketNameredshiftQuicksightBucketName, bucketRegion),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsCurReportDefinitionExists(resourceName),
-					resource.TestCheckResourceAttr(resourceName, "report_name", reportName),
+					resource.TestCheckResourceAttr(resourceName, "report_name", redshiftQuicksightReportName),
 					resource.TestCheckResourceAttr(resourceName, "time_unit", "DAILY"),
+					resource.TestCheckResourceAttr(resourceName, "format", "textORcsv"),
 					resource.TestCheckResourceAttr(resourceName, "compression", "GZIP"),
 					resource.TestCheckResourceAttr(resourceName, "additional_schema_elements.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "s3_bucket", bucketName),
+					resource.TestCheckResourceAttr(resourceName, "s3_bucket", redshiftQuicksightBucketName),
 					resource.TestCheckResourceAttr(resourceName, "s3_prefix", ""),
 					resource.TestCheckResourceAttr(resourceName, "s3_region", bucketRegion),
 					resource.TestCheckResourceAttr(resourceName, "additional_artifacts.#", "2"),
+				),
+			},
+			{
+				Config: testAccAwsCurReportDefinitionConfig_basic_athena(athenaReportName, athenaBucketName, bucketRegion),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAwsCurReportDefinitionExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "report_name", athenaReportName),
+					resource.TestCheckResourceAttr(resourceName, "time_unit", "DAILY"),
+					resource.TestCheckResourceAttr(resourceName, "format", "Parquet"),
+					resource.TestCheckResourceAttr(resourceName, "compression", "Parquet"),
+					resource.TestCheckResourceAttr(resourceName, "additional_schema_elements.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "s3_bucket", athenaBucketName),
+					resource.TestCheckResourceAttr(resourceName, "s3_prefix", ""),
+					resource.TestCheckResourceAttr(resourceName, "s3_region", bucketRegion),
+					resource.TestCheckResourceAttr(resourceName, "additional_artifacts.#", "1"),
 				),
 			},
 		},
@@ -151,7 +169,11 @@ resource "aws_s3_bucket_policy" "test" {
 }
 POLICY
 }
+`, reportName, bucketName, bucketRegion)
+}
 
+func testAccAwsCurReportDefinitionConfig_basic_redshift_quicksight(reportName string, bucketName string, bucketRegion string)(reportName string) string {
+	return testAccAwsCurReportDefinitionConfig_basic(reportName, bucketName, bucketRegion) + `
 resource "aws_cur_report_definition" "redshift_quicksight" {
   report_name                = "%[1]s"
   time_unit                  = "DAILY"
@@ -161,9 +183,13 @@ resource "aws_cur_report_definition" "redshift_quicksight" {
   s3_bucket                  = "${aws_s3_bucket.test.id}"
   s3_prefix                  = ""
   s3_region                  = "${aws_s3_bucket.test.region}"
-  additional_artifacts       = ["REDSHIFT", "QUICKSIGHT"]
+  additional_artifacts       = ["ATHENA"]
+}
+`, reportName)
 }
 
+func testAccAwsCurReportDefinitionConfig_basic_athena(reportName string, bucketName string, bucketRegion string) string {
+	return testAccAwsCurReportDefinitionConfig_basic(reportName, bucketName, bucketRegion) + `
 resource "aws_cur_report_definition" "athena" {
   report_name                = "%[1]s"
   time_unit                  = "DAILY"
@@ -173,7 +199,7 @@ resource "aws_cur_report_definition" "athena" {
   s3_bucket                  = "${aws_s3_bucket.test.id}"
   s3_prefix                  = ""
   s3_region                  = "${aws_s3_bucket.test.region}"
-  additional_artifacts       = ["ATHENA"]
+  additional_artifacts       = ["REDSHIFT", "QUICKSIGHT"]
 }
-`, reportName, bucketName, bucketRegion)
+`, reportName)
 }
