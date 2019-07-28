@@ -15,6 +15,7 @@ Provides an ECS cluster.
 ```hcl
 resource "aws_ecs_cluster" "foo" {
   name = "white-hart"
+	container_insights: true
 }
 ```
 
@@ -24,6 +25,7 @@ The following arguments are supported:
 
 * `name` - (Required) The name of the cluster (up to 255 letters, numbers, hyphens, and underscores)
 * `tags` - (Optional) Key-value mapping of resource tags
+* `container_insights` - (Optional, Default: false) A boolean that indicates whether to enable [Container Insight](https://docs.aws.amazon.com/AmazonCloudWatch/latest/monitoring/ContainerInsights.html)
 
 ## Attributes Reference
 
