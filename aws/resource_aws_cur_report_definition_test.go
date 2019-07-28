@@ -152,7 +152,7 @@ resource "aws_s3_bucket_policy" "test" {
 POLICY
 }
 
-resource "aws_cur_report_definition" "test" {
+resource "aws_cur_report_definition" "redshift_quicksight" {
   report_name                = "%[1]s"
   time_unit                  = "DAILY"
   format                     = "textORcsv"
@@ -162,6 +162,18 @@ resource "aws_cur_report_definition" "test" {
   s3_prefix                  = ""
   s3_region                  = "${aws_s3_bucket.test.region}"
   additional_artifacts       = ["REDSHIFT", "QUICKSIGHT"]
+}
+
+resource "aws_cur_report_definition" "athena" {
+  report_name                = "%[1]s"
+  time_unit                  = "DAILY"
+  format                     = "Parquet"
+  compression                = "Parquet"
+  additional_schema_elements = ["RESOURCES"]
+  s3_bucket                  = "${aws_s3_bucket.test.id}"
+  s3_prefix                  = ""
+  s3_region                  = "${aws_s3_bucket.test.region}"
+  additional_artifacts       = ["ATHENA"]
 }
 `, reportName, bucketName, bucketRegion)
 }
