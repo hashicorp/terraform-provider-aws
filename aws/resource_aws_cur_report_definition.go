@@ -39,7 +39,9 @@ func resourceAwsCurReportDefinition() *schema.Resource {
 				Required: true,
 				ForceNew: true,
 				ValidateFunc: validation.StringInSlice([]string{
-					costandusagereportservice.ReportFormatTextOrcsv}, false),
+					costandusagereportservice.ReportFormatParquet,
+					costandusagereportservice.ReportFormatTextOrcsv,
+				}, false),
 			},
 			"compression": {
 				Type:     schema.TypeString,
@@ -47,6 +49,7 @@ func resourceAwsCurReportDefinition() *schema.Resource {
 				ForceNew: true,
 				ValidateFunc: validation.StringInSlice([]string{
 					costandusagereportservice.CompressionFormatGzip,
+					costandusagereportservice.CompressionFormatParquet,
 					costandusagereportservice.CompressionFormatZip,
 				}, false),
 			},
@@ -82,6 +85,7 @@ func resourceAwsCurReportDefinition() *schema.Resource {
 				Type: schema.TypeSet,
 				Elem: &schema.Schema{Type: schema.TypeString,
 					ValidateFunc: validation.StringInSlice([]string{
+						costandusagereportservice.AdditionalArtifactAthena,
 						costandusagereportservice.AdditionalArtifactQuicksight,
 						costandusagereportservice.AdditionalArtifactRedshift,
 					}, false),
