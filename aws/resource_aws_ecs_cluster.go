@@ -61,8 +61,16 @@ func resourceAwsEcsClusterCreate(d *schema.ResourceData, meta interface{}) error
 	clusterName := d.Get("name").(string)
 	log.Printf("[DEBUG] Creating ECS cluster %s", clusterName)
 
+	settings := &ecs.ClusterSetting{
+		Name:  aws.String("containerInsights"),
+		Value: aws.String("enabled"),
+	}
+	clusterSetting := make([]*ecs.ClusterSetting, 0, 1)
+	clusterSetting = append(clusterSetting, settings)
+
 	out, err := conn.CreateCluster(&ecs.CreateClusterInput{
 		ClusterName: aws.String(clusterName),
+		Settings:    clusterSetting,
 		Tags:        tagsFromMapECS(d.Get("tags").(map[string]interface{})),
 	})
 	if err != nil {
