@@ -59,11 +59,12 @@ func resourceAwsEcsClusterCreate(d *schema.ResourceData, meta interface{}) error
 	conn := meta.(*AWSClient).ecsconn
 
 	clusterName := d.Get("name").(string)
-	log.Printf("[DEBUG] Creating ECS cluster %s", clusterName)
+	containerInsights := d.Get("container_insights").(bool)
+	log.Printf("[DEBUG] Creating ECS cluster %s container_insights %t", clusterName, containerInsights)
 
 	settings := &ecs.ClusterSetting{
 		Name:  aws.String("containerInsights"),
-		Value: aws.String("enabled"),
+		Value: aws.String(clusterSettingValue(containerInsights)),
 	}
 	clusterSetting := make([]*ecs.ClusterSetting, 0, 1)
 	clusterSetting = append(clusterSetting, settings)
@@ -260,4 +261,12 @@ func resourceAwsEcsClusterDelete(d *schema.ResourceData, meta interface{}) error
 
 	log.Printf("[DEBUG] ECS cluster %q deleted", d.Id())
 	return nil
+}
+
+func clusterSettingValue(b bool) string {
+	if b {
+		return "enabled"
+	} else {
+		return "disabled"
+	}
 }
