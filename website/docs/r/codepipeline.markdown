@@ -138,7 +138,7 @@ resource "aws_codepipeline" "codepipeline" {
       input_artifacts = ["build_output"]
       version         = "1"
 
-      configuration {
+      configuration = {
         ActionMode     = "REPLACE_ON_FAILURE"
         Capabilities   = "CAPABILITY_AUTO_EXPAND,CAPABILITY_IAM"
         OutputFileName = "CreateStackOutput.json"

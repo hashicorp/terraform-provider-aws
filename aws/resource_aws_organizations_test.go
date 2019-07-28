@@ -11,6 +11,7 @@ func TestAccAWSOrganizations(t *testing.T) {
 			"AwsServiceAccessPrincipals": testAccAwsOrganizationsOrganization_AwsServiceAccessPrincipals,
 			"EnabledPolicyTypes":         testAccAwsOrganizationsOrganization_EnabledPolicyTypes,
 			"FeatureSet":                 testAccAwsOrganizationsOrganization_FeatureSet,
+			"DataSource":                 testAccDataSourceAwsOrganizationsOrganization_basic,
 		},
 		"Account": {
 			"basic":    testAccAwsOrganizationsAccount_basic,

@@ -463,6 +463,44 @@ func TestAccAWSDBInstance_MaxAllocatedStorage(t *testing.T) {
 	})
 }
 
+func TestAccAWSDBInstance_Password(t *testing.T) {
+	var dbInstance rds.DBInstance
+
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_db_instance.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSDBInstanceDestroy,
+		Steps: []resource.TestStep{
+			// Password should not be shown in error message
+			{
+				Config:      testAccAWSDBInstanceConfig_Password(rName, "invalid"),
+				ExpectError: regexp.MustCompile(`MasterUserPassword: "\*{8}",`),
+			},
+			{
+				Config: testAccAWSDBInstanceConfig_Password(rName, "valid-password"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSDBInstanceExists(resourceName, &dbInstance),
+					resource.TestCheckResourceAttr(resourceName, "password", "valid-password"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"apply_immediately",
+					"final_snapshot_identifier",
+					"password",
+					"skip_final_snapshot",
+				},
+			},
+		},
+	})
+}
+
 func TestAccAWSDBInstance_ReplicateSourceDb(t *testing.T) {
 	var dbInstance, sourceDbInstance rds.DBInstance
 
@@ -3969,6 +4007,20 @@ resource "aws_db_instance" "test" {
   skip_final_snapshot     = true
 }
 `, rName, maxAllocatedStorage)
+}
+
+func testAccAWSDBInstanceConfig_Password(rName, password string) string {
+	return fmt.Sprintf(`
+resource "aws_db_instance" "test" {
+  allocated_storage   = 5
+  engine              = "mysql"
+  identifier          = %[1]q
+  instance_class      = "db.t2.micro"
+  password            = %[2]q
+  username            = "tfacctest"
+  skip_final_snapshot = true
+}
+`, rName, password)
 }
 
 func testAccAWSDBInstanceConfig_ReplicateSourceDb(rName string) string {

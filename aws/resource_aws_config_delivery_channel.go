@@ -99,13 +99,15 @@ func resourceAwsConfigDeliveryChannelPut(d *schema.ResourceData, meta interface{
 			return nil
 		}
 
-		awsErr, ok := err.(awserr.Error)
-		if ok && awsErr.Code() == "InsufficientDeliveryPolicyException" {
+		if isAWSErr(err, "InsufficientDeliveryPolicyException", "") {
 			return resource.RetryableError(err)
 		}
 
 		return resource.NonRetryableError(err)
 	})
+	if isResourceTimeoutError(err) {
+		_, err = conn.PutDeliveryChannel(&input)
+	}
 	if err != nil {
 		return fmt.Errorf("Creating Delivery Channel failed: %s", err)
 	}
@@ -175,6 +177,9 @@ func resourceAwsConfigDeliveryChannelDelete(d *schema.ResourceData, meta interfa
 		}
 		return nil
 	})
+	if isResourceTimeoutError(err) {
+		_, err = conn.DeleteDeliveryChannel(&input)
+	}
 	if err != nil {
 		return fmt.Errorf("Unable to delete delivery channel: %s", err)
 	}
