@@ -31,7 +31,7 @@ func TestAccAwsCurReportDefinition_basic(t *testing.T) {
 		CheckDestroy: testAccCheckAwsCurReportDefinitionDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAwsCurReportDefinitionConfig_basic_redshift_quicksight(reportNameredshiftQuicksightReportName, bucketNameredshiftQuicksightBucketName, bucketRegion),
+				Config: testAccAwsCurReportDefinitionConfig_basic_redshift_quicksight(redshiftQuicksightReportName, redshiftQuicksightBucketName, bucketRegion),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsCurReportDefinitionExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "report_name", redshiftQuicksightReportName),
@@ -172,8 +172,8 @@ POLICY
 `, reportName, bucketName, bucketRegion)
 }
 
-func testAccAwsCurReportDefinitionConfig_basic_redshift_quicksight(reportName string, bucketName string, bucketRegion string)(reportName string) string {
-	return testAccAwsCurReportDefinitionConfig_basic(reportName, bucketName, bucketRegion) + `
+func testAccAwsCurReportDefinitionConfig_basic_redshift_quicksight(reportName string, bucketName string, bucketRegion string) string {
+	reportDefinition := fmt.Sprintf(`
 resource "aws_cur_report_definition" "redshift_quicksight" {
   report_name                = "%[1]s"
   time_unit                  = "DAILY"
@@ -186,10 +186,13 @@ resource "aws_cur_report_definition" "redshift_quicksight" {
   additional_artifacts       = ["ATHENA"]
 }
 `, reportName)
+
+	return testAccAwsCurReportDefinitionConfig_basic(reportName, bucketName, bucketRegion) + reportDefinition
 }
 
+//``
 func testAccAwsCurReportDefinitionConfig_basic_athena(reportName string, bucketName string, bucketRegion string) string {
-	return testAccAwsCurReportDefinitionConfig_basic(reportName, bucketName, bucketRegion) + `
+	reportDefinition := fmt.Sprintf(`
 resource "aws_cur_report_definition" "athena" {
   report_name                = "%[1]s"
   time_unit                  = "DAILY"
@@ -202,4 +205,6 @@ resource "aws_cur_report_definition" "athena" {
   additional_artifacts       = ["REDSHIFT", "QUICKSIGHT"]
 }
 `, reportName)
+
+	return testAccAwsCurReportDefinitionConfig_basic(reportName, bucketName, bucketRegion) + reportDefinition
 }
