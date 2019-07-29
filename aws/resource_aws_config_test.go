@@ -15,6 +15,7 @@ func TestAccAWSConfig(t *testing.T) {
 			"scopeTagKey":      testAccConfigConfigRule_Scope_TagKey,
 			"scopeTagKeyEmpty": testAccConfigConfigRule_Scope_TagKey_Empty,
 			"scopeTagValue":    testAccConfigConfigRule_Scope_TagValue,
+			"tags":             testAccConfigConfigRule_tags,
 		},
 		"ConfigurationRecorderStatus": {
 			"basic":        testAccConfigConfigurationRecorderStatus_basic,
