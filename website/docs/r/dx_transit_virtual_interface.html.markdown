@@ -20,7 +20,7 @@ resource "aws_dx_gateway" "example" {
 }
 
 resource "aws_dx_transit_virtual_interface" "example" {
-  connection_id = "dxcon-zzzzzzzz"
+  connection_id = "${aws_dx_connection.example.id}"
 
   dx_gateway_id  = "${aws_dx_gateway.example.id}"
   name           = "tf-transit-vif-example"
