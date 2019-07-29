@@ -67,29 +67,54 @@ func testAccCheckAwsDxTransitVirtualInterfaceDestroy(s *terraform.State) error {
 		if rs.Type != "aws_dx_transit_virtual_interface" {
 			continue
 		}
-
-		input := &directconnect.DescribeVirtualInterfacesInput{
-			VirtualInterfaceId: aws.String(rs.Primary.ID),
+		if rs.Primary.ID == "" {
+			return fmt.Errorf("No ID is set")
 		}
 
-		resp, err := conn.DescribeVirtualInterfaces(input)
+		resp, err := conn.DescribeVirtualInterfaces(&directconnect.DescribeVirtualInterfacesInput{
+			VirtualInterfaceId: aws.String(rs.Primary.ID),
+		})
+		if isAWSErr(err, directconnect.ErrCodeClientException, "does not exist") {
+			continue
+		}
 		if err != nil {
 			return err
 		}
-		for _, v := range resp.VirtualInterfaces {
-			if *v.VirtualInterfaceId == rs.Primary.ID && !(*v.VirtualInterfaceState == directconnect.VirtualInterfaceStateDeleted) {
-				return fmt.Errorf("[DESTROY ERROR] Dx Transit VIF (%s) not deleted", rs.Primary.ID)
+
+		n := len(resp.VirtualInterfaces)
+		switch n {
+		case 0:
+			continue
+		case 1:
+			if aws.StringValue(resp.VirtualInterfaces[0].VirtualInterfaceState) == directconnect.VirtualInterfaceStateDeleted {
+				continue
 			}
+			return fmt.Errorf("still exist.")
+		default:
+			return fmt.Errorf("Found %d Direct Connect virtual interfaces for %s, expected 1", n, rs.Primary.ID)
 		}
 	}
+
 	return nil
 }
 
 func testAccCheckAwsDxTransitVirtualInterfaceExists(name string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		_, ok := s.RootModule().Resources[name]
+		conn := testAccProvider.Meta().(*AWSClient).dxconn
+
+		rs, ok := s.RootModule().Resources[name]
 		if !ok {
 			return fmt.Errorf("Not found: %s", name)
+		}
+		if rs.Primary.ID == "" {
+			return fmt.Errorf("No ID is set")
+		}
+
+		_, err := conn.DescribeVirtualInterfaces(&directconnect.DescribeVirtualInterfacesInput{
+			VirtualInterfaceId: aws.String(rs.Primary.ID),
+		})
+		if err != nil {
+			return err
 		}
 
 		return nil

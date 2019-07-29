@@ -115,6 +115,7 @@ func resourceAwsDxTransitVirtualInterfaceCreate(d *schema.ResourceData, meta int
 			Asn:                    aws.Int64(int64(d.Get("bgp_asn").(int))),
 			DirectConnectGatewayId: aws.String(d.Get("dx_gateway_id").(string)),
 			Mtu:                    aws.Int64(int64(d.Get("mtu").(int))),
+			Tags:                   tagsFromMapDX(d.Get("tags").(map[string]interface{})),
 			VirtualInterfaceName:   aws.String(d.Get("name").(string)),
 			Vlan:                   aws.Int64(int64(d.Get("vlan").(int))),
 		},
@@ -149,7 +150,7 @@ func resourceAwsDxTransitVirtualInterfaceCreate(d *schema.ResourceData, meta int
 		return err
 	}
 
-	return resourceAwsDxTransitVirtualInterfaceUpdate(d, meta)
+	return resourceAwsDxTransitVirtualInterfaceRead(d, meta)
 }
 
 func resourceAwsDxTransitVirtualInterfaceRead(d *schema.ResourceData, meta interface{}) error {
