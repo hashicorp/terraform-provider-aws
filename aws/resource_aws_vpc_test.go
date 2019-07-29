@@ -25,6 +25,7 @@ func init() {
 			"aws_route_table",
 			"aws_security_group",
 			"aws_subnet",
+			"aws_vpc_peering_connection",
 			"aws_vpn_gateway",
 		},
 		F: testSweepVPCs,
