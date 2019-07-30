@@ -132,7 +132,7 @@ func resourceAwsDxTransitVirtualInterfaceCreate(d *schema.ResourceData, meta int
 		req.NewTransitVirtualInterface.Tags = tagsFromMapDX(v.(map[string]interface{}))
 	}
 
-	log.Printf("[DEBUG] Creating Direct Connect transit virtual interface: %#v", req)
+	log.Printf("[DEBUG] Creating Direct Connect transit virtual interface: %s", req)
 	resp, err := conn.CreateTransitVirtualInterface(req)
 	if err != nil {
 		return fmt.Errorf("error creating Direct Connect transit virtual interface: %s", err)
