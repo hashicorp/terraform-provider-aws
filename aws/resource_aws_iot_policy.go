@@ -3,6 +3,7 @@ package aws
 import (
 	"fmt"
 	"log"
+	"strconv"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/iot"
@@ -147,14 +148,22 @@ func iotPolicyPruneVersions(name string, iotconn *iot.IoT) error {
 	}
 
 	var oldestVersion *iot.PolicyVersion
+	var oldestVersionId int64
 
 	for _, version := range versions {
 		if *version.IsDefaultVersion {
 			continue
 		}
-		if oldestVersion == nil ||
-			version.CreateDate.Before(*oldestVersion.CreateDate) {
+
+		versionId, err := strconv.ParseInt(*version.VersionId, 10, 64)
+		if err != nil {
+			log.Printf("[ERROR] Unexpected version id cannot be parsed to an integer. %s", err)
+			return err
+		}
+
+		if oldestVersion == nil || versionId < oldestVersionId {
 			oldestVersion = version
+			oldestVersionId = versionId
 		}
 	}
 
