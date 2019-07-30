@@ -12,6 +12,7 @@ ENHANCEMENTS:
 * data-source/aws_elb_service_account: Support `me-south-1` region [GH-9547]
 * data-source/aws_s3_bucket: Support `me-south-1` region for `hosted_zone_id` attribute [GH-9547]
 * provider: Support automatic region validation for `me-south-1` [GH-9538]
+* resource/aws_ecs_service: Allow multiple `load_balancer` configuration blocks (support for multiple target groups) [GH-9411]
 * resource/aws_s3_bucket: Support `me-south-1` region for `hosted_zone_id` attribute [GH-9547]
 
 BUG FIXES:
