@@ -1,5 +1,9 @@
 ## 2.22.0 (Unreleased)
 
+ENHANCEMENTS:
+
+* provider: Support automatic region validation for `me-south-1` [GH-9538]
+
 BUG FIXES:
 * resource/aws_storagegateway_cached_iscsi_volume: Retry after timeout deleting volume [GH-9536]
 * resource/aws_storagegateway_gateway: Retry after timeouts creating gateway [GH-9536]
