@@ -6,7 +6,13 @@ NOTES:
 
 ENHANCEMENTS:
 
+* data-source/aws_cloudtrail_service_account: Support `me-south-1` region [GH-9547]
+* data-source/aws_elastic_beanstalk_hosted_zone: Support `me-south-1` region [GH-9547]
+* data-source/aws_elb_hosted_zone_id: Support `me-south-1` region [GH-9547]
+* data-source/aws_elb_service_account: Support `me-south-1` region [GH-9547]
+* data-source/aws_s3_bucket: Support `me-south-1` region for `hosted_zone_id` attribute [GH-9547]
 * provider: Support automatic region validation for `me-south-1` [GH-9538]
+* resource/aws_s3_bucket: Support `me-south-1` region for `hosted_zone_id` attribute [GH-9547]
 
 BUG FIXES:
 * resource/aws_storagegateway_cached_iscsi_volume: Retry after timeout deleting volume [GH-9536]
