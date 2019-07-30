@@ -265,6 +265,7 @@ In addition to all arguments above, the following attributes are exported:
 * `vpc_security_group_ids` - The associated security groups in non-default VPC
 * `subnet_id` - The VPC subnet ID.
 * `credit_specification` - Credit specification of instance.
+* `instance_state` - The state of the instance. One of: `pending`, `running`, `shutting-down`, `terminated`, `stopping`, `stopped`. See [Instance Lifecycle](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/ec2-instance-lifecycle.html) for more information.
 
 For any `root_block_device` and `ebs_block_device` the `volume_id` is exported.
 e.g. `aws_instance.web.root_block_device.0.volume_id`
