@@ -66,15 +66,16 @@ New Regions:
 These are added to the AWS Go SDK `aws/endpoints/defaults.go` file and generally noted in the AWS Go SDK `CHANGELOG` as `aws/endpoints: Updated Regions`. Since April 2019, new regions added to AWS now require being explicitly enabled before they can be used. Examples of this can be found when `me-south-1` was announced:
 
 - [Terraform AWS Provider issue](https://github.com/terraform-providers/terraform-provider-aws/issues/9545)
-- [Terraform AWS Provider pull request](https://github.com/terraform-providers/terraform-provider-aws/pull/9538)
+- [Terraform AWS Provider AWS Go SDK update pull request](https://github.com/terraform-providers/terraform-provider-aws/pull/9538)
+- [Terraform AWS Provider data source update pull request](https://github.com/terraform-providers/terraform-provider-aws/pull/9547)
 - [Terraform S3 Backend issue](https://github.com/hashicorp/terraform/issues/22254)
 - [Terraform S3 Backend pull request](https://github.com/hashicorp/terraform/pull/22253)
 
 Typically our process for new regions is as follows:
 
-- Create new Terraform AWS Provider issue: Support Automatic Region Validation for `XX-XXXXX-#` (Location)
-- Create new Terraform S3 Backend issue: backend/s3: Support Automatic Region Validation for `XX-XXXXX-#` (Location)
-- [Enable the new region in an AWS testing account](https://docs.aws.amazon.com/general/latest/gr/rande-manage.html#rande-manage-enable) and verify AWS Go SDK update works with new region by building the provider and testing a configuration like the following:
+- Create new (if not existing) Terraform AWS Provider issue: Support Automatic Region Validation for `XX-XXXXX-#` (Location)
+- Create new (if not existing) Terraform S3 Backend issue: backend/s3: Support Automatic Region Validation for `XX-XXXXX-#` (Location)
+- [Enable the new region in an AWS testing account](https://docs.aws.amazon.com/general/latest/gr/rande-manage.html#rande-manage-enable) and verify AWS Go SDK update works with the new region with `export AWS_DEFAULT_REGION=XX-XXXXX-#` with the new region and run the `TestAccDataSourceAwsRegion_` acceptance testing or by building the provider and testing a configuration like the following:
 
 ```hcl
 provider "aws" {
@@ -92,33 +93,6 @@ output "region" {
 
 ``````markdown
 Support for automatic validation of this new region has been merged and will release with version 2.22.0 of the Terraform AWS Provider, later this week.
-
-This was verified on a build of the provider with the update:
-
-```hcl
-provider "aws" {
-  region = "me-south-1"
-}
-
-data "aws_region" "current" {}
-
-output "region" {
-  value = data.aws_region.current.name
-}
-```
-
-Outputs:
-
-```console
-$ terraform apply
-data.aws_region.current: Refreshing state...
-
-Apply complete! Resources: 0 added, 0 changed, 0 destroyed.
-
-Outputs:
-
-region = me-south-1
-```
 
 ---
 
@@ -162,6 +136,7 @@ ENHANCEMENTS:
 * provider: Support automatic region validation for `XX-XXXXX-#` [GH-####]
 ```
 
+- Follow the [Contributing Guide](https://github.com/terraform-providers/terraform-provider-aws/blob/master/.github/CONTRIBUTING.md#new-region) to submit updates for various data sources to support the new region
 - Submit the dependency update to the Terraform S3 Backend by running the following:
 
 ```shell
@@ -186,7 +161,7 @@ output "test" {
 }
 ```
 
-- Merge AWS Go SDK update in Terraform S3 Backend and close issue with the following information:
+- After approval, merge AWS Go SDK update in Terraform S3 Backend and close issue with the following information:
 
 ``````markdown
 Support for automatic validation of this new region has been merged and will release with the next version of the Terraform.
