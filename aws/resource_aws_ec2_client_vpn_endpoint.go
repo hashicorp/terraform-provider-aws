@@ -3,11 +3,9 @@ package aws
 import (
 	"fmt"
 	"log"
-	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
-	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/helper/schema"
 	"github.com/hashicorp/terraform/helper/validation"
 )
@@ -173,19 +171,7 @@ func resourceAwsEc2ClientVpnEndpointCreate(d *schema.ResourceData, meta interfac
 		req.ConnectionLogOptions = connLogReq
 	}
 
-	log.Printf("[DEBUG] Creating Client VPN endpoint: %#v", req)
-	var resp *ec2.CreateClientVpnEndpointOutput
-	err := resource.Retry(1*time.Minute, func() *resource.RetryError {
-		var err error
-		resp, err = conn.CreateClientVpnEndpoint(req)
-		if isAWSErr(err, "OperationNotPermitted", "Endpoint cannot be created while another endpoint is being created") {
-			return resource.RetryableError(err)
-		}
-		if err != nil {
-			return resource.NonRetryableError(err)
-		}
-		return nil
-	})
+	resp, err := conn.CreateClientVpnEndpoint(req)
 
 	if err != nil {
 		return fmt.Errorf("Error creating Client VPN endpoint: %s", err)
