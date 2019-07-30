@@ -55,7 +55,7 @@ func resourceAwsDxHostedTransitVirtualInterfaceAccepterCreate(d *schema.Resource
 		VirtualInterfaceId:     aws.String(vifId),
 	}
 
-	log.Printf("[DEBUG] Accepting Direct Connect hosted transit virtual interface: %#v", req)
+	log.Printf("[DEBUG] Accepting Direct Connect hosted transit virtual interface: %s", req)
 	_, err := conn.ConfirmTransitVirtualInterface(req)
 	if err != nil {
 		return fmt.Errorf("error accepting Direct Connect hosted transit virtual interface (%s): %s", vifId, err)
@@ -120,6 +120,20 @@ func resourceAwsDxHostedTransitVirtualInterfaceAccepterDelete(d *schema.Resource
 }
 
 func resourceAwsDxHostedTransitVirtualInterfaceAccepterImport(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
+	conn := meta.(*AWSClient).dxconn
+
+	vif, err := dxVirtualInterfaceRead(d.Id(), conn)
+	if err != nil {
+		return nil, err
+	}
+	if vif == nil {
+		return nil, fmt.Errorf("virtual interface (%s) not found", d.Id())
+	}
+
+	if vifType := aws.StringValue(vif.VirtualInterfaceType); vifType != "transit" {
+		return nil, fmt.Errorf("virtual interface (%s) has incorrect type: %s", d.Id(), vifType)
+	}
+
 	arn := arn.ARN{
 		Partition: meta.(*AWSClient).partition,
 		Region:    meta.(*AWSClient).region,
