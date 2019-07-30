@@ -92,7 +92,7 @@ output "region" {
 - Merge AWS Go SDK update in Terraform AWS Provider and close issue with the following information:
 
 ``````markdown
-Support for automatic validation of this new region has been merged and will release with version 2.22.0 of the Terraform AWS Provider, later this week.
+Support for automatic validation of this new region has been merged and will release with version <x.y.z> of the Terraform AWS Provider, later this week.
 
 ---
 
@@ -112,7 +112,7 @@ Error: error validating provider credentials: error calling sts:GetCallerIdentit
 
 ---
 
-To use this new region before Terraform AWS Provider version 2.22.0, you must disable the provider's automatic region validation via:
+To use this new region before support has been added to Terraform AWS Provider version in use, you must disable the provider's automatic region validation via:
 
 ```hcl
 provider "aws" {
