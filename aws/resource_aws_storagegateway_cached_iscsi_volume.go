@@ -195,6 +195,9 @@ func resourceAwsStorageGatewayCachedIscsiVolumeDelete(d *schema.ResourceData, me
 		}
 		return nil
 	})
+	if isResourceTimeoutError(err) {
+		_, err = conn.DeleteVolume(input)
+	}
 	if err != nil {
 		return fmt.Errorf("error deleting Storage Gateway cached iSCSI volume %q: %s", d.Id(), err)
 	}
