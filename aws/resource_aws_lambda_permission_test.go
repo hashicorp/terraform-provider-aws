@@ -252,6 +252,7 @@ func TestAccAWSLambdaPermission_withRawFunctionName(t *testing.T) {
 func TestAccAWSLambdaPermission_withStatementIdPrefix(t *testing.T) {
 	var statement LambdaPolicyStatement
 	rName := acctest.RandomWithPrefix("tf-acc-test")
+	funcName := fmt.Sprintf("tf_acc_lambda_perm_w_raw_fname_%s", rString)
 	statementId := fmt.Sprintf("tf_acc_statement_lambda_perm_basic_%s", rString)
 	endsWithFuncName := regexp.MustCompile(":function:lambda_function_name_perm$")
 	startsWithPrefix := regexp.MustCompile("^AllowExecutionWithStatementIdPrefix-")
