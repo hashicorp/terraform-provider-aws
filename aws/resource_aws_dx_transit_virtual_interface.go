@@ -115,7 +115,6 @@ func resourceAwsDxTransitVirtualInterfaceCreate(d *schema.ResourceData, meta int
 			Asn:                    aws.Int64(int64(d.Get("bgp_asn").(int))),
 			DirectConnectGatewayId: aws.String(d.Get("dx_gateway_id").(string)),
 			Mtu:                    aws.Int64(int64(d.Get("mtu").(int))),
-			Tags:                   tagsFromMapDX(d.Get("tags").(map[string]interface{})),
 			VirtualInterfaceName:   aws.String(d.Get("name").(string)),
 			Vlan:                   aws.Int64(int64(d.Get("vlan").(int))),
 		},
@@ -128,6 +127,9 @@ func resourceAwsDxTransitVirtualInterfaceCreate(d *schema.ResourceData, meta int
 	}
 	if v, ok := d.GetOk("customer_address"); ok && v.(string) != "" {
 		req.NewTransitVirtualInterface.CustomerAddress = aws.String(v.(string))
+	}
+	if v, ok := d.GetOk("tags"); ok {
+		req.NewTransitVirtualInterface.Tags = tagsFromMapDX(v.(map[string]interface{}))
 	}
 
 	log.Printf("[DEBUG] Creating Direct Connect transit virtual interface: %#v", req)
