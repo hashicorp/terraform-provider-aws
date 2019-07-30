@@ -144,8 +144,11 @@ func resourceAwsEcsClusterRead(d *schema.ResourceData, meta interface{}) error {
 		return nil
 	}
 
+	settings := *(cluster.Settings)
+	container_insights := settings[0]["Value"].(bool)
 	d.Set("arn", cluster.ClusterArn)
 	d.Set("name", cluster.ClusterName)
+	d.Set("container_insights", container_insights)
 
 	if err := d.Set("tags", tagsToMapECS(cluster.Tags)); err != nil {
 		return fmt.Errorf("error setting tags: %s", err)
