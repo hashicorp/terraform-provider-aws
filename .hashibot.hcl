@@ -239,6 +239,9 @@ behavior "regexp_issue_labeler_v2" "service_labels" {
     "service/iot" = [
       "aws_iot_",
     ],
+    "service/kafka" = [
+      "aws_msk_",
+    ],
     "service/kinesis" = [
       # Catch aws_kinesis_XXX but not aws_kinesis_firehose_
       "aws_kinesis_([^f]|f[^i]|fi[^r]|fir[^e]|fire[^h]|fireh[^o]|fireho[^s]|firehos[^e]|firehose[^_])",
@@ -287,9 +290,6 @@ behavior "regexp_issue_labeler_v2" "service_labels" {
     ],
     "service/mobile" = [
       "aws_mobile_",
-    ],
-    "service/msk" = [
-      "aws_msk_",
     ],
     "service/mq" = [
       "aws_mq_",
@@ -550,7 +550,7 @@ behavior "pull_request_path_labeler" "service_labels" {
     ]
     "service/cloudwatch" = [
       "**/*_cloudwatch_dashboard*",
-      "**/*_cloudwatch_metic_alarm*",
+      "**/*_cloudwatch_metric_alarm*",
       "**/cloudwatch_dashboard*",
       "**/cloudwatch_metric_alarm*"
     ]
@@ -800,6 +800,10 @@ behavior "pull_request_path_labeler" "service_labels" {
     "service/iot" = [
       "**/*_iot_*",
       "**/iot_*"
+    ]
+    "service/kafka" = [
+      "**/*_msk_*",
+      "**/msk_*",
     ]
     "service/kinesis" = [
       "aws/*_aws_kinesis_stream*",
