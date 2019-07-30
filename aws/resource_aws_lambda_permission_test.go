@@ -251,6 +251,8 @@ func TestAccAWSLambdaPermission_withRawFunctionName(t *testing.T) {
 
 func TestAccAWSLambdaPermission_withStatementIdPrefix(t *testing.T) {
 	var statement LambdaPolicyStatement
+
+	rString := acctest.RandString(8)
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 	funcName := fmt.Sprintf("tf_acc_lambda_perm_w_raw_fname_%s", rString)
 	statementId := fmt.Sprintf("tf_acc_statement_lambda_perm_basic_%s", rString)
