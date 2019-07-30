@@ -1,3 +1,25 @@
+# Catch the following in issues:
+# *aws_XXX
+# * aws_XXX
+# * `aws_XXX`
+# -aws_XXX
+# - aws_XXX
+# - `aws_XXX`
+# data "aws_XXX"
+# resource "aws_XXX"
+behavior "regexp_issue_labeler_v2" "service_labels" {
+  regexp = "(\\* ?`?|- ?`?|data \"|resource \")aws_(\\w+)"
+
+  label_map = {
+    "service/acm" = [
+      "aws_acm_",
+    ],
+    "service/acmpca" = [
+      "aws_acmpca_",
+    ],
+  }
+}
+
 behavior "pull_request_path_labeler" "service_labels" {
   label_map = {
     # label provider related changes
