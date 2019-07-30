@@ -131,21 +131,18 @@ func resourceAwsLambdaPermissionCreate(d *schema.ResourceData, meta interface{})
 		var err error
 		out, err = conn.AddPermission(&input)
 
-		if isAWSErr(err, lambda.ErrCodeResourceConflictException, "") {
+		if isAWSErr(err, lambda.ErrCodeResourceConflictException, "") || isAWSErr(err, lambda.ErrCodeResourceNotFoundException, "") {
 			return resource.RetryableError(err)
 		}
-
-		if isAWSErr(err, lambda.ErrCodeResourceNotFoundException, "") {
-			return resource.RetryableError(err)
-		}
-
 		if err != nil {
 			return resource.NonRetryableError(err)
 		}
 
 		return nil
 	})
-
+	if isResourceTimeoutError(err) {
+		out, err = conn.AddPermission(&input)
+	}
 	if err != nil {
 		return fmt.Errorf("Error adding new Lambda Permission for %s: %s", functionName, err)
 	}
@@ -178,8 +175,13 @@ func resourceAwsLambdaPermissionCreate(d *schema.ResourceData, meta interface{})
 		}
 		return nil
 	})
-
-	return err
+	if isResourceTimeoutError(err) {
+		err = resourceAwsLambdaPermissionRead(d, meta)
+	}
+	if err != nil {
+		return fmt.Errorf("Error reading new Lambda permissions: %s", err)
+	}
+	return nil
 }
 
 func resourceAwsLambdaPermissionRead(d *schema.ResourceData, meta interface{}) error {
@@ -200,43 +202,42 @@ func resourceAwsLambdaPermissionRead(d *schema.ResourceData, meta interface{}) e
 		var err error
 		out, err = conn.GetPolicy(&input)
 		if err != nil {
-			if awsErr, ok := err.(awserr.Error); ok {
-				if awsErr.Code() == "ResourceNotFoundException" {
-					return resource.RetryableError(err)
-				}
+			if isAWSErr(err, "ResourceNotFoundException", "") {
+				return resource.RetryableError(err)
 			}
 			return resource.NonRetryableError(err)
 		}
-
-		policyInBytes := []byte(*out.Policy)
-		policy := LambdaPolicy{}
-		err = json.Unmarshal(policyInBytes, &policy)
-		if err != nil {
-			return resource.NonRetryableError(err)
-		}
-
-		statement, err = findLambdaPolicyStatementById(&policy, d.Id())
-		return resource.RetryableError(err)
+		return nil
 	})
 
+	if isResourceTimeoutError(err) {
+		out, err = conn.GetPolicy(&input)
+	}
+	if err != nil && !isAWSErr(err, "ResourceNotFoundException", "") {
+		return fmt.Errorf("Error getting Lambda policy: %s", err)
+	}
+	policyInBytes := []byte(*out.Policy)
+	policy := LambdaPolicy{}
+	err = json.Unmarshal(policyInBytes, &policy)
 	if err != nil {
+		return fmt.Errorf("Error unmarshaling policy JSON response: %s", err)
+	}
+	statement, err = findLambdaPolicyStatementById(&policy, d.Id())
+
+	if isAWSErr(err, "ResourceNotFoundException", "") {
 		// Missing whole policy or Lambda function (API error)
-		if awsErr, ok := err.(awserr.Error); ok {
-			if awsErr.Code() == "ResourceNotFoundException" {
-				log.Printf("[WARN] No Lambda Permission Policy found: %v", input)
-				d.SetId("")
-				return nil
-			}
-		}
-
+		log.Printf("[WARN] No Lambda Permission Policy found: %v", input)
+		d.SetId("")
+		return nil
+	}
+	if nfErr, ok := err.(*resource.NotFoundError); ok {
 		// Missing permission inside valid policy
-		if nfErr, ok := err.(*resource.NotFoundError); ok {
-			log.Printf("[WARN] %s", nfErr)
-			d.SetId("")
-			return nil
-		}
-
-		return err
+		log.Printf("[WARN] %s", nfErr)
+		d.SetId("")
+		return nil
+	}
+	if err != nil {
+		return fmt.Errorf("Error finding Lambda permission policy: %s", err)
 	}
 
 	qualifier, err := getQualifierFromLambdaAliasOrVersionArn(statement.Resource)
@@ -313,54 +314,49 @@ func resourceAwsLambdaPermissionDelete(d *schema.ResourceData, meta interface{})
 		return err
 	}
 
+	params := &lambda.GetPolicyInput{
+		FunctionName: aws.String(d.Get("function_name").(string)),
+	}
+	if v, ok := d.GetOk("qualifier"); ok {
+		params.Qualifier = aws.String(v.(string))
+	}
+
+	var resp *lambda.GetPolicyOutput
 	err = resource.Retry(5*time.Minute, func() *resource.RetryError {
-		log.Printf("[DEBUG] Checking if Lambda permission %q is deleted", d.Id())
-
-		params := &lambda.GetPolicyInput{
-			FunctionName: aws.String(d.Get("function_name").(string)),
-		}
-		if v, ok := d.GetOk("qualifier"); ok {
-			params.Qualifier = aws.String(v.(string))
-		}
-
-		log.Printf("[DEBUG] Looking for Lambda permission: %s", *params)
-		resp, err := conn.GetPolicy(params)
+		resp, err = conn.GetPolicy(params)
 		if err != nil {
-			if awsErr, ok := err.(awserr.Error); ok {
-				if awsErr.Code() == "ResourceNotFoundException" {
-					return nil
-				}
+			if isAWSErr(err, "ResourceNotFoundException", "") {
+				return nil
 			}
 			return resource.NonRetryableError(err)
 		}
-
-		if resp.Policy == nil {
+		return nil
+	})
+	if isResourceTimeoutError(err) {
+		resp, err = conn.GetPolicy(params)
+	}
+	if err != nil {
+		if isAWSErr(err, "ResourceNotFoundException", "") {
 			return nil
 		}
+		return fmt.Errorf("Failed removing Lambda permission: %s", err)
+	}
 
+	if resp.Policy != nil {
 		policyInBytes := []byte(*resp.Policy)
 		policy := LambdaPolicy{}
 		err = json.Unmarshal(policyInBytes, &policy)
 		if err != nil {
-			return resource.RetryableError(
-				fmt.Errorf("Error unmarshalling Lambda policy: %s", err))
+			return fmt.Errorf("Error unmarshalling Lambda policy: %s", err)
 		}
-
 		_, err = findLambdaPolicyStatementById(&policy, d.Id())
 		if err != nil {
 			return nil
 		}
-
-		log.Printf("[DEBUG] No error when checking if Lambda permission %s is deleted", d.Id())
-		return nil
-	})
-
-	if err != nil {
-		return fmt.Errorf("Failed removing Lambda permission: %s", err)
+		return fmt.Errorf("Failed to delete Lambda permissions") // No error here, it just didn't delete yet?!
 	}
 
 	log.Printf("[DEBUG] Lambda permission with ID %q removed", d.Id())
-
 	return nil
 }
 
