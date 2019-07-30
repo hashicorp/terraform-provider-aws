@@ -551,8 +551,6 @@ func TestAccAWSEcsService_withMultipleTargetGroups(t *testing.T) {
 
 	clusterName := fmt.Sprintf("tf-acc-cluster-svc-w-alb-%s", rString)
 	tdName := fmt.Sprintf("tf-acc-td-svc-w-alb-%s", rString)
-	roleName := fmt.Sprintf("tf-acc-role-svc-w-alb-%s", rString)
-	policyName := fmt.Sprintf("tf-acc-policy-svc-w-alb-%s", rString)
 	lbName := fmt.Sprintf("tf-acc-lb-svc-w-alb-%s", rString)
 	svcName := fmt.Sprintf("tf-acc-svc-w-alb-%s", rString)
 
@@ -562,10 +560,10 @@ func TestAccAWSEcsService_withMultipleTargetGroups(t *testing.T) {
 		CheckDestroy: testAccCheckAWSEcsServiceDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSEcsServiceWithMultipleTargetGroups(clusterName, tdName, roleName, policyName, lbName, svcName),
+				Config: testAccAWSEcsServiceWithMultipleTargetGroups(clusterName, tdName, lbName, svcName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSEcsServiceExists("aws_ecs_service.with_alb", &service),
-					resource.TestCheckResourceAttr("aws_ecs_service.with_alb", "load_balancer.#", "1"),
+					resource.TestCheckResourceAttr("aws_ecs_service.with_alb", "load_balancer.#", "2"),
 				),
 			},
 		},
@@ -2294,7 +2292,7 @@ resource "aws_ecs_service" "with_alb" {
 `, clusterName, tdName, roleName, policyName, lbName, svcName)
 }
 
-func testAccAWSEcsServiceWithMultipleTargetGroups(clusterName, tdName, roleName, policyName, lbName, svcName string) string {
+func testAccAWSEcsServiceWithMultipleTargetGroups(clusterName, tdName, lbName, svcName string) string {
 	return fmt.Sprintf(`
 data "aws_availability_zones" "available" {}
 
@@ -2335,7 +2333,11 @@ resource "aws_ecs_task_definition" "with_lb_changes" {
     "portMappings": [
       {
         "containerPort": 2368,
-        "hostPort": 8080
+        "hostPort": 2368
+      },
+      {
+        "containerPort": 4501,
+        "hostPort": 4501
       }
     ]
   }
@@ -2343,60 +2345,15 @@ resource "aws_ecs_task_definition" "with_lb_changes" {
 DEFINITION
 }
 
-resource "aws_iam_role" "ecs_service" {
-  name = "%s"
-
-  assume_role_policy = <<EOF
-{
-  "Version": "2008-10-17",
-  "Statement": [
-    {
-      "Sid": "",
-      "Effect": "Allow",
-      "Principal": {
-        "Service": "ecs.amazonaws.com"
-      },
-      "Action": "sts:AssumeRole"
-    }
-  ]
-}
-EOF
-}
-
-resource "aws_iam_role_policy" "ecs_service" {
-  name = "%s"
-  role = "${aws_iam_role.ecs_service.name}"
-
-  policy = <<EOF
-{
-  "Version": "2012-10-17",
-  "Statement": [
-    {
-      "Effect": "Allow",
-      "Action": [
-        "ec2:Describe*",
-        "elasticloadbalancing:DeregisterInstancesFromLoadBalancer",
-        "elasticloadbalancing:DeregisterTargets",
-        "elasticloadbalancing:Describe*",
-        "elasticloadbalancing:RegisterInstancesWithLoadBalancer",
-        "elasticloadbalancing:RegisterTargets"
-      ],
-      "Resource": "*"
-    }
-  ]
-}
-EOF
-}
-
 resource "aws_lb_target_group" "test" {
-  name     = "${aws_lb.main.name}"
+  name     = "${aws_lb.main.name}1"
   port     = 80
   protocol = "HTTP"
   vpc_id   = "${aws_vpc.main.id}"
 }
 
 resource "aws_lb_target_group" "static" {
-  name     = "${aws_lb.main.name}"
+  name     = "${aws_lb.main.name}2"
   port     = 80
   protocol = "HTTP"
   vpc_id   = "${aws_vpc.main.id}"
@@ -2439,7 +2396,6 @@ resource "aws_ecs_service" "with_alb" {
   cluster         = "${aws_ecs_cluster.main.id}"
   task_definition = "${aws_ecs_task_definition.with_lb_changes.arn}"
   desired_count   = 1
-  iam_role        = "${aws_iam_role.ecs_service.name}"
 
   load_balancer {
     target_group_arn = "${aws_lb_target_group.test.id}"
@@ -2452,12 +2408,8 @@ resource "aws_ecs_service" "with_alb" {
     container_name   = "ghost"
     container_port   = "4501"
   }
-
-  depends_on = [
-    "aws_iam_role_policy.ecs_service",
-  ]
 }
-`, clusterName, tdName, roleName, policyName, lbName, svcName)
+`, clusterName, tdName, lbName, svcName)
 }
 
 func testAccAWSEcsServiceWithNetworkConfiguration(sg1Name, sg2Name, clusterName, tdName, svcName string) string {
