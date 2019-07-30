@@ -238,6 +238,12 @@ func TestAccAWSLambdaPermission_withRawFunctionName(t *testing.T) {
 					resource.TestMatchResourceAttr("aws_lambda_permission.with_raw_func_name", "function_name", funcArnRe),
 				),
 			},
+			{
+				ResourceName:      "aws_lambda_permission.allow_cloudwatch",
+				ImportState:       true,
+				ImportStateId:     fmt.Sprintf("%s/%s", funcName, statementId),
+				ImportStateVerify: true,
+			},
 		},
 	})
 }
@@ -262,6 +268,12 @@ func TestAccAWSLambdaPermission_withStatementIdPrefix(t *testing.T) {
 					resource.TestMatchResourceAttr("aws_lambda_permission.with_statement_id_prefix", "statement_id", startsWithPrefix),
 					resource.TestMatchResourceAttr("aws_lambda_permission.with_statement_id_prefix", "function_name", endsWithFuncName),
 				),
+			},
+			{
+				ResourceName:      "aws_lambda_permission.allow_cloudwatch",
+				ImportState:       true,
+				ImportStateId:     fmt.Sprintf("%s/%s", funcName, statementId),
+				ImportStateVerify: true,
 			},
 		},
 	})
@@ -291,6 +303,12 @@ func TestAccAWSLambdaPermission_withQualifier(t *testing.T) {
 					resource.TestMatchResourceAttr("aws_lambda_permission.with_qualifier", "function_name", funcArnRe),
 					resource.TestCheckResourceAttr("aws_lambda_permission.with_qualifier", "qualifier", aliasName),
 				),
+			},
+			{
+				ResourceName:      "aws_lambda_permission.allow_cloudwatch",
+				ImportState:       true,
+				ImportStateId:     fmt.Sprintf("%s/%s", funcName, statementId),
+				ImportStateVerify: true,
 			},
 		},
 	})
@@ -353,6 +371,12 @@ func TestAccAWSLambdaPermission_multiplePerms(t *testing.T) {
 					resource.TestMatchResourceAttr("aws_lambda_permission.third", "function_name", funcArnRe),
 				),
 			},
+			{
+				ResourceName:      "aws_lambda_permission.allow_cloudwatch",
+				ImportState:       true,
+				ImportStateId:     fmt.Sprintf("%s/%s", funcName, statementId),
+				ImportStateVerify: true,
+			},
 		},
 	})
 }
@@ -382,6 +406,12 @@ func TestAccAWSLambdaPermission_withS3(t *testing.T) {
 					resource.TestCheckResourceAttr("aws_lambda_permission.with_s3", "source_arn",
 						fmt.Sprintf("arn:aws:s3:::%s", bucketName)),
 				),
+			},
+			{
+				ResourceName:      "aws_lambda_permission.allow_cloudwatch",
+				ImportState:       true,
+				ImportStateId:     fmt.Sprintf("%s/%s", funcName, statementId),
+				ImportStateVerify: true,
 			},
 		},
 	})
@@ -414,6 +444,12 @@ func TestAccAWSLambdaPermission_withSNS(t *testing.T) {
 					resource.TestMatchResourceAttr("aws_lambda_permission.with_sns", "source_arn", topicArnRe),
 				),
 			},
+			{
+				ResourceName:      "aws_lambda_permission.allow_cloudwatch",
+				ImportState:       true,
+				ImportStateId:     fmt.Sprintf("%s/%s", funcName, statementId),
+				ImportStateVerify: true,
+			},
 		},
 	})
 }
@@ -441,6 +477,12 @@ func TestAccAWSLambdaPermission_withIAMRole(t *testing.T) {
 					resource.TestCheckResourceAttr("aws_lambda_permission.iam_role", "statement_id", "AllowExecutionFromIAMRole"),
 					resource.TestMatchResourceAttr("aws_lambda_permission.iam_role", "function_name", funcArnRe),
 				),
+			},
+			{
+				ResourceName:      "aws_lambda_permission.allow_cloudwatch",
+				ImportState:       true,
+				ImportStateId:     fmt.Sprintf("%s/%s", funcName, statementId),
+				ImportStateVerify: true,
 			},
 		},
 	})
