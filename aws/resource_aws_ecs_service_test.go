@@ -545,6 +545,32 @@ func TestAccAWSEcsService_withAlb(t *testing.T) {
 	})
 }
 
+func TestAccAWSEcsService_withMultipleTargetGroups(t *testing.T) {
+	var service ecs.Service
+	rString := acctest.RandString(8)
+
+	clusterName := fmt.Sprintf("tf-acc-cluster-svc-w-alb-%s", rString)
+	tdName := fmt.Sprintf("tf-acc-td-svc-w-alb-%s", rString)
+	roleName := fmt.Sprintf("tf-acc-role-svc-w-alb-%s", rString)
+	policyName := fmt.Sprintf("tf-acc-policy-svc-w-alb-%s", rString)
+	lbName := fmt.Sprintf("tf-acc-lb-svc-w-alb-%s", rString)
+	svcName := fmt.Sprintf("tf-acc-svc-w-alb-%s", rString)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSEcsServiceDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSEcsServiceWithMultipleTargetGroups(clusterName, tdName, roleName, policyName, lbName, svcName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSEcsServiceExists("aws_ecs_service.with_alb", &service),
+					resource.TestCheckResourceAttr("aws_ecs_service.with_alb", "load_balancer.#", "1"),
+				),
+			},
+		},
+	})
+}
 func TestAccAWSEcsService_withPlacementStrategy(t *testing.T) {
 	var service ecs.Service
 	rString := acctest.RandString(8)
@@ -2259,6 +2285,172 @@ resource "aws_ecs_service" "with_alb" {
     target_group_arn = "${aws_lb_target_group.test.id}"
     container_name   = "ghost"
     container_port   = "2368"
+  }
+
+  depends_on = [
+    "aws_iam_role_policy.ecs_service",
+  ]
+}
+`, clusterName, tdName, roleName, policyName, lbName, svcName)
+}
+
+func testAccAWSEcsServiceWithMultipleTargetGroups(clusterName, tdName, roleName, policyName, lbName, svcName string) string {
+	return fmt.Sprintf(`
+data "aws_availability_zones" "available" {}
+
+resource "aws_vpc" "main" {
+  cidr_block = "10.10.0.0/16"
+
+  tags = {
+    Name = "terraform-testacc-ecs-service-with-alb"
+  }
+}
+
+resource "aws_subnet" "main" {
+  count             = 2
+  cidr_block        = "${cidrsubnet(aws_vpc.main.cidr_block, 8, count.index)}"
+  availability_zone = "${data.aws_availability_zones.available.names[count.index]}"
+  vpc_id            = "${aws_vpc.main.id}"
+
+  tags = {
+    Name = "tf-acc-ecs-service-with-alb"
+  }
+}
+
+resource "aws_ecs_cluster" "main" {
+  name = "%s"
+}
+
+resource "aws_ecs_task_definition" "with_lb_changes" {
+  family = "%s"
+
+  container_definitions = <<DEFINITION
+[
+  {
+    "cpu": 256,
+    "essential": true,
+    "image": "ghost:latest",
+    "memory": 512,
+    "name": "ghost",
+    "portMappings": [
+      {
+        "containerPort": 2368,
+        "hostPort": 8080
+      }
+    ]
+  }
+]
+DEFINITION
+}
+
+resource "aws_iam_role" "ecs_service" {
+  name = "%s"
+
+  assume_role_policy = <<EOF
+{
+  "Version": "2008-10-17",
+  "Statement": [
+    {
+      "Sid": "",
+      "Effect": "Allow",
+      "Principal": {
+        "Service": "ecs.amazonaws.com"
+      },
+      "Action": "sts:AssumeRole"
+    }
+  ]
+}
+EOF
+}
+
+resource "aws_iam_role_policy" "ecs_service" {
+  name = "%s"
+  role = "${aws_iam_role.ecs_service.name}"
+
+  policy = <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Action": [
+        "ec2:Describe*",
+        "elasticloadbalancing:DeregisterInstancesFromLoadBalancer",
+        "elasticloadbalancing:DeregisterTargets",
+        "elasticloadbalancing:Describe*",
+        "elasticloadbalancing:RegisterInstancesWithLoadBalancer",
+        "elasticloadbalancing:RegisterTargets"
+      ],
+      "Resource": "*"
+    }
+  ]
+}
+EOF
+}
+
+resource "aws_lb_target_group" "test" {
+  name     = "${aws_lb.main.name}"
+  port     = 80
+  protocol = "HTTP"
+  vpc_id   = "${aws_vpc.main.id}"
+}
+
+resource "aws_lb_target_group" "static" {
+  name     = "${aws_lb.main.name}"
+  port     = 80
+  protocol = "HTTP"
+  vpc_id   = "${aws_vpc.main.id}"
+}
+
+resource "aws_lb" "main" {
+  name     = "%s"
+  internal = true
+  subnets  = ["${aws_subnet.main.*.id[0]}", "${aws_subnet.main.*.id[1]}"]
+}
+
+resource "aws_lb_listener" "front_end" {
+  load_balancer_arn = "${aws_lb.main.id}"
+  port              = "80"
+  protocol          = "HTTP"
+
+  default_action {
+    target_group_arn = "${aws_lb_target_group.test.id}"
+    type             = "forward"
+  }
+}
+
+resource "aws_lb_listener_rule" "static" {
+  listener_arn = "${aws_lb_listener.front_end.arn}"
+  priority     = 100
+
+  action {
+    type             = "forward"
+    target_group_arn = "${aws_lb_target_group.static.arn}"
+  }
+
+  condition {
+    field  = "path-pattern"
+    values = ["/static/*"]
+  }
+}
+
+resource "aws_ecs_service" "with_alb" {
+  name            = "%s"
+  cluster         = "${aws_ecs_cluster.main.id}"
+  task_definition = "${aws_ecs_task_definition.with_lb_changes.arn}"
+  desired_count   = 1
+  iam_role        = "${aws_iam_role.ecs_service.name}"
+
+  load_balancer {
+    target_group_arn = "${aws_lb_target_group.test.id}"
+    container_name   = "ghost"
+    container_port   = "2368"
+  }
+
+  load_balancer {
+    target_group_arn = "${aws_lb_target_group.static.id}"
+    container_name   = "ghost"
+    container_port   = "4501"
   }
 
   depends_on = [
