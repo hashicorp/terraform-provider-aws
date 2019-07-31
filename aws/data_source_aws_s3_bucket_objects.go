@@ -10,7 +10,7 @@ import (
 	"github.com/hashicorp/terraform/helper/schema"
 )
 
-const maxS3ObjectListReqSize = 1000
+const keyRequestPageSize = 1000
 
 func dataSourceAwsS3BucketObjects() *schema.Resource {
 	return &schema.Resource{
@@ -36,6 +36,7 @@ func dataSourceAwsS3BucketObjects() *schema.Resource {
 			"max_keys": {
 				Type:     schema.TypeInt,
 				Optional: true,
+				Default:  1000,
 			},
 			"start_after": {
 				Type:     schema.TypeString,
@@ -110,14 +111,14 @@ func dataSourceAwsS3BucketObjectsRead(d *schema.ResourceData, meta interface{}) 
 		listInput.EncodingType = aws.String(s.(string))
 	}
 
-	// MaxKeys attribute refers to max keys returned in a single request
+	// "listInput.MaxKeys" refers to max keys returned in a single request
 	// (i.e., page size), not the total number of keys returned if you page
-	// through the results. This reduces # requests to fewest possible.
+	// through the results. "maxKeys" does refer to total keys returned.
 	maxKeys := -1
 	if max, ok := d.GetOk("max_keys"); ok {
 		maxKeys = max.(int)
-		if maxKeys > maxS3ObjectListReqSize {
-			listInput.MaxKeys = aws.Int64(int64(maxS3ObjectListReqSize))
+		if maxKeys > keyRequestPageSize {
+			listInput.MaxKeys = aws.Int64(int64(keyRequestPageSize))
 		} else {
 			listInput.MaxKeys = aws.Int64(int64(maxKeys))
 		}
