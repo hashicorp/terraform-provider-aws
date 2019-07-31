@@ -33,7 +33,7 @@ func resourceAwsCodeBuildProject() *schema.Resource {
 				Computed: true,
 			},
 			"artifacts": {
-				Type:     schema.TypeSet,
+				Type:     schema.TypeList,
 				Required: true,
 				MaxItems: 1,
 				Elem: &schema.Resource{
@@ -41,6 +41,12 @@ func resourceAwsCodeBuildProject() *schema.Resource {
 						"name": {
 							Type:     schema.TypeString,
 							Optional: true,
+							DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+								if old == d.Get("name") && new == "" {
+									return true
+								}
+								return false
+							},
 						},
 						"encryption_disabled": {
 							Type:     schema.TypeBool,
@@ -54,6 +60,12 @@ func resourceAwsCodeBuildProject() *schema.Resource {
 						"namespace_type": {
 							Type:     schema.TypeString,
 							Optional: true,
+							DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+								if d.Get("artifacts.0.type") == codebuild.ArtifactsTypeS3 && old == codebuild.ArtifactNamespaceNone && new == "" {
+									return true
+								}
+								return false
+							},
 							ValidateFunc: validation.StringInSlice([]string{
 								codebuild.ArtifactNamespaceNone,
 								codebuild.ArtifactNamespaceBuildId,
@@ -62,6 +74,15 @@ func resourceAwsCodeBuildProject() *schema.Resource {
 						"packaging": {
 							Type:     schema.TypeString,
 							Optional: true,
+							DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+								if d.Get("artifacts.0.type") == codebuild.ArtifactsTypeCodepipeline && new == "" {
+									return true
+								}
+								if d.Get("artifacts.0.type") == codebuild.ArtifactsTypeS3 && old == codebuild.ArtifactPackagingNone && new == "" {
+									return true
+								}
+								return false
+							},
 						},
 						"path": {
 							Type:     schema.TypeString,
@@ -83,7 +104,6 @@ func resourceAwsCodeBuildProject() *schema.Resource {
 						},
 					},
 				},
-				Set: resourceAwsCodeBuildProjectArtifactsHash,
 			},
 			"cache": {
 				Type:     schema.TypeList,
@@ -659,7 +679,7 @@ func expandProjectSecondaryArtifacts(d *schema.ResourceData) []*codebuild.Projec
 }
 
 func expandProjectArtifacts(d *schema.ResourceData) codebuild.ProjectArtifacts {
-	configs := d.Get("artifacts").(*schema.Set).List()
+	configs := d.Get("artifacts").([]interface{})
 	data := configs[0].(map[string]interface{})
 
 	return expandProjectArtifactData(data)
@@ -1215,17 +1235,8 @@ func flattenAwsCodeBuildProjectSecondaryArtifacts(artifactsList []*codebuild.Pro
 	return &artifactSet
 }
 
-func flattenAwsCodeBuildProjectArtifacts(artifacts *codebuild.ProjectArtifacts) *schema.Set {
-
-	artifactSet := schema.Set{
-		F: resourceAwsCodeBuildProjectArtifactsHash,
-	}
-
-	values := flattenAwsCodeBuildProjectArtifactsData(*artifacts)
-
-	artifactSet.Add(values)
-
-	return &artifactSet
+func flattenAwsCodeBuildProjectArtifacts(artifacts *codebuild.ProjectArtifacts) []interface{} {
+	return []interface{}{flattenAwsCodeBuildProjectArtifactsData(*artifacts)}
 }
 
 func flattenAwsCodeBuildProjectArtifactsData(artifacts codebuild.ProjectArtifacts) map[string]interface{} {
