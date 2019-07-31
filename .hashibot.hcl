@@ -105,7 +105,7 @@ behavior "regexp_issue_labeler_v2" "service_labels" {
       "aws_codedeploy_",
     ],
     "service/codepipeline" = [
-      "aws_codepipeline_",
+      "aws_codepipeline",
     ],
     "service/codestar" = [
       "aws_codestar_",
@@ -340,7 +340,7 @@ behavior "regexp_issue_labeler_v2" "service_labels" {
     ],
     "service/s3" = [
       "aws_canonical_user_id",
-      "aws_s3_bucket_",
+      "aws_s3_bucket",
     ],
     "service/s3control" = [
       "aws_s3_account_",
