@@ -41,6 +41,12 @@ func TestAccAWSCodeBuildSourceCredential_Basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "auth_type", "PERSONAL_ACCESS_TOKEN"),
 				),
 			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"token", "user_name"},
+			},
 		},
 	})
 }
@@ -71,6 +77,12 @@ func TestAccAWSCodeBuildSourceCredential_BasicAuth(t *testing.T) {
 					testAccCheckAWSCodeBuildSourceCredentialExists(resourceName, &sourceCredentialsInfo),
 					resource.TestCheckResourceAttr(resourceName, "user_name", "user2"),
 				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"token", "user_name"},
 			},
 		},
 	})

@@ -16,6 +16,10 @@ func resourceAwsCodeBuildSourceCredential() *schema.Resource {
 		Read:   resourceAwsCodeBuildSourceCredentialRead,
 		Delete: resourceAwsCodeBuildSourceCredentialDelete,
 
+		Importer: &schema.ResourceImporter{
+			State: schema.ImportStatePassthrough,
+		},
+
 		Schema: map[string]*schema.Schema{
 			"arn": {
 				Type:     schema.TypeString,

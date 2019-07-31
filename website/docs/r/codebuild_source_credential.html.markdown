@@ -46,3 +46,11 @@ In addition to all arguments above, the following attributes are exported:
 
 * `id` - The ARN of Source Credential.
 * `arn` - The ARN of Source Credential.
+
+## Import
+
+CodeBuild Source Credential can be imported using the CodeBuild Source Credential arn, e.g.
+
+```
+$ terraform import aws_codebuild_source_credential.example arn:aws:codebuild:us-west-2:123456789:token:github
+```
