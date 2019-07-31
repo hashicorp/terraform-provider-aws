@@ -41,6 +41,11 @@ func resourceAwsEc2ClientVpnEndpoint() *schema.Resource {
 				Type:     schema.TypeString,
 				Required: true,
 			},
+			"split_tunnel": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				Default:  false,
+			},
 			"transport_protocol": {
 				Type:     schema.TypeString,
 				Optional: true,
@@ -120,6 +125,7 @@ func resourceAwsEc2ClientVpnEndpointCreate(d *schema.ResourceData, meta interfac
 		ClientCidrBlock:      aws.String(d.Get("client_cidr_block").(string)),
 		ServerCertificateArn: aws.String(d.Get("server_certificate_arn").(string)),
 		TransportProtocol:    aws.String(d.Get("transport_protocol").(string)),
+		SplitTunnel:          aws.Bool(d.Get("split_tunnel").(bool)),
 		TagSpecifications:    ec2TagSpecificationsFromMap(d.Get("tags").(map[string]interface{}), ec2.ResourceTypeClientVpnEndpoint),
 	}
 
@@ -226,6 +232,7 @@ func resourceAwsEc2ClientVpnEndpointRead(d *schema.ResourceData, meta interface{
 	d.Set("transport_protocol", result.ClientVpnEndpoints[0].TransportProtocol)
 	d.Set("dns_name", result.ClientVpnEndpoints[0].DnsName)
 	d.Set("status", result.ClientVpnEndpoints[0].Status)
+	d.Set("split_tunnel", result.ClientVpnEndpoints[0].SplitTunnel)
 
 	err = d.Set("authentication_options", flattenAuthOptsConfig(result.ClientVpnEndpoints[0].AuthenticationOptions))
 	if err != nil {
@@ -290,6 +297,10 @@ func resourceAwsEc2ClientVpnEndpointUpdate(d *schema.ResourceData, meta interfac
 
 	if d.HasChange("server_certificate_arn") {
 		req.ServerCertificateArn = aws.String(d.Get("server_certificate_arn").(string))
+	}
+
+	if d.HasChange("split_tunnel") {
+		req.SplitTunnel = aws.Bool(d.Get("split_tunnel").(bool))
 	}
 
 	if d.HasChange("connection_log_options") {
