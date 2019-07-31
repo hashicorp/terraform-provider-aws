@@ -75,6 +75,7 @@ func TestAccAWSCodeBuildProject_basic(t *testing.T) {
 					testAccCheckResourceAttrRegionalARN(resourceName, "arn", "codebuild", fmt.Sprintf("project/%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, "artifacts.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "artifacts.1178773975.encryption_disabled", "false"),
+					resource.TestCheckResourceAttr(resourceName, "artifacts.1178773975.override_artifact_name", "false"),
 					resource.TestCheckResourceAttr(resourceName, "artifacts.1178773975.location", ""),
 					resource.TestCheckResourceAttr(resourceName, "artifacts.1178773975.name", ""),
 					resource.TestCheckResourceAttr(resourceName, "artifacts.1178773975.namespace_type", ""),
@@ -913,6 +914,37 @@ func TestAccAWSCodeBuildProject_Artifacts_EncryptionDisabled(t *testing.T) {
 					testAccCheckAWSCodeBuildProjectExists(resourceName, &project),
 					resource.TestCheckResourceAttr(resourceName, "artifacts.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "artifacts.537882814.encryption_disabled", "true"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAWSCodeBuildProject_Artifacts_OverrideArtifactName(t *testing.T) {
+	var project codebuild.Project
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	bName := acctest.RandomWithPrefix("tf-acc-test-bucket")
+	resourceName := "aws_codebuild_project.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSCodeBuild(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSCodeBuildProjectDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSCodebuildProjectConfig_Artifacts_OverrideArtifactName(rName, bName, true),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSCodeBuildProjectExists(resourceName, &project),
+					resource.TestCheckResourceAttr(resourceName, "artifacts.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "artifacts.1580844383.override_artifact_name", "true"),
+				),
+			},
+			{
+				Config: testAccAWSCodebuildProjectConfig_Artifacts_OverrideArtifactName(rName, bName, false),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSCodeBuildProjectExists(resourceName, &project),
+					resource.TestCheckResourceAttr(resourceName, "artifacts.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "artifacts.135498304.override_artifact_name", "false"),
 				),
 			},
 		},
@@ -2146,6 +2178,32 @@ resource "aws_codebuild_project" "test" {
   }
 }
 `, rName, encryptionDisabled)
+}
+
+func testAccAWSCodebuildProjectConfig_Artifacts_OverrideArtifactName(rName string, bName string, overrideArtifactName bool) string {
+	return testAccAWSCodeBuildProjectConfig_Base_ServiceRole(rName) + testAccAWSCodeBuildProjectConfig_Base_Bucket(bName) + fmt.Sprintf(`
+resource "aws_codebuild_project" "test" {
+  name          = "%s"
+  service_role  = "${aws_iam_role.test.arn}"
+
+  artifacts {
+    override_artifact_name = %t
+    location            = "${aws_s3_bucket.test.bucket}"
+    type                = "S3"
+  }
+
+  environment {
+    compute_type = "BUILD_GENERAL1_SMALL"
+    image        = "2"
+    type         = "LINUX_CONTAINER"
+  }
+
+  source {
+    type     = "GITHUB"
+    location = "https://github.com/hashicorp/packer.git"
+  }
+}
+`, rName, overrideArtifactName)
 }
 
 func testAccAWSCodebuildProjectConfig_SecondaryArtifacts(rName string, bName string) string {

@@ -76,6 +76,11 @@ func resourceAwsCodeBuildProject() *schema.Resource {
 								codebuild.ArtifactsTypeNoArtifacts,
 							}, false),
 						},
+						"override_artifact_name": {
+							Type:     schema.TypeBool,
+							Optional: true,
+							Default:  false,
+						},
 					},
 				},
 				Set: resourceAwsCodeBuildProjectArtifactsHash,
@@ -668,6 +673,8 @@ func expandProjectArtifactData(data map[string]interface{}) codebuild.ProjectArt
 		projectArtifacts.EncryptionDisabled = aws.Bool(data["encryption_disabled"].(bool))
 	}
 
+	projectArtifacts.OverrideArtifactName = aws.Bool(data["override_artifact_name"].(bool))
+
 	if data["artifact_identifier"] != nil && data["artifact_identifier"].(string) != "" {
 		projectArtifacts.ArtifactIdentifier = aws.String(data["artifact_identifier"].(string))
 	}
@@ -1226,6 +1233,11 @@ func flattenAwsCodeBuildProjectArtifactsData(artifacts codebuild.ProjectArtifact
 	if artifacts.EncryptionDisabled != nil {
 		values["encryption_disabled"] = *artifacts.EncryptionDisabled
 	}
+
+	if artifacts.OverrideArtifactName != nil {
+		values["override_artifact_name"] = *artifacts.OverrideArtifactName
+	}
+
 	if artifacts.Location != nil {
 		values["location"] = *artifacts.Location
 	}
@@ -1351,6 +1363,7 @@ func resourceAwsCodeBuildProjectArtifactsHash(v interface{}) int {
 	m := v.(map[string]interface{})
 
 	buf.WriteString(fmt.Sprintf("%s-", m["type"].(string)))
+	buf.WriteString(fmt.Sprintf("%t-", m["override_artifact_name"].(bool)))
 
 	if v, ok := m["artifact_identifier"]; ok {
 		buf.WriteString(fmt.Sprintf("%s:", v.(string)))
