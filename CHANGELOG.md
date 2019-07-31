@@ -18,6 +18,7 @@ ENHANCEMENTS:
 
 BUG FIXES:
 * resource/aws_storagegateway_cached_iscsi_volume: Retry after timeout deleting volume [GH-9536]
+* resource/aws_storagegateway_cached_iscsi_volume: Fix errors deleting volumes when volumes don't exist [GH-9543]
 * resource/aws_storagegateway_gateway: Retry after timeouts creating gateway [GH-9536]
 
 ## 2.21.1 (July 26, 2019)
