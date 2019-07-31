@@ -151,3 +151,11 @@ resource "aws_lambda_permission" "lambda_permission" {
  * `statement_id_prefix` - (Optional) A statement identifier prefix. Terraform will generate a unique suffix. Conflicts with `statement_id`.
 
 [1]: https://developer.amazon.com/docs/custom-skills/host-a-custom-skill-as-an-aws-lambda-function.html#use-aws-cli
+
+## Import
+
+Lambda permission statements can be imported using the function_name/statement_id, e.g.
+
+```
+$ terraform import aws_lambda_function_permission.test_lambda_permission my_test_lambda_function/AllowExecutionFromCloudWatch
+```

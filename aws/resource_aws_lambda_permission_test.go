@@ -169,6 +169,7 @@ func TestAccAWSLambdaPermission_basic(t *testing.T) {
 	rString := acctest.RandString(8)
 	funcName := fmt.Sprintf("tf_acc_lambda_perm_basic_%s", rString)
 	roleName := fmt.Sprintf("tf_acc_role_lambda_perm_basic_%s", rString)
+	statementId := fmt.Sprintf("tf_acc_statement_lambda_perm_basic_%s", rString)
 	funcArnRe := regexp.MustCompile(":function:" + funcName + "$")
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -187,6 +188,12 @@ func TestAccAWSLambdaPermission_basic(t *testing.T) {
 					resource.TestMatchResourceAttr("aws_lambda_permission.allow_cloudwatch", "function_name", funcArnRe),
 					resource.TestCheckResourceAttr("aws_lambda_permission.allow_cloudwatch", "event_source_token", "test-event-source-token"),
 				),
+			},
+			{
+				ResourceName:      "aws_lambda_permission.allow_cloudwatch",
+				ImportState:       true,
+				ImportStateId:     fmt.Sprintf("%s/%s", funcName, statementId),
+				ImportStateVerify: true,
 			},
 		},
 	})
@@ -214,6 +221,7 @@ func TestAccAWSLambdaPermission_withRawFunctionName(t *testing.T) {
 	rString := acctest.RandString(8)
 	funcName := fmt.Sprintf("tf_acc_lambda_perm_w_raw_fname_%s", rString)
 	roleName := fmt.Sprintf("tf_acc_role_lambda_perm_w_raw_fname_%s", rString)
+	statementId := fmt.Sprintf("tf_acc_statement_lambda_perm_basic_%s", rString)
 	funcArnRe := regexp.MustCompile(":function:" + funcName + "$")
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -231,13 +239,23 @@ func TestAccAWSLambdaPermission_withRawFunctionName(t *testing.T) {
 					resource.TestMatchResourceAttr("aws_lambda_permission.with_raw_func_name", "function_name", funcArnRe),
 				),
 			},
+			{
+				ResourceName:      "aws_lambda_permission.allow_cloudwatch",
+				ImportState:       true,
+				ImportStateId:     fmt.Sprintf("%s/%s", funcName, statementId),
+				ImportStateVerify: true,
+			},
 		},
 	})
 }
 
 func TestAccAWSLambdaPermission_withStatementIdPrefix(t *testing.T) {
 	var statement LambdaPolicyStatement
+
+	rString := acctest.RandString(8)
 	rName := acctest.RandomWithPrefix("tf-acc-test")
+	funcName := fmt.Sprintf("tf_acc_lambda_perm_w_raw_fname_%s", rString)
+	statementId := fmt.Sprintf("tf_acc_statement_lambda_perm_basic_%s", rString)
 	endsWithFuncName := regexp.MustCompile(":function:lambda_function_name_perm$")
 	startsWithPrefix := regexp.MustCompile("^AllowExecutionWithStatementIdPrefix-")
 
@@ -256,6 +274,12 @@ func TestAccAWSLambdaPermission_withStatementIdPrefix(t *testing.T) {
 					resource.TestMatchResourceAttr("aws_lambda_permission.with_statement_id_prefix", "function_name", endsWithFuncName),
 				),
 			},
+			{
+				ResourceName:      "aws_lambda_permission.allow_cloudwatch",
+				ImportState:       true,
+				ImportStateId:     fmt.Sprintf("%s/%s", funcName, statementId),
+				ImportStateVerify: true,
+			},
 		},
 	})
 }
@@ -267,6 +291,7 @@ func TestAccAWSLambdaPermission_withQualifier(t *testing.T) {
 	aliasName := fmt.Sprintf("tf_acc_lambda_perm_alias_w_qualifier_%s", rString)
 	funcName := fmt.Sprintf("tf_acc_lambda_perm_w_qualifier_%s", rString)
 	roleName := fmt.Sprintf("tf_acc_role_lambda_perm_w_qualifier_%s", rString)
+	statementId := fmt.Sprintf("tf_acc_statement_lambda_perm_basic_%s", rString)
 	funcArnRe := regexp.MustCompile(":function:" + funcName + "$")
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -285,6 +310,12 @@ func TestAccAWSLambdaPermission_withQualifier(t *testing.T) {
 					resource.TestCheckResourceAttr("aws_lambda_permission.with_qualifier", "qualifier", aliasName),
 				),
 			},
+			{
+				ResourceName:      "aws_lambda_permission.allow_cloudwatch",
+				ImportState:       true,
+				ImportStateId:     fmt.Sprintf("%s/%s", funcName, statementId),
+				ImportStateVerify: true,
+			},
 		},
 	})
 }
@@ -299,6 +330,7 @@ func TestAccAWSLambdaPermission_multiplePerms(t *testing.T) {
 	rString := acctest.RandString(8)
 	funcName := fmt.Sprintf("tf_acc_lambda_perm_multi_%s", rString)
 	roleName := fmt.Sprintf("tf_acc_role_lambda_perm_multi_%s", rString)
+	statementId := fmt.Sprintf("tf_acc_statement_lambda_perm_basic_%s", rString)
 	funcArnRe := regexp.MustCompile(":function:" + funcName + "$")
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -346,6 +378,12 @@ func TestAccAWSLambdaPermission_multiplePerms(t *testing.T) {
 					resource.TestMatchResourceAttr("aws_lambda_permission.third", "function_name", funcArnRe),
 				),
 			},
+			{
+				ResourceName:      "aws_lambda_permission.allow_cloudwatch",
+				ImportState:       true,
+				ImportStateId:     fmt.Sprintf("%s/%s", funcName, statementId),
+				ImportStateVerify: true,
+			},
 		},
 	})
 }
@@ -357,6 +395,7 @@ func TestAccAWSLambdaPermission_withS3(t *testing.T) {
 	bucketName := fmt.Sprintf("tf-acc-bucket-lambda-perm-w-s3-%s", rString)
 	funcName := fmt.Sprintf("tf_acc_lambda_perm_w_s3_%s", rString)
 	roleName := fmt.Sprintf("tf_acc_role_lambda_perm_w_s3_%s", rString)
+	statementId := fmt.Sprintf("tf_acc_statement_lambda_perm_basic_%s", rString)
 	funcArnRe := regexp.MustCompile(":function:" + funcName + "$")
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -376,6 +415,12 @@ func TestAccAWSLambdaPermission_withS3(t *testing.T) {
 						fmt.Sprintf("arn:aws:s3:::%s", bucketName)),
 				),
 			},
+			{
+				ResourceName:      "aws_lambda_permission.allow_cloudwatch",
+				ImportState:       true,
+				ImportStateId:     fmt.Sprintf("%s/%s", funcName, statementId),
+				ImportStateVerify: true,
+			},
 		},
 	})
 }
@@ -387,6 +432,7 @@ func TestAccAWSLambdaPermission_withSNS(t *testing.T) {
 	topicName := fmt.Sprintf("tf_acc_topic_lambda_perm_w_sns_%s", rString)
 	funcName := fmt.Sprintf("tf_acc_lambda_perm_w_sns_%s", rString)
 	roleName := fmt.Sprintf("tf_acc_role_lambda_perm_w_sns_%s", rString)
+	statementId := fmt.Sprintf("tf_acc_statement_lambda_perm_basic_%s", rString)
 
 	funcArnRe := regexp.MustCompile(":function:" + funcName + "$")
 	topicArnRe := regexp.MustCompile(":" + topicName + "$")
@@ -407,6 +453,12 @@ func TestAccAWSLambdaPermission_withSNS(t *testing.T) {
 					resource.TestMatchResourceAttr("aws_lambda_permission.with_sns", "source_arn", topicArnRe),
 				),
 			},
+			{
+				ResourceName:      "aws_lambda_permission.allow_cloudwatch",
+				ImportState:       true,
+				ImportStateId:     fmt.Sprintf("%s/%s", funcName, statementId),
+				ImportStateVerify: true,
+			},
 		},
 	})
 }
@@ -417,6 +469,7 @@ func TestAccAWSLambdaPermission_withIAMRole(t *testing.T) {
 	rString := acctest.RandString(8)
 	funcName := fmt.Sprintf("tf_acc_lambda_perm_w_iam_%s", rString)
 	roleName := fmt.Sprintf("tf_acc_role_lambda_perm_w_iam_%s", rString)
+	statementId := fmt.Sprintf("tf_acc_statement_lambda_perm_basic_%s", rString)
 	funcArnRe := regexp.MustCompile(":function:" + funcName + "$")
 	roleArnRe := regexp.MustCompile("/" + roleName + "$")
 
@@ -434,6 +487,12 @@ func TestAccAWSLambdaPermission_withIAMRole(t *testing.T) {
 					resource.TestCheckResourceAttr("aws_lambda_permission.iam_role", "statement_id", "AllowExecutionFromIAMRole"),
 					resource.TestMatchResourceAttr("aws_lambda_permission.iam_role", "function_name", funcArnRe),
 				),
+			},
+			{
+				ResourceName:      "aws_lambda_permission.allow_cloudwatch",
+				ImportState:       true,
+				ImportStateId:     fmt.Sprintf("%s/%s", funcName, statementId),
+				ImportStateVerify: true,
 			},
 		},
 	})
