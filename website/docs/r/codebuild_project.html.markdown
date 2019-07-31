@@ -72,6 +72,24 @@ resource "aws_iam_role_policy" "example" {
     {
       "Effect": "Allow",
       "Action": [
+        "ec2:CreateNetworkInterfacePermission"
+      ],
+      "Resource": [
+        "arn:aws:ec2:us-east-1:123456789012:network-interface/*"
+      ]
+      "Condition": {
+        "StringEquals": {
+          "ec2:Subnet": [
+            "arn:aws:ec2:us-east-1:123456789012:subnet/subnet-ba35d2e",
+            "arn:aws:ec2:us-east-1:123456789012:subnet/subnet-ab129af1"
+          ],
+          "ec2:AuthorizedService": "codebuild.amazonaws.com"
+        }
+      }
+    },
+    {
+      "Effect": "Allow",
+      "Action": [
         "s3:*"
       ],
       "Resource": [
