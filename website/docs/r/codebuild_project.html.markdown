@@ -59,7 +59,6 @@ resource "aws_iam_role_policy" "example" {
       "Effect": "Allow",
       "Action": [
         "ec2:CreateNetworkInterface",
-        "ec2:CreateNetworkInterfacePermission",
         "ec2:DescribeDhcpOptions",
         "ec2:DescribeNetworkInterfaces",
         "ec2:DeleteNetworkInterface",
@@ -80,8 +79,8 @@ resource "aws_iam_role_policy" "example" {
       "Condition": {
         "StringEquals": {
           "ec2:Subnet": [
-            "arn:aws:ec2:us-east-1:123456789012:subnet/subnet-ba35d2e",
-            "arn:aws:ec2:us-east-1:123456789012:subnet/subnet-ab129af1"
+            "${aws_subnet.example1.arn}",
+            "${aws_subnet.example2.arn}"
           ],
           "ec2:AuthorizedService": "codebuild.amazonaws.com"
         }
@@ -154,16 +153,16 @@ resource "aws_codebuild_project" "example" {
   }
 
   vpc_config {
-    vpc_id = "vpc-725fca"
+    vpc_id = "${aws_vpc.example.id}"
 
     subnets = [
-      "subnet-ba35d2e0",
-      "subnet-ab129af1",
+      "${aws_subnet.example1.id}",
+      "${aws_subnet.example2.id}",
     ]
 
     security_group_ids = [
-      "sg-f9f27d91",
-      "sg-e4f48g23",
+      "${aws_security_group.example1.id}",
+      "${aws_security_gorup.example2.id}",
     ]
   }
 
