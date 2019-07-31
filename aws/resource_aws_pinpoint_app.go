@@ -130,7 +130,6 @@ func resourceAwsPinpointApp() *schema.Resource {
 			},
 			"arn": {
 				Type:     schema.TypeString,
-				Optional: true,
 				Computed: true,
 			},
 			"tags": tagsSchema(),
@@ -142,7 +141,6 @@ func resourceAwsPinpointAppCreate(d *schema.ResourceData, meta interface{}) erro
 	pinpointconn := meta.(*AWSClient).pinpointconn
 
 	var name string
-	var tags = make(map[string]*string)
 
 	if v, ok := d.GetOk("name"); ok {
 		name = v.(string)
@@ -154,15 +152,14 @@ func resourceAwsPinpointAppCreate(d *schema.ResourceData, meta interface{}) erro
 
 	log.Printf("[DEBUG] Pinpoint create app: %s", name)
 
-	if v, ok := d.GetOk("tags"); ok {
-		tags = tagsFromMapPinPointApp(v.(map[string]interface{}))
-	}
-
 	req := &pinpoint.CreateAppInput{
 		CreateApplicationRequest: &pinpoint.CreateApplicationRequest{
 			Name: aws.String(name),
-			Tags: tags,
 		},
+	}
+
+	if v, ok := d.GetOk("tags"); ok {
+		req.CreateApplicationRequest.Tags = tagsFromMapPinPointApp(v.(map[string]interface{}))
 	}
 
 	output, err := pinpointconn.CreateApp(req)
@@ -208,9 +205,7 @@ func resourceAwsPinpointAppUpdate(d *schema.ResourceData, meta interface{}) erro
 	}
 
 	if err := setTagsPinPointApp(conn, d); err != nil {
-		return fmt.Errorf(
-			"Error Updating PinPoint App tags: \"%s\"\n%s",
-			d.Get("name").(string), err)
+		return fmt.Errorf("error updating PinPoint Application (%s) tags: %s", d.Id(), err)
 	}
 
 	return resourceAwsPinpointAppRead(d, meta)
@@ -261,7 +256,7 @@ func resourceAwsPinpointAppRead(d *schema.ResourceData, meta interface{}) error 
 		return fmt.Errorf("error setting quiet_time: %s", err)
 	}
 
-	if err := getTagsPinPointApp(conn, d, *app.ApplicationResponse.Name); err != nil {
+	if err := getTagsPinPointApp(conn, d); err != nil {
 		return fmt.Errorf("error setting tags: %s", err)
 	}
 

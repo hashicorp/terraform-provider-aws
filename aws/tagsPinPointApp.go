@@ -10,7 +10,7 @@ import (
 
 // getTags is a helper to get the tags for a resource. It expects the
 // tags field to be named "tags"
-func getTagsPinPointApp(conn *pinpoint.Pinpoint, d *schema.ResourceData, sn string) error {
+func getTagsPinPointApp(conn *pinpoint.Pinpoint, d *schema.ResourceData) error {
 	resp, err := conn.ListTagsForResource(&pinpoint.ListTagsForResourceInput{
 		ResourceArn: aws.String(d.Get("arn").(string)),
 	})

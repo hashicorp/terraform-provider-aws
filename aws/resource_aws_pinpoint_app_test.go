@@ -2,13 +2,13 @@ package aws
 
 import (
 	"fmt"
-	"github.com/hashicorp/terraform/helper/acctest"
 	"os"
 	"testing"
 
 	"github.com/aws/aws-sdk-go/service/pinpoint"
 
 	"github.com/aws/aws-sdk-go/aws"
+	"github.com/hashicorp/terraform/helper/acctest"
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/terraform"
 )
