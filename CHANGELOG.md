@@ -16,6 +16,7 @@ ENHANCEMENTS:
 * resource/aws_config_aggregate_authorization: Add `tags` argument [GH-9561]
 * resource/aws_config_config_rule: Add `tags` argument [GH-9561]
 * resource/aws_config_configuration_aggregator: Add `tags` argument [GH-9561]
+* resource/aws_ec2_client_vpn_endpoint: Add `split_tunnel` argument [GH-9566]
 * resource/aws_ecs_service: Allow multiple `load_balancer` configuration blocks (support for multiple target groups) [GH-9411]
 * resource/aws_pinpoint_app: Add `tags` argument [GH-9460]
 * resource/aws_s3_bucket: Support `me-south-1` region for `hosted_zone_id` attribute [GH-9547]
