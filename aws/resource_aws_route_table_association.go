@@ -51,7 +51,7 @@ func resourceAwsRouteTableAssociationCreate(d *schema.ResourceData, meta interfa
 	}
 
 	var associationID string
-	err := resource.Retry(30*time.Second, func() *resource.RetryError {
+	err := resource.Retry(5*time.Minute, func() *resource.RetryError {
 		resp, err := conn.AssociateRouteTable(&associationOpts)
 		if err != nil {
 			if awsErr, ok := err.(awserr.Error); ok {
@@ -60,9 +60,8 @@ func resourceAwsRouteTableAssociationCreate(d *schema.ResourceData, meta interfa
 				}
 			}
 			return resource.NonRetryableError(err)
-		} else {
-			associationID = *resp.AssociationId
 		}
+		associationID = *resp.AssociationId
 		return nil
 	})
 	if err != nil {
@@ -188,8 +187,8 @@ func resourceAwsRouteTableAssociationImport(d *schema.ResourceData, meta interfa
 
 	var associationID string
 	for _, a := range rt.Associations {
-		if *a.SubnetId == subnetID {
-			associationID = *a.RouteTableAssociationId
+		if aws.StringValue(a.SubnetId) == subnetID {
+			associationID = aws.StringValue(a.RouteTableAssociationId)
 			break
 		}
 	}
