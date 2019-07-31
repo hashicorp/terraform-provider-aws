@@ -1033,7 +1033,7 @@ data "aws_iam_policy_document" "assume" {
 }
 
 data "aws_iam_policy" "AWSGlueServiceRole" {
-  arn = "arn:aws:iam::aws:policy/service-role/AWSGlueServiceRole"
+  arn = "arn:${data.aws_partition.current.partition}:iam::aws:policy/service-role/AWSGlueServiceRole"
 }
 
 resource "aws_iam_role_policy_attachment" "test-AWSGlueServiceRole" {
@@ -1570,7 +1570,7 @@ resource "aws_glue_crawler" "test" {
   schema_change_policy {
     delete_behavior = "LOG"
   }
-  
+
   catalog_target {
     database_name = "${aws_glue_catalog_database.test.name}"
     tables = [%s]
@@ -1633,7 +1633,7 @@ resource "aws_glue_crawler" "test" {
   schema_change_policy {
     delete_behavior = "LOG"
   }
-  
+
   catalog_target {
     database_name = "${aws_glue_catalog_database.test_1.name}"
     tables = ["${aws_glue_catalog_table.test_1.name}"]
