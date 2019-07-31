@@ -12,7 +12,6 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/elbv2"
-	"github.com/hashicorp/terraform/helper/customdiff"
 	"github.com/hashicorp/terraform/helper/hashcode"
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/helper/schema"
@@ -441,20 +440,6 @@ func resourceAwsLbbListenerRule() *schema.Resource {
 				},
 			},
 		},
-		// FIXME New diff is totally broken. The leaf list items are a list of length 1 containing nil.
-		// Example output:
-		// ...DDD o *schema.Set: &{0x3ddc210 map[3525442329:map[field:path-pattern host_header:[] http_header:[] http_request_method:[] path_pattern:[map[values:[1 2 3 4 5]]] query_string:[] source_ip:[] values:[1 2 3 4 5]]] {{0 0} 1}}
-		// ...DDD n *schema.Set, &{0x3ddc210 map[22963242:map[field:path-pattern host_header:[] http_header:[] http_request_method:[] path_pattern:[<nil>] query_string:[] source_ip:[] values:[]]] {{0 0} 1}}
-		CustomizeDiff: customdiff.All(
-			func(diff *schema.ResourceDiff, v interface{}) error {
-				if diff.HasChange("condition") {
-					o, n := diff.GetChange("condition")
-					log.Printf("DDD o %T: %v", o, o)
-					log.Printf("DDD n %T, %v", n, n)
-				}
-				return nil
-			},
-		),
 	}
 }
 
