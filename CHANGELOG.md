@@ -25,6 +25,7 @@ ENHANCEMENTS:
 
 BUG FIXES:
 
+* resource/aws_codebuild_project: Properly perform drift detection and updates for `artifacts` configuration block arguments [GH-9559]
 * resource/aws_ec2_client_vpn_endpoint: Remove hardcoded one minute timeout during resource creation [GH-9558]
 * resource/aws_route53_record: Prevent error when removing `weighted_routing_policy` [GH-9565]
 * resource/aws_storagegateway_cached_iscsi_volume: Retry after timeout deleting volume [GH-9536]
