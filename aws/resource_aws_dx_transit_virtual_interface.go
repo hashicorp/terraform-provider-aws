@@ -139,14 +139,6 @@ func resourceAwsDxTransitVirtualInterfaceCreate(d *schema.ResourceData, meta int
 	}
 
 	d.SetId(aws.StringValue(resp.VirtualInterface.VirtualInterfaceId))
-	arn := arn.ARN{
-		Partition: meta.(*AWSClient).partition,
-		Region:    meta.(*AWSClient).region,
-		Service:   "directconnect",
-		AccountID: meta.(*AWSClient).accountid,
-		Resource:  fmt.Sprintf("dxvif/%s", d.Id()),
-	}.String()
-	d.Set("arn", arn)
 
 	if err := dxTransitVirtualInterfaceWaitUntilAvailable(conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
 		return err
@@ -170,6 +162,14 @@ func resourceAwsDxTransitVirtualInterfaceRead(d *schema.ResourceData, meta inter
 
 	d.Set("address_family", vif.AddressFamily)
 	d.Set("amazon_address", vif.AmazonAddress)
+	arn := arn.ARN{
+		Partition: meta.(*AWSClient).partition,
+		Region:    meta.(*AWSClient).region,
+		Service:   "directconnect",
+		AccountID: meta.(*AWSClient).accountid,
+		Resource:  fmt.Sprintf("dxvif/%s", d.Id()),
+	}.String()
+	d.Set("arn", arn)
 	d.Set("aws_device", vif.AwsDeviceV2)
 	d.Set("bgp_asn", vif.Asn)
 	d.Set("bgp_auth_key", vif.AuthKey)
@@ -217,15 +217,6 @@ func resourceAwsDxTransitVirtualInterfaceImport(d *schema.ResourceData, meta int
 	if vifType := aws.StringValue(vif.VirtualInterfaceType); vifType != "transit" {
 		return nil, fmt.Errorf("virtual interface (%s) has incorrect type: %s", d.Id(), vifType)
 	}
-
-	arn := arn.ARN{
-		Partition: meta.(*AWSClient).partition,
-		Region:    meta.(*AWSClient).region,
-		Service:   "directconnect",
-		AccountID: meta.(*AWSClient).accountid,
-		Resource:  fmt.Sprintf("dxvif/%s", d.Id()),
-	}.String()
-	d.Set("arn", arn)
 
 	return []*schema.ResourceData{d}, nil
 }
