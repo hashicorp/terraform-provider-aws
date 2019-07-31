@@ -325,6 +325,11 @@ func resourceAwsCodeBuildProject() *schema.Resource {
 								codebuild.ArtifactNamespaceBuildId,
 							}, false),
 						},
+						"override_artifact_name": {
+							Type:     schema.TypeBool,
+							Optional: true,
+							Default:  false,
+						},
 						"packaging": {
 							Type:     schema.TypeString,
 							Optional: true,
@@ -673,8 +678,6 @@ func expandProjectArtifactData(data map[string]interface{}) codebuild.ProjectArt
 		projectArtifacts.EncryptionDisabled = aws.Bool(data["encryption_disabled"].(bool))
 	}
 
-	projectArtifacts.OverrideArtifactName = aws.Bool(data["override_artifact_name"].(bool))
-
 	if data["artifact_identifier"] != nil && data["artifact_identifier"].(string) != "" {
 		projectArtifacts.ArtifactIdentifier = aws.String(data["artifact_identifier"].(string))
 	}
@@ -689,6 +692,10 @@ func expandProjectArtifactData(data map[string]interface{}) codebuild.ProjectArt
 
 	if data["namespace_type"].(string) != "" {
 		projectArtifacts.NamespaceType = aws.String(data["namespace_type"].(string))
+	}
+
+	if v, ok := data["override_artifact_name"]; ok {
+		projectArtifacts.OverrideArtifactName = aws.Bool(v.(bool))
 	}
 
 	if data["packaging"].(string) != "" {
@@ -1363,11 +1370,15 @@ func resourceAwsCodeBuildProjectArtifactsHash(v interface{}) int {
 	m := v.(map[string]interface{})
 
 	buf.WriteString(fmt.Sprintf("%s-", m["type"].(string)))
-	buf.WriteString(fmt.Sprintf("%t-", m["override_artifact_name"].(bool)))
 
 	if v, ok := m["artifact_identifier"]; ok {
 		buf.WriteString(fmt.Sprintf("%s:", v.(string)))
 	}
+
+	if v, ok := m["override_artifact_name"]; ok {
+		buf.WriteString(fmt.Sprintf("%t-", v.(bool)))
+	}
+
 	return hashcode.String(buf.String())
 }
 
