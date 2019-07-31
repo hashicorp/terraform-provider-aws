@@ -6,7 +6,7 @@ description: |-
   Provides a CodeBuild Source Credential resource.
 ---
 
-# aws_codebuild_project
+# Resource: aws_codebuild_source_credential
 
 Provides a CodeBuild Source Credentials Resource.
 
