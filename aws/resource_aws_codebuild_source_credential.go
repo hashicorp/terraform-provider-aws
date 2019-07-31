@@ -88,29 +88,27 @@ func resourceAwsCodeBuildSourceCredentialRead(d *schema.ResourceData, meta inter
 
 	resp, err := conn.ListSourceCredentials(&codebuild.ListSourceCredentialsInput{})
 	if err != nil {
-		return fmt.Errorf("Error list source credentials: %s", err)
+		return fmt.Errorf("Error List CodeBuild Source Credential: %s", err)
 	}
 
-	if len(resp.SourceCredentialsInfos) == 0 {
-		log.Printf("[WARN] Source Credentials(%s) is already deleted", d.Id())
-		d.SetId("")
-		return nil
-	}
+	var info *codebuild.SourceCredentialsInfo
 
-	resourceNotFound := true
 	for _, sourceCredentialsInfo := range resp.SourceCredentialsInfos {
 		if d.Id() == aws.StringValue(sourceCredentialsInfo.Arn) {
-			d.Set("auth_type", sourceCredentialsInfo.AuthType)
-			d.Set("server_type", sourceCredentialsInfo.ServerType)
-			resourceNotFound = false
+			info = sourceCredentialsInfo
+			break
 		}
 	}
 
-	if resourceNotFound {
-		log.Printf("[WARN] Source Credentials(%s) is already deleted", d.Id())
+	if info == nil {
+		log.Printf("[WARN] CodeBuild Source Credential (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
 	}
+
+	d.Set("arn", info.Arn)
+	d.Set("auth_type", info.AuthType)
+	d.Set("server_type", info.ServerType)
 
 	return nil
 }
@@ -123,7 +121,7 @@ func resourceAwsCodeBuildSourceCredentialDelete(d *schema.ResourceData, meta int
 	}
 
 	if _, err := conn.DeleteSourceCredentials(deleteOpts); err != nil {
-		if !isAWSErr(err, codebuild.ErrCodeResourceNotFoundException, "") {
+		if isAWSErr(err, codebuild.ErrCodeResourceNotFoundException, "") {
 			return nil
 		}
 		return fmt.Errorf("Error deleting Source Credentials(%s): %s", d.Id(), err)
