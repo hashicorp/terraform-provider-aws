@@ -83,6 +83,48 @@ func TestAccAWSConfigAggregateAuthorization_basic(t *testing.T) {
 	})
 }
 
+func TestAccAWSConfigAggregateAuthorization_tags(t *testing.T) {
+	rString := acctest.RandStringFromCharSet(12, "0123456789")
+	resourceName := "aws_config_aggregate_authorization.example"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSConfigAggregateAuthorizationDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSConfigAggregateAuthorizationConfig_tags(rString, "foo", "bar", "fizz", "buzz"),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "3"),
+					resource.TestCheckResourceAttr(resourceName, "tags.Name", rString),
+					resource.TestCheckResourceAttr(resourceName, "tags.foo", "bar"),
+					resource.TestCheckResourceAttr(resourceName, "tags.fizz", "buzz"),
+				),
+			},
+			{
+				Config: testAccAWSConfigAggregateAuthorizationConfig_tags(rString, "foo", "bar2", "fizz2", "buzz2"),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "3"),
+					resource.TestCheckResourceAttr(resourceName, "tags.Name", rString),
+					resource.TestCheckResourceAttr(resourceName, "tags.foo", "bar2"),
+					resource.TestCheckResourceAttr(resourceName, "tags.fizz2", "buzz2"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccAWSConfigAggregateAuthorizationConfig_basic(rString),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+				),
+			},
+		},
+	})
+}
+
 func testAccCheckAWSConfigAggregateAuthorizationDestroy(s *terraform.State) error {
 	conn := testAccProvider.Meta().(*AWSClient).configconn
 
@@ -119,4 +161,19 @@ resource "aws_config_aggregate_authorization" "example" {
   region     = "eu-west-1"
 }
 `, rString)
+}
+
+func testAccAWSConfigAggregateAuthorizationConfig_tags(rString, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
+	return fmt.Sprintf(`
+resource "aws_config_aggregate_authorization" "example" {
+  account_id = %[1]q
+  region     = "eu-west-1"
+
+  tags = {
+	Name  = %[1]q
+	%[2]s = %[3]q
+	%[4]s = %[5]q
+  }
+}
+`, rString, tagKey1, tagValue1, tagKey2, tagValue2)
 }
