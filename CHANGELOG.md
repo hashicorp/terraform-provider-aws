@@ -21,6 +21,8 @@ ENHANCEMENTS:
 * resource/aws_s3_bucket: Support `me-south-1` region for `hosted_zone_id` attribute [GH-9547]
 
 BUG FIXES:
+
+* resource/aws_route53_record: Prevent error when removing `weighted_routing_policy` [GH-9565]
 * resource/aws_storagegateway_cached_iscsi_volume: Retry after timeout deleting volume [GH-9536]
 * resource/aws_storagegateway_cached_iscsi_volume: Fix errors deleting volumes when volumes don't exist [GH-9543]
 * resource/aws_storagegateway_gateway: Retry after timeouts creating gateway [GH-9536]
