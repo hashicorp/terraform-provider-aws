@@ -1591,11 +1591,11 @@ EOF
 func testAccGlueCrawlerConfig_CatalogTarget_Multiple(rName string) string {
 	return testAccGlueCrawlerConfig_Base(rName) + fmt.Sprintf(`
 resource "aws_glue_catalog_database" "test_1" {
-  name = "%s_test_1"
+  name = "%[1]q_test_1"
 }
 
 resource "aws_glue_catalog_database" "test_2" {
-  name = "%s_test_2"
+  name = "%[1]q_test_2"
 }
 
 resource "aws_glue_catalog_table" "test_1" {
@@ -1619,7 +1619,7 @@ resource "aws_glue_catalog_table" "test_2" {
 }
 
 resource "aws_s3_bucket" "default" {
-  bucket = %q
+  bucket = %[1]q
   force_destroy = true
 }
 
@@ -1627,7 +1627,7 @@ resource "aws_glue_crawler" "test" {
   depends_on = ["aws_iam_role_policy_attachment.test-AWSGlueServiceRole"]
 
   database_name = "${aws_glue_catalog_database.test_1.name}"
-  name          = %q
+  name          = %[1]q
   role          = "${aws_iam_role.test.name}"
 
   schema_change_policy {
@@ -1653,7 +1653,7 @@ resource "aws_glue_crawler" "test" {
 }
 EOF
 }
-`, rName, rName, rName, rName)
+`, rName)
 }
 
 func testAccGlueCrawlerConfig_Schedule(rName, schedule string) string {
