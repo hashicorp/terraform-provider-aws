@@ -61,8 +61,8 @@ func resourceAwsCodeBuildProject() *schema.Resource {
 							Type:     schema.TypeString,
 							Optional: true,
 							DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
-								if d.Get("artifacts.0.type") == codebuild.ArtifactsTypeS3 && old == codebuild.ArtifactNamespaceNone && new == "" {
-									return true
+								if d.Get("artifacts.0.type") == codebuild.ArtifactsTypeS3 {
+									return old == codebuild.ArtifactNamespaceNone && new == ""
 								}
 								return false
 							},
@@ -75,11 +75,11 @@ func resourceAwsCodeBuildProject() *schema.Resource {
 							Type:     schema.TypeString,
 							Optional: true,
 							DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
-								if d.Get("artifacts.0.type") == codebuild.ArtifactsTypeCodepipeline && new == "" {
-									return true
-								}
-								if d.Get("artifacts.0.type") == codebuild.ArtifactsTypeS3 && old == codebuild.ArtifactPackagingNone && new == "" {
-									return true
+								switch d.Get("artifacts.0.type") {
+								case codebuild.ArtifactsTypeCodepipeline:
+									return new == ""
+								case codebuild.ArtifactsTypeS3:
+									return old == codebuild.ArtifactPackagingNone && new == ""
 								}
 								return false
 							},
