@@ -79,7 +79,6 @@ func resourceAwsCodeBuildSourceCredentialCreate(d *schema.ResourceData, meta int
 	}
 
 	d.SetId(aws.StringValue(resp.Arn))
-	d.Set("arn", resp.Arn)
 
 	return nil
 }
