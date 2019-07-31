@@ -146,6 +146,55 @@ func TestAccAWSConfigConfigurationAggregator_switch(t *testing.T) {
 	})
 }
 
+func TestAccAWSConfigConfigurationAggregator_tags(t *testing.T) {
+	var ca configservice.ConfigurationAggregator
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_config_configuration_aggregator.example"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSConfigConfigurationAggregatorDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSConfigConfigurationAggregatorConfig_tags(rName, "foo", "bar", "fizz", "buzz"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSConfigConfigurationAggregatorExists(resourceName, &ca),
+					testAccCheckAWSConfigConfigurationAggregatorName(resourceName, rName, &ca),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "3"),
+					resource.TestCheckResourceAttr(resourceName, "tags.Name", rName),
+					resource.TestCheckResourceAttr(resourceName, "tags.foo", "bar"),
+					resource.TestCheckResourceAttr(resourceName, "tags.fizz", "buzz"),
+				),
+			},
+			{
+				Config: testAccAWSConfigConfigurationAggregatorConfig_tags(rName, "foo", "bar2", "fizz2", "buzz2"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSConfigConfigurationAggregatorExists(resourceName, &ca),
+					testAccCheckAWSConfigConfigurationAggregatorName(resourceName, rName, &ca),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "3"),
+					resource.TestCheckResourceAttr(resourceName, "tags.Name", rName),
+					resource.TestCheckResourceAttr(resourceName, "tags.foo", "bar2"),
+					resource.TestCheckResourceAttr(resourceName, "tags.fizz2", "buzz2"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccAWSConfigConfigurationAggregatorConfig_account(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSConfigConfigurationAggregatorExists(resourceName, &ca),
+					testAccCheckAWSConfigConfigurationAggregatorName(resourceName, rName, &ca),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+				),
+			},
+		},
+	})
+}
+
 func testAccCheckAWSConfigConfigurationAggregatorName(n, desired string, obj *configservice.ConfigurationAggregator) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
@@ -266,4 +315,25 @@ resource "aws_iam_role_policy_attachment" "example" {
   policy_arn = "arn:aws:iam::aws:policy/service-role/AWSConfigRoleForOrganizations"
 }
 `, rName)
+}
+
+func testAccAWSConfigConfigurationAggregatorConfig_tags(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
+	return fmt.Sprintf(`
+resource "aws_config_configuration_aggregator" "example" {
+  name = %[1]q
+
+  account_aggregation_source {
+    account_ids = ["${data.aws_caller_identity.current.account_id}"]
+    regions     = ["us-west-2"]
+  }
+
+  tags = {
+	Name  = %[1]q
+	%[2]s = %[3]q
+	%[4]s = %[5]q
+  }
+}
+
+data "aws_caller_identity" "current" {}
+`, rName, tagKey1, tagValue1, tagKey2, tagValue2)
 }
