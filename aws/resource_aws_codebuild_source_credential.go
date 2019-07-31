@@ -69,7 +69,7 @@ func resourceAwsCodeBuildSourceCredentialCreate(d *schema.ResourceData, meta int
 		Token:      aws.String(d.Get("token").(string)),
 	}
 
-	if attr, ok := d.GetOk("user_name"); ok && attr.(string) != "" && authType == codebuild.AuthTypeBasicAuth {
+	if attr, ok := d.GetOk("user_name"); ok && authType == codebuild.AuthTypeBasicAuth {
 		createOpts.Username = aws.String(attr.(string))
 	}
 
