@@ -456,7 +456,7 @@ func TestAccAWSGlueCrawler_CatalogTarget(t *testing.T) {
 		CheckDestroy: testAccCheckAWSGlueCrawlerDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccGlueCrawlerConfig_CatalogTarget(rName, []string{"table_1"}),
+				Config: testAccGlueCrawlerConfig_CatalogTarget(rName, 1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSGlueCrawlerExists(resourceName, &crawler),
 					testAccCheckResourceAttrRegionalARN(resourceName, "arn", "glue", fmt.Sprintf("crawler/%s", rName)),
@@ -471,7 +471,7 @@ func TestAccAWSGlueCrawler_CatalogTarget(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "catalog_target.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "catalog_target.0.database_name", rName),
 					resource.TestCheckResourceAttr(resourceName, "catalog_target.0.tables.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "catalog_target.0.tables.0", "table_1"),
+					resource.TestCheckResourceAttr(resourceName, "catalog_target.0.tables.0", fmt.Sprintf("%s_table_0", rName)),
 					resource.TestCheckResourceAttr(resourceName, "schedule", ""),
 					resource.TestCheckResourceAttr(resourceName, "schema_change_policy.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "schema_change_policy.0.delete_behavior", "LOG"),
@@ -481,7 +481,7 @@ func TestAccAWSGlueCrawler_CatalogTarget(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccGlueCrawlerConfig_CatalogTarget(rName, []string{"table_1", "table_2"}),
+				Config: testAccGlueCrawlerConfig_CatalogTarget(rName, 2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSGlueCrawlerExists(resourceName, &crawler),
 					testAccCheckResourceAttrRegionalARN(resourceName, "arn", "glue", fmt.Sprintf("crawler/%s", rName)),
@@ -496,8 +496,8 @@ func TestAccAWSGlueCrawler_CatalogTarget(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "catalog_target.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "catalog_target.0.database_name", rName),
 					resource.TestCheckResourceAttr(resourceName, "catalog_target.0.tables.#", "2"),
-					resource.TestCheckResourceAttr(resourceName, "catalog_target.0.tables.0", "table_1"),
-					resource.TestCheckResourceAttr(resourceName, "catalog_target.0.tables.1", "table_2"),
+					resource.TestCheckResourceAttr(resourceName, "catalog_target.0.tables.0", fmt.Sprintf("%s_table_0", rName)),
+					resource.TestCheckResourceAttr(resourceName, "catalog_target.0.tables.1", fmt.Sprintf("%s_table_1", rName)),
 					resource.TestCheckResourceAttr(resourceName, "schedule", ""),
 					resource.TestCheckResourceAttr(resourceName, "schema_change_policy.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "schema_change_policy.0.delete_behavior", "LOG"),
@@ -526,14 +526,14 @@ func TestAccAWSGlueCrawler_CatalogTarget_Multiple(t *testing.T) {
 		CheckDestroy: testAccCheckAWSGlueCrawlerDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccGlueCrawlerConfig_CatalogTarget(rName, []string{"table_1"}),
+				Config: testAccGlueCrawlerConfig_CatalogTarget(rName, 1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSGlueCrawlerExists(resourceName, &crawler),
 					testAccCheckResourceAttrRegionalARN(resourceName, "arn", "glue", fmt.Sprintf("crawler/%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, "catalog_target.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "catalog_target.0.database_name", rName),
 					resource.TestCheckResourceAttr(resourceName, "catalog_target.0.tables.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "catalog_target.0.tables.0", "table_1"),
+					resource.TestCheckResourceAttr(resourceName, "catalog_target.0.tables.0", fmt.Sprintf("%s_table_0", rName)),
 				),
 			},
 			{
@@ -542,23 +542,23 @@ func TestAccAWSGlueCrawler_CatalogTarget_Multiple(t *testing.T) {
 					testAccCheckAWSGlueCrawlerExists(resourceName, &crawler),
 					testAccCheckResourceAttrRegionalARN(resourceName, "arn", "glue", fmt.Sprintf("crawler/%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, "catalog_target.#", "2"),
-					resource.TestCheckResourceAttr(resourceName, "catalog_target.0.database_name", fmt.Sprintf("%s_test_1", rName)),
+					resource.TestCheckResourceAttr(resourceName, "catalog_target.0.database_name", fmt.Sprintf("%s_database_0", rName)),
+					resource.TestCheckResourceAttr(resourceName, "catalog_target.1.database_name", fmt.Sprintf("%s_database_1", rName)),
 					resource.TestCheckResourceAttr(resourceName, "catalog_target.0.tables.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "catalog_target.0.tables.0", "table_1"),
-					resource.TestCheckResourceAttr(resourceName, "catalog_target.1.database_name", fmt.Sprintf("%s_test_2", rName)),
+					resource.TestCheckResourceAttr(resourceName, "catalog_target.0.tables.0", fmt.Sprintf("%s_table_0", rName)),
 					resource.TestCheckResourceAttr(resourceName, "catalog_target.1.tables.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "catalog_target.1.tables.0", "table_2"),
+					resource.TestCheckResourceAttr(resourceName, "catalog_target.1.tables.0", fmt.Sprintf("%s_table_1", rName)),
 				),
 			},
 			{
-				Config: testAccGlueCrawlerConfig_CatalogTarget(rName, []string{"table_1"}),
+				Config: testAccGlueCrawlerConfig_CatalogTarget(rName, 1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSGlueCrawlerExists(resourceName, &crawler),
 					testAccCheckResourceAttrRegionalARN(resourceName, "arn", "glue", fmt.Sprintf("crawler/%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, "catalog_target.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "catalog_target.0.database_name", rName),
 					resource.TestCheckResourceAttr(resourceName, "catalog_target.0.tables.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "catalog_target.0.tables.0", "table_1"),
+					resource.TestCheckResourceAttr(resourceName, "catalog_target.0.tables.0", fmt.Sprintf("%s_table_0", rName)),
 				),
 			},
 			{
@@ -1516,55 +1516,34 @@ resource "aws_glue_crawler" "test" {
 `, rName, rName, path1, path2)
 }
 
-func testAccGlueCrawlerConfig_CatalogTarget_TableResources(tables []string) string {
-	var config string
-	for _, table := range tables {
-		config += fmt.Sprintf(`
-      resource "aws_glue_catalog_table" %q {
-        database_name = "${aws_glue_catalog_database.test.name}"
-        name          = %q
-        table_type    = "EXTERNAL_TABLE"
-
-        storage_descriptor {
-          location      = "s3://${aws_s3_bucket.default.bucket}"
-        }
-      }
-    `, table, table)
-	}
-
-	return config
-}
-
-func testAccGlueCrawlerConfig_CatalogTarget_TableList(tables []string) string {
-	var list string
-	for _, table := range tables {
-		list += fmt.Sprintf(`"${aws_glue_catalog_table.%s.name}",`, table)
-	}
-
-	return list
-}
-
-func testAccGlueCrawlerConfig_CatalogTarget(rName string, tables []string) string {
-	tableResources := testAccGlueCrawlerConfig_CatalogTarget_TableResources(tables)
-	catalogTableList := testAccGlueCrawlerConfig_CatalogTarget_TableList(tables)
-
+func testAccGlueCrawlerConfig_CatalogTarget(rName string, tableCount int) string {
 	return testAccGlueCrawlerConfig_Base(rName) + fmt.Sprintf(`
 resource "aws_glue_catalog_database" "test" {
-  name = %q
+  name = %[1]q
 }
 
 resource "aws_s3_bucket" "default" {
-  bucket = %q
+  bucket = %[1]q
   force_destroy = true
 }
 
-%s
+resource "aws_glue_catalog_table" "test" {
+	count = %[2]d
+
+	database_name = "${aws_glue_catalog_database.test.name}"
+	name          = "%[1]s_table_${count.index}"
+	table_type    = "EXTERNAL_TABLE"
+
+	storage_descriptor {
+		location      = "s3://${aws_s3_bucket.default.bucket}"
+	}
+}
 
 resource "aws_glue_crawler" "test" {
   depends_on = ["aws_iam_role_policy_attachment.test-AWSGlueServiceRole"]
 
   database_name = "${aws_glue_catalog_database.test.name}"
-  name          = %q
+  name          = %[1]q
   role          = "${aws_iam_role.test.name}"
 
   schema_change_policy {
@@ -1573,7 +1552,7 @@ resource "aws_glue_crawler" "test" {
 
   catalog_target {
     database_name = "${aws_glue_catalog_database.test.name}"
-    tables = [%s]
+    tables = flatten(["${aws_glue_catalog_table.test[*].name}"])
   }
 
   configuration = <<EOF
@@ -1585,32 +1564,20 @@ resource "aws_glue_crawler" "test" {
 }
 EOF
 }
-`, rName, rName, tableResources, rName, catalogTableList)
+`, rName, tableCount)
 }
 
 func testAccGlueCrawlerConfig_CatalogTarget_Multiple(rName string) string {
 	return testAccGlueCrawlerConfig_Base(rName) + fmt.Sprintf(`
-resource "aws_glue_catalog_database" "test_1" {
-  name = "%[1]q_test_1"
+resource "aws_glue_catalog_database" "test" {
+	count = 2
+  name = "%[1]s_database_${count.index}"
 }
 
-resource "aws_glue_catalog_database" "test_2" {
-  name = "%[1]q_test_2"
-}
-
-resource "aws_glue_catalog_table" "test_1" {
-  database_name = "${aws_glue_catalog_database.test_1.name}"
-  name          = "table_1"
-  table_type    = "EXTERNAL_TABLE"
-
-  storage_descriptor {
-    location      = "s3://${aws_s3_bucket.default.bucket}"
-  }
-}
-
-resource "aws_glue_catalog_table" "test_2" {
-  database_name = "${aws_glue_catalog_database.test_2.name}"
-  name          = "table_2"
+resource "aws_glue_catalog_table" "test" {
+	count = 2
+  database_name = "${aws_glue_catalog_database.test[count.index].name}"
+  name          = "%[1]s_table_${count.index}"
   table_type    = "EXTERNAL_TABLE"
 
   storage_descriptor {
@@ -1626,7 +1593,7 @@ resource "aws_s3_bucket" "default" {
 resource "aws_glue_crawler" "test" {
   depends_on = ["aws_iam_role_policy_attachment.test-AWSGlueServiceRole"]
 
-  database_name = "${aws_glue_catalog_database.test_1.name}"
+  database_name = "${aws_glue_catalog_database.test[0].name}"
   name          = %[1]q
   role          = "${aws_iam_role.test.name}"
 
@@ -1635,13 +1602,13 @@ resource "aws_glue_crawler" "test" {
   }
 
   catalog_target {
-    database_name = "${aws_glue_catalog_database.test_1.name}"
-    tables = ["${aws_glue_catalog_table.test_1.name}"]
+    database_name = "${aws_glue_catalog_database.test[0].name}"
+    tables = ["${aws_glue_catalog_table.test[0].name}"]
   }
 
   catalog_target {
-    database_name = "${aws_glue_catalog_database.test_2.name}"
-    tables = ["${aws_glue_catalog_table.test_2.name}"]
+    database_name = "${aws_glue_catalog_database.test[1].name}"
+    tables = ["${aws_glue_catalog_table.test[1].name}"]
   }
 
   configuration = <<EOF
