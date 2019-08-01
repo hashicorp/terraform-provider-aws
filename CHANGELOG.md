@@ -1,41 +1,41 @@
-## 2.22.0 (Unreleased)
+## 2.22.0 (August 01, 2019)
 
 NOTES:
 
-* provider: Region validation now automatically supports the new `me-south-1` Middle East (Bahrain) region. For AWS operations to work in the new region, the region must be explicitly enabled as outlined in the [previous new region announcement blog post](https://aws.amazon.com/blogs/aws/now-open-aws-asia-pacific-hong-kong-region/). When the region is not enabled, the Terraform AWS Provider will return errors during credential validation (e.g. `error validating provider credentials: error calling sts:GetCallerIdentity: InvalidClientTokenId: The security token included in the request is invalid`) or AWS operations will throw their own errors (e.g. `data.aws_availability_zones.current: Error fetching Availability Zones: AuthFailure: AWS was not able to validate the provided access credentials`). [GH-9538]
+* provider: Region validation now automatically supports the new `me-south-1` Middle East (Bahrain) region. For AWS operations to work in the new region, the region must be explicitly enabled as outlined in the [previous new region announcement blog post](https://aws.amazon.com/blogs/aws/now-open-aws-asia-pacific-hong-kong-region/). When the region is not enabled, the Terraform AWS Provider will return errors during credential validation (e.g. `error validating provider credentials: error calling sts:GetCallerIdentity: InvalidClientTokenId: The security token included in the request is invalid`) or AWS operations will throw their own errors (e.g. `data.aws_availability_zones.current: Error fetching Availability Zones: AuthFailure: AWS was not able to validate the provided access credentials`). ([#9538](https://github.com/terraform-providers/terraform-provider-aws/issues/9538))
 
 FEATURES:
 
-* **New Resource:** `aws_codebuild_source_credential` [GH-7631]
-* **New Resource:** `aws_fms_admin_account` [GH-4310]
+* **New Resource:** `aws_codebuild_source_credential` ([#7631](https://github.com/terraform-providers/terraform-provider-aws/issues/7631))
+* **New Resource:** `aws_fms_admin_account` ([#4310](https://github.com/terraform-providers/terraform-provider-aws/issues/4310))
 
 ENHANCEMENTS:
 
-* data-source/aws_cloudtrail_service_account: Support `me-south-1` region [GH-9547]
-* data-source/aws_elastic_beanstalk_hosted_zone: Support `me-south-1` region [GH-9547]
-* data-source/aws_elb_hosted_zone_id: Support `me-south-1` region [GH-9547]
-* data-source/aws_elb_service_account: Support `me-south-1` region [GH-9547]
-* data-source/aws_s3_bucket: Support `me-south-1` region for `hosted_zone_id` attribute [GH-9547]
-* provider: Support automatic region validation for `me-south-1` [GH-9538]
-* resource/aws_codebuild_project: Add `override_artifact_name` argument to `artifacts` and `secondary_artifacts` configuration blocks [GH-7824]
-* resource/aws_config_aggregate_authorization: Add `tags` argument [GH-9561]
-* resource/aws_config_config_rule: Add `tags` argument [GH-9561]
-* resource/aws_config_configuration_aggregator: Add `tags` argument [GH-9561]
-* resource/aws_ec2_client_vpn_endpoint: Add `split_tunnel` argument [GH-9566]
-* resource/aws_ecs_service: Allow multiple `load_balancer` configuration blocks (support for multiple target groups) [GH-9411]
-* resource/aws_pinpoint_app: Add `tags` argument [GH-9460]
-* resource/aws_route_table_association: Support resource import [GH-6999]
-* resource/aws_route_table_association: Allow in-place updates of `subnet_id` argument [GH-6999]
-* resource/aws_s3_bucket: Support `me-south-1` region for `hosted_zone_id` attribute [GH-9547]
+* data-source/aws_cloudtrail_service_account: Support `me-south-1` region ([#9547](https://github.com/terraform-providers/terraform-provider-aws/issues/9547))
+* data-source/aws_elastic_beanstalk_hosted_zone: Support `me-south-1` region ([#9547](https://github.com/terraform-providers/terraform-provider-aws/issues/9547))
+* data-source/aws_elb_hosted_zone_id: Support `me-south-1` region ([#9547](https://github.com/terraform-providers/terraform-provider-aws/issues/9547))
+* data-source/aws_elb_service_account: Support `me-south-1` region ([#9547](https://github.com/terraform-providers/terraform-provider-aws/issues/9547))
+* data-source/aws_s3_bucket: Support `me-south-1` region for `hosted_zone_id` attribute ([#9547](https://github.com/terraform-providers/terraform-provider-aws/issues/9547))
+* provider: Support automatic region validation for `me-south-1` ([#9538](https://github.com/terraform-providers/terraform-provider-aws/issues/9538))
+* resource/aws_codebuild_project: Add `override_artifact_name` argument to `artifacts` and `secondary_artifacts` configuration blocks ([#7824](https://github.com/terraform-providers/terraform-provider-aws/issues/7824))
+* resource/aws_config_aggregate_authorization: Add `tags` argument ([#9561](https://github.com/terraform-providers/terraform-provider-aws/issues/9561))
+* resource/aws_config_config_rule: Add `tags` argument ([#9561](https://github.com/terraform-providers/terraform-provider-aws/issues/9561))
+* resource/aws_config_configuration_aggregator: Add `tags` argument ([#9561](https://github.com/terraform-providers/terraform-provider-aws/issues/9561))
+* resource/aws_ec2_client_vpn_endpoint: Add `split_tunnel` argument ([#9566](https://github.com/terraform-providers/terraform-provider-aws/issues/9566))
+* resource/aws_ecs_service: Allow multiple `load_balancer` configuration blocks (support for multiple target groups) ([#9411](https://github.com/terraform-providers/terraform-provider-aws/issues/9411))
+* resource/aws_pinpoint_app: Add `tags` argument ([#9460](https://github.com/terraform-providers/terraform-provider-aws/issues/9460))
+* resource/aws_route_table_association: Support resource import ([#6999](https://github.com/terraform-providers/terraform-provider-aws/issues/6999))
+* resource/aws_route_table_association: Allow in-place updates of `subnet_id` argument ([#6999](https://github.com/terraform-providers/terraform-provider-aws/issues/6999))
+* resource/aws_s3_bucket: Support `me-south-1` region for `hosted_zone_id` attribute ([#9547](https://github.com/terraform-providers/terraform-provider-aws/issues/9547))
 
 BUG FIXES:
 
-* resource/aws_codebuild_project: Properly perform drift detection and updates for `artifacts` configuration block arguments [GH-9559]
-* resource/aws_ec2_client_vpn_endpoint: Remove hardcoded one minute timeout during resource creation [GH-9558]
-* resource/aws_route53_record: Prevent error when removing `weighted_routing_policy` [GH-9565]
-* resource/aws_storagegateway_cached_iscsi_volume: Retry after timeout deleting volume [GH-9536]
-* resource/aws_storagegateway_cached_iscsi_volume: Fix errors deleting volumes when volumes don't exist [GH-9543]
-* resource/aws_storagegateway_gateway: Retry after timeouts creating gateway [GH-9536]
+* resource/aws_codebuild_project: Properly perform drift detection and updates for `artifacts` configuration block arguments ([#9559](https://github.com/terraform-providers/terraform-provider-aws/issues/9559))
+* resource/aws_ec2_client_vpn_endpoint: Remove hardcoded one minute timeout during resource creation ([#9558](https://github.com/terraform-providers/terraform-provider-aws/issues/9558))
+* resource/aws_route53_record: Prevent error when removing `weighted_routing_policy` ([#9565](https://github.com/terraform-providers/terraform-provider-aws/issues/9565))
+* resource/aws_storagegateway_cached_iscsi_volume: Retry after timeout deleting volume ([#9536](https://github.com/terraform-providers/terraform-provider-aws/issues/9536))
+* resource/aws_storagegateway_cached_iscsi_volume: Fix errors deleting volumes when volumes don't exist ([#9543](https://github.com/terraform-providers/terraform-provider-aws/issues/9543))
+* resource/aws_storagegateway_gateway: Retry after timeouts creating gateway ([#9536](https://github.com/terraform-providers/terraform-provider-aws/issues/9536))
 
 ## 2.21.1 (July 26, 2019)
 
