@@ -159,6 +159,24 @@ func resourceAwsGlueCrawler() *schema.Resource {
 					},
 				},
 			},
+			"catalog_target": {
+				Type:     schema.TypeList,
+				Optional: true,
+				MinItems: 1,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"database_name": {
+							Type:     schema.TypeString,
+							Required: true,
+						},
+						"tables": {
+							Type:     schema.TypeList,
+							Required: true,
+							Elem:     &schema.Schema{Type: schema.TypeString},
+						},
+					},
+				},
+			},
 			"configuration": {
 				Type:             schema.TypeString,
 				Optional:         true,
@@ -325,14 +343,16 @@ func expandGlueCrawlerTargets(d *schema.ResourceData) (*glue.CrawlerTargets, err
 	dynamodbTargets, dynamodbTargetsOk := d.GetOk("dynamodb_target")
 	jdbcTargets, jdbcTargetsOk := d.GetOk("jdbc_target")
 	s3Targets, s3TargetsOk := d.GetOk("s3_target")
-	if !dynamodbTargetsOk && !jdbcTargetsOk && !s3TargetsOk {
-		return nil, fmt.Errorf("One of the following configurations is required: dynamodb_target, jdbc_target, s3_target")
+	catalogTargets, catalogTargetsOk := d.GetOk("catalog_target")
+	if !dynamodbTargetsOk && !jdbcTargetsOk && !s3TargetsOk && !catalogTargetsOk {
+		return nil, fmt.Errorf("One of the following configurations is required: dynamodb_target, jdbc_target, s3_target, catalog_target")
 	}
 
 	log.Print("[DEBUG] Creating crawler target")
 	crawlerTargets.DynamoDBTargets = expandGlueDynamoDBTargets(dynamodbTargets.([]interface{}))
 	crawlerTargets.JdbcTargets = expandGlueJdbcTargets(jdbcTargets.([]interface{}))
 	crawlerTargets.S3Targets = expandGlueS3Targets(s3Targets.([]interface{}))
+	crawlerTargets.CatalogTargets = expandGlueCatalogTargets(catalogTargets.([]interface{}))
 
 	return crawlerTargets, nil
 }
@@ -404,6 +424,28 @@ func expandGlueJdbcTarget(cfg map[string]interface{}) *glue.JdbcTarget {
 	if exclusions, ok := cfg["exclusions"]; ok {
 		target.Exclusions = expandStringList(exclusions.([]interface{}))
 	}
+	return target
+}
+
+func expandGlueCatalogTargets(targets []interface{}) []*glue.CatalogTarget {
+	if len(targets) < 1 {
+		return []*glue.CatalogTarget{}
+	}
+
+	perms := make([]*glue.CatalogTarget, len(targets))
+	for i, rawCfg := range targets {
+		cfg := rawCfg.(map[string]interface{})
+		perms[i] = expandGlueCatalogTarget(cfg)
+	}
+	return perms
+}
+
+func expandGlueCatalogTarget(cfg map[string]interface{}) *glue.CatalogTarget {
+	target := &glue.CatalogTarget{
+		DatabaseName: aws.String(cfg["database_name"].(string)),
+		Tables:       expandStringList(cfg["tables"].([]interface{})),
+	}
+
 	return target
 }
 
@@ -509,6 +551,10 @@ func resourceAwsGlueCrawlerRead(d *schema.ResourceData, meta interface{}) error 
 		if err := d.Set("s3_target", flattenGlueS3Targets(crawlerOutput.Crawler.Targets.S3Targets)); err != nil {
 			return fmt.Errorf("error setting s3_target: %s", err)
 		}
+
+		if err := d.Set("catalog_target", flattenGlueCatalogTargets(crawlerOutput.Crawler.Targets.CatalogTargets)); err != nil {
+			return fmt.Errorf("error setting catalog_target: %s", err)
+		}
 	}
 
 	return nil
@@ -521,6 +567,19 @@ func flattenGlueS3Targets(s3Targets []*glue.S3Target) []map[string]interface{} {
 		attrs := make(map[string]interface{})
 		attrs["exclusions"] = flattenStringList(s3Target.Exclusions)
 		attrs["path"] = aws.StringValue(s3Target.Path)
+
+		result = append(result, attrs)
+	}
+	return result
+}
+
+func flattenGlueCatalogTargets(CatalogTargets []*glue.CatalogTarget) []map[string]interface{} {
+	result := make([]map[string]interface{}, 0)
+
+	for _, catalogTarget := range CatalogTargets {
+		attrs := make(map[string]interface{})
+		attrs["tables"] = flattenStringList(catalogTarget.Tables)
+		attrs["database_name"] = aws.StringValue(catalogTarget.DatabaseName)
 
 		result = append(result, attrs)
 	}
