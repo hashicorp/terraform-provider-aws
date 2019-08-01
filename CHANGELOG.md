@@ -4,6 +4,10 @@ NOTES:
 
 * provider: Region validation now automatically supports the new `me-south-1` Middle East (Bahrain) region. For AWS operations to work in the new region, the region must be explicitly enabled as outlined in the [previous new region announcement blog post](https://aws.amazon.com/blogs/aws/now-open-aws-asia-pacific-hong-kong-region/). When the region is not enabled, the Terraform AWS Provider will return errors during credential validation (e.g. `error validating provider credentials: error calling sts:GetCallerIdentity: InvalidClientTokenId: The security token included in the request is invalid`) or AWS operations will throw their own errors (e.g. `data.aws_availability_zones.current: Error fetching Availability Zones: AuthFailure: AWS was not able to validate the provided access credentials`). [GH-9538]
 
+FEATURES:
+
+* **New Resource:** `aws_codebuild_source_credential` [GH-7631]
+
 ENHANCEMENTS:
 
 * data-source/aws_cloudtrail_service_account: Support `me-south-1` region [GH-9547]
