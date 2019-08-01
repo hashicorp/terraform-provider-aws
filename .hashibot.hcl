@@ -1,3 +1,13 @@
+queued_behavior "release_commenter" "releases" {
+  repo_prefix = "terraform-provider-"
+
+  message = <<-EOF
+    This has been released in [version ${var.release_version} of the Terraform AWS provider](${var.changelog_link}). Please see the [Terraform documentation on provider versioning](https://www.terraform.io/docs/configuration/providers.html#provider-versions) or reach out if you need any assistance upgrading.
+
+    For further feature requests or bug reports with this functionality, please create a [new GitHub issue](https://github.com/terraform-providers/terraform-provider-aws/issues/new/choose) following the template for triage. Thanks!
+  EOF
+}
+
 # Catch the following in issues:
 # *aws_XXX
 # * aws_XXX
