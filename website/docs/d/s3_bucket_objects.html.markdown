@@ -8,6 +8,8 @@ description: |-
 
 # Data Source: aws_s3_bucket_objects
 
+~> **NOTE on `max_keys`:** Retrieving very large numbers of keys can adversely affect Terraform's performance.
+
 The bucket-objects data source returns keys (i.e., file names) and other metadata about objects in an S3 bucket.
 
 ## Example Usage
@@ -34,10 +36,7 @@ The following arguments are supported:
 * `prefix` - (Optional) Limits results to object keys with this prefix (Default: none)
 * `delimiter` - (Optional) A character used to group keys (Default: none)
 * `encoding_type` - (Optional) Encodes keys using this method (Default: none; besides none, only "url" can be used)
-* `max_keys` - (Optional) Maximum object keys to return or `-1` to retrieve all keys (Default: 1000)
-
-~> **NOTE on `max_keys`:** Retrieving very large numbers of keys can adversely affect Terraform's performance.
-
+* `max_keys` - (Optional) Maximum object keys to return (Default: 1000)
 * `start_after` - (Optional) Returns key names lexicographically after a specific object key in your bucket (Default: none; S3 lists object keys in UTF-8 character encoding in lexicographical order)
 * `fetch_owner` - (Optional) Boolean specifying whether to populate the owner list (Default: false)
 
@@ -45,7 +44,6 @@ The following arguments are supported:
 
 In addition to all arguments above, the following attributes are exported:
 
-* `arn` - ARN of the bucket in the format `arn:aws:s3:::bucketname`
 * `keys` - List of strings representing object keys
 * `common_prefixes` - List of any keys between `prefix` and the next occurrence of `delimiter` (i.e., similar to subdirectories of the `prefix` "directory"); the list is only returned when you specify `delimiter`
 * `owners` - List of strings representing object owner IDs (see `fetch_owner` above)

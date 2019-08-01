@@ -11,7 +11,6 @@ import (
 
 func TestAccDataSourceAWSS3BucketObjects_basic(t *testing.T) {
 	rInt := acctest.RandInt()
-	basic := testAccAWSDataSourceS3ObjectsConfigBasic(rInt)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                  func() { testAccPreCheck(t) },
@@ -19,14 +18,13 @@ func TestAccDataSourceAWSS3BucketObjects_basic(t *testing.T) {
 		PreventPostDestroyRefresh: true,
 		Steps: []resource.TestStep{
 			{
-				Config: basic,
+				Config: testAccAWSDataSourceS3ObjectsConfigResources(rInt), // NOTE: contains no data source
+				// Does not need Check
+			},
+			{
+				Config: testAccAWSDataSourceS3ObjectsConfigBasic(rInt),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsS3ObjectsDataSourceExists("data.aws_s3_bucket_objects.yesh"),
-					resource.TestCheckResourceAttr(
-						"data.aws_s3_bucket_objects.yesh",
-						"arn",
-						fmt.Sprintf("arn:aws:s3:::tf-objects-test-bucket-%d", rInt),
-					),
 					resource.TestCheckResourceAttr("data.aws_s3_bucket_objects.yesh", "keys.#", "2"),
 					resource.TestCheckResourceAttr("data.aws_s3_bucket_objects.yesh", "keys.0", "arch/navajo/north_window"),
 					resource.TestCheckResourceAttr("data.aws_s3_bucket_objects.yesh", "keys.1", "arch/navajo/sand_dune"),
@@ -38,7 +36,6 @@ func TestAccDataSourceAWSS3BucketObjects_basic(t *testing.T) {
 
 func TestAccDataSourceAWSS3BucketObjects_all(t *testing.T) {
 	rInt := acctest.RandInt()
-	basic := testAccAWSDataSourceS3ObjectsConfigAll(rInt)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                  func() { testAccPreCheck(t) },
@@ -46,7 +43,11 @@ func TestAccDataSourceAWSS3BucketObjects_all(t *testing.T) {
 		PreventPostDestroyRefresh: true,
 		Steps: []resource.TestStep{
 			{
-				Config: basic,
+				Config: testAccAWSDataSourceS3ObjectsConfigResources(rInt), // NOTE: contains no data source
+				// Does not need Check
+			},
+			{
+				Config: testAccAWSDataSourceS3ObjectsConfigAll(rInt),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsS3ObjectsDataSourceExists("data.aws_s3_bucket_objects.yesh"),
 					resource.TestCheckResourceAttr("data.aws_s3_bucket_objects.yesh", "keys.#", "7"),
@@ -65,7 +66,6 @@ func TestAccDataSourceAWSS3BucketObjects_all(t *testing.T) {
 
 func TestAccDataSourceAWSS3BucketObjects_prefixes(t *testing.T) {
 	rInt := acctest.RandInt()
-	basic := testAccAWSDataSourceS3ObjectsConfigPrefixes(rInt)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                  func() { testAccPreCheck(t) },
@@ -73,7 +73,11 @@ func TestAccDataSourceAWSS3BucketObjects_prefixes(t *testing.T) {
 		PreventPostDestroyRefresh: true,
 		Steps: []resource.TestStep{
 			{
-				Config: basic,
+				Config: testAccAWSDataSourceS3ObjectsConfigResources(rInt), // NOTE: contains no data source
+				// Does not need Check
+			},
+			{
+				Config: testAccAWSDataSourceS3ObjectsConfigPrefixes(rInt),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsS3ObjectsDataSourceExists("data.aws_s3_bucket_objects.yesh"),
 					resource.TestCheckResourceAttr("data.aws_s3_bucket_objects.yesh", "keys.#", "1"),
@@ -91,7 +95,6 @@ func TestAccDataSourceAWSS3BucketObjects_prefixes(t *testing.T) {
 
 func TestAccDataSourceAWSS3BucketObjects_encoded(t *testing.T) {
 	rInt := acctest.RandInt()
-	basic := testAccAWSDataSourceS3ObjectsConfigEncoded(rInt)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                  func() { testAccPreCheck(t) },
@@ -99,7 +102,11 @@ func TestAccDataSourceAWSS3BucketObjects_encoded(t *testing.T) {
 		PreventPostDestroyRefresh: true,
 		Steps: []resource.TestStep{
 			{
-				Config: basic,
+				Config: testAccAWSDataSourceS3ObjectsConfigExtraResource(rInt), // NOTE: contains no data source
+				// Does not need Check
+			},
+			{
+				Config: testAccAWSDataSourceS3ObjectsConfigEncoded(rInt),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsS3ObjectsDataSourceExists("data.aws_s3_bucket_objects.yesh"),
 					resource.TestCheckResourceAttr("data.aws_s3_bucket_objects.yesh", "keys.#", "2"),
@@ -113,7 +120,6 @@ func TestAccDataSourceAWSS3BucketObjects_encoded(t *testing.T) {
 
 func TestAccDataSourceAWSS3BucketObjects_maxKeys(t *testing.T) {
 	rInt := acctest.RandInt()
-	basic := testAccAWSDataSourceS3ObjectsConfigMaxKeys(rInt)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                  func() { testAccPreCheck(t) },
@@ -121,7 +127,11 @@ func TestAccDataSourceAWSS3BucketObjects_maxKeys(t *testing.T) {
 		PreventPostDestroyRefresh: true,
 		Steps: []resource.TestStep{
 			{
-				Config: basic,
+				Config: testAccAWSDataSourceS3ObjectsConfigResources(rInt), // NOTE: contains no data source
+				// Does not need Check
+			},
+			{
+				Config: testAccAWSDataSourceS3ObjectsConfigMaxKeys(rInt),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsS3ObjectsDataSourceExists("data.aws_s3_bucket_objects.yesh"),
 					resource.TestCheckResourceAttr("data.aws_s3_bucket_objects.yesh", "keys.#", "2"),
@@ -135,7 +145,6 @@ func TestAccDataSourceAWSS3BucketObjects_maxKeys(t *testing.T) {
 
 func TestAccDataSourceAWSS3BucketObjects_startAfter(t *testing.T) {
 	rInt := acctest.RandInt()
-	basic := testAccAWSDataSourceS3ObjectsConfigStartAfter(rInt)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                  func() { testAccPreCheck(t) },
@@ -143,7 +152,11 @@ func TestAccDataSourceAWSS3BucketObjects_startAfter(t *testing.T) {
 		PreventPostDestroyRefresh: true,
 		Steps: []resource.TestStep{
 			{
-				Config: basic,
+				Config: testAccAWSDataSourceS3ObjectsConfigResources(rInt), // NOTE: contains no data source
+				// Does not need Check
+			},
+			{
+				Config: testAccAWSDataSourceS3ObjectsConfigStartAfter(rInt),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsS3ObjectsDataSourceExists("data.aws_s3_bucket_objects.yesh"),
 					resource.TestCheckResourceAttr("data.aws_s3_bucket_objects.yesh", "keys.#", "1"),
@@ -156,7 +169,6 @@ func TestAccDataSourceAWSS3BucketObjects_startAfter(t *testing.T) {
 
 func TestAccDataSourceAWSS3BucketObjects_fetchOwner(t *testing.T) {
 	rInt := acctest.RandInt()
-	basic := testAccAWSDataSourceS3ObjectsConfigOwners(rInt)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                  func() { testAccPreCheck(t) },
@@ -164,7 +176,11 @@ func TestAccDataSourceAWSS3BucketObjects_fetchOwner(t *testing.T) {
 		PreventPostDestroyRefresh: true,
 		Steps: []resource.TestStep{
 			{
-				Config: basic,
+				Config: testAccAWSDataSourceS3ObjectsConfigResources(rInt), // NOTE: contains no data source
+				// Does not need Check
+			},
+			{
+				Config: testAccAWSDataSourceS3ObjectsConfigOwners(rInt),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsS3ObjectsDataSourceExists("data.aws_s3_bucket_objects.yesh"),
 					resource.TestCheckResourceAttr("data.aws_s3_bucket_objects.yesh", "keys.#", "2"),
@@ -274,7 +290,7 @@ data "aws_s3_bucket_objects" "yesh" {
 `, testAccAWSDataSourceS3ObjectsConfigResources(randInt))
 }
 
-func testAccAWSDataSourceS3ObjectsConfigEncoded(randInt int) string {
+func testAccAWSDataSourceS3ObjectsConfigExtraResource(randInt int) string {
 	return fmt.Sprintf(`
 %s
 
@@ -283,13 +299,19 @@ resource "aws_s3_bucket_object" "object8" {
   key     = "arch/ru b ic on"
   content = "Goose Island"
 }
+`, testAccAWSDataSourceS3ObjectsConfigResources(randInt))
+}
+
+func testAccAWSDataSourceS3ObjectsConfigEncoded(randInt int) string {
+	return fmt.Sprintf(`
+%s
 
 data "aws_s3_bucket_objects" "yesh" {
   bucket        = "${aws_s3_bucket.objects_bucket.id}"
   encoding_type = "url"
   prefix        = "arch/ru"
 }
-`, testAccAWSDataSourceS3ObjectsConfigResources(randInt))
+`, testAccAWSDataSourceS3ObjectsConfigExtraResource(randInt))
 }
 
 func testAccAWSDataSourceS3ObjectsConfigMaxKeys(randInt int) string {

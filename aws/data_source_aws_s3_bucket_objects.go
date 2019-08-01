@@ -2,11 +2,10 @@ package aws
 
 import (
 	"fmt"
-	"log"
 
 	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/s3"
+	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/helper/schema"
 )
 
@@ -46,10 +45,6 @@ func dataSourceAwsS3BucketObjects() *schema.Resource {
 				Type:     schema.TypeBool,
 				Optional: true,
 			},
-			"arn": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
 			"keys": {
 				Type:     schema.TypeList,
 				Computed: true,
@@ -75,25 +70,7 @@ func dataSourceAwsS3BucketObjectsRead(d *schema.ResourceData, meta interface{}) 
 	bucket := d.Get("bucket").(string)
 	prefix := d.Get("prefix").(string)
 
-	input := &s3.HeadBucketInput{
-		Bucket: aws.String(bucket),
-	}
-
-	log.Printf("[DEBUG] Reading S3 bucket: %s", input)
-	_, err := conn.HeadBucket(input)
-
-	if err != nil {
-		return fmt.Errorf("Failed listing S3 bucket object keys: %s Bucket: %q", err, bucket)
-	}
-
-	d.SetId(fmt.Sprintf("%s_%s", bucket, prefix))
-
-	arn := arn.ARN{
-		Partition: meta.(*AWSClient).partition,
-		Service:   "s3",
-		Resource:  bucket,
-	}.String()
-	d.Set("arn", arn)
+	d.SetId(resource.UniqueId())
 
 	listInput := s3.ListObjectsV2Input{
 		Bucket: aws.String(bucket),
@@ -114,14 +91,9 @@ func dataSourceAwsS3BucketObjectsRead(d *schema.ResourceData, meta interface{}) 
 	// "listInput.MaxKeys" refers to max keys returned in a single request
 	// (i.e., page size), not the total number of keys returned if you page
 	// through the results. "maxKeys" does refer to total keys returned.
-	maxKeys := -1
-	if max, ok := d.GetOk("max_keys"); ok {
-		maxKeys = max.(int)
-		if maxKeys > keyRequestPageSize {
-			listInput.MaxKeys = aws.Int64(int64(keyRequestPageSize))
-		} else {
-			listInput.MaxKeys = aws.Int64(int64(maxKeys))
-		}
+	maxKeys := int64(d.Get("max_keys").(int))
+	if maxKeys <= keyRequestPageSize {
+		listInput.MaxKeys = aws.Int64(maxKeys)
 	}
 
 	if s, ok := d.GetOk("start_after"); ok {
@@ -132,52 +104,47 @@ func dataSourceAwsS3BucketObjectsRead(d *schema.ResourceData, meta interface{}) 
 		listInput.FetchOwner = aws.Bool(b.(bool))
 	}
 
-	keys, prefixes, owners, err := listS3Objects(conn, listInput, maxKeys)
+	var commonPrefixes []string
+	var keys []string
+	var owners []string
+
+	err := conn.ListObjectsV2Pages(&listInput, func(page *s3.ListObjectsV2Output, lastPage bool) bool {
+		for _, commonPrefix := range page.CommonPrefixes {
+			commonPrefixes = append(commonPrefixes, aws.StringValue(commonPrefix.Prefix))
+		}
+
+		for _, object := range page.Contents {
+			keys = append(keys, aws.StringValue(object.Key))
+
+			if object.Owner != nil {
+				owners = append(owners, aws.StringValue(object.Owner.ID))
+			}
+		}
+
+		maxKeys = maxKeys - aws.Int64Value(page.KeyCount)
+
+		if maxKeys <= keyRequestPageSize {
+			listInput.MaxKeys = aws.Int64(maxKeys)
+		}
+
+		return !lastPage
+	})
+
 	if err != nil {
-		return err
+		return fmt.Errorf("error listing S3 Bucket (%s) Objects: %s", bucket, err)
 	}
-	d.Set("keys", keys)
-	d.Set("common_prefixes", prefixes)
-	d.Set("owners", owners)
+
+	if err := d.Set("common_prefixes", commonPrefixes); err != nil {
+		return fmt.Errorf("error setting common_prefixes: %s", err)
+	}
+
+	if err := d.Set("keys", keys); err != nil {
+		return fmt.Errorf("error setting keys: %s", err)
+	}
+
+	if err := d.Set("owners", owners); err != nil {
+		return fmt.Errorf("error setting owners: %s", err)
+	}
 
 	return nil
-}
-
-func listS3Objects(conn *s3.S3, input s3.ListObjectsV2Input, maxKeys int) ([]string, []string, []string, error) {
-	var objectList []string
-	var commonPrefixList []string
-	var ownerList []string
-	var continueToken *string
-	for {
-		//page through keys
-		input.ContinuationToken = continueToken
-
-		log.Printf("[DEBUG] Requesting page of S3 bucket (%s) object keys", *input.Bucket)
-		listOutput, err := conn.ListObjectsV2(&input)
-		if err != nil {
-			return nil, nil, nil, fmt.Errorf("Failed listing S3 bucket object keys: %s Bucket: %q", err, *input.Bucket)
-		}
-
-		for _, content := range listOutput.Contents {
-			objectList = append(objectList, *content.Key)
-			if input.FetchOwner != nil && *input.FetchOwner {
-				ownerList = append(ownerList, *content.Owner.ID)
-			}
-			if maxKeys > -1 && len(objectList) >= maxKeys {
-				break
-			}
-		}
-
-		for _, commonPrefix := range listOutput.CommonPrefixes {
-			commonPrefixList = append(commonPrefixList, *commonPrefix.Prefix)
-		}
-
-		// stop requesting if no more results OR all wanted keys done
-		if !*listOutput.IsTruncated || (maxKeys > -1 && len(objectList) >= maxKeys) {
-			break
-		}
-		continueToken = listOutput.NextContinuationToken
-	}
-
-	return objectList, commonPrefixList, ownerList, nil
 }
