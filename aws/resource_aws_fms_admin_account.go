@@ -147,7 +147,7 @@ func waitForFmsAdminAccountDeletion(conn *fms.FMS) error {
 			fms.AccountRoleStatusPendingDeletion,
 			fms.AccountRoleStatusReady,
 		},
-		Target:  []string{fms.AccountRoleStatusDeleted},
+		Target: []string{fms.AccountRoleStatusDeleted},
 		Refresh: func() (interface{}, string, error) {
 			output, err := conn.GetAdminAccount(&fms.GetAdminAccountInput{})
 
