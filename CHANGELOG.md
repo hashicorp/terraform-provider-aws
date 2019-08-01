@@ -7,6 +7,7 @@ NOTES:
 FEATURES:
 
 * **New Resource:** `aws_codebuild_source_credential` [GH-7631]
+* **New Resource:** `aws_fms_admin_account` [GH-4310]
 
 ENHANCEMENTS:
 
