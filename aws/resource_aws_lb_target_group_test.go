@@ -955,7 +955,7 @@ func TestAccAWSLBTargetGroup_tcpGroupCreatesTCPHealthcheck(t *testing.T) {
 					testAccCheckAWSLBTargetGroupExists("aws_lb_target_group.test", &conf),
 					resource.TestCheckResourceAttr("aws_lb_target_group.test", "health_check.#", "1"),
 					resource.TestCheckResourceAttr("aws_lb_target_group.test", "health_check.0.enabled", "true"),
-					resource.TestCheckResourceAttr("aws_lb_target_group.test", "health_check.0.protocol", "TCP"),
+					resource.TestCheckResourceAttr("aws_lb_target_group.test", "health_check.0.protocol", ""),
 					resource.TestCheckResourceAttr("aws_lb_target_group.test", "health_check.0.port", "8080"),
 				),
 			},
