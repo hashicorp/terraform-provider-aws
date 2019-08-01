@@ -204,8 +204,6 @@ func resourceAwsFmsPolicyCreate(d *schema.ResourceData, meta interface{}) error 
 		return fmt.Errorf("Creating Policy Failed: %s", err.Error())
 	}
 
-	log.Printf("[DEBUG] Printing ID: %s", aws.StringValue(resp.Policy.PolicyId))
-
 	d.SetId(aws.StringValue(resp.Policy.PolicyId))
 	d.Set("arn", aws.StringValue(resp.PolicyArn))
 	d.Set("policy_update_token", aws.StringValue(resp.Policy.PolicyUpdateToken))
