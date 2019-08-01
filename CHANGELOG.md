@@ -4,6 +4,10 @@ FEATURES:
 
 * **New Data Source:** `aws_s3_bucket_objects` [GH-6968]
 
+ENHANCEMENTS:
+
+* resource/aws_glue_crawler: Add `catalog_target` configuration block [GH-9430]
+
 ## 2.22.0 (August 01, 2019)
 
 NOTES:
