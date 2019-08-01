@@ -45,9 +45,10 @@ func resourceAwsCodeBuildSourceCredential() *schema.Resource {
 				}, false),
 			},
 			"token": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
+				Type:      schema.TypeString,
+				Required:  true,
+				ForceNew:  true,
+				Sensitive: true,
 			},
 			"user_name": {
 				Type:     schema.TypeString,
