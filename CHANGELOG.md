@@ -1,4 +1,9 @@
 ## 2.23.0 (Unreleased)
+
+FEATURES:
+
+* **New Data Source:** `aws_s3_bucket_objects` [GH-6968]
+
 ## 2.22.0 (August 01, 2019)
 
 NOTES:
