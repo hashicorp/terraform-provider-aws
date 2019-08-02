@@ -120,10 +120,7 @@ func TestFetchRootDevice(t *testing.T) {
 				data := r.Data.(*ec2.DescribeImagesOutput)
 				data.Images = tc.images
 			})
-			name, err := fetchRootDeviceName("ami-123", conn)
-			if err != nil {
-				t.Errorf("Error fetching device name: %s", err)
-			}
+			name, _ := fetchRootDeviceName("ami-123", conn)
 			if tc.name != aws.StringValue(name) {
 				t.Errorf("Expected name %s, got %s", tc.name, aws.StringValue(name))
 			}
@@ -315,6 +312,32 @@ func TestAccAWSInstance_basic(t *testing.T) {
 					_, err := conn.DeleteVolume(&ec2.DeleteVolumeInput{VolumeId: vol.VolumeId})
 					return err
 				},
+			},
+		},
+	})
+}
+
+func TestAccAWSInstance_encryptedRootVolume(t *testing.T) {
+	var v ec2.Instance
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:      func() { testAccPreCheck(t) },
+		IDRefreshName: "aws_instance.foo",
+		Providers:     testAccProviders,
+		CheckDestroy:  testAccCheckInstanceDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccCheckInstanceEncryptedRootVolume,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckInstanceExists(
+						"aws_instance.foo", &v),
+					resource.TestCheckResourceAttr(
+						"aws_instance.foo", "root_block_device.#", "1"),
+					resource.TestCheckResourceAttr(
+						"aws_instance.foo", "root_block_device.0.encrypted", "true"),
+					resource.TestCheckResourceAttrSet(
+						"aws_instance.foo", "root_block_device.0.kms_key_id"),
+				),
 			},
 		},
 	})
@@ -2473,14 +2496,30 @@ resource "aws_instance" "foo" {
 `
 
 const testAccInstanceConfigBlockDevices = `
-resource "aws_kms_key" "foo" {
-	description = "Dummy key for terraform test"
-	deletion_window_in_days = 7
+resource "aws_vpc" "foo" {
+  cidr_block = "10.1.0.0/16"
+
+  tags {
+    Name = "terraform-testacc-instance-source-dest-enable"
+  }
 }
+
+resource "aws_subnet" "foo" {
+  cidr_block        = "10.1.1.0/24"
+  vpc_id            = "${aws_vpc.foo.id}"
+  availability_zone = "us-west-2a"
+
+  tags {
+    Name = "tf-acc-instance-source-dest-enable"
+  }
+}
+
+resource "aws_kms_key" "foo" {}
 
 resource "aws_instance" "foo" {
 	# us-west-2
-	ami = "ami-55a7ea65"
+	ami       = "ami-55a7ea65"
+    subnet_id = "${aws_subnet.foo.id}"
 
 	# In order to attach an encrypted volume to an instance you need to have an
 	# m3.medium or larger. See "Supported Instance Types" in:
@@ -2491,10 +2530,12 @@ resource "aws_instance" "foo" {
 		volume_type = "gp2"
 		volume_size = 11
 	}
+
 	ebs_block_device {
 		device_name = "/dev/sdb"
 		volume_size = 9
 	}
+
 	ebs_block_device {
 		device_name = "/dev/sdc"
 		volume_size = 10
@@ -2506,8 +2547,8 @@ resource "aws_instance" "foo" {
 	ebs_block_device {
 		device_name = "/dev/sdd"
 		volume_size = 12
-		encrypted = true
-		kms_key_id = "${aws_kms_key.foo.arn}"
+		encrypted   = true
+        kms_key_id  = "${aws_kms_key.foo.arn}"
 	}
 
 	ephemeral_block_device {
@@ -2789,6 +2830,40 @@ resource "aws_instance" "foo" {
 	tags = {
 		foo = "bar"
 	}
+}
+`
+
+const testAccCheckInstanceEncryptedRootVolume = `
+resource "aws_vpc" "foo" {
+  cidr_block = "10.1.0.0/16"
+
+  tags {
+    Name = "terraform-testacc-instance-source-dest-enable"
+  }
+}
+
+resource "aws_subnet" "foo" {
+  cidr_block = "10.1.1.0/24"
+  vpc_id = "${aws_vpc.foo.id}"
+  availability_zone = "us-west-2a"
+
+  tags {
+    Name = "tf-acc-instance-source-dest-enable"
+  }
+}
+
+resource "aws_kms_key" "foo" {}
+
+resource "aws_instance" "foo" {
+  ami           = "ami-08692d171e3cf02d6"
+  instance_type = "t3.nano"
+  subnet_id     = "${aws_subnet.foo.id}"
+
+  root_block_device {
+    delete_on_termination = true
+    encrypted             = true
+    kms_key_id            = "${aws_kms_key.foo.arn}"
+  }
 }
 `
 
