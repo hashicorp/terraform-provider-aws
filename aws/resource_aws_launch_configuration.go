@@ -263,7 +263,7 @@ func resourceAwsLaunchConfiguration() *schema.Resource {
 						"encrypted": {
 							Type:     schema.TypeBool,
 							Optional: true,
-							Default:  false,
+							Computed: true,
 							ForceNew: true,
 						},
 
