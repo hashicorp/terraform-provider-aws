@@ -32,6 +32,26 @@ func TestAccAWSLBTargetGroupAttachment_basic(t *testing.T) {
 	})
 }
 
+func TestAccAWSLBTargetGroupAttachment_missingAttachmentDrift(t *testing.T) {
+	targetGroupName := fmt.Sprintf("test-target-group-%s", acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum))
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:      func() { testAccPreCheck(t) },
+		IDRefreshName: "aws_lb_target_group.test",
+		Providers:     testAccProviders,
+		CheckDestroy:  testAccCheckAWSLBTargetGroupAttachmentDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSLBTargetGroupAttachmentConfig_basic(targetGroupName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSLBTargetGroupAttachmentExists("aws_lb_target_group_attachment.test"),
+					deregisterTarget("aws_lb_target_group.test", "aws_instance.test"),
+				),
+				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}
+
 func TestAccAWSLBTargetGroupAttachmentBackwardsCompatibility(t *testing.T) {
 	targetGroupName := fmt.Sprintf("test-target-group-%s", acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum))
 
@@ -106,6 +126,34 @@ func TestAccAWSALBTargetGroupAttachment_lambda(t *testing.T) {
 			},
 		},
 	})
+}
+
+func deregisterTarget(attachmentAddress string, instanceAddress string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		attachmentRs, ok := s.RootModule().Resources[attachmentAddress]
+		if !ok {
+			return fmt.Errorf("Attachment not found: %s", attachmentAddress)
+		}
+		instanceRs, ok := s.RootModule().Resources[instanceAddress]
+		if !ok {
+			return fmt.Errorf("Instance not found: %s", instanceAddress)
+		}
+
+		conn := testAccProvider.Meta().(*AWSClient).elbv2conn
+
+		targetGroupArn := attachmentRs.Primary.Attributes["arn"]
+		instanceId := instanceRs.Primary.Attributes["id"]
+
+		_, err := conn.DeregisterTargets(&elbv2.DeregisterTargetsInput{
+			TargetGroupArn: aws.String(targetGroupArn),
+			Targets: []*elbv2.TargetDescription{
+				{
+					Id: aws.String(instanceId),
+				},
+			},
+		})
+		return err
+	}
 }
 
 func testAccCheckAWSLBTargetGroupAttachmentExists(n string) resource.TestCheckFunc {
@@ -197,7 +245,7 @@ resource "aws_lb_target_group_attachment" "test" {
 }
 
 resource "aws_instance" "test" {
-  ami           = "ami-f701cb97"
+  ami           = "ami-0d8e27447ec2c8410"
   instance_type = "t2.micro"
   subnet_id     = "${aws_subnet.subnet.id}"
 }
@@ -254,7 +302,7 @@ resource "aws_lb_target_group_attachment" "test" {
 }
 
 resource "aws_instance" "test" {
-  ami           = "ami-f701cb97"
+  ami           = "ami-0d8e27447ec2c8410"
   instance_type = "t2.micro"
   subnet_id     = "${aws_subnet.subnet.id}"
 }
@@ -311,7 +359,7 @@ resource "aws_alb_target_group_attachment" "test" {
 }
 
 resource "aws_instance" "test" {
-  ami           = "ami-f701cb97"
+  ami           = "ami-0d8e27447ec2c8410"
   instance_type = "t2.micro"
   subnet_id     = "${aws_subnet.subnet.id}"
 }
@@ -368,7 +416,7 @@ resource "aws_lb_target_group_attachment" "test" {
 }
 
 resource "aws_instance" "test" {
-  ami           = "ami-f701cb97"
+  ami           = "ami-0d8e27447ec2c8410"
   instance_type = "t2.micro"
   subnet_id     = "${aws_subnet.subnet.id}"
 }

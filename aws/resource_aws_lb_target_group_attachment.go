@@ -126,6 +126,7 @@ func resourceAwsLbAttachmentRead(d *schema.ResourceData, meta interface{}) error
 		TargetGroupArn: aws.String(d.Get("target_group_arn").(string)),
 		Targets:        []*elbv2.TargetDescription{target},
 	})
+
 	if err != nil {
 		if isAWSErr(err, elbv2.ErrCodeTargetGroupNotFoundException, "") {
 			log.Printf("[WARN] Target group does not exist, removing target attachment %s", d.Id())
@@ -138,6 +139,16 @@ func resourceAwsLbAttachmentRead(d *schema.ResourceData, meta interface{}) error
 			return nil
 		}
 		return fmt.Errorf("Error reading Target Health: %s", err)
+	}
+
+	for _, targetDesc := range resp.TargetHealthDescriptions {
+		if *targetDesc.Target.Id == d.Get("target_id").(string) {
+			if (*targetDesc.TargetHealth.State == "unused") || (*targetDesc.TargetHealth.State == "draining") {
+				log.Printf("[WARN] Target Attachment does not exist, recreating attachment")
+				d.SetId("")
+				return nil
+			}
+		}
 	}
 
 	if len(resp.TargetHealthDescriptions) != 1 {
