@@ -339,6 +339,7 @@ func resourceAwsInstance() *schema.Resource {
 						"kms_key_id": {
 							Type:     schema.TypeString,
 							Optional: true,
+							Computed: true,
 							ForceNew: true,
 						},
 
@@ -448,6 +449,7 @@ func resourceAwsInstance() *schema.Resource {
 						"kms_key_id": {
 							Type:     schema.TypeString,
 							Optional: true,
+							Computed: true,
 							ForceNew: true,
 						},
 
@@ -1579,10 +1581,13 @@ func readBlockDeviceMappingsFromConfig(
 			bd := v.(map[string]interface{})
 			ebs := &ec2.EbsBlockDevice{
 				DeleteOnTermination: aws.Bool(bd["delete_on_termination"].(bool)),
-				Encrypted:           aws.Bool(bd["encrypted"].(bool)),
 			}
 
-			if v, ok := bd["kms_key_id"].(int); ok && v != 0 {
+			if v, ok := bd["encrypted"].(bool); ok && v {
+				ebs.Encrypted = aws.Bool(v)
+			}
+
+			if v, ok := bd["kms_key_id"].(string); ok && v != "" {
 				ebs.KmsKeyId = aws.String(bd["kms_key_id"].(string))
 			}
 

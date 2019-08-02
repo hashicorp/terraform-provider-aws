@@ -182,13 +182,13 @@ func dataSourceAwsInstance() *schema.Resource {
 							Computed: true,
 						},
 
-						"kms_key_id": {
-							Type:     schema.TypeString,
+						"iops": {
+							Type:     schema.TypeInt,
 							Computed: true,
 						},
 
-						"iops": {
-							Type:     schema.TypeInt,
+						"kms_key_id": {
+							Type:     schema.TypeString,
 							Computed: true,
 						},
 
@@ -224,8 +224,18 @@ func dataSourceAwsInstance() *schema.Resource {
 							Computed: true,
 						},
 
+						"encrypted": {
+							Type:     schema.TypeBool,
+							Computed: true,
+						},
+
 						"iops": {
 							Type:     schema.TypeInt,
+							Computed: true,
+						},
+
+						"kms_key_id": {
+							Type:     schema.TypeString,
 							Computed: true,
 						},
 
