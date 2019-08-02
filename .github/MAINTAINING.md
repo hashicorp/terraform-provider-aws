@@ -264,3 +264,4 @@ The fix for this has been merged and will release with version X.Y.Z of the Terr
 - Run the HashiCorp (non-OSS) TeamCity release job with the `DEPLOYMENT_TARGET_VERSION` matching the expected release milestone and `DEPLOYMENT_NEXT_VERSION` matching the next release milestone
 - Wait for the TeamCity release job and TeamCity website deployment jobs to complete either by watching the build logs or Slack notifications
 - Close the release milestone
+- Create a new GitHub release with the release title exactly matching the tag and milestone (e.g. `v2.22.0`). This will trigger [HashiBot](https://github.com/apps/hashibot) release comments.
