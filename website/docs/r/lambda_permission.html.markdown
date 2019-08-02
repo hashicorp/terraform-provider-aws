@@ -154,8 +154,10 @@ resource "aws_lambda_permission" "lambda_permission" {
 
 ## Import
 
-Lambda permission statements can be imported using the function_name/statement_id, e.g.
+Lambda permission statements can be imported using function_name/statement_id, with an optional qualifier, e.g.
 
 ```
 $ terraform import aws_lambda_function_permission.test_lambda_permission my_test_lambda_function/AllowExecutionFromCloudWatch
+
+$ terraform import aws_lambda_function_permission.test_lambda_permission my_test_lambda_function:qualifier_name/AllowExecutionFromCloudWatch
 ```

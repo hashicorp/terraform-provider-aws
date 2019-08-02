@@ -632,7 +632,7 @@ func testAccAWSCLambdaPermissionImportStateIdFunc(resourceName string) resource.
 		}
 
 		if v, ok := rs.Primary.Attributes["qualifier"]; ok && v != "" {
-			return fmt.Sprintf("%s:%s/%s", rs.Primary.Attributes["function_name"], *aws.String(v), rs.Primary.Attributes["statement_id"]), nil
+			return fmt.Sprintf("%s:%s/%s", rs.Primary.Attributes["function_name"], v, rs.Primary.Attributes["statement_id"]), nil
 		}
 		return fmt.Sprintf("%s/%s", rs.Primary.Attributes["function_name"], rs.Primary.Attributes["statement_id"]), nil
 	}

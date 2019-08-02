@@ -406,7 +406,7 @@ func getFunctionNameFromLambdaArn(arn string) (string, error) {
 func resourceAwsLambdaPermissionImport(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
 	idParts := strings.Split(d.Id(), "/")
 	if len(idParts) != 2 || idParts[0] == "" || idParts[1] == "" {
-		return nil, fmt.Errorf("Unexpected format of ID (%q), expected FUNCTION_NAME/STATEMENT_ID", d.Id())
+		return nil, fmt.Errorf("Unexpected format of ID (%q), expected FUNCTION_NAME/STATEMENT_ID or FUNCTION_NAME:QUALIFIER/STATEMENT_ID", d.Id())
 	}
 
 	functionName := idParts[0]
@@ -420,8 +420,8 @@ func resourceAwsLambdaPermissionImport(d *schema.ResourceData, meta interface{})
 		qualifier = fnParts[1]
 		input.Qualifier = &qualifier
 	}
-	statement := idParts[1]
-	log.Printf("[DEBUG] Importing Lambda Permission %s for function name %s", statement, functionName)
+	statementId := idParts[1]
+	log.Printf("[DEBUG] Importing Lambda Permission %s for function name %s", statementId, functionName)
 
 	conn := meta.(*AWSClient).lambdaconn
 	getFunctionOutput, err := conn.GetFunction(input)
@@ -430,11 +430,11 @@ func resourceAwsLambdaPermissionImport(d *schema.ResourceData, meta interface{})
 	}
 
 	d.Set("function_name", getFunctionOutput.Configuration.FunctionArn)
-	d.Set("statement_id", statement)
+	d.Set("statement_id", statementId)
 	if qualifier != "" {
 		d.Set("qualifier", qualifier)
 	}
-	d.SetId(statement)
+	d.SetId(statementId)
 	return []*schema.ResourceData{d}, nil
 }
 
