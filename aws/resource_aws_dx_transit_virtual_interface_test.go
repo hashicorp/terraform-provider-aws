@@ -174,71 +174,12 @@ func testAccAwsDxTransitVirtualInterface_Tags(t *testing.T) {
 	})
 }
 
-func testAccCheckAwsDxTransitVirtualInterfaceDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).dxconn
-
-	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_dx_transit_virtual_interface" {
-			continue
-		}
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("No ID is set")
-		}
-
-		resp, err := conn.DescribeVirtualInterfaces(&directconnect.DescribeVirtualInterfacesInput{
-			VirtualInterfaceId: aws.String(rs.Primary.ID),
-		})
-		if isAWSErr(err, directconnect.ErrCodeClientException, "does not exist") {
-			continue
-		}
-		if err != nil {
-			return err
-		}
-
-		n := len(resp.VirtualInterfaces)
-		switch n {
-		case 0:
-			continue
-		case 1:
-			if aws.StringValue(resp.VirtualInterfaces[0].VirtualInterfaceState) == directconnect.VirtualInterfaceStateDeleted {
-				continue
-			}
-			return fmt.Errorf("still exist.")
-		default:
-			return fmt.Errorf("Found %d Direct Connect virtual interfaces for %s, expected 1", n, rs.Primary.ID)
-		}
-	}
-
-	return nil
+func testAccCheckAwsDxTransitVirtualInterfaceExists(name string, vif *directconnect.VirtualInterface) resource.TestCheckFunc {
+	return testAccCheckDxVirtualInterfaceExists(name, vif)
 }
 
-func testAccCheckAwsDxTransitVirtualInterfaceExists(name string, vif *directconnect.VirtualInterface) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		conn := testAccProvider.Meta().(*AWSClient).dxconn
-
-		rs, ok := s.RootModule().Resources[name]
-		if !ok {
-			return fmt.Errorf("Not found: %s", name)
-		}
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("No ID is set")
-		}
-
-		resp, err := conn.DescribeVirtualInterfaces(&directconnect.DescribeVirtualInterfacesInput{
-			VirtualInterfaceId: aws.String(rs.Primary.ID),
-		})
-		if err != nil {
-			return err
-		}
-
-		if n := len(resp.VirtualInterfaces); n != 1 {
-			return fmt.Errorf("Found %d Direct Connect virtual interfaces for %s, expected 1", n, rs.Primary.ID)
-		}
-
-		*vif = *resp.VirtualInterfaces[0]
-
-		return nil
-	}
+func testAccCheckAwsDxTransitVirtualInterfaceDestroy(s *terraform.State) error {
+	return testAccCheckDxVirtualInterfaceDestroy(s, "aws_dx_transit_virtual_interface")
 }
 
 func testAccDxTransitVirtualInterfaceConfig_base(rName string, amzAsn int) string {
