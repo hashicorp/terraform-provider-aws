@@ -135,7 +135,7 @@ func resourceAwsDxHostedPrivateVirtualInterfaceCreate(d *schema.ResourceData, me
 	log.Printf("[DEBUG] Creating Direct Connect hosted private virtual interface: %s", req)
 	resp, err := conn.AllocatePrivateVirtualInterface(req)
 	if err != nil {
-		return fmt.Errorf("rrror creating Direct Connect hosted private virtual interface: %s", err)
+		return fmt.Errorf("error creating Direct Connect hosted private virtual interface: %s", err)
 	}
 
 	d.SetId(aws.StringValue(resp.VirtualInterfaceId))
