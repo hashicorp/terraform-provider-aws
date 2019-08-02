@@ -6,7 +6,9 @@ FEATURES:
 
 ENHANCEMENTS:
 
+* data-source/aws_instance: Add `ebs_block_device` and `root_block_device` configuration block `encryption` and `kms_key_id` attributes [GH-4861] / [GH-7757]
 * resource/aws_glue_crawler: Add `catalog_target` configuration block [GH-9430]
+* resource/aws_instance: Add `ebs_block_device` and `root_block_device` configuration block `encryption` and `kms_key_id` arguments (support encryption on launch) [GH-4861] / [GH-7757]
 
 ## 2.22.0 (August 01, 2019)
 
