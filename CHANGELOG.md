@@ -14,6 +14,12 @@ ENHANCEMENTS:
 * resource/aws_lambda_permission: Support resource import [GH-9369]
 * resource/aws_launch_configuration: Add `root_block_device` configuration block `encrypted` argument (support encryption on launch) [GH-7759]
 
+BUG FIXES:
+
+* resource/aws_lambda_event_source_mapping: Final retries after timeout when creating, updating, and deleting event source mappings [GH-9553]
+* resource/aws_lambda_function: Final retry when creating lambda function [GH-9553]
+* resource/aws_lambda_permission: Final retries when creating, reading, and deleting lambda permissions [GH-9553]
+
 ## 2.22.0 (August 01, 2019)
 
 NOTES:
