@@ -260,6 +260,13 @@ func resourceAwsLaunchConfiguration() *schema.Resource {
 							ForceNew: true,
 						},
 
+						"encrypted": {
+							Type:     schema.TypeBool,
+							Optional: true,
+							Computed: true,
+							ForceNew: true,
+						},
+
 						"iops": {
 							Type:     schema.TypeInt,
 							Optional: true,
@@ -419,6 +426,10 @@ func resourceAwsLaunchConfigurationCreate(d *schema.ResourceData, meta interface
 			bd := v.(map[string]interface{})
 			ebs := &autoscaling.Ebs{
 				DeleteOnTermination: aws.Bool(bd["delete_on_termination"].(bool)),
+			}
+
+			if v, ok := bd["encrypted"].(bool); ok && v {
+				ebs.Encrypted = aws.Bool(v)
 			}
 
 			if v, ok := bd["volume_size"].(int); ok && v != 0 {
@@ -675,16 +686,17 @@ func readBlockDevicesFromLaunchConfiguration(d *schema.ResourceData, lc *autosca
 		if bdm.Ebs != nil && bdm.Ebs.Iops != nil {
 			bd["iops"] = *bdm.Ebs.Iops
 		}
+		if bdm.Ebs != nil && bdm.Ebs.Encrypted != nil {
+			bd["encrypted"] = *bdm.Ebs.Encrypted
+		}
 
 		if bdm.DeviceName != nil && *bdm.DeviceName == *rootDeviceName {
 			blockDevices["root"] = bd
 		} else {
-			if bdm.Ebs != nil && bdm.Ebs.Encrypted != nil {
-				bd["encrypted"] = *bdm.Ebs.Encrypted
-			}
 			if bdm.DeviceName != nil {
 				bd["device_name"] = *bdm.DeviceName
 			}
+
 			if bdm.VirtualName != nil {
 				bd["virtual_name"] = *bdm.VirtualName
 				blockDevices["ephemeral"] = append(blockDevices["ephemeral"].([]map[string]interface{}), bd)
