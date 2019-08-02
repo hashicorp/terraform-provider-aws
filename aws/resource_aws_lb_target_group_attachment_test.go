@@ -3,14 +3,13 @@ package aws
 import (
 	"errors"
 	"fmt"
-	"strconv"
-	"testing"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/elbv2"
 	"github.com/hashicorp/terraform/helper/acctest"
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/terraform"
-
+	"strconv"
+	"testing"
 )
 
 func TestAccAWSLBTargetGroupAttachment_basic(t *testing.T) {
