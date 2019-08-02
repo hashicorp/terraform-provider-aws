@@ -164,5 +164,5 @@ The `video_codec_options` map supports the following:
 Elastic Transcoder presets can be imported using the `id`, e.g.
 
 ```
-$ terraform import aws_elastic_transcoder_preset.basic_preset 1407981661351-cttk8b
+$ terraform import aws_elastictranscoder_preset.basic_preset 1407981661351-cttk8b
 ```

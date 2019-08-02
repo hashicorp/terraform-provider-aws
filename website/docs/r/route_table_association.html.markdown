@@ -32,3 +32,17 @@ In addition to all arguments above, the following attributes are exported:
 
 * `id` - The ID of the association
 
+## Import
+
+~> **NOTE:** Attempting to associate a route table with a subnet, where either
+is already associated, will result in an error (e.g.,
+`Resource.AlreadyAssociated: the specified association for route table
+rtb-4176657279 conflicts with an existing association`) unless you first
+import the original association.
+
+Route table associations can be imported using the subnet and route table IDs.
+For example, use this command:
+
+```
+$ terraform import aws_route_table_association.assoc subnet-6777656e646f6c796e/rtb-656c65616e6f72
+```

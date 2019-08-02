@@ -18,7 +18,7 @@ resource "aws_ssm_association" "example" {
 
   targets {
     key    = "InstanceIds"
-    values = "${aws_instance.example.id}"
+    values = ["${aws_instance.example.id}"]
   }
 }
 ```
@@ -47,7 +47,7 @@ Output Location (`output_location`) is an S3 bucket where you want to store the 
 Targets specify what instance IDs or tags to apply the document to and has these keys:
 
 * `key` - (Required) Either `InstanceIds` or `tag:Tag Name` to specify an EC2 tag.
-* `values` - (Required) A list of instance IDs or tag values. AWS currently limits this to 1 target value.
+* `values` - (Required) A list of instance IDs or tag values. AWS currently limits this list size to one value.
 
 ## Attributes Reference
 

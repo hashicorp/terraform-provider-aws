@@ -136,6 +136,7 @@ func resourceAwsConfigConfigRule() *schema.Resource {
 					},
 				},
 			},
+			"tags": tagsSchema(),
 		},
 	}
 }
@@ -162,6 +163,7 @@ func resourceAwsConfigConfigRulePut(d *schema.ResourceData, meta interface{}) er
 
 	input := configservice.PutConfigRuleInput{
 		ConfigRule: &ruleInput,
+		Tags:       tagsFromMapConfigService(d.Get("tags").(map[string]interface{})),
 	}
 	log.Printf("[DEBUG] Creating AWSConfig config rule: %s", input)
 	err := resource.Retry(2*time.Minute, func() *resource.RetryError {
@@ -179,13 +181,27 @@ func resourceAwsConfigConfigRulePut(d *schema.ResourceData, meta interface{}) er
 
 		return nil
 	})
+	if isResourceTimeoutError(err) {
+		_, err = conn.PutConfigRule(&input)
+	}
 	if err != nil {
-		return err
+		return fmt.Errorf("Error creating AWSConfig rule: %s", err)
 	}
 
 	d.SetId(name)
 
 	log.Printf("[DEBUG] AWSConfig config rule %q created", name)
+
+	if !d.IsNewResource() {
+		if err := setTagsConfigService(conn, d, d.Get("arn").(string)); err != nil {
+			if isAWSErr(err, configservice.ErrCodeResourceNotFoundException, "") {
+				log.Printf("[WARN] Config Rule not found: %s, removing from state", d.Id())
+				d.SetId("")
+				return nil
+			}
+			return fmt.Errorf("Error updating tags for %s: %s", d.Id(), err)
+		}
+	}
 
 	return resourceAwsConfigConfigRuleRead(d, meta)
 }
@@ -233,6 +249,15 @@ func resourceAwsConfigConfigRuleRead(d *schema.ResourceData, meta interface{}) e
 
 	d.Set("source", flattenConfigRuleSource(rule.Source))
 
+	if err := saveTagsConfigService(conn, d, aws.StringValue(rule.ConfigRuleArn)); err != nil {
+		if isAWSErr(err, configservice.ErrCodeResourceNotFoundException, "") {
+			log.Printf("[WARN] Config Rule not found: %s, removing from state", d.Id())
+			d.SetId("")
+			return nil
+		}
+		return fmt.Errorf("Error setting tags for %s: %s", d.Id(), err)
+	}
+
 	return nil
 }
 
@@ -242,10 +267,11 @@ func resourceAwsConfigConfigRuleDelete(d *schema.ResourceData, meta interface{})
 	name := d.Get("name").(string)
 
 	log.Printf("[DEBUG] Deleting AWS Config config rule %q", name)
+	input := &configservice.DeleteConfigRuleInput{
+		ConfigRuleName: aws.String(name),
+	}
 	err := resource.Retry(2*time.Minute, func() *resource.RetryError {
-		_, err := conn.DeleteConfigRule(&configservice.DeleteConfigRuleInput{
-			ConfigRuleName: aws.String(name),
-		})
+		_, err := conn.DeleteConfigRule(input)
 		if err != nil {
 			if awsErr, ok := err.(awserr.Error); ok && awsErr.Code() == "ResourceInUseException" {
 				return resource.RetryableError(err)
@@ -254,6 +280,9 @@ func resourceAwsConfigConfigRuleDelete(d *schema.ResourceData, meta interface{})
 		}
 		return nil
 	})
+	if isResourceTimeoutError(err) {
+		_, err = conn.DeleteConfigRule(input)
+	}
 	if err != nil {
 		return fmt.Errorf("Deleting Config Rule failed: %s", err)
 	}

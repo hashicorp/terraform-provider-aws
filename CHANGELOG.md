@@ -1,8 +1,150 @@
-## 2.20.0 (Unreleased)
+## 2.23.0 (Unreleased)
+
+FEATURES:
+
+* **New Data Source:** `aws_s3_bucket_objects` [GH-6968]
 
 ENHANCEMENTS:
 
-* provider: Support for assuming role using credential process from the shared AWS configuration file [GH-9305]
+* data-source/aws_eks_cluster: Add `status` attribute [GH-9582]
+* data-source/aws_instance: Add `ebs_block_device` and `root_block_device` configuration block `encryption` and `kms_key_id` attributes [GH-4861] / [GH-7757]
+* resource/aws_eks_cluster: Add `status` attribute [GH-9582]
+* resource/aws_glue_crawler: Add `catalog_target` configuration block [GH-9430]
+* resource/aws_instance: Add `ebs_block_device` and `root_block_device` configuration block `encryption` and `kms_key_id` arguments (support encryption on launch) [GH-4861] / [GH-7757]
+* resource/aws_lambda_permission: Support resource import [GH-9369]
+* resource/aws_launch_configuration: Add `root_block_device` configuration block `encrypted` argument (support encryption on launch) [GH-7759]
+
+BUG FIXES:
+
+* resource/aws_lambda_event_source_mapping: Final retries after timeout when creating, updating, and deleting event source mappings [GH-9553]
+* resource/aws_lambda_function: Final retry when creating lambda function [GH-9553]
+* resource/aws_lambda_permission: Final retries when creating, reading, and deleting lambda permissions [GH-9553]
+
+## 2.22.0 (August 01, 2019)
+
+NOTES:
+
+* provider: Region validation now automatically supports the new `me-south-1` Middle East (Bahrain) region. For AWS operations to work in the new region, the region must be explicitly enabled as outlined in the [previous new region announcement blog post](https://aws.amazon.com/blogs/aws/now-open-aws-asia-pacific-hong-kong-region/). When the region is not enabled, the Terraform AWS Provider will return errors during credential validation (e.g. `error validating provider credentials: error calling sts:GetCallerIdentity: InvalidClientTokenId: The security token included in the request is invalid`) or AWS operations will throw their own errors (e.g. `data.aws_availability_zones.current: Error fetching Availability Zones: AuthFailure: AWS was not able to validate the provided access credentials`). ([#9538](https://github.com/terraform-providers/terraform-provider-aws/issues/9538))
+
+FEATURES:
+
+* **New Resource:** `aws_codebuild_source_credential` ([#7631](https://github.com/terraform-providers/terraform-provider-aws/issues/7631))
+* **New Resource:** `aws_fms_admin_account` ([#4310](https://github.com/terraform-providers/terraform-provider-aws/issues/4310))
+
+ENHANCEMENTS:
+
+* data-source/aws_cloudtrail_service_account: Support `me-south-1` region ([#9547](https://github.com/terraform-providers/terraform-provider-aws/issues/9547))
+* data-source/aws_elastic_beanstalk_hosted_zone: Support `me-south-1` region ([#9547](https://github.com/terraform-providers/terraform-provider-aws/issues/9547))
+* data-source/aws_elb_hosted_zone_id: Support `me-south-1` region ([#9547](https://github.com/terraform-providers/terraform-provider-aws/issues/9547))
+* data-source/aws_elb_service_account: Support `me-south-1` region ([#9547](https://github.com/terraform-providers/terraform-provider-aws/issues/9547))
+* data-source/aws_s3_bucket: Support `me-south-1` region for `hosted_zone_id` attribute ([#9547](https://github.com/terraform-providers/terraform-provider-aws/issues/9547))
+* provider: Support automatic region validation for `me-south-1` ([#9538](https://github.com/terraform-providers/terraform-provider-aws/issues/9538))
+* resource/aws_codebuild_project: Add `override_artifact_name` argument to `artifacts` and `secondary_artifacts` configuration blocks ([#7824](https://github.com/terraform-providers/terraform-provider-aws/issues/7824))
+* resource/aws_config_aggregate_authorization: Add `tags` argument ([#9561](https://github.com/terraform-providers/terraform-provider-aws/issues/9561))
+* resource/aws_config_config_rule: Add `tags` argument ([#9561](https://github.com/terraform-providers/terraform-provider-aws/issues/9561))
+* resource/aws_config_configuration_aggregator: Add `tags` argument ([#9561](https://github.com/terraform-providers/terraform-provider-aws/issues/9561))
+* resource/aws_ec2_client_vpn_endpoint: Add `split_tunnel` argument ([#9566](https://github.com/terraform-providers/terraform-provider-aws/issues/9566))
+* resource/aws_ecs_service: Allow multiple `load_balancer` configuration blocks (support for multiple target groups) ([#9411](https://github.com/terraform-providers/terraform-provider-aws/issues/9411))
+* resource/aws_pinpoint_app: Add `tags` argument ([#9460](https://github.com/terraform-providers/terraform-provider-aws/issues/9460))
+* resource/aws_route_table_association: Support resource import ([#6999](https://github.com/terraform-providers/terraform-provider-aws/issues/6999))
+* resource/aws_route_table_association: Allow in-place updates of `subnet_id` argument ([#6999](https://github.com/terraform-providers/terraform-provider-aws/issues/6999))
+* resource/aws_s3_bucket: Support `me-south-1` region for `hosted_zone_id` attribute ([#9547](https://github.com/terraform-providers/terraform-provider-aws/issues/9547))
+
+BUG FIXES:
+
+* resource/aws_codebuild_project: Properly perform drift detection and updates for `artifacts` configuration block arguments ([#9559](https://github.com/terraform-providers/terraform-provider-aws/issues/9559))
+* resource/aws_ec2_client_vpn_endpoint: Remove hardcoded one minute timeout during resource creation ([#9558](https://github.com/terraform-providers/terraform-provider-aws/issues/9558))
+* resource/aws_route53_record: Prevent error when removing `weighted_routing_policy` ([#9565](https://github.com/terraform-providers/terraform-provider-aws/issues/9565))
+* resource/aws_storagegateway_cached_iscsi_volume: Retry after timeout deleting volume ([#9536](https://github.com/terraform-providers/terraform-provider-aws/issues/9536))
+* resource/aws_storagegateway_cached_iscsi_volume: Fix errors deleting volumes when volumes don't exist ([#9543](https://github.com/terraform-providers/terraform-provider-aws/issues/9543))
+* resource/aws_storagegateway_gateway: Retry after timeouts creating gateway ([#9536](https://github.com/terraform-providers/terraform-provider-aws/issues/9536))
+
+## 2.21.1 (July 26, 2019)
+
+BUG FIXES:
+
+* resource/aws_autoscaling_group: Revert change from version 2.21.0 to `load_balancers` and `target_group_arns` arguments that removes attachments when using the `aws_autoscaling_attachment` resource (https://github.com/terraform-providers/terraform-provider-aws/issues/9513) ([#9518](https://github.com/terraform-providers/terraform-provider-aws/issues/9518))
+
+## 2.21.0 (July 25, 2019)
+
+NOTES:
+
+* provider: After this update, the AWS Go SDK will prefer credentials found via the `AWS_PROFILE` environment variable when both the `AWS_PROFILE` environment variable and the `AWS_ACCESS_KEY_ID` and `AWS_SECRET_ACCESS_KEY` environment variables are statically defined. Previously the SDK would ignore the `AWS_PROFILE` environment variable, if static environment credentials were also specified. This is listed as a bug fix in the AWS Go SDK release notes. ([#9428](https://github.com/terraform-providers/terraform-provider-aws/issues/9428))
+
+FEATURES:
+* **New Data Source**: `aws_organizations_organization` ([#9419](https://github.com/terraform-providers/terraform-provider-aws/issues/9419))
+* **New Data Source**: `aws_waf_ipset` ([#9481](https://github.com/terraform-providers/terraform-provider-aws/issues/9481))
+* **New Data Source**: `aws_wafregional_ipset` ([#9484](https://github.com/terraform-providers/terraform-provider-aws/issues/9484))
+
+ENHANCEMENTS:
+
+* provider: Add support for assuming role via web identity token via the `AWS_WEB_IDENTITY_TOKEN_FILE` and `AWS_ROLE_ARN` environment variables ([#9428](https://github.com/terraform-providers/terraform-provider-aws/issues/9428))
+* resource/aws_cloudwatch_event_target: Support resource import ([#9431](https://github.com/terraform-providers/terraform-provider-aws/issues/9431))
+* resource/aws_s3_bucket_object: Add `metadata` argument ([#1945](https://github.com/terraform-providers/terraform-provider-aws/issues/1945))
+* resource/aws_wafregional_ipset: Support resource import ([#9424](https://github.com/terraform-providers/terraform-provider-aws/issues/9424))
+
+BUG FIXES:
+
+* provider: Load credentials via the `AWS_PROFILE` environment variable (if available) when `AWS_PROFILE` is defined along with `AWS_ACCESS_KEY_ID` and `AWS_SECRET_ACCESS_KEY` ([#9428](https://github.com/terraform-providers/terraform-provider-aws/issues/9428))
+* resource/aws_autoscaling_group: Always perform drift detection with `load_balancers` and `target_group_arns` arguments ([#9478](https://github.com/terraform-providers/terraform-provider-aws/issues/9478))
+* resource/aws_cloudfront_distribution: Prevent `DistributionAlreadyExists` errors during concurrent distribution creation ([#9470](https://github.com/terraform-providers/terraform-provider-aws/issues/9470))
+* resource/aws_cognito_user_pool_client: Properly update name value ([#9437](https://github.com/terraform-providers/terraform-provider-aws/issues/9437))
+* resource/aws_config_config_rule: Retries after timeouts when creating and deleting config rules ([#9438](https://github.com/terraform-providers/terraform-provider-aws/issues/9438))
+* resource/aws_config_delivery_channel: Retries after timeouts when creating and deleting config delivery channels ([#9438](https://github.com/terraform-providers/terraform-provider-aws/issues/9438))
+* resource/aws_customer_gateway: Final retry after timeout deleting customer gateway ([#9421](https://github.com/terraform-providers/terraform-provider-aws/issues/9421))
+* resource/aws_db_instance: Redact `MasterUserPassword` from user interface when displaying `InvalidParameterValue` error during resource creation ([#9446](https://github.com/terraform-providers/terraform-provider-aws/issues/9446))
+* resource/aws_db_instance: Retries after timeouts creating DB instances ([#9477](https://github.com/terraform-providers/terraform-provider-aws/issues/9477))
+* resource/aws_db_option_group: Retry after timeout deleting DB option group ([#9477](https://github.com/terraform-providers/terraform-provider-aws/issues/9477))
+* resource/aws_db_parameter_group: Retry after timeout deleting DB parameter group ([#9477](https://github.com/terraform-providers/terraform-provider-aws/issues/9477))
+* resource/aws_kms_grant: Final retries after timeouts when creating, finding, and revoking grants ([#9415](https://github.com/terraform-providers/terraform-provider-aws/issues/9415))
+* resource/aws_kms_key: Final retries after timeouts when creating keys and updating key rotation status ([#9415](https://github.com/terraform-providers/terraform-provider-aws/issues/9415))
+* resource/aws_rds_cluster: Properly update `master_password` during snapshot restore ([#9505](https://github.com/terraform-providers/terraform-provider-aws/issues/9505))
+* resource/aws_s3_bucket: Ensure `website_endpoint` and `website_domain` attributes have correct DNS suffix in AWS China ([#9444](https://github.com/terraform-providers/terraform-provider-aws/issues/9444))
+* resource/aws_ses_domain_identity_verification: Retry after timeout when creating SES domain identity verification ([#9417](https://github.com/terraform-providers/terraform-provider-aws/issues/9417))
+* resource/aws_sfn_activity: Retry after timeout deleting SFN activity ([#9498](https://github.com/terraform-providers/terraform-provider-aws/issues/9498))
+* resource/aws_sfn_state_machine: Retry after timeouts deleting and creating SFN state machines ([#9498](https://github.com/terraform-providers/terraform-provider-aws/issues/9498))
+
+## 2.20.0 (July 19, 2019)
+
+NOTES:
+
+* resource/aws_ssm_maintenance_window_task: The `logging_info` and `task_parameters` configuration blocks have been deprecated in favor of a new `task_invocation_parameters` configuration block to match the API ([#7823](https://github.com/terraform-providers/terraform-provider-aws/issues/7823))
+
+FEATURES:
+* **New Data Source** `aws_waf_rule` ([#9318](https://github.com/terraform-providers/terraform-provider-aws/issues/9318))
+* **New Data Source:** `aws_waf_web_acl` ([#9320](https://github.com/terraform-providers/terraform-provider-aws/issues/9320))
+* **New Data Source** `aws_wafregional_rule` ([#9319](https://github.com/terraform-providers/terraform-provider-aws/issues/9319))
+* **New Data Source:** `aws_wafregional_web_acl` ([#9321](https://github.com/terraform-providers/terraform-provider-aws/issues/9321))
+* **New Resource:** `aws_quicksight_group` ([#8233](https://github.com/terraform-providers/terraform-provider-aws/issues/8233))
+* **New Resource:** `aws_servicequotas_service_quota` ([#9192](https://github.com/terraform-providers/terraform-provider-aws/issues/9192))
+
+ENHANCEMENTS:
+
+* data-source/aws_route53_zone: Add `linked_service_principal` and `linked_service_description` attributes ([#9390](https://github.com/terraform-providers/terraform-provider-aws/issues/9390))
+* provider: Support for assuming role using credential process from the shared AWS configuration file ([#9305](https://github.com/terraform-providers/terraform-provider-aws/issues/9305))
+* resource/aws_api_gateway_domain_name: Add `security_policy` argument ([#9128](https://github.com/terraform-providers/terraform-provider-aws/issues/9128))
+* resource/aws_athena_named_query: Add `workgroup` argument ([#9383](https://github.com/terraform-providers/terraform-provider-aws/issues/9383))
+* resource/aws_autoscaling_lifecycle_hook: Support resource import ([#9336](https://github.com/terraform-providers/terraform-provider-aws/issues/9336))
+* resource/aws_elasticsearch_domain: Add `cluster_config` configuration block `zone_awareness_config` configuration block (support three Availability Zone awareness) ([#9398](https://github.com/terraform-providers/terraform-provider-aws/issues/9398))
+* resource/aws_emr_cluster: Add `master_instance_group` configuration block `instance_count` argument (support multiple master nodes) ([#9235](https://github.com/terraform-providers/terraform-provider-aws/issues/9235))
+* resource/aws_media_store_container: Add `tags` argument ([#9379](https://github.com/terraform-providers/terraform-provider-aws/issues/9379))
+* resource/aws_rds_cluster: Support `scaling_configuration` configuration block `timeout_action` argument ([#9374](https://github.com/terraform-providers/terraform-provider-aws/issues/9374))
+* resource/aws_s3_bucket_object: Allow empty object ([#7544](https://github.com/terraform-providers/terraform-provider-aws/issues/7544))
+* resource/aws_ssm_maintenance_window_task: Support resource import and in-place updates ([#7823](https://github.com/terraform-providers/terraform-provider-aws/issues/7823))
+* resource/aws_ssm_maintenance_window_task: Add `task_invocation_parameters` configuration block and deprecate `logging_info` and `task_parameters` configuration blockss to match API ([#7823](https://github.com/terraform-providers/terraform-provider-aws/issues/7823))
+
+BUG FIXES:
+
+* resource/aws_appautoscaling_policy: Properly support importing of dynamodb policies [[#8397](https://github.com/terraform-providers/terraform-provider-aws/issues/8397)] 
+* resource/aws_cloudwatch_event_permissions: Clean up error handling when reading event permissions ([#9065](https://github.com/terraform-providers/terraform-provider-aws/issues/9065))
+* resource/aws_cloudwatch_event_rule: Retry error handling when creating and updating event rules ([#9065](https://github.com/terraform-providers/terraform-provider-aws/issues/9065))
+* resource/aws_cloudwatch_log_destination: Clean up error handling when putting log destination ([#9065](https://github.com/terraform-providers/terraform-provider-aws/issues/9065))
+* resource/aws_cloudwatch_log_subscription_filter: Clean up error handling when creating log subscription filter ([#9065](https://github.com/terraform-providers/terraform-provider-aws/issues/9065))
+* resource/aws_cognito_identity_provider: Properly pass all attributes during update ([#9396](https://github.com/terraform-providers/terraform-provider-aws/issues/9396))
+* resource/aws_db_event_subscription: Handle `SubscriptionNotFound` errors during refresh and deletion ([#9371](https://github.com/terraform-providers/terraform-provider-aws/issues/9371))
+* resource/aws_s3_account_public_access_block: Retry after timeout when reading s3 account public access block ([#9387](https://github.com/terraform-providers/terraform-provider-aws/issues/9387))
+* resource/aws_ssm_maintenance_window_task: Bypass `DoesNotExistException` error on deletion ([#7823](https://github.com/terraform-providers/terraform-provider-aws/issues/7823))
+* resource/aws_ssm_maintenance_window_task: Prevent `task_parameters` ordering differences ([#9364](https://github.com/terraform-providers/terraform-provider-aws/issues/9364))
 
 ## 2.19.0 (July 11, 2019)
 

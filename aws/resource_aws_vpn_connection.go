@@ -316,29 +316,10 @@ func resourceAwsVpnConnectionCreate(d *schema.ResourceData, meta interface{}) er
 		return fmt.Errorf("Error creating vpn connection: %s", err)
 	}
 
-	// Store the ID
-	vpnConnection := resp.VpnConnection
-	d.SetId(*vpnConnection.VpnConnectionId)
-	log.Printf("[INFO] VPN connection ID: %s", *vpnConnection.VpnConnectionId)
+	d.SetId(aws.StringValue(resp.VpnConnection.VpnConnectionId))
 
-	// Wait for the connection to become available. This has an obscenely
-	// high default timeout because AWS VPN connections are notoriously
-	// slow at coming up or going down. There's also no point in checking
-	// more frequently than every ten seconds.
-	stateConf := &resource.StateChangeConf{
-		Pending:    []string{"pending"},
-		Target:     []string{"available"},
-		Refresh:    vpnConnectionRefreshFunc(conn, *vpnConnection.VpnConnectionId),
-		Timeout:    40 * time.Minute,
-		Delay:      10 * time.Second,
-		MinTimeout: 10 * time.Second,
-	}
-
-	_, stateErr := stateConf.WaitForState()
-	if stateErr != nil {
-		return fmt.Errorf(
-			"Error waiting for VPN connection (%s) to become ready: %s",
-			*vpnConnection.VpnConnectionId, stateErr)
+	if err := waitForEc2VpnConnectionAvailable(conn, d.Id()); err != nil {
+		return fmt.Errorf("error waiting for VPN connection (%s) to become available: %s", d.Id(), err)
 	}
 
 	// Create tags.
@@ -512,34 +493,17 @@ func resourceAwsVpnConnectionDelete(d *schema.ResourceData, meta interface{}) er
 	_, err := conn.DeleteVpnConnection(&ec2.DeleteVpnConnectionInput{
 		VpnConnectionId: aws.String(d.Id()),
 	})
+
+	if isAWSErr(err, "InvalidVpnConnectionID.NotFound", "") {
+		return nil
+	}
+
 	if err != nil {
-		if ec2err, ok := err.(awserr.Error); ok && ec2err.Code() == "InvalidVpnConnectionID.NotFound" {
-			return nil
-		} else {
-			log.Printf("[ERROR] Error deleting VPN connection: %s", err)
-			return err
-		}
+		return fmt.Errorf("error deleting VPN Connection (%s): %s", d.Id(), err)
 	}
 
-	// These things can take quite a while to tear themselves down and any
-	// attempt to modify resources they reference (e.g. CustomerGateways or
-	// VPN Gateways) before deletion will result in an error. Furthermore,
-	// they don't just disappear. The go into "deleted" state. We need to
-	// wait to ensure any other modifications the user might make to their
-	// VPC stack can safely run.
-	stateConf := &resource.StateChangeConf{
-		Pending:    []string{"deleting"},
-		Target:     []string{"deleted"},
-		Refresh:    vpnConnectionRefreshFunc(conn, d.Id()),
-		Timeout:    30 * time.Minute,
-		Delay:      10 * time.Second,
-		MinTimeout: 10 * time.Second,
-	}
-
-	_, stateErr := stateConf.WaitForState()
-	if stateErr != nil {
-		return fmt.Errorf(
-			"Error waiting for VPN connection (%s) to delete: %s", d.Id(), err)
+	if err := waitForEc2VpnConnectionDeletion(conn, d.Id()); err != nil {
+		return fmt.Errorf("error waiting for VPN connection (%s) to delete: %s", d.Id(), err)
 	}
 
 	return nil
@@ -580,6 +544,46 @@ func telemetryToMapList(telemetry []*ec2.VgwTelemetry) []map[string]interface{} 
 	}
 
 	return result
+}
+
+func waitForEc2VpnConnectionAvailable(conn *ec2.EC2, id string) error {
+	// Wait for the connection to become available. This has an obscenely
+	// high default timeout because AWS VPN connections are notoriously
+	// slow at coming up or going down. There's also no point in checking
+	// more frequently than every ten seconds.
+	stateConf := &resource.StateChangeConf{
+		Pending:    []string{"pending"},
+		Target:     []string{"available"},
+		Refresh:    vpnConnectionRefreshFunc(conn, id),
+		Timeout:    40 * time.Minute,
+		Delay:      10 * time.Second,
+		MinTimeout: 10 * time.Second,
+	}
+
+	_, err := stateConf.WaitForState()
+
+	return err
+}
+
+func waitForEc2VpnConnectionDeletion(conn *ec2.EC2, id string) error {
+	// These things can take quite a while to tear themselves down and any
+	// attempt to modify resources they reference (e.g. CustomerGateways or
+	// VPN Gateways) before deletion will result in an error. Furthermore,
+	// they don't just disappear. The go into "deleted" state. We need to
+	// wait to ensure any other modifications the user might make to their
+	// VPC stack can safely run.
+	stateConf := &resource.StateChangeConf{
+		Pending:    []string{"deleting"},
+		Target:     []string{"deleted"},
+		Refresh:    vpnConnectionRefreshFunc(conn, id),
+		Timeout:    30 * time.Minute,
+		Delay:      10 * time.Second,
+		MinTimeout: 10 * time.Second,
+	}
+
+	_, err := stateConf.WaitForState()
+
+	return err
 }
 
 func xmlConfigToTunnelInfo(xmlConfig string) (*TunnelInfo, error) {

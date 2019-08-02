@@ -131,6 +131,8 @@ The `root_block_device` mapping supports the following:
   using that type
 * `delete_on_termination` - (Optional) Whether the volume should be destroyed
   on instance termination (Default: `true`).
+* `encrypted` - (Optional) Enable volume encryption. (Default: `false`). Must be configured to perform drift detection.
+* `kms_key_id` - (Optional) Amazon Resource Name (ARN) of the KMS Key to use when encrypting the volume. Must be configured to perform drift detection.
 
 Modifying any of the `root_block_device` settings requires resource
 replacement.
@@ -149,7 +151,8 @@ Each `ebs_block_device` supports the following:
   on instance termination (Default: `true`).
 * `encrypted` - (Optional) Enables [EBS
   encryption](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/EBSEncryption.html)
-  on the volume (Default: `false`). Cannot be used with `snapshot_id`.
+  on the volume (Default: `false`). Cannot be used with `snapshot_id`. Must be configured to perform drift detection.
+* `kms_key_id` - (Optional) Amazon Resource Name (ARN) of the KMS Key to use when encrypting the volume. Must be configured to perform drift detection.
 
 ~> **NOTE:** Currently, changes to the `ebs_block_device` configuration of _existing_ resources cannot be automatically detected by Terraform. To manage changes and attachments of an EBS block to an instance, use the `aws_ebs_volume` and `aws_volume_attachment` resources instead. If you use `ebs_block_device` on an `aws_instance`, Terraform will assume management over the full set of non-root EBS block devices for the instance, treating additional block devices as drift. For this reason, `ebs_block_device` cannot be mixed with external `aws_ebs_volume` and `aws_volume_attachment` resources for a given instance.
 
@@ -265,6 +268,7 @@ In addition to all arguments above, the following attributes are exported:
 * `vpc_security_group_ids` - The associated security groups in non-default VPC
 * `subnet_id` - The VPC subnet ID.
 * `credit_specification` - Credit specification of instance.
+* `instance_state` - The state of the instance. One of: `pending`, `running`, `shutting-down`, `terminated`, `stopping`, `stopped`. See [Instance Lifecycle](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/ec2-instance-lifecycle.html) for more information.
 
 For any `root_block_device` and `ebs_block_device` the `volume_id` is exported.
 e.g. `aws_instance.web.root_block_device.0.volume_id`
