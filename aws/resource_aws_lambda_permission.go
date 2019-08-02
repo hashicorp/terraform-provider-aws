@@ -355,10 +355,13 @@ func resourceAwsLambdaPermissionDelete(d *schema.ResourceData, meta interface{})
 
 	if isResourceTimeoutError(err) {
 		resp, err := conn.GetPolicy(params)
-		if resp.Policy == nil {
+		if isAWSErr(err, "ResourceNotFoundException", "") {
 			return nil
 		}
-		if isAWSErr(err, "ResourceNotFoundException", "") {
+		if err != nil {
+			return fmt.Errorf("Error getting Lambda permission policy: %s", err)
+		}
+		if resp.Policy == nil {
 			return nil
 		}
 
@@ -368,13 +371,11 @@ func resourceAwsLambdaPermissionDelete(d *schema.ResourceData, meta interface{})
 			return nil
 		}
 	}
-
-	if statement != nil {
-		return fmt.Errorf("Failed to delete Lambda permission with ID %s", d.Id())
-	}
-
 	if err != nil {
 		return fmt.Errorf("Failed removing Lambda permission: %s", err)
+	}
+	if statement != nil {
+		return fmt.Errorf("Failed to delete Lambda permission with ID %s", d.Id())
 	}
 
 	log.Printf("[DEBUG] Lambda permission with ID %q removed", d.Id())
