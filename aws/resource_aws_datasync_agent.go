@@ -144,10 +144,11 @@ func resourceAwsDataSyncAgentCreate(d *schema.ResourceData, meta interface{}) er
 	d.SetId(aws.StringValue(output.AgentArn))
 
 	// Agent activations can take a few minutes
+	descAgentInput := &datasync.DescribeAgentInput{
+		AgentArn: aws.String(d.Id()),
+	}
 	err = resource.Retry(d.Timeout(schema.TimeoutCreate), func() *resource.RetryError {
-		_, err := conn.DescribeAgent(&datasync.DescribeAgentInput{
-			AgentArn: aws.String(d.Id()),
-		})
+		_, err := conn.DescribeAgent(descAgentInput)
 
 		if isAWSErr(err, "InvalidRequestException", "not found") {
 			return resource.RetryableError(err)
@@ -159,6 +160,9 @@ func resourceAwsDataSyncAgentCreate(d *schema.ResourceData, meta interface{}) er
 
 		return nil
 	})
+	if isResourceTimeoutError(err) {
+		_, err = conn.DescribeAgent(descAgentInput)
+	}
 	if err != nil {
 		return fmt.Errorf("error waiting for DataSync Agent (%s) creation: %s", d.Id(), err)
 	}
