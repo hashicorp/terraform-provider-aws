@@ -3,14 +3,13 @@ package aws
 import (
 	"errors"
 	"fmt"
-	"strconv"
-	"testing"
-
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/elbv2"
 	"github.com/hashicorp/terraform/helper/acctest"
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/terraform"
+	"strconv"
+	"testing"
 )
 
 func TestAccAWSLBTargetGroupAttachment_basic(t *testing.T) {
@@ -44,7 +43,7 @@ func TestAccAWSLBTargetGroupAttachment_missingAttachmentDrift(t *testing.T) {
 				Config: testAccAWSLBTargetGroupAttachmentConfig_basic(targetGroupName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSLBTargetGroupAttachmentExists("aws_lb_target_group_attachment.test"),
-					deregisterTarget("aws_lb_target_group.test", "aws_instance.test"),
+					deregisterTarget("aws_lb_target_group_attachment.test"),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -128,30 +127,36 @@ func TestAccAWSALBTargetGroupAttachment_lambda(t *testing.T) {
 	})
 }
 
-func deregisterTarget(attachmentAddress string, instanceAddress string) resource.TestCheckFunc {
+func deregisterTarget(n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		attachmentRs, ok := s.RootModule().Resources[attachmentAddress]
+		rs, ok := s.RootModule().Resources[n]
 		if !ok {
-			return fmt.Errorf("Attachment not found: %s", attachmentAddress)
-		}
-		instanceRs, ok := s.RootModule().Resources[instanceAddress]
-		if !ok {
-			return fmt.Errorf("Instance not found: %s", instanceAddress)
+			return fmt.Errorf("Attachment not found: %s", n)
 		}
 
 		conn := testAccProvider.Meta().(*AWSClient).elbv2conn
+		targetGroupArn := rs.Primary.Attributes["target_group_arn"]
 
-		targetGroupArn := attachmentRs.Primary.Attributes["arn"]
-		instanceId := instanceRs.Primary.Attributes["id"]
+		target := &elbv2.TargetDescription{
+			Id: aws.String(rs.Primary.Attributes["target_id"]),
+		}
 
-		_, err := conn.DeregisterTargets(&elbv2.DeregisterTargetsInput{
+		_, hasPort := rs.Primary.Attributes["port"]
+		if hasPort {
+			port, _ := strconv.Atoi(rs.Primary.Attributes["port"])
+			target.Port = aws.Int64(int64(port))
+		}
+
+		params := &elbv2.DeregisterTargetsInput{
 			TargetGroupArn: aws.String(targetGroupArn),
-			Targets: []*elbv2.TargetDescription{
-				{
-					Id: aws.String(instanceId),
-				},
-			},
-		})
+			Targets:        []*elbv2.TargetDescription{target},
+		}
+
+		_, err := conn.DeregisterTargets(params)
+		if err != nil && !isAWSErr(err, elbv2.ErrCodeTargetGroupNotFoundException, "") {
+			return fmt.Errorf("Error deregistering Targets: %s", err)
+		}
+
 		return err
 	}
 }
