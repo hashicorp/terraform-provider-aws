@@ -124,6 +124,7 @@ func resourceAwsEcrRepositoryRead(d *schema.ResourceData, meta interface{}) erro
 	d.Set("name", repository.RepositoryName)
 	d.Set("registry_id", repository.RegistryId)
 	d.Set("repository_url", repository.RepositoryUri)
+	d.Set("image_tag_mutability", repository.ImageTagMutability)
 
 	if err := getTagsECR(conn, d); err != nil {
 		return fmt.Errorf("error getting ECR repository tags: %s", err)

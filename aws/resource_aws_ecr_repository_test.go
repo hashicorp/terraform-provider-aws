@@ -87,6 +87,11 @@ func TestAccAWSEcrRepository_immutability(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "image_tag_mutability", "IMMUTABLE"),
 				),
 			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
 		},
 	})
 }
