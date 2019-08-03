@@ -82,6 +82,7 @@ The `http_route` object supports the following:
 
 * `action` - (Required) The action to take if a match is determined.
 * `match` - (Required) The criteria for determining an HTTP request match.
+* `retry_policy` - (Optional) The retry policy.
 
 The `tcp_route` object supports the following:
 
@@ -99,6 +100,20 @@ This parameter must always start with /, which by itself matches all requests to
 * `header` - (Optional) The HTTP headers with which to match requests.
 * `method` - (Optional) The HTTP method with which to match requests. Valid values: `GET`, `HEAD`, `POST`, `PUT`, `DELETE`, `CONNECT`, `OPTIONS`, `TRACE`, `PATCH`.
 * `scheme` - (Optional) The URL scheme with which to match requests. Valid values: `HTTP`, `HTTPS`.
+
+The `retry_policy` object supports the following:
+
+* `http_retry_events` - (Optional) List of HTTP retry events.
+* `max_retries` - (Optional) The maximum number of retries. Default is `1`.
+* `per_retry_timeout` - (Optional) The per-retry timeout. Default is `15s`.
+* `tcp_retry_events` - (Optional) List of TCP retry events. The only valid value is `connection-error`.
+
+You must specify at least one value for `http_retry_events`, or at least one value for `tcp_retry_events`.
+
+The `per_retry_timeout` object supports the following:
+
+* `unit` - (Required) Retry unit. Valid values: `ms`, `s`.
+* `value` - (Required) Retry value.
 
 The `weighted_target` object supports the following:
 
