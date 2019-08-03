@@ -42,7 +42,7 @@ The following arguments are supported:
 
 ## Import
 
-Redshift Snapshot Schedule Association can be imported using the `<cluster-identifier>/<snapshot-identifier>`, e.g.
+Redshift Snapshot Schedule Association can be imported using the `<cluster-identifier>/<schedule-identifier>`, e.g.
 
 ```
 $ terraform import aws_redshift_snapshot_schedule_association.default tf-redshift-cluster/tf-redshift-snapshot-schedule
