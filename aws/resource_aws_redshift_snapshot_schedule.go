@@ -24,6 +24,10 @@ func resourceAwsRedshiftSnapshotSchedule() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
+			"arn": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"identifier": {
 				Type:          schema.TypeString,
 				Optional:      true,
@@ -117,13 +121,6 @@ func resourceAwsRedshiftSnapshotScheduleRead(d *schema.ResourceData, meta interf
 	}
 	d.Set("tags", tagsToMapRedshift(snapshotSchedule.Tags))
 
-	return nil
-}
-
-func resourceAwsRedshiftSnapshotScheduleUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).redshiftconn
-	d.Partial(true)
-
 	arn := arn.ARN{
 		Partition: meta.(*AWSClient).partition,
 		Service:   "redshift",
@@ -131,7 +128,17 @@ func resourceAwsRedshiftSnapshotScheduleUpdate(d *schema.ResourceData, meta inte
 		AccountID: meta.(*AWSClient).accountid,
 		Resource:  fmt.Sprintf("snapshotschedule:%s", d.Id()),
 	}.String()
-	if tagErr := setTagsRedshift(conn, d, arn); tagErr != nil {
+
+	d.Set("arn", arn)
+
+	return nil
+}
+
+func resourceAwsRedshiftSnapshotScheduleUpdate(d *schema.ResourceData, meta interface{}) error {
+	conn := meta.(*AWSClient).redshiftconn
+	d.Partial(true)
+
+	if tagErr := setTagsRedshift(conn, d); tagErr != nil {
 		return tagErr
 	} else {
 		d.SetPartial("tags")
