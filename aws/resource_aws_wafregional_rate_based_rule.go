@@ -17,6 +17,9 @@ func resourceAwsWafRegionalRateBasedRule() *schema.Resource {
 		Read:   resourceAwsWafRegionalRateBasedRuleRead,
 		Update: resourceAwsWafRegionalRateBasedRuleUpdate,
 		Delete: resourceAwsWafRegionalRateBasedRuleDelete,
+		Importer: &schema.ResourceImporter{
+			State: schema.ImportStatePassthrough,
+		},
 
 		Schema: map[string]*schema.Schema{
 			"name": {
