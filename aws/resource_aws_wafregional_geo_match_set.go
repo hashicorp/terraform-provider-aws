@@ -16,6 +16,9 @@ func resourceAwsWafRegionalGeoMatchSet() *schema.Resource {
 		Read:   resourceAwsWafRegionalGeoMatchSetRead,
 		Update: resourceAwsWafRegionalGeoMatchSetUpdate,
 		Delete: resourceAwsWafRegionalGeoMatchSetDelete,
+		Importer: &schema.ResourceImporter{
+			State: schema.ImportStatePassthrough,
+		},
 
 		Schema: map[string]*schema.Schema{
 			"name": {
