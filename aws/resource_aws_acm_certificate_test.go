@@ -19,7 +19,9 @@ import (
 var certificateArnRegex = regexp.MustCompile(`^arn:aws:acm:[^:]+:[^:]+:certificate/.+$`)
 
 func testAccAwsAcmCertificateDomainFromEnv(t *testing.T) string {
-	if os.Getenv("ACM_CERTIFICATE_ROOT_DOMAIN") == "" {
+	rootDomain := os.Getenv("ACM_CERTIFICATE_ROOT_DOMAIN")
+
+	if rootDomain == "" {
 		t.Skip(
 			"Environment variable ACM_CERTIFICATE_ROOT_DOMAIN is not set. " +
 				"For DNS validation requests, this domain must be publicly " +
@@ -29,15 +31,30 @@ func testAccAwsAcmCertificateDomainFromEnv(t *testing.T) string {
 				"hostmaster|postmaster|webmaster)@domain or one of the WHOIS " +
 				"contact addresses.")
 	}
-	return os.Getenv("ACM_CERTIFICATE_ROOT_DOMAIN")
+
+	if len(rootDomain) >= 56 {
+		t.Skip(
+			"Environment variable ACM_CERTIFICATE_ROOT_DOMAIN is too long. " +
+				"The domain must be shorter than 56 characters to allow for " +
+				"subdomain randomization in the testing.")
+	}
+
+	return rootDomain
 }
+
+// ACM domain names cannot be longer than 64 characters
+func testAccAwsAcmCertificateRandomSubDomain(rootDomain string) string {
+	// Max length (64)
+	// Subtract "tf-acc-" prefix (7)
+	// Subtract "." between prefix and root domain (1)
+	// Subtract length of root domain
+	return fmt.Sprintf("tf-acc-%s.%s", acctest.RandString(56-len(rootDomain)), rootDomain)
+}
+
 
 func TestAccAWSAcmCertificate_emailValidation(t *testing.T) {
 	rootDomain := testAccAwsAcmCertificateDomainFromEnv(t)
-
-	rInt1 := acctest.RandInt()
-
-	domain := fmt.Sprintf("tf-acc-%d.%s", rInt1, rootDomain)
+	domain := testAccAwsAcmCertificateRandomSubDomain(rootDomain)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -67,10 +84,7 @@ func TestAccAWSAcmCertificate_emailValidation(t *testing.T) {
 
 func TestAccAWSAcmCertificate_dnsValidation(t *testing.T) {
 	rootDomain := testAccAwsAcmCertificateDomainFromEnv(t)
-
-	rInt1 := acctest.RandInt()
-
-	domain := fmt.Sprintf("tf-acc-%d.%s", rInt1, rootDomain)
+	domain := testAccAwsAcmCertificateRandomSubDomain(rootDomain)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -207,11 +221,8 @@ func TestAccAWSAcmCertificate_rootAndWildcardSan(t *testing.T) {
 
 func TestAccAWSAcmCertificate_san_single(t *testing.T) {
 	rootDomain := testAccAwsAcmCertificateDomainFromEnv(t)
-
-	rInt1 := acctest.RandInt()
-
-	domain := fmt.Sprintf("tf-acc-%d.%s", rInt1, rootDomain)
-	sanDomain := fmt.Sprintf("tf-acc-%d-san.%s", rInt1, rootDomain)
+	domain := testAccAwsAcmCertificateRandomSubDomain(rootDomain)
+	sanDomain := testAccAwsAcmCertificateRandomSubDomain(rootDomain)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -249,12 +260,9 @@ func TestAccAWSAcmCertificate_san_single(t *testing.T) {
 
 func TestAccAWSAcmCertificate_san_multiple(t *testing.T) {
 	rootDomain := testAccAwsAcmCertificateDomainFromEnv(t)
-
-	rInt1 := acctest.RandInt()
-
-	domain := fmt.Sprintf("tf-acc-%d.%s", rInt1, rootDomain)
-	sanDomain1 := fmt.Sprintf("tf-acc-%d-san1.%s", rInt1, rootDomain)
-	sanDomain2 := fmt.Sprintf("tf-acc-%d-san2.%s", rInt1, rootDomain)
+	domain := testAccAwsAcmCertificateRandomSubDomain(rootDomain)
+	sanDomain1 := testAccAwsAcmCertificateRandomSubDomain(rootDomain)
+	sanDomain2 := testAccAwsAcmCertificateRandomSubDomain(rootDomain)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -297,11 +305,8 @@ func TestAccAWSAcmCertificate_san_multiple(t *testing.T) {
 
 func TestAccAWSAcmCertificate_san_TrailingPeriod(t *testing.T) {
 	rootDomain := testAccAwsAcmCertificateDomainFromEnv(t)
-
-	rInt1 := acctest.RandInt()
-
-	domain := fmt.Sprintf("tf-acc-%d.%s", rInt1, rootDomain)
-	sanDomain := fmt.Sprintf("tf-acc-%d-san.%s.", rInt1, rootDomain)
+	domain := testAccAwsAcmCertificateRandomSubDomain(rootDomain)
+	sanDomain := testAccAwsAcmCertificateRandomSubDomain(rootDomain)
 	resourceName := "aws_acm_certificate.cert"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -411,10 +416,7 @@ func TestAccAWSAcmCertificate_wildcardAndRootSan(t *testing.T) {
 
 func TestAccAWSAcmCertificate_tags(t *testing.T) {
 	rootDomain := testAccAwsAcmCertificateDomainFromEnv(t)
-
-	rInt1 := acctest.RandInt()
-
-	domain := fmt.Sprintf("tf-acc-%d.%s", rInt1, rootDomain)
+	domain := testAccAwsAcmCertificateRandomSubDomain(rootDomain)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
