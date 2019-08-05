@@ -256,14 +256,12 @@ func resourceAwsRDSClusterInstanceCreate(d *schema.ResourceData, meta interface{
 		createOpts.MonitoringRoleArn = aws.String(attr.(string))
 	}
 
-	if attr, _ := d.GetOk("engine"); attr == "aurora-postgresql" || attr == "aurora" {
-		if attr, ok := d.GetOk("performance_insights_enabled"); ok {
-			createOpts.EnablePerformanceInsights = aws.Bool(attr.(bool))
-		}
+	if attr, ok := d.GetOk("performance_insights_enabled"); ok {
+		createOpts.EnablePerformanceInsights = aws.Bool(attr.(bool))
+	}
 
-		if attr, ok := d.GetOk("performance_insights_kms_key_id"); ok {
-			createOpts.PerformanceInsightsKMSKeyId = aws.String(attr.(string))
-		}
+	if attr, ok := d.GetOk("performance_insights_kms_key_id"); ok {
+		createOpts.PerformanceInsightsKMSKeyId = aws.String(attr.(string))
 	}
 
 	if attr, ok := d.GetOk("preferred_backup_window"); ok {
