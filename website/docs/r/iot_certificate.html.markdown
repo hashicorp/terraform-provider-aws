@@ -38,12 +38,9 @@ resource "aws_iot_certificate" "cert" {
 
 In addition to the arguments, the following attributes are exported:
 
-* `arn` - The ARN of the certificate.
-* `id` - The internal id assigned to this certificate by IoT Core.
+* `id` - The internal ID assigned to this certificate.
+* `arn` - The ARN of the created certificate.
 * `certificate_pem` - The certificate data, in PEM format.
 * `public_key` - When no CSR is provided, the public key.
 * `private_key` - When no CSR is provided, the private key.
 
-## Attributes Reference
-
-* `arn` - The ARN of the created AWS IoT certificate
