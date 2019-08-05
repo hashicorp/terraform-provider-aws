@@ -292,6 +292,10 @@ func convertValidationOptions(certificate *acm.CertificateDetail) ([]map[string]
 	var emailValidationResult []string
 
 	if *certificate.Type == acm.CertificateTypeAmazonIssued {
+		if len(certificate.DomainValidationOptions) == 0 && aws.StringValue(certificate.Status) == acm.DomainStatusPendingValidation {
+			log.Printf("[DEBUG] No validation options need to retry.")
+			return nil, nil, fmt.Errorf("No validation options need to retry.")
+		}
 		for _, o := range certificate.DomainValidationOptions {
 			if o.ResourceRecord != nil {
 				validationOption := map[string]interface{}{
