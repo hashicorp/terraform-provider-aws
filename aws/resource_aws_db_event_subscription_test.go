@@ -4,9 +4,9 @@ import (
 	"fmt"
 	"regexp"
 	"testing"
+	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/rds"
 	"github.com/hashicorp/terraform/helper/acctest"
 	"github.com/hashicorp/terraform/helper/resource"
@@ -68,6 +68,28 @@ func TestAccAWSDBEventSubscription_basicUpdate(t *testing.T) {
 					resource.TestCheckResourceAttr("aws_db_event_subscription.bar", "tags.%", "1"),
 					resource.TestCheckResourceAttr("aws_db_event_subscription.bar", "tags.Name", "new-name"),
 				),
+			},
+		},
+	})
+}
+
+func TestAccAWSDBEventSubscription_disappears(t *testing.T) {
+	var eventSubscription rds.EventSubscription
+	rInt := acctest.RandInt()
+	resourceName := "aws_db_event_subscription.bar"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSDBEventSubscriptionDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSDBEventSubscriptionConfig(rInt),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSDBEventSubscriptionExists(resourceName, &eventSubscription),
+					testAccCheckAWSDBEventSubscriptionDisappears(&eventSubscription),
+				),
+				ExpectNonEmptyPlan: true,
 			},
 		},
 	})
@@ -190,22 +212,18 @@ func testAccCheckAWSDBEventSubscriptionExists(n string, v *rds.EventSubscription
 
 		conn := testAccProvider.Meta().(*AWSClient).rdsconn
 
-		opts := rds.DescribeEventSubscriptionsInput{
-			SubscriptionName: aws.String(rs.Primary.ID),
-		}
-
-		resp, err := conn.DescribeEventSubscriptions(&opts)
+		eventSubscription, err := resourceAwsDbEventSubscriptionRetrieve(rs.Primary.ID, conn)
 
 		if err != nil {
 			return err
 		}
 
-		if len(resp.EventSubscriptionsList) != 1 ||
-			*resp.EventSubscriptionsList[0].CustSubscriptionId != rs.Primary.ID {
+		if eventSubscription == nil {
 			return fmt.Errorf("RDS Event Subscription not found")
 		}
 
-		*v = *resp.EventSubscriptionsList[0]
+		*v = *eventSubscription
+
 		return nil
 	}
 }
@@ -218,34 +236,40 @@ func testAccCheckAWSDBEventSubscriptionDestroy(s *terraform.State) error {
 			continue
 		}
 
-		var err error
-		resp, err := conn.DescribeEventSubscriptions(
-			&rds.DescribeEventSubscriptionsInput{
-				SubscriptionName: aws.String(rs.Primary.ID),
-			})
+		eventSubscription, err := resourceAwsDbEventSubscriptionRetrieve(rs.Primary.ID, conn)
 
-		if ae, ok := err.(awserr.Error); ok && ae.Code() == "SubscriptionNotFound" {
+		if isAWSErr(err, rds.ErrCodeSubscriptionNotFoundFault, "") {
 			continue
 		}
 
-		if err == nil {
-			if len(resp.EventSubscriptionsList) != 0 &&
-				*resp.EventSubscriptionsList[0].CustSubscriptionId == rs.Primary.ID {
-				return fmt.Errorf("Event Subscription still exists")
-			}
+		if err != nil {
+			return err
 		}
 
-		// Verify the error
-		newerr, ok := err.(awserr.Error)
-		if !ok {
-			return err
-		}
-		if newerr.Code() != "SubscriptionNotFound" {
-			return err
+		if eventSubscription != nil {
+			return fmt.Errorf("RDS Event Subscription (%s) still exists", rs.Primary.ID)
 		}
 	}
 
 	return nil
+}
+
+func testAccCheckAWSDBEventSubscriptionDisappears(eventSubscription *rds.EventSubscription) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := testAccProvider.Meta().(*AWSClient).rdsconn
+
+		input := &rds.DeleteEventSubscriptionInput{
+			SubscriptionName: eventSubscription.CustSubscriptionId,
+		}
+
+		_, err := conn.DeleteEventSubscription(input)
+
+		if err != nil {
+			return err
+		}
+
+		return waitForRdsEventSubscriptionDeletion(conn, aws.StringValue(eventSubscription.CustSubscriptionId), 10*time.Minute)
+	}
 }
 
 func testAccAWSDBEventSubscriptionConfig(rInt int) string {

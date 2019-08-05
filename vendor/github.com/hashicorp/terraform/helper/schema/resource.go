@@ -95,9 +95,10 @@ type Resource struct {
 	//
 	// Exists is a function that is called to check if a resource still
 	// exists. If this returns false, then this will affect the diff
-	// accordingly. If this function isn't set, it will not be called. It
-	// is highly recommended to set it. The *ResourceData passed to Exists
-	// should _not_ be modified.
+	// accordingly. If this function isn't set, it will not be called. You
+	// can also signal existence in the Read method by calling d.SetId("")
+	// if the Resource is no longer present and should be removed from state.
+	// The *ResourceData passed to Exists should _not_ be modified.
 	Create CreateFunc
 	Read   ReadFunc
 	Update UpdateFunc
@@ -329,21 +330,13 @@ func (r *Resource) simpleDiff(
 	c *terraform.ResourceConfig,
 	meta interface{}) (*terraform.InstanceDiff, error) {
 
-	t := &ResourceTimeout{}
-	err := t.ConfigDecode(r, c)
-
-	if err != nil {
-		return nil, fmt.Errorf("[ERR] Error decoding timeout: %s", err)
-	}
-
 	instanceDiff, err := schemaMap(r.Schema).Diff(s, c, r.CustomizeDiff, meta, false)
 	if err != nil {
 		return instanceDiff, err
 	}
 
 	if instanceDiff == nil {
-		log.Printf("[DEBUG] Instance Diff is nil in SimpleDiff()")
-		return nil, err
+		instanceDiff = terraform.NewInstanceDiff()
 	}
 
 	// Make sure the old value is set in each of the instance diffs.
@@ -357,10 +350,7 @@ func (r *Resource) simpleDiff(
 		}
 	}
 
-	if err := t.DiffEncode(instanceDiff); err != nil {
-		log.Printf("[ERR] Error encoding timeout to instance diff: %s", err)
-	}
-	return instanceDiff, err
+	return instanceDiff, nil
 }
 
 // Validate validates the resource configuration against the schema.

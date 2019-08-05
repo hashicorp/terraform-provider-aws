@@ -50,10 +50,6 @@ func testAccDataSourceAwsSnsTopicCheck(name string) resource.TestCheckFunc {
 }
 
 const testAccDataSourceAwsSnsTopicConfig = `
-provider "aws" {
-  region = "us-west-2"
-}
-
 resource "aws_sns_topic" "tf_wrong1" {
   name = "wrong1"
 }

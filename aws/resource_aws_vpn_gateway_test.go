@@ -31,17 +31,7 @@ func testSweepVPNGateways(region string) error {
 	}
 	conn := client.(*AWSClient).ec2conn
 
-	req := &ec2.DescribeVpnGatewaysInput{
-		Filters: []*ec2.Filter{
-			{
-				Name: aws.String("tag-value"),
-				Values: []*string{
-					aws.String("terraform-testacc-*"),
-					aws.String("tf-acc-test-*"),
-				},
-			},
-		},
-	}
+	req := &ec2.DescribeVpnGatewaysInput{}
 	resp, err := conn.DescribeVpnGateways(req)
 	if err != nil {
 		if testSweepSkipSweepError(err) {

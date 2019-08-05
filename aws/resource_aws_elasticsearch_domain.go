@@ -190,6 +190,22 @@ func resourceAwsElasticSearchDomain() *schema.Resource {
 							Optional: true,
 							Default:  "m3.medium.elasticsearch",
 						},
+						"zone_awareness_config": {
+							Type:             schema.TypeList,
+							Optional:         true,
+							MaxItems:         1,
+							DiffSuppressFunc: suppressMissingOptionalConfigurationBlock,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"availability_zone_count": {
+										Type:         schema.TypeInt,
+										Optional:     true,
+										Default:      2,
+										ValidateFunc: validation.IntInSlice([]int{2, 3}),
+									},
+								},
+							},
+						},
 						"zone_awareness_enabled": {
 							Type:     schema.TypeBool,
 							Optional: true,

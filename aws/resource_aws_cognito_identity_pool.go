@@ -198,24 +198,24 @@ func resourceAwsCognitoIdentityPoolUpdate(d *schema.ResourceData, meta interface
 		IdentityPoolName:               aws.String(d.Get("identity_pool_name").(string)),
 	}
 
-	if d.HasChange("developer_provider_name") {
-		params.DeveloperProviderName = aws.String(d.Get("developer_provider_name").(string))
+	if v, ok := d.GetOk("developer_provider_name"); ok {
+		params.DeveloperProviderName = aws.String(v.(string))
 	}
 
-	if d.HasChange("cognito_identity_providers") {
-		params.CognitoIdentityProviders = expandCognitoIdentityProviders(d.Get("cognito_identity_providers").(*schema.Set))
+	if v, ok := d.GetOk("cognito_identity_providers"); ok {
+		params.CognitoIdentityProviders = expandCognitoIdentityProviders(v.(*schema.Set))
 	}
 
-	if d.HasChange("supported_login_providers") {
-		params.SupportedLoginProviders = expandCognitoSupportedLoginProviders(d.Get("supported_login_providers").(map[string]interface{}))
+	if v, ok := d.GetOk("supported_login_providers"); ok {
+		params.SupportedLoginProviders = expandCognitoSupportedLoginProviders(v.(map[string]interface{}))
 	}
 
-	if d.HasChange("openid_connect_provider_arns") {
-		params.OpenIdConnectProviderARNs = expandStringList(d.Get("openid_connect_provider_arns").([]interface{}))
+	if v, ok := d.GetOk("openid_connect_provider_arns"); ok {
+		params.OpenIdConnectProviderARNs = expandStringList(v.([]interface{}))
 	}
 
-	if d.HasChange("saml_provider_arns") {
-		params.SamlProviderARNs = expandStringList(d.Get("saml_provider_arns").([]interface{}))
+	if v, ok := d.GetOk("saml_provider_arns"); ok {
+		params.SamlProviderARNs = expandStringList(v.([]interface{}))
 	}
 
 	_, err := conn.UpdateIdentityPool(params)

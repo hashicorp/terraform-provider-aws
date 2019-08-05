@@ -24,6 +24,9 @@ resource "aws_lightsail_instance" "gitlab_test" {
   blueprint_id      = "string"
   bundle_id         = "string"
   key_pair_name     = "some_key_name"
+  tags = {
+    foo = "bar"
+  }
 }
 ```
 
@@ -40,6 +43,7 @@ instance (see list below)
 * `key_pair_name` - (Optional) The name of your key pair. Created in the
 Lightsail console (cannot use `aws_key_pair` at this time)
 * `user_data` - (Optional) launch script to configure server with additional user data
+* `tags` - (Optional) A mapping of tags to assign to the resource.
 
 ## Availability Zones
 Lightsail currently supports the following Availability Zones (e.g. `us-east-1a`):
