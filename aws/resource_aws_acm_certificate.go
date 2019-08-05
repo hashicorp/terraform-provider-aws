@@ -11,7 +11,13 @@ import (
 	"github.com/aws/aws-sdk-go/service/acm"
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/helper/schema"
+	"github.com/hashicorp/terraform/helper/validation"
 )
+
+var validCTLoggingPreferences = []string{
+	acm.CertificateTransparencyLoggingPreferenceEnabled,
+	acm.CertificateTransparencyLoggingPreferenceDisabled,
+}
 
 func resourceAwsAcmCertificate() *schema.Resource {
 	return &schema.Resource{
@@ -22,7 +28,6 @@ func resourceAwsAcmCertificate() *schema.Resource {
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
-
 		Schema: map[string]*schema.Schema{
 			"certificate_body": {
 				Type:      schema.TypeString,
@@ -108,6 +113,24 @@ func resourceAwsAcmCertificate() *schema.Resource {
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
+			"options": {
+				Type:             schema.TypeList,
+				Optional:         true,
+				MaxItems:         1,
+				DiffSuppressFunc: suppressAcmMissingCertificateOptions,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"certificate_transparency_logging_preference": {
+							Type:          schema.TypeString,
+							Optional:      true,
+							Default:       acm.CertificateTransparencyLoggingPreferenceEnabled,
+							ForceNew:      true,
+							ConflictsWith: []string{"private_key", "certificate_body", "certificate_chain"},
+							ValidateFunc:  validation.StringInSlice(validCTLoggingPreferences, false),
+						},
+					},
+				},
+			},
 			"tags": tagsSchema(),
 		},
 	}
@@ -164,6 +187,11 @@ func resourceAwsAcmCertificateCreateRequested(d *schema.ResourceData, meta inter
 			subjectAlternativeNames[i] = aws.String(strings.TrimSuffix(sanRaw.(string), "."))
 		}
 		params.SubjectAlternativeNames = subjectAlternativeNames
+	}
+
+	cert_options := expandAcmCertificateOptions(d.Get("options").([]interface{}))
+	if cert_options != nil {
+		params.SetOptions(cert_options)
 	}
 
 	log.Printf("[DEBUG] ACM Certificate Request: %#v", params)
@@ -228,6 +256,10 @@ func resourceAwsAcmCertificateRead(d *schema.ResourceData, meta interface{}) err
 		}
 
 		d.Set("validation_method", resourceAwsAcmCertificateGuessValidationMethod(domainValidationOptions, emailValidationOptions))
+
+		if err := d.Set("options", flattenAcmCertificateOptions(resp.Certificate.Options)); err != nil {
+			return resource.NonRetryableError(fmt.Errorf("error setting certificate options: %s", err))
+		}
 
 		params := &acm.ListTagsForCertificateInput{
 			CertificateArn: aws.String(d.Id()),
@@ -361,4 +393,28 @@ func resourceAwsAcmCertificateImport(conn *acm.ACM, d *schema.ResourceData, upda
 
 	log.Printf("[DEBUG] ACM Certificate Import: %#v", params)
 	return conn.ImportCertificate(params)
+}
+
+func expandAcmCertificateOptions(l []interface{}) *acm.CertificateOptions {
+	if len(l) == 0 || l[0] == nil {
+		return nil
+	}
+
+	m := l[0].(map[string]interface{})
+
+	options := &acm.CertificateOptions{}
+
+	if v, ok := m["certificate_transparency_logging_preference"]; ok {
+		options.CertificateTransparencyLoggingPreference = aws.String(v.(string))
+	}
+
+	return options
+}
+
+func flattenAcmCertificateOptions(co *acm.CertificateOptions) []interface{} {
+	m := map[string]interface{}{
+		"certificate_transparency_logging_preference": aws.StringValue(co.CertificateTransparencyLoggingPreference),
+	}
+
+	return []interface{}{m}
 }
