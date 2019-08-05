@@ -8,6 +8,7 @@ ENHANCEMENTS:
 
 * data-source/aws_eks_cluster: Add `status` attribute [GH-9582]
 * data-source/aws_instance: Add `ebs_block_device` and `root_block_device` configuration block `encryption` and `kms_key_id` attributes [GH-4861] / [GH-7757]
+* resource/aws_acm_certificate: Support `options` configuration block `certificate_transparency_logging_preference` argument [GH-9413]
 * resource/aws_eks_cluster: Add `status` attribute [GH-9582]
 * resource/aws_glue_crawler: Add `catalog_target` configuration block [GH-9430]
 * resource/aws_instance: Add `ebs_block_device` and `root_block_device` configuration block `encryption` and `kms_key_id` arguments (support encryption on launch) [GH-4861] / [GH-7757]
