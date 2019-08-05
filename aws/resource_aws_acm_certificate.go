@@ -1,6 +1,7 @@
 package aws
 
 import (
+	"crypto/md5"
 	"errors"
 	"fmt"
 	"log"
@@ -41,6 +42,11 @@ func resourceAwsAcmCertificate() *schema.Resource {
 				StateFunc: normalizeCert,
 				Sensitive: true,
 			},
+			"certificate_authority_arn": {
+				Type:     schema.TypeString,
+				Optional: true,
+				ForceNew: true,
+			},
 			"domain_name": {
 				Type:          schema.TypeString,
 				Optional:      true,
@@ -73,7 +79,7 @@ func resourceAwsAcmCertificate() *schema.Resource {
 				Optional:      true,
 				Computed:      true,
 				ForceNew:      true,
-				ConflictsWith: []string{"private_key", "certificate_body", "certificate_chain"},
+				ConflictsWith: []string{"private_key", "certificate_body", "certificate_chain", "certificate_authority_arn"},
 			},
 			"arn": {
 				Type:     schema.TypeString,
@@ -144,6 +150,10 @@ func resourceAwsAcmCertificate() *schema.Resource {
 
 func resourceAwsAcmCertificateCreate(d *schema.ResourceData, meta interface{}) error {
 	if _, ok := d.GetOk("domain_name"); ok {
+		if _, ok := d.GetOk("certificate_authority_arn"); ok {
+			return resourceAwsAcmCertificateCreateRequested(d, meta)
+		}
+
 		if _, ok := d.GetOk("validation_method"); !ok {
 			return errors.New("validation_method must be set when creating a certificate")
 		}
@@ -184,8 +194,12 @@ func resourceAwsAcmCertificateCreateRequested(d *schema.ResourceData, meta inter
 	acmconn := meta.(*AWSClient).acmconn
 	params := &acm.RequestCertificateInput{
 		DomainName:       aws.String(strings.TrimSuffix(d.Get("domain_name").(string), ".")),
+		IdempotencyToken: aws.String(resource.UniqueId()),
 		Options:          expandAcmCertificateOptions(d.Get("options").([]interface{})),
-		ValidationMethod: aws.String(d.Get("validation_method").(string)),
+	}
+
+	if caARN, ok := d.GetOk("certificate_authority_arn"); ok {
+		params.CertificateAuthorityArn = aws.String(caARN.(string))
 	}
 
 	if sans, ok := d.GetOk("subject_alternative_names"); ok {
@@ -194,6 +208,10 @@ func resourceAwsAcmCertificateCreateRequested(d *schema.ResourceData, meta inter
 			subjectAlternativeNames[i] = aws.String(strings.TrimSuffix(sanRaw.(string), "."))
 		}
 		params.SubjectAlternativeNames = subjectAlternativeNames
+	}
+
+	if v, ok := d.GetOk("validation_method"); ok {
+		params.ValidationMethod = aws.String(v.(string))
 	}
 
 	log.Printf("[DEBUG] ACM Certificate Request: %#v", params)
@@ -239,6 +257,7 @@ func resourceAwsAcmCertificateRead(d *schema.ResourceData, meta interface{}) err
 
 		d.Set("domain_name", resp.Certificate.DomainName)
 		d.Set("arn", resp.Certificate.CertificateArn)
+		d.Set("certificate_authority_arn", resp.Certificate.CertificateAuthorityArn)
 
 		if err := d.Set("subject_alternative_names", cleanUpSubjectAlternativeNames(resp.Certificate)); err != nil {
 			return resource.NonRetryableError(err)

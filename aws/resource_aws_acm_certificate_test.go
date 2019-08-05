@@ -51,6 +51,15 @@ func testAccAwsAcmCertificateRandomSubDomain(rootDomain string) string {
 	return fmt.Sprintf("tf-acc-%s.%s", acctest.RandString(56-len(rootDomain)), rootDomain)
 }
 
+func testAccAwsAcmCAARNFromEnv(t *testing.T) string {
+	if os.Getenv("ACM_CA_ARN") == "" {
+		t.Skip(
+			"Environment variable ACM_CA_ARN is not set. " +
+				"This must to be a valid PCA")
+	}
+	return os.Getenv("ACM_CA_ARN")
+}
+
 func TestAccAWSAcmCertificate_emailValidation(t *testing.T) {
 	rootDomain := testAccAwsAcmCertificateDomainFromEnv(t)
 	domain := testAccAwsAcmCertificateRandomSubDomain(rootDomain)
@@ -135,6 +144,36 @@ func TestAccAWSAcmCertificate_root(t *testing.T) {
 					resource.TestCheckResourceAttr("aws_acm_certificate.cert", "subject_alternative_names.#", "0"),
 					resource.TestCheckResourceAttr("aws_acm_certificate.cert", "validation_emails.#", "0"),
 					resource.TestCheckResourceAttr("aws_acm_certificate.cert", "validation_method", acm.ValidationMethodDns),
+				),
+			},
+			{
+				ResourceName:      "aws_acm_certificate.cert",
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccAWSAcmCertificate_privateCert(t *testing.T) {
+	rootDomain := testAccAwsAcmCertificateDomainFromEnv(t)
+	caARN := testAccAwsAcmCAARNFromEnv(t)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAcmCertificateDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAcmCertificateConfig_privateCert(rootDomain, caARN),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestMatchResourceAttr("aws_acm_certificate.cert", "arn", certificateArnRegex),
+					resource.TestCheckResourceAttr("aws_acm_certificate.cert", "domain_name", rootDomain),
+					resource.TestCheckResourceAttr("aws_acm_certificate.cert", "domain_validation_options.#", "0"),
+					resource.TestCheckResourceAttr("aws_acm_certificate.cert", "subject_alternative_names.#", "0"),
+					resource.TestCheckResourceAttr("aws_acm_certificate.cert", "validation_emails.#", "0"),
+					resource.TestCheckResourceAttr("aws_acm_certificate.cert", "validation_method", "NONE"),
+					resource.TestCheckResourceAttr("aws_acm_certificate.cert", "certificate_authority_arn", caARN),
 				),
 			},
 			{
@@ -561,6 +600,16 @@ resource "aws_acm_certificate" "cert" {
   validation_method = "%s"
 }
 `, domainName, validationMethod)
+
+}
+
+func testAccAcmCertificateConfig_privateCert(domainName, caARN string) string {
+	return fmt.Sprintf(`
+resource "aws_acm_certificate" "cert" {
+  domain_name               = "%s"
+  certificate_authority_arn = "%s"
+}
+`, domainName, caARN)
 
 }
 
