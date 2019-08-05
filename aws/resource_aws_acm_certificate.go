@@ -14,11 +14,6 @@ import (
 	"github.com/hashicorp/terraform/helper/validation"
 )
 
-var validCTLoggingPreferences = []string{
-	acm.CertificateTransparencyLoggingPreferenceEnabled,
-	acm.CertificateTransparencyLoggingPreferenceDisabled,
-}
-
 func resourceAwsAcmCertificate() *schema.Resource {
 	return &schema.Resource{
 		Create: resourceAwsAcmCertificateCreate,
@@ -117,7 +112,15 @@ func resourceAwsAcmCertificate() *schema.Resource {
 				Type:             schema.TypeList,
 				Optional:         true,
 				MaxItems:         1,
-				DiffSuppressFunc: suppressAcmMissingCertificateOptions,
+				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+					if _, ok := d.GetOk("private_key"); ok {
+						// ignore diffs for imported certs; they have a different logging preference
+						// default to requested certs which can't be changed by the ImportCertificate API
+						return true
+					}
+					// behave just like suppressMissingOptionalConfigurationBlock() for requested certs
+					return old == "1" && new == "0"
+				},
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"certificate_transparency_logging_preference": {
@@ -126,7 +129,10 @@ func resourceAwsAcmCertificate() *schema.Resource {
 							Default:       acm.CertificateTransparencyLoggingPreferenceEnabled,
 							ForceNew:      true,
 							ConflictsWith: []string{"private_key", "certificate_body", "certificate_chain"},
-							ValidateFunc:  validation.StringInSlice(validCTLoggingPreferences, false),
+							ValidateFunc:  validation.StringInSlice([]string{
+								acm.CertificateTransparencyLoggingPreferenceEnabled,
+								acm.CertificateTransparencyLoggingPreferenceDisabled,
+							}, false),
 						},
 					},
 				},
@@ -178,6 +184,7 @@ func resourceAwsAcmCertificateCreateRequested(d *schema.ResourceData, meta inter
 	acmconn := meta.(*AWSClient).acmconn
 	params := &acm.RequestCertificateInput{
 		DomainName:       aws.String(strings.TrimSuffix(d.Get("domain_name").(string), ".")),
+		Options:          expandAcmCertificateOptions(d.Get("options").([]interface{})),
 		ValidationMethod: aws.String(d.Get("validation_method").(string)),
 	}
 
@@ -187,11 +194,6 @@ func resourceAwsAcmCertificateCreateRequested(d *schema.ResourceData, meta inter
 			subjectAlternativeNames[i] = aws.String(strings.TrimSuffix(sanRaw.(string), "."))
 		}
 		params.SubjectAlternativeNames = subjectAlternativeNames
-	}
-
-	cert_options := expandAcmCertificateOptions(d.Get("options").([]interface{}))
-	if cert_options != nil {
-		params.SetOptions(cert_options)
 	}
 
 	log.Printf("[DEBUG] ACM Certificate Request: %#v", params)

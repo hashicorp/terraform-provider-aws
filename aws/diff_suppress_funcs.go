@@ -132,14 +132,3 @@ func suppressRoute53ZoneNameWithTrailingDot(k, old, new string, d *schema.Resour
 	}
 	return strings.TrimSuffix(old, ".") == strings.TrimSuffix(new, ".")
 }
-
-func suppressAcmMissingCertificateOptions(k, old, new string, d *schema.ResourceData) bool {
-	if _, ok := d.GetOk("private_key"); ok {
-		// ignore diffs for imported certs; they have a different logging preference
-		// default to requested certs which can't be changed by the ImportCertificate API
-		return true
-	} else {
-		// behave just like suppressMissingOptionalConfigurationBlock() for requested certs
-		return old == "1" && new == "0"
-	}
-}
