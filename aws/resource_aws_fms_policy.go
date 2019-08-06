@@ -5,9 +5,11 @@ import (
 	"fmt"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/fms"
+	"github.com/hashicorp/terraform/helper/hashcode"
 	"github.com/hashicorp/terraform/helper/schema"
 	"github.com/hashicorp/terraform/helper/validation"
 	"log"
+	"strings"
 )
 
 func resourceAwsFmsPolicy() *schema.Resource {
@@ -155,7 +157,6 @@ func resourceAwsFmsPolicy() *schema.Resource {
 					},
 				},
 			},
-
 			"arn": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -176,19 +177,19 @@ func resourceAwsFmsPolicyCreate(d *schema.ResourceData, meta interface{}) error 
 	}
 
 	if v, ok := d.GetOk("security_service_policy_data"); ok {
-		fmsPolicy.SecurityServicePolicyData = flattenAwsFmsManagedSecurityData(v.(*schema.Set))
+		fmsPolicy.SecurityServicePolicyData = expandAwsFmsManagedSecurityData(v.(*schema.Set))
 	}
 
 	if rTags, tagsOk := d.GetOk("resource_tags"); tagsOk {
-		fmsPolicy.ResourceTags = buildResourceTags(rTags)
+		fmsPolicy.ResourceTags = constructResourceTags(rTags)
 	}
 
 	if v, ok := d.GetOk("include_map"); ok {
-		fmsPolicy.IncludeMap = buildAccountList(v.(*schema.Set))
+		fmsPolicy.IncludeMap = expandAccountList(v.(*schema.Set))
 	}
 
 	if v, ok := d.GetOk("exclude_map"); ok {
-		fmsPolicy.ExcludeMap = buildAccountList(v.(*schema.Set))
+		fmsPolicy.ExcludeMap = expandAccountList(v.(*schema.Set))
 	}
 
 	params := &fms.PutPolicyInput{
@@ -205,9 +206,6 @@ func resourceAwsFmsPolicyCreate(d *schema.ResourceData, meta interface{}) error 
 	}
 
 	d.SetId(aws.StringValue(resp.Policy.PolicyId))
-	d.Set("arn", aws.StringValue(resp.PolicyArn))
-	d.Set("policy_update_token", aws.StringValue(resp.Policy.PolicyUpdateToken))
-	d.Set("exclude_resource_tags", aws.BoolValue(resp.Policy.ExcludeResourceTags))
 
 	return resourceAwsFmsPolicyRead(d, meta)
 }
@@ -232,8 +230,16 @@ func resourceAwsFmsPolicyRead(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	d.Set("arn", aws.StringValue(resp.PolicyArn))
-	d.Set("policy_update_token", aws.StringValue(resp.Policy.PolicyUpdateToken))
+
+	d.Set("name", aws.StringValue(resp.Policy.PolicyName))
 	d.Set("exclude_resource_tags", aws.BoolValue(resp.Policy.ExcludeResourceTags))
+	d.Set("exclude_map", flattenFMSAccountMap(resp.Policy.ExcludeMap))
+	d.Set("include_map", flattenFMSAccountMap(resp.Policy.IncludeMap))
+	d.Set("remediation_enabled", aws.BoolValue(resp.Policy.RemediationEnabled))
+	d.Set("resource_type_list", resp.Policy.ResourceTypeList)
+	d.Set("policy_update_token", aws.StringValue(resp.Policy.PolicyUpdateToken))
+	d.Set("resource_tags", flattenFMSResourceTags(resp.Policy.ResourceTags))
+	d.Set("security_service_policy_data", flattenFmsSecurityServicePolicyData(resp.Policy.SecurityServicePolicyData))
 
 	return nil
 }
@@ -254,22 +260,22 @@ func resourceAwsFmsPolicyUpdate(d *schema.ResourceData, meta interface{}) error 
 	requestUpdate := false
 
 	if d.HasChange("exclude_map") {
-		fmsPolicy.ExcludeMap = buildAccountList(d.Get("exclude_map").(*schema.Set))
+		fmsPolicy.ExcludeMap = expandAccountList(d.Get("exclude_map").(*schema.Set))
 		requestUpdate = true
 	}
 
 	if d.HasChange("include_map") {
-		fmsPolicy.ExcludeMap = buildAccountList(d.Get("include_map").(*schema.Set))
+		fmsPolicy.ExcludeMap = expandAccountList(d.Get("include_map").(*schema.Set))
 		requestUpdate = true
 	}
 
 	if d.HasChange("resource_tags") {
-		fmsPolicy.ResourceTags = buildResourceTags(d.Get("resource_tags"))
+		fmsPolicy.ResourceTags = constructResourceTags(d.Get("resource_tags"))
 		requestUpdate = true
 	}
 
 	if requestUpdate {
-		fmsPolicy.SecurityServicePolicyData = flattenAwsFmsManagedSecurityData(d.Get("security_service_policy_data").(*schema.Set))
+		fmsPolicy.SecurityServicePolicyData = expandAwsFmsManagedSecurityData(d.Get("security_service_policy_data").(*schema.Set))
 
 		params := &fms.PutPolicyInput{Policy: fmsPolicy}
 		_, err := conn.PutPolicy(params)
@@ -302,7 +308,7 @@ func resourceAwsFmsPolicyDelete(d *schema.ResourceData, meta interface{}) error 
 	return nil
 }
 
-func buildAccountList(set *schema.Set) map[string][]*string {
+func expandAccountList(set *schema.Set) map[string][]*string {
 	var accountList = make(map[string][]*string)
 
 	for _, account := range set.List() {
@@ -356,7 +362,7 @@ func constructRuleGroupsList(rgs []interface{}) []map[string]interface{} {
 	return ruleGroup
 }
 
-func flattenAwsFmsManagedSecurityData(set *schema.Set) *fms.SecurityServicePolicyData {
+func expandAwsFmsManagedSecurityData(set *schema.Set) *fms.SecurityServicePolicyData {
 	spd := set.List()
 
 	securityServicePolicyData := &fms.SecurityServicePolicyData{}
@@ -387,7 +393,92 @@ func flattenAwsFmsManagedSecurityData(set *schema.Set) *fms.SecurityServicePolic
 	return securityServicePolicyData
 }
 
-func buildResourceTags(rTags interface{}) []*fms.ResourceTag {
+func flattenFMSAccountMap(accountMap map[string][]*string) *schema.Set {
+	eMap := map[string]interface{}{}
+
+	if _, ok := eMap["account"]; ok {
+		for _, v := range accountMap["ACCOUNT"] {
+			eMap["account"] = append(eMap["account"].([]*string), v)
+		}
+	}
+
+	s := schema.NewSet(fmsPolicyDataHash, []interface{}{})
+	s.Add(eMap)
+
+	return s
+}
+
+func flattenFMSResourceTags(resourceTags []*fms.ResourceTag) map[string]interface{} {
+	resTags := map[string]interface{}{}
+
+	for _, v := range resourceTags {
+		resTags[*v.Key] = v.Value
+	}
+	return resTags
+}
+
+func flattenFmsManagedServiceData(sspdMsd map[string]interface{}) *schema.Set {
+	msdSS := schema.NewSet(fmsPolicyDataHash, []interface{}{})
+
+	msdData := map[string]interface{}{
+		"type": sspdMsd["type"].(string),
+	}
+
+	if sspdMsd["defaultAction"] != nil {
+		msdData["default_action"] = sspdMsd["defaultAction"]
+	}
+
+	msdData["rule_groups"] = flattenFmsMsdRuleGroupsList(sspdMsd)
+
+	msdSS.Add(msdData)
+
+	return msdSS
+}
+
+func flattenFmsMsdRuleGroupsList(sspdMsd map[string]interface{}) *schema.Set {
+	ruleGroupsSet := schema.NewSet(fmsPolicyDataHash, []interface{}{})
+	if sspdMsd["ruleGroups"] != nil {
+		for _, v := range sspdMsd["ruleGroups"].([]interface{}) {
+
+			rg := v.(map[string]interface{})
+
+			rule := map[string]interface{}{
+				"id":              rg["id"].(string),
+				"override_action": rg["overrideAction"].(map[string]interface{}),
+			}
+
+			ruleGroupsSet.Add(rule)
+		}
+	}
+	return ruleGroupsSet
+}
+
+func flattenFmsSecurityServicePolicyData(spd *fms.SecurityServicePolicyData) *schema.Set {
+	s := schema.NewSet(fmsPolicyDataHash, []interface{}{})
+
+	sspd := map[string]interface{}{
+		"type": aws.StringValue(spd.Type),
+	}
+
+	var policy map[string]interface{}
+
+	if spd.ManagedServiceData != nil {
+
+		msd := []byte(aws.StringValue(spd.ManagedServiceData))
+
+		if err := json.Unmarshal(msd, &policy); err != nil {
+			panic(err)
+		}
+
+		sspd["managed_service_data"] = flattenFmsManagedServiceData(policy)
+	}
+
+	s.Add(sspd)
+
+	return s
+}
+
+func constructResourceTags(rTags interface{}) []*fms.ResourceTag {
 	var rTagList []*fms.ResourceTag
 
 	tags := rTags.(map[string]interface{})
@@ -396,4 +487,18 @@ func buildResourceTags(rTags interface{}) []*fms.ResourceTag {
 	}
 
 	return rTagList
+}
+
+func fmsPolicyDataHash(v interface{}) int {
+	var buf strings.Builder
+
+	m := v.(map[string]interface{})
+
+	if _, ok := m["Id"]; ok {
+		buf.WriteString(fmt.Sprintf("%s", m["Id"]))
+	} else {
+		buf.WriteString(fmt.Sprintf("%s-", m))
+	}
+
+	return hashcode.String(buf.String())
 }

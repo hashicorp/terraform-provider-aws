@@ -26,9 +26,10 @@ func TestAccAWSFmsPolicy_importBasic(t *testing.T) {
 				Config: testAccFmsPolicyConfig(fmsPolicyName, wafRuleGroupName),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"policy_update_token"},
 			},
 		},
 	})
