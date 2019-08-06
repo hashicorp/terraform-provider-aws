@@ -60,6 +60,7 @@ func resourceAwsRDSCluster() *schema.Resource {
 				ConflictsWith: []string{"cluster_identifier_prefix"},
 				ValidateFunc:  validateRdsIdentifier,
 			},
+
 			"cluster_identifier_prefix": {
 				Type:          schema.TypeString,
 				Optional:      true,
@@ -385,6 +386,15 @@ func resourceAwsRDSCluster() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 				ForceNew: true,
+			},
+
+			"enable_data_api": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+					// Suppress the diff unless using engine_mode serverless.
+					return d.Get("engine_mode").(string) != "serverless"
+				},
 			},
 
 			"enabled_cloudwatch_logs_exports": {
@@ -834,12 +844,15 @@ func resourceAwsRDSClusterCreate(d *schema.ResourceData, meta interface{}) error
 			createOpts.EnableIAMDatabaseAuthentication = aws.Bool(attr.(bool))
 		}
 
-		if attr, ok := d.GetOk("enabled_cloudwatch_logs_exports"); ok && len(attr.([]interface{})) > 0 {
-			createOpts.EnableCloudwatchLogsExports = expandStringList(attr.([]interface{}))
+		if attr, ok := d.GetOk("enable_data_api"); ok {
+			if d.Get("engine_mode").(string) == "serverless" {
+				modifyDbClusterInput.EnableHttpEndpoint = aws.Bool(attr.(bool))
+				requiresModifyDbCluster = true
+			}
 		}
 
-		if attr, ok := d.GetOk("scaling_configuration"); ok && len(attr.([]interface{})) > 0 {
-			createOpts.ScalingConfiguration = expandRdsScalingConfiguration(attr.([]interface{}))
+		if attr, ok := d.GetOk("enabled_cloudwatch_logs_exports"); ok && len(attr.([]interface{})) > 0 {
+			createOpts.EnableCloudwatchLogsExports = expandStringList(attr.([]interface{}))
 		}
 
 		if attr, ok := d.GetOkExists("storage_encrypted"); ok {
@@ -988,6 +1001,7 @@ func resourceAwsRDSClusterRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("db_cluster_parameter_group_name", dbc.DBClusterParameterGroup)
 	d.Set("db_subnet_group_name", dbc.DBSubnetGroup)
 	d.Set("deletion_protection", dbc.DeletionProtection)
+	d.Set("enable_data_api", dbc.HttpEndpointEnabled)
 
 	if err := d.Set("enabled_cloudwatch_logs_exports", aws.StringValueSlice(dbc.EnabledCloudwatchLogsExports)); err != nil {
 		return fmt.Errorf("error setting enabled_cloudwatch_logs_exports: %s", err)
@@ -1120,6 +1134,13 @@ func resourceAwsRDSClusterUpdate(d *schema.ResourceData, meta interface{}) error
 	if d.HasChange("iam_database_authentication_enabled") {
 		req.EnableIAMDatabaseAuthentication = aws.Bool(d.Get("iam_database_authentication_enabled").(bool))
 		requestUpdate = true
+	}
+
+	if d.HasChange("enable_data_api") {
+		if d.Get("engine_mode").(string) == "serverless" {
+			req.EnableHttpEndpoint = aws.Bool(d.Get("enable_data_api").(bool))
+			requestUpdate = true
+		}
 	}
 
 	if d.HasChange("enabled_cloudwatch_logs_exports") {
