@@ -57,10 +57,12 @@ func testAccCheckAWSRedshiftSnapshotScheduleAssociationDestroy(s *terraform.Stat
 			ClusterIdentifier:  aws.String(clusterIdentifier),
 		})
 
-		if err == nil {
-			if len(resp.SnapshotSchedules) != 0 {
-				return fmt.Errorf("Redshift Cluster(%s) Snapshot Schedule (%s) association still exists", clusterIdentifier, scheduleIdentifier)
-			}
+		if err != nil {
+			return err
+		}
+
+		if resp != nil && len(resp.SnapshotSchedules) > 0 {
+			return fmt.Errorf("Redshift Cluster (%s) Snapshot Schedule (%s) Association still exist", clusterIdentifier, scheduleIdentifier)
 		}
 
 		return err
