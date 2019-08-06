@@ -72,7 +72,7 @@ The following arguments are supported:
 
 ## managed_service_data Configuration block
 
--> Additonal information about this configuration can be found in the [AWS Firewall Manager SecurityServicePolicyData API Reference](https://docs.aws.amazon.com/fms/2018-01-01/APIReference/API_SecurityServicePolicyData.html)
+-> Additional information about this configuration can be found in the [AWS Firewall Manager SecurityServicePolicyData API Reference](https://docs.aws.amazon.com/fms/2018-01-01/APIReference/API_SecurityServicePolicyData.html)
 
 * `type` - (Required) Type currently only supports WAF.
 * `rule_groups` - (Required) A rule group block, maximum of 2 rule group blocks are currently supported.
