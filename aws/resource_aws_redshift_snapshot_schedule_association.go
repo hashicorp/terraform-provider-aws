@@ -204,15 +204,13 @@ func resourceAwsRedshiftSnapshotScheduleAssociationStateRefreshFunc(clusterIdent
 }
 
 func waitForRedshiftSnapshotScheduleAssociationActive(conn *redshift.Redshift, timeout time.Duration, clusterIdentifier, scheduleIdentifier string) error {
-	// sleep 30 seconds to give it time, until association information included to describe response
-	time.Sleep(30 * time.Second)
-
 	stateConf := &resource.StateChangeConf{
 		Pending:    []string{redshift.ScheduleStateModifying},
 		Target:     []string{redshift.ScheduleStateActive},
 		Refresh:    resourceAwsRedshiftSnapshotScheduleAssociationStateRefreshFunc(clusterIdentifier, scheduleIdentifier, conn),
 		Timeout:    timeout,
 		MinTimeout: 10 * time.Second,
+		Delay:      30 * time.Second,
 	}
 
 	if _, err := stateConf.WaitForState(); err != nil {
