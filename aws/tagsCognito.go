@@ -21,7 +21,7 @@ func setTagsCognito(conn *cognitoidentity.CognitoIdentity, d *schema.ResourceDat
 			log.Printf("[DEBUG] Removing tags: %s", remove)
 			tagsToRemove := &cognitoidentity.UntagResourceInput{
 				ResourceArn: aws.String(d.Get("arn").(string)),
-				TagKeys:     cognitoStringsToPointyString(remove),
+				TagKeys:     aws.StringSlice(remove),
 			}
 
 			_, err := conn.UntagResource(tagsToRemove)
@@ -33,7 +33,7 @@ func setTagsCognito(conn *cognitoidentity.CognitoIdentity, d *schema.ResourceDat
 			log.Printf("[DEBUG] Creating tags: %s", create)
 			tagsToAdd := &cognitoidentity.TagResourceInput{
 				ResourceArn: aws.String(d.Get("arn").(string)),
-				Tags:        cognitoTagsFromMap(create),
+				Tags:        aws.StringMap(create),
 			}
 			_, err := conn.TagResource(tagsToAdd)
 			if err != nil {
@@ -43,24 +43,6 @@ func setTagsCognito(conn *cognitoidentity.CognitoIdentity, d *schema.ResourceDat
 	}
 
 	return nil
-}
-
-func cognitoStringsToPointyString(s []string) []*string {
-	results := make([]*string, len(s))
-	for i, x := range s {
-		results[i] = aws.String(x)
-	}
-
-	return results
-}
-
-func cognitoTagsFromMap(responseTags map[string]string) map[string]*string {
-	results := make(map[string]*string, len(responseTags))
-	for k, v := range responseTags {
-		results[k] = aws.String(v)
-	}
-
-	return results
 }
 
 // diffTags takes our tags locally and the ones remotely and returns
@@ -80,6 +62,9 @@ func diffTagsCognito(oldTags, newTags map[string]string) (map[string]string, []s
 		if !ok || old != v {
 			// Delete it!
 			remove = append(remove, k)
+		} else if ok {
+			// already present so remove from new
+			delete(create, k)
 		}
 	}
 
