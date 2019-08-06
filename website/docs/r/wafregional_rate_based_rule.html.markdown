@@ -68,3 +68,11 @@ See the [WAF Documentation](https://docs.aws.amazon.com/waf/latest/APIReference/
 In addition to all arguments above, the following attributes are exported:
 
 * `id` - The ID of the WAF Regional rate based rule.
+
+## Import
+
+WAF Regional Rate Based Rule can be imported using the id, e.g.
+
+```
+$ terraform import aws_wafregional_rate_based_rule.wafrule a1b2c3d4-d5f6-7777-8888-9999aaaabbbbcccc
+```
