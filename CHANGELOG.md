@@ -22,6 +22,7 @@ BUG FIXES:
 * resource/aws_lambda_event_source_mapping: Final retries after timeout when creating, updating, and deleting event source mappings [GH-9553]
 * resource/aws_lambda_function: Final retry when creating lambda function [GH-9553]
 * resource/aws_lambda_permission: Final retries when creating, reading, and deleting lambda permissions [GH-9553]
+* resource/aws_sns_platform_application: Final retry after timeout error updating SNS platform application [GH-9607]
 
 ## 2.22.0 (August 01, 2019)
 
