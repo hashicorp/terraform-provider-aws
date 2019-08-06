@@ -2436,8 +2436,8 @@ type ContainerDetail struct {
 	// The Amazon Resource Name (ARN) associated with the job upon execution.
 	JobRoleArn *string `locationName:"jobRoleArn" type:"string"`
 
-	// Linux-specific modifications that are applied to the container, such as Linux
-	// kernel capabilities.
+	// Linux-specific modifications that are applied to the container, such as details
+	// for device mappings.
 	LinuxParameters *LinuxParameters `locationName:"linuxParameters" type:"structure"`
 
 	// The name of the CloudWatch Logs log stream associated with the container.
@@ -2780,8 +2780,8 @@ type ContainerProperties struct {
 	// for AWS permissions.
 	JobRoleArn *string `locationName:"jobRoleArn" type:"string"`
 
-	// Linux-specific modifications that are applied to the container, such as Linux
-	// kernel capabilities.
+	// Linux-specific modifications that are applied to the container, such as details
+	// for device mappings.
 	LinuxParameters *LinuxParameters `locationName:"linuxParameters" type:"structure"`
 
 	// The hard limit (in MiB) of memory to present to the container. If your container
@@ -3795,7 +3795,8 @@ func (s *DescribeJobsOutput) SetJobs(v []*JobDetail) *DescribeJobsOutput {
 type Device struct {
 	_ struct{} `type:"structure"`
 
-	// The path inside the container at which to expose the host device.
+	// The path inside the container at which to expose the host device. By default
+	// the hostPath value is used.
 	ContainerPath *string `locationName:"containerPath" type:"string"`
 
 	// The path for the device on the host container instance.
@@ -4554,8 +4555,8 @@ func (s *LaunchTemplateSpecification) SetVersion(v string) *LaunchTemplateSpecif
 	return s
 }
 
-// Linux-specific modifications that are applied to the container, such as Linux
-// kernel capabilities.
+// Linux-specific modifications that are applied to the container, such as details
+// for device mappings.
 type LinuxParameters struct {
 	_ struct{} `type:"structure"`
 

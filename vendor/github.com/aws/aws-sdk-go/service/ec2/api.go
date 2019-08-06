@@ -93148,6 +93148,9 @@ const (
 
 	// AllocationStrategyDiversified is a AllocationStrategy enum value
 	AllocationStrategyDiversified = "diversified"
+
+	// AllocationStrategyCapacityOptimized is a AllocationStrategy enum value
+	AllocationStrategyCapacityOptimized = "capacityOptimized"
 )
 
 const (
@@ -95236,6 +95239,9 @@ const (
 
 	// SpotAllocationStrategyDiversified is a SpotAllocationStrategy enum value
 	SpotAllocationStrategyDiversified = "diversified"
+
+	// SpotAllocationStrategyCapacityOptimized is a SpotAllocationStrategy enum value
+	SpotAllocationStrategyCapacityOptimized = "capacity-optimized"
 )
 
 const (
