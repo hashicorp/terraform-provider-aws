@@ -51,15 +51,6 @@ func testAccAwsAcmCertificateRandomSubDomain(rootDomain string) string {
 	return fmt.Sprintf("tf-acc-%s.%s", acctest.RandString(56-len(rootDomain)), rootDomain)
 }
 
-func testAccAwsAcmCAARNFromEnv(t *testing.T) string {
-	if os.Getenv("ACM_CA_ARN") == "" {
-		t.Skip(
-			"Environment variable ACM_CA_ARN is not set. " +
-				"This must to be a valid PCA")
-	}
-	return os.Getenv("ACM_CA_ARN")
-}
-
 func TestAccAWSAcmCertificate_emailValidation(t *testing.T) {
 	rootDomain := testAccAwsAcmCertificateDomainFromEnv(t)
 	domain := testAccAwsAcmCertificateRandomSubDomain(rootDomain)
@@ -156,8 +147,9 @@ func TestAccAWSAcmCertificate_root(t *testing.T) {
 }
 
 func TestAccAWSAcmCertificate_privateCert(t *testing.T) {
-	rootDomain := testAccAwsAcmCertificateDomainFromEnv(t)
-	caARN := testAccAwsAcmCAARNFromEnv(t)
+	certificateAuthorityResourceName := "aws_acmpca_certificate_authority.test"
+	resourceName := "aws_acm_certificate.cert"
+	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -165,19 +157,19 @@ func TestAccAWSAcmCertificate_privateCert(t *testing.T) {
 		CheckDestroy: testAccCheckAcmCertificateDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAcmCertificateConfig_privateCert(rootDomain, caARN),
+				Config: testAccAcmCertificateConfig_privateCert(rName),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestMatchResourceAttr("aws_acm_certificate.cert", "arn", certificateArnRegex),
-					resource.TestCheckResourceAttr("aws_acm_certificate.cert", "domain_name", rootDomain),
-					resource.TestCheckResourceAttr("aws_acm_certificate.cert", "domain_validation_options.#", "0"),
-					resource.TestCheckResourceAttr("aws_acm_certificate.cert", "subject_alternative_names.#", "0"),
-					resource.TestCheckResourceAttr("aws_acm_certificate.cert", "validation_emails.#", "0"),
-					resource.TestCheckResourceAttr("aws_acm_certificate.cert", "validation_method", "NONE"),
-					resource.TestCheckResourceAttr("aws_acm_certificate.cert", "certificate_authority_arn", caARN),
+					resource.TestMatchResourceAttr(resourceName, "arn", certificateArnRegex),
+					resource.TestCheckResourceAttr(resourceName, "domain_name", fmt.Sprintf("%s.terraformtesting.com", rName)),
+					resource.TestCheckResourceAttr(resourceName, "domain_validation_options.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "subject_alternative_names.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "validation_emails.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "validation_method", "NONE"),
+					resource.TestCheckResourceAttrPair(resourceName, "certificate_authority_arn", certificateAuthorityResourceName, "arn"),
 				),
 			},
 			{
-				ResourceName:      "aws_acm_certificate.cert",
+				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
 			},
@@ -603,14 +595,27 @@ resource "aws_acm_certificate" "cert" {
 
 }
 
-func testAccAcmCertificateConfig_privateCert(domainName, caARN string) string {
+func testAccAcmCertificateConfig_privateCert(rName string) string {
 	return fmt.Sprintf(`
-resource "aws_acm_certificate" "cert" {
-  domain_name               = "%s"
-  certificate_authority_arn = "%s"
-}
-`, domainName, caARN)
+resource "aws_acmpca_certificate_authority" "test" {
+  permanent_deletion_time_in_days = 7
+  type                            = "ROOT"
 
+  certificate_authority_configuration {
+    key_algorithm     = "RSA_4096"
+    signing_algorithm = "SHA512WITHRSA"
+
+    subject {
+      common_name = "terraformtesting.com"
+    }
+  }
+}
+
+resource "aws_acm_certificate" "cert" {
+  domain_name               = "%s.terraformtesting.com"
+  certificate_authority_arn = "${aws_acmpca_certificate_authority.test.arn}"
+}
+`, rName)
 }
 
 func testAccAcmCertificateConfig_subjectAlternativeNames(domainName, subjectAlternativeNames, validationMethod string) string {

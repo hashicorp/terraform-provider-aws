@@ -1,7 +1,6 @@
 package aws
 
 import (
-	"crypto/md5"
 	"errors"
 	"fmt"
 	"log"
@@ -194,7 +193,7 @@ func resourceAwsAcmCertificateCreateRequested(d *schema.ResourceData, meta inter
 	acmconn := meta.(*AWSClient).acmconn
 	params := &acm.RequestCertificateInput{
 		DomainName:       aws.String(strings.TrimSuffix(d.Get("domain_name").(string), ".")),
-		IdempotencyToken: aws.String(resource.UniqueId()),
+		IdempotencyToken: aws.String(resource.PrefixedUniqueId("tf")), // 32 character limit
 		Options:          expandAcmCertificateOptions(d.Get("options").([]interface{})),
 	}
 
@@ -344,7 +343,8 @@ func convertValidationOptions(certificate *acm.CertificateDetail) ([]map[string]
 	var domainValidationResult []map[string]interface{}
 	var emailValidationResult []string
 
-	if *certificate.Type == acm.CertificateTypeAmazonIssued {
+	switch aws.StringValue(certificate.Type) {
+	case acm.CertificateTypeAmazonIssued:
 		if len(certificate.DomainValidationOptions) == 0 && aws.StringValue(certificate.Status) == acm.DomainStatusPendingValidation {
 			log.Printf("[DEBUG] No validation options need to retry.")
 			return nil, nil, fmt.Errorf("No validation options need to retry.")
@@ -366,6 +366,12 @@ func convertValidationOptions(certificate *acm.CertificateDetail) ([]map[string]
 				log.Printf("[DEBUG] No validation options need to retry: %#v", o)
 				return nil, nil, fmt.Errorf("No validation options need to retry: %#v", o)
 			}
+		}
+	case acm.CertificateTypePrivate:
+		// While ACM PRIVATE certificates do not need to be validated, there is a slight delay for
+		// the API to fill in all certificate details, which is during the PENDING_VALIDATION status.
+		if aws.StringValue(certificate.Status) == acm.DomainStatusPendingValidation {
+			return nil, nil, fmt.Errorf("certificate still pending issuance")
 		}
 	}
 
