@@ -3,13 +3,14 @@ package aws
 import (
 	"encoding/json"
 	"fmt"
+	"log"
+	"reflect"
+
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/fms"
-	"github.com/hashicorp/terraform/helper/hashcode"
-	"github.com/hashicorp/terraform/helper/schema"
-	"github.com/hashicorp/terraform/helper/validation"
-	"log"
-	"strings"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	"github.com/mitchellh/mapstructure"
 )
 
 func resourceAwsFmsPolicy() *schema.Resource {
@@ -43,15 +44,22 @@ func resourceAwsFmsPolicy() *schema.Resource {
 
 			"exclude_map": {
 				Type:     schema.TypeSet,
+				MaxItems: 1,
 				Optional: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"account": {
-							Type:     schema.TypeList,
-							Required: true,
+							Type:     schema.TypeSet,
+							Optional: true,
 							Elem: &schema.Schema{
-								Type:         schema.TypeString,
-								ValidateFunc: validation.StringLenBetween(12, 12),
+								Type: schema.TypeString,
+							},
+						},
+						"orgunit": {
+							Type:     schema.TypeSet,
+							Optional: true,
+							Elem: &schema.Schema{
+								Type: schema.TypeString,
 							},
 						},
 					},
@@ -60,15 +68,22 @@ func resourceAwsFmsPolicy() *schema.Resource {
 
 			"include_map": {
 				Type:     schema.TypeSet,
+				MaxItems: 1,
 				Optional: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"account": {
-							Type:     schema.TypeList,
-							Required: true,
+							Type:     schema.TypeSet,
+							Optional: true,
 							Elem: &schema.Schema{
-								Type:         schema.TypeString,
-								ValidateFunc: validation.StringLenBetween(12, 12),
+								Type: schema.TypeString,
+							},
+						},
+						"orgunit": {
+							Type:     schema.TypeSet,
+							Optional: true,
+							Elem: &schema.Schema{
+								Type: schema.TypeString,
 							},
 						},
 					},
@@ -99,65 +114,21 @@ func resourceAwsFmsPolicy() *schema.Resource {
 			"resource_tags": tagsSchema(),
 
 			"security_service_policy_data": {
-				Type:     schema.TypeSet,
+				Type:     schema.TypeList,
+				MaxItems: 1,
 				Required: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"managed_service_data": {
-							Type:     schema.TypeSet,
-							Optional: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"type": {
-										Required: true,
-										Type:     schema.TypeString,
-									},
-									"rule_groups": {
-										Type:     schema.TypeSet,
-										Required: true,
-										Elem: &schema.Resource{
-											Schema: map[string]*schema.Schema{
-												"id": {
-													Type:     schema.TypeString,
-													Required: true,
-												},
-												"override_action": {
-													Type:     schema.TypeMap,
-													Required: true,
-													Elem: &schema.Resource{
-														Schema: map[string]*schema.Schema{
-															"type": {
-																Type:         schema.TypeString,
-																Required:     true,
-																ValidateFunc: validation.StringInSlice([]string{"COUNT", "NONE"}, false),
-															},
-														},
-													},
-												},
-											},
-										},
-									},
-									"default_action": {
-										Type:     schema.TypeMap,
-										Optional: true,
-										Elem: &schema.Resource{
-											Schema: map[string]*schema.Schema{
-												"type": {
-													Required: true,
-													Type:     schema.TypeString,
-												},
-											},
-										},
-									},
-								},
-							},
+						"waf":   wafSchema(),
+						"wafv2": wafV2Schema(),
+						"shield_advanced": {
+							Type:         schema.TypeBool,
+							ExactlyOneOf: []string{"security_service_policy_data.0.waf", "security_service_policy_data.0.wafv2", "security_service_policy_data.0.shield_advanced", "security_service_policy_data.0.security_groups_common", "security_service_policy_data.0.security_groups_content_audit", "security_service_policy_data.0.security_groups_usage_audit"},
+							Optional:     true,
 						},
-						"type": {
-							Type:         schema.TypeString,
-							Required:     true,
-							ForceNew:     true,
-							ValidateFunc: validation.StringInSlice([]string{"WAF", "ADVANCED_SHIELD"}, false),
-						},
+						"security_groups_common":        securityGroupsCommon(),
+						"security_groups_content_audit": securityGroupsContentAudit(),
+						"security_groups_usage_audit":   securityGroupsUsageAudit(),
 					},
 				},
 			},
@@ -167,6 +138,322 @@ func resourceAwsFmsPolicy() *schema.Resource {
 			},
 		},
 	}
+}
+
+func securityGroupsCommon() *schema.Schema {
+	return &schema.Schema{
+		Type:         schema.TypeList,
+		MaxItems:     1,
+		ExactlyOneOf: []string{"security_service_policy_data.0.waf", "security_service_policy_data.0.wafv2", "security_service_policy_data.0.shield_advanced", "security_service_policy_data.0.security_groups_common", "security_service_policy_data.0.security_groups_content_audit", "security_service_policy_data.0.security_groups_usage_audit"},
+		Optional:     true,
+		Elem: &schema.Resource{
+			Schema: map[string]*schema.Schema{
+				"revert_manual_security_group_changes": {
+					Type:     schema.TypeBool,
+					Optional: true,
+				},
+				"exclusive_resource_security_group_management": {
+					Type:     schema.TypeBool,
+					Optional: true,
+				},
+				"security_groups": {
+					Type:     schema.TypeSet,
+					Required: true,
+					Elem:     schema.TypeString,
+				},
+				"remediation_enabled": {
+					Type:     schema.TypeBool,
+					Optional: true,
+				},
+				"resource_type": {
+					Type:     schema.TypeString,
+					Required: true,
+				},
+			},
+		},
+	}
+}
+
+func securityGroupsContentAudit() *schema.Schema {
+	return &schema.Schema{
+		Type:         schema.TypeList,
+		MaxItems:     1,
+		ExactlyOneOf: []string{"security_service_policy_data.0.waf", "security_service_policy_data.0.wafv2", "security_service_policy_data.0.shield_advanced", "security_service_policy_data.0.security_groups_common", "security_service_policy_data.0.security_groups_content_audit", "security_service_policy_data.0.security_groups_usage_audit"},
+		Optional:     true,
+		Elem: &schema.Resource{
+			Schema: map[string]*schema.Schema{
+				"revert_manual_security_group_changes": {
+					Type:     schema.TypeBool,
+					Optional: true,
+				},
+				"security_group_action": {
+					Type:     schema.TypeString,
+					Required: true,
+				},
+				"security_groups": {
+					Type:     schema.TypeSet,
+					Required: true,
+					Elem:     schema.TypeString,
+				},
+				"remediation_enabled": {
+					Type:     schema.TypeBool,
+					Optional: true,
+				},
+				"resource_type": {
+					Type:     schema.TypeString,
+					Required: true,
+				},
+			},
+		},
+	}
+}
+
+func securityGroupsUsageAudit() *schema.Schema {
+	return &schema.Schema{
+		Type:         schema.TypeList,
+		MaxItems:     1,
+		ExactlyOneOf: []string{"security_service_policy_data.0.waf", "security_service_policy_data.0.wafv2", "security_service_policy_data.0.shield_advanced", "security_service_policy_data.0.security_groups_common", "security_service_policy_data.0.security_groups_content_audit", "security_service_policy_data.0.security_groups_usage_audit"},
+		Optional:     true,
+		Elem: &schema.Resource{
+			Schema: map[string]*schema.Schema{
+				"revert_manual_security_group_changes": {
+					Type:     schema.TypeBool,
+					Optional: true,
+				},
+				"security_group_action": {
+					Type:     schema.TypeString,
+					Required: true,
+				},
+				"security_groups": {
+					Type:     schema.TypeSet,
+					Required: true,
+					Elem:     schema.TypeString,
+				},
+				"remediation_enabled": {
+					Type:     schema.TypeBool,
+					Optional: true,
+				},
+				"resource_type": {
+					Type:     schema.TypeString,
+					Required: true,
+				},
+			},
+		},
+	}
+}
+
+func wafSchema() *schema.Schema {
+	return &schema.Schema{
+		Type:         schema.TypeList,
+		MaxItems:     1,
+		ExactlyOneOf: []string{"security_service_policy_data.0.waf", "security_service_policy_data.0.wafv2", "security_service_policy_data.0.shield_advanced", "security_service_policy_data.0.security_groups_common", "security_service_policy_data.0.security_groups_content_audit", "security_service_policy_data.0.security_groups_usage_audit"},
+		Optional:     true,
+		Elem: &schema.Resource{
+			Schema: map[string]*schema.Schema{
+				"rule_groups": {
+					Type:     schema.TypeSet,
+					Optional: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"id": {
+								Type:     schema.TypeString,
+								Required: true,
+							},
+							"override_action": {
+								Type:     schema.TypeSet,
+								Optional: true,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"type": {
+											Type:     schema.TypeString,
+											Required: true,
+										},
+										"default_action": {
+											Type:     schema.TypeString,
+											Required: true,
+										},
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+		},
+	}
+}
+
+func wafV2Schema() *schema.Schema {
+	return &schema.Schema{
+		Type:         schema.TypeList,
+		MaxItems:     1,
+		ExactlyOneOf: []string{"security_service_policy_data.0.waf", "security_service_policy_data.0.wafv2", "security_service_policy_data.0.shield_advanced", "security_service_policy_data.0.security_groups_common", "security_service_policy_data.0.security_groups_content_audit", "security_service_policy_data.0.security_groups_usage_audit"},
+		Optional:     true,
+		Elem: &schema.Resource{
+			Schema: map[string]*schema.Schema{
+				"preprocess_rule_groups": {
+					Type:     schema.TypeSet,
+					Optional: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"rule_group_arn": {
+								Type:     schema.TypeString,
+								Required: true,
+							},
+							"override_action": {
+								Type:     schema.TypeString,
+								Required: true,
+							},
+						},
+					},
+				},
+				"managed_rule_group_identifier": {
+					Type:     schema.TypeList,
+					MaxItems: 1,
+					Optional: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"version": {
+								Type:     schema.TypeString,
+								Optional: true,
+							},
+							"vendor_name": {
+								Type:     schema.TypeString,
+								Optional: true,
+							},
+							"managed_rule_group_name": {
+								Type:     schema.TypeString,
+								Optional: true,
+							},
+						},
+					},
+				},
+				"rule_group_type": {
+					Type:     schema.TypeString,
+					Optional: true,
+				},
+				"exclude_rule_groups": {
+					Type:     schema.TypeSet,
+					Optional: true,
+					Elem:     schema.TypeString,
+				},
+				"post_process_rule_groups": {
+					Type:     schema.TypeSet,
+					Optional: true,
+					Elem:     schema.TypeString,
+				},
+				"default_action": {
+					Type:     schema.TypeString,
+					Optional: true,
+				},
+				"override_customer_web_acl_association": {
+					Type:     schema.TypeBool,
+					Optional: true,
+				},
+				"logging_configuration": {
+					Type:     schema.TypeSet,
+					Optional: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"log_destination_configs": {
+								Type:     schema.TypeSet,
+								Required: true,
+								Elem:     schema.TypeString,
+							},
+							"redacted_fields": {
+								Type:     schema.TypeSet,
+								Optional: true,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"redacted_field_type": {
+											Type:     schema.TypeString,
+											Required: true,
+										},
+										"redacted_field_value": {
+											Type:     schema.TypeString,
+											Optional: true,
+										},
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+		},
+	}
+}
+
+// Shared structs
+type fmsPolicyBasicType struct {
+	Type string `json:"type" mapstructure:"type"`
+}
+
+// WAF structs
+type fmsPolicyManagedServiceDataWAF struct {
+	Type       string               `json:"type" mapstructure:"type"`
+	RuleGroups []fmsPolicyRuleGroup `json:"ruleGroups" mapstructure:"rule_groups"`
+}
+
+type fmsPolicyRuleGroup struct {
+	ID              string             `json:"id" mapstructure:"id"`
+	OverrrideAction fmsPolicyBasicType `json:"overrideAction" mapstructure:"override_action"`
+}
+
+// WAFv2 structs
+type fmsPolicyManagedServiceDataWAFV2 struct {
+	Type                              string                        `json:"type" mapstructure:"type"`
+	PreProcessRuleGroups              []fmsPolicyProcessRuleGroup   `json:"preProcessRuleGroups" mapstructure:"preprocess_rule_groups"`
+	PostProcessRuleGroups             []fmsPolicyProcessRuleGroup   `json:"postProcessRuleGroups" mapstructure:"postprocess_rule_groups"`
+	DefaultAction                     fmsPolicyBasicType            `json:"defaultAction" mapstructure:"default_action"`
+	OverrideCustomerWebACLAssociation bool                          `json:"overrideCustomerWebACLAssociation" mapstructure:"override_customer_web_acl_association"`
+	LoggingConfiguration              fmsPolicyLoggingConfiguration `json:"loggingConfiguration" mapstructure:"logging_configuration"`
+}
+
+type fmsPolicyLoggingConfiguration struct {
+	LogDestinationConfigs []string                 `json:"logDestinationConfigs" mapstructure:"log_destination_configs"`
+	RedactedFields        []fmsPolicyRedactedField `json:"redactedFields" mapstructure:"redacted_fields"`
+}
+
+type fmsPolicyRedactedField struct {
+	RedactedFieldType  string `json:"redactedFieldType" mapstructure:"redacted_field_type"`
+	RedactedFieldValue string `json:"redactedFieldValue" mapstructure:"redacted_field_value"`
+}
+
+type fmsPolicyRuleGroupIdentifier struct {
+	Version              string `json:"version" mapstructure:"version"`
+	VendorName           string `json:"vendorName" mapstructure:"vendor_name"`
+	ManagedRuleGroupName string `json:"managedRuleGroupName" mapstructure:"managed_rule_group_name"`
+}
+
+type fmsPolicyProcessRuleGroup struct {
+	RuleGroupARN               string                       `json:"ruleGroupArn" mapstructure:"rule_group_arn"`
+	OverrideAction             fmsPolicyBasicType           `json:"overrideAction" mapstructure:"override_action"`
+	ManagedRuleGroupIdentifier fmsPolicyRuleGroupIdentifier `json:"managedRuleGroupIdentifier" mapstructure:"managed_rule_group_identifier"`
+	RuleGroupType              string                       `json:"ruleGroupType" mapstructure:"rule_group_type"`
+	ExcludeRules               []string                     `json:"excludeRules" mapstructure:"excluded_rules"`
+}
+
+// SECURITY_GROUPS_COMMON structs
+type fmsPolicyManagedServiceDataSecurityGroupsCommon struct {
+	Type                                     string               `json:"type" mapstructure:"type"`
+	RevertManualSecurityGroupChanges         bool                 `json:"revertManualSecurityGroupChanges" mapstructure:"revert_manual_security_group_changes"`
+	ExclusiveResourceSecurityGroupManagement bool                 `json:"exclusiveResourceSecurityGroupManagement" mapstructure:"exclusive_resource_security_group_management"`
+	SecurityGroups                           []fmsPolicyRuleGroup `json:"ruleGroups" mapstructure:"security_groups"`
+}
+
+// SECURITY_GROUPS_CONTENT_AUDIT structs
+type fmsPolicyManagedServiceDataSecurityGroupsContentAudit struct {
+	Type                string               `json:"type" mapstructure:"type"`
+	SecurityGroups      []fmsPolicyRuleGroup `json:"ruleGroups" mapstructure:"security_groups"`
+	SecurityGroupAction fmsPolicyBasicType   `json:"securityGroupAction" mapstructure:"security_group_action"`
+}
+
+// SECURITY_GROUPS_USAGE_AUDIT structs
+type fmsPolicyManagedServiceDataSecurityGroupsUsageAudit struct {
+	Type                            string `json:"type" mapstructure:"type"`
+	DeleteUnusedSecurityGroups      bool   `json:"deleteUnusedSecurityGroups" mapstructure:"delete_unused_security_groups"`
+	CoalesceRedundantSecurityGroups bool   `json:"coalesceRedundantSecurityGroups" mapstructure:"coalesce_redundant_security_groups"`
 }
 
 func resourceAwsFmsPolicyCreate(d *schema.ResourceData, meta interface{}) error {
@@ -181,7 +468,10 @@ func resourceAwsFmsPolicyCreate(d *schema.ResourceData, meta interface{}) error 
 	}
 
 	if v, ok := d.GetOk("security_service_policy_data"); ok {
-		fmsPolicy.SecurityServicePolicyData = expandAwsFmsManagedSecurityData(v.(*schema.Set))
+		var err error
+		if fmsPolicy.SecurityServicePolicyData, err = expandSecurityServicePolicyData(v.([]interface{})[0].(map[string]interface{})); err != nil {
+			return err
+		}
 	}
 
 	if rTags, tagsOk := d.GetOk("resource_tags"); tagsOk {
@@ -189,11 +479,11 @@ func resourceAwsFmsPolicyCreate(d *schema.ResourceData, meta interface{}) error 
 	}
 
 	if v, ok := d.GetOk("include_map"); ok {
-		fmsPolicy.IncludeMap = expandAccountList(v.(*schema.Set))
+		fmsPolicy.IncludeMap = expandFMSPolicyMap(v.(*schema.Set))
 	}
 
 	if v, ok := d.GetOk("exclude_map"); ok {
-		fmsPolicy.ExcludeMap = expandAccountList(v.(*schema.Set))
+		fmsPolicy.ExcludeMap = expandFMSPolicyMap(v.(*schema.Set))
 	}
 
 	params := &fms.PutPolicyInput{
@@ -237,13 +527,22 @@ func resourceAwsFmsPolicyRead(d *schema.ResourceData, meta interface{}) error {
 
 	d.Set("name", aws.StringValue(resp.Policy.PolicyName))
 	d.Set("exclude_resource_tags", aws.BoolValue(resp.Policy.ExcludeResourceTags))
-	d.Set("exclude_map", flattenFMSAccountMap(resp.Policy.ExcludeMap))
-	d.Set("include_map", flattenFMSAccountMap(resp.Policy.IncludeMap))
+	if err = d.Set("exclude_map", flattenFMSPolicyMap(resp.Policy.ExcludeMap)); err != nil {
+		return err
+	}
+	d.Set("include_map", flattenFMSPolicyMap(resp.Policy.IncludeMap))
 	d.Set("remediation_enabled", aws.BoolValue(resp.Policy.RemediationEnabled))
 	d.Set("resource_type_list", resp.Policy.ResourceTypeList)
 	d.Set("policy_update_token", aws.StringValue(resp.Policy.PolicyUpdateToken))
 	d.Set("resource_tags", flattenFMSResourceTags(resp.Policy.ResourceTags))
-	d.Set("security_service_policy_data", flattenFmsSecurityServicePolicyData(resp.Policy.SecurityServicePolicyData))
+
+	securityServicePolicyData, err := fmsPolicyUnmarshalManagedServiceData(resp.Policy.SecurityServicePolicyData)
+	if err != nil {
+		return err
+	}
+	if err = d.Set("security_service_policy_data", securityServicePolicyData); err != nil {
+		return err
+	}
 
 	return nil
 }
@@ -264,12 +563,12 @@ func resourceAwsFmsPolicyUpdate(d *schema.ResourceData, meta interface{}) error 
 	requestUpdate := false
 
 	if d.HasChange("exclude_map") {
-		fmsPolicy.ExcludeMap = expandAccountList(d.Get("exclude_map").(*schema.Set))
+		fmsPolicy.ExcludeMap = expandFMSPolicyMap(d.Get("exclude_map").(*schema.Set))
 		requestUpdate = true
 	}
 
 	if d.HasChange("include_map") {
-		fmsPolicy.ExcludeMap = expandAccountList(d.Get("include_map").(*schema.Set))
+		fmsPolicy.IncludeMap = expandFMSPolicyMap(d.Get("include_map").(*schema.Set))
 		requestUpdate = true
 	}
 
@@ -279,10 +578,13 @@ func resourceAwsFmsPolicyUpdate(d *schema.ResourceData, meta interface{}) error 
 	}
 
 	if requestUpdate {
-		fmsPolicy.SecurityServicePolicyData = expandAwsFmsManagedSecurityData(d.Get("security_service_policy_data").(*schema.Set))
+		var err error
+		if fmsPolicy.SecurityServicePolicyData, err = expandSecurityServicePolicyData(d.Get("security_service_policy_data").(*schema.Set).List()[0].(map[string]interface{})); err != nil {
+			return err
+		}
 
 		params := &fms.PutPolicyInput{Policy: fmsPolicy}
-		_, err := conn.PutPolicy(params)
+		_, err = conn.PutPolicy(params)
 
 		if err != nil {
 			return fmt.Errorf("Error modifying FMS Policy Rule: %s", err)
@@ -312,104 +614,149 @@ func resourceAwsFmsPolicyDelete(d *schema.ResourceData, meta interface{}) error 
 	return nil
 }
 
-func expandAccountList(set *schema.Set) map[string][]*string {
-	var accountList = make(map[string][]*string)
-
-	for _, account := range set.List() {
-		l := account.(map[string]interface{})
-		y := l["account"].([]interface{})
-
-		for _, a := range y {
-			accountList["ACCOUNT"] = append(accountList["ACCOUNT"], aws.String(a.(string)))
+func terraformMapDecodeHelper() mapstructure.DecodeHookFuncType {
+	return func(inType reflect.Type, outType reflect.Type, value interface{}) (interface{}, error) {
+		if inType == reflect.SliceOf(outType) && reflect.ValueOf(value).Len() == 1 {
+			return reflect.ValueOf(value).Index(0).Interface(), nil
 		}
+		return value, nil
 	}
-
-	return accountList
 }
 
-func constructManagedServiceData(m []interface{}) map[string]interface{} {
-	var msd map[string]interface{}
-
-	for _, data := range m {
-		m := data.(map[string]interface{})
-
-		rgl := m["rule_groups"].(*schema.Set).List()
-		rgs := constructRuleGroupsList(rgl)
-
-		msd = map[string]interface{}{
-			"type":          m["type"].(string),
-			"defaultAction": m["default_action"].(map[string]interface{}),
-			"ruleGroups":    rgs,
+func fmsPolicyUnmarshalManagedServiceData(policyData *fms.SecurityServicePolicyData) (map[string]interface{}, error) {
+	var policyStruct interface{}
+	var securityServicePolicy map[string]interface{}
+	var policyType string
+	switch *policyData.Type {
+	case "WAF":
+		policyType = "waf"
+		policyStruct = fmsPolicyManagedServiceDataWAF{}
+		if err := json.Unmarshal([]byte(*policyData.ManagedServiceData), &policyStruct); err != nil {
+			return nil, err
 		}
+	case "WAFV2":
+		policyType = "wafv2"
+		policyStruct = fmsPolicyManagedServiceDataWAFV2{}
+		if err := json.Unmarshal([]byte(*policyData.ManagedServiceData), &policyStruct); err != nil {
+			return nil, err
+		}
+	case "SECURITY_GROUPS_COMMON":
+		policyType = "security_groups_common"
+		policyStruct = fmsPolicyManagedServiceDataSecurityGroupsCommon{}
+		if err := json.Unmarshal([]byte(*policyData.ManagedServiceData), &policyStruct); err != nil {
+			return nil, err
+		}
+	case "SECURITY_CONTENT_AUDIT":
+		policyType = "security_groups_content_audit"
+		policyStruct = fmsPolicyManagedServiceDataSecurityGroupsContentAudit{}
+		if err := json.Unmarshal([]byte(*policyData.ManagedServiceData), &policyStruct); err != nil {
+			return nil, err
+		}
+	case "SECURITY_GROUPS_USAGE_AUDIT":
+		policyType = "security_groups_usage_audit"
+		policyStruct = fmsPolicyManagedServiceDataSecurityGroupsUsageAudit{}
+		if err := json.Unmarshal([]byte(*policyData.ManagedServiceData), &policyStruct); err != nil {
+			return nil, err
+		}
+	case "SHIELD_ADVANCED":
+		policyType = "security_groups_usage_audit"
+		policyStruct = true
 	}
-	return msd
+	var policyMap map[string]interface{}
+	err := mapstructure.Decode(policyStruct, policyMap)
+	securityServicePolicy[policyType] = policyMap
+	return securityServicePolicy, err
 }
 
-func constructRuleGroupsList(rgs []interface{}) []map[string]interface{} {
-	ruleGroup := []map[string]interface{}{}
-
-	for _, rg := range rgs {
-		log.Printf("[DEBUG] Rule_Group Keys: %s", rg)
-
-		m := rg.(map[string]interface{})
-
-		ruleId := m["id"].(string)
-		overrideAction := m["override_action"].(map[string]interface{})
-
-		rule := map[string]interface{}{
-			"id":             ruleId,
-			"overrideAction": overrideAction,
-		}
-
-		ruleGroup = append(ruleGroup, rule)
+func fmsPolicyMarshalManagedServiceData(policyMap interface{}, policyStruct interface{}) (*string, error) {
+	var managedServiceData []byte
+	var err error
+	decoderConfig := mapstructure.DecoderConfig{
+		WeaklyTypedInput: true,
+		Result:           &policyStruct,
+		DecodeHook:       terraformMapDecodeHelper(),
 	}
-	return ruleGroup
+	weakDecoder, err := mapstructure.NewDecoder(&decoderConfig)
+	if err != nil {
+		return nil, err
+	}
+	if err = weakDecoder.Decode(policyMap); err != nil {
+		return nil, err
+	}
+	if managedServiceData, err = json.Marshal(policyStruct); err != nil {
+		return nil, err
+	}
+	return aws.String(string(managedServiceData)), nil
 }
 
-func expandAwsFmsManagedSecurityData(set *schema.Set) *fms.SecurityServicePolicyData {
-	spd := set.List()
+func expandSecurityServicePolicyData(policyData map[string]interface{}) (*fms.SecurityServicePolicyData, error) {
+	var managedServiceData *string
+	var err error
+	var SecurityPolicyType string
+	switch {
+	case len(policyData["waf"].([]interface{})) == 1:
+		policyStruct := fmsPolicyManagedServiceDataWAF{}
+		SecurityPolicyType = "WAF"
+		managedServiceData, err = fmsPolicyMarshalManagedServiceData(policyData["waf"].([]interface{})[0], policyStruct)
 
-	securityServicePolicyData := &fms.SecurityServicePolicyData{}
+	case len(policyData["wafv2"].([]interface{})) == 1:
+		policyStruct := fmsPolicyManagedServiceDataWAFV2{}
+		SecurityPolicyType = "WAFV2"
+		managedServiceData, err = fmsPolicyMarshalManagedServiceData(policyData["wafv2"].([]interface{})[0], policyStruct)
 
-	for _, t := range spd {
-		spdMap := t.(map[string]interface{})
-		spdType := spdMap["type"].(string)
+	case policyData["shield_advanced"].(bool):
+		SecurityPolicyType = "SHIELD_ADVANCED"
+		managedServiceData = aws.String("{}")
 
-		securityServicePolicyData.Type = aws.String(spdType)
+	case len(policyData["security_groups_common"].([]interface{})) == 1:
+		policyStruct := fmsPolicyManagedServiceDataSecurityGroupsCommon{}
+		SecurityPolicyType = "SECURITY_GROUPS_COMMON"
+		managedServiceData, err = fmsPolicyMarshalManagedServiceData(policyData["security_groups_common"].([]interface{})[0], policyStruct)
 
-		switch spdType {
-		case "WAF":
-			if v, ok := spdMap["managed_service_data"]; !ok {
-				log.Printf("[DEBUG] Error Looking up Managed Service Data: %s", v)
-			} else {
-				spdPolicy := constructManagedServiceData(v.(*schema.Set).List())
+	case len(policyData["security_groups_content_audit"].([]interface{})) == 1:
+		policyStruct := fmsPolicyManagedServiceDataSecurityGroupsContentAudit{}
+		SecurityPolicyType = "SECURITY_GROUPS_CONTENT_AUDIT"
+		managedServiceData, err = fmsPolicyMarshalManagedServiceData(policyData["security_groups_content_audit"].([]interface{})[0], policyStruct)
 
-				js, err := json.Marshal(spdPolicy)
-				if err != nil {
-					log.Printf("[DEBUG] JSON Error: %s", err)
-				}
+	case len(policyData["security_groups_usage_audit"].([]interface{})) == 1:
+		policyStruct := fmsPolicyManagedServiceDataSecurityGroupsUsageAudit{}
+		SecurityPolicyType = "SECURITY_GROUPS_USAGE_AUDIT"
+		managedServiceData, err = fmsPolicyMarshalManagedServiceData(policyData["security_groups_usage_audit"].([]interface{})[0], policyStruct)
+	}
 
-				securityServicePolicyData.ManagedServiceData = aws.String(string(js))
+	return &fms.SecurityServicePolicyData{
+		Type:               aws.String(SecurityPolicyType),
+		ManagedServiceData: managedServiceData,
+	}, err
+}
+
+func expandFMSPolicyMap(set *schema.Set) map[string][]*string {
+	fmsPolicyMap := map[string][]*string{}
+	if set.Len() > 0 {
+		for key, listValue := range set.List()[0].(map[string]interface{}) {
+			for _, value := range listValue.([]interface{}) {
+				fmsPolicyMap[key] = append(fmsPolicyMap[key], aws.String(value.(string)))
 			}
 		}
 	}
-
-	return securityServicePolicyData
+	return fmsPolicyMap
 }
 
-func flattenFMSAccountMap(accountMap map[string][]*string) *schema.Set {
-	eMap := map[string]interface{}{}
+func flattenFMSPolicyMap(fmsPolicyMap map[string][]*string) []interface{} {
+	flatPolicyMap := map[string]interface{}{}
 
-	if _, ok := eMap["account"]; ok {
-		for _, v := range accountMap["ACCOUNT"] {
-			eMap["account"] = append(eMap["account"].([]*string), v)
+	for key, value := range fmsPolicyMap {
+		switch key {
+		case "account":
+			flatPolicyMap["account"] = value
+		case "orgunit":
+			flatPolicyMap["orgunit"] = value
+		default:
+			log.Printf("[WARNING] Unexpected key (%q) found in FMS policy", key)
 		}
 	}
 
-	s := schema.NewSet(fmsPolicyDataHash, []interface{}{})
-	s.Add(eMap)
-
-	return s
+	return []interface{}{flatPolicyMap}
 }
 
 func flattenFMSResourceTags(resourceTags []*fms.ResourceTag) map[string]interface{} {
@@ -421,67 +768,6 @@ func flattenFMSResourceTags(resourceTags []*fms.ResourceTag) map[string]interfac
 	return resTags
 }
 
-func flattenFmsManagedServiceData(sspdMsd map[string]interface{}) *schema.Set {
-	msdSS := schema.NewSet(fmsPolicyDataHash, []interface{}{})
-
-	msdData := map[string]interface{}{
-		"type": sspdMsd["type"].(string),
-	}
-
-	if sspdMsd["defaultAction"] != nil {
-		msdData["default_action"] = sspdMsd["defaultAction"]
-	}
-
-	msdData["rule_groups"] = flattenFmsMsdRuleGroupsList(sspdMsd)
-
-	msdSS.Add(msdData)
-
-	return msdSS
-}
-
-func flattenFmsMsdRuleGroupsList(sspdMsd map[string]interface{}) *schema.Set {
-	ruleGroupsSet := schema.NewSet(fmsPolicyDataHash, []interface{}{})
-	if sspdMsd["ruleGroups"] != nil {
-		for _, v := range sspdMsd["ruleGroups"].([]interface{}) {
-
-			rg := v.(map[string]interface{})
-
-			rule := map[string]interface{}{
-				"id":              rg["id"].(string),
-				"override_action": rg["overrideAction"].(map[string]interface{}),
-			}
-
-			ruleGroupsSet.Add(rule)
-		}
-	}
-	return ruleGroupsSet
-}
-
-func flattenFmsSecurityServicePolicyData(spd *fms.SecurityServicePolicyData) *schema.Set {
-	s := schema.NewSet(fmsPolicyDataHash, []interface{}{})
-
-	sspd := map[string]interface{}{
-		"type": aws.StringValue(spd.Type),
-	}
-
-	var policy map[string]interface{}
-
-	if spd.ManagedServiceData != nil {
-
-		msd := []byte(aws.StringValue(spd.ManagedServiceData))
-
-		if err := json.Unmarshal(msd, &policy); err != nil {
-			panic(err)
-		}
-
-		sspd["managed_service_data"] = flattenFmsManagedServiceData(policy)
-	}
-
-	s.Add(sspd)
-
-	return s
-}
-
 func constructResourceTags(rTags interface{}) []*fms.ResourceTag {
 	var rTagList []*fms.ResourceTag
 
@@ -491,18 +777,4 @@ func constructResourceTags(rTags interface{}) []*fms.ResourceTag {
 	}
 
 	return rTagList
-}
-
-func fmsPolicyDataHash(v interface{}) int {
-	var buf strings.Builder
-
-	m := v.(map[string]interface{})
-
-	if _, ok := m["Id"]; ok {
-		buf.WriteString(fmt.Sprintf("%s", m["Id"]))
-	} else {
-		buf.WriteString(fmt.Sprintf("%s-", m))
-	}
-
-	return hashcode.String(buf.String())
 }
