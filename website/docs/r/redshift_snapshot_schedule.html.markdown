@@ -27,8 +27,8 @@ The following arguments are supported:
 * `identifier_prefix` - (Optional, Forces new resource) Creates a unique
 identifier beginning with the specified prefix. Conflicts with `identifier`.
 * `description` - (Optional) The description of the snapshot schedule.
-* `definitions` - (Optional) The definition of the snapshot schedule. The definition is made up of schedule expressions, for example "cron(30 12 *)" or "rate(12 hours)".
-* `force_destroy` - (Optional) Whether to destroy all associated settings with clusters.
+* `definitions` - (Optional) The definition of the snapshot schedule. The definition is made up of schedule expressions, for example `cron(30 12 *)` or `rate(12 hours)`.
+* `force_destroy` - (Optional) Whether to destroy all associated clusters with this snapshot schedule on deletion. Must be enabled and applied before attempting deletion.
 * `tags` - (Optional) A mapping of tags to assign to the resource.
 
 ## Import
