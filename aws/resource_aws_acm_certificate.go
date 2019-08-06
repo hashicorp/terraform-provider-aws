@@ -114,9 +114,9 @@ func resourceAwsAcmCertificate() *schema.Resource {
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
 			"options": {
-				Type:             schema.TypeList,
-				Optional:         true,
-				MaxItems:         1,
+				Type:     schema.TypeList,
+				Optional: true,
+				MaxItems: 1,
 				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
 					if _, ok := d.GetOk("private_key"); ok {
 						// ignore diffs for imported certs; they have a different logging preference
@@ -134,7 +134,7 @@ func resourceAwsAcmCertificate() *schema.Resource {
 							Default:       acm.CertificateTransparencyLoggingPreferenceEnabled,
 							ForceNew:      true,
 							ConflictsWith: []string{"private_key", "certificate_body", "certificate_chain"},
-							ValidateFunc:  validation.StringInSlice([]string{
+							ValidateFunc: validation.StringInSlice([]string{
 								acm.CertificateTransparencyLoggingPreferenceEnabled,
 								acm.CertificateTransparencyLoggingPreferenceDisabled,
 							}, false),
