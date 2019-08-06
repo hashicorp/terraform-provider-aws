@@ -89,6 +89,10 @@ The following arguments are supported:
   * `private_key` - (Required) The certificate's PEM-formatted private key
   * `certificate_body` - (Required) The certificate's PEM-formatted public key
   * `certificate_chain` - (Optional) The certificate's PEM-formatted chain
+* Creating a private CA issued certificate
+  * `domain_name` - (Required) A domain name for which the certificate should be issued
+  * `certificate_authority_arn` - (Required) ARN of an ACMPCA
+  * `subject_alternative_names` - (Optional) A list of domains that should be SANs in the issued certificate
 * `tags` - (Optional) A mapping of tags to assign to the resource.
 
 ## options Configuration Block
