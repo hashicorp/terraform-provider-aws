@@ -20,6 +20,7 @@ ENHANCEMENTS:
 BUG FIXES:
 
 * resource/aws_acm_certificate: Wait for presence of `DomainValidationOptions` when requesting ACM certificates (previously the API would always immediately return this information during creation) [GH-9598]
+* resource/aws_cloudfront_distribution: Ensure deployment timeout matches documentation at 90 minutes [GH-9642]
 * resource/aws_lambda_event_source_mapping: Final retries after timeout when creating, updating, and deleting event source mappings [GH-9553]
 * resource/aws_lambda_function: Final retry when creating lambda function [GH-9553]
 * resource/aws_lambda_permission: Final retries when creating, reading, and deleting lambda permissions [GH-9553]
