@@ -126,6 +126,8 @@ func resourceAwsRDSCluster() *schema.Resource {
 				ForceNew: true,
 				Default:  "provisioned",
 				ValidateFunc: validation.StringInSlice([]string{
+					"global",        // (eric-luminal) backported
+					"parallelquery", // (eric-luminal) backported
 					"provisioned",
 					"serverless",
 				}, false),
