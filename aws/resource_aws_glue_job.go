@@ -47,6 +47,7 @@ func resourceAwsGlueJob() *schema.Resource {
 						"python_version": {
 							Type:         schema.TypeString,
 							Optional:     true,
+							Computed:     true,
 							ValidateFunc: validation.StringInSlice([]string{"2", "3"}, true),
 						},
 					},
@@ -336,7 +337,10 @@ func expandGlueJobCommand(l []interface{}) *glue.JobCommand {
 	jobCommand := &glue.JobCommand{
 		Name:           aws.String(m["name"].(string)),
 		ScriptLocation: aws.String(m["script_location"].(string)),
-		PythonVersion:  aws.String(m["python_version"].(string)),
+	}
+
+	if v, ok := m["python_version"].(string); ok && v != "" {
+		jobCommand.PythonVersion = aws.String(v)
 	}
 
 	return jobCommand
