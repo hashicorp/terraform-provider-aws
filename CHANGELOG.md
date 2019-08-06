@@ -19,6 +19,7 @@ ENHANCEMENTS:
 * resource/aws_iot_certificate: Mark `csr` argument as optional and add `certificate_pem`, `public_key`, and `private_key` attributes (support creating key and certificate) [GH-9283]
 * resource/aws_lambda_permission: Support resource import [GH-9369]
 * resource/aws_launch_configuration: Add `root_block_device` configuration block `encrypted` argument (support encryption on launch) [GH-7759]
+* resource/aws_wafregional_geo_match_set: Support resource import [GH-9620]
 * resource/aws_wafregional_rate_based_rule: Support resource import [GH-9621]
 
 BUG FIXES:
