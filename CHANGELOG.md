@@ -3,6 +3,7 @@
 FEATURES:
 
 * **New Data Source:** `aws_s3_bucket_objects` [GH-6968]
+* **New Resource:** `aws_dx_transit_virtual_interface` [GH-8522]
 
 ENHANCEMENTS:
 
