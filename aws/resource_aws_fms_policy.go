@@ -29,6 +29,12 @@ func resourceAwsFmsPolicy() *schema.Resource {
 				ForceNew: true,
 			},
 
+			"delete_all_policy_resources": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				Default:  true,
+			},
+
 			"exclude_resource_tags": {
 				Type:     schema.TypeBool,
 				Required: true,
@@ -42,7 +48,7 @@ func resourceAwsFmsPolicy() *schema.Resource {
 					Schema: map[string]*schema.Schema{
 						"account": {
 							Type:     schema.TypeList,
-							Optional: true,
+							Required: true,
 							Elem: &schema.Schema{
 								Type:         schema.TypeString,
 								ValidateFunc: validation.StringLenBetween(12, 12),
@@ -59,7 +65,7 @@ func resourceAwsFmsPolicy() *schema.Resource {
 					Schema: map[string]*schema.Schema{
 						"account": {
 							Type:     schema.TypeList,
-							Optional: true,
+							Required: true,
 							Elem: &schema.Schema{
 								Type:         schema.TypeString,
 								ValidateFunc: validation.StringLenBetween(12, 12),
@@ -71,7 +77,7 @@ func resourceAwsFmsPolicy() *schema.Resource {
 
 			"remediation_enabled": {
 				Type:     schema.TypeBool,
-				Optional: true,
+				Required: true,
 			},
 
 			"resource_type_list": {
@@ -103,28 +109,26 @@ func resourceAwsFmsPolicy() *schema.Resource {
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"type": {
-										Optional: true,
+										Required: true,
 										Type:     schema.TypeString,
 									},
 									"rule_groups": {
 										Type:     schema.TypeSet,
-										Optional: true,
+										Required: true,
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
 												"id": {
 													Type:     schema.TypeString,
-													Optional: true,
+													Required: true,
 												},
 												"override_action": {
 													Type:     schema.TypeMap,
-													Optional: true,
-													Default:  map[string]interface{}{},
+													Required: true,
 													Elem: &schema.Resource{
 														Schema: map[string]*schema.Schema{
 															"type": {
 																Type:         schema.TypeString,
-																Optional:     true,
-																Default:      "NONE",
+																Required:     true,
 																ValidateFunc: validation.StringInSlice([]string{"COUNT", "NONE"}, false),
 															},
 														},
@@ -139,8 +143,8 @@ func resourceAwsFmsPolicy() *schema.Resource {
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
 												"type": {
-													Type:    schema.TypeString,
-													Default: "BLOCK",
+													Required: true,
+													Type:     schema.TypeString,
 												},
 											},
 										},
@@ -294,7 +298,7 @@ func resourceAwsFmsPolicyDelete(d *schema.ResourceData, meta interface{}) error 
 
 	_, err := conn.DeletePolicy(&fms.DeletePolicyInput{
 		PolicyId:                 aws.String(d.Id()),
-		DeleteAllPolicyResources: aws.Bool(true),
+		DeleteAllPolicyResources: aws.Bool(d.Get("delete_all_policy_resources").(bool)),
 	})
 
 	if isAWSErr(err, fms.ErrCodeResourceNotFoundException, "") {
