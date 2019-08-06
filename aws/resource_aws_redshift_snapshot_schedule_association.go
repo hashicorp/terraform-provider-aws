@@ -98,16 +98,14 @@ func resourceAwsRedshiftSnapshotScheduleAssociationRead(d *schema.ResourceData, 
 	}
 
 	var associatedCluster *redshift.ClusterAssociatedToSchedule
-	foundAssociatedCluster := false
 	for _, cluster := range snapshotSchedule.AssociatedClusters {
 		if *cluster.ClusterIdentifier == clusterIdentifier {
 			associatedCluster = cluster
-			foundAssociatedCluster = true
 			break
 		}
 	}
 
-	if !foundAssociatedCluster {
+	if associatedCluster == nil {
 		return fmt.Errorf("Unable to find Redshift Cluster (%s)", clusterIdentifier)
 	}
 
