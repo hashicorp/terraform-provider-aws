@@ -151,7 +151,7 @@ func resourceAwsRedshiftSnapshotScheduleAssociationDelete(d *schema.ResourceData
 
 func resourceAwsRedshiftSnapshotScheduleAssociationParseId(id string) (clusterIdentifier, scheduleIdentifier string, err error) {
 	parts := strings.SplitN(id, "/", 2)
-	if len(parts) != 2 {
+	if len(parts) != 2 || parts[0] == "" || parts[1] == "" {
 		err = fmt.Errorf("aws_redshift_snapshot_schedule_association id must be of the form <ClusterIdentifier>/<ScheduleIdentifier>")
 		return
 	}
