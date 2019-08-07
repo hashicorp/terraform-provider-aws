@@ -15,6 +15,7 @@ ENHANCEMENTS:
 * resource/aws_acm_certificate: Support `options` configuration block `certificate_transparency_logging_preference` argument [GH-9413]
 * resource/aws_acm_certificate: Add `certificate_authority_arn` argument (support issuance of ACM private certificates) [GH-6666]
 * resource/aws_cognito_identity_pool: Add `tags` argument [GH-9639]
+* resource/aws_ecr_repository: Add `image_tag_mutability` argument (support immutable image tags) [GH-9557]
 * resource/aws_efs_file_system: Add `lifecycle_policy` configuration block (support transition to IA storage after 14, 30, 60, or 90 days) [GH-9636]
 * resource/aws_eks_cluster: Add `status` attribute [GH-9582]
 * resource/aws_glue_crawler: Add `catalog_target` configuration block [GH-9430]
