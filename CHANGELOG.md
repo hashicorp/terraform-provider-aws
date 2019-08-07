@@ -29,6 +29,7 @@ ENHANCEMENTS:
 BUG FIXES:
 
 * resource/aws_acm_certificate: Wait for presence of `DomainValidationOptions` when requesting ACM certificates (previously the API would always immediately return this information during creation) [GH-9598]
+* resource/aws_autoscaling_group: Final retries after timeouts creating, draining, and deleting ASGs and autoscaling helpers [GH-9649]
 * resource/aws_cloud9_environment_ec2: Final retries after timeouts creating and deleting Cloud9 environments [GH-9629]
 * resource/aws_cloudfront_distribution: Ensure deployment timeout matches documentation at 90 minutes [GH-9642]
 * resource/aws_datasync_agent: Final retries after timeouts creating datasync agent [GH-9608]
@@ -44,6 +45,7 @@ BUG FIXES:
 * resource/aws_organizations_policy_attachment: Final retry after timeout creating policy attachment [GH-9631]
 * resource/aws_secretsmanager_secret: Fianl retries after timeouts creating and updating secrets [GH-9632]
 * resource/aws_sns_platform_application: Final retry after timeout error updating SNS platform application [GH-9607]
+* resource/aws_vpc: Final retry after timeout deleting VPC [GH-9644]
 
 ## 2.22.0 (August 01, 2019)
 
