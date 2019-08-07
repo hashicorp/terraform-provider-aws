@@ -628,24 +628,6 @@ func (c *Config) Client() (interface{}, error) {
 	return client, nil
 }
 
-func parseDNSSuffixFromEndpoint(endpoint string, region string) (*string, error) {
-	e := strings.Split(endpoint, ".")
-
-	// Expect endpoints with at least three elements
-	// {service}.{optional region}.{one or more zones}.{root}
-	if len(e) < 2 {
-		return nil, fmt.Errorf("Could not determine URL Suffix from endpoint '%s'", endpoint)
-	}
-
-	// An endpoint may have the region in the second element
-	if e[1] == region {
-		return aws.String(strings.Join(e[2:], ".")), nil
-	}
-
-	// Without a region, the URL Suffix is everything past the first element
-	return aws.String(strings.Join(e[1:], ".")), nil
-}
-
 func hasEc2Classic(platforms []string) bool {
 	for _, p := range platforms {
 		if p == "EC2" {
