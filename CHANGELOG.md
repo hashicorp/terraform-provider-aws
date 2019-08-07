@@ -29,10 +29,20 @@ ENHANCEMENTS:
 BUG FIXES:
 
 * resource/aws_acm_certificate: Wait for presence of `DomainValidationOptions` when requesting ACM certificates (previously the API would always immediately return this information during creation) [GH-9598]
+* resource/aws_cloud9_environment_ec2: Final retries after timeouts creating and deleting Cloud9 environments [GH-9629]
 * resource/aws_cloudfront_distribution: Ensure deployment timeout matches documentation at 90 minutes [GH-9642]
+* resource/aws_datasync_agent: Final retries after timeouts creating datasync agent [GH-9608]
+* resource/aws_datasync_task: Final retry after timeout error creating datasync task [GH-9608]
+* resource/aws_dax_cluster: Final retries after timeouts when creating and deleting Dax clusters [GH-9630]
 * resource/aws_lambda_event_source_mapping: Final retries after timeout when creating, updating, and deleting event source mappings [GH-9553]
 * resource/aws_lambda_function: Final retry when creating lambda function [GH-9553]
 * resource/aws_lambda_permission: Final retries when creating, reading, and deleting lambda permissions [GH-9553]
+* resource/aws_media_package_channel: Final retries after timeouts deleting media package channels [GH-9633]
+* resource/aws_media_store_container: Final retries after timeouts deleting media store containers [GH-9633]
+* resource/aws_organizations_organizational_unit: Final retry after timeout when creating organizational unit [GH-9631]
+* resource/aws_organizations_policy: Final retry after timeout creating policy [GH-9631]
+* resource/aws_organizations_policy_attachment: Final retry after timeout creating policy attachment [GH-9631]
+* resource/aws_secretsmanager_secret: Fianl retries after timeouts creating and updating secrets [GH-9632]
 * resource/aws_sns_platform_application: Final retry after timeout error updating SNS platform application [GH-9607]
 
 ## 2.22.0 (August 01, 2019)
