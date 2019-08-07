@@ -11,6 +11,7 @@ ENHANCEMENTS:
 
 * data-source/aws_eks_cluster: Add `status` attribute [GH-9582]
 * data-source/aws_instance: Add `ebs_block_device` and `root_block_device` configuration block `encryption` and `kms_key_id` attributes [GH-4861] / [GH-7757]
+* data-source/aws_partition: Add `dns_suffix` attribute (e.g. `amazonaws.com` in AWS Commercial, `amazonaws.com.cn` in AWS China) [GH-5602]
 * resource/aws_acm_certificate: Support `options` configuration block `certificate_transparency_logging_preference` argument [GH-9413]
 * resource/aws_acm_certificate: Add `certificate_authority_arn` argument (support issuance of ACM private certificates) [GH-6666]
 * resource/aws_cognito_identity_pool: Add `tags` argument [GH-9639]
