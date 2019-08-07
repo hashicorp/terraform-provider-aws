@@ -82,7 +82,7 @@ func resourceAwsEgressOnlyInternetGatewayRead(d *schema.ResourceData, meta inter
 	return nil
 }
 
-func gatewayFound(id string, resp *ec2.DescribeEgressOnlyInternetGatewaysOutput) bool {
+func hasEc2EgressOnlyInternetGateway(id string, resp *ec2.DescribeEgressOnlyInternetGatewaysOutput) bool {
 	var found bool
 	if resp != nil && len(resp.EgressOnlyInternetGateways) > 0 {
 		for _, igw := range resp.EgressOnlyInternetGateways {
