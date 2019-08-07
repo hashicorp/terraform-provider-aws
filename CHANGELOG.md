@@ -22,6 +22,7 @@ ENHANCEMENTS:
 * resource/aws_lambda_permission: Support resource import [GH-9369]
 * resource/aws_launch_configuration: Add `root_block_device` configuration block `encrypted` argument (support encryption on launch) [GH-7759]
 * resource/aws_s3_bucket_object: Added plan time validation for `bucket` and `key` arguments [GH-9591]
+* resource/aws_spot_fleet_request: Add `ebs_block_device` and `root_block_device` configuration block `kms_key_id` argument (support encryption on launch) [GH-9599]
 * resource/aws_wafregional_geo_match_set: Support resource import [GH-9620]
 * resource/aws_wafregional_rate_based_rule: Support resource import [GH-9621]
 
