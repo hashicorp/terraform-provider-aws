@@ -7,6 +7,7 @@ import (
 	"log"
 	"os"
 	"reflect"
+	"regexp"
 	"sort"
 	"strings"
 	"testing"
@@ -155,6 +156,28 @@ func testSweepS3BucketObjects(region string) error {
 	return nil
 }
 
+func TestAccAWSS3BucketObject_noNameNoKey(t *testing.T) {
+	bucketError := regexp.MustCompile(`bucket must not be empty`)
+	keyError := regexp.MustCompile(`key must not be empty`)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSS3BucketObjectDestroy,
+		Steps: []resource.TestStep{
+			{
+				PreConfig:   func() {},
+				Config:      testAccAWSS3BucketObjectConfigBasic("", "a key"),
+				ExpectError: bucketError,
+			},
+			{
+				PreConfig:   func() {},
+				Config:      testAccAWSS3BucketObjectConfigBasic("a name", ""),
+				ExpectError: keyError,
+			},
+		},
+	})
+}
 func TestAccAWSS3BucketObject_empty(t *testing.T) {
 	var obj s3.GetObjectOutput
 	resourceName := "aws_s3_bucket_object.object"
@@ -858,6 +881,15 @@ func testAccAWSS3BucketObjectCreateTempFile(t *testing.T, data string) string {
 	}
 
 	return filename
+}
+
+func testAccAWSS3BucketObjectConfigBasic(bucket, key string) string {
+	return fmt.Sprintf(`
+resource "aws_s3_bucket_object" "object" {
+  bucket = "%s"
+  key = "%s"
+}
+`, bucket, key)
 }
 
 func testAccAWSS3BucketObjectConfigEmpty(randInt int) string {
