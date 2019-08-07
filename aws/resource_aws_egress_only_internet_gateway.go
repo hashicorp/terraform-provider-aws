@@ -58,7 +58,7 @@ func resourceAwsEgressOnlyInternetGatewayRead(d *schema.ResourceData, meta inter
 			return resource.NonRetryableError(err)
 		}
 
-		found = gatewayFound(d.Id(), resp)
+		found = hasEc2EgressOnlyInternetGateway(d.Id(), resp)
 		if d.IsNewResource() && !found {
 			return resource.RetryableError(fmt.Errorf("Egress Only Internet Gateway (%s) not found.", d.Id()))
 		}
@@ -72,7 +72,7 @@ func resourceAwsEgressOnlyInternetGatewayRead(d *schema.ResourceData, meta inter
 		return fmt.Errorf("Error describing egress internet gateway: %s", err)
 	}
 
-	found = gatewayFound(d.Id(), resp)
+	found = hasEc2EgressOnlyInternetGateway(d.Id(), resp)
 	if !found {
 		log.Printf("[Error] Cannot find Egress Only Internet Gateway: %q", d.Id())
 		d.SetId("")
