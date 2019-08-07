@@ -4928,6 +4928,13 @@ type CreateJobInput struct {
 	// transcoding settings individually
 	JobTemplate *string `locationName:"jobTemplate" type:"string"`
 
+	// Specify the relative priority for this job. In any given queue, the service
+	// begins processing the job with the highest value first. When more than one
+	// job has the same priority, the service begins processing the job that you
+	// submitted first. If you don't specify a priority, the service uses the default
+	// value 0.
+	Priority *int64 `locationName:"priority" type:"integer"`
+
 	// Optional. When you create a job, you can specify a queue to send it to. If
 	// you don't specify, the job will go to the default queue. For more about queues,
 	// see the User Guide topic at http://docs.aws.amazon.com/mediaconvert/latest/ug/what-is.html.
@@ -4968,6 +4975,9 @@ func (s CreateJobInput) GoString() string {
 // Validate inspects the fields of the type to determine if they are valid.
 func (s *CreateJobInput) Validate() error {
 	invalidParams := request.ErrInvalidParams{Context: "CreateJobInput"}
+	if s.Priority != nil && *s.Priority < -50 {
+		invalidParams.Add(request.NewErrParamMinValue("Priority", -50))
+	}
 	if s.Role == nil {
 		invalidParams.Add(request.NewErrParamRequired("Role"))
 	}
@@ -5012,6 +5022,12 @@ func (s *CreateJobInput) SetClientRequestToken(v string) *CreateJobInput {
 // SetJobTemplate sets the JobTemplate field's value.
 func (s *CreateJobInput) SetJobTemplate(v string) *CreateJobInput {
 	s.JobTemplate = &v
+	return s
+}
+
+// SetPriority sets the Priority field's value.
+func (s *CreateJobInput) SetPriority(v int64) *CreateJobInput {
+	s.Priority = &v
 	return s
 }
 
@@ -5093,6 +5109,13 @@ type CreateJobTemplateInput struct {
 	// Name is a required field
 	Name *string `locationName:"name" type:"string" required:"true"`
 
+	// Specify the relative priority for this job. In any given queue, the service
+	// begins processing the job with the highest value first. When more than one
+	// job has the same priority, the service begins processing the job that you
+	// submitted first. If you don't specify a priority, the service uses the default
+	// value 0.
+	Priority *int64 `locationName:"priority" type:"integer"`
+
 	// Optional. The queue that jobs created from this template are assigned to.
 	// If you don't specify this, jobs will go to the default queue.
 	Queue *string `locationName:"queue" type:"string"`
@@ -5129,6 +5152,9 @@ func (s *CreateJobTemplateInput) Validate() error {
 	invalidParams := request.ErrInvalidParams{Context: "CreateJobTemplateInput"}
 	if s.Name == nil {
 		invalidParams.Add(request.NewErrParamRequired("Name"))
+	}
+	if s.Priority != nil && *s.Priority < -50 {
+		invalidParams.Add(request.NewErrParamMinValue("Priority", -50))
 	}
 	if s.Settings == nil {
 		invalidParams.Add(request.NewErrParamRequired("Settings"))
@@ -5171,6 +5197,12 @@ func (s *CreateJobTemplateInput) SetDescription(v string) *CreateJobTemplateInpu
 // SetName sets the Name field's value.
 func (s *CreateJobTemplateInput) SetName(v string) *CreateJobTemplateInput {
 	s.Name = &v
+	return s
+}
+
+// SetPriority sets the Priority field's value.
+func (s *CreateJobTemplateInput) SetPriority(v int64) *CreateJobTemplateInput {
+	s.Priority = &v
 	return s
 }
 
@@ -10452,6 +10484,9 @@ type Job struct {
 	// List of output group details
 	OutputGroupDetails []*OutputGroupDetail `locationName:"outputGroupDetails" type:"list"`
 
+	// Relative priority on the job.
+	Priority *int64 `locationName:"priority" type:"integer"`
+
 	// Optional. When you create a job, you can specify a queue to send it to. If
 	// you don't specify, the job will go to the default queue. For more about queues,
 	// see the User Guide topic at http://docs.aws.amazon.com/mediaconvert/latest/ug/what-is.html
@@ -10563,6 +10598,12 @@ func (s *Job) SetJobTemplate(v string) *Job {
 // SetOutputGroupDetails sets the OutputGroupDetails field's value.
 func (s *Job) SetOutputGroupDetails(v []*OutputGroupDetail) *Job {
 	s.OutputGroupDetails = v
+	return s
+}
+
+// SetPriority sets the Priority field's value.
+func (s *Job) SetPriority(v int64) *Job {
+	s.Priority = &v
 	return s
 }
 
@@ -10805,6 +10846,9 @@ type JobTemplate struct {
 	// Name is a required field
 	Name *string `locationName:"name" type:"string" required:"true"`
 
+	// Relative priority on the job.
+	Priority *int64 `locationName:"priority" type:"integer"`
+
 	// Optional. The queue that jobs created from this template are assigned to.
 	// If you don't specify this, jobs will go to the default queue.
 	Queue *string `locationName:"queue" type:"string"`
@@ -10875,6 +10919,12 @@ func (s *JobTemplate) SetLastUpdated(v time.Time) *JobTemplate {
 // SetName sets the Name field's value.
 func (s *JobTemplate) SetName(v string) *JobTemplate {
 	s.Name = &v
+	return s
+}
+
+// SetPriority sets the Priority field's value.
+func (s *JobTemplate) SetPriority(v int64) *JobTemplate {
+	s.Priority = &v
 	return s
 }
 
@@ -15370,6 +15420,13 @@ type UpdateJobTemplateInput struct {
 	// Name is a required field
 	Name *string `location:"uri" locationName:"name" type:"string" required:"true"`
 
+	// Specify the relative priority for this job. In any given queue, the service
+	// begins processing the job with the highest value first. When more than one
+	// job has the same priority, the service begins processing the job that you
+	// submitted first. If you don't specify a priority, the service uses the default
+	// value 0.
+	Priority *int64 `locationName:"priority" type:"integer"`
+
 	// The new queue for the job template, if you are changing it.
 	Queue *string `locationName:"queue" type:"string"`
 
@@ -15402,6 +15459,9 @@ func (s *UpdateJobTemplateInput) Validate() error {
 	}
 	if s.Name != nil && len(*s.Name) < 1 {
 		invalidParams.Add(request.NewErrParamMinLen("Name", 1))
+	}
+	if s.Priority != nil && *s.Priority < -50 {
+		invalidParams.Add(request.NewErrParamMinValue("Priority", -50))
 	}
 	if s.AccelerationSettings != nil {
 		if err := s.AccelerationSettings.Validate(); err != nil {
@@ -15441,6 +15501,12 @@ func (s *UpdateJobTemplateInput) SetDescription(v string) *UpdateJobTemplateInpu
 // SetName sets the Name field's value.
 func (s *UpdateJobTemplateInput) SetName(v string) *UpdateJobTemplateInput {
 	s.Name = &v
+	return s
+}
+
+// SetPriority sets the Priority field's value.
+func (s *UpdateJobTemplateInput) SetPriority(v int64) *UpdateJobTemplateInput {
+	s.Priority = &v
 	return s
 }
 
