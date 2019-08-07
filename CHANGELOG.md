@@ -35,6 +35,7 @@ BUG FIXES:
 * resource/aws_datasync_agent: Final retries after timeouts creating datasync agent [GH-9608]
 * resource/aws_datasync_task: Final retry after timeout error creating datasync task [GH-9608]
 * resource/aws_dax_cluster: Final retries after timeouts when creating and deleting Dax clusters [GH-9630]
+* resource/aws_egress_only_internet_gateway: Final retry after timeout when reading gateway [GH-9638]
 * resource/aws_lambda_event_source_mapping: Final retries after timeout when creating, updating, and deleting event source mappings [GH-9553]
 * resource/aws_lambda_function: Final retry when creating lambda function [GH-9553]
 * resource/aws_lambda_permission: Final retries when creating, reading, and deleting lambda permissions [GH-9553]
