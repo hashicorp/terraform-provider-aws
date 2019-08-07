@@ -28,6 +28,7 @@ ENHANCEMENTS:
 
 BUG FIXES:
 
+* provider: Environment credentials have precedence over shared config credentials even if the `AWS_PROFILE` environment credentials are present. Explicitly configure the provider `profile` to override this behavior. The AWS Go SDK change that was released in version 2.21.0 of the Terraform AWS Provider has been mostly reverted. [GH-9555]
 * resource/aws_acm_certificate: Wait for presence of `DomainValidationOptions` when requesting ACM certificates (previously the API would always immediately return this information during creation) [GH-9598]
 * resource/aws_autoscaling_group: Final retries after timeouts creating, draining, and deleting ASGs and autoscaling helpers [GH-9649]
 * resource/aws_cloud9_environment_ec2: Final retries after timeouts creating and deleting Cloud9 environments [GH-9629]
