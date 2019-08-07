@@ -1,55 +1,55 @@
-## 2.23.0 (Unreleased)
+## 2.23.0 (August 07, 2019)
 
 FEATURES:
 
-* **New Data Source:** `aws_s3_bucket_objects` [GH-6968]
-* **New Resource:** `aws_dx_transit_virtual_interface` [GH-8522]
-* **New Resource:** `aws_redshift_snapshot_schedule` [GH-8064]
-* **New Resource:** `aws_redshift_snapshot_schedule_association` [GH-8064]
+* **New Data Source:** `aws_s3_bucket_objects` ([#6968](https://github.com/terraform-providers/terraform-provider-aws/issues/6968))
+* **New Resource:** `aws_dx_transit_virtual_interface` ([#8522](https://github.com/terraform-providers/terraform-provider-aws/issues/8522))
+* **New Resource:** `aws_redshift_snapshot_schedule` ([#8064](https://github.com/terraform-providers/terraform-provider-aws/issues/8064))
+* **New Resource:** `aws_redshift_snapshot_schedule_association` ([#8064](https://github.com/terraform-providers/terraform-provider-aws/issues/8064))
 
 ENHANCEMENTS:
 
-* data-source/aws_eks_cluster: Add `status` attribute [GH-9582]
-* data-source/aws_instance: Add `ebs_block_device` and `root_block_device` configuration block `encryption` and `kms_key_id` attributes [GH-4861] / [GH-7757]
-* data-source/aws_partition: Add `dns_suffix` attribute (e.g. `amazonaws.com` in AWS Commercial, `amazonaws.com.cn` in AWS China) [GH-5602]
-* resource/aws_acm_certificate: Support `options` configuration block `certificate_transparency_logging_preference` argument [GH-9413]
-* resource/aws_acm_certificate: Add `certificate_authority_arn` argument (support issuance of ACM private certificates) [GH-6666]
-* resource/aws_cognito_identity_pool: Add `tags` argument [GH-9639]
-* resource/aws_ecr_repository: Add `image_tag_mutability` argument (support immutable image tags) [GH-9557]
-* resource/aws_efs_file_system: Add `lifecycle_policy` configuration block (support transition to IA storage after 14, 30, 60, or 90 days) [GH-9636]
-* resource/aws_eks_cluster: Add `status` attribute [GH-9582]
-* resource/aws_glue_crawler: Add `catalog_target` configuration block [GH-9430]
-* resource/aws_instance: Add `ebs_block_device` and `root_block_device` configuration block `encryption` and `kms_key_id` arguments (support encryption on launch) [GH-4861] / [GH-7757]
-* resource/aws_iot_certificate: Mark `csr` argument as optional and add `certificate_pem`, `public_key`, and `private_key` attributes (support creating key and certificate) [GH-9283]
-* resource/aws_lambda_permission: Support resource import [GH-9369]
-* resource/aws_launch_configuration: Add `root_block_device` configuration block `encrypted` argument (support encryption on launch) [GH-7759]
-* resource/aws_s3_bucket_object: Added plan time validation for `bucket` and `key` arguments [GH-9591]
-* resource/aws_spot_fleet_request: Add `ebs_block_device` and `root_block_device` configuration block `kms_key_id` argument (support encryption on launch) [GH-9599]
-* resource/aws_wafregional_geo_match_set: Support resource import [GH-9620]
-* resource/aws_wafregional_rate_based_rule: Support resource import [GH-9621]
+* data-source/aws_eks_cluster: Add `status` attribute ([#9582](https://github.com/terraform-providers/terraform-provider-aws/issues/9582))
+* data-source/aws_instance: Add `ebs_block_device` and `root_block_device` configuration block `encryption` and `kms_key_id` attributes ([#4861](https://github.com/terraform-providers/terraform-provider-aws/issues/4861)] / [[#7757](https://github.com/terraform-providers/terraform-provider-aws/issues/7757))
+* data-source/aws_partition: Add `dns_suffix` attribute (e.g. `amazonaws.com` in AWS Commercial, `amazonaws.com.cn` in AWS China) ([#5602](https://github.com/terraform-providers/terraform-provider-aws/issues/5602))
+* resource/aws_acm_certificate: Support `options` configuration block `certificate_transparency_logging_preference` argument ([#9413](https://github.com/terraform-providers/terraform-provider-aws/issues/9413))
+* resource/aws_acm_certificate: Add `certificate_authority_arn` argument (support issuance of ACM private certificates) ([#6666](https://github.com/terraform-providers/terraform-provider-aws/issues/6666))
+* resource/aws_cognito_identity_pool: Add `tags` argument ([#9639](https://github.com/terraform-providers/terraform-provider-aws/issues/9639))
+* resource/aws_ecr_repository: Add `image_tag_mutability` argument (support immutable image tags) ([#9557](https://github.com/terraform-providers/terraform-provider-aws/issues/9557))
+* resource/aws_efs_file_system: Add `lifecycle_policy` configuration block (support transition to IA storage after 14, 30, 60, or 90 days) ([#9636](https://github.com/terraform-providers/terraform-provider-aws/issues/9636))
+* resource/aws_eks_cluster: Add `status` attribute ([#9582](https://github.com/terraform-providers/terraform-provider-aws/issues/9582))
+* resource/aws_glue_crawler: Add `catalog_target` configuration block ([#9430](https://github.com/terraform-providers/terraform-provider-aws/issues/9430))
+* resource/aws_instance: Add `ebs_block_device` and `root_block_device` configuration block `encryption` and `kms_key_id` arguments (support encryption on launch) ([#4861](https://github.com/terraform-providers/terraform-provider-aws/issues/4861)] / [[#7757](https://github.com/terraform-providers/terraform-provider-aws/issues/7757))
+* resource/aws_iot_certificate: Mark `csr` argument as optional and add `certificate_pem`, `public_key`, and `private_key` attributes (support creating key and certificate) ([#9283](https://github.com/terraform-providers/terraform-provider-aws/issues/9283))
+* resource/aws_lambda_permission: Support resource import ([#9369](https://github.com/terraform-providers/terraform-provider-aws/issues/9369))
+* resource/aws_launch_configuration: Add `root_block_device` configuration block `encrypted` argument (support encryption on launch) ([#7759](https://github.com/terraform-providers/terraform-provider-aws/issues/7759))
+* resource/aws_s3_bucket_object: Added plan time validation for `bucket` and `key` arguments ([#9591](https://github.com/terraform-providers/terraform-provider-aws/issues/9591))
+* resource/aws_spot_fleet_request: Add `ebs_block_device` and `root_block_device` configuration block `kms_key_id` argument (support encryption on launch) ([#9599](https://github.com/terraform-providers/terraform-provider-aws/issues/9599))
+* resource/aws_wafregional_geo_match_set: Support resource import ([#9620](https://github.com/terraform-providers/terraform-provider-aws/issues/9620))
+* resource/aws_wafregional_rate_based_rule: Support resource import ([#9621](https://github.com/terraform-providers/terraform-provider-aws/issues/9621))
 
 BUG FIXES:
 
-* provider: Environment credentials have precedence over shared config credentials even if the `AWS_PROFILE` environment credentials are present. Explicitly configure the provider `profile` to override this behavior. The AWS Go SDK change that was released in version 2.21.0 of the Terraform AWS Provider has been mostly reverted. [GH-9555]
-* resource/aws_acm_certificate: Wait for presence of `DomainValidationOptions` when requesting ACM certificates (previously the API would always immediately return this information during creation) [GH-9598]
-* resource/aws_autoscaling_group: Final retries after timeouts creating, draining, and deleting ASGs and autoscaling helpers [GH-9649]
-* resource/aws_cloud9_environment_ec2: Final retries after timeouts creating and deleting Cloud9 environments [GH-9629]
-* resource/aws_cloudfront_distribution: Ensure deployment timeout matches documentation at 90 minutes [GH-9642]
-* resource/aws_datasync_agent: Final retries after timeouts creating datasync agent [GH-9608]
-* resource/aws_datasync_task: Final retry after timeout error creating datasync task [GH-9608]
-* resource/aws_dax_cluster: Final retries after timeouts when creating and deleting Dax clusters [GH-9630]
-* resource/aws_egress_only_internet_gateway: Final retry after timeout when reading gateway [GH-9638]
-* resource/aws_lambda_event_source_mapping: Final retries after timeout when creating, updating, and deleting event source mappings [GH-9553]
-* resource/aws_lambda_function: Final retry when creating lambda function [GH-9553]
-* resource/aws_lambda_permission: Final retries when creating, reading, and deleting lambda permissions [GH-9553]
-* resource/aws_media_package_channel: Final retries after timeouts deleting media package channels [GH-9633]
-* resource/aws_media_store_container: Final retries after timeouts deleting media store containers [GH-9633]
-* resource/aws_organizations_organizational_unit: Final retry after timeout when creating organizational unit [GH-9631]
-* resource/aws_organizations_policy: Final retry after timeout creating policy [GH-9631]
-* resource/aws_organizations_policy_attachment: Final retry after timeout creating policy attachment [GH-9631]
-* resource/aws_secretsmanager_secret: Fianl retries after timeouts creating and updating secrets [GH-9632]
-* resource/aws_sns_platform_application: Final retry after timeout error updating SNS platform application [GH-9607]
-* resource/aws_vpc: Final retry after timeout deleting VPC [GH-9644]
+* provider: Environment credentials have precedence over shared config credentials even if the `AWS_PROFILE` environment credentials are present. Explicitly configure the provider `profile` to override this behavior. The AWS Go SDK change that was released in version 2.21.0 of the Terraform AWS Provider has been mostly reverted. ([#9555](https://github.com/terraform-providers/terraform-provider-aws/issues/9555))
+* resource/aws_acm_certificate: Wait for presence of `DomainValidationOptions` when requesting ACM certificates (previously the API would always immediately return this information during creation) ([#9598](https://github.com/terraform-providers/terraform-provider-aws/issues/9598))
+* resource/aws_autoscaling_group: Final retries after timeouts creating, draining, and deleting ASGs and autoscaling helpers ([#9649](https://github.com/terraform-providers/terraform-provider-aws/issues/9649))
+* resource/aws_cloud9_environment_ec2: Final retries after timeouts creating and deleting Cloud9 environments ([#9629](https://github.com/terraform-providers/terraform-provider-aws/issues/9629))
+* resource/aws_cloudfront_distribution: Ensure deployment timeout matches documentation at 90 minutes ([#9642](https://github.com/terraform-providers/terraform-provider-aws/issues/9642))
+* resource/aws_datasync_agent: Final retries after timeouts creating datasync agent ([#9608](https://github.com/terraform-providers/terraform-provider-aws/issues/9608))
+* resource/aws_datasync_task: Final retry after timeout error creating datasync task ([#9608](https://github.com/terraform-providers/terraform-provider-aws/issues/9608))
+* resource/aws_dax_cluster: Final retries after timeouts when creating and deleting Dax clusters ([#9630](https://github.com/terraform-providers/terraform-provider-aws/issues/9630))
+* resource/aws_egress_only_internet_gateway: Final retry after timeout when reading gateway ([#9638](https://github.com/terraform-providers/terraform-provider-aws/issues/9638))
+* resource/aws_lambda_event_source_mapping: Final retries after timeout when creating, updating, and deleting event source mappings ([#9553](https://github.com/terraform-providers/terraform-provider-aws/issues/9553))
+* resource/aws_lambda_function: Final retry when creating lambda function ([#9553](https://github.com/terraform-providers/terraform-provider-aws/issues/9553))
+* resource/aws_lambda_permission: Final retries when creating, reading, and deleting lambda permissions ([#9553](https://github.com/terraform-providers/terraform-provider-aws/issues/9553))
+* resource/aws_media_package_channel: Final retries after timeouts deleting media package channels ([#9633](https://github.com/terraform-providers/terraform-provider-aws/issues/9633))
+* resource/aws_media_store_container: Final retries after timeouts deleting media store containers ([#9633](https://github.com/terraform-providers/terraform-provider-aws/issues/9633))
+* resource/aws_organizations_organizational_unit: Final retry after timeout when creating organizational unit ([#9631](https://github.com/terraform-providers/terraform-provider-aws/issues/9631))
+* resource/aws_organizations_policy: Final retry after timeout creating policy ([#9631](https://github.com/terraform-providers/terraform-provider-aws/issues/9631))
+* resource/aws_organizations_policy_attachment: Final retry after timeout creating policy attachment ([#9631](https://github.com/terraform-providers/terraform-provider-aws/issues/9631))
+* resource/aws_secretsmanager_secret: Fianl retries after timeouts creating and updating secrets ([#9632](https://github.com/terraform-providers/terraform-provider-aws/issues/9632))
+* resource/aws_sns_platform_application: Final retry after timeout error updating SNS platform application ([#9607](https://github.com/terraform-providers/terraform-provider-aws/issues/9607))
+* resource/aws_vpc: Final retry after timeout deleting VPC ([#9644](https://github.com/terraform-providers/terraform-provider-aws/issues/9644))
 
 ## 2.22.0 (August 01, 2019)
 
