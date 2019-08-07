@@ -66,7 +66,7 @@ func resourceAwsAcmCertificateValidationCreate(d *schema.ResourceData, meta inte
 		log.Printf("[INFO] No validation_record_fqdns set, skipping check")
 	}
 
-	return resource.Retry(d.Timeout(schema.TimeoutCreate), func() *resource.RetryError {
+	err = resource.Retry(d.Timeout(schema.TimeoutCreate), func() *resource.RetryError {
 		resp, err := acmconn.DescribeCertificate(params)
 
 		if err != nil {
@@ -80,6 +80,16 @@ func resourceAwsAcmCertificateValidationCreate(d *schema.ResourceData, meta inte
 		log.Printf("[INFO] ACM Certificate validation for %s done, certificate was issued", certificate_arn)
 		return resource.NonRetryableError(resourceAwsAcmCertificateValidationRead(d, meta))
 	})
+	if isResourceTimeoutError(err) {
+		resp, err = acmconn.DescribeCertificate(params)
+		if *resp.Certificate.Status != "ISSUED" {
+			return fmt.Errorf("Expected certificate to be issued but was in state %s", *resp.Certificate.Status)
+		}
+	}
+	if err != nil {
+		return fmt.Errorf("Error describing created certificate: %s", err)
+	}
+	return nil
 }
 
 func resourceAwsAcmCertificateCheckValidationRecords(validationRecordFqdns []interface{}, cert *acm.CertificateDetail, conn *acm.ACM) error {
@@ -89,9 +99,11 @@ func resourceAwsAcmCertificateCheckValidationRecords(validationRecordFqdns []int
 		input := &acm.DescribeCertificateInput{
 			CertificateArn: cert.CertificateArn,
 		}
-		err := resource.Retry(1*time.Minute, func() *resource.RetryError {
+		var err error
+		var output *acm.DescribeCertificateOutput
+		err = resource.Retry(1*time.Minute, func() *resource.RetryError {
 			log.Printf("[DEBUG] Certificate domain validation options empty for %q, retrying", *cert.CertificateArn)
-			output, err := conn.DescribeCertificate(input)
+			output, err = conn.DescribeCertificate(input)
 			if err != nil {
 				return resource.NonRetryableError(err)
 			}
@@ -101,9 +113,16 @@ func resourceAwsAcmCertificateCheckValidationRecords(validationRecordFqdns []int
 			cert = output.Certificate
 			return nil
 		})
-		if err != nil {
-			return err
+		if isResourceTimeoutError(err) {
+			output, err = conn.DescribeCertificate(input)
+			if len(output.Certificate.DomainValidationOptions) == 0 {
+				return fmt.Errorf("Certificate domain validation options empty for %s", *cert.CertificateArn)
+			}
 		}
+		if err != nil {
+			return fmt.Errorf("Error checking certificate domain validation options: %s", err)
+		}
+		cert = output.Certificate
 	}
 	for _, v := range cert.DomainValidationOptions {
 		if v.ValidationMethod != nil {
