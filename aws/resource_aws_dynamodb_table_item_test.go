@@ -250,8 +250,9 @@ func TestAccCheckAWSDynamoDbItem_importWithHashKey(t *testing.T) {
 	}
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:  func() { testAccPreCheck(t) },
-		Providers: testAccProviders,
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSDynamoDbItemDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSDynamoDbItemImportWithHashKey(tableName, hashKey, item),
@@ -308,8 +309,9 @@ func TestAccCheckAWSDynamoDbItem_importWithRangeKey(t *testing.T) {
 	}
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:  func() { testAccPreCheck(t) },
-		Providers: testAccProviders,
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSDynamoDbItemDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSDynamoDbItemImportWithRangeKey(tableName, hashKey, rangeKey, item),
