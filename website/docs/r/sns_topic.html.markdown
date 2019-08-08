@@ -1,6 +1,6 @@
 ---
 layout: "aws"
-page_title: "AWS: sns_topic"
+page_title: "AWS: aws_sns_topic"
 sidebar_current: "docs-aws-resource-sns-topic"
 description: |-
   Provides an SNS topic resource.
@@ -49,7 +49,7 @@ EOF
 
 ```hcl
 resource "aws_sns_topic" "user_updates" {
-  name = "user-updates-topic"
+  name              = "user-updates-topic"
   kms_master_key_id = "alias/aws/sns"
 }
 ```

@@ -70,6 +70,7 @@ func resourceAwsOrganizationsAccount() *schema.Resource {
 				Optional:     true,
 				ValidateFunc: validateAwsOrganizationsAccountRoleName,
 			},
+			"tags": tagsSchema(),
 		},
 	}
 }
@@ -162,6 +163,19 @@ func resourceAwsOrganizationsAccountCreate(d *schema.ResourceData, meta interfac
 		}
 	}
 
+	if tags := tagsFromMapOrganizations(d.Get("tags").(map[string]interface{})); len(tags) > 0 {
+		input := &organizations.TagResourceInput{
+			ResourceId: aws.String(d.Id()),
+			Tags:       tags,
+		}
+
+		log.Printf("[DEBUG] Adding Organizations Account (%s) tags: %s", d.Id(), input)
+
+		if _, err := conn.TagResource(input); err != nil {
+			return fmt.Errorf("error updating Organizations Account (%s) tags: %s", d.Id(), err)
+		}
+	}
+
 	return resourceAwsOrganizationsAccountRead(d, meta)
 }
 
@@ -194,6 +208,20 @@ func resourceAwsOrganizationsAccountRead(d *schema.ResourceData, meta interface{
 		return fmt.Errorf("error getting AWS Organizations Account (%s) parent: %s", d.Id(), err)
 	}
 
+	tagsInput := &organizations.ListTagsForResourceInput{
+		ResourceId: aws.String(d.Id()),
+	}
+
+	tagsOutput, err := conn.ListTagsForResource(tagsInput)
+
+	if err != nil {
+		return fmt.Errorf("error reading Organizations Account (%s) tags: %s", d.Id(), err)
+	}
+
+	if tagsOutput == nil {
+		return fmt.Errorf("error reading Organizations Account (%s) tags: empty result", d.Id())
+	}
+
 	d.Set("arn", account.Arn)
 	d.Set("email", account.Email)
 	d.Set("joined_method", account.JoinedMethod)
@@ -201,6 +229,10 @@ func resourceAwsOrganizationsAccountRead(d *schema.ResourceData, meta interface{
 	d.Set("name", account.Name)
 	d.Set("parent_id", parentId)
 	d.Set("status", account.Status)
+
+	if err := d.Set("tags", tagsToMapOrganizations(tagsOutput.Tags)); err != nil {
+		return fmt.Errorf("error setting tags: %s", err)
+	}
 
 	return nil
 }
@@ -219,6 +251,39 @@ func resourceAwsOrganizationsAccountUpdate(d *schema.ResourceData, meta interfac
 
 		if _, err := conn.MoveAccount(input); err != nil {
 			return fmt.Errorf("error moving AWS Organizations Account (%s): %s", d.Id(), err)
+		}
+	}
+
+	if d.HasChange("tags") {
+		oraw, nraw := d.GetChange("tags")
+		o := oraw.(map[string]interface{})
+		n := nraw.(map[string]interface{})
+		create, remove := diffTagsOrganizations(tagsFromMapOrganizations(o), tagsFromMapOrganizations(n))
+
+		// Set tags
+		if len(remove) > 0 {
+			input := &organizations.UntagResourceInput{
+				ResourceId: aws.String(d.Id()),
+				TagKeys:    remove,
+			}
+
+			log.Printf("[DEBUG] Removing Organizations Account (%s) tags: %s", d.Id(), input)
+
+			if _, err := conn.UntagResource(input); err != nil {
+				return fmt.Errorf("error removing Organizations Account (%s) tags: %s", d.Id(), err)
+			}
+		}
+		if len(create) > 0 {
+			input := &organizations.TagResourceInput{
+				ResourceId: aws.String(d.Id()),
+				Tags:       create,
+			}
+
+			log.Printf("[DEBUG] Adding Organizations Account (%s) tags: %s", d.Id(), input)
+
+			if _, err := conn.TagResource(input); err != nil {
+				return fmt.Errorf("error updating Organizations Account (%s) tags: %s", d.Id(), err)
+			}
 		}
 	}
 

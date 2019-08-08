@@ -922,7 +922,7 @@ func (c *MediaConvert) DescribeEndpointsWithContext(ctx aws.Context, input *Desc
 //    // Example iterating over at most 3 pages of a DescribeEndpoints operation.
 //    pageNum := 0
 //    err := client.DescribeEndpointsPages(params,
-//        func(page *DescribeEndpointsOutput, lastPage bool) bool {
+//        func(page *mediaconvert.DescribeEndpointsOutput, lastPage bool) bool {
 //            pageNum++
 //            fmt.Println(page)
 //            return pageNum <= 3
@@ -1510,7 +1510,7 @@ func (c *MediaConvert) ListJobTemplatesWithContext(ctx aws.Context, input *ListJ
 //    // Example iterating over at most 3 pages of a ListJobTemplates operation.
 //    pageNum := 0
 //    err := client.ListJobTemplatesPages(params,
-//        func(page *ListJobTemplatesOutput, lastPage bool) bool {
+//        func(page *mediaconvert.ListJobTemplatesOutput, lastPage bool) bool {
 //            pageNum++
 //            fmt.Println(page)
 //            return pageNum <= 3
@@ -1657,7 +1657,7 @@ func (c *MediaConvert) ListJobsWithContext(ctx aws.Context, input *ListJobsInput
 //    // Example iterating over at most 3 pages of a ListJobs operation.
 //    pageNum := 0
 //    err := client.ListJobsPages(params,
-//        func(page *ListJobsOutput, lastPage bool) bool {
+//        func(page *mediaconvert.ListJobsOutput, lastPage bool) bool {
 //            pageNum++
 //            fmt.Println(page)
 //            return pageNum <= 3
@@ -1803,7 +1803,7 @@ func (c *MediaConvert) ListPresetsWithContext(ctx aws.Context, input *ListPreset
 //    // Example iterating over at most 3 pages of a ListPresets operation.
 //    pageNum := 0
 //    err := client.ListPresetsPages(params,
-//        func(page *ListPresetsOutput, lastPage bool) bool {
+//        func(page *mediaconvert.ListPresetsOutput, lastPage bool) bool {
 //            pageNum++
 //            fmt.Println(page)
 //            return pageNum <= 3
@@ -1949,7 +1949,7 @@ func (c *MediaConvert) ListQueuesWithContext(ctx aws.Context, input *ListQueuesI
 //    // Example iterating over at most 3 pages of a ListQueues operation.
 //    pageNum := 0
 //    err := client.ListQueuesPages(params,
-//        func(page *ListQueuesOutput, lastPage bool) bool {
+//        func(page *mediaconvert.ListQueuesOutput, lastPage bool) bool {
 //            pageNum++
 //            fmt.Println(page)
 //            return pageNum <= 3
@@ -2541,13 +2541,14 @@ type AacSettings struct {
 	// and FollowInputAudioType.
 	AudioDescriptionBroadcasterMix *string `locationName:"audioDescriptionBroadcasterMix" type:"string" enum:"AacAudioDescriptionBroadcasterMix"`
 
-	// Average bitrate in bits/second. The set of valid values for this setting
-	// is: 6000, 8000, 10000, 12000, 14000, 16000, 20000, 24000, 28000, 32000, 40000,
-	// 48000, 56000, 64000, 80000, 96000, 112000, 128000, 160000, 192000, 224000,
-	// 256000, 288000, 320000, 384000, 448000, 512000, 576000, 640000, 768000, 896000,
-	// 1024000. The value you set is also constrained by the values you choose for
-	// Profile (codecProfile), Bitrate control mode (codingMode), and Sample rate
-	// (sampleRate). Default values depend on Bitrate control mode and Profile.
+	// Specify the average bitrate in bits per second. The set of valid values for
+	// this setting is: 6000, 8000, 10000, 12000, 14000, 16000, 20000, 24000, 28000,
+	// 32000, 40000, 48000, 56000, 64000, 80000, 96000, 112000, 128000, 160000,
+	// 192000, 224000, 256000, 288000, 320000, 384000, 448000, 512000, 576000, 640000,
+	// 768000, 896000, 1024000. The value you set is also constrained by the values
+	// that you choose for Profile (codecProfile), Bitrate control mode (codingMode),
+	// and Sample rate (sampleRate). Default values depend on Bitrate control mode
+	// and Profile.
 	Bitrate *int64 `locationName:"bitrate" min:"6000" type:"integer"`
 
 	// AAC Profile.
@@ -2663,11 +2664,13 @@ func (s *AacSettings) SetVbrQuality(v string) *AacSettings {
 type Ac3Settings struct {
 	_ struct{} `type:"structure"`
 
-	// Average bitrate in bits/second. Valid bitrates depend on the coding mode.
+	// Specify the average bitrate in bits per second. Valid bitrates depend on
+	// the coding mode.
 	Bitrate *int64 `locationName:"bitrate" min:"64000" type:"integer"`
 
-	// Specifies the "Bitstream Mode" (bsmod) for the emitted AC-3 stream. See ATSC
-	// A/52-2012 for background on these values.
+	// Specify the bitstream mode for the AC-3 stream that the encoder emits. For
+	// more information about the AC3 bitstream mode, see ATSC A/52-2012 (Annex
+	// E).
 	BitstreamMode *string `locationName:"bitstreamMode" type:"string" enum:"Ac3BitstreamMode"`
 
 	// Dolby Digital coding mode. Determines number of channels.
@@ -2690,7 +2693,7 @@ type Ac3Settings struct {
 	// from one of these streams, then the static metadata settings will be used.
 	MetadataControl *string `locationName:"metadataControl" type:"string" enum:"Ac3MetadataControl"`
 
-	// Sample rate in hz. Sample rate is always 48000.
+	// This value is always 48000. It represents the sample rate in Hz.
 	SampleRate *int64 `locationName:"sampleRate" min:"48000" type:"integer"`
 }
 
@@ -2975,10 +2978,11 @@ func (s AssociateCertificateOutput) GoString() string {
 
 // Audio codec settings (CodecSettings) under (AudioDescriptions) contains the
 // group of settings related to audio encoding. The settings in this group vary
-// depending on the value you choose for Audio codec (Codec). For each codec
-// enum you choose, define the corresponding settings object. The following
-// lists the codec enum, settings object pairs. * AAC, AacSettings * MP2, Mp2Settings
-// * WAV, WavSettings * AIFF, AiffSettings * AC3, Ac3Settings * EAC3, Eac3Settings
+// depending on the value that you choose for Audio codec (Codec). For each
+// codec enum that you choose, define the corresponding settings object. The
+// following lists the codec enum, settings object pairs. * AAC, AacSettings
+// * MP2, Mp2Settings * WAV, WavSettings * AIFF, AiffSettings * AC3, Ac3Settings
+// * EAC3, Eac3Settings * EAC3_ATMOS, Eac3AtmosSettings
 type AudioCodecSettings struct {
 	_ struct{} `type:"structure"`
 
@@ -3001,6 +3005,10 @@ type AudioCodecSettings struct {
 
 	// Type of Audio codec.
 	Codec *string `locationName:"codec" type:"string" enum:"AudioCodec"`
+
+	// Required when you set (Codec) under (AudioDescriptions)>(CodecSettings) to
+	// the value EAC3_ATMOS.
+	Eac3AtmosSettings *Eac3AtmosSettings `locationName:"eac3AtmosSettings" type:"structure"`
 
 	// Required when you set (Codec) under (AudioDescriptions)>(CodecSettings) to
 	// the value EAC3.
@@ -3041,6 +3049,11 @@ func (s *AudioCodecSettings) Validate() error {
 	if s.AiffSettings != nil {
 		if err := s.AiffSettings.Validate(); err != nil {
 			invalidParams.AddNested("AiffSettings", err.(request.ErrInvalidParams))
+		}
+	}
+	if s.Eac3AtmosSettings != nil {
+		if err := s.Eac3AtmosSettings.Validate(); err != nil {
+			invalidParams.AddNested("Eac3AtmosSettings", err.(request.ErrInvalidParams))
 		}
 	}
 	if s.Eac3Settings != nil {
@@ -3089,6 +3102,12 @@ func (s *AudioCodecSettings) SetCodec(v string) *AudioCodecSettings {
 	return s
 }
 
+// SetEac3AtmosSettings sets the Eac3AtmosSettings field's value.
+func (s *AudioCodecSettings) SetEac3AtmosSettings(v *Eac3AtmosSettings) *AudioCodecSettings {
+	s.Eac3AtmosSettings = v
+	return s
+}
+
 // SetEac3Settings sets the Eac3Settings field's value.
 func (s *AudioCodecSettings) SetEac3Settings(v *Eac3Settings) *AudioCodecSettings {
 	s.Eac3Settings = v
@@ -3111,7 +3130,8 @@ func (s *AudioCodecSettings) SetWavSettings(v *WavSettings) *AudioCodecSettings 
 type AudioDescription struct {
 	_ struct{} `type:"structure"`
 
-	// Advanced audio normalization settings.
+	// Advanced audio normalization settings. Ignore these settings unless you need
+	// to comply with a loudness standard.
 	AudioNormalizationSettings *AudioNormalizationSettings `locationName:"audioNormalizationSettings" type:"structure"`
 
 	// Specifies which audio data to use from each input. In the simplest case,
@@ -3141,10 +3161,11 @@ type AudioDescription struct {
 
 	// Audio codec settings (CodecSettings) under (AudioDescriptions) contains the
 	// group of settings related to audio encoding. The settings in this group vary
-	// depending on the value you choose for Audio codec (Codec). For each codec
-	// enum you choose, define the corresponding settings object. The following
-	// lists the codec enum, settings object pairs. * AAC, AacSettings * MP2, Mp2Settings
-	// * WAV, WavSettings * AIFF, AiffSettings * AC3, Ac3Settings * EAC3, Eac3Settings
+	// depending on the value that you choose for Audio codec (Codec). For each
+	// codec enum that you choose, define the corresponding settings object. The
+	// following lists the codec enum, settings object pairs. * AAC, AacSettings
+	// * MP2, Mp2Settings * WAV, WavSettings * AIFF, AiffSettings * AC3, Ac3Settings
+	// * EAC3, Eac3Settings * EAC3_ATMOS, Eac3AtmosSettings
 	CodecSettings *AudioCodecSettings `locationName:"codecSettings" type:"structure"`
 
 	// Specify the language for this audio output track, using the ISO 639-2 or
@@ -3273,12 +3294,21 @@ func (s *AudioDescription) SetStreamName(v string) *AudioDescription {
 	return s
 }
 
-// Advanced audio normalization settings.
+// Advanced audio normalization settings. Ignore these settings unless you need
+// to comply with a loudness standard.
 type AudioNormalizationSettings struct {
 	_ struct{} `type:"structure"`
 
-	// Audio normalization algorithm to use. 1770-1 conforms to the CALM Act specification,
-	// 1770-2 conforms to the EBU R-128 specification.
+	// Choose one of the following audio normalization algorithms: ITU-R BS.1770-1:
+	// Ungated loudness. A measurement of ungated average loudness for an entire
+	// piece of content, suitable for measurement of short-form content under ATSC
+	// recommendation A/85. Supports up to 5.1 audio channels. ITU-R BS.1770-2:
+	// Gated loudness. A measurement of gated average loudness compliant with the
+	// requirements of EBU-R128. Supports up to 5.1 audio channels. ITU-R BS.1770-3:
+	// Modified peak. The same loudness measurement algorithm as 1770-2, with an
+	// updated true peak measurement. ITU-R BS.1770-4: Higher channel count. Allows
+	// for more audio channels than the other algorithms, including configurations
+	// such as 7.1.
 	Algorithm *string `locationName:"algorithm" type:"string" enum:"AudioNormalizationAlgorithm"`
 
 	// When enabled the output audio is corrected using the chosen algorithm. If
@@ -3297,10 +3327,11 @@ type AudioNormalizationSettings struct {
 	// track loudness.
 	PeakCalculation *string `locationName:"peakCalculation" type:"string" enum:"AudioNormalizationPeakCalculation"`
 
-	// Target LKFS(loudness) to adjust volume to. If no value is entered, a default
-	// value will be used according to the chosen algorithm. The CALM Act (1770-1)
-	// recommends a target of -24 LKFS. The EBU R-128 specification (1770-2) recommends
-	// a target of -23 LKFS.
+	// When you use Audio normalization (AudioNormalizationSettings), optionally
+	// use this setting to specify a target loudness. If you don't specify a value
+	// here, the encoder chooses a value for you, based on the algorithm that you
+	// choose for Algorithm (algorithm). If you choose algorithm 1770-1, the encoder
+	// will choose -24 LKFS; otherwise, the encoder will choose -23 LKFS.
 	TargetLkfs *float64 `locationName:"targetLkfs" type:"double"`
 }
 
@@ -4801,7 +4832,8 @@ type ContainerSettings struct {
 	// Settings for MOV Container.
 	MovSettings *MovSettings `locationName:"movSettings" type:"structure"`
 
-	// Settings for MP4 Container
+	// Settings for MP4 container. You can create audio-only AAC outputs with this
+	// container.
 	Mp4Settings *Mp4Settings `locationName:"mp4Settings" type:"structure"`
 }
 
@@ -4896,6 +4928,13 @@ type CreateJobInput struct {
 	// transcoding settings individually
 	JobTemplate *string `locationName:"jobTemplate" type:"string"`
 
+	// Specify the relative priority for this job. In any given queue, the service
+	// begins processing the job with the highest value first. When more than one
+	// job has the same priority, the service begins processing the job that you
+	// submitted first. If you don't specify a priority, the service uses the default
+	// value 0.
+	Priority *int64 `locationName:"priority" type:"integer"`
+
 	// Optional. When you create a job, you can specify a queue to send it to. If
 	// you don't specify, the job will go to the default queue. For more about queues,
 	// see the User Guide topic at http://docs.aws.amazon.com/mediaconvert/latest/ug/what-is.html.
@@ -4936,6 +4975,9 @@ func (s CreateJobInput) GoString() string {
 // Validate inspects the fields of the type to determine if they are valid.
 func (s *CreateJobInput) Validate() error {
 	invalidParams := request.ErrInvalidParams{Context: "CreateJobInput"}
+	if s.Priority != nil && *s.Priority < -50 {
+		invalidParams.Add(request.NewErrParamMinValue("Priority", -50))
+	}
 	if s.Role == nil {
 		invalidParams.Add(request.NewErrParamRequired("Role"))
 	}
@@ -4980,6 +5022,12 @@ func (s *CreateJobInput) SetClientRequestToken(v string) *CreateJobInput {
 // SetJobTemplate sets the JobTemplate field's value.
 func (s *CreateJobInput) SetJobTemplate(v string) *CreateJobInput {
 	s.JobTemplate = &v
+	return s
+}
+
+// SetPriority sets the Priority field's value.
+func (s *CreateJobInput) SetPriority(v int64) *CreateJobInput {
+	s.Priority = &v
 	return s
 }
 
@@ -5061,6 +5109,13 @@ type CreateJobTemplateInput struct {
 	// Name is a required field
 	Name *string `locationName:"name" type:"string" required:"true"`
 
+	// Specify the relative priority for this job. In any given queue, the service
+	// begins processing the job with the highest value first. When more than one
+	// job has the same priority, the service begins processing the job that you
+	// submitted first. If you don't specify a priority, the service uses the default
+	// value 0.
+	Priority *int64 `locationName:"priority" type:"integer"`
+
 	// Optional. The queue that jobs created from this template are assigned to.
 	// If you don't specify this, jobs will go to the default queue.
 	Queue *string `locationName:"queue" type:"string"`
@@ -5097,6 +5152,9 @@ func (s *CreateJobTemplateInput) Validate() error {
 	invalidParams := request.ErrInvalidParams{Context: "CreateJobTemplateInput"}
 	if s.Name == nil {
 		invalidParams.Add(request.NewErrParamRequired("Name"))
+	}
+	if s.Priority != nil && *s.Priority < -50 {
+		invalidParams.Add(request.NewErrParamMinValue("Priority", -50))
 	}
 	if s.Settings == nil {
 		invalidParams.Add(request.NewErrParamRequired("Settings"))
@@ -5139,6 +5197,12 @@ func (s *CreateJobTemplateInput) SetDescription(v string) *CreateJobTemplateInpu
 // SetName sets the Name field's value.
 func (s *CreateJobTemplateInput) SetName(v string) *CreateJobTemplateInput {
 	s.Name = &v
+	return s
+}
+
+// SetPriority sets the Priority field's value.
+func (s *CreateJobTemplateInput) SetPriority(v int64) *CreateJobTemplateInput {
+	s.Priority = &v
 	return s
 }
 
@@ -6457,6 +6521,197 @@ func (s *DvbTdtSettings) SetTdtInterval(v int64) *DvbTdtSettings {
 }
 
 // Required when you set (Codec) under (AudioDescriptions)>(CodecSettings) to
+// the value EAC3_ATMOS.
+type Eac3AtmosSettings struct {
+	_ struct{} `type:"structure"`
+
+	// Specify the average bitrate in bits per second.Valid values: 384k, 448k,
+	// 640k, 768k
+	Bitrate *int64 `locationName:"bitrate" min:"384000" type:"integer"`
+
+	// Specify the bitstream mode for the E-AC-3 stream that the encoder emits.
+	// For more information about the EAC3 bitstream mode, see ATSC A/52-2012 (Annex
+	// E).
+	BitstreamMode *string `locationName:"bitstreamMode" type:"string" enum:"Eac3AtmosBitstreamMode"`
+
+	// The coding mode for Dolby Digital Plus JOC (Atmos) is always 9.1.6 (CODING_MODE_9_1_6).
+	CodingMode *string `locationName:"codingMode" type:"string" enum:"Eac3AtmosCodingMode"`
+
+	// Enable Dolby Dialogue Intelligence to adjust loudness based on dialogue analysis.
+	DialogueIntelligence *string `locationName:"dialogueIntelligence" type:"string" enum:"Eac3AtmosDialogueIntelligence"`
+
+	// Specify the absolute peak level for a signal with dynamic range compression.
+	DynamicRangeCompressionLine *string `locationName:"dynamicRangeCompressionLine" type:"string" enum:"Eac3AtmosDynamicRangeCompressionLine"`
+
+	// Specify how the service limits the audio dynamic range when compressing the
+	// audio.
+	DynamicRangeCompressionRf *string `locationName:"dynamicRangeCompressionRf" type:"string" enum:"Eac3AtmosDynamicRangeCompressionRf"`
+
+	// Specify a value for the following Dolby Atmos setting: Left only/Right only
+	// center mix(Lo/Ro center). MediaConvert uses this value for downmixing. How
+	// the service uses thisvalue depends on the value that you choose for Stereo
+	// downmix (Eac3AtmosStereoDownmix).Valid values: 3.0, 1.5, 0.0, -1.5, -3.0,
+	// -4.5, and -6.0.
+	LoRoCenterMixLevel *float64 `locationName:"loRoCenterMixLevel" type:"double"`
+
+	// Specify a value for the following Dolby Atmos setting: Left only/Right only
+	// (Lo/Ro surround). MediaConvert uses this value for downmixing. How the service
+	// uses this value depends on the value that you choose for Stereo downmix (Eac3AtmosStereoDownmix).
+	// Valid values: -1.5, -3.0, -4.5, -6.0, and -60. The value -60 mutes the channel.
+	LoRoSurroundMixLevel *float64 `locationName:"loRoSurroundMixLevel" type:"double"`
+
+	// Specify a value for the following Dolby Atmos setting: Left total/Right total
+	// center mix (Lt/Rt center). MediaConvert uses this value for downmixing. How
+	// the service uses this value depends on the value that you choose for Stereo
+	// downmix (Eac3AtmosStereoDownmix). Valid values: 3.0, 1.5, 0.0, -1.5, -3.0,
+	// -4.5, and -6.0.
+	LtRtCenterMixLevel *float64 `locationName:"ltRtCenterMixLevel" type:"double"`
+
+	// Specify a value for the following Dolby Atmos setting: Left total/Right total
+	// surround mix (Lt/Rt surround). MediaConvert uses this value for downmixing.
+	// How the service uses this value depends on the value that you choose for
+	// Stereo downmix (Eac3AtmosStereoDownmix). Valid values: -1.5, -3.0, -4.5,
+	// -6.0, and -60. The value -60 mutes the channel.
+	LtRtSurroundMixLevel *float64 `locationName:"ltRtSurroundMixLevel" type:"double"`
+
+	// Choose how the service meters the loudness of your audio.
+	MeteringMode *string `locationName:"meteringMode" type:"string" enum:"Eac3AtmosMeteringMode"`
+
+	// This value is always 48000. It represents the sample rate in Hz.
+	SampleRate *int64 `locationName:"sampleRate" min:"48000" type:"integer"`
+
+	// Specify the percentage of audio content that must be speech before the encoder
+	// uses the measured speech loudness as the overall program loudness.
+	SpeechThreshold *int64 `locationName:"speechThreshold" min:"1" type:"integer"`
+
+	// Choose how the service does stereo downmixing.
+	StereoDownmix *string `locationName:"stereoDownmix" type:"string" enum:"Eac3AtmosStereoDownmix"`
+
+	// Specify whether your input audio has an additional center rear surround channel
+	// matrix encoded into your left and right surround channels.
+	SurroundExMode *string `locationName:"surroundExMode" type:"string" enum:"Eac3AtmosSurroundExMode"`
+}
+
+// String returns the string representation
+func (s Eac3AtmosSettings) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s Eac3AtmosSettings) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *Eac3AtmosSettings) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "Eac3AtmosSettings"}
+	if s.Bitrate != nil && *s.Bitrate < 384000 {
+		invalidParams.Add(request.NewErrParamMinValue("Bitrate", 384000))
+	}
+	if s.SampleRate != nil && *s.SampleRate < 48000 {
+		invalidParams.Add(request.NewErrParamMinValue("SampleRate", 48000))
+	}
+	if s.SpeechThreshold != nil && *s.SpeechThreshold < 1 {
+		invalidParams.Add(request.NewErrParamMinValue("SpeechThreshold", 1))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetBitrate sets the Bitrate field's value.
+func (s *Eac3AtmosSettings) SetBitrate(v int64) *Eac3AtmosSettings {
+	s.Bitrate = &v
+	return s
+}
+
+// SetBitstreamMode sets the BitstreamMode field's value.
+func (s *Eac3AtmosSettings) SetBitstreamMode(v string) *Eac3AtmosSettings {
+	s.BitstreamMode = &v
+	return s
+}
+
+// SetCodingMode sets the CodingMode field's value.
+func (s *Eac3AtmosSettings) SetCodingMode(v string) *Eac3AtmosSettings {
+	s.CodingMode = &v
+	return s
+}
+
+// SetDialogueIntelligence sets the DialogueIntelligence field's value.
+func (s *Eac3AtmosSettings) SetDialogueIntelligence(v string) *Eac3AtmosSettings {
+	s.DialogueIntelligence = &v
+	return s
+}
+
+// SetDynamicRangeCompressionLine sets the DynamicRangeCompressionLine field's value.
+func (s *Eac3AtmosSettings) SetDynamicRangeCompressionLine(v string) *Eac3AtmosSettings {
+	s.DynamicRangeCompressionLine = &v
+	return s
+}
+
+// SetDynamicRangeCompressionRf sets the DynamicRangeCompressionRf field's value.
+func (s *Eac3AtmosSettings) SetDynamicRangeCompressionRf(v string) *Eac3AtmosSettings {
+	s.DynamicRangeCompressionRf = &v
+	return s
+}
+
+// SetLoRoCenterMixLevel sets the LoRoCenterMixLevel field's value.
+func (s *Eac3AtmosSettings) SetLoRoCenterMixLevel(v float64) *Eac3AtmosSettings {
+	s.LoRoCenterMixLevel = &v
+	return s
+}
+
+// SetLoRoSurroundMixLevel sets the LoRoSurroundMixLevel field's value.
+func (s *Eac3AtmosSettings) SetLoRoSurroundMixLevel(v float64) *Eac3AtmosSettings {
+	s.LoRoSurroundMixLevel = &v
+	return s
+}
+
+// SetLtRtCenterMixLevel sets the LtRtCenterMixLevel field's value.
+func (s *Eac3AtmosSettings) SetLtRtCenterMixLevel(v float64) *Eac3AtmosSettings {
+	s.LtRtCenterMixLevel = &v
+	return s
+}
+
+// SetLtRtSurroundMixLevel sets the LtRtSurroundMixLevel field's value.
+func (s *Eac3AtmosSettings) SetLtRtSurroundMixLevel(v float64) *Eac3AtmosSettings {
+	s.LtRtSurroundMixLevel = &v
+	return s
+}
+
+// SetMeteringMode sets the MeteringMode field's value.
+func (s *Eac3AtmosSettings) SetMeteringMode(v string) *Eac3AtmosSettings {
+	s.MeteringMode = &v
+	return s
+}
+
+// SetSampleRate sets the SampleRate field's value.
+func (s *Eac3AtmosSettings) SetSampleRate(v int64) *Eac3AtmosSettings {
+	s.SampleRate = &v
+	return s
+}
+
+// SetSpeechThreshold sets the SpeechThreshold field's value.
+func (s *Eac3AtmosSettings) SetSpeechThreshold(v int64) *Eac3AtmosSettings {
+	s.SpeechThreshold = &v
+	return s
+}
+
+// SetStereoDownmix sets the StereoDownmix field's value.
+func (s *Eac3AtmosSettings) SetStereoDownmix(v string) *Eac3AtmosSettings {
+	s.StereoDownmix = &v
+	return s
+}
+
+// SetSurroundExMode sets the SurroundExMode field's value.
+func (s *Eac3AtmosSettings) SetSurroundExMode(v string) *Eac3AtmosSettings {
+	s.SurroundExMode = &v
+	return s
+}
+
+// Required when you set (Codec) under (AudioDescriptions)>(CodecSettings) to
 // the value EAC3.
 type Eac3Settings struct {
 	_ struct{} `type:"structure"`
@@ -6465,11 +6720,13 @@ type Eac3Settings struct {
 	// Only used for 3/2 coding mode.
 	AttenuationControl *string `locationName:"attenuationControl" type:"string" enum:"Eac3AttenuationControl"`
 
-	// Average bitrate in bits/second. Valid bitrates depend on the coding mode.
+	// Specify the average bitrate in bits per second. Valid bitrates depend on
+	// the coding mode.
 	Bitrate *int64 `locationName:"bitrate" min:"64000" type:"integer"`
 
-	// Specifies the "Bitstream Mode" (bsmod) for the emitted E-AC-3 stream. See
-	// ATSC A/52-2012 (Annex E) for background on these values.
+	// Specify the bitstream mode for the E-AC-3 stream that the encoder emits.
+	// For more information about the EAC3 bitstream mode, see ATSC A/52-2012 (Annex
+	// E).
 	BitstreamMode *string `locationName:"bitstreamMode" type:"string" enum:"Eac3BitstreamMode"`
 
 	// Dolby Digital Plus coding mode. Determines number of channels.
@@ -6482,12 +6739,11 @@ type Eac3Settings struct {
 	// Plus, dialnorm will be passed through.
 	Dialnorm *int64 `locationName:"dialnorm" min:"1" type:"integer"`
 
-	// Enables Dynamic Range Compression that restricts the absolute peak level
-	// for a signal.
+	// Specify the absolute peak level for a signal with dynamic range compression.
 	DynamicRangeCompressionLine *string `locationName:"dynamicRangeCompressionLine" type:"string" enum:"Eac3DynamicRangeCompressionLine"`
 
-	// Enables Heavy Dynamic Range Compression, ensures that the instantaneous signal
-	// peaks do not exceed specified levels.
+	// Specify how the service limits the audio dynamic range when compressing the
+	// audio.
 	DynamicRangeCompressionRf *string `locationName:"dynamicRangeCompressionRf" type:"string" enum:"Eac3DynamicRangeCompressionRf"`
 
 	// When encoding 3/2 audio, controls whether the LFE channel is enabled
@@ -6497,20 +6753,44 @@ type Eac3Settings struct {
 	// valid with 3_2_LFE coding mode.
 	LfeFilter *string `locationName:"lfeFilter" type:"string" enum:"Eac3LfeFilter"`
 
-	// Left only/Right only center mix level. Only used for 3/2 coding mode.Valid
-	// values: 3.0, 1.5, 0.0, -1.5 -3.0 -4.5 -6.0 -60
+	// Specify a value for the following Dolby Digital Plus setting: Left only/Right
+	// only center mix (Lo/Ro center). MediaConvert uses this value for downmixing.
+	// How the service uses this value depends on the value that you choose for
+	// Stereo downmix (Eac3StereoDownmix). Valid values: 3.0, 1.5, 0.0, -1.5, -3.0,
+	// -4.5, -6.0, and -60. The value -60 mutes the channel. This setting applies
+	// only if you keep the default value of 3/2 - L, R, C, Ls, Rs (CODING_MODE_3_2)
+	// for the setting Coding mode (Eac3CodingMode). If you choose a different value
+	// for Coding mode, the service ignores Left only/Right only center (loRoCenterMixLevel).
 	LoRoCenterMixLevel *float64 `locationName:"loRoCenterMixLevel" type:"double"`
 
-	// Left only/Right only surround mix level. Only used for 3/2 coding mode.Valid
-	// values: -1.5 -3.0 -4.5 -6.0 -60
+	// Specify a value for the following Dolby Digital Plus setting: Left only/Right
+	// only (Lo/Ro surround). MediaConvert uses this value for downmixing. How the
+	// service uses this value depends on the value that you choose for Stereo downmix
+	// (Eac3StereoDownmix). Valid values: -1.5, -3.0, -4.5, -6.0, and -60. The value
+	// -60 mutes the channel. This setting applies only if you keep the default
+	// value of 3/2 - L, R, C, Ls, Rs (CODING_MODE_3_2) for the setting Coding mode
+	// (Eac3CodingMode). If you choose a different value for Coding mode, the service
+	// ignores Left only/Right only surround (loRoSurroundMixLevel).
 	LoRoSurroundMixLevel *float64 `locationName:"loRoSurroundMixLevel" type:"double"`
 
-	// Left total/Right total center mix level. Only used for 3/2 coding mode.Valid
-	// values: 3.0, 1.5, 0.0, -1.5 -3.0 -4.5 -6.0 -60
+	// Specify a value for the following Dolby Digital Plus setting: Left total/Right
+	// total center mix (Lt/Rt center). MediaConvert uses this value for downmixing.
+	// How the service uses this value depends on the value that you choose for
+	// Stereo downmix (Eac3StereoDownmix). Valid values: 3.0, 1.5, 0.0, -1.5, -3.0,
+	// -4.5, -6.0, and -60. The value -60 mutes the channel. This setting applies
+	// only if you keep the default value of 3/2 - L, R, C, Ls, Rs (CODING_MODE_3_2)
+	// for the setting Coding mode (Eac3CodingMode). If you choose a different value
+	// for Coding mode, the service ignores Left total/Right total center (ltRtCenterMixLevel).
 	LtRtCenterMixLevel *float64 `locationName:"ltRtCenterMixLevel" type:"double"`
 
-	// Left total/Right total surround mix level. Only used for 3/2 coding mode.Valid
-	// values: -1.5 -3.0 -4.5 -6.0 -60
+	// Specify a value for the following Dolby Digital Plus setting: Left total/Right
+	// total surround mix (Lt/Rt surround). MediaConvert uses this value for downmixing.
+	// How the service uses this value depends on the value that you choose for
+	// Stereo downmix (Eac3StereoDownmix). Valid values: -1.5, -3.0, -4.5, -6.0,
+	// and -60. The value -60 mutes the channel. This setting applies only if you
+	// keep the default value of 3/2 - L, R, C, Ls, Rs (CODING_MODE_3_2) for the
+	// setting Coding mode (Eac3CodingMode). If you choose a different value for
+	// Coding mode, the service ignores Left total/Right total surround (ltRtSurroundMixLevel).
 	LtRtSurroundMixLevel *float64 `locationName:"ltRtSurroundMixLevel" type:"double"`
 
 	// When set to FOLLOW_INPUT, encoder metadata will be sourced from the DD, DD+,
@@ -6528,10 +6808,13 @@ type Eac3Settings struct {
 	// used for 3/2 coding mode.
 	PhaseControl *string `locationName:"phaseControl" type:"string" enum:"Eac3PhaseControl"`
 
-	// Sample rate in hz. Sample rate is always 48000.
+	// This value is always 48000. It represents the sample rate in Hz.
 	SampleRate *int64 `locationName:"sampleRate" min:"48000" type:"integer"`
 
-	// Stereo downmix preference. Only used for 3/2 coding mode.
+	// Choose how the service does stereo downmixing. This setting only applies
+	// if you keep the default value of 3/2 - L, R, C, Ls, Rs (CODING_MODE_3_2)
+	// for the setting Coding mode (Eac3CodingMode). If you choose a different value
+	// for Coding mode, the service ignores Stereo downmix (Eac3StereoDownmix).
 	StereoDownmix *string `locationName:"stereoDownmix" type:"string" enum:"Eac3StereoDownmix"`
 
 	// When encoding 3/2 audio, sets whether an extra center back surround channel
@@ -6703,16 +6986,24 @@ func (s *Eac3Settings) SetSurroundMode(v string) *Eac3Settings {
 type EmbeddedDestinationSettings struct {
 	_ struct{} `type:"structure"`
 
-	// Ignore this setting unless your input captions are SCC format and your output
-	// container is MXF. With this combination of input captions format and output
-	// container, you can optionally use this setting to replace the input channel
-	// number with the track number that you specify. Specify a different number
-	// for each output captions track. If you don't specify an output track number,
-	// the system uses the input channel number for the output channel number. This
-	// setting applies to each output individually. You can optionally combine two
-	// captions channels in your output. The two output channel numbers can be one
-	// of the following pairs: 1,3; 2,4; 1,4; or 2,3.
+	// Ignore this setting unless your input captions are SCC format. With SCC inputs,
+	// you can optionally use this setting to replace the input channel number with
+	// the channel number that you specify. Specify a different number for each
+	// output captions track for a particular output. If you don't specify an output
+	// channel number, the system uses the input channel number for the output channel
+	// number. You can optionally combine two captions channels in your output.
+	// The two output channel numbers can be one of the following pairs: 1,3; 2,4;
+	// 1,4; or 2,3.
 	Destination608ChannelNumber *int64 `locationName:"destination608ChannelNumber" min:"1" type:"integer"`
+
+	// Ignore this setting unless your input captions are SCC format and you are
+	// performing SCC upconvert. With SCC inputs, you can optionally use this setting
+	// to specify the 708 service number that is in the output. Specify a different
+	// service number for each output captions track for a particular output. If
+	// you don't specify an output track number, the system uses the 608 channel
+	// number for the output 708 service number. You can combine two captions channels
+	// in your output. Service numbers must be distinct.
+	Destination708ServiceNumber *int64 `locationName:"destination708ServiceNumber" min:"1" type:"integer"`
 }
 
 // String returns the string representation
@@ -6731,6 +7022,9 @@ func (s *EmbeddedDestinationSettings) Validate() error {
 	if s.Destination608ChannelNumber != nil && *s.Destination608ChannelNumber < 1 {
 		invalidParams.Add(request.NewErrParamMinValue("Destination608ChannelNumber", 1))
 	}
+	if s.Destination708ServiceNumber != nil && *s.Destination708ServiceNumber < 1 {
+		invalidParams.Add(request.NewErrParamMinValue("Destination708ServiceNumber", 1))
+	}
 
 	if invalidParams.Len() > 0 {
 		return invalidParams
@@ -6741,6 +7035,12 @@ func (s *EmbeddedDestinationSettings) Validate() error {
 // SetDestination608ChannelNumber sets the Destination608ChannelNumber field's value.
 func (s *EmbeddedDestinationSettings) SetDestination608ChannelNumber(v int64) *EmbeddedDestinationSettings {
 	s.Destination608ChannelNumber = &v
+	return s
+}
+
+// SetDestination708ServiceNumber sets the Destination708ServiceNumber field's value.
+func (s *EmbeddedDestinationSettings) SetDestination708ServiceNumber(v int64) *EmbeddedDestinationSettings {
+	s.Destination708ServiceNumber = &v
 	return s
 }
 
@@ -6916,10 +7216,11 @@ type EsamSignalProcessingNotification struct {
 	// job settings. Form the XML document as per OC-SP-ESAM-API-I03-131025. The
 	// transcoder will use the signal processing instructions in the message that
 	// you supply. Provide your ESAM SignalProcessingNotification XML document inside
-	// your JSON job settings. If you want the service to place SCTE-35 markers
-	// at the insertion points you specify in the XML document, you must also enable
-	// SCTE-35 ESAM (scte35Esam). Note that you can either specify an ESAM XML document
-	// or enable SCTE-35 passthrough. You can't do both.
+	// your JSON job settings. For your MPEG2-TS file outputs, if you want the service
+	// to place SCTE-35 markers at the insertion points you specify in the XML document,
+	// you must also enable SCTE-35 ESAM (scte35Esam). Note that you can either
+	// specify an ESAM XML document or enable SCTE-35 passthrough. You can't do
+	// both.
 	SccXml *string `locationName:"sccXml" type:"string"`
 }
 
@@ -7432,9 +7733,9 @@ type H264QvbrSettings struct {
 	// Use this setting only when Rate control mode is QVBR and Quality tuning level
 	// is Multi-pass HQ. For Max average bitrate values suited to the complexity
 	// of your input video, the service limits the average bitrate of the video
-	// part of this output to the value you choose. That is, the total size of the
-	// video element is less than or equal to the value you set multiplied by the
-	// number of seconds of encoded output.
+	// part of this output to the value that you choose. That is, the total size
+	// of the video element is less than or equal to the value you set multiplied
+	// by the number of seconds of encoded output.
 	MaxAverageBitrate *int64 `locationName:"maxAverageBitrate" min:"1000" type:"integer"`
 
 	// Required when you use QVBR rate control mode. That is, when you specify qvbrSettings
@@ -7492,8 +7793,9 @@ type H264Settings struct {
 	// quality.
 	AdaptiveQuantization *string `locationName:"adaptiveQuantization" type:"string" enum:"H264AdaptiveQuantization"`
 
-	// Average bitrate in bits/second. Required for VBR and CBR. For MS Smooth outputs,
-	// bitrates must be unique when rounded down to the nearest multiple of 1000.
+	// Specify the average bitrate in bits per second. Required for VBR and CBR.
+	// For MS Smooth outputs, bitrates must be unique when rounded down to the nearest
+	// multiple of 1000.
 	Bitrate *int64 `locationName:"bitrate" min:"1000" type:"integer"`
 
 	// Specify an H.264 level that is consistent with your output video settings.
@@ -7967,9 +8269,9 @@ type H265QvbrSettings struct {
 	// Use this setting only when Rate control mode is QVBR and Quality tuning level
 	// is Multi-pass HQ. For Max average bitrate values suited to the complexity
 	// of your input video, the service limits the average bitrate of the video
-	// part of this output to the value you choose. That is, the total size of the
-	// video element is less than or equal to the value you set multiplied by the
-	// number of seconds of encoded output.
+	// part of this output to the value that you choose. That is, the total size
+	// of the video element is less than or equal to the value you set multiplied
+	// by the number of seconds of encoded output.
 	MaxAverageBitrate *int64 `locationName:"maxAverageBitrate" min:"1000" type:"integer"`
 
 	// Required when you use QVBR rate control mode. That is, when you specify qvbrSettings
@@ -8030,8 +8332,9 @@ type H265Settings struct {
 	// Log Gamma (HLG) Electro-Optical Transfer Function (EOTF).
 	AlternateTransferFunctionSei *string `locationName:"alternateTransferFunctionSei" type:"string" enum:"H265AlternateTransferFunctionSei"`
 
-	// Average bitrate in bits/second. Required for VBR and CBR. For MS Smooth outputs,
-	// bitrates must be unique when rounded down to the nearest multiple of 1000.
+	// Specify the average bitrate in bits per second. Required for VBR and CBR.
+	// For MS Smooth outputs, bitrates must be unique when rounded down to the nearest
+	// multiple of 1000.
 	Bitrate *int64 `locationName:"bitrate" min:"1000" type:"integer"`
 
 	// H.265 Level.
@@ -8826,8 +9129,9 @@ func (s *HlsEncryptionSettings) SetType(v string) *HlsEncryptionSettings {
 type HlsGroupSettings struct {
 	_ struct{} `type:"structure"`
 
-	// Choose one or more ad marker types to pass SCTE35 signals through to this
-	// group of Apple HLS outputs.
+	// Choose one or more ad marker types to decorate your Apple HLS manifest. This
+	// setting does not determine whether SCTE-35 markers appear in the outputs
+	// themselves.
 	AdMarkers []*string `locationName:"adMarkers" type:"list"`
 
 	// A partial URI prefix that will be prepended to each output in the media .m3u8
@@ -9137,6 +9441,13 @@ type HlsSettings struct {
 	// Specifies the group to which the audio Rendition belongs.
 	AudioGroupId *string `locationName:"audioGroupId" type:"string"`
 
+	// Use this setting only in audio-only outputs. Choose MPEG-2 Transport Stream
+	// (M2TS) to create a file in an MPEG2-TS container. Keep the default value
+	// Automatic (AUTOMATIC) to create an audio-only file in a raw container. Regardless
+	// of the value that you specify here, if this output has video, the service
+	// will place the output into an MPEG2-TS container.
+	AudioOnlyContainer *string `locationName:"audioOnlyContainer" type:"string" enum:"HlsAudioOnlyContainer"`
+
 	// List all the audio groups that are used with the video output stream. Input
 	// all the audio GROUP-IDs that are associated to the video, separate by ','.
 	AudioRenditionSets *string `locationName:"audioRenditionSets" type:"string"`
@@ -9175,6 +9486,12 @@ func (s HlsSettings) GoString() string {
 // SetAudioGroupId sets the AudioGroupId field's value.
 func (s *HlsSettings) SetAudioGroupId(v string) *HlsSettings {
 	s.AudioGroupId = &v
+	return s
+}
+
+// SetAudioOnlyContainer sets the AudioOnlyContainer field's value.
+func (s *HlsSettings) SetAudioOnlyContainer(v string) *HlsSettings {
+	s.AudioOnlyContainer = &v
 	return s
 }
 
@@ -9304,6 +9621,12 @@ type Input struct {
 	// selectors per input.
 	CaptionSelectors map[string]*CaptionSelector `locationName:"captionSelectors" type:"map"`
 
+	// Use Cropping selection (crop) to specify the video area that the service
+	// will include in the output video frame. If you specify a value here, it will
+	// override any value that you specify in the output setting Cropping selection
+	// (crop).
+	Crop *Rectangle `locationName:"crop" type:"structure"`
+
 	// Enable Deblock (InputDeblockFilter) to produce smoother motion in the output.
 	// Default is disabled. Only manaully controllable for MPEG2 and uncompressed
 	// video inputs.
@@ -9354,6 +9677,16 @@ type Input struct {
 	// you specify more than one input clip, the transcoding service creates the
 	// job outputs by stringing the clips together in the order you specify them.
 	InputClippings []*InputClipping `locationName:"inputClippings" type:"list"`
+
+	// Use Selection placement (position) to define the video area in your output
+	// frame. The area outside of the rectangle that you specify here is black.
+	// If you specify a value here, it will override any value that you specify
+	// in the output setting Selection placement (position). If you specify a value
+	// here, this will override any AFD values in your input, even if you set Respond
+	// to AFD (RespondToAfd) to Respond (RESPOND). If you specify a value here,
+	// this will ignore anything that you specify for the setting Scaling Behavior
+	// (scalingBehavior).
+	Position *Rectangle `locationName:"position" type:"structure"`
 
 	// Use Program (programNumber) to select a specific program from within a multi-program
 	// transport stream. Note that Quad 4K is not currently supported. Default is
@@ -9426,6 +9759,11 @@ func (s *Input) Validate() error {
 			}
 		}
 	}
+	if s.Crop != nil {
+		if err := s.Crop.Validate(); err != nil {
+			invalidParams.AddNested("Crop", err.(request.ErrInvalidParams))
+		}
+	}
 	if s.DecryptionSettings != nil {
 		if err := s.DecryptionSettings.Validate(); err != nil {
 			invalidParams.AddNested("DecryptionSettings", err.(request.ErrInvalidParams))
@@ -9434,6 +9772,11 @@ func (s *Input) Validate() error {
 	if s.ImageInserter != nil {
 		if err := s.ImageInserter.Validate(); err != nil {
 			invalidParams.AddNested("ImageInserter", err.(request.ErrInvalidParams))
+		}
+	}
+	if s.Position != nil {
+		if err := s.Position.Validate(); err != nil {
+			invalidParams.AddNested("Position", err.(request.ErrInvalidParams))
 		}
 	}
 	if s.VideoSelector != nil {
@@ -9463,6 +9806,12 @@ func (s *Input) SetAudioSelectors(v map[string]*AudioSelector) *Input {
 // SetCaptionSelectors sets the CaptionSelectors field's value.
 func (s *Input) SetCaptionSelectors(v map[string]*CaptionSelector) *Input {
 	s.CaptionSelectors = v
+	return s
+}
+
+// SetCrop sets the Crop field's value.
+func (s *Input) SetCrop(v *Rectangle) *Input {
+	s.Crop = v
 	return s
 }
 
@@ -9511,6 +9860,12 @@ func (s *Input) SetImageInserter(v *ImageInserter) *Input {
 // SetInputClippings sets the InputClippings field's value.
 func (s *Input) SetInputClippings(v []*InputClipping) *Input {
 	s.InputClippings = v
+	return s
+}
+
+// SetPosition sets the Position field's value.
+func (s *Input) SetPosition(v *Rectangle) *Input {
+	s.Position = v
 	return s
 }
 
@@ -9696,6 +10051,12 @@ type InputTemplate struct {
 	// selectors per input.
 	CaptionSelectors map[string]*CaptionSelector `locationName:"captionSelectors" type:"map"`
 
+	// Use Cropping selection (crop) to specify the video area that the service
+	// will include in the output video frame. If you specify a value here, it will
+	// override any value that you specify in the output setting Cropping selection
+	// (crop).
+	Crop *Rectangle `locationName:"crop" type:"structure"`
+
 	// Enable Deblock (InputDeblockFilter) to produce smoother motion in the output.
 	// Default is disabled. Only manaully controllable for MPEG2 and uncompressed
 	// video inputs.
@@ -9731,6 +10092,16 @@ type InputTemplate struct {
 	// you specify more than one input clip, the transcoding service creates the
 	// job outputs by stringing the clips together in the order you specify them.
 	InputClippings []*InputClipping `locationName:"inputClippings" type:"list"`
+
+	// Use Selection placement (position) to define the video area in your output
+	// frame. The area outside of the rectangle that you specify here is black.
+	// If you specify a value here, it will override any value that you specify
+	// in the output setting Selection placement (position). If you specify a value
+	// here, this will override any AFD values in your input, even if you set Respond
+	// to AFD (RespondToAfd) to Respond (RESPOND). If you specify a value here,
+	// this will ignore anything that you specify for the setting Scaling Behavior
+	// (scalingBehavior).
+	Position *Rectangle `locationName:"position" type:"structure"`
 
 	// Use Program (programNumber) to select a specific program from within a multi-program
 	// transport stream. Note that Quad 4K is not currently supported. Default is
@@ -9795,9 +10166,19 @@ func (s *InputTemplate) Validate() error {
 			}
 		}
 	}
+	if s.Crop != nil {
+		if err := s.Crop.Validate(); err != nil {
+			invalidParams.AddNested("Crop", err.(request.ErrInvalidParams))
+		}
+	}
 	if s.ImageInserter != nil {
 		if err := s.ImageInserter.Validate(); err != nil {
 			invalidParams.AddNested("ImageInserter", err.(request.ErrInvalidParams))
+		}
+	}
+	if s.Position != nil {
+		if err := s.Position.Validate(); err != nil {
+			invalidParams.AddNested("Position", err.(request.ErrInvalidParams))
 		}
 	}
 	if s.VideoSelector != nil {
@@ -9827,6 +10208,12 @@ func (s *InputTemplate) SetAudioSelectors(v map[string]*AudioSelector) *InputTem
 // SetCaptionSelectors sets the CaptionSelectors field's value.
 func (s *InputTemplate) SetCaptionSelectors(v map[string]*CaptionSelector) *InputTemplate {
 	s.CaptionSelectors = v
+	return s
+}
+
+// SetCrop sets the Crop field's value.
+func (s *InputTemplate) SetCrop(v *Rectangle) *InputTemplate {
+	s.Crop = v
 	return s
 }
 
@@ -9863,6 +10250,12 @@ func (s *InputTemplate) SetImageInserter(v *ImageInserter) *InputTemplate {
 // SetInputClippings sets the InputClippings field's value.
 func (s *InputTemplate) SetInputClippings(v []*InputClipping) *InputTemplate {
 	s.InputClippings = v
+	return s
+}
+
+// SetPosition sets the Position field's value.
+func (s *InputTemplate) SetPosition(v *Rectangle) *InputTemplate {
+	s.Position = v
 	return s
 }
 
@@ -10080,9 +10473,8 @@ type Job struct {
 	// provides jobPercentComplete in CloudWatch STATUS_UPDATE events and in the
 	// response to GetJob and ListJobs requests. The jobPercentComplete estimate
 	// is reliable for the following input containers: Quicktime, Transport Stream,
-	// MP4, and MXF. For some jobs, including audio-only jobs and jobs that use
-	// input clipping, the service can't provide information about job progress.
-	// In those cases, jobPercentComplete returns a null value.
+	// MP4, and MXF. For some jobs, the service can't provide information about
+	// job progress. In those cases, jobPercentComplete returns a null value.
 	JobPercentComplete *int64 `locationName:"jobPercentComplete" type:"integer"`
 
 	// The job template that the job is created from, if it is created from a job
@@ -10091,6 +10483,9 @@ type Job struct {
 
 	// List of output group details
 	OutputGroupDetails []*OutputGroupDetail `locationName:"outputGroupDetails" type:"list"`
+
+	// Relative priority on the job.
+	Priority *int64 `locationName:"priority" type:"integer"`
 
 	// Optional. When you create a job, you can specify a queue to send it to. If
 	// you don't specify, the job will go to the default queue. For more about queues,
@@ -10206,6 +10601,12 @@ func (s *Job) SetOutputGroupDetails(v []*OutputGroupDetail) *Job {
 	return s
 }
 
+// SetPriority sets the Priority field's value.
+func (s *Job) SetPriority(v int64) *Job {
+	s.Priority = &v
+	return s
+}
+
 // SetQueue sets the Queue field's value.
 func (s *Job) SetQueue(v string) *Job {
 	s.Queue = &v
@@ -10278,7 +10679,13 @@ type JobSettings struct {
 	// specify here appear on all outputs in all output groups.
 	MotionImageInserter *MotionImageInserter `locationName:"motionImageInserter" type:"structure"`
 
-	// Settings for Nielsen Configuration
+	// Settings for your Nielsen configuration. If you don't do Nielsen measurement
+	// and analytics, ignore these settings. When you enable Nielsen configuration
+	// (nielsenConfiguration), MediaConvert enables PCM to ID3 tagging for all outputs
+	// in the job. To enable Nielsen configuration programmatically, include an
+	// instance of nielsenConfiguration in your JSON job specification. Even if
+	// you don't include any children of nielsenConfiguration, you still enable
+	// the setting.
 	NielsenConfiguration *NielsenConfiguration `locationName:"nielsenConfiguration" type:"structure"`
 
 	// (OutputGroups) contains one group of settings for each set of outputs that
@@ -10414,8 +10821,8 @@ func (s *JobSettings) SetTimedMetadataInsertion(v *TimedMetadataInsertion) *JobS
 type JobTemplate struct {
 	_ struct{} `type:"structure"`
 
-	// Accelerated transcoding is currently in private preview. Contact AWS for
-	// more information.
+	// Accelerated transcoding can significantly speed up jobs with long, visually
+	// complex content.
 	AccelerationSettings *AccelerationSettings `locationName:"accelerationSettings" type:"structure"`
 
 	// An identifier for this resource that is unique within all of AWS.
@@ -10438,6 +10845,9 @@ type JobTemplate struct {
 	//
 	// Name is a required field
 	Name *string `locationName:"name" type:"string" required:"true"`
+
+	// Relative priority on the job.
+	Priority *int64 `locationName:"priority" type:"integer"`
 
 	// Optional. The queue that jobs created from this template are assigned to.
 	// If you don't specify this, jobs will go to the default queue.
@@ -10512,6 +10922,12 @@ func (s *JobTemplate) SetName(v string) *JobTemplate {
 	return s
 }
 
+// SetPriority sets the Priority field's value.
+func (s *JobTemplate) SetPriority(v int64) *JobTemplate {
+	s.Priority = &v
+	return s
+}
+
 // SetQueue sets the Queue field's value.
 func (s *JobTemplate) SetQueue(v string) *JobTemplate {
 	s.Queue = &v
@@ -10561,7 +10977,13 @@ type JobTemplateSettings struct {
 	// specify here appear on all outputs in all output groups.
 	MotionImageInserter *MotionImageInserter `locationName:"motionImageInserter" type:"structure"`
 
-	// Settings for Nielsen Configuration
+	// Settings for your Nielsen configuration. If you don't do Nielsen measurement
+	// and analytics, ignore these settings. When you enable Nielsen configuration
+	// (nielsenConfiguration), MediaConvert enables PCM to ID3 tagging for all outputs
+	// in the job. To enable Nielsen configuration programmatically, include an
+	// instance of nielsenConfiguration in your JSON job specification. Even if
+	// you don't include any children of nielsenConfiguration, you still enable
+	// the setting.
 	NielsenConfiguration *NielsenConfiguration `locationName:"nielsenConfiguration" type:"structure"`
 
 	// (OutputGroups) contains one group of settings for each set of outputs that
@@ -11396,8 +11818,12 @@ type M2tsSettings struct {
 	// stream.
 	Scte35Pid *int64 `locationName:"scte35Pid" min:"32" type:"integer"`
 
-	// Enables SCTE-35 passthrough (scte35Source) to pass any SCTE-35 signals from
-	// input to output.
+	// For SCTE-35 markers from your input-- Choose Passthrough (PASSTHROUGH) if
+	// you want SCTE-35 markers that appear in your input to also appear in this
+	// output. Choose None (NONE) if you don't want SCTE-35 markers in this output.
+	// For SCTE-35 markers from an ESAM XML document-- Choose None (NONE). Also
+	// provide the ESAM XML as a string in the setting Signal processing notification
+	// XML (sccXml). Also enable ESAM SCTE-35 (include the property scte35Esam).
 	Scte35Source *string `locationName:"scte35Source" type:"string" enum:"M2tsScte35Source"`
 
 	// Inserts segmentation markers at each segmentation_time period. rai_segstart
@@ -11764,8 +12190,14 @@ type M3u8Settings struct {
 	// Packet Identifier (PID) of the SCTE-35 stream in the transport stream.
 	Scte35Pid *int64 `locationName:"scte35Pid" min:"32" type:"integer"`
 
-	// Enables SCTE-35 passthrough (scte35Source) to pass any SCTE-35 signals from
-	// input to output.
+	// For SCTE-35 markers from your input-- Choose Passthrough (PASSTHROUGH) if
+	// you want SCTE-35 markers that appear in your input to also appear in this
+	// output. Choose None (NONE) if you don't want SCTE-35 markers in this output.
+	// For SCTE-35 markers from an ESAM XML document-- Choose None (NONE) if you
+	// don't want manifest conditioning. Choose Passthrough (PASSTHROUGH) and choose
+	// Ad markers (adMarkers) if you do want manifest conditioning. In both cases,
+	// also provide the ESAM XML as a string in the setting Signal processing notification
+	// XML (sccXml).
 	Scte35Source *string `locationName:"scte35Source" type:"string" enum:"M3u8Scte35Source"`
 
 	// Applies only to HLS outputs. Use this setting to specify whether the service
@@ -12196,7 +12628,7 @@ func (s *MovSettings) SetReference(v string) *MovSettings {
 type Mp2Settings struct {
 	_ struct{} `type:"structure"`
 
-	// Average bitrate in bits/second.
+	// Specify the average bitrate in bits per second.
 	Bitrate *int64 `locationName:"bitrate" min:"32000" type:"integer"`
 
 	// Set Channels to specify the number of channels in this output audio track.
@@ -12255,7 +12687,8 @@ func (s *Mp2Settings) SetSampleRate(v int64) *Mp2Settings {
 	return s
 }
 
-// Settings for MP4 Container
+// Settings for MP4 container. You can create audio-only AAC outputs with this
+// container.
 type Mp4Settings struct {
 	_ struct{} `type:"structure"`
 
@@ -12321,8 +12754,9 @@ type Mpeg2Settings struct {
 	// quality.
 	AdaptiveQuantization *string `locationName:"adaptiveQuantization" type:"string" enum:"Mpeg2AdaptiveQuantization"`
 
-	// Average bitrate in bits/second. Required for VBR and CBR. For MS Smooth outputs,
-	// bitrates must be unique when rounded down to the nearest multiple of 1000.
+	// Specify the average bitrate in bits per second. Required for VBR and CBR.
+	// For MS Smooth outputs, bitrates must be unique when rounded down to the nearest
+	// multiple of 1000.
 	Bitrate *int64 `locationName:"bitrate" min:"1000" type:"integer"`
 
 	// Use Level (Mpeg2CodecLevel) to set the MPEG-2 level for the video output.
@@ -12805,12 +13239,18 @@ func (s *MsSmoothGroupSettings) SetManifestEncoding(v string) *MsSmoothGroupSett
 	return s
 }
 
-// Settings for Nielsen Configuration
+// Settings for your Nielsen configuration. If you don't do Nielsen measurement
+// and analytics, ignore these settings. When you enable Nielsen configuration
+// (nielsenConfiguration), MediaConvert enables PCM to ID3 tagging for all outputs
+// in the job. To enable Nielsen configuration programmatically, include an
+// instance of nielsenConfiguration in your JSON job specification. Even if
+// you don't include any children of nielsenConfiguration, you still enable
+// the setting.
 type NielsenConfiguration struct {
 	_ struct{} `type:"structure"`
 
-	// Use Nielsen Configuration (NielsenConfiguration) to set the Nielsen measurement
-	// system breakout code. Supported values are 0, 3, 7, and 9.
+	// Nielsen has discontinued the use of breakout code functionality. If you must
+	// include this property, set the value to zero.
 	BreakoutCode *int64 `locationName:"breakoutCode" type:"integer"`
 
 	// Use Distributor ID (DistributorID) to specify the distributor ID that is
@@ -13032,8 +13472,9 @@ type Output struct {
 	Preset *string `locationName:"preset" type:"string"`
 
 	// (VideoDescription) contains a group of video encoding settings. The specific
-	// video settings depend on the video codec you choose when you specify a value
-	// for Video codec (codec). Include one instance of (VideoDescription) per output.
+	// video settings depend on the video codec that you choose when you specify
+	// a value for Video codec (codec). Include one instance of (VideoDescription)
+	// per output.
 	VideoDescription *VideoDescription `locationName:"videoDescription" type:"structure"`
 }
 
@@ -13539,8 +13980,9 @@ type PresetSettings struct {
 	ContainerSettings *ContainerSettings `locationName:"containerSettings" type:"structure"`
 
 	// (VideoDescription) contains a group of video encoding settings. The specific
-	// video settings depend on the video codec you choose when you specify a value
-	// for Video codec (codec). Include one instance of (VideoDescription) per output.
+	// video settings depend on the video codec that you choose when you specify
+	// a value for Video codec (codec). Include one instance of (VideoDescription)
+	// per output.
 	VideoDescription *VideoDescription `locationName:"videoDescription" type:"structure"`
 }
 
@@ -14978,6 +15420,13 @@ type UpdateJobTemplateInput struct {
 	// Name is a required field
 	Name *string `location:"uri" locationName:"name" type:"string" required:"true"`
 
+	// Specify the relative priority for this job. In any given queue, the service
+	// begins processing the job with the highest value first. When more than one
+	// job has the same priority, the service begins processing the job that you
+	// submitted first. If you don't specify a priority, the service uses the default
+	// value 0.
+	Priority *int64 `locationName:"priority" type:"integer"`
+
 	// The new queue for the job template, if you are changing it.
 	Queue *string `locationName:"queue" type:"string"`
 
@@ -15010,6 +15459,9 @@ func (s *UpdateJobTemplateInput) Validate() error {
 	}
 	if s.Name != nil && len(*s.Name) < 1 {
 		invalidParams.Add(request.NewErrParamMinLen("Name", 1))
+	}
+	if s.Priority != nil && *s.Priority < -50 {
+		invalidParams.Add(request.NewErrParamMinValue("Priority", -50))
 	}
 	if s.AccelerationSettings != nil {
 		if err := s.AccelerationSettings.Validate(); err != nil {
@@ -15049,6 +15501,12 @@ func (s *UpdateJobTemplateInput) SetDescription(v string) *UpdateJobTemplateInpu
 // SetName sets the Name field's value.
 func (s *UpdateJobTemplateInput) SetName(v string) *UpdateJobTemplateInput {
 	s.Name = &v
+	return s
+}
+
+// SetPriority sets the Priority field's value.
+func (s *UpdateJobTemplateInput) SetPriority(v int64) *UpdateJobTemplateInput {
+	s.Priority = &v
 	return s
 }
 
@@ -15309,10 +15767,10 @@ func (s *UpdateQueueOutput) SetQueue(v *Queue) *UpdateQueueOutput {
 
 // Video codec settings, (CodecSettings) under (VideoDescription), contains
 // the group of settings related to video encoding. The settings in this group
-// vary depending on the value you choose for Video codec (Codec). For each
-// codec enum you choose, define the corresponding settings object. The following
-// lists the codec enum, settings object pairs. * H_264, H264Settings * H_265,
-// H265Settings * MPEG2, Mpeg2Settings * PRORES, ProresSettings * FRAME_CAPTURE,
+// vary depending on the value that you choose for Video codec (Codec). For
+// each codec enum that you choose, define the corresponding settings object.
+// The following lists the codec enum, settings object pairs. * H_264, H264Settings
+// * H_265, H265Settings * MPEG2, Mpeg2Settings * PRORES, ProresSettings * FRAME_CAPTURE,
 // FrameCaptureSettings
 type VideoCodecSettings struct {
 	_ struct{} `type:"structure"`
@@ -15434,17 +15892,17 @@ type VideoDescription struct {
 	// to calculate output AFD values based on the input AFD scaler data.
 	AfdSignaling *string `locationName:"afdSignaling" type:"string" enum:"AfdSignaling"`
 
-	// The service automatically applies the anti-alias filter to all outputs. The
-	// service no longer accepts the value DISABLED for AntiAlias. If you specify
-	// that in your job, the service will ignore the setting.
+	// The anti-alias filter is automatically applied to all outputs. The service
+	// no longer accepts the value DISABLED for AntiAlias. If you specify that in
+	// your job, the service will ignore the setting.
 	AntiAlias *string `locationName:"antiAlias" type:"string" enum:"AntiAlias"`
 
 	// Video codec settings, (CodecSettings) under (VideoDescription), contains
 	// the group of settings related to video encoding. The settings in this group
-	// vary depending on the value you choose for Video codec (Codec). For each
-	// codec enum you choose, define the corresponding settings object. The following
-	// lists the codec enum, settings object pairs. * H_264, H264Settings * H_265,
-	// H265Settings * MPEG2, Mpeg2Settings * PRORES, ProresSettings * FRAME_CAPTURE,
+	// vary depending on the value that you choose for Video codec (Codec). For
+	// each codec enum that you choose, define the corresponding settings object.
+	// The following lists the codec enum, settings object pairs. * H_264, H264Settings
+	// * H_265, H265Settings * MPEG2, Mpeg2Settings * PRORES, ProresSettings * FRAME_CAPTURE,
 	// FrameCaptureSettings
 	CodecSettings *VideoCodecSettings `locationName:"codecSettings" type:"structure"`
 
@@ -15452,12 +15910,8 @@ type VideoDescription struct {
 	// this output. This setting is enabled by default.
 	ColorMetadata *string `locationName:"colorMetadata" type:"string" enum:"ColorMetadata"`
 
-	// Applies only if your input aspect ratio is different from your output aspect
-	// ratio. Use Input cropping rectangle (Crop) to specify the video area the
-	// service will include in the output. This will crop the input source, causing
-	// video pixels to be removed on encode. If you crop your input frame size to
-	// smaller than your output frame size, make sure to specify the behavior you
-	// want in your output setting "Scaling behavior".
+	// Use Cropping selection (crop) to specify the video area that the service
+	// will include in the output video frame.
 	Crop *Rectangle `locationName:"crop" type:"structure"`
 
 	// Applies only to 29.97 fps outputs. When this feature is enabled, the service
@@ -15476,8 +15930,8 @@ type VideoDescription struct {
 	// will use the input height.
 	Height *int64 `locationName:"height" min:"32" type:"integer"`
 
-	// Use Position (Position) to point to a rectangle object to define your position.
-	// This setting overrides any other aspect ratio.
+	// Use Selection placement (position) to define the video area in your output
+	// frame. The area outside of the rectangle that you specify here is black.
 	Position *Rectangle `locationName:"position" type:"structure"`
 
 	// Use Respond to AFD (RespondToAfd) to specify how the service changes the
@@ -15490,11 +15944,12 @@ type VideoDescription struct {
 	// from this output.
 	RespondToAfd *string `locationName:"respondToAfd" type:"string" enum:"RespondToAfd"`
 
-	// Applies only if your input aspect ratio is different from your output aspect
-	// ratio. Choose "Stretch to output" to have the service stretch your video
-	// image to fit. Keep the setting "Default" to allow the service to letterbox
-	// your video instead. This setting overrides any positioning value you specify
-	// elsewhere in the job.
+	// Specify how the service handles outputs that have a different aspect ratio
+	// from the input aspect ratio. Choose Stretch to output (STRETCH_TO_OUTPUT)
+	// to have the service stretch your video image to fit. Keep the setting Default
+	// (DEFAULT) to have the service letterbox your video instead. This setting
+	// overrides any value that you specify for the setting Selection placement
+	// (position) in this output.
 	ScalingBehavior *string `locationName:"scalingBehavior" type:"string" enum:"ScalingBehavior"`
 
 	// Use Sharpness (Sharpness) setting to specify the strength of anti-aliasing.
@@ -16088,8 +16543,9 @@ const (
 	AacVbrQualityHigh = "HIGH"
 )
 
-// Specifies the "Bitstream Mode" (bsmod) for the emitted AC-3 stream. See ATSC
-// A/52-2012 for background on these values.
+// Specify the bitstream mode for the AC-3 stream that the encoder emits. For
+// more information about the AC3 bitstream mode, see ATSC A/52-2012 (Annex
+// E).
 const (
 	// Ac3BitstreamModeCompleteMain is a Ac3BitstreamMode enum value
 	Ac3BitstreamModeCompleteMain = "COMPLETE_MAIN"
@@ -16189,9 +16645,9 @@ const (
 	AfdSignalingFixed = "FIXED"
 )
 
-// The service automatically applies the anti-alias filter to all outputs. The
-// service no longer accepts the value DISABLED for AntiAlias. If you specify
-// that in your job, the service will ignore the setting.
+// The anti-alias filter is automatically applied to all outputs. The service
+// no longer accepts the value DISABLED for AntiAlias. If you specify that in
+// your job, the service will ignore the setting.
 const (
 	// AntiAliasDisabled is a AntiAlias enum value
 	AntiAliasDisabled = "DISABLED"
@@ -16220,6 +16676,9 @@ const (
 	// AudioCodecEac3 is a AudioCodec enum value
 	AudioCodecEac3 = "EAC3"
 
+	// AudioCodecEac3Atmos is a AudioCodec enum value
+	AudioCodecEac3Atmos = "EAC3_ATMOS"
+
 	// AudioCodecPassthrough is a AudioCodec enum value
 	AudioCodecPassthrough = "PASSTHROUGH"
 )
@@ -16247,14 +16706,28 @@ const (
 	AudioLanguageCodeControlUseConfigured = "USE_CONFIGURED"
 )
 
-// Audio normalization algorithm to use. 1770-1 conforms to the CALM Act specification,
-// 1770-2 conforms to the EBU R-128 specification.
+// Choose one of the following audio normalization algorithms: ITU-R BS.1770-1:
+// Ungated loudness. A measurement of ungated average loudness for an entire
+// piece of content, suitable for measurement of short-form content under ATSC
+// recommendation A/85. Supports up to 5.1 audio channels. ITU-R BS.1770-2:
+// Gated loudness. A measurement of gated average loudness compliant with the
+// requirements of EBU-R128. Supports up to 5.1 audio channels. ITU-R BS.1770-3:
+// Modified peak. The same loudness measurement algorithm as 1770-2, with an
+// updated true peak measurement. ITU-R BS.1770-4: Higher channel count. Allows
+// for more audio channels than the other algorithms, including configurations
+// such as 7.1.
 const (
 	// AudioNormalizationAlgorithmItuBs17701 is a AudioNormalizationAlgorithm enum value
 	AudioNormalizationAlgorithmItuBs17701 = "ITU_BS_1770_1"
 
 	// AudioNormalizationAlgorithmItuBs17702 is a AudioNormalizationAlgorithm enum value
 	AudioNormalizationAlgorithmItuBs17702 = "ITU_BS_1770_2"
+
+	// AudioNormalizationAlgorithmItuBs17703 is a AudioNormalizationAlgorithm enum value
+	AudioNormalizationAlgorithmItuBs17703 = "ITU_BS_1770_3"
+
+	// AudioNormalizationAlgorithmItuBs17704 is a AudioNormalizationAlgorithm enum value
+	AudioNormalizationAlgorithmItuBs17704 = "ITU_BS_1770_4"
 )
 
 // When enabled the output audio is corrected using the chosen algorithm. If
@@ -16962,6 +17435,118 @@ const (
 	DvbSubtitleTeletextSpacingProportional = "PROPORTIONAL"
 )
 
+// Specify the bitstream mode for the E-AC-3 stream that the encoder emits.
+// For more information about the EAC3 bitstream mode, see ATSC A/52-2012 (Annex
+// E).
+const (
+	// Eac3AtmosBitstreamModeCompleteMain is a Eac3AtmosBitstreamMode enum value
+	Eac3AtmosBitstreamModeCompleteMain = "COMPLETE_MAIN"
+)
+
+// The coding mode for Dolby Digital Plus JOC (Atmos) is always 9.1.6 (CODING_MODE_9_1_6).
+const (
+	// Eac3AtmosCodingModeCodingMode916 is a Eac3AtmosCodingMode enum value
+	Eac3AtmosCodingModeCodingMode916 = "CODING_MODE_9_1_6"
+)
+
+// Enable Dolby Dialogue Intelligence to adjust loudness based on dialogue analysis.
+const (
+	// Eac3AtmosDialogueIntelligenceEnabled is a Eac3AtmosDialogueIntelligence enum value
+	Eac3AtmosDialogueIntelligenceEnabled = "ENABLED"
+
+	// Eac3AtmosDialogueIntelligenceDisabled is a Eac3AtmosDialogueIntelligence enum value
+	Eac3AtmosDialogueIntelligenceDisabled = "DISABLED"
+)
+
+// Specify the absolute peak level for a signal with dynamic range compression.
+const (
+	// Eac3AtmosDynamicRangeCompressionLineNone is a Eac3AtmosDynamicRangeCompressionLine enum value
+	Eac3AtmosDynamicRangeCompressionLineNone = "NONE"
+
+	// Eac3AtmosDynamicRangeCompressionLineFilmStandard is a Eac3AtmosDynamicRangeCompressionLine enum value
+	Eac3AtmosDynamicRangeCompressionLineFilmStandard = "FILM_STANDARD"
+
+	// Eac3AtmosDynamicRangeCompressionLineFilmLight is a Eac3AtmosDynamicRangeCompressionLine enum value
+	Eac3AtmosDynamicRangeCompressionLineFilmLight = "FILM_LIGHT"
+
+	// Eac3AtmosDynamicRangeCompressionLineMusicStandard is a Eac3AtmosDynamicRangeCompressionLine enum value
+	Eac3AtmosDynamicRangeCompressionLineMusicStandard = "MUSIC_STANDARD"
+
+	// Eac3AtmosDynamicRangeCompressionLineMusicLight is a Eac3AtmosDynamicRangeCompressionLine enum value
+	Eac3AtmosDynamicRangeCompressionLineMusicLight = "MUSIC_LIGHT"
+
+	// Eac3AtmosDynamicRangeCompressionLineSpeech is a Eac3AtmosDynamicRangeCompressionLine enum value
+	Eac3AtmosDynamicRangeCompressionLineSpeech = "SPEECH"
+)
+
+// Specify how the service limits the audio dynamic range when compressing the
+// audio.
+const (
+	// Eac3AtmosDynamicRangeCompressionRfNone is a Eac3AtmosDynamicRangeCompressionRf enum value
+	Eac3AtmosDynamicRangeCompressionRfNone = "NONE"
+
+	// Eac3AtmosDynamicRangeCompressionRfFilmStandard is a Eac3AtmosDynamicRangeCompressionRf enum value
+	Eac3AtmosDynamicRangeCompressionRfFilmStandard = "FILM_STANDARD"
+
+	// Eac3AtmosDynamicRangeCompressionRfFilmLight is a Eac3AtmosDynamicRangeCompressionRf enum value
+	Eac3AtmosDynamicRangeCompressionRfFilmLight = "FILM_LIGHT"
+
+	// Eac3AtmosDynamicRangeCompressionRfMusicStandard is a Eac3AtmosDynamicRangeCompressionRf enum value
+	Eac3AtmosDynamicRangeCompressionRfMusicStandard = "MUSIC_STANDARD"
+
+	// Eac3AtmosDynamicRangeCompressionRfMusicLight is a Eac3AtmosDynamicRangeCompressionRf enum value
+	Eac3AtmosDynamicRangeCompressionRfMusicLight = "MUSIC_LIGHT"
+
+	// Eac3AtmosDynamicRangeCompressionRfSpeech is a Eac3AtmosDynamicRangeCompressionRf enum value
+	Eac3AtmosDynamicRangeCompressionRfSpeech = "SPEECH"
+)
+
+// Choose how the service meters the loudness of your audio.
+const (
+	// Eac3AtmosMeteringModeLeqA is a Eac3AtmosMeteringMode enum value
+	Eac3AtmosMeteringModeLeqA = "LEQ_A"
+
+	// Eac3AtmosMeteringModeItuBs17701 is a Eac3AtmosMeteringMode enum value
+	Eac3AtmosMeteringModeItuBs17701 = "ITU_BS_1770_1"
+
+	// Eac3AtmosMeteringModeItuBs17702 is a Eac3AtmosMeteringMode enum value
+	Eac3AtmosMeteringModeItuBs17702 = "ITU_BS_1770_2"
+
+	// Eac3AtmosMeteringModeItuBs17703 is a Eac3AtmosMeteringMode enum value
+	Eac3AtmosMeteringModeItuBs17703 = "ITU_BS_1770_3"
+
+	// Eac3AtmosMeteringModeItuBs17704 is a Eac3AtmosMeteringMode enum value
+	Eac3AtmosMeteringModeItuBs17704 = "ITU_BS_1770_4"
+)
+
+// Choose how the service does stereo downmixing.
+const (
+	// Eac3AtmosStereoDownmixNotIndicated is a Eac3AtmosStereoDownmix enum value
+	Eac3AtmosStereoDownmixNotIndicated = "NOT_INDICATED"
+
+	// Eac3AtmosStereoDownmixStereo is a Eac3AtmosStereoDownmix enum value
+	Eac3AtmosStereoDownmixStereo = "STEREO"
+
+	// Eac3AtmosStereoDownmixSurround is a Eac3AtmosStereoDownmix enum value
+	Eac3AtmosStereoDownmixSurround = "SURROUND"
+
+	// Eac3AtmosStereoDownmixDpl2 is a Eac3AtmosStereoDownmix enum value
+	Eac3AtmosStereoDownmixDpl2 = "DPL2"
+)
+
+// Specify whether your input audio has an additional center rear surround channel
+// matrix encoded into your left and right surround channels.
+const (
+	// Eac3AtmosSurroundExModeNotIndicated is a Eac3AtmosSurroundExMode enum value
+	Eac3AtmosSurroundExModeNotIndicated = "NOT_INDICATED"
+
+	// Eac3AtmosSurroundExModeEnabled is a Eac3AtmosSurroundExMode enum value
+	Eac3AtmosSurroundExModeEnabled = "ENABLED"
+
+	// Eac3AtmosSurroundExModeDisabled is a Eac3AtmosSurroundExMode enum value
+	Eac3AtmosSurroundExModeDisabled = "DISABLED"
+)
+
 // If set to ATTENUATE_3_DB, applies a 3 dB attenuation to the surround channels.
 // Only used for 3/2 coding mode.
 const (
@@ -16972,8 +17557,9 @@ const (
 	Eac3AttenuationControlNone = "NONE"
 )
 
-// Specifies the "Bitstream Mode" (bsmod) for the emitted E-AC-3 stream. See
-// ATSC A/52-2012 (Annex E) for background on these values.
+// Specify the bitstream mode for the E-AC-3 stream that the encoder emits.
+// For more information about the EAC3 bitstream mode, see ATSC A/52-2012 (Annex
+// E).
 const (
 	// Eac3BitstreamModeCompleteMain is a Eac3BitstreamMode enum value
 	Eac3BitstreamModeCompleteMain = "COMPLETE_MAIN"
@@ -17012,8 +17598,7 @@ const (
 	Eac3DcFilterDisabled = "DISABLED"
 )
 
-// Enables Dynamic Range Compression that restricts the absolute peak level
-// for a signal.
+// Specify the absolute peak level for a signal with dynamic range compression.
 const (
 	// Eac3DynamicRangeCompressionLineNone is a Eac3DynamicRangeCompressionLine enum value
 	Eac3DynamicRangeCompressionLineNone = "NONE"
@@ -17034,8 +17619,8 @@ const (
 	Eac3DynamicRangeCompressionLineSpeech = "SPEECH"
 )
 
-// Enables Heavy Dynamic Range Compression, ensures that the instantaneous signal
-// peaks do not exceed specified levels.
+// Specify how the service limits the audio dynamic range when compressing the
+// audio.
 const (
 	// Eac3DynamicRangeCompressionRfNone is a Eac3DynamicRangeCompressionRf enum value
 	Eac3DynamicRangeCompressionRfNone = "NONE"
@@ -17108,7 +17693,10 @@ const (
 	Eac3PhaseControlNoShift = "NO_SHIFT"
 )
 
-// Stereo downmix preference. Only used for 3/2 coding mode.
+// Choose how the service does stereo downmixing. This setting only applies
+// if you keep the default value of 3/2 - L, R, C, Ls, Rs (CODING_MODE_3_2)
+// for the setting Coding mode (Eac3CodingMode). If you choose a different value
+// for Coding mode, the service ignores Stereo downmix (Eac3StereoDownmix).
 const (
 	// Eac3StereoDownmixNotIndicated is a Eac3StereoDownmix enum value
 	Eac3StereoDownmixNotIndicated = "NOT_INDICATED"
@@ -17905,6 +18493,19 @@ const (
 
 	// HlsAdMarkersElementalScte35 is a HlsAdMarkers enum value
 	HlsAdMarkersElementalScte35 = "ELEMENTAL_SCTE35"
+)
+
+// Use this setting only in audio-only outputs. Choose MPEG-2 Transport Stream
+// (M2TS) to create a file in an MPEG2-TS container. Keep the default value
+// Automatic (AUTOMATIC) to create a raw audio-only file with no container.
+// Regardless of the value that you specify here, if this output has video,
+// the service will place outputs into an MPEG2-TS container.
+const (
+	// HlsAudioOnlyContainerAutomatic is a HlsAudioOnlyContainer enum value
+	HlsAudioOnlyContainerAutomatic = "AUTOMATIC"
+
+	// HlsAudioOnlyContainerM2ts is a HlsAudioOnlyContainer enum value
+	HlsAudioOnlyContainerM2ts = "M2TS"
 )
 
 // Four types of audio-only tracks are supported: Audio-Only Variant Stream
@@ -18918,8 +19519,12 @@ const (
 	M2tsRateModeCbr = "CBR"
 )
 
-// Enables SCTE-35 passthrough (scte35Source) to pass any SCTE-35 signals from
-// input to output.
+// For SCTE-35 markers from your input-- Choose Passthrough (PASSTHROUGH) if
+// you want SCTE-35 markers that appear in your input to also appear in this
+// output. Choose None (NONE) if you don't want SCTE-35 markers in this output.
+// For SCTE-35 markers from an ESAM XML document-- Choose None (NONE). Also
+// provide the ESAM XML as a string in the setting Signal processing notification
+// XML (sccXml). Also enable ESAM SCTE-35 (include the property scte35Esam).
 const (
 	// M2tsScte35SourcePassthrough is a M2tsScte35Source enum value
 	M2tsScte35SourcePassthrough = "PASSTHROUGH"
@@ -18995,8 +19600,14 @@ const (
 	M3u8PcrControlConfiguredPcrPeriod = "CONFIGURED_PCR_PERIOD"
 )
 
-// Enables SCTE-35 passthrough (scte35Source) to pass any SCTE-35 signals from
-// input to output.
+// For SCTE-35 markers from your input-- Choose Passthrough (PASSTHROUGH) if
+// you want SCTE-35 markers that appear in your input to also appear in this
+// output. Choose None (NONE) if you don't want SCTE-35 markers in this output.
+// For SCTE-35 markers from an ESAM XML document-- Choose None (NONE) if you
+// don't want manifest conditioning. Choose Passthrough (PASSTHROUGH) and choose
+// Ad markers (adMarkers) if you do want manifest conditioning. In both cases,
+// also provide the ESAM XML as a string in the setting Signal processing notification
+// XML (sccXml).
 const (
 	// M3u8Scte35SourcePassthrough is a M3u8Scte35Source enum value
 	M3u8Scte35SourcePassthrough = "PASSTHROUGH"
@@ -19656,11 +20267,12 @@ const (
 	S3ServerSideEncryptionTypeServerSideEncryptionKms = "SERVER_SIDE_ENCRYPTION_KMS"
 )
 
-// Applies only if your input aspect ratio is different from your output aspect
-// ratio. Choose "Stretch to output" to have the service stretch your video
-// image to fit. Keep the setting "Default" to allow the service to letterbox
-// your video instead. This setting overrides any positioning value you specify
-// elsewhere in the job.
+// Specify how the service handles outputs that have a different aspect ratio
+// from the input aspect ratio. Choose Stretch to output (STRETCH_TO_OUTPUT)
+// to have the service stretch your video image to fit. Keep the setting Default
+// (DEFAULT) to have the service letterbox your video instead. This setting
+// overrides any value that you specify for the setting Selection placement
+// (position) in this output.
 const (
 	// ScalingBehaviorDefault is a ScalingBehavior enum value
 	ScalingBehaviorDefault = "DEFAULT"

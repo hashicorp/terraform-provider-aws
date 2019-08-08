@@ -1,6 +1,6 @@
 ---
 layout: "aws"
-page_title: "AWS: sns_sms_preferences"
+page_title: "AWS: aws_sns_sms_preferences"
 sidebar_current: "docs-aws-resource-sns-sms-preferences"
 description: |-
   Provides a way to set SNS SMS preferences.

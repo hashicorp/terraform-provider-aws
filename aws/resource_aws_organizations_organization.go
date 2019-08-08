@@ -70,6 +70,30 @@ func resourceAwsOrganizationsOrganization() *schema.Resource {
 					},
 				},
 			},
+			"non_master_accounts": {
+				Type:     schema.TypeList,
+				Computed: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"arn": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"email": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"id": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"name": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+					},
+				},
+			},
 			"roots": {
 				Type:     schema.TypeList,
 				Computed: true,
@@ -208,8 +232,16 @@ func resourceAwsOrganizationsOrganizationRead(d *schema.ResourceData, meta inter
 
 	log.Printf("[INFO] Listing Accounts for Organization: %s", d.Id())
 	var accounts []*organizations.Account
+	var nonMasterAccounts []*organizations.Account
 	err = conn.ListAccountsPages(&organizations.ListAccountsInput{}, func(page *organizations.ListAccountsOutput, lastPage bool) bool {
-		accounts = append(accounts, page.Accounts...)
+		for _, account := range page.Accounts {
+			if aws.StringValue(account.Id) != aws.StringValue(org.Organization.MasterAccountId) {
+				nonMasterAccounts = append(nonMasterAccounts, account)
+			}
+
+			accounts = append(accounts, account)
+		}
+
 		return !lastPage
 	})
 	if err != nil {
@@ -235,6 +267,10 @@ func resourceAwsOrganizationsOrganizationRead(d *schema.ResourceData, meta inter
 	d.Set("master_account_arn", org.Organization.MasterAccountArn)
 	d.Set("master_account_email", org.Organization.MasterAccountEmail)
 	d.Set("master_account_id", org.Organization.MasterAccountId)
+
+	if err := d.Set("non_master_accounts", flattenOrganizationsAccounts(nonMasterAccounts)); err != nil {
+		return fmt.Errorf("error setting non_master_accounts: %s", err)
+	}
 
 	if err := d.Set("roots", flattenOrganizationsRoots(roots)); err != nil {
 		return fmt.Errorf("error setting roots: %s", err)

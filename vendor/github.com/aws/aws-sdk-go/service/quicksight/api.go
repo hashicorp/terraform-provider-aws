@@ -54,7 +54,7 @@ func (c *QuickSight) CreateGroupRequest(input *CreateGroupInput) (req *request.R
 //
 // Creates an Amazon QuickSight group.
 //
-// The permissions resource is arn:aws:quicksight:us-east-1:<relevant-aws-account-id>:group/default/<group-name>.
+// The permissions resource is arn:aws:quicksight:us-east-1:<relevant-aws-account-id>:group/default/<group-name> .
 //
 // The response is a group object.
 //
@@ -169,7 +169,7 @@ func (c *QuickSight) CreateGroupMembershipRequest(input *CreateGroupMembershipIn
 //
 // Adds an Amazon QuickSight user to an Amazon QuickSight group.
 //
-// The permissions resource is arn:aws:quicksight:us-east-1:<aws-account-id>:group/default/<group-name>.
+// The permissions resource is arn:aws:quicksight:us-east-1:<aws-account-id>:group/default/<group-name> .
 //
 // The condition resource is the user name.
 //
@@ -282,7 +282,7 @@ func (c *QuickSight) DeleteGroupRequest(input *DeleteGroupInput) (req *request.R
 //
 // Removes a user group from Amazon QuickSight.
 //
-// The permissions resource is arn:aws:quicksight:us-east-1:<aws-account-id>:group/default/<group-name>.
+// The permissions resource is arn:aws:quicksight:us-east-1:<aws-account-id>:group/default/<group-name> .
 //
 // CLI Sample:
 //
@@ -390,7 +390,7 @@ func (c *QuickSight) DeleteGroupMembershipRequest(input *DeleteGroupMembershipIn
 // Removes a user from a group so that the user is no longer a member of the
 // group.
 //
-// The permissions resource is arn:aws:quicksight:us-east-1:<aws-account-id>:group/default/<group-name>.
+// The permissions resource is arn:aws:quicksight:us-east-1:<aws-account-id>:group/default/<group-name> .
 //
 // The condition resource is the user name.
 //
@@ -503,8 +503,7 @@ func (c *QuickSight) DeleteUserRequest(input *DeleteUserInput) (req *request.Req
 // the AWS Identity and Access Management (IAM) user or role that's making the
 // call. The IAM user isn't deleted as a result of this call.
 //
-// The permission resource is arn:aws:quicksight:us-east-1:<aws-account-id>:user/default/<user-name>
-// .
+// The permission resource is arn:aws:quicksight:us-east-1:<aws-account-id>:user/default/<user-name> .
 //
 // CLI Sample:
 //
@@ -606,7 +605,14 @@ func (c *QuickSight) DeleteUserByPrincipalIdRequest(input *DeleteUserByPrincipal
 
 // DeleteUserByPrincipalId API operation for Amazon QuickSight.
 //
-// Deletes a user after locating the user by its principal ID.
+// Deletes a user identified by its principal ID.
+//
+// The permission resource is arn:aws:quicksight:us-east-1:<aws-account-id>:user/default/<user-name> .
+//
+// CLI Sample:
+//
+// aws quicksight delete-user-by-principal-id --aws-account-id=111122223333
+// --namespace=default --principal-id=ABCDEFJA26JLI7EUUOEHS
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -706,7 +712,7 @@ func (c *QuickSight) DescribeGroupRequest(input *DescribeGroupInput) (req *reque
 // Returns an Amazon QuickSight group's description and Amazon Resource Name
 // (ARN).
 //
-// The permissions resource is arn:aws:quicksight:us-east-1:<relevant-aws-account-id>:group/default/<group-name>.
+// The permissions resource is arn:aws:quicksight:us-east-1:<relevant-aws-account-id>:group/default/<group-name> .
 //
 // The response is the group object.
 //
@@ -815,7 +821,7 @@ func (c *QuickSight) DescribeUserRequest(input *DescribeUserInput) (req *request
 //
 // Returns information about a user, given the user name.
 //
-// The permission resource is arn:aws:quicksight:us-east-1:<aws-account-id>:user/default/<user-name>.
+// The permission resource is arn:aws:quicksight:us-east-1:<aws-account-id>:user/default/<user-name> .
 //
 // The response is a user object that contains the user's Amazon Resource Name
 // (ARN), AWS Identity and Access Management (IAM) role, and email address.
@@ -922,7 +928,7 @@ func (c *QuickSight) GetDashboardEmbedUrlRequest(input *GetDashboardEmbedUrlInpu
 //
 // Generates a server-side embeddable URL and authorization code. Before this
 // can work properly, first you need to configure the dashboards and user permissions.
-// For more information, see  Embedding Amazon QuickSight Dashboards (https://docs.aws.amazon.com/en_us/quicksight/latest/user/embedding.html).
+// For more information, see Embedding Amazon QuickSight Dashboards (https://docs.aws.amazon.com/en_us/quicksight/latest/user/embedding.html).
 //
 // Currently, you can use GetDashboardEmbedURL only from the server, not from
 // the user’s browser.
@@ -1074,7 +1080,7 @@ func (c *QuickSight) ListGroupMembershipsRequest(input *ListGroupMembershipsInpu
 //
 // Lists member users in a group.
 //
-// The permissions resource is arn:aws:quicksight:us-east-1:<aws-account-id>:group/default/<group-name>.
+// The permissions resource is arn:aws:quicksight:us-east-1:<aws-account-id>:group/default/<group-name> .
 //
 // The response is a list of group member objects.
 //
@@ -1297,7 +1303,7 @@ func (c *QuickSight) ListUserGroupsRequest(input *ListUserGroupsInput) (req *req
 // Lists the Amazon QuickSight groups that an Amazon QuickSight user is a member
 // of.
 //
-// The permission resource is arn:aws:quicksight:us-east-1:<aws-account-id>:user/default/<user-name>.
+// The permission resource is arn:aws:quicksight:us-east-1:<aws-account-id>:user/default/<user-name> .
 //
 // The response is a one or more group objects.
 //
@@ -1403,7 +1409,7 @@ func (c *QuickSight) ListUsersRequest(input *ListUsersInput) (req *request.Reque
 //
 // Returns a list of all of the Amazon QuickSight users belonging to this account.
 //
-// The permission resource is arn:aws:quicksight:us-east-1:<aws-account-id>:user/default/*.
+// The permission resource is arn:aws:quicksight:us-east-1:<aws-account-id>:user/default/* .
 //
 // The response is a list of user objects, containing each user's Amazon Resource
 // Name (ARN), AWS Identity and Access Management (IAM) role, and email address.
@@ -1514,7 +1520,7 @@ func (c *QuickSight) RegisterUserRequest(input *RegisterUserInput) (req *request
 // AWS Identity and Access Management (IAM) identity or role specified in the
 // request.
 //
-// The permission resource is arn:aws:quicksight:us-east-1:<aws-account-id>:user/default/<user-name>.
+// The permission resource is arn:aws:quicksight:us-east-1:<aws-account-id>:user/default/<user-name> .
 //
 // The condition resource is the Amazon Resource Name (ARN) for the IAM user
 // or role, and the session name.
@@ -1632,7 +1638,7 @@ func (c *QuickSight) UpdateGroupRequest(input *UpdateGroupInput) (req *request.R
 //
 // Changes a group description.
 //
-// The permissions resource is arn:aws:quicksight:us-east-1:<aws-account-id>:group/default/<group-name>.
+// The permissions resource is arn:aws:quicksight:us-east-1:<aws-account-id>:group/default/<group-name> .
 //
 // The response is a group object.
 //
@@ -1741,7 +1747,7 @@ func (c *QuickSight) UpdateUserRequest(input *UpdateUserInput) (req *request.Req
 //
 // Updates an Amazon QuickSight user.
 //
-// The permission resource is arn:aws:quicksight:us-east-1:<aws-account-id>:user/default/<user-name>.
+// The permission resource is arn:aws:quicksight:us-east-1:<aws-account-id>:user/default/<user-name> .
 //
 // The response is a user object that contains the user's Amazon QuickSight
 // user name, email address, active or inactive status in Amazon QuickSight,
@@ -2780,6 +2786,20 @@ type GetDashboardEmbedUrlInput struct {
 	// Remove the undo/redo button on embedded dashboard. The default is FALSE,
 	// which enables the undo/redo button.
 	UndoRedoDisabled *bool `location:"querystring" locationName:"undo-redo-disabled" type:"boolean"`
+
+	// The Amazon QuickSight user's ARN, for use with QUICKSIGHT identity type.
+	// You can use this for any of the following:
+	//
+	//    * Amazon QuickSight users in your account (readers, authors, or admins)
+	//
+	//    * AD users
+	//
+	//    * Invited non-federated users
+	//
+	//    * Federated IAM users
+	//
+	//    * Federated IAM role-based sessions
+	UserArn *string `location:"querystring" locationName:"user-arn" type:"string"`
 }
 
 // String returns the string representation
@@ -2853,6 +2873,12 @@ func (s *GetDashboardEmbedUrlInput) SetSessionLifetimeInMinutes(v int64) *GetDas
 // SetUndoRedoDisabled sets the UndoRedoDisabled field's value.
 func (s *GetDashboardEmbedUrlInput) SetUndoRedoDisabled(v bool) *GetDashboardEmbedUrlInput {
 	s.UndoRedoDisabled = &v
+	return s
+}
+
+// SetUserArn sets the UserArn field's value.
+func (s *GetDashboardEmbedUrlInput) SetUserArn(v string) *GetDashboardEmbedUrlInput {
+	s.UserArn = &v
 	return s
 }
 
@@ -3574,10 +3600,12 @@ type RegisterUserInput struct {
 	// Namespace is a required field
 	Namespace *string `location:"uri" locationName:"Namespace" type:"string" required:"true"`
 
-	// The name of the session with the assumed IAM role. By using this parameter,
-	// you can register multiple users with the same IAM role, provided that each
-	// has a different session name. For more information on assuming IAM roles,
-	// see assume-role (https://docs.aws.amazon.com/cli/latest/reference/sts/assume-role.html)
+	// You need to use this parameter only when you register one or more users using
+	// an assumed IAM role. You don't need to provide the session name for other
+	// scenarios, for example when you are registering an IAM user or an Amazon
+	// QuickSight user. You can register multiple users using the same IAM role
+	// if each user has a different session name. For more information on assuming
+	// IAM roles, see assume-role (https://docs.aws.amazon.com/cli/latest/reference/sts/assume-role.html)
 	// in the AWS CLI Reference.
 	SessionName *string `min:"2" type:"string"`
 
@@ -4032,9 +4060,9 @@ func (s *UpdateUserOutput) SetUser(v *User) *UpdateUserOutput {
 type User struct {
 	_ struct{} `type:"structure"`
 
-	// Active status of user. When you create an Amazon QuickSight user that’s not
-	// an IAM user or an AD user, that user is inactive until they sign in and provide
-	// a password
+	// Active status of user. When you create an Amazon QuickSight user that’s
+	// not an IAM user or an AD user, that user is inactive until they sign in and
+	// provide a password
 	Active *bool `type:"boolean"`
 
 	// The Amazon Resource Name (ARN) for the user.

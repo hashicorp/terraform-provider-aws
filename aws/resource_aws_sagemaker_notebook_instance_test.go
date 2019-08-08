@@ -292,25 +292,26 @@ func testAccCheckAWSSagemakerNotebookInstanceTags(notebook *sagemaker.DescribeNo
 func testAccAWSSagemakerNotebookInstanceConfig(notebookName string) string {
 	return fmt.Sprintf(`
 resource "aws_sagemaker_notebook_instance" "foo" {
-	name = "%s"
-	role_arn = "${aws_iam_role.foo.arn}"
-	instance_type = "ml.t2.medium"
+  name          = "%s"
+  role_arn      = "${aws_iam_role.foo.arn}"
+  instance_type = "ml.t2.medium"
 }
 
 resource "aws_iam_role" "foo" {
-	name = "%s"
-	path = "/"
-	assume_role_policy = "${data.aws_iam_policy_document.assume_role.json}"
+  name               = "%s"
+  path               = "/"
+  assume_role_policy = "${data.aws_iam_policy_document.assume_role.json}"
 }
 
 data "aws_iam_policy_document" "assume_role" {
-	statement {
-		actions = [ "sts:AssumeRole" ]
-		principals {
-			type = "Service"
-			identifiers = [ "sagemaker.amazonaws.com" ]
-		}
-	}
+  statement {
+    actions = ["sts:AssumeRole"]
+
+    principals {
+      type        = "Service"
+      identifiers = ["sagemaker.amazonaws.com"]
+    }
+  }
 }
 `, notebookName, notebookName)
 }
@@ -318,25 +319,26 @@ data "aws_iam_policy_document" "assume_role" {
 func testAccAWSSagemakerNotebookInstanceUpdateConfig(notebookName string) string {
 	return fmt.Sprintf(`
 resource "aws_sagemaker_notebook_instance" "foo" {
-	name = "%s"
-	role_arn = "${aws_iam_role.foo.arn}"
-	instance_type = "ml.m4.xlarge"
+  name          = "%s"
+  role_arn      = "${aws_iam_role.foo.arn}"
+  instance_type = "ml.m4.xlarge"
 }
 
 resource "aws_iam_role" "foo" {
-	name = "%s"
-	path = "/"
-	assume_role_policy = "${data.aws_iam_policy_document.assume_role.json}"
+  name               = "%s"
+  path               = "/"
+  assume_role_policy = "${data.aws_iam_policy_document.assume_role.json}"
 }
 
 data "aws_iam_policy_document" "assume_role" {
-	statement {
-		actions = [ "sts:AssumeRole" ]
-		principals {
-			type = "Service"
-			identifiers = [ "sagemaker.amazonaws.com" ]
-		}
-	}
+  statement {
+    actions = ["sts:AssumeRole"]
+
+    principals {
+      type        = "Service"
+      identifiers = ["sagemaker.amazonaws.com"]
+    }
+  }
 }
 `, notebookName, notebookName)
 }
@@ -345,7 +347,8 @@ func testAccAWSSagemakerNotebookInstanceConfigLifecycleConfigName(rName string) 
 	return fmt.Sprintf(`
 data "aws_iam_policy_document" "assume_role" {
   statement {
-    actions = [ "sts:AssumeRole" ]
+    actions = ["sts:AssumeRole"]
+
     principals {
       identifiers = ["sagemaker.amazonaws.com"]
       type        = "Service"
@@ -375,28 +378,30 @@ resource "aws_sagemaker_notebook_instance" "test" {
 func testAccAWSSagemakerNotebookInstanceTagsConfig(notebookName string) string {
 	return fmt.Sprintf(`
 resource "aws_sagemaker_notebook_instance" "foo" {
-	name = "%s"
-	role_arn = "${aws_iam_role.foo.arn}"
-	instance_type = "ml.t2.medium"
-	tags = {
-		foo = "bar"
-	}
+  name          = "%s"
+  role_arn      = "${aws_iam_role.foo.arn}"
+  instance_type = "ml.t2.medium"
+
+  tags = {
+    foo = "bar"
+  }
 }
 
 resource "aws_iam_role" "foo" {
-	name = "%s"
-	path = "/"
-	assume_role_policy = "${data.aws_iam_policy_document.assume_role.json}"
+  name               = "%s"
+  path               = "/"
+  assume_role_policy = "${data.aws_iam_policy_document.assume_role.json}"
 }
 
 data "aws_iam_policy_document" "assume_role" {
-	statement {
-		actions = [ "sts:AssumeRole" ]
-		principals {
-			type = "Service"
-			identifiers = [ "sagemaker.amazonaws.com" ]
-		}
-	}
+  statement {
+    actions = ["sts:AssumeRole"]
+
+    principals {
+      type        = "Service"
+      identifiers = ["sagemaker.amazonaws.com"]
+    }
+  }
 }
 `, notebookName, notebookName)
 }
@@ -404,28 +409,30 @@ data "aws_iam_policy_document" "assume_role" {
 func testAccAWSSagemakerNotebookInstanceTagsUpdateConfig(notebookName string) string {
 	return fmt.Sprintf(`
 resource "aws_sagemaker_notebook_instance" "foo" {
-	name = "%s"
-	role_arn = "${aws_iam_role.foo.arn}"
-	instance_type = "ml.t2.medium"
-	tags = {
-		bar = "baz"
-	}
+  name          = "%s"
+  role_arn      = "${aws_iam_role.foo.arn}"
+  instance_type = "ml.t2.medium"
+
+  tags = {
+    bar = "baz"
+  }
 }
 
 resource "aws_iam_role" "foo" {
-	name = "%s"
-	path = "/"
-	assume_role_policy = "${data.aws_iam_policy_document.assume_role.json}"
+  name               = "%s"
+  path               = "/"
+  assume_role_policy = "${data.aws_iam_policy_document.assume_role.json}"
 }
 
 data "aws_iam_policy_document" "assume_role" {
-	statement {
-		actions = [ "sts:AssumeRole" ]
-		principals {
-			type = "Service"
-			identifiers = [ "sagemaker.amazonaws.com" ]
-		}
-	}
+  statement {
+    actions = ["sts:AssumeRole"]
+
+    principals {
+      type        = "Service"
+      identifiers = ["sagemaker.amazonaws.com"]
+    }
+  }
 }
 `, notebookName, notebookName)
 }

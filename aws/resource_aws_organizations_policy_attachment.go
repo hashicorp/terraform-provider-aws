@@ -63,6 +63,9 @@ func resourceAwsOrganizationsPolicyAttachmentCreate(d *schema.ResourceData, meta
 
 		return nil
 	})
+	if isResourceTimeoutError(err) {
+		_, err = conn.AttachPolicy(input)
+	}
 
 	if err != nil {
 		return fmt.Errorf("error creating Organizations Policy Attachment: %s", err)

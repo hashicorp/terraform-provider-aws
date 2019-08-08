@@ -6,6 +6,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/directconnect"
+	"github.com/hashicorp/terraform/helper/customdiff"
 	"github.com/hashicorp/terraform/helper/schema"
 )
 
@@ -18,13 +19,42 @@ func resourceAwsDxGatewayAssociationProposal() *schema.Resource {
 			State: schema.ImportStatePassthrough,
 		},
 
+		CustomizeDiff: customdiff.Sequence(
+			// Accepting the proposal with overridden prefixes changes the returned RequestedAllowedPrefixesToDirectConnectGateway value (allowed_prefixes attribute).
+			// We only want to force a new resource if this value changes and the current proposal state is "requested".
+			customdiff.ForceNewIf("allowed_prefixes", func(d *schema.ResourceDiff, meta interface{}) bool {
+				conn := meta.(*AWSClient).dxconn
+
+				proposal, err := describeDirectConnectGatewayAssociationProposal(conn, d.Id())
+				if err != nil {
+					log.Printf("[ERROR] Error reading Direct Connect Gateway Association Proposal (%s): %s", d.Id(), err)
+					return false
+				}
+
+				return proposal != nil && aws.StringValue(proposal.ProposalState) == directconnect.GatewayAssociationProposalStateRequested
+			}),
+		),
+
 		Schema: map[string]*schema.Schema{
 			"allowed_prefixes": {
 				Type:     schema.TypeSet,
 				Optional: true,
 				Computed: true,
-				ForceNew: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
+			},
+			"associated_gateway_id": {
+				Type:          schema.TypeString,
+				Optional:      true,
+				ForceNew:      true,
+				ConflictsWith: []string{"vpn_gateway_id"},
+			},
+			"associated_gateway_owner_account_id": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"associated_gateway_type": {
+				Type:     schema.TypeString,
+				Computed: true,
 			},
 			"dx_gateway_id": {
 				Type:     schema.TypeString,
@@ -38,9 +68,11 @@ func resourceAwsDxGatewayAssociationProposal() *schema.Resource {
 				ValidateFunc: validateAwsAccountId,
 			},
 			"vpn_gateway_id": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
+				Type:          schema.TypeString,
+				Optional:      true,
+				ForceNew:      true,
+				ConflictsWith: []string{"associated_gateway_id"},
+				Deprecated:    "use 'associated_gateway_id' argument instead",
 			},
 		},
 	}
@@ -49,12 +81,24 @@ func resourceAwsDxGatewayAssociationProposal() *schema.Resource {
 func resourceAwsDxGatewayAssociationProposalCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).dxconn
 
+	allowedPrefixes := expandDirectConnectGatewayAssociationProposalAllowedPrefixes(d.Get("allowed_prefixes").(*schema.Set).List())
 	input := &directconnect.CreateDirectConnectGatewayAssociationProposalInput{
-		AddAllowedPrefixesToDirectConnectGateway: expandDirectConnectGatewayAssociationProposalAllowedPrefixes(d.Get("allowed_prefixes").(*schema.Set).List()),
+		AddAllowedPrefixesToDirectConnectGateway: allowedPrefixes,
 		DirectConnectGatewayId:                   aws.String(d.Get("dx_gateway_id").(string)),
 		DirectConnectGatewayOwnerAccount:         aws.String(d.Get("dx_gateway_owner_account_id").(string)),
-		GatewayId:                                aws.String(d.Get("vpn_gateway_id").(string)),
 	}
+	var gwID string
+	if v, ok := d.GetOk("vpn_gateway_id"); ok {
+		gwID = v.(string)
+	} else if v, ok := d.GetOk("associated_gateway_id"); ok {
+		gwID = v.(string)
+	}
+
+	if gwID == "" {
+		return fmt.Errorf("gateway id not provided, one of associated_gateway_id or vpn_gateway_id must be configured")
+	}
+
+	input.GatewayId = aws.String(gwID)
 
 	log.Printf("[DEBUG] Creating Direct Connect Gateway Association Proposal: %s", input)
 	output, err := conn.CreateDirectConnectGatewayAssociationProposal(input)
@@ -97,9 +141,15 @@ func resourceAwsDxGatewayAssociationProposalRead(d *schema.ResourceData, meta in
 		return fmt.Errorf("error setting allowed_prefixes: %s", err)
 	}
 
+	if _, ok := d.GetOk("vpn_gateway_id"); ok {
+		d.Set("vpn_gateway_id", aws.StringValue(proposal.AssociatedGateway.Id))
+	} else {
+		d.Set("associated_gateway_id", aws.StringValue(proposal.AssociatedGateway.Id))
+	}
+	d.Set("associated_gateway_owner_account_id", proposal.AssociatedGateway.OwnerAccount)
+	d.Set("associated_gateway_type", proposal.AssociatedGateway.Type)
 	d.Set("dx_gateway_id", aws.StringValue(proposal.DirectConnectGatewayId))
 	d.Set("dx_gateway_owner_account_id", aws.StringValue(proposal.DirectConnectGatewayOwnerAccount))
-	d.Set("vpn_gateway_id", aws.StringValue(proposal.AssociatedGateway.Id))
 
 	return nil
 }

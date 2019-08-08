@@ -770,7 +770,7 @@ resource "aws_network_acl" "test" {
     from_port       = 0
     icmp_code       = -1
     icmp_type       = -1
-    ipv6_cidr_block =  "::/0"
+    ipv6_cidr_block = "::/0"
     protocol        = 58
     rule_no         = 1
     to_port         = 0
@@ -1277,15 +1277,17 @@ func testAccAWSNetworkAclConfigEgressConfigModeBlocks() string {
 	return fmt.Sprintf(`
 resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"
-  tags       = {
+
+  tags = {
     Name = "terraform-testacc-network-acl-egress-computed-attribute-mode"
   }
 }
 
 resource "aws_network_acl" "test" {
-  tags   = {
+  tags = {
     Name = "terraform-testacc-network-acl-egress-computed-attribute-mode"
   }
+
   vpc_id = "${aws_vpc.test.id}"
 
   egress {
@@ -1313,15 +1315,17 @@ func testAccAWSNetworkAclConfigEgressConfigModeNoBlocks() string {
 	return fmt.Sprintf(`
 resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"
-  tags       = {
+
+  tags = {
     Name = "terraform-testacc-network-acl-egress-computed-attribute-mode"
   }
 }
 
 resource "aws_network_acl" "test" {
-  tags   = {
+  tags = {
     Name = "terraform-testacc-network-acl-egress-computed-attribute-mode"
   }
+
   vpc_id = "${aws_vpc.test.id}"
 }
 `)
@@ -1331,17 +1335,20 @@ func testAccAWSNetworkAclConfigEgressConfigModeZeroed() string {
 	return fmt.Sprintf(`
 resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"
-  tags       = {
+
+  tags = {
     Name = "terraform-testacc-network-acl-egress-computed-attribute-mode"
   }
 }
 
 resource "aws_network_acl" "test" {
   egress = []
-  tags    = {
+
+  tags = {
     Name = "terraform-testacc-network-acl-egress-computed-attribute-mode"
   }
-  vpc_id  = "${aws_vpc.test.id}"
+
+  vpc_id = "${aws_vpc.test.id}"
 }
 `)
 }
@@ -1350,15 +1357,17 @@ func testAccAWSNetworkAclConfigIngressConfigModeBlocks() string {
 	return fmt.Sprintf(`
 resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"
-  tags       = {
+
+  tags = {
     Name = "terraform-testacc-network-acl-ingress-computed-attribute-mode"
   }
 }
 
 resource "aws_network_acl" "test" {
-  tags   = {
+  tags = {
     Name = "terraform-testacc-network-acl-ingress-computed-attribute-mode"
   }
+
   vpc_id = "${aws_vpc.test.id}"
 
   ingress {
@@ -1386,15 +1395,17 @@ func testAccAWSNetworkAclConfigIngressConfigModeNoBlocks() string {
 	return fmt.Sprintf(`
 resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"
-  tags       = {
+
+  tags = {
     Name = "terraform-testacc-network-acl-ingress-computed-attribute-mode"
   }
 }
 
 resource "aws_network_acl" "test" {
-  tags   = {
+  tags = {
     Name = "terraform-testacc-network-acl-ingress-computed-attribute-mode"
   }
+
   vpc_id = "${aws_vpc.test.id}"
 }
 `)
@@ -1404,17 +1415,20 @@ func testAccAWSNetworkAclConfigIngressConfigModeZeroed() string {
 	return fmt.Sprintf(`
 resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"
-  tags       = {
+
+  tags = {
     Name = "terraform-testacc-network-acl-ingress-computed-attribute-mode"
   }
 }
 
 resource "aws_network_acl" "test" {
   ingress = []
-  tags    = {
+
+  tags = {
     Name = "terraform-testacc-network-acl-ingress-computed-attribute-mode"
   }
-  vpc_id  = "${aws_vpc.test.id}"
+
+  vpc_id = "${aws_vpc.test.id}"
 }
 `)
 }

@@ -1065,7 +1065,7 @@ func resourceAwsCloudFrontDistributionWaitUntilDeployed(id string, meta interfac
 		Pending:    []string{"InProgress"},
 		Target:     []string{"Deployed"},
 		Refresh:    resourceAwsCloudFrontWebDistributionStateRefreshFunc(id, meta),
-		Timeout:    70 * time.Minute,
+		Timeout:    90 * time.Minute,
 		MinTimeout: 15 * time.Second,
 		Delay:      1 * time.Minute,
 	}

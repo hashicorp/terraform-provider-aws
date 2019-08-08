@@ -15,18 +15,18 @@ Provides an AWS Client VPN endpoint for OpenVPN clients. For more information on
 
 ```hcl
 resource "aws_ec2_client_vpn_endpoint" "example" {
-  description = "terraform-clientvpn-example"
+  description            = "terraform-clientvpn-example"
   server_certificate_arn = "${aws_acm_certificate.cert.arn}"
-  client_cidr_block = "10.0.0.0/16"
+  client_cidr_block      = "10.0.0.0/16"
 
   authentication_options {
-    type = "certificate-authentication"
+    type                       = "certificate-authentication"
     root_certificate_chain_arn = "${aws_acm_certificate.root_cert.arn}"
   }
 
   connection_log_options {
-    enabled = true
-    cloudwatch_log_group = "${aws_cloudwatch_log_group.lg.name}"
+    enabled               = true
+    cloudwatch_log_group  = "${aws_cloudwatch_log_group.lg.name}"
     cloudwatch_log_stream = "${aws_cloudwatch_log_stream.ls.name}"
   }
 }
@@ -36,14 +36,15 @@ resource "aws_ec2_client_vpn_endpoint" "example" {
 
 The following arguments are supported:
 
-* `description` - (Optional) Name of the repository.
+* `authentication_options` - (Required) Information about the authentication method to be used to authenticate clients.
 * `client_cidr_block` - (Required) The IPv4 address range, in CIDR notation, from which to assign client IP addresses. The address range cannot overlap with the local CIDR of the VPC in which the associated subnet is located, or the routes that you add manually. The address range cannot be changed after the Client VPN endpoint has been created. The CIDR block should be /22 or greater.
+* `connection_log_options` - (Required) Information about the client connection logging options.
+* `description` - (Optional) Name of the repository.
 * `dns_servers` - (Optional) Information about the DNS servers to be used for DNS resolution. A Client VPN endpoint can have up to two DNS servers. If no DNS server is specified, the DNS address of the VPC that is to be associated with Client VPN endpoint is used as the DNS server.
 * `server_certificate_arn` - (Required) The ARN of the ACM server certificate.
-* `transport_protocol` - (Optional) The transport protocol to be used by the VPN session. Default value is `udp`.
-* `authentication_options` - (Required) Information about the authentication method to be used to authenticate clients.
-* `connection_log_options` - (Required) Information about the client connection logging options.
+* `split_tunnel` - (Optional) Indicates whether split-tunnel is enabled on VPN endpoint. Default value is `false`.
 * `tags` - (Optional) A mapping of tags to assign to the resource.
+* `transport_protocol` - (Optional) The transport protocol to be used by the VPN session. Default value is `udp`.
 
 ### `authentication_options` Argument Reference
 

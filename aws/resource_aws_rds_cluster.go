@@ -188,6 +188,15 @@ func resourceAwsRDSCluster() *schema.Resource {
 							Default:      300,
 							ValidateFunc: validation.IntBetween(300, 86400),
 						},
+						"timeout_action": {
+							Type:     schema.TypeString,
+							Optional: true,
+							Default:  "RollbackCapacityChange",
+							ValidateFunc: validation.StringInSlice([]string{
+								"ForceApplyCapacityChange",
+								"RollbackCapacityChange",
+							}, false),
+						},
 					},
 				},
 			},
@@ -225,7 +234,6 @@ func resourceAwsRDSCluster() *schema.Resource {
 						},
 						"bucket_prefix": {
 							Type:     schema.TypeString,
-							Required: false,
 							Optional: true,
 							ForceNew: true,
 						},
@@ -288,7 +296,6 @@ func resourceAwsRDSCluster() *schema.Resource {
 
 			"snapshot_identifier": {
 				Type:     schema.TypeString,
-				Computed: false,
 				Optional: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
@@ -382,7 +389,6 @@ func resourceAwsRDSCluster() *schema.Resource {
 
 			"enabled_cloudwatch_logs_exports": {
 				Type:     schema.TypeList,
-				Computed: false,
 				Optional: true,
 				Elem: &schema.Schema{
 					Type: schema.TypeString,
@@ -483,6 +489,11 @@ func resourceAwsRDSClusterCreate(d *schema.ResourceData, meta interface{}) error
 			opts.KmsKeyId = aws.String(attr.(string))
 		}
 
+		if attr, ok := d.GetOk("master_password"); ok {
+			modifyDbClusterInput.MasterUserPassword = aws.String(attr.(string))
+			requiresModifyDbCluster = true
+		}
+
 		if attr, ok := d.GetOk("option_group_name"); ok {
 			opts.OptionGroupName = aws.String(attr.(string))
 		}
@@ -516,6 +527,9 @@ func resourceAwsRDSClusterCreate(d *schema.ResourceData, meta interface{}) error
 			}
 			return nil
 		})
+		if isResourceTimeoutError(err) {
+			_, err = conn.RestoreDBClusterFromSnapshot(&opts)
+		}
 		if err != nil {
 			return fmt.Errorf("Error creating RDS Cluster: %s", err)
 		}
@@ -602,6 +616,9 @@ func resourceAwsRDSClusterCreate(d *schema.ResourceData, meta interface{}) error
 			}
 			return nil
 		})
+		if isResourceTimeoutError(err) {
+			resp, err = conn.CreateDBCluster(createOpts)
+		}
 		if err != nil {
 			return fmt.Errorf("error creating RDS cluster: %s", err)
 		}
@@ -695,8 +712,10 @@ func resourceAwsRDSClusterCreate(d *schema.ResourceData, meta interface{}) error
 
 		log.Printf("[DEBUG] RDS Cluster restore options: %s", createOpts)
 		// Retry for IAM/S3 eventual consistency
+		var resp *rds.RestoreDBClusterFromS3Output
 		err := resource.Retry(5*time.Minute, func() *resource.RetryError {
-			resp, err := conn.RestoreDBClusterFromS3(createOpts)
+			var err error
+			resp, err = conn.RestoreDBClusterFromS3(createOpts)
 			if err != nil {
 				// InvalidParameterValue: Files from the specified Amazon S3 bucket cannot be downloaded.
 				// Make sure that you have created an AWS Identity and Access Management (IAM) role that lets Amazon RDS access Amazon S3 for you.
@@ -714,6 +733,9 @@ func resourceAwsRDSClusterCreate(d *schema.ResourceData, meta interface{}) error
 			log.Printf("[DEBUG]: RDS Cluster create response: %s", resp)
 			return nil
 		})
+		if isResourceTimeoutError(err) {
+			resp, err = conn.RestoreDBClusterFromS3(createOpts)
+		}
 
 		if err != nil {
 			log.Printf("[ERROR] Error creating RDS Cluster: %s", err)
@@ -837,6 +859,9 @@ func resourceAwsRDSClusterCreate(d *schema.ResourceData, meta interface{}) error
 			}
 			return nil
 		})
+		if isResourceTimeoutError(err) {
+			resp, err = conn.CreateDBCluster(createOpts)
+		}
 		if err != nil {
 			return fmt.Errorf("error creating RDS cluster: %s", err)
 		}
@@ -1128,6 +1153,9 @@ func resourceAwsRDSClusterUpdate(d *schema.ResourceData, meta interface{}) error
 			}
 			return nil
 		})
+		if isResourceTimeoutError(err) {
+			_, err = conn.ModifyDBCluster(req)
+		}
 		if err != nil {
 			return fmt.Errorf("Failed to modify RDS Cluster (%s): %s", d.Id(), err)
 		}

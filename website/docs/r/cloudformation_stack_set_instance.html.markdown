@@ -48,11 +48,12 @@ resource "aws_iam_role" "AWSCloudFormationStackSetExecutionRole" {
 # Additional IAM permissions necessary depend on the resources defined in the Stack Set template
 data "aws_iam_policy_document" "AWSCloudFormationStackSetExecutionRole_MinimumExecutionPolicy" {
   statement {
-    actions   = [
+    actions = [
       "cloudformation:*",
       "s3:*",
       "sns:*",
     ]
+
     effect    = "Allow"
     resources = ["*"]
   }

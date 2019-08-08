@@ -107,6 +107,101 @@ func (c *WorkLink) AssociateDomainWithContext(ctx aws.Context, input *AssociateD
 	return out, req.Send()
 }
 
+const opAssociateWebsiteAuthorizationProvider = "AssociateWebsiteAuthorizationProvider"
+
+// AssociateWebsiteAuthorizationProviderRequest generates a "aws/request.Request" representing the
+// client's request for the AssociateWebsiteAuthorizationProvider operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See AssociateWebsiteAuthorizationProvider for more information on using the AssociateWebsiteAuthorizationProvider
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the AssociateWebsiteAuthorizationProviderRequest method.
+//    req, resp := client.AssociateWebsiteAuthorizationProviderRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/worklink-2018-09-25/AssociateWebsiteAuthorizationProvider
+func (c *WorkLink) AssociateWebsiteAuthorizationProviderRequest(input *AssociateWebsiteAuthorizationProviderInput) (req *request.Request, output *AssociateWebsiteAuthorizationProviderOutput) {
+	op := &request.Operation{
+		Name:       opAssociateWebsiteAuthorizationProvider,
+		HTTPMethod: "POST",
+		HTTPPath:   "/associateWebsiteAuthorizationProvider",
+	}
+
+	if input == nil {
+		input = &AssociateWebsiteAuthorizationProviderInput{}
+	}
+
+	output = &AssociateWebsiteAuthorizationProviderOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// AssociateWebsiteAuthorizationProvider API operation for Amazon WorkLink.
+//
+// Associates a website authorization provider with a specified fleet. This
+// is used to authorize users against associated websites in the company network.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for Amazon WorkLink's
+// API operation AssociateWebsiteAuthorizationProvider for usage and error information.
+//
+// Returned Error Codes:
+//   * ErrCodeUnauthorizedException "UnauthorizedException"
+//   You are not authorized to perform this action.
+//
+//   * ErrCodeInternalServerErrorException "InternalServerErrorException"
+//   The service is temporarily unavailable.
+//
+//   * ErrCodeInvalidRequestException "InvalidRequestException"
+//   The request is not valid.
+//
+//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   The requested resource was not found.
+//
+//   * ErrCodeResourceAlreadyExistsException "ResourceAlreadyExistsException"
+//   The resource already exists.
+//
+//   * ErrCodeTooManyRequestsException "TooManyRequestsException"
+//   The number of requests exceeds the limit.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/worklink-2018-09-25/AssociateWebsiteAuthorizationProvider
+func (c *WorkLink) AssociateWebsiteAuthorizationProvider(input *AssociateWebsiteAuthorizationProviderInput) (*AssociateWebsiteAuthorizationProviderOutput, error) {
+	req, out := c.AssociateWebsiteAuthorizationProviderRequest(input)
+	return out, req.Send()
+}
+
+// AssociateWebsiteAuthorizationProviderWithContext is the same as AssociateWebsiteAuthorizationProvider with the addition of
+// the ability to pass a context and additional request options.
+//
+// See AssociateWebsiteAuthorizationProvider for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *WorkLink) AssociateWebsiteAuthorizationProviderWithContext(ctx aws.Context, input *AssociateWebsiteAuthorizationProviderInput, opts ...request.Option) (*AssociateWebsiteAuthorizationProviderOutput, error) {
+	req, out := c.AssociateWebsiteAuthorizationProviderRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
 const opAssociateWebsiteCertificateAuthority = "AssociateWebsiteCertificateAuthority"
 
 // AssociateWebsiteCertificateAuthorityRequest generates a "aws/request.Request" representing the
@@ -1214,6 +1309,103 @@ func (c *WorkLink) DisassociateDomainWithContext(ctx aws.Context, input *Disasso
 	return out, req.Send()
 }
 
+const opDisassociateWebsiteAuthorizationProvider = "DisassociateWebsiteAuthorizationProvider"
+
+// DisassociateWebsiteAuthorizationProviderRequest generates a "aws/request.Request" representing the
+// client's request for the DisassociateWebsiteAuthorizationProvider operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See DisassociateWebsiteAuthorizationProvider for more information on using the DisassociateWebsiteAuthorizationProvider
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the DisassociateWebsiteAuthorizationProviderRequest method.
+//    req, resp := client.DisassociateWebsiteAuthorizationProviderRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/worklink-2018-09-25/DisassociateWebsiteAuthorizationProvider
+func (c *WorkLink) DisassociateWebsiteAuthorizationProviderRequest(input *DisassociateWebsiteAuthorizationProviderInput) (req *request.Request, output *DisassociateWebsiteAuthorizationProviderOutput) {
+	op := &request.Operation{
+		Name:       opDisassociateWebsiteAuthorizationProvider,
+		HTTPMethod: "POST",
+		HTTPPath:   "/disassociateWebsiteAuthorizationProvider",
+	}
+
+	if input == nil {
+		input = &DisassociateWebsiteAuthorizationProviderInput{}
+	}
+
+	output = &DisassociateWebsiteAuthorizationProviderOutput{}
+	req = c.newRequest(op, input, output)
+	req.Handlers.Unmarshal.Swap(restjson.UnmarshalHandler.Name, protocol.UnmarshalDiscardBodyHandler)
+	return
+}
+
+// DisassociateWebsiteAuthorizationProvider API operation for Amazon WorkLink.
+//
+// Disassociates a website authorization provider from a specified fleet. After
+// the disassociation, users can't load any associated websites that require
+// this authorization provider.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for Amazon WorkLink's
+// API operation DisassociateWebsiteAuthorizationProvider for usage and error information.
+//
+// Returned Error Codes:
+//   * ErrCodeUnauthorizedException "UnauthorizedException"
+//   You are not authorized to perform this action.
+//
+//   * ErrCodeInternalServerErrorException "InternalServerErrorException"
+//   The service is temporarily unavailable.
+//
+//   * ErrCodeInvalidRequestException "InvalidRequestException"
+//   The request is not valid.
+//
+//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   The requested resource was not found.
+//
+//   * ErrCodeResourceAlreadyExistsException "ResourceAlreadyExistsException"
+//   The resource already exists.
+//
+//   * ErrCodeTooManyRequestsException "TooManyRequestsException"
+//   The number of requests exceeds the limit.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/worklink-2018-09-25/DisassociateWebsiteAuthorizationProvider
+func (c *WorkLink) DisassociateWebsiteAuthorizationProvider(input *DisassociateWebsiteAuthorizationProviderInput) (*DisassociateWebsiteAuthorizationProviderOutput, error) {
+	req, out := c.DisassociateWebsiteAuthorizationProviderRequest(input)
+	return out, req.Send()
+}
+
+// DisassociateWebsiteAuthorizationProviderWithContext is the same as DisassociateWebsiteAuthorizationProvider with the addition of
+// the ability to pass a context and additional request options.
+//
+// See DisassociateWebsiteAuthorizationProvider for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *WorkLink) DisassociateWebsiteAuthorizationProviderWithContext(ctx aws.Context, input *DisassociateWebsiteAuthorizationProviderInput, opts ...request.Option) (*DisassociateWebsiteAuthorizationProviderOutput, error) {
+	req, out := c.DisassociateWebsiteAuthorizationProviderRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
 const opDisassociateWebsiteCertificateAuthority = "DisassociateWebsiteCertificateAuthority"
 
 // DisassociateWebsiteCertificateAuthorityRequest generates a "aws/request.Request" representing the
@@ -1414,7 +1606,7 @@ func (c *WorkLink) ListDevicesWithContext(ctx aws.Context, input *ListDevicesInp
 //    // Example iterating over at most 3 pages of a ListDevices operation.
 //    pageNum := 0
 //    err := client.ListDevicesPages(params,
-//        func(page *ListDevicesOutput, lastPage bool) bool {
+//        func(page *worklink.ListDevicesOutput, lastPage bool) bool {
 //            pageNum++
 //            fmt.Println(page)
 //            return pageNum <= 3
@@ -1558,7 +1750,7 @@ func (c *WorkLink) ListDomainsWithContext(ctx aws.Context, input *ListDomainsInp
 //    // Example iterating over at most 3 pages of a ListDomains operation.
 //    pageNum := 0
 //    err := client.ListDomainsPages(params,
-//        func(page *ListDomainsOutput, lastPage bool) bool {
+//        func(page *worklink.ListDomainsOutput, lastPage bool) bool {
 //            pageNum++
 //            fmt.Println(page)
 //            return pageNum <= 3
@@ -1702,7 +1894,7 @@ func (c *WorkLink) ListFleetsWithContext(ctx aws.Context, input *ListFleetsInput
 //    // Example iterating over at most 3 pages of a ListFleets operation.
 //    pageNum := 0
 //    err := client.ListFleetsPages(params,
-//        func(page *ListFleetsOutput, lastPage bool) bool {
+//        func(page *worklink.ListFleetsOutput, lastPage bool) bool {
 //            pageNum++
 //            fmt.Println(page)
 //            return pageNum <= 3
@@ -1737,6 +1929,154 @@ func (c *WorkLink) ListFleetsPagesWithContext(ctx aws.Context, input *ListFleets
 	cont := true
 	for p.Next() && cont {
 		cont = fn(p.Page().(*ListFleetsOutput), !p.HasNextPage())
+	}
+	return p.Err()
+}
+
+const opListWebsiteAuthorizationProviders = "ListWebsiteAuthorizationProviders"
+
+// ListWebsiteAuthorizationProvidersRequest generates a "aws/request.Request" representing the
+// client's request for the ListWebsiteAuthorizationProviders operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See ListWebsiteAuthorizationProviders for more information on using the ListWebsiteAuthorizationProviders
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the ListWebsiteAuthorizationProvidersRequest method.
+//    req, resp := client.ListWebsiteAuthorizationProvidersRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/worklink-2018-09-25/ListWebsiteAuthorizationProviders
+func (c *WorkLink) ListWebsiteAuthorizationProvidersRequest(input *ListWebsiteAuthorizationProvidersInput) (req *request.Request, output *ListWebsiteAuthorizationProvidersOutput) {
+	op := &request.Operation{
+		Name:       opListWebsiteAuthorizationProviders,
+		HTTPMethod: "POST",
+		HTTPPath:   "/listWebsiteAuthorizationProviders",
+		Paginator: &request.Paginator{
+			InputTokens:     []string{"NextToken"},
+			OutputTokens:    []string{"NextToken"},
+			LimitToken:      "MaxResults",
+			TruncationToken: "",
+		},
+	}
+
+	if input == nil {
+		input = &ListWebsiteAuthorizationProvidersInput{}
+	}
+
+	output = &ListWebsiteAuthorizationProvidersOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// ListWebsiteAuthorizationProviders API operation for Amazon WorkLink.
+//
+// Retrieves a list of website authorization providers associated with a specified
+// fleet.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for Amazon WorkLink's
+// API operation ListWebsiteAuthorizationProviders for usage and error information.
+//
+// Returned Error Codes:
+//   * ErrCodeUnauthorizedException "UnauthorizedException"
+//   You are not authorized to perform this action.
+//
+//   * ErrCodeInternalServerErrorException "InternalServerErrorException"
+//   The service is temporarily unavailable.
+//
+//   * ErrCodeInvalidRequestException "InvalidRequestException"
+//   The request is not valid.
+//
+//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   The requested resource was not found.
+//
+//   * ErrCodeTooManyRequestsException "TooManyRequestsException"
+//   The number of requests exceeds the limit.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/worklink-2018-09-25/ListWebsiteAuthorizationProviders
+func (c *WorkLink) ListWebsiteAuthorizationProviders(input *ListWebsiteAuthorizationProvidersInput) (*ListWebsiteAuthorizationProvidersOutput, error) {
+	req, out := c.ListWebsiteAuthorizationProvidersRequest(input)
+	return out, req.Send()
+}
+
+// ListWebsiteAuthorizationProvidersWithContext is the same as ListWebsiteAuthorizationProviders with the addition of
+// the ability to pass a context and additional request options.
+//
+// See ListWebsiteAuthorizationProviders for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *WorkLink) ListWebsiteAuthorizationProvidersWithContext(ctx aws.Context, input *ListWebsiteAuthorizationProvidersInput, opts ...request.Option) (*ListWebsiteAuthorizationProvidersOutput, error) {
+	req, out := c.ListWebsiteAuthorizationProvidersRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
+// ListWebsiteAuthorizationProvidersPages iterates over the pages of a ListWebsiteAuthorizationProviders operation,
+// calling the "fn" function with the response data for each page. To stop
+// iterating, return false from the fn function.
+//
+// See ListWebsiteAuthorizationProviders method for more information on how to use this operation.
+//
+// Note: This operation can generate multiple requests to a service.
+//
+//    // Example iterating over at most 3 pages of a ListWebsiteAuthorizationProviders operation.
+//    pageNum := 0
+//    err := client.ListWebsiteAuthorizationProvidersPages(params,
+//        func(page *worklink.ListWebsiteAuthorizationProvidersOutput, lastPage bool) bool {
+//            pageNum++
+//            fmt.Println(page)
+//            return pageNum <= 3
+//        })
+//
+func (c *WorkLink) ListWebsiteAuthorizationProvidersPages(input *ListWebsiteAuthorizationProvidersInput, fn func(*ListWebsiteAuthorizationProvidersOutput, bool) bool) error {
+	return c.ListWebsiteAuthorizationProvidersPagesWithContext(aws.BackgroundContext(), input, fn)
+}
+
+// ListWebsiteAuthorizationProvidersPagesWithContext same as ListWebsiteAuthorizationProvidersPages except
+// it takes a Context and allows setting request options on the pages.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *WorkLink) ListWebsiteAuthorizationProvidersPagesWithContext(ctx aws.Context, input *ListWebsiteAuthorizationProvidersInput, fn func(*ListWebsiteAuthorizationProvidersOutput, bool) bool, opts ...request.Option) error {
+	p := request.Pagination{
+		NewRequest: func() (*request.Request, error) {
+			var inCpy *ListWebsiteAuthorizationProvidersInput
+			if input != nil {
+				tmp := *input
+				inCpy = &tmp
+			}
+			req, _ := c.ListWebsiteAuthorizationProvidersRequest(inCpy)
+			req.SetContext(ctx)
+			req.ApplyOptions(opts...)
+			return req, nil
+		},
+	}
+
+	cont := true
+	for p.Next() && cont {
+		cont = fn(p.Page().(*ListWebsiteAuthorizationProvidersOutput), !p.HasNextPage())
 	}
 	return p.Err()
 }
@@ -1847,7 +2187,7 @@ func (c *WorkLink) ListWebsiteCertificateAuthoritiesWithContext(ctx aws.Context,
 //    // Example iterating over at most 3 pages of a ListWebsiteCertificateAuthorities operation.
 //    pageNum := 0
 //    err := client.ListWebsiteCertificateAuthoritiesPages(params,
-//        func(page *ListWebsiteCertificateAuthoritiesOutput, lastPage bool) bool {
+//        func(page *worklink.ListWebsiteCertificateAuthoritiesOutput, lastPage bool) bool {
 //            pageNum++
 //            fmt.Println(page)
 //            return pageNum <= 3
@@ -2810,6 +3150,97 @@ func (s AssociateDomainOutput) GoString() string {
 	return s.String()
 }
 
+type AssociateWebsiteAuthorizationProviderInput struct {
+	_ struct{} `type:"structure"`
+
+	// The authorization provider type.
+	//
+	// AuthorizationProviderType is a required field
+	AuthorizationProviderType *string `type:"string" required:"true" enum:"AuthorizationProviderType"`
+
+	// The domain name of the authorization provider. This applies only to SAML-based
+	// authorization providers.
+	DomainName *string `min:"1" type:"string"`
+
+	// The ARN of the fleet.
+	//
+	// FleetArn is a required field
+	FleetArn *string `min:"20" type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s AssociateWebsiteAuthorizationProviderInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s AssociateWebsiteAuthorizationProviderInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *AssociateWebsiteAuthorizationProviderInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "AssociateWebsiteAuthorizationProviderInput"}
+	if s.AuthorizationProviderType == nil {
+		invalidParams.Add(request.NewErrParamRequired("AuthorizationProviderType"))
+	}
+	if s.DomainName != nil && len(*s.DomainName) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("DomainName", 1))
+	}
+	if s.FleetArn == nil {
+		invalidParams.Add(request.NewErrParamRequired("FleetArn"))
+	}
+	if s.FleetArn != nil && len(*s.FleetArn) < 20 {
+		invalidParams.Add(request.NewErrParamMinLen("FleetArn", 20))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetAuthorizationProviderType sets the AuthorizationProviderType field's value.
+func (s *AssociateWebsiteAuthorizationProviderInput) SetAuthorizationProviderType(v string) *AssociateWebsiteAuthorizationProviderInput {
+	s.AuthorizationProviderType = &v
+	return s
+}
+
+// SetDomainName sets the DomainName field's value.
+func (s *AssociateWebsiteAuthorizationProviderInput) SetDomainName(v string) *AssociateWebsiteAuthorizationProviderInput {
+	s.DomainName = &v
+	return s
+}
+
+// SetFleetArn sets the FleetArn field's value.
+func (s *AssociateWebsiteAuthorizationProviderInput) SetFleetArn(v string) *AssociateWebsiteAuthorizationProviderInput {
+	s.FleetArn = &v
+	return s
+}
+
+type AssociateWebsiteAuthorizationProviderOutput struct {
+	_ struct{} `type:"structure"`
+
+	// A unique identifier for the authorization provider.
+	AuthorizationProviderId *string `min:"1" type:"string"`
+}
+
+// String returns the string representation
+func (s AssociateWebsiteAuthorizationProviderOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s AssociateWebsiteAuthorizationProviderOutput) GoString() string {
+	return s.String()
+}
+
+// SetAuthorizationProviderId sets the AuthorizationProviderId field's value.
+func (s *AssociateWebsiteAuthorizationProviderOutput) SetAuthorizationProviderId(v string) *AssociateWebsiteAuthorizationProviderOutput {
+	s.AuthorizationProviderId = &v
+	return s
+}
+
 type AssociateWebsiteCertificateAuthorityInput struct {
 	_ struct{} `type:"structure"`
 
@@ -3463,11 +3894,17 @@ func (s *DescribeDomainInput) SetFleetArn(v string) *DescribeDomainInput {
 type DescribeDomainOutput struct {
 	_ struct{} `type:"structure"`
 
+	// The ARN of an issued ACM certificate that is valid for the domain being associated.
+	AcmCertificateArn *string `type:"string"`
+
 	// The time that the domain was added.
 	CreatedTime *time.Time `type:"timestamp"`
 
 	// The name to display.
 	DisplayName *string `type:"string"`
+
+	// The name of the domain.
+	DomainName *string `min:"1" type:"string"`
 
 	// The current state for the domain.
 	DomainStatus *string `type:"string" enum:"DomainStatus"`
@@ -3483,6 +3920,12 @@ func (s DescribeDomainOutput) GoString() string {
 	return s.String()
 }
 
+// SetAcmCertificateArn sets the AcmCertificateArn field's value.
+func (s *DescribeDomainOutput) SetAcmCertificateArn(v string) *DescribeDomainOutput {
+	s.AcmCertificateArn = &v
+	return s
+}
+
 // SetCreatedTime sets the CreatedTime field's value.
 func (s *DescribeDomainOutput) SetCreatedTime(v time.Time) *DescribeDomainOutput {
 	s.CreatedTime = &v
@@ -3492,6 +3935,12 @@ func (s *DescribeDomainOutput) SetCreatedTime(v time.Time) *DescribeDomainOutput
 // SetDisplayName sets the DisplayName field's value.
 func (s *DescribeDomainOutput) SetDisplayName(v string) *DescribeDomainOutput {
 	s.DisplayName = &v
+	return s
+}
+
+// SetDomainName sets the DomainName field's value.
+func (s *DescribeDomainOutput) SetDomainName(v string) *DescribeDomainOutput {
+	s.DomainName = &v
 	return s
 }
 
@@ -3903,6 +4352,78 @@ func (s DisassociateDomainOutput) String() string {
 
 // GoString returns the string representation
 func (s DisassociateDomainOutput) GoString() string {
+	return s.String()
+}
+
+type DisassociateWebsiteAuthorizationProviderInput struct {
+	_ struct{} `type:"structure"`
+
+	// A unique identifier for the authorization provider.
+	//
+	// AuthorizationProviderId is a required field
+	AuthorizationProviderId *string `min:"1" type:"string" required:"true"`
+
+	// The ARN of the fleet.
+	//
+	// FleetArn is a required field
+	FleetArn *string `min:"20" type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s DisassociateWebsiteAuthorizationProviderInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DisassociateWebsiteAuthorizationProviderInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *DisassociateWebsiteAuthorizationProviderInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "DisassociateWebsiteAuthorizationProviderInput"}
+	if s.AuthorizationProviderId == nil {
+		invalidParams.Add(request.NewErrParamRequired("AuthorizationProviderId"))
+	}
+	if s.AuthorizationProviderId != nil && len(*s.AuthorizationProviderId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("AuthorizationProviderId", 1))
+	}
+	if s.FleetArn == nil {
+		invalidParams.Add(request.NewErrParamRequired("FleetArn"))
+	}
+	if s.FleetArn != nil && len(*s.FleetArn) < 20 {
+		invalidParams.Add(request.NewErrParamMinLen("FleetArn", 20))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetAuthorizationProviderId sets the AuthorizationProviderId field's value.
+func (s *DisassociateWebsiteAuthorizationProviderInput) SetAuthorizationProviderId(v string) *DisassociateWebsiteAuthorizationProviderInput {
+	s.AuthorizationProviderId = &v
+	return s
+}
+
+// SetFleetArn sets the FleetArn field's value.
+func (s *DisassociateWebsiteAuthorizationProviderInput) SetFleetArn(v string) *DisassociateWebsiteAuthorizationProviderInput {
+	s.FleetArn = &v
+	return s
+}
+
+type DisassociateWebsiteAuthorizationProviderOutput struct {
+	_ struct{} `type:"structure"`
+}
+
+// String returns the string representation
+func (s DisassociateWebsiteAuthorizationProviderOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DisassociateWebsiteAuthorizationProviderOutput) GoString() string {
 	return s.String()
 }
 
@@ -4390,6 +4911,105 @@ func (s *ListFleetsOutput) SetFleetSummaryList(v []*FleetSummary) *ListFleetsOut
 // SetNextToken sets the NextToken field's value.
 func (s *ListFleetsOutput) SetNextToken(v string) *ListFleetsOutput {
 	s.NextToken = &v
+	return s
+}
+
+type ListWebsiteAuthorizationProvidersInput struct {
+	_ struct{} `type:"structure"`
+
+	// The ARN of the fleet.
+	//
+	// FleetArn is a required field
+	FleetArn *string `min:"20" type:"string" required:"true"`
+
+	// The maximum number of results to be included in the next page.
+	MaxResults *int64 `min:"1" type:"integer"`
+
+	// The pagination token to use to retrieve the next page of results for this
+	// operation. If this value is null, it retrieves the first page.
+	NextToken *string `min:"1" type:"string"`
+}
+
+// String returns the string representation
+func (s ListWebsiteAuthorizationProvidersInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ListWebsiteAuthorizationProvidersInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *ListWebsiteAuthorizationProvidersInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "ListWebsiteAuthorizationProvidersInput"}
+	if s.FleetArn == nil {
+		invalidParams.Add(request.NewErrParamRequired("FleetArn"))
+	}
+	if s.FleetArn != nil && len(*s.FleetArn) < 20 {
+		invalidParams.Add(request.NewErrParamMinLen("FleetArn", 20))
+	}
+	if s.MaxResults != nil && *s.MaxResults < 1 {
+		invalidParams.Add(request.NewErrParamMinValue("MaxResults", 1))
+	}
+	if s.NextToken != nil && len(*s.NextToken) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("NextToken", 1))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetFleetArn sets the FleetArn field's value.
+func (s *ListWebsiteAuthorizationProvidersInput) SetFleetArn(v string) *ListWebsiteAuthorizationProvidersInput {
+	s.FleetArn = &v
+	return s
+}
+
+// SetMaxResults sets the MaxResults field's value.
+func (s *ListWebsiteAuthorizationProvidersInput) SetMaxResults(v int64) *ListWebsiteAuthorizationProvidersInput {
+	s.MaxResults = &v
+	return s
+}
+
+// SetNextToken sets the NextToken field's value.
+func (s *ListWebsiteAuthorizationProvidersInput) SetNextToken(v string) *ListWebsiteAuthorizationProvidersInput {
+	s.NextToken = &v
+	return s
+}
+
+type ListWebsiteAuthorizationProvidersOutput struct {
+	_ struct{} `type:"structure"`
+
+	// The pagination token to use to retrieve the next page of results for this
+	// operation. If this value is null, it retrieves the first page.
+	NextToken *string `min:"1" type:"string"`
+
+	// The website authorization providers.
+	WebsiteAuthorizationProviders []*WebsiteAuthorizationProviderSummary `type:"list"`
+}
+
+// String returns the string representation
+func (s ListWebsiteAuthorizationProvidersOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ListWebsiteAuthorizationProvidersOutput) GoString() string {
+	return s.String()
+}
+
+// SetNextToken sets the NextToken field's value.
+func (s *ListWebsiteAuthorizationProvidersOutput) SetNextToken(v string) *ListWebsiteAuthorizationProvidersOutput {
+	s.NextToken = &v
+	return s
+}
+
+// SetWebsiteAuthorizationProviders sets the WebsiteAuthorizationProviders field's value.
+func (s *ListWebsiteAuthorizationProvidersOutput) SetWebsiteAuthorizationProviders(v []*WebsiteAuthorizationProviderSummary) *ListWebsiteAuthorizationProvidersOutput {
+	s.WebsiteAuthorizationProviders = v
 	return s
 }
 
@@ -5174,6 +5794,60 @@ func (s UpdateIdentityProviderConfigurationOutput) GoString() string {
 	return s.String()
 }
 
+// The summary of the website authorization provider.
+type WebsiteAuthorizationProviderSummary struct {
+	_ struct{} `type:"structure"`
+
+	// A unique identifier for the authorization provider.
+	AuthorizationProviderId *string `min:"1" type:"string"`
+
+	// The authorization provider type.
+	//
+	// AuthorizationProviderType is a required field
+	AuthorizationProviderType *string `type:"string" required:"true" enum:"AuthorizationProviderType"`
+
+	// The time of creation.
+	CreatedTime *time.Time `type:"timestamp"`
+
+	// The domain name of the authorization provider. This applies only to SAML-based
+	// authorization providers.
+	DomainName *string `min:"1" type:"string"`
+}
+
+// String returns the string representation
+func (s WebsiteAuthorizationProviderSummary) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s WebsiteAuthorizationProviderSummary) GoString() string {
+	return s.String()
+}
+
+// SetAuthorizationProviderId sets the AuthorizationProviderId field's value.
+func (s *WebsiteAuthorizationProviderSummary) SetAuthorizationProviderId(v string) *WebsiteAuthorizationProviderSummary {
+	s.AuthorizationProviderId = &v
+	return s
+}
+
+// SetAuthorizationProviderType sets the AuthorizationProviderType field's value.
+func (s *WebsiteAuthorizationProviderSummary) SetAuthorizationProviderType(v string) *WebsiteAuthorizationProviderSummary {
+	s.AuthorizationProviderType = &v
+	return s
+}
+
+// SetCreatedTime sets the CreatedTime field's value.
+func (s *WebsiteAuthorizationProviderSummary) SetCreatedTime(v time.Time) *WebsiteAuthorizationProviderSummary {
+	s.CreatedTime = &v
+	return s
+}
+
+// SetDomainName sets the DomainName field's value.
+func (s *WebsiteAuthorizationProviderSummary) SetDomainName(v string) *WebsiteAuthorizationProviderSummary {
+	s.DomainName = &v
+	return s
+}
+
 // The summary of the certificate authority (CA).
 type WebsiteCaSummary struct {
 	_ struct{} `type:"structure"`
@@ -5215,6 +5889,11 @@ func (s *WebsiteCaSummary) SetWebsiteCaId(v string) *WebsiteCaSummary {
 	s.WebsiteCaId = &v
 	return s
 }
+
+const (
+	// AuthorizationProviderTypeSaml is a AuthorizationProviderType enum value
+	AuthorizationProviderTypeSaml = "SAML"
+)
 
 const (
 	// DeviceStatusActive is a DeviceStatus enum value

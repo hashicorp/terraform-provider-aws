@@ -669,7 +669,7 @@ func (c *MediaConnect) ListEntitlementsWithContext(ctx aws.Context, input *ListE
 //    // Example iterating over at most 3 pages of a ListEntitlements operation.
 //    pageNum := 0
 //    err := client.ListEntitlementsPages(params,
-//        func(page *ListEntitlementsOutput, lastPage bool) bool {
+//        func(page *mediaconnect.ListEntitlementsOutput, lastPage bool) bool {
 //            pageNum++
 //            fmt.Println(page)
 //            return pageNum <= 3
@@ -822,7 +822,7 @@ func (c *MediaConnect) ListFlowsWithContext(ctx aws.Context, input *ListFlowsInp
 //    // Example iterating over at most 3 pages of a ListFlows operation.
 //    pageNum := 0
 //    err := client.ListFlowsPages(params,
-//        func(page *ListFlowsOutput, lastPage bool) bool {
+//        func(page *mediaconnect.ListFlowsOutput, lastPage bool) bool {
 //            pageNum++
 //            fmt.Println(page)
 //            return pageNum <= 3
@@ -1990,14 +1990,17 @@ func (s *AddFlowOutputsOutput) SetOutputs(v []*Output) *AddFlowOutputsOutput {
 type AddOutputRequest struct {
 	_ struct{} `type:"structure"`
 
+	// The range of IP addresses that should be allowed to initiate output requests
+	// to this flow. These IP addresses should be in the form of a Classless Inter-Domain
+	// Routing (CIDR) block; for example, 10.0.0.0/16.
+	CidrAllowList []*string `locationName:"cidrAllowList" type:"list"`
+
 	// A description of the output. This description appears only on the AWS Elemental
 	// MediaConnect console and will not be seen by the end user.
 	Description *string `locationName:"description" type:"string"`
 
 	// The IP address from which video will be sent to output destinations.
-	//
-	// Destination is a required field
-	Destination *string `locationName:"destination" type:"string" required:"true"`
+	Destination *string `locationName:"destination" type:"string"`
 
 	// The type of key used for the encryption. If no keyType is provided, the service
 	// will use the default setting (static-key).
@@ -2010,14 +2013,15 @@ type AddOutputRequest struct {
 	Name *string `locationName:"name" type:"string"`
 
 	// The port to use when content is distributed to this output.
-	//
-	// Port is a required field
-	Port *int64 `locationName:"port" type:"integer" required:"true"`
+	Port *int64 `locationName:"port" type:"integer"`
 
 	// The protocol to use for the output.
 	//
 	// Protocol is a required field
 	Protocol *string `locationName:"protocol" type:"string" required:"true" enum:"Protocol"`
+
+	// The remote ID for the Zixi-pull output stream.
+	RemoteId *string `locationName:"remoteId" type:"string"`
 
 	// The smoothing latency in milliseconds for RTP and RTP-FEC streams.
 	SmoothingLatency *int64 `locationName:"smoothingLatency" type:"integer"`
@@ -2040,12 +2044,6 @@ func (s AddOutputRequest) GoString() string {
 // Validate inspects the fields of the type to determine if they are valid.
 func (s *AddOutputRequest) Validate() error {
 	invalidParams := request.ErrInvalidParams{Context: "AddOutputRequest"}
-	if s.Destination == nil {
-		invalidParams.Add(request.NewErrParamRequired("Destination"))
-	}
-	if s.Port == nil {
-		invalidParams.Add(request.NewErrParamRequired("Port"))
-	}
 	if s.Protocol == nil {
 		invalidParams.Add(request.NewErrParamRequired("Protocol"))
 	}
@@ -2059,6 +2057,12 @@ func (s *AddOutputRequest) Validate() error {
 		return invalidParams
 	}
 	return nil
+}
+
+// SetCidrAllowList sets the CidrAllowList field's value.
+func (s *AddOutputRequest) SetCidrAllowList(v []*string) *AddOutputRequest {
+	s.CidrAllowList = v
+	return s
 }
 
 // SetDescription sets the Description field's value.
@@ -2100,6 +2104,12 @@ func (s *AddOutputRequest) SetPort(v int64) *AddOutputRequest {
 // SetProtocol sets the Protocol field's value.
 func (s *AddOutputRequest) SetProtocol(v string) *AddOutputRequest {
 	s.Protocol = &v
+	return s
+}
+
+// SetRemoteId sets the RemoteId field's value.
+func (s *AddOutputRequest) SetRemoteId(v string) *AddOutputRequest {
+	s.RemoteId = &v
 	return s
 }
 
@@ -2400,9 +2410,29 @@ type Encryption struct {
 	// Algorithm is a required field
 	Algorithm *string `locationName:"algorithm" type:"string" required:"true" enum:"Algorithm"`
 
+	// A 128-bit, 16-byte hex value represented by a 32-character string, to be
+	// used with the key for encrypting content. This parameter is not valid for
+	// static key encryption.
+	ConstantInitializationVector *string `locationName:"constantInitializationVector" type:"string"`
+
+	// The value of one of the devices that you configured with your digital rights
+	// management (DRM) platform key provider. This parameter is required for SPEKE
+	// encryption and is not valid for static key encryption.
+	DeviceId *string `locationName:"deviceId" type:"string"`
+
 	// The type of key that is used for the encryption. If no keyType is provided,
 	// the service will use the default setting (static-key).
 	KeyType *string `locationName:"keyType" type:"string" enum:"KeyType"`
+
+	// The AWS Region that the API Gateway proxy endpoint was created in. This parameter
+	// is required for SPEKE encryption and is not valid for static key encryption.
+	Region *string `locationName:"region" type:"string"`
+
+	// An identifier for the content. The service sends this value to the key server
+	// to identify the current endpoint. The resource ID is also known as the content
+	// ID. This parameter is required for SPEKE encryption and is not valid for
+	// static key encryption.
+	ResourceId *string `locationName:"resourceId" type:"string"`
 
 	// The ARN of the role that you created during setup (when you set up AWS Elemental
 	// MediaConnect as a trusted entity).
@@ -2410,11 +2440,15 @@ type Encryption struct {
 	// RoleArn is a required field
 	RoleArn *string `locationName:"roleArn" type:"string" required:"true"`
 
-	// The ARN that was assigned to the secret that you created in AWS Secrets Manager
-	// to store the encryption key.
-	//
-	// SecretArn is a required field
-	SecretArn *string `locationName:"secretArn" type:"string" required:"true"`
+	// The ARN of the secret that you created in AWS Secrets Manager to store the
+	// encryption key. This parameter is required for static key encryption and
+	// is not valid for SPEKE encryption.
+	SecretArn *string `locationName:"secretArn" type:"string"`
+
+	// The URL from the API Gateway proxy that you set up to talk to your key server.
+	// This parameter is required for SPEKE encryption and is not valid for static
+	// key encryption.
+	Url *string `locationName:"url" type:"string"`
 }
 
 // String returns the string representation
@@ -2436,9 +2470,6 @@ func (s *Encryption) Validate() error {
 	if s.RoleArn == nil {
 		invalidParams.Add(request.NewErrParamRequired("RoleArn"))
 	}
-	if s.SecretArn == nil {
-		invalidParams.Add(request.NewErrParamRequired("SecretArn"))
-	}
 
 	if invalidParams.Len() > 0 {
 		return invalidParams
@@ -2452,9 +2483,33 @@ func (s *Encryption) SetAlgorithm(v string) *Encryption {
 	return s
 }
 
+// SetConstantInitializationVector sets the ConstantInitializationVector field's value.
+func (s *Encryption) SetConstantInitializationVector(v string) *Encryption {
+	s.ConstantInitializationVector = &v
+	return s
+}
+
+// SetDeviceId sets the DeviceId field's value.
+func (s *Encryption) SetDeviceId(v string) *Encryption {
+	s.DeviceId = &v
+	return s
+}
+
 // SetKeyType sets the KeyType field's value.
 func (s *Encryption) SetKeyType(v string) *Encryption {
 	s.KeyType = &v
+	return s
+}
+
+// SetRegion sets the Region field's value.
+func (s *Encryption) SetRegion(v string) *Encryption {
+	s.Region = &v
+	return s
+}
+
+// SetResourceId sets the ResourceId field's value.
+func (s *Encryption) SetResourceId(v string) *Encryption {
+	s.ResourceId = &v
 	return s
 }
 
@@ -2467,6 +2522,12 @@ func (s *Encryption) SetRoleArn(v string) *Encryption {
 // SetSecretArn sets the SecretArn field's value.
 func (s *Encryption) SetSecretArn(v string) *Encryption {
 	s.SecretArn = &v
+	return s
+}
+
+// SetUrl sets the Url field's value.
+func (s *Encryption) SetUrl(v string) *Encryption {
+	s.Url = &v
 	return s
 }
 
@@ -3517,7 +3578,7 @@ type SetSourceRequest struct {
 	StreamId *string `locationName:"streamId" type:"string"`
 
 	// The range of IP addresses that should be allowed to contribute content to
-	// your source. These IP addresses should in the form of a Classless Inter-Domain
+	// your source. These IP addresses should be in the form of a Classless Inter-Domain
 	// Routing (CIDR) block; for example, 10.0.0.0/16.
 	WhitelistCidr *string `locationName:"whitelistCidr" type:"string"`
 }
@@ -3643,7 +3704,7 @@ type Source struct {
 	Transport *Transport `locationName:"transport" type:"structure"`
 
 	// The range of IP addresses that should be allowed to contribute content to
-	// your source. These IP addresses should in the form of a Classless Inter-Domain
+	// your source. These IP addresses should be in the form of a Classless Inter-Domain
 	// Routing (CIDR) block; for example, 10.0.0.0/16.
 	WhitelistCidr *string `locationName:"whitelistCidr" type:"string"`
 }
@@ -3930,6 +3991,11 @@ func (s TagResourceOutput) GoString() string {
 type Transport struct {
 	_ struct{} `type:"structure"`
 
+	// The range of IP addresses that should be allowed to initiate output requests
+	// to this flow. These IP addresses should be in the form of a Classless Inter-Domain
+	// Routing (CIDR) block; for example, 10.0.0.0/16.
+	CidrAllowList []*string `locationName:"cidrAllowList" type:"list"`
+
 	// The smoothing max bitrate for RTP and RTP-FEC streams.
 	MaxBitrate *int64 `locationName:"maxBitrate" type:"integer"`
 
@@ -3940,6 +4006,9 @@ type Transport struct {
 	//
 	// Protocol is a required field
 	Protocol *string `locationName:"protocol" type:"string" required:"true" enum:"Protocol"`
+
+	// The remote ID for the Zixi-pull stream.
+	RemoteId *string `locationName:"remoteId" type:"string"`
 
 	// The smoothing latency in milliseconds for RTP and RTP-FEC streams.
 	SmoothingLatency *int64 `locationName:"smoothingLatency" type:"integer"`
@@ -3959,6 +4028,12 @@ func (s Transport) GoString() string {
 	return s.String()
 }
 
+// SetCidrAllowList sets the CidrAllowList field's value.
+func (s *Transport) SetCidrAllowList(v []*string) *Transport {
+	s.CidrAllowList = v
+	return s
+}
+
 // SetMaxBitrate sets the MaxBitrate field's value.
 func (s *Transport) SetMaxBitrate(v int64) *Transport {
 	s.MaxBitrate = &v
@@ -3974,6 +4049,12 @@ func (s *Transport) SetMaxLatency(v int64) *Transport {
 // SetProtocol sets the Protocol field's value.
 func (s *Transport) SetProtocol(v string) *Transport {
 	s.Protocol = &v
+	return s
+}
+
+// SetRemoteId sets the RemoteId field's value.
+func (s *Transport) SetRemoteId(v string) *Transport {
+	s.RemoteId = &v
 	return s
 }
 
@@ -4062,17 +4143,43 @@ type UpdateEncryption struct {
 	// or aes256).
 	Algorithm *string `locationName:"algorithm" type:"string" enum:"Algorithm"`
 
+	// A 128-bit, 16-byte hex value represented by a 32-character string, to be
+	// used with the key for encrypting content. This parameter is not valid for
+	// static key encryption.
+	ConstantInitializationVector *string `locationName:"constantInitializationVector" type:"string"`
+
+	// The value of one of the devices that you configured with your digital rights
+	// management (DRM) platform key provider. This parameter is required for SPEKE
+	// encryption and is not valid for static key encryption.
+	DeviceId *string `locationName:"deviceId" type:"string"`
+
 	// The type of key that is used for the encryption. If no keyType is provided,
 	// the service will use the default setting (static-key).
 	KeyType *string `locationName:"keyType" type:"string" enum:"KeyType"`
+
+	// The AWS Region that the API Gateway proxy endpoint was created in. This parameter
+	// is required for SPEKE encryption and is not valid for static key encryption.
+	Region *string `locationName:"region" type:"string"`
+
+	// An identifier for the content. The service sends this value to the key server
+	// to identify the current endpoint. The resource ID is also known as the content
+	// ID. This parameter is required for SPEKE encryption and is not valid for
+	// static key encryption.
+	ResourceId *string `locationName:"resourceId" type:"string"`
 
 	// The ARN of the role that you created during setup (when you set up AWS Elemental
 	// MediaConnect as a trusted entity).
 	RoleArn *string `locationName:"roleArn" type:"string"`
 
-	// The ARN that was assigned to the secret that you created in AWS Secrets Manager
-	// to store the encryption key.
+	// The ARN of the secret that you created in AWS Secrets Manager to store the
+	// encryption key. This parameter is required for static key encryption and
+	// is not valid for SPEKE encryption.
 	SecretArn *string `locationName:"secretArn" type:"string"`
+
+	// The URL from the API Gateway proxy that you set up to talk to your key server.
+	// This parameter is required for SPEKE encryption and is not valid for static
+	// key encryption.
+	Url *string `locationName:"url" type:"string"`
 }
 
 // String returns the string representation
@@ -4091,9 +4198,33 @@ func (s *UpdateEncryption) SetAlgorithm(v string) *UpdateEncryption {
 	return s
 }
 
+// SetConstantInitializationVector sets the ConstantInitializationVector field's value.
+func (s *UpdateEncryption) SetConstantInitializationVector(v string) *UpdateEncryption {
+	s.ConstantInitializationVector = &v
+	return s
+}
+
+// SetDeviceId sets the DeviceId field's value.
+func (s *UpdateEncryption) SetDeviceId(v string) *UpdateEncryption {
+	s.DeviceId = &v
+	return s
+}
+
 // SetKeyType sets the KeyType field's value.
 func (s *UpdateEncryption) SetKeyType(v string) *UpdateEncryption {
 	s.KeyType = &v
+	return s
+}
+
+// SetRegion sets the Region field's value.
+func (s *UpdateEncryption) SetRegion(v string) *UpdateEncryption {
+	s.Region = &v
+	return s
+}
+
+// SetResourceId sets the ResourceId field's value.
+func (s *UpdateEncryption) SetResourceId(v string) *UpdateEncryption {
+	s.ResourceId = &v
 	return s
 }
 
@@ -4106,6 +4237,12 @@ func (s *UpdateEncryption) SetRoleArn(v string) *UpdateEncryption {
 // SetSecretArn sets the SecretArn field's value.
 func (s *UpdateEncryption) SetSecretArn(v string) *UpdateEncryption {
 	s.SecretArn = &v
+	return s
+}
+
+// SetUrl sets the Url field's value.
+func (s *UpdateEncryption) SetUrl(v string) *UpdateEncryption {
+	s.Url = &v
 	return s
 }
 
@@ -4234,6 +4371,11 @@ func (s *UpdateFlowEntitlementOutput) SetFlowArn(v string) *UpdateFlowEntitlemen
 type UpdateFlowOutputInput struct {
 	_ struct{} `type:"structure"`
 
+	// The range of IP addresses that should be allowed to initiate output requests
+	// to this flow. These IP addresses should be in the form of a Classless Inter-Domain
+	// Routing (CIDR) block; for example, 10.0.0.0/16.
+	CidrAllowList []*string `locationName:"cidrAllowList" type:"list"`
+
 	// A description of the output. This description appears only on the AWS Elemental
 	// MediaConnect console and will not be seen by the end user.
 	Description *string `locationName:"description" type:"string"`
@@ -4259,6 +4401,9 @@ type UpdateFlowOutputInput struct {
 
 	// The protocol to use for the output.
 	Protocol *string `locationName:"protocol" type:"string" enum:"Protocol"`
+
+	// The remote ID for the Zixi-pull stream.
+	RemoteId *string `locationName:"remoteId" type:"string"`
 
 	// The smoothing latency in milliseconds for RTP and RTP-FEC streams.
 	SmoothingLatency *int64 `locationName:"smoothingLatency" type:"integer"`
@@ -4298,6 +4443,12 @@ func (s *UpdateFlowOutputInput) Validate() error {
 		return invalidParams
 	}
 	return nil
+}
+
+// SetCidrAllowList sets the CidrAllowList field's value.
+func (s *UpdateFlowOutputInput) SetCidrAllowList(v []*string) *UpdateFlowOutputInput {
+	s.CidrAllowList = v
+	return s
 }
 
 // SetDescription sets the Description field's value.
@@ -4345,6 +4496,12 @@ func (s *UpdateFlowOutputInput) SetPort(v int64) *UpdateFlowOutputInput {
 // SetProtocol sets the Protocol field's value.
 func (s *UpdateFlowOutputInput) SetProtocol(v string) *UpdateFlowOutputInput {
 	s.Protocol = &v
+	return s
+}
+
+// SetRemoteId sets the RemoteId field's value.
+func (s *UpdateFlowOutputInput) SetRemoteId(v string) *UpdateFlowOutputInput {
+	s.RemoteId = &v
 	return s
 }
 
@@ -4433,7 +4590,7 @@ type UpdateFlowSourceInput struct {
 	StreamId *string `locationName:"streamId" type:"string"`
 
 	// The range of IP addresses that should be allowed to contribute content to
-	// your source. These IP addresses should in the form of a Classless Inter-Domain
+	// your source. These IP addresses should be in the form of a Classless Inter-Domain
 	// Routing (CIDR) block; for example, 10.0.0.0/16.
 	WhitelistCidr *string `locationName:"whitelistCidr" type:"string"`
 }
@@ -4582,6 +4739,9 @@ const (
 )
 
 const (
+	// KeyTypeSpeke is a KeyType enum value
+	KeyTypeSpeke = "speke"
+
 	// KeyTypeStaticKey is a KeyType enum value
 	KeyTypeStaticKey = "static-key"
 )
@@ -4595,6 +4755,9 @@ const (
 
 	// ProtocolRtp is a Protocol enum value
 	ProtocolRtp = "rtp"
+
+	// ProtocolZixiPull is a Protocol enum value
+	ProtocolZixiPull = "zixi-pull"
 )
 
 const (

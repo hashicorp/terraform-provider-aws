@@ -6,7 +6,6 @@ import (
 	"math/rand"
 	"reflect"
 	"regexp"
-	"sort"
 	"testing"
 	"time"
 
@@ -104,14 +103,7 @@ func TestAccAWSELB_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(
 						"aws_elb.bar", "availability_zones.#", "3"),
 					resource.TestCheckResourceAttr(
-						"aws_elb.bar", "availability_zones.2487133097", "us-west-2a"),
-					resource.TestCheckResourceAttr(
-						"aws_elb.bar", "availability_zones.221770259", "us-west-2b"),
-					resource.TestCheckResourceAttr(
-						"aws_elb.bar", "availability_zones.2050015877", "us-west-2c"),
-					resource.TestCheckResourceAttr(
 						"aws_elb.bar", "subnets.#", "3"),
-					// NOTE: Subnet IDs are different across AWS accounts and cannot be checked.
 					resource.TestCheckResourceAttr(
 						"aws_elb.bar", "listener.206423021.instance_port", "8000"),
 					resource.TestCheckResourceAttr(
@@ -343,12 +335,6 @@ func TestAccAWSELB_availabilityZones(t *testing.T) {
 					testAccCheckAWSELBExists("aws_elb.bar", &conf),
 					resource.TestCheckResourceAttr(
 						"aws_elb.bar", "availability_zones.#", "3"),
-					resource.TestCheckResourceAttr(
-						"aws_elb.bar", "availability_zones.2487133097", "us-west-2a"),
-					resource.TestCheckResourceAttr(
-						"aws_elb.bar", "availability_zones.221770259", "us-west-2b"),
-					resource.TestCheckResourceAttr(
-						"aws_elb.bar", "availability_zones.2050015877", "us-west-2c"),
 				),
 			},
 
@@ -358,10 +344,6 @@ func TestAccAWSELB_availabilityZones(t *testing.T) {
 					testAccCheckAWSELBExists("aws_elb.bar", &conf),
 					resource.TestCheckResourceAttr(
 						"aws_elb.bar", "availability_zones.#", "2"),
-					resource.TestCheckResourceAttr(
-						"aws_elb.bar", "availability_zones.2487133097", "us-west-2a"),
-					resource.TestCheckResourceAttr(
-						"aws_elb.bar", "availability_zones.221770259", "us-west-2b"),
 				),
 			},
 		},
@@ -1086,16 +1068,6 @@ func testAccCheckAWSELBDisappears(loadBalancer *elb.LoadBalancerDescription) res
 
 func testAccCheckAWSELBAttributes(conf *elb.LoadBalancerDescription) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		zones := []string{"us-west-2a", "us-west-2b", "us-west-2c"}
-		azs := make([]string, 0, len(conf.AvailabilityZones))
-		for _, x := range conf.AvailabilityZones {
-			azs = append(azs, *x)
-		}
-		sort.StringSlice(azs).Sort()
-		if !reflect.DeepEqual(azs, zones) {
-			return fmt.Errorf("bad availability_zones")
-		}
-
 		l := elb.Listener{
 			InstancePort:     aws.Int64(int64(8000)),
 			InstanceProtocol: aws.String("HTTP"),
@@ -1120,16 +1092,6 @@ func testAccCheckAWSELBAttributes(conf *elb.LoadBalancerDescription) resource.Te
 
 func testAccCheckAWSELBAttributesHealthCheck(conf *elb.LoadBalancerDescription) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		zones := []string{"us-west-2a", "us-west-2b", "us-west-2c"}
-		azs := make([]string, 0, len(conf.AvailabilityZones))
-		for _, x := range conf.AvailabilityZones {
-			azs = append(azs, *x)
-		}
-		sort.StringSlice(azs).Sort()
-		if !reflect.DeepEqual(azs, zones) {
-			return fmt.Errorf("bad availability_zones")
-		}
-
 		check := &elb.HealthCheck{
 			Timeout:            aws.Int64(int64(30)),
 			UnhealthyThreshold: aws.Int64(int64(5)),
@@ -1195,15 +1157,18 @@ func testAccCheckAWSELBExists(n string, res *elb.LoadBalancerDescription) resour
 }
 
 const testAccAWSELBConfig = `
+data "aws_availability_zones" "available" {
+  state = "available"
+}
+
 resource "aws_elb" "bar" {
-  availability_zones = ["us-west-2a", "us-west-2b", "us-west-2c"]
+  availability_zones = ["${data.aws_availability_zones.available.names[0]}", "${data.aws_availability_zones.available.names[1]}", "${data.aws_availability_zones.available.names[2]}"]
 
   listener {
     instance_port = 8000
     instance_protocol = "http"
     lb_port = 80
-    // Protocol should be case insensitive
-    lb_protocol = "HttP"
+    lb_protocol = "http"
   }
 
 	tags = {
@@ -1215,9 +1180,13 @@ resource "aws_elb" "bar" {
 `
 
 const testAccAWSELBFullRangeOfCharacters = `
+data "aws_availability_zones" "available" {
+  state = "available"
+}
+
 resource "aws_elb" "foo" {
   name = "%s"
-  availability_zones = ["us-west-2a", "us-west-2b", "us-west-2c"]
+  availability_zones = ["${data.aws_availability_zones.available.names[0]}", "${data.aws_availability_zones.available.names[1]}", "${data.aws_availability_zones.available.names[2]}"]
 
   listener {
     instance_port = 8000
@@ -1229,8 +1198,12 @@ resource "aws_elb" "foo" {
 `
 
 const testAccAWSELBAccessLogs = `
+data "aws_availability_zones" "available" {
+  state = "available"
+}
+
 resource "aws_elb" "foo" {
-  availability_zones = ["us-west-2a", "us-west-2b", "us-west-2c"]
+  availability_zones = ["${data.aws_availability_zones.available.names[0]}", "${data.aws_availability_zones.available.names[1]}", "${data.aws_availability_zones.available.names[2]}"]
 
   listener {
     instance_port = 8000
@@ -1243,13 +1216,19 @@ resource "aws_elb" "foo" {
 
 func testAccAWSELBAccessLogsOn(r string) string {
 	return fmt.Sprintf(`
-# an S3 bucket configured for Access logs
-# The 797873946194 is the AWS ID for us-west-2, so this test
-# must be ran in us-west-2
+data "aws_availability_zones" "available" {
+  state = "available"
+}
+
+data "aws_elb_service_account" "current" {}
+
+data "aws_partition" "current" {}
+
 resource "aws_s3_bucket" "acceslogs_bucket" {
-  bucket = "%s"
-  acl = "private"
+  bucket        = "%s"
+  acl           = "private"
   force_destroy = true
+
   policy = <<EOF
 {
   "Id": "Policy1446577137248",
@@ -1258,9 +1237,9 @@ resource "aws_s3_bucket" "acceslogs_bucket" {
       "Action": "s3:PutObject",
       "Effect": "Allow",
       "Principal": {
-        "AWS": "arn:aws:iam::797873946194:root"
+        "AWS": "${data.aws_elb_service_account.current.arn}"
       },
-      "Resource": "arn:aws:s3:::%s/*",
+      "Resource": "arn:${data.aws_partition.current.partition}:s3:::%s/*",
       "Sid": "Stmt1446575236270"
     }
   ],
@@ -1270,32 +1249,38 @@ EOF
 }
 
 resource "aws_elb" "foo" {
-  availability_zones = ["us-west-2a", "us-west-2b", "us-west-2c"]
+  availability_zones = ["${data.aws_availability_zones.available.names[0]}", "${data.aws_availability_zones.available.names[1]}", "${data.aws_availability_zones.available.names[2]}"]
 
   listener {
-    instance_port = 8000
+    instance_port     = 8000
     instance_protocol = "http"
-    lb_port = 80
-    lb_protocol = "http"
+    lb_port           = 80
+    lb_protocol       = "http"
   }
 
-	access_logs {
-		interval = 5
-		bucket = "${aws_s3_bucket.acceslogs_bucket.bucket}"
-	}
+  access_logs {
+    interval = 5
+    bucket   = "${aws_s3_bucket.acceslogs_bucket.bucket}"
+  }
 }
 `, r, r)
 }
 
 func testAccAWSELBAccessLogsDisabled(r string) string {
 	return fmt.Sprintf(`
-# an S3 bucket configured for Access logs
-# The 797873946194 is the AWS ID for us-west-2, so this test
-# must be ran in us-west-2
+data "aws_availability_zones" "available" {
+  state = "available"
+}
+
+data "aws_elb_service_account" "current" {}
+
+data "aws_partition" "current" {}
+
 resource "aws_s3_bucket" "acceslogs_bucket" {
-  bucket = "%s"
-  acl = "private"
+  bucket        = "%s"
+  acl           = "private"
   force_destroy = true
+
   policy = <<EOF
 {
   "Id": "Policy1446577137248",
@@ -1304,9 +1289,9 @@ resource "aws_s3_bucket" "acceslogs_bucket" {
       "Action": "s3:PutObject",
       "Effect": "Allow",
       "Principal": {
-        "AWS": "arn:aws:iam::797873946194:root"
+        "AWS": "${data.aws_elb_service_account.current.arn}"
       },
-      "Resource": "arn:aws:s3:::%s/*",
+      "Resource": "arn:${data.aws_partition.current.partition}:s3:::%s/*",
       "Sid": "Stmt1446575236270"
     }
   ],
@@ -1316,28 +1301,32 @@ EOF
 }
 
 resource "aws_elb" "foo" {
-  availability_zones = ["us-west-2a", "us-west-2b", "us-west-2c"]
+  availability_zones = ["${data.aws_availability_zones.available.names[0]}", "${data.aws_availability_zones.available.names[1]}", "${data.aws_availability_zones.available.names[2]}"]
 
   listener {
-    instance_port = 8000
+    instance_port     = 8000
     instance_protocol = "http"
-    lb_port = 80
-    lb_protocol = "http"
+    lb_port           = 80
+    lb_protocol       = "http"
   }
 
-	access_logs {
-		interval = 5
-		bucket = "${aws_s3_bucket.acceslogs_bucket.bucket}"
-		enabled = false
-	}
+  access_logs {
+    interval = 5
+    bucket   = "${aws_s3_bucket.acceslogs_bucket.bucket}"
+    enabled  = false
+  }
 }
 `, r, r)
 }
 
 const testAccAWSELB_namePrefix = `
+data "aws_availability_zones" "available" {
+  state = "available"
+}
+
 resource "aws_elb" "test" {
   name_prefix = "test-"
-  availability_zones = ["us-west-2a", "us-west-2b", "us-west-2c"]
+  availability_zones = ["${data.aws_availability_zones.available.names[0]}", "${data.aws_availability_zones.available.names[1]}", "${data.aws_availability_zones.available.names[2]}"]
 
   listener {
     instance_port = 8000
@@ -1349,8 +1338,12 @@ resource "aws_elb" "test" {
 `
 
 const testAccAWSELBGeneratedName = `
+data "aws_availability_zones" "available" {
+  state = "available"
+}
+
 resource "aws_elb" "foo" {
-  availability_zones = ["us-west-2a", "us-west-2b", "us-west-2c"]
+  availability_zones = ["${data.aws_availability_zones.available.names[0]}", "${data.aws_availability_zones.available.names[1]}", "${data.aws_availability_zones.available.names[2]}"]
 
   listener {
     instance_port = 8000
@@ -1362,9 +1355,13 @@ resource "aws_elb" "foo" {
 `
 
 const testAccAWSELB_zeroValueName = `
+data "aws_availability_zones" "available" {
+  state = "available"
+}
+
 resource "aws_elb" "foo" {
   name               = ""
-  availability_zones = ["us-west-2a", "us-west-2b", "us-west-2c"]
+  availability_zones = ["${data.aws_availability_zones.available.names[0]}", "${data.aws_availability_zones.available.names[1]}", "${data.aws_availability_zones.available.names[2]}"]
 
   listener {
     instance_port = 8000
@@ -1381,8 +1378,12 @@ output "lb_name" {
 `
 
 const testAccAWSELBConfig_AvailabilityZonesUpdate = `
+data "aws_availability_zones" "available" {
+  state = "available"
+}
+
 resource "aws_elb" "bar" {
-  availability_zones = ["us-west-2a", "us-west-2b"]
+  availability_zones = ["${data.aws_availability_zones.available.names[0]}", "${data.aws_availability_zones.available.names[1]}"]
 
   listener {
     instance_port = 8000
@@ -1394,8 +1395,12 @@ resource "aws_elb" "bar" {
 `
 
 const testAccAWSELBConfig_TagUpdate = `
+data "aws_availability_zones" "available" {
+  state = "available"
+}
+
 resource "aws_elb" "bar" {
-  availability_zones = ["us-west-2a", "us-west-2b", "us-west-2c"]
+  availability_zones = ["${data.aws_availability_zones.available.names[0]}", "${data.aws_availability_zones.available.names[1]}", "${data.aws_availability_zones.available.names[2]}"]
 
   listener {
     instance_port = 8000
@@ -1414,8 +1419,27 @@ resource "aws_elb" "bar" {
 `
 
 const testAccAWSELBConfigNewInstance = `
+data "aws_ami" "amzn-ami-minimal-hvm-ebs" {
+  most_recent = true
+  owners      = ["amazon"]
+
+  filter {
+    name   = "name"
+    values = ["amzn-ami-minimal-hvm-*"]
+  }
+
+  filter {
+    name   = "root-device-type"
+    values = ["ebs"]
+  }
+}
+
+data "aws_availability_zones" "available" {
+  state = "available"
+}
+
 resource "aws_elb" "bar" {
-  availability_zones = ["us-west-2a", "us-west-2b", "us-west-2c"]
+  availability_zones = ["${data.aws_availability_zones.available.names[0]}", "${data.aws_availability_zones.available.names[1]}", "${data.aws_availability_zones.available.names[2]}"]
 
   listener {
     instance_port = 8000
@@ -1428,15 +1452,18 @@ resource "aws_elb" "bar" {
 }
 
 resource "aws_instance" "foo" {
-	# us-west-2
-	ami = "ami-043a5034"
-	instance_type = "t1.micro"
+  ami           = "${data.aws_ami.amzn-ami-minimal-hvm-ebs.id}"
+  instance_type = "t3.micro"
 }
 `
 
 const testAccAWSELBConfigHealthCheck = `
+data "aws_availability_zones" "available" {
+  state = "available"
+}
+
 resource "aws_elb" "bar" {
-  availability_zones = ["us-west-2a", "us-west-2b", "us-west-2c"]
+  availability_zones = ["${data.aws_availability_zones.available.names[0]}", "${data.aws_availability_zones.available.names[1]}", "${data.aws_availability_zones.available.names[2]}"]
 
   listener {
     instance_port = 8000
@@ -1456,8 +1483,12 @@ resource "aws_elb" "bar" {
 `
 
 const testAccAWSELBConfigHealthCheck_update = `
+data "aws_availability_zones" "available" {
+  state = "available"
+}
+
 resource "aws_elb" "bar" {
-  availability_zones = ["us-west-2a"]
+  availability_zones = ["${data.aws_availability_zones.available.names[0]}"]
 
   listener {
     instance_port = 8000
@@ -1477,8 +1508,12 @@ resource "aws_elb" "bar" {
 `
 
 const testAccAWSELBConfigListener_update = `
+data "aws_availability_zones" "available" {
+  state = "available"
+}
+
 resource "aws_elb" "bar" {
-  availability_zones = ["us-west-2a", "us-west-2b", "us-west-2c"]
+  availability_zones = ["${data.aws_availability_zones.available.names[0]}", "${data.aws_availability_zones.available.names[1]}", "${data.aws_availability_zones.available.names[2]}"]
 
   listener {
     instance_port = 8080
@@ -1490,8 +1525,12 @@ resource "aws_elb" "bar" {
 `
 
 const testAccAWSELBConfigListener_multipleListeners = `
+data "aws_availability_zones" "available" {
+  state = "available"
+}
+
 resource "aws_elb" "bar" {
-  availability_zones = ["us-west-2a", "us-west-2b", "us-west-2c"]
+  availability_zones = ["${data.aws_availability_zones.available.names[0]}", "${data.aws_availability_zones.available.names[1]}", "${data.aws_availability_zones.available.names[2]}"]
 
   listener {
     instance_port = 8000
@@ -1510,8 +1549,12 @@ resource "aws_elb" "bar" {
 `
 
 const testAccAWSELBConfigIdleTimeout = `
+data "aws_availability_zones" "available" {
+  state = "available"
+}
+
 resource "aws_elb" "bar" {
-	availability_zones = ["us-west-2a"]
+	availability_zones = ["${data.aws_availability_zones.available.names[0]}"]
 
 	listener {
 		instance_port = 8000
@@ -1525,8 +1568,12 @@ resource "aws_elb" "bar" {
 `
 
 const testAccAWSELBConfigIdleTimeout_update = `
+data "aws_availability_zones" "available" {
+  state = "available"
+}
+
 resource "aws_elb" "bar" {
-	availability_zones = ["us-west-2a"]
+	availability_zones = ["${data.aws_availability_zones.available.names[0]}"]
 
 	listener {
 		instance_port = 8000
@@ -1540,8 +1587,12 @@ resource "aws_elb" "bar" {
 `
 
 const testAccAWSELBConfigConnectionDraining = `
+data "aws_availability_zones" "available" {
+  state = "available"
+}
+
 resource "aws_elb" "bar" {
-	availability_zones = ["us-west-2a"]
+	availability_zones = ["${data.aws_availability_zones.available.names[0]}"]
 
 	listener {
 		instance_port = 8000
@@ -1556,8 +1607,12 @@ resource "aws_elb" "bar" {
 `
 
 const testAccAWSELBConfigConnectionDraining_update_timeout = `
+data "aws_availability_zones" "available" {
+  state = "available"
+}
+
 resource "aws_elb" "bar" {
-	availability_zones = ["us-west-2a"]
+	availability_zones = ["${data.aws_availability_zones.available.names[0]}"]
 
 	listener {
 		instance_port = 8000
@@ -1572,8 +1627,12 @@ resource "aws_elb" "bar" {
 `
 
 const testAccAWSELBConfigConnectionDraining_update_disable = `
+data "aws_availability_zones" "available" {
+  state = "available"
+}
+
 resource "aws_elb" "bar" {
-	availability_zones = ["us-west-2a"]
+	availability_zones = ["${data.aws_availability_zones.available.names[0]}"]
 
 	listener {
 		instance_port = 8000
@@ -1587,8 +1646,12 @@ resource "aws_elb" "bar" {
 `
 
 const testAccAWSELBConfigSecurityGroups = `
+data "aws_availability_zones" "available" {
+  state = "available"
+}
+
 resource "aws_elb" "bar" {
-  availability_zones = ["us-west-2a", "us-west-2b", "us-west-2c"]
+  availability_zones = ["${data.aws_availability_zones.available.names[0]}", "${data.aws_availability_zones.available.names[1]}", "${data.aws_availability_zones.available.names[2]}"]
 
   listener {
     instance_port = 8000
@@ -1676,8 +1739,8 @@ resource "aws_elb" "bar" {
 }
 
 const testAccAWSELBConfig_subnets = `
-provider "aws" {
-  region = "us-west-2"
+data "aws_availability_zones" "available" {
+  state = "available"
 }
 
 resource "aws_vpc" "azelb" {
@@ -1693,7 +1756,7 @@ resource "aws_subnet" "public_a_one" {
   vpc_id = "${aws_vpc.azelb.id}"
 
   cidr_block        = "10.1.1.0/24"
-  availability_zone = "us-west-2a"
+  availability_zone = "${data.aws_availability_zones.available.names[0]}"
   tags = {
     Name = "tf-acc-elb-subnets-a-one"
   }
@@ -1703,7 +1766,7 @@ resource "aws_subnet" "public_b_one" {
   vpc_id = "${aws_vpc.azelb.id}"
 
   cidr_block        = "10.1.7.0/24"
-  availability_zone = "us-west-2b"
+  availability_zone = "${data.aws_availability_zones.available.names[1]}"
   tags = {
     Name = "tf-acc-elb-subnets-b-one"
   }
@@ -1713,7 +1776,7 @@ resource "aws_subnet" "public_a_two" {
   vpc_id = "${aws_vpc.azelb.id}"
 
   cidr_block        = "10.1.2.0/24"
-  availability_zone = "us-west-2a"
+  availability_zone = "${data.aws_availability_zones.available.names[0]}"
   tags = {
     Name = "tf-acc-elb-subnets-a-two"
   }
@@ -1747,8 +1810,8 @@ resource "aws_internet_gateway" "gw" {
 `
 
 const testAccAWSELBConfig_subnet_swap = `
-provider "aws" {
-  region = "us-west-2"
+data "aws_availability_zones" "available" {
+  state = "available"
 }
 
 resource "aws_vpc" "azelb" {
@@ -1764,7 +1827,7 @@ resource "aws_subnet" "public_a_one" {
   vpc_id = "${aws_vpc.azelb.id}"
 
   cidr_block        = "10.1.1.0/24"
-  availability_zone = "us-west-2a"
+  availability_zone = "${data.aws_availability_zones.available.names[0]}"
   tags = {
     Name = "tf-acc-elb-subnet-swap-a-one"
   }
@@ -1774,7 +1837,7 @@ resource "aws_subnet" "public_b_one" {
   vpc_id = "${aws_vpc.azelb.id}"
 
   cidr_block        = "10.1.7.0/24"
-  availability_zone = "us-west-2b"
+  availability_zone = "${data.aws_availability_zones.available.names[1]}"
   tags = {
     Name = "tf-acc-elb-subnet-swap-b-one"
   }
@@ -1784,7 +1847,7 @@ resource "aws_subnet" "public_a_two" {
   vpc_id = "${aws_vpc.azelb.id}"
 
   cidr_block        = "10.1.2.0/24"
-  availability_zone = "us-west-2a"
+  availability_zone = "${data.aws_availability_zones.available.names[0]}"
   tags = {
     Name = "tf-acc-elb-subnet-swap-a-two"
   }

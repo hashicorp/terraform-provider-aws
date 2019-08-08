@@ -1,6 +1,6 @@
 ---
 layout: "aws"
-page_title: "AWS: wafregional_rule_group"
+page_title: "AWS: aws_wafregional_rule_group"
 sidebar_current: "docs-aws-resource-wafregional-rule-group"
 description: |-
   Provides a AWS WAF Regional Rule Group resource.
@@ -58,3 +58,11 @@ The following arguments are supported:
 In addition to all arguments above, the following attributes are exported:
 
 * `id` - The ID of the WAF Regional Rule Group.
+
+## Import
+
+WAF Regional Rule Group can be imported using the id, e.g.
+
+```
+$ terraform import aws_wafregional_rule_group.example a1b2c3d4-d5f6-7777-8888-9999aaaabbbbcccc
+```

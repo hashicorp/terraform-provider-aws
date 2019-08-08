@@ -6,12 +6,13 @@ import (
 	"strconv"
 	"time"
 
+	"strings"
+
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/applicationautoscaling"
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/helper/schema"
 	"github.com/hashicorp/terraform/helper/validation"
-	"strings"
 )
 
 func resourceAwsAppautoscalingPolicy() *schema.Resource {
@@ -277,6 +278,9 @@ func resourceAwsAppautoscalingPolicyCreate(d *schema.ResourceData, meta interfac
 		}
 		return nil
 	})
+	if isResourceTimeoutError(err) {
+		resp, err = conn.PutScalingPolicy(&params)
+	}
 	if err != nil {
 		return fmt.Errorf("Failed to create scaling policy: %s", err)
 	}
@@ -302,6 +306,9 @@ func resourceAwsAppautoscalingPolicyRead(d *schema.ResourceData, meta interface{
 		}
 		return nil
 	})
+	if isResourceTimeoutError(err) {
+		p, err = getAwsAppautoscalingPolicy(d, meta)
+	}
 	if err != nil {
 		return fmt.Errorf("Failed to read scaling policy: %s", err)
 	}
@@ -353,6 +360,9 @@ func resourceAwsAppautoscalingPolicyUpdate(d *schema.ResourceData, meta interfac
 		}
 		return nil
 	})
+	if isResourceTimeoutError(err) {
+		_, err = conn.PutScalingPolicy(&params)
+	}
 	if err != nil {
 		return fmt.Errorf("Failed to update scaling policy: %s", err)
 	}
@@ -406,28 +416,51 @@ func resourceAwsAppautoscalingPolicyDelete(d *schema.ResourceData, meta interfac
 }
 
 func resourceAwsAppautoscalingPolicyImport(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
-	idParts := strings.Split(d.Id(), "/")
-
-	if len(idParts) < 4 {
+	idParts, err := validateAppautoscalingPolicyImportInput(d.Id())
+	if err != nil {
 		return nil, fmt.Errorf("unexpected format (%q), expected <service-namespace>/<resource-id>/<scalable-dimension>/<policy-name>", d.Id())
 	}
 
 	serviceNamespace := idParts[0]
-	resourceId := strings.Join(idParts[1:len(idParts)-2], "/")
-	scalableDimension := idParts[len(idParts)-2]
-	policyName := idParts[len(idParts)-1]
-
-	if serviceNamespace == "" || resourceId == "" || scalableDimension == "" || policyName == "" {
-		return nil, fmt.Errorf("unexpected format (%q), expected <service-namespace>/<resource-id>/<scalable-dimension>/<policy-name>", d.Id())
-	}
+	resourceId := idParts[1]
+	scalableDimension := idParts[2]
+	policyName := idParts[3]
 
 	d.Set("service_namespace", serviceNamespace)
 	d.Set("resource_id", resourceId)
 	d.Set("scalable_dimension", scalableDimension)
 	d.Set("name", policyName)
 	d.SetId(policyName)
-
 	return []*schema.ResourceData{d}, nil
+}
+
+func validateAppautoscalingPolicyImportInput(id string) ([]string, error) {
+
+	idParts := strings.Split(id, "/")
+	if len(idParts) < 4 {
+		return nil, fmt.Errorf("unexpected format (%q), expected <service-namespace>/<resource-id>/<scalable-dimension>/<policy-name>", id)
+	}
+
+	var serviceNamespace, resourceId, scalableDimension, policyName string
+	switch idParts[0] {
+	case "dynamodb":
+		serviceNamespace = idParts[0]
+		resourceId = strings.Join(idParts[1:3], "/")
+		scalableDimension = idParts[3]
+		policyName = strings.Join(idParts[4:], "/")
+	default:
+		serviceNamespace = idParts[0]
+		resourceId = strings.Join(idParts[1:len(idParts)-2], "/")
+		scalableDimension = idParts[len(idParts)-2]
+		policyName = idParts[len(idParts)-1]
+
+	}
+
+	if serviceNamespace == "" || resourceId == "" || scalableDimension == "" || policyName == "" {
+		return nil, fmt.Errorf("unexpected format (%q), expected <service-namespace>/<resource-id>/<scalable-dimension>/<policy-name>", id)
+	}
+
+	return []string{serviceNamespace, resourceId, scalableDimension, policyName}, nil
 }
 
 // Takes the result of flatmap.Expand for an array of step adjustments and

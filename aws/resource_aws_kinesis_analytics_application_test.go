@@ -17,7 +17,7 @@ func TestAccAWSKinesisAnalyticsApplication_basic(t *testing.T) {
 	rInt := acctest.RandInt()
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSKinesisAnalytics(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckKinesisAnalyticsApplicationDestroy,
 		Steps: []resource.TestStep{
@@ -44,7 +44,7 @@ func TestAccAWSKinesisAnalyticsApplication_update(t *testing.T) {
 	rInt := acctest.RandInt()
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSKinesisAnalytics(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckKinesisAnalyticsApplicationDestroy,
 		Steps: []resource.TestStep{
@@ -78,7 +78,7 @@ func TestAccAWSKinesisAnalyticsApplication_addCloudwatchLoggingOptions(t *testin
 	thirdStep := testAccKinesisAnalyticsApplication_prereq(rInt) + testAccKinesisAnalyticsApplication_cloudwatchLoggingOptions(rInt, "testStream")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSKinesisAnalytics(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckKinesisAnalyticsApplicationDestroy,
 		Steps: []resource.TestStep{
@@ -115,7 +115,7 @@ func TestAccAWSKinesisAnalyticsApplication_updateCloudwatchLoggingOptions(t *tes
 	secondStep := testAccKinesisAnalyticsApplication_prereq(rInt) + testAccKinesisAnalyticsApplication_cloudwatchLoggingOptions(rInt, "testStream2")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSKinesisAnalytics(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckKinesisAnalyticsApplicationDestroy,
 		Steps: []resource.TestStep{
@@ -152,7 +152,7 @@ func TestAccAWSKinesisAnalyticsApplication_inputsKinesisFirehose(t *testing.T) {
 	rInt := acctest.RandInt()
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSKinesisAnalytics(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckKinesisAnalyticsApplicationDestroy,
 		Steps: []resource.TestStep{
@@ -179,7 +179,7 @@ func TestAccAWSKinesisAnalyticsApplication_inputsKinesisStream(t *testing.T) {
 	rInt := acctest.RandInt()
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSKinesisAnalytics(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckKinesisAnalyticsApplicationDestroy,
 		Steps: []resource.TestStep{
@@ -215,7 +215,7 @@ func TestAccAWSKinesisAnalyticsApplication_inputsAdd(t *testing.T) {
 	secondStep := testAccKinesisAnalyticsApplication_prereq(rInt) + testAccKinesisAnalyticsApplication_inputsKinesisStream(rInt)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSKinesisAnalytics(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckKinesisAnalyticsApplicationDestroy,
 		Steps: []resource.TestStep{
@@ -259,7 +259,7 @@ func TestAccAWSKinesisAnalyticsApplication_inputsUpdateKinesisStream(t *testing.
 	secondStep := testAccKinesisAnalyticsApplication_prereq(rInt) + testAccKinesisAnalyticsApplication_inputsUpdateKinesisStream(rInt, "testStream")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSKinesisAnalytics(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckKinesisAnalyticsApplicationDestroy,
 		Steps: []resource.TestStep{
@@ -303,7 +303,7 @@ func TestAccAWSKinesisAnalyticsApplication_outputsKinesisStream(t *testing.T) {
 	firstStep := testAccKinesisAnalyticsApplication_prereq(rInt) + testAccKinesisAnalyticsApplication_outputsKinesisStream(rInt)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSKinesisAnalytics(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckKinesisAnalyticsApplicationDestroy,
 		Steps: []resource.TestStep{
@@ -336,7 +336,7 @@ func TestAccAWSKinesisAnalyticsApplication_outputsMultiple(t *testing.T) {
 	step := testAccKinesisAnalyticsApplication_prereq(rInt1) + testAccKinesisAnalyticsApplication_outputsMultiple(rInt1, rInt2)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSKinesisAnalytics(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckKinesisAnalyticsApplicationDestroy,
 		Steps: []resource.TestStep{
@@ -364,7 +364,7 @@ func TestAccAWSKinesisAnalyticsApplication_outputsAdd(t *testing.T) {
 	secondStep := testAccKinesisAnalyticsApplication_prereq(rInt) + testAccKinesisAnalyticsApplication_outputsKinesisStream(rInt)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSKinesisAnalytics(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckKinesisAnalyticsApplicationDestroy,
 		Steps: []resource.TestStep{
@@ -404,7 +404,7 @@ func TestAccAWSKinesisAnalyticsApplication_outputsUpdateKinesisStream(t *testing
 	secondStep := testAccKinesisAnalyticsApplication_prereq(rInt) + testAccKinesisAnalyticsApplication_outputsUpdateKinesisStream(rInt, "testStream")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSKinesisAnalytics(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckKinesisAnalyticsApplicationDestroy,
 		Steps: []resource.TestStep{
@@ -450,7 +450,7 @@ func TestAccAWSKinesisAnalyticsApplication_Outputs_Lambda_Add(t *testing.T) {
 	rInt := acctest.RandInt()
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSKinesisAnalytics(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckKinesisAnalyticsApplicationDestroy,
 		Steps: []resource.TestStep{
@@ -490,7 +490,7 @@ func TestAccAWSKinesisAnalyticsApplication_Outputs_Lambda_Create(t *testing.T) {
 	rInt := acctest.RandInt()
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSKinesisAnalytics(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckKinesisAnalyticsApplicationDestroy,
 		Steps: []resource.TestStep{
@@ -521,7 +521,7 @@ func TestAccAWSKinesisAnalyticsApplication_referenceDataSource(t *testing.T) {
 	firstStep := testAccKinesisAnalyticsApplication_prereq(rInt) + testAccKinesisAnalyticsApplication_referenceDataSource(rInt)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSKinesisAnalytics(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckKinesisAnalyticsApplicationDestroy,
 		Steps: []resource.TestStep{
@@ -554,7 +554,7 @@ func TestAccAWSKinesisAnalyticsApplication_referenceDataSourceUpdate(t *testing.
 	secondStep := testAccKinesisAnalyticsApplication_prereq(rInt) + testAccKinesisAnalyticsApplication_referenceDataSourceUpdate(rInt)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSKinesisAnalytics(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckKinesisAnalyticsApplicationDestroy,
 		Steps: []resource.TestStep{
@@ -589,7 +589,7 @@ func TestAccAWSKinesisAnalyticsApplication_tags(t *testing.T) {
 	rInt := acctest.RandInt()
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSKinesisAnalytics(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckKinesisAnalyticsApplicationDestroy,
 		Steps: []resource.TestStep{
@@ -684,6 +684,22 @@ func testAccCheckKinesisAnalyticsApplicationExists(n string, application *kinesi
 	}
 }
 
+func testAccPreCheckAWSKinesisAnalytics(t *testing.T) {
+	conn := testAccProvider.Meta().(*AWSClient).kinesisanalyticsconn
+
+	input := &kinesisanalytics.ListApplicationsInput{}
+
+	_, err := conn.ListApplications(input)
+
+	if testAccPreCheckSkipError(err) {
+		t.Skipf("skipping acceptance testing: %s", err)
+	}
+
+	if err != nil {
+		t.Fatalf("unexpected PreCheck error: %s", err)
+	}
+}
+
 func testAccKinesisAnalyticsApplication_basic(rInt int) string {
 	return fmt.Sprintf(`
 resource "aws_kinesis_analytics_application" "test" {
@@ -709,7 +725,7 @@ resource "aws_cloudwatch_log_group" "test" {
 }
 
 resource "aws_cloudwatch_log_stream" "test" {
-  name = "testAcc-%s-%d"
+  name           = "testAcc-%s-%d"
   log_group_name = "${aws_cloudwatch_log_group.test.name}"
 }
 
@@ -719,7 +735,7 @@ resource "aws_kinesis_analytics_application" "test" {
 
   cloudwatch_logging_options {
     log_stream_arn = "${aws_cloudwatch_log_stream.test.arn}"
-    role_arn = "${aws_iam_role.test.arn}"
+    role_arn       = "${aws_iam_role.test.arn}"
   }
 }
 `, rInt, streamName, rInt, rInt)
@@ -730,36 +746,38 @@ func testAccKinesisAnalyticsApplication_inputsKinesisFirehose(rInt int) string {
 data "aws_iam_policy_document" "trust_firehose" {
   statement {
     actions = ["sts:AssumeRole"]
+
     principals {
-      type = "Service"
+      type        = "Service"
       identifiers = ["firehose.amazonaws.com"]
     }
   }
 }
 
 resource "aws_iam_role" "firehose" {
-  name = "testAcc-firehose-%d"
+  name               = "testAcc-firehose-%d"
   assume_role_policy = "${data.aws_iam_policy_document.trust_firehose.json}"
 }
 
 data "aws_iam_policy_document" "trust_lambda" {
   statement {
     actions = ["sts:AssumeRole"]
+
     principals {
-      type = "Service"
+      type        = "Service"
       identifiers = ["lambda.amazonaws.com"]
     }
   }
 }
 
 resource "aws_iam_role" "lambda" {
-  name = "testAcc-lambda-%d"
+  name               = "testAcc-lambda-%d"
   assume_role_policy = "${data.aws_iam_policy_document.trust_lambda.json}"
 }
 
 resource "aws_s3_bucket" "test" {
   bucket = "testacc-%d"
-  acl = "private"
+  acl    = "private"
 }
 
 resource "aws_lambda_function" "test" {
@@ -771,10 +789,11 @@ resource "aws_lambda_function" "test" {
 }
 
 resource "aws_kinesis_firehose_delivery_stream" "test" {
-  name = "testAcc-%d"
+  name        = "testAcc-%d"
   destination = "extended_s3"
+
   extended_s3_configuration {
-    role_arn = "${aws_iam_role.firehose.arn}"
+    role_arn   = "${aws_iam_role.firehose.arn}"
     bucket_arn = "${aws_s3_bucket.test.arn}"
   }
 }
@@ -782,27 +801,33 @@ resource "aws_kinesis_firehose_delivery_stream" "test" {
 resource "aws_kinesis_analytics_application" "test" {
   name = "testAcc-%d"
   code = "testCode\n"
+
   inputs {
     name_prefix = "test_prefix"
+
     kinesis_firehose {
       resource_arn = "${aws_kinesis_firehose_delivery_stream.test.arn}"
-      role_arn = "${aws_iam_role.test.arn}"
+      role_arn     = "${aws_iam_role.test.arn}"
     }
+
     parallelism {
       count = 1
     }
+
     schema {
       record_columns {
-        mapping = "$.test"
-        name = "test"
+        mapping  = "$.test"
+        name     = "test"
         sql_type = "VARCHAR(8)"
       }
+
       record_encoding = "UTF-8"
+
       record_format {
         mapping_parameters {
           csv {
             record_column_delimiter = ","
-            record_row_delimiter = "\n"
+            record_row_delimiter    = "\n"
           }
         }
       }
@@ -815,7 +840,7 @@ resource "aws_kinesis_analytics_application" "test" {
 func testAccKinesisAnalyticsApplication_inputsKinesisStream(rInt int) string {
 	return fmt.Sprintf(`
 resource "aws_kinesis_stream" "test" {
-  name = "testAcc-%d"
+  name        = "testAcc-%d"
   shard_count = 1
 }
 
@@ -825,20 +850,25 @@ resource "aws_kinesis_analytics_application" "test" {
 
   inputs {
     name_prefix = "test_prefix"
+
     kinesis_stream {
       resource_arn = "${aws_kinesis_stream.test.arn}"
-      role_arn = "${aws_iam_role.test.arn}"
+      role_arn     = "${aws_iam_role.test.arn}"
     }
+
     parallelism {
       count = 1
     }
+
     schema {
       record_columns {
-        mapping = "$.test"
-        name = "test"
+        mapping  = "$.test"
+        name     = "test"
         sql_type = "VARCHAR(8)"
       }
+
       record_encoding = "UTF-8"
+
       record_format {
         mapping_parameters {
           json {
@@ -855,7 +885,7 @@ resource "aws_kinesis_analytics_application" "test" {
 func testAccKinesisAnalyticsApplication_inputsUpdateKinesisStream(rInt int, streamName string) string {
 	return fmt.Sprintf(`
 resource "aws_kinesis_stream" "test" {
-  name = "testAcc-%s-%d"
+  name        = "testAcc-%s-%d"
   shard_count = 1
 }
 
@@ -865,25 +895,30 @@ resource "aws_kinesis_analytics_application" "test" {
 
   inputs {
     name_prefix = "test_prefix2"
+
     kinesis_stream {
       resource_arn = "${aws_kinesis_stream.test.arn}"
-      role_arn = "${aws_iam_role.test.arn}"
+      role_arn     = "${aws_iam_role.test.arn}"
     }
+
     parallelism {
       count = 2
     }
+
     schema {
       record_columns {
-        mapping = "$.test2"
-        name = "test2"
+        mapping  = "$.test2"
+        name     = "test2"
         sql_type = "VARCHAR(8)"
       }
+
       record_encoding = "UTF-8"
+
       record_format {
         mapping_parameters {
           csv {
             record_column_delimiter = ","
-            record_row_delimiter = "\n"
+            record_row_delimiter    = "\n"
           }
         }
       }
@@ -896,7 +931,7 @@ resource "aws_kinesis_analytics_application" "test" {
 func testAccKinesisAnalyticsApplication_outputsKinesisStream(rInt int) string {
 	return fmt.Sprintf(`
 resource "aws_kinesis_stream" "test" {
-  name = "testAcc-%d"
+  name        = "testAcc-%d"
   shard_count = 1
 }
 
@@ -906,10 +941,12 @@ resource "aws_kinesis_analytics_application" "test" {
 
   outputs {
     name = "test_name"
+
     kinesis_stream {
       resource_arn = "${aws_kinesis_stream.test.arn}"
-      role_arn = "${aws_iam_role.test.arn}"
+      role_arn     = "${aws_iam_role.test.arn}"
     }
+
     schema {
       record_format_type = "JSON"
     }
@@ -921,12 +958,12 @@ resource "aws_kinesis_analytics_application" "test" {
 func testAccKinesisAnalyticsApplication_outputsMultiple(rInt1, rInt2 int) string {
 	return fmt.Sprintf(`
 resource "aws_kinesis_stream" "test1" {
-  name = "testAcc-%d"
+  name        = "testAcc-%d"
   shard_count = 1
 }
 
 resource "aws_kinesis_stream" "test2" {
-  name = "testAcc-%d"
+  name        = "testAcc-%d"
   shard_count = 1
 }
 
@@ -936,10 +973,12 @@ resource "aws_kinesis_analytics_application" "test" {
 
   outputs {
     name = "test_name1"
+
     kinesis_stream {
       resource_arn = "${aws_kinesis_stream.test1.arn}"
-      role_arn = "${aws_iam_role.test.arn}"
+      role_arn     = "${aws_iam_role.test.arn}"
     }
+
     schema {
       record_format_type = "JSON"
     }
@@ -947,10 +986,12 @@ resource "aws_kinesis_analytics_application" "test" {
 
   outputs {
     name = "test_name2"
+
     kinesis_stream {
       resource_arn = "${aws_kinesis_stream.test2.arn}"
-      role_arn = "${aws_iam_role.test.arn}"
+      role_arn     = "${aws_iam_role.test.arn}"
     }
+
     schema {
       record_format_type = "JSON"
     }
@@ -1021,10 +1062,12 @@ resource "aws_kinesis_analytics_application" "test" {
 
   outputs {
     name = "test_name"
+
     lambda {
       resource_arn = "${aws_lambda_function.test.arn}"
       role_arn     = "${aws_iam_role.kinesis_analytics_application.arn}"
     }
+
     schema {
       record_format_type = "JSON"
     }
@@ -1036,7 +1079,7 @@ resource "aws_kinesis_analytics_application" "test" {
 func testAccKinesisAnalyticsApplication_outputsUpdateKinesisStream(rInt int, streamName string) string {
 	return fmt.Sprintf(`
 resource "aws_kinesis_stream" "test" {
-  name = "testAcc-%s-%d"
+  name        = "testAcc-%s-%d"
   shard_count = 1
 }
 
@@ -1046,10 +1089,12 @@ resource "aws_kinesis_analytics_application" "test" {
 
   outputs {
     name = "test_name2"
+
     kinesis_stream {
       resource_arn = "${aws_kinesis_stream.test.arn}"
-      role_arn = "${aws_iam_role.test.arn}"
+      role_arn     = "${aws_iam_role.test.arn}"
     }
+
     schema {
       record_format_type = "CSV"
     }
@@ -1069,18 +1114,22 @@ resource "aws_kinesis_analytics_application" "test" {
 
   reference_data_sources {
     table_name = "test_table"
+
     s3 {
       bucket_arn = "${aws_s3_bucket.test.arn}"
-      file_key = "test_file_key"
-      role_arn = "${aws_iam_role.test.arn}"
+      file_key   = "test_file_key"
+      role_arn   = "${aws_iam_role.test.arn}"
     }
+
     schema {
       record_columns {
-        mapping = "$.test"
-        name = "test"
+        mapping  = "$.test"
+        name     = "test"
         sql_type = "VARCHAR(8)"
       }
+
       record_encoding = "UTF-8"
+
       record_format {
         mapping_parameters {
           json {
@@ -1105,23 +1154,27 @@ resource "aws_kinesis_analytics_application" "test" {
 
   reference_data_sources {
     table_name = "test_table2"
+
     s3 {
       bucket_arn = "${aws_s3_bucket.test.arn}"
-      file_key = "test_file_key"
-      role_arn = "${aws_iam_role.test.arn}"
+      file_key   = "test_file_key"
+      role_arn   = "${aws_iam_role.test.arn}"
     }
+
     schema {
       record_columns {
-        mapping = "$.test2"
-        name = "test2"
+        mapping  = "$.test2"
+        name     = "test2"
         sql_type = "VARCHAR(8)"
       }
+
       record_encoding = "UTF-8"
+
       record_format {
         mapping_parameters {
           csv {
             record_column_delimiter = ","
-            record_row_delimiter = "\n"
+            record_row_delimiter    = "\n"
           }
         }
       }
@@ -1137,32 +1190,33 @@ func testAccKinesisAnalyticsApplication_prereq(rInt int) string {
 data "aws_iam_policy_document" "trust" {
   statement {
     actions = ["sts:AssumeRole"]
+
     principals {
-      type = "Service"
+      type        = "Service"
       identifiers = ["kinesisanalytics.amazonaws.com"]
     }
   }
 }
 
 resource "aws_iam_role" "test" {
-  name = "testAcc-%d"
+  name               = "testAcc-%d"
   assume_role_policy = "${data.aws_iam_policy_document.trust.json}"
 }
 
 data "aws_iam_policy_document" "test" {
   statement {
-    actions = ["firehose:*"]
+    actions   = ["firehose:*"]
     resources = ["*"]
   }
 }
 
 resource "aws_iam_policy" "test" {
-  name = "testAcc-%d"
+  name   = "testAcc-%d"
   policy = "${data.aws_iam_policy_document.test.json}"
 }
 
 resource "aws_iam_role_policy_attachment" "test" {
-  role = "${aws_iam_role.test.name}"
+  role       = "${aws_iam_role.test.name}"
   policy_arn = "${aws_iam_policy.test.arn}"
 }
 `, rInt, rInt)
@@ -1172,12 +1226,12 @@ func testAccKinesisAnalyticsApplicationWithTags(rInt int, tag1, tag2 string) str
 	return fmt.Sprintf(`
 resource "aws_kinesis_analytics_application" "test" {
   name = "testAcc-%d"
-	code = "testCode\n"
-	
-	tags = {
-		firstTag = "%s"
-		secondTag = "%s"
-	}
+  code = "testCode\n"
+
+  tags = {
+    firstTag  = "%s"
+    secondTag = "%s"
+  }
 }
 `, rInt, tag1, tag2)
 }
@@ -1186,13 +1240,13 @@ func testAccKinesisAnalyticsApplicationWithAddTags(rInt int, tag1, tag2, tag3 st
 	return fmt.Sprintf(`
 resource "aws_kinesis_analytics_application" "test" {
   name = "testAcc-%d"
-	code = "testCode\n"
-	
-	tags = {
-		firstTag = "%s"
-		secondTag = "%s"
-		thirdTag 	= "%s"
-	}
+  code = "testCode\n"
+
+  tags = {
+    firstTag  = "%s"
+    secondTag = "%s"
+    thirdTag  = "%s"
+  }
 }
 `, rInt, tag1, tag2, tag3)
 }

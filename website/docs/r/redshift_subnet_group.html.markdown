@@ -60,6 +60,7 @@ The following arguments are supported:
 
 In addition to all arguments above, the following attributes are exported:
 
+* `arn` - Amazon Resource Name (ARN) of the Redshift Subnet group name
 * `id` - The Redshift Subnet group ID.
 
 ## Import

@@ -34,8 +34,9 @@ func TestAccAWSCloudformationExportDataSource_basic(t *testing.T) {
 func testAccCheckAwsCloudformationExportConfig(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_cloudformation_stack" "cfs" {
-  name = "%s1"
+  name               = "%s1"
   timeout_in_minutes = 6
+
   template_body = <<STACK
 {
   "Resources": {
@@ -55,17 +56,22 @@ resource "aws_cloudformation_stack" "cfs" {
   }
 }
 STACK
+
   tags = {
     TestExport = "waiter"
-    Second = "meh"
+    Second     = "meh"
   }
 }
+
 resource "aws_cloudformation_stack" "yaml" {
   name = "%s2"
+
   parameters = {
     CIDR = "10.10.10.0/24"
   }
+
   timeout_in_minutes = 6
+
   template_body = <<STACK
 Parameters:
   CIDR:
@@ -88,16 +94,19 @@ Outputs:
     Export:
       Name: MyVpcId
 STACK
+
   tags = {
     TestExport = "MyVpcId"
-    Second = "meh"
+    Second     = "meh"
   }
 }
+
 data "aws_cloudformation_export" "vpc" {
-	name = "${aws_cloudformation_stack.yaml.tags["TestExport"]}"
+  name = "${aws_cloudformation_stack.yaml.tags["TestExport"]}"
 }
+
 data "aws_cloudformation_export" "waiter" {
-	name = "${aws_cloudformation_stack.cfs.tags["TestExport"]}"
+  name = "${aws_cloudformation_stack.cfs.tags["TestExport"]}"
 }
 `, rName, rName)
 }

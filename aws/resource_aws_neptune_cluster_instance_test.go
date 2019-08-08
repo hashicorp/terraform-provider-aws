@@ -217,17 +217,17 @@ func testAccCheckAWSNeptuneClusterInstanceAttributes(v *neptune.DBInstance) reso
 func testAccAWSNeptuneClusterInstanceConfig(n int) string {
 	return fmt.Sprintf(`
 resource "aws_neptune_cluster" "default" {
-  cluster_identifier 	= "tf-neptune-cluster-test-%d"
-  availability_zones 	= ["us-west-2a", "us-west-2b", "us-west-2c"]
-  skip_final_snapshot 	= true
+  cluster_identifier  = "tf-neptune-cluster-test-%d"
+  availability_zones  = ["us-west-2a", "us-west-2b", "us-west-2c"]
+  skip_final_snapshot = true
 }
 
 resource "aws_neptune_cluster_instance" "cluster_instances" {
-  identifier              		= "tf-cluster-instance-%d"
-  cluster_identifier      		= "${aws_neptune_cluster.default.id}"
-  instance_class          		= "db.r4.large"
-  neptune_parameter_group_name 	= "${aws_neptune_parameter_group.bar.name}"
-  promotion_tier          		= "3"
+  identifier                   = "tf-cluster-instance-%d"
+  cluster_identifier           = "${aws_neptune_cluster.default.id}"
+  instance_class               = "db.r4.large"
+  neptune_parameter_group_name = "${aws_neptune_parameter_group.bar.name}"
+  promotion_tier               = "3"
 }
 
 resource "aws_neptune_parameter_group" "bar" {
@@ -235,8 +235,8 @@ resource "aws_neptune_parameter_group" "bar" {
   family = "neptune1"
 
   parameter {
-    name         = "neptune_query_timeout"
-    value        = "25"
+    name  = "neptune_query_timeout"
+    value = "25"
   }
 
   tags = {
@@ -249,18 +249,18 @@ resource "aws_neptune_parameter_group" "bar" {
 func testAccAWSNeptuneClusterInstanceConfigModified(n int) string {
 	return fmt.Sprintf(`
 resource "aws_neptune_cluster" "default" {
-  cluster_identifier 	= "tf-neptune-cluster-test-%d"
-  availability_zones 	= ["us-west-2a", "us-west-2b", "us-west-2c"]
-  skip_final_snapshot 	= true
+  cluster_identifier  = "tf-neptune-cluster-test-%d"
+  availability_zones  = ["us-west-2a", "us-west-2b", "us-west-2c"]
+  skip_final_snapshot = true
 }
 
 resource "aws_neptune_cluster_instance" "cluster_instances" {
-  identifier              		= "tf-cluster-instance-%d"
-  cluster_identifier      		= "${aws_neptune_cluster.default.id}"
-  instance_class          		= "db.r4.large"
-  neptune_parameter_group_name 	= "${aws_neptune_parameter_group.bar.name}"
-  auto_minor_version_upgrade 	= false
-  promotion_tier          		= "3"
+  identifier                   = "tf-cluster-instance-%d"
+  cluster_identifier           = "${aws_neptune_cluster.default.id}"
+  instance_class               = "db.r4.large"
+  neptune_parameter_group_name = "${aws_neptune_parameter_group.bar.name}"
+  auto_minor_version_upgrade   = false
+  promotion_tier               = "3"
 }
 
 resource "aws_neptune_parameter_group" "bar" {
@@ -268,8 +268,8 @@ resource "aws_neptune_parameter_group" "bar" {
   family = "neptune1"
 
   parameter {
-    name         = "neptune_query_timeout"
-    value        = "25"
+    name  = "neptune_query_timeout"
+    value = "25"
   }
 
   tags = {
@@ -284,18 +284,18 @@ func testAccAWSNeptuneClusterInstanceConfig_az(n int) string {
 data "aws_availability_zones" "available" {}
 
 resource "aws_neptune_cluster" "default" {
-  cluster_identifier 	= "tf-neptune-cluster-test-%d"
-  availability_zones 	= ["${data.aws_availability_zones.available.names[0]}", "${data.aws_availability_zones.available.names[1]}", "${data.aws_availability_zones.available.names[2]}"]
-  skip_final_snapshot 	= true
+  cluster_identifier  = "tf-neptune-cluster-test-%d"
+  availability_zones  = ["${data.aws_availability_zones.available.names[0]}", "${data.aws_availability_zones.available.names[1]}", "${data.aws_availability_zones.available.names[2]}"]
+  skip_final_snapshot = true
 }
 
 resource "aws_neptune_cluster_instance" "cluster_instances" {
-  identifier              		= "tf-cluster-instance-%d"
-  cluster_identifier      		= "${aws_neptune_cluster.default.id}"
-  instance_class          		= "db.r4.large"
-  neptune_parameter_group_name 	= "${aws_neptune_parameter_group.bar.name}"
-  promotion_tier          		= "3"
-  availability_zone       		= "${data.aws_availability_zones.available.names[0]}"
+  identifier                   = "tf-cluster-instance-%d"
+  cluster_identifier           = "${aws_neptune_cluster.default.id}"
+  instance_class               = "db.r4.large"
+  neptune_parameter_group_name = "${aws_neptune_parameter_group.bar.name}"
+  promotion_tier               = "3"
+  availability_zone            = "${data.aws_availability_zones.available.names[0]}"
 }
 
 resource "aws_neptune_parameter_group" "bar" {
@@ -303,8 +303,8 @@ resource "aws_neptune_parameter_group" "bar" {
   family = "neptune1"
 
   parameter {
-    name         = "neptune_query_timeout"
-    value        = "25"
+    name  = "neptune_query_timeout"
+    value = "25"
   }
 
   tags = {
@@ -317,44 +317,47 @@ resource "aws_neptune_parameter_group" "bar" {
 func testAccAWSNeptuneClusterInstanceConfig_withSubnetGroup(n int) string {
 	return fmt.Sprintf(`
 resource "aws_neptune_cluster_instance" "test" {
-  identifier = "tf-cluster-instance-%d"
+  identifier         = "tf-cluster-instance-%d"
   cluster_identifier = "${aws_neptune_cluster.test.id}"
-  instance_class = "db.r4.large"
+  instance_class     = "db.r4.large"
 }
 
 resource "aws_neptune_cluster" "test" {
-  cluster_identifier = "tf-neptune-cluster-%d"
+  cluster_identifier        = "tf-neptune-cluster-%d"
   neptune_subnet_group_name = "${aws_neptune_subnet_group.test.name}"
-  skip_final_snapshot = true
+  skip_final_snapshot       = true
 }
 
 resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"
-	tags = {
-		Name = "terraform-testacc-neptune-cluster-instance-name-prefix"
-	}
+
+  tags = {
+    Name = "terraform-testacc-neptune-cluster-instance-name-prefix"
+  }
 }
 
 resource "aws_subnet" "a" {
-  vpc_id = "${aws_vpc.test.id}"
-  cidr_block = "10.0.0.0/24"
+  vpc_id            = "${aws_vpc.test.id}"
+  cidr_block        = "10.0.0.0/24"
   availability_zone = "us-west-2a"
+
   tags = {
     Name = "tf-acc-neptune-cluster-instance-name-prefix-a"
   }
 }
 
 resource "aws_subnet" "b" {
-  vpc_id = "${aws_vpc.test.id}"
-  cidr_block = "10.0.1.0/24"
+  vpc_id            = "${aws_vpc.test.id}"
+  cidr_block        = "10.0.1.0/24"
   availability_zone = "us-west-2b"
+
   tags = {
     Name = "tf-acc-neptune-cluster-instance-name-prefix-b"
   }
 }
 
 resource "aws_neptune_subnet_group" "test" {
-  name = "tf-test-%d"
+  name       = "tf-test-%d"
   subnet_ids = ["${aws_subnet.a.id}", "${aws_subnet.b.id}"]
 }
 `, n, n, n)
@@ -363,44 +366,47 @@ resource "aws_neptune_subnet_group" "test" {
 func testAccAWSNeptuneClusterInstanceConfig_namePrefix(n int) string {
 	return fmt.Sprintf(`
 resource "aws_neptune_cluster_instance" "test" {
-  identifier_prefix = "tf-cluster-instance-"
+  identifier_prefix  = "tf-cluster-instance-"
   cluster_identifier = "${aws_neptune_cluster.test.id}"
-  instance_class = "db.r4.large"
+  instance_class     = "db.r4.large"
 }
 
 resource "aws_neptune_cluster" "test" {
-  cluster_identifier = "tf-neptune-cluster-%d"
+  cluster_identifier        = "tf-neptune-cluster-%d"
   neptune_subnet_group_name = "${aws_neptune_subnet_group.test.name}"
-  skip_final_snapshot = true
+  skip_final_snapshot       = true
 }
 
 resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"
-	tags = {
-		Name = "terraform-testacc-neptune-cluster-instance-name-prefix"
-	}
+
+  tags = {
+    Name = "terraform-testacc-neptune-cluster-instance-name-prefix"
+  }
 }
 
 resource "aws_subnet" "a" {
-  vpc_id = "${aws_vpc.test.id}"
-  cidr_block = "10.0.0.0/24"
+  vpc_id            = "${aws_vpc.test.id}"
+  cidr_block        = "10.0.0.0/24"
   availability_zone = "us-west-2a"
+
   tags = {
     Name = "tf-acc-neptune-cluster-instance-name-prefix-a"
   }
 }
 
 resource "aws_subnet" "b" {
-  vpc_id = "${aws_vpc.test.id}"
-  cidr_block = "10.0.1.0/24"
+  vpc_id            = "${aws_vpc.test.id}"
+  cidr_block        = "10.0.1.0/24"
   availability_zone = "us-west-2b"
+
   tags = {
     Name = "tf-acc-neptune-cluster-instance-name-prefix-b"
   }
 }
 
 resource "aws_neptune_subnet_group" "test" {
-  name = "tf-test-%d"
+  name       = "tf-test-%d"
   subnet_ids = ["${aws_subnet.a.id}", "${aws_subnet.b.id}"]
 }
 `, n, n)
@@ -410,42 +416,45 @@ func testAccAWSNeptuneClusterInstanceConfig_generatedName(n int) string {
 	return fmt.Sprintf(`
 resource "aws_neptune_cluster_instance" "test" {
   cluster_identifier = "${aws_neptune_cluster.test.id}"
-  instance_class = "db.r4.large"
+  instance_class     = "db.r4.large"
 }
 
 resource "aws_neptune_cluster" "test" {
-  cluster_identifier = "tf-neptune-cluster-%d"
+  cluster_identifier        = "tf-neptune-cluster-%d"
   neptune_subnet_group_name = "${aws_neptune_subnet_group.test.name}"
-  skip_final_snapshot = true
+  skip_final_snapshot       = true
 }
 
 resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"
-	tags = {
-		Name = "terraform-testacc-neptune-cluster-instance-name-prefix"
-	}
+
+  tags = {
+    Name = "terraform-testacc-neptune-cluster-instance-name-prefix"
+  }
 }
 
 resource "aws_subnet" "a" {
-  vpc_id = "${aws_vpc.test.id}"
-  cidr_block = "10.0.0.0/24"
+  vpc_id            = "${aws_vpc.test.id}"
+  cidr_block        = "10.0.0.0/24"
   availability_zone = "us-west-2a"
+
   tags = {
     Name = "tf-acc-neptune-cluster-instance-name-prefix-a"
   }
 }
 
 resource "aws_subnet" "b" {
-  vpc_id = "${aws_vpc.test.id}"
-  cidr_block = "10.0.1.0/24"
+  vpc_id            = "${aws_vpc.test.id}"
+  cidr_block        = "10.0.1.0/24"
   availability_zone = "us-west-2b"
+
   tags = {
     Name = "tf-acc-neptune-cluster-instance-name-prefix-b"
   }
 }
 
 resource "aws_neptune_subnet_group" "test" {
-  name = "tf-test-%d"
+  name       = "tf-test-%d"
   subnet_ids = ["${aws_subnet.a.id}", "${aws_subnet.b.id}"]
 }
 `, n, n)
@@ -453,10 +462,10 @@ resource "aws_neptune_subnet_group" "test" {
 
 func testAccAWSNeptuneClusterInstanceConfigKmsKey(n int) string {
 	return fmt.Sprintf(`
-
 resource "aws_kms_key" "foo" {
-    description = "Terraform acc test %d"
-    policy = <<POLICY
+  description = "Terraform acc test %d"
+
+  policy = <<POLICY
 {
   "Version": "2012-10-17",
   "Id": "kms-tf-1",
@@ -476,18 +485,18 @@ POLICY
 }
 
 resource "aws_neptune_cluster" "default" {
-  cluster_identifier 	= "tf-neptune-cluster-test-%d"
-  availability_zones 	= ["us-west-2a", "us-west-2b", "us-west-2c"]
-  skip_final_snapshot 	= true
-  storage_encrypted 	= true
-  kms_key_arn			= "${aws_kms_key.foo.arn}"
+  cluster_identifier  = "tf-neptune-cluster-test-%d"
+  availability_zones  = ["us-west-2a", "us-west-2b", "us-west-2c"]
+  skip_final_snapshot = true
+  storage_encrypted   = true
+  kms_key_arn         = "${aws_kms_key.foo.arn}"
 }
 
 resource "aws_neptune_cluster_instance" "cluster_instances" {
-  identifier              		= "tf-cluster-instance-%d"
-  cluster_identifier      		= "${aws_neptune_cluster.default.id}"
-  instance_class          		= "db.r4.large"
-  neptune_parameter_group_name 	= "${aws_neptune_parameter_group.bar.name}"
+  identifier                   = "tf-cluster-instance-%d"
+  cluster_identifier           = "${aws_neptune_cluster.default.id}"
+  instance_class               = "db.r4.large"
+  neptune_parameter_group_name = "${aws_neptune_parameter_group.bar.name}"
 }
 
 resource "aws_neptune_parameter_group" "bar" {
@@ -495,8 +504,8 @@ resource "aws_neptune_parameter_group" "bar" {
   family = "neptune1"
 
   parameter {
-    name         = "neptune_query_timeout"
-    value        = "25"
+    name  = "neptune_query_timeout"
+    value = "25"
   }
 
   tags = {

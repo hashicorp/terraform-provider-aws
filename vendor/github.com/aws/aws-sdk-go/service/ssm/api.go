@@ -59,8 +59,8 @@ func (c *SSM) AddTagsToResourceRequest(input *AddTagsToResourceInput) (req *requ
 // AddTagsToResource API operation for Amazon Simple Systems Manager (SSM).
 //
 // Adds or overwrites one or more tags for the specified resource. Tags are
-// metadata that you can assign to your documents, managed instances, Maintenance
-// Windows, Parameter Store parameters, and patch baselines. Tags enable you
+// metadata that you can assign to your documents, managed instances, maintenance
+// windows, Parameter Store parameters, and patch baselines. Tags enable you
 // to categorize your resources in different ways, for example, by purpose,
 // owner, or environment. Each tag consists of a key and an optional value,
 // both of which you define. For example, you could define a set of tags for
@@ -194,12 +194,9 @@ func (c *SSM) CancelCommandRequest(input *CancelCommandInput) (req *request.Requ
 //
 //   You do not have permission to access the instance.
 //
-//   SSM Agent is not running. On managed instances and Linux instances, verify
-//   that the SSM Agent is running. On EC2 Windows instances, verify that the
-//   EC2Config service is running.
+//   SSM Agent is not running. Verify that SSM Agent is running.
 //
-//   SSM Agent or EC2Config service is not registered to the SSM endpoint. Try
-//   reinstalling SSM Agent or EC2Config service.
+//   SSM Agent is not registered with the SSM endpoint. Try reinstalling SSM Agent.
 //
 //   The instance is not in valid state. Valid states are: Running, Pending, Stopped,
 //   Stopping. Invalid states are: Shutting-down and Terminated.
@@ -273,7 +270,7 @@ func (c *SSM) CancelMaintenanceWindowExecutionRequest(input *CancelMaintenanceWi
 
 // CancelMaintenanceWindowExecution API operation for Amazon Simple Systems Manager (SSM).
 //
-// Stops a Maintenance Window execution that is already in progress and cancels
+// Stops a maintenance window execution that is already in progress and cancels
 // any tasks in the window that have not already starting running. (Tasks already
 // in progress will continue to completion.)
 //
@@ -289,8 +286,8 @@ func (c *SSM) CancelMaintenanceWindowExecutionRequest(input *CancelMaintenanceWi
 //   An error occurred on the server side.
 //
 //   * ErrCodeDoesNotExistException "DoesNotExistException"
-//   Error returned when the ID specified for a resource, such as a Maintenance
-//   Window or Patch baseline, doesn't exist.
+//   Error returned when the ID specified for a resource, such as a maintenance
+//   window or Patch baseline, doesn't exist.
 //
 //   For information about resource limits in Systems Manager, see AWS Systems
 //   Manager Limits (http://docs.aws.amazon.com/general/latest/gr/aws_service_limits.html#limits_ssm).
@@ -364,8 +361,8 @@ func (c *SSM) CreateActivationRequest(input *CreateActivationInput) (req *reques
 // Registers your on-premises server or virtual machine with Amazon EC2 so that
 // you can manage these resources using Run Command. An on-premises server or
 // virtual machine that has been registered with EC2 is called a managed instance.
-// For more information about activations, see Setting Up Systems Manager in
-// Hybrid Environments (http://docs.aws.amazon.com/systems-manager/latest/userguide/systems-manager-managedinstances.html).
+// For more information about activations, see Setting Up AWS Systems Manager
+// for Hybrid Environments (http://docs.aws.amazon.com/systems-manager/latest/userguide/systems-manager-managedinstances.html).
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -482,12 +479,9 @@ func (c *SSM) CreateAssociationRequest(input *CreateAssociationInput) (req *requ
 //
 //   You do not have permission to access the instance.
 //
-//   SSM Agent is not running. On managed instances and Linux instances, verify
-//   that the SSM Agent is running. On EC2 Windows instances, verify that the
-//   EC2Config service is running.
+//   SSM Agent is not running. Verify that SSM Agent is running.
 //
-//   SSM Agent or EC2Config service is not registered to the SSM endpoint. Try
-//   reinstalling SSM Agent or EC2Config service.
+//   SSM Agent is not registered with the SSM endpoint. Try reinstalling SSM Agent.
 //
 //   The instance is not in valid state. Valid states are: Running, Pending, Stopped,
 //   Stopping. Invalid states are: Shutting-down and Terminated.
@@ -609,12 +603,9 @@ func (c *SSM) CreateAssociationBatchRequest(input *CreateAssociationBatchInput) 
 //
 //   You do not have permission to access the instance.
 //
-//   SSM Agent is not running. On managed instances and Linux instances, verify
-//   that the SSM Agent is running. On EC2 Windows instances, verify that the
-//   EC2Config service is running.
+//   SSM Agent is not running. Verify that SSM Agent is running.
 //
-//   SSM Agent or EC2Config service is not registered to the SSM endpoint. Try
-//   reinstalling SSM Agent or EC2Config service.
+//   SSM Agent is not registered with the SSM endpoint. Try reinstalling SSM Agent.
 //
 //   The instance is not in valid state. Valid states are: Running, Pending, Stopped,
 //   Stopping. Invalid states are: Shutting-down and Terminated.
@@ -736,7 +727,7 @@ func (c *SSM) CreateDocumentRequest(input *CreateDocumentInput) (req *request.Re
 //   The content for the document is not valid.
 //
 //   * ErrCodeDocumentLimitExceeded "DocumentLimitExceeded"
-//   You can have at most 200 active Systems Manager documents.
+//   You can have at most 500 active Systems Manager documents.
 //
 //   * ErrCodeInvalidDocumentSchemaVersion "InvalidDocumentSchemaVersion"
 //   The version of the document schema is not supported.
@@ -807,7 +798,7 @@ func (c *SSM) CreateMaintenanceWindowRequest(input *CreateMaintenanceWindowInput
 
 // CreateMaintenanceWindow API operation for Amazon Simple Systems Manager (SSM).
 //
-// Creates a new Maintenance Window.
+// Creates a new maintenance window.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -823,7 +814,7 @@ func (c *SSM) CreateMaintenanceWindowRequest(input *CreateMaintenanceWindowInput
 //
 //   * ErrCodeResourceLimitExceededException "ResourceLimitExceededException"
 //   Error returned when the caller has exceeded the default resource limits.
-//   For example, too many Maintenance Windows or Patch baselines have been created.
+//   For example, too many maintenance windows or patch baselines have been created.
 //
 //   For information about resource limits in Systems Manager, see AWS Systems
 //   Manager Limits (http://docs.aws.amazon.com/general/latest/gr/aws_service_limits.html#limits_ssm).
@@ -848,6 +839,105 @@ func (c *SSM) CreateMaintenanceWindow(input *CreateMaintenanceWindowInput) (*Cre
 // for more information on using Contexts.
 func (c *SSM) CreateMaintenanceWindowWithContext(ctx aws.Context, input *CreateMaintenanceWindowInput, opts ...request.Option) (*CreateMaintenanceWindowOutput, error) {
 	req, out := c.CreateMaintenanceWindowRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
+const opCreateOpsItem = "CreateOpsItem"
+
+// CreateOpsItemRequest generates a "aws/request.Request" representing the
+// client's request for the CreateOpsItem operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See CreateOpsItem for more information on using the CreateOpsItem
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the CreateOpsItemRequest method.
+//    req, resp := client.CreateOpsItemRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/CreateOpsItem
+func (c *SSM) CreateOpsItemRequest(input *CreateOpsItemInput) (req *request.Request, output *CreateOpsItemOutput) {
+	op := &request.Operation{
+		Name:       opCreateOpsItem,
+		HTTPMethod: "POST",
+		HTTPPath:   "/",
+	}
+
+	if input == nil {
+		input = &CreateOpsItemInput{}
+	}
+
+	output = &CreateOpsItemOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// CreateOpsItem API operation for Amazon Simple Systems Manager (SSM).
+//
+// Creates a new OpsItem. You must have permission in AWS Identity and Access
+// Management (IAM) to create a new OpsItem. For more information, see Getting
+// Started with OpsCenter (http://docs.aws.amazon.com/systems-manager/latest/userguide/OpsCenter-getting-started.html)
+// in the AWS Systems Manager User Guide.
+//
+// Operations engineers and IT professionals use OpsCenter to view, investigate,
+// and remediate operational issues impacting the performance and health of
+// their AWS resources. For more information, see AWS Systems Manager OpsCenter
+// (http://docs.aws.amazon.com/systems-manager/latest/userguide/OpsCenter.html)
+// in the AWS Systems Manager User Guide.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for Amazon Simple Systems Manager (SSM)'s
+// API operation CreateOpsItem for usage and error information.
+//
+// Returned Error Codes:
+//   * ErrCodeInternalServerError "InternalServerError"
+//   An error occurred on the server side.
+//
+//   * ErrCodeOpsItemAlreadyExistsException "OpsItemAlreadyExistsException"
+//   The OpsItem already exists.
+//
+//   * ErrCodeOpsItemLimitExceededException "OpsItemLimitExceededException"
+//   The request caused OpsItems to exceed one or more limits. For information
+//   about OpsItem limits, see What are the resource limits for OpsCenter? (http://docs.aws.amazon.com/systems-manager/latest/userguide/OpsCenter-learn-more.html#OpsCenter-learn-more-limits).
+//
+//   * ErrCodeOpsItemInvalidParameterException "OpsItemInvalidParameterException"
+//   A specified parameter argument isn't valid. Verify the available arguments
+//   and try again.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/CreateOpsItem
+func (c *SSM) CreateOpsItem(input *CreateOpsItemInput) (*CreateOpsItemOutput, error) {
+	req, out := c.CreateOpsItemRequest(input)
+	return out, req.Send()
+}
+
+// CreateOpsItemWithContext is the same as CreateOpsItem with the addition of
+// the ability to pass a context and additional request options.
+//
+// See CreateOpsItem for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *SSM) CreateOpsItemWithContext(ctx aws.Context, input *CreateOpsItemInput, opts ...request.Option) (*CreateOpsItemOutput, error) {
+	req, out := c.CreateOpsItemRequest(input)
 	req.SetContext(ctx)
 	req.ApplyOptions(opts...)
 	return out, req.Send()
@@ -916,7 +1006,7 @@ func (c *SSM) CreatePatchBaselineRequest(input *CreatePatchBaselineInput) (req *
 //
 //   * ErrCodeResourceLimitExceededException "ResourceLimitExceededException"
 //   Error returned when the caller has exceeded the default resource limits.
-//   For example, too many Maintenance Windows or Patch baselines have been created.
+//   For example, too many maintenance windows or patch baselines have been created.
 //
 //   For information about resource limits in Systems Manager, see AWS Systems
 //   Manager Limits (http://docs.aws.amazon.com/general/latest/gr/aws_service_limits.html#limits_ssm).
@@ -1214,12 +1304,9 @@ func (c *SSM) DeleteAssociationRequest(input *DeleteAssociationInput) (req *requ
 //
 //   You do not have permission to access the instance.
 //
-//   SSM Agent is not running. On managed instances and Linux instances, verify
-//   that the SSM Agent is running. On EC2 Windows instances, verify that the
-//   EC2Config service is running.
+//   SSM Agent is not running. Verify that SSM Agent is running.
 //
-//   SSM Agent or EC2Config service is not registered to the SSM endpoint. Try
-//   reinstalling SSM Agent or EC2Config service.
+//   SSM Agent is not registered with the SSM endpoint. Try reinstalling SSM Agent.
 //
 //   The instance is not in valid state. Valid states are: Running, Pending, Stopped,
 //   Stopping. Invalid states are: Shutting-down and Terminated.
@@ -1484,7 +1571,7 @@ func (c *SSM) DeleteMaintenanceWindowRequest(input *DeleteMaintenanceWindowInput
 
 // DeleteMaintenanceWindow API operation for Amazon Simple Systems Manager (SSM).
 //
-// Deletes a Maintenance Window.
+// Deletes a maintenance window.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -1646,8 +1733,7 @@ func (c *SSM) DeleteParametersRequest(input *DeleteParametersInput) (req *reques
 
 // DeleteParameters API operation for Amazon Simple Systems Manager (SSM).
 //
-// Delete a list of parameters. This API is used to delete parameters by using
-// the Amazon EC2 console.
+// Delete a list of parameters.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -1913,12 +1999,9 @@ func (c *SSM) DeregisterManagedInstanceRequest(input *DeregisterManagedInstanceI
 //
 //   You do not have permission to access the instance.
 //
-//   SSM Agent is not running. On managed instances and Linux instances, verify
-//   that the SSM Agent is running. On EC2 Windows instances, verify that the
-//   EC2Config service is running.
+//   SSM Agent is not running. Verify that SSM Agent is running.
 //
-//   SSM Agent or EC2Config service is not registered to the SSM endpoint. Try
-//   reinstalling SSM Agent or EC2Config service.
+//   SSM Agent is not registered with the SSM endpoint. Try reinstalling SSM Agent.
 //
 //   The instance is not in valid state. Valid states are: Running, Pending, Stopped,
 //   Stopping. Invalid states are: Shutting-down and Terminated.
@@ -2075,7 +2158,7 @@ func (c *SSM) DeregisterTargetFromMaintenanceWindowRequest(input *DeregisterTarg
 
 // DeregisterTargetFromMaintenanceWindow API operation for Amazon Simple Systems Manager (SSM).
 //
-// Removes a target from a Maintenance Window.
+// Removes a target from a maintenance window.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -2086,8 +2169,8 @@ func (c *SSM) DeregisterTargetFromMaintenanceWindowRequest(input *DeregisterTarg
 //
 // Returned Error Codes:
 //   * ErrCodeDoesNotExistException "DoesNotExistException"
-//   Error returned when the ID specified for a resource, such as a Maintenance
-//   Window or Patch baseline, doesn't exist.
+//   Error returned when the ID specified for a resource, such as a maintenance
+//   window or Patch baseline, doesn't exist.
 //
 //   For information about resource limits in Systems Manager, see AWS Systems
 //   Manager Limits (http://docs.aws.amazon.com/general/latest/gr/aws_service_limits.html#limits_ssm).
@@ -2165,7 +2248,7 @@ func (c *SSM) DeregisterTaskFromMaintenanceWindowRequest(input *DeregisterTaskFr
 
 // DeregisterTaskFromMaintenanceWindow API operation for Amazon Simple Systems Manager (SSM).
 //
-// Removes a task from a Maintenance Window.
+// Removes a task from a maintenance window.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -2176,8 +2259,8 @@ func (c *SSM) DeregisterTaskFromMaintenanceWindowRequest(input *DeregisterTaskFr
 //
 // Returned Error Codes:
 //   * ErrCodeDoesNotExistException "DoesNotExistException"
-//   Error returned when the ID specified for a resource, such as a Maintenance
-//   Window or Patch baseline, doesn't exist.
+//   Error returned when the ID specified for a resource, such as a maintenance
+//   window or Patch baseline, doesn't exist.
 //
 //   For information about resource limits in Systems Manager, see AWS Systems
 //   Manager Limits (http://docs.aws.amazon.com/general/latest/gr/aws_service_limits.html#limits_ssm).
@@ -2257,9 +2340,9 @@ func (c *SSM) DescribeActivationsRequest(input *DescribeActivationsInput) (req *
 
 // DescribeActivations API operation for Amazon Simple Systems Manager (SSM).
 //
-// Details about the activation, including: the date and time the activation
-// was created, the expiration date, the IAM role assigned to the instances
-// in the activation, and the number of instances activated by this registration.
+// Describes details about the activation, such as the date and time the activation
+// was created, its expiration date, the IAM role assigned to the instances
+// in the activation, and the number of instances registered by using this activation.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -2312,7 +2395,7 @@ func (c *SSM) DescribeActivationsWithContext(ctx aws.Context, input *DescribeAct
 //    // Example iterating over at most 3 pages of a DescribeActivations operation.
 //    pageNum := 0
 //    err := client.DescribeActivationsPages(params,
-//        func(page *DescribeActivationsOutput, lastPage bool) bool {
+//        func(page *ssm.DescribeActivationsOutput, lastPage bool) bool {
 //            pageNum++
 //            fmt.Println(page)
 //            return pageNum <= 3
@@ -2428,12 +2511,9 @@ func (c *SSM) DescribeAssociationRequest(input *DescribeAssociationInput) (req *
 //
 //   You do not have permission to access the instance.
 //
-//   SSM Agent is not running. On managed instances and Linux instances, verify
-//   that the SSM Agent is running. On EC2 Windows instances, verify that the
-//   EC2Config service is running.
+//   SSM Agent is not running. Verify that SSM Agent is running.
 //
-//   SSM Agent or EC2Config service is not registered to the SSM endpoint. Try
-//   reinstalling SSM Agent or EC2Config service.
+//   SSM Agent is not registered with the SSM endpoint. Try reinstalling SSM Agent.
 //
 //   The instance is not in valid state. Valid states are: Running, Pending, Stopped,
 //   Stopping. Invalid states are: Shutting-down and Terminated.
@@ -2859,7 +2939,7 @@ func (c *SSM) DescribeAvailablePatchesRequest(input *DescribeAvailablePatchesInp
 
 // DescribeAvailablePatches API operation for Amazon Simple Systems Manager (SSM).
 //
-// Lists all patches that could possibly be included in a patch baseline.
+// Lists all patches eligible to be included in a patch baseline.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -3129,12 +3209,9 @@ func (c *SSM) DescribeEffectiveInstanceAssociationsRequest(input *DescribeEffect
 //
 //   You do not have permission to access the instance.
 //
-//   SSM Agent is not running. On managed instances and Linux instances, verify
-//   that the SSM Agent is running. On EC2 Windows instances, verify that the
-//   EC2Config service is running.
+//   SSM Agent is not running. Verify that SSM Agent is running.
 //
-//   SSM Agent or EC2Config service is not registered to the SSM endpoint. Try
-//   reinstalling SSM Agent or EC2Config service.
+//   SSM Agent is not registered with the SSM endpoint. Try reinstalling SSM Agent.
 //
 //   The instance is not in valid state. Valid states are: Running, Pending, Stopped,
 //   Stopping. Invalid states are: Shutting-down and Terminated.
@@ -3225,8 +3302,8 @@ func (c *SSM) DescribeEffectivePatchesForPatchBaselineRequest(input *DescribeEff
 //   try again.
 //
 //   * ErrCodeDoesNotExistException "DoesNotExistException"
-//   Error returned when the ID specified for a resource, such as a Maintenance
-//   Window or Patch baseline, doesn't exist.
+//   Error returned when the ID specified for a resource, such as a maintenance
+//   window or Patch baseline, doesn't exist.
 //
 //   For information about resource limits in Systems Manager, see AWS Systems
 //   Manager Limits (http://docs.aws.amazon.com/general/latest/gr/aws_service_limits.html#limits_ssm).
@@ -3323,12 +3400,9 @@ func (c *SSM) DescribeInstanceAssociationsStatusRequest(input *DescribeInstanceA
 //
 //   You do not have permission to access the instance.
 //
-//   SSM Agent is not running. On managed instances and Linux instances, verify
-//   that the SSM Agent is running. On EC2 Windows instances, verify that the
-//   EC2Config service is running.
+//   SSM Agent is not running. Verify that SSM Agent is running.
 //
-//   SSM Agent or EC2Config service is not registered to the SSM endpoint. Try
-//   reinstalling SSM Agent or EC2Config service.
+//   SSM Agent is not registered with the SSM endpoint. Try reinstalling SSM Agent.
 //
 //   The instance is not in valid state. Valid states are: Running, Pending, Stopped,
 //   Stopping. Invalid states are: Shutting-down and Terminated.
@@ -3435,12 +3509,9 @@ func (c *SSM) DescribeInstanceInformationRequest(input *DescribeInstanceInformat
 //
 //   You do not have permission to access the instance.
 //
-//   SSM Agent is not running. On managed instances and Linux instances, verify
-//   that the SSM Agent is running. On EC2 Windows instances, verify that the
-//   EC2Config service is running.
+//   SSM Agent is not running. Verify that SSM Agent is running.
 //
-//   SSM Agent or EC2Config service is not registered to the SSM endpoint. Try
-//   reinstalling SSM Agent or EC2Config service.
+//   SSM Agent is not registered with the SSM endpoint. Try reinstalling SSM Agent.
 //
 //   The instance is not in valid state. Valid states are: Running, Pending, Stopped,
 //   Stopping. Invalid states are: Shutting-down and Terminated.
@@ -3487,7 +3558,7 @@ func (c *SSM) DescribeInstanceInformationWithContext(ctx aws.Context, input *Des
 //    // Example iterating over at most 3 pages of a DescribeInstanceInformation operation.
 //    pageNum := 0
 //    err := client.DescribeInstanceInformationPages(params,
-//        func(page *DescribeInstanceInformationOutput, lastPage bool) bool {
+//        func(page *ssm.DescribeInstanceInformationOutput, lastPage bool) bool {
 //            pageNum++
 //            fmt.Println(page)
 //            return pageNum <= 3
@@ -3758,12 +3829,9 @@ func (c *SSM) DescribeInstancePatchesRequest(input *DescribeInstancePatchesInput
 //
 //   You do not have permission to access the instance.
 //
-//   SSM Agent is not running. On managed instances and Linux instances, verify
-//   that the SSM Agent is running. On EC2 Windows instances, verify that the
-//   EC2Config service is running.
+//   SSM Agent is not running. Verify that SSM Agent is running.
 //
-//   SSM Agent or EC2Config service is not registered to the SSM endpoint. Try
-//   reinstalling SSM Agent or EC2Config service.
+//   SSM Agent is not registered with the SSM endpoint. Try reinstalling SSM Agent.
 //
 //   The instance is not in valid state. Valid states are: Running, Pending, Stopped,
 //   Stopping. Invalid states are: Shutting-down and Terminated.
@@ -3855,7 +3923,7 @@ func (c *SSM) DescribeInventoryDeletionsRequest(input *DescribeInventoryDeletion
 //   An error occurred on the server side.
 //
 //   * ErrCodeInvalidDeletionIdException "InvalidDeletionIdException"
-//   The ID specified for the delete operation does not exist or is not valide.
+//   The ID specified for the delete operation does not exist or is not valid.
 //   Verify the ID and try again.
 //
 //   * ErrCodeInvalidNextToken "InvalidNextToken"
@@ -3928,7 +3996,7 @@ func (c *SSM) DescribeMaintenanceWindowExecutionTaskInvocationsRequest(input *De
 // DescribeMaintenanceWindowExecutionTaskInvocations API operation for Amazon Simple Systems Manager (SSM).
 //
 // Retrieves the individual task executions (one per target) for a particular
-// task run as part of a Maintenance Window execution.
+// task run as part of a maintenance window execution.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -3939,8 +4007,8 @@ func (c *SSM) DescribeMaintenanceWindowExecutionTaskInvocationsRequest(input *De
 //
 // Returned Error Codes:
 //   * ErrCodeDoesNotExistException "DoesNotExistException"
-//   Error returned when the ID specified for a resource, such as a Maintenance
-//   Window or Patch baseline, doesn't exist.
+//   Error returned when the ID specified for a resource, such as a maintenance
+//   window or Patch baseline, doesn't exist.
 //
 //   For information about resource limits in Systems Manager, see AWS Systems
 //   Manager Limits (http://docs.aws.amazon.com/general/latest/gr/aws_service_limits.html#limits_ssm).
@@ -4014,7 +4082,7 @@ func (c *SSM) DescribeMaintenanceWindowExecutionTasksRequest(input *DescribeMain
 
 // DescribeMaintenanceWindowExecutionTasks API operation for Amazon Simple Systems Manager (SSM).
 //
-// For a given Maintenance Window execution, lists the tasks that were run.
+// For a given maintenance window execution, lists the tasks that were run.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -4025,8 +4093,8 @@ func (c *SSM) DescribeMaintenanceWindowExecutionTasksRequest(input *DescribeMain
 //
 // Returned Error Codes:
 //   * ErrCodeDoesNotExistException "DoesNotExistException"
-//   Error returned when the ID specified for a resource, such as a Maintenance
-//   Window or Patch baseline, doesn't exist.
+//   Error returned when the ID specified for a resource, such as a maintenance
+//   window or Patch baseline, doesn't exist.
 //
 //   For information about resource limits in Systems Manager, see AWS Systems
 //   Manager Limits (http://docs.aws.amazon.com/general/latest/gr/aws_service_limits.html#limits_ssm).
@@ -4100,9 +4168,9 @@ func (c *SSM) DescribeMaintenanceWindowExecutionsRequest(input *DescribeMaintena
 
 // DescribeMaintenanceWindowExecutions API operation for Amazon Simple Systems Manager (SSM).
 //
-// Lists the executions of a Maintenance Window. This includes information about
-// when the Maintenance Window was scheduled to be active, and information about
-// tasks registered and run with the Maintenance Window.
+// Lists the executions of a maintenance window. This includes information about
+// when the maintenance window was scheduled to be active, and information about
+// tasks registered and run with the maintenance window.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -4181,7 +4249,7 @@ func (c *SSM) DescribeMaintenanceWindowScheduleRequest(input *DescribeMaintenanc
 
 // DescribeMaintenanceWindowSchedule API operation for Amazon Simple Systems Manager (SSM).
 //
-// Retrieves information about upcoming executions of a Maintenance Window.
+// Retrieves information about upcoming executions of a maintenance window.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -4195,8 +4263,8 @@ func (c *SSM) DescribeMaintenanceWindowScheduleRequest(input *DescribeMaintenanc
 //   An error occurred on the server side.
 //
 //   * ErrCodeDoesNotExistException "DoesNotExistException"
-//   Error returned when the ID specified for a resource, such as a Maintenance
-//   Window or Patch baseline, doesn't exist.
+//   Error returned when the ID specified for a resource, such as a maintenance
+//   window or Patch baseline, doesn't exist.
 //
 //   For information about resource limits in Systems Manager, see AWS Systems
 //   Manager Limits (http://docs.aws.amazon.com/general/latest/gr/aws_service_limits.html#limits_ssm).
@@ -4267,7 +4335,7 @@ func (c *SSM) DescribeMaintenanceWindowTargetsRequest(input *DescribeMaintenance
 
 // DescribeMaintenanceWindowTargets API operation for Amazon Simple Systems Manager (SSM).
 //
-// Lists the targets registered with the Maintenance Window.
+// Lists the targets registered with the maintenance window.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -4278,8 +4346,8 @@ func (c *SSM) DescribeMaintenanceWindowTargetsRequest(input *DescribeMaintenance
 //
 // Returned Error Codes:
 //   * ErrCodeDoesNotExistException "DoesNotExistException"
-//   Error returned when the ID specified for a resource, such as a Maintenance
-//   Window or Patch baseline, doesn't exist.
+//   Error returned when the ID specified for a resource, such as a maintenance
+//   window or Patch baseline, doesn't exist.
 //
 //   For information about resource limits in Systems Manager, see AWS Systems
 //   Manager Limits (http://docs.aws.amazon.com/general/latest/gr/aws_service_limits.html#limits_ssm).
@@ -4353,7 +4421,7 @@ func (c *SSM) DescribeMaintenanceWindowTasksRequest(input *DescribeMaintenanceWi
 
 // DescribeMaintenanceWindowTasks API operation for Amazon Simple Systems Manager (SSM).
 //
-// Lists the tasks in a Maintenance Window.
+// Lists the tasks in a maintenance window.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -4364,8 +4432,8 @@ func (c *SSM) DescribeMaintenanceWindowTasksRequest(input *DescribeMaintenanceWi
 //
 // Returned Error Codes:
 //   * ErrCodeDoesNotExistException "DoesNotExistException"
-//   Error returned when the ID specified for a resource, such as a Maintenance
-//   Window or Patch baseline, doesn't exist.
+//   Error returned when the ID specified for a resource, such as a maintenance
+//   window or Patch baseline, doesn't exist.
 //
 //   For information about resource limits in Systems Manager, see AWS Systems
 //   Manager Limits (http://docs.aws.amazon.com/general/latest/gr/aws_service_limits.html#limits_ssm).
@@ -4439,7 +4507,7 @@ func (c *SSM) DescribeMaintenanceWindowsRequest(input *DescribeMaintenanceWindow
 
 // DescribeMaintenanceWindows API operation for Amazon Simple Systems Manager (SSM).
 //
-// Retrieves the Maintenance Windows in an AWS account.
+// Retrieves the maintenance windows in an AWS account.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -4518,7 +4586,7 @@ func (c *SSM) DescribeMaintenanceWindowsForTargetRequest(input *DescribeMaintena
 
 // DescribeMaintenanceWindowsForTarget API operation for Amazon Simple Systems Manager (SSM).
 //
-// Retrieves information about the Maintenance Windows targets or tasks that
+// Retrieves information about the maintenance window targets or tasks that
 // an instance is associated with.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
@@ -4549,6 +4617,94 @@ func (c *SSM) DescribeMaintenanceWindowsForTarget(input *DescribeMaintenanceWind
 // for more information on using Contexts.
 func (c *SSM) DescribeMaintenanceWindowsForTargetWithContext(ctx aws.Context, input *DescribeMaintenanceWindowsForTargetInput, opts ...request.Option) (*DescribeMaintenanceWindowsForTargetOutput, error) {
 	req, out := c.DescribeMaintenanceWindowsForTargetRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
+const opDescribeOpsItems = "DescribeOpsItems"
+
+// DescribeOpsItemsRequest generates a "aws/request.Request" representing the
+// client's request for the DescribeOpsItems operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See DescribeOpsItems for more information on using the DescribeOpsItems
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the DescribeOpsItemsRequest method.
+//    req, resp := client.DescribeOpsItemsRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/DescribeOpsItems
+func (c *SSM) DescribeOpsItemsRequest(input *DescribeOpsItemsInput) (req *request.Request, output *DescribeOpsItemsOutput) {
+	op := &request.Operation{
+		Name:       opDescribeOpsItems,
+		HTTPMethod: "POST",
+		HTTPPath:   "/",
+	}
+
+	if input == nil {
+		input = &DescribeOpsItemsInput{}
+	}
+
+	output = &DescribeOpsItemsOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// DescribeOpsItems API operation for Amazon Simple Systems Manager (SSM).
+//
+// Query a set of OpsItems. You must have permission in AWS Identity and Access
+// Management (IAM) to query a list of OpsItems. For more information, see Getting
+// Started with OpsCenter (http://docs.aws.amazon.com/systems-manager/latest/userguide/OpsCenter-getting-started.html)
+// in the AWS Systems Manager User Guide.
+//
+// Operations engineers and IT professionals use OpsCenter to view, investigate,
+// and remediate operational issues impacting the performance and health of
+// their AWS resources. For more information, see AWS Systems Manager OpsCenter
+// (http://docs.aws.amazon.com/systems-manager/latest/userguide/OpsCenter.html)
+// in the AWS Systems Manager User Guide.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for Amazon Simple Systems Manager (SSM)'s
+// API operation DescribeOpsItems for usage and error information.
+//
+// Returned Error Codes:
+//   * ErrCodeInternalServerError "InternalServerError"
+//   An error occurred on the server side.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/DescribeOpsItems
+func (c *SSM) DescribeOpsItems(input *DescribeOpsItemsInput) (*DescribeOpsItemsOutput, error) {
+	req, out := c.DescribeOpsItemsRequest(input)
+	return out, req.Send()
+}
+
+// DescribeOpsItemsWithContext is the same as DescribeOpsItems with the addition of
+// the ability to pass a context and additional request options.
+//
+// See DescribeOpsItems for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *SSM) DescribeOpsItemsWithContext(ctx aws.Context, input *DescribeOpsItemsInput, opts ...request.Option) (*DescribeOpsItemsOutput, error) {
+	req, out := c.DescribeOpsItemsRequest(input)
 	req.SetContext(ctx)
 	req.ApplyOptions(opts...)
 	return out, req.Send()
@@ -4671,7 +4827,7 @@ func (c *SSM) DescribeParametersWithContext(ctx aws.Context, input *DescribePara
 //    // Example iterating over at most 3 pages of a DescribeParameters operation.
 //    pageNum := 0
 //    err := client.DescribeParametersPages(params,
-//        func(page *DescribeParametersOutput, lastPage bool) bool {
+//        func(page *ssm.DescribeParametersOutput, lastPage bool) bool {
 //            pageNum++
 //            fmt.Println(page)
 //            return pageNum <= 3
@@ -5003,19 +5159,33 @@ func (c *SSM) DescribePatchPropertiesRequest(input *DescribePatchPropertiesInput
 // The following section lists the properties that can be used in filters for
 // each major operating system type:
 //
-// WINDOWSValid properties: PRODUCT, PRODUCT_FAMILY, CLASSIFICATION, MSRC_SEVERITY
+// WINDOWS
 //
-// AMAZON_LINUXValid properties: PRODUCT, CLASSIFICATION, SEVERITY
+// Valid properties: PRODUCT, PRODUCT_FAMILY, CLASSIFICATION, MSRC_SEVERITY
 //
-// AMAZON_LINUX_2Valid properties: PRODUCT, CLASSIFICATION, SEVERITY
+// AMAZON_LINUX
 //
-// UBUNTU Valid properties: PRODUCT, PRIORITY
+// Valid properties: PRODUCT, CLASSIFICATION, SEVERITY
 //
-// REDHAT_ENTERPRISE_LINUXValid properties: PRODUCT, CLASSIFICATION, SEVERITY
+// AMAZON_LINUX_2
 //
-// SUSEValid properties: PRODUCT, CLASSIFICATION, SEVERITY
+// Valid properties: PRODUCT, CLASSIFICATION, SEVERITY
 //
-// CENTOSValid properties: PRODUCT, CLASSIFICATION, SEVERITY
+// UBUNTU
+//
+// Valid properties: PRODUCT, PRIORITY
+//
+// REDHAT_ENTERPRISE_LINUX
+//
+// Valid properties: PRODUCT, CLASSIFICATION, SEVERITY
+//
+// SUSE
+//
+// Valid properties: PRODUCT, CLASSIFICATION, SEVERITY
+//
+// CENTOS
+//
+// Valid properties: PRODUCT, CLASSIFICATION, SEVERITY
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -5284,12 +5454,9 @@ func (c *SSM) GetCommandInvocationRequest(input *GetCommandInvocationInput) (req
 //
 //   You do not have permission to access the instance.
 //
-//   SSM Agent is not running. On managed instances and Linux instances, verify
-//   that the SSM Agent is running. On EC2 Windows instances, verify that the
-//   EC2Config service is running.
+//   SSM Agent is not running. Verify that SSM Agent is running.
 //
-//   SSM Agent or EC2Config service is not registered to the SSM endpoint. Try
-//   reinstalling SSM Agent or EC2Config service.
+//   SSM Agent is not registered with the SSM endpoint. Try reinstalling SSM Agent.
 //
 //   The instance is not in valid state. Valid states are: Running, Pending, Stopped,
 //   Stopping. Invalid states are: Shutting-down and Terminated.
@@ -5299,7 +5466,7 @@ func (c *SSM) GetCommandInvocationRequest(input *GetCommandInvocationInput) (req
 //
 //   * ErrCodeInvocationDoesNotExist "InvocationDoesNotExist"
 //   The command ID and instance ID you specified did not match any invocations.
-//   Verify the command ID adn the instance ID and try again.
+//   Verify the command ID and the instance ID and try again.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/GetCommandInvocation
 func (c *SSM) GetCommandInvocation(input *GetCommandInvocationInput) (*GetCommandInvocationOutput, error) {
@@ -5551,6 +5718,11 @@ func (c *SSM) GetDeployablePatchSnapshotForInstanceRequest(input *GetDeployableP
 //   Windows, AmazonLinux, RedhatEnterpriseLinux, and Ubuntu.
 //
 //   * ErrCodeUnsupportedFeatureRequiredException "UnsupportedFeatureRequiredException"
+//   Microsoft application patching is only available on EC2 instances and Advanced
+//   Instances. To patch Microsoft applications on on-premises servers and VMs,
+//   you must enable Advanced Instances. For more information, see Using the Advanced-Instances
+//   Tier (http://docs.aws.amazon.com/systems-manager/latest/userguide/systems-manager-managedinstances-advanced.html)
+//   in the AWS Systems Manager User Guide.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/GetDeployablePatchSnapshotForInstance
 func (c *SSM) GetDeployablePatchSnapshotForInstance(input *GetDeployablePatchSnapshotForInstanceInput) (*GetDeployablePatchSnapshotForInstanceOutput, error) {
@@ -5888,7 +6060,7 @@ func (c *SSM) GetMaintenanceWindowRequest(input *GetMaintenanceWindowInput) (req
 
 // GetMaintenanceWindow API operation for Amazon Simple Systems Manager (SSM).
 //
-// Retrieves a Maintenance Window.
+// Retrieves a maintenance window.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -5899,8 +6071,8 @@ func (c *SSM) GetMaintenanceWindowRequest(input *GetMaintenanceWindowInput) (req
 //
 // Returned Error Codes:
 //   * ErrCodeDoesNotExistException "DoesNotExistException"
-//   Error returned when the ID specified for a resource, such as a Maintenance
-//   Window or Patch baseline, doesn't exist.
+//   Error returned when the ID specified for a resource, such as a maintenance
+//   window or Patch baseline, doesn't exist.
 //
 //   For information about resource limits in Systems Manager, see AWS Systems
 //   Manager Limits (http://docs.aws.amazon.com/general/latest/gr/aws_service_limits.html#limits_ssm).
@@ -5974,8 +6146,7 @@ func (c *SSM) GetMaintenanceWindowExecutionRequest(input *GetMaintenanceWindowEx
 
 // GetMaintenanceWindowExecution API operation for Amazon Simple Systems Manager (SSM).
 //
-// Retrieves details about a specific task run as part of a Maintenance Window
-// execution.
+// Retrieves details about a specific a maintenance window execution.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -5986,8 +6157,8 @@ func (c *SSM) GetMaintenanceWindowExecutionRequest(input *GetMaintenanceWindowEx
 //
 // Returned Error Codes:
 //   * ErrCodeDoesNotExistException "DoesNotExistException"
-//   Error returned when the ID specified for a resource, such as a Maintenance
-//   Window or Patch baseline, doesn't exist.
+//   Error returned when the ID specified for a resource, such as a maintenance
+//   window or Patch baseline, doesn't exist.
 //
 //   For information about resource limits in Systems Manager, see AWS Systems
 //   Manager Limits (http://docs.aws.amazon.com/general/latest/gr/aws_service_limits.html#limits_ssm).
@@ -6061,8 +6232,8 @@ func (c *SSM) GetMaintenanceWindowExecutionTaskRequest(input *GetMaintenanceWind
 
 // GetMaintenanceWindowExecutionTask API operation for Amazon Simple Systems Manager (SSM).
 //
-// Retrieves the details about a specific task run as part of a Maintenance
-// Window execution.
+// Retrieves the details about a specific task run as part of a maintenance
+// window execution.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -6073,8 +6244,8 @@ func (c *SSM) GetMaintenanceWindowExecutionTaskRequest(input *GetMaintenanceWind
 //
 // Returned Error Codes:
 //   * ErrCodeDoesNotExistException "DoesNotExistException"
-//   Error returned when the ID specified for a resource, such as a Maintenance
-//   Window or Patch baseline, doesn't exist.
+//   Error returned when the ID specified for a resource, such as a maintenance
+//   window or Patch baseline, doesn't exist.
 //
 //   For information about resource limits in Systems Manager, see AWS Systems
 //   Manager Limits (http://docs.aws.amazon.com/general/latest/gr/aws_service_limits.html#limits_ssm).
@@ -6148,8 +6319,7 @@ func (c *SSM) GetMaintenanceWindowExecutionTaskInvocationRequest(input *GetMaint
 
 // GetMaintenanceWindowExecutionTaskInvocation API operation for Amazon Simple Systems Manager (SSM).
 //
-// Retrieves a task invocation. A task invocation is a specific task running
-// on a specific target. Maintenance Windows report status for all invocations.
+// Retrieves information about a specific task running on a specific target.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -6160,8 +6330,8 @@ func (c *SSM) GetMaintenanceWindowExecutionTaskInvocationRequest(input *GetMaint
 //
 // Returned Error Codes:
 //   * ErrCodeDoesNotExistException "DoesNotExistException"
-//   Error returned when the ID specified for a resource, such as a Maintenance
-//   Window or Patch baseline, doesn't exist.
+//   Error returned when the ID specified for a resource, such as a maintenance
+//   window or Patch baseline, doesn't exist.
 //
 //   For information about resource limits in Systems Manager, see AWS Systems
 //   Manager Limits (http://docs.aws.amazon.com/general/latest/gr/aws_service_limits.html#limits_ssm).
@@ -6235,7 +6405,7 @@ func (c *SSM) GetMaintenanceWindowTaskRequest(input *GetMaintenanceWindowTaskInp
 
 // GetMaintenanceWindowTask API operation for Amazon Simple Systems Manager (SSM).
 //
-// Lists the tasks in a Maintenance Window.
+// Lists the tasks in a maintenance window.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -6246,8 +6416,8 @@ func (c *SSM) GetMaintenanceWindowTaskRequest(input *GetMaintenanceWindowTaskInp
 //
 // Returned Error Codes:
 //   * ErrCodeDoesNotExistException "DoesNotExistException"
-//   Error returned when the ID specified for a resource, such as a Maintenance
-//   Window or Patch baseline, doesn't exist.
+//   Error returned when the ID specified for a resource, such as a maintenance
+//   window or Patch baseline, doesn't exist.
 //
 //   For information about resource limits in Systems Manager, see AWS Systems
 //   Manager Limits (http://docs.aws.amazon.com/general/latest/gr/aws_service_limits.html#limits_ssm).
@@ -6272,6 +6442,190 @@ func (c *SSM) GetMaintenanceWindowTask(input *GetMaintenanceWindowTaskInput) (*G
 // for more information on using Contexts.
 func (c *SSM) GetMaintenanceWindowTaskWithContext(ctx aws.Context, input *GetMaintenanceWindowTaskInput, opts ...request.Option) (*GetMaintenanceWindowTaskOutput, error) {
 	req, out := c.GetMaintenanceWindowTaskRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
+const opGetOpsItem = "GetOpsItem"
+
+// GetOpsItemRequest generates a "aws/request.Request" representing the
+// client's request for the GetOpsItem operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See GetOpsItem for more information on using the GetOpsItem
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the GetOpsItemRequest method.
+//    req, resp := client.GetOpsItemRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/GetOpsItem
+func (c *SSM) GetOpsItemRequest(input *GetOpsItemInput) (req *request.Request, output *GetOpsItemOutput) {
+	op := &request.Operation{
+		Name:       opGetOpsItem,
+		HTTPMethod: "POST",
+		HTTPPath:   "/",
+	}
+
+	if input == nil {
+		input = &GetOpsItemInput{}
+	}
+
+	output = &GetOpsItemOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// GetOpsItem API operation for Amazon Simple Systems Manager (SSM).
+//
+// Get information about an OpsItem by using the ID. You must have permission
+// in AWS Identity and Access Management (IAM) to view information about an
+// OpsItem. For more information, see Getting Started with OpsCenter (http://docs.aws.amazon.com/systems-manager/latest/userguide/OpsCenter-getting-started.html)
+// in the AWS Systems Manager User Guide.
+//
+// Operations engineers and IT professionals use OpsCenter to view, investigate,
+// and remediate operational issues impacting the performance and health of
+// their AWS resources. For more information, see AWS Systems Manager OpsCenter
+// (http://docs.aws.amazon.com/systems-manager/latest/userguide/OpsCenter.html)
+// in the AWS Systems Manager User Guide.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for Amazon Simple Systems Manager (SSM)'s
+// API operation GetOpsItem for usage and error information.
+//
+// Returned Error Codes:
+//   * ErrCodeInternalServerError "InternalServerError"
+//   An error occurred on the server side.
+//
+//   * ErrCodeOpsItemNotFoundException "OpsItemNotFoundException"
+//   The specified OpsItem ID doesn't exist. Verify the ID and try again.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/GetOpsItem
+func (c *SSM) GetOpsItem(input *GetOpsItemInput) (*GetOpsItemOutput, error) {
+	req, out := c.GetOpsItemRequest(input)
+	return out, req.Send()
+}
+
+// GetOpsItemWithContext is the same as GetOpsItem with the addition of
+// the ability to pass a context and additional request options.
+//
+// See GetOpsItem for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *SSM) GetOpsItemWithContext(ctx aws.Context, input *GetOpsItemInput, opts ...request.Option) (*GetOpsItemOutput, error) {
+	req, out := c.GetOpsItemRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
+const opGetOpsSummary = "GetOpsSummary"
+
+// GetOpsSummaryRequest generates a "aws/request.Request" representing the
+// client's request for the GetOpsSummary operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See GetOpsSummary for more information on using the GetOpsSummary
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the GetOpsSummaryRequest method.
+//    req, resp := client.GetOpsSummaryRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/GetOpsSummary
+func (c *SSM) GetOpsSummaryRequest(input *GetOpsSummaryInput) (req *request.Request, output *GetOpsSummaryOutput) {
+	op := &request.Operation{
+		Name:       opGetOpsSummary,
+		HTTPMethod: "POST",
+		HTTPPath:   "/",
+	}
+
+	if input == nil {
+		input = &GetOpsSummaryInput{}
+	}
+
+	output = &GetOpsSummaryOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// GetOpsSummary API operation for Amazon Simple Systems Manager (SSM).
+//
+// View a summary of OpsItems based on specified filters and aggregators.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for Amazon Simple Systems Manager (SSM)'s
+// API operation GetOpsSummary for usage and error information.
+//
+// Returned Error Codes:
+//   * ErrCodeInternalServerError "InternalServerError"
+//   An error occurred on the server side.
+//
+//   * ErrCodeInvalidFilter "InvalidFilter"
+//   The filter name is not valid. Verify the you entered the correct name and
+//   try again.
+//
+//   * ErrCodeInvalidNextToken "InvalidNextToken"
+//   The specified token is not valid.
+//
+//   * ErrCodeInvalidTypeNameException "InvalidTypeNameException"
+//   The parameter type name is not valid.
+//
+//   * ErrCodeInvalidAggregatorException "InvalidAggregatorException"
+//   The specified aggregator is not valid for inventory groups. Verify that the
+//   aggregator uses a valid inventory type such as AWS:Application or AWS:InstanceInformation.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/GetOpsSummary
+func (c *SSM) GetOpsSummary(input *GetOpsSummaryInput) (*GetOpsSummaryOutput, error) {
+	req, out := c.GetOpsSummaryRequest(input)
+	return out, req.Send()
+}
+
+// GetOpsSummaryWithContext is the same as GetOpsSummary with the addition of
+// the ability to pass a context and additional request options.
+//
+// See GetOpsSummary for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *SSM) GetOpsSummaryWithContext(ctx aws.Context, input *GetOpsSummaryInput, opts ...request.Option) (*GetOpsSummaryOutput, error) {
+	req, out := c.GetOpsSummaryRequest(input)
 	req.SetContext(ctx)
 	req.ApplyOptions(opts...)
 	return out, req.Send()
@@ -6472,7 +6826,7 @@ func (c *SSM) GetParameterHistoryWithContext(ctx aws.Context, input *GetParamete
 //    // Example iterating over at most 3 pages of a GetParameterHistory operation.
 //    pageNum := 0
 //    err := client.GetParameterHistoryPages(params,
-//        func(page *GetParameterHistoryOutput, lastPage bool) bool {
+//        func(page *ssm.GetParameterHistoryOutput, lastPage bool) bool {
 //            pageNum++
 //            fmt.Println(page)
 //            return pageNum <= 3
@@ -6718,7 +7072,7 @@ func (c *SSM) GetParametersByPathWithContext(ctx aws.Context, input *GetParamete
 //    // Example iterating over at most 3 pages of a GetParametersByPath operation.
 //    pageNum := 0
 //    err := client.GetParametersByPathPages(params,
-//        func(page *GetParametersByPathOutput, lastPage bool) bool {
+//        func(page *ssm.GetParametersByPathOutput, lastPage bool) bool {
 //            pageNum++
 //            fmt.Println(page)
 //            return pageNum <= 3
@@ -6812,8 +7166,8 @@ func (c *SSM) GetPatchBaselineRequest(input *GetPatchBaselineInput) (req *reques
 //
 // Returned Error Codes:
 //   * ErrCodeDoesNotExistException "DoesNotExistException"
-//   Error returned when the ID specified for a resource, such as a Maintenance
-//   Window or Patch baseline, doesn't exist.
+//   Error returned when the ID specified for a resource, such as a maintenance
+//   window or Patch baseline, doesn't exist.
 //
 //   For information about resource limits in Systems Manager, see AWS Systems
 //   Manager Limits (http://docs.aws.amazon.com/general/latest/gr/aws_service_limits.html#limits_ssm).
@@ -7329,7 +7683,7 @@ func (c *SSM) ListAssociationsWithContext(ctx aws.Context, input *ListAssociatio
 //    // Example iterating over at most 3 pages of a ListAssociations operation.
 //    pageNum := 0
 //    err := client.ListAssociationsPages(params,
-//        func(page *ListAssociationsOutput, lastPage bool) bool {
+//        func(page *ssm.ListAssociationsOutput, lastPage bool) bool {
 //            pageNum++
 //            fmt.Println(page)
 //            return pageNum <= 3
@@ -7442,12 +7796,9 @@ func (c *SSM) ListCommandInvocationsRequest(input *ListCommandInvocationsInput) 
 //
 //   You do not have permission to access the instance.
 //
-//   SSM Agent is not running. On managed instances and Linux instances, verify
-//   that the SSM Agent is running. On EC2 Windows instances, verify that the
-//   EC2Config service is running.
+//   SSM Agent is not running. Verify that SSM Agent is running.
 //
-//   SSM Agent or EC2Config service is not registered to the SSM endpoint. Try
-//   reinstalling SSM Agent or EC2Config service.
+//   SSM Agent is not registered with the SSM endpoint. Try reinstalling SSM Agent.
 //
 //   The instance is not in valid state. Valid states are: Running, Pending, Stopped,
 //   Stopping. Invalid states are: Shutting-down and Terminated.
@@ -7491,7 +7842,7 @@ func (c *SSM) ListCommandInvocationsWithContext(ctx aws.Context, input *ListComm
 //    // Example iterating over at most 3 pages of a ListCommandInvocations operation.
 //    pageNum := 0
 //    err := client.ListCommandInvocationsPages(params,
-//        func(page *ListCommandInvocationsOutput, lastPage bool) bool {
+//        func(page *ssm.ListCommandInvocationsOutput, lastPage bool) bool {
 //            pageNum++
 //            fmt.Println(page)
 //            return pageNum <= 3
@@ -7600,12 +7951,9 @@ func (c *SSM) ListCommandsRequest(input *ListCommandsInput) (req *request.Reques
 //
 //   You do not have permission to access the instance.
 //
-//   SSM Agent is not running. On managed instances and Linux instances, verify
-//   that the SSM Agent is running. On EC2 Windows instances, verify that the
-//   EC2Config service is running.
+//   SSM Agent is not running. Verify that SSM Agent is running.
 //
-//   SSM Agent or EC2Config service is not registered to the SSM endpoint. Try
-//   reinstalling SSM Agent or EC2Config service.
+//   SSM Agent is not registered with the SSM endpoint. Try reinstalling SSM Agent.
 //
 //   The instance is not in valid state. Valid states are: Running, Pending, Stopped,
 //   Stopping. Invalid states are: Shutting-down and Terminated.
@@ -7649,7 +7997,7 @@ func (c *SSM) ListCommandsWithContext(ctx aws.Context, input *ListCommandsInput,
 //    // Example iterating over at most 3 pages of a ListCommands operation.
 //    pageNum := 0
 //    err := client.ListCommandsPages(params,
-//        func(page *ListCommandsOutput, lastPage bool) bool {
+//        func(page *ssm.ListCommandsOutput, lastPage bool) bool {
 //            pageNum++
 //            fmt.Println(page)
 //            return pageNum <= 3
@@ -8060,7 +8408,7 @@ func (c *SSM) ListDocumentsWithContext(ctx aws.Context, input *ListDocumentsInpu
 //    // Example iterating over at most 3 pages of a ListDocuments operation.
 //    pageNum := 0
 //    err := client.ListDocumentsPages(params,
-//        func(page *ListDocumentsOutput, lastPage bool) bool {
+//        func(page *ssm.ListDocumentsOutput, lastPage bool) bool {
 //            pageNum++
 //            fmt.Println(page)
 //            return pageNum <= 3
@@ -8161,12 +8509,9 @@ func (c *SSM) ListInventoryEntriesRequest(input *ListInventoryEntriesInput) (req
 //
 //   You do not have permission to access the instance.
 //
-//   SSM Agent is not running. On managed instances and Linux instances, verify
-//   that the SSM Agent is running. On EC2 Windows instances, verify that the
-//   EC2Config service is running.
+//   SSM Agent is not running. Verify that SSM Agent is running.
 //
-//   SSM Agent or EC2Config service is not registered to the SSM endpoint. Try
-//   reinstalling SSM Agent or EC2Config service.
+//   SSM Agent is not registered with the SSM endpoint. Try reinstalling SSM Agent.
 //
 //   The instance is not in valid state. Valid states are: Running, Pending, Stopped,
 //   Stopping. Invalid states are: Shutting-down and Terminated.
@@ -8543,7 +8888,7 @@ func (c *SSM) ModifyDocumentPermissionRequest(input *ModifyDocumentPermissionInp
 //   documents. If you need to increase this limit, contact AWS Support.
 //
 //   * ErrCodeDocumentLimitExceeded "DocumentLimitExceeded"
-//   You can have at most 200 active Systems Manager documents.
+//   You can have at most 500 active Systems Manager documents.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/ModifyDocumentPermission
 func (c *SSM) ModifyDocumentPermission(input *ModifyDocumentPermissionInput) (*ModifyDocumentPermissionOutput, error) {
@@ -8773,12 +9118,9 @@ func (c *SSM) PutInventoryRequest(input *PutInventoryInput) (req *request.Reques
 //
 //   You do not have permission to access the instance.
 //
-//   SSM Agent is not running. On managed instances and Linux instances, verify
-//   that the SSM Agent is running. On EC2 Windows instances, verify that the
-//   EC2Config service is running.
+//   SSM Agent is not running. Verify that SSM Agent is running.
 //
-//   SSM Agent or EC2Config service is not registered to the SSM endpoint. Try
-//   reinstalling SSM Agent or EC2Config service.
+//   SSM Agent is not registered with the SSM endpoint. Try reinstalling SSM Agent.
 //
 //   The instance is not in valid state. Valid states are: Running, Pending, Stopped,
 //   Stopping. Invalid states are: Shutting-down and Terminated.
@@ -9016,7 +9358,12 @@ func (c *SSM) RegisterDefaultPatchBaselineRequest(input *RegisterDefaultPatchBas
 
 // RegisterDefaultPatchBaseline API operation for Amazon Simple Systems Manager (SSM).
 //
-// Defines the default patch baseline.
+// Defines the default patch baseline for the relevant operating system.
+//
+// To reset the AWS predefined patch baseline as the default, specify the full
+// patch baseline ARN as the baseline ID value. For example, for CentOS, specify
+// arn:aws:ssm:us-east-2:733109147000:patchbaseline/pb-0574b43a65ea646ed instead
+// of pb-0574b43a65ea646ed.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -9031,8 +9378,8 @@ func (c *SSM) RegisterDefaultPatchBaselineRequest(input *RegisterDefaultPatchBas
 //   try again.
 //
 //   * ErrCodeDoesNotExistException "DoesNotExistException"
-//   Error returned when the ID specified for a resource, such as a Maintenance
-//   Window or Patch baseline, doesn't exist.
+//   Error returned when the ID specified for a resource, such as a maintenance
+//   window or Patch baseline, doesn't exist.
 //
 //   For information about resource limits in Systems Manager, see AWS Systems
 //   Manager Limits (http://docs.aws.amazon.com/general/latest/gr/aws_service_limits.html#limits_ssm).
@@ -9121,8 +9468,8 @@ func (c *SSM) RegisterPatchBaselineForPatchGroupRequest(input *RegisterPatchBase
 //   baseline that is already registered with a different patch baseline.
 //
 //   * ErrCodeDoesNotExistException "DoesNotExistException"
-//   Error returned when the ID specified for a resource, such as a Maintenance
-//   Window or Patch baseline, doesn't exist.
+//   Error returned when the ID specified for a resource, such as a maintenance
+//   window or Patch baseline, doesn't exist.
 //
 //   For information about resource limits in Systems Manager, see AWS Systems
 //   Manager Limits (http://docs.aws.amazon.com/general/latest/gr/aws_service_limits.html#limits_ssm).
@@ -9133,7 +9480,7 @@ func (c *SSM) RegisterPatchBaselineForPatchGroupRequest(input *RegisterPatchBase
 //
 //   * ErrCodeResourceLimitExceededException "ResourceLimitExceededException"
 //   Error returned when the caller has exceeded the default resource limits.
-//   For example, too many Maintenance Windows or Patch baselines have been created.
+//   For example, too many maintenance windows or patch baselines have been created.
 //
 //   For information about resource limits in Systems Manager, see AWS Systems
 //   Manager Limits (http://docs.aws.amazon.com/general/latest/gr/aws_service_limits.html#limits_ssm).
@@ -9207,7 +9554,7 @@ func (c *SSM) RegisterTargetWithMaintenanceWindowRequest(input *RegisterTargetWi
 
 // RegisterTargetWithMaintenanceWindow API operation for Amazon Simple Systems Manager (SSM).
 //
-// Registers a target with a Maintenance Window.
+// Registers a target with a maintenance window.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -9222,15 +9569,15 @@ func (c *SSM) RegisterTargetWithMaintenanceWindowRequest(input *RegisterTargetWi
 //   don't match the original call to the API with the same idempotency token.
 //
 //   * ErrCodeDoesNotExistException "DoesNotExistException"
-//   Error returned when the ID specified for a resource, such as a Maintenance
-//   Window or Patch baseline, doesn't exist.
+//   Error returned when the ID specified for a resource, such as a maintenance
+//   window or Patch baseline, doesn't exist.
 //
 //   For information about resource limits in Systems Manager, see AWS Systems
 //   Manager Limits (http://docs.aws.amazon.com/general/latest/gr/aws_service_limits.html#limits_ssm).
 //
 //   * ErrCodeResourceLimitExceededException "ResourceLimitExceededException"
 //   Error returned when the caller has exceeded the default resource limits.
-//   For example, too many Maintenance Windows or Patch baselines have been created.
+//   For example, too many maintenance windows or patch baselines have been created.
 //
 //   For information about resource limits in Systems Manager, see AWS Systems
 //   Manager Limits (http://docs.aws.amazon.com/general/latest/gr/aws_service_limits.html#limits_ssm).
@@ -9304,7 +9651,7 @@ func (c *SSM) RegisterTaskWithMaintenanceWindowRequest(input *RegisterTaskWithMa
 
 // RegisterTaskWithMaintenanceWindow API operation for Amazon Simple Systems Manager (SSM).
 //
-// Adds a new task to a Maintenance Window.
+// Adds a new task to a maintenance window.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -9319,21 +9666,21 @@ func (c *SSM) RegisterTaskWithMaintenanceWindowRequest(input *RegisterTaskWithMa
 //   don't match the original call to the API with the same idempotency token.
 //
 //   * ErrCodeDoesNotExistException "DoesNotExistException"
-//   Error returned when the ID specified for a resource, such as a Maintenance
-//   Window or Patch baseline, doesn't exist.
+//   Error returned when the ID specified for a resource, such as a maintenance
+//   window or Patch baseline, doesn't exist.
 //
 //   For information about resource limits in Systems Manager, see AWS Systems
 //   Manager Limits (http://docs.aws.amazon.com/general/latest/gr/aws_service_limits.html#limits_ssm).
 //
 //   * ErrCodeResourceLimitExceededException "ResourceLimitExceededException"
 //   Error returned when the caller has exceeded the default resource limits.
-//   For example, too many Maintenance Windows or Patch baselines have been created.
+//   For example, too many maintenance windows or patch baselines have been created.
 //
 //   For information about resource limits in Systems Manager, see AWS Systems
 //   Manager Limits (http://docs.aws.amazon.com/general/latest/gr/aws_service_limits.html#limits_ssm).
 //
 //   * ErrCodeFeatureNotAvailableException "FeatureNotAvailableException"
-//   You attempted to register a LAMBDA or STEP_FUNCTION task in a region where
+//   You attempted to register a LAMBDA or STEP_FUNCTIONS task in a region where
 //   the corresponding service is not available.
 //
 //   * ErrCodeInternalServerError "InternalServerError"
@@ -9406,7 +9753,7 @@ func (c *SSM) RemoveTagsFromResourceRequest(input *RemoveTagsFromResourceInput) 
 
 // RemoveTagsFromResource API operation for Amazon Simple Systems Manager (SSM).
 //
-// Removes all tags from the specified resource.
+// Removes tag keys from the specified resource.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -9614,8 +9961,8 @@ func (c *SSM) ResumeSessionRequest(input *ResumeSessionInput) (req *request.Requ
 //
 // Returned Error Codes:
 //   * ErrCodeDoesNotExistException "DoesNotExistException"
-//   Error returned when the ID specified for a resource, such as a Maintenance
-//   Window or Patch baseline, doesn't exist.
+//   Error returned when the ID specified for a resource, such as a maintenance
+//   window or Patch baseline, doesn't exist.
 //
 //   For information about resource limits in Systems Manager, see AWS Systems
 //   Manager Limits (http://docs.aws.amazon.com/general/latest/gr/aws_service_limits.html#limits_ssm).
@@ -9802,12 +10149,9 @@ func (c *SSM) SendCommandRequest(input *SendCommandInput) (req *request.Request,
 //
 //   You do not have permission to access the instance.
 //
-//   SSM Agent is not running. On managed instances and Linux instances, verify
-//   that the SSM Agent is running. On EC2 Windows instances, verify that the
-//   EC2Config service is running.
+//   SSM Agent is not running. Verify that SSM Agent is running.
 //
-//   SSM Agent or EC2Config service is not registered to the SSM endpoint. Try
-//   reinstalling SSM Agent or EC2Config service.
+//   SSM Agent is not registered with the SSM endpoint. Try reinstalling SSM Agent.
 //
 //   The instance is not in valid state. Valid states are: Running, Pending, Stopped,
 //   Stopping. Invalid states are: Shutting-down and Terminated.
@@ -10102,8 +10446,7 @@ func (c *SSM) StartSessionRequest(input *StartSessionInput) (req *request.Reques
 //
 // AWS CLI usage: start-session is an interactive command that requires the
 // Session Manager plugin to be installed on the client machine making the call.
-// For information, see  Install the Session Manager Plugin for the AWS CLI
-// (http://docs.aws.amazon.com/systems-manager/latest/userguide/session-manager-working-with-install-plugin.html)
+// For information, see Install the Session Manager Plugin for the AWS CLI (http://docs.aws.amazon.com/systems-manager/latest/userguide/session-manager-working-with-install-plugin.html)
 // in the AWS Systems Manager User Guide.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
@@ -10292,8 +10635,8 @@ func (c *SSM) TerminateSessionRequest(input *TerminateSessionInput) (req *reques
 //
 // Returned Error Codes:
 //   * ErrCodeDoesNotExistException "DoesNotExistException"
-//   Error returned when the ID specified for a resource, such as a Maintenance
-//   Window or Patch baseline, doesn't exist.
+//   Error returned when the ID specified for a resource, such as a maintenance
+//   window or Patch baseline, doesn't exist.
 //
 //   For information about resource limits in Systems Manager, see AWS Systems
 //   Manager Limits (http://docs.aws.amazon.com/general/latest/gr/aws_service_limits.html#limits_ssm).
@@ -10509,12 +10852,9 @@ func (c *SSM) UpdateAssociationStatusRequest(input *UpdateAssociationStatusInput
 //
 //   You do not have permission to access the instance.
 //
-//   SSM Agent is not running. On managed instances and Linux instances, verify
-//   that the SSM Agent is running. On EC2 Windows instances, verify that the
-//   EC2Config service is running.
+//   SSM Agent is not running. Verify that SSM Agent is running.
 //
-//   SSM Agent or EC2Config service is not registered to the SSM endpoint. Try
-//   reinstalling SSM Agent or EC2Config service.
+//   SSM Agent is not registered with the SSM endpoint. Try reinstalling SSM Agent.
 //
 //   The instance is not in valid state. Valid states are: Running, Pending, Stopped,
 //   Stopping. Invalid states are: Shutting-down and Terminated.
@@ -10598,7 +10938,7 @@ func (c *SSM) UpdateDocumentRequest(input *UpdateDocumentInput) (req *request.Re
 
 // UpdateDocument API operation for Amazon Simple Systems Manager (SSM).
 //
-// The document you want to update.
+// Updates one or more values for an SSM document.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -10796,7 +11136,7 @@ func (c *SSM) UpdateMaintenanceWindowRequest(input *UpdateMaintenanceWindowInput
 
 // UpdateMaintenanceWindow API operation for Amazon Simple Systems Manager (SSM).
 //
-// Updates an existing Maintenance Window. Only specified parameters are modified.
+// Updates an existing maintenance window. Only specified parameters are modified.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -10807,8 +11147,8 @@ func (c *SSM) UpdateMaintenanceWindowRequest(input *UpdateMaintenanceWindowInput
 //
 // Returned Error Codes:
 //   * ErrCodeDoesNotExistException "DoesNotExistException"
-//   Error returned when the ID specified for a resource, such as a Maintenance
-//   Window or Patch baseline, doesn't exist.
+//   Error returned when the ID specified for a resource, such as a maintenance
+//   window or Patch baseline, doesn't exist.
 //
 //   For information about resource limits in Systems Manager, see AWS Systems
 //   Manager Limits (http://docs.aws.amazon.com/general/latest/gr/aws_service_limits.html#limits_ssm).
@@ -10882,21 +11222,22 @@ func (c *SSM) UpdateMaintenanceWindowTargetRequest(input *UpdateMaintenanceWindo
 
 // UpdateMaintenanceWindowTarget API operation for Amazon Simple Systems Manager (SSM).
 //
-// Modifies the target of an existing Maintenance Window. You can't change the
-// target type, but you can change the following:
+// Modifies the target of an existing maintenance window. You can change the
+// following:
 //
-// The target from being an ID target to a Tag target, or a Tag target to an
-// ID target.
+//    * Name
 //
-// IDs for an ID target.
+//    * Description
 //
-// Tags for a Tag target.
+//    * Owner
 //
-// Owner.
+//    * IDs for an ID target
 //
-// Name.
+//    * Tags for a Tag target
 //
-// Description.
+//    * From any supported tag type to another. The three supported tag types
+//    are ID target, Tag target, and resource group. For more information, see
+//    Target.
 //
 // If a parameter is null, then the corresponding field is not modified.
 //
@@ -10909,8 +11250,8 @@ func (c *SSM) UpdateMaintenanceWindowTargetRequest(input *UpdateMaintenanceWindo
 //
 // Returned Error Codes:
 //   * ErrCodeDoesNotExistException "DoesNotExistException"
-//   Error returned when the ID specified for a resource, such as a Maintenance
-//   Window or Patch baseline, doesn't exist.
+//   Error returned when the ID specified for a resource, such as a maintenance
+//   window or Patch baseline, doesn't exist.
 //
 //   For information about resource limits in Systems Manager, see AWS Systems
 //   Manager Limits (http://docs.aws.amazon.com/general/latest/gr/aws_service_limits.html#limits_ssm).
@@ -10984,7 +11325,7 @@ func (c *SSM) UpdateMaintenanceWindowTaskRequest(input *UpdateMaintenanceWindowT
 
 // UpdateMaintenanceWindowTask API operation for Amazon Simple Systems Manager (SSM).
 //
-// Modifies a task assigned to a Maintenance Window. You can't change the task
+// Modifies a task assigned to a maintenance window. You can't change the task
 // type, but you can change the following values:
 //
 //    * TaskARN. For example, you can change a RUN_COMMAND task from AWS-RunPowerShellScript
@@ -11014,8 +11355,8 @@ func (c *SSM) UpdateMaintenanceWindowTaskRequest(input *UpdateMaintenanceWindowT
 //
 // Returned Error Codes:
 //   * ErrCodeDoesNotExistException "DoesNotExistException"
-//   Error returned when the ID specified for a resource, such as a Maintenance
-//   Window or Patch baseline, doesn't exist.
+//   Error returned when the ID specified for a resource, such as a maintenance
+//   window or Patch baseline, doesn't exist.
 //
 //   For information about resource limits in Systems Manager, see AWS Systems
 //   Manager Limits (http://docs.aws.amazon.com/general/latest/gr/aws_service_limits.html#limits_ssm).
@@ -11090,7 +11431,7 @@ func (c *SSM) UpdateManagedInstanceRoleRequest(input *UpdateManagedInstanceRoleI
 
 // UpdateManagedInstanceRole API operation for Amazon Simple Systems Manager (SSM).
 //
-// Assigns or changes an Amazon Identity and Access Management (IAM) role to
+// Assigns or changes an Amazon Identity and Access Management (IAM) role for
 // the managed instance.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
@@ -11106,12 +11447,9 @@ func (c *SSM) UpdateManagedInstanceRoleRequest(input *UpdateManagedInstanceRoleI
 //
 //   You do not have permission to access the instance.
 //
-//   SSM Agent is not running. On managed instances and Linux instances, verify
-//   that the SSM Agent is running. On EC2 Windows instances, verify that the
-//   EC2Config service is running.
+//   SSM Agent is not running. Verify that SSM Agent is running.
 //
-//   SSM Agent or EC2Config service is not registered to the SSM endpoint. Try
-//   reinstalling SSM Agent or EC2Config service.
+//   SSM Agent is not registered with the SSM endpoint. Try reinstalling SSM Agent.
 //
 //   The instance is not in valid state. Valid states are: Running, Pending, Stopped,
 //   Stopping. Invalid states are: Shutting-down and Terminated.
@@ -11136,6 +11474,109 @@ func (c *SSM) UpdateManagedInstanceRole(input *UpdateManagedInstanceRoleInput) (
 // for more information on using Contexts.
 func (c *SSM) UpdateManagedInstanceRoleWithContext(ctx aws.Context, input *UpdateManagedInstanceRoleInput, opts ...request.Option) (*UpdateManagedInstanceRoleOutput, error) {
 	req, out := c.UpdateManagedInstanceRoleRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
+const opUpdateOpsItem = "UpdateOpsItem"
+
+// UpdateOpsItemRequest generates a "aws/request.Request" representing the
+// client's request for the UpdateOpsItem operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See UpdateOpsItem for more information on using the UpdateOpsItem
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the UpdateOpsItemRequest method.
+//    req, resp := client.UpdateOpsItemRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/UpdateOpsItem
+func (c *SSM) UpdateOpsItemRequest(input *UpdateOpsItemInput) (req *request.Request, output *UpdateOpsItemOutput) {
+	op := &request.Operation{
+		Name:       opUpdateOpsItem,
+		HTTPMethod: "POST",
+		HTTPPath:   "/",
+	}
+
+	if input == nil {
+		input = &UpdateOpsItemInput{}
+	}
+
+	output = &UpdateOpsItemOutput{}
+	req = c.newRequest(op, input, output)
+	req.Handlers.Unmarshal.Swap(jsonrpc.UnmarshalHandler.Name, protocol.UnmarshalDiscardBodyHandler)
+	return
+}
+
+// UpdateOpsItem API operation for Amazon Simple Systems Manager (SSM).
+//
+// Edit or change an OpsItem. You must have permission in AWS Identity and Access
+// Management (IAM) to update an OpsItem. For more information, see Getting
+// Started with OpsCenter (http://docs.aws.amazon.com/systems-manager/latest/userguide/OpsCenter-getting-started.html)
+// in the AWS Systems Manager User Guide.
+//
+// Operations engineers and IT professionals use OpsCenter to view, investigate,
+// and remediate operational issues impacting the performance and health of
+// their AWS resources. For more information, see AWS Systems Manager OpsCenter
+// (http://docs.aws.amazon.com/systems-manager/latest/userguide/OpsCenter.html)
+// in the AWS Systems Manager User Guide.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for Amazon Simple Systems Manager (SSM)'s
+// API operation UpdateOpsItem for usage and error information.
+//
+// Returned Error Codes:
+//   * ErrCodeInternalServerError "InternalServerError"
+//   An error occurred on the server side.
+//
+//   * ErrCodeOpsItemNotFoundException "OpsItemNotFoundException"
+//   The specified OpsItem ID doesn't exist. Verify the ID and try again.
+//
+//   * ErrCodeOpsItemAlreadyExistsException "OpsItemAlreadyExistsException"
+//   The OpsItem already exists.
+//
+//   * ErrCodeOpsItemLimitExceededException "OpsItemLimitExceededException"
+//   The request caused OpsItems to exceed one or more limits. For information
+//   about OpsItem limits, see What are the resource limits for OpsCenter? (http://docs.aws.amazon.com/systems-manager/latest/userguide/OpsCenter-learn-more.html#OpsCenter-learn-more-limits).
+//
+//   * ErrCodeOpsItemInvalidParameterException "OpsItemInvalidParameterException"
+//   A specified parameter argument isn't valid. Verify the available arguments
+//   and try again.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/UpdateOpsItem
+func (c *SSM) UpdateOpsItem(input *UpdateOpsItemInput) (*UpdateOpsItemOutput, error) {
+	req, out := c.UpdateOpsItemRequest(input)
+	return out, req.Send()
+}
+
+// UpdateOpsItemWithContext is the same as UpdateOpsItem with the addition of
+// the ability to pass a context and additional request options.
+//
+// See UpdateOpsItem for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *SSM) UpdateOpsItemWithContext(ctx aws.Context, input *UpdateOpsItemInput, opts ...request.Option) (*UpdateOpsItemOutput, error) {
+	req, out := c.UpdateOpsItemRequest(input)
 	req.SetContext(ctx)
 	req.ApplyOptions(opts...)
 	return out, req.Send()
@@ -11200,8 +11641,8 @@ func (c *SSM) UpdatePatchBaselineRequest(input *UpdatePatchBaselineInput) (req *
 //
 // Returned Error Codes:
 //   * ErrCodeDoesNotExistException "DoesNotExistException"
-//   Error returned when the ID specified for a resource, such as a Maintenance
-//   Window or Patch baseline, doesn't exist.
+//   Error returned when the ID specified for a resource, such as a maintenance
+//   window or Patch baseline, doesn't exist.
 //
 //   For information about resource limits in Systems Manager, see AWS Systems
 //   Manager Limits (http://docs.aws.amazon.com/general/latest/gr/aws_service_limits.html#limits_ssm).
@@ -11458,7 +11899,7 @@ type AddTagsToResourceInput struct {
 	// For the Document and Parameter values, use the name of the resource.
 	//
 	// The ManagedInstance type for this API action is only for on-premises managed
-	// instances. You must specify the the name of the managed instance in the following
+	// instances. You must specify the name of the managed instance in the following
 	// format: mi-ID_number. For example, mi-1a2b3c4d5e6f.
 	//
 	// ResourceId is a required field
@@ -11467,7 +11908,7 @@ type AddTagsToResourceInput struct {
 	// Specifies the type of resource you are tagging.
 	//
 	// The ManagedInstance type for this API action is for on-premises managed instances.
-	// You must specify the the name of the managed instance in the following format:
+	// You must specify the name of the managed instance in the following format:
 	// mi-ID_number. For example, mi-1a2b3c4d5e6f.
 	//
 	// ResourceType is a required field
@@ -13252,7 +13693,7 @@ func (s CancelCommandOutput) GoString() string {
 type CancelMaintenanceWindowExecutionInput struct {
 	_ struct{} `type:"structure"`
 
-	// The ID of the Maintenance Window execution to stop.
+	// The ID of the maintenance window execution to stop.
 	//
 	// WindowExecutionId is a required field
 	WindowExecutionId *string `min:"36" type:"string" required:"true"`
@@ -13293,7 +13734,7 @@ func (s *CancelMaintenanceWindowExecutionInput) SetWindowExecutionId(v string) *
 type CancelMaintenanceWindowExecutionOutput struct {
 	_ struct{} `type:"structure"`
 
-	// The ID of the Maintenance Window execution that has been stopped.
+	// The ID of the maintenance window execution that has been stopped.
 	WindowExecutionId *string `min:"36" type:"string"`
 }
 
@@ -13660,33 +14101,17 @@ type CommandFilter struct {
 	//    before July 7, 2018.
 	//
 	//    * Status: Specify a valid command status to see a list of all command
-	//    executions with that status. Status values you can specify include:
-	//
-	// Pending
-	//
-	// InProgress
-	//
-	// Success
-	//
-	// Cancelled
-	//
-	// Failed
-	//
-	// TimedOut
-	//
-	// Cancelling
+	//    executions with that status. Status values you can specify include: Pending
+	//    InProgress Success Cancelled Failed TimedOut Cancelling
 	//
 	//    * DocumentName: Specify name of the SSM document for which you want to
 	//    see command execution results. For example, specify AWS-RunPatchBaseline
 	//    to see command executions that used this SSM document to perform security
 	//    patching operations on instances.
 	//
-	//    * ExecutionStage: Specify one of the following values:
-	//
-	// Executing: Returns a list of command executions that are currently still
-	//    running.
-	//
-	// Complete: Returns a list of command executions that have already completed.
+	//    * ExecutionStage: Specify one of the following values: Executing: Returns
+	//    a list of command executions that are currently still running. Complete:
+	//    Returns a list of command executions that have already completed.
 	//
 	// Value is a required field
 	Value *string `locationName:"value" min:"1" type:"string" required:"true"`
@@ -15232,11 +15657,11 @@ type CreateDocumentInput struct {
 	// Do not use the following to begin the names of documents you create. They
 	// are reserved by AWS for use as document prefixes:
 	//
-	// aws
+	//    * aws
 	//
-	// amazon
+	//    * amazon
 	//
-	// amzn
+	//    * amzn
 	//
 	// Name is a required field
 	Name *string `type:"string" required:"true"`
@@ -15392,13 +15817,13 @@ func (s *CreateDocumentOutput) SetDocumentDescription(v *DocumentDescription) *C
 type CreateMaintenanceWindowInput struct {
 	_ struct{} `type:"structure"`
 
-	// Enables a Maintenance Window task to run on managed instances, even if you
+	// Enables a maintenance window task to run on managed instances, even if you
 	// have not registered those instances as targets. If enabled, then you must
 	// specify the unregistered instances (by instance ID) when you register a task
-	// with the Maintenance Window
+	// with the maintenance window.
 	//
 	// If you don't enable this option, then you must specify previously-registered
-	// targets when you register a task with the Maintenance Window.
+	// targets when you register a task with the maintenance window.
 	//
 	// AllowUnassociatedTargets is a required field
 	AllowUnassociatedTargets *bool `type:"boolean" required:"true"`
@@ -15406,50 +15831,50 @@ type CreateMaintenanceWindowInput struct {
 	// User-provided idempotency token.
 	ClientToken *string `min:"1" type:"string" idempotencyToken:"true"`
 
-	// The number of hours before the end of the Maintenance Window that Systems
+	// The number of hours before the end of the maintenance window that Systems
 	// Manager stops scheduling new tasks for execution.
 	//
 	// Cutoff is a required field
 	Cutoff *int64 `type:"integer" required:"true"`
 
-	// An optional description for the Maintenance Window. We recommend specifying
-	// a description to help you organize your Maintenance Windows.
+	// An optional description for the maintenance window. We recommend specifying
+	// a description to help you organize your maintenance windows.
 	Description *string `min:"1" type:"string" sensitive:"true"`
 
-	// The duration of the Maintenance Window in hours.
+	// The duration of the maintenance window in hours.
 	//
 	// Duration is a required field
 	Duration *int64 `min:"1" type:"integer" required:"true"`
 
-	// The date and time, in ISO-8601 Extended format, for when you want the Maintenance
-	// Window to become inactive. EndDate allows you to set a date and time in the
-	// future when the Maintenance Window will no longer run.
+	// The date and time, in ISO-8601 Extended format, for when you want the maintenance
+	// window to become inactive. EndDate allows you to set a date and time in the
+	// future when the maintenance window will no longer run.
 	EndDate *string `type:"string"`
 
-	// The name of the Maintenance Window.
+	// The name of the maintenance window.
 	//
 	// Name is a required field
 	Name *string `min:"3" type:"string" required:"true"`
 
-	// The schedule of the Maintenance Window in the form of a cron or rate expression.
+	// The schedule of the maintenance window in the form of a cron or rate expression.
 	//
 	// Schedule is a required field
 	Schedule *string `min:"1" type:"string" required:"true"`
 
-	// The time zone that the scheduled Maintenance Window executions are based
+	// The time zone that the scheduled maintenance window executions are based
 	// on, in Internet Assigned Numbers Authority (IANA) format. For example: "America/Los_Angeles",
 	// "etc/UTC", or "Asia/Seoul". For more information, see the Time Zone Database
 	// (https://www.iana.org/time-zones) on the IANA website.
 	ScheduleTimezone *string `type:"string"`
 
-	// The date and time, in ISO-8601 Extended format, for when you want the Maintenance
-	// Window to become active. StartDate allows you to delay activation of the
-	// Maintenance Window until the specified future date.
+	// The date and time, in ISO-8601 Extended format, for when you want the maintenance
+	// window to become active. StartDate allows you to delay activation of the
+	// maintenance window until the specified future date.
 	StartDate *string `type:"string"`
 
 	// Optional metadata that you assign to a resource. Tags enable you to categorize
 	// a resource in different ways, such as by purpose, owner, or environment.
-	// For example, you might want to tag a Maintenance Window to identify the type
+	// For example, you might want to tag a maintenance window to identify the type
 	// of tasks it will run, the types of targets, and the environment it will run
 	// in. In this case, you could specify the following key name/value pairs:
 	//
@@ -15459,7 +15884,7 @@ type CreateMaintenanceWindowInput struct {
 	//
 	//    * Key=Environment,Value=Production
 	//
-	// To add tags to an existing Maintenance Window, use the AddTagsToResource
+	// To add tags to an existing maintenance window, use the AddTagsToResource
 	// action.
 	Tags []*Tag `type:"list"`
 }
@@ -15593,7 +16018,7 @@ func (s *CreateMaintenanceWindowInput) SetTags(v []*Tag) *CreateMaintenanceWindo
 type CreateMaintenanceWindowOutput struct {
 	_ struct{} `type:"structure"`
 
-	// The ID of the created Maintenance Window.
+	// The ID of the created maintenance window.
 	WindowId *string `min:"20" type:"string"`
 }
 
@@ -15610,6 +16035,205 @@ func (s CreateMaintenanceWindowOutput) GoString() string {
 // SetWindowId sets the WindowId field's value.
 func (s *CreateMaintenanceWindowOutput) SetWindowId(v string) *CreateMaintenanceWindowOutput {
 	s.WindowId = &v
+	return s
+}
+
+type CreateOpsItemInput struct {
+	_ struct{} `type:"structure"`
+
+	// Information about the OpsItem.
+	//
+	// Description is a required field
+	Description *string `min:"1" type:"string" required:"true"`
+
+	// The Amazon Resource Name (ARN) of an SNS topic where notifications are sent
+	// when this OpsItem is edited or changed.
+	Notifications []*OpsItemNotification `type:"list"`
+
+	// Operational data is custom data that provides useful reference details about
+	// the OpsItem. For example, you can specify log files, error strings, license
+	// keys, troubleshooting tips, or other relevant data. You enter operational
+	// data as key-value pairs. The key has a maximum length of 128 characters.
+	// The value has a maximum size of 20 KB.
+	//
+	// Operational data keys can't begin with the following: amazon, aws, amzn,
+	// ssm, /amazon, /aws, /amzn, /ssm.
+	//
+	// You can choose to make the data searchable by other users in the account
+	// or you can restrict search access. Searchable data means that all users with
+	// access to the OpsItem Overview page (as provided by the DescribeOpsItems
+	// API action) can view and search on the specified data. Operational data that
+	// is not searchable is only viewable by users who have access to the OpsItem
+	// (as provided by the GetOpsItem API action).
+	//
+	// Use the /aws/resources key in OperationalData to specify a related resource
+	// in the request. Use the /aws/automations key in OperationalData to associate
+	// an Automation runbook with the OpsItem. To view AWS CLI example commands
+	// that use these keys, see Creating OpsItems Manually (http://docs.aws.amazon.com/systems-manager/latest/userguide/OpsCenter-creating-OpsItems.html#OpsCenter-manually-create-OpsItems)
+	// in the AWS Systems Manager User Guide.
+	OperationalData map[string]*OpsItemDataValue `type:"map"`
+
+	// The importance of this OpsItem in relation to other OpsItems in the system.
+	Priority *int64 `min:"1" type:"integer"`
+
+	// One or more OpsItems that share something in common with the current OpsItems.
+	// For example, related OpsItems can include OpsItems with similar error messages,
+	// impacted resources, or statuses for the impacted resource.
+	RelatedOpsItems []*RelatedOpsItem `type:"list"`
+
+	// The origin of the OpsItem, such as Amazon EC2 or AWS Systems Manager.
+	//
+	// Source is a required field
+	Source *string `min:"1" type:"string" required:"true"`
+
+	// Optional metadata that you assign to a resource. You can restrict access
+	// to OpsItems by using an inline IAM policy that specifies tags. For more information,
+	// see Getting Started with OpsCenter (http://docs.aws.amazon.com/systems-manager/latest/userguide/OpsCenter-getting-started.html#OpsCenter-getting-started-user-permissions)
+	// in the AWS Systems Manager User Guide.
+	//
+	// Tags use a key-value pair. For example:
+	//
+	// Key=Department,Value=Finance
+	//
+	// To add tags to an existing OpsItem, use the AddTagsToResource action.
+	Tags []*Tag `type:"list"`
+
+	// A short heading that describes the nature of the OpsItem and the impacted
+	// resource.
+	//
+	// Title is a required field
+	Title *string `min:"1" type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s CreateOpsItemInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s CreateOpsItemInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *CreateOpsItemInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "CreateOpsItemInput"}
+	if s.Description == nil {
+		invalidParams.Add(request.NewErrParamRequired("Description"))
+	}
+	if s.Description != nil && len(*s.Description) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("Description", 1))
+	}
+	if s.Priority != nil && *s.Priority < 1 {
+		invalidParams.Add(request.NewErrParamMinValue("Priority", 1))
+	}
+	if s.Source == nil {
+		invalidParams.Add(request.NewErrParamRequired("Source"))
+	}
+	if s.Source != nil && len(*s.Source) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("Source", 1))
+	}
+	if s.Title == nil {
+		invalidParams.Add(request.NewErrParamRequired("Title"))
+	}
+	if s.Title != nil && len(*s.Title) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("Title", 1))
+	}
+	if s.RelatedOpsItems != nil {
+		for i, v := range s.RelatedOpsItems {
+			if v == nil {
+				continue
+			}
+			if err := v.Validate(); err != nil {
+				invalidParams.AddNested(fmt.Sprintf("%s[%v]", "RelatedOpsItems", i), err.(request.ErrInvalidParams))
+			}
+		}
+	}
+	if s.Tags != nil {
+		for i, v := range s.Tags {
+			if v == nil {
+				continue
+			}
+			if err := v.Validate(); err != nil {
+				invalidParams.AddNested(fmt.Sprintf("%s[%v]", "Tags", i), err.(request.ErrInvalidParams))
+			}
+		}
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetDescription sets the Description field's value.
+func (s *CreateOpsItemInput) SetDescription(v string) *CreateOpsItemInput {
+	s.Description = &v
+	return s
+}
+
+// SetNotifications sets the Notifications field's value.
+func (s *CreateOpsItemInput) SetNotifications(v []*OpsItemNotification) *CreateOpsItemInput {
+	s.Notifications = v
+	return s
+}
+
+// SetOperationalData sets the OperationalData field's value.
+func (s *CreateOpsItemInput) SetOperationalData(v map[string]*OpsItemDataValue) *CreateOpsItemInput {
+	s.OperationalData = v
+	return s
+}
+
+// SetPriority sets the Priority field's value.
+func (s *CreateOpsItemInput) SetPriority(v int64) *CreateOpsItemInput {
+	s.Priority = &v
+	return s
+}
+
+// SetRelatedOpsItems sets the RelatedOpsItems field's value.
+func (s *CreateOpsItemInput) SetRelatedOpsItems(v []*RelatedOpsItem) *CreateOpsItemInput {
+	s.RelatedOpsItems = v
+	return s
+}
+
+// SetSource sets the Source field's value.
+func (s *CreateOpsItemInput) SetSource(v string) *CreateOpsItemInput {
+	s.Source = &v
+	return s
+}
+
+// SetTags sets the Tags field's value.
+func (s *CreateOpsItemInput) SetTags(v []*Tag) *CreateOpsItemInput {
+	s.Tags = v
+	return s
+}
+
+// SetTitle sets the Title field's value.
+func (s *CreateOpsItemInput) SetTitle(v string) *CreateOpsItemInput {
+	s.Title = &v
+	return s
+}
+
+type CreateOpsItemOutput struct {
+	_ struct{} `type:"structure"`
+
+	// The ID of the OpsItem.
+	OpsItemId *string `type:"string"`
+}
+
+// String returns the string representation
+func (s CreateOpsItemOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s CreateOpsItemOutput) GoString() string {
+	return s.String()
+}
+
+// SetOpsItemId sets the OpsItemId field's value.
+func (s *CreateOpsItemOutput) SetOpsItemId(v string) *CreateOpsItemOutput {
+	s.OpsItemId = &v
 	return s
 }
 
@@ -16043,10 +16667,18 @@ func (s DeleteAssociationOutput) GoString() string {
 type DeleteDocumentInput struct {
 	_ struct{} `type:"structure"`
 
+	// The version of the document that you want to delete. If not provided, all
+	// versions of the document are deleted.
+	DocumentVersion *string `type:"string"`
+
 	// The name of the document.
 	//
 	// Name is a required field
 	Name *string `type:"string" required:"true"`
+
+	// The version name of the document that you want to delete. If not provided,
+	// all versions of the document are deleted.
+	VersionName *string `type:"string"`
 }
 
 // String returns the string representation
@@ -16072,9 +16704,21 @@ func (s *DeleteDocumentInput) Validate() error {
 	return nil
 }
 
+// SetDocumentVersion sets the DocumentVersion field's value.
+func (s *DeleteDocumentInput) SetDocumentVersion(v string) *DeleteDocumentInput {
+	s.DocumentVersion = &v
+	return s
+}
+
 // SetName sets the Name field's value.
 func (s *DeleteDocumentInput) SetName(v string) *DeleteDocumentInput {
 	s.Name = &v
+	return s
+}
+
+// SetVersionName sets the VersionName field's value.
+func (s *DeleteDocumentInput) SetVersionName(v string) *DeleteDocumentInput {
+	s.VersionName = &v
 	return s
 }
 
@@ -16113,7 +16757,7 @@ type DeleteInventoryInput struct {
 	// DisableSchema: If you choose this option, the system ignores all inventory
 	// data for the specified version, and any earlier versions. To enable this
 	// schema again, you must call the PutInventory action for a version greater
-	// than the disbled version.
+	// than the disabled version.
 	//
 	// DeleteSchema: This option deletes the specified custom type from the Inventory
 	// service. You can recreate the schema later, if you want.
@@ -16228,7 +16872,7 @@ func (s *DeleteInventoryOutput) SetTypeName(v string) *DeleteInventoryOutput {
 type DeleteMaintenanceWindowInput struct {
 	_ struct{} `type:"structure"`
 
-	// The ID of the Maintenance Window to delete.
+	// The ID of the maintenance window to delete.
 	//
 	// WindowId is a required field
 	WindowId *string `min:"20" type:"string" required:"true"`
@@ -16269,7 +16913,7 @@ func (s *DeleteMaintenanceWindowInput) SetWindowId(v string) *DeleteMaintenanceW
 type DeleteMaintenanceWindowOutput struct {
 	_ struct{} `type:"structure"`
 
-	// The ID of the deleted Maintenance Window.
+	// The ID of the deleted maintenance window.
 	WindowId *string `min:"20" type:"string"`
 }
 
@@ -16685,10 +17329,10 @@ type DeregisterTargetFromMaintenanceWindowInput struct {
 
 	// The system checks if the target is being referenced by a task. If the target
 	// is being referenced, the system returns an error and does not deregister
-	// the target from the Maintenance Window.
+	// the target from the maintenance window.
 	Safe *bool `type:"boolean"`
 
-	// The ID of the Maintenance Window the target should be removed from.
+	// The ID of the maintenance window the target should be removed from.
 	//
 	// WindowId is a required field
 	WindowId *string `min:"20" type:"string" required:"true"`
@@ -16752,7 +17396,7 @@ func (s *DeregisterTargetFromMaintenanceWindowInput) SetWindowTargetId(v string)
 type DeregisterTargetFromMaintenanceWindowOutput struct {
 	_ struct{} `type:"structure"`
 
-	// The ID of the Maintenance Window the target was removed from.
+	// The ID of the maintenance window the target was removed from.
 	WindowId *string `min:"20" type:"string"`
 
 	// The ID of the removed target definition.
@@ -16784,12 +17428,12 @@ func (s *DeregisterTargetFromMaintenanceWindowOutput) SetWindowTargetId(v string
 type DeregisterTaskFromMaintenanceWindowInput struct {
 	_ struct{} `type:"structure"`
 
-	// The ID of the Maintenance Window the task should be removed from.
+	// The ID of the maintenance window the task should be removed from.
 	//
 	// WindowId is a required field
 	WindowId *string `min:"20" type:"string" required:"true"`
 
-	// The ID of the task to remove from the Maintenance Window.
+	// The ID of the task to remove from the maintenance window.
 	//
 	// WindowTaskId is a required field
 	WindowTaskId *string `min:"36" type:"string" required:"true"`
@@ -16842,10 +17486,10 @@ func (s *DeregisterTaskFromMaintenanceWindowInput) SetWindowTaskId(v string) *De
 type DeregisterTaskFromMaintenanceWindowOutput struct {
 	_ struct{} `type:"structure"`
 
-	// The ID of the Maintenance Window the task was removed from.
+	// The ID of the maintenance window the task was removed from.
 	WindowId *string `min:"20" type:"string"`
 
-	// The ID of the task removed from the Maintenance Window.
+	// The ID of the task removed from the maintenance window.
 	WindowTaskId *string `min:"36" type:"string"`
 }
 
@@ -18684,13 +19328,13 @@ type DescribeMaintenanceWindowExecutionTaskInvocationsInput struct {
 	// a previous call.)
 	NextToken *string `type:"string"`
 
-	// The ID of the specific task in the Maintenance Window task that should be
+	// The ID of the specific task in the maintenance window task that should be
 	// retrieved.
 	//
 	// TaskId is a required field
 	TaskId *string `min:"36" type:"string" required:"true"`
 
-	// The ID of the Maintenance Window execution the task is part of.
+	// The ID of the maintenance window execution the task is part of.
 	//
 	// WindowExecutionId is a required field
 	WindowExecutionId *string `min:"36" type:"string" required:"true"`
@@ -18821,7 +19465,7 @@ type DescribeMaintenanceWindowExecutionTasksInput struct {
 	// a previous call.)
 	NextToken *string `type:"string"`
 
-	// The ID of the Maintenance Window execution whose task executions should be
+	// The ID of the maintenance window execution whose task executions should be
 	// retrieved.
 	//
 	// WindowExecutionId is a required field
@@ -18946,7 +19590,7 @@ type DescribeMaintenanceWindowExecutionsInput struct {
 	// a previous call.)
 	NextToken *string `type:"string"`
 
-	// The ID of the Maintenance Window whose executions should be retrieved.
+	// The ID of the maintenance window whose executions should be retrieved.
 	//
 	// WindowId is a required field
 	WindowId *string `min:"20" type:"string" required:"true"`
@@ -19022,7 +19666,7 @@ type DescribeMaintenanceWindowExecutionsOutput struct {
 	// items to return, the string is empty.
 	NextToken *string `type:"string"`
 
-	// Information about the Maintenance Windows execution.
+	// Information about the maintenance window executions.
 	WindowExecutions []*MaintenanceWindowExecution `type:"list"`
 }
 
@@ -19051,8 +19695,8 @@ func (s *DescribeMaintenanceWindowExecutionsOutput) SetWindowExecutions(v []*Mai
 type DescribeMaintenanceWindowScheduleInput struct {
 	_ struct{} `type:"structure"`
 
-	// Filters used to limit the range of results. For example, you can limit Maintenance
-	// Window executions to only those scheduled before or after a certain date
+	// Filters used to limit the range of results. For example, you can limit maintenance
+	// window executions to only those scheduled before or after a certain date
 	// and time.
 	Filters []*PatchOrchestratorFilter `type:"list"`
 
@@ -19072,7 +19716,7 @@ type DescribeMaintenanceWindowScheduleInput struct {
 	// The instance ID or key/value pair to retrieve information about.
 	Targets []*Target `type:"list"`
 
-	// The ID of the Maintenance Window to retrieve information about.
+	// The ID of the maintenance window to retrieve information about.
 	WindowId *string `min:"20" type:"string"`
 }
 
@@ -19165,7 +19809,7 @@ type DescribeMaintenanceWindowScheduleOutput struct {
 	// next call.)
 	NextToken *string `type:"string"`
 
-	// Information about Maintenance Window executions scheduled for the specified
+	// Information about maintenance window executions scheduled for the specified
 	// time range.
 	ScheduledWindowExecutions []*ScheduledWindowExecution `type:"list"`
 }
@@ -19208,7 +19852,7 @@ type DescribeMaintenanceWindowTargetsInput struct {
 	// a previous call.)
 	NextToken *string `type:"string"`
 
-	// The ID of the Maintenance Window whose targets should be retrieved.
+	// The ID of the maintenance window whose targets should be retrieved.
 	//
 	// WindowId is a required field
 	WindowId *string `min:"20" type:"string" required:"true"`
@@ -19284,7 +19928,7 @@ type DescribeMaintenanceWindowTargetsOutput struct {
 	// items to return, the string is empty.
 	NextToken *string `type:"string"`
 
-	// Information about the targets in the Maintenance Window.
+	// Information about the targets in the maintenance window.
 	Targets []*MaintenanceWindowTarget `type:"list"`
 }
 
@@ -19326,7 +19970,7 @@ type DescribeMaintenanceWindowTasksInput struct {
 	// a previous call.)
 	NextToken *string `type:"string"`
 
-	// The ID of the Maintenance Window whose tasks should be retrieved.
+	// The ID of the maintenance window whose tasks should be retrieved.
 	//
 	// WindowId is a required field
 	WindowId *string `min:"20" type:"string" required:"true"`
@@ -19402,7 +20046,7 @@ type DescribeMaintenanceWindowTasksOutput struct {
 	// items to return, the string is empty.
 	NextToken *string `type:"string"`
 
-	// Information about the tasks in the Maintenance Window.
+	// Information about the tasks in the maintenance window.
 	Tasks []*MaintenanceWindowTask `type:"list"`
 }
 
@@ -19522,7 +20166,7 @@ type DescribeMaintenanceWindowsForTargetOutput struct {
 	// next call.)
 	NextToken *string `type:"string"`
 
-	// Information about the Maintenance Window targets and tasks an instance is
+	// Information about the maintenance window targets and tasks an instance is
 	// associated with.
 	WindowIdentities []*MaintenanceWindowIdentityForTarget `type:"list"`
 }
@@ -19552,8 +20196,8 @@ func (s *DescribeMaintenanceWindowsForTargetOutput) SetWindowIdentities(v []*Mai
 type DescribeMaintenanceWindowsInput struct {
 	_ struct{} `type:"structure"`
 
-	// Optional filters used to narrow down the scope of the returned Maintenance
-	// Windows. Supported filter keys are Name and Enabled.
+	// Optional filters used to narrow down the scope of the returned maintenance
+	// windows. Supported filter keys are Name and Enabled.
 	Filters []*MaintenanceWindowFilter `type:"list"`
 
 	// The maximum number of items to return for this call. The call also returns
@@ -19624,7 +20268,7 @@ type DescribeMaintenanceWindowsOutput struct {
 	// items to return, the string is empty.
 	NextToken *string `type:"string"`
 
-	// Information about the Maintenance Windows.
+	// Information about the maintenance windows.
 	WindowIdentities []*MaintenanceWindowIdentity `type:"list"`
 }
 
@@ -19647,6 +20291,134 @@ func (s *DescribeMaintenanceWindowsOutput) SetNextToken(v string) *DescribeMaint
 // SetWindowIdentities sets the WindowIdentities field's value.
 func (s *DescribeMaintenanceWindowsOutput) SetWindowIdentities(v []*MaintenanceWindowIdentity) *DescribeMaintenanceWindowsOutput {
 	s.WindowIdentities = v
+	return s
+}
+
+type DescribeOpsItemsInput struct {
+	_ struct{} `type:"structure"`
+
+	// The maximum number of items to return for this call. The call also returns
+	// a token that you can specify in a subsequent call to get the next set of
+	// results.
+	MaxResults *int64 `min:"1" type:"integer"`
+
+	// A token to start the list. Use this token to get the next set of results.
+	NextToken *string `type:"string"`
+
+	// One or more filters to limit the reponse.
+	//
+	//    * Key: CreatedTime Operations: GreaterThan, LessThan
+	//
+	//    * Key: LastModifiedBy Operations: Contains, Equals
+	//
+	//    * Key: LastModifiedTime Operations: GreaterThan, LessThan
+	//
+	//    * Key: Priority Operations: Equals
+	//
+	//    * Key: Source Operations: Contains, Equals
+	//
+	//    * Key: Status Operations: Equals
+	//
+	//    * Key: Title Operations: Contains
+	//
+	//    * Key: OperationalData* Operations: Equals
+	//
+	//    * Key: OperationalDataKey Operations: Equals
+	//
+	//    * Key: OperationalDataValue Operations: Equals, Contains
+	//
+	//    * Key: OpsItemId Operations: Equals
+	//
+	//    * Key: ResourceId Operations: Contains
+	//
+	//    * Key: AutomationId Operations: Equals
+	//
+	// *If you filter the response by using the OperationalData operator, specify
+	// a key-value pair by using the following JSON format: {"key":"key_name","value":"a_value"}
+	OpsItemFilters []*OpsItemFilter `type:"list"`
+}
+
+// String returns the string representation
+func (s DescribeOpsItemsInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DescribeOpsItemsInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *DescribeOpsItemsInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "DescribeOpsItemsInput"}
+	if s.MaxResults != nil && *s.MaxResults < 1 {
+		invalidParams.Add(request.NewErrParamMinValue("MaxResults", 1))
+	}
+	if s.OpsItemFilters != nil {
+		for i, v := range s.OpsItemFilters {
+			if v == nil {
+				continue
+			}
+			if err := v.Validate(); err != nil {
+				invalidParams.AddNested(fmt.Sprintf("%s[%v]", "OpsItemFilters", i), err.(request.ErrInvalidParams))
+			}
+		}
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetMaxResults sets the MaxResults field's value.
+func (s *DescribeOpsItemsInput) SetMaxResults(v int64) *DescribeOpsItemsInput {
+	s.MaxResults = &v
+	return s
+}
+
+// SetNextToken sets the NextToken field's value.
+func (s *DescribeOpsItemsInput) SetNextToken(v string) *DescribeOpsItemsInput {
+	s.NextToken = &v
+	return s
+}
+
+// SetOpsItemFilters sets the OpsItemFilters field's value.
+func (s *DescribeOpsItemsInput) SetOpsItemFilters(v []*OpsItemFilter) *DescribeOpsItemsInput {
+	s.OpsItemFilters = v
+	return s
+}
+
+type DescribeOpsItemsOutput struct {
+	_ struct{} `type:"structure"`
+
+	// The token for the next set of items to return. Use this token to get the
+	// next set of results.
+	NextToken *string `type:"string"`
+
+	// A list of OpsItems.
+	OpsItemSummaries []*OpsItemSummary `type:"list"`
+}
+
+// String returns the string representation
+func (s DescribeOpsItemsOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DescribeOpsItemsOutput) GoString() string {
+	return s.String()
+}
+
+// SetNextToken sets the NextToken field's value.
+func (s *DescribeOpsItemsOutput) SetNextToken(v string) *DescribeOpsItemsOutput {
+	s.NextToken = &v
+	return s
+}
+
+// SetOpsItemSummaries sets the OpsItemSummaries field's value.
+func (s *DescribeOpsItemsOutput) SetOpsItemSummaries(v []*OpsItemSummary) *DescribeOpsItemsOutput {
+	s.OpsItemSummaries = v
 	return s
 }
 
@@ -22153,7 +22925,7 @@ func (s *GetInventorySchemaOutput) SetSchemas(v []*InventoryItemSchema) *GetInve
 type GetMaintenanceWindowExecutionInput struct {
 	_ struct{} `type:"structure"`
 
-	// The ID of the Maintenance Window execution that includes the task.
+	// The ID of the maintenance window execution that includes the task.
 	//
 	// WindowExecutionId is a required field
 	WindowExecutionId *string `min:"36" type:"string" required:"true"`
@@ -22194,22 +22966,22 @@ func (s *GetMaintenanceWindowExecutionInput) SetWindowExecutionId(v string) *Get
 type GetMaintenanceWindowExecutionOutput struct {
 	_ struct{} `type:"structure"`
 
-	// The time the Maintenance Window finished running.
+	// The time the maintenance window finished running.
 	EndTime *time.Time `type:"timestamp"`
 
-	// The time the Maintenance Window started running.
+	// The time the maintenance window started running.
 	StartTime *time.Time `type:"timestamp"`
 
-	// The status of the Maintenance Window execution.
+	// The status of the maintenance window execution.
 	Status *string `type:"string" enum:"MaintenanceWindowExecutionStatus"`
 
 	// The details explaining the Status. Only available for certain status values.
 	StatusDetails *string `type:"string"`
 
-	// The ID of the task executions from the Maintenance Window execution.
+	// The ID of the task executions from the maintenance window execution.
 	TaskIds []*string `type:"list"`
 
-	// The ID of the Maintenance Window execution.
+	// The ID of the maintenance window execution.
 	WindowExecutionId *string `min:"36" type:"string"`
 }
 
@@ -22262,13 +23034,13 @@ func (s *GetMaintenanceWindowExecutionOutput) SetWindowExecutionId(v string) *Ge
 type GetMaintenanceWindowExecutionTaskInput struct {
 	_ struct{} `type:"structure"`
 
-	// The ID of the specific task execution in the Maintenance Window task that
+	// The ID of the specific task execution in the maintenance window task that
 	// should be retrieved.
 	//
 	// TaskId is a required field
 	TaskId *string `min:"36" type:"string" required:"true"`
 
-	// The ID of the Maintenance Window execution that includes the task.
+	// The ID of the maintenance window execution that includes the task.
 	//
 	// WindowExecutionId is a required field
 	WindowExecutionId *string `min:"36" type:"string" required:"true"`
@@ -22326,13 +23098,13 @@ type GetMaintenanceWindowExecutionTaskInvocationInput struct {
 	// InvocationId is a required field
 	InvocationId *string `min:"36" type:"string" required:"true"`
 
-	// The ID of the specific task in the Maintenance Window task that should be
+	// The ID of the specific task in the maintenance window task that should be
 	// retrieved.
 	//
 	// TaskId is a required field
 	TaskId *string `min:"36" type:"string" required:"true"`
 
-	// The ID of the Maintenance Window execution for which the task is a part.
+	// The ID of the maintenance window execution for which the task is a part.
 	//
 	// WindowExecutionId is a required field
 	WindowExecutionId *string `min:"36" type:"string" required:"true"`
@@ -22407,7 +23179,7 @@ type GetMaintenanceWindowExecutionTaskInvocationOutput struct {
 	InvocationId *string `min:"36" type:"string"`
 
 	// User-provided value to be included in any CloudWatch events raised while
-	// running tasks for these targets in this Maintenance Window.
+	// running tasks for these targets in this maintenance window.
 	OwnerInformation *string `min:"1" type:"string" sensitive:"true"`
 
 	// The parameters used at the time that the task ran.
@@ -22426,14 +23198,14 @@ type GetMaintenanceWindowExecutionTaskInvocationOutput struct {
 	// The task execution ID.
 	TaskExecutionId *string `min:"36" type:"string"`
 
-	// Retrieves the task type for a Maintenance Window. Task types include the
-	// following: LAMBDA, STEP_FUNCTION, AUTOMATION, RUN_COMMAND.
+	// Retrieves the task type for a maintenance window. Task types include the
+	// following: LAMBDA, STEP_FUNCTIONS, AUTOMATION, RUN_COMMAND.
 	TaskType *string `type:"string" enum:"MaintenanceWindowTaskType"`
 
-	// The Maintenance Window execution ID.
+	// The maintenance window execution ID.
 	WindowExecutionId *string `min:"36" type:"string"`
 
-	// The Maintenance Window target ID.
+	// The maintenance window target ID.
 	WindowTargetId *string `type:"string"`
 }
 
@@ -22550,7 +23322,7 @@ type GetMaintenanceWindowExecutionTaskOutput struct {
 	// The ARN of the task that ran.
 	TaskArn *string `min:"1" type:"string"`
 
-	// The ID of the specific task execution in the Maintenance Window task that
+	// The ID of the specific task execution in the maintenance window task that
 	// was retrieved.
 	TaskExecutionId *string `min:"36" type:"string"`
 
@@ -22559,7 +23331,7 @@ type GetMaintenanceWindowExecutionTaskOutput struct {
 	// TaskParameters has been deprecated. To specify parameters to pass to a task
 	// when it runs, instead use the Parameters option in the TaskInvocationParameters
 	// structure. For information about how Systems Manager handles these options
-	// for the supported Maintenance Window task types, see MaintenanceWindowTaskInvocationParameters.
+	// for the supported maintenance window task types, see MaintenanceWindowTaskInvocationParameters.
 	//
 	// The map has the following format:
 	//
@@ -22571,7 +23343,7 @@ type GetMaintenanceWindowExecutionTaskOutput struct {
 	// The type of task that was run.
 	Type *string `type:"string" enum:"MaintenanceWindowTaskType"`
 
-	// The ID of the Maintenance Window execution that includes the task.
+	// The ID of the maintenance window execution that includes the task.
 	WindowExecutionId *string `min:"36" type:"string"`
 }
 
@@ -22666,7 +23438,7 @@ func (s *GetMaintenanceWindowExecutionTaskOutput) SetWindowExecutionId(v string)
 type GetMaintenanceWindowInput struct {
 	_ struct{} `type:"structure"`
 
-	// The ID of the desired Maintenance Window.
+	// The ID of the maintenance window for which you want to retrieve information.
 	//
 	// WindowId is a required field
 	WindowId *string `min:"20" type:"string" required:"true"`
@@ -22707,56 +23479,56 @@ func (s *GetMaintenanceWindowInput) SetWindowId(v string) *GetMaintenanceWindowI
 type GetMaintenanceWindowOutput struct {
 	_ struct{} `type:"structure"`
 
-	// Whether targets must be registered with the Maintenance Window before tasks
+	// Whether targets must be registered with the maintenance window before tasks
 	// can be defined for those targets.
 	AllowUnassociatedTargets *bool `type:"boolean"`
 
-	// The date the Maintenance Window was created.
+	// The date the maintenance window was created.
 	CreatedDate *time.Time `type:"timestamp"`
 
-	// The number of hours before the end of the Maintenance Window that Systems
+	// The number of hours before the end of the maintenance window that Systems
 	// Manager stops scheduling new tasks for execution.
 	Cutoff *int64 `type:"integer"`
 
-	// The description of the Maintenance Window.
+	// The description of the maintenance window.
 	Description *string `min:"1" type:"string" sensitive:"true"`
 
-	// The duration of the Maintenance Window in hours.
+	// The duration of the maintenance window in hours.
 	Duration *int64 `min:"1" type:"integer"`
 
-	// Whether the Maintenance Windows is enabled.
+	// Indicates whether the maintenance window is enabled.
 	Enabled *bool `type:"boolean"`
 
-	// The date and time, in ISO-8601 Extended format, for when the Maintenance
-	// Window is scheduled to become inactive. The Maintenance Window will not run
+	// The date and time, in ISO-8601 Extended format, for when the maintenance
+	// window is scheduled to become inactive. The maintenance window will not run
 	// after this specified time.
 	EndDate *string `type:"string"`
 
-	// The date the Maintenance Window was last modified.
+	// The date the maintenance window was last modified.
 	ModifiedDate *time.Time `type:"timestamp"`
 
-	// The name of the Maintenance Window.
+	// The name of the maintenance window.
 	Name *string `min:"3" type:"string"`
 
-	// The next time the Maintenance Window will actually run, taking into account
-	// any specified times for the Maintenance Window to become active or inactive.
+	// The next time the maintenance window will actually run, taking into account
+	// any specified times for the maintenance window to become active or inactive.
 	NextExecutionTime *string `type:"string"`
 
-	// The schedule of the Maintenance Window in the form of a cron or rate expression.
+	// The schedule of the maintenance window in the form of a cron or rate expression.
 	Schedule *string `min:"1" type:"string"`
 
-	// The time zone that the scheduled Maintenance Window executions are based
+	// The time zone that the scheduled maintenance window executions are based
 	// on, in Internet Assigned Numbers Authority (IANA) format. For example: "America/Los_Angeles",
 	// "etc/UTC", or "Asia/Seoul". For more information, see the Time Zone Database
 	// (https://www.iana.org/time-zones) on the IANA website.
 	ScheduleTimezone *string `type:"string"`
 
-	// The date and time, in ISO-8601 Extended format, for when the Maintenance
-	// Window is scheduled to become active. The Maintenance Window will not run
+	// The date and time, in ISO-8601 Extended format, for when the maintenance
+	// window is scheduled to become active. The maintenance window will not run
 	// before this specified time.
 	StartDate *string `type:"string"`
 
-	// The ID of the created Maintenance Window.
+	// The ID of the created maintenance window.
 	WindowId *string `min:"20" type:"string"`
 }
 
@@ -22857,12 +23629,12 @@ func (s *GetMaintenanceWindowOutput) SetWindowId(v string) *GetMaintenanceWindow
 type GetMaintenanceWindowTaskInput struct {
 	_ struct{} `type:"structure"`
 
-	// The Maintenance Window ID that includes the task to retrieve.
+	// The maintenance window ID that includes the task to retrieve.
 	//
 	// WindowId is a required field
 	WindowId *string `min:"20" type:"string" required:"true"`
 
-	// The Maintenance Window task ID to retrieve.
+	// The maintenance window task ID to retrieve.
 	//
 	// WindowTaskId is a required field
 	WindowTaskId *string `min:"36" type:"string" required:"true"`
@@ -22923,7 +23695,7 @@ type GetMaintenanceWindowTaskOutput struct {
 	// LoggingInfo has been deprecated. To specify an S3 bucket to contain logs,
 	// instead use the OutputS3BucketName and OutputS3KeyPrefix options in the TaskInvocationParameters
 	// structure. For information about how Systems Manager handles these options
-	// for the supported Maintenance Window task types, see MaintenanceWindowTaskInvocationParameters.
+	// for the supported maintenance window task types, see MaintenanceWindowTaskInvocationParameters.
 	LoggingInfo *LoggingInfo `type:"structure"`
 
 	// The maximum number of targets allowed to run this task in parallel.
@@ -22939,7 +23711,8 @@ type GetMaintenanceWindowTaskOutput struct {
 	// priority. Tasks that have the same priority are scheduled in parallel.
 	Priority *int64 `type:"integer"`
 
-	// The IAM service role to assume during task execution.
+	// The ARN of the IAM service role to use to publish Amazon Simple Notification
+	// Service (Amazon SNS) notifications for maintenance window Run Command tasks.
 	ServiceRoleArn *string `type:"string"`
 
 	// The targets where the task should run.
@@ -22947,8 +23720,8 @@ type GetMaintenanceWindowTaskOutput struct {
 
 	// The resource that the task used during execution. For RUN_COMMAND and AUTOMATION
 	// task types, the TaskArn is the Systems Manager Document name/ARN. For LAMBDA
-	// tasks, the value is the function name/ARN. For STEP_FUNCTION tasks, the value
-	// is the state machine ARN.
+	// tasks, the value is the function name/ARN. For STEP_FUNCTIONS tasks, the
+	// value is the state machine ARN.
 	TaskArn *string `min:"1" type:"string"`
 
 	// The parameters to pass to the task when it runs.
@@ -22959,16 +23732,16 @@ type GetMaintenanceWindowTaskOutput struct {
 	// TaskParameters has been deprecated. To specify parameters to pass to a task
 	// when it runs, instead use the Parameters option in the TaskInvocationParameters
 	// structure. For information about how Systems Manager handles these options
-	// for the supported Maintenance Window task types, see MaintenanceWindowTaskInvocationParameters.
+	// for the supported maintenance window task types, see MaintenanceWindowTaskInvocationParameters.
 	TaskParameters map[string]*MaintenanceWindowTaskParameterValueExpression `type:"map" sensitive:"true"`
 
 	// The type of task to run.
 	TaskType *string `type:"string" enum:"MaintenanceWindowTaskType"`
 
-	// The retrieved Maintenance Window ID.
+	// The retrieved maintenance window ID.
 	WindowId *string `min:"20" type:"string"`
 
-	// The retrieved Maintenance Window task ID.
+	// The retrieved maintenance window task ID.
 	WindowTaskId *string `min:"36" type:"string"`
 }
 
@@ -23063,6 +23836,197 @@ func (s *GetMaintenanceWindowTaskOutput) SetWindowId(v string) *GetMaintenanceWi
 // SetWindowTaskId sets the WindowTaskId field's value.
 func (s *GetMaintenanceWindowTaskOutput) SetWindowTaskId(v string) *GetMaintenanceWindowTaskOutput {
 	s.WindowTaskId = &v
+	return s
+}
+
+type GetOpsItemInput struct {
+	_ struct{} `type:"structure"`
+
+	// The ID of the OpsItem that you want to get.
+	//
+	// OpsItemId is a required field
+	OpsItemId *string `type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s GetOpsItemInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s GetOpsItemInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *GetOpsItemInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "GetOpsItemInput"}
+	if s.OpsItemId == nil {
+		invalidParams.Add(request.NewErrParamRequired("OpsItemId"))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetOpsItemId sets the OpsItemId field's value.
+func (s *GetOpsItemInput) SetOpsItemId(v string) *GetOpsItemInput {
+	s.OpsItemId = &v
+	return s
+}
+
+type GetOpsItemOutput struct {
+	_ struct{} `type:"structure"`
+
+	// The OpsItem.
+	OpsItem *OpsItem `type:"structure"`
+}
+
+// String returns the string representation
+func (s GetOpsItemOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s GetOpsItemOutput) GoString() string {
+	return s.String()
+}
+
+// SetOpsItem sets the OpsItem field's value.
+func (s *GetOpsItemOutput) SetOpsItem(v *OpsItem) *GetOpsItemOutput {
+	s.OpsItem = v
+	return s
+}
+
+type GetOpsSummaryInput struct {
+	_ struct{} `type:"structure"`
+
+	// Optional aggregators that return counts of OpsItems based on one or more
+	// expressions.
+	//
+	// Aggregators is a required field
+	Aggregators []*OpsAggregator `min:"1" type:"list" required:"true"`
+
+	// Optional filters used to scope down the returned OpsItems.
+	Filters []*OpsFilter `min:"1" type:"list"`
+
+	// The maximum number of items to return for this call. The call also returns
+	// a token that you can specify in a subsequent call to get the next set of
+	// results.
+	MaxResults *int64 `min:"1" type:"integer"`
+
+	// A token to start the list. Use this token to get the next set of results.
+	NextToken *string `type:"string"`
+}
+
+// String returns the string representation
+func (s GetOpsSummaryInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s GetOpsSummaryInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *GetOpsSummaryInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "GetOpsSummaryInput"}
+	if s.Aggregators == nil {
+		invalidParams.Add(request.NewErrParamRequired("Aggregators"))
+	}
+	if s.Aggregators != nil && len(s.Aggregators) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("Aggregators", 1))
+	}
+	if s.Filters != nil && len(s.Filters) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("Filters", 1))
+	}
+	if s.MaxResults != nil && *s.MaxResults < 1 {
+		invalidParams.Add(request.NewErrParamMinValue("MaxResults", 1))
+	}
+	if s.Aggregators != nil {
+		for i, v := range s.Aggregators {
+			if v == nil {
+				continue
+			}
+			if err := v.Validate(); err != nil {
+				invalidParams.AddNested(fmt.Sprintf("%s[%v]", "Aggregators", i), err.(request.ErrInvalidParams))
+			}
+		}
+	}
+	if s.Filters != nil {
+		for i, v := range s.Filters {
+			if v == nil {
+				continue
+			}
+			if err := v.Validate(); err != nil {
+				invalidParams.AddNested(fmt.Sprintf("%s[%v]", "Filters", i), err.(request.ErrInvalidParams))
+			}
+		}
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetAggregators sets the Aggregators field's value.
+func (s *GetOpsSummaryInput) SetAggregators(v []*OpsAggregator) *GetOpsSummaryInput {
+	s.Aggregators = v
+	return s
+}
+
+// SetFilters sets the Filters field's value.
+func (s *GetOpsSummaryInput) SetFilters(v []*OpsFilter) *GetOpsSummaryInput {
+	s.Filters = v
+	return s
+}
+
+// SetMaxResults sets the MaxResults field's value.
+func (s *GetOpsSummaryInput) SetMaxResults(v int64) *GetOpsSummaryInput {
+	s.MaxResults = &v
+	return s
+}
+
+// SetNextToken sets the NextToken field's value.
+func (s *GetOpsSummaryInput) SetNextToken(v string) *GetOpsSummaryInput {
+	s.NextToken = &v
+	return s
+}
+
+type GetOpsSummaryOutput struct {
+	_ struct{} `type:"structure"`
+
+	// The list of aggregated and filtered OpsItems.
+	Entities []*OpsEntity `type:"list"`
+
+	// The token for the next set of items to return. Use this token to get the
+	// next set of results.
+	NextToken *string `type:"string"`
+}
+
+// String returns the string representation
+func (s GetOpsSummaryOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s GetOpsSummaryOutput) GoString() string {
+	return s.String()
+}
+
+// SetEntities sets the Entities field's value.
+func (s *GetOpsSummaryOutput) SetEntities(v []*OpsEntity) *GetOpsSummaryOutput {
+	s.Entities = v
+	return s
+}
+
+// SetNextToken sets the NextToken field's value.
+func (s *GetOpsSummaryOutput) SetNextToken(v string) *GetOpsSummaryOutput {
+	s.NextToken = &v
 	return s
 }
 
@@ -23447,8 +24411,8 @@ func (s *GetParametersInput) SetWithDecryption(v bool) *GetParametersInput {
 type GetParametersOutput struct {
 	_ struct{} `type:"structure"`
 
-	// A list of parameters that are not formatted correctly or do not run when
-	// executed.
+	// A list of parameters that are not formatted correctly or do not run during
+	// an execution.
 	InvalidParameters []*string `min:"1" type:"list"`
 
 	// A list of details for a parameter.
@@ -23994,7 +24958,7 @@ type InstanceAssociationStatusInfo struct {
 	// Detailed status information about the instance association.
 	DetailedStatus *string `type:"string"`
 
-	// The association document verions.
+	// The association document versions.
 	DocumentVersion *string `type:"string"`
 
 	// An error code returned by the request to create the association.
@@ -24783,7 +25747,7 @@ type InventoryDeletionStatusItem struct {
 	DeletionStartTime *time.Time `type:"timestamp"`
 
 	// Information about the delete operation. For more information about this summary,
-	// see Understanding the Delete Inventory Summary (http://docs.aws.amazon.com/systems-manager/latest/userguide/sysman-inventory-delete.html#sysman-inventory-delete-summary)
+	// see Understanding the Delete Inventory Summary (http://docs.aws.amazon.com/systems-manager/latest/userguide/sysman-inventory-custom.html#sysman-inventory-delete)
 	// in the AWS Systems Manager User Guide.
 	DeletionSummary *InventoryDeletionSummary `type:"structure"`
 
@@ -26819,7 +27783,7 @@ func (s *ListTagsForResourceOutput) SetTagList(v []*Tag) *ListTagsForResourceOut
 // LoggingInfo has been deprecated. To specify an S3 bucket to contain logs,
 // instead use the OutputS3BucketName and OutputS3KeyPrefix options in the TaskInvocationParameters
 // structure. For information about how Systems Manager handles these options
-// for the supported Maintenance Window task types, see MaintenanceWindowTaskInvocationParameters.
+// for the supported maintenance window task types, see MaintenanceWindowTaskInvocationParameters.
 type LoggingInfo struct {
 	_ struct{} `type:"structure"`
 
@@ -26902,12 +27866,12 @@ type MaintenanceWindowAutomationParameters struct {
 	// LoggingInfo has been deprecated. To specify an S3 bucket to contain logs,
 	// instead use the OutputS3BucketName and OutputS3KeyPrefix options in the TaskInvocationParameters
 	// structure. For information about how Systems Manager handles these options
-	// for the supported Maintenance Window task types, see MaintenanceWindowTaskInvocationParameters.
+	// for the supported maintenance window task types, see MaintenanceWindowTaskInvocationParameters.
 	//
 	// TaskParameters has been deprecated. To specify parameters to pass to a task
 	// when it runs, instead use the Parameters option in the TaskInvocationParameters
 	// structure. For information about how Systems Manager handles these options
-	// for the supported Maintenance Window task types, see MaintenanceWindowTaskInvocationParameters.
+	// for the supported maintenance window task types, see MaintenanceWindowTaskInvocationParameters.
 	//
 	// For AUTOMATION task types, Systems Manager ignores any values specified for
 	// these parameters.
@@ -26949,7 +27913,7 @@ func (s *MaintenanceWindowAutomationParameters) SetParameters(v map[string][]*st
 	return s
 }
 
-// Describes the information about an execution of a Maintenance Window.
+// Describes the information about an execution of a maintenance window.
 type MaintenanceWindowExecution struct {
 	_ struct{} `type:"structure"`
 
@@ -26965,10 +27929,10 @@ type MaintenanceWindowExecution struct {
 	// The details explaining the Status. Only available for certain status values.
 	StatusDetails *string `type:"string"`
 
-	// The ID of the Maintenance Window execution.
+	// The ID of the maintenance window execution.
 	WindowExecutionId *string `min:"36" type:"string"`
 
-	// The ID of the Maintenance Window.
+	// The ID of the maintenance window.
 	WindowId *string `min:"20" type:"string"`
 }
 
@@ -27018,7 +27982,7 @@ func (s *MaintenanceWindowExecution) SetWindowId(v string) *MaintenanceWindowExe
 	return s
 }
 
-// Information about a task execution performed as part of a Maintenance Window
+// Information about a task execution performed as part of a maintenance window
 // execution.
 type MaintenanceWindowExecutionTaskIdentity struct {
 	_ struct{} `type:"structure"`
@@ -27039,13 +28003,13 @@ type MaintenanceWindowExecutionTaskIdentity struct {
 	// The ARN of the task that ran.
 	TaskArn *string `min:"1" type:"string"`
 
-	// The ID of the specific task execution in the Maintenance Window execution.
+	// The ID of the specific task execution in the maintenance window execution.
 	TaskExecutionId *string `min:"36" type:"string"`
 
 	// The type of task that ran.
 	TaskType *string `type:"string" enum:"MaintenanceWindowTaskType"`
 
-	// The ID of the Maintenance Window execution that ran the task.
+	// The ID of the maintenance window execution that ran the task.
 	WindowExecutionId *string `min:"36" type:"string"`
 }
 
@@ -27108,7 +28072,7 @@ func (s *MaintenanceWindowExecutionTaskIdentity) SetWindowExecutionId(v string) 
 }
 
 // Describes the information about a task invocation for a particular target
-// as part of a task execution performed as part of a Maintenance Window execution.
+// as part of a task execution performed as part of a maintenance window execution.
 type MaintenanceWindowExecutionTaskInvocationIdentity struct {
 	_ struct{} `type:"structure"`
 
@@ -27123,7 +28087,7 @@ type MaintenanceWindowExecutionTaskInvocationIdentity struct {
 	InvocationId *string `min:"36" type:"string"`
 
 	// User-provided value that was specified when the target was registered with
-	// the Maintenance Window. This was also included in any CloudWatch events raised
+	// the maintenance window. This was also included in any CloudWatch events raised
 	// during the task invocation.
 	OwnerInformation *string `min:"1" type:"string" sensitive:"true"`
 
@@ -27140,16 +28104,16 @@ type MaintenanceWindowExecutionTaskInvocationIdentity struct {
 	// for certain Status values.
 	StatusDetails *string `type:"string"`
 
-	// The ID of the specific task execution in the Maintenance Window execution.
+	// The ID of the specific task execution in the maintenance window execution.
 	TaskExecutionId *string `min:"36" type:"string"`
 
 	// The task type.
 	TaskType *string `type:"string" enum:"MaintenanceWindowTaskType"`
 
-	// The ID of the Maintenance Window execution that ran the task.
+	// The ID of the maintenance window execution that ran the task.
 	WindowExecutionId *string `min:"36" type:"string"`
 
-	// The ID of the target definition in this Maintenance Window the invocation
+	// The ID of the target definition in this maintenance window the invocation
 	// was performed for.
 	WindowTargetId *string `type:"string"`
 }
@@ -27282,46 +28246,46 @@ func (s *MaintenanceWindowFilter) SetValues(v []*string) *MaintenanceWindowFilte
 	return s
 }
 
-// Information about the Maintenance Window.
+// Information about the maintenance window.
 type MaintenanceWindowIdentity struct {
 	_ struct{} `type:"structure"`
 
-	// The number of hours before the end of the Maintenance Window that Systems
+	// The number of hours before the end of the maintenance window that Systems
 	// Manager stops scheduling new tasks for execution.
 	Cutoff *int64 `type:"integer"`
 
-	// A description of the Maintenance Window.
+	// A description of the maintenance window.
 	Description *string `min:"1" type:"string" sensitive:"true"`
 
-	// The duration of the Maintenance Window in hours.
+	// The duration of the maintenance window in hours.
 	Duration *int64 `min:"1" type:"integer"`
 
-	// Whether the Maintenance Window is enabled.
+	// Indicates whether the maintenance window is enabled.
 	Enabled *bool `type:"boolean"`
 
-	// The date and time, in ISO-8601 Extended format, for when the Maintenance
-	// Window is scheduled to become inactive.
+	// The date and time, in ISO-8601 Extended format, for when the maintenance
+	// window is scheduled to become inactive.
 	EndDate *string `type:"string"`
 
-	// The name of the Maintenance Window.
+	// The name of the maintenance window.
 	Name *string `min:"3" type:"string"`
 
-	// The next time the Maintenance Window will actually run, taking into account
-	// any specified times for the Maintenance Window to become active or inactive.
+	// The next time the maintenance window will actually run, taking into account
+	// any specified times for the maintenance window to become active or inactive.
 	NextExecutionTime *string `type:"string"`
 
-	// The schedule of the Maintenance Window in the form of a cron or rate expression.
+	// The schedule of the maintenance window in the form of a cron or rate expression.
 	Schedule *string `min:"1" type:"string"`
 
-	// The time zone that the scheduled Maintenance Window executions are based
+	// The time zone that the scheduled maintenance window executions are based
 	// on, in Internet Assigned Numbers Authority (IANA) format.
 	ScheduleTimezone *string `type:"string"`
 
-	// The date and time, in ISO-8601 Extended format, for when the Maintenance
-	// Window is scheduled to become active.
+	// The date and time, in ISO-8601 Extended format, for when the maintenance
+	// window is scheduled to become active.
 	StartDate *string `type:"string"`
 
-	// The ID of the Maintenance Window.
+	// The ID of the maintenance window.
 	WindowId *string `min:"20" type:"string"`
 }
 
@@ -27401,14 +28365,14 @@ func (s *MaintenanceWindowIdentity) SetWindowId(v string) *MaintenanceWindowIden
 	return s
 }
 
-// The Maintenance Window to which the specified target belongs.
+// The maintenance window to which the specified target belongs.
 type MaintenanceWindowIdentityForTarget struct {
 	_ struct{} `type:"structure"`
 
-	// The name of the Maintenance Window.
+	// The name of the maintenance window.
 	Name *string `min:"3" type:"string"`
 
-	// The ID of the Maintenance Window.
+	// The ID of the maintenance window.
 	WindowId *string `min:"20" type:"string"`
 }
 
@@ -27442,12 +28406,12 @@ func (s *MaintenanceWindowIdentityForTarget) SetWindowId(v string) *MaintenanceW
 // LoggingInfo has been deprecated. To specify an S3 bucket to contain logs,
 // instead use the OutputS3BucketName and OutputS3KeyPrefix options in the TaskInvocationParameters
 // structure. For information about how Systems Manager handles these options
-// for the supported Maintenance Window task types, see MaintenanceWindowTaskInvocationParameters.
+// for the supported maintenance window task types, see MaintenanceWindowTaskInvocationParameters.
 //
 // TaskParameters has been deprecated. To specify parameters to pass to a task
 // when it runs, instead use the Parameters option in the TaskInvocationParameters
 // structure. For information about how Systems Manager handles these options
-// for the supported Maintenance Window task types, see MaintenanceWindowTaskInvocationParameters.
+// for the supported maintenance window task types, see MaintenanceWindowTaskInvocationParameters.
 //
 // For Lambda tasks, Systems Manager ignores any values specified for TaskParameters
 // and LoggingInfo.
@@ -27523,19 +28487,19 @@ func (s *MaintenanceWindowLambdaParameters) SetQualifier(v string) *MaintenanceW
 // LoggingInfo has been deprecated. To specify an S3 bucket to contain logs,
 // instead use the OutputS3BucketName and OutputS3KeyPrefix options in the TaskInvocationParameters
 // structure. For information about how Systems Manager handles these options
-// for the supported Maintenance Window task types, see MaintenanceWindowTaskInvocationParameters.
+// for the supported maintenance window task types, see MaintenanceWindowTaskInvocationParameters.
 //
 // TaskParameters has been deprecated. To specify parameters to pass to a task
 // when it runs, instead use the Parameters option in the TaskInvocationParameters
 // structure. For information about how Systems Manager handles these options
-// for the supported Maintenance Window task types, see MaintenanceWindowTaskInvocationParameters.
+// for the supported maintenance window task types, see MaintenanceWindowTaskInvocationParameters.
 //
 // For Run Command tasks, Systems Manager uses specified values for TaskParameters
 // and LoggingInfo only if no values are specified for TaskInvocationParameters.
 type MaintenanceWindowRunCommandParameters struct {
 	_ struct{} `type:"structure"`
 
-	// Information about the command(s) to run.
+	// Information about the commands to run.
 	Comment *string `type:"string"`
 
 	// The SHA-256 or SHA-1 hash created by the system when the document was created.
@@ -27558,7 +28522,8 @@ type MaintenanceWindowRunCommandParameters struct {
 	// The parameters for the RUN_COMMAND task execution.
 	Parameters map[string][]*string `type:"map"`
 
-	// The IAM service role to assume during task execution.
+	// The ARN of the IAM service role to use to publish Amazon Simple Notification
+	// Service (Amazon SNS) notifications for maintenance window Run Command tasks.
 	ServiceRoleArn *string `type:"string"`
 
 	// If this time is reached and the command has not already started running,
@@ -27646,7 +28611,7 @@ func (s *MaintenanceWindowRunCommandParameters) SetTimeoutSeconds(v int64) *Main
 	return s
 }
 
-// The parameters for a STEP_FUNCTION task.
+// The parameters for a STEP_FUNCTIONS task.
 //
 // For information about specifying and updating task parameters, see RegisterTaskWithMaintenanceWindow
 // and UpdateMaintenanceWindowTask.
@@ -27654,22 +28619,22 @@ func (s *MaintenanceWindowRunCommandParameters) SetTimeoutSeconds(v int64) *Main
 // LoggingInfo has been deprecated. To specify an S3 bucket to contain logs,
 // instead use the OutputS3BucketName and OutputS3KeyPrefix options in the TaskInvocationParameters
 // structure. For information about how Systems Manager handles these options
-// for the supported Maintenance Window task types, see MaintenanceWindowTaskInvocationParameters.
+// for the supported maintenance window task types, see MaintenanceWindowTaskInvocationParameters.
 //
 // TaskParameters has been deprecated. To specify parameters to pass to a task
 // when it runs, instead use the Parameters option in the TaskInvocationParameters
 // structure. For information about how Systems Manager handles these options
-// for the supported Maintenance Window task types, see MaintenanceWindowTaskInvocationParameters.
+// for the supported maintenance window task types, see MaintenanceWindowTaskInvocationParameters.
 //
 // For Step Functions tasks, Systems Manager ignores any values specified for
 // TaskParameters and LoggingInfo.
 type MaintenanceWindowStepFunctionsParameters struct {
 	_ struct{} `type:"structure"`
 
-	// The inputs for the STEP_FUNCTION task.
+	// The inputs for the STEP_FUNCTIONS task.
 	Input *string `type:"string" sensitive:"true"`
 
-	// The name of the STEP_FUNCTION task.
+	// The name of the STEP_FUNCTIONS task.
 	Name *string `min:"1" type:"string"`
 }
 
@@ -27708,21 +28673,21 @@ func (s *MaintenanceWindowStepFunctionsParameters) SetName(v string) *Maintenanc
 	return s
 }
 
-// The target registered with the Maintenance Window.
+// The target registered with the maintenance window.
 type MaintenanceWindowTarget struct {
 	_ struct{} `type:"structure"`
 
 	// A description for the target.
 	Description *string `min:"1" type:"string" sensitive:"true"`
 
-	// The target name.
+	// The name for the maintenance window target.
 	Name *string `min:"3" type:"string"`
 
 	// A user-provided value that will be included in any CloudWatch events that
-	// are raised while running tasks for these targets in this Maintenance Window.
+	// are raised while running tasks for these targets in this maintenance window.
 	OwnerInformation *string `min:"1" type:"string" sensitive:"true"`
 
-	// The type of target that is being registered with the Maintenance Window.
+	// The type of target that is being registered with the maintenance window.
 	ResourceType *string `type:"string" enum:"MaintenanceWindowResourceType"`
 
 	// The targets, either instances or tags.
@@ -27736,7 +28701,7 @@ type MaintenanceWindowTarget struct {
 	// Key=<tag name>,Values=<tag value>.
 	Targets []*Target `type:"list"`
 
-	// The ID of the Maintenance Window to register the target with.
+	// The ID of the maintenance window to register the target with.
 	WindowId *string `min:"20" type:"string"`
 
 	// The ID of the target.
@@ -27795,7 +28760,7 @@ func (s *MaintenanceWindowTarget) SetWindowTargetId(v string) *MaintenanceWindow
 	return s
 }
 
-// Information about a task defined for a Maintenance Window.
+// Information about a task defined for a maintenance window.
 type MaintenanceWindowTask struct {
 	_ struct{} `type:"structure"`
 
@@ -27807,7 +28772,7 @@ type MaintenanceWindowTask struct {
 	// LoggingInfo has been deprecated. To specify an S3 bucket to contain logs,
 	// instead use the OutputS3BucketName and OutputS3KeyPrefix options in the TaskInvocationParameters
 	// structure. For information about how Systems Manager handles these options
-	// for the supported Maintenance Window task types, see MaintenanceWindowTaskInvocationParameters.
+	// for the supported maintenance window task types, see MaintenanceWindowTaskInvocationParameters.
 	LoggingInfo *LoggingInfo `type:"structure"`
 
 	// The maximum number of targets this task can be run for, in parallel.
@@ -27819,12 +28784,13 @@ type MaintenanceWindowTask struct {
 	// The task name.
 	Name *string `min:"3" type:"string"`
 
-	// The priority of the task in the Maintenance Window. The lower the number,
+	// The priority of the task in the maintenance window. The lower the number,
 	// the higher the priority. Tasks that have the same priority are scheduled
 	// in parallel.
 	Priority *int64 `type:"integer"`
 
-	// The role that should be assumed when running the task.
+	// The ARN of the IAM service role to use to publish Amazon Simple Notification
+	// Service (Amazon SNS) notifications for maintenance window Run Command tasks.
 	ServiceRoleArn *string `type:"string"`
 
 	// The targets (either instances or tags). Instances are specified using Key=instanceids,Values=<instanceid1>,<instanceid2>.
@@ -27833,8 +28799,8 @@ type MaintenanceWindowTask struct {
 
 	// The resource that the task uses during execution. For RUN_COMMAND and AUTOMATION
 	// task types, TaskArn is the Systems Manager document name or ARN. For LAMBDA
-	// tasks, it's the function name or ARN. For STEP_FUNCTION tasks, it's the state
-	// machine ARN.
+	// tasks, it's the function name or ARN. For STEP_FUNCTIONS tasks, it's the
+	// state machine ARN.
 	TaskArn *string `min:"1" type:"string"`
 
 	// The parameters that should be passed to the task when it is run.
@@ -27842,14 +28808,14 @@ type MaintenanceWindowTask struct {
 	// TaskParameters has been deprecated. To specify parameters to pass to a task
 	// when it runs, instead use the Parameters option in the TaskInvocationParameters
 	// structure. For information about how Systems Manager handles these options
-	// for the supported Maintenance Window task types, see MaintenanceWindowTaskInvocationParameters.
+	// for the supported maintenance window task types, see MaintenanceWindowTaskInvocationParameters.
 	TaskParameters map[string]*MaintenanceWindowTaskParameterValueExpression `type:"map" sensitive:"true"`
 
 	// The type of task. The type can be one of the following: RUN_COMMAND, AUTOMATION,
-	// LAMBDA, or STEP_FUNCTION.
+	// LAMBDA, or STEP_FUNCTIONS.
 	Type *string `type:"string" enum:"MaintenanceWindowTaskType"`
 
-	// The ID of the Maintenance Window where the task is registered.
+	// The ID of the maintenance window where the task is registered.
 	WindowId *string `min:"20" type:"string"`
 
 	// The task ID.
@@ -27957,7 +28923,7 @@ type MaintenanceWindowTaskInvocationParameters struct {
 	// The parameters for a RUN_COMMAND task type.
 	RunCommand *MaintenanceWindowRunCommandParameters `type:"structure"`
 
-	// The parameters for a STEP_FUNCTION task type.
+	// The parameters for a STEP_FUNCTIONS task type.
 	StepFunctions *MaintenanceWindowStepFunctionsParameters `type:"structure"`
 }
 
@@ -28176,14 +29142,15 @@ func (s *NonCompliantSummary) SetSeveritySummary(v *SeveritySummary) *NonComplia
 type NotificationConfig struct {
 	_ struct{} `type:"structure"`
 
-	// An Amazon Resource Name (ARN) for a Simple Notification Service (SNS) topic.
-	// Run Command pushes notifications about command status changes to this topic.
+	// An Amazon Resource Name (ARN) for an Amazon Simple Notification Service (Amazon
+	// SNS) topic. Run Command pushes notifications about command status changes
+	// to this topic.
 	NotificationArn *string `type:"string"`
 
 	// The different events for which you can receive notifications. These events
 	// include the following: All (events), InProgress, Success, TimedOut, Cancelled,
 	// Failed. To learn more about these events, see Configuring Amazon SNS Notifications
-	// for Run Command (http://docs.aws.amazon.com/systems-manager/latest/userguide/rc-sns-notifications.html)
+	// for AWS Systems Manager (http://docs.aws.amazon.com/systems-manager/latest/userguide/monitoring-sns-notifications.html)
 	// in the AWS Systems Manager User Guide.
 	NotificationEvents []*string `type:"list"`
 
@@ -28218,6 +29185,649 @@ func (s *NotificationConfig) SetNotificationEvents(v []*string) *NotificationCon
 // SetNotificationType sets the NotificationType field's value.
 func (s *NotificationConfig) SetNotificationType(v string) *NotificationConfig {
 	s.NotificationType = &v
+	return s
+}
+
+// One or more aggregators for viewing counts of OpsItems using different dimensions
+// such as Source, CreatedTime, or Source and CreatedTime, to name a few.
+type OpsAggregator struct {
+	_ struct{} `type:"structure"`
+
+	// Either a Range or Count aggregator for limiting an OpsItem summary.
+	AggregatorType *string `min:"1" type:"string"`
+
+	// A nested aggregator for viewing counts of OpsItems.
+	Aggregators []*OpsAggregator `min:"1" type:"list"`
+
+	// The name of an OpsItem attribute on which to limit the count of OpsItems.
+	AttributeName *string `type:"string"`
+
+	// The aggregator filters.
+	Filters []*OpsFilter `min:"1" type:"list"`
+
+	// The data type name to use for viewing counts of OpsItems.
+	TypeName *string `min:"1" type:"string"`
+
+	// The aggregator value.
+	Values map[string]*string `type:"map"`
+}
+
+// String returns the string representation
+func (s OpsAggregator) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s OpsAggregator) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *OpsAggregator) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "OpsAggregator"}
+	if s.AggregatorType != nil && len(*s.AggregatorType) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("AggregatorType", 1))
+	}
+	if s.Aggregators != nil && len(s.Aggregators) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("Aggregators", 1))
+	}
+	if s.Filters != nil && len(s.Filters) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("Filters", 1))
+	}
+	if s.TypeName != nil && len(*s.TypeName) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("TypeName", 1))
+	}
+	if s.Aggregators != nil {
+		for i, v := range s.Aggregators {
+			if v == nil {
+				continue
+			}
+			if err := v.Validate(); err != nil {
+				invalidParams.AddNested(fmt.Sprintf("%s[%v]", "Aggregators", i), err.(request.ErrInvalidParams))
+			}
+		}
+	}
+	if s.Filters != nil {
+		for i, v := range s.Filters {
+			if v == nil {
+				continue
+			}
+			if err := v.Validate(); err != nil {
+				invalidParams.AddNested(fmt.Sprintf("%s[%v]", "Filters", i), err.(request.ErrInvalidParams))
+			}
+		}
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetAggregatorType sets the AggregatorType field's value.
+func (s *OpsAggregator) SetAggregatorType(v string) *OpsAggregator {
+	s.AggregatorType = &v
+	return s
+}
+
+// SetAggregators sets the Aggregators field's value.
+func (s *OpsAggregator) SetAggregators(v []*OpsAggregator) *OpsAggregator {
+	s.Aggregators = v
+	return s
+}
+
+// SetAttributeName sets the AttributeName field's value.
+func (s *OpsAggregator) SetAttributeName(v string) *OpsAggregator {
+	s.AttributeName = &v
+	return s
+}
+
+// SetFilters sets the Filters field's value.
+func (s *OpsAggregator) SetFilters(v []*OpsFilter) *OpsAggregator {
+	s.Filters = v
+	return s
+}
+
+// SetTypeName sets the TypeName field's value.
+func (s *OpsAggregator) SetTypeName(v string) *OpsAggregator {
+	s.TypeName = &v
+	return s
+}
+
+// SetValues sets the Values field's value.
+func (s *OpsAggregator) SetValues(v map[string]*string) *OpsAggregator {
+	s.Values = v
+	return s
+}
+
+// The result of the query.
+type OpsEntity struct {
+	_ struct{} `type:"structure"`
+
+	// The data returned by the query.
+	Data map[string]*OpsEntityItem `type:"map"`
+
+	// The query ID.
+	Id *string `type:"string"`
+}
+
+// String returns the string representation
+func (s OpsEntity) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s OpsEntity) GoString() string {
+	return s.String()
+}
+
+// SetData sets the Data field's value.
+func (s *OpsEntity) SetData(v map[string]*OpsEntityItem) *OpsEntity {
+	s.Data = v
+	return s
+}
+
+// SetId sets the Id field's value.
+func (s *OpsEntity) SetId(v string) *OpsEntity {
+	s.Id = &v
+	return s
+}
+
+// The OpsItem summaries result item.
+type OpsEntityItem struct {
+	_ struct{} `type:"structure"`
+
+	// The detailed data content for an OpsItem summaries result item.
+	Content []map[string]*string `type:"list"`
+}
+
+// String returns the string representation
+func (s OpsEntityItem) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s OpsEntityItem) GoString() string {
+	return s.String()
+}
+
+// SetContent sets the Content field's value.
+func (s *OpsEntityItem) SetContent(v []map[string]*string) *OpsEntityItem {
+	s.Content = v
+	return s
+}
+
+// A filter for viewing OpsItem summaries.
+type OpsFilter struct {
+	_ struct{} `type:"structure"`
+
+	// The name of the filter.
+	//
+	// Key is a required field
+	Key *string `min:"1" type:"string" required:"true"`
+
+	// The type of filter.
+	Type *string `type:"string" enum:"OpsFilterOperatorType"`
+
+	// The filter value.
+	//
+	// Values is a required field
+	Values []*string `min:"1" type:"list" required:"true"`
+}
+
+// String returns the string representation
+func (s OpsFilter) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s OpsFilter) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *OpsFilter) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "OpsFilter"}
+	if s.Key == nil {
+		invalidParams.Add(request.NewErrParamRequired("Key"))
+	}
+	if s.Key != nil && len(*s.Key) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("Key", 1))
+	}
+	if s.Values == nil {
+		invalidParams.Add(request.NewErrParamRequired("Values"))
+	}
+	if s.Values != nil && len(s.Values) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("Values", 1))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetKey sets the Key field's value.
+func (s *OpsFilter) SetKey(v string) *OpsFilter {
+	s.Key = &v
+	return s
+}
+
+// SetType sets the Type field's value.
+func (s *OpsFilter) SetType(v string) *OpsFilter {
+	s.Type = &v
+	return s
+}
+
+// SetValues sets the Values field's value.
+func (s *OpsFilter) SetValues(v []*string) *OpsFilter {
+	s.Values = v
+	return s
+}
+
+// Operations engineers and IT professionals use OpsCenter to view, investigate,
+// and remediate operational issues impacting the performance and health of
+// their AWS resources. For more information, see AWS Systems Manager OpsCenter
+// (http://docs.aws.amazon.com/systems-manager/latest/userguide/OpsCenter.html)
+// in the AWS Systems Manager User Guide.
+type OpsItem struct {
+	_ struct{} `type:"structure"`
+
+	// The ARN of the AWS account that created the OpsItem.
+	CreatedBy *string `type:"string"`
+
+	// The date and time the OpsItem was created.
+	CreatedTime *time.Time `type:"timestamp"`
+
+	// The OpsItem description.
+	Description *string `min:"1" type:"string"`
+
+	// The ARN of the AWS account that last updated the OpsItem.
+	LastModifiedBy *string `type:"string"`
+
+	// The date and time the OpsItem was last updated.
+	LastModifiedTime *time.Time `type:"timestamp"`
+
+	// The Amazon Resource Name (ARN) of an SNS topic where notifications are sent
+	// when this OpsItem is edited or changed.
+	Notifications []*OpsItemNotification `type:"list"`
+
+	// Operational data is custom data that provides useful reference details about
+	// the OpsItem. For example, you can specify log files, error strings, license
+	// keys, troubleshooting tips, or other relevant data. You enter operational
+	// data as key-value pairs. The key has a maximum length of 128 characters.
+	// The value has a maximum size of 20 KB.
+	//
+	// Operational data keys can't begin with the following: amazon, aws, amzn,
+	// ssm, /amazon, /aws, /amzn, /ssm.
+	//
+	// You can choose to make the data searchable by other users in the account
+	// or you can restrict search access. Searchable data means that all users with
+	// access to the OpsItem Overview page (as provided by the DescribeOpsItems
+	// API action) can view and search on the specified data. Operational data that
+	// is not searchable is only viewable by users who have access to the OpsItem
+	// (as provided by the GetOpsItem API action).
+	//
+	// Use the /aws/resources key in OperationalData to specify a related resource
+	// in the request. Use the /aws/automations key in OperationalData to associate
+	// an Automation runbook with the OpsItem. To view AWS CLI example commands
+	// that use these keys, see Creating OpsItems Manually (http://docs.aws.amazon.com/systems-manager/latest/userguide/OpsCenter-creating-OpsItems.html#OpsCenter-manually-create-OpsItems)
+	// in the AWS Systems Manager User Guide.
+	OperationalData map[string]*OpsItemDataValue `type:"map"`
+
+	// The ID of the OpsItem.
+	OpsItemId *string `type:"string"`
+
+	// The importance of this OpsItem in relation to other OpsItems in the system.
+	Priority *int64 `min:"1" type:"integer"`
+
+	// One or more OpsItems that share something in common with the current OpsItem.
+	// For example, related OpsItems can include OpsItems with similar error messages,
+	// impacted resources, or statuses for the impacted resource.
+	RelatedOpsItems []*RelatedOpsItem `type:"list"`
+
+	// The origin of the OpsItem, such as Amazon EC2 or AWS Systems Manager. The
+	// impacted resource is a subset of source.
+	Source *string `min:"1" type:"string"`
+
+	// The OpsItem status. Status can be Open, In Progress, or Resolved. For more
+	// information, see Editing OpsItem Details (http://docs.aws.amazon.com/systems-manager/latest/userguide/OpsCenter-working-with-OpsItems-editing-details.html)
+	// in the AWS Systems Manager User Guide.
+	Status *string `type:"string" enum:"OpsItemStatus"`
+
+	// A short heading that describes the nature of the OpsItem and the impacted
+	// resource.
+	Title *string `min:"1" type:"string"`
+
+	// The version of this OpsItem. Each time the OpsItem is edited the version
+	// number increments by one.
+	Version *string `type:"string"`
+}
+
+// String returns the string representation
+func (s OpsItem) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s OpsItem) GoString() string {
+	return s.String()
+}
+
+// SetCreatedBy sets the CreatedBy field's value.
+func (s *OpsItem) SetCreatedBy(v string) *OpsItem {
+	s.CreatedBy = &v
+	return s
+}
+
+// SetCreatedTime sets the CreatedTime field's value.
+func (s *OpsItem) SetCreatedTime(v time.Time) *OpsItem {
+	s.CreatedTime = &v
+	return s
+}
+
+// SetDescription sets the Description field's value.
+func (s *OpsItem) SetDescription(v string) *OpsItem {
+	s.Description = &v
+	return s
+}
+
+// SetLastModifiedBy sets the LastModifiedBy field's value.
+func (s *OpsItem) SetLastModifiedBy(v string) *OpsItem {
+	s.LastModifiedBy = &v
+	return s
+}
+
+// SetLastModifiedTime sets the LastModifiedTime field's value.
+func (s *OpsItem) SetLastModifiedTime(v time.Time) *OpsItem {
+	s.LastModifiedTime = &v
+	return s
+}
+
+// SetNotifications sets the Notifications field's value.
+func (s *OpsItem) SetNotifications(v []*OpsItemNotification) *OpsItem {
+	s.Notifications = v
+	return s
+}
+
+// SetOperationalData sets the OperationalData field's value.
+func (s *OpsItem) SetOperationalData(v map[string]*OpsItemDataValue) *OpsItem {
+	s.OperationalData = v
+	return s
+}
+
+// SetOpsItemId sets the OpsItemId field's value.
+func (s *OpsItem) SetOpsItemId(v string) *OpsItem {
+	s.OpsItemId = &v
+	return s
+}
+
+// SetPriority sets the Priority field's value.
+func (s *OpsItem) SetPriority(v int64) *OpsItem {
+	s.Priority = &v
+	return s
+}
+
+// SetRelatedOpsItems sets the RelatedOpsItems field's value.
+func (s *OpsItem) SetRelatedOpsItems(v []*RelatedOpsItem) *OpsItem {
+	s.RelatedOpsItems = v
+	return s
+}
+
+// SetSource sets the Source field's value.
+func (s *OpsItem) SetSource(v string) *OpsItem {
+	s.Source = &v
+	return s
+}
+
+// SetStatus sets the Status field's value.
+func (s *OpsItem) SetStatus(v string) *OpsItem {
+	s.Status = &v
+	return s
+}
+
+// SetTitle sets the Title field's value.
+func (s *OpsItem) SetTitle(v string) *OpsItem {
+	s.Title = &v
+	return s
+}
+
+// SetVersion sets the Version field's value.
+func (s *OpsItem) SetVersion(v string) *OpsItem {
+	s.Version = &v
+	return s
+}
+
+// An object that defines the value of the key and its type in the OperationalData
+// map.
+type OpsItemDataValue struct {
+	_ struct{} `type:"structure"`
+
+	// The type of key-value pair. Valid types include SearchableString and String.
+	Type *string `type:"string" enum:"OpsItemDataType"`
+
+	// The value of the OperationalData key.
+	Value *string `type:"string"`
+}
+
+// String returns the string representation
+func (s OpsItemDataValue) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s OpsItemDataValue) GoString() string {
+	return s.String()
+}
+
+// SetType sets the Type field's value.
+func (s *OpsItemDataValue) SetType(v string) *OpsItemDataValue {
+	s.Type = &v
+	return s
+}
+
+// SetValue sets the Value field's value.
+func (s *OpsItemDataValue) SetValue(v string) *OpsItemDataValue {
+	s.Value = &v
+	return s
+}
+
+// Describes an OpsItem filter.
+type OpsItemFilter struct {
+	_ struct{} `type:"structure"`
+
+	// The name of the filter.
+	//
+	// Key is a required field
+	Key *string `type:"string" required:"true" enum:"OpsItemFilterKey"`
+
+	// The operator used by the filter call.
+	//
+	// Operator is a required field
+	Operator *string `type:"string" required:"true" enum:"OpsItemFilterOperator"`
+
+	// The filter value.
+	//
+	// Values is a required field
+	Values []*string `type:"list" required:"true"`
+}
+
+// String returns the string representation
+func (s OpsItemFilter) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s OpsItemFilter) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *OpsItemFilter) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "OpsItemFilter"}
+	if s.Key == nil {
+		invalidParams.Add(request.NewErrParamRequired("Key"))
+	}
+	if s.Operator == nil {
+		invalidParams.Add(request.NewErrParamRequired("Operator"))
+	}
+	if s.Values == nil {
+		invalidParams.Add(request.NewErrParamRequired("Values"))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetKey sets the Key field's value.
+func (s *OpsItemFilter) SetKey(v string) *OpsItemFilter {
+	s.Key = &v
+	return s
+}
+
+// SetOperator sets the Operator field's value.
+func (s *OpsItemFilter) SetOperator(v string) *OpsItemFilter {
+	s.Operator = &v
+	return s
+}
+
+// SetValues sets the Values field's value.
+func (s *OpsItemFilter) SetValues(v []*string) *OpsItemFilter {
+	s.Values = v
+	return s
+}
+
+// A notification about the OpsItem.
+type OpsItemNotification struct {
+	_ struct{} `type:"structure"`
+
+	// The Amazon Resource Name (ARN) of an SNS topic where notifications are sent
+	// when this OpsItem is edited or changed.
+	Arn *string `type:"string"`
+}
+
+// String returns the string representation
+func (s OpsItemNotification) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s OpsItemNotification) GoString() string {
+	return s.String()
+}
+
+// SetArn sets the Arn field's value.
+func (s *OpsItemNotification) SetArn(v string) *OpsItemNotification {
+	s.Arn = &v
+	return s
+}
+
+// A count of OpsItems.
+type OpsItemSummary struct {
+	_ struct{} `type:"structure"`
+
+	// The Amazon Resource Name (ARN) of the IAM entity that created the OpsItem.
+	CreatedBy *string `type:"string"`
+
+	// The date and time the OpsItem was created.
+	CreatedTime *time.Time `type:"timestamp"`
+
+	// The Amazon Resource Name (ARN) of the IAM entity that created the OpsItem.
+	LastModifiedBy *string `type:"string"`
+
+	// The date and time the OpsItem was last updated.
+	LastModifiedTime *time.Time `type:"timestamp"`
+
+	// Operational data is custom data that provides useful reference details about
+	// the OpsItem.
+	OperationalData map[string]*OpsItemDataValue `type:"map"`
+
+	// The ID of the OpsItem.
+	OpsItemId *string `type:"string"`
+
+	// The importance of this OpsItem in relation to other OpsItems in the system.
+	Priority *int64 `min:"1" type:"integer"`
+
+	// The impacted AWS resource.
+	Source *string `min:"1" type:"string"`
+
+	// The OpsItem status. Status can be Open, In Progress, or Resolved.
+	Status *string `type:"string" enum:"OpsItemStatus"`
+
+	// A short heading that describes the nature of the OpsItem and the impacted
+	// resource.
+	Title *string `min:"1" type:"string"`
+}
+
+// String returns the string representation
+func (s OpsItemSummary) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s OpsItemSummary) GoString() string {
+	return s.String()
+}
+
+// SetCreatedBy sets the CreatedBy field's value.
+func (s *OpsItemSummary) SetCreatedBy(v string) *OpsItemSummary {
+	s.CreatedBy = &v
+	return s
+}
+
+// SetCreatedTime sets the CreatedTime field's value.
+func (s *OpsItemSummary) SetCreatedTime(v time.Time) *OpsItemSummary {
+	s.CreatedTime = &v
+	return s
+}
+
+// SetLastModifiedBy sets the LastModifiedBy field's value.
+func (s *OpsItemSummary) SetLastModifiedBy(v string) *OpsItemSummary {
+	s.LastModifiedBy = &v
+	return s
+}
+
+// SetLastModifiedTime sets the LastModifiedTime field's value.
+func (s *OpsItemSummary) SetLastModifiedTime(v time.Time) *OpsItemSummary {
+	s.LastModifiedTime = &v
+	return s
+}
+
+// SetOperationalData sets the OperationalData field's value.
+func (s *OpsItemSummary) SetOperationalData(v map[string]*OpsItemDataValue) *OpsItemSummary {
+	s.OperationalData = v
+	return s
+}
+
+// SetOpsItemId sets the OpsItemId field's value.
+func (s *OpsItemSummary) SetOpsItemId(v string) *OpsItemSummary {
+	s.OpsItemId = &v
+	return s
+}
+
+// SetPriority sets the Priority field's value.
+func (s *OpsItemSummary) SetPriority(v int64) *OpsItemSummary {
+	s.Priority = &v
+	return s
+}
+
+// SetSource sets the Source field's value.
+func (s *OpsItemSummary) SetSource(v string) *OpsItemSummary {
+	s.Source = &v
+	return s
+}
+
+// SetStatus sets the Status field's value.
+func (s *OpsItemSummary) SetStatus(v string) *OpsItemSummary {
+	s.Status = &v
+	return s
+}
+
+// SetTitle sets the Title field's value.
+func (s *OpsItemSummary) SetTitle(v string) *OpsItemSummary {
+	s.Title = &v
 	return s
 }
 
@@ -28379,6 +29989,9 @@ type ParameterHistory struct {
 	Name *string `min:"1" type:"string"`
 
 	// Information about the policies assigned to a parameter.
+	//
+	// Working with Parameter Policies (https://docs.aws.amazon.com/systems-manager/latest/userguide/parameter-store-policies.html)
+	// in the AWS Systems Manager User Guide.
 	Policies []*ParameterInlinePolicy `type:"list"`
 
 	// The parameter tier.
@@ -28522,7 +30135,7 @@ func (s *ParameterInlinePolicy) SetPolicyType(v string) *ParameterInlinePolicy {
 	return s
 }
 
-// Metada includes information like the ARN of the last user and the date/time
+// Metadata includes information like the ARN of the last user and the date/time
 // the parameter was last used.
 type ParameterMetadata struct {
 	_ struct{} `type:"structure"`
@@ -30259,30 +31872,54 @@ type RegisterTargetWithMaintenanceWindowInput struct {
 	Name *string `min:"3" type:"string"`
 
 	// User-provided value that will be included in any CloudWatch events raised
-	// while running tasks for these targets in this Maintenance Window.
+	// while running tasks for these targets in this maintenance window.
 	OwnerInformation *string `min:"1" type:"string" sensitive:"true"`
 
-	// The type of target being registered with the Maintenance Window.
+	// The type of target being registered with the maintenance window.
 	//
 	// ResourceType is a required field
 	ResourceType *string `type:"string" required:"true" enum:"MaintenanceWindowResourceType"`
 
-	// The targets (either instances or tags).
+	// The targets to register with the maintenance window. In other words, the
+	// instances to run commands on when the maintenance window runs.
 	//
-	// Specify instances using the following format:
+	// You can specify targets using instance IDs, resource group names, or tags
+	// that have been applied to instances.
 	//
-	// Key=InstanceIds,Values=<instance-id-1>,<instance-id-2>
+	// Example 1: Specify instance IDs
 	//
-	// Specify tags using either of the following formats:
+	// Key=InstanceIds,Values=instance-id-1,instance-id-2,instance-id-3
 	//
-	// Key=tag:<tag-key>,Values=<tag-value-1>,<tag-value-2>
+	// Example 2: Use tag key-pairs applied to instances
 	//
-	// Key=tag-key,Values=<tag-key-1>,<tag-key-2>
+	// Key=tag:my-tag-key,Values=my-tag-value-1,my-tag-value-2
+	//
+	// Example 3: Use tag-keys applied to instances
+	//
+	// Key=tag-key,Values=my-tag-key-1,my-tag-key-2
+	//
+	// Example 4: Use resource group names
+	//
+	// Key=resource-groups:Name,Values=resource-group-name
+	//
+	// Example 5: Use filters for resource group types
+	//
+	// Key=resource-groups:ResourceTypeFilters,Values=resource-type-1,resource-type-2
+	//
+	// For Key=resource-groups:ResourceTypeFilters, specify resource types in the
+	// following format
+	//
+	// Key=resource-groups:ResourceTypeFilters,Values=AWS::EC2::INSTANCE,AWS::EC2::VPC
+	//
+	// For more information about these examples formats, including the best use
+	// case for each one, see Examples: Register Targets with a Maintenance Window
+	// (https://docs.aws.amazon.com/systems-manager/latest/userguide/mw-cli-tutorial-targets-examples.html)
+	// in the AWS Systems Manager User Guide.
 	//
 	// Targets is a required field
 	Targets []*Target `type:"list" required:"true"`
 
-	// The ID of the Maintenance Window the target should be registered with.
+	// The ID of the maintenance window the target should be registered with.
 	//
 	// WindowId is a required field
 	WindowId *string `min:"20" type:"string" required:"true"`
@@ -30387,7 +32024,7 @@ func (s *RegisterTargetWithMaintenanceWindowInput) SetWindowId(v string) *Regist
 type RegisterTargetWithMaintenanceWindowOutput struct {
 	_ struct{} `type:"structure"`
 
-	// The ID of the target definition in this Maintenance Window.
+	// The ID of the target definition in this maintenance window.
 	WindowTargetId *string `min:"36" type:"string"`
 }
 
@@ -30422,7 +32059,7 @@ type RegisterTaskWithMaintenanceWindowInput struct {
 	// LoggingInfo has been deprecated. To specify an S3 bucket to contain logs,
 	// instead use the OutputS3BucketName and OutputS3KeyPrefix options in the TaskInvocationParameters
 	// structure. For information about how Systems Manager handles these options
-	// for the supported Maintenance Window task types, see MaintenanceWindowTaskInvocationParameters.
+	// for the supported maintenance window task types, see MaintenanceWindowTaskInvocationParameters.
 	LoggingInfo *LoggingInfo `type:"structure"`
 
 	// The maximum number of targets this task can be run for in parallel.
@@ -30438,35 +32075,34 @@ type RegisterTaskWithMaintenanceWindowInput struct {
 	// An optional name for the task.
 	Name *string `min:"3" type:"string"`
 
-	// The priority of the task in the Maintenance Window, the lower the number
-	// the higher the priority. Tasks in a Maintenance Window are scheduled in priority
+	// The priority of the task in the maintenance window, the lower the number
+	// the higher the priority. Tasks in a maintenance window are scheduled in priority
 	// order with tasks that have the same priority scheduled in parallel.
 	Priority *int64 `type:"integer"`
 
-	// The role to assume when running the Maintenance Window task.
+	// The ARN of the IAM service role for Systems Manager to assume when running
+	// a maintenance window task. If you do not specify a service role ARN, Systems
+	// Manager uses your account's service-linked role. If no service-linked role
+	// for Systems Manager exists in your account, it is created when you run RegisterTaskWithMaintenanceWindow.
 	//
-	// If you do not specify a service role ARN, Systems Manager will use your account's
-	// service-linked role for Systems Manager by default. If no service-linked
-	// role for Systems Manager exists in your account, it will be created when
-	// you run RegisterTaskWithMaintenanceWindow without specifying a service role
-	// ARN.
+	// For more information, see the following topics in the in the AWS Systems
+	// Manager User Guide:
 	//
-	// For more information, see Service-Linked Role Permissions for Systems Manager
-	// (http://docs.aws.amazon.com/systems-manager/latest/userguide/using-service-linked-roles.html#slr-permissions)
-	// and Should I Use a Service-Linked Role or a Custom Service Role to Run Maintenance
-	// Window Tasks?  (http://docs.aws.amazon.com/systems-manager/latest/userguide/sysman-maintenance-permissions.html#maintenance-window-tasks-service-role)
-	// in the AWS Systems Manager User Guide.
+	//    * Service-Linked Role Permissions for Systems Manager (http://docs.aws.amazon.com/systems-manager/latest/userguide/using-service-linked-roles.html#slr-permissions)
+	//
+	//    * Should I Use a Service-Linked Role or a Custom Service Role to Run Maintenance
+	//    Window Tasks? (http://docs.aws.amazon.com/systems-manager/latest/userguide/sysman-maintenance-permissions.html#maintenance-window-tasks-service-role)
 	ServiceRoleArn *string `type:"string"`
 
-	// The targets (either instances or Maintenance Window targets).
+	// The targets (either instances or maintenance window targets).
 	//
 	// Specify instances using the following format:
 	//
 	// Key=InstanceIds,Values=<instance-id-1>,<instance-id-2>
 	//
-	// Specify Maintenance Window targets using the following format:
+	// Specify maintenance window targets using the following format:
 	//
-	// Key=<WindowTargetIds>,Values=<window-target-id-1>,<window-target-id-2>
+	// Key=WindowTargetIds;,Values=<window-target-id-1>,<window-target-id-2>
 	//
 	// Targets is a required field
 	Targets []*Target `type:"list" required:"true"`
@@ -30485,7 +32121,7 @@ type RegisterTaskWithMaintenanceWindowInput struct {
 	// TaskParameters has been deprecated. To specify parameters to pass to a task
 	// when it runs, instead use the Parameters option in the TaskInvocationParameters
 	// structure. For information about how Systems Manager handles these options
-	// for the supported Maintenance Window task types, see MaintenanceWindowTaskInvocationParameters.
+	// for the supported maintenance window task types, see MaintenanceWindowTaskInvocationParameters.
 	TaskParameters map[string]*MaintenanceWindowTaskParameterValueExpression `type:"map" sensitive:"true"`
 
 	// The type of task being registered.
@@ -30493,7 +32129,7 @@ type RegisterTaskWithMaintenanceWindowInput struct {
 	// TaskType is a required field
 	TaskType *string `type:"string" required:"true" enum:"MaintenanceWindowTaskType"`
 
-	// The ID of the Maintenance Window the task should be added to.
+	// The ID of the maintenance window the task should be added to.
 	//
 	// WindowId is a required field
 	WindowId *string `min:"20" type:"string" required:"true"`
@@ -30665,7 +32301,7 @@ func (s *RegisterTaskWithMaintenanceWindowInput) SetWindowId(v string) *Register
 type RegisterTaskWithMaintenanceWindowOutput struct {
 	_ struct{} `type:"structure"`
 
-	// The ID of the task in the Maintenance Window.
+	// The ID of the task in the maintenance window.
 	WindowTaskId *string `min:"36" type:"string"`
 }
 
@@ -30685,11 +32321,51 @@ func (s *RegisterTaskWithMaintenanceWindowOutput) SetWindowTaskId(v string) *Reg
 	return s
 }
 
+// An OpsItems that shares something in common with the current OpsItem. For
+// example, related OpsItems can include OpsItems with similar error messages,
+// impacted resources, or statuses for the impacted resource.
+type RelatedOpsItem struct {
+	_ struct{} `type:"structure"`
+
+	// The ID of an OpsItem related to the current OpsItem.
+	//
+	// OpsItemId is a required field
+	OpsItemId *string `type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s RelatedOpsItem) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s RelatedOpsItem) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *RelatedOpsItem) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "RelatedOpsItem"}
+	if s.OpsItemId == nil {
+		invalidParams.Add(request.NewErrParamRequired("OpsItemId"))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetOpsItemId sets the OpsItemId field's value.
+func (s *RelatedOpsItem) SetOpsItemId(v string) *RelatedOpsItem {
+	s.OpsItemId = &v
+	return s
+}
+
 type RemoveTagsFromResourceInput struct {
 	_ struct{} `type:"structure"`
 
-	// The resource ID for which you want to remove tags. Use the ID of the resource.
-	// Here are some examples:
+	// The ID of the resource from which you want to remove tags. For example:
 	//
 	// ManagedInstance: mi-012345abcde
 	//
@@ -30700,17 +32376,17 @@ type RemoveTagsFromResourceInput struct {
 	// For the Document and Parameter values, use the name of the resource.
 	//
 	// The ManagedInstance type for this API action is only for on-premises managed
-	// instances. You must specify the the name of the managed instance in the following
-	// format: mi-ID_number. For example, mi-1a2b3c4d5e6f.
+	// instances. Specify the name of the managed instance in the following format:
+	// mi-ID_number. For example, mi-1a2b3c4d5e6f.
 	//
 	// ResourceId is a required field
 	ResourceId *string `type:"string" required:"true"`
 
-	// The type of resource of which you want to remove a tag.
+	// The type of resource from which you want to remove a tag.
 	//
 	// The ManagedInstance type for this API action is only for on-premises managed
-	// instances. You must specify the the name of the managed instance in the following
-	// format: mi-ID_number. For example, mi-1a2b3c4d5e6f.
+	// instances. Specify the name of the managed instance in the following format:
+	// mi-ID_number. For example, mi-1a2b3c4d5e6f.
 	//
 	// ResourceType is a required field
 	ResourceType *string `type:"string" required:"true" enum:"ResourceTypeForTagging"`
@@ -31055,7 +32731,7 @@ type ResourceDataSyncS3Destination struct {
 	_ struct{} `type:"structure"`
 
 	// The ARN of an encryption key for a destination in Amazon S3. Must belong
-	// to the same region as the destination Amazon S3 bucket.
+	// to the same Region as the destination Amazon S3 bucket.
 	AWSKMSKeyARN *string `min:"1" type:"string"`
 
 	// The name of the Amazon S3 bucket where the aggregated data is stored.
@@ -31239,7 +32915,7 @@ type ResumeSessionOutput struct {
 	SessionId *string `min:"1" type:"string"`
 
 	// A URL back to SSM Agent on the instance that the Session Manager client uses
-	// to send commands and receive output from the instance. Format: wss://ssm-messages.region.amazonaws.com/v1/data-channel/session-id?stream=(input|output).
+	// to send commands and receive output from the instance. Format: wss://ssmmessages.region.amazonaws.com/v1/data-channel/session-id?stream=(input|output).
 	//
 	// region represents the Region identifier for an AWS Region supported by AWS
 	// Systems Manager, such as us-east-2 for the US East (Ohio) Region. For a list
@@ -31369,18 +33045,18 @@ func (s *S3OutputUrl) SetOutputUrl(v string) *S3OutputUrl {
 	return s
 }
 
-// Information about a scheduled execution for a Maintenance Window.
+// Information about a scheduled execution for a maintenance window.
 type ScheduledWindowExecution struct {
 	_ struct{} `type:"structure"`
 
-	// The time, in ISO-8601 Extended format, that the Maintenance Window is scheduled
+	// The time, in ISO-8601 Extended format, that the maintenance window is scheduled
 	// to be run.
 	ExecutionTime *string `type:"string"`
 
-	// The name of the Maintenance Window to be run.
+	// The name of the maintenance window to be run.
 	Name *string `min:"3" type:"string"`
 
-	// The ID of the Maintenance Window to be run.
+	// The ID of the maintenance window to be run.
 	WindowId *string `min:"20" type:"string"`
 }
 
@@ -31423,10 +33099,24 @@ type SendAutomationSignalInput struct {
 
 	// The data sent with the signal. The data schema depends on the type of signal
 	// used in the request.
+	//
+	// For Approve and Reject signal types, the payload is an optional comment that
+	// you can send with the signal type. For example:
+	//
+	// Comment="Looks good"
+	//
+	// For StartStep and Resume signal types, you must send the name of the Automation
+	// step to start or resume as the payload. For example:
+	//
+	// StepName="step1"
+	//
+	// For the StopStep signal type, you must send the step execution ID as the
+	// payload. For example:
+	//
+	// StepExecutionId="97fff367-fc5a-4299-aed8-0123456789ab"
 	Payload map[string][]*string `min:"1" type:"map"`
 
-	// The type of signal. Valid signal types include the following: Approve and
-	// Reject
+	// The type of signal to send to an Automation execution.
 	//
 	// SignalType is a required field
 	SignalType *string `type:"string" required:"true" enum:"SignalType"`
@@ -31576,7 +33266,8 @@ type SendCommandInput struct {
 	// The required and optional parameters specified in the document being run.
 	Parameters map[string][]*string `type:"map"`
 
-	// The IAM role that Systems Manager uses to send notifications.
+	// The ARN of the IAM service role to use to publish Amazon Simple Notification
+	// Service (Amazon SNS) notifications for Run Command commands.
 	ServiceRoleArn *string `type:"string"`
 
 	// (Optional) An array of search criteria that targets instances using a Key,Value
@@ -31986,19 +33677,8 @@ type SessionFilter struct {
 	//    by that user.
 	//
 	//    * Status: Specify a valid session status to see a list of all sessions
-	//    with that status. Status values you can specify include:
-	//
-	// Connected
-	//
-	// Connecting
-	//
-	// Disconnected
-	//
-	// Terminated
-	//
-	// Terminating
-	//
-	// Failed
+	//    with that status. Status values you can specify include: Connected Connecting
+	//    Disconnected Terminated Terminating Failed
 	//
 	// Value is a required field
 	Value *string `locationName:"value" min:"1" type:"string" required:"true"`
@@ -32496,7 +34176,7 @@ type StartSessionOutput struct {
 	SessionId *string `min:"1" type:"string"`
 
 	// A URL back to SSM Agent on the instance that the Session Manager client uses
-	// to send commands and receive output from the instance. Format: wss://ssm-messages.region.amazonaws.com/v1/data-channel/session-id?stream=(input|output)
+	// to send commands and receive output from the instance. Format: wss://ssmmessages.region.amazonaws.com/v1/data-channel/session-id?stream=(input|output)
 	//
 	// region represents the Region identifier for an AWS Region supported by AWS
 	// Systems Manager, such as us-east-2 for the US East (Ohio) Region. For a list
@@ -32891,8 +34571,8 @@ func (s StopAutomationExecutionOutput) GoString() string {
 
 // Metadata that you assign to your AWS resources. Tags enable you to categorize
 // your resources in different ways, for example, by purpose, owner, or environment.
-// In Systems Manager, you can apply tags to documents, managed instances, Maintenance
-// Windows, Parameter Store parameters, and patch baselines.
+// In Systems Manager, you can apply tags to documents, managed instances, maintenance
+// windows, Parameter Store parameters, and patch baselines.
 type Tag struct {
 	_ struct{} `type:"structure"`
 
@@ -32952,24 +34632,46 @@ func (s *Tag) SetValue(v string) *Tag {
 }
 
 // An array of search criteria that targets instances using a Key,Value combination
-// that you specify. Targets is required if you don't provide one or more instance
-// IDs in the call.
+// that you specify.
+//
+// Supported formats include the following.
+//
+//    * Key=InstanceIds,Values=instance-id-1,instance-id-2,instance-id-3
+//
+//    * Key=tag:my-tag-key,Values=my-tag-value-1,my-tag-value-2
+//
+//    * Key=tag-key,Values=my-tag-key-1,my-tag-key-2
+//
+//    * (Maintenance window targets only) Key=resource-groups:Name,Values=resource-group-name
+//
+//    * (Maintenance window targets only) Key=resource-groups:ResourceTypeFilters,Values=resource-type-1,resource-type-2
+//
+// For example:
+//
+//    * Key=InstanceIds,Values=i-02573cafcfEXAMPLE,i-0471e04240EXAMPLE,i-07782c72faEXAMPLE
+//
+//    * Key=tag:CostCenter,Values=CostCenter1,CostCenter2,CostCenter3
+//
+//    * Key=tag-key,Values=Name,Instance-Type,CostCenter
+//
+//    * (Maintenance window targets only) Key=resource-groups:Name,Values=ProductionResourceGroup
+//
+//    * (Maintenance window targets only) Key=resource-groups:ResourceTypeFilters,Values=AWS::EC2::INSTANCE,AWS::EC2::VPC
+//
+// For information about how to send commands that target instances using Key,Value
+// parameters, see Using Targets and Rate Controls to Send Commands to a Fleet
+// (https://docs.aws.amazon.com/systems-manager/latest/userguide/send-commands-multiple.html#send-commands-targeting)
+// in the AWS Systems Manager User Guide.
 type Target struct {
 	_ struct{} `type:"structure"`
 
 	// User-defined criteria for sending commands that target instances that meet
-	// the criteria. Key can be tag:<Amazon EC2 tag> or InstanceIds. For more information
-	// about how to send commands that target instances using Key,Value parameters,
-	// see Using Targets and Rate Controls to Send Commands to a Fleet (https://docs.aws.amazon.com/systems-manager/latest/userguide/send-commands-multiple.html#send-commands-targeting)
-	// in the AWS Systems Manager User Guide.
+	// the criteria.
 	Key *string `min:"1" type:"string"`
 
 	// User-defined criteria that maps to Key. For example, if you specified tag:ServerRole,
 	// you could specify value:WebServer to run a command on instances that include
-	// Amazon EC2 tags of ServerRole,WebServer. For more information about how to
-	// send commands that target instances using Key,Value parameters, see Using
-	// Targets and Rate Controls to Send Commands to a Fleet (https://docs.aws.amazon.com/systems-manager/latest/userguide/send-commands-multiple.html)
-	// in the AWS Systems Manager User Guide.
+	// Amazon EC2 tags of ServerRole,WebServer.
 	Values []*string `type:"list"`
 }
 
@@ -33022,11 +34724,11 @@ type TargetLocation struct {
 	// The AWS Regions targeted by the current Automation execution.
 	Regions []*string `min:"1" type:"list"`
 
-	// The maxium number of AWS accounts and AWS regions allowed to run the Automation
+	// The maximum number of AWS accounts and AWS regions allowed to run the Automation
 	// concurrently
 	TargetLocationMaxConcurrency *string `min:"1" type:"string"`
 
-	// The maxium number of errors allowed before the system stops queueing additional
+	// The maximum number of errors allowed before the system stops queueing additional
 	// Automation executions for the currently running Automation.
 	TargetLocationMaxErrors *string `min:"1" type:"string"`
 }
@@ -33707,29 +35409,29 @@ func (s *UpdateDocumentOutput) SetDocumentDescription(v *DocumentDescription) *U
 type UpdateMaintenanceWindowInput struct {
 	_ struct{} `type:"structure"`
 
-	// Whether targets must be registered with the Maintenance Window before tasks
+	// Whether targets must be registered with the maintenance window before tasks
 	// can be defined for those targets.
 	AllowUnassociatedTargets *bool `type:"boolean"`
 
-	// The number of hours before the end of the Maintenance Window that Systems
+	// The number of hours before the end of the maintenance window that Systems
 	// Manager stops scheduling new tasks for execution.
 	Cutoff *int64 `type:"integer"`
 
 	// An optional description for the update request.
 	Description *string `min:"1" type:"string" sensitive:"true"`
 
-	// The duration of the Maintenance Window in hours.
+	// The duration of the maintenance window in hours.
 	Duration *int64 `min:"1" type:"integer"`
 
-	// Whether the Maintenance Window is enabled.
+	// Whether the maintenance window is enabled.
 	Enabled *bool `type:"boolean"`
 
-	// The date and time, in ISO-8601 Extended format, for when you want the Maintenance
-	// Window to become inactive. EndDate allows you to set a date and time in the
-	// future when the Maintenance Window will no longer run.
+	// The date and time, in ISO-8601 Extended format, for when you want the maintenance
+	// window to become inactive. EndDate allows you to set a date and time in the
+	// future when the maintenance window will no longer run.
 	EndDate *string `type:"string"`
 
-	// The name of the Maintenance Window.
+	// The name of the maintenance window.
 	Name *string `min:"3" type:"string"`
 
 	// If True, then all fields that are required by the CreateMaintenanceWindow
@@ -33737,22 +35439,22 @@ type UpdateMaintenanceWindowInput struct {
 	// specified are set to null.
 	Replace *bool `type:"boolean"`
 
-	// The schedule of the Maintenance Window in the form of a cron or rate expression.
+	// The schedule of the maintenance window in the form of a cron or rate expression.
 	Schedule *string `min:"1" type:"string"`
 
-	// The time zone that the scheduled Maintenance Window executions are based
+	// The time zone that the scheduled maintenance window executions are based
 	// on, in Internet Assigned Numbers Authority (IANA) format. For example: "America/Los_Angeles",
 	// "etc/UTC", or "Asia/Seoul". For more information, see the Time Zone Database
 	// (https://www.iana.org/time-zones) on the IANA website.
 	ScheduleTimezone *string `type:"string"`
 
-	// The time zone that the scheduled Maintenance Window executions are based
+	// The time zone that the scheduled maintenance window executions are based
 	// on, in Internet Assigned Numbers Authority (IANA) format. For example: "America/Los_Angeles",
 	// "etc/UTC", or "Asia/Seoul". For more information, see the Time Zone Database
 	// (https://www.iana.org/time-zones) on the IANA website.
 	StartDate *string `type:"string"`
 
-	// The ID of the Maintenance Window to update.
+	// The ID of the maintenance window to update.
 	//
 	// WindowId is a required field
 	WindowId *string `min:"20" type:"string" required:"true"`
@@ -33871,46 +35573,46 @@ func (s *UpdateMaintenanceWindowInput) SetWindowId(v string) *UpdateMaintenanceW
 type UpdateMaintenanceWindowOutput struct {
 	_ struct{} `type:"structure"`
 
-	// Whether targets must be registered with the Maintenance Window before tasks
+	// Whether targets must be registered with the maintenance window before tasks
 	// can be defined for those targets.
 	AllowUnassociatedTargets *bool `type:"boolean"`
 
-	// The number of hours before the end of the Maintenance Window that Systems
+	// The number of hours before the end of the maintenance window that Systems
 	// Manager stops scheduling new tasks for execution.
 	Cutoff *int64 `type:"integer"`
 
 	// An optional description of the update.
 	Description *string `min:"1" type:"string" sensitive:"true"`
 
-	// The duration of the Maintenance Window in hours.
+	// The duration of the maintenance window in hours.
 	Duration *int64 `min:"1" type:"integer"`
 
-	// Whether the Maintenance Window is enabled.
+	// Whether the maintenance window is enabled.
 	Enabled *bool `type:"boolean"`
 
-	// The date and time, in ISO-8601 Extended format, for when the Maintenance
-	// Window is scheduled to become inactive. The Maintenance Window will not run
+	// The date and time, in ISO-8601 Extended format, for when the maintenance
+	// window is scheduled to become inactive. The maintenance window will not run
 	// after this specified time.
 	EndDate *string `type:"string"`
 
-	// The name of the Maintenance Window.
+	// The name of the maintenance window.
 	Name *string `min:"3" type:"string"`
 
-	// The schedule of the Maintenance Window in the form of a cron or rate expression.
+	// The schedule of the maintenance window in the form of a cron or rate expression.
 	Schedule *string `min:"1" type:"string"`
 
-	// The time zone that the scheduled Maintenance Window executions are based
+	// The time zone that the scheduled maintenance window executions are based
 	// on, in Internet Assigned Numbers Authority (IANA) format. For example: "America/Los_Angeles",
 	// "etc/UTC", or "Asia/Seoul". For more information, see the Time Zone Database
 	// (https://www.iana.org/time-zones) on the IANA website.
 	ScheduleTimezone *string `type:"string"`
 
-	// The date and time, in ISO-8601 Extended format, for when the Maintenance
-	// Window is scheduled to become active. The Maintenance Window will not run
+	// The date and time, in ISO-8601 Extended format, for when the maintenance
+	// window is scheduled to become active. The maintenance window will not run
 	// before this specified time.
 	StartDate *string `type:"string"`
 
-	// The ID of the created Maintenance Window.
+	// The ID of the created maintenance window.
 	WindowId *string `min:"20" type:"string"`
 }
 
@@ -34000,7 +35702,7 @@ type UpdateMaintenanceWindowTargetInput struct {
 	Name *string `min:"3" type:"string"`
 
 	// User-provided value that will be included in any CloudWatch events raised
-	// while running tasks for these targets in this Maintenance Window.
+	// while running tasks for these targets in this maintenance window.
 	OwnerInformation *string `min:"1" type:"string" sensitive:"true"`
 
 	// If True, then all fields that are required by the RegisterTargetWithMaintenanceWindow
@@ -34011,7 +35713,7 @@ type UpdateMaintenanceWindowTargetInput struct {
 	// The targets to add or replace.
 	Targets []*Target `type:"list"`
 
-	// The Maintenance Window ID with which to modify the target.
+	// The maintenance window ID with which to modify the target.
 	//
 	// WindowId is a required field
 	WindowId *string `min:"20" type:"string" required:"true"`
@@ -34130,7 +35832,7 @@ type UpdateMaintenanceWindowTargetOutput struct {
 	// The updated targets.
 	Targets []*Target `type:"list"`
 
-	// The Maintenance Window ID specified in the update request.
+	// The maintenance window ID specified in the update request.
 	WindowId *string `min:"20" type:"string"`
 
 	// The target ID specified in the update request.
@@ -34194,7 +35896,7 @@ type UpdateMaintenanceWindowTaskInput struct {
 	// LoggingInfo has been deprecated. To specify an S3 bucket to contain logs,
 	// instead use the OutputS3BucketName and OutputS3KeyPrefix options in the TaskInvocationParameters
 	// structure. For information about how Systems Manager handles these options
-	// for the supported Maintenance Window task types, see MaintenanceWindowTaskInvocationParameters.
+	// for the supported maintenance window task types, see MaintenanceWindowTaskInvocationParameters.
 	LoggingInfo *LoggingInfo `type:"structure"`
 
 	// The new MaxConcurrency value you want to specify. MaxConcurrency is the number
@@ -34217,20 +35919,18 @@ type UpdateMaintenanceWindowTaskInput struct {
 	// specified are set to null.
 	Replace *bool `type:"boolean"`
 
-	// The IAM service role ARN to modify. The system assumes this role during task
-	// execution.
+	// The ARN of the IAM service role for Systems Manager to assume when running
+	// a maintenance window task. If you do not specify a service role ARN, Systems
+	// Manager uses your account's service-linked role. If no service-linked role
+	// for Systems Manager exists in your account, it is created when you run RegisterTaskWithMaintenanceWindow.
 	//
-	// If you do not specify a service role ARN, Systems Manager will use your account's
-	// service-linked role for Systems Manager by default. If no service-linked
-	// role for Systems Manager exists in your account, it will be created when
-	// you run RegisterTaskWithMaintenanceWindow without specifying a service role
-	// ARN.
+	// For more information, see the following topics in the in the AWS Systems
+	// Manager User Guide:
 	//
-	// For more information, see Service-Linked Role Permissions for Systems Manager
-	// (http://docs.aws.amazon.com/systems-manager/latest/userguide/using-service-linked-roles.html#slr-permissions)
-	// and Should I Use a Service-Linked Role or a Custom Service Role to Run Maintenance
-	// Window Tasks?  (http://docs.aws.amazon.com/systems-manager/latest/userguide/sysman-maintenance-permissions.html#maintenance-window-tasks-service-role)
-	// in the AWS Systems Manager User Guide.
+	//    * Service-Linked Role Permissions for Systems Manager (http://docs.aws.amazon.com/systems-manager/latest/userguide/using-service-linked-roles.html#slr-permissions)
+	//
+	//    * Should I Use a Service-Linked Role or a Custom Service Role to Run Maintenance
+	//    Window Tasks? (http://docs.aws.amazon.com/systems-manager/latest/userguide/sysman-maintenance-permissions.html#maintenance-window-tasks-service-role)
 	ServiceRoleArn *string `type:"string"`
 
 	// The targets (either instances or tags) to modify. Instances are specified
@@ -34250,7 +35950,7 @@ type UpdateMaintenanceWindowTaskInput struct {
 	// TaskParameters has been deprecated. To specify parameters to pass to a task
 	// when it runs, instead use the Parameters option in the TaskInvocationParameters
 	// structure. For information about how Systems Manager handles these options
-	// for the supported Maintenance Window task types, see MaintenanceWindowTaskInvocationParameters.
+	// for the supported maintenance window task types, see MaintenanceWindowTaskInvocationParameters.
 	//
 	// The map has the following format:
 	//
@@ -34259,7 +35959,7 @@ type UpdateMaintenanceWindowTaskInput struct {
 	// Value: an array of strings, each string is between 1 and 255 characters
 	TaskParameters map[string]*MaintenanceWindowTaskParameterValueExpression `type:"map" sensitive:"true"`
 
-	// The Maintenance Window ID that contains the task to modify.
+	// The maintenance window ID that contains the task to modify.
 	//
 	// WindowId is a required field
 	WindowId *string `min:"20" type:"string" required:"true"`
@@ -34432,7 +36132,7 @@ type UpdateMaintenanceWindowTaskOutput struct {
 	// LoggingInfo has been deprecated. To specify an S3 bucket to contain logs,
 	// instead use the OutputS3BucketName and OutputS3KeyPrefix options in the TaskInvocationParameters
 	// structure. For information about how Systems Manager handles these options
-	// for the supported Maintenance Window task types, see MaintenanceWindowTaskInvocationParameters.
+	// for the supported maintenance window task types, see MaintenanceWindowTaskInvocationParameters.
 	LoggingInfo *LoggingInfo `type:"structure"`
 
 	// The updated MaxConcurrency value.
@@ -34447,7 +36147,8 @@ type UpdateMaintenanceWindowTaskOutput struct {
 	// The updated priority value.
 	Priority *int64 `type:"integer"`
 
-	// The updated service role ARN value.
+	// The ARN of the IAM service role to use to publish Amazon Simple Notification
+	// Service (Amazon SNS) notifications for maintenance window Run Command tasks.
 	ServiceRoleArn *string `type:"string"`
 
 	// The updated target values.
@@ -34464,13 +36165,13 @@ type UpdateMaintenanceWindowTaskOutput struct {
 	// TaskParameters has been deprecated. To specify parameters to pass to a task
 	// when it runs, instead use the Parameters option in the TaskInvocationParameters
 	// structure. For information about how Systems Manager handles these options
-	// for the supported Maintenance Window task types, see MaintenanceWindowTaskInvocationParameters.
+	// for the supported maintenance window task types, see MaintenanceWindowTaskInvocationParameters.
 	TaskParameters map[string]*MaintenanceWindowTaskParameterValueExpression `type:"map" sensitive:"true"`
 
-	// The ID of the Maintenance Window that was updated.
+	// The ID of the maintenance window that was updated.
 	WindowId *string `min:"20" type:"string"`
 
-	// The task ID of the Maintenance Window that was updated.
+	// The task ID of the maintenance window that was updated.
 	WindowTaskId *string `min:"36" type:"string"`
 }
 
@@ -34625,6 +36326,179 @@ func (s UpdateManagedInstanceRoleOutput) String() string {
 
 // GoString returns the string representation
 func (s UpdateManagedInstanceRoleOutput) GoString() string {
+	return s.String()
+}
+
+type UpdateOpsItemInput struct {
+	_ struct{} `type:"structure"`
+
+	// Update the information about the OpsItem. Provide enough information so that
+	// users reading this OpsItem for the first time understand the issue.
+	Description *string `min:"1" type:"string"`
+
+	// The Amazon Resource Name (ARN) of an SNS topic where notifications are sent
+	// when this OpsItem is edited or changed.
+	Notifications []*OpsItemNotification `type:"list"`
+
+	// Add new keys or edit existing key-value pairs of the OperationalData map
+	// in the OpsItem object.
+	//
+	// Operational data is custom data that provides useful reference details about
+	// the OpsItem. For example, you can specify log files, error strings, license
+	// keys, troubleshooting tips, or other relevant data. You enter operational
+	// data as key-value pairs. The key has a maximum length of 128 characters.
+	// The value has a maximum size of 20 KB.
+	//
+	// Operational data keys can't begin with the following: amazon, aws, amzn,
+	// ssm, /amazon, /aws, /amzn, /ssm.
+	//
+	// You can choose to make the data searchable by other users in the account
+	// or you can restrict search access. Searchable data means that all users with
+	// access to the OpsItem Overview page (as provided by the DescribeOpsItems
+	// API action) can view and search on the specified data. Operational data that
+	// is not searchable is only viewable by users who have access to the OpsItem
+	// (as provided by the GetOpsItem API action).
+	//
+	// Use the /aws/resources key in OperationalData to specify a related resource
+	// in the request. Use the /aws/automations key in OperationalData to associate
+	// an Automation runbook with the OpsItem. To view AWS CLI example commands
+	// that use these keys, see Creating OpsItems Manually (http://docs.aws.amazon.com/systems-manager/latest/userguide/OpsCenter-creating-OpsItems.html#OpsCenter-manually-create-OpsItems)
+	// in the AWS Systems Manager User Guide.
+	OperationalData map[string]*OpsItemDataValue `type:"map"`
+
+	// Keys that you want to remove from the OperationalData map.
+	OperationalDataToDelete []*string `type:"list"`
+
+	// The ID of the OpsItem.
+	//
+	// OpsItemId is a required field
+	OpsItemId *string `type:"string" required:"true"`
+
+	// The importance of this OpsItem in relation to other OpsItems in the system.
+	Priority *int64 `min:"1" type:"integer"`
+
+	// One or more OpsItems that share something in common with the current OpsItems.
+	// For example, related OpsItems can include OpsItems with similar error messages,
+	// impacted resources, or statuses for the impacted resource.
+	RelatedOpsItems []*RelatedOpsItem `type:"list"`
+
+	// The OpsItem status. Status can be Open, In Progress, or Resolved. For more
+	// information, see Editing OpsItem Details (http://docs.aws.amazon.com/systems-manager/latest/userguide/OpsCenter-working-with-OpsItems-editing-details.html)
+	// in the AWS Systems Manager User Guide.
+	Status *string `type:"string" enum:"OpsItemStatus"`
+
+	// A short heading that describes the nature of the OpsItem and the impacted
+	// resource.
+	Title *string `min:"1" type:"string"`
+}
+
+// String returns the string representation
+func (s UpdateOpsItemInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s UpdateOpsItemInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *UpdateOpsItemInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "UpdateOpsItemInput"}
+	if s.Description != nil && len(*s.Description) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("Description", 1))
+	}
+	if s.OpsItemId == nil {
+		invalidParams.Add(request.NewErrParamRequired("OpsItemId"))
+	}
+	if s.Priority != nil && *s.Priority < 1 {
+		invalidParams.Add(request.NewErrParamMinValue("Priority", 1))
+	}
+	if s.Title != nil && len(*s.Title) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("Title", 1))
+	}
+	if s.RelatedOpsItems != nil {
+		for i, v := range s.RelatedOpsItems {
+			if v == nil {
+				continue
+			}
+			if err := v.Validate(); err != nil {
+				invalidParams.AddNested(fmt.Sprintf("%s[%v]", "RelatedOpsItems", i), err.(request.ErrInvalidParams))
+			}
+		}
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetDescription sets the Description field's value.
+func (s *UpdateOpsItemInput) SetDescription(v string) *UpdateOpsItemInput {
+	s.Description = &v
+	return s
+}
+
+// SetNotifications sets the Notifications field's value.
+func (s *UpdateOpsItemInput) SetNotifications(v []*OpsItemNotification) *UpdateOpsItemInput {
+	s.Notifications = v
+	return s
+}
+
+// SetOperationalData sets the OperationalData field's value.
+func (s *UpdateOpsItemInput) SetOperationalData(v map[string]*OpsItemDataValue) *UpdateOpsItemInput {
+	s.OperationalData = v
+	return s
+}
+
+// SetOperationalDataToDelete sets the OperationalDataToDelete field's value.
+func (s *UpdateOpsItemInput) SetOperationalDataToDelete(v []*string) *UpdateOpsItemInput {
+	s.OperationalDataToDelete = v
+	return s
+}
+
+// SetOpsItemId sets the OpsItemId field's value.
+func (s *UpdateOpsItemInput) SetOpsItemId(v string) *UpdateOpsItemInput {
+	s.OpsItemId = &v
+	return s
+}
+
+// SetPriority sets the Priority field's value.
+func (s *UpdateOpsItemInput) SetPriority(v int64) *UpdateOpsItemInput {
+	s.Priority = &v
+	return s
+}
+
+// SetRelatedOpsItems sets the RelatedOpsItems field's value.
+func (s *UpdateOpsItemInput) SetRelatedOpsItems(v []*RelatedOpsItem) *UpdateOpsItemInput {
+	s.RelatedOpsItems = v
+	return s
+}
+
+// SetStatus sets the Status field's value.
+func (s *UpdateOpsItemInput) SetStatus(v string) *UpdateOpsItemInput {
+	s.Status = &v
+	return s
+}
+
+// SetTitle sets the Title field's value.
+func (s *UpdateOpsItemInput) SetTitle(v string) *UpdateOpsItemInput {
+	s.Title = &v
+	return s
+}
+
+type UpdateOpsItemOutput struct {
+	_ struct{} `type:"structure"`
+}
+
+// String returns the string representation
+func (s UpdateOpsItemOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s UpdateOpsItemOutput) GoString() string {
 	return s.String()
 }
 
@@ -35566,6 +37440,9 @@ const (
 const (
 	// MaintenanceWindowResourceTypeInstance is a MaintenanceWindowResourceType enum value
 	MaintenanceWindowResourceTypeInstance = "INSTANCE"
+
+	// MaintenanceWindowResourceTypeResourceGroup is a MaintenanceWindowResourceType enum value
+	MaintenanceWindowResourceTypeResourceGroup = "RESOURCE_GROUP"
 )
 
 const (
@@ -35631,6 +37508,100 @@ const (
 
 	// OperatingSystemCentos is a OperatingSystem enum value
 	OperatingSystemCentos = "CENTOS"
+)
+
+const (
+	// OpsFilterOperatorTypeEqual is a OpsFilterOperatorType enum value
+	OpsFilterOperatorTypeEqual = "Equal"
+
+	// OpsFilterOperatorTypeNotEqual is a OpsFilterOperatorType enum value
+	OpsFilterOperatorTypeNotEqual = "NotEqual"
+
+	// OpsFilterOperatorTypeBeginWith is a OpsFilterOperatorType enum value
+	OpsFilterOperatorTypeBeginWith = "BeginWith"
+
+	// OpsFilterOperatorTypeLessThan is a OpsFilterOperatorType enum value
+	OpsFilterOperatorTypeLessThan = "LessThan"
+
+	// OpsFilterOperatorTypeGreaterThan is a OpsFilterOperatorType enum value
+	OpsFilterOperatorTypeGreaterThan = "GreaterThan"
+
+	// OpsFilterOperatorTypeExists is a OpsFilterOperatorType enum value
+	OpsFilterOperatorTypeExists = "Exists"
+)
+
+const (
+	// OpsItemDataTypeSearchableString is a OpsItemDataType enum value
+	OpsItemDataTypeSearchableString = "SearchableString"
+
+	// OpsItemDataTypeString is a OpsItemDataType enum value
+	OpsItemDataTypeString = "String"
+)
+
+const (
+	// OpsItemFilterKeyStatus is a OpsItemFilterKey enum value
+	OpsItemFilterKeyStatus = "Status"
+
+	// OpsItemFilterKeyCreatedBy is a OpsItemFilterKey enum value
+	OpsItemFilterKeyCreatedBy = "CreatedBy"
+
+	// OpsItemFilterKeySource is a OpsItemFilterKey enum value
+	OpsItemFilterKeySource = "Source"
+
+	// OpsItemFilterKeyPriority is a OpsItemFilterKey enum value
+	OpsItemFilterKeyPriority = "Priority"
+
+	// OpsItemFilterKeyTitle is a OpsItemFilterKey enum value
+	OpsItemFilterKeyTitle = "Title"
+
+	// OpsItemFilterKeyOpsItemId is a OpsItemFilterKey enum value
+	OpsItemFilterKeyOpsItemId = "OpsItemId"
+
+	// OpsItemFilterKeyCreatedTime is a OpsItemFilterKey enum value
+	OpsItemFilterKeyCreatedTime = "CreatedTime"
+
+	// OpsItemFilterKeyLastModifiedTime is a OpsItemFilterKey enum value
+	OpsItemFilterKeyLastModifiedTime = "LastModifiedTime"
+
+	// OpsItemFilterKeyOperationalData is a OpsItemFilterKey enum value
+	OpsItemFilterKeyOperationalData = "OperationalData"
+
+	// OpsItemFilterKeyOperationalDataKey is a OpsItemFilterKey enum value
+	OpsItemFilterKeyOperationalDataKey = "OperationalDataKey"
+
+	// OpsItemFilterKeyOperationalDataValue is a OpsItemFilterKey enum value
+	OpsItemFilterKeyOperationalDataValue = "OperationalDataValue"
+
+	// OpsItemFilterKeyResourceId is a OpsItemFilterKey enum value
+	OpsItemFilterKeyResourceId = "ResourceId"
+
+	// OpsItemFilterKeyAutomationId is a OpsItemFilterKey enum value
+	OpsItemFilterKeyAutomationId = "AutomationId"
+)
+
+const (
+	// OpsItemFilterOperatorEqual is a OpsItemFilterOperator enum value
+	OpsItemFilterOperatorEqual = "Equal"
+
+	// OpsItemFilterOperatorContains is a OpsItemFilterOperator enum value
+	OpsItemFilterOperatorContains = "Contains"
+
+	// OpsItemFilterOperatorGreaterThan is a OpsItemFilterOperator enum value
+	OpsItemFilterOperatorGreaterThan = "GreaterThan"
+
+	// OpsItemFilterOperatorLessThan is a OpsItemFilterOperator enum value
+	OpsItemFilterOperatorLessThan = "LessThan"
+)
+
+const (
+	// OpsItemStatusOpen is a OpsItemStatus enum value
+	OpsItemStatusOpen = "Open"
+
+	// OpsItemStatusInProgress is a OpsItemStatus enum value
+	OpsItemStatusInProgress = "InProgress"
+
+	// OpsItemStatusResolved is a OpsItemStatus enum value
+	OpsItemStatusResolved = "Resolved"
 )
 
 const (
@@ -35840,6 +37811,9 @@ const (
 
 	// ResourceTypeForTaggingPatchBaseline is a ResourceTypeForTagging enum value
 	ResourceTypeForTaggingPatchBaseline = "PatchBaseline"
+
+	// ResourceTypeForTaggingOpsItem is a ResourceTypeForTagging enum value
+	ResourceTypeForTaggingOpsItem = "OpsItem"
 )
 
 const (

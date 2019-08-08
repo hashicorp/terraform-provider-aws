@@ -32,12 +32,12 @@ func TestAccAWSDataSourceIAMGroup_basic(t *testing.T) {
 func testAccAwsIAMGroupConfig(name string) string {
 	return fmt.Sprintf(`
 resource "aws_iam_group" "group" {
-	name = "%s"
-	path = "/"
+  name = "%s"
+  path = "/"
 }
 
 data "aws_iam_group" "test" {
-	  group_name = "${aws_iam_group.group.name}"
+  group_name = "${aws_iam_group.group.name}"
 }
 `, name)
 }

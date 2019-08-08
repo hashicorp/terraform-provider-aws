@@ -5040,6 +5040,199 @@ func (c *IAM) GenerateCredentialReportWithContext(ctx aws.Context, input *Genera
 	return out, req.Send()
 }
 
+const opGenerateOrganizationsAccessReport = "GenerateOrganizationsAccessReport"
+
+// GenerateOrganizationsAccessReportRequest generates a "aws/request.Request" representing the
+// client's request for the GenerateOrganizationsAccessReport operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See GenerateOrganizationsAccessReport for more information on using the GenerateOrganizationsAccessReport
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the GenerateOrganizationsAccessReportRequest method.
+//    req, resp := client.GenerateOrganizationsAccessReportRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/iam-2010-05-08/GenerateOrganizationsAccessReport
+func (c *IAM) GenerateOrganizationsAccessReportRequest(input *GenerateOrganizationsAccessReportInput) (req *request.Request, output *GenerateOrganizationsAccessReportOutput) {
+	op := &request.Operation{
+		Name:       opGenerateOrganizationsAccessReport,
+		HTTPMethod: "POST",
+		HTTPPath:   "/",
+	}
+
+	if input == nil {
+		input = &GenerateOrganizationsAccessReportInput{}
+	}
+
+	output = &GenerateOrganizationsAccessReportOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// GenerateOrganizationsAccessReport API operation for AWS Identity and Access Management.
+//
+// Generates a report for service last accessed data for AWS Organizations.
+// You can generate a report for any entities (organization root, organizational
+// unit, or account) or policies in your organization.
+//
+// To call this operation, you must be signed in using your AWS Organizations
+// master account credentials. You can use your long-term IAM user or root user
+// credentials, or temporary credentials from assuming an IAM role. SCPs must
+// be enabled for your organization root. You must have the required IAM and
+// AWS Organizations permissions. For more information, see Refining Permissions
+// Using Service Last Accessed Data (https://docs.aws.amazon.com/IAM/latest/UserGuide/access_policies_access-advisor.html)
+// in the IAM User Guide.
+//
+// You can generate a service last accessed data report for entities by specifying
+// only the entity's path. This data includes a list of services that are allowed
+// by any service control policies (SCPs) that apply to the entity.
+//
+// You can generate a service last accessed data report for a policy by specifying
+// an entity's path and an optional AWS Organizations policy ID. This data includes
+// a list of services that are allowed by the specified SCP.
+//
+// For each service in both report types, the data includes the most recent
+// account activity that the policy allows to account principals in the entity
+// or the entity's children. For important information about the data, reporting
+// period, permissions required, troubleshooting, and supported Regions see
+// Reducing Permissions Using Service Last Accessed Data (https://docs.aws.amazon.com/IAM/latest/UserGuide/access_policies_access-advisor.html)
+// in the IAM User Guide.
+//
+// The data includes all attempts to access AWS, not just the successful ones.
+// This includes all attempts that were made using the AWS Management Console,
+// the AWS API through any of the SDKs, or any of the command line tools. An
+// unexpected entry in the service last accessed data does not mean that an
+// account has been compromised, because the request might have been denied.
+// Refer to your CloudTrail logs as the authoritative source for information
+// about all API calls and whether they were successful or denied access. For
+// more information, see Logging IAM Events with CloudTrail (https://docs.aws.amazon.com/IAM/latest/UserGuide/cloudtrail-integration.html)
+// in the IAM User Guide.
+//
+// This operation returns a JobId. Use this parameter in the GetOrganizationsAccessReport
+// operation to check the status of the report generation. To check the status
+// of this request, use the JobId parameter in the GetOrganizationsAccessReport
+// operation and test the JobStatus response parameter. When the job is complete,
+// you can retrieve the report.
+//
+// To generate a service last accessed data report for entities, specify an
+// entity path without specifying the optional AWS Organizations policy ID.
+// The type of entity that you specify determines the data returned in the report.
+//
+//    * Root – When you specify the organizations root as the entity, the
+//    resulting report lists all of the services allowed by SCPs that are attached
+//    to your root. For each service, the report includes data for all accounts
+//    in your organization except the master account, because the master account
+//    is not limited by SCPs.
+//
+//    * OU – When you specify an organizational unit (OU) as the entity, the
+//    resulting report lists all of the services allowed by SCPs that are attached
+//    to the OU and its parents. For each service, the report includes data
+//    for all accounts in the OU or its children. This data excludes the master
+//    account, because the master account is not limited by SCPs.
+//
+//    * Master account – When you specify the master account, the resulting
+//    report lists all AWS services, because the master account is not limited
+//    by SCPs. For each service, the report includes data for only the master
+//    account.
+//
+//    * Account – When you specify another account as the entity, the resulting
+//    report lists all of the services allowed by SCPs that are attached to
+//    the account and its parents. For each service, the report includes data
+//    for only the specified account.
+//
+// To generate a service last accessed data report for policies, specify an
+// entity path and the optional AWS Organizations policy ID. The type of entity
+// that you specify determines the data returned for each service.
+//
+//    * Root – When you specify the root entity and a policy ID, the resulting
+//    report lists all of the services that are allowed by the specified SCP.
+//    For each service, the report includes data for all accounts in your organization
+//    to which the SCP applies. This data excludes the master account, because
+//    the master account is not limited by SCPs. If the SCP is not attached
+//    to any entities in the organization, then the report will return a list
+//    of services with no data.
+//
+//    * OU – When you specify an OU entity and a policy ID, the resulting
+//    report lists all of the services that are allowed by the specified SCP.
+//    For each service, the report includes data for all accounts in the OU
+//    or its children to which the SCP applies. This means that other accounts
+//    outside the OU that are affected by the SCP might not be included in the
+//    data. This data excludes the master account, because the master account
+//    is not limited by SCPs. If the SCP is not attached to the OU or one of
+//    its children, the report will return a list of services with no data.
+//
+//    * Master account – When you specify the master account, the resulting
+//    report lists all AWS services, because the master account is not limited
+//    by SCPs. If you specify a policy ID in the CLI or API, the policy is ignored.
+//    For each service, the report includes data for only the master account.
+//
+//    * Account – When you specify another account entity and a policy ID,
+//    the resulting report lists all of the services that are allowed by the
+//    specified SCP. For each service, the report includes data for only the
+//    specified account. This means that other accounts in the organization
+//    that are affected by the SCP might not be included in the data. If the
+//    SCP is not attached to the account, the report will return a list of services
+//    with no data.
+//
+// Service last accessed data does not use other policy types when determining
+// whether a principal could access a service. These other policy types include
+// identity-based policies, resource-based policies, access control lists, IAM
+// permissions boundaries, and STS assume role policies. It only applies SCP
+// logic. For more about the evaluation of policy types, see Evaluating Policies
+// (https://docs.aws.amazon.com/IAM/latest/UserGuide/reference_policies_evaluation-logic.html#policy-eval-basics)
+// in the IAM User Guide.
+//
+// For more information about service last accessed data, see Reducing Policy
+// Scope by Viewing User Activity (https://docs.aws.amazon.com/IAM/latest/UserGuide/access_policies_access-advisor.html)
+// in the IAM User Guide.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for AWS Identity and Access Management's
+// API operation GenerateOrganizationsAccessReport for usage and error information.
+//
+// Returned Error Codes:
+//   * ErrCodeReportGenerationLimitExceededException "ReportGenerationLimitExceeded"
+//   The request failed because the maximum number of concurrent requests for
+//   this account are already running.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/iam-2010-05-08/GenerateOrganizationsAccessReport
+func (c *IAM) GenerateOrganizationsAccessReport(input *GenerateOrganizationsAccessReportInput) (*GenerateOrganizationsAccessReportOutput, error) {
+	req, out := c.GenerateOrganizationsAccessReportRequest(input)
+	return out, req.Send()
+}
+
+// GenerateOrganizationsAccessReportWithContext is the same as GenerateOrganizationsAccessReport with the addition of
+// the ability to pass a context and additional request options.
+//
+// See GenerateOrganizationsAccessReport for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *IAM) GenerateOrganizationsAccessReportWithContext(ctx aws.Context, input *GenerateOrganizationsAccessReportInput, opts ...request.Option) (*GenerateOrganizationsAccessReportOutput, error) {
+	req, out := c.GenerateOrganizationsAccessReportRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
 const opGenerateServiceLastAccessedDetails = "GenerateServiceLastAccessedDetails"
 
 // GenerateServiceLastAccessedDetailsRequest generates a "aws/request.Request" representing the
@@ -5084,21 +5277,20 @@ func (c *IAM) GenerateServiceLastAccessedDetailsRequest(input *GenerateServiceLa
 
 // GenerateServiceLastAccessedDetails API operation for AWS Identity and Access Management.
 //
-// Generates a request for a report that includes details about when an IAM
-// resource (user, group, role, or policy) was last used in an attempt to access
-// AWS services. Recent activity usually appears within four hours. IAM reports
-// activity for the last 365 days, or less if your Region began supporting this
-// feature within the last year. For more information, see Regions Where Data
-// Is Tracked (https://docs.aws.amazon.com/IAM/latest/UserGuide/access_policies_access-advisor.html#access-advisor_tracking-period).
+// Generates a report that includes details about when an IAM resource (user,
+// group, role, or policy) was last used in an attempt to access AWS services.
+// Recent activity usually appears within four hours. IAM reports activity for
+// the last 365 days, or less if your Region began supporting this feature within
+// the last year. For more information, see Regions Where Data Is Tracked (https://docs.aws.amazon.com/IAM/latest/UserGuide/access_policies_access-advisor.html#access-advisor_tracking-period).
 //
-// The service last accessed data includes all attempts to access an AWS API,
+// The service last accessed data includes all attempts to access an AWS API,
 // not just the successful ones. This includes all attempts that were made using
 // the AWS Management Console, the AWS API through any of the SDKs, or any of
 // the command line tools. An unexpected entry in the service last accessed
 // data does not mean that your account has been compromised, because the request
 // might have been denied. Refer to your CloudTrail logs as the authoritative
 // source for information about all API calls and whether they were successful
-// or denied access. For more information, see Logging IAM Events with CloudTrail
+// or denied access. For more information, see Logging IAM Events with CloudTrail
 // (https://docs.aws.amazon.com/IAM/latest/UserGuide/cloudtrail-integration.html)
 // in the IAM User Guide.
 //
@@ -5111,9 +5303,9 @@ func (c *IAM) GenerateServiceLastAccessedDetailsRequest(input *GenerateServiceLa
 //    using permissions policies. For each service, the response includes information
 //    about the most recent access attempt.
 //
-//    * GetServiceLastAccessedDetailsWithEntities – Use this operation for groups
-//    and policies to list information about the associated entities (users
-//    or roles) that attempted to access a specific AWS service.
+//    * GetServiceLastAccessedDetailsWithEntities – Use this operation for
+//    groups and policies to list information about the associated entities
+//    (users or roles) that attempted to access a specific AWS service.
 //
 // To check the status of the GenerateServiceLastAccessedDetails request, use
 // the JobId parameter in the same operations and test the JobStatus response
@@ -5228,12 +5420,6 @@ func (c *IAM) GetAccessKeyLastUsedRequest(input *GetAccessKeyLastUsedInput) (req
 //
 // See the AWS API reference guide for AWS Identity and Access Management's
 // API operation GetAccessKeyLastUsed for usage and error information.
-//
-// Returned Error Codes:
-//   * ErrCodeNoSuchEntityException "NoSuchEntity"
-//   The request was rejected because it referenced a resource entity that does
-//   not exist. The error message describes the resource.
-//
 // See also, https://docs.aws.amazon.com/goto/WebAPI/iam-2010-05-08/GetAccessKeyLastUsed
 func (c *IAM) GetAccessKeyLastUsed(input *GetAccessKeyLastUsedInput) (*GetAccessKeyLastUsedOutput, error) {
 	req, out := c.GetAccessKeyLastUsedRequest(input)
@@ -5365,7 +5551,7 @@ func (c *IAM) GetAccountAuthorizationDetailsWithContext(ctx aws.Context, input *
 //    // Example iterating over at most 3 pages of a GetAccountAuthorizationDetails operation.
 //    pageNum := 0
 //    err := client.GetAccountAuthorizationDetailsPages(params,
-//        func(page *GetAccountAuthorizationDetailsOutput, lastPage bool) bool {
+//        func(page *iam.GetAccountAuthorizationDetailsOutput, lastPage bool) bool {
 //            pageNum++
 //            fmt.Println(page)
 //            return pageNum <= 3
@@ -5960,7 +6146,7 @@ func (c *IAM) GetGroupWithContext(ctx aws.Context, input *GetGroupInput, opts ..
 //    // Example iterating over at most 3 pages of a GetGroup operation.
 //    pageNum := 0
 //    err := client.GetGroupPages(params,
-//        func(page *GetGroupOutput, lastPage bool) bool {
+//        func(page *iam.GetGroupOutput, lastPage bool) bool {
 //            pageNum++
 //            fmt.Println(page)
 //            return pageNum <= 3
@@ -6356,6 +6542,105 @@ func (c *IAM) GetOpenIDConnectProvider(input *GetOpenIDConnectProviderInput) (*G
 // for more information on using Contexts.
 func (c *IAM) GetOpenIDConnectProviderWithContext(ctx aws.Context, input *GetOpenIDConnectProviderInput, opts ...request.Option) (*GetOpenIDConnectProviderOutput, error) {
 	req, out := c.GetOpenIDConnectProviderRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
+const opGetOrganizationsAccessReport = "GetOrganizationsAccessReport"
+
+// GetOrganizationsAccessReportRequest generates a "aws/request.Request" representing the
+// client's request for the GetOrganizationsAccessReport operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See GetOrganizationsAccessReport for more information on using the GetOrganizationsAccessReport
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the GetOrganizationsAccessReportRequest method.
+//    req, resp := client.GetOrganizationsAccessReportRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/iam-2010-05-08/GetOrganizationsAccessReport
+func (c *IAM) GetOrganizationsAccessReportRequest(input *GetOrganizationsAccessReportInput) (req *request.Request, output *GetOrganizationsAccessReportOutput) {
+	op := &request.Operation{
+		Name:       opGetOrganizationsAccessReport,
+		HTTPMethod: "POST",
+		HTTPPath:   "/",
+	}
+
+	if input == nil {
+		input = &GetOrganizationsAccessReportInput{}
+	}
+
+	output = &GetOrganizationsAccessReportOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// GetOrganizationsAccessReport API operation for AWS Identity and Access Management.
+//
+// Retrieves the service last accessed data report for AWS Organizations that
+// was previously generated using the GenerateOrganizationsAccessReport operation.
+// This operation retrieves the status of your report job and the report contents.
+//
+// Depending on the parameters that you passed when you generated the report,
+// the data returned could include different information. For details, see GenerateOrganizationsAccessReport.
+//
+// To call this operation, you must be signed in to the master account in your
+// organization. SCPs must be enabled for your organization root. You must have
+// permissions to perform this operation. For more information, see Refining
+// Permissions Using Service Last Accessed Data (https://docs.aws.amazon.com/IAM/latest/UserGuide/access_policies_access-advisor.html)
+// in the IAM User Guide.
+//
+// For each service that principals in an account (root users, IAM users, or
+// IAM roles) could access using SCPs, the operation returns details about the
+// most recent access attempt. If there was no attempt, the service is listed
+// without details about the most recent attempt to access the service. If the
+// operation fails, it returns the reason that it failed.
+//
+// By default, the list is sorted by service namespace.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for AWS Identity and Access Management's
+// API operation GetOrganizationsAccessReport for usage and error information.
+//
+// Returned Error Codes:
+//   * ErrCodeNoSuchEntityException "NoSuchEntity"
+//   The request was rejected because it referenced a resource entity that does
+//   not exist. The error message describes the resource.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/iam-2010-05-08/GetOrganizationsAccessReport
+func (c *IAM) GetOrganizationsAccessReport(input *GetOrganizationsAccessReportInput) (*GetOrganizationsAccessReportOutput, error) {
+	req, out := c.GetOrganizationsAccessReportRequest(input)
+	return out, req.Send()
+}
+
+// GetOrganizationsAccessReportWithContext is the same as GetOrganizationsAccessReport with the addition of
+// the ability to pass a context and additional request options.
+//
+// See GetOrganizationsAccessReport for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *IAM) GetOrganizationsAccessReportWithContext(ctx aws.Context, input *GetOrganizationsAccessReportInput, opts ...request.Option) (*GetOrganizationsAccessReportOutput, error) {
+	req, out := c.GetOrganizationsAccessReportRequest(input)
 	req.SetContext(ctx)
 	req.ApplyOptions(opts...)
 	return out, req.Send()
@@ -7080,10 +7365,11 @@ func (c *IAM) GetServiceLastAccessedDetailsRequest(input *GetServiceLastAccessed
 
 // GetServiceLastAccessedDetails API operation for AWS Identity and Access Management.
 //
-// After you generate a user, group, role, or policy report using the GenerateServiceLastAccessedDetails
-// operation, you can use the JobId parameter in GetServiceLastAccessedDetails.
-// This operation retrieves the status of your report job and a list of AWS
-// services that the resource (user, group, role, or managed policy) can access.
+// Retrieves a service last accessed report that was created using the GenerateServiceLastAccessedDetails
+// operation. You can use the JobId parameter in GetServiceLastAccessedDetails
+// to retrieve the status of your report job. When the report is complete, you
+// can retrieve the generated report. The report includes a list of AWS services
+// that the resource (user, group, role, or managed policy) can access.
 //
 // Service last accessed data does not use other policy types when determining
 // whether a resource could access a service. These other policy types include
@@ -7205,9 +7491,9 @@ func (c *IAM) GetServiceLastAccessedDetailsWithEntitiesRequest(input *GetService
 // that could have used group or policy permissions to access the specified
 // service.
 //
-//    * Group – For a group report, this operation returns a list of users in
-//    the group that could have used the group’s policies in an attempt to access
-//    the service.
+//    * Group – For a group report, this operation returns a list of users
+//    in the group that could have used the group’s policies in an attempt
+//    to access the service.
 //
 //    * Policy – For a policy report, this operation returns a list of entities
 //    (users or roles) that could have used the policy in an attempt to access
@@ -7655,7 +7941,7 @@ func (c *IAM) ListAccessKeysWithContext(ctx aws.Context, input *ListAccessKeysIn
 //    // Example iterating over at most 3 pages of a ListAccessKeys operation.
 //    pageNum := 0
 //    err := client.ListAccessKeysPages(params,
-//        func(page *ListAccessKeysOutput, lastPage bool) bool {
+//        func(page *iam.ListAccessKeysOutput, lastPage bool) bool {
 //            pageNum++
 //            fmt.Println(page)
 //            return pageNum <= 3
@@ -7794,7 +8080,7 @@ func (c *IAM) ListAccountAliasesWithContext(ctx aws.Context, input *ListAccountA
 //    // Example iterating over at most 3 pages of a ListAccountAliases operation.
 //    pageNum := 0
 //    err := client.ListAccountAliasesPages(params,
-//        func(page *ListAccountAliasesOutput, lastPage bool) bool {
+//        func(page *iam.ListAccountAliasesOutput, lastPage bool) bool {
 //            pageNum++
 //            fmt.Println(page)
 //            return pageNum <= 3
@@ -7949,7 +8235,7 @@ func (c *IAM) ListAttachedGroupPoliciesWithContext(ctx aws.Context, input *ListA
 //    // Example iterating over at most 3 pages of a ListAttachedGroupPolicies operation.
 //    pageNum := 0
 //    err := client.ListAttachedGroupPoliciesPages(params,
-//        func(page *ListAttachedGroupPoliciesOutput, lastPage bool) bool {
+//        func(page *iam.ListAttachedGroupPoliciesOutput, lastPage bool) bool {
 //            pageNum++
 //            fmt.Println(page)
 //            return pageNum <= 3
@@ -8104,7 +8390,7 @@ func (c *IAM) ListAttachedRolePoliciesWithContext(ctx aws.Context, input *ListAt
 //    // Example iterating over at most 3 pages of a ListAttachedRolePolicies operation.
 //    pageNum := 0
 //    err := client.ListAttachedRolePoliciesPages(params,
-//        func(page *ListAttachedRolePoliciesOutput, lastPage bool) bool {
+//        func(page *iam.ListAttachedRolePoliciesOutput, lastPage bool) bool {
 //            pageNum++
 //            fmt.Println(page)
 //            return pageNum <= 3
@@ -8259,7 +8545,7 @@ func (c *IAM) ListAttachedUserPoliciesWithContext(ctx aws.Context, input *ListAt
 //    // Example iterating over at most 3 pages of a ListAttachedUserPolicies operation.
 //    pageNum := 0
 //    err := client.ListAttachedUserPoliciesPages(params,
-//        func(page *ListAttachedUserPoliciesOutput, lastPage bool) bool {
+//        func(page *iam.ListAttachedUserPoliciesOutput, lastPage bool) bool {
 //            pageNum++
 //            fmt.Println(page)
 //            return pageNum <= 3
@@ -8411,7 +8697,7 @@ func (c *IAM) ListEntitiesForPolicyWithContext(ctx aws.Context, input *ListEntit
 //    // Example iterating over at most 3 pages of a ListEntitiesForPolicy operation.
 //    pageNum := 0
 //    err := client.ListEntitiesForPolicyPages(params,
-//        func(page *ListEntitiesForPolicyOutput, lastPage bool) bool {
+//        func(page *iam.ListEntitiesForPolicyOutput, lastPage bool) bool {
 //            pageNum++
 //            fmt.Println(page)
 //            return pageNum <= 3
@@ -8562,7 +8848,7 @@ func (c *IAM) ListGroupPoliciesWithContext(ctx aws.Context, input *ListGroupPoli
 //    // Example iterating over at most 3 pages of a ListGroupPolicies operation.
 //    pageNum := 0
 //    err := client.ListGroupPoliciesPages(params,
-//        func(page *ListGroupPoliciesOutput, lastPage bool) bool {
+//        func(page *iam.ListGroupPoliciesOutput, lastPage bool) bool {
 //            pageNum++
 //            fmt.Println(page)
 //            return pageNum <= 3
@@ -8700,7 +8986,7 @@ func (c *IAM) ListGroupsWithContext(ctx aws.Context, input *ListGroupsInput, opt
 //    // Example iterating over at most 3 pages of a ListGroups operation.
 //    pageNum := 0
 //    err := client.ListGroupsPages(params,
-//        func(page *ListGroupsOutput, lastPage bool) bool {
+//        func(page *iam.ListGroupsOutput, lastPage bool) bool {
 //            pageNum++
 //            fmt.Println(page)
 //            return pageNum <= 3
@@ -8842,7 +9128,7 @@ func (c *IAM) ListGroupsForUserWithContext(ctx aws.Context, input *ListGroupsFor
 //    // Example iterating over at most 3 pages of a ListGroupsForUser operation.
 //    pageNum := 0
 //    err := client.ListGroupsForUserPages(params,
-//        func(page *ListGroupsForUserOutput, lastPage bool) bool {
+//        func(page *iam.ListGroupsForUserOutput, lastPage bool) bool {
 //            pageNum++
 //            fmt.Println(page)
 //            return pageNum <= 3
@@ -8982,7 +9268,7 @@ func (c *IAM) ListInstanceProfilesWithContext(ctx aws.Context, input *ListInstan
 //    // Example iterating over at most 3 pages of a ListInstanceProfiles operation.
 //    pageNum := 0
 //    err := client.ListInstanceProfilesPages(params,
-//        func(page *ListInstanceProfilesOutput, lastPage bool) bool {
+//        func(page *iam.ListInstanceProfilesOutput, lastPage bool) bool {
 //            pageNum++
 //            fmt.Println(page)
 //            return pageNum <= 3
@@ -9126,7 +9412,7 @@ func (c *IAM) ListInstanceProfilesForRoleWithContext(ctx aws.Context, input *Lis
 //    // Example iterating over at most 3 pages of a ListInstanceProfilesForRole operation.
 //    pageNum := 0
 //    err := client.ListInstanceProfilesForRolePages(params,
-//        func(page *ListInstanceProfilesForRoleOutput, lastPage bool) bool {
+//        func(page *iam.ListInstanceProfilesForRoleOutput, lastPage bool) bool {
 //            pageNum++
 //            fmt.Println(page)
 //            return pageNum <= 3
@@ -9271,7 +9557,7 @@ func (c *IAM) ListMFADevicesWithContext(ctx aws.Context, input *ListMFADevicesIn
 //    // Example iterating over at most 3 pages of a ListMFADevices operation.
 //    pageNum := 0
 //    err := client.ListMFADevicesPages(params,
-//        func(page *ListMFADevicesOutput, lastPage bool) bool {
+//        func(page *iam.ListMFADevicesOutput, lastPage bool) bool {
 //            pageNum++
 //            fmt.Println(page)
 //            return pageNum <= 3
@@ -9500,7 +9786,7 @@ func (c *IAM) ListPoliciesWithContext(ctx aws.Context, input *ListPoliciesInput,
 //    // Example iterating over at most 3 pages of a ListPolicies operation.
 //    pageNum := 0
 //    err := client.ListPoliciesPages(params,
-//        func(page *ListPoliciesOutput, lastPage bool) bool {
+//        func(page *iam.ListPoliciesOutput, lastPage bool) bool {
 //            pageNum++
 //            fmt.Println(page)
 //            return pageNum <= 3
@@ -9602,9 +9888,9 @@ func (c *IAM) ListPoliciesGrantingServiceAccessRequest(input *ListPoliciesGranti
 //    managed and inline policies that are attached to the group to which the
 //    user belongs.
 //
-//    * Group – The list of policies includes only the managed and inline policies
-//    that are attached to the group directly. Policies that are attached to
-//    the group’s user are not included.
+//    * Group – The list of policies includes only the managed and inline
+//    policies that are attached to the group directly. Policies that are attached
+//    to the group’s user are not included.
 //
 //    * Role – The list of policies includes only the managed and inline policies
 //    that are attached to the role.
@@ -9767,7 +10053,7 @@ func (c *IAM) ListPolicyVersionsWithContext(ctx aws.Context, input *ListPolicyVe
 //    // Example iterating over at most 3 pages of a ListPolicyVersions operation.
 //    pageNum := 0
 //    err := client.ListPolicyVersionsPages(params,
-//        func(page *ListPolicyVersionsOutput, lastPage bool) bool {
+//        func(page *iam.ListPolicyVersionsOutput, lastPage bool) bool {
 //            pageNum++
 //            fmt.Println(page)
 //            return pageNum <= 3
@@ -9917,7 +10203,7 @@ func (c *IAM) ListRolePoliciesWithContext(ctx aws.Context, input *ListRolePolici
 //    // Example iterating over at most 3 pages of a ListRolePolicies operation.
 //    pageNum := 0
 //    err := client.ListRolePoliciesPages(params,
-//        func(page *ListRolePoliciesOutput, lastPage bool) bool {
+//        func(page *iam.ListRolePoliciesOutput, lastPage bool) bool {
 //            pageNum++
 //            fmt.Println(page)
 //            return pageNum <= 3
@@ -10144,7 +10430,7 @@ func (c *IAM) ListRolesWithContext(ctx aws.Context, input *ListRolesInput, opts 
 //    // Example iterating over at most 3 pages of a ListRoles operation.
 //    pageNum := 0
 //    err := client.ListRolesPages(params,
-//        func(page *ListRolesOutput, lastPage bool) bool {
+//        func(page *iam.ListRolesOutput, lastPage bool) bool {
 //            pageNum++
 //            fmt.Println(page)
 //            return pageNum <= 3
@@ -10372,7 +10658,7 @@ func (c *IAM) ListSSHPublicKeysWithContext(ctx aws.Context, input *ListSSHPublic
 //    // Example iterating over at most 3 pages of a ListSSHPublicKeys operation.
 //    pageNum := 0
 //    err := client.ListSSHPublicKeysPages(params,
-//        func(page *ListSSHPublicKeysOutput, lastPage bool) bool {
+//        func(page *iam.ListSSHPublicKeysOutput, lastPage bool) bool {
 //            pageNum++
 //            fmt.Println(page)
 //            return pageNum <= 3
@@ -10516,7 +10802,7 @@ func (c *IAM) ListServerCertificatesWithContext(ctx aws.Context, input *ListServ
 //    // Example iterating over at most 3 pages of a ListServerCertificates operation.
 //    pageNum := 0
 //    err := client.ListServerCertificatesPages(params,
-//        func(page *ListServerCertificatesOutput, lastPage bool) bool {
+//        func(page *iam.ListServerCertificatesOutput, lastPage bool) bool {
 //            pageNum++
 //            fmt.Println(page)
 //            return pageNum <= 3
@@ -10755,7 +11041,7 @@ func (c *IAM) ListSigningCertificatesWithContext(ctx aws.Context, input *ListSig
 //    // Example iterating over at most 3 pages of a ListSigningCertificates operation.
 //    pageNum := 0
 //    err := client.ListSigningCertificatesPages(params,
-//        func(page *ListSigningCertificatesOutput, lastPage bool) bool {
+//        func(page *iam.ListSigningCertificatesOutput, lastPage bool) bool {
 //            pageNum++
 //            fmt.Println(page)
 //            return pageNum <= 3
@@ -10904,7 +11190,7 @@ func (c *IAM) ListUserPoliciesWithContext(ctx aws.Context, input *ListUserPolici
 //    // Example iterating over at most 3 pages of a ListUserPolicies operation.
 //    pageNum := 0
 //    err := client.ListUserPoliciesPages(params,
-//        func(page *ListUserPoliciesOutput, lastPage bool) bool {
+//        func(page *iam.ListUserPoliciesOutput, lastPage bool) bool {
 //            pageNum++
 //            fmt.Println(page)
 //            return pageNum <= 3
@@ -11131,7 +11417,7 @@ func (c *IAM) ListUsersWithContext(ctx aws.Context, input *ListUsersInput, opts 
 //    // Example iterating over at most 3 pages of a ListUsers operation.
 //    pageNum := 0
 //    err := client.ListUsersPages(params,
-//        func(page *ListUsersOutput, lastPage bool) bool {
+//        func(page *iam.ListUsersOutput, lastPage bool) bool {
 //            pageNum++
 //            fmt.Println(page)
 //            return pageNum <= 3
@@ -11266,7 +11552,7 @@ func (c *IAM) ListVirtualMFADevicesWithContext(ctx aws.Context, input *ListVirtu
 //    // Example iterating over at most 3 pages of a ListVirtualMFADevices operation.
 //    pageNum := 0
 //    err := client.ListVirtualMFADevicesPages(params,
-//        func(page *ListVirtualMFADevicesOutput, lastPage bool) bool {
+//        func(page *iam.ListVirtualMFADevicesOutput, lastPage bool) bool {
 //            pageNum++
 //            fmt.Println(page)
 //            return pageNum <= 3
@@ -12647,7 +12933,7 @@ func (c *IAM) SimulateCustomPolicyWithContext(ctx aws.Context, input *SimulateCu
 //    // Example iterating over at most 3 pages of a SimulateCustomPolicy operation.
 //    pageNum := 0
 //    err := client.SimulateCustomPolicyPages(params,
-//        func(page *SimulatePolicyResponse, lastPage bool) bool {
+//        func(page *iam.SimulatePolicyResponse, lastPage bool) bool {
 //            pageNum++
 //            fmt.Println(page)
 //            return pageNum <= 3
@@ -12817,7 +13103,7 @@ func (c *IAM) SimulatePrincipalPolicyWithContext(ctx aws.Context, input *Simulat
 //    // Example iterating over at most 3 pages of a SimulatePrincipalPolicy operation.
 //    pageNum := 0
 //    err := client.SimulatePrincipalPolicyPages(params,
-//        func(page *SimulatePolicyResponse, lastPage bool) bool {
+//        func(page *iam.SimulatePolicyResponse, lastPage bool) bool {
 //            pageNum++
 //            fmt.Println(page)
 //            return pageNum <= 3
@@ -12925,13 +13211,13 @@ func (c *IAM) TagRoleRequest(input *TagRoleInput) (req *request.Request, output 
 //    * Cost allocation - Use tags to help track which individuals and teams
 //    are using which AWS resources.
 //
-// Make sure that you have no invalid tags and that you do not exceed the allowed
-// number of tags per role. In either case, the entire request fails and no
-// tags are added to the role.
+//    * Make sure that you have no invalid tags and that you do not exceed the
+//    allowed number of tags per role. In either case, the entire request fails
+//    and no tags are added to the role.
 //
-// AWS always interprets the tag Value as a single string. If you need to store
-// an array, you can store comma-separated values in the string. However, you
-// must interpret the value in your code.
+//    * AWS always interprets the tag Value as a single string. If you need
+//    to store an array, you can store comma-separated values in the string.
+//    However, you must interpret the value in your code.
 //
 // For more information about tagging, see Tagging IAM Identities (https://docs.aws.amazon.com/IAM/latest/UserGuide/id_tags.html)
 // in the IAM User Guide.
@@ -13055,13 +13341,13 @@ func (c *IAM) TagUserRequest(input *TagUserInput) (req *request.Request, output 
 //    * Cost allocation - Use tags to help track which individuals and teams
 //    are using which AWS resources.
 //
-// Make sure that you have no invalid tags and that you do not exceed the allowed
-// number of tags per role. In either case, the entire request fails and no
-// tags are added to the role.
+//    * Make sure that you have no invalid tags and that you do not exceed the
+//    allowed number of tags per role. In either case, the entire request fails
+//    and no tags are added to the role.
 //
-// AWS always interprets the tag Value as a single string. If you need to store
-// an array, you can store comma-separated values in the string. However, you
-// must interpret the value in your code.
+//    * AWS always interprets the tag Value as a single string. If you need
+//    to store an array, you can store comma-separated values in the string.
+//    However, you must interpret the value in your code.
 //
 // For more information about tagging, see Tagging IAM Identities (https://docs.aws.amazon.com/IAM/latest/UserGuide/id_tags.html)
 // in the IAM User Guide.
@@ -13448,12 +13734,12 @@ func (c *IAM) UpdateAccountPasswordPolicyRequest(input *UpdateAccountPasswordPol
 //
 // Updates the password policy settings for the AWS account.
 //
-// This operation does not support partial updates. No parameters are required,
-// but if you do not specify a parameter, that parameter's value reverts to
-// its default value. See the Request Parameters section for each parameter's
-// default value. Also note that some parameters do not allow the default parameter
-// to be explicitly set. Instead, to invoke the default value, do not include
-// that parameter when you invoke the operation.
+//    * This operation does not support partial updates. No parameters are required,
+//    but if you do not specify a parameter, that parameter's value reverts
+//    to its default value. See the Request Parameters section for each parameter's
+//    default value. Also note that some parameters do not allow the default
+//    parameter to be explicitly set. Instead, to invoke the default value,
+//    do not include that parameter when you invoke the operation.
 //
 // For more information about using a password policy, see Managing an IAM Password
 // Policy (https://docs.aws.amazon.com/IAM/latest/UserGuide/Using_ManagingPasswordPolicies.html)
@@ -15036,6 +15322,108 @@ func (c *IAM) UploadSigningCertificateWithContext(ctx aws.Context, input *Upload
 	return out, req.Send()
 }
 
+// An object that contains details about when a principal in the reported AWS
+// Organizations entity last attempted to access an AWS service. A principal
+// can be an IAM user, an IAM role, or the AWS account root user within the
+// reported Organizations entity.
+//
+// This data type is a response element in the GetOrganizationsAccessReport
+// operation.
+type AccessDetail struct {
+	_ struct{} `type:"structure"`
+
+	// The path of the Organizations entity (root, organizational unit, or account)
+	// from which an authenticated principal last attempted to access the service.
+	// AWS does not report unauthenticated requests.
+	//
+	// This field is null if no principals (IAM users, IAM roles, or root users)
+	// in the reported Organizations entity attempted to access the service within
+	// the reporting period (https://docs.aws.amazon.com/IAM/latest/UserGuide/access_policies_access-advisor.html#service-last-accessed-reporting-period).
+	EntityPath *string `min:"19" type:"string"`
+
+	// The date and time, in ISO 8601 date-time format (http://www.iso.org/iso/iso8601),
+	// when an authenticated principal most recently attempted to access the service.
+	// AWS does not report unauthenticated requests.
+	//
+	// This field is null if no principals in the reported Organizations entity
+	// attempted to access the service within the reporting period (https://docs.aws.amazon.com/IAM/latest/UserGuide/access_policies_access-advisor.html#service-last-accessed-reporting-period).
+	LastAuthenticatedTime *time.Time `type:"timestamp"`
+
+	// The Region where the last service access attempt occurred.
+	//
+	// This field is null if no principals in the reported Organizations entity
+	// attempted to access the service within the reporting period (https://docs.aws.amazon.com/IAM/latest/UserGuide/access_policies_access-advisor.html#service-last-accessed-reporting-period).
+	Region *string `type:"string"`
+
+	// The name of the service in which access was attempted.
+	//
+	// ServiceName is a required field
+	ServiceName *string `type:"string" required:"true"`
+
+	// The namespace of the service in which access was attempted.
+	//
+	// To learn the service namespace of a service, go to Actions, Resources, and
+	// Condition Keys for AWS Services (https://docs.aws.amazon.com/IAM/latest/UserGuide/reference_policies_actions-resources-contextkeys.html)
+	// in the IAM User Guide. Choose the name of the service to view details for
+	// that service. In the first paragraph, find the service prefix. For example,
+	// (service prefix: a4b). For more information about service namespaces, see
+	// AWS Service Namespaces (https://docs.aws.amazon.com/general/latest/gr/aws-arns-and-namespaces.html#genref-aws-service-namespaces)
+	// in the AWS General Reference.
+	//
+	// ServiceNamespace is a required field
+	ServiceNamespace *string `min:"1" type:"string" required:"true"`
+
+	// The number of accounts with authenticated principals (root users, IAM users,
+	// and IAM roles) that attempted to access the service in the reporting period.
+	TotalAuthenticatedEntities *int64 `type:"integer"`
+}
+
+// String returns the string representation
+func (s AccessDetail) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s AccessDetail) GoString() string {
+	return s.String()
+}
+
+// SetEntityPath sets the EntityPath field's value.
+func (s *AccessDetail) SetEntityPath(v string) *AccessDetail {
+	s.EntityPath = &v
+	return s
+}
+
+// SetLastAuthenticatedTime sets the LastAuthenticatedTime field's value.
+func (s *AccessDetail) SetLastAuthenticatedTime(v time.Time) *AccessDetail {
+	s.LastAuthenticatedTime = &v
+	return s
+}
+
+// SetRegion sets the Region field's value.
+func (s *AccessDetail) SetRegion(v string) *AccessDetail {
+	s.Region = &v
+	return s
+}
+
+// SetServiceName sets the ServiceName field's value.
+func (s *AccessDetail) SetServiceName(v string) *AccessDetail {
+	s.ServiceName = &v
+	return s
+}
+
+// SetServiceNamespace sets the ServiceNamespace field's value.
+func (s *AccessDetail) SetServiceNamespace(v string) *AccessDetail {
+	s.ServiceNamespace = &v
+	return s
+}
+
+// SetTotalAuthenticatedEntities sets the TotalAuthenticatedEntities field's value.
+func (s *AccessDetail) SetTotalAuthenticatedEntities(v int64) *AccessDetail {
+	s.TotalAuthenticatedEntities = &v
+	return s
+}
+
 // Contains information about an AWS access key.
 //
 // This data type is used as a response element in the CreateAccessKey and ListAccessKeys
@@ -15130,12 +15518,12 @@ type AccessKeyLastUsed struct {
 	//    * An access key exists but has not been used since IAM began tracking
 	//    this information.
 	//
-	//    * There is no sign-in data associated with the user
+	//    * There is no sign-in data associated with the user.
 	//
 	// LastUsedDate is a required field
 	LastUsedDate *time.Time `type:"timestamp" required:"true"`
 
-	// The AWS region where this access key was most recently used. The value for
+	// The AWS Region where this access key was most recently used. The value for
 	// this field is "N/A" in the following situations:
 	//
 	//    * The user does not have an access key.
@@ -15143,9 +15531,9 @@ type AccessKeyLastUsed struct {
 	//    * An access key exists but has not been used since IAM began tracking
 	//    this information.
 	//
-	//    * There is no sign-in data associated with the user
+	//    * There is no sign-in data associated with the user.
 	//
-	// For more information about AWS regions, see Regions and Endpoints (https://docs.aws.amazon.com/general/latest/gr/rande.html)
+	// For more information about AWS Regions, see Regions and Endpoints (https://docs.aws.amazon.com/general/latest/gr/rande.html)
 	// in the Amazon Web Services General Reference.
 	//
 	// Region is a required field
@@ -15159,7 +15547,7 @@ type AccessKeyLastUsed struct {
 	//    * An access key exists but has not been used since IAM started tracking
 	//    this information.
 	//
-	//    * There is no sign-in data associated with the user
+	//    * There is no sign-in data associated with the user.
 	//
 	// ServiceName is a required field
 	ServiceName *string `type:"string" required:"true"`
@@ -15728,7 +16116,7 @@ func (s AttachUserPolicyOutput) GoString() string {
 // to a user or role to set the permissions boundary.
 //
 // For more information about permissions boundaries, see Permissions Boundaries
-// for IAM Identities  (https://docs.aws.amazon.com/IAM/latest/UserGuide/access_policies_boundaries.html)
+// for IAM Identities (https://docs.aws.amazon.com/IAM/latest/UserGuide/access_policies_boundaries.html)
 // in the IAM User Guide.
 type AttachedPermissionsBoundary struct {
 	_ struct{} `type:"structure"`
@@ -15899,7 +16287,7 @@ func (s ChangePasswordOutput) GoString() string {
 // evaluating the Condition elements of the input policies.
 //
 // This data type is used as an input parameter to SimulateCustomPolicy and
-// SimulateCustomPolicy.
+// SimulateCustomPolicy .
 type ContextEntry struct {
 	_ struct{} `type:"structure"`
 
@@ -16532,7 +16920,7 @@ type CreatePolicyInput struct {
 	// can contain any ASCII character from the ! (\u0021) through the DEL character
 	// (\u007F), including most punctuation characters, digits, and upper and lowercased
 	// letters.
-	Path *string `type:"string"`
+	Path *string `min:"1" type:"string"`
 
 	// The JSON policy document that you want to use as the content for the new
 	// policy.
@@ -16580,6 +16968,9 @@ func (s CreatePolicyInput) GoString() string {
 // Validate inspects the fields of the type to determine if they are valid.
 func (s *CreatePolicyInput) Validate() error {
 	invalidParams := request.ErrInvalidParams{Context: "CreatePolicyInput"}
+	if s.Path != nil && len(*s.Path) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("Path", 1))
+	}
 	if s.PolicyDocument == nil {
 		invalidParams.Add(request.NewErrParamRequired("PolicyDocument"))
 	}
@@ -16775,10 +17166,10 @@ type CreateRoleInput struct {
 	// The trust relationship policy document that grants an entity permission to
 	// assume the role.
 	//
-	// You must provide policies in JSON format in IAM. However, for AWS CloudFormation
-	// templates formatted in YAML, you can provide the policy in JSON or YAML format.
-	// AWS CloudFormation always converts a YAML policy to JSON format before submitting
-	// it to IAM.
+	// In IAM, you must provide a JSON policy that has been converted to a string.
+	// However, for AWS CloudFormation templates formatted in YAML, you can provide
+	// the policy in JSON or YAML format. AWS CloudFormation always converts a YAML
+	// policy to JSON format before submitting it to IAM.
 	//
 	// The regex pattern (http://wikipedia.org/wiki/regex) used to validate this
 	// parameter is a string of characters consisting of the following:
@@ -16791,6 +17182,9 @@ type CreateRoleInput struct {
 	//
 	//    * The special characters tab (\u0009), line feed (\u000A), and carriage
 	//    return (\u000D)
+	//
+	// Upon success, the response includes the same trust policy as a URL-encoded
+	// JSON string.
 	//
 	// AssumeRolePolicyDocument is a required field
 	AssumeRolePolicyDocument *string `min:"1" type:"string" required:"true"`
@@ -17083,10 +17477,13 @@ type CreateServiceLinkedRoleInput struct {
 
 	// A string that you provide, which is combined with the service-provided prefix
 	// to form the complete role name. If you make multiple requests for the same
-	// service, then you must supply a different CustomSuffixfor each request. Otherwise the request fails with a duplicate role name
-	// error. For example, you could add -1or -debugto the suffix.
+	// service, then you must supply a different CustomSuffix for each request.
+	// Otherwise the request fails with a duplicate role name error. For example,
+	// you could add -1 or -debug to the suffix.
 	//
-	// Some services do not support the CustomSuffix
+	// Some services do not support the CustomSuffix parameter. If you provide an
+	// optional suffix and the operation fails, try the operation again without
+	// the suffix.
 	CustomSuffix *string `min:"1" type:"string"`
 
 	// The description of the role.
@@ -19063,7 +19460,7 @@ type DeletionTaskFailureReasonType struct {
 	// role has active sessions or if any resources that were used by the role have
 	// not been deleted from the linked service, the role can't be deleted. This
 	// parameter includes a list of the resources that are associated with the role
-	// and the region in which the resources are being used.
+	// and the Region in which the resources are being used.
 	RoleUsageList []*RoleUsageType `type:"list"`
 }
 
@@ -19470,12 +19867,12 @@ func (s EnableMFADeviceOutput) GoString() string {
 type EntityDetails struct {
 	_ struct{} `type:"structure"`
 
-	// The EntityInfo object that contains details about the entity (user or role).
+	// The EntityInfo object that contains details about the entity (user or role).
 	//
 	// EntityInfo is a required field
 	EntityInfo *EntityInfo `type:"structure" required:"true"`
 
-	// The date and time, in ISO 8601 date-time format (http://www.iso.org/iso/iso8601),
+	// The date and time, in ISO 8601 date-time format (http://www.iso.org/iso/iso8601),
 	// when the authenticated entity last attempted to access AWS. AWS does not
 	// report unauthenticated requests.
 	//
@@ -19584,8 +19981,9 @@ func (s *EntityInfo) SetType(v string) *EntityInfo {
 
 // Contains information about the reason that the operation failed.
 //
-// This data type is used as a response element in the GetServiceLastAccessedDetails
-// operation and the GetServiceLastAccessedDetailsWithEntities operation.
+// This data type is used as a response element in the GetOrganizationsAccessReport,
+// GetServiceLastAccessedDetails, and GetServiceLastAccessedDetailsWithEntities
+// operations.
 type ErrorDetails struct {
 	_ struct{} `type:"structure"`
 
@@ -19625,7 +20023,7 @@ func (s *ErrorDetails) SetMessage(v string) *ErrorDetails {
 // Contains the results of a simulation.
 //
 // This data type is used by the return parameter of SimulateCustomPolicy and
-// SimulatePrincipalPolicy.
+// SimulatePrincipalPolicy .
 type EvaluationResult struct {
 	_ struct{} `type:"structure"`
 
@@ -19653,7 +20051,7 @@ type EvaluationResult struct {
 	// A list of the statements in the input policies that determine the result
 	// for this scenario. Remember that even if multiple statements allow the operation
 	// on the resource, if only one statement denies that operation, then the explicit
-	// deny overrides any allow. Inaddition, the deny statement is the only entry
+	// deny overrides any allow. In addition, the deny statement is the only entry
 	// included in the result.
 	MatchedStatements []*Statement `type:"list"`
 
@@ -19666,7 +20064,7 @@ type EvaluationResult struct {
 	// call GetContextKeysForCustomPolicy or GetContextKeysForPrincipalPolicy.
 	MissingContextValues []*string `type:"list"`
 
-	// A structure that details how AWS Organizations and its service control policies
+	// A structure that details how Organizations and its service control policies
 	// affect the results of the simulation. Only applies if the simulated user's
 	// account is part of an organization.
 	OrganizationsDecisionDetail *OrganizationsDecisionDetail `type:"structure"`
@@ -19778,6 +20176,87 @@ func (s *GenerateCredentialReportOutput) SetDescription(v string) *GenerateCrede
 // SetState sets the State field's value.
 func (s *GenerateCredentialReportOutput) SetState(v string) *GenerateCredentialReportOutput {
 	s.State = &v
+	return s
+}
+
+type GenerateOrganizationsAccessReportInput struct {
+	_ struct{} `type:"structure"`
+
+	// The path of the AWS Organizations entity (root, OU, or account). You can
+	// build an entity path using the known structure of your organization. For
+	// example, assume that your account ID is 123456789012 and its parent OU ID
+	// is ou-rge0-awsabcde. The organization root ID is r-f6g7h8i9j0example and
+	// your organization ID is o-a1b2c3d4e5. Your entity path is o-a1b2c3d4e5/r-f6g7h8i9j0example/ou-rge0-awsabcde/123456789012.
+	//
+	// EntityPath is a required field
+	EntityPath *string `min:"19" type:"string" required:"true"`
+
+	// The identifier of the AWS Organizations service control policy (SCP). This
+	// parameter is optional.
+	//
+	// This ID is used to generate information about when an account principal that
+	// is limited by the SCP attempted to access an AWS service.
+	OrganizationsPolicyId *string `type:"string"`
+}
+
+// String returns the string representation
+func (s GenerateOrganizationsAccessReportInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s GenerateOrganizationsAccessReportInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *GenerateOrganizationsAccessReportInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "GenerateOrganizationsAccessReportInput"}
+	if s.EntityPath == nil {
+		invalidParams.Add(request.NewErrParamRequired("EntityPath"))
+	}
+	if s.EntityPath != nil && len(*s.EntityPath) < 19 {
+		invalidParams.Add(request.NewErrParamMinLen("EntityPath", 19))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetEntityPath sets the EntityPath field's value.
+func (s *GenerateOrganizationsAccessReportInput) SetEntityPath(v string) *GenerateOrganizationsAccessReportInput {
+	s.EntityPath = &v
+	return s
+}
+
+// SetOrganizationsPolicyId sets the OrganizationsPolicyId field's value.
+func (s *GenerateOrganizationsAccessReportInput) SetOrganizationsPolicyId(v string) *GenerateOrganizationsAccessReportInput {
+	s.OrganizationsPolicyId = &v
+	return s
+}
+
+type GenerateOrganizationsAccessReportOutput struct {
+	_ struct{} `type:"structure"`
+
+	// The job identifier that you can use in the GetOrganizationsAccessReport operation.
+	JobId *string `min:"36" type:"string"`
+}
+
+// String returns the string representation
+func (s GenerateOrganizationsAccessReportOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s GenerateOrganizationsAccessReportOutput) GoString() string {
+	return s.String()
+}
+
+// SetJobId sets the JobId field's value.
+func (s *GenerateOrganizationsAccessReportOutput) SetJobId(v string) *GenerateOrganizationsAccessReportOutput {
+	s.JobId = &v
 	return s
 }
 
@@ -20135,8 +20614,8 @@ func (s GetAccountSummaryInput) GoString() string {
 type GetAccountSummaryOutput struct {
 	_ struct{} `type:"structure"`
 
-	// A set of key–value pairs containing information about IAM entity usage and
-	// IAM quotas.
+	// A set of key–value pairs containing information about IAM entity usage
+	// and IAM quotas.
 	SummaryMap map[string]*int64 `type:"map"`
 }
 
@@ -20869,6 +21348,211 @@ func (s *GetOpenIDConnectProviderOutput) SetUrl(v string) *GetOpenIDConnectProvi
 	return s
 }
 
+type GetOrganizationsAccessReportInput struct {
+	_ struct{} `type:"structure"`
+
+	// The identifier of the request generated by the GenerateOrganizationsAccessReport
+	// operation.
+	//
+	// JobId is a required field
+	JobId *string `min:"36" type:"string" required:"true"`
+
+	// Use this parameter only when paginating results and only after you receive
+	// a response indicating that the results are truncated. Set it to the value
+	// of the Marker element in the response that you received to indicate where
+	// the next call should start.
+	Marker *string `min:"1" type:"string"`
+
+	// Use this only when paginating results to indicate the maximum number of items
+	// you want in the response. If additional items exist beyond the maximum you
+	// specify, the IsTruncated response element is true.
+	//
+	// If you do not include this parameter, the number of items defaults to 100.
+	// Note that IAM might return fewer results, even when there are more results
+	// available. In that case, the IsTruncated response element returns true, and
+	// Marker contains a value to include in the subsequent call that tells the
+	// service where to continue from.
+	MaxItems *int64 `min:"1" type:"integer"`
+
+	// The key that is used to sort the results. If you choose the namespace key,
+	// the results are returned in alphabetical order. If you choose the time key,
+	// the results are sorted numerically by the date and time.
+	SortKey *string `type:"string" enum:"sortKeyType"`
+}
+
+// String returns the string representation
+func (s GetOrganizationsAccessReportInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s GetOrganizationsAccessReportInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *GetOrganizationsAccessReportInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "GetOrganizationsAccessReportInput"}
+	if s.JobId == nil {
+		invalidParams.Add(request.NewErrParamRequired("JobId"))
+	}
+	if s.JobId != nil && len(*s.JobId) < 36 {
+		invalidParams.Add(request.NewErrParamMinLen("JobId", 36))
+	}
+	if s.Marker != nil && len(*s.Marker) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("Marker", 1))
+	}
+	if s.MaxItems != nil && *s.MaxItems < 1 {
+		invalidParams.Add(request.NewErrParamMinValue("MaxItems", 1))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetJobId sets the JobId field's value.
+func (s *GetOrganizationsAccessReportInput) SetJobId(v string) *GetOrganizationsAccessReportInput {
+	s.JobId = &v
+	return s
+}
+
+// SetMarker sets the Marker field's value.
+func (s *GetOrganizationsAccessReportInput) SetMarker(v string) *GetOrganizationsAccessReportInput {
+	s.Marker = &v
+	return s
+}
+
+// SetMaxItems sets the MaxItems field's value.
+func (s *GetOrganizationsAccessReportInput) SetMaxItems(v int64) *GetOrganizationsAccessReportInput {
+	s.MaxItems = &v
+	return s
+}
+
+// SetSortKey sets the SortKey field's value.
+func (s *GetOrganizationsAccessReportInput) SetSortKey(v string) *GetOrganizationsAccessReportInput {
+	s.SortKey = &v
+	return s
+}
+
+type GetOrganizationsAccessReportOutput struct {
+	_ struct{} `type:"structure"`
+
+	// An object that contains details about the most recent attempt to access the
+	// service.
+	AccessDetails []*AccessDetail `type:"list"`
+
+	// Contains information about the reason that the operation failed.
+	//
+	// This data type is used as a response element in the GetOrganizationsAccessReport,
+	// GetServiceLastAccessedDetails, and GetServiceLastAccessedDetailsWithEntities
+	// operations.
+	ErrorDetails *ErrorDetails `type:"structure"`
+
+	// A flag that indicates whether there are more items to return. If your results
+	// were truncated, you can make a subsequent pagination request using the Marker
+	// request parameter to retrieve more items. Note that IAM might return fewer
+	// than the MaxItems number of results even when there are more results available.
+	// We recommend that you check IsTruncated after every call to ensure that you
+	// receive all your results.
+	IsTruncated *bool `type:"boolean"`
+
+	// The date and time, in ISO 8601 date-time format (http://www.iso.org/iso/iso8601),
+	// when the generated report job was completed or failed.
+	//
+	// This field is null if the job is still in progress, as indicated by a job
+	// status value of IN_PROGRESS.
+	JobCompletionDate *time.Time `type:"timestamp"`
+
+	// The date and time, in ISO 8601 date-time format (http://www.iso.org/iso/iso8601),
+	// when the report job was created.
+	//
+	// JobCreationDate is a required field
+	JobCreationDate *time.Time `type:"timestamp" required:"true"`
+
+	// The status of the job.
+	//
+	// JobStatus is a required field
+	JobStatus *string `type:"string" required:"true" enum:"jobStatusType"`
+
+	// When IsTruncated is true, this element is present and contains the value
+	// to use for the Marker parameter in a subsequent pagination request.
+	Marker *string `min:"1" type:"string"`
+
+	// The number of services that the applicable SCPs allow account principals
+	// to access.
+	NumberOfServicesAccessible *int64 `type:"integer"`
+
+	// The number of services that account principals are allowed but did not attempt
+	// to access.
+	NumberOfServicesNotAccessed *int64 `type:"integer"`
+}
+
+// String returns the string representation
+func (s GetOrganizationsAccessReportOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s GetOrganizationsAccessReportOutput) GoString() string {
+	return s.String()
+}
+
+// SetAccessDetails sets the AccessDetails field's value.
+func (s *GetOrganizationsAccessReportOutput) SetAccessDetails(v []*AccessDetail) *GetOrganizationsAccessReportOutput {
+	s.AccessDetails = v
+	return s
+}
+
+// SetErrorDetails sets the ErrorDetails field's value.
+func (s *GetOrganizationsAccessReportOutput) SetErrorDetails(v *ErrorDetails) *GetOrganizationsAccessReportOutput {
+	s.ErrorDetails = v
+	return s
+}
+
+// SetIsTruncated sets the IsTruncated field's value.
+func (s *GetOrganizationsAccessReportOutput) SetIsTruncated(v bool) *GetOrganizationsAccessReportOutput {
+	s.IsTruncated = &v
+	return s
+}
+
+// SetJobCompletionDate sets the JobCompletionDate field's value.
+func (s *GetOrganizationsAccessReportOutput) SetJobCompletionDate(v time.Time) *GetOrganizationsAccessReportOutput {
+	s.JobCompletionDate = &v
+	return s
+}
+
+// SetJobCreationDate sets the JobCreationDate field's value.
+func (s *GetOrganizationsAccessReportOutput) SetJobCreationDate(v time.Time) *GetOrganizationsAccessReportOutput {
+	s.JobCreationDate = &v
+	return s
+}
+
+// SetJobStatus sets the JobStatus field's value.
+func (s *GetOrganizationsAccessReportOutput) SetJobStatus(v string) *GetOrganizationsAccessReportOutput {
+	s.JobStatus = &v
+	return s
+}
+
+// SetMarker sets the Marker field's value.
+func (s *GetOrganizationsAccessReportOutput) SetMarker(v string) *GetOrganizationsAccessReportOutput {
+	s.Marker = &v
+	return s
+}
+
+// SetNumberOfServicesAccessible sets the NumberOfServicesAccessible field's value.
+func (s *GetOrganizationsAccessReportOutput) SetNumberOfServicesAccessible(v int64) *GetOrganizationsAccessReportOutput {
+	s.NumberOfServicesAccessible = &v
+	return s
+}
+
+// SetNumberOfServicesNotAccessed sets the NumberOfServicesNotAccessed field's value.
+func (s *GetOrganizationsAccessReportOutput) SetNumberOfServicesNotAccessed(v int64) *GetOrganizationsAccessReportOutput {
+	s.NumberOfServicesNotAccessed = &v
+	return s
+}
+
 type GetPolicyInput struct {
 	_ struct{} `type:"structure"`
 
@@ -21566,21 +22250,23 @@ type GetServiceLastAccessedDetailsOutput struct {
 	Error *ErrorDetails `type:"structure"`
 
 	// A flag that indicates whether there are more items to return. If your results
-	// were truncated, you can make a subsequent pagination request using the Markerrequest parameter to retrieve more items. Note that IAM might return fewer
-	// than the MaxItemsnumber of results even when there are more results available. We recommend
-	// that you check IsTruncated
+	// were truncated, you can make a subsequent pagination request using the Marker
+	// request parameter to retrieve more items. Note that IAM might return fewer
+	// than the MaxItems number of results even when there are more results available.
+	// We recommend that you check IsTruncated after every call to ensure that you
+	// receive all your results.
 	IsTruncated *bool `type:"boolean"`
 
-	// The date and time, in ISO 8601 date-time format (http://www.iso.org/iso/iso8601),
+	// The date and time, in ISO 8601 date-time format (http://www.iso.org/iso/iso8601),
 	// when the generated report job was completed or failed.
 	//
-	// This field is null if the job is still in progress, as indicated by a JobStatus
-	// value of IN_PROGRESS.
+	// This field is null if the job is still in progress, as indicated by a job
+	// status value of IN_PROGRESS.
 	//
 	// JobCompletionDate is a required field
 	JobCompletionDate *time.Time `type:"timestamp" required:"true"`
 
-	// The date and time, in ISO 8601 date-time format (http://www.iso.org/iso/iso8601),
+	// The date and time, in ISO 8601 date-time format (http://www.iso.org/iso/iso8601),
 	// when the report job was created.
 	//
 	// JobCreationDate is a required field
@@ -21595,7 +22281,7 @@ type GetServiceLastAccessedDetailsOutput struct {
 	// to use for the Marker parameter in a subsequent pagination request.
 	Marker *string `type:"string"`
 
-	// A ServiceLastAccessed object that contains details about the most recent
+	// A ServiceLastAccessed object that contains details about the most recent
 	// attempt to access the service.
 	//
 	// ServicesLastAccessed is a required field
@@ -21689,7 +22375,7 @@ type GetServiceLastAccessedDetailsWithEntitiesInput struct {
 	// that service. In the first paragraph, find the service prefix. For example,
 	// (service prefix: a4b). For more information about service namespaces, see
 	// AWS Service Namespaces (https://docs.aws.amazon.com/general/latest/gr/aws-arns-and-namespaces.html#genref-aws-service-namespaces)
-	// in the AWS General Reference.
+	// in the AWS General Reference.
 	//
 	// ServiceNamespace is a required field
 	ServiceNamespace *string `min:"1" type:"string" required:"true"`
@@ -21760,7 +22446,7 @@ func (s *GetServiceLastAccessedDetailsWithEntitiesInput) SetServiceNamespace(v s
 type GetServiceLastAccessedDetailsWithEntitiesOutput struct {
 	_ struct{} `type:"structure"`
 
-	// An EntityDetailsList object that contains details about when an IAM entity
+	// An EntityDetailsList object that contains details about when an IAM entity
 	// (user or role) used group or policy permissions in an attempt to access the
 	// specified AWS service.
 	//
@@ -21778,13 +22464,16 @@ type GetServiceLastAccessedDetailsWithEntitiesOutput struct {
 	// receive all your results.
 	IsTruncated *bool `type:"boolean"`
 
-	// The date and time, in ISO 8601 date-time format (http://www.iso.org/iso/iso8601),
+	// The date and time, in ISO 8601 date-time format (http://www.iso.org/iso/iso8601),
 	// when the generated report job was completed or failed.
+	//
+	// This field is null if the job is still in progress, as indicated by a job
+	// status value of IN_PROGRESS.
 	//
 	// JobCompletionDate is a required field
 	JobCompletionDate *time.Time `type:"timestamp" required:"true"`
 
-	// The date and time, in ISO 8601 date-time format (http://www.iso.org/iso/iso8601),
+	// The date and time, in ISO 8601 date-time format (http://www.iso.org/iso/iso8601),
 	// when the report job was created.
 	//
 	// JobCreationDate is a required field
@@ -22677,7 +23366,7 @@ type ListAttachedGroupPoliciesInput struct {
 	// can contain any ASCII character from the ! (\u0021) through the DEL character
 	// (\u007F), including most punctuation characters, digits, and upper and lowercased
 	// letters.
-	PathPrefix *string `type:"string"`
+	PathPrefix *string `min:"1" type:"string"`
 }
 
 // String returns the string representation
@@ -22704,6 +23393,9 @@ func (s *ListAttachedGroupPoliciesInput) Validate() error {
 	}
 	if s.MaxItems != nil && *s.MaxItems < 1 {
 		invalidParams.Add(request.NewErrParamMinValue("MaxItems", 1))
+	}
+	if s.PathPrefix != nil && len(*s.PathPrefix) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("PathPrefix", 1))
 	}
 
 	if invalidParams.Len() > 0 {
@@ -22813,7 +23505,7 @@ type ListAttachedRolePoliciesInput struct {
 	// can contain any ASCII character from the ! (\u0021) through the DEL character
 	// (\u007F), including most punctuation characters, digits, and upper and lowercased
 	// letters.
-	PathPrefix *string `type:"string"`
+	PathPrefix *string `min:"1" type:"string"`
 
 	// The name (friendly name, not ARN) of the role to list attached policies for.
 	//
@@ -22843,6 +23535,9 @@ func (s *ListAttachedRolePoliciesInput) Validate() error {
 	}
 	if s.MaxItems != nil && *s.MaxItems < 1 {
 		invalidParams.Add(request.NewErrParamMinValue("MaxItems", 1))
+	}
+	if s.PathPrefix != nil && len(*s.PathPrefix) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("PathPrefix", 1))
 	}
 	if s.RoleName == nil {
 		invalidParams.Add(request.NewErrParamRequired("RoleName"))
@@ -22958,7 +23653,7 @@ type ListAttachedUserPoliciesInput struct {
 	// can contain any ASCII character from the ! (\u0021) through the DEL character
 	// (\u007F), including most punctuation characters, digits, and upper and lowercased
 	// letters.
-	PathPrefix *string `type:"string"`
+	PathPrefix *string `min:"1" type:"string"`
 
 	// The name (friendly name, not ARN) of the user to list attached policies for.
 	//
@@ -22988,6 +23683,9 @@ func (s *ListAttachedUserPoliciesInput) Validate() error {
 	}
 	if s.MaxItems != nil && *s.MaxItems < 1 {
 		invalidParams.Add(request.NewErrParamMinValue("MaxItems", 1))
+	}
+	if s.PathPrefix != nil && len(*s.PathPrefix) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("PathPrefix", 1))
 	}
 	if s.UserName == nil {
 		invalidParams.Add(request.NewErrParamRequired("UserName"))
@@ -23124,9 +23822,9 @@ type ListEntitiesForPolicyInput struct {
 
 	// The policy usage method to use for filtering the results.
 	//
-	// To list only permissions policies, set PolicyUsageFilter to PermissionsPolicy.
-	// To list only the policies used to set permissions boundaries, set the value
-	// to PermissionsBoundary.
+	// To list only permissions policies, set PolicyUsageFilter to PermissionsPolicy.
+	// To list only the policies used to set permissions boundaries, set the value
+	// to PermissionsBoundary.
 	//
 	// This parameter is optional. If it is not included, all policies are returned.
 	PolicyUsageFilter *string `type:"string" enum:"PolicyUsageType"`
@@ -24094,7 +24792,7 @@ func (s *ListOpenIDConnectProvidersOutput) SetOpenIDConnectProviderList(v []*Ope
 type ListPoliciesGrantingServiceAccessEntry struct {
 	_ struct{} `type:"structure"`
 
-	// The PoliciesGrantingServiceAccess object that contains details about the
+	// The PoliciesGrantingServiceAccess object that contains details about the
 	// policy.
 	Policies []*PolicyGrantingServiceAccess `type:"list"`
 
@@ -24106,7 +24804,7 @@ type ListPoliciesGrantingServiceAccessEntry struct {
 	// that service. In the first paragraph, find the service prefix. For example,
 	// (service prefix: a4b). For more information about service namespaces, see
 	// AWS Service Namespaces (https://docs.aws.amazon.com/general/latest/gr/aws-arns-and-namespaces.html#genref-aws-service-namespaces)
-	// in the AWS General Reference.
+	// in the AWS General Reference.
 	ServiceNamespace *string `min:"1" type:"string"`
 }
 
@@ -24155,7 +24853,7 @@ type ListPoliciesGrantingServiceAccessInput struct {
 	// that service. In the first paragraph, find the service prefix. For example,
 	// (service prefix: a4b). For more information about service namespaces, see
 	// AWS Service Namespaces (https://docs.aws.amazon.com/general/latest/gr/aws-arns-and-namespaces.html#genref-aws-service-namespaces)
-	// in the AWS General Reference.
+	// in the AWS General Reference.
 	//
 	// ServiceNamespaces is a required field
 	ServiceNamespaces []*string `min:"1" type:"list" required:"true"`
@@ -24227,7 +24925,7 @@ type ListPoliciesGrantingServiceAccessOutput struct {
 	// to use for the Marker parameter in a subsequent pagination request.
 	Marker *string `type:"string"`
 
-	// A ListPoliciesGrantingServiceAccess object that contains details about the
+	// A ListPoliciesGrantingServiceAccess object that contains details about the
 	// permissions policies attached to the specified identity (user, group, or
 	// role).
 	//
@@ -24298,13 +24996,13 @@ type ListPoliciesInput struct {
 	// can contain any ASCII character from the ! (\u0021) through the DEL character
 	// (\u007F), including most punctuation characters, digits, and upper and lowercased
 	// letters.
-	PathPrefix *string `type:"string"`
+	PathPrefix *string `min:"1" type:"string"`
 
 	// The policy usage method to use for filtering the results.
 	//
-	// To list only permissions policies, set PolicyUsageFilter to PermissionsPolicy.
-	// To list only the policies used to set permissions boundaries, set the value
-	// to PermissionsBoundary.
+	// To list only permissions policies, set PolicyUsageFilter to PermissionsPolicy.
+	// To list only the policies used to set permissions boundaries, set the value
+	// to PermissionsBoundary.
 	//
 	// This parameter is optional. If it is not included, all policies are returned.
 	PolicyUsageFilter *string `type:"string" enum:"PolicyUsageType"`
@@ -24337,6 +25035,9 @@ func (s *ListPoliciesInput) Validate() error {
 	}
 	if s.MaxItems != nil && *s.MaxItems < 1 {
 		invalidParams.Add(request.NewErrParamMinValue("MaxItems", 1))
+	}
+	if s.PathPrefix != nil && len(*s.PathPrefix) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("PathPrefix", 1))
 	}
 
 	if invalidParams.Len() > 0 {
@@ -26106,13 +26807,13 @@ type ManagedPolicyDetail struct {
 	//
 	// For more information about paths, see IAM Identifiers (https://docs.aws.amazon.com/IAM/latest/UserGuide/Using_Identifiers.html)
 	// in the Using IAM guide.
-	Path *string `type:"string"`
+	Path *string `min:"1" type:"string"`
 
 	// The number of entities (users and roles) for which the policy is used as
 	// the permissions boundary.
 	//
 	// For more information about permissions boundaries, see Permissions Boundaries
-	// for IAM Identities  (https://docs.aws.amazon.com/IAM/latest/UserGuide/access_policies_boundaries.html)
+	// for IAM Identities (https://docs.aws.amazon.com/IAM/latest/UserGuide/access_policies_boundaries.html)
 	// in the IAM User Guide.
 	PermissionsBoundaryUsageCount *int64 `type:"integer"`
 
@@ -26248,11 +26949,12 @@ func (s *OpenIDConnectProviderListEntry) SetArn(v string) *OpenIDConnectProvider
 	return s
 }
 
-// Contains information about AWS Organizations's effect on a policy simulation.
+// Contains information about the effect that Organizations has on a policy
+// simulation.
 type OrganizationsDecisionDetail struct {
 	_ struct{} `type:"structure"`
 
-	// Specifies whether the simulated operation is allowed by the AWS Organizations
+	// Specifies whether the simulated operation is allowed by the Organizations
 	// service control policies that impact the simulated user's account.
 	AllowedByOrganizations *bool `type:"boolean"`
 }
@@ -26427,13 +27129,13 @@ type Policy struct {
 	//
 	// For more information about paths, see IAM Identifiers (https://docs.aws.amazon.com/IAM/latest/UserGuide/Using_Identifiers.html)
 	// in the Using IAM guide.
-	Path *string `type:"string"`
+	Path *string `min:"1" type:"string"`
 
 	// The number of entities (users and roles) for which the policy is used to
 	// set the permissions boundary.
 	//
 	// For more information about permissions boundaries, see Permissions Boundaries
-	// for IAM Identities  (https://docs.aws.amazon.com/IAM/latest/UserGuide/access_policies_boundaries.html)
+	// for IAM Identities (https://docs.aws.amazon.com/IAM/latest/UserGuide/access_policies_boundaries.html)
 	// in the IAM User Guide.
 	PermissionsBoundaryUsageCount *int64 `type:"integer"`
 
@@ -26891,7 +27593,9 @@ type PutGroupPolicyInput struct {
 
 	// The name of the group to associate the policy with.
 	//
-	// ®ex-name;.
+	// This parameter allows (through its regex pattern (http://wikipedia.org/wiki/regex))
+	// a string of characters consisting of upper and lowercase alphanumeric characters
+	// with no spaces. You can also include any of the following characters: _+=,.@-.
 	//
 	// GroupName is a required field
 	GroupName *string `min:"1" type:"string" required:"true"`
@@ -27944,7 +28648,7 @@ type Role struct {
 	// The ARN of the policy used to set the permissions boundary for the role.
 	//
 	// For more information about permissions boundaries, see Permissions Boundaries
-	// for IAM Identities  (https://docs.aws.amazon.com/IAM/latest/UserGuide/access_policies_boundaries.html)
+	// for IAM Identities (https://docs.aws.amazon.com/IAM/latest/UserGuide/access_policies_boundaries.html)
 	// in the IAM User Guide.
 	PermissionsBoundary *AttachedPermissionsBoundary `type:"structure"`
 
@@ -28072,7 +28776,7 @@ type RoleDetail struct {
 	// The ARN of the policy used to set the permissions boundary for the role.
 	//
 	// For more information about permissions boundaries, see Permissions Boundaries
-	// for IAM Identities  (https://docs.aws.amazon.com/IAM/latest/UserGuide/access_policies_boundaries.html)
+	// for IAM Identities (https://docs.aws.amazon.com/IAM/latest/UserGuide/access_policies_boundaries.html)
 	// in the IAM User Guide.
 	PermissionsBoundary *AttachedPermissionsBoundary `type:"structure"`
 
@@ -28178,7 +28882,7 @@ func (s *RoleDetail) SetTags(v []*Tag) *RoleDetail {
 type RoleUsageType struct {
 	_ struct{} `type:"structure"`
 
-	// The name of the region where the service-linked role is being used.
+	// The name of the Region where the service-linked role is being used.
 	Region *string `min:"1" type:"string"`
 
 	// The name of the resource that is using the service-linked role.
@@ -28543,7 +29247,7 @@ func (s *ServerCertificateMetadata) SetUploadDate(v time.Time) *ServerCertificat
 type ServiceLastAccessed struct {
 	_ struct{} `type:"structure"`
 
-	// The date and time, in ISO 8601 date-time format (http://www.iso.org/iso/iso8601),
+	// The date and time, in ISO 8601 date-time format (http://www.iso.org/iso/iso8601),
 	// when an authenticated entity most recently attempted to access the service.
 	// AWS does not report unauthenticated requests.
 	//
@@ -28571,15 +29275,15 @@ type ServiceLastAccessed struct {
 	// that service. In the first paragraph, find the service prefix. For example,
 	// (service prefix: a4b). For more information about service namespaces, see
 	// AWS Service Namespaces (https://docs.aws.amazon.com/general/latest/gr/aws-arns-and-namespaces.html#genref-aws-service-namespaces)
-	// in the AWS General Reference.
+	// in the AWS General Reference.
 	//
 	// ServiceNamespace is a required field
 	ServiceNamespace *string `min:"1" type:"string" required:"true"`
 
-	// The total number of authenticated entities that have attempted to access
-	// the service.
+	// The total number of authenticated principals (root user, IAM users, or IAM
+	// roles) that have attempted to access the service.
 	//
-	// This field is null if no IAM entities attempted to access the service within
+	// This field is null if no principals attempted to access the service within
 	// the reporting period (https://docs.aws.amazon.com/IAM/latest/UserGuide/access_policies_access-advisor.html#service-last-accessed-reporting-period).
 	TotalAuthenticatedEntities *int64 `type:"integer"`
 }
@@ -29114,29 +29818,19 @@ type SimulateCustomPolicyInput struct {
 	// the EC2 scenario options, see Supported Platforms (https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/ec2-supported-platforms.html)
 	// in the Amazon EC2 User Guide.
 	//
-	//    * EC2-Classic-InstanceStore
+	//    * EC2-Classic-InstanceStore instance, image, security-group
 	//
-	// instance, image, security-group
+	//    * EC2-Classic-EBS instance, image, security-group, volume
 	//
-	//    * EC2-Classic-EBS
+	//    * EC2-VPC-InstanceStore instance, image, security-group, network-interface
 	//
-	// instance, image, security-group, volume
+	//    * EC2-VPC-InstanceStore-Subnet instance, image, security-group, network-interface,
+	//    subnet
 	//
-	//    * EC2-VPC-InstanceStore
+	//    * EC2-VPC-EBS instance, image, security-group, network-interface, volume
 	//
-	// instance, image, security-group, network-interface
-	//
-	//    * EC2-VPC-InstanceStore-Subnet
-	//
-	// instance, image, security-group, network-interface, subnet
-	//
-	//    * EC2-VPC-EBS
-	//
-	// instance, image, security-group, network-interface, volume
-	//
-	//    * EC2-VPC-EBS-Subnet
-	//
-	// instance, image, security-group, network-interface, subnet, volume
+	//    * EC2-VPC-EBS-Subnet instance, image, security-group, network-interface,
+	//    subnet, volume
 	ResourceHandlingOption *string `min:"1" type:"string"`
 
 	// An ARN representing the AWS account ID that specifies the owner of any simulated
@@ -29366,7 +30060,7 @@ type SimulatePrincipalPolicyInput struct {
 	CallerArn *string `min:"1" type:"string"`
 
 	// A list of context keys and corresponding values for the simulation to use.
-	// Whenever a context key is evaluated in one of the simulated IAM permission
+	// Whenever a context key is evaluated in one of the simulated IAM permissions
 	// policies, the corresponding value is supplied.
 	ContextEntries []*ContextEntry `type:"list"`
 
@@ -29448,29 +30142,19 @@ type SimulatePrincipalPolicyInput struct {
 	// the EC2 scenario options, see Supported Platforms (https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/ec2-supported-platforms.html)
 	// in the Amazon EC2 User Guide.
 	//
-	//    * EC2-Classic-InstanceStore
+	//    * EC2-Classic-InstanceStore instance, image, security group
 	//
-	// instance, image, security group
+	//    * EC2-Classic-EBS instance, image, security group, volume
 	//
-	//    * EC2-Classic-EBS
+	//    * EC2-VPC-InstanceStore instance, image, security group, network interface
 	//
-	// instance, image, security group, volume
+	//    * EC2-VPC-InstanceStore-Subnet instance, image, security group, network
+	//    interface, subnet
 	//
-	//    * EC2-VPC-InstanceStore
+	//    * EC2-VPC-EBS instance, image, security group, network interface, volume
 	//
-	// instance, image, security group, network interface
-	//
-	//    * EC2-VPC-InstanceStore-Subnet
-	//
-	// instance, image, security group, network interface, subnet
-	//
-	//    * EC2-VPC-EBS
-	//
-	// instance, image, security group, network interface, volume
-	//
-	//    * EC2-VPC-EBS-Subnet
-	//
-	// instance, image, security group, network interface, subnet, volume
+	//    * EC2-VPC-EBS-Subnet instance, image, security group, network interface,
+	//    subnet, volume
 	ResourceHandlingOption *string `min:"1" type:"string"`
 
 	// An AWS account ID that specifies the owner of any simulated resource that
@@ -31834,7 +32518,7 @@ type User struct {
 	//    * A password exists but has not been used since IAM started tracking this
 	//    information on October 20, 2014.
 	//
-	// A null valuedoes not mean that the user never had a password. Also, if the
+	// A null value does not mean that the user never had a password. Also, if the
 	// user does not currently have a password, but had one in the past, then this
 	// field contains the date and time the most recent password was used.
 	//
@@ -31851,7 +32535,7 @@ type User struct {
 	// The ARN of the policy used to set the permissions boundary for the user.
 	//
 	// For more information about permissions boundaries, see Permissions Boundaries
-	// for IAM Identities  (https://docs.aws.amazon.com/IAM/latest/UserGuide/access_policies_boundaries.html)
+	// for IAM Identities (https://docs.aws.amazon.com/IAM/latest/UserGuide/access_policies_boundaries.html)
 	// in the IAM User Guide.
 	PermissionsBoundary *AttachedPermissionsBoundary `type:"structure"`
 
@@ -31964,7 +32648,7 @@ type UserDetail struct {
 	// The ARN of the policy used to set the permissions boundary for the user.
 	//
 	// For more information about permissions boundaries, see Permissions Boundaries
-	// for IAM Identities  (https://docs.aws.amazon.com/IAM/latest/UserGuide/access_policies_boundaries.html)
+	// for IAM Identities (https://docs.aws.amazon.com/IAM/latest/UserGuide/access_policies_boundaries.html)
 	// in the IAM User Guide.
 	PermissionsBoundary *AttachedPermissionsBoundary `type:"structure"`
 
@@ -32237,7 +32921,7 @@ const (
 // policy or as the permissions boundary for an entity.
 //
 // For more information about permissions boundaries, see Permissions Boundaries
-// for IAM Identities  (https://docs.aws.amazon.com/IAM/latest/UserGuide/access_policies_boundaries.html)
+// for IAM Identities (https://docs.aws.amazon.com/IAM/latest/UserGuide/access_policies_boundaries.html)
 // in the IAM User Guide.
 const (
 	// PolicyUsageTypePermissionsPolicy is a PolicyUsageType enum value
@@ -32329,6 +33013,20 @@ const (
 
 	// PolicyTypeManaged is a policyType enum value
 	PolicyTypeManaged = "MANAGED"
+)
+
+const (
+	// SortKeyTypeServiceNamespaceAscending is a sortKeyType enum value
+	SortKeyTypeServiceNamespaceAscending = "SERVICE_NAMESPACE_ASCENDING"
+
+	// SortKeyTypeServiceNamespaceDescending is a sortKeyType enum value
+	SortKeyTypeServiceNamespaceDescending = "SERVICE_NAMESPACE_DESCENDING"
+
+	// SortKeyTypeLastAuthenticatedTimeAscending is a sortKeyType enum value
+	SortKeyTypeLastAuthenticatedTimeAscending = "LAST_AUTHENTICATED_TIME_ASCENDING"
+
+	// SortKeyTypeLastAuthenticatedTimeDescending is a sortKeyType enum value
+	SortKeyTypeLastAuthenticatedTimeDescending = "LAST_AUTHENTICATED_TIME_DESCENDING"
 )
 
 const (

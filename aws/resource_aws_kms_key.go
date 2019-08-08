@@ -108,6 +108,9 @@ func resourceAwsKmsKeyCreate(d *schema.ResourceData, meta interface{}) error {
 		}
 		return resource.NonRetryableError(err)
 	})
+	if isResourceTimeoutError(err) {
+		resp, err = conn.CreateKey(&req)
+	}
 	if err != nil {
 		return err
 	}
@@ -335,18 +338,7 @@ func updateKmsKeyRotationStatus(conn *kms.KMS, d *schema.ResourceData) error {
 	shouldEnableRotation := d.Get("enable_key_rotation").(bool)
 
 	err := resource.Retry(10*time.Minute, func() *resource.RetryError {
-		var err error
-		if shouldEnableRotation {
-			log.Printf("[DEBUG] Enabling key rotation for KMS key %q", d.Id())
-			_, err = conn.EnableKeyRotation(&kms.EnableKeyRotationInput{
-				KeyId: aws.String(d.Id()),
-			})
-		} else {
-			log.Printf("[DEBUG] Disabling key rotation for KMS key %q", d.Id())
-			_, err = conn.DisableKeyRotation(&kms.DisableKeyRotationInput{
-				KeyId: aws.String(d.Id()),
-			})
-		}
+		err := handleKeyRotation(conn, shouldEnableRotation, aws.String(d.Id()))
 
 		if err != nil {
 			awsErr, ok := err.(awserr.Error)
@@ -362,6 +354,9 @@ func updateKmsKeyRotationStatus(conn *kms.KMS, d *schema.ResourceData) error {
 
 		return nil
 	})
+	if isResourceTimeoutError(err) {
+		err = handleKeyRotation(conn, shouldEnableRotation, aws.String(d.Id()))
+	}
 
 	if err != nil {
 		return fmt.Errorf("Failed to set key rotation for %q to %t: %q",
@@ -402,6 +397,22 @@ func updateKmsKeyRotationStatus(conn *kms.KMS, d *schema.ResourceData) error {
 	}
 
 	return nil
+}
+
+func handleKeyRotation(conn *kms.KMS, shouldEnableRotation bool, keyId *string) error {
+	var err error
+	if shouldEnableRotation {
+		log.Printf("[DEBUG] Enabling key rotation for KMS key %q", *keyId)
+		_, err = conn.EnableKeyRotation(&kms.EnableKeyRotationInput{
+			KeyId: keyId,
+		})
+	} else {
+		log.Printf("[DEBUG] Disabling key rotation for KMS key %q", *keyId)
+		_, err = conn.DisableKeyRotation(&kms.DisableKeyRotationInput{
+			KeyId: keyId,
+		})
+	}
+	return err
 }
 
 func resourceAwsKmsKeyExists(d *schema.ResourceData, meta interface{}) (bool, error) {

@@ -16,10 +16,10 @@ For information about Lambda Layers and how to use them, see [AWS Lambda Layers]
 
 ```hcl
 resource "aws_lambda_layer_version" "lambda_layer" {
-  filename = "lambda_layer_payload.zip"
+  filename   = "lambda_layer_payload.zip"
   layer_name = "lambda_layer_name"
-  
-  compatible_runtimes = ["nodejs8.10", "nodejs6.10"]
+
+  compatible_runtimes = ["nodejs8.10"]
 }
 ```
 

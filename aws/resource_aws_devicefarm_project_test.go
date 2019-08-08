@@ -114,6 +114,7 @@ func testAccCheckDeviceFarmProjectDestroy(s *terraform.State) error {
 func testAccDeviceFarmProjectConfig(rInt int) string {
 	return fmt.Sprintf(`
 resource "aws_devicefarm_project" "foo" {
-	name = "tf-testproject-%d"
-}`, rInt)
+  name = "tf-testproject-%d"
+}
+`, rInt)
 }

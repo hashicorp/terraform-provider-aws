@@ -77,6 +77,64 @@ func TestAccAWSElasticSearchDomain_basic(t *testing.T) {
 	})
 }
 
+func TestAccAWSElasticSearchDomain_ClusterConfig_ZoneAwarenessConfig(t *testing.T) {
+	var domain1, domain2, domain3, domain4 elasticsearch.ElasticsearchDomainStatus
+	rName := acctest.RandomWithPrefix("tf-acc-test")[:28]
+	resourceName := "aws_elasticsearch_domain.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckESDomainDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccESDomainConfig_ClusterConfig_ZoneAwarenessConfig_AvailabilityZoneCount(rName, 3),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckESDomainExists(resourceName, &domain1),
+					resource.TestCheckResourceAttr(resourceName, "cluster_config.0.zone_awareness_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "cluster_config.0.zone_awareness_config.0.availability_zone_count", "3"),
+					resource.TestCheckResourceAttr(resourceName, "cluster_config.0.zone_awareness_enabled", "true"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateId:     rName,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccESDomainConfig_ClusterConfig_ZoneAwarenessConfig_AvailabilityZoneCount(rName, 2),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckESDomainExists(resourceName, &domain2),
+					testAccCheckAWSESDomainNotRecreated(&domain1, &domain2),
+					resource.TestCheckResourceAttr(resourceName, "cluster_config.0.zone_awareness_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "cluster_config.0.zone_awareness_config.0.availability_zone_count", "2"),
+					resource.TestCheckResourceAttr(resourceName, "cluster_config.0.zone_awareness_enabled", "true"),
+				),
+			},
+			{
+				Config: testAccESDomainConfig_ClusterConfig_ZoneAwarenessEnabled(rName, false),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckESDomainExists(resourceName, &domain3),
+					testAccCheckAWSESDomainNotRecreated(&domain2, &domain3),
+					resource.TestCheckResourceAttr(resourceName, "cluster_config.0.zone_awareness_enabled", "false"),
+					resource.TestCheckResourceAttr(resourceName, "cluster_config.0.zone_awareness_config.#", "0"),
+				),
+			},
+			{
+				Config: testAccESDomainConfig_ClusterConfig_ZoneAwarenessConfig_AvailabilityZoneCount(rName, 3),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckESDomainExists(resourceName, &domain4),
+					testAccCheckAWSESDomainNotRecreated(&domain3, &domain4),
+					resource.TestCheckResourceAttr(resourceName, "cluster_config.0.zone_awareness_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "cluster_config.0.zone_awareness_config.0.availability_zone_count", "3"),
+					resource.TestCheckResourceAttr(resourceName, "cluster_config.0.zone_awareness_enabled", "true"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccAWSElasticSearchDomain_withDedicatedMaster(t *testing.T) {
 	var domain elasticsearch.ElasticsearchDomainStatus
 	ri := acctest.RandInt()
@@ -749,18 +807,60 @@ resource "aws_elasticsearch_domain" "example" {
 `, randInt)
 }
 
+func testAccESDomainConfig_ClusterConfig_ZoneAwarenessConfig_AvailabilityZoneCount(rName string, availabilityZoneCount int) string {
+	return fmt.Sprintf(`
+resource "aws_elasticsearch_domain" "test" {
+  domain_name = %[1]q
+
+  cluster_config {
+    instance_type          = "t2.micro.elasticsearch"
+    instance_count         = 6
+    zone_awareness_enabled = true
+
+    zone_awareness_config {
+      availability_zone_count = %[2]d
+    }
+  }
+
+  ebs_options {
+    ebs_enabled = true
+    volume_size = 10
+  }
+}
+`, rName, availabilityZoneCount)
+}
+
+func testAccESDomainConfig_ClusterConfig_ZoneAwarenessEnabled(rName string, zoneAwarenessEnabled bool) string {
+	return fmt.Sprintf(`
+resource "aws_elasticsearch_domain" "test" {
+  domain_name = %[1]q
+
+  cluster_config {
+    instance_type          = "t2.micro.elasticsearch"
+    instance_count         = 6
+    zone_awareness_enabled = %[2]t
+  }
+
+  ebs_options {
+    ebs_enabled = true
+    volume_size = 10
+  }
+}
+`, rName, zoneAwarenessEnabled)
+}
+
 func testAccESDomainConfig_WithDedicatedClusterMaster(randInt int, enabled bool) string {
 	return fmt.Sprintf(`
 resource "aws_elasticsearch_domain" "example" {
-	domain_name = "tf-test-%d"
-	
-	cluster_config {
-		instance_type            = "t2.micro.elasticsearch"
+  domain_name = "tf-test-%d"
+
+  cluster_config {
+    instance_type            = "t2.micro.elasticsearch"
     instance_count           = "1"
     dedicated_master_enabled = %t
     dedicated_master_count   = "3"
     dedicated_master_type    = "t2.micro.elasticsearch"
-	}
+  }
 
   ebs_options {
     ebs_enabled = true
@@ -781,14 +881,13 @@ resource "aws_elasticsearch_domain" "example" {
 
   ebs_options {
     ebs_enabled = true
-		volume_size = 10
-
+    volume_size = 10
   }
 
   cluster_config {
-    instance_count = %d
+    instance_count         = %d
     zone_awareness_enabled = true
-    instance_type = "t2.micro.elasticsearch"
+    instance_type          = "t2.micro.elasticsearch"
   }
 
   snapshot_options {
@@ -803,7 +902,7 @@ func testAccESDomainConfig_ClusterUpdateEBSVolume(randInt, volumeSize int) strin
 resource "aws_elasticsearch_domain" "example" {
   domain_name = "tf-test-%d"
 
-	elasticsearch_version = "6.0"
+  elasticsearch_version = "6.0"
 
   advanced_options = {
     "indices.fielddata.cache.size" = 80
@@ -811,13 +910,13 @@ resource "aws_elasticsearch_domain" "example" {
 
   ebs_options {
     ebs_enabled = true
-		volume_size = %d
+    volume_size = %d
   }
 
   cluster_config {
-    instance_count = 2
+    instance_count         = 2
     zone_awareness_enabled = true
-    instance_type = "t2.small.elasticsearch"
+    instance_type          = "t2.small.elasticsearch"
   }
 }
 `, randInt, volumeSize)
@@ -836,9 +935,9 @@ resource "aws_elasticsearch_domain" "example" {
   }
 
   cluster_config {
-    instance_count = 1
+    instance_count         = 1
     zone_awareness_enabled = false
-    instance_type = "t2.small.elasticsearch"
+    instance_type          = "t2.small.elasticsearch"
   }
 }
 `, randInt, version)
@@ -849,7 +948,7 @@ func testAccESDomainConfig_ClusterUpdateInstanceStore(randInt int) string {
 resource "aws_elasticsearch_domain" "example" {
   domain_name = "tf-test-%d"
 
-	elasticsearch_version = "6.0"
+  elasticsearch_version = "6.0"
 
   advanced_options = {
     "indices.fielddata.cache.size" = 80
@@ -860,9 +959,9 @@ resource "aws_elasticsearch_domain" "example" {
   }
 
   cluster_config {
-    instance_count = 2
+    instance_count         = 2
     zone_awareness_enabled = true
-    instance_type = "i3.large.elasticsearch"
+    instance_type          = "i3.large.elasticsearch"
   }
 }
 `, randInt)
@@ -872,6 +971,7 @@ func testAccESDomainConfig_TagUpdate(randInt int) string {
 	return fmt.Sprintf(`
 resource "aws_elasticsearch_domain" "example" {
   domain_name = "tf-test-%d"
+
   ebs_options {
     ebs_enabled = true
     volume_size = 10
@@ -889,10 +989,12 @@ func testAccESDomainConfigWithPolicy(randESId int, randRoleId int) string {
 	return fmt.Sprintf(`
 resource "aws_elasticsearch_domain" "example" {
   domain_name = "tf-test-%d"
-   ebs_options {
+
+  ebs_options {
     ebs_enabled = true
     volume_size = 10
   }
+
   access_policies = <<CONFIG
   {
   "Version": "2012-10-17",
@@ -909,13 +1011,16 @@ resource "aws_elasticsearch_domain" "example" {
   }
 CONFIG
 }
+
 resource "aws_iam_role" "example_role" {
-  name = "es-domain-role-%d"
+  name               = "es-domain-role-%d"
   assume_role_policy = "${data.aws_iam_policy_document.instance-assume-role-policy.json}"
 }
+
 data "aws_iam_policy_document" "instance-assume-role-policy" {
   statement {
     actions = ["sts:AssumeRole"]
+
     principals {
       type        = "Service"
       identifiers = ["ec2.amazonaws.com"]
@@ -927,7 +1032,6 @@ data "aws_iam_policy_document" "instance-assume-role-policy" {
 
 func testAccESDomainConfigWithEncryptAtRestDefaultKey(randESId int) string {
 	return fmt.Sprintf(`
-
 resource "aws_elasticsearch_domain" "example" {
   domain_name = "tf-test-%d"
 
@@ -944,7 +1048,7 @@ resource "aws_elasticsearch_domain" "example" {
   }
 
   encrypt_at_rest {
-    enabled    = true
+    enabled = true
   }
 }
 `, randESId)
@@ -982,7 +1086,6 @@ resource "aws_elasticsearch_domain" "example" {
 
 func testAccESDomainConfigwithNodeToNodeEncryption(randInt int) string {
 	return fmt.Sprintf(`
-
 resource "aws_elasticsearch_domain" "example" {
   domain_name = "tf-test-%d"
 
@@ -998,7 +1101,7 @@ resource "aws_elasticsearch_domain" "example" {
   }
 
   node_to_node_encryption {
-  	enabled = true
+    enabled = true
   }
 }
 `, randInt)
@@ -1018,9 +1121,9 @@ resource "aws_elasticsearch_domain" "example" {
   }
 
   cluster_config {
-    instance_count = 2
+    instance_count         = 2
     zone_awareness_enabled = true
-    instance_type = "m3.medium.elasticsearch"
+    instance_type          = "m3.medium.elasticsearch"
   }
 
   snapshot_options {
@@ -1038,10 +1141,12 @@ func testAccESDomainConfigV23(randInt int) string {
 	return fmt.Sprintf(`
 resource "aws_elasticsearch_domain" "example" {
   domain_name = "tf-test-%d"
+
   ebs_options {
     ebs_enabled = true
     volume_size = 10
   }
+
   elasticsearch_version = "2.3"
 }
 `, randInt)
@@ -1055,6 +1160,7 @@ data "aws_availability_zones" "available" {
 
 resource "aws_vpc" "elasticsearch_in_vpc" {
   cidr_block = "192.168.0.0/22"
+
   tags = {
     Name = "terraform-testacc-elasticsearch-domain-in-vpc"
   }
@@ -1064,6 +1170,7 @@ resource "aws_subnet" "first" {
   vpc_id            = "${aws_vpc.elasticsearch_in_vpc.id}"
   availability_zone = "${data.aws_availability_zones.available.names[0]}"
   cidr_block        = "192.168.0.0/24"
+
   tags = {
     Name = "tf-acc-elasticsearch-domain-in-vpc-first"
   }
@@ -1073,6 +1180,7 @@ resource "aws_subnet" "second" {
   vpc_id            = "${aws_vpc.elasticsearch_in_vpc.id}"
   availability_zone = "${data.aws_availability_zones.available.names[1]}"
   cidr_block        = "192.168.1.0/24"
+
   tags = {
     Name = "tf-acc-elasticsearch-domain-in-vpc-second"
   }
@@ -1094,14 +1202,14 @@ resource "aws_elasticsearch_domain" "example" {
   }
 
   cluster_config {
-    instance_count = 2
+    instance_count         = 2
     zone_awareness_enabled = true
-    instance_type = "m3.medium.elasticsearch"
+    instance_type          = "m3.medium.elasticsearch"
   }
 
   vpc_options {
     security_group_ids = ["${aws_security_group.first.id}", "${aws_security_group.second.id}"]
-    subnet_ids = ["${aws_subnet.first.id}", "${aws_subnet.second.id}"]
+    subnet_ids         = ["${aws_subnet.first.id}", "${aws_subnet.second.id}"]
   }
 }
 `, randInt)
@@ -1124,6 +1232,7 @@ data "aws_availability_zones" "available" {
 
 resource "aws_vpc" "elasticsearch_in_vpc" {
   cidr_block = "192.168.0.0/22"
+
   tags = {
     Name = "terraform-testacc-elasticsearch-domain-in-vpc-update"
   }
@@ -1133,6 +1242,7 @@ resource "aws_subnet" "az1_first" {
   vpc_id            = "${aws_vpc.elasticsearch_in_vpc.id}"
   availability_zone = "${data.aws_availability_zones.available.names[0]}"
   cidr_block        = "192.168.0.0/24"
+
   tags = {
     Name = "tf-acc-elasticsearch-domain-in-vpc-update-az1-first"
   }
@@ -1142,6 +1252,7 @@ resource "aws_subnet" "az2_first" {
   vpc_id            = "${aws_vpc.elasticsearch_in_vpc.id}"
   availability_zone = "${data.aws_availability_zones.available.names[1]}"
   cidr_block        = "192.168.1.0/24"
+
   tags = {
     Name = "tf-acc-elasticsearch-domain-in-vpc-update-az2-first"
   }
@@ -1151,6 +1262,7 @@ resource "aws_subnet" "az1_second" {
   vpc_id            = "${aws_vpc.elasticsearch_in_vpc.id}"
   availability_zone = "${data.aws_availability_zones.available.names[0]}"
   cidr_block        = "192.168.2.0/24"
+
   tags = {
     Name = "tf-acc-elasticsearch-domain-in-vpc-update-az1-second"
   }
@@ -1160,6 +1272,7 @@ resource "aws_subnet" "az2_second" {
   vpc_id            = "${aws_vpc.elasticsearch_in_vpc.id}"
   availability_zone = "${data.aws_availability_zones.available.names[1]}"
   cidr_block        = "192.168.3.0/24"
+
   tags = {
     Name = "tf-acc-elasticsearch-domain-in-vpc-update-az2-second"
   }
@@ -1181,14 +1294,14 @@ resource "aws_elasticsearch_domain" "example" {
   }
 
   cluster_config {
-    instance_count = 2
+    instance_count         = 2
     zone_awareness_enabled = true
-    instance_type = "m3.medium.elasticsearch"
+    instance_type          = "m3.medium.elasticsearch"
   }
 
   vpc_options {
     security_group_ids = ["%s"]
-    subnet_ids = ["${aws_subnet.az1_%s.id}", "${aws_subnet.az2_%s.id}"]
+    subnet_ids         = ["${aws_subnet.az1_%s.id}", "${aws_subnet.az2_%s.id}"]
   }
 }
 `, randInt, sg_ids, subnet_string, subnet_string)
@@ -1202,6 +1315,7 @@ data "aws_availability_zones" "available" {
 
 resource "aws_vpc" "elasticsearch_in_vpc" {
   cidr_block = "192.168.0.0/22"
+
   tags = {
     Name = "terraform-testacc-elasticsearch-domain-internet-to-vpc-endpoint"
   }
@@ -1211,6 +1325,7 @@ resource "aws_subnet" "first" {
   vpc_id            = "${aws_vpc.elasticsearch_in_vpc.id}"
   availability_zone = "${data.aws_availability_zones.available.names[0]}"
   cidr_block        = "192.168.0.0/24"
+
   tags = {
     Name = "tf-acc-elasticsearch-domain-internet-to-vpc-endpoint-first"
   }
@@ -1220,6 +1335,7 @@ resource "aws_subnet" "second" {
   vpc_id            = "${aws_vpc.elasticsearch_in_vpc.id}"
   availability_zone = "${data.aws_availability_zones.available.names[1]}"
   cidr_block        = "192.168.1.0/24"
+
   tags = {
     Name = "tf-acc-elasticsearch-domain-internet-to-vpc-endpoint-second"
   }
@@ -1242,14 +1358,14 @@ resource "aws_elasticsearch_domain" "example" {
   }
 
   cluster_config {
-    instance_count = 2
+    instance_count         = 2
     zone_awareness_enabled = true
-    instance_type = "t2.micro.elasticsearch"
+    instance_type          = "t2.micro.elasticsearch"
   }
 
   vpc_options {
     security_group_ids = ["${aws_security_group.first.id}", "${aws_security_group.second.id}"]
-    subnet_ids = ["${aws_subnet.first.id}", "${aws_subnet.second.id}"]
+    subnet_ids         = ["${aws_subnet.first.id}", "${aws_subnet.second.id}"]
   }
 }
 `, randInt)
@@ -1263,6 +1379,7 @@ resource "aws_cloudwatch_log_group" "example" {
 
 resource "aws_cloudwatch_log_resource_policy" "example" {
   policy_name = "tf-cwlp-%d"
+
   policy_document = <<CONFIG
 {
   "Version": "2012-10-17",
@@ -1286,12 +1403,14 @@ CONFIG
 
 resource "aws_elasticsearch_domain" "example" {
   domain_name = "tf-test-%d"
+
   ebs_options {
     ebs_enabled = true
     volume_size = 10
   }
+
   log_publishing_options {
-    log_type = "INDEX_SLOW_LOGS"
+    log_type                 = "INDEX_SLOW_LOGS"
     cloudwatch_log_group_arn = "${aws_cloudwatch_log_group.example.arn}"
   }
 }

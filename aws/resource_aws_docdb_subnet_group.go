@@ -140,7 +140,7 @@ func resourceAwsDocDBSubnetGroupRead(d *schema.ResourceData, meta interface{}) e
 	})
 
 	if err != nil {
-		return fmt.Errorf("error retrieving tags for ARN: %s", aws.StringValue(subnetGroup.DBSubnetGroupArn))
+		return fmt.Errorf("error retrieving tags for ARN (%s): %s", aws.StringValue(subnetGroup.DBSubnetGroupArn), err)
 	}
 
 	if err := d.Set("tags", tagsToMapDocDB(resp.TagList)); err != nil {

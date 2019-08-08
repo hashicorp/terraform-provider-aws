@@ -51,14 +51,15 @@ func resourceAwsApiGatewayBasePathMapping() *schema.Resource {
 
 func resourceAwsApiGatewayBasePathMappingCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).apigateway
+	input := &apigateway.CreateBasePathMappingInput{
+		RestApiId:  aws.String(d.Get("api_id").(string)),
+		DomainName: aws.String(d.Get("domain_name").(string)),
+		BasePath:   aws.String(d.Get("base_path").(string)),
+		Stage:      aws.String(d.Get("stage_name").(string)),
+	}
 
 	err := resource.Retry(30*time.Second, func() *resource.RetryError {
-		_, err := conn.CreateBasePathMapping(&apigateway.CreateBasePathMappingInput{
-			RestApiId:  aws.String(d.Get("api_id").(string)),
-			DomainName: aws.String(d.Get("domain_name").(string)),
-			BasePath:   aws.String(d.Get("base_path").(string)),
-			Stage:      aws.String(d.Get("stage_name").(string)),
-		})
+		_, err := conn.CreateBasePathMapping(input)
 
 		if err != nil {
 			if err, ok := err.(awserr.Error); ok && err.Code() != "BadRequestException" {
@@ -72,6 +73,10 @@ func resourceAwsApiGatewayBasePathMappingCreate(d *schema.ResourceData, meta int
 
 		return nil
 	})
+
+	if isResourceTimeoutError(err) {
+		_, err = conn.CreateBasePathMapping(input)
+	}
 
 	if err != nil {
 		return fmt.Errorf("Error creating Gateway base path mapping: %s", err)

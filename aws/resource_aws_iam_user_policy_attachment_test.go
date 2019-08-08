@@ -128,13 +128,14 @@ func testAccAWSIAMUserPolicyAttachmentImportStateIdFunc(resourceName string) res
 func testAccAWSUserPolicyAttachConfig(rName, policyName string) string {
 	return fmt.Sprintf(`
 resource "aws_iam_user" "user" {
-    name = "test-user-%s"
+  name = "test-user-%s"
 }
 
 resource "aws_iam_policy" "policy" {
-    name = "%s"
-    description = "A test policy"
-    policy = <<EOF
+  name        = "%s"
+  description = "A test policy"
+
+  policy = <<EOF
 {
   "Version": "2012-10-17",
   "Statement": [
@@ -151,21 +152,23 @@ EOF
 }
 
 resource "aws_iam_user_policy_attachment" "test-attach" {
-    user = "${aws_iam_user.user.name}"
-    policy_arn = "${aws_iam_policy.policy.arn}"
-}`, rName, policyName)
+  user       = "${aws_iam_user.user.name}"
+  policy_arn = "${aws_iam_policy.policy.arn}"
+}
+`, rName, policyName)
 }
 
 func testAccAWSUserPolicyAttachConfigUpdate(rName, policyName1, policyName2, policyName3 string) string {
 	return fmt.Sprintf(`
 resource "aws_iam_user" "user" {
-    name = "test-user-%s"
+  name = "test-user-%s"
 }
 
 resource "aws_iam_policy" "policy" {
-    name = "%s"
-    description = "A test policy"
-    policy = <<EOF
+  name        = "%s"
+  description = "A test policy"
+
+  policy = <<EOF
 {
   "Version": "2012-10-17",
   "Statement": [
@@ -182,9 +185,10 @@ EOF
 }
 
 resource "aws_iam_policy" "policy2" {
-    name = "%s"
-    description = "A test policy"
-    policy = <<EOF
+  name        = "%s"
+  description = "A test policy"
+
+  policy = <<EOF
 {
   "Version": "2012-10-17",
   "Statement": [
@@ -201,9 +205,10 @@ EOF
 }
 
 resource "aws_iam_policy" "policy3" {
-    name = "%s"
-    description = "A test policy"
-    policy = <<EOF
+  name        = "%s"
+  description = "A test policy"
+
+  policy = <<EOF
 {
   "Version": "2012-10-17",
   "Statement": [
@@ -220,12 +225,13 @@ EOF
 }
 
 resource "aws_iam_user_policy_attachment" "test-attach" {
-    user = "${aws_iam_user.user.name}"
-    policy_arn = "${aws_iam_policy.policy2.arn}"
+  user       = "${aws_iam_user.user.name}"
+  policy_arn = "${aws_iam_policy.policy2.arn}"
 }
 
 resource "aws_iam_user_policy_attachment" "test-attach2" {
-    user = "${aws_iam_user.user.name}"
-    policy_arn = "${aws_iam_policy.policy3.arn}"
-}`, rName, policyName1, policyName2, policyName3)
+  user       = "${aws_iam_user.user.name}"
+  policy_arn = "${aws_iam_policy.policy3.arn}"
+}
+`, rName, policyName1, policyName2, policyName3)
 }

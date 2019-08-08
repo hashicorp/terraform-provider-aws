@@ -110,7 +110,6 @@
 //
 //    * PollForJobs, which determines whether there are any jobs to act upon,
 //
-//
 //    * PutJobFailureResult, which provides details of a job failure, and
 //
 //    * PutJobSuccessResult, which provides details of a job success.

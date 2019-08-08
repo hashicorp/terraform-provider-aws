@@ -335,26 +335,27 @@ func testAccCheckSagemakerModelExists(n string) resource.TestCheckFunc {
 func testAccSagemakerModelConfig(rName string, image string) string {
 	return fmt.Sprintf(`
 resource "aws_sagemaker_model" "foo" {
-	name = "terraform-testacc-sagemaker-model-%s"
-	execution_role_arn = "${aws_iam_role.foo.arn}"
+  name               = "terraform-testacc-sagemaker-model-%s"
+  execution_role_arn = "${aws_iam_role.foo.arn}"
 
-	primary_container {
-		image = "%s"
-	}
+  primary_container {
+    image = "%s"
+  }
 }
 
 resource "aws_iam_role" "foo" {
-  name = "terraform-testacc-sagemaker-model-%s"
-  path = "/"
+  name               = "terraform-testacc-sagemaker-model-%s"
+  path               = "/"
   assume_role_policy = "${data.aws_iam_policy_document.assume_role.json}"
 }
 
 data "aws_iam_policy_document" "assume_role" {
   statement {
-    actions = [ "sts:AssumeRole" ]
+    actions = ["sts:AssumeRole"]
+
     principals {
-      type = "Service"
-      identifiers = [ "sagemaker.amazonaws.com" ]
+      type        = "Service"
+      identifiers = ["sagemaker.amazonaws.com"]
     }
   }
 }
@@ -364,30 +365,31 @@ data "aws_iam_policy_document" "assume_role" {
 func testAccSagemakerModelConfigTags(rName string, image string) string {
 	return fmt.Sprintf(`
 resource "aws_sagemaker_model" "foo" {
-	name = "terraform-testacc-sagemaker-model-%s"
-	execution_role_arn = "${aws_iam_role.foo.arn}"
+  name               = "terraform-testacc-sagemaker-model-%s"
+  execution_role_arn = "${aws_iam_role.foo.arn}"
 
-	primary_container {
-		image = "%s"
-	}
+  primary_container {
+    image = "%s"
+  }
 
-	tags = {
-		foo = "bar"
-	}
+  tags = {
+    foo = "bar"
+  }
 }
 
 resource "aws_iam_role" "foo" {
-  name = "terraform-testacc-sagemaker-model-%s"
-  path = "/"
+  name               = "terraform-testacc-sagemaker-model-%s"
+  path               = "/"
   assume_role_policy = "${data.aws_iam_policy_document.assume_role.json}"
 }
 
 data "aws_iam_policy_document" "assume_role" {
   statement {
-    actions = [ "sts:AssumeRole" ]
+    actions = ["sts:AssumeRole"]
+
     principals {
-      type = "Service"
-      identifiers = [ "sagemaker.amazonaws.com" ]
+      type        = "Service"
+      identifiers = ["sagemaker.amazonaws.com"]
     }
   }
 }
@@ -397,30 +399,31 @@ data "aws_iam_policy_document" "assume_role" {
 func testAccSagemakerModelConfigTagsUpdate(rName string, image string) string {
 	return fmt.Sprintf(`
 resource "aws_sagemaker_model" "foo" {
-	name = "terraform-testacc-sagemaker-model-%s"
-	execution_role_arn = "${aws_iam_role.foo.arn}"
+  name               = "terraform-testacc-sagemaker-model-%s"
+  execution_role_arn = "${aws_iam_role.foo.arn}"
 
-	primary_container {
-		image = "%s"
-	}
+  primary_container {
+    image = "%s"
+  }
 
-	tags = {
-		bar = "baz"
-	}
+  tags = {
+    bar = "baz"
+  }
 }
 
 resource "aws_iam_role" "foo" {
-  name = "terraform-testacc-sagemaker-model-%s"
-  path = "/"
+  name               = "terraform-testacc-sagemaker-model-%s"
+  path               = "/"
   assume_role_policy = "${data.aws_iam_policy_document.assume_role.json}"
 }
 
 data "aws_iam_policy_document" "assume_role" {
   statement {
-    actions = [ "sts:AssumeRole" ]
+    actions = ["sts:AssumeRole"]
+
     principals {
-      type = "Service"
-      identifiers = [ "sagemaker.amazonaws.com" ]
+      type        = "Service"
+      identifiers = ["sagemaker.amazonaws.com"]
     }
   }
 }
@@ -430,40 +433,42 @@ data "aws_iam_policy_document" "assume_role" {
 func testAccSagemakerPrimaryContainerModelDataUrlConfig(rName string, image string, modelDataUrl string) string {
 	return fmt.Sprintf(`
 resource "aws_sagemaker_model" "foo" {
-	name = "terraform-testacc-sagemaker-model-%s"
-	execution_role_arn = "${aws_iam_role.foo.arn}"
+  name               = "terraform-testacc-sagemaker-model-%s"
+  execution_role_arn = "${aws_iam_role.foo.arn}"
 
-	primary_container {
-		image = "%s"
-		model_data_url = "%s"
-	}
+  primary_container {
+    image          = "%s"
+    model_data_url = "%s"
+  }
 }
 
 resource "aws_iam_role" "foo" {
-  name = "terraform-testacc-sagemaker-model-%s"
-  path = "/"
+  name               = "terraform-testacc-sagemaker-model-%s"
+  path               = "/"
   assume_role_policy = "${data.aws_iam_policy_document.assume_role.json}"
 }
 
 data "aws_iam_policy_document" "assume_role" {
   statement {
-    actions = [ "sts:AssumeRole" ]
+    actions = ["sts:AssumeRole"]
+
     principals {
-      type = "Service"
-      identifiers = [ "sagemaker.amazonaws.com" ]
+      type        = "Service"
+      identifiers = ["sagemaker.amazonaws.com"]
     }
   }
 }
 
 resource "aws_iam_policy" "foo" {
-  name = "terraform-testacc-sagemaker-model-%s"
+  name        = "terraform-testacc-sagemaker-model-%s"
   description = "Allow Sagemaker to create model"
-  policy = "${data.aws_iam_policy_document.foo.json}"
+  policy      = "${data.aws_iam_policy_document.foo.json}"
 }
 
 data "aws_iam_policy_document" "foo" {
   statement {
     effect = "Allow"
+
     actions = [
       "cloudwatch:PutMetricData",
       "logs:CreateLogStream",
@@ -473,37 +478,42 @@ data "aws_iam_policy_document" "foo" {
       "ecr:GetAuthorizationToken",
       "ecr:BatchCheckLayerAvailability",
       "ecr:GetDownloadUrlForLayer",
-      "ecr:BatchGetImage"
+      "ecr:BatchGetImage",
     ]
+
     resources = [
-      "*"]
+      "*",
+    ]
   }
+
   statement {
     effect = "Allow"
+
     actions = [
-      "s3:GetObject"
+      "s3:GetObject",
     ]
+
     resources = [
       "arn:aws:s3:::${aws_s3_bucket.foo.bucket}",
-      "arn:aws:s3:::${aws_s3_bucket.foo.bucket}/*"
+      "arn:aws:s3:::${aws_s3_bucket.foo.bucket}/*",
     ]
   }
 }
 
 resource "aws_iam_role_policy_attachment" "foo" {
-  role = "${aws_iam_role.foo.name}"
+  role       = "${aws_iam_role.foo.name}"
   policy_arn = "${aws_iam_policy.foo.arn}"
 }
 
 resource "aws_s3_bucket" "foo" {
-  bucket = "terraform-testacc-sagemaker-model-data-bucket-%s"
-  acl    = "private"
+  bucket        = "terraform-testacc-sagemaker-model-data-bucket-%s"
+  acl           = "private"
   force_destroy = true
 }
 
 resource "aws_s3_bucket_object" "object" {
-  bucket = "${aws_s3_bucket.foo.bucket}"
-  key    = "model.tar.gz"
+  bucket  = "${aws_s3_bucket.foo.bucket}"
+  key     = "model.tar.gz"
   content = "some-data"
 }
 `, rName, image, modelDataUrl, rName, rName, rName)
@@ -512,27 +522,28 @@ resource "aws_s3_bucket_object" "object" {
 func testAccSagemakerPrimaryContainerHostnameConfig(rName string, image string) string {
 	return fmt.Sprintf(`
 resource "aws_sagemaker_model" "foo" {
-	name = "terraform-testacc-sagemaker-model-%s"
-	execution_role_arn = "${aws_iam_role.foo.arn}"
+  name               = "terraform-testacc-sagemaker-model-%s"
+  execution_role_arn = "${aws_iam_role.foo.arn}"
 
-	primary_container {
-		image = "%s"
-		container_hostname = "foo"
-	}
+  primary_container {
+    image              = "%s"
+    container_hostname = "foo"
+  }
 }
 
 resource "aws_iam_role" "foo" {
-  name = "terraform-testacc-sagemaker-model-%s"
-  path = "/"
+  name               = "terraform-testacc-sagemaker-model-%s"
+  path               = "/"
   assume_role_policy = "${data.aws_iam_policy_document.assume_role.json}"
 }
 
 data "aws_iam_policy_document" "assume_role" {
   statement {
-    actions = [ "sts:AssumeRole" ]
+    actions = ["sts:AssumeRole"]
+
     principals {
-      type = "Service"
-      identifiers = [ "sagemaker.amazonaws.com" ]
+      type        = "Service"
+      identifiers = ["sagemaker.amazonaws.com"]
     }
   }
 }
@@ -542,30 +553,31 @@ data "aws_iam_policy_document" "assume_role" {
 func testAccSagemakerPrimaryContainerEnvironmentConfig(rName string, image string) string {
 	return fmt.Sprintf(`
 resource "aws_sagemaker_model" "foo" {
-	name = "terraform-testacc-sagemaker-model-%s"
-	execution_role_arn = "${aws_iam_role.foo.arn}"
+  name               = "terraform-testacc-sagemaker-model-%s"
+  execution_role_arn = "${aws_iam_role.foo.arn}"
 
-	primary_container {
-		image = "%s"
+  primary_container {
+    image = "%s"
 
-		environment = {
-			foo = "bar"
-		}
-	}
+    environment = {
+      foo = "bar"
+    }
+  }
 }
 
 resource "aws_iam_role" "foo" {
-  name = "terraform-testacc-sagemaker-model-%s"
-  path = "/"
+  name               = "terraform-testacc-sagemaker-model-%s"
+  path               = "/"
   assume_role_policy = "${data.aws_iam_policy_document.assume_role.json}"
 }
 
 data "aws_iam_policy_document" "assume_role" {
   statement {
-    actions = [ "sts:AssumeRole" ]
+    actions = ["sts:AssumeRole"]
+
     principals {
-      type = "Service"
-      identifiers = [ "sagemaker.amazonaws.com" ]
+      type        = "Service"
+      identifiers = ["sagemaker.amazonaws.com"]
     }
   }
 }
@@ -575,30 +587,31 @@ data "aws_iam_policy_document" "assume_role" {
 func testAccSagemakerModelContainers(rName string, image string) string {
 	return fmt.Sprintf(`
 resource "aws_sagemaker_model" "foo" {
-	name = "terraform-testacc-sagemaker-model-%s"
-	execution_role_arn = "${aws_iam_role.foo.arn}"
+  name               = "terraform-testacc-sagemaker-model-%s"
+  execution_role_arn = "${aws_iam_role.foo.arn}"
 
-	container {
-		image = "%s"
-	}
+  container {
+    image = "%s"
+  }
 
-	container {
-		image = "%s"
-	}
+  container {
+    image = "%s"
+  }
 }
 
 resource "aws_iam_role" "foo" {
-  name = "terraform-testacc-sagemaker-model-%s"
-  path = "/"
+  name               = "terraform-testacc-sagemaker-model-%s"
+  path               = "/"
   assume_role_policy = "${data.aws_iam_policy_document.assume_role.json}"
 }
 
 data "aws_iam_policy_document" "assume_role" {
   statement {
-    actions = [ "sts:AssumeRole" ]
+    actions = ["sts:AssumeRole"]
+
     principals {
-      type = "Service"
-      identifiers = [ "sagemaker.amazonaws.com" ]
+      type        = "Service"
+      identifiers = ["sagemaker.amazonaws.com"]
     }
   }
 }
@@ -608,27 +621,28 @@ data "aws_iam_policy_document" "assume_role" {
 func testAccSagemakerModelNetworkIsolation(rName string, image string) string {
 	return fmt.Sprintf(`
 resource "aws_sagemaker_model" "foo" {
-	name = "terraform-testacc-sagemaker-model-%s"
-	execution_role_arn = "${aws_iam_role.foo.arn}"
-	enable_network_isolation = true
+  name                     = "terraform-testacc-sagemaker-model-%s"
+  execution_role_arn       = "${aws_iam_role.foo.arn}"
+  enable_network_isolation = true
 
-    primary_container {
-		image = "%s"
-	}
+  primary_container {
+    image = "%s"
+  }
 }
 
 resource "aws_iam_role" "foo" {
-  name = "terraform-testacc-sagemaker-model-%s"
-  path = "/"
+  name               = "terraform-testacc-sagemaker-model-%s"
+  path               = "/"
   assume_role_policy = "${data.aws_iam_policy_document.assume_role.json}"
 }
 
 data "aws_iam_policy_document" "assume_role" {
   statement {
-    actions = [ "sts:AssumeRole" ]
+    actions = ["sts:AssumeRole"]
+
     principals {
-      type = "Service"
-      identifiers = [ "sagemaker.amazonaws.com" ]
+      type        = "Service"
+      identifiers = ["sagemaker.amazonaws.com"]
     }
   }
 }
@@ -638,70 +652,73 @@ data "aws_iam_policy_document" "assume_role" {
 func testAccSagemakerModelVpcConfig(rName string, image string) string {
 	return fmt.Sprintf(`
 resource "aws_sagemaker_model" "foo" {
-	name = "terraform-testacc-sagemaker-model-%s"
-	execution_role_arn = "${aws_iam_role.foo.arn}"
-	enable_network_isolation = true
+  name                     = "terraform-testacc-sagemaker-model-%s"
+  execution_role_arn       = "${aws_iam_role.foo.arn}"
+  enable_network_isolation = true
 
-    primary_container {
-		image = "%s"
-	}
+  primary_container {
+    image = "%s"
+  }
 
-    vpc_config {
-      subnets = ["${aws_subnet.foo.id}", "${aws_subnet.bar.id}"]
-      security_group_ids = ["${aws_security_group.foo.id}", "${aws_security_group.bar.id}"]
-    }
-
+  vpc_config {
+    subnets            = ["${aws_subnet.foo.id}", "${aws_subnet.bar.id}"]
+    security_group_ids = ["${aws_security_group.foo.id}", "${aws_security_group.bar.id}"]
+  }
 }
 
 resource "aws_iam_role" "foo" {
-  name = "terraform-testacc-sagemaker-model-%s"
-  path = "/"
+  name               = "terraform-testacc-sagemaker-model-%s"
+  path               = "/"
   assume_role_policy = "${data.aws_iam_policy_document.assume_role.json}"
 }
 
 data "aws_iam_policy_document" "assume_role" {
   statement {
-    actions = [ "sts:AssumeRole" ]
+    actions = ["sts:AssumeRole"]
+
     principals {
-      type = "Service"
-      identifiers = [ "sagemaker.amazonaws.com" ]
+      type        = "Service"
+      identifiers = ["sagemaker.amazonaws.com"]
     }
   }
 }
 
 resource "aws_vpc" "foo" {
-	cidr_block = "10.1.0.0/16"
-	tags = {
-		Name = "terraform-testacc-sagemaker-model-%s"
-	}
+  cidr_block = "10.1.0.0/16"
+
+  tags = {
+    Name = "terraform-testacc-sagemaker-model-%s"
+  }
 }
 
 resource "aws_subnet" "foo" {
-	cidr_block = "10.1.1.0/24"
-	availability_zone = "us-west-2a"
-	vpc_id = "${aws_vpc.foo.id}"
-	tags = {
-		Name = "terraform-testacc-sagemaker-model-foo-%s"
-	}
+  cidr_block        = "10.1.1.0/24"
+  availability_zone = "us-west-2a"
+  vpc_id            = "${aws_vpc.foo.id}"
+
+  tags = {
+    Name = "terraform-testacc-sagemaker-model-foo-%s"
+  }
 }
 
 resource "aws_subnet" "bar" {
-	cidr_block = "10.1.2.0/24"
-	availability_zone = "us-west-2b"
-	vpc_id = "${aws_vpc.foo.id}"
-	tags = {
-		Name = "terraform-testacc-sagemaker-model-bar-%s"
-	}
+  cidr_block        = "10.1.2.0/24"
+  availability_zone = "us-west-2b"
+  vpc_id            = "${aws_vpc.foo.id}"
+
+  tags = {
+    Name = "terraform-testacc-sagemaker-model-bar-%s"
+  }
 }
 
 resource "aws_security_group" "foo" {
-	name 	= "terraform-testacc-sagemaker-model-foo-%s"
-	vpc_id 	= "${aws_vpc.foo.id}"
+  name   = "terraform-testacc-sagemaker-model-foo-%s"
+  vpc_id = "${aws_vpc.foo.id}"
 }
 
 resource "aws_security_group" "bar" {
-	name 	= "terraform-testacc-sagemaker-model-bar-%s"
-	vpc_id 	= "${aws_vpc.foo.id}"
+  name   = "terraform-testacc-sagemaker-model-bar-%s"
+  vpc_id = "${aws_vpc.foo.id}"
 }
 `, rName, image, rName, rName, rName, rName, rName, rName)
 }

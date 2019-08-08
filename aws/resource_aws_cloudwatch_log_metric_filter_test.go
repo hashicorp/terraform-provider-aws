@@ -180,19 +180,19 @@ func testAccCheckCloudwatchLogMetricFilterManyExist(basename string, mf *cloudwa
 func testAccAWSCloudWatchLogMetricFilterConfig(rInt int) string {
 	return fmt.Sprintf(`
 resource "aws_cloudwatch_log_metric_filter" "foobar" {
-  name = "MyAppAccessCount-%d"
-  pattern = ""
+  name           = "MyAppAccessCount-%d"
+  pattern        = ""
   log_group_name = "${aws_cloudwatch_log_group.dada.name}"
 
   metric_transformation {
-  	name = "EventCount"
-  	namespace = "YourNamespace"
-  	value = "1"
+    name      = "EventCount"
+    namespace = "YourNamespace"
+    value     = "1"
   }
 }
 
 resource "aws_cloudwatch_log_group" "dada" {
-	name = "MyApp/access-%d.log"
+  name = "MyApp/access-%d.log"
 }
 `, rInt, rInt)
 }
@@ -201,21 +201,23 @@ func testAccAWSCloudWatchLogMetricFilterConfigModified(rInt int) string {
 	return fmt.Sprintf(`
 resource "aws_cloudwatch_log_metric_filter" "foobar" {
   name = "MyAppAccessCount-%d"
+
   pattern = <<PATTERN
 { $.errorCode = "AccessDenied" }
 PATTERN
+
   log_group_name = "${aws_cloudwatch_log_group.dada.name}"
 
   metric_transformation {
-  	name = "AccessDeniedCount"
-  	namespace = "MyNamespace"
-  	value = "2"
-  	default_value = "1"
+    name          = "AccessDeniedCount"
+    namespace     = "MyNamespace"
+    value         = "2"
+    default_value = "1"
   }
 }
 
 resource "aws_cloudwatch_log_group" "dada" {
-	name = "MyApp/access-%d.log"
+  name = "MyApp/access-%d.log"
 }
 `, rInt, rInt)
 }
@@ -223,20 +225,20 @@ resource "aws_cloudwatch_log_group" "dada" {
 func testAccAWSCloudwatchLogMetricFilterConfigMany(rInt int) string {
 	return fmt.Sprintf(`
 resource "aws_cloudwatch_log_metric_filter" "count_dracula" {
-	count = 15
-	name = "MyAppCountLog-${count.index}-%d"
-	pattern = "count ${count.index}"
-	log_group_name = "${aws_cloudwatch_log_group.mama.name}"
+  count          = 15
+  name           = "MyAppCountLog-${count.index}-%d"
+  pattern        = "count ${count.index}"
+  log_group_name = "${aws_cloudwatch_log_group.mama.name}"
 
-	metric_transformation {
-		name = "CountDracula-${count.index}"
-		namespace = "CountNamespace"
-		value = "1"
-	}
+  metric_transformation {
+    name      = "CountDracula-${count.index}"
+    namespace = "CountNamespace"
+    value     = "1"
+  }
 }
 
 resource "aws_cloudwatch_log_group" "mama" {
-	name = "MyApp/count-log-%d.log"
+  name = "MyApp/count-log-%d.log"
 }
 `, rInt, rInt)
 }
