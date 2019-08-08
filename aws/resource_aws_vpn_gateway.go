@@ -168,9 +168,6 @@ func resourceAwsVpnGatewayDelete(d *schema.ResourceData, meta interface{}) error
 		if isAWSErr(err, "IncorrectState", "") {
 			return resource.RetryableError(err)
 		}
-		if !isAWSErr(err, "", "") {
-			return resource.RetryableError(err)
-		}
 
 		return resource.NonRetryableError(err)
 	})
@@ -213,9 +210,6 @@ func resourceAwsVpnGatewayAttach(d *schema.ResourceData, meta interface{}) error
 		_, err := conn.AttachVpnGateway(req)
 		if err != nil {
 			if isAWSErr(err, "InvalidVpnGatewayID.NotFound", "") {
-				return resource.RetryableError(err)
-			}
-			if isAWSErr(err, "InvalidParameterValue", "This call cannot be completed because there are pending VPNs or Virtual Interfaces") {
 				return resource.RetryableError(err)
 			}
 			return resource.NonRetryableError(err)

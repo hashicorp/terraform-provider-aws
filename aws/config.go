@@ -571,6 +571,12 @@ func (c *Config) Client() (interface{}, error) {
 				r.Retryable = aws.Bool(true)
 			}
 		}
+
+		if r.Operation.Name == "AttachVpnGateway" {
+			if isAWSErr(err, "InvalidParameterValue", "This call cannot be completed because there are pending VPNs or Virtual Interfaces") {
+				r.Retryable = aws.Bool(true)
+			}
+		}
 	})
 
 	client.kafkaconn.Handlers.Retry.PushBack(func(r *request.Request) {
