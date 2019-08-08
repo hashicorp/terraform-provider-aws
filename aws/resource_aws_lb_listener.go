@@ -54,6 +54,17 @@ func resourceAwsLbListener() *schema.Resource {
 					elbv2.ProtocolEnumHttp,
 					elbv2.ProtocolEnumHttps,
 					elbv2.ProtocolEnumTcp,
+					// TODO(grim): Use the appropriate
+					// ProtocolEnum* values when we update
+					// aws-sdk-go to a version that defines
+					// them. This shortcut is safe because
+					// any changes to this field are
+					// destructive, so we're gauranteed to
+					// never perform any operation that
+					// would change the protocol.
+					"TLS",     // elbv2.ProtocolEnumTls,
+					"UDP",     // elbv2.ProtocolEnumUdp,
+					"TCP_UDP", // elbv2.ProtocolEnumTcpUdp,
 				}, true),
 			},
 
