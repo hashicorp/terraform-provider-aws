@@ -260,7 +260,7 @@ The fix for this has been merged and will release with version X.Y.Z of the Terr
 
 ### Pull Request Types to CHANGELOG
 
-The CHANGELOG is intended to show operator impacting changes to the codebase for a particular version. If every change or commit to the code resulted in an entry, the CHANGELOG would become less useful for operators. The lists below are general guidelines when a decision needs to be made whether a change should have an entry.
+The CHANGELOG is intended to show operator-impacting changes to the codebase for a particular version. If every change or commit to the code resulted in an entry, the CHANGELOG would become less useful for operators. The lists below are general guidelines on when a decision needs to be made to decide whether a change should have an entry.
 
 Changes that should have a CHANGELOG entry:
 
