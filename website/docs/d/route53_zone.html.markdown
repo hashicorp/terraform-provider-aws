@@ -57,4 +57,6 @@ The following attribute is additionally exported:
 * `caller_reference` - Caller Reference of the Hosted Zone.
 * `comment` - The comment field of the Hosted Zone.
 * `name_servers` - The list of DNS name servers for the Hosted Zone.
-* `resource_record_set_count` - the number of Record Set in the Hosted Zone
+* `resource_record_set_count` - The number of Record Set in the Hosted Zone.
+* `linked_service_principal` - The service that created the Hosted Zone (e.g. `servicediscovery.amazonaws.com`).
+* `linked_service_description` - The description provided by the service that created the Hosted Zone (e.g. `arn:aws:servicediscovery:us-east-1:1234567890:namespace/ns-xxxxxxxxxxxxxxxx`).

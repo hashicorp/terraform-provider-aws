@@ -1,6 +1,6 @@
 ---
 layout: "aws"
-page_title: "AWS: ses_domain_identity_verification"
+page_title: "AWS: aws_ses_domain_identity_verification"
 sidebar_current: "docs-aws-resource-ses-domain-identity-verification"
 description: |-
   Waits for and checks successful verification of an SES domain identity.

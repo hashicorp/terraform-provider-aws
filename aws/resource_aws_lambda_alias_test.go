@@ -284,7 +284,8 @@ resource "aws_lambda_alias" "lambda_alias_test" {
   description      = "a sample description"
   function_name    = "${aws_lambda_function.lambda_function_test_create.arn}"
   function_version = "1"
-}`, roleName, policyName, attachmentName, funcName, aliasName)
+}
+`, roleName, policyName, attachmentName, funcName, aliasName)
 }
 
 func testAccAwsLambdaAliasConfigWithRoutingConfig(roleName, policyName, attachmentName, funcName, aliasName string) string {
@@ -357,5 +358,6 @@ resource "aws_lambda_alias" "lambda_alias_test" {
       "2" = 0.5
     }
   }
-}`, roleName, policyName, attachmentName, funcName, aliasName)
+}
+`, roleName, policyName, attachmentName, funcName, aliasName)
 }

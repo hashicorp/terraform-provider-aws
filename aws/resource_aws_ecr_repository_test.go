@@ -70,6 +70,32 @@ func TestAccAWSEcrRepository_tags(t *testing.T) {
 	})
 }
 
+func TestAccAWSEcrRepository_immutability(t *testing.T) {
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_ecr_repository.default"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSEcrRepositoryDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSEcrRepositoryConfig_immutability(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSEcrRepositoryExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, "image_tag_mutability", "IMMUTABLE"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func testAccCheckAWSEcrRepositoryDestroy(s *terraform.State) error {
 	conn := testAccProvider.Meta().(*AWSClient).ecrconn
 
@@ -142,7 +168,7 @@ resource "aws_ecr_repository" "default" {
 
   tags = {
     Environment = "production"
-    Usage = "original"
+    Usage       = "original"
   }
 }
 `, rName)
@@ -156,6 +182,15 @@ resource "aws_ecr_repository" "default" {
   tags = {
     Usage = "changed"
   }
+}
+`, rName)
+}
+
+func testAccAWSEcrRepositoryConfig_immutability(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_ecr_repository" "default" {
+  name = %q
+  image_tag_mutability = "IMMUTABLE"
 }
 `, rName)
 }

@@ -18,7 +18,6 @@ server configured.
 ## Example Usage
 
 ```hcl
-
 data "aws_eks_cluster" "example" {
   name = "example"
 }

@@ -23,6 +23,7 @@ resource "aws_emr_cluster" "cluster" {
   name          = "emr-test-arn"
   release_label = "emr-4.6.0"
   applications  = ["Spark"]
+
   additional_info = <<EOF
 {
   "instanceAwsClientConfiguration": {
@@ -49,12 +50,15 @@ EOF
   core_instance_group {
     instance_type  = "c4.large"
     instance_count = 1
+
     ebs_config {
       size                 = "40"
       type                 = "gp2"
       volumes_per_instance = 1
     }
-    bid_price          = "0.30"
+
+    bid_price = "0.30"
+
     autoscaling_policy = <<EOF
 {
 "Constraints": {
@@ -89,6 +93,7 @@ EOF
 }
 EOF
   }
+
   ebs_root_volume_size = 100
 
   tags = {
@@ -130,7 +135,8 @@ EOF
     }
   ]
 EOF
-  service_role        = "${aws_iam_role.iam_emr_service_role.arn}"
+
+  service_role = "${aws_iam_role.iam_emr_service_role.arn}"
 }
 ```
 
@@ -154,8 +160,8 @@ resource "aws_emr_cluster" "example" {
   # ... other configuration ...
 
   step {
-    action_on_failure  = "TERMINATE_CLUSTER"
-    name   = "Setup Hadoop Debugging"
+    action_on_failure = "TERMINATE_CLUSTER"
+    name              = "Setup Hadoop Debugging"
 
     hadoop_jar_step {
       jar  = "command-runner.jar"
@@ -166,6 +172,51 @@ resource "aws_emr_cluster" "example" {
   # Optional: ignore outside changes to running cluster steps
   lifecycle {
     ignore_changes = ["step"]
+  }
+}
+```
+
+### Multiple Node Master Instance Group
+
+Available in EMR version 5.23.0 and later, an EMR Cluster can be launched with three master nodes for high availability. Additional information about this functionality and its requirements can be found in the [EMR Management Guide](https://docs.aws.amazon.com/emr/latest/ManagementGuide/emr-plan-ha.html).
+
+```hcl
+# This configuration is for illustrative purposes and highlights
+# only relevant configurations for working with this functionality.
+
+# Map public IP on launch must be enabled for public (Internet accessible) subnets
+resource "aws_subnet" "example" {
+  # ... other configuration ...
+
+  map_public_ip_on_launch = true
+}
+
+resource "aws_emr_cluster" "example" {
+  # ... other configuration ...
+
+  # EMR version must be 5.23.0 or later
+  release_label = "emr-5.24.1"
+
+  # Termination protection is automatically enabled for multiple masters
+  # To destroy the cluster, this must be configured to false and applied first
+  termination_protection = true
+
+  ec2_attributes {
+    # ... other configuration ...
+
+    subnet_id = "${aws_subnet.example.id}"
+  }
+
+  master_instance_group {
+    # ... other configuration ...
+
+    # Master instance count must be set to 3
+    instance_count = 3
+  }
+
+  # core_instance_group must be configured
+  core_instance_group {
+    # ... other configuration ...
   }
 }
 ```
@@ -188,7 +239,7 @@ The following arguments are supported:
 * `instance_group` - (Optional, **DEPRECATED**) Use the `master_instance_group` configuration block, `core_instance_group` configuration block and [`aws_emr_instance_group` resource(s)](/docs/providers/aws/r/emr_instance_group.html) instead. A list of `instance_group` objects for each instance group in the cluster. Exactly one of `master_instance_type` and `instance_group` must be specified. If `instance_group` is set, then it must contain a configuration block for at least the `MASTER` instance group type (as well as any additional instance groups). Cannot be specified if `master_instance_group` or `core_instance_group` configuration blocks are set. Defined below
 * `log_uri` - (Optional) S3 bucket to write the log files of the job flow. If a value is not provided, logs are not created
 * `applications` - (Optional) A list of applications for the cluster. Valid values are: `Flink`, `Hadoop`, `Hive`, `Mahout`, `Pig`, `Spark`, and `JupyterHub` (as of EMR 5.14.0). Case insensitive
-* `termination_protection` - (Optional) Switch on/off termination protection (default is off)
+* `termination_protection` - (Optional) Switch on/off termination protection (default is `false`, except when using multiple master nodes). Before attempting to destroy the resource when termination protection is enabled, this configuration must be applied with its value set to `false`.
 * `keep_job_flow_alive_when_no_steps` - (Optional) Switch on/off run cluster with no steps or when all steps are complete (default is on)
 * `ec2_attributes` - (Optional) Attributes for the EC2 instances running the job flow. Defined below
 * `kerberos_attributes` - (Optional) Kerberos configuration for the cluster. Defined below
@@ -268,10 +319,10 @@ for more information about the EMR-managed security group rules.
 
 Attributes for Kerberos configuration
 
-* `ad_domain_join_password` - (Optional) The Active Directory password for `ad_domain_join_user`
-* `ad_domain_join_user` - (Optional) Required only when establishing a cross-realm trust with an Active Directory domain. A user with sufficient privileges to join resources to the domain.
-* `cross_realm_trust_principal_password` - (Optional) Required only when establishing a cross-realm trust with a KDC in a different realm. The cross-realm principal password, which must be identical across realms.
-* `kdc_admin_password` - (Required) The password used within the cluster for the kadmin service on the cluster-dedicated KDC, which maintains Kerberos principals, password policies, and keytabs for the cluster.
+* `ad_domain_join_password` - (Optional) The Active Directory password for `ad_domain_join_user`. Terraform cannot perform drift detection of this configuration.
+* `ad_domain_join_user` - (Optional) Required only when establishing a cross-realm trust with an Active Directory domain. A user with sufficient privileges to join resources to the domain. Terraform cannot perform drift detection of this configuration.
+* `cross_realm_trust_principal_password` - (Optional) Required only when establishing a cross-realm trust with a KDC in a different realm. The cross-realm principal password, which must be identical across realms. Terraform cannot perform drift detection of this configuration.
+* `kdc_admin_password` - (Required) The password used within the cluster for the kadmin service on the cluster-dedicated KDC, which maintains Kerberos principals, password policies, and keytabs for the cluster. Terraform cannot perform drift detection of this configuration.
 * `realm` - (Required) The name of the Kerberos realm to which all nodes in a cluster belong. For example, `EC2.INTERNAL`
 
 ## instance_group
@@ -293,6 +344,7 @@ Supported nested arguments for the `master_instance_group` configuration block:
 * `instance_type` - (Required) EC2 instance type for all instances in the instance group.
 * `bid_price` - (Optional) Bid price for each EC2 instance in the instance group, expressed in USD. By setting this attribute, the instance group is being declared as a Spot Instance, and will implicitly create a Spot request. Leave this blank to use On-Demand Instances.
 * `ebs_config` - (Optional) Configuration block(s) for EBS volumes attached to each instance in the instance group. Detailed below.
+* `instance_count` - (Optional) Target number of instances for the instance group. Must be 1 or 3. Defaults to 1. Launching with multiple master nodes is only supported in EMR version 5.23.0+, and requires this resource's `core_instance_group` to be configured. Public (Internet accessible) instances must be created in VPC subnets that have [map public IP on launch](/docs/providers/aws/r/subnet.html#map_public_ip_on_launch) enabled. Termination protection is automatically enabled when launched with multiple master nodes and Terraform must have the `termination_protection = false` configuration applied before destroying this resource.
 * `name` - (Optional) Friendly name given to the instance group.
 
 ## ebs_config
@@ -656,4 +708,16 @@ EMR clusters can be imported using the `id`, e.g.
 
 ```
 $ terraform import aws_emr_cluster.cluster j-123456ABCDEF
+```
+
+Since the API does not return the actual values for Kerberos configurations, environments with those Terraform configurations will need to use the [`lifecycle` configuration block `ignore_changes` argument](/docs/configuration/resources.html#ignore_changes) available to all Terraform resources to prevent perpetual differences, e.g.
+
+```hcl
+resource "aws_emr_cluster" "example" {
+  # ... other configuration ...
+
+  lifecycle {
+    ignore_changes = ["kerberos_attributes"]
+  }
+}
 ```

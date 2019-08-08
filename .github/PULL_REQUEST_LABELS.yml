@@ -1,0 +1,51 @@
+# Experimental automatic PR label configuration
+# Documentation: https://github.com/actions/labeler
+#
+# The majority of PR labels are still handled by hashibot
+#
+# This file should be considered for automatic generation in the future
+
+service/appmesh:
+  - aws/{data_source,resource}_aws_appmesh_*
+  - website/docs/{d,r}/appmesh_*
+
+service/backup:
+  - aws/{data_source,resource}_aws_backup_*
+  - website/docs/{d,r}/backup_*
+
+service/comprehend:
+  - aws/{data_source,resource}_aws_comprehend_*
+  - website/docs/{d,r}/comprehend_*
+
+service/docdb:
+  - aws/{data_source,resource}_aws_docdb_*
+  - aws/tagsDocDB*
+  - website/docs/{d,r}/docdb_*
+
+service/licensemanager:
+  - aws/{data_source,resource}_aws_licensemanager_*
+  - aws/tagsLicenseManager*
+  - website/docs/{d,r}/licensemanager_*
+
+service/quicksight:
+  - aws/{data_source,resource}_aws_quicksight_*
+  - website/docs/{d,r}/quicksight_*
+
+service/ram:
+  - aws/{data_source,resource}_aws_ram_*
+  - aws/tagsRAM*
+  - website/docs/{d,r}/ram_*
+
+service/route53resolver:
+  - aws/{data_source,resource}_aws_route53resolver_*
+  - aws/tagsRoute53Resolver*
+  - website/docs/{d,r}/route53resolver_*
+
+service/transfer:
+  - aws/{data_source,resource}_aws_transfer_*
+  - aws/tagsTransfer*
+  - website/docs/{d,r}/transfer_*
+
+service/worklink:
+  - aws/{data_source,resource}_aws_worklink_*
+  - website/docs/{d,r}/worklink_*

@@ -520,7 +520,7 @@ func (c *Cloud9) DescribeEnvironmentMembershipsWithContext(ctx aws.Context, inpu
 //    // Example iterating over at most 3 pages of a DescribeEnvironmentMemberships operation.
 //    pageNum := 0
 //    err := client.DescribeEnvironmentMembershipsPages(params,
-//        func(page *DescribeEnvironmentMembershipsOutput, lastPage bool) bool {
+//        func(page *cloud9.DescribeEnvironmentMembershipsOutput, lastPage bool) bool {
 //            pageNum++
 //            fmt.Println(page)
 //            return pageNum <= 3
@@ -867,7 +867,7 @@ func (c *Cloud9) ListEnvironmentsWithContext(ctx aws.Context, input *ListEnviron
 //    // Example iterating over at most 3 pages of a ListEnvironments operation.
 //    pageNum := 0
 //    err := client.ListEnvironmentsPages(params,
-//        func(page *ListEnvironmentsOutput, lastPage bool) bool {
+//        func(page *cloud9.ListEnvironmentsOutput, lastPage bool) bool {
 //            pageNum++
 //            fmt.Println(page)
 //            return pageNum <= 3

@@ -753,15 +753,17 @@ func testAccAWSRouteTableConfigRouteConfigModeBlocks() string {
 	return fmt.Sprintf(`
 resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"
-  tags       = {
+
+  tags = {
     Name = "tf-acc-test-ec2-route-table-config-mode"
   }
 }
 
 resource "aws_internet_gateway" "test" {
-  tags   = {
+  tags = {
     Name = "tf-acc-test-ec2-route-table-config-mode"
   }
+
   vpc_id = "${aws_vpc.test.id}"
 }
 
@@ -785,15 +787,17 @@ func testAccAWSRouteTableConfigRouteConfigModeNoBlocks() string {
 	return fmt.Sprintf(`
 resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"
-  tags       = {
+
+  tags = {
     Name = "tf-acc-test-ec2-route-table-config-mode"
   }
 }
 
 resource "aws_internet_gateway" "test" {
-  tags   = {
+  tags = {
     Name = "tf-acc-test-ec2-route-table-config-mode"
   }
+
   vpc_id = "${aws_vpc.test.id}"
 }
 
@@ -807,15 +811,17 @@ func testAccAWSRouteTableConfigRouteConfigModeZeroed() string {
 	return fmt.Sprintf(`
 resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"
-  tags       = {
+
+  tags = {
     Name = "tf-acc-test-ec2-route-table-config-mode"
   }
 }
 
 resource "aws_internet_gateway" "test" {
-  tags   = {
+  tags = {
     Name = "tf-acc-test-ec2-route-table-config-mode"
   }
+
   vpc_id = "${aws_vpc.test.id}"
 }
 

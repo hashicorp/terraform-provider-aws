@@ -245,7 +245,8 @@ resource "aws_s3_bucket_object" "object" {
 data "aws_s3_bucket_object" "obj" {
 	bucket = "tf-object-test-bucket-%d"
 	key = "tf-testing-obj-%d"
-}`, resources, randInt, randInt)
+}
+`, resources, randInt, randInt)
 
 	return resources, both
 }
@@ -267,7 +268,8 @@ resource "aws_s3_bucket_object" "object" {
 data "aws_s3_bucket_object" "obj" {
 	bucket = "tf-object-test-bucket-%d"
 	key = "tf-testing-obj-%d-readable"
-}`, resources, randInt, randInt)
+}
+`, resources, randInt, randInt)
 
 	return resources, both
 }
@@ -317,7 +319,8 @@ resource "aws_s3_bucket_object" "object" {
 data "aws_s3_bucket_object" "obj" {
 	bucket = "tf-object-test-bucket-%d"
 	key = "tf-testing-obj-%d-encrypted"
-}`, resources, randInt, randInt)
+}
+`, resources, randInt, randInt)
 
 	return resources, both
 }
@@ -352,7 +355,8 @@ CONTENT
 data "aws_s3_bucket_object" "obj" {
 	bucket = "tf-object-test-bucket-%d"
 	key = "tf-testing-obj-%d-all-params"
-}`, resources, randInt, randInt)
+}
+`, resources, randInt, randInt)
 
 	return resources, both
 }

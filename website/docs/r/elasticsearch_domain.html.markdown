@@ -48,6 +48,7 @@ data "aws_caller_identity" "current" {}
 
 resource "aws_elasticsearch_domain" "example" {
   domain_name = "${var.domain}"
+
   # ... other configuration ...
 
   access_policies = <<POLICY
@@ -78,6 +79,7 @@ resource "aws_cloudwatch_log_group" "example" {
 
 resource "aws_cloudwatch_log_resource_policy" "example" {
   policy_name = "example"
+
   policy_document = <<CONFIG
 {
   "Version": "2012-10-17",
@@ -245,7 +247,12 @@ The following arguments are supported:
 * `dedicated_master_enabled` - (Optional) Indicates whether dedicated master nodes are enabled for the cluster.
 * `dedicated_master_type` - (Optional) Instance type of the dedicated master nodes in the cluster.
 * `dedicated_master_count` - (Optional) Number of dedicated master nodes in the cluster
-* `zone_awareness_enabled` - (Optional) Indicates whether zone awareness is enabled.
+* `zone_awareness_config` - (Optional) Configuration block containing zone awareness settings. Documented below.
+* `zone_awareness_enabled` - (Optional) Indicates whether zone awareness is enabled. To enable awareness with three Availability Zones, the `availability_zone_count` within the `zone_awareness_config` must be set to `3`.
+
+**zone_awareness_config** supports the following attributes:
+
+* `availability_zone_count` - (Optional) Number of Availability Zones for the domain to use with `zone_awareness_enabled`. Defaults to `2`. Valid values: `2` or `3`.
 
 **node_to_node_encryption** supports the following attributes:
 

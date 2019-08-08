@@ -647,7 +647,7 @@ func (c *MediaPackage) ListChannelsWithContext(ctx aws.Context, input *ListChann
 //    // Example iterating over at most 3 pages of a ListChannels operation.
 //    pageNum := 0
 //    err := client.ListChannelsPages(params,
-//        func(page *ListChannelsOutput, lastPage bool) bool {
+//        func(page *mediapackage.ListChannelsOutput, lastPage bool) bool {
 //            pageNum++
 //            fmt.Println(page)
 //            return pageNum <= 3
@@ -791,7 +791,7 @@ func (c *MediaPackage) ListOriginEndpointsWithContext(ctx aws.Context, input *Li
 //    // Example iterating over at most 3 pages of a ListOriginEndpoints operation.
 //    pageNum := 0
 //    err := client.ListOriginEndpointsPages(params,
-//        func(page *ListOriginEndpointsOutput, lastPage bool) bool {
+//        func(page *mediapackage.ListOriginEndpointsOutput, lastPage bool) bool {
 //            pageNum++
 //            fmt.Println(page)
 //            return pageNum <= 3
@@ -2125,6 +2125,23 @@ func (s *DashEncryption) SetSpekeKeyProvider(v *SpekeKeyProvider) *DashEncryptio
 type DashPackage struct {
 	_ struct{} `type:"structure"`
 
+	// A list of SCTE-35 message types that are treated as ad markers in the output.
+	// If empty, noad markers are output. Specify multiple items to create ad markers
+	// for all of the includedmessage types.
+	AdTriggers []*string `locationName:"adTriggers" type:"list"`
+
+	// This setting allows the delivery restriction flags on SCTE-35 segmentation
+	// descriptors todetermine whether a message signals an ad. Choosing "NONE"
+	// means no SCTE-35 messages becomeads. Choosing "RESTRICTED" means SCTE-35
+	// messages of the types specified in AdTriggers thatcontain delivery restrictions
+	// will be treated as ads. Choosing "UNRESTRICTED" means SCTE-35messages of
+	// the types specified in AdTriggers that do not contain delivery restrictions
+	// willbe treated as ads. Choosing "BOTH" means all SCTE-35 messages of the
+	// types specified inAdTriggers will be treated as ads. Note that Splice Insert
+	// messages do not have these flagsand are always treated as ads if specified
+	// in AdTriggers.
+	AdsOnDeliveryRestrictions *string `locationName:"adsOnDeliveryRestrictions" type:"string" enum:"AdsOnDeliveryRestrictions"`
+
 	// A Dynamic Adaptive Streaming over HTTP (DASH) encryption configuration.
 	Encryption *DashEncryption `locationName:"encryption" type:"structure"`
 
@@ -2160,10 +2177,12 @@ type DashPackage struct {
 	// the nearest multiple of the source segment duration.
 	SegmentDurationSeconds *int64 `locationName:"segmentDurationSeconds" type:"integer"`
 
-	// Determines the type of SegmentTimeline included in the Media Presentation
+	// Determines the type of SegmentTemplate included in the Media Presentation
 	// Description (MPD). When set to NUMBER_WITH_TIMELINE, a full timeline is presented
 	// in each SegmentTemplate, with $Number$ media URLs. When set to TIME_WITH_TIMELINE,
 	// a full timeline is presented in each SegmentTemplate, with $Time$ media URLs.
+	// When set to NUMBER_WITH_DURATION, only a duration is included in each SegmentTemplate,
+	// with $Number$ media URLs.
 	SegmentTemplateFormat *string `locationName:"segmentTemplateFormat" type:"string" enum:"SegmentTemplateFormat"`
 
 	// A StreamSelection configuration.
@@ -2196,6 +2215,18 @@ func (s *DashPackage) Validate() error {
 		return invalidParams
 	}
 	return nil
+}
+
+// SetAdTriggers sets the AdTriggers field's value.
+func (s *DashPackage) SetAdTriggers(v []*string) *DashPackage {
+	s.AdTriggers = v
+	return s
+}
+
+// SetAdsOnDeliveryRestrictions sets the AdsOnDeliveryRestrictions field's value.
+func (s *DashPackage) SetAdsOnDeliveryRestrictions(v string) *DashPackage {
+	s.AdsOnDeliveryRestrictions = &v
+	return s
 }
 
 // SetEncryption sets the Encryption field's value.
@@ -2856,6 +2887,23 @@ type HlsManifestCreateOrUpdateParameters struct {
 	// ad markers and blackout tags based on SCTE-35messages in the input source.
 	AdMarkers *string `locationName:"adMarkers" type:"string" enum:"AdMarkers"`
 
+	// A list of SCTE-35 message types that are treated as ad markers in the output.
+	// If empty, noad markers are output. Specify multiple items to create ad markers
+	// for all of the includedmessage types.
+	AdTriggers []*string `locationName:"adTriggers" type:"list"`
+
+	// This setting allows the delivery restriction flags on SCTE-35 segmentation
+	// descriptors todetermine whether a message signals an ad. Choosing "NONE"
+	// means no SCTE-35 messages becomeads. Choosing "RESTRICTED" means SCTE-35
+	// messages of the types specified in AdTriggers thatcontain delivery restrictions
+	// will be treated as ads. Choosing "UNRESTRICTED" means SCTE-35messages of
+	// the types specified in AdTriggers that do not contain delivery restrictions
+	// willbe treated as ads. Choosing "BOTH" means all SCTE-35 messages of the
+	// types specified inAdTriggers will be treated as ads. Note that Splice Insert
+	// messages do not have these flagsand are always treated as ads if specified
+	// in AdTriggers.
+	AdsOnDeliveryRestrictions *string `locationName:"adsOnDeliveryRestrictions" type:"string" enum:"AdsOnDeliveryRestrictions"`
+
 	// The ID of the manifest. The ID must be unique within the OriginEndpoint and
 	// it cannot be changed after it is created.
 	//
@@ -2917,6 +2965,18 @@ func (s *HlsManifestCreateOrUpdateParameters) SetAdMarkers(v string) *HlsManifes
 	return s
 }
 
+// SetAdTriggers sets the AdTriggers field's value.
+func (s *HlsManifestCreateOrUpdateParameters) SetAdTriggers(v []*string) *HlsManifestCreateOrUpdateParameters {
+	s.AdTriggers = v
+	return s
+}
+
+// SetAdsOnDeliveryRestrictions sets the AdsOnDeliveryRestrictions field's value.
+func (s *HlsManifestCreateOrUpdateParameters) SetAdsOnDeliveryRestrictions(v string) *HlsManifestCreateOrUpdateParameters {
+	s.AdsOnDeliveryRestrictions = &v
+	return s
+}
+
 // SetId sets the Id field's value.
 func (s *HlsManifestCreateOrUpdateParameters) SetId(v string) *HlsManifestCreateOrUpdateParameters {
 	s.Id = &v
@@ -2963,6 +3023,23 @@ type HlsPackage struct {
 	// from the input HTTP Live Streaming (HLS) manifest."SCTE35_ENHANCED" generates
 	// ad markers and blackout tags based on SCTE-35messages in the input source.
 	AdMarkers *string `locationName:"adMarkers" type:"string" enum:"AdMarkers"`
+
+	// A list of SCTE-35 message types that are treated as ad markers in the output.
+	// If empty, noad markers are output. Specify multiple items to create ad markers
+	// for all of the includedmessage types.
+	AdTriggers []*string `locationName:"adTriggers" type:"list"`
+
+	// This setting allows the delivery restriction flags on SCTE-35 segmentation
+	// descriptors todetermine whether a message signals an ad. Choosing "NONE"
+	// means no SCTE-35 messages becomeads. Choosing "RESTRICTED" means SCTE-35
+	// messages of the types specified in AdTriggers thatcontain delivery restrictions
+	// will be treated as ads. Choosing "UNRESTRICTED" means SCTE-35messages of
+	// the types specified in AdTriggers that do not contain delivery restrictions
+	// willbe treated as ads. Choosing "BOTH" means all SCTE-35 messages of the
+	// types specified inAdTriggers will be treated as ads. Note that Splice Insert
+	// messages do not have these flagsand are always treated as ads if specified
+	// in AdTriggers.
+	AdsOnDeliveryRestrictions *string `locationName:"adsOnDeliveryRestrictions" type:"string" enum:"AdsOnDeliveryRestrictions"`
 
 	// An HTTP Live Streaming (HLS) encryption configuration.
 	Encryption *HlsEncryption `locationName:"encryption" type:"structure"`
@@ -3027,6 +3104,18 @@ func (s *HlsPackage) Validate() error {
 // SetAdMarkers sets the AdMarkers field's value.
 func (s *HlsPackage) SetAdMarkers(v string) *HlsPackage {
 	s.AdMarkers = &v
+	return s
+}
+
+// SetAdTriggers sets the AdTriggers field's value.
+func (s *HlsPackage) SetAdTriggers(v []*string) *HlsPackage {
+	s.AdTriggers = v
+	return s
+}
+
+// SetAdsOnDeliveryRestrictions sets the AdsOnDeliveryRestrictions field's value.
+func (s *HlsPackage) SetAdsOnDeliveryRestrictions(v string) *HlsPackage {
+	s.AdsOnDeliveryRestrictions = &v
 	return s
 }
 
@@ -4451,6 +4540,30 @@ const (
 	AdMarkersPassthrough = "PASSTHROUGH"
 )
 
+// This setting allows the delivery restriction flags on SCTE-35 segmentation
+// descriptors todetermine whether a message signals an ad. Choosing "NONE"
+// means no SCTE-35 messages becomeads. Choosing "RESTRICTED" means SCTE-35
+// messages of the types specified in AdTriggers thatcontain delivery restrictions
+// will be treated as ads. Choosing "UNRESTRICTED" means SCTE-35messages of
+// the types specified in AdTriggers that do not contain delivery restrictions
+// willbe treated as ads. Choosing "BOTH" means all SCTE-35 messages of the
+// types specified inAdTriggers will be treated as ads. Note that Splice Insert
+// messages do not have these flagsand are always treated as ads if specified
+// in AdTriggers.
+const (
+	// AdsOnDeliveryRestrictionsNone is a AdsOnDeliveryRestrictions enum value
+	AdsOnDeliveryRestrictionsNone = "NONE"
+
+	// AdsOnDeliveryRestrictionsRestricted is a AdsOnDeliveryRestrictions enum value
+	AdsOnDeliveryRestrictionsRestricted = "RESTRICTED"
+
+	// AdsOnDeliveryRestrictionsUnrestricted is a AdsOnDeliveryRestrictions enum value
+	AdsOnDeliveryRestrictionsUnrestricted = "UNRESTRICTED"
+
+	// AdsOnDeliveryRestrictionsBoth is a AdsOnDeliveryRestrictions enum value
+	AdsOnDeliveryRestrictionsBoth = "BOTH"
+)
+
 const (
 	// EncryptionMethodAes128 is a EncryptionMethod enum value
 	EncryptionMethodAes128 = "AES_128"
@@ -4492,6 +4605,9 @@ const (
 
 	// SegmentTemplateFormatTimeWithTimeline is a SegmentTemplateFormat enum value
 	SegmentTemplateFormatTimeWithTimeline = "TIME_WITH_TIMELINE"
+
+	// SegmentTemplateFormatNumberWithDuration is a SegmentTemplateFormat enum value
+	SegmentTemplateFormatNumberWithDuration = "NUMBER_WITH_DURATION"
 )
 
 const (
@@ -4503,6 +4619,32 @@ const (
 
 	// StreamOrderVideoBitrateDescending is a StreamOrder enum value
 	StreamOrderVideoBitrateDescending = "VIDEO_BITRATE_DESCENDING"
+)
+
+const (
+	// __AdTriggersElementSpliceInsert is a __AdTriggersElement enum value
+	__AdTriggersElementSpliceInsert = "SPLICE_INSERT"
+
+	// __AdTriggersElementBreak is a __AdTriggersElement enum value
+	__AdTriggersElementBreak = "BREAK"
+
+	// __AdTriggersElementProviderAdvertisement is a __AdTriggersElement enum value
+	__AdTriggersElementProviderAdvertisement = "PROVIDER_ADVERTISEMENT"
+
+	// __AdTriggersElementDistributorAdvertisement is a __AdTriggersElement enum value
+	__AdTriggersElementDistributorAdvertisement = "DISTRIBUTOR_ADVERTISEMENT"
+
+	// __AdTriggersElementProviderPlacementOpportunity is a __AdTriggersElement enum value
+	__AdTriggersElementProviderPlacementOpportunity = "PROVIDER_PLACEMENT_OPPORTUNITY"
+
+	// __AdTriggersElementDistributorPlacementOpportunity is a __AdTriggersElement enum value
+	__AdTriggersElementDistributorPlacementOpportunity = "DISTRIBUTOR_PLACEMENT_OPPORTUNITY"
+
+	// __AdTriggersElementProviderOverlayPlacementOpportunity is a __AdTriggersElement enum value
+	__AdTriggersElementProviderOverlayPlacementOpportunity = "PROVIDER_OVERLAY_PLACEMENT_OPPORTUNITY"
+
+	// __AdTriggersElementDistributorOverlayPlacementOpportunity is a __AdTriggersElement enum value
+	__AdTriggersElementDistributorOverlayPlacementOpportunity = "DISTRIBUTOR_OVERLAY_PLACEMENT_OPPORTUNITY"
 )
 
 const (

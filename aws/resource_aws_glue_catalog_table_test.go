@@ -346,7 +346,7 @@ resource "aws_glue_catalog_database" "test" {
 }
 
 resource "aws_glue_catalog_table" "test" {
-  name     = "my_test_catalog_table_%d"
+  name          = "my_test_catalog_table_%d"
   database_name = "${aws_glue_catalog_database.test.name}"
 }
 `, rInt, rInt)
@@ -382,52 +382,56 @@ resource "aws_glue_catalog_table" "test" {
     }
 
     columns {
-       name = "my_column_1"
-       type = "int"
-       comment = "my_column1_comment"
+      name    = "my_column_1"
+      type    = "int"
+      comment = "my_column1_comment"
     }
 
     columns {
-       name = "my_column_2"
-       type = "string"
-       comment = "my_column2_comment"
+      name    = "my_column_2"
+      type    = "string"
+      comment = "my_column2_comment"
     }
 
     ser_de_info {
       name = "ser_de_name"
+
       parameters = {
         param1 = "param_val_1"
       }
+
       serialization_library = "org.apache.hadoop.hive.serde2.columnar.ColumnarSerDe"
     }
 
     sort_columns {
-      column = "my_column_1"
+      column     = "my_column_1"
       sort_order = 1
     }
 
     skewed_info {
       skewed_column_names = [
-        "my_column_1"
+        "my_column_1",
       ]
+
       skewed_column_value_location_maps = {
         my_column_1 = "my_column_1_val_loc_map"
       }
+
       skewed_column_values = [
-        "skewed_val_1"
+        "skewed_val_1",
       ]
     }
   }
 
   partition_keys {
-    name = "my_column_1"
-    type = "int"
+    name    = "my_column_1"
+    type    = "int"
     comment = "my_column_1_comment"
   }
 
   partition_keys {
-    name = "my_column_2"
-    type = "string"
+    name    = "my_column_2"
+    type    = "string"
     comment = "my_column_2_comment"
   }
 
@@ -457,8 +461,9 @@ resource "aws_glue_catalog_table" "test" {
   storage_descriptor {
     bucket_columns = [
       "bucket_column_12",
-      "bucket_column_2"
+      "bucket_column_2",
     ]
+
     compressed                = true
     input_format              = "TextInputFormat"
     location                  = "my_location2"
@@ -471,53 +476,57 @@ resource "aws_glue_catalog_table" "test" {
     }
 
     columns {
-      name = "my_column_12"
-      type = "date"
+      name    = "my_column_12"
+      type    = "date"
       comment = "my_column1_comment2"
     }
 
     columns {
-      name = "my_column_22"
-      type = "timestamp"
+      name    = "my_column_22"
+      type    = "timestamp"
       comment = "my_column2_comment2"
     }
 
     ser_de_info {
       name = "ser_de_name2"
+
       parameters = {
         param2 = "param_val_12"
       }
+
       serialization_library = "org.apache.hadoop.hive.serde2.columnar.ColumnarSerDe2"
     }
 
     skewed_info {
       skewed_column_names = [
-        "my_column_12"
+        "my_column_12",
       ]
+
       skewed_column_value_location_maps = {
         my_column_12 = "my_column_1_val_loc_map2"
       }
+
       skewed_column_values = [
         "skewed_val_12",
-        "skewed_val_2"
+        "skewed_val_2",
       ]
     }
 
     sort_columns {
-      column = "my_column_12"
+      column     = "my_column_12"
       sort_order = 0
     }
   }
 
   partition_keys {
-    name = "my_column_12"
-    type = "date"
+    name    = "my_column_12"
+    type    = "date"
     comment = "my_column_1_comment2"
   }
 
   partition_keys {
-    name = "my_column_22"
-    type = "timestamp"
+    name    = "my_column_22"
+    type    = "timestamp"
     comment = "my_column_2_comment2"
   }
 

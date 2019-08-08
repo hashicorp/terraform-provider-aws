@@ -239,103 +239,111 @@ func testAccCheckAWSLoadBalancerPolicyState(elbResource string, policyResource s
 
 func testAccAWSLoadBalancerPolicyConfig_basic(rInt int) string {
 	return fmt.Sprintf(`
-	resource "aws_elb" "test-lb" {
-		name = "test-lb-%d"
-		availability_zones = ["us-west-2a"]
+resource "aws_elb" "test-lb" {
+  name               = "test-lb-%d"
+  availability_zones = ["us-west-2a"]
 
-		listener {
-			instance_port = 80
-			instance_protocol = "http"
-			lb_port = 80
-			lb_protocol = "http"
-		}
+  listener {
+    instance_port     = 80
+    instance_protocol = "http"
+    lb_port           = 80
+    lb_protocol       = "http"
+  }
 
-	tags = {
-			Name = "tf-acc-test"
-		}
-	}
+  tags = {
+    Name = "tf-acc-test"
+  }
+}
 
-	resource "aws_load_balancer_policy" "test-policy" {
-		load_balancer_name = "${aws_elb.test-lb.name}"
-		policy_name = "test-policy-%d"
-		policy_type_name = "AppCookieStickinessPolicyType"
-		policy_attribute {
-			name = "CookieName"
-			value = "magic_cookie"
-		}
-	}`, rInt, rInt)
+resource "aws_load_balancer_policy" "test-policy" {
+  load_balancer_name = "${aws_elb.test-lb.name}"
+  policy_name        = "test-policy-%d"
+  policy_type_name   = "AppCookieStickinessPolicyType"
+
+  policy_attribute {
+    name  = "CookieName"
+    value = "magic_cookie"
+  }
+}
+`, rInt, rInt)
 }
 
 func testAccAWSLoadBalancerPolicyConfig_updateWhileAssigned0(rInt int) string {
 	return fmt.Sprintf(`
-	resource "aws_elb" "test-lb" {
-		name = "test-lb-%d"
-		availability_zones = ["us-west-2a"]
+resource "aws_elb" "test-lb" {
+  name               = "test-lb-%d"
+  availability_zones = ["us-west-2a"]
 
-		listener {
-			instance_port = 80
-			instance_protocol = "http"
-			lb_port = 80
-			lb_protocol = "http"
-		}
+  listener {
+    instance_port     = 80
+    instance_protocol = "http"
+    lb_port           = 80
+    lb_protocol       = "http"
+  }
 
-	tags = {
-			Name = "tf-acc-test"
-		}
-	}
+  tags = {
+    Name = "tf-acc-test"
+  }
+}
 
-	resource "aws_load_balancer_policy" "test-policy" {
-		load_balancer_name = "${aws_elb.test-lb.name}"
-		policy_name = "test-policy-%d"
-		policy_type_name = "AppCookieStickinessPolicyType"
-		policy_attribute {
-			name = "CookieName"
-			value = "magic_cookie"
-		}
-	}
+resource "aws_load_balancer_policy" "test-policy" {
+  load_balancer_name = "${aws_elb.test-lb.name}"
+  policy_name        = "test-policy-%d"
+  policy_type_name   = "AppCookieStickinessPolicyType"
 
-	resource "aws_load_balancer_listener_policy" "test-lb-test-policy-80" {
-		load_balancer_name = "${aws_elb.test-lb.name}"
-		load_balancer_port = 80
-		policy_names = [
-			"${aws_load_balancer_policy.test-policy.policy_name}"
-		]
-	}`, rInt, rInt)
+  policy_attribute {
+    name  = "CookieName"
+    value = "magic_cookie"
+  }
+}
+
+resource "aws_load_balancer_listener_policy" "test-lb-test-policy-80" {
+  load_balancer_name = "${aws_elb.test-lb.name}"
+  load_balancer_port = 80
+
+  policy_names = [
+    "${aws_load_balancer_policy.test-policy.policy_name}",
+  ]
+}
+`, rInt, rInt)
 }
 
 func testAccAWSLoadBalancerPolicyConfig_updateWhileAssigned1(rInt int) string {
 	return fmt.Sprintf(`
-	resource "aws_elb" "test-lb" {
-		name = "test-lb-%d"
-		availability_zones = ["us-west-2a"]
+resource "aws_elb" "test-lb" {
+  name               = "test-lb-%d"
+  availability_zones = ["us-west-2a"]
 
-		listener {
-			instance_port = 80
-			instance_protocol = "http"
-			lb_port = 80
-			lb_protocol = "http"
-		}
+  listener {
+    instance_port     = 80
+    instance_protocol = "http"
+    lb_port           = 80
+    lb_protocol       = "http"
+  }
 
-	tags = {
-			Name = "tf-acc-test"
-		}
-	}
+  tags = {
+    Name = "tf-acc-test"
+  }
+}
 
-	resource "aws_load_balancer_policy" "test-policy" {
-		load_balancer_name = "${aws_elb.test-lb.name}"
-		policy_name = "test-policy-%d"
-		policy_type_name = "AppCookieStickinessPolicyType"
-		policy_attribute {
-			name = "CookieName"
-			value = "unicorn_cookie"
-		}
-	}
+resource "aws_load_balancer_policy" "test-policy" {
+  load_balancer_name = "${aws_elb.test-lb.name}"
+  policy_name        = "test-policy-%d"
+  policy_type_name   = "AppCookieStickinessPolicyType"
 
-	resource "aws_load_balancer_listener_policy" "test-lb-test-policy-80" {
-		load_balancer_name = "${aws_elb.test-lb.name}"
-		load_balancer_port = 80
-		policy_names = [
-			"${aws_load_balancer_policy.test-policy.policy_name}"
-		]
-	}`, rInt, rInt)
+  policy_attribute {
+    name  = "CookieName"
+    value = "unicorn_cookie"
+  }
+}
+
+resource "aws_load_balancer_listener_policy" "test-lb-test-policy-80" {
+  load_balancer_name = "${aws_elb.test-lb.name}"
+  load_balancer_port = 80
+
+  policy_names = [
+    "${aws_load_balancer_policy.test-policy.policy_name}",
+  ]
+}
+`, rInt, rInt)
 }

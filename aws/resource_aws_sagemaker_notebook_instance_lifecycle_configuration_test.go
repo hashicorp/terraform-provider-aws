@@ -197,9 +197,9 @@ resource "aws_sagemaker_notebook_instance_lifecycle_configuration" "test" {
 func testAccSagemakerNotebookInstanceLifecycleConfigurationConfig_Update(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_sagemaker_notebook_instance_lifecycle_configuration" "test" {
-  name = %q
+  name      = %q
   on_create = "${base64encode("echo bla")}"
-  on_start = "${base64encode("echo blub")}"
+  on_start  = "${base64encode("echo blub")}"
 }
 `, rName)
 }

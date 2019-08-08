@@ -905,16 +905,16 @@ func testAccCheckAWSRedshiftClusterNotRecreated(i, j *redshift.Cluster) resource
 func testAccAWSRedshiftClusterConfig_updateNodeCount(rInt int) string {
 	return fmt.Sprintf(`
 resource "aws_redshift_cluster" "default" {
-  cluster_identifier = "tf-redshift-cluster-%d"
-  availability_zone = "us-west-2a"
-  database_name = "mydb"
-  master_username = "foo_test"
-  master_password = "Mustbe8characters"
-  node_type = "dc1.large"
+  cluster_identifier                  = "tf-redshift-cluster-%d"
+  availability_zone                   = "us-west-2a"
+  database_name                       = "mydb"
+  master_username                     = "foo_test"
+  master_password                     = "Mustbe8characters"
+  node_type                           = "dc1.large"
   automated_snapshot_retention_period = 0
-  allow_version_upgrade = false
-  number_of_nodes = 2
-  skip_final_snapshot = true
+  allow_version_upgrade               = false
+  number_of_nodes                     = 2
+  skip_final_snapshot                 = true
 }
 `, rInt)
 }
@@ -922,16 +922,16 @@ resource "aws_redshift_cluster" "default" {
 func testAccAWSRedshiftClusterConfig_updateNodeType(rInt int) string {
 	return fmt.Sprintf(`
 resource "aws_redshift_cluster" "default" {
-  cluster_identifier = "tf-redshift-cluster-%d"
-  availability_zone = "us-west-2a"
-  database_name = "mydb"
-  master_username = "foo_test"
-  master_password = "Mustbe8characters"
-  node_type = "dc2.large"
+  cluster_identifier                  = "tf-redshift-cluster-%d"
+  availability_zone                   = "us-west-2a"
+  database_name                       = "mydb"
+  master_username                     = "foo_test"
+  master_password                     = "Mustbe8characters"
+  node_type                           = "dc2.large"
   automated_snapshot_retention_period = 0
-  allow_version_upgrade = false
-  number_of_nodes = 1
-  skip_final_snapshot = true
+  allow_version_upgrade               = false
+  number_of_nodes                     = 1
+  skip_final_snapshot                 = true
 }
 `, rInt)
 }
@@ -939,27 +939,29 @@ resource "aws_redshift_cluster" "default" {
 func testAccAWSRedshiftClusterConfig_basic(rInt int) string {
 	return fmt.Sprintf(`
 resource "aws_redshift_cluster" "default" {
-  cluster_identifier = "tf-redshift-cluster-%d"
-  availability_zone = "us-west-2a"
-  database_name = "mydb"
-  master_username = "foo_test"
-  master_password = "Mustbe8characters"
-  node_type = "dc1.large"
+  cluster_identifier                  = "tf-redshift-cluster-%d"
+  availability_zone                   = "us-west-2a"
+  database_name                       = "mydb"
+  master_username                     = "foo_test"
+  master_password                     = "Mustbe8characters"
+  node_type                           = "dc1.large"
   automated_snapshot_retention_period = 0
-  allow_version_upgrade = false
-  skip_final_snapshot = true
+  allow_version_upgrade               = false
+  skip_final_snapshot                 = true
 
   timeouts {
-	create = "30m"
+    create = "30m"
   }
-}`, rInt)
+}
+`, rInt)
 }
 
 func testAccAWSRedshiftClusterConfig_encrypted(rInt int) string {
 	return fmt.Sprintf(`
 resource "aws_kms_key" "foo" {
-	description = "Terraform acc test %d"
-	policy = <<POLICY
+  description = "Terraform acc test %d"
+
+  policy = <<POLICY
 	{
 	"Version": "2012-10-17",
 	"Id": "kms-tf-1",
@@ -976,21 +978,22 @@ resource "aws_kms_key" "foo" {
 	]
 	}
 	POLICY
-	}
+}
 
 resource "aws_redshift_cluster" "default" {
-  cluster_identifier = "tf-redshift-cluster-%d"
-  availability_zone = "us-west-2a"
-  database_name = "mydb"
-  master_username = "foo_test"
-  master_password = "Mustbe8characters"
-  node_type = "dc1.large"
+  cluster_identifier                  = "tf-redshift-cluster-%d"
+  availability_zone                   = "us-west-2a"
+  database_name                       = "mydb"
+  master_username                     = "foo_test"
+  master_password                     = "Mustbe8characters"
+  node_type                           = "dc1.large"
   automated_snapshot_retention_period = 0
-  allow_version_upgrade = false
-  skip_final_snapshot = true
-  encrypted = true
-  kms_key_id = "${aws_kms_key.foo.arn}"
-}`, rInt, rInt)
+  allow_version_upgrade               = false
+  skip_final_snapshot                 = true
+  encrypted                           = true
+  kms_key_id                          = "${aws_kms_key.foo.arn}"
+}
+`, rInt, rInt)
 }
 
 func testAccAWSRedshiftClusterConfig_unencrypted(rInt int) string {
@@ -998,8 +1001,9 @@ func testAccAWSRedshiftClusterConfig_unencrypted(rInt int) string {
 	//Removing the kms key here causes the key to be deleted before the redshift cluster is unencrypted, resulting in an unstable cluster. This is to be kept for the time-being unti we find a better way to handle this.
 	return fmt.Sprintf(`
 resource "aws_kms_key" "foo" {
-	description = "Terraform acc test %d"
-	policy = <<POLICY
+  description = "Terraform acc test %d"
+
+  policy = <<POLICY
 	{
 	"Version": "2012-10-17",
 	"Id": "kms-tf-1",
@@ -1016,41 +1020,44 @@ resource "aws_kms_key" "foo" {
 	]
 	}
 	POLICY
-	}
+}
 
 resource "aws_redshift_cluster" "default" {
-  cluster_identifier = "tf-redshift-cluster-%d"
-  availability_zone = "us-west-2a"
-  database_name = "mydb"
-  master_username = "foo_test"
-  master_password = "Mustbe8characters"
-  node_type = "dc1.large"
+  cluster_identifier                  = "tf-redshift-cluster-%d"
+  availability_zone                   = "us-west-2a"
+  database_name                       = "mydb"
+  master_username                     = "foo_test"
+  master_password                     = "Mustbe8characters"
+  node_type                           = "dc1.large"
   automated_snapshot_retention_period = 0
-  allow_version_upgrade = false
-  skip_final_snapshot = true
-}`, rInt, rInt)
+  allow_version_upgrade               = false
+  skip_final_snapshot                 = true
+}
+`, rInt, rInt)
 }
 
 func testAccAWSRedshiftClusterConfigWithFinalSnapshot(rInt int) string {
 	return fmt.Sprintf(`
 resource "aws_redshift_cluster" "default" {
-  cluster_identifier = "tf-redshift-cluster-%d"
-  availability_zone = "us-west-2a"
-  database_name = "mydb"
-  master_username = "foo_test"
-  master_password = "Mustbe8characters"
-  node_type = "dc1.large"
+  cluster_identifier                  = "tf-redshift-cluster-%d"
+  availability_zone                   = "us-west-2a"
+  database_name                       = "mydb"
+  master_username                     = "foo_test"
+  master_password                     = "Mustbe8characters"
+  node_type                           = "dc1.large"
   automated_snapshot_retention_period = 0
-  allow_version_upgrade = false
-  skip_final_snapshot = false
-  final_snapshot_identifier = "tf-acctest-snapshot-%d"
-}`, rInt, rInt)
+  allow_version_upgrade               = false
+  skip_final_snapshot                 = false
+  final_snapshot_identifier           = "tf-acctest-snapshot-%d"
+}
+`, rInt, rInt)
 }
 
 func testAccAWSRedshiftClusterConfig_kmsKey(rInt int) string {
 	return fmt.Sprintf(`
 resource "aws_kms_key" "foo" {
   description = "Terraform acc test %d"
+
   policy = <<POLICY
 {
   "Version": "2012-10-17",
@@ -1071,33 +1078,34 @@ POLICY
 }
 
 resource "aws_redshift_cluster" "default" {
-  cluster_identifier = "tf-redshift-cluster-%d"
-  availability_zone = "us-west-2a"
-  database_name = "mydb"
-  master_username = "foo_test"
-  master_password = "Mustbe8characters"
-  node_type = "dc1.large"
+  cluster_identifier                  = "tf-redshift-cluster-%d"
+  availability_zone                   = "us-west-2a"
+  database_name                       = "mydb"
+  master_username                     = "foo_test"
+  master_password                     = "Mustbe8characters"
+  node_type                           = "dc1.large"
   automated_snapshot_retention_period = 0
-  allow_version_upgrade = false
-  kms_key_id = "${aws_kms_key.foo.arn}"
-  encrypted = true
-  skip_final_snapshot = true
-}`, rInt, rInt)
+  allow_version_upgrade               = false
+  kms_key_id                          = "${aws_kms_key.foo.arn}"
+  encrypted                           = true
+  skip_final_snapshot                 = true
+}
+`, rInt, rInt)
 }
 
 func testAccAWSRedshiftClusterConfig_enhancedVpcRoutingEnabled(rInt int) string {
 	return fmt.Sprintf(`
 resource "aws_redshift_cluster" "default" {
-  cluster_identifier = "tf-redshift-cluster-%d"
-  availability_zone = "us-west-2a"
-  database_name = "mydb"
-  master_username = "foo_test"
-  master_password = "Mustbe8characters"
-  node_type = "dc1.large"
+  cluster_identifier                  = "tf-redshift-cluster-%d"
+  availability_zone                   = "us-west-2a"
+  database_name                       = "mydb"
+  master_username                     = "foo_test"
+  master_password                     = "Mustbe8characters"
+  node_type                           = "dc1.large"
   automated_snapshot_retention_period = 0
-  allow_version_upgrade = false
-  enhanced_vpc_routing = true
-  skip_final_snapshot = true
+  allow_version_upgrade               = false
+  enhanced_vpc_routing                = true
+  skip_final_snapshot                 = true
 }
 `, rInt)
 }
@@ -1105,46 +1113,50 @@ resource "aws_redshift_cluster" "default" {
 func testAccAWSRedshiftClusterConfig_enhancedVpcRoutingDisabled(rInt int) string {
 	return fmt.Sprintf(`
 resource "aws_redshift_cluster" "default" {
-  cluster_identifier = "tf-redshift-cluster-%d"
-  availability_zone = "us-west-2a"
-  database_name = "mydb"
-  master_username = "foo_test"
-  master_password = "Mustbe8characters"
-  node_type = "dc1.large"
+  cluster_identifier                  = "tf-redshift-cluster-%d"
+  availability_zone                   = "us-west-2a"
+  database_name                       = "mydb"
+  master_username                     = "foo_test"
+  master_password                     = "Mustbe8characters"
+  node_type                           = "dc1.large"
   automated_snapshot_retention_period = 0
-  allow_version_upgrade = false
-  enhanced_vpc_routing = false
-  skip_final_snapshot = true
+  allow_version_upgrade               = false
+  enhanced_vpc_routing                = false
+  skip_final_snapshot                 = true
 }
 `, rInt)
 }
 
 func testAccAWSRedshiftClusterConfig_loggingDisabled(rInt int) string {
 	return fmt.Sprintf(`
-	resource "aws_redshift_cluster" "default" {
-		cluster_identifier = "tf-redshift-cluster-%d"
-		availability_zone = "us-west-2a"
-		database_name = "mydb"
-		master_username = "foo_test"
-		master_password = "Mustbe8characters"
-		node_type = "dc1.large"
-		automated_snapshot_retention_period = 0
-		allow_version_upgrade = false
-		logging {
-			enable = false
-		}
-		skip_final_snapshot = true
-	}`, rInt)
+resource "aws_redshift_cluster" "default" {
+  cluster_identifier                  = "tf-redshift-cluster-%d"
+  availability_zone                   = "us-west-2a"
+  database_name                       = "mydb"
+  master_username                     = "foo_test"
+  master_password                     = "Mustbe8characters"
+  node_type                           = "dc1.large"
+  automated_snapshot_retention_period = 0
+  allow_version_upgrade               = false
+
+  logging {
+    enable = false
+  }
+
+  skip_final_snapshot = true
+}
+`, rInt)
 }
 
 func testAccAWSRedshiftClusterConfig_loggingEnabled(rInt int) string {
 	return fmt.Sprintf(`
 data "aws_redshift_service_account" "main" {}
 
- resource "aws_s3_bucket" "bucket" {
-	 bucket = "tf-redshift-logging-%d"
-	 force_destroy = true
-	 policy = <<EOF
+resource "aws_s3_bucket" "bucket" {
+  bucket        = "tf-redshift-logging-%d"
+  force_destroy = true
+
+  policy = <<EOF
 {
  "Version": "2008-10-17",
  "Statement": [
@@ -1169,300 +1181,338 @@ data "aws_redshift_service_account" "main" {}
  ]
 }
 EOF
- }
+}
 
+resource "aws_redshift_cluster" "default" {
+  cluster_identifier                  = "tf-redshift-cluster-%d"
+  availability_zone                   = "us-west-2a"
+  database_name                       = "mydb"
+  master_username                     = "foo_test"
+  master_password                     = "Mustbe8characters"
+  node_type                           = "dc1.large"
+  automated_snapshot_retention_period = 0
+  allow_version_upgrade               = false
 
- resource "aws_redshift_cluster" "default" {
-	 cluster_identifier = "tf-redshift-cluster-%d"
-	 availability_zone = "us-west-2a"
-	 database_name = "mydb"
-	 master_username = "foo_test"
-	 master_password = "Mustbe8characters"
-	 node_type = "dc1.large"
-	 automated_snapshot_retention_period = 0
-	 allow_version_upgrade = false
-	 logging {
-		enable = true
-		bucket_name = "${aws_s3_bucket.bucket.bucket}"
-	 }
-	 skip_final_snapshot = true
- }`, rInt, rInt, rInt, rInt)
+  logging {
+    enable      = true
+    bucket_name = "${aws_s3_bucket.bucket.bucket}"
+  }
+
+  skip_final_snapshot = true
+}
+`, rInt, rInt, rInt, rInt)
 }
 
 func testAccAWSRedshiftClusterConfig_snapshotCopyDisabled(rInt int) string {
 	return fmt.Sprintf(`
-	resource "aws_redshift_cluster" "default" {
-		cluster_identifier = "tf-redshift-cluster-%d"
-		availability_zone = "us-west-2a"
-		database_name = "mydb"
-		master_username = "foo_test"
-		master_password = "Mustbe8characters"
-		node_type = "dc1.large"
-		automated_snapshot_retention_period = 0
-		allow_version_upgrade = false
-		skip_final_snapshot = true
-	}`, rInt)
+resource "aws_redshift_cluster" "default" {
+  cluster_identifier                  = "tf-redshift-cluster-%d"
+  availability_zone                   = "us-west-2a"
+  database_name                       = "mydb"
+  master_username                     = "foo_test"
+  master_password                     = "Mustbe8characters"
+  node_type                           = "dc1.large"
+  automated_snapshot_retention_period = 0
+  allow_version_upgrade               = false
+  skip_final_snapshot                 = true
+}
+`, rInt)
 }
 
 func testAccAWSRedshiftClusterConfig_snapshotCopyEnabled(rInt int) string {
 	return fmt.Sprintf(`
- resource "aws_redshift_cluster" "default" {
-	 cluster_identifier = "tf-redshift-cluster-%d"
-	 availability_zone = "us-west-2a"
-	 database_name = "mydb"
-	 master_username = "foo_test"
-	 master_password = "Mustbe8characters"
-	 node_type = "dc1.large"
-	 automated_snapshot_retention_period = 0
-	 allow_version_upgrade = false
-	 snapshot_copy {
-		destination_region = "us-east-1"
-		retention_period = 1
-	 }
-	 skip_final_snapshot = true
- }`, rInt)
+resource "aws_redshift_cluster" "default" {
+  cluster_identifier                  = "tf-redshift-cluster-%d"
+  availability_zone                   = "us-west-2a"
+  database_name                       = "mydb"
+  master_username                     = "foo_test"
+  master_password                     = "Mustbe8characters"
+  node_type                           = "dc1.large"
+  automated_snapshot_retention_period = 0
+  allow_version_upgrade               = false
+
+  snapshot_copy {
+    destination_region = "us-east-1"
+    retention_period   = 1
+  }
+
+  skip_final_snapshot = true
+}
+`, rInt)
 }
 
 func testAccAWSRedshiftClusterConfig_tags(rInt int) string {
 	return fmt.Sprintf(`
 resource "aws_redshift_cluster" "default" {
-  cluster_identifier = "tf-redshift-cluster-%d"
-  availability_zone = "us-west-2a"
-  database_name = "mydb"
-  master_username = "foo"
-  master_password = "Mustbe8characters"
-  node_type = "dc1.large"
+  cluster_identifier                  = "tf-redshift-cluster-%d"
+  availability_zone                   = "us-west-2a"
+  database_name                       = "mydb"
+  master_username                     = "foo"
+  master_password                     = "Mustbe8characters"
+  node_type                           = "dc1.large"
   automated_snapshot_retention_period = 7
-  allow_version_upgrade = false
-  skip_final_snapshot = true
+  allow_version_upgrade               = false
+  skip_final_snapshot                 = true
+
   tags = {
     environment = "Production"
-    cluster = "reader"
-    Type = "master"
+    cluster     = "reader"
+    Type        = "master"
   }
-}`, rInt)
+}
+`, rInt)
 }
 
 func testAccAWSRedshiftClusterConfig_updatedTags(rInt int) string {
 	return fmt.Sprintf(`
 resource "aws_redshift_cluster" "default" {
-  cluster_identifier = "tf-redshift-cluster-%d"
-  availability_zone = "us-west-2a"
-  database_name = "mydb"
-  master_username = "foo"
-  master_password = "Mustbe8characters"
-  node_type = "dc1.large"
+  cluster_identifier                  = "tf-redshift-cluster-%d"
+  availability_zone                   = "us-west-2a"
+  database_name                       = "mydb"
+  master_username                     = "foo"
+  master_password                     = "Mustbe8characters"
+  node_type                           = "dc1.large"
   automated_snapshot_retention_period = 7
-  allow_version_upgrade = false
-  skip_final_snapshot = true
+  allow_version_upgrade               = false
+  skip_final_snapshot                 = true
+
   tags = {
     environment = "Production"
   }
-}`, rInt)
+}
+`, rInt)
 }
 
 func testAccAWSRedshiftClusterConfig_notPubliclyAccessible(rInt int) string {
 	return fmt.Sprintf(`
-	resource "aws_vpc" "foo" {
-		cidr_block = "10.1.0.0/16"
-	tags = {
-			Name = "terraform-testacc-redshift-cluster-not-publicly-accessible"
-		}
-	}
-	resource "aws_internet_gateway" "foo" {
-		vpc_id = "${aws_vpc.foo.id}"
-	tags = {
-			foo = "bar"
-		}
-	}
-	resource "aws_subnet" "foo" {
-		cidr_block = "10.1.1.0/24"
-		availability_zone = "us-west-2a"
-		vpc_id = "${aws_vpc.foo.id}"
-	tags = {
-			Name = "tf-acc-redshift-cluster-not-publicly-accessible-foo"
-		}
-	}
-	resource "aws_subnet" "bar" {
-		cidr_block = "10.1.2.0/24"
-		availability_zone = "us-west-2b"
-		vpc_id = "${aws_vpc.foo.id}"
-	tags = {
-			Name = "tf-acc-redshift-cluster-not-publicly-accessible-bar"
-		}
-	}
-	resource "aws_subnet" "foobar" {
-		cidr_block = "10.1.3.0/24"
-		availability_zone = "us-west-2c"
-		vpc_id = "${aws_vpc.foo.id}"
-	tags = {
-			Name = "tf-acc-redshift-cluster-not-publicly-accessible-foobar"
-		}
-	}
-	resource "aws_redshift_subnet_group" "foo" {
-		name = "foo-%d"
-		description = "foo description"
-		subnet_ids = ["${aws_subnet.foo.id}", "${aws_subnet.bar.id}", "${aws_subnet.foobar.id}"]
-	}
-	resource "aws_redshift_cluster" "default" {
-		cluster_identifier = "tf-redshift-cluster-%d"
-		availability_zone = "us-west-2a"
-		database_name = "mydb"
-		master_username = "foo"
-		master_password = "Mustbe8characters"
-		node_type = "dc1.large"
-		automated_snapshot_retention_period = 0
-		allow_version_upgrade = false
-		cluster_subnet_group_name = "${aws_redshift_subnet_group.foo.name}"
-		publicly_accessible = false
-		skip_final_snapshot = true
+resource "aws_vpc" "foo" {
+  cidr_block = "10.1.0.0/16"
 
-		depends_on = ["aws_internet_gateway.foo"]
-	}`, rInt, rInt)
+  tags = {
+    Name = "terraform-testacc-redshift-cluster-not-publicly-accessible"
+  }
+}
+
+resource "aws_internet_gateway" "foo" {
+  vpc_id = "${aws_vpc.foo.id}"
+
+  tags = {
+    foo = "bar"
+  }
+}
+
+resource "aws_subnet" "foo" {
+  cidr_block        = "10.1.1.0/24"
+  availability_zone = "us-west-2a"
+  vpc_id            = "${aws_vpc.foo.id}"
+
+  tags = {
+    Name = "tf-acc-redshift-cluster-not-publicly-accessible-foo"
+  }
+}
+
+resource "aws_subnet" "bar" {
+  cidr_block        = "10.1.2.0/24"
+  availability_zone = "us-west-2b"
+  vpc_id            = "${aws_vpc.foo.id}"
+
+  tags = {
+    Name = "tf-acc-redshift-cluster-not-publicly-accessible-bar"
+  }
+}
+
+resource "aws_subnet" "foobar" {
+  cidr_block        = "10.1.3.0/24"
+  availability_zone = "us-west-2c"
+  vpc_id            = "${aws_vpc.foo.id}"
+
+  tags = {
+    Name = "tf-acc-redshift-cluster-not-publicly-accessible-foobar"
+  }
+}
+
+resource "aws_redshift_subnet_group" "foo" {
+  name        = "foo-%d"
+  description = "foo description"
+  subnet_ids  = ["${aws_subnet.foo.id}", "${aws_subnet.bar.id}", "${aws_subnet.foobar.id}"]
+}
+
+resource "aws_redshift_cluster" "default" {
+  cluster_identifier                  = "tf-redshift-cluster-%d"
+  availability_zone                   = "us-west-2a"
+  database_name                       = "mydb"
+  master_username                     = "foo"
+  master_password                     = "Mustbe8characters"
+  node_type                           = "dc1.large"
+  automated_snapshot_retention_period = 0
+  allow_version_upgrade               = false
+  cluster_subnet_group_name           = "${aws_redshift_subnet_group.foo.name}"
+  publicly_accessible                 = false
+  skip_final_snapshot                 = true
+
+  depends_on = ["aws_internet_gateway.foo"]
+}
+`, rInt, rInt)
 }
 
 func testAccAWSRedshiftClusterConfig_updatePubliclyAccessible(rInt int) string {
 	return fmt.Sprintf(`
-	resource "aws_vpc" "foo" {
-		cidr_block = "10.1.0.0/16"
-	tags = {
-			Name = "terraform-testacc-redshift-cluster-upd-publicly-accessible"
-		}
-	}
-	resource "aws_internet_gateway" "foo" {
-		vpc_id = "${aws_vpc.foo.id}"
-	tags = {
-			foo = "bar"
-		}
-	}
-	resource "aws_subnet" "foo" {
-		cidr_block = "10.1.1.0/24"
-		availability_zone = "us-west-2a"
-		vpc_id = "${aws_vpc.foo.id}"
-	tags = {
-			Name = "tf-acc-redshift-cluster-upd-publicly-accessible-foo"
-		}
-	}
-	resource "aws_subnet" "bar" {
-		cidr_block = "10.1.2.0/24"
-		availability_zone = "us-west-2b"
-		vpc_id = "${aws_vpc.foo.id}"
-	tags = {
-			Name = "tf-acc-redshift-cluster-upd-publicly-accessible-bar"
-		}
-	}
-	resource "aws_subnet" "foobar" {
-		cidr_block = "10.1.3.0/24"
-		availability_zone = "us-west-2c"
-		vpc_id = "${aws_vpc.foo.id}"
-	tags = {
-			Name = "tf-acc-redshift-cluster-upd-publicly-accessible-foobar"
-		}
-	}
-	resource "aws_redshift_subnet_group" "foo" {
-		name = "foo-%d"
-		description = "foo description"
-		subnet_ids = ["${aws_subnet.foo.id}", "${aws_subnet.bar.id}", "${aws_subnet.foobar.id}"]
-	}
-	resource "aws_redshift_cluster" "default" {
-		cluster_identifier = "tf-redshift-cluster-%d"
-		availability_zone = "us-west-2a"
-		database_name = "mydb"
-		master_username = "foo"
-		master_password = "Mustbe8characters"
-		node_type = "dc1.large"
-		automated_snapshot_retention_period = 0
-		allow_version_upgrade = false
-		cluster_subnet_group_name = "${aws_redshift_subnet_group.foo.name}"
-		publicly_accessible = true
-		skip_final_snapshot = true
+resource "aws_vpc" "foo" {
+  cidr_block = "10.1.0.0/16"
 
-		depends_on = ["aws_internet_gateway.foo"]
-	}`, rInt, rInt)
+  tags = {
+    Name = "terraform-testacc-redshift-cluster-upd-publicly-accessible"
+  }
+}
+
+resource "aws_internet_gateway" "foo" {
+  vpc_id = "${aws_vpc.foo.id}"
+
+  tags = {
+    foo = "bar"
+  }
+}
+
+resource "aws_subnet" "foo" {
+  cidr_block        = "10.1.1.0/24"
+  availability_zone = "us-west-2a"
+  vpc_id            = "${aws_vpc.foo.id}"
+
+  tags = {
+    Name = "tf-acc-redshift-cluster-upd-publicly-accessible-foo"
+  }
+}
+
+resource "aws_subnet" "bar" {
+  cidr_block        = "10.1.2.0/24"
+  availability_zone = "us-west-2b"
+  vpc_id            = "${aws_vpc.foo.id}"
+
+  tags = {
+    Name = "tf-acc-redshift-cluster-upd-publicly-accessible-bar"
+  }
+}
+
+resource "aws_subnet" "foobar" {
+  cidr_block        = "10.1.3.0/24"
+  availability_zone = "us-west-2c"
+  vpc_id            = "${aws_vpc.foo.id}"
+
+  tags = {
+    Name = "tf-acc-redshift-cluster-upd-publicly-accessible-foobar"
+  }
+}
+
+resource "aws_redshift_subnet_group" "foo" {
+  name        = "foo-%d"
+  description = "foo description"
+  subnet_ids  = ["${aws_subnet.foo.id}", "${aws_subnet.bar.id}", "${aws_subnet.foobar.id}"]
+}
+
+resource "aws_redshift_cluster" "default" {
+  cluster_identifier                  = "tf-redshift-cluster-%d"
+  availability_zone                   = "us-west-2a"
+  database_name                       = "mydb"
+  master_username                     = "foo"
+  master_password                     = "Mustbe8characters"
+  node_type                           = "dc1.large"
+  automated_snapshot_retention_period = 0
+  allow_version_upgrade               = false
+  cluster_subnet_group_name           = "${aws_redshift_subnet_group.foo.name}"
+  publicly_accessible                 = true
+  skip_final_snapshot                 = true
+
+  depends_on = ["aws_internet_gateway.foo"]
+}
+`, rInt, rInt)
 }
 
 func testAccAWSRedshiftClusterConfig_iamRoles(rInt int) string {
 	return fmt.Sprintf(`
 resource "aws_iam_role" "ec2-role" {
-	name   = "test-role-ec2-%d"
-	path = "/"
- 	assume_role_policy = "{\"Version\":\"2012-10-17\",\"Statement\":[{\"Effect\":\"Allow\",\"Principal\":{\"Service\":[\"ec2.amazonaws.com\"]},\"Action\":[\"sts:AssumeRole\"]}]}"
+  name               = "test-role-ec2-%d"
+  path               = "/"
+  assume_role_policy = "{\"Version\":\"2012-10-17\",\"Statement\":[{\"Effect\":\"Allow\",\"Principal\":{\"Service\":[\"ec2.amazonaws.com\"]},\"Action\":[\"sts:AssumeRole\"]}]}"
 }
 
 resource "aws_iam_role" "lambda-role" {
- 	name   = "test-role-lambda-%d"
- 	path = "/"
- 	assume_role_policy = "{\"Version\":\"2012-10-17\",\"Statement\":[{\"Effect\":\"Allow\",\"Principal\":{\"Service\":[\"lambda.amazonaws.com\"]},\"Action\":[\"sts:AssumeRole\"]}]}"
+  name               = "test-role-lambda-%d"
+  path               = "/"
+  assume_role_policy = "{\"Version\":\"2012-10-17\",\"Statement\":[{\"Effect\":\"Allow\",\"Principal\":{\"Service\":[\"lambda.amazonaws.com\"]},\"Action\":[\"sts:AssumeRole\"]}]}"
 }
 
 resource "aws_redshift_cluster" "default" {
-   cluster_identifier = "tf-redshift-cluster-%d"
-   availability_zone = "us-west-2a"
-   database_name = "mydb"
-   master_username = "foo_test"
-   master_password = "Mustbe8characters"
-   node_type = "dc1.large"
-   automated_snapshot_retention_period = 0
-   allow_version_upgrade = false
-   iam_roles = ["${aws_iam_role.ec2-role.arn}", "${aws_iam_role.lambda-role.arn}"]
-   skip_final_snapshot = true
-}`, rInt, rInt, rInt)
+  cluster_identifier                  = "tf-redshift-cluster-%d"
+  availability_zone                   = "us-west-2a"
+  database_name                       = "mydb"
+  master_username                     = "foo_test"
+  master_password                     = "Mustbe8characters"
+  node_type                           = "dc1.large"
+  automated_snapshot_retention_period = 0
+  allow_version_upgrade               = false
+  iam_roles                           = ["${aws_iam_role.ec2-role.arn}", "${aws_iam_role.lambda-role.arn}"]
+  skip_final_snapshot                 = true
+}
+`, rInt, rInt, rInt)
 }
 
 func testAccAWSRedshiftClusterConfig_updateIamRoles(rInt int) string {
 	return fmt.Sprintf(`
 resource "aws_iam_role" "ec2-role" {
- 	name   = "test-role-ec2-%d"
- 	path = "/"
- 	assume_role_policy = "{\"Version\":\"2012-10-17\",\"Statement\":[{\"Effect\":\"Allow\",\"Principal\":{\"Service\":[\"ec2.amazonaws.com\"]},\"Action\":[\"sts:AssumeRole\"]}]}"
- }
+  name               = "test-role-ec2-%d"
+  path               = "/"
+  assume_role_policy = "{\"Version\":\"2012-10-17\",\"Statement\":[{\"Effect\":\"Allow\",\"Principal\":{\"Service\":[\"ec2.amazonaws.com\"]},\"Action\":[\"sts:AssumeRole\"]}]}"
+}
 
- resource "aws_iam_role" "lambda-role" {
- 	name   = "test-role-lambda-%d"
- 	path = "/"
- 	assume_role_policy = "{\"Version\":\"2012-10-17\",\"Statement\":[{\"Effect\":\"Allow\",\"Principal\":{\"Service\":[\"lambda.amazonaws.com\"]},\"Action\":[\"sts:AssumeRole\"]}]}"
- }
+resource "aws_iam_role" "lambda-role" {
+  name               = "test-role-lambda-%d"
+  path               = "/"
+  assume_role_policy = "{\"Version\":\"2012-10-17\",\"Statement\":[{\"Effect\":\"Allow\",\"Principal\":{\"Service\":[\"lambda.amazonaws.com\"]},\"Action\":[\"sts:AssumeRole\"]}]}"
+}
 
- resource "aws_redshift_cluster" "default" {
-   cluster_identifier = "tf-redshift-cluster-%d"
-   availability_zone = "us-west-2a"
-   database_name = "mydb"
-   master_username = "foo_test"
-   master_password = "Mustbe8characters"
-   node_type = "dc1.large"
-   automated_snapshot_retention_period = 0
-   allow_version_upgrade = false
-   iam_roles = ["${aws_iam_role.ec2-role.arn}"]
-   skip_final_snapshot = true
- }`, rInt, rInt, rInt)
+resource "aws_redshift_cluster" "default" {
+  cluster_identifier                  = "tf-redshift-cluster-%d"
+  availability_zone                   = "us-west-2a"
+  database_name                       = "mydb"
+  master_username                     = "foo_test"
+  master_password                     = "Mustbe8characters"
+  node_type                           = "dc1.large"
+  automated_snapshot_retention_period = 0
+  allow_version_upgrade               = false
+  iam_roles                           = ["${aws_iam_role.ec2-role.arn}"]
+  skip_final_snapshot                 = true
+}
+`, rInt, rInt, rInt)
 }
 
 func testAccAWSRedshiftClusterConfig_updatedUsername(rInt int) string {
 	return fmt.Sprintf(`
 resource "aws_redshift_cluster" "default" {
-  cluster_identifier = "tf-redshift-cluster-%d"
-  availability_zone = "us-west-2a"
-  database_name = "mydb"
-  master_username = "new_username"
-  master_password = "Mustbe8characters"
-  node_type = "dc1.large"
+  cluster_identifier                  = "tf-redshift-cluster-%d"
+  availability_zone                   = "us-west-2a"
+  database_name                       = "mydb"
+  master_username                     = "new_username"
+  master_password                     = "Mustbe8characters"
+  node_type                           = "dc1.large"
   automated_snapshot_retention_period = 0
-  allow_version_upgrade = false
-  skip_final_snapshot = true
-}`, rInt)
+  allow_version_upgrade               = false
+  skip_final_snapshot                 = true
+}
+`, rInt)
 }
 
 func testAccAWSRedshiftClusterConfig_updatedAvailabilityZone(rInt int) string {
 	return fmt.Sprintf(`
-	resource "aws_redshift_cluster" "default" {
-		cluster_identifier = "tf-redshift-cluster-%d"
-		availability_zone = "us-west-2b"
-		database_name = "mydb"
-		master_username = "foo_test"
-		master_password = "Mustbe8characters"
-		node_type = "dc1.large"
-		automated_snapshot_retention_period = 0
-		allow_version_upgrade = false
-		skip_final_snapshot = true
-	}`, rInt)
+resource "aws_redshift_cluster" "default" {
+  cluster_identifier                  = "tf-redshift-cluster-%d"
+  availability_zone                   = "us-west-2b"
+  database_name                       = "mydb"
+  master_username                     = "foo_test"
+  master_password                     = "Mustbe8characters"
+  node_type                           = "dc1.large"
+  automated_snapshot_retention_period = 0
+  allow_version_upgrade               = false
+  skip_final_snapshot                 = true
+}
+`, rInt)
 }

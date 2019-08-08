@@ -3,7 +3,9 @@ package aws
 import (
 	"errors"
 	"fmt"
+	"log"
 	"regexp"
+	"strings"
 	"testing"
 	"time"
 
@@ -14,6 +16,72 @@ import (
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/terraform"
 )
+
+func init() {
+	resource.AddTestSweepers("aws_rds_cluster_parameter_group", &resource.Sweeper{
+		Name: "aws_rds_cluster_parameter_group",
+		F:    testSweepRdsClusterParameterGroups,
+		Dependencies: []string{
+			"aws_rds_cluster",
+		},
+	})
+}
+
+func testSweepRdsClusterParameterGroups(region string) error {
+	client, err := sharedClientForRegion(region)
+	if err != nil {
+		return fmt.Errorf("error getting client: %s", err)
+	}
+	conn := client.(*AWSClient).rdsconn
+
+	input := &rds.DescribeDBClusterParameterGroupsInput{}
+
+	for {
+		output, err := conn.DescribeDBClusterParameterGroups(input)
+
+		if testSweepSkipSweepError(err) {
+			log.Printf("[WARN] Skipping RDS DB Cluster Parameter Group sweep for %s: %s", region, err)
+			return nil
+		}
+
+		if err != nil {
+			return fmt.Errorf("error retrieving DB Cluster Parameter Groups: %s", err)
+		}
+
+		for _, dbcpg := range output.DBClusterParameterGroups {
+			if dbcpg == nil {
+				continue
+			}
+
+			input := &rds.DeleteDBClusterParameterGroupInput{
+				DBClusterParameterGroupName: dbcpg.DBClusterParameterGroupName,
+			}
+			name := aws.StringValue(dbcpg.DBClusterParameterGroupName)
+
+			if strings.HasPrefix(name, "default.") {
+				log.Printf("[INFO] Skipping DB Cluster Parameter Group: %s", name)
+				continue
+			}
+
+			log.Printf("[INFO] Deleting DB Cluster Parameter Group: %s", name)
+
+			_, err := conn.DeleteDBClusterParameterGroup(input)
+
+			if err != nil {
+				log.Printf("[ERROR] Failed to delete DB Cluster Parameter Group %s: %s", name, err)
+				continue
+			}
+		}
+
+		if aws.StringValue(output.Marker) == "" {
+			break
+		}
+
+		input.Marker = output.Marker
+	}
+
+	return nil
+}
 
 func TestAccAWSDBClusterParameterGroup_importBasic(t *testing.T) {
 	resourceName := "aws_rds_cluster_parameter_group.bar"
@@ -433,9 +501,9 @@ resource "aws_rds_cluster_parameter_group" "bar" {
   }
 
   parameter {
-    name  = "character_set_client"
-    value = "utf8"
-		apply_method = "pending-reboot"
+    name         = "character_set_client"
+    value        = "utf8"
+    apply_method = "pending-reboot"
   }
 
   tags = {
@@ -486,10 +554,12 @@ resource "aws_rds_cluster_parameter_group" "bar" {
 }
 
 func testAccAWSDBClusterParameterGroupOnlyConfig(name string) string {
-	return fmt.Sprintf(`resource "aws_rds_cluster_parameter_group" "bar" {
-  name        = "%s"
-  family      = "aurora5.6"
-}`, name)
+	return fmt.Sprintf(`
+resource "aws_rds_cluster_parameter_group" "bar" {
+  name   = "%s"
+  family = "aurora5.6"
+}
+`, name)
 }
 
 const testAccAWSDBClusterParameterGroupConfig_namePrefix = `

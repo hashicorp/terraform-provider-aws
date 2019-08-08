@@ -207,7 +207,8 @@ resource "aws_pinpoint_apns_sandbox_channel" "test_channel" {
   default_authentication_method = "CERTIFICATE"
   certificate                   = %s
   private_key                   = %s
-}`, conf.Certificate, conf.PrivateKey)
+}
+`, conf.Certificate, conf.PrivateKey)
 }
 
 func testAccAWSPinpointAPNSSandboxChannelConfig_basicToken(conf *testAccAwsPinpointAPNSSandboxChannelTokenConfiguration) string {
@@ -221,14 +222,15 @@ resource "aws_pinpoint_app" "test_app" {}
 resource "aws_pinpoint_apns_sandbox_channel" "test_channel" {
   application_id = "${aws_pinpoint_app.test_app.application_id}"
   enabled        = false
-  
+
   default_authentication_method = "TOKEN"
 
-  bundle_id      = %s
-  team_id        = %s
-  token_key      = %s
-  token_key_id   = %s
-}`, conf.BundleId, conf.TeamId, conf.TokenKey, conf.TokenKeyId)
+  bundle_id    = %s
+  team_id      = %s
+  token_key    = %s
+  token_key_id = %s
+}
+`, conf.BundleId, conf.TeamId, conf.TokenKey, conf.TokenKeyId)
 }
 
 func testAccCheckAWSPinpointAPNSSandboxChannelDestroy(s *terraform.State) error {

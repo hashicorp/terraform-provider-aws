@@ -18,7 +18,7 @@ func TestAccAWSWorkLinkWorkLinkWebsiteCertificateAuthorityAssociation_Basic(t *t
 	resourceName := "aws_worklink_website_certificate_authority_association.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSWorkLink(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSWorkLinkWebsiteCertificateAuthorityAssociationDestroy,
 		Steps: []resource.TestStep{
@@ -47,7 +47,7 @@ func TestAccAWSWorkLinkWorkLinkWebsiteCertificateAuthorityAssociation_DisplayNam
 	displayName1 := fmt.Sprintf("tf-website-certificate-%s", randomString(5))
 	displayName2 := fmt.Sprintf("tf-website-certificate-%s", randomString(5))
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSWorkLink(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSWorkLinkWebsiteCertificateAuthorityAssociationDestroy,
 		Steps: []resource.TestStep{
@@ -79,7 +79,7 @@ func TestAccAWSWorkLinkWorkLinkWebsiteCertificateAuthorityAssociation_Disappears
 	resourceName := "aws_worklink_website_certificate_authority_association.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSWorkLink(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSWorkLinkWebsiteCertificateAuthorityAssociationDestroy,
 		Steps: []resource.TestStep{
@@ -198,10 +198,9 @@ func testAccAWSWorkLinkWebsiteCertificateAuthorityAssociationConfig(r string) st
 %s
 
 resource "aws_worklink_website_certificate_authority_association" "test" {
-	fleet_arn	= "${aws_worklink_fleet.test.arn}"
-	certificate = "${file("test-fixtures/worklink-website-certificate-authority-association.pem")}"
+  fleet_arn   = "${aws_worklink_fleet.test.arn}"
+  certificate = "${file("test-fixtures/worklink-website-certificate-authority-association.pem")}"
 }
-
 `, testAccAWSWorkLinkFleetConfig(r))
 }
 
@@ -210,10 +209,9 @@ func testAccAWSWorkLinkWebsiteCertificateAuthorityAssociationConfigDisplayName(r
 %s
 
 resource "aws_worklink_website_certificate_authority_association" "test" {
-	fleet_arn		= "${aws_worklink_fleet.test.arn}"
-	certificate 	= "${file("test-fixtures/worklink-website-certificate-authority-association.pem")}"
-	display_name 	= "%s"
+  fleet_arn    = "${aws_worklink_fleet.test.arn}"
+  certificate  = "${file("test-fixtures/worklink-website-certificate-authority-association.pem")}"
+  display_name = "%s"
 }
-
 `, testAccAWSWorkLinkFleetConfig(r), displayName)
 }

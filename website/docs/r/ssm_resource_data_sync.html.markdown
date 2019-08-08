@@ -20,6 +20,7 @@ resource "aws_s3_bucket" "hoge" {
 
 resource "aws_s3_bucket_policy" "hoge" {
   bucket = "${aws_s3_bucket.hoge.bucket}"
+
   policy = <<EOF
 {
     "Version": "2012-10-17",
@@ -54,6 +55,7 @@ EOF
 
 resource "aws_ssm_resource_data_sync" "foo" {
   name = "foo"
+
   s3_destination = {
     bucket_name = "${aws_s3_bucket.hoge.bucket}"
     region      = "${aws_s3_bucket.hoge.region}"

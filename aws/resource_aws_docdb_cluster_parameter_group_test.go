@@ -333,18 +333,22 @@ func testAccCheckAWSDocDBClusterParameterGroupExists(n string, v *docdb.DBCluste
 }
 
 func testAccAWSDocDBClusterParameterGroupConfig(name string) string {
-	return fmt.Sprintf(`resource "aws_docdb_cluster_parameter_group" "bar" {
-	family = "docdb3.6"
-	name   = "%s"
-}`, name)
+	return fmt.Sprintf(`
+resource "aws_docdb_cluster_parameter_group" "bar" {
+  family = "docdb3.6"
+  name   = "%s"
+}
+`, name)
 }
 
 func testAccAWSDocDBClusterParameterGroupConfig_Description(name, description string) string {
-	return fmt.Sprintf(`resource "aws_docdb_cluster_parameter_group" "bar" {
-  family = "docdb3.6"
+	return fmt.Sprintf(`
+resource "aws_docdb_cluster_parameter_group" "bar" {
+  family      = "docdb3.6"
   description = "%s"
   name        = "%s"
-}`, description, name)
+}
+`, description, name)
 }
 
 func testAccAWSDocDBClusterParameterGroupConfig_Parameter(name, pName, pValue string) string {

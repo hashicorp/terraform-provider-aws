@@ -44,63 +44,32 @@ func waitForASGCapacity(
 			d.SetId("")
 			return nil
 		}
-		elbis, err := getELBInstanceStates(g, meta)
-		if err != nil {
-			return resource.NonRetryableError(err)
-		}
-		albis, err := getTargetGroupInstanceStates(g, meta)
-		if err != nil {
-			return resource.NonRetryableError(err)
-		}
 
-		haveASG := 0
-		haveELB := 0
-
-		for _, i := range g.Instances {
-			if i.HealthStatus == nil || i.InstanceId == nil || i.LifecycleState == nil {
-				continue
-			}
-
-			if !strings.EqualFold(*i.HealthStatus, "Healthy") {
-				continue
-			}
-
-			if !strings.EqualFold(*i.LifecycleState, "InService") {
-				continue
-			}
-
-			haveASG++
-
-			inAllLbs := true
-			for _, states := range elbis {
-				state, ok := states[*i.InstanceId]
-				if !ok || !strings.EqualFold(state, "InService") {
-					inAllLbs = false
-				}
-			}
-			for _, states := range albis {
-				state, ok := states[*i.InstanceId]
-				if !ok || !strings.EqualFold(state, "healthy") {
-					inAllLbs = false
-				}
-			}
-			if inAllLbs {
-				haveELB++
-			}
-		}
-
-		satisfied, reason := satisfiedFunc(d, haveASG, haveELB)
-
-		log.Printf("[DEBUG] %q Capacity: %d ASG, %d ELB/ALB, satisfied: %t, reason: %q",
-			d.Id(), haveASG, haveELB, satisfied, reason)
-
+		satisfied, reason := isELBCapacitySatisfied(d, meta, g, satisfiedFunc)
 		if satisfied {
 			return nil
 		}
 
-		return resource.RetryableError(
-			fmt.Errorf("%q: Waiting up to %s: %s", d.Id(), wait, reason))
+		return resource.RetryableError(fmt.Errorf("%q: Waiting up to %s: %s", d.Id(), wait, reason))
 	})
+	if isResourceTimeoutError(err) {
+		g, err := getAwsAutoscalingGroup(d.Id(), meta.(*AWSClient).autoscalingconn)
+
+		if err != nil {
+			return fmt.Errorf("Error getting autoscaling group info: %s", err)
+		}
+
+		if g == nil {
+			log.Printf("[WARN] Autoscaling Group (%s) not found, removing from state", d.Id())
+			d.SetId("")
+			return nil
+		}
+
+		satisfied, _ := isELBCapacitySatisfied(d, meta, g, satisfiedFunc)
+		if satisfied {
+			return nil
+		}
+	}
 
 	if err == nil {
 		return nil
@@ -124,6 +93,60 @@ func waitForASGCapacity(
 	}
 
 	return fmt.Errorf("%s. Most recent activity: %s", err, recentStatus)
+}
+
+func isELBCapacitySatisfied(d *schema.ResourceData, meta interface{}, g *autoscaling.Group, satisfiedFunc capacitySatisfiedFunc) (bool, string) {
+	elbis, err := getELBInstanceStates(g, meta)
+	if err != nil {
+		return false, fmt.Sprintf("Error getting ELB instance states: %s", err)
+	}
+	albis, err := getTargetGroupInstanceStates(g, meta)
+	if err != nil {
+		return false, fmt.Sprintf("Error getting target group instance states: %s", err)
+	}
+
+	haveASG := 0
+	haveELB := 0
+
+	for _, i := range g.Instances {
+		if i.HealthStatus == nil || i.InstanceId == nil || i.LifecycleState == nil {
+			continue
+		}
+
+		if !strings.EqualFold(*i.HealthStatus, "Healthy") {
+			continue
+		}
+
+		if !strings.EqualFold(*i.LifecycleState, "InService") {
+			continue
+		}
+
+		haveASG++
+
+		inAllLbs := true
+		for _, states := range elbis {
+			state, ok := states[*i.InstanceId]
+			if !ok || !strings.EqualFold(state, "InService") {
+				inAllLbs = false
+			}
+		}
+		for _, states := range albis {
+			state, ok := states[*i.InstanceId]
+			if !ok || !strings.EqualFold(state, "healthy") {
+				inAllLbs = false
+			}
+		}
+		if inAllLbs {
+			haveELB++
+		}
+	}
+
+	satisfied, reason := satisfiedFunc(d, haveASG, haveELB)
+
+	log.Printf("[DEBUG] %q Capacity: %d ASG, %d ELB/ALB, satisfied: %t, reason: %q",
+		d.Id(), haveASG, haveELB, satisfied, reason)
+
+	return satisfied, reason
 }
 
 type capacitySatisfiedFunc func(*schema.ResourceData, int, int) (bool, string)

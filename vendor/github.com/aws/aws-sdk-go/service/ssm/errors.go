@@ -105,7 +105,7 @@ const (
 	// ErrCodeDocumentLimitExceeded for service response error code
 	// "DocumentLimitExceeded".
 	//
-	// You can have at most 200 active Systems Manager documents.
+	// You can have at most 500 active Systems Manager documents.
 	ErrCodeDocumentLimitExceeded = "DocumentLimitExceeded"
 
 	// ErrCodeDocumentPermissionLimit for service response error code
@@ -126,8 +126,8 @@ const (
 	// ErrCodeDoesNotExistException for service response error code
 	// "DoesNotExistException".
 	//
-	// Error returned when the ID specified for a resource, such as a Maintenance
-	// Window or Patch baseline, doesn't exist.
+	// Error returned when the ID specified for a resource, such as a maintenance
+	// window or Patch baseline, doesn't exist.
 	//
 	// For information about resource limits in Systems Manager, see AWS Systems
 	// Manager Limits (http://docs.aws.amazon.com/general/latest/gr/aws_service_limits.html#limits_ssm).
@@ -156,7 +156,7 @@ const (
 	// ErrCodeFeatureNotAvailableException for service response error code
 	// "FeatureNotAvailableException".
 	//
-	// You attempted to register a LAMBDA or STEP_FUNCTION task in a region where
+	// You attempted to register a LAMBDA or STEP_FUNCTIONS task in a region where
 	// the corresponding service is not available.
 	ErrCodeFeatureNotAvailableException = "FeatureNotAvailableException"
 
@@ -272,7 +272,7 @@ const (
 	// ErrCodeInvalidDeletionIdException for service response error code
 	// "InvalidDeletionIdException".
 	//
-	// The ID specified for the delete operation does not exist or is not valide.
+	// The ID specified for the delete operation does not exist or is not valid.
 	// Verify the ID and try again.
 	ErrCodeInvalidDeletionIdException = "InvalidDeletionIdException"
 
@@ -340,12 +340,9 @@ const (
 	//
 	// You do not have permission to access the instance.
 	//
-	// SSM Agent is not running. On managed instances and Linux instances, verify
-	// that the SSM Agent is running. On EC2 Windows instances, verify that the
-	// EC2Config service is running.
+	// SSM Agent is not running. Verify that SSM Agent is running.
 	//
-	// SSM Agent or EC2Config service is not registered to the SSM endpoint. Try
-	// reinstalling SSM Agent or EC2Config service.
+	// SSM Agent is not registered with the SSM endpoint. Try reinstalling SSM Agent.
 	//
 	// The instance is not in valid state. Valid states are: Running, Pending, Stopped,
 	// Stopping. Invalid states are: Shutting-down and Terminated.
@@ -513,7 +510,7 @@ const (
 	// "InvocationDoesNotExist".
 	//
 	// The command ID and instance ID you specified did not match any invocations.
-	// Verify the command ID adn the instance ID and try again.
+	// Verify the command ID and the instance ID and try again.
 	ErrCodeInvocationDoesNotExist = "InvocationDoesNotExist"
 
 	// ErrCodeItemContentMismatchException for service response error code
@@ -533,6 +530,32 @@ const (
 	//
 	// The size limit of a document is 64 KB.
 	ErrCodeMaxDocumentSizeExceeded = "MaxDocumentSizeExceeded"
+
+	// ErrCodeOpsItemAlreadyExistsException for service response error code
+	// "OpsItemAlreadyExistsException".
+	//
+	// The OpsItem already exists.
+	ErrCodeOpsItemAlreadyExistsException = "OpsItemAlreadyExistsException"
+
+	// ErrCodeOpsItemInvalidParameterException for service response error code
+	// "OpsItemInvalidParameterException".
+	//
+	// A specified parameter argument isn't valid. Verify the available arguments
+	// and try again.
+	ErrCodeOpsItemInvalidParameterException = "OpsItemInvalidParameterException"
+
+	// ErrCodeOpsItemLimitExceededException for service response error code
+	// "OpsItemLimitExceededException".
+	//
+	// The request caused OpsItems to exceed one or more limits. For information
+	// about OpsItem limits, see What are the resource limits for OpsCenter? (http://docs.aws.amazon.com/systems-manager/latest/userguide/OpsCenter-learn-more.html#OpsCenter-learn-more-limits).
+	ErrCodeOpsItemLimitExceededException = "OpsItemLimitExceededException"
+
+	// ErrCodeOpsItemNotFoundException for service response error code
+	// "OpsItemNotFoundException".
+	//
+	// The specified OpsItem ID doesn't exist. Verify the ID and try again.
+	ErrCodeOpsItemNotFoundException = "OpsItemNotFoundException"
 
 	// ErrCodeParameterAlreadyExists for service response error code
 	// "ParameterAlreadyExists".
@@ -620,7 +643,7 @@ const (
 	// "ResourceLimitExceededException".
 	//
 	// Error returned when the caller has exceeded the default resource limits.
-	// For example, too many Maintenance Windows or Patch baselines have been created.
+	// For example, too many maintenance windows or patch baselines have been created.
 	//
 	// For information about resource limits in Systems Manager, see AWS Systems
 	// Manager Limits (http://docs.aws.amazon.com/general/latest/gr/aws_service_limits.html#limits_ssm).
@@ -683,6 +706,12 @@ const (
 
 	// ErrCodeUnsupportedFeatureRequiredException for service response error code
 	// "UnsupportedFeatureRequiredException".
+	//
+	// Microsoft application patching is only available on EC2 instances and Advanced
+	// Instances. To patch Microsoft applications on on-premises servers and VMs,
+	// you must enable Advanced Instances. For more information, see Using the Advanced-Instances
+	// Tier (http://docs.aws.amazon.com/systems-manager/latest/userguide/systems-manager-managedinstances-advanced.html)
+	// in the AWS Systems Manager User Guide.
 	ErrCodeUnsupportedFeatureRequiredException = "UnsupportedFeatureRequiredException"
 
 	// ErrCodeUnsupportedInventoryItemContextException for service response error code

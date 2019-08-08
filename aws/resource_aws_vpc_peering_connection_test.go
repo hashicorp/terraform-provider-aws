@@ -6,6 +6,7 @@ import (
 	"reflect"
 	"regexp"
 	"testing"
+	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
@@ -13,6 +14,77 @@ import (
 	"github.com/hashicorp/terraform/helper/schema"
 	"github.com/hashicorp/terraform/terraform"
 )
+
+func init() {
+	resource.AddTestSweepers("aws_vpc_peering_connection", &resource.Sweeper{
+		Name: "aws_vpc_peering_connection",
+		F:    testSweepEc2VpcPeeringConnections,
+	})
+}
+
+func testSweepEc2VpcPeeringConnections(region string) error {
+	client, err := sharedClientForRegion(region)
+	if err != nil {
+		return fmt.Errorf("error getting client: %s", err)
+	}
+
+	conn := client.(*AWSClient).ec2conn
+	input := &ec2.DescribeVpcPeeringConnectionsInput{}
+
+	err = conn.DescribeVpcPeeringConnectionsPages(input, func(page *ec2.DescribeVpcPeeringConnectionsOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
+		}
+
+		for _, vpcPeeringConnection := range page.VpcPeeringConnections {
+			deletedStatuses := map[string]bool{
+				ec2.VpcPeeringConnectionStateReasonCodeDeleted:  true,
+				ec2.VpcPeeringConnectionStateReasonCodeExpired:  true,
+				ec2.VpcPeeringConnectionStateReasonCodeFailed:   true,
+				ec2.VpcPeeringConnectionStateReasonCodeRejected: true,
+			}
+
+			if _, ok := deletedStatuses[aws.StringValue(vpcPeeringConnection.Status.Code)]; ok {
+				continue
+			}
+
+			id := aws.StringValue(vpcPeeringConnection.VpcPeeringConnectionId)
+			input := &ec2.DeleteVpcPeeringConnectionInput{
+				VpcPeeringConnectionId: vpcPeeringConnection.VpcPeeringConnectionId,
+			}
+
+			log.Printf("[INFO] Deleting EC2 VPC Peering Connection: %s", id)
+
+			_, err := conn.DeleteVpcPeeringConnection(input)
+
+			if isAWSErr(err, "InvalidVpcPeeringConnectionID.NotFound", "") {
+				continue
+			}
+
+			if err != nil {
+				log.Printf("[ERROR] Error deleting EC2 VPC Peering Connection (%s): %s", id, err)
+				continue
+			}
+
+			if err := waitForEc2VpcPeeringConnectionDeletion(conn, id, 5*time.Minute); err != nil {
+				log.Printf("[ERROR] Error waiting for EC2 VPC Peering Connection (%s) to be deleted: %s", id, err)
+			}
+		}
+
+		return !lastPage
+	})
+
+	if testSweepSkipSweepError(err) {
+		log.Printf("[WARN] Skipping EC2 VPC Peering Connection sweep for %s: %s", region, err)
+		return nil
+	}
+
+	if err != nil {
+		return fmt.Errorf("Error describing EC2 VPC Peering Connections: %s", err)
+	}
+
+	return nil
+}
 
 func TestAccAWSVPCPeeringConnection_importBasic(t *testing.T) {
 	resourceName := "aws_vpc_peering_connection.foo"

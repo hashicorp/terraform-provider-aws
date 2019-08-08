@@ -1,6 +1,7 @@
 package aws
 
 import (
+	"fmt"
 	"log"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -17,7 +18,7 @@ func resourceAwsIotCertificate() *schema.Resource {
 		Schema: map[string]*schema.Schema{
 			"csr": {
 				Type:     schema.TypeString,
-				Required: true,
+				Optional: true,
 				ForceNew: true,
 			},
 			"active": {
@@ -28,6 +29,21 @@ func resourceAwsIotCertificate() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"certificate_pem": {
+				Type:      schema.TypeString,
+				Computed:  true,
+				Sensitive: true,
+			},
+			"public_key": {
+				Type:      schema.TypeString,
+				Computed:  true,
+				Sensitive: true,
+			},
+			"private_key": {
+				Type:      schema.TypeString,
+				Computed:  true,
+				Sensitive: true,
+			},
 		},
 	}
 }
@@ -35,19 +51,32 @@ func resourceAwsIotCertificate() *schema.Resource {
 func resourceAwsIotCertificateCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).iotconn
 
-	log.Printf("[DEBUG] Creating certificate from csr")
-	out, err := conn.CreateCertificateFromCsr(&iot.CreateCertificateFromCsrInput{
-		CertificateSigningRequest: aws.String(d.Get("csr").(string)),
-		SetAsActive:               aws.Bool(d.Get("active").(bool)),
-	})
+	if _, ok := d.GetOk("csr"); ok {
+		log.Printf("[DEBUG] Creating certificate from CSR")
+		out, err := conn.CreateCertificateFromCsr(&iot.CreateCertificateFromCsrInput{
+			CertificateSigningRequest: aws.String(d.Get("csr").(string)),
+			SetAsActive:               aws.Bool(d.Get("active").(bool)),
+		})
+		if err != nil {
+			return fmt.Errorf("error creating certificate from CSR: %v", err)
+		}
+		log.Printf("[DEBUG] Created certificate from CSR")
 
-	if err != nil {
-		log.Printf("[ERROR] %s", err)
-		return err
+		d.SetId(*out.CertificateId)
+	} else {
+		log.Printf("[DEBUG] Creating keys and certificate")
+		out, err := conn.CreateKeysAndCertificate(&iot.CreateKeysAndCertificateInput{
+			SetAsActive: aws.Bool(d.Get("active").(bool)),
+		})
+		if err != nil {
+			return fmt.Errorf("error creating keys and certificate: %v", err)
+		}
+		log.Printf("[DEBUG] Created keys and certificate")
+
+		d.SetId(*out.CertificateId)
+		d.Set("public_key", *out.KeyPair.PublicKey)
+		d.Set("private_key", *out.KeyPair.PrivateKey)
 	}
-	log.Printf("[DEBUG] Created certificate from csr")
-
-	d.SetId(*out.CertificateId)
 
 	return resourceAwsIotCertificateRead(d, meta)
 }
@@ -58,14 +87,13 @@ func resourceAwsIotCertificateRead(d *schema.ResourceData, meta interface{}) err
 	out, err := conn.DescribeCertificate(&iot.DescribeCertificateInput{
 		CertificateId: aws.String(d.Id()),
 	})
-
 	if err != nil {
-		log.Printf("[ERROR] %s", err)
-		return err
+		return fmt.Errorf("error reading certificate details: %v", err)
 	}
 
 	d.Set("active", aws.Bool(*out.CertificateDescription.Status == iot.CertificateStatusActive))
 	d.Set("arn", out.CertificateDescription.CertificateArn)
+	d.Set("certificate_pem", out.CertificateDescription.CertificatePem)
 
 	return nil
 }
@@ -83,10 +111,8 @@ func resourceAwsIotCertificateUpdate(d *schema.ResourceData, meta interface{}) e
 			CertificateId: aws.String(d.Id()),
 			NewStatus:     aws.String(status),
 		})
-
 		if err != nil {
-			log.Printf("[ERROR] %s", err)
-			return err
+			return fmt.Errorf("error updating certificate: %v", err)
 		}
 	}
 
@@ -100,19 +126,15 @@ func resourceAwsIotCertificateDelete(d *schema.ResourceData, meta interface{}) e
 		CertificateId: aws.String(d.Id()),
 		NewStatus:     aws.String("INACTIVE"),
 	})
-
 	if err != nil {
-		log.Printf("[ERROR], %s", err)
-		return err
+		return fmt.Errorf("error inactivating certificate: %v", err)
 	}
 
 	_, err = conn.DeleteCertificate(&iot.DeleteCertificateInput{
 		CertificateId: aws.String(d.Id()),
 	})
-
 	if err != nil {
-		log.Printf("[ERROR] %s", err)
-		return err
+		return fmt.Errorf("error deleting certificate: %v", err)
 	}
 
 	return nil

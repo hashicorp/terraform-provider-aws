@@ -332,11 +332,20 @@ func testAccCheckWithProviders(f func(*terraform.State, *schema.Provider) error,
 // Check service API call error for reasons to skip acceptance testing
 // These include missing API endpoints and unsupported API calls
 func testAccPreCheckSkipError(err error) bool {
+	// GovCloud has endpoints that respond with (no message provided after the error code):
+	// AccessDeniedException:
+	// Ignore these API endpoints that exist but are not officially enabled
+	if isAWSErr(err, "AccessDeniedException", "") {
+		return true
+	}
 	// Ignore missing API endpoints
 	if isAWSErr(err, "RequestError", "send request failed") {
 		return true
 	}
 	// Ignore unsupported API calls
+	if isAWSErr(err, "UnknownOperationException", "") {
+		return true
+	}
 	if isAWSErr(err, "UnsupportedOperation", "") {
 		return true
 	}
@@ -357,6 +366,10 @@ func testSweepSkipSweepError(err error) bool {
 	// Ignore more unsupported API calls
 	// InvalidParameterValue: Use of cache security groups is not permitted in this API version for your account.
 	if isAWSErr(err, "InvalidParameterValue", "not permitted in this API version for your account") {
+		return true
+	}
+	// InvalidParameterValue: Access Denied to API Version: APIGlobalDatabases
+	if isAWSErr(err, "InvalidParameterValue", "Access Denied to API Version") {
 		return true
 	}
 	// GovCloud has endpoints that respond with (no message provided):
@@ -394,6 +407,7 @@ func TestAccAWSProvider_Endpoints(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:          func() { testAccPreCheck(t) },
 		ProviderFactories: testAccProviderFactories(&providers),
+		CheckDestroy:      nil,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSProviderConfigEndpoints(endpoints.String()),
@@ -422,6 +436,7 @@ func TestAccAWSProvider_Endpoints_Deprecated(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:          func() { testAccPreCheck(t) },
 		ProviderFactories: testAccProviderFactories(&providers),
+		CheckDestroy:      nil,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSProviderConfigEndpoints(endpointsDeprecated.String()),
@@ -431,6 +446,88 @@ func TestAccAWSProvider_Endpoints_Deprecated(t *testing.T) {
 			},
 		},
 	})
+}
+
+func TestAccAWSProvider_Region_AwsChina(t *testing.T) {
+	var providers []*schema.Provider
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:          func() { testAccPreCheck(t) },
+		ProviderFactories: testAccProviderFactories(&providers),
+		CheckDestroy:      nil,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSProviderConfigRegion("cn-northwest-1"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSProviderDnsSuffix(&providers, "amazonaws.com.cn"),
+					testAccCheckAWSProviderPartition(&providers, "aws-cn"),
+				),
+				PlanOnly: true,
+			},
+		},
+	})
+}
+
+func TestAccAWSProvider_Region_AwsCommercial(t *testing.T) {
+	var providers []*schema.Provider
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:          func() { testAccPreCheck(t) },
+		ProviderFactories: testAccProviderFactories(&providers),
+		CheckDestroy:      nil,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSProviderConfigRegion("us-west-2"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSProviderDnsSuffix(&providers, "amazonaws.com"),
+					testAccCheckAWSProviderPartition(&providers, "aws"),
+				),
+				PlanOnly: true,
+			},
+		},
+	})
+}
+
+func TestAccAWSProvider_Region_AwsGovCloudUs(t *testing.T) {
+	var providers []*schema.Provider
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:          func() { testAccPreCheck(t) },
+		ProviderFactories: testAccProviderFactories(&providers),
+		CheckDestroy:      nil,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSProviderConfigRegion("us-gov-west-1"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSProviderDnsSuffix(&providers, "amazonaws.com"),
+					testAccCheckAWSProviderPartition(&providers, "aws-us-gov"),
+				),
+				PlanOnly: true,
+			},
+		},
+	})
+}
+
+func testAccCheckAWSProviderDnsSuffix(providers *[]*schema.Provider, expectedDnsSuffix string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		if providers == nil {
+			return fmt.Errorf("no providers initialized")
+		}
+
+		for _, provider := range *providers {
+			if provider == nil || provider.Meta() == nil || provider.Meta().(*AWSClient) == nil {
+				continue
+			}
+
+			providerDnsSuffix := provider.Meta().(*AWSClient).dnsSuffix
+
+			if providerDnsSuffix != expectedDnsSuffix {
+				return fmt.Errorf("expected DNS Suffix (%s), got: %s", expectedDnsSuffix, providerDnsSuffix)
+			}
+		}
+
+		return nil
+	}
 }
 
 func testAccCheckAWSProviderEndpoints(providers *[]*schema.Provider) resource.TestCheckFunc {
@@ -566,6 +663,28 @@ func testAccCheckAWSProviderEndpointsDeprecated(providers *[]*schema.Provider) r
 	}
 }
 
+func testAccCheckAWSProviderPartition(providers *[]*schema.Provider, expectedPartition string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		if providers == nil {
+			return fmt.Errorf("no providers initialized")
+		}
+
+		for _, provider := range *providers {
+			if provider == nil || provider.Meta() == nil || provider.Meta().(*AWSClient) == nil {
+				continue
+			}
+
+			providerPartition := provider.Meta().(*AWSClient).partition
+
+			if providerPartition != expectedPartition {
+				return fmt.Errorf("expected DNS Suffix (%s), got: %s", expectedPartition, providerPartition)
+			}
+		}
+
+		return nil
+	}
+}
+
 func testAccAWSProviderConfigEndpoints(endpoints string) string {
 	return fmt.Sprintf(`
 provider "aws" {
@@ -575,7 +694,7 @@ provider "aws" {
   skip_requesting_account_id  = true
 
   endpoints {
-%[1]s
+    %[1]s
   }
 }
 
@@ -584,4 +703,21 @@ data "aws_arn" "test" {
   arn = "arn:aws:s3:::test"
 }
 `, endpoints)
+}
+
+func testAccAWSProviderConfigRegion(region string) string {
+	return fmt.Sprintf(`
+provider "aws" {
+  region                      = %[1]q
+  skip_credentials_validation = true
+  skip_get_ec2_platforms      = true
+  skip_metadata_api_check     = true
+  skip_requesting_account_id  = true
+}
+
+# Required to initialize the provider
+data "aws_arn" "test" {
+  arn = "arn:aws:s3:::test"
+}
+`, region)
 }

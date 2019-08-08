@@ -57,6 +57,7 @@ The following arguments are supported:
 
 In addition to all arguments above, the following attributes are exported:
 
+* `id` - The activation ID.
 * `activation_code` - The code the system generates when it processes the activation.
 * `name` - The default name of the registered managed instance.
 * `description` - The description of the resource that was registered.

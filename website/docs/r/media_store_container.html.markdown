@@ -23,6 +23,7 @@ resource "aws_media_store_container" "example" {
 The following arguments are supported:
 
 * `name` - (Required) The name of the container. Must contain alphanumeric characters or underscores.
+* `tags` - (Optional) A mapping of tags to assign to the resource.
 
 ## Attributes Reference
 

@@ -121,7 +121,7 @@ func TestAccAwsDxGateway_importComplex(t *testing.T) {
 		CheckDestroy: testAccCheckAwsDxGatewayDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDxGatewayAssociationConfig_multiVgws(rName1, rName2, rBgpAsn),
+				Config: testAccDxGatewayAssociationConfig_multiVpnGatewaysSingleAccount(rName1, rName2, rBgpAsn),
 			},
 
 			{
@@ -189,11 +189,11 @@ func testAccCheckAwsDxGatewayExists(name string) resource.TestCheckFunc {
 
 func testAccDxGatewayConfig(rName string, rBgpAsn int) string {
 	return fmt.Sprintf(`
-    resource "aws_dx_gateway" "test" {
-      name = "terraform-testacc-dxgw-%s"
-      amazon_side_asn = "%d"
-    }
-    `, rName, rBgpAsn)
+resource "aws_dx_gateway" "test" {
+  name            = "terraform-testacc-dxgw-%s"
+  amazon_side_asn = "%d"
+}
+`, rName, rBgpAsn)
 }
 
 // Local copy of acctest.RandIntRange until https://github.com/hashicorp/terraform/pull/17438 is merged.

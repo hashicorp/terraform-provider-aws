@@ -239,20 +239,22 @@ func testAccAwsOpsworksInstanceConfigUpdateHostName(name string) string {
 	return fmt.Sprintf(`
 resource "aws_security_group" "tf-ops-acc-web" {
   name = "%s-web"
+
   ingress {
-    from_port = 80
-    to_port = 80
-    protocol = "tcp"
+    from_port   = 80
+    to_port     = 80
+    protocol    = "tcp"
     cidr_blocks = ["0.0.0.0/0"]
   }
 }
 
 resource "aws_security_group" "tf-ops-acc-php" {
   name = "%s-php"
+
   ingress {
-    from_port = 8080
-    to_port = 8080
-    protocol = "tcp"
+    from_port   = 8080
+    to_port     = 8080
+    protocol    = "tcp"
     cidr_blocks = ["0.0.0.0/0"]
   }
 }
@@ -275,12 +277,14 @@ resource "aws_opsworks_php_app_layer" "tf-acc" {
 
 resource "aws_opsworks_instance" "tf-acc" {
   stack_id = "${aws_opsworks_stack.tf-acc.id}"
+
   layer_ids = [
     "${aws_opsworks_static_web_layer.tf-acc.id}",
   ]
+
   instance_type = "t2.micro"
-  state = "stopped"
-  hostname = "tf-acc2"
+  state         = "stopped"
+  hostname      = "tf-acc2"
 }
 
 %s
@@ -292,20 +296,22 @@ func testAccAwsOpsworksInstanceConfigCreate(name string) string {
 	return fmt.Sprintf(`
 resource "aws_security_group" "tf-ops-acc-web" {
   name = "%s-web"
+
   ingress {
-    from_port = 80
-    to_port = 80
-    protocol = "tcp"
+    from_port   = 80
+    to_port     = 80
+    protocol    = "tcp"
     cidr_blocks = ["0.0.0.0/0"]
   }
 }
 
 resource "aws_security_group" "tf-ops-acc-php" {
   name = "%s-php"
+
   ingress {
-    from_port = 8080
-    to_port = 8080
-    protocol = "tcp"
+    from_port   = 8080
+    to_port     = 8080
+    protocol    = "tcp"
     cidr_blocks = ["0.0.0.0/0"]
   }
 }
@@ -328,12 +334,14 @@ resource "aws_opsworks_php_app_layer" "tf-acc" {
 
 resource "aws_opsworks_instance" "tf-acc" {
   stack_id = "${aws_opsworks_stack.tf-acc.id}"
+
   layer_ids = [
     "${aws_opsworks_static_web_layer.tf-acc.id}",
   ]
+
   instance_type = "t2.micro"
-  state = "stopped"
-  hostname = "tf-acc1"
+  state         = "stopped"
+  hostname      = "tf-acc1"
 }
 
 %s
@@ -345,20 +353,22 @@ func testAccAwsOpsworksInstanceConfigUpdate(name string) string {
 	return fmt.Sprintf(`
 resource "aws_security_group" "tf-ops-acc-web" {
   name = "%s-web"
+
   ingress {
-    from_port = 80
-    to_port = 80
-    protocol = "tcp"
+    from_port   = 80
+    to_port     = 80
+    protocol    = "tcp"
     cidr_blocks = ["0.0.0.0/0"]
   }
 }
 
 resource "aws_security_group" "tf-ops-acc-php" {
   name = "%s-php"
+
   ingress {
-    from_port = 8080
-    to_port = 8080
-    protocol = "tcp"
+    from_port   = 8080
+    to_port     = 8080
+    protocol    = "tcp"
     cidr_blocks = ["0.0.0.0/0"]
   }
 }
@@ -381,14 +391,16 @@ resource "aws_opsworks_php_app_layer" "tf-acc" {
 
 resource "aws_opsworks_instance" "tf-acc" {
   stack_id = "${aws_opsworks_stack.tf-acc.id}"
+
   layer_ids = [
     "${aws_opsworks_static_web_layer.tf-acc.id}",
     "${aws_opsworks_php_app_layer.tf-acc.id}",
   ]
+
   instance_type = "t2.small"
-  state = "stopped"
-  hostname = "tf-acc1"
-  os = "Amazon Linux 2015.09"
+  state         = "stopped"
+  hostname      = "tf-acc1"
+  os            = "Amazon Linux 2015.09"
 
   timeouts {
     update = "15s"

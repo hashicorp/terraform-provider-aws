@@ -16,6 +16,9 @@ func resourceAwsWafRegionalGeoMatchSet() *schema.Resource {
 		Read:   resourceAwsWafRegionalGeoMatchSetRead,
 		Update: resourceAwsWafRegionalGeoMatchSetUpdate,
 		Delete: resourceAwsWafRegionalGeoMatchSetDelete,
+		Importer: &schema.ResourceImporter{
+			State: schema.ImportStatePassthrough,
+		},
 
 		Schema: map[string]*schema.Schema{
 			"name": {
@@ -76,16 +79,14 @@ func resourceAwsWafRegionalGeoMatchSetRead(d *schema.ResourceData, meta interfac
 	}
 
 	resp, err := conn.GetGeoMatchSet(params)
-	if err != nil {
-		// TODO: Replace with constant once it's available
-		// See https://github.com/aws/aws-sdk-go/issues/1856
-		if isAWSErr(err, "WAFNonexistentItemException", "") {
-			log.Printf("[WARN] WAF WAF Regional Geo Match Set (%s) not found, removing from state", d.Id())
-			d.SetId("")
-			return nil
-		}
 
-		return err
+	if isAWSErr(err, wafregional.ErrCodeWAFNonexistentItemException, "") {
+		log.Printf("[WARN] WAF WAF Regional Geo Match Set (%s) not found, removing from state", d.Id())
+		d.SetId("")
+		return nil
+	}
+	if err != nil {
+		return fmt.Errorf("Error getting WAF Regional Geo Match Set (%s): %s", d.Id(), err)
 	}
 
 	d.Set("name", resp.GeoMatchSet.Name)
@@ -103,8 +104,13 @@ func resourceAwsWafRegionalGeoMatchSetUpdate(d *schema.ResourceData, meta interf
 		oldConstraints, newConstraints := o.(*schema.Set).List(), n.(*schema.Set).List()
 
 		err := updateGeoMatchSetResourceWR(d.Id(), oldConstraints, newConstraints, conn, region)
+		if isAWSErr(err, wafregional.ErrCodeWAFNonexistentItemException, "") {
+			log.Printf("[WARN] WAF WAF Regional Geo Match Set (%s) not found, removing from state", d.Id())
+			d.SetId("")
+			return nil
+		}
 		if err != nil {
-			return fmt.Errorf("Failed updating WAF Regional Geo Match Set: %s", err)
+			return fmt.Errorf("Failed updating WAF Regional Geo Match Set(%s): %s", d.Id(), err)
 		}
 	}
 
@@ -133,8 +139,11 @@ func resourceAwsWafRegionalGeoMatchSetDelete(d *schema.ResourceData, meta interf
 
 		return conn.DeleteGeoMatchSet(req)
 	})
+	if isAWSErr(err, wafregional.ErrCodeWAFNonexistentItemException, "") {
+		return nil
+	}
 	if err != nil {
-		return fmt.Errorf("Failed deleting WAF Regional Geo Match Set: %s", err)
+		return fmt.Errorf("Failed deleting WAF Regional Geo Match Set(%s): %s", d.Id(), err)
 	}
 
 	return nil

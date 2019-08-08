@@ -626,8 +626,8 @@ func (c *IoT) AttachSecurityProfileRequest(input *AttachSecurityProfileInput) (r
 
 // AttachSecurityProfile API operation for AWS IoT.
 //
-// Associates a Device Defender security profile with a thing group or with
-// this account. Each thing group or account can have up to five security profiles
+// Associates a Device Defender security profile with a thing group or this
+// account. Each thing group or account can have up to five security profiles
 // associated with it.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
@@ -767,6 +767,93 @@ func (c *IoT) AttachThingPrincipal(input *AttachThingPrincipalInput) (*AttachThi
 // for more information on using Contexts.
 func (c *IoT) AttachThingPrincipalWithContext(ctx aws.Context, input *AttachThingPrincipalInput, opts ...request.Option) (*AttachThingPrincipalOutput, error) {
 	req, out := c.AttachThingPrincipalRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
+const opCancelAuditMitigationActionsTask = "CancelAuditMitigationActionsTask"
+
+// CancelAuditMitigationActionsTaskRequest generates a "aws/request.Request" representing the
+// client's request for the CancelAuditMitigationActionsTask operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See CancelAuditMitigationActionsTask for more information on using the CancelAuditMitigationActionsTask
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the CancelAuditMitigationActionsTaskRequest method.
+//    req, resp := client.CancelAuditMitigationActionsTaskRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+func (c *IoT) CancelAuditMitigationActionsTaskRequest(input *CancelAuditMitigationActionsTaskInput) (req *request.Request, output *CancelAuditMitigationActionsTaskOutput) {
+	op := &request.Operation{
+		Name:       opCancelAuditMitigationActionsTask,
+		HTTPMethod: "PUT",
+		HTTPPath:   "/audit/mitigationactions/tasks/{taskId}/cancel",
+	}
+
+	if input == nil {
+		input = &CancelAuditMitigationActionsTaskInput{}
+	}
+
+	output = &CancelAuditMitigationActionsTaskOutput{}
+	req = c.newRequest(op, input, output)
+	req.Handlers.Unmarshal.Swap(restjson.UnmarshalHandler.Name, protocol.UnmarshalDiscardBodyHandler)
+	return
+}
+
+// CancelAuditMitigationActionsTask API operation for AWS IoT.
+//
+// Cancels a mitigation action task that is in progress. If the task is not
+// in progress, an InvalidRequestException occurs.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for AWS IoT's
+// API operation CancelAuditMitigationActionsTask for usage and error information.
+//
+// Returned Error Codes:
+//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   The specified resource does not exist.
+//
+//   * ErrCodeInvalidRequestException "InvalidRequestException"
+//   The request is not valid.
+//
+//   * ErrCodeThrottlingException "ThrottlingException"
+//   The rate exceeds the limit.
+//
+//   * ErrCodeInternalFailureException "InternalFailureException"
+//   An unexpected error has occurred.
+//
+func (c *IoT) CancelAuditMitigationActionsTask(input *CancelAuditMitigationActionsTaskInput) (*CancelAuditMitigationActionsTaskOutput, error) {
+	req, out := c.CancelAuditMitigationActionsTaskRequest(input)
+	return out, req.Send()
+}
+
+// CancelAuditMitigationActionsTaskWithContext is the same as CancelAuditMitigationActionsTask with the addition of
+// the ability to pass a context and additional request options.
+//
+// See CancelAuditMitigationActionsTask for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *IoT) CancelAuditMitigationActionsTaskWithContext(ctx aws.Context, input *CancelAuditMitigationActionsTaskInput, opts ...request.Option) (*CancelAuditMitigationActionsTaskOutput, error) {
+	req, out := c.CancelAuditMitigationActionsTaskRequest(input)
 	req.SetContext(ctx)
 	req.ApplyOptions(opts...)
 	return out, req.Send()
@@ -1822,6 +1909,95 @@ func (c *IoT) CreateKeysAndCertificateWithContext(ctx aws.Context, input *Create
 	return out, req.Send()
 }
 
+const opCreateMitigationAction = "CreateMitigationAction"
+
+// CreateMitigationActionRequest generates a "aws/request.Request" representing the
+// client's request for the CreateMitigationAction operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See CreateMitigationAction for more information on using the CreateMitigationAction
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the CreateMitigationActionRequest method.
+//    req, resp := client.CreateMitigationActionRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+func (c *IoT) CreateMitigationActionRequest(input *CreateMitigationActionInput) (req *request.Request, output *CreateMitigationActionOutput) {
+	op := &request.Operation{
+		Name:       opCreateMitigationAction,
+		HTTPMethod: "POST",
+		HTTPPath:   "/mitigationactions/actions/{actionName}",
+	}
+
+	if input == nil {
+		input = &CreateMitigationActionInput{}
+	}
+
+	output = &CreateMitigationActionOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// CreateMitigationAction API operation for AWS IoT.
+//
+// Defines an action that can be applied to audit findings by using StartAuditMitigationActionsTask.
+// Each mitigation action can apply only one type of change.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for AWS IoT's
+// API operation CreateMitigationAction for usage and error information.
+//
+// Returned Error Codes:
+//   * ErrCodeInvalidRequestException "InvalidRequestException"
+//   The request is not valid.
+//
+//   * ErrCodeResourceAlreadyExistsException "ResourceAlreadyExistsException"
+//   The resource already exists.
+//
+//   * ErrCodeLimitExceededException "LimitExceededException"
+//   A limit has been exceeded.
+//
+//   * ErrCodeThrottlingException "ThrottlingException"
+//   The rate exceeds the limit.
+//
+//   * ErrCodeInternalFailureException "InternalFailureException"
+//   An unexpected error has occurred.
+//
+func (c *IoT) CreateMitigationAction(input *CreateMitigationActionInput) (*CreateMitigationActionOutput, error) {
+	req, out := c.CreateMitigationActionRequest(input)
+	return out, req.Send()
+}
+
+// CreateMitigationActionWithContext is the same as CreateMitigationAction with the addition of
+// the ability to pass a context and additional request options.
+//
+// See CreateMitigationAction for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *IoT) CreateMitigationActionWithContext(ctx aws.Context, input *CreateMitigationActionInput, opts ...request.Option) (*CreateMitigationActionOutput, error) {
+	req, out := c.CreateMitigationActionRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
 const opCreateOTAUpdate = "CreateOTAUpdate"
 
 // CreateOTAUpdateRequest generates a "aws/request.Request" representing the
@@ -2269,6 +2445,9 @@ func (c *IoT) CreateScheduledAuditRequest(input *CreateScheduledAuditInput) (req
 // Returned Error Codes:
 //   * ErrCodeInvalidRequestException "InvalidRequestException"
 //   The request is not valid.
+//
+//   * ErrCodeResourceAlreadyExistsException "ResourceAlreadyExistsException"
+//   The resource already exists.
 //
 //   * ErrCodeThrottlingException "ThrottlingException"
 //   The rate exceeds the limit.
@@ -3272,10 +3451,10 @@ func (c *IoT) DeleteCertificateRequest(input *DeleteCertificateInput) (req *requ
 //
 // Deletes the specified certificate.
 //
-// A certificate cannot be deleted if it has a policy attached to it or if its
-// status is set to ACTIVE. To delete a certificate, first use the DetachPrincipalPolicy
-// API to detach all policies. Next, use the UpdateCertificate API to set the
-// certificate to the INACTIVE status.
+// A certificate cannot be deleted if it has a policy or IoT thing attached
+// to it or if its status is set to ACTIVE. To delete a certificate, first use
+// the DetachPrincipalPolicy API to detach all policies. Next, use the UpdateCertificate
+// API to set the certificate to the INACTIVE status.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -3606,6 +3785,89 @@ func (c *IoT) DeleteJobExecution(input *DeleteJobExecutionInput) (*DeleteJobExec
 // for more information on using Contexts.
 func (c *IoT) DeleteJobExecutionWithContext(ctx aws.Context, input *DeleteJobExecutionInput, opts ...request.Option) (*DeleteJobExecutionOutput, error) {
 	req, out := c.DeleteJobExecutionRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
+const opDeleteMitigationAction = "DeleteMitigationAction"
+
+// DeleteMitigationActionRequest generates a "aws/request.Request" representing the
+// client's request for the DeleteMitigationAction operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See DeleteMitigationAction for more information on using the DeleteMitigationAction
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the DeleteMitigationActionRequest method.
+//    req, resp := client.DeleteMitigationActionRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+func (c *IoT) DeleteMitigationActionRequest(input *DeleteMitigationActionInput) (req *request.Request, output *DeleteMitigationActionOutput) {
+	op := &request.Operation{
+		Name:       opDeleteMitigationAction,
+		HTTPMethod: "DELETE",
+		HTTPPath:   "/mitigationactions/actions/{actionName}",
+	}
+
+	if input == nil {
+		input = &DeleteMitigationActionInput{}
+	}
+
+	output = &DeleteMitigationActionOutput{}
+	req = c.newRequest(op, input, output)
+	req.Handlers.Unmarshal.Swap(restjson.UnmarshalHandler.Name, protocol.UnmarshalDiscardBodyHandler)
+	return
+}
+
+// DeleteMitigationAction API operation for AWS IoT.
+//
+// Deletes a defined mitigation action from your AWS account.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for AWS IoT's
+// API operation DeleteMitigationAction for usage and error information.
+//
+// Returned Error Codes:
+//   * ErrCodeInvalidRequestException "InvalidRequestException"
+//   The request is not valid.
+//
+//   * ErrCodeThrottlingException "ThrottlingException"
+//   The rate exceeds the limit.
+//
+//   * ErrCodeInternalFailureException "InternalFailureException"
+//   An unexpected error has occurred.
+//
+func (c *IoT) DeleteMitigationAction(input *DeleteMitigationActionInput) (*DeleteMitigationActionOutput, error) {
+	req, out := c.DeleteMitigationActionRequest(input)
+	return out, req.Send()
+}
+
+// DeleteMitigationActionWithContext is the same as DeleteMitigationAction with the addition of
+// the ability to pass a context and additional request options.
+//
+// See DeleteMitigationAction for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *IoT) DeleteMitigationActionWithContext(ctx aws.Context, input *DeleteMitigationActionInput, opts ...request.Option) (*DeleteMitigationActionOutput, error) {
+	req, out := c.DeleteMitigationActionRequest(input)
 	req.SetContext(ctx)
 	req.ApplyOptions(opts...)
 	return out, req.Send()
@@ -4989,6 +5251,181 @@ func (c *IoT) DescribeAccountAuditConfigurationWithContext(ctx aws.Context, inpu
 	return out, req.Send()
 }
 
+const opDescribeAuditFinding = "DescribeAuditFinding"
+
+// DescribeAuditFindingRequest generates a "aws/request.Request" representing the
+// client's request for the DescribeAuditFinding operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See DescribeAuditFinding for more information on using the DescribeAuditFinding
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the DescribeAuditFindingRequest method.
+//    req, resp := client.DescribeAuditFindingRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+func (c *IoT) DescribeAuditFindingRequest(input *DescribeAuditFindingInput) (req *request.Request, output *DescribeAuditFindingOutput) {
+	op := &request.Operation{
+		Name:       opDescribeAuditFinding,
+		HTTPMethod: "GET",
+		HTTPPath:   "/audit/findings/{findingId}",
+	}
+
+	if input == nil {
+		input = &DescribeAuditFindingInput{}
+	}
+
+	output = &DescribeAuditFindingOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// DescribeAuditFinding API operation for AWS IoT.
+//
+// Gets information about a single audit finding. Properties include the reason
+// for noncompliance, the severity of the issue, and when the audit that returned
+// the finding was started.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for AWS IoT's
+// API operation DescribeAuditFinding for usage and error information.
+//
+// Returned Error Codes:
+//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   The specified resource does not exist.
+//
+//   * ErrCodeInvalidRequestException "InvalidRequestException"
+//   The request is not valid.
+//
+//   * ErrCodeThrottlingException "ThrottlingException"
+//   The rate exceeds the limit.
+//
+//   * ErrCodeInternalFailureException "InternalFailureException"
+//   An unexpected error has occurred.
+//
+func (c *IoT) DescribeAuditFinding(input *DescribeAuditFindingInput) (*DescribeAuditFindingOutput, error) {
+	req, out := c.DescribeAuditFindingRequest(input)
+	return out, req.Send()
+}
+
+// DescribeAuditFindingWithContext is the same as DescribeAuditFinding with the addition of
+// the ability to pass a context and additional request options.
+//
+// See DescribeAuditFinding for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *IoT) DescribeAuditFindingWithContext(ctx aws.Context, input *DescribeAuditFindingInput, opts ...request.Option) (*DescribeAuditFindingOutput, error) {
+	req, out := c.DescribeAuditFindingRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
+const opDescribeAuditMitigationActionsTask = "DescribeAuditMitigationActionsTask"
+
+// DescribeAuditMitigationActionsTaskRequest generates a "aws/request.Request" representing the
+// client's request for the DescribeAuditMitigationActionsTask operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See DescribeAuditMitigationActionsTask for more information on using the DescribeAuditMitigationActionsTask
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the DescribeAuditMitigationActionsTaskRequest method.
+//    req, resp := client.DescribeAuditMitigationActionsTaskRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+func (c *IoT) DescribeAuditMitigationActionsTaskRequest(input *DescribeAuditMitigationActionsTaskInput) (req *request.Request, output *DescribeAuditMitigationActionsTaskOutput) {
+	op := &request.Operation{
+		Name:       opDescribeAuditMitigationActionsTask,
+		HTTPMethod: "GET",
+		HTTPPath:   "/audit/mitigationactions/tasks/{taskId}",
+	}
+
+	if input == nil {
+		input = &DescribeAuditMitigationActionsTaskInput{}
+	}
+
+	output = &DescribeAuditMitigationActionsTaskOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// DescribeAuditMitigationActionsTask API operation for AWS IoT.
+//
+// Gets information about an audit mitigation task that is used to apply mitigation
+// actions to a set of audit findings. Properties include the actions being
+// applied, the audit checks to which they're being applied, the task status,
+// and aggregated task statistics.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for AWS IoT's
+// API operation DescribeAuditMitigationActionsTask for usage and error information.
+//
+// Returned Error Codes:
+//   * ErrCodeInvalidRequestException "InvalidRequestException"
+//   The request is not valid.
+//
+//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   The specified resource does not exist.
+//
+//   * ErrCodeThrottlingException "ThrottlingException"
+//   The rate exceeds the limit.
+//
+//   * ErrCodeInternalFailureException "InternalFailureException"
+//   An unexpected error has occurred.
+//
+func (c *IoT) DescribeAuditMitigationActionsTask(input *DescribeAuditMitigationActionsTaskInput) (*DescribeAuditMitigationActionsTaskOutput, error) {
+	req, out := c.DescribeAuditMitigationActionsTaskRequest(input)
+	return out, req.Send()
+}
+
+// DescribeAuditMitigationActionsTaskWithContext is the same as DescribeAuditMitigationActionsTask with the addition of
+// the ability to pass a context and additional request options.
+//
+// See DescribeAuditMitigationActionsTask for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *IoT) DescribeAuditMitigationActionsTaskWithContext(ctx aws.Context, input *DescribeAuditMitigationActionsTaskInput, opts ...request.Option) (*DescribeAuditMitigationActionsTaskOutput, error) {
+	req, out := c.DescribeAuditMitigationActionsTaskRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
 const opDescribeAuditTask = "DescribeAuditTask"
 
 // DescribeAuditTaskRequest generates a "aws/request.Request" representing the
@@ -5943,6 +6380,91 @@ func (c *IoT) DescribeJobExecution(input *DescribeJobExecutionInput) (*DescribeJ
 // for more information on using Contexts.
 func (c *IoT) DescribeJobExecutionWithContext(ctx aws.Context, input *DescribeJobExecutionInput, opts ...request.Option) (*DescribeJobExecutionOutput, error) {
 	req, out := c.DescribeJobExecutionRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
+const opDescribeMitigationAction = "DescribeMitigationAction"
+
+// DescribeMitigationActionRequest generates a "aws/request.Request" representing the
+// client's request for the DescribeMitigationAction operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See DescribeMitigationAction for more information on using the DescribeMitigationAction
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the DescribeMitigationActionRequest method.
+//    req, resp := client.DescribeMitigationActionRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+func (c *IoT) DescribeMitigationActionRequest(input *DescribeMitigationActionInput) (req *request.Request, output *DescribeMitigationActionOutput) {
+	op := &request.Operation{
+		Name:       opDescribeMitigationAction,
+		HTTPMethod: "GET",
+		HTTPPath:   "/mitigationactions/actions/{actionName}",
+	}
+
+	if input == nil {
+		input = &DescribeMitigationActionInput{}
+	}
+
+	output = &DescribeMitigationActionOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// DescribeMitigationAction API operation for AWS IoT.
+//
+// Gets information about a mitigation action.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for AWS IoT's
+// API operation DescribeMitigationAction for usage and error information.
+//
+// Returned Error Codes:
+//   * ErrCodeInvalidRequestException "InvalidRequestException"
+//   The request is not valid.
+//
+//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   The specified resource does not exist.
+//
+//   * ErrCodeThrottlingException "ThrottlingException"
+//   The rate exceeds the limit.
+//
+//   * ErrCodeInternalFailureException "InternalFailureException"
+//   An unexpected error has occurred.
+//
+func (c *IoT) DescribeMitigationAction(input *DescribeMitigationActionInput) (*DescribeMitigationActionOutput, error) {
+	req, out := c.DescribeMitigationActionRequest(input)
+	return out, req.Send()
+}
+
+// DescribeMitigationActionWithContext is the same as DescribeMitigationAction with the addition of
+// the ability to pass a context and additional request options.
+//
+// See DescribeMitigationAction for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *IoT) DescribeMitigationActionWithContext(ctx aws.Context, input *DescribeMitigationActionInput, opts ...request.Option) (*DescribeMitigationActionOutput, error) {
+	req, out := c.DescribeMitigationActionRequest(input)
 	req.SetContext(ctx)
 	req.ApplyOptions(opts...)
 	return out, req.Send()
@@ -8458,6 +8980,170 @@ func (c *IoT) ListAuditFindingsWithContext(ctx aws.Context, input *ListAuditFind
 	return out, req.Send()
 }
 
+const opListAuditMitigationActionsExecutions = "ListAuditMitigationActionsExecutions"
+
+// ListAuditMitigationActionsExecutionsRequest generates a "aws/request.Request" representing the
+// client's request for the ListAuditMitigationActionsExecutions operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See ListAuditMitigationActionsExecutions for more information on using the ListAuditMitigationActionsExecutions
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the ListAuditMitigationActionsExecutionsRequest method.
+//    req, resp := client.ListAuditMitigationActionsExecutionsRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+func (c *IoT) ListAuditMitigationActionsExecutionsRequest(input *ListAuditMitigationActionsExecutionsInput) (req *request.Request, output *ListAuditMitigationActionsExecutionsOutput) {
+	op := &request.Operation{
+		Name:       opListAuditMitigationActionsExecutions,
+		HTTPMethod: "GET",
+		HTTPPath:   "/audit/mitigationactions/executions",
+	}
+
+	if input == nil {
+		input = &ListAuditMitigationActionsExecutionsInput{}
+	}
+
+	output = &ListAuditMitigationActionsExecutionsOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// ListAuditMitigationActionsExecutions API operation for AWS IoT.
+//
+// Gets the status of audit mitigation action tasks that were executed.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for AWS IoT's
+// API operation ListAuditMitigationActionsExecutions for usage and error information.
+//
+// Returned Error Codes:
+//   * ErrCodeInvalidRequestException "InvalidRequestException"
+//   The request is not valid.
+//
+//   * ErrCodeThrottlingException "ThrottlingException"
+//   The rate exceeds the limit.
+//
+//   * ErrCodeInternalFailureException "InternalFailureException"
+//   An unexpected error has occurred.
+//
+func (c *IoT) ListAuditMitigationActionsExecutions(input *ListAuditMitigationActionsExecutionsInput) (*ListAuditMitigationActionsExecutionsOutput, error) {
+	req, out := c.ListAuditMitigationActionsExecutionsRequest(input)
+	return out, req.Send()
+}
+
+// ListAuditMitigationActionsExecutionsWithContext is the same as ListAuditMitigationActionsExecutions with the addition of
+// the ability to pass a context and additional request options.
+//
+// See ListAuditMitigationActionsExecutions for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *IoT) ListAuditMitigationActionsExecutionsWithContext(ctx aws.Context, input *ListAuditMitigationActionsExecutionsInput, opts ...request.Option) (*ListAuditMitigationActionsExecutionsOutput, error) {
+	req, out := c.ListAuditMitigationActionsExecutionsRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
+const opListAuditMitigationActionsTasks = "ListAuditMitigationActionsTasks"
+
+// ListAuditMitigationActionsTasksRequest generates a "aws/request.Request" representing the
+// client's request for the ListAuditMitigationActionsTasks operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See ListAuditMitigationActionsTasks for more information on using the ListAuditMitigationActionsTasks
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the ListAuditMitigationActionsTasksRequest method.
+//    req, resp := client.ListAuditMitigationActionsTasksRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+func (c *IoT) ListAuditMitigationActionsTasksRequest(input *ListAuditMitigationActionsTasksInput) (req *request.Request, output *ListAuditMitigationActionsTasksOutput) {
+	op := &request.Operation{
+		Name:       opListAuditMitigationActionsTasks,
+		HTTPMethod: "GET",
+		HTTPPath:   "/audit/mitigationactions/tasks",
+	}
+
+	if input == nil {
+		input = &ListAuditMitigationActionsTasksInput{}
+	}
+
+	output = &ListAuditMitigationActionsTasksOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// ListAuditMitigationActionsTasks API operation for AWS IoT.
+//
+// Gets a list of audit mitigation action tasks that match the specified filters.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for AWS IoT's
+// API operation ListAuditMitigationActionsTasks for usage and error information.
+//
+// Returned Error Codes:
+//   * ErrCodeInvalidRequestException "InvalidRequestException"
+//   The request is not valid.
+//
+//   * ErrCodeThrottlingException "ThrottlingException"
+//   The rate exceeds the limit.
+//
+//   * ErrCodeInternalFailureException "InternalFailureException"
+//   An unexpected error has occurred.
+//
+func (c *IoT) ListAuditMitigationActionsTasks(input *ListAuditMitigationActionsTasksInput) (*ListAuditMitigationActionsTasksOutput, error) {
+	req, out := c.ListAuditMitigationActionsTasksRequest(input)
+	return out, req.Send()
+}
+
+// ListAuditMitigationActionsTasksWithContext is the same as ListAuditMitigationActionsTasks with the addition of
+// the ability to pass a context and additional request options.
+//
+// See ListAuditMitigationActionsTasks for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *IoT) ListAuditMitigationActionsTasksWithContext(ctx aws.Context, input *ListAuditMitigationActionsTasksInput, opts ...request.Option) (*ListAuditMitigationActionsTasksOutput, error) {
+	req, out := c.ListAuditMitigationActionsTasksRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
 const opListAuditTasks = "ListAuditTasks"
 
 // ListAuditTasksRequest generates a "aws/request.Request" representing the
@@ -9322,6 +10008,88 @@ func (c *IoT) ListJobs(input *ListJobsInput) (*ListJobsOutput, error) {
 // for more information on using Contexts.
 func (c *IoT) ListJobsWithContext(ctx aws.Context, input *ListJobsInput, opts ...request.Option) (*ListJobsOutput, error) {
 	req, out := c.ListJobsRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
+const opListMitigationActions = "ListMitigationActions"
+
+// ListMitigationActionsRequest generates a "aws/request.Request" representing the
+// client's request for the ListMitigationActions operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See ListMitigationActions for more information on using the ListMitigationActions
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the ListMitigationActionsRequest method.
+//    req, resp := client.ListMitigationActionsRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+func (c *IoT) ListMitigationActionsRequest(input *ListMitigationActionsInput) (req *request.Request, output *ListMitigationActionsOutput) {
+	op := &request.Operation{
+		Name:       opListMitigationActions,
+		HTTPMethod: "GET",
+		HTTPPath:   "/mitigationactions/actions",
+	}
+
+	if input == nil {
+		input = &ListMitigationActionsInput{}
+	}
+
+	output = &ListMitigationActionsOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// ListMitigationActions API operation for AWS IoT.
+//
+// Gets a list of all mitigation actions that match the specified filter criteria.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for AWS IoT's
+// API operation ListMitigationActions for usage and error information.
+//
+// Returned Error Codes:
+//   * ErrCodeInvalidRequestException "InvalidRequestException"
+//   The request is not valid.
+//
+//   * ErrCodeThrottlingException "ThrottlingException"
+//   The rate exceeds the limit.
+//
+//   * ErrCodeInternalFailureException "InternalFailureException"
+//   An unexpected error has occurred.
+//
+func (c *IoT) ListMitigationActions(input *ListMitigationActionsInput) (*ListMitigationActionsOutput, error) {
+	req, out := c.ListMitigationActionsRequest(input)
+	return out, req.Send()
+}
+
+// ListMitigationActionsWithContext is the same as ListMitigationActions with the addition of
+// the ability to pass a context and additional request options.
+//
+// See ListMitigationActions for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *IoT) ListMitigationActionsWithContext(ctx aws.Context, input *ListMitigationActionsInput, opts ...request.Option) (*ListMitigationActionsOutput, error) {
+	req, out := c.ListMitigationActionsRequest(input)
 	req.SetContext(ctx)
 	req.ApplyOptions(opts...)
 	return out, req.Send()
@@ -11656,7 +12424,7 @@ func (c *IoT) ListViolationEventsRequest(input *ListViolationEventsInput) (req *
 //
 // Lists the Device Defender security profile violations discovered during the
 // given time period. You can use filters to limit the results to those alerts
-// issued for a particular security profile, behavior or thing (device).
+// issued for a particular security profile, behavior, or thing (device).
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -12908,6 +13676,95 @@ func (c *IoT) SetV2LoggingOptions(input *SetV2LoggingOptionsInput) (*SetV2Loggin
 // for more information on using Contexts.
 func (c *IoT) SetV2LoggingOptionsWithContext(ctx aws.Context, input *SetV2LoggingOptionsInput, opts ...request.Option) (*SetV2LoggingOptionsOutput, error) {
 	req, out := c.SetV2LoggingOptionsRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
+const opStartAuditMitigationActionsTask = "StartAuditMitigationActionsTask"
+
+// StartAuditMitigationActionsTaskRequest generates a "aws/request.Request" representing the
+// client's request for the StartAuditMitigationActionsTask operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See StartAuditMitigationActionsTask for more information on using the StartAuditMitigationActionsTask
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the StartAuditMitigationActionsTaskRequest method.
+//    req, resp := client.StartAuditMitigationActionsTaskRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+func (c *IoT) StartAuditMitigationActionsTaskRequest(input *StartAuditMitigationActionsTaskInput) (req *request.Request, output *StartAuditMitigationActionsTaskOutput) {
+	op := &request.Operation{
+		Name:       opStartAuditMitigationActionsTask,
+		HTTPMethod: "POST",
+		HTTPPath:   "/audit/mitigationactions/tasks/{taskId}",
+	}
+
+	if input == nil {
+		input = &StartAuditMitigationActionsTaskInput{}
+	}
+
+	output = &StartAuditMitigationActionsTaskOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// StartAuditMitigationActionsTask API operation for AWS IoT.
+//
+// Starts a task that applies a set of mitigation actions to the specified target.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for AWS IoT's
+// API operation StartAuditMitigationActionsTask for usage and error information.
+//
+// Returned Error Codes:
+//   * ErrCodeInvalidRequestException "InvalidRequestException"
+//   The request is not valid.
+//
+//   * ErrCodeTaskAlreadyExistsException "TaskAlreadyExistsException"
+//   This exception occurs if you attempt to start a task with the same task-id
+//   as an existing task but with a different clientRequestToken.
+//
+//   * ErrCodeLimitExceededException "LimitExceededException"
+//   A limit has been exceeded.
+//
+//   * ErrCodeThrottlingException "ThrottlingException"
+//   The rate exceeds the limit.
+//
+//   * ErrCodeInternalFailureException "InternalFailureException"
+//   An unexpected error has occurred.
+//
+func (c *IoT) StartAuditMitigationActionsTask(input *StartAuditMitigationActionsTaskInput) (*StartAuditMitigationActionsTaskOutput, error) {
+	req, out := c.StartAuditMitigationActionsTaskRequest(input)
+	return out, req.Send()
+}
+
+// StartAuditMitigationActionsTaskWithContext is the same as StartAuditMitigationActionsTask with the addition of
+// the ability to pass a context and additional request options.
+//
+// See StartAuditMitigationActionsTask for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *IoT) StartAuditMitigationActionsTaskWithContext(ctx aws.Context, input *StartAuditMitigationActionsTaskInput, opts ...request.Option) (*StartAuditMitigationActionsTaskOutput, error) {
+	req, out := c.StartAuditMitigationActionsTaskRequest(input)
 	req.SetContext(ctx)
 	req.ApplyOptions(opts...)
 	return out, req.Send()
@@ -14460,6 +15317,91 @@ func (c *IoT) UpdateJobWithContext(ctx aws.Context, input *UpdateJobInput, opts 
 	return out, req.Send()
 }
 
+const opUpdateMitigationAction = "UpdateMitigationAction"
+
+// UpdateMitigationActionRequest generates a "aws/request.Request" representing the
+// client's request for the UpdateMitigationAction operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See UpdateMitigationAction for more information on using the UpdateMitigationAction
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the UpdateMitigationActionRequest method.
+//    req, resp := client.UpdateMitigationActionRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+func (c *IoT) UpdateMitigationActionRequest(input *UpdateMitigationActionInput) (req *request.Request, output *UpdateMitigationActionOutput) {
+	op := &request.Operation{
+		Name:       opUpdateMitigationAction,
+		HTTPMethod: "PATCH",
+		HTTPPath:   "/mitigationactions/actions/{actionName}",
+	}
+
+	if input == nil {
+		input = &UpdateMitigationActionInput{}
+	}
+
+	output = &UpdateMitigationActionOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// UpdateMitigationAction API operation for AWS IoT.
+//
+// Updates the definition for the specified mitigation action.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for AWS IoT's
+// API operation UpdateMitigationAction for usage and error information.
+//
+// Returned Error Codes:
+//   * ErrCodeInvalidRequestException "InvalidRequestException"
+//   The request is not valid.
+//
+//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   The specified resource does not exist.
+//
+//   * ErrCodeThrottlingException "ThrottlingException"
+//   The rate exceeds the limit.
+//
+//   * ErrCodeInternalFailureException "InternalFailureException"
+//   An unexpected error has occurred.
+//
+func (c *IoT) UpdateMitigationAction(input *UpdateMitigationActionInput) (*UpdateMitigationActionOutput, error) {
+	req, out := c.UpdateMitigationActionRequest(input)
+	return out, req.Send()
+}
+
+// UpdateMitigationActionWithContext is the same as UpdateMitigationAction with the addition of
+// the ability to pass a context and additional request options.
+//
+// See UpdateMitigationAction for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *IoT) UpdateMitigationActionWithContext(ctx aws.Context, input *UpdateMitigationActionInput, opts ...request.Option) (*UpdateMitigationActionOutput, error) {
+	req, out := c.UpdateMitigationActionRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
 const opUpdateRoleAlias = "UpdateRoleAlias"
 
 // UpdateRoleAliasRequest generates a "aws/request.Request" representing the
@@ -14593,7 +15535,7 @@ func (c *IoT) UpdateScheduledAuditRequest(input *UpdateScheduledAuditInput) (req
 
 // UpdateScheduledAudit API operation for AWS IoT.
 //
-// Updates a scheduled audit, including what checks are performed and how often
+// Updates a scheduled audit, including which checks are performed and how often
 // the audit takes place.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
@@ -15872,6 +16814,61 @@ func (s AddThingToThingGroupOutput) GoString() string {
 	return s.String()
 }
 
+// Parameters used when defining a mitigation action that move a set of things
+// to a thing group.
+type AddThingsToThingGroupParams struct {
+	_ struct{} `type:"structure"`
+
+	// Specifies if this mitigation action can move the things that triggered the
+	// mitigation action even if they are part of one or more dynamic things groups.
+	OverrideDynamicGroups *bool `locationName:"overrideDynamicGroups" type:"boolean"`
+
+	// The list of groups to which you want to add the things that triggered the
+	// mitigation action. You can add a thing to a maximum of 10 groups, but you
+	// cannot add a thing to more than one group in the same hierarchy.
+	//
+	// ThingGroupNames is a required field
+	ThingGroupNames []*string `locationName:"thingGroupNames" min:"1" type:"list" required:"true"`
+}
+
+// String returns the string representation
+func (s AddThingsToThingGroupParams) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s AddThingsToThingGroupParams) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *AddThingsToThingGroupParams) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "AddThingsToThingGroupParams"}
+	if s.ThingGroupNames == nil {
+		invalidParams.Add(request.NewErrParamRequired("ThingGroupNames"))
+	}
+	if s.ThingGroupNames != nil && len(s.ThingGroupNames) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("ThingGroupNames", 1))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetOverrideDynamicGroups sets the OverrideDynamicGroups field's value.
+func (s *AddThingsToThingGroupParams) SetOverrideDynamicGroups(v bool) *AddThingsToThingGroupParams {
+	s.OverrideDynamicGroups = &v
+	return s
+}
+
+// SetThingGroupNames sets the ThingGroupNames field's value.
+func (s *AddThingsToThingGroupParams) SetThingGroupNames(v []*string) *AddThingsToThingGroupParams {
+	s.ThingGroupNames = v
+	return s
+}
+
 // A structure containing the alert target ARN and the role ARN.
 type AlertTarget struct {
 	_ struct{} `type:"structure"`
@@ -16412,22 +17409,22 @@ func (s *AuditCheckConfiguration) SetEnabled(v bool) *AuditCheckConfiguration {
 type AuditCheckDetails struct {
 	_ struct{} `type:"structure"`
 
-	// True if the check completed and found all resources compliant.
+	// True if the check is complete and found all resources compliant.
 	CheckCompliant *bool `locationName:"checkCompliant" type:"boolean"`
 
-	// The completion status of this check, one of "IN_PROGRESS", "WAITING_FOR_DATA_COLLECTION",
+	// The completion status of this check. One of "IN_PROGRESS", "WAITING_FOR_DATA_COLLECTION",
 	// "CANCELED", "COMPLETED_COMPLIANT", "COMPLETED_NON_COMPLIANT", or "FAILED".
 	CheckRunStatus *string `locationName:"checkRunStatus" type:"string" enum:"AuditCheckRunStatus"`
 
-	// The code of any error encountered when performing this check during this
-	// audit. One of "INSUFFICIENT_PERMISSIONS", or "AUDIT_CHECK_DISABLED".
+	// The code of any error encountered when this check is performed during this
+	// audit. One of "INSUFFICIENT_PERMISSIONS" or "AUDIT_CHECK_DISABLED".
 	ErrorCode *string `locationName:"errorCode" type:"string"`
 
-	// The message associated with any error encountered when performing this check
+	// The message associated with any error encountered when this check is performed
 	// during this audit.
 	Message *string `locationName:"message" type:"string"`
 
-	// The number of resources that the check found non-compliant.
+	// The number of resources that were found noncompliant during the check.
 	NonCompliantResourcesCount *int64 `locationName:"nonCompliantResourcesCount" type:"long"`
 
 	// The number of resources on which the check was performed.
@@ -16487,16 +17484,20 @@ type AuditFinding struct {
 	// The audit check that generated this result.
 	CheckName *string `locationName:"checkName" type:"string"`
 
+	// A unique identifier for this set of audit findings. This identifier is used
+	// to apply mitigation tasks to one or more sets of findings.
+	FindingId *string `locationName:"findingId" min:"1" type:"string"`
+
 	// The time the result (finding) was discovered.
 	FindingTime *time.Time `locationName:"findingTime" type:"timestamp"`
 
-	// The resource that was found to be non-compliant with the audit check.
+	// The resource that was found to be noncompliant with the audit check.
 	NonCompliantResource *NonCompliantResource `locationName:"nonCompliantResource" type:"structure"`
 
-	// The reason the resource was non-compliant.
+	// The reason the resource was noncompliant.
 	ReasonForNonCompliance *string `locationName:"reasonForNonCompliance" type:"string"`
 
-	// A code which indicates the reason that the resource was non-compliant.
+	// A code that indicates the reason that the resource was noncompliant.
 	ReasonForNonComplianceCode *string `locationName:"reasonForNonComplianceCode" type:"string"`
 
 	// The list of related resources.
@@ -16505,7 +17506,7 @@ type AuditFinding struct {
 	// The severity of the result (finding).
 	Severity *string `locationName:"severity" type:"string" enum:"AuditFindingSeverity"`
 
-	// The ID of the audit that generated this result (finding)
+	// The ID of the audit that generated this result (finding).
 	TaskId *string `locationName:"taskId" min:"1" type:"string"`
 
 	// The time the audit started.
@@ -16525,6 +17526,12 @@ func (s AuditFinding) GoString() string {
 // SetCheckName sets the CheckName field's value.
 func (s *AuditFinding) SetCheckName(v string) *AuditFinding {
 	s.CheckName = &v
+	return s
+}
+
+// SetFindingId sets the FindingId field's value.
+func (s *AuditFinding) SetFindingId(v string) *AuditFinding {
+	s.FindingId = &v
 	return s
 }
 
@@ -16573,6 +17580,210 @@ func (s *AuditFinding) SetTaskId(v string) *AuditFinding {
 // SetTaskStartTime sets the TaskStartTime field's value.
 func (s *AuditFinding) SetTaskStartTime(v time.Time) *AuditFinding {
 	s.TaskStartTime = &v
+	return s
+}
+
+// Returned by ListAuditMitigationActionsTask, this object contains information
+// that describes a mitigation action that has been started.
+type AuditMitigationActionExecutionMetadata struct {
+	_ struct{} `type:"structure"`
+
+	// The unique identifier for the mitigation action being applied by the task.
+	ActionId *string `locationName:"actionId" type:"string"`
+
+	// The friendly name of the mitigation action being applied by the task.
+	ActionName *string `locationName:"actionName" type:"string"`
+
+	// The date and time when the task was completed or canceled. Blank if the task
+	// is still running.
+	EndTime *time.Time `locationName:"endTime" type:"timestamp"`
+
+	// If an error occurred, the code that indicates which type of error occurred.
+	ErrorCode *string `locationName:"errorCode" type:"string"`
+
+	// The unique identifier for the findings to which the task and associated mitigation
+	// action are applied.
+	FindingId *string `locationName:"findingId" min:"1" type:"string"`
+
+	// If an error occurred, a message that describes the error.
+	Message *string `locationName:"message" type:"string"`
+
+	// The date and time when the task was started.
+	StartTime *time.Time `locationName:"startTime" type:"timestamp"`
+
+	// The current status of the task being executed.
+	Status *string `locationName:"status" type:"string" enum:"AuditMitigationActionsExecutionStatus"`
+
+	// The unique identifier for the task that applies the mitigation action.
+	TaskId *string `locationName:"taskId" min:"1" type:"string"`
+}
+
+// String returns the string representation
+func (s AuditMitigationActionExecutionMetadata) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s AuditMitigationActionExecutionMetadata) GoString() string {
+	return s.String()
+}
+
+// SetActionId sets the ActionId field's value.
+func (s *AuditMitigationActionExecutionMetadata) SetActionId(v string) *AuditMitigationActionExecutionMetadata {
+	s.ActionId = &v
+	return s
+}
+
+// SetActionName sets the ActionName field's value.
+func (s *AuditMitigationActionExecutionMetadata) SetActionName(v string) *AuditMitigationActionExecutionMetadata {
+	s.ActionName = &v
+	return s
+}
+
+// SetEndTime sets the EndTime field's value.
+func (s *AuditMitigationActionExecutionMetadata) SetEndTime(v time.Time) *AuditMitigationActionExecutionMetadata {
+	s.EndTime = &v
+	return s
+}
+
+// SetErrorCode sets the ErrorCode field's value.
+func (s *AuditMitigationActionExecutionMetadata) SetErrorCode(v string) *AuditMitigationActionExecutionMetadata {
+	s.ErrorCode = &v
+	return s
+}
+
+// SetFindingId sets the FindingId field's value.
+func (s *AuditMitigationActionExecutionMetadata) SetFindingId(v string) *AuditMitigationActionExecutionMetadata {
+	s.FindingId = &v
+	return s
+}
+
+// SetMessage sets the Message field's value.
+func (s *AuditMitigationActionExecutionMetadata) SetMessage(v string) *AuditMitigationActionExecutionMetadata {
+	s.Message = &v
+	return s
+}
+
+// SetStartTime sets the StartTime field's value.
+func (s *AuditMitigationActionExecutionMetadata) SetStartTime(v time.Time) *AuditMitigationActionExecutionMetadata {
+	s.StartTime = &v
+	return s
+}
+
+// SetStatus sets the Status field's value.
+func (s *AuditMitigationActionExecutionMetadata) SetStatus(v string) *AuditMitigationActionExecutionMetadata {
+	s.Status = &v
+	return s
+}
+
+// SetTaskId sets the TaskId field's value.
+func (s *AuditMitigationActionExecutionMetadata) SetTaskId(v string) *AuditMitigationActionExecutionMetadata {
+	s.TaskId = &v
+	return s
+}
+
+// Information about an audit mitigation actions task that is returned by ListAuditMitigationActionsTasks.
+type AuditMitigationActionsTaskMetadata struct {
+	_ struct{} `type:"structure"`
+
+	// The time at which the audit mitigation actions task was started.
+	StartTime *time.Time `locationName:"startTime" type:"timestamp"`
+
+	// The unique identifier for the task.
+	TaskId *string `locationName:"taskId" min:"1" type:"string"`
+
+	// The current state of the audit mitigation actions task.
+	TaskStatus *string `locationName:"taskStatus" type:"string" enum:"AuditMitigationActionsTaskStatus"`
+}
+
+// String returns the string representation
+func (s AuditMitigationActionsTaskMetadata) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s AuditMitigationActionsTaskMetadata) GoString() string {
+	return s.String()
+}
+
+// SetStartTime sets the StartTime field's value.
+func (s *AuditMitigationActionsTaskMetadata) SetStartTime(v time.Time) *AuditMitigationActionsTaskMetadata {
+	s.StartTime = &v
+	return s
+}
+
+// SetTaskId sets the TaskId field's value.
+func (s *AuditMitigationActionsTaskMetadata) SetTaskId(v string) *AuditMitigationActionsTaskMetadata {
+	s.TaskId = &v
+	return s
+}
+
+// SetTaskStatus sets the TaskStatus field's value.
+func (s *AuditMitigationActionsTaskMetadata) SetTaskStatus(v string) *AuditMitigationActionsTaskMetadata {
+	s.TaskStatus = &v
+	return s
+}
+
+// Used in MitigationActionParams, this information identifies the target findings
+// to which the mitigation actions are applied. Only one entry appears.
+type AuditMitigationActionsTaskTarget struct {
+	_ struct{} `type:"structure"`
+
+	// Specifies a filter in the form of an audit check and set of reason codes
+	// that identify the findings from the audit to which the audit mitigation actions
+	// task apply.
+	AuditCheckToReasonCodeFilter map[string][]*string `locationName:"auditCheckToReasonCodeFilter" type:"map"`
+
+	// If the task will apply a mitigation action to findings from a specific audit,
+	// this value uniquely identifies the audit.
+	AuditTaskId *string `locationName:"auditTaskId" min:"1" type:"string"`
+
+	// If the task will apply a mitigation action to one or more listed findings,
+	// this value uniquely identifies those findings.
+	FindingIds []*string `locationName:"findingIds" min:"1" type:"list"`
+}
+
+// String returns the string representation
+func (s AuditMitigationActionsTaskTarget) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s AuditMitigationActionsTaskTarget) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *AuditMitigationActionsTaskTarget) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "AuditMitigationActionsTaskTarget"}
+	if s.AuditTaskId != nil && len(*s.AuditTaskId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("AuditTaskId", 1))
+	}
+	if s.FindingIds != nil && len(s.FindingIds) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("FindingIds", 1))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetAuditCheckToReasonCodeFilter sets the AuditCheckToReasonCodeFilter field's value.
+func (s *AuditMitigationActionsTaskTarget) SetAuditCheckToReasonCodeFilter(v map[string][]*string) *AuditMitigationActionsTaskTarget {
+	s.AuditCheckToReasonCodeFilter = v
+	return s
+}
+
+// SetAuditTaskId sets the AuditTaskId field's value.
+func (s *AuditMitigationActionsTaskTarget) SetAuditTaskId(v string) *AuditMitigationActionsTaskTarget {
+	s.AuditTaskId = &v
+	return s
+}
+
+// SetFindingIds sets the FindingIds field's value.
+func (s *AuditMitigationActionsTaskTarget) SetFindingIds(v []*string) *AuditMitigationActionsTaskTarget {
+	s.FindingIds = v
 	return s
 }
 
@@ -16638,11 +17849,11 @@ type AuditTaskMetadata struct {
 	// The ID of this audit.
 	TaskId *string `locationName:"taskId" min:"1" type:"string"`
 
-	// The status of this audit: one of "IN_PROGRESS", "COMPLETED", "FAILED" or
+	// The status of this audit. One of "IN_PROGRESS", "COMPLETED", "FAILED", or
 	// "CANCELED".
 	TaskStatus *string `locationName:"taskStatus" type:"string" enum:"AuditTaskStatus"`
 
-	// The type of this audit: one of "ON_DEMAND_AUDIT_TASK" or "SCHEDULED_AUDIT_TASK".
+	// The type of this audit. One of "ON_DEMAND_AUDIT_TASK" or "SCHEDULED_AUDIT_TASK".
 	TaskType *string `locationName:"taskType" type:"string" enum:"AuditTaskType"`
 }
 
@@ -17303,6 +18514,61 @@ func (s *CACertificateDescription) SetStatus(v string) *CACertificateDescription
 func (s *CACertificateDescription) SetValidity(v *CertificateValidity) *CACertificateDescription {
 	s.Validity = v
 	return s
+}
+
+type CancelAuditMitigationActionsTaskInput struct {
+	_ struct{} `type:"structure"`
+
+	// The unique identifier for the task that you want to cancel.
+	//
+	// TaskId is a required field
+	TaskId *string `location:"uri" locationName:"taskId" min:"1" type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s CancelAuditMitigationActionsTaskInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s CancelAuditMitigationActionsTaskInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *CancelAuditMitigationActionsTaskInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "CancelAuditMitigationActionsTaskInput"}
+	if s.TaskId == nil {
+		invalidParams.Add(request.NewErrParamRequired("TaskId"))
+	}
+	if s.TaskId != nil && len(*s.TaskId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("TaskId", 1))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetTaskId sets the TaskId field's value.
+func (s *CancelAuditMitigationActionsTaskInput) SetTaskId(v string) *CancelAuditMitigationActionsTaskInput {
+	s.TaskId = &v
+	return s
+}
+
+type CancelAuditMitigationActionsTaskOutput struct {
+	_ struct{} `type:"structure"`
+}
+
+// String returns the string representation
+func (s CancelAuditMitigationActionsTaskOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s CancelAuditMitigationActionsTaskOutput) GoString() string {
+	return s.String()
 }
 
 type CancelAuditTaskInput struct {
@@ -19011,6 +20277,125 @@ func (s *CreateKeysAndCertificateOutput) SetKeyPair(v *KeyPair) *CreateKeysAndCe
 	return s
 }
 
+type CreateMitigationActionInput struct {
+	_ struct{} `type:"structure"`
+
+	// A friendly name for the action. Choose a friendly name that accurately describes
+	// the action (for example, EnableLoggingAction).
+	//
+	// ActionName is a required field
+	ActionName *string `location:"uri" locationName:"actionName" type:"string" required:"true"`
+
+	// Defines the type of action and the parameters for that action.
+	//
+	// ActionParams is a required field
+	ActionParams *MitigationActionParams `locationName:"actionParams" type:"structure" required:"true"`
+
+	// The ARN of the IAM role that is used to apply the mitigation action.
+	//
+	// RoleArn is a required field
+	RoleArn *string `locationName:"roleArn" min:"20" type:"string" required:"true"`
+
+	// Metadata that can be used to manage the mitigation action.
+	Tags []*Tag `locationName:"tags" type:"list"`
+}
+
+// String returns the string representation
+func (s CreateMitigationActionInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s CreateMitigationActionInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *CreateMitigationActionInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "CreateMitigationActionInput"}
+	if s.ActionName == nil {
+		invalidParams.Add(request.NewErrParamRequired("ActionName"))
+	}
+	if s.ActionName != nil && len(*s.ActionName) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("ActionName", 1))
+	}
+	if s.ActionParams == nil {
+		invalidParams.Add(request.NewErrParamRequired("ActionParams"))
+	}
+	if s.RoleArn == nil {
+		invalidParams.Add(request.NewErrParamRequired("RoleArn"))
+	}
+	if s.RoleArn != nil && len(*s.RoleArn) < 20 {
+		invalidParams.Add(request.NewErrParamMinLen("RoleArn", 20))
+	}
+	if s.ActionParams != nil {
+		if err := s.ActionParams.Validate(); err != nil {
+			invalidParams.AddNested("ActionParams", err.(request.ErrInvalidParams))
+		}
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetActionName sets the ActionName field's value.
+func (s *CreateMitigationActionInput) SetActionName(v string) *CreateMitigationActionInput {
+	s.ActionName = &v
+	return s
+}
+
+// SetActionParams sets the ActionParams field's value.
+func (s *CreateMitigationActionInput) SetActionParams(v *MitigationActionParams) *CreateMitigationActionInput {
+	s.ActionParams = v
+	return s
+}
+
+// SetRoleArn sets the RoleArn field's value.
+func (s *CreateMitigationActionInput) SetRoleArn(v string) *CreateMitigationActionInput {
+	s.RoleArn = &v
+	return s
+}
+
+// SetTags sets the Tags field's value.
+func (s *CreateMitigationActionInput) SetTags(v []*Tag) *CreateMitigationActionInput {
+	s.Tags = v
+	return s
+}
+
+type CreateMitigationActionOutput struct {
+	_ struct{} `type:"structure"`
+
+	// The ARN for the new mitigation action.
+	ActionArn *string `locationName:"actionArn" type:"string"`
+
+	// A unique identifier for the new mitigation action.
+	ActionId *string `locationName:"actionId" type:"string"`
+}
+
+// String returns the string representation
+func (s CreateMitigationActionOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s CreateMitigationActionOutput) GoString() string {
+	return s.String()
+}
+
+// SetActionArn sets the ActionArn field's value.
+func (s *CreateMitigationActionOutput) SetActionArn(v string) *CreateMitigationActionOutput {
+	s.ActionArn = &v
+	return s
+}
+
+// SetActionId sets the ActionId field's value.
+func (s *CreateMitigationActionOutput) SetActionId(v string) *CreateMitigationActionOutput {
+	s.ActionId = &v
+	return s
+}
+
 type CreateOTAUpdateInput struct {
 	_ struct{} `type:"structure"`
 
@@ -19567,13 +20952,13 @@ type CreateScheduledAuditInput struct {
 	DayOfMonth *string `locationName:"dayOfMonth" type:"string"`
 
 	// The day of the week on which the scheduled audit takes place. Can be one
-	// of "SUN", "MON", "TUE", "WED", "THU", "FRI" or "SAT". This field is required
+	// of "SUN", "MON", "TUE", "WED", "THU", "FRI", or "SAT". This field is required
 	// if the "frequency" parameter is set to "WEEKLY" or "BIWEEKLY".
 	DayOfWeek *string `locationName:"dayOfWeek" type:"string" enum:"DayOfWeek"`
 
 	// How often the scheduled audit takes place. Can be one of "DAILY", "WEEKLY",
-	// "BIWEEKLY" or "MONTHLY". The actual start time of each audit is determined
-	// by the system.
+	// "BIWEEKLY" or "MONTHLY". The start time of each audit is determined by the
+	// system.
 	//
 	// Frequency is a required field
 	Frequency *string `locationName:"frequency" type:"string" required:"true" enum:"AuditFrequency"`
@@ -19583,12 +20968,12 @@ type CreateScheduledAuditInput struct {
 	// ScheduledAuditName is a required field
 	ScheduledAuditName *string `location:"uri" locationName:"scheduledAuditName" min:"1" type:"string" required:"true"`
 
-	// Metadata which can be used to manage the scheduled audit.
+	// Metadata that can be used to manage the scheduled audit.
 	Tags []*Tag `locationName:"tags" type:"list"`
 
 	// Which checks are performed during the scheduled audit. Checks must be enabled
 	// for your account. (Use DescribeAccountAuditConfiguration to see the list
-	// of all checks including those that are enabled or UpdateAccountAuditConfiguration
+	// of all checks, including those that are enabled or use UpdateAccountAuditConfiguration
 	// to select which checks are enabled.)
 	//
 	// TargetCheckNames is a required field
@@ -19690,7 +21075,7 @@ type CreateSecurityProfileInput struct {
 	_ struct{} `type:"structure"`
 
 	// A list of metrics whose data is retained (stored). By default, data is retained
-	// for any metric used in the profile's behaviors but it is also retained for
+	// for any metric used in the profile's behaviors, but it is also retained for
 	// any metric specified here.
 	AdditionalMetricsToRetain []*string `locationName:"additionalMetricsToRetain" type:"list"`
 
@@ -19710,7 +21095,7 @@ type CreateSecurityProfileInput struct {
 	// SecurityProfileName is a required field
 	SecurityProfileName *string `location:"uri" locationName:"securityProfileName" min:"1" type:"string" required:"true"`
 
-	// Metadata which can be used to manage the security profile.
+	// Metadata that can be used to manage the security profile.
 	Tags []*Tag `locationName:"tags" type:"list"`
 }
 
@@ -20685,7 +22070,8 @@ type DeleteCertificateInput struct {
 	// CertificateId is a required field
 	CertificateId *string `location:"uri" locationName:"certificateId" min:"64" type:"string" required:"true"`
 
-	// Forces a certificate request to be deleted.
+	// Forces the deletion of a certificate if it is inactive and is not attached
+	// to an IoT thing.
 	ForceDelete *bool `location:"querystring" locationName:"forceDelete" type:"boolean"`
 }
 
@@ -20983,6 +22369,61 @@ func (s DeleteJobOutput) String() string {
 
 // GoString returns the string representation
 func (s DeleteJobOutput) GoString() string {
+	return s.String()
+}
+
+type DeleteMitigationActionInput struct {
+	_ struct{} `type:"structure"`
+
+	// The name of the mitigation action that you want to delete.
+	//
+	// ActionName is a required field
+	ActionName *string `location:"uri" locationName:"actionName" type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s DeleteMitigationActionInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DeleteMitigationActionInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *DeleteMitigationActionInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "DeleteMitigationActionInput"}
+	if s.ActionName == nil {
+		invalidParams.Add(request.NewErrParamRequired("ActionName"))
+	}
+	if s.ActionName != nil && len(*s.ActionName) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("ActionName", 1))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetActionName sets the ActionName field's value.
+func (s *DeleteMitigationActionInput) SetActionName(v string) *DeleteMitigationActionInput {
+	s.ActionName = &v
+	return s
+}
+
+type DeleteMitigationActionOutput struct {
+	_ struct{} `type:"structure"`
+}
+
+// String returns the string representation
+func (s DeleteMitigationActionOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DeleteMitigationActionOutput) GoString() string {
 	return s.String()
 }
 
@@ -21335,7 +22776,7 @@ type DeleteSecurityProfileInput struct {
 
 	// The expected version of the security profile. A new version is generated
 	// whenever the security profile is updated. If you specify a value that is
-	// different than the actual version, a VersionConflictException is thrown.
+	// different from the actual version, a VersionConflictException is thrown.
 	ExpectedVersion *int64 `location:"querystring" locationName:"expectedVersion" type:"long"`
 
 	// The name of the security profile to be deleted.
@@ -21889,10 +23330,10 @@ type DescribeAccountAuditConfigurationOutput struct {
 	AuditNotificationTargetConfigurations map[string]*AuditNotificationTarget `locationName:"auditNotificationTargetConfigurations" type:"map"`
 
 	// The ARN of the role that grants permission to AWS IoT to access information
-	// about your devices, policies, certificates and other items as necessary when
+	// about your devices, policies, certificates, and other items as required when
 	// performing an audit.
 	//
-	// On the first call to UpdateAccountAuditConfiguration this parameter is required.
+	// On the first call to UpdateAccountAuditConfiguration, this parameter is required.
 	RoleArn *string `locationName:"roleArn" min:"20" type:"string"`
 }
 
@@ -21921,6 +23362,193 @@ func (s *DescribeAccountAuditConfigurationOutput) SetAuditNotificationTargetConf
 // SetRoleArn sets the RoleArn field's value.
 func (s *DescribeAccountAuditConfigurationOutput) SetRoleArn(v string) *DescribeAccountAuditConfigurationOutput {
 	s.RoleArn = &v
+	return s
+}
+
+type DescribeAuditFindingInput struct {
+	_ struct{} `type:"structure"`
+
+	// A unique identifier for a single audit finding. You can use this identifier
+	// to apply mitigation actions to the finding.
+	//
+	// FindingId is a required field
+	FindingId *string `location:"uri" locationName:"findingId" min:"1" type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s DescribeAuditFindingInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DescribeAuditFindingInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *DescribeAuditFindingInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "DescribeAuditFindingInput"}
+	if s.FindingId == nil {
+		invalidParams.Add(request.NewErrParamRequired("FindingId"))
+	}
+	if s.FindingId != nil && len(*s.FindingId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("FindingId", 1))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetFindingId sets the FindingId field's value.
+func (s *DescribeAuditFindingInput) SetFindingId(v string) *DescribeAuditFindingInput {
+	s.FindingId = &v
+	return s
+}
+
+type DescribeAuditFindingOutput struct {
+	_ struct{} `type:"structure"`
+
+	// The findings (results) of the audit.
+	Finding *AuditFinding `locationName:"finding" type:"structure"`
+}
+
+// String returns the string representation
+func (s DescribeAuditFindingOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DescribeAuditFindingOutput) GoString() string {
+	return s.String()
+}
+
+// SetFinding sets the Finding field's value.
+func (s *DescribeAuditFindingOutput) SetFinding(v *AuditFinding) *DescribeAuditFindingOutput {
+	s.Finding = v
+	return s
+}
+
+type DescribeAuditMitigationActionsTaskInput struct {
+	_ struct{} `type:"structure"`
+
+	// The unique identifier for the audit mitigation task.
+	//
+	// TaskId is a required field
+	TaskId *string `location:"uri" locationName:"taskId" min:"1" type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s DescribeAuditMitigationActionsTaskInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DescribeAuditMitigationActionsTaskInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *DescribeAuditMitigationActionsTaskInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "DescribeAuditMitigationActionsTaskInput"}
+	if s.TaskId == nil {
+		invalidParams.Add(request.NewErrParamRequired("TaskId"))
+	}
+	if s.TaskId != nil && len(*s.TaskId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("TaskId", 1))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetTaskId sets the TaskId field's value.
+func (s *DescribeAuditMitigationActionsTaskInput) SetTaskId(v string) *DescribeAuditMitigationActionsTaskInput {
+	s.TaskId = &v
+	return s
+}
+
+type DescribeAuditMitigationActionsTaskOutput struct {
+	_ struct{} `type:"structure"`
+
+	// Specifies the mitigation actions and their parameters that are applied as
+	// part of this task.
+	ActionsDefinition []*MitigationAction `locationName:"actionsDefinition" type:"list"`
+
+	// Specifies the mitigation actions that should be applied to specific audit
+	// checks.
+	AuditCheckToActionsMapping map[string][]*string `locationName:"auditCheckToActionsMapping" type:"map"`
+
+	// The date and time when the task was completed or canceled.
+	EndTime *time.Time `locationName:"endTime" type:"timestamp"`
+
+	// The date and time when the task was started.
+	StartTime *time.Time `locationName:"startTime" type:"timestamp"`
+
+	// Identifies the findings to which the mitigation actions are applied. This
+	// can be by audit checks, by audit task, or a set of findings.
+	Target *AuditMitigationActionsTaskTarget `locationName:"target" type:"structure"`
+
+	// Aggregate counts of the results when the mitigation tasks were applied to
+	// the findings for this audit mitigation actions task.
+	TaskStatistics map[string]*TaskStatisticsForAuditCheck `locationName:"taskStatistics" type:"map"`
+
+	// The current status of the task.
+	TaskStatus *string `locationName:"taskStatus" type:"string" enum:"AuditMitigationActionsTaskStatus"`
+}
+
+// String returns the string representation
+func (s DescribeAuditMitigationActionsTaskOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DescribeAuditMitigationActionsTaskOutput) GoString() string {
+	return s.String()
+}
+
+// SetActionsDefinition sets the ActionsDefinition field's value.
+func (s *DescribeAuditMitigationActionsTaskOutput) SetActionsDefinition(v []*MitigationAction) *DescribeAuditMitigationActionsTaskOutput {
+	s.ActionsDefinition = v
+	return s
+}
+
+// SetAuditCheckToActionsMapping sets the AuditCheckToActionsMapping field's value.
+func (s *DescribeAuditMitigationActionsTaskOutput) SetAuditCheckToActionsMapping(v map[string][]*string) *DescribeAuditMitigationActionsTaskOutput {
+	s.AuditCheckToActionsMapping = v
+	return s
+}
+
+// SetEndTime sets the EndTime field's value.
+func (s *DescribeAuditMitigationActionsTaskOutput) SetEndTime(v time.Time) *DescribeAuditMitigationActionsTaskOutput {
+	s.EndTime = &v
+	return s
+}
+
+// SetStartTime sets the StartTime field's value.
+func (s *DescribeAuditMitigationActionsTaskOutput) SetStartTime(v time.Time) *DescribeAuditMitigationActionsTaskOutput {
+	s.StartTime = &v
+	return s
+}
+
+// SetTarget sets the Target field's value.
+func (s *DescribeAuditMitigationActionsTaskOutput) SetTarget(v *AuditMitigationActionsTaskTarget) *DescribeAuditMitigationActionsTaskOutput {
+	s.Target = v
+	return s
+}
+
+// SetTaskStatistics sets the TaskStatistics field's value.
+func (s *DescribeAuditMitigationActionsTaskOutput) SetTaskStatistics(v map[string]*TaskStatisticsForAuditCheck) *DescribeAuditMitigationActionsTaskOutput {
+	s.TaskStatistics = v
+	return s
+}
+
+// SetTaskStatus sets the TaskStatus field's value.
+func (s *DescribeAuditMitigationActionsTaskOutput) SetTaskStatus(v string) *DescribeAuditMitigationActionsTaskOutput {
+	s.TaskStatus = &v
 	return s
 }
 
@@ -22756,6 +24384,134 @@ func (s *DescribeJobOutput) SetJob(v *Job) *DescribeJobOutput {
 	return s
 }
 
+type DescribeMitigationActionInput struct {
+	_ struct{} `type:"structure"`
+
+	// The friendly name that uniquely identifies the mitigation action.
+	//
+	// ActionName is a required field
+	ActionName *string `location:"uri" locationName:"actionName" type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s DescribeMitigationActionInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DescribeMitigationActionInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *DescribeMitigationActionInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "DescribeMitigationActionInput"}
+	if s.ActionName == nil {
+		invalidParams.Add(request.NewErrParamRequired("ActionName"))
+	}
+	if s.ActionName != nil && len(*s.ActionName) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("ActionName", 1))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetActionName sets the ActionName field's value.
+func (s *DescribeMitigationActionInput) SetActionName(v string) *DescribeMitigationActionInput {
+	s.ActionName = &v
+	return s
+}
+
+type DescribeMitigationActionOutput struct {
+	_ struct{} `type:"structure"`
+
+	// The ARN that identifies this migration action.
+	ActionArn *string `locationName:"actionArn" type:"string"`
+
+	// A unique identifier for this action.
+	ActionId *string `locationName:"actionId" type:"string"`
+
+	// The friendly name that uniquely identifies the mitigation action.
+	ActionName *string `locationName:"actionName" type:"string"`
+
+	// Parameters that control how the mitigation action is applied, specific to
+	// the type of mitigation action.
+	ActionParams *MitigationActionParams `locationName:"actionParams" type:"structure"`
+
+	// The type of mitigation action.
+	ActionType *string `locationName:"actionType" type:"string" enum:"MitigationActionType"`
+
+	// The date and time when the mitigation action was added to your AWS account.
+	CreationDate *time.Time `locationName:"creationDate" type:"timestamp"`
+
+	// The date and time when the mitigation action was last changed.
+	LastModifiedDate *time.Time `locationName:"lastModifiedDate" type:"timestamp"`
+
+	// The ARN of the IAM role used to apply this action.
+	RoleArn *string `locationName:"roleArn" min:"20" type:"string"`
+}
+
+// String returns the string representation
+func (s DescribeMitigationActionOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DescribeMitigationActionOutput) GoString() string {
+	return s.String()
+}
+
+// SetActionArn sets the ActionArn field's value.
+func (s *DescribeMitigationActionOutput) SetActionArn(v string) *DescribeMitigationActionOutput {
+	s.ActionArn = &v
+	return s
+}
+
+// SetActionId sets the ActionId field's value.
+func (s *DescribeMitigationActionOutput) SetActionId(v string) *DescribeMitigationActionOutput {
+	s.ActionId = &v
+	return s
+}
+
+// SetActionName sets the ActionName field's value.
+func (s *DescribeMitigationActionOutput) SetActionName(v string) *DescribeMitigationActionOutput {
+	s.ActionName = &v
+	return s
+}
+
+// SetActionParams sets the ActionParams field's value.
+func (s *DescribeMitigationActionOutput) SetActionParams(v *MitigationActionParams) *DescribeMitigationActionOutput {
+	s.ActionParams = v
+	return s
+}
+
+// SetActionType sets the ActionType field's value.
+func (s *DescribeMitigationActionOutput) SetActionType(v string) *DescribeMitigationActionOutput {
+	s.ActionType = &v
+	return s
+}
+
+// SetCreationDate sets the CreationDate field's value.
+func (s *DescribeMitigationActionOutput) SetCreationDate(v time.Time) *DescribeMitigationActionOutput {
+	s.CreationDate = &v
+	return s
+}
+
+// SetLastModifiedDate sets the LastModifiedDate field's value.
+func (s *DescribeMitigationActionOutput) SetLastModifiedDate(v time.Time) *DescribeMitigationActionOutput {
+	s.LastModifiedDate = &v
+	return s
+}
+
+// SetRoleArn sets the RoleArn field's value.
+func (s *DescribeMitigationActionOutput) SetRoleArn(v string) *DescribeMitigationActionOutput {
+	s.RoleArn = &v
+	return s
+}
+
 type DescribeRoleAliasInput struct {
 	_ struct{} `type:"structure"`
 
@@ -22870,11 +24626,11 @@ type DescribeScheduledAuditOutput struct {
 	DayOfMonth *string `locationName:"dayOfMonth" type:"string"`
 
 	// The day of the week on which the scheduled audit takes place. One of "SUN",
-	// "MON", "TUE", "WED", "THU", "FRI" or "SAT".
+	// "MON", "TUE", "WED", "THU", "FRI", or "SAT".
 	DayOfWeek *string `locationName:"dayOfWeek" type:"string" enum:"DayOfWeek"`
 
-	// How often the scheduled audit takes place. One of "DAILY", "WEEKLY", "BIWEEKLY"
-	// or "MONTHLY". The actual start time of each audit is determined by the system.
+	// How often the scheduled audit takes place. One of "DAILY", "WEEKLY", "BIWEEKLY",
+	// or "MONTHLY". The start time of each audit is determined by the system.
 	Frequency *string `locationName:"frequency" type:"string" enum:"AuditFrequency"`
 
 	// The ARN of the scheduled audit.
@@ -22883,9 +24639,9 @@ type DescribeScheduledAuditOutput struct {
 	// The name of the scheduled audit.
 	ScheduledAuditName *string `locationName:"scheduledAuditName" min:"1" type:"string"`
 
-	// Which checks are performed during the scheduled audit. (Note that checks
-	// must be enabled for your account. (Use DescribeAccountAuditConfiguration
-	// to see the list of all checks including those that are enabled or UpdateAccountAuditConfiguration
+	// Which checks are performed during the scheduled audit. Checks must be enabled
+	// for your account. (Use DescribeAccountAuditConfiguration to see the list
+	// of all checks, including those that are enabled or use UpdateAccountAuditConfiguration
 	// to select which checks are enabled.)
 	TargetCheckNames []*string `locationName:"targetCheckNames" type:"list"`
 }
@@ -22981,7 +24737,7 @@ type DescribeSecurityProfileOutput struct {
 	_ struct{} `type:"structure"`
 
 	// A list of metrics whose data is retained (stored). By default, data is retained
-	// for any metric used in the profile's behaviors but it is also retained for
+	// for any metric used in the profile's behaviors, but it is also retained for
 	// any metric specified here.
 	AdditionalMetricsToRetain []*string `locationName:"additionalMetricsToRetain" type:"list"`
 
@@ -24424,6 +26180,62 @@ func (s *ElasticsearchAction) SetType(v string) *ElasticsearchAction {
 	return s
 }
 
+// Parameters used when defining a mitigation action that enable AWS IoT logging.
+type EnableIoTLoggingParams struct {
+	_ struct{} `type:"structure"`
+
+	// Specifies the types of information to be logged.
+	//
+	// LogLevel is a required field
+	LogLevel *string `locationName:"logLevel" type:"string" required:"true" enum:"LogLevel"`
+
+	// The ARN of the IAM role used for logging.
+	//
+	// RoleArnForLogging is a required field
+	RoleArnForLogging *string `locationName:"roleArnForLogging" min:"20" type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s EnableIoTLoggingParams) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s EnableIoTLoggingParams) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *EnableIoTLoggingParams) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "EnableIoTLoggingParams"}
+	if s.LogLevel == nil {
+		invalidParams.Add(request.NewErrParamRequired("LogLevel"))
+	}
+	if s.RoleArnForLogging == nil {
+		invalidParams.Add(request.NewErrParamRequired("RoleArnForLogging"))
+	}
+	if s.RoleArnForLogging != nil && len(*s.RoleArnForLogging) < 20 {
+		invalidParams.Add(request.NewErrParamMinLen("RoleArnForLogging", 20))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetLogLevel sets the LogLevel field's value.
+func (s *EnableIoTLoggingParams) SetLogLevel(v string) *EnableIoTLoggingParams {
+	s.LogLevel = &v
+	return s
+}
+
+// SetRoleArnForLogging sets the RoleArnForLogging field's value.
+func (s *EnableIoTLoggingParams) SetRoleArnForLogging(v string) *EnableIoTLoggingParams {
+	s.RoleArnForLogging = &v
+	return s
+}
+
 // The input for the EnableTopicRuleRequest operation.
 type EnableTopicRuleInput struct {
 	_ struct{} `type:"structure"`
@@ -25629,7 +27441,7 @@ func (s *ImplicitDeny) SetPolicies(v []*Policy) *ImplicitDeny {
 	return s
 }
 
-// Sends messge data to an AWS IoT Analytics channel.
+// Sends message data to an AWS IoT Analytics channel.
 type IotAnalyticsAction struct {
 	_ struct{} `type:"structure"`
 
@@ -26796,7 +28608,7 @@ type ListAuditFindingsInput struct {
 	// The token for the next set of results.
 	NextToken *string `locationName:"nextToken" type:"string"`
 
-	// Information identifying the non-compliant resource.
+	// Information identifying the noncompliant resource.
 	ResourceIdentifier *ResourceIdentifier `locationName:"resourceIdentifier" type:"structure"`
 
 	// A filter to limit results to those found after the specified time. You must
@@ -26914,6 +28726,271 @@ func (s *ListAuditFindingsOutput) SetNextToken(v string) *ListAuditFindingsOutpu
 	return s
 }
 
+type ListAuditMitigationActionsExecutionsInput struct {
+	_ struct{} `type:"structure"`
+
+	// Specify this filter to limit results to those with a specific status.
+	ActionStatus *string `location:"querystring" locationName:"actionStatus" type:"string" enum:"AuditMitigationActionsExecutionStatus"`
+
+	// Specify this filter to limit results to those that were applied to a specific
+	// audit finding.
+	//
+	// FindingId is a required field
+	FindingId *string `location:"querystring" locationName:"findingId" min:"1" type:"string" required:"true"`
+
+	// The maximum number of results to return at one time. The default is 25.
+	MaxResults *int64 `location:"querystring" locationName:"maxResults" min:"1" type:"integer"`
+
+	// The token for the next set of results.
+	NextToken *string `location:"querystring" locationName:"nextToken" type:"string"`
+
+	// Specify this filter to limit results to actions for a specific audit mitigation
+	// actions task.
+	//
+	// TaskId is a required field
+	TaskId *string `location:"querystring" locationName:"taskId" min:"1" type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s ListAuditMitigationActionsExecutionsInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ListAuditMitigationActionsExecutionsInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *ListAuditMitigationActionsExecutionsInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "ListAuditMitigationActionsExecutionsInput"}
+	if s.FindingId == nil {
+		invalidParams.Add(request.NewErrParamRequired("FindingId"))
+	}
+	if s.FindingId != nil && len(*s.FindingId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("FindingId", 1))
+	}
+	if s.MaxResults != nil && *s.MaxResults < 1 {
+		invalidParams.Add(request.NewErrParamMinValue("MaxResults", 1))
+	}
+	if s.TaskId == nil {
+		invalidParams.Add(request.NewErrParamRequired("TaskId"))
+	}
+	if s.TaskId != nil && len(*s.TaskId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("TaskId", 1))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetActionStatus sets the ActionStatus field's value.
+func (s *ListAuditMitigationActionsExecutionsInput) SetActionStatus(v string) *ListAuditMitigationActionsExecutionsInput {
+	s.ActionStatus = &v
+	return s
+}
+
+// SetFindingId sets the FindingId field's value.
+func (s *ListAuditMitigationActionsExecutionsInput) SetFindingId(v string) *ListAuditMitigationActionsExecutionsInput {
+	s.FindingId = &v
+	return s
+}
+
+// SetMaxResults sets the MaxResults field's value.
+func (s *ListAuditMitigationActionsExecutionsInput) SetMaxResults(v int64) *ListAuditMitigationActionsExecutionsInput {
+	s.MaxResults = &v
+	return s
+}
+
+// SetNextToken sets the NextToken field's value.
+func (s *ListAuditMitigationActionsExecutionsInput) SetNextToken(v string) *ListAuditMitigationActionsExecutionsInput {
+	s.NextToken = &v
+	return s
+}
+
+// SetTaskId sets the TaskId field's value.
+func (s *ListAuditMitigationActionsExecutionsInput) SetTaskId(v string) *ListAuditMitigationActionsExecutionsInput {
+	s.TaskId = &v
+	return s
+}
+
+type ListAuditMitigationActionsExecutionsOutput struct {
+	_ struct{} `type:"structure"`
+
+	// A set of task execution results based on the input parameters. Details include
+	// the mitigation action applied, start time, and task status.
+	ActionsExecutions []*AuditMitigationActionExecutionMetadata `locationName:"actionsExecutions" type:"list"`
+
+	// The token for the next set of results.
+	NextToken *string `locationName:"nextToken" type:"string"`
+}
+
+// String returns the string representation
+func (s ListAuditMitigationActionsExecutionsOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ListAuditMitigationActionsExecutionsOutput) GoString() string {
+	return s.String()
+}
+
+// SetActionsExecutions sets the ActionsExecutions field's value.
+func (s *ListAuditMitigationActionsExecutionsOutput) SetActionsExecutions(v []*AuditMitigationActionExecutionMetadata) *ListAuditMitigationActionsExecutionsOutput {
+	s.ActionsExecutions = v
+	return s
+}
+
+// SetNextToken sets the NextToken field's value.
+func (s *ListAuditMitigationActionsExecutionsOutput) SetNextToken(v string) *ListAuditMitigationActionsExecutionsOutput {
+	s.NextToken = &v
+	return s
+}
+
+type ListAuditMitigationActionsTasksInput struct {
+	_ struct{} `type:"structure"`
+
+	// Specify this filter to limit results to tasks that were applied to results
+	// for a specific audit.
+	AuditTaskId *string `location:"querystring" locationName:"auditTaskId" min:"1" type:"string"`
+
+	// Specify this filter to limit results to tasks that were completed or canceled
+	// on or before a specific date and time.
+	//
+	// EndTime is a required field
+	EndTime *time.Time `location:"querystring" locationName:"endTime" type:"timestamp" required:"true"`
+
+	// Specify this filter to limit results to tasks that were applied to a specific
+	// audit finding.
+	FindingId *string `location:"querystring" locationName:"findingId" min:"1" type:"string"`
+
+	// The maximum number of results to return at one time. The default is 25.
+	MaxResults *int64 `location:"querystring" locationName:"maxResults" min:"1" type:"integer"`
+
+	// The token for the next set of results.
+	NextToken *string `location:"querystring" locationName:"nextToken" type:"string"`
+
+	// Specify this filter to limit results to tasks that began on or after a specific
+	// date and time.
+	//
+	// StartTime is a required field
+	StartTime *time.Time `location:"querystring" locationName:"startTime" type:"timestamp" required:"true"`
+
+	// Specify this filter to limit results to tasks that are in a specific state.
+	TaskStatus *string `location:"querystring" locationName:"taskStatus" type:"string" enum:"AuditMitigationActionsTaskStatus"`
+}
+
+// String returns the string representation
+func (s ListAuditMitigationActionsTasksInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ListAuditMitigationActionsTasksInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *ListAuditMitigationActionsTasksInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "ListAuditMitigationActionsTasksInput"}
+	if s.AuditTaskId != nil && len(*s.AuditTaskId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("AuditTaskId", 1))
+	}
+	if s.EndTime == nil {
+		invalidParams.Add(request.NewErrParamRequired("EndTime"))
+	}
+	if s.FindingId != nil && len(*s.FindingId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("FindingId", 1))
+	}
+	if s.MaxResults != nil && *s.MaxResults < 1 {
+		invalidParams.Add(request.NewErrParamMinValue("MaxResults", 1))
+	}
+	if s.StartTime == nil {
+		invalidParams.Add(request.NewErrParamRequired("StartTime"))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetAuditTaskId sets the AuditTaskId field's value.
+func (s *ListAuditMitigationActionsTasksInput) SetAuditTaskId(v string) *ListAuditMitigationActionsTasksInput {
+	s.AuditTaskId = &v
+	return s
+}
+
+// SetEndTime sets the EndTime field's value.
+func (s *ListAuditMitigationActionsTasksInput) SetEndTime(v time.Time) *ListAuditMitigationActionsTasksInput {
+	s.EndTime = &v
+	return s
+}
+
+// SetFindingId sets the FindingId field's value.
+func (s *ListAuditMitigationActionsTasksInput) SetFindingId(v string) *ListAuditMitigationActionsTasksInput {
+	s.FindingId = &v
+	return s
+}
+
+// SetMaxResults sets the MaxResults field's value.
+func (s *ListAuditMitigationActionsTasksInput) SetMaxResults(v int64) *ListAuditMitigationActionsTasksInput {
+	s.MaxResults = &v
+	return s
+}
+
+// SetNextToken sets the NextToken field's value.
+func (s *ListAuditMitigationActionsTasksInput) SetNextToken(v string) *ListAuditMitigationActionsTasksInput {
+	s.NextToken = &v
+	return s
+}
+
+// SetStartTime sets the StartTime field's value.
+func (s *ListAuditMitigationActionsTasksInput) SetStartTime(v time.Time) *ListAuditMitigationActionsTasksInput {
+	s.StartTime = &v
+	return s
+}
+
+// SetTaskStatus sets the TaskStatus field's value.
+func (s *ListAuditMitigationActionsTasksInput) SetTaskStatus(v string) *ListAuditMitigationActionsTasksInput {
+	s.TaskStatus = &v
+	return s
+}
+
+type ListAuditMitigationActionsTasksOutput struct {
+	_ struct{} `type:"structure"`
+
+	// The token for the next set of results.
+	NextToken *string `locationName:"nextToken" type:"string"`
+
+	// The collection of audit mitigation tasks that matched the filter criteria.
+	Tasks []*AuditMitigationActionsTaskMetadata `locationName:"tasks" type:"list"`
+}
+
+// String returns the string representation
+func (s ListAuditMitigationActionsTasksOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ListAuditMitigationActionsTasksOutput) GoString() string {
+	return s.String()
+}
+
+// SetNextToken sets the NextToken field's value.
+func (s *ListAuditMitigationActionsTasksOutput) SetNextToken(v string) *ListAuditMitigationActionsTasksOutput {
+	s.NextToken = &v
+	return s
+}
+
+// SetTasks sets the Tasks field's value.
+func (s *ListAuditMitigationActionsTasksOutput) SetTasks(v []*AuditMitigationActionsTaskMetadata) *ListAuditMitigationActionsTasksOutput {
+	s.Tasks = v
+	return s
+}
+
 type ListAuditTasksInput struct {
 	_ struct{} `type:"structure"`
 
@@ -26928,15 +29005,15 @@ type ListAuditTasksInput struct {
 	// The token for the next set of results.
 	NextToken *string `location:"querystring" locationName:"nextToken" type:"string"`
 
-	// The beginning of the time period. Note that audit information is retained
-	// for a limited time (180 days). Requesting a start time prior to what is retained
-	// results in an "InvalidRequestException".
+	// The beginning of the time period. Audit information is retained for a limited
+	// time (180 days). Requesting a start time prior to what is retained results
+	// in an "InvalidRequestException".
 	//
 	// StartTime is a required field
 	StartTime *time.Time `location:"querystring" locationName:"startTime" type:"timestamp" required:"true"`
 
 	// A filter to limit the output to audits with the specified completion status:
-	// can be one of "IN_PROGRESS", "COMPLETED", "FAILED" or "CANCELED".
+	// can be one of "IN_PROGRESS", "COMPLETED", "FAILED", or "CANCELED".
 	TaskStatus *string `location:"querystring" locationName:"taskStatus" type:"string" enum:"AuditTaskStatus"`
 
 	// A filter to limit the output to the specified type of audit: can be one of
@@ -27927,6 +30004,93 @@ func (s *ListJobsOutput) SetNextToken(v string) *ListJobsOutput {
 	return s
 }
 
+type ListMitigationActionsInput struct {
+	_ struct{} `type:"structure"`
+
+	// Specify a value to limit the result to mitigation actions with a specific
+	// action type.
+	ActionType *string `location:"querystring" locationName:"actionType" type:"string" enum:"MitigationActionType"`
+
+	// The maximum number of results to return at one time. The default is 25.
+	MaxResults *int64 `location:"querystring" locationName:"maxResults" min:"1" type:"integer"`
+
+	// The token for the next set of results.
+	NextToken *string `location:"querystring" locationName:"nextToken" type:"string"`
+}
+
+// String returns the string representation
+func (s ListMitigationActionsInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ListMitigationActionsInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *ListMitigationActionsInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "ListMitigationActionsInput"}
+	if s.MaxResults != nil && *s.MaxResults < 1 {
+		invalidParams.Add(request.NewErrParamMinValue("MaxResults", 1))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetActionType sets the ActionType field's value.
+func (s *ListMitigationActionsInput) SetActionType(v string) *ListMitigationActionsInput {
+	s.ActionType = &v
+	return s
+}
+
+// SetMaxResults sets the MaxResults field's value.
+func (s *ListMitigationActionsInput) SetMaxResults(v int64) *ListMitigationActionsInput {
+	s.MaxResults = &v
+	return s
+}
+
+// SetNextToken sets the NextToken field's value.
+func (s *ListMitigationActionsInput) SetNextToken(v string) *ListMitigationActionsInput {
+	s.NextToken = &v
+	return s
+}
+
+type ListMitigationActionsOutput struct {
+	_ struct{} `type:"structure"`
+
+	// A set of actions that matched the specified filter criteria.
+	ActionIdentifiers []*MitigationActionIdentifier `locationName:"actionIdentifiers" type:"list"`
+
+	// The token for the next set of results.
+	NextToken *string `locationName:"nextToken" type:"string"`
+}
+
+// String returns the string representation
+func (s ListMitigationActionsOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ListMitigationActionsOutput) GoString() string {
+	return s.String()
+}
+
+// SetActionIdentifiers sets the ActionIdentifiers field's value.
+func (s *ListMitigationActionsOutput) SetActionIdentifiers(v []*MitigationActionIdentifier) *ListMitigationActionsOutput {
+	s.ActionIdentifiers = v
+	return s
+}
+
+// SetNextToken sets the NextToken field's value.
+func (s *ListMitigationActionsOutput) SetNextToken(v string) *ListMitigationActionsOutput {
+	s.NextToken = &v
+	return s
+}
+
 type ListOTAUpdatesInput struct {
 	_ struct{} `type:"structure"`
 
@@ -28736,7 +30900,7 @@ type ListSecurityProfilesForTargetInput struct {
 	// The token for the next set of results.
 	NextToken *string `location:"querystring" locationName:"nextToken" type:"string"`
 
-	// If true, return child groups as well.
+	// If true, return child groups too.
 	Recursive *bool `location:"querystring" locationName:"recursive" type:"boolean"`
 
 	// The ARN of the target (thing group) whose attached security profiles you
@@ -30431,7 +32595,7 @@ type ListViolationEventsOutput struct {
 	NextToken *string `locationName:"nextToken" type:"string"`
 
 	// The security profile violation alerts issued for this account during the
-	// given time frame, potentially filtered by security profile, behavior violated,
+	// given time period, potentially filtered by security profile, behavior violated,
 	// or thing (device) violating.
 	ViolationEvents []*ViolationEvent `locationName:"violationEvents" type:"list"`
 }
@@ -30632,17 +32796,230 @@ func (s *MetricValue) SetPorts(v []*int64) *MetricValue {
 	return s
 }
 
-// Information about the resource that was non-compliant with the audit check.
+// Describes which changes should be applied as part of a mitigation action.
+type MitigationAction struct {
+	_ struct{} `type:"structure"`
+
+	// The set of parameters for this mitigation action. The parameters vary, depending
+	// on the kind of action you apply.
+	ActionParams *MitigationActionParams `locationName:"actionParams" type:"structure"`
+
+	// A unique identifier for the mitigation action.
+	Id *string `locationName:"id" type:"string"`
+
+	// A user-friendly name for the mitigation action.
+	Name *string `locationName:"name" type:"string"`
+
+	// The IAM role ARN used to apply this mitigation action.
+	RoleArn *string `locationName:"roleArn" min:"20" type:"string"`
+}
+
+// String returns the string representation
+func (s MitigationAction) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s MitigationAction) GoString() string {
+	return s.String()
+}
+
+// SetActionParams sets the ActionParams field's value.
+func (s *MitigationAction) SetActionParams(v *MitigationActionParams) *MitigationAction {
+	s.ActionParams = v
+	return s
+}
+
+// SetId sets the Id field's value.
+func (s *MitigationAction) SetId(v string) *MitigationAction {
+	s.Id = &v
+	return s
+}
+
+// SetName sets the Name field's value.
+func (s *MitigationAction) SetName(v string) *MitigationAction {
+	s.Name = &v
+	return s
+}
+
+// SetRoleArn sets the RoleArn field's value.
+func (s *MitigationAction) SetRoleArn(v string) *MitigationAction {
+	s.RoleArn = &v
+	return s
+}
+
+// Information that identifies a mitigation action. This information is returned
+// by ListMitigationActions.
+type MitigationActionIdentifier struct {
+	_ struct{} `type:"structure"`
+
+	// The IAM role ARN used to apply this mitigation action.
+	ActionArn *string `locationName:"actionArn" type:"string"`
+
+	// The friendly name of the mitigation action.
+	ActionName *string `locationName:"actionName" type:"string"`
+
+	// The date when this mitigation action was created.
+	CreationDate *time.Time `locationName:"creationDate" type:"timestamp"`
+}
+
+// String returns the string representation
+func (s MitigationActionIdentifier) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s MitigationActionIdentifier) GoString() string {
+	return s.String()
+}
+
+// SetActionArn sets the ActionArn field's value.
+func (s *MitigationActionIdentifier) SetActionArn(v string) *MitigationActionIdentifier {
+	s.ActionArn = &v
+	return s
+}
+
+// SetActionName sets the ActionName field's value.
+func (s *MitigationActionIdentifier) SetActionName(v string) *MitigationActionIdentifier {
+	s.ActionName = &v
+	return s
+}
+
+// SetCreationDate sets the CreationDate field's value.
+func (s *MitigationActionIdentifier) SetCreationDate(v time.Time) *MitigationActionIdentifier {
+	s.CreationDate = &v
+	return s
+}
+
+// The set of parameters for this mitigation action. You can specify only one
+// type of parameter (in other words, you can apply only one action for each
+// defined mitigation action).
+type MitigationActionParams struct {
+	_ struct{} `type:"structure"`
+
+	// Parameters to define a mitigation action that moves devices associated with
+	// a certificate to one or more specified thing groups, typically for quarantine.
+	AddThingsToThingGroupParams *AddThingsToThingGroupParams `locationName:"addThingsToThingGroupParams" type:"structure"`
+
+	// Parameters to define a mitigation action that enables AWS IoT logging at
+	// a specified level of detail.
+	EnableIoTLoggingParams *EnableIoTLoggingParams `locationName:"enableIoTLoggingParams" type:"structure"`
+
+	// Parameters to define a mitigation action that publishes findings to Amazon
+	// SNS. You can implement your own custom actions in response to the Amazon
+	// SNS messages.
+	PublishFindingToSnsParams *PublishFindingToSnsParams `locationName:"publishFindingToSnsParams" type:"structure"`
+
+	// Parameters to define a mitigation action that adds a blank policy to restrict
+	// permissions.
+	ReplaceDefaultPolicyVersionParams *ReplaceDefaultPolicyVersionParams `locationName:"replaceDefaultPolicyVersionParams" type:"structure"`
+
+	// Parameters to define a mitigation action that changes the state of the CA
+	// certificate to inactive.
+	UpdateCACertificateParams *UpdateCACertificateParams `locationName:"updateCACertificateParams" type:"structure"`
+
+	// Parameters to define a mitigation action that changes the state of the device
+	// certificate to inactive.
+	UpdateDeviceCertificateParams *UpdateDeviceCertificateParams `locationName:"updateDeviceCertificateParams" type:"structure"`
+}
+
+// String returns the string representation
+func (s MitigationActionParams) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s MitigationActionParams) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *MitigationActionParams) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "MitigationActionParams"}
+	if s.AddThingsToThingGroupParams != nil {
+		if err := s.AddThingsToThingGroupParams.Validate(); err != nil {
+			invalidParams.AddNested("AddThingsToThingGroupParams", err.(request.ErrInvalidParams))
+		}
+	}
+	if s.EnableIoTLoggingParams != nil {
+		if err := s.EnableIoTLoggingParams.Validate(); err != nil {
+			invalidParams.AddNested("EnableIoTLoggingParams", err.(request.ErrInvalidParams))
+		}
+	}
+	if s.PublishFindingToSnsParams != nil {
+		if err := s.PublishFindingToSnsParams.Validate(); err != nil {
+			invalidParams.AddNested("PublishFindingToSnsParams", err.(request.ErrInvalidParams))
+		}
+	}
+	if s.ReplaceDefaultPolicyVersionParams != nil {
+		if err := s.ReplaceDefaultPolicyVersionParams.Validate(); err != nil {
+			invalidParams.AddNested("ReplaceDefaultPolicyVersionParams", err.(request.ErrInvalidParams))
+		}
+	}
+	if s.UpdateCACertificateParams != nil {
+		if err := s.UpdateCACertificateParams.Validate(); err != nil {
+			invalidParams.AddNested("UpdateCACertificateParams", err.(request.ErrInvalidParams))
+		}
+	}
+	if s.UpdateDeviceCertificateParams != nil {
+		if err := s.UpdateDeviceCertificateParams.Validate(); err != nil {
+			invalidParams.AddNested("UpdateDeviceCertificateParams", err.(request.ErrInvalidParams))
+		}
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetAddThingsToThingGroupParams sets the AddThingsToThingGroupParams field's value.
+func (s *MitigationActionParams) SetAddThingsToThingGroupParams(v *AddThingsToThingGroupParams) *MitigationActionParams {
+	s.AddThingsToThingGroupParams = v
+	return s
+}
+
+// SetEnableIoTLoggingParams sets the EnableIoTLoggingParams field's value.
+func (s *MitigationActionParams) SetEnableIoTLoggingParams(v *EnableIoTLoggingParams) *MitigationActionParams {
+	s.EnableIoTLoggingParams = v
+	return s
+}
+
+// SetPublishFindingToSnsParams sets the PublishFindingToSnsParams field's value.
+func (s *MitigationActionParams) SetPublishFindingToSnsParams(v *PublishFindingToSnsParams) *MitigationActionParams {
+	s.PublishFindingToSnsParams = v
+	return s
+}
+
+// SetReplaceDefaultPolicyVersionParams sets the ReplaceDefaultPolicyVersionParams field's value.
+func (s *MitigationActionParams) SetReplaceDefaultPolicyVersionParams(v *ReplaceDefaultPolicyVersionParams) *MitigationActionParams {
+	s.ReplaceDefaultPolicyVersionParams = v
+	return s
+}
+
+// SetUpdateCACertificateParams sets the UpdateCACertificateParams field's value.
+func (s *MitigationActionParams) SetUpdateCACertificateParams(v *UpdateCACertificateParams) *MitigationActionParams {
+	s.UpdateCACertificateParams = v
+	return s
+}
+
+// SetUpdateDeviceCertificateParams sets the UpdateDeviceCertificateParams field's value.
+func (s *MitigationActionParams) SetUpdateDeviceCertificateParams(v *UpdateDeviceCertificateParams) *MitigationActionParams {
+	s.UpdateDeviceCertificateParams = v
+	return s
+}
+
+// Information about the resource that was noncompliant with the audit check.
 type NonCompliantResource struct {
 	_ struct{} `type:"structure"`
 
-	// Additional information about the non-compliant resource.
+	// Other information about the noncompliant resource.
 	AdditionalInfo map[string]*string `locationName:"additionalInfo" type:"map"`
 
-	// Information identifying the non-compliant resource.
+	// Information that identifies the noncompliant resource.
 	ResourceIdentifier *ResourceIdentifier `locationName:"resourceIdentifier" type:"structure"`
 
-	// The type of the non-compliant resource.
+	// The type of the noncompliant resource.
 	ResourceType *string `locationName:"resourceType" type:"string" enum:"ResourceType"`
 }
 
@@ -31185,12 +33562,53 @@ func (s *PresignedUrlConfig) SetRoleArn(v string) *PresignedUrlConfig {
 	return s
 }
 
+// Parameters to define a mitigation action that publishes findings to Amazon
+// SNS. You can implement your own custom actions in response to the Amazon
+// SNS messages.
+type PublishFindingToSnsParams struct {
+	_ struct{} `type:"structure"`
+
+	// The ARN of the topic to which you want to publish the findings.
+	//
+	// TopicArn is a required field
+	TopicArn *string `locationName:"topicArn" type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s PublishFindingToSnsParams) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s PublishFindingToSnsParams) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *PublishFindingToSnsParams) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "PublishFindingToSnsParams"}
+	if s.TopicArn == nil {
+		invalidParams.Add(request.NewErrParamRequired("TopicArn"))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetTopicArn sets the TopicArn field's value.
+func (s *PublishFindingToSnsParams) SetTopicArn(v string) *PublishFindingToSnsParams {
+	s.TopicArn = &v
+	return s
+}
+
 // The input for the DynamoActionVS action that specifies the DynamoDB table
 // to which the message data will be written.
 type PutItemInput struct {
 	_ struct{} `type:"structure"`
 
-	// The table where the message data will be written
+	// The table where the message data will be written.
 	//
 	// TableName is a required field
 	TableName *string `locationName:"tableName" type:"string" required:"true"`
@@ -31705,10 +34123,10 @@ func (s RejectCertificateTransferOutput) GoString() string {
 type RelatedResource struct {
 	_ struct{} `type:"structure"`
 
-	// Additional information about the resource.
+	// Other information about the resource.
 	AdditionalInfo map[string]*string `locationName:"additionalInfo" type:"map"`
 
-	// Information identifying the resource.
+	// Information that identifies the resource.
 	ResourceIdentifier *ResourceIdentifier `locationName:"resourceIdentifier" type:"structure"`
 
 	// The type of resource.
@@ -31903,6 +34321,46 @@ func (s RemoveThingFromThingGroupOutput) GoString() string {
 	return s.String()
 }
 
+// Parameters to define a mitigation action that adds a blank policy to restrict
+// permissions.
+type ReplaceDefaultPolicyVersionParams struct {
+	_ struct{} `type:"structure"`
+
+	// The name of the template to be applied. The only supported value is BLANK_POLICY.
+	//
+	// TemplateName is a required field
+	TemplateName *string `locationName:"templateName" type:"string" required:"true" enum:"PolicyTemplateName"`
+}
+
+// String returns the string representation
+func (s ReplaceDefaultPolicyVersionParams) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ReplaceDefaultPolicyVersionParams) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *ReplaceDefaultPolicyVersionParams) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "ReplaceDefaultPolicyVersionParams"}
+	if s.TemplateName == nil {
+		invalidParams.Add(request.NewErrParamRequired("TemplateName"))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetTemplateName sets the TemplateName field's value.
+func (s *ReplaceDefaultPolicyVersionParams) SetTemplateName(v string) *ReplaceDefaultPolicyVersionParams {
+	s.TemplateName = &v
+	return s
+}
+
 // The input for the ReplaceTopicRule operation.
 type ReplaceTopicRuleInput struct {
 	_ struct{} `type:"structure" payload:"TopicRulePayload"`
@@ -32031,7 +34489,7 @@ func (s *RepublishAction) SetTopic(v string) *RepublishAction {
 	return s
 }
 
-// Information identifying the non-compliant resource.
+// Information that identifies the noncompliant resource.
 type ResourceIdentifier struct {
 	_ struct{} `type:"structure"`
 
@@ -32044,7 +34502,7 @@ type ResourceIdentifier struct {
 	// The client ID.
 	ClientId *string `locationName:"clientId" type:"string"`
 
-	// The ID of the Cognito Identity Pool.
+	// The ID of the Amazon Cognito identity pool.
 	CognitoIdentityPoolId *string `locationName:"cognitoIdentityPoolId" type:"string"`
 
 	// The ID of the certificate attached to the resource.
@@ -32455,7 +34913,7 @@ type ScheduledAuditMetadata struct {
 	// is "WEEKLY" or "BIWEEKLY").
 	DayOfWeek *string `locationName:"dayOfWeek" type:"string" enum:"DayOfWeek"`
 
-	// How often the scheduled audit takes place.
+	// How often the scheduled audit occurs.
 	Frequency *string `locationName:"frequency" type:"string" enum:"AuditFrequency"`
 
 	// The ARN of the scheduled audit.
@@ -33228,12 +35686,129 @@ func (s *SqsAction) SetUseBase64(v bool) *SqsAction {
 	return s
 }
 
+type StartAuditMitigationActionsTaskInput struct {
+	_ struct{} `type:"structure"`
+
+	// For an audit check, specifies which mitigation actions to apply. Those actions
+	// must be defined in your AWS account.
+	//
+	// AuditCheckToActionsMapping is a required field
+	AuditCheckToActionsMapping map[string][]*string `locationName:"auditCheckToActionsMapping" type:"map" required:"true"`
+
+	// Each audit mitigation task must have a unique client request token. If you
+	// try to start a new task with the same token as a task that already exists,
+	// an exception occurs. If you omit this value, a unique client request token
+	// is generated automatically.
+	ClientRequestToken *string `locationName:"clientRequestToken" min:"1" type:"string" idempotencyToken:"true"`
+
+	// Specifies the audit findings to which the mitigation actions are applied.
+	// You can apply them to a type of audit check, to all findings from an audit,
+	// or to a speecific set of findings.
+	//
+	// Target is a required field
+	Target *AuditMitigationActionsTaskTarget `locationName:"target" type:"structure" required:"true"`
+
+	// A unique identifier for the task. You can use this identifier to check the
+	// status of the task or to cancel it.
+	//
+	// TaskId is a required field
+	TaskId *string `location:"uri" locationName:"taskId" min:"1" type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s StartAuditMitigationActionsTaskInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s StartAuditMitigationActionsTaskInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *StartAuditMitigationActionsTaskInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "StartAuditMitigationActionsTaskInput"}
+	if s.AuditCheckToActionsMapping == nil {
+		invalidParams.Add(request.NewErrParamRequired("AuditCheckToActionsMapping"))
+	}
+	if s.ClientRequestToken != nil && len(*s.ClientRequestToken) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("ClientRequestToken", 1))
+	}
+	if s.Target == nil {
+		invalidParams.Add(request.NewErrParamRequired("Target"))
+	}
+	if s.TaskId == nil {
+		invalidParams.Add(request.NewErrParamRequired("TaskId"))
+	}
+	if s.TaskId != nil && len(*s.TaskId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("TaskId", 1))
+	}
+	if s.Target != nil {
+		if err := s.Target.Validate(); err != nil {
+			invalidParams.AddNested("Target", err.(request.ErrInvalidParams))
+		}
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetAuditCheckToActionsMapping sets the AuditCheckToActionsMapping field's value.
+func (s *StartAuditMitigationActionsTaskInput) SetAuditCheckToActionsMapping(v map[string][]*string) *StartAuditMitigationActionsTaskInput {
+	s.AuditCheckToActionsMapping = v
+	return s
+}
+
+// SetClientRequestToken sets the ClientRequestToken field's value.
+func (s *StartAuditMitigationActionsTaskInput) SetClientRequestToken(v string) *StartAuditMitigationActionsTaskInput {
+	s.ClientRequestToken = &v
+	return s
+}
+
+// SetTarget sets the Target field's value.
+func (s *StartAuditMitigationActionsTaskInput) SetTarget(v *AuditMitigationActionsTaskTarget) *StartAuditMitigationActionsTaskInput {
+	s.Target = v
+	return s
+}
+
+// SetTaskId sets the TaskId field's value.
+func (s *StartAuditMitigationActionsTaskInput) SetTaskId(v string) *StartAuditMitigationActionsTaskInput {
+	s.TaskId = &v
+	return s
+}
+
+type StartAuditMitigationActionsTaskOutput struct {
+	_ struct{} `type:"structure"`
+
+	// The unique identifier for the audit mitigation task. This matches the taskId
+	// that you specified in the request.
+	TaskId *string `locationName:"taskId" min:"1" type:"string"`
+}
+
+// String returns the string representation
+func (s StartAuditMitigationActionsTaskOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s StartAuditMitigationActionsTaskOutput) GoString() string {
+	return s.String()
+}
+
+// SetTaskId sets the TaskId field's value.
+func (s *StartAuditMitigationActionsTaskOutput) SetTaskId(v string) *StartAuditMitigationActionsTaskOutput {
+	s.TaskId = &v
+	return s
+}
+
 type StartOnDemandAuditTaskInput struct {
 	_ struct{} `type:"structure"`
 
 	// Which checks are performed during the audit. The checks you specify must
 	// be enabled for your account or an exception occurs. Use DescribeAccountAuditConfiguration
-	// to see the list of all checks including those that are enabled or UpdateAccountAuditConfiguration
+	// to see the list of all checks, including those that are enabled or UpdateAccountAuditConfiguration
 	// to select which checks are enabled.
 	//
 	// TargetCheckNames is a required field
@@ -33981,13 +36556,13 @@ type TaskStatistics struct {
 	// The number of checks that found compliant resources.
 	CompliantChecks *int64 `locationName:"compliantChecks" type:"integer"`
 
-	// The number of checks
+	// The number of checks.
 	FailedChecks *int64 `locationName:"failedChecks" type:"integer"`
 
 	// The number of checks in progress.
 	InProgressChecks *int64 `locationName:"inProgressChecks" type:"integer"`
 
-	// The number of checks that found non-compliant resources.
+	// The number of checks that found noncompliant resources.
 	NonCompliantChecks *int64 `locationName:"nonCompliantChecks" type:"integer"`
 
 	// The number of checks in this audit.
@@ -34046,6 +36621,70 @@ func (s *TaskStatistics) SetTotalChecks(v int64) *TaskStatistics {
 // SetWaitingForDataCollectionChecks sets the WaitingForDataCollectionChecks field's value.
 func (s *TaskStatistics) SetWaitingForDataCollectionChecks(v int64) *TaskStatistics {
 	s.WaitingForDataCollectionChecks = &v
+	return s
+}
+
+// Provides summary counts of how many tasks for findings are in a particular
+// state. This information is included in the response from DescribeAuditMitigationActionsTask.
+type TaskStatisticsForAuditCheck struct {
+	_ struct{} `type:"structure"`
+
+	// The number of findings to which the mitigation action task was canceled when
+	// applied.
+	CanceledFindingsCount *int64 `locationName:"canceledFindingsCount" type:"long"`
+
+	// The number of findings for which at least one of the actions failed when
+	// applied.
+	FailedFindingsCount *int64 `locationName:"failedFindingsCount" type:"long"`
+
+	// The number of findings skipped because of filter conditions provided in the
+	// parameters to the command.
+	SkippedFindingsCount *int64 `locationName:"skippedFindingsCount" type:"long"`
+
+	// The number of findings for which all mitigation actions succeeded when applied.
+	SucceededFindingsCount *int64 `locationName:"succeededFindingsCount" type:"long"`
+
+	// The total number of findings to which a task is being applied.
+	TotalFindingsCount *int64 `locationName:"totalFindingsCount" type:"long"`
+}
+
+// String returns the string representation
+func (s TaskStatisticsForAuditCheck) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s TaskStatisticsForAuditCheck) GoString() string {
+	return s.String()
+}
+
+// SetCanceledFindingsCount sets the CanceledFindingsCount field's value.
+func (s *TaskStatisticsForAuditCheck) SetCanceledFindingsCount(v int64) *TaskStatisticsForAuditCheck {
+	s.CanceledFindingsCount = &v
+	return s
+}
+
+// SetFailedFindingsCount sets the FailedFindingsCount field's value.
+func (s *TaskStatisticsForAuditCheck) SetFailedFindingsCount(v int64) *TaskStatisticsForAuditCheck {
+	s.FailedFindingsCount = &v
+	return s
+}
+
+// SetSkippedFindingsCount sets the SkippedFindingsCount field's value.
+func (s *TaskStatisticsForAuditCheck) SetSkippedFindingsCount(v int64) *TaskStatisticsForAuditCheck {
+	s.SkippedFindingsCount = &v
+	return s
+}
+
+// SetSucceededFindingsCount sets the SucceededFindingsCount field's value.
+func (s *TaskStatisticsForAuditCheck) SetSucceededFindingsCount(v int64) *TaskStatisticsForAuditCheck {
+	s.SucceededFindingsCount = &v
+	return s
+}
+
+// SetTotalFindingsCount sets the TotalFindingsCount field's value.
+func (s *TaskStatisticsForAuditCheck) SetTotalFindingsCount(v int64) *TaskStatisticsForAuditCheck {
+	s.TotalFindingsCount = &v
 	return s
 }
 
@@ -34652,8 +37291,8 @@ type ThingIndexingConfiguration struct {
 
 	// Thing connectivity indexing mode. Valid values are:
 	//
-	//    * STATUS – Your thing index contains connectivity status. To enable thing
-	//    connectivity indexing, thingIndexMode must not be set to OFF.
+	//    * STATUS – Your thing index contains connectivity status. To enable
+	//    thing connectivity indexing, thingIndexMode must not be set to OFF.
 	//
 	//    * OFF - Thing connectivity status indexing is disabled.
 	ThingConnectivityIndexingMode *string `locationName:"thingConnectivityIndexingMode" type:"string" enum:"ThingConnectivityIndexingMode"`
@@ -35347,18 +37986,18 @@ type UpdateAccountAuditConfigurationInput struct {
 	_ struct{} `type:"structure"`
 
 	// Specifies which audit checks are enabled and disabled for this account. Use
-	// DescribeAccountAuditConfiguration to see the list of all checks including
+	// DescribeAccountAuditConfiguration to see the list of all checks, including
 	// those that are currently enabled.
 	//
-	// Note that some data collection may begin immediately when certain checks
-	// are enabled. When a check is disabled, any data collected so far in relation
-	// to the check is deleted.
+	// Some data collection might start immediately when certain checks are enabled.
+	// When a check is disabled, any data collected so far in relation to the check
+	// is deleted.
 	//
 	// You cannot disable a check if it is used by any scheduled audit. You must
 	// first delete the check from the scheduled audit or delete the scheduled audit
 	// itself.
 	//
-	// On the first call to UpdateAccountAuditConfiguration this parameter is required
+	// On the first call to UpdateAccountAuditConfiguration, this parameter is required
 	// and must specify at least one enabled check.
 	AuditCheckConfigurations map[string]*AuditCheckConfiguration `locationName:"auditCheckConfigurations" type:"map"`
 
@@ -35366,7 +38005,7 @@ type UpdateAccountAuditConfigurationInput struct {
 	AuditNotificationTargetConfigurations map[string]*AuditNotificationTarget `locationName:"auditNotificationTargetConfigurations" type:"map"`
 
 	// The ARN of the role that grants permission to AWS IoT to access information
-	// about your devices, policies, certificates and other items as necessary when
+	// about your devices, policies, certificates and other items as required when
 	// performing an audit.
 	RoleArn *string `locationName:"roleArn" min:"20" type:"string"`
 }
@@ -35659,7 +38298,7 @@ type UpdateCACertificateInput struct {
 	// Information about the registration configuration.
 	RegistrationConfig *RegistrationConfig `locationName:"registrationConfig" type:"structure"`
 
-	// If true, remove auto registration.
+	// If true, removes auto registration.
 	RemoveAutoRegistration *bool `locationName:"removeAutoRegistration" type:"boolean"`
 }
 
@@ -35738,6 +38377,47 @@ func (s UpdateCACertificateOutput) GoString() string {
 	return s.String()
 }
 
+// Parameters to define a mitigation action that changes the state of the CA
+// certificate to inactive.
+type UpdateCACertificateParams struct {
+	_ struct{} `type:"structure"`
+
+	// The action that you want to apply to the CA cerrtificate. The only supported
+	// value is DEACTIVATE.
+	//
+	// Action is a required field
+	Action *string `locationName:"action" type:"string" required:"true" enum:"CACertificateUpdateAction"`
+}
+
+// String returns the string representation
+func (s UpdateCACertificateParams) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s UpdateCACertificateParams) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *UpdateCACertificateParams) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "UpdateCACertificateParams"}
+	if s.Action == nil {
+		invalidParams.Add(request.NewErrParamRequired("Action"))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetAction sets the Action field's value.
+func (s *UpdateCACertificateParams) SetAction(v string) *UpdateCACertificateParams {
+	s.Action = &v
+	return s
+}
+
 // The input for the UpdateCertificate operation.
 type UpdateCertificateInput struct {
 	_ struct{} `type:"structure"`
@@ -35814,6 +38494,47 @@ func (s UpdateCertificateOutput) String() string {
 // GoString returns the string representation
 func (s UpdateCertificateOutput) GoString() string {
 	return s.String()
+}
+
+// Parameters to define a mitigation action that changes the state of the device
+// certificate to inactive.
+type UpdateDeviceCertificateParams struct {
+	_ struct{} `type:"structure"`
+
+	// The action that you want to apply to the device cerrtificate. The only supported
+	// value is DEACTIVATE.
+	//
+	// Action is a required field
+	Action *string `locationName:"action" type:"string" required:"true" enum:"DeviceCertificateUpdateAction"`
+}
+
+// String returns the string representation
+func (s UpdateDeviceCertificateParams) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s UpdateDeviceCertificateParams) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *UpdateDeviceCertificateParams) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "UpdateDeviceCertificateParams"}
+	if s.Action == nil {
+		invalidParams.Add(request.NewErrParamRequired("Action"))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetAction sets the Action field's value.
+func (s *UpdateDeviceCertificateParams) SetAction(v string) *UpdateDeviceCertificateParams {
+	s.Action = &v
+	return s
 }
 
 type UpdateDynamicThingGroupInput struct {
@@ -36162,6 +38883,107 @@ func (s UpdateJobOutput) GoString() string {
 	return s.String()
 }
 
+type UpdateMitigationActionInput struct {
+	_ struct{} `type:"structure"`
+
+	// The friendly name for the mitigation action. You can't change the name by
+	// using UpdateMitigationAction. Instead, you must delete and re-create the
+	// mitigation action with the new name.
+	//
+	// ActionName is a required field
+	ActionName *string `location:"uri" locationName:"actionName" type:"string" required:"true"`
+
+	// Defines the type of action and the parameters for that action.
+	ActionParams *MitigationActionParams `locationName:"actionParams" type:"structure"`
+
+	// The ARN of the IAM role that is used to apply the mitigation action.
+	RoleArn *string `locationName:"roleArn" min:"20" type:"string"`
+}
+
+// String returns the string representation
+func (s UpdateMitigationActionInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s UpdateMitigationActionInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *UpdateMitigationActionInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "UpdateMitigationActionInput"}
+	if s.ActionName == nil {
+		invalidParams.Add(request.NewErrParamRequired("ActionName"))
+	}
+	if s.ActionName != nil && len(*s.ActionName) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("ActionName", 1))
+	}
+	if s.RoleArn != nil && len(*s.RoleArn) < 20 {
+		invalidParams.Add(request.NewErrParamMinLen("RoleArn", 20))
+	}
+	if s.ActionParams != nil {
+		if err := s.ActionParams.Validate(); err != nil {
+			invalidParams.AddNested("ActionParams", err.(request.ErrInvalidParams))
+		}
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetActionName sets the ActionName field's value.
+func (s *UpdateMitigationActionInput) SetActionName(v string) *UpdateMitigationActionInput {
+	s.ActionName = &v
+	return s
+}
+
+// SetActionParams sets the ActionParams field's value.
+func (s *UpdateMitigationActionInput) SetActionParams(v *MitigationActionParams) *UpdateMitigationActionInput {
+	s.ActionParams = v
+	return s
+}
+
+// SetRoleArn sets the RoleArn field's value.
+func (s *UpdateMitigationActionInput) SetRoleArn(v string) *UpdateMitigationActionInput {
+	s.RoleArn = &v
+	return s
+}
+
+type UpdateMitigationActionOutput struct {
+	_ struct{} `type:"structure"`
+
+	// The ARN for the new mitigation action.
+	ActionArn *string `locationName:"actionArn" type:"string"`
+
+	// A unique identifier for the mitigation action.
+	ActionId *string `locationName:"actionId" type:"string"`
+}
+
+// String returns the string representation
+func (s UpdateMitigationActionOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s UpdateMitigationActionOutput) GoString() string {
+	return s.String()
+}
+
+// SetActionArn sets the ActionArn field's value.
+func (s *UpdateMitigationActionOutput) SetActionArn(v string) *UpdateMitigationActionOutput {
+	s.ActionArn = &v
+	return s
+}
+
+// SetActionId sets the ActionId field's value.
+func (s *UpdateMitigationActionOutput) SetActionId(v string) *UpdateMitigationActionOutput {
+	s.ActionId = &v
+	return s
+}
+
 type UpdateRoleAliasInput struct {
 	_ struct{} `type:"structure"`
 
@@ -36269,13 +39091,13 @@ type UpdateScheduledAuditInput struct {
 	DayOfMonth *string `locationName:"dayOfMonth" type:"string"`
 
 	// The day of the week on which the scheduled audit takes place. Can be one
-	// of "SUN", "MON", "TUE", "WED", "THU", "FRI" or "SAT". This field is required
+	// of "SUN", "MON", "TUE", "WED", "THU", "FRI", or "SAT". This field is required
 	// if the "frequency" parameter is set to "WEEKLY" or "BIWEEKLY".
 	DayOfWeek *string `locationName:"dayOfWeek" type:"string" enum:"DayOfWeek"`
 
 	// How often the scheduled audit takes place. Can be one of "DAILY", "WEEKLY",
-	// "BIWEEKLY" or "MONTHLY". The actual start time of each audit is determined
-	// by the system.
+	// "BIWEEKLY", or "MONTHLY". The start time of each audit is determined by the
+	// system.
 	Frequency *string `locationName:"frequency" type:"string" enum:"AuditFrequency"`
 
 	// The name of the scheduled audit. (Max. 128 chars)
@@ -36285,7 +39107,7 @@ type UpdateScheduledAuditInput struct {
 
 	// Which checks are performed during the scheduled audit. Checks must be enabled
 	// for your account. (Use DescribeAccountAuditConfiguration to see the list
-	// of all checks including those that are enabled or UpdateAccountAuditConfiguration
+	// of all checks, including those that are enabled or use UpdateAccountAuditConfiguration
 	// to select which checks are enabled.)
 	TargetCheckNames []*string `locationName:"targetCheckNames" type:"list"`
 }
@@ -36373,7 +39195,7 @@ type UpdateSecurityProfileInput struct {
 	_ struct{} `type:"structure"`
 
 	// A list of metrics whose data is retained (stored). By default, data is retained
-	// for any metric used in the profile's behaviors but it is also retained for
+	// for any metric used in the profile's behaviors, but it is also retained for
 	// any metric specified here.
 	AdditionalMetricsToRetain []*string `locationName:"additionalMetricsToRetain" type:"list"`
 
@@ -36385,21 +39207,21 @@ type UpdateSecurityProfileInput struct {
 	Behaviors []*Behavior `locationName:"behaviors" type:"list"`
 
 	// If true, delete all additionalMetricsToRetain defined for this security profile.
-	// If any additionalMetricsToRetain are defined in the current invocation an
+	// If any additionalMetricsToRetain are defined in the current invocation, an
 	// exception occurs.
 	DeleteAdditionalMetricsToRetain *bool `locationName:"deleteAdditionalMetricsToRetain" type:"boolean"`
 
 	// If true, delete all alertTargets defined for this security profile. If any
-	// alertTargets are defined in the current invocation an exception occurs.
+	// alertTargets are defined in the current invocation, an exception occurs.
 	DeleteAlertTargets *bool `locationName:"deleteAlertTargets" type:"boolean"`
 
 	// If true, delete all behaviors defined for this security profile. If any behaviors
-	// are defined in the current invocation an exception occurs.
+	// are defined in the current invocation, an exception occurs.
 	DeleteBehaviors *bool `locationName:"deleteBehaviors" type:"boolean"`
 
 	// The expected version of the security profile. A new version is generated
 	// whenever the security profile is updated. If you specify a value that is
-	// different than the actual version, a VersionConflictException is thrown.
+	// different from the actual version, a VersionConflictException is thrown.
 	ExpectedVersion *int64 `location:"querystring" locationName:"expectedVersion" type:"long"`
 
 	// A description of the security profile.
@@ -36515,7 +39337,7 @@ type UpdateSecurityProfileOutput struct {
 	_ struct{} `type:"structure"`
 
 	// A list of metrics whose data is retained (stored). By default, data is retained
-	// for any metric used in the security profile's behaviors but it is also retained
+	// for any metric used in the security profile's behaviors, but it is also retained
 	// for any metric specified here.
 	AdditionalMetricsToRetain []*string `locationName:"additionalMetricsToRetain" type:"list"`
 
@@ -37272,6 +40094,40 @@ const (
 )
 
 const (
+	// AuditMitigationActionsExecutionStatusInProgress is a AuditMitigationActionsExecutionStatus enum value
+	AuditMitigationActionsExecutionStatusInProgress = "IN_PROGRESS"
+
+	// AuditMitigationActionsExecutionStatusCompleted is a AuditMitigationActionsExecutionStatus enum value
+	AuditMitigationActionsExecutionStatusCompleted = "COMPLETED"
+
+	// AuditMitigationActionsExecutionStatusFailed is a AuditMitigationActionsExecutionStatus enum value
+	AuditMitigationActionsExecutionStatusFailed = "FAILED"
+
+	// AuditMitigationActionsExecutionStatusCanceled is a AuditMitigationActionsExecutionStatus enum value
+	AuditMitigationActionsExecutionStatusCanceled = "CANCELED"
+
+	// AuditMitigationActionsExecutionStatusSkipped is a AuditMitigationActionsExecutionStatus enum value
+	AuditMitigationActionsExecutionStatusSkipped = "SKIPPED"
+
+	// AuditMitigationActionsExecutionStatusPending is a AuditMitigationActionsExecutionStatus enum value
+	AuditMitigationActionsExecutionStatusPending = "PENDING"
+)
+
+const (
+	// AuditMitigationActionsTaskStatusInProgress is a AuditMitigationActionsTaskStatus enum value
+	AuditMitigationActionsTaskStatusInProgress = "IN_PROGRESS"
+
+	// AuditMitigationActionsTaskStatusCompleted is a AuditMitigationActionsTaskStatus enum value
+	AuditMitigationActionsTaskStatusCompleted = "COMPLETED"
+
+	// AuditMitigationActionsTaskStatusFailed is a AuditMitigationActionsTaskStatus enum value
+	AuditMitigationActionsTaskStatusFailed = "FAILED"
+
+	// AuditMitigationActionsTaskStatusCanceled is a AuditMitigationActionsTaskStatus enum value
+	AuditMitigationActionsTaskStatusCanceled = "CANCELED"
+)
+
+const (
 	// AuditNotificationTypeSns is a AuditNotificationType enum value
 	AuditNotificationTypeSns = "SNS"
 )
@@ -37331,6 +40187,11 @@ const (
 
 	// CACertificateStatusInactive is a CACertificateStatus enum value
 	CACertificateStatusInactive = "INACTIVE"
+)
+
+const (
+	// CACertificateUpdateActionDeactivate is a CACertificateUpdateAction enum value
+	CACertificateUpdateActionDeactivate = "DEACTIVATE"
 )
 
 const (
@@ -37426,6 +40287,11 @@ const (
 
 	// DayOfWeekSat is a DayOfWeek enum value
 	DayOfWeekSat = "SAT"
+)
+
+const (
+	// DeviceCertificateUpdateActionDeactivate is a DeviceCertificateUpdateAction enum value
+	DeviceCertificateUpdateActionDeactivate = "DEACTIVATE"
 )
 
 const (
@@ -37581,6 +40447,26 @@ const (
 )
 
 const (
+	// MitigationActionTypeUpdateDeviceCertificate is a MitigationActionType enum value
+	MitigationActionTypeUpdateDeviceCertificate = "UPDATE_DEVICE_CERTIFICATE"
+
+	// MitigationActionTypeUpdateCaCertificate is a MitigationActionType enum value
+	MitigationActionTypeUpdateCaCertificate = "UPDATE_CA_CERTIFICATE"
+
+	// MitigationActionTypeAddThingsToThingGroup is a MitigationActionType enum value
+	MitigationActionTypeAddThingsToThingGroup = "ADD_THINGS_TO_THING_GROUP"
+
+	// MitigationActionTypeReplaceDefaultPolicyVersion is a MitigationActionType enum value
+	MitigationActionTypeReplaceDefaultPolicyVersion = "REPLACE_DEFAULT_POLICY_VERSION"
+
+	// MitigationActionTypeEnableIotLogging is a MitigationActionType enum value
+	MitigationActionTypeEnableIotLogging = "ENABLE_IOT_LOGGING"
+
+	// MitigationActionTypePublishFindingToSns is a MitigationActionType enum value
+	MitigationActionTypePublishFindingToSns = "PUBLISH_FINDING_TO_SNS"
+)
+
+const (
 	// OTAUpdateStatusCreatePending is a OTAUpdateStatus enum value
 	OTAUpdateStatusCreatePending = "CREATE_PENDING"
 
@@ -37592,6 +40478,11 @@ const (
 
 	// OTAUpdateStatusCreateFailed is a OTAUpdateStatus enum value
 	OTAUpdateStatusCreateFailed = "CREATE_FAILED"
+)
+
+const (
+	// PolicyTemplateNameBlankPolicy is a PolicyTemplateName enum value
+	PolicyTemplateNameBlankPolicy = "BLANK_POLICY"
 )
 
 const (
