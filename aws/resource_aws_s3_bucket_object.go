@@ -151,6 +151,11 @@ func resourceAwsS3BucketObject() *schema.Resource {
 				ConflictsWith: []string{"kms_key_id", "server_side_encryption"},
 			},
 
+			"etag_changed": {
+				Type:     schema.TypeBool,
+				Computed: true,
+			},
+
 			"version_id": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -339,8 +344,11 @@ func resourceAwsS3BucketObjectRead(d *schema.ResourceData, meta interface{}) err
 			d.Set("kms_key_id", resp.SSEKMSKeyId)
 		}
 	}
-	// See https://forums.aws.amazon.com/thread.jspa?threadID=44003
-	d.Set("etag", strings.Trim(aws.StringValue(resp.ETag), `"`))
+	// We detect if the last saved etag does not match the actual etag, if so, that mean that the s3 object has been
+	// modified outside of terraform and then, we will force the update of the resource.
+	actualEtag := strings.Trim(aws.StringValue(resp.ETag), `"`)
+	d.Set("etag_changed", d.Get("etag") != actualEtag)
+	d.Set("etag", actualEtag)
 
 	// The "STANDARD" (which is also the default) storage
 	// class when set would not be included in the results.
@@ -460,6 +468,10 @@ func validateMetadataIsLowerCase(v interface{}, k string) (ws []string, errors [
 }
 
 func resourceAwsS3BucketObjectCustomizeDiff(d *schema.ResourceDiff, meta interface{}) error {
+	if d.Get("etag_changed").(bool) {
+		d.SetNewComputed("etag")
+	}
+
 	if d.HasChange("etag") {
 		d.SetNewComputed("version_id")
 	}
