@@ -1,0 +1,16 @@
+on: pull_request
+name: Pull Request Updates
+jobs:
+  pr-filter-sync:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@master
+    - name: pr-filter-sync
+      uses: actions/bin/filter@master
+      with:
+        args: action 'opened|synchronize'
+    - name: pr-label
+      uses: actions/labeler@v1.0.0
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        LABEL_SPEC_FILE: .github/PULL_REQUEST_LABELS.yml
