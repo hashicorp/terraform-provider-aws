@@ -162,6 +162,11 @@ func resourceAwsS3BucketObject() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
+
+			"remove_all_on_delete": {
+				Type:     schema.TypeBool,
+				Optional: true,
+			},
 		},
 	}
 }
@@ -402,7 +407,9 @@ func resourceAwsS3BucketObjectDelete(d *schema.ResourceData, meta interface{}) e
 	// We are effectively ignoring any leading '/' in the key name as aws.Config.DisableRestProtocolURICleaning is false
 	key = strings.TrimPrefix(key, "/")
 
-	if _, ok := d.GetOk("version_id"); ok {
+	delete_versions := d.Get("remove_all_on_delete").(bool)
+
+	if _, ok := d.GetOk("version_id"); ok && delete_versions {
 		// Bucket is versioned, we need to delete all versions
 		vInput := s3.ListObjectVersionsInput{
 			Bucket: aws.String(bucket),
