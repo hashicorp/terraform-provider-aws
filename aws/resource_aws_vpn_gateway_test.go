@@ -47,7 +47,15 @@ func testSweepVPNGateways(region string) error {
 	}
 
 	for _, vpng := range resp.VpnGateways {
+		if aws.StringValue(vpng.State) == ec2.VpnStateDeleted {
+			continue
+		}
+
 		for _, vpcAttachment := range vpng.VpcAttachments {
+			if aws.StringValue(vpcAttachment.State) == ec2.AttachmentStatusDetached {
+				continue
+			}
+
 			input := &ec2.DetachVpnGatewayInput{
 				VpcId:        vpcAttachment.VpcId,
 				VpnGatewayId: vpng.VpnGatewayId,
@@ -55,6 +63,11 @@ func testSweepVPNGateways(region string) error {
 
 			log.Printf("[DEBUG] Detaching VPN Gateway: %s", input)
 			_, err := conn.DetachVpnGateway(input)
+
+			if isAWSErr(err, "InvalidVpnGatewayAttachment.NotFound", "") || isAWSErr(err, "InvalidVpnGatewayID.NotFound", "") {
+				continue
+			}
+
 			if err != nil {
 				return fmt.Errorf("error detaching VPN Gateway (%s) from VPC (%s): %s", aws.StringValue(vpng.VpnGatewayId), aws.StringValue(vpcAttachment.VpcId), err)
 			}
@@ -78,6 +91,11 @@ func testSweepVPNGateways(region string) error {
 
 		log.Printf("[DEBUG] Deleting VPN Gateway: %s", input)
 		_, err := conn.DeleteVpnGateway(input)
+
+		if isAWSErr(err, "InvalidVpnGatewayID.NotFound", "") {
+			continue
+		}
+
 		if err != nil {
 			return fmt.Errorf("error deleting VPN Gateway (%s): %s", aws.StringValue(vpng.VpnGatewayId), err)
 		}

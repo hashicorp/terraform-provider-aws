@@ -539,6 +539,15 @@ func TestAccAWSAcmCertificate_imported_DomainName(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 					resource.TestCheckResourceAttr(resourceName, "domain_name", "example.com"),
 				),
+				ExpectNonEmptyPlan: true, // The certificate body is regenerated every time
+			},
+			{
+				Config: testAccAcmCertificateConfig_selfSigned("example"),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, "domain_name", "example.com"),
+				),
+				ExpectNonEmptyPlan: true, // The certificate body is regenerated every time
 			},
 			{
 				Config: testAccAcmCertificateConfig_selfSigned("example2"),
@@ -546,13 +555,14 @@ func TestAccAWSAcmCertificate_imported_DomainName(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 					resource.TestCheckResourceAttr(resourceName, "domain_name", "example2.com"),
 				),
+				ExpectNonEmptyPlan: true, // The certificate body is regenerated every time
 			},
 			{
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
 				// These are not returned by the API
-				ImportStateVerifyIgnore: []string{"private_key", "certificate_body"},
+				ImportStateVerifyIgnore: []string{"private_key", "certificate_body", "certificate_chain"},
 			},
 		},
 	})
@@ -661,17 +671,46 @@ resource "tls_private_key" "%[1]s" {
   algorithm = "RSA"
 }
 
-resource "tls_self_signed_cert" "%[1]s" {
+resource "tls_cert_request" "%[1]s" {
   key_algorithm   = "RSA"
-  private_key_pem = "${tls_private_key.%[1]s.private_key_pem}"
-
+  private_key_pem = "${tls_private_key.%[1]s.private_key_pem}"  
+  
   subject {
     common_name  = "%[1]s.com"
     organization = "ACME Examples, Inc"
   }
+}
 
-  validity_period_hours = 12
+resource "tls_self_signed_cert" "%[1]s" {
+  key_algorithm   = "${tls_private_key.%[1]s.algorithm}"
+  private_key_pem = "${tls_private_key.%[1]s.private_key_pem}"  
+  
+  validity_period_hours = 4
+  early_renewal_hours   = 2
+  is_ca_certificate     = true  # Reasonable set of uses for a server SSL certificate.
+  
+  allowed_uses = [
+    "key_encipherment",
+    "digital_signature",
+    "server_auth",
+    "cert_signing",
+  ]  
+  
+  subject {
+    common_name  = "test.com"
+    organization = "ACME Examples, Inc"
+  }
+}
 
+resource "tls_locally_signed_cert" "%[1]s" {
+  cert_request_pem   = "${tls_cert_request.%[1]s.cert_request_pem}"
+  ca_key_algorithm   = "RSA"
+  ca_private_key_pem = "${tls_private_key.%[1]s.private_key_pem}"
+  ca_cert_pem        = "${tls_self_signed_cert.%[1]s.cert_pem}"
+
+  validity_period_hours = 3000
+  early_renewal_hours   = 3000  
+  
   allowed_uses = [
     "key_encipherment",
     "digital_signature",
@@ -680,8 +719,9 @@ resource "tls_self_signed_cert" "%[1]s" {
 }
 
 resource "aws_acm_certificate" "cert" {
-  private_key      = "${tls_private_key.%[1]s.private_key_pem}"
-  certificate_body = "${tls_self_signed_cert.%[1]s.cert_pem}"
+  private_key       = "${tls_private_key.%[1]s.private_key_pem}"
+  certificate_body  = "${tls_locally_signed_cert.%[1]s.cert_pem}"
+  certificate_chain = "${tls_self_signed_cert.%[1]s.cert_pem}"
 }
 `, certName)
 }
