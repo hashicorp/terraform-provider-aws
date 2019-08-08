@@ -76,7 +76,7 @@ func TestAccAWSBatchJobQueue_basic(t *testing.T) {
 	ri := acctest.RandInt()
 	config := fmt.Sprintf(testAccBatchJobQueueBasic, ri)
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSBatch(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckBatchJobQueueDestroy,
 		Steps: []resource.TestStep{
@@ -97,7 +97,7 @@ func TestAccAWSBatchJobQueue_disappears(t *testing.T) {
 	rInt := acctest.RandInt()
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSBatch(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSLaunchTemplateDestroy,
 		Steps: []resource.TestStep{
@@ -119,7 +119,7 @@ func TestAccAWSBatchJobQueue_update(t *testing.T) {
 	config := fmt.Sprintf(testAccBatchJobQueueBasic, ri)
 	updateConfig := fmt.Sprintf(testAccBatchJobQueueUpdate, ri)
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSBatch(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckBatchJobQueueDestroy,
 		Steps: []resource.TestStep{
@@ -307,7 +307,7 @@ resource "aws_subnet" "test_acc" {
 
 resource "aws_batch_compute_environment" "test_environment" {
   compute_environment_name = "tf_acctest_batch_compute_environment_%[1]d"
-  compute_resources = {
+  compute_resources {
     instance_role = "${aws_iam_role.aws_batch_service_role.arn}"
     instance_type = ["m3.medium"]
     max_vcpus = 1

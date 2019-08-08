@@ -3,7 +3,6 @@ package aws
 import (
 	"fmt"
 	"log"
-	"strings"
 	"testing"
 	"time"
 
@@ -28,27 +27,8 @@ func testSweepAPIGatewayRestApis(region string) error {
 	}
 	conn := client.(*AWSClient).apigateway
 
-	// https://github.com/terraform-providers/terraform-provider-aws/issues/3808
-	prefixes := []string{
-		"test",
-		"tf_acc_",
-		"tf-acc-",
-	}
-
 	err = conn.GetRestApisPages(&apigateway.GetRestApisInput{}, func(page *apigateway.GetRestApisOutput, lastPage bool) bool {
 		for _, item := range page.Items {
-			skip := true
-			for _, prefix := range prefixes {
-				if strings.HasPrefix(*item.Name, prefix) {
-					skip = false
-					break
-				}
-			}
-			if skip {
-				log.Printf("[INFO] Skipping API Gateway REST API: %s", *item.Name)
-				continue
-			}
-
 			input := &apigateway.DeleteRestApiInput{
 				RestApiId: item.Id,
 			}

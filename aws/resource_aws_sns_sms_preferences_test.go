@@ -143,9 +143,9 @@ resource "aws_sns_sms_preferences" "test_pref" {
 `
 const testAccAWSSNSSMSPreferencesConfig_almostAll = `
 resource "aws_sns_sms_preferences" "test_pref" {
-	monthly_spend_limit = "1",
-	default_sms_type = "Transactional",
-	usage_report_s3_bucket = "some-bucket",
+	monthly_spend_limit = "1"
+	default_sms_type = "Transactional"
+	usage_report_s3_bucket = "some-bucket"
 }
 `
 const testAccAWSSNSSMSPreferencesConfig_deliveryRole = `
@@ -188,7 +188,7 @@ POLICY
 }
 
 resource "aws_sns_sms_preferences" "test_pref" {
-	delivery_status_iam_role_arn = "${aws_iam_role.test_smsdelivery_role.arn}",
-	delivery_status_success_sampling_rate = "75",
+	delivery_status_iam_role_arn = "${aws_iam_role.test_smsdelivery_role.arn}"
+	delivery_status_success_sampling_rate = "75"
 }
 `

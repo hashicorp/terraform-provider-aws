@@ -14,6 +14,8 @@ import (
 func TestAccAWSRouteTableAssociation_basic(t *testing.T) {
 	var v, v2 ec2.RouteTable
 
+	resourceName := "aws_route_table_association.foo"
+
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
@@ -23,15 +25,53 @@ func TestAccAWSRouteTableAssociation_basic(t *testing.T) {
 				Config: testAccRouteTableAssociationConfig,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRouteTableAssociationExists(
-						"aws_route_table_association.foo", &v),
+						resourceName, &v),
 				),
 			},
-
 			{
 				Config: testAccRouteTableAssociationConfigChange,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRouteTableAssociationExists(
-						"aws_route_table_association.foo", &v2),
+						resourceName, &v2),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateIdFunc: testAccAWSRouteTabAssocImportStateIdFunc(resourceName),
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccAWSRouteTableAssociation_replace(t *testing.T) {
+	var v, v2 ec2.RouteTable
+	resourceName := "aws_route_table_association.foo"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckRouteTableAssociationDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccRouteTableAssociationConfig,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckRouteTableAssociationExists(
+						resourceName, &v),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateIdFunc: testAccAWSRouteTabAssocImportStateIdFunc(resourceName),
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccRouteTableAssociationConfigReplace,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckRouteTableAssociationExists(
+						resourceName, &v2),
 				),
 			},
 		},
@@ -105,11 +145,22 @@ func testAccCheckRouteTableAssociationExists(n string, v *ec2.RouteTable) resour
 	}
 }
 
+func testAccAWSRouteTabAssocImportStateIdFunc(resourceName string) resource.ImportStateIdFunc {
+	return func(s *terraform.State) (string, error) {
+		rs, ok := s.RootModule().Resources[resourceName]
+		if !ok {
+			return "", fmt.Errorf("not found: %s", resourceName)
+		}
+
+		return fmt.Sprintf("%s/%s", rs.Primary.Attributes["subnet_id"], rs.Primary.Attributes["route_table_id"]), nil
+	}
+}
+
 const testAccRouteTableAssociationConfig = `
 resource "aws_vpc" "foo" {
 	cidr_block = "10.1.0.0/16"
 	tags = {
-		Name = "terraform-testacc-route-table-association"
+		Name = "tf-acc-route-table-assoc"
 	}
 }
 
@@ -117,15 +168,14 @@ resource "aws_subnet" "foo" {
 	vpc_id = "${aws_vpc.foo.id}"
 	cidr_block = "10.1.1.0/24"
 	tags = {
-		Name = "tf-acc-route-table-association"
+		Name = "tf-acc-route-table-assoc"
 	}
 }
 
 resource "aws_internet_gateway" "foo" {
 	vpc_id = "${aws_vpc.foo.id}"
-
 	tags = {
-		Name = "terraform-testacc-route-table-association"
+		Name = "tf-acc-route-table-assoc"
 	}
 }
 
@@ -134,6 +184,9 @@ resource "aws_route_table" "foo" {
 	route {
 		cidr_block = "10.0.0.0/8"
 		gateway_id = "${aws_internet_gateway.foo.id}"
+	}
+	tags = {
+		Name = "tf-acc-route-table-assoc"
 	}
 }
 
@@ -147,7 +200,7 @@ const testAccRouteTableAssociationConfigChange = `
 resource "aws_vpc" "foo" {
 	cidr_block = "10.1.0.0/16"
 	tags = {
-		Name = "terraform-testacc-route-table-association"
+		Name = "tf-acc-route-table-assoc"
 	}
 }
 
@@ -155,7 +208,7 @@ resource "aws_subnet" "foo" {
 	vpc_id = "${aws_vpc.foo.id}"
 	cidr_block = "10.1.1.0/24"
 	tags = {
-		Name = "tf-acc-route-table-association"
+		Name = "tf-acc-route-table-assoc"
 	}
 }
 
@@ -163,7 +216,7 @@ resource "aws_internet_gateway" "foo" {
 	vpc_id = "${aws_vpc.foo.id}"
 
 	tags = {
-		Name = "terraform-testacc-route-table-association"
+		Name = "tf-acc-route-table-assoc"
 	}
 }
 
@@ -172,6 +225,50 @@ resource "aws_route_table" "bar" {
 	route {
 		cidr_block = "10.0.0.0/8"
 		gateway_id = "${aws_internet_gateway.foo.id}"
+	}
+	tags = {
+		Name = "tf-acc-route-change-table-assoc"
+	}
+}
+
+resource "aws_route_table_association" "foo" {
+	route_table_id = "${aws_route_table.bar.id}"
+	subnet_id = "${aws_subnet.foo.id}"
+}
+`
+
+const testAccRouteTableAssociationConfigReplace = `
+resource "aws_vpc" "foo" {
+	cidr_block = "10.1.0.0/16"
+	tags = {
+		Name = "tf-acc-route-table-assoc"
+	}
+}
+
+resource "aws_subnet" "foo" {
+	vpc_id = "${aws_vpc.foo.id}"
+	cidr_block = "10.1.1.0/24"
+	tags = {
+		Name = "tf-acc-route-table-assoc"
+	}
+}
+
+resource "aws_internet_gateway" "foo" {
+	vpc_id = "${aws_vpc.foo.id}"
+
+	tags = {
+		Name = "tf-acc-route-table-assoc"
+	}
+}
+
+resource "aws_route_table" "bar" {
+	vpc_id = "${aws_vpc.foo.id}"
+	route {
+		cidr_block = "10.0.0.0/16"
+		gateway_id = "${aws_internet_gateway.foo.id}"
+	}
+	tags = {
+		Name = "tf-acc-replace-route-table-assoc"
 	}
 }
 

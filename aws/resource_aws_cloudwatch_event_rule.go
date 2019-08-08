@@ -3,7 +3,6 @@ package aws
 import (
 	"fmt"
 	"log"
-	"regexp"
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -73,6 +72,7 @@ func resourceAwsCloudWatchEventRule() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"tags": tagsSchema(),
 		},
 	}
 }
@@ -98,28 +98,33 @@ func resourceAwsCloudWatchEventRuleCreate(d *schema.ResourceData, meta interface
 	// IAM Roles take some time to propagate
 	var out *events.PutRuleOutput
 	err = resource.Retry(30*time.Second, func() *resource.RetryError {
-		var err error
 		out, err = conn.PutRule(input)
-		pattern := regexp.MustCompile(`cannot be assumed by principal '[a-z]+\.amazonaws\.com'\.$`)
+
+		if isAWSErr(err, "ValidationException", "cannot be assumed by principal") {
+			log.Printf("[DEBUG] Retrying update of CloudWatch Event Rule %q", *input.Name)
+			return resource.RetryableError(err)
+		}
 		if err != nil {
-			if awsErr, ok := err.(awserr.Error); ok {
-				if awsErr.Code() == "ValidationException" && pattern.MatchString(awsErr.Message()) {
-					log.Printf("[DEBUG] Retrying creation of CloudWatch Event Rule %q", *input.Name)
-					return resource.RetryableError(err)
-				}
-			}
 			return resource.NonRetryableError(err)
 		}
 		return nil
 	})
+	if isResourceTimeoutError(err) {
+		_, err = conn.PutRule(input)
+	}
+
 	if err != nil {
-		return fmt.Errorf("Creating CloudWatch Event Rule failed: %s", err)
+		return fmt.Errorf("Updating CloudWatch Event Rule failed: %s", err)
 	}
 
 	d.Set("arn", out.RuleArn)
 	d.SetId(*input.Name)
 
 	log.Printf("[INFO] CloudWatch Event Rule %q created", *out.RuleArn)
+
+	if err := setTagsCloudWatchEvents(conn, d, aws.StringValue(out.RuleArn)); err != nil {
+		return fmt.Errorf("Error creating tags for %s: %s", d.Id(), err)
+	}
 
 	return resourceAwsCloudWatchEventRuleUpdate(d, meta)
 }
@@ -163,7 +168,9 @@ func resourceAwsCloudWatchEventRuleRead(d *schema.ResourceData, meta interface{}
 	}
 	log.Printf("[DEBUG] Setting boolean state: %t", boolState)
 	d.Set("is_enabled", boolState)
-
+	if err := saveTagsCloudWatchEvents(conn, d, aws.StringValue(out.Arn)); err != nil {
+		return fmt.Errorf("error setting tags: %s", err)
+	}
 	return nil
 }
 
@@ -190,18 +197,20 @@ func resourceAwsCloudWatchEventRuleUpdate(d *schema.ResourceData, meta interface
 	// IAM Roles take some time to propagate
 	err = resource.Retry(30*time.Second, func() *resource.RetryError {
 		_, err := conn.PutRule(input)
-		pattern := regexp.MustCompile(`cannot be assumed by principal '[a-z]+\.amazonaws\.com'\.$`)
+
+		if isAWSErr(err, "ValidationException", "cannot be assumed by principal") {
+			log.Printf("[DEBUG] Retrying update of CloudWatch Event Rule %q", *input.Name)
+			return resource.RetryableError(err)
+		}
 		if err != nil {
-			if awsErr, ok := err.(awserr.Error); ok {
-				if awsErr.Code() == "ValidationException" && pattern.MatchString(awsErr.Message()) {
-					log.Printf("[DEBUG] Retrying update of CloudWatch Event Rule %q", *input.Name)
-					return resource.RetryableError(err)
-				}
-			}
 			return resource.NonRetryableError(err)
 		}
 		return nil
 	})
+	if isResourceTimeoutError(err) {
+		_, err = conn.PutRule(input)
+	}
+
 	if err != nil {
 		return fmt.Errorf("Updating CloudWatch Event Rule failed: %s", err)
 	}
@@ -215,6 +224,12 @@ func resourceAwsCloudWatchEventRuleUpdate(d *schema.ResourceData, meta interface
 			return err
 		}
 		log.Printf("[DEBUG] CloudWatch Event Rule (%q) disabled", d.Id())
+	}
+
+	if d.HasChange("tags") {
+		if err := setTagsCloudWatchEvents(conn, d, d.Get("arn").(string)); err != nil {
+			return fmt.Errorf("Error updating tags for %s: %s", d.Id(), err)
+		}
 	}
 
 	return resourceAwsCloudWatchEventRuleRead(d, meta)

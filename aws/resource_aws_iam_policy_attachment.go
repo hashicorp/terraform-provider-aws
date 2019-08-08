@@ -185,7 +185,7 @@ func resourceAwsIamPolicyAttachmentDelete(d *schema.ResourceData, meta interface
 }
 
 func composeErrors(desc string, uErr error, rErr error, gErr error) error {
-	errMsg := fmt.Sprintf(desc)
+	errMsg := fmt.Sprint(desc)
 	errs := []error{uErr, rErr, gErr}
 	for _, e := range errs {
 		if e != nil {
@@ -336,6 +336,9 @@ func detachPolicyFromUsers(conn *iam.IAM, users []*string, arn string) error {
 			UserName:  u,
 			PolicyArn: aws.String(arn),
 		})
+		if isAWSErr(err, iam.ErrCodeNoSuchEntityException, "") {
+			continue
+		}
 		if err != nil {
 			return err
 		}
@@ -348,6 +351,9 @@ func detachPolicyFromRoles(conn *iam.IAM, roles []*string, arn string) error {
 			RoleName:  r,
 			PolicyArn: aws.String(arn),
 		})
+		if isAWSErr(err, iam.ErrCodeNoSuchEntityException, "") {
+			continue
+		}
 		if err != nil {
 			return err
 		}
@@ -360,6 +366,9 @@ func detachPolicyFromGroups(conn *iam.IAM, groups []*string, arn string) error {
 			GroupName: g,
 			PolicyArn: aws.String(arn),
 		})
+		if isAWSErr(err, iam.ErrCodeNoSuchEntityException, "") {
+			continue
+		}
 		if err != nil {
 			return err
 		}

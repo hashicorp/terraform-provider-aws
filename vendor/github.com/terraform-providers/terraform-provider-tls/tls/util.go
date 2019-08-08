@@ -6,6 +6,7 @@ import (
 	"fmt"
 
 	"github.com/hashicorp/terraform/helper/schema"
+	"golang.org/x/crypto/ssh"
 )
 
 func decodePEM(d *schema.ResourceData, pemKey, pemType string) (*pem.Block, error) {
@@ -73,4 +74,32 @@ func parseCertificateRequest(d *schema.ResourceData, pemKey string) (*x509.Certi
 	}
 
 	return certReq, nil
+}
+
+func readPublicKey(d *schema.ResourceData, rsaKey interface{}) error {
+	pubKey := publicKey(rsaKey)
+	pubKeyBytes, err := x509.MarshalPKIXPublicKey(pubKey)
+	if err != nil {
+		return fmt.Errorf("failed to marshal public key error: %s", err)
+	}
+	pubKeyPemBlock := &pem.Block{
+		Type:  "PUBLIC KEY",
+		Bytes: pubKeyBytes,
+	}
+
+	d.SetId(hashForState(string((pubKeyBytes))))
+	d.Set("public_key_pem", string(pem.EncodeToMemory(pubKeyPemBlock)))
+
+	sshPubKey, err := ssh.NewPublicKey(publicKey(rsaKey))
+	if err == nil {
+		// Not all EC types can be SSH keys, so we'll produce this only
+		// if an appropriate type was selected.
+		sshPubKeyBytes := ssh.MarshalAuthorizedKey(sshPubKey)
+		d.Set("public_key_openssh", string(sshPubKeyBytes))
+		d.Set("public_key_fingerprint_md5", ssh.FingerprintLegacyMD5(sshPubKey))
+	} else {
+		d.Set("public_key_openssh", "")
+		d.Set("public_key_fingerprint_md5", "")
+	}
+	return nil
 }

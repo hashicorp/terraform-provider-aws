@@ -249,7 +249,8 @@ resource "aws_neptune_parameter_group" "test" {
     name         = %q
     value        = %q
   }
-}`, rName, pApplyMethod, pName, pValue)
+}
+`, rName, pApplyMethod, pName, pValue)
 }
 
 func testAccAWSNeptuneParameterGroupConfig_Description(rName, description string) string {
@@ -258,7 +259,8 @@ resource "aws_neptune_parameter_group" "test" {
   description = %q
   family      = "neptune1"
   name        = %q
-}`, description, rName)
+}
+`, description, rName)
 }
 
 func testAccAWSNeptuneParameterGroupConfig_Required(rName string) string {
@@ -266,7 +268,8 @@ func testAccAWSNeptuneParameterGroupConfig_Required(rName string) string {
 resource "aws_neptune_parameter_group" "test" {
   family = "neptune1"
   name   = %q
-}`, rName)
+}
+`, rName)
 }
 
 func testAccAWSNeptuneParameterGroupConfig_Tags_SingleTag(name, tKey, tValue string) string {

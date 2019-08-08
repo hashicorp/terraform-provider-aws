@@ -2,6 +2,7 @@ package aws
 
 import (
 	"fmt"
+	"log"
 	"os"
 	"strings"
 	"testing"
@@ -13,6 +14,76 @@ import (
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/terraform"
 )
+
+// Implement a test sweeper for EIPs.
+// This will currently skip EIPs with associations,
+// although we depend on aws_vpc to potentially have
+// the majority of those associations removed.
+func init() {
+	resource.AddTestSweepers("aws_eip", &resource.Sweeper{
+		Name: "aws_eip",
+		Dependencies: []string{
+			"aws_vpc",
+		},
+		F: testSweepEc2Eips,
+	})
+}
+
+func testSweepEc2Eips(region string) error {
+	client, err := sharedClientForRegion(region)
+	if err != nil {
+		return fmt.Errorf("error getting client: %s", err)
+	}
+	conn := client.(*AWSClient).ec2conn
+
+	// There is currently no paginator or Marker/NextToken
+	input := &ec2.DescribeAddressesInput{}
+
+	output, err := conn.DescribeAddresses(input)
+
+	if testSweepSkipSweepError(err) {
+		log.Printf("[WARN] Skipping EC2 EIP sweep for %s: %s", region, err)
+		return nil
+	}
+
+	if err != nil {
+		return fmt.Errorf("error describing EC2 EIPs: %s", err)
+	}
+
+	if output == nil || len(output.Addresses) == 0 {
+		log.Print("[DEBUG] No EC2 EIPs to sweep")
+		return nil
+	}
+
+	for _, address := range output.Addresses {
+		publicIP := aws.StringValue(address.PublicIp)
+
+		if address.AssociationId != nil {
+			log.Printf("[INFO] Skipping EC2 EIP (%s) with association: %s", publicIP, aws.StringValue(address.AssociationId))
+			continue
+		}
+
+		input := &ec2.ReleaseAddressInput{}
+
+		// The EC2 API is particular that you only specify one or the other
+		// InvalidParameterCombination: You may specify public IP or allocation id, but not both in the same call
+		if address.AllocationId != nil {
+			input.AllocationId = address.AllocationId
+		} else {
+			input.PublicIp = address.PublicIp
+		}
+
+		log.Printf("[INFO] Releasing EC2 EIP: %s", publicIP)
+
+		_, err := conn.ReleaseAddress(input)
+
+		if err != nil {
+			return fmt.Errorf("error releasing EC2 EIP (%s): %s", publicIP, err)
+		}
+	}
+
+	return nil
+}
 
 func TestAccAWSEIP_importEc2Classic(t *testing.T) {
 	oldvar := os.Getenv("AWS_DEFAULT_REGION")
@@ -72,6 +143,7 @@ func TestAccAWSEIP_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSEIPExists("aws_eip.bar", &conf),
 					testAccCheckAWSEIPAttributes(&conf),
+					testAccCheckAWSEIPPublicDNS("aws_eip.bar"),
 				),
 			},
 		},
@@ -121,6 +193,7 @@ func TestAccAWSEIP_network_interface(t *testing.T) {
 					testAccCheckAWSEIPExists("aws_eip.bar", &conf),
 					testAccCheckAWSEIPAttributes(&conf),
 					testAccCheckAWSEIPAssociated(&conf),
+					testAccCheckAWSEIPPrivateDNS("aws_eip.bar"),
 				),
 			},
 		},
@@ -488,6 +561,52 @@ func testAccCheckAWSEIPExists(n string, res *ec2.Address) resource.TestCheckFunc
 	}
 }
 
+func testAccCheckAWSEIPPrivateDNS(resourceName string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		rs, ok := s.RootModule().Resources[resourceName]
+		if !ok {
+			return fmt.Errorf("Not found: %s", resourceName)
+		}
+
+		privateIPDashed := strings.Replace(rs.Primary.Attributes["private_ip"], ".", "-", -1)
+		privateDNS := rs.Primary.Attributes["private_dns"]
+		expectedPrivateDNS := fmt.Sprintf("ip-%s.%s.compute.internal", privateIPDashed, testAccGetRegion())
+
+		if testAccGetRegion() == "us-east-1" {
+			expectedPrivateDNS = fmt.Sprintf("ip-%s.ec2.internal", privateIPDashed)
+		}
+
+		if privateDNS != expectedPrivateDNS {
+			return fmt.Errorf("expected private_dns value (%s), received: %s", expectedPrivateDNS, privateDNS)
+		}
+
+		return nil
+	}
+}
+
+func testAccCheckAWSEIPPublicDNS(resourceName string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		rs, ok := s.RootModule().Resources[resourceName]
+		if !ok {
+			return fmt.Errorf("Not found: %s", resourceName)
+		}
+
+		publicIPDashed := strings.Replace(rs.Primary.Attributes["public_ip"], ".", "-", -1)
+		publicDNS := rs.Primary.Attributes["public_dns"]
+		expectedPublicDNS := fmt.Sprintf("ec2-%s.%s.compute.amazonaws.com", publicIPDashed, testAccGetRegion())
+
+		if testAccGetRegion() == "us-east-1" {
+			expectedPublicDNS = fmt.Sprintf("ec2-%s.compute-1.amazonaws.com", publicIPDashed)
+		}
+
+		if publicDNS != expectedPublicDNS {
+			return fmt.Errorf("expected public_dns value (%s), received: %s", expectedPublicDNS, publicDNS)
+		}
+
+		return nil
+	}
+}
+
 const testAccAWSEIPConfig = `
 resource "aws_eip" "bar" {
 }
@@ -513,8 +632,8 @@ resource "aws_eip" "bar" {
 func testAccAWSEIPConfig_PublicIpv4Pool_custom(poolName string) string {
 	return fmt.Sprintf(`
 resource "aws_eip" "bar" {
-   vpc = true
-   public_ipv4_pool = "%s"
+  vpc              = true
+  public_ipv4_pool = "%s"
 }
 `, poolName)
 }
@@ -526,10 +645,8 @@ provider "aws" {
 
 data "aws_ami" "amzn-ami-minimal-pv" {
   most_recent = true
-  filter {
-    name = "owner-alias"
-    values = ["amazon"]
-  }
+  owners      = ["amazon"]
+
   filter {
     name = "name"
     values = ["amzn-ami-minimal-pv-*"]
@@ -556,10 +673,8 @@ resource "aws_eip" "bar" {
 const testAccAWSEIPInstanceConfig = `
 data "aws_ami" "amzn-ami-minimal-pv" {
   most_recent = true
-  filter {
-    name = "owner-alias"
-    values = ["amazon"]
-  }
+  owners      = ["amazon"]
+
   filter {
     name = "name"
     values = ["amzn-ami-minimal-pv-*"]
@@ -583,10 +698,8 @@ resource "aws_eip" "bar" {
 const testAccAWSEIPInstanceConfig2 = `
 data "aws_ami" "amzn-ami-minimal-pv" {
   most_recent = true
-  filter {
-    name = "owner-alias"
-    values = ["amazon"]
-  }
+  owners      = ["amazon"]
+
   filter {
     name = "name"
     values = ["amzn-ami-minimal-pv-*"]
@@ -610,10 +723,8 @@ resource "aws_eip" "bar" {
 const testAccAWSEIPInstanceConfig_associated = `
 data "aws_ami" "amzn-ami-minimal-hvm" {
   most_recent = true
-  filter {
-    name = "owner-alias"
-    values = ["amazon"]
-  }
+  owners      = ["amazon"]
+
   filter {
     name = "name"
     values = ["amzn-ami-minimal-hvm-*"]
@@ -688,10 +799,8 @@ resource "aws_eip" "bar" {
 const testAccAWSEIPInstanceConfig_associated_switch = `
 data "aws_ami" "amzn-ami-minimal-hvm" {
   most_recent = true
-  filter {
-    name = "owner-alias"
-    values = ["amazon"]
-  }
+  owners      = ["amazon"]
+
   filter {
     name = "name"
     values = ["amzn-ami-minimal-hvm-*"]
@@ -852,10 +961,8 @@ variable "server_count" {
 
 data "aws_ami" "amzn-ami-minimal-pv" {
   most_recent = true
-  filter {
-    name = "owner-alias"
-    values = ["amazon"]
-  }
+  owners      = ["amazon"]
+
   filter {
     name = "name"
     values = ["amzn-ami-minimal-pv-*"]
@@ -923,16 +1030,15 @@ resource "aws_route_table" "us-east-1-public" {
 resource "aws_route_table_association" "us-east-1b-public" {
   subnet_id      = "${aws_subnet.us-east-1b-public.id}"
   route_table_id = "${aws_route_table.us-east-1-public.id}"
-}`, rootDeviceType)
+}
+`, rootDeviceType)
 }
 
 const testAccAWSEIPAssociate_not_associated = `
 data "aws_ami" "amzn-ami-minimal-pv" {
   most_recent = true
-  filter {
-    name = "owner-alias"
-    values = ["amazon"]
-  }
+  owners      = ["amazon"]
+
   filter {
     name = "name"
     values = ["amzn-ami-minimal-pv-*"]
@@ -955,10 +1061,8 @@ resource "aws_eip" "bar" {
 const testAccAWSEIPAssociate_associated = `
 data "aws_ami" "amzn-ami-minimal-pv" {
   most_recent = true
-  filter {
-    name = "owner-alias"
-    values = ["amazon"]
-  }
+  owners      = ["amazon"]
+
   filter {
     name = "name"
     values = ["amzn-ami-minimal-pv-*"]

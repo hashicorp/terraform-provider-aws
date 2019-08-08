@@ -1,17 +1,14 @@
 package aws
 
 import (
-	"encoding/json"
 	"fmt"
 	"log"
 	"strconv"
 	"strings"
-	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/apigateway"
-	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/helper/schema"
 )
 
@@ -88,17 +85,15 @@ func resourceAwsApiGatewayMethod() *schema.Resource {
 			},
 
 			"request_parameters": {
-				Type:          schema.TypeMap,
-				Elem:          &schema.Schema{Type: schema.TypeBool},
-				Optional:      true,
-				ConflictsWith: []string{"request_parameters_in_json"},
+				Type:     schema.TypeMap,
+				Elem:     &schema.Schema{Type: schema.TypeBool},
+				Optional: true,
 			},
 
 			"request_parameters_in_json": {
-				Type:          schema.TypeString,
-				Optional:      true,
-				ConflictsWith: []string{"request_parameters"},
-				Deprecated:    "Use field request_parameters instead",
+				Type:     schema.TypeString,
+				Optional: true,
+				Removed:  "Use `request_parameters` argument instead",
 			},
 
 			"request_validator_id": {
@@ -136,12 +131,6 @@ func resourceAwsApiGatewayMethodCreate(d *schema.ResourceData, meta interface{})
 				value, _ := strconv.ParseBool(v.(string))
 				parameters[k] = value
 			}
-		}
-		input.RequestParameters = aws.BoolMap(parameters)
-	}
-	if v, ok := d.GetOk("request_parameters_in_json"); ok {
-		if err := json.Unmarshal([]byte(v.(string)), &parameters); err != nil {
-			return fmt.Errorf("Error unmarshaling request_parameters_in_json: %s", err)
 		}
 		input.RequestParameters = aws.BoolMap(parameters)
 	}
@@ -201,16 +190,8 @@ func resourceAwsApiGatewayMethodRead(d *schema.ResourceData, meta interface{}) e
 		return fmt.Errorf("error setting request_models: %s", err)
 	}
 
-	// KNOWN ISSUE: This next d.Set() is broken as it should be a JSON string of the map,
-	//              however leaving as-is since this attribute has been deprecated
-	//              for a very long time and will be removed soon in the next major release.
-	//              Not worth the effort of fixing, acceptance testing, and potential JSON equivalence bugs.
-	if _, ok := d.GetOk("request_parameters_in_json"); ok {
-		d.Set("request_parameters_in_json", aws.BoolValueMap(out.RequestParameters))
-	}
-
 	if err := d.Set("request_parameters", aws.BoolValueMap(out.RequestParameters)); err != nil {
-		return fmt.Errorf("error setting request_models: %s", err)
+		return fmt.Errorf("error setting request_parameters: %s", err)
 	}
 
 	d.Set("request_validator_id", out.RequestValidatorId)
@@ -346,25 +327,19 @@ func resourceAwsApiGatewayMethodDelete(d *schema.ResourceData, meta interface{})
 	conn := meta.(*AWSClient).apigateway
 	log.Printf("[DEBUG] Deleting API Gateway Method: %s", d.Id())
 
-	return resource.Retry(5*time.Minute, func() *resource.RetryError {
-		_, err := conn.DeleteMethod(&apigateway.DeleteMethodInput{
-			HttpMethod: aws.String(d.Get("http_method").(string)),
-			ResourceId: aws.String(d.Get("resource_id").(string)),
-			RestApiId:  aws.String(d.Get("rest_api_id").(string)),
-		})
-		if err == nil {
-			return nil
-		}
-
-		apigatewayErr, ok := err.(awserr.Error)
-		if apigatewayErr.Code() == "NotFoundException" {
-			return nil
-		}
-
-		if !ok {
-			return resource.NonRetryableError(err)
-		}
-
-		return resource.NonRetryableError(err)
+	_, err := conn.DeleteMethod(&apigateway.DeleteMethodInput{
+		HttpMethod: aws.String(d.Get("http_method").(string)),
+		ResourceId: aws.String(d.Get("resource_id").(string)),
+		RestApiId:  aws.String(d.Get("rest_api_id").(string)),
 	})
+
+	if isAWSErr(err, apigateway.ErrCodeNotFoundException, "") {
+		return nil
+	}
+
+	if err != nil {
+		return fmt.Errorf("error deleting API Gateway Method (%s): %s", d.Id(), err)
+	}
+
+	return nil
 }

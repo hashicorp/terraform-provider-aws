@@ -73,9 +73,9 @@ func resourceAwsLaunchConfiguration() *schema.Resource {
 				ForceNew:      true,
 				ConflictsWith: []string{"user_data_base64"},
 				StateFunc: func(v interface{}) string {
-					switch v.(type) {
+					switch v := v.(type) {
 					case string:
-						return userDataHashSum(v.(string))
+						return userDataHashSum(v)
 					default:
 						return ""
 					}
@@ -260,6 +260,13 @@ func resourceAwsLaunchConfiguration() *schema.Resource {
 							ForceNew: true,
 						},
 
+						"encrypted": {
+							Type:     schema.TypeBool,
+							Optional: true,
+							Computed: true,
+							ForceNew: true,
+						},
+
 						"iops": {
 							Type:     schema.TypeInt,
 							Optional: true,
@@ -421,6 +428,10 @@ func resourceAwsLaunchConfigurationCreate(d *schema.ResourceData, meta interface
 				DeleteOnTermination: aws.Bool(bd["delete_on_termination"].(bool)),
 			}
 
+			if v, ok := bd["encrypted"].(bool); ok && v {
+				ebs.Encrypted = aws.Bool(v)
+			}
+
 			if v, ok := bd["volume_size"].(int); ok && v != 0 {
 				ebs.VolumeSize = aws.Int64(int64(v))
 			}
@@ -563,19 +574,36 @@ func resourceAwsLaunchConfigurationRead(d *schema.ResourceData, meta interface{}
 
 func resourceAwsLaunchConfigurationDelete(d *schema.ResourceData, meta interface{}) error {
 	autoscalingconn := meta.(*AWSClient).autoscalingconn
+	input := &autoscaling.DeleteLaunchConfigurationInput{
+		LaunchConfigurationName: aws.String(d.Id()),
+	}
 
-	log.Printf("[DEBUG] Launch Configuration destroy: %v", d.Id())
-	_, err := autoscalingconn.DeleteLaunchConfiguration(
-		&autoscaling.DeleteLaunchConfigurationInput{
-			LaunchConfigurationName: aws.String(d.Id()),
-		})
-	if err != nil {
+	log.Printf("[DEBUG] Deleting Autoscaling Launch Configuration: %s", d.Id())
+	// Retry for Autoscaling eventual consistency
+	err := resource.Retry(1*time.Minute, func() *resource.RetryError {
+		_, err := autoscalingconn.DeleteLaunchConfiguration(input)
+
+		if isAWSErr(err, autoscaling.ErrCodeResourceInUseFault, "") {
+			return resource.RetryableError(err)
+		}
+
 		if isAWSErr(err, "InvalidConfiguration.NotFound", "") {
-			log.Printf("[DEBUG] Launch configuration (%s) not found", d.Id())
 			return nil
 		}
 
-		return err
+		if err != nil {
+			return resource.NonRetryableError(err)
+		}
+
+		return nil
+	})
+
+	if isResourceTimeoutError(err) {
+		_, err = autoscalingconn.DeleteLaunchConfiguration(input)
+	}
+
+	if err != nil {
+		return fmt.Errorf("error deleting Autoscaling Launch Configuration (%s): %s", d.Id(), err)
 	}
 
 	return nil
@@ -658,16 +686,17 @@ func readBlockDevicesFromLaunchConfiguration(d *schema.ResourceData, lc *autosca
 		if bdm.Ebs != nil && bdm.Ebs.Iops != nil {
 			bd["iops"] = *bdm.Ebs.Iops
 		}
+		if bdm.Ebs != nil && bdm.Ebs.Encrypted != nil {
+			bd["encrypted"] = *bdm.Ebs.Encrypted
+		}
 
 		if bdm.DeviceName != nil && *bdm.DeviceName == *rootDeviceName {
 			blockDevices["root"] = bd
 		} else {
-			if bdm.Ebs != nil && bdm.Ebs.Encrypted != nil {
-				bd["encrypted"] = *bdm.Ebs.Encrypted
-			}
 			if bdm.DeviceName != nil {
 				bd["device_name"] = *bdm.DeviceName
 			}
+
 			if bdm.VirtualName != nil {
 				bd["virtual_name"] = *bdm.VirtualName
 				blockDevices["ephemeral"] = append(blockDevices["ephemeral"].([]map[string]interface{}), bd)

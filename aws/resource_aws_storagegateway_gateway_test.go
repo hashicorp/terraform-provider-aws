@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"log"
 	"regexp"
-	"strings"
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -36,10 +35,7 @@ func testSweepStorageGatewayGateways(region string) error {
 
 		for _, gateway := range page.Gateways {
 			name := aws.StringValue(gateway.GatewayName)
-			if !strings.HasPrefix(name, "tf-acc-test-") {
-				log.Printf("[INFO] Skipping Storage Gateway Gateway: %s", name)
-				continue
-			}
+
 			log.Printf("[INFO] Deleting Storage Gateway Gateway: %s", name)
 			input := &storagegateway.DeleteGatewayInput{
 				GatewayARN: gateway.GatewayARN,
@@ -468,11 +464,7 @@ func testAccAWSStorageGateway_FileGatewayBase(rName string) string {
 	return testAccAWSStorageGateway_VPCBase(rName) + fmt.Sprintf(`
 data "aws_ami" "aws-thinstaller" {
   most_recent = true
-
-  filter {
-    name   = "owner-alias"
-    values = ["amazon"]
-  }
+  owners      = ["amazon"]
 
   filter {
     name   = "name"
@@ -503,11 +495,7 @@ func testAccAWSStorageGateway_TapeAndVolumeGatewayBase(rName string) string {
 	return testAccAWSStorageGateway_VPCBase(rName) + fmt.Sprintf(`
 data "aws_ami" "aws-storage-gateway-2" {
   most_recent = true
-
-  filter {
-    name   = "owner-alias"
-    values = ["amazon"]
-  }
+  owners      = ["amazon"]
 
   filter {
     name   = "name"
@@ -667,7 +655,7 @@ resource "aws_directory_service_directory" "test" {
   size     = "Small"
 
   vpc_settings {
-    subnet_ids = ["${aws_subnet.test.*.id}"]
+    subnet_ids = aws_subnet.test[*].id
     vpc_id     = "${aws_vpc.test.id}"
   }
 
@@ -678,7 +666,7 @@ resource "aws_directory_service_directory" "test" {
 
 resource "aws_vpc_dhcp_options" "test" {
   domain_name         = "${aws_directory_service_directory.test.name}"
-  domain_name_servers = ["${aws_directory_service_directory.test.dns_ip_addresses}"]
+  domain_name_servers = aws_directory_service_directory.test.dns_ip_addresses
 
   tags = {
     Name = %q
@@ -692,11 +680,7 @@ resource "aws_vpc_dhcp_options_association" "test" {
 
 data "aws_ami" "aws-thinstaller" {
   most_recent = true
-
-  filter {
-    name   = "owner-alias"
-    values = ["amazon"]
-  }
+  owners      = ["amazon"]
 
   filter {
     name   = "name"
@@ -709,10 +693,11 @@ resource "aws_instance" "test" {
 
   ami                         = "${data.aws_ami.aws-thinstaller.id}"
   associate_public_ip_address = true
+
   # https://docs.aws.amazon.com/storagegateway/latest/userguide/Requirements.html
-  instance_type               = "m4.xlarge"
-  vpc_security_group_ids      = ["${aws_security_group.test.id}"]
-  subnet_id                   = "${aws_subnet.test.*.id[0]}"
+  instance_type          = "m4.xlarge"
+  vpc_security_group_ids = ["${aws_security_group.test.id}"]
+  subnet_id              = "${aws_subnet.test.*.id[0]}"
 
   tags = {
     Name = %q

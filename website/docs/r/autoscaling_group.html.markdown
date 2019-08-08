@@ -6,7 +6,7 @@ description: |-
   Provides an AutoScaling Group resource.
 ---
 
-# aws_autoscaling_group
+# Resource: aws_autoscaling_group
 
 Provides an AutoScaling Group resource.
 
@@ -81,9 +81,9 @@ resource "aws_autoscaling_group" "bar" {
   max_size           = 1
   min_size           = 1
 
-  launch_template = {
+  launch_template {
     id      = "${aws_launch_template.foobar.id}"
-    version = "$$Latest"
+    version = "$Latest"
   }
 }
 ```
@@ -204,8 +204,8 @@ The following arguments are supported:
 * `load_balancers` (Optional) A list of elastic load balancer names to add to the autoscaling
    group names. Only valid for classic load balancers. For ALBs, use `target_group_arns` instead.
 * `vpc_zone_identifier` (Optional) A list of subnet IDs to launch resources in.
-* `target_group_arns` (Optional) A list of `aws_alb_target_group` ARNs, for use with Application Load Balancing.
-* `termination_policies` (Optional) A list of policies to decide how the instances in the auto scale group should be terminated. The allowed values are `OldestInstance`, `NewestInstance`, `OldestLaunchConfiguration`, `ClosestToNextInstanceHour`, `Default`.
+* `target_group_arns` (Optional) A list of `aws_alb_target_group` ARNs, for use with Application or Network Load Balancing.
+* `termination_policies` (Optional) A list of policies to decide how the instances in the auto scale group should be terminated. The allowed values are `OldestInstance`, `NewestInstance`, `OldestLaunchConfiguration`, `ClosestToNextInstanceHour`, `OldestLaunchTemplate`, `AllocationStrategy`, `Default`.
 * `suspended_processes` - (Optional) A list of processes to suspend for the AutoScaling Group. The allowed values are `Launch`, `Terminate`, `HealthCheck`, `ReplaceUnhealthy`, `AZRebalance`, `AlarmNotification`, `ScheduledActions`, `AddToLoadBalancer`.
 Note that if you suspend either the `Launch` or `Terminate` process types, it can prevent your autoscaling group from functioning properly.
 * `tag` (Optional) A list of tag blocks. Tags documented below.
@@ -219,13 +219,13 @@ Note that if you suspend either the `Launch` or `Terminate` process types, it ca
   for Capacity](#waiting-for-capacity) below.) Setting this to "0" causes
   Terraform to skip all Capacity Waiting behavior.
 * `min_elb_capacity` - (Optional) Setting this causes Terraform to wait for
-  this number of instances to show up healthy in the ELB only on creation.
-  Updates will not wait on ELB instance number changes.
+  this number of instances from this autoscaling group to show up healthy in the
+  ELB only on creation. Updates will not wait on ELB instance number changes.
   (See also [Waiting for Capacity](#waiting-for-capacity) below.)
 * `wait_for_elb_capacity` - (Optional) Setting this will cause Terraform to wait
-  for exactly this number of healthy instances in all attached load balancers
-  on both create and update operations. (Takes precedence over
-  `min_elb_capacity` behavior.)
+  for exactly this number of healthy instances from this autoscaling group in
+  all attached load balancers on both create and update operations. (Takes
+  precedence over `min_elb_capacity` behavior.)
   (See also [Waiting for Capacity](#waiting-for-capacity) below.)
 * `protect_from_scale_in` (Optional) Allows setting instance protection. The
    autoscaling group will not select instances with this setting for terminination
@@ -245,7 +245,7 @@ The top-level `launch_template` block supports the following:
 ### mixed_instances_policy
 
 * `instances_distribution` - (Optional) Nested argument containing settings on how to mix on-demand and Spot instances in the Auto Scaling group. Defined below.
-* `launch_template` - (Optional) Nested argument containing launch template settings along with the overrides to specify multiple instance types. Defined below.
+* `launch_template` - (Required) Nested argument containing launch template settings along with the overrides to specify multiple instance types. Defined below.
 
 #### mixed_instances_policy instances_distribution
 
@@ -255,15 +255,15 @@ This configuration block supports the following:
 * `on_demand_base_capacity` - (Optional) Absolute minimum amount of desired capacity that must be fulfilled by on-demand instances. Default: `0`.
 * `on_demand_percentage_above_base_capacity` - (Optional) Percentage split between on-demand and Spot instances above the base on-demand capacity. Default: `100`.
 * `spot_allocation_strategy` - (Optional) How to allocate capacity across the Spot pools. Valid values: `lowest-price`. Default: `lowest-price`.
-* `spot_instance_pools` - (Optional) Number of Spot pools per availability zone to allocate capacity. EC2 Auto Scaling selects the cheapest Spot pools and evenly allocates Spot capacity across the number of Spot pools that you specify. Default: `1`.
-* `spot_max_price` - (Optional) Maximum price per unit hour that the user is willing to pay for the Spot instances. Default: on-demand price.
+* `spot_instance_pools` - (Optional) Number of Spot pools per availability zone to allocate capacity. EC2 Auto Scaling selects the cheapest Spot pools and evenly allocates Spot capacity across the number of Spot pools that you specify. Default: `2`.
+* `spot_max_price` - (Optional) Maximum price per unit hour that the user is willing to pay for the Spot instances. Default: an empty string which means the on-demand price.
 
 #### mixed_instances_policy launch_template
 
 This configuration block supports the following:
 
-* `launch_template_specification` - (Optional) Nested argument defines the Launch Template. Defined below.
-* `overrides` - (Optional) List of nested arguments provides the ability to specify multiple instance types. This will override the same parameter in the launch template. For on-demand instances, Auto Scaling considers the order of preference of instance types to launch based on the order specified in the overrides list. Defined below.
+* `launch_template_specification` - (Required) Nested argument defines the Launch Template. Defined below.
+* `override` - (Optional) List of nested arguments provides the ability to specify multiple instance types. This will override the same parameter in the launch template. For on-demand instances, Auto Scaling considers the order of preference of instance types to launch based on the order specified in the overrides list. Defined below.
 
 ##### mixed_instances_policy launch_template launch_template_specification
 
@@ -275,7 +275,7 @@ This configuration block supports the following:
 * `launch_template_name` - (Optional) The name of the launch template. Conflicts with `launch_template_id`.
 * `version` - (Optional) Template version. Can be version number, `$Latest`, or `$Default`. (Default: `$Default`).
 
-##### mixed_instances_policy launch_template overrides
+##### mixed_instances_policy launch_template override
 
 This configuration block supports the following:
 

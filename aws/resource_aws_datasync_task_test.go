@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"log"
 	"regexp"
-	"strings"
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -49,10 +48,7 @@ func testSweepDataSyncTasks(region string) error {
 
 		for _, task := range output.Tasks {
 			name := aws.StringValue(task.Name)
-			if !strings.HasPrefix(name, "tf-acc-test") {
-				log.Printf("[INFO] Skipping DataSync Task: %s", name)
-				continue
-			}
+
 			log.Printf("[INFO] Deleting DataSync Task: %s", name)
 			input := &datasync.DeleteTaskInput{
 				TaskArn: task.TaskArn,
@@ -747,10 +743,11 @@ resource "aws_instance" "source" {
 
   ami                         = "${data.aws_ami.source-aws-thinstaller.id}"
   associate_public_ip_address = true
+
   # Default instance type from sync.sh
-  instance_type               = "c5.2xlarge"
-  vpc_security_group_ids      = ["${aws_security_group.source.id}"]
-  subnet_id                   = "${aws_subnet.source.id}"
+  instance_type          = "c5.2xlarge"
+  vpc_security_group_ids = ["${aws_security_group.source.id}"]
+  subnet_id              = "${aws_subnet.source.id}"
 
   tags = {
     Name = "tf-acc-test-datasync-task"

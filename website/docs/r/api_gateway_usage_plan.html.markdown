@@ -6,7 +6,7 @@ description: |-
   Provides an API Gateway Usage Plan.
 ---
 
-# aws_api_gateway_usage_plan
+# Resource: aws_api_gateway_usage_plan
 
 Provides an API Gateway Usage Plan.
 

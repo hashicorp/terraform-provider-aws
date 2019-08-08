@@ -247,6 +247,9 @@ func resourceAwsNeptuneClusterInstanceCreate(d *schema.ResourceData, meta interf
 		}
 		return nil
 	})
+	if isResourceTimeoutError(err) {
+		resp, err = conn.CreateDBInstance(createOpts)
+	}
 	if err != nil {
 		return fmt.Errorf("error creating Neptune Instance: %s", err)
 	}
@@ -304,7 +307,7 @@ func resourceAwsNeptuneClusterInstanceRead(d *schema.ResourceData, meta interfac
 	}
 	for _, m := range dbc.DBClusterMembers {
 		if aws.StringValue(db.DBInstanceIdentifier) == aws.StringValue(m.DBInstanceIdentifier) {
-			if aws.BoolValue(m.IsClusterWriter) == true {
+			if aws.BoolValue(m.IsClusterWriter) {
 				d.Set("writer", true)
 			} else {
 				d.Set("writer", false)
@@ -407,6 +410,9 @@ func resourceAwsNeptuneClusterInstanceUpdate(d *schema.ResourceData, meta interf
 			}
 			return nil
 		})
+		if isResourceTimeoutError(err) {
+			_, err = conn.ModifyDBInstance(req)
+		}
 		if err != nil {
 			return fmt.Errorf("Error modifying Neptune Instance %s: %s", d.Id(), err)
 		}
@@ -460,11 +466,8 @@ func resourceAwsNeptuneClusterInstanceDelete(d *schema.ResourceData, meta interf
 		Delay:      30 * time.Second,
 	}
 
-	if _, err := stateConf.WaitForState(); err != nil {
-		return err
-	}
-
-	return nil
+	_, err := stateConf.WaitForState()
+	return err
 
 }
 

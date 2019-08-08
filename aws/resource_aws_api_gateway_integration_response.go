@@ -1,16 +1,13 @@
 package aws
 
 import (
-	"encoding/json"
 	"fmt"
 	"log"
 	"strings"
-	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/apigateway"
-	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/helper/schema"
 )
 
@@ -76,17 +73,15 @@ func resourceAwsApiGatewayIntegrationResponse() *schema.Resource {
 			},
 
 			"response_parameters": {
-				Type:          schema.TypeMap,
-				Elem:          &schema.Schema{Type: schema.TypeString},
-				Optional:      true,
-				ConflictsWith: []string{"response_parameters_in_json"},
+				Type:     schema.TypeMap,
+				Elem:     &schema.Schema{Type: schema.TypeString},
+				Optional: true,
 			},
 
 			"response_parameters_in_json": {
-				Type:          schema.TypeString,
-				Optional:      true,
-				ConflictsWith: []string{"response_parameters"},
-				Deprecated:    "Use field response_parameters instead",
+				Type:     schema.TypeString,
+				Optional: true,
+				Removed:  "Use `response_parameters` argument instead",
 			},
 
 			"content_handling": {
@@ -112,11 +107,7 @@ func resourceAwsApiGatewayIntegrationResponseCreate(d *schema.ResourceData, meta
 			parameters[k] = v.(string)
 		}
 	}
-	if v, ok := d.GetOk("response_parameters_in_json"); ok {
-		if err := json.Unmarshal([]byte(v.(string)), &parameters); err != nil {
-			return fmt.Errorf("Error unmarshaling response_parameters_in_json: %s", err)
-		}
-	}
+
 	var contentHandling *string
 	if val, ok := d.GetOk("content_handling"); ok {
 		contentHandling = aws.String(val.(string))
@@ -173,14 +164,6 @@ func resourceAwsApiGatewayIntegrationResponseRead(d *schema.ResourceData, meta i
 		return fmt.Errorf("error setting response_parameters: %s", err)
 	}
 
-	// KNOWN ISSUE: This next d.Set() is broken as it should be a JSON string of the map,
-	//              however leaving as-is since this attribute has been deprecated
-	//              for a very long time and will be removed soon in the next major release.
-	//              Not worth the effort of fixing, acceptance testing, and potential JSON equivalence bugs.
-	if _, ok := d.GetOk("response_parameters_in_json"); ok {
-		d.Set("response_parameters_in_json", aws.StringValueMap(integrationResponse.ResponseParameters))
-	}
-
 	// We need to explicitly convert key = nil values into key = "", which aws.StringValueMap() removes
 	responseTemplateMap := make(map[string]string)
 	for key, valuePointer := range integrationResponse.ResponseTemplates {
@@ -199,26 +182,20 @@ func resourceAwsApiGatewayIntegrationResponseDelete(d *schema.ResourceData, meta
 	conn := meta.(*AWSClient).apigateway
 	log.Printf("[DEBUG] Deleting API Gateway Integration Response: %s", d.Id())
 
-	return resource.Retry(5*time.Minute, func() *resource.RetryError {
-		_, err := conn.DeleteIntegrationResponse(&apigateway.DeleteIntegrationResponseInput{
-			HttpMethod: aws.String(d.Get("http_method").(string)),
-			ResourceId: aws.String(d.Get("resource_id").(string)),
-			RestApiId:  aws.String(d.Get("rest_api_id").(string)),
-			StatusCode: aws.String(d.Get("status_code").(string)),
-		})
-		if err == nil {
-			return nil
-		}
-
-		apigatewayErr, ok := err.(awserr.Error)
-		if apigatewayErr.Code() == "NotFoundException" {
-			return nil
-		}
-
-		if !ok {
-			return resource.NonRetryableError(err)
-		}
-
-		return resource.NonRetryableError(err)
+	_, err := conn.DeleteIntegrationResponse(&apigateway.DeleteIntegrationResponseInput{
+		HttpMethod: aws.String(d.Get("http_method").(string)),
+		ResourceId: aws.String(d.Get("resource_id").(string)),
+		RestApiId:  aws.String(d.Get("rest_api_id").(string)),
+		StatusCode: aws.String(d.Get("status_code").(string)),
 	})
+
+	if isAWSErr(err, apigateway.ErrCodeNotFoundException, "") {
+		return nil
+	}
+
+	if err != nil {
+		return fmt.Errorf("error deleting API Gateway Integration Response (%s): %s", d.Id(), err)
+	}
+
+	return nil
 }

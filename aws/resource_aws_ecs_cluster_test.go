@@ -2,6 +2,7 @@ package aws
 
 import (
 	"fmt"
+	"log"
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -10,6 +11,55 @@ import (
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/terraform"
 )
+
+func init() {
+	resource.AddTestSweepers("aws_ecs_cluster", &resource.Sweeper{
+		Name: "aws_ecs_cluster",
+		F:    testSweepEcsClusters,
+		Dependencies: []string{
+			"aws_ecs_service",
+		},
+	})
+}
+
+func testSweepEcsClusters(region string) error {
+	client, err := sharedClientForRegion(region)
+	if err != nil {
+		return fmt.Errorf("error getting client: %s", err)
+	}
+	conn := client.(*AWSClient).ecsconn
+
+	err = conn.ListClustersPages(&ecs.ListClustersInput{}, func(page *ecs.ListClustersOutput, isLast bool) bool {
+		if page == nil {
+			return !isLast
+		}
+
+		for _, clusterARNPtr := range page.ClusterArns {
+			input := &ecs.DeleteClusterInput{
+				Cluster: clusterARNPtr,
+			}
+			clusterARN := aws.StringValue(clusterARNPtr)
+
+			log.Printf("[INFO] Deleting ECS Cluster: %s", clusterARN)
+			_, err = conn.DeleteCluster(input)
+
+			if err != nil {
+				log.Printf("[ERROR] Error deleting ECS Cluster (%s): %s", clusterARN, err)
+			}
+		}
+
+		return !isLast
+	})
+	if err != nil {
+		if testSweepSkipSweepError(err) {
+			log.Printf("[WARN] Skipping ECS Cluster sweep for %s: %s", region, err)
+			return nil
+		}
+		return fmt.Errorf("error retrieving ECS Clusters: %s", err)
+	}
+
+	return nil
+}
 
 func TestAccAWSEcsCluster_basic(t *testing.T) {
 	var cluster1 ecs.Cluster

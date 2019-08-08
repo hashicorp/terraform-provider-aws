@@ -63,6 +63,9 @@ func TestAccDataSourceAWSMqBroker_basic(t *testing.T) {
 						"data.aws_mq_broker.by_id", "subnet_ids.#",
 						"aws_mq_broker.acctest", "subnet_ids.#"),
 					resource.TestCheckResourceAttrPair(
+						"data.aws_mq_broker.by_id", "tags.%",
+						"aws_mq_broker.acctest", "tags.%"),
+					resource.TestCheckResourceAttrPair(
 						"data.aws_mq_broker.by_id", "user.#",
 						"aws_mq_broker.acctest", "user.#"),
 				),
@@ -168,8 +171,8 @@ resource "aws_mq_broker" "acctest" {
   }
 
   publicly_accessible = true
-  security_groups     = ["${aws_security_group.acctest.*.id}"]
-  subnet_ids          = ["${aws_subnet.acctest.*.id}"]
+  security_groups     = ["${aws_security_group.acctest.0.id}", "${aws_security_group.acctest.1.id}"]
+  subnet_ids          = ["${aws_subnet.acctest.0.id}", "${aws_subnet.acctest.1.id}"]
 
   user {
     username = "Ender"

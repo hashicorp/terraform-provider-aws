@@ -291,6 +291,9 @@ func resourceAwsRDSClusterInstanceCreate(d *schema.ResourceData, meta interface{
 		}
 		return nil
 	})
+	if isResourceTimeoutError(err) {
+		resp, err = conn.CreateDBInstance(createOpts)
+	}
 	if err != nil {
 		return fmt.Errorf("error creating RDS DB Instance: %s", err)
 	}
@@ -353,7 +356,7 @@ func resourceAwsRDSClusterInstanceRead(d *schema.ResourceData, meta interface{})
 
 	for _, m := range dbc.DBClusterMembers {
 		if *db.DBInstanceIdentifier == *m.DBInstanceIdentifier {
-			if *m.IsClusterWriter == true {
+			if *m.IsClusterWriter {
 				d.Set("writer", true)
 			} else {
 				d.Set("writer", false)
@@ -500,6 +503,9 @@ func resourceAwsRDSClusterInstanceUpdate(d *schema.ResourceData, meta interface{
 			}
 			return nil
 		})
+		if isResourceTimeoutError(err) {
+			_, err = conn.ModifyDBInstance(req)
+		}
 		if err != nil {
 			return fmt.Errorf("Error modifying DB Instance %s: %s", d.Id(), err)
 		}
@@ -552,11 +558,8 @@ func resourceAwsRDSClusterInstanceDelete(d *schema.ResourceData, meta interface{
 		Delay:      30 * time.Second, // Wait 30 secs before starting
 	}
 
-	if _, err := stateConf.WaitForState(); err != nil {
-		return err
-	}
-
-	return nil
+	_, err := stateConf.WaitForState()
+	return err
 
 }
 

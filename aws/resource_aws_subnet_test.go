@@ -5,6 +5,7 @@ import (
 	"log"
 	"regexp"
 	"testing"
+	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
@@ -18,25 +19,29 @@ func init() {
 	resource.AddTestSweepers("aws_subnet", &resource.Sweeper{
 		Name: "aws_subnet",
 		F:    testSweepSubnets,
-		// When implemented, these should be moved to aws_network_interface
-		// and aws_network_interface set as dependency here.
 		Dependencies: []string{
 			"aws_autoscaling_group",
 			"aws_batch_compute_environment",
 			"aws_beanstalk_environment",
-			"aws_db_instance",
+			"aws_db_subnet_group",
 			"aws_directory_service_directory",
+			"aws_ec2_client_vpn_endpoint",
+			"aws_ec2_transit_gateway_vpc_attachment",
 			"aws_eks_cluster",
 			"aws_elasticache_cluster",
 			"aws_elasticache_replication_group",
 			"aws_elasticsearch_domain",
 			"aws_elb",
-			"aws_instance",
+			"aws_emr_cluster",
 			"aws_lambda_function",
 			"aws_lb",
 			"aws_mq_broker",
+			"aws_msk_cluster",
+			"aws_network_interface",
 			"aws_redshift_cluster",
+			"aws_route53_resolver_endpoint",
 			"aws_spot_fleet_request",
+			"aws_vpc_endpoint",
 		},
 	})
 }
@@ -48,17 +53,7 @@ func testSweepSubnets(region string) error {
 	}
 	conn := client.(*AWSClient).ec2conn
 
-	req := &ec2.DescribeSubnetsInput{
-		Filters: []*ec2.Filter{
-			{
-				Name: aws.String("tag-value"),
-				Values: []*string{
-					aws.String("terraform-testacc-*"),
-					aws.String("tf-acc-*"),
-				},
-			},
-		},
-	}
+	req := &ec2.DescribeSubnetsInput{}
 	resp, err := conn.DescribeSubnets(req)
 	if err != nil {
 		if testSweepSkipSweepError(err) {
@@ -74,14 +69,35 @@ func testSweepSubnets(region string) error {
 	}
 
 	for _, subnet := range resp.Subnets {
-		// delete the subnet
-		_, err := conn.DeleteSubnet(&ec2.DeleteSubnetInput{
+		if subnet == nil {
+			continue
+		}
+
+		if aws.BoolValue(subnet.DefaultForAz) {
+			continue
+		}
+
+		input := &ec2.DeleteSubnetInput{
 			SubnetId: subnet.SubnetId,
+		}
+
+		// Handle eventual consistency, especially with lingering ENIs from Load Balancers and Lambda
+		err := resource.Retry(5*time.Minute, func() *resource.RetryError {
+			_, err := conn.DeleteSubnet(input)
+
+			if isAWSErr(err, "DependencyViolation", "") {
+				return resource.RetryableError(err)
+			}
+
+			if err != nil {
+				return resource.NonRetryableError(err)
+			}
+
+			return nil
 		})
+
 		if err != nil {
-			return fmt.Errorf(
-				"Error deleting Subnet (%s): %s",
-				*subnet.SubnetId, err)
+			return fmt.Errorf("Error deleting Subnet (%s): %s", aws.StringValue(subnet.SubnetId), err)
 		}
 	}
 
@@ -439,10 +455,6 @@ resource "aws_subnet" "foo" {
 `
 
 const testAccSubnetConfigAvailabilityZoneId = `
-provider "aws" {
-  region = "us-west-2"
-}
-
 resource "aws_vpc" "foo" {
   cidr_block = "10.1.0.0/16"
   tags = {

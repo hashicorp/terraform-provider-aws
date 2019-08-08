@@ -87,6 +87,7 @@ func testAccAWSIoTPolicyConfigInitialState(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_iot_policy" "pubsub" {
   name = "%s"
+
   policy = <<EOF
 {
   "Version": "2012-10-17",
@@ -105,6 +106,7 @@ func testAccAWSIoTPolicyInvalidJsonConfig(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_iot_policy" "pubsub" {
   name = "%s"
+
   policy = <<EOF
 	{
 	  "Version": "2012-10-17",

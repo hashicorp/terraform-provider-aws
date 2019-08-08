@@ -4,17 +4,29 @@ package securityhub
 
 const (
 
+	// ErrCodeAccessDeniedException for service response error code
+	// "AccessDeniedException".
+	//
+	// You don't have permission to perform the action specified in the request.
+	ErrCodeAccessDeniedException = "AccessDeniedException"
+
 	// ErrCodeInternalException for service response error code
 	// "InternalException".
 	//
 	// Internal server error.
 	ErrCodeInternalException = "InternalException"
 
+	// ErrCodeInvalidAccessException for service response error code
+	// "InvalidAccessException".
+	//
+	// AWS Security Hub isn't enabled for the account used to make this request.
+	ErrCodeInvalidAccessException = "InvalidAccessException"
+
 	// ErrCodeInvalidInputException for service response error code
 	// "InvalidInputException".
 	//
-	// The request was rejected because an invalid or out-of-range value was supplied
-	// for an input parameter.
+	// The request was rejected because you supplied an invalid or out-of-range
+	// value for an input parameter.
 	ErrCodeInvalidInputException = "InvalidInputException"
 
 	// ErrCodeLimitExceededException for service response error code
@@ -24,9 +36,15 @@ const (
 	// the current AWS account limits. The error code describes the limit exceeded.
 	ErrCodeLimitExceededException = "LimitExceededException"
 
+	// ErrCodeResourceConflictException for service response error code
+	// "ResourceConflictException".
+	//
+	// The resource specified in the request conflicts with an existing resource.
+	ErrCodeResourceConflictException = "ResourceConflictException"
+
 	// ErrCodeResourceNotFoundException for service response error code
 	// "ResourceNotFoundException".
 	//
-	// The request was rejected because the specified resource cannot be found.
+	// The request was rejected because we can't find the specified resource.
 	ErrCodeResourceNotFoundException = "ResourceNotFoundException"
 )

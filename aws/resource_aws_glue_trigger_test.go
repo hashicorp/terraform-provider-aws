@@ -3,7 +3,6 @@ package aws
 import (
 	"fmt"
 	"log"
-	"strings"
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -27,10 +26,6 @@ func testSweepGlueTriggers(region string) error {
 	}
 	conn := client.(*AWSClient).glueconn
 
-	prefixes := []string{
-		"tf-acc-test-",
-	}
-
 	input := &glue.GetTriggersInput{}
 	err = conn.GetTriggersPages(input, func(page *glue.GetTriggersOutput, lastPage bool) bool {
 		if page == nil || len(page.Triggers) == 0 {
@@ -38,18 +33,7 @@ func testSweepGlueTriggers(region string) error {
 			return false
 		}
 		for _, trigger := range page.Triggers {
-			skip := true
 			name := aws.StringValue(trigger.Name)
-			for _, prefix := range prefixes {
-				if strings.HasPrefix(name, prefix) {
-					skip = false
-					break
-				}
-			}
-			if skip {
-				log.Printf("[INFO] Skipping Glue Trigger: %s", name)
-				continue
-			}
 
 			log.Printf("[INFO] Deleting Glue Trigger: %s", name)
 			err := deleteGlueJob(conn, name)
@@ -382,8 +366,8 @@ resource "aws_glue_job" "test2" {
 }
 
 resource "aws_glue_trigger" "test" {
-  name     = "%s"
-  type     = "CONDITIONAL"
+  name = "%s"
+  type = "CONDITIONAL"
 
   actions {
     job_name = "${aws_glue_job.test2.name}"

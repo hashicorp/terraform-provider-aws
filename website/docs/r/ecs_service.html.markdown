@@ -6,7 +6,7 @@ description: |-
   Provides an ECS service.
 ---
 
-# aws_ecs_service
+# Resource: aws_ecs_service
 
 -> **Note:** To prevent a race condition during service deletion, make sure to set `depends_on` to the related `aws_iam_role_policy`; otherwise, the policy may be destroyed too soon and the ECS service will then get stuck in the `DRAINING` state.
 
@@ -89,9 +89,8 @@ The following arguments are supported:
 * `deployment_minimum_healthy_percent` - (Optional) The lower limit (as a percentage of the service's desiredCount) of the number of running tasks that must remain running and healthy in a service during a deployment.
 * `enable_ecs_managed_tags` - (Optional) Specifies whether to enable Amazon ECS managed tags for the tasks within the service.
 * `propagate_tags` - (Optional) Specifies whether to propagate the tags from the task definition or the service to the tasks. The valid values are `SERVICE` and `TASK_DEFINITION`.
-* `placement_strategy` - (Optional) **Deprecated**, use `ordered_placement_strategy` instead.
 * `ordered_placement_strategy` - (Optional) Service level strategy rules that are taken into consideration during task placement. List from top to bottom in order of precedence. The maximum number of `ordered_placement_strategy` blocks is `5`. Defined below.
-* `health_check_grace_period_seconds` - (Optional) Seconds to ignore failing load balancer health checks on newly instantiated tasks to prevent premature shutdown, up to 7200. Only valid for services configured to use load balancers.
+* `health_check_grace_period_seconds` - (Optional) Seconds to ignore failing load balancer health checks on newly instantiated tasks to prevent premature shutdown, up to 2147483647. Only valid for services configured to use load balancers.
 * `load_balancer` - (Optional) A load balancer block. Load balancers documented below.
 * `placement_constraints` - (Optional) rules that are taken into consideration during task placement. Maximum number of
 `placement_constraints` is `10`. Defined below.
@@ -113,8 +112,6 @@ The `deployment_controller` configuration block supports the following:
 * `target_group_arn` - (Required for ALB/NLB) The ARN of the Load Balancer target group to associate with the service.
 * `container_name` - (Required) The name of the container to associate with the load balancer (as it appears in a container definition).
 * `container_port` - (Required) The port on the container to associate with the load balancer.
-
--> **Note:** As a result of an AWS limitation, a single `load_balancer` can be attached to the ECS service at most. See [related docs](https://docs.aws.amazon.com/AmazonECS/latest/developerguide/service-load-balancing.html#load-balancing-concepts).
 
 ## ordered_placement_strategy
 

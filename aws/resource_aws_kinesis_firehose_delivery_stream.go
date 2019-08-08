@@ -1500,7 +1500,7 @@ func updateExtendedS3Config(d *schema.ResourceData) *firehose.ExtendedS3Destinat
 }
 
 func expandFirehoseDataFormatConversionConfiguration(l []interface{}) *firehose.DataFormatConversionConfiguration {
-	if len(l) == 0 {
+	if len(l) == 0 || l[0] == nil {
 		return nil
 	}
 
@@ -1515,7 +1515,7 @@ func expandFirehoseDataFormatConversionConfiguration(l []interface{}) *firehose.
 }
 
 func expandFirehoseInputFormatConfiguration(l []interface{}) *firehose.InputFormatConfiguration {
-	if len(l) == 0 {
+	if len(l) == 0 || l[0] == nil {
 		return nil
 	}
 
@@ -1527,7 +1527,7 @@ func expandFirehoseInputFormatConfiguration(l []interface{}) *firehose.InputForm
 }
 
 func expandFirehoseDeserializer(l []interface{}) *firehose.Deserializer {
-	if len(l) == 0 {
+	if len(l) == 0 || l[0] == nil {
 		return nil
 	}
 
@@ -1574,7 +1574,7 @@ func expandFirehoseOpenXJsonSerDe(l []interface{}) *firehose.OpenXJsonSerDe {
 }
 
 func expandFirehoseOutputFormatConfiguration(l []interface{}) *firehose.OutputFormatConfiguration {
-	if len(l) == 0 {
+	if len(l) == 0 || l[0] == nil {
 		return nil
 	}
 
@@ -1586,7 +1586,7 @@ func expandFirehoseOutputFormatConfiguration(l []interface{}) *firehose.OutputFo
 }
 
 func expandFirehoseSerializer(l []interface{}) *firehose.Serializer {
-	if len(l) == 0 {
+	if len(l) == 0 || l[0] == nil {
 		return nil
 	}
 
@@ -1650,7 +1650,7 @@ func expandFirehoseParquetSerDe(l []interface{}) *firehose.ParquetSerDe {
 }
 
 func expandFirehoseSchemaConfiguration(l []interface{}) *firehose.SchemaConfiguration {
-	if len(l) == 0 {
+	if len(l) == 0 || l[0] == nil {
 		return nil
 	}
 
@@ -2078,6 +2078,10 @@ func resourceAwsKinesisFirehoseDeliveryStreamCreate(d *schema.ResourceData, meta
 		}
 	}
 
+	if v, ok := d.GetOk("tags"); ok {
+		createInput.Tags = tagsFromMapKinesisFirehose(v.(map[string]interface{}))
+	}
+
 	err := resource.Retry(1*time.Minute, func() *resource.RetryError {
 		_, err := conn.CreateDeliveryStream(createInput)
 		if err != nil {
@@ -2103,6 +2107,9 @@ func resourceAwsKinesisFirehoseDeliveryStreamCreate(d *schema.ResourceData, meta
 
 		return nil
 	})
+	if isResourceTimeoutError(err) {
+		_, err = conn.CreateDeliveryStream(createInput)
+	}
 	if err != nil {
 		return fmt.Errorf("error creating Kinesis Firehose Delivery Stream: %s", err)
 	}
@@ -2126,12 +2133,6 @@ func resourceAwsKinesisFirehoseDeliveryStreamCreate(d *schema.ResourceData, meta
 	s := firehoseStream.(*firehose.DeliveryStreamDescription)
 	d.SetId(*s.DeliveryStreamARN)
 	d.Set("arn", s.DeliveryStreamARN)
-
-	if err := setTagsKinesisFirehose(conn, d, sn); err != nil {
-		return fmt.Errorf(
-			"Error setting for Kinesis Stream (%s) tags: %s",
-			sn, err)
-	}
 
 	return resourceAwsKinesisFirehoseDeliveryStreamRead(d, meta)
 }
@@ -2238,6 +2239,10 @@ func resourceAwsKinesisFirehoseDeliveryStreamUpdate(d *schema.ResourceData, meta
 		return nil
 	})
 
+	if isResourceTimeoutError(err) {
+		_, err = conn.UpdateDestination(updateInput)
+	}
+
 	if err != nil {
 		return fmt.Errorf(
 			"Error Updating Kinesis Firehose Delivery Stream: \"%s\"\n%s",
@@ -2292,20 +2297,10 @@ func resourceAwsKinesisFirehoseDeliveryStreamDelete(d *schema.ResourceData, meta
 	})
 
 	if err != nil {
-		return err
+		return fmt.Errorf("error deleting Kinesis Firehose Delivery Stream (%s): %s", sn, err)
 	}
 
-	stateConf := &resource.StateChangeConf{
-		Pending:    []string{"DELETING"},
-		Target:     []string{"DESTROYED"},
-		Refresh:    firehoseStreamStateRefreshFunc(conn, sn),
-		Timeout:    20 * time.Minute,
-		Delay:      10 * time.Second,
-		MinTimeout: 3 * time.Second,
-	}
-
-	_, err = stateConf.WaitForState()
-	if err != nil {
+	if err := waitForKinesisFirehoseDeliveryStreamDeletion(conn, sn); err != nil {
 		return fmt.Errorf(
 			"Error waiting for Delivery Stream (%s) to be destroyed: %s",
 			sn, err)
@@ -2329,4 +2324,19 @@ func firehoseStreamStateRefreshFunc(conn *firehose.Firehose, sn string) resource
 
 		return resp.DeliveryStreamDescription, *resp.DeliveryStreamDescription.DeliveryStreamStatus, nil
 	}
+}
+
+func waitForKinesisFirehoseDeliveryStreamDeletion(conn *firehose.Firehose, deliveryStreamName string) error {
+	stateConf := &resource.StateChangeConf{
+		Pending:    []string{"DELETING"},
+		Target:     []string{"DESTROYED"},
+		Refresh:    firehoseStreamStateRefreshFunc(conn, deliveryStreamName),
+		Timeout:    20 * time.Minute,
+		Delay:      10 * time.Second,
+		MinTimeout: 3 * time.Second,
+	}
+
+	_, err := stateConf.WaitForState()
+
+	return err
 }

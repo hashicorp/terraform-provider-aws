@@ -118,7 +118,7 @@ resource "aws_vpc" "test" {
   cidr_block = "192.168.0.0/16"
 
   tags = {
-   Name = %q
+    Name = %q
   }
 }
 
@@ -136,7 +136,7 @@ resource "aws_subnet" "test" {
 
 resource "aws_db_subnet_group" "test" {
   name       = %q
-  subnet_ids = ["${aws_subnet.test.*.id}"]
+  subnet_ids = ["${aws_subnet.test.*.id[0]}", "${aws_subnet.test.*.id[1]}"]
 }
 
 resource "aws_rds_cluster" "test" {

@@ -5,12 +5,10 @@ import (
 	"fmt"
 	"log"
 	"strconv"
-	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/apigateway"
-	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/helper/schema"
 	"github.com/hashicorp/terraform/helper/validation"
 )
@@ -220,7 +218,7 @@ func resourceAwsApiGatewayUsagePlanCreate(d *schema.ResourceData, meta interface
 			},
 		}
 
-		up, err = conn.UpdateUsagePlan(updateParameters)
+		_, err = conn.UpdateUsagePlan(updateParameters)
 		if err != nil {
 			return fmt.Errorf("Error creating the API Gateway Usage Plan product code: %s", err)
 		}
@@ -491,15 +489,14 @@ func resourceAwsApiGatewayUsagePlanDelete(d *schema.ResourceData, meta interface
 
 	log.Printf("[DEBUG] Deleting API Gateway Usage Plan: %s", d.Id())
 
-	return resource.Retry(5*time.Minute, func() *resource.RetryError {
-		_, err := conn.DeleteUsagePlan(&apigateway.DeleteUsagePlanInput{
-			UsagePlanId: aws.String(d.Id()),
-		})
-
-		if err == nil {
-			return nil
-		}
-
-		return resource.NonRetryableError(err)
+	_, err := conn.DeleteUsagePlan(&apigateway.DeleteUsagePlanInput{
+		UsagePlanId: aws.String(d.Id()),
 	})
+
+	if err != nil {
+		return fmt.Errorf("Error deleting API gateway usage plan: %s", err)
+	}
+
+	return nil
+
 }

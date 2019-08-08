@@ -4,7 +4,6 @@ import (
 	"errors"
 	"fmt"
 	"log"
-	"strings"
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -49,10 +48,6 @@ func testSweepLightsailStaticIps(region string) error {
 		for _, staticIp := range output.StaticIps {
 			name := aws.StringValue(staticIp.Name)
 
-			if !strings.HasPrefix(name, "tf-test-") {
-				continue
-			}
-
 			log.Printf("[INFO] Deleting Lightsail Static IP %s", name)
 			_, err := conn.ReleaseStaticIp(&lightsail.ReleaseStaticIpInput{
 				StaticIpName: aws.String(name),
@@ -76,7 +71,7 @@ func TestAccAWSLightsailStaticIp_basic(t *testing.T) {
 	staticIpName := fmt.Sprintf("tf-test-lightsail-%s", acctest.RandString(5))
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSLightsail(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSLightsailStaticIpDestroy,
 		Steps: []resource.TestStep{
@@ -108,7 +103,7 @@ func TestAccAWSLightsailStaticIp_disappears(t *testing.T) {
 	}
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSLightsail(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSLightsailStaticIpDestroy,
 		Steps: []resource.TestStep{
@@ -186,9 +181,6 @@ func testAccCheckAWSLightsailStaticIpDestroy(s *terraform.State) error {
 
 func testAccAWSLightsailStaticIpConfig_basic(staticIpName string) string {
 	return fmt.Sprintf(`
-provider "aws" {
-  region = "us-east-1"
-}
 resource "aws_lightsail_static_ip" "test" {
   name = "%s"
 }

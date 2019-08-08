@@ -22,7 +22,7 @@ func TestAccAWSWafIPSet_basic(t *testing.T) {
 	ipsetName := fmt.Sprintf("ip-set-%s", acctest.RandString(5))
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSWaf(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSWafIPSetDestroy,
 		Steps: []resource.TestStep{
@@ -53,7 +53,7 @@ func TestAccAWSWafIPSet_disappears(t *testing.T) {
 	var v waf.IPSet
 	ipsetName := fmt.Sprintf("ip-set-%s", acctest.RandString(5))
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSWaf(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSWafIPSetDestroy,
 		Steps: []resource.TestStep{
@@ -75,7 +75,7 @@ func TestAccAWSWafIPSet_changeNameForceNew(t *testing.T) {
 	ipsetNewName := fmt.Sprintf("ip-set-new-%s", acctest.RandString(5))
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSWaf(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSWafIPSetDestroy,
 		Steps: []resource.TestStep{
@@ -112,7 +112,7 @@ func TestAccAWSWafIPSet_changeDescriptors(t *testing.T) {
 	ipsetName := fmt.Sprintf("ip-set-%s", acctest.RandString(5))
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSWaf(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSWafIPSetDestroy,
 		Steps: []resource.TestStep{
@@ -153,7 +153,7 @@ func TestAccAWSWafIPSet_noDescriptors(t *testing.T) {
 	ipsetName := fmt.Sprintf("ip-set-%s", acctest.RandString(5))
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSWaf(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSWafIPSetDestroy,
 		Steps: []resource.TestStep{
@@ -196,7 +196,7 @@ func TestAccAWSWafIPSet_IpSetDescriptors_1000UpdateLimit(t *testing.T) {
 	}
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSWaf(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSWafIPSetDestroy,
 		Steps: []resource.TestStep{
@@ -422,42 +422,55 @@ func testAccAWSWafIPSetConfig(name string) string {
 	return fmt.Sprintf(`
 resource "aws_waf_ipset" "ipset" {
   name = "%s"
+
   ip_set_descriptors {
-    type = "IPV4"
+    type  = "IPV4"
     value = "192.0.7.0/24"
   }
-}`, name)
+}
+`, name)
 }
 
 func testAccAWSWafIPSetConfigChangeName(name string) string {
-	return fmt.Sprintf(`resource "aws_waf_ipset" "ipset" {
+	return fmt.Sprintf(`
+resource "aws_waf_ipset" "ipset" {
   name = "%s"
+
   ip_set_descriptors {
-    type = "IPV4"
+    type  = "IPV4"
     value = "192.0.7.0/24"
   }
-}`, name)
+}
+`, name)
 }
 
 func testAccAWSWafIPSetConfigChangeIPSetDescriptors(name string) string {
-	return fmt.Sprintf(`resource "aws_waf_ipset" "ipset" {
+	return fmt.Sprintf(`
+resource "aws_waf_ipset" "ipset" {
   name = "%s"
+
   ip_set_descriptors {
-    type = "IPV4"
+    type  = "IPV4"
     value = "192.0.8.0/24"
   }
-}`, name)
+}
+`, name)
 }
 
 func testAccAWSWafIPSetConfig_IpSetDescriptors(name, ipSetDescriptors string) string {
-	return fmt.Sprintf(`resource "aws_waf_ipset" "ipset" {
+	return fmt.Sprintf(`
+resource "aws_waf_ipset" "ipset" {
   name = "%s"
-%s
-}`, name, ipSetDescriptors)
+
+  %s
+}
+`, name, ipSetDescriptors)
 }
 
 func testAccAWSWafIPSetConfig_noDescriptors(name string) string {
-	return fmt.Sprintf(`resource "aws_waf_ipset" "ipset" {
+	return fmt.Sprintf(`
+resource "aws_waf_ipset" "ipset" {
   name = "%s"
-}`, name)
+}
+`, name)
 }

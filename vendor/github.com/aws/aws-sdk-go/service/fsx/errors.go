@@ -55,6 +55,12 @@ const (
 	// A generic error indicating a server-side failure.
 	ErrCodeInternalServerError = "InternalServerError"
 
+	// ErrCodeInvalidExportPath for service response error code
+	// "InvalidExportPath".
+	//
+	// The path provided for data repository export isn't valid.
+	ErrCodeInvalidExportPath = "InvalidExportPath"
+
 	// ErrCodeInvalidImportPath for service response error code
 	// "InvalidImportPath".
 	//
@@ -103,4 +109,10 @@ const (
 	// An error indicating that a particular service limit was exceeded. You can
 	// increase some service limits by contacting AWS Support.
 	ErrCodeServiceLimitExceeded = "ServiceLimitExceeded"
+
+	// ErrCodeUnsupportedOperation for service response error code
+	// "UnsupportedOperation".
+	//
+	// An error occured.
+	ErrCodeUnsupportedOperation = "UnsupportedOperation"
 )

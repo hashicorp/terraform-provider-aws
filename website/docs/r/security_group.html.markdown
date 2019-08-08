@@ -6,7 +6,7 @@ description: |-
   Provides a security group resource.
 ---
 
-# aws_security_group
+# Resource: aws_security_group
 
 Provides a security group resource.
 
@@ -24,16 +24,19 @@ a conflict of rule settings and will overwrite rules.
 Basic usage
 
 ```hcl
-resource "aws_security_group" "allow_all" {
-  name        = "allow_all"
-  description = "Allow all inbound traffic"
+resource "aws_security_group" "allow_tls" {
+  name        = "allow_tls"
+  description = "Allow TLS inbound traffic"
   vpc_id      = "${aws_vpc.main.id}"
 
   ingress {
-    from_port   = 0
-    to_port     = 0
+    # TLS (change to whatever ports you need)
+    from_port   = 443
+    to_port     = 443
     protocol    = "-1"
-    cidr_blocks = ["0.0.0.0/0"]
+    # Please restrict your ingress to only necessary IPs and ports.
+    # Opening to 0.0.0.0/0 can lead to security vulnerabilities.
+    cidr_blocks = # add a CIDR block here
   }
 
   egress {
@@ -49,15 +52,18 @@ resource "aws_security_group" "allow_all" {
 Basic usage with tags:
 
 ```hcl
-resource "aws_security_group" "allow_all" {
-  name        = "allow_all"
-  description = "Allow all inbound traffic"
+resource "aws_security_group" "allow_tls" {
+  name        = "allow_tls"
+  description = "Allow TLS inbound traffic"
 
   ingress {
-    from_port   = 0
-    to_port     = 65535
+    # TLS (change to whatever ports you need)
+    from_port   = 443
+    to_port     = 443
     protocol    = "tcp"
-    cidr_blocks = ["0.0.0.0/0"]
+    # Please restrict your ingress to only necessary IPs and ports.
+    # Opening to 0.0.0.0/0 can lead to security vulnerabilities.
+    cidr_blocks = # add your IP address here
   }
 
   tags = {
@@ -80,8 +86,10 @@ assign a random, unique name
   to classify your security groups in a way that can be updated, use `tags`.
 * `ingress` - (Optional) Can be specified multiple times for each
    ingress rule. Each ingress block supports fields documented below.
+   This argument is processed in [attribute-as-blocks mode](/docs/configuration/attr-as-blocks.html).
 * `egress` - (Optional, VPC only) Can be specified multiple times for each
       egress rule. Each egress block supports fields documented below.
+      This argument is processed in [attribute-as-blocks mode](/docs/configuration/attr-as-blocks.html).
 * `revoke_rules_on_delete` - (Optional) Instruct Terraform to revoke all of the
 Security Groups attached ingress and egress rules before deleting the rule
 itself. This is normally not needed, however certain AWS services such as

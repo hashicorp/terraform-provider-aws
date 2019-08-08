@@ -2,11 +2,9 @@ package aws
 
 import (
 	"fmt"
+	"log"
 	"testing"
 	"time"
-
-	"log"
-	"strings"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/gamelift"
@@ -33,11 +31,12 @@ func testSweepGameliftGameSessionQueue(region string) error {
 
 	out, err := conn.DescribeGameSessionQueues(&gamelift.DescribeGameSessionQueuesInput{})
 
+	if testSweepSkipSweepError(err) {
+		log.Printf("[WARN] Skipping Gamelife Queue sweep for %s: %s", region, err)
+		return nil
+	}
+
 	if err != nil {
-		if testSweepSkipSweepError(err) {
-			log.Printf("[WARN] Skipping Gamelife Queue sweep for %s: %s", region, err)
-			return nil
-		}
 		return fmt.Errorf("error listing Gamelift Session Queue: %s", err)
 	}
 
@@ -49,10 +48,6 @@ func testSweepGameliftGameSessionQueue(region string) error {
 	log.Printf("[INFO] Found %d Gamelift Session Queue", len(out.GameSessionQueues))
 
 	for _, queue := range out.GameSessionQueues {
-		if !strings.HasPrefix(*queue.Name, testAccGameliftGameSessionQueuePrefix) {
-			continue
-		}
-
 		log.Printf("[INFO] Deleting Gamelift Session Queue %q", *queue.Name)
 		_, err := conn.DeleteGameSessionQueue(&gamelift.DeleteGameSessionQueueInput{
 			Name: aws.String(*queue.Name),
@@ -61,14 +56,6 @@ func testSweepGameliftGameSessionQueue(region string) error {
 			return fmt.Errorf("error deleting Gamelift Session Queue (%s): %s",
 				*queue.Name, err)
 		}
-	}
-
-	if err != nil {
-		if testSweepSkipSweepError(err) {
-			log.Printf("[WARN] Skipping Gamelift Session Queue sweep for %s: %s", region, err)
-			return nil
-		}
-		return fmt.Errorf("error listing Gamelift Session Queue: %s", err)
 	}
 
 	return nil
@@ -104,7 +91,7 @@ func TestAccAWSGameliftGameSessionQueue_basic(t *testing.T) {
 	uTimeoutInSeconds := int64(600)
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSGamelift(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSGameliftGameSessionQueueDestroy,
 		Steps: []resource.TestStep{
@@ -269,15 +256,18 @@ func testAccAWSGameliftGameSessionQueueBasicConfig(queueName string,
 	playerLatencyPolicies []gamelift.PlayerLatencyPolicy, timeoutInSeconds int64) string {
 	return fmt.Sprintf(`
 resource "aws_gamelift_game_session_queue" "test" {
-  name = "%s"
+  name         = "%s"
   destinations = []
+
   player_latency_policy {
     maximum_individual_player_latency_milliseconds = %d
-    policy_duration_seconds = %d
+    policy_duration_seconds                        = %d
   }
+
   player_latency_policy {
     maximum_individual_player_latency_milliseconds = %d
   }
+
   timeout_in_seconds = %d
 }
 `,

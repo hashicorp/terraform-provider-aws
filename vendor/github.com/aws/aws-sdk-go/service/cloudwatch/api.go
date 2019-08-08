@@ -93,6 +93,95 @@ func (c *CloudWatch) DeleteAlarmsWithContext(ctx aws.Context, input *DeleteAlarm
 	return out, req.Send()
 }
 
+const opDeleteAnomalyDetector = "DeleteAnomalyDetector"
+
+// DeleteAnomalyDetectorRequest generates a "aws/request.Request" representing the
+// client's request for the DeleteAnomalyDetector operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See DeleteAnomalyDetector for more information on using the DeleteAnomalyDetector
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the DeleteAnomalyDetectorRequest method.
+//    req, resp := client.DeleteAnomalyDetectorRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/monitoring-2010-08-01/DeleteAnomalyDetector
+func (c *CloudWatch) DeleteAnomalyDetectorRequest(input *DeleteAnomalyDetectorInput) (req *request.Request, output *DeleteAnomalyDetectorOutput) {
+	op := &request.Operation{
+		Name:       opDeleteAnomalyDetector,
+		HTTPMethod: "POST",
+		HTTPPath:   "/",
+	}
+
+	if input == nil {
+		input = &DeleteAnomalyDetectorInput{}
+	}
+
+	output = &DeleteAnomalyDetectorOutput{}
+	req = c.newRequest(op, input, output)
+	req.Handlers.Unmarshal.Swap(query.UnmarshalHandler.Name, protocol.UnmarshalDiscardBodyHandler)
+	return
+}
+
+// DeleteAnomalyDetector API operation for Amazon CloudWatch.
+//
+// Deletes the specified anomaly detection model from your account.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for Amazon CloudWatch's
+// API operation DeleteAnomalyDetector for usage and error information.
+//
+// Returned Error Codes:
+//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   The named resource does not exist.
+//
+//   * ErrCodeInternalServiceFault "InternalServiceError"
+//   Request processing has failed due to some unknown error, exception, or failure.
+//
+//   * ErrCodeInvalidParameterValueException "InvalidParameterValue"
+//   The value of an input parameter is bad or out-of-range.
+//
+//   * ErrCodeMissingRequiredParameterException "MissingParameter"
+//   An input parameter that is required is missing.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/monitoring-2010-08-01/DeleteAnomalyDetector
+func (c *CloudWatch) DeleteAnomalyDetector(input *DeleteAnomalyDetectorInput) (*DeleteAnomalyDetectorOutput, error) {
+	req, out := c.DeleteAnomalyDetectorRequest(input)
+	return out, req.Send()
+}
+
+// DeleteAnomalyDetectorWithContext is the same as DeleteAnomalyDetector with the addition of
+// the ability to pass a context and additional request options.
+//
+// See DeleteAnomalyDetector for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *CloudWatch) DeleteAnomalyDetectorWithContext(ctx aws.Context, input *DeleteAnomalyDetectorInput, opts ...request.Option) (*DeleteAnomalyDetectorOutput, error) {
+	req, out := c.DeleteAnomalyDetectorRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
 const opDeleteDashboards = "DeleteDashboards"
 
 // DeleteDashboardsRequest generates a "aws/request.Request" representing the
@@ -280,7 +369,7 @@ func (c *CloudWatch) DescribeAlarmHistoryWithContext(ctx aws.Context, input *Des
 //    // Example iterating over at most 3 pages of a DescribeAlarmHistory operation.
 //    pageNum := 0
 //    err := client.DescribeAlarmHistoryPages(params,
-//        func(page *DescribeAlarmHistoryOutput, lastPage bool) bool {
+//        func(page *cloudwatch.DescribeAlarmHistoryOutput, lastPage bool) bool {
 //            pageNum++
 //            fmt.Println(page)
 //            return pageNum <= 3
@@ -417,7 +506,7 @@ func (c *CloudWatch) DescribeAlarmsWithContext(ctx aws.Context, input *DescribeA
 //    // Example iterating over at most 3 pages of a DescribeAlarms operation.
 //    pageNum := 0
 //    err := client.DescribeAlarmsPages(params,
-//        func(page *DescribeAlarmsOutput, lastPage bool) bool {
+//        func(page *cloudwatch.DescribeAlarmsOutput, lastPage bool) bool {
 //            pageNum++
 //            fmt.Println(page)
 //            return pageNum <= 3
@@ -526,6 +615,93 @@ func (c *CloudWatch) DescribeAlarmsForMetric(input *DescribeAlarmsForMetricInput
 // for more information on using Contexts.
 func (c *CloudWatch) DescribeAlarmsForMetricWithContext(ctx aws.Context, input *DescribeAlarmsForMetricInput, opts ...request.Option) (*DescribeAlarmsForMetricOutput, error) {
 	req, out := c.DescribeAlarmsForMetricRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
+const opDescribeAnomalyDetectors = "DescribeAnomalyDetectors"
+
+// DescribeAnomalyDetectorsRequest generates a "aws/request.Request" representing the
+// client's request for the DescribeAnomalyDetectors operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See DescribeAnomalyDetectors for more information on using the DescribeAnomalyDetectors
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the DescribeAnomalyDetectorsRequest method.
+//    req, resp := client.DescribeAnomalyDetectorsRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/monitoring-2010-08-01/DescribeAnomalyDetectors
+func (c *CloudWatch) DescribeAnomalyDetectorsRequest(input *DescribeAnomalyDetectorsInput) (req *request.Request, output *DescribeAnomalyDetectorsOutput) {
+	op := &request.Operation{
+		Name:       opDescribeAnomalyDetectors,
+		HTTPMethod: "POST",
+		HTTPPath:   "/",
+	}
+
+	if input == nil {
+		input = &DescribeAnomalyDetectorsInput{}
+	}
+
+	output = &DescribeAnomalyDetectorsOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// DescribeAnomalyDetectors API operation for Amazon CloudWatch.
+//
+// Lists the anomaly detection models that you have created in your account.
+// You can list all models in your account or filter the results to only the
+// models that are related to a certain namespace, metric name, or metric dimension.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for Amazon CloudWatch's
+// API operation DescribeAnomalyDetectors for usage and error information.
+//
+// Returned Error Codes:
+//   * ErrCodeInvalidNextToken "InvalidNextToken"
+//   The next token specified is invalid.
+//
+//   * ErrCodeInternalServiceFault "InternalServiceError"
+//   Request processing has failed due to some unknown error, exception, or failure.
+//
+//   * ErrCodeInvalidParameterValueException "InvalidParameterValue"
+//   The value of an input parameter is bad or out-of-range.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/monitoring-2010-08-01/DescribeAnomalyDetectors
+func (c *CloudWatch) DescribeAnomalyDetectors(input *DescribeAnomalyDetectorsInput) (*DescribeAnomalyDetectorsOutput, error) {
+	req, out := c.DescribeAnomalyDetectorsRequest(input)
+	return out, req.Send()
+}
+
+// DescribeAnomalyDetectorsWithContext is the same as DescribeAnomalyDetectors with the addition of
+// the ability to pass a context and additional request options.
+//
+// See DescribeAnomalyDetectors for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *CloudWatch) DescribeAnomalyDetectorsWithContext(ctx aws.Context, input *DescribeAnomalyDetectorsInput, opts ...request.Option) (*DescribeAnomalyDetectorsOutput, error) {
+	req, out := c.DescribeAnomalyDetectorsRequest(input)
 	req.SetContext(ctx)
 	req.ApplyOptions(opts...)
 	return out, req.Send()
@@ -802,6 +978,12 @@ func (c *CloudWatch) GetMetricDataRequest(input *GetMetricDataInput) (req *reque
 		Name:       opGetMetricData,
 		HTTPMethod: "POST",
 		HTTPPath:   "/",
+		Paginator: &request.Paginator{
+			InputTokens:     []string{"NextToken"},
+			OutputTokens:    []string{"NextToken"},
+			LimitToken:      "MaxDatapoints",
+			TruncationToken: "",
+		},
 	}
 
 	if input == nil {
@@ -821,7 +1003,7 @@ func (c *CloudWatch) GetMetricDataRequest(input *GetMetricDataInput) (req *reque
 // to create new time series that represent new insights into your data. For
 // example, using Lambda metrics, you could divide the Errors metric by the
 // Invocations metric to get an error rate time series. For more information
-// about metric math expressions, see Metric Math Syntax and Functions (http://docs.aws.amazon.com/AmazonCloudWatch/latest/monitoring/using-metric-math.html#metric-math-syntax)
+// about metric math expressions, see Metric Math Syntax and Functions (https://docs.aws.amazon.com/AmazonCloudWatch/latest/monitoring/using-metric-math.html#metric-math-syntax)
 // in the Amazon CloudWatch User Guide.
 //
 // Calls to the GetMetricData API have a different pricing structure than calls
@@ -882,6 +1064,56 @@ func (c *CloudWatch) GetMetricDataWithContext(ctx aws.Context, input *GetMetricD
 	req.SetContext(ctx)
 	req.ApplyOptions(opts...)
 	return out, req.Send()
+}
+
+// GetMetricDataPages iterates over the pages of a GetMetricData operation,
+// calling the "fn" function with the response data for each page. To stop
+// iterating, return false from the fn function.
+//
+// See GetMetricData method for more information on how to use this operation.
+//
+// Note: This operation can generate multiple requests to a service.
+//
+//    // Example iterating over at most 3 pages of a GetMetricData operation.
+//    pageNum := 0
+//    err := client.GetMetricDataPages(params,
+//        func(page *cloudwatch.GetMetricDataOutput, lastPage bool) bool {
+//            pageNum++
+//            fmt.Println(page)
+//            return pageNum <= 3
+//        })
+//
+func (c *CloudWatch) GetMetricDataPages(input *GetMetricDataInput, fn func(*GetMetricDataOutput, bool) bool) error {
+	return c.GetMetricDataPagesWithContext(aws.BackgroundContext(), input, fn)
+}
+
+// GetMetricDataPagesWithContext same as GetMetricDataPages except
+// it takes a Context and allows setting request options on the pages.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *CloudWatch) GetMetricDataPagesWithContext(ctx aws.Context, input *GetMetricDataInput, fn func(*GetMetricDataOutput, bool) bool, opts ...request.Option) error {
+	p := request.Pagination{
+		NewRequest: func() (*request.Request, error) {
+			var inCpy *GetMetricDataInput
+			if input != nil {
+				tmp := *input
+				inCpy = &tmp
+			}
+			req, _ := c.GetMetricDataRequest(inCpy)
+			req.SetContext(ctx)
+			req.ApplyOptions(opts...)
+			return req, nil
+		},
+	}
+
+	cont := true
+	for p.Next() && cont {
+		cont = fn(p.Page().(*GetMetricDataOutput), !p.HasNextPage())
+	}
+	return p.Err()
 }
 
 const opGetMetricStatistics = "GetMetricStatistics"
@@ -980,7 +1212,7 @@ func (c *CloudWatch) GetMetricStatisticsRequest(input *GetMetricStatisticsInput)
 // 2016.
 //
 // For information about metrics and dimensions supported by AWS services, see
-// the Amazon CloudWatch Metrics and Dimensions Reference (http://docs.aws.amazon.com/AmazonCloudWatch/latest/monitoring/CW_Support_For_AWS.html)
+// the Amazon CloudWatch Metrics and Dimensions Reference (https://docs.aws.amazon.com/AmazonCloudWatch/latest/monitoring/CW_Support_For_AWS.html)
 // in the Amazon CloudWatch User Guide.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
@@ -1144,6 +1376,12 @@ func (c *CloudWatch) ListDashboardsRequest(input *ListDashboardsInput) (req *req
 		Name:       opListDashboards,
 		HTTPMethod: "POST",
 		HTTPPath:   "/",
+		Paginator: &request.Paginator{
+			InputTokens:     []string{"NextToken"},
+			OutputTokens:    []string{"NextToken"},
+			LimitToken:      "",
+			TruncationToken: "",
+		},
 	}
 
 	if input == nil {
@@ -1199,6 +1437,56 @@ func (c *CloudWatch) ListDashboardsWithContext(ctx aws.Context, input *ListDashb
 	req.SetContext(ctx)
 	req.ApplyOptions(opts...)
 	return out, req.Send()
+}
+
+// ListDashboardsPages iterates over the pages of a ListDashboards operation,
+// calling the "fn" function with the response data for each page. To stop
+// iterating, return false from the fn function.
+//
+// See ListDashboards method for more information on how to use this operation.
+//
+// Note: This operation can generate multiple requests to a service.
+//
+//    // Example iterating over at most 3 pages of a ListDashboards operation.
+//    pageNum := 0
+//    err := client.ListDashboardsPages(params,
+//        func(page *cloudwatch.ListDashboardsOutput, lastPage bool) bool {
+//            pageNum++
+//            fmt.Println(page)
+//            return pageNum <= 3
+//        })
+//
+func (c *CloudWatch) ListDashboardsPages(input *ListDashboardsInput, fn func(*ListDashboardsOutput, bool) bool) error {
+	return c.ListDashboardsPagesWithContext(aws.BackgroundContext(), input, fn)
+}
+
+// ListDashboardsPagesWithContext same as ListDashboardsPages except
+// it takes a Context and allows setting request options on the pages.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *CloudWatch) ListDashboardsPagesWithContext(ctx aws.Context, input *ListDashboardsInput, fn func(*ListDashboardsOutput, bool) bool, opts ...request.Option) error {
+	p := request.Pagination{
+		NewRequest: func() (*request.Request, error) {
+			var inCpy *ListDashboardsInput
+			if input != nil {
+				tmp := *input
+				inCpy = &tmp
+			}
+			req, _ := c.ListDashboardsRequest(inCpy)
+			req.SetContext(ctx)
+			req.ApplyOptions(opts...)
+			return req, nil
+		},
+	}
+
+	cont := true
+	for p.Next() && cont {
+		cont = fn(p.Page().(*ListDashboardsOutput), !p.HasNextPage())
+	}
+	return p.Err()
 }
 
 const opListMetrics = "ListMetrics"
@@ -1308,7 +1596,7 @@ func (c *CloudWatch) ListMetricsWithContext(ctx aws.Context, input *ListMetricsI
 //    // Example iterating over at most 3 pages of a ListMetrics operation.
 //    pageNum := 0
 //    err := client.ListMetricsPages(params,
-//        func(page *ListMetricsOutput, lastPage bool) bool {
+//        func(page *cloudwatch.ListMetricsOutput, lastPage bool) bool {
 //            pageNum++
 //            fmt.Println(page)
 //            return pageNum <= 3
@@ -1345,6 +1633,183 @@ func (c *CloudWatch) ListMetricsPagesWithContext(ctx aws.Context, input *ListMet
 		cont = fn(p.Page().(*ListMetricsOutput), !p.HasNextPage())
 	}
 	return p.Err()
+}
+
+const opListTagsForResource = "ListTagsForResource"
+
+// ListTagsForResourceRequest generates a "aws/request.Request" representing the
+// client's request for the ListTagsForResource operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See ListTagsForResource for more information on using the ListTagsForResource
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the ListTagsForResourceRequest method.
+//    req, resp := client.ListTagsForResourceRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/monitoring-2010-08-01/ListTagsForResource
+func (c *CloudWatch) ListTagsForResourceRequest(input *ListTagsForResourceInput) (req *request.Request, output *ListTagsForResourceOutput) {
+	op := &request.Operation{
+		Name:       opListTagsForResource,
+		HTTPMethod: "POST",
+		HTTPPath:   "/",
+	}
+
+	if input == nil {
+		input = &ListTagsForResourceInput{}
+	}
+
+	output = &ListTagsForResourceOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// ListTagsForResource API operation for Amazon CloudWatch.
+//
+// Displays the tags associated with a CloudWatch resource. Alarms support tagging.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for Amazon CloudWatch's
+// API operation ListTagsForResource for usage and error information.
+//
+// Returned Error Codes:
+//   * ErrCodeInvalidParameterValueException "InvalidParameterValue"
+//   The value of an input parameter is bad or out-of-range.
+//
+//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   The named resource does not exist.
+//
+//   * ErrCodeInternalServiceFault "InternalServiceError"
+//   Request processing has failed due to some unknown error, exception, or failure.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/monitoring-2010-08-01/ListTagsForResource
+func (c *CloudWatch) ListTagsForResource(input *ListTagsForResourceInput) (*ListTagsForResourceOutput, error) {
+	req, out := c.ListTagsForResourceRequest(input)
+	return out, req.Send()
+}
+
+// ListTagsForResourceWithContext is the same as ListTagsForResource with the addition of
+// the ability to pass a context and additional request options.
+//
+// See ListTagsForResource for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *CloudWatch) ListTagsForResourceWithContext(ctx aws.Context, input *ListTagsForResourceInput, opts ...request.Option) (*ListTagsForResourceOutput, error) {
+	req, out := c.ListTagsForResourceRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
+const opPutAnomalyDetector = "PutAnomalyDetector"
+
+// PutAnomalyDetectorRequest generates a "aws/request.Request" representing the
+// client's request for the PutAnomalyDetector operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See PutAnomalyDetector for more information on using the PutAnomalyDetector
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the PutAnomalyDetectorRequest method.
+//    req, resp := client.PutAnomalyDetectorRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/monitoring-2010-08-01/PutAnomalyDetector
+func (c *CloudWatch) PutAnomalyDetectorRequest(input *PutAnomalyDetectorInput) (req *request.Request, output *PutAnomalyDetectorOutput) {
+	op := &request.Operation{
+		Name:       opPutAnomalyDetector,
+		HTTPMethod: "POST",
+		HTTPPath:   "/",
+	}
+
+	if input == nil {
+		input = &PutAnomalyDetectorInput{}
+	}
+
+	output = &PutAnomalyDetectorOutput{}
+	req = c.newRequest(op, input, output)
+	req.Handlers.Unmarshal.Swap(query.UnmarshalHandler.Name, protocol.UnmarshalDiscardBodyHandler)
+	return
+}
+
+// PutAnomalyDetector API operation for Amazon CloudWatch.
+//
+// Creates an anomaly detection model for a CloudWatch metric. You can use the
+// model to display a band of expected normal values when the metric is graphed.
+//
+// For more information, see CloudWatch Anomaly Detection (https://docs.aws.amazon.com/AmazonCloudWatch/latest/monitoring/CloudWatch_Anomaly_Detection.html).
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for Amazon CloudWatch's
+// API operation PutAnomalyDetector for usage and error information.
+//
+// Returned Error Codes:
+//   * ErrCodeLimitExceededException "LimitExceededException"
+//   The operation exceeded one or more limits.
+//
+//   * ErrCodeInternalServiceFault "InternalServiceError"
+//   Request processing has failed due to some unknown error, exception, or failure.
+//
+//   * ErrCodeInvalidParameterValueException "InvalidParameterValue"
+//   The value of an input parameter is bad or out-of-range.
+//
+//   * ErrCodeMissingRequiredParameterException "MissingParameter"
+//   An input parameter that is required is missing.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/monitoring-2010-08-01/PutAnomalyDetector
+func (c *CloudWatch) PutAnomalyDetector(input *PutAnomalyDetectorInput) (*PutAnomalyDetectorOutput, error) {
+	req, out := c.PutAnomalyDetectorRequest(input)
+	return out, req.Send()
+}
+
+// PutAnomalyDetectorWithContext is the same as PutAnomalyDetector with the addition of
+// the ability to pass a context and additional request options.
+//
+// See PutAnomalyDetector for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *CloudWatch) PutAnomalyDetectorWithContext(ctx aws.Context, input *PutAnomalyDetectorInput, opts ...request.Option) (*PutAnomalyDetectorOutput, error) {
+	req, out := c.PutAnomalyDetectorRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
 }
 
 const opPutDashboard = "PutDashboard"
@@ -1395,8 +1860,7 @@ func (c *CloudWatch) PutDashboardRequest(input *PutDashboardInput) (req *request
 // dashboard. If you update a dashboard, the entire contents are replaced with
 // what you specify here.
 //
-// There is no limit to the number of dashboards in your account. All dashboards
-// in your account are global, not region-specific.
+// All dashboards in your account are global, not region-specific.
 //
 // A simple way to create a dashboard using PutDashboard is to copy an existing
 // dashboard. To copy an existing dashboard using the console, you can load
@@ -1492,8 +1956,10 @@ func (c *CloudWatch) PutMetricAlarmRequest(input *PutMetricAlarmInput) (req *req
 
 // PutMetricAlarm API operation for Amazon CloudWatch.
 //
-// Creates or updates an alarm and associates it with the specified metric or
-// metric math expression.
+// Creates or updates an alarm and associates it with the specified metric,
+// metric math expression, or anomaly detection model.
+//
+// Alarms based on anomaly detection models cannot have Auto Scaling actions.
 //
 // When this operation creates an alarm, the alarm state is immediately set
 // to INSUFFICIENT_DATA. The alarm is then evaluated and its state is set appropriately.
@@ -1514,8 +1980,7 @@ func (c *CloudWatch) PutMetricAlarmRequest(input *PutMetricAlarmInput) (req *req
 //
 //    * ec2:TerminateInstances for alarms with terminate actions
 //
-//    * ec2:DescribeInstanceRecoveryAttribute and ec2:RecoverInstances for alarms
-//    with recover actions
+//    * No specific permissions are needed for alarms with recover actions
 //
 // If you have read/write permissions for Amazon CloudWatch but not for Amazon
 // EC2, you can still create an alarm, but the stop or terminate actions are
@@ -1533,7 +1998,7 @@ func (c *CloudWatch) PutMetricAlarmRequest(input *PutMetricAlarmInput) (req *req
 // The first time you create an alarm in the AWS Management Console, the CLI,
 // or by using the PutMetricAlarm API, CloudWatch creates the necessary service-linked
 // role for you. The service-linked role is called AWSServiceRoleForCloudWatchEvents.
-// For more information, see AWS service-linked role (http://docs.aws.amazon.com/IAM/latest/UserGuide/id_roles_terms-and-concepts.html#iam-term-service-linked-role).
+// For more information, see AWS service-linked role (https://docs.aws.amazon.com/IAM/latest/UserGuide/id_roles_terms-and-concepts.html#iam-term-service-linked-role).
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -1636,8 +2101,8 @@ func (c *CloudWatch) PutMetricDataRequest(input *PutMetricDataInput) (req *reque
 // not supported.
 //
 // You can use up to 10 dimensions per metric to further clarify what data the
-// metric collects. For more information about specifying dimensions, see Publishing
-// Metrics (http://docs.aws.amazon.com/AmazonCloudWatch/latest/monitoring/publishingMetrics.html)
+// metric collects. Each dimension consists of a Name and Value pair. For more
+// information about specifying dimensions, see Publishing Metrics (https://docs.aws.amazon.com/AmazonCloudWatch/latest/monitoring/publishingMetrics.html)
 // in the Amazon CloudWatch User Guide.
 //
 // Data points with time stamps from 24 hours ago or longer can take at least
@@ -1785,6 +2250,199 @@ func (c *CloudWatch) SetAlarmStateWithContext(ctx aws.Context, input *SetAlarmSt
 	return out, req.Send()
 }
 
+const opTagResource = "TagResource"
+
+// TagResourceRequest generates a "aws/request.Request" representing the
+// client's request for the TagResource operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See TagResource for more information on using the TagResource
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the TagResourceRequest method.
+//    req, resp := client.TagResourceRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/monitoring-2010-08-01/TagResource
+func (c *CloudWatch) TagResourceRequest(input *TagResourceInput) (req *request.Request, output *TagResourceOutput) {
+	op := &request.Operation{
+		Name:       opTagResource,
+		HTTPMethod: "POST",
+		HTTPPath:   "/",
+	}
+
+	if input == nil {
+		input = &TagResourceInput{}
+	}
+
+	output = &TagResourceOutput{}
+	req = c.newRequest(op, input, output)
+	req.Handlers.Unmarshal.Swap(query.UnmarshalHandler.Name, protocol.UnmarshalDiscardBodyHandler)
+	return
+}
+
+// TagResource API operation for Amazon CloudWatch.
+//
+// Assigns one or more tags (key-value pairs) to the specified CloudWatch resource.
+// Tags can help you organize and categorize your resources. You can also use
+// them to scope user permissions, by granting a user permission to access or
+// change only resources with certain tag values. In CloudWatch, alarms can
+// be tagged.
+//
+// Tags don't have any semantic meaning to AWS and are interpreted strictly
+// as strings of characters.
+//
+// You can use the TagResource action with a resource that already has tags.
+// If you specify a new tag key for the resource, this tag is appended to the
+// list of tags associated with the resource. If you specify a tag key that
+// is already associated with the resource, the new tag value that you specify
+// replaces the previous value for that tag.
+//
+// You can associate as many as 50 tags with a resource.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for Amazon CloudWatch's
+// API operation TagResource for usage and error information.
+//
+// Returned Error Codes:
+//   * ErrCodeInvalidParameterValueException "InvalidParameterValue"
+//   The value of an input parameter is bad or out-of-range.
+//
+//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   The named resource does not exist.
+//
+//   * ErrCodeConcurrentModificationException "ConcurrentModificationException"
+//   More than one process tried to modify a resource at the same time.
+//
+//   * ErrCodeInternalServiceFault "InternalServiceError"
+//   Request processing has failed due to some unknown error, exception, or failure.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/monitoring-2010-08-01/TagResource
+func (c *CloudWatch) TagResource(input *TagResourceInput) (*TagResourceOutput, error) {
+	req, out := c.TagResourceRequest(input)
+	return out, req.Send()
+}
+
+// TagResourceWithContext is the same as TagResource with the addition of
+// the ability to pass a context and additional request options.
+//
+// See TagResource for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *CloudWatch) TagResourceWithContext(ctx aws.Context, input *TagResourceInput, opts ...request.Option) (*TagResourceOutput, error) {
+	req, out := c.TagResourceRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
+const opUntagResource = "UntagResource"
+
+// UntagResourceRequest generates a "aws/request.Request" representing the
+// client's request for the UntagResource operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See UntagResource for more information on using the UntagResource
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the UntagResourceRequest method.
+//    req, resp := client.UntagResourceRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/monitoring-2010-08-01/UntagResource
+func (c *CloudWatch) UntagResourceRequest(input *UntagResourceInput) (req *request.Request, output *UntagResourceOutput) {
+	op := &request.Operation{
+		Name:       opUntagResource,
+		HTTPMethod: "POST",
+		HTTPPath:   "/",
+	}
+
+	if input == nil {
+		input = &UntagResourceInput{}
+	}
+
+	output = &UntagResourceOutput{}
+	req = c.newRequest(op, input, output)
+	req.Handlers.Unmarshal.Swap(query.UnmarshalHandler.Name, protocol.UnmarshalDiscardBodyHandler)
+	return
+}
+
+// UntagResource API operation for Amazon CloudWatch.
+//
+// Removes one or more tags from the specified resource.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for Amazon CloudWatch's
+// API operation UntagResource for usage and error information.
+//
+// Returned Error Codes:
+//   * ErrCodeInvalidParameterValueException "InvalidParameterValue"
+//   The value of an input parameter is bad or out-of-range.
+//
+//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   The named resource does not exist.
+//
+//   * ErrCodeConcurrentModificationException "ConcurrentModificationException"
+//   More than one process tried to modify a resource at the same time.
+//
+//   * ErrCodeInternalServiceFault "InternalServiceError"
+//   Request processing has failed due to some unknown error, exception, or failure.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/monitoring-2010-08-01/UntagResource
+func (c *CloudWatch) UntagResource(input *UntagResourceInput) (*UntagResourceOutput, error) {
+	req, out := c.UntagResourceRequest(input)
+	return out, req.Send()
+}
+
+// UntagResourceWithContext is the same as UntagResource with the addition of
+// the ability to pass a context and additional request options.
+//
+// See UntagResource for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *CloudWatch) UntagResourceWithContext(ctx aws.Context, input *UntagResourceInput, opts ...request.Option) (*UntagResourceOutput, error) {
+	req, out := c.UntagResourceRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
 // Represents the history of a specific alarm.
 type AlarmHistoryItem struct {
 	_ struct{} `type:"structure"`
@@ -1842,6 +2500,133 @@ func (s *AlarmHistoryItem) SetHistorySummary(v string) *AlarmHistoryItem {
 // SetTimestamp sets the Timestamp field's value.
 func (s *AlarmHistoryItem) SetTimestamp(v time.Time) *AlarmHistoryItem {
 	s.Timestamp = &v
+	return s
+}
+
+// An anomaly detection model associated with a particular CloudWatch metric
+// athresnd statistic. You can use the model to display a band of expected normal
+// values when the metric is graphed.
+type AnomalyDetector struct {
+	_ struct{} `type:"structure"`
+
+	// The configuration specifies details about how the anomaly detection model
+	// is to be trained, including time ranges to exclude from use for training
+	// the model, and the time zone to use for the metric.
+	Configuration *AnomalyDetectorConfiguration `type:"structure"`
+
+	// The metric dimensions associated with the anomaly detection model.
+	Dimensions []*Dimension `type:"list"`
+
+	// The name of the metric associated with the anomaly detection model.
+	MetricName *string `min:"1" type:"string"`
+
+	// The namespace of the metric associated with the anomaly detection model.
+	Namespace *string `min:"1" type:"string"`
+
+	// The statistic associated with the anomaly detection model.
+	Stat *string `type:"string"`
+}
+
+// String returns the string representation
+func (s AnomalyDetector) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s AnomalyDetector) GoString() string {
+	return s.String()
+}
+
+// SetConfiguration sets the Configuration field's value.
+func (s *AnomalyDetector) SetConfiguration(v *AnomalyDetectorConfiguration) *AnomalyDetector {
+	s.Configuration = v
+	return s
+}
+
+// SetDimensions sets the Dimensions field's value.
+func (s *AnomalyDetector) SetDimensions(v []*Dimension) *AnomalyDetector {
+	s.Dimensions = v
+	return s
+}
+
+// SetMetricName sets the MetricName field's value.
+func (s *AnomalyDetector) SetMetricName(v string) *AnomalyDetector {
+	s.MetricName = &v
+	return s
+}
+
+// SetNamespace sets the Namespace field's value.
+func (s *AnomalyDetector) SetNamespace(v string) *AnomalyDetector {
+	s.Namespace = &v
+	return s
+}
+
+// SetStat sets the Stat field's value.
+func (s *AnomalyDetector) SetStat(v string) *AnomalyDetector {
+	s.Stat = &v
+	return s
+}
+
+// The configuration specifies details about how the anomaly detection model
+// is to be trained, including time ranges to exclude from use for training
+// the model and the time zone to use for the metric.
+type AnomalyDetectorConfiguration struct {
+	_ struct{} `type:"structure"`
+
+	// An array of time ranges to exclude from use when the anomaly detection model
+	// is trained. Use this to make sure that events that could cause unusual values
+	// for the metric, such as deployments, aren't used when CloudWatch creates
+	// the model.
+	ExcludedTimeRanges []*Range `type:"list"`
+
+	// The time zone to use for the metric. This is useful to enable the model to
+	// automatically account for daylight savings time changes if the metric is
+	// sensitive to such time changes.
+	//
+	// To specify a time zone, use the name of the time zone as specified in the
+	// standard tz database. For more information, see tz database (https://en.wikipedia.org/wiki/Tz_database).
+	MetricTimezone *string `type:"string"`
+}
+
+// String returns the string representation
+func (s AnomalyDetectorConfiguration) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s AnomalyDetectorConfiguration) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *AnomalyDetectorConfiguration) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "AnomalyDetectorConfiguration"}
+	if s.ExcludedTimeRanges != nil {
+		for i, v := range s.ExcludedTimeRanges {
+			if v == nil {
+				continue
+			}
+			if err := v.Validate(); err != nil {
+				invalidParams.AddNested(fmt.Sprintf("%s[%v]", "ExcludedTimeRanges", i), err.(request.ErrInvalidParams))
+			}
+		}
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetExcludedTimeRanges sets the ExcludedTimeRanges field's value.
+func (s *AnomalyDetectorConfiguration) SetExcludedTimeRanges(v []*Range) *AnomalyDetectorConfiguration {
+	s.ExcludedTimeRanges = v
+	return s
+}
+
+// SetMetricTimezone sets the MetricTimezone field's value.
+func (s *AnomalyDetectorConfiguration) SetMetricTimezone(v string) *AnomalyDetectorConfiguration {
+	s.MetricTimezone = &v
 	return s
 }
 
@@ -2068,6 +2853,111 @@ func (s DeleteAlarmsOutput) String() string {
 
 // GoString returns the string representation
 func (s DeleteAlarmsOutput) GoString() string {
+	return s.String()
+}
+
+type DeleteAnomalyDetectorInput struct {
+	_ struct{} `type:"structure"`
+
+	// The metric dimensions associated with the anomaly detection model to delete.
+	Dimensions []*Dimension `type:"list"`
+
+	// The metric name associated with the anomaly detection model to delete.
+	//
+	// MetricName is a required field
+	MetricName *string `min:"1" type:"string" required:"true"`
+
+	// The namespace associated with the anomaly detection model to delete.
+	//
+	// Namespace is a required field
+	Namespace *string `min:"1" type:"string" required:"true"`
+
+	// The statistic associated with the anomaly detection model to delete.
+	//
+	// Stat is a required field
+	Stat *string `type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s DeleteAnomalyDetectorInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DeleteAnomalyDetectorInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *DeleteAnomalyDetectorInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "DeleteAnomalyDetectorInput"}
+	if s.MetricName == nil {
+		invalidParams.Add(request.NewErrParamRequired("MetricName"))
+	}
+	if s.MetricName != nil && len(*s.MetricName) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("MetricName", 1))
+	}
+	if s.Namespace == nil {
+		invalidParams.Add(request.NewErrParamRequired("Namespace"))
+	}
+	if s.Namespace != nil && len(*s.Namespace) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("Namespace", 1))
+	}
+	if s.Stat == nil {
+		invalidParams.Add(request.NewErrParamRequired("Stat"))
+	}
+	if s.Dimensions != nil {
+		for i, v := range s.Dimensions {
+			if v == nil {
+				continue
+			}
+			if err := v.Validate(); err != nil {
+				invalidParams.AddNested(fmt.Sprintf("%s[%v]", "Dimensions", i), err.(request.ErrInvalidParams))
+			}
+		}
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetDimensions sets the Dimensions field's value.
+func (s *DeleteAnomalyDetectorInput) SetDimensions(v []*Dimension) *DeleteAnomalyDetectorInput {
+	s.Dimensions = v
+	return s
+}
+
+// SetMetricName sets the MetricName field's value.
+func (s *DeleteAnomalyDetectorInput) SetMetricName(v string) *DeleteAnomalyDetectorInput {
+	s.MetricName = &v
+	return s
+}
+
+// SetNamespace sets the Namespace field's value.
+func (s *DeleteAnomalyDetectorInput) SetNamespace(v string) *DeleteAnomalyDetectorInput {
+	s.Namespace = &v
+	return s
+}
+
+// SetStat sets the Stat field's value.
+func (s *DeleteAnomalyDetectorInput) SetStat(v string) *DeleteAnomalyDetectorInput {
+	s.Stat = &v
+	return s
+}
+
+type DeleteAnomalyDetectorOutput struct {
+	_ struct{} `type:"structure"`
+}
+
+// String returns the string representation
+func (s DeleteAnomalyDetectorOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DeleteAnomalyDetectorOutput) GoString() string {
 	return s.String()
 }
 
@@ -2503,6 +3393,138 @@ func (s *DescribeAlarmsOutput) SetNextToken(v string) *DescribeAlarmsOutput {
 	return s
 }
 
+type DescribeAnomalyDetectorsInput struct {
+	_ struct{} `type:"structure"`
+
+	// Limits the results to only the anomaly detection models that are associated
+	// with the specified metric dimensions. If there are multiple metrics that
+	// have these dimensions and have anomaly detection models associated, they're
+	// all returned.
+	Dimensions []*Dimension `type:"list"`
+
+	// The maximum number of results to return in one operation. The maximum value
+	// you can specify is 10.
+	//
+	// To retrieve the remaining results, make another call with the returned NextToken
+	// value.
+	MaxResults *int64 `min:"1" type:"integer"`
+
+	// Limits the results to only the anomaly detection models that are associated
+	// with the specified metric name. If there are multiple metrics with this name
+	// in different namespaces that have anomaly detection models, they're all returned.
+	MetricName *string `min:"1" type:"string"`
+
+	// Limits the results to only the anomaly detection models that are associated
+	// with the specified namespace.
+	Namespace *string `min:"1" type:"string"`
+
+	// Use the token returned by the previous operation to request the next page
+	// of results.
+	NextToken *string `type:"string"`
+}
+
+// String returns the string representation
+func (s DescribeAnomalyDetectorsInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DescribeAnomalyDetectorsInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *DescribeAnomalyDetectorsInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "DescribeAnomalyDetectorsInput"}
+	if s.MaxResults != nil && *s.MaxResults < 1 {
+		invalidParams.Add(request.NewErrParamMinValue("MaxResults", 1))
+	}
+	if s.MetricName != nil && len(*s.MetricName) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("MetricName", 1))
+	}
+	if s.Namespace != nil && len(*s.Namespace) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("Namespace", 1))
+	}
+	if s.Dimensions != nil {
+		for i, v := range s.Dimensions {
+			if v == nil {
+				continue
+			}
+			if err := v.Validate(); err != nil {
+				invalidParams.AddNested(fmt.Sprintf("%s[%v]", "Dimensions", i), err.(request.ErrInvalidParams))
+			}
+		}
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetDimensions sets the Dimensions field's value.
+func (s *DescribeAnomalyDetectorsInput) SetDimensions(v []*Dimension) *DescribeAnomalyDetectorsInput {
+	s.Dimensions = v
+	return s
+}
+
+// SetMaxResults sets the MaxResults field's value.
+func (s *DescribeAnomalyDetectorsInput) SetMaxResults(v int64) *DescribeAnomalyDetectorsInput {
+	s.MaxResults = &v
+	return s
+}
+
+// SetMetricName sets the MetricName field's value.
+func (s *DescribeAnomalyDetectorsInput) SetMetricName(v string) *DescribeAnomalyDetectorsInput {
+	s.MetricName = &v
+	return s
+}
+
+// SetNamespace sets the Namespace field's value.
+func (s *DescribeAnomalyDetectorsInput) SetNamespace(v string) *DescribeAnomalyDetectorsInput {
+	s.Namespace = &v
+	return s
+}
+
+// SetNextToken sets the NextToken field's value.
+func (s *DescribeAnomalyDetectorsInput) SetNextToken(v string) *DescribeAnomalyDetectorsInput {
+	s.NextToken = &v
+	return s
+}
+
+type DescribeAnomalyDetectorsOutput struct {
+	_ struct{} `type:"structure"`
+
+	// The list of anomaly detection models returned by the operation.
+	AnomalyDetectors []*AnomalyDetector `type:"list"`
+
+	// A token that you can use in a subsequent operation to retrieve the next set
+	// of results.
+	NextToken *string `type:"string"`
+}
+
+// String returns the string representation
+func (s DescribeAnomalyDetectorsOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DescribeAnomalyDetectorsOutput) GoString() string {
+	return s.String()
+}
+
+// SetAnomalyDetectors sets the AnomalyDetectors field's value.
+func (s *DescribeAnomalyDetectorsOutput) SetAnomalyDetectors(v []*AnomalyDetector) *DescribeAnomalyDetectorsOutput {
+	s.AnomalyDetectors = v
+	return s
+}
+
+// SetNextToken sets the NextToken field's value.
+func (s *DescribeAnomalyDetectorsOutput) SetNextToken(v string) *DescribeAnomalyDetectorsOutput {
+	s.NextToken = &v
+	return s
+}
+
 // Expands the identity of a metric.
 type Dimension struct {
 	_ struct{} `type:"structure"`
@@ -2809,7 +3831,7 @@ type GetMetricDataInput struct {
 	// For better performance, specify StartTime and EndTime values that align with
 	// the value of the metric's Period and sync up with the beginning and end of
 	// an hour. For example, if the Period of a metric is 5 minutes, specifying
-	// 12:05 or 12:30 as EndTime can get a faster response from CloudWatch then
+	// 12:05 or 12:30 as EndTime can get a faster response from CloudWatch than
 	// setting 12:07 or 12:29 as the EndTime.
 	//
 	// EndTime is a required field
@@ -2842,7 +3864,7 @@ type GetMetricDataInput struct {
 	// For better performance, specify StartTime and EndTime values that align with
 	// the value of the metric's Period and sync up with the beginning and end of
 	// an hour. For example, if the Period of a metric is 5 minutes, specifying
-	// 12:05 or 12:30 as StartTime can get a faster response from CloudWatch then
+	// 12:05 or 12:30 as StartTime can get a faster response from CloudWatch than
 	// setting 12:07 or 12:29 as the StartTime.
 	//
 	// StartTime is a required field
@@ -2927,6 +3949,16 @@ func (s *GetMetricDataInput) SetStartTime(v time.Time) *GetMetricDataInput {
 type GetMetricDataOutput struct {
 	_ struct{} `type:"structure"`
 
+	// Contains a message about this GetMetricData operation, if the operation results
+	// in such a message. An example of a message that may be returned is Maximum
+	// number of allowed metrics exceeded. If there is a message, as much of the
+	// operation as possible is still executed.
+	//
+	// A message appears here only if it is related to the global GetMetricData
+	// operation. Any message about a specific metric returned by the operation
+	// appears in the MetricDataResult object returned for that metric.
+	Messages []*MessageData `type:"list"`
+
 	// The metrics that are returned, including the metric name, namespace, and
 	// dimensions.
 	MetricDataResults []*MetricDataResult `type:"list"`
@@ -2943,6 +3975,12 @@ func (s GetMetricDataOutput) String() string {
 // GoString returns the string representation
 func (s GetMetricDataOutput) GoString() string {
 	return s.String()
+}
+
+// SetMessages sets the Messages field's value.
+func (s *GetMetricDataOutput) SetMessages(v []*MessageData) *GetMetricDataOutput {
+	s.Messages = v
+	return s
 }
 
 // SetMetricDataResults sets the MetricDataResults field's value.
@@ -2965,9 +4003,9 @@ type GetMetricStatisticsInput struct {
 	// dimensions as a separate metric. If a specific combination of dimensions
 	// was not published, you can't retrieve statistics for it. You must specify
 	// the same dimensions that were used when the metrics were created. For an
-	// example, see Dimension Combinations (http://docs.aws.amazon.com/AmazonCloudWatch/latest/monitoring/cloudwatch_concepts.html#dimension-combinations)
+	// example, see Dimension Combinations (https://docs.aws.amazon.com/AmazonCloudWatch/latest/monitoring/cloudwatch_concepts.html#dimension-combinations)
 	// in the Amazon CloudWatch User Guide. For more information about specifying
-	// dimensions, see Publishing Metrics (http://docs.aws.amazon.com/AmazonCloudWatch/latest/monitoring/publishingMetrics.html)
+	// dimensions, see Publishing Metrics (https://docs.aws.amazon.com/AmazonCloudWatch/latest/monitoring/publishingMetrics.html)
 	// in the Amazon CloudWatch User Guide.
 	Dimensions []*Dimension `type:"list"`
 
@@ -3225,7 +4263,7 @@ type GetMetricWidgetImageInput struct {
 	// with the content-type set to text/xml. The image data is in a MetricWidgetImage
 	// field. For example:
 	//
-	// <GetMetricWidgetImageResponse xmlns="http://monitoring.amazonaws.com/doc/2010-08-01/">
+	// <GetMetricWidgetImageResponse xmlns=<URLstring>>
 	//
 	// <GetMetricWidgetImageResult>
 	//
@@ -3488,6 +4526,72 @@ func (s *ListMetricsOutput) SetNextToken(v string) *ListMetricsOutput {
 	return s
 }
 
+type ListTagsForResourceInput struct {
+	_ struct{} `type:"structure"`
+
+	// The ARN of the CloudWatch resource that you want to view tags for. For more
+	// information on ARN format, see Example ARNs (https://docs.aws.amazon.com/general/latest/gr/aws-arns-and-namespaces.html#arn-syntax-cloudwatch)
+	// in the Amazon Web Services General Reference.
+	//
+	// ResourceARN is a required field
+	ResourceARN *string `min:"1" type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s ListTagsForResourceInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ListTagsForResourceInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *ListTagsForResourceInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "ListTagsForResourceInput"}
+	if s.ResourceARN == nil {
+		invalidParams.Add(request.NewErrParamRequired("ResourceARN"))
+	}
+	if s.ResourceARN != nil && len(*s.ResourceARN) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("ResourceARN", 1))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetResourceARN sets the ResourceARN field's value.
+func (s *ListTagsForResourceInput) SetResourceARN(v string) *ListTagsForResourceInput {
+	s.ResourceARN = &v
+	return s
+}
+
+type ListTagsForResourceOutput struct {
+	_ struct{} `type:"structure"`
+
+	// The list of tag keys and values associated with the resource you specified.
+	Tags []*Tag `type:"list"`
+}
+
+// String returns the string representation
+func (s ListTagsForResourceOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ListTagsForResourceOutput) GoString() string {
+	return s.String()
+}
+
+// SetTags sets the Tags field's value.
+func (s *ListTagsForResourceOutput) SetTags(v []*Tag) *ListTagsForResourceOutput {
+	s.Tags = v
+	return s
+}
+
 // A message returned by the GetMetricDataAPI, including a code and a description.
 type MessageData struct {
 	_ struct{} `type:"structure"`
@@ -3641,9 +4745,15 @@ type MetricAlarm struct {
 	// Name (ARN).
 	InsufficientDataActions []*string `type:"list"`
 
-	// The name of the metric associated with the alarm.
+	// The name of the metric associated with the alarm, if this is an alarm based
+	// on a single metric.
 	MetricName *string `min:"1" type:"string"`
 
+	// An array of MetricDataQuery structures, used in an alarm based on a metric
+	// math expression. Each structure either retrieves a metric or performs a math
+	// expression. One item in the Metrics array is the math expression that the
+	// alarm watches. This expression by designated by having ReturnValue set to
+	// true.
 	Metrics []*MetricDataQuery `type:"list"`
 
 	// The namespace of the metric associated with the alarm.
@@ -3674,6 +4784,10 @@ type MetricAlarm struct {
 
 	// The value to compare with the specified statistic.
 	Threshold *float64 `type:"double"`
+
+	// In an alarm based on an anomaly detection model, this is the ID of the ANOMALY_DETECTION_BAND
+	// function used as the threshold for the alarm.
+	ThresholdMetricId *string `min:"1" type:"string"`
 
 	// Sets how this alarm is to handle missing data points. If this parameter is
 	// omitted, the default behavior of missing is used.
@@ -3837,6 +4951,12 @@ func (s *MetricAlarm) SetThreshold(v float64) *MetricAlarm {
 	return s
 }
 
+// SetThresholdMetricId sets the ThresholdMetricId field's value.
+func (s *MetricAlarm) SetThresholdMetricId(v string) *MetricAlarm {
+	s.ThresholdMetricId = &v
+	return s
+}
+
 // SetTreatMissingData sets the TreatMissingData field's value.
 func (s *MetricAlarm) SetTreatMissingData(v string) *MetricAlarm {
 	s.TreatMissingData = &v
@@ -3863,9 +4983,12 @@ func (s *MetricAlarm) SetUnit(v string) *MetricAlarm {
 // A single PutMetricAlarm call can include up to 20 MetricDataQuery structures
 // in the array. The 20 structures can include as many as 10 structures that
 // contain a MetricStat parameter to retrieve a metric, and as many as 10 structures
-// that contain the Expression parameter to perform a math expression. Any expression
-// used in a PutMetricAlarm operation must return a single time series. For
-// more information, see Metric Math Syntax and Functions (http://docs.aws.amazon.com/AmazonCloudWatch/latest/monitoring/using-metric-math.html#metric-math-syntax)
+// that contain the Expression parameter to perform a math expression. Of those
+// Expression structures, one must have True as the value for ReturnData. The
+// result of this expression is the value the alarm watches.
+//
+// Any expression used in a PutMetricAlarm operation must return a single time
+// series. For more information, see Metric Math Syntax and Functions (https://docs.aws.amazon.com/AmazonCloudWatch/latest/monitoring/using-metric-math.html#metric-math-syntax)
 // in the Amazon CloudWatch User Guide.
 //
 // Some of the parameters of this structure also have different uses whether
@@ -3878,7 +5001,7 @@ type MetricDataQuery struct {
 	// is performing a math expression. This expression can use the Id of the other
 	// metrics to refer to those metrics, and can also use the Id of other expressions
 	// to use the result of those expressions. For more information about metric
-	// math expressions, see Metric Math Syntax and Functions (http://docs.aws.amazon.com/AmazonCloudWatch/latest/monitoring/using-metric-math.html#metric-math-syntax)
+	// math expressions, see Metric Math Syntax and Functions (https://docs.aws.amazon.com/AmazonCloudWatch/latest/monitoring/using-metric-math.html#metric-math-syntax)
 	// in the Amazon CloudWatch User Guide.
 	//
 	// Within each MetricDataQuery object, you must specify either Expression or
@@ -4094,7 +5217,7 @@ type MetricDatum struct {
 	// to one second. Setting this to 60 specifies this metric as a regular-resolution
 	// metric, which CloudWatch stores at 1-minute resolution. Currently, high resolution
 	// is available only for custom metrics. For more information about high-resolution
-	// metrics, see High-Resolution Metrics (http://docs.aws.amazon.com/AmazonCloudWatch/latest/monitoring/publishingMetrics.html#high-resolution-metrics)
+	// metrics, see High-Resolution Metrics (https://docs.aws.amazon.com/AmazonCloudWatch/latest/monitoring/publishingMetrics.html#high-resolution-metrics)
 	// in the Amazon CloudWatch User Guide.
 	//
 	// This field is optional, if you do not specify it the default of 60 is used.
@@ -4104,7 +5227,9 @@ type MetricDatum struct {
 	// since Jan 1, 1970 00:00:00 UTC.
 	Timestamp *time.Time `type:"timestamp"`
 
-	// The unit of the metric.
+	// When you are using a Put operation, this defines what unit you want to use
+	// when storing the metric. In a Get operation, this displays the unit that
+	// is used for the metric.
 	Unit *string `type:"string" enum:"StandardUnit"`
 
 	// The value for the metric.
@@ -4249,7 +5374,9 @@ type MetricStat struct {
 	// Stat is a required field
 	Stat *string `type:"string" required:"true"`
 
-	// The unit to use for the returned data points.
+	// When you are using a Put operation, this defines what unit you want to use
+	// when storing the metric. In a Get operation, this displays the unit that
+	// is used for the metric.
 	Unit *string `type:"string" enum:"StandardUnit"`
 }
 
@@ -4312,6 +5439,131 @@ func (s *MetricStat) SetStat(v string) *MetricStat {
 func (s *MetricStat) SetUnit(v string) *MetricStat {
 	s.Unit = &v
 	return s
+}
+
+type PutAnomalyDetectorInput struct {
+	_ struct{} `type:"structure"`
+
+	// The configuration specifies details about how the anomaly detection model
+	// is to be trained, including time ranges to exclude when training and updating
+	// the model. You can specify as many as 10 time ranges.
+	//
+	// The configuration can also include the time zone to use for the metric.
+	//
+	// You can in
+	Configuration *AnomalyDetectorConfiguration `type:"structure"`
+
+	// The metric dimensions to create the anomaly detection model for.
+	Dimensions []*Dimension `type:"list"`
+
+	// The name of the metric to create the anomaly detection model for.
+	//
+	// MetricName is a required field
+	MetricName *string `min:"1" type:"string" required:"true"`
+
+	// The namespace of the metric to create the anomaly detection model for.
+	//
+	// Namespace is a required field
+	Namespace *string `min:"1" type:"string" required:"true"`
+
+	// The statistic to use for the metric and the anomaly detection model.
+	//
+	// Stat is a required field
+	Stat *string `type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s PutAnomalyDetectorInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s PutAnomalyDetectorInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *PutAnomalyDetectorInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "PutAnomalyDetectorInput"}
+	if s.MetricName == nil {
+		invalidParams.Add(request.NewErrParamRequired("MetricName"))
+	}
+	if s.MetricName != nil && len(*s.MetricName) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("MetricName", 1))
+	}
+	if s.Namespace == nil {
+		invalidParams.Add(request.NewErrParamRequired("Namespace"))
+	}
+	if s.Namespace != nil && len(*s.Namespace) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("Namespace", 1))
+	}
+	if s.Stat == nil {
+		invalidParams.Add(request.NewErrParamRequired("Stat"))
+	}
+	if s.Configuration != nil {
+		if err := s.Configuration.Validate(); err != nil {
+			invalidParams.AddNested("Configuration", err.(request.ErrInvalidParams))
+		}
+	}
+	if s.Dimensions != nil {
+		for i, v := range s.Dimensions {
+			if v == nil {
+				continue
+			}
+			if err := v.Validate(); err != nil {
+				invalidParams.AddNested(fmt.Sprintf("%s[%v]", "Dimensions", i), err.(request.ErrInvalidParams))
+			}
+		}
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetConfiguration sets the Configuration field's value.
+func (s *PutAnomalyDetectorInput) SetConfiguration(v *AnomalyDetectorConfiguration) *PutAnomalyDetectorInput {
+	s.Configuration = v
+	return s
+}
+
+// SetDimensions sets the Dimensions field's value.
+func (s *PutAnomalyDetectorInput) SetDimensions(v []*Dimension) *PutAnomalyDetectorInput {
+	s.Dimensions = v
+	return s
+}
+
+// SetMetricName sets the MetricName field's value.
+func (s *PutAnomalyDetectorInput) SetMetricName(v string) *PutAnomalyDetectorInput {
+	s.MetricName = &v
+	return s
+}
+
+// SetNamespace sets the Namespace field's value.
+func (s *PutAnomalyDetectorInput) SetNamespace(v string) *PutAnomalyDetectorInput {
+	s.Namespace = &v
+	return s
+}
+
+// SetStat sets the Stat field's value.
+func (s *PutAnomalyDetectorInput) SetStat(v string) *PutAnomalyDetectorInput {
+	s.Stat = &v
+	return s
+}
+
+type PutAnomalyDetectorOutput struct {
+	_ struct{} `type:"structure"`
+}
+
+// String returns the string representation
+func (s PutAnomalyDetectorOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s PutAnomalyDetectorOutput) GoString() string {
+	return s.String()
 }
 
 type PutDashboardInput struct {
@@ -4415,8 +5667,8 @@ type PutMetricAlarmInput struct {
 	// any other state. Each action is specified as an Amazon Resource Name (ARN).
 	//
 	// Valid Values: arn:aws:automate:region:ec2:stop | arn:aws:automate:region:ec2:terminate
-	// | arn:aws:automate:region:ec2:recover | arn:aws:sns:region:account-id:sns-topic-name
-	// | arn:aws:autoscaling:region:account-id:scalingPolicy:policy-idautoScalingGroupName/group-friendly-name:policyName/policy-friendly-name
+	// | arn:aws:automate:region:ec2:recover | arn:aws:automate:region:ec2:reboot
+	// | arn:aws:sns:region:account-id:sns-topic-name | arn:aws:autoscaling:region:account-id:scalingPolicy:policy-idautoScalingGroupName/group-friendly-name:policyName/policy-friendly-name
 	//
 	// Valid Values (for use with IAM roles): arn:aws:swf:region:account-id:action/actions/AWS_EC2.InstanceId.Stop/1.0
 	// | arn:aws:swf:region:account-id:action/actions/AWS_EC2.InstanceId.Terminate/1.0
@@ -4434,12 +5686,16 @@ type PutMetricAlarmInput struct {
 	// The arithmetic operation to use when comparing the specified statistic and
 	// threshold. The specified statistic value is used as the first operand.
 	//
+	// The values LessThanLowerOrGreaterThanUpperThreshold, LessThanLowerThreshold,
+	// and GreaterThanUpperThreshold are used only for alarms based on anomaly detection
+	// models.
+	//
 	// ComparisonOperator is a required field
 	ComparisonOperator *string `type:"string" required:"true" enum:"ComparisonOperator"`
 
 	// The number of datapoints that must be breaching to trigger the alarm. This
 	// is used only if you are setting an "M out of N" alarm. In that case, this
-	// value is the M. For more information, see Evaluating an Alarm (http://docs.aws.amazon.com/AmazonCloudWatch/latest/monitoring/AlarmThatSendsEmail.html#alarm-evaluation)
+	// value is the M. For more information, see Evaluating an Alarm (https://docs.aws.amazon.com/AmazonCloudWatch/latest/monitoring/AlarmThatSendsEmail.html#alarm-evaluation)
 	// in the Amazon CloudWatch User Guide.
 	DatapointsToAlarm *int64 `min:"1" type:"integer"`
 
@@ -4451,7 +5707,7 @@ type PutMetricAlarmInput struct {
 	// significant. If you specify evaluate or omit this parameter, the alarm is
 	// always evaluated and possibly changes state no matter how many data points
 	// are available. For more information, see Percentile-Based CloudWatch Alarms
-	// and Low Data Samples (http://docs.aws.amazon.com/AmazonCloudWatch/latest/monitoring/AlarmThatSendsEmail.html#percentiles-with-low-samples).
+	// and Low Data Samples (https://docs.aws.amazon.com/AmazonCloudWatch/latest/monitoring/AlarmThatSendsEmail.html#percentiles-with-low-samples).
 	//
 	// Valid Values: evaluate | ignore
 	EvaluateLowSampleCountPercentile *string `min:"1" type:"string"`
@@ -4478,8 +5734,8 @@ type PutMetricAlarmInput struct {
 	// Name (ARN).
 	//
 	// Valid Values: arn:aws:automate:region:ec2:stop | arn:aws:automate:region:ec2:terminate
-	// | arn:aws:automate:region:ec2:recover | arn:aws:sns:region:account-id:sns-topic-name
-	// | arn:aws:autoscaling:region:account-id:scalingPolicy:policy-idautoScalingGroupName/group-friendly-name:policyName/policy-friendly-name
+	// | arn:aws:automate:region:ec2:recover | arn:aws:automate:region:ec2:reboot
+	// | arn:aws:sns:region:account-id:sns-topic-name | arn:aws:autoscaling:region:account-id:scalingPolicy:policy-idautoScalingGroupName/group-friendly-name:policyName/policy-friendly-name
 	//
 	// Valid Values (for use with IAM roles): >arn:aws:swf:region:account-id:action/actions/AWS_EC2.InstanceId.Stop/1.0
 	// | arn:aws:swf:region:account-id:action/actions/AWS_EC2.InstanceId.Terminate/1.0
@@ -4497,6 +5753,10 @@ type PutMetricAlarmInput struct {
 	// An array of MetricDataQuery structures that enable you to create an alarm
 	// based on the result of a metric math expression. Each item in the Metrics
 	// array either retrieves a metric or performs a math expression.
+	//
+	// One item in the Metrics array is the expression that the alarm watches. You
+	// designate this expression by setting ReturnValue to true for this object
+	// in the array. For more information, see MetricDataQuery.
 	//
 	// If you use the Metrics parameter, you cannot include the MetricName, Dimensions,
 	// Period, Namespace, Statistic, or ExtendedStatistic parameters of PutMetricAlarm
@@ -4542,14 +5802,29 @@ type PutMetricAlarmInput struct {
 	// but not both.
 	Statistic *string `type:"string" enum:"Statistic"`
 
-	// The value against which the specified statistic is compared.
+	// A list of key-value pairs to associate with the alarm. You can associate
+	// as many as 50 tags with an alarm.
 	//
-	// Threshold is a required field
-	Threshold *float64 `type:"double" required:"true"`
+	// Tags can help you organize and categorize your resources. You can also use
+	// them to scope user permissions, by granting a user permission to access or
+	// change only resources with certain tag values.
+	Tags []*Tag `type:"list"`
+
+	// The value against which the specified statistic is compared.
+	Threshold *float64 `type:"double"`
+
+	// If this is an alarm based on an anomaly detection model, make this value
+	// match the ID of the ANOMALY_DETECTION_BAND function.
+	//
+	// For an example of how to use this parameter, see the Anomaly Detection Model
+	// Alarm example on this page.
+	//
+	// If your alarm uses this parameter, it cannot have Auto Scaling actions.
+	ThresholdMetricId *string `min:"1" type:"string"`
 
 	// Sets how this alarm is to handle missing data points. If TreatMissingData
 	// is omitted, the default behavior of missing is used. For more information,
-	// see Configuring How CloudWatch Alarms Treats Missing Data (http://docs.aws.amazon.com/AmazonCloudWatch/latest/monitoring/AlarmThatSendsEmail.html#alarms-and-missing-data).
+	// see Configuring How CloudWatch Alarms Treats Missing Data (https://docs.aws.amazon.com/AmazonCloudWatch/latest/monitoring/AlarmThatSendsEmail.html#alarms-and-missing-data).
 	//
 	// Valid Values: breaching | notBreaching | ignore | missing
 	TreatMissingData *string `min:"1" type:"string"`
@@ -4609,8 +5884,8 @@ func (s *PutMetricAlarmInput) Validate() error {
 	if s.Period != nil && *s.Period < 1 {
 		invalidParams.Add(request.NewErrParamMinValue("Period", 1))
 	}
-	if s.Threshold == nil {
-		invalidParams.Add(request.NewErrParamRequired("Threshold"))
+	if s.ThresholdMetricId != nil && len(*s.ThresholdMetricId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("ThresholdMetricId", 1))
 	}
 	if s.TreatMissingData != nil && len(*s.TreatMissingData) < 1 {
 		invalidParams.Add(request.NewErrParamMinLen("TreatMissingData", 1))
@@ -4632,6 +5907,16 @@ func (s *PutMetricAlarmInput) Validate() error {
 			}
 			if err := v.Validate(); err != nil {
 				invalidParams.AddNested(fmt.Sprintf("%s[%v]", "Metrics", i), err.(request.ErrInvalidParams))
+			}
+		}
+	}
+	if s.Tags != nil {
+		for i, v := range s.Tags {
+			if v == nil {
+				continue
+			}
+			if err := v.Validate(); err != nil {
+				invalidParams.AddNested(fmt.Sprintf("%s[%v]", "Tags", i), err.(request.ErrInvalidParams))
 			}
 		}
 	}
@@ -4744,9 +6029,21 @@ func (s *PutMetricAlarmInput) SetStatistic(v string) *PutMetricAlarmInput {
 	return s
 }
 
+// SetTags sets the Tags field's value.
+func (s *PutMetricAlarmInput) SetTags(v []*Tag) *PutMetricAlarmInput {
+	s.Tags = v
+	return s
+}
+
 // SetThreshold sets the Threshold field's value.
 func (s *PutMetricAlarmInput) SetThreshold(v float64) *PutMetricAlarmInput {
 	s.Threshold = &v
+	return s
+}
+
+// SetThresholdMetricId sets the ThresholdMetricId field's value.
+func (s *PutMetricAlarmInput) SetThresholdMetricId(v string) *PutMetricAlarmInput {
+	s.ThresholdMetricId = &v
 	return s
 }
 
@@ -4857,6 +6154,62 @@ func (s PutMetricDataOutput) String() string {
 // GoString returns the string representation
 func (s PutMetricDataOutput) GoString() string {
 	return s.String()
+}
+
+// Specifies one range of days or times to exclude from use for training an
+// anomaly detection model.
+type Range struct {
+	_ struct{} `type:"structure"`
+
+	// The end time of the range to exclude. The format is yyyy-MM-dd'T'HH:mm:ss.
+	// For example, 2019-07-01T23:59:59.
+	//
+	// EndTime is a required field
+	EndTime *time.Time `type:"timestamp" required:"true"`
+
+	// The start time of the range to exclude. The format is yyyy-MM-dd'T'HH:mm:ss.
+	// For example, 2019-07-01T23:59:59.
+	//
+	// StartTime is a required field
+	StartTime *time.Time `type:"timestamp" required:"true"`
+}
+
+// String returns the string representation
+func (s Range) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s Range) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *Range) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "Range"}
+	if s.EndTime == nil {
+		invalidParams.Add(request.NewErrParamRequired("EndTime"))
+	}
+	if s.StartTime == nil {
+		invalidParams.Add(request.NewErrParamRequired("StartTime"))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetEndTime sets the EndTime field's value.
+func (s *Range) SetEndTime(v time.Time) *Range {
+	s.EndTime = &v
+	return s
+}
+
+// SetStartTime sets the StartTime field's value.
+func (s *Range) SetStartTime(v time.Time) *Range {
+	s.StartTime = &v
+	return s
 }
 
 type SetAlarmStateInput struct {
@@ -5033,6 +6386,215 @@ func (s *StatisticSet) SetSum(v float64) *StatisticSet {
 	return s
 }
 
+// A key-value pair associated with a CloudWatch resource.
+type Tag struct {
+	_ struct{} `type:"structure"`
+
+	// A string that you can use to assign a value. The combination of tag keys
+	// and values can help you organize and categorize your resources.
+	//
+	// Key is a required field
+	Key *string `min:"1" type:"string" required:"true"`
+
+	// The value for the specified tag key.
+	//
+	// Value is a required field
+	Value *string `type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s Tag) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s Tag) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *Tag) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "Tag"}
+	if s.Key == nil {
+		invalidParams.Add(request.NewErrParamRequired("Key"))
+	}
+	if s.Key != nil && len(*s.Key) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("Key", 1))
+	}
+	if s.Value == nil {
+		invalidParams.Add(request.NewErrParamRequired("Value"))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetKey sets the Key field's value.
+func (s *Tag) SetKey(v string) *Tag {
+	s.Key = &v
+	return s
+}
+
+// SetValue sets the Value field's value.
+func (s *Tag) SetValue(v string) *Tag {
+	s.Value = &v
+	return s
+}
+
+type TagResourceInput struct {
+	_ struct{} `type:"structure"`
+
+	// The ARN of the CloudWatch resource that you're adding tags to. For more information
+	// on ARN format, see Example ARNs (https://docs.aws.amazon.com/general/latest/gr/aws-arns-and-namespaces.html#arn-syntax-cloudwatch)
+	// in the Amazon Web Services General Reference.
+	//
+	// ResourceARN is a required field
+	ResourceARN *string `min:"1" type:"string" required:"true"`
+
+	// The list of key-value pairs to associate with the resource.
+	//
+	// Tags is a required field
+	Tags []*Tag `type:"list" required:"true"`
+}
+
+// String returns the string representation
+func (s TagResourceInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s TagResourceInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *TagResourceInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "TagResourceInput"}
+	if s.ResourceARN == nil {
+		invalidParams.Add(request.NewErrParamRequired("ResourceARN"))
+	}
+	if s.ResourceARN != nil && len(*s.ResourceARN) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("ResourceARN", 1))
+	}
+	if s.Tags == nil {
+		invalidParams.Add(request.NewErrParamRequired("Tags"))
+	}
+	if s.Tags != nil {
+		for i, v := range s.Tags {
+			if v == nil {
+				continue
+			}
+			if err := v.Validate(); err != nil {
+				invalidParams.AddNested(fmt.Sprintf("%s[%v]", "Tags", i), err.(request.ErrInvalidParams))
+			}
+		}
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetResourceARN sets the ResourceARN field's value.
+func (s *TagResourceInput) SetResourceARN(v string) *TagResourceInput {
+	s.ResourceARN = &v
+	return s
+}
+
+// SetTags sets the Tags field's value.
+func (s *TagResourceInput) SetTags(v []*Tag) *TagResourceInput {
+	s.Tags = v
+	return s
+}
+
+type TagResourceOutput struct {
+	_ struct{} `type:"structure"`
+}
+
+// String returns the string representation
+func (s TagResourceOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s TagResourceOutput) GoString() string {
+	return s.String()
+}
+
+type UntagResourceInput struct {
+	_ struct{} `type:"structure"`
+
+	// The ARN of the CloudWatch resource that you're removing tags from. For more
+	// information on ARN format, see Example ARNs (https://docs.aws.amazon.com/general/latest/gr/aws-arns-and-namespaces.html#arn-syntax-cloudwatch)
+	// in the Amazon Web Services General Reference.
+	//
+	// ResourceARN is a required field
+	ResourceARN *string `min:"1" type:"string" required:"true"`
+
+	// The list of tag keys to remove from the resource.
+	//
+	// TagKeys is a required field
+	TagKeys []*string `type:"list" required:"true"`
+}
+
+// String returns the string representation
+func (s UntagResourceInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s UntagResourceInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *UntagResourceInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "UntagResourceInput"}
+	if s.ResourceARN == nil {
+		invalidParams.Add(request.NewErrParamRequired("ResourceARN"))
+	}
+	if s.ResourceARN != nil && len(*s.ResourceARN) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("ResourceARN", 1))
+	}
+	if s.TagKeys == nil {
+		invalidParams.Add(request.NewErrParamRequired("TagKeys"))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetResourceARN sets the ResourceARN field's value.
+func (s *UntagResourceInput) SetResourceARN(v string) *UntagResourceInput {
+	s.ResourceARN = &v
+	return s
+}
+
+// SetTagKeys sets the TagKeys field's value.
+func (s *UntagResourceInput) SetTagKeys(v []*string) *UntagResourceInput {
+	s.TagKeys = v
+	return s
+}
+
+type UntagResourceOutput struct {
+	_ struct{} `type:"structure"`
+}
+
+// String returns the string representation
+func (s UntagResourceOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s UntagResourceOutput) GoString() string {
+	return s.String()
+}
+
 const (
 	// ComparisonOperatorGreaterThanOrEqualToThreshold is a ComparisonOperator enum value
 	ComparisonOperatorGreaterThanOrEqualToThreshold = "GreaterThanOrEqualToThreshold"
@@ -5045,6 +6607,15 @@ const (
 
 	// ComparisonOperatorLessThanOrEqualToThreshold is a ComparisonOperator enum value
 	ComparisonOperatorLessThanOrEqualToThreshold = "LessThanOrEqualToThreshold"
+
+	// ComparisonOperatorLessThanLowerOrGreaterThanUpperThreshold is a ComparisonOperator enum value
+	ComparisonOperatorLessThanLowerOrGreaterThanUpperThreshold = "LessThanLowerOrGreaterThanUpperThreshold"
+
+	// ComparisonOperatorLessThanLowerThreshold is a ComparisonOperator enum value
+	ComparisonOperatorLessThanLowerThreshold = "LessThanLowerThreshold"
+
+	// ComparisonOperatorGreaterThanUpperThreshold is a ComparisonOperator enum value
+	ComparisonOperatorGreaterThanUpperThreshold = "GreaterThanUpperThreshold"
 )
 
 const (

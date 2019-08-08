@@ -107,9 +107,10 @@ func resourceAwsAutoscalingGroup() *schema.Resource {
 										Type:     schema.TypeString,
 										Optional: true,
 										Default:  "prioritized",
-										ValidateFunc: validation.StringInSlice([]string{
-											"prioritized",
-										}, false),
+										// Reference: https://github.com/hashicorp/terraform/issues/18027
+										// ValidateFunc: validation.StringInSlice([]string{
+										// 	"prioritized",
+										// }, false),
 									},
 									"on_demand_base_capacity": {
 										Type:         schema.TypeInt,
@@ -126,9 +127,10 @@ func resourceAwsAutoscalingGroup() *schema.Resource {
 										Type:     schema.TypeString,
 										Optional: true,
 										Default:  "lowest-price",
-										ValidateFunc: validation.StringInSlice([]string{
-											"lowest-price",
-										}, false),
+										// Reference: https://github.com/hashicorp/terraform/issues/18027
+										// ValidateFunc: validation.StringInSlice([]string{
+										// 	"lowest-price",
+										// }, false),
 									},
 									"spot_instance_pools": {
 										Type:         schema.TypeInt,
@@ -253,6 +255,8 @@ func resourceAwsAutoscalingGroup() *schema.Resource {
 				Optional: true,
 			},
 
+			// DEPRECATED: Computed: true should be removed in a major version release
+			// Reference: https://github.com/terraform-providers/terraform-provider-aws/issues/9513
 			"load_balancers": {
 				Type:     schema.TypeSet,
 				Optional: true,
@@ -325,6 +329,8 @@ func resourceAwsAutoscalingGroup() *schema.Resource {
 				Default:  false,
 			},
 
+			// DEPRECATED: Computed: true should be removed in a major version release
+			// Reference: https://github.com/terraform-providers/terraform-provider-aws/issues/9513
 			"target_group_arns": {
 				Type:     schema.TypeSet,
 				Optional: true,
@@ -512,7 +518,7 @@ func resourceAwsAutoscalingGroupCreate(d *schema.ResourceData, meta interface{})
 		}
 	}
 
-	// Availability Zones are optional if VPC Zone Identifer(s) are specified
+	// Availability Zones are optional if VPC Zone Identifier(s) are specified
 	if v, ok := d.GetOk("availability_zones"); ok && v.(*schema.Set).Len() > 0 {
 		createOpts.AvailabilityZones = expandStringList(v.(*schema.Set).List())
 	}
@@ -590,6 +596,9 @@ func resourceAwsAutoscalingGroupCreate(d *schema.ResourceData, meta interface{})
 
 		return nil
 	})
+	if isResourceTimeoutError(err) {
+		_, err = conn.CreateAutoScalingGroup(&createOpts)
+	}
 	if err != nil {
 		return fmt.Errorf("Error creating AutoScaling Group: %s", err)
 	}
@@ -644,37 +653,51 @@ func resourceAwsAutoscalingGroupRead(d *schema.ResourceData, meta interface{}) e
 		return nil
 	}
 
-	d.Set("availability_zones", flattenStringList(g.AvailabilityZones))
-	d.Set("default_cooldown", g.DefaultCooldown)
+	if err := d.Set("availability_zones", flattenStringList(g.AvailabilityZones)); err != nil {
+		return fmt.Errorf("error setting availability_zones: %s", err)
+	}
+
 	d.Set("arn", g.AutoScalingGroupARN)
+	d.Set("default_cooldown", g.DefaultCooldown)
 	d.Set("desired_capacity", g.DesiredCapacity)
+
+	d.Set("enabled_metrics", nil)
+	d.Set("metrics_granularity", "1Minute")
+	if g.EnabledMetrics != nil {
+		if err := d.Set("enabled_metrics", flattenAsgEnabledMetrics(g.EnabledMetrics)); err != nil {
+			return fmt.Errorf("error setting enabled_metrics: %s", err)
+		}
+		d.Set("metrics_granularity", g.EnabledMetrics[0].Granularity)
+	}
+
 	d.Set("health_check_grace_period", g.HealthCheckGracePeriod)
 	d.Set("health_check_type", g.HealthCheckType)
-	d.Set("load_balancers", flattenStringList(g.LoadBalancerNames))
+
+	if err := d.Set("load_balancers", flattenStringList(g.LoadBalancerNames)); err != nil {
+		return fmt.Errorf("error setting load_balancers: %s", err)
+	}
 
 	d.Set("launch_configuration", g.LaunchConfigurationName)
 
-	if g.LaunchTemplate != nil {
-		d.Set("launch_template", flattenLaunchTemplateSpecification(g.LaunchTemplate))
-	} else {
-		d.Set("launch_template", nil)
+	if err := d.Set("launch_template", flattenLaunchTemplateSpecification(g.LaunchTemplate)); err != nil {
+		return fmt.Errorf("error setting launch_template: %s", err)
 	}
+
+	d.Set("max_size", g.MaxSize)
+	d.Set("min_size", g.MinSize)
 
 	if err := d.Set("mixed_instances_policy", flattenAutoScalingMixedInstancesPolicy(g.MixedInstancesPolicy)); err != nil {
 		return fmt.Errorf("error setting mixed_instances_policy: %s", err)
 	}
 
-	if err := d.Set("suspended_processes", flattenAsgSuspendedProcesses(g.SuspendedProcesses)); err != nil {
-		log.Printf("[WARN] Error setting suspended_processes for %q: %s", d.Id(), err)
-	}
-	if err := d.Set("target_group_arns", flattenStringList(g.TargetGroupARNs)); err != nil {
-		log.Printf("[ERR] Error setting target groups: %s", err)
-	}
-	d.Set("min_size", g.MinSize)
-	d.Set("max_size", g.MaxSize)
-	d.Set("placement_group", g.PlacementGroup)
 	d.Set("name", g.AutoScalingGroupName)
+	d.Set("placement_group", g.PlacementGroup)
+	d.Set("protect_from_scale_in", g.NewInstancesProtectedFromScaleIn)
 	d.Set("service_linked_role_arn", g.ServiceLinkedRoleARN)
+
+	if err := d.Set("suspended_processes", flattenAsgSuspendedProcesses(g.SuspendedProcesses)); err != nil {
+		return fmt.Errorf("error setting suspended_processes: %s", err)
+	}
 
 	var tagList, tagsList []*autoscaling.TagDescription
 	var tagOk, tagsOk bool
@@ -718,31 +741,27 @@ func resourceAwsAutoscalingGroupRead(d *schema.ResourceData, meta interface{}) e
 		d.Set("tag", autoscalingTagDescriptionsToSlice(g.Tags))
 	}
 
-	if len(*g.VPCZoneIdentifier) > 0 {
-		d.Set("vpc_zone_identifier", strings.Split(*g.VPCZoneIdentifier, ","))
-	} else {
-		d.Set("vpc_zone_identifier", []string{})
+	if err := d.Set("target_group_arns", flattenStringList(g.TargetGroupARNs)); err != nil {
+		return fmt.Errorf("error setting target_group_arns: %s", err)
 	}
-
-	d.Set("protect_from_scale_in", g.NewInstancesProtectedFromScaleIn)
 
 	// If no termination polices are explicitly configured and the upstream state
 	// is only using the "Default" policy, clear the state to make it consistent
 	// with the default AWS create API behavior.
 	_, ok := d.GetOk("termination_policies")
-	if !ok && len(g.TerminationPolicies) == 1 && *g.TerminationPolicies[0] == "Default" {
+	if !ok && len(g.TerminationPolicies) == 1 && aws.StringValue(g.TerminationPolicies[0]) == "Default" {
 		d.Set("termination_policies", []interface{}{})
 	} else {
-		d.Set("termination_policies", flattenStringList(g.TerminationPolicies))
+		if err := d.Set("termination_policies", flattenStringList(g.TerminationPolicies)); err != nil {
+			return fmt.Errorf("error setting termination_policies: %s", err)
+		}
 	}
 
-	if g.EnabledMetrics != nil {
-		if err := d.Set("enabled_metrics", flattenAsgEnabledMetrics(g.EnabledMetrics)); err != nil {
-			log.Printf("[WARN] Error setting metrics for (%s): %s", d.Id(), err)
+	d.Set("vpc_zone_identifier", []string{})
+	if len(aws.StringValue(g.VPCZoneIdentifier)) > 0 {
+		if err := d.Set("vpc_zone_identifier", strings.Split(aws.StringValue(g.VPCZoneIdentifier), ",")); err != nil {
+			return fmt.Errorf("error setting vpc_zone_identifier: %s", err)
 		}
-		d.Set("metrics_granularity", g.EnabledMetrics[0].Granularity)
-	} else {
-		d.Set("enabled_metrics", nil)
 	}
 
 	return nil
@@ -989,23 +1008,38 @@ func resourceAwsAutoscalingGroupDelete(d *schema.ResourceData, meta interface{})
 		// Successful delete
 		return nil
 	})
+	if isResourceTimeoutError(err) {
+		_, err = conn.DeleteAutoScalingGroup(&deleteopts)
+		if isAWSErr(err, "InvalidGroup.NotFound", "") {
+			return nil
+		}
+	}
 	if err != nil {
-		return err
+		return fmt.Errorf("Error deleting autoscaling group: %s", err)
 	}
 
-	return resource.Retry(d.Timeout(schema.TimeoutDelete), func() *resource.RetryError {
-		if g, _ = getAwsAutoscalingGroup(d.Id(), conn); g != nil {
-			return resource.RetryableError(
-				fmt.Errorf("Auto Scaling Group still exists"))
+	var group *autoscaling.Group
+	err = resource.Retry(d.Timeout(schema.TimeoutDelete), func() *resource.RetryError {
+		group, err = getAwsAutoscalingGroup(d.Id(), conn)
+
+		if group != nil {
+			return resource.RetryableError(fmt.Errorf("Auto Scaling Group still exists"))
 		}
 		return nil
 	})
+	if isResourceTimeoutError(err) {
+		group, err = getAwsAutoscalingGroup(d.Id(), conn)
+		if group != nil {
+			return fmt.Errorf("Auto Scaling Group still exists")
+		}
+	}
+	if err != nil {
+		return fmt.Errorf("Error deleting autoscaling group: %s", err)
+	}
+	return nil
 }
 
-func getAwsAutoscalingGroup(
-	asgName string,
-	conn *autoscaling.AutoScaling) (*autoscaling.Group, error) {
-
+func getAwsAutoscalingGroup(asgName string, conn *autoscaling.AutoScaling) (*autoscaling.Group, error) {
 	describeOpts := autoscaling.DescribeAutoScalingGroupsInput{
 		AutoScalingGroupNames: []*string{aws.String(asgName)},
 	}
@@ -1053,7 +1087,8 @@ func resourceAwsAutoscalingGroupDrain(d *schema.ResourceData, meta interface{}) 
 
 	// Next, wait for the autoscale group to drain
 	log.Printf("[DEBUG] Waiting for group to have zero instances")
-	return resource.Retry(d.Timeout(schema.TimeoutDelete), func() *resource.RetryError {
+	var g *autoscaling.Group
+	err := resource.Retry(d.Timeout(schema.TimeoutDelete), func() *resource.RetryError {
 		g, err := getAwsAutoscalingGroup(d.Id(), conn)
 		if err != nil {
 			return resource.NonRetryableError(err)
@@ -1069,8 +1104,21 @@ func resourceAwsAutoscalingGroupDrain(d *schema.ResourceData, meta interface{}) 
 		}
 
 		return resource.RetryableError(
-			fmt.Errorf("group still has %d instances", len(g.Instances)))
+			fmt.Errorf("Group still has %d instances", len(g.Instances)))
 	})
+	if isResourceTimeoutError(err) {
+		g, err = getAwsAutoscalingGroup(d.Id(), conn)
+		if err != nil {
+			return fmt.Errorf("Error getting autoscaling group info when draining: %s", err)
+		}
+		if g != nil && len(g.Instances) > 0 {
+			return fmt.Errorf("Group still has %d instances", len(g.Instances))
+		}
+	}
+	if err != nil {
+		return fmt.Errorf("Error draining autoscaling group: %s", err)
+	}
+	return nil
 }
 
 func enableASGSuspendedProcesses(d *schema.ResourceData, conn *autoscaling.AutoScaling) error {
@@ -1259,7 +1307,7 @@ func expandAutoScalingInstancesDistribution(l []interface{}) *autoscaling.Instan
 		instancesDistribution.OnDemandAllocationStrategy = aws.String(v.(string))
 	}
 
-	if v, ok := m["on_demand_base_capacity"]; ok && v.(int) != 0 {
+	if v, ok := m["on_demand_base_capacity"]; ok {
 		instancesDistribution.OnDemandBaseCapacity = aws.Int64(int64(v.(int)))
 	}
 
@@ -1275,7 +1323,7 @@ func expandAutoScalingInstancesDistribution(l []interface{}) *autoscaling.Instan
 		instancesDistribution.SpotInstancePools = aws.Int64(int64(v.(int)))
 	}
 
-	if v, ok := m["spot_max_price"]; ok && v.(string) != "" {
+	if v, ok := m["spot_max_price"]; ok {
 		instancesDistribution.SpotMaxPrice = aws.String(v.(string))
 	}
 
