@@ -3,6 +3,7 @@ sudo: required
 services:
   - docker
 language: go
+go_import_path: github.com/terraform-providers/terraform-provider-aws
 
 env:
   global:
@@ -33,6 +34,8 @@ install:
 - bash scripts/gogetcookie.sh
 - make tools
 
-branches:
-  only:
-    - master
+after_success:
+- if [ ${TRAVIS_TAG::1} = v ];
+  then
+    curl -sL https://git.io/goreleaser | bash;
+  fi
