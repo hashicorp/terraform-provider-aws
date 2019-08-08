@@ -35,6 +35,7 @@ lint:
 	@GOGC=30 golangci-lint run ./$(PKG_NAME)
 	@tfproviderlint \
 		-c 1 \
+		-AT001 \
 		-S001 \
 		-S002 \
 		-S003 \

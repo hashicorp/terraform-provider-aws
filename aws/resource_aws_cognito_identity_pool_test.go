@@ -215,6 +215,71 @@ func TestAccAWSCognitoIdentityPool_cognitoIdentityProviders(t *testing.T) {
 	})
 }
 
+func TestAccAWSCognitoIdentityPool_addingNewProviderKeepsOldProvider(t *testing.T) {
+	name := acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum)
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSCognitoIdentity(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSCognitoIdentityPoolDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSCognitoIdentityPoolConfig_cognitoIdentityProviders(name),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckAWSCognitoIdentityPoolExists("aws_cognito_identity_pool.main"),
+					resource.TestCheckResourceAttr("aws_cognito_identity_pool.main", "identity_pool_name", fmt.Sprintf("identity pool %s", name)),
+					resource.TestCheckResourceAttr("aws_cognito_identity_pool.main", "cognito_identity_providers.#", "2"),
+				),
+			},
+			{
+				Config: testAccAWSCognitoIdentityPoolConfig_cognitoIdentityProvidersAndOpenidConnectProviderArns(name),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckAWSCognitoIdentityPoolExists("aws_cognito_identity_pool.main"),
+					resource.TestCheckResourceAttr("aws_cognito_identity_pool.main", "identity_pool_name", fmt.Sprintf("identity pool %s", name)),
+					resource.TestCheckResourceAttr("aws_cognito_identity_pool.main", "cognito_identity_providers.#", "2"),
+					resource.TestCheckResourceAttr("aws_cognito_identity_pool.main", "openid_connect_provider_arns.#", "1"),
+				),
+			},
+			{
+				Config: testAccAWSCognitoIdentityPoolConfig_basic(name),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckAWSCognitoIdentityPoolExists("aws_cognito_identity_pool.main"),
+					resource.TestCheckResourceAttr("aws_cognito_identity_pool.main", "identity_pool_name", fmt.Sprintf("identity pool %s", name)),
+					resource.TestCheckResourceAttr("aws_cognito_identity_pool.main", "cognito_identity_providers.#", "0"),
+					resource.TestCheckResourceAttr("aws_cognito_identity_pool.main", "openid_connect_provider_arns.#", "0"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAWSCognitoIdentityPoolWithTags(t *testing.T) {
+	name := acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSCognitoIdentity(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSCognitoIdentityPoolDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSCognitoIdentityPoolConfigWithTags(name),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckAWSCognitoIdentityPoolExists("aws_cognito_identity_pool.main"),
+					resource.TestCheckResourceAttr("aws_cognito_identity_pool.main", "tags.environment", "dev"),
+				),
+			},
+			{
+				Config: testAccAWSCognitoIdentityPoolConfigWithTagsUpdated(name),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckAWSCognitoIdentityPoolExists("aws_cognito_identity_pool.main"),
+					resource.TestCheckResourceAttr("aws_cognito_identity_pool.main", "tags.environment", "dev"),
+					resource.TestCheckResourceAttr("aws_cognito_identity_pool.main", "tags.project", "Terraform"),
+				),
+			},
+		},
+	})
+}
+
 func testAccCheckAWSCognitoIdentityPoolExists(n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
@@ -404,6 +469,56 @@ resource "aws_cognito_identity_pool" "main" {
     client_id               = "6lhlkkfbfb4q5kpp90urffae"
     provider_name           = "cognito-idp.us-east-1.amazonaws.com/us-east-1_Zr231apJu"
     server_side_token_check = false
+  }
+}
+`, name)
+}
+
+func testAccAWSCognitoIdentityPoolConfig_cognitoIdentityProvidersAndOpenidConnectProviderArns(name string) string {
+	return fmt.Sprintf(`
+resource "aws_cognito_identity_pool" "main" {
+  identity_pool_name               = "identity pool %s"
+  allow_unauthenticated_identities = false
+
+  cognito_identity_providers {
+    client_id               = "7lhlkkfbfb4q5kpp90urffao"
+    provider_name           = "cognito-idp.us-east-1.amazonaws.com/us-east-1_Ab129faBb"
+    server_side_token_check = false
+  }
+
+  cognito_identity_providers {
+    client_id               = "7lhlkkfbfb4q5kpp90urffao"
+    provider_name           = "cognito-idp.us-east-1.amazonaws.com/us-east-1_Zr231apJu"
+    server_side_token_check = false
+  }
+
+  openid_connect_provider_arns = ["arn:aws:iam::123456789012:oidc-provider/server.example.com"]
+}
+`, name)
+}
+
+func testAccAWSCognitoIdentityPoolConfigWithTags(name string) string {
+	return fmt.Sprintf(`
+resource "aws_cognito_identity_pool" "main" {
+  identity_pool_name               = "identity pool %s"
+  allow_unauthenticated_identities = false
+
+  tags = {
+	"environment" = "dev"
+  }
+}
+`, name)
+}
+
+func testAccAWSCognitoIdentityPoolConfigWithTagsUpdated(name string) string {
+	return fmt.Sprintf(`
+resource "aws_cognito_identity_pool" "main" {
+  identity_pool_name               = "identity pool %s"
+  allow_unauthenticated_identities = false
+
+  tags = {
+    "environment" = "dev"
+    "project"     = "Terraform"
   }
 }
 `, name)

@@ -144,6 +144,9 @@ func resourceAwsSecretsManagerSecretCreate(d *schema.ResourceData, meta interfac
 		}
 		return nil
 	})
+	if isResourceTimeoutError(err) {
+		output, err = conn.CreateSecret(input)
+	}
 	if err != nil {
 		return fmt.Errorf("error creating Secrets Manager Secret: %s", err)
 	}
@@ -182,6 +185,9 @@ func resourceAwsSecretsManagerSecretCreate(d *schema.ResourceData, meta interfac
 			}
 			return nil
 		})
+		if isResourceTimeoutError(err) {
+			_, err = conn.RotateSecret(input)
+		}
 		if err != nil {
 			return fmt.Errorf("error enabling Secrets Manager Secret %q rotation: %s", d.Id(), err)
 		}
@@ -318,6 +324,9 @@ func resourceAwsSecretsManagerSecretUpdate(d *schema.ResourceData, meta interfac
 				}
 				return nil
 			})
+			if isResourceTimeoutError(err) {
+				_, err = conn.RotateSecret(input)
+			}
 			if err != nil {
 				return fmt.Errorf("error updating Secrets Manager Secret %q rotation: %s", d.Id(), err)
 			}

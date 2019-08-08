@@ -77,6 +77,64 @@ func TestAccAWSElasticSearchDomain_basic(t *testing.T) {
 	})
 }
 
+func TestAccAWSElasticSearchDomain_ClusterConfig_ZoneAwarenessConfig(t *testing.T) {
+	var domain1, domain2, domain3, domain4 elasticsearch.ElasticsearchDomainStatus
+	rName := acctest.RandomWithPrefix("tf-acc-test")[:28]
+	resourceName := "aws_elasticsearch_domain.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckESDomainDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccESDomainConfig_ClusterConfig_ZoneAwarenessConfig_AvailabilityZoneCount(rName, 3),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckESDomainExists(resourceName, &domain1),
+					resource.TestCheckResourceAttr(resourceName, "cluster_config.0.zone_awareness_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "cluster_config.0.zone_awareness_config.0.availability_zone_count", "3"),
+					resource.TestCheckResourceAttr(resourceName, "cluster_config.0.zone_awareness_enabled", "true"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateId:     rName,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccESDomainConfig_ClusterConfig_ZoneAwarenessConfig_AvailabilityZoneCount(rName, 2),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckESDomainExists(resourceName, &domain2),
+					testAccCheckAWSESDomainNotRecreated(&domain1, &domain2),
+					resource.TestCheckResourceAttr(resourceName, "cluster_config.0.zone_awareness_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "cluster_config.0.zone_awareness_config.0.availability_zone_count", "2"),
+					resource.TestCheckResourceAttr(resourceName, "cluster_config.0.zone_awareness_enabled", "true"),
+				),
+			},
+			{
+				Config: testAccESDomainConfig_ClusterConfig_ZoneAwarenessEnabled(rName, false),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckESDomainExists(resourceName, &domain3),
+					testAccCheckAWSESDomainNotRecreated(&domain2, &domain3),
+					resource.TestCheckResourceAttr(resourceName, "cluster_config.0.zone_awareness_enabled", "false"),
+					resource.TestCheckResourceAttr(resourceName, "cluster_config.0.zone_awareness_config.#", "0"),
+				),
+			},
+			{
+				Config: testAccESDomainConfig_ClusterConfig_ZoneAwarenessConfig_AvailabilityZoneCount(rName, 3),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckESDomainExists(resourceName, &domain4),
+					testAccCheckAWSESDomainNotRecreated(&domain3, &domain4),
+					resource.TestCheckResourceAttr(resourceName, "cluster_config.0.zone_awareness_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "cluster_config.0.zone_awareness_config.0.availability_zone_count", "3"),
+					resource.TestCheckResourceAttr(resourceName, "cluster_config.0.zone_awareness_enabled", "true"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccAWSElasticSearchDomain_withDedicatedMaster(t *testing.T) {
 	var domain elasticsearch.ElasticsearchDomainStatus
 	ri := acctest.RandInt()
@@ -747,6 +805,48 @@ resource "aws_elasticsearch_domain" "example" {
   }
 }
 `, randInt)
+}
+
+func testAccESDomainConfig_ClusterConfig_ZoneAwarenessConfig_AvailabilityZoneCount(rName string, availabilityZoneCount int) string {
+	return fmt.Sprintf(`
+resource "aws_elasticsearch_domain" "test" {
+  domain_name = %[1]q
+
+  cluster_config {
+    instance_type          = "t2.micro.elasticsearch"
+    instance_count         = 6
+    zone_awareness_enabled = true
+
+    zone_awareness_config {
+      availability_zone_count = %[2]d
+    }
+  }
+
+  ebs_options {
+    ebs_enabled = true
+    volume_size = 10
+  }
+}
+`, rName, availabilityZoneCount)
+}
+
+func testAccESDomainConfig_ClusterConfig_ZoneAwarenessEnabled(rName string, zoneAwarenessEnabled bool) string {
+	return fmt.Sprintf(`
+resource "aws_elasticsearch_domain" "test" {
+  domain_name = %[1]q
+
+  cluster_config {
+    instance_type          = "t2.micro.elasticsearch"
+    instance_count         = 6
+    zone_awareness_enabled = %[2]t
+  }
+
+  ebs_options {
+    ebs_enabled = true
+    volume_size = 10
+  }
+}
+`, rName, zoneAwarenessEnabled)
 }
 
 func testAccESDomainConfig_WithDedicatedClusterMaster(randInt int, enabled bool) string {

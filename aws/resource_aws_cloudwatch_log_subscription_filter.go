@@ -64,32 +64,32 @@ func resourceAwsCloudwatchLogSubscriptionFilterCreate(d *schema.ResourceData, me
 	params := getAwsCloudWatchLogsSubscriptionFilterInput(d)
 	log.Printf("[DEBUG] Creating SubscriptionFilter %#v", params)
 
-	return resource.Retry(5*time.Minute, func() *resource.RetryError {
+	err := resource.Retry(5*time.Minute, func() *resource.RetryError {
 		_, err := conn.PutSubscriptionFilter(&params)
 
-		if err == nil {
-			d.SetId(cloudwatchLogsSubscriptionFilterId(d.Get("log_group_name").(string)))
-			log.Printf("[DEBUG] Cloudwatch logs subscription %q created", d.Id())
-		}
-
-		awsErr, ok := err.(awserr.Error)
-		if !ok {
+		if isAWSErr(err, cloudwatchlogs.ErrCodeInvalidParameterException, "Could not deliver test message to specified") {
 			return resource.RetryableError(err)
 		}
-
-		if awsErr.Code() == "InvalidParameterException" {
-			log.Printf("[DEBUG] Caught message: %q, code: %q: Retrying", awsErr.Message(), awsErr.Code())
-			if strings.Contains(awsErr.Message(), "Could not deliver test message to specified") {
-				return resource.RetryableError(err)
-			}
-			if strings.Contains(awsErr.Message(), "Could not execute the lambda function") {
-				return resource.RetryableError(err)
-			}
-			resource.NonRetryableError(err)
+		if isAWSErr(err, cloudwatchlogs.ErrCodeInvalidParameterException, "Could not execute the lambda function") {
+			return resource.RetryableError(err)
 		}
-
-		return resource.NonRetryableError(err)
+		if err != nil {
+			return resource.NonRetryableError(err)
+		}
+		return nil
 	})
+
+	if isResourceTimeoutError(err) {
+		_, err = conn.PutSubscriptionFilter(&params)
+	}
+
+	if err != nil {
+		return fmt.Errorf("Error creating Cloudwatch log subscription filter: %s", err)
+	}
+
+	d.SetId(cloudwatchLogsSubscriptionFilterId(d.Get("log_group_name").(string)))
+	log.Printf("[DEBUG] Cloudwatch logs subscription %q created", d.Id())
+	return nil
 }
 
 func resourceAwsCloudwatchLogSubscriptionFilterUpdate(d *schema.ResourceData, meta interface{}) error {

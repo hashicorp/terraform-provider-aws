@@ -555,6 +555,48 @@ func TestAccAWSSpotFleetRequest_withEBSDisk(t *testing.T) {
 	})
 }
 
+func TestAccAWSSpotFleetRequest_LaunchSpecification_EbsBlockDevice_KmsKeyId(t *testing.T) {
+	var config ec2.SpotFleetRequestConfig
+	rName := acctest.RandString(10)
+	rInt := acctest.RandInt()
+	resourceName := "aws_spot_fleet_request.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSEc2SpotFleetRequest(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSSpotFleetRequestDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSSpotFleetRequestLaunchSpecificationEbsBlockDeviceKmsKeyId(rName, rInt),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckAWSSpotFleetRequestExists(resourceName, &config),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAWSSpotFleetRequest_LaunchSpecification_RootBlockDevice_KmsKeyId(t *testing.T) {
+	var config ec2.SpotFleetRequestConfig
+	rName := acctest.RandString(10)
+	rInt := acctest.RandInt()
+	resourceName := "aws_spot_fleet_request.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSEc2SpotFleetRequest(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSSpotFleetRequestDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSSpotFleetRequestLaunchSpecificationRootBlockDeviceKmsKeyId(rName, rInt),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckAWSSpotFleetRequestExists(resourceName, &config),
+				),
+			},
+		},
+	})
+}
+
 func TestAccAWSSpotFleetRequest_withTags(t *testing.T) {
 	var config ec2.SpotFleetRequestConfig
 	rName := acctest.RandString(10)
@@ -1479,6 +1521,105 @@ resource "aws_spot_fleet_request" "foo" {
         }
     }
     depends_on = ["aws_iam_policy_attachment.test-attach"]
+}
+`)
+}
+
+func testAccAWSSpotFleetRequestLaunchSpecificationEbsBlockDeviceKmsKeyId(rName string, rInt int) string {
+	return testAccAWSSpotFleetRequestConfigBase(rName, rInt) + fmt.Sprint(`
+data "aws_ami" "amzn-ami-minimal-hvm-ebs" {
+  most_recent = true
+  owners      = ["amazon"]
+
+  filter {
+    name   = "name"
+    values = ["amzn-ami-minimal-hvm-*"]
+  }
+
+  filter {
+    name   = "root-device-type"
+    values = ["ebs"]
+  }
+}
+
+resource "aws_kms_key" "test" {
+  deletion_window_in_days = 7
+}
+
+resource "aws_spot_fleet_request" "test" {
+  iam_fleet_role                      = "${aws_iam_role.test-role.arn}"
+  spot_price                          = "0.005"
+  target_capacity                     = 1
+  terminate_instances_with_expiration = true
+  valid_until                         = "2029-11-04T20:44:20Z"
+  wait_for_fulfillment                = true
+
+  launch_specification {
+    ami           = "${data.aws_ami.amzn-ami-minimal-hvm-ebs.id}"
+    instance_type = "t2.micro"
+
+    ebs_block_device {
+      device_name = "/dev/xvda"
+      volume_type = "gp2"
+      volume_size = 8
+    }
+
+    ebs_block_device {
+      device_name = "/dev/xvdcz"
+      encrypted   = true
+      kms_key_id  = "${aws_kms_key.test.arn}"
+      volume_type = "gp2"
+      volume_size = 10
+    }
+  }
+
+  depends_on = ["aws_iam_policy_attachment.test-attach"]
+}
+`)
+}
+
+func testAccAWSSpotFleetRequestLaunchSpecificationRootBlockDeviceKmsKeyId(rName string, rInt int) string {
+	return testAccAWSSpotFleetRequestConfigBase(rName, rInt) + fmt.Sprint(`
+data "aws_ami" "amzn-ami-minimal-hvm-ebs" {
+  most_recent = true
+  owners      = ["amazon"]
+
+  filter {
+    name   = "name"
+    values = ["amzn-ami-minimal-hvm-*"]
+  }
+
+  filter {
+    name   = "root-device-type"
+    values = ["ebs"]
+  }
+}
+
+resource "aws_kms_key" "test" {
+  deletion_window_in_days = 7
+}
+
+resource "aws_spot_fleet_request" "test" {
+  iam_fleet_role                      = "${aws_iam_role.test-role.arn}"
+  spot_price                          = "0.005"
+  target_capacity                     = 1
+  terminate_instances_with_expiration = true
+  valid_until                         = "2029-11-04T20:44:20Z"
+  wait_for_fulfillment                = true
+
+  launch_specification {
+    ami           = "${data.aws_ami.amzn-ami-minimal-hvm-ebs.id}"
+    instance_type = "t2.micro"
+
+    root_block_device {
+      encrypted   = true
+      kms_key_id  = "${aws_kms_key.test.arn}"
+      volume_type = "gp2"
+      volume_size = 10
+    }
+  }
+
+  depends_on = ["aws_iam_policy_attachment.test-attach"]
 }
 `)
 }

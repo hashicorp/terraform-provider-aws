@@ -151,6 +151,62 @@ func testAccAwsAppmeshVirtualRouter_basic(t *testing.T) {
 	})
 }
 
+func testAccAwsAppmeshVirtualRouter_tags(t *testing.T) {
+	var vr appmesh.VirtualRouterData
+	resourceName := "aws_appmesh_virtual_router.foo"
+	meshName := fmt.Sprintf("tf-test-mesh-%d", acctest.RandInt())
+	vrName := fmt.Sprintf("tf-test-router-%d", acctest.RandInt())
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAppmeshVirtualRouterDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAppmeshVirtualRouterConfig_tags(meshName, vrName, "foo", "bar", "good", "bad"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAppmeshVirtualRouterExists(
+						resourceName, &vr),
+					resource.TestCheckResourceAttr(
+						resourceName, "tags.%", "2"),
+					resource.TestCheckResourceAttr(
+						resourceName, "tags.foo", "bar"),
+					resource.TestCheckResourceAttr(
+						resourceName, "tags.good", "bad"),
+				),
+			},
+			{
+				Config: testAccAppmeshVirtualRouterConfig_tags(meshName, vrName, "foo2", "bar", "good", "bad2"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAppmeshVirtualRouterExists(
+						resourceName, &vr),
+					resource.TestCheckResourceAttr(
+						resourceName, "tags.%", "2"),
+					resource.TestCheckResourceAttr(
+						resourceName, "tags.foo2", "bar"),
+					resource.TestCheckResourceAttr(
+						resourceName, "tags.good", "bad2"),
+				),
+			},
+			{
+				Config: testAccAppmeshVirtualRouterConfig_basic(meshName, vrName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAppmeshVirtualRouterExists(
+						resourceName, &vr),
+					resource.TestCheckResourceAttr(
+						resourceName, "tags.%", "0"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportStateId:     fmt.Sprintf("%s/%s", meshName, vrName),
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func testAccCheckAppmeshVirtualRouterDestroy(s *terraform.State) error {
 	conn := testAccProvider.Meta().(*AWSClient).appmeshconn
 
@@ -243,4 +299,31 @@ resource "aws_appmesh_virtual_router" "foo" {
   }
 }
 `, meshName, vrName)
+}
+
+func testAccAppmeshVirtualRouterConfig_tags(meshName, vrName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
+	return fmt.Sprintf(`
+resource "aws_appmesh_mesh" "foo" {
+  name = "%[1]s"
+}
+
+resource "aws_appmesh_virtual_router" "foo" {
+  name      = "%[2]s"
+  mesh_name = "${aws_appmesh_mesh.foo.id}"
+
+  spec {
+    listener {
+      port_mapping {
+        port     = 8080
+        protocol = "http"
+      }
+    }
+  }
+
+  tags = {
+	%[3]s = %[4]q
+	%[5]s = %[6]q
+  }
+}
+`, meshName, vrName, tagKey1, tagValue1, tagKey2, tagValue2)
 }
