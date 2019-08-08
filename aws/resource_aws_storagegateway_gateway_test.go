@@ -655,7 +655,7 @@ resource "aws_directory_service_directory" "test" {
   size     = "Small"
 
   vpc_settings {
-    subnet_ids = ["${aws_subnet.test.*.id}"]
+    subnet_ids = aws_subnet.test[*].id
     vpc_id     = "${aws_vpc.test.id}"
   }
 
@@ -666,7 +666,7 @@ resource "aws_directory_service_directory" "test" {
 
 resource "aws_vpc_dhcp_options" "test" {
   domain_name         = "${aws_directory_service_directory.test.name}"
-  domain_name_servers = ["${aws_directory_service_directory.test.dns_ip_addresses}"]
+  domain_name_servers = aws_directory_service_directory.test.dns_ip_addresses
 
   tags = {
     Name = %q

@@ -21,7 +21,7 @@ func TestAccAWSCodePipeline_Import_basic(t *testing.T) {
 	name := acctest.RandString(10)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSCodePipeline(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSCodePipelineDestroy,
 		Steps: []resource.TestStep{
@@ -46,7 +46,7 @@ func TestAccAWSCodePipeline_basic(t *testing.T) {
 	name := acctest.RandString(10)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSCodePipeline(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSCodePipelineDestroy,
 		Steps: []resource.TestStep{
@@ -82,7 +82,7 @@ func TestAccAWSCodePipeline_emptyArtifacts(t *testing.T) {
 	name := acctest.RandString(10)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSCodePipeline(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSCodePipelineDestroy,
 		Steps: []resource.TestStep{
@@ -116,7 +116,7 @@ func TestAccAWSCodePipeline_deployWithServiceRole(t *testing.T) {
 	name := acctest.RandString(10)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSCodePipeline(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSCodePipelineDestroy,
 		Steps: []resource.TestStep{
@@ -144,7 +144,7 @@ func TestAccAWSCodePipeline_tags(t *testing.T) {
 	resourceName := "aws_codepipeline.bar"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSCodePipeline(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSCodePipelineDestroy,
 		Steps: []resource.TestStep{
@@ -224,6 +224,22 @@ func testAccCheckAWSCodePipelineDestroy(s *terraform.State) error {
 	}
 
 	return fmt.Errorf("Default error in CodePipeline Test")
+}
+
+func testAccPreCheckAWSCodePipeline(t *testing.T) {
+	conn := testAccProvider.Meta().(*AWSClient).codepipelineconn
+
+	input := &codepipeline.ListPipelinesInput{}
+
+	_, err := conn.ListPipelines(input)
+
+	if testAccPreCheckSkipError(err) {
+		t.Skipf("skipping acceptance testing: %s", err)
+	}
+
+	if err != nil {
+		t.Fatalf("unexpected PreCheck error: %s", err)
+	}
 }
 
 func testAccAWSCodePipelineConfig_basic(rName string) string {

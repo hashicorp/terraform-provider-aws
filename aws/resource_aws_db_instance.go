@@ -809,6 +809,9 @@ func resourceAwsDbInstanceCreate(d *schema.ResourceData, meta interface{}) error
 			}
 			return nil
 		})
+		if isResourceTimeoutError(err) {
+			_, err = conn.RestoreDBInstanceFromS3(&opts)
+		}
 		if err != nil {
 			return fmt.Errorf("Error creating DB Instance: %s", err)
 		}
@@ -1183,12 +1186,15 @@ func resourceAwsDbInstanceCreate(d *schema.ResourceData, meta interface{}) error
 			}
 			return nil
 		})
+		if isResourceTimeoutError(err) {
+			_, err = conn.CreateDBInstance(&opts)
+		}
 		if err != nil {
 			if isAWSErr(err, "InvalidParameterValue", "") {
+				opts.MasterUserPassword = aws.String("********")
 				return fmt.Errorf("Error creating DB Instance: %s, %+v", err, opts)
 			}
 			return fmt.Errorf("Error creating DB Instance: %s", err)
-
 		}
 	}
 

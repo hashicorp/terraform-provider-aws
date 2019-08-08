@@ -778,7 +778,6 @@ func (c *EC2) AssignPrivateIpAddressesRequest(input *AssignPrivateIpAddressesInp
 
 	output = &AssignPrivateIpAddressesOutput{}
 	req = c.newRequest(op, input, output)
-	req.Handlers.Unmarshal.Swap(ec2query.UnmarshalHandler.Name, protocol.UnmarshalDiscardBodyHandler)
 	return
 }
 
@@ -3745,9 +3744,9 @@ func (c *EC2) CreateDhcpOptionsRequest(input *CreateDhcpOptionsInput) (req *requ
 //    * domain-name-servers - The IP addresses of up to four domain name servers,
 //    or AmazonProvidedDNS. The default DHCP option set specifies AmazonProvidedDNS.
 //    If specifying more than one domain name server, specify the IP addresses
-//    in a single parameter, separated by commas. ITo have your instance to
-//    receive a custom DNS hostname as specified in domain-name, you must set
-//    domain-name-servers to a custom DNS server.
+//    in a single parameter, separated by commas. To have your instance receive
+//    a custom DNS hostname as specified in domain-name, you must set domain-name-servers
+//    to a custom DNS server.
 //
 //    * domain-name - If you're using AmazonProvidedDNS in us-east-1, specify
 //    ec2.internal. If you're using AmazonProvidedDNS in another Region, specify
@@ -14942,7 +14941,7 @@ func (c *EC2) DescribeInstancesRequest(input *DescribeInstancesInput) (req *requ
 
 // DescribeInstances API operation for Amazon Elastic Compute Cloud.
 //
-// Describes the specified instances or all of your instances.
+// Describes the specified instances or all of AWS account's instances.
 //
 // If you specify one or more instance IDs, Amazon EC2 returns information for
 // those instances. If you do not specify instance IDs, Amazon EC2 returns information
@@ -16764,14 +16763,14 @@ func (c *EC2) DescribeRegionsRequest(input *DescribeRegionsInput) (req *request.
 
 // DescribeRegions API operation for Amazon Elastic Compute Cloud.
 //
-// Describes the Regions that are currently available to you. The API returns
-// a list of all the Regions, including Regions that are disabled for your account.
-// For information about enabling Regions for your account, see Enabling and
-// Disabling Regions (https://docs.aws.amazon.com/awsaccountbilling/latest/aboutv2/manage-account-payment.html#manage-account-payment-enable-disable-regions)
-// in the AWS Billing and Cost Management User Guide.
+// Describes the Regions that are enabled for your account, or all Regions.
 //
 // For a list of the Regions supported by Amazon EC2, see Regions and Endpoints
 // (https://docs.aws.amazon.com/general/latest/gr/rande.html#ec2_region).
+//
+// For information about enabling and disabling Regions for your account, see
+// Managing AWS Regions (https://docs.aws.amazon.com/general/latest/gr/rande-manage.html)
+// in the AWS General Reference.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -24073,6 +24072,78 @@ func (c *EC2) ExportTransitGatewayRoutes(input *ExportTransitGatewayRoutesInput)
 // for more information on using Contexts.
 func (c *EC2) ExportTransitGatewayRoutesWithContext(ctx aws.Context, input *ExportTransitGatewayRoutesInput, opts ...request.Option) (*ExportTransitGatewayRoutesOutput, error) {
 	req, out := c.ExportTransitGatewayRoutesRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
+const opGetCapacityReservationUsage = "GetCapacityReservationUsage"
+
+// GetCapacityReservationUsageRequest generates a "aws/request.Request" representing the
+// client's request for the GetCapacityReservationUsage operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See GetCapacityReservationUsage for more information on using the GetCapacityReservationUsage
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the GetCapacityReservationUsageRequest method.
+//    req, resp := client.GetCapacityReservationUsageRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/ec2-2016-11-15/GetCapacityReservationUsage
+func (c *EC2) GetCapacityReservationUsageRequest(input *GetCapacityReservationUsageInput) (req *request.Request, output *GetCapacityReservationUsageOutput) {
+	op := &request.Operation{
+		Name:       opGetCapacityReservationUsage,
+		HTTPMethod: "POST",
+		HTTPPath:   "/",
+	}
+
+	if input == nil {
+		input = &GetCapacityReservationUsageInput{}
+	}
+
+	output = &GetCapacityReservationUsageOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// GetCapacityReservationUsage API operation for Amazon Elastic Compute Cloud.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for Amazon Elastic Compute Cloud's
+// API operation GetCapacityReservationUsage for usage and error information.
+// See also, https://docs.aws.amazon.com/goto/WebAPI/ec2-2016-11-15/GetCapacityReservationUsage
+func (c *EC2) GetCapacityReservationUsage(input *GetCapacityReservationUsageInput) (*GetCapacityReservationUsageOutput, error) {
+	req, out := c.GetCapacityReservationUsageRequest(input)
+	return out, req.Send()
+}
+
+// GetCapacityReservationUsageWithContext is the same as GetCapacityReservationUsage with the addition of
+// the ability to pass a context and additional request options.
+//
+// See GetCapacityReservationUsage for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *EC2) GetCapacityReservationUsageWithContext(ctx aws.Context, input *GetCapacityReservationUsageInput, opts ...request.Option) (*GetCapacityReservationUsageOutput, error) {
+	req, out := c.GetCapacityReservationUsageRequest(input)
 	req.SetContext(ctx)
 	req.ApplyOptions(opts...)
 	return out, req.Send()
@@ -33324,6 +33395,12 @@ func (s *AssignPrivateIpAddressesInput) SetSecondaryPrivateIpAddressCount(v int6
 
 type AssignPrivateIpAddressesOutput struct {
 	_ struct{} `type:"structure"`
+
+	// The private IP addresses assigned to the network interface.
+	AssignedPrivateIpAddresses []*AssignedPrivateIpAddress `locationName:"assignedPrivateIpAddressesSet" locationNameList:"item" type:"list"`
+
+	// The ID of the network interface.
+	NetworkInterfaceId *string `locationName:"networkInterfaceId" type:"string"`
 }
 
 // String returns the string representation
@@ -33334,6 +33411,42 @@ func (s AssignPrivateIpAddressesOutput) String() string {
 // GoString returns the string representation
 func (s AssignPrivateIpAddressesOutput) GoString() string {
 	return s.String()
+}
+
+// SetAssignedPrivateIpAddresses sets the AssignedPrivateIpAddresses field's value.
+func (s *AssignPrivateIpAddressesOutput) SetAssignedPrivateIpAddresses(v []*AssignedPrivateIpAddress) *AssignPrivateIpAddressesOutput {
+	s.AssignedPrivateIpAddresses = v
+	return s
+}
+
+// SetNetworkInterfaceId sets the NetworkInterfaceId field's value.
+func (s *AssignPrivateIpAddressesOutput) SetNetworkInterfaceId(v string) *AssignPrivateIpAddressesOutput {
+	s.NetworkInterfaceId = &v
+	return s
+}
+
+// Describes the private IP addresses assigned to a network interface.
+type AssignedPrivateIpAddress struct {
+	_ struct{} `type:"structure"`
+
+	// The private IP address assigned to the network interface.
+	PrivateIpAddress *string `locationName:"privateIpAddress" type:"string"`
+}
+
+// String returns the string representation
+func (s AssignedPrivateIpAddress) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s AssignedPrivateIpAddress) GoString() string {
+	return s.String()
+}
+
+// SetPrivateIpAddress sets the PrivateIpAddress field's value.
+func (s *AssignedPrivateIpAddress) SetPrivateIpAddress(v string) *AssignedPrivateIpAddress {
+	s.PrivateIpAddress = &v
+	return s
 }
 
 type AssociateAddressInput struct {
@@ -36344,9 +36457,13 @@ type CapacityReservation struct {
 	// The Availability Zone in which the capacity is reserved.
 	AvailabilityZone *string `locationName:"availabilityZone" type:"string"`
 
+	AvailabilityZoneId *string `locationName:"availabilityZoneId" type:"string"`
+
 	// The remaining capacity. Indicates the number of instances that can be launched
 	// in the Capacity Reservation.
 	AvailableInstanceCount *int64 `locationName:"availableInstanceCount" type:"integer"`
+
+	CapacityReservationArn *string `locationName:"capacityReservationArn" type:"string"`
 
 	// The ID of the Capacity Reservation.
 	CapacityReservationId *string `locationName:"capacityReservationId" type:"string"`
@@ -36402,6 +36519,8 @@ type CapacityReservation struct {
 	// The type of instance for which the Capacity Reservation reserves capacity.
 	InstanceType *string `locationName:"instanceType" type:"string"`
 
+	OwnerId *string `locationName:"ownerId" type:"string"`
+
 	// The current state of the Capacity Reservation. A Capacity Reservation can
 	// be in one of the following states:
 	//
@@ -36456,9 +36575,21 @@ func (s *CapacityReservation) SetAvailabilityZone(v string) *CapacityReservation
 	return s
 }
 
+// SetAvailabilityZoneId sets the AvailabilityZoneId field's value.
+func (s *CapacityReservation) SetAvailabilityZoneId(v string) *CapacityReservation {
+	s.AvailabilityZoneId = &v
+	return s
+}
+
 // SetAvailableInstanceCount sets the AvailableInstanceCount field's value.
 func (s *CapacityReservation) SetAvailableInstanceCount(v int64) *CapacityReservation {
 	s.AvailableInstanceCount = &v
+	return s
+}
+
+// SetCapacityReservationArn sets the CapacityReservationArn field's value.
+func (s *CapacityReservation) SetCapacityReservationArn(v string) *CapacityReservation {
+	s.CapacityReservationArn = &v
 	return s
 }
 
@@ -36513,6 +36644,12 @@ func (s *CapacityReservation) SetInstancePlatform(v string) *CapacityReservation
 // SetInstanceType sets the InstanceType field's value.
 func (s *CapacityReservation) SetInstanceType(v string) *CapacityReservation {
 	s.InstanceType = &v
+	return s
+}
+
+// SetOwnerId sets the OwnerId field's value.
+func (s *CapacityReservation) SetOwnerId(v string) *CapacityReservation {
+	s.OwnerId = &v
 	return s
 }
 
@@ -37378,7 +37515,12 @@ type ClientVpnEndpoint struct {
 	// The ARN of the server certificate.
 	ServerCertificateArn *string `locationName:"serverCertificateArn" type:"string"`
 
-	// Indicates whether VPN split tunneling is supported.
+	// Indicates whether split-tunnel is enabled in the AWS Client VPN endpoint
+	// endpoint.
+	//
+	// For information about split-tunnel VPN endpoints, see Split-Tunnel AWS Client
+	// VPN Endpoint (https://docs.aws.amazon.com/vpn/latest/clientvpn-admin/split-tunnel-vpn.html)
+	// in the AWS Client VPN Administrator Guide.
 	SplitTunnel *bool `locationName:"splitTunnel" type:"boolean"`
 
 	// The current state of the Client VPN endpoint.
@@ -38314,10 +38456,11 @@ type CopySnapshotInput struct {
 	// it is UnauthorizedOperation.
 	DryRun *bool `locationName:"dryRun" type:"boolean"`
 
-	// Specifies whether the destination snapshot should be encrypted. You can encrypt
-	// a copy of an unencrypted snapshot, but you cannot use it to create an unencrypted
-	// copy of an encrypted snapshot. For more information, see Amazon EBS Encryption
-	// (https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/EBSEncryption.html)
+	// To encrypt a copy of an unencrypted snapshot if encryption by default is
+	// not enabled, enable encryption using this parameter. Otherwise, omit this
+	// parameter. Encrypted snapshots are encrypted, even if you omit this parameter
+	// and encryption by default is not enabled. You cannot set this parameter to
+	// false. For more information, see Amazon EBS Encryption (https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/EBSEncryption.html)
 	// in the Amazon Elastic Compute Cloud User Guide.
 	Encrypted *bool `locationName:"encrypted" type:"boolean"`
 
@@ -38538,9 +38681,9 @@ type CreateCapacityReservationInput struct {
 	_ struct{} `type:"structure"`
 
 	// The Availability Zone in which to create the Capacity Reservation.
-	//
-	// AvailabilityZone is a required field
-	AvailabilityZone *string `type:"string" required:"true"`
+	AvailabilityZone *string `type:"string"`
+
+	AvailabilityZoneId *string `type:"string"`
 
 	// Unique, case-sensitive identifier that you provide to ensure the idempotency
 	// of the request. For more information, see How to Ensure Idempotency (https://docs.aws.amazon.com/AWSEC2/latest/APIReference/Run_Instance_Idempotency.html).
@@ -38650,9 +38793,6 @@ func (s CreateCapacityReservationInput) GoString() string {
 // Validate inspects the fields of the type to determine if they are valid.
 func (s *CreateCapacityReservationInput) Validate() error {
 	invalidParams := request.ErrInvalidParams{Context: "CreateCapacityReservationInput"}
-	if s.AvailabilityZone == nil {
-		invalidParams.Add(request.NewErrParamRequired("AvailabilityZone"))
-	}
 	if s.InstanceCount == nil {
 		invalidParams.Add(request.NewErrParamRequired("InstanceCount"))
 	}
@@ -38672,6 +38812,12 @@ func (s *CreateCapacityReservationInput) Validate() error {
 // SetAvailabilityZone sets the AvailabilityZone field's value.
 func (s *CreateCapacityReservationInput) SetAvailabilityZone(v string) *CreateCapacityReservationInput {
 	s.AvailabilityZone = &v
+	return s
+}
+
+// SetAvailabilityZoneId sets the AvailabilityZoneId field's value.
+func (s *CreateCapacityReservationInput) SetAvailabilityZoneId(v string) *CreateCapacityReservationInput {
+	s.AvailabilityZoneId = &v
 	return s
 }
 
@@ -38828,6 +38974,16 @@ type CreateClientVpnEndpointInput struct {
 	// ServerCertificateArn is a required field
 	ServerCertificateArn *string `type:"string" required:"true"`
 
+	// Indicates whether split-tunnel is enabled on the AWS Client VPN endpoint
+	// endpoint.
+	//
+	// By default, split-tunnel on a VPN endpoint is disabled.
+	//
+	// For information about split-tunnel VPN endpoints, see Split-Tunnel AWS Client
+	// VPN Endpoint (https://docs.aws.amazon.com/vpn/latest/clientvpn-admin/split-tunnel-vpn.html)
+	// in the AWS Client VPN Administrator Guide.
+	SplitTunnel *bool `type:"boolean"`
+
 	// The tags to apply to the Client VPN endpoint during creation.
 	TagSpecifications []*TagSpecification `locationName:"TagSpecification" locationNameList:"item" type:"list"`
 
@@ -38914,6 +39070,12 @@ func (s *CreateClientVpnEndpointInput) SetDryRun(v bool) *CreateClientVpnEndpoin
 // SetServerCertificateArn sets the ServerCertificateArn field's value.
 func (s *CreateClientVpnEndpointInput) SetServerCertificateArn(v string) *CreateClientVpnEndpointInput {
 	s.ServerCertificateArn = &v
+	return s
+}
+
+// SetSplitTunnel sets the SplitTunnel field's value.
+func (s *CreateClientVpnEndpointInput) SetSplitTunnel(v bool) *CreateClientVpnEndpointInput {
+	s.SplitTunnel = &v
 	return s
 }
 
@@ -39574,7 +39736,7 @@ type CreateFleetInput struct {
 	// LaunchTemplateConfigs is a required field
 	LaunchTemplateConfigs []*FleetLaunchTemplateConfigRequest `locationNameList:"item" type:"list" required:"true"`
 
-	// The allocation strategy of On-Demand Instances in an EC2 Fleet.
+	// Describes the configuration of On-Demand Instances in an EC2 Fleet.
 	OnDemandOptions *OnDemandOptionsRequest `type:"structure"`
 
 	// Indicates whether EC2 Fleet should replace unhealthy instances.
@@ -39589,8 +39751,7 @@ type CreateFleetInput struct {
 	// For information about tagging after launch, see Tagging Your Resources (https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/Using_Tags.html#tag-resources).
 	TagSpecifications []*TagSpecification `locationName:"TagSpecification" locationNameList:"item" type:"list"`
 
-	// The TotalTargetCapacity, OnDemandTargetCapacity, SpotTargetCapacity, and
-	// DefaultCapacityType structure.
+	// The number of units to request.
 	//
 	// TargetCapacitySpecification is a required field
 	TargetCapacitySpecification *TargetCapacitySpecificationRequest `type:"structure" required:"true"`
@@ -40544,6 +40705,9 @@ type CreateLaunchTemplateInput struct {
 	// LaunchTemplateName is a required field
 	LaunchTemplateName *string `min:"3" type:"string" required:"true"`
 
+	// The tags to apply to the launch template during creation.
+	TagSpecifications []*TagSpecification `locationName:"TagSpecification" locationNameList:"item" type:"list"`
+
 	// A description for the first version of the launch template.
 	VersionDescription *string `type:"string"`
 }
@@ -40603,6 +40767,12 @@ func (s *CreateLaunchTemplateInput) SetLaunchTemplateData(v *RequestLaunchTempla
 // SetLaunchTemplateName sets the LaunchTemplateName field's value.
 func (s *CreateLaunchTemplateInput) SetLaunchTemplateName(v string) *CreateLaunchTemplateInput {
 	s.LaunchTemplateName = &v
+	return s
+}
+
+// SetTagSpecifications sets the TagSpecifications field's value.
+func (s *CreateLaunchTemplateInput) SetTagSpecifications(v []*TagSpecification) *CreateLaunchTemplateInput {
+	s.TagSpecifications = v
 	return s
 }
 
@@ -41128,8 +41298,6 @@ type CreateNetworkInterfaceInput struct {
 	// Indicates the type of network interface. To create an Elastic Fabric Adapter
 	// (EFA), specify efa. For more information, see Elastic Fabric Adapter (https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/efa.html)
 	// in the Amazon Elastic Compute Cloud User Guide.
-	//
-	// If you are not creating an EFA, specify interface or omit this parameter.
 	InterfaceType *string `type:"string" enum:"NetworkInterfaceCreationType"`
 
 	// The number of IPv6 addresses to assign to a network interface. Amazon EC2
@@ -41976,7 +42144,7 @@ func (s *CreateSnapshotInput) SetVolumeId(v string) *CreateSnapshotInput {
 type CreateSnapshotsInput struct {
 	_ struct{} `type:"structure"`
 
-	// Copies the tags from the specified instance to all snapshots.
+	// Copies the tags from the specified volume to corresponding snapshot.
 	CopyTagsFromSource *string `type:"string" enum:"CopyTagsFromSource"`
 
 	// A description propagated to every snapshot specified by the instance.
@@ -53817,7 +53985,7 @@ type DescribeNetworkInterfacesInput struct {
 	//
 	//    * attachment.attachment-id - The ID of the interface attachment.
 	//
-	//    * attachment.attach.time - The time that the network interface was attached
+	//    * attachment.attach-time - The time that the network interface was attached
 	//    to an instance.
 	//
 	//    * attachment.delete-on-termination - Indicates whether the attachment
@@ -54367,6 +54535,10 @@ func (s *DescribePublicIpv4PoolsOutput) SetPublicIpv4Pools(v []*PublicIpv4Pool) 
 type DescribeRegionsInput struct {
 	_ struct{} `type:"structure"`
 
+	// Indicates whether to display all Regions, including Regions that are disabled
+	// for your account.
+	AllRegions *bool `type:"boolean"`
+
 	// Checks whether you have the required permissions for the action, without
 	// actually making the request, and provides an error response. If you have
 	// the required permissions, the error response is DryRunOperation. Otherwise,
@@ -54380,7 +54552,8 @@ type DescribeRegionsInput struct {
 	//    * region-name - The name of the Region (for example, us-east-1).
 	Filters []*Filter `locationName:"Filter" locationNameList:"Filter" type:"list"`
 
-	// The names of the Regions.
+	// The names of the Regions. You can specify any Regions, whether they are enabled
+	// and disabled for your account.
 	RegionNames []*string `locationName:"RegionName" locationNameList:"RegionName" type:"list"`
 }
 
@@ -54392,6 +54565,12 @@ func (s DescribeRegionsInput) String() string {
 // GoString returns the string representation
 func (s DescribeRegionsInput) GoString() string {
 	return s.String()
+}
+
+// SetAllRegions sets the AllRegions field's value.
+func (s *DescribeRegionsInput) SetAllRegions(v bool) *DescribeRegionsInput {
+	s.AllRegions = &v
+	return s
 }
 
 // SetDryRun sets the DryRun field's value.
@@ -64174,6 +64353,139 @@ func (s *FpgaImageState) SetMessage(v string) *FpgaImageState {
 	return s
 }
 
+type GetCapacityReservationUsageInput struct {
+	_ struct{} `type:"structure"`
+
+	// CapacityReservationId is a required field
+	CapacityReservationId *string `type:"string" required:"true"`
+
+	DryRun *bool `type:"boolean"`
+
+	MaxResults *int64 `min:"1" type:"integer"`
+
+	NextToken *string `type:"string"`
+}
+
+// String returns the string representation
+func (s GetCapacityReservationUsageInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s GetCapacityReservationUsageInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *GetCapacityReservationUsageInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "GetCapacityReservationUsageInput"}
+	if s.CapacityReservationId == nil {
+		invalidParams.Add(request.NewErrParamRequired("CapacityReservationId"))
+	}
+	if s.MaxResults != nil && *s.MaxResults < 1 {
+		invalidParams.Add(request.NewErrParamMinValue("MaxResults", 1))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetCapacityReservationId sets the CapacityReservationId field's value.
+func (s *GetCapacityReservationUsageInput) SetCapacityReservationId(v string) *GetCapacityReservationUsageInput {
+	s.CapacityReservationId = &v
+	return s
+}
+
+// SetDryRun sets the DryRun field's value.
+func (s *GetCapacityReservationUsageInput) SetDryRun(v bool) *GetCapacityReservationUsageInput {
+	s.DryRun = &v
+	return s
+}
+
+// SetMaxResults sets the MaxResults field's value.
+func (s *GetCapacityReservationUsageInput) SetMaxResults(v int64) *GetCapacityReservationUsageInput {
+	s.MaxResults = &v
+	return s
+}
+
+// SetNextToken sets the NextToken field's value.
+func (s *GetCapacityReservationUsageInput) SetNextToken(v string) *GetCapacityReservationUsageInput {
+	s.NextToken = &v
+	return s
+}
+
+type GetCapacityReservationUsageOutput struct {
+	_ struct{} `type:"structure"`
+
+	AvailableInstanceCount *int64 `locationName:"availableInstanceCount" type:"integer"`
+
+	CapacityReservationId *string `locationName:"capacityReservationId" type:"string"`
+
+	InstanceType *string `locationName:"instanceType" type:"string"`
+
+	InstanceUsages []*InstanceUsage `locationName:"instanceUsageSet" locationNameList:"item" type:"list"`
+
+	NextToken *string `locationName:"nextToken" type:"string"`
+
+	State *string `locationName:"state" type:"string" enum:"CapacityReservationState"`
+
+	TotalInstanceCount *int64 `locationName:"totalInstanceCount" type:"integer"`
+}
+
+// String returns the string representation
+func (s GetCapacityReservationUsageOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s GetCapacityReservationUsageOutput) GoString() string {
+	return s.String()
+}
+
+// SetAvailableInstanceCount sets the AvailableInstanceCount field's value.
+func (s *GetCapacityReservationUsageOutput) SetAvailableInstanceCount(v int64) *GetCapacityReservationUsageOutput {
+	s.AvailableInstanceCount = &v
+	return s
+}
+
+// SetCapacityReservationId sets the CapacityReservationId field's value.
+func (s *GetCapacityReservationUsageOutput) SetCapacityReservationId(v string) *GetCapacityReservationUsageOutput {
+	s.CapacityReservationId = &v
+	return s
+}
+
+// SetInstanceType sets the InstanceType field's value.
+func (s *GetCapacityReservationUsageOutput) SetInstanceType(v string) *GetCapacityReservationUsageOutput {
+	s.InstanceType = &v
+	return s
+}
+
+// SetInstanceUsages sets the InstanceUsages field's value.
+func (s *GetCapacityReservationUsageOutput) SetInstanceUsages(v []*InstanceUsage) *GetCapacityReservationUsageOutput {
+	s.InstanceUsages = v
+	return s
+}
+
+// SetNextToken sets the NextToken field's value.
+func (s *GetCapacityReservationUsageOutput) SetNextToken(v string) *GetCapacityReservationUsageOutput {
+	s.NextToken = &v
+	return s
+}
+
+// SetState sets the State field's value.
+func (s *GetCapacityReservationUsageOutput) SetState(v string) *GetCapacityReservationUsageOutput {
+	s.State = &v
+	return s
+}
+
+// SetTotalInstanceCount sets the TotalInstanceCount field's value.
+func (s *GetCapacityReservationUsageOutput) SetTotalInstanceCount(v int64) *GetCapacityReservationUsageOutput {
+	s.TotalInstanceCount = &v
+	return s
+}
+
 type GetConsoleOutputInput struct {
 	_ struct{} `type:"structure"`
 
@@ -66136,7 +66448,7 @@ type Image struct {
 	// The AWS account ID of the image owner.
 	OwnerId *string `locationName:"imageOwnerId" type:"string"`
 
-	// This value is set for Windows AMIs; otherwise, it is blank.
+	// This value is set to windows for Windows AMIs; otherwise, it is blank.
 	Platform *string `locationName:"platform" type:"string" enum:"PlatformValues"`
 
 	// Any product codes associated with the AMI.
@@ -69428,6 +69740,36 @@ func (s *InstanceStatusSummary) SetStatus(v string) *InstanceStatusSummary {
 	return s
 }
 
+type InstanceUsage struct {
+	_ struct{} `type:"structure"`
+
+	AccountId *string `locationName:"accountId" type:"string"`
+
+	UsedInstanceCount *int64 `locationName:"usedInstanceCount" type:"integer"`
+}
+
+// String returns the string representation
+func (s InstanceUsage) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s InstanceUsage) GoString() string {
+	return s.String()
+}
+
+// SetAccountId sets the AccountId field's value.
+func (s *InstanceUsage) SetAccountId(v string) *InstanceUsage {
+	s.AccountId = &v
+	return s
+}
+
+// SetUsedInstanceCount sets the UsedInstanceCount field's value.
+func (s *InstanceUsage) SetUsedInstanceCount(v int64) *InstanceUsage {
+	s.UsedInstanceCount = &v
+	return s
+}
+
 // Describes an internet gateway.
 type InternetGateway struct {
 	_ struct{} `type:"structure"`
@@ -72085,6 +72427,13 @@ type ModifyClientVpnEndpointInput struct {
 	// The ARN of the server certificate to be used. The server certificate must
 	// be provisioned in AWS Certificate Manager (ACM).
 	ServerCertificateArn *string `type:"string"`
+
+	// Indicates whether the VPN is split-tunnel.
+	//
+	// For information about split-tunnel VPN endpoints, see Split-Tunnel AWS Client
+	// VPN Endpoint (https://docs.aws.amazon.com/vpn/latest/clientvpn-admin/split-tunnel-vpn.html)
+	// in the AWS Client VPN Administrator Guide.
+	SplitTunnel *bool `type:"boolean"`
 }
 
 // String returns the string representation
@@ -72143,6 +72492,12 @@ func (s *ModifyClientVpnEndpointInput) SetDryRun(v bool) *ModifyClientVpnEndpoin
 // SetServerCertificateArn sets the ServerCertificateArn field's value.
 func (s *ModifyClientVpnEndpointInput) SetServerCertificateArn(v string) *ModifyClientVpnEndpointInput {
 	s.ServerCertificateArn = &v
+	return s
+}
+
+// SetSplitTunnel sets the SplitTunnel field's value.
+func (s *ModifyClientVpnEndpointInput) SetSplitTunnel(v bool) *ModifyClientVpnEndpointInput {
+	s.SplitTunnel = &v
 	return s
 }
 
@@ -73952,6 +74307,9 @@ type ModifySpotFleetRequestInput struct {
 	// the Spot Fleet.
 	ExcessCapacityTerminationPolicy *string `locationName:"excessCapacityTerminationPolicy" type:"string" enum:"ExcessCapacityTerminationPolicy"`
 
+	// The number of On-Demand Instances in the fleet.
+	OnDemandTargetCapacity *int64 `type:"integer"`
+
 	// The ID of the Spot Fleet request.
 	//
 	// SpotFleetRequestId is a required field
@@ -73987,6 +74345,12 @@ func (s *ModifySpotFleetRequestInput) Validate() error {
 // SetExcessCapacityTerminationPolicy sets the ExcessCapacityTerminationPolicy field's value.
 func (s *ModifySpotFleetRequestInput) SetExcessCapacityTerminationPolicy(v string) *ModifySpotFleetRequestInput {
 	s.ExcessCapacityTerminationPolicy = &v
+	return s
+}
+
+// SetOnDemandTargetCapacity sets the OnDemandTargetCapacity field's value.
+func (s *ModifySpotFleetRequestInput) SetOnDemandTargetCapacity(v int64) *ModifySpotFleetRequestInput {
+	s.OnDemandTargetCapacity = &v
 	return s
 }
 
@@ -76845,7 +77209,7 @@ func (s *NewDhcpConfiguration) SetValues(v []*string) *NewDhcpConfiguration {
 	return s
 }
 
-// The allocation strategy of On-Demand Instances in an EC2 Fleet.
+// Describes the configuration of On-Demand Instances in an EC2 Fleet.
 type OnDemandOptions struct {
 	_ struct{} `type:"structure"`
 
@@ -76856,6 +77220,10 @@ type OnDemandOptions struct {
 	// launching the highest priority first. If you do not specify a value, EC2
 	// Fleet defaults to lowest-price.
 	AllocationStrategy *string `locationName:"allocationStrategy" type:"string" enum:"FleetOnDemandAllocationStrategy"`
+
+	// The maximum amount per hour for On-Demand Instances that you're willing to
+	// pay.
+	MaxTotalPrice *string `locationName:"maxTotalPrice" type:"string"`
 
 	// The minimum target capacity for On-Demand Instances in the fleet. If the
 	// minimum target capacity is not reached, the fleet launches no instances.
@@ -76886,6 +77254,12 @@ func (s *OnDemandOptions) SetAllocationStrategy(v string) *OnDemandOptions {
 	return s
 }
 
+// SetMaxTotalPrice sets the MaxTotalPrice field's value.
+func (s *OnDemandOptions) SetMaxTotalPrice(v string) *OnDemandOptions {
+	s.MaxTotalPrice = &v
+	return s
+}
+
 // SetMinTargetCapacity sets the MinTargetCapacity field's value.
 func (s *OnDemandOptions) SetMinTargetCapacity(v int64) *OnDemandOptions {
 	s.MinTargetCapacity = &v
@@ -76904,7 +77278,7 @@ func (s *OnDemandOptions) SetSingleInstanceType(v bool) *OnDemandOptions {
 	return s
 }
 
-// The allocation strategy of On-Demand Instances in an EC2 Fleet.
+// Describes the configuration of On-Demand Instances in an EC2 Fleet.
 type OnDemandOptionsRequest struct {
 	_ struct{} `type:"structure"`
 
@@ -76915,6 +77289,10 @@ type OnDemandOptionsRequest struct {
 	// launching the highest priority first. If you do not specify a value, EC2
 	// Fleet defaults to lowest-price.
 	AllocationStrategy *string `type:"string" enum:"FleetOnDemandAllocationStrategy"`
+
+	// The maximum amount per hour for On-Demand Instances that you're willing to
+	// pay.
+	MaxTotalPrice *string `type:"string"`
 
 	// The minimum target capacity for On-Demand Instances in the fleet. If the
 	// minimum target capacity is not reached, the fleet launches no instances.
@@ -76942,6 +77320,12 @@ func (s OnDemandOptionsRequest) GoString() string {
 // SetAllocationStrategy sets the AllocationStrategy field's value.
 func (s *OnDemandOptionsRequest) SetAllocationStrategy(v string) *OnDemandOptionsRequest {
 	s.AllocationStrategy = &v
+	return s
+}
+
+// SetMaxTotalPrice sets the MaxTotalPrice field's value.
+func (s *OnDemandOptionsRequest) SetMaxTotalPrice(v string) *OnDemandOptionsRequest {
+	s.MaxTotalPrice = &v
 	return s
 }
 
@@ -78514,6 +78898,10 @@ type Region struct {
 	// The Region service endpoint.
 	Endpoint *string `locationName:"regionEndpoint" type:"string"`
 
+	// The Region opt-in status. The possible values are opt-in-not-required, opted-in,
+	// and not-opted-in.
+	OptInStatus *string `locationName:"optInStatus" type:"string"`
+
 	// The name of the Region.
 	RegionName *string `locationName:"regionName" type:"string"`
 }
@@ -78531,6 +78919,12 @@ func (s Region) GoString() string {
 // SetEndpoint sets the Endpoint field's value.
 func (s *Region) SetEndpoint(v string) *Region {
 	s.Endpoint = &v
+	return s
+}
+
+// SetOptInStatus sets the OptInStatus field's value.
+func (s *Region) SetOptInStatus(v string) *Region {
+	s.OptInStatus = &v
 	return s
 }
 
@@ -86344,6 +86738,16 @@ type SpotFleetRequestConfigData struct {
 	// target On-Demand capacity.
 	OnDemandFulfilledCapacity *float64 `locationName:"onDemandFulfilledCapacity" type:"double"`
 
+	// The maximum amount per hour for On-Demand Instances that you're willing to
+	// pay. You can use the onDemandMaxTotalPrice parameter, the spotMaxTotalPrice
+	// parameter, or both parameters to ensure that your fleet cost does not exceed
+	// your budget. If you set a maximum price per hour for the On-Demand Instances
+	// and Spot Instances in your request, Spot Fleet will launch instances until
+	// it reaches the maximum amount you're willing to pay. When the maximum amount
+	// you're willing to pay is reached, the fleet stops launching instances even
+	// if it hasn’t met the target capacity.
+	OnDemandMaxTotalPrice *string `locationName:"onDemandMaxTotalPrice" type:"string"`
+
 	// The number of On-Demand units to request. You can choose to set the target
 	// capacity in terms of instances or a performance characteristic that is important
 	// to your application workload, such as vCPUs, memory, or I/O. If the request
@@ -86353,6 +86757,16 @@ type SpotFleetRequestConfigData struct {
 
 	// Indicates whether Spot Fleet should replace unhealthy instances.
 	ReplaceUnhealthyInstances *bool `locationName:"replaceUnhealthyInstances" type:"boolean"`
+
+	// The maximum amount per hour for Spot Instances that you're willing to pay.
+	// You can use the spotdMaxTotalPrice parameter, the onDemandMaxTotalPrice parameter,
+	// or both parameters to ensure that your fleet cost does not exceed your budget.
+	// If you set a maximum price per hour for the On-Demand Instances and Spot
+	// Instances in your request, Spot Fleet will launch instances until it reaches
+	// the maximum amount you're willing to pay. When the maximum amount you're
+	// willing to pay is reached, the fleet stops launching instances even if it
+	// hasn’t met the target capacity.
+	SpotMaxTotalPrice *string `locationName:"spotMaxTotalPrice" type:"string"`
 
 	// The maximum price per unit hour that you are willing to pay for a Spot Instance.
 	// The default is the On-Demand price.
@@ -86505,6 +86919,12 @@ func (s *SpotFleetRequestConfigData) SetOnDemandFulfilledCapacity(v float64) *Sp
 	return s
 }
 
+// SetOnDemandMaxTotalPrice sets the OnDemandMaxTotalPrice field's value.
+func (s *SpotFleetRequestConfigData) SetOnDemandMaxTotalPrice(v string) *SpotFleetRequestConfigData {
+	s.OnDemandMaxTotalPrice = &v
+	return s
+}
+
 // SetOnDemandTargetCapacity sets the OnDemandTargetCapacity field's value.
 func (s *SpotFleetRequestConfigData) SetOnDemandTargetCapacity(v int64) *SpotFleetRequestConfigData {
 	s.OnDemandTargetCapacity = &v
@@ -86514,6 +86934,12 @@ func (s *SpotFleetRequestConfigData) SetOnDemandTargetCapacity(v int64) *SpotFle
 // SetReplaceUnhealthyInstances sets the ReplaceUnhealthyInstances field's value.
 func (s *SpotFleetRequestConfigData) SetReplaceUnhealthyInstances(v bool) *SpotFleetRequestConfigData {
 	s.ReplaceUnhealthyInstances = &v
+	return s
+}
+
+// SetSpotMaxTotalPrice sets the SpotMaxTotalPrice field's value.
+func (s *SpotFleetRequestConfigData) SetSpotMaxTotalPrice(v string) *SpotFleetRequestConfigData {
+	s.SpotMaxTotalPrice = &v
 	return s
 }
 
@@ -86949,6 +87375,9 @@ type SpotOptions struct {
 	// the number of Spot pools that you specify.
 	InstancePoolsToUseCount *int64 `locationName:"instancePoolsToUseCount" type:"integer"`
 
+	// The maximum amount per hour for Spot Instances that you're willing to pay.
+	MaxTotalPrice *string `locationName:"maxTotalPrice" type:"string"`
+
 	// The minimum target capacity for Spot Instances in the fleet. If the minimum
 	// target capacity is not reached, the fleet launches no instances.
 	MinTargetCapacity *int64 `locationName:"minTargetCapacity" type:"integer"`
@@ -86990,6 +87419,12 @@ func (s *SpotOptions) SetInstancePoolsToUseCount(v int64) *SpotOptions {
 	return s
 }
 
+// SetMaxTotalPrice sets the MaxTotalPrice field's value.
+func (s *SpotOptions) SetMaxTotalPrice(v string) *SpotOptions {
+	s.MaxTotalPrice = &v
+	return s
+}
+
 // SetMinTargetCapacity sets the MinTargetCapacity field's value.
 func (s *SpotOptions) SetMinTargetCapacity(v int64) *SpotOptions {
 	s.MinTargetCapacity = &v
@@ -87024,6 +87459,9 @@ type SpotOptionsRequest struct {
 	// selects the cheapest Spot pools and evenly allocates your target Spot capacity
 	// across the number of Spot pools that you specify.
 	InstancePoolsToUseCount *int64 `type:"integer"`
+
+	// The maximum amount per hour for Spot Instances that you're willing to pay.
+	MaxTotalPrice *string `type:"string"`
 
 	// The minimum target capacity for Spot Instances in the fleet. If the minimum
 	// target capacity is not reached, the fleet launches no instances.
@@ -87063,6 +87501,12 @@ func (s *SpotOptionsRequest) SetInstanceInterruptionBehavior(v string) *SpotOpti
 // SetInstancePoolsToUseCount sets the InstancePoolsToUseCount field's value.
 func (s *SpotOptionsRequest) SetInstancePoolsToUseCount(v int64) *SpotOptionsRequest {
 	s.InstancePoolsToUseCount = &v
+	return s
+}
+
+// SetMaxTotalPrice sets the MaxTotalPrice field's value.
+func (s *SpotOptionsRequest) SetMaxTotalPrice(v string) *SpotOptionsRequest {
+	s.MaxTotalPrice = &v
 	return s
 }
 
@@ -87985,8 +88429,11 @@ type TagSpecification struct {
 	_ struct{} `type:"structure"`
 
 	// The type of resource to tag. Currently, the resource types that support tagging
-	// on creation are fleet, dedicated-host, instance, snapshot, and volume. To
-	// tag a resource after it has been created, see CreateTags.
+	// on creation are: capacity-reservation | client-vpn-endpoint | dedicated-host
+	// | fleet | instance | launch-template | snapshot | transit-gateway | transit-gateway-attachment
+	// | transit-gateway-route-table | volume.
+	//
+	// To tag a resource after it has been created, see CreateTags.
 	ResourceType *string `locationName:"resourceType" type:"string" enum:"ResourceType"`
 
 	// The tags to apply to the resource.
@@ -88020,16 +88467,27 @@ func (s *TagSpecification) SetTags(v []*Tag) *TagSpecification {
 // your application workload, such as vCPUs, memory, or I/O. If the request
 // type is maintain, you can specify a target capacity of 0 and add capacity
 // later.
+//
+// You can use the On-Demand Instance MaxTotalPrice parameter, the Spot Instance
+// MaxTotalPrice, or both to ensure your fleet cost does not exceed your budget.
+// If you set a maximum price per hour for the On-Demand Instances and Spot
+// Instances in your request, EC2 Fleet will launch instances until it reaches
+// the maximum amount you're willing to pay. When the maximum amount you're
+// willing to pay is reached, the fleet stops launching instances even if it
+// hasn’t met the target capacity. The MaxTotalPrice parameters are located
+// in and
 type TargetCapacitySpecification struct {
 	_ struct{} `type:"structure"`
 
 	// The default TotalTargetCapacity, which is either Spot or On-Demand.
 	DefaultTargetCapacityType *string `locationName:"defaultTargetCapacityType" type:"string" enum:"DefaultTargetCapacityType"`
 
-	// The number of On-Demand units to request.
+	// The number of On-Demand units to request. If you specify a target capacity
+	// for Spot units, you cannot specify a target capacity for On-Demand units.
 	OnDemandTargetCapacity *int64 `locationName:"onDemandTargetCapacity" type:"integer"`
 
-	// The maximum number of Spot units to launch.
+	// The maximum number of Spot units to launch. If you specify a target capacity
+	// for On-Demand units, you cannot specify a target capacity for Spot units.
 	SpotTargetCapacity *int64 `locationName:"spotTargetCapacity" type:"integer"`
 
 	// The number of units to request, filled using DefaultTargetCapacityType.
@@ -88071,10 +88529,19 @@ func (s *TargetCapacitySpecification) SetTotalTargetCapacity(v int64) *TargetCap
 }
 
 // The number of units to request. You can choose to set the target capacity
-// in terms of instances or a performance characteristic that is important to
-// your application workload, such as vCPUs, memory, or I/O. If the request
-// type is maintain, you can specify a target capacity of 0 and add capacity
-// later.
+// as the number of instances. Or you can set the target capacity to a performance
+// characteristic that is important to your application workload, such as vCPUs,
+// memory, or I/O. If the request type is maintain, you can specify a target
+// capacity of 0 and add capacity later.
+//
+// You can use the On-Demand Instance MaxTotalPrice parameter, the Spot Instance
+// MaxTotalPrice parameter, or both parameters to ensure that your fleet cost
+// does not exceed your budget. If you set a maximum price per hour for the
+// On-Demand Instances and Spot Instances in your request, EC2 Fleet will launch
+// instances until it reaches the maximum amount you're willing to pay. When
+// the maximum amount you're willing to pay is reached, the fleet stops launching
+// instances even if it hasn’t met the target capacity. The MaxTotalPrice
+// parameters are located in and .
 type TargetCapacitySpecificationRequest struct {
 	_ struct{} `type:"structure"`
 
@@ -92681,6 +93148,9 @@ const (
 
 	// AllocationStrategyDiversified is a AllocationStrategy enum value
 	AllocationStrategyDiversified = "diversified"
+
+	// AllocationStrategyCapacityOptimized is a AllocationStrategy enum value
+	AllocationStrategyCapacityOptimized = "capacityOptimized"
 )
 
 const (
@@ -94769,6 +95239,9 @@ const (
 
 	// SpotAllocationStrategyDiversified is a SpotAllocationStrategy enum value
 	SpotAllocationStrategyDiversified = "diversified"
+
+	// SpotAllocationStrategyCapacityOptimized is a SpotAllocationStrategy enum value
+	SpotAllocationStrategyCapacityOptimized = "capacity-optimized"
 )
 
 const (

@@ -302,3 +302,11 @@ For more information, see [Task Networking](https://docs.aws.amazon.com/AmazonEC
 
 * `input_paths` - (Optional) Key value pairs specified in the form of JSONPath (for example, time = $.time)
 * `input_template` - (Required) Structure containing the template body.
+
+## Import
+
+Cloud Watch Event Target can be imported using the role event_rule and target_id separated by `/`.
+
+ ```
+$ terraform import aws_cloudwatch_event_target.test-event-target rule-name/target-id
+```

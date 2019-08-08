@@ -153,9 +153,10 @@ func resourceAwsStorageGatewayGatewayCreate(d *schema.ResourceData, meta interfa
 			return fmt.Errorf("error creating HTTP request: %s", err)
 		}
 
+		var response *http.Response
 		err = resource.Retry(d.Timeout(schema.TimeoutCreate), func() *resource.RetryError {
 			log.Printf("[DEBUG] Making HTTP request: %s", request.URL.String())
-			response, err := client.Do(request)
+			response, err = client.Do(request)
 			if err != nil {
 				if err, ok := err.(net.Error); ok {
 					errMessage := fmt.Errorf("error making HTTP request: %s", err)
@@ -164,24 +165,26 @@ func resourceAwsStorageGatewayGatewayCreate(d *schema.ResourceData, meta interfa
 				}
 				return resource.NonRetryableError(fmt.Errorf("error making HTTP request: %s", err))
 			}
-
-			log.Printf("[DEBUG] Received HTTP response: %#v", response)
-			if response.StatusCode != 302 {
-				return resource.NonRetryableError(fmt.Errorf("expected HTTP status code 302, received: %d", response.StatusCode))
-			}
-
-			redirectURL, err := response.Location()
-			if err != nil {
-				return resource.NonRetryableError(fmt.Errorf("error extracting HTTP Location header: %s", err))
-			}
-
-			activationKey = redirectURL.Query().Get("activationKey")
-
 			return nil
 		})
+		if isResourceTimeoutError(err) {
+			response, err = client.Do(request)
+		}
 		if err != nil {
 			return fmt.Errorf("error retrieving activation key from IP Address (%s): %s", gatewayIpAddress, err)
 		}
+
+		log.Printf("[DEBUG] Received HTTP response: %#v", response)
+		if response.StatusCode != 302 {
+			return fmt.Errorf("expected HTTP status code 302, received: %d", response.StatusCode)
+		}
+
+		redirectURL, err := response.Location()
+		if err != nil {
+			return fmt.Errorf("error extracting HTTP Location header: %s", err)
+		}
+
+		activationKey = redirectURL.Query().Get("activationKey")
 		if activationKey == "" {
 			return fmt.Errorf("empty activationKey received from IP Address: %s", gatewayIpAddress)
 		}
@@ -212,10 +215,11 @@ func resourceAwsStorageGatewayGatewayCreate(d *schema.ResourceData, meta interfa
 	d.SetId(aws.StringValue(output.GatewayARN))
 
 	// Gateway activations can take a few minutes
+	gwInput := &storagegateway.DescribeGatewayInformationInput{
+		GatewayARN: aws.String(d.Id()),
+	}
 	err = resource.Retry(d.Timeout(schema.TimeoutCreate), func() *resource.RetryError {
-		_, err := conn.DescribeGatewayInformation(&storagegateway.DescribeGatewayInformationInput{
-			GatewayARN: aws.String(d.Id()),
-		})
+		_, err := conn.DescribeGatewayInformation(gwInput)
 		if err != nil {
 			if isAWSErr(err, storagegateway.ErrorCodeGatewayNotConnected, "") {
 				return resource.RetryableError(err)
@@ -228,6 +232,9 @@ func resourceAwsStorageGatewayGatewayCreate(d *schema.ResourceData, meta interfa
 
 		return nil
 	})
+	if isResourceTimeoutError(err) {
+		_, err = conn.DescribeGatewayInformation(gwInput)
+	}
 	if err != nil {
 		return fmt.Errorf("error waiting for Storage Gateway Gateway activation: %s", err)
 	}

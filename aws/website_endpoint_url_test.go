@@ -19,6 +19,8 @@ var websiteEndpoints = []struct {
 	{"ap-southeast-2", "bucket-name.s3-website-ap-southeast-2.amazonaws.com"},
 	{"ap-northeast-2", "bucket-name.s3-website.ap-northeast-2.amazonaws.com"},
 	{"sa-east-1", "bucket-name.s3-website-sa-east-1.amazonaws.com"},
+	{"cn-northwest-1", "bucket-name.s3-website.cn-northwest-1.amazonaws.com.cn"},
+	{"cn-north-1", "bucket-name.s3-website.cn-north-1.amazonaws.com.cn"},
 }
 
 func TestWebsiteEndpointUrl(t *testing.T) {

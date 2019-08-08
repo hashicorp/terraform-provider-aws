@@ -41,6 +41,7 @@ output "kubeconfig-certificate-authority-data" {
 * `endpoint` - The endpoint for your Kubernetes API server.
 * `platform_version` - The platform version for the cluster.
 * `role_arn` - The Amazon Resource Name (ARN) of the IAM role that provides permissions for the Kubernetes control plane to make calls to AWS API operations on your behalf.
+* `status` - The status of the EKS cluster. One of `CREATING`, `ACTIVE`, `DELETING`, `FAILED`.
 * `version` - The Kubernetes server version for the cluster.
 * `vpc_config` - Nested attribute containing VPC configuration for the cluster.
   * `endpoint_private_access` - Indicates whether or not the Amazon EKS private API server endpoint is enabled.

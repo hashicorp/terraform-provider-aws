@@ -201,6 +201,7 @@ type AWSClient struct {
 	devicefarmconn                      *devicefarm.DeviceFarm
 	dlmconn                             *dlm.DLM
 	dmsconn                             *databasemigrationservice.DatabaseMigrationService
+	dnsSuffix                           string
 	docdbconn                           *docdb.DocDB
 	dsconn                              *directoryservice.DirectoryService
 	dxconn                              *directconnect.DirectConnect
@@ -339,6 +340,11 @@ func (c *Config) Client() (interface{}, error) {
 		return nil, err
 	}
 
+	dnsSuffix := "amazonaws.com"
+	if p, ok := endpoints.PartitionForRegion(endpoints.DefaultPartitions(), c.Region); ok {
+		dnsSuffix = p.DNSSuffix()
+	}
+
 	client := &AWSClient{
 		accountid:                           accountID,
 		acmconn:                             acm.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["acm"])})),
@@ -378,6 +384,7 @@ func (c *Config) Client() (interface{}, error) {
 		devicefarmconn:                      devicefarm.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["devicefarm"])})),
 		dlmconn:                             dlm.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["dlm"])})),
 		dmsconn:                             databasemigrationservice.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["dms"])})),
+		dnsSuffix:                           dnsSuffix,
 		docdbconn:                           docdb.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["docdb"])})),
 		dsconn:                              directoryservice.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["ds"])})),
 		dxconn:                              directconnect.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["directconnect"])})),
@@ -554,6 +561,12 @@ func (c *Config) Client() (interface{}, error) {
 	})
 
 	client.ec2conn.Handlers.Retry.PushBack(func(r *request.Request) {
+		if r.Operation.Name == "CreateClientVpnEndpoint" {
+			if isAWSErr(r.Error, "OperationNotPermitted", "Endpoint cannot be created while another endpoint is being created") {
+				r.Retryable = aws.Bool(true)
+			}
+		}
+
 		if r.Operation.Name == "CreateVpnConnection" {
 			if isAWSErr(r.Error, "VpnConnectionLimitExceeded", "maximum number of mutating objects has been reached") {
 				r.Retryable = aws.Bool(true)
@@ -586,6 +599,14 @@ func (c *Config) Client() (interface{}, error) {
 		}
 	})
 
+	client.organizationsconn.Handlers.Retry.PushBack(func(r *request.Request) {
+		// Retry on the following error:
+		// ConcurrentModificationException: AWS Organizations can't complete your request because it conflicts with another attempt to modify the same entity. Try again later.
+		if isAWSErr(r.Error, organizations.ErrCodeConcurrentModificationException, "Try again later") {
+			r.Retryable = aws.Bool(true)
+		}
+	})
+
 	client.storagegatewayconn.Handlers.Retry.PushBack(func(r *request.Request) {
 		// InvalidGatewayRequestException: The specified gateway proxy network connection is busy.
 		if isAWSErr(r.Error, storagegateway.ErrCodeInvalidGatewayRequestException, "The specified gateway proxy network connection is busy") {
@@ -605,6 +626,24 @@ func (c *Config) Client() (interface{}, error) {
 	}
 
 	return client, nil
+}
+
+func parseDNSSuffixFromEndpoint(endpoint string, region string) (*string, error) {
+	e := strings.Split(endpoint, ".")
+
+	// Expect endpoints with at least three elements
+	// {service}.{optional region}.{one or more zones}.{root}
+	if len(e) < 2 {
+		return nil, fmt.Errorf("Could not determine URL Suffix from endpoint '%s'", endpoint)
+	}
+
+	// An endpoint may have the region in the second element
+	if e[1] == region {
+		return aws.String(strings.Join(e[2:], ".")), nil
+	}
+
+	// Without a region, the URL Suffix is everything past the first element
+	return aws.String(strings.Join(e[1:], ".")), nil
 }
 
 func hasEc2Classic(platforms []string) bool {

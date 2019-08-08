@@ -142,6 +142,14 @@ const (
 	// A commit was not specified.
 	ErrCodeCommitRequiredException = "CommitRequiredException"
 
+	// ErrCodeConcurrentReferenceUpdateException for service response error code
+	// "ConcurrentReferenceUpdateException".
+	//
+	// The merge cannot be completed because the target branch has been modified.
+	// Another user might have modified the target branch while the merge was in
+	// progress. Wait a few minutes, and then try again.
+	ErrCodeConcurrentReferenceUpdateException = "ConcurrentReferenceUpdateException"
+
 	// ErrCodeDefaultBranchCannotBeDeletedException for service response error code
 	// "DefaultBranchCannotBeDeletedException".
 	//

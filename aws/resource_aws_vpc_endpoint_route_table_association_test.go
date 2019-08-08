@@ -103,10 +103,6 @@ func testAccCheckVpcEndpointRouteTableAssociationExists(n string, vpce *ec2.VpcE
 }
 
 const testAccVpcEndpointRouteTableAssociationConfig = `
-provider "aws" {
-    region = "us-west-2"
-}
-
 resource "aws_vpc" "foo" {
     cidr_block = "10.0.0.0/16"
   tags = {

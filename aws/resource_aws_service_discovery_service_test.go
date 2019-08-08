@@ -78,6 +78,25 @@ func TestAccAWSServiceDiscoveryService_public(t *testing.T) {
 	})
 }
 
+func TestAccAWSServiceDiscoveryService_http(t *testing.T) {
+	rName := acctest.RandString(5)
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAwsServiceDiscoveryServiceDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccServiceDiscoveryServiceConfig_http(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAwsServiceDiscoveryServiceExists("aws_service_discovery_service.test"),
+					resource.TestCheckResourceAttrSet("aws_service_discovery_service.test", "namespace_id"),
+					resource.TestCheckResourceAttrSet("aws_service_discovery_service.test", "arn"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccAWSServiceDiscoveryService_import(t *testing.T) {
 	resourceName := "aws_service_discovery_service.test"
 
@@ -245,4 +264,18 @@ resource "aws_service_discovery_service" "test" {
   }
 }
 `, rName, rName, th, path)
+}
+
+func testAccServiceDiscoveryServiceConfig_http(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_service_discovery_http_namespace" "test" {
+  name = "tf-sd-ns-%s"
+  description = "test"
+}
+
+resource "aws_service_discovery_service" "test" {
+  name = "tf-sd-%s"
+  namespace_id = "${aws_service_discovery_http_namespace.test.id}"
+}
+`, rName, rName)
 }
