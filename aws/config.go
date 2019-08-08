@@ -573,7 +573,7 @@ func (c *Config) Client() (interface{}, error) {
 		}
 
 		if r.Operation.Name == "AttachVpnGateway" {
-			if isAWSErr(err, "InvalidParameterValue", "This call cannot be completed because there are pending VPNs or Virtual Interfaces") {
+			if isAWSErr(r.Error, "InvalidParameterValue", "This call cannot be completed because there are pending VPNs or Virtual Interfaces") {
 				r.Retryable = aws.Bool(true)
 			}
 		}
