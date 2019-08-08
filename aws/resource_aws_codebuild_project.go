@@ -649,9 +649,11 @@ func resourceAwsCodeBuildProjectCreate(d *schema.ResourceData, meta interface{})
 		}
 
 		return nil
-
 	})
 
+	if isResourceTimeoutError(err) {
+		resp, err = conn.CreateProject(params)
+	}
 	if err != nil {
 		return fmt.Errorf("Error creating CodeBuild project: %s", err)
 	}
@@ -1157,9 +1159,11 @@ func resourceAwsCodeBuildProjectUpdate(d *schema.ResourceData, meta interface{})
 		}
 
 		return nil
-
 	})
 
+	if isResourceTimeoutError(err) {
+		_, err = conn.UpdateProject(params)
+	}
 	if err != nil {
 		return fmt.Errorf(
 			"[ERROR] Error updating CodeBuild project (%s): %s",

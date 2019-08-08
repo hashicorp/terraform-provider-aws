@@ -555,8 +555,11 @@ func resourceAwsCodeDeployDeploymentGroupCreate(d *schema.ResourceData, meta int
 		return handleCreateError(err)
 	})
 
+	if isResourceTimeoutError(err) {
+		resp, err = conn.CreateDeploymentGroup(&input)
+	}
 	if err != nil {
-		return err
+		return fmt.Errorf("Error creating CodeDeploy deployment group: %s", err)
 	}
 
 	d.SetId(*resp.DeploymentGroupId)
@@ -732,8 +735,11 @@ func resourceAwsCodeDeployDeploymentGroupUpdate(d *schema.ResourceData, meta int
 		return handleUpdateError(err)
 	})
 
+	if isResourceTimeoutError(err) {
+		_, err = conn.UpdateDeploymentGroup(&input)
+	}
 	if err != nil {
-		return err
+		return fmt.Errorf("Error updating CodeDeploy deployment group: %s", err)
 	}
 
 	return resourceAwsCodeDeployDeploymentGroupRead(d, meta)
