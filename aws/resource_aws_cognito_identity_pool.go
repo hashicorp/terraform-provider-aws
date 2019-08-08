@@ -3,13 +3,11 @@ package aws
 import (
 	"fmt"
 	"log"
-	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/cognitoidentity"
-	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/helper/schema"
 )
 
@@ -245,15 +243,12 @@ func resourceAwsCognitoIdentityPoolDelete(d *schema.ResourceData, meta interface
 	conn := meta.(*AWSClient).cognitoconn
 	log.Printf("[DEBUG] Deleting Cognito Identity Pool: %s", d.Id())
 
-	return resource.Retry(5*time.Minute, func() *resource.RetryError {
-		_, err := conn.DeleteIdentityPool(&cognitoidentity.DeleteIdentityPoolInput{
-			IdentityPoolId: aws.String(d.Id()),
-		})
-
-		if err == nil {
-			return nil
-		}
-
-		return resource.NonRetryableError(err)
+	_, err := conn.DeleteIdentityPool(&cognitoidentity.DeleteIdentityPoolInput{
+		IdentityPoolId: aws.String(d.Id()),
 	})
+
+	if err != nil {
+		return fmt.Errorf("Error deleting Cognito identity pool: %s", err)
+	}
+	return nil
 }
