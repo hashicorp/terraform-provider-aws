@@ -156,13 +156,14 @@ func (c *DataSync) CreateAgentRequest(input *CreateAgentInput) (req *request.Req
 // target locations (in Amazon S3 or Amazon EFS) reside. Your tasks are created
 // in this AWS Region.
 //
+// You can activate the agent in a VPC (Virtual private Cloud) or provide the
+// agent access to a VPC endpoint so you can run tasks without going over the
+// public Internet.
+//
 // You can use an agent for more than one location. If a task uses multiple
 // agents, all of them need to have status AVAILABLE for the task to run. If
 // you use multiple agents for a source location, the status of all the agents
 // must be AVAILABLE for the task to run.
-//
-// For more information, see "https://docs.aws.amazon.com/datasync/latest/userguide/working-with-agents.html#activating-agent"
-// (Activating an Agent) in the AWS DataSync User Guide.
 //
 // Agents are automatically updated by AWS on a regular basis, using a mechanism
 // that ensures minimal interruption to your tasks.
@@ -419,8 +420,8 @@ func (c *DataSync) CreateLocationS3Request(input *CreateLocationS3Input) (req *r
 // required permissions and attaching the policy to the role. An example of
 // such a policy is shown in the examples section.
 //
-// For more information, see "https://docs.aws.amazon.com/datasync/latest/userguide/working-with-locations.html#create-s3-location"
-// (Configuring Amazon S3 Location Settings) in the AWS DataSync User Guide.
+// For more information, see Configuring Amazon S3 Location Settings in the
+// AWS DataSync User Guide.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -1412,7 +1413,7 @@ func (c *DataSync) ListAgentsWithContext(ctx aws.Context, input *ListAgentsInput
 //    // Example iterating over at most 3 pages of a ListAgents operation.
 //    pageNum := 0
 //    err := client.ListAgentsPages(params,
-//        func(page *ListAgentsOutput, lastPage bool) bool {
+//        func(page *datasync.ListAgentsOutput, lastPage bool) bool {
 //            pageNum++
 //            fmt.Println(page)
 //            return pageNum <= 3
@@ -1555,7 +1556,7 @@ func (c *DataSync) ListLocationsWithContext(ctx aws.Context, input *ListLocation
 //    // Example iterating over at most 3 pages of a ListLocations operation.
 //    pageNum := 0
 //    err := client.ListLocationsPages(params,
-//        func(page *ListLocationsOutput, lastPage bool) bool {
+//        func(page *datasync.ListLocationsOutput, lastPage bool) bool {
 //            pageNum++
 //            fmt.Println(page)
 //            return pageNum <= 3
@@ -1693,7 +1694,7 @@ func (c *DataSync) ListTagsForResourceWithContext(ctx aws.Context, input *ListTa
 //    // Example iterating over at most 3 pages of a ListTagsForResource operation.
 //    pageNum := 0
 //    err := client.ListTagsForResourcePages(params,
-//        func(page *ListTagsForResourceOutput, lastPage bool) bool {
+//        func(page *datasync.ListTagsForResourceOutput, lastPage bool) bool {
 //            pageNum++
 //            fmt.Println(page)
 //            return pageNum <= 3
@@ -1831,7 +1832,7 @@ func (c *DataSync) ListTaskExecutionsWithContext(ctx aws.Context, input *ListTas
 //    // Example iterating over at most 3 pages of a ListTaskExecutions operation.
 //    pageNum := 0
 //    err := client.ListTaskExecutionsPages(params,
-//        func(page *ListTaskExecutionsOutput, lastPage bool) bool {
+//        func(page *datasync.ListTaskExecutionsOutput, lastPage bool) bool {
 //            pageNum++
 //            fmt.Println(page)
 //            return pageNum <= 3
@@ -1969,7 +1970,7 @@ func (c *DataSync) ListTasksWithContext(ctx aws.Context, input *ListTasksInput, 
 //    // Example iterating over at most 3 pages of a ListTasks operation.
 //    pageNum := 0
 //    err := client.ListTasksPages(params,
-//        func(page *ListTasksOutput, lastPage bool) bool {
+//        func(page *datasync.ListTasksOutput, lastPage bool) bool {
 //            pageNum++
 //            fmt.Println(page)
 //            return pageNum <= 3
@@ -2059,8 +2060,8 @@ func (c *DataSync) StartTaskExecutionRequest(input *StartTaskExecutionInput) (re
 // TaskExecution has the following transition phases: INITIALIZING | PREPARING
 // | TRANSFERRING | VERIFYING | SUCCESS/FAILURE.
 //
-// For detailed information, see Task Execution in "https://docs.aws.amazon.com/datasync/latest/userguide/how-datasync-works.html#terminology"
-// (Components and Terminology) in the AWS DataSync User Guide.
+// For detailed information, see the Task Execution section in the Components
+// and Terminology topic in the AWS DataSync User Guide.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -2540,8 +2541,7 @@ type CreateAgentInput struct {
 	// The arguments you pass to this API call determine the actual configuration
 	// of your agent.
 	//
-	// For more information, see "https://docs.aws.amazon.com/datasync/latest/userguide/working-with-agents.html#activating-agent"
-	// (Activating a Agent) in the AWS DataSync User Guide.
+	// For more information, see Activating an Agent in the AWS DataSync User Guide.
 	//
 	// ActivationKey is a required field
 	ActivationKey *string `type:"string" required:"true"`
@@ -2550,6 +2550,19 @@ type CreateAgentInput struct {
 	// is used to identify the agent in the console.
 	AgentName *string `min:"1" type:"string"`
 
+	// The ARNs of the security groups used to protect your data transfer task subnets.
+	// See CreateAgentRequest$SubnetArns.
+	SecurityGroupArns []*string `min:"1" type:"list"`
+
+	// The Amazon Resource Names (ARNs) of the subnets in which DataSync will create
+	// Elastic Network Interfaces (ENIs) for each data transfer task. The agent
+	// that runs a task must be private. When you start a task that is associated
+	// with an agent created in a VPC, or one that has access to an IP address in
+	// a VPC, then the task is also private. In this case, DataSync creates four
+	// ENIs for each task in your subnet. For a data transfer to work, the agent
+	// must be able to route to all these four ENIs.
+	SubnetArns []*string `min:"1" type:"list"`
+
 	// The key-value pair that represents the tag that you want to associate with
 	// the agent. The value can be an empty string. This value helps you manage,
 	// filter, and search for your agents.
@@ -2557,6 +2570,15 @@ type CreateAgentInput struct {
 	// Valid characters for key and value are letters, spaces, and numbers representable
 	// in UTF-8 format, and the following special characters: + - = . _ : / @.
 	Tags []*TagListEntry `type:"list"`
+
+	// The ID of the VPC (Virtual Private Cloud) endpoint that the agent has access
+	// to. This is the client-side VPC endpoint, also called a PrivateLink. If you
+	// don't have a PrivateLink VPC endpoint, see Creating a VPC Endpoint Service
+	// Configuration (https://docs.aws.amazon.com/vpc/latest/userguide/endpoint-service.html#create-endpoint-service)
+	// in the AWS VPC User Guide.
+	//
+	// VPC endpoint ID looks like this: vpce-01234d5aff67890e1.
+	VpcEndpointId *string `type:"string"`
 }
 
 // String returns the string representation
@@ -2577,6 +2599,12 @@ func (s *CreateAgentInput) Validate() error {
 	}
 	if s.AgentName != nil && len(*s.AgentName) < 1 {
 		invalidParams.Add(request.NewErrParamMinLen("AgentName", 1))
+	}
+	if s.SecurityGroupArns != nil && len(s.SecurityGroupArns) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("SecurityGroupArns", 1))
+	}
+	if s.SubnetArns != nil && len(s.SubnetArns) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("SubnetArns", 1))
 	}
 	if s.Tags != nil {
 		for i, v := range s.Tags {
@@ -2607,9 +2635,27 @@ func (s *CreateAgentInput) SetAgentName(v string) *CreateAgentInput {
 	return s
 }
 
+// SetSecurityGroupArns sets the SecurityGroupArns field's value.
+func (s *CreateAgentInput) SetSecurityGroupArns(v []*string) *CreateAgentInput {
+	s.SecurityGroupArns = v
+	return s
+}
+
+// SetSubnetArns sets the SubnetArns field's value.
+func (s *CreateAgentInput) SetSubnetArns(v []*string) *CreateAgentInput {
+	s.SubnetArns = v
+	return s
+}
+
 // SetTags sets the Tags field's value.
 func (s *CreateAgentInput) SetTags(v []*TagListEntry) *CreateAgentInput {
 	s.Tags = v
+	return s
+}
+
+// SetVpcEndpointId sets the VpcEndpointId field's value.
+func (s *CreateAgentInput) SetVpcEndpointId(v string) *CreateAgentInput {
+	s.VpcEndpointId = &v
 	return s
 }
 
@@ -2650,7 +2696,7 @@ type CreateLocationEfsInput struct {
 	// security group S (which you provide for DataSync to use at this stage) is
 	// as follows:
 	//
-	//    *  Security group M (which you associate with the mount target) must allow
+	//    * Security group M (which you associate with the mount target) must allow
 	//    inbound access for the Transmission Control Protocol (TCP) on the NFS
 	//    port (2049) from security group S. You can enable inbound connections
 	//    either by IP address (CIDR range) or security group.
@@ -2658,11 +2704,9 @@ type CreateLocationEfsInput struct {
 	//    * Security group S (provided to DataSync to access EFS) should have a
 	//    rule that enables outbound connections to the NFS port on one of the file
 	//    system’s mount targets. You can enable outbound connections either by
-	//    IP address (CIDR range) or security group.
-	//
-	// For information about security groups and mount targets, see "https://docs.aws.amazon.com/efs/latest/ug/security-considerations.html#network-access"
-	//    (Security Groups for Amazon EC2 Instances and Mount Targets) in the Amazon
-	//    EFS User Guide.
+	//    IP address (CIDR range) or security group. For information about security
+	//    groups and mount targets, see Security Groups for Amazon EC2 Instances
+	//    and Mount Targets in the Amazon EFS User Guide.
 	//
 	// Ec2Config is a required field
 	Ec2Config *Ec2Config `type:"structure" required:"true"`
@@ -2815,8 +2859,8 @@ type CreateLocationNfsInput struct {
 	// enables the agent to read the files. For the agent to access directories,
 	// you must additionally enable all execute access.
 	//
-	// For information about NFS export configuration, see "http://web.mit.edu/rhel-doc/5/RHEL-5-manual/Deployment_Guide-en-US/s1-nfs-server-config-exports.html"
-	// (18.7. The /etc/exports Configuration File).
+	// For information about NFS export configuration, see 18.7. The /etc/exports
+	// Configuration File in the Red Hat Enterprise Linux documentation.
 	//
 	// Subdirectory is a required field
 	Subdirectory *string `type:"string" required:"true"`
@@ -2937,8 +2981,8 @@ type CreateLocationS3Input struct {
 	// The Amazon Resource Name (ARN) of the AWS Identity and Access Management
 	// (IAM) role that is used to access an Amazon S3 bucket.
 	//
-	// For detailed information about using such a role, see "https://docs.aws.amazon.com/datasync/latest/userguide/working-with-locations.html#create-s3-location"
-	// (Creating a Location for Amazon S3) in the AWS DataSync User Guide.
+	// For detailed information about using such a role, see Creating a Location
+	// for Amazon S3 in the AWS DataSync User Guide.
 	//
 	// S3Config is a required field
 	S3Config *S3Config `type:"structure" required:"true"`
@@ -3049,11 +3093,11 @@ type CreateTaskInput struct {
 	// The Amazon Resource Name (ARN) of the Amazon CloudWatch log group that is
 	// used to monitor and log events in the task.
 	//
-	// For more information on these groups, see "https://docs.aws.amazon.com/AmazonCloudWatch/latest/logs/Working-with-log-groups-and-streams.html"
-	// (Working with Log Groups and Log Streams) in the Amazon CloudWatch User Guide.
+	// For more information on these groups, see Working with Log Groups and Log
+	// Streams in the Amazon CloudWatch User Guide.
 	//
-	// For more information about how to useCloudWatchLogs with DataSync, see "https://docs.aws.amazon.com/datasync/latest/userguide/monitor-datasync.html"
-	// (Monitoring Your Task)
+	// For more information about how to use CloudWatch Logs with DataSync, see
+	// Monitoring Your Task in the AWS DataSync User Guide.
 	CloudWatchLogGroupArn *string `type:"string"`
 
 	// The Amazon Resource Name (ARN) of an AWS storage resource's location.
@@ -3061,9 +3105,10 @@ type CreateTaskInput struct {
 	// DestinationLocationArn is a required field
 	DestinationLocationArn *string `type:"string" required:"true"`
 
-	// A filter that determines which files to exclude from a task based on the
-	// specified pattern. Transfers all files in the task’s subdirectory, except
-	// files that match the filter that is set.
+	// A list of filter rules that determines which files to exclude from a task.
+	// The list should contain a single filter string that consists of the patterns
+	// to exclude. The patterns are delimited by "|" (that is, a pipe), for example,
+	// "/folder1|/folder2"
 	Excludes []*FilterRule `type:"list"`
 
 	// The name of a task. This value is a text reference that is used to identify
@@ -3409,11 +3454,18 @@ type DescribeAgentOutput struct {
 	// The time that the agent was activated (that is, created in your account).
 	CreationTime *time.Time `type:"timestamp"`
 
+	// The type of endpoint that your agent is connected to. If the endpoint is
+	// a VPC endpoint, the agent is not accessible over the public Internet.
+	EndpointType *string `type:"string" enum:"EndpointType"`
+
 	// The time that the agent last connected to DataSyc.
 	LastConnectionTime *time.Time `type:"timestamp"`
 
 	// The name of the agent.
 	Name *string `min:"1" type:"string"`
+
+	// The subnet and the security group that DataSync used to access a VPC endpoint.
+	PrivateLinkConfig *PrivateLinkConfig `type:"structure"`
 
 	// The status of the agent. If the status is ONLINE, then the agent is configured
 	// properly and is available to use. The Running status is the normal running
@@ -3445,6 +3497,12 @@ func (s *DescribeAgentOutput) SetCreationTime(v time.Time) *DescribeAgentOutput 
 	return s
 }
 
+// SetEndpointType sets the EndpointType field's value.
+func (s *DescribeAgentOutput) SetEndpointType(v string) *DescribeAgentOutput {
+	s.EndpointType = &v
+	return s
+}
+
 // SetLastConnectionTime sets the LastConnectionTime field's value.
 func (s *DescribeAgentOutput) SetLastConnectionTime(v time.Time) *DescribeAgentOutput {
 	s.LastConnectionTime = &v
@@ -3454,6 +3512,12 @@ func (s *DescribeAgentOutput) SetLastConnectionTime(v time.Time) *DescribeAgentO
 // SetName sets the Name field's value.
 func (s *DescribeAgentOutput) SetName(v string) *DescribeAgentOutput {
 	s.Name = &v
+	return s
+}
+
+// SetPrivateLinkConfig sets the PrivateLinkConfig field's value.
+func (s *DescribeAgentOutput) SetPrivateLinkConfig(v *PrivateLinkConfig) *DescribeAgentOutput {
+	s.PrivateLinkConfig = v
 	return s
 }
 
@@ -3711,8 +3775,8 @@ type DescribeLocationS3Output struct {
 	// The Amazon Resource Name (ARN) of the AWS Identity and Access Management
 	// (IAM) role that is used to access an Amazon S3 bucket.
 	//
-	// For detailed information about using such a role, see "https://docs.aws.amazon.com/datasync/latest/userguide/working-with-locations.html#create-s3-location"
-	// (Creating a Location for Amazon S3) in the AWS DataSync User Guide.
+	// For detailed information about using such a role, see Creating a Location
+	// for Amazon S3 in the AWS DataSync User Guide.
 	S3Config *S3Config `type:"structure"`
 }
 
@@ -3810,9 +3874,10 @@ type DescribeTaskExecutionOutput struct {
 	// and finding the delta that needs to be transferred.
 	EstimatedFilesToTransfer *int64 `type:"long"`
 
-	// Specifies that the task execution excludes files from the transfer based
-	// on the specified pattern in the filter. Transfers all files in the task’s
-	// subdirectory, except files that match the filter that is set.
+	// A list of filter rules that determines which files to exclude from a task.
+	// The list should contain a single filter string that consists of the patterns
+	// to exclude. The patterns are delimited by "|" (that is, a pipe), for example:
+	// "/folder1|/folder2"
 	Excludes []*FilterRule `type:"list"`
 
 	// The actual number of files that was transferred over the network. This value
@@ -3827,9 +3892,10 @@ type DescribeTaskExecutionOutput struct {
 	// execution.
 	FilesTransferred *int64 `type:"long"`
 
-	// Specifies that the task execution excludes files in the transfer based on
-	// the specified pattern in the filter. When multiple include filters are set,
-	// they are interpreted as an OR.
+	// A list of filter rules that determines which files to include when running
+	// a task. The list should contain a single filter string that consists of the
+	// patterns to include. The patterns are delimited by "|" (that is, a pipe),
+	// for example: "/folder1|/folder2"
 	Includes []*FilterRule `type:"list"`
 
 	// Represents the options that are available to control the behavior of a StartTaskExecution
@@ -3851,8 +3917,8 @@ type DescribeTaskExecutionOutput struct {
 
 	// The status of the task execution.
 	//
-	// For detailed information about task execution statuses, see "https://docs.aws.amazon.com/datasync/latest/userguide/working-with-tasks.html#understand-task-creation-statuses"
-	// (Understanding Task Statuses).
+	// For detailed information about task execution statuses, see Understanding
+	// Task Statuses in the AWS DataSync User Guide.
 	Status *string `type:"string" enum:"TaskExecutionStatus"`
 
 	// The Amazon Resource Name (ARN) of the task execution that was described.
@@ -3992,8 +4058,8 @@ type DescribeTaskOutput struct {
 	// The Amazon Resource Name (ARN) of the Amazon CloudWatch log group that was
 	// used to monitor and log events in the task.
 	//
-	// For more information on these groups, see "https://docs.aws.amazon.com/AmazonCloudWatch/latest/logs/Working-with-log-groups-and-streams.html"
-	// (Working with Log Groups and Log Streams) in the Amazon CloudWatch UserGuide.
+	// For more information on these groups, see Working with Log Groups and Log
+	// Streams in the Amazon CloudWatch User Guide.
 	CloudWatchLogGroupArn *string `type:"string"`
 
 	// The time that the task was created.
@@ -4005,6 +4071,10 @@ type DescribeTaskOutput struct {
 	// The Amazon Resource Name (ARN) of the AWS storage resource's location.
 	DestinationLocationArn *string `type:"string"`
 
+	// The Amazon Resource Name (ARN) of the destination ENIs (Elastic Network Interface)
+	// that was created for your subnet.
+	DestinationNetworkInterfaceArns []*string `type:"list"`
+
 	// Errors that AWS DataSync encountered during execution of the task. You can
 	// use this error code to help troubleshoot issues.
 	ErrorCode *string `type:"string"`
@@ -4013,9 +4083,10 @@ type DescribeTaskOutput struct {
 	// You can use this information to help troubleshoot issues.
 	ErrorDetail *string `type:"string"`
 
-	// Specifies that the task excludes files in the transfer based on the specified
-	// pattern in the filter. Transfers all files in the task’s subdirectory, except
-	// files that match the filter that is set.
+	// A list of filter rules that determines which files to exclude from a task.
+	// The list should contain a single filter string that consists of the patterns
+	// to exclude. The patterns are delimited by "|" (that is, a pipe), for example:
+	// "/folder1|/folder2"
 	Excludes []*FilterRule `type:"list"`
 
 	// The name of the task that was described.
@@ -4033,10 +4104,14 @@ type DescribeTaskOutput struct {
 	// The Amazon Resource Name (ARN) of the source file system's location.
 	SourceLocationArn *string `type:"string"`
 
+	// The Amazon Resource Name (ARN) of the source ENIs (Elastic Network Interface)
+	// that was created for your subnet.
+	SourceNetworkInterfaceArns []*string `type:"list"`
+
 	// The status of the task that was described.
 	//
-	// For detailed information about task execution statuses, see "https://docs.aws.amazon.com/datasync/latest/userguide/working-with-tasks.html#understand-task-creation-statuses"
-	// (Understanding Task Statuses).
+	// For detailed information about task execution statuses, see Understanding
+	// Task Statuses in the AWS DataSync User Guide.
 	Status *string `type:"string" enum:"TaskStatus"`
 
 	// The Amazon Resource Name (ARN) of the task that was described.
@@ -4077,6 +4152,12 @@ func (s *DescribeTaskOutput) SetDestinationLocationArn(v string) *DescribeTaskOu
 	return s
 }
 
+// SetDestinationNetworkInterfaceArns sets the DestinationNetworkInterfaceArns field's value.
+func (s *DescribeTaskOutput) SetDestinationNetworkInterfaceArns(v []*string) *DescribeTaskOutput {
+	s.DestinationNetworkInterfaceArns = v
+	return s
+}
+
 // SetErrorCode sets the ErrorCode field's value.
 func (s *DescribeTaskOutput) SetErrorCode(v string) *DescribeTaskOutput {
 	s.ErrorCode = &v
@@ -4110,6 +4191,12 @@ func (s *DescribeTaskOutput) SetOptions(v *Options) *DescribeTaskOutput {
 // SetSourceLocationArn sets the SourceLocationArn field's value.
 func (s *DescribeTaskOutput) SetSourceLocationArn(v string) *DescribeTaskOutput {
 	s.SourceLocationArn = &v
+	return s
+}
+
+// SetSourceNetworkInterfaceArns sets the SourceNetworkInterfaceArns field's value.
+func (s *DescribeTaskOutput) SetSourceNetworkInterfaceArns(v []*string) *DescribeTaskOutput {
+	s.SourceNetworkInterfaceArns = v
 	return s
 }
 
@@ -4186,17 +4273,17 @@ func (s *Ec2Config) SetSubnetArn(v string) *Ec2Config {
 	return s
 }
 
-// A pattern that determines which files to include in the transfer or which
-// files to exclude.
+// Specifies which files, folders and objects to include or exclude when transferring
+// files from source to destination.
 type FilterRule struct {
 	_ struct{} `type:"structure"`
 
-	// Specifies the type of filter rule pattern to apply. DataSync only supports
-	// the SIMPLE_PATTERN rule type.
+	// The type of filter rule to apply. AWS DataSync only supports the SIMPLE_PATTERN
+	// rule type.
 	FilterType *string `type:"string" enum:"FilterType"`
 
-	// A pattern that defines the filter. The filter might include or exclude files
-	// is a transfer.
+	// A single filter string that consists of the patterns to include or exclude.
+	// The patterns are delimited by "|" (that is, a pipe), for example: /folder1|/folder2
 	Value *string `type:"string"`
 }
 
@@ -4909,11 +4996,71 @@ func (s *Options) SetVerifyMode(v string) *Options {
 	return s
 }
 
+// The VPC endpoint, subnet and security group that an agent uses to access
+// IP addresses in a VPC (Virtual Private Cloud).
+type PrivateLinkConfig struct {
+	_ struct{} `type:"structure"`
+
+	// The private endpoint that is configured for an agent that has access to IP
+	// addresses in a PrivateLink (https://docs.aws.amazon.com/vpc/latest/userguide/endpoint-service.html).
+	// An agent that is configured with this endpoint will not be accessible over
+	// the public Internet.
+	PrivateLinkEndpoint *string `min:"7" type:"string"`
+
+	// The Amazon Resource Names (ARNs) of the security groups that are configured
+	// for the EC2 resource that hosts an agent activated in a VPC or an agent that
+	// has access to a VPC endpoint.
+	SecurityGroupArns []*string `min:"1" type:"list"`
+
+	// The Amazon Resource Names (ARNs) of the subnets that are configured for an
+	// agent activated in a VPC or an agent that has access to a VPC endpoint.
+	SubnetArns []*string `min:"1" type:"list"`
+
+	// The ID of the VPC endpoint that is configured for an agent. An agent that
+	// is configured with a VPC endpoint will not be accessible over the public
+	// Internet.
+	VpcEndpointId *string `type:"string"`
+}
+
+// String returns the string representation
+func (s PrivateLinkConfig) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s PrivateLinkConfig) GoString() string {
+	return s.String()
+}
+
+// SetPrivateLinkEndpoint sets the PrivateLinkEndpoint field's value.
+func (s *PrivateLinkConfig) SetPrivateLinkEndpoint(v string) *PrivateLinkConfig {
+	s.PrivateLinkEndpoint = &v
+	return s
+}
+
+// SetSecurityGroupArns sets the SecurityGroupArns field's value.
+func (s *PrivateLinkConfig) SetSecurityGroupArns(v []*string) *PrivateLinkConfig {
+	s.SecurityGroupArns = v
+	return s
+}
+
+// SetSubnetArns sets the SubnetArns field's value.
+func (s *PrivateLinkConfig) SetSubnetArns(v []*string) *PrivateLinkConfig {
+	s.SubnetArns = v
+	return s
+}
+
+// SetVpcEndpointId sets the VpcEndpointId field's value.
+func (s *PrivateLinkConfig) SetVpcEndpointId(v string) *PrivateLinkConfig {
+	s.VpcEndpointId = &v
+	return s
+}
+
 // The Amazon Resource Name (ARN) of the AWS Identity and Access Management
 // (IAM) role that is used to access an Amazon S3 bucket.
 //
-// For detailed information about using such a role, see "https://docs.aws.amazon.com/datasync/latest/userguide/working-with-locations.html#create-s3-location"
-// (Creating a Location for Amazon S3) in the AWS DataSync User Guide.
+// For detailed information about using such a role, see Creating a Location
+// for Amazon S3 in the AWS DataSync User Guide.
 type S3Config struct {
 	_ struct{} `type:"structure"`
 
@@ -4957,9 +5104,10 @@ func (s *S3Config) SetBucketAccessRoleArn(v string) *S3Config {
 type StartTaskExecutionInput struct {
 	_ struct{} `type:"structure"`
 
-	// A filter that determines which files to include in the transfer during a
-	// task execution based on the specified pattern in the filter. When multiple
-	// include filters are set, they are interpreted as an OR.
+	// A list of filter rules that determines which files to include when running
+	// a task. The pattern should contain a single filter string that consists of
+	// the patterns to include. The patterns are delimited by "|" (that is, a pipe).
+	// For example: "/folder1|/folder2"
 	Includes []*FilterRule `type:"list"`
 
 	// Represents the options that are available to control the behavior of a StartTaskExecution
@@ -5496,9 +5644,10 @@ type UpdateTaskInput struct {
 	// The Amazon Resource Name (ARN) of the resource name of the CloudWatch LogGroup.
 	CloudWatchLogGroupArn *string `type:"string"`
 
-	// A filter that determines which files to exclude from a task based on the
-	// specified pattern in the filter. Transfers all files in the task’s subdirectory,
-	// except files that match the filter that is set.
+	// A list of filter rules that determines which files to exclude from a task.
+	// The list should contain a single filter string that consists of the patterns
+	// to exclude. The patterns are delimited by "|" (that is, a pipe), for example:
+	// "/folder1|/folder2"
 	Excludes []*FilterRule `type:"list"`
 
 	// The name of the task to update.
@@ -5610,6 +5759,14 @@ const (
 
 	// AtimeBestEffort is a Atime enum value
 	AtimeBestEffort = "BEST_EFFORT"
+)
+
+const (
+	// EndpointTypePublic is a EndpointType enum value
+	EndpointTypePublic = "PUBLIC"
+
+	// EndpointTypePrivateLink is a EndpointType enum value
+	EndpointTypePrivateLink = "PRIVATE_LINK"
 )
 
 const (

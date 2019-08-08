@@ -33,7 +33,7 @@ func resourceAwsEksCluster() *schema.Resource {
 		},
 
 		Timeouts: &schema.ResourceTimeout{
-			Create: schema.DefaultTimeout(15 * time.Minute),
+			Create: schema.DefaultTimeout(30 * time.Minute),
 			Update: schema.DefaultTimeout(60 * time.Minute),
 			Delete: schema.DefaultTimeout(15 * time.Minute),
 		},
@@ -79,6 +79,10 @@ func resourceAwsEksCluster() *schema.Resource {
 				Required:     true,
 				ForceNew:     true,
 				ValidateFunc: validateArn,
+			},
+			"status": {
+				Type:     schema.TypeString,
+				Computed: true,
 			},
 			"version": {
 				Type:     schema.TypeString,
@@ -230,6 +234,7 @@ func resourceAwsEksClusterRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("name", cluster.Name)
 	d.Set("platform_version", cluster.PlatformVersion)
 	d.Set("role_arn", cluster.RoleArn)
+	d.Set("status", cluster.Status)
 	d.Set("version", cluster.Version)
 	if err := d.Set("enabled_cluster_log_types", flattenEksEnabledLogTypes(cluster.Logging)); err != nil {
 		return fmt.Errorf("error setting enabled_cluster_log_types: %s", err)

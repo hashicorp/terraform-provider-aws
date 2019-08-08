@@ -41,6 +41,11 @@ func TestAccAWSWafRegionalIPSet_basic(t *testing.T) {
 						regexp.MustCompile(`^arn:[\w-]+:waf-regional:[^:]+:\d{12}:ipset/.+$`)),
 				),
 			},
+			{
+				ResourceName:      "aws_wafregional_ipset.ipset",
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
 		},
 	})
 }
@@ -99,6 +104,11 @@ func TestAccAWSWafRegionalIPSet_changeNameForceNew(t *testing.T) {
 						"aws_wafregional_ipset.ipset", "ip_set_descriptor.4037960608.value", "192.0.7.0/24"),
 				),
 			},
+			{
+				ResourceName:      "aws_wafregional_ipset.ipset",
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
 		},
 	})
 }
@@ -140,6 +150,11 @@ func TestAccAWSWafRegionalIPSet_changeDescriptors(t *testing.T) {
 						"aws_wafregional_ipset.ipset", "ip_set_descriptor.115741513.value", "192.0.8.0/24"),
 				),
 			},
+			{
+				ResourceName:      "aws_wafregional_ipset.ipset",
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
 		},
 	})
 }
@@ -180,6 +195,11 @@ func TestAccAWSWafRegionalIPSet_IpSetDescriptors_1000UpdateLimit(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "ip_set_descriptor.#", "2048"),
 				),
 			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
 		},
 	})
 }
@@ -202,6 +222,11 @@ func TestAccAWSWafRegionalIPSet_noDescriptors(t *testing.T) {
 					resource.TestCheckResourceAttr(
 						"aws_wafregional_ipset.ipset", "ip_set_descriptor.#", "0"),
 				),
+			},
+			{
+				ResourceName:      "aws_wafregional_ipset.ipset",
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})
@@ -419,42 +444,53 @@ func testAccAWSWafRegionalIPSetConfig(name string) string {
 	return fmt.Sprintf(`
 resource "aws_wafregional_ipset" "ipset" {
   name = "%s"
+
   ip_set_descriptor {
-    type = "IPV4"
+    type  = "IPV4"
     value = "192.0.7.0/24"
   }
-}`, name)
+}
+`, name)
 }
 
 func testAccAWSWafRegionalIPSetConfigChangeName(name string) string {
-	return fmt.Sprintf(`resource "aws_wafregional_ipset" "ipset" {
+	return fmt.Sprintf(`
+resource "aws_wafregional_ipset" "ipset" {
   name = "%s"
+
   ip_set_descriptor {
-    type = "IPV4"
+    type  = "IPV4"
     value = "192.0.7.0/24"
   }
-}`, name)
+}
+`, name)
 }
 
 func testAccAWSWafRegionalIPSetConfigChangeIPSetDescriptors(name string) string {
-	return fmt.Sprintf(`resource "aws_wafregional_ipset" "ipset" {
+	return fmt.Sprintf(`
+resource "aws_wafregional_ipset" "ipset" {
   name = "%s"
+
   ip_set_descriptor {
-    type = "IPV4"
+    type  = "IPV4"
     value = "192.0.8.0/24"
   }
-}`, name)
+}
+`, name)
 }
 
 func testAccAWSWafRegionalIPSetConfig_IpSetDescriptors(name, ipSetDescriptors string) string {
-	return fmt.Sprintf(`resource "aws_wafregional_ipset" "ipset" {
+	return fmt.Sprintf(`
+resource "aws_wafregional_ipset" "ipset" {
   name = "%s"
 %s
-}`, name, ipSetDescriptors)
+}
+`, name, ipSetDescriptors)
 }
 
 func testAccAWSWafRegionalIPSetConfig_noDescriptors(name string) string {
-	return fmt.Sprintf(`resource "aws_wafregional_ipset" "ipset" {
+	return fmt.Sprintf(`
+resource "aws_wafregional_ipset" "ipset" {
    name = "%s"
  }`, name)
 }

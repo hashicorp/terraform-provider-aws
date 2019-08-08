@@ -1,23 +1,18 @@
 # Contributing to Terraform - AWS Provider
 
-**First:** if you're unsure or afraid of _anything_, just ask
-or submit the issue or pull request anyways. You won't be yelled at for
-giving your best effort. The worst that can happen is that you'll be
-politely asked to change something. We appreciate any sort of contributions,
-and don't want a wall of rules to get in the way of that.
+**First:** if you're unsure or afraid of _anything_, ask for help! You can
+submit a work in progress (WIP) pull request, or file an issue with the parts
+you know. We'll do our best to guide you in the right direction, and let you
+know if there are guidelines we will need to follow. We want people to be able
+to participate without fear of doing the wrong thing.
 
-However, for those individuals who want a bit more guidance on the
-best way to contribute to the project, read on. This document will cover
-what we're looking for. By addressing all the points we're looking for,
-it raises the chances we can quickly merge or address your contributions.
-
-Specifically, we have provided checklists below for each type of issue and pull
-request that can happen on the project. These checklists represent everything
-we need to be able to review and respond quickly.
+Below are our expectations for contributors. Following these guidelines gives us
+the best opportunity to work with you, by making sure we have the things we need
+in order to make it happen. Doing your best to follow it will speed up our
+ability to merge PRs and respond to issues.
 
 <!-- TOC depthFrom:2 -->
 
-- [HashiCorp vs. Community Providers](#hashicorp-vs-community-providers)
 - [Issues](#issues)
     - [Issue Reporting Checklists](#issue-reporting-checklists)
         - [Bug Reports](#bug-reports)
@@ -29,10 +24,12 @@ we need to be able to review and respond quickly.
     - [Checklists for Contribution](#checklists-for-contribution)
         - [Documentation Update](#documentation-update)
         - [Enhancement/Bugfix to a Resource](#enhancementbugfix-to-a-resource)
+        - [Adding Resource Import Support](#adding-resource-import-support)
         - [New Resource](#new-resource)
         - [New Service](#new-service)
         - [New Region](#new-region)
     - [Common Review Items](#common-review-items)
+        - [Go Coding Style](#go-coding-style)
         - [Resource Contribution Guidelines](#resource-contribution-guidelines)
         - [Acceptance Testing Guidelines](#acceptance-testing-guidelines)
     - [Writing Acceptance Tests](#writing-acceptance-tests)
@@ -43,39 +40,6 @@ we need to be able to review and respond quickly.
 
 <!-- /TOC -->
 
-## HashiCorp vs. Community Providers
-
-We separate providers out into what we call "HashiCorp Providers" and
-"Community Providers".
-
-HashiCorp providers are providers that we'll dedicate full time resources to
-improving, supporting the latest features, and fixing bugs. These are providers
-we understand deeply and are confident we have the resources to manage
-ourselves.
-
-Community providers are providers where we depend on the community to
-contribute fixes and enhancements to improve. HashiCorp will run automated
-tests and ensure these providers continue to work, but will not dedicate full
-time resources to add new features to these providers. These providers are
-available in official Terraform releases, but the functionality is primarily
-contributed.
-
-The current list of HashiCorp Providers is as follows:
-
- * `aws`
- * `azurerm`
- * `google`
- * `opc`
-
-Our testing standards are the same for both HashiCorp and Community providers,
-and HashiCorp runs full acceptance test suites for every provider nightly to
-ensure Terraform remains stable.
-
-We make the distinction between these two types of providers to help
-highlight the vast amounts of community effort that goes in to making Terraform
-great, and to help contributors better understand the role HashiCorp employees
-play in the various areas of the code base.
-
 ## Issues
 
 ### Issue Reporting Checklists
@@ -84,15 +48,15 @@ We welcome issues of all kinds including feature requests, bug reports, and
 general questions. Below you'll find checklists with guidelines for well-formed
 issues of each type.
 
-#### Bug Reports
+#### [Bug Reports](https://github.com/terraform-providers/terraform-provider-aws/issues/new?template=Bug_Report.md)
 
  - [ ] __Test against latest release__: Make sure you test against the latest
    released version. It is possible we already fixed the bug you're experiencing.
 
  - [ ] __Search for possible duplicate reports__: It's helpful to keep bug
    reports consolidated to one thread, so do a quick search on existing bug
-   reports to check if anybody else has reported the same thing. You can scope
-   searches by the label "bug" to help narrow things down.
+   reports to check if anybody else has reported the same thing. You can [scope
+      searches by the label "bug"](https://github.com/terraform-providers/terraform-provider-aws/issues?q=is%3Aopen+is%3Aissue+label%3Abug) to help narrow things down.
 
  - [ ] __Include steps to reproduce__: Provide steps to reproduce the issue,
    along with your `.tf` files, with secrets removed, so we can try to
@@ -102,24 +66,24 @@ issues of each type.
    create a [gist](https://gist.github.com) of the *entire* generated crash log
    for us to look at. Double check no sensitive items were in the log.
 
-#### Feature Requests
+#### [Feature Requests](https://github.com/terraform-providers/terraform-provider-aws/issues/new?labels=enhancement&template=Feature_Request.md)
 
  - [ ] __Search for possible duplicate requests__: It's helpful to keep requests
    consolidated to one thread, so do a quick search on existing requests to
-   check if anybody else has reported the same thing. You can scope searches by
-   the label "enhancement" to help narrow things down.
+   check if anybody else has reported the same thing. You can [scope searches by
+      the label "enhancement"](https://github.com/terraform-providers/terraform-provider-aws/issues?q=is%3Aopen+is%3Aissue+label%3Aenhancement) to help narrow things down.
 
  - [ ] __Include a use case description__: In addition to describing the
    behavior of the feature you'd like to see added, it's helpful to also lay
    out the reason why the feature would be important and how it would benefit
    Terraform users.
 
-#### Questions
+#### [Questions](https://github.com/terraform-providers/terraform-provider-aws/issues/new?labels=question&template=Question.md)
 
  - [ ] __Search for answers in Terraform documentation__: We're happy to answer
    questions in GitHub Issues, but it helps reduce issue churn and maintainer
-   workload if you work to find answers to common questions in the
-   documentation. Often times Question issues result in documentation updates
+   workload if you work to [find answers to common questions in the
+   documentation](https://www.terraform.io/docs/providers/aws/index.html). Oftentimes Question issues result in documentation updates
    to help future users, so if you don't find an answer, you can give us
    pointers for where you'd expect to see it in the docs.
 
@@ -130,56 +94,60 @@ issues of each type.
 2. The issue is verified and categorized by a Terraform collaborator.
    Categorization is done via GitHub labels. We generally use a two-label
    system of (1) issue/PR type, and (2) section of the codebase. Type is
-   usually "bug", "enhancement", "documentation", or "question", and section
-   can be any of the providers or provisioners or "core".
+   one of "bug", "enhancement", "documentation", or "question", and section
+   is usually the AWS service name.
 
-3. Unless it is critical, the issue is left for a period of time (sometimes
-   many weeks), giving outside contributors a chance to address the issue.
+3. An initial triage process determines whether the issue is critical and must
+    be addressed immediately, or can be left open for community discussion.
 
-4. The issue is addressed in a pull request or commit. The issue will be
+4. The issue is addressed in a pull request or commit. The issue number will be
    referenced in the commit message so that the code that fixes it is clearly
    linked.
 
-5. The issue is closed. Sometimes, valid issues will be closed to keep
-   the issue tracker clean. The issue is still indexed and available for
-   future viewers, or can be re-opened if necessary.
+5. The issue is closed. Sometimes, valid issues will be closed because they are
+   tracked elsewhere or non-actionable. The issue is still indexed and
+   available for future viewers, or can be re-opened if necessary.
 
 ## Pull Requests
 
-Thank you for contributing! Here you'll find information on what to include in
-your Pull Request to ensure it is accepted quickly.
+We appreciate direct contributions to the provider codebase. Here's what to
+expect:
 
- * For pull requests that follow the guidelines, we expect to be able to review
-   and merge very quickly.
- * Pull requests that don't follow the guidelines will be annotated with what
-   they're missing. A community or core team member may be able to swing around
-   and help finish up the work, but these PRs will generally hang out much
-   longer until they can be completed and merged.
+ * For pull requests that follow the guidelines, we will proceed to reviewing
+  and merging, following the provider team's review schedule. There may be some
+  internal or community discussion needed before we can complete this.
+ * Pull requests that don't follow the guidelines will be commented with what
+  they're missing. The person who submits the pull request or another community
+  member will need to address those requests before they move forward.
 
 ### Pull Request Lifecycle
 
-1. You are welcome to submit your pull request for commentary or review before
-   it is fully completed. Please prefix the title of your pull request with
-   "[WIP]" to indicate this. It's also a good idea to include specific
-   questions or items you'd like feedback on.
+1. [Fork the GitHub repository](https://help.github.com/en/articles/fork-a-repo),
+   modify the code, and [create a pull request](https://help.github.com/en/articles/creating-a-pull-request-from-a-fork).
+   You are welcome to submit your pull request for commentary or review before
+   it is fully completed by creating a [draft pull request](https://help.github.com/en/articles/about-pull-requests#draft-pull-requests)
+   or adding `[WIP]` to the beginning of the pull request title.
+   Please include specific questions or items you'd like feedback on.
 
-2. Once you believe your pull request is ready to be merged, you can remove any
-   "[WIP]" prefix from the title and a core team member will review. Follow
-   [the checklists below](#checklists-for-contribution) to help ensure that
-   your contribution will be merged quickly.
+1. Once you believe your pull request is ready to be reviewed, ensure the
+   pull request is not a draft pull request by [marking it ready for review](https://help.github.com/en/articles/changing-the-stage-of-a-pull-request)
+   or removing `[WIP]` from the pull request title if necessary, and a
+   maintainer will review it. Follow [the checklists below](#checklists-for-contribution)
+   to help ensure that your contribution can be easily reviewed and potentially
+   merged.
 
-3. One of Terraform's core team members will look over your contribution and
-   either provide comments letting you know if there is anything left to do. We
-   do our best to provide feedback in a timely manner, but it may take some
-   time for us to respond.
+1. One of Terraform's provider team members will look over your contribution and
+   either approve it or provide comments letting you know if there is anything
+   left to do. We do our best to keep up with the volume of PRs waiting for
+   review, but it may take some time depending on the complexity of the work.
 
-4. Once all outstanding comments and checklist items have been addressed, your
+1. Once all outstanding comments and checklist items have been addressed, your
    contribution will be merged! Merged PRs will be included in the next
-   Terraform release. The core team takes care of updating the CHANGELOG as
+   Terraform release. The provider team takes care of updating the CHANGELOG as
    they merge.
 
-5. In rare cases, we might decide that a PR should be closed. We'll make sure
-   to provide clear reasoning when this happens.
+1. In some cases, we might decide that a PR should be closed without merging.
+   We'll make sure to provide clear reasoning when this happens.
 
 ### Checklists for Contribution
 
@@ -189,9 +157,11 @@ each type of contribution.
 
 #### Documentation Update
 
-The [Terraform AWS Provider's website source][website] is in this repository along with the code and testing. Below are some common items that will get flagged during documentation reviews:
+The [Terraform AWS Provider's website source][website] is in this repository
+along with the code and tests. Below are some common items that will get
+flagged during documentation reviews:
 
-- [ ] __Reasoning for Change__: Most documentation updates should include an explanation for why the update is needed.
+- [ ] __Reasoning for Change__: Documentation updates should include an explanation for why the update is needed.
 - [ ] __Prefer AWS Documentation__: Documentation about AWS service features and valid argument values that are likely to update over time should link to AWS service user guides and API references where possible.
 - [ ] __Large Example Configurations__: Example Terraform configuration that includes multiple resource definitions should be added to the repository `examples` directory instead of an individual resource documentation page. Each directory under `examples` should be self-contained to call `terraform apply` without special configuration.
 - [ ] __Terraform Configuration Language Features__: Individual resource documentation pages and examples should refrain from highlighting particular Terraform configuration language syntax workarounds or features such as `variable`, `local`, `count`, and built-in functions.
@@ -202,7 +172,9 @@ Working on existing resources is a great way to get started as a Terraform
 contributor because you can work within existing code and tests to get a feel
 for what to do.
 
-In addition to the below checklist, please see the [Common Review Items](#common-review-items] sections for more specific coding and testing guidelines.
+In addition to the below checklist, please see the [Common Review
+Items](#common-review-items) sections for more specific coding and testing
+guidelines.
 
  - [ ] __Acceptance test coverage of new behavior__: Existing resources each
    have a set of [acceptance tests][acctests] covering their functionality.
@@ -210,12 +182,13 @@ In addition to the below checklist, please see the [Common Review Items](#common
    adding something or fixing a bug, the idea is to have an acceptance test that
    fails if your code were to be removed. Sometimes it is sufficient to
    "enhance" an existing test by adding an assertion or tweaking the config
-   that is used, but often a new test is better to add. You can copy/paste an
+   that is used, but it's often better to add a new test. You can copy/paste an
    existing test and follow the conventions you see there, modifying the test
    to exercise the behavior of your code.
  - [ ] __Documentation updates__: If your code makes any changes that need to
-   be documented, you should include those doc updates in the same PR. The
-   [Terraform website][website] source is in this repo and includes
+   be documented, you should include those doc updates in the same PR. This
+   includes things like new resource attributes or changes in default values.
+   The [Terraform website][website] source is in this repo and includes
    instructions for getting a local copy of the site up and running if you'd
    like to preview your changes.
  - [ ] __Well-formed Code__: Do your best to follow existing conventions you
@@ -224,8 +197,20 @@ In addition to the below checklist, please see the [Common Review Items](#common
    The PR reviewers can help out on this front, and may provide comments with
    suggestions on how to improve the code.
  - [ ] __Vendor additions__: Create a separate PR if you are updating the vendor
-   folder. This is to avoid conflicts as the vendor versions tend to be fast
-   moving targets.
+   folder. This is to avoid conflicts as the vendor versions tend to be fast-
+   moving targets. We will plan to merge the PR with this change first.
+
+#### Adding Resource Import Support
+
+Adding import support for Terraform resources will allow existing infrastructure to be managed within Terraform. This type of enhancement generally requires a small to moderate amount of code changes.
+
+Comprehensive code examples and information about resource import support can be found in the [Extending Terraform documentation](https://www.terraform.io/docs/extend/resources/import.html).
+
+In addition to the below checklist and the items noted in the Extending Terraform documentation, please see the [Common Review Items](#common-review-items) sections for more specific coding and testing guidelines.
+
+- [ ] _Resource Code Implementation_: In the resource code (e.g. `aws/resource_aws_service_thing.go`), implementation of `Importer` `State` function
+- [ ] _Resource Acceptance Testing Implementation_: In the resource acceptance testing (e.g. `aws/resource_aws_service_thing_test.go`), implementation of `TestStep`s with `ImportState: true`
+- [ ] _Resource Documentation Implementation_: In the resource documentation (e.g. `website/docs/r/service_thing.html.markdown`), addition of `Import` documentation section at the bottom of the page
 
 #### New Resource
 
@@ -233,18 +218,33 @@ Implementing a new resource is a good way to learn more about how Terraform
 interacts with upstream APIs. There are plenty of examples to draw from in the
 existing resources, but you still get to implement something completely new.
 
-In addition to the below checklist, please see the [Common Review Items](#common-review-items] sections for more specific coding and testing guidelines.
+In addition to the below checklist, please see the [Common Review
+Items](#common-review-items) sections for more specific coding and testing
+guidelines.
 
- - [ ] __Minimal LOC__: It can be inefficient for both the reviewer
-   and author to go through long feedback cycles on a big PR with many
-   resources. We therefore encourage you to only submit **1 resource at a time**.
+ - [ ] __Minimal LOC__: It's difficult for both the reviewer and author to go
+   through long feedback cycles on a big PR with many resources. We ask you to
+   only submit **1 resource at a time**.
  - [ ] __Acceptance tests__: New resources should include acceptance tests
    covering their behavior. See [Writing Acceptance
    Tests](#writing-acceptance-tests) below for a detailed guide on how to
    approach these.
- - [ ] __Naming__: Resources should be named `aws_<service>_<name>` where
-   `service` is the AWS short service name and `name` is a short, preferably
-   single word, description of the resource. Use `_` as a separator.
+ - [ ] __Resource Naming__: Resources should be named `aws_<service>_<name>`,
+   using underscores (`_`) as the separator. Resources are namespaced with the
+   service name to allow easier searching of related resources, to align
+   the resource naming with the service for [Customizing Endpoints](https://www.terraform.io/docs/providers/aws/guides/custom-service-endpoints.html#available-endpoint-customizations),
+   and to prevent future conflicts with new AWS services/resources.
+   For reference:
+
+   - `service` is the AWS short service name that matches the entry in
+     `endpointServiceNames` (created via the [New Service](#new-service)
+     section)
+   - `name` represents the conceptual infrastructure represented by the
+     create, read, update, and delete methods of the service API. It should
+     be a singular noun. For example, in an API that has methods such as
+     `CreateThing`, `DeleteThing`, `DescribeThing`, and `ModifyThing` the name
+     of the resource would end in `_thing`.
+
  - [ ] __Arguments_and_Attributes__: The HCL for arguments and attributes should
    mimic the types and structs presented by the AWS API. API arguments should be
    converted from `CamelCase` to `camel_case`.
@@ -260,8 +260,8 @@ In addition to the below checklist, please see the [Common Review Items](#common
    The PR reviewers can help out on this front, and may provide comments with
    suggestions on how to improve the code.
  - [ ] __Vendor updates__: Create a separate PR if you are adding to the vendor
-   folder. This is to avoid conflicts as the vendor versions tend to be fast
-   moving targets.
+   folder. This is to avoid conflicts as the vendor versions tend to be fast-
+   moving targets. We will plan to merge the PR with this change first.
 
 #### New Service
 
@@ -269,9 +269,9 @@ Implementing a new AWS service gives Terraform the ability to manage resources i
 a whole new API. It's a larger undertaking, but brings major new functionality
 into Terraform.
 
-- [ ] __Service Client__: Before new resources are submitted, we encourage
+- [ ] __Service Client__: Before new resources are submitted, we request
   a separate pull request containing just the new AWS Go SDK service client.
-  Doing so will pull in the AWS Go SDK service code into the project at the
+  Doing so will pull the AWS Go SDK service code into the project at the
   current version. Since the AWS Go SDK is updated frequently, these pull
   requests can easily have merge conflicts or be out of date. The maintainers
   prioritize reviewing and merging these quickly to prevent those situations.
@@ -298,10 +298,10 @@ into Terraform.
   go mod vendor
   ```
 
-- [ ] __Initial Resource__: Some services may be big and it can be
-  inefficient for both reviewer & author to go through long feedback cycles
+- [ ] __Initial Resource__: Some services can be big and it can be
+  difficult for both reviewer & author to go through long feedback cycles
   on a big PR with many resources. Often feedback items in one resource
-  will also need to be applied in other resources. We encourage you to submit
+  will also need to be applied in other resources. We prefer you to submit
   the necessary minimum in a single PR, ideally **just the first resource**
   of the service.
 
@@ -319,11 +319,24 @@ manually sourced values from documentation.
  - [ ] Check [CloudTrail Supported Regions docs](https://docs.aws.amazon.com/awscloudtrail/latest/userguide/cloudtrail-supported-regions.html) and add AWS Account ID if available to `aws/data_source_aws_cloudtrail_service_account.go`
  - [ ] Check [Elastic Load Balancing Access Logs docs](https://docs.aws.amazon.com/elasticloadbalancing/latest/classic/enable-access-logs.html#attach-bucket-policy) and add Elastic Load Balancing Account ID if available to `aws/data_source_aws_elb_service_account.go`
  - [ ] Check [Redshift Database Audit Logging docs](https://docs.aws.amazon.com/redshift/latest/mgmt/db-auditing.html) and add AWS Account ID if available to `aws/data_source_aws_redshift_service_account.go`
- - [ ] Check [Regions and Endpoints Elastic Beanstalk](https://docs.aws.amazon.com/general/latest/gr/rande.html#elasticbeanstalk_region) and add Route53 Hosted Zone ID if available to `aws/data_source_aws_elastic_beanstalk_hosted_zone.go`]
+ - [ ] Check [Regions and Endpoints Elastic Beanstalk](https://docs.aws.amazon.com/general/latest/gr/rande.html#elasticbeanstalk_region) and add Route53 Hosted Zone ID if available to `aws/data_source_aws_elastic_beanstalk_hosted_zone.go`
 
 ### Common Review Items
 
-The Terraform AWS Provider follows common practices to ensure consistent and reliable implementations across all resources in the project. While there may be older resource and testing code that predates these guidelines, new submissions are generally expected to adhere to these items to maintain Terraform Provider quality. For any guidelines listed, contributors are encouraged to ask any questions and community reviewers are encouraged to provide review suggestions based on these guidelines to speed up the review and merge process.
+The Terraform AWS Provider follows common practices to ensure consistent and
+reliable implementations across all resources in the project. While there may be
+older resource and testing code that predates these guidelines, new submissions
+are generally expected to adhere to these items to maintain Terraform Provider
+quality. For any guidelines listed, contributors are encouraged to ask any
+questions and community reviewers are encouraged to provide review suggestions
+based on these guidelines to speed up the review and merge process.
+
+#### Go Coding Style
+
+The following Go language resources provide common coding preferences that may be referenced during review, if not automatically handled by the project's linting tools.
+
+- [Effective Go](https://golang.org/doc/effective_go.html)
+- [Go Code Review Comments](https://github.com/golang/go/wiki/CodeReviewComments)
 
 #### Resource Contribution Guidelines
 
@@ -371,6 +384,7 @@ The following resource checks need to be addressed before your contribution can 
   ```
 
 - [ ] __Uses resource.NotFoundError__: Custom errors for missing resources should use [`resource.NotFoundError`](https://godoc.org/github.com/hashicorp/terraform/helper/resource#NotFoundError).
+- [ ] __Uses resource.UniqueId()__: API fields for concurrency protection such as `CallerReference` and `IdempotencyToken` should use [`resource.UniqueId()`](https://godoc.org/github.com/hashicorp/terraform/helper/resource#UniqueId). The implementation includes a monotonic counter which is safer for concurrent operations than solutions such as `time.Now()`.
 - [ ] __Skips Exists Function__: Implementing a resource `Exists` function is extraneous as it often duplicates resource `Read` functionality. Ensure `d.SetId("")` is used to appropriately trigger resource recreation in the resource `Read` function.
 - [ ] __Skips id Attribute__: The `id` attribute is implicit for all Terraform resources and does not need to be defined in the schema.
 
@@ -450,7 +464,7 @@ Because acceptance tests create real resources, they often cost money to run.
 Because the resources only exist for a short period of time, the total amount
 of money required is usually a relatively small. Nevertheless, we don't want
 financial limitations to be a barrier to contribution, so if you are unable to
-pay to run acceptance tests for your contribution, simply mention this in your
+pay to run acceptance tests for your contribution, mention this in your
 pull request. We will happily accept "best effort" implementations of
 acceptance tests and run them for you on our side. This might mean that your PR
 takes a bit longer to merge, but it most definitely is not a blocker for
@@ -473,6 +487,14 @@ export AWS_PROFILE=...
 export AWS_ACCESS_KEY_ID=...
 export AWS_SECRET_ACCESS_KEY=...
 export AWS_DEFAULT_REGION=...
+```
+
+Please note that the default region for the testing is `us-west-2` and must be
+overriden via the `AWS_DEFAULT_REGION` environment variable, if necessary. This
+is especially important for testing AWS GovCloud (US), which requires:
+
+```sh
+export AWS_DEFAULT_REGION=us-gov-west-1
 ```
 
 Tests can then be run by specifying the target provider and a regular

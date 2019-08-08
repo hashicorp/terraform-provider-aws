@@ -217,30 +217,32 @@ resource "aws_sns_topic" "topic_example" {
 }
 
 resource "aws_launch_configuration" "foobar" {
-  name = "foobarautoscaling-terraform-test-%s"
-  image_id = "ami-21f78e11"
+  name          = "foobarautoscaling-terraform-test-%s"
+  image_id      = "ami-21f78e11"
   instance_type = "t1.micro"
 }
 
 resource "aws_autoscaling_group" "bar" {
-  availability_zones = ["us-west-2a"]
-  name = "foobar1-terraform-test-%s"
-  max_size = 1
-  min_size = 1
+  availability_zones        = ["us-west-2a"]
+  name                      = "foobar1-terraform-test-%s"
+  max_size                  = 1
+  min_size                  = 1
   health_check_grace_period = 100
-  health_check_type = "ELB"
-  desired_capacity = 1
-  force_delete = true
-  termination_policies = ["OldestInstance"]
-  launch_configuration = "${aws_launch_configuration.foobar.name}"
+  health_check_type         = "ELB"
+  desired_capacity          = 1
+  force_delete              = true
+  termination_policies      = ["OldestInstance"]
+  launch_configuration      = "${aws_launch_configuration.foobar.name}"
 }
 
 resource "aws_autoscaling_notification" "example" {
-  group_names     = ["${aws_autoscaling_group.bar.name}"]
-  notifications  = [
-	"autoscaling:EC2_INSTANCE_LAUNCH", 
-	"autoscaling:EC2_INSTANCE_TERMINATE", 
+  group_names = ["${aws_autoscaling_group.bar.name}"]
+
+  notifications = [
+    "autoscaling:EC2_INSTANCE_LAUNCH",
+    "autoscaling:EC2_INSTANCE_TERMINATE",
   ]
+
   topic_arn = "${aws_sns_topic.topic_example.arn}"
 }
 `, rName, rName, rName)
@@ -253,49 +255,52 @@ resource "aws_sns_topic" "topic_example" {
 }
 
 resource "aws_launch_configuration" "foobar" {
-  name = "foobarautoscaling-terraform-test-%s"
-  image_id = "ami-21f78e11"
+  name          = "foobarautoscaling-terraform-test-%s"
+  image_id      = "ami-21f78e11"
   instance_type = "t1.micro"
 }
 
 resource "aws_autoscaling_group" "bar" {
-  availability_zones = ["us-west-2a"]
-  name = "foobar1-terraform-test-%s"
-  max_size = 1
-  min_size = 1
+  availability_zones        = ["us-west-2a"]
+  name                      = "foobar1-terraform-test-%s"
+  max_size                  = 1
+  min_size                  = 1
   health_check_grace_period = 100
-  health_check_type = "ELB"
-  desired_capacity = 1
-  force_delete = true
-  termination_policies = ["OldestInstance"]
-  launch_configuration = "${aws_launch_configuration.foobar.name}"
+  health_check_type         = "ELB"
+  desired_capacity          = 1
+  force_delete              = true
+  termination_policies      = ["OldestInstance"]
+  launch_configuration      = "${aws_launch_configuration.foobar.name}"
 }
 
 resource "aws_autoscaling_group" "foo" {
-  availability_zones = ["us-west-2b"]
-  name = "barfoo-terraform-test-%s"
-  max_size = 1
-  min_size = 1
+  availability_zones        = ["us-west-2b"]
+  name                      = "barfoo-terraform-test-%s"
+  max_size                  = 1
+  min_size                  = 1
   health_check_grace_period = 200
-  health_check_type = "ELB"
-  desired_capacity = 1
-  force_delete = true
-  termination_policies = ["OldestInstance"]
-  launch_configuration = "${aws_launch_configuration.foobar.name}"
+  health_check_type         = "ELB"
+  desired_capacity          = 1
+  force_delete              = true
+  termination_policies      = ["OldestInstance"]
+  launch_configuration      = "${aws_launch_configuration.foobar.name}"
 }
 
 resource "aws_autoscaling_notification" "example" {
-	group_names     = [
-	"${aws_autoscaling_group.bar.name}",
-	"${aws_autoscaling_group.foo.name}",
-	]
-	notifications  = [
-		"autoscaling:EC2_INSTANCE_LAUNCH", 
-		"autoscaling:EC2_INSTANCE_TERMINATE",
-		"autoscaling:EC2_INSTANCE_LAUNCH_ERROR"
-	]
-	topic_arn = "${aws_sns_topic.topic_example.arn}"
-}`, rName, rName, rName, rName)
+  group_names = [
+    "${aws_autoscaling_group.bar.name}",
+    "${aws_autoscaling_group.foo.name}",
+  ]
+
+  notifications = [
+    "autoscaling:EC2_INSTANCE_LAUNCH",
+    "autoscaling:EC2_INSTANCE_TERMINATE",
+    "autoscaling:EC2_INSTANCE_LAUNCH_ERROR",
+  ]
+
+  topic_arn = "${aws_sns_topic.topic_example.arn}"
+}
+`, rName, rName, rName, rName)
 }
 
 const testAccASGNotificationConfig_pagination = `

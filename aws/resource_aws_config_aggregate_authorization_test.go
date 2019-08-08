@@ -59,6 +59,7 @@ func testSweepConfigAggregateAuthorizations(region string) error {
 
 func TestAccAWSConfigAggregateAuthorization_basic(t *testing.T) {
 	rString := acctest.RandStringFromCharSet(12, "0123456789")
+	resourceName := "aws_config_aggregate_authorization.example"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -68,15 +69,57 @@ func TestAccAWSConfigAggregateAuthorization_basic(t *testing.T) {
 			{
 				Config: testAccAWSConfigAggregateAuthorizationConfig_basic(rString),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("aws_config_aggregate_authorization.example", "account_id", rString),
-					resource.TestCheckResourceAttr("aws_config_aggregate_authorization.example", "region", "eu-west-1"),
-					resource.TestMatchResourceAttr("aws_config_aggregate_authorization.example", "arn", regexp.MustCompile(`^arn:aws:config:[\w-]+:\d{12}:aggregation-authorization/\d{12}/[\w-]+$`)),
+					resource.TestCheckResourceAttr(resourceName, "account_id", rString),
+					resource.TestCheckResourceAttr(resourceName, "region", "eu-west-1"),
+					resource.TestMatchResourceAttr(resourceName, "arn", regexp.MustCompile(`^arn:aws:config:[\w-]+:\d{12}:aggregation-authorization/\d{12}/[\w-]+$`)),
 				),
 			},
 			{
-				ResourceName:      "aws_config_aggregate_authorization.example",
+				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccAWSConfigAggregateAuthorization_tags(t *testing.T) {
+	rString := acctest.RandStringFromCharSet(12, "0123456789")
+	resourceName := "aws_config_aggregate_authorization.example"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSConfigAggregateAuthorizationDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSConfigAggregateAuthorizationConfig_tags(rString, "foo", "bar", "fizz", "buzz"),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "3"),
+					resource.TestCheckResourceAttr(resourceName, "tags.Name", rString),
+					resource.TestCheckResourceAttr(resourceName, "tags.foo", "bar"),
+					resource.TestCheckResourceAttr(resourceName, "tags.fizz", "buzz"),
+				),
+			},
+			{
+				Config: testAccAWSConfigAggregateAuthorizationConfig_tags(rString, "foo", "bar2", "fizz2", "buzz2"),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "3"),
+					resource.TestCheckResourceAttr(resourceName, "tags.Name", rString),
+					resource.TestCheckResourceAttr(resourceName, "tags.foo", "bar2"),
+					resource.TestCheckResourceAttr(resourceName, "tags.fizz2", "buzz2"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccAWSConfigAggregateAuthorizationConfig_basic(rString),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+				),
 			},
 		},
 	})
@@ -114,7 +157,23 @@ func testAccCheckAWSConfigAggregateAuthorizationDestroy(s *terraform.State) erro
 func testAccAWSConfigAggregateAuthorizationConfig_basic(rString string) string {
 	return fmt.Sprintf(`
 resource "aws_config_aggregate_authorization" "example" {
-  account_id = "%s"
-  region = "eu-west-1"
-}`, rString)
+  account_id = %[1]q
+  region     = "eu-west-1"
+}
+`, rString)
+}
+
+func testAccAWSConfigAggregateAuthorizationConfig_tags(rString, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
+	return fmt.Sprintf(`
+resource "aws_config_aggregate_authorization" "example" {
+  account_id = %[1]q
+  region     = "eu-west-1"
+
+  tags = {
+	Name  = %[1]q
+	%[2]s = %[3]q
+	%[4]s = %[5]q
+  }
+}
+`, rString, tagKey1, tagValue1, tagKey2, tagValue2)
 }

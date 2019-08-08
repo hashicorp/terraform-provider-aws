@@ -238,7 +238,7 @@ func TestAccAWSMqBroker_basic(t *testing.T) {
 	brokerName := fmt.Sprintf("tf-acc-test-%s", acctest.RandString(5))
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSMq(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsMqBrokerDestroy,
 		Steps: []resource.TestStep{
@@ -308,7 +308,7 @@ func TestAccAWSMqBroker_allFieldsDefaultVpc(t *testing.T) {
 </broker>`
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSMq(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsMqBrokerDestroy,
 		Steps: []resource.TestStep{
@@ -417,7 +417,7 @@ func TestAccAWSMqBroker_allFieldsCustomVpc(t *testing.T) {
 </broker>`
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSMq(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsMqBrokerDestroy,
 		Steps: []resource.TestStep{
@@ -512,7 +512,7 @@ func TestAccAWSMqBroker_updateUsers(t *testing.T) {
 	brokerName := fmt.Sprintf("tf-acc-test-%s", acctest.RandString(5))
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSMq(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsMqBrokerDestroy,
 		Steps: []resource.TestStep{
@@ -565,7 +565,7 @@ func TestAccAWSMqBroker_updateTags(t *testing.T) {
 	brokerName := fmt.Sprintf("tf-acc-test-%s", acctest.RandString(5))
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSMq(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsMqBrokerDestroy,
 		Steps: []resource.TestStep{
@@ -637,6 +637,22 @@ func testAccCheckAwsMqBrokerExists(name string) resource.TestCheckFunc {
 	}
 }
 
+func testAccPreCheckAWSMq(t *testing.T) {
+	conn := testAccProvider.Meta().(*AWSClient).mqconn
+
+	input := &mq.ListBrokersInput{}
+
+	_, err := conn.ListBrokers(input)
+
+	if testAccPreCheckSkipError(err) {
+		t.Skipf("skipping acceptance testing: %s", err)
+	}
+
+	if err != nil {
+		t.Fatalf("unexpected PreCheck error: %s", err)
+	}
+}
+
 func testAccMqBrokerConfig(sgName, brokerName string) string {
 	return fmt.Sprintf(`
 resource "aws_security_group" "test" {
@@ -644,19 +660,22 @@ resource "aws_security_group" "test" {
 }
 
 resource "aws_mq_broker" "test" {
-  broker_name = "%s"
-  engine_type = "ActiveMQ"
-  engine_version = "5.15.0"
+  broker_name        = "%s"
+  engine_type        = "ActiveMQ"
+  engine_version     = "5.15.0"
   host_instance_type = "mq.t2.micro"
-  security_groups = ["${aws_security_group.test.id}"]
+  security_groups    = ["${aws_security_group.test.id}"]
+
   logs {
     general = true
   }
+
   user {
     username = "Test"
     password = "TestTest1234"
   }
-}`, sgName, brokerName)
+}
+`, sgName, brokerName)
 }
 
 func testAccMqBrokerConfig_allFieldsDefaultVpc(sgName, cfgName, cfgBody, brokerName string) string {
@@ -670,9 +689,10 @@ resource "aws_security_group" "mq2" {
 }
 
 resource "aws_mq_configuration" "test" {
-  name = "%s"
-  engine_type = "ActiveMQ"
+  name           = "%s"
+  engine_type    = "ActiveMQ"
   engine_version = "5.15.0"
+
   data = <<DATA
 %s
 DATA
@@ -680,34 +700,41 @@ DATA
 
 resource "aws_mq_broker" "test" {
   auto_minor_version_upgrade = true
-  apply_immediately = true
-  broker_name = "%s"
+  apply_immediately          = true
+  broker_name                = "%s"
+
   configuration {
-    id = "${aws_mq_configuration.test.id}"
+    id       = "${aws_mq_configuration.test.id}"
     revision = "${aws_mq_configuration.test.latest_revision}"
   }
-  deployment_mode = "ACTIVE_STANDBY_MULTI_AZ"
-  engine_type = "ActiveMQ"
-  engine_version = "5.15.0"
+
+  deployment_mode    = "ACTIVE_STANDBY_MULTI_AZ"
+  engine_type        = "ActiveMQ"
+  engine_version     = "5.15.0"
   host_instance_type = "mq.t2.micro"
+
   maintenance_window_start_time {
     day_of_week = "TUESDAY"
     time_of_day = "02:00"
-    time_zone = "CET"
+    time_zone   = "CET"
   }
+
   publicly_accessible = true
-  security_groups = ["${aws_security_group.mq1.id}", "${aws_security_group.mq2.id}"]
+  security_groups     = ["${aws_security_group.mq1.id}", "${aws_security_group.mq2.id}"]
+
   user {
     username = "Test"
     password = "TestTest1234"
   }
+
   user {
-    username = "SecondTest"
-    password = "SecondTestTest1234"
+    username       = "SecondTest"
+    password       = "SecondTestTest1234"
     console_access = true
-    groups = ["first", "second", "third"]
+    groups         = ["first", "second", "third"]
   }
-}`, sgName, sgName, cfgName, cfgBody, brokerName)
+}
+`, sgName, sgName, cfgName, cfgBody, brokerName)
 }
 
 func testAccMqBrokerConfig_allFieldsCustomVpc(sgName, cfgName, cfgBody, brokerName string) string {
@@ -716,6 +743,7 @@ data "aws_availability_zones" "available" {}
 
 resource "aws_vpc" "main" {
   cidr_block = "10.11.0.0/16"
+
   tags = {
     Name = "terraform-testacc-mq-broker-all-fields-custom-vpc"
   }
@@ -735,10 +763,11 @@ resource "aws_route_table" "test" {
 }
 
 resource "aws_subnet" "private" {
-  count = 2
-  cidr_block = "10.11.${count.index}.0/24"
+  count             = 2
+  cidr_block        = "10.11.${count.index}.0/24"
   availability_zone = "${data.aws_availability_zones.available.names[count.index]}"
-  vpc_id = "${aws_vpc.main.id}"
+  vpc_id            = "${aws_vpc.main.id}"
+
   tags = {
     Name = "tf-acc-mq-broker-all-fields-custom-vpc-${count.index}"
   }
@@ -751,19 +780,20 @@ resource "aws_route_table_association" "test" {
 }
 
 resource "aws_security_group" "mq1" {
-  name = "%s-1"
+  name   = "%s-1"
   vpc_id = "${aws_vpc.main.id}"
 }
 
 resource "aws_security_group" "mq2" {
-  name = "%s-2"
+  name   = "%s-2"
   vpc_id = "${aws_vpc.main.id}"
 }
 
 resource "aws_mq_configuration" "test" {
-  name = "%s"
-  engine_type = "ActiveMQ"
+  name           = "%s"
+  engine_type    = "ActiveMQ"
   engine_version = "5.15.0"
+
   data = <<DATA
 %s
 DATA
@@ -771,41 +801,49 @@ DATA
 
 resource "aws_mq_broker" "test" {
   auto_minor_version_upgrade = true
-  apply_immediately = true
-  broker_name = "%s"
+  apply_immediately          = true
+  broker_name                = "%s"
+
   configuration {
-    id = "${aws_mq_configuration.test.id}"
+    id       = "${aws_mq_configuration.test.id}"
     revision = "${aws_mq_configuration.test.latest_revision}"
   }
-  deployment_mode = "ACTIVE_STANDBY_MULTI_AZ"
-  engine_type = "ActiveMQ"
-  engine_version = "5.15.0"
+
+  deployment_mode    = "ACTIVE_STANDBY_MULTI_AZ"
+  engine_type        = "ActiveMQ"
+  engine_version     = "5.15.0"
   host_instance_type = "mq.t2.micro"
+
   logs {
     general = true
-    audit = true
+    audit   = true
   }
+
   maintenance_window_start_time {
     day_of_week = "TUESDAY"
     time_of_day = "02:00"
-    time_zone = "CET"
+    time_zone   = "CET"
   }
+
   publicly_accessible = true
-  security_groups = ["${aws_security_group.mq1.id}", "${aws_security_group.mq2.id}"]
-  subnet_ids = ["${aws_subnet.private.*.id[0]}", "${aws_subnet.private.*.id[1]}"]
+  security_groups     = ["${aws_security_group.mq1.id}", "${aws_security_group.mq2.id}"]
+  subnet_ids          = ["${aws_subnet.private.*.id[0]}", "${aws_subnet.private.*.id[1]}"]
+
   user {
     username = "Test"
     password = "TestTest1234"
   }
+
   user {
-    username = "SecondTest"
-    password = "SecondTestTest1234"
+    username       = "SecondTest"
+    password       = "SecondTestTest1234"
     console_access = true
-    groups = ["first", "second", "third"]
+    groups         = ["first", "second", "third"]
   }
 
   depends_on = ["aws_internet_gateway.test"]
-}`, sgName, sgName, cfgName, cfgBody, brokerName)
+}
+`, sgName, sgName, cfgName, cfgBody, brokerName)
 }
 
 func testAccMqBrokerConfig_updateUsers1(sgName, brokerName string) string {
@@ -815,17 +853,19 @@ resource "aws_security_group" "test" {
 }
 
 resource "aws_mq_broker" "test" {
-  apply_immediately = true
-  broker_name = "%s"
-  engine_type = "ActiveMQ"
-  engine_version = "5.15.0"
+  apply_immediately  = true
+  broker_name        = "%s"
+  engine_type        = "ActiveMQ"
+  engine_version     = "5.15.0"
   host_instance_type = "mq.t2.micro"
-  security_groups = ["${aws_security_group.test.id}"]
+  security_groups    = ["${aws_security_group.test.id}"]
+
   user {
     username = "first"
     password = "TestTest1111"
   }
-}`, sgName, brokerName)
+}
+`, sgName, brokerName)
 }
 
 func testAccMqBrokerConfig_updateUsers2(sgName, brokerName string) string {
@@ -835,22 +875,25 @@ resource "aws_security_group" "test" {
 }
 
 resource "aws_mq_broker" "test" {
-  apply_immediately = true
-  broker_name = "%s"
-  engine_type = "ActiveMQ"
-  engine_version = "5.15.0"
+  apply_immediately  = true
+  broker_name        = "%s"
+  engine_type        = "ActiveMQ"
+  engine_version     = "5.15.0"
   host_instance_type = "mq.t2.micro"
-  security_groups = ["${aws_security_group.test.id}"]
+  security_groups    = ["${aws_security_group.test.id}"]
+
   user {
     console_access = true
-    username = "first"
-    password = "TestTest1111updated"
+    username       = "first"
+    password       = "TestTest1111updated"
   }
+
   user {
     username = "second"
     password = "TestTest2222"
   }
-}`, sgName, brokerName)
+}
+`, sgName, brokerName)
 }
 
 func testAccMqBrokerConfig_updateUsers3(sgName, brokerName string) string {
@@ -860,18 +903,20 @@ resource "aws_security_group" "test" {
 }
 
 resource "aws_mq_broker" "test" {
-  apply_immediately = true
-  broker_name = "%s"
-  engine_type = "ActiveMQ"
-  engine_version = "5.15.0"
+  apply_immediately  = true
+  broker_name        = "%s"
+  engine_type        = "ActiveMQ"
+  engine_version     = "5.15.0"
   host_instance_type = "mq.t2.micro"
-  security_groups = ["${aws_security_group.test.id}"]
+  security_groups    = ["${aws_security_group.test.id}"]
+
   user {
     username = "second"
     password = "TestTest2222"
-    groups = ["admin"]
+    groups   = ["admin"]
   }
-}`, sgName, brokerName)
+}
+`, sgName, brokerName)
 }
 
 func testAccMqBrokerConfig_updateTags1(sgName, brokerName string) string {
@@ -881,21 +926,23 @@ resource "aws_security_group" "test" {
 }
 
 resource "aws_mq_broker" "test" {
-  apply_immediately = true
-  broker_name = "%s"
-  engine_type = "ActiveMQ"
-  engine_version = "5.15.0"
+  apply_immediately  = true
+  broker_name        = "%s"
+  engine_type        = "ActiveMQ"
+  engine_version     = "5.15.0"
   host_instance_type = "mq.t2.micro"
-	security_groups = ["${aws_security_group.test.id}"]
+  security_groups    = ["${aws_security_group.test.id}"]
+
   user {
     username = "Test"
     password = "TestTest1234"
-	}
+  }
 
   tags = {
     env = "test"
   }
-}`, sgName, brokerName)
+}
+`, sgName, brokerName)
 }
 
 func testAccMqBrokerConfig_updateTags2(sgName, brokerName string) string {
@@ -905,22 +952,24 @@ resource "aws_security_group" "test" {
 }
 
 resource "aws_mq_broker" "test" {
-  apply_immediately = true
-  broker_name = "%s"
-  engine_type = "ActiveMQ"
-  engine_version = "5.15.0"
+  apply_immediately  = true
+  broker_name        = "%s"
+  engine_type        = "ActiveMQ"
+  engine_version     = "5.15.0"
   host_instance_type = "mq.t2.micro"
-	security_groups = ["${aws_security_group.test.id}"]
+  security_groups    = ["${aws_security_group.test.id}"]
+
   user {
     username = "Test"
     password = "TestTest1234"
-	}
+  }
 
   tags = {
-		env = "test2"
-		role = "test-role"
+    env  = "test2"
+    role = "test-role"
   }
-}`, sgName, brokerName)
+}
+`, sgName, brokerName)
 }
 
 func testAccMqBrokerConfig_updateTags3(sgName, brokerName string) string {
@@ -930,19 +979,21 @@ resource "aws_security_group" "test" {
 }
 
 resource "aws_mq_broker" "test" {
-  apply_immediately = true
-  broker_name = "%s"
-  engine_type = "ActiveMQ"
-  engine_version = "5.15.0"
+  apply_immediately  = true
+  broker_name        = "%s"
+  engine_type        = "ActiveMQ"
+  engine_version     = "5.15.0"
   host_instance_type = "mq.t2.micro"
-	security_groups = ["${aws_security_group.test.id}"]
+  security_groups    = ["${aws_security_group.test.id}"]
+
   user {
     username = "Test"
     password = "TestTest1234"
-	}
+  }
 
   tags = {
-		role = "test-role"
+    role = "test-role"
   }
-}`, sgName, brokerName)
+}
+`, sgName, brokerName)
 }

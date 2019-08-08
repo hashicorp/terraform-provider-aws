@@ -445,6 +445,131 @@ func TestAccAWSGlueCrawler_S3Target_Multiple(t *testing.T) {
 	})
 }
 
+func TestAccAWSGlueCrawler_CatalogTarget(t *testing.T) {
+	var crawler glue.Crawler
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_glue_crawler.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSGlueCrawlerDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccGlueCrawlerConfig_CatalogTarget(rName, 1),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSGlueCrawlerExists(resourceName, &crawler),
+					testAccCheckResourceAttrRegionalARN(resourceName, "arn", "glue", fmt.Sprintf("crawler/%s", rName)),
+					resource.TestCheckResourceAttr(resourceName, "classifiers.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "database_name", rName),
+					resource.TestCheckResourceAttr(resourceName, "description", ""),
+					resource.TestCheckResourceAttr(resourceName, "dynamodb_target.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "jdbc_target.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "s3_target.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, "role", rName),
+					resource.TestCheckResourceAttr(resourceName, "catalog_target.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "catalog_target.0.database_name", rName),
+					resource.TestCheckResourceAttr(resourceName, "catalog_target.0.tables.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "catalog_target.0.tables.0", fmt.Sprintf("%s_table_0", rName)),
+					resource.TestCheckResourceAttr(resourceName, "schedule", ""),
+					resource.TestCheckResourceAttr(resourceName, "schema_change_policy.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "schema_change_policy.0.delete_behavior", "LOG"),
+					resource.TestCheckResourceAttr(resourceName, "schema_change_policy.0.update_behavior", "UPDATE_IN_DATABASE"),
+					resource.TestCheckResourceAttr(resourceName, "table_prefix", ""),
+					resource.TestCheckResourceAttr(resourceName, "configuration", "{\"Version\":1.0,\"Grouping\":{\"TableGroupingPolicy\":\"CombineCompatibleSchemas\"}}"),
+				),
+			},
+			{
+				Config: testAccGlueCrawlerConfig_CatalogTarget(rName, 2),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSGlueCrawlerExists(resourceName, &crawler),
+					testAccCheckResourceAttrRegionalARN(resourceName, "arn", "glue", fmt.Sprintf("crawler/%s", rName)),
+					resource.TestCheckResourceAttr(resourceName, "classifiers.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "database_name", rName),
+					resource.TestCheckResourceAttr(resourceName, "description", ""),
+					resource.TestCheckResourceAttr(resourceName, "dynamodb_target.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "jdbc_target.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "s3_target.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, "role", rName),
+					resource.TestCheckResourceAttr(resourceName, "catalog_target.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "catalog_target.0.database_name", rName),
+					resource.TestCheckResourceAttr(resourceName, "catalog_target.0.tables.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "catalog_target.0.tables.0", fmt.Sprintf("%s_table_0", rName)),
+					resource.TestCheckResourceAttr(resourceName, "catalog_target.0.tables.1", fmt.Sprintf("%s_table_1", rName)),
+					resource.TestCheckResourceAttr(resourceName, "schedule", ""),
+					resource.TestCheckResourceAttr(resourceName, "schema_change_policy.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "schema_change_policy.0.delete_behavior", "LOG"),
+					resource.TestCheckResourceAttr(resourceName, "schema_change_policy.0.update_behavior", "UPDATE_IN_DATABASE"),
+					resource.TestCheckResourceAttr(resourceName, "table_prefix", ""),
+					resource.TestCheckResourceAttr(resourceName, "configuration", "{\"Version\":1.0,\"Grouping\":{\"TableGroupingPolicy\":\"CombineCompatibleSchemas\"}}"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccAWSGlueCrawler_CatalogTarget_Multiple(t *testing.T) {
+	var crawler glue.Crawler
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_glue_crawler.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSGlueCrawlerDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccGlueCrawlerConfig_CatalogTarget(rName, 1),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSGlueCrawlerExists(resourceName, &crawler),
+					testAccCheckResourceAttrRegionalARN(resourceName, "arn", "glue", fmt.Sprintf("crawler/%s", rName)),
+					resource.TestCheckResourceAttr(resourceName, "catalog_target.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "catalog_target.0.database_name", rName),
+					resource.TestCheckResourceAttr(resourceName, "catalog_target.0.tables.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "catalog_target.0.tables.0", fmt.Sprintf("%s_table_0", rName)),
+				),
+			},
+			{
+				Config: testAccGlueCrawlerConfig_CatalogTarget_Multiple(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSGlueCrawlerExists(resourceName, &crawler),
+					testAccCheckResourceAttrRegionalARN(resourceName, "arn", "glue", fmt.Sprintf("crawler/%s", rName)),
+					resource.TestCheckResourceAttr(resourceName, "catalog_target.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "catalog_target.0.database_name", fmt.Sprintf("%s_database_0", rName)),
+					resource.TestCheckResourceAttr(resourceName, "catalog_target.1.database_name", fmt.Sprintf("%s_database_1", rName)),
+					resource.TestCheckResourceAttr(resourceName, "catalog_target.0.tables.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "catalog_target.0.tables.0", fmt.Sprintf("%s_table_0", rName)),
+					resource.TestCheckResourceAttr(resourceName, "catalog_target.1.tables.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "catalog_target.1.tables.0", fmt.Sprintf("%s_table_1", rName)),
+				),
+			},
+			{
+				Config: testAccGlueCrawlerConfig_CatalogTarget(rName, 1),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSGlueCrawlerExists(resourceName, &crawler),
+					testAccCheckResourceAttrRegionalARN(resourceName, "arn", "glue", fmt.Sprintf("crawler/%s", rName)),
+					resource.TestCheckResourceAttr(resourceName, "catalog_target.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "catalog_target.0.database_name", rName),
+					resource.TestCheckResourceAttr(resourceName, "catalog_target.0.tables.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "catalog_target.0.tables.0", fmt.Sprintf("%s_table_0", rName)),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func TestAccAWSGlueCrawler_recreates(t *testing.T) {
 	var crawler glue.Crawler
 	rName := acctest.RandomWithPrefix("tf-acc-test")
@@ -889,27 +1014,30 @@ func testAccCheckAWSGlueCrawlerConfiguration(crawler *glue.Crawler, acctestJSON 
 
 func testAccGlueCrawlerConfig_Base(rName string) string {
 	return fmt.Sprintf(`
+data "aws_partition" "current" {}
+
 resource "aws_iam_role" "test" {
   name = %q
-  assume_role_policy = <<EOF
-{
-  "Version": "2012-10-17",
-  "Statement": [
-    {
-      "Action": "sts:AssumeRole",
-      "Principal": {
-        "Service": "glue.amazonaws.com"
-      },
-      "Effect": "Allow",
-      "Sid": ""
-    }
-  ]
+  assume_role_policy = "${data.aws_iam_policy_document.assume.json}"
 }
-EOF
+
+data "aws_iam_policy_document" "assume" {
+  statement {
+    actions = ["sts:AssumeRole"]
+
+    principals {
+      type        = "Service"
+      identifiers = ["glue.amazonaws.com"]
+    }
+  }
+}
+
+data "aws_iam_policy" "AWSGlueServiceRole" {
+  arn = "arn:${data.aws_partition.current.partition}:iam::aws:policy/service-role/AWSGlueServiceRole"
 }
 
 resource "aws_iam_role_policy_attachment" "test-AWSGlueServiceRole" {
-  policy_arn = "arn:aws:iam::aws:policy/service-role/AWSGlueServiceRole"
+  policy_arn = "${data.aws_iam_policy.AWSGlueServiceRole.arn}"
   role       = "${aws_iam_role.test.name}"
 }
 `, rName)
@@ -1208,6 +1336,8 @@ resource "aws_glue_crawler" "test" {
 
 func testAccGlueCrawlerConfig_Role_ARN_Path(rName string) string {
 	return fmt.Sprintf(`
+data "aws_partition" "current" {}
+
 resource "aws_iam_role" "test" {
   name = %q
   path = "/path/"
@@ -1230,7 +1360,7 @@ EOF
 }
 
 resource "aws_iam_role_policy_attachment" "test-AWSGlueServiceRole" {
-  policy_arn = "arn:aws:iam::aws:policy/service-role/AWSGlueServiceRole"
+  policy_arn = "arn:${data.aws_partition.current.partition}:iam::aws:policy/service-role/AWSGlueServiceRole"
   role       = "${aws_iam_role.test.name}"
 }
 
@@ -1254,6 +1384,8 @@ resource "aws_glue_crawler" "test" {
 
 func testAccGlueCrawlerConfig_Role_Name_Path(rName string) string {
 	return fmt.Sprintf(`
+data "aws_partition" "current" {}
+
 resource "aws_iam_role" "test" {
   name = %q
   path = "/path/"
@@ -1276,7 +1408,7 @@ EOF
 }
 
 resource "aws_iam_role_policy_attachment" "test-AWSGlueServiceRole" {
-  policy_arn = "arn:aws:iam::aws:policy/service-role/AWSGlueServiceRole"
+  policy_arn = "arn:${data.aws_partition.current.partition}:iam::aws:policy/service-role/AWSGlueServiceRole"
   role       = "${aws_iam_role.test.name}"
 }
 
@@ -1382,6 +1514,113 @@ resource "aws_glue_crawler" "test" {
   }
 }
 `, rName, rName, path1, path2)
+}
+
+func testAccGlueCrawlerConfig_CatalogTarget(rName string, tableCount int) string {
+	return testAccGlueCrawlerConfig_Base(rName) + fmt.Sprintf(`
+resource "aws_glue_catalog_database" "test" {
+  name = %[1]q
+}
+
+resource "aws_s3_bucket" "default" {
+  bucket = %[1]q
+  force_destroy = true
+}
+
+resource "aws_glue_catalog_table" "test" {
+	count = %[2]d
+
+	database_name = "${aws_glue_catalog_database.test.name}"
+	name          = "%[1]s_table_${count.index}"
+	table_type    = "EXTERNAL_TABLE"
+
+	storage_descriptor {
+		location      = "s3://${aws_s3_bucket.default.bucket}"
+	}
+}
+
+resource "aws_glue_crawler" "test" {
+  depends_on = ["aws_iam_role_policy_attachment.test-AWSGlueServiceRole"]
+
+  database_name = "${aws_glue_catalog_database.test.name}"
+  name          = %[1]q
+  role          = "${aws_iam_role.test.name}"
+
+  schema_change_policy {
+    delete_behavior = "LOG"
+  }
+
+  catalog_target {
+    database_name = "${aws_glue_catalog_database.test.name}"
+    tables = flatten(["${aws_glue_catalog_table.test[*].name}"])
+  }
+
+  configuration = <<EOF
+{
+  "Version":1.0,
+  "Grouping": {
+    "TableGroupingPolicy": "CombineCompatibleSchemas"
+  }
+}
+EOF
+}
+`, rName, tableCount)
+}
+
+func testAccGlueCrawlerConfig_CatalogTarget_Multiple(rName string) string {
+	return testAccGlueCrawlerConfig_Base(rName) + fmt.Sprintf(`
+resource "aws_glue_catalog_database" "test" {
+	count = 2
+  name = "%[1]s_database_${count.index}"
+}
+
+resource "aws_glue_catalog_table" "test" {
+	count = 2
+  database_name = "${aws_glue_catalog_database.test[count.index].name}"
+  name          = "%[1]s_table_${count.index}"
+  table_type    = "EXTERNAL_TABLE"
+
+  storage_descriptor {
+    location      = "s3://${aws_s3_bucket.default.bucket}"
+  }
+}
+
+resource "aws_s3_bucket" "default" {
+  bucket = %[1]q
+  force_destroy = true
+}
+
+resource "aws_glue_crawler" "test" {
+  depends_on = ["aws_iam_role_policy_attachment.test-AWSGlueServiceRole"]
+
+  database_name = "${aws_glue_catalog_database.test[0].name}"
+  name          = %[1]q
+  role          = "${aws_iam_role.test.name}"
+
+  schema_change_policy {
+    delete_behavior = "LOG"
+  }
+
+  catalog_target {
+    database_name = "${aws_glue_catalog_database.test[0].name}"
+    tables = ["${aws_glue_catalog_table.test[0].name}"]
+  }
+
+  catalog_target {
+    database_name = "${aws_glue_catalog_database.test[1].name}"
+    tables = ["${aws_glue_catalog_table.test[1].name}"]
+  }
+
+  configuration = <<EOF
+{
+  "Version":1.0,
+  "Grouping": {
+    "TableGroupingPolicy": "CombineCompatibleSchemas"
+  }
+}
+EOF
+}
+`, rName)
 }
 
 func testAccGlueCrawlerConfig_Schedule(rName, schedule string) string {

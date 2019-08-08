@@ -37,7 +37,7 @@ Reading key-value pairs from JSON back into a native Terraform map can be accomp
 
 ```hcl
 output "example" {
-  value = jsondecode(aws_secretsmanager_secret_version.example.secret_string)["key1"]
+  value = jsondecode(data.aws_secretsmanager_secret_version.example.secret_string)["key1"]
 }
 ```
 

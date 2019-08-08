@@ -18,7 +18,7 @@ func TestAccAWSCognitoUserPoolClient_basic(t *testing.T) {
 	clientName := acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSCognitoIdentityProvider(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSCognitoUserPoolClientDestroy,
 		Steps: []resource.TestStep{
@@ -71,7 +71,7 @@ func TestAccAWSCognitoUserPoolClient_importBasic(t *testing.T) {
 	}
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSCognitoIdentityProvider(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSEcsServiceDestroy,
 		Steps: []resource.TestStep{
@@ -92,7 +92,7 @@ func TestAccAWSCognitoUserPoolClient_RefreshTokenValidity(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSCognitoIdentityProvider(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSCognitoUserPoolClientDestroy,
 		Steps: []resource.TestStep{
@@ -114,12 +114,39 @@ func TestAccAWSCognitoUserPoolClient_RefreshTokenValidity(t *testing.T) {
 	})
 }
 
+func TestAccAWSCognitoUserPoolClient_Name(t *testing.T) {
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_cognito_user_pool_client.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSCognitoIdentityProvider(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSCognitoUserPoolClientDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSCognitoUserPoolClientConfig_Name(rName, "name1"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckAWSCognitoUserPoolClientExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "name", "name1"),
+				),
+			},
+			{
+				Config: testAccAWSCognitoUserPoolClientConfig_Name(rName, "name2"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckAWSCognitoUserPoolClientExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "name", "name2"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccAWSCognitoUserPoolClient_allFields(t *testing.T) {
 	userPoolName := fmt.Sprintf("tf-acc-cognito-user-pool-%s", acctest.RandString(7))
 	clientName := acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSCognitoIdentityProvider(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSCognitoUserPoolClientDestroy,
 		Steps: []resource.TestStep{
@@ -165,7 +192,7 @@ func TestAccAWSCognitoUserPoolClient_allFieldsUpdatingOneField(t *testing.T) {
 	clientName := acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSCognitoIdentityProvider(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSCognitoUserPoolClientDestroy,
 		Steps: []resource.TestStep{
@@ -287,6 +314,19 @@ resource "aws_cognito_user_pool_client" "client" {
 `, rName, rName, refreshTokenValidity)
 }
 
+func testAccAWSCognitoUserPoolClientConfig_Name(rName, name string) string {
+	return fmt.Sprintf(`
+resource "aws_cognito_user_pool" "test" {
+  name = %[1]q
+}
+
+resource "aws_cognito_user_pool_client" "test" {
+  name                   = %[2]q
+  user_pool_id           = "${aws_cognito_user_pool.test.id}"
+}
+`, rName, name)
+}
+
 func testAccAWSCognitoUserPoolClientConfig_allFields(userPoolName, clientName string, refreshTokenValidity int) string {
 	return fmt.Sprintf(`
 resource "aws_cognito_user_pool" "pool" {
@@ -296,23 +336,23 @@ resource "aws_cognito_user_pool" "pool" {
 resource "aws_cognito_user_pool_client" "client" {
   name = "%s"
 
-  user_pool_id = "${aws_cognito_user_pool.pool.id}"
+  user_pool_id        = "${aws_cognito_user_pool.pool.id}"
   explicit_auth_flows = ["ADMIN_NO_SRP_AUTH", "CUSTOM_AUTH_FLOW_ONLY", "USER_PASSWORD_AUTH"]
 
   generate_secret = "true"
 
-  read_attributes = ["email"]
+  read_attributes  = ["email"]
   write_attributes = ["email"]
 
   refresh_token_validity = %d
 
-  allowed_oauth_flows = ["code", "implicit"]
+  allowed_oauth_flows                  = ["code", "implicit"]
   allowed_oauth_flows_user_pool_client = "true"
-  allowed_oauth_scopes = ["phone", "email", "openid", "profile", "aws.cognito.signin.user.admin"]
+  allowed_oauth_scopes                 = ["phone", "email", "openid", "profile", "aws.cognito.signin.user.admin"]
 
-  callback_urls = ["https://www.example.com/callback", "https://www.example.com/redirect"]
+  callback_urls        = ["https://www.example.com/callback", "https://www.example.com/redirect"]
   default_redirect_uri = "https://www.example.com/redirect"
-  logout_urls = ["https://www.example.com/login"]
+  logout_urls          = ["https://www.example.com/login"]
 }
 `, userPoolName, clientName, refreshTokenValidity)
 }

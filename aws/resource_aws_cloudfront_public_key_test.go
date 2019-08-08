@@ -16,7 +16,7 @@ func TestAccAWSCloudFrontPublicKey_basic(t *testing.T) {
 	rInt := acctest.RandInt()
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSCloudFront(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckCloudFrontPublicKeyDestroy,
 		Steps: []resource.TestStep{
@@ -25,9 +25,7 @@ func TestAccAWSCloudFrontPublicKey_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCloudFrontPublicKeyExistence("aws_cloudfront_public_key.example"),
 					resource.TestCheckResourceAttr("aws_cloudfront_public_key.example", "comment", "test key"),
-					resource.TestMatchResourceAttr("aws_cloudfront_public_key.example",
-						"caller_reference",
-						regexp.MustCompile("^20[0-9]{2}.*")),
+					resource.TestMatchResourceAttr("aws_cloudfront_public_key.example", "caller_reference", regexp.MustCompile(fmt.Sprintf("^%s", resource.UniqueIdPrefix))),
 					resource.TestCheckResourceAttr("aws_cloudfront_public_key.example", "name", fmt.Sprintf("tf-acc-test-%d", rInt)),
 				),
 			},
@@ -39,7 +37,7 @@ func TestAccAWSCloudFrontPublicKey_namePrefix(t *testing.T) {
 	startsWithPrefix := regexp.MustCompile("^tf-acc-test-")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSCloudFront(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckCloudFrontPublicKeyDestroy,
 		Steps: []resource.TestStep{
@@ -58,7 +56,7 @@ func TestAccAWSCloudFrontPublicKey_update(t *testing.T) {
 	rInt := acctest.RandInt()
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSCloudFront(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckCloudFrontPublicKeyDestroy,
 		Steps: []resource.TestStep{
@@ -131,18 +129,18 @@ func testAccCheckCloudFrontPublicKeyDestroy(s *terraform.State) error {
 
 func testAccAWSCloudFrontPublicKeyConfig(rInt int) string {
 	return fmt.Sprintf(`
-  resource "aws_cloudfront_public_key" "example" {
-  comment = "test key"
+resource "aws_cloudfront_public_key" "example" {
+  comment     = "test key"
   encoded_key = "${file("test-fixtures/cloudfront-public-key.pem")}"
-  name = "tf-acc-test-%d"
+  name        = "tf-acc-test-%d"
 }
 `, rInt)
 }
 
 func testAccAWSCloudFrontPublicKeyConfig_namePrefix() string {
 	return fmt.Sprintf(`
-  resource "aws_cloudfront_public_key" "example" {
-  comment = "test key"
+resource "aws_cloudfront_public_key" "example" {
+  comment     = "test key"
   encoded_key = "${file("test-fixtures/cloudfront-public-key.pem")}"
   name_prefix = "tf-acc-test-"
 }
@@ -151,10 +149,10 @@ func testAccAWSCloudFrontPublicKeyConfig_namePrefix() string {
 
 func testAccAWSCloudFrontPublicKeyConfigUpdate(rInt int) string {
 	return fmt.Sprintf(`
-  resource "aws_cloudfront_public_key" "example" {
-  comment = "test key1"
+resource "aws_cloudfront_public_key" "example" {
+  comment     = "test key1"
   encoded_key = "${file("test-fixtures/cloudfront-public-key.pem")}"
-  name = "tf-acc-test-%d"
+  name        = "tf-acc-test-%d"
 }
 `, rInt)
 }

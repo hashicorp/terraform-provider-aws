@@ -277,6 +277,13 @@ Multiple occurrences of `ec2_tag_filter` are allowed, where any instance that ma
 
 You can form a tag group by putting a set of tag filters into `ec2_tag_set`. If multiple tag groups are specified, any instance that matches to at least one tag filter of every tag group is selected.
 
+### ecs_service Argument Reference
+
+Each `ecs_service` configuration block supports the following:
+
+* `cluster_name` - (Required) The name of the ECS cluster.
+* `service_name` - (Required) The name of the ECS service.
+
 ### load_balancer_info Argument Reference
 
 You can configure the **Load Balancer** to use in a deployment. `load_balancer_info` supports the following:

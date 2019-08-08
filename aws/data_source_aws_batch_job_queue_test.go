@@ -15,7 +15,7 @@ func TestAccDataSourceAwsBatchJobQueue(t *testing.T) {
 	datasourceName := "data.aws_batch_job_queue.by_name"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:  func() { testAccPreCheck(t) },
+		PreCheck:  func() { testAccPreCheck(t); testAccPreCheckAWSBatch(t) },
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
 			{
@@ -66,6 +66,7 @@ func testAccDataSourceAwsBatchJobQueueConfig(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_iam_role" "ecs_instance_role" {
   name = "ecs_%[1]s"
+
   assume_role_policy = <<EOF
 {
     "Version": "2012-10-17",
@@ -88,12 +89,13 @@ resource "aws_iam_role_policy_attachment" "ecs_instance_role" {
 }
 
 resource "aws_iam_instance_profile" "ecs_instance_role" {
-  name  = "ecs_%[1]s"
+  name = "ecs_%[1]s"
   role = "${aws_iam_role.ecs_instance_role.name}"
 }
 
 resource "aws_iam_role" "aws_batch_service_role" {
   name = "batch_%[1]s"
+
   assume_role_policy = <<EOF
 {
     "Version": "2012-10-17",
@@ -124,43 +126,50 @@ resource "aws_vpc" "sample" {
 }
 
 resource "aws_subnet" "sample" {
-  vpc_id = "${aws_vpc.sample.id}"
+  vpc_id     = "${aws_vpc.sample.id}"
   cidr_block = "10.1.1.0/24"
 }
 
 resource "aws_batch_compute_environment" "sample" {
   compute_environment_name = "%[1]s"
+
   compute_resources {
     instance_role = "${aws_iam_instance_profile.ecs_instance_role.arn}"
+
     instance_type = [
       "c4.large",
     ]
+
     max_vcpus = 16
     min_vcpus = 0
+
     security_group_ids = [
-      "${aws_security_group.sample.id}"
+      "${aws_security_group.sample.id}",
     ]
+
     subnets = [
-      "${aws_subnet.sample.id}"
+      "${aws_subnet.sample.id}",
     ]
+
     type = "EC2"
   }
+
   service_role = "${aws_iam_role.aws_batch_service_role.arn}"
-  type = "MANAGED"
-  depends_on = ["aws_iam_role_policy_attachment.aws_batch_service_role"]
+  type         = "MANAGED"
+  depends_on   = ["aws_iam_role_policy_attachment.aws_batch_service_role"]
 }
 
 resource "aws_batch_job_queue" "test" {
-  name = "%[1]s"
-  state = "ENABLED"
-  priority = 1
+  name                 = "%[1]s"
+  state                = "ENABLED"
+  priority             = 1
   compute_environments = ["${aws_batch_compute_environment.sample.arn}"]
 }
 
 resource "aws_batch_job_queue" "wrong" {
-  name = "%[1]s_wrong"
-  state = "ENABLED"
-  priority = 2
+  name                 = "%[1]s_wrong"
+  state                = "ENABLED"
+  priority             = 2
   compute_environments = ["${aws_batch_compute_environment.sample.arn}"]
 }
 

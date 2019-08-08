@@ -44,57 +44,62 @@ func TestAccDataSourceAwsSecurityGroups_filter(t *testing.T) {
 
 func testAccDataSourceAwsSecurityGroupsConfig_tag(rInt int) string {
 	return fmt.Sprintf(`
-	resource "aws_vpc" "test_tag" {
-		cidr_block = "172.16.0.0/16"
-	tags = {
-			Name = "terraform-testacc-security-group-data-source"
-		}
-	}
+resource "aws_vpc" "test_tag" {
+  cidr_block = "172.16.0.0/16"
 
-	resource "aws_security_group" "test" {
-		count = 3
-		vpc_id = "${aws_vpc.test_tag.id}"
-		name = "tf-%[1]d-${count.index}"
-	tags = {
-			Seed = "%[1]d"
-		}
-	}
+  tags = {
+    Name = "terraform-testacc-security-group-data-source"
+  }
+}
 
-	data "aws_security_groups" "by_tag" {
-	tags = {
-			Seed = "${aws_security_group.test.0.tags["Seed"]}"
-		}
-	}
+resource "aws_security_group" "test" {
+  count  = 3
+  vpc_id = "${aws_vpc.test_tag.id}"
+  name   = "tf-%[1]d-${count.index}"
+
+  tags = {
+    Seed = "%[1]d"
+  }
+}
+
+data "aws_security_groups" "by_tag" {
+  tags = {
+    Seed = "${aws_security_group.test.0.tags["Seed"]}"
+  }
+}
 `, rInt)
 }
 
 func testAccDataSourceAwsSecurityGroupsConfig_filter(rInt int) string {
 	return fmt.Sprintf(`
-	resource "aws_vpc" "test_filter" {
-		cidr_block = "172.16.0.0/16"
-	tags = {
-			Name = "terraform-testacc-security-group-data-source"
-		}
-	}
+resource "aws_vpc" "test_filter" {
+  cidr_block = "172.16.0.0/16"
 
-	resource "aws_security_group" "test" {
-		count = 3
-		vpc_id = "${aws_vpc.test_filter.id}"
-		name = "tf-%[1]d-${count.index}"
-	tags = {
-			Seed = "%[1]d"
-		}
-	}
+  tags = {
+    Name = "terraform-testacc-security-group-data-source"
+  }
+}
 
-	data "aws_security_groups" "by_filter" {
-		filter {
-			name = "vpc-id"
-			values = ["${aws_vpc.test_filter.id}"]
-		}
-		filter {
-			name = "group-name"
-			values = ["tf-${aws_security_group.test.0.tags["Seed"]}-*"]
-		}
-	}
+resource "aws_security_group" "test" {
+  count  = 3
+  vpc_id = "${aws_vpc.test_filter.id}"
+  name   = "tf-%[1]d-${count.index}"
+
+  tags = {
+    Seed = "%[1]d"
+  }
+}
+
+data "aws_security_groups" "by_filter" {
+  filter {
+    name   = "vpc-id"
+    values = ["${aws_vpc.test_filter.id}"]
+  }
+
+  filter {
+    name   = "group-name"
+    values = ["tf-${aws_security_group.test.0.tags["Seed"]}-*"]
+  }
+}
 `, rInt)
 }

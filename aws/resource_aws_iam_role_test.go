@@ -590,10 +590,10 @@ func testAccCheckAWSRolePermissionsBoundary(getRoleOutput *iam.GetRoleOutput, ex
 func testAccCheckIAMRoleConfig_MaxSessionDuration(rName string, maxSessionDuration int) string {
 	return fmt.Sprintf(`
 resource "aws_iam_role" "test" {
-  name   = "test-role-%s"
-	path = "/"
-	max_session_duration = %d
-  assume_role_policy = "{\"Version\":\"2012-10-17\",\"Statement\":[{\"Effect\":\"Allow\",\"Principal\":{\"Service\":[\"ec2.amazonaws.com\"]},\"Action\":[\"sts:AssumeRole\"]}]}"
+  name                 = "test-role-%s"
+  path                 = "/"
+  max_session_duration = %d
+  assume_role_policy   = "{\"Version\":\"2012-10-17\",\"Statement\":[{\"Effect\":\"Allow\",\"Principal\":{\"Service\":[\"ec2.amazonaws.com\"]},\"Action\":[\"sts:AssumeRole\"]}]}"
 }
 `, rName, maxSessionDuration)
 }
@@ -612,8 +612,8 @@ resource "aws_iam_role" "role" {
 func testAccAWSIAMRoleConfig(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_iam_role" "role" {
-  name   = "test-role-%s"
-  path = "/"
+  name               = "test-role-%s"
+  path               = "/"
   assume_role_policy = "{\"Version\":\"2012-10-17\",\"Statement\":[{\"Effect\":\"Allow\",\"Principal\":{\"Service\":[\"ec2.amazonaws.com\"]},\"Action\":[\"sts:AssumeRole\"]}]}"
 }
 `, rName)
@@ -622,9 +622,9 @@ resource "aws_iam_role" "role" {
 func testAccAWSIAMRoleConfigWithDescription(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_iam_role" "role" {
-  name   = "test-role-%s"
-  description = "This 1s a D3scr!pti0n with weird content: &@90ë“‘{«¡Çø}"
-  path = "/"
+  name               = "test-role-%s"
+  description        = "This 1s a D3scr!pti0n with weird content: &@90ë“‘{«¡Çø}"
+  path               = "/"
   assume_role_policy = "{\"Version\":\"2012-10-17\",\"Statement\":[{\"Effect\":\"Allow\",\"Principal\":{\"Service\":[\"ec2.amazonaws.com\"]},\"Action\":[\"sts:AssumeRole\"]}]}"
 }
 `, rName)
@@ -633,9 +633,9 @@ resource "aws_iam_role" "role" {
 func testAccAWSIAMRoleConfigWithUpdatedDescription(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_iam_role" "role" {
-  name   = "test-role-%s"
-  description = "This 1s an Upd@ted D3scr!pti0n with weird content: &90ë“‘{«¡Çø}"
-  path = "/"
+  name               = "test-role-%s"
+  description        = "This 1s an Upd@ted D3scr!pti0n with weird content: &90ë“‘{«¡Çø}"
+  path               = "/"
   assume_role_policy = "{\"Version\":\"2012-10-17\",\"Statement\":[{\"Effect\":\"Allow\",\"Principal\":{\"Service\":[\"ec2.amazonaws.com\"]},\"Action\":[\"sts:AssumeRole\"]}]}"
 }
 `, rName)
@@ -644,8 +644,8 @@ resource "aws_iam_role" "role" {
 func testAccAWSIAMRolePrefixNameConfig(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_iam_role" "role" {
-  name_prefix = "test-role-%s"
-  path = "/"
+  name_prefix        = "test-role-%s"
+  path               = "/"
   assume_role_policy = "{\"Version\":\"2012-10-17\",\"Statement\":[{\"Effect\":\"Allow\",\"Principal\":{\"Service\":[\"ec2.amazonaws.com\"]},\"Action\":[\"sts:AssumeRole\"]}]}"
 }
 `, rName)
@@ -658,6 +658,7 @@ data "aws_partition" "current" {}
 resource "aws_iam_role" "role_update_test" {
   name = "tf_old_name_%s"
   path = "/test/"
+
   assume_role_policy = <<EOF
 {
   "Version": "2012-10-17",
@@ -678,6 +679,7 @@ EOF
 resource "aws_iam_role_policy" "role_update_test" {
   name = "role_update_test_%s"
   role = "${aws_iam_role.role_update_test.id}"
+
   policy = <<EOF
 {
   "Version": "2012-10-17",
@@ -696,8 +698,8 @@ EOF
 }
 
 resource "aws_iam_instance_profile" "role_update_test" {
-  name = "role_update_test_%s"
-  path = "/test/"
+  name  = "role_update_test_%s"
+  path  = "/test/"
   roles = ["${aws_iam_role.role_update_test.name}"]
 }
 `, rName, rName, rName)
@@ -710,6 +712,7 @@ data "aws_partition" "current" {}
 resource "aws_iam_role" "role_update_test" {
   name = "tf_new_name_%s"
   path = "/test/"
+
   assume_role_policy = <<EOF
 {
   "Version": "2012-10-17",
@@ -730,6 +733,7 @@ EOF
 resource "aws_iam_role_policy" "role_update_test" {
   name = "role_update_test_%s"
   role = "${aws_iam_role.role_update_test.id}"
+
   policy = <<EOF
 {
   "Version": "2012-10-17",
@@ -748,8 +752,8 @@ EOF
 }
 
 resource "aws_iam_instance_profile" "role_update_test" {
-  name = "role_update_test_%s"
-  path = "/test/"
+  name  = "role_update_test_%s"
+  path  = "/test/"
   roles = ["${aws_iam_role.role_update_test.name}"]
 }
 `, rName, rName, rName)
@@ -802,8 +806,9 @@ EOF
 }
 
 resource "aws_iam_policy" "test" {
-  name = "tf-iam-policy-%s"
+  name        = "tf-iam-policy-%s"
   description = "A test policy"
+
   policy = <<EOF
 {
   "Version": "2012-10-17",
@@ -821,13 +826,14 @@ EOF
 }
 
 resource "aws_iam_role_policy_attachment" "test" {
-  role = "${aws_iam_role.test.name}"
+  role       = "${aws_iam_role.test.name}"
   policy_arn = "${aws_iam_policy.test.arn}"
 }
 
 resource "aws_iam_role" "test" {
-  name = "tf-iam-role-%s"
+  name                  = "tf-iam-role-%s"
   force_detach_policies = true
+
   assume_role_policy = <<EOF
 {
   "Version": "2012-10-17",
@@ -851,6 +857,7 @@ func testAccAWSIAMRoleConfig_tags(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_iam_role" "test" {
   name = %q
+
   assume_role_policy = <<EOF
 {
   "Version": "2012-10-17",
@@ -872,7 +879,6 @@ EOF
     tag2 = "test-value2"
   }
 }
-
 `, rName)
 }
 
@@ -880,6 +886,7 @@ func testAccAWSIAMRoleConfig_tagsUpdate(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_iam_role" "test" {
   name = %q
+
   assume_role_policy = <<EOF
 {
   "Version": "2012-10-17",

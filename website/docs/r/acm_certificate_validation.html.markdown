@@ -133,6 +133,12 @@ The following arguments are supported:
 * `certificate_arn` - (Required) The ARN of the certificate that is being validated.
 * `validation_record_fqdns` - (Optional) List of FQDNs that implement the validation. Only valid for DNS validation method ACM certificates. If this is set, the resource can implement additional sanity checks and has an explicit dependency on the resource that is implementing the validation
 
+## Attributes Reference
+
+In addition to all arguments above, the following attributes are exported:
+
+* `id` - The time at which the certificate was issued
+
 ## Timeouts
 
 `acm_certificate_validation` provides the following [Timeouts](/docs/configuration/resources.html#timeouts)

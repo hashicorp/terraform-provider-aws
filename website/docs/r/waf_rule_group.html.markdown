@@ -1,6 +1,6 @@
 ---
 layout: "aws"
-page_title: "AWS: waf_rule_group"
+page_title: "AWS: aws_waf_rule_group"
 sidebar_current: "docs-aws-resource-waf-rule-group"
 description: |-
   Provides a AWS WAF rule group resource.
@@ -51,10 +51,18 @@ The following arguments are supported:
   * `type` - (Required) e.g. `BLOCK`, `ALLOW`, or `COUNT`
 * `priority` - (Required) Specifies the order in which the rules are evaluated. Rules with a lower value are evaluated before rules with a higher value.
 * `rule_id` - (Required) The ID of a [rule](/docs/providers/aws/r/waf_rule.html)
-* `type` - (Optional) The rule type, either [`REGULAR`](/docs/providers/aws/r/waf_rule.html), [`RATE_BASED`]((/docs/providers/aws/r/waf_rate_based_rule.html), or `GROUP`. Defaults to `REGULAR`.
+* `type` - (Optional) The rule type, either [`REGULAR`](/docs/providers/aws/r/waf_rule.html), [`RATE_BASED`](/docs/providers/aws/r/waf_rate_based_rule.html), or `GROUP`. Defaults to `REGULAR`.
 
 ## Attributes Reference
 
 In addition to all arguments above, the following attributes are exported:
 
 * `id` - The ID of the WAF rule group.
+
+## Import
+
+WAF Rule Group can be imported using the id, e.g.
+
+```
+$ terraform import aws_waf_rule_group.example a1b2c3d4-d5f6-7777-8888-9999aaaabbbbcccc
+```

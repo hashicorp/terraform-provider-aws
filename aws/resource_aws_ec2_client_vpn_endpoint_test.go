@@ -223,6 +223,38 @@ func TestAccAwsEc2ClientVpnEndpoint_tags(t *testing.T) {
 	})
 }
 
+func TestAccAwsEc2ClientVpnEndpoint_splitTunnel(t *testing.T) {
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_ec2_client_vpn_endpoint.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProvidersWithTLS,
+		CheckDestroy: testAccCheckAwsEc2ClientVpnEndpointDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccEc2ClientVpnEndpointConfigSplitTunnel(rName, true),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAwsEc2ClientVpnEndpointExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "split_tunnel", "true"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccEc2ClientVpnEndpointConfigSplitTunnel(rName, false),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAwsEc2ClientVpnEndpointExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "split_tunnel", "false"),
+				),
+			},
+		},
+	})
+}
+
 func testAccCheckAwsEc2ClientVpnEndpointDestroy(s *terraform.State) error {
 	conn := testAccProvider.Meta().(*AWSClient).ec2conn
 
@@ -286,12 +318,12 @@ resource "aws_acm_certificate" "cert" {
 }
 
 resource "aws_ec2_client_vpn_endpoint" "test" {
-  description = "terraform-testacc-clientvpn-%s"
+  description            = "terraform-testacc-clientvpn-%s"
   server_certificate_arn = "${aws_acm_certificate.cert.arn}"
-  client_cidr_block = "10.0.0.0/16"
+  client_cidr_block      = "10.0.0.0/16"
 
   authentication_options {
-    type = "certificate-authentication"
+    type                       = "certificate-authentication"
     root_certificate_chain_arn = "${aws_acm_certificate.cert.arn}"
   }
 
@@ -341,18 +373,18 @@ resource "aws_cloudwatch_log_stream" "ls" {
 }
 
 resource "aws_ec2_client_vpn_endpoint" "test" {
-  description = "terraform-testacc-clientvpn-%s"
+  description            = "terraform-testacc-clientvpn-%s"
   server_certificate_arn = "${aws_acm_certificate.cert.arn}"
-  client_cidr_block = "10.0.0.0/16"
+  client_cidr_block      = "10.0.0.0/16"
 
   authentication_options {
-    type = "certificate-authentication"
+    type                       = "certificate-authentication"
     root_certificate_chain_arn = "${aws_acm_certificate.cert.arn}"
   }
 
   connection_log_options {
-    enabled = true
-    cloudwatch_log_group = "${aws_cloudwatch_log_group.lg.name}"
+    enabled               = true
+    cloudwatch_log_group  = "${aws_cloudwatch_log_group.lg.name}"
     cloudwatch_log_stream = "${aws_cloudwatch_log_stream.ls.name}"
   }
 }
@@ -389,14 +421,14 @@ resource "aws_acm_certificate" "cert" {
 }
 
 resource "aws_ec2_client_vpn_endpoint" "test" {
-  description = "terraform-testacc-clientvpn-%s"
+  description            = "terraform-testacc-clientvpn-%s"
   server_certificate_arn = "${aws_acm_certificate.cert.arn}"
-  client_cidr_block = "10.0.0.0/16"
+  client_cidr_block      = "10.0.0.0/16"
 
   dns_servers = ["8.8.8.8", "8.8.4.4"]
 
   authentication_options {
-    type = "certificate-authentication"
+    type                       = "certificate-authentication"
     root_certificate_chain_arn = "${aws_acm_certificate.cert.arn}"
   }
 
@@ -412,27 +444,28 @@ func testAccEc2ClientVpnEndpointConfigWithMicrosoftAD(rName string) string {
 data "aws_availability_zones" "available" {}
 
 resource "aws_vpc" "test" {
-  cidr_block  = "10.0.0.0/16"
+  cidr_block = "10.0.0.0/16"
 }
 
 resource "aws_subnet" "test1" {
-  vpc_id     				= "${aws_vpc.test.id}"
-  cidr_block 				= "10.0.1.0/24"
+  vpc_id            = "${aws_vpc.test.id}"
+  cidr_block        = "10.0.1.0/24"
   availability_zone = "${data.aws_availability_zones.available.names[0]}"
 }
 
 resource "aws_subnet" "test2" {
-  vpc_id     				= "${aws_vpc.test.id}"
-  cidr_block 				= "10.0.2.0/24"
+  vpc_id            = "${aws_vpc.test.id}"
+  cidr_block        = "10.0.2.0/24"
   availability_zone = "${data.aws_availability_zones.available.names[1]}"
 }
 
 resource "aws_directory_service_directory" "test" {
-  name = "corp.notexample.com"
+  name     = "corp.notexample.com"
   password = "SuperSecretPassw0rd"
-  type = "MicrosoftAD"
+  type     = "MicrosoftAD"
+
   vpc_settings {
-    vpc_id = "${aws_vpc.test.id}"
+    vpc_id     = "${aws_vpc.test.id}"
     subnet_ids = ["${aws_subnet.test1.id}", "${aws_subnet.test2.id}"]
   }
 }
@@ -465,12 +498,12 @@ resource "aws_acm_certificate" "cert" {
 }
 
 resource "aws_ec2_client_vpn_endpoint" "test" {
-  description = "terraform-testacc-clientvpn-%s"
+  description            = "terraform-testacc-clientvpn-%s"
   server_certificate_arn = "${aws_acm_certificate.cert.arn}"
-  client_cidr_block = "10.0.0.0/16"
+  client_cidr_block      = "10.0.0.0/16"
 
   authentication_options {
-    type = "directory-service-authentication"
+    type                = "directory-service-authentication"
     active_directory_id = "${aws_directory_service_directory.test.id}"
   }
 
@@ -511,12 +544,12 @@ resource "aws_acm_certificate" "cert" {
 }
 
 resource "aws_ec2_client_vpn_endpoint" "test" {
-  description = "terraform-testacc-clientvpn-%s"
+  description            = "terraform-testacc-clientvpn-%s"
   server_certificate_arn = "${aws_acm_certificate.cert.arn}"
-  client_cidr_block = "10.0.0.0/16"
+  client_cidr_block      = "10.0.0.0/16"
 
   authentication_options {
-    type = "certificate-authentication"
+    type                       = "certificate-authentication"
     root_certificate_chain_arn = "${aws_acm_certificate.cert.arn}"
   }
 
@@ -526,7 +559,7 @@ resource "aws_ec2_client_vpn_endpoint" "test" {
 
   tags = {
     Environment = "production"
-    Usage = "original"
+    Usage       = "original"
   }
 }
 `, rName)
@@ -562,12 +595,12 @@ resource "aws_acm_certificate" "cert" {
 }
 
 resource "aws_ec2_client_vpn_endpoint" "test" {
-  description = "terraform-testacc-clientvpn-%s"
+  description            = "terraform-testacc-clientvpn-%s"
   server_certificate_arn = "${aws_acm_certificate.cert.arn}"
-  client_cidr_block = "10.0.0.0/16"
+  client_cidr_block      = "10.0.0.0/16"
 
   authentication_options {
-    type = "certificate-authentication"
+    type                       = "certificate-authentication"
     root_certificate_chain_arn = "${aws_acm_certificate.cert.arn}"
   }
 
@@ -580,4 +613,50 @@ resource "aws_ec2_client_vpn_endpoint" "test" {
   }
 }
 `, rName)
+}
+
+func testAccEc2ClientVpnEndpointConfigSplitTunnel(rName string, splitTunnel bool) string {
+	return fmt.Sprintf(`
+resource "tls_private_key" "test" {
+  algorithm = "RSA"
+}
+
+resource "tls_self_signed_cert" "test" {
+  allowed_uses = [
+    "digital_signature",
+    "key_encipherment",
+    "server_auth",
+  ]
+
+  key_algorithm         = "RSA"
+  private_key_pem       = "${tls_private_key.test.private_key_pem}"
+  validity_period_hours = 12
+
+  subject {
+    common_name  = "example.com"
+    organization = "ACME Examples, Inc"
+  }
+}
+
+resource "aws_acm_certificate" "test" {
+  certificate_body = "${tls_self_signed_cert.test.cert_pem}"
+  private_key      = "${tls_private_key.test.private_key_pem}"
+}
+
+resource "aws_ec2_client_vpn_endpoint" "test" {
+  client_cidr_block      = "10.0.0.0/16"
+  description            = %[1]q
+  server_certificate_arn = "${aws_acm_certificate.test.arn}"
+  split_tunnel           = %[2]t
+
+  authentication_options {
+    type                       = "certificate-authentication"
+    root_certificate_chain_arn = "${aws_acm_certificate.test.arn}"
+  }
+
+  connection_log_options {
+    enabled = false
+  }
+}
+`, rName, splitTunnel)
 }

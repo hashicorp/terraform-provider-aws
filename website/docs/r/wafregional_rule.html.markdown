@@ -1,6 +1,6 @@
 ---
 layout: "aws"
-page_title: "AWS: wafregional_rule"
+page_title: "AWS: aws_wafregional_rule"
 sidebar_current: "docs-aws-resource-wafregional-rule"
 description: |-
   Provides an AWS WAF Regional rule resource for use with ALB.
@@ -40,7 +40,7 @@ The following arguments are supported:
 
 * `name` - (Required) The name or description of the rule.
 * `metric_name` - (Required) The name or description for the Amazon CloudWatch metric of this rule.
-* `predicate` - (Optional) The objects to include in a rule.
+* `predicate` - (Optional) The objects to include in a rule (documented below).
 
 ## Nested Fields
 
@@ -61,3 +61,11 @@ See the [WAF Documentation](https://docs.aws.amazon.com/waf/latest/APIReference/
 In addition to all arguments above, the following attributes are exported:
 
 * `id` - The ID of the WAF Regional Rule.
+
+## Import
+
+WAF Regional Rule can be imported using the id, e.g.
+
+```
+$ terraform import aws_wafregional_rule.wafrule a1b2c3d4-d5f6-7777-8888-9999aaaabbbbcccc
+```

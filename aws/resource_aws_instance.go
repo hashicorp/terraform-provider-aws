@@ -336,6 +336,13 @@ func resourceAwsInstance() *schema.Resource {
 							ForceNew: true,
 						},
 
+						"kms_key_id": {
+							Type:     schema.TypeString,
+							Optional: true,
+							Computed: true,
+							ForceNew: true,
+						},
+
 						"iops": {
 							Type:             schema.TypeInt,
 							Optional:         true,
@@ -429,6 +436,20 @@ func resourceAwsInstance() *schema.Resource {
 							Type:     schema.TypeBool,
 							Optional: true,
 							Default:  true,
+							ForceNew: true,
+						},
+
+						"encrypted": {
+							Type:     schema.TypeBool,
+							Optional: true,
+							Computed: true,
+							ForceNew: true,
+						},
+
+						"kms_key_id": {
+							Type:     schema.TypeString,
+							Optional: true,
+							Computed: true,
 							ForceNew: true,
 						},
 
@@ -1328,15 +1349,18 @@ func readBlockDevicesFromInstance(instance *ec2.Instance, conn *ec2.EC2) (map[st
 		if vol.Iops != nil {
 			bd["iops"] = *vol.Iops
 		}
+		if vol.Encrypted != nil {
+			bd["encrypted"] = *vol.Encrypted
+		}
+		if vol.KmsKeyId != nil {
+			bd["kms_key_id"] = *vol.KmsKeyId
+		}
 
 		if blockDeviceIsRoot(instanceBd, instance) {
 			blockDevices["root"] = bd
 		} else {
 			if instanceBd.DeviceName != nil {
 				bd["device_name"] = *instanceBd.DeviceName
-			}
-			if vol.Encrypted != nil {
-				bd["encrypted"] = *vol.Encrypted
 			}
 			if vol.SnapshotId != nil {
 				bd["snapshot_id"] = *vol.SnapshotId
@@ -1370,7 +1394,7 @@ func fetchRootDeviceName(ami string, conn *ec2.EC2) (*string, error) {
 
 	// For a bad image, we just return nil so we don't block a refresh
 	if len(res.Images) == 0 {
-		return nil, nil
+		return nil, fmt.Errorf("No images found for AMI %s", ami)
 	}
 
 	image := res.Images[0]
@@ -1378,7 +1402,7 @@ func fetchRootDeviceName(ami string, conn *ec2.EC2) (*string, error) {
 
 	// Instance store backed AMIs do not provide a root device name.
 	if *image.RootDeviceType == ec2.DeviceTypeInstanceStore {
-		return nil, nil
+		return nil, fmt.Errorf("Instance store backed AMIs do not provide a root device name - Use an EBS AMI")
 	}
 
 	// Some AMIs have a RootDeviceName like "/dev/sda1" that does not appear as a
@@ -1498,6 +1522,10 @@ func readBlockDeviceMappingsFromConfig(
 				ebs.Encrypted = aws.Bool(v)
 			}
 
+			if v, ok := bd["kms_key_id"].(string); ok && v != "" {
+				ebs.KmsKeyId = aws.String(v)
+			}
+
 			if v, ok := bd["volume_size"].(int); ok && v != 0 {
 				ebs.VolumeSize = aws.Int64(int64(v))
 			}
@@ -1555,6 +1583,14 @@ func readBlockDeviceMappingsFromConfig(
 				DeleteOnTermination: aws.Bool(bd["delete_on_termination"].(bool)),
 			}
 
+			if v, ok := bd["encrypted"].(bool); ok && v {
+				ebs.Encrypted = aws.Bool(v)
+			}
+
+			if v, ok := bd["kms_key_id"].(string); ok && v != "" {
+				ebs.KmsKeyId = aws.String(bd["kms_key_id"].(string))
+			}
+
 			if v, ok := bd["volume_size"].(int); ok && v != 0 {
 				ebs.VolumeSize = aws.Int64(int64(v))
 			}
@@ -1575,20 +1611,15 @@ func readBlockDeviceMappingsFromConfig(
 				log.Print("[WARN] IOPs is only valid for storate type io1 for EBS Volumes")
 			}
 
-			if dn, err := fetchRootDeviceName(d.Get("ami").(string), conn); err == nil {
-				if dn == nil {
-					return nil, fmt.Errorf(
-						"Expected 1 AMI for ID: %s, got none",
-						d.Get("ami").(string))
-				}
-
-				blockDevices = append(blockDevices, &ec2.BlockDeviceMapping{
-					DeviceName: dn,
-					Ebs:        ebs,
-				})
-			} else {
-				return nil, err
+			dn, err := fetchRootDeviceName(d.Get("ami").(string), conn)
+			if err != nil {
+				return nil, fmt.Errorf("Expected 1 AMI for ID: %s (%s)", d.Get("ami").(string), err)
 			}
+
+			blockDevices = append(blockDevices, &ec2.BlockDeviceMapping{
+				DeviceName: dn,
+				Ebs:        ebs,
+			})
 		}
 	}
 
@@ -1764,9 +1795,12 @@ func buildAwsInstanceOpts(
 	if v, ok := d.GetOk("credit_specification"); ok {
 		// Only T2 and T3 are burstable performance instance types and supports Unlimited
 		if strings.HasPrefix(instanceType, "t2") || strings.HasPrefix(instanceType, "t3") {
-			cs := v.([]interface{})[0].(map[string]interface{})
-			opts.CreditSpecification = &ec2.CreditSpecificationRequest{
-				CpuCredits: aws.String(cs["cpu_credits"].(string)),
+			if cs, ok := v.([]interface{})[0].(map[string]interface{}); ok {
+				opts.CreditSpecification = &ec2.CreditSpecificationRequest{
+					CpuCredits: aws.String(cs["cpu_credits"].(string)),
+				}
+			} else {
+				log.Print("[WARN] credit_specification is defined but the value of cpu_credits is missing, default value will be used.")
 			}
 		} else {
 			log.Print("[WARN] credit_specification is defined but instance type is not T2/T3. Ignoring...")

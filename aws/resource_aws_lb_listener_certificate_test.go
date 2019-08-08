@@ -196,15 +196,15 @@ resource "aws_lb_listener_certificate" "additional_2" {
 }
 
 resource "aws_lb" "test" {
-  name_prefix    = "%s"
-  subnets = ["${aws_subnet.test.*.id[0]}", "${aws_subnet.test.*.id[1]}"]
-  internal = true
+  name_prefix = "%s"
+  subnets     = ["${aws_subnet.test.*.id[0]}", "${aws_subnet.test.*.id[1]}"]
+  internal    = true
 }
 
 resource "aws_lb_target_group" "test" {
   port     = "443"
   protocol = "HTTP"
-  vpc_id            = "${aws_vpc.test.id}"
+  vpc_id   = "${aws_vpc.test.id}"
 }
 
 resource "aws_lb_listener" "test" {
@@ -248,8 +248,9 @@ data "aws_availability_zones" "available" {}
 
 resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"
+
   tags = {
-  	Name = "terraform-testacc-lb-listener-certificate"
+    Name = "terraform-testacc-lb-listener-certificate"
   }
 }
 
@@ -262,10 +263,12 @@ resource "aws_subnet" "test" {
   vpc_id            = "${aws_vpc.test.id}"
   cidr_block        = "${element(var.subnets, count.index)}"
   availability_zone = "${element(data.aws_availability_zones.available.names, count.index)}"
+
   tags = {
     Name = "tf-acc-lb-listener-certificate-${count.index}"
   }
-}`, rName, suffix, suffix, suffix, suffix)
+}
+`, rName, suffix, suffix, suffix, suffix)
 }
 
 func testAccLbListenerCertificateAddNew(rName, prefix string) string {

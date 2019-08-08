@@ -475,6 +475,96 @@ func (c *StorageGateway) AddWorkingStorageWithContext(ctx aws.Context, input *Ad
 	return out, req.Send()
 }
 
+const opAssignTapePool = "AssignTapePool"
+
+// AssignTapePoolRequest generates a "aws/request.Request" representing the
+// client's request for the AssignTapePool operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See AssignTapePool for more information on using the AssignTapePool
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the AssignTapePoolRequest method.
+//    req, resp := client.AssignTapePoolRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/storagegateway-2013-06-30/AssignTapePool
+func (c *StorageGateway) AssignTapePoolRequest(input *AssignTapePoolInput) (req *request.Request, output *AssignTapePoolOutput) {
+	op := &request.Operation{
+		Name:       opAssignTapePool,
+		HTTPMethod: "POST",
+		HTTPPath:   "/",
+	}
+
+	if input == nil {
+		input = &AssignTapePoolInput{}
+	}
+
+	output = &AssignTapePoolOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// AssignTapePool API operation for AWS Storage Gateway.
+//
+// Assigns a tape to a tape pool for archiving. The tape assigned to a pool
+// is archived in the S3 storage class that is associated with the pool. When
+// you use your backup application to eject the tape, the tape is archived directly
+// into the S3 storage class (Glacier or Deep Archive) that corresponds to the
+// pool.
+//
+// Valid values: "GLACIER", "DEEP_ARCHIVE"
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for AWS Storage Gateway's
+// API operation AssignTapePool for usage and error information.
+//
+// Returned Error Codes:
+//   * ErrCodeInvalidGatewayRequestException "InvalidGatewayRequestException"
+//   An exception occurred because an invalid gateway request was issued to the
+//   service. For more information, see the error and message fields.
+//
+//   * ErrCodeInternalServerError "InternalServerError"
+//   An internal server error has occurred during the request. For more information,
+//   see the error and message fields.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/storagegateway-2013-06-30/AssignTapePool
+func (c *StorageGateway) AssignTapePool(input *AssignTapePoolInput) (*AssignTapePoolOutput, error) {
+	req, out := c.AssignTapePoolRequest(input)
+	return out, req.Send()
+}
+
+// AssignTapePoolWithContext is the same as AssignTapePool with the addition of
+// the ability to pass a context and additional request options.
+//
+// See AssignTapePool for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *StorageGateway) AssignTapePoolWithContext(ctx aws.Context, input *AssignTapePoolInput, opts ...request.Option) (*AssignTapePoolOutput, error) {
+	req, out := c.AssignTapePoolRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
 const opAttachVolume = "AttachVolume"
 
 // AttachVolumeRequest generates a "aws/request.Request" representing the
@@ -1831,10 +1921,10 @@ func (c *StorageGateway) DeleteGatewayRequest(input *DeleteGatewayInput) (req *r
 //
 // You no longer pay software charges after the gateway is deleted; however,
 // your existing Amazon EBS snapshots persist and you will continue to be billed
-// for these snapshots. You can choose to remove all remaining Amazon EBS snapshots
-// by canceling your Amazon EC2 subscription.  If you prefer not to cancel your
+// for these snapshots. You can choose to remove all remaining Amazon EBS snapshots
+// by canceling your Amazon EC2 subscription. If you prefer not to cancel your
 // Amazon EC2 subscription, you can delete your snapshots using the Amazon EC2
-// console. For more information, see the  AWS Storage Gateway Detail Page (http://aws.amazon.com/storagegateway).
+// console. For more information, see the AWS Storage Gateway Detail Page (http://aws.amazon.com/storagegateway).
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -3294,7 +3384,7 @@ func (c *StorageGateway) DescribeTapeArchivesWithContext(ctx aws.Context, input 
 //    // Example iterating over at most 3 pages of a DescribeTapeArchives operation.
 //    pageNum := 0
 //    err := client.DescribeTapeArchivesPages(params,
-//        func(page *DescribeTapeArchivesOutput, lastPage bool) bool {
+//        func(page *storagegateway.DescribeTapeArchivesOutput, lastPage bool) bool {
 //            pageNum++
 //            fmt.Println(page)
 //            return pageNum <= 3
@@ -3440,7 +3530,7 @@ func (c *StorageGateway) DescribeTapeRecoveryPointsWithContext(ctx aws.Context, 
 //    // Example iterating over at most 3 pages of a DescribeTapeRecoveryPoints operation.
 //    pageNum := 0
 //    err := client.DescribeTapeRecoveryPointsPages(params,
-//        func(page *DescribeTapeRecoveryPointsOutput, lastPage bool) bool {
+//        func(page *storagegateway.DescribeTapeRecoveryPointsOutput, lastPage bool) bool {
 //            pageNum++
 //            fmt.Println(page)
 //            return pageNum <= 3
@@ -3583,7 +3673,7 @@ func (c *StorageGateway) DescribeTapesWithContext(ctx aws.Context, input *Descri
 //    // Example iterating over at most 3 pages of a DescribeTapes operation.
 //    pageNum := 0
 //    err := client.DescribeTapesPages(params,
-//        func(page *DescribeTapesOutput, lastPage bool) bool {
+//        func(page *storagegateway.DescribeTapesOutput, lastPage bool) bool {
 //            pageNum++
 //            fmt.Println(page)
 //            return pageNum <= 3
@@ -3814,7 +3904,7 @@ func (c *StorageGateway) DescribeVTLDevicesWithContext(ctx aws.Context, input *D
 //    // Example iterating over at most 3 pages of a DescribeVTLDevices operation.
 //    pageNum := 0
 //    err := client.DescribeVTLDevicesPages(params,
-//        func(page *DescribeVTLDevicesOutput, lastPage bool) bool {
+//        func(page *storagegateway.DescribeVTLDevicesOutput, lastPage bool) bool {
 //            pageNum++
 //            fmt.Println(page)
 //            return pageNum <= 3
@@ -4312,7 +4402,7 @@ func (c *StorageGateway) ListFileSharesWithContext(ctx aws.Context, input *ListF
 //    // Example iterating over at most 3 pages of a ListFileShares operation.
 //    pageNum := 0
 //    err := client.ListFileSharesPages(params,
-//        func(page *ListFileSharesOutput, lastPage bool) bool {
+//        func(page *storagegateway.ListFileSharesOutput, lastPage bool) bool {
 //            pageNum++
 //            fmt.Println(page)
 //            return pageNum <= 3
@@ -4462,7 +4552,7 @@ func (c *StorageGateway) ListGatewaysWithContext(ctx aws.Context, input *ListGat
 //    // Example iterating over at most 3 pages of a ListGateways operation.
 //    pageNum := 0
 //    err := client.ListGatewaysPages(params,
-//        func(page *ListGatewaysOutput, lastPage bool) bool {
+//        func(page *storagegateway.ListGatewaysOutput, lastPage bool) bool {
 //            pageNum++
 //            fmt.Println(page)
 //            return pageNum <= 3
@@ -4696,7 +4786,7 @@ func (c *StorageGateway) ListTagsForResourceWithContext(ctx aws.Context, input *
 //    // Example iterating over at most 3 pages of a ListTagsForResource operation.
 //    pageNum := 0
 //    err := client.ListTagsForResourcePages(params,
-//        func(page *ListTagsForResourceOutput, lastPage bool) bool {
+//        func(page *storagegateway.ListTagsForResourceOutput, lastPage bool) bool {
 //            pageNum++
 //            fmt.Println(page)
 //            return pageNum <= 3
@@ -4846,7 +4936,7 @@ func (c *StorageGateway) ListTapesWithContext(ctx aws.Context, input *ListTapesI
 //    // Example iterating over at most 3 pages of a ListTapes operation.
 //    pageNum := 0
 //    err := client.ListTapesPages(params,
-//        func(page *ListTapesOutput, lastPage bool) bool {
+//        func(page *storagegateway.ListTapesOutput, lastPage bool) bool {
 //            pageNum++
 //            fmt.Println(page)
 //            return pageNum <= 3
@@ -5174,7 +5264,7 @@ func (c *StorageGateway) ListVolumesWithContext(ctx aws.Context, input *ListVolu
 //    // Example iterating over at most 3 pages of a ListVolumes operation.
 //    pageNum := 0
 //    err := client.ListVolumesPages(params,
-//        func(page *ListVolumesOutput, lastPage bool) bool {
+//        func(page *storagegateway.ListVolumesOutput, lastPage bool) bool {
 //            pageNum++
 //            fmt.Println(page)
 //            return pageNum <= 3
@@ -6798,6 +6888,91 @@ func (c *StorageGateway) UpdateSMBFileShareWithContext(ctx aws.Context, input *U
 	return out, req.Send()
 }
 
+const opUpdateSMBSecurityStrategy = "UpdateSMBSecurityStrategy"
+
+// UpdateSMBSecurityStrategyRequest generates a "aws/request.Request" representing the
+// client's request for the UpdateSMBSecurityStrategy operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See UpdateSMBSecurityStrategy for more information on using the UpdateSMBSecurityStrategy
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the UpdateSMBSecurityStrategyRequest method.
+//    req, resp := client.UpdateSMBSecurityStrategyRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/storagegateway-2013-06-30/UpdateSMBSecurityStrategy
+func (c *StorageGateway) UpdateSMBSecurityStrategyRequest(input *UpdateSMBSecurityStrategyInput) (req *request.Request, output *UpdateSMBSecurityStrategyOutput) {
+	op := &request.Operation{
+		Name:       opUpdateSMBSecurityStrategy,
+		HTTPMethod: "POST",
+		HTTPPath:   "/",
+	}
+
+	if input == nil {
+		input = &UpdateSMBSecurityStrategyInput{}
+	}
+
+	output = &UpdateSMBSecurityStrategyOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// UpdateSMBSecurityStrategy API operation for AWS Storage Gateway.
+//
+// Updates the SMB security strategy on a file gateway. This action is only
+// supported in file gateways.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for AWS Storage Gateway's
+// API operation UpdateSMBSecurityStrategy for usage and error information.
+//
+// Returned Error Codes:
+//   * ErrCodeInvalidGatewayRequestException "InvalidGatewayRequestException"
+//   An exception occurred because an invalid gateway request was issued to the
+//   service. For more information, see the error and message fields.
+//
+//   * ErrCodeInternalServerError "InternalServerError"
+//   An internal server error has occurred during the request. For more information,
+//   see the error and message fields.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/storagegateway-2013-06-30/UpdateSMBSecurityStrategy
+func (c *StorageGateway) UpdateSMBSecurityStrategy(input *UpdateSMBSecurityStrategyInput) (*UpdateSMBSecurityStrategyOutput, error) {
+	req, out := c.UpdateSMBSecurityStrategyRequest(input)
+	return out, req.Send()
+}
+
+// UpdateSMBSecurityStrategyWithContext is the same as UpdateSMBSecurityStrategy with the addition of
+// the ability to pass a context and additional request options.
+//
+// See UpdateSMBSecurityStrategy for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *StorageGateway) UpdateSMBSecurityStrategyWithContext(ctx aws.Context, input *UpdateSMBSecurityStrategyInput, opts ...request.Option) (*UpdateSMBSecurityStrategyOutput, error) {
+	req, out := c.UpdateSMBSecurityStrategyRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
 const opUpdateSnapshotSchedule = "UpdateSnapshotSchedule"
 
 // UpdateSnapshotScheduleRequest generates a "aws/request.Request" representing the
@@ -7556,6 +7731,95 @@ func (s *AddWorkingStorageOutput) SetGatewayARN(v string) *AddWorkingStorageOutp
 	return s
 }
 
+type AssignTapePoolInput struct {
+	_ struct{} `type:"structure"`
+
+	// The ID of the pool that you want to add your tape to for archiving. The tape
+	// in this pool is archived in the S3 storage class that is associated with
+	// the pool. When you use your backup application to eject the tape, the tape
+	// is archived directly into the storage class (Glacier or Deep Archive) that
+	// corresponds to the pool.
+	//
+	// Valid values: "GLACIER", "DEEP_ARCHIVE"
+	//
+	// PoolId is a required field
+	PoolId *string `min:"1" type:"string" required:"true"`
+
+	// The unique Amazon Resource Name (ARN) of the virtual tape that you want to
+	// add to the tape pool.
+	//
+	// TapeARN is a required field
+	TapeARN *string `min:"50" type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s AssignTapePoolInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s AssignTapePoolInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *AssignTapePoolInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "AssignTapePoolInput"}
+	if s.PoolId == nil {
+		invalidParams.Add(request.NewErrParamRequired("PoolId"))
+	}
+	if s.PoolId != nil && len(*s.PoolId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("PoolId", 1))
+	}
+	if s.TapeARN == nil {
+		invalidParams.Add(request.NewErrParamRequired("TapeARN"))
+	}
+	if s.TapeARN != nil && len(*s.TapeARN) < 50 {
+		invalidParams.Add(request.NewErrParamMinLen("TapeARN", 50))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetPoolId sets the PoolId field's value.
+func (s *AssignTapePoolInput) SetPoolId(v string) *AssignTapePoolInput {
+	s.PoolId = &v
+	return s
+}
+
+// SetTapeARN sets the TapeARN field's value.
+func (s *AssignTapePoolInput) SetTapeARN(v string) *AssignTapePoolInput {
+	s.TapeARN = &v
+	return s
+}
+
+type AssignTapePoolOutput struct {
+	_ struct{} `type:"structure"`
+
+	// The unique Amazon Resource Names (ARN) of the virtual tape that was added
+	// to the tape pool.
+	TapeARN *string `min:"50" type:"string"`
+}
+
+// String returns the string representation
+func (s AssignTapePoolOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s AssignTapePoolOutput) GoString() string {
+	return s.String()
+}
+
+// SetTapeARN sets the TapeARN field's value.
+func (s *AssignTapePoolOutput) SetTapeARN(v string) *AssignTapePoolOutput {
+	s.TapeARN = &v
+	return s
+}
+
 // AttachVolumeInput
 type AttachVolumeInput struct {
 	_ struct{} `type:"structure"`
@@ -8036,11 +8300,11 @@ type ChapInfo struct {
 
 	// The secret key that the initiator (for example, the Windows client) must
 	// provide to participate in mutual CHAP with the target.
-	SecretToAuthenticateInitiator *string `min:"1" type:"string"`
+	SecretToAuthenticateInitiator *string `min:"1" type:"string" sensitive:"true"`
 
 	// The secret key that the target must provide to participate in mutual CHAP
 	// with the initiator (e.g. Windows client).
-	SecretToAuthenticateTarget *string `min:"1" type:"string"`
+	SecretToAuthenticateTarget *string `min:"1" type:"string" sensitive:"true"`
 
 	// The Amazon Resource Name (ARN) of the volume.
 	//
@@ -10788,6 +11052,10 @@ type DescribeGatewayInformationOutput struct {
 	// key name. Each tag is a key-value pair. For a gateway with more than 10 tags
 	// assigned, you can view all tags using the ListTagsForResource API operation.
 	Tags []*Tag `type:"list"`
+
+	// The configuration settings for the virtual private cloud (VPC) endpoint for
+	// your gateway.
+	VPCEndpoint *string `type:"string"`
 }
 
 // String returns the string representation
@@ -10869,6 +11137,12 @@ func (s *DescribeGatewayInformationOutput) SetNextUpdateAvailabilityDate(v strin
 // SetTags sets the Tags field's value.
 func (s *DescribeGatewayInformationOutput) SetTags(v []*Tag) *DescribeGatewayInformationOutput {
 	s.Tags = v
+	return s
+}
+
+// SetVPCEndpoint sets the VPCEndpoint field's value.
+func (s *DescribeGatewayInformationOutput) SetVPCEndpoint(v string) *DescribeGatewayInformationOutput {
+	s.VPCEndpoint = &v
 	return s
 }
 
@@ -11192,9 +11466,21 @@ type DescribeSMBSettingsOutput struct {
 	// to return a list of gateways for your account and region.
 	GatewayARN *string `min:"50" type:"string"`
 
-	// This value is true if a password for the guest user “smbguest” is set, and
-	// otherwise false.
+	// This value is true if a password for the guest user “smbguest” is set,
+	// and otherwise false.
 	SMBGuestPasswordSet *bool `type:"boolean"`
+
+	// The type of security strategy that was specified for file gateway.
+	//
+	// ClientSpecified: SMBv1 is enabled, SMB signing is offered but not required,
+	// SMB encryption is offered but not required.
+	//
+	// MandatorySigning: SMBv1 is disabled, SMB signing is required, SMB encryption
+	// is offered but not required.
+	//
+	// MandatoryEncryption: SMBv1 is disabled, SMB signing is offered but not required,
+	// SMB encryption is required.
+	SMBSecurityStrategy *string `type:"string" enum:"SMBSecurityStrategy"`
 }
 
 // String returns the string representation
@@ -11222,6 +11508,12 @@ func (s *DescribeSMBSettingsOutput) SetGatewayARN(v string) *DescribeSMBSettings
 // SetSMBGuestPasswordSet sets the SMBGuestPasswordSet field's value.
 func (s *DescribeSMBSettingsOutput) SetSMBGuestPasswordSet(v bool) *DescribeSMBSettingsOutput {
 	s.SMBGuestPasswordSet = &v
+	return s
+}
+
+// SetSMBSecurityStrategy sets the SMBSecurityStrategy field's value.
+func (s *DescribeSMBSettingsOutput) SetSMBSecurityStrategy(v string) *DescribeSMBSettingsOutput {
+	s.SMBSecurityStrategy = &v
 	return s
 }
 
@@ -15571,7 +15863,7 @@ type UpdateChapCredentialsInput struct {
 	// The secret key must be between 12 and 16 bytes when encoded in UTF-8.
 	//
 	// SecretToAuthenticateInitiator is a required field
-	SecretToAuthenticateInitiator *string `min:"1" type:"string" required:"true"`
+	SecretToAuthenticateInitiator *string `min:"1" type:"string" required:"true" sensitive:"true"`
 
 	// The secret key that the target must provide to participate in mutual CHAP
 	// with the initiator (e.g. Windows client).
@@ -15579,7 +15871,7 @@ type UpdateChapCredentialsInput struct {
 	// Byte constraints: Minimum bytes of 12. Maximum bytes of 16.
 	//
 	// The secret key must be between 12 and 16 bytes when encoded in UTF-8.
-	SecretToAuthenticateTarget *string `min:"1" type:"string"`
+	SecretToAuthenticateTarget *string `min:"1" type:"string" sensitive:"true"`
 
 	// The Amazon Resource Name (ARN) of the iSCSI volume target. Use the DescribeStorediSCSIVolumes
 	// operation to return the TargetARN for specified VolumeARN.
@@ -16383,6 +16675,95 @@ func (s *UpdateSMBFileShareOutput) SetFileShareARN(v string) *UpdateSMBFileShare
 	return s
 }
 
+type UpdateSMBSecurityStrategyInput struct {
+	_ struct{} `type:"structure"`
+
+	// The Amazon Resource Name (ARN) of the gateway. Use the ListGateways operation
+	// to return a list of gateways for your account and region.
+	//
+	// GatewayARN is a required field
+	GatewayARN *string `min:"50" type:"string" required:"true"`
+
+	// Specifies the type of security strategy.
+	//
+	// ClientSpecified: SMBv1 is enabled, SMB signing is offered but not required,
+	// SMB encryption is offered but not required.
+	//
+	// MandatorySigning: SMBv1 is disabled, SMB signing is required, SMB encryption
+	// is offered but not required.
+	//
+	// MandatoryEncryption: SMBv1 is disabled, SMB signing is offered but not required,
+	// SMB encryption is required.
+	//
+	// SMBSecurityStrategy is a required field
+	SMBSecurityStrategy *string `type:"string" required:"true" enum:"SMBSecurityStrategy"`
+}
+
+// String returns the string representation
+func (s UpdateSMBSecurityStrategyInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s UpdateSMBSecurityStrategyInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *UpdateSMBSecurityStrategyInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "UpdateSMBSecurityStrategyInput"}
+	if s.GatewayARN == nil {
+		invalidParams.Add(request.NewErrParamRequired("GatewayARN"))
+	}
+	if s.GatewayARN != nil && len(*s.GatewayARN) < 50 {
+		invalidParams.Add(request.NewErrParamMinLen("GatewayARN", 50))
+	}
+	if s.SMBSecurityStrategy == nil {
+		invalidParams.Add(request.NewErrParamRequired("SMBSecurityStrategy"))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetGatewayARN sets the GatewayARN field's value.
+func (s *UpdateSMBSecurityStrategyInput) SetGatewayARN(v string) *UpdateSMBSecurityStrategyInput {
+	s.GatewayARN = &v
+	return s
+}
+
+// SetSMBSecurityStrategy sets the SMBSecurityStrategy field's value.
+func (s *UpdateSMBSecurityStrategyInput) SetSMBSecurityStrategy(v string) *UpdateSMBSecurityStrategyInput {
+	s.SMBSecurityStrategy = &v
+	return s
+}
+
+type UpdateSMBSecurityStrategyOutput struct {
+	_ struct{} `type:"structure"`
+
+	// The Amazon Resource Name (ARN) of the gateway. Use the ListGateways operation
+	// to return a list of gateways for your account and region.
+	GatewayARN *string `min:"50" type:"string"`
+}
+
+// String returns the string representation
+func (s UpdateSMBSecurityStrategyOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s UpdateSMBSecurityStrategyOutput) GoString() string {
+	return s.String()
+}
+
+// SetGatewayARN sets the GatewayARN field's value.
+func (s *UpdateSMBSecurityStrategyOutput) SetGatewayARN(v string) *UpdateSMBSecurityStrategyOutput {
+	s.GatewayARN = &v
+	return s
+}
+
 // A JSON object containing one or more of the following fields:
 //
 //    * UpdateSnapshotScheduleInput$Description
@@ -17102,4 +17483,15 @@ const (
 
 	// ObjectACLAwsExecRead is a ObjectACL enum value
 	ObjectACLAwsExecRead = "aws-exec-read"
+)
+
+const (
+	// SMBSecurityStrategyClientSpecified is a SMBSecurityStrategy enum value
+	SMBSecurityStrategyClientSpecified = "ClientSpecified"
+
+	// SMBSecurityStrategyMandatorySigning is a SMBSecurityStrategy enum value
+	SMBSecurityStrategyMandatorySigning = "MandatorySigning"
+
+	// SMBSecurityStrategyMandatoryEncryption is a SMBSecurityStrategy enum value
+	SMBSecurityStrategyMandatoryEncryption = "MandatoryEncryption"
 )

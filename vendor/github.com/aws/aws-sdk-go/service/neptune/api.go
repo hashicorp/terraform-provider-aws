@@ -1733,10 +1733,7 @@ func (c *Neptune) DeleteDBInstanceRequest(input *DeleteDBInstanceInput) (req *re
 // incompatible-restore, or incompatible-network, you can only delete it when
 // the SkipFinalSnapshot parameter is set to true.
 //
-// If the specified DB instance is part of a DB cluster, you can't delete the
-// DB instance if both of the following conditions are true:
-//
-//    * The DB instance is the only instance in the DB cluster.
+// You can't delete a DB instance if it is the only instance in the DB cluster.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -2540,7 +2537,7 @@ func (c *Neptune) DescribeDBEngineVersionsWithContext(ctx aws.Context, input *De
 //    // Example iterating over at most 3 pages of a DescribeDBEngineVersions operation.
 //    pageNum := 0
 //    err := client.DescribeDBEngineVersionsPages(params,
-//        func(page *DescribeDBEngineVersionsOutput, lastPage bool) bool {
+//        func(page *neptune.DescribeDBEngineVersionsOutput, lastPage bool) bool {
 //            pageNum++
 //            fmt.Println(page)
 //            return pageNum <= 3
@@ -2675,7 +2672,7 @@ func (c *Neptune) DescribeDBInstancesWithContext(ctx aws.Context, input *Describ
 //    // Example iterating over at most 3 pages of a DescribeDBInstances operation.
 //    pageNum := 0
 //    err := client.DescribeDBInstancesPages(params,
-//        func(page *DescribeDBInstancesOutput, lastPage bool) bool {
+//        func(page *neptune.DescribeDBInstancesOutput, lastPage bool) bool {
 //            pageNum++
 //            fmt.Println(page)
 //            return pageNum <= 3
@@ -2812,7 +2809,7 @@ func (c *Neptune) DescribeDBParameterGroupsWithContext(ctx aws.Context, input *D
 //    // Example iterating over at most 3 pages of a DescribeDBParameterGroups operation.
 //    pageNum := 0
 //    err := client.DescribeDBParameterGroupsPages(params,
-//        func(page *DescribeDBParameterGroupsOutput, lastPage bool) bool {
+//        func(page *neptune.DescribeDBParameterGroupsOutput, lastPage bool) bool {
 //            pageNum++
 //            fmt.Println(page)
 //            return pageNum <= 3
@@ -2947,7 +2944,7 @@ func (c *Neptune) DescribeDBParametersWithContext(ctx aws.Context, input *Descri
 //    // Example iterating over at most 3 pages of a DescribeDBParameters operation.
 //    pageNum := 0
 //    err := client.DescribeDBParametersPages(params,
-//        func(page *DescribeDBParametersOutput, lastPage bool) bool {
+//        func(page *neptune.DescribeDBParametersOutput, lastPage bool) bool {
 //            pageNum++
 //            fmt.Println(page)
 //            return pageNum <= 3
@@ -3085,7 +3082,7 @@ func (c *Neptune) DescribeDBSubnetGroupsWithContext(ctx aws.Context, input *Desc
 //    // Example iterating over at most 3 pages of a DescribeDBSubnetGroups operation.
 //    pageNum := 0
 //    err := client.DescribeDBSubnetGroupsPages(params,
-//        func(page *DescribeDBSubnetGroupsOutput, lastPage bool) bool {
+//        func(page *neptune.DescribeDBSubnetGroupsOutput, lastPage bool) bool {
 //            pageNum++
 //            fmt.Println(page)
 //            return pageNum <= 3
@@ -3291,7 +3288,7 @@ func (c *Neptune) DescribeEngineDefaultParametersWithContext(ctx aws.Context, in
 //    // Example iterating over at most 3 pages of a DescribeEngineDefaultParameters operation.
 //    pageNum := 0
 //    err := client.DescribeEngineDefaultParametersPages(params,
-//        func(page *DescribeEngineDefaultParametersOutput, lastPage bool) bool {
+//        func(page *neptune.DescribeEngineDefaultParametersOutput, lastPage bool) bool {
 //            pageNum++
 //            fmt.Println(page)
 //            return pageNum <= 3
@@ -3505,7 +3502,7 @@ func (c *Neptune) DescribeEventSubscriptionsWithContext(ctx aws.Context, input *
 //    // Example iterating over at most 3 pages of a DescribeEventSubscriptions operation.
 //    pageNum := 0
 //    err := client.DescribeEventSubscriptionsPages(params,
-//        func(page *DescribeEventSubscriptionsOutput, lastPage bool) bool {
+//        func(page *neptune.DescribeEventSubscriptionsOutput, lastPage bool) bool {
 //            pageNum++
 //            fmt.Println(page)
 //            return pageNum <= 3
@@ -3639,7 +3636,7 @@ func (c *Neptune) DescribeEventsWithContext(ctx aws.Context, input *DescribeEven
 //    // Example iterating over at most 3 pages of a DescribeEvents operation.
 //    pageNum := 0
 //    err := client.DescribeEventsPages(params,
-//        func(page *DescribeEventsOutput, lastPage bool) bool {
+//        func(page *neptune.DescribeEventsOutput, lastPage bool) bool {
 //            pageNum++
 //            fmt.Println(page)
 //            return pageNum <= 3
@@ -3769,7 +3766,7 @@ func (c *Neptune) DescribeOrderableDBInstanceOptionsWithContext(ctx aws.Context,
 //    // Example iterating over at most 3 pages of a DescribeOrderableDBInstanceOptions operation.
 //    pageNum := 0
 //    err := client.DescribeOrderableDBInstanceOptionsPages(params,
-//        func(page *DescribeOrderableDBInstanceOptionsOutput, lastPage bool) bool {
+//        func(page *neptune.DescribeOrderableDBInstanceOptionsOutput, lastPage bool) bool {
 //            pageNum++
 //            fmt.Println(page)
 //            return pageNum <= 3
@@ -5961,7 +5958,7 @@ type AddTagsToResourceInput struct {
 	_ struct{} `type:"structure"`
 
 	// The Amazon Neptune resource that the tags are added to. This value is an
-	// Amazon Resource Name (ARN). For information about creating an ARN, see  Constructing
+	// Amazon Resource Name (ARN). For information about creating an ARN, see Constructing
 	// an Amazon Resource Name (ARN) (https://docs.aws.amazon.com/neptune/latest/UserGuide/tagging.ARN.html#tagging.ARN.Constructing).
 	//
 	// ResourceName is a required field
@@ -6051,7 +6048,7 @@ type ApplyPendingMaintenanceActionInput struct {
 	OptInType *string `type:"string" required:"true"`
 
 	// The Amazon Resource Name (ARN) of the resource that the pending maintenance
-	// action applies to. For information about creating an ARN, see  Constructing
+	// action applies to. For information about creating an ARN, see Constructing
 	// an Amazon Resource Name (ARN) (https://docs.aws.amazon.com/neptune/latest/UserGuide/tagging.ARN.html#tagging.ARN.Constructing).
 	//
 	// ResourceIdentifier is a required field
@@ -6187,6 +6184,9 @@ func (s *CharacterSet) SetCharacterSetName(v string) *CharacterSet {
 
 // The configuration setting for the log types to be enabled for export to CloudWatch
 // Logs for a specific DB instance or DB cluster.
+//
+// The EnableLogTypes and DisableLogTypes arrays determine which logs will be
+// exported (or not exported) to CloudWatch Logs.
 type CloudwatchLogsExportConfiguration struct {
 	_ struct{} `type:"structure"`
 
@@ -6223,7 +6223,7 @@ type CopyDBClusterParameterGroupInput struct {
 	_ struct{} `type:"structure"`
 
 	// The identifier or Amazon Resource Name (ARN) for the source DB cluster parameter
-	// group. For information about creating an ARN, see  Constructing an Amazon
+	// group. For information about creating an ARN, see Constructing an Amazon
 	// Resource Name (ARN) (https://docs.aws.amazon.com/neptune/latest/UserGuide/tagging.ARN.html#tagging.ARN.Constructing).
 	//
 	// Constraints:
@@ -6504,7 +6504,7 @@ type CopyDBParameterGroupInput struct {
 	_ struct{} `type:"structure"`
 
 	// The identifier or ARN for the source DB parameter group. For information
-	// about creating an ARN, see  Constructing an Amazon Resource Name (ARN) (https://docs.aws.amazon.com/neptune/latest/UserGuide/tagging.ARN.html#tagging.ARN.Constructing).
+	// about creating an ARN, see Constructing an Amazon Resource Name (ARN) (https://docs.aws.amazon.com/neptune/latest/UserGuide/tagging.ARN.html#tagging.ARN.Constructing).
 	//
 	// Constraints:
 	//
@@ -6678,6 +6678,10 @@ type CreateDBClusterInput struct {
 	// you are creating.
 	DatabaseName *string `type:"string"`
 
+	// The list of log types that need to be enabled for exporting to CloudWatch
+	// Logs.
+	EnableCloudwatchLogsExports []*string `type:"list"`
+
 	// True to enable mapping of AWS Identity and Access Management (IAM) accounts
 	// to database accounts, and otherwise false.
 	//
@@ -6757,7 +6761,7 @@ type CreateDBClusterInput struct {
 	// backups are enabled using the BackupRetentionPeriod parameter.
 	//
 	// The default is a 30-minute window selected at random from an 8-hour block
-	// of time for each AWS Region. To see the time blocks available, see  Adjusting
+	// of time for each AWS Region. To see the time blocks available, see Adjusting
 	// the Preferred Maintenance Window (https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/AdjustingTheMaintenanceWindow.html)
 	// in the Amazon Neptune User Guide.
 	//
@@ -6779,7 +6783,7 @@ type CreateDBClusterInput struct {
 	//
 	// The default is a 30-minute window selected at random from an 8-hour block
 	// of time for each AWS Region, occurring on a random day of the week. To see
-	// the time blocks available, see  Adjusting the Preferred Maintenance Window
+	// the time blocks available, see Adjusting the Preferred Maintenance Window
 	// (https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/AdjustingTheMaintenanceWindow.html)
 	// in the Amazon Neptune User Guide.
 	//
@@ -6867,6 +6871,12 @@ func (s *CreateDBClusterInput) SetDBSubnetGroupName(v string) *CreateDBClusterIn
 // SetDatabaseName sets the DatabaseName field's value.
 func (s *CreateDBClusterInput) SetDatabaseName(v string) *CreateDBClusterInput {
 	s.DatabaseName = &v
+	return s
+}
+
+// SetEnableCloudwatchLogsExports sets the EnableCloudwatchLogsExports field's value.
+func (s *CreateDBClusterInput) SetEnableCloudwatchLogsExports(v []*string) *CreateDBClusterInput {
+	s.EnableCloudwatchLogsExports = v
 	return s
 }
 
@@ -8229,6 +8239,10 @@ type DBCluster struct {
 	// restore.
 	EarliestRestorableTime *time.Time `type:"timestamp"`
 
+	// A list of log types that this DB cluster is configured to export to CloudWatch
+	// Logs.
+	EnabledCloudwatchLogsExports []*string `type:"list"`
+
 	// Specifies the connection endpoint for the primary instance of the DB cluster.
 	Endpoint *string `type:"string"`
 
@@ -8406,6 +8420,12 @@ func (s *DBCluster) SetDbClusterResourceId(v string) *DBCluster {
 // SetEarliestRestorableTime sets the EarliestRestorableTime field's value.
 func (s *DBCluster) SetEarliestRestorableTime(v time.Time) *DBCluster {
 	s.EarliestRestorableTime = &v
+	return s
+}
+
+// SetEnabledCloudwatchLogsExports sets the EnabledCloudwatchLogsExports field's value.
+func (s *DBCluster) SetEnabledCloudwatchLogsExports(v []*string) *DBCluster {
+	s.EnabledCloudwatchLogsExports = v
 	return s
 }
 
@@ -13176,7 +13196,7 @@ type ListTagsForResourceInput struct {
 	Filters []*Filter `locationNameList:"Filter" type:"list"`
 
 	// The Amazon Neptune resource with tags to be listed. This value is an Amazon
-	// Resource Name (ARN). For information about creating an ARN, see  Constructing
+	// Resource Name (ARN). For information about creating an ARN, see Constructing
 	// an Amazon Resource Name (ARN) (https://docs.aws.amazon.com/neptune/latest/UserGuide/tagging.ARN.html#tagging.ARN.Constructing).
 	//
 	// ResourceName is a required field
@@ -13279,6 +13299,10 @@ type ModifyDBClusterInput struct {
 	//
 	//    * Must be a value from 1 to 35
 	BackupRetentionPeriod *int64 `type:"integer"`
+
+	// The configuration setting for the log types to be enabled for export to CloudWatch
+	// Logs for a specific DB cluster.
+	CloudwatchLogsExportConfiguration *CloudwatchLogsExportConfiguration `type:"structure"`
 
 	// The DB cluster identifier for the cluster being modified. This parameter
 	// is not case-sensitive.
@@ -13411,6 +13435,12 @@ func (s *ModifyDBClusterInput) SetApplyImmediately(v bool) *ModifyDBClusterInput
 // SetBackupRetentionPeriod sets the BackupRetentionPeriod field's value.
 func (s *ModifyDBClusterInput) SetBackupRetentionPeriod(v int64) *ModifyDBClusterInput {
 	s.BackupRetentionPeriod = &v
+	return s
+}
+
+// SetCloudwatchLogsExportConfiguration sets the CloudwatchLogsExportConfiguration field's value.
+func (s *ModifyDBClusterInput) SetCloudwatchLogsExportConfiguration(v *CloudwatchLogsExportConfiguration) *ModifyDBClusterInput {
+	s.CloudwatchLogsExportConfiguration = v
 	return s
 }
 
@@ -15430,7 +15460,7 @@ type RemoveTagsFromResourceInput struct {
 
 	// The Amazon Neptune resource that the tags are removed from. This value is
 	// an Amazon Resource Name (ARN). For information about creating an ARN, see
-	//  Constructing an Amazon Resource Name (ARN) (https://docs.aws.amazon.com/neptune/latest/UserGuide/tagging.ARN.html#tagging.ARN.Constructing).
+	// Constructing an Amazon Resource Name (ARN) (https://docs.aws.amazon.com/neptune/latest/UserGuide/tagging.ARN.html#tagging.ARN.Constructing).
 	//
 	// ResourceName is a required field
 	ResourceName *string `type:"string" required:"true"`
@@ -15751,6 +15781,10 @@ type RestoreDBClusterFromSnapshotInput struct {
 	// Not supported.
 	DatabaseName *string `type:"string"`
 
+	// The list of logs that the restored DB cluster is to export to Amazon CloudWatch
+	// Logs.
+	EnableCloudwatchLogsExports []*string `type:"list"`
+
 	// True to enable mapping of AWS Identity and Access Management (IAM) accounts
 	// to database accounts, and otherwise false.
 	//
@@ -15877,6 +15911,12 @@ func (s *RestoreDBClusterFromSnapshotInput) SetDatabaseName(v string) *RestoreDB
 	return s
 }
 
+// SetEnableCloudwatchLogsExports sets the EnableCloudwatchLogsExports field's value.
+func (s *RestoreDBClusterFromSnapshotInput) SetEnableCloudwatchLogsExports(v []*string) *RestoreDBClusterFromSnapshotInput {
+	s.EnableCloudwatchLogsExports = v
+	return s
+}
+
 // SetEnableIAMDatabaseAuthentication sets the EnableIAMDatabaseAuthentication field's value.
 func (s *RestoreDBClusterFromSnapshotInput) SetEnableIAMDatabaseAuthentication(v bool) *RestoreDBClusterFromSnapshotInput {
 	s.EnableIAMDatabaseAuthentication = &v
@@ -15986,6 +16026,10 @@ type RestoreDBClusterToPointInTimeInput struct {
 	// Example: mySubnetgroup
 	DBSubnetGroupName *string `type:"string"`
 
+	// The list of logs that the restored DB cluster is to export to CloudWatch
+	// Logs.
+	EnableCloudwatchLogsExports []*string `type:"list"`
+
 	// True to enable mapping of AWS Identity and Access Management (IAM) accounts
 	// to database accounts, and otherwise false.
 	//
@@ -16045,8 +16089,17 @@ type RestoreDBClusterToPointInTimeInput struct {
 	// Example: 2015-03-07T23:45:00Z
 	RestoreToTime *time.Time `type:"timestamp"`
 
-	// The type of restore to be performed. The only type of restore currently supported
-	// is full-copy (the default).
+	// The type of restore to be performed. You can specify one of the following
+	// values:
+	//
+	//    * full-copy - The new DB cluster is restored as a full copy of the source
+	//    DB cluster.
+	//
+	//    * copy-on-write - The new DB cluster is restored as a clone of the source
+	//    DB cluster.
+	//
+	// If you don't specify a RestoreType value, then the new DB cluster is restored
+	// as a full copy of the source DB cluster.
 	RestoreType *string `type:"string"`
 
 	// The identifier of the source DB cluster from which to restore.
@@ -16114,6 +16167,12 @@ func (s *RestoreDBClusterToPointInTimeInput) SetDBClusterParameterGroupName(v st
 // SetDBSubnetGroupName sets the DBSubnetGroupName field's value.
 func (s *RestoreDBClusterToPointInTimeInput) SetDBSubnetGroupName(v string) *RestoreDBClusterToPointInTimeInput {
 	s.DBSubnetGroupName = &v
+	return s
+}
+
+// SetEnableCloudwatchLogsExports sets the EnableCloudwatchLogsExports field's value.
+func (s *RestoreDBClusterToPointInTimeInput) SetEnableCloudwatchLogsExports(v []*string) *RestoreDBClusterToPointInTimeInput {
+	s.EnableCloudwatchLogsExports = v
 	return s
 }
 

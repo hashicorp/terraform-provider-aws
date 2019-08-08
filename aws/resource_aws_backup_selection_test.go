@@ -16,7 +16,7 @@ func TestAccAwsBackupSelection_basic(t *testing.T) {
 	resourceName := "aws_backup_selection.test"
 	rInt := acctest.RandInt()
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSBackup(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsBackupSelectionDestroy,
 		Steps: []resource.TestStep{
@@ -40,7 +40,7 @@ func TestAccAwsBackupSelection_disappears(t *testing.T) {
 	var selection1 backup.GetBackupSelectionOutput
 	rInt := acctest.RandInt()
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSBackup(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsBackupSelectionDestroy,
 		Steps: []resource.TestStep{
@@ -61,7 +61,7 @@ func TestAccAwsBackupSelection_withTags(t *testing.T) {
 	resourceName := "aws_backup_selection.test"
 	rInt := acctest.RandInt()
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSBackup(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsBackupSelectionDestroy,
 		Steps: []resource.TestStep{
@@ -87,7 +87,7 @@ func TestAccAwsBackupSelection_withResources(t *testing.T) {
 	resourceName := "aws_backup_selection.test"
 	rInt := acctest.RandInt()
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSBackup(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsBackupSelectionDestroy,
 		Steps: []resource.TestStep{
@@ -113,7 +113,7 @@ func TestAccAwsBackupSelection_updateTag(t *testing.T) {
 	resourceName := "aws_backup_selection.test"
 	rInt := acctest.RandInt()
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSBackup(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsBackupSelectionDestroy,
 		Steps: []resource.TestStep{
@@ -304,6 +304,17 @@ resource "aws_backup_selection" "test" {
 
 func testAccBackupSelectionConfigWithResources(rInt int) string {
 	return testAccBackupSelectionConfigBase(rInt) + fmt.Sprintf(`
+data "aws_availability_zones" "available" {
+  state = "available"
+}
+
+resource "aws_ebs_volume" "test" {
+  count = 2
+
+  availability_zone = "${data.aws_availability_zones.available.names[0]}"
+  size              = 1
+}
+
 resource "aws_backup_selection" "test" {
   plan_id      = "${aws_backup_plan.test.id}"
 
@@ -317,8 +328,8 @@ resource "aws_backup_selection" "test" {
   }
 
   resources = [
-    "arn:${data.aws_partition.current.partition}:elasticfilesystem:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:file-system/",
-    "arn:${data.aws_partition.current.partition}:ec2:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:volume/"
+    "${aws_ebs_volume.test.0.arn}",
+    "${aws_ebs_volume.test.1.arn}",
   ]
 }
 `, rInt)
