@@ -1,4 +1,16 @@
 ## 2.24.0 (Unreleased)
+
+BUG FIXES:
+
+* resource/aws_ami: Final retry after timeout reading AMI [GH-9674]
+* resource/aws_cloudhsm2_cluster: Final retries after timeouts creating, updating, and deleting CloudHSM clusters [GH-9675]
+* resource/aws_cloudhsm2_hsm: Final retries after timeouts creating and deleting CloudHSM modules [GH-9675]
+* resource/aws_cloudtrail: Final retries after timeouts creating and updating cloudtrails [GH-9678]
+* resource/aws_codebuild_project: Final retries after timeouts creating and updating codebuild projects [GH-9682]
+* resource/aws_codedeploy_deployment_group: Final retries after timeouts creating and updating deployment groups [GH-9682]
+* resource/aws_codepipeline: Final retry after timeout creating codepipeline [GH-9682]
+* resource/aws_vpn_gateway: Retry after timeouts attaching and deleting VPN gateways, and retrying attachment after pending VPN errors [GH-9641]
+
 ## 2.23.0 (August 07, 2019)
 
 FEATURES:
