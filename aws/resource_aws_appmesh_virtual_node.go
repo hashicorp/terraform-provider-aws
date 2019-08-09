@@ -28,14 +28,29 @@ func resourceAwsAppmeshVirtualNode() *schema.Resource {
 		MigrateState:  resourceAwsAppmeshVirtualNodeMigrateState,
 
 		Schema: map[string]*schema.Schema{
-			"name": {
+			"arn": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+
+			"created_date": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+
+			"last_updated_date": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+
+			"mesh_name": {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
 				ValidateFunc: validation.StringLenBetween(1, 255),
 			},
 
-			"mesh_name": {
+			"name": {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
@@ -49,14 +64,6 @@ func resourceAwsAppmeshVirtualNode() *schema.Resource {
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"backends": {
-							Type:     schema.TypeSet,
-							Removed:  "Use `backend` configuration blocks instead",
-							Optional: true,
-							Computed: true,
-							Elem:     &schema.Schema{Type: schema.TypeString},
-						},
-
 						"backend": {
 							Type:     schema.TypeSet,
 							Optional: true,
@@ -82,6 +89,14 @@ func resourceAwsAppmeshVirtualNode() *schema.Resource {
 								},
 							},
 							Set: appmeshBackendHash,
+						},
+
+						"backends": {
+							Type:     schema.TypeSet,
+							Removed:  "Use `backend` configuration blocks instead",
+							Optional: true,
+							Computed: true,
+							Elem:     &schema.Schema{Type: schema.TypeString},
 						},
 
 						"listener": {
@@ -254,17 +269,17 @@ func resourceAwsAppmeshVirtualNode() *schema.Resource {
 										ConflictsWith: []string{"spec.0.service_discovery.0.aws_cloud_map"},
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
+												"hostname": {
+													Type:         schema.TypeString,
+													Required:     true,
+													ValidateFunc: validation.NoZeroValues,
+												},
+
 												"service_name": {
 													Type:     schema.TypeString,
 													Removed:  "Use `hostname` argument instead",
 													Optional: true,
 													Computed: true,
-												},
-
-												"hostname": {
-													Type:         schema.TypeString,
-													Required:     true,
-													ValidateFunc: validation.NoZeroValues,
 												},
 											},
 										},
@@ -276,21 +291,6 @@ func resourceAwsAppmeshVirtualNode() *schema.Resource {
 				},
 			},
 
-			"arn": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-
-			"created_date": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-
-			"last_updated_date": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-
 			"tags": tagsSchema(),
 		},
 	}
@@ -300,13 +300,13 @@ func resourceAwsAppmeshVirtualNodeCreate(d *schema.ResourceData, meta interface{
 	conn := meta.(*AWSClient).appmeshpreviewconn
 
 	req := &appmesh.CreateVirtualNodeInput{
-		MeshName:        aws.String(d.Get("mesh_name").(string)),
-		VirtualNodeName: aws.String(d.Get("name").(string)),
-		Spec:            expandAppmeshVirtualNodeSpec(d.Get("spec").([]interface{})),
+		MeshName: aws.String(d.Get("mesh_name").(string)),
+		Spec:     expandAppmeshVirtualNodeSpec(d.Get("spec").([]interface{})),
 		// Tags:            tagsFromMapAppmesh(d.Get("tags").(map[string]interface{})),
+		VirtualNodeName: aws.String(d.Get("name").(string)),
 	}
 
-	log.Printf("[DEBUG] Creating App Mesh virtual node: %#v", req)
+	log.Printf("[DEBUG] Creating App Mesh virtual node: %s", req)
 	resp, err := conn.CreateVirtualNode(req)
 	if err != nil {
 		return fmt.Errorf("error creating App Mesh virtual node: %s", err)
@@ -330,7 +330,7 @@ func resourceAwsAppmeshVirtualNodeRead(d *schema.ResourceData, meta interface{})
 		return nil
 	}
 	if err != nil {
-		return fmt.Errorf("error reading App Mesh virtual node: %s", err)
+		return fmt.Errorf("error reading App Mesh virtual node (%s): %s", d.Id(), err)
 	}
 	if aws.StringValue(resp.VirtualNode.Status.Status) == appmesh.VirtualNodeStatusCodeDeleted {
 		log.Printf("[WARN] App Mesh virtual node (%s) not found, removing from state", d.Id())
@@ -338,11 +338,11 @@ func resourceAwsAppmeshVirtualNodeRead(d *schema.ResourceData, meta interface{})
 		return nil
 	}
 
-	d.Set("name", resp.VirtualNode.VirtualNodeName)
-	d.Set("mesh_name", resp.VirtualNode.MeshName)
 	d.Set("arn", resp.VirtualNode.Metadata.Arn)
 	d.Set("created_date", resp.VirtualNode.Metadata.CreatedAt.Format(time.RFC3339))
 	d.Set("last_updated_date", resp.VirtualNode.Metadata.LastUpdatedAt.Format(time.RFC3339))
+	d.Set("mesh_name", resp.VirtualNode.MeshName)
+	d.Set("name", resp.VirtualNode.VirtualNodeName)
 	err = d.Set("spec", flattenAppmeshVirtualNodeSpec(resp.VirtualNode.Spec))
 	if err != nil {
 		return fmt.Errorf("error setting spec: %s", err)
@@ -368,14 +368,14 @@ func resourceAwsAppmeshVirtualNodeUpdate(d *schema.ResourceData, meta interface{
 		_, v := d.GetChange("spec")
 		req := &appmesh.UpdateVirtualNodeInput{
 			MeshName:        aws.String(d.Get("mesh_name").(string)),
-			VirtualNodeName: aws.String(d.Get("name").(string)),
 			Spec:            expandAppmeshVirtualNodeSpec(v.([]interface{})),
+			VirtualNodeName: aws.String(d.Get("name").(string)),
 		}
 
-		log.Printf("[DEBUG] Updating App Mesh virtual node: %#v", req)
+		log.Printf("[DEBUG] Updating App Mesh virtual node: %s", req)
 		_, err := conn.UpdateVirtualNode(req)
 		if err != nil {
-			return fmt.Errorf("error updating App Mesh virtual node: %s", err)
+			return fmt.Errorf("error updating App Mesh virtual node (%s): %s", d.Id(), err)
 		}
 	}
 
@@ -404,7 +404,7 @@ func resourceAwsAppmeshVirtualNodeDelete(d *schema.ResourceData, meta interface{
 		return nil
 	}
 	if err != nil {
-		return fmt.Errorf("error deleting App Mesh virtual node: %s", err)
+		return fmt.Errorf("error deleting App Mesh virtual node (%s): %s", d.Id(), err)
 	}
 
 	return nil
@@ -431,8 +431,8 @@ func resourceAwsAppmeshVirtualNodeImport(d *schema.ResourceData, meta interface{
 	}
 
 	d.SetId(aws.StringValue(resp.VirtualNode.Metadata.Uid))
-	d.Set("name", resp.VirtualNode.VirtualNodeName)
 	d.Set("mesh_name", resp.VirtualNode.MeshName)
+	d.Set("name", resp.VirtualNode.VirtualNodeName)
 
 	return []*schema.ResourceData{d}, nil
 }
