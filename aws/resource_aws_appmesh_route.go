@@ -26,11 +26,19 @@ func resourceAwsAppmeshRoute() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"name": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: validation.StringLenBetween(1, 255),
+			"arn": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+
+			"created_date": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+
+			"last_updated_date": {
+				Type:     schema.TypeString,
+				Computed: true,
 			},
 
 			"mesh_name": {
@@ -40,7 +48,7 @@ func resourceAwsAppmeshRoute() *schema.Resource {
 				ValidateFunc: validation.StringLenBetween(1, 255),
 			},
 
-			"virtual_router_name": {
+			"name": {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
@@ -257,22 +265,14 @@ func resourceAwsAppmeshRoute() *schema.Resource {
 				},
 			},
 
-			"arn": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-
-			"created_date": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-
-			"last_updated_date": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-
 			"tags": tagsSchema(),
+
+			"virtual_router_name": {
+				Type:         schema.TypeString,
+				Required:     true,
+				ForceNew:     true,
+				ValidateFunc: validation.StringLenBetween(1, 255),
+			},
 		},
 	}
 }
@@ -283,12 +283,12 @@ func resourceAwsAppmeshRouteCreate(d *schema.ResourceData, meta interface{}) err
 	req := &appmesh.CreateRouteInput{
 		MeshName:          aws.String(d.Get("mesh_name").(string)),
 		RouteName:         aws.String(d.Get("name").(string)),
-		VirtualRouterName: aws.String(d.Get("virtual_router_name").(string)),
 		Spec:              expandAppmeshRouteSpec(d.Get("spec").([]interface{})),
 		Tags:              tagsFromMapAppmesh(d.Get("tags").(map[string]interface{})),
+		VirtualRouterName: aws.String(d.Get("virtual_router_name").(string)),
 	}
 
-	log.Printf("[DEBUG] Creating App Mesh route: %#v", req)
+	log.Printf("[DEBUG] Creating App Mesh route: %s", req)
 	resp, err := conn.CreateRoute(req)
 	if err != nil {
 		return fmt.Errorf("error creating App Mesh route: %s", err)
@@ -313,7 +313,7 @@ func resourceAwsAppmeshRouteRead(d *schema.ResourceData, meta interface{}) error
 		return nil
 	}
 	if err != nil {
-		return fmt.Errorf("error reading App Mesh route: %s", err)
+		return fmt.Errorf("error reading App Mesh route (%s): %s", d.Id(), err)
 	}
 	if aws.StringValue(resp.Route.Status.Status) == appmesh.RouteStatusCodeDeleted {
 		log.Printf("[WARN] App Mesh route (%s) not found, removing from state", d.Id())
@@ -321,16 +321,16 @@ func resourceAwsAppmeshRouteRead(d *schema.ResourceData, meta interface{}) error
 		return nil
 	}
 
-	d.Set("name", resp.Route.RouteName)
-	d.Set("mesh_name", resp.Route.MeshName)
-	d.Set("virtual_router_name", resp.Route.VirtualRouterName)
 	d.Set("arn", resp.Route.Metadata.Arn)
 	d.Set("created_date", resp.Route.Metadata.CreatedAt.Format(time.RFC3339))
 	d.Set("last_updated_date", resp.Route.Metadata.LastUpdatedAt.Format(time.RFC3339))
+	d.Set("mesh_name", resp.Route.MeshName)
+	d.Set("name", resp.Route.RouteName)
 	err = d.Set("spec", flattenAppmeshRouteSpec(resp.Route.Spec))
 	if err != nil {
 		return fmt.Errorf("error setting spec: %s", err)
 	}
+	d.Set("virtual_router_name", resp.Route.VirtualRouterName)
 
 	err = saveTagsAppmesh(conn, d, aws.StringValue(resp.Route.Metadata.Arn))
 	if isAWSErr(err, appmesh.ErrCodeNotFoundException, "") {
@@ -353,14 +353,14 @@ func resourceAwsAppmeshRouteUpdate(d *schema.ResourceData, meta interface{}) err
 		req := &appmesh.UpdateRouteInput{
 			MeshName:          aws.String(d.Get("mesh_name").(string)),
 			RouteName:         aws.String(d.Get("name").(string)),
-			VirtualRouterName: aws.String(d.Get("virtual_router_name").(string)),
 			Spec:              expandAppmeshRouteSpec(v.([]interface{})),
+			VirtualRouterName: aws.String(d.Get("virtual_router_name").(string)),
 		}
 
-		log.Printf("[DEBUG] Updating App Mesh route: %#v", req)
+		log.Printf("[DEBUG] Updating App Mesh route: %s", req)
 		_, err := conn.UpdateRoute(req)
 		if err != nil {
-			return fmt.Errorf("error updating App Mesh route: %s", err)
+			return fmt.Errorf("error updating App Mesh route (%s): %s", d.Id(), err)
 		}
 	}
 
@@ -390,7 +390,7 @@ func resourceAwsAppmeshRouteDelete(d *schema.ResourceData, meta interface{}) err
 		return nil
 	}
 	if err != nil {
-		return fmt.Errorf("error deleting App Mesh route: %s", err)
+		return fmt.Errorf("error deleting App Mesh route (%s): %s", d.Id(), err)
 	}
 
 	return nil
@@ -419,8 +419,8 @@ func resourceAwsAppmeshRouteImport(d *schema.ResourceData, meta interface{}) ([]
 	}
 
 	d.SetId(aws.StringValue(resp.Route.Metadata.Uid))
-	d.Set("name", resp.Route.RouteName)
 	d.Set("mesh_name", resp.Route.MeshName)
+	d.Set("name", resp.Route.RouteName)
 	d.Set("virtual_router_name", resp.Route.VirtualRouterName)
 
 	return []*schema.ResourceData{d}, nil
