@@ -143,10 +143,11 @@ func resourceAwsSfnActivityDelete(d *schema.ResourceData, meta interface{}) erro
 	conn := meta.(*AWSClient).sfnconn
 	log.Printf("[DEBUG] Deleting Step Functions Activity: %s", d.Id())
 
-	return resource.Retry(5*time.Minute, func() *resource.RetryError {
-		_, err := conn.DeleteActivity(&sfn.DeleteActivityInput{
-			ActivityArn: aws.String(d.Id()),
-		})
+	input := &sfn.DeleteActivityInput{
+		ActivityArn: aws.String(d.Id()),
+	}
+	err := resource.Retry(5*time.Minute, func() *resource.RetryError {
+		_, err := conn.DeleteActivity(input)
 
 		if err == nil {
 			return nil
@@ -154,4 +155,11 @@ func resourceAwsSfnActivityDelete(d *schema.ResourceData, meta interface{}) erro
 
 		return resource.NonRetryableError(err)
 	})
+	if isResourceTimeoutError(err) {
+		_, err = conn.DeleteActivity(input)
+	}
+	if err != nil {
+		return fmt.Errorf("Error deleting SFN Activity: %s", err)
+	}
+	return nil
 }

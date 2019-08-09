@@ -5,6 +5,7 @@ import (
 	"log"
 	"math"
 	"regexp"
+	"strings"
 
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/helper/schema"
@@ -21,6 +22,10 @@ func resourceAwsCloudWatchEventTarget() *schema.Resource {
 		Read:   resourceAwsCloudWatchEventTargetRead,
 		Update: resourceAwsCloudWatchEventTargetUpdate,
 		Delete: resourceAwsCloudWatchEventTargetDelete,
+
+		Importer: &schema.ResourceImporter{
+			State: resourceAwsCloudWatchEventTargetImport,
+		},
 
 		Schema: map[string]*schema.Schema{
 			"rule": {
@@ -650,4 +655,20 @@ func flattenAwsCloudWatchInputTransformer(inputTransformer *events.InputTransfor
 
 	result := []map[string]interface{}{config}
 	return result
+}
+
+func resourceAwsCloudWatchEventTargetImport(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
+	idParts := strings.SplitN(d.Id(), "/", 2)
+	if len(idParts) != 2 || idParts[0] == "" || idParts[1] == "" {
+		return nil, fmt.Errorf("unexpected format (%q), expected <rule-name>/<target-id>", d.Id())
+	}
+
+	ruleName := idParts[0]
+	targetName := idParts[1]
+
+	d.Set("target_id", targetName)
+	d.Set("rule", ruleName)
+	d.SetId(ruleName + "-" + targetName)
+
+	return []*schema.ResourceData{d}, nil
 }

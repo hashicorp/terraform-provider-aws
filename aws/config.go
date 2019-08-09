@@ -201,6 +201,7 @@ type AWSClient struct {
 	devicefarmconn                      *devicefarm.DeviceFarm
 	dlmconn                             *dlm.DLM
 	dmsconn                             *databasemigrationservice.DatabaseMigrationService
+	dnsSuffix                           string
 	docdbconn                           *docdb.DocDB
 	dsconn                              *directoryservice.DirectoryService
 	dxconn                              *directconnect.DirectConnect
@@ -339,6 +340,11 @@ func (c *Config) Client() (interface{}, error) {
 		return nil, err
 	}
 
+	dnsSuffix := "amazonaws.com"
+	if p, ok := endpoints.PartitionForRegion(endpoints.DefaultPartitions(), c.Region); ok {
+		dnsSuffix = p.DNSSuffix()
+	}
+
 	client := &AWSClient{
 		accountid:                           accountID,
 		acmconn:                             acm.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["acm"])})),
@@ -378,6 +384,7 @@ func (c *Config) Client() (interface{}, error) {
 		devicefarmconn:                      devicefarm.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["devicefarm"])})),
 		dlmconn:                             dlm.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["dlm"])})),
 		dmsconn:                             databasemigrationservice.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["dms"])})),
+		dnsSuffix:                           dnsSuffix,
 		docdbconn:                           docdb.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["docdb"])})),
 		dsconn:                              directoryservice.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["ds"])})),
 		dxconn:                              directconnect.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["directconnect"])})),
@@ -554,6 +561,12 @@ func (c *Config) Client() (interface{}, error) {
 	})
 
 	client.ec2conn.Handlers.Retry.PushBack(func(r *request.Request) {
+		if r.Operation.Name == "CreateClientVpnEndpoint" {
+			if isAWSErr(r.Error, "OperationNotPermitted", "Endpoint cannot be created while another endpoint is being created") {
+				r.Retryable = aws.Bool(true)
+			}
+		}
+
 		if r.Operation.Name == "CreateVpnConnection" {
 			if isAWSErr(r.Error, "VpnConnectionLimitExceeded", "maximum number of mutating objects has been reached") {
 				r.Retryable = aws.Bool(true)

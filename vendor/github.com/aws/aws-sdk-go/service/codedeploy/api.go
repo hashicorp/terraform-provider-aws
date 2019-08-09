@@ -5938,7 +5938,8 @@ func (s *BlueGreenDeploymentConfiguration) SetTerminateBlueInstancesOnDeployment
 }
 
 // Information about whether instances in the original environment are terminated
-// when a blue/green deployment is successful.
+// when a blue/green deployment is successful. BlueInstanceTerminationOption
+// does not apply to Lambda deployments.
 type BlueInstanceTerminationOption struct {
 	_ struct{} `type:"structure"`
 
@@ -5951,9 +5952,14 @@ type BlueInstanceTerminationOption struct {
 	//    the load balancer and removed from the deployment group.
 	Action *string `locationName:"action" type:"string" enum:"InstanceAction"`
 
-	// The number of minutes to wait after a successful blue/green deployment before
-	// terminating instances from the original environment. The maximum setting
-	// is 2880 minutes (2 days).
+	// For an Amazon EC2 deployment, the number of minutes to wait after a successful
+	// blue/green deployment before terminating instances from the original environment.
+	//
+	// For an Amazon ECS deployment, the number of minutes before deleting the original
+	// (blue) task set. During an Amazon ECS deployment, CodeDeploy shifts traffic
+	// from the original (blue) task set to a replacement (green) task set.
+	//
+	// The maximum setting is 2880 minutes (2 days).
 	TerminationWaitTimeInMinutes *int64 `locationName:"terminationWaitTimeInMinutes" type:"integer"`
 }
 
@@ -9982,7 +9988,13 @@ type ListDeploymentTargetsInput struct {
 	// It can be used to return the next set of deployment targets in the list.
 	NextToken *string `locationName:"nextToken" type:"string"`
 
-	// A key used to filter the returned targets.
+	// A key used to filter the returned targets. The two valid values are:
+	//
+	//    * TargetStatus - A TargetStatus filter string can be Failed, InProgress,
+	//    Pending, Ready, Skipped, Succeeded, or Unknown.
+	//
+	//    * ServerInstanceLabel - A ServerInstanceLabel filter string can be Blue
+	//    or Green.
 	TargetFilters map[string][]*string `locationName:"targetFilters" type:"map"`
 }
 

@@ -3744,9 +3744,9 @@ func (c *EC2) CreateDhcpOptionsRequest(input *CreateDhcpOptionsInput) (req *requ
 //    * domain-name-servers - The IP addresses of up to four domain name servers,
 //    or AmazonProvidedDNS. The default DHCP option set specifies AmazonProvidedDNS.
 //    If specifying more than one domain name server, specify the IP addresses
-//    in a single parameter, separated by commas. ITo have your instance to
-//    receive a custom DNS hostname as specified in domain-name, you must set
-//    domain-name-servers to a custom DNS server.
+//    in a single parameter, separated by commas. To have your instance receive
+//    a custom DNS hostname as specified in domain-name, you must set domain-name-servers
+//    to a custom DNS server.
 //
 //    * domain-name - If you're using AmazonProvidedDNS in us-east-1, specify
 //    ec2.internal. If you're using AmazonProvidedDNS in another Region, specify
@@ -16763,14 +16763,14 @@ func (c *EC2) DescribeRegionsRequest(input *DescribeRegionsInput) (req *request.
 
 // DescribeRegions API operation for Amazon Elastic Compute Cloud.
 //
-// Describes the Regions that are currently available to you. The API returns
-// a list of all the Regions, including Regions that are disabled for your account.
-// For information about enabling Regions for your account, see Enabling and
-// Disabling Regions (https://docs.aws.amazon.com/awsaccountbilling/latest/aboutv2/manage-account-payment.html#manage-account-payment-enable-disable-regions)
-// in the AWS Billing and Cost Management User Guide.
+// Describes the Regions that are enabled for your account, or all Regions.
 //
 // For a list of the Regions supported by Amazon EC2, see Regions and Endpoints
 // (https://docs.aws.amazon.com/general/latest/gr/rande.html#ec2_region).
+//
+// For information about enabling and disabling Regions for your account, see
+// Managing AWS Regions (https://docs.aws.amazon.com/general/latest/gr/rande-manage.html)
+// in the AWS General Reference.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -24072,6 +24072,78 @@ func (c *EC2) ExportTransitGatewayRoutes(input *ExportTransitGatewayRoutesInput)
 // for more information on using Contexts.
 func (c *EC2) ExportTransitGatewayRoutesWithContext(ctx aws.Context, input *ExportTransitGatewayRoutesInput, opts ...request.Option) (*ExportTransitGatewayRoutesOutput, error) {
 	req, out := c.ExportTransitGatewayRoutesRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
+const opGetCapacityReservationUsage = "GetCapacityReservationUsage"
+
+// GetCapacityReservationUsageRequest generates a "aws/request.Request" representing the
+// client's request for the GetCapacityReservationUsage operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See GetCapacityReservationUsage for more information on using the GetCapacityReservationUsage
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the GetCapacityReservationUsageRequest method.
+//    req, resp := client.GetCapacityReservationUsageRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/ec2-2016-11-15/GetCapacityReservationUsage
+func (c *EC2) GetCapacityReservationUsageRequest(input *GetCapacityReservationUsageInput) (req *request.Request, output *GetCapacityReservationUsageOutput) {
+	op := &request.Operation{
+		Name:       opGetCapacityReservationUsage,
+		HTTPMethod: "POST",
+		HTTPPath:   "/",
+	}
+
+	if input == nil {
+		input = &GetCapacityReservationUsageInput{}
+	}
+
+	output = &GetCapacityReservationUsageOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// GetCapacityReservationUsage API operation for Amazon Elastic Compute Cloud.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for Amazon Elastic Compute Cloud's
+// API operation GetCapacityReservationUsage for usage and error information.
+// See also, https://docs.aws.amazon.com/goto/WebAPI/ec2-2016-11-15/GetCapacityReservationUsage
+func (c *EC2) GetCapacityReservationUsage(input *GetCapacityReservationUsageInput) (*GetCapacityReservationUsageOutput, error) {
+	req, out := c.GetCapacityReservationUsageRequest(input)
+	return out, req.Send()
+}
+
+// GetCapacityReservationUsageWithContext is the same as GetCapacityReservationUsage with the addition of
+// the ability to pass a context and additional request options.
+//
+// See GetCapacityReservationUsage for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *EC2) GetCapacityReservationUsageWithContext(ctx aws.Context, input *GetCapacityReservationUsageInput, opts ...request.Option) (*GetCapacityReservationUsageOutput, error) {
+	req, out := c.GetCapacityReservationUsageRequest(input)
 	req.SetContext(ctx)
 	req.ApplyOptions(opts...)
 	return out, req.Send()
@@ -36385,9 +36457,13 @@ type CapacityReservation struct {
 	// The Availability Zone in which the capacity is reserved.
 	AvailabilityZone *string `locationName:"availabilityZone" type:"string"`
 
+	AvailabilityZoneId *string `locationName:"availabilityZoneId" type:"string"`
+
 	// The remaining capacity. Indicates the number of instances that can be launched
 	// in the Capacity Reservation.
 	AvailableInstanceCount *int64 `locationName:"availableInstanceCount" type:"integer"`
+
+	CapacityReservationArn *string `locationName:"capacityReservationArn" type:"string"`
 
 	// The ID of the Capacity Reservation.
 	CapacityReservationId *string `locationName:"capacityReservationId" type:"string"`
@@ -36443,6 +36519,8 @@ type CapacityReservation struct {
 	// The type of instance for which the Capacity Reservation reserves capacity.
 	InstanceType *string `locationName:"instanceType" type:"string"`
 
+	OwnerId *string `locationName:"ownerId" type:"string"`
+
 	// The current state of the Capacity Reservation. A Capacity Reservation can
 	// be in one of the following states:
 	//
@@ -36497,9 +36575,21 @@ func (s *CapacityReservation) SetAvailabilityZone(v string) *CapacityReservation
 	return s
 }
 
+// SetAvailabilityZoneId sets the AvailabilityZoneId field's value.
+func (s *CapacityReservation) SetAvailabilityZoneId(v string) *CapacityReservation {
+	s.AvailabilityZoneId = &v
+	return s
+}
+
 // SetAvailableInstanceCount sets the AvailableInstanceCount field's value.
 func (s *CapacityReservation) SetAvailableInstanceCount(v int64) *CapacityReservation {
 	s.AvailableInstanceCount = &v
+	return s
+}
+
+// SetCapacityReservationArn sets the CapacityReservationArn field's value.
+func (s *CapacityReservation) SetCapacityReservationArn(v string) *CapacityReservation {
+	s.CapacityReservationArn = &v
 	return s
 }
 
@@ -36554,6 +36644,12 @@ func (s *CapacityReservation) SetInstancePlatform(v string) *CapacityReservation
 // SetInstanceType sets the InstanceType field's value.
 func (s *CapacityReservation) SetInstanceType(v string) *CapacityReservation {
 	s.InstanceType = &v
+	return s
+}
+
+// SetOwnerId sets the OwnerId field's value.
+func (s *CapacityReservation) SetOwnerId(v string) *CapacityReservation {
+	s.OwnerId = &v
 	return s
 }
 
@@ -37419,7 +37515,12 @@ type ClientVpnEndpoint struct {
 	// The ARN of the server certificate.
 	ServerCertificateArn *string `locationName:"serverCertificateArn" type:"string"`
 
-	// Indicates whether VPN split tunneling is supported.
+	// Indicates whether split-tunnel is enabled in the AWS Client VPN endpoint
+	// endpoint.
+	//
+	// For information about split-tunnel VPN endpoints, see Split-Tunnel AWS Client
+	// VPN Endpoint (https://docs.aws.amazon.com/vpn/latest/clientvpn-admin/split-tunnel-vpn.html)
+	// in the AWS Client VPN Administrator Guide.
 	SplitTunnel *bool `locationName:"splitTunnel" type:"boolean"`
 
 	// The current state of the Client VPN endpoint.
@@ -38580,9 +38681,9 @@ type CreateCapacityReservationInput struct {
 	_ struct{} `type:"structure"`
 
 	// The Availability Zone in which to create the Capacity Reservation.
-	//
-	// AvailabilityZone is a required field
-	AvailabilityZone *string `type:"string" required:"true"`
+	AvailabilityZone *string `type:"string"`
+
+	AvailabilityZoneId *string `type:"string"`
 
 	// Unique, case-sensitive identifier that you provide to ensure the idempotency
 	// of the request. For more information, see How to Ensure Idempotency (https://docs.aws.amazon.com/AWSEC2/latest/APIReference/Run_Instance_Idempotency.html).
@@ -38692,9 +38793,6 @@ func (s CreateCapacityReservationInput) GoString() string {
 // Validate inspects the fields of the type to determine if they are valid.
 func (s *CreateCapacityReservationInput) Validate() error {
 	invalidParams := request.ErrInvalidParams{Context: "CreateCapacityReservationInput"}
-	if s.AvailabilityZone == nil {
-		invalidParams.Add(request.NewErrParamRequired("AvailabilityZone"))
-	}
 	if s.InstanceCount == nil {
 		invalidParams.Add(request.NewErrParamRequired("InstanceCount"))
 	}
@@ -38714,6 +38812,12 @@ func (s *CreateCapacityReservationInput) Validate() error {
 // SetAvailabilityZone sets the AvailabilityZone field's value.
 func (s *CreateCapacityReservationInput) SetAvailabilityZone(v string) *CreateCapacityReservationInput {
 	s.AvailabilityZone = &v
+	return s
+}
+
+// SetAvailabilityZoneId sets the AvailabilityZoneId field's value.
+func (s *CreateCapacityReservationInput) SetAvailabilityZoneId(v string) *CreateCapacityReservationInput {
+	s.AvailabilityZoneId = &v
 	return s
 }
 
@@ -38870,6 +38974,16 @@ type CreateClientVpnEndpointInput struct {
 	// ServerCertificateArn is a required field
 	ServerCertificateArn *string `type:"string" required:"true"`
 
+	// Indicates whether split-tunnel is enabled on the AWS Client VPN endpoint
+	// endpoint.
+	//
+	// By default, split-tunnel on a VPN endpoint is disabled.
+	//
+	// For information about split-tunnel VPN endpoints, see Split-Tunnel AWS Client
+	// VPN Endpoint (https://docs.aws.amazon.com/vpn/latest/clientvpn-admin/split-tunnel-vpn.html)
+	// in the AWS Client VPN Administrator Guide.
+	SplitTunnel *bool `type:"boolean"`
+
 	// The tags to apply to the Client VPN endpoint during creation.
 	TagSpecifications []*TagSpecification `locationName:"TagSpecification" locationNameList:"item" type:"list"`
 
@@ -38956,6 +39070,12 @@ func (s *CreateClientVpnEndpointInput) SetDryRun(v bool) *CreateClientVpnEndpoin
 // SetServerCertificateArn sets the ServerCertificateArn field's value.
 func (s *CreateClientVpnEndpointInput) SetServerCertificateArn(v string) *CreateClientVpnEndpointInput {
 	s.ServerCertificateArn = &v
+	return s
+}
+
+// SetSplitTunnel sets the SplitTunnel field's value.
+func (s *CreateClientVpnEndpointInput) SetSplitTunnel(v bool) *CreateClientVpnEndpointInput {
+	s.SplitTunnel = &v
 	return s
 }
 
@@ -40585,6 +40705,9 @@ type CreateLaunchTemplateInput struct {
 	// LaunchTemplateName is a required field
 	LaunchTemplateName *string `min:"3" type:"string" required:"true"`
 
+	// The tags to apply to the launch template during creation.
+	TagSpecifications []*TagSpecification `locationName:"TagSpecification" locationNameList:"item" type:"list"`
+
 	// A description for the first version of the launch template.
 	VersionDescription *string `type:"string"`
 }
@@ -40644,6 +40767,12 @@ func (s *CreateLaunchTemplateInput) SetLaunchTemplateData(v *RequestLaunchTempla
 // SetLaunchTemplateName sets the LaunchTemplateName field's value.
 func (s *CreateLaunchTemplateInput) SetLaunchTemplateName(v string) *CreateLaunchTemplateInput {
 	s.LaunchTemplateName = &v
+	return s
+}
+
+// SetTagSpecifications sets the TagSpecifications field's value.
+func (s *CreateLaunchTemplateInput) SetTagSpecifications(v []*TagSpecification) *CreateLaunchTemplateInput {
+	s.TagSpecifications = v
 	return s
 }
 
@@ -42015,7 +42144,7 @@ func (s *CreateSnapshotInput) SetVolumeId(v string) *CreateSnapshotInput {
 type CreateSnapshotsInput struct {
 	_ struct{} `type:"structure"`
 
-	// Copies the tags from the specified instance to all snapshots.
+	// Copies the tags from the specified volume to corresponding snapshot.
 	CopyTagsFromSource *string `type:"string" enum:"CopyTagsFromSource"`
 
 	// A description propagated to every snapshot specified by the instance.
@@ -53856,7 +53985,7 @@ type DescribeNetworkInterfacesInput struct {
 	//
 	//    * attachment.attachment-id - The ID of the interface attachment.
 	//
-	//    * attachment.attach.time - The time that the network interface was attached
+	//    * attachment.attach-time - The time that the network interface was attached
 	//    to an instance.
 	//
 	//    * attachment.delete-on-termination - Indicates whether the attachment
@@ -54406,6 +54535,10 @@ func (s *DescribePublicIpv4PoolsOutput) SetPublicIpv4Pools(v []*PublicIpv4Pool) 
 type DescribeRegionsInput struct {
 	_ struct{} `type:"structure"`
 
+	// Indicates whether to display all Regions, including Regions that are disabled
+	// for your account.
+	AllRegions *bool `type:"boolean"`
+
 	// Checks whether you have the required permissions for the action, without
 	// actually making the request, and provides an error response. If you have
 	// the required permissions, the error response is DryRunOperation. Otherwise,
@@ -54419,7 +54552,8 @@ type DescribeRegionsInput struct {
 	//    * region-name - The name of the Region (for example, us-east-1).
 	Filters []*Filter `locationName:"Filter" locationNameList:"Filter" type:"list"`
 
-	// The names of the Regions.
+	// The names of the Regions. You can specify any Regions, whether they are enabled
+	// and disabled for your account.
 	RegionNames []*string `locationName:"RegionName" locationNameList:"RegionName" type:"list"`
 }
 
@@ -54431,6 +54565,12 @@ func (s DescribeRegionsInput) String() string {
 // GoString returns the string representation
 func (s DescribeRegionsInput) GoString() string {
 	return s.String()
+}
+
+// SetAllRegions sets the AllRegions field's value.
+func (s *DescribeRegionsInput) SetAllRegions(v bool) *DescribeRegionsInput {
+	s.AllRegions = &v
+	return s
 }
 
 // SetDryRun sets the DryRun field's value.
@@ -64213,6 +64353,139 @@ func (s *FpgaImageState) SetMessage(v string) *FpgaImageState {
 	return s
 }
 
+type GetCapacityReservationUsageInput struct {
+	_ struct{} `type:"structure"`
+
+	// CapacityReservationId is a required field
+	CapacityReservationId *string `type:"string" required:"true"`
+
+	DryRun *bool `type:"boolean"`
+
+	MaxResults *int64 `min:"1" type:"integer"`
+
+	NextToken *string `type:"string"`
+}
+
+// String returns the string representation
+func (s GetCapacityReservationUsageInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s GetCapacityReservationUsageInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *GetCapacityReservationUsageInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "GetCapacityReservationUsageInput"}
+	if s.CapacityReservationId == nil {
+		invalidParams.Add(request.NewErrParamRequired("CapacityReservationId"))
+	}
+	if s.MaxResults != nil && *s.MaxResults < 1 {
+		invalidParams.Add(request.NewErrParamMinValue("MaxResults", 1))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetCapacityReservationId sets the CapacityReservationId field's value.
+func (s *GetCapacityReservationUsageInput) SetCapacityReservationId(v string) *GetCapacityReservationUsageInput {
+	s.CapacityReservationId = &v
+	return s
+}
+
+// SetDryRun sets the DryRun field's value.
+func (s *GetCapacityReservationUsageInput) SetDryRun(v bool) *GetCapacityReservationUsageInput {
+	s.DryRun = &v
+	return s
+}
+
+// SetMaxResults sets the MaxResults field's value.
+func (s *GetCapacityReservationUsageInput) SetMaxResults(v int64) *GetCapacityReservationUsageInput {
+	s.MaxResults = &v
+	return s
+}
+
+// SetNextToken sets the NextToken field's value.
+func (s *GetCapacityReservationUsageInput) SetNextToken(v string) *GetCapacityReservationUsageInput {
+	s.NextToken = &v
+	return s
+}
+
+type GetCapacityReservationUsageOutput struct {
+	_ struct{} `type:"structure"`
+
+	AvailableInstanceCount *int64 `locationName:"availableInstanceCount" type:"integer"`
+
+	CapacityReservationId *string `locationName:"capacityReservationId" type:"string"`
+
+	InstanceType *string `locationName:"instanceType" type:"string"`
+
+	InstanceUsages []*InstanceUsage `locationName:"instanceUsageSet" locationNameList:"item" type:"list"`
+
+	NextToken *string `locationName:"nextToken" type:"string"`
+
+	State *string `locationName:"state" type:"string" enum:"CapacityReservationState"`
+
+	TotalInstanceCount *int64 `locationName:"totalInstanceCount" type:"integer"`
+}
+
+// String returns the string representation
+func (s GetCapacityReservationUsageOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s GetCapacityReservationUsageOutput) GoString() string {
+	return s.String()
+}
+
+// SetAvailableInstanceCount sets the AvailableInstanceCount field's value.
+func (s *GetCapacityReservationUsageOutput) SetAvailableInstanceCount(v int64) *GetCapacityReservationUsageOutput {
+	s.AvailableInstanceCount = &v
+	return s
+}
+
+// SetCapacityReservationId sets the CapacityReservationId field's value.
+func (s *GetCapacityReservationUsageOutput) SetCapacityReservationId(v string) *GetCapacityReservationUsageOutput {
+	s.CapacityReservationId = &v
+	return s
+}
+
+// SetInstanceType sets the InstanceType field's value.
+func (s *GetCapacityReservationUsageOutput) SetInstanceType(v string) *GetCapacityReservationUsageOutput {
+	s.InstanceType = &v
+	return s
+}
+
+// SetInstanceUsages sets the InstanceUsages field's value.
+func (s *GetCapacityReservationUsageOutput) SetInstanceUsages(v []*InstanceUsage) *GetCapacityReservationUsageOutput {
+	s.InstanceUsages = v
+	return s
+}
+
+// SetNextToken sets the NextToken field's value.
+func (s *GetCapacityReservationUsageOutput) SetNextToken(v string) *GetCapacityReservationUsageOutput {
+	s.NextToken = &v
+	return s
+}
+
+// SetState sets the State field's value.
+func (s *GetCapacityReservationUsageOutput) SetState(v string) *GetCapacityReservationUsageOutput {
+	s.State = &v
+	return s
+}
+
+// SetTotalInstanceCount sets the TotalInstanceCount field's value.
+func (s *GetCapacityReservationUsageOutput) SetTotalInstanceCount(v int64) *GetCapacityReservationUsageOutput {
+	s.TotalInstanceCount = &v
+	return s
+}
+
 type GetConsoleOutputInput struct {
 	_ struct{} `type:"structure"`
 
@@ -66175,7 +66448,7 @@ type Image struct {
 	// The AWS account ID of the image owner.
 	OwnerId *string `locationName:"imageOwnerId" type:"string"`
 
-	// This value is set for Windows AMIs; otherwise, it is blank.
+	// This value is set to windows for Windows AMIs; otherwise, it is blank.
 	Platform *string `locationName:"platform" type:"string" enum:"PlatformValues"`
 
 	// Any product codes associated with the AMI.
@@ -69467,6 +69740,36 @@ func (s *InstanceStatusSummary) SetStatus(v string) *InstanceStatusSummary {
 	return s
 }
 
+type InstanceUsage struct {
+	_ struct{} `type:"structure"`
+
+	AccountId *string `locationName:"accountId" type:"string"`
+
+	UsedInstanceCount *int64 `locationName:"usedInstanceCount" type:"integer"`
+}
+
+// String returns the string representation
+func (s InstanceUsage) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s InstanceUsage) GoString() string {
+	return s.String()
+}
+
+// SetAccountId sets the AccountId field's value.
+func (s *InstanceUsage) SetAccountId(v string) *InstanceUsage {
+	s.AccountId = &v
+	return s
+}
+
+// SetUsedInstanceCount sets the UsedInstanceCount field's value.
+func (s *InstanceUsage) SetUsedInstanceCount(v int64) *InstanceUsage {
+	s.UsedInstanceCount = &v
+	return s
+}
+
 // Describes an internet gateway.
 type InternetGateway struct {
 	_ struct{} `type:"structure"`
@@ -72124,6 +72427,13 @@ type ModifyClientVpnEndpointInput struct {
 	// The ARN of the server certificate to be used. The server certificate must
 	// be provisioned in AWS Certificate Manager (ACM).
 	ServerCertificateArn *string `type:"string"`
+
+	// Indicates whether the VPN is split-tunnel.
+	//
+	// For information about split-tunnel VPN endpoints, see Split-Tunnel AWS Client
+	// VPN Endpoint (https://docs.aws.amazon.com/vpn/latest/clientvpn-admin/split-tunnel-vpn.html)
+	// in the AWS Client VPN Administrator Guide.
+	SplitTunnel *bool `type:"boolean"`
 }
 
 // String returns the string representation
@@ -72182,6 +72492,12 @@ func (s *ModifyClientVpnEndpointInput) SetDryRun(v bool) *ModifyClientVpnEndpoin
 // SetServerCertificateArn sets the ServerCertificateArn field's value.
 func (s *ModifyClientVpnEndpointInput) SetServerCertificateArn(v string) *ModifyClientVpnEndpointInput {
 	s.ServerCertificateArn = &v
+	return s
+}
+
+// SetSplitTunnel sets the SplitTunnel field's value.
+func (s *ModifyClientVpnEndpointInput) SetSplitTunnel(v bool) *ModifyClientVpnEndpointInput {
+	s.SplitTunnel = &v
 	return s
 }
 
@@ -78582,6 +78898,10 @@ type Region struct {
 	// The Region service endpoint.
 	Endpoint *string `locationName:"regionEndpoint" type:"string"`
 
+	// The Region opt-in status. The possible values are opt-in-not-required, opted-in,
+	// and not-opted-in.
+	OptInStatus *string `locationName:"optInStatus" type:"string"`
+
 	// The name of the Region.
 	RegionName *string `locationName:"regionName" type:"string"`
 }
@@ -78599,6 +78919,12 @@ func (s Region) GoString() string {
 // SetEndpoint sets the Endpoint field's value.
 func (s *Region) SetEndpoint(v string) *Region {
 	s.Endpoint = &v
+	return s
+}
+
+// SetOptInStatus sets the OptInStatus field's value.
+func (s *Region) SetOptInStatus(v string) *Region {
+	s.OptInStatus = &v
 	return s
 }
 
@@ -88103,8 +88429,11 @@ type TagSpecification struct {
 	_ struct{} `type:"structure"`
 
 	// The type of resource to tag. Currently, the resource types that support tagging
-	// on creation are fleet, dedicated-host, instance, snapshot, and volume. To
-	// tag a resource after it has been created, see CreateTags.
+	// on creation are: capacity-reservation | client-vpn-endpoint | dedicated-host
+	// | fleet | instance | launch-template | snapshot | transit-gateway | transit-gateway-attachment
+	// | transit-gateway-route-table | volume.
+	//
+	// To tag a resource after it has been created, see CreateTags.
 	ResourceType *string `locationName:"resourceType" type:"string" enum:"ResourceType"`
 
 	// The tags to apply to the resource.
@@ -92819,6 +93148,9 @@ const (
 
 	// AllocationStrategyDiversified is a AllocationStrategy enum value
 	AllocationStrategyDiversified = "diversified"
+
+	// AllocationStrategyCapacityOptimized is a AllocationStrategy enum value
+	AllocationStrategyCapacityOptimized = "capacityOptimized"
 )
 
 const (
@@ -94907,6 +95239,9 @@ const (
 
 	// SpotAllocationStrategyDiversified is a SpotAllocationStrategy enum value
 	SpotAllocationStrategyDiversified = "diversified"
+
+	// SpotAllocationStrategyCapacityOptimized is a SpotAllocationStrategy enum value
+	SpotAllocationStrategyCapacityOptimized = "capacity-optimized"
 )
 
 const (

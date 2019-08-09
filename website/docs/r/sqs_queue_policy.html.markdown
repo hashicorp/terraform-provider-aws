@@ -34,7 +34,7 @@ resource "aws_sqs_queue_policy" "test" {
       "Resource": "${aws_sqs_queue.q.arn}",
       "Condition": {
         "ArnEquals": {
-          "aws:SourceArn": "${aws_sqs_queue.q.arn}"
+          "aws:SourceArn": "${aws_sns_topic.example.arn}"
         }
       }
     }

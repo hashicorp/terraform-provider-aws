@@ -867,7 +867,7 @@ func TestAccAWSS3Bucket_Logging(t *testing.T) {
 	})
 }
 
-func TestAccAWSS3Bucket_Lifecycle(t *testing.T) {
+func TestAccAWSS3Bucket_LifecycleBasic(t *testing.T) {
 	rInt := acctest.RandInt()
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -942,6 +942,24 @@ func TestAccAWSS3Bucket_Lifecycle(t *testing.T) {
 						"aws_s3_bucket.bucket", "lifecycle_rule.3.tags.tagKey", "tagValue"),
 					resource.TestCheckResourceAttr(
 						"aws_s3_bucket.bucket", "lifecycle_rule.3.tags.terraform", "hashicorp"),
+					resource.TestCheckResourceAttr(
+						"aws_s3_bucket.bucket", "lifecycle_rule.4.id", "id5"),
+					resource.TestCheckResourceAttr(
+						"aws_s3_bucket.bucket", "lifecycle_rule.4.tags.tagKey", "tagValue"),
+					resource.TestCheckResourceAttr(
+						"aws_s3_bucket.bucket", "lifecycle_rule.4.tags.terraform", "hashicorp"),
+					resource.TestCheckResourceAttr(
+						"aws_s3_bucket.bucket", "lifecycle_rule.4.transition.460947558.days", "0"),
+					resource.TestCheckResourceAttr(
+						"aws_s3_bucket.bucket", "lifecycle_rule.4.transition.460947558.storage_class", "GLACIER"),
+					resource.TestCheckResourceAttr(
+						"aws_s3_bucket.bucket", "lifecycle_rule.5.id", "id6"),
+					resource.TestCheckResourceAttr(
+						"aws_s3_bucket.bucket", "lifecycle_rule.5.tags.tagKey", "tagValue"),
+					resource.TestCheckResourceAttr(
+						"aws_s3_bucket.bucket", "lifecycle_rule.5.transition.460947558.days", "0"),
+					resource.TestCheckResourceAttr(
+						"aws_s3_bucket.bucket", "lifecycle_rule.5.transition.460947558.storage_class", "GLACIER"),
 				),
 			},
 			{
@@ -2539,6 +2557,33 @@ resource "aws_s3_bucket" "bucket" {
       date = "2016-01-12"
     }
   }
+	lifecycle_rule {
+		id = "id5"
+		enabled = true
+
+		tags = {
+			"tagKey" = "tagValue"
+			"terraform" = "hashicorp"
+		}
+
+		transition {
+			days = 0
+			storage_class = "GLACIER"
+		}
+	}
+	lifecycle_rule {
+		id = "id6"
+		enabled = true
+
+		tags = {
+			"tagKey" = "tagValue"
+		}
+
+		transition {
+			days = 0
+			storage_class = "GLACIER"
+		}
+	}
 }
 `, randInt)
 }

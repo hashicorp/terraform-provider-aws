@@ -135,8 +135,8 @@ func testAccCheckAWSLightsailStaticIpAttachmentDestroy(s *terraform.State) error
 
 func testAccAWSLightsailStaticIpAttachmentConfig_basic(staticIpName, instanceName, keypairName string) string {
 	return fmt.Sprintf(`
-provider "aws" {
-  region = "us-east-1"
+data "aws_availability_zones" "available" {
+  state = "available"
 }
 
 resource "aws_lightsail_static_ip_attachment" "test" {
@@ -150,8 +150,8 @@ resource "aws_lightsail_static_ip" "test" {
 
 resource "aws_lightsail_instance" "test" {
   name              = "%s"
-  availability_zone = "us-east-1b"
-  blueprint_id      = "wordpress_4_6_1"
+  availability_zone = "${data.aws_availability_zones.available.names[0]}"
+  blueprint_id      = "amazon_linux"
   bundle_id         = "micro_1_0"
   key_pair_name     = "${aws_lightsail_key_pair.test.name}"
 }

@@ -1087,6 +1087,11 @@ func (c *CodeCommit) CreateUnreferencedMergeCommitRequest(input *CreateUnreferen
 //   The maximum number of items to compare between the source or destination
 //   branches and the merge base has exceeded the maximum allowed.
 //
+//   * ErrCodeConcurrentReferenceUpdateException "ConcurrentReferenceUpdateException"
+//   The merge cannot be completed because the target branch has been modified.
+//   Another user might have modified the target branch while the merge was in
+//   progress. Wait a few minutes, and then try again.
+//
 //   * ErrCodeFileModeRequiredException "FileModeRequiredException"
 //   The commit cannot be created because a file mode is required to update mode
 //   permissions for an existing file, but no file mode has been specified.
@@ -4714,6 +4719,11 @@ func (c *CodeCommit) MergeBranchesByFastForwardRequest(input *MergeBranchesByFas
 //   The pull request cannot be merged automatically into the destination branch.
 //   You must manually merge the branches and resolve any conflicts.
 //
+//   * ErrCodeConcurrentReferenceUpdateException "ConcurrentReferenceUpdateException"
+//   The merge cannot be completed because the target branch has been modified.
+//   Another user might have modified the target branch while the merge was in
+//   progress. Wait a few minutes, and then try again.
+//
 //   * ErrCodeEncryptionIntegrityChecksFailedException "EncryptionIntegrityChecksFailedException"
 //   An encryption integrity check failed.
 //
@@ -4928,6 +4938,11 @@ func (c *CodeCommit) MergeBranchesBySquashRequest(input *MergeBranchesBySquashIn
 //   * ErrCodeCommitMessageLengthExceededException "CommitMessageLengthExceededException"
 //   The commit message is too long. Provide a shorter string.
 //
+//   * ErrCodeConcurrentReferenceUpdateException "ConcurrentReferenceUpdateException"
+//   The merge cannot be completed because the target branch has been modified.
+//   Another user might have modified the target branch while the merge was in
+//   progress. Wait a few minutes, and then try again.
+//
 //   * ErrCodeEncryptionIntegrityChecksFailedException "EncryptionIntegrityChecksFailedException"
 //   An encryption integrity check failed.
 //
@@ -5067,6 +5082,11 @@ func (c *CodeCommit) MergeBranchesByThreeWayRequest(input *MergeBranchesByThreeW
 //   * ErrCodeManualMergeRequiredException "ManualMergeRequiredException"
 //   The pull request cannot be merged automatically into the destination branch.
 //   You must manually merge the branches and resolve any conflicts.
+//
+//   * ErrCodeConcurrentReferenceUpdateException "ConcurrentReferenceUpdateException"
+//   The merge cannot be completed because the target branch has been modified.
+//   Another user might have modified the target branch while the merge was in
+//   progress. Wait a few minutes, and then try again.
 //
 //   * ErrCodeInvalidConflictDetailLevelException "InvalidConflictDetailLevelException"
 //   The specified conflict detail level is not valid.
@@ -5284,6 +5304,11 @@ func (c *CodeCommit) MergePullRequestByFastForwardRequest(input *MergePullReques
 //   * ErrCodeRepositoryDoesNotExistException "RepositoryDoesNotExistException"
 //   The specified repository does not exist.
 //
+//   * ErrCodeConcurrentReferenceUpdateException "ConcurrentReferenceUpdateException"
+//   The merge cannot be completed because the target branch has been modified.
+//   Another user might have modified the target branch while the merge was in
+//   progress. Wait a few minutes, and then try again.
+//
 //   * ErrCodeEncryptionIntegrityChecksFailedException "EncryptionIntegrityChecksFailedException"
 //   An encryption integrity check failed.
 //
@@ -5446,6 +5471,11 @@ func (c *CodeCommit) MergePullRequestBySquashRequest(input *MergePullRequestBySq
 //
 //   * ErrCodeMaximumConflictResolutionEntriesExceededException "MaximumConflictResolutionEntriesExceededException"
 //   The number of allowed conflict resolution entries was exceeded.
+//
+//   * ErrCodeConcurrentReferenceUpdateException "ConcurrentReferenceUpdateException"
+//   The merge cannot be completed because the target branch has been modified.
+//   Another user might have modified the target branch while the merge was in
+//   progress. Wait a few minutes, and then try again.
 //
 //   * ErrCodePathRequiredException "PathRequiredException"
 //   The folderPath for a location cannot be null.
@@ -5710,6 +5740,11 @@ func (c *CodeCommit) MergePullRequestByThreeWayRequest(input *MergePullRequestBy
 //   The repository does not contain any pull requests with that pull request
 //   ID. Use GetPullRequest to verify the correct repository name for the pull
 //   request ID.
+//
+//   * ErrCodeConcurrentReferenceUpdateException "ConcurrentReferenceUpdateException"
+//   The merge cannot be completed because the target branch has been modified.
+//   Another user might have modified the target branch while the merge was in
+//   progress. Wait a few minutes, and then try again.
 //
 //   * ErrCodeEncryptionIntegrityChecksFailedException "EncryptionIntegrityChecksFailedException"
 //   An encryption integrity check failed.
@@ -15310,7 +15345,8 @@ type RepositoryTrigger struct {
 	// The branches that will be included in the trigger configuration. If you specify
 	// an empty array, the trigger will apply to all branches.
 	//
-	// While no content is required in the array, you must include the array itself.
+	// Although no content is required in the array, you must include the array
+	// itself.
 	Branches []*string `locationName:"branches" type:"list"`
 
 	// Any custom data associated with the trigger that will be included in the
@@ -15318,14 +15354,13 @@ type RepositoryTrigger struct {
 	CustomData *string `locationName:"customData" type:"string"`
 
 	// The ARN of the resource that is the target for a trigger. For example, the
-	// ARN of a topic in Amazon Simple Notification Service (SNS).
+	// ARN of a topic in Amazon SNS.
 	//
 	// DestinationArn is a required field
 	DestinationArn *string `locationName:"destinationArn" type:"string" required:"true"`
 
 	// The repository events that will cause the trigger to run actions in another
-	// service, such as sending a notification through Amazon Simple Notification
-	// Service (SNS).
+	// service, such as sending a notification through Amazon SNS.
 	//
 	// The valid value "all" cannot be used with any other values.
 	//

@@ -31,15 +31,17 @@ func resourceAwsS3BucketObject() *schema.Resource {
 
 		Schema: map[string]*schema.Schema{
 			"bucket": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
+				Type:         schema.TypeString,
+				Required:     true,
+				ForceNew:     true,
+				ValidateFunc: validation.NoZeroValues,
 			},
 
 			"key": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
+				Type:         schema.TypeString,
+				Required:     true,
+				ForceNew:     true,
+				ValidateFunc: validation.NoZeroValues,
 			},
 
 			"acl": {
@@ -75,6 +77,13 @@ func resourceAwsS3BucketObject() *schema.Resource {
 			"content_language": {
 				Type:     schema.TypeString,
 				Optional: true,
+			},
+
+			"metadata": {
+				Type:         schema.TypeMap,
+				ValidateFunc: validateMetadataIsLowerCase,
+				Optional:     true,
+				Elem:         &schema.Schema{Type: schema.TypeString},
 			},
 
 			"content_type": {
@@ -192,8 +201,6 @@ func resourceAwsS3BucketObjectPut(d *schema.ResourceData, meta interface{}) erro
 			return fmt.Errorf("error decoding content_base64: %s", err)
 		}
 		body = bytes.NewReader(contentRaw)
-	} else {
-		return fmt.Errorf("Must specify \"source\", \"content\", or \"content_base64\" field")
 	}
 
 	bucket := d.Get("bucket").(string)
@@ -216,6 +223,10 @@ func resourceAwsS3BucketObjectPut(d *schema.ResourceData, meta interface{}) erro
 
 	if v, ok := d.GetOk("content_type"); ok {
 		putInput.ContentType = aws.String(v.(string))
+	}
+
+	if v, ok := d.GetOk("metadata"); ok {
+		putInput.Metadata = stringMapToPointers(v.(map[string]interface{}))
 	}
 
 	if v, ok := d.GetOk("content_encoding"); ok {
@@ -292,6 +303,17 @@ func resourceAwsS3BucketObjectRead(d *schema.ResourceData, meta interface{}) err
 	d.Set("content_encoding", resp.ContentEncoding)
 	d.Set("content_language", resp.ContentLanguage)
 	d.Set("content_type", resp.ContentType)
+	metadata := pointersMapToStringList(resp.Metadata)
+
+	// AWS Go SDK capitalizes metadata, this is a workaround. https://github.com/aws/aws-sdk-go/issues/445
+	for k, v := range metadata {
+		delete(metadata, k)
+		metadata[strings.ToLower(k)] = v
+	}
+
+	if err := d.Set("metadata", metadata); err != nil {
+		return fmt.Errorf("error setting metadata: %s", err)
+	}
 	d.Set("version_id", resp.VersionId)
 	d.Set("server_side_encryption", resp.ServerSideEncryption)
 	d.Set("website_redirect", resp.WebsiteRedirectLocation)
@@ -333,17 +355,18 @@ func resourceAwsS3BucketObjectUpdate(d *schema.ResourceData, meta interface{}) e
 	// Changes to any of these attributes requires creation of a new object version (if bucket is versioned):
 	for _, key := range []string{
 		"cache_control",
+		"content_base64",
 		"content_disposition",
 		"content_encoding",
 		"content_language",
 		"content_type",
-		"source",
 		"content",
-		"content_base64",
-		"storage_class",
-		"server_side_encryption",
-		"kms_key_id",
 		"etag",
+		"kms_key_id",
+		"metadata",
+		"server_side_encryption",
+		"source",
+		"storage_class",
 		"website_redirect",
 	} {
 		if d.HasChange(key) {
@@ -415,6 +438,18 @@ func resourceAwsS3BucketObjectDelete(d *schema.ResourceData, meta interface{}) e
 	}
 
 	return nil
+}
+
+func validateMetadataIsLowerCase(v interface{}, k string) (ws []string, errors []error) {
+	value := v.(map[string]interface{})
+
+	for k := range value {
+		if k != strings.ToLower(k) {
+			errors = append(errors, fmt.Errorf(
+				"Metadata must be lowercase only. Offending key: %q", k))
+		}
+	}
+	return
 }
 
 func resourceAwsS3BucketObjectCustomizeDiff(d *schema.ResourceDiff, meta interface{}) error {

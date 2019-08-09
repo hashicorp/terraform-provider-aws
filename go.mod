@@ -1,7 +1,7 @@
 module github.com/terraform-providers/terraform-provider-aws
 
 require (
-	github.com/aws/aws-sdk-go v1.20.17
+	github.com/aws/aws-sdk-go v1.22.0
 	github.com/beevik/etree v1.1.0
 	github.com/bflad/tfproviderlint v0.4.0
 	github.com/client9/misspell v0.3.4
@@ -13,7 +13,7 @@ require (
 	github.com/hashicorp/go-cleanhttp v0.5.1
 	github.com/hashicorp/go-multierror v1.0.0
 	github.com/hashicorp/go-version v1.2.0
-	github.com/hashicorp/terraform v0.12.2
+	github.com/hashicorp/terraform v0.12.6
 	github.com/hashicorp/vault v0.10.4
 	github.com/jen20/awspolicyequivalence v1.0.0
 	github.com/kubernetes-sigs/aws-iam-authenticator v0.3.1-0.20181019024009-82544ec86140

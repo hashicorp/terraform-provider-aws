@@ -3310,6 +3310,86 @@ func (c *ServiceCatalog) DescribeServiceActionWithContext(ctx aws.Context, input
 	return out, req.Send()
 }
 
+const opDescribeServiceActionExecutionParameters = "DescribeServiceActionExecutionParameters"
+
+// DescribeServiceActionExecutionParametersRequest generates a "aws/request.Request" representing the
+// client's request for the DescribeServiceActionExecutionParameters operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See DescribeServiceActionExecutionParameters for more information on using the DescribeServiceActionExecutionParameters
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the DescribeServiceActionExecutionParametersRequest method.
+//    req, resp := client.DescribeServiceActionExecutionParametersRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/servicecatalog-2015-12-10/DescribeServiceActionExecutionParameters
+func (c *ServiceCatalog) DescribeServiceActionExecutionParametersRequest(input *DescribeServiceActionExecutionParametersInput) (req *request.Request, output *DescribeServiceActionExecutionParametersOutput) {
+	op := &request.Operation{
+		Name:       opDescribeServiceActionExecutionParameters,
+		HTTPMethod: "POST",
+		HTTPPath:   "/",
+	}
+
+	if input == nil {
+		input = &DescribeServiceActionExecutionParametersInput{}
+	}
+
+	output = &DescribeServiceActionExecutionParametersOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// DescribeServiceActionExecutionParameters API operation for AWS Service Catalog.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for AWS Service Catalog's
+// API operation DescribeServiceActionExecutionParameters for usage and error information.
+//
+// Returned Error Codes:
+//   * ErrCodeInvalidParametersException "InvalidParametersException"
+//   One or more parameters provided to the operation are not valid.
+//
+//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   The specified resource was not found.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/servicecatalog-2015-12-10/DescribeServiceActionExecutionParameters
+func (c *ServiceCatalog) DescribeServiceActionExecutionParameters(input *DescribeServiceActionExecutionParametersInput) (*DescribeServiceActionExecutionParametersOutput, error) {
+	req, out := c.DescribeServiceActionExecutionParametersRequest(input)
+	return out, req.Send()
+}
+
+// DescribeServiceActionExecutionParametersWithContext is the same as DescribeServiceActionExecutionParameters with the addition of
+// the ability to pass a context and additional request options.
+//
+// See DescribeServiceActionExecutionParameters for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *ServiceCatalog) DescribeServiceActionExecutionParametersWithContext(ctx aws.Context, input *DescribeServiceActionExecutionParametersInput, opts ...request.Option) (*DescribeServiceActionExecutionParametersOutput, error) {
+	req, out := c.DescribeServiceActionExecutionParametersRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
 const opDescribeTagOption = "DescribeTagOption"
 
 // DescribeTagOptionRequest generates a "aws/request.Request" representing the
@@ -12164,6 +12244,90 @@ func (s *DescribeRecordOutput) SetRecordOutputs(v []*RecordOutput) *DescribeReco
 	return s
 }
 
+type DescribeServiceActionExecutionParametersInput struct {
+	_ struct{} `type:"structure"`
+
+	AcceptLanguage *string `type:"string"`
+
+	// ProvisionedProductId is a required field
+	ProvisionedProductId *string `min:"1" type:"string" required:"true"`
+
+	// ServiceActionId is a required field
+	ServiceActionId *string `min:"1" type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s DescribeServiceActionExecutionParametersInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DescribeServiceActionExecutionParametersInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *DescribeServiceActionExecutionParametersInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "DescribeServiceActionExecutionParametersInput"}
+	if s.ProvisionedProductId == nil {
+		invalidParams.Add(request.NewErrParamRequired("ProvisionedProductId"))
+	}
+	if s.ProvisionedProductId != nil && len(*s.ProvisionedProductId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("ProvisionedProductId", 1))
+	}
+	if s.ServiceActionId == nil {
+		invalidParams.Add(request.NewErrParamRequired("ServiceActionId"))
+	}
+	if s.ServiceActionId != nil && len(*s.ServiceActionId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("ServiceActionId", 1))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetAcceptLanguage sets the AcceptLanguage field's value.
+func (s *DescribeServiceActionExecutionParametersInput) SetAcceptLanguage(v string) *DescribeServiceActionExecutionParametersInput {
+	s.AcceptLanguage = &v
+	return s
+}
+
+// SetProvisionedProductId sets the ProvisionedProductId field's value.
+func (s *DescribeServiceActionExecutionParametersInput) SetProvisionedProductId(v string) *DescribeServiceActionExecutionParametersInput {
+	s.ProvisionedProductId = &v
+	return s
+}
+
+// SetServiceActionId sets the ServiceActionId field's value.
+func (s *DescribeServiceActionExecutionParametersInput) SetServiceActionId(v string) *DescribeServiceActionExecutionParametersInput {
+	s.ServiceActionId = &v
+	return s
+}
+
+type DescribeServiceActionExecutionParametersOutput struct {
+	_ struct{} `type:"structure"`
+
+	ServiceActionParameters []*ExecutionParameter `type:"list"`
+}
+
+// String returns the string representation
+func (s DescribeServiceActionExecutionParametersOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DescribeServiceActionExecutionParametersOutput) GoString() string {
+	return s.String()
+}
+
+// SetServiceActionParameters sets the ServiceActionParameters field's value.
+func (s *DescribeServiceActionExecutionParametersOutput) SetServiceActionParameters(v []*ExecutionParameter) *DescribeServiceActionExecutionParametersOutput {
+	s.ServiceActionParameters = v
+	return s
+}
+
 type DescribeServiceActionInput struct {
 	_ struct{} `type:"structure"`
 
@@ -12891,6 +13055,8 @@ type ExecuteProvisionedProductServiceActionInput struct {
 	// An idempotency token that uniquely identifies the execute request.
 	ExecuteToken *string `min:"1" type:"string" idempotencyToken:"true"`
 
+	Parameters map[string][]*string `min:"1" type:"map"`
+
 	// The identifier of the provisioned product.
 	//
 	// ProvisionedProductId is a required field
@@ -12917,6 +13083,9 @@ func (s *ExecuteProvisionedProductServiceActionInput) Validate() error {
 	invalidParams := request.ErrInvalidParams{Context: "ExecuteProvisionedProductServiceActionInput"}
 	if s.ExecuteToken != nil && len(*s.ExecuteToken) < 1 {
 		invalidParams.Add(request.NewErrParamMinLen("ExecuteToken", 1))
+	}
+	if s.Parameters != nil && len(s.Parameters) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("Parameters", 1))
 	}
 	if s.ProvisionedProductId == nil {
 		invalidParams.Add(request.NewErrParamRequired("ProvisionedProductId"))
@@ -12946,6 +13115,12 @@ func (s *ExecuteProvisionedProductServiceActionInput) SetAcceptLanguage(v string
 // SetExecuteToken sets the ExecuteToken field's value.
 func (s *ExecuteProvisionedProductServiceActionInput) SetExecuteToken(v string) *ExecuteProvisionedProductServiceActionInput {
 	s.ExecuteToken = &v
+	return s
+}
+
+// SetParameters sets the Parameters field's value.
+func (s *ExecuteProvisionedProductServiceActionInput) SetParameters(v map[string][]*string) *ExecuteProvisionedProductServiceActionInput {
+	s.Parameters = v
 	return s
 }
 
@@ -12982,6 +13157,44 @@ func (s ExecuteProvisionedProductServiceActionOutput) GoString() string {
 // SetRecordDetail sets the RecordDetail field's value.
 func (s *ExecuteProvisionedProductServiceActionOutput) SetRecordDetail(v *RecordDetail) *ExecuteProvisionedProductServiceActionOutput {
 	s.RecordDetail = v
+	return s
+}
+
+type ExecutionParameter struct {
+	_ struct{} `type:"structure"`
+
+	DefaultValues []*string `type:"list"`
+
+	Name *string `min:"1" type:"string"`
+
+	Type *string `min:"1" type:"string"`
+}
+
+// String returns the string representation
+func (s ExecutionParameter) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ExecutionParameter) GoString() string {
+	return s.String()
+}
+
+// SetDefaultValues sets the DefaultValues field's value.
+func (s *ExecutionParameter) SetDefaultValues(v []*string) *ExecutionParameter {
+	s.DefaultValues = v
+	return s
+}
+
+// SetName sets the Name field's value.
+func (s *ExecutionParameter) SetName(v string) *ExecutionParameter {
+	s.Name = &v
+	return s
+}
+
+// SetType sets the Type field's value.
+func (s *ExecutionParameter) SetType(v string) *ExecutionParameter {
+	s.Type = &v
 	return s
 }
 

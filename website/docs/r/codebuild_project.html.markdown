@@ -71,6 +71,24 @@ resource "aws_iam_role_policy" "example" {
     {
       "Effect": "Allow",
       "Action": [
+        "ec2:CreateNetworkInterfacePermission"
+      ],
+      "Resource": [
+        "arn:aws:ec2:us-east-1:123456789012:network-interface/*"
+      ]
+      "Condition": {
+        "StringEquals": {
+          "ec2:Subnet": [
+            "${aws_subnet.example1.arn}",
+            "${aws_subnet.example2.arn}"
+          ],
+          "ec2:AuthorizedService": "codebuild.amazonaws.com"
+        }
+      }
+    },
+    {
+      "Effect": "Allow",
+      "Action": [
         "s3:*"
       ],
       "Resource": [
@@ -135,16 +153,16 @@ resource "aws_codebuild_project" "example" {
   }
 
   vpc_config {
-    vpc_id = "vpc-725fca"
+    vpc_id = "${aws_vpc.example.id}"
 
     subnets = [
-      "subnet-ba35d2e0",
-      "subnet-ab129af1",
+      "${aws_subnet.example1.id}",
+      "${aws_subnet.example2.id}",
     ]
 
     security_group_ids = [
-      "sg-f9f27d91",
-      "sg-e4f48g23",
+      "${aws_security_group.example1.id}",
+      "${aws_security_gorup.example2.id}",
     ]
   }
 
@@ -216,7 +234,8 @@ The following arguments are supported:
 
 * `type` - (Required) The build output artifact's type. Valid values for this parameter are: `CODEPIPELINE`, `NO_ARTIFACTS` or `S3`.
 * `encryption_disabled` - (Optional) If set to true, output artifacts will not be encrypted. If `type` is set to `NO_ARTIFACTS` then this value will be ignored. Defaults to `false`.
-* `location` - (Optional) Information about the build output artifact location. If `type` is set to `CODEPIPELINE` or `NO_ARTIFACTS` then this value will be ignored. If `type` is set to `S3`, this is the name of the output bucket. If `path` is not also specified, then `location` can also specify the path of the output artifact in the output bucket.
+* `override_artifact_name` (Optional) If set to true, a name specified in the build spec file overrides the artifact name.
+* `location` - (Optional) Information about the build output artifact location. If `type` is set to `CODEPIPELINE` or `NO_ARTIFACTS` then this value will be ignored. If `type` is set to `S3`, this is the name of the output bucket.
 * `name` - (Optional) The name of the project. If `type` is set to `S3`, this is the name of the output artifact object
 * `namespace_type` - (Optional) The namespace to use in storing build artifacts. If `type` is set to `S3`, then valid values for this parameter are: `BUILD_ID` or `NONE`.
 * `packaging` - (Optional) The type of build output artifact to create. If `type` is set to `S3`, valid values for this parameter are: `NONE` or `ZIP`
@@ -231,7 +250,7 @@ The following arguments are supported:
 `environment` supports the following:
 
 * `compute_type` - (Required) Information about the compute resources the build project will use. Available values for this parameter are: `BUILD_GENERAL1_SMALL`, `BUILD_GENERAL1_MEDIUM` or `BUILD_GENERAL1_LARGE`. `BUILD_GENERAL1_SMALL` is only valid if `type` is set to `LINUX_CONTAINER`
-* `image` - (Required) The *image identifier* of the Docker image to use for this build project ([list of Docker images provided by AWS CodeBuild.](https://docs.aws.amazon.com/codebuild/latest/userguide/build-env-ref-available.html)). You can read more about the AWS curated environment images in the [documentation](https://docs.aws.amazon.com/codebuild/latest/APIReference/API_ListCuratedEnvironmentImages.html).
+* `image` - (Required) The Docker image to use for this build project. Valid values include [Docker images provided by CodeBuild](https://docs.aws.amazon.com/codebuild/latest/userguide/build-env-ref-available.html) (e.g `aws/codebuild/standard:2.0`), [Docker Hub images](https://hub.docker.com/) (e.g. `hashicorp/terraform:latest`), and full Docker repository URIs such as those for ECR (e.g. `137112412989.dkr.ecr.us-west-2.amazonaws.com/amazonlinux:latest`).
 * `type` - (Required) The type of build environment to use for related builds. Available values are: `LINUX_CONTAINER` or `WINDOWS_CONTAINER`.
 * `image_pull_credentials_type` - (Optional) The type of credentials AWS CodeBuild uses to pull images in your build. Available values for this parameter are `CODEBUILD` or `SERVICE_ROLE`. When you use a cross-account or private registry image, you must use SERVICE_ROLE credentials. When you use an AWS CodeBuild curated image, you must use CODEBUILD credentials. Default to `CODEBUILD`
 * `environment_variable` - (Optional) A set of environment variables to make available to builds for this build project.
@@ -293,6 +312,7 @@ The following arguments are supported:
 * `type` - (Required) The build output artifact's type. Valid values for this parameter are: `CODEPIPELINE`, `NO_ARTIFACTS` or `S3`.
 * `artifact_identifier` - (Required) The artifact identifier. Must be the same specified inside AWS CodeBuild buildspec.
 * `encryption_disabled` - (Optional) If set to true, output artifacts will not be encrypted. If `type` is set to `NO_ARTIFACTS` then this value will be ignored. Defaults to `false`.
+* `override_artifact_name` (Optional) If set to true, a name specified in the build spec file overrides the artifact name.
 * `location` - (Optional) Information about the build output artifact location. If `type` is set to `CODEPIPELINE` or `NO_ARTIFACTS` then this value will be ignored. If `type` is set to `S3`, this is the name of the output bucket. If `path` is not also specified, then `location` can also specify the path of the output artifact in the output bucket.
 * `name` - (Optional) The name of the project. If `type` is set to `S3`, this is the name of the output artifact object
 * `namespace_type` - (Optional) The namespace to use in storing build artifacts. If `type` is set to `S3`, then valid values for this parameter are: `BUILD_ID` or `NONE`.

@@ -3,7 +3,6 @@ package aws
 import (
 	"fmt"
 	"log"
-	"regexp"
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -99,22 +98,23 @@ func resourceAwsCloudWatchEventRuleCreate(d *schema.ResourceData, meta interface
 	// IAM Roles take some time to propagate
 	var out *events.PutRuleOutput
 	err = resource.Retry(30*time.Second, func() *resource.RetryError {
-		var err error
 		out, err = conn.PutRule(input)
-		pattern := regexp.MustCompile(`cannot be assumed by principal '[a-z]+\.amazonaws\.com'\.$`)
+
+		if isAWSErr(err, "ValidationException", "cannot be assumed by principal") {
+			log.Printf("[DEBUG] Retrying update of CloudWatch Event Rule %q", *input.Name)
+			return resource.RetryableError(err)
+		}
 		if err != nil {
-			if awsErr, ok := err.(awserr.Error); ok {
-				if awsErr.Code() == "ValidationException" && pattern.MatchString(awsErr.Message()) {
-					log.Printf("[DEBUG] Retrying creation of CloudWatch Event Rule %q", *input.Name)
-					return resource.RetryableError(err)
-				}
-			}
 			return resource.NonRetryableError(err)
 		}
 		return nil
 	})
+	if isResourceTimeoutError(err) {
+		_, err = conn.PutRule(input)
+	}
+
 	if err != nil {
-		return fmt.Errorf("Creating CloudWatch Event Rule failed: %s", err)
+		return fmt.Errorf("Updating CloudWatch Event Rule failed: %s", err)
 	}
 
 	d.Set("arn", out.RuleArn)
@@ -197,18 +197,20 @@ func resourceAwsCloudWatchEventRuleUpdate(d *schema.ResourceData, meta interface
 	// IAM Roles take some time to propagate
 	err = resource.Retry(30*time.Second, func() *resource.RetryError {
 		_, err := conn.PutRule(input)
-		pattern := regexp.MustCompile(`cannot be assumed by principal '[a-z]+\.amazonaws\.com'\.$`)
+
+		if isAWSErr(err, "ValidationException", "cannot be assumed by principal") {
+			log.Printf("[DEBUG] Retrying update of CloudWatch Event Rule %q", *input.Name)
+			return resource.RetryableError(err)
+		}
 		if err != nil {
-			if awsErr, ok := err.(awserr.Error); ok {
-				if awsErr.Code() == "ValidationException" && pattern.MatchString(awsErr.Message()) {
-					log.Printf("[DEBUG] Retrying update of CloudWatch Event Rule %q", *input.Name)
-					return resource.RetryableError(err)
-				}
-			}
 			return resource.NonRetryableError(err)
 		}
 		return nil
 	})
+	if isResourceTimeoutError(err) {
+		_, err = conn.PutRule(input)
+	}
+
 	if err != nil {
 		return fmt.Errorf("Updating CloudWatch Event Rule failed: %s", err)
 	}

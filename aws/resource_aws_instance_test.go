@@ -120,10 +120,7 @@ func TestFetchRootDevice(t *testing.T) {
 				data := r.Data.(*ec2.DescribeImagesOutput)
 				data.Images = tc.images
 			})
-			name, err := fetchRootDeviceName("ami-123", conn)
-			if err != nil {
-				t.Errorf("Error fetching device name: %s", err)
-			}
+			name, _ := fetchRootDeviceName("ami-123", conn)
 			if tc.name != aws.StringValue(name) {
 				t.Errorf("Expected name %s, got %s", tc.name, aws.StringValue(name))
 			}
@@ -320,6 +317,52 @@ func TestAccAWSInstance_basic(t *testing.T) {
 	})
 }
 
+func TestAccAWSInstance_EbsBlockDevice_KmsKeyArn(t *testing.T) {
+	var instance ec2.Instance
+	kmsKeyResourceName := "aws_kms_key.foo"
+	resourceName := "aws_instance.foo"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckInstanceDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccInstanceConfigEbsBlockDeviceKmsKeyArn,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckInstanceExists(resourceName, &instance),
+					resource.TestCheckResourceAttr(resourceName, "ebs_block_device.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "ebs_block_device.2634515331.encrypted", "true"),
+					resource.TestCheckResourceAttrPair(resourceName, "ebs_block_device.2634515331.kms_key_id", kmsKeyResourceName, "arn"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAWSInstance_RootBlockDevice_KmsKeyArn(t *testing.T) {
+	var instance ec2.Instance
+	kmsKeyResourceName := "aws_kms_key.foo"
+	resourceName := "aws_instance.foo"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckInstanceDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccInstanceConfigRootBlockDeviceKmsKeyArn,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckInstanceExists(resourceName, &instance),
+					resource.TestCheckResourceAttr(resourceName, "root_block_device.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "root_block_device.0.encrypted", "true"),
+					resource.TestCheckResourceAttrPair(resourceName, "root_block_device.0.kms_key_id", kmsKeyResourceName, "arn"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccAWSInstance_userDataBase64(t *testing.T) {
 	var v ec2.Instance
 
@@ -482,7 +525,7 @@ func TestAccAWSInstance_blockDevices(t *testing.T) {
 					resource.TestCheckResourceAttr(
 						"aws_instance.foo", "ebs_block_device.2576023345.volume_size", "9"),
 					resource.TestCheckResourceAttr(
-						"aws_instance.foo", "ebs_block_device.2576023345.volume_type", "standard"),
+						"aws_instance.foo", "ebs_block_device.2576023345.volume_type", "gp2"),
 					resource.TestCheckResourceAttr(
 						"aws_instance.foo", "ebs_block_device.2554893574.device_name", "/dev/sdc"),
 					resource.TestMatchResourceAttr(
@@ -495,6 +538,8 @@ func TestAccAWSInstance_blockDevices(t *testing.T) {
 						"aws_instance.foo", "ebs_block_device.2554893574.iops", "100"),
 					resource.TestCheckResourceAttr(
 						"aws_instance.foo", "ebs_block_device.2634515331.device_name", "/dev/sdd"),
+					resource.TestMatchResourceAttr(
+						"aws_instance.foo", "ebs_block_device.2634515331.volume_id", regexp.MustCompile("vol-[a-z0-9]+")),
 					resource.TestCheckResourceAttr(
 						"aws_instance.foo", "ebs_block_device.2634515331.encrypted", "true"),
 					resource.TestCheckResourceAttr(
@@ -2480,10 +2525,12 @@ resource "aws_instance" "foo" {
 		volume_type = "gp2"
 		volume_size = 11
 	}
+
 	ebs_block_device {
 		device_name = "/dev/sdb"
 		volume_size = 9
 	}
+
 	ebs_block_device {
 		device_name = "/dev/sdc"
 		volume_size = 10
@@ -2495,7 +2542,7 @@ resource "aws_instance" "foo" {
 	ebs_block_device {
 		device_name = "/dev/sdd"
 		volume_size = 12
-		encrypted = true
+		encrypted   = true
 	}
 
 	ephemeral_block_device {
@@ -2777,6 +2824,71 @@ resource "aws_instance" "foo" {
 	tags = {
 		foo = "bar"
 	}
+}
+`
+
+const testAccInstanceConfigEbsBlockDeviceKmsKeyArn = `
+resource "aws_kms_key" "foo" {
+  deletion_window_in_days = 7
+}
+
+resource "aws_instance" "foo" {
+  # us-west-2
+  ami = "ami-55a7ea65"
+
+  # In order to attach an encrypted volume to an instance you need to have an
+  # m3.medium or larger. See "Supported Instance Types" in:
+  # http://docs.aws.amazon.com/AWSEC2/latest/UserGuide/EBSEncryption.html
+  instance_type = "m3.medium"
+
+  root_block_device {
+    volume_type = "gp2"
+    volume_size = 11
+  }
+
+  # Encrypted ebs block device
+  ebs_block_device {
+    device_name = "/dev/sdd"
+    encrypted   = true
+    kms_key_id  = "${aws_kms_key.foo.arn}"
+    volume_size = 12
+  }
+}
+`
+
+const testAccInstanceConfigRootBlockDeviceKmsKeyArn = `
+resource "aws_vpc" "foo" {
+  cidr_block = "10.1.0.0/16"
+
+  tags = {
+    Name = "terraform-testacc-instance-source-dest-enable"
+  }
+}
+
+resource "aws_subnet" "foo" {
+  cidr_block = "10.1.1.0/24"
+  vpc_id = "${aws_vpc.foo.id}"
+  availability_zone = "us-west-2a"
+
+  tags = {
+    Name = "tf-acc-instance-source-dest-enable"
+  }
+}
+
+resource "aws_kms_key" "foo" {
+  deletion_window_in_days = 7
+}
+
+resource "aws_instance" "foo" {
+  ami           = "ami-08692d171e3cf02d6"
+  instance_type = "t3.nano"
+  subnet_id     = "${aws_subnet.foo.id}"
+
+  root_block_device {
+    delete_on_termination = true
+    encrypted             = true
+    kms_key_id            = "${aws_kms_key.foo.arn}"
+  }
 }
 `
 

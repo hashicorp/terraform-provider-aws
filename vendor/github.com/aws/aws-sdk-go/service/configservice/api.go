@@ -771,6 +771,9 @@ func (c *ConfigService) DeleteOrganizationConfigRuleRequest(input *DeleteOrganiz
 //   The rule is currently being deleted or the rule is deleting your evaluation
 //   results. Try your request again later.
 //
+//   * ErrCodeOrganizationAccessDeniedException "OrganizationAccessDeniedException"
+//   No permission to call the EnableAWSServiceAccess API.
+//
 // See also, https://docs.aws.amazon.com/goto/WebAPI/config-2014-11-12/DeleteOrganizationConfigRule
 func (c *ConfigService) DeleteOrganizationConfigRule(input *DeleteOrganizationConfigRuleInput) (*DeleteOrganizationConfigRuleOutput, error) {
 	req, out := c.DeleteOrganizationConfigRuleRequest(input)
@@ -2291,6 +2294,9 @@ func (c *ConfigService) DescribeOrganizationConfigRuleStatusesRequest(input *Des
 //   The specified next token is invalid. Specify the nextToken string that was
 //   returned in the previous response to get the next page of results.
 //
+//   * ErrCodeOrganizationAccessDeniedException "OrganizationAccessDeniedException"
+//   No permission to call the EnableAWSServiceAccess API.
+//
 // See also, https://docs.aws.amazon.com/goto/WebAPI/config-2014-11-12/DescribeOrganizationConfigRuleStatuses
 func (c *ConfigService) DescribeOrganizationConfigRuleStatuses(input *DescribeOrganizationConfigRuleStatusesInput) (*DescribeOrganizationConfigRuleStatusesOutput, error) {
 	req, out := c.DescribeOrganizationConfigRuleStatusesRequest(input)
@@ -2373,6 +2379,9 @@ func (c *ConfigService) DescribeOrganizationConfigRulesRequest(input *DescribeOr
 //
 //   * ErrCodeInvalidLimitException "InvalidLimitException"
 //   The specified limit is outside the allowable range.
+//
+//   * ErrCodeOrganizationAccessDeniedException "OrganizationAccessDeniedException"
+//   No permission to call the EnableAWSServiceAccess API.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/config-2014-11-12/DescribeOrganizationConfigRules
 func (c *ConfigService) DescribeOrganizationConfigRules(input *DescribeOrganizationConfigRulesInput) (*DescribeOrganizationConfigRulesOutput, error) {
@@ -3669,6 +3678,9 @@ func (c *ConfigService) GetOrganizationConfigRuleDetailedStatusRequest(input *Ge
 //   * ErrCodeInvalidNextTokenException "InvalidNextTokenException"
 //   The specified next token is invalid. Specify the nextToken string that was
 //   returned in the previous response to get the next page of results.
+//
+//   * ErrCodeOrganizationAccessDeniedException "OrganizationAccessDeniedException"
+//   No permission to call the EnableAWSServiceAccess API.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/config-2014-11-12/GetOrganizationConfigRuleDetailedStatus
 func (c *ConfigService) GetOrganizationConfigRuleDetailedStatus(input *GetOrganizationConfigRuleDetailedStatusInput) (*GetOrganizationConfigRuleDetailedStatusOutput, error) {
@@ -14824,6 +14836,15 @@ const (
 	// MemberAccountRuleStatusCreateFailed is a MemberAccountRuleStatus enum value
 	MemberAccountRuleStatusCreateFailed = "CREATE_FAILED"
 
+	// MemberAccountRuleStatusUpdateSuccessful is a MemberAccountRuleStatus enum value
+	MemberAccountRuleStatusUpdateSuccessful = "UPDATE_SUCCESSFUL"
+
+	// MemberAccountRuleStatusUpdateFailed is a MemberAccountRuleStatus enum value
+	MemberAccountRuleStatusUpdateFailed = "UPDATE_FAILED"
+
+	// MemberAccountRuleStatusUpdateInProgress is a MemberAccountRuleStatus enum value
+	MemberAccountRuleStatusUpdateInProgress = "UPDATE_IN_PROGRESS"
+
 	// MemberAccountRuleStatusDeleteSuccessful is a MemberAccountRuleStatus enum value
 	MemberAccountRuleStatusDeleteSuccessful = "DELETE_SUCCESSFUL"
 
@@ -14868,6 +14889,15 @@ const (
 
 	// OrganizationRuleStatusCreateFailed is a OrganizationRuleStatus enum value
 	OrganizationRuleStatusCreateFailed = "CREATE_FAILED"
+
+	// OrganizationRuleStatusUpdateSuccessful is a OrganizationRuleStatus enum value
+	OrganizationRuleStatusUpdateSuccessful = "UPDATE_SUCCESSFUL"
+
+	// OrganizationRuleStatusUpdateFailed is a OrganizationRuleStatus enum value
+	OrganizationRuleStatusUpdateFailed = "UPDATE_FAILED"
+
+	// OrganizationRuleStatusUpdateInProgress is a OrganizationRuleStatus enum value
+	OrganizationRuleStatusUpdateInProgress = "UPDATE_IN_PROGRESS"
 
 	// OrganizationRuleStatusDeleteSuccessful is a OrganizationRuleStatus enum value
 	OrganizationRuleStatusDeleteSuccessful = "DELETE_SUCCESSFUL"
