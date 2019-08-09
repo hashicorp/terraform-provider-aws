@@ -185,6 +185,52 @@ func resourceAwsAppmeshVirtualNode() *schema.Resource {
 											},
 										},
 									},
+
+									"tls": {
+										Type:     schema.TypeList,
+										Optional: true,
+										MinItems: 0,
+										MaxItems: 1,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"certificate": {
+													Type:     schema.TypeList,
+													Required: true,
+													MinItems: 1,
+													MaxItems: 1,
+													Elem: &schema.Resource{
+														Schema: map[string]*schema.Schema{
+															"acm": {
+																Type:     schema.TypeList,
+																Optional: true,
+																MinItems: 0,
+																MaxItems: 1,
+																Elem: &schema.Resource{
+																	Schema: map[string]*schema.Schema{
+																		"certificate_arn": {
+																			Type:         schema.TypeString,
+																			Required:     true,
+																			ValidateFunc: validateArn,
+																		},
+																	},
+																},
+															},
+														},
+													},
+												},
+
+												"mode": {
+													Type:     schema.TypeString,
+													Required: true,
+													ValidateFunc: validation.StringInSlice([]string{
+														appmesh.ListenerTlsModeDisabled,
+														appmesh.ListenerTlsModePermissive,
+														appmesh.ListenerTlsModeStrict,
+													}, false),
+												},
+											},
+										},
+									},
 								},
 							},
 							Set: appmeshListenerHash,
@@ -459,10 +505,11 @@ func expandAppmeshVirtualNodeSpec(vSpec []interface{}) *appmesh.VirtualNodeSpec 
 
 				backend.VirtualService = &appmesh.VirtualServiceBackend{}
 
-				if vVirtualServiceName, ok := mVirtualService["virtual_service_name"].(string); ok {
+				if vVirtualServiceName, ok := mVirtualService["virtual_service_name"].(string); ok && vVirtualServiceName != "" {
 					backend.VirtualService.VirtualServiceName = aws.String(vVirtualServiceName)
 				}
 			}
+
 			backends = append(backends, backend)
 		}
 
@@ -480,42 +527,74 @@ func expandAppmeshVirtualNodeSpec(vSpec []interface{}) *appmesh.VirtualNodeSpec 
 			if vHealthCheck, ok := mListener["health_check"].([]interface{}); ok && len(vHealthCheck) > 0 && vHealthCheck[0] != nil {
 				mHealthCheck := vHealthCheck[0].(map[string]interface{})
 
-				listener.HealthCheck = &appmesh.HealthCheckPolicy{}
+				healthCheck := &appmesh.HealthCheckPolicy{}
 
 				if vHealthyThreshold, ok := mHealthCheck["healthy_threshold"].(int); ok && vHealthyThreshold > 0 {
-					listener.HealthCheck.HealthyThreshold = aws.Int64(int64(vHealthyThreshold))
+					healthCheck.HealthyThreshold = aws.Int64(int64(vHealthyThreshold))
 				}
 				if vIntervalMillis, ok := mHealthCheck["interval_millis"].(int); ok && vIntervalMillis > 0 {
-					listener.HealthCheck.IntervalMillis = aws.Int64(int64(vIntervalMillis))
+					healthCheck.IntervalMillis = aws.Int64(int64(vIntervalMillis))
 				}
 				if vPath, ok := mHealthCheck["path"].(string); ok && vPath != "" {
-					listener.HealthCheck.Path = aws.String(vPath)
+					healthCheck.Path = aws.String(vPath)
 				}
 				if vPort, ok := mHealthCheck["port"].(int); ok && vPort > 0 {
-					listener.HealthCheck.Port = aws.Int64(int64(vPort))
+					healthCheck.Port = aws.Int64(int64(vPort))
 				}
 				if vProtocol, ok := mHealthCheck["protocol"].(string); ok && vProtocol != "" {
-					listener.HealthCheck.Protocol = aws.String(vProtocol)
+					healthCheck.Protocol = aws.String(vProtocol)
 				}
 				if vTimeoutMillis, ok := mHealthCheck["timeout_millis"].(int); ok && vTimeoutMillis > 0 {
-					listener.HealthCheck.TimeoutMillis = aws.Int64(int64(vTimeoutMillis))
+					healthCheck.TimeoutMillis = aws.Int64(int64(vTimeoutMillis))
 				}
 				if vUnhealthyThreshold, ok := mHealthCheck["unhealthy_threshold"].(int); ok && vUnhealthyThreshold > 0 {
-					listener.HealthCheck.UnhealthyThreshold = aws.Int64(int64(vUnhealthyThreshold))
+					healthCheck.UnhealthyThreshold = aws.Int64(int64(vUnhealthyThreshold))
 				}
+
+				listener.HealthCheck = healthCheck
 			}
 
 			if vPortMapping, ok := mListener["port_mapping"].([]interface{}); ok && len(vPortMapping) > 0 && vPortMapping[0] != nil {
 				mPortMapping := vPortMapping[0].(map[string]interface{})
 
-				listener.PortMapping = &appmesh.PortMapping{}
+				portMapping := &appmesh.PortMapping{}
 
 				if vPort, ok := mPortMapping["port"].(int); ok && vPort > 0 {
-					listener.PortMapping.Port = aws.Int64(int64(vPort))
+					portMapping.Port = aws.Int64(int64(vPort))
 				}
 				if vProtocol, ok := mPortMapping["protocol"].(string); ok && vProtocol != "" {
-					listener.PortMapping.Protocol = aws.String(vProtocol)
+					portMapping.Protocol = aws.String(vProtocol)
 				}
+
+				listener.PortMapping = portMapping
+			}
+
+			if vTls, ok := mListener["tls"].([]interface{}); ok && len(vTls) > 0 && vTls[0] != nil {
+				mTls := vTls[0].(map[string]interface{})
+
+				tls := &appmesh.ListenerTls{}
+
+				if vMode, ok := mTls["mode"].(string); ok && vMode != "" {
+					tls.Mode = aws.String(vMode)
+				}
+
+				if vCertificate, ok := mTls["certificate"].([]interface{}); ok && len(vCertificate) > 0 && vCertificate[0] != nil {
+					mCertificate := vCertificate[0].(map[string]interface{})
+
+					if vAcm, ok := mCertificate["acm"].([]interface{}); ok && len(vAcm) > 0 && vAcm[0] != nil {
+						mAcm := vAcm[0].(map[string]interface{})
+
+						if vCertificateArn, ok := mAcm["certificate_arn"].(string); ok && vCertificateArn != "" {
+							tls.Certificate = &appmesh.ListenerTlsCertificate{
+								Acm: &appmesh.ListenerTlsAcmCertificate{
+									CertificateArn: aws.String(vCertificateArn),
+								},
+							}
+						}
+					}
+				}
+
+				listener.Tls = tls
 			}
 
 			listeners = append(listeners, listener)
@@ -552,9 +631,16 @@ func expandAppmeshVirtualNodeSpec(vSpec []interface{}) *appmesh.VirtualNodeSpec 
 		mServiceDiscovery := vServiceDiscovery[0].(map[string]interface{})
 
 		if vAwsCloudMap, ok := mServiceDiscovery["aws_cloud_map"].([]interface{}); ok && len(vAwsCloudMap) > 0 && vAwsCloudMap[0] != nil {
-			spec.ServiceDiscovery.AwsCloudMap = &appmesh.AwsCloudMapServiceDiscovery{}
+			awsCloudMap := &appmesh.AwsCloudMapServiceDiscovery{}
 
 			mAwsCloudMap := vAwsCloudMap[0].(map[string]interface{})
+
+			if vNamespaceName, ok := mAwsCloudMap["namespace_name"].(string); ok && vNamespaceName != "" {
+				awsCloudMap.NamespaceName = aws.String(vNamespaceName)
+			}
+			if vServiceName, ok := mAwsCloudMap["service_name"].(string); ok && vServiceName != "" {
+				awsCloudMap.ServiceName = aws.String(vServiceName)
+			}
 
 			if vAttributes, ok := mAwsCloudMap["attributes"].(map[string]interface{}); ok && len(vAttributes) > 0 {
 				attributes := []*appmesh.AwsCloudMapInstanceAttribute{}
@@ -566,14 +652,10 @@ func expandAppmeshVirtualNodeSpec(vSpec []interface{}) *appmesh.VirtualNodeSpec 
 					})
 				}
 
-				spec.ServiceDiscovery.AwsCloudMap.Attributes = attributes
+				awsCloudMap.Attributes = attributes
 			}
-			if vNamespaceName, ok := mAwsCloudMap["namespace_name"].(string); ok && vNamespaceName != "" {
-				spec.ServiceDiscovery.AwsCloudMap.NamespaceName = aws.String(vNamespaceName)
-			}
-			if vServiceName, ok := mAwsCloudMap["service_name"].(string); ok && vServiceName != "" {
-				spec.ServiceDiscovery.AwsCloudMap.ServiceName = aws.String(vServiceName)
-			}
+
+			spec.ServiceDiscovery.AwsCloudMap = awsCloudMap
 		}
 
 		if vDns, ok := mServiceDiscovery["dns"].([]interface{}); ok && len(vDns) > 0 && vDns[0] != nil {
@@ -597,17 +679,18 @@ func flattenAppmeshVirtualNodeSpec(spec *appmesh.VirtualNodeSpec) []interface{} 
 
 	mSpec := map[string]interface{}{}
 
-	if spec.Backends != nil {
+	if backends := spec.Backends; backends != nil {
 		vBackends := []interface{}{}
 
-		for _, backend := range spec.Backends {
+		for _, backend := range backends {
 			mBackend := map[string]interface{}{}
 
-			if backend.VirtualService != nil {
-				mVirtualService := map[string]interface{}{
-					"virtual_service_name": aws.StringValue(backend.VirtualService.VirtualServiceName),
+			if virtualService := backend.VirtualService; virtualService != nil {
+				mBackend["virtual_service"] = []interface{}{
+					map[string]interface{}{
+						"virtual_service_name": aws.StringValue(virtualService.VirtualServiceName),
+					},
 				}
-				mBackend["virtual_service"] = []interface{}{mVirtualService}
 			}
 
 			vBackends = append(vBackends, mBackend)
@@ -616,31 +699,55 @@ func flattenAppmeshVirtualNodeSpec(spec *appmesh.VirtualNodeSpec) []interface{} 
 		mSpec["backend"] = schema.NewSet(appmeshBackendHash, vBackends)
 	}
 
-	if spec.Listeners != nil {
+	if listeners := spec.Listeners; listeners != nil {
 		vListeners := []interface{}{}
 
-		for _, listener := range spec.Listeners {
+		for _, listener := range listeners {
 			mListener := map[string]interface{}{}
 
-			if listener.HealthCheck != nil {
-				mHealthCheck := map[string]interface{}{
-					"healthy_threshold":   int(aws.Int64Value(listener.HealthCheck.HealthyThreshold)),
-					"interval_millis":     int(aws.Int64Value(listener.HealthCheck.IntervalMillis)),
-					"path":                aws.StringValue(listener.HealthCheck.Path),
-					"port":                int(aws.Int64Value(listener.HealthCheck.Port)),
-					"protocol":            aws.StringValue(listener.HealthCheck.Protocol),
-					"timeout_millis":      int(aws.Int64Value(listener.HealthCheck.TimeoutMillis)),
-					"unhealthy_threshold": int(aws.Int64Value(listener.HealthCheck.UnhealthyThreshold)),
+			if healthCheck := listener.HealthCheck; healthCheck != nil {
+				mListener["health_check"] = []interface{}{
+					map[string]interface{}{
+						"healthy_threshold":   int(aws.Int64Value(healthCheck.HealthyThreshold)),
+						"interval_millis":     int(aws.Int64Value(healthCheck.IntervalMillis)),
+						"path":                aws.StringValue(healthCheck.Path),
+						"port":                int(aws.Int64Value(healthCheck.Port)),
+						"protocol":            aws.StringValue(healthCheck.Protocol),
+						"timeout_millis":      int(aws.Int64Value(healthCheck.TimeoutMillis)),
+						"unhealthy_threshold": int(aws.Int64Value(healthCheck.UnhealthyThreshold)),
+					},
 				}
-				mListener["health_check"] = []interface{}{mHealthCheck}
 			}
 
-			if listener.PortMapping != nil {
-				mPortMapping := map[string]interface{}{
-					"port":     int(aws.Int64Value(listener.PortMapping.Port)),
-					"protocol": aws.StringValue(listener.PortMapping.Protocol),
+			if portMapping := listener.PortMapping; portMapping != nil {
+				mListener["port_mapping"] = []interface{}{
+					map[string]interface{}{
+						"port":     int(aws.Int64Value(portMapping.Port)),
+						"protocol": aws.StringValue(portMapping.Protocol),
+					},
 				}
-				mListener["port_mapping"] = []interface{}{mPortMapping}
+			}
+
+			if tls := listener.Tls; tls != nil {
+				mTls := map[string]interface{}{
+					"mode": aws.StringValue(tls.Mode),
+				}
+
+				if certificate := tls.Certificate; certificate != nil {
+					if acm := certificate.Acm; acm != nil {
+						mTls["certificate"] = []interface{}{
+							map[string]interface{}{
+								"acm": []interface{}{
+									map[string]interface{}{
+										"certificate_arn": aws.StringValue(acm.CertificateArn),
+									},
+								},
+							},
+						}
+					}
+				}
+
+				mListener["tls"] = []interface{}{mTls}
 			}
 
 			vListeners = append(vListeners, mListener)
@@ -649,45 +756,49 @@ func flattenAppmeshVirtualNodeSpec(spec *appmesh.VirtualNodeSpec) []interface{} 
 		mSpec["listener"] = schema.NewSet(appmeshListenerHash, vListeners)
 	}
 
-	if spec.Logging != nil && spec.Logging.AccessLog != nil && spec.Logging.AccessLog.File != nil {
-		mSpec["logging"] = []interface{}{
-			map[string]interface{}{
-				"access_log": []interface{}{
+	if logging := spec.Logging; logging != nil {
+		if accessLog := logging.AccessLog; accessLog != nil {
+			if file := accessLog.File; file != nil {
+				mSpec["logging"] = []interface{}{
 					map[string]interface{}{
-						"file": []interface{}{
+						"access_log": []interface{}{
 							map[string]interface{}{
-								"path": aws.StringValue(spec.Logging.AccessLog.File.Path),
+								"file": []interface{}{
+									map[string]interface{}{
+										"path": aws.StringValue(file.Path),
+									},
+								},
 							},
 						},
 					},
-				},
-			},
+				}
+			}
 		}
 	}
 
-	if spec.ServiceDiscovery != nil {
+	if serviceDiscovery := spec.ServiceDiscovery; serviceDiscovery != nil {
 		mServiceDiscovery := map[string]interface{}{}
 
-		if spec.ServiceDiscovery.AwsCloudMap != nil {
+		if awsCloudMap := serviceDiscovery.AwsCloudMap; awsCloudMap != nil {
 			vAttributes := map[string]interface{}{}
 
-			for _, attribute := range spec.ServiceDiscovery.AwsCloudMap.Attributes {
+			for _, attribute := range awsCloudMap.Attributes {
 				vAttributes[aws.StringValue(attribute.Key)] = aws.StringValue(attribute.Value)
 			}
 
 			mServiceDiscovery["aws_cloud_map"] = []interface{}{
 				map[string]interface{}{
 					"attributes":     vAttributes,
-					"namespace_name": aws.StringValue(spec.ServiceDiscovery.AwsCloudMap.NamespaceName),
-					"service_name":   aws.StringValue(spec.ServiceDiscovery.AwsCloudMap.ServiceName),
+					"namespace_name": aws.StringValue(awsCloudMap.NamespaceName),
+					"service_name":   aws.StringValue(awsCloudMap.ServiceName),
 				},
 			}
 		}
 
-		if spec.ServiceDiscovery.Dns != nil {
+		if dns := serviceDiscovery.Dns; dns != nil {
 			mServiceDiscovery["dns"] = []interface{}{
 				map[string]interface{}{
-					"hostname": aws.StringValue(spec.ServiceDiscovery.Dns.Hostname),
+					"hostname": aws.StringValue(dns.Hostname),
 				},
 			}
 		}
@@ -742,6 +853,21 @@ func appmeshListenerHash(vListener interface{}) int {
 			buf.WriteString(fmt.Sprintf("%d-", v))
 		}
 		if v, ok := mPortMapping["protocol"].(string); ok {
+			buf.WriteString(fmt.Sprintf("%s-", v))
+		}
+	}
+	if vTls, ok := mListener["tls"].([]interface{}); ok && len(vTls) > 0 && vTls[0] != nil {
+		mTls := vTls[0].(map[string]interface{})
+		if vCertificate, ok := mTls["certificate"].([]interface{}); ok && len(vCertificate) > 0 && vCertificate[0] != nil {
+			mCertificate := vCertificate[0].(map[string]interface{})
+			if vAcm, ok := mCertificate["acm"].([]interface{}); ok && len(vAcm) > 0 && vAcm[0] != nil {
+				mAcm := vAcm[0].(map[string]interface{})
+				if v, ok := mAcm["certificate_arn"].(string); ok {
+					buf.WriteString(fmt.Sprintf("%s-", v))
+				}
+			}
+		}
+		if v, ok := mTls["mode"].(string); ok {
 			buf.WriteString(fmt.Sprintf("%s-", v))
 		}
 	}

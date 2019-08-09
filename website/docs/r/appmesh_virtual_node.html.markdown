@@ -197,6 +197,7 @@ The `listener` object supports the following:
 
 * `port_mapping` - (Required) The port mapping information for the listener.
 * `health_check` - (Optional) The health check information for the listener.
+* `tls` - (Optional) The TLS information for the listener.
 
 The `logging` object supports the following:
 
@@ -240,6 +241,19 @@ The `health_check` object supports the following:
 * `unhealthy_threshold` - (Required) The number of consecutive failed health checks that must occur before declaring a virtual node unhealthy.
 * `path` - (Optional) The destination path for the health check request. This is only required if the specified protocol is `http`.
 * `port` - (Optional) The destination port for the health check request. This port must match the port defined in the `port_mapping` for the listener.
+
+The `tls` object supports the following:
+
+* `certificate` - (Required) The certificate.
+* `mode` - (Required) The TLS mode. Valid values are `DISABLED`, `PERMISSIVE` and `STRICT`.
+
+The `certificate` object supports the following:
+
+* `acm` - (Optional) [AWS Certificate Manager](https://aws.amazon.com/certificate-manager/) certificate configuration.
+
+The `acm` object supports the following:
+
+* `certificate_arn` - (Required) The [ACM certificate](/docs/providers/aws/r/acm_certificate.html) ARN.
 
 ## Attributes Reference
 
