@@ -79,6 +79,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/kinesisanalyticsv2"
 	"github.com/aws/aws-sdk-go/service/kinesisvideo"
 	"github.com/aws/aws-sdk-go/service/kms"
+	"github.com/aws/aws-sdk-go/service/lakeformation"
 	"github.com/aws/aws-sdk-go/service/lambda"
 	"github.com/aws/aws-sdk-go/service/lexmodelbuildingservice"
 	"github.com/aws/aws-sdk-go/service/licensemanager"
@@ -235,6 +236,7 @@ type AWSClient struct {
 	kinesisconn                         *kinesis.Kinesis
 	kinesisvideoconn                    *kinesisvideo.KinesisVideo
 	kmsconn                             *kms.KMS
+	lakeformationconn                   *lakeformation.LakeFormation
 	lambdaconn                          *lambda.Lambda
 	lexmodelconn                        *lexmodelbuildingservice.LexModelBuildingService
 	licensemanagerconn                  *licensemanager.LicenseManager
@@ -417,6 +419,7 @@ func (c *Config) Client() (interface{}, error) {
 		kinesisconn:                         kinesis.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["kinesis"])})),
 		kinesisvideoconn:                    kinesisvideo.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["kinesisvideo"])})),
 		kmsconn:                             kms.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["kms"])})),
+		lakeformationconn:                   lakeformation.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["lakeformation"])})),
 		lambdaconn:                          lambda.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["lambda"])})),
 		lexmodelconn:                        lexmodelbuildingservice.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["lexmodels"])})),
 		licensemanagerconn:                  licensemanager.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["licensemanager"])})),
