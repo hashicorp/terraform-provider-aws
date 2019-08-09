@@ -6326,6 +6326,8 @@ type Listener struct {
 	//
 	// PortMapping is a required field
 	PortMapping *PortMapping `locationName:"portMapping" type:"structure" required:"true"`
+
+	Tls *ListenerTls `locationName:"tls" type:"structure"`
 }
 
 // String returns the string representation
@@ -6354,6 +6356,11 @@ func (s *Listener) Validate() error {
 			invalidParams.AddNested("PortMapping", err.(request.ErrInvalidParams))
 		}
 	}
+	if s.Tls != nil {
+		if err := s.Tls.Validate(); err != nil {
+			invalidParams.AddNested("Tls", err.(request.ErrInvalidParams))
+		}
+	}
 
 	if invalidParams.Len() > 0 {
 		return invalidParams
@@ -6370,6 +6377,138 @@ func (s *Listener) SetHealthCheck(v *HealthCheckPolicy) *Listener {
 // SetPortMapping sets the PortMapping field's value.
 func (s *Listener) SetPortMapping(v *PortMapping) *Listener {
 	s.PortMapping = v
+	return s
+}
+
+// SetTls sets the Tls field's value.
+func (s *Listener) SetTls(v *ListenerTls) *Listener {
+	s.Tls = v
+	return s
+}
+
+type ListenerTls struct {
+	_ struct{} `type:"structure"`
+
+	// Certificate is a required field
+	Certificate *ListenerTlsCertificate `locationName:"certificate" type:"structure" required:"true"`
+
+	// Mode is a required field
+	Mode *string `locationName:"mode" type:"string" required:"true" enum:"ListenerTlsMode"`
+}
+
+// String returns the string representation
+func (s ListenerTls) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ListenerTls) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *ListenerTls) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "ListenerTls"}
+	if s.Certificate == nil {
+		invalidParams.Add(request.NewErrParamRequired("Certificate"))
+	}
+	if s.Mode == nil {
+		invalidParams.Add(request.NewErrParamRequired("Mode"))
+	}
+	if s.Certificate != nil {
+		if err := s.Certificate.Validate(); err != nil {
+			invalidParams.AddNested("Certificate", err.(request.ErrInvalidParams))
+		}
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetCertificate sets the Certificate field's value.
+func (s *ListenerTls) SetCertificate(v *ListenerTlsCertificate) *ListenerTls {
+	s.Certificate = v
+	return s
+}
+
+// SetMode sets the Mode field's value.
+func (s *ListenerTls) SetMode(v string) *ListenerTls {
+	s.Mode = &v
+	return s
+}
+
+type ListenerTlsAcmCertificate struct {
+	_ struct{} `type:"structure"`
+
+	// CertificateArn is a required field
+	CertificateArn *string `locationName:"certificateArn" type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s ListenerTlsAcmCertificate) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ListenerTlsAcmCertificate) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *ListenerTlsAcmCertificate) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "ListenerTlsAcmCertificate"}
+	if s.CertificateArn == nil {
+		invalidParams.Add(request.NewErrParamRequired("CertificateArn"))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetCertificateArn sets the CertificateArn field's value.
+func (s *ListenerTlsAcmCertificate) SetCertificateArn(v string) *ListenerTlsAcmCertificate {
+	s.CertificateArn = &v
+	return s
+}
+
+type ListenerTlsCertificate struct {
+	_ struct{} `type:"structure"`
+
+	Acm *ListenerTlsAcmCertificate `locationName:"acm" type:"structure"`
+}
+
+// String returns the string representation
+func (s ListenerTlsCertificate) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ListenerTlsCertificate) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *ListenerTlsCertificate) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "ListenerTlsCertificate"}
+	if s.Acm != nil {
+		if err := s.Acm.Validate(); err != nil {
+			invalidParams.AddNested("Acm", err.(request.ErrInvalidParams))
+		}
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetAcm sets the Acm field's value.
+func (s *ListenerTlsCertificate) SetAcm(v *ListenerTlsAcmCertificate) *ListenerTlsCertificate {
+	s.Acm = v
 	return s
 }
 
@@ -8826,6 +8965,17 @@ const (
 
 	// HttpSchemeHttps is a HttpScheme enum value
 	HttpSchemeHttps = "https"
+)
+
+const (
+	// ListenerTlsModeDisabled is a ListenerTlsMode enum value
+	ListenerTlsModeDisabled = "DISABLED"
+
+	// ListenerTlsModePermissive is a ListenerTlsMode enum value
+	ListenerTlsModePermissive = "PERMISSIVE"
+
+	// ListenerTlsModeStrict is a ListenerTlsMode enum value
+	ListenerTlsModeStrict = "STRICT"
 )
 
 const (
