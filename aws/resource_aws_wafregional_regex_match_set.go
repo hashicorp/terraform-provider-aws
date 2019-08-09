@@ -17,6 +17,9 @@ func resourceAwsWafRegionalRegexMatchSet() *schema.Resource {
 		Read:   resourceAwsWafRegionalRegexMatchSetRead,
 		Update: resourceAwsWafRegionalRegexMatchSetUpdate,
 		Delete: resourceAwsWafRegionalRegexMatchSetDelete,
+		Importer: &schema.ResourceImporter{
+			State: schema.ImportStatePassthrough,
+		},
 
 		Schema: map[string]*schema.Schema{
 			"name": {
