@@ -54,7 +54,7 @@ func resourceAwsAcmCertificateValidationCreate(d *schema.ResourceData, meta inte
 	}
 
 	if *resp.Certificate.Type != "AMAZON_ISSUED" {
-		return fmt.Errorf("Certificate %s has type %s, no validation necessary", *resp.Certificate.CertificateArn, *resp.Certificate.Type)
+		return fmt.Errorf("Certificate %s has type %s, no validation necessary", aws.StringValue(resp.Certificate.CertificateArn), aws.StringValue(resp.Certificate.Status))
 	}
 
 	if validation_record_fqdns, ok := d.GetOk("validation_record_fqdns"); ok {
@@ -73,8 +73,8 @@ func resourceAwsAcmCertificateValidationCreate(d *schema.ResourceData, meta inte
 			return resource.NonRetryableError(fmt.Errorf("Error describing certificate: %s", err))
 		}
 
-		if *resp.Certificate.Status != "ISSUED" {
-			return resource.RetryableError(fmt.Errorf("Expected certificate to be issued but was in state %s", *resp.Certificate.Status))
+		if aws.StringValue(resp.Certificate.Status) != acm.CertificateStatusIssued {
+			return resource.RetryableError(fmt.Errorf("Expected certificate to be issued but was in state %s", aws.StringValue(resp.Certificate.Status)))
 		}
 
 		log.Printf("[INFO] ACM Certificate validation for %s done, certificate was issued", certificate_arn)
@@ -82,8 +82,8 @@ func resourceAwsAcmCertificateValidationCreate(d *schema.ResourceData, meta inte
 	})
 	if isResourceTimeoutError(err) {
 		resp, err = acmconn.DescribeCertificate(params)
-		if *resp.Certificate.Status != "ISSUED" {
-			return fmt.Errorf("Expected certificate to be issued but was in state %s", *resp.Certificate.Status)
+		if aws.StringValue(resp.Certificate.Status) != acm.CertificateStatusIssued {
+			return fmt.Errorf("Expected certificate to be issued but was in state %s", aws.StringValue(resp.Certificate.Status))
 		}
 	}
 	if err != nil {
@@ -115,6 +115,9 @@ func resourceAwsAcmCertificateCheckValidationRecords(validationRecordFqdns []int
 		})
 		if isResourceTimeoutError(err) {
 			output, err = conn.DescribeCertificate(input)
+			if err != nil {
+				return fmt.Errorf("Error describing ACM certificate: %s", err)
+			}
 			if len(output.Certificate.DomainValidationOptions) == 0 {
 				return fmt.Errorf("Certificate domain validation options empty for %s", *cert.CertificateArn)
 			}
@@ -168,8 +171,8 @@ func resourceAwsAcmCertificateValidationRead(d *schema.ResourceData, meta interf
 		return fmt.Errorf("Error describing certificate: %s", err)
 	}
 
-	if *resp.Certificate.Status != "ISSUED" {
-		log.Printf("[INFO] Certificate status not issued, was %s, tainting validation", *resp.Certificate.Status)
+	if aws.StringValue(resp.Certificate.Status) != acm.CertificateStatusIssued {
+		log.Printf("[INFO] Certificate status not issued, was %s, tainting validation", aws.StringValue(resp.Certificate.Status))
 		d.SetId("")
 	} else {
 		d.SetId((*resp.Certificate.IssuedAt).String())
