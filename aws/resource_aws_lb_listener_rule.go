@@ -300,21 +300,21 @@ func resourceAwsLbbListenerRule() *schema.Resource {
 							}, true),
 						},
 						"host_header": {
-							Type:     schema.TypeList,
-							MaxItems: 1,
-							Optional: true,
-							// Deprecated: Remove Computed: true in next major version of the provider
-							Computed:         true,
+							Type:             schema.TypeList,
+							MaxItems:         1,
+							Optional:         true,
 							DiffSuppressFunc: suppressIfConditionFieldNotIn([]string{"host-header"}),
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"values": {
 										Type: schema.TypeList,
+										// Deprecated: Change Optional & Computed to Required in next major version of the provider
+										Optional: true,
+										Computed: true,
 										Elem: &schema.Schema{
 											Type:         schema.TypeString,
 											ValidateFunc: validation.StringLenBetween(1, 128),
 										},
-										Required: true,
 									},
 								},
 							},
@@ -361,21 +361,21 @@ func resourceAwsLbbListenerRule() *schema.Resource {
 							},
 						},
 						"path_pattern": {
-							Type:     schema.TypeList,
-							MaxItems: 1,
-							Optional: true,
-							// Deprecated: Remove Computed: true in next major version of the provider
-							Computed:         true,
+							Type:             schema.TypeList,
+							MaxItems:         1,
+							Optional:         true,
 							DiffSuppressFunc: suppressIfConditionFieldNotIn([]string{"path-pattern"}),
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"values": {
 										Type: schema.TypeList,
+										// Deprecated: Change Optional & Computed to Required in next major version of the provider
+										Optional: true,
+										Computed: true,
 										Elem: &schema.Schema{
 											Type:         schema.TypeString,
 											ValidateFunc: validation.StringLenBetween(1, 128),
 										},
-										Required: true,
 									},
 								},
 							},
