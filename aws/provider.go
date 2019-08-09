@@ -141,6 +141,7 @@ func Provider() terraform.ResourceProvider {
 		},
 
 		DataSourcesMap: map[string]*schema.Resource{
+<<<<<<< HEAD
 			"aws_acm_certificate":                           dataSourceAwsAcmCertificate(),
 			"aws_acmpca_certificate_authority":              dataSourceAwsAcmpcaCertificateAuthority(),
 			"aws_ami":                                       dataSourceAwsAmi(),
@@ -171,6 +172,7 @@ func Provider() terraform.ResourceProvider {
 			"aws_db_event_categories":                       dataSourceAwsDbEventCategories(),
 			"aws_db_instance":                               dataSourceAwsDbInstance(),
 			"aws_db_snapshot":                               dataSourceAwsDbSnapshot(),
+			"aws_dx_connection":                             dataSourceAwsDxConnection(),
 			"aws_dx_gateway":                                dataSourceAwsDxGateway(),
 			"aws_dynamodb_table":                            dataSourceAwsDynamoDbTable(),
 			"aws_ebs_default_kms_key":                       dataSourceAwsEbsDefaultKmsKey(),
@@ -281,7 +283,6 @@ func Provider() terraform.ResourceProvider {
 			"aws_wafregional_rule":                          dataSourceAwsWafRegionalRule(),
 			"aws_wafregional_web_acl":                       dataSourceAwsWafRegionalWebAcl(),
 			"aws_workspaces_bundle":                         dataSourceAwsWorkspaceBundle(),
-
 			// Adding the Aliases for the ALB -> LB Rename
 			"aws_lb":               dataSourceAwsLb(),
 			"aws_alb":              dataSourceAwsLb(),
