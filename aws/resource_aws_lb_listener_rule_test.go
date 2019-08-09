@@ -2536,16 +2536,18 @@ resource "aws_security_group" "test" {
 }
 
 func testAccAWSLBListenerRuleConfig_conditionNoField() string {
-	return `resource "aws_lb_listener_rule" "static" {
+	return `
+resource "aws_lb_listener_rule" "static" {
   listener_arn = "arn:aws:elasticloadbalancing:us-west-2:111111111111:listener/app/test/xxxxxxxxxxxxxxxx/xxxxxxxxxxxxxxxx"
-  priority = 100
+  priority     = 100
 
   action {
     type = "fixed-response"
+
     fixed_response {
       content_type = "text/plain"
       message_body = "Static"
-      status_code = 200
+      status_code  = 200
     }
   }
 
@@ -2554,44 +2556,49 @@ func testAccAWSLBListenerRuleConfig_conditionNoField() string {
       values = ["GET"]
     }
   }
-}`
+}
+`
 }
 
 func testAccAWSLBListenerRuleConfig_conditionHostHeader(lbName string) string {
-	return fmt.Sprintf(`resource "aws_lb_listener_rule" "static" {
+	return fmt.Sprintf(`
+resource "aws_lb_listener_rule" "static" {
   listener_arn = "${aws_lb_listener.front_end.arn}"
-  priority = 100
+  priority     = 100
 
   action {
     type = "fixed-response"
+
     fixed_response {
       content_type = "text/plain"
       message_body = "Static"
-      status_code = 200
+      status_code  = 200
     }
   }
 
   condition {
     field = "host-header"
+
     host_header {
-      values = ["example.com","www.example.com"]
+      values = ["example.com", "www.example.com"]
     }
   }
 }
 
 resource "aws_lb_listener" "front_end" {
-   load_balancer_arn = "${aws_lb.alb_test.id}"
-   protocol = "HTTP"
-   port = "80"
+  load_balancer_arn = "${aws_lb.alb_test.id}"
+  protocol          = "HTTP"
+  port              = "80"
 
-   default_action {
-     type = "fixed-response"
-     fixed_response {
-       content_type = "text/plain"
-       message_body = "Not Found"
-       status_code = 404
-     }
-   }
+  default_action {
+    type = "fixed-response"
+
+    fixed_response {
+      content_type = "text/plain"
+      message_body = "Not Found"
+      status_code  = 404
+    }
+  }
 }
 
 resource "aws_lb" "alb_test" {
@@ -2600,7 +2607,7 @@ resource "aws_lb" "alb_test" {
   security_groups = ["${aws_security_group.alb_test.id}"]
   subnets         = ["${aws_subnet.alb_test.*.id[0]}", "${aws_subnet.alb_test.*.id[1]}"]
 
-  idle_timeout = 30
+  idle_timeout               = 30
   enable_deletion_protection = false
 
   tags = {
@@ -2657,42 +2664,46 @@ resource "aws_security_group" "alb_test" {
   tags = {
     Name = "TestAccAWSALB_conditionHostHeader"
   }
-}`, lbName)
+}
+`, lbName)
 }
 
 func testAccAWSLBListenerRuleConfig_conditionHostHeader_deprecated(lbName string) string {
-	return fmt.Sprintf(`resource "aws_lb_listener_rule" "static" {
+	return fmt.Sprintf(`
+resource "aws_lb_listener_rule" "static" {
   listener_arn = "${aws_lb_listener.front_end.arn}"
-  priority = 100
+  priority     = 100
 
   action {
     type = "fixed-response"
+
     fixed_response {
       content_type = "text/plain"
       message_body = "Static"
-      status_code = 200
+      status_code  = 200
     }
   }
 
   condition {
-    field = "host-header"
+    field  = "host-header"
     values = ["example.com"]
   }
 }
 
 resource "aws_lb_listener" "front_end" {
-   load_balancer_arn = "${aws_lb.alb_test.id}"
-   protocol = "HTTP"
-   port = "80"
+  load_balancer_arn = "${aws_lb.alb_test.id}"
+  protocol          = "HTTP"
+  port              = "80"
 
-   default_action {
-     type = "fixed-response"
-     fixed_response {
-       content_type = "text/plain"
-       message_body = "Not Found"
-       status_code = 404
-     }
-   }
+  default_action {
+    type = "fixed-response"
+
+    fixed_response {
+      content_type = "text/plain"
+      message_body = "Not Found"
+      status_code  = 404
+    }
+  }
 }
 
 resource "aws_lb" "alb_test" {
@@ -2701,7 +2712,7 @@ resource "aws_lb" "alb_test" {
   security_groups = ["${aws_security_group.alb_test.id}"]
   subnets         = ["${aws_subnet.alb_test.*.id[0]}", "${aws_subnet.alb_test.*.id[1]}"]
 
-  idle_timeout = 30
+  idle_timeout               = 30
   enable_deletion_protection = false
 
   tags = {
@@ -2758,53 +2769,59 @@ resource "aws_security_group" "alb_test" {
   tags = {
     Name = "TestAccAWSALB_conditionHostHeader"
   }
-}`, lbName)
+}
+`, lbName)
 }
 
 func testAccAWSLBListenerRuleConfig_conditionHttpHeader(lbName string) string {
-	return fmt.Sprintf(`resource "aws_lb_listener_rule" "static" {
+	return fmt.Sprintf(`
+resource "aws_lb_listener_rule" "static" {
   listener_arn = "${aws_lb_listener.front_end.arn}"
-  priority = 100
+  priority     = 100
 
   action {
     type = "fixed-response"
+
     fixed_response {
       content_type = "text/plain"
       message_body = "Static"
-      status_code = 200
+      status_code  = 200
     }
   }
 
   condition {
     field = "http-header"
+
     http_header {
       http_header_name = "X-Forwarded-For"
-      values = ["192.168.1.*","10.0.0.*"]
+      values           = ["192.168.1.*", "10.0.0.*"]
     }
   }
 
   condition {
     field = "http-header"
+
     http_header {
       http_header_name = "Zz9~|_^.-+*'&%%$#!0aA"
-      values = ["RFC7230 Validity"]
+      values           = ["RFC7230 Validity"]
     }
   }
 }
 
 resource "aws_lb_listener" "front_end" {
-   load_balancer_arn = "${aws_lb.alb_test.id}"
-   protocol = "HTTP"
-   port = "80"
+  load_balancer_arn = "${aws_lb.alb_test.id}"
+  protocol          = "HTTP"
+  port              = "80"
 
-   default_action {
-     type = "fixed-response"
-     fixed_response {
-       content_type = "text/plain"
-       message_body = "Not Found"
-       status_code = 404
-     }
-   }
+  default_action {
+    type = "fixed-response"
+
+    fixed_response {
+      content_type = "text/plain"
+      message_body = "Not Found"
+      status_code  = 404
+    }
+  }
 }
 
 resource "aws_lb" "alb_test" {
@@ -2813,7 +2830,7 @@ resource "aws_lb" "alb_test" {
   security_groups = ["${aws_security_group.alb_test.id}"]
   subnets         = ["${aws_subnet.alb_test.*.id[0]}", "${aws_subnet.alb_test.*.id[1]}"]
 
-  idle_timeout = 30
+  idle_timeout               = 30
   enable_deletion_protection = false
 
   tags = {
@@ -2870,68 +2887,77 @@ resource "aws_security_group" "alb_test" {
   tags = {
     Name = "TestAccAWSALB_conditionHttpHeader"
   }
-}`, lbName)
+}
+`, lbName)
 }
 
 func testAccAWSLBListenerRuleConfig_conditionHttpHeader_invalid() string {
-	return `resource "aws_lb_listener_rule" "static" {
+	return `
+resource "aws_lb_listener_rule" "static" {
   listener_arn = "arn:aws:elasticloadbalancing:us-west-2:111111111111:listener/app/test/xxxxxxxxxxxxxxxx/xxxxxxxxxxxxxxxx"
-  priority = 100
+  priority     = 100
 
   action {
     type = "fixed-response"
+
     fixed_response {
       content_type = "text/plain"
       message_body = "Static"
-      status_code = 200
+      status_code  = 200
     }
   }
 
   condition {
     field = "http-header"
+
     http_header {
       http_header_name = "Invalid@"
-      values = ["RFC7230 Validity"]
+      values           = ["RFC7230 Validity"]
     }
   }
-}`
+}
+`
 }
 
 func testAccAWSLBListenerRuleConfig_conditionHttpRequestMethod(lbName string) string {
-	return fmt.Sprintf(`resource "aws_lb_listener_rule" "static" {
+	return fmt.Sprintf(`
+resource "aws_lb_listener_rule" "static" {
   listener_arn = "${aws_lb_listener.front_end.arn}"
-  priority = 100
+  priority     = 100
 
   action {
     type = "fixed-response"
+
     fixed_response {
       content_type = "text/plain"
       message_body = "Static"
-      status_code = 200
+      status_code  = 200
     }
   }
 
   condition {
     field = "http-request-method"
+
     http_request_method {
-      values = ["GET","POST"]
+      values = ["GET", "POST"]
     }
   }
 }
 
 resource "aws_lb_listener" "front_end" {
-   load_balancer_arn = "${aws_lb.alb_test.id}"
-   protocol = "HTTP"
-   port = "80"
+  load_balancer_arn = "${aws_lb.alb_test.id}"
+  protocol          = "HTTP"
+  port              = "80"
 
-   default_action {
-     type = "fixed-response"
-     fixed_response {
-       content_type = "text/plain"
-       message_body = "Not Found"
-       status_code = 404
-     }
-   }
+  default_action {
+    type = "fixed-response"
+
+    fixed_response {
+      content_type = "text/plain"
+      message_body = "Not Found"
+      status_code  = 404
+    }
+  }
 }
 
 resource "aws_lb" "alb_test" {
@@ -2940,7 +2966,7 @@ resource "aws_lb" "alb_test" {
   security_groups = ["${aws_security_group.alb_test.id}"]
   subnets         = ["${aws_subnet.alb_test.*.id[0]}", "${aws_subnet.alb_test.*.id[1]}"]
 
-  idle_timeout = 30
+  idle_timeout               = 30
   enable_deletion_protection = false
 
   tags = {
@@ -2997,25 +3023,29 @@ resource "aws_security_group" "alb_test" {
   tags = {
     Name = "TestAccAWSALB_conditionHttpReqestMethod"
   }
-}`, lbName)
+}
+`, lbName)
 }
 
 func testAccAWSLBListenerRuleConfig_conditionPathPattern(lbName string) string {
-	return fmt.Sprintf(`resource "aws_lb_listener_rule" "static" {
+	return fmt.Sprintf(`
+resource "aws_lb_listener_rule" "static" {
   listener_arn = "${aws_lb_listener.front_end.arn}"
-  priority = 100
+  priority     = 100
 
   action {
     type = "fixed-response"
+
     fixed_response {
       content_type = "text/plain"
       message_body = "Static"
-      status_code = 200
+      status_code  = 200
     }
   }
 
   condition {
     field = "path-pattern"
+
     path_pattern {
       values = ["/public/*", "/cgi-bin/*"]
     }
@@ -3023,18 +3053,19 @@ func testAccAWSLBListenerRuleConfig_conditionPathPattern(lbName string) string {
 }
 
 resource "aws_lb_listener" "front_end" {
-   load_balancer_arn = "${aws_lb.alb_test.id}"
-   protocol = "HTTP"
-   port = "80"
+  load_balancer_arn = "${aws_lb.alb_test.id}"
+  protocol          = "HTTP"
+  port              = "80"
 
-   default_action {
-     type = "fixed-response"
-     fixed_response {
-       content_type = "text/plain"
-       message_body = "Not Found"
-       status_code = 404
-     }
-   }
+  default_action {
+    type = "fixed-response"
+
+    fixed_response {
+      content_type = "text/plain"
+      message_body = "Not Found"
+      status_code  = 404
+    }
+  }
 }
 
 resource "aws_lb" "alb_test" {
@@ -3043,7 +3074,7 @@ resource "aws_lb" "alb_test" {
   security_groups = ["${aws_security_group.alb_test.id}"]
   subnets         = ["${aws_subnet.alb_test.*.id[0]}", "${aws_subnet.alb_test.*.id[1]}"]
 
-  idle_timeout = 30
+  idle_timeout               = 30
   enable_deletion_protection = false
 
   tags = {
@@ -3100,20 +3131,22 @@ resource "aws_security_group" "alb_test" {
   tags = {
     Name = "TestAccAWSALB_conditionPathPattern"
   }
-}`, lbName)
+}
+`, lbName)
 }
 
 func testAccAWSLBListenerRuleConfig_conditionPathPattern_deprecated(lbName string) string {
 	return fmt.Sprintf(`resource "aws_lb_listener_rule" "static" {
   listener_arn = "${aws_lb_listener.front_end.arn}"
-  priority = 100
+  priority     = 100
 
   action {
     type = "fixed-response"
+
     fixed_response {
       content_type = "text/plain"
       message_body = "Static"
-      status_code = 200
+      status_code  = 200
     }
   }
 
@@ -3125,15 +3158,16 @@ func testAccAWSLBListenerRuleConfig_conditionPathPattern_deprecated(lbName strin
 
 resource "aws_lb_listener" "front_end" {
    load_balancer_arn = "${aws_lb.alb_test.id}"
-   protocol = "HTTP"
-   port = "80"
+   protocol          = "HTTP"
+   port              = "80"
 
    default_action {
      type = "fixed-response"
+
      fixed_response {
        content_type = "text/plain"
        message_body = "Not Found"
-       status_code = 404
+       status_code  = 404
      }
    }
 }
@@ -3144,7 +3178,7 @@ resource "aws_lb" "alb_test" {
   security_groups = ["${aws_security_group.alb_test.id}"]
   subnets         = ["${aws_subnet.alb_test.*.id[0]}", "${aws_subnet.alb_test.*.id[1]}"]
 
-  idle_timeout = 30
+  idle_timeout               = 30
   enable_deletion_protection = false
 
   tags = {
@@ -3201,36 +3235,40 @@ resource "aws_security_group" "alb_test" {
   tags = {
     Name = "TestAccAWSALB_conditionPathPattern"
   }
-}`, lbName)
+}
+`, lbName)
 }
 
 func testAccAWSLBListenerRuleConfig_conditionQueryString(lbName string) string {
-	return fmt.Sprintf(`resource "aws_lb_listener_rule" "static" {
+	return fmt.Sprintf(`
+resource "aws_lb_listener_rule" "static" {
   listener_arn = "${aws_lb_listener.front_end.arn}"
-  priority = 100
+  priority     = 100
 
   action {
     type = "fixed-response"
+
     fixed_response {
       content_type = "text/plain"
       message_body = "Static"
-      status_code = 200
+      status_code  = 200
     }
   }
 
   condition {
     field = "query-string"
+
     query_string {
       values = [
         {
           value = "surprise"
         },
         {
-          key = ""
+          key   = ""
           value = "blank"
         },
         {
-          key = "text"
+          key   = "text"
           value = "entry"
         },
       ]
@@ -3239,13 +3277,14 @@ func testAccAWSLBListenerRuleConfig_conditionQueryString(lbName string) string {
 
   condition {
     field = "query-string"
+
     query_string {
       values {
-        key = "foo"
+        key   = "foo"
         value = "bar"
       }
       values {
-        key = "foo"
+        key   = "foo"
         value = "baz"
       }
     }
@@ -3253,18 +3292,19 @@ func testAccAWSLBListenerRuleConfig_conditionQueryString(lbName string) string {
 }
 
 resource "aws_lb_listener" "front_end" {
-   load_balancer_arn = "${aws_lb.alb_test.id}"
-   protocol = "HTTP"
-   port = "80"
+  load_balancer_arn = "${aws_lb.alb_test.id}"
+  protocol          = "HTTP"
+  port              = "80"
 
-   default_action {
-     type = "fixed-response"
-     fixed_response {
-       content_type = "text/plain"
-       message_body = "Not Found"
-       status_code = 404
-     }
-   }
+  default_action {
+    type = "fixed-response"
+
+    fixed_response {
+      content_type = "text/plain"
+      message_body = "Not Found"
+      status_code  = 404
+    }
+  }
 }
 
 resource "aws_lb" "alb_test" {
@@ -3273,7 +3313,7 @@ resource "aws_lb" "alb_test" {
   security_groups = ["${aws_security_group.alb_test.id}"]
   subnets         = ["${aws_subnet.alb_test.*.id[0]}", "${aws_subnet.alb_test.*.id[1]}"]
 
-  idle_timeout = 30
+  idle_timeout               = 30
   enable_deletion_protection = false
 
   tags = {
@@ -3330,25 +3370,29 @@ resource "aws_security_group" "alb_test" {
   tags = {
     Name = "TestAccAWSALB_conditionQueryString"
   }
-}`, lbName)
+}
+`, lbName)
 }
 
 func testAccAWSLBListenerRuleConfig_conditionSourceIp(lbName string) string {
-	return fmt.Sprintf(`resource "aws_lb_listener_rule" "static" {
+	return fmt.Sprintf(`
+resource "aws_lb_listener_rule" "static" {
   listener_arn = "${aws_lb_listener.front_end.arn}"
-  priority = 100
+  priority     = 100
 
   action {
     type = "fixed-response"
+
     fixed_response {
       content_type = "text/plain"
       message_body = "Static"
-      status_code = 200
+      status_code  = 200
     }
   }
 
   condition {
     field = "source-ip"
+
     source_ip {
       values = [
         "192.168.0.0/16",
@@ -3359,18 +3403,19 @@ func testAccAWSLBListenerRuleConfig_conditionSourceIp(lbName string) string {
 }
 
 resource "aws_lb_listener" "front_end" {
-   load_balancer_arn = "${aws_lb.alb_test.id}"
-   protocol = "HTTP"
-   port = "80"
+  load_balancer_arn = "${aws_lb.alb_test.id}"
+  protocol          = "HTTP"
+  port              = "80"
 
-   default_action {
-     type = "fixed-response"
-     fixed_response {
-       content_type = "text/plain"
-       message_body = "Not Found"
-       status_code = 404
-     }
-   }
+  default_action {
+    type = "fixed-response"
+
+    fixed_response {
+      content_type = "text/plain"
+      message_body = "Not Found"
+      status_code  = 404
+    }
+  }
 }
 
 resource "aws_lb" "alb_test" {
@@ -3379,7 +3424,7 @@ resource "aws_lb" "alb_test" {
   security_groups = ["${aws_security_group.alb_test.id}"]
   subnets         = ["${aws_subnet.alb_test.*.id[0]}", "${aws_subnet.alb_test.*.id[1]}"]
 
-  idle_timeout = 30
+  idle_timeout               = 30
   enable_deletion_protection = false
 
   tags = {
@@ -3436,26 +3481,30 @@ resource "aws_security_group" "alb_test" {
   tags = {
     Name = "TestAccAWSALB_conditionSourceIp"
   }
-}`, lbName)
+}
+`, lbName)
 }
 
 // Currently a maximum of 5 condition values per rule
 func testAccAWSLBListenerRuleConfig_conditionMultiple(lbName string) string {
-	return fmt.Sprintf(`resource "aws_lb_listener_rule" "static" {
+	return fmt.Sprintf(`
+resource "aws_lb_listener_rule" "static" {
   listener_arn = "${aws_lb_listener.front_end.arn}"
-  priority = 100
+  priority     = 100
 
   action {
     type = "fixed-response"
+
     fixed_response {
       content_type = "text/plain"
       message_body = "Static"
-      status_code = 200
+      status_code  = 200
     }
   }
 
   condition {
     field = "host-header"
+
     host_header {
       values = ["example.com"]
     }
@@ -3463,14 +3512,16 @@ func testAccAWSLBListenerRuleConfig_conditionMultiple(lbName string) string {
 
   condition {
     field = "http-header"
+
     http_header {
       http_header_name = "X-Forwarded-For"
-      values = ["192.168.1.*"]
+      values           = ["192.168.1.*"]
     }
   }
 
   condition {
     field = "http-request-method"
+
     http_request_method {
       values = ["GET"]
     }
@@ -3478,6 +3529,7 @@ func testAccAWSLBListenerRuleConfig_conditionMultiple(lbName string) string {
 
   condition {
     field = "path-pattern"
+
     path_pattern {
       values = ["/public/*"]
     }
@@ -3485,6 +3537,7 @@ func testAccAWSLBListenerRuleConfig_conditionMultiple(lbName string) string {
 
   condition {
     field = "source-ip"
+
     source_ip {
       values = [
         "192.168.0.0/16",
@@ -3494,18 +3547,19 @@ func testAccAWSLBListenerRuleConfig_conditionMultiple(lbName string) string {
 }
 
 resource "aws_lb_listener" "front_end" {
-   load_balancer_arn = "${aws_lb.alb_test.id}"
-   protocol = "HTTP"
-   port = "80"
+  load_balancer_arn = "${aws_lb.alb_test.id}"
+  protocol          = "HTTP"
+  port              = "80"
 
-   default_action {
-     type = "fixed-response"
-     fixed_response {
-       content_type = "text/plain"
-       message_body = "Not Found"
-       status_code = 404
-     }
-   }
+  default_action {
+    type = "fixed-response"
+
+    fixed_response {
+      content_type = "text/plain"
+      message_body = "Not Found"
+      status_code  = 404
+    }
+  }
 }
 
 resource "aws_lb" "alb_test" {
@@ -3514,7 +3568,7 @@ resource "aws_lb" "alb_test" {
   security_groups = ["${aws_security_group.alb_test.id}"]
   subnets         = ["${aws_subnet.alb_test.*.id[0]}", "${aws_subnet.alb_test.*.id[1]}"]
 
-  idle_timeout = 30
+  idle_timeout               = 30
   enable_deletion_protection = false
 
   tags = {
@@ -3571,5 +3625,6 @@ resource "aws_security_group" "alb_test" {
   tags = {
     Name = "TestAccAWSALB_conditionMultiple"
   }
-}`, lbName)
+}
+`, lbName)
 }
