@@ -269,6 +269,11 @@ func findNetworkAclRule(d *schema.ResourceData, meta interface{}) (*ec2.NetworkA
 	log.Printf("[INFO] Describing Network Acl: %s", d.Get("network_acl_id").(string))
 	log.Printf("[INFO] Describing Network Acl with the Filters %#v", params)
 	resp, err := conn.DescribeNetworkAcls(params)
+
+	if isAWSErr(err, "InvalidNetworkAclID.NotFound", "") {
+		return nil, nil
+	}
+
 	if err != nil {
 		return nil, fmt.Errorf("Error Finding Network Acl Rule %d: %s", d.Get("rule_number").(int), err.Error())
 	}
