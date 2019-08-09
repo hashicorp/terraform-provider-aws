@@ -105,6 +105,7 @@ The `retry_policy` object supports the following:
 
 * `http_retry_events` - (Optional) List of HTTP retry events.
 * `max_retries` - (Optional) The maximum number of retries. Default is `1`.
+* `per_retry_timeout_millis` - (Optional) The per-retry timeout in milliseconds. Default is `15000`.
 * `per_retry_timeout` - (Optional) The per-retry timeout. Default is `15s`.
 * `tcp_retry_events` - (Optional) List of TCP retry events. The only valid value is `connection-error`.
 

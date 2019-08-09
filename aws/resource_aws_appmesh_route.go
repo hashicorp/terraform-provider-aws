@@ -228,31 +228,10 @@ func resourceAwsAppmeshRoute() *schema.Resource {
 													Default:  1,
 												},
 
-												// TODO The API default is 15000ms, but that cannot currently be expressed via 'Default:'.
-												// TODO The API always returns results as ms. Should the attribute be 'per_retry_timeout_millis'?
-												// TODO See https://github.com/aws/aws-app-mesh-roadmap/issues/7#issuecomment-518041427.
-												"per_retry_timeout": {
-													Type:     schema.TypeList,
+												"per_retry_timeout_millis": {
+													Type:     schema.TypeInt,
 													Optional: true,
-													MinItems: 0,
-													MaxItems: 1,
-													Elem: &schema.Resource{
-														Schema: map[string]*schema.Schema{
-															"unit": {
-																Type:     schema.TypeString,
-																Required: true,
-																ValidateFunc: validation.StringInSlice([]string{
-																	appmesh.DurationUnitMs,
-																	appmesh.DurationUnitS,
-																}, false),
-															},
-
-															"value": {
-																Type:     schema.TypeInt,
-																Required: true,
-															},
-														},
-													},
+													Default:  15000,
 												},
 
 												"tcp_retry_events": {
@@ -605,24 +584,15 @@ func expandAppmeshRouteSpec(vSpec []interface{}) *appmesh.RouteSpec {
 			if vMaxRetries, ok := mHttpRetryPolicy["max_retries"].(int); ok && vMaxRetries > 0 {
 				httpRetryPolicy.MaxRetries = aws.Int64(int64(vMaxRetries))
 			}
+			if vPerRetryTimeoutMillis, ok := mHttpRetryPolicy["per_retry_timeout_millis"].(int); ok && vPerRetryTimeoutMillis > 0 {
+				httpRetryPolicy.PerRetryTimeout = &appmesh.Duration{
+					Unit:  aws.String(appmesh.DurationUnitMs),
+					Value: aws.Int64(int64(vPerRetryTimeoutMillis)),
+				}
+			}
 
 			if vHttpRetryEvents, ok := mHttpRetryPolicy["http_retry_events"].(*schema.Set); ok && vHttpRetryEvents.Len() > 0 {
 				httpRetryPolicy.HttpRetryEvents = expandStringSet(vHttpRetryEvents)
-			}
-
-			if vPerRetryTimeout, ok := mHttpRetryPolicy["per_retry_timeout"].([]interface{}); ok && len(vPerRetryTimeout) > 0 && vPerRetryTimeout[0] != nil {
-				perRetryTimeout := &appmesh.Duration{}
-
-				mPerRetryTimeout := vPerRetryTimeout[0].(map[string]interface{})
-
-				if vUnit, ok := mPerRetryTimeout["unit"].(string); ok && vUnit != "" {
-					perRetryTimeout.Unit = aws.String(vUnit)
-				}
-				if vValue, ok := mPerRetryTimeout["value"].(int); ok && vValue > 0 {
-					perRetryTimeout.Value = aws.Int64(int64(vValue))
-				}
-
-				httpRetryPolicy.PerRetryTimeout = perRetryTimeout
 			}
 
 			if vTcpRetryEvents, ok := mHttpRetryPolicy["tcp_retry_events"].(*schema.Set); ok && vTcpRetryEvents.Len() > 0 {
@@ -750,12 +720,7 @@ func flattenAppmeshRouteSpec(spec *appmesh.RouteSpec) []interface{} {
 			}
 
 			if perRetryTimeout := httpRetryPolicy.PerRetryTimeout; perRetryTimeout != nil {
-				mPerRetryTimeout := map[string]interface{}{
-					"unit":  aws.StringValue(perRetryTimeout.Unit),
-					"value": int(aws.Int64Value(perRetryTimeout.Value)),
-				}
-
-				mHttpRetryPolicy["per_retry_timeout"] = []interface{}{mPerRetryTimeout}
+				mHttpRetryPolicy["per_retry_timeout_millis"] = int(aws.Int64Value(perRetryTimeout.Value))
 			}
 
 			mHttpRoute["retry_policy"] = []interface{}{mHttpRetryPolicy}
