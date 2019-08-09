@@ -141,7 +141,6 @@ func Provider() terraform.ResourceProvider {
 		},
 
 		DataSourcesMap: map[string]*schema.Resource{
-<<<<<<< HEAD
 			"aws_acm_certificate":                           dataSourceAwsAcmCertificate(),
 			"aws_acmpca_certificate_authority":              dataSourceAwsAcmpcaCertificateAuthority(),
 			"aws_ami":                                       dataSourceAwsAmi(),
@@ -283,6 +282,7 @@ func Provider() terraform.ResourceProvider {
 			"aws_wafregional_rule":                          dataSourceAwsWafRegionalRule(),
 			"aws_wafregional_web_acl":                       dataSourceAwsWafRegionalWebAcl(),
 			"aws_workspaces_bundle":                         dataSourceAwsWorkspaceBundle(),
+
 			// Adding the Aliases for the ALB -> LB Rename
 			"aws_lb":               dataSourceAwsLb(),
 			"aws_alb":              dataSourceAwsLb(),
