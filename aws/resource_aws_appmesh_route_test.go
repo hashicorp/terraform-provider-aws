@@ -247,6 +247,84 @@ func testAccAwsAppmeshRoute_httpHeader(t *testing.T) {
 	})
 }
 
+func testAccAwsAppmeshRoute_httpRetryPolicy(t *testing.T) {
+	var r appmesh.RouteData
+	resourceName := "aws_appmesh_route.test"
+	rName := fmt.Sprintf("tf-testacc-appmesh-%s", acctest.RandStringFromCharSet(13, acctest.CharSetAlphaNum))
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAwsAppmeshRouteDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAwsAppmeshRouteConfig_httpRetryPolicy(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAwsAppmeshRouteExists(resourceName, &r),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, "mesh_name", rName),
+					resource.TestCheckResourceAttr(resourceName, "virtual_router_name", rName),
+					resource.TestCheckResourceAttr(resourceName, "spec.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.http_route.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.http_route.0.action.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.http_route.0.action.0.weighted_target.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.http_route.0.match.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.http_route.0.match.0.header.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.http_route.0.match.0.method", ""),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.http_route.0.match.0.prefix", "/"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.http_route.0.match.0.scheme", ""),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.http_route.0.retry_policy.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.http_route.0.retry_policy.0.http_retry_events.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.http_route.0.retry_policy.0.http_retry_events.3149296306", "server-error"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.http_route.0.retry_policy.0.max_retries", "1"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.http_route.0.retry_policy.0.per_retry_timeout_millis", "15000"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.http_route.0.retry_policy.0.tcp_retry_events.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.tcp_route.#", "0"),
+					resource.TestCheckResourceAttrSet(resourceName, "created_date"),
+					resource.TestCheckResourceAttrSet(resourceName, "last_updated_date"),
+					testAccCheckResourceAttrRegionalARN(resourceName, "arn", "appmesh-preview", fmt.Sprintf("mesh/%s/virtualRouter/%s/route/%s", rName, rName, rName)),
+				),
+			},
+			{
+				Config: testAccAwsAppmeshRouteConfig_httpRetryPolicyUpdated(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAwsAppmeshRouteExists(resourceName, &r),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, "mesh_name", rName),
+					resource.TestCheckResourceAttr(resourceName, "virtual_router_name", rName),
+					resource.TestCheckResourceAttr(resourceName, "spec.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.http_route.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.http_route.0.action.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.http_route.0.action.0.weighted_target.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.http_route.0.match.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.http_route.0.match.0.header.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.http_route.0.match.0.method", ""),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.http_route.0.match.0.prefix", "/"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.http_route.0.match.0.scheme", ""),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.http_route.0.retry_policy.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.http_route.0.retry_policy.0.http_retry_events.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.http_route.0.retry_policy.0.http_retry_events.1737003747", "gateway-error"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.http_route.0.retry_policy.0.http_retry_events.3092941836", "client-error"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.http_route.0.retry_policy.0.max_retries", "3"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.http_route.0.retry_policy.0.per_retry_timeout_millis", "25000"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.http_route.0.retry_policy.0.tcp_retry_events.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.http_route.0.retry_policy.0.tcp_retry_events.3724400910", "connection-error"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.tcp_route.#", "0"),
+					resource.TestCheckResourceAttrSet(resourceName, "created_date"),
+					resource.TestCheckResourceAttrSet(resourceName, "last_updated_date"),
+					testAccCheckResourceAttrRegionalARN(resourceName, "arn", "appmesh-preview", fmt.Sprintf("mesh/%s/virtualRouter/%s/route/%s", rName, rName, rName)),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportStateIdFunc: testAccAwsAppmeshRouteImportStateIdFunc(resourceName),
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func testAccAwsAppmeshRoute_tcpRoute(t *testing.T) {
 	var r appmesh.RouteData
 	resourceName := "aws_appmesh_route.test"
@@ -566,6 +644,76 @@ resource "aws_appmesh_route" "test" {
             }
           }
         }
+      }
+
+      action {
+        weighted_target {
+          virtual_node = "${aws_appmesh_virtual_node.test.*.name[0]}"
+          weight       = 100
+        }
+      }
+    }
+  }
+}
+`, rName)
+}
+
+func testAccAwsAppmeshRouteConfig_httpRetryPolicy(rName string) string {
+	return testAccAwsAppmeshRouteConfigBase(rName) + fmt.Sprintf(`
+resource "aws_appmesh_route" "test" {
+  name                = %[1]q
+  mesh_name           = "${aws_appmesh_mesh.test.id}"
+  virtual_router_name = "${aws_appmesh_virtual_router.test.name}"
+
+  spec {
+    http_route {
+      match {
+        prefix = "/"
+      }
+
+      retry_policy {
+        http_retry_events = [
+          "server-error",
+        ]
+      }
+
+      action {
+        weighted_target {
+          virtual_node = "${aws_appmesh_virtual_node.test.*.name[0]}"
+          weight       = 100
+        }
+      }
+    }
+  }
+}
+`, rName)
+}
+
+func testAccAwsAppmeshRouteConfig_httpRetryPolicyUpdated(rName string) string {
+	return testAccAwsAppmeshRouteConfigBase(rName) + fmt.Sprintf(`
+resource "aws_appmesh_route" "test" {
+  name                = %[1]q
+  mesh_name           = "${aws_appmesh_mesh.test.id}"
+  virtual_router_name = "${aws_appmesh_virtual_router.test.name}"
+
+  spec {
+    http_route {
+      match {
+        prefix = "/"
+      }
+
+      retry_policy {
+        http_retry_events = [
+          "client-error",
+          "gateway-error",
+        ]
+
+        max_retries              = 3
+        per_retry_timeout_millis = 25000
+
+        tcp_retry_events = [
+          "connection-error",
+        ]
       }
 
       action {
