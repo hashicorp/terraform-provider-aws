@@ -153,29 +153,35 @@ func resourceAwsVpnGatewayDelete(d *schema.ResourceData, meta interface{}) error
 	}
 
 	log.Printf("[INFO] Deleting VPN gateway: %s", d.Id())
-
-	return resource.Retry(5*time.Minute, func() *resource.RetryError {
-		_, err := conn.DeleteVpnGateway(&ec2.DeleteVpnGatewayInput{
-			VpnGatewayId: aws.String(d.Id()),
-		})
+	input := &ec2.DeleteVpnGatewayInput{
+		VpnGatewayId: aws.String(d.Id()),
+	}
+	err := resource.Retry(5*time.Minute, func() *resource.RetryError {
+		_, err := conn.DeleteVpnGateway(input)
 		if err == nil {
 			return nil
 		}
 
-		ec2err, ok := err.(awserr.Error)
-		if !ok {
-			return resource.RetryableError(err)
-		}
-
-		switch ec2err.Code() {
-		case "InvalidVpnGatewayID.NotFound":
+		if isAWSErr(err, "InvalidVpnGatewayID.NotFound", "") {
 			return nil
-		case "IncorrectState":
+		}
+		if isAWSErr(err, "IncorrectState", "") {
 			return resource.RetryableError(err)
 		}
 
 		return resource.NonRetryableError(err)
 	})
+	if isResourceTimeoutError(err) {
+		_, err = conn.DeleteVpnGateway(input)
+		if isAWSErr(err, "InvalidVpnGatewayID.NotFound", "") {
+			return nil
+		}
+	}
+
+	if err != nil {
+		return fmt.Errorf("Error deleting VPN gateway: %s", err)
+	}
+	return nil
 }
 
 func resourceAwsVpnGatewayAttach(d *schema.ResourceData, meta interface{}) error {
@@ -210,9 +216,12 @@ func resourceAwsVpnGatewayAttach(d *schema.ResourceData, meta interface{}) error
 		}
 		return nil
 	})
+	if isResourceTimeoutError(err) {
+		_, err = conn.AttachVpnGateway(req)
+	}
 
 	if err != nil {
-		return err
+		return fmt.Errorf("Error attaching VPN gateway: %s", err)
 	}
 
 	// Wait for it to be fully attached before continuing
