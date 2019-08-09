@@ -1,5 +1,9 @@
 ## 2.24.0 (Unreleased)
 
+ENHANCEMENTS:
+
+* resource/aws_rds_cluster: Add `multimaster` to `engine_mode` argument validation (support Aurora Multi-Master Clusters) [GH-9691]
+
 BUG FIXES:
 
 * resource/aws_ami: Final retry after timeout reading AMI [GH-9674]
