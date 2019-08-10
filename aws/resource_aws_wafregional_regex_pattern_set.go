@@ -51,7 +51,7 @@ func resourceAwsWafRegionalRegexPatternSetCreate(d *schema.ResourceData, meta in
 	}
 	resp := out.(*waf.CreateRegexPatternSetOutput)
 
-	d.SetId(*resp.RegexPatternSet.RegexPatternSetId)
+	d.SetId(aws.StringValue(resp.RegexPatternSet.RegexPatternSetId))
 
 	return resourceAwsWafRegionalRegexPatternSetUpdate(d, meta)
 }
@@ -72,7 +72,7 @@ func resourceAwsWafRegionalRegexPatternSetRead(d *schema.ResourceData, meta inte
 			return nil
 		}
 
-		return err
+		return fmt.Errorf("Error getting WAF Regional Regex Pattern Set (%s): %s", d.Id(), err)
 	}
 
 	d.Set("name", resp.RegexPatternSet.Name)
@@ -91,8 +91,13 @@ func resourceAwsWafRegionalRegexPatternSetUpdate(d *schema.ResourceData, meta in
 		o, n := d.GetChange("regex_pattern_strings")
 		oldPatterns, newPatterns := o.(*schema.Set).List(), n.(*schema.Set).List()
 		err := updateWafRegionalRegexPatternSetPatternStringsWR(d.Id(), oldPatterns, newPatterns, conn, region)
+		if isAWSErr(err, wafregional.ErrCodeWAFNonexistentItemException, "") {
+			log.Printf("[WARN] WAF Regional Rate Based Rule (%s) not found, removing from state", d.Id())
+			d.SetId("")
+			return nil
+		}
 		if err != nil {
-			return fmt.Errorf("Failed updating WAF Regional Regex Pattern Set: %s", err)
+			return fmt.Errorf("Failed updating WAF Regional Regex Pattern Set(%s): %s", d.Id(), err)
 		}
 	}
 
@@ -107,8 +112,11 @@ func resourceAwsWafRegionalRegexPatternSetDelete(d *schema.ResourceData, meta in
 	if len(oldPatterns) > 0 {
 		noPatterns := []interface{}{}
 		err := updateWafRegionalRegexPatternSetPatternStringsWR(d.Id(), oldPatterns, noPatterns, conn, region)
+		if isAWSErr(err, wafregional.ErrCodeWAFNonexistentItemException, "") {
+			return nil
+		}
 		if err != nil {
-			return fmt.Errorf("Error updating WAF Regional Regex Pattern Set: %s", err)
+			return fmt.Errorf("Failed updating WAF Regional Regex Pattern Set(%s): %s", d.Id(), err)
 		}
 	}
 
@@ -139,9 +147,6 @@ func updateWafRegionalRegexPatternSetPatternStringsWR(id string, oldPatterns, ne
 
 		return conn.UpdateRegexPatternSet(req)
 	})
-	if err != nil {
-		return fmt.Errorf("Failed updating WAF Regional Regex Pattern Set: %s", err)
-	}
 
-	return nil
+	return err
 }
