@@ -20,9 +20,9 @@ func TestAccAwsCurReportDefinition_basic(t *testing.T) {
 	resourceName := "aws_cur_report_definition.test"
 
 	redshiftQuicksightReportName := acctest.RandomWithPrefix("tf_acc_test")
-	redshiftQuicksightBucketName := fmt.Sprintf("tf-test-bucket-%d-%s", acctest.RandInt(), redshiftQuicksightReportName)
+	redshiftQuicksightBucketName := fmt.Sprintf("tf-test-bucket-%d", acctest.RandInt())
 	athenaReportName := acctest.RandomWithPrefix("tf_acc_test")
-	athenaBucketName := fmt.Sprintf("tf-test-bucket-%d-%s", acctest.RandInt(), athenaReportName)
+	athenaBucketName := fmt.Sprintf("tf-test-bucket-%d", acctest.RandInt())
 	bucketRegion := "us-east-1"
 
 	resource.ParallelTest(t, resource.TestCase{
