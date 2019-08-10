@@ -16,6 +16,9 @@ func resourceAwsWafRegionalSizeConstraintSet() *schema.Resource {
 		Read:   resourceAwsWafRegionalSizeConstraintSetRead,
 		Update: resourceAwsWafRegionalSizeConstraintSetUpdate,
 		Delete: resourceAwsWafRegionalSizeConstraintSetDelete,
+		Importer: &schema.ResourceImporter{
+			State: schema.ImportStatePassthrough,
+		},
 
 		Schema: wafSizeConstraintSetSchema(),
 	}
