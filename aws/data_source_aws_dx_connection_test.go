@@ -18,11 +18,7 @@ func TestAccDataSourceAwsDxConnection_Basic(t *testing.T) {
 	resourceName := "aws_dx_connection.test"
 	datasourceName := "data.aws_dx_connection.test"
 
-	dxLocation, err := testAccAwsDxConnectionLocation()
-
-	if err != nil {
-		fmt.Errorf("error retrieving DX Locations")
-	}
+	dxLocation, _ := testAccAwsDxConnectionLocation()
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:  func() { testAccPreCheck(t) },
@@ -53,11 +49,7 @@ func TestAccDataSourceAwsDxConnection_tags(t *testing.T) {
 	resourceName := "aws_dx_connection.test"
 	datasourceName := "data.aws_dx_connection.test"
 
-	dxLocation, err := testAccAwsDxConnectionLocation()
-
-	if err != nil {
-		fmt.Errorf("error retrieving DX Locations")
-	}
+	dxLocation, _ := testAccAwsDxConnectionLocation()
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:  func() { testAccPreCheck(t) },
@@ -161,7 +153,7 @@ func testAccAwsDxConnectionLocation() (*string, error) {
 	resp, err := conn.DescribeLocations(input)
 
 	if err != nil {
-		fmt.Println("Error")
+		fmt.Println("Error Describing DX Locations")
 	}
 
 	rand.Seed(time.Now().Unix())
