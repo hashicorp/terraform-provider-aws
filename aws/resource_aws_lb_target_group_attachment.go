@@ -2,11 +2,12 @@ package aws
 
 import (
 	"fmt"
+	"log"
+
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/elbv2"
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/helper/schema"
-	"log"
 )
 
 func resourceAwsLbTargetGroupAttachment() *schema.Resource {
@@ -141,11 +142,21 @@ func resourceAwsLbAttachmentRead(d *schema.ResourceData, meta interface{}) error
 	}
 
 	for _, targetDesc := range resp.TargetHealthDescriptions {
+		if targetDesc == nil || targetDesc.Target == nil {
+			continue
+		}
+
 		if *targetDesc.Target.Id == d.Get("target_id").(string) {
 			// These will catch targets being removed by hand (draining as we plan) or that have been removed for a while
 			// without trying to re-create ones that are just not in use. For example, a target can be `unused` if the
 			// target group isnt assigned to anything, a scenario where we don't want to continuously recreate the resource.
-			if (*targetDesc.TargetHealth.Reason == "Target.NotRegistered") || (*targetDesc.TargetHealth.Reason == "Target.DeregistrationInProgress") {
+			if targetDesc.TargetHealth == nil {
+				continue
+			}
+
+			reason := aws.StringValue(targetDesc.TargetHealth.Reason)
+
+			if reason == elbv2.TargetHealthReasonEnumTargetNotRegistered || reason == elbv2.TargetHealthReasonEnumTargetDeregistrationInProgress {
 				log.Printf("[WARN] Target Attachment does not exist, recreating attachment")
 				d.SetId("")
 				return nil

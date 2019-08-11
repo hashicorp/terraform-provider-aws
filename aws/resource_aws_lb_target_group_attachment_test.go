@@ -3,13 +3,14 @@ package aws
 import (
 	"errors"
 	"fmt"
+	"strconv"
+	"testing"
+
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/elbv2"
 	"github.com/hashicorp/terraform/helper/acctest"
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/terraform"
-	"strconv"
-	"testing"
 )
 
 func TestAccAWSLBTargetGroupAttachment_basic(t *testing.T) {
@@ -250,7 +251,7 @@ resource "aws_lb_target_group_attachment" "test" {
 }
 
 resource "aws_instance" "test" {
-  ami           = "ami-f701cb97"
+  ami           = "ami-0bdfa1adc3878cd23"
   instance_type = "t2.micro"
   subnet_id     = "${aws_subnet.subnet.id}"
 }
@@ -307,7 +308,7 @@ resource "aws_lb_target_group_attachment" "test" {
 }
 
 resource "aws_instance" "test" {
-  ami           = "ami-f701cb97"
+  ami           = "ami-0bdfa1adc3878cd23"
   instance_type = "t2.micro"
   subnet_id     = "${aws_subnet.subnet.id}"
 }
@@ -364,7 +365,7 @@ resource "aws_alb_target_group_attachment" "test" {
 }
 
 resource "aws_instance" "test" {
-  ami           = "ami-f701cb97"
+  ami           = "ami-0bdfa1adc3878cd23"
   instance_type = "t2.micro"
   subnet_id     = "${aws_subnet.subnet.id}"
 }
@@ -421,7 +422,7 @@ resource "aws_lb_target_group_attachment" "test" {
 }
 
 resource "aws_instance" "test" {
-  ami           = "ami-f701cb97"
+  ami           = "ami-0bdfa1adc3878cd23"
   instance_type = "t2.micro"
   subnet_id     = "${aws_subnet.subnet.id}"
 }
