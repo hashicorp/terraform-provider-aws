@@ -19,6 +19,9 @@ func resourceAwsWafRegionalSqlInjectionMatchSet() *schema.Resource {
 		Read:   resourceAwsWafRegionalSqlInjectionMatchSetRead,
 		Update: resourceAwsWafRegionalSqlInjectionMatchSetUpdate,
 		Delete: resourceAwsWafRegionalSqlInjectionMatchSetDelete,
+		Importer: &schema.ResourceImporter{
+			State: schema.ImportStatePassthrough,
+		},
 
 		Schema: map[string]*schema.Schema{
 			"name": {
