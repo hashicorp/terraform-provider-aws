@@ -44,6 +44,10 @@ func resourceAwsApiGateway2Api() *schema.Resource {
 				Optional:     true,
 				ValidateFunc: validation.StringLenBetween(0, 1024),
 			},
+			"execution_arn": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"name": {
 				Type:         schema.TypeString,
 				Required:     true,
@@ -105,7 +109,7 @@ func resourceAwsApiGateway2ApiCreate(d *schema.ResourceData, meta interface{}) e
 	}.String()
 	err = setTagsApiGateway2(conn, d, arn)
 	if err != nil {
-		return fmt.Errorf("error creating API Gateway v2 API tags (%s): %s", d.Id(), err)
+		return fmt.Errorf("error creating API Gateway v2 API (%s) tags: %s", d.Id(), err)
 	}
 
 	return resourceAwsApiGateway2ApiRead(d, meta)
@@ -128,14 +132,22 @@ func resourceAwsApiGateway2ApiRead(d *schema.ResourceData, meta interface{}) err
 
 	d.Set("api_endpoint", resp.ApiEndpoint)
 	d.Set("api_key_selection_expression", resp.ApiKeySelectionExpression)
-	arn := arn.ARN{
+	apiArn := arn.ARN{
 		Partition: meta.(*AWSClient).partition,
 		Service:   "apigateway",
 		Region:    meta.(*AWSClient).region,
 		Resource:  fmt.Sprintf("/apis/%s", d.Id()),
 	}.String()
-	d.Set("arn", arn)
+	d.Set("arn", apiArn)
 	d.Set("description", resp.Description)
+	executionArn := arn.ARN{
+		Partition: meta.(*AWSClient).partition,
+		Service:   "execute-api",
+		Region:    meta.(*AWSClient).region,
+		AccountID: meta.(*AWSClient).accountid,
+		Resource:  d.Id(),
+	}.String()
+	d.Set("execution_arn", executionArn)
 	d.Set("name", resp.Name)
 	d.Set("protocol_type", resp.ProtocolType)
 	d.Set("route_selection_expression", resp.RouteSelectionExpression)
