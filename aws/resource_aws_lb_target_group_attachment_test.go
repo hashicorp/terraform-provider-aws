@@ -251,7 +251,7 @@ resource "aws_lb_target_group_attachment" "test" {
 }
 
 resource "aws_instance" "test" {
-  ami           = "ami-0bdfa1adc3878cd23"
+  ami           = "ami-f701cb97"
   instance_type = "t2.micro"
   subnet_id     = "${aws_subnet.subnet.id}"
 }
@@ -308,7 +308,7 @@ resource "aws_lb_target_group_attachment" "test" {
 }
 
 resource "aws_instance" "test" {
-  ami           = "ami-0bdfa1adc3878cd23"
+  ami           = "ami-f701cb97"
   instance_type = "t2.micro"
   subnet_id     = "${aws_subnet.subnet.id}"
 }
@@ -365,7 +365,7 @@ resource "aws_alb_target_group_attachment" "test" {
 }
 
 resource "aws_instance" "test" {
-  ami           = "ami-0bdfa1adc3878cd23"
+  ami           = "ami-f701cb97"
   instance_type = "t2.micro"
   subnet_id     = "${aws_subnet.subnet.id}"
 }
@@ -422,7 +422,7 @@ resource "aws_lb_target_group_attachment" "test" {
 }
 
 resource "aws_instance" "test" {
-  ami           = "ami-0bdfa1adc3878cd23"
+  ami           = "ami-f701cb97"
   instance_type = "t2.micro"
   subnet_id     = "${aws_subnet.subnet.id}"
 }
