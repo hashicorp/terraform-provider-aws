@@ -686,9 +686,6 @@ func resourceAwsSpotFleetRequestCreate(d *schema.ResourceData, meta interface{})
 			return err
 		}
 		spotFleetConfig.ValidUntil = aws.Time(valid_until)
-	} else {
-		valid_until := time.Now().Add(24 * time.Hour)
-		spotFleetConfig.ValidUntil = aws.Time(valid_until)
 	}
 
 	if v, ok := d.GetOk("load_balancers"); ok && v.(*schema.Set).Len() > 0 {
