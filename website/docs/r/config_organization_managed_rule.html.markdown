@@ -56,7 +56,7 @@ In addition to all arguments above, the following attributes are exported:
 `aws_config_organization_managed_rule` provides the following [Timeouts](/docs/configuration/resources.html#timeouts)
 configuration options:
 
-* `delete` - (Default `5m`) How long to wait for the rule to be created.
+* `create` - (Default `5m`) How long to wait for the rule to be created.
 * `delete` - (Default `5m`) How long to wait for the rule to be deleted.
 * `update` - (Default `5m`) How long to wait for the rule to be updated.
 
