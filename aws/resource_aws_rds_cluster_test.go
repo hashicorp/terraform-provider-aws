@@ -413,7 +413,7 @@ func TestAccAWSRDSCluster_Tags(t *testing.T) {
 }
 
 func TestAccAWSRDSCluster_EnabledCloudwatchLogsExports(t *testing.T) {
-	var dbCluster1, dbCluster2, dbCluster3 rds.DBCluster
+	var dbCluster1, dbCluster2, dbCluster3, dbCluster4 rds.DBCluster
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_rds_cluster.test"
 
@@ -457,6 +457,14 @@ func TestAccAWSRDSCluster_EnabledCloudwatchLogsExports(t *testing.T) {
 					testAccCheckAWSClusterExists(resourceName, &dbCluster3),
 					resource.TestCheckResourceAttr(resourceName, "enabled_cloudwatch_logs_exports.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "enabled_cloudwatch_logs_exports.0", "error"),
+				),
+			},
+			{
+				Config: testAccAWSClusterConfigEnabledCloudwatchLogsExportsPostgres1(rName, "postgresql"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSClusterExists(resourceName, &dbCluster4),
+					resource.TestCheckResourceAttr(resourceName, "enabled_cloudwatch_logs_exports.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "enabled_cloudwatch_logs_exports.0", "postgresql"),
 				),
 			},
 		},
@@ -2078,6 +2086,19 @@ resource "aws_rds_cluster" "test" {
   skip_final_snapshot             = true
 }
 `, rName, enabledCloudwatchLogExports1, enabledCloudwatchLogExports2)
+}
+
+func testAccAWSClusterConfigEnabledCloudwatchLogsExportsPostgres1(rName, enabledCloudwatchLogExports1 string) string {
+	return fmt.Sprintf(`
+resource "aws_rds_cluster" "test" {
+  cluster_identifier              = %[1]q
+  enabled_cloudwatch_logs_exports = [%[2]q]
+  engine                          = "aurora-postgresql"
+  master_username                 = "foo"
+  master_password                 = "mustbeeightcharaters"
+  skip_final_snapshot             = true
+}
+`, rName, enabledCloudwatchLogExports1)
 }
 
 func testAccAWSClusterConfig_kmsKey(n int) string {
