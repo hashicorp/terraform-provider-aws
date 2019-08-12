@@ -270,7 +270,7 @@ func resourceAwsFsxFileSystemUpdate(d *schema.ResourceData, meta interface{}) er
 	if requestUpdate {
 		_, err := conn.UpdateFileSystem(params)
 		if err != nil {
-			fmt.Errorf("error updating FSX File System (%s): %s", d.Id(), err)
+			return fmt.Errorf("error updating FSX File System (%s): %s", d.Id(), err)
 		}
 	}
 
@@ -401,13 +401,6 @@ func fsxStateRefreshFunc(conn *fsx.FSx, id string) resource.StateRefreshFunc {
 		filesystem := resp.FileSystems[0]
 		return filesystem, *filesystem.Lifecycle, nil
 	}
-}
-
-func hasEmptyFsxFileSystems(fs *fsx.DescribeFileSystemsOutput) bool {
-	if fs != nil && len(fs.FileSystems) > 0 {
-		return false
-	}
-	return true
 }
 
 func expandFsxLustreConfigurationCreate(l []interface{}) *fsx.CreateFileSystemLustreConfiguration {
