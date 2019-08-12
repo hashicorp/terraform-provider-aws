@@ -18,20 +18,23 @@ func TestAccAWSFsxFileSystem_lustreBasic(t *testing.T) {
 		PreCheck:      func() { testAccPreCheck(t) },
 		IDRefreshName: resourceName,
 		Providers:     testAccProviders,
+		CheckDestroy:  testAccCheckFsxFileSystemDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAwsFsxFileSystemLustreBasic,
+				Config: testAccAwsFsxFileSystemLustreBasic(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFileSystemExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "type", "LUSTRE"),
 					resource.TestCheckResourceAttr(resourceName, "capacity", "3600"),
+					resource.TestCheckResourceAttr(resourceName, "subnet_ids.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "security_group_ids.#", "1"),
 				),
 			},
 			{
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"kms_key_id"},
+				ImportStateVerifyIgnore: []string{"timeout", "security_group_ids"},
 			},
 		},
 	})
@@ -42,12 +45,12 @@ func TestAccAWSFsxFileSystem_lustreConfig(t *testing.T) {
 	resourceName := "aws_fsx_file_system.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:      func() { testAccPreCheck(t) },
-		IDRefreshName: resourceName,
-		Providers:     testAccProviders,
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckFsxFileSystemDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAwsFsxFileSystemLustreConfigOpts,
+				Config: testAccAwsFsxFileSystemLustreConfigOpts(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFileSystemExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "lustre_configuration.#", "1"),
@@ -59,7 +62,7 @@ func TestAccAWSFsxFileSystem_lustreConfig(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"kms_key_id"},
+				ImportStateVerifyIgnore: []string{"timeout", "security_group_ids"},
 			},
 		},
 	})
@@ -70,20 +73,20 @@ func TestAccAWSFsxFileSystem_lustreUpdate(t *testing.T) {
 	resourceName := "aws_fsx_file_system.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:      func() { testAccPreCheck(t) },
-		IDRefreshName: resourceName,
-		Providers:     testAccProviders,
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckFsxFileSystemDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAwsFsxFileSystemLustreConfigOpts,
+				Config: testAccAwsFsxFileSystemLustreConfigOpts(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFileSystemExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "lustre_configuration.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "lustre_configuration.0.weekly_maintenance_start_time", "3:03:30"),
+					resource.TestCheckResourceAttrSet(resourceName, "lustre_configuration.0.weekly_maintenance_start_time"),
 				),
 			},
 			{
-				Config: testAccAwsFsxFileSystemLustreUpdateOpts,
+				Config: testAccAwsFsxFileSystemLustreUpdateOpts(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFileSystemExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "lustre_configuration.#", "1"),
@@ -99,12 +102,12 @@ func TestAccAWSFsxFileSystem_windowsConfig(t *testing.T) {
 	resourceName := "aws_fsx_file_system.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:      func() { testAccPreCheck(t) },
-		IDRefreshName: resourceName,
-		Providers:     testAccProviders,
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckFsxFileSystemDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAwsFsxFileSystemWindowsConfigOpts,
+				Config: testAccAwsFsxFileSystemWindowsConfigOpts(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFileSystemExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "windows_configuration.#", "1"),
@@ -117,7 +120,7 @@ func TestAccAWSFsxFileSystem_windowsConfig(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"kms_key_id"},
+				ImportStateVerifyIgnore: []string{"timeout", "security_group_ids"},
 			},
 		},
 	})
@@ -128,12 +131,12 @@ func TestAccAWSFsxFileSystem_windowsUpdate(t *testing.T) {
 	resourceName := "aws_fsx_file_system.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:      func() { testAccPreCheck(t) },
-		IDRefreshName: resourceName,
-		Providers:     testAccProviders,
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckFsxFileSystemDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAwsFsxFileSystemWindowsConfigOpts,
+				Config: testAccAwsFsxFileSystemWindowsConfigOpts(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFileSystemExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "windows_configuration.#", "1"),
@@ -141,7 +144,7 @@ func TestAccAWSFsxFileSystem_windowsUpdate(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccAwsFsxFileSystemWindowsUpdateOpts,
+				Config: testAccAwsFsxFileSystemWindowsUpdateOpts(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFileSystemExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "windows_configuration.#", "1"),
@@ -180,186 +183,185 @@ func testAccCheckFileSystemExists(n string, v *fsx.FileSystem) resource.TestChec
 	}
 }
 
-const testAccAwsFsxFileSystemLustreBasic = `
-resource "aws_vpc" "test" {
-  cidr_block  = "10.0.0.0/16"
-}
+func testAccCheckFsxFileSystemDestroy(s *terraform.State) error {
+	conn := testAccProvider.Meta().(*AWSClient).fsxconn
 
-resource "aws_subnet" "test" {
-  vpc_id     				= "${aws_vpc.test.id}"
-	cidr_block 				= "10.0.1.0/24"
-	availability_zone = "us-east-1a"
-}
+	for _, rs := range s.RootModule().Resources {
+		if rs.Type != "aws_fsx_file_system" {
+			continue
+		}
 
-resource "aws_kms_key" "test" {
-  description             = "FSx KMS Testing key"
-  deletion_window_in_days = 7
-}
+		filesystem, err := describeFsxFileSystem(conn, rs.Primary.ID)
 
-resource "aws_fsx_file_system" "test" {
-	depends_on 	= ["aws_subnet.test", "aws_kms_key.test"]
-  type 				= "LUSTRE"
-  capacity 		= 3600
-	kms_key_id 	= "${aws_kms_key.test.key_id}"
-	subnet_ids 	= ["${aws_subnet.test.id}"]
-}
-`
+		if isAWSErr(err, fsx.ErrCodeFileSystemNotFound, "") {
+			continue
+		}
 
-const testAccAwsFsxFileSystemLustreConfigOpts = `
-resource "aws_vpc" "test" {
-  cidr_block  = "10.0.0.0/16"
-}
+		if err != nil {
+			return err
+		}
 
-resource "aws_subnet" "test" {
-  vpc_id     				= "${aws_vpc.test.id}"
-	cidr_block 				= "10.0.1.0/24"
-	availability_zone = "us-east-1a"
-}
-
-resource "aws_kms_key" "test" {
-  description             = "FSx KMS Testing key"
-  deletion_window_in_days = 7
-}
-
-resource "aws_fsx_file_system" "test" {
-	depends_on 	= ["aws_subnet.test", "aws_kms_key.test"]
-  type 				= "LUSTRE"
-  capacity 		= 3600
-	kms_key_id 	= "${aws_kms_key.test.key_id}"
-	subnet_ids 	= ["${aws_subnet.test.id}"]
-
-	lustre_configuration {
-		import_path = "s3://nasanex"
-		chunk_size 	= 2048
+		if filesystem != nil {
+			return fmt.Errorf("FSx File System (%s) still exists", rs.Primary.ID)
+		}
 	}
-}
-`
-
-const testAccAwsFsxFileSystemLustreUpdateOpts = `
-resource "aws_vpc" "test" {
-  cidr_block  = "10.0.0.0/16"
+	return nil
 }
 
-resource "aws_subnet" "test" {
-  vpc_id     				= "${aws_vpc.test.id}"
-	cidr_block 				= "10.0.1.0/24"
-	availability_zone = "us-east-1a"
+const testAccAwsFsxFileSystemBaseConfig = `
+data "aws_availability_zones" "available" {
+  state = "available"
 }
 
-resource "aws_kms_key" "test" {
-  description             = "FSx KMS Testing key"
-  deletion_window_in_days = 7
-}
-
-resource "aws_fsx_file_system" "test" {
-	depends_on 	= ["aws_subnet.test", "aws_kms_key.test"]
-  type 				= "LUSTRE"
-  capacity 		= 3600
-	kms_key_id 	= "${aws_kms_key.test.key_id}"
-	subnet_ids 	= ["${aws_subnet.test.id}"]
-
-	lustre_configuration {
-		import_path = "s3://nasanex"
-		chunk_size 	= 2048
-		weekly_maintenance_start_time = "5:05:50"
-	}
-}
-`
-
-const testAccAwsFsxFileSystemWindowsConfigOpts = `
 resource "aws_vpc" "test" {
   cidr_block  = "10.0.0.0/16"
 }
 
 resource "aws_subnet" "test1" {
-  vpc_id     				= "${aws_vpc.test.id}"
-	cidr_block 				= "10.0.1.0/24"
-	availability_zone = "us-east-1a"
+  vpc_id            = "${aws_vpc.test.id}"
+  cidr_block        = "10.0.1.0/24"
+  availability_zone = "${data.aws_availability_zones.available.names[0]}"
 }
 
 resource "aws_subnet" "test2" {
-  vpc_id     				= "${aws_vpc.test.id}"
-	cidr_block 				= "10.0.2.0/24"
-	availability_zone = "us-east-1d"
+  vpc_id            = "${aws_vpc.test.id}"
+  cidr_block        = "10.0.2.0/24"
+  availability_zone = "${data.aws_availability_zones.available.names[1]}"
 }
 
+resource "aws_security_group" "test1" {
+  description = "security group for FSx testing"
+  vpc_id      = "${aws_vpc.test.id}"
+
+  ingress {
+    from_port   = 988
+    to_port     = 988
+    protocol    = "tcp"
+    cidr_blocks = ["10.0.0.0/16"]
+  }
+
+  ingress {
+    from_port   = 135
+    to_port     = 135
+    protocol    = "tcp"
+    cidr_blocks = ["10.0.0.0/16"]
+  }
+
+  ingress {
+    from_port   = 445
+    to_port     = 445
+    protocol    = "tcp"
+    cidr_blocks = ["10.0.0.0/16"]
+  }
+
+  ingress {
+    from_port   = 55555
+    to_port     = 55555
+    protocol    = "tcp"
+    cidr_blocks = ["10.0.0.0/16"]
+  }
+
+  egress {
+    from_port       = 0
+    to_port         = 0
+    protocol        = "-1"
+    cidr_blocks     = ["0.0.0.0/0"]
+  }
+}
+`
+
+const testAccAwsFsxFileSystemBaseWindowsConfig = `
 resource "aws_kms_key" "test" {
   description             = "FSx KMS Testing key"
   deletion_window_in_days = 7
 }
 
 resource "aws_directory_service_directory" "test" {
-  name = "corp.notexample.com"
+  name     = "corp.notexample.com"
   password = "SuperSecretPassw0rd"
-  type = "MicrosoftAD"
-
+  type     = "MicrosoftAD"
+  
   vpc_settings {
-    vpc_id = "${aws_vpc.test.id}"
-    subnet_ids = ["${aws_subnet.test1.id}", "${aws_subnet.test2.id}"]
+    vpc_id     = "${aws_vpc.test.id}"
+	subnet_ids = ["${aws_subnet.test1.id}", "${aws_subnet.test2.id}"]
   }
-}
-
-resource "aws_fsx_file_system" "test" {
-	depends_on 	= ["aws_subnet.test1", "aws_kms_key.test", "aws_directory_service_directory.test"]
-  type 				= "WINDOWS"
-  capacity 		= 300
-	kms_key_id 	= "${aws_kms_key.test.arn}"
-	subnet_ids 	= ["${aws_subnet.test1.id}"]
-
-	windows_configuration {
-		active_directory_id		= "${aws_directory_service_directory.test.id}"
-		backup_retention 			= 3
-		copy_tags_to_backups 	= true
-		throughput_capacity 	= 1024
-	}
 }
 `
 
-const testAccAwsFsxFileSystemWindowsUpdateOpts = `
-resource "aws_vpc" "test" {
-  cidr_block  = "10.0.0.0/16"
+func testAccAwsFsxFileSystemLustreBasic() string {
+	return testAccAwsFsxFileSystemBaseConfig + fmt.Sprintf(`
+resource "aws_fsx_file_system" "test" {
+  type       = "LUSTRE"
+  capacity   = 3600
+  subnet_ids = ["${aws_subnet.test1.id}"]
+  security_group_ids = ["${aws_security_group.test1.id}"]
+}
+`)
 }
 
-resource "aws_subnet" "test1" {
-  vpc_id     				= "${aws_vpc.test.id}"
-	cidr_block 				= "10.0.1.0/24"
-	availability_zone = "us-east-1a"
-}
+func testAccAwsFsxFileSystemLustreConfigOpts() string {
+	return testAccAwsFsxFileSystemBaseConfig + fmt.Sprintf(`
+resource "aws_fsx_file_system" "test" {
+  type       = "LUSTRE"
+  capacity   = 3600
+  subnet_ids = ["${aws_subnet.test1.id}"]
 
-resource "aws_subnet" "test2" {
-  vpc_id     				= "${aws_vpc.test.id}"
-	cidr_block 				= "10.0.2.0/24"
-	availability_zone = "us-east-1d"
-}
-
-resource "aws_kms_key" "test" {
-  description             = "FSx KMS Testing key"
-  deletion_window_in_days = 7
-}
-
-resource "aws_directory_service_directory" "test" {
-  name = "corp.notexample.com"
-  password = "SuperSecretPassw0rd"
-  type = "MicrosoftAD"
-
-  vpc_settings {
-    vpc_id = "${aws_vpc.test.id}"
-    subnet_ids = ["${aws_subnet.test1.id}", "${aws_subnet.test2.id}"]
+  lustre_configuration {
+    import_path = "s3://nasanex"
+    chunk_size 	= 2048
   }
 }
-
-resource "aws_fsx_file_system" "test" {
-	depends_on 	= ["aws_subnet.test1", "aws_kms_key.test", "aws_directory_service_directory.test"]
-  type 				= "WINDOWS"
-  capacity 		= 300
-	kms_key_id 	= "${aws_kms_key.test.arn}"
-	subnet_ids 	= ["${aws_subnet.test1.id}"]
-
-	windows_configuration {
-		active_directory_id		= "${aws_directory_service_directory.test.id}"
-		backup_retention 			= 30
-		copy_tags_to_backups 	= true
-		throughput_capacity 	= 1024
-	}
+`)
 }
-`
+
+func testAccAwsFsxFileSystemLustreUpdateOpts() string {
+	return testAccAwsFsxFileSystemBaseConfig + fmt.Sprintf(`
+resource "aws_fsx_file_system" "test" {
+  type       = "LUSTRE"
+  capacity   = 3600
+  subnet_ids = ["${aws_subnet.test1.id}"]
+
+  lustre_configuration {
+    import_path = "s3://nasanex"
+    chunk_size 	= 2048
+    weekly_maintenance_start_time = "5:05:50"
+  }
+}
+`)
+}
+
+func testAccAwsFsxFileSystemWindowsConfigOpts() string {
+	return testAccAwsFsxFileSystemBaseConfig + testAccAwsFsxFileSystemBaseWindowsConfig + fmt.Sprintf(`
+resource "aws_fsx_file_system" "test" {
+  type          = "WINDOWS"
+  capacity 		= 300
+  kms_key_id 	= "${aws_kms_key.test.arn}"
+  subnet_ids 	= ["${aws_subnet.test1.id}"]
+
+  windows_configuration {
+    active_directory_id  = "${aws_directory_service_directory.test.id}"
+    backup_retention     = 3
+    copy_tags_to_backups = true
+    throughput_capacity  = 1024
+  }
+}
+`)
+}
+
+func testAccAwsFsxFileSystemWindowsUpdateOpts() string {
+	return testAccAwsFsxFileSystemBaseConfig + testAccAwsFsxFileSystemBaseWindowsConfig + fmt.Sprintf(`
+resource "aws_fsx_file_system" "test" {
+  type         = "WINDOWS"
+  capacity     = 300
+  kms_key_id = "${aws_kms_key.test.arn}"
+  subnet_ids = ["${aws_subnet.test1.id}"]
+
+  windows_configuration {
+    active_directory_id  = "${aws_directory_service_directory.test.id}"
+	backup_retention     = 30
+	copy_tags_to_backups = true
+    throughput_capacity  = 1024
+  }
+}
+`)
+}
