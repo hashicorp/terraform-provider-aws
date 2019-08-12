@@ -11,7 +11,7 @@ import (
 	"github.com/hashicorp/terraform/terraform"
 )
 
-func TestAccAwsDmsEndpointBasic(t *testing.T) {
+func TestAccAwsDmsEndpoint_Basic(t *testing.T) {
 	resourceName := "aws_dms_endpoint.dms_endpoint"
 	randId := acctest.RandString(8) + "-basic"
 
@@ -50,7 +50,7 @@ func TestAccAwsDmsEndpointBasic(t *testing.T) {
 	})
 }
 
-func TestAccAwsDmsEndpointS3(t *testing.T) {
+func TestAccAwsDmsEndpoint_S3(t *testing.T) {
 	resourceName := "aws_dms_endpoint.dms_endpoint"
 	randId := acctest.RandString(8) + "-s3"
 
@@ -96,7 +96,7 @@ func TestAccAwsDmsEndpointS3(t *testing.T) {
 	})
 }
 
-func TestAccAwsDmsEndpointDynamoDb(t *testing.T) {
+func TestAccAwsDmsEndpoint_DynamoDb(t *testing.T) {
 	resourceName := "aws_dms_endpoint.dms_endpoint"
 	randId := acctest.RandString(8) + "-dynamodb"
 
@@ -128,7 +128,7 @@ func TestAccAwsDmsEndpointDynamoDb(t *testing.T) {
 	})
 }
 
-func TestAccAwsDmsEndpointMongoDb(t *testing.T) {
+func TestAccAwsDmsEndpoint_MongoDb(t *testing.T) {
 	resourceName := "aws_dms_endpoint.dms_endpoint"
 	randId := acctest.RandString(8) + "-mongodb"
 
@@ -172,7 +172,7 @@ func TestAccAwsDmsEndpointMongoDb(t *testing.T) {
 	})
 }
 
-func TestAccAwsDmsEndpointDocDB(t *testing.T) {
+func TestAccAwsDmsEndpoint_DocDB(t *testing.T) {
 	resourceName := "aws_dms_endpoint.dms_endpoint"
 	randId := acctest.RandString(8) + "-docdb"
 
@@ -211,7 +211,7 @@ func TestAccAwsDmsEndpointDocDB(t *testing.T) {
 	})
 }
 
-func TestAccAwsDmsEndpointDb2(t *testing.T) {
+func TestAccAwsDmsEndpoint_Db2(t *testing.T) {
 	resourceName := "aws_dms_endpoint.dms_endpoint"
 	randId := acctest.RandString(8) + "-db2"
 
