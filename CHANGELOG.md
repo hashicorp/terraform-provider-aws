@@ -36,6 +36,7 @@ BUG FIXES:
 * resource/aws_ebs_snapshot_copy: Final retry after timeout deleting EBS snapshot copies [GH-9698]
 * resource/aws_ecs_cluster: Final retries after timeouts reading and deleting ECS cluster [GH-9704]
 * resource/aws_ecs_service: Final retries after timeouts creating, updating, and deleting ECS service [GH-9704]
+* resource/aws_lb_target_group_attachment: Perform drift detection on attachments using target health description (trigger resource recreation for manually deregistered attachments) [GH-9610]
 * resource/aws_vpn_gateway: Retry after timeouts attaching and deleting VPN gateways, and retrying attachment after pending VPN errors [GH-9641]
 
 ## 2.23.0 (August 07, 2019)
