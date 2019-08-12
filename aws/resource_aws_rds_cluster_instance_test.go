@@ -834,7 +834,7 @@ resource "aws_rds_cluster_instance" "cluster_instances" {
 
 resource "aws_db_parameter_group" "bar" {
   name   = "tfcluster-test-group-%d"
-  family = "aurora-postgresql9.6"
+  family = "aurora-postgresql10"
 
   parameter {
     name  = "authentication_timeout"
