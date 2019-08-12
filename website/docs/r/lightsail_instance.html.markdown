@@ -69,7 +69,7 @@ Lightsail currently supports the following Blueprint IDs:
 ### OS Only
 
 - `amazon_linux_2018_03_0_2`
-- `centos_7_1805_01`
+- `centos_7_1901_01`
 - `debian_8_7`
 - `debian_9_5`
 - `freebsd_11_1`
