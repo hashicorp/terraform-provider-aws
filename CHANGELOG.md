@@ -2,6 +2,8 @@
 
 ENHANCEMENTS:
 
+* resource/aws_codebuild_project: Add `artifacts` configuration block `artifact_identifier` argument [GH-9652]
+* resource/aws_codebuild_project: Add plan time validation for `artifacts` and `secondary_artifacts` configuration blocks `packaging` argument [GH-9652]
 * resource/aws_rds_cluster: Add `multimaster` to `engine_mode` argument validation (support Aurora Multi-Master Clusters) [GH-9691]
 * resource/aws_wafregional_regex_pattern_set: Support resource import [GH-9712]
 * resource/aws_wafregional_size_constraint_set: Support resource import [GH-9713]
@@ -15,6 +17,7 @@ BUG FIXES:
 * resource/aws_cloudhsm2_hsm: Final retries after timeouts creating and deleting CloudHSM modules [GH-9675]
 * resource/aws_cloudtrail: Final retries after timeouts creating and updating cloudtrails [GH-9678]
 * resource/aws_codebuild_project: Final retries after timeouts creating and updating codebuild projects [GH-9682]
+* resource/aws_codebuild_project: Properly perform drift detection and updates for `secondary_artifacts` configuration block arguments (except `name` which will require a separate fix) [GH-9652]
 * resource/aws_codedeploy_deployment_group: Final retries after timeouts creating and updating deployment groups [GH-9682]
 * resource/aws_codepipeline: Final retry after timeout creating codepipeline [GH-9682]
 * resource/aws_cognito_user_pool: Final retries after timeouts creating and updating Cognito user pools [GH-9684]
