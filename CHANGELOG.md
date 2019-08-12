@@ -5,6 +5,7 @@ ENHANCEMENTS:
 * resource/aws_codebuild_project: Add `artifacts` configuration block `artifact_identifier` argument [GH-9652]
 * resource/aws_codebuild_project: Add plan time validation for `artifacts` and `secondary_artifacts` configuration blocks `packaging` argument [GH-9652]
 * resource/aws_rds_cluster: Add `multimaster` to `engine_mode` argument validation (support Aurora Multi-Master Clusters) [GH-9691]
+* resource/aws_wafregional_regex_match_set: Support resource import [GH-9699]
 * resource/aws_wafregional_regex_pattern_set: Support resource import [GH-9712]
 * resource/aws_wafregional_size_constraint_set: Support resource import [GH-9713]
 * resource/aws_wafregional_sql_injection_match_set: Support resource import [GH-9717]
