@@ -3,6 +3,7 @@
 ENHANCEMENTS:
 
 * resource/aws_rds_cluster: Add `multimaster` to `engine_mode` argument validation (support Aurora Multi-Master Clusters) [GH-9691]
+* resource/aws_wafregional_size_constraint_set: Support resource import [GH-9713]
 
 BUG FIXES:
 
