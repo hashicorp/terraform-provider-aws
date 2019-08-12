@@ -32,7 +32,7 @@ func TestAccAWSLBTargetGroupAttachment_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSLBTargetGroupAttachment_missingAttachmentDrift(t *testing.T) {
+func TestAccAWSLBTargetGroupAttachment_disappears(t *testing.T) {
 	targetGroupName := fmt.Sprintf("test-target-group-%s", acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum))
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:      func() { testAccPreCheck(t) },
@@ -44,7 +44,7 @@ func TestAccAWSLBTargetGroupAttachment_missingAttachmentDrift(t *testing.T) {
 				Config: testAccAWSLBTargetGroupAttachmentConfig_basic(targetGroupName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSLBTargetGroupAttachmentExists("aws_lb_target_group_attachment.test"),
-					deregisterTarget("aws_lb_target_group_attachment.test"),
+					testAccCheckAWSLBTargetGroupAttachmentDisappears("aws_lb_target_group_attachment.test"),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -52,7 +52,7 @@ func TestAccAWSLBTargetGroupAttachment_missingAttachmentDrift(t *testing.T) {
 	})
 }
 
-func TestAccAWSLBTargetGroupAttachmentBackwardsCompatibility(t *testing.T) {
+func TestAccAWSLBTargetGroupAttachment_BackwardsCompatibility(t *testing.T) {
 	targetGroupName := fmt.Sprintf("test-target-group-%s", acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum))
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -90,7 +90,7 @@ func TestAccAWSLBTargetGroupAttachment_withoutPort(t *testing.T) {
 	})
 }
 
-func TestAccAWSALBTargetGroupAttachment_ipAddress(t *testing.T) {
+func TestAccAWSLBTargetGroupAttachment_ipAddress(t *testing.T) {
 	targetGroupName := fmt.Sprintf("test-target-group-%s", acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum))
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -109,7 +109,7 @@ func TestAccAWSALBTargetGroupAttachment_ipAddress(t *testing.T) {
 	})
 }
 
-func TestAccAWSALBTargetGroupAttachment_lambda(t *testing.T) {
+func TestAccAWSLBTargetGroupAttachment_lambda(t *testing.T) {
 	targetGroupName := fmt.Sprintf("test-target-group-%s", acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum))
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -128,7 +128,7 @@ func TestAccAWSALBTargetGroupAttachment_lambda(t *testing.T) {
 	})
 }
 
-func deregisterTarget(n string) resource.TestCheckFunc {
+func testAccCheckAWSLBTargetGroupAttachmentDisappears(n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
