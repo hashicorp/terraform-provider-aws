@@ -8,6 +8,7 @@ ENHANCEMENTS:
 
 BUG FIXES:
 
+* resource/aws_acm_certificate_validation: Final retries after timeouts creating and checking validation for ACM certificates [GH-9661]
 * resource/aws_ami: Final retry after timeout reading AMI [GH-9674]
 * resource/aws_cloudhsm2_cluster: Final retries after timeouts creating, updating, and deleting CloudHSM clusters [GH-9675]
 * resource/aws_cloudhsm2_hsm: Final retries after timeouts creating and deleting CloudHSM modules [GH-9675]
@@ -23,6 +24,8 @@ BUG FIXES:
 * resource/aws_dynamodb_table: Final retries after timeouts creating, updating, and deleting DynamoDB tables [GH-9697]
 * resource/aws_ebs_snapshot: Final retries after timeouts creating, deleting or waiting for available EBS snapshots [GH-9698]
 * resource/aws_ebs_snapshot_copy: Final retry after timeout deleting EBS snapshot copies [GH-9698]
+* resource/aws_ecs_cluster: Final retries after timeouts reading and deleting ECS cluster [GH-9704]
+* resource/aws_ecs_service: Final retries after timeouts creating, updating, and deleting ECS service [GH-9704]
 * resource/aws_vpn_gateway: Retry after timeouts attaching and deleting VPN gateways, and retrying attachment after pending VPN errors [GH-9641]
 
 ## 2.23.0 (August 07, 2019)
