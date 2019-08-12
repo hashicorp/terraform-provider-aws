@@ -333,7 +333,7 @@ func setTagsAwsCloudHsm2Cluster(conn *cloudhsmv2.CloudHSMV2, d *schema.ResourceD
 			tagList := make([]*cloudhsmv2.Tag, 0, len(create))
 			for k, v := range create {
 				tagList = append(tagList, &cloudhsmv2.Tag{
-					Key:   &k,
+					Key:   aws.String(k),
 					Value: v,
 				})
 			}
