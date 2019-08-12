@@ -1,5 +1,10 @@
 ## 2.24.0 (Unreleased)
 
+FEATURES:
+
+* **New Resource:** `aws_config_organization_custom_rule` [GH-9716]
+* **New Resource:** `aws_config_organization_managed_rule` [GH-9716]
+
 ENHANCEMENTS:
 
 * resource/aws_codebuild_project: Add `artifacts` configuration block `artifact_identifier` argument [GH-9652]
