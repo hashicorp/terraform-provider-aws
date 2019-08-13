@@ -2560,7 +2560,7 @@ resource "aws_lb_listener_rule" "static" {
 `
 }
 
-func testAccAWSLBListenerRuleConfig_conditionHostHeader(lbName string) string {
+func testAccAWSLBListenerRuleConfig_condition_base(condition, name, lbName string) string {
 	return fmt.Sprintf(`
 resource "aws_lb_listener_rule" "static" {
   listener_arn = "${aws_lb_listener.front_end.arn}"
@@ -2576,13 +2576,7 @@ resource "aws_lb_listener_rule" "static" {
     }
   }
 
-  condition {
-    field = "host-header"
-
-    host_header {
-      values = ["example.com", "www.example.com"]
-    }
-  }
+  %s
 }
 
 resource "aws_lb_listener" "front_end" {
@@ -2611,7 +2605,7 @@ resource "aws_lb" "alb_test" {
   enable_deletion_protection = false
 
   tags = {
-    Name = "TestAccAWSALB_conditionHostHeader"
+    Name = "TestAccAWSALB_condition%s"
   }
 }
 
@@ -2626,7 +2620,7 @@ resource "aws_vpc" "alb_test" {
   cidr_block = "10.0.0.0/16"
 
   tags = {
-    Name = "TestAccAWSALB_conditionHostHeader"
+    Name = "TestAccAWSALB_condition%s"
   }
 }
 
@@ -2638,7 +2632,7 @@ resource "aws_subnet" "alb_test" {
   availability_zone       = "${element(data.aws_availability_zones.available.names, count.index)}"
 
   tags = {
-    Name = "TestAccAWSALB_conditionHostHeader-${count.index}"
+    Name = "TestAccAWSALB_condition%s-${count.index}"
   }
 }
 
@@ -2662,233 +2656,53 @@ resource "aws_security_group" "alb_test" {
   }
 
   tags = {
-    Name = "TestAccAWSALB_conditionHostHeader"
+    Name = "TestAccAWSALB_condition%s"
   }
 }
-`, lbName)
+`, condition, lbName, name, name, name, name)
+}
+
+func testAccAWSLBListenerRuleConfig_conditionHostHeader(lbName string) string {
+	return testAccAWSLBListenerRuleConfig_condition_base(`
+condition {
+  field = "host-header"
+
+  host_header {
+    values = ["example.com", "www.example.com"]
+  }
+}
+`, "HostHeader", lbName)
 }
 
 func testAccAWSLBListenerRuleConfig_conditionHostHeader_deprecated(lbName string) string {
-	return fmt.Sprintf(`
-resource "aws_lb_listener_rule" "static" {
-  listener_arn = "${aws_lb_listener.front_end.arn}"
-  priority     = 100
-
-  action {
-    type = "fixed-response"
-
-    fixed_response {
-      content_type = "text/plain"
-      message_body = "Static"
-      status_code  = 200
-    }
-  }
-
-  condition {
-    field  = "host-header"
-    values = ["example.com"]
-  }
+	return testAccAWSLBListenerRuleConfig_condition_base(`
+condition {
+  field  = "host-header"
+  values = ["example.com"]
 }
-
-resource "aws_lb_listener" "front_end" {
-  load_balancer_arn = "${aws_lb.alb_test.id}"
-  protocol          = "HTTP"
-  port              = "80"
-
-  default_action {
-    type = "fixed-response"
-
-    fixed_response {
-      content_type = "text/plain"
-      message_body = "Not Found"
-      status_code  = 404
-    }
-  }
-}
-
-resource "aws_lb" "alb_test" {
-  name            = "%s"
-  internal        = true
-  security_groups = ["${aws_security_group.alb_test.id}"]
-  subnets         = ["${aws_subnet.alb_test.*.id[0]}", "${aws_subnet.alb_test.*.id[1]}"]
-
-  idle_timeout               = 30
-  enable_deletion_protection = false
-
-  tags = {
-    Name = "TestAccAWSALB_conditionHostHeader"
-  }
-}
-
-variable "subnets" {
-  default = ["10.0.1.0/24", "10.0.2.0/24"]
-  type    = "list"
-}
-
-data "aws_availability_zones" "available" {}
-
-resource "aws_vpc" "alb_test" {
-  cidr_block = "10.0.0.0/16"
-
-  tags = {
-    Name = "TestAccAWSALB_conditionHostHeader"
-  }
-}
-
-resource "aws_subnet" "alb_test" {
-  count                   = 2
-  vpc_id                  = "${aws_vpc.alb_test.id}"
-  cidr_block              = "${element(var.subnets, count.index)}"
-  map_public_ip_on_launch = true
-  availability_zone       = "${element(data.aws_availability_zones.available.names, count.index)}"
-
-  tags = {
-    Name = "TestAccAWSALB_conditionHostHeader-${count.index}"
-  }
-}
-
-resource "aws_security_group" "alb_test" {
-  name        = "allow_all_alb_test"
-  description = "Used for ALB Testing"
-  vpc_id      = "${aws_vpc.alb_test.id}"
-
-  ingress {
-    from_port   = 0
-    to_port     = 0
-    protocol    = "-1"
-    cidr_blocks = ["0.0.0.0/0"]
-  }
-
-  egress {
-    from_port   = 0
-    to_port     = 0
-    protocol    = "-1"
-    cidr_blocks = ["0.0.0.0/0"]
-  }
-
-  tags = {
-    Name = "TestAccAWSALB_conditionHostHeader"
-  }
-}
-`, lbName)
+`, "HostHeaderDep", lbName)
 }
 
 func testAccAWSLBListenerRuleConfig_conditionHttpHeader(lbName string) string {
-	return fmt.Sprintf(`
-resource "aws_lb_listener_rule" "static" {
-  listener_arn = "${aws_lb_listener.front_end.arn}"
-  priority     = 100
+	return testAccAWSLBListenerRuleConfig_condition_base(`
+condition {
+  field = "http-header"
 
-  action {
-    type = "fixed-response"
-
-    fixed_response {
-      content_type = "text/plain"
-      message_body = "Static"
-      status_code  = 200
-    }
-  }
-
-  condition {
-    field = "http-header"
-
-    http_header {
-      http_header_name = "X-Forwarded-For"
-      values           = ["192.168.1.*", "10.0.0.*"]
-    }
-  }
-
-  condition {
-    field = "http-header"
-
-    http_header {
-      http_header_name = "Zz9~|_^.-+*'&%%$#!0aA"
-      values           = ["RFC7230 Validity"]
-    }
+  http_header {
+    http_header_name = "X-Forwarded-For"
+    values           = ["192.168.1.*", "10.0.0.*"]
   }
 }
 
-resource "aws_lb_listener" "front_end" {
-  load_balancer_arn = "${aws_lb.alb_test.id}"
-  protocol          = "HTTP"
-  port              = "80"
+condition {
+  field = "http-header"
 
-  default_action {
-    type = "fixed-response"
-
-    fixed_response {
-      content_type = "text/plain"
-      message_body = "Not Found"
-      status_code  = 404
-    }
+  http_header {
+    http_header_name = "Zz9~|_^.-+*'&%%$#!0aA"
+    values           = ["RFC7230 Validity"]
   }
 }
-
-resource "aws_lb" "alb_test" {
-  name            = "%s"
-  internal        = true
-  security_groups = ["${aws_security_group.alb_test.id}"]
-  subnets         = ["${aws_subnet.alb_test.*.id[0]}", "${aws_subnet.alb_test.*.id[1]}"]
-
-  idle_timeout               = 30
-  enable_deletion_protection = false
-
-  tags = {
-    Name = "TestAccAWSALB_conditionHttpHeader"
-  }
-}
-
-variable "subnets" {
-  default = ["10.0.1.0/24", "10.0.2.0/24"]
-  type    = "list"
-}
-
-data "aws_availability_zones" "available" {}
-
-resource "aws_vpc" "alb_test" {
-  cidr_block = "10.0.0.0/16"
-
-  tags = {
-    Name = "TestAccAWSALB_conditionHttpHeader"
-  }
-}
-
-resource "aws_subnet" "alb_test" {
-  count                   = 2
-  vpc_id                  = "${aws_vpc.alb_test.id}"
-  cidr_block              = "${element(var.subnets, count.index)}"
-  map_public_ip_on_launch = true
-  availability_zone       = "${element(data.aws_availability_zones.available.names, count.index)}"
-
-  tags = {
-    Name = "TestAccAWSALB_conditionHttpHeader-${count.index}"
-  }
-}
-
-resource "aws_security_group" "alb_test" {
-  name        = "allow_all_alb_test"
-  description = "Used for ALB Testing"
-  vpc_id      = "${aws_vpc.alb_test.id}"
-
-  ingress {
-    from_port   = 0
-    to_port     = 0
-    protocol    = "-1"
-    cidr_blocks = ["0.0.0.0/0"]
-  }
-
-  egress {
-    from_port   = 0
-    to_port     = 0
-    protocol    = "-1"
-    cidr_blocks = ["0.0.0.0/0"]
-  }
-
-  tags = {
-    Name = "TestAccAWSALB_conditionHttpHeader"
-  }
-}
-`, lbName)
+`, "HttpHeader", lbName)
 }
 
 func testAccAWSLBListenerRuleConfig_conditionHttpHeader_invalid() string {
@@ -2920,711 +2734,136 @@ resource "aws_lb_listener_rule" "static" {
 }
 
 func testAccAWSLBListenerRuleConfig_conditionHttpRequestMethod(lbName string) string {
-	return fmt.Sprintf(`
-resource "aws_lb_listener_rule" "static" {
-  listener_arn = "${aws_lb_listener.front_end.arn}"
-  priority     = 100
+	return testAccAWSLBListenerRuleConfig_condition_base(`
+condition {
+  field = "http-request-method"
 
-  action {
-    type = "fixed-response"
-
-    fixed_response {
-      content_type = "text/plain"
-      message_body = "Static"
-      status_code  = 200
-    }
-  }
-
-  condition {
-    field = "http-request-method"
-
-    http_request_method {
-      values = ["GET", "POST"]
-    }
+  http_request_method {
+    values = ["GET", "POST"]
   }
 }
-
-resource "aws_lb_listener" "front_end" {
-  load_balancer_arn = "${aws_lb.alb_test.id}"
-  protocol          = "HTTP"
-  port              = "80"
-
-  default_action {
-    type = "fixed-response"
-
-    fixed_response {
-      content_type = "text/plain"
-      message_body = "Not Found"
-      status_code  = 404
-    }
-  }
-}
-
-resource "aws_lb" "alb_test" {
-  name            = "%s"
-  internal        = true
-  security_groups = ["${aws_security_group.alb_test.id}"]
-  subnets         = ["${aws_subnet.alb_test.*.id[0]}", "${aws_subnet.alb_test.*.id[1]}"]
-
-  idle_timeout               = 30
-  enable_deletion_protection = false
-
-  tags = {
-    Name = "TestAccAWSALB_conditionHttpReqestMethod"
-  }
-}
-
-variable "subnets" {
-  default = ["10.0.1.0/24", "10.0.2.0/24"]
-  type    = "list"
-}
-
-data "aws_availability_zones" "available" {}
-
-resource "aws_vpc" "alb_test" {
-  cidr_block = "10.0.0.0/16"
-
-  tags = {
-    Name = "TestAccAWSALB_conditionHttpReqestMethod"
-  }
-}
-
-resource "aws_subnet" "alb_test" {
-  count                   = 2
-  vpc_id                  = "${aws_vpc.alb_test.id}"
-  cidr_block              = "${element(var.subnets, count.index)}"
-  map_public_ip_on_launch = true
-  availability_zone       = "${element(data.aws_availability_zones.available.names, count.index)}"
-
-  tags = {
-    Name = "TestAccAWSALB_conditionHttpReqestMethod-${count.index}"
-  }
-}
-
-resource "aws_security_group" "alb_test" {
-  name        = "allow_all_alb_test"
-  description = "Used for ALB Testing"
-  vpc_id      = "${aws_vpc.alb_test.id}"
-
-  ingress {
-    from_port   = 0
-    to_port     = 0
-    protocol    = "-1"
-    cidr_blocks = ["0.0.0.0/0"]
-  }
-
-  egress {
-    from_port   = 0
-    to_port     = 0
-    protocol    = "-1"
-    cidr_blocks = ["0.0.0.0/0"]
-  }
-
-  tags = {
-    Name = "TestAccAWSALB_conditionHttpReqestMethod"
-  }
-}
-`, lbName)
+`, "HttpRequestMethod", lbName)
 }
 
 func testAccAWSLBListenerRuleConfig_conditionPathPattern(lbName string) string {
-	return fmt.Sprintf(`
-resource "aws_lb_listener_rule" "static" {
-  listener_arn = "${aws_lb_listener.front_end.arn}"
-  priority     = 100
+	return testAccAWSLBListenerRuleConfig_condition_base(`
+condition {
+  field = "path-pattern"
 
-  action {
-    type = "fixed-response"
-
-    fixed_response {
-      content_type = "text/plain"
-      message_body = "Static"
-      status_code  = 200
-    }
-  }
-
-  condition {
-    field = "path-pattern"
-
-    path_pattern {
-      values = ["/public/*", "/cgi-bin/*"]
-    }
+  path_pattern {
+    values = ["/public/*", "/cgi-bin/*"]
   }
 }
-
-resource "aws_lb_listener" "front_end" {
-  load_balancer_arn = "${aws_lb.alb_test.id}"
-  protocol          = "HTTP"
-  port              = "80"
-
-  default_action {
-    type = "fixed-response"
-
-    fixed_response {
-      content_type = "text/plain"
-      message_body = "Not Found"
-      status_code  = 404
-    }
-  }
-}
-
-resource "aws_lb" "alb_test" {
-  name            = "%s"
-  internal        = true
-  security_groups = ["${aws_security_group.alb_test.id}"]
-  subnets         = ["${aws_subnet.alb_test.*.id[0]}", "${aws_subnet.alb_test.*.id[1]}"]
-
-  idle_timeout               = 30
-  enable_deletion_protection = false
-
-  tags = {
-    Name = "TestAccAWSALB_conditionPathPattern"
-  }
-}
-
-variable "subnets" {
-  default = ["10.0.1.0/24", "10.0.2.0/24"]
-  type    = "list"
-}
-
-data "aws_availability_zones" "available" {}
-
-resource "aws_vpc" "alb_test" {
-  cidr_block = "10.0.0.0/16"
-
-  tags = {
-    Name = "TestAccAWSALB_conditionPathPattern"
-  }
-}
-
-resource "aws_subnet" "alb_test" {
-  count                   = 2
-  vpc_id                  = "${aws_vpc.alb_test.id}"
-  cidr_block              = "${element(var.subnets, count.index)}"
-  map_public_ip_on_launch = true
-  availability_zone       = "${element(data.aws_availability_zones.available.names, count.index)}"
-
-  tags = {
-    Name = "TestAccAWSALB_conditionPathPattern-${count.index}"
-  }
-}
-
-resource "aws_security_group" "alb_test" {
-  name        = "allow_all_alb_test"
-  description = "Used for ALB Testing"
-  vpc_id      = "${aws_vpc.alb_test.id}"
-
-  ingress {
-    from_port   = 0
-    to_port     = 0
-    protocol    = "-1"
-    cidr_blocks = ["0.0.0.0/0"]
-  }
-
-  egress {
-    from_port   = 0
-    to_port     = 0
-    protocol    = "-1"
-    cidr_blocks = ["0.0.0.0/0"]
-  }
-
-  tags = {
-    Name = "TestAccAWSALB_conditionPathPattern"
-  }
-}
-`, lbName)
+`, "PathPattern", lbName)
 }
 
 func testAccAWSLBListenerRuleConfig_conditionPathPattern_deprecated(lbName string) string {
-	return fmt.Sprintf(`resource "aws_lb_listener_rule" "static" {
-  listener_arn = "${aws_lb_listener.front_end.arn}"
-  priority     = 100
-
-  action {
-    type = "fixed-response"
-
-    fixed_response {
-      content_type = "text/plain"
-      message_body = "Static"
-      status_code  = 200
-    }
-  }
-
-  condition {
-    field = "path-pattern"
-    values = ["/public/*"]
-  }
+	return testAccAWSLBListenerRuleConfig_condition_base(`
+condition {
+  field = "path-pattern"
+  values = ["/public/*"]
 }
-
-resource "aws_lb_listener" "front_end" {
-   load_balancer_arn = "${aws_lb.alb_test.id}"
-   protocol          = "HTTP"
-   port              = "80"
-
-   default_action {
-     type = "fixed-response"
-
-     fixed_response {
-       content_type = "text/plain"
-       message_body = "Not Found"
-       status_code  = 404
-     }
-   }
-}
-
-resource "aws_lb" "alb_test" {
-  name            = "%s"
-  internal        = true
-  security_groups = ["${aws_security_group.alb_test.id}"]
-  subnets         = ["${aws_subnet.alb_test.*.id[0]}", "${aws_subnet.alb_test.*.id[1]}"]
-
-  idle_timeout               = 30
-  enable_deletion_protection = false
-
-  tags = {
-    Name = "TestAccAWSALB_conditionPathPattern"
-  }
-}
-
-variable "subnets" {
-  default = ["10.0.1.0/24", "10.0.2.0/24"]
-  type    = "list"
-}
-
-data "aws_availability_zones" "available" {}
-
-resource "aws_vpc" "alb_test" {
-  cidr_block = "10.0.0.0/16"
-
-  tags = {
-    Name = "TestAccAWSALB_conditionPathPattern"
-  }
-}
-
-resource "aws_subnet" "alb_test" {
-  count                   = 2
-  vpc_id                  = "${aws_vpc.alb_test.id}"
-  cidr_block              = "${element(var.subnets, count.index)}"
-  map_public_ip_on_launch = true
-  availability_zone       = "${element(data.aws_availability_zones.available.names, count.index)}"
-
-  tags = {
-    Name = "TestAccAWSALB_conditionPathPattern-${count.index}"
-  }
-}
-
-resource "aws_security_group" "alb_test" {
-  name        = "allow_all_alb_test"
-  description = "Used for ALB Testing"
-  vpc_id      = "${aws_vpc.alb_test.id}"
-
-  ingress {
-    from_port   = 0
-    to_port     = 0
-    protocol    = "-1"
-    cidr_blocks = ["0.0.0.0/0"]
-  }
-
-  egress {
-    from_port   = 0
-    to_port     = 0
-    protocol    = "-1"
-    cidr_blocks = ["0.0.0.0/0"]
-  }
-
-  tags = {
-    Name = "TestAccAWSALB_conditionPathPattern"
-  }
-}
-`, lbName)
+`, "PathPatternDep", lbName)
 }
 
 func testAccAWSLBListenerRuleConfig_conditionQueryString(lbName string) string {
-	return fmt.Sprintf(`
-resource "aws_lb_listener_rule" "static" {
-  listener_arn = "${aws_lb_listener.front_end.arn}"
-  priority     = 100
+	return testAccAWSLBListenerRuleConfig_condition_base(`
+condition {
+  field = "query-string"
 
-  action {
-    type = "fixed-response"
-
-    fixed_response {
-      content_type = "text/plain"
-      message_body = "Static"
-      status_code  = 200
-    }
+  query_string {
+    values = [
+      {
+        value = "surprise"
+      },
+      {
+        key   = ""
+        value = "blank"
+      },
+      {
+        key   = "text"
+        value = "entry"
+      },
+    ]
   }
+}
 
-  condition {
-    field = "query-string"
+condition {
+  field = "query-string"
 
-    query_string {
-      values = [
-        {
-          value = "surprise"
-        },
-        {
-          key   = ""
-          value = "blank"
-        },
-        {
-          key   = "text"
-          value = "entry"
-        },
-      ]
+  query_string {
+    values {
+      key   = "foo"
+      value = "bar"
     }
-  }
-
-  condition {
-    field = "query-string"
-
-    query_string {
-      values {
-        key   = "foo"
-        value = "bar"
-      }
-      values {
-        key   = "foo"
-        value = "baz"
-      }
+    values {
+      key   = "foo"
+      value = "baz"
     }
   }
 }
-
-resource "aws_lb_listener" "front_end" {
-  load_balancer_arn = "${aws_lb.alb_test.id}"
-  protocol          = "HTTP"
-  port              = "80"
-
-  default_action {
-    type = "fixed-response"
-
-    fixed_response {
-      content_type = "text/plain"
-      message_body = "Not Found"
-      status_code  = 404
-    }
-  }
-}
-
-resource "aws_lb" "alb_test" {
-  name            = "%s"
-  internal        = true
-  security_groups = ["${aws_security_group.alb_test.id}"]
-  subnets         = ["${aws_subnet.alb_test.*.id[0]}", "${aws_subnet.alb_test.*.id[1]}"]
-
-  idle_timeout               = 30
-  enable_deletion_protection = false
-
-  tags = {
-    Name = "TestAccAWSALB_conditionQueryString"
-  }
-}
-
-variable "subnets" {
-  default = ["10.0.1.0/24", "10.0.2.0/24"]
-  type    = "list"
-}
-
-data "aws_availability_zones" "available" {}
-
-resource "aws_vpc" "alb_test" {
-  cidr_block = "10.0.0.0/16"
-
-  tags = {
-    Name = "TestAccAWSALB_conditionQueryString"
-  }
-}
-
-resource "aws_subnet" "alb_test" {
-  count                   = 2
-  vpc_id                  = "${aws_vpc.alb_test.id}"
-  cidr_block              = "${element(var.subnets, count.index)}"
-  map_public_ip_on_launch = true
-  availability_zone       = "${element(data.aws_availability_zones.available.names, count.index)}"
-
-  tags = {
-    Name = "TestAccAWSALB_conditionQueryString-${count.index}"
-  }
-}
-
-resource "aws_security_group" "alb_test" {
-  name        = "allow_all_alb_test"
-  description = "Used for ALB Testing"
-  vpc_id      = "${aws_vpc.alb_test.id}"
-
-  ingress {
-    from_port   = 0
-    to_port     = 0
-    protocol    = "-1"
-    cidr_blocks = ["0.0.0.0/0"]
-  }
-
-  egress {
-    from_port   = 0
-    to_port     = 0
-    protocol    = "-1"
-    cidr_blocks = ["0.0.0.0/0"]
-  }
-
-  tags = {
-    Name = "TestAccAWSALB_conditionQueryString"
-  }
-}
-`, lbName)
+`, "QueryString", lbName)
 }
 
 func testAccAWSLBListenerRuleConfig_conditionSourceIp(lbName string) string {
-	return fmt.Sprintf(`
-resource "aws_lb_listener_rule" "static" {
-  listener_arn = "${aws_lb_listener.front_end.arn}"
-  priority     = 100
+	return testAccAWSLBListenerRuleConfig_condition_base(`
+condition {
+  field = "source-ip"
 
-  action {
-    type = "fixed-response"
-
-    fixed_response {
-      content_type = "text/plain"
-      message_body = "Static"
-      status_code  = 200
-    }
-  }
-
-  condition {
-    field = "source-ip"
-
-    source_ip {
-      values = [
-        "192.168.0.0/16",
-        "dead:cafe::/64",
-      ]
-    }
+  source_ip {
+    values = [
+      "192.168.0.0/16",
+      "dead:cafe::/64",
+    ]
   }
 }
-
-resource "aws_lb_listener" "front_end" {
-  load_balancer_arn = "${aws_lb.alb_test.id}"
-  protocol          = "HTTP"
-  port              = "80"
-
-  default_action {
-    type = "fixed-response"
-
-    fixed_response {
-      content_type = "text/plain"
-      message_body = "Not Found"
-      status_code  = 404
-    }
-  }
-}
-
-resource "aws_lb" "alb_test" {
-  name            = "%s"
-  internal        = true
-  security_groups = ["${aws_security_group.alb_test.id}"]
-  subnets         = ["${aws_subnet.alb_test.*.id[0]}", "${aws_subnet.alb_test.*.id[1]}"]
-
-  idle_timeout               = 30
-  enable_deletion_protection = false
-
-  tags = {
-    Name = "TestAccAWSALB_conditionSourceIp"
-  }
-}
-
-variable "subnets" {
-  default = ["10.0.1.0/24", "10.0.2.0/24"]
-  type    = "list"
-}
-
-data "aws_availability_zones" "available" {}
-
-resource "aws_vpc" "alb_test" {
-  cidr_block = "10.0.0.0/16"
-
-  tags = {
-    Name = "TestAccAWSALB_conditionSourceIp"
-  }
-}
-
-resource "aws_subnet" "alb_test" {
-  count                   = 2
-  vpc_id                  = "${aws_vpc.alb_test.id}"
-  cidr_block              = "${element(var.subnets, count.index)}"
-  map_public_ip_on_launch = true
-  availability_zone       = "${element(data.aws_availability_zones.available.names, count.index)}"
-
-  tags = {
-    Name = "TestAccAWSALB_conditionSourceIp-${count.index}"
-  }
-}
-
-resource "aws_security_group" "alb_test" {
-  name        = "allow_all_alb_test"
-  description = "Used for ALB Testing"
-  vpc_id      = "${aws_vpc.alb_test.id}"
-
-  ingress {
-    from_port   = 0
-    to_port     = 0
-    protocol    = "-1"
-    cidr_blocks = ["0.0.0.0/0"]
-  }
-
-  egress {
-    from_port   = 0
-    to_port     = 0
-    protocol    = "-1"
-    cidr_blocks = ["0.0.0.0/0"]
-  }
-
-  tags = {
-    Name = "TestAccAWSALB_conditionSourceIp"
-  }
-}
-`, lbName)
+`, "SourceIp", lbName)
 }
 
 // Currently a maximum of 5 condition values per rule
 func testAccAWSLBListenerRuleConfig_conditionMultiple(lbName string) string {
-	return fmt.Sprintf(`
-resource "aws_lb_listener_rule" "static" {
-  listener_arn = "${aws_lb_listener.front_end.arn}"
-  priority     = 100
+	return testAccAWSLBListenerRuleConfig_condition_base(`
+condition {
+  field = "host-header"
 
-  action {
-    type = "fixed-response"
-
-    fixed_response {
-      content_type = "text/plain"
-      message_body = "Static"
-      status_code  = 200
-    }
-  }
-
-  condition {
-    field = "host-header"
-
-    host_header {
-      values = ["example.com"]
-    }
-  }
-
-  condition {
-    field = "http-header"
-
-    http_header {
-      http_header_name = "X-Forwarded-For"
-      values           = ["192.168.1.*"]
-    }
-  }
-
-  condition {
-    field = "http-request-method"
-
-    http_request_method {
-      values = ["GET"]
-    }
-  }
-
-  condition {
-    field = "path-pattern"
-
-    path_pattern {
-      values = ["/public/*"]
-    }
-  }
-
-  condition {
-    field = "source-ip"
-
-    source_ip {
-      values = [
-        "192.168.0.0/16",
-      ]
-    }
+  host_header {
+    values = ["example.com"]
   }
 }
 
-resource "aws_lb_listener" "front_end" {
-  load_balancer_arn = "${aws_lb.alb_test.id}"
-  protocol          = "HTTP"
-  port              = "80"
+condition {
+  field = "http-header"
 
-  default_action {
-    type = "fixed-response"
-
-    fixed_response {
-      content_type = "text/plain"
-      message_body = "Not Found"
-      status_code  = 404
-    }
+  http_header {
+    http_header_name = "X-Forwarded-For"
+    values           = ["192.168.1.*"]
   }
 }
 
-resource "aws_lb" "alb_test" {
-  name            = "%s"
-  internal        = true
-  security_groups = ["${aws_security_group.alb_test.id}"]
-  subnets         = ["${aws_subnet.alb_test.*.id[0]}", "${aws_subnet.alb_test.*.id[1]}"]
+condition {
+  field = "http-request-method"
 
-  idle_timeout               = 30
-  enable_deletion_protection = false
-
-  tags = {
-    Name = "TestAccAWSALB_conditionMultiple"
+  http_request_method {
+    values = ["GET"]
   }
 }
 
-variable "subnets" {
-  default = ["10.0.1.0/24", "10.0.2.0/24"]
-  type    = "list"
-}
+condition {
+  field = "path-pattern"
 
-data "aws_availability_zones" "available" {}
-
-resource "aws_vpc" "alb_test" {
-  cidr_block = "10.0.0.0/16"
-
-  tags = {
-    Name = "TestAccAWSALB_conditionMultiple"
+  path_pattern {
+    values = ["/public/*"]
   }
 }
 
-resource "aws_subnet" "alb_test" {
-  count                   = 2
-  vpc_id                  = "${aws_vpc.alb_test.id}"
-  cidr_block              = "${element(var.subnets, count.index)}"
-  map_public_ip_on_launch = true
-  availability_zone       = "${element(data.aws_availability_zones.available.names, count.index)}"
+condition {
+  field = "source-ip"
 
-  tags = {
-    Name = "TestAccAWSALB_conditionMultiple-${count.index}"
+  source_ip {
+    values = [
+      "192.168.0.0/16",
+    ]
   }
 }
-
-resource "aws_security_group" "alb_test" {
-  name        = "allow_all_alb_test"
-  description = "Used for ALB Testing"
-  vpc_id      = "${aws_vpc.alb_test.id}"
-
-  ingress {
-    from_port   = 0
-    to_port     = 0
-    protocol    = "-1"
-    cidr_blocks = ["0.0.0.0/0"]
-  }
-
-  egress {
-    from_port   = 0
-    to_port     = 0
-    protocol    = "-1"
-    cidr_blocks = ["0.0.0.0/0"]
-  }
-
-  tags = {
-    Name = "TestAccAWSALB_conditionMultiple"
-  }
-}
-`, lbName)
+`, "Multiple", lbName)
 }
