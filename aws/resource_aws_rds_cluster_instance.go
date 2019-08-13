@@ -434,15 +434,15 @@ func resourceAwsRDSClusterInstanceUpdate(d *schema.ResourceData, meta interface{
 		requestUpdate = true
 	}
 
-	if d.HasChange("performance_insights_enabled") {
+	if d.HasChange("performance_insights_enabled") || d.HasChange("performance_insights_kms_key_id") {
 		d.SetPartial("performance_insights_enabled")
 		req.EnablePerformanceInsights = aws.Bool(d.Get("performance_insights_enabled").(bool))
-		requestUpdate = true
-	}
 
-	if d.HasChange("performance_insights_kms_key_id") {
-		d.SetPartial("performance_insights_kms_key_id")
-		req.PerformanceInsightsKMSKeyId = aws.String(d.Get("performance_insights_kms_key_id").(string))
+		if v, ok := d.GetOk("performance_insights_kms_key_id"); ok {
+			d.SetPartial("performance_insights_kms_key_id")
+			req.PerformanceInsightsKMSKeyId = aws.String(v.(string))
+		}
+
 		requestUpdate = true
 	}
 
