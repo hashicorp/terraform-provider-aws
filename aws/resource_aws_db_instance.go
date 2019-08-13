@@ -1630,11 +1630,16 @@ func resourceAwsDbInstanceUpdate(d *schema.ResourceData, meta interface{}) error
 		d.SetPartial("performance_insights_enabled")
 		req.EnablePerformanceInsights = aws.Bool(d.Get("performance_insights_enabled").(bool))
 
-		d.SetPartial("performance_insights_kms_key_id")
-		req.PerformanceInsightsKMSKeyId = aws.String(d.Get("performance_insights_kms_key_id").(string))
+		if v, ok := d.GetOk("performance_insights_kms_key_id"); ok {
+			d.SetPartial("performance_insights_kms_key_id")
+			req.PerformanceInsightsKMSKeyId = aws.String(v.(string))
+		}
 
-		d.SetPartial("performance_insights_retention_period")
-		req.PerformanceInsightsRetentionPeriod = aws.Int64(int64(d.Get("performance_insights_retention_period").(int)))
+		if v, ok := d.GetOk("performance_insights_retention_period"); ok {
+			d.SetPartial("performance_insights_retention_period")
+			req.PerformanceInsightsRetentionPeriod = aws.Int64(int64(v.(int)))
+		}
+
 		requestUpdate = true
 	}
 
