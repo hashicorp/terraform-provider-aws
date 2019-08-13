@@ -5739,8 +5739,7 @@ func (c *Redshift) DescribeStorageRequest(input *DescribeStorageInput) (req *req
 
 // DescribeStorage API operation for Amazon Redshift.
 //
-// Returns the total amount of snapshot usage and provisioned storage for a
-// user in megabytes.
+// Returns the total amount of snapshot usage and provisioned storage in megabytes.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -9485,6 +9484,18 @@ type Cluster struct {
 	// Default: false
 	EnhancedVpcRouting *bool `type:"boolean"`
 
+	// The date and time when the next snapshot is expected to be taken for clusters
+	// with a valid snapshot schedule and backups enabled.
+	ExpectedNextSnapshotScheduleTime *time.Time `type:"timestamp"`
+
+	// The status of next expected snapshot for clusters having a valid snapshot
+	// schedule and backups enabled. Possible values are the following:
+	//
+	//    * OnTrack - The next snapshot is expected to be taken on time.
+	//
+	//    * Pending - The next snapshot is pending to be taken.
+	ExpectedNextSnapshotScheduleTimeStatus *string `type:"string"`
+
 	// A value that reports whether the Amazon Redshift cluster has finished applying
 	// any hardware security module (HSM) settings changes specified in a modify
 	// cluster command.
@@ -9713,6 +9724,18 @@ func (s *Cluster) SetEndpoint(v *Endpoint) *Cluster {
 // SetEnhancedVpcRouting sets the EnhancedVpcRouting field's value.
 func (s *Cluster) SetEnhancedVpcRouting(v bool) *Cluster {
 	s.EnhancedVpcRouting = &v
+	return s
+}
+
+// SetExpectedNextSnapshotScheduleTime sets the ExpectedNextSnapshotScheduleTime field's value.
+func (s *Cluster) SetExpectedNextSnapshotScheduleTime(v time.Time) *Cluster {
+	s.ExpectedNextSnapshotScheduleTime = &v
+	return s
+}
+
+// SetExpectedNextSnapshotScheduleTimeStatus sets the ExpectedNextSnapshotScheduleTimeStatus field's value.
+func (s *Cluster) SetExpectedNextSnapshotScheduleTimeStatus(v string) *Cluster {
+	s.ExpectedNextSnapshotScheduleTimeStatus = &v
 	return s
 }
 
@@ -19502,7 +19525,8 @@ type ResizeClusterInput struct {
 	// The new cluster type for the specified cluster.
 	ClusterType *string `type:"string"`
 
-	// The new node type for the nodes you are adding.
+	// The new node type for the nodes you are adding. If not specified, the cluster's
+	// current node type is used.
 	NodeType *string `type:"string"`
 
 	// The new number of nodes for the cluster.
