@@ -177,7 +177,9 @@ func resourceAwsEksClusterCreate(d *schema.ResourceData, meta interface{}) error
 		}
 		return nil
 	})
-
+	if isResourceTimeoutError(err) {
+		_, err = conn.CreateCluster(input)
+	}
 	if err != nil {
 		return fmt.Errorf("error creating EKS Cluster (%s): %s", name, err)
 	}
