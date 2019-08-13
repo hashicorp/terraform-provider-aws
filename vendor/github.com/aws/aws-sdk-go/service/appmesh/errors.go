@@ -65,4 +65,12 @@ const (
 	// for your account. For best results, use an increasing or variable sleep interval
 	// between requests.
 	ErrCodeTooManyRequestsException = "TooManyRequestsException"
+
+	// ErrCodeTooManyTagsException for service response error code
+	// "TooManyTagsException".
+	//
+	// The request exceeds the maximum allowed number of tags allowed per resource.
+	// The current limit is 50 user tags per resource. You must reduce the number
+	// of tags in the request. None of the tags in this request were applied.
+	ErrCodeTooManyTagsException = "TooManyTagsException"
 )

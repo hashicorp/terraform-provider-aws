@@ -6,7 +6,7 @@ description: |-
   Provides a Connection of Direct Connect.
 ---
 
-# aws_dx_connection
+# Resource: aws_dx_connection
 
 Provides a Connection of Direct Connect.
 

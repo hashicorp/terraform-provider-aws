@@ -262,6 +262,9 @@ func (c *CloudWatchLogs) CreateExportTaskRequest(input *CreateExportTaskInput) (
 // same S3 bucket. To separate out log data for each export task, you can specify
 // a prefix to be used as the Amazon S3 key prefix for all exported objects.
 //
+// Exporting to S3 buckets that are encrypted with AES-256 is supported. Exporting
+// to S3 buckets encrypted with SSE-KMS is not supported.
+//
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
 // the error.
@@ -1251,7 +1254,7 @@ func (c *CloudWatchLogs) DescribeDestinationsWithContext(ctx aws.Context, input 
 //    // Example iterating over at most 3 pages of a DescribeDestinations operation.
 //    pageNum := 0
 //    err := client.DescribeDestinationsPages(params,
-//        func(page *DescribeDestinationsOutput, lastPage bool) bool {
+//        func(page *cloudwatchlogs.DescribeDestinationsOutput, lastPage bool) bool {
 //            pageNum++
 //            fmt.Println(page)
 //            return pageNum <= 3
@@ -1474,7 +1477,7 @@ func (c *CloudWatchLogs) DescribeLogGroupsWithContext(ctx aws.Context, input *De
 //    // Example iterating over at most 3 pages of a DescribeLogGroups operation.
 //    pageNum := 0
 //    err := client.DescribeLogGroupsPages(params,
-//        func(page *DescribeLogGroupsOutput, lastPage bool) bool {
+//        func(page *cloudwatchlogs.DescribeLogGroupsOutput, lastPage bool) bool {
 //            pageNum++
 //            fmt.Println(page)
 //            return pageNum <= 3
@@ -1621,7 +1624,7 @@ func (c *CloudWatchLogs) DescribeLogStreamsWithContext(ctx aws.Context, input *D
 //    // Example iterating over at most 3 pages of a DescribeLogStreams operation.
 //    pageNum := 0
 //    err := client.DescribeLogStreamsPages(params,
-//        func(page *DescribeLogStreamsOutput, lastPage bool) bool {
+//        func(page *cloudwatchlogs.DescribeLogStreamsOutput, lastPage bool) bool {
 //            pageNum++
 //            fmt.Println(page)
 //            return pageNum <= 3
@@ -1765,7 +1768,7 @@ func (c *CloudWatchLogs) DescribeMetricFiltersWithContext(ctx aws.Context, input
 //    // Example iterating over at most 3 pages of a DescribeMetricFilters operation.
 //    pageNum := 0
 //    err := client.DescribeMetricFiltersPages(params,
-//        func(page *DescribeMetricFiltersOutput, lastPage bool) bool {
+//        func(page *cloudwatchlogs.DescribeMetricFiltersOutput, lastPage bool) bool {
 //            pageNum++
 //            fmt.Println(page)
 //            return pageNum <= 3
@@ -2079,7 +2082,7 @@ func (c *CloudWatchLogs) DescribeSubscriptionFiltersWithContext(ctx aws.Context,
 //    // Example iterating over at most 3 pages of a DescribeSubscriptionFilters operation.
 //    pageNum := 0
 //    err := client.DescribeSubscriptionFiltersPages(params,
-//        func(page *DescribeSubscriptionFiltersOutput, lastPage bool) bool {
+//        func(page *cloudwatchlogs.DescribeSubscriptionFiltersOutput, lastPage bool) bool {
 //            pageNum++
 //            fmt.Println(page)
 //            return pageNum <= 3
@@ -2326,7 +2329,7 @@ func (c *CloudWatchLogs) FilterLogEventsWithContext(ctx aws.Context, input *Filt
 //    // Example iterating over at most 3 pages of a FilterLogEvents operation.
 //    pageNum := 0
 //    err := client.FilterLogEventsPages(params,
-//        func(page *FilterLogEventsOutput, lastPage bool) bool {
+//        func(page *cloudwatchlogs.FilterLogEventsOutput, lastPage bool) bool {
 //            pageNum++
 //            fmt.Println(page)
 //            return pageNum <= 3
@@ -2473,7 +2476,7 @@ func (c *CloudWatchLogs) GetLogEventsWithContext(ctx aws.Context, input *GetLogE
 //    // Example iterating over at most 3 pages of a GetLogEvents operation.
 //    pageNum := 0
 //    err := client.GetLogEventsPages(params,
-//        func(page *GetLogEventsOutput, lastPage bool) bool {
+//        func(page *cloudwatchlogs.GetLogEventsOutput, lastPage bool) bool {
 //            pageNum++
 //            fmt.Println(page)
 //            return pageNum <= 3
@@ -2746,11 +2749,17 @@ func (c *CloudWatchLogs) GetQueryResultsRequest(input *GetQueryResultsInput) (re
 
 // GetQueryResults API operation for Amazon CloudWatch Logs.
 //
-// Returns the results from the specified query. If the query is in progress,
-// partial results of that current execution are returned. Only the fields requested
-// in the query are returned.
+// Returns the results from the specified query.
+//
+// Only the fields requested in the query are returned, along with a @ptr field
+// which is the identifier for the log record. You can use the value of @ptr
+// in a operation to get the full log record.
 //
 // GetQueryResults does not start a query execution. To run a query, use .
+//
+// If the value of the Status field in the output is Running, this operation
+// returns only partial results. If you see a value of Scheduled or Running
+// for the status, you can retry the operation later to see the final results.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -2920,14 +2929,14 @@ func (c *CloudWatchLogs) PutDestinationRequest(input *PutDestinationInput) (req 
 // Creates or updates a destination. A destination encapsulates a physical resource
 // (such as an Amazon Kinesis stream) and enables you to subscribe to a real-time
 // stream of log events for a different account, ingested using PutLogEvents.
-// Currently, the only supported physical resource is a Kinesis stream belonging
-// to the same account as the destination.
+// A destination can be an Amazon Kinesis stream, Amazon Kinesis Data Firehose
+// strea, or an AWS Lambda function.
 //
-// Through an access policy, a destination controls what is written to its Kinesis
-// stream. By default, PutDestination does not set any access policy with the
-// destination, which means a cross-account user cannot call PutSubscriptionFilter
-// against this destination. To enable this, the destination owner must call
-// PutDestinationPolicy after PutDestination.
+// Through an access policy, a destination controls what is written to it. By
+// default, PutDestination does not set any access policy with the destination,
+// which means a cross-account user cannot call PutSubscriptionFilter against
+// this destination. To enable this, the destination owner must call PutDestinationPolicy
+// after PutDestination.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -3014,7 +3023,7 @@ func (c *CloudWatchLogs) PutDestinationPolicyRequest(input *PutDestinationPolicy
 // PutDestinationPolicy API operation for Amazon CloudWatch Logs.
 //
 // Creates or updates an access policy associated with an existing destination.
-// An access policy is an IAM policy document (http://docs.aws.amazon.com/IAM/latest/UserGuide/policies_overview.html)
+// An access policy is an IAM policy document (https://docs.aws.amazon.com/IAM/latest/UserGuide/policies_overview.html)
 // that is used to authorize claims to register a subscription filter against
 // a given destination.
 //
@@ -3118,8 +3127,8 @@ func (c *CloudWatchLogs) PutLogEventsRequest(input *PutLogEventsInput) (req *req
 //    * None of the log events in the batch can be more than 2 hours in the
 //    future.
 //
-//    * None of the log events in the batch can be older than 14 days or the
-//    retention period of the log group.
+//    * None of the log events in the batch can be older than 14 days or older
+//    than the retention period of the log group.
 //
 //    * The log events in the batch must be in chronological ordered by their
 //    timestamp. The timestamp is the time the event occurred, expressed as
@@ -3617,7 +3626,11 @@ func (c *CloudWatchLogs) StartQueryRequest(input *StartQueryInput) (req *request
 // Schedules a query of a log group using CloudWatch Logs Insights. You specify
 // the log group and time range to query, and the query string to use.
 //
-// For more information, see CloudWatch Logs Insights Query Syntax (http://docs.aws.amazon.com/AmazonCloudWatch/latest/logs/CWL_QuerySyntax.html).
+// For more information, see CloudWatch Logs Insights Query Syntax (https://docs.aws.amazon.com/AmazonCloudWatch/latest/logs/CWL_QuerySyntax.html).
+//
+// Queries time out after 15 minutes of execution. If your queries are timing
+// out, reduce the time range being searched, or partition your query into a
+// number of queries.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -3632,7 +3645,7 @@ func (c *CloudWatchLogs) StartQueryRequest(input *StartQueryInput) (req *request
 //   a QueryCompileError object. For more information, see .
 //
 //   For more information about valid query syntax, see CloudWatch Logs Insights
-//   Query Syntax (http://docs.aws.amazon.com/AmazonCloudWatch/latest/logs/CWL_QuerySyntax.html).
+//   Query Syntax (https://docs.aws.amazon.com/AmazonCloudWatch/latest/logs/CWL_QuerySyntax.html).
 //
 //   * ErrCodeInvalidParameterException "InvalidParameterException"
 //   A parameter is specified incorrectly.
@@ -3806,7 +3819,7 @@ func (c *CloudWatchLogs) TagLogGroupRequest(input *TagLogGroupInput) (req *reque
 // UntagLogGroup.
 //
 // For more information about tags, see Tag Log Groups in Amazon CloudWatch
-// Logs (http://docs.aws.amazon.com/AmazonCloudWatch/latest/logs/log-group-tagging.html)
+// Logs (https://docs.aws.amazon.com/AmazonCloudWatch/latest/logs/log-group-tagging.html)
 // in the Amazon CloudWatch Logs User Guide.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
@@ -4017,7 +4030,7 @@ type AssociateKmsKeyInput struct {
 
 	// The Amazon Resource Name (ARN) of the CMK to use when encrypting log data.
 	// For more information, see Amazon Resource Names - AWS Key Management Service
-	// (AWS KMS) (http://docs.aws.amazon.com/general/latest/gr/aws-arns-and-namespaces.html#arn-syntax-kms).
+	// (AWS KMS) (https://docs.aws.amazon.com/general/latest/gr/aws-arns-and-namespaces.html#arn-syntax-kms).
 	//
 	// KmsKeyId is a required field
 	KmsKeyId *string `locationName:"kmsKeyId" type:"string" required:"true"`
@@ -4292,7 +4305,7 @@ type CreateLogGroupInput struct {
 
 	// The Amazon Resource Name (ARN) of the CMK to use when encrypting log data.
 	// For more information, see Amazon Resource Names - AWS Key Management Service
-	// (AWS KMS) (http://docs.aws.amazon.com/general/latest/gr/aws-arns-and-namespaces.html#arn-syntax-kms).
+	// (AWS KMS) (https://docs.aws.amazon.com/general/latest/gr/aws-arns-and-namespaces.html#arn-syntax-kms).
 	KmsKeyId *string `locationName:"kmsKeyId" type:"string"`
 
 	// The name of the log group.
@@ -6026,7 +6039,7 @@ type FilterLogEventsInput struct {
 	EndTime *int64 `locationName:"endTime" type:"long"`
 
 	// The filter pattern to use. For more information, see Filter and Pattern Syntax
-	// (http://docs.aws.amazon.com/AmazonCloudWatch/latest/logs/FilterAndPatternSyntax.html).
+	// (https://docs.aws.amazon.com/AmazonCloudWatch/latest/logs/FilterAndPatternSyntax.html).
 	//
 	// If not provided, all the events are matched.
 	FilterPattern *string `locationName:"filterPattern" type:"string"`
@@ -6036,7 +6049,13 @@ type FilterLogEventsInput struct {
 	// in a single response. If the value is false, all the matched log events in
 	// the first log stream are searched first, then those in the next log stream,
 	// and so on. The default is false.
-	Interleaved *bool `locationName:"interleaved" type:"boolean"`
+	//
+	// IMPORTANT: Starting on June 17, 2019, this parameter will be ignored and
+	// the value will be assumed to be true. The response from this operation will
+	// always interleave events from multiple log streams within a log group.
+	//
+	// Deprecated: Starting on June 17, 2019, this parameter will be ignored and the value will be assumed to be true. The response from this operation will always interleave events from multiple log streams within a log group.
+	Interleaved *bool `locationName:"interleaved" deprecated:"true" type:"boolean"`
 
 	// The maximum number of events to return. The default is 10,000 events.
 	Limit *int64 `locationName:"limit" min:"1" type:"integer"`
@@ -6297,6 +6316,8 @@ type GetLogEventsInput struct {
 	// If the value is true, the earliest log events are returned first. If the
 	// value is false, the latest log events are returned first. The default value
 	// is false.
+	//
+	// If you are using nextToken in this operation, you must specify true for startFromHead.
 	StartFromHead *bool `locationName:"startFromHead" type:"boolean"`
 
 	// The start of the time range, expressed as the number of milliseconds after
@@ -6630,7 +6651,11 @@ type GetQueryResultsOutput struct {
 	Statistics *QueryStatistics `locationName:"statistics" type:"structure"`
 
 	// The status of the most recent running of the query. Possible values are Cancelled,
-	// Complete, Failed, Running, Scheduled, and Unknown.
+	// Complete, Failed, Running, Scheduled, Timeout, and Unknown.
+	//
+	// Queries time out after 15 minutes of execution. To avoid having your queries
+	// time out, reduce the time range being searched, or partition your query into
+	// a number of queries.
 	Status *string `locationName:"status" type:"string" enum:"QueryStatus"`
 }
 
@@ -6930,7 +6955,13 @@ type LogStream struct {
 	LogStreamName *string `locationName:"logStreamName" min:"1" type:"string"`
 
 	// The number of bytes stored.
-	StoredBytes *int64 `locationName:"storedBytes" type:"long"`
+	//
+	// IMPORTANT: Starting on June 17, 2019, this parameter will be deprecated for
+	// log streams, and will be reported as zero. This change applies only to log
+	// streams. The storedBytes parameter for log groups is not affected.
+	//
+	// Deprecated: Starting on June 17, 2019, this parameter will be deprecated for log streams, and will be reported as zero. This change applies only to log streams. The storedBytes parameter for log groups is not affected.
+	StoredBytes *int64 `locationName:"storedBytes" deprecated:"true" type:"long"`
 
 	// The sequence token.
 	UploadSequenceToken *string `locationName:"uploadSequenceToken" min:"1" type:"string"`
@@ -7102,7 +7133,7 @@ func (s *MetricFilterMatchRecord) SetExtractedValues(v map[string]*string) *Metr
 	return s
 }
 
-// Indicates how to transform ingested log eventsto metric data in a CloudWatch
+// Indicates how to transform ingested log events to metric data in a CloudWatch
 // metric.
 type MetricTransformation struct {
 	_ struct{} `type:"structure"`
@@ -7648,6 +7679,7 @@ type PutResourcePolicyInput struct {
 
 	// Details of the new policy, including the identity of the principal that is
 	// enabled to put logs to this account. This is formatted as a JSON string.
+	// This parameter is required.
 	//
 	// The following example creates a resource policy enabling the Route 53 service
 	// to put DNS query logs in to the specified log group. Replace "logArn" with
@@ -8265,7 +8297,8 @@ func (s *SearchedLogStream) SetSearchedCompletely(v bool) *SearchedLogStream {
 type StartQueryInput struct {
 	_ struct{} `type:"structure"`
 
-	// The end of the time range to query. Specified as epoch time, the number of
+	// The end of the time range to query. The range is inclusive, so the specified
+	// end time is included in the query. Specified as epoch time, the number of
 	// seconds since January 1, 1970, 00:00:00 UTC.
 	//
 	// EndTime is a required field
@@ -8277,17 +8310,25 @@ type StartQueryInput struct {
 
 	// The log group on which to perform the query.
 	//
-	// LogGroupName is a required field
-	LogGroupName *string `locationName:"logGroupName" min:"1" type:"string" required:"true"`
+	// A StartQuery operation must include a logGroupNames or a logGroupName parameter,
+	// but not both.
+	LogGroupName *string `locationName:"logGroupName" min:"1" type:"string"`
+
+	// The list of log groups to be queried. You can include up to 20 log groups.
+	//
+	// A StartQuery operation must include a logGroupNames or a logGroupName parameter,
+	// but not both.
+	LogGroupNames []*string `locationName:"logGroupNames" type:"list"`
 
 	// The query string to use. For more information, see CloudWatch Logs Insights
-	// Query Syntax (http://docs.aws.amazon.com/AmazonCloudWatch/latest/logs/CWL_QuerySyntax.html).
+	// Query Syntax (https://docs.aws.amazon.com/AmazonCloudWatch/latest/logs/CWL_QuerySyntax.html).
 	//
 	// QueryString is a required field
 	QueryString *string `locationName:"queryString" type:"string" required:"true"`
 
-	// The beginning of the time range to query. Specified as epoch time, the number
-	// of seconds since January 1, 1970, 00:00:00 UTC.
+	// The beginning of the time range to query. The range is inclusive, so the
+	// specified start time is included in the query. Specified as epoch time, the
+	// number of seconds since January 1, 1970, 00:00:00 UTC.
 	//
 	// StartTime is a required field
 	StartTime *int64 `locationName:"startTime" type:"long" required:"true"`
@@ -8311,9 +8352,6 @@ func (s *StartQueryInput) Validate() error {
 	}
 	if s.Limit != nil && *s.Limit < 1 {
 		invalidParams.Add(request.NewErrParamMinValue("Limit", 1))
-	}
-	if s.LogGroupName == nil {
-		invalidParams.Add(request.NewErrParamRequired("LogGroupName"))
 	}
 	if s.LogGroupName != nil && len(*s.LogGroupName) < 1 {
 		invalidParams.Add(request.NewErrParamMinLen("LogGroupName", 1))
@@ -8346,6 +8384,12 @@ func (s *StartQueryInput) SetLimit(v int64) *StartQueryInput {
 // SetLogGroupName sets the LogGroupName field's value.
 func (s *StartQueryInput) SetLogGroupName(v string) *StartQueryInput {
 	s.LogGroupName = &v
+	return s
+}
+
+// SetLogGroupNames sets the LogGroupNames field's value.
+func (s *StartQueryInput) SetLogGroupNames(v []*string) *StartQueryInput {
+	s.LogGroupNames = v
 	return s
 }
 

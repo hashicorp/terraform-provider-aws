@@ -43,12 +43,9 @@ func TestAccDataSourceAwsNatGateway(t *testing.T) {
 
 func testAccDataSourceAwsNatGatewayConfig(rInt int) string {
 	return fmt.Sprintf(`
-provider "aws" {
-  region = "us-west-2"
-}
-
 resource "aws_vpc" "test" {
   cidr_block = "172.%d.0.0/16"
+
   tags = {
     Name = "terraform-testacc-nat-gw-data-source"
   }
@@ -72,6 +69,7 @@ resource "aws_eip" "test" {
 # IGWs are required for an NGW to spin up; manual dependency
 resource "aws_internet_gateway" "test" {
   vpc_id = "${aws_vpc.test.id}"
+
   tags = {
     Name = "terraform-testacc-nat-gateway-data-source-%d"
   }
@@ -82,7 +80,7 @@ resource "aws_nat_gateway" "test" {
   allocation_id = "${aws_eip.test.id}"
 
   tags = {
-    Name = "terraform-testacc-nat-gw-data-source-%d"
+    Name     = "terraform-testacc-nat-gw-data-source-%d"
     OtherTag = "some-value"
   }
 
@@ -102,6 +100,5 @@ data "aws_nat_gateway" "test_by_tags" {
     Name = "${aws_nat_gateway.test.tags["Name"]}"
   }
 }
-
 `, rInt, rInt, rInt, rInt)
 }

@@ -71,22 +71,22 @@ func nameFromResourceData(nameMap map[string]interface{}) (*pkix.Name, error) {
 
 var nameSchema *schema.Resource = &schema.Resource{
 	Schema: map[string]*schema.Schema{
-		"organization": &schema.Schema{
+		"organization": {
 			Type:     schema.TypeString,
 			Optional: true,
 			ForceNew: true,
 		},
-		"common_name": &schema.Schema{
+		"common_name": {
 			Type:     schema.TypeString,
 			Optional: true,
 			ForceNew: true,
 		},
-		"organizational_unit": &schema.Schema{
+		"organizational_unit": {
 			Type:     schema.TypeString,
 			Optional: true,
 			ForceNew: true,
 		},
-		"street_address": &schema.Schema{
+		"street_address": {
 			Type:     schema.TypeList,
 			Optional: true,
 			Elem: &schema.Schema{
@@ -94,27 +94,27 @@ var nameSchema *schema.Resource = &schema.Resource{
 			},
 			ForceNew: true,
 		},
-		"locality": &schema.Schema{
+		"locality": {
 			Type:     schema.TypeString,
 			Optional: true,
 			ForceNew: true,
 		},
-		"province": &schema.Schema{
+		"province": {
 			Type:     schema.TypeString,
 			Optional: true,
 			ForceNew: true,
 		},
-		"country": &schema.Schema{
+		"country": {
 			Type:     schema.TypeString,
 			Optional: true,
 			ForceNew: true,
 		},
-		"postal_code": &schema.Schema{
+		"postal_code": {
 			Type:     schema.TypeString,
 			Optional: true,
 			ForceNew: true,
 		},
-		"serial_number": &schema.Schema{
+		"serial_number": {
 			Type:     schema.TypeString,
 			Optional: true,
 			ForceNew: true,

@@ -170,15 +170,15 @@ func testAccCheckAWSDBSecurityGroupExists(n string, v *rds.DBSecurityGroup) reso
 func testAccAWSDBSecurityGroupConfig(name string) string {
 	return fmt.Sprintf(`
 resource "aws_db_security_group" "bar" {
-    name = "%s"
+  name = "%s"
 
-    ingress {
-        cidr = "10.0.0.1/24"
-    }
+  ingress {
+    cidr = "10.0.0.1/24"
+  }
 
   tags = {
-		foo = "bar"
-    }
+    foo = "bar"
+  }
 }
 `, name)
 }

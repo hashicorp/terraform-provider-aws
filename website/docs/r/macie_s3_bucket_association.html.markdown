@@ -6,7 +6,7 @@ description: |-
   Associates an S3 resource with Amazon Macie for monitoring and data classification.
 ---
 
-# aws_macie_s3_bucket_association
+# Resource: aws_macie_s3_bucket_association
 
 Associates an S3 resource with Amazon Macie for monitoring and data classification.
 

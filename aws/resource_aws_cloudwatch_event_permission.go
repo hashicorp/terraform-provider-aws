@@ -99,37 +99,35 @@ func resourceAwsCloudWatchEventPermissionCreate(d *schema.ResourceData, meta int
 func resourceAwsCloudWatchEventPermissionRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).cloudwatcheventsconn
 	input := events.DescribeEventBusInput{}
-	var policyDoc CloudWatchEventPermissionPolicyDoc
+	var output *events.DescribeEventBusOutput
 	var policyStatement *CloudWatchEventPermissionPolicyStatement
 
 	// Especially with concurrent PutPermission calls there can be a slight delay
 	err := resource.Retry(1*time.Minute, func() *resource.RetryError {
 		log.Printf("[DEBUG] Reading CloudWatch Events bus: %s", input)
-		debo, err := conn.DescribeEventBus(&input)
+		output, err := conn.DescribeEventBus(&input)
 		if err != nil {
 			return resource.NonRetryableError(fmt.Errorf("Reading CloudWatch Events permission '%s' failed: %s", d.Id(), err.Error()))
 		}
 
-		if debo.Policy == nil {
-			return resource.RetryableError(fmt.Errorf("CloudWatch Events permission %q not found", d.Id()))
-		}
-
-		err = json.Unmarshal([]byte(*debo.Policy), &policyDoc)
-		if err != nil {
-			return resource.NonRetryableError(fmt.Errorf("Reading CloudWatch Events permission '%s' failed: %s", d.Id(), err.Error()))
-		}
-
-		policyStatement, err = findCloudWatchEventPermissionPolicyStatementByID(&policyDoc, d.Id())
+		policyStatement, err = getPolicyStatement(output, d.Id())
 		return resource.RetryableError(err)
 	})
+
+	if isResourceTimeoutError(err) {
+		output, err = conn.DescribeEventBus(&input)
+		if output != nil {
+			policyStatement, err = getPolicyStatement(output, d.Id())
+		}
+	}
+
+	if isResourceNotFoundError(err) {
+		log.Printf("[WARN] %s", err)
+		d.SetId("")
+		return nil
+	}
 	if err != nil {
 		// Missing statement inside valid policy
-		if nfErr, ok := err.(*resource.NotFoundError); ok {
-			log.Printf("[WARN] %s", nfErr)
-			d.SetId("")
-			return nil
-		}
-
 		return err
 	}
 
@@ -146,13 +144,32 @@ func resourceAwsCloudWatchEventPermissionRead(d *schema.ResourceData, meta inter
 		principalMap := policyStatement.Principal.(map[string]interface{})
 		policyARN, err := arn.Parse(principalMap["AWS"].(string))
 		if err != nil {
-			return fmt.Errorf("Reading CloudWatch Events permission '%s' failed: %s", d.Id(), err.Error())
+			return fmt.Errorf("Reading CloudWatch Events permission '%s' failed: %s", d.Id(), err)
 		}
 		d.Set("principal", policyARN.AccountID)
 	}
 	d.Set("statement_id", policyStatement.Sid)
 
 	return nil
+}
+
+func getPolicyStatement(output *events.DescribeEventBusOutput, statementID string) (*CloudWatchEventPermissionPolicyStatement, error) {
+	var policyDoc CloudWatchEventPermissionPolicyDoc
+
+	if output == nil || output.Policy == nil {
+		return nil, &resource.NotFoundError{
+			Message: fmt.Sprintf("CloudWatch Events permission %q not found"+
+				"in given results from DescribeEventBus", statementID),
+			LastResponse: output,
+		}
+	}
+
+	err := json.Unmarshal([]byte(*output.Policy), &policyDoc)
+	if err != nil {
+		return nil, fmt.Errorf("Reading CloudWatch Events permission '%s' failed: %s", statementID, err)
+	}
+
+	return findCloudWatchEventPermissionPolicyStatementByID(&policyDoc, statementID)
 }
 
 func resourceAwsCloudWatchEventPermissionUpdate(d *schema.ResourceData, meta interface{}) error {
@@ -167,6 +184,11 @@ func resourceAwsCloudWatchEventPermissionUpdate(d *schema.ResourceData, meta int
 
 	log.Printf("[DEBUG] Update CloudWatch Events permission: %s", input)
 	_, err := conn.PutPermission(&input)
+	if isAWSErr(err, events.ErrCodeResourceNotFoundException, "") {
+		log.Printf("[WARN] CloudWatch Events permission %q not found, removing from state", d.Id())
+		d.SetId("")
+		return nil
+	}
 	if err != nil {
 		return fmt.Errorf("Updating CloudWatch Events permission '%s' failed: %s", d.Id(), err.Error())
 	}
@@ -182,6 +204,9 @@ func resourceAwsCloudWatchEventPermissionDelete(d *schema.ResourceData, meta int
 
 	log.Printf("[DEBUG] Delete CloudWatch Events permission: %s", input)
 	_, err := conn.RemovePermission(&input)
+	if isAWSErr(err, events.ErrCodeResourceNotFoundException, "") {
+		return nil
+	}
 	if err != nil {
 		return fmt.Errorf("Deleting CloudWatch Events permission '%s' failed: %s", d.Id(), err.Error())
 	}

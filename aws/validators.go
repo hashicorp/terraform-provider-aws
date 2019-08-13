@@ -21,22 +21,22 @@ import (
 	"github.com/hashicorp/terraform/helper/validation"
 )
 
-// validateAny returns a SchemaValidateFunc which tests if the provided value
-// passes any of the provided SchemaValidateFunc
-// Temporarily added into AWS provider, but will be submitted upstream into provider SDK
-func validateAny(validators ...schema.SchemaValidateFunc) schema.SchemaValidateFunc {
-	return func(i interface{}, k string) ([]string, []error) {
-		var allErrors []error
-		var allWarnings []string
-		for _, validator := range validators {
-			validatorWarnings, validatorErrors := validator(i, k)
-			if len(validatorWarnings) == 0 && len(validatorErrors) == 0 {
-				return []string{}, []error{}
-			}
-			allWarnings = append(allWarnings, validatorWarnings...)
-			allErrors = append(allErrors, validatorErrors...)
+// FloatAtLeast returns a SchemaValidateFunc which tests if the provided value
+// is of type float and is at least min (inclusive)
+func FloatAtLeast(min float64) schema.SchemaValidateFunc {
+	return func(i interface{}, k string) (s []string, es []error) {
+		v, ok := i.(float64)
+		if !ok {
+			es = append(es, fmt.Errorf("expected type of %s to be float", k))
+			return
 		}
-		return allWarnings, allErrors
+
+		if v < min {
+			es = append(es, fmt.Errorf("expected %s to be at least (%f), got %f", k, min, v))
+			return
+		}
+
+		return
 	}
 }
 
@@ -98,15 +98,10 @@ func validateTransferServerID(v interface{}, k string) (ws []string, errors []er
 
 func validateTransferUserName(v interface{}, k string) (ws []string, errors []error) {
 	value := v.(string)
-
 	// https://docs.aws.amazon.com/transfer/latest/userguide/API_CreateUser.html
-	pattern := `^[a-z0-9]{3,32}$`
-	if !regexp.MustCompile(pattern).MatchString(value) {
-		errors = append(errors, fmt.Errorf(
-			"%q isn't a valid transfer user name (only lowercase alphanumeric characters are allowed): %q",
-			k, value))
+	if !regexp.MustCompile(`^[a-zA-Z0-9_][a-zA-Z0-9_-]{2,31}$`).MatchString(value) {
+		errors = append(errors, fmt.Errorf("Invalid %q: must be between 3 and 32 alphanumeric or special characters hyphen and underscore. However, %q cannot begin with a hyphen", k, k))
 	}
-
 	return
 }
 
@@ -590,23 +585,6 @@ func validateCloudWatchLogResourcePolicyDocument(v interface{}, k string) (ws []
 	return
 }
 
-func validateIntegerInSlice(valid []int) schema.SchemaValidateFunc {
-	return func(i interface{}, k string) (s []string, es []error) {
-		v, ok := i.(int)
-		if !ok {
-			es = append(es, fmt.Errorf("expected type of %s to be int", k))
-			return
-		}
-		for _, in := range valid {
-			if v == in {
-				return
-			}
-		}
-		es = append(es, fmt.Errorf("expected %s to be one of %v, got %d", k, valid, v))
-		return
-	}
-}
-
 func validateCloudWatchEventTargetId(v interface{}, k string) (ws []string, errors []error) {
 	value := v.(string)
 	if len(value) > 64 {
@@ -884,6 +862,7 @@ func validateS3BucketLifecycleTransitionStorageClass() schema.SchemaValidateFunc
 		s3.TransitionStorageClassStandardIa,
 		s3.TransitionStorageClassOnezoneIa,
 		s3.TransitionStorageClassIntelligentTiering,
+		s3.TransitionStorageClassDeepArchive,
 	}, false)
 }
 
@@ -1722,16 +1701,6 @@ func validateCognitoUserPoolInviteTemplateSmsMessage(v interface{}, k string) (w
 
 	if !regexp.MustCompile(`.*\{username\}.*`).MatchString(value) {
 		es = append(es, fmt.Errorf("%q does not contain {username}", k))
-	}
-	return
-}
-
-func validateCognitoUserPoolReplyEmailAddress(v interface{}, k string) (ws []string, errors []error) {
-	value := v.(string)
-
-	if !regexp.MustCompile(`[\p{L}\p{M}\p{S}\p{N}\p{P}]+@[\p{L}\p{M}\p{S}\p{N}\p{P}]+`).MatchString(value) {
-		errors = append(errors, fmt.Errorf(
-			`%q must satisfy regular expression pattern: [\p{L}\p{M}\p{S}\p{N}\p{P}]+@[\p{L}\p{M}\p{S}\p{N}\p{P}]+`, k))
 	}
 	return
 }

@@ -18,7 +18,7 @@ The following example shows how to get a delegation set from its id.
 
 ```hcl
 data "aws_route53_delegation_set" "dset" {
-  id         = "MQWGHCBFAKEID"
+  id = "MQWGHCBFAKEID"
 }
 ```
 

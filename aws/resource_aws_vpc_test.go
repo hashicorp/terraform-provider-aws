@@ -19,12 +19,14 @@ func init() {
 	resource.AddTestSweepers("aws_vpc", &resource.Sweeper{
 		Name: "aws_vpc",
 		Dependencies: []string{
+			"aws_egress_only_internet_gateway",
 			"aws_internet_gateway",
 			"aws_nat_gateway",
 			"aws_network_acl",
 			"aws_route_table",
 			"aws_security_group",
 			"aws_subnet",
+			"aws_vpc_peering_connection",
 			"aws_vpn_gateway",
 		},
 		F: testSweepVPCs,
@@ -114,6 +116,27 @@ func TestAccAWSVpc_basic(t *testing.T) {
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccAWSVpc_disappears(t *testing.T) {
+	var vpc ec2.Vpc
+	resourceName := "aws_vpc.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckVpcDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccVpcConfig,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckVpcExists(resourceName, &vpc),
+					testAccCheckVpcDisappears(&vpc),
+				),
+				ExpectNonEmptyPlan: true,
 			},
 		},
 	})
@@ -365,6 +388,20 @@ func testAccCheckVpcExists(n string, vpc *ec2.Vpc) resource.TestCheckFunc {
 		*vpc = *resp.Vpcs[0]
 
 		return nil
+	}
+}
+
+func testAccCheckVpcDisappears(vpc *ec2.Vpc) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := testAccProvider.Meta().(*AWSClient).ec2conn
+
+		input := &ec2.DeleteVpcInput{
+			VpcId: vpc.VpcId,
+		}
+
+		_, err := conn.DeleteVpc(input)
+
+		return err
 	}
 }
 

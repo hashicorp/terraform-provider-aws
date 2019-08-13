@@ -96,6 +96,86 @@ func (c *DatabaseMigrationService) AddTagsToResourceWithContext(ctx aws.Context,
 	return out, req.Send()
 }
 
+const opApplyPendingMaintenanceAction = "ApplyPendingMaintenanceAction"
+
+// ApplyPendingMaintenanceActionRequest generates a "aws/request.Request" representing the
+// client's request for the ApplyPendingMaintenanceAction operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See ApplyPendingMaintenanceAction for more information on using the ApplyPendingMaintenanceAction
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the ApplyPendingMaintenanceActionRequest method.
+//    req, resp := client.ApplyPendingMaintenanceActionRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/dms-2016-01-01/ApplyPendingMaintenanceAction
+func (c *DatabaseMigrationService) ApplyPendingMaintenanceActionRequest(input *ApplyPendingMaintenanceActionInput) (req *request.Request, output *ApplyPendingMaintenanceActionOutput) {
+	op := &request.Operation{
+		Name:       opApplyPendingMaintenanceAction,
+		HTTPMethod: "POST",
+		HTTPPath:   "/",
+	}
+
+	if input == nil {
+		input = &ApplyPendingMaintenanceActionInput{}
+	}
+
+	output = &ApplyPendingMaintenanceActionOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// ApplyPendingMaintenanceAction API operation for AWS Database Migration Service.
+//
+// Applies a pending maintenance action to a resource (for example, to a replication
+// instance).
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for AWS Database Migration Service's
+// API operation ApplyPendingMaintenanceAction for usage and error information.
+//
+// Returned Error Codes:
+//   * ErrCodeResourceNotFoundFault "ResourceNotFoundFault"
+//   The resource could not be found.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/dms-2016-01-01/ApplyPendingMaintenanceAction
+func (c *DatabaseMigrationService) ApplyPendingMaintenanceAction(input *ApplyPendingMaintenanceActionInput) (*ApplyPendingMaintenanceActionOutput, error) {
+	req, out := c.ApplyPendingMaintenanceActionRequest(input)
+	return out, req.Send()
+}
+
+// ApplyPendingMaintenanceActionWithContext is the same as ApplyPendingMaintenanceAction with the addition of
+// the ability to pass a context and additional request options.
+//
+// See ApplyPendingMaintenanceAction for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *DatabaseMigrationService) ApplyPendingMaintenanceActionWithContext(ctx aws.Context, input *ApplyPendingMaintenanceActionInput, opts ...request.Option) (*ApplyPendingMaintenanceActionOutput, error) {
+	req, out := c.ApplyPendingMaintenanceActionRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
 const opCreateEndpoint = "CreateEndpoint"
 
 // CreateEndpointRequest generates a "aws/request.Request" representing the
@@ -151,7 +231,7 @@ func (c *DatabaseMigrationService) CreateEndpointRequest(input *CreateEndpointIn
 //
 // Returned Error Codes:
 //   * ErrCodeKMSKeyNotAccessibleFault "KMSKeyNotAccessibleFault"
-//   AWS DMS cannot access the KMS key.
+//   AWS DMS cannot access the AWS KMS key.
 //
 //   * ErrCodeResourceAlreadyExistsFault "ResourceAlreadyExistsFault"
 //   The resource you are attempting to create already exists.
@@ -167,7 +247,8 @@ func (c *DatabaseMigrationService) CreateEndpointRequest(input *CreateEndpointIn
 //   The resource could not be found.
 //
 //   * ErrCodeAccessDeniedFault "AccessDeniedFault"
-//   AWS DMS was denied access to the endpoint.
+//   AWS DMS was denied access to the endpoint. Check that the role is correctly
+//   configured.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/dms-2016-01-01/CreateEndpoint
 func (c *DatabaseMigrationService) CreateEndpoint(input *CreateEndpointInput) (*CreateEndpointOutput, error) {
@@ -250,7 +331,7 @@ func (c *DatabaseMigrationService) CreateEventSubscriptionRequest(input *CreateE
 // your customer account.
 //
 // For more information about AWS DMS events, see Working with Events and Notifications
-// (http://docs.aws.amazon.com/dms/latest/userguide/CHAP_Events.html) in the
+// (https://docs.aws.amazon.com/dms/latest/userguide/CHAP_Events.html) in the
 // AWS Database Migration Service User Guide.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
@@ -264,6 +345,9 @@ func (c *DatabaseMigrationService) CreateEventSubscriptionRequest(input *CreateE
 //   * ErrCodeResourceQuotaExceededFault "ResourceQuotaExceededFault"
 //   The quota for this resource quota has been exceeded.
 //
+//   * ErrCodeResourceNotFoundFault "ResourceNotFoundFault"
+//   The resource could not be found.
+//
 //   * ErrCodeResourceAlreadyExistsFault "ResourceAlreadyExistsFault"
 //   The resource you are attempting to create already exists.
 //
@@ -273,8 +357,21 @@ func (c *DatabaseMigrationService) CreateEventSubscriptionRequest(input *CreateE
 //   * ErrCodeSNSNoAuthorizationFault "SNSNoAuthorizationFault"
 //   You are not authorized for the SNS subscription.
 //
-//   * ErrCodeResourceNotFoundFault "ResourceNotFoundFault"
-//   The resource could not be found.
+//   * ErrCodeKMSAccessDeniedFault "KMSAccessDeniedFault"
+//   The ciphertext references a key that doesn't exist or that the DMS account
+//   doesn't have access to.
+//
+//   * ErrCodeKMSDisabledFault "KMSDisabledFault"
+//   The specified master key (CMK) isn't enabled.
+//
+//   * ErrCodeKMSInvalidStateFault "KMSInvalidStateFault"
+//   The state of the specified AWS KMS resource isn't valid for this request.
+//
+//   * ErrCodeKMSNotFoundFault "KMSNotFoundFault"
+//   The specified AWS KMS entity or resource can't be found.
+//
+//   * ErrCodeKMSThrottlingFault "KMSThrottlingFault"
+//   This request triggered AWS KMS request throttling.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/dms-2016-01-01/CreateEventSubscription
 func (c *DatabaseMigrationService) CreateEventSubscription(input *CreateEventSubscriptionInput) (*CreateEventSubscriptionOutput, error) {
@@ -353,7 +450,8 @@ func (c *DatabaseMigrationService) CreateReplicationInstanceRequest(input *Creat
 //
 // Returned Error Codes:
 //   * ErrCodeAccessDeniedFault "AccessDeniedFault"
-//   AWS DMS was denied access to the endpoint.
+//   AWS DMS was denied access to the endpoint. Check that the role is correctly
+//   configured.
 //
 //   * ErrCodeResourceAlreadyExistsFault "ResourceAlreadyExistsFault"
 //   The resource you are attempting to create already exists.
@@ -382,7 +480,7 @@ func (c *DatabaseMigrationService) CreateReplicationInstanceRequest(input *Creat
 //   The subnet provided is invalid.
 //
 //   * ErrCodeKMSKeyNotAccessibleFault "KMSKeyNotAccessibleFault"
-//   AWS DMS cannot access the KMS key.
+//   AWS DMS cannot access the AWS KMS key.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/dms-2016-01-01/CreateReplicationInstance
 func (c *DatabaseMigrationService) CreateReplicationInstance(input *CreateReplicationInstanceInput) (*CreateReplicationInstanceOutput, error) {
@@ -461,7 +559,8 @@ func (c *DatabaseMigrationService) CreateReplicationSubnetGroupRequest(input *Cr
 //
 // Returned Error Codes:
 //   * ErrCodeAccessDeniedFault "AccessDeniedFault"
-//   AWS DMS was denied access to the endpoint.
+//   AWS DMS was denied access to the endpoint. Check that the role is correctly
+//   configured.
 //
 //   * ErrCodeResourceAlreadyExistsFault "ResourceAlreadyExistsFault"
 //   The resource you are attempting to create already exists.
@@ -556,7 +655,8 @@ func (c *DatabaseMigrationService) CreateReplicationTaskRequest(input *CreateRep
 //
 // Returned Error Codes:
 //   * ErrCodeAccessDeniedFault "AccessDeniedFault"
-//   AWS DMS was denied access to the endpoint.
+//   AWS DMS was denied access to the endpoint. Check that the role is correctly
+//   configured.
 //
 //   * ErrCodeInvalidResourceStateFault "InvalidResourceStateFault"
 //   The resource is in a state that prevents it from being used for database
@@ -569,7 +669,7 @@ func (c *DatabaseMigrationService) CreateReplicationTaskRequest(input *CreateRep
 //   The resource could not be found.
 //
 //   * ErrCodeKMSKeyNotAccessibleFault "KMSKeyNotAccessibleFault"
-//   AWS DMS cannot access the KMS key.
+//   AWS DMS cannot access the AWS KMS key.
 //
 //   * ErrCodeResourceQuotaExceededFault "ResourceQuotaExceededFault"
 //   The quota for this resource quota has been exceeded.
@@ -1145,10 +1245,13 @@ func (c *DatabaseMigrationService) DescribeAccountAttributesRequest(input *Descr
 
 // DescribeAccountAttributes API operation for AWS Database Migration Service.
 //
-// Lists all of the AWS DMS attributes for a customer account. The attributes
-// include AWS DMS quotas for the account, such as the number of replication
-// instances allowed. The description for a quota includes the quota name, current
-// usage toward that quota, and the quota's maximum value.
+// Lists all of the AWS DMS attributes for a customer account. These attributes
+// include AWS DMS quotas for the account and a unique account identifier in
+// a particular DMS region. DMS quotas include a list of resource quotas supported
+// by the account, such as the number of replication instances allowed. The
+// description for each resource quota, includes the quota name, current usage
+// toward that quota, and the quota's maximum value. DMS uses the unique account
+// identifier to name each artifact used by DMS in the given region.
 //
 // This command does not take any parameters.
 //
@@ -1276,7 +1379,7 @@ func (c *DatabaseMigrationService) DescribeCertificatesWithContext(ctx aws.Conte
 //    // Example iterating over at most 3 pages of a DescribeCertificates operation.
 //    pageNum := 0
 //    err := client.DescribeCertificatesPages(params,
-//        func(page *DescribeCertificatesOutput, lastPage bool) bool {
+//        func(page *databasemigrationservice.DescribeCertificatesOutput, lastPage bool) bool {
 //            pageNum++
 //            fmt.Println(page)
 //            return pageNum <= 3
@@ -1412,7 +1515,7 @@ func (c *DatabaseMigrationService) DescribeConnectionsWithContext(ctx aws.Contex
 //    // Example iterating over at most 3 pages of a DescribeConnections operation.
 //    pageNum := 0
 //    err := client.DescribeConnectionsPages(params,
-//        func(page *DescribeConnectionsOutput, lastPage bool) bool {
+//        func(page *databasemigrationservice.DescribeConnectionsOutput, lastPage bool) bool {
 //            pageNum++
 //            fmt.Println(page)
 //            return pageNum <= 3
@@ -1542,7 +1645,7 @@ func (c *DatabaseMigrationService) DescribeEndpointTypesWithContext(ctx aws.Cont
 //    // Example iterating over at most 3 pages of a DescribeEndpointTypes operation.
 //    pageNum := 0
 //    err := client.DescribeEndpointTypesPages(params,
-//        func(page *DescribeEndpointTypesOutput, lastPage bool) bool {
+//        func(page *databasemigrationservice.DescribeEndpointTypesOutput, lastPage bool) bool {
 //            pageNum++
 //            fmt.Println(page)
 //            return pageNum <= 3
@@ -1677,7 +1780,7 @@ func (c *DatabaseMigrationService) DescribeEndpointsWithContext(ctx aws.Context,
 //    // Example iterating over at most 3 pages of a DescribeEndpoints operation.
 //    pageNum := 0
 //    err := client.DescribeEndpointsPages(params,
-//        func(page *DescribeEndpointsOutput, lastPage bool) bool {
+//        func(page *databasemigrationservice.DescribeEndpointsOutput, lastPage bool) bool {
 //            pageNum++
 //            fmt.Println(page)
 //            return pageNum <= 3
@@ -1762,7 +1865,7 @@ func (c *DatabaseMigrationService) DescribeEventCategoriesRequest(input *Describ
 //
 // Lists categories for all event source types, or, if specified, for a specified
 // source type. You can see a list of the event categories and source types
-// in Working with Events and Notifications (http://docs.aws.amazon.com/dms/latest/userguide/CHAP_Events.html)
+// in Working with Events and Notifications (https://docs.aws.amazon.com/dms/latest/userguide/CHAP_Events.html)
 // in the AWS Database Migration Service User Guide.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
@@ -1894,7 +1997,7 @@ func (c *DatabaseMigrationService) DescribeEventSubscriptionsWithContext(ctx aws
 //    // Example iterating over at most 3 pages of a DescribeEventSubscriptions operation.
 //    pageNum := 0
 //    err := client.DescribeEventSubscriptionsPages(params,
-//        func(page *DescribeEventSubscriptionsOutput, lastPage bool) bool {
+//        func(page *databasemigrationservice.DescribeEventSubscriptionsOutput, lastPage bool) bool {
 //            pageNum++
 //            fmt.Println(page)
 //            return pageNum <= 3
@@ -1985,7 +2088,7 @@ func (c *DatabaseMigrationService) DescribeEventsRequest(input *DescribeEventsIn
 //
 // Lists events for a given source identifier and source type. You can also
 // specify a start and end time. For more information on AWS DMS events, see
-// Working with Events and Notifications (http://docs.aws.amazon.com/dms/latest/userguide/CHAP_Events.html)
+// Working with Events and Notifications (https://docs.aws.amazon.com/dms/latest/userguide/CHAP_Events.html)
 // in the AWS Database Migration User Guide.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
@@ -2027,7 +2130,7 @@ func (c *DatabaseMigrationService) DescribeEventsWithContext(ctx aws.Context, in
 //    // Example iterating over at most 3 pages of a DescribeEvents operation.
 //    pageNum := 0
 //    err := client.DescribeEventsPages(params,
-//        func(page *DescribeEventsOutput, lastPage bool) bool {
+//        func(page *databasemigrationservice.DescribeEventsOutput, lastPage bool) bool {
 //            pageNum++
 //            fmt.Println(page)
 //            return pageNum <= 3
@@ -2158,7 +2261,7 @@ func (c *DatabaseMigrationService) DescribeOrderableReplicationInstancesWithCont
 //    // Example iterating over at most 3 pages of a DescribeOrderableReplicationInstances operation.
 //    pageNum := 0
 //    err := client.DescribeOrderableReplicationInstancesPages(params,
-//        func(page *DescribeOrderableReplicationInstancesOutput, lastPage bool) bool {
+//        func(page *databasemigrationservice.DescribeOrderableReplicationInstancesOutput, lastPage bool) bool {
 //            pageNum++
 //            fmt.Println(page)
 //            return pageNum <= 3
@@ -2193,6 +2296,141 @@ func (c *DatabaseMigrationService) DescribeOrderableReplicationInstancesPagesWit
 	cont := true
 	for p.Next() && cont {
 		cont = fn(p.Page().(*DescribeOrderableReplicationInstancesOutput), !p.HasNextPage())
+	}
+	return p.Err()
+}
+
+const opDescribePendingMaintenanceActions = "DescribePendingMaintenanceActions"
+
+// DescribePendingMaintenanceActionsRequest generates a "aws/request.Request" representing the
+// client's request for the DescribePendingMaintenanceActions operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See DescribePendingMaintenanceActions for more information on using the DescribePendingMaintenanceActions
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the DescribePendingMaintenanceActionsRequest method.
+//    req, resp := client.DescribePendingMaintenanceActionsRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/dms-2016-01-01/DescribePendingMaintenanceActions
+func (c *DatabaseMigrationService) DescribePendingMaintenanceActionsRequest(input *DescribePendingMaintenanceActionsInput) (req *request.Request, output *DescribePendingMaintenanceActionsOutput) {
+	op := &request.Operation{
+		Name:       opDescribePendingMaintenanceActions,
+		HTTPMethod: "POST",
+		HTTPPath:   "/",
+		Paginator: &request.Paginator{
+			InputTokens:     []string{"Marker"},
+			OutputTokens:    []string{"Marker"},
+			LimitToken:      "MaxRecords",
+			TruncationToken: "",
+		},
+	}
+
+	if input == nil {
+		input = &DescribePendingMaintenanceActionsInput{}
+	}
+
+	output = &DescribePendingMaintenanceActionsOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// DescribePendingMaintenanceActions API operation for AWS Database Migration Service.
+//
+// For internal use only
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for AWS Database Migration Service's
+// API operation DescribePendingMaintenanceActions for usage and error information.
+//
+// Returned Error Codes:
+//   * ErrCodeResourceNotFoundFault "ResourceNotFoundFault"
+//   The resource could not be found.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/dms-2016-01-01/DescribePendingMaintenanceActions
+func (c *DatabaseMigrationService) DescribePendingMaintenanceActions(input *DescribePendingMaintenanceActionsInput) (*DescribePendingMaintenanceActionsOutput, error) {
+	req, out := c.DescribePendingMaintenanceActionsRequest(input)
+	return out, req.Send()
+}
+
+// DescribePendingMaintenanceActionsWithContext is the same as DescribePendingMaintenanceActions with the addition of
+// the ability to pass a context and additional request options.
+//
+// See DescribePendingMaintenanceActions for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *DatabaseMigrationService) DescribePendingMaintenanceActionsWithContext(ctx aws.Context, input *DescribePendingMaintenanceActionsInput, opts ...request.Option) (*DescribePendingMaintenanceActionsOutput, error) {
+	req, out := c.DescribePendingMaintenanceActionsRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
+// DescribePendingMaintenanceActionsPages iterates over the pages of a DescribePendingMaintenanceActions operation,
+// calling the "fn" function with the response data for each page. To stop
+// iterating, return false from the fn function.
+//
+// See DescribePendingMaintenanceActions method for more information on how to use this operation.
+//
+// Note: This operation can generate multiple requests to a service.
+//
+//    // Example iterating over at most 3 pages of a DescribePendingMaintenanceActions operation.
+//    pageNum := 0
+//    err := client.DescribePendingMaintenanceActionsPages(params,
+//        func(page *databasemigrationservice.DescribePendingMaintenanceActionsOutput, lastPage bool) bool {
+//            pageNum++
+//            fmt.Println(page)
+//            return pageNum <= 3
+//        })
+//
+func (c *DatabaseMigrationService) DescribePendingMaintenanceActionsPages(input *DescribePendingMaintenanceActionsInput, fn func(*DescribePendingMaintenanceActionsOutput, bool) bool) error {
+	return c.DescribePendingMaintenanceActionsPagesWithContext(aws.BackgroundContext(), input, fn)
+}
+
+// DescribePendingMaintenanceActionsPagesWithContext same as DescribePendingMaintenanceActionsPages except
+// it takes a Context and allows setting request options on the pages.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *DatabaseMigrationService) DescribePendingMaintenanceActionsPagesWithContext(ctx aws.Context, input *DescribePendingMaintenanceActionsInput, fn func(*DescribePendingMaintenanceActionsOutput, bool) bool, opts ...request.Option) error {
+	p := request.Pagination{
+		NewRequest: func() (*request.Request, error) {
+			var inCpy *DescribePendingMaintenanceActionsInput
+			if input != nil {
+				tmp := *input
+				inCpy = &tmp
+			}
+			req, _ := c.DescribePendingMaintenanceActionsRequest(inCpy)
+			req.SetContext(ctx)
+			req.ApplyOptions(opts...)
+			return req, nil
+		},
+	}
+
+	cont := true
+	for p.Next() && cont {
+		cont = fn(p.Page().(*DescribePendingMaintenanceActionsOutput), !p.HasNextPage())
 	}
 	return p.Err()
 }
@@ -2380,7 +2618,7 @@ func (c *DatabaseMigrationService) DescribeReplicationInstanceTaskLogsWithContex
 //    // Example iterating over at most 3 pages of a DescribeReplicationInstanceTaskLogs operation.
 //    pageNum := 0
 //    err := client.DescribeReplicationInstanceTaskLogsPages(params,
-//        func(page *DescribeReplicationInstanceTaskLogsOutput, lastPage bool) bool {
+//        func(page *databasemigrationservice.DescribeReplicationInstanceTaskLogsOutput, lastPage bool) bool {
 //            pageNum++
 //            fmt.Println(page)
 //            return pageNum <= 3
@@ -2516,7 +2754,7 @@ func (c *DatabaseMigrationService) DescribeReplicationInstancesWithContext(ctx a
 //    // Example iterating over at most 3 pages of a DescribeReplicationInstances operation.
 //    pageNum := 0
 //    err := client.DescribeReplicationInstancesPages(params,
-//        func(page *DescribeReplicationInstancesOutput, lastPage bool) bool {
+//        func(page *databasemigrationservice.DescribeReplicationInstancesOutput, lastPage bool) bool {
 //            pageNum++
 //            fmt.Println(page)
 //            return pageNum <= 3
@@ -2651,7 +2889,7 @@ func (c *DatabaseMigrationService) DescribeReplicationSubnetGroupsWithContext(ct
 //    // Example iterating over at most 3 pages of a DescribeReplicationSubnetGroups operation.
 //    pageNum := 0
 //    err := client.DescribeReplicationSubnetGroupsPages(params,
-//        func(page *DescribeReplicationSubnetGroupsOutput, lastPage bool) bool {
+//        func(page *databasemigrationservice.DescribeReplicationSubnetGroupsOutput, lastPage bool) bool {
 //            pageNum++
 //            fmt.Println(page)
 //            return pageNum <= 3
@@ -2787,7 +3025,7 @@ func (c *DatabaseMigrationService) DescribeReplicationTaskAssessmentResultsWithC
 //    // Example iterating over at most 3 pages of a DescribeReplicationTaskAssessmentResults operation.
 //    pageNum := 0
 //    err := client.DescribeReplicationTaskAssessmentResultsPages(params,
-//        func(page *DescribeReplicationTaskAssessmentResultsOutput, lastPage bool) bool {
+//        func(page *databasemigrationservice.DescribeReplicationTaskAssessmentResultsOutput, lastPage bool) bool {
 //            pageNum++
 //            fmt.Println(page)
 //            return pageNum <= 3
@@ -2923,7 +3161,7 @@ func (c *DatabaseMigrationService) DescribeReplicationTasksWithContext(ctx aws.C
 //    // Example iterating over at most 3 pages of a DescribeReplicationTasks operation.
 //    pageNum := 0
 //    err := client.DescribeReplicationTasksPages(params,
-//        func(page *DescribeReplicationTasksOutput, lastPage bool) bool {
+//        func(page *databasemigrationservice.DescribeReplicationTasksOutput, lastPage bool) bool {
 //            pageNum++
 //            fmt.Println(page)
 //            return pageNum <= 3
@@ -3062,7 +3300,7 @@ func (c *DatabaseMigrationService) DescribeSchemasWithContext(ctx aws.Context, i
 //    // Example iterating over at most 3 pages of a DescribeSchemas operation.
 //    pageNum := 0
 //    err := client.DescribeSchemasPages(params,
-//        func(page *DescribeSchemasOutput, lastPage bool) bool {
+//        func(page *databasemigrationservice.DescribeSchemasOutput, lastPage bool) bool {
 //            pageNum++
 //            fmt.Println(page)
 //            return pageNum <= 3
@@ -3206,7 +3444,7 @@ func (c *DatabaseMigrationService) DescribeTableStatisticsWithContext(ctx aws.Co
 //    // Example iterating over at most 3 pages of a DescribeTableStatistics operation.
 //    pageNum := 0
 //    err := client.DescribeTableStatisticsPages(params,
-//        func(page *DescribeTableStatisticsOutput, lastPage bool) bool {
+//        func(page *databasemigrationservice.DescribeTableStatisticsOutput, lastPage bool) bool {
 //            pageNum++
 //            fmt.Println(page)
 //            return pageNum <= 3
@@ -3474,10 +3712,11 @@ func (c *DatabaseMigrationService) ModifyEndpointRequest(input *ModifyEndpointIn
 //   The resource you are attempting to create already exists.
 //
 //   * ErrCodeKMSKeyNotAccessibleFault "KMSKeyNotAccessibleFault"
-//   AWS DMS cannot access the KMS key.
+//   AWS DMS cannot access the AWS KMS key.
 //
 //   * ErrCodeAccessDeniedFault "AccessDeniedFault"
-//   AWS DMS was denied access to the endpoint.
+//   AWS DMS was denied access to the endpoint. Check that the role is correctly
+//   configured.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/dms-2016-01-01/ModifyEndpoint
 func (c *DatabaseMigrationService) ModifyEndpoint(input *ModifyEndpointInput) (*ModifyEndpointOutput, error) {
@@ -3567,6 +3806,22 @@ func (c *DatabaseMigrationService) ModifyEventSubscriptionRequest(input *ModifyE
 //   * ErrCodeSNSNoAuthorizationFault "SNSNoAuthorizationFault"
 //   You are not authorized for the SNS subscription.
 //
+//   * ErrCodeKMSAccessDeniedFault "KMSAccessDeniedFault"
+//   The ciphertext references a key that doesn't exist or that the DMS account
+//   doesn't have access to.
+//
+//   * ErrCodeKMSDisabledFault "KMSDisabledFault"
+//   The specified master key (CMK) isn't enabled.
+//
+//   * ErrCodeKMSInvalidStateFault "KMSInvalidStateFault"
+//   The state of the specified AWS KMS resource isn't valid for this request.
+//
+//   * ErrCodeKMSNotFoundFault "KMSNotFoundFault"
+//   The specified AWS KMS entity or resource can't be found.
+//
+//   * ErrCodeKMSThrottlingFault "KMSThrottlingFault"
+//   This request triggered AWS KMS request throttling.
+//
 // See also, https://docs.aws.amazon.com/goto/WebAPI/dms-2016-01-01/ModifyEventSubscription
 func (c *DatabaseMigrationService) ModifyEventSubscription(input *ModifyEventSubscriptionInput) (*ModifyEventSubscriptionOutput, error) {
 	req, out := c.ModifyEventSubscriptionRequest(input)
@@ -3647,6 +3902,10 @@ func (c *DatabaseMigrationService) ModifyReplicationInstanceRequest(input *Modif
 // API operation ModifyReplicationInstance for usage and error information.
 //
 // Returned Error Codes:
+//   * ErrCodeAccessDeniedFault "AccessDeniedFault"
+//   AWS DMS was denied access to the endpoint. Check that the role is correctly
+//   configured.
+//
 //   * ErrCodeInvalidResourceStateFault "InvalidResourceStateFault"
 //   The resource is in a state that prevents it from being used for database
 //   migration.
@@ -3743,7 +4002,8 @@ func (c *DatabaseMigrationService) ModifyReplicationSubnetGroupRequest(input *Mo
 //
 // Returned Error Codes:
 //   * ErrCodeAccessDeniedFault "AccessDeniedFault"
-//   AWS DMS was denied access to the endpoint.
+//   AWS DMS was denied access to the endpoint. Check that the role is correctly
+//   configured.
 //
 //   * ErrCodeResourceNotFoundFault "ResourceNotFoundFault"
 //   The resource could not be found.
@@ -3833,7 +4093,7 @@ func (c *DatabaseMigrationService) ModifyReplicationTaskRequest(input *ModifyRep
 // can modify it.
 //
 // For more information about AWS DMS tasks, see Working with Migration Tasks
-// (http://docs.aws.amazon.com/dms/latest/userguide/CHAP_Tasks.html) in the
+// (https://docs.aws.amazon.com/dms/latest/userguide/CHAP_Tasks.html) in the
 // AWS Database Migration Service User Guide.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
@@ -3855,7 +4115,7 @@ func (c *DatabaseMigrationService) ModifyReplicationTaskRequest(input *ModifyRep
 //   The resource you are attempting to create already exists.
 //
 //   * ErrCodeKMSKeyNotAccessibleFault "KMSKeyNotAccessibleFault"
-//   AWS DMS cannot access the KMS key.
+//   AWS DMS cannot access the AWS KMS key.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/dms-2016-01-01/ModifyReplicationTask
 func (c *DatabaseMigrationService) ModifyReplicationTask(input *ModifyReplicationTaskInput) (*ModifyReplicationTaskOutput, error) {
@@ -4027,7 +4287,7 @@ func (c *DatabaseMigrationService) RefreshSchemasRequest(input *RefreshSchemasIn
 //   The resource could not be found.
 //
 //   * ErrCodeKMSKeyNotAccessibleFault "KMSKeyNotAccessibleFault"
-//   AWS DMS cannot access the KMS key.
+//   AWS DMS cannot access the AWS KMS key.
 //
 //   * ErrCodeResourceQuotaExceededFault "ResourceQuotaExceededFault"
 //   The quota for this resource quota has been exceeded.
@@ -4264,7 +4524,7 @@ func (c *DatabaseMigrationService) StartReplicationTaskRequest(input *StartRepli
 // Starts the replication task.
 //
 // For more information about AWS DMS tasks, see Working with Migration Tasks
-//  (http://docs.aws.amazon.com/dms/latest/userguide/CHAP_Tasks.html) in the
+// (https://docs.aws.amazon.com/dms/latest/userguide/CHAP_Tasks.html) in the
 // AWS Database Migration Service User Guide.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
@@ -4283,7 +4543,8 @@ func (c *DatabaseMigrationService) StartReplicationTaskRequest(input *StartRepli
 //   migration.
 //
 //   * ErrCodeAccessDeniedFault "AccessDeniedFault"
-//   AWS DMS was denied access to the endpoint.
+//   AWS DMS was denied access to the endpoint. Check that the role is correctly
+//   configured.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/dms-2016-01-01/StartReplicationTask
 func (c *DatabaseMigrationService) StartReplicationTask(input *StartReplicationTaskInput) (*StartReplicationTaskOutput, error) {
@@ -4536,7 +4797,7 @@ func (c *DatabaseMigrationService) TestConnectionRequest(input *TestConnectionIn
 //   migration.
 //
 //   * ErrCodeKMSKeyNotAccessibleFault "KMSKeyNotAccessibleFault"
-//   AWS DMS cannot access the KMS key.
+//   AWS DMS cannot access the AWS KMS key.
 //
 //   * ErrCodeResourceQuotaExceededFault "ResourceQuotaExceededFault"
 //   The quota for this resource quota has been exceeded.
@@ -4606,17 +4867,20 @@ func (s *AccountQuota) SetUsed(v int64) *AccountQuota {
 	return s
 }
 
+// Associates a set of tags with an AWS DMS resource.
 type AddTagsToResourceInput struct {
 	_ struct{} `type:"structure"`
 
-	// The Amazon Resource Name (ARN) of the AWS DMS resource the tag is to be added
-	// to. AWS DMS resources include a replication instance, endpoint, and a replication
+	// Identifies the AWS DMS resource to which tags should be added. The value
+	// for this parameter is an Amazon Resource Name (ARN).
+	//
+	// For AWS DMS, you can tag a replication instance, an endpoint, or a replication
 	// task.
 	//
 	// ResourceArn is a required field
 	ResourceArn *string `type:"string" required:"true"`
 
-	// The tag to be assigned to the DMS resource.
+	// One or more tags to be assigned to the resource.
 	//
 	// Tags is a required field
 	Tags []*Tag `type:"list" required:"true"`
@@ -4674,6 +4938,107 @@ func (s AddTagsToResourceOutput) GoString() string {
 	return s.String()
 }
 
+type ApplyPendingMaintenanceActionInput struct {
+	_ struct{} `type:"structure"`
+
+	// The pending maintenance action to apply to this resource.
+	//
+	// ApplyAction is a required field
+	ApplyAction *string `type:"string" required:"true"`
+
+	// A value that specifies the type of opt-in request, or undoes an opt-in request.
+	// You can't undo an opt-in request of type immediate.
+	//
+	// Valid values:
+	//
+	//    * immediate - Apply the maintenance action immediately.
+	//
+	//    * next-maintenance - Apply the maintenance action during the next maintenance
+	//    window for the resource.
+	//
+	//    * undo-opt-in - Cancel any existing next-maintenance opt-in requests.
+	//
+	// OptInType is a required field
+	OptInType *string `type:"string" required:"true"`
+
+	// The Amazon Resource Name (ARN) of the AWS DMS resource that the pending maintenance
+	// action applies to.
+	//
+	// ReplicationInstanceArn is a required field
+	ReplicationInstanceArn *string `type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s ApplyPendingMaintenanceActionInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ApplyPendingMaintenanceActionInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *ApplyPendingMaintenanceActionInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "ApplyPendingMaintenanceActionInput"}
+	if s.ApplyAction == nil {
+		invalidParams.Add(request.NewErrParamRequired("ApplyAction"))
+	}
+	if s.OptInType == nil {
+		invalidParams.Add(request.NewErrParamRequired("OptInType"))
+	}
+	if s.ReplicationInstanceArn == nil {
+		invalidParams.Add(request.NewErrParamRequired("ReplicationInstanceArn"))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetApplyAction sets the ApplyAction field's value.
+func (s *ApplyPendingMaintenanceActionInput) SetApplyAction(v string) *ApplyPendingMaintenanceActionInput {
+	s.ApplyAction = &v
+	return s
+}
+
+// SetOptInType sets the OptInType field's value.
+func (s *ApplyPendingMaintenanceActionInput) SetOptInType(v string) *ApplyPendingMaintenanceActionInput {
+	s.OptInType = &v
+	return s
+}
+
+// SetReplicationInstanceArn sets the ReplicationInstanceArn field's value.
+func (s *ApplyPendingMaintenanceActionInput) SetReplicationInstanceArn(v string) *ApplyPendingMaintenanceActionInput {
+	s.ReplicationInstanceArn = &v
+	return s
+}
+
+type ApplyPendingMaintenanceActionOutput struct {
+	_ struct{} `type:"structure"`
+
+	// The AWS DMS resource that the pending maintenance action will be applied
+	// to.
+	ResourcePendingMaintenanceActions *ResourcePendingMaintenanceActions `type:"structure"`
+}
+
+// String returns the string representation
+func (s ApplyPendingMaintenanceActionOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ApplyPendingMaintenanceActionOutput) GoString() string {
+	return s.String()
+}
+
+// SetResourcePendingMaintenanceActions sets the ResourcePendingMaintenanceActions field's value.
+func (s *ApplyPendingMaintenanceActionOutput) SetResourcePendingMaintenanceActions(v *ResourcePendingMaintenanceActions) *ApplyPendingMaintenanceActionOutput {
+	s.ResourcePendingMaintenanceActions = v
+	return s
+}
+
 type AvailabilityZone struct {
 	_ struct{} `type:"structure"`
 
@@ -4708,17 +5073,18 @@ type Certificate struct {
 	// The date that the certificate was created.
 	CertificateCreationDate *time.Time `type:"timestamp"`
 
-	// The customer-assigned name of the certificate. Valid characters are A-z and
-	// 0-9.
+	// A customer-assigned name for the certificate. Identifiers must begin with
+	// a letter; must contain only ASCII letters, digits, and hyphens; and must
+	// not end with a hyphen or contain two consecutive hyphens.
 	CertificateIdentifier *string `type:"string"`
 
 	// The owner of the certificate.
 	CertificateOwner *string `type:"string"`
 
-	// The contents of the .pem X.509 certificate file for the certificate.
+	// The contents of a .pem file, which contains an X.509 certificate.
 	CertificatePem *string `type:"string"`
 
-	// The location of the imported Oracle Wallet certificate for use with SSL.
+	// The location of an imported Oracle Wallet certificate for use with SSL.
 	//
 	// CertificateWallet is automatically base64 encoded/decoded by the SDK.
 	CertificateWallet []byte `type:"blob"`
@@ -4907,13 +5273,13 @@ type CreateEndpointInput struct {
 
 	// Settings in JSON format for the target Amazon DynamoDB endpoint. For more
 	// information about the available settings, see Using Object Mapping to Migrate
-	// Data to DynamoDB (http://docs.aws.amazon.com/dms/latest/userguide/CHAP_Target.DynamoDB.html)
+	// Data to DynamoDB (https://docs.aws.amazon.com/dms/latest/userguide/CHAP_Target.DynamoDB.html)
 	// in the AWS Database Migration Service User Guide.
 	DynamoDbSettings *DynamoDbSettings `type:"structure"`
 
 	// Settings in JSON format for the target Elasticsearch endpoint. For more information
 	// about the available settings, see Extra Connection Attributes When Using
-	// Elasticsearch as a Target for AWS DMS (http://docs.aws.amazon.com/dms/latest/userguide/CHAP_Target.Elasticsearch.html#CHAP_Target.Elasticsearch.Configuration)
+	// Elasticsearch as a Target for AWS DMS (https://docs.aws.amazon.com/dms/latest/userguide/CHAP_Target.Elasticsearch.html#CHAP_Target.Elasticsearch.Configuration)
 	// in the AWS Database Migration User Guide.
 	ElasticsearchSettings *ElasticsearchSettings `type:"structure"`
 
@@ -4924,12 +5290,12 @@ type CreateEndpointInput struct {
 	// EndpointIdentifier is a required field
 	EndpointIdentifier *string `type:"string" required:"true"`
 
-	// The type of endpoint.
+	// The type of endpoint. Valid values are source and target.
 	//
 	// EndpointType is a required field
 	EndpointType *string `type:"string" required:"true" enum:"ReplicationEndpointTypeValue"`
 
-	// The type of engine for the endpoint. Valid values, depending on the EndPointType
+	// The type of engine for the endpoint. Valid values, depending on the EndpointType
 	// value, include mysql, oracle, postgres, mariadb, aurora, aurora-postgresql,
 	// redshift, s3, db2, azuredb, sybase, dynamodb, mongodb, and sqlserver.
 	//
@@ -4939,25 +5305,33 @@ type CreateEndpointInput struct {
 	// The external table definition.
 	ExternalTableDefinition *string `type:"string"`
 
-	// Additional attributes associated with the connection.
+	// Additional attributes associated with the connection. Each attribute is specified
+	// as a name-value pair associated by an equal sign (=). Multiple attributes
+	// are separated by a semicolon (;) with no additional white space. For information
+	// on the attributes available for connecting your source or target endpoint,
+	// see Working with AWS DMS Endpoints (https://docs.aws.amazon.com/dms/latest/userguide/CHAP_Endpoints.html)
+	// in the AWS Database Migration Service User Guide.
 	ExtraConnectionAttributes *string `type:"string"`
 
 	// Settings in JSON format for the target Amazon Kinesis Data Streams endpoint.
 	// For more information about the available settings, see Using Object Mapping
-	// to Migrate Data to a Kinesis Data Stream (http://docs.aws.amazon.com/dms/latest/userguide/CHAP_Target.Kinesis.html#CHAP_Target.Kinesis.ObjectMapping
-	// ) in the AWS Database Migration User Guide.
+	// to Migrate Data to a Kinesis Data Stream (https://docs.aws.amazon.com/dms/latest/userguide/CHAP_Target.Kinesis.html#CHAP_Target.Kinesis.ObjectMapping)
+	// in the AWS Database Migration User Guide.
 	KinesisSettings *KinesisSettings `type:"structure"`
 
-	// The AWS KMS key identifier to use to encrypt the connection parameters. If
-	// you don't specify a value for the KmsKeyId parameter, then AWS DMS uses your
-	// default encryption key. AWS KMS creates the default encryption key for your
-	// AWS account. Your AWS account has a different default encryption key for
-	// each AWS Region.
+	// An AWS KMS key identifier that is used to encrypt the connection parameters
+	// for the endpoint.
+	//
+	// If you don't specify a value for the KmsKeyId parameter, then AWS DMS uses
+	// your default encryption key.
+	//
+	// AWS KMS creates the default encryption key for your AWS account. Your AWS
+	// account has a different default encryption key for each AWS Region.
 	KmsKeyId *string `type:"string"`
 
 	// Settings in JSON format for the source MongoDB endpoint. For more information
 	// about the available settings, see the configuration properties section in
-	//  Using MongoDB as a Target for AWS Database Migration Service (http://docs.aws.amazon.com/dms/latest/userguide/CHAP_Source.MongoDB.html)
+	// Using MongoDB as a Target for AWS Database Migration Service (https://docs.aws.amazon.com/dms/latest/userguide/CHAP_Source.MongoDB.html)
 	// in the AWS Database Migration Service User Guide.
 	MongoDbSettings *MongoDbSettings `type:"structure"`
 
@@ -4967,9 +5341,11 @@ type CreateEndpointInput struct {
 	// The port used by the endpoint database.
 	Port *int64 `type:"integer"`
 
+	RedshiftSettings *RedshiftSettings `type:"structure"`
+
 	// Settings in JSON format for the target Amazon S3 endpoint. For more information
 	// about the available settings, see Extra Connection Attributes When Using
-	// Amazon S3 as a Target for AWS DMS (http://docs.aws.amazon.com/dms/latest/userguide/CHAP_Target.S3.html#CHAP_Target.S3.Configuring)
+	// Amazon S3 as a Target for AWS DMS (https://docs.aws.amazon.com/dms/latest/userguide/CHAP_Target.S3.html#CHAP_Target.S3.Configuring)
 	// in the AWS Database Migration Service User Guide.
 	S3Settings *S3Settings `type:"structure"`
 
@@ -4980,12 +5356,11 @@ type CreateEndpointInput struct {
 	// to use to create the endpoint.
 	ServiceAccessRoleArn *string `type:"string"`
 
-	// The Secure Sockets Layer (SSL) mode to use for the SSL connection. The SSL
-	// mode can be one of four values: none, require, verify-ca, verify-full. The
-	// default value is none.
+	// The Secure Sockets Layer (SSL) mode to use for the SSL connection. The default
+	// is none
 	SslMode *string `type:"string" enum:"DmsSslModeValue"`
 
-	// Tags to be added to the endpoint.
+	// One or more tags to be assigned to the endpoint.
 	Tags []*Tag `type:"list"`
 
 	// The user name to be used to log in to the endpoint database.
@@ -5121,6 +5496,12 @@ func (s *CreateEndpointInput) SetPort(v int64) *CreateEndpointInput {
 	return s
 }
 
+// SetRedshiftSettings sets the RedshiftSettings field's value.
+func (s *CreateEndpointInput) SetRedshiftSettings(v *RedshiftSettings) *CreateEndpointInput {
+	s.RedshiftSettings = v
+	return s
+}
+
 // SetS3Settings sets the S3Settings field's value.
 func (s *CreateEndpointInput) SetS3Settings(v *S3Settings) *CreateEndpointInput {
 	s.S3Settings = v
@@ -5188,10 +5569,8 @@ type CreateEventSubscriptionInput struct {
 	Enabled *bool `type:"boolean"`
 
 	// A list of event categories for a source type that you want to subscribe to.
-	// You can see a list of the categories for a given source type by calling the
-	// DescribeEventCategories action or in the topic Working with Events and Notifications
-	// (http://docs.aws.amazon.com/dms/latest/userguide/CHAP_Events.html) in the
-	// AWS Database Migration Service User Guide.
+	// For more information, see Working with Events and Notifications (https://docs.aws.amazon.com/dms/latest/userguide/CHAP_Events.html)
+	// in the AWS Database Migration Service User Guide.
 	EventCategories []*string `type:"list"`
 
 	// The Amazon Resource Name (ARN) of the Amazon SNS topic created for event
@@ -5201,10 +5580,13 @@ type CreateEventSubscriptionInput struct {
 	// SnsTopicArn is a required field
 	SnsTopicArn *string `type:"string" required:"true"`
 
-	// The list of identifiers of the event sources for which events will be returned.
-	// If not specified, then all sources are included in the response. An identifier
-	// must begin with a letter and must contain only ASCII letters, digits, and
-	// hyphens; it cannot end with a hyphen or contain two consecutive hyphens.
+	// A list of identifiers for which AWS DMS provides notification events.
+	//
+	// If you don't specify a value, notifications are provided for all sources.
+	//
+	// If you specify multiple values, they must be of the same type. For example,
+	// if you specify a database instance ID, then all of the other values must
+	// be database instance IDs.
 	SourceIds []*string `type:"list"`
 
 	// The type of AWS DMS resource that generates the events. For example, if you
@@ -5212,17 +5594,16 @@ type CreateEventSubscriptionInput struct {
 	// this parameter to replication-instance. If this value is not specified, all
 	// events are returned.
 	//
-	// Valid values: replication-instance | migration-task
+	// Valid values: replication-instance | replication-task
 	SourceType *string `type:"string"`
 
-	// The name of the AWS DMS event notification subscription.
-	//
-	// Constraints: The name must be less than 255 characters.
+	// The name of the AWS DMS event notification subscription. This name must be
+	// less than 255 characters.
 	//
 	// SubscriptionName is a required field
 	SubscriptionName *string `type:"string" required:"true"`
 
-	// A tag to be attached to the event subscription.
+	// One or more tags to be assigned to the event subscription.
 	Tags []*Tag `type:"list"`
 }
 
@@ -5324,17 +5705,16 @@ type CreateReplicationInstanceInput struct {
 	// instance.
 	AllocatedStorage *int64 `type:"integer"`
 
-	// Indicates that minor engine upgrades will be applied automatically to the
-	// replication instance during the maintenance window.
+	// Indicates whether minor engine upgrades will be applied automatically to
+	// the replication instance during the maintenance window. This parameter defaults
+	// to true.
 	//
 	// Default: true
 	AutoMinorVersionUpgrade *bool `type:"boolean"`
 
-	// The EC2 Availability Zone that the replication instance will be created in.
-	//
-	// Default: A random, system-chosen Availability Zone in the endpoint's region.
-	//
-	// Example: us-east-1d
+	// The AWS Availability Zone where the replication instance will be created.
+	// The default value is a random, system-chosen Availability Zone in the endpoint's
+	// AWS Region, for example: us-east-1d
 	AvailabilityZone *string `type:"string"`
 
 	// A list of DNS name servers supported for the replication instance.
@@ -5343,15 +5723,19 @@ type CreateReplicationInstanceInput struct {
 	// The engine version number of the replication instance.
 	EngineVersion *string `type:"string"`
 
-	// The AWS KMS key identifier that is used to encrypt the content on the replication
-	// instance. If you don't specify a value for the KmsKeyId parameter, then AWS
-	// DMS uses your default encryption key. AWS KMS creates the default encryption
-	// key for your AWS account. Your AWS account has a different default encryption
-	// key for each AWS Region.
+	// An AWS KMS key identifier that is used to encrypt the data on the replication
+	// instance.
+	//
+	// If you don't specify a value for the KmsKeyId parameter, then AWS DMS uses
+	// your default encryption key.
+	//
+	// AWS KMS creates the default encryption key for your AWS account. Your AWS
+	// account has a different default encryption key for each AWS Region.
 	KmsKeyId *string `type:"string"`
 
-	// Specifies if the replication instance is a Multi-AZ deployment. You cannot
-	// set the AvailabilityZone parameter if the Multi-AZ parameter is set to true.
+	// Specifies whether the replication instance is a Multi-AZ deployment. You
+	// cannot set the AvailabilityZone parameter if the Multi-AZ parameter is set
+	// to true.
 	MultiAZ *bool `type:"boolean"`
 
 	// The weekly time range during which system maintenance can occur, in Universal
@@ -5360,7 +5744,7 @@ type CreateReplicationInstanceInput struct {
 	// Format: ddd:hh24:mi-ddd:hh24:mi
 	//
 	// Default: A 30-minute window selected at random from an 8-hour block of time
-	// per region, occurring on a random day of the week.
+	// per AWS Region, occurring on a random day of the week.
 	//
 	// Valid Days: Mon, Tue, Wed, Thu, Fri, Sat, Sun
 	//
@@ -5400,7 +5784,7 @@ type CreateReplicationInstanceInput struct {
 	// A subnet group to associate with the replication instance.
 	ReplicationSubnetGroupIdentifier *string `type:"string"`
 
-	// Tags to be associated with the replication instance.
+	// One or more tags to be assigned to the replication instance.
 	Tags []*Tag `type:"list"`
 
 	// Specifies the VPC security group to be used with the replication instance.
@@ -5561,12 +5945,12 @@ type CreateReplicationSubnetGroupInput struct {
 	// ReplicationSubnetGroupIdentifier is a required field
 	ReplicationSubnetGroupIdentifier *string `type:"string" required:"true"`
 
-	// The EC2 subnet IDs for the subnet group.
+	// One or more subnet IDs to be assigned to the subnet group.
 	//
 	// SubnetIds is a required field
 	SubnetIds []*string `type:"list" required:"true"`
 
-	// The tag to be assigned to the subnet group.
+	// One or more tags to be assigned to the subnet group.
 	Tags []*Tag `type:"list"`
 }
 
@@ -5678,17 +6062,17 @@ type CreateReplicationTaskInput struct {
 	// “
 	CdcStopPosition *string `type:"string"`
 
-	// The migration type.
+	// The migration type. Valid values: full-load | cdc | full-load-and-cdc
 	//
 	// MigrationType is a required field
 	MigrationType *string `type:"string" required:"true" enum:"MigrationTypeValue"`
 
-	// The Amazon Resource Name (ARN) of the replication instance.
+	// The Amazon Resource Name (ARN) of a replication instance.
 	//
 	// ReplicationInstanceArn is a required field
 	ReplicationInstanceArn *string `type:"string" required:"true"`
 
-	// The replication task identifier.
+	// An identifier for the replication task.
 	//
 	// Constraints:
 	//
@@ -5701,30 +6085,27 @@ type CreateReplicationTaskInput struct {
 	// ReplicationTaskIdentifier is a required field
 	ReplicationTaskIdentifier *string `type:"string" required:"true"`
 
-	// Settings for the task, such as target metadata settings. For a complete list
-	// of task settings, see Task Settings for AWS Database Migration Service Tasks
-	// (http://docs.aws.amazon.com/dms/latest/userguide/CHAP_Tasks.CustomizingTasks.TaskSettings.html)
+	// Overall settings for the task, in JSON format. For more information, see
+	// Task Settings (https://docs.aws.amazon.com/dms/latest/userguide/CHAP_Tasks.CustomizingTasks.TaskSettings.html)
 	// in the AWS Database Migration User Guide.
 	ReplicationTaskSettings *string `type:"string"`
 
-	// The Amazon Resource Name (ARN) string that uniquely identifies the endpoint.
+	// An Amazon Resource Name (ARN) that uniquely identifies the source endpoint.
 	//
 	// SourceEndpointArn is a required field
 	SourceEndpointArn *string `type:"string" required:"true"`
 
-	// When using the AWS CLI or boto3, provide the path of the JSON file that contains
-	// the table mappings. Precede the path with "file://". When working with the
-	// DMS API, provide the JSON as the parameter value.
-	//
-	// For example, --table-mappings file://mappingfile.json
+	// The table mappings for the task, in JSON format. For more information, see
+	// Table Mapping (https://docs.aws.amazon.com/dms/latest/userguide/CHAP_Tasks.CustomizingTasks.TableMapping.html)
+	// in the AWS Database Migration User Guide.
 	//
 	// TableMappings is a required field
 	TableMappings *string `type:"string" required:"true"`
 
-	// Tags to be added to the replication instance.
+	// One or more tags to be assigned to the replication task.
 	Tags []*Tag `type:"list"`
 
-	// The Amazon Resource Name (ARN) string that uniquely identifies the endpoint.
+	// An Amazon Resource Name (ARN) that uniquely identifies the target endpoint.
 	//
 	// TargetEndpointArn is a required field
 	TargetEndpointArn *string `type:"string" required:"true"`
@@ -6233,6 +6614,17 @@ type DescribeAccountAttributesOutput struct {
 
 	// Account quota information.
 	AccountQuotas []*AccountQuota `type:"list"`
+
+	// A unique AWS DMS identifier for an account in a particular AWS Region. The
+	// value of this identifier has the following format: c99999999999. DMS uses
+	// this identifier to name artifacts. For example, DMS uses this identifier
+	// to name the default Amazon S3 bucket for storing task assessment reports
+	// in a given AWS Region. The format of this S3 bucket name is the following:
+	// dms-AccountNumber-UniqueAccountIdentifier. Here is an example name for this
+	// default S3 bucket: dms-111122223333-c44445555666.
+	//
+	// AWS DMS supports UniqueAccountIdentifier in versions 3.1.4 and later.
+	UniqueAccountIdentifier *string `type:"string"`
 }
 
 // String returns the string representation
@@ -6251,6 +6643,12 @@ func (s *DescribeAccountAttributesOutput) SetAccountQuotas(v []*AccountQuota) *D
 	return s
 }
 
+// SetUniqueAccountIdentifier sets the UniqueAccountIdentifier field's value.
+func (s *DescribeAccountAttributesOutput) SetUniqueAccountIdentifier(v string) *DescribeAccountAttributesOutput {
+	s.UniqueAccountIdentifier = &v
+	return s
+}
+
 type DescribeCertificatesInput struct {
 	_ struct{} `type:"structure"`
 
@@ -6259,7 +6657,7 @@ type DescribeCertificatesInput struct {
 
 	// An optional pagination token provided by a previous request. If this parameter
 	// is specified, the response includes only records beyond the marker, up to
-	// the value specified by MaxRecords.
+	// the vlue specified by MaxRecords.
 	Marker *string `type:"string"`
 
 	// The maximum number of records to include in the response. If more records
@@ -6535,7 +6933,7 @@ type DescribeEndpointTypesOutput struct {
 	// the value specified by MaxRecords.
 	Marker *string `type:"string"`
 
-	// The type of endpoints that are supported.
+	// The types of endpoints that are supported.
 	SupportedEndpointTypes []*SupportedEndpointType `type:"list"`
 }
 
@@ -6674,7 +7072,7 @@ type DescribeEventCategoriesInput struct {
 
 	// The type of AWS DMS resource that generates events.
 	//
-	// Valid values: replication-instance | migration-task
+	// Valid values: replication-instance | replication-task
 	SourceType *string `type:"string"`
 }
 
@@ -6864,7 +7262,7 @@ type DescribeEventsInput struct {
 	// The end time for the events to be listed.
 	EndTime *time.Time `type:"timestamp"`
 
-	// A list of event categories for a source type that you want to subscribe to.
+	// A list of event categories for the source type that you've chosen.
 	EventCategories []*string `type:"list"`
 
 	// Filters applied to the action.
@@ -6884,14 +7282,12 @@ type DescribeEventsInput struct {
 	// Constraints: Minimum 20, maximum 100.
 	MaxRecords *int64 `type:"integer"`
 
-	// The identifier of the event source. An identifier must begin with a letter
-	// and must contain only ASCII letters, digits, and hyphens. It cannot end with
-	// a hyphen or contain two consecutive hyphens.
+	// The identifier of an event source.
 	SourceIdentifier *string `type:"string"`
 
 	// The type of AWS DMS resource that generates events.
 	//
-	// Valid values: replication-instance | migration-task
+	// Valid values: replication-instance | replication-task
 	SourceType *string `type:"string" enum:"SourceType"`
 
 	// The start time for the events to be listed.
@@ -7087,6 +7483,117 @@ func (s *DescribeOrderableReplicationInstancesOutput) SetMarker(v string) *Descr
 // SetOrderableReplicationInstances sets the OrderableReplicationInstances field's value.
 func (s *DescribeOrderableReplicationInstancesOutput) SetOrderableReplicationInstances(v []*OrderableReplicationInstance) *DescribeOrderableReplicationInstancesOutput {
 	s.OrderableReplicationInstances = v
+	return s
+}
+
+type DescribePendingMaintenanceActionsInput struct {
+	_ struct{} `type:"structure"`
+
+	Filters []*Filter `type:"list"`
+
+	// An optional pagination token provided by a previous request. If this parameter
+	// is specified, the response includes only records beyond the marker, up to
+	// the value specified by MaxRecords.
+	Marker *string `type:"string"`
+
+	// The maximum number of records to include in the response. If more records
+	// exist than the specified MaxRecords value, a pagination token called a marker
+	// is included in the response so that the remaining results can be retrieved.
+	//
+	// Default: 100
+	//
+	// Constraints: Minimum 20, maximum 100.
+	MaxRecords *int64 `type:"integer"`
+
+	// The Amazon Resource Name (ARN) of the replication instance.
+	ReplicationInstanceArn *string `type:"string"`
+}
+
+// String returns the string representation
+func (s DescribePendingMaintenanceActionsInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DescribePendingMaintenanceActionsInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *DescribePendingMaintenanceActionsInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "DescribePendingMaintenanceActionsInput"}
+	if s.Filters != nil {
+		for i, v := range s.Filters {
+			if v == nil {
+				continue
+			}
+			if err := v.Validate(); err != nil {
+				invalidParams.AddNested(fmt.Sprintf("%s[%v]", "Filters", i), err.(request.ErrInvalidParams))
+			}
+		}
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetFilters sets the Filters field's value.
+func (s *DescribePendingMaintenanceActionsInput) SetFilters(v []*Filter) *DescribePendingMaintenanceActionsInput {
+	s.Filters = v
+	return s
+}
+
+// SetMarker sets the Marker field's value.
+func (s *DescribePendingMaintenanceActionsInput) SetMarker(v string) *DescribePendingMaintenanceActionsInput {
+	s.Marker = &v
+	return s
+}
+
+// SetMaxRecords sets the MaxRecords field's value.
+func (s *DescribePendingMaintenanceActionsInput) SetMaxRecords(v int64) *DescribePendingMaintenanceActionsInput {
+	s.MaxRecords = &v
+	return s
+}
+
+// SetReplicationInstanceArn sets the ReplicationInstanceArn field's value.
+func (s *DescribePendingMaintenanceActionsInput) SetReplicationInstanceArn(v string) *DescribePendingMaintenanceActionsInput {
+	s.ReplicationInstanceArn = &v
+	return s
+}
+
+type DescribePendingMaintenanceActionsOutput struct {
+	_ struct{} `type:"structure"`
+
+	// An optional pagination token provided by a previous request. If this parameter
+	// is specified, the response includes only records beyond the marker, up to
+	// the value specified by MaxRecords.
+	Marker *string `type:"string"`
+
+	// The pending maintenance action.
+	PendingMaintenanceActions []*ResourcePendingMaintenanceActions `type:"list"`
+}
+
+// String returns the string representation
+func (s DescribePendingMaintenanceActionsOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DescribePendingMaintenanceActionsOutput) GoString() string {
+	return s.String()
+}
+
+// SetMarker sets the Marker field's value.
+func (s *DescribePendingMaintenanceActionsOutput) SetMarker(v string) *DescribePendingMaintenanceActionsOutput {
+	s.Marker = &v
+	return s
+}
+
+// SetPendingMaintenanceActions sets the PendingMaintenanceActions field's value.
+func (s *DescribePendingMaintenanceActionsOutput) SetPendingMaintenanceActions(v []*ResourcePendingMaintenanceActions) *DescribePendingMaintenanceActionsOutput {
+	s.PendingMaintenanceActions = v
 	return s
 }
 
@@ -7584,6 +8091,11 @@ type DescribeReplicationTasksInput struct {
 	//
 	// Constraints: Minimum 20, maximum 100.
 	MaxRecords *int64 `type:"integer"`
+
+	// An option to set to avoid returning information about settings. Use this
+	// to reduce overhead when setting information is too large. To use this option,
+	// choose true; otherwise, choose false (the default).
+	WithoutSettings *bool `type:"boolean"`
 }
 
 // String returns the string representation
@@ -7631,6 +8143,12 @@ func (s *DescribeReplicationTasksInput) SetMarker(v string) *DescribeReplication
 // SetMaxRecords sets the MaxRecords field's value.
 func (s *DescribeReplicationTasksInput) SetMaxRecords(v int64) *DescribeReplicationTasksInput {
 	s.MaxRecords = &v
+	return s
+}
+
+// SetWithoutSettings sets the WithoutSettings field's value.
+func (s *DescribeReplicationTasksInput) SetWithoutSettings(v bool) *DescribeReplicationTasksInput {
+	s.WithoutSettings = &v
 	return s
 }
 
@@ -7971,7 +8489,7 @@ func (s *DynamoDbSettings) SetServiceAccessRoleArn(v string) *DynamoDbSettings {
 type ElasticsearchSettings struct {
 	_ struct{} `type:"structure"`
 
-	// The endpoint for the ElasticSearch cluster.
+	// The endpoint for the Elasticsearch cluster.
 	//
 	// EndpointUri is a required field
 	EndpointUri *string `type:"string" required:"true"`
@@ -8084,16 +8602,16 @@ type Endpoint struct {
 	// hyphen or contain two consecutive hyphens.
 	EndpointIdentifier *string `type:"string"`
 
-	// The type of endpoint.
+	// The type of endpoint. Valid values are source and target.
 	EndpointType *string `type:"string" enum:"ReplicationEndpointTypeValue"`
 
 	// The expanded name for the engine name. For example, if the EngineName parameter
 	// is "aurora," this value would be "Amazon Aurora MySQL."
 	EngineDisplayName *string `type:"string"`
 
-	// The database engine name. Valid values, depending on the EndPointType, include
+	// The database engine name. Valid values, depending on the EndpointType, include
 	// mysql, oracle, postgres, mariadb, aurora, aurora-postgresql, redshift, s3,
-	// db2, azuredb, sybase, sybase, dynamodb, mongodb, and sqlserver.
+	// db2, azuredb, sybase, dynamodb, mongodb, and sqlserver.
 	EngineName *string `type:"string"`
 
 	// Value returned by a call to CreateEndpoint that can be used for cross-account
@@ -8111,11 +8629,14 @@ type Endpoint struct {
 	// see the KinesisSettings structure.
 	KinesisSettings *KinesisSettings `type:"structure"`
 
-	// The AWS KMS key identifier that is used to encrypt the content on the replication
-	// instance. If you don't specify a value for the KmsKeyId parameter, then AWS
-	// DMS uses your default encryption key. AWS KMS creates the default encryption
-	// key for your AWS account. Your AWS account has a different default encryption
-	// key for each AWS Region.
+	// An AWS KMS key identifier that is used to encrypt the connection parameters
+	// for the endpoint.
+	//
+	// If you don't specify a value for the KmsKeyId parameter, then AWS DMS uses
+	// your default encryption key.
+	//
+	// AWS KMS creates the default encryption key for your AWS account. Your AWS
+	// account has a different default encryption key for each AWS Region.
 	KmsKeyId *string `type:"string"`
 
 	// The settings for the MongoDB source endpoint. For more information, see the
@@ -8124,6 +8645,9 @@ type Endpoint struct {
 
 	// The port value used to access the endpoint.
 	Port *int64 `type:"integer"`
+
+	// Settings for the Amazon Redshift endpoint.
+	RedshiftSettings *RedshiftSettings `type:"structure"`
 
 	// The settings for the S3 target endpoint. For more information, see the S3Settings
 	// structure.
@@ -8135,11 +8659,7 @@ type Endpoint struct {
 	// The Amazon Resource Name (ARN) used by the service access IAM role.
 	ServiceAccessRoleArn *string `type:"string"`
 
-	// The SSL mode used to connect to the endpoint.
-	//
-	// SSL mode can be one of four values: none, require, verify-ca, verify-full.
-	//
-	// The default value is none.
+	// The SSL mode used to connect to the endpoint. The default value is none.
 	SslMode *string `type:"string" enum:"DmsSslModeValue"`
 
 	// The status of the endpoint.
@@ -8261,6 +8781,12 @@ func (s *Endpoint) SetPort(v int64) *Endpoint {
 	return s
 }
 
+// SetRedshiftSettings sets the RedshiftSettings field's value.
+func (s *Endpoint) SetRedshiftSettings(v *RedshiftSettings) *Endpoint {
+	s.RedshiftSettings = v
+	return s
+}
+
 // SetS3Settings sets the S3Settings field's value.
 func (s *Endpoint) SetS3Settings(v *S3Settings) *Endpoint {
 	s.S3Settings = v
@@ -8309,16 +8835,12 @@ type Event struct {
 	// The event message.
 	Message *string `type:"string"`
 
-	// The identifier of the event source. An identifier must begin with a letter
-	// and must contain only ASCII letters, digits, and hyphens; it cannot end with
-	// a hyphen or contain two consecutive hyphens.
-	//
-	// Constraints:replication instance, endpoint, migration task
+	// The identifier of an event source.
 	SourceIdentifier *string `type:"string"`
 
 	// The type of AWS DMS resource that generates events.
 	//
-	// Valid values: replication-instance | endpoint | migration-task
+	// Valid values: replication-instance | endpoint | replication-task
 	SourceType *string `type:"string" enum:"SourceType"`
 }
 
@@ -8365,13 +8887,13 @@ func (s *Event) SetSourceType(v string) *Event {
 type EventCategoryGroup struct {
 	_ struct{} `type:"structure"`
 
-	// A list of event categories for a SourceType that you want to subscribe to.
+	// A list of event categories from a source type that you've chosen.
 	EventCategories []*string `type:"list"`
 
 	// The type of AWS DMS resource that generates events.
 	//
 	// Valid values: replication-instance | replication-server | security-group
-	// | migration-task
+	// | replication-task
 	SourceType *string `type:"string"`
 }
 
@@ -8421,7 +8943,7 @@ type EventSubscription struct {
 	// The type of AWS DMS resource that generates events.
 	//
 	// Valid values: replication-instance | replication-server | security-group
-	// | migration-task
+	// | replication-task
 	SourceType *string `type:"string"`
 
 	// The status of the AWS DMS event notification subscription.
@@ -8559,16 +9081,17 @@ func (s *Filter) SetValues(v []*string) *Filter {
 type ImportCertificateInput struct {
 	_ struct{} `type:"structure"`
 
-	// The customer-assigned name of the certificate. Valid characters are A-z and
-	// 0-9.
+	// A customer-assigned name for the certificate. Identifiers must begin with
+	// a letter; must contain only ASCII letters, digits, and hyphens; and must
+	// not end with a hyphen or contain two consecutive hyphens.
 	//
 	// CertificateIdentifier is a required field
 	CertificateIdentifier *string `type:"string" required:"true"`
 
-	// The contents of the .pem X.509 certificate file for the certificate.
+	// The contents of a .pem file, which contains an X.509 certificate.
 	CertificatePem *string `type:"string"`
 
-	// The location of the imported Oracle Wallet certificate for use with SSL.
+	// The location of an imported Oracle Wallet certificate for use with SSL.
 	//
 	// CertificateWallet is automatically base64 encoded/decoded by the SDK.
 	CertificateWallet []byte `type:"blob"`
@@ -8784,13 +9307,13 @@ type ModifyEndpointInput struct {
 
 	// Settings in JSON format for the target Amazon DynamoDB endpoint. For more
 	// information about the available settings, see Using Object Mapping to Migrate
-	// Data to DynamoDB (http://docs.aws.amazon.com/dms/latest/userguide/CHAP_Target.DynamoDB.html)
+	// Data to DynamoDB (https://docs.aws.amazon.com/dms/latest/userguide/CHAP_Target.DynamoDB.html)
 	// in the AWS Database Migration Service User Guide.
 	DynamoDbSettings *DynamoDbSettings `type:"structure"`
 
 	// Settings in JSON format for the target Elasticsearch endpoint. For more information
 	// about the available settings, see Extra Connection Attributes When Using
-	// Elasticsearch as a Target for AWS DMS (http://docs.aws.amazon.com/dms/latest/userguide/CHAP_Target.Elasticsearch.html#CHAP_Target.Elasticsearch.Configuration)
+	// Elasticsearch as a Target for AWS DMS (https://docs.aws.amazon.com/dms/latest/userguide/CHAP_Target.Elasticsearch.html#CHAP_Target.Elasticsearch.Configuration)
 	// in the AWS Database Migration User Guide.
 	ElasticsearchSettings *ElasticsearchSettings `type:"structure"`
 
@@ -8804,12 +9327,12 @@ type ModifyEndpointInput struct {
 	// hyphen or contain two consecutive hyphens.
 	EndpointIdentifier *string `type:"string"`
 
-	// The type of endpoint.
+	// The type of endpoint. Valid values are source and target.
 	EndpointType *string `type:"string" enum:"ReplicationEndpointTypeValue"`
 
-	// The type of engine for the endpoint. Valid values, depending on the EndPointType,
+	// The type of engine for the endpoint. Valid values, depending on the EndpointType,
 	// include mysql, oracle, postgres, mariadb, aurora, aurora-postgresql, redshift,
-	// s3, db2, azuredb, sybase, sybase, dynamodb, mongodb, and sqlserver.
+	// s3, db2, azuredb, sybase, dynamodb, mongodb, and sqlserver.
 	EngineName *string `type:"string"`
 
 	// The external table definition.
@@ -8821,13 +9344,13 @@ type ModifyEndpointInput struct {
 
 	// Settings in JSON format for the target Amazon Kinesis Data Streams endpoint.
 	// For more information about the available settings, see Using Object Mapping
-	// to Migrate Data to a Kinesis Data Stream (http://docs.aws.amazon.com/dms/latest/userguide/CHAP_Target.Kinesis.html#CHAP_Target.Kinesis.ObjectMapping
-	// ) in the AWS Database Migration User Guide.
+	// to Migrate Data to a Kinesis Data Stream (https://docs.aws.amazon.com/dms/latest/userguide/CHAP_Target.Kinesis.html#CHAP_Target.Kinesis.ObjectMapping)
+	// in the AWS Database Migration User Guide.
 	KinesisSettings *KinesisSettings `type:"structure"`
 
 	// Settings in JSON format for the source MongoDB endpoint. For more information
 	// about the available settings, see the configuration properties section in
-	//  Using MongoDB as a Target for AWS Database Migration Service (http://docs.aws.amazon.com/dms/latest/userguide/CHAP_Source.MongoDB.html)
+	// Using MongoDB as a Target for AWS Database Migration Service (https://docs.aws.amazon.com/dms/latest/userguide/CHAP_Source.MongoDB.html)
 	// in the AWS Database Migration Service User Guide.
 	MongoDbSettings *MongoDbSettings `type:"structure"`
 
@@ -8837,9 +9360,11 @@ type ModifyEndpointInput struct {
 	// The port used by the endpoint database.
 	Port *int64 `type:"integer"`
 
+	RedshiftSettings *RedshiftSettings `type:"structure"`
+
 	// Settings in JSON format for the target Amazon S3 endpoint. For more information
 	// about the available settings, see Extra Connection Attributes When Using
-	// Amazon S3 as a Target for AWS DMS (http://docs.aws.amazon.com/dms/latest/userguide/CHAP_Target.S3.html#CHAP_Target.S3.Configuring)
+	// Amazon S3 as a Target for AWS DMS (https://docs.aws.amazon.com/dms/latest/userguide/CHAP_Target.S3.html#CHAP_Target.S3.Configuring)
 	// in the AWS Database Migration Service User Guide.
 	S3Settings *S3Settings `type:"structure"`
 
@@ -8850,11 +9375,7 @@ type ModifyEndpointInput struct {
 	// to modify the endpoint.
 	ServiceAccessRoleArn *string `type:"string"`
 
-	// The SSL mode to be used.
-	//
-	// SSL mode can be one of four values: none, require, verify-ca, verify-full.
-	//
-	// The default value is none.
+	// The SSL mode used to connect to the endpoint. The default value is none.
 	SslMode *string `type:"string" enum:"DmsSslModeValue"`
 
 	// The user name to be used to login to the endpoint database.
@@ -8984,6 +9505,12 @@ func (s *ModifyEndpointInput) SetPort(v int64) *ModifyEndpointInput {
 	return s
 }
 
+// SetRedshiftSettings sets the RedshiftSettings field's value.
+func (s *ModifyEndpointInput) SetRedshiftSettings(v *RedshiftSettings) *ModifyEndpointInput {
+	s.RedshiftSettings = v
+	return s
+}
+
 // SetS3Settings sets the S3Settings field's value.
 func (s *ModifyEndpointInput) SetS3Settings(v *S3Settings) *ModifyEndpointInput {
 	s.S3Settings = v
@@ -9055,7 +9582,7 @@ type ModifyEventSubscriptionInput struct {
 	// The type of AWS DMS resource that generates the events you want to subscribe
 	// to.
 	//
-	// Valid values: replication-instance | migration-task
+	// Valid values: replication-instance | replication-task
 	SourceType *string `type:"string"`
 
 	// The name of the AWS DMS event notification subscription to be modified.
@@ -9148,12 +9675,12 @@ type ModifyReplicationInstanceInput struct {
 	AllocatedStorage *int64 `type:"integer"`
 
 	// Indicates that major version upgrades are allowed. Changing this parameter
-	// does not result in an outage and the change is asynchronously applied as
+	// does not result in an outage, and the change is asynchronously applied as
 	// soon as possible.
 	//
-	// Constraints: This parameter must be set to true when specifying a value for
-	// the EngineVersion parameter that is a different major version than the replication
-	// instance's current version.
+	// This parameter must be set to true when specifying a value for the EngineVersion
+	// parameter that is a different major version than the replication instance's
+	// current version.
 	AllowMajorVersionUpgrade *bool `type:"boolean"`
 
 	// Indicates whether the changes should be applied immediately or during the
@@ -9172,8 +9699,9 @@ type ModifyReplicationInstanceInput struct {
 	// The engine version number of the replication instance.
 	EngineVersion *string `type:"string"`
 
-	// Specifies if the replication instance is a Multi-AZ deployment. You cannot
-	// set the AvailabilityZone parameter if the Multi-AZ parameter is set to true.
+	// Specifies whether the replication instance is a Multi-AZ deployment. You
+	// cannot set the AvailabilityZone parameter if the Multi-AZ parameter is set
+	// to true.
 	MultiAZ *bool `type:"boolean"`
 
 	// The weekly time range (in UTC) during which system maintenance can occur,
@@ -9328,7 +9856,7 @@ func (s *ModifyReplicationInstanceOutput) SetReplicationInstance(v *ReplicationI
 type ModifyReplicationSubnetGroupInput struct {
 	_ struct{} `type:"structure"`
 
-	// The description of the replication instance subnet group.
+	// A description for the replication instance subnet group.
 	ReplicationSubnetGroupDescription *string `type:"string"`
 
 	// The name of the replication instance subnet group.
@@ -9441,9 +9969,7 @@ type ModifyReplicationTaskInput struct {
 	// “
 	CdcStopPosition *string `type:"string"`
 
-	// The migration type.
-	//
-	// Valid values: full-load | cdc | full-load-and-cdc
+	// The migration type. Valid values: full-load | cdc | full-load-and-cdc
 	MigrationType *string `type:"string" enum:"MigrationTypeValue"`
 
 	// The Amazon Resource Name (ARN) of the replication task.
@@ -9466,10 +9992,9 @@ type ModifyReplicationTaskInput struct {
 	ReplicationTaskSettings *string `type:"string"`
 
 	// When using the AWS CLI or boto3, provide the path of the JSON file that contains
-	// the table mappings. Precede the path with "file://". When working with the
-	// DMS API, provide the JSON as the parameter value.
-	//
-	// For example, --table-mappings file://mappingfile.json
+	// the table mappings. Precede the path with file://. When working with the
+	// DMS API, provide the JSON as the parameter value, for example: --table-mappings
+	// file://mappingfile.json
 	TableMappings *string `type:"string"`
 }
 
@@ -9574,8 +10099,8 @@ type MongoDbSettings struct {
 	//
 	// Valid values: DEFAULT, MONGODB_CR, SCRAM_SHA_1
 	//
-	// DEFAULT – For MongoDB version 2.x, use MONGODB_CR. For MongoDB version 3.x,
-	// use SCRAM_SHA_1. This attribute is not used when authType=No.
+	// DEFAULT – For MongoDB version 2.x, use MONGODB_CR. For MongoDB version
+	// 3.x, use SCRAM_SHA_1. This attribute is not used when authType=No.
 	AuthMechanism *string `type:"string" enum:"AuthMechanismValue"`
 
 	// The MongoDB database name. This attribute is not used when authType=NO.
@@ -9719,6 +10244,9 @@ func (s *MongoDbSettings) SetUsername(v string) *MongoDbSettings {
 type OrderableReplicationInstance struct {
 	_ struct{} `type:"structure"`
 
+	// List of Availability Zones for this replication instance.
+	AvailabilityZones []*string `type:"list"`
+
 	// The default amount of storage (in gigabytes) that is allocated for the replication
 	// instance.
 	DefaultAllocatedStorage *int64 `type:"integer"`
@@ -9738,6 +10266,12 @@ type OrderableReplicationInstance struct {
 	// replication instance.
 	MinAllocatedStorage *int64 `type:"integer"`
 
+	// The value returned when the specified EngineVersion of the replication instance
+	// is in Beta or test mode. This indicates some features might not work as expected.
+	//
+	// AWS DMS supports ReleaseStatus in versions 3.1.4 and later.
+	ReleaseStatus *string `type:"string" enum:"ReleaseStatusValues"`
+
 	// The compute and memory capacity of the replication instance.
 	//
 	// Valid Values: dms.t2.micro | dms.t2.small | dms.t2.medium | dms.t2.large
@@ -9756,6 +10290,12 @@ func (s OrderableReplicationInstance) String() string {
 // GoString returns the string representation
 func (s OrderableReplicationInstance) GoString() string {
 	return s.String()
+}
+
+// SetAvailabilityZones sets the AvailabilityZones field's value.
+func (s *OrderableReplicationInstance) SetAvailabilityZones(v []*string) *OrderableReplicationInstance {
+	s.AvailabilityZones = v
+	return s
 }
 
 // SetDefaultAllocatedStorage sets the DefaultAllocatedStorage field's value.
@@ -9788,6 +10328,12 @@ func (s *OrderableReplicationInstance) SetMinAllocatedStorage(v int64) *Orderabl
 	return s
 }
 
+// SetReleaseStatus sets the ReleaseStatus field's value.
+func (s *OrderableReplicationInstance) SetReleaseStatus(v string) *OrderableReplicationInstance {
+	s.ReleaseStatus = &v
+	return s
+}
+
 // SetReplicationInstanceClass sets the ReplicationInstanceClass field's value.
 func (s *OrderableReplicationInstance) SetReplicationInstanceClass(v string) *OrderableReplicationInstance {
 	s.ReplicationInstanceClass = &v
@@ -9797,6 +10343,84 @@ func (s *OrderableReplicationInstance) SetReplicationInstanceClass(v string) *Or
 // SetStorageType sets the StorageType field's value.
 func (s *OrderableReplicationInstance) SetStorageType(v string) *OrderableReplicationInstance {
 	s.StorageType = &v
+	return s
+}
+
+type PendingMaintenanceAction struct {
+	_ struct{} `type:"structure"`
+
+	// The type of pending maintenance action that is available for the resource.
+	Action *string `type:"string"`
+
+	// The date of the maintenance window when the action will be applied. The maintenance
+	// action will be applied to the resource during its first maintenance window
+	// after this date. If this date is specified, any next-maintenance opt-in requests
+	// are ignored.
+	AutoAppliedAfterDate *time.Time `type:"timestamp"`
+
+	// The effective date when the pending maintenance action will be applied to
+	// the resource. This date takes into account opt-in requests received from
+	// the ApplyPendingMaintenanceAction API, the AutoAppliedAfterDate, and the
+	// ForcedApplyDate. This value is blank if an opt-in request has not been received
+	// and nothing has been specified as AutoAppliedAfterDate or ForcedApplyDate.
+	CurrentApplyDate *time.Time `type:"timestamp"`
+
+	// A description providing more detail about the maintenance action.
+	Description *string `type:"string"`
+
+	// The date when the maintenance action will be automatically applied. The maintenance
+	// action will be applied to the resource on this date regardless of the maintenance
+	// window for the resource. If this date is specified, any immediate opt-in
+	// requests are ignored.
+	ForcedApplyDate *time.Time `type:"timestamp"`
+
+	// Indicates the type of opt-in request that has been received for the resource.
+	OptInStatus *string `type:"string"`
+}
+
+// String returns the string representation
+func (s PendingMaintenanceAction) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s PendingMaintenanceAction) GoString() string {
+	return s.String()
+}
+
+// SetAction sets the Action field's value.
+func (s *PendingMaintenanceAction) SetAction(v string) *PendingMaintenanceAction {
+	s.Action = &v
+	return s
+}
+
+// SetAutoAppliedAfterDate sets the AutoAppliedAfterDate field's value.
+func (s *PendingMaintenanceAction) SetAutoAppliedAfterDate(v time.Time) *PendingMaintenanceAction {
+	s.AutoAppliedAfterDate = &v
+	return s
+}
+
+// SetCurrentApplyDate sets the CurrentApplyDate field's value.
+func (s *PendingMaintenanceAction) SetCurrentApplyDate(v time.Time) *PendingMaintenanceAction {
+	s.CurrentApplyDate = &v
+	return s
+}
+
+// SetDescription sets the Description field's value.
+func (s *PendingMaintenanceAction) SetDescription(v string) *PendingMaintenanceAction {
+	s.Description = &v
+	return s
+}
+
+// SetForcedApplyDate sets the ForcedApplyDate field's value.
+func (s *PendingMaintenanceAction) SetForcedApplyDate(v time.Time) *PendingMaintenanceAction {
+	s.ForcedApplyDate = &v
+	return s
+}
+
+// SetOptInStatus sets the OptInStatus field's value.
+func (s *PendingMaintenanceAction) SetOptInStatus(v string) *PendingMaintenanceAction {
+	s.OptInStatus = &v
 	return s
 }
 
@@ -9868,6 +10492,293 @@ func (s RebootReplicationInstanceOutput) GoString() string {
 // SetReplicationInstance sets the ReplicationInstance field's value.
 func (s *RebootReplicationInstanceOutput) SetReplicationInstance(v *ReplicationInstance) *RebootReplicationInstanceOutput {
 	s.ReplicationInstance = v
+	return s
+}
+
+type RedshiftSettings struct {
+	_ struct{} `type:"structure"`
+
+	// A value that indicates to allow any date format, including invalid formats
+	// such as 00/00/00 00:00:00, to be loaded without generating an error. You
+	// can choose true or false (the default).
+	//
+	// This parameter applies only to TIMESTAMP and DATE columns. Always use ACCEPTANYDATE
+	// with the DATEFORMAT parameter. If the date format for the data doesn't match
+	// the DATEFORMAT specification, Amazon Redshift inserts a NULL value into that
+	// field.
+	AcceptAnyDate *bool `type:"boolean"`
+
+	// Code to run after connecting. This parameter should contain the code itself,
+	// not the name of a file containing the code.
+	AfterConnectScript *string `type:"string"`
+
+	// The location where the comma-separated value (.csv) files are stored before
+	// being uploaded to the S3 bucket.
+	BucketFolder *string `type:"string"`
+
+	// The name of the S3 bucket you want to use
+	BucketName *string `type:"string"`
+
+	// A value that sets the amount of time to wait (in milliseconds) before timing
+	// out, beginning from when you initially establish a connection.
+	ConnectionTimeout *int64 `type:"integer"`
+
+	// The name of the Amazon Redshift data warehouse (service) that you are working
+	// with.
+	DatabaseName *string `type:"string"`
+
+	// The date format that you are using. Valid values are auto (case-sensitive),
+	// your date format string enclosed in quotes, or NULL. If this parameter is
+	// left unset (NULL), it defaults to a format of 'YYYY-MM-DD'. Using auto recognizes
+	// most strings, even some that aren't supported when you use a date format
+	// string.
+	//
+	// If your date and time values use formats different from each other, set this
+	// to auto.
+	DateFormat *string `type:"string"`
+
+	// A value that specifies whether AWS DMS should migrate empty CHAR and VARCHAR
+	// fields as NULL. A value of true sets empty CHAR and VARCHAR fields to null.
+	// The default is false.
+	EmptyAsNull *bool `type:"boolean"`
+
+	// The type of server-side encryption that you want to use for your data. This
+	// encryption type is part of the endpoint settings or the extra connections
+	// attributes for Amazon S3. You can choose either SSE_S3 (the default) or SSE_KMS.
+	// To use SSE_S3, create an AWS Identity and Access Management (IAM) role with
+	// a policy that allows "arn:aws:s3:::*" to use the following actions: "s3:PutObject",
+	// "s3:ListBucket"
+	EncryptionMode *string `type:"string" enum:"EncryptionModeValue"`
+
+	// The number of threads used to upload a single file. This parameter accepts
+	// a value from 1 through 64. It defaults to 10.
+	FileTransferUploadStreams *int64 `type:"integer"`
+
+	// The amount of time to wait (in milliseconds) before timing out, beginning
+	// from when you begin loading.
+	LoadTimeout *int64 `type:"integer"`
+
+	// The maximum size (in KB) of any .csv file used to transfer data to Amazon
+	// Redshift. This accepts a value from 1 through 1,048,576. It defaults to 32,768
+	// KB (32 MB).
+	MaxFileSize *int64 `type:"integer"`
+
+	// The password for the user named in the username property.
+	Password *string `type:"string" sensitive:"true"`
+
+	// The port number for Amazon Redshift. The default value is 5439.
+	Port *int64 `type:"integer"`
+
+	// A value that specifies to remove surrounding quotation marks from strings
+	// in the incoming data. All characters within the quotation marks, including
+	// delimiters, are retained. Choose true to remove quotation marks. The default
+	// is false.
+	RemoveQuotes *bool `type:"boolean"`
+
+	// A value that specifies to replaces the invalid characters specified in ReplaceInvalidChars,
+	// substituting the specified characters instead. The default is "?".
+	ReplaceChars *string `type:"string"`
+
+	// A list of characters that you want to replace. Use with ReplaceChars.
+	ReplaceInvalidChars *string `type:"string"`
+
+	// The name of the Amazon Redshift cluster you are using.
+	ServerName *string `type:"string"`
+
+	// The AWS KMS key ID. If you are using SSE_KMS for the EncryptionMode, provide
+	// this key ID. The key that you use needs an attached policy that enables IAM
+	// user permissions and allows use of the key.
+	ServerSideEncryptionKmsKeyId *string `type:"string"`
+
+	// The Amazon Resource Name (ARN) of the IAM role that has access to the Amazon
+	// Redshift service.
+	ServiceAccessRoleArn *string `type:"string"`
+
+	// The time format that you want to use. Valid values are auto (case-sensitive),
+	// 'timeformat_string', 'epochsecs', or 'epochmillisecs'. It defaults to 10.
+	// Using auto recognizes most strings, even some that aren't supported when
+	// you use a time format string.
+	//
+	// If your date and time values use formats different from each other, set this
+	// parameter to auto.
+	TimeFormat *string `type:"string"`
+
+	// A value that specifies to remove the trailing white space characters from
+	// a VARCHAR string. This parameter applies only to columns with a VARCHAR data
+	// type. Choose true to remove unneeded white space. The default is false.
+	TrimBlanks *bool `type:"boolean"`
+
+	// A value that specifies to truncate data in columns to the appropriate number
+	// of characters, so that the data fits in the column. This parameter applies
+	// only to columns with a VARCHAR or CHAR data type, and rows with a size of
+	// 4 MB or less. Choose true to truncate data. The default is false.
+	TruncateColumns *bool `type:"boolean"`
+
+	// An Amazon Redshift user name for a registered user.
+	Username *string `type:"string"`
+
+	// The size of the write buffer to use in rows. Valid values range from 1 through
+	// 2,048. The default is 1,024. Use this setting to tune performance.
+	WriteBufferSize *int64 `type:"integer"`
+}
+
+// String returns the string representation
+func (s RedshiftSettings) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s RedshiftSettings) GoString() string {
+	return s.String()
+}
+
+// SetAcceptAnyDate sets the AcceptAnyDate field's value.
+func (s *RedshiftSettings) SetAcceptAnyDate(v bool) *RedshiftSettings {
+	s.AcceptAnyDate = &v
+	return s
+}
+
+// SetAfterConnectScript sets the AfterConnectScript field's value.
+func (s *RedshiftSettings) SetAfterConnectScript(v string) *RedshiftSettings {
+	s.AfterConnectScript = &v
+	return s
+}
+
+// SetBucketFolder sets the BucketFolder field's value.
+func (s *RedshiftSettings) SetBucketFolder(v string) *RedshiftSettings {
+	s.BucketFolder = &v
+	return s
+}
+
+// SetBucketName sets the BucketName field's value.
+func (s *RedshiftSettings) SetBucketName(v string) *RedshiftSettings {
+	s.BucketName = &v
+	return s
+}
+
+// SetConnectionTimeout sets the ConnectionTimeout field's value.
+func (s *RedshiftSettings) SetConnectionTimeout(v int64) *RedshiftSettings {
+	s.ConnectionTimeout = &v
+	return s
+}
+
+// SetDatabaseName sets the DatabaseName field's value.
+func (s *RedshiftSettings) SetDatabaseName(v string) *RedshiftSettings {
+	s.DatabaseName = &v
+	return s
+}
+
+// SetDateFormat sets the DateFormat field's value.
+func (s *RedshiftSettings) SetDateFormat(v string) *RedshiftSettings {
+	s.DateFormat = &v
+	return s
+}
+
+// SetEmptyAsNull sets the EmptyAsNull field's value.
+func (s *RedshiftSettings) SetEmptyAsNull(v bool) *RedshiftSettings {
+	s.EmptyAsNull = &v
+	return s
+}
+
+// SetEncryptionMode sets the EncryptionMode field's value.
+func (s *RedshiftSettings) SetEncryptionMode(v string) *RedshiftSettings {
+	s.EncryptionMode = &v
+	return s
+}
+
+// SetFileTransferUploadStreams sets the FileTransferUploadStreams field's value.
+func (s *RedshiftSettings) SetFileTransferUploadStreams(v int64) *RedshiftSettings {
+	s.FileTransferUploadStreams = &v
+	return s
+}
+
+// SetLoadTimeout sets the LoadTimeout field's value.
+func (s *RedshiftSettings) SetLoadTimeout(v int64) *RedshiftSettings {
+	s.LoadTimeout = &v
+	return s
+}
+
+// SetMaxFileSize sets the MaxFileSize field's value.
+func (s *RedshiftSettings) SetMaxFileSize(v int64) *RedshiftSettings {
+	s.MaxFileSize = &v
+	return s
+}
+
+// SetPassword sets the Password field's value.
+func (s *RedshiftSettings) SetPassword(v string) *RedshiftSettings {
+	s.Password = &v
+	return s
+}
+
+// SetPort sets the Port field's value.
+func (s *RedshiftSettings) SetPort(v int64) *RedshiftSettings {
+	s.Port = &v
+	return s
+}
+
+// SetRemoveQuotes sets the RemoveQuotes field's value.
+func (s *RedshiftSettings) SetRemoveQuotes(v bool) *RedshiftSettings {
+	s.RemoveQuotes = &v
+	return s
+}
+
+// SetReplaceChars sets the ReplaceChars field's value.
+func (s *RedshiftSettings) SetReplaceChars(v string) *RedshiftSettings {
+	s.ReplaceChars = &v
+	return s
+}
+
+// SetReplaceInvalidChars sets the ReplaceInvalidChars field's value.
+func (s *RedshiftSettings) SetReplaceInvalidChars(v string) *RedshiftSettings {
+	s.ReplaceInvalidChars = &v
+	return s
+}
+
+// SetServerName sets the ServerName field's value.
+func (s *RedshiftSettings) SetServerName(v string) *RedshiftSettings {
+	s.ServerName = &v
+	return s
+}
+
+// SetServerSideEncryptionKmsKeyId sets the ServerSideEncryptionKmsKeyId field's value.
+func (s *RedshiftSettings) SetServerSideEncryptionKmsKeyId(v string) *RedshiftSettings {
+	s.ServerSideEncryptionKmsKeyId = &v
+	return s
+}
+
+// SetServiceAccessRoleArn sets the ServiceAccessRoleArn field's value.
+func (s *RedshiftSettings) SetServiceAccessRoleArn(v string) *RedshiftSettings {
+	s.ServiceAccessRoleArn = &v
+	return s
+}
+
+// SetTimeFormat sets the TimeFormat field's value.
+func (s *RedshiftSettings) SetTimeFormat(v string) *RedshiftSettings {
+	s.TimeFormat = &v
+	return s
+}
+
+// SetTrimBlanks sets the TrimBlanks field's value.
+func (s *RedshiftSettings) SetTrimBlanks(v bool) *RedshiftSettings {
+	s.TrimBlanks = &v
+	return s
+}
+
+// SetTruncateColumns sets the TruncateColumns field's value.
+func (s *RedshiftSettings) SetTruncateColumns(v bool) *RedshiftSettings {
+	s.TruncateColumns = &v
+	return s
+}
+
+// SetUsername sets the Username field's value.
+func (s *RedshiftSettings) SetUsername(v string) *RedshiftSettings {
+	s.Username = &v
+	return s
+}
+
+// SetWriteBufferSize sets the WriteBufferSize field's value.
+func (s *RedshiftSettings) SetWriteBufferSize(v int64) *RedshiftSettings {
+	s.WriteBufferSize = &v
 	return s
 }
 
@@ -10095,11 +11006,12 @@ func (s *ReloadTablesOutput) SetReplicationTaskArn(v string) *ReloadTablesOutput
 	return s
 }
 
+// Removes one or more tags from an AWS DMS resource.
 type RemoveTagsFromResourceInput struct {
 	_ struct{} `type:"structure"`
 
-	// >The Amazon Resource Name (ARN) of the AWS DMS resource the tag is to be
-	// removed from.
+	// An AWS DMS resource from which you want to remove tag(s). The value for this
+	// parameter is an Amazon Resource Name (ARN).
 	//
 	// ResourceArn is a required field
 	ResourceArn *string `type:"string" required:"true"`
@@ -10189,15 +11101,19 @@ type ReplicationInstance struct {
 	// The time the replication instance was created.
 	InstanceCreateTime *time.Time `type:"timestamp"`
 
-	// The AWS KMS key identifier that is used to encrypt the content on the replication
-	// instance. If you don't specify a value for the KmsKeyId parameter, then AWS
-	// DMS uses your default encryption key. AWS KMS creates the default encryption
-	// key for your AWS account. Your AWS account has a different default encryption
-	// key for each AWS Region.
+	// An AWS KMS key identifier that is used to encrypt the data on the replication
+	// instance.
+	//
+	// If you don't specify a value for the KmsKeyId parameter, then AWS DMS uses
+	// your default encryption key.
+	//
+	// AWS KMS creates the default encryption key for your AWS account. Your AWS
+	// account has a different default encryption key for each AWS Region.
 	KmsKeyId *string `type:"string"`
 
-	// Specifies if the replication instance is a Multi-AZ deployment. You cannot
-	// set the AvailabilityZone parameter if the Multi-AZ parameter is set to true.
+	// Specifies whether the replication instance is a Multi-AZ deployment. You
+	// cannot set the AvailabilityZone parameter if the Multi-AZ parameter is set
+	// to true.
 	MultiAZ *bool `type:"boolean"`
 
 	// The pending modification values.
@@ -10239,7 +11155,7 @@ type ReplicationInstance struct {
 	// Deprecated: ReplicationInstancePrivateIpAddress has been deprecated
 	ReplicationInstancePrivateIpAddress *string `deprecated:"true" type:"string"`
 
-	// The private IP address of the replication instance.
+	// One or more private IP addresses for the replication instance.
 	ReplicationInstancePrivateIpAddresses []*string `type:"list"`
 
 	// The public IP address of the replication instance.
@@ -10247,7 +11163,7 @@ type ReplicationInstance struct {
 	// Deprecated: ReplicationInstancePublicIpAddress has been deprecated
 	ReplicationInstancePublicIpAddress *string `deprecated:"true" type:"string"`
 
-	// The public IP address of the replication instance.
+	// One or more public IP addresses for the replication instance.
 	ReplicationInstancePublicIpAddresses []*string `type:"list"`
 
 	// The status of the replication instance.
@@ -10463,8 +11379,9 @@ type ReplicationPendingModifiedValues struct {
 	// The engine version number of the replication instance.
 	EngineVersion *string `type:"string"`
 
-	// Specifies if the replication instance is a Multi-AZ deployment. You cannot
-	// set the AvailabilityZone parameter if the Multi-AZ parameter is set to true.
+	// Specifies whether the replication instance is a Multi-AZ deployment. You
+	// cannot set the AvailabilityZone parameter if the Multi-AZ parameter is set
+	// to true.
 	MultiAZ *bool `type:"boolean"`
 
 	// The compute and memory capacity of the replication instance.
@@ -10511,7 +11428,7 @@ func (s *ReplicationPendingModifiedValues) SetReplicationInstanceClass(v string)
 type ReplicationSubnetGroup struct {
 	_ struct{} `type:"structure"`
 
-	// The description of the replication subnet group.
+	// A description for the replication subnet group.
 	ReplicationSubnetGroupDescription *string `type:"string"`
 
 	// The identifier of the replication instance subnet group.
@@ -10571,8 +11488,8 @@ type ReplicationTask struct {
 	_ struct{} `type:"structure"`
 
 	// Indicates when you want a change data capture (CDC) operation to start. Use
-	// either CdcStartPosition or CdcStartTime to specify when you want a CDC operation
-	// to start. Specifying both values results in an error.
+	// either CdcStartPosition or CdcStartTime to specify when you want the CDC
+	// operation to start. Specifying both values results in an error.
 	//
 	// The value can be in date, checkpoint, or LSN/SCN format.
 	//
@@ -10908,20 +11825,77 @@ func (s *ReplicationTaskStats) SetTablesQueued(v int64) *ReplicationTaskStats {
 	return s
 }
 
+type ResourcePendingMaintenanceActions struct {
+	_ struct{} `type:"structure"`
+
+	// Detailed information about the pending maintenance action.
+	PendingMaintenanceActionDetails []*PendingMaintenanceAction `type:"list"`
+
+	// The Amazon Resource Name (ARN) of the DMS resource that the pending maintenance
+	// action applies to. For information about creating an ARN, see Constructing
+	// an Amazon Resource Name (ARN) for AWS DMS (https://docs.aws.amazon.com/dms/latest/userguide/CHAP_Introduction.AWS.ARN.html)
+	// in the DMS documentation.
+	ResourceIdentifier *string `type:"string"`
+}
+
+// String returns the string representation
+func (s ResourcePendingMaintenanceActions) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ResourcePendingMaintenanceActions) GoString() string {
+	return s.String()
+}
+
+// SetPendingMaintenanceActionDetails sets the PendingMaintenanceActionDetails field's value.
+func (s *ResourcePendingMaintenanceActions) SetPendingMaintenanceActionDetails(v []*PendingMaintenanceAction) *ResourcePendingMaintenanceActions {
+	s.PendingMaintenanceActionDetails = v
+	return s
+}
+
+// SetResourceIdentifier sets the ResourceIdentifier field's value.
+func (s *ResourcePendingMaintenanceActions) SetResourceIdentifier(v string) *ResourcePendingMaintenanceActions {
+	s.ResourceIdentifier = &v
+	return s
+}
+
+// Settings for exporting data to Amazon S3.
 type S3Settings struct {
 	_ struct{} `type:"structure"`
 
 	// An optional parameter to set a folder name in the S3 bucket. If provided,
-	// tables are created in the path <bucketFolder>/<schema_name>/<table_name>/.
-	// If this parameter is not specified, then the path used is <schema_name>/<table_name>/.
+	// tables are created in the path bucketFolder/schema_name/table_name/. If this
+	// parameter is not specified, then the path used is schema_name/table_name/.
 	BucketFolder *string `type:"string"`
 
 	// The name of the S3 bucket.
 	BucketName *string `type:"string"`
 
+	// A value that enables a change data capture (CDC) load to write only INSERT
+	// operations to .csv or columnar storage (.parquet) output files. By default
+	// (the false setting), the first field in a .csv or .parquet record contains
+	// the letter I (INSERT), U (UPDATE), or D (DELETE). These values indicate whether
+	// the row was inserted, updated, or deleted at the source database for a CDC
+	// load to the target.
+	//
+	// If cdcInsertsOnly is set to true or y, only INSERTs from the source database
+	// are migrated to the .csv or .parquet file. For .csv format only, how these
+	// INSERTs are recorded depends on the value of IncludeOpForFullLoad. If IncludeOpForFullLoad
+	// is set to true, the first field of every CDC record is set to I to indicate
+	// the INSERT operation at the source. If IncludeOpForFullLoad is set to false,
+	// every CDC record is written without a first field to indicate the INSERT
+	// operation at the source. For more information about how these settings work
+	// together, see Indicating Source DB Operations in Migrated S3 Data (https://docs.aws.amazon.com/dms/latest/userguide/CHAP_Target.S3.html#CHAP_Target.S3.Configuring.InsertOps)
+	// in the AWS Database Migration Service User Guide..
+	//
+	// AWS DMS supports this interaction between CdcInsertsOnly and IncludeOpForFullLoad
+	// in versions 3.1.4 and later.
+	CdcInsertsOnly *bool `type:"boolean"`
+
 	// An optional parameter to use GZIP to compress the target files. Set to GZIP
 	// to compress the target files. Set to NONE (the default) or do not use to
-	// leave the files uncompressed.
+	// leave the files uncompressed. Applies to both .csv and .parquet file formats.
 	CompressionType *string `type:"string" enum:"CompressionTypeValue"`
 
 	// The delimiter used to separate columns in the source files. The default is
@@ -10932,11 +11906,134 @@ type S3Settings struct {
 	// carriage return (\n).
 	CsvRowDelimiter *string `type:"string"`
 
+	// The format of the data that you want to use for output. You can choose one
+	// of the following:
+	//
+	//    * csv : This is a row-based file format with comma-separated values (.csv).
+	//
+	//    * parquet : Apache Parquet (.parquet) is a columnar storage file format
+	//    that features efficient compression and provides faster query response.
+	DataFormat *string `type:"string" enum:"DataFormatValue"`
+
+	// The size of one data page in bytes. This parameter defaults to 1024 * 1024
+	// bytes (1 MiB). This number is used for .parquet file format only.
+	DataPageSize *int64 `type:"integer"`
+
+	// The maximum size of an encoded dictionary page of a column. If the dictionary
+	// page exceeds this, this column is stored using an encoding type of PLAIN.
+	// This parameter defaults to 1024 * 1024 bytes (1 MiB), the maximum size of
+	// a dictionary page before it reverts to PLAIN encoding. This size is used
+	// for .parquet file format only.
+	DictPageSizeLimit *int64 `type:"integer"`
+
+	// A value that enables statistics for Parquet pages and row groups. Choose
+	// true to enable statistics, false to disable. Statistics include NULL, DISTINCT,
+	// MAX, and MIN values. This parameter defaults to true. This value is used
+	// for .parquet file format only.
+	EnableStatistics *bool `type:"boolean"`
+
+	// The type of encoding you are using:
+	//
+	//    * RLE_DICTIONARY uses a combination of bit-packing and run-length encoding
+	//    to store repeated values more efficiently. This is the default.
+	//
+	//    * PLAIN doesn't use encoding at all. Values are stored as they are.
+	//
+	//    * PLAIN_DICTIONARY builds a dictionary of the values encountered in a
+	//    given column. The dictionary is stored in a dictionary page for each column
+	//    chunk.
+	EncodingType *string `type:"string" enum:"EncodingTypeValue"`
+
+	// The type of server-side encryption that you want to use for your data. This
+	// encryption type is part of the endpoint settings or the extra connections
+	// attributes for Amazon S3. You can choose either SSE_S3 (the default) or SSE_KMS.
+	// To use SSE_S3, you need an AWS Identity and Access Management (IAM) role
+	// with permission to allow "arn:aws:s3:::dms-*" to use the following actions:
+	//
+	//    * s3:CreateBucket
+	//
+	//    * s3:ListBucket
+	//
+	//    * s3:DeleteBucket
+	//
+	//    * s3:GetBucketLocation
+	//
+	//    * s3:GetObject
+	//
+	//    * s3:PutObject
+	//
+	//    * s3:DeleteObject
+	//
+	//    * s3:GetObjectVersion
+	//
+	//    * s3:GetBucketPolicy
+	//
+	//    * s3:PutBucketPolicy
+	//
+	//    * s3:DeleteBucketPolicy
+	EncryptionMode *string `type:"string" enum:"EncryptionModeValue"`
+
 	// The external table definition.
 	ExternalTableDefinition *string `type:"string"`
 
+	// A value that enables a full load to write INSERT operations to the comma-separated
+	// value (.csv) output files only to indicate how the rows were added to the
+	// source database.
+	//
+	// AWS DMS supports IncludeOpForFullLoad in versions 3.1.4 and later.
+	//
+	// For full load, records can only be inserted. By default (the false setting),
+	// no information is recorded in these output files for a full load to indicate
+	// that the rows were inserted at the source database. If IncludeOpForFullLoad
+	// is set to true or y, the INSERT is recorded as an I annotation in the first
+	// field of the .csv file. This allows the format of your target records from
+	// a full load to be consistent with the target records from a CDC load.
+	//
+	// This setting works together with CdcInsertsOnly for output to .csv files
+	// only. For more information about how these settings work together, see Indicating
+	// Source DB Operations in Migrated S3 Data (https://docs.aws.amazon.com/dms/latest/userguide/CHAP_Target.S3.html#CHAP_Target.S3.Configuring.InsertOps)
+	// in the AWS Database Migration Service User Guide..
+	IncludeOpForFullLoad *bool `type:"boolean"`
+
+	// The version of the Apache Parquet format that you want to use: parquet_1_0
+	// (the default) or parquet_2_0.
+	ParquetVersion *string `type:"string" enum:"ParquetVersionValue"`
+
+	// The number of rows in a row group. A smaller row group size provides faster
+	// reads. But as the number of row groups grows, the slower writes become. This
+	// parameter defaults to 10,000 rows. This number is used for .parquet file
+	// format only.
+	//
+	// If you choose a value larger than the maximum, RowGroupLength is set to the
+	// max row group length in bytes (64 * 1024 * 1024).
+	RowGroupLength *int64 `type:"integer"`
+
+	// If you are using SSE_KMS for the EncryptionMode, provide the AWS KMS key
+	// ID. The key that you use needs an attached policy that enables AWS Identity
+	// and Access Management (IAM) user permissions and allows use of the key.
+	//
+	// Here is a CLI example: aws dms create-endpoint --endpoint-identifier value
+	// --endpoint-type target --engine-name s3 --s3-settings ServiceAccessRoleArn=value,BucketFolder=value,BucketName=value,EncryptionMode=SSE_KMS,ServerSideEncryptionKmsKeyId=value
+	ServerSideEncryptionKmsKeyId *string `type:"string"`
+
 	// The Amazon Resource Name (ARN) used by the service access IAM role.
 	ServiceAccessRoleArn *string `type:"string"`
+
+	// A value that includes a timestamp column in the Amazon S3 target endpoint
+	// data. AWS DMS includes an additional column in the migrated data when you
+	// set timestampColumnName to a non-blank value.
+	//
+	// AWS DMS supports TimestampColumnName in versions 3.1.4 and later.
+	//
+	// For a full load, each row of the timestamp column contains a timestamp for
+	// when the data was transferred from the source to the target by DMS. For a
+	// CDC load, each row of the timestamp column contains the timestamp for the
+	// commit of that row in the source database. The format for the timestamp column
+	// value is yyyy-MM-dd HH:mm:ss.SSSSSS. For CDC, the microsecond precision depends
+	// on the commit timestamp supported by DMS for the source database. When the
+	// AddColumnName setting is set to true, DMS also includes the name for the
+	// timestamp column that you set as the nonblank value of timestampColumnName.
+	TimestampColumnName *string `type:"string"`
 }
 
 // String returns the string representation
@@ -10961,6 +12058,12 @@ func (s *S3Settings) SetBucketName(v string) *S3Settings {
 	return s
 }
 
+// SetCdcInsertsOnly sets the CdcInsertsOnly field's value.
+func (s *S3Settings) SetCdcInsertsOnly(v bool) *S3Settings {
+	s.CdcInsertsOnly = &v
+	return s
+}
+
 // SetCompressionType sets the CompressionType field's value.
 func (s *S3Settings) SetCompressionType(v string) *S3Settings {
 	s.CompressionType = &v
@@ -10979,15 +12082,81 @@ func (s *S3Settings) SetCsvRowDelimiter(v string) *S3Settings {
 	return s
 }
 
+// SetDataFormat sets the DataFormat field's value.
+func (s *S3Settings) SetDataFormat(v string) *S3Settings {
+	s.DataFormat = &v
+	return s
+}
+
+// SetDataPageSize sets the DataPageSize field's value.
+func (s *S3Settings) SetDataPageSize(v int64) *S3Settings {
+	s.DataPageSize = &v
+	return s
+}
+
+// SetDictPageSizeLimit sets the DictPageSizeLimit field's value.
+func (s *S3Settings) SetDictPageSizeLimit(v int64) *S3Settings {
+	s.DictPageSizeLimit = &v
+	return s
+}
+
+// SetEnableStatistics sets the EnableStatistics field's value.
+func (s *S3Settings) SetEnableStatistics(v bool) *S3Settings {
+	s.EnableStatistics = &v
+	return s
+}
+
+// SetEncodingType sets the EncodingType field's value.
+func (s *S3Settings) SetEncodingType(v string) *S3Settings {
+	s.EncodingType = &v
+	return s
+}
+
+// SetEncryptionMode sets the EncryptionMode field's value.
+func (s *S3Settings) SetEncryptionMode(v string) *S3Settings {
+	s.EncryptionMode = &v
+	return s
+}
+
 // SetExternalTableDefinition sets the ExternalTableDefinition field's value.
 func (s *S3Settings) SetExternalTableDefinition(v string) *S3Settings {
 	s.ExternalTableDefinition = &v
 	return s
 }
 
+// SetIncludeOpForFullLoad sets the IncludeOpForFullLoad field's value.
+func (s *S3Settings) SetIncludeOpForFullLoad(v bool) *S3Settings {
+	s.IncludeOpForFullLoad = &v
+	return s
+}
+
+// SetParquetVersion sets the ParquetVersion field's value.
+func (s *S3Settings) SetParquetVersion(v string) *S3Settings {
+	s.ParquetVersion = &v
+	return s
+}
+
+// SetRowGroupLength sets the RowGroupLength field's value.
+func (s *S3Settings) SetRowGroupLength(v int64) *S3Settings {
+	s.RowGroupLength = &v
+	return s
+}
+
+// SetServerSideEncryptionKmsKeyId sets the ServerSideEncryptionKmsKeyId field's value.
+func (s *S3Settings) SetServerSideEncryptionKmsKeyId(v string) *S3Settings {
+	s.ServerSideEncryptionKmsKeyId = &v
+	return s
+}
+
 // SetServiceAccessRoleArn sets the ServiceAccessRoleArn field's value.
 func (s *S3Settings) SetServiceAccessRoleArn(v string) *S3Settings {
 	s.ServiceAccessRoleArn = &v
+	return s
+}
+
+// SetTimestampColumnName sets the TimestampColumnName field's value.
+func (s *S3Settings) SetTimestampColumnName(v string) *S3Settings {
+	s.TimestampColumnName = &v
 	return s
 }
 
@@ -11279,16 +12448,16 @@ func (s *Subnet) SetSubnetStatus(v string) *Subnet {
 type SupportedEndpointType struct {
 	_ struct{} `type:"structure"`
 
-	// The type of endpoint.
+	// The type of endpoint. Valid values are source and target.
 	EndpointType *string `type:"string" enum:"ReplicationEndpointTypeValue"`
 
 	// The expanded name for the engine name. For example, if the EngineName parameter
 	// is "aurora," this value would be "Amazon Aurora MySQL."
 	EngineDisplayName *string `type:"string"`
 
-	// The database engine name. Valid values, depending on the EndPointType, include
+	// The database engine name. Valid values, depending on the EndpointType, include
 	// mysql, oracle, postgres, mariadb, aurora, aurora-postgresql, redshift, s3,
-	// db2, azuredb, sybase, sybase, dynamodb, mongodb, and sqlserver.
+	// db2, azuredb, sybase, dynamodb, mongodb, and sqlserver.
 	EngineName *string `type:"string"`
 
 	// Indicates if Change Data Capture (CDC) is supported.
@@ -11387,16 +12556,16 @@ type TableStatistics struct {
 	//
 	//    * Pending records—Some records in the table are waiting for validation.
 	//
-	//    * Mismatched records—Some records in the table do not match between the
-	//    source and target.
+	//    * Mismatched records—Some records in the table do not match between
+	//    the source and target.
 	//
 	//    * Suspended records—Some records in the table could not be validated.
 	//
-	//    * No primary key—The table could not be validated because it had no primary
-	//    key.
+	//    * No primary key—The table could not be validated because it had no
+	//    primary key.
 	//
-	//    * Table error—The table was not validated because it was in an error state
-	//    and some data was not migrated.
+	//    * Table error—The table was not validated because it was in an error
+	//    state and some data was not migrated.
 	//
 	//    * Validated—All rows in the table were validated. If the table is updated,
 	//    the status can change from Validated.
@@ -11722,6 +12891,14 @@ const (
 )
 
 const (
+	// DataFormatValueCsv is a DataFormatValue enum value
+	DataFormatValueCsv = "csv"
+
+	// DataFormatValueParquet is a DataFormatValue enum value
+	DataFormatValueParquet = "parquet"
+)
+
+const (
 	// DmsSslModeValueNone is a DmsSslModeValue enum value
 	DmsSslModeValueNone = "none"
 
@@ -11733,6 +12910,25 @@ const (
 
 	// DmsSslModeValueVerifyFull is a DmsSslModeValue enum value
 	DmsSslModeValueVerifyFull = "verify-full"
+)
+
+const (
+	// EncodingTypeValuePlain is a EncodingTypeValue enum value
+	EncodingTypeValuePlain = "plain"
+
+	// EncodingTypeValuePlainDictionary is a EncodingTypeValue enum value
+	EncodingTypeValuePlainDictionary = "plain-dictionary"
+
+	// EncodingTypeValueRleDictionary is a EncodingTypeValue enum value
+	EncodingTypeValueRleDictionary = "rle-dictionary"
+)
+
+const (
+	// EncryptionModeValueSseS3 is a EncryptionModeValue enum value
+	EncryptionModeValueSseS3 = "sse-s3"
+
+	// EncryptionModeValueSseKms is a EncryptionModeValue enum value
+	EncryptionModeValueSseKms = "sse-kms"
 )
 
 const (
@@ -11760,6 +12956,14 @@ const (
 )
 
 const (
+	// ParquetVersionValueParquet10 is a ParquetVersionValue enum value
+	ParquetVersionValueParquet10 = "parquet-1-0"
+
+	// ParquetVersionValueParquet20 is a ParquetVersionValue enum value
+	ParquetVersionValueParquet20 = "parquet-2-0"
+)
+
+const (
 	// RefreshSchemasStatusTypeValueSuccessful is a RefreshSchemasStatusTypeValue enum value
 	RefreshSchemasStatusTypeValueSuccessful = "successful"
 
@@ -11768,6 +12972,11 @@ const (
 
 	// RefreshSchemasStatusTypeValueRefreshing is a RefreshSchemasStatusTypeValue enum value
 	RefreshSchemasStatusTypeValueRefreshing = "refreshing"
+)
+
+const (
+	// ReleaseStatusValuesBeta is a ReleaseStatusValues enum value
+	ReleaseStatusValuesBeta = "beta"
 )
 
 const (

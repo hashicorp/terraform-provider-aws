@@ -142,42 +142,42 @@ func testAccCheckAWSLoadBalancerBackendServerPolicyState(loadBalancerName string
 func testAccAWSLoadBalancerBackendServerPolicyConfig_basic0(lbName string) string {
 	return fmt.Sprintf(`
 resource "tls_private_key" "example0" {
-    algorithm = "RSA"
+  algorithm = "RSA"
 }
 
 resource "tls_self_signed_cert" "test-cert0" {
-    key_algorithm = "RSA"
-    private_key_pem = "${tls_private_key.example0.private_key_pem}"
+  key_algorithm   = "RSA"
+  private_key_pem = "${tls_private_key.example0.private_key_pem}"
 
-    subject {
-        common_name = "example.com"
-        organization = "ACME Examples, Inc"
-    }
+  subject {
+    common_name  = "example.com"
+    organization = "ACME Examples, Inc"
+  }
 
-    validity_period_hours = 12
+  validity_period_hours = 12
 
-    allowed_uses = [
-        "key_encipherment",
-        "digital_signature",
-        "server_auth",
-    ]
+  allowed_uses = [
+    "key_encipherment",
+    "digital_signature",
+    "server_auth",
+  ]
 }
 
 resource "aws_iam_server_certificate" "test-iam-cert0" {
-  name_prefix = "test_cert_"
+  name_prefix      = "test_cert_"
   certificate_body = "${tls_self_signed_cert.test-cert0.cert_pem}"
-  private_key = "${tls_private_key.example0.private_key_pem}"
+  private_key      = "${tls_private_key.example0.private_key_pem}"
 }
 
 resource "aws_elb" "test-lb" {
-  name = "%s"
+  name               = "%s"
   availability_zones = ["us-west-2a"]
 
   listener {
-    instance_port = 443
-    instance_protocol = "https"
-    lb_port = 443
-    lb_protocol = "https"
+    instance_port      = 443
+    instance_protocol  = "https"
+    lb_port            = 443
+    lb_protocol        = "https"
     ssl_certificate_id = "${aws_iam_server_certificate.test-iam-cert0.arn}"
   }
 
@@ -188,29 +188,32 @@ resource "aws_elb" "test-lb" {
 
 resource "aws_load_balancer_policy" "test-pubkey-policy0" {
   load_balancer_name = "${aws_elb.test-lb.name}"
-  policy_name = "test-pubkey-policy0"
-  policy_type_name = "PublicKeyPolicyType"
+  policy_name        = "test-pubkey-policy0"
+  policy_type_name   = "PublicKeyPolicyType"
+
   policy_attribute {
-    name = "PublicKey"
+    name  = "PublicKey"
     value = "${replace(replace(replace(tls_private_key.example0.public_key_pem, "\n", ""), "-----BEGIN PUBLIC KEY-----", ""), "-----END PUBLIC KEY-----", "")}"
   }
 }
 
 resource "aws_load_balancer_policy" "test-backend-auth-policy0" {
   load_balancer_name = "${aws_elb.test-lb.name}"
-  policy_name = "test-backend-auth-policy0"
-  policy_type_name = "BackendServerAuthenticationPolicyType"
+  policy_name        = "test-backend-auth-policy0"
+  policy_type_name   = "BackendServerAuthenticationPolicyType"
+
   policy_attribute {
-    name = "PublicKeyPolicyName"
+    name  = "PublicKeyPolicyName"
     value = "${aws_load_balancer_policy.test-pubkey-policy0.policy_name}"
   }
 }
 
 resource "aws_load_balancer_backend_server_policy" "test-backend-auth-policies-443" {
   load_balancer_name = "${aws_elb.test-lb.name}"
-  instance_port = 443
+  instance_port      = 443
+
   policy_names = [
-    "${aws_load_balancer_policy.test-backend-auth-policy0.policy_name}"
+    "${aws_load_balancer_policy.test-backend-auth-policy0.policy_name}",
   ]
 }
 `, lbName)
@@ -219,64 +222,64 @@ resource "aws_load_balancer_backend_server_policy" "test-backend-auth-policies-4
 func testAccAWSLoadBalancerBackendServerPolicyConfig_basic1(lbName string) string {
 	return fmt.Sprintf(`
 resource "tls_private_key" "example0" {
-    algorithm = "RSA"
+  algorithm = "RSA"
 }
 
 resource "tls_self_signed_cert" "test-cert0" {
-    key_algorithm = "RSA"
-    private_key_pem = "${tls_private_key.example0.private_key_pem}"
+  key_algorithm   = "RSA"
+  private_key_pem = "${tls_private_key.example0.private_key_pem}"
 
-    subject {
-        common_name = "example.com"
-        organization = "ACME Examples, Inc"
-    }
+  subject {
+    common_name  = "example.com"
+    organization = "ACME Examples, Inc"
+  }
 
-    validity_period_hours = 12
+  validity_period_hours = 12
 
-    allowed_uses = [
-        "key_encipherment",
-        "digital_signature",
-        "server_auth",
-    ]
+  allowed_uses = [
+    "key_encipherment",
+    "digital_signature",
+    "server_auth",
+  ]
 }
 
 resource "tls_private_key" "example1" {
-    algorithm = "RSA"
+  algorithm = "RSA"
 }
 
 resource "tls_self_signed_cert" "test-cert1" {
-    key_algorithm = "RSA"
-    private_key_pem = "${tls_private_key.example1.private_key_pem}"
+  key_algorithm   = "RSA"
+  private_key_pem = "${tls_private_key.example1.private_key_pem}"
 
-    subject {
-        common_name = "example.com"
-        organization = "ACME Examples, Inc"
-    }
+  subject {
+    common_name  = "example.com"
+    organization = "ACME Examples, Inc"
+  }
 
-    validity_period_hours = 12
+  validity_period_hours = 12
 
-    allowed_uses = [
-        "key_encipherment",
-        "digital_signature",
-        "server_auth",
-    ]
+  allowed_uses = [
+    "key_encipherment",
+    "digital_signature",
+    "server_auth",
+  ]
 }
 
 resource "aws_iam_server_certificate" "test-iam-cert0" {
-  name_prefix = "test_cert_"
+  name_prefix      = "test_cert_"
   certificate_body = "${tls_self_signed_cert.test-cert0.cert_pem}"
-  private_key = "${tls_private_key.example0.private_key_pem}"
+  private_key      = "${tls_private_key.example0.private_key_pem}"
 }
 
 resource "aws_elb" "test-lb" {
-  name = "%s"
+  name               = "%s"
   availability_zones = ["us-west-2a"]
 
   listener {
-    instance_port = 443
-    instance_protocol = "https"
-    lb_port = 443
-    lb_protocol = "https"
+    instance_port      = 443
+    instance_protocol  = "https"
+    lb_port            = 443
+    lb_protocol        = "https"
     ssl_certificate_id = "${aws_iam_server_certificate.test-iam-cert0.arn}"
   }
 
@@ -287,39 +290,43 @@ resource "aws_elb" "test-lb" {
 
 resource "aws_load_balancer_policy" "test-pubkey-policy0" {
   load_balancer_name = "${aws_elb.test-lb.name}"
-  policy_name = "test-pubkey-policy0"
-  policy_type_name = "PublicKeyPolicyType"
+  policy_name        = "test-pubkey-policy0"
+  policy_type_name   = "PublicKeyPolicyType"
+
   policy_attribute {
-    name = "PublicKey"
+    name  = "PublicKey"
     value = "${replace(replace(replace(tls_private_key.example0.public_key_pem, "\n", ""), "-----BEGIN PUBLIC KEY-----", ""), "-----END PUBLIC KEY-----", "")}"
   }
 }
 
 resource "aws_load_balancer_policy" "test-pubkey-policy1" {
   load_balancer_name = "${aws_elb.test-lb.name}"
-  policy_name = "test-pubkey-policy1"
-  policy_type_name = "PublicKeyPolicyType"
+  policy_name        = "test-pubkey-policy1"
+  policy_type_name   = "PublicKeyPolicyType"
+
   policy_attribute {
-    name = "PublicKey"
+    name  = "PublicKey"
     value = "${replace(replace(replace(tls_private_key.example1.public_key_pem, "\n", ""), "-----BEGIN PUBLIC KEY-----", ""), "-----END PUBLIC KEY-----", "")}"
   }
 }
 
 resource "aws_load_balancer_policy" "test-backend-auth-policy0" {
   load_balancer_name = "${aws_elb.test-lb.name}"
-  policy_name = "test-backend-auth-policy0"
-  policy_type_name = "BackendServerAuthenticationPolicyType"
+  policy_name        = "test-backend-auth-policy0"
+  policy_type_name   = "BackendServerAuthenticationPolicyType"
+
   policy_attribute {
-    name = "PublicKeyPolicyName"
+    name  = "PublicKeyPolicyName"
     value = "${aws_load_balancer_policy.test-pubkey-policy1.policy_name}"
   }
 }
 
 resource "aws_load_balancer_backend_server_policy" "test-backend-auth-policies-443" {
   load_balancer_name = "${aws_elb.test-lb.name}"
-  instance_port = 443
+  instance_port      = 443
+
   policy_names = [
-    "${aws_load_balancer_policy.test-backend-auth-policy0.policy_name}"
+    "${aws_load_balancer_policy.test-backend-auth-policy0.policy_name}",
   ]
 }
 `, lbName)
@@ -328,64 +335,64 @@ resource "aws_load_balancer_backend_server_policy" "test-backend-auth-policies-4
 func testAccAWSLoadBalancerBackendServerPolicyConfig_basic2(lbName string) string {
 	return fmt.Sprintf(`
 resource "tls_private_key" "example0" {
-    algorithm = "RSA"
+  algorithm = "RSA"
 }
 
 resource "tls_self_signed_cert" "test-cert0" {
-    key_algorithm = "RSA"
-    private_key_pem = "${tls_private_key.example0.private_key_pem}"
+  key_algorithm   = "RSA"
+  private_key_pem = "${tls_private_key.example0.private_key_pem}"
 
-    subject {
-        common_name = "example.com"
-        organization = "ACME Examples, Inc"
-    }
+  subject {
+    common_name  = "example.com"
+    organization = "ACME Examples, Inc"
+  }
 
-    validity_period_hours = 12
+  validity_period_hours = 12
 
-    allowed_uses = [
-        "key_encipherment",
-        "digital_signature",
-        "server_auth",
-    ]
+  allowed_uses = [
+    "key_encipherment",
+    "digital_signature",
+    "server_auth",
+  ]
 }
 
 resource "tls_private_key" "example1" {
-    algorithm = "RSA"
+  algorithm = "RSA"
 }
 
 resource "tls_self_signed_cert" "test-cert1" {
-    key_algorithm = "RSA"
-    private_key_pem = "${tls_private_key.example1.private_key_pem}"
+  key_algorithm   = "RSA"
+  private_key_pem = "${tls_private_key.example1.private_key_pem}"
 
-    subject {
-        common_name = "example.com"
-        organization = "ACME Examples, Inc"
-    }
+  subject {
+    common_name  = "example.com"
+    organization = "ACME Examples, Inc"
+  }
 
-    validity_period_hours = 12
+  validity_period_hours = 12
 
-    allowed_uses = [
-        "key_encipherment",
-        "digital_signature",
-        "server_auth",
-    ]
+  allowed_uses = [
+    "key_encipherment",
+    "digital_signature",
+    "server_auth",
+  ]
 }
 
 resource "aws_iam_server_certificate" "test-iam-cert0" {
-  name_prefix = "test_cert_"
+  name_prefix      = "test_cert_"
   certificate_body = "${tls_self_signed_cert.test-cert0.cert_pem}"
-  private_key = "${tls_private_key.example0.private_key_pem}"
+  private_key      = "${tls_private_key.example0.private_key_pem}"
 }
 
 resource "aws_elb" "test-lb" {
-  name = "%s"
+  name               = "%s"
   availability_zones = ["us-west-2a"]
 
   listener {
-    instance_port = 443
-    instance_protocol = "https"
-    lb_port = 443
-    lb_protocol = "https"
+    instance_port      = 443
+    instance_protocol  = "https"
+    lb_port            = 443
+    lb_protocol        = "https"
     ssl_certificate_id = "${aws_iam_server_certificate.test-iam-cert0.arn}"
   }
 

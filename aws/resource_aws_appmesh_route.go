@@ -55,10 +55,11 @@ func resourceAwsAppmeshRoute() *schema.Resource {
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"http_route": {
-							Type:     schema.TypeList,
-							Optional: true,
-							MinItems: 0,
-							MaxItems: 1,
+							Type:          schema.TypeList,
+							Optional:      true,
+							MinItems:      0,
+							MaxItems:      1,
+							ConflictsWith: []string{"spec.0.tcp_route"},
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"action": {
@@ -72,6 +73,7 @@ func resourceAwsAppmeshRoute() *schema.Resource {
 													Type:     schema.TypeSet,
 													Required: true,
 													MinItems: 1,
+													MaxItems: 10,
 													Elem: &schema.Resource{
 														Schema: map[string]*schema.Schema{
 															"virtual_node": {
@@ -79,6 +81,7 @@ func resourceAwsAppmeshRoute() *schema.Resource {
 																Required:     true,
 																ValidateFunc: validation.StringLenBetween(1, 255),
 															},
+
 															"weight": {
 																Type:         schema.TypeInt,
 																Required:     true,
@@ -110,6 +113,50 @@ func resourceAwsAppmeshRoute() *schema.Resource {
 								},
 							},
 						},
+
+						"tcp_route": {
+							Type:          schema.TypeList,
+							Optional:      true,
+							MinItems:      0,
+							MaxItems:      1,
+							ConflictsWith: []string{"spec.0.http_route"},
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"action": {
+										Type:     schema.TypeList,
+										Required: true,
+										MinItems: 1,
+										MaxItems: 1,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"weighted_target": {
+													Type:     schema.TypeSet,
+													Required: true,
+													MinItems: 1,
+													MaxItems: 10,
+													Elem: &schema.Resource{
+														Schema: map[string]*schema.Schema{
+															"virtual_node": {
+																Type:         schema.TypeString,
+																Required:     true,
+																ValidateFunc: validation.StringLenBetween(1, 255),
+															},
+
+															"weight": {
+																Type:         schema.TypeInt,
+																Required:     true,
+																ValidateFunc: validation.IntBetween(0, 100),
+															},
+														},
+													},
+													Set: appmeshRouteWeightedTargetHash,
+												},
+											},
+										},
+									},
+								},
+							},
+						},
 					},
 				},
 			},
@@ -128,6 +175,8 @@ func resourceAwsAppmeshRoute() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+
+			"tags": tagsSchema(),
 		},
 	}
 }
@@ -140,6 +189,7 @@ func resourceAwsAppmeshRouteCreate(d *schema.ResourceData, meta interface{}) err
 		RouteName:         aws.String(d.Get("name").(string)),
 		VirtualRouterName: aws.String(d.Get("virtual_router_name").(string)),
 		Spec:              expandAppmeshRouteSpec(d.Get("spec").([]interface{})),
+		Tags:              tagsFromMapAppmesh(d.Get("tags").(map[string]interface{})),
 	}
 
 	log.Printf("[DEBUG] Creating App Mesh route: %#v", req)
@@ -186,6 +236,16 @@ func resourceAwsAppmeshRouteRead(d *schema.ResourceData, meta interface{}) error
 		return fmt.Errorf("error setting spec: %s", err)
 	}
 
+	err = saveTagsAppmesh(conn, d, aws.StringValue(resp.Route.Metadata.Arn))
+	if isAWSErr(err, appmesh.ErrCodeNotFoundException, "") {
+		log.Printf("[WARN] App Mesh route (%s) not found, removing from state", d.Id())
+		d.SetId("")
+		return nil
+	}
+	if err != nil {
+		return fmt.Errorf("error saving tags: %s", err)
+	}
+
 	return nil
 }
 
@@ -206,6 +266,16 @@ func resourceAwsAppmeshRouteUpdate(d *schema.ResourceData, meta interface{}) err
 		if err != nil {
 			return fmt.Errorf("error updating App Mesh route: %s", err)
 		}
+	}
+
+	err := setTagsAppmesh(conn, d, d.Get("arn").(string))
+	if isAWSErr(err, appmesh.ErrCodeNotFoundException, "") {
+		log.Printf("[WARN] App Mesh route (%s) not found, removing from state", d.Id())
+		d.SetId("")
+		return nil
+	}
+	if err != nil {
+		return fmt.Errorf("error setting tags: %s", err)
 	}
 
 	return resourceAwsAppmeshRouteRead(d, meta)

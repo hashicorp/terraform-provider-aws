@@ -37,6 +37,10 @@ func dataSourceAwsSsmParameter() *schema.Resource {
 				Optional: true,
 				Default:  true,
 			},
+			"version": {
+				Type:     schema.TypeInt,
+				Computed: true,
+			},
 		},
 	}
 }
@@ -72,6 +76,7 @@ func dataAwsSsmParameterRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("name", param.Name)
 	d.Set("type", param.Type)
 	d.Set("value", param.Value)
+	d.Set("version", param.Version)
 
 	return nil
 }

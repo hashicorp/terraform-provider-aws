@@ -6,7 +6,7 @@ description: |-
   Creates a snapshot copy grant that allows AWS Redshift to encrypt copied snapshots with a customer master key from AWS KMS in a destination region.
 ---
 
-# aws_redshift_snapshot_copy_grant
+# Resource: aws_redshift_snapshot_copy_grant
 
 Creates a snapshot copy grant that allows AWS Redshift to encrypt copied snapshots with a customer master key from AWS KMS in a destination region.
 
@@ -38,4 +38,4 @@ The following arguments are supported:
 
 ## Attributes Reference
 
-No additional attributes beyond the arguments above are exported.
+* `arn` - Amazon Resource Name (ARN) of snapshot copy grant

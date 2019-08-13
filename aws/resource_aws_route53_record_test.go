@@ -395,6 +395,30 @@ func TestAccAWSRoute53Record_weighted_basic(t *testing.T) {
 	})
 }
 
+func TestAccAWSRoute53Record_weighted_to_simple_basic(t *testing.T) {
+	var record1 route53.ResourceRecordSet
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckRoute53RecordDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testaccRoute53RecordConfigWithWeightedRoutingPolicy,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckRoute53RecordExists("aws_route53_record.www-server1", &record1),
+				),
+			},
+			{
+				Config: testaccRoute53RecordConfigWithSimpleRoutingPolicy,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckRoute53RecordExists("aws_route53_record.www-server1", &record1),
+				),
+			},
+		},
+	})
+}
+
 func TestAccAWSRoute53Record_Alias_Elb(t *testing.T) {
 	var record1 route53.ResourceRecordSet
 
@@ -1274,20 +1298,21 @@ resource "aws_route53_zone" "main" {
 
 resource "aws_s3_bucket" "website" {
   bucket = %q
-	acl = "public-read"
-	website {
-		index_document = "index.html"
-	}
+  acl    = "public-read"
+
+  website {
+    index_document = "index.html"
+  }
 }
 
 resource "aws_route53_record" "alias" {
   zone_id = "${aws_route53_zone.main.zone_id}"
-  name = "www"
-  type = "A"
+  name    = "www"
+  type    = "A"
 
   alias {
-    zone_id = "${aws_s3_bucket.website.hosted_zone_id}"
-    name = "${aws_s3_bucket.website.website_domain}"
+    zone_id                = "${aws_s3_bucket.website.hosted_zone_id}"
+    name                   = "${aws_s3_bucket.website.website_domain}"
     evaluate_target_health = true
   }
 }
@@ -1671,5 +1696,39 @@ resource "aws_route53_record" "www-server2" {
   multivalue_answer_routing_policy = true
   set_identifier = "server2"
   records = ["127.0.0.2"]
+}
+`
+
+const testaccRoute53RecordConfigWithWeightedRoutingPolicy = `
+resource "aws_route53_zone" "main" {
+  name = "notexample.com"
+}
+
+resource "aws_route53_record" "www-server1" {
+  zone_id = "${aws_route53_zone.main.zone_id}"
+  name    = "www"
+  type    = "A"
+
+  weighted_routing_policy {
+    weight = 5
+  }
+
+  ttl            = "300"
+  set_identifier = "server1"
+  records        = ["127.0.0.1"]
+}
+`
+
+const testaccRoute53RecordConfigWithSimpleRoutingPolicy = `
+resource "aws_route53_zone" "main" {
+  name = "notexample.com"
+}
+
+resource "aws_route53_record" "www-server1" {
+  zone_id        = "${aws_route53_zone.main.zone_id}"
+  name           = "www"
+  type           = "A"
+  ttl            = "300"
+  records        = ["127.0.0.1"]
 }
 `

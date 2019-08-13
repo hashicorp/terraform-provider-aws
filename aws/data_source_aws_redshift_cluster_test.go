@@ -81,18 +81,18 @@ func TestAccAWSDataSourceRedshiftCluster_logging(t *testing.T) {
 func testAccAWSDataSourceRedshiftClusterConfig(rInt int) string {
 	return fmt.Sprintf(`
 resource "aws_redshift_cluster" "test" {
-  cluster_identifier 		= "tf-redshift-cluster-%d"
+  cluster_identifier = "tf-redshift-cluster-%d"
 
-  database_name      		= "testdb"
-  master_username    		= "foo"
-  master_password    		= "Password1"
-  node_type          		= "dc1.large"
-  cluster_type       		= "single-node"
-	skip_final_snapshot 	= true
+  database_name       = "testdb"
+  master_username     = "foo"
+  master_password     = "Password1"
+  node_type           = "dc1.large"
+  cluster_type        = "single-node"
+  skip_final_snapshot = true
 }
 
 data "aws_redshift_cluster" "test" {
-	cluster_identifier = "${aws_redshift_cluster.test.cluster_identifier}"
+  cluster_identifier = "${aws_redshift_cluster.test.cluster_identifier}"
 }
 `, rInt)
 }
@@ -100,48 +100,48 @@ data "aws_redshift_cluster" "test" {
 func testAccAWSDataSourceRedshiftClusterConfigWithVpc(rInt int) string {
 	return fmt.Sprintf(`
 resource "aws_vpc" "test" {
-	cidr_block = "10.1.0.0/16"
+  cidr_block = "10.1.0.0/16"
 }
 
 resource "aws_subnet" "foo" {
-	cidr_block 				= "10.1.1.0/24"
-	availability_zone = "us-west-2a"
-	vpc_id 						= "${aws_vpc.test.id}"
+  cidr_block        = "10.1.1.0/24"
+  availability_zone = "us-west-2a"
+  vpc_id            = "${aws_vpc.test.id}"
 }
 
 resource "aws_subnet" "bar" {
-	cidr_block 				= "10.1.2.0/24"
-	availability_zone = "us-west-2b"
-	vpc_id 						= "${aws_vpc.test.id}"
+  cidr_block        = "10.1.2.0/24"
+  availability_zone = "us-west-2b"
+  vpc_id            = "${aws_vpc.test.id}"
 }
 
 resource "aws_redshift_subnet_group" "test" {
-	name 				= "tf-redshift-subnet-group-%d"
-	subnet_ids 	= ["${aws_subnet.foo.id}", "${aws_subnet.bar.id}"]
+  name       = "tf-redshift-subnet-group-%d"
+  subnet_ids = ["${aws_subnet.foo.id}", "${aws_subnet.bar.id}"]
 }
 
 resource "aws_security_group" "test" {
-	name 		= "tf-redshift-sg-%d"
-	vpc_id 	= "${aws_vpc.test.id}"
+  name   = "tf-redshift-sg-%d"
+  vpc_id = "${aws_vpc.test.id}"
 }
 
 resource "aws_redshift_cluster" "test" {
-  cluster_identifier 				= "tf-redshift-cluster-%d"
+  cluster_identifier = "tf-redshift-cluster-%d"
 
-  database_name      				= "testdb"
-  master_username    				= "foo"
-  master_password    				= "Password1"
-  node_type          				= "dc1.large"
-  cluster_type       				= "multi-node"
-	number_of_nodes 					= 2
-	publicly_accessible 			= false
-	cluster_subnet_group_name = "${aws_redshift_subnet_group.test.name}"
-	vpc_security_group_ids 		= ["${aws_security_group.test.id}"]
-	skip_final_snapshot 			= true
+  database_name             = "testdb"
+  master_username           = "foo"
+  master_password           = "Password1"
+  node_type                 = "dc1.large"
+  cluster_type              = "multi-node"
+  number_of_nodes           = 2
+  publicly_accessible       = false
+  cluster_subnet_group_name = "${aws_redshift_subnet_group.test.name}"
+  vpc_security_group_ids    = ["${aws_security_group.test.id}"]
+  skip_final_snapshot       = true
 }
 
 data "aws_redshift_cluster" "test" {
-	cluster_identifier = "${aws_redshift_cluster.test.cluster_identifier}"
+  cluster_identifier = "${aws_redshift_cluster.test.cluster_identifier}"
 }
 `, rInt, rInt, rInt)
 }

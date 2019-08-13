@@ -38,7 +38,7 @@ resource "aws_ecr_repository" "default" {
 
   tags = {
     Environment = "production"
-    Usage = "original"
+    Usage       = "original"
   }
 }
 

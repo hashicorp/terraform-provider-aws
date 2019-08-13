@@ -161,6 +161,26 @@ func TestAccAWSLaunchConfiguration_updateRootBlockDevice(t *testing.T) {
 	})
 }
 
+func TestAccAWSLaunchConfiguration_encryptedRootBlockDevice(t *testing.T) {
+	var conf autoscaling.LaunchConfiguration
+	rInt := acctest.RandInt()
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSLaunchConfigurationDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSLaunchConfigurationConfigWithEncryptedRootBlockDevice(rInt),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSLaunchConfigurationExists("aws_launch_configuration.bar", &conf),
+					resource.TestCheckResourceAttr("aws_launch_configuration.bar", "root_block_device.0.encrypted", "true"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccAWSLaunchConfiguration_withSpotPrice(t *testing.T) {
 	var conf autoscaling.LaunchConfiguration
 
@@ -469,7 +489,7 @@ func testAccAWSLaunchConfigurationConfig_ami() string {
 	return fmt.Sprintf(`
 data "aws_ami" "ubuntu" {
   most_recent = true
-  owners = ["099720109477"] # Canonical
+  owners      = ["099720109477"] # Canonical
 
   filter {
     name   = "name"
@@ -494,6 +514,42 @@ resource "aws_launch_configuration" "bar" {
   }
 }
 `, rInt)
+}
+
+func testAccAWSLaunchConfigurationConfigWithEncryptedRootBlockDevice(rInt int) string {
+	return testAccAWSLaunchConfigurationConfig_ami() + fmt.Sprintf(`
+resource "aws_vpc" "foo" {
+  cidr_block = "10.1.0.0/16"
+
+  tags = {
+    Name = "terraform-testacc-instance-%d"
+  }
+}
+
+resource "aws_subnet" "foo" {
+  cidr_block = "10.1.1.0/24"
+  vpc_id = "${aws_vpc.foo.id}"
+  availability_zone = "us-west-2a"
+
+  tags = {
+    Name = "terraform-testacc-instance-%d"
+  }
+}
+
+resource "aws_launch_configuration" "bar" {
+  name_prefix = "tf-acc-test-%d"
+  image_id = "${data.aws_ami.ubuntu.id}"
+  instance_type = "t3.nano"
+  user_data = "foobar-user-data"
+  associate_public_ip_address = true
+
+  root_block_device {
+    encrypted   = true
+    volume_type = "gp2"
+    volume_size = 11
+  }
+}
+`, rInt, rInt, rInt)
 }
 
 func testAccAWSLaunchConfigurationConfigWithRootBlockDeviceUpdated(rInt int) string {

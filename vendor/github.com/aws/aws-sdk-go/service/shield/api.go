@@ -59,8 +59,8 @@ func (c *Shield) AssociateDRTLogBucketRequest(input *AssociateDRTLogBucketInput)
 // AssociateDRTLogBucket API operation for AWS Shield.
 //
 // Authorizes the DDoS Response team (DRT) to access the specified Amazon S3
-// bucket containing your flow logs. You can associate up to 10 Amazon S3 buckets
-// with your subscription.
+// bucket containing your AWS WAF logs. You can associate up to 10 Amazon S3
+// buckets with your subscription.
 //
 // To use the services of the DRT and make an AssociateDRTLogBucket request,
 // you must be subscribed to the Business Support plan (https://aws.amazon.com/premiumsupport/business-support/)
@@ -187,8 +187,8 @@ func (c *Shield) AssociateDRTRoleRequest(input *AssociateDRTRoleInput) (req *req
 // Prior to making the AssociateDRTRole request, you must attach the AWSShieldDRTAccessPolicy
 // (https://console.aws.amazon.com/iam/home?#/policies/arn:aws:iam::aws:policy/service-role/AWSShieldDRTAccessPolicy)
 // managed policy to the role you will specify in the request. For more information
-// see Attaching and Detaching IAM Policies ( https://docs.aws.amazon.com/IAM/latest/UserGuide/access_policies_manage-attach-detach.html).
-// The role must also trust the service principal  drt.shield.amazonaws.com.
+// see Attaching and Detaching IAM Policies (https://docs.aws.amazon.com/IAM/latest/UserGuide/access_policies_manage-attach-detach.html).
+// The role must also trust the service principal drt.shield.amazonaws.com.
 // For more information, see IAM JSON Policy Elements: Principal (https://docs.aws.amazon.com/IAM/latest/UserGuide/reference_policies_elements_principal.html).
 //
 // The DRT will have access only to your AWS WAF and Shield resources. By submitting
@@ -423,6 +423,10 @@ func (c *Shield) CreateSubscriptionRequest(input *CreateSubscriptionInput) (req 
 // grant the DDoS response team (DRT) needed permissions to assist you during
 // a suspected DDoS attack. For more information see Authorize the DDoS Response
 // Team to Create Rules and Web ACLs on Your Behalf (https://docs.aws.amazon.com/waf/latest/developerguide/authorize-DRT.html).
+//
+// To use the services of the DRT, you must be subscribed to the Business Support
+// plan (https://aws.amazon.com/premiumsupport/business-support/) or the Enterprise
+// Support plan (https://aws.amazon.com/premiumsupport/enterprise-support/).
 //
 // When you initally create a subscription, your subscription is set to be automatically
 // renewed at the end of the existing subscription period. You can change this
@@ -1122,7 +1126,7 @@ func (c *Shield) DisassociateDRTLogBucketRequest(input *DisassociateDRTLogBucket
 // DisassociateDRTLogBucket API operation for AWS Shield.
 //
 // Removes the DDoS Response team's (DRT) access to the specified Amazon S3
-// bucket containing your flow logs.
+// bucket containing your AWS WAF logs.
 //
 // To make a DisassociateDRTLogBucket request, you must be subscribed to the
 // Business Support plan (https://aws.amazon.com/premiumsupport/business-support/)
@@ -1732,7 +1736,7 @@ func (c *Shield) UpdateSubscriptionWithContext(ctx aws.Context, input *UpdateSub
 type AssociateDRTLogBucketInput struct {
 	_ struct{} `type:"structure"`
 
-	// The Amazon S3 bucket that contains your flow logs.
+	// The Amazon S3 bucket that contains your AWS WAF logs.
 	//
 	// LogBucket is a required field
 	LogBucket *string `min:"3" type:"string" required:"true"`
@@ -1793,7 +1797,7 @@ type AssociateDRTRoleInput struct {
 	// Prior to making the AssociateDRTRole request, you must attach the AWSShieldDRTAccessPolicy
 	// (https://console.aws.amazon.com/iam/home?#/policies/arn:aws:iam::aws:policy/service-role/AWSShieldDRTAccessPolicy)
 	// managed policy to this role. For more information see Attaching and Detaching
-	// IAM Policies ( https://docs.aws.amazon.com/IAM/latest/UserGuide/access_policies_manage-attach-detach.html).
+	// IAM Policies (https://docs.aws.amazon.com/IAM/latest/UserGuide/access_policies_manage-attach-detach.html).
 	//
 	// RoleArn is a required field
 	RoleArn *string `min:"1" type:"string" required:"true"`
@@ -1939,11 +1943,14 @@ func (s *AttackDetail) SetSubResources(v []*SubResourceSummary) *AttackDetail {
 type AttackProperty struct {
 	_ struct{} `type:"structure"`
 
-	// The type of DDoS event that was observed. NETWORK indicates layer 3 and layer
-	// 4 events and APPLICATION indicates layer 7 events.
+	// The type of distributed denial of service (DDoS) event that was observed.
+	// NETWORK indicates layer 3 and layer 4 events and APPLICATION indicates layer
+	// 7 events.
 	AttackLayer *string `type:"string" enum:"AttackLayer"`
 
-	// Defines the DDoS attack property information that is provided.
+	// Defines the DDoS attack property information that is provided. The WORDPRESS_PINGBACK_REFLECTOR
+	// and WORDPRESS_PINGBACK_SOURCE values are valid only for WordPress reflective
+	// pingback DDoS attacks.
 	AttackPropertyIdentifier *string `type:"string" enum:"AttackPropertyIdentifier"`
 
 	// The array of Contributor objects that includes the top five contributors
@@ -2095,6 +2102,12 @@ type AttackVectorDescription struct {
 	//    * ACK_FLOOD
 	//
 	//    * REQUEST_FLOOD
+	//
+	//    * HTTP_REFLECTION
+	//
+	//    * UDS_REFLECTION
+	//
+	//    * MEMCACHED_REFLECTION
 	//
 	// VectorType is a required field
 	VectorType *string `type:"string" required:"true"`
@@ -2624,7 +2637,7 @@ func (s *DescribeSubscriptionOutput) SetSubscription(v *Subscription) *DescribeS
 type DisassociateDRTLogBucketInput struct {
 	_ struct{} `type:"structure"`
 
-	// The Amazon S3 bucket that contains your flow logs.
+	// The Amazon S3 bucket that contains your AWS WAF logs.
 	//
 	// LogBucket is a required field
 	LogBucket *string `min:"3" type:"string" required:"true"`
@@ -3486,6 +3499,12 @@ const (
 
 	// AttackPropertyIdentifierSourceUserAgent is a AttackPropertyIdentifier enum value
 	AttackPropertyIdentifierSourceUserAgent = "SOURCE_USER_AGENT"
+
+	// AttackPropertyIdentifierWordpressPingbackReflector is a AttackPropertyIdentifier enum value
+	AttackPropertyIdentifierWordpressPingbackReflector = "WORDPRESS_PINGBACK_REFLECTOR"
+
+	// AttackPropertyIdentifierWordpressPingbackSource is a AttackPropertyIdentifier enum value
+	AttackPropertyIdentifierWordpressPingbackSource = "WORDPRESS_PINGBACK_SOURCE"
 )
 
 const (

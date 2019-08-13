@@ -6,9 +6,9 @@ description: |-
   Provides an RDS Cluster Resource Instance
 ---
 
-# aws_rds_cluster_instance
+# Resource: aws_rds_cluster_instance
 
-Provides an RDS Cluster Resource Instance. A Cluster Instance Resource defines
+Provides an RDS Cluster Instance Resource. A Cluster Instance Resource defines
 attributes that are specific to a single instance in a [RDS Cluster][3],
 specifically running Amazon Aurora.
 
@@ -58,21 +58,7 @@ see [Comparison between Aurora MySQL 1 and Aurora MySQL 2](https://docs.aws.amaz
 in the Amazon RDS User Guide.
 * `engine_version` - (Optional) The database engine version.
 * `instance_class` - (Required) The instance class to use. For details on CPU
-and memory, see [Scaling Aurora DB Instances][4]. Aurora currently
-  supports the below instance classes. Please see [AWS Documentation][7] for complete details.
-  - db.t2.small
-  - db.t2.medium
-  - db.r3.large
-  - db.r3.xlarge
-  - db.r3.2xlarge
-  - db.r3.4xlarge
-  - db.r3.8xlarge
-  - db.r4.large
-  - db.r4.xlarge
-  - db.r4.2xlarge
-  - db.r4.4xlarge
-  - db.r4.8xlarge
-  - db.r4.16xlarge
+and memory, see [Scaling Aurora DB Instances][4]. Aurora uses `db.*` instance classes/types. Please see [AWS Documentation][7] for currently available instance classes and complete details.
 * `publicly_accessible` - (Optional) Bool to control if instance is publicly accessible.
 Default `false`. See the documentation on [Creating DB Instances][6] for more
 details on controlling this property.

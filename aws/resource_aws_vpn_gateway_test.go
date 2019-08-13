@@ -31,17 +31,7 @@ func testSweepVPNGateways(region string) error {
 	}
 	conn := client.(*AWSClient).ec2conn
 
-	req := &ec2.DescribeVpnGatewaysInput{
-		Filters: []*ec2.Filter{
-			{
-				Name: aws.String("tag-value"),
-				Values: []*string{
-					aws.String("terraform-testacc-*"),
-					aws.String("tf-acc-test-*"),
-				},
-			},
-		},
-	}
+	req := &ec2.DescribeVpnGatewaysInput{}
 	resp, err := conn.DescribeVpnGateways(req)
 	if err != nil {
 		if testSweepSkipSweepError(err) {
@@ -374,18 +364,7 @@ func testAccAWSVpnGatewayDisappears(gateway *ec2.VpnGateway) resource.TestCheckF
 			VpcId:        gateway.VpcAttachments[0].VpcId,
 		})
 		if err != nil {
-			ec2err, ok := err.(awserr.Error)
-			if ok {
-				if ec2err.Code() == "InvalidVpnGatewayID.NotFound" {
-					return nil
-				} else if ec2err.Code() == "InvalidVpnGatewayAttachment.NotFound" {
-					return nil
-				}
-			}
-
-			if err != nil {
-				return err
-			}
+			return err
 		}
 
 		opts := &ec2.DeleteVpnGatewayInput{

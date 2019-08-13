@@ -6,7 +6,7 @@ description: |-
   Provides a CloudWatch Logs destination policy.
 ---
 
-# aws_cloudwatch_log_destination_policy
+# Resource: aws_cloudwatch_log_destination_policy
 
 Provides a CloudWatch Logs destination policy resource.
 

@@ -6,7 +6,7 @@ description: |-
   Manages status of an AWS Config Configuration Recorder.
 ---
 
-# aws_config_configuration_recorder_status
+# Resource: aws_config_configuration_recorder_status
 
 Manages status (recording / stopped) of an AWS Config Configuration Recorder.
 

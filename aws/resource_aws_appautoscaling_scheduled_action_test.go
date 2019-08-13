@@ -116,10 +116,10 @@ func testAccCheckAwsAppautoscalingScheduledActionExists(name string) resource.Te
 func testAccAppautoscalingScheduledActionConfig_DynamoDB(rName, ts string) string {
 	return fmt.Sprintf(`
 resource "aws_dynamodb_table" "hoge" {
-  name = "tf-ddb-%s"
-  read_capacity = 5
+  name           = "tf-ddb-%s"
+  read_capacity  = 5
   write_capacity = 5
-  hash_key = "UserID"
+  hash_key       = "UserID"
 
   attribute {
     name = "UserID"
@@ -128,19 +128,19 @@ resource "aws_dynamodb_table" "hoge" {
 }
 
 resource "aws_appautoscaling_target" "read" {
-  service_namespace = "dynamodb"
-  resource_id = "table/${aws_dynamodb_table.hoge.name}"
+  service_namespace  = "dynamodb"
+  resource_id        = "table/${aws_dynamodb_table.hoge.name}"
   scalable_dimension = "dynamodb:table:ReadCapacityUnits"
-  min_capacity = 1
-  max_capacity = 10
+  min_capacity       = 1
+  max_capacity       = 10
 }
 
 resource "aws_appautoscaling_scheduled_action" "hoge" {
-  name = "tf-appauto-%s"
-  service_namespace = "${aws_appautoscaling_target.read.service_namespace}"
-  resource_id = "${aws_appautoscaling_target.read.resource_id}"
+  name               = "tf-appauto-%s"
+  service_namespace  = "${aws_appautoscaling_target.read.service_namespace}"
+  resource_id        = "${aws_appautoscaling_target.read.resource_id}"
   scalable_dimension = "${aws_appautoscaling_target.read.scalable_dimension}"
-  schedule = "at(%s)"
+  schedule           = "at(%s)"
 
   scalable_target_action {
     min_capacity = 1
@@ -158,6 +158,7 @@ resource "aws_ecs_cluster" "hoge" {
 
 resource "aws_ecs_task_definition" "hoge" {
   family = "foobar%s"
+
   container_definitions = <<EOF
 [
   {
@@ -172,29 +173,29 @@ EOF
 }
 
 resource "aws_ecs_service" "hoge" {
-  name = "tf-ecs-service-%s"
-  cluster = "${aws_ecs_cluster.hoge.id}"
+  name            = "tf-ecs-service-%s"
+  cluster         = "${aws_ecs_cluster.hoge.id}"
   task_definition = "${aws_ecs_task_definition.hoge.arn}"
-  desired_count = 1
+  desired_count   = 1
 
-  deployment_maximum_percent = 200
+  deployment_maximum_percent         = 200
   deployment_minimum_healthy_percent = 50
 }
 
 resource "aws_appautoscaling_target" "hoge" {
-  service_namespace = "ecs"
-  resource_id = "service/${aws_ecs_cluster.hoge.name}/${aws_ecs_service.hoge.name}"
+  service_namespace  = "ecs"
+  resource_id        = "service/${aws_ecs_cluster.hoge.name}/${aws_ecs_service.hoge.name}"
   scalable_dimension = "ecs:service:DesiredCount"
-  min_capacity = 1
-  max_capacity = 3
+  min_capacity       = 1
+  max_capacity       = 3
 }
 
 resource "aws_appautoscaling_scheduled_action" "hoge" {
-  name = "tf-appauto-%s"
-  service_namespace = "${aws_appautoscaling_target.hoge.service_namespace}"
-  resource_id = "${aws_appautoscaling_target.hoge.resource_id}"
+  name               = "tf-appauto-%s"
+  service_namespace  = "${aws_appautoscaling_target.hoge.service_namespace}"
+  resource_id        = "${aws_appautoscaling_target.hoge.resource_id}"
   scalable_dimension = "${aws_appautoscaling_target.hoge.scalable_dimension}"
-  schedule = "at(%s)"
+  schedule           = "at(%s)"
 
   scalable_target_action {
     min_capacity = 1
@@ -223,10 +224,10 @@ resource "aws_emr_cluster" "hoge" {
   core_instance_count  = 2
 
   tags = {
-    role = "rolename"
+    role     = "rolename"
     dns_zone = "env_zone"
-    env = "env"
-    name = "name-env"
+    env      = "env"
+    name     = "name-env"
   }
 
   keep_job_flow_alive_when_no_steps = true
@@ -241,7 +242,7 @@ resource "aws_emr_cluster" "hoge" {
 
   depends_on = ["aws_main_route_table_association.hoge"]
 
-  service_role = "${aws_iam_role.emr_role.arn}"
+  service_role     = "${aws_iam_role.emr_role.arn}"
   autoscaling_role = "${aws_iam_role.autoscale_role.arn}"
 }
 
@@ -257,10 +258,10 @@ resource "aws_security_group" "hoge" {
   vpc_id      = "${aws_vpc.hoge.id}"
 
   ingress {
-    from_port   = 0
-    to_port     = 0
-    protocol    = "-1"
-    self = true
+    from_port = 0
+    to_port   = 0
+    protocol  = "-1"
+    self      = true
   }
 
   egress {
@@ -280,6 +281,7 @@ resource "aws_security_group" "hoge" {
 resource "aws_vpc" "hoge" {
   cidr_block           = "168.31.0.0/16"
   enable_dns_hostnames = true
+
   tags = {
     Name = "terraform-testacc-appautoscaling-scheduled-action-emr"
   }
@@ -288,6 +290,7 @@ resource "aws_vpc" "hoge" {
 resource "aws_subnet" "hoge" {
   vpc_id     = "${aws_vpc.hoge.id}"
   cidr_block = "168.31.0.0/20"
+
   tags = {
     Name = "tf-acc-appautoscaling-scheduled-action"
   }
@@ -426,7 +429,7 @@ resource "aws_iam_instance_profile" "instance_profile" {
 }
 
 resource "aws_iam_role_policy_attachment" "instance_role" {
-  role = "${aws_iam_role.instance_role.id}"
+  role       = "${aws_iam_role.instance_role.id}"
   policy_arn = "${aws_iam_policy.instance_policy.arn}"
 }
 
@@ -478,7 +481,7 @@ data "aws_iam_policy_document" "autoscale_role" {
 
     principals {
       type        = "Service"
-      identifiers = ["elasticmapreduce.amazonaws.com","application-autoscaling.amazonaws.com"]
+      identifiers = ["elasticmapreduce.amazonaws.com", "application-autoscaling.amazonaws.com"]
     }
   }
 }
@@ -489,20 +492,20 @@ resource "aws_iam_role_policy_attachment" "autoscale_role" {
 }
 
 resource "aws_appautoscaling_target" "hoge" {
-  service_namespace = "elasticmapreduce"
-  resource_id = "instancegroup/${aws_emr_cluster.hoge.id}/${aws_emr_instance_group.hoge.id}"
+  service_namespace  = "elasticmapreduce"
+  resource_id        = "instancegroup/${aws_emr_cluster.hoge.id}/${aws_emr_instance_group.hoge.id}"
   scalable_dimension = "elasticmapreduce:instancegroup:InstanceCount"
-  role_arn = "${aws_iam_role.autoscale_role.arn}"
-  min_capacity = 1
-  max_capacity = 5
+  role_arn           = "${aws_iam_role.autoscale_role.arn}"
+  min_capacity       = 1
+  max_capacity       = 5
 }
 
 resource "aws_appautoscaling_scheduled_action" "hoge" {
-  name = "tf-appauto-%s"
-  service_namespace = "${aws_appautoscaling_target.hoge.service_namespace}"
-  resource_id = "${aws_appautoscaling_target.hoge.resource_id}"
+  name               = "tf-appauto-%s"
+  service_namespace  = "${aws_appautoscaling_target.hoge.service_namespace}"
+  resource_id        = "${aws_appautoscaling_target.hoge.resource_id}"
   scalable_dimension = "${aws_appautoscaling_target.hoge.scalable_dimension}"
-  schedule = "at(%s)"
+  schedule           = "at(%s)"
 
   scalable_target_action {
     min_capacity = 1
@@ -535,37 +538,37 @@ EOF
 }
 
 resource "aws_iam_role_policy_attachment" "fleet_role_policy" {
-  role = "${aws_iam_role.fleet_role.name}"
+  role       = "${aws_iam_role.fleet_role.name}"
   policy_arn = "arn:aws:iam::aws:policy/service-role/AmazonEC2SpotFleetRole"
 }
 
 resource "aws_spot_fleet_request" "hoge" {
-  iam_fleet_role = "${aws_iam_role.fleet_role.arn}"
-  spot_price = "0.005"
-  target_capacity = 2
-  valid_until = "2019-11-04T20:44:20Z"
+  iam_fleet_role                      = "${aws_iam_role.fleet_role.arn}"
+  spot_price                          = "0.005"
+  target_capacity                     = 2
+  valid_until                         = "2019-11-04T20:44:20Z"
   terminate_instances_with_expiration = true
 
   launch_specification {
     instance_type = "m3.medium"
-    ami = "ami-d06a90b0"
+    ami           = "ami-d06a90b0"
   }
 }
 
 resource "aws_appautoscaling_target" "hoge" {
-  service_namespace = "ec2"
-  resource_id = "spot-fleet-request/${aws_spot_fleet_request.hoge.id}"
+  service_namespace  = "ec2"
+  resource_id        = "spot-fleet-request/${aws_spot_fleet_request.hoge.id}"
   scalable_dimension = "ec2:spot-fleet-request:TargetCapacity"
-  min_capacity = 1
-  max_capacity = 3
+  min_capacity       = 1
+  max_capacity       = 3
 }
 
 resource "aws_appautoscaling_scheduled_action" "hoge" {
-  name = "tf-appauto-%s"
-  service_namespace = "${aws_appautoscaling_target.hoge.service_namespace}"
-  resource_id = "${aws_appautoscaling_target.hoge.resource_id}"
+  name               = "tf-appauto-%s"
+  service_namespace  = "${aws_appautoscaling_target.hoge.service_namespace}"
+  resource_id        = "${aws_appautoscaling_target.hoge.resource_id}"
   scalable_dimension = "${aws_appautoscaling_target.hoge.scalable_dimension}"
-  schedule = "at(%s)"
+  schedule           = "at(%s)"
 
   scalable_target_action {
     min_capacity = 1

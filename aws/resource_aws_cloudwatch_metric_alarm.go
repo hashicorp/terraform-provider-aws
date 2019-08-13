@@ -136,7 +136,7 @@ func resourceAwsCloudWatchMetricAlarm() *schema.Resource {
 				Optional: true,
 				Elem: &schema.Schema{
 					Type: schema.TypeString,
-					ValidateFunc: validateAny(
+					ValidateFunc: validation.Any(
 						validateArn,
 						validateEC2AutomateARN,
 					),
@@ -190,6 +190,8 @@ func resourceAwsCloudWatchMetricAlarm() *schema.Resource {
 				Computed:     true,
 				ValidateFunc: validation.StringInSlice([]string{"evaluate", "ignore"}, true),
 			},
+
+			"tags": tagsSchema(),
 		},
 	}
 }
@@ -310,6 +312,10 @@ func resourceAwsCloudWatchMetricAlarmRead(d *schema.ResourceData, meta interface
 	d.Set("treat_missing_data", a.TreatMissingData)
 	d.Set("evaluate_low_sample_count_percentiles", a.EvaluateLowSampleCountPercentile)
 
+	if err := saveTagsCloudWatch(meta.(*AWSClient).cloudwatchconn, d, aws.StringValue(a.AlarmArn)); err != nil {
+		return fmt.Errorf("error setting tags: %s", err)
+	}
+
 	return nil
 }
 
@@ -323,6 +329,11 @@ func resourceAwsCloudWatchMetricAlarmUpdate(d *schema.ResourceData, meta interfa
 		return fmt.Errorf("Updating metric alarm failed: %s", err)
 	}
 	log.Println("[INFO] CloudWatch Metric Alarm updated")
+
+	// Tags are cannot update by PutMetricAlarm.
+	if err := setTagsCloudWatch(conn, d, d.Get("arn").(string)); err != nil {
+		return fmt.Errorf("error updating tags for %s: %s", d.Id(), err)
+	}
 
 	return resourceAwsCloudWatchMetricAlarmRead(d, meta)
 }
@@ -359,6 +370,7 @@ func getAwsCloudWatchPutMetricAlarmInput(d *schema.ResourceData) cloudwatch.PutM
 		EvaluationPeriods:  aws.Int64(int64(d.Get("evaluation_periods").(int))),
 		Threshold:          aws.Float64(d.Get("threshold").(float64)),
 		TreatMissingData:   aws.String(d.Get("treat_missing_data").(string)),
+		Tags:               tagsFromMapCloudWatch(d.Get("tags").(map[string]interface{})),
 	}
 
 	if v := d.Get("actions_enabled"); v != nil {
@@ -422,8 +434,12 @@ func getAwsCloudWatchPutMetricAlarmInput(d *schema.ResourceData) cloudwatch.PutM
 	if v := d.Get("metric_query"); v != nil {
 		for _, v := range v.(*schema.Set).List() {
 			metricQueryResource := v.(map[string]interface{})
+			id := metricQueryResource["id"].(string)
+			if id == "" {
+				continue
+			}
 			metricQuery := cloudwatch.MetricDataQuery{
-				Id: aws.String(metricQueryResource["id"].(string)),
+				Id: aws.String(id),
 			}
 			if v, ok := metricQueryResource["expression"]; ok && v.(string) != "" {
 				metricQuery.Expression = aws.String(v.(string))

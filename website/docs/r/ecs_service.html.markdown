@@ -6,7 +6,7 @@ description: |-
   Provides an ECS service.
 ---
 
-# aws_ecs_service
+# Resource: aws_ecs_service
 
 -> **Note:** To prevent a race condition during service deletion, make sure to set `depends_on` to the related `aws_iam_role_policy`; otherwise, the policy may be destroyed too soon and the ECS service will then get stuck in the `DRAINING` state.
 
@@ -112,8 +112,6 @@ The `deployment_controller` configuration block supports the following:
 * `target_group_arn` - (Required for ALB/NLB) The ARN of the Load Balancer target group to associate with the service.
 * `container_name` - (Required) The name of the container to associate with the load balancer (as it appears in a container definition).
 * `container_port` - (Required) The port on the container to associate with the load balancer.
-
--> **Note:** As a result of an AWS limitation, a single `load_balancer` can be attached to the ECS service at most. See [related docs](https://docs.aws.amazon.com/AmazonECS/latest/developerguide/service-load-balancing.html#load-balancing-concepts).
 
 ## ordered_placement_strategy
 

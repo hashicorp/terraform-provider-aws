@@ -23,9 +23,24 @@ func TestAccAWSDefaultRouteTable_basic(t *testing.T) {
 			{
 				Config: testAccDefaultRouteTableConfig,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckRouteTableExists(
-						"aws_default_route_table.foo", &v),
+					testAccCheckRouteTableExists("aws_default_route_table.foo", &v),
 					testAccCheckResourceAttrAccountID("aws_default_route_table.foo", "owner_id"),
+				),
+			},
+			{
+				Config: testAccDefaultRouteTableConfig_noRouteBlock,
+				Check: resource.ComposeTestCheckFunc(
+					// The route block from the previous step should still be
+					// present, because no blocks means "ignore existing blocks".
+					resource.TestCheckResourceAttr("aws_default_route_table.foo", "route.#", "1"),
+				),
+			},
+			{
+				Config: testAccDefaultRouteTableConfig_routeBlocksExplicitZero,
+				Check: resource.ComposeTestCheckFunc(
+					// This config uses attribute syntax to set zero routes
+					// explicitly, so should remove the one we created before.
+					resource.TestCheckResourceAttr("aws_default_route_table.foo", "route.#", "0"),
 				),
 			},
 		},
@@ -169,11 +184,61 @@ resource "aws_internet_gateway" "gw" {
   }
 }`
 
-const testAccDefaultRouteTable_change = `
-provider "aws" {
-  region = "us-west-2"
+const testAccDefaultRouteTableConfig_noRouteBlock = `
+resource "aws_vpc" "foo" {
+  cidr_block           = "10.1.0.0/16"
+  enable_dns_hostnames = true
+
+  tags = {
+    Name = "terraform-testacc-default-route-table"
+  }
 }
 
+resource "aws_default_route_table" "foo" {
+  default_route_table_id = "${aws_vpc.foo.default_route_table_id}"
+
+  tags = {
+    Name = "tf-default-route-table-test"
+  }
+}
+
+resource "aws_internet_gateway" "gw" {
+  vpc_id = "${aws_vpc.foo.id}"
+
+  tags = {
+    Name = "tf-default-route-table-test"
+  }
+}`
+
+const testAccDefaultRouteTableConfig_routeBlocksExplicitZero = `
+resource "aws_vpc" "foo" {
+  cidr_block           = "10.1.0.0/16"
+  enable_dns_hostnames = true
+
+  tags = {
+    Name = "terraform-testacc-default-route-table"
+  }
+}
+
+resource "aws_default_route_table" "foo" {
+  default_route_table_id = "${aws_vpc.foo.default_route_table_id}"
+
+  route = []
+
+  tags = {
+    Name = "tf-default-route-table-test"
+  }
+}
+
+resource "aws_internet_gateway" "gw" {
+  vpc_id = "${aws_vpc.foo.id}"
+
+  tags = {
+    Name = "tf-default-route-table-test"
+  }
+}`
+
+const testAccDefaultRouteTable_change = `
 resource "aws_vpc" "foo" {
   cidr_block           = "10.1.0.0/16"
   enable_dns_hostnames = true
@@ -220,10 +285,6 @@ resource "aws_route_table" "r" {
 `
 
 const testAccDefaultRouteTable_change_mod = `
-provider "aws" {
-  region = "us-west-2"
-}
-
 resource "aws_vpc" "foo" {
   cidr_block           = "10.1.0.0/16"
   enable_dns_hostnames = true
@@ -313,10 +374,6 @@ resource "aws_default_route_table" "test" {
 }
 
 const testAccDefaultRouteTable_vpc_endpoint = `
-provider "aws" {
-    region = "us-west-2"
-}
-
 resource "aws_vpc" "test" {
     cidr_block = "10.0.0.0/16"
 

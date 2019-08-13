@@ -6,7 +6,7 @@ description: |-
   Provides an AWS Config Configuration Recorder.
 ---
 
-# aws_config_configuration_recorder
+# Resource: aws_config_configuration_recorder
 
 Provides an AWS Config Configuration Recorder. Please note that this resource **does not start** the created recorder automatically.
 

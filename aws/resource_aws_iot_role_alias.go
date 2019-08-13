@@ -20,6 +20,10 @@ func resourceAwsIotRoleAlias() *schema.Resource {
 			State: schema.ImportStatePassthrough,
 		},
 		Schema: map[string]*schema.Schema{
+			"arn": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"alias": {
 				Type:     schema.TypeString,
 				Required: true,
@@ -94,6 +98,7 @@ func resourceAwsIotRoleAliasRead(d *schema.ResourceData, meta interface{}) error
 		return nil
 	}
 
+	d.Set("arn", roleAliasDescription.RoleAliasArn)
 	d.Set("alias", roleAliasDescription.RoleAlias)
 	d.Set("role_arn", roleAliasDescription.RoleArn)
 	d.Set("credential_duration", roleAliasDescription.CredentialDurationSeconds)

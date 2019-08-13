@@ -157,6 +157,11 @@ func dataSourceAwsLaunchConfiguration() *schema.Resource {
 							Computed: true,
 						},
 
+						"encrypted": {
+							Type:     schema.TypeBool,
+							Computed: true,
+						},
+
 						"iops": {
 							Type:     schema.TypeInt,
 							Computed: true,
