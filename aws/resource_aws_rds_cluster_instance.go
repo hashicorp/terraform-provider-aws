@@ -382,6 +382,8 @@ func resourceAwsRDSClusterInstanceRead(d *schema.ResourceData, meta interface{})
 	d.Set("identifier", db.DBInstanceIdentifier)
 	d.Set("instance_class", db.DBInstanceClass)
 	d.Set("kms_key_id", db.KmsKeyId)
+	d.Set("monitoring_interval", db.MonitoringInterval)
+	d.Set("monitoring_role_arn", db.MonitoringRoleArn)
 	d.Set("performance_insights_enabled", db.PerformanceInsightsEnabled)
 	d.Set("performance_insights_kms_key_id", db.PerformanceInsightsKMSKeyId)
 	d.Set("preferred_backup_window", db.PreferredBackupWindow)
@@ -389,14 +391,6 @@ func resourceAwsRDSClusterInstanceRead(d *schema.ResourceData, meta interface{})
 	d.Set("promotion_tier", db.PromotionTier)
 	d.Set("publicly_accessible", db.PubliclyAccessible)
 	d.Set("storage_encrypted", db.StorageEncrypted)
-
-	if db.MonitoringInterval != nil {
-		d.Set("monitoring_interval", db.MonitoringInterval)
-	}
-
-	if db.MonitoringRoleArn != nil {
-		d.Set("monitoring_role_arn", db.MonitoringRoleArn)
-	}
 
 	if len(db.DBParameterGroups) > 0 {
 		d.Set("db_parameter_group_name", db.DBParameterGroups[0].DBParameterGroupName)
