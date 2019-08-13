@@ -382,9 +382,11 @@ func TestAccAWSRDSClusterInstance_withInstanceEnhancedMonitor(t *testing.T) {
 	})
 }
 
-func TestAccAWSRDSClusterInstance_withInstancePerformanceInsights(t *testing.T) {
-	var v rds.DBInstance
-	keyRegex := regexp.MustCompile("^arn:aws:kms:")
+func TestAccAWSRDSClusterInstance_PerformanceInsightsEnabled_AuroraMysql1(t *testing.T) {
+	var dbInstance rds.DBInstance
+	kmsKeyResourceName := "aws_kms_key.test"
+	resourceName := "aws_rds_cluster_instance.test"
+	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -392,18 +394,79 @@ func TestAccAWSRDSClusterInstance_withInstancePerformanceInsights(t *testing.T) 
 		CheckDestroy: testAccCheckAWSClusterDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSClusterInstancePerformanceInsights(acctest.RandInt()),
+				Config: testAccAWSClusterInstanceConfigPerformanceInsightsEnabledAuroraMysql1(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSClusterInstanceExists("aws_rds_cluster_instance.cluster_instances", &v),
-					testAccCheckAWSDBClusterInstanceAttributes(&v),
-					resource.TestCheckResourceAttr(
-						"aws_rds_cluster_instance.cluster_instances", "performance_insights_enabled", "true"),
-					resource.TestMatchResourceAttr(
-						"aws_rds_cluster_instance.cluster_instances", "performance_insights_kms_key_id", keyRegex),
+					testAccCheckAWSClusterInstanceExists(resourceName, &dbInstance),
+					resource.TestCheckResourceAttr(resourceName, "performance_insights_enabled", "true"),
+					resource.TestCheckResourceAttrPair(resourceName, "performance_insights_kms_key_id", kmsKeyResourceName, "arn"),
 				),
 			},
 			{
-				ResourceName:      "aws_rds_cluster_instance.cluster_instances",
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"apply_immediately",
+					"identifier_prefix",
+				},
+			},
+		},
+	})
+}
+
+func TestAccAWSRDSClusterInstance_PerformanceInsightsEnabled_AuroraMysql2(t *testing.T) {
+	var dbInstance rds.DBInstance
+	kmsKeyResourceName := "aws_kms_key.test"
+	resourceName := "aws_rds_cluster_instance.test"
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSClusterDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSClusterInstanceConfigPerformanceInsightsEnabledAuroraMysql2(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSClusterInstanceExists(resourceName, &dbInstance),
+					resource.TestCheckResourceAttr(resourceName, "performance_insights_enabled", "true"),
+					resource.TestCheckResourceAttrPair(resourceName, "performance_insights_kms_key_id", kmsKeyResourceName, "arn"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"apply_immediately",
+					"identifier_prefix",
+				},
+			},
+		},
+	})
+}
+
+func TestAccAWSRDSClusterInstance_PerformanceInsightsEnabled_AuroraPostgresql(t *testing.T) {
+	var dbInstance rds.DBInstance
+	kmsKeyResourceName := "aws_kms_key.test"
+	resourceName := "aws_rds_cluster_instance.test"
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSClusterDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSClusterInstanceConfigPerformanceInsightsEnabledAuroraPostgresql(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSClusterInstanceExists(resourceName, &dbInstance),
+					resource.TestCheckResourceAttr(resourceName, "performance_insights_enabled", "true"),
+					resource.TestCheckResourceAttrPair(resourceName, "performance_insights_kms_key_id", kmsKeyResourceName, "arn"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
@@ -787,65 +850,84 @@ resource "aws_db_parameter_group" "bar" {
 `, n, n, n, n, n, n)
 }
 
-func testAccAWSClusterInstancePerformanceInsights(n int) string {
+func testAccAWSClusterInstanceConfigPerformanceInsightsEnabledAuroraMysql1(rName string) string {
 	return fmt.Sprintf(`
-resource "aws_kms_key" "foo" {
-  description = "Terraform acc test %d"
-
-  policy = <<POLICY
-{
-  "Version": "2012-10-17",
-  "Id": "kms-tf-1",
-  "Statement": [
-    {
-      "Sid": "Enable IAM User Permissions",
-      "Effect": "Allow",
-      "Principal": {
-        "AWS": "*"
-      },
-      "Action": "kms:*",
-      "Resource": "*"
-    }
-  ]
-}
-POLICY
+resource "aws_kms_key" "test" {
+  deletion_window_in_days = 7
 }
 
-resource "aws_rds_cluster" "default" {
-  engine              = "aurora-postgresql"
-  cluster_identifier  = "tf-aurora-cluster-test-%d"
-  availability_zones  = ["us-west-2a", "us-west-2b", "us-west-2c"]
+resource "aws_rds_cluster" "test" {
+  cluster_identifier  = %[1]q
   database_name       = "mydb"
-  master_username     = "foo"
+  engine              = "aurora"
   master_password     = "mustbeeightcharaters"
-  storage_encrypted   = true
+  master_username     = "foo"
   skip_final_snapshot = true
 }
 
-resource "aws_rds_cluster_instance" "cluster_instances" {
-  engine                          = "aurora-postgresql"
-  identifier                      = "tf-cluster-instance-%d"
-  cluster_identifier              = "${aws_rds_cluster.default.id}"
+resource "aws_rds_cluster_instance" "test" {
+  cluster_identifier              = "${aws_rds_cluster.test.id}"
+  engine                          = "${aws_rds_cluster.test.engine}"
+  identifier                      = %[1]q
   instance_class                  = "db.r4.large"
-  db_parameter_group_name         = "${aws_db_parameter_group.bar.name}"
   performance_insights_enabled    = true
-  performance_insights_kms_key_id = "${aws_kms_key.foo.arn}"
+  performance_insights_kms_key_id = "${aws_kms_key.test.arn}"
+}
+`, rName)
 }
 
-resource "aws_db_parameter_group" "bar" {
-  name   = "tfcluster-test-group-%d"
-  family = "aurora-postgresql10"
-
-  parameter {
-    name  = "authentication_timeout"
-    value = "10"
-  }
-
-  tags = {
-    foo = "bar"
-  }
+func testAccAWSClusterInstanceConfigPerformanceInsightsEnabledAuroraMysql2(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_kms_key" "test" {
+  deletion_window_in_days = 7
 }
-`, n, n, n, n)
+
+resource "aws_rds_cluster" "test" {
+  cluster_identifier  = %[1]q
+  database_name       = "mydb"
+  engine              = "aurora-mysql"
+  engine_version      = "5.7.mysql_aurora.2.04.2"
+  master_password     = "mustbeeightcharaters"
+  master_username     = "foo"
+  skip_final_snapshot = true
+}
+
+resource "aws_rds_cluster_instance" "test" {
+  cluster_identifier              = "${aws_rds_cluster.test.id}"
+  engine                          = "${aws_rds_cluster.test.engine}"
+  engine_version                  = "${aws_rds_cluster.test.engine_version}"
+  identifier                      = %[1]q
+  instance_class                  = "db.r4.large"
+  performance_insights_enabled    = true
+  performance_insights_kms_key_id = "${aws_kms_key.test.arn}"
+}
+`, rName)
+}
+
+func testAccAWSClusterInstanceConfigPerformanceInsightsEnabledAuroraPostgresql(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_kms_key" "test" {
+  deletion_window_in_days = 7
+}
+
+resource "aws_rds_cluster" "test" {
+  cluster_identifier  = %[1]q
+  database_name       = "mydb"
+  engine              = "aurora-postgresql"
+  master_password     = "mustbeeightcharaters"
+  master_username     = "foo"
+  skip_final_snapshot = true
+}
+
+resource "aws_rds_cluster_instance" "test" {
+  cluster_identifier              = "${aws_rds_cluster.test.id}"
+  engine                          = "${aws_rds_cluster.test.engine}"
+  identifier                      = %[1]q
+  instance_class                  = "db.r4.large"
+  performance_insights_enabled    = true
+  performance_insights_kms_key_id = "${aws_kms_key.test.arn}"
+}
+`, rName)
 }
 
 func testAccAWSRDSClusterInstanceConfig_PubliclyAccessible(rName string, publiclyAccessible bool) string {
