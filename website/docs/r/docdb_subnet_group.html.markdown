@@ -6,7 +6,7 @@ description: |-
   Provides an DocumentDB subnet group resource.
 ---
 
-# aws_docdb_subnet_group
+# Resource: aws_docdb_subnet_group
 
 Provides an DocumentDB subnet group resource.
 

@@ -15,7 +15,7 @@ func TestAccAWSElasticTranscoderPreset_import(t *testing.T) {
 	resourceName := "aws_elastictranscoder_preset.bar"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSElasticTranscoder(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckElasticTranscoderPresetDestroy,
 		Steps: []resource.TestStep{
@@ -75,7 +75,7 @@ func TestAccAWSElasticTranscoderPreset_basic(t *testing.T) {
 	}
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSElasticTranscoder(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckElasticTranscoderPresetDestroy,
 		Steps: []resource.TestStep{

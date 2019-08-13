@@ -478,29 +478,42 @@ func resourceAwsVpcDelete(d *schema.ResourceData, meta interface{}) error {
 	}
 	log.Printf("[INFO] Deleting VPC: %s", d.Id())
 
-	return resource.Retry(5*time.Minute, func() *resource.RetryError {
+	err := resource.Retry(5*time.Minute, func() *resource.RetryError {
 		_, err := conn.DeleteVpc(deleteVpcOpts)
 		if err == nil {
 			return nil
 		}
 
-		ec2err, ok := err.(awserr.Error)
-		if !ok {
-			return resource.NonRetryableError(err)
-		}
-
-		switch ec2err.Code() {
-		case "InvalidVpcID.NotFound":
+		if isAWSErr(err, "InvalidVpcID.NotFound", "") {
 			return nil
-		case "DependencyViolation":
+		}
+		if isAWSErr(err, "DependencyViolation", "") {
 			return resource.RetryableError(err)
 		}
-
 		return resource.NonRetryableError(fmt.Errorf("Error deleting VPC: %s", err))
 	})
+	if isResourceTimeoutError(err) {
+		_, err = conn.DeleteVpc(deleteVpcOpts)
+		if isAWSErr(err, "InvalidVpcID.NotFound", "") {
+			return nil
+		}
+	}
+
+	if err != nil {
+		return fmt.Errorf("Error deleting VPC: %s", err)
+	}
+	return nil
 }
 
 func resourceAwsVpcCustomizeDiff(diff *schema.ResourceDiff, v interface{}) error {
+	if diff.HasChange("assign_generated_ipv6_cidr_block") {
+		if err := diff.SetNewComputed("ipv6_association_id"); err != nil {
+			return fmt.Errorf("error setting ipv6_association_id to computed: %s", err)
+		}
+		if err := diff.SetNewComputed("ipv6_cidr_block"); err != nil {
+			return fmt.Errorf("error setting ipv6_cidr_block to computed: %s", err)
+		}
+	}
 	if diff.HasChange("instance_tenancy") {
 		old, new := diff.GetChange("instance_tenancy")
 		if old.(string) != ec2.TenancyDedicated || new.(string) != ec2.TenancyDefault {

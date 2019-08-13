@@ -6,7 +6,7 @@ description: |-
   Provides a Route53 Resolver rule association.
 ---
 
-# aws_route53_resolver_rule_association
+# Resource: aws_route53_resolver_rule_association
 
 Provides a Route53 Resolver rule association.
 

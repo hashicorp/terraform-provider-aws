@@ -28,9 +28,15 @@ func resourceAwsEc2TransitGatewayRoute() *schema.Resource {
 				Required: true,
 				ForceNew: true,
 			},
+			"blackhole": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				ForceNew: true,
+				Default:  false,
+			},
 			"transit_gateway_attachment_id": {
 				Type:         schema.TypeString,
-				Required:     true,
+				Optional:     true,
 				ForceNew:     true,
 				ValidateFunc: validation.NoZeroValues,
 			},
@@ -52,6 +58,7 @@ func resourceAwsEc2TransitGatewayRouteCreate(d *schema.ResourceData, meta interf
 
 	input := &ec2.CreateTransitGatewayRouteInput{
 		DestinationCidrBlock:       aws.String(destination),
+		Blackhole:                  aws.Bool(d.Get("blackhole").(bool)),
 		TransitGatewayAttachmentId: aws.String(d.Get("transit_gateway_attachment_id").(string)),
 		TransitGatewayRouteTableId: aws.String(transitGatewayRouteTableID),
 	}
@@ -92,6 +99,10 @@ func resourceAwsEc2TransitGatewayRouteRead(d *schema.ResourceData, meta interfac
 		return nil
 	})
 
+	if isResourceTimeoutError(err) {
+		transitGatewayRoute, err = ec2DescribeTransitGatewayRoute(conn, transitGatewayRouteTableID, destination)
+	}
+
 	if isAWSErr(err, "InvalidRouteTableID.NotFound", "") {
 		log.Printf("[WARN] EC2 Transit Gateway Route Table (%s) not found, removing from state", transitGatewayRouteTableID)
 		d.SetId("")
@@ -126,8 +137,10 @@ func resourceAwsEc2TransitGatewayRouteRead(d *schema.ResourceData, meta interfac
 	d.Set("transit_gateway_attachment_id", "")
 	if len(transitGatewayRoute.TransitGatewayAttachments) > 0 && transitGatewayRoute.TransitGatewayAttachments[0] != nil {
 		d.Set("transit_gateway_attachment_id", transitGatewayRoute.TransitGatewayAttachments[0].TransitGatewayAttachmentId)
+		d.Set("blackhole", false)
+	} else {
+		d.Set("blackhole", true)
 	}
-
 	d.Set("transit_gateway_route_table_id", transitGatewayRouteTableID)
 
 	return nil

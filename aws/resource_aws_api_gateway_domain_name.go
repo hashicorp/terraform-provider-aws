@@ -8,7 +8,6 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/apigateway"
-	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/helper/schema"
 	"github.com/hashicorp/terraform/helper/validation"
 )
@@ -60,6 +59,16 @@ func resourceAwsApiGatewayDomainName() *schema.Resource {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
+			},
+
+			"security_policy": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+				ValidateFunc: validation.StringInSlice([]string{
+					apigateway.SecurityPolicyTls10,
+					apigateway.SecurityPolicyTls12,
+				}, true),
 			},
 
 			"certificate_arn": {
@@ -174,6 +183,10 @@ func resourceAwsApiGatewayDomainNameCreate(d *schema.ResourceData, meta interfac
 		params.RegionalCertificateName = aws.String(v.(string))
 	}
 
+	if v, ok := d.GetOk("security_policy"); ok && v.(string) != "" {
+		params.SecurityPolicy = aws.String(v.(string))
+	}
+
 	domainName, err := conn.CreateDomainName(params)
 	if err != nil {
 		return fmt.Errorf("Error creating API Gateway Domain Name: %s", err)
@@ -209,6 +222,7 @@ func resourceAwsApiGatewayDomainNameRead(d *schema.ResourceData, meta interface{
 	d.Set("cloudfront_domain_name", domainName.DistributionDomainName)
 	d.Set("cloudfront_zone_id", cloudFrontRoute53ZoneID)
 	d.Set("domain_name", domainName.DomainName)
+	d.Set("security_policy", domainName.SecurityPolicy)
 
 	if err := d.Set("endpoint_configuration", flattenApiGatewayEndpointConfiguration(domainName.EndpointConfiguration)); err != nil {
 		return fmt.Errorf("error setting endpoint_configuration: %s", err)
@@ -257,6 +271,14 @@ func resourceAwsApiGatewayDomainNameUpdateOperations(d *schema.ResourceData) []*
 		})
 	}
 
+	if d.HasChange("security_policy") {
+		operations = append(operations, &apigateway.PatchOperation{
+			Op:    aws.String("replace"),
+			Path:  aws.String("/securityPolicy"),
+			Value: aws.String(d.Get("security_policy").(string)),
+		})
+	}
+
 	if d.HasChange("endpoint_configuration.0.types") {
 		// The domain name must have an endpoint type.
 		// If attempting to remove the configuration, do nothing.
@@ -294,19 +316,17 @@ func resourceAwsApiGatewayDomainNameDelete(d *schema.ResourceData, meta interfac
 	conn := meta.(*AWSClient).apigateway
 	log.Printf("[DEBUG] Deleting API Gateway Domain Name: %s", d.Id())
 
-	return resource.Retry(5*time.Minute, func() *resource.RetryError {
-		_, err := conn.DeleteDomainName(&apigateway.DeleteDomainNameInput{
-			DomainName: aws.String(d.Id()),
-		})
-
-		if err == nil {
-			return nil
-		}
-
-		if apigatewayErr, ok := err.(awserr.Error); ok && apigatewayErr.Code() == "NotFoundException" {
-			return nil
-		}
-
-		return resource.NonRetryableError(err)
+	_, err := conn.DeleteDomainName(&apigateway.DeleteDomainNameInput{
+		DomainName: aws.String(d.Id()),
 	})
+
+	if isAWSErr(err, "NotFoundException", "") {
+		return nil
+	}
+
+	if err != nil {
+		return fmt.Errorf("Error deleting API Gateway domain name: %s", err)
+	}
+
+	return nil
 }

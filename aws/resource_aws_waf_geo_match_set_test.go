@@ -17,7 +17,7 @@ func TestAccAWSWafGeoMatchSet_basic(t *testing.T) {
 	geoMatchSet := fmt.Sprintf("geoMatchSet-%s", acctest.RandString(5))
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSWaf(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSWafGeoMatchSetDestroy,
 		Steps: []resource.TestStep{
@@ -49,7 +49,7 @@ func TestAccAWSWafGeoMatchSet_changeNameForceNew(t *testing.T) {
 	geoMatchSetNewName := fmt.Sprintf("geoMatchSetNewName-%s", acctest.RandString(5))
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSWaf(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSWafGeoMatchSetDestroy,
 		Steps: []resource.TestStep{
@@ -82,7 +82,7 @@ func TestAccAWSWafGeoMatchSet_disappears(t *testing.T) {
 	geoMatchSet := fmt.Sprintf("geoMatchSet-%s", acctest.RandString(5))
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSWaf(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSWafGeoMatchSetDestroy,
 		Steps: []resource.TestStep{
@@ -103,7 +103,7 @@ func TestAccAWSWafGeoMatchSet_changeConstraints(t *testing.T) {
 	setName := fmt.Sprintf("geoMatchSet-%s", acctest.RandString(5))
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSWaf(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSWafGeoMatchSetDestroy,
 		Steps: []resource.TestStep{
@@ -152,7 +152,7 @@ func TestAccAWSWafGeoMatchSet_noConstraints(t *testing.T) {
 	setName := fmt.Sprintf("geoMatchSet-%s", acctest.RandString(5))
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSWaf(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSWafGeoMatchSetDestroy,
 		Steps: []resource.TestStep{
@@ -273,53 +273,60 @@ func testAccAWSWafGeoMatchSetConfig(name string) string {
 	return fmt.Sprintf(`
 resource "aws_waf_geo_match_set" "geo_match_set" {
   name = "%s"
+
   geo_match_constraint {
-    type = "Country"
+    type  = "Country"
     value = "US"
   }
 
   geo_match_constraint {
-    type = "Country"
+    type  = "Country"
     value = "CA"
   }
-}`, name)
+}
+`, name)
 }
 
 func testAccAWSWafGeoMatchSetConfigChangeName(name string) string {
 	return fmt.Sprintf(`
 resource "aws_waf_geo_match_set" "geo_match_set" {
   name = "%s"
+
   geo_match_constraint {
-    type = "Country"
+    type  = "Country"
     value = "US"
   }
 
   geo_match_constraint {
-    type = "Country"
+    type  = "Country"
     value = "CA"
   }
-}`, name)
+}
+`, name)
 }
 
 func testAccAWSWafGeoMatchSetConfig_changeConstraints(name string) string {
 	return fmt.Sprintf(`
 resource "aws_waf_geo_match_set" "geo_match_set" {
   name = "%s"
+
   geo_match_constraint {
-    type = "Country"
+    type  = "Country"
     value = "RU"
   }
 
   geo_match_constraint {
-    type = "Country"
+    type  = "Country"
     value = "CN"
   }
-}`, name)
+}
+`, name)
 }
 
 func testAccAWSWafGeoMatchSetConfig_noConstraints(name string) string {
 	return fmt.Sprintf(`
 resource "aws_waf_geo_match_set" "geo_match_set" {
   name = "%s"
-}`, name)
+}
+`, name)
 }

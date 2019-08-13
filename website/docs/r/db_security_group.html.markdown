@@ -6,7 +6,7 @@ description: |-
   Provides an RDS security group resource.
 ---
 
-# aws_db_security_group
+# Resource: aws_db_security_group
 
 Provides an RDS security group resource. This is only for DB instances in the
 EC2-Classic Platform. For instances inside a VPC, use the

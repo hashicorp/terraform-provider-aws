@@ -12,7 +12,7 @@ import (
 	"github.com/hashicorp/terraform/terraform"
 )
 
-func TestAccAwsOrganizationsPolicy_basic(t *testing.T) {
+func testAccAwsOrganizationsPolicy_basic(t *testing.T) {
 	var policy organizations.Policy
 	content1 := `{"Version": "2012-10-17", "Statement": { "Effect": "Allow", "Action": "*", "Resource": "*"}}`
 	content2 := `{"Version": "2012-10-17", "Statement": { "Effect": "Allow", "Action": "s3:*", "Resource": "*"}}`
@@ -51,7 +51,36 @@ func TestAccAwsOrganizationsPolicy_basic(t *testing.T) {
 	})
 }
 
-func TestAccAwsOrganizationsPolicy_description(t *testing.T) {
+// Reference: https://github.com/terraform-providers/terraform-provider-aws/issues/5073
+func testAccAwsOrganizationsPolicy_concurrent(t *testing.T) {
+	var policy1, policy2, policy3, policy4, policy5 organizations.Policy
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName1 := "aws_organizations_policy.test1"
+	resourceName2 := "aws_organizations_policy.test2"
+	resourceName3 := "aws_organizations_policy.test3"
+	resourceName4 := "aws_organizations_policy.test4"
+	resourceName5 := "aws_organizations_policy.test5"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t); testAccOrganizationsAccountPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAwsOrganizationsPolicyDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAwsOrganizationsPolicyConfigConcurrent(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAwsOrganizationsPolicyExists(resourceName1, &policy1),
+					testAccCheckAwsOrganizationsPolicyExists(resourceName2, &policy2),
+					testAccCheckAwsOrganizationsPolicyExists(resourceName3, &policy3),
+					testAccCheckAwsOrganizationsPolicyExists(resourceName4, &policy4),
+					testAccCheckAwsOrganizationsPolicyExists(resourceName5, &policy5),
+				),
+			},
+		},
+	})
+}
+
+func testAccAwsOrganizationsPolicy_description(t *testing.T) {
 	var policy organizations.Policy
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_organizations_policy.test"
@@ -98,8 +127,12 @@ func testAccCheckAwsOrganizationsPolicyDestroy(s *terraform.State) error {
 
 		resp, err := conn.DescribePolicy(input)
 
+		if isAWSErr(err, organizations.ErrCodeAWSOrganizationsNotInUseException, "") {
+			continue
+		}
+
 		if isAWSErr(err, organizations.ErrCodePolicyNotFoundException, "") {
-			return nil
+			continue
 		}
 
 		if err != nil {
@@ -145,19 +178,68 @@ func testAccCheckAwsOrganizationsPolicyExists(resourceName string, policy *organ
 
 func testAccAwsOrganizationsPolicyConfig_Description(rName, description string) string {
 	return fmt.Sprintf(`
+resource "aws_organizations_organization" "test" {}
+
 resource "aws_organizations_policy" "test" {
   content     = "{\"Version\": \"2012-10-17\", \"Statement\": { \"Effect\": \"Allow\", \"Action\": \"*\", \"Resource\": \"*\"}}"
   description = "%s"
   name        = "%s"
+
+  depends_on = ["aws_organizations_organization.test"]
 }
 `, description, rName)
 }
 
 func testAccAwsOrganizationsPolicyConfig_Required(rName, content string) string {
 	return fmt.Sprintf(`
+resource "aws_organizations_organization" "test" {}
+
 resource "aws_organizations_policy" "test" {
   content = %s
   name    = "%s"
+
+  depends_on = ["aws_organizations_organization.test"]
 }
 `, strconv.Quote(content), rName)
+}
+
+func testAccAwsOrganizationsPolicyConfigConcurrent(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_organizations_organization" "test" {}
+
+resource "aws_organizations_policy" "test1" {
+  content = "{\"Version\": \"2012-10-17\", \"Statement\": { \"Effect\": \"Deny\", \"Action\": \"cloudtrail:StopLogging\", \"Resource\": \"*\"}}"
+  name    = "%[1]s1"
+
+  depends_on = ["aws_organizations_organization.test"]
+}
+
+resource "aws_organizations_policy" "test2" {
+  content = "{\"Version\": \"2012-10-17\", \"Statement\": { \"Effect\": \"Deny\", \"Action\": \"ec2:DeleteFlowLogs\", \"Resource\": \"*\"}}"
+  name    = "%[1]s2"
+
+  depends_on = ["aws_organizations_organization.test"]
+}
+
+resource "aws_organizations_policy" "test3" {
+  content = "{\"Version\": \"2012-10-17\", \"Statement\": { \"Effect\": \"Deny\", \"Action\": \"logs:DeleteLogGroup\", \"Resource\": \"*\"}}"
+  name    = "%[1]s3"
+
+  depends_on = ["aws_organizations_organization.test"]
+}
+
+resource "aws_organizations_policy" "test4" {
+  content = "{\"Version\": \"2012-10-17\", \"Statement\": { \"Effect\": \"Deny\", \"Action\": \"config:DeleteConfigRule\", \"Resource\": \"*\"}}"
+  name    = "%[1]s4"
+
+  depends_on = ["aws_organizations_organization.test"]
+}
+
+resource "aws_organizations_policy" "test5" {
+  content = "{\"Version\": \"2012-10-17\", \"Statement\": { \"Effect\": \"Deny\", \"Action\": \"iam:DeleteRolePermissionsBoundary\", \"Resource\": \"*\"}}"
+  name    = "%[1]s5"
+
+  depends_on = ["aws_organizations_organization.test"]
+}
+`, rName)
 }

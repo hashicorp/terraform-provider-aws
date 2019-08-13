@@ -661,7 +661,7 @@ resource "aws_db_option_group" "bar" {
   major_engine_version     = "5.6"
 
   timeouts {
-  	delete = "10m"
+    delete = "10m"
   }
 }
 `, r)
@@ -670,9 +670,9 @@ resource "aws_db_option_group" "bar" {
 func testAccAWSDBOptionGroupBasicConfig(r string) string {
 	return fmt.Sprintf(`
 resource "aws_db_option_group" "bar" {
-  name                     = "%s"
-  engine_name              = "mysql"
-  major_engine_version     = "5.6"
+  name                 = "%s"
+  engine_name          = "mysql"
+  major_engine_version = "5.6"
 }
 `, r)
 }
@@ -680,24 +680,23 @@ resource "aws_db_option_group" "bar" {
 func testAccAWSDBOptionGroupBasicDestroyConfig(r string) string {
 	return fmt.Sprintf(`
 resource "aws_db_instance" "bar" {
-	allocated_storage = 10
-	engine = "MySQL"
-	engine_version = "5.6.35"
-	instance_class = "db.t2.micro"
-	name = "baz"
-	password = "barbarbarbar"
-	username = "foo"
+  allocated_storage = 10
+  engine            = "MySQL"
+  engine_version    = "5.6.35"
+  instance_class    = "db.t2.micro"
+  name              = "baz"
+  password          = "barbarbarbar"
+  username          = "foo"
 
+  # Maintenance Window is stored in lower case in the API, though not strictly
+  # documented. Terraform will downcase this to match (as opposed to throw a
+  # validation error).
+  maintenance_window = "Fri:09:00-Fri:09:30"
 
-	# Maintenance Window is stored in lower case in the API, though not strictly
-	# documented. Terraform will downcase this to match (as opposed to throw a
-	# validation error).
-	maintenance_window = "Fri:09:00-Fri:09:30"
+  backup_retention_period = 0
+  skip_final_snapshot     = true
 
-	backup_retention_period = 0
-	skip_final_snapshot = true
-
-	option_group_name = "${aws_db_option_group.bar.name}"
+  option_group_name = "${aws_db_option_group.bar.name}"
 }
 
 resource "aws_db_option_group" "bar" {
@@ -719,8 +718,9 @@ resource "aws_db_option_group" "bar" {
 
   option {
     option_name = "Timezone"
+
     option_settings {
-      name = "TIME_ZONE"
+      name  = "TIME_ZONE"
       value = "UTC"
     }
   }
@@ -733,15 +733,16 @@ func testAccAWSDBOptionGroupOptionSettingsIAMRole(r string) string {
 data "aws_iam_policy_document" "rds_assume_role" {
   statement {
     actions = ["sts:AssumeRole"]
+
     principals {
-	  type = "Service"
+      type        = "Service"
       identifiers = ["rds.amazonaws.com"]
     }
   }
 }
 
 resource "aws_iam_role" "sql_server_backup" {
-  name = "rds-backup-%s"
+  name               = "rds-backup-%s"
   assume_role_policy = "${data.aws_iam_policy_document.rds_assume_role.json}"
 }
 
@@ -753,6 +754,7 @@ resource "aws_db_option_group" "bar" {
 
   option {
     option_name = "SQLSERVER_BACKUP_RESTORE"
+
     option_settings {
       name  = "IAM_ROLE_ARN"
       value = "${aws_iam_role.sql_server_backup.arn}"
@@ -772,8 +774,9 @@ resource "aws_db_option_group" "bar" {
 
   option {
     option_name = "Timezone"
+
     option_settings {
-      name = "TIME_ZONE"
+      name  = "TIME_ZONE"
       value = "US/Pacific"
     }
   }

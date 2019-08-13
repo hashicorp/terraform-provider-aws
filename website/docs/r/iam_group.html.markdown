@@ -6,7 +6,7 @@ description: |-
   Provides an IAM group.
 ---
 
-# aws_iam_group
+# Resource: aws_iam_group
 
 Provides an IAM group.
 

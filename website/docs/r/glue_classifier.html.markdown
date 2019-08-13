@@ -6,7 +6,7 @@ description: |-
   Provides an Glue Classifier resource.
 ---
 
-# aws_glue_classifier
+# Resource: aws_glue_classifier
 
 Provides a Glue Classifier resource.
 

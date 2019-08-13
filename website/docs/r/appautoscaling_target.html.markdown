@@ -6,7 +6,7 @@ description: |-
   Provides an Application AutoScaling ScalableTarget resource.
 ---
 
-# aws_appautoscaling_target
+# Resource: aws_appautoscaling_target
 
 Provides an Application AutoScaling ScalableTarget resource. To manage policies which get attached to the target, see the [`aws_appautoscaling_policy` resource](/docs/providers/aws/r/appautoscaling_policy.html).
 

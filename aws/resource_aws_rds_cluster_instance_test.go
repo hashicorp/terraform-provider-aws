@@ -16,27 +16,6 @@ import (
 	"github.com/aws/aws-sdk-go/service/rds"
 )
 
-func TestAccAWSRDSClusterInstance_importBasic(t *testing.T) {
-	resourceName := "aws_rds_cluster_instance.cluster_instances"
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckAWSClusterDestroy,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccAWSClusterInstanceConfig(acctest.RandInt()),
-			},
-
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-			},
-		},
-	})
-}
-
 func TestAccAWSRDSClusterInstance_basic(t *testing.T) {
 	var v rds.DBInstance
 
@@ -60,6 +39,15 @@ func TestAccAWSRDSClusterInstance_basic(t *testing.T) {
 					resource.TestCheckResourceAttrSet("aws_rds_cluster_instance.cluster_instances", "engine_version"),
 					resource.TestCheckResourceAttr("aws_rds_cluster_instance.cluster_instances", "engine", "aurora"),
 				),
+			},
+			{
+				ResourceName:      "aws_rds_cluster_instance.cluster_instances",
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"apply_immediately",
+					"identifier_prefix",
+				},
 			},
 			{
 				Config: testAccAWSClusterInstanceConfigModified(acctest.RandInt()),
@@ -89,6 +77,15 @@ func TestAccAWSRDSClusterInstance_az(t *testing.T) {
 					resource.TestMatchResourceAttr("aws_rds_cluster_instance.cluster_instances", "availability_zone", regexp.MustCompile("^us-west-2[a-z]{1}$")),
 				),
 			},
+			{
+				ResourceName:      "aws_rds_cluster_instance.cluster_instances",
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"apply_immediately",
+					"identifier_prefix",
+				},
+			},
 		},
 	})
 }
@@ -113,6 +110,15 @@ func TestAccAWSRDSClusterInstance_namePrefix(t *testing.T) {
 						"aws_rds_cluster_instance.test", "identifier", regexp.MustCompile("^tf-cluster-instance-")),
 				),
 			},
+			{
+				ResourceName:      "aws_rds_cluster_instance.test",
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"apply_immediately",
+					"identifier_prefix",
+				},
+			},
 		},
 	})
 }
@@ -134,6 +140,15 @@ func TestAccAWSRDSClusterInstance_generatedName(t *testing.T) {
 						"aws_rds_cluster_instance.test", "identifier", regexp.MustCompile("^tf-")),
 				),
 			},
+			{
+				ResourceName:      "aws_rds_cluster_instance.test",
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"apply_immediately",
+					"identifier_prefix",
+				},
+			},
 		},
 	})
 }
@@ -154,6 +169,15 @@ func TestAccAWSRDSClusterInstance_kmsKey(t *testing.T) {
 					resource.TestMatchResourceAttr(
 						"aws_rds_cluster_instance.cluster_instances", "kms_key_id", keyRegex),
 				),
+			},
+			{
+				ResourceName:      "aws_rds_cluster_instance.cluster_instances",
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"apply_immediately",
+					"identifier_prefix",
+				},
 			},
 		},
 	})
@@ -199,10 +223,13 @@ func TestAccAWSRDSClusterInstance_PubliclyAccessible(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"apply_immediately"},
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"apply_immediately",
+					"identifier_prefix",
+				},
 			},
 			{
 				Config: testAccAWSRDSClusterInstanceConfig_PubliclyAccessible(rName, false),
@@ -231,6 +258,15 @@ func TestAccAWSRDSClusterInstance_CopyTagsToSnapshot(t *testing.T) {
 					resource.TestCheckResourceAttr(
 						"aws_rds_cluster_instance.cluster_instances", "copy_tags_to_snapshot", "true"),
 				),
+			},
+			{
+				ResourceName:      "aws_rds_cluster_instance.cluster_instances",
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"apply_immediately",
+					"identifier_prefix",
+				},
 			},
 			{
 				Config: testAccAWSClusterInstanceConfig_CopyTagsToSnapshot(rNameSuffix, false),
@@ -333,13 +369,24 @@ func TestAccAWSRDSClusterInstance_withInstanceEnhancedMonitor(t *testing.T) {
 					testAccCheckAWSDBClusterInstanceAttributes(&v),
 				),
 			},
+			{
+				ResourceName:      "aws_rds_cluster_instance.cluster_instances",
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"apply_immediately",
+					"identifier_prefix",
+				},
+			},
 		},
 	})
 }
 
-func TestAccAWSRDSClusterInstance_withInstancePerformanceInsights(t *testing.T) {
-	var v rds.DBInstance
-	keyRegex := regexp.MustCompile("^arn:aws:kms:")
+func TestAccAWSRDSClusterInstance_PerformanceInsightsEnabled_AuroraMysql1(t *testing.T) {
+	var dbInstance rds.DBInstance
+	kmsKeyResourceName := "aws_kms_key.test"
+	resourceName := "aws_rds_cluster_instance.test"
+	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -347,15 +394,85 @@ func TestAccAWSRDSClusterInstance_withInstancePerformanceInsights(t *testing.T) 
 		CheckDestroy: testAccCheckAWSClusterDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSClusterInstancePerformanceInsights(acctest.RandInt()),
+				Config: testAccAWSClusterInstanceConfigPerformanceInsightsEnabledAuroraMysql1(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSClusterInstanceExists("aws_rds_cluster_instance.cluster_instances", &v),
-					testAccCheckAWSDBClusterInstanceAttributes(&v),
-					resource.TestCheckResourceAttr(
-						"aws_rds_cluster_instance.cluster_instances", "performance_insights_enabled", "true"),
-					resource.TestMatchResourceAttr(
-						"aws_rds_cluster_instance.cluster_instances", "performance_insights_kms_key_id", keyRegex),
+					testAccCheckAWSClusterInstanceExists(resourceName, &dbInstance),
+					resource.TestCheckResourceAttr(resourceName, "performance_insights_enabled", "true"),
+					resource.TestCheckResourceAttrPair(resourceName, "performance_insights_kms_key_id", kmsKeyResourceName, "arn"),
 				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"apply_immediately",
+					"identifier_prefix",
+				},
+			},
+		},
+	})
+}
+
+func TestAccAWSRDSClusterInstance_PerformanceInsightsEnabled_AuroraMysql2(t *testing.T) {
+	var dbInstance rds.DBInstance
+	kmsKeyResourceName := "aws_kms_key.test"
+	resourceName := "aws_rds_cluster_instance.test"
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSClusterDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSClusterInstanceConfigPerformanceInsightsEnabledAuroraMysql2(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSClusterInstanceExists(resourceName, &dbInstance),
+					resource.TestCheckResourceAttr(resourceName, "performance_insights_enabled", "true"),
+					resource.TestCheckResourceAttrPair(resourceName, "performance_insights_kms_key_id", kmsKeyResourceName, "arn"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"apply_immediately",
+					"identifier_prefix",
+				},
+			},
+		},
+	})
+}
+
+func TestAccAWSRDSClusterInstance_PerformanceInsightsEnabled_AuroraPostgresql(t *testing.T) {
+	var dbInstance rds.DBInstance
+	kmsKeyResourceName := "aws_kms_key.test"
+	resourceName := "aws_rds_cluster_instance.test"
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSClusterDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSClusterInstanceConfigPerformanceInsightsEnabledAuroraPostgresql(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSClusterInstanceExists(resourceName, &dbInstance),
+					resource.TestCheckResourceAttr(resourceName, "performance_insights_enabled", "true"),
+					resource.TestCheckResourceAttrPair(resourceName, "performance_insights_kms_key_id", kmsKeyResourceName, "arn"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"apply_immediately",
+					"identifier_prefix",
+				},
 			},
 		},
 	})
@@ -365,11 +482,11 @@ func TestAccAWSRDSClusterInstance_withInstancePerformanceInsights(t *testing.T) 
 func testAccAWSClusterInstanceConfig(n int) string {
 	return fmt.Sprintf(`
 resource "aws_rds_cluster" "default" {
-  cluster_identifier = "tf-aurora-cluster-test-%d"
-  availability_zones = ["us-west-2a", "us-west-2b", "us-west-2c"]
-  database_name      = "mydb"
-  master_username    = "foo"
-  master_password    = "mustbeeightcharaters"
+  cluster_identifier  = "tf-aurora-cluster-test-%d"
+  availability_zones  = ["us-west-2a", "us-west-2b", "us-west-2c"]
+  database_name       = "mydb"
+  master_username     = "foo"
+  master_password     = "mustbeeightcharaters"
   skip_final_snapshot = true
 }
 
@@ -401,11 +518,11 @@ resource "aws_db_parameter_group" "bar" {
 func testAccAWSClusterInstanceConfigModified(n int) string {
 	return fmt.Sprintf(`
 resource "aws_rds_cluster" "default" {
-  cluster_identifier = "tf-aurora-cluster-test-%d"
-  availability_zones = ["us-west-2a", "us-west-2b", "us-west-2c"]
-  database_name      = "mydb"
-  master_username    = "foo"
-  master_password    = "mustbeeightcharaters"
+  cluster_identifier  = "tf-aurora-cluster-test-%d"
+  availability_zones  = ["us-west-2a", "us-west-2b", "us-west-2c"]
+  database_name       = "mydb"
+  master_username     = "foo"
+  master_password     = "mustbeeightcharaters"
   skip_final_snapshot = true
 }
 
@@ -440,11 +557,11 @@ func testAccAWSClusterInstanceConfig_az(n int) string {
 data "aws_availability_zones" "available" {}
 
 resource "aws_rds_cluster" "default" {
-  cluster_identifier = "tf-aurora-cluster-test-%d"
-  availability_zones = ["${data.aws_availability_zones.available.names[0]}", "${data.aws_availability_zones.available.names[1]}", "${data.aws_availability_zones.available.names[2]}"]
-  database_name      = "mydb"
-  master_username    = "foo"
-  master_password    = "mustbeeightcharaters"
+  cluster_identifier  = "tf-aurora-cluster-test-%d"
+  availability_zones  = ["${data.aws_availability_zones.available.names[0]}", "${data.aws_availability_zones.available.names[1]}", "${data.aws_availability_zones.available.names[2]}"]
+  database_name       = "mydb"
+  master_username     = "foo"
+  master_password     = "mustbeeightcharaters"
   skip_final_snapshot = true
 }
 
@@ -477,46 +594,49 @@ resource "aws_db_parameter_group" "bar" {
 func testAccAWSClusterInstanceConfig_namePrefix(n int) string {
 	return fmt.Sprintf(`
 resource "aws_rds_cluster_instance" "test" {
-  identifier_prefix = "tf-cluster-instance-"
+  identifier_prefix  = "tf-cluster-instance-"
   cluster_identifier = "${aws_rds_cluster.test.id}"
-  instance_class = "db.t2.small"
+  instance_class     = "db.t2.small"
 }
 
 resource "aws_rds_cluster" "test" {
-  cluster_identifier = "tf-aurora-cluster-%d"
-  master_username = "root"
-  master_password = "password"
+  cluster_identifier   = "tf-aurora-cluster-%d"
+  master_username      = "root"
+  master_password      = "password"
   db_subnet_group_name = "${aws_db_subnet_group.test.name}"
-  skip_final_snapshot = true
+  skip_final_snapshot  = true
 }
 
 resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"
-	tags = {
-		Name = "terraform-testacc-rds-cluster-instance-name-prefix"
-	}
+
+  tags = {
+    Name = "terraform-testacc-rds-cluster-instance-name-prefix"
+  }
 }
 
 resource "aws_subnet" "a" {
-  vpc_id = "${aws_vpc.test.id}"
-  cidr_block = "10.0.0.0/24"
+  vpc_id            = "${aws_vpc.test.id}"
+  cidr_block        = "10.0.0.0/24"
   availability_zone = "us-west-2a"
+
   tags = {
     Name = "tf-acc-rds-cluster-instance-name-prefix-a"
   }
 }
 
 resource "aws_subnet" "b" {
-  vpc_id = "${aws_vpc.test.id}"
-  cidr_block = "10.0.1.0/24"
+  vpc_id            = "${aws_vpc.test.id}"
+  cidr_block        = "10.0.1.0/24"
   availability_zone = "us-west-2b"
+
   tags = {
     Name = "tf-acc-rds-cluster-instance-name-prefix-b"
   }
 }
 
 resource "aws_db_subnet_group" "test" {
-  name = "tf-test-%d"
+  name       = "tf-test-%d"
   subnet_ids = ["${aws_subnet.a.id}", "${aws_subnet.b.id}"]
 }
 `, n, n)
@@ -526,44 +646,47 @@ func testAccAWSClusterInstanceConfig_generatedName(n int) string {
 	return fmt.Sprintf(`
 resource "aws_rds_cluster_instance" "test" {
   cluster_identifier = "${aws_rds_cluster.test.id}"
-  instance_class = "db.t2.small"
+  instance_class     = "db.t2.small"
 }
 
 resource "aws_rds_cluster" "test" {
-  cluster_identifier = "tf-aurora-cluster-%d"
-  master_username = "root"
-  master_password = "password"
+  cluster_identifier   = "tf-aurora-cluster-%d"
+  master_username      = "root"
+  master_password      = "password"
   db_subnet_group_name = "${aws_db_subnet_group.test.name}"
-  skip_final_snapshot = true
+  skip_final_snapshot  = true
 }
 
 resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"
-	tags = {
-		Name = "terraform-testacc-rds-cluster-instance-generated-name"
-	}
+
+  tags = {
+    Name = "terraform-testacc-rds-cluster-instance-generated-name"
+  }
 }
 
 resource "aws_subnet" "a" {
-  vpc_id = "${aws_vpc.test.id}"
-  cidr_block = "10.0.0.0/24"
+  vpc_id            = "${aws_vpc.test.id}"
+  cidr_block        = "10.0.0.0/24"
   availability_zone = "us-west-2a"
+
   tags = {
     Name = "tf-acc-rds-cluster-instance-generated-name-a"
   }
 }
 
 resource "aws_subnet" "b" {
-  vpc_id = "${aws_vpc.test.id}"
-  cidr_block = "10.0.1.0/24"
+  vpc_id            = "${aws_vpc.test.id}"
+  cidr_block        = "10.0.1.0/24"
   availability_zone = "us-west-2b"
+
   tags = {
     Name = "tf-acc-rds-cluster-instance-generated-name-b"
   }
 }
 
 resource "aws_db_subnet_group" "test" {
-  name = "tf-test-%d"
+  name       = "tf-test-%d"
   subnet_ids = ["${aws_subnet.a.id}", "${aws_subnet.b.id}"]
 }
 `, n, n)
@@ -571,10 +694,10 @@ resource "aws_db_subnet_group" "test" {
 
 func testAccAWSClusterInstanceConfigKmsKey(n int) string {
 	return fmt.Sprintf(`
-
 resource "aws_kms_key" "foo" {
-    description = "Terraform acc test %d"
-    policy = <<POLICY
+  description = "Terraform acc test %d"
+
+  policy = <<POLICY
 {
   "Version": "2012-10-17",
   "Id": "kms-tf-1",
@@ -594,13 +717,13 @@ POLICY
 }
 
 resource "aws_rds_cluster" "default" {
-  cluster_identifier = "tf-aurora-cluster-test-%d"
-  availability_zones = ["us-west-2a", "us-west-2b", "us-west-2c"]
-  database_name      = "mydb"
-  master_username    = "foo"
-  master_password    = "mustbeeightcharaters"
-  storage_encrypted = true
-  kms_key_id = "${aws_kms_key.foo.arn}"
+  cluster_identifier  = "tf-aurora-cluster-test-%d"
+  availability_zones  = ["us-west-2a", "us-west-2b", "us-west-2c"]
+  database_name       = "mydb"
+  master_username     = "foo"
+  master_password     = "mustbeeightcharaters"
+  storage_encrypted   = true
+  kms_key_id          = "${aws_kms_key.foo.arn}"
   skip_final_snapshot = true
 }
 
@@ -631,11 +754,11 @@ resource "aws_db_parameter_group" "bar" {
 func testAccAWSClusterInstanceEnhancedMonitor(n int) string {
 	return fmt.Sprintf(`
 resource "aws_rds_cluster" "default" {
-  cluster_identifier = "tf-aurora-cluster-test-%d"
-  availability_zones = ["us-west-2a", "us-west-2b", "us-west-2c"]
-  database_name      = "mydb"
-  master_username    = "foo"
-  master_password    = "mustbeeightcharaters"
+  cluster_identifier  = "tf-aurora-cluster-test-%d"
+  availability_zones  = ["us-west-2a", "us-west-2b", "us-west-2c"]
+  database_name       = "mydb"
+  master_username     = "foo"
+  master_password     = "mustbeeightcharaters"
   skip_final_snapshot = true
 }
 
@@ -649,8 +772,9 @@ resource "aws_rds_cluster_instance" "cluster_instances" {
 }
 
 resource "aws_iam_role" "tf_enhanced_monitor_role" {
-    name = "tf_enhanced_monitor_role-%d"
-    assume_role_policy = <<EOF
+  name = "tf_enhanced_monitor_role-%d"
+
+  assume_role_policy = <<EOF
 {
             "Version": "2012-10-17",
             "Statement": [
@@ -668,13 +792,14 @@ EOF
 }
 
 resource "aws_iam_policy_attachment" "rds_m_attach" {
-    name = "tf-enhanced-monitoring-attachment-%d"
-    roles = ["${aws_iam_role.tf_enhanced_monitor_role.name}"]
-    policy_arn = "${aws_iam_policy.test.arn}"
+  name       = "tf-enhanced-monitoring-attachment-%d"
+  roles      = ["${aws_iam_role.tf_enhanced_monitor_role.name}"]
+  policy_arn = "${aws_iam_policy.test.arn}"
 }
 
 resource "aws_iam_policy" "test" {
-  name   = "tf-enhanced-monitoring-policy-%d"
+  name = "tf-enhanced-monitoring-policy-%d"
+
   policy = <<POLICY
 {
     "Version": "2012-10-17",
@@ -725,65 +850,84 @@ resource "aws_db_parameter_group" "bar" {
 `, n, n, n, n, n, n)
 }
 
-func testAccAWSClusterInstancePerformanceInsights(n int) string {
+func testAccAWSClusterInstanceConfigPerformanceInsightsEnabledAuroraMysql1(rName string) string {
 	return fmt.Sprintf(`
-
-resource "aws_kms_key" "foo" {
-    description = "Terraform acc test %d"
-    policy = <<POLICY
-{
-  "Version": "2012-10-17",
-  "Id": "kms-tf-1",
-  "Statement": [
-    {
-      "Sid": "Enable IAM User Permissions",
-      "Effect": "Allow",
-      "Principal": {
-        "AWS": "*"
-      },
-      "Action": "kms:*",
-      "Resource": "*"
-    }
-  ]
-}
-POLICY
+resource "aws_kms_key" "test" {
+  deletion_window_in_days = 7
 }
 
-resource "aws_rds_cluster" "default" {
-  engine             = "aurora-postgresql"
-  cluster_identifier = "tf-aurora-cluster-test-%d"
-  availability_zones = ["us-west-2a", "us-west-2b", "us-west-2c"]
-  database_name      = "mydb"
-  master_username    = "foo"
-  master_password    = "mustbeeightcharaters"
-  storage_encrypted = true
+resource "aws_rds_cluster" "test" {
+  cluster_identifier  = %[1]q
+  database_name       = "mydb"
+  engine              = "aurora"
+  master_password     = "mustbeeightcharaters"
+  master_username     = "foo"
   skip_final_snapshot = true
 }
 
-resource "aws_rds_cluster_instance" "cluster_instances" {
-  engine                  = "aurora-postgresql"
-  identifier              = "tf-cluster-instance-%d"
-  cluster_identifier      = "${aws_rds_cluster.default.id}"
-  instance_class          = "db.r4.large"
-  db_parameter_group_name = "${aws_db_parameter_group.bar.name}"
-  performance_insights_enabled = true
-  performance_insights_kms_key_id = "${aws_kms_key.foo.arn}"
+resource "aws_rds_cluster_instance" "test" {
+  cluster_identifier              = "${aws_rds_cluster.test.id}"
+  engine                          = "${aws_rds_cluster.test.engine}"
+  identifier                      = %[1]q
+  instance_class                  = "db.r4.large"
+  performance_insights_enabled    = true
+  performance_insights_kms_key_id = "${aws_kms_key.test.arn}"
+}
+`, rName)
 }
 
-resource "aws_db_parameter_group" "bar" {
-  name   = "tfcluster-test-group-%d"
-  family = "aurora-postgresql9.6"
-
-  parameter {
-    name  = "authentication_timeout"
-    value = "10"
-  }
-
-  tags = {
-    foo = "bar"
-  }
+func testAccAWSClusterInstanceConfigPerformanceInsightsEnabledAuroraMysql2(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_kms_key" "test" {
+  deletion_window_in_days = 7
 }
-`, n, n, n, n)
+
+resource "aws_rds_cluster" "test" {
+  cluster_identifier  = %[1]q
+  database_name       = "mydb"
+  engine              = "aurora-mysql"
+  engine_version      = "5.7.mysql_aurora.2.04.2"
+  master_password     = "mustbeeightcharaters"
+  master_username     = "foo"
+  skip_final_snapshot = true
+}
+
+resource "aws_rds_cluster_instance" "test" {
+  cluster_identifier              = "${aws_rds_cluster.test.id}"
+  engine                          = "${aws_rds_cluster.test.engine}"
+  engine_version                  = "${aws_rds_cluster.test.engine_version}"
+  identifier                      = %[1]q
+  instance_class                  = "db.r4.large"
+  performance_insights_enabled    = true
+  performance_insights_kms_key_id = "${aws_kms_key.test.arn}"
+}
+`, rName)
+}
+
+func testAccAWSClusterInstanceConfigPerformanceInsightsEnabledAuroraPostgresql(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_kms_key" "test" {
+  deletion_window_in_days = 7
+}
+
+resource "aws_rds_cluster" "test" {
+  cluster_identifier  = %[1]q
+  database_name       = "mydb"
+  engine              = "aurora-postgresql"
+  master_password     = "mustbeeightcharaters"
+  master_username     = "foo"
+  skip_final_snapshot = true
+}
+
+resource "aws_rds_cluster_instance" "test" {
+  cluster_identifier              = "${aws_rds_cluster.test.id}"
+  engine                          = "${aws_rds_cluster.test.engine}"
+  identifier                      = %[1]q
+  instance_class                  = "db.r4.large"
+  performance_insights_enabled    = true
+  performance_insights_kms_key_id = "${aws_kms_key.test.arn}"
+}
+`, rName)
 }
 
 func testAccAWSRDSClusterInstanceConfig_PubliclyAccessible(rName string, publiclyAccessible bool) string {
@@ -796,11 +940,11 @@ resource "aws_rds_cluster" "test" {
 }
 
 resource "aws_rds_cluster_instance" "test" {
-  apply_immediately       = true
-  cluster_identifier      = "${aws_rds_cluster.test.id}"
-  identifier              = %q
-  instance_class          = "db.t2.small"
-  publicly_accessible     = %t
+  apply_immediately   = true
+  cluster_identifier  = "${aws_rds_cluster.test.id}"
+  identifier          = %q
+  instance_class      = "db.t2.small"
+  publicly_accessible = %t
 }
 `, rName, rName, publiclyAccessible)
 }
@@ -808,20 +952,20 @@ resource "aws_rds_cluster_instance" "test" {
 func testAccAWSClusterInstanceConfig_CopyTagsToSnapshot(n int, f bool) string {
 	return fmt.Sprintf(`
 resource "aws_rds_cluster" "default" {
-  cluster_identifier = "tf-aurora-cluster-test-%d"
-  availability_zones = ["us-west-2a", "us-west-2b", "us-west-2c"]
-  database_name      = "mydb"
-  master_username    = "foo"
-  master_password    = "mustbeeightcharaters"
+  cluster_identifier  = "tf-aurora-cluster-test-%d"
+  availability_zones  = ["us-west-2a", "us-west-2b", "us-west-2c"]
+  database_name       = "mydb"
+  master_username     = "foo"
+  master_password     = "mustbeeightcharaters"
   skip_final_snapshot = true
 }
 
 resource "aws_rds_cluster_instance" "cluster_instances" {
-  identifier              = "tf-cluster-instance-%d"
-  cluster_identifier      = "${aws_rds_cluster.default.id}"
-  instance_class          = "db.t2.small"
-  promotion_tier          = "3"
-  copy_tags_to_snapshot 	= %t
+  identifier            = "tf-cluster-instance-%d"
+  cluster_identifier    = "${aws_rds_cluster.default.id}"
+  instance_class        = "db.t2.small"
+  promotion_tier        = "3"
+  copy_tags_to_snapshot = %t
 }
 `, n, n, f)
 }

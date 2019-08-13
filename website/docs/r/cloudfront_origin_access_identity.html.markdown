@@ -1,12 +1,12 @@
 ---
 layout: "aws"
-page_title: "AWS: cloudfront_origin_access_identity"
+page_title: "AWS: aws_cloudfront_origin_access_identity"
 sidebar_current: "docs-aws-resource-cloudfront-origin-access-identity"
 description: |-
   Provides a CloudFront origin access identity.
 ---
 
-# aws_cloudfront_origin_access_identity
+# Resource: aws_cloudfront_origin_access_identity
 
 Creates an Amazon CloudFront origin access identity.
 

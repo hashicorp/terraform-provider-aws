@@ -6,7 +6,7 @@ description: |-
   Provides a Gamelift Fleet resource.
 ---
 
-# aws_gamelift_fleet
+# Resource: aws_gamelift_fleet
 
 Provides a Gamelift Fleet resource.
 

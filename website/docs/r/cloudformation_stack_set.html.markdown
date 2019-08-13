@@ -6,7 +6,7 @@ description: |-
   Manages a CloudFormation Stack Set.
 ---
 
-# aws_cloudformation_stack_set
+# Resource: aws_cloudformation_stack_set
 
 Manages a CloudFormation Stack Set. Stack Sets allow CloudFormation templates to be easily deployed across multiple accounts and regions via Stack Set Instances ([`aws_cloudformation_stack_set_instance` resource](/docs/providers/aws/r/cloudformation_stack_set_instance.html)). Additional information about Stack Sets can be found in the [AWS CloudFormation User Guide](https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/what-is-cfnstacksets.html).
 

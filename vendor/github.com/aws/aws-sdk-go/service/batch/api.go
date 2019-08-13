@@ -611,6 +611,12 @@ func (c *Batch) DescribeComputeEnvironmentsRequest(input *DescribeComputeEnviron
 		Name:       opDescribeComputeEnvironments,
 		HTTPMethod: "POST",
 		HTTPPath:   "/v1/describecomputeenvironments",
+		Paginator: &request.Paginator{
+			InputTokens:     []string{"nextToken"},
+			OutputTokens:    []string{"nextToken"},
+			LimitToken:      "maxResults",
+			TruncationToken: "",
+		},
 	}
 
 	if input == nil {
@@ -668,6 +674,56 @@ func (c *Batch) DescribeComputeEnvironmentsWithContext(ctx aws.Context, input *D
 	return out, req.Send()
 }
 
+// DescribeComputeEnvironmentsPages iterates over the pages of a DescribeComputeEnvironments operation,
+// calling the "fn" function with the response data for each page. To stop
+// iterating, return false from the fn function.
+//
+// See DescribeComputeEnvironments method for more information on how to use this operation.
+//
+// Note: This operation can generate multiple requests to a service.
+//
+//    // Example iterating over at most 3 pages of a DescribeComputeEnvironments operation.
+//    pageNum := 0
+//    err := client.DescribeComputeEnvironmentsPages(params,
+//        func(page *batch.DescribeComputeEnvironmentsOutput, lastPage bool) bool {
+//            pageNum++
+//            fmt.Println(page)
+//            return pageNum <= 3
+//        })
+//
+func (c *Batch) DescribeComputeEnvironmentsPages(input *DescribeComputeEnvironmentsInput, fn func(*DescribeComputeEnvironmentsOutput, bool) bool) error {
+	return c.DescribeComputeEnvironmentsPagesWithContext(aws.BackgroundContext(), input, fn)
+}
+
+// DescribeComputeEnvironmentsPagesWithContext same as DescribeComputeEnvironmentsPages except
+// it takes a Context and allows setting request options on the pages.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *Batch) DescribeComputeEnvironmentsPagesWithContext(ctx aws.Context, input *DescribeComputeEnvironmentsInput, fn func(*DescribeComputeEnvironmentsOutput, bool) bool, opts ...request.Option) error {
+	p := request.Pagination{
+		NewRequest: func() (*request.Request, error) {
+			var inCpy *DescribeComputeEnvironmentsInput
+			if input != nil {
+				tmp := *input
+				inCpy = &tmp
+			}
+			req, _ := c.DescribeComputeEnvironmentsRequest(inCpy)
+			req.SetContext(ctx)
+			req.ApplyOptions(opts...)
+			return req, nil
+		},
+	}
+
+	cont := true
+	for p.Next() && cont {
+		cont = fn(p.Page().(*DescribeComputeEnvironmentsOutput), !p.HasNextPage())
+	}
+	return p.Err()
+}
+
 const opDescribeJobDefinitions = "DescribeJobDefinitions"
 
 // DescribeJobDefinitionsRequest generates a "aws/request.Request" representing the
@@ -699,6 +755,12 @@ func (c *Batch) DescribeJobDefinitionsRequest(input *DescribeJobDefinitionsInput
 		Name:       opDescribeJobDefinitions,
 		HTTPMethod: "POST",
 		HTTPPath:   "/v1/describejobdefinitions",
+		Paginator: &request.Paginator{
+			InputTokens:     []string{"nextToken"},
+			OutputTokens:    []string{"nextToken"},
+			LimitToken:      "maxResults",
+			TruncationToken: "",
+		},
 	}
 
 	if input == nil {
@@ -753,6 +815,56 @@ func (c *Batch) DescribeJobDefinitionsWithContext(ctx aws.Context, input *Descri
 	return out, req.Send()
 }
 
+// DescribeJobDefinitionsPages iterates over the pages of a DescribeJobDefinitions operation,
+// calling the "fn" function with the response data for each page. To stop
+// iterating, return false from the fn function.
+//
+// See DescribeJobDefinitions method for more information on how to use this operation.
+//
+// Note: This operation can generate multiple requests to a service.
+//
+//    // Example iterating over at most 3 pages of a DescribeJobDefinitions operation.
+//    pageNum := 0
+//    err := client.DescribeJobDefinitionsPages(params,
+//        func(page *batch.DescribeJobDefinitionsOutput, lastPage bool) bool {
+//            pageNum++
+//            fmt.Println(page)
+//            return pageNum <= 3
+//        })
+//
+func (c *Batch) DescribeJobDefinitionsPages(input *DescribeJobDefinitionsInput, fn func(*DescribeJobDefinitionsOutput, bool) bool) error {
+	return c.DescribeJobDefinitionsPagesWithContext(aws.BackgroundContext(), input, fn)
+}
+
+// DescribeJobDefinitionsPagesWithContext same as DescribeJobDefinitionsPages except
+// it takes a Context and allows setting request options on the pages.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *Batch) DescribeJobDefinitionsPagesWithContext(ctx aws.Context, input *DescribeJobDefinitionsInput, fn func(*DescribeJobDefinitionsOutput, bool) bool, opts ...request.Option) error {
+	p := request.Pagination{
+		NewRequest: func() (*request.Request, error) {
+			var inCpy *DescribeJobDefinitionsInput
+			if input != nil {
+				tmp := *input
+				inCpy = &tmp
+			}
+			req, _ := c.DescribeJobDefinitionsRequest(inCpy)
+			req.SetContext(ctx)
+			req.ApplyOptions(opts...)
+			return req, nil
+		},
+	}
+
+	cont := true
+	for p.Next() && cont {
+		cont = fn(p.Page().(*DescribeJobDefinitionsOutput), !p.HasNextPage())
+	}
+	return p.Err()
+}
+
 const opDescribeJobQueues = "DescribeJobQueues"
 
 // DescribeJobQueuesRequest generates a "aws/request.Request" representing the
@@ -784,6 +896,12 @@ func (c *Batch) DescribeJobQueuesRequest(input *DescribeJobQueuesInput) (req *re
 		Name:       opDescribeJobQueues,
 		HTTPMethod: "POST",
 		HTTPPath:   "/v1/describejobqueues",
+		Paginator: &request.Paginator{
+			InputTokens:     []string{"nextToken"},
+			OutputTokens:    []string{"nextToken"},
+			LimitToken:      "maxResults",
+			TruncationToken: "",
+		},
 	}
 
 	if input == nil {
@@ -835,6 +953,56 @@ func (c *Batch) DescribeJobQueuesWithContext(ctx aws.Context, input *DescribeJob
 	req.SetContext(ctx)
 	req.ApplyOptions(opts...)
 	return out, req.Send()
+}
+
+// DescribeJobQueuesPages iterates over the pages of a DescribeJobQueues operation,
+// calling the "fn" function with the response data for each page. To stop
+// iterating, return false from the fn function.
+//
+// See DescribeJobQueues method for more information on how to use this operation.
+//
+// Note: This operation can generate multiple requests to a service.
+//
+//    // Example iterating over at most 3 pages of a DescribeJobQueues operation.
+//    pageNum := 0
+//    err := client.DescribeJobQueuesPages(params,
+//        func(page *batch.DescribeJobQueuesOutput, lastPage bool) bool {
+//            pageNum++
+//            fmt.Println(page)
+//            return pageNum <= 3
+//        })
+//
+func (c *Batch) DescribeJobQueuesPages(input *DescribeJobQueuesInput, fn func(*DescribeJobQueuesOutput, bool) bool) error {
+	return c.DescribeJobQueuesPagesWithContext(aws.BackgroundContext(), input, fn)
+}
+
+// DescribeJobQueuesPagesWithContext same as DescribeJobQueuesPages except
+// it takes a Context and allows setting request options on the pages.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *Batch) DescribeJobQueuesPagesWithContext(ctx aws.Context, input *DescribeJobQueuesInput, fn func(*DescribeJobQueuesOutput, bool) bool, opts ...request.Option) error {
+	p := request.Pagination{
+		NewRequest: func() (*request.Request, error) {
+			var inCpy *DescribeJobQueuesInput
+			if input != nil {
+				tmp := *input
+				inCpy = &tmp
+			}
+			req, _ := c.DescribeJobQueuesRequest(inCpy)
+			req.SetContext(ctx)
+			req.ApplyOptions(opts...)
+			return req, nil
+		},
+	}
+
+	cont := true
+	for p.Next() && cont {
+		cont = fn(p.Page().(*DescribeJobQueuesOutput), !p.HasNextPage())
+	}
+	return p.Err()
 }
 
 const opDescribeJobs = "DescribeJobs"
@@ -952,6 +1120,12 @@ func (c *Batch) ListJobsRequest(input *ListJobsInput) (req *request.Request, out
 		Name:       opListJobs,
 		HTTPMethod: "POST",
 		HTTPPath:   "/v1/listjobs",
+		Paginator: &request.Paginator{
+			InputTokens:     []string{"nextToken"},
+			OutputTokens:    []string{"nextToken"},
+			LimitToken:      "maxResults",
+			TruncationToken: "",
+		},
 	}
 
 	if input == nil {
@@ -1014,6 +1188,56 @@ func (c *Batch) ListJobsWithContext(ctx aws.Context, input *ListJobsInput, opts 
 	req.SetContext(ctx)
 	req.ApplyOptions(opts...)
 	return out, req.Send()
+}
+
+// ListJobsPages iterates over the pages of a ListJobs operation,
+// calling the "fn" function with the response data for each page. To stop
+// iterating, return false from the fn function.
+//
+// See ListJobs method for more information on how to use this operation.
+//
+// Note: This operation can generate multiple requests to a service.
+//
+//    // Example iterating over at most 3 pages of a ListJobs operation.
+//    pageNum := 0
+//    err := client.ListJobsPages(params,
+//        func(page *batch.ListJobsOutput, lastPage bool) bool {
+//            pageNum++
+//            fmt.Println(page)
+//            return pageNum <= 3
+//        })
+//
+func (c *Batch) ListJobsPages(input *ListJobsInput, fn func(*ListJobsOutput, bool) bool) error {
+	return c.ListJobsPagesWithContext(aws.BackgroundContext(), input, fn)
+}
+
+// ListJobsPagesWithContext same as ListJobsPages except
+// it takes a Context and allows setting request options on the pages.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *Batch) ListJobsPagesWithContext(ctx aws.Context, input *ListJobsInput, fn func(*ListJobsOutput, bool) bool, opts ...request.Option) error {
+	p := request.Pagination{
+		NewRequest: func() (*request.Request, error) {
+			var inCpy *ListJobsInput
+			if input != nil {
+				tmp := *input
+				inCpy = &tmp
+			}
+			req, _ := c.ListJobsRequest(inCpy)
+			req.SetContext(ctx)
+			req.ApplyOptions(opts...)
+			return req, nil
+		},
+	}
+
+	cont := true
+	for p.Next() && cont {
+		cont = fn(p.Page().(*ListJobsOutput), !p.HasNextPage())
+	}
+	return p.Err()
 }
 
 const opRegisterJobDefinition = "RegisterJobDefinition"
@@ -1938,8 +2162,8 @@ type ComputeResource struct {
 
 	// The Amazon ECS instance profile applied to Amazon EC2 instances in a compute
 	// environment. You can specify the short name or full Amazon Resource Name
-	// (ARN) of an instance profile. For example, ecsInstanceRole or arn:aws:iam::<aws_account_id>:instance-profile/ecsInstanceRole.
-	// For more information, see Amazon ECS Instance Role (http://docs.aws.amazon.com/batch/latest/userguide/instance_IAM_role.html)
+	// (ARN) of an instance profile. For example, ecsInstanceRole or arn:aws:iam::<aws_account_id>:instance-profile/ecsInstanceRole
+	// . For more information, see Amazon ECS Instance Role (https://docs.aws.amazon.com/batch/latest/userguide/instance_IAM_role.html)
 	// in the AWS Batch User Guide.
 	//
 	// InstanceRole is a required field
@@ -1948,8 +2172,8 @@ type ComputeResource struct {
 	// The instances types that may be launched. You can specify instance families
 	// to launch any instance type within those families (for example, c4 or p3),
 	// or you can specify specific sizes within a family (such as c4.8xlarge). You
-	// can also choose optimal to pick instance types (from the latest C, M, and
-	// R instance families) on the fly that match the demand of your job queues.
+	// can also choose optimal to pick instance types (from the C, M, and R instance
+	// families) on the fly that match the demand of your job queues.
 	//
 	// InstanceTypes is a required field
 	InstanceTypes []*string `locationName:"instanceTypes" type:"list" required:"true"`
@@ -1958,6 +2182,8 @@ type ComputeResource struct {
 	// resource parameters that you specify in a CreateComputeEnvironment API operation
 	// override the same parameters in the launch template. You must specify either
 	// the launch template ID or launch template name in the request, but not both.
+	// For more information, see Launch Template Support (https://docs.aws.amazon.com/batch/latest/userguide/launch-templates.html)
+	// in the AWS Batch User Guide.
 	LaunchTemplate *LaunchTemplateSpecification `locationName:"launchTemplate" type:"structure"`
 
 	// The maximum number of EC2 vCPUs that an environment can reach.
@@ -1985,19 +2211,25 @@ type ComputeResource struct {
 	SecurityGroupIds []*string `locationName:"securityGroupIds" type:"list"`
 
 	// The Amazon Resource Name (ARN) of the Amazon EC2 Spot Fleet IAM role applied
-	// to a SPOT compute environment.
+	// to a SPOT compute environment. For more information, see Amazon EC2 Spot
+	// Fleet Role (https://docs.aws.amazon.com/batch/latest/userguide/spot_fleet_IAM_role.html)
+	// in the AWS Batch User Guide.
 	SpotIamFleetRole *string `locationName:"spotIamFleetRole" type:"string"`
 
-	// The VPC subnets into which the compute resources are launched.
+	// The VPC subnets into which the compute resources are launched. For more information,
+	// see VPCs and Subnets (https://docs.aws.amazon.com/vpc/latest/userguide/VPC_Subnets.html)
+	// in the Amazon VPC User Guide.
 	//
 	// Subnets is a required field
 	Subnets []*string `locationName:"subnets" type:"list" required:"true"`
 
 	// Key-value pair tags to be applied to resources that are launched in the compute
-	// environment.
+	// environment. For AWS Batch, these take the form of "String1": "String2",
+	// where String1 is the tag key and String2 is the tag value—for example,
+	// { "Name": "AWS Batch Instance - C4OnDemand" }.
 	Tags map[string]*string `locationName:"tags" type:"map"`
 
-	// The type of compute environment.
+	// The type of compute environment: EC2 or SPOT.
 	//
 	// Type is a required field
 	Type *string `locationName:"type" type:"string" required:"true" enum:"CRType"`
@@ -2204,6 +2436,10 @@ type ContainerDetail struct {
 	// The Amazon Resource Name (ARN) associated with the job upon execution.
 	JobRoleArn *string `locationName:"jobRoleArn" type:"string"`
 
+	// Linux-specific modifications that are applied to the container, such as details
+	// for device mappings.
+	LinuxParameters *LinuxParameters `locationName:"linuxParameters" type:"structure"`
+
 	// The name of the CloudWatch Logs log stream associated with the container.
 	// The log group for AWS Batch jobs is /aws/batch/job. Each container attempt
 	// receives a log stream name when they reach the RUNNING status.
@@ -2301,6 +2537,12 @@ func (s *ContainerDetail) SetInstanceType(v string) *ContainerDetail {
 // SetJobRoleArn sets the JobRoleArn field's value.
 func (s *ContainerDetail) SetJobRoleArn(v string) *ContainerDetail {
 	s.JobRoleArn = &v
+	return s
+}
+
+// SetLinuxParameters sets the LinuxParameters field's value.
+func (s *ContainerDetail) SetLinuxParameters(v *LinuxParameters) *ContainerDetail {
+	s.LinuxParameters = v
 	return s
 }
 
@@ -2488,16 +2730,16 @@ type ContainerProperties struct {
 	_ struct{} `type:"structure"`
 
 	// The command that is passed to the container. This parameter maps to Cmd in
-	// the Create a container (https://docs.docker.com/engine/reference/api/docker_remote_api_v1.23/#create-a-container)
-	// section of the Docker Remote API (https://docs.docker.com/engine/reference/api/docker_remote_api_v1.23/)
+	// the Create a container (https://docs.docker.com/engine/api/v1.23/#create-a-container)
+	// section of the Docker Remote API (https://docs.docker.com/engine/api/v1.23/)
 	// and the COMMAND parameter to docker run (https://docs.docker.com/engine/reference/run/).
 	// For more information, see https://docs.docker.com/engine/reference/builder/#cmd
 	// (https://docs.docker.com/engine/reference/builder/#cmd).
 	Command []*string `locationName:"command" type:"list"`
 
 	// The environment variables to pass to a container. This parameter maps to
-	// Env in the Create a container (https://docs.docker.com/engine/reference/api/docker_remote_api_v1.23/#create-a-container)
-	// section of the Docker Remote API (https://docs.docker.com/engine/reference/api/docker_remote_api_v1.23/)
+	// Env in the Create a container (https://docs.docker.com/engine/api/v1.23/#create-a-container)
+	// section of the Docker Remote API (https://docs.docker.com/engine/api/v1.23/)
 	// and the --env option to docker run (https://docs.docker.com/engine/reference/run/).
 	//
 	// We do not recommend using plaintext environment variables for sensitive information,
@@ -2509,16 +2751,15 @@ type ContainerProperties struct {
 
 	// The image used to start a container. This string is passed directly to the
 	// Docker daemon. Images in the Docker Hub registry are available by default.
-	// Other repositories are specified with repository-url/image:tag. Up to 255
+	// Other repositories are specified with repository-url/image:tag . Up to 255
 	// letters (uppercase and lowercase), numbers, hyphens, underscores, colons,
 	// periods, forward slashes, and number signs are allowed. This parameter maps
-	// to Image in the Create a container (https://docs.docker.com/engine/reference/api/docker_remote_api_v1.23/#create-a-container)
-	// section of the Docker Remote API (https://docs.docker.com/engine/reference/api/docker_remote_api_v1.23/)
+	// to Image in the Create a container (https://docs.docker.com/engine/api/v1.23/#create-a-container)
+	// section of the Docker Remote API (https://docs.docker.com/engine/api/v1.23/)
 	// and the IMAGE parameter of docker run (https://docs.docker.com/engine/reference/run/).
 	//
 	//    * Images in Amazon ECR repositories use the full registry and repository
 	//    URI (for example, 012345678910.dkr.ecr.<region-name>.amazonaws.com/<repository-name>).
-	//
 	//
 	//    * Images in official repositories on Docker Hub use a single name (for
 	//    example, ubuntu or mongo).
@@ -2539,37 +2780,41 @@ type ContainerProperties struct {
 	// for AWS permissions.
 	JobRoleArn *string `locationName:"jobRoleArn" type:"string"`
 
+	// Linux-specific modifications that are applied to the container, such as details
+	// for device mappings.
+	LinuxParameters *LinuxParameters `locationName:"linuxParameters" type:"structure"`
+
 	// The hard limit (in MiB) of memory to present to the container. If your container
 	// attempts to exceed the memory specified here, the container is killed. This
-	// parameter maps to Memory in the Create a container (https://docs.docker.com/engine/reference/api/docker_remote_api_v1.23/#create-a-container)
-	// section of the Docker Remote API (https://docs.docker.com/engine/reference/api/docker_remote_api_v1.23/)
+	// parameter maps to Memory in the Create a container (https://docs.docker.com/engine/api/v1.23/#create-a-container)
+	// section of the Docker Remote API (https://docs.docker.com/engine/api/v1.23/)
 	// and the --memory option to docker run (https://docs.docker.com/engine/reference/run/).
 	// You must specify at least 4 MiB of memory for a job.
 	//
 	// If you are trying to maximize your resource utilization by providing your
 	// jobs as much memory as possible for a particular instance type, see Memory
-	// Management (http://docs.aws.amazon.com/batch/latest/userguide/memory-management.html)
+	// Management (https://docs.aws.amazon.com/batch/latest/userguide/memory-management.html)
 	// in the AWS Batch User Guide.
 	Memory *int64 `locationName:"memory" type:"integer"`
 
 	// The mount points for data volumes in your container. This parameter maps
-	// to Volumes in the Create a container (https://docs.docker.com/engine/reference/api/docker_remote_api_v1.23/#create-a-container)
-	// section of the Docker Remote API (https://docs.docker.com/engine/reference/api/docker_remote_api_v1.23/)
+	// to Volumes in the Create a container (https://docs.docker.com/engine/api/v1.23/#create-a-container)
+	// section of the Docker Remote API (https://docs.docker.com/engine/api/v1.23/)
 	// and the --volume option to docker run (https://docs.docker.com/engine/reference/run/).
 	MountPoints []*MountPoint `locationName:"mountPoints" type:"list"`
 
 	// When this parameter is true, the container is given elevated privileges on
 	// the host container instance (similar to the root user). This parameter maps
-	// to Privileged in the Create a container (https://docs.docker.com/engine/reference/api/docker_remote_api_v1.23/#create-a-container)
-	// section of the Docker Remote API (https://docs.docker.com/engine/reference/api/docker_remote_api_v1.23/)
+	// to Privileged in the Create a container (https://docs.docker.com/engine/api/v1.23/#create-a-container)
+	// section of the Docker Remote API (https://docs.docker.com/engine/api/v1.23/)
 	// and the --privileged option to docker run (https://docs.docker.com/engine/reference/run/).
 	Privileged *bool `locationName:"privileged" type:"boolean"`
 
 	// When this parameter is true, the container is given read-only access to its
 	// root file system. This parameter maps to ReadonlyRootfs in the Create a container
-	// (https://docs.docker.com/engine/reference/api/docker_remote_api_v1.23/#create-a-container)
-	// section of the Docker Remote API (https://docs.docker.com/engine/reference/api/docker_remote_api_v1.23/)
-	// and the --read-only option to docker run.
+	// (https://docs.docker.com/engine/api/v1.23/#create-a-container) section of
+	// the Docker Remote API (https://docs.docker.com/engine/api/v1.23/) and the
+	// --read-only option to docker run.
 	ReadonlyRootFilesystem *bool `locationName:"readonlyRootFilesystem" type:"boolean"`
 
 	// The type and amount of a resource to assign to a container. Currently, the
@@ -2577,20 +2822,20 @@ type ContainerProperties struct {
 	ResourceRequirements []*ResourceRequirement `locationName:"resourceRequirements" type:"list"`
 
 	// A list of ulimits to set in the container. This parameter maps to Ulimits
-	// in the Create a container (https://docs.docker.com/engine/reference/api/docker_remote_api_v1.23/#create-a-container)
-	// section of the Docker Remote API (https://docs.docker.com/engine/reference/api/docker_remote_api_v1.23/)
+	// in the Create a container (https://docs.docker.com/engine/api/v1.23/#create-a-container)
+	// section of the Docker Remote API (https://docs.docker.com/engine/api/v1.23/)
 	// and the --ulimit option to docker run (https://docs.docker.com/engine/reference/run/).
 	Ulimits []*Ulimit `locationName:"ulimits" type:"list"`
 
 	// The user name to use inside the container. This parameter maps to User in
-	// the Create a container (https://docs.docker.com/engine/reference/api/docker_remote_api_v1.23/#create-a-container)
-	// section of the Docker Remote API (https://docs.docker.com/engine/reference/api/docker_remote_api_v1.23/)
+	// the Create a container (https://docs.docker.com/engine/api/v1.23/#create-a-container)
+	// section of the Docker Remote API (https://docs.docker.com/engine/api/v1.23/)
 	// and the --user option to docker run (https://docs.docker.com/engine/reference/run/).
 	User *string `locationName:"user" type:"string"`
 
 	// The number of vCPUs reserved for the container. This parameter maps to CpuShares
-	// in the Create a container (https://docs.docker.com/engine/reference/api/docker_remote_api_v1.23/#create-a-container)
-	// section of the Docker Remote API (https://docs.docker.com/engine/reference/api/docker_remote_api_v1.23/)
+	// in the Create a container (https://docs.docker.com/engine/api/v1.23/#create-a-container)
+	// section of the Docker Remote API (https://docs.docker.com/engine/api/v1.23/)
 	// and the --cpu-shares option to docker run (https://docs.docker.com/engine/reference/run/).
 	// Each vCPU is equivalent to 1,024 CPU shares. You must specify at least one
 	// vCPU.
@@ -2613,6 +2858,11 @@ func (s ContainerProperties) GoString() string {
 // Validate inspects the fields of the type to determine if they are valid.
 func (s *ContainerProperties) Validate() error {
 	invalidParams := request.ErrInvalidParams{Context: "ContainerProperties"}
+	if s.LinuxParameters != nil {
+		if err := s.LinuxParameters.Validate(); err != nil {
+			invalidParams.AddNested("LinuxParameters", err.(request.ErrInvalidParams))
+		}
+	}
 	if s.ResourceRequirements != nil {
 		for i, v := range s.ResourceRequirements {
 			if v == nil {
@@ -2667,6 +2917,12 @@ func (s *ContainerProperties) SetInstanceType(v string) *ContainerProperties {
 // SetJobRoleArn sets the JobRoleArn field's value.
 func (s *ContainerProperties) SetJobRoleArn(v string) *ContainerProperties {
 	s.JobRoleArn = &v
+	return s
+}
+
+// SetLinuxParameters sets the LinuxParameters field's value.
+func (s *ContainerProperties) SetLinuxParameters(v *LinuxParameters) *ContainerProperties {
+	s.LinuxParameters = v
 	return s
 }
 
@@ -2768,7 +3024,9 @@ type CreateComputeEnvironmentInput struct {
 	ComputeEnvironmentName *string `locationName:"computeEnvironmentName" type:"string" required:"true"`
 
 	// Details of the compute resources managed by the compute environment. This
-	// parameter is required for managed compute environments.
+	// parameter is required for managed compute environments. For more information,
+	// see Compute Environments (https://docs.aws.amazon.com/batch/latest/userguide/compute_environments.html)
+	// in the AWS Batch User Guide.
 	ComputeResources *ComputeResource `locationName:"computeResources" type:"structure"`
 
 	// The full Amazon Resource Name (ARN) of the IAM role that allows AWS Batch
@@ -3280,8 +3538,8 @@ type DescribeJobDefinitionsInput struct {
 	// The name of the job definition to describe.
 	JobDefinitionName *string `locationName:"jobDefinitionName" type:"string"`
 
-	// A space-separated list of up to 100 job definition names or full Amazon Resource
-	// Name (ARN) entries.
+	// A list of up to 100 job definition names or full Amazon Resource Name (ARN)
+	// entries.
 	JobDefinitions []*string `locationName:"jobDefinitions" type:"list"`
 
 	// The maximum number of results returned by DescribeJobDefinitions in paginated
@@ -3475,7 +3733,7 @@ func (s *DescribeJobQueuesOutput) SetNextToken(v string) *DescribeJobQueuesOutpu
 type DescribeJobsInput struct {
 	_ struct{} `type:"structure"`
 
-	// A space-separated list of up to 100 job IDs.
+	// A list of up to 100 job IDs.
 	//
 	// Jobs is a required field
 	Jobs []*string `locationName:"jobs" type:"list" required:"true"`
@@ -3533,21 +3791,79 @@ func (s *DescribeJobsOutput) SetJobs(v []*JobDetail) *DescribeJobsOutput {
 	return s
 }
 
-// The contents of the host parameter determine whether your data volume persists
-// on the host container instance and where it is stored. If the host parameter
-// is empty, then the Docker daemon assigns a host path for your data volume,
-// but the data is not guaranteed to persist after the containers associated
-// with it stop running.
+// An object representing a container instance host device.
+type Device struct {
+	_ struct{} `type:"structure"`
+
+	// The path inside the container at which to expose the host device. By default
+	// the hostPath value is used.
+	ContainerPath *string `locationName:"containerPath" type:"string"`
+
+	// The path for the device on the host container instance.
+	//
+	// HostPath is a required field
+	HostPath *string `locationName:"hostPath" type:"string" required:"true"`
+
+	// The explicit permissions to provide to the container for the device. By default,
+	// the container has permissions for read, write, and mknod for the device.
+	Permissions []*string `locationName:"permissions" type:"list"`
+}
+
+// String returns the string representation
+func (s Device) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s Device) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *Device) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "Device"}
+	if s.HostPath == nil {
+		invalidParams.Add(request.NewErrParamRequired("HostPath"))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetContainerPath sets the ContainerPath field's value.
+func (s *Device) SetContainerPath(v string) *Device {
+	s.ContainerPath = &v
+	return s
+}
+
+// SetHostPath sets the HostPath field's value.
+func (s *Device) SetHostPath(v string) *Device {
+	s.HostPath = &v
+	return s
+}
+
+// SetPermissions sets the Permissions field's value.
+func (s *Device) SetPermissions(v []*string) *Device {
+	s.Permissions = v
+	return s
+}
+
+// Determine whether your data volume persists on the host container instance
+// and where it is stored. If this parameter is empty, then the Docker daemon
+// assigns a host path for your data volume, but the data is not guaranteed
+// to persist after the containers associated with it stop running.
 type Host struct {
 	_ struct{} `type:"structure"`
 
 	// The path on the host container instance that is presented to the container.
 	// If this parameter is empty, then the Docker daemon has assigned a host path
-	// for you. If the host parameter contains a sourcePath file location, then
-	// the data volume persists at the specified location on the host container
-	// instance until you delete it manually. If the sourcePath value does not exist
-	// on the host container instance, the Docker daemon creates it. If the location
-	// does exist, the contents of the source path folder are exported.
+	// for you. If this parameter contains a file location, then the data volume
+	// persists at the specified location on the host container instance until you
+	// delete it manually. If the source path location does not exist on the host
+	// container instance, the Docker daemon creates it. If the location does exist,
+	// the contents of the source path folder are exported.
 	SourcePath *string `locationName:"sourcePath" type:"string"`
 }
 
@@ -3788,8 +4104,9 @@ type JobDetail struct {
 
 	// The current status for the job.
 	//
-	// If your jobs do not progress to STARTING, see Jobs Stuck in  (https://docs.aws.amazon.com/batch/latest/userguide/troubleshooting.html#job_stuck_in_runnable)RUNNABLE
-	// Status in the troubleshooting section of the AWS Batch User Guide.
+	// If your jobs do not progress to STARTING, see Jobs Stuck in RUNNABLE Status
+	// (https://docs.aws.amazon.com/batch/latest/userguide/troubleshooting.html#job_stuck_in_runnable)
+	// in the troubleshooting section of the AWS Batch User Guide.
 	//
 	// Status is a required field
 	Status *string `locationName:"status" type:"string" required:"true" enum:"JobStatus"`
@@ -4238,6 +4555,54 @@ func (s *LaunchTemplateSpecification) SetVersion(v string) *LaunchTemplateSpecif
 	return s
 }
 
+// Linux-specific modifications that are applied to the container, such as details
+// for device mappings.
+type LinuxParameters struct {
+	_ struct{} `type:"structure"`
+
+	// Any host devices to expose to the container. This parameter maps to Devices
+	// in the Create a container (https://docs.docker.com/engine/api/v1.23/#create-a-container)
+	// section of the Docker Remote API (https://docs.docker.com/engine/api/v1.23/)
+	// and the --device option to docker run (https://docs.docker.com/engine/reference/run/).
+	Devices []*Device `locationName:"devices" type:"list"`
+}
+
+// String returns the string representation
+func (s LinuxParameters) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s LinuxParameters) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *LinuxParameters) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "LinuxParameters"}
+	if s.Devices != nil {
+		for i, v := range s.Devices {
+			if v == nil {
+				continue
+			}
+			if err := v.Validate(); err != nil {
+				invalidParams.AddNested(fmt.Sprintf("%s[%v]", "Devices", i), err.(request.ErrInvalidParams))
+			}
+		}
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetDevices sets the Devices field's value.
+func (s *LinuxParameters) SetDevices(v []*Device) *LinuxParameters {
+	s.Devices = v
+	return s
+}
+
 type ListJobsInput struct {
 	_ struct{} `type:"structure"`
 
@@ -4361,7 +4726,8 @@ func (s *ListJobsOutput) SetNextToken(v string) *ListJobsOutput {
 }
 
 // Details on a Docker volume mount point that is used in a job's container
-// properties.
+// properties. This parameter maps to Volumes in the Create a container (https://docs.docker.com/engine/reference/api/docker_remote_api_v1.19/#create-a-container)
+// section of the Docker Remote API and the --volume option to docker run.
 type MountPoint struct {
 	_ struct{} `type:"structure"`
 
@@ -4807,7 +5173,7 @@ type RegisterJobDefinitionInput struct {
 
 	// An object with various properties specific to multi-node parallel jobs. If
 	// you specify node properties for a job, it becomes a multi-node parallel job.
-	// For more information, see Multi-node Parallel Jobs (http://docs.aws.amazon.com/batch/latest/userguide/multi-node-parallel-jobs.html)
+	// For more information, see Multi-node Parallel Jobs (https://docs.aws.amazon.com/batch/latest/userguide/multi-node-parallel-jobs.html)
 	// in the AWS Batch User Guide. If the job definition's type parameter is container,
 	// then you must specify either containerProperties or nodeProperties.
 	NodeProperties *NodeProperties `locationName:"nodeProperties" type:"structure"`
@@ -5052,7 +5418,7 @@ type SubmitJobInput struct {
 	// The array properties for the submitted job, such as the size of the array.
 	// The array size can be between 2 and 10,000. If you specify array properties
 	// for a job, it becomes an array job. For more information, see Array Jobs
-	// (http://docs.aws.amazon.com/batch/latest/userguide/array_jobs.html) in the
+	// (https://docs.aws.amazon.com/batch/latest/userguide/array_jobs.html) in the
 	// AWS Batch User Guide.
 	ArrayProperties *ArrayProperties `locationName:"arrayProperties" type:"structure"`
 
@@ -5703,6 +6069,17 @@ const (
 
 	// CRTypeSpot is a CRType enum value
 	CRTypeSpot = "SPOT"
+)
+
+const (
+	// DeviceCgroupPermissionRead is a DeviceCgroupPermission enum value
+	DeviceCgroupPermissionRead = "READ"
+
+	// DeviceCgroupPermissionWrite is a DeviceCgroupPermission enum value
+	DeviceCgroupPermissionWrite = "WRITE"
+
+	// DeviceCgroupPermissionMknod is a DeviceCgroupPermission enum value
+	DeviceCgroupPermissionMknod = "MKNOD"
 )
 
 const (

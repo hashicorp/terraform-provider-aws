@@ -101,15 +101,16 @@ func testAccCheckAWSSsmResourceDataSyncExists(name string) resource.TestCheckFun
 
 func testAccSsmResourceDataSyncConfig(rInt int, rName string) string {
 	return fmt.Sprintf(`
-    resource "aws_s3_bucket" "hoge" {
-      bucket = "tf-test-bucket-%d"
-      region = "us-west-2"
-      force_destroy = true
-    }
+resource "aws_s3_bucket" "hoge" {
+  bucket        = "tf-test-bucket-%d"
+  region        = "us-west-2"
+  force_destroy = true
+}
 
-    resource "aws_s3_bucket_policy" "hoge" {
-    	bucket = "${aws_s3_bucket.hoge.bucket}"
-    	policy = <<EOF
+resource "aws_s3_bucket_policy" "hoge" {
+  bucket = "${aws_s3_bucket.hoge.bucket}"
+
+  policy = <<EOF
 {
         "Version": "2012-10-17",
         "Statement": [
@@ -139,29 +140,31 @@ func testAccSsmResourceDataSyncConfig(rInt int, rName string) string {
           ]
       }
       EOF
-    }
+}
 
-    resource "aws_ssm_resource_data_sync" "foo" {
-      name = "tf-test-ssm-%s"
-      s3_destination {
-        bucket_name = "${aws_s3_bucket.hoge.bucket}"
-        region = "${aws_s3_bucket.hoge.region}"
-      }
-    }
-    `, rInt, rInt, rInt, rName)
+resource "aws_ssm_resource_data_sync" "foo" {
+  name = "tf-test-ssm-%s"
+
+  s3_destination {
+    bucket_name = "${aws_s3_bucket.hoge.bucket}"
+    region      = "${aws_s3_bucket.hoge.region}"
+  }
+}
+`, rInt, rInt, rInt, rName)
 }
 
 func testAccSsmResourceDataSyncConfigUpdate(rInt int, rName string) string {
 	return fmt.Sprintf(`
-    resource "aws_s3_bucket" "hoge" {
-      bucket = "tf-test-bucket-%d"
-      region = "us-west-2"
-      force_destroy = true
-    }
+resource "aws_s3_bucket" "hoge" {
+  bucket        = "tf-test-bucket-%d"
+  region        = "us-west-2"
+  force_destroy = true
+}
 
-    resource "aws_s3_bucket_policy" "hoge" {
-      bucket = "${aws_s3_bucket.hoge.bucket}"
-      policy = <<EOF
+resource "aws_s3_bucket_policy" "hoge" {
+  bucket = "${aws_s3_bucket.hoge.bucket}"
+
+  policy = <<EOF
 {
         "Version": "2012-10-17",
         "Statement": [
@@ -191,15 +194,16 @@ func testAccSsmResourceDataSyncConfigUpdate(rInt int, rName string) string {
           ]
       }
       EOF
-    }
+}
 
-    resource "aws_ssm_resource_data_sync" "foo" {
-      name = "tf-test-ssm-%s"
-      s3_destination {
-        bucket_name = "${aws_s3_bucket.hoge.bucket}"
-        region = "${aws_s3_bucket.hoge.region}"
-        prefix = "test-"
-      }
-    }
-    `, rInt, rInt, rInt, rName)
+resource "aws_ssm_resource_data_sync" "foo" {
+  name = "tf-test-ssm-%s"
+
+  s3_destination {
+    bucket_name = "${aws_s3_bucket.hoge.bucket}"
+    region      = "${aws_s3_bucket.hoge.region}"
+    prefix      = "test-"
+  }
+}
+`, rInt, rInt, rInt, rName)
 }

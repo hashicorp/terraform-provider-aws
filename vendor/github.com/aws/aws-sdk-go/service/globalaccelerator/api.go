@@ -1620,8 +1620,8 @@ type AcceleratorAttributes struct {
 	FlowLogsS3Bucket *string `type:"string"`
 
 	// The prefix for the location in the Amazon S3 bucket for the flow logs. Attribute
-	// is required if FlowLogsEnabled is true. If you don’t specify a prefix, the
-	// flow logs are stored in the root of the bucket.
+	// is required if FlowLogsEnabled is true. If you don’t specify a prefix,
+	// the flow logs are stored in the root of the bucket.
 	FlowLogsS3Prefix *string `type:"string"`
 }
 
@@ -1948,10 +1948,11 @@ type CreateListenerInput struct {
 	// AWS Global Accelerator uses a consistent-flow hashing algorithm to choose
 	// the optimal endpoint for a connection. If client affinity is NONE, Global
 	// Accelerator uses the "five-tuple" (5-tuple) properties—source IP address,
-	// source port, destination IP address, destination port, and protocol—to select
-	// the hash value, and then chooses the best endpoint. However, with this setting,
-	// if someone uses different ports to connect to Global Accelerator, their connections
-	// might not be always routed to the same endpoint because the hash value changes.
+	// source port, destination IP address, destination port, and protocol—to
+	// select the hash value, and then chooses the best endpoint. However, with
+	// this setting, if someone uses different ports to connect to Global Accelerator,
+	// their connections might not be always routed to the same endpoint because
+	// the hash value changes.
 	//
 	// If you want a given client to always be routed to the same endpoint, set
 	// client affinity to SOURCE_IP instead. When you use the SOURCE_IP setting,
@@ -3016,10 +3017,11 @@ type Listener struct {
 	// AWS Global Accelerator uses a consistent-flow hashing algorithm to choose
 	// the optimal endpoint for a connection. If client affinity is NONE, Global
 	// Accelerator uses the "five-tuple" (5-tuple) properties—source IP address,
-	// source port, destination IP address, destination port, and protocol—to select
-	// the hash value, and then chooses the best endpoint. However, with this setting,
-	// if someone uses different ports to connect to Global Accelerator, their connections
-	// might not be always routed to the same endpoint because the hash value changes.
+	// source port, destination IP address, destination port, and protocol—to
+	// select the hash value, and then chooses the best endpoint. However, with
+	// this setting, if someone uses different ports to connect to Global Accelerator,
+	// their connections might not be always routed to the same endpoint because
+	// the hash value changes.
 	//
 	// If you want a given client to always be routed to the same endpoint, set
 	// client affinity to SOURCE_IP instead. When you use the SOURCE_IP setting,
@@ -3142,8 +3144,8 @@ type UpdateAcceleratorAttributesInput struct {
 	FlowLogsS3Bucket *string `type:"string"`
 
 	// Update the prefix for the location in the Amazon S3 bucket for the flow logs.
-	// Attribute is required if FlowLogsEnabled is true. If you don’t specify a
-	// prefix, the flow logs are stored in the root of the bucket.
+	// Attribute is required if FlowLogsEnabled is true. If you don’t specify
+	// a prefix, the flow logs are stored in the root of the bucket.
 	FlowLogsS3Prefix *string `type:"string"`
 }
 
@@ -3457,10 +3459,11 @@ type UpdateListenerInput struct {
 	// AWS Global Accelerator uses a consistent-flow hashing algorithm to choose
 	// the optimal endpoint for a connection. If client affinity is NONE, Global
 	// Accelerator uses the "five-tuple" (5-tuple) properties—source IP address,
-	// source port, destination IP address, destination port, and protocol—to select
-	// the hash value, and then chooses the best endpoint. However, with this setting,
-	// if someone uses different ports to connect to Global Accelerator, their connections
-	// might not be always routed to the same endpoint because the hash value changes.
+	// source port, destination IP address, destination port, and protocol—to
+	// select the hash value, and then chooses the best endpoint. However, with
+	// this setting, if someone uses different ports to connect to Global Accelerator,
+	// their connections might not be always routed to the same endpoint because
+	// the hash value changes.
 	//
 	// If you want a given client to always be routed to the same endpoint, set
 	// client affinity to SOURCE_IP instead. When you use the SOURCE_IP setting,

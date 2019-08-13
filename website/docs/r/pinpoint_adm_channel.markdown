@@ -6,7 +6,7 @@ description: |-
   Provides a Pinpoint ADM Channel resource.
 ---
 
-# aws_pinpoint_adm_channel
+# Resource: aws_pinpoint_adm_channel
 
 Provides a Pinpoint ADM (Amazon Device Messaging) Channel resource.
 

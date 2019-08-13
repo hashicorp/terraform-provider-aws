@@ -34,38 +34,38 @@ func TestAccAWSDataElasticacheCluster_basic(t *testing.T) {
 func testAccAWSElastiCacheClusterConfigWithDataSource(rString string, rInt int) string {
 	return fmt.Sprintf(`
 provider "aws" {
-	region = "us-east-1"
+  region = "us-east-1"
 }
 
 resource "aws_security_group" "bar" {
-    name = "tf-test-security-group-%d"
-    description = "tf-test-security-group-descr"
-    ingress {
-        from_port = -1
-        to_port = -1
-        protocol = "icmp"
-        self = true
-    }
+  name        = "tf-test-security-group-%d"
+  description = "tf-test-security-group-descr"
+
+  ingress {
+    from_port = -1
+    to_port   = -1
+    protocol  = "icmp"
+    self      = true
+  }
 }
 
 resource "aws_elasticache_security_group" "bar" {
-    name = "tf-test-security-group-%d"
-    description = "tf-test-security-group-descr"
-    security_group_names = ["${aws_security_group.bar.name}"]
+  name                 = "tf-test-security-group-%d"
+  description          = "tf-test-security-group-descr"
+  security_group_names = ["${aws_security_group.bar.name}"]
 }
 
 resource "aws_elasticache_cluster" "bar" {
-    cluster_id = "tf-%s"
-    engine = "memcached"
-    node_type = "cache.m1.small"
-    num_cache_nodes = 1
-    port = 11211
-    security_group_names = ["${aws_elasticache_security_group.bar.name}"]
+  cluster_id           = "tf-%s"
+  engine               = "memcached"
+  node_type            = "cache.m1.small"
+  num_cache_nodes      = 1
+  port                 = 11211
+  security_group_names = ["${aws_elasticache_security_group.bar.name}"]
 }
 
 data "aws_elasticache_cluster" "bar" {
-	cluster_id = "${aws_elasticache_cluster.bar.cluster_id}"
+  cluster_id = "${aws_elasticache_cluster.bar.cluster_id}"
 }
-
 `, rInt, rInt, rString)
 }

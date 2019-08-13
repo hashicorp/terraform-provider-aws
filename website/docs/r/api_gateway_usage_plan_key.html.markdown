@@ -6,7 +6,7 @@ description: |-
   Provides an API Gateway Usage Plan Key.
 ---
 
-# aws_api_gateway_usage_plan_key
+# Resource: aws_api_gateway_usage_plan_key
 
 Provides an API Gateway Usage Plan Key.
 

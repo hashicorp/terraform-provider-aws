@@ -271,197 +271,203 @@ func TestResourceAWSRedshiftSecurityGroupNameValidation(t *testing.T) {
 
 func testAccAWSRedshiftSecurityGroupConfig_ingressCidr(rInt int) string {
 	return fmt.Sprintf(`
-	provider "aws" {
-			region = "us-east-1"
-	}
+provider "aws" {
+  region = "us-east-1"
+}
 
-	resource "aws_redshift_security_group" "bar" {
-			name = "redshift-sg-terraform-%d"
+resource "aws_redshift_security_group" "bar" {
+  name = "redshift-sg-terraform-%d"
 
-			ingress {
-					cidr = "10.0.0.1/24"
-			}
-	}`, rInt)
+  ingress {
+    cidr = "10.0.0.1/24"
+  }
+}
+`, rInt)
 }
 
 func testAccAWSRedshiftSecurityGroupConfig_ingressCidrAdd(rInt int) string {
 	return fmt.Sprintf(`
-	provider "aws" {
-			region = "us-east-1"
-	}
+provider "aws" {
+  region = "us-east-1"
+}
 
-	resource "aws_redshift_security_group" "bar" {
-			name = "redshift-sg-terraform-%d"
-			description = "this is a description"
+resource "aws_redshift_security_group" "bar" {
+  name        = "redshift-sg-terraform-%d"
+  description = "this is a description"
 
-			ingress {
-					cidr = "10.0.0.1/24"
-			}
+  ingress {
+    cidr = "10.0.0.1/24"
+  }
 
-			ingress {
-					cidr = "10.0.10.1/24"
-			}
+  ingress {
+    cidr = "10.0.10.1/24"
+  }
 
-			ingress {
-					cidr = "10.0.20.1/24"
-			}
-	}`, rInt)
+  ingress {
+    cidr = "10.0.20.1/24"
+  }
+}
+`, rInt)
 }
 
 func testAccAWSRedshiftSecurityGroupConfig_ingressCidrReduce(rInt int) string {
 	return fmt.Sprintf(`
-	provider "aws" {
-			region = "us-east-1"
-	}
+provider "aws" {
+  region = "us-east-1"
+}
 
-	resource "aws_redshift_security_group" "bar" {
-			name = "redshift-sg-terraform-%d"
-			description = "this is a description"
+resource "aws_redshift_security_group" "bar" {
+  name        = "redshift-sg-terraform-%d"
+  description = "this is a description"
 
-			ingress {
-					cidr = "10.0.0.1/24"
-			}
+  ingress {
+    cidr = "10.0.0.1/24"
+  }
 
-			ingress {
-					cidr = "10.0.10.1/24"
-			}
-	}`, rInt)
+  ingress {
+    cidr = "10.0.10.1/24"
+  }
+}
+`, rInt)
 }
 
 func testAccAWSRedshiftSecurityGroupConfig_ingressSgId(rInt int) string {
 	return fmt.Sprintf(`
-	provider "aws" {
-			region = "us-east-1"
-	}
+provider "aws" {
+  region = "us-east-1"
+}
 
-	resource "aws_security_group" "redshift" {
-		name = "terraform_redshift_test_%d"
-		description = "Used in the redshift acceptance tests"
+resource "aws_security_group" "redshift" {
+  name        = "terraform_redshift_test_%d"
+  description = "Used in the redshift acceptance tests"
 
-		ingress {
-			protocol = "tcp"
-			from_port = 22
-			to_port = 22
-			cidr_blocks = ["10.0.0.0/8"]
-		}
-	}
+  ingress {
+    protocol    = "tcp"
+    from_port   = 22
+    to_port     = 22
+    cidr_blocks = ["10.0.0.0/8"]
+  }
+}
 
-	resource "aws_redshift_security_group" "bar" {
-			name = "redshift-sg-terraform-%d"
-			description = "this is a description"
+resource "aws_redshift_security_group" "bar" {
+  name        = "redshift-sg-terraform-%d"
+  description = "this is a description"
 
-			ingress {
-					security_group_name = "${aws_security_group.redshift.name}"
-					security_group_owner_id = "${aws_security_group.redshift.owner_id}"
-			}
-	}`, rInt, rInt)
+  ingress {
+    security_group_name     = "${aws_security_group.redshift.name}"
+    security_group_owner_id = "${aws_security_group.redshift.owner_id}"
+  }
+}
+`, rInt, rInt)
 }
 
 func testAccAWSRedshiftSecurityGroupConfig_ingressSgIdAdd(rInt int) string {
 	return fmt.Sprintf(`
-	provider "aws" {
-			region = "us-east-1"
-	}
+provider "aws" {
+  region = "us-east-1"
+}
 
-	resource "aws_security_group" "redshift" {
-		name = "terraform_redshift_test_%d"
-		description = "Used in the redshift acceptance tests"
+resource "aws_security_group" "redshift" {
+  name        = "terraform_redshift_test_%d"
+  description = "Used in the redshift acceptance tests"
 
-		ingress {
-			protocol = "tcp"
-			from_port = 22
-			to_port = 22
-			cidr_blocks = ["10.0.0.0/16"]
-		}
-	}
+  ingress {
+    protocol    = "tcp"
+    from_port   = 22
+    to_port     = 22
+    cidr_blocks = ["10.0.0.0/16"]
+  }
+}
 
-	resource "aws_security_group" "redshift2" {
-		name = "terraform_redshift_test_2_%d"
-		description = "Used in the redshift acceptance tests #2"
+resource "aws_security_group" "redshift2" {
+  name        = "terraform_redshift_test_2_%d"
+  description = "Used in the redshift acceptance tests #2"
 
-		ingress {
-			protocol = "tcp"
-			from_port = 22
-			to_port = 22
-			cidr_blocks = ["10.1.0.0/16"]
-		}
-	}
+  ingress {
+    protocol    = "tcp"
+    from_port   = 22
+    to_port     = 22
+    cidr_blocks = ["10.1.0.0/16"]
+  }
+}
 
-	resource "aws_security_group" "redshift3" {
-		name = "terraform_redshift_test_3_%d"
-		description = "Used in the redshift acceptance tests #3"
+resource "aws_security_group" "redshift3" {
+  name        = "terraform_redshift_test_3_%d"
+  description = "Used in the redshift acceptance tests #3"
 
-		ingress {
-			protocol = "tcp"
-			from_port = 22
-			to_port = 22
-			cidr_blocks = ["10.2.0.0/16"]
-		}
-	}
+  ingress {
+    protocol    = "tcp"
+    from_port   = 22
+    to_port     = 22
+    cidr_blocks = ["10.2.0.0/16"]
+  }
+}
 
-	resource "aws_redshift_security_group" "bar" {
-			name = "redshift-sg-terraform-%d"
-			description = "this is a description"
+resource "aws_redshift_security_group" "bar" {
+  name        = "redshift-sg-terraform-%d"
+  description = "this is a description"
 
-			ingress {
-					security_group_name = "${aws_security_group.redshift.name}"
-					security_group_owner_id = "${aws_security_group.redshift.owner_id}"
-			}
+  ingress {
+    security_group_name     = "${aws_security_group.redshift.name}"
+    security_group_owner_id = "${aws_security_group.redshift.owner_id}"
+  }
 
-			ingress {
-					security_group_name = "${aws_security_group.redshift2.name}"
-					security_group_owner_id = "${aws_security_group.redshift.owner_id}"
-			}
+  ingress {
+    security_group_name     = "${aws_security_group.redshift2.name}"
+    security_group_owner_id = "${aws_security_group.redshift.owner_id}"
+  }
 
-			ingress {
-					security_group_name = "${aws_security_group.redshift3.name}"
-					security_group_owner_id = "${aws_security_group.redshift.owner_id}"
-			}
-	}`, rInt, rInt, rInt, rInt)
+  ingress {
+    security_group_name     = "${aws_security_group.redshift3.name}"
+    security_group_owner_id = "${aws_security_group.redshift.owner_id}"
+  }
+}
+`, rInt, rInt, rInt, rInt)
 }
 
 func testAccAWSRedshiftSecurityGroupConfig_ingressSgIdReduce(rInt int) string {
 	return fmt.Sprintf(`
-	provider "aws" {
-			region = "us-east-1"
-	}
+provider "aws" {
+  region = "us-east-1"
+}
 
-	resource "aws_security_group" "redshift" {
-		name = "terraform_redshift_test_%d"
-		description = "Used in the redshift acceptance tests"
+resource "aws_security_group" "redshift" {
+  name        = "terraform_redshift_test_%d"
+  description = "Used in the redshift acceptance tests"
 
-		ingress {
-			protocol = "tcp"
-			from_port = 22
-			to_port = 22
-			cidr_blocks = ["10.0.0.0/16"]
-		}
-	}
+  ingress {
+    protocol    = "tcp"
+    from_port   = 22
+    to_port     = 22
+    cidr_blocks = ["10.0.0.0/16"]
+  }
+}
 
-	resource "aws_security_group" "redshift2" {
-		name = "terraform_redshift_test_2_%d"
-		description = "Used in the redshift acceptance tests #2"
+resource "aws_security_group" "redshift2" {
+  name        = "terraform_redshift_test_2_%d"
+  description = "Used in the redshift acceptance tests #2"
 
-		ingress {
-			protocol = "tcp"
-			from_port = 22
-			to_port = 22
-			cidr_blocks = ["10.1.0.0/16"]
-		}
-	}
+  ingress {
+    protocol    = "tcp"
+    from_port   = 22
+    to_port     = 22
+    cidr_blocks = ["10.1.0.0/16"]
+  }
+}
 
-	resource "aws_redshift_security_group" "bar" {
-			name = "redshift-sg-terraform-%d"
-			description = "this is a description"
+resource "aws_redshift_security_group" "bar" {
+  name        = "redshift-sg-terraform-%d"
+  description = "this is a description"
 
-			ingress {
-					security_group_name = "${aws_security_group.redshift.name}"
-					security_group_owner_id = "${aws_security_group.redshift.owner_id}"
-			}
+  ingress {
+    security_group_name     = "${aws_security_group.redshift.name}"
+    security_group_owner_id = "${aws_security_group.redshift.owner_id}"
+  }
 
-			ingress {
-					security_group_name = "${aws_security_group.redshift2.name}"
-					security_group_owner_id = "${aws_security_group.redshift.owner_id}"
-			}
-	}`, rInt, rInt, rInt)
+  ingress {
+    security_group_name     = "${aws_security_group.redshift2.name}"
+    security_group_owner_id = "${aws_security_group.redshift.owner_id}"
+  }
+}
+`, rInt, rInt, rInt)
 }

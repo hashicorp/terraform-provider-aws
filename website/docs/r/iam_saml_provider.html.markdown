@@ -6,7 +6,7 @@ description: |-
   Provides an IAM SAML provider.
 ---
 
-# aws_iam_saml_provider
+# Resource: aws_iam_saml_provider
 
 Provides an IAM SAML provider.
 

@@ -6,7 +6,7 @@ description: |-
   Associates a Direct Connect Connection with a LAG.
 ---
 
-# aws_dx_connection_association
+# Resource: aws_dx_connection_association
 
 Associates a Direct Connect Connection with a LAG.
 

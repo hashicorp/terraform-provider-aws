@@ -11,6 +11,7 @@ import (
 // See https://docs.aws.amazon.com/govcloud-us/latest/ug-east/verifying-cloudtrail.html
 // See https://docs.aws.amazon.com/govcloud-us/latest/ug-west/verifying-cloudtrail.html
 var cloudTrailServiceAccountPerRegionMap = map[string]string{
+	"ap-east-1":      "119688915426",
 	"ap-northeast-1": "216624486486",
 	"ap-northeast-2": "492519147666",
 	"ap-northeast-3": "765225791966",
@@ -24,6 +25,7 @@ var cloudTrailServiceAccountPerRegionMap = map[string]string{
 	"eu-west-1":      "859597730677",
 	"eu-west-2":      "282025262664",
 	"eu-west-3":      "262312530599",
+	"me-south-1":     "034638983726",
 	"sa-east-1":      "814480443879",
 	"us-east-1":      "086441151436",
 	"us-east-2":      "475085895292",

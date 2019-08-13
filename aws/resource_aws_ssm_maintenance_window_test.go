@@ -34,12 +34,47 @@ func TestAccAWSSSMMaintenanceWindow_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "schedule_timezone", ""),
 					resource.TestCheckResourceAttr(resourceName, "schedule", "cron(0 16 ? * TUE *)"),
 					resource.TestCheckResourceAttr(resourceName, "start_date", ""),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 				),
 			},
 			{
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccAWSSSMMaintenanceWindow_tags(t *testing.T) {
+	var winId ssm.MaintenanceWindowIdentity
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_ssm_maintenance_window.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSSSMMaintenanceWindowDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSSSMMaintenanceWindowConfigTags(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSSSMMaintenanceWindowExists(resourceName, &winId),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.Name", "My Maintenance Window"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccAWSSSMMaintenanceWindowConfig(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSSSMMaintenanceWindowExists(resourceName, &winId),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+				),
 			},
 		},
 	})
@@ -449,6 +484,21 @@ resource "aws_ssm_maintenance_window" "test" {
   duration = 3
   name     = %q
   schedule = "cron(0 16 ? * TUE *)"
+}
+`, rName)
+}
+
+func testAccAWSSSMMaintenanceWindowConfigTags(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_ssm_maintenance_window" "test" {
+  cutoff   = 1
+  duration = 3
+  name     = %q
+  schedule = "cron(0 16 ? * TUE *)"
+
+  tags = {
+    Name = "My Maintenance Window"
+  }
 }
 `, rName)
 }

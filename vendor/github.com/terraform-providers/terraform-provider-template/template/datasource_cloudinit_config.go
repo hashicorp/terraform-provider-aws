@@ -77,6 +77,10 @@ func renderCloudinitConfig(d *schema.ResourceData) (string, error) {
 	gzipOutput := d.Get("gzip").(bool)
 	base64Output := d.Get("base64_encode").(bool)
 
+	if gzipOutput && !base64Output {
+		return "", fmt.Errorf("base64_encode is mandatory when gzip is enabled")
+	}
+
 	partsValue, hasParts := d.GetOk("part")
 	if !hasParts {
 		return "", fmt.Errorf("No parts found in the cloudinit resource declaration")

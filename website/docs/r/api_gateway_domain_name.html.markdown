@@ -6,7 +6,7 @@ description: |-
   Registers a custom domain name for use with AWS API Gateway.
 ---
 
-# aws_api_gateway_domain_name
+# Resource: aws_api_gateway_domain_name
 
 Registers a custom domain name for use with AWS API Gateway. Additional information about this functionality
 can be found in the [API Gateway Developer Guide](https://docs.aws.amazon.com/apigateway/latest/developerguide/how-to-custom-domains.html).
@@ -148,6 +148,7 @@ The following arguments are supported:
 
 * `domain_name` - (Required) The fully-qualified domain name to register
 * `endpoint_configuration` - (Optional) Configuration block defining API endpoint information including type. Defined below.
+* `security_policy` - (Optional) The Transport Layer Security (TLS) version + cipher suite for this DomainName. The valid values are `TLS_1_0` and `TLS_1_2`. Must be configured to perform drift detection.
 
 When referencing an AWS-managed certificate, the following arguments are supported:
 

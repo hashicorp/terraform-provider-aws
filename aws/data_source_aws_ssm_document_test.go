@@ -70,7 +70,7 @@ DOC
 }
 
 data "aws_ssm_document" "test" {
-  name = "${aws_ssm_document.test.name}"
+  name            = "${aws_ssm_document.test.name}"
   document_format = "%s"
 }
 `, name, documentFormat)

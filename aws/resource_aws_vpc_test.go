@@ -19,12 +19,14 @@ func init() {
 	resource.AddTestSweepers("aws_vpc", &resource.Sweeper{
 		Name: "aws_vpc",
 		Dependencies: []string{
+			"aws_egress_only_internet_gateway",
 			"aws_internet_gateway",
 			"aws_nat_gateway",
 			"aws_network_acl",
 			"aws_route_table",
 			"aws_security_group",
 			"aws_subnet",
+			"aws_vpc_peering_connection",
 			"aws_vpn_gateway",
 		},
 		F: testSweepVPCs,

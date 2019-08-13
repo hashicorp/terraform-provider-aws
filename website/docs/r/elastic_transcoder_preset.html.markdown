@@ -6,7 +6,7 @@ description: |-
   Provides an Elastic Transcoder preset resource.
 ---
 
-# aws_elastictranscoder_preset
+# Resource: aws_elastictranscoder_preset
 
 Provides an Elastic Transcoder preset resource.
 
@@ -164,5 +164,5 @@ The `video_codec_options` map supports the following:
 Elastic Transcoder presets can be imported using the `id`, e.g.
 
 ```
-$ terraform import aws_elastic_transcoder_preset.basic_preset 1407981661351-cttk8b
+$ terraform import aws_elastictranscoder_preset.basic_preset 1407981661351-cttk8b
 ```

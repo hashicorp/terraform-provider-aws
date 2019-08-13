@@ -23,7 +23,7 @@ func init() {
 			"aws_autoscaling_group",
 			"aws_batch_compute_environment",
 			"aws_beanstalk_environment",
-			"aws_db_instance",
+			"aws_db_subnet_group",
 			"aws_directory_service_directory",
 			"aws_ec2_client_vpn_endpoint",
 			"aws_ec2_transit_gateway_vpc_attachment",
@@ -36,6 +36,7 @@ func init() {
 			"aws_lambda_function",
 			"aws_lb",
 			"aws_mq_broker",
+			"aws_msk_cluster",
 			"aws_network_interface",
 			"aws_redshift_cluster",
 			"aws_route53_resolver_endpoint",
@@ -454,10 +455,6 @@ resource "aws_subnet" "foo" {
 `
 
 const testAccSubnetConfigAvailabilityZoneId = `
-provider "aws" {
-  region = "us-west-2"
-}
-
 resource "aws_vpc" "foo" {
   cidr_block = "10.1.0.0/16"
   tags = {
