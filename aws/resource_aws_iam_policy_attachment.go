@@ -4,12 +4,10 @@ import (
 	"fmt"
 	"log"
 	"strings"
-	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/iam"
-	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/helper/schema"
 	"github.com/hashicorp/terraform/helper/validation"
 )
@@ -217,37 +215,28 @@ func attachPolicyToRoles(conn *iam.IAM, roles []*string, arn string) error {
 			return err
 		}
 
-		var attachmentErr = resource.Retry(2*time.Minute, func() *resource.RetryError {
-
-			input := iam.ListRolePoliciesInput{
-				RoleName: r,
-			}
-
-			attachedPolicies, err := conn.ListRolePolicies(&input)
-			if err != nil {
-				return resource.NonRetryableError(err)
-			}
-
-			if len(attachedPolicies.PolicyNames) > 0 {
-				var foundPolicy bool
-				for _, policyName := range attachedPolicies.PolicyNames {
-					if strings.HasSuffix(arn, *policyName) {
-						foundPolicy = true
-						break
-					}
-				}
-
-				if !foundPolicy {
-					return resource.NonRetryableError(err)
-				}
-			}
-
-			return nil
-		})
-
-		if attachmentErr != nil {
-			return attachmentErr
+		input := iam.ListRolePoliciesInput{
+			RoleName: r,
 		}
+		attachedPolicies, err := conn.ListRolePolicies(&input)
+		if err != nil {
+			return fmt.Errorf("Error listing role policies: %s", err)
+		}
+
+		if len(attachedPolicies.PolicyNames) > 0 {
+			var foundPolicy bool
+			for _, policyName := range attachedPolicies.PolicyNames {
+				if strings.HasSuffix(arn, *policyName) {
+					foundPolicy = true
+					break
+				}
+			}
+
+			if !foundPolicy {
+				return fmt.Errorf("Error: Attached policy not found")
+			}
+		}
+
 	}
 	return nil
 }
