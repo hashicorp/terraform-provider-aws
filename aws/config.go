@@ -505,11 +505,6 @@ func (c *Config) Client() (interface{}, error) {
 		}
 		route53Config.Region = aws.String(endpoints.CnNorthwest1RegionID)
 	case endpoints.AwsUsGovPartitionID:
-		// The AWS Go SDK is missing endpoint information for Route 53 in the AWS GovCloud (US) partition.
-		// This can likely be removed in the future.
-		if aws.StringValue(route53Config.Endpoint) == "" {
-			route53Config.Endpoint = aws.String("https://route53.us-gov.amazonaws.com")
-		}
 		route53Config.Region = aws.String(endpoints.UsGovWest1RegionID)
 	}
 
