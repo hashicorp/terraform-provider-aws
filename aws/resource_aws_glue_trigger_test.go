@@ -77,6 +77,7 @@ func TestAccAWSGlueTrigger_Basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "predicate.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "schedule", ""),
 					resource.TestCheckResourceAttr(resourceName, "type", "ON_DEMAND"),
+					resource.TestCheckResourceAttr(resourceName, "workflow_name", ""),
 				),
 			},
 			{
@@ -228,6 +229,42 @@ func TestAccAWSGlueTrigger_Schedule(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSGlueTriggerExists(resourceName, &trigger),
 					resource.TestCheckResourceAttr(resourceName, "schedule", "cron(2 3 * * ? *)"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+
+
+func TestAccAWSGlueTrigger_WorkflowName(t *testing.T) {
+	var trigger glue.Trigger
+
+	rName := fmt.Sprintf("tf-acc-test-%s", acctest.RandString(5))
+	resourceName := "aws_glue_trigger.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSGlueTriggerDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSGlueTriggerConfig_WorkflowName(rName, "workflow_name1"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSGlueTriggerExists(resourceName, &trigger),
+					resource.TestCheckResourceAttr(resourceName, "workflow_name", "workflow_name1"),
+				),
+			},
+			{
+				Config: testAccAWSGlueTriggerConfig_WorkflowName(rName, ""),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSGlueTriggerExists(resourceName, &trigger),
+					resource.TestCheckResourceAttr(resourceName, "workflow_name", ""),
 				),
 			},
 			{
@@ -397,4 +434,20 @@ resource "aws_glue_trigger" "test" {
   }
 }
 `, testAccAWSGlueJobConfig_Required(rName), rName, schedule)
+}
+
+func testAccAWSGlueTriggerConfig_WorkflowName(rName, workflowName string) string {
+	return fmt.Sprintf(`
+%s
+
+resource "aws_glue_trigger" "test" {
+  workflow_name = "%s"
+  name          = "%s"
+  type          = "ON_DEMAND"
+
+  actions {
+    job_name = "${aws_glue_job.test.name}"
+  }
+}
+`, testAccAWSGlueJobConfig_Required(rName), workflowName, rName)
 }
