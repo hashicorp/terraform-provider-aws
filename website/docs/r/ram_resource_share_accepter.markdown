@@ -14,7 +14,7 @@ Manage accepting a Resource Access Manager (RAM) Resource Share invitation. From
 
 ## Example Usage
 
-This configuration provides an example of using multiple Terraform AWS providers to configure two different AWS accounts. In the _sender_ account, the configuration creates a `aws_ram_resource_share` and uses a data source in the _receiver_ account to create a `aws_ram_principal_assocation` resource with the _receiver's_ account ID. In the _receiver_ account, the configuration accepts the invitation to share resources with the `aws_ram_resource_share_accepter`.
+This configuration provides an example of using multiple Terraform AWS providers to configure two different AWS accounts. In the _sender_ account, the configuration creates a `aws_ram_resource_share` and uses a data source in the _receiver_ account to create a `aws_ram_principal_association` resource with the _receiver's_ account ID. In the _receiver_ account, the configuration accepts the invitation to share resources with the `aws_ram_resource_share_accepter`.
 
 ```hcl
 provider "aws" {
@@ -55,15 +55,13 @@ resource "aws_ram_resource_share_accepter" "receiver_accept" {
 
 The following arguments are supported:
 
-~> **Note:** One of either `share_arn` or `invitation_arn` is required. Using `share_arn` where multiple resources share invitations exist between the same _sender_ and _receiver_, may result in this resource selecting an unexpected invitation. In that case, use `invitation_arn`.
-
-* `share_arn` - (Optional) The ARN of the resource share.
-* `invitation_arn` - (Optional) The ARN of the resource share invitation.
+* `share_arn` - (Required) The ARN of the resource share.
 
 ## Attributes Reference
 
 In addition to all arguments above, the following attributes are exported:
 
+* `invitation_arn` - The ARN of the resource share invitation.
 * `share_id` - The ID of the resource share as displayed in the console.
 * `status` - The status of the invitation (e.g., ACCEPTED, REJECTED).
 * `receiver_account_id` - The account ID of the receiver account which accepts the invitation.
@@ -73,7 +71,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-Resource share accepters can be imported using the invitation ARN, e.g.
+Resource share accepters can be imported using the resource share ARN, e.g.
 
 ```
 $ terraform import aws_ram_resource_share_accepter.example arn:aws:ram:us-east-1:123456789012:resource-share/c4b56393-e8d9-89d9-6dc9-883752de4767

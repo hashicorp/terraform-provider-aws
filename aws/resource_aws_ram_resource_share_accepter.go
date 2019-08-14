@@ -29,20 +29,16 @@ func resourceAwsRamResourceShareAccepter() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"invitation_arn": {
+			"share_arn": {
 				Type:         schema.TypeString,
-				Optional:     true,
+				Required:     true,
 				ForceNew:     true,
-				Computed:     true,
 				ValidateFunc: validateArn,
 			},
 
-			"share_arn": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ForceNew:     true,
-				Computed:     true,
-				ValidateFunc: validateArn,
+			"invitation_arn": {
+				Type:     schema.TypeString,
+				Computed: true,
 			},
 
 			"share_id": {
@@ -84,35 +80,32 @@ func resourceAwsRamResourceShareAccepter() *schema.Resource {
 func resourceAwsRamResourceShareAccepterCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).ramconn
 
-	input := &ram.AcceptResourceShareInvitationInput{
-		ClientToken: aws.String(resource.UniqueId()),
+	shareARN := d.Get("share_arn").(string)
+
+	// need invitation arn
+	invitation, err := resourceAwsRamResourceShareGetInvitation(conn, shareARN, ram.ResourceShareInvitationStatusPending)
+
+	if err != nil {
+		return err
 	}
 
-	if v, ok := d.GetOk("invitation_arn"); ok && v.(string) != "" {
-		input.ResourceShareInvitationArn = aws.String(v.(string))
-	} else if v, ok := d.GetOk("share_arn"); ok && v.(string) != "" {
-		// need invitation arn
-		invitation, err := resourceAwsRamResourceShareGetInvitation(d, meta, v.(string), ram.ResourceShareInvitationStatusPending)
-		if err != nil {
-			return err
-		}
-		if invitation == nil || aws.StringValue(invitation.ResourceShareInvitationArn) == "" {
-			return fmt.Errorf("No RAM resource share invitation by ARN (%s) found", v.(string))
-		}
+	if invitation == nil || aws.StringValue(invitation.ResourceShareInvitationArn) == "" {
+		return fmt.Errorf("No RAM resource share invitation by ARN (%s) found", shareARN)
+	}
 
-		input.ResourceShareInvitationArn = invitation.ResourceShareInvitationArn
-	} else {
-		return fmt.Errorf("Either an invitation ARN or share ARN are required")
+	input := &ram.AcceptResourceShareInvitationInput{
+		ClientToken:                aws.String(resource.UniqueId()),
+		ResourceShareInvitationArn: invitation.ResourceShareInvitationArn,
 	}
 
 	log.Printf("[DEBUG] Accept RAM resource share invitation request: %s", input)
 	output, err := conn.AcceptResourceShareInvitation(input)
+
 	if err != nil {
 		return fmt.Errorf("Error accepting RAM resource share invitation: %s", err)
 	}
 
-	d.SetId(aws.StringValue(output.ResourceShareInvitation.ResourceShareArn))
-	d.Set("invitation_arn", output.ResourceShareInvitation.ResourceShareInvitationArn)
+	d.SetId(shareARN)
 
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{ram.ResourceShareInvitationStatusPending},
@@ -124,6 +117,7 @@ func resourceAwsRamResourceShareAccepterCreate(d *schema.ResourceData, meta inte
 	}
 
 	_, err = stateConf.WaitForState()
+
 	if err != nil {
 		return fmt.Errorf("Error waiting for RAM resource share (%s) state: %s", d.Id(), err)
 	}
@@ -134,7 +128,7 @@ func resourceAwsRamResourceShareAccepterCreate(d *schema.ResourceData, meta inte
 func resourceAwsRamResourceShareAccepterRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).ramconn
 
-	invitation, err := resourceAwsRamResourceShareGetInvitation(d, meta, d.Id(), ram.ResourceShareInvitationStatusAccepted)
+	invitation, err := resourceAwsRamResourceShareGetInvitation(conn, d.Id(), ram.ResourceShareInvitationStatusAccepted)
 
 	if err == nil && invitation == nil {
 		log.Printf("[WARN] No RAM resource share invitation by ARN (%s) found, removing from state", d.Id())
@@ -184,19 +178,21 @@ func resourceAwsRamResourceShareAccepterRead(d *schema.ResourceData, meta interf
 func resourceAwsRamResourceShareAccepterDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).ramconn
 
-	v, ok := d.GetOk("receiver_account_id")
-	if !ok {
+	receiverAccountID := d.Get("receiver_account_id").(string)
+
+	if receiverAccountID == "" {
 		return fmt.Errorf("The receiver account ID is required to leave a resource share")
 	}
-	receiverID := v.(string)
 
 	input := &ram.DisassociateResourceShareInput{
 		ClientToken:      aws.String(resource.UniqueId()),
 		ResourceShareArn: aws.String(d.Id()),
-		Principals:       []*string{aws.String(receiverID)},
+		Principals:       []*string{aws.String(receiverAccountID)},
 	}
-	log.Printf("[DEBUG] Leaving RAM resource share request: %s", input)
+	log.Printf("[DEBUG] Leave RAM resource share request: %s", input)
+
 	_, err := conn.DisassociateResourceShare(input)
+
 	if err != nil {
 		return fmt.Errorf("Error leaving RAM resource share: %s", err)
 	}
@@ -219,16 +215,9 @@ func resourceAwsRamResourceShareAccepterDelete(d *schema.ResourceData, meta inte
 	return nil
 }
 
-func resourceAwsRamResourceShareGetInvitation(d *schema.ResourceData, meta interface{}, resourceShareARN, status string) (*ram.ResourceShareInvitation, error) {
-	conn := meta.(*AWSClient).ramconn
-
+func resourceAwsRamResourceShareGetInvitation(conn *ram.RAM, resourceShareARN, status string) (*ram.ResourceShareInvitation, error) {
 	input := &ram.GetResourceShareInvitationsInput{
 		ResourceShareArns: []*string{aws.String(resourceShareARN)},
-	}
-
-	invitationARN := d.Get("invitation_arn").(string)
-	if invitationARN != "" {
-		input.ResourceShareInvitationArns = []*string{aws.String(invitationARN)}
 	}
 
 	var invitation *ram.ResourceShareInvitation
@@ -242,12 +231,6 @@ func resourceAwsRamResourceShareGetInvitation(d *schema.ResourceData, meta inter
 
 		return !lastPage
 	})
-
-	// if invitation not found with invitation ARN, try to find without
-	if invitation == nil && invitationARN != "" {
-		d.Set("invitation_arn", "")
-		return resourceAwsRamResourceShareGetInvitation(d, meta, resourceShareARN, status)
-	}
 
 	if invitation == nil {
 		return nil, nil
