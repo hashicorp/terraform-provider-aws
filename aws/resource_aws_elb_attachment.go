@@ -59,7 +59,9 @@ func resourceAwsElbAttachmentCreate(d *schema.ResourceData, meta interface{}) er
 
 		return nil
 	})
-
+	if isResourceTimeoutError(err) {
+		_, err = elbconn.RegisterInstancesWithLoadBalancer(&registerInstancesOpts)
+	}
 	if err != nil {
 		return fmt.Errorf("Failure registering instances with ELB: %s", err)
 	}
