@@ -90,8 +90,8 @@ func resourceAwsRamResourceShareAccepterCreate(d *schema.ResourceData, meta inte
 
 	if invitation == nil || aws.StringValue(invitation.ResourceShareInvitationArn) == "" {
 		return fmt.Errorf(
-			"No RAM Resource Share (%s) invitation found\n\n" +
-			"NOTE: If both AWS accounts are in the same AWS Organization and RAM Sharing with AWS Organizations is enabled, this resource is not necessary",
+			"No RAM Resource Share (%s) invitation found\n\n"+
+				"NOTE: If both AWS accounts are in the same AWS Organization and RAM Sharing with AWS Organizations is enabled, this resource is not necessary",
 			shareARN)
 	}
 
