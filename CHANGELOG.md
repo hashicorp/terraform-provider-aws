@@ -4,6 +4,8 @@ FEATURES:
 
 * **New Resource:** `aws_config_organization_custom_rule` [GH-9716]
 * **New Resource:** `aws_config_organization_managed_rule` [GH-9716]
+* **New Resource:** `aws_fsx_lustre_file_system` [GH-7074] / [GH-9761]
+* **New Resource:** `aws_fsx_windows_file_system` [GH-7074] / [GH-9761]
 
 ENHANCEMENTS:
 
