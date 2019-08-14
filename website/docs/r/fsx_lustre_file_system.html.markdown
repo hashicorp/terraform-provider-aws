@@ -57,7 +57,7 @@ configuration options:
 FSx File Systems can be imported using the `id`, e.g.
 
 ```
-$ terraform import aws_fsx_windows_file_system.example fs-543ab12b1ca672f33
+$ terraform import aws_fsx_lustre_file_system.example fs-543ab12b1ca672f33
 ```
 
 Certain resource arguments, like `security_group_ids`, do not have a FSx API method for reading the information after creation. If the argument is set in the Terraform configuration on an imported resource, Terraform will always show a difference. To workaround this behavior, either omit the argument from the Terraform configuration or use [`ignore_changes`](/docs/configuration/resources.html#ignore_changes) to hide the difference, e.g.
