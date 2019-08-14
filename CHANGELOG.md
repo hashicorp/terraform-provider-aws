@@ -41,6 +41,10 @@ BUG FIXES:
 * resource/aws_eip_association: Final retry after timeout creating EIP association [GH-9728]
 * resource/aws_eks_cluster: Final retry after timeout creating EKS cluster [GH-9729]
 * resource/aws_elastic_beanstalk_application: Final retries after timeouts reading and deleting beanstalk applications [GH-9731]
+* resource/aws_gamelift_build: Final retry after timeout creating gamelift build [GH-9752]
+* resource/aws_gamelift fleet: Final retry after timeout deleting gamelift fleet [GH-9752]
+* resource/aws_glue_crawler: Final retry after timeout creating glue crawler [GH-9753]
+* resource/aws_guardduty_member: Final retry after timeout waiting for email invitation [GH-9757]
 * resource/aws_lb_target_group_attachment: Perform drift detection on attachments using target health description (trigger resource recreation for manually deregistered attachments) [GH-9610]
 * resource/aws_vpn_gateway: Retry after timeouts attaching and deleting VPN gateways, and retrying attachment after pending VPN errors [GH-9641]
 
