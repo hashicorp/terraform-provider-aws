@@ -240,8 +240,6 @@ func TestAccAWSGlueTrigger_Schedule(t *testing.T) {
 	})
 }
 
-
-
 func TestAccAWSGlueTrigger_WorkflowName(t *testing.T) {
 	var trigger glue.Trigger
 
