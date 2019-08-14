@@ -82,7 +82,6 @@ func resourceAwsRamResourceShareAccepterCreate(d *schema.ResourceData, meta inte
 
 	shareARN := d.Get("share_arn").(string)
 
-	// need invitation arn
 	invitation, err := resourceAwsRamResourceShareGetInvitation(conn, shareARN, ram.ResourceShareInvitationStatusPending)
 
 	if err != nil {
@@ -90,7 +89,10 @@ func resourceAwsRamResourceShareAccepterCreate(d *schema.ResourceData, meta inte
 	}
 
 	if invitation == nil || aws.StringValue(invitation.ResourceShareInvitationArn) == "" {
-		return fmt.Errorf("No RAM resource share invitation by ARN (%s) found", shareARN)
+		return fmt.Errorf(
+			"No RAM Resource Share (%s) invitation found\n\n" +
+			"NOTE: If both AWS accounts are in the same AWS Organization and RAM Sharing with AWS Organizations is enabled, this resource is not necessary",
+			shareARN)
 	}
 
 	input := &ram.AcceptResourceShareInvitationInput{
@@ -225,7 +227,7 @@ func resourceAwsRamResourceShareGetInvitation(conn *ram.RAM, resourceShareARN, s
 		for _, rsi := range page.ResourceShareInvitations {
 			if aws.StringValue(rsi.Status) == status {
 				invitation = rsi
-				break
+				return false
 			}
 		}
 

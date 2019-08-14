@@ -72,11 +72,12 @@ func testAccCheckAwsRamResourceShareAccepterDestroy(s *terraform.State) error {
 			return fmt.Errorf("Error deleting RAM resource share: %s", err)
 		}
 
-		if len(output.ResourceShares) == 0 {
-			return nil
+		if len(output.ResourceShares) > 0 && aws.StringValue(output.ResourceShares[0].Status) != ram.ResourceShareStatusDeleted {
+			return fmt.Errorf("RAM resource share invitation found, should be destroyed")
 		}
 	}
-	return fmt.Errorf("RAM resource share invitation found, should be destroyed")
+
+	return nil
 }
 
 func testAccCheckAwsRamResourceShareAccepterExists(name string) resource.TestCheckFunc {

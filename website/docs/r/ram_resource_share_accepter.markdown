@@ -10,7 +10,7 @@ description: |-
 
 Manage accepting a Resource Access Manager (RAM) Resource Share invitation. From a _receiver_ AWS account, accept an invitation to share resources that were shared by a _sender_ AWS account. To create a resource share in the _sender_, see the [`aws_ram_resource_share` resource](/docs/providers/aws/r/ram_resource_share.html).
 
-~> **Note:** You can [`share resources`](https://docs.aws.amazon.com/ram/latest/userguide/getting-started-sharing.html) with Organizations, Organizational Units (OUs), AWS accounts, and accounts from outside of your Organization.
+~> **Note:** If both AWS accounts are in the same Organization and [RAM Sharing with AWS Organizations is enabled](https://docs.aws.amazon.com/ram/latest/userguide/getting-started-sharing.html#getting-started-sharing-orgs), this resource is not necessary as RAM Resource Share invitations are not used.
 
 ## Example Usage
 
