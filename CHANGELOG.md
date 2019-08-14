@@ -30,6 +30,7 @@ BUG FIXES:
 * resource/aws_codedeploy_deployment_group: Final retries after timeouts creating and updating deployment groups [GH-9682]
 * resource/aws_codepipeline: Final retry after timeout creating codepipeline [GH-9682]
 * resource/aws_cognito_user_pool: Final retries after timeouts creating and updating Cognito user pools [GH-9684]
+* resource/aws_db_instance: Fix enabling Performance Insights on update without Performance Insights KMS Key ID [GH-9745]
 * resource/aws_dms_endpoint: Final retry after timeout creating DMS endpoint [GH-9695]
 * resource/aws_docdb_cluster_instance: Final retries after timeouts creating and updating DocDB cluster instances [GH-9696]
 * resource/aws_docdb_cluster_parameter_group: Final retry after timeout deleting DocDB cluster parameter groups [GH-9696]
