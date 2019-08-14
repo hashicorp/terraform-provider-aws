@@ -63,10 +63,13 @@ func diffTagsFSX(oldTags, newTags []*fsx.Tag) ([]*fsx.Tag, []*fsx.Tag) {
 	// Build the list of what to remove
 	var remove []*fsx.Tag
 	for _, t := range oldTags {
-		old, ok := create[*t.Key]
-		if !ok || old != *t.Value {
+		old, ok := create[aws.StringValue(t.Key)]
+		if !ok || old != aws.StringValue(t.Value) {
 			// Delete it!
 			remove = append(remove, t)
+		} else if ok {
+			// already present so remove from new
+			delete(create, aws.StringValue(t.Key))
 		}
 	}
 

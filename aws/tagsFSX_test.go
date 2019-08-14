@@ -44,6 +44,39 @@ func TestDiffFSXTags(t *testing.T) {
 				"foo": "bar",
 			},
 		},
+
+		// Overlap
+		{
+			Old: map[string]interface{}{
+				"foo":   "bar",
+				"hello": "world",
+			},
+			New: map[string]interface{}{
+				"foo":   "baz",
+				"hello": "world",
+			},
+			Create: map[string]string{
+				"foo": "baz",
+			},
+			Remove: map[string]string{
+				"foo": "bar",
+			},
+		},
+
+		// Remove
+		{
+			Old: map[string]interface{}{
+				"foo": "bar",
+				"bar": "baz",
+			},
+			New: map[string]interface{}{
+				"foo": "bar",
+			},
+			Create: map[string]string{},
+			Remove: map[string]string{
+				"bar": "baz",
+			},
+		},
 	}
 
 	for i, tc := range cases {
