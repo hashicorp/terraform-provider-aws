@@ -5,7 +5,6 @@ import (
 	"regexp"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/hashicorp/terraform/helper/acctest"
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/helper/schema"
@@ -60,35 +59,44 @@ func testAccCheckAwsRamResourceShareAccepterDestroy(s *terraform.State) error {
 			continue
 		}
 
-		request := &ram.GetResourceSharesInput{
+		input := &ram.GetResourceSharesInput{
 			ResourceShareArns: []*string{aws.String(rs.Primary.Attributes["share_arn"])},
 			ResourceOwner:     aws.String(ram.ResourceOwnerOtherAccounts),
 		}
 
-		resp, err := conn.GetResourceShares(request)
+		output, err := conn.GetResourceShares(input)
 		if err != nil {
-			if awserr, ok := err.(awserr.Error); ok {
-				switch awserr.Code() {
-				case ram.ErrCodeUnknownResourceException:
-					// good - it's gone
-					return nil
-				}
+			if isAWSErr(err, ram.ErrCodeUnknownResourceException, "") {
+				return nil
 			}
 			return fmt.Errorf("Error deleting RAM resource share: %s", err)
 		}
 
-		if len(resp.ResourceShares) == 0 {
+		if len(output.ResourceShares) == 0 {
 			return nil
 		}
 	}
-	return fmt.Errorf("RAM resource share association found, should be destroyed")
+	return fmt.Errorf("RAM resource share invitation found, should be destroyed")
 }
 
 func testAccCheckAwsRamResourceShareAccepterExists(name string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		_, ok := s.RootModule().Resources[name]
-		if !ok {
-			return fmt.Errorf("Not found: %s", name)
+		rs, ok := s.RootModule().Resources[name]
+
+		if !ok || rs.Type != "aws_ram_resource_share_accepter" {
+			return fmt.Errorf("RAM resource share invitation not found: %s", name)
+		}
+
+		conn := testAccProvider.Meta().(*AWSClient).ramconn
+
+		input := &ram.GetResourceSharesInput{
+			ResourceShareArns: []*string{aws.String(rs.Primary.Attributes["share_arn"])},
+			ResourceOwner:     aws.String(ram.ResourceOwnerOtherAccounts),
+		}
+
+		output, err := conn.GetResourceShares(input)
+		if err != nil || len(output.ResourceShares) == 0 {
+			return fmt.Errorf("Error finding RAM resource share: %s", err)
 		}
 
 		return nil
@@ -100,11 +108,11 @@ func testAccAwsRamResourceShareAccepterBasic(shareName string) string {
 resource "aws_ram_resource_share" "test" {
   provider = "aws.alternate"
 
-  name                      = %q
+  name                      = %[1]q
   allow_external_principals = true
 
   tags = {
-	Name = %q
+	Name = %[1]q
   }
 }
 
@@ -113,16 +121,12 @@ resource "aws_ram_principal_association" "test" {
 
   principal          = "${data.aws_caller_identity.receiver.account_id}"
   resource_share_arn = "${aws_ram_resource_share.test.arn}"
-
-  depends_on = ["data.aws_caller_identity.receiver"]
 }
 
 data "aws_caller_identity" "receiver" {}
 
 resource "aws_ram_resource_share_accepter" "test" {
-  share_arn = "${aws_ram_resource_share.test.arn}"
-
-  depends_on = ["aws_ram_resource_share.test", "aws_ram_principal_association.test"]
+  share_arn = "${aws_ram_principal_association.test.resource_share_arn}"
 }
-`, shareName, shareName)
+`, shareName)
 }
