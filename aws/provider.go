@@ -961,6 +961,7 @@ func init() {
 		"kinesisanalytics",
 		"kinesisvideo",
 		"kms",
+		"lakeformation",
 		"lambda",
 		"lexmodels",
 		"licensemanager",

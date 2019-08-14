@@ -115,6 +115,7 @@ The Terraform AWS Provider allows the following endpoints to be customized:
 - `kinesisanalytics`
 - `kinesisvideo`
 - `kms`
+- `lakeformation`
 - `lambda`
 - `lexmodels`
 - `licensemanager`
