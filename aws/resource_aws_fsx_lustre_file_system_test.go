@@ -2,6 +2,7 @@ package aws
 
 import (
 	"fmt"
+	"log"
 	"regexp"
 	"testing"
 	"time"
@@ -12,6 +13,60 @@ import (
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/terraform"
 )
+
+func init() {
+	resource.AddTestSweepers("aws_fsx_lustre_file_system", &resource.Sweeper{
+		Name: "aws_fsx_lustre_file_system",
+		F:    testSweepFSXLustreFileSystems,
+	})
+}
+
+func testSweepFSXLustreFileSystems(region string) error {
+	client, err := sharedClientForRegion(region)
+	if err != nil {
+		return fmt.Errorf("error getting client: %s", err)
+	}
+	conn := client.(*AWSClient).fsxconn
+	input := &fsx.DescribeFileSystemsInput{}
+
+	err = conn.DescribeFileSystemsPages(input, func(page *fsx.DescribeFileSystemsOutput, lastPage bool) bool {
+		for _, fs := range page.FileSystems {
+			if aws.StringValue(fs.FileSystemType) != fsx.FileSystemTypeLustre {
+				continue
+			}
+
+			input := &fsx.DeleteFileSystemInput{
+				FileSystemId: fs.FileSystemId,
+			}
+
+			log.Printf("[INFO] Deleting FSx lustre filesystem: %s", aws.StringValue(fs.FileSystemId))
+			_, err := conn.DeleteFileSystem(input)
+
+			if err != nil {
+				log.Printf("[ERROR] Error deleting FSx filesystem: %s", err)
+				continue
+			}
+
+			if err := waitForFsxFileSystemDeletion(conn, aws.StringValue(fs.FileSystemId), 30*time.Minute); err != nil {
+				log.Printf("[ERROR] Error waiting for filesystem (%s) to delete: %s", aws.StringValue(fs.FileSystemId), err)
+			}
+		}
+
+		return !lastPage
+	})
+
+	if testSweepSkipSweepError(err) {
+		log.Printf("[WARN] Skipping FSx Lustre Filesystem sweep for %s: %s", region, err)
+		return nil
+	}
+
+	if err != nil {
+		return fmt.Errorf("error listing FSx Lustre Filesystems: %s", err)
+	}
+
+	return nil
+
+}
 
 func TestAccAWSFsxLustreFileSystem_basic(t *testing.T) {
 	var filesystem fsx.FileSystem

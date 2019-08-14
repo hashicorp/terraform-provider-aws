@@ -2,6 +2,7 @@ package aws
 
 import (
 	"fmt"
+	"log"
 	"regexp"
 	"testing"
 	"time"
@@ -11,6 +12,64 @@ import (
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/terraform"
 )
+
+func init() {
+	resource.AddTestSweepers("aws_fsx_windows_file_system", &resource.Sweeper{
+		Name: "aws_fsx_windows_file_system",
+		F:    testSweepFSXWindowsFileSystems,
+	})
+}
+
+func testSweepFSXWindowsFileSystems(region string) error {
+	client, err := sharedClientForRegion(region)
+	if err != nil {
+		return fmt.Errorf("error getting client: %s", err)
+	}
+	conn := client.(*AWSClient).fsxconn
+	input := &fsx.DescribeFileSystemsInput{}
+
+	err = conn.DescribeFileSystemsPages(input, func(page *fsx.DescribeFileSystemsOutput, lastPage bool) bool {
+		for _, fs := range page.FileSystems {
+			if aws.StringValue(fs.FileSystemType) != fsx.FileSystemTypeWindows {
+				continue
+			}
+
+			input := &fsx.DeleteFileSystemInput{
+				ClientRequestToken: aws.String(resource.UniqueId()),
+				FileSystemId:       fs.FileSystemId,
+				WindowsConfiguration: &fsx.DeleteFileSystemWindowsConfiguration{
+					SkipFinalBackup: aws.Bool(true),
+				},
+			}
+
+			log.Printf("[INFO] Deleting FSx windows filesystem: %s", aws.StringValue(fs.FileSystemId))
+			_, err := conn.DeleteFileSystem(input)
+
+			if err != nil {
+				log.Printf("[ERROR] Error deleting FSx filesystem: %s", err)
+				continue
+			}
+
+			if err := waitForFsxFileSystemDeletion(conn, aws.StringValue(fs.FileSystemId), 30*time.Minute); err != nil {
+				log.Printf("[ERROR] Error waiting for filesystem (%s) to delete: %s", aws.StringValue(fs.FileSystemId), err)
+			}
+		}
+
+		return !lastPage
+	})
+
+	if testSweepSkipSweepError(err) {
+		log.Printf("[WARN] Skipping FSx Windows Filesystem sweep for %s: %s", region, err)
+		return nil
+	}
+
+	if err != nil {
+		return fmt.Errorf("error listing FSx Windows Filesystems: %s", err)
+	}
+
+	return nil
+
+}
 
 func TestAccAWSFsxWindowsFileSystem_basic(t *testing.T) {
 	var filesystem fsx.FileSystem
