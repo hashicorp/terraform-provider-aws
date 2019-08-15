@@ -1,5 +1,9 @@
 ## 2.25.0 (Unreleased)
 
+ENHANCEMENTS:
+
+* resource/aws_rds_cluster: Support `postgresql` in plan time validation for `enabled_cloudwatch_logs_exports` argument [GH-9740]
+
 BUG FIXES:
 
 * resource/aws_db_instance: Fix enabling Enhanced Monitoring on update to handle IAM eventual consistency [GH-9747]
