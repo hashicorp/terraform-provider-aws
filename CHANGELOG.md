@@ -1,4 +1,9 @@
 ## 2.25.0 (Unreleased)
+
+BUG FIXES:
+
+* resource/aws_db_instance: Fix enabling Enhanced Monitoring on update to handle IAM eventual consistency [GH-9747]
+
 ## 2.24.0 (August 15, 2019)
 
 FEATURES:
