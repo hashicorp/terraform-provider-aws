@@ -398,6 +398,7 @@ func resourceAwsRDSCluster() *schema.Resource {
 						"error",
 						"general",
 						"slowquery",
+						"postgresql",
 					}, false),
 				},
 			},
