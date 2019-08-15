@@ -1,56 +1,56 @@
-## 2.24.0 (Unreleased)
+## 2.24.0 (August 15, 2019)
 
 FEATURES:
 
-* **New Resource:** `aws_config_organization_custom_rule` [GH-9716]
-* **New Resource:** `aws_config_organization_managed_rule` [GH-9716]
-* **New Resource:** `aws_fsx_lustre_file_system` [GH-7074] / [GH-9761]
-* **New Resource:** `aws_fsx_windows_file_system` [GH-7074] / [GH-9761]
-* **New Resource:** `aws_ram_resource_share_accepter` [GH-8259]
+* **New Resource:** `aws_config_organization_custom_rule` ([#9716](https://github.com/terraform-providers/terraform-provider-aws/issues/9716))
+* **New Resource:** `aws_config_organization_managed_rule` ([#9716](https://github.com/terraform-providers/terraform-provider-aws/issues/9716))
+* **New Resource:** `aws_fsx_lustre_file_system` ([#7074](https://github.com/terraform-providers/terraform-provider-aws/issues/7074)] / [[#9761](https://github.com/terraform-providers/terraform-provider-aws/issues/9761))
+* **New Resource:** `aws_fsx_windows_file_system` ([#7074](https://github.com/terraform-providers/terraform-provider-aws/issues/7074)] / [[#9761](https://github.com/terraform-providers/terraform-provider-aws/issues/9761))
+* **New Resource:** `aws_ram_resource_share_accepter` ([#8259](https://github.com/terraform-providers/terraform-provider-aws/issues/8259))
 
 ENHANCEMENTS:
 
-* resource/aws_codebuild_project: Add `artifacts` configuration block `artifact_identifier` argument [GH-9652]
-* resource/aws_codebuild_project: Add plan time validation for `artifacts` and `secondary_artifacts` configuration blocks `packaging` argument [GH-9652]
-* resource/aws_rds_cluster: Add `multimaster` to `engine_mode` argument validation (support Aurora Multi-Master Clusters) [GH-9691]
-* resource/aws_rds_cluster_instance: Allow `aurora-mysql` (MySQL 5.7) engine to enable Performance Insights [GH-9635]
-* resource/aws_wafregional_regex_match_set: Support resource import [GH-9699]
-* resource/aws_wafregional_regex_pattern_set: Support resource import [GH-9712]
-* resource/aws_wafregional_size_constraint_set: Support resource import [GH-9713]
-* resource/aws_wafregional_sql_injection_match_set: Support resource import [GH-9717]
+* resource/aws_codebuild_project: Add `artifacts` configuration block `artifact_identifier` argument ([#9652](https://github.com/terraform-providers/terraform-provider-aws/issues/9652))
+* resource/aws_codebuild_project: Add plan time validation for `artifacts` and `secondary_artifacts` configuration blocks `packaging` argument ([#9652](https://github.com/terraform-providers/terraform-provider-aws/issues/9652))
+* resource/aws_rds_cluster: Add `multimaster` to `engine_mode` argument validation (support Aurora Multi-Master Clusters) ([#9691](https://github.com/terraform-providers/terraform-provider-aws/issues/9691))
+* resource/aws_rds_cluster_instance: Allow `aurora-mysql` (MySQL 5.7) engine to enable Performance Insights ([#9635](https://github.com/terraform-providers/terraform-provider-aws/issues/9635))
+* resource/aws_wafregional_regex_match_set: Support resource import ([#9699](https://github.com/terraform-providers/terraform-provider-aws/issues/9699))
+* resource/aws_wafregional_regex_pattern_set: Support resource import ([#9712](https://github.com/terraform-providers/terraform-provider-aws/issues/9712))
+* resource/aws_wafregional_size_constraint_set: Support resource import ([#9713](https://github.com/terraform-providers/terraform-provider-aws/issues/9713))
+* resource/aws_wafregional_sql_injection_match_set: Support resource import ([#9717](https://github.com/terraform-providers/terraform-provider-aws/issues/9717))
 
 BUG FIXES:
 
-* resource/aws_acm_certificate_validation: Final retries after timeouts creating and checking validation for ACM certificates [GH-9661]
-* resource/aws_ami: Final retry after timeout reading AMI [GH-9674]
-* resource/aws_cloudhsm2_cluster: Final retries after timeouts creating, updating, and deleting CloudHSM clusters [GH-9675]
-* resource/aws_cloudhsm2_hsm: Final retries after timeouts creating and deleting CloudHSM modules [GH-9675]
-* resource/aws_cloudtrail: Final retries after timeouts creating and updating cloudtrails [GH-9678]
-* resource/aws_codebuild_project: Final retries after timeouts creating and updating codebuild projects [GH-9682]
-* resource/aws_codebuild_project: Properly perform drift detection and updates for `secondary_artifacts` configuration block arguments (except `name` which will require a separate fix) [GH-9652]
-* resource/aws_codedeploy_deployment_group: Final retries after timeouts creating and updating deployment groups [GH-9682]
-* resource/aws_codepipeline: Final retry after timeout creating codepipeline [GH-9682]
-* resource/aws_cognito_user_pool: Final retries after timeouts creating and updating Cognito user pools [GH-9684]
-* resource/aws_db_instance: Fix enabling Performance Insights on update without Performance Insights KMS Key ID [GH-9745]
-* resource/aws_dms_endpoint: Final retry after timeout creating DMS endpoint [GH-9695]
-* resource/aws_docdb_cluster_instance: Final retries after timeouts creating and updating DocDB cluster instances [GH-9696]
-* resource/aws_docdb_cluster_parameter_group: Final retry after timeout deleting DocDB cluster parameter groups [GH-9696]
-* resource/aws_docdb_subnet_group: Final retry after timeout deleting DocDB subnet groups [GH-9696]
-* resource/aws_dynamodb_table: Final retries after timeouts creating, updating, and deleting DynamoDB tables [GH-9697]
-* resource/aws_ebs_snapshot: Final retries after timeouts creating, deleting or waiting for available EBS snapshots [GH-9698]
-* resource/aws_ebs_snapshot_copy: Final retry after timeout deleting EBS snapshot copies [GH-9698]
-* resource/aws_ecs_cluster: Final retries after timeouts reading and deleting ECS cluster [GH-9704]
-* resource/aws_ecs_service: Final retries after timeouts creating, updating, and deleting ECS service [GH-9704]
-* resource/aws_eip: Final retries after timeouts reading, updating, and deleting EIPs [GH-9728]
-* resource/aws_eip_association: Final retry after timeout creating EIP association [GH-9728]
-* resource/aws_eks_cluster: Final retry after timeout creating EKS cluster [GH-9729]
-* resource/aws_elastic_beanstalk_application: Final retries after timeouts reading and deleting beanstalk applications [GH-9731]
-* resource/aws_gamelift_build: Final retry after timeout creating gamelift build [GH-9752]
-* resource/aws_gamelift fleet: Final retry after timeout deleting gamelift fleet [GH-9752]
-* resource/aws_glue_crawler: Final retry after timeout creating glue crawler [GH-9753]
-* resource/aws_guardduty_member: Final retry after timeout waiting for email invitation [GH-9757]
-* resource/aws_lb_target_group_attachment: Perform drift detection on attachments using target health description (trigger resource recreation for manually deregistered attachments) [GH-9610]
-* resource/aws_vpn_gateway: Retry after timeouts attaching and deleting VPN gateways, and retrying attachment after pending VPN errors [GH-9641]
+* resource/aws_acm_certificate_validation: Final retries after timeouts creating and checking validation for ACM certificates ([#9661](https://github.com/terraform-providers/terraform-provider-aws/issues/9661))
+* resource/aws_ami: Final retry after timeout reading AMI ([#9674](https://github.com/terraform-providers/terraform-provider-aws/issues/9674))
+* resource/aws_cloudhsm2_cluster: Final retries after timeouts creating, updating, and deleting CloudHSM clusters ([#9675](https://github.com/terraform-providers/terraform-provider-aws/issues/9675))
+* resource/aws_cloudhsm2_hsm: Final retries after timeouts creating and deleting CloudHSM modules ([#9675](https://github.com/terraform-providers/terraform-provider-aws/issues/9675))
+* resource/aws_cloudtrail: Final retries after timeouts creating and updating cloudtrails ([#9678](https://github.com/terraform-providers/terraform-provider-aws/issues/9678))
+* resource/aws_codebuild_project: Final retries after timeouts creating and updating codebuild projects ([#9682](https://github.com/terraform-providers/terraform-provider-aws/issues/9682))
+* resource/aws_codebuild_project: Properly perform drift detection and updates for `secondary_artifacts` configuration block arguments (except `name` which will require a separate fix) ([#9652](https://github.com/terraform-providers/terraform-provider-aws/issues/9652))
+* resource/aws_codedeploy_deployment_group: Final retries after timeouts creating and updating deployment groups ([#9682](https://github.com/terraform-providers/terraform-provider-aws/issues/9682))
+* resource/aws_codepipeline: Final retry after timeout creating codepipeline ([#9682](https://github.com/terraform-providers/terraform-provider-aws/issues/9682))
+* resource/aws_cognito_user_pool: Final retries after timeouts creating and updating Cognito user pools ([#9684](https://github.com/terraform-providers/terraform-provider-aws/issues/9684))
+* resource/aws_db_instance: Fix enabling Performance Insights on update without Performance Insights KMS Key ID ([#9745](https://github.com/terraform-providers/terraform-provider-aws/issues/9745))
+* resource/aws_dms_endpoint: Final retry after timeout creating DMS endpoint ([#9695](https://github.com/terraform-providers/terraform-provider-aws/issues/9695))
+* resource/aws_docdb_cluster_instance: Final retries after timeouts creating and updating DocDB cluster instances ([#9696](https://github.com/terraform-providers/terraform-provider-aws/issues/9696))
+* resource/aws_docdb_cluster_parameter_group: Final retry after timeout deleting DocDB cluster parameter groups ([#9696](https://github.com/terraform-providers/terraform-provider-aws/issues/9696))
+* resource/aws_docdb_subnet_group: Final retry after timeout deleting DocDB subnet groups ([#9696](https://github.com/terraform-providers/terraform-provider-aws/issues/9696))
+* resource/aws_dynamodb_table: Final retries after timeouts creating, updating, and deleting DynamoDB tables ([#9697](https://github.com/terraform-providers/terraform-provider-aws/issues/9697))
+* resource/aws_ebs_snapshot: Final retries after timeouts creating, deleting or waiting for available EBS snapshots ([#9698](https://github.com/terraform-providers/terraform-provider-aws/issues/9698))
+* resource/aws_ebs_snapshot_copy: Final retry after timeout deleting EBS snapshot copies ([#9698](https://github.com/terraform-providers/terraform-provider-aws/issues/9698))
+* resource/aws_ecs_cluster: Final retries after timeouts reading and deleting ECS cluster ([#9704](https://github.com/terraform-providers/terraform-provider-aws/issues/9704))
+* resource/aws_ecs_service: Final retries after timeouts creating, updating, and deleting ECS service ([#9704](https://github.com/terraform-providers/terraform-provider-aws/issues/9704))
+* resource/aws_eip: Final retries after timeouts reading, updating, and deleting EIPs ([#9728](https://github.com/terraform-providers/terraform-provider-aws/issues/9728))
+* resource/aws_eip_association: Final retry after timeout creating EIP association ([#9728](https://github.com/terraform-providers/terraform-provider-aws/issues/9728))
+* resource/aws_eks_cluster: Final retry after timeout creating EKS cluster ([#9729](https://github.com/terraform-providers/terraform-provider-aws/issues/9729))
+* resource/aws_elastic_beanstalk_application: Final retries after timeouts reading and deleting beanstalk applications ([#9731](https://github.com/terraform-providers/terraform-provider-aws/issues/9731))
+* resource/aws_gamelift_build: Final retry after timeout creating gamelift build ([#9752](https://github.com/terraform-providers/terraform-provider-aws/issues/9752))
+* resource/aws_gamelift fleet: Final retry after timeout deleting gamelift fleet ([#9752](https://github.com/terraform-providers/terraform-provider-aws/issues/9752))
+* resource/aws_glue_crawler: Final retry after timeout creating glue crawler ([#9753](https://github.com/terraform-providers/terraform-provider-aws/issues/9753))
+* resource/aws_guardduty_member: Final retry after timeout waiting for email invitation ([#9757](https://github.com/terraform-providers/terraform-provider-aws/issues/9757))
+* resource/aws_lb_target_group_attachment: Perform drift detection on attachments using target health description (trigger resource recreation for manually deregistered attachments) ([#9610](https://github.com/terraform-providers/terraform-provider-aws/issues/9610))
+* resource/aws_vpn_gateway: Retry after timeouts attaching and deleting VPN gateways, and retrying attachment after pending VPN errors ([#9641](https://github.com/terraform-providers/terraform-provider-aws/issues/9641))
 
 ## 2.23.0 (August 07, 2019)
 
