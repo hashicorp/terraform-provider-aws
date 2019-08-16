@@ -24121,6 +24121,12 @@ func (c *EC2) GetCapacityReservationUsageRequest(input *GetCapacityReservationUs
 
 // GetCapacityReservationUsage API operation for Amazon Elastic Compute Cloud.
 //
+// Gets usage information about a Capacity Reservation. If the Capacity Reservation
+// is shared, it shows usage information for the Capacity Reservation owner
+// and each AWS account that is currently using the shared capacity. If the
+// Capacity Reservation is not shared, it shows only the Capacity Reservation
+// owner's usage.
+//
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
 // the error.
@@ -25943,7 +25949,34 @@ func (c *EC2) ModifyFleetRequest(input *ModifyFleetInput) (req *request.Request,
 //
 // Modifies the specified EC2 Fleet.
 //
+// You can only modify an EC2 Fleet request of type maintain.
+//
 // While the EC2 Fleet is being modified, it is in the modifying state.
+//
+// To scale up your EC2 Fleet, increase its target capacity. The EC2 Fleet launches
+// the additional Spot Instances according to the allocation strategy for the
+// EC2 Fleet request. If the allocation strategy is lowestPrice, the EC2 Fleet
+// launches instances using the Spot Instance pool with the lowest price. If
+// the allocation strategy is diversified, the EC2 Fleet distributes the instances
+// across the Spot Instance pools. If the allocation strategy is capacityOptimized,
+// EC2 Fleet launches instances from Spot Instance pools that are optimally
+// chosen based on the available Spot Instance capacity.
+//
+// To scale down your EC2 Fleet, decrease its target capacity. First, the EC2
+// Fleet cancels any open requests that exceed the new target capacity. You
+// can request that the EC2 Fleet terminate Spot Instances until the size of
+// the fleet no longer exceeds the new target capacity. If the allocation strategy
+// is lowestPrice, the EC2 Fleet terminates the instances with the highest price
+// per unit. If the allocation strategy is capacityOptimized, the EC2 Fleet
+// terminates the instances in the Spot Instance pools that have the least available
+// Spot Instance capacity. If the allocation strategy is diversified, the EC2
+// Fleet terminates instances across the Spot Instance pools. Alternatively,
+// you can request that the EC2 Fleet keep the fleet at its current size, but
+// not replace any Spot Instances that are interrupted or that you terminate
+// manually.
+//
+// If you are finished with your EC2 Fleet for now, but will use it again later,
+// you can set the target capacity to 0.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -27097,6 +27130,7 @@ func (c *EC2) ModifySnapshotAttributeRequest(input *ModifySnapshotAttributeInput
 // or remove specified AWS account IDs from a snapshot's list of create volume
 // permissions, but you cannot do both in a single operation. If you need to
 // both add and remove account IDs for a snapshot, you must use multiple operations.
+// You can make up to 500 modifications to a snapshot in a single operation.
 //
 // Encrypted snapshots and snapshots with AWS Marketplace product codes cannot
 // be made public. Snapshots encrypted with your default CMK cannot be shared
@@ -27187,19 +27221,24 @@ func (c *EC2) ModifySpotFleetRequestRequest(input *ModifySpotFleetRequestInput) 
 // To scale up your Spot Fleet, increase its target capacity. The Spot Fleet
 // launches the additional Spot Instances according to the allocation strategy
 // for the Spot Fleet request. If the allocation strategy is lowestPrice, the
-// Spot Fleet launches instances using the Spot pool with the lowest price.
-// If the allocation strategy is diversified, the Spot Fleet distributes the
-// instances across the Spot pools.
+// Spot Fleet launches instances using the Spot Instance pool with the lowest
+// price. If the allocation strategy is diversified, the Spot Fleet distributes
+// the instances across the Spot Instance pools. If the allocation strategy
+// is capacityOptimized, Spot Fleet launches instances from Spot Instance pools
+// that are optimally chosen based on the available Spot Instance capacity.
 //
 // To scale down your Spot Fleet, decrease its target capacity. First, the Spot
 // Fleet cancels any open requests that exceed the new target capacity. You
 // can request that the Spot Fleet terminate Spot Instances until the size of
 // the fleet no longer exceeds the new target capacity. If the allocation strategy
 // is lowestPrice, the Spot Fleet terminates the instances with the highest
-// price per unit. If the allocation strategy is diversified, the Spot Fleet
-// terminates instances across the Spot pools. Alternatively, you can request
-// that the Spot Fleet keep the fleet at its current size, but not replace any
-// Spot Instances that are interrupted or that you terminate manually.
+// price per unit. If the allocation strategy is capacityOptimized, the Spot
+// Fleet terminates the instances in the Spot Instance pools that have the least
+// available Spot Instance capacity. If the allocation strategy is diversified,
+// the Spot Fleet terminates instances across the Spot Instance pools. Alternatively,
+// you can request that the Spot Fleet keep the fleet at its current size, but
+// not replace any Spot Instances that are interrupted or that you terminate
+// manually.
 //
 // If you are finished with your Spot Fleet for now, but will use it again later,
 // you can set the target capacity to 0.
@@ -28479,6 +28518,80 @@ func (c *EC2) ModifyVpnConnection(input *ModifyVpnConnectionInput) (*ModifyVpnCo
 // for more information on using Contexts.
 func (c *EC2) ModifyVpnConnectionWithContext(ctx aws.Context, input *ModifyVpnConnectionInput, opts ...request.Option) (*ModifyVpnConnectionOutput, error) {
 	req, out := c.ModifyVpnConnectionRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
+const opModifyVpnTunnelCertificate = "ModifyVpnTunnelCertificate"
+
+// ModifyVpnTunnelCertificateRequest generates a "aws/request.Request" representing the
+// client's request for the ModifyVpnTunnelCertificate operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See ModifyVpnTunnelCertificate for more information on using the ModifyVpnTunnelCertificate
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the ModifyVpnTunnelCertificateRequest method.
+//    req, resp := client.ModifyVpnTunnelCertificateRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/ec2-2016-11-15/ModifyVpnTunnelCertificate
+func (c *EC2) ModifyVpnTunnelCertificateRequest(input *ModifyVpnTunnelCertificateInput) (req *request.Request, output *ModifyVpnTunnelCertificateOutput) {
+	op := &request.Operation{
+		Name:       opModifyVpnTunnelCertificate,
+		HTTPMethod: "POST",
+		HTTPPath:   "/",
+	}
+
+	if input == nil {
+		input = &ModifyVpnTunnelCertificateInput{}
+	}
+
+	output = &ModifyVpnTunnelCertificateOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// ModifyVpnTunnelCertificate API operation for Amazon Elastic Compute Cloud.
+//
+// Modifies the VPN tunnel endpoint certificate.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for Amazon Elastic Compute Cloud's
+// API operation ModifyVpnTunnelCertificate for usage and error information.
+// See also, https://docs.aws.amazon.com/goto/WebAPI/ec2-2016-11-15/ModifyVpnTunnelCertificate
+func (c *EC2) ModifyVpnTunnelCertificate(input *ModifyVpnTunnelCertificateInput) (*ModifyVpnTunnelCertificateOutput, error) {
+	req, out := c.ModifyVpnTunnelCertificateRequest(input)
+	return out, req.Send()
+}
+
+// ModifyVpnTunnelCertificateWithContext is the same as ModifyVpnTunnelCertificate with the addition of
+// the ability to pass a context and additional request options.
+//
+// See ModifyVpnTunnelCertificate for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *EC2) ModifyVpnTunnelCertificateWithContext(ctx aws.Context, input *ModifyVpnTunnelCertificateInput, opts ...request.Option) (*ModifyVpnTunnelCertificateOutput, error) {
+	req, out := c.ModifyVpnTunnelCertificateRequest(input)
 	req.SetContext(ctx)
 	req.ApplyOptions(opts...)
 	return out, req.Send()
@@ -30179,10 +30292,10 @@ func (c *EC2) RequestSpotFleetRequest(input *RequestSpotFleetInput) (req *reques
 // You can submit a single request that includes multiple launch specifications
 // that vary by instance type, AMI, Availability Zone, or subnet.
 //
-// By default, the Spot Fleet requests Spot Instances in the Spot pool where
-// the price per unit is the lowest. Each launch specification can include its
-// own instance weighting that reflects the value of the instance type to your
-// application workload.
+// By default, the Spot Fleet requests Spot Instances in the Spot Instance pool
+// where the price per unit is the lowest. Each launch specification can include
+// its own instance weighting that reflects the value of the instance type to
+// your application workload.
 //
 // Alternatively, you can specify that the Spot Fleet distribute the target
 // capacity across the Spot pools included in its launch specifications. By
@@ -31379,6 +31492,98 @@ func (c *EC2) SearchTransitGatewayRoutes(input *SearchTransitGatewayRoutesInput)
 // for more information on using Contexts.
 func (c *EC2) SearchTransitGatewayRoutesWithContext(ctx aws.Context, input *SearchTransitGatewayRoutesInput, opts ...request.Option) (*SearchTransitGatewayRoutesOutput, error) {
 	req, out := c.SearchTransitGatewayRoutesRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
+const opSendDiagnosticInterrupt = "SendDiagnosticInterrupt"
+
+// SendDiagnosticInterruptRequest generates a "aws/request.Request" representing the
+// client's request for the SendDiagnosticInterrupt operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See SendDiagnosticInterrupt for more information on using the SendDiagnosticInterrupt
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the SendDiagnosticInterruptRequest method.
+//    req, resp := client.SendDiagnosticInterruptRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/ec2-2016-11-15/SendDiagnosticInterrupt
+func (c *EC2) SendDiagnosticInterruptRequest(input *SendDiagnosticInterruptInput) (req *request.Request, output *SendDiagnosticInterruptOutput) {
+	op := &request.Operation{
+		Name:       opSendDiagnosticInterrupt,
+		HTTPMethod: "POST",
+		HTTPPath:   "/",
+	}
+
+	if input == nil {
+		input = &SendDiagnosticInterruptInput{}
+	}
+
+	output = &SendDiagnosticInterruptOutput{}
+	req = c.newRequest(op, input, output)
+	req.Handlers.Unmarshal.Swap(ec2query.UnmarshalHandler.Name, protocol.UnmarshalDiscardBodyHandler)
+	return
+}
+
+// SendDiagnosticInterrupt API operation for Amazon Elastic Compute Cloud.
+//
+// Sends a diagnostic interrupt to the specified Amazon EC2 instance to trigger
+// a kernel panic (on Linux instances), or a blue screen/stop error (on Windows
+// instances). For instances based on Intel and AMD processors, the interrupt
+// is received as a non-maskable interrupt (NMI).
+//
+// In general, the operating system crashes and reboots when a kernel panic
+// or stop error is triggered. The operating system can also be configured to
+// perform diagnostic tasks, such as generating a memory dump file, loading
+// a secondary kernel, or obtaining a call trace.
+//
+// Before sending a diagnostic interrupt to your instance, ensure that its operating
+// system is configured to perform the required diagnostic tasks.
+//
+// For more information about configuring your operating system to generate
+// a crash dump when a kernel panic or stop error occurs, see Send a Diagnostic
+// Interrupt (https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/instance-console.html#diagnostic-interrupt)
+// (Linux instances) or Send a Diagnostic Interrupt (https://docs.aws.amazon.com/AWSEC2/latest/WindowsGuide/unreachable-instance.html#diagnostic-interrupt)
+// (Windows instances).
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for Amazon Elastic Compute Cloud's
+// API operation SendDiagnosticInterrupt for usage and error information.
+// See also, https://docs.aws.amazon.com/goto/WebAPI/ec2-2016-11-15/SendDiagnosticInterrupt
+func (c *EC2) SendDiagnosticInterrupt(input *SendDiagnosticInterruptInput) (*SendDiagnosticInterruptOutput, error) {
+	req, out := c.SendDiagnosticInterruptRequest(input)
+	return out, req.Send()
+}
+
+// SendDiagnosticInterruptWithContext is the same as SendDiagnosticInterrupt with the addition of
+// the ability to pass a context and additional request options.
+//
+// See SendDiagnosticInterrupt for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *EC2) SendDiagnosticInterruptWithContext(ctx aws.Context, input *SendDiagnosticInterruptInput, opts ...request.Option) (*SendDiagnosticInterruptOutput, error) {
+	req, out := c.SendDiagnosticInterruptRequest(input)
 	req.SetContext(ctx)
 	req.ApplyOptions(opts...)
 	return out, req.Send()
@@ -36457,12 +36662,14 @@ type CapacityReservation struct {
 	// The Availability Zone in which the capacity is reserved.
 	AvailabilityZone *string `locationName:"availabilityZone" type:"string"`
 
+	// The Availability Zone ID of the Capacity Reservation.
 	AvailabilityZoneId *string `locationName:"availabilityZoneId" type:"string"`
 
 	// The remaining capacity. Indicates the number of instances that can be launched
 	// in the Capacity Reservation.
 	AvailableInstanceCount *int64 `locationName:"availableInstanceCount" type:"integer"`
 
+	// The Amazon Resource Name (ARN) of the Capacity Reservation.
 	CapacityReservationArn *string `locationName:"capacityReservationArn" type:"string"`
 
 	// The ID of the Capacity Reservation.
@@ -36519,6 +36726,7 @@ type CapacityReservation struct {
 	// The type of instance for which the Capacity Reservation reserves capacity.
 	InstanceType *string `locationName:"instanceType" type:"string"`
 
+	// The ID of the AWS account that owns the Capacity Reservation.
 	OwnerId *string `locationName:"ownerId" type:"string"`
 
 	// The current state of the Capacity Reservation. A Capacity Reservation can
@@ -36527,11 +36735,11 @@ type CapacityReservation struct {
 	//    * active - The Capacity Reservation is active and the capacity is available
 	//    for your use.
 	//
-	//    * cancelled - The Capacity Reservation expired automatically at the date
+	//    * expired - The Capacity Reservation expired automatically at the date
 	//    and time specified in your request. The reserved capacity is no longer
 	//    available for your use.
 	//
-	//    * expired - The Capacity Reservation was manually cancelled. The reserved
+	//    * cancelled - The Capacity Reservation was manually cancelled. The reserved
 	//    capacity is no longer available for your use.
 	//
 	//    * pending - The Capacity Reservation request was successful but the capacity
@@ -36555,7 +36763,8 @@ type CapacityReservation struct {
 	//    that is dedicated to a single AWS account.
 	Tenancy *string `locationName:"tenancy" type:"string" enum:"CapacityReservationTenancy"`
 
-	// The number of instances for which the Capacity Reservation reserves capacity.
+	// The total number of instances for which the Capacity Reservation reserves
+	// capacity.
 	TotalInstanceCount *int64 `locationName:"totalInstanceCount" type:"integer"`
 }
 
@@ -37515,8 +37724,7 @@ type ClientVpnEndpoint struct {
 	// The ARN of the server certificate.
 	ServerCertificateArn *string `locationName:"serverCertificateArn" type:"string"`
 
-	// Indicates whether split-tunnel is enabled in the AWS Client VPN endpoint
-	// endpoint.
+	// Indicates whether split-tunnel is enabled in the AWS Client VPN endpoint.
 	//
 	// For information about split-tunnel VPN endpoints, see Split-Tunnel AWS Client
 	// VPN Endpoint (https://docs.aws.amazon.com/vpn/latest/clientvpn-admin/split-tunnel-vpn.html)
@@ -38683,6 +38891,7 @@ type CreateCapacityReservationInput struct {
 	// The Availability Zone in which to create the Capacity Reservation.
 	AvailabilityZone *string `type:"string"`
 
+	// The ID of the Availability Zone in which to create the Capacity Reservation.
 	AvailabilityZoneId *string `type:"string"`
 
 	// Unique, case-sensitive identifier that you provide to ensure the idempotency
@@ -38958,8 +39167,7 @@ type CreateClientVpnEndpointInput struct {
 
 	// Information about the DNS servers to be used for DNS resolution. A Client
 	// VPN endpoint can have up to two DNS servers. If no DNS server is specified,
-	// the DNS address of the VPC that is to be associated with Client VPN endpoint
-	// is used as the DNS server.
+	// the DNS address configured on the device is used for the DNS server.
 	DnsServers []*string `locationNameList:"item" type:"list"`
 
 	// Checks whether you have the required permissions for the action, without
@@ -38974,8 +39182,7 @@ type CreateClientVpnEndpointInput struct {
 	// ServerCertificateArn is a required field
 	ServerCertificateArn *string `type:"string" required:"true"`
 
-	// Indicates whether split-tunnel is enabled on the AWS Client VPN endpoint
-	// endpoint.
+	// Indicates whether split-tunnel is enabled on the AWS Client VPN endpoint.
 	//
 	// By default, split-tunnel on a VPN endpoint is disabled.
 	//
@@ -39274,6 +39481,9 @@ type CreateCustomerGatewayInput struct {
 	// BgpAsn is a required field
 	BgpAsn *int64 `type:"integer" required:"true"`
 
+	// The Amazon Resource Name (ARN) for the customer gateway certificate.
+	CertificateArn *string `type:"string"`
+
 	// Checks whether you have the required permissions for the action, without
 	// actually making the request, and provides an error response. If you have
 	// the required permissions, the error response is DryRunOperation. Otherwise,
@@ -39282,9 +39492,7 @@ type CreateCustomerGatewayInput struct {
 
 	// The Internet-routable IP address for the customer gateway's outside interface.
 	// The address must be static.
-	//
-	// PublicIp is a required field
-	PublicIp *string `locationName:"IpAddress" type:"string" required:"true"`
+	PublicIp *string `locationName:"IpAddress" type:"string"`
 
 	// The type of VPN connection that this customer gateway supports (ipsec.1).
 	//
@@ -39308,9 +39516,6 @@ func (s *CreateCustomerGatewayInput) Validate() error {
 	if s.BgpAsn == nil {
 		invalidParams.Add(request.NewErrParamRequired("BgpAsn"))
 	}
-	if s.PublicIp == nil {
-		invalidParams.Add(request.NewErrParamRequired("PublicIp"))
-	}
 	if s.Type == nil {
 		invalidParams.Add(request.NewErrParamRequired("Type"))
 	}
@@ -39324,6 +39529,12 @@ func (s *CreateCustomerGatewayInput) Validate() error {
 // SetBgpAsn sets the BgpAsn field's value.
 func (s *CreateCustomerGatewayInput) SetBgpAsn(v int64) *CreateCustomerGatewayInput {
 	s.BgpAsn = &v
+	return s
+}
+
+// SetCertificateArn sets the CertificateArn field's value.
+func (s *CreateCustomerGatewayInput) SetCertificateArn(v string) *CreateCustomerGatewayInput {
+	s.CertificateArn = &v
 	return s
 }
 
@@ -40835,7 +41046,9 @@ type CreateLaunchTemplateVersionInput struct {
 
 	// The version number of the launch template version on which to base the new
 	// version. The new version inherits the same launch parameters as the source
-	// version, except for parameters that you specify in LaunchTemplateData.
+	// version, except for parameters that you specify in LaunchTemplateData. Snapshots
+	// applied to the block device mapping are ignored when creating a new version
+	// unless they are explicitly included.
 	SourceVersion *string `type:"string"`
 
 	// A description for the version of the launch template.
@@ -43607,10 +43820,7 @@ type CreateVolumeInput struct {
 	// IOPS SSD, st1 for Throughput Optimized HDD, sc1 for Cold HDD, or standard
 	// for Magnetic volumes.
 	//
-	// Defaults: If no volume type is specified, the default is standard in us-east-1,
-	// eu-west-1, eu-central-1, us-west-2, us-west-1, sa-east-1, ap-northeast-1,
-	// ap-northeast-2, ap-southeast-1, ap-southeast-2, ap-south-1, us-gov-west-1,
-	// and cn-north-1. In all other Regions, EBS defaults to gp2.
+	// Default: gp2
 	VolumeType *string `type:"string" enum:"VolumeType"`
 }
 
@@ -44718,6 +44928,9 @@ type CustomerGateway struct {
 	// (ASN).
 	BgpAsn *string `locationName:"bgpAsn" type:"string"`
 
+	// The Amazon Resource Name (ARN) for the customer gateway certificate.
+	CertificateArn *string `locationName:"certificateArn" type:"string"`
+
 	// The ID of the customer gateway.
 	CustomerGatewayId *string `locationName:"customerGatewayId" type:"string"`
 
@@ -44748,6 +44961,12 @@ func (s CustomerGateway) GoString() string {
 // SetBgpAsn sets the BgpAsn field's value.
 func (s *CustomerGateway) SetBgpAsn(v string) *CustomerGateway {
 	s.BgpAsn = &v
+	return s
+}
+
+// SetCertificateArn sets the CertificateArn field's value.
+func (s *CustomerGateway) SetCertificateArn(v string) *CustomerGateway {
+	s.CertificateArn = &v
 	return s
 }
 
@@ -54549,6 +54768,9 @@ type DescribeRegionsInput struct {
 	//
 	//    * endpoint - The endpoint of the Region (for example, ec2.us-east-1.amazonaws.com).
 	//
+	//    * opt-in-status - The opt-in status of the Region (opt-in-not-required
+	//    | opted-in | not-opted-in).
+	//
 	//    * region-name - The name of the Region (for example, us-east-1).
 	Filters []*Filter `locationName:"Filter" locationNameList:"Filter" type:"list"`
 
@@ -60360,6 +60582,19 @@ type DetachNetworkInterfaceInput struct {
 	DryRun *bool `locationName:"dryRun" type:"boolean"`
 
 	// Specifies whether to force a detachment.
+	//
+	//    * Use the Force parameter only as a last resort to detach a network interface
+	//    from a failed instance.
+	//
+	//    * If you use the Force parameter to detach a network interface, you might
+	//    not be able to attach a different network interface to the same index
+	//    on the instance without first stopping and starting the instance.
+	//
+	//    * If you force the detachment of a network interface, the instance metadata
+	//    (https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/ec2-instance-metadata.html)
+	//    might not get updated. This means that the attributes associated with
+	//    the detached network interface might still be visible. The instance metadata
+	//    will get updated when you stop and start the instance.
 	Force *bool `locationName:"force" type:"boolean"`
 }
 
@@ -61909,9 +62144,10 @@ type EbsBlockDevice struct {
 	// size.
 	VolumeSize *int64 `locationName:"volumeSize" type:"integer"`
 
-	// The volume type. If you set the type to io1, you must also set the Iops property.
+	// The volume type. If you set the type to io1, you must also specify the IOPS
+	// that the volume supports.
 	//
-	// Default: standard
+	// Default: gp2
 	VolumeType *string `locationName:"volumeType" type:"string" enum:"VolumeType"`
 }
 
@@ -64356,13 +64592,25 @@ func (s *FpgaImageState) SetMessage(v string) *FpgaImageState {
 type GetCapacityReservationUsageInput struct {
 	_ struct{} `type:"structure"`
 
+	// The ID of the Capacity Reservation.
+	//
 	// CapacityReservationId is a required field
 	CapacityReservationId *string `type:"string" required:"true"`
 
+	// Checks whether you have the required permissions for the action, without
+	// actually making the request, and provides an error response. If you have
+	// the required permissions, the error response is DryRunOperation. Otherwise,
+	// it is UnauthorizedOperation.
 	DryRun *bool `type:"boolean"`
 
+	// The maximum number of results to return for the request in a single page.
+	// The remaining results can be seen by sending another request with the returned
+	// nextToken value.
+	//
+	// Valid range: Minimum value of 1. Maximum value of 1000.
 	MaxResults *int64 `min:"1" type:"integer"`
 
+	// The token to retrieve the next page of results.
 	NextToken *string `type:"string"`
 }
 
@@ -64419,18 +64667,45 @@ func (s *GetCapacityReservationUsageInput) SetNextToken(v string) *GetCapacityRe
 type GetCapacityReservationUsageOutput struct {
 	_ struct{} `type:"structure"`
 
+	// The remaining capacity. Indicates the number of instances that can be launched
+	// in the Capacity Reservation.
 	AvailableInstanceCount *int64 `locationName:"availableInstanceCount" type:"integer"`
 
+	// The ID of the Capacity Reservation.
 	CapacityReservationId *string `locationName:"capacityReservationId" type:"string"`
 
+	// The type of instance for which the Capacity Reservation reserves capacity.
 	InstanceType *string `locationName:"instanceType" type:"string"`
 
+	// Information about the Capacity Reservation usage.
 	InstanceUsages []*InstanceUsage `locationName:"instanceUsageSet" locationNameList:"item" type:"list"`
 
+	// The token to use to retrieve the next page of results. This value is null
+	// when there are no more results to return.
 	NextToken *string `locationName:"nextToken" type:"string"`
 
+	// The current state of the Capacity Reservation. A Capacity Reservation can
+	// be in one of the following states:
+	//
+	//    * active - The Capacity Reservation is active and the capacity is available
+	//    for your use.
+	//
+	//    * expired - The Capacity Reservation expired automatically at the date
+	//    and time specified in your request. The reserved capacity is no longer
+	//    available for your use.
+	//
+	//    * cancelled - The Capacity Reservation was manually cancelled. The reserved
+	//    capacity is no longer available for your use.
+	//
+	//    * pending - The Capacity Reservation request was successful but the capacity
+	//    provisioning is still pending.
+	//
+	//    * failed - The Capacity Reservation request has failed. A request might
+	//    fail due to invalid request parameters, capacity constraints, or instance
+	//    limit constraints. Failed requests are retained for 60 minutes.
 	State *string `locationName:"state" type:"string" enum:"CapacityReservationState"`
 
+	// The number of instances for which the Capacity Reservation reserves capacity.
 	TotalInstanceCount *int64 `locationName:"totalInstanceCount" type:"integer"`
 }
 
@@ -69240,8 +69515,8 @@ type InstanceNetworkInterfaceSpecification struct {
 	// request.
 	SecondaryPrivateIpAddressCount *int64 `locationName:"secondaryPrivateIpAddressCount" type:"integer"`
 
-	// The ID of the subnet associated with the network string. Applies only if
-	// creating a network interface when launching an instance.
+	// The ID of the subnet associated with the network interface. Applies only
+	// if creating a network interface when launching an instance.
 	SubnetId *string `locationName:"subnetId" type:"string"`
 }
 
@@ -69740,11 +70015,14 @@ func (s *InstanceStatusSummary) SetStatus(v string) *InstanceStatusSummary {
 	return s
 }
 
+// Information about the Capacity Reservation usage.
 type InstanceUsage struct {
 	_ struct{} `type:"structure"`
 
+	// The ID of the AWS account that is making use of the Capacity Reservation.
 	AccountId *string `locationName:"accountId" type:"string"`
 
+	// The number of instances the AWS account currently has in the Capacity Reservation.
 	UsedInstanceCount *int64 `locationName:"usedInstanceCount" type:"integer"`
 }
 
@@ -72369,7 +72647,7 @@ func (s *ModifyCapacityReservationInput) SetInstanceCount(v int64) *ModifyCapaci
 type ModifyCapacityReservationOutput struct {
 	_ struct{} `type:"structure"`
 
-	// Information about the Capacity Reservation.
+	// Returns true if the request succeeds; otherwise, it returns an error.
 	Return *bool `locationName:"return" type:"boolean"`
 }
 
@@ -75389,8 +75667,7 @@ type ModifyVpcEndpointInput struct {
 	DryRun *bool `type:"boolean"`
 
 	// A policy to attach to the endpoint that controls access to the service. The
-	// policy must be in valid JSON format. If this parameter is not specified,
-	// we attach a default policy that allows full access to the service.
+	// policy must be in valid JSON format.
 	PolicyDocument *string `type:"string"`
 
 	// (Interface endpoint) Indicate whether a private hosted zone is associated
@@ -75915,6 +76192,9 @@ func (s *ModifyVpcTenancyOutput) SetReturnValue(v bool) *ModifyVpcTenancyOutput 
 type ModifyVpnConnectionInput struct {
 	_ struct{} `type:"structure"`
 
+	// The ID of the customer gateway at your end of the VPN connection.
+	CustomerGatewayId *string `type:"string"`
+
 	// Checks whether you have the required permissions for the action, without
 	// actually making the request, and provides an error response. If you have
 	// the required permissions, the error response is DryRunOperation. Otherwise,
@@ -75954,6 +76234,12 @@ func (s *ModifyVpnConnectionInput) Validate() error {
 		return invalidParams
 	}
 	return nil
+}
+
+// SetCustomerGatewayId sets the CustomerGatewayId field's value.
+func (s *ModifyVpnConnectionInput) SetCustomerGatewayId(v string) *ModifyVpnConnectionInput {
+	s.CustomerGatewayId = &v
+	return s
 }
 
 // SetDryRun sets the DryRun field's value.
@@ -75999,6 +76285,93 @@ func (s ModifyVpnConnectionOutput) GoString() string {
 
 // SetVpnConnection sets the VpnConnection field's value.
 func (s *ModifyVpnConnectionOutput) SetVpnConnection(v *VpnConnection) *ModifyVpnConnectionOutput {
+	s.VpnConnection = v
+	return s
+}
+
+type ModifyVpnTunnelCertificateInput struct {
+	_ struct{} `type:"structure"`
+
+	// Checks whether you have the required permissions for the action, without
+	// actually making the request, and provides an error response. If you have
+	// the required permissions, the error response is DryRunOperation. Otherwise,
+	// it is UnauthorizedOperation.
+	DryRun *bool `type:"boolean"`
+
+	// The ID of the AWS Site-to-Site VPN connection.
+	//
+	// VpnConnectionId is a required field
+	VpnConnectionId *string `type:"string" required:"true"`
+
+	// The external IP address of the VPN tunnel.
+	//
+	// VpnTunnelOutsideIpAddress is a required field
+	VpnTunnelOutsideIpAddress *string `type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s ModifyVpnTunnelCertificateInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ModifyVpnTunnelCertificateInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *ModifyVpnTunnelCertificateInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "ModifyVpnTunnelCertificateInput"}
+	if s.VpnConnectionId == nil {
+		invalidParams.Add(request.NewErrParamRequired("VpnConnectionId"))
+	}
+	if s.VpnTunnelOutsideIpAddress == nil {
+		invalidParams.Add(request.NewErrParamRequired("VpnTunnelOutsideIpAddress"))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetDryRun sets the DryRun field's value.
+func (s *ModifyVpnTunnelCertificateInput) SetDryRun(v bool) *ModifyVpnTunnelCertificateInput {
+	s.DryRun = &v
+	return s
+}
+
+// SetVpnConnectionId sets the VpnConnectionId field's value.
+func (s *ModifyVpnTunnelCertificateInput) SetVpnConnectionId(v string) *ModifyVpnTunnelCertificateInput {
+	s.VpnConnectionId = &v
+	return s
+}
+
+// SetVpnTunnelOutsideIpAddress sets the VpnTunnelOutsideIpAddress field's value.
+func (s *ModifyVpnTunnelCertificateInput) SetVpnTunnelOutsideIpAddress(v string) *ModifyVpnTunnelCertificateInput {
+	s.VpnTunnelOutsideIpAddress = &v
+	return s
+}
+
+type ModifyVpnTunnelCertificateOutput struct {
+	_ struct{} `type:"structure"`
+
+	// Describes a VPN connection.
+	VpnConnection *VpnConnection `locationName:"vpnConnection" type:"structure"`
+}
+
+// String returns the string representation
+func (s ModifyVpnTunnelCertificateOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ModifyVpnTunnelCertificateOutput) GoString() string {
+	return s.String()
+}
+
+// SetVpnConnection sets the VpnConnection field's value.
+func (s *ModifyVpnTunnelCertificateOutput) SetVpnConnection(v *VpnConnection) *ModifyVpnTunnelCertificateOutput {
 	s.VpnConnection = v
 	return s
 }
@@ -80982,7 +81355,9 @@ type RequestSpotLaunchSpecification struct {
 	// you can specify the names or the IDs of the security groups.
 	SecurityGroups []*string `locationName:"SecurityGroup" locationNameList:"item" type:"list"`
 
-	// The ID of the subnet in which to launch the instance.
+	// The IDs of the subnets in which to launch the instance. To specify multiple
+	// subnets, separate them using commas; for example, "subnet-1234abcdeexample1,
+	// subnet-0987cdef6example2".
 	SubnetId *string `locationName:"subnetId" type:"string"`
 
 	// The Base64-encoded user data for the instance. User data is limited to 16
@@ -84640,7 +85015,7 @@ type ScheduledInstancesEbs struct {
 	// The volume type. gp2 for General Purpose SSD, io1 for Provisioned IOPS SSD,
 	// Throughput Optimized HDD for st1, Cold HDD for sc1, or standard for Magnetic.
 	//
-	// Default: standard
+	// Default: gp2
 	VolumeType *string `type:"string"`
 }
 
@@ -85165,7 +85540,7 @@ type SearchTransitGatewayRoutesInput struct {
 	//
 	//    * state - The state of the route (active | blackhole).
 	//
-	//    * type - The type of roue (propagated | static).
+	//    * type - The type of route (propagated | static).
 	//
 	// Filters is a required field
 	Filters []*Filter `locationName:"Filter" locationNameList:"Filter" type:"list" required:"true"`
@@ -85424,6 +85799,70 @@ func (s *SecurityGroupReference) SetReferencingVpcId(v string) *SecurityGroupRef
 func (s *SecurityGroupReference) SetVpcPeeringConnectionId(v string) *SecurityGroupReference {
 	s.VpcPeeringConnectionId = &v
 	return s
+}
+
+type SendDiagnosticInterruptInput struct {
+	_ struct{} `type:"structure"`
+
+	// Checks whether you have the required permissions for the action, without
+	// actually making the request, and provides an error response. If you have
+	// the required permissions, the error response is DryRunOperation. Otherwise,
+	// it is UnauthorizedOperation.
+	DryRun *bool `type:"boolean"`
+
+	// The ID of the instance.
+	//
+	// InstanceId is a required field
+	InstanceId *string `type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s SendDiagnosticInterruptInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s SendDiagnosticInterruptInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *SendDiagnosticInterruptInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "SendDiagnosticInterruptInput"}
+	if s.InstanceId == nil {
+		invalidParams.Add(request.NewErrParamRequired("InstanceId"))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetDryRun sets the DryRun field's value.
+func (s *SendDiagnosticInterruptInput) SetDryRun(v bool) *SendDiagnosticInterruptInput {
+	s.DryRun = &v
+	return s
+}
+
+// SetInstanceId sets the InstanceId field's value.
+func (s *SendDiagnosticInterruptInput) SetInstanceId(v string) *SendDiagnosticInterruptInput {
+	s.InstanceId = &v
+	return s
+}
+
+type SendDiagnosticInterruptOutput struct {
+	_ struct{} `type:"structure"`
+}
+
+// String returns the string representation
+func (s SendDiagnosticInterruptOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s SendDiagnosticInterruptOutput) GoString() string {
+	return s.String()
 }
 
 // Describes a service configuration for a VPC endpoint service.
@@ -86378,7 +86817,7 @@ type SpotFleetLaunchSpecification struct {
 	// Deprecated.
 	AddressingType *string `locationName:"addressingType" type:"string"`
 
-	// One or more block devices that are mapped to the Spot instances. You can't
+	// One or more block devices that are mapped to the Spot Instances. You can't
 	// specify both a snapshot ID and an encryption value. This is because only
 	// blank volumes can be encrypted on creation. If a snapshot is the basis for
 	// a volume, it is not blank and its encryption status is used for the volume
@@ -86436,8 +86875,9 @@ type SpotFleetLaunchSpecification struct {
 	// by the value of WeightedCapacity.
 	SpotPrice *string `locationName:"spotPrice" type:"string"`
 
-	// The ID of the subnet in which to launch the instances. To specify multiple
-	// subnets, separate them using commas; for example, "subnet-a61dafcf, subnet-65ea5f08".
+	// The IDs of the subnets in which to launch the instances. To specify multiple
+	// subnets, separate them using commas; for example, "subnet-1234abcdeexample1,
+	// subnet-0987cdef6example2".
 	SubnetId *string `locationName:"subnetId" type:"string"`
 
 	// The tags to apply during creation.
@@ -86668,8 +87108,19 @@ func (s *SpotFleetRequestConfig) SetSpotFleetRequestState(v string) *SpotFleetRe
 type SpotFleetRequestConfigData struct {
 	_ struct{} `type:"structure"`
 
-	// Indicates how to allocate the target capacity across the Spot pools specified
-	// by the Spot Fleet request. The default is lowestPrice.
+	// Indicates how to allocate the target Spot Instance capacity across the Spot
+	// Instance pools specified by the Spot Fleet request.
+	//
+	// If the allocation strategy is lowestPrice, Spot Fleet launches instances
+	// from the Spot Instance pools with the lowest price. This is the default allocation
+	// strategy.
+	//
+	// If the allocation strategy is diversified, Spot Fleet launches instances
+	// from all the Spot Instance pools that you specify.
+	//
+	// If the allocation strategy is capacityOptimized, Spot Fleet launches instances
+	// from Spot Instance pools that are optimally chosen based on the available
+	// Spot Instance capacity.
 	AllocationStrategy *string `locationName:"allocationStrategy" type:"string" enum:"AllocationStrategy"`
 
 	// A unique, case-sensitive identifier that you provide to ensure the idempotency
@@ -87362,8 +87813,19 @@ func (s *SpotMarketOptions) SetValidUntil(v time.Time) *SpotMarketOptions {
 type SpotOptions struct {
 	_ struct{} `type:"structure"`
 
-	// Indicates how to allocate the target capacity across the Spot pools specified
-	// by the Spot Fleet request. The default is lowest-price.
+	// Indicates how to allocate the target Spot Instance capacity across the Spot
+	// Instance pools specified by the EC2 Fleet.
+	//
+	// If the allocation strategy is lowestPrice, EC2 Fleet launches instances from
+	// the Spot Instance pools with the lowest price. This is the default allocation
+	// strategy.
+	//
+	// If the allocation strategy is diversified, EC2 Fleet launches instances from
+	// all the Spot Instance pools that you specify.
+	//
+	// If the allocation strategy is capacityOptimized, EC2 Fleet launches instances
+	// from Spot Instance pools that are optimally chosen based on the available
+	// Spot Instance capacity.
 	AllocationStrategy *string `locationName:"allocationStrategy" type:"string" enum:"SpotAllocationStrategy"`
 
 	// The behavior when a Spot Instance is interrupted. The default is terminate.
@@ -87447,8 +87909,19 @@ func (s *SpotOptions) SetSingleInstanceType(v bool) *SpotOptions {
 type SpotOptionsRequest struct {
 	_ struct{} `type:"structure"`
 
-	// Indicates how to allocate the target capacity across the Spot pools specified
-	// by the Spot Fleet request. The default is lowestPrice.
+	// Indicates how to allocate the target Spot Instance capacity across the Spot
+	// Instance pools specified by the EC2 Fleet.
+	//
+	// If the allocation strategy is lowestPrice, EC2 Fleet launches instances from
+	// the Spot Instance pools with the lowest price. This is the default allocation
+	// strategy.
+	//
+	// If the allocation strategy is diversified, EC2 Fleet launches instances from
+	// all the Spot Instance pools that you specify.
+	//
+	// If the allocation strategy is capacityOptimized, EC2 Fleet launches instances
+	// from Spot Instance pools that are optimally chosen based on the available
+	// Spot Instance capacity.
 	AllocationStrategy *string `type:"string" enum:"SpotAllocationStrategy"`
 
 	// The behavior when a Spot Instance is interrupted. The default is terminate.
@@ -91222,6 +91695,9 @@ type VgwTelemetry struct {
 	// The number of accepted routes.
 	AcceptedRouteCount *int64 `locationName:"acceptedRouteCount" type:"integer"`
 
+	// The Amazon Resource Name (ARN) of the VPN tunnel endpoint certificate.
+	CertificateArn *string `locationName:"certificateArn" type:"string"`
+
 	// The date and time of the last change in status.
 	LastStatusChange *time.Time `locationName:"lastStatusChange" type:"timestamp"`
 
@@ -91249,6 +91725,12 @@ func (s VgwTelemetry) GoString() string {
 // SetAcceptedRouteCount sets the AcceptedRouteCount field's value.
 func (s *VgwTelemetry) SetAcceptedRouteCount(v int64) *VgwTelemetry {
 	s.AcceptedRouteCount = &v
+	return s
+}
+
+// SetCertificateArn sets the CertificateArn field's value.
+func (s *VgwTelemetry) SetCertificateArn(v string) *VgwTelemetry {
+	s.CertificateArn = &v
 	return s
 }
 
@@ -94332,6 +94814,9 @@ const (
 
 	// InstanceTypeI3en24xlarge is a InstanceType enum value
 	InstanceTypeI3en24xlarge = "i3en.24xlarge"
+
+	// InstanceTypeI3enMetal is a InstanceType enum value
+	InstanceTypeI3enMetal = "i3en.metal"
 
 	// InstanceTypeHi14xlarge is a InstanceType enum value
 	InstanceTypeHi14xlarge = "hi1.4xlarge"

@@ -60,6 +60,9 @@
 //
 // Commits, by calling the following:
 //
+//    * BatchGetCommits, which returns information about one or more commits
+//    in a repository
+//
 //    * CreateCommit, which creates a commit for changes to a repository.
 //
 //    * GetCommit, which returns information about a commit, including commit

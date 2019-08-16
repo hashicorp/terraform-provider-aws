@@ -768,12 +768,12 @@ func (c *ECS) DeleteServiceRequest(input *DeleteServiceInput) (req *request.Requ
 // When you delete a service, if there are still running tasks that require
 // cleanup, the service status moves from ACTIVE to DRAINING, and the service
 // is no longer visible in the console or in the ListServices API operation.
-// After the tasks have stopped, then the service status moves from DRAINING
-// to INACTIVE. Services in the DRAINING or INACTIVE status can still be viewed
-// with the DescribeServices API operation. However, in the future, INACTIVE
-// services may be cleaned up and purged from Amazon ECS record keeping, and
-// DescribeServices calls on those services return a ServiceNotFoundException
-// error.
+// After all tasks have transitioned to either STOPPING or STOPPED status, the
+// service status moves from DRAINING to INACTIVE. Services in the DRAINING
+// or INACTIVE status can still be viewed with the DescribeServices API operation.
+// However, in the future, INACTIVE services may be cleaned up and purged from
+// Amazon ECS record keeping, and DescribeServices calls on those services return
+// a ServiceNotFoundException error.
 //
 // If you attempt to create a new service with the same name as an existing
 // service in either ACTIVE or DRAINING status, you receive an error.
@@ -3016,10 +3016,12 @@ func (c *ECS) PutAccountSettingRequest(input *PutAccountSettingInput) (req *requ
 
 // PutAccountSetting API operation for Amazon EC2 Container Service.
 //
-// Modifies an account setting. If you change the account setting for the root
-// user, the default settings for all of the IAM users and roles for which no
-// individual account setting has been specified are reset. For more information,
-// see Account Settings (https://docs.aws.amazon.com/AmazonECS/latest/developerguide/ecs-account-settings.html)
+// Modifies an account setting. Account settings are set on a per-Region basis.
+//
+// If you change the account setting for the root user, the default settings
+// for all of the IAM users and roles for which no individual account setting
+// has been specified are reset. For more information, see Account Settings
+// (https://docs.aws.amazon.com/AmazonECS/latest/developerguide/ecs-account-settings.html)
 // in the Amazon Elastic Container Service Developer Guide.
 //
 // When serviceLongArnFormat, taskLongArnFormat, or containerInstanceLongArnFormat
@@ -3132,7 +3134,8 @@ func (c *ECS) PutAccountSettingDefaultRequest(input *PutAccountSettingDefaultInp
 // PutAccountSettingDefault API operation for Amazon EC2 Container Service.
 //
 // Modifies an account setting for all IAM users on an account for whom no individual
-// account setting has been specified.
+// account setting has been specified. Account settings are set on a per-Region
+// basis.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -5282,8 +5285,30 @@ type Cluster struct {
 
 	// The metadata that you apply to the cluster to help you categorize and organize
 	// them. Each tag consists of a key and an optional value, both of which you
-	// define. Tag keys can have a maximum character length of 128 characters, and
-	// tag values can have a maximum length of 256 characters.
+	// define.
+	//
+	// The following basic restrictions apply to tags:
+	//
+	//    * Maximum number of tags per resource - 50
+	//
+	//    * For each resource, each tag key must be unique, and each tag key can
+	//    have only one value.
+	//
+	//    * Maximum key length - 128 Unicode characters in UTF-8
+	//
+	//    * Maximum value length - 256 Unicode characters in UTF-8
+	//
+	//    * If your tagging schema is used across multiple services and resources,
+	//    remember that other services may have restrictions on allowed characters.
+	//    Generally allowed characters are: letters, numbers, and spaces representable
+	//    in UTF-8, and the following characters: + - = . _ : / @.
+	//
+	//    * Tag keys and values are case-sensitive.
+	//
+	//    * Do not use aws:, AWS:, or any upper or lowercase combination of such
+	//    as a prefix for either keys or values as it is reserved for AWS use. You
+	//    cannot edit or delete tag keys or values with this prefix. Tags with this
+	//    prefix do not count against your tags per resource limit.
 	Tags []*Tag `locationName:"tags" type:"list"`
 }
 
@@ -5799,12 +5824,6 @@ type ContainerDefinition struct {
 	LinuxParameters *LinuxParameters `locationName:"linuxParameters" type:"structure"`
 
 	// The log configuration specification for the container.
-	//
-	// For tasks using the Fargate launch type, the supported log drivers are awslogs
-	// and splunk.
-	//
-	// For tasks using the EC2 launch type, the supported log drivers are awslogs,
-	// syslog, gelf, fluentd, splunk, journald, and json-file.
 	//
 	// This parameter maps to LogConfig in the Create a container (https://docs.docker.com/engine/api/v1.35/#operation/ContainerCreate)
 	// section of the Docker Remote API (https://docs.docker.com/engine/api/v1.35/)
@@ -6557,8 +6576,30 @@ type ContainerInstance struct {
 
 	// The metadata that you apply to the container instance to help you categorize
 	// and organize them. Each tag consists of a key and an optional value, both
-	// of which you define. Tag keys can have a maximum character length of 128
-	// characters, and tag values can have a maximum length of 256 characters.
+	// of which you define.
+	//
+	// The following basic restrictions apply to tags:
+	//
+	//    * Maximum number of tags per resource - 50
+	//
+	//    * For each resource, each tag key must be unique, and each tag key can
+	//    have only one value.
+	//
+	//    * Maximum key length - 128 Unicode characters in UTF-8
+	//
+	//    * Maximum value length - 256 Unicode characters in UTF-8
+	//
+	//    * If your tagging schema is used across multiple services and resources,
+	//    remember that other services may have restrictions on allowed characters.
+	//    Generally allowed characters are: letters, numbers, and spaces representable
+	//    in UTF-8, and the following characters: + - = . _ : / @.
+	//
+	//    * Tag keys and values are case-sensitive.
+	//
+	//    * Do not use aws:, AWS:, or any upper or lowercase combination of such
+	//    as a prefix for either keys or values as it is reserved for AWS use. You
+	//    cannot edit or delete tag keys or values with this prefix. Tags with this
+	//    prefix do not count against your tags per resource limit.
 	Tags []*Tag `locationName:"tags" type:"list"`
 
 	// The version counter for the container instance. Every time a container instance
@@ -6873,8 +6914,30 @@ type CreateClusterInput struct {
 
 	// The metadata that you apply to the cluster to help you categorize and organize
 	// them. Each tag consists of a key and an optional value, both of which you
-	// define. Tag keys can have a maximum character length of 128 characters, and
-	// tag values can have a maximum length of 256 characters.
+	// define.
+	//
+	// The following basic restrictions apply to tags:
+	//
+	//    * Maximum number of tags per resource - 50
+	//
+	//    * For each resource, each tag key must be unique, and each tag key can
+	//    have only one value.
+	//
+	//    * Maximum key length - 128 Unicode characters in UTF-8
+	//
+	//    * Maximum value length - 256 Unicode characters in UTF-8
+	//
+	//    * If your tagging schema is used across multiple services and resources,
+	//    remember that other services may have restrictions on allowed characters.
+	//    Generally allowed characters are: letters, numbers, and spaces representable
+	//    in UTF-8, and the following characters: + - = . _ : / @.
+	//
+	//    * Tag keys and values are case-sensitive.
+	//
+	//    * Do not use aws:, AWS:, or any upper or lowercase combination of such
+	//    as a prefix for either keys or values as it is reserved for AWS use. You
+	//    cannot edit or delete tag keys or values with this prefix. Tags with this
+	//    prefix do not count against your tags per resource limit.
 	Tags []*Tag `locationName:"tags" type:"list"`
 }
 
@@ -7127,9 +7190,30 @@ type CreateServiceInput struct {
 
 	// The metadata that you apply to the service to help you categorize and organize
 	// them. Each tag consists of a key and an optional value, both of which you
-	// define. When a service is deleted, the tags are deleted as well. Tag keys
-	// can have a maximum character length of 128 characters, and tag values can
-	// have a maximum length of 256 characters.
+	// define. When a service is deleted, the tags are deleted as well.
+	//
+	// The following basic restrictions apply to tags:
+	//
+	//    * Maximum number of tags per resource - 50
+	//
+	//    * For each resource, each tag key must be unique, and each tag key can
+	//    have only one value.
+	//
+	//    * Maximum key length - 128 Unicode characters in UTF-8
+	//
+	//    * Maximum value length - 256 Unicode characters in UTF-8
+	//
+	//    * If your tagging schema is used across multiple services and resources,
+	//    remember that other services may have restrictions on allowed characters.
+	//    Generally allowed characters are: letters, numbers, and spaces representable
+	//    in UTF-8, and the following characters: + - = . _ : / @.
+	//
+	//    * Tag keys and values are case-sensitive.
+	//
+	//    * Do not use aws:, AWS:, or any upper or lowercase combination of such
+	//    as a prefix for either keys or values as it is reserved for AWS use. You
+	//    cannot edit or delete tag keys or values with this prefix. Tags with this
+	//    prefix do not count against your tags per resource limit.
 	Tags []*Tag `locationName:"tags" type:"list"`
 
 	// The family and revision (family:revision) or full ARN of the task definition
@@ -8687,8 +8771,30 @@ type DescribeTaskDefinitionOutput struct {
 
 	// The metadata that is applied to the task definition to help you categorize
 	// and organize them. Each tag consists of a key and an optional value, both
-	// of which you define. Tag keys can have a maximum character length of 128
-	// characters, and tag values can have a maximum length of 256 characters.
+	// of which you define.
+	//
+	// The following basic restrictions apply to tags:
+	//
+	//    * Maximum number of tags per resource - 50
+	//
+	//    * For each resource, each tag key must be unique, and each tag key can
+	//    have only one value.
+	//
+	//    * Maximum key length - 128 Unicode characters in UTF-8
+	//
+	//    * Maximum value length - 256 Unicode characters in UTF-8
+	//
+	//    * If your tagging schema is used across multiple services and resources,
+	//    remember that other services may have restrictions on allowed characters.
+	//    Generally allowed characters are: letters, numbers, and spaces representable
+	//    in UTF-8, and the following characters: + - = . _ : / @.
+	//
+	//    * Tag keys and values are case-sensitive.
+	//
+	//    * Do not use aws:, AWS:, or any upper or lowercase combination of such
+	//    as a prefix for either keys or values as it is reserved for AWS use. You
+	//    cannot edit or delete tag keys or values with this prefix. Tags with this
+	//    prefix do not count against your tags per resource limit.
 	Tags []*Tag `locationName:"tags" type:"list"`
 
 	// The full task definition description.
@@ -9478,12 +9584,39 @@ type LinuxParameters struct {
 	// command: sudo docker version --format '{{.Server.APIVersion}}'
 	InitProcessEnabled *bool `locationName:"initProcessEnabled" type:"boolean"`
 
+	// The total amount of swap memory (in MiB) a container can use. This parameter
+	// will be translated to the --memory-swap option to docker run (https://docs.docker.com/engine/reference/run/)
+	// where the value would be the sum of the container memory plus the maxSwap
+	// value.
+	//
+	// If a maxSwap value of 0 is specified, the container will not use swap. Accepted
+	// values are 0 or any positive integer. If the maxSwap parameter is omitted,
+	// the container will use the swap configuration for the container instance
+	// it is running on. A maxSwap value must be set for the swappiness parameter
+	// to be used.
+	//
+	// If you are using tasks that use the Fargate launch type, the maxSwap parameter
+	// is not supported.
+	MaxSwap *int64 `locationName:"maxSwap" type:"integer"`
+
 	// The value for the size (in MiB) of the /dev/shm volume. This parameter maps
 	// to the --shm-size option to docker run (https://docs.docker.com/engine/reference/run/).
 	//
 	// If you are using tasks that use the Fargate launch type, the sharedMemorySize
 	// parameter is not supported.
 	SharedMemorySize *int64 `locationName:"sharedMemorySize" type:"integer"`
+
+	// This allows you to tune a container's memory swappiness behavior. A swappiness
+	// value of 0 will cause swapping to not happen unless absolutely necessary.
+	// A swappiness value of 100 will cause pages to be swapped very aggressively.
+	// Accepted values are whole numbers between 0 and 100. If the swappiness parameter
+	// is not specified, a default value of 60 is used. If a value is not specified
+	// for maxSwap then this parameter is ignored. This parameter maps to the --memory-swappiness
+	// option to docker run (https://docs.docker.com/engine/reference/run/).
+	//
+	// If you are using tasks that use the Fargate launch type, the swappiness parameter
+	// is not supported.
+	Swappiness *int64 `locationName:"swappiness" type:"integer"`
 
 	// The container path, mount options, and size (in MiB) of the tmpfs mount.
 	// This parameter maps to the --tmpfs option to docker run (https://docs.docker.com/engine/reference/run/).
@@ -9551,9 +9684,21 @@ func (s *LinuxParameters) SetInitProcessEnabled(v bool) *LinuxParameters {
 	return s
 }
 
+// SetMaxSwap sets the MaxSwap field's value.
+func (s *LinuxParameters) SetMaxSwap(v int64) *LinuxParameters {
+	s.MaxSwap = &v
+	return s
+}
+
 // SetSharedMemorySize sets the SharedMemorySize field's value.
 func (s *LinuxParameters) SetSharedMemorySize(v int64) *LinuxParameters {
 	s.SharedMemorySize = &v
+	return s
+}
+
+// SetSwappiness sets the Swappiness field's value.
+func (s *LinuxParameters) SetSwappiness(v int64) *LinuxParameters {
+	s.Swappiness = &v
 	return s
 }
 
@@ -10673,7 +10818,7 @@ type LogConfiguration struct {
 	// and splunk.
 	//
 	// For tasks using the EC2 launch type, the supported log drivers are awslogs,
-	// syslog, gelf, fluentd, splunk, journald, and json-file.
+	// fluentd, gelf, json-file, journald, logentries, syslog, splunk, and syslog.
 	//
 	// For more information about using the awslogs log driver, see Using the awslogs
 	// Log Driver (https://docs.aws.amazon.com/AmazonECS/latest/developerguide/using_awslogs.html)
@@ -11566,8 +11711,30 @@ type RegisterContainerInstanceInput struct {
 
 	// The metadata that you apply to the container instance to help you categorize
 	// and organize them. Each tag consists of a key and an optional value, both
-	// of which you define. Tag keys can have a maximum character length of 128
-	// characters, and tag values can have a maximum length of 256 characters.
+	// of which you define.
+	//
+	// The following basic restrictions apply to tags:
+	//
+	//    * Maximum number of tags per resource - 50
+	//
+	//    * For each resource, each tag key must be unique, and each tag key can
+	//    have only one value.
+	//
+	//    * Maximum key length - 128 Unicode characters in UTF-8
+	//
+	//    * Maximum value length - 256 Unicode characters in UTF-8
+	//
+	//    * If your tagging schema is used across multiple services and resources,
+	//    remember that other services may have restrictions on allowed characters.
+	//    Generally allowed characters are: letters, numbers, and spaces representable
+	//    in UTF-8, and the following characters: + - = . _ : / @.
+	//
+	//    * Tag keys and values are case-sensitive.
+	//
+	//    * Do not use aws:, AWS:, or any upper or lowercase combination of such
+	//    as a prefix for either keys or values as it is reserved for AWS use. You
+	//    cannot edit or delete tag keys or values with this prefix. Tags with this
+	//    prefix do not count against your tags per resource limit.
 	Tags []*Tag `locationName:"tags" type:"list"`
 
 	// The resources available on the instance.
@@ -11897,8 +12064,30 @@ type RegisterTaskDefinitionInput struct {
 
 	// The metadata that you apply to the task definition to help you categorize
 	// and organize them. Each tag consists of a key and an optional value, both
-	// of which you define. Tag keys can have a maximum character length of 128
-	// characters, and tag values can have a maximum length of 256 characters.
+	// of which you define.
+	//
+	// The following basic restrictions apply to tags:
+	//
+	//    * Maximum number of tags per resource - 50
+	//
+	//    * For each resource, each tag key must be unique, and each tag key can
+	//    have only one value.
+	//
+	//    * Maximum key length - 128 Unicode characters in UTF-8
+	//
+	//    * Maximum value length - 256 Unicode characters in UTF-8
+	//
+	//    * If your tagging schema is used across multiple services and resources,
+	//    remember that other services may have restrictions on allowed characters.
+	//    Generally allowed characters are: letters, numbers, and spaces representable
+	//    in UTF-8, and the following characters: + - = . _ : / @.
+	//
+	//    * Tag keys and values are case-sensitive.
+	//
+	//    * Do not use aws:, AWS:, or any upper or lowercase combination of such
+	//    as a prefix for either keys or values as it is reserved for AWS use. You
+	//    cannot edit or delete tag keys or values with this prefix. Tags with this
+	//    prefix do not count against your tags per resource limit.
 	Tags []*Tag `locationName:"tags" type:"list"`
 
 	// The short name or full Amazon Resource Name (ARN) of the IAM role that containers
@@ -12341,8 +12530,30 @@ type RunTaskInput struct {
 
 	// The metadata that you apply to the task to help you categorize and organize
 	// them. Each tag consists of a key and an optional value, both of which you
-	// define. Tag keys can have a maximum character length of 128 characters, and
-	// tag values can have a maximum length of 256 characters.
+	// define.
+	//
+	// The following basic restrictions apply to tags:
+	//
+	//    * Maximum number of tags per resource - 50
+	//
+	//    * For each resource, each tag key must be unique, and each tag key can
+	//    have only one value.
+	//
+	//    * Maximum key length - 128 Unicode characters in UTF-8
+	//
+	//    * Maximum value length - 256 Unicode characters in UTF-8
+	//
+	//    * If your tagging schema is used across multiple services and resources,
+	//    remember that other services may have restrictions on allowed characters.
+	//    Generally allowed characters are: letters, numbers, and spaces representable
+	//    in UTF-8, and the following characters: + - = . _ : / @.
+	//
+	//    * Tag keys and values are case-sensitive.
+	//
+	//    * Do not use aws:, AWS:, or any upper or lowercase combination of such
+	//    as a prefix for either keys or values as it is reserved for AWS use. You
+	//    cannot edit or delete tag keys or values with this prefix. Tags with this
+	//    prefix do not count against your tags per resource limit.
 	Tags []*Tag `locationName:"tags" type:"list"`
 
 	// The family and revision (family:revision) or full ARN of the task definition
@@ -12634,7 +12845,9 @@ type Service struct {
 	// deployment and the ordering of stopping and starting tasks.
 	DeploymentConfiguration *DeploymentConfiguration `locationName:"deploymentConfiguration" type:"structure"`
 
-	// The deployment controller type the service is using.
+	// The deployment controller type the service is using. When using the DescribeServices
+	// API, this field is omitted if the service is using the ECS deployment controller
+	// type.
 	DeploymentController *DeploymentController `locationName:"deploymentController" type:"structure"`
 
 	// The current state of deployments for the service.
@@ -12745,8 +12958,30 @@ type Service struct {
 
 	// The metadata that you apply to the service to help you categorize and organize
 	// them. Each tag consists of a key and an optional value, both of which you
-	// define. Tag keys can have a maximum character length of 128 characters, and
-	// tag values can have a maximum length of 256 characters.
+	// define.
+	//
+	// The following basic restrictions apply to tags:
+	//
+	//    * Maximum number of tags per resource - 50
+	//
+	//    * For each resource, each tag key must be unique, and each tag key can
+	//    have only one value.
+	//
+	//    * Maximum key length - 128 Unicode characters in UTF-8
+	//
+	//    * Maximum value length - 256 Unicode characters in UTF-8
+	//
+	//    * If your tagging schema is used across multiple services and resources,
+	//    remember that other services may have restrictions on allowed characters.
+	//    Generally allowed characters are: letters, numbers, and spaces representable
+	//    in UTF-8, and the following characters: + - = . _ : / @.
+	//
+	//    * Tag keys and values are case-sensitive.
+	//
+	//    * Do not use aws:, AWS:, or any upper or lowercase combination of such
+	//    as a prefix for either keys or values as it is reserved for AWS use. You
+	//    cannot edit or delete tag keys or values with this prefix. Tags with this
+	//    prefix do not count against your tags per resource limit.
 	Tags []*Tag `locationName:"tags" type:"list"`
 
 	// The task definition to use for tasks in the service. This value is specified
@@ -13148,8 +13383,30 @@ type StartTaskInput struct {
 
 	// The metadata that you apply to the task to help you categorize and organize
 	// them. Each tag consists of a key and an optional value, both of which you
-	// define. Tag keys can have a maximum character length of 128 characters, and
-	// tag values can have a maximum length of 256 characters.
+	// define.
+	//
+	// The following basic restrictions apply to tags:
+	//
+	//    * Maximum number of tags per resource - 50
+	//
+	//    * For each resource, each tag key must be unique, and each tag key can
+	//    have only one value.
+	//
+	//    * Maximum key length - 128 Unicode characters in UTF-8
+	//
+	//    * Maximum value length - 256 Unicode characters in UTF-8
+	//
+	//    * If your tagging schema is used across multiple services and resources,
+	//    remember that other services may have restrictions on allowed characters.
+	//    Generally allowed characters are: letters, numbers, and spaces representable
+	//    in UTF-8, and the following characters: + - = . _ : / @.
+	//
+	//    * Tag keys and values are case-sensitive.
+	//
+	//    * Do not use aws:, AWS:, or any upper or lowercase combination of such
+	//    as a prefix for either keys or values as it is reserved for AWS use. You
+	//    cannot edit or delete tag keys or values with this prefix. Tags with this
+	//    prefix do not count against your tags per resource limit.
 	Tags []*Tag `locationName:"tags" type:"list"`
 
 	// The family and revision (family:revision) or full ARN of the task definition
@@ -13754,8 +14011,30 @@ func (s *SystemControl) SetValue(v string) *SystemControl {
 
 // The metadata that you apply to a resource to help you categorize and organize
 // them. Each tag consists of a key and an optional value, both of which you
-// define. Tag keys can have a maximum character length of 128 characters, and
-// tag values can have a maximum length of 256 characters.
+// define.
+//
+// The following basic restrictions apply to tags:
+//
+//    * Maximum number of tags per resource - 50
+//
+//    * For each resource, each tag key must be unique, and each tag key can
+//    have only one value.
+//
+//    * Maximum key length - 128 Unicode characters in UTF-8
+//
+//    * Maximum value length - 256 Unicode characters in UTF-8
+//
+//    * If your tagging schema is used across multiple services and resources,
+//    remember that other services may have restrictions on allowed characters.
+//    Generally allowed characters are: letters, numbers, and spaces representable
+//    in UTF-8, and the following characters: + - = . _ : / @.
+//
+//    * Tag keys and values are case-sensitive.
+//
+//    * Do not use aws:, AWS:, or any upper or lowercase combination of such
+//    as a prefix for either keys or values as it is reserved for AWS use. You
+//    cannot edit or delete tag keys or values with this prefix. Tags with this
+//    prefix do not count against your tags per resource limit.
 type Tag struct {
 	_ struct{} `type:"structure"`
 
@@ -13813,9 +14092,30 @@ type TagResourceInput struct {
 	// ResourceArn is a required field
 	ResourceArn *string `locationName:"resourceArn" type:"string" required:"true"`
 
-	// The tags to add to the resource. A tag is an array of key-value pairs. Tag
-	// keys can have a maximum character length of 128 characters, and tag values
-	// can have a maximum length of 256 characters.
+	// The tags to add to the resource. A tag is an array of key-value pairs.
+	//
+	// The following basic restrictions apply to tags:
+	//
+	//    * Maximum number of tags per resource - 50
+	//
+	//    * For each resource, each tag key must be unique, and each tag key can
+	//    have only one value.
+	//
+	//    * Maximum key length - 128 Unicode characters in UTF-8
+	//
+	//    * Maximum value length - 256 Unicode characters in UTF-8
+	//
+	//    * If your tagging schema is used across multiple services and resources,
+	//    remember that other services may have restrictions on allowed characters.
+	//    Generally allowed characters are: letters, numbers, and spaces representable
+	//    in UTF-8, and the following characters: + - = . _ : / @.
+	//
+	//    * Tag keys and values are case-sensitive.
+	//
+	//    * Do not use aws:, AWS:, or any upper or lowercase combination of such
+	//    as a prefix for either keys or values as it is reserved for AWS use. You
+	//    cannot edit or delete tag keys or values with this prefix. Tags with this
+	//    prefix do not count against your tags per resource limit.
 	//
 	// Tags is a required field
 	Tags []*Tag `locationName:"tags" type:"list" required:"true"`
@@ -14041,8 +14341,30 @@ type Task struct {
 
 	// The metadata that you apply to the task to help you categorize and organize
 	// them. Each tag consists of a key and an optional value, both of which you
-	// define. Tag keys can have a maximum character length of 128 characters, and
-	// tag values can have a maximum length of 256 characters.
+	// define.
+	//
+	// The following basic restrictions apply to tags:
+	//
+	//    * Maximum number of tags per resource - 50
+	//
+	//    * For each resource, each tag key must be unique, and each tag key can
+	//    have only one value.
+	//
+	//    * Maximum key length - 128 Unicode characters in UTF-8
+	//
+	//    * Maximum value length - 256 Unicode characters in UTF-8
+	//
+	//    * If your tagging schema is used across multiple services and resources,
+	//    remember that other services may have restrictions on allowed characters.
+	//    Generally allowed characters are: letters, numbers, and spaces representable
+	//    in UTF-8, and the following characters: + - = . _ : / @.
+	//
+	//    * Tag keys and values are case-sensitive.
+	//
+	//    * Do not use aws:, AWS:, or any upper or lowercase combination of such
+	//    as a prefix for either keys or values as it is reserved for AWS use. You
+	//    cannot edit or delete tag keys or values with this prefix. Tags with this
+	//    prefix do not count against your tags per resource limit.
 	Tags []*Tag `locationName:"tags" type:"list"`
 
 	// The Amazon Resource Name (ARN) of the task.
@@ -14439,9 +14761,10 @@ type TaskDefinition struct {
 	// The full Amazon Resource Name (ARN) of the task definition.
 	TaskDefinitionArn *string `locationName:"taskDefinitionArn" type:"string"`
 
-	// The Amazon Resource Name (ARN) of an AWS Identity and Access Management (IAM)
-	// role that grants containers in the task permission to call AWS APIs on your
-	// behalf. For more information, see Amazon ECS Task Role (https://docs.aws.amazon.com/AmazonECS/latest/developerguide/task_IAM_role.html)
+	// The short name or full Amazon Resource Name (ARN) of the AWS Identity and
+	// Access Management (IAM) role that grants containers in the task permission
+	// to call AWS APIs on your behalf. For more information, see Amazon ECS Task
+	// Role (https://docs.aws.amazon.com/AmazonECS/latest/developerguide/task_IAM_role.html)
 	// in the Amazon Elastic Container Service Developer Guide.
 	//
 	// IAM roles for tasks on Windows require that the -EnableTaskIAMRole option
@@ -14771,10 +15094,7 @@ type TaskSet struct {
 	//    * There are no tasks running on container instances in the DRAINING status.
 	//
 	//    * All tasks are reporting a healthy status from the load balancers, service
-	//    discovery, and container health checks. If a healthCheckGracePeriodSeconds
-	//    value was set when the service was created, you may see a STEADY_STATE
-	//    reached since unhealthy Elastic Load Balancing target health checks will
-	//    be ignored until it expires.
+	//    discovery, and container health checks.
 	//
 	// If any of those conditions are not met, the stability status returns STABILIZING.
 	StabilityStatus *string `locationName:"stabilityStatus" type:"string" enum:"StabilityStatus"`
