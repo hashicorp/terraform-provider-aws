@@ -224,6 +224,12 @@ func resourceAwsAppmeshRoute() *schema.Resource {
 							},
 						},
 
+						"priority": {
+							Type:         schema.TypeInt,
+							Optional:     true,
+							ValidateFunc: validation.IntBetween(0, 1000),
+						},
+
 						"tcp_route": {
 							Type:          schema.TypeList,
 							Optional:      true,
@@ -441,6 +447,10 @@ func expandAppmeshRouteSpec(vSpec []interface{}) *appmesh.RouteSpec {
 	}
 	mSpec := vSpec[0].(map[string]interface{})
 
+	if vPriority, ok := mSpec["priority"].(int); ok && vPriority > 0 {
+		spec.Priority = aws.Int64(int64(vPriority))
+	}
+
 	if vHttpRoute, ok := mSpec["http_route"].([]interface{}); ok && len(vHttpRoute) > 0 && vHttpRoute[0] != nil {
 		mHttpRoute := vHttpRoute[0].(map[string]interface{})
 
@@ -586,7 +596,9 @@ func flattenAppmeshRouteSpec(spec *appmesh.RouteSpec) []interface{} {
 		return []interface{}{}
 	}
 
-	mSpec := map[string]interface{}{}
+	mSpec := map[string]interface{}{
+		"priority": int(aws.Int64Value(spec.Priority)),
+	}
 
 	if httpRoute := spec.HttpRoute; httpRoute != nil {
 		mHttpRoute := map[string]interface{}{}
