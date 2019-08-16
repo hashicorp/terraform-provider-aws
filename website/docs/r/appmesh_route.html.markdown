@@ -42,6 +42,41 @@ resource "aws_appmesh_route" "serviceb" {
 }
 ```
 
+### HTTP Header Routing
+
+```hcl
+resource "aws_appmesh_route" "serviceb" {
+  name                = "serviceB-route"
+  mesh_name           = "${aws_appmesh_mesh.simple.id}"
+  virtual_router_name = "${aws_appmesh_virtual_router.serviceb.name}"
+
+  spec {
+    http_route {
+      match {
+        method = "POST"
+        prefix = "/"
+        scheme = "https"
+
+        header {
+          name = "clientRequestId"
+
+          match {
+            prefix = "123"
+          }
+        }
+      }
+
+      action {
+        weighted_target {
+          virtual_node = "${aws_appmesh_virtual_node.serviceb.name}"
+          weight       = 100
+        }
+      }
+    }
+  }
+}
+```
+
 ### TCP Routing
 
 ```hcl
@@ -92,13 +127,13 @@ The `action` object supports the following:
 * `weighted_target` - (Required) The targets that traffic is routed to when a request matches the route.
 You can specify one or more targets and their relative weights with which to distribute traffic.
 
-The `match` object supports the following:
+The `http_route`'s `match` object supports the following:
 
 * `prefix` - (Required) Specifies the path with which to match requests.
 This parameter must always start with /, which by itself matches all requests to the virtual router service name.
-* `header` - (Optional) The HTTP headers with which to match requests.
-* `method` - (Optional) The HTTP method with which to match requests. Valid values: `GET`, `HEAD`, `POST`, `PUT`, `DELETE`, `CONNECT`, `OPTIONS`, `TRACE`, `PATCH`.
-* `scheme` - (Optional) The URL scheme with which to match requests. Valid values: `HTTP`, `HTTPS`.
+* `header` - (Optional) The client request headers to match on.
+* `method` - (Optional) The client request header method to match on. Valid values: `GET`, `HEAD`, `POST`, `PUT`, `DELETE`, `CONNECT`, `OPTIONS`, `TRACE`, `PATCH`.
+* `scheme` - (Optional) The client request header scheme to match on. Valid values: `http`, `https`.
 
 The `weighted_target` object supports the following:
 
@@ -107,22 +142,22 @@ The `weighted_target` object supports the following:
 
 The `header` object supports the following:
 
-* `name` - (Required) HTTP header name
-* `invert` - (Optional) If `true`, the match is on the opposite of the match type and value. Default is `false`.
-* `match` - (Optional) The match type and value.
+* `name` - (Required) A name for the HTTP header in the client request that will be matched on.
+* `invert` - (Optional) If `true`, the match is on the opposite of the `match` method and value. Default is `false`.
+* `match` - (Optional) The method and value to match the header value sent with a request. Specify one match method.
 
-The `match` object supports the following:
+The `header`'s `match` object supports the following:
 
-* `exact` - (Optional) Exact match
-* `prefix` - (Optional) Prefix match
-* `range`- (Optional) Range match
-* `regex` - (Optional) Regex match
-* `suffix` - (Optional) Suffix match
+* `exact` - (Optional) The header value sent by the client must match the specified value exactly.
+* `prefix` - (Optional) The header value sent by the client must begin with the specified characters.
+* `range`- (Optional) The object that specifies the range of numbers that the header value sent by the client must be included in.
+* `regex` - (Optional) The header value sent by the client must include the specified characters.
+* `suffix` - (Optional) The header value sent by the client must end with the specified characters.
 
 The `range` object supports the following:
 
-* `end` - (Required) End of the range
-* `start` - (Requited) Start of the range
+* `end` - (Required) The end of the range.
+* `start` - (Requited) The start of the range.
 
 ## Attributes Reference
 
