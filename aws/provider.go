@@ -979,6 +979,7 @@ func init() {
 		"neptune",
 		"opsworks",
 		"organizations",
+		"personalize",
 		"pinpoint",
 		"pricing",
 		"quicksight",
