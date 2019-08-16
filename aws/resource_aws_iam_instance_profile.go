@@ -174,6 +174,9 @@ func instanceProfileAddRole(iamconn *iam.IAM, profileName, roleName string) erro
 		}
 		return nil
 	})
+	if isResourceTimeoutError(err) {
+		_, err = iamconn.AddRoleToInstanceProfile(request)
+	}
 	if err != nil {
 		return fmt.Errorf("Error adding IAM Role %s to Instance Profile %s: %s", roleName, profileName, err)
 	}
