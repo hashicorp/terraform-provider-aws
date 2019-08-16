@@ -678,7 +678,7 @@ resource "aws_rds_cluster" "default" {
   availability_zones  = ["us-west-2a", "us-west-2b", "us-west-2c"]
   database_name       = "mydb"
   master_username     = "foo"
-  master_password     = "mustbeeightcharaters"
+  master_password     = "mustbeeightcharacters"
   skip_final_snapshot = true
 }
 
@@ -714,7 +714,7 @@ resource "aws_rds_cluster" "default" {
   availability_zones  = ["us-west-2a", "us-west-2b", "us-west-2c"]
   database_name       = "mydb"
   master_username     = "foo"
-  master_password     = "mustbeeightcharaters"
+  master_password     = "mustbeeightcharacters"
   skip_final_snapshot = true
 }
 
@@ -753,7 +753,7 @@ resource "aws_rds_cluster" "default" {
   availability_zones  = ["${data.aws_availability_zones.available.names[0]}", "${data.aws_availability_zones.available.names[1]}", "${data.aws_availability_zones.available.names[2]}"]
   database_name       = "mydb"
   master_username     = "foo"
-  master_password     = "mustbeeightcharaters"
+  master_password     = "mustbeeightcharacters"
   skip_final_snapshot = true
 }
 
@@ -913,7 +913,7 @@ resource "aws_rds_cluster" "default" {
   availability_zones  = ["us-west-2a", "us-west-2b", "us-west-2c"]
   database_name       = "mydb"
   master_username     = "foo"
-  master_password     = "mustbeeightcharaters"
+  master_password     = "mustbeeightcharacters"
   storage_encrypted   = true
   kms_key_id          = "${aws_kms_key.foo.arn}"
   skip_final_snapshot = true
@@ -950,7 +950,7 @@ resource "aws_rds_cluster" "default" {
   availability_zones  = ["us-west-2a", "us-west-2b", "us-west-2c"]
   database_name       = "mydb"
   master_username     = "foo"
-  master_password     = "mustbeeightcharaters"
+  master_password     = "mustbeeightcharacters"
   skip_final_snapshot = true
 }
 
@@ -1048,7 +1048,7 @@ resource "aws_rds_cluster" "test" {
   cluster_identifier  = %[1]q
   database_name       = "mydb"
   engine              = "aurora"
-  master_password     = "mustbeeightcharaters"
+  master_password     = "mustbeeightcharacters"
   master_username     = "foo"
   skip_final_snapshot = true
 }
@@ -1070,7 +1070,7 @@ resource "aws_rds_cluster" "test" {
   database_name       = "mydb"
   engine              = "aurora-mysql"
   engine_version      = "5.7.mysql_aurora.2.04.2"
-  master_password     = "mustbeeightcharaters"
+  master_password     = "mustbeeightcharacters"
   master_username     = "foo"
   skip_final_snapshot = true
 }
@@ -1092,7 +1092,7 @@ resource "aws_rds_cluster" "test" {
   cluster_identifier  = %[1]q
   database_name       = "mydb"
   engine              = "aurora-postgresql"
-  master_password     = "mustbeeightcharaters"
+  master_password     = "mustbeeightcharacters"
   master_username     = "foo"
   skip_final_snapshot = true
 }
@@ -1117,7 +1117,7 @@ resource "aws_rds_cluster" "test" {
   cluster_identifier  = %[1]q
   database_name       = "mydb"
   engine              = "aurora"
-  master_password     = "mustbeeightcharaters"
+  master_password     = "mustbeeightcharacters"
   master_username     = "foo"
   skip_final_snapshot = true
 }
@@ -1144,7 +1144,7 @@ resource "aws_rds_cluster" "test" {
   database_name       = "mydb"
   engine              = "aurora-mysql"
   engine_version      = "5.7.mysql_aurora.2.04.2"
-  master_password     = "mustbeeightcharaters"
+  master_password     = "mustbeeightcharacters"
   master_username     = "foo"
   skip_final_snapshot = true
 }
@@ -1171,7 +1171,7 @@ resource "aws_rds_cluster" "test" {
   cluster_identifier  = %[1]q
   database_name       = "mydb"
   engine              = "aurora-postgresql"
-  master_password     = "mustbeeightcharaters"
+  master_password     = "mustbeeightcharacters"
   master_username     = "foo"
   skip_final_snapshot = true
 }
@@ -1192,7 +1192,7 @@ func testAccAWSRDSClusterInstanceConfig_PubliclyAccessible(rName string, publicl
 resource "aws_rds_cluster" "test" {
   cluster_identifier  = %q
   master_username     = "foo"
-  master_password     = "mustbeeightcharaters"
+  master_password     = "mustbeeightcharacters"
   skip_final_snapshot = true
 }
 
@@ -1213,7 +1213,7 @@ resource "aws_rds_cluster" "default" {
   availability_zones  = ["us-west-2a", "us-west-2b", "us-west-2c"]
   database_name       = "mydb"
   master_username     = "foo"
-  master_password     = "mustbeeightcharaters"
+  master_password     = "mustbeeightcharacters"
   skip_final_snapshot = true
 }
 
