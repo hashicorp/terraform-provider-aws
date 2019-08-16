@@ -10,6 +10,10 @@ BUG FIXES:
 * resource/aws_db_instance: Fix enabling Enhanced Monitoring on update to handle IAM eventual consistency [GH-9747]
 * resource/aws_elb: Final retries after timeouts creating and updating ELBs [GH-9765]
 * resource/aws_elb_attachment: Final retry after timout creating ELB attachment [GH-9765]
+* resource/aws_iam_instance_profile: Final retry after timeout adding role to profile [GH-9766]
+* resource/aws_iam_policy: Final retry after timeout reading policy [GH-9766]
+* resource/aws_iam_role: Final retries after timeouts creating and deleting IAM roles [GH-9766]
+* resource/aws_iam_user: Final retry after timeout deleting user login profile [GH-9766]
 * resource/aws_inspector_assessment_target: Final retry after timeout deleting target [GH-9767]
 * resource/aws_rds_cluster_instance: Ensure `monitoring_interval` and `monitoring_role_arn` attributes are always written to the Terraform state [GH-9748]
 
