@@ -99,6 +99,11 @@ func resourceAwsEc2TagRead(d *schema.ResourceData, meta interface{}) error {
 			},
 		})
 
+		// tag not found _yet_
+		if len(tags.Tags) == 0 {
+			return resource.RetryableError(fmt.Errorf("tag not found"))
+		}
+
 		if err != nil {
 			return resource.RetryableError(err)
 		}
