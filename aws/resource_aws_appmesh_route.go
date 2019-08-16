@@ -114,6 +114,7 @@ func resourceAwsAppmeshRoute() *schema.Resource {
 													Type:     schema.TypeSet,
 													Optional: true,
 													MinItems: 0,
+													MaxItems: 10,
 													Elem: &schema.Resource{
 														Schema: map[string]*schema.Schema{
 															"invert": {
@@ -130,13 +131,15 @@ func resourceAwsAppmeshRoute() *schema.Resource {
 																Elem: &schema.Resource{
 																	Schema: map[string]*schema.Schema{
 																		"exact": {
-																			Type:     schema.TypeString,
-																			Optional: true,
+																			Type:         schema.TypeString,
+																			Optional:     true,
+																			ValidateFunc: validation.StringLenBetween(1, 255),
 																		},
 
 																		"prefix": {
-																			Type:     schema.TypeString,
-																			Optional: true,
+																			Type:         schema.TypeString,
+																			Optional:     true,
+																			ValidateFunc: validation.StringLenBetween(1, 255),
 																		},
 
 																		"range": {
@@ -160,21 +163,24 @@ func resourceAwsAppmeshRoute() *schema.Resource {
 																		},
 
 																		"regex": {
-																			Type:     schema.TypeString,
-																			Optional: true,
+																			Type:         schema.TypeString,
+																			Optional:     true,
+																			ValidateFunc: validation.StringLenBetween(1, 255),
 																		},
 
 																		"suffix": {
-																			Type:     schema.TypeString,
-																			Optional: true,
+																			Type:         schema.TypeString,
+																			Optional:     true,
+																			ValidateFunc: validation.StringLenBetween(1, 255),
 																		},
 																	},
 																},
 															},
 
 															"name": {
-																Type:     schema.TypeString,
-																Required: true,
+																Type:         schema.TypeString,
+																Required:     true,
+																ValidateFunc: validation.StringLenBetween(1, 50),
 															},
 														},
 													},
