@@ -111,6 +111,8 @@ The following arguments are supported:
 The `spec` object supports the following:
 
 * `http_route` - (Optional) The HTTP routing information for the route.
+* `priority` - (Optional) The priority for the route, between `0` and `1000`.
+Routes are matched based on the specified value, where `0` is the highest priority.
 * `tcp_route` - (Optional) The TCP routing information for the route.
 
 The `http_route` object supports the following:
