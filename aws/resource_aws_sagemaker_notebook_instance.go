@@ -248,33 +248,42 @@ func resourceAwsSagemakerNotebookInstanceUpdate(d *schema.ResourceData, meta int
 			startOpts := &sagemaker.StartNotebookInstanceInput{
 				NotebookInstanceName: aws.String(d.Id()),
 			}
-
+			stateConf := &resource.StateChangeConf{
+				Pending: []string{
+					sagemaker.NotebookInstanceStatusStopped,
+				},
+				Target:  []string{sagemaker.NotebookInstanceStatusInService, sagemaker.NotebookInstanceStatusPending},
+				Refresh: sagemakerNotebookInstanceStateRefreshFunc(conn, d.Id()),
+				Timeout: 30 * time.Second,
+			}
 			// StartNotebookInstance sometimes doesn't take so we'll check for a state change and if
 			// it doesn't change we'll send another request
 			err := resource.Retry(5*time.Minute, func() *resource.RetryError {
-				if _, err := conn.StartNotebookInstance(startOpts); err != nil {
+				_, err := conn.StartNotebookInstance(startOpts)
+				if err != nil {
 					return resource.NonRetryableError(fmt.Errorf("error starting sagemaker notebook instance (%s): %s", d.Id(), err))
 				}
-				stateConf := &resource.StateChangeConf{
-					Pending: []string{
-						sagemaker.NotebookInstanceStatusStopped,
-					},
-					Target:  []string{sagemaker.NotebookInstanceStatusInService, sagemaker.NotebookInstanceStatusPending},
-					Refresh: sagemakerNotebookInstanceStateRefreshFunc(conn, d.Id()),
-					Timeout: 30 * time.Second,
-				}
-				_, err := stateConf.WaitForState()
+
+				_, err = stateConf.WaitForState()
 				if err != nil {
 					return resource.RetryableError(fmt.Errorf("error waiting for sagemaker notebook instance (%s) to start: %s", d.Id(), err))
 				}
 
 				return nil
 			})
+			if isResourceTimeoutError(err) {
+				_, err = conn.StartNotebookInstance(startOpts)
+				if err != nil {
+					return fmt.Errorf("error starting sagemaker notebook instance (%s): %s", d.Id(), err)
+				}
+
+				_, err = stateConf.WaitForState()
+			}
 			if err != nil {
-				return err
+				return fmt.Errorf("Error waiting for sagemaker notebook instance to start: %s", err)
 			}
 
-			stateConf := &resource.StateChangeConf{
+			stateConf = &resource.StateChangeConf{
 				Pending: []string{
 					sagemaker.NotebookInstanceStatusUpdating,
 					sagemaker.NotebookInstanceStatusPending,
