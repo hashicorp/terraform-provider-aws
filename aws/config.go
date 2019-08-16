@@ -255,7 +255,7 @@ type AWSClient struct {
 	opsworksconn                        *opsworks.OpsWorks
 	organizationsconn                   *organizations.Organizations
 	partition                           string
-	personalizeconn						*personalize.Personalize
+	personalizeconn                     *personalize.Personalize
 	pinpointconn                        *pinpoint.Pinpoint
 	pricingconn                         *pricing.Pricing
 	quicksightconn                      *quicksight.QuickSight
