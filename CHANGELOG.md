@@ -8,6 +8,9 @@ BUG FIXES:
 
 * resource/aws_cloudwatch_log_subscription_filter: Prevent difference when omitting default `distribution` argument value of `ByLogStream` [GH-9265]
 * resource/aws_db_instance: Fix enabling Enhanced Monitoring on update to handle IAM eventual consistency [GH-9747]
+* resource/aws_elb: Final retries after timeouts creating and updating ELBs [GH-9765]
+* resource/aws_elb_attachment: Final retry after timout creating ELB attachment [GH-9765]
+* resource/aws_inspector_assessment_target: Final retry after timeout deleting target [GH-9767]
 * resource/aws_rds_cluster_instance: Ensure `monitoring_interval` and `monitoring_role_arn` attributes are always written to the Terraform state [GH-9748]
 
 ## 2.24.0 (August 15, 2019)
