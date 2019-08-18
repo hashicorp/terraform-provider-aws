@@ -320,12 +320,13 @@ func resourceAwsLbbListenerRule() *schema.Resource {
 										ValidateFunc: validation.StringMatch(regexp.MustCompile("^[A-Za-z0-9!#$%&'*+-.^_`|~]{1,40}$"), ""),
 									},
 									"values": {
-										Type: schema.TypeList,
+										Type: schema.TypeSet,
 										Elem: &schema.Schema{
 											Type:         schema.TypeString,
 											ValidateFunc: validation.StringLenBetween(1, 128),
 										},
 										Required: true,
+										Set:      schema.HashString,
 									},
 								},
 							},
@@ -452,8 +453,8 @@ func lbListenerRuleConditionSetHash(v interface{}) int {
 		field = "http-header"
 		httpHeaderMap := httpHeader[0].(map[string]interface{})
 		fmt.Fprint(&buf, httpHeaderMap["http_header_name"].(string), ":")
-		httpHeaderValues := httpHeaderMap["values"].([]interface{})
-		for _, l := range httpHeaderValues {
+		httpHeaderValues := httpHeaderMap["values"].(*schema.Set)
+		for _, l := range httpHeaderValues.List() {
 			fmt.Fprint(&buf, l, "-")
 		}
 	}
@@ -905,7 +906,7 @@ func resourceAwsLbListenerRuleRead(d *schema.ResourceData, meta interface{}) err
 			conditionMap["http_header"] = []interface{}{
 				map[string]interface{}{
 					"http_header_name": aws.StringValue(condition.HttpHeaderConfig.HttpHeaderName),
-					"values":           aws.StringValueSlice(condition.HttpHeaderConfig.Values),
+					"values":           flattenStringSet(condition.HttpHeaderConfig.Values),
 				},
 			}
 
@@ -1226,11 +1227,11 @@ func lbListenerRuleConditions(conditions []interface{}) ([]*elbv2.RuleCondition,
 		if httpHeader, ok := conditionMap["http_header"].([]interface{}); ok && len(httpHeader) > 0 {
 			field = "http-header"
 			httpHeaderMap := httpHeader[0].(map[string]interface{})
-			values := httpHeaderMap["values"].([]interface{})
+			values := httpHeaderMap["values"].(*schema.Set)
 
 			elbConditions[i].HttpHeaderConfig = &elbv2.HttpHeaderConditionConfig{
 				HttpHeaderName: aws.String(httpHeaderMap["http_header_name"].(string)),
-				Values:         expandStringList(values),
+				Values:         expandStringSet(values),
 			}
 		}
 
