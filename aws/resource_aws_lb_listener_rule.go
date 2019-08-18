@@ -341,21 +341,13 @@ func resourceAwsLbbListenerRule() *schema.Resource {
 							},
 						},
 						"http_request_method": {
-							Type:     schema.TypeList,
-							MaxItems: 1,
+							Type:     schema.TypeSet,
 							Optional: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"values": {
-										Type: schema.TypeList,
-										Elem: &schema.Schema{
-											Type:         schema.TypeString,
-											ValidateFunc: validation.StringMatch(regexp.MustCompile(`^[A-Za-z-_]{1,40}$`), ""),
-										},
-										Required: true,
-									},
-								},
+							Elem: &schema.Schema{
+								Type:         schema.TypeString,
+								ValidateFunc: validation.StringMatch(regexp.MustCompile(`^[A-Za-z-_]{1,40}$`), ""),
 							},
+							Set: schema.HashString,
 						},
 						"path_pattern": {
 							Type:     schema.TypeList,
@@ -479,10 +471,9 @@ func lbListenerRuleConditionSetHash(v interface{}) int {
 		}
 	}
 
-	if httpRequestMethod, ok := m["http_request_method"].([]interface{}); ok && len(httpRequestMethod) > 0 && httpRequestMethod[0] != nil {
+	if httpRequestMethod, ok := m["http_request_method"].(*schema.Set); ok && httpRequestMethod.Len() > 0 {
 		field = "http-request-method"
-		values := httpRequestMethod[0].(map[string]interface{})["values"].([]interface{})
-		for _, l := range values {
+		for _, l := range httpRequestMethod.List() {
 			fmt.Fprint(&buf, l, "-")
 		}
 	}
@@ -544,7 +535,7 @@ func customDiffLbListenerRuleConditionAttributes(diff *schema.ResourceDiff, v in
 				count += 1
 			}
 
-			if len(condition["http_request_method"].([]interface{})) > 0 {
+			if c, ok := condition["http_request_method"].(*schema.Set); ok && c.Len() > 0 {
 				count += 1
 			}
 
@@ -936,11 +927,7 @@ func resourceAwsLbListenerRuleRead(d *schema.ResourceData, meta interface{}) err
 			}
 
 		case "http-request-method":
-			conditionMap["http_request_method"] = []interface{}{
-				map[string]interface{}{
-					"values": aws.StringValueSlice(condition.HttpRequestMethodConfig.Values),
-				},
-			}
+			conditionMap["http_request_method"] = flattenStringSet(condition.HttpRequestMethodConfig.Values)
 
 		case "path-pattern":
 			conditionMap["path_pattern"] = []interface{}{
@@ -1265,12 +1252,11 @@ func lbListenerRuleConditions(conditions []interface{}) ([]*elbv2.RuleCondition,
 			}
 		}
 
-		if httpRequestMethod, ok := conditionMap["http_request_method"].([]interface{}); ok && len(httpRequestMethod) > 0 {
+		if httpRequestMethod, ok := conditionMap["http_request_method"].(*schema.Set); ok && httpRequestMethod.Len() > 0 {
 			field = "http-request-method"
-			values := httpRequestMethod[0].(map[string]interface{})["values"].([]interface{})
 
 			elbConditions[i].HttpRequestMethodConfig = &elbv2.HttpRequestMethodConditionConfig{
-				Values: expandStringList(values),
+				Values: expandStringSet(httpRequestMethod),
 			}
 		}
 
