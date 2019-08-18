@@ -486,27 +486,13 @@ func customDiffLbListenerRuleConditionAttributes(diff *schema.ResourceDiff, v in
 			condition := c.(map[string]interface{})
 			count := 0
 
-			if c, ok := condition["host_header"].(*schema.Set); ok && c.Len() > 0 {
-				count += 1
+			for _, field := range []string{"host_header", "http_request_method", "path_pattern", "query_string", "source_ip"} {
+				if c, ok := condition[field].(*schema.Set); ok && c.Len() > 0 {
+					count += 1
+				}
 			}
 
 			if len(condition["http_header"].([]interface{})) > 0 {
-				count += 1
-			}
-
-			if c, ok := condition["http_request_method"].(*schema.Set); ok && c.Len() > 0 {
-				count += 1
-			}
-
-			if c, ok := condition["path_pattern"].(*schema.Set); ok && c.Len() > 0 {
-				count += 1
-			}
-
-			if c, ok := condition["query_string"].(*schema.Set); ok && c.Len() > 0 {
-				count += 1
-			}
-
-			if c, ok := condition["source_ip"].(*schema.Set); ok && c.Len() > 0 {
 				count += 1
 			}
 
