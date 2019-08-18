@@ -299,24 +299,14 @@ func resourceAwsLbbListenerRule() *schema.Resource {
 							Deprecated: "use 'host_header' or 'path_pattern' attribute instead",
 						},
 						"host_header": {
-							Type:     schema.TypeList,
-							MaxItems: 1,
+							Type:     schema.TypeSet,
 							Optional: true,
 							Computed: true, // Deprecated: remove Computed
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"values": {
-										Type: schema.TypeList,
-										// Deprecated: Change Optional & Computed to Required in next major version of the provider
-										Optional: true,
-										Computed: true,
-										Elem: &schema.Schema{
-											Type:         schema.TypeString,
-											ValidateFunc: validation.StringLenBetween(1, 128),
-										},
-									},
-								},
+							Elem: &schema.Schema{
+								Type:         schema.TypeString,
+								ValidateFunc: validation.StringLenBetween(1, 128),
 							},
+							Set: schema.HashString,
 						},
 						"http_header": {
 							Type:     schema.TypeList,
@@ -445,13 +435,10 @@ func lbListenerRuleConditionSetHash(v interface{}) int {
 
 	m := v.(map[string]interface{})
 
-	if hostHeader, ok := m["host_header"].([]interface{}); ok && len(hostHeader) > 0 {
-		if hostHeader[0] != nil {
-			field = "host-header"
-			values := hostHeader[0].(map[string]interface{})["values"].([]interface{})
-			for _, l := range values {
-				fmt.Fprint(&buf, l, "-")
-			}
+	if hostHeader, ok := m["host_header"].(*schema.Set); ok && hostHeader.Len() > 0 {
+		field = "host-header"
+		for _, l := range hostHeader.List() {
+			fmt.Fprint(&buf, l, "-")
 		}
 	} else if m["field"].(string) == "host-header" {
 		// Backwards compatibility
@@ -527,7 +514,7 @@ func customDiffLbListenerRuleConditionAttributes(diff *schema.ResourceDiff, v in
 			condition := c.(map[string]interface{})
 			count := 0
 
-			if len(condition["host_header"].([]interface{})) > 0 {
+			if c, ok := condition["host_header"].(*schema.Set); ok && c.Len() > 0 {
 				count += 1
 			}
 
@@ -912,11 +899,7 @@ func resourceAwsLbListenerRuleRead(d *schema.ResourceData, meta interface{}) err
 
 		switch conditionMap["field"] {
 		case "host-header":
-			conditionMap["host_header"] = []interface{}{
-				map[string]interface{}{
-					"values": aws.StringValueSlice(condition.HostHeaderConfig.Values),
-				},
-			}
+			conditionMap["host_header"] = flattenStringSet(condition.HostHeaderConfig.Values)
 
 		case "http-header":
 			conditionMap["http_header"] = []interface{}{
@@ -1232,12 +1215,11 @@ func lbListenerRuleConditions(conditions []interface{}) ([]*elbv2.RuleCondition,
 		conditionMap := condition.(map[string]interface{})
 		var field string
 
-		if hostHeader, ok := conditionMap["host_header"].([]interface{}); ok && len(hostHeader) > 0 {
+		if hostHeader, ok := conditionMap["host_header"].(*schema.Set); ok && hostHeader.Len() > 0 {
 			field = "host-header"
-			values := hostHeader[0].(map[string]interface{})["values"].([]interface{})
 
 			elbConditions[i].HostHeaderConfig = &elbv2.HostHeaderConditionConfig{
-				Values: expandStringList(values),
+				Values: expandStringSet(hostHeader),
 			}
 		}
 
