@@ -341,24 +341,14 @@ func resourceAwsLbbListenerRule() *schema.Resource {
 							Set: schema.HashString,
 						},
 						"path_pattern": {
-							Type:     schema.TypeList,
-							MaxItems: 1,
+							Type:     schema.TypeSet,
 							Optional: true,
 							Computed: true, // Deprecated: remove Computed
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"values": {
-										Type: schema.TypeList,
-										// Deprecated: Change Optional & Computed to Required in next major version of the provider
-										Optional: true,
-										Computed: true,
-										Elem: &schema.Schema{
-											Type:         schema.TypeString,
-											ValidateFunc: validation.StringLenBetween(1, 128),
-										},
-									},
-								},
+							Elem: &schema.Schema{
+								Type:         schema.TypeString,
+								ValidateFunc: validation.StringLenBetween(1, 128),
 							},
+							Set: schema.HashString,
 						},
 						"query_string": {
 							Type:     schema.TypeList,
@@ -466,13 +456,10 @@ func lbListenerRuleConditionSetHash(v interface{}) int {
 		}
 	}
 
-	if pathPattern, ok := m["path_pattern"].([]interface{}); ok && len(pathPattern) > 0 {
-		if pathPattern[0] != nil {
-			field = "path-pattern"
-			values := pathPattern[0].(map[string]interface{})["values"].([]interface{})
-			for _, l := range values {
-				fmt.Fprint(&buf, l, "-")
-			}
+	if pathPattern, ok := m["path_pattern"].(*schema.Set); ok && pathPattern.Len() > 0 {
+		field = "path-pattern"
+		for _, l := range pathPattern.List() {
+			fmt.Fprint(&buf, l, "-")
 		}
 	} else if m["field"].(string) == "path-pattern" {
 		// Backwards compatibility
@@ -527,7 +514,7 @@ func customDiffLbListenerRuleConditionAttributes(diff *schema.ResourceDiff, v in
 				count += 1
 			}
 
-			if len(condition["path_pattern"].([]interface{})) > 0 {
+			if c, ok := condition["path_pattern"].(*schema.Set); ok && c.Len() > 0 {
 				count += 1
 			}
 
@@ -914,11 +901,7 @@ func resourceAwsLbListenerRuleRead(d *schema.ResourceData, meta interface{}) err
 			conditionMap["http_request_method"] = flattenStringSet(condition.HttpRequestMethodConfig.Values)
 
 		case "path-pattern":
-			conditionMap["path_pattern"] = []interface{}{
-				map[string]interface{}{
-					"values": aws.StringValueSlice(condition.PathPatternConfig.Values),
-				},
-			}
+			conditionMap["path_pattern"] = flattenStringSet(condition.PathPatternConfig.Values)
 
 		case "query-string":
 			values := make([]interface{}, len(condition.QueryStringConfig.Values))
@@ -1243,12 +1226,11 @@ func lbListenerRuleConditions(conditions []interface{}) ([]*elbv2.RuleCondition,
 			}
 		}
 
-		if pathPattern, ok := conditionMap["path_pattern"].([]interface{}); ok && len(pathPattern) > 0 {
+		if pathPattern, ok := conditionMap["path_pattern"].(*schema.Set); ok && pathPattern.Len() > 0 {
 			field = "path-pattern"
-			values := pathPattern[0].(map[string]interface{})["values"].([]interface{})
 
 			elbConditions[i].PathPatternConfig = &elbv2.PathPatternConditionConfig{
-				Values: expandStringList(values),
+				Values: expandStringSet(pathPattern),
 			}
 		}
 
