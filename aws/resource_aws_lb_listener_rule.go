@@ -1250,7 +1250,7 @@ func lbListenerRuleConditions(conditions []interface{}) ([]*elbv2.RuleCondition,
 			values := hostHeader[0].(map[string]interface{})["values"].([]interface{})
 
 			elbConditions[i].HostHeaderConfig = &elbv2.HostHeaderConditionConfig{
-				Values: interfaceStringSlice(values),
+				Values: expandStringList(values),
 			}
 		}
 
@@ -1261,7 +1261,7 @@ func lbListenerRuleConditions(conditions []interface{}) ([]*elbv2.RuleCondition,
 
 			elbConditions[i].HttpHeaderConfig = &elbv2.HttpHeaderConditionConfig{
 				HttpHeaderName: aws.String(httpHeaderMap["http_header_name"].(string)),
-				Values:         interfaceStringSlice(values),
+				Values:         expandStringList(values),
 			}
 		}
 
@@ -1270,7 +1270,7 @@ func lbListenerRuleConditions(conditions []interface{}) ([]*elbv2.RuleCondition,
 			values := httpRequestMethod[0].(map[string]interface{})["values"].([]interface{})
 
 			elbConditions[i].HttpRequestMethodConfig = &elbv2.HttpRequestMethodConditionConfig{
-				Values: interfaceStringSlice(values),
+				Values: expandStringList(values),
 			}
 		}
 
@@ -1279,7 +1279,7 @@ func lbListenerRuleConditions(conditions []interface{}) ([]*elbv2.RuleCondition,
 			values := pathPattern[0].(map[string]interface{})["values"].([]interface{})
 
 			elbConditions[i].PathPatternConfig = &elbv2.PathPatternConditionConfig{
-				Values: interfaceStringSlice(values),
+				Values: expandStringList(values),
 			}
 		}
 
@@ -1307,7 +1307,7 @@ func lbListenerRuleConditions(conditions []interface{}) ([]*elbv2.RuleCondition,
 			values := sourceIp[0].(map[string]interface{})["values"].([]interface{})
 
 			elbConditions[i].SourceIpConfig = &elbv2.SourceIpConditionConfig{
-				Values: interfaceStringSlice(values),
+				Values: expandStringList(values),
 			}
 		}
 
@@ -1317,7 +1317,7 @@ func lbListenerRuleConditions(conditions []interface{}) ([]*elbv2.RuleCondition,
 		if cmField, ok := conditionMap["field"].(string); ok && cmField != "" {
 			values := conditionMap["values"].([]interface{})
 			elbConditions[i].Field = aws.String(cmField)
-			elbConditions[i].Values = interfaceStringSlice(values)
+			elbConditions[i].Values = expandStringList(values)
 		}
 	}
 	return elbConditions, nil
