@@ -86,7 +86,6 @@ func TestAccAWSLBListenerRule_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.447032695.http_header.#", "0"),
 					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.447032695.http_request_method.#", "0"),
 					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.447032695.path_pattern.#", "1"),
-					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.447032695.path_pattern.0.values.#", "1"),
 					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.447032695.query_string.#", "0"),
 					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.447032695.source_ip.#", "0"),
 					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.447032695.values.#", "1"),
@@ -129,7 +128,6 @@ func TestAccAWSLBListenerRuleBackwardsCompatibility(t *testing.T) {
 					resource.TestCheckResourceAttr("aws_alb_listener_rule.static", "condition.447032695.http_header.#", "0"),
 					resource.TestCheckResourceAttr("aws_alb_listener_rule.static", "condition.447032695.http_request_method.#", "0"),
 					resource.TestCheckResourceAttr("aws_alb_listener_rule.static", "condition.447032695.path_pattern.#", "1"),
-					resource.TestCheckResourceAttr("aws_alb_listener_rule.static", "condition.447032695.path_pattern.0.values.#", "1"),
 					resource.TestCheckResourceAttr("aws_alb_listener_rule.static", "condition.447032695.query_string.#", "0"),
 					resource.TestCheckResourceAttr("aws_alb_listener_rule.static", "condition.447032695.source_ip.#", "0"),
 					resource.TestCheckResourceAttr("aws_alb_listener_rule.static", "condition.447032695.values.#", "1"),
@@ -542,10 +540,9 @@ func TestAccAWSLBListenerRule_conditionHostHeader(t *testing.T) {
 					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "action.#", "1"),
 					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.#", "1"),
 					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.1089289132.field", "host-header"),
-					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.1089289132.host_header.#", "1"),
-					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.1089289132.host_header.0.values.#", "2"),
-					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.1089289132.host_header.0.values.0", "example.com"),
-					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.1089289132.host_header.0.values.1", "www.example.com"),
+					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.1089289132.host_header.#", "2"),
+					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.1089289132.host_header.3069857465", "example.com"),
+					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.1089289132.host_header.785793723", "www.example.com"),
 					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.1089289132.http_header.#", "0"),
 					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.1089289132.http_request_method.#", "0"),
 					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.1089289132.path_pattern.#", "0"),
@@ -581,8 +578,7 @@ func TestAccAWSLBListenerRule_conditionHostHeader_deprecated(t *testing.T) {
 					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.#", "1"),
 					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.887624213.field", "host-header"),
 					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.887624213.host_header.#", "1"),
-					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.887624213.host_header.0.values.#", "1"),
-					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.887624213.host_header.0.values.0", "example.com"),
+					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.887624213.host_header.3069857465", "example.com"),
 					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.887624213.http_header.#", "0"),
 					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.887624213.http_request_method.#", "0"),
 					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.887624213.path_pattern.#", "0"),
@@ -615,24 +611,24 @@ func TestAccAWSLBListenerRule_conditionHttpHeader(t *testing.T) {
 					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "priority", "100"),
 					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "action.#", "1"),
 					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.#", "2"),
-					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.3310300433.field", "http-header"),
-					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.3310300433.host_header.#", "0"),
-					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.3310300433.http_header.#", "1"),
-					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.3310300433.http_header.0.http_header_name", "X-Forwarded-For"),
-					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.3310300433.http_header.0.values.#", "2"),
-					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.3310300433.http_header.0.values.0", "192.168.1.*"),
-					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.3310300433.http_header.0.values.1", "10.0.0.*"),
-					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.3310300433.http_request_method.#", "0"),
-					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.3310300433.path_pattern.#", "0"),
-					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.3310300433.query_string.#", "0"),
-					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.3310300433.source_ip.#", "0"),
-					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.3310300433.values.#", "0"),
+					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.168627567.field", "http-header"),
+					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.168627567.host_header.#", "0"),
+					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.168627567.http_header.#", "1"),
+					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.168627567.http_header.0.http_header_name", "X-Forwarded-For"),
+					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.168627567.http_header.0.values.#", "2"),
+					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.168627567.http_header.0.values.2895841407", "10.0.0.*"),
+					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.168627567.http_header.0.values.35666611", "192.168.1.*"),
+					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.168627567.http_request_method.#", "0"),
+					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.168627567.path_pattern.#", "0"),
+					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.168627567.query_string.#", "0"),
+					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.168627567.source_ip.#", "0"),
+					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.168627567.values.#", "0"),
 					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.4090220723.field", "http-header"),
 					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.4090220723.host_header.#", "0"),
 					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.4090220723.http_header.#", "1"),
 					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.4090220723.http_header.0.http_header_name", "Zz9~|_^.-+*'&%$#!0aA"),
 					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.4090220723.http_header.0.values.#", "1"),
-					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.4090220723.http_header.0.values.0", "RFC7230 Validity"),
+					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.4090220723.http_header.0.values.1801271041", "RFC7230 Validity"),
 					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.4090220723.http_request_method.#", "0"),
 					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.4090220723.path_pattern.#", "0"),
 					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.4090220723.query_string.#", "0"),
@@ -680,10 +676,9 @@ func TestAccAWSLBListenerRule_conditionHttpRequestMethod(t *testing.T) {
 					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.2223521492.field", "http-request-method"),
 					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.2223521492.host_header.#", "0"),
 					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.2223521492.http_header.#", "0"),
-					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.2223521492.http_request_method.#", "1"),
-					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.2223521492.http_request_method.0.values.#", "2"),
-					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.2223521492.http_request_method.0.values.0", "GET"),
-					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.2223521492.http_request_method.0.values.1", "POST"),
+					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.2223521492.http_request_method.#", "2"),
+					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.2223521492.http_request_method.1805413626", "GET"),
+					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.2223521492.http_request_method.1814004025", "POST"),
 					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.2223521492.path_pattern.#", "0"),
 					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.2223521492.query_string.#", "0"),
 					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.2223521492.source_ip.#", "0"),
@@ -713,19 +708,18 @@ func TestAccAWSLBListenerRule_conditionPathPattern(t *testing.T) {
 					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "priority", "100"),
 					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "action.#", "1"),
 					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.#", "1"),
-					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.1136866225.field", "path-pattern"),
-					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.1136866225.host_header.#", "0"),
-					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.1136866225.http_header.#", "0"),
-					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.1136866225.http_request_method.#", "0"),
-					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.1136866225.path_pattern.#", "1"),
-					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.1136866225.path_pattern.0.values.#", "2"),
-					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.1136866225.path_pattern.0.values.0", "/public/*"),
-					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.1136866225.path_pattern.0.values.1", "/cgi-bin/*"),
-					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.1136866225.query_string.#", "0"),
-					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.1136866225.source_ip.#", "0"),
-					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.1136866225.values.#", "2"),
-					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.1136866225.values.0", "/public/*"),
-					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.1136866225.values.1", "/cgi-bin/*"),
+					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.2177156802.field", "path-pattern"),
+					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.2177156802.host_header.#", "0"),
+					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.2177156802.http_header.#", "0"),
+					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.2177156802.http_request_method.#", "0"),
+					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.2177156802.path_pattern.#", "2"),
+					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.2177156802.path_pattern.1764929539", "/cgi-bin/*"),
+					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.2177156802.path_pattern.1973895062", "/public/*"),
+					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.2177156802.query_string.#", "0"),
+					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.2177156802.source_ip.#", "0"),
+					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.2177156802.values.#", "2"),
+					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.2177156802.values.0", "/cgi-bin/*"),
+					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.2177156802.values.1", "/public/*"),
 				),
 			},
 		},
@@ -756,8 +750,7 @@ func TestAccAWSLBListenerRule_conditionPathPattern_deprecated(t *testing.T) {
 					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.837782343.http_header.#", "0"),
 					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.837782343.http_request_method.#", "0"),
 					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.837782343.path_pattern.#", "1"),
-					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.837782343.path_pattern.0.values.#", "1"),
-					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.837782343.path_pattern.0.values.0", "/public/*"),
+					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.837782343.path_pattern.1973895062", "/public/*"),
 					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.837782343.query_string.#", "0"),
 					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.837782343.source_ip.#", "0"),
 					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.837782343.values.#", "1"),
@@ -787,32 +780,30 @@ func TestAccAWSLBListenerRule_conditionQueryString(t *testing.T) {
 					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "priority", "100"),
 					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "action.#", "1"),
 					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.#", "2"),
-					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.1636113450.field", "query-string"),
-					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.1636113450.host_header.#", "0"),
-					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.1636113450.http_header.#", "0"),
-					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.1636113450.http_request_method.#", "0"),
-					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.1636113450.path_pattern.#", "0"),
-					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.1636113450.query_string.#", "1"),
-					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.1636113450.query_string.0.values.#", "2"),
-					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.1636113450.query_string.0.values.0.key", ""),
-					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.1636113450.query_string.0.values.0.value", "surprise"),
-					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.1636113450.query_string.0.values.1.key", ""),
-					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.1636113450.query_string.0.values.1.value", "blank"),
-					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.1636113450.source_ip.#", "0"),
-					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.1636113450.values.#", "0"),
-					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.4005575479.field", "query-string"),
-					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.4005575479.host_header.#", "0"),
-					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.4005575479.http_header.#", "0"),
-					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.4005575479.http_request_method.#", "0"),
-					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.4005575479.path_pattern.#", "0"),
-					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.4005575479.query_string.#", "1"),
-					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.4005575479.query_string.0.values.#", "2"),
-					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.4005575479.query_string.0.values.0.key", "foo"),
-					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.4005575479.query_string.0.values.0.value", "bar"),
-					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.4005575479.query_string.0.values.1.key", "foo"),
-					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.4005575479.query_string.0.values.1.value", "baz"),
-					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.4005575479.source_ip.#", "0"),
-					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.4005575479.values.#", "0"),
+					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.1697057359.field", "query-string"),
+					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.1697057359.host_header.#", "0"),
+					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.1697057359.http_header.#", "0"),
+					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.1697057359.http_request_method.#", "0"),
+					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.1697057359.path_pattern.#", "0"),
+					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.1697057359.query_string.#", "2"),
+					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.1697057359.query_string.167408634.key", ""),
+					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.1697057359.query_string.167408634.value", "surprise"),
+					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.1697057359.query_string.4042884147.key", ""),
+					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.1697057359.query_string.4042884147.value", "blank"),
+					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.1697057359.source_ip.#", "0"),
+					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.1697057359.values.#", "0"),
+					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.863121889.field", "query-string"),
+					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.863121889.host_header.#", "0"),
+					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.863121889.http_header.#", "0"),
+					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.863121889.http_request_method.#", "0"),
+					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.863121889.path_pattern.#", "0"),
+					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.863121889.query_string.#", "2"),
+					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.863121889.query_string.1123504603.key", "foo"),
+					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.863121889.query_string.1123504603.value", "baz"),
+					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.863121889.query_string.1278007785.key", "foo"),
+					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.863121889.query_string.1278007785.value", "bar"),
+					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.863121889.source_ip.#", "0"),
+					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.863121889.values.#", "0"),
 				),
 			},
 		},
@@ -838,17 +829,16 @@ func TestAccAWSLBListenerRule_conditionSourceIp(t *testing.T) {
 					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "priority", "100"),
 					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "action.#", "1"),
 					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.#", "1"),
-					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.3256247297.field", "source-ip"),
-					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.3256247297.host_header.#", "0"),
-					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.3256247297.http_header.#", "0"),
-					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.3256247297.http_request_method.#", "0"),
-					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.3256247297.path_pattern.#", "0"),
-					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.3256247297.query_string.#", "0"),
-					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.3256247297.source_ip.#", "1"),
-					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.3256247297.source_ip.0.values.#", "2"),
-					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.3256247297.source_ip.0.values.0", "192.168.0.0/16"),
-					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.3256247297.source_ip.0.values.1", "dead:cafe::/64"),
-					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.3256247297.values.#", "0"),
+					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.3009583077.field", "source-ip"),
+					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.3009583077.host_header.#", "0"),
+					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.3009583077.http_header.#", "0"),
+					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.3009583077.http_request_method.#", "0"),
+					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.3009583077.path_pattern.#", "0"),
+					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.3009583077.query_string.#", "0"),
+					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.3009583077.source_ip.#", "2"),
+					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.3009583077.source_ip.1567875353", "dead:cafe::/64"),
+					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.3009583077.source_ip.3901788224", "192.168.0.0/16"),
+					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.3009583077.values.#", "0"),
 				),
 			},
 		},
@@ -879,7 +869,7 @@ func TestAccAWSLBListenerRule_conditionMultiple(t *testing.T) {
 					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.139999317.http_header.#", "1"),
 					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.139999317.http_header.0.http_header_name", "X-Forwarded-For"),
 					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.139999317.http_header.0.values.#", "1"),
-					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.139999317.http_header.0.values.0", "192.168.1.*"),
+					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.139999317.http_header.0.values.35666611", "192.168.1.*"),
 					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.139999317.http_request_method.#", "0"),
 					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.139999317.path_pattern.#", "0"),
 					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.139999317.query_string.#", "0"),
@@ -892,15 +882,13 @@ func TestAccAWSLBListenerRule_conditionMultiple(t *testing.T) {
 					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.2986919393.path_pattern.#", "0"),
 					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.2986919393.query_string.#", "0"),
 					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.2986919393.source_ip.#", "1"),
-					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.2986919393.source_ip.0.values.#", "1"),
-					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.2986919393.source_ip.0.values.0", "192.168.0.0/16"),
+					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.2986919393.source_ip.3901788224", "192.168.0.0/16"),
 					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.2986919393.values.#", "0"),
 					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.4038921246.field", "http-request-method"),
 					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.4038921246.host_header.#", "0"),
 					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.4038921246.http_header.#", "0"),
 					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.4038921246.http_request_method.#", "1"),
-					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.4038921246.http_request_method.0.values.#", "1"),
-					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.4038921246.http_request_method.0.values.0", "GET"),
+					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.4038921246.http_request_method.1805413626", "GET"),
 					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.4038921246.path_pattern.#", "0"),
 					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.4038921246.query_string.#", "0"),
 					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.4038921246.source_ip.#", "0"),
@@ -910,16 +898,14 @@ func TestAccAWSLBListenerRule_conditionMultiple(t *testing.T) {
 					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.837782343.http_header.#", "0"),
 					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.837782343.http_request_method.#", "0"),
 					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.837782343.path_pattern.#", "1"),
-					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.837782343.path_pattern.0.values.#", "1"),
-					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.837782343.path_pattern.0.values.0", "/public/*"),
+					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.837782343.path_pattern.1973895062", "/public/*"),
 					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.837782343.query_string.#", "0"),
 					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.837782343.source_ip.#", "0"),
 					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.837782343.values.#", "1"),
 					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.837782343.values.0", "/public/*"),
 					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.887624213.field", "host-header"),
 					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.887624213.host_header.#", "1"),
-					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.887624213.host_header.0.values.#", "1"),
-					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.887624213.host_header.0.values.0", "example.com"),
+					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.887624213.host_header.3069857465", "example.com"),
 					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.887624213.http_header.#", "0"),
 					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.887624213.http_request_method.#", "0"),
 					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.887624213.path_pattern.#", "0"),
@@ -1157,8 +1143,7 @@ resource "aws_lb_listener_rule" "static" {
   }
 
   condition {
-    field  = "path-pattern"
-    values = ["/static/*"]
+    path_pattern = ["/static/*"]
   }
 }
 
@@ -1270,8 +1255,7 @@ resource "aws_alb_listener_rule" "static" {
   }
 
   condition {
-    field  = "path-pattern"
-    values = ["/static/*"]
+    path_pattern = ["/static/*"]
   }
 }
 
@@ -1388,8 +1372,7 @@ resource "aws_lb_listener_rule" "static" {
   }
 
   condition {
-    field  = "path-pattern"
-    values = ["/static/*"]
+    path_pattern = ["/static/*"]
   }
 }
 
@@ -1493,8 +1476,7 @@ resource "aws_lb_listener_rule" "static" {
   }
 
   condition {
-    field  = "path-pattern"
-    values = ["/static/*"]
+    path_pattern = ["/static/*"]
   }
 }
 
@@ -1593,8 +1575,7 @@ resource "aws_lb_listener_rule" "static" {
   }
 
   condition {
-    field  = "path-pattern"
-    values = ["/static/*"]
+    path_pattern = ["/static/*"]
   }
 }
 
@@ -1706,8 +1687,7 @@ resource "aws_lb_listener_rule" "static" {
   }
 
   condition {
-    field  = "path-pattern"
-    values = ["/static/*"]
+    path_pattern = ["/static/*"]
   }
 }
 
@@ -1927,8 +1907,7 @@ resource "aws_lb_listener_rule" "first" {
   }
 
   condition {
-    field = "path-pattern"
-    values = ["/first/*"]
+    path_pattern = ["/first/*"]
   }
 }
 
@@ -1942,8 +1921,7 @@ resource "aws_lb_listener_rule" "third" {
   }
 
   condition {
-    field = "path-pattern"
-    values = ["/third/*"]
+    path_pattern = ["/third/*"]
   }
 
   depends_on = ["aws_lb_listener_rule.first"]
@@ -1962,8 +1940,7 @@ resource "aws_lb_listener_rule" "last" {
   }
 
   condition {
-    field = "path-pattern"
-    values = ["/last/*"]
+    path_pattern = ["/last/*"]
   }
 }
 `)
@@ -1981,8 +1958,7 @@ resource "aws_lb_listener_rule" "last" {
   }
 
   condition {
-    field = "path-pattern"
-    values = ["/last/*"]
+    path_pattern = ["/last/*"]
   }
 }
 `)
@@ -2001,8 +1977,7 @@ resource "aws_lb_listener_rule" "parallelism" {
   }
 
   condition {
-    field = "path-pattern"
-    values = ["/${count.index}/*"]
+    path_pattern = ["/${count.index}/*"]
   }
 }
 `)
@@ -2020,8 +1995,7 @@ resource "aws_lb_listener_rule" "priority50000" {
   }
 
   condition {
-    field = "path-pattern"
-    values = ["/50000/*"]
+    path_pattern = ["/50000/*"]
   }
 }
 `)
@@ -2039,8 +2013,7 @@ resource "aws_lb_listener_rule" "priority50001" {
   }
 
   condition {
-    field = "path-pattern"
-    values = ["/50001/*"]
+    path_pattern = ["/50001/*"]
   }
 }
 `)
@@ -2058,8 +2031,7 @@ resource "aws_lb_listener_rule" "priority50000_in_use" {
   }
 
   condition {
-    field = "path-pattern"
-    values = ["/50000_in_use/*"]
+    path_pattern = ["/50000_in_use/*"]
   }
 }
 `)
@@ -2091,8 +2063,7 @@ resource "aws_lb_listener_rule" "cognito" {
   }
 
   condition {
-    field  = "path-pattern"
-    values = ["/static/*"]
+    path_pattern = ["/static/*"]
   }
 }
 
@@ -2272,8 +2243,7 @@ resource "aws_lb_listener_rule" "oidc" {
   }
 
   condition {
-    field  = "path-pattern"
-    values = ["/static/*"]
+    path_pattern = ["/static/*"]
   }
 }
 
@@ -2439,8 +2409,7 @@ resource "aws_lb_listener_rule" "test" {
   }
 
   condition {
-    field  = "path-pattern"
-    values = ["/static/*"]
+    path_pattern = ["/static/*"]
   }
 }
 
@@ -2578,20 +2547,18 @@ resource "aws_lb_listener_rule" "static" {
 
 func testAccAWSLBListenerRuleConfig_conditionCustomDiffAttributes_pairs() []string {
 	inputs := []string{
-		`host_header { values = ["example.com"] }`,
+		`host_header = ["example.com"]`,
 		`http_header {
 		  http_header_name = "X-Clacks-Overhead"
 		  values = ["GNU Terry Pratchett"]
 		}`,
-		`http_request_method { values = ["POST"] }`,
-		`path_pattern { values = ["/"] }`,
+		`http_request_method = ["POST"]`,
+		`path_pattern = ["/"]`,
 		`query_string {
-		  values {
-		    key = "foo"
-		    value = "bar"
-		  }
+		  key = "foo"
+		  value = "bar"
 		}`,
-		`source_ip { values = ["192.168.0.0/16"] }`,
+		`source_ip = ["192.168.0.0/16"]`,
 		`field = "host-header"`,
 	}
 
@@ -2712,9 +2679,7 @@ resource "aws_security_group" "alb_test" {
 func testAccAWSLBListenerRuleConfig_conditionHostHeader(lbName string) string {
 	return testAccAWSLBListenerRuleConfig_condition_base(`
 condition {
-  host_header {
-    values = ["example.com", "www.example.com"]
-  }
+  host_header = ["example.com", "www.example.com"]
 }
 `, "HostHeader", lbName)
 }
@@ -2775,9 +2740,7 @@ resource "aws_lb_listener_rule" "static" {
 func testAccAWSLBListenerRuleConfig_conditionHttpRequestMethod(lbName string) string {
 	return testAccAWSLBListenerRuleConfig_condition_base(`
 condition {
-  http_request_method {
-    values = ["GET", "POST"]
-  }
+  http_request_method = ["GET", "POST"]
 }
 `, "HttpRequestMethod", lbName)
 }
@@ -2785,9 +2748,7 @@ condition {
 func testAccAWSLBListenerRuleConfig_conditionPathPattern(lbName string) string {
 	return testAccAWSLBListenerRuleConfig_condition_base(`
 condition {
-  path_pattern {
-    values = ["/public/*", "/cgi-bin/*"]
-  }
+  path_pattern = ["/public/*", "/cgi-bin/*"]
 }
 `, "PathPattern", lbName)
 }
@@ -2805,26 +2766,22 @@ func testAccAWSLBListenerRuleConfig_conditionQueryString(lbName string) string {
 	return testAccAWSLBListenerRuleConfig_condition_base(`
 condition {
   query_string {
-    values {
-      value = "surprise"
-    }
-    values {
-      key   = ""
-      value = "blank"
-    }
+    value = "surprise"
+  }
+  query_string {
+    key   = ""
+    value = "blank"
   }
 }
 
 condition {
   query_string {
-    values {
-      key   = "foo"
-      value = "bar"
-    }
-    values {
-      key   = "foo"
-      value = "baz"
-    }
+    key   = "foo"
+    value = "bar"
+  }
+  query_string {
+    key   = "foo"
+    value = "baz"
   }
 }
 `, "QueryString", lbName)
@@ -2833,12 +2790,10 @@ condition {
 func testAccAWSLBListenerRuleConfig_conditionSourceIp(lbName string) string {
 	return testAccAWSLBListenerRuleConfig_condition_base(`
 condition {
-  source_ip {
-    values = [
-      "192.168.0.0/16",
-      "dead:cafe::/64",
-    ]
-  }
+  source_ip = [
+    "192.168.0.0/16",
+    "dead:cafe::/64",
+  ]
 }
 `, "SourceIp", lbName)
 }
@@ -2847,9 +2802,7 @@ condition {
 func testAccAWSLBListenerRuleConfig_conditionMultiple(lbName string) string {
 	return testAccAWSLBListenerRuleConfig_condition_base(`
 condition {
-  host_header {
-    values = ["example.com"]
-  }
+  host_header = ["example.com"]
 }
 
 condition {
@@ -2860,23 +2813,15 @@ condition {
 }
 
 condition {
-  http_request_method {
-    values = ["GET"]
-  }
+  http_request_method = ["GET"]
 }
 
 condition {
-  path_pattern {
-    values = ["/public/*"]
-  }
+  path_pattern = ["/public/*"]
 }
 
 condition {
-  source_ip {
-    values = [
-      "192.168.0.0/16",
-    ]
-  }
+  source_ip = ["192.168.0.0/16"]
 }
 `, "Multiple", lbName)
 }
