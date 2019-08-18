@@ -351,29 +351,21 @@ func resourceAwsLbbListenerRule() *schema.Resource {
 							Set: schema.HashString,
 						},
 						"query_string": {
-							Type:     schema.TypeList,
-							MaxItems: 1,
+							Type:     schema.TypeSet,
 							Optional: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"values": {
-										Type:     schema.TypeList,
+									"key": {
+										Type:     schema.TypeString,
+										Optional: true,
+									},
+									"value": {
+										Type:     schema.TypeString,
 										Required: true,
-										Elem: &schema.Resource{
-											Schema: map[string]*schema.Schema{
-												"key": {
-													Type:     schema.TypeString,
-													Optional: true,
-												},
-												"value": {
-													Type:     schema.TypeString,
-													Required: true,
-												},
-											},
-										},
 									},
 								},
 							},
+							Set: lbListenerRuleConditionQueryStringHash,
 						},
 						"source_ip": {
 							Type:     schema.TypeList,
@@ -469,13 +461,10 @@ func lbListenerRuleConditionSetHash(v interface{}) int {
 		}
 	}
 
-	if queryString, ok := m["query_string"].([]interface{}); ok && len(queryString) > 0 && queryString[0] != nil {
+	if queryString, ok := m["query_string"].(*schema.Set); ok && queryString.Len() > 0 {
 		field = "query-string"
-		queryStringMap := queryString[0].(map[string]interface{})
-		queryStringValues := queryStringMap["values"].([]interface{})
-		for _, l := range queryStringValues {
-			values := l.(map[string]interface{})
-			fmt.Fprint(&buf, values["key"].(string), "-", values["value"].(string), ",")
+		for _, l := range queryString.List() {
+			fmt.Fprint(&buf, lbListenerRuleConditionQueryStringHash(l), "-")
 		}
 	}
 
@@ -489,6 +478,11 @@ func lbListenerRuleConditionSetHash(v interface{}) int {
 	}
 
 	return hashcode.String(fmt.Sprintf("%s-%s", field, buf.String()))
+}
+
+func lbListenerRuleConditionQueryStringHash(v interface{}) int {
+	m := v.(map[string]interface{})
+	return hashcode.String(fmt.Sprintf("%s-%s", m["key"], m["value"]))
 }
 
 // customDiffLbListenerRuleCondition ensures that only one sub-block is set within a condition.
@@ -518,7 +512,7 @@ func customDiffLbListenerRuleConditionAttributes(diff *schema.ResourceDiff, v in
 				count += 1
 			}
 
-			if len(condition["query_string"].([]interface{})) > 0 {
+			if c, ok := condition["query_string"].(*schema.Set); ok && c.Len() > 0 {
 				count += 1
 			}
 
@@ -911,11 +905,7 @@ func resourceAwsLbListenerRuleRead(d *schema.ResourceData, meta interface{}) err
 					"value": aws.StringValue(value.Value),
 				}
 			}
-			conditionMap["query_string"] = []interface{}{
-				map[string]interface{}{
-					"values": values,
-				},
-			}
+			conditionMap["query_string"] = schema.NewSet(lbListenerRuleConditionQueryStringHash, values)
 
 		case "source-ip":
 			conditionMap["source_ip"] = []interface{}{
@@ -1234,9 +1224,9 @@ func lbListenerRuleConditions(conditions []interface{}) ([]*elbv2.RuleCondition,
 			}
 		}
 
-		if queryString, ok := conditionMap["query_string"].([]interface{}); ok && len(queryString) > 0 {
+		if queryString, ok := conditionMap["query_string"].(*schema.Set); ok && queryString.Len() > 0 {
 			field = "query-string"
-			values := queryString[0].(map[string]interface{})["values"].([]interface{})
+			values := queryString.List()
 
 			elbConditions[i].QueryStringConfig = &elbv2.QueryStringConditionConfig{
 				Values: make([]*elbv2.QueryStringKeyValuePair, len(values)),
