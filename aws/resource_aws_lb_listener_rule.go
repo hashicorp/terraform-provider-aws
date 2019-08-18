@@ -12,7 +12,6 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/elbv2"
-	"github.com/hashicorp/terraform/helper/customdiff"
 	"github.com/hashicorp/terraform/helper/hashcode"
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/helper/schema"
@@ -391,9 +390,6 @@ func resourceAwsLbbListenerRule() *schema.Resource {
 				},
 			},
 		},
-		CustomizeDiff: customdiff.All(
-			customDiffLbListenerRuleConditionAttributes,
-		),
 	}
 }
 
@@ -473,48 +469,6 @@ func lbListenerRuleConditionSetHash(v interface{}) int {
 func lbListenerRuleConditionQueryStringHash(v interface{}) int {
 	m := v.(map[string]interface{})
 	return hashcode.String(fmt.Sprintf("%s-%s", m["key"], m["value"]))
-}
-
-// customDiffLbListenerRuleCondition ensures that only one sub-block is set within a condition.
-// FIXME Rework this and use ConflictsWith when it finally works with collections:
-// https://github.com/hashicorp/terraform/issues/13016
-// Still need to ensure that one of the condition attributes is set.
-func customDiffLbListenerRuleConditionAttributes(diff *schema.ResourceDiff, v interface{}) error {
-	if diff.HasChange("condition") {
-		conditions := diff.Get("condition").(*schema.Set).List()
-		for _, c := range conditions {
-			condition := c.(map[string]interface{})
-			count := 0
-
-			for _, field := range []string{"host_header", "http_request_method", "path_pattern", "query_string", "source_ip"} {
-				if c, ok := condition[field].(*schema.Set); ok && c.Len() > 0 {
-					count += 1
-				}
-			}
-
-			if len(condition["http_header"].([]interface{})) > 0 {
-				count += 1
-			}
-
-			// Deprecated
-			if condition["field"] != "" {
-				count += 1
-			}
-
-			if count == 0 {
-				return errors.New("One of host_header, http_header, http_request_method, path_pattern, query_string or source_ip must be set inside condition block")
-			} else if count > 1 {
-				// Deprecated: remove `field` from message
-				return errors.New("Only one of field, host_header, http_header, http_request_method, path_pattern, query_string or source_ip can be given in a condition block")
-			}
-
-			// Deprecated
-			if condition["field"] != "" && len(condition["values"].([]interface{})) == 0 {
-				return errors.New("Both field and values must be set")
-			}
-		}
-	}
-	return nil
 }
 
 func suppressIfActionTypeNot(t string) schema.SchemaDiffSuppressFunc {
@@ -1160,9 +1114,11 @@ func lbListenerRuleConditions(conditions []interface{}) ([]*elbv2.RuleCondition,
 		elbConditions[i] = &elbv2.RuleCondition{}
 		conditionMap := condition.(map[string]interface{})
 		var field string
+		var attrs int
 
 		if hostHeader, ok := conditionMap["host_header"].(*schema.Set); ok && hostHeader.Len() > 0 {
 			field = "host-header"
+			attrs += 1
 
 			elbConditions[i].HostHeaderConfig = &elbv2.HostHeaderConditionConfig{
 				Values: expandStringSet(hostHeader),
@@ -1171,6 +1127,7 @@ func lbListenerRuleConditions(conditions []interface{}) ([]*elbv2.RuleCondition,
 
 		if httpHeader, ok := conditionMap["http_header"].([]interface{}); ok && len(httpHeader) > 0 {
 			field = "http-header"
+			attrs += 1
 			httpHeaderMap := httpHeader[0].(map[string]interface{})
 			values := httpHeaderMap["values"].(*schema.Set)
 
@@ -1182,6 +1139,7 @@ func lbListenerRuleConditions(conditions []interface{}) ([]*elbv2.RuleCondition,
 
 		if httpRequestMethod, ok := conditionMap["http_request_method"].(*schema.Set); ok && httpRequestMethod.Len() > 0 {
 			field = "http-request-method"
+			attrs += 1
 
 			elbConditions[i].HttpRequestMethodConfig = &elbv2.HttpRequestMethodConditionConfig{
 				Values: expandStringSet(httpRequestMethod),
@@ -1190,6 +1148,7 @@ func lbListenerRuleConditions(conditions []interface{}) ([]*elbv2.RuleCondition,
 
 		if pathPattern, ok := conditionMap["path_pattern"].(*schema.Set); ok && pathPattern.Len() > 0 {
 			field = "path-pattern"
+			attrs += 1
 
 			elbConditions[i].PathPatternConfig = &elbv2.PathPatternConditionConfig{
 				Values: expandStringSet(pathPattern),
@@ -1198,6 +1157,7 @@ func lbListenerRuleConditions(conditions []interface{}) ([]*elbv2.RuleCondition,
 
 		if queryString, ok := conditionMap["query_string"].(*schema.Set); ok && queryString.Len() > 0 {
 			field = "query-string"
+			attrs += 1
 			values := queryString.List()
 
 			elbConditions[i].QueryStringConfig = &elbv2.QueryStringConditionConfig{
@@ -1217,20 +1177,35 @@ func lbListenerRuleConditions(conditions []interface{}) ([]*elbv2.RuleCondition,
 
 		if sourceIp, ok := conditionMap["source_ip"].(*schema.Set); ok && sourceIp.Len() > 0 {
 			field = "source-ip"
+			attrs += 1
 
 			elbConditions[i].SourceIpConfig = &elbv2.SourceIpConditionConfig{
 				Values: expandStringSet(sourceIp),
 			}
 		}
 
-		elbConditions[i].Field = aws.String(field)
-
 		// Deprecated backwards compatibility
 		if cmField, ok := conditionMap["field"].(string); ok && cmField != "" {
+			field = cmField
+			attrs += 1
 			values := conditionMap["values"].([]interface{})
-			elbConditions[i].Field = aws.String(cmField)
+			if len(values) == 0 {
+				return nil, errors.New("Both field and values must be set in a condition block")
+			}
 			elbConditions[i].Values = expandStringList(values)
 		}
+
+		// FIXME Rework this and use ConflictsWith when it finally works with collections:
+		// https://github.com/hashicorp/terraform/issues/13016
+		// Still need to ensure that one of the condition attributes is set.
+		if attrs == 0 {
+			return nil, errors.New("One of host_header, http_header, http_request_method, path_pattern, query_string or source_ip must be set in a condition block")
+		} else if attrs > 1 {
+			// Deprecated: remove `field` from message
+			return nil, errors.New("Only one of field, host_header, http_header, http_request_method, path_pattern, query_string or source_ip can be set in a condition block")
+		}
+
+		elbConditions[i].Field = aws.String(field)
 	}
 	return elbConditions, nil
 }

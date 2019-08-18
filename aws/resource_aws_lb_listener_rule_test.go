@@ -486,15 +486,18 @@ func TestAccAWSLBListenerRule_Action_Order_Recreates(t *testing.T) {
 	})
 }
 
-func TestAccAWSLBListenerRule_conditionCustomDiffAttributes(t *testing.T) {
-	err_zero := regexp.MustCompile("One of host_header, http_header, http_request_method, path_pattern, query_string or source_ip must be set inside condition block")
-	err_many := regexp.MustCompile("Only one of field, host_header, http_header, http_request_method, path_pattern, query_string or source_ip can be given in a condition block")
-	err_deprecated := regexp.MustCompile("Both field and values must be set")
+func TestAccAWSLBListenerRule_conditionAttributesCount(t *testing.T) {
+	err_zero := regexp.MustCompile("One of host_header, http_header, http_request_method, path_pattern, query_string or source_ip must be set in a condition block")
+	err_many := regexp.MustCompile("Only one of field, host_header, http_header, http_request_method, path_pattern, query_string or source_ip can be set in a condition block")
+	err_deprecated := regexp.MustCompile("Both field and values must be set in a condition block")
+
+	name := "conditionAttributesCount"
+	lbName := fmt.Sprintf("testrule-attrCount-%s", acctest.RandStringFromCharSet(13, acctest.CharSetAlphaNum))
 
 	var pairs []resource.TestStep
-	for _, p := range testAccAWSLBListenerRuleConfig_conditionCustomDiffAttributes_pairs() {
+	for _, p := range testAccAWSLBListenerRuleConfig_conditionAttributesCount_pairs() {
 		pairs = append(pairs, resource.TestStep{
-			Config:      p,
+			Config:      testAccAWSLBListenerRuleConfig_condition_base(p, name, lbName),
 			ExpectError: err_many,
 		})
 	}
@@ -503,20 +506,20 @@ func TestAccAWSLBListenerRule_conditionCustomDiffAttributes(t *testing.T) {
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSLBListenerRuleDestroy,
-		Steps: append(pairs, []resource.TestStep{
+		Steps: append([]resource.TestStep{
 			{
-				Config:      testAccAWSLBListenerRuleConfig_conditionCustomDiffAttributes("condition {}"),
+				Config:      testAccAWSLBListenerRuleConfig_condition_base("condition {}", name, lbName),
 				ExpectError: err_zero,
 			},
 			{
-				Config:      testAccAWSLBListenerRuleConfig_conditionCustomDiffAttributes(`condition { field = "host-header" }`),
+				Config:      testAccAWSLBListenerRuleConfig_condition_base(`condition { field = "host-header" }`, name, lbName),
 				ExpectError: err_deprecated,
 			},
 			{
-				Config:      testAccAWSLBListenerRuleConfig_conditionCustomDiffAttributes(`condition { values = ["example.com"] }`),
+				Config:      testAccAWSLBListenerRuleConfig_condition_base(`condition { values = ["example.com"] }`, name, lbName),
 				ExpectError: err_zero,
 			},
-		}...),
+		}, pairs...),
 	})
 }
 
@@ -2524,50 +2527,37 @@ resource "aws_security_group" "test" {
 `, rName)
 }
 
-func testAccAWSLBListenerRuleConfig_conditionCustomDiffAttributes(condition string) string {
-	return fmt.Sprintf(`
-resource "aws_lb_listener_rule" "static" {
-  listener_arn = "arn:aws:elasticloadbalancing:us-west-2:111111111111:listener/app/test/xxxxxxxxxxxxxxxx/xxxxxxxxxxxxxxxx"
-  priority     = 100
-
-  action {
-    type = "fixed-response"
-
-    fixed_response {
-      content_type = "text/plain"
-      message_body = "Static"
-      status_code  = 200
-    }
-  }
-
-  %s
-}
-`, condition)
-}
-
-func testAccAWSLBListenerRuleConfig_conditionCustomDiffAttributes_pairs() []string {
-	inputs := []string{
-		`host_header = ["example.com"]`,
-		`http_header {
+func testAccAWSLBListenerRuleConfig_conditionAttributesCount_pairs() []string {
+	inputs := map[string]string{
+		"host_header": `= ["example.com"]`,
+		"http_header": `{
 		  http_header_name = "X-Clacks-Overhead"
 		  values = ["GNU Terry Pratchett"]
 		}`,
-		`http_request_method = ["POST"]`,
-		`path_pattern = ["/"]`,
-		`query_string {
+		"http_request_method": `= ["POST"]`,
+		"path_pattern":        `= ["/"]`,
+		"query_string": `{
 		  key = "foo"
 		  value = "bar"
 		}`,
-		`source_ip = ["192.168.0.0/16"]`,
-		`field = "host-header"`,
+		"source_ip": `= ["192.168.0.0/16"]`,
+		"field": `= "host-header"
+		  values = ["example.com"]`,
+	}
+
+	// Extract keys
+	i := 0
+	keys := make([]string, len(inputs))
+	for k := range inputs {
+		keys[i] = k
+		i++
 	}
 
 	// Combine in every pair combination
 	var output []string
-	for i := 0; i < len(inputs); i++ {
-		for j := i + 1; j < len(inputs); j++ {
-			c := fmt.Sprintf("condition {\n  %s\n  %s\n}", inputs[i], inputs[j])
-			output = append(output, testAccAWSLBListenerRuleConfig_conditionCustomDiffAttributes(c))
+	for i := 0; i < len(keys); i++ {
+		for j := i + 1; j < len(keys); j++ {
+			output = append(output, fmt.Sprintf("condition {\n  %s %s\n  %s %s\n}", keys[i], inputs[keys[i]], keys[j], inputs[keys[j]]))
 		}
 	}
 
