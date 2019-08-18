@@ -33,15 +33,11 @@ resource "aws_lb_listener_rule" "static" {
   }
 
   condition {
-    path_pattern {
-      values = ["/static/*"]
-    }
+    path_pattern = ["/static/*"]
   }
 
   condition {
-    host_header {
-      values = ["example.com"]
-    }
+    host_header = ["example.com"]
   }
 }
 
@@ -57,9 +53,7 @@ resource "aws_lb_listener_rule" "host_based_routing" {
   }
 
   condition {
-    host_header {
-      values = ["my-service.*.terraform.io"]
-    }
+    host_header = ["my-service.*.terraform.io"]
   }
 }
 
@@ -103,14 +97,12 @@ resource "aws_lb_listener_rule" "health_check" {
 
   condition {
     query_string {
-      values {
-        key   = "health"
-        value = "check"
-      }
+      key   = "health"
+      value = "check"
+    }
 
-      values {
-        values = "bar"
-      }
+    query_string {
+      value = "bar"
     }
   }
 }
@@ -248,20 +240,14 @@ Condition Blocks (for `condition`) support the following:
 
 * `field` - (Optional, **DEPRECATED**) The type of condition. Valid values are `host-header` or `path-pattern`. Must also set `values`.
 * `values` - (Optional, **DEPRECATED**) List of exactly one pattern to match. Required when `field` is set.
-* `host_header` - (Optional) Host headers to match. Host Header block fields documented below.
+* `host_header` - (Optional) List of host header patterns to match. The maximum size of each pattern is 128 characters. Comparison is case insensitive. Wildcard characters supported: * (matches 0 or more characters) and ? (matches exactly 1 character). Only one pattern needs to match for the condition to be satisfied.
 * `http_header` - (Optional) HTTP headers to match. HTTP Header block fields documented below.
-* `http_request_method` - (Optional) HTTP request methods to match. HTTP Request Method block fields documented below.
-* `path_pattern` - (Optional) Path patterns to match. Path Pattern block fields documented below.
+* `http_request_method` - (Optional) List of HTTP request methods or verbs to match. Maximum size is 40 characters. Only allowed characters are A-Z, hyphen (-) and underscore (\_). Comparison is case sensitive. Wildcards are not supported. Only one needs to match for the condition to be satisfied. AWS recommends that GET and HEAD requests are routed in the same way because the response to a HEAD request may be cached.
+* `path_pattern` - (Optional) List of path patterns to match against the request URL. Maximum size of each pattern is 128 characters. Comparison is case sensitive. Wildcard charaters supported: * (matches 0 or more characters) and ? (matches exactly 1 character). Only one pattern needs to match for the condition to be satisfied. Path pattern is compared only to the path of the URL, not to its query string. To compare against the query string, use a `query-string` condition.
 * `query_string` - (Optional) Query strings to match. Query String block fields documented below.
-* `source_ip` - (Optional) Source IPs to match. Source IP block fields documented below.
+* `source_ip` - (Optional) List of source IP CIDR notations to match. You can use both IPv4 and IPv6 addresses. Wildcards are not supported. Condition is satisfied if the source IP address of the request matches one of the CIDR blocks. Condition is not satisfied by the addresses in the `X-Forwarded-For` header, use `http-header` condition instead.
 
 ~> **NOTE::** Exactly one of `field`, `host_header`, `http_header`, `http_request_method`, `path_pattern`, `query_string` or `source_ip` must be set per condition.
-
-#### Host Header Blocks
-
-Host Header Blocks (for `host_header`) support the following:
-
-* `values` - (Required) List of host patterns to match. The maximum size of each pattern is 128 characters. Comparison is case insensitive. Wildcard characters supported: * (matches 0 or more characters) and ? (matches exactly 1 character). Only one pattern needs to match for the condition to be satisfied.
 
 #### HTTP Header Blocks
 
@@ -269,18 +255,6 @@ HTTP Header Blocks (for `http_header`) support the following:
 
 * `http_header_name` - (Required) Name of HTTP header to search. The maximum size is 40 characters. Comparison is case insensitive. Only RFC7240 characters are supported. Wildcards are not supported. You cannot use HTTP header condition to specify the host header, use a `host-header` condition instead.
 * `values` - (Required) List of header value patterns to match. Maximum size of each pattern is 128 characters. Comparison is case insensitive. Wildcard characters supported: * (matches 0 or more characters) and ? (matches exactly 1 character). If the same header appears multiple times in the request they will be searched in order until a match is found. Only one pattern needs to match for the condition to be satisfied. To require that all of the strings are a match, create one condition block per string.
-
-#### HTTP Request Method Blocks
-
-HTTP Request Method Blocks (for `http_request_method`) support the following:
-
-* `values` - (Required) List of HTTP request methods or verbs to match. Maximum size is 40 characters. Only allowed characters are A-Z, hyphen (-) and underscore (\_). Comparison is case sensitive. Wildcards are not supported. Only one needs to match for the condition to be satisfied. AWS recommends that GET and HEAD requests are routed in the same way because the response to a HEAD request may be cached.
-
-#### Path Pattern Blocks
-
-Path Pattern Blocks (for `path_pattern`) support the following:
-
-* `values` - (Required) List of path patterns to match against the request URL. Maximum size of each pattern is 128 characters. Comparison is case sensitive. Wildcard charaters supported: * (matches 0 or more characters) and ? (matches exactly 1 character). Only one pattern needs to match for the condition to be satisfied. Path pattern is compared only to the path of the URL, not to its query string. To compare against the query string, use a `query-string` condition.
 
 #### Query String Blocks
 
@@ -292,12 +266,6 @@ Query String Value Blocks (for `query_string.values`) support the following:
 
 * `key` - (Optional) Query string key pattern to match.
 * `value` - (Required) Query string value pattern to match.
-
-#### Source IP Blocks
-
-Source IP Blocks (for `source_ip`) support the following:
-
-* `values` - (Required) List of CIDR notations to match. You can use both IPv4 and IPv6 addresses. Wildcards are not supported. Condition is satisfied if the source IP address of the request matches one of the CIDR blocks. Condition is not satisfied by the addresses in the `X-Forwarded-For` header, use `http-header` condition instead.
 
 ## Attributes Reference
 
