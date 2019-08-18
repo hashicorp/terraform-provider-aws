@@ -33,10 +33,14 @@ resource "aws_lb_listener_rule" "static" {
   }
 
   condition {
-    field = "path-pattern"
-
     path_pattern {
       values = ["/static/*"]
+    }
+  }
+
+  condition {
+    host_header {
+      values = ["example.com"]
     }
   }
 }
@@ -53,8 +57,6 @@ resource "aws_lb_listener_rule" "host_based_routing" {
   }
 
   condition {
-    field = "host-header"
-
     host_header {
       values = ["my-service.*.terraform.io"]
     }
@@ -77,8 +79,6 @@ resource "aws_lb_listener_rule" "redirect_http_to_https" {
   }
 
   condition {
-    field  = "http-header"
-
     http_header {
       http_header_name = "X-Forwarded-For"
       values           = ["192.168.1.*"]
@@ -102,8 +102,6 @@ resource "aws_lb_listener_rule" "health_check" {
   }
 
   condition {
-    field  = "query-string"
-
     query_string {
       values {
         key   = "health"
@@ -244,18 +242,20 @@ Authentication Request Extra Params Blocks (for `authentication_request_extra_pa
 
 ### Condition Blocks
 
-One of more condition blocks can be set per rule. Most condition types can only be specified once per rule except for `http-header` and `query-string` which can be specified multiple times.
+One or more condition blocks can be set per rule. Most condition types can only be specified once per rule except for `http-header` and `query-string` which can be specified multiple times.
 
 Condition Blocks (for `condition`) support the following:
 
-* `field` - (Required) The type of condition. Valid values are `host-header`, `http-header`, `http-request-method`, `path-pattern`, `query-string` and `source-ip`.
-* `host_header` - (Optional) Host headers to match. Host Header block fields documented below. Required if `field` is `host-header` and `values` is empty.
-* `http_header` - (Optional) HTTP headers to match. HTTP Header block fields documented below. Required if `field` is `http-header`.
-* `http_request_method` - (Optional) HTTP request methods to match. HTTP Request Method block fields documented below. Required if `field` is `http-request-method`.
-* `path_pattern` - (Optional) Path patterns to match. Path Pattern block fields documented below. Required if `field` is `path-pattern` and `values` is empty.
-* `query_string` - (Optional) Query strings to match. Query String block fields documented below. Required if `field` is `query-string`.
-* `source_ip` - (Optional) Source IPs to match. Source IP block fields documented below. Required if `field` is `source-ip`.
-* `values` - (Optional, **DEPRECATED**) List of exactly one pattern to match. Only valid when `field` is `host-header` or `path-pattern`, and the `host_header` and `path_pattern` blocks have not been set.
+* `field` - (Optional, **DEPRECATED**) The type of condition. Valid values are `host-header` or `path-pattern`. Must also set `values`.
+* `values` - (Optional, **DEPRECATED**) List of exactly one pattern to match. Required when `field` is set.
+* `host_header` - (Optional) Host headers to match. Host Header block fields documented below.
+* `http_header` - (Optional) HTTP headers to match. HTTP Header block fields documented below.
+* `http_request_method` - (Optional) HTTP request methods to match. HTTP Request Method block fields documented below.
+* `path_pattern` - (Optional) Path patterns to match. Path Pattern block fields documented below.
+* `query_string` - (Optional) Query strings to match. Query String block fields documented below.
+* `source_ip` - (Optional) Source IPs to match. Source IP block fields documented below.
+
+~> **NOTE::** Exactly one of `field`, `host_header`, `http_header`, `http_request_method`, `path_pattern`, `query_string` or `source_ip` must be set per condition.
 
 #### Host Header Blocks
 
