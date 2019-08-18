@@ -368,21 +368,13 @@ func resourceAwsLbbListenerRule() *schema.Resource {
 							Set: lbListenerRuleConditionQueryStringHash,
 						},
 						"source_ip": {
-							Type:     schema.TypeList,
-							MaxItems: 1,
+							Type:     schema.TypeSet,
 							Optional: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"values": {
-										Type: schema.TypeList,
-										Elem: &schema.Schema{
-											Type:         schema.TypeString,
-											ValidateFunc: validateCIDRNetworkAddress,
-										},
-										Required: true,
-									},
-								},
+							Elem: &schema.Schema{
+								Type:         schema.TypeString,
+								ValidateFunc: validateCIDRNetworkAddress,
 							},
+							Set: schema.HashString,
 						},
 						"values": {
 							Type:     schema.TypeList,
@@ -468,11 +460,9 @@ func lbListenerRuleConditionSetHash(v interface{}) int {
 		}
 	}
 
-	if sourceIp, ok := m["source_ip"].([]interface{}); ok && len(sourceIp) > 0 && sourceIp[0] != nil {
+	if sourceIp, ok := m["source_ip"].(*schema.Set); ok && sourceIp.Len() > 0 {
 		field = "source-ip"
-		sourceIpMap := sourceIp[0].(map[string]interface{})
-		sourceIpValues := sourceIpMap["values"].([]interface{})
-		for _, l := range sourceIpValues {
+		for _, l := range sourceIp.List() {
 			fmt.Fprint(&buf, l, "-")
 		}
 	}
@@ -516,7 +506,7 @@ func customDiffLbListenerRuleConditionAttributes(diff *schema.ResourceDiff, v in
 				count += 1
 			}
 
-			if len(condition["source_ip"].([]interface{})) > 0 {
+			if c, ok := condition["source_ip"].(*schema.Set); ok && c.Len() > 0 {
 				count += 1
 			}
 
@@ -908,11 +898,7 @@ func resourceAwsLbListenerRuleRead(d *schema.ResourceData, meta interface{}) err
 			conditionMap["query_string"] = schema.NewSet(lbListenerRuleConditionQueryStringHash, values)
 
 		case "source-ip":
-			conditionMap["source_ip"] = []interface{}{
-				map[string]interface{}{
-					"values": aws.StringValueSlice(condition.SourceIpConfig.Values),
-				},
-			}
+			conditionMap["source_ip"] = flattenStringSet(condition.SourceIpConfig.Values)
 		}
 
 		conditions[i] = conditionMap
@@ -1243,12 +1229,11 @@ func lbListenerRuleConditions(conditions []interface{}) ([]*elbv2.RuleCondition,
 			}
 		}
 
-		if sourceIp, ok := conditionMap["source_ip"].([]interface{}); ok && len(sourceIp) > 0 {
+		if sourceIp, ok := conditionMap["source_ip"].(*schema.Set); ok && sourceIp.Len() > 0 {
 			field = "source-ip"
-			values := sourceIp[0].(map[string]interface{})["values"].([]interface{})
 
 			elbConditions[i].SourceIpConfig = &elbv2.SourceIpConditionConfig{
-				Values: expandStringList(values),
+				Values: expandStringSet(sourceIp),
 			}
 		}
 
