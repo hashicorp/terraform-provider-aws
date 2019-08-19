@@ -63,4 +63,4 @@ deploy:
   on:
     branch: master
     tags: true
-  condition: ${GIT_TAG} =~ ^v[0-9]+\.[0-9]+\.[0-9]$
+  condition: ${GIT_TAG} =~ ^v[0-9]+\.[0-9]+\.[0-9]$ AND ${JOB_NAME} = "Code UnitTest"
