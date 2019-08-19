@@ -315,11 +315,11 @@ func deleteGlueClassifier(conn *glue.Glue, name string) error {
 
 func expandGlueCsvClassifierCreate(name string, m map[string]interface{}) *glue.CreateCsvClassifierRequest {
 	csvClassifier := &glue.CreateCsvClassifierRequest{
-		AllowSingleColumn:    aws.String(m["allow_single_column"].(string)), // Bool
+		AllowSingleColumn:    aws.Bool(m["allow_single_column"].(bool)),
 		ContainsHeader:       aws.String(m["contains_header"].(string)),
 		Delimiter:            aws.String(m["delimiter"].(string)),
-		DisableValueTrimming: aws.String(m["disable_value_trimming"].(string)), // Bool
-		Header:               aws.String(m["header"].(string)),                 // List of strings
+		DisableValueTrimming: aws.Bool(m["disable_value_trimming"].(bool)),
+		Header:               aws.String(m["header"].([]interface{})),
 		Name:                 aws.String(name),
 		QuoteSymbol:          aws.String(m["quote_symbol"].(string)),
 	}
@@ -329,11 +329,11 @@ func expandGlueCsvClassifierCreate(name string, m map[string]interface{}) *glue.
 
 func expandGlueCsvClassifierUpdate(name string, m map[string]interface{}) *glue.UpdateCsvClassifierRequest {
 	csvClassifier := &glue.UpdateCsvClassifierRequest{
-		AllowSingleColumn:    aws.String(m["allow_single_column"].(string)),
+		AllowSingleColumn:    aws.Bool(m["allow_single_column"].(bool)),
 		ContainsHeader:       aws.String(m["contains_header"].(string)),
 		Delimiter:            aws.String(m["delimiter"].(string)),
-		DisableValueTrimming: aws.String(m["disable_value_trimming"].(string)),
-		Header:               aws.String(m["header"].(string)),
+		DisableValueTrimming: aws.Bool(m["disable_value_trimming"].(bool)),
+		Header:               aws.String(m["header"].([]interface{})),
 		Name:                 aws.String(name),
 		QuoteSymbol:          aws.String(m["quote_symbol"].(string)),
 	}
