@@ -22,12 +22,13 @@ func setTagsDynamoDb(conn *dynamodb.DynamoDB, d *schema.ResourceData) error {
 
 	// Set tags
 	if len(remove) > 0 {
+		input := &dynamodb.UntagResourceInput{
+			ResourceArn: aws.String(arn),
+			TagKeys:     remove,
+		}
 		err := resource.Retry(2*time.Minute, func() *resource.RetryError {
 			log.Printf("[DEBUG] Removing tags: %#v from %s", remove, d.Id())
-			_, err := conn.UntagResource(&dynamodb.UntagResourceInput{
-				ResourceArn: aws.String(arn),
-				TagKeys:     remove,
-			})
+			_, err := conn.UntagResource(input)
 			if err != nil {
 				if isAWSErr(err, dynamodb.ErrCodeResourceNotFoundException, "") {
 					return resource.RetryableError(err)
@@ -36,17 +37,21 @@ func setTagsDynamoDb(conn *dynamodb.DynamoDB, d *schema.ResourceData) error {
 			}
 			return nil
 		})
+		if isResourceTimeoutError(err) {
+			_, err = conn.UntagResource(input)
+		}
 		if err != nil {
 			return err
 		}
 	}
 	if len(create) > 0 {
+		input := &dynamodb.TagResourceInput{
+			ResourceArn: aws.String(arn),
+			Tags:        create,
+		}
 		err := resource.Retry(2*time.Minute, func() *resource.RetryError {
 			log.Printf("[DEBUG] Creating tags: %s for %s", create, d.Id())
-			_, err := conn.TagResource(&dynamodb.TagResourceInput{
-				ResourceArn: aws.String(arn),
-				Tags:        create,
-			})
+			_, err := conn.TagResource(input)
 			if err != nil {
 				if isAWSErr(err, dynamodb.ErrCodeResourceNotFoundException, "") {
 					return resource.RetryableError(err)
@@ -55,6 +60,9 @@ func setTagsDynamoDb(conn *dynamodb.DynamoDB, d *schema.ResourceData) error {
 			}
 			return nil
 		})
+		if isResourceTimeoutError(err) {
+			_, err = conn.TagResource(input)
+		}
 		if err != nil {
 			return err
 		}
