@@ -83,6 +83,11 @@ func resourceAwsDocDBCluster() *schema.Resource {
 				Computed: true,
 			},
 
+			"deletion_protection": {
+				Type:     schema.TypeBool,
+				Optional: true,
+			},
+
 			"endpoint": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -275,6 +280,7 @@ func resourceAwsDocDBClusterCreate(d *schema.ResourceData, meta interface{}) err
 	if _, ok := d.GetOk("snapshot_identifier"); ok {
 		opts := docdb.RestoreDBClusterFromSnapshotInput{
 			DBClusterIdentifier: aws.String(identifier),
+			DeletionProtection:  aws.Bool(d.Get("deletion_protection").(bool)),
 			Engine:              aws.String(d.Get("engine").(string)),
 			SnapshotIdentifier:  aws.String(d.Get("snapshot_identifier").(string)),
 			Tags:                tags,
@@ -356,6 +362,7 @@ func resourceAwsDocDBClusterCreate(d *schema.ResourceData, meta interface{}) err
 
 		createOpts := &docdb.CreateDBClusterInput{
 			DBClusterIdentifier: aws.String(identifier),
+			DeletionProtection:  aws.Bool(d.Get("deletion_protection").(bool)),
 			Engine:              aws.String(d.Get("engine").(string)),
 			MasterUserPassword:  aws.String(d.Get("master_password").(string)),
 			MasterUsername:      aws.String(d.Get("master_username").(string)),
@@ -532,6 +539,7 @@ func resourceAwsDocDBClusterRead(d *schema.ResourceData, meta interface{}) error
 
 	d.Set("db_cluster_parameter_group_name", dbc.DBClusterParameterGroup)
 	d.Set("db_subnet_group_name", dbc.DBSubnetGroup)
+	d.Set("deletion_protection", dbc.DeletionProtection)
 
 	if err := d.Set("enabled_cloudwatch_logs_exports", aws.StringValueSlice(dbc.EnabledCloudwatchLogsExports)); err != nil {
 		return fmt.Errorf("error setting enabled_cloudwatch_logs_exports: %s", err)
@@ -612,6 +620,11 @@ func resourceAwsDocDBClusterUpdate(d *schema.ResourceData, meta interface{}) err
 	if d.HasChange("db_cluster_parameter_group_name") {
 		d.SetPartial("db_cluster_parameter_group_name")
 		req.DBClusterParameterGroupName = aws.String(d.Get("db_cluster_parameter_group_name").(string))
+		requestUpdate = true
+	}
+
+	if d.HasChange("deletion_protection") {
+		req.DeletionProtection = aws.Bool(d.Get("deletion_protection").(bool))
 		requestUpdate = true
 	}
 

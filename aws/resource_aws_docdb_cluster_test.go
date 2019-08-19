@@ -154,6 +154,46 @@ func TestAccAWSDocDBCluster_takeFinalSnapshot(t *testing.T) {
 	})
 }
 
+func TestAccAWSDocDBCluster_DeletionProtection(t *testing.T) {
+	var dbCluster docdb.DBCluster
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_docdb_cluster.default"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSClusterDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccDocDBClusterConfig_DeletionProtection(rName, true),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDocDBClusterExists(resourceName, &dbCluster),
+					resource.TestCheckResourceAttr(resourceName, "deletion_protection", "true"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"apply_immediately",
+					"cluster_identifier_prefix",
+					"final_snapshot_identifier",
+					"master_password",
+					"skip_final_snapshot",
+				},
+			},
+			{
+				Config: testAccDocDBClusterConfig_DeletionProtection(rName, false),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDocDBClusterExists(resourceName, &dbCluster),
+					resource.TestCheckResourceAttr(resourceName, "deletion_protection", "false"),
+				),
+			},
+		},
+	})
+}
+
 /// This is a regression test to make sure that we always cover the scenario as hightlighted in
 /// https://github.com/hashicorp/terraform/issues/11568
 func TestAccAWSDocDBCluster_missingUserNameCausesError(t *testing.T) {
@@ -739,4 +779,17 @@ resource "aws_docdb_cluster" "test" {
   skip_final_snapshot             = true
 }
 `, rInt, port)
+}
+
+func testAccDocDBClusterConfig_DeletionProtection(rName string, deletionProtection bool) string {
+	return fmt.Sprintf(`
+resource "aws_docdb_cluster" "default" {
+  cluster_identifier  = %q
+  deletion_protection = %t
+  availability_zones  = ["us-west-2a", "us-west-2b", "us-west-2c"]
+  master_username     = "foo"
+  master_password     = "mustbeeightcharaters"
+  skip_final_snapshot = true
+}
+`, rName, deletionProtection)
 }
