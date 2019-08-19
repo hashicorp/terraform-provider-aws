@@ -73,40 +73,43 @@ func TestAccAWSGlueClassifier_CsvClassifier(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_glue_classifier.test"
 
-	// resource.ParallelTest(t, resource.TestCase{
-	// 	PreCheck:     func() { testAccPreCheck(t) },
-	// 	Providers:    testAccProviders,
-	// 	CheckDestroy: testAccCheckAWSGlueClassifierDestroy,
-	// 	Steps: []resource.TestStep{
-	// 		{
-	// 			Config: testAccAWSGlueClassifierConfig_CsvClassifier(rName, "classification1", "pattern1"),
-	// 			Check: resource.ComposeTestCheckFunc(
-	// 				testAccCheckAWSGlueClassifierExists(resourceName, &classifier),
-    //              resource.TestCheckResourceAttr(resourceName, "csv_classifier.#", "1"),
-	// 				resource.TestCheckResourceAttr(resourceName, "grok_classifier.#", "0"),
-	// 				resource.TestCheckResourceAttr(resourceName, "json_classifier.#", "0"),
-	// 				resource.TestCheckResourceAttr(resourceName, "name", rName),
-	// 				resource.TestCheckResourceAttr(resourceName, "xml_classifier.#", "0"),
-	// 			),
-	// 		},
-	// 		{
-	// 			Config: testAccAWSGlueClassifierConfig_CsvClassifier(rName, "classification2", "pattern2"),
-	// 			Check: resource.ComposeTestCheckFunc(
-	// 				testAccCheckAWSGlueClassifierExists(resourceName, &classifier),
-	//              resource.TestCheckResourceAttr(resourceName, "csv_classifier.#", "1"),
-	// 				resource.TestCheckResourceAttr(resourceName, "grok_classifier.#", "0"),
-	// 				resource.TestCheckResourceAttr(resourceName, "json_classifier.#", "0"),
-	// 				resource.TestCheckResourceAttr(resourceName, "name", rName),
-	// 				resource.TestCheckResourceAttr(resourceName, "xml_classifier.#", "0"),
-	// 			),
-	// 		},
-	// 		{
-	// 			ResourceName:      resourceName,
-	// 			ImportState:       true,
-	// 			ImportStateVerify: true,
-	// 		},
-	// 	},
-	// })
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSGlueClassifierDestroy,
+		Steps: []resource.TestStep{
+			{
+				// TODO update parameters
+				Config: testAccAWSGlueClassifierConfig_CsvClassifier(rName, false, "PRESENT", "|", false, "'"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSGlueClassifierExists(resourceName, &classifier),
+					resource.TestCheckResourceAttr(resourceName, "csv_classifier.#", "1"),
+					// Add attributes for csv classifier here
+					resource.TestCheckResourceAttr(resourceName, "grok_classifier.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "json_classifier.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, "xml_classifier.#", "0"),
+				),
+			},
+			{
+				// TODO update parameters
+				Config: testAccAWSGlueClassifierConfig_CsvClassifier(rName, "classification2", "pattern2"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSGlueClassifierExists(resourceName, &classifier),
+	             	resource.TestCheckResourceAttr(resourceName, "csv_classifier.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "grok_classifier.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "json_classifier.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, "xml_classifier.#", "0"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
 }
 
 func TestAccAWSGlueClassifier_GrokClassifier(t *testing.T) {
@@ -422,7 +425,7 @@ func testAccCheckAWSGlueClassifierDestroy(s *terraform.State) error {
 	return nil
 }
 
-	func testAccAWSGlueClassifierConfig_CsvClassifier(rName, allowSingleColumn bool, containsHeader string, delimiter string, disableValueTrimming bool, header, quoteSymbol string) string {
+	func testAccAWSGlueClassifierConfig_CsvClassifier(rName, allowSingleColumn bool, containsHeader string, delimiter string, disableValueTrimming bool, quoteSymbol string) string {
 	return fmt.Sprintf(`
 resource "aws_glue_classifier" "test" {
   name = "%s"
@@ -432,11 +435,11 @@ resource "aws_glue_classifier" "test" {
 	contains_header        = "%s"
 	delimiter              = "%s"
 	disable_value_trimming = "%t"
-	header                 = ["%s"]
+	header                 = ["header_column1", "header_column2]
 	quote_symbol           = "%s"
   }
 }
-`, rName, allowSingleColumn, containsHeader, delimiter, disableValueTrimming, header, quoteSymbol)
+`, rName, allowSingleColumn, containsHeader, delimiter, disableValueTrimming, quoteSymbol)
 }
 
 func testAccAWSGlueClassifierConfig_GrokClassifier(rName, classification, grokPattern string) string {
