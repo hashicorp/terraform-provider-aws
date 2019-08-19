@@ -319,9 +319,16 @@ func expandGlueCsvClassifierCreate(name string, m map[string]interface{}) *glue.
 		ContainsHeader:       aws.String(m["contains_header"].(string)),
 		Delimiter:            aws.String(m["delimiter"].(string)),
 		DisableValueTrimming: aws.Bool(m["disable_value_trimming"].(bool)),
-		Header:               aws.String(m["header"].([]interface{})),
 		Name:                 aws.String(name),
 		QuoteSymbol:          aws.String(m["quote_symbol"].(string)),
+	}
+
+	if v, ok := m["header"]; ok {
+		header := make([]string, len(v.([]interface{})))
+		for i, item := range v.([]interface{}) {
+			header[i] = fmt.Sprint(item)
+		}
+		csvClassifier.Header = aws.StringSlice(header)
 	}
 
 	return csvClassifier
@@ -333,9 +340,16 @@ func expandGlueCsvClassifierUpdate(name string, m map[string]interface{}) *glue.
 		ContainsHeader:       aws.String(m["contains_header"].(string)),
 		Delimiter:            aws.String(m["delimiter"].(string)),
 		DisableValueTrimming: aws.Bool(m["disable_value_trimming"].(bool)),
-		Header:               aws.String(m["header"].([]interface{})),
 		Name:                 aws.String(name),
 		QuoteSymbol:          aws.String(m["quote_symbol"].(string)),
+	}
+
+	if v, ok := m["header"]; ok {
+		header := make([]string, len(v.([]interface{})))
+		for i, item := range v.([]interface{}) {
+			header[i] = fmt.Sprint(item)
+		}
+		csvClassifier.Header = aws.StringSlice(header)
 	}
 
 	return csvClassifier
@@ -411,17 +425,17 @@ func expandGlueXmlClassifierUpdate(name string, m map[string]interface{}) *glue.
 	return xmlClassifier
 }
 
-func flattenGlueCsvClassifier(csvClassifier *glue.CSVClassifier) []map[string]interface{} {
+func flattenGlueCsvClassifier(csvClassifier *glue.CsvClassifier) []map[string]interface{} {
 	if csvClassifier == nil {
 		return []map[string]interface{}{}
 	}
 
 	m := map[string]interface{}{
-		"allow_single_column":    aws.StringValue(csvClassifier.AllowSingleColumn),
+		"allow_single_column":    aws.BoolValue(csvClassifier.AllowSingleColumn),
 		"contains_header":        aws.StringValue(csvClassifier.ContainsHeader),
 		"delimiter":              aws.StringValue(csvClassifier.Delimiter),
-		"disable_value_trimming": aws.StringValue(csvClassifier.DisableValueTrimming),
-		"header":                 aws.StringValue(csvClassifier.Header),
+		"disable_value_trimming": aws.BoolValue(csvClassifier.DisableValueTrimming),
+		"header":                 aws.StringValueSlice(csvClassifier.Header),
 		"name":                   aws.StringValue(csvClassifier.Name),
 		"quote_symbol":           aws.StringValue(csvClassifier.QuoteSymbol),
 	}
