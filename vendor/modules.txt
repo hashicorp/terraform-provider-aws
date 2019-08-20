@@ -584,7 +584,7 @@ github.com/spf13/pflag
 github.com/spf13/viper
 # github.com/terraform-providers/terraform-provider-template v2.1.2+incompatible
 github.com/terraform-providers/terraform-provider-template/template
-# github.com/terraform-providers/terraform-provider-tls v2.0.1+incompatible
+# github.com/terraform-providers/terraform-provider-tls v2.1.0+incompatible
 github.com/terraform-providers/terraform-provider-tls/tls
 # github.com/timakin/bodyclose v0.0.0-20190407043127-4a873e97b2bb
 github.com/timakin/bodyclose/passes/bodyclose
