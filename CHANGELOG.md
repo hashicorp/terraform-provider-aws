@@ -15,6 +15,7 @@ BUG FIXES:
 * resource/aws_iam_role: Final retries after timeouts creating and deleting IAM roles [GH-9766]
 * resource/aws_iam_user: Final retry after timeout deleting user login profile [GH-9766]
 * resource/aws_inspector_assessment_target: Final retry after timeout deleting target [GH-9767]
+* resource/aws_kinesis_firehose_delivery_stream: Prevent differences with disabled `data_format_conversion_configuration` and `processing_configuration` after changes outside Terraform [GH-9103]
 * resource/aws_network_acl_rule: Remove resource from Terraform state on `InvalidNetworkAclID.NotFound` errors [GH-9710]
 * resource/aws_rds_cluster_instance: Ensure `monitoring_interval` and `monitoring_role_arn` attributes are always written to the Terraform state [GH-9748]
 
