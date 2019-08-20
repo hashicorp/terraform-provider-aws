@@ -101,7 +101,7 @@ func resourceAwsSqsQueuePolicyUpsert(d *schema.ResourceData, meta interface{}) e
 			var equivalent bool
 			equivalent, err = awspolicy.PoliciesAreEquivalent(*queuePolicy, policy)
 			if !equivalent {
-				return fmt.Errorf("SQS attribute not updated")
+				return notUpdatedError
 			}
 		}
 	}
