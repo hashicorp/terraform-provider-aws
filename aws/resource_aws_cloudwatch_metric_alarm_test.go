@@ -271,6 +271,13 @@ func TestAccAWSCloudWatchMetricAlarm_expression(t *testing.T) {
 				),
 			},
 			{
+				Config: testAccAWSCloudWatchMetricAlarmConfigWithAnomalyDetectionExpression(rInt),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckCloudWatchMetricAlarmExists("aws_cloudwatch_metric_alarm.foobar", &alarm),
+					resource.TestCheckResourceAttr("aws_cloudwatch_metric_alarm.foobar", "metric_query.#", "2"),
+				),
+			},
+			{
 				Config: testAccAWSCloudWatchMetricAlarmConfigWithExpressionWithQueryUpdated(rInt),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCloudWatchMetricAlarmExists("aws_cloudwatch_metric_alarm.foobar", &alarm),
@@ -629,7 +636,7 @@ func testAccAWSCloudWatchMetricAlarmConfigWithAnomalyDetectionExpression(rInt in
 	return fmt.Sprintf(`
 resource "aws_cloudwatch_metric_alarm" "foobar" {
   alarm_name                = "terraform-test-foobar%d"
-  comparison_operator       = "GreaterThanOrEqualToThreshold"
+  comparison_operator       = "GreaterThanUpperThreshold"
   evaluation_periods        = "2"
   threshold_metric_id       = "e1"
   alarm_description         = "This metric monitors ec2 cpu utilization"
