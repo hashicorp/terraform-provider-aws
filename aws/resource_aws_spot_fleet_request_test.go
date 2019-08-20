@@ -690,6 +690,23 @@ func TestAccAWSSpotFleetRequest_WithTargetGroups(t *testing.T) {
 	})
 }
 
+func TestAccAWSSpotFleetRequest_WithInstanceStoreAmi(t *testing.T) {
+	rName := acctest.RandString(10)
+	rInt := acctest.RandInt()
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSEc2SpotFleetRequest(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSSpotFleetRequestDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config:      testAccAWSSpotFleetRequestLaunchSpecificationWithInstanceStoreAmi(rName, rInt),
+				ExpectError: regexp.MustCompile("Instance store backed AMIs do not provide a root device name"),
+			},
+		},
+	})
+}
+
 func testAccCheckAWSSpotFleetRequestConfigRecreated(t *testing.T,
 	before, after *ec2.SpotFleetRequestConfig) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
@@ -1620,6 +1637,37 @@ resource "aws_spot_fleet_request" "test" {
   }
 
   depends_on = ["aws_iam_policy_attachment.test-attach"]
+}
+`)
+}
+
+func testAccAWSSpotFleetRequestLaunchSpecificationWithInstanceStoreAmi(rName string, rInt int) string {
+	return testAccAWSSpotFleetRequestConfigBase(rName, rInt) + fmt.Sprint(`
+data "aws_ami" "ubuntu_instance_store" {
+  most_recent = true
+  owners      = ["099720109477"] # Canonical
+
+  # Latest Ubuntu 18.04 LTS amd64 instance-store HVM AMI
+  filter {
+    name   = "name"
+    values = ["ubuntu/images/hvm-instance/ubuntu-bionic-18.04-amd64-server*"]
+  }
+}
+
+resource "aws_spot_fleet_request" "foo" {
+    iam_fleet_role = "${aws_iam_role.test-role.arn}"
+    spot_price = "0.03"
+    target_capacity = 2
+    valid_until = "2019-11-04T20:44:20Z"
+    terminate_instances_with_expiration = true
+    wait_for_fulfillment = true
+
+    launch_specification {
+      ami           = "${data.aws_ami.ubuntu_instance_store.id}"
+	  instance_type = "c3.large"
+    }
+
+	depends_on = ["aws_iam_policy_attachment.test-attach"]
 }
 `)
 }
