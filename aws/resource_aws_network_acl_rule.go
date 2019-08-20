@@ -169,18 +169,24 @@ func resourceAwsNetworkAclRuleCreate(d *schema.ResourceData, meta interface{}) e
 	// It appears it might be a while until the newly created rule is visible via the
 	// API (see issue GH-4721). Retry the `findNetworkAclRule` function until it is
 	// visible (which in most cases is likely immediately).
+	var r *ec2.NetworkAclEntry
 	err = resource.Retry(3*time.Minute, func() *resource.RetryError {
-		r, findErr := findNetworkAclRule(d, meta)
-		if findErr != nil {
-			return resource.RetryableError(findErr)
+		r, err = findNetworkAclRule(d, meta)
+		if err != nil {
+			return resource.RetryableError(err)
 		}
 		if r == nil {
-			err := fmt.Errorf("Network ACL rule (%s) not found", d.Id())
-			return resource.RetryableError(err)
+			return resource.RetryableError(fmt.Errorf("Network ACL rule (%s) not found", d.Id()))
 		}
 
 		return nil
 	})
+	if isResourceTimeoutError(err) {
+		r, err = findNetworkAclRule(d, meta)
+		if r == nil {
+			return fmt.Errorf("Network ACL rule (%s) not found", d.Id())
+		}
+	}
 	if err != nil {
 		return fmt.Errorf("Created Network ACL Rule was not visible in API within 3 minute period. Running 'terraform apply' again will resume infrastructure creation.")
 	}
