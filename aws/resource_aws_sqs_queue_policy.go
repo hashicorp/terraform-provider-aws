@@ -95,7 +95,7 @@ func resourceAwsSqsQueuePolicyUpsert(d *schema.ResourceData, meta interface{}) e
 		if err == nil {
 			queuePolicy, ok := out.Attributes[sqs.QueueAttributeNamePolicy]
 			if !ok {
-				return fmt.Errorf("SQS queue attribute not found")
+				return notUpdatedError
 			}
 
 			var equivalent bool
