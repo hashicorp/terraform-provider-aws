@@ -124,7 +124,11 @@ func resourceAwsCloudWatchMetricAlarm() *schema.Resource {
 			},
 			"threshold": {
 				Type:     schema.TypeFloat,
-				Required: true,
+				Optional: true,
+			},
+			"threshold_metric_id": {
+				Type:     schema.TypeString,
+				Optional: true,
 			},
 			"actions_enabled": {
 				Type:     schema.TypeBool,
@@ -307,6 +311,7 @@ func resourceAwsCloudWatchMetricAlarmRead(d *schema.ResourceData, meta interface
 	d.Set("period", a.Period)
 	d.Set("statistic", a.Statistic)
 	d.Set("threshold", a.Threshold)
+	d.Set("threshold_metric_id", a.ThresholdMetricId)
 	d.Set("unit", a.Unit)
 	d.Set("extended_statistic", a.ExtendedStatistic)
 	d.Set("treat_missing_data", a.TreatMissingData)
@@ -368,7 +373,6 @@ func getAwsCloudWatchPutMetricAlarmInput(d *schema.ResourceData) cloudwatch.PutM
 		AlarmName:          aws.String(d.Get("alarm_name").(string)),
 		ComparisonOperator: aws.String(d.Get("comparison_operator").(string)),
 		EvaluationPeriods:  aws.Int64(int64(d.Get("evaluation_periods").(int))),
-		Threshold:          aws.Float64(d.Get("threshold").(float64)),
 		TreatMissingData:   aws.String(d.Get("treat_missing_data").(string)),
 		Tags:               tagsFromMapCloudWatch(d.Get("tags").(map[string]interface{})),
 	}
@@ -410,6 +414,14 @@ func getAwsCloudWatchPutMetricAlarmInput(d *schema.ResourceData) cloudwatch.PutM
 
 	if v, ok := d.GetOk("evaluate_low_sample_count_percentiles"); ok {
 		params.EvaluateLowSampleCountPercentile = aws.String(v.(string))
+	}
+
+	if v, ok := d.GetOk("threshold"); ok {
+		params.Threshold = aws.Float64(v.(float64))
+	}
+
+	if v, ok := d.GetOk("threshold_metric_id"); ok {
+		params.ThresholdMetricId = aws.String(v.(string))
 	}
 
 	var alarmActions []*string
