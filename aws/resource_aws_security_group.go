@@ -471,7 +471,11 @@ func resourceAwsSecurityGroupDelete(d *schema.ResourceData, meta interface{}) er
 				// If it is a dependency violation, we want to retry
 				return resource.RetryableError(err)
 			}
-			return resource.NonRetryableError(err)
+			if err != nil {
+				resource.NonRetryableError(err)
+			}
+
+			return nil
 		}
 
 		return nil
