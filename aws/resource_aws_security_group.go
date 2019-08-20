@@ -482,7 +482,7 @@ func resourceAwsSecurityGroupDelete(d *schema.ResourceData, meta interface{}) er
 	})
 	if isResourceTimeoutError(err) {
 		_, err = conn.DeleteSecurityGroup(input)
-		if err != nil && isAWSErr(err, "InvalidGroup.NotFound", "") {
+		if isAWSErr(err, "InvalidGroup.NotFound", "") {
 			return nil
 		}
 	}
