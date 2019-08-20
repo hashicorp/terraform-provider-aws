@@ -100,8 +100,8 @@ func TestAccAWSGlueClassifier_CsvClassifier(t *testing.T) {
 				Config: testAccAWSGlueClassifierConfig_CsvClassifier(rName, false, "PRESENT", ",", false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSGlueClassifierExists(resourceName, &classifier),
-	             	resource.TestCheckResourceAttr(resourceName, "csv_classifier.#", "1"),
-	             	resource.TestCheckResourceAttr(resourceName, "csv_classifier.0.allow_single_column", false),
+					resource.TestCheckResourceAttr(resourceName, "csv_classifier.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "csv_classifier.0.allow_single_column", false),
 					resource.TestCheckResourceAttr(resourceName, "csv_classifier.0.contains_header", "PRESENT"),
 					resource.TestCheckResourceAttr(resourceName, "csv_classifier.0.delimiter", ","),
 					resource.TestCheckResourceAttr(resourceName, "csv_classifier.0.disable_value_trimming", false),
@@ -436,7 +436,7 @@ func testAccCheckAWSGlueClassifierDestroy(s *terraform.State) error {
 	return nil
 }
 
-	func testAccAWSGlueClassifierConfig_CsvClassifier(rName string, allowSingleColumn bool, containsHeader string, delimiter string, disableValueTrimming bool) string {
+func testAccAWSGlueClassifierConfig_CsvClassifier(rName string, allowSingleColumn bool, containsHeader string, delimiter string, disableValueTrimming bool) string {
 	return fmt.Sprintf(`
 resource "aws_glue_classifier" "test" {
   name = "%s"
@@ -450,7 +450,7 @@ resource "aws_glue_classifier" "test" {
 	quote_symbol           = "'"
   }
 }
-`,  allowSingleColumn, containsHeader, delimiter, disableValueTrimming)
+`, allowSingleColumn, containsHeader, delimiter, disableValueTrimming)
 }
 
 func testAccAWSGlueClassifierConfig_GrokClassifier(rName, classification, grokPattern string) string {
