@@ -350,6 +350,8 @@ The `parameters` array objects support the following:
 
 ### data_format_conversion_configuration
 
+~> **NOTE:** Once configured, the data format conversion configuration can only be disabled, in which the configuration values will remain, but will not be active. It is not currently possible to completely remove the configuration without recreating the resource.
+
 Example:
 
 ```hcl

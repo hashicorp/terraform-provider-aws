@@ -98,9 +98,10 @@ func s3ConfigurationSchema() *schema.Schema {
 
 func processingConfigurationSchema() *schema.Schema {
 	return &schema.Schema{
-		Type:     schema.TypeList,
-		Optional: true,
-		MaxItems: 1,
+		Type:             schema.TypeList,
+		Optional:         true,
+		MaxItems:         1,
+		DiffSuppressFunc: suppressMissingOptionalConfigurationBlock,
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
 				"enabled": {
@@ -336,9 +337,9 @@ func flattenFirehoseDataFormatConversionConfiguration(dfcc *firehose.DataFormatC
 	// The AWS SDK can represent "no data format conversion configuration" in two ways:
 	// 1. With a nil value
 	// 2. With enabled set to false and nil for ALL the config sections.
-	// These two cases are equivalent so we use the same state description, to avoid diffs.
+	// We normalize this with an empty configuration in the state due
+	// to the existing Default: true on the enabled attribute.
 	if !enabled && len(ifc) == 0 && len(ofc) == 0 && len(sc) == 0 {
-		log.Printf("Found ambiguous AWS response")
 		return []map[string]interface{}{}
 	}
 
@@ -545,16 +546,6 @@ func flattenProcessingConfiguration(pc *firehose.ProcessingConfiguration, roleAr
 		return []map[string]interface{}{}
 	}
 
-	enabled := aws.BoolValue(pc.Enabled)
-
-	// The AWS SDK can represent "no processing configuration" in two ways:
-	// 1. With a nil value
-	// 2. With an empty processor list and enabled set to false.
-	// These are equivalent so we use the same state description, to avoid diffs.
-	if !enabled && len(pc.Processors) == 0 {
-		return []map[string]interface{}{}
-	}
-
 	processingConfiguration := make([]map[string]interface{}, 1)
 
 	// It is necessary to explicitly filter this out
@@ -595,7 +586,7 @@ func flattenProcessingConfiguration(pc *firehose.ProcessingConfiguration, roleAr
 		}
 	}
 	processingConfiguration[0] = map[string]interface{}{
-		"enabled":    enabled,
+		"enabled":    aws.BoolValue(pc.Enabled),
 		"processors": processors,
 	}
 	return processingConfiguration
@@ -1426,12 +1417,8 @@ func createExtendedS3Config(d *schema.ResourceData) *firehose.ExtendedS3Destinat
 		configuration.CloudWatchLoggingOptions = extractCloudWatchLoggingConfiguration(s3)
 	}
 
-	if v, ok := s3["error_output_prefix"]; ok {
+	if v, ok := s3["error_output_prefix"]; ok && v.(string) != "" {
 		configuration.ErrorOutputPrefix = aws.String(v.(string))
-	} else {
-		// It is possible to just pass nil here, but this seems to be the
-		// canonical form that AWS uses, and is less likely to produce diffs.
-		configuration.ErrorOutputPrefix = aws.String("")
 	}
 
 	if s3BackupMode, ok := s3["s3_backup_mode"]; ok {
@@ -1515,12 +1502,8 @@ func updateExtendedS3Config(d *schema.ResourceData) *firehose.ExtendedS3Destinat
 		configuration.CloudWatchLoggingOptions = extractCloudWatchLoggingConfiguration(s3)
 	}
 
-	if v, ok := s3["error_output_prefix"]; ok {
+	if v, ok := s3["error_output_prefix"]; ok && v.(string) != "" {
 		configuration.ErrorOutputPrefix = aws.String(v.(string))
-	} else {
-		// It is possible to just pass nil here, but this seems to be the
-		// canonical form that AWS uses, and is less likely to produce diffs.
-		configuration.ErrorOutputPrefix = aws.String("")
 	}
 
 	if s3BackupMode, ok := s3["s3_backup_mode"]; ok {
