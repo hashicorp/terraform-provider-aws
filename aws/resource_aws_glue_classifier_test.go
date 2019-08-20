@@ -450,7 +450,7 @@ resource "aws_glue_classifier" "test" {
 	quote_symbol           = "'"
   }
 }
-`, allowSingleColumn, containsHeader, delimiter, disableValueTrimming)
+`, rName, allowSingleColumn, containsHeader, delimiter, disableValueTrimming)
 }
 
 func testAccAWSGlueClassifierConfig_GrokClassifier(rName, classification, grokPattern string) string {
