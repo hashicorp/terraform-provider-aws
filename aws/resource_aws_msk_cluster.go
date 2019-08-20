@@ -633,7 +633,7 @@ func resourceAwsMskClusterDeleteWaiter(conn *kafka.Kafka, arn string) error {
 	})
 	if isResourceTimeoutError(err) {
 		_, err = conn.DescribeCluster(input)
-		if err != nil && isAWSErr(err, kafka.ErrCodeNotFoundException, "") {
+		if isAWSErr(err, kafka.ErrCodeNotFoundException, "") {
 			return nil
 		}
 	}
