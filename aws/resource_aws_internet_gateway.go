@@ -66,7 +66,7 @@ func resourceAwsInternetGatewayCreate(d *schema.ResourceData, meta interface{}) 
 	if isResourceTimeoutError(err) {
 		igRaw, _, err = IGStateRefreshFunc(conn, d.Id())()
 		if igRaw == nil {
-			return fmt.Errorf("Error refreshing internet gateway state: nil state received")
+			return fmt.Errorf("error finding Internet Gateway (%s) after creation; retry running Terraform", d.Id())
 		}
 	}
 	if err != nil {
