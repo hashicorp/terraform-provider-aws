@@ -18,6 +18,7 @@ BUG FIXES:
 * resource/aws_kinesis_firehose_delivery_stream: Prevent differences with disabled `data_format_conversion_configuration` and `processing_configuration` after changes outside Terraform [GH-9103]
 * resource/aws_network_acl_rule: Remove resource from Terraform state on `InvalidNetworkAclID.NotFound` errors [GH-9710]
 * resource/aws_rds_cluster_instance: Ensure `monitoring_interval` and `monitoring_role_arn` attributes are always written to the Terraform state [GH-9748]
+* resource/aws_s3_bucket_object: Allow using SSE-S3 encryption with `etag` argument [GH-9442]
 
 ## 2.24.0 (August 15, 2019)
 
