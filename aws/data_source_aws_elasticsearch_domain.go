@@ -2,11 +2,9 @@ package aws
 
 import (
 	"fmt"
-	"log"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/elasticsearchservice"
-	"github.com/hashicorp/errwrap"
 	"github.com/hashicorp/terraform/helper/schema"
 	"github.com/hashicorp/terraform/helper/structure"
 )
@@ -120,6 +118,18 @@ func dataSourceAwsElasticSearchDomain() *schema.Resource {
 						"instance_type": {
 							Type:     schema.TypeString,
 							Computed: true,
+						},
+						"zone_awareness_config": {
+							Type:     schema.TypeSet,
+							Computed: true,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"availability_zone_count": {
+										Type:     schema.TypeInt,
+										Computed: true,
+									},
+								},
+							},
 						},
 						"zone_awareness_enabled": {
 							Type:     schema.TypeBool,
@@ -244,7 +254,7 @@ func dataSourceAwsElasticSearchDomainRead(d *schema.ResourceData, meta interface
 
 	resp, err := esconn.DescribeElasticsearchDomain(req)
 	if err != nil {
-		return err
+		return fmt.Errorf("error querying elasticsearch_domain: %s", err)
 	}
 
 	if resp.DomainStatus == nil {
@@ -258,59 +268,48 @@ func dataSourceAwsElasticSearchDomainRead(d *schema.ResourceData, meta interface
 	if ds.AccessPolicies != nil && *ds.AccessPolicies != "" {
 		policies, err := structure.NormalizeJsonString(*ds.AccessPolicies)
 		if err != nil {
-			return errwrap.Wrapf("access policies contain an invalid JSON: {{err}}", err)
+			return fmt.Errorf("access policies contain an invalid JSON: %s", err)
 		}
 		d.Set("access_policies", policies)
 	}
 
-	err = d.Set("advanced_options", pointersMapToStringList(ds.AdvancedOptions))
-	if err != nil {
-		return err
+	if err := d.Set("advanced_options", pointersMapToStringList(ds.AdvancedOptions)); err != nil {
+		return fmt.Errorf("error setting advanced_options: %s", err)
 	}
 
-	d.Set("arn", *ds.ARN)
+	d.Set("arn", ds.ARN)
 	d.Set("domain_id", ds.DomainId)
 	d.Set("endpoint", ds.Endpoint)
 	d.Set("kibana_endpoint", getKibanaEndpoint(d))
 
-	err = d.Set("ebs_options", flattenESEBSOptions(ds.EBSOptions))
-	if err != nil {
-		return err
+	if err := d.Set("ebs_options", flattenESEBSOptions(ds.EBSOptions)); err != nil {
+		return fmt.Errorf("error setting ebs_options: %s", err)
 	}
 
-	err = d.Set("encryption_at_rest", flattenESEncryptAtRestOptions(ds.EncryptionAtRestOptions))
-	if err != nil {
-		return err
+	if err := d.Set("encryption_at_rest", flattenESEncryptAtRestOptions(ds.EncryptionAtRestOptions)); err != nil {
+		return fmt.Errorf("error setting encryption_at_rest: %s", err)
 	}
 
-	err = d.Set("node_to_node_encryption", flattenESNodeToNodeEncryptionOptions(ds.NodeToNodeEncryptionOptions))
-	if err != nil {
-		return err
+	if err := d.Set("node_to_node_encryption", flattenESNodeToNodeEncryptionOptions(ds.NodeToNodeEncryptionOptions)); err != nil {
+		return fmt.Errorf("error setting node_to_node_encryption: %s", err)
 	}
 
-	err = d.Set("cluster_config", flattenESClusterConfig(ds.ElasticsearchClusterConfig))
-	if err != nil {
-		return err
+	if err := d.Set("cluster_config", flattenESClusterConfig(ds.ElasticsearchClusterConfig)); err != nil {
+		return fmt.Errorf("error setting cluster_config: %s", err)
 	}
 
-	if ds.SnapshotOptions != nil {
-		m := map[string]interface{}{}
-
-		m["automated_snapshot_start_hour"] = *ds.SnapshotOptions.AutomatedSnapshotStartHour
-
-		d.Set("snapshot_options", []map[string]interface{}{m})
+	if err := d.Set("snapshot_options", flattenESSnapshotOptions(ds.SnapshotOptions)); err != nil {
+		return fmt.Errorf("error setting snapshot_options: %s", err)
 	}
 
 	if ds.VPCOptions != nil {
-		err = d.Set("vpc_options", flattenESVPCDerivedInfo(ds.VPCOptions))
-		if err != nil {
-			return err
+		if err := d.Set("vpc_options", flattenESVPCDerivedInfo(ds.VPCOptions)); err != nil {
+			return fmt.Errorf("error setting vpc_options: %s", err)
 		}
 
 		endpoints := pointersMapToStringList(ds.Endpoints)
-		err = d.Set("endpoint", endpoints["vpc"])
-		if err != nil {
-			return err
+		if err := d.Set("endpoint", endpoints["vpc"]); err != nil {
+			return fmt.Errorf("error setting endpoint: %s", err)
 		}
 		d.Set("kibana_endpoint", getKibanaEndpoint(d))
 		if ds.Endpoint != nil {
@@ -342,9 +341,8 @@ func dataSourceAwsElasticSearchDomainRead(d *schema.ResourceData, meta interface
 
 	d.Set("elasticsearch_version", ds.ElasticsearchVersion)
 
-	err = d.Set("cognito_options", flattenESCognitoOptions(ds.CognitoOptions))
-	if err != nil {
-		return err
+	if err := d.Set("cognito_options", flattenESCognitoOptions(ds.CognitoOptions)); err != nil {
+		return fmt.Errorf("error setting cognito_options: %s", err)
 	}
 
 	d.Set("created", ds.Created)
@@ -357,10 +355,12 @@ func dataSourceAwsElasticSearchDomainRead(d *schema.ResourceData, meta interface
 	})
 
 	if err != nil {
-		log.Printf("[DEBUG] Error retrieving tags for ARN: %s", *ds.ARN)
+		return fmt.Errorf("error retrieving tags for elasticsearch_domain: %s", err)
 	}
 
-	d.Set("tags", tagsToMapElasticsearchService(tagResp.TagList))
+	if err := d.Set("tags", tagsToMapElasticsearchService(tagResp.TagList)); err != nil {
+		return fmt.Errorf("error setting tags: %s", err)
+	}
 
 	return nil
 }

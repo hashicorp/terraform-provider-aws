@@ -10,26 +10,28 @@ import (
 
 func TestAccAWSDataElasticsearchDomain_basic(t *testing.T) {
 	rInt := acctest.RandInt()
+	datasourceName := "data.aws_elasticsearch_domain.test"
+	resourceName := "aws_elasticsearch_domain.test"
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:  func() { testAccPreCheck(t) },
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSElasticsearchDomainConfigWithDataSource(rInt),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr("data.aws_elasticsearch_domain.bar", "elasticsearch_version", "1.5"),
-					resource.TestCheckResourceAttr("data.aws_elasticsearch_domain.bar", "cluster_config.#", "1"),
-					resource.TestCheckResourceAttr("data.aws_elasticsearch_domain.bar", "cluster_config.0.instance_type", "t2.micro.elasticsearch"),
-					resource.TestCheckResourceAttr("data.aws_elasticsearch_domain.bar", "cluster_config.0.instance_count", "2"),
-					resource.TestCheckResourceAttr("data.aws_elasticsearch_domain.bar", "cluster_config.0.dedicated_master_enabled", "false"),
-					resource.TestCheckResourceAttr("data.aws_elasticsearch_domain.bar", "cluster_config.0.zone_awareness_enabled", "true"),
-					resource.TestCheckResourceAttr("data.aws_elasticsearch_domain.bar", "ebs_options.#", "1"),
-					resource.TestCheckResourceAttr("data.aws_elasticsearch_domain.bar", "ebs_options.0.ebs_enabled", "true"),
-					resource.TestCheckResourceAttr("data.aws_elasticsearch_domain.bar", "ebs_options.0.volume_type", "gp2"),
-					resource.TestCheckResourceAttr("data.aws_elasticsearch_domain.bar", "ebs_options.0.volume_size", "20"),
-					resource.TestCheckResourceAttr("data.aws_elasticsearch_domain.bar", "snapshot_options.#", "1"),
-					resource.TestCheckResourceAttr("data.aws_elasticsearch_domain.bar", "snapshot_options.0.automated_snapshot_start_hour", "23"),
+					resource.TestCheckResourceAttrPair(datasourceName, "elasticsearch_version", resourceName, "elasticsearch_version"),
+					resource.TestCheckResourceAttrPair(datasourceName, "cluster_config.#", resourceName, "cluster_config.#"),
+					resource.TestCheckResourceAttrPair(datasourceName, "cluster_config.0.instance_type", resourceName, "cluster_config.0.instance_type"),
+					resource.TestCheckResourceAttrPair(datasourceName, "cluster_config.0.instance_count", resourceName, "cluster_config.0.instance_count"),
+					resource.TestCheckResourceAttrPair(datasourceName, "cluster_config.0.dedicated_master_enabled", resourceName, "cluster_config.0.dedicated_master_enabled"),
+					resource.TestCheckResourceAttrPair(datasourceName, "cluster_config.0.zone_awareness_enabled", resourceName, "cluster_config.0.zone_awareness_enabled"),
+					resource.TestCheckResourceAttrPair(datasourceName, "ebs_options.#", resourceName, "ebs_options.#"),
+					resource.TestCheckResourceAttrPair(datasourceName, "ebs_options.0.ebs_enabled", resourceName, "ebs_options.0.ebs_enabled"),
+					resource.TestCheckResourceAttrPair(datasourceName, "ebs_options.0.volume_type", resourceName, "ebs_options.0.volume_type"),
+					resource.TestCheckResourceAttrPair(datasourceName, "ebs_options.0.volume_size", resourceName, "ebs_options.0.volume_size"),
+					resource.TestCheckResourceAttrPair(datasourceName, "snapshot_options.#", resourceName, "snapshot_options.#"),
+					resource.TestCheckResourceAttrPair(datasourceName, "snapshot_options.0.automated_snapshot_start_hour", resourceName, "snapshot_options.0.automated_snapshot_start_hour"),
 				),
 			},
 		},
@@ -38,29 +40,31 @@ func TestAccAWSDataElasticsearchDomain_basic(t *testing.T) {
 
 func TestAccAWSDataElasticsearchDomain_advanced(t *testing.T) {
 	rInt := acctest.RandInt()
+	datasourceName := "data.aws_elasticsearch_domain.test"
+	resourceName := "aws_elasticsearch_domain.test"
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:  func() { testAccPreCheck(t) },
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSElasticsearchDomainConfigAdvancedWithDataSource(rInt),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr("data.aws_elasticsearch_domain.bar", "elasticsearch_version", "1.5"),
-					resource.TestCheckResourceAttr("data.aws_elasticsearch_domain.bar", "cluster_config.#", "1"),
-					resource.TestCheckResourceAttr("data.aws_elasticsearch_domain.bar", "cluster_config.0.instance_type", "t2.micro.elasticsearch"),
-					resource.TestCheckResourceAttr("data.aws_elasticsearch_domain.bar", "cluster_config.0.instance_count", "2"),
-					resource.TestCheckResourceAttr("data.aws_elasticsearch_domain.bar", "cluster_config.0.dedicated_master_enabled", "false"),
-					resource.TestCheckResourceAttr("data.aws_elasticsearch_domain.bar", "cluster_config.0.zone_awareness_enabled", "true"),
-					resource.TestCheckResourceAttr("data.aws_elasticsearch_domain.bar", "ebs_options.#", "1"),
-					resource.TestCheckResourceAttr("data.aws_elasticsearch_domain.bar", "ebs_options.0.ebs_enabled", "true"),
-					resource.TestCheckResourceAttr("data.aws_elasticsearch_domain.bar", "ebs_options.0.volume_type", "gp2"),
-					resource.TestCheckResourceAttr("data.aws_elasticsearch_domain.bar", "ebs_options.0.volume_size", "20"),
-					resource.TestCheckResourceAttr("data.aws_elasticsearch_domain.bar", "snapshot_options.#", "1"),
-					resource.TestCheckResourceAttr("data.aws_elasticsearch_domain.bar", "snapshot_options.0.automated_snapshot_start_hour", "23"),
-					resource.TestCheckResourceAttr("data.aws_elasticsearch_domain.bar", "log_publishing_options.#", "1"),
-					resource.TestCheckResourceAttr("data.aws_elasticsearch_domain.bar", "log_publishing_options.0.log_type", "INDEX_SLOW_LOGS"),
-					resource.TestCheckResourceAttr("data.aws_elasticsearch_domain.bar", "vpc_options.#", "1"),
+					resource.TestCheckResourceAttrPair(datasourceName, "elasticsearch_version", resourceName, "elasticsearch_version"),
+					resource.TestCheckResourceAttrPair(datasourceName, "cluster_config.#", resourceName, "cluster_config.#"),
+					resource.TestCheckResourceAttrPair(datasourceName, "cluster_config.0.instance_type", resourceName, "cluster_config.0.instance_type"),
+					resource.TestCheckResourceAttrPair(datasourceName, "cluster_config.0.instance_count", resourceName, "cluster_config.0.instance_count"),
+					resource.TestCheckResourceAttrPair(datasourceName, "cluster_config.0.dedicated_master_enabled", resourceName, "cluster_config.0.dedicated_master_enabled"),
+					resource.TestCheckResourceAttrPair(datasourceName, "cluster_config.0.zone_awareness_enabled", resourceName, "cluster_config.0.zone_awareness_enabled"),
+					resource.TestCheckResourceAttrPair(datasourceName, "ebs_options.#", resourceName, "ebs_options.#"),
+					resource.TestCheckResourceAttrPair(datasourceName, "ebs_options.0.ebs_enabled", resourceName, "ebs_options.0.ebs_enabled"),
+					resource.TestCheckResourceAttrPair(datasourceName, "ebs_options.0.volume_type", resourceName, "ebs_options.0.volume_type"),
+					resource.TestCheckResourceAttrPair(datasourceName, "ebs_options.0.volume_size", resourceName, "ebs_options.0.volume_size"),
+					resource.TestCheckResourceAttrPair(datasourceName, "snapshot_options.#", resourceName, "snapshot_options.#"),
+					resource.TestCheckResourceAttrPair(datasourceName, "snapshot_options.0.automated_snapshot_start_hour", resourceName, "snapshot_options.0.automated_snapshot_start_hour"),
+					resource.TestCheckResourceAttrPair(datasourceName, "log_publishing_options.#", resourceName, "log_publishing_options.#"),
+					resource.TestCheckResourceAttrPair(datasourceName, "log_publishing_options.0.log_type", resourceName, "log_publishing_options.0.log_type"),
+					resource.TestCheckResourceAttrPair(datasourceName, "vpc_options.#", resourceName, "vpc_options.#"),
 				),
 			},
 		},
@@ -81,7 +85,7 @@ data "aws_region" "current" {}
 		
 data "aws_caller_identity" "current" {}
 					
-resource "aws_elasticsearch_domain" "bar" {
+resource "aws_elasticsearch_domain" "test" {
 	domain_name = "${local.random_name}"
 	elasticsearch_version = "1.5"
 	
@@ -95,7 +99,7 @@ resource "aws_elasticsearch_domain" "bar" {
 			"Effect": "Allow",
 			"Resource": "arn:aws:es:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:domain/${local.random_name}/*",
 			"Condition": {
-				"IpAddress": {"aws:SourceIp": ["66.193.100.22/32"]}
+				"IpAddress": {"aws:SourceIp": ["127.0.0.0/8"]}
 			}
 		}
 	]
@@ -105,7 +109,10 @@ POLICY
   cluster_config {
     instance_type = "t2.micro.elasticsearch"
     instance_count = 2
-    dedicated_master_enabled = false
+	dedicated_master_enabled = false
+	zone_awareness_config {
+		availability_zone_count = 2
+	}
     zone_awareness_enabled = true
   }
   ebs_options {
@@ -118,8 +125,8 @@ POLICY
   }
 }
 
-data "aws_elasticsearch_domain" "bar" {
-  domain_name = "${aws_elasticsearch_domain.bar.domain_name}"
+data "aws_elasticsearch_domain" "test" {
+  domain_name = "${aws_elasticsearch_domain.test.domain_name}"
 }
 		`, rInt)
 }
@@ -138,11 +145,11 @@ locals {
 	random_name = "test-es-%d"
 }
 
-resource "aws_cloudwatch_log_group" "bar" {
+resource "aws_cloudwatch_log_group" "test" {
 	name = "${local.random_name}"
 }
 
-resource "aws_cloudwatch_log_resource_policy" "bar" {
+resource "aws_cloudwatch_log_resource_policy" "test" {
 	policy_name = "${local.random_name}"
 	policy_document = <<CONFIG
 {
@@ -165,40 +172,40 @@ resource "aws_cloudwatch_log_resource_policy" "bar" {
 CONFIG
 }
 
-resource "aws_vpc" "bar" {
+resource "aws_vpc" "test" {
 	cidr_block = "10.0.0.0/16"
 }
 
-resource "aws_subnet" "bar" {
-	vpc_id = "${aws_vpc.bar.id}"
+resource "aws_subnet" "test" {
+	vpc_id = "${aws_vpc.test.id}"
 	cidr_block = "10.0.0.0/24"
 }
 
-resource "aws_subnet" "baz" {
-	vpc_id = "${aws_vpc.bar.id}"
+resource "aws_subnet" "test2" {
+	vpc_id = "${aws_vpc.test.id}"
 	cidr_block = "10.0.1.0/24"
 }
 
-resource "aws_security_group" "bar" {
+resource "aws_security_group" "test" {
 	name = "${local.random_name}"
-	vpc_id = "${aws_vpc.bar.id}"
+	vpc_id = "${aws_vpc.test.id}"
 }
 
-resource "aws_security_group_rule" "bar" {
+resource "aws_security_group_rule" "test" {
 	type = "ingress"
 	from_port = 443
 	to_port = 443
 	protocol = "tcp"
 	cidr_blocks = [ "0.0.0.0/0" ]
 
-	security_group_id = "${aws_security_group.bar.id}"
+	security_group_id = "${aws_security_group.test.id}"
 }
 
-resource "aws_iam_service_linked_role" "bar" {
+resource "aws_iam_service_linked_role" "test" {
 	aws_service_name = "es.amazonaws.com"
 }
 
-resource "aws_elasticsearch_domain" "bar" {
+resource "aws_elasticsearch_domain" "test" {
 	domain_name = "${local.random_name}"
 	elasticsearch_version = "1.5"
 	
@@ -220,6 +227,9 @@ POLICY
     instance_type = "t2.micro.elasticsearch"
     instance_count = 2
     dedicated_master_enabled = false
+	zone_awareness_config {
+		availability_zone_count = 2
+	}
     zone_awareness_enabled = true
   }
   ebs_options {
@@ -231,30 +241,30 @@ POLICY
     automated_snapshot_start_hour = 23
   }
   log_publishing_options {
-    cloudwatch_log_group_arn = "${aws_cloudwatch_log_group.bar.arn}"
+    cloudwatch_log_group_arn = "${aws_cloudwatch_log_group.test.arn}"
     log_type = "INDEX_SLOW_LOGS"
   }
   vpc_options {
 		security_group_ids = [
-			"${aws_security_group.bar.id}"
+			"${aws_security_group.test.id}"
 		]
 		subnet_ids = [
-			"${aws_subnet.bar.id}",
-			"${aws_subnet.baz.id}"
+			"${aws_subnet.test.id}",
+			"${aws_subnet.test2.id}"
 		]
   }
 
-  tags {
-	  Domain = "TestDomain"
-	}
+  tags = {
+	Domain = "TestDomain"
+  }
 	
-	depends_on = [
-    "aws_iam_service_linked_role.bar",
+  depends_on = [
+    "aws_iam_service_linked_role.test",
   ]
 }
 
-data "aws_elasticsearch_domain" "bar" {
-  domain_name = "${aws_elasticsearch_domain.bar.domain_name}"
+data "aws_elasticsearch_domain" "test" {
+  domain_name = "${aws_elasticsearch_domain.test.domain_name}"
 }
 				`, rInt)
 }
