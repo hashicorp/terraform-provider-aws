@@ -440,7 +440,7 @@ func resourceAwsSagemakerNotebookInstanceUpdate(d *schema.ResourceData, meta int
 			describeInput := &sagemaker.DescribeNotebookInstanceInput{
 				NotebookInstanceName: aws.String(d.Id()),
 			}
-			
+
 			if err := conn.WaitUntilNotebookInstanceInService(describeInput); err != nil {
 				return fmt.Errorf("error waiting for SageMaker Notebook Instance (%s) to be in service: %s", d.Id(), err)
 			}
