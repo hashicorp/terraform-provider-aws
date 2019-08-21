@@ -269,6 +269,46 @@ func TestAccAWSEMRCluster_CoreInstanceGroup_AutoscalingPolicy(t *testing.T) {
 	})
 }
 
+func TestAccAWSEMRCluster_CoreInstanceGroup_Market(t *testing.T) {
+	var cluster1, cluster2 emr.Cluster
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_emr_cluster.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSEmrDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSEmrClusterConfigCoreInstanceGroupMarket(rName, "SPOT"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSEmrClusterExists(resourceName, &cluster1),
+					resource.TestCheckResourceAttr(resourceName, "core_instance_group.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "core_instance_group.0.market", "SPOT"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"configurations",
+					"keep_job_flow_alive_when_no_steps",
+				},
+			},
+			{
+				Config: testAccAWSEmrClusterConfigCoreInstanceGroupMarket(rName, "ON_DEMAND"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSEmrClusterExists(resourceName, &cluster2),
+					testAccCheckAWSEmrClusterRecreated(&cluster1, &cluster2),
+					resource.TestCheckResourceAttr(resourceName, "core_instance_group.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "core_instance_group.0.market", "ON_DEMAND"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccAWSEMRCluster_CoreInstanceGroup_BidPrice(t *testing.T) {
 	var cluster1, cluster2 emr.Cluster
 	rName := acctest.RandomWithPrefix("tf-acc-test")
@@ -682,6 +722,46 @@ func TestAccAWSEMRCluster_Kerberos_ClusterDedicatedKdc(t *testing.T) {
 				ImportState:             true,
 				ImportStateVerify:       true,
 				ImportStateVerifyIgnore: []string{"configurations", "keep_job_flow_alive_when_no_steps", "kerberos_attributes.0.kdc_admin_password"},
+			},
+		},
+	})
+}
+
+func TestAccAWSEMRCluster_MasterInstanceGroup_Market(t *testing.T) {
+	var cluster1, cluster2 emr.Cluster
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_emr_cluster.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSEmrDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSEmrClusterConfigMasterInstanceGroupMarket(rName, "SPOT"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSEmrClusterExists(resourceName, &cluster1),
+					resource.TestCheckResourceAttr(resourceName, "master_instance_group.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "master_instance_group.0.market", "SPOT"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"configurations",
+					"keep_job_flow_alive_when_no_steps",
+				},
+			},
+			{
+				Config: testAccAWSEmrClusterConfigMasterInstanceGroupMarket(rName, "ON_DEMAND"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSEmrClusterExists(resourceName, &cluster2),
+					testAccCheckAWSEmrClusterRecreated(&cluster1, &cluster2),
+					resource.TestCheckResourceAttr(resourceName, "master_instance_group.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "master_instance_group.0.market", "ON_DEMAND"),
+				),
 			},
 		},
 	})
@@ -3448,11 +3528,13 @@ resource "aws_emr_cluster" "test" {
 
   master_instance_group {
     instance_type = "m4.large"
+    market        = "ON_DEMAND"
   }
 
   core_instance_group {
     autoscaling_policy = <<POLICY%[2]sPOLICY
     instance_type      = "m4.large"
+    market             = "ON_DEMAND"
   }
 
   depends_on = ["aws_iam_role_policy_attachment.test", "aws_route_table_association.test"]
@@ -3506,15 +3588,48 @@ resource "aws_emr_cluster" "test" {
 
   master_instance_group {
     instance_type = "m4.large"
+    market        = "ON_DEMAND"
   }
 
   core_instance_group {
     instance_type = "m4.large"
+    market        = "ON_DEMAND"
   }
 
   depends_on = ["aws_iam_role_policy_attachment.test", "aws_route_table_association.test"]
 }
 `, rName)
+}
+
+func testAccAWSEmrClusterConfigCoreInstanceGroupMarket(rName, Market string) string {
+	return testAccAWSEmrClusterConfigBaseVpc(false) + fmt.Sprintf(`
+resource "aws_emr_cluster" "test" {
+  applications                      = ["Spark"]
+  keep_job_flow_alive_when_no_steps = true
+  name                              = %[1]q
+  release_label                     = "emr-5.12.0"
+  service_role                      = "EMR_DefaultRole"
+
+  ec2_attributes {
+    emr_managed_master_security_group = "${aws_security_group.test.id}"
+    emr_managed_slave_security_group  = "${aws_security_group.test.id}"
+    instance_profile                  = "EMR_EC2_DefaultRole"
+    subnet_id                         = "${aws_subnet.test.id}"
+  }
+
+  master_instance_group {
+    instance_type = "m4.large"
+    market        = "ON_DEMAND"
+  }
+
+  core_instance_group {
+    market        = %[2]q
+    instance_type = "m4.large"
+  }
+
+  depends_on = ["aws_route_table_association.test"]
+}
+`, rName, Market)
 }
 
 func testAccAWSEmrClusterConfigCoreInstanceGroupBidPrice(rName, bidPrice string) string {
@@ -3535,9 +3650,11 @@ resource "aws_emr_cluster" "test" {
 
   master_instance_group {
     instance_type = "m4.large"
+    market        = "ON_DEMAND"
   }
 
   core_instance_group {
+    market        = "SPOT"
     bid_price     = %[2]q
     instance_type = "m4.large"
   }
@@ -3565,11 +3682,13 @@ resource "aws_emr_cluster" "test" {
 
   master_instance_group {
     instance_type = "m4.large"
+    market        = "ON_DEMAND"
   }
 
   core_instance_group {
     instance_count = %[2]d
     instance_type  = "m4.large"
+    market        = "ON_DEMAND"
   }
 
   depends_on = ["aws_route_table_association.test"]
@@ -3595,10 +3714,12 @@ resource "aws_emr_cluster" "test" {
 
   master_instance_group {
     instance_type = "m4.large"
+    market        = "ON_DEMAND"
   }
 
   core_instance_group {
     instance_type = %[2]q
+    market        = "ON_DEMAND"
   }
 
   depends_on = ["aws_route_table_association.test"]
@@ -3624,11 +3745,13 @@ resource "aws_emr_cluster" "test" {
 
   master_instance_group {
     instance_type = "m4.large"
+    market        = "ON_DEMAND"
   }
 
   core_instance_group {
     instance_type = "m4.large"
     name          = %[2]q
+    market        = "ON_DEMAND"
   }
 
   depends_on = ["aws_route_table_association.test"]
@@ -3656,6 +3779,7 @@ resource "aws_emr_cluster" "test" {
 
   master_instance_group {
     instance_type = "m4.large"
+    market        = "ON_DEMAND"
   }
 
   depends_on = ["aws_route_table_association.test"]
@@ -3683,12 +3807,14 @@ resource "aws_emr_cluster" "test" {
     instance_count = 1
     instance_role  = "MASTER"
     instance_type  = "m4.large"
+    market         = "ON_DEMAND"
   }
 
   instance_group {
     instance_count = 1
     instance_role  = "CORE"
     instance_type  = %[2]q
+    market         = "ON_DEMAND"
   }
 
   depends_on = ["aws_route_table_association.test"]
@@ -3716,6 +3842,7 @@ resource "aws_emr_cluster" "test" {
     instance_count = 1
     instance_role  = "MASTER"
     instance_type  = %[2]q
+    market         = "ON_DEMAND"
   }
 
   depends_on = ["aws_route_table_association.test"]
@@ -3748,6 +3875,7 @@ resource "aws_emr_cluster" "tf-test-cluster" {
       volumes_per_instance = 1
     }
 
+    market    = "SPOT"
     bid_price = "0.30"
 
     autoscaling_policy = <<EOT
@@ -4435,6 +4563,7 @@ resource "aws_emr_cluster" "tf-test-cluster" {
       volumes_per_instance = 1
     }
 
+    market    = "SPOT"
     bid_price = "0.30"
 
     autoscaling_policy = <<EOT
@@ -4788,6 +4917,7 @@ resource "aws_emr_cluster" "tf-test-cluster" {
       volumes_per_instance = 1
     }
 
+    market    = "SPOT"
     bid_price = "0.30"
 
     autoscaling_policy = <<EOT
@@ -5139,6 +5269,7 @@ resource "aws_emr_cluster" "tf-test-cluster" {
       volumes_per_instance = 1
     }
 
+    market    = "SPOT"
     bid_price = "0.30"
 
     autoscaling_policy = <<EOT
@@ -5465,6 +5596,32 @@ resource "aws_iam_role_policy_attachment" "emr-autoscaling-role" {
 `, r)
 }
 
+func testAccAWSEmrClusterConfigMasterInstanceGroupMarket(rName, Market string) string {
+	return testAccAWSEmrClusterConfigBaseVpc(false) + fmt.Sprintf(`
+resource "aws_emr_cluster" "test" {
+  applications                      = ["Spark"]
+  keep_job_flow_alive_when_no_steps = true
+  name                              = %[1]q
+  release_label                     = "emr-5.12.0"
+  service_role                      = "EMR_DefaultRole"
+
+  ec2_attributes {
+    emr_managed_master_security_group = "${aws_security_group.test.id}"
+    emr_managed_slave_security_group  = "${aws_security_group.test.id}"
+    instance_profile                  = "EMR_EC2_DefaultRole"
+    subnet_id                         = "${aws_subnet.test.id}"
+  }
+
+  master_instance_group {
+    market        = %[2]q
+    instance_type = "m4.large"
+  }
+
+  depends_on = ["aws_route_table_association.test"]
+}
+`, rName, Market)
+}
+
 func testAccAWSEmrClusterConfigMasterInstanceGroupBidPrice(rName, bidPrice string) string {
 	return testAccAWSEmrClusterConfigBaseVpc(false) + fmt.Sprintf(`
 resource "aws_emr_cluster" "test" {
@@ -5482,6 +5639,7 @@ resource "aws_emr_cluster" "test" {
   }
 
   master_instance_group {
+    market        = "SPOT"
     bid_price     = %[2]q
     instance_type = "m4.large"
   }
