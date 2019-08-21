@@ -18,6 +18,9 @@ func resourceAwsBackupVault() *schema.Resource {
 		Read:   resourceAwsBackupVaultRead,
 		Update: resourceAwsBackupVaultUpdate,
 		Delete: resourceAwsBackupVaultDelete,
+		Importer: &schema.ResourceImporter{
+			State: schema.ImportStatePassthrough,
+		},
 
 		Schema: map[string]*schema.Schema{
 			"name": {
@@ -91,7 +94,7 @@ func resourceAwsBackupVaultRead(d *schema.ResourceData, meta interface{}) error 
 	if err != nil {
 		return fmt.Errorf("error reading Backup Vault (%s): %s", d.Id(), err)
 	}
-
+	d.Set("name", resp.BackupVaultName)
 	d.Set("kms_key_arn", resp.EncryptionKeyArn)
 	d.Set("arn", resp.BackupVaultArn)
 	d.Set("recovery_points", resp.NumberOfRecoveryPoints)

@@ -778,7 +778,6 @@ func (c *EC2) AssignPrivateIpAddressesRequest(input *AssignPrivateIpAddressesInp
 
 	output = &AssignPrivateIpAddressesOutput{}
 	req = c.newRequest(op, input, output)
-	req.Handlers.Unmarshal.Swap(ec2query.UnmarshalHandler.Name, protocol.UnmarshalDiscardBodyHandler)
 	return
 }
 
@@ -1062,7 +1061,7 @@ func (c *EC2) AssociateDhcpOptionsRequest(input *AssociateDhcpOptionsInput) (req
 // its DHCP lease. You can explicitly renew the lease using the operating system
 // on the instance.
 //
-// For more information, see DHCP Options Sets (https://docs.aws.amazon.com/AmazonVPC/latest/UserGuide/VPC_DHCP_Options.html)
+// For more information, see DHCP Options Sets (https://docs.aws.amazon.com/vpc/latest/userguide/VPC_DHCP_Options.html)
 // in the Amazon Virtual Private Cloud User Guide.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
@@ -1218,7 +1217,7 @@ func (c *EC2) AssociateRouteTableRequest(input *AssociateRouteTableInput) (req *
 // an association ID, which you need in order to disassociate the route table
 // from the subnet later. A route table can be associated with multiple subnets.
 //
-// For more information, see Route Tables (https://docs.aws.amazon.com/AmazonVPC/latest/UserGuide/VPC_Route_Tables.html)
+// For more information, see Route Tables (https://docs.aws.amazon.com/vpc/latest/userguide/VPC_Route_Tables.html)
 // in the Amazon Virtual Private Cloud User Guide.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
@@ -1449,7 +1448,7 @@ func (c *EC2) AssociateVpcCidrBlockRequest(input *AssociateVpcCidrBlockInput) (r
 // IPv6 CIDR block size is fixed at /56.
 //
 // For more information about associating CIDR blocks with your VPC and applicable
-// restrictions, see VPC and Subnet Sizing (https://docs.aws.amazon.com/AmazonVPC/latest/UserGuide/VPC_Subnets.html#VPC_Sizing)
+// restrictions, see VPC and Subnet Sizing (https://docs.aws.amazon.com/vpc/latest/userguide/VPC_Subnets.html#VPC_Sizing)
 // in the Amazon Virtual Private Cloud User Guide.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
@@ -1612,7 +1611,7 @@ func (c *EC2) AttachInternetGatewayRequest(input *AttachInternetGatewayInput) (r
 //
 // Attaches an internet gateway to a VPC, enabling connectivity between the
 // internet and the VPC. For more information about your VPC and internet gateway,
-// see the Amazon Virtual Private Cloud User Guide (https://docs.aws.amazon.com/AmazonVPC/latest/UserGuide/).
+// see the Amazon Virtual Private Cloud User Guide (https://docs.aws.amazon.com/vpc/latest/userguide/).
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -1763,15 +1762,12 @@ func (c *EC2) AttachVolumeRequest(input *AttachVolumeInput) (req *request.Reques
 // Attaches an EBS volume to a running or stopped instance and exposes it to
 // the instance with the specified device name.
 //
-// Encrypted EBS volumes may only be attached to instances that support Amazon
-// EBS encryption. For more information, see Amazon EBS Encryption (https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/EBSEncryption.html)
+// Encrypted EBS volumes must be attached to instances that support Amazon EBS
+// encryption. For more information, see Amazon EBS Encryption (https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/EBSEncryption.html)
 // in the Amazon Elastic Compute Cloud User Guide.
 //
-// For a list of supported device names, see Attaching an EBS Volume to an Instance
-// (https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/ebs-attaching-volume.html).
-// Any device names that aren't reserved for instance store volumes can be used
-// for EBS volumes. For more information, see Amazon EC2 Instance Store (https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/InstanceStorage.html)
-// in the Amazon Elastic Compute Cloud User Guide.
+// After you attach an EBS volume, you must make it available. For more information,
+// see Making an EBS Volume Available For Use (https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/ebs-using-volumes.html).
 //
 // If a volume has an AWS Marketplace product code:
 //
@@ -1785,8 +1781,7 @@ func (c *EC2) AttachVolumeRequest(input *AttachVolumeInput) (req *request.Reques
 //    the product. For example, you can't detach a volume from a Windows instance
 //    and attach it to a Linux instance.
 //
-// For more information about EBS volumes, see Attaching Amazon EBS Volumes
-// (https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/ebs-attaching-volume.html)
+// For more information, see Attaching Amazon EBS Volumes (https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/ebs-attaching-volume.html)
 // in the Amazon Elastic Compute Cloud User Guide.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
@@ -3140,14 +3135,13 @@ func (c *EC2) CopySnapshotRequest(input *CopySnapshotInput) (req *request.Reques
 // Copies a point-in-time snapshot of an EBS volume and stores it in Amazon
 // S3. You can copy the snapshot within the same Region or from one Region to
 // another. You can use the snapshot to create EBS volumes or Amazon Machine
-// Images (AMIs). The snapshot is copied to the regional endpoint that you send
-// the HTTP request to.
+// Images (AMIs).
 //
 // Copies of encrypted EBS snapshots remain encrypted. Copies of unencrypted
-// snapshots remain unencrypted, unless the Encrypted flag is specified during
-// the snapshot copy operation. By default, encrypted snapshot copies use the
-// default AWS Key Management Service (AWS KMS) customer master key (CMK); however,
-// you can specify a non-default CMK with the KmsKeyId parameter.
+// snapshots remain unencrypted, unless you enable encryption for the snapshot
+// copy operation. By default, encrypted snapshot copies use the default AWS
+// Key Management Service (AWS KMS) customer master key (CMK); however, you
+// can specify a different CMK.
 //
 // To copy an encrypted snapshot that has been shared from another account,
 // you must have permissions for the CMK used to encrypt the snapshot.
@@ -3580,7 +3574,7 @@ func (c *EC2) CreateDefaultSubnetRequest(input *CreateDefaultSubnetInput) (req *
 // Creates a default subnet with a size /20 IPv4 CIDR block in the specified
 // Availability Zone in your default VPC. You can have only one default subnet
 // per Availability Zone. For more information, see Creating a Default Subnet
-// (https://docs.aws.amazon.com/AmazonVPC/latest/UserGuide/default-vpc.html#create-default-subnet)
+// (https://docs.aws.amazon.com/vpc/latest/userguide/default-vpc.html#create-default-subnet)
 // in the Amazon Virtual Private Cloud User Guide.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
@@ -3657,7 +3651,7 @@ func (c *EC2) CreateDefaultVpcRequest(input *CreateDefaultVpcInput) (req *reques
 //
 // Creates a default VPC with a size /16 IPv4 CIDR block and a default subnet
 // in each Availability Zone. For more information about the components of a
-// default VPC, see Default VPC and Default Subnets (https://docs.aws.amazon.com/AmazonVPC/latest/UserGuide/default-vpc.html)
+// default VPC, see Default VPC and Default Subnets (https://docs.aws.amazon.com/vpc/latest/userguide/default-vpc.html)
 // in the Amazon Virtual Private Cloud User Guide. You cannot specify the components
 // of the default VPC yourself.
 //
@@ -3750,9 +3744,9 @@ func (c *EC2) CreateDhcpOptionsRequest(input *CreateDhcpOptionsInput) (req *requ
 //    * domain-name-servers - The IP addresses of up to four domain name servers,
 //    or AmazonProvidedDNS. The default DHCP option set specifies AmazonProvidedDNS.
 //    If specifying more than one domain name server, specify the IP addresses
-//    in a single parameter, separated by commas. ITo have your instance to
-//    receive a custom DNS hostname as specified in domain-name, you must set
-//    domain-name-servers to a custom DNS server.
+//    in a single parameter, separated by commas. To have your instance receive
+//    a custom DNS hostname as specified in domain-name, you must set domain-name-servers
+//    to a custom DNS server.
 //
 //    * domain-name - If you're using AmazonProvidedDNS in us-east-1, specify
 //    ec2.internal. If you're using AmazonProvidedDNS in another Region, specify
@@ -3778,7 +3772,7 @@ func (c *EC2) CreateDhcpOptionsRequest(input *CreateDhcpOptionsInput) (req *requ
 // only a DNS server that we provide (AmazonProvidedDNS). If you create a set
 // of options, and if your VPC has an internet gateway, make sure to set the
 // domain-name-servers option either to AmazonProvidedDNS or to a domain name
-// server of your choice. For more information, see DHCP Options Sets (https://docs.aws.amazon.com/AmazonVPC/latest/UserGuide/VPC_DHCP_Options.html)
+// server of your choice. For more information, see DHCP Options Sets (https://docs.aws.amazon.com/vpc/latest/userguide/VPC_DHCP_Options.html)
 // in the Amazon Virtual Private Cloud User Guide.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
@@ -4015,7 +4009,7 @@ func (c *EC2) CreateFlowLogsRequest(input *CreateFlowLogsInput) (req *request.Re
 //
 // Flow log data for a monitored network interface is recorded as flow log records,
 // which are log events consisting of fields that describe the traffic flow.
-// For more information, see Flow Log Records (https://docs.aws.amazon.com/AmazonVPC/latest/UserGuide/flow-logs.html#flow-log-records)
+// For more information, see Flow Log Records (https://docs.aws.amazon.com/vpc/latest/userguide/flow-logs.html#flow-log-records)
 // in the Amazon Virtual Private Cloud User Guide.
 //
 // When publishing to CloudWatch Logs, flow log records are published to a log
@@ -4024,7 +4018,7 @@ func (c *EC2) CreateFlowLogsRequest(input *CreateFlowLogsInput) (req *request.Re
 // interfaces are published to a single log file object that is stored in the
 // specified bucket.
 //
-// For more information, see VPC Flow Logs (https://docs.aws.amazon.com/AmazonVPC/latest/UserGuide/flow-logs.html)
+// For more information, see VPC Flow Logs (https://docs.aws.amazon.com/vpc/latest/userguide/flow-logs.html)
 // in the Amazon Virtual Private Cloud User Guide.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
@@ -4346,7 +4340,7 @@ func (c *EC2) CreateInternetGatewayRequest(input *CreateInternetGatewayInput) (r
 // gateway, you attach it to a VPC using AttachInternetGateway.
 //
 // For more information about your VPC and internet gateway, see the Amazon
-// Virtual Private Cloud User Guide (https://docs.aws.amazon.com/AmazonVPC/latest/UserGuide/).
+// Virtual Private Cloud User Guide (https://docs.aws.amazon.com/vpc/latest/userguide/).
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -4665,7 +4659,7 @@ func (c *EC2) CreateNatGatewayRequest(input *CreateNatGatewayInput) (req *reques
 // the IP address range of the subnet. Internet-bound traffic from a private
 // subnet can be routed to the NAT gateway, therefore enabling instances in
 // the private subnet to connect to the internet. For more information, see
-// NAT Gateways (https://docs.aws.amazon.com/AmazonVPC/latest/UserGuide/vpc-nat-gateway.html)
+// NAT Gateways (https://docs.aws.amazon.com/vpc/latest/userguide/vpc-nat-gateway.html)
 // in the Amazon Virtual Private Cloud User Guide.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
@@ -4743,7 +4737,7 @@ func (c *EC2) CreateNetworkAclRequest(input *CreateNetworkAclInput) (req *reques
 // Creates a network ACL in a VPC. Network ACLs provide an optional layer of
 // security (in addition to security groups) for the instances in your VPC.
 //
-// For more information, see Network ACLs (https://docs.aws.amazon.com/AmazonVPC/latest/UserGuide/VPC_ACLs.html)
+// For more information, see Network ACLs (https://docs.aws.amazon.com/vpc/latest/userguide/VPC_ACLs.html)
 // in the Amazon Virtual Private Cloud User Guide.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
@@ -4834,7 +4828,7 @@ func (c *EC2) CreateNetworkAclEntryRequest(input *CreateNetworkAclEntryInput) (r
 // After you add an entry, you can't modify it; you must either replace it,
 // or create an entry and delete the old one.
 //
-// For more information about network ACLs, see Network ACLs (https://docs.aws.amazon.com/AmazonVPC/latest/UserGuide/VPC_ACLs.html)
+// For more information about network ACLs, see Network ACLs (https://docs.aws.amazon.com/vpc/latest/userguide/VPC_ACLs.html)
 // in the Amazon Virtual Private Cloud User Guide.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
@@ -5265,7 +5259,7 @@ func (c *EC2) CreateRouteRequest(input *CreateRouteInput) (req *request.Request,
 // route in the list covers a smaller number of IP addresses and is therefore
 // more specific, so we use that route to determine where to target the traffic.
 //
-// For more information about route tables, see Route Tables (https://docs.aws.amazon.com/AmazonVPC/latest/UserGuide/VPC_Route_Tables.html)
+// For more information about route tables, see Route Tables (https://docs.aws.amazon.com/vpc/latest/userguide/VPC_Route_Tables.html)
 // in the Amazon Virtual Private Cloud User Guide.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
@@ -5343,7 +5337,7 @@ func (c *EC2) CreateRouteTableRequest(input *CreateRouteTableInput) (req *reques
 // Creates a route table for the specified VPC. After you create a route table,
 // you can add routes and associate the table with a subnet.
 //
-// For more information, see Route Tables (https://docs.aws.amazon.com/AmazonVPC/latest/UserGuide/VPC_Route_Tables.html)
+// For more information, see Route Tables (https://docs.aws.amazon.com/vpc/latest/userguide/VPC_Route_Tables.html)
 // in the Amazon Virtual Private Cloud User Guide.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
@@ -5801,7 +5795,7 @@ func (c *EC2) CreateSubnetRequest(input *CreateSubnetInput) (req *request.Reques
 // It's therefore possible to have a subnet with no running instances (they're
 // all stopped), but no remaining IP addresses available.
 //
-// For more information about subnets, see Your VPC and Subnets (https://docs.aws.amazon.com/AmazonVPC/latest/UserGuide/VPC_Subnets.html)
+// For more information about subnets, see Your VPC and Subnets (https://docs.aws.amazon.com/vpc/latest/userguide/VPC_Subnets.html)
 // in the Amazon Virtual Private Cloud User Guide.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
@@ -5910,6 +5904,333 @@ func (c *EC2) CreateTags(input *CreateTagsInput) (*CreateTagsOutput, error) {
 // for more information on using Contexts.
 func (c *EC2) CreateTagsWithContext(ctx aws.Context, input *CreateTagsInput, opts ...request.Option) (*CreateTagsOutput, error) {
 	req, out := c.CreateTagsRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
+const opCreateTrafficMirrorFilter = "CreateTrafficMirrorFilter"
+
+// CreateTrafficMirrorFilterRequest generates a "aws/request.Request" representing the
+// client's request for the CreateTrafficMirrorFilter operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See CreateTrafficMirrorFilter for more information on using the CreateTrafficMirrorFilter
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the CreateTrafficMirrorFilterRequest method.
+//    req, resp := client.CreateTrafficMirrorFilterRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/ec2-2016-11-15/CreateTrafficMirrorFilter
+func (c *EC2) CreateTrafficMirrorFilterRequest(input *CreateTrafficMirrorFilterInput) (req *request.Request, output *CreateTrafficMirrorFilterOutput) {
+	op := &request.Operation{
+		Name:       opCreateTrafficMirrorFilter,
+		HTTPMethod: "POST",
+		HTTPPath:   "/",
+	}
+
+	if input == nil {
+		input = &CreateTrafficMirrorFilterInput{}
+	}
+
+	output = &CreateTrafficMirrorFilterOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// CreateTrafficMirrorFilter API operation for Amazon Elastic Compute Cloud.
+//
+// Creates a Traffic Mirror filter.
+//
+// A Traffic Mirror filter is a set of rules that defines the traffic to mirror.
+//
+// By default, no traffic is mirrored. To mirror traffic, use CreateTrafficMirrorFilterRule
+// to add Traffic Mirror rules to the filter. The rules you add define what
+// traffic gets mirrored. You can also use ModifyTrafficMirrorFilterNetworkServices
+// to mirror supported network services.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for Amazon Elastic Compute Cloud's
+// API operation CreateTrafficMirrorFilter for usage and error information.
+// See also, https://docs.aws.amazon.com/goto/WebAPI/ec2-2016-11-15/CreateTrafficMirrorFilter
+func (c *EC2) CreateTrafficMirrorFilter(input *CreateTrafficMirrorFilterInput) (*CreateTrafficMirrorFilterOutput, error) {
+	req, out := c.CreateTrafficMirrorFilterRequest(input)
+	return out, req.Send()
+}
+
+// CreateTrafficMirrorFilterWithContext is the same as CreateTrafficMirrorFilter with the addition of
+// the ability to pass a context and additional request options.
+//
+// See CreateTrafficMirrorFilter for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *EC2) CreateTrafficMirrorFilterWithContext(ctx aws.Context, input *CreateTrafficMirrorFilterInput, opts ...request.Option) (*CreateTrafficMirrorFilterOutput, error) {
+	req, out := c.CreateTrafficMirrorFilterRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
+const opCreateTrafficMirrorFilterRule = "CreateTrafficMirrorFilterRule"
+
+// CreateTrafficMirrorFilterRuleRequest generates a "aws/request.Request" representing the
+// client's request for the CreateTrafficMirrorFilterRule operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See CreateTrafficMirrorFilterRule for more information on using the CreateTrafficMirrorFilterRule
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the CreateTrafficMirrorFilterRuleRequest method.
+//    req, resp := client.CreateTrafficMirrorFilterRuleRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/ec2-2016-11-15/CreateTrafficMirrorFilterRule
+func (c *EC2) CreateTrafficMirrorFilterRuleRequest(input *CreateTrafficMirrorFilterRuleInput) (req *request.Request, output *CreateTrafficMirrorFilterRuleOutput) {
+	op := &request.Operation{
+		Name:       opCreateTrafficMirrorFilterRule,
+		HTTPMethod: "POST",
+		HTTPPath:   "/",
+	}
+
+	if input == nil {
+		input = &CreateTrafficMirrorFilterRuleInput{}
+	}
+
+	output = &CreateTrafficMirrorFilterRuleOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// CreateTrafficMirrorFilterRule API operation for Amazon Elastic Compute Cloud.
+//
+// Creates a Traffic Mirror rule.
+//
+// A Traffic Mirror rule defines the Traffic Mirror source traffic to mirror.
+//
+// You need the Traffic Mirror filter ID when you create the rule.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for Amazon Elastic Compute Cloud's
+// API operation CreateTrafficMirrorFilterRule for usage and error information.
+// See also, https://docs.aws.amazon.com/goto/WebAPI/ec2-2016-11-15/CreateTrafficMirrorFilterRule
+func (c *EC2) CreateTrafficMirrorFilterRule(input *CreateTrafficMirrorFilterRuleInput) (*CreateTrafficMirrorFilterRuleOutput, error) {
+	req, out := c.CreateTrafficMirrorFilterRuleRequest(input)
+	return out, req.Send()
+}
+
+// CreateTrafficMirrorFilterRuleWithContext is the same as CreateTrafficMirrorFilterRule with the addition of
+// the ability to pass a context and additional request options.
+//
+// See CreateTrafficMirrorFilterRule for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *EC2) CreateTrafficMirrorFilterRuleWithContext(ctx aws.Context, input *CreateTrafficMirrorFilterRuleInput, opts ...request.Option) (*CreateTrafficMirrorFilterRuleOutput, error) {
+	req, out := c.CreateTrafficMirrorFilterRuleRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
+const opCreateTrafficMirrorSession = "CreateTrafficMirrorSession"
+
+// CreateTrafficMirrorSessionRequest generates a "aws/request.Request" representing the
+// client's request for the CreateTrafficMirrorSession operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See CreateTrafficMirrorSession for more information on using the CreateTrafficMirrorSession
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the CreateTrafficMirrorSessionRequest method.
+//    req, resp := client.CreateTrafficMirrorSessionRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/ec2-2016-11-15/CreateTrafficMirrorSession
+func (c *EC2) CreateTrafficMirrorSessionRequest(input *CreateTrafficMirrorSessionInput) (req *request.Request, output *CreateTrafficMirrorSessionOutput) {
+	op := &request.Operation{
+		Name:       opCreateTrafficMirrorSession,
+		HTTPMethod: "POST",
+		HTTPPath:   "/",
+	}
+
+	if input == nil {
+		input = &CreateTrafficMirrorSessionInput{}
+	}
+
+	output = &CreateTrafficMirrorSessionOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// CreateTrafficMirrorSession API operation for Amazon Elastic Compute Cloud.
+//
+// Creates a Traffic Mirror session.
+//
+// A Traffic Mirror session actively copies packets from a Traffic Mirror source
+// to a Traffic Mirror target. Create a filter, and then assign it to the session
+// to define a subset of the traffic to mirror, for example all TCP traffic.
+//
+// The Traffic Mirror source and the Traffic Mirror target (monitoring appliances)
+// can be in the same VPC, or in a different VPC connected via VPC peering or
+// a transit gateway.
+//
+// By default, no traffic is mirrored. Use CreateTrafficMirrorFilter to create
+// filter rules that specify the traffic to mirror.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for Amazon Elastic Compute Cloud's
+// API operation CreateTrafficMirrorSession for usage and error information.
+// See also, https://docs.aws.amazon.com/goto/WebAPI/ec2-2016-11-15/CreateTrafficMirrorSession
+func (c *EC2) CreateTrafficMirrorSession(input *CreateTrafficMirrorSessionInput) (*CreateTrafficMirrorSessionOutput, error) {
+	req, out := c.CreateTrafficMirrorSessionRequest(input)
+	return out, req.Send()
+}
+
+// CreateTrafficMirrorSessionWithContext is the same as CreateTrafficMirrorSession with the addition of
+// the ability to pass a context and additional request options.
+//
+// See CreateTrafficMirrorSession for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *EC2) CreateTrafficMirrorSessionWithContext(ctx aws.Context, input *CreateTrafficMirrorSessionInput, opts ...request.Option) (*CreateTrafficMirrorSessionOutput, error) {
+	req, out := c.CreateTrafficMirrorSessionRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
+const opCreateTrafficMirrorTarget = "CreateTrafficMirrorTarget"
+
+// CreateTrafficMirrorTargetRequest generates a "aws/request.Request" representing the
+// client's request for the CreateTrafficMirrorTarget operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See CreateTrafficMirrorTarget for more information on using the CreateTrafficMirrorTarget
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the CreateTrafficMirrorTargetRequest method.
+//    req, resp := client.CreateTrafficMirrorTargetRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/ec2-2016-11-15/CreateTrafficMirrorTarget
+func (c *EC2) CreateTrafficMirrorTargetRequest(input *CreateTrafficMirrorTargetInput) (req *request.Request, output *CreateTrafficMirrorTargetOutput) {
+	op := &request.Operation{
+		Name:       opCreateTrafficMirrorTarget,
+		HTTPMethod: "POST",
+		HTTPPath:   "/",
+	}
+
+	if input == nil {
+		input = &CreateTrafficMirrorTargetInput{}
+	}
+
+	output = &CreateTrafficMirrorTargetOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// CreateTrafficMirrorTarget API operation for Amazon Elastic Compute Cloud.
+//
+// Creates a target for your Traffic Mirror session.
+//
+// A Traffic Mirror target is the destination for mirrored traffic. The Traffic
+// Mirror source and the Traffic Mirror target (monitoring appliances) can be
+// in the same VPC, or in different VPCs connected via VPC peering or a transit
+// gateway.
+//
+// A Traffic Mirror target can be a network interface, or a Network Load Balancer.
+//
+// To use the target in a Traffic Mirror session, use CreateTrafficMirrorSession.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for Amazon Elastic Compute Cloud's
+// API operation CreateTrafficMirrorTarget for usage and error information.
+// See also, https://docs.aws.amazon.com/goto/WebAPI/ec2-2016-11-15/CreateTrafficMirrorTarget
+func (c *EC2) CreateTrafficMirrorTarget(input *CreateTrafficMirrorTargetInput) (*CreateTrafficMirrorTargetOutput, error) {
+	req, out := c.CreateTrafficMirrorTargetRequest(input)
+	return out, req.Send()
+}
+
+// CreateTrafficMirrorTargetWithContext is the same as CreateTrafficMirrorTarget with the addition of
+// the ability to pass a context and additional request options.
+//
+// See CreateTrafficMirrorTarget for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *EC2) CreateTrafficMirrorTargetWithContext(ctx aws.Context, input *CreateTrafficMirrorTargetInput, opts ...request.Option) (*CreateTrafficMirrorTargetOutput, error) {
+	req, out := c.CreateTrafficMirrorTargetRequest(input)
 	req.SetContext(ctx)
 	req.ApplyOptions(opts...)
 	return out, req.Send()
@@ -6289,10 +6610,10 @@ func (c *EC2) CreateVolumeRequest(input *CreateVolumeInput) (req *request.Reques
 // Any AWS Marketplace product codes from the snapshot are propagated to the
 // volume.
 //
-// You can create encrypted volumes with the Encrypted parameter. Encrypted
-// volumes may only be attached to instances that support Amazon EBS encryption.
-// Volumes that are created from encrypted snapshots are also automatically
-// encrypted. For more information, see Amazon EBS Encryption (https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/EBSEncryption.html)
+// You can create encrypted volumes. Encrypted volumes must be attached to instances
+// that support Amazon EBS encryption. Volumes that are created from encrypted
+// snapshots are also automatically encrypted. For more information, see Amazon
+// EBS Encryption (https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/EBSEncryption.html)
 // in the Amazon Elastic Compute Cloud User Guide.
 //
 // You can tag your volumes during creation. For more information, see Tagging
@@ -6377,7 +6698,7 @@ func (c *EC2) CreateVpcRequest(input *CreateVpcInput) (req *request.Request, out
 // Creates a VPC with the specified IPv4 CIDR block. The smallest VPC you can
 // create uses a /28 netmask (16 IPv4 addresses), and the largest uses a /16
 // netmask (65,536 IPv4 addresses). For more information about how large to
-// make your VPC, see Your VPC and Subnets (https://docs.aws.amazon.com/AmazonVPC/latest/UserGuide/VPC_Subnets.html)
+// make your VPC, see Your VPC and Subnets (https://docs.aws.amazon.com/vpc/latest/userguide/VPC_Subnets.html)
 // in the Amazon Virtual Private Cloud User Guide.
 //
 // You can optionally request an Amazon-provided IPv6 CIDR block for the VPC.
@@ -6386,7 +6707,7 @@ func (c *EC2) CreateVpcRequest(input *CreateVpcInput) (req *request.Request, out
 //
 // By default, each instance you launch in the VPC has the default DHCP options,
 // which include only a default DNS server that we provide (AmazonProvidedDNS).
-// For more information, see DHCP Options Sets (https://docs.aws.amazon.com/AmazonVPC/latest/UserGuide/VPC_DHCP_Options.html)
+// For more information, see DHCP Options Sets (https://docs.aws.amazon.com/vpc/latest/userguide/VPC_DHCP_Options.html)
 // in the Amazon Virtual Private Cloud User Guide.
 //
 // You can specify the instance tenancy value for the VPC when you create it.
@@ -6469,7 +6790,7 @@ func (c *EC2) CreateVpcEndpointRequest(input *CreateVpcEndpointInput) (req *requ
 // Creates a VPC endpoint for a specified service. An endpoint enables you to
 // create a private connection between your VPC and the service. The service
 // may be provided by AWS, an AWS Marketplace partner, or another AWS account.
-// For more information, see VPC Endpoints (https://docs.aws.amazon.com/AmazonVPC/latest/UserGuide/vpc-endpoints.html)
+// For more information, see VPC Endpoints (https://docs.aws.amazon.com/vpc/latest/userguide/vpc-endpoints.html)
 // in the Amazon Virtual Private Cloud User Guide.
 //
 // A gateway endpoint serves as a target for a route in your route table for
@@ -6642,7 +6963,7 @@ func (c *EC2) CreateVpcEndpointServiceConfigurationRequest(input *CreateVpcEndpo
 //
 // To create an endpoint service configuration, you must first create a Network
 // Load Balancer for your service. For more information, see VPC Endpoint Services
-// (https://docs.aws.amazon.com/AmazonVPC/latest/UserGuide/endpoint-service.html)
+// (https://docs.aws.amazon.com/vpc/latest/userguide/endpoint-service.html)
 // in the Amazon Virtual Private Cloud User Guide.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
@@ -6724,7 +7045,7 @@ func (c *EC2) CreateVpcPeeringConnectionRequest(input *CreateVpcPeeringConnectio
 // CIDR blocks.
 //
 // Limitations and rules apply to a VPC peering connection. For more information,
-// see the limitations (https://docs.aws.amazon.com/AmazonVPC/latest/PeeringGuide/vpc-peering-basics.html#vpc-peering-limitations)
+// see the limitations (https://docs.aws.amazon.com/vpc/latest/peering/vpc-peering-basics.html#vpc-peering-limitations)
 // section in the VPC Peering Guide.
 //
 // The owner of the accepter VPC must accept the peering request to activate
@@ -6807,7 +7128,7 @@ func (c *EC2) CreateVpnConnectionRequest(input *CreateVpnConnectionInput) (req *
 // CreateVpnConnection API operation for Amazon Elastic Compute Cloud.
 //
 // Creates a VPN connection between an existing virtual private gateway and
-// a VPN customer gateway. The supported connection types are ipsec.1 and ipsec.2.
+// a VPN customer gateway. The supported connection types is ipsec.1.
 //
 // The response includes information that you need to give to your network administrator
 // to configure your customer gateway.
@@ -8930,6 +9251,308 @@ func (c *EC2) DeleteTags(input *DeleteTagsInput) (*DeleteTagsOutput, error) {
 // for more information on using Contexts.
 func (c *EC2) DeleteTagsWithContext(ctx aws.Context, input *DeleteTagsInput, opts ...request.Option) (*DeleteTagsOutput, error) {
 	req, out := c.DeleteTagsRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
+const opDeleteTrafficMirrorFilter = "DeleteTrafficMirrorFilter"
+
+// DeleteTrafficMirrorFilterRequest generates a "aws/request.Request" representing the
+// client's request for the DeleteTrafficMirrorFilter operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See DeleteTrafficMirrorFilter for more information on using the DeleteTrafficMirrorFilter
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the DeleteTrafficMirrorFilterRequest method.
+//    req, resp := client.DeleteTrafficMirrorFilterRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/ec2-2016-11-15/DeleteTrafficMirrorFilter
+func (c *EC2) DeleteTrafficMirrorFilterRequest(input *DeleteTrafficMirrorFilterInput) (req *request.Request, output *DeleteTrafficMirrorFilterOutput) {
+	op := &request.Operation{
+		Name:       opDeleteTrafficMirrorFilter,
+		HTTPMethod: "POST",
+		HTTPPath:   "/",
+	}
+
+	if input == nil {
+		input = &DeleteTrafficMirrorFilterInput{}
+	}
+
+	output = &DeleteTrafficMirrorFilterOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// DeleteTrafficMirrorFilter API operation for Amazon Elastic Compute Cloud.
+//
+// Deletes the specified Traffic Mirror filter.
+//
+// You cannot delete a Traffic Mirror filter that is in use by a Traffic Mirror
+// session.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for Amazon Elastic Compute Cloud's
+// API operation DeleteTrafficMirrorFilter for usage and error information.
+// See also, https://docs.aws.amazon.com/goto/WebAPI/ec2-2016-11-15/DeleteTrafficMirrorFilter
+func (c *EC2) DeleteTrafficMirrorFilter(input *DeleteTrafficMirrorFilterInput) (*DeleteTrafficMirrorFilterOutput, error) {
+	req, out := c.DeleteTrafficMirrorFilterRequest(input)
+	return out, req.Send()
+}
+
+// DeleteTrafficMirrorFilterWithContext is the same as DeleteTrafficMirrorFilter with the addition of
+// the ability to pass a context and additional request options.
+//
+// See DeleteTrafficMirrorFilter for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *EC2) DeleteTrafficMirrorFilterWithContext(ctx aws.Context, input *DeleteTrafficMirrorFilterInput, opts ...request.Option) (*DeleteTrafficMirrorFilterOutput, error) {
+	req, out := c.DeleteTrafficMirrorFilterRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
+const opDeleteTrafficMirrorFilterRule = "DeleteTrafficMirrorFilterRule"
+
+// DeleteTrafficMirrorFilterRuleRequest generates a "aws/request.Request" representing the
+// client's request for the DeleteTrafficMirrorFilterRule operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See DeleteTrafficMirrorFilterRule for more information on using the DeleteTrafficMirrorFilterRule
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the DeleteTrafficMirrorFilterRuleRequest method.
+//    req, resp := client.DeleteTrafficMirrorFilterRuleRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/ec2-2016-11-15/DeleteTrafficMirrorFilterRule
+func (c *EC2) DeleteTrafficMirrorFilterRuleRequest(input *DeleteTrafficMirrorFilterRuleInput) (req *request.Request, output *DeleteTrafficMirrorFilterRuleOutput) {
+	op := &request.Operation{
+		Name:       opDeleteTrafficMirrorFilterRule,
+		HTTPMethod: "POST",
+		HTTPPath:   "/",
+	}
+
+	if input == nil {
+		input = &DeleteTrafficMirrorFilterRuleInput{}
+	}
+
+	output = &DeleteTrafficMirrorFilterRuleOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// DeleteTrafficMirrorFilterRule API operation for Amazon Elastic Compute Cloud.
+//
+// Deletes the specified Traffic Mirror rule.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for Amazon Elastic Compute Cloud's
+// API operation DeleteTrafficMirrorFilterRule for usage and error information.
+// See also, https://docs.aws.amazon.com/goto/WebAPI/ec2-2016-11-15/DeleteTrafficMirrorFilterRule
+func (c *EC2) DeleteTrafficMirrorFilterRule(input *DeleteTrafficMirrorFilterRuleInput) (*DeleteTrafficMirrorFilterRuleOutput, error) {
+	req, out := c.DeleteTrafficMirrorFilterRuleRequest(input)
+	return out, req.Send()
+}
+
+// DeleteTrafficMirrorFilterRuleWithContext is the same as DeleteTrafficMirrorFilterRule with the addition of
+// the ability to pass a context and additional request options.
+//
+// See DeleteTrafficMirrorFilterRule for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *EC2) DeleteTrafficMirrorFilterRuleWithContext(ctx aws.Context, input *DeleteTrafficMirrorFilterRuleInput, opts ...request.Option) (*DeleteTrafficMirrorFilterRuleOutput, error) {
+	req, out := c.DeleteTrafficMirrorFilterRuleRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
+const opDeleteTrafficMirrorSession = "DeleteTrafficMirrorSession"
+
+// DeleteTrafficMirrorSessionRequest generates a "aws/request.Request" representing the
+// client's request for the DeleteTrafficMirrorSession operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See DeleteTrafficMirrorSession for more information on using the DeleteTrafficMirrorSession
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the DeleteTrafficMirrorSessionRequest method.
+//    req, resp := client.DeleteTrafficMirrorSessionRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/ec2-2016-11-15/DeleteTrafficMirrorSession
+func (c *EC2) DeleteTrafficMirrorSessionRequest(input *DeleteTrafficMirrorSessionInput) (req *request.Request, output *DeleteTrafficMirrorSessionOutput) {
+	op := &request.Operation{
+		Name:       opDeleteTrafficMirrorSession,
+		HTTPMethod: "POST",
+		HTTPPath:   "/",
+	}
+
+	if input == nil {
+		input = &DeleteTrafficMirrorSessionInput{}
+	}
+
+	output = &DeleteTrafficMirrorSessionOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// DeleteTrafficMirrorSession API operation for Amazon Elastic Compute Cloud.
+//
+// Deletes the specified Traffic Mirror session.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for Amazon Elastic Compute Cloud's
+// API operation DeleteTrafficMirrorSession for usage and error information.
+// See also, https://docs.aws.amazon.com/goto/WebAPI/ec2-2016-11-15/DeleteTrafficMirrorSession
+func (c *EC2) DeleteTrafficMirrorSession(input *DeleteTrafficMirrorSessionInput) (*DeleteTrafficMirrorSessionOutput, error) {
+	req, out := c.DeleteTrafficMirrorSessionRequest(input)
+	return out, req.Send()
+}
+
+// DeleteTrafficMirrorSessionWithContext is the same as DeleteTrafficMirrorSession with the addition of
+// the ability to pass a context and additional request options.
+//
+// See DeleteTrafficMirrorSession for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *EC2) DeleteTrafficMirrorSessionWithContext(ctx aws.Context, input *DeleteTrafficMirrorSessionInput, opts ...request.Option) (*DeleteTrafficMirrorSessionOutput, error) {
+	req, out := c.DeleteTrafficMirrorSessionRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
+const opDeleteTrafficMirrorTarget = "DeleteTrafficMirrorTarget"
+
+// DeleteTrafficMirrorTargetRequest generates a "aws/request.Request" representing the
+// client's request for the DeleteTrafficMirrorTarget operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See DeleteTrafficMirrorTarget for more information on using the DeleteTrafficMirrorTarget
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the DeleteTrafficMirrorTargetRequest method.
+//    req, resp := client.DeleteTrafficMirrorTargetRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/ec2-2016-11-15/DeleteTrafficMirrorTarget
+func (c *EC2) DeleteTrafficMirrorTargetRequest(input *DeleteTrafficMirrorTargetInput) (req *request.Request, output *DeleteTrafficMirrorTargetOutput) {
+	op := &request.Operation{
+		Name:       opDeleteTrafficMirrorTarget,
+		HTTPMethod: "POST",
+		HTTPPath:   "/",
+	}
+
+	if input == nil {
+		input = &DeleteTrafficMirrorTargetInput{}
+	}
+
+	output = &DeleteTrafficMirrorTargetOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// DeleteTrafficMirrorTarget API operation for Amazon Elastic Compute Cloud.
+//
+// Deletes the specified Traffic Mirror target.
+//
+// You cannot delete a Traffic Mirror target that is in use by a Traffic Mirror
+// session.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for Amazon Elastic Compute Cloud's
+// API operation DeleteTrafficMirrorTarget for usage and error information.
+// See also, https://docs.aws.amazon.com/goto/WebAPI/ec2-2016-11-15/DeleteTrafficMirrorTarget
+func (c *EC2) DeleteTrafficMirrorTarget(input *DeleteTrafficMirrorTargetInput) (*DeleteTrafficMirrorTargetOutput, error) {
+	req, out := c.DeleteTrafficMirrorTargetRequest(input)
+	return out, req.Send()
+}
+
+// DeleteTrafficMirrorTargetWithContext is the same as DeleteTrafficMirrorTarget with the addition of
+// the ability to pass a context and additional request options.
+//
+// See DeleteTrafficMirrorTarget for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *EC2) DeleteTrafficMirrorTargetWithContext(ctx aws.Context, input *DeleteTrafficMirrorTargetInput, opts ...request.Option) (*DeleteTrafficMirrorTargetOutput, error) {
+	req, out := c.DeleteTrafficMirrorTargetRequest(input)
 	req.SetContext(ctx)
 	req.ApplyOptions(opts...)
 	return out, req.Send()
@@ -11775,7 +12398,7 @@ func (c *EC2) DescribeDhcpOptionsRequest(input *DescribeDhcpOptionsInput) (req *
 //
 // Describes one or more of your DHCP options sets.
 //
-// For more information, see DHCP Options Sets (https://docs.aws.amazon.com/AmazonVPC/latest/UserGuide/VPC_DHCP_Options.html)
+// For more information, see DHCP Options Sets (https://docs.aws.amazon.com/vpc/latest/userguide/VPC_DHCP_Options.html)
 // in the Amazon Virtual Private Cloud User Guide.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
@@ -14318,7 +14941,7 @@ func (c *EC2) DescribeInstancesRequest(input *DescribeInstancesInput) (req *requ
 
 // DescribeInstances API operation for Amazon Elastic Compute Cloud.
 //
-// Describes the specified instances or all of your instances.
+// Describes the specified instances or all of AWS account's instances.
 //
 // If you specify one or more instance IDs, Amazon EC2 returns information for
 // those instances. If you do not specify instance IDs, Amazon EC2 returns information
@@ -15195,7 +15818,7 @@ func (c *EC2) DescribeNetworkAclsRequest(input *DescribeNetworkAclsInput) (req *
 //
 // Describes one or more of your network ACLs.
 //
-// For more information, see Network ACLs (https://docs.aws.amazon.com/AmazonVPC/latest/UserGuide/VPC_ACLs.html)
+// For more information, see Network ACLs (https://docs.aws.amazon.com/vpc/latest/userguide/VPC_ACLs.html)
 // in the Amazon Virtual Private Cloud User Guide.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
@@ -16140,14 +16763,14 @@ func (c *EC2) DescribeRegionsRequest(input *DescribeRegionsInput) (req *request.
 
 // DescribeRegions API operation for Amazon Elastic Compute Cloud.
 //
-// Describes the Regions that are currently available to you. The API returns
-// a list of all the Regions, including Regions that are disabled for your account.
-// For information about enabling Regions for your account, see Enabling and
-// Disabling Regions (https://docs.aws.amazon.com/awsaccountbilling/latest/aboutv2/manage-account-payment.html#manage-account-payment-enable-disable-regions)
-// in the AWS Billing and Cost Management User Guide.
+// Describes the Regions that are enabled for your account, or all Regions.
 //
 // For a list of the Regions supported by Amazon EC2, see Regions and Endpoints
 // (https://docs.aws.amazon.com/general/latest/gr/rande.html#ec2_region).
+//
+// For information about enabling and disabling Regions for your account, see
+// Managing AWS Regions (https://docs.aws.amazon.com/general/latest/gr/rande-manage.html)
+// in the AWS General Reference.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -16683,7 +17306,7 @@ func (c *EC2) DescribeRouteTablesRequest(input *DescribeRouteTablesInput) (req *
 // with the main route table. This command does not return the subnet ID for
 // implicit associations.
 //
-// For more information, see Route Tables (https://docs.aws.amazon.com/AmazonVPC/latest/UserGuide/VPC_Route_Tables.html)
+// For more information, see Route Tables (https://docs.aws.amazon.com/vpc/latest/userguide/VPC_Route_Tables.html)
 // in the Amazon Virtual Private Cloud User Guide.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
@@ -18329,7 +18952,7 @@ func (c *EC2) DescribeSubnetsRequest(input *DescribeSubnetsInput) (req *request.
 //
 // Describes one or more of your subnets.
 //
-// For more information, see Your VPC and Subnets (https://docs.aws.amazon.com/AmazonVPC/latest/UserGuide/VPC_Subnets.html)
+// For more information, see Your VPC and Subnets (https://docs.aws.amazon.com/vpc/latest/userguide/VPC_Subnets.html)
 // in the Amazon Virtual Private Cloud User Guide.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
@@ -18539,6 +19162,397 @@ func (c *EC2) DescribeTagsPagesWithContext(ctx aws.Context, input *DescribeTagsI
 	cont := true
 	for p.Next() && cont {
 		cont = fn(p.Page().(*DescribeTagsOutput), !p.HasNextPage())
+	}
+	return p.Err()
+}
+
+const opDescribeTrafficMirrorFilters = "DescribeTrafficMirrorFilters"
+
+// DescribeTrafficMirrorFiltersRequest generates a "aws/request.Request" representing the
+// client's request for the DescribeTrafficMirrorFilters operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See DescribeTrafficMirrorFilters for more information on using the DescribeTrafficMirrorFilters
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the DescribeTrafficMirrorFiltersRequest method.
+//    req, resp := client.DescribeTrafficMirrorFiltersRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/ec2-2016-11-15/DescribeTrafficMirrorFilters
+func (c *EC2) DescribeTrafficMirrorFiltersRequest(input *DescribeTrafficMirrorFiltersInput) (req *request.Request, output *DescribeTrafficMirrorFiltersOutput) {
+	op := &request.Operation{
+		Name:       opDescribeTrafficMirrorFilters,
+		HTTPMethod: "POST",
+		HTTPPath:   "/",
+		Paginator: &request.Paginator{
+			InputTokens:     []string{"NextToken"},
+			OutputTokens:    []string{"NextToken"},
+			LimitToken:      "MaxResults",
+			TruncationToken: "",
+		},
+	}
+
+	if input == nil {
+		input = &DescribeTrafficMirrorFiltersInput{}
+	}
+
+	output = &DescribeTrafficMirrorFiltersOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// DescribeTrafficMirrorFilters API operation for Amazon Elastic Compute Cloud.
+//
+// Describes one or more Traffic Mirror filters.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for Amazon Elastic Compute Cloud's
+// API operation DescribeTrafficMirrorFilters for usage and error information.
+// See also, https://docs.aws.amazon.com/goto/WebAPI/ec2-2016-11-15/DescribeTrafficMirrorFilters
+func (c *EC2) DescribeTrafficMirrorFilters(input *DescribeTrafficMirrorFiltersInput) (*DescribeTrafficMirrorFiltersOutput, error) {
+	req, out := c.DescribeTrafficMirrorFiltersRequest(input)
+	return out, req.Send()
+}
+
+// DescribeTrafficMirrorFiltersWithContext is the same as DescribeTrafficMirrorFilters with the addition of
+// the ability to pass a context and additional request options.
+//
+// See DescribeTrafficMirrorFilters for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *EC2) DescribeTrafficMirrorFiltersWithContext(ctx aws.Context, input *DescribeTrafficMirrorFiltersInput, opts ...request.Option) (*DescribeTrafficMirrorFiltersOutput, error) {
+	req, out := c.DescribeTrafficMirrorFiltersRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
+// DescribeTrafficMirrorFiltersPages iterates over the pages of a DescribeTrafficMirrorFilters operation,
+// calling the "fn" function with the response data for each page. To stop
+// iterating, return false from the fn function.
+//
+// See DescribeTrafficMirrorFilters method for more information on how to use this operation.
+//
+// Note: This operation can generate multiple requests to a service.
+//
+//    // Example iterating over at most 3 pages of a DescribeTrafficMirrorFilters operation.
+//    pageNum := 0
+//    err := client.DescribeTrafficMirrorFiltersPages(params,
+//        func(page *ec2.DescribeTrafficMirrorFiltersOutput, lastPage bool) bool {
+//            pageNum++
+//            fmt.Println(page)
+//            return pageNum <= 3
+//        })
+//
+func (c *EC2) DescribeTrafficMirrorFiltersPages(input *DescribeTrafficMirrorFiltersInput, fn func(*DescribeTrafficMirrorFiltersOutput, bool) bool) error {
+	return c.DescribeTrafficMirrorFiltersPagesWithContext(aws.BackgroundContext(), input, fn)
+}
+
+// DescribeTrafficMirrorFiltersPagesWithContext same as DescribeTrafficMirrorFiltersPages except
+// it takes a Context and allows setting request options on the pages.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *EC2) DescribeTrafficMirrorFiltersPagesWithContext(ctx aws.Context, input *DescribeTrafficMirrorFiltersInput, fn func(*DescribeTrafficMirrorFiltersOutput, bool) bool, opts ...request.Option) error {
+	p := request.Pagination{
+		NewRequest: func() (*request.Request, error) {
+			var inCpy *DescribeTrafficMirrorFiltersInput
+			if input != nil {
+				tmp := *input
+				inCpy = &tmp
+			}
+			req, _ := c.DescribeTrafficMirrorFiltersRequest(inCpy)
+			req.SetContext(ctx)
+			req.ApplyOptions(opts...)
+			return req, nil
+		},
+	}
+
+	cont := true
+	for p.Next() && cont {
+		cont = fn(p.Page().(*DescribeTrafficMirrorFiltersOutput), !p.HasNextPage())
+	}
+	return p.Err()
+}
+
+const opDescribeTrafficMirrorSessions = "DescribeTrafficMirrorSessions"
+
+// DescribeTrafficMirrorSessionsRequest generates a "aws/request.Request" representing the
+// client's request for the DescribeTrafficMirrorSessions operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See DescribeTrafficMirrorSessions for more information on using the DescribeTrafficMirrorSessions
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the DescribeTrafficMirrorSessionsRequest method.
+//    req, resp := client.DescribeTrafficMirrorSessionsRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/ec2-2016-11-15/DescribeTrafficMirrorSessions
+func (c *EC2) DescribeTrafficMirrorSessionsRequest(input *DescribeTrafficMirrorSessionsInput) (req *request.Request, output *DescribeTrafficMirrorSessionsOutput) {
+	op := &request.Operation{
+		Name:       opDescribeTrafficMirrorSessions,
+		HTTPMethod: "POST",
+		HTTPPath:   "/",
+		Paginator: &request.Paginator{
+			InputTokens:     []string{"NextToken"},
+			OutputTokens:    []string{"NextToken"},
+			LimitToken:      "MaxResults",
+			TruncationToken: "",
+		},
+	}
+
+	if input == nil {
+		input = &DescribeTrafficMirrorSessionsInput{}
+	}
+
+	output = &DescribeTrafficMirrorSessionsOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// DescribeTrafficMirrorSessions API operation for Amazon Elastic Compute Cloud.
+//
+// Describes one or more Traffic Mirror sessions. By default, all Traffic Mirror
+// sessions are described. Alternatively, you can filter the results.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for Amazon Elastic Compute Cloud's
+// API operation DescribeTrafficMirrorSessions for usage and error information.
+// See also, https://docs.aws.amazon.com/goto/WebAPI/ec2-2016-11-15/DescribeTrafficMirrorSessions
+func (c *EC2) DescribeTrafficMirrorSessions(input *DescribeTrafficMirrorSessionsInput) (*DescribeTrafficMirrorSessionsOutput, error) {
+	req, out := c.DescribeTrafficMirrorSessionsRequest(input)
+	return out, req.Send()
+}
+
+// DescribeTrafficMirrorSessionsWithContext is the same as DescribeTrafficMirrorSessions with the addition of
+// the ability to pass a context and additional request options.
+//
+// See DescribeTrafficMirrorSessions for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *EC2) DescribeTrafficMirrorSessionsWithContext(ctx aws.Context, input *DescribeTrafficMirrorSessionsInput, opts ...request.Option) (*DescribeTrafficMirrorSessionsOutput, error) {
+	req, out := c.DescribeTrafficMirrorSessionsRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
+// DescribeTrafficMirrorSessionsPages iterates over the pages of a DescribeTrafficMirrorSessions operation,
+// calling the "fn" function with the response data for each page. To stop
+// iterating, return false from the fn function.
+//
+// See DescribeTrafficMirrorSessions method for more information on how to use this operation.
+//
+// Note: This operation can generate multiple requests to a service.
+//
+//    // Example iterating over at most 3 pages of a DescribeTrafficMirrorSessions operation.
+//    pageNum := 0
+//    err := client.DescribeTrafficMirrorSessionsPages(params,
+//        func(page *ec2.DescribeTrafficMirrorSessionsOutput, lastPage bool) bool {
+//            pageNum++
+//            fmt.Println(page)
+//            return pageNum <= 3
+//        })
+//
+func (c *EC2) DescribeTrafficMirrorSessionsPages(input *DescribeTrafficMirrorSessionsInput, fn func(*DescribeTrafficMirrorSessionsOutput, bool) bool) error {
+	return c.DescribeTrafficMirrorSessionsPagesWithContext(aws.BackgroundContext(), input, fn)
+}
+
+// DescribeTrafficMirrorSessionsPagesWithContext same as DescribeTrafficMirrorSessionsPages except
+// it takes a Context and allows setting request options on the pages.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *EC2) DescribeTrafficMirrorSessionsPagesWithContext(ctx aws.Context, input *DescribeTrafficMirrorSessionsInput, fn func(*DescribeTrafficMirrorSessionsOutput, bool) bool, opts ...request.Option) error {
+	p := request.Pagination{
+		NewRequest: func() (*request.Request, error) {
+			var inCpy *DescribeTrafficMirrorSessionsInput
+			if input != nil {
+				tmp := *input
+				inCpy = &tmp
+			}
+			req, _ := c.DescribeTrafficMirrorSessionsRequest(inCpy)
+			req.SetContext(ctx)
+			req.ApplyOptions(opts...)
+			return req, nil
+		},
+	}
+
+	cont := true
+	for p.Next() && cont {
+		cont = fn(p.Page().(*DescribeTrafficMirrorSessionsOutput), !p.HasNextPage())
+	}
+	return p.Err()
+}
+
+const opDescribeTrafficMirrorTargets = "DescribeTrafficMirrorTargets"
+
+// DescribeTrafficMirrorTargetsRequest generates a "aws/request.Request" representing the
+// client's request for the DescribeTrafficMirrorTargets operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See DescribeTrafficMirrorTargets for more information on using the DescribeTrafficMirrorTargets
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the DescribeTrafficMirrorTargetsRequest method.
+//    req, resp := client.DescribeTrafficMirrorTargetsRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/ec2-2016-11-15/DescribeTrafficMirrorTargets
+func (c *EC2) DescribeTrafficMirrorTargetsRequest(input *DescribeTrafficMirrorTargetsInput) (req *request.Request, output *DescribeTrafficMirrorTargetsOutput) {
+	op := &request.Operation{
+		Name:       opDescribeTrafficMirrorTargets,
+		HTTPMethod: "POST",
+		HTTPPath:   "/",
+		Paginator: &request.Paginator{
+			InputTokens:     []string{"NextToken"},
+			OutputTokens:    []string{"NextToken"},
+			LimitToken:      "MaxResults",
+			TruncationToken: "",
+		},
+	}
+
+	if input == nil {
+		input = &DescribeTrafficMirrorTargetsInput{}
+	}
+
+	output = &DescribeTrafficMirrorTargetsOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// DescribeTrafficMirrorTargets API operation for Amazon Elastic Compute Cloud.
+//
+// Information about one or more Traffic Mirror targets.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for Amazon Elastic Compute Cloud's
+// API operation DescribeTrafficMirrorTargets for usage and error information.
+// See also, https://docs.aws.amazon.com/goto/WebAPI/ec2-2016-11-15/DescribeTrafficMirrorTargets
+func (c *EC2) DescribeTrafficMirrorTargets(input *DescribeTrafficMirrorTargetsInput) (*DescribeTrafficMirrorTargetsOutput, error) {
+	req, out := c.DescribeTrafficMirrorTargetsRequest(input)
+	return out, req.Send()
+}
+
+// DescribeTrafficMirrorTargetsWithContext is the same as DescribeTrafficMirrorTargets with the addition of
+// the ability to pass a context and additional request options.
+//
+// See DescribeTrafficMirrorTargets for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *EC2) DescribeTrafficMirrorTargetsWithContext(ctx aws.Context, input *DescribeTrafficMirrorTargetsInput, opts ...request.Option) (*DescribeTrafficMirrorTargetsOutput, error) {
+	req, out := c.DescribeTrafficMirrorTargetsRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
+// DescribeTrafficMirrorTargetsPages iterates over the pages of a DescribeTrafficMirrorTargets operation,
+// calling the "fn" function with the response data for each page. To stop
+// iterating, return false from the fn function.
+//
+// See DescribeTrafficMirrorTargets method for more information on how to use this operation.
+//
+// Note: This operation can generate multiple requests to a service.
+//
+//    // Example iterating over at most 3 pages of a DescribeTrafficMirrorTargets operation.
+//    pageNum := 0
+//    err := client.DescribeTrafficMirrorTargetsPages(params,
+//        func(page *ec2.DescribeTrafficMirrorTargetsOutput, lastPage bool) bool {
+//            pageNum++
+//            fmt.Println(page)
+//            return pageNum <= 3
+//        })
+//
+func (c *EC2) DescribeTrafficMirrorTargetsPages(input *DescribeTrafficMirrorTargetsInput, fn func(*DescribeTrafficMirrorTargetsOutput, bool) bool) error {
+	return c.DescribeTrafficMirrorTargetsPagesWithContext(aws.BackgroundContext(), input, fn)
+}
+
+// DescribeTrafficMirrorTargetsPagesWithContext same as DescribeTrafficMirrorTargetsPages except
+// it takes a Context and allows setting request options on the pages.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *EC2) DescribeTrafficMirrorTargetsPagesWithContext(ctx aws.Context, input *DescribeTrafficMirrorTargetsInput, fn func(*DescribeTrafficMirrorTargetsOutput, bool) bool, opts ...request.Option) error {
+	p := request.Pagination{
+		NewRequest: func() (*request.Request, error) {
+			var inCpy *DescribeTrafficMirrorTargetsInput
+			if input != nil {
+				tmp := *input
+				inCpy = &tmp
+			}
+			req, _ := c.DescribeTrafficMirrorTargetsRequest(inCpy)
+			req.SetContext(ctx)
+			req.ApplyOptions(opts...)
+			return req, nil
+		},
+	}
+
+	cont := true
+	for p.Next() && cont {
+		cont = fn(p.Page().(*DescribeTrafficMirrorTargetsOutput), !p.HasNextPage())
 	}
 	return p.Err()
 }
@@ -21462,16 +22476,16 @@ func (c *EC2) DisableEbsEncryptionByDefaultRequest(input *DisableEbsEncryptionBy
 
 // DisableEbsEncryptionByDefault API operation for Amazon Elastic Compute Cloud.
 //
-// Disables default encryption for EBS volumes that are created in your account
-// in the current region.
+// Disables EBS encryption by default for your account in the current Region.
 //
-// Call this API if you have enabled default encryption using EnableEbsEncryptionByDefault
-// and want to disable default EBS encryption. Once default EBS encryption is
-// disabled, you can still create an encrypted volume by setting encrypted to
-// true in the API call that creates the volume.
+// After you disable encryption by default, you can still create encrypted volumes
+// by enabling encryption when you create each volume.
 //
-// Disabling default EBS encryption will not change the encryption status of
-// any of your existing volumes.
+// Disabling encryption by default does not change the encryption status of
+// your existing volumes.
+//
+// For more information, see Amazon EBS Encryption (https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/EBSEncryption.html)
+// in the Amazon Elastic Compute Cloud User Guide.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -22097,7 +23111,7 @@ func (c *EC2) DisassociateRouteTableRequest(input *DisassociateRouteTableInput) 
 //
 // After you perform this action, the subnet no longer uses the routes in the
 // route table. Instead, it uses the routes in the VPC's main route table. For
-// more information about route tables, see Route Tables (https://docs.aws.amazon.com/AmazonVPC/latest/UserGuide/VPC_Route_Tables.html)
+// more information about route tables, see Route Tables (https://docs.aws.amazon.com/vpc/latest/userguide/VPC_Route_Tables.html)
 // in the Amazon Virtual Private Cloud User Guide.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
@@ -22402,32 +23416,23 @@ func (c *EC2) EnableEbsEncryptionByDefaultRequest(input *EnableEbsEncryptionByDe
 
 // EnableEbsEncryptionByDefault API operation for Amazon Elastic Compute Cloud.
 //
-// Enables default encryption for EBS volumes that are created in your account
-// in the current region.
+// Enables EBS encryption by default for your account in the current Region.
 //
-// Once encryption is enabled with this action, EBS volumes that are created
-// in your account will always be encrypted even if encryption is not specified
-// at launch. This setting overrides the encrypted setting to true in all API
-// calls that create EBS volumes in your account. A volume will be encrypted
-// even if you specify encryption to be false in the API call that creates the
-// volume.
+// After you enable encryption by default, the EBS volumes that you create are
+// are always encrypted, either using the default CMK or the CMK that you specified
+// when you created each volume. For more information, see Amazon EBS Encryption
+// (https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/EBSEncryption.html)
+// in the Amazon Elastic Compute Cloud User Guide.
 //
-// If you do not specify a customer master key (CMK) in the API call that creates
-// the EBS volume, then the volume is encrypted to your AWS account's default
-// CMK.
+// You can specify the default CMK for encryption by default using ModifyEbsDefaultKmsKeyId
+// or ResetEbsDefaultKmsKeyId.
 //
-// You can specify a default CMK of your choice using ModifyEbsDefaultKmsKeyId.
+// Enabling encryption by default has no effect on the encryption status of
+// your existing volumes.
 //
-// Enabling default encryption for EBS volumes has no effect on existing unencrypted
-// volumes in your account. Encrypting the data in these requires manual action.
-// You can either create an encrypted snapshot of an unencrypted volume, or
-// encrypt a copy of an unencrypted snapshot. Any volume restored from an encrypted
-// snapshot is also encrypted. For more information, see Amazon EBS Snapshots
-// (https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/EBSSnapshots.html).
-//
-// After EBS encryption by default is enabled, you can no longer launch older-generation
-// instance types that do not support encryption. For more information, see
-// Supported Instance Types (https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/EBSEncryption.html#EBSEncryption_supported_instances).
+// After you enable encryption by default, you can no longer launch instances
+// using instance types that do not support encryption. For more information,
+// see Supported Instance Types (https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/EBSEncryption.html#EBSEncryption_supported_instances).
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -23072,6 +24077,78 @@ func (c *EC2) ExportTransitGatewayRoutesWithContext(ctx aws.Context, input *Expo
 	return out, req.Send()
 }
 
+const opGetCapacityReservationUsage = "GetCapacityReservationUsage"
+
+// GetCapacityReservationUsageRequest generates a "aws/request.Request" representing the
+// client's request for the GetCapacityReservationUsage operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See GetCapacityReservationUsage for more information on using the GetCapacityReservationUsage
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the GetCapacityReservationUsageRequest method.
+//    req, resp := client.GetCapacityReservationUsageRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/ec2-2016-11-15/GetCapacityReservationUsage
+func (c *EC2) GetCapacityReservationUsageRequest(input *GetCapacityReservationUsageInput) (req *request.Request, output *GetCapacityReservationUsageOutput) {
+	op := &request.Operation{
+		Name:       opGetCapacityReservationUsage,
+		HTTPMethod: "POST",
+		HTTPPath:   "/",
+	}
+
+	if input == nil {
+		input = &GetCapacityReservationUsageInput{}
+	}
+
+	output = &GetCapacityReservationUsageOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// GetCapacityReservationUsage API operation for Amazon Elastic Compute Cloud.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for Amazon Elastic Compute Cloud's
+// API operation GetCapacityReservationUsage for usage and error information.
+// See also, https://docs.aws.amazon.com/goto/WebAPI/ec2-2016-11-15/GetCapacityReservationUsage
+func (c *EC2) GetCapacityReservationUsage(input *GetCapacityReservationUsageInput) (*GetCapacityReservationUsageOutput, error) {
+	req, out := c.GetCapacityReservationUsageRequest(input)
+	return out, req.Send()
+}
+
+// GetCapacityReservationUsageWithContext is the same as GetCapacityReservationUsage with the addition of
+// the ability to pass a context and additional request options.
+//
+// See GetCapacityReservationUsage for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *EC2) GetCapacityReservationUsageWithContext(ctx aws.Context, input *GetCapacityReservationUsageInput, opts ...request.Option) (*GetCapacityReservationUsageOutput, error) {
+	req, out := c.GetCapacityReservationUsageRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
 const opGetConsoleOutput = "GetConsoleOutput"
 
 // GetConsoleOutputRequest generates a "aws/request.Request" representing the
@@ -23282,9 +24359,12 @@ func (c *EC2) GetEbsDefaultKmsKeyIdRequest(input *GetEbsDefaultKmsKeyIdInput) (r
 
 // GetEbsDefaultKmsKeyId API operation for Amazon Elastic Compute Cloud.
 //
-// Describes the default customer master key (CMK) that your account uses to
-// encrypt EBS volumes if you don’t specify a CMK in the API call. You can
-// change this default using ModifyEbsDefaultKmsKeyId.
+// Describes the default customer master key (CMK) for EBS encryption by default
+// for your account in this Region. You can change the default CMK for encryption
+// by default using ModifyEbsDefaultKmsKeyId or ResetEbsDefaultKmsKeyId.
+//
+// For more information, see Amazon EBS Encryption (https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/EBSEncryption.html)
+// in the Amazon Elastic Compute Cloud User Guide.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -23358,8 +24438,11 @@ func (c *EC2) GetEbsEncryptionByDefaultRequest(input *GetEbsEncryptionByDefaultI
 
 // GetEbsEncryptionByDefault API operation for Amazon Elastic Compute Cloud.
 //
-// Describes whether default EBS encryption is enabled for your account in the
-// current region.
+// Describes whether EBS encryption by default is enabled for your account in
+// the current Region.
+//
+// For more information, see Amazon EBS Encryption (https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/EBSEncryption.html)
+// in the Amazon Elastic Compute Cloud User Guide.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -24772,16 +25855,19 @@ func (c *EC2) ModifyEbsDefaultKmsKeyIdRequest(input *ModifyEbsDefaultKmsKeyIdInp
 
 // ModifyEbsDefaultKmsKeyId API operation for Amazon Elastic Compute Cloud.
 //
-// Changes the default customer master key (CMK) that your account uses to encrypt
-// EBS volumes if you don't specify a CMK in the API call.
+// Changes the default customer master key (CMK) for EBS encryption by default
+// for your account in this Region.
 //
-// Your account has an AWS-managed default CMK that is used for encrypting an
-// EBS volume when no CMK is specified in the API call that creates the volume.
-// By calling this API, you can specify a customer-managed CMK to use in place
-// of the AWS-managed default CMK.
+// AWS creates a unique AWS managed CMK in each Region for use with encryption
+// by default. If you change the default CMK to a customer managed CMK, it is
+// used instead of the AWS managed CMK. To reset the default CMK to the AWS
+// managed CMK for EBS, use ResetEbsDefaultKmsKeyId.
 //
-// Note: Deleting or disabling the custom CMK that you have specified to act
-// as your default CMK will result in instance-launch failures.
+// If you delete or disable the customer managed CMK that you specified for
+// use with encryption by default, your instances will fail to launch.
+//
+// For more information, see Amazon EBS Encryption (https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/EBSEncryption.html)
+// in the Amazon Elastic Compute Cloud User Guide.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -26009,9 +27095,8 @@ func (c *EC2) ModifySnapshotAttributeRequest(input *ModifySnapshotAttributeInput
 //
 // Adds or removes permission settings for the specified snapshot. You may add
 // or remove specified AWS account IDs from a snapshot's list of create volume
-// permissions, but you cannot do both in a single API call. If you need to
-// both add and remove account IDs for a snapshot, you must use multiple API
-// calls.
+// permissions, but you cannot do both in a single operation. If you need to
+// both add and remove account IDs for a snapshot, you must use multiple operations.
 //
 // Encrypted snapshots and snapshots with AWS Marketplace product codes cannot
 // be made public. Snapshots encrypted with your default CMK cannot be shared
@@ -26222,6 +27307,241 @@ func (c *EC2) ModifySubnetAttributeWithContext(ctx aws.Context, input *ModifySub
 	return out, req.Send()
 }
 
+const opModifyTrafficMirrorFilterNetworkServices = "ModifyTrafficMirrorFilterNetworkServices"
+
+// ModifyTrafficMirrorFilterNetworkServicesRequest generates a "aws/request.Request" representing the
+// client's request for the ModifyTrafficMirrorFilterNetworkServices operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See ModifyTrafficMirrorFilterNetworkServices for more information on using the ModifyTrafficMirrorFilterNetworkServices
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the ModifyTrafficMirrorFilterNetworkServicesRequest method.
+//    req, resp := client.ModifyTrafficMirrorFilterNetworkServicesRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/ec2-2016-11-15/ModifyTrafficMirrorFilterNetworkServices
+func (c *EC2) ModifyTrafficMirrorFilterNetworkServicesRequest(input *ModifyTrafficMirrorFilterNetworkServicesInput) (req *request.Request, output *ModifyTrafficMirrorFilterNetworkServicesOutput) {
+	op := &request.Operation{
+		Name:       opModifyTrafficMirrorFilterNetworkServices,
+		HTTPMethod: "POST",
+		HTTPPath:   "/",
+	}
+
+	if input == nil {
+		input = &ModifyTrafficMirrorFilterNetworkServicesInput{}
+	}
+
+	output = &ModifyTrafficMirrorFilterNetworkServicesOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// ModifyTrafficMirrorFilterNetworkServices API operation for Amazon Elastic Compute Cloud.
+//
+// Allows or restricts mirroring network services.
+//
+// By default, Amazon DNS network services are not eligible for Traffic Mirror.
+// Use AddNetworkServices to add network services to a Traffic Mirror filter.
+// When a network service is added to the Traffic Mirror filter, all traffic
+// related to that network service will be mirrored. When you no longer want
+// to mirror network services, use RemoveNetworkServices to remove the network
+// services from the Traffic Mirror filter.
+//
+// FFor information about filter rule properties, see Network Services (https://docs.aws.amazon.com/vpc/latest/mirroring/traffic-mirroring-considerations.html#traffic-mirroring-network-services)
+// in the Traffic Mirroring User Guide .
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for Amazon Elastic Compute Cloud's
+// API operation ModifyTrafficMirrorFilterNetworkServices for usage and error information.
+// See also, https://docs.aws.amazon.com/goto/WebAPI/ec2-2016-11-15/ModifyTrafficMirrorFilterNetworkServices
+func (c *EC2) ModifyTrafficMirrorFilterNetworkServices(input *ModifyTrafficMirrorFilterNetworkServicesInput) (*ModifyTrafficMirrorFilterNetworkServicesOutput, error) {
+	req, out := c.ModifyTrafficMirrorFilterNetworkServicesRequest(input)
+	return out, req.Send()
+}
+
+// ModifyTrafficMirrorFilterNetworkServicesWithContext is the same as ModifyTrafficMirrorFilterNetworkServices with the addition of
+// the ability to pass a context and additional request options.
+//
+// See ModifyTrafficMirrorFilterNetworkServices for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *EC2) ModifyTrafficMirrorFilterNetworkServicesWithContext(ctx aws.Context, input *ModifyTrafficMirrorFilterNetworkServicesInput, opts ...request.Option) (*ModifyTrafficMirrorFilterNetworkServicesOutput, error) {
+	req, out := c.ModifyTrafficMirrorFilterNetworkServicesRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
+const opModifyTrafficMirrorFilterRule = "ModifyTrafficMirrorFilterRule"
+
+// ModifyTrafficMirrorFilterRuleRequest generates a "aws/request.Request" representing the
+// client's request for the ModifyTrafficMirrorFilterRule operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See ModifyTrafficMirrorFilterRule for more information on using the ModifyTrafficMirrorFilterRule
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the ModifyTrafficMirrorFilterRuleRequest method.
+//    req, resp := client.ModifyTrafficMirrorFilterRuleRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/ec2-2016-11-15/ModifyTrafficMirrorFilterRule
+func (c *EC2) ModifyTrafficMirrorFilterRuleRequest(input *ModifyTrafficMirrorFilterRuleInput) (req *request.Request, output *ModifyTrafficMirrorFilterRuleOutput) {
+	op := &request.Operation{
+		Name:       opModifyTrafficMirrorFilterRule,
+		HTTPMethod: "POST",
+		HTTPPath:   "/",
+	}
+
+	if input == nil {
+		input = &ModifyTrafficMirrorFilterRuleInput{}
+	}
+
+	output = &ModifyTrafficMirrorFilterRuleOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// ModifyTrafficMirrorFilterRule API operation for Amazon Elastic Compute Cloud.
+//
+// Modifies the specified Traffic Mirror rule.
+//
+// DestinationCidrBlock and SourceCidrBlock must both be an IPv4 range or an
+// IPv6 range.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for Amazon Elastic Compute Cloud's
+// API operation ModifyTrafficMirrorFilterRule for usage and error information.
+// See also, https://docs.aws.amazon.com/goto/WebAPI/ec2-2016-11-15/ModifyTrafficMirrorFilterRule
+func (c *EC2) ModifyTrafficMirrorFilterRule(input *ModifyTrafficMirrorFilterRuleInput) (*ModifyTrafficMirrorFilterRuleOutput, error) {
+	req, out := c.ModifyTrafficMirrorFilterRuleRequest(input)
+	return out, req.Send()
+}
+
+// ModifyTrafficMirrorFilterRuleWithContext is the same as ModifyTrafficMirrorFilterRule with the addition of
+// the ability to pass a context and additional request options.
+//
+// See ModifyTrafficMirrorFilterRule for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *EC2) ModifyTrafficMirrorFilterRuleWithContext(ctx aws.Context, input *ModifyTrafficMirrorFilterRuleInput, opts ...request.Option) (*ModifyTrafficMirrorFilterRuleOutput, error) {
+	req, out := c.ModifyTrafficMirrorFilterRuleRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
+const opModifyTrafficMirrorSession = "ModifyTrafficMirrorSession"
+
+// ModifyTrafficMirrorSessionRequest generates a "aws/request.Request" representing the
+// client's request for the ModifyTrafficMirrorSession operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See ModifyTrafficMirrorSession for more information on using the ModifyTrafficMirrorSession
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the ModifyTrafficMirrorSessionRequest method.
+//    req, resp := client.ModifyTrafficMirrorSessionRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/ec2-2016-11-15/ModifyTrafficMirrorSession
+func (c *EC2) ModifyTrafficMirrorSessionRequest(input *ModifyTrafficMirrorSessionInput) (req *request.Request, output *ModifyTrafficMirrorSessionOutput) {
+	op := &request.Operation{
+		Name:       opModifyTrafficMirrorSession,
+		HTTPMethod: "POST",
+		HTTPPath:   "/",
+	}
+
+	if input == nil {
+		input = &ModifyTrafficMirrorSessionInput{}
+	}
+
+	output = &ModifyTrafficMirrorSessionOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// ModifyTrafficMirrorSession API operation for Amazon Elastic Compute Cloud.
+//
+// Modifies a Traffic Mirror session.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for Amazon Elastic Compute Cloud's
+// API operation ModifyTrafficMirrorSession for usage and error information.
+// See also, https://docs.aws.amazon.com/goto/WebAPI/ec2-2016-11-15/ModifyTrafficMirrorSession
+func (c *EC2) ModifyTrafficMirrorSession(input *ModifyTrafficMirrorSessionInput) (*ModifyTrafficMirrorSessionOutput, error) {
+	req, out := c.ModifyTrafficMirrorSessionRequest(input)
+	return out, req.Send()
+}
+
+// ModifyTrafficMirrorSessionWithContext is the same as ModifyTrafficMirrorSession with the addition of
+// the ability to pass a context and additional request options.
+//
+// See ModifyTrafficMirrorSession for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *EC2) ModifyTrafficMirrorSessionWithContext(ctx aws.Context, input *ModifyTrafficMirrorSessionInput, opts ...request.Option) (*ModifyTrafficMirrorSessionOutput, error) {
+	req, out := c.ModifyTrafficMirrorSessionRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
 const opModifyTransitGatewayVpcAttachment = "ModifyTransitGatewayVpcAttachment"
 
 // ModifyTransitGatewayVpcAttachmentRequest generates a "aws/request.Request" representing the
@@ -26359,9 +27679,9 @@ func (c *EC2) ModifyVolumeRequest(input *ModifyVolumeInput) (req *request.Reques
 // You can use CloudWatch Events to check the status of a modification to an
 // EBS volume. For information about CloudWatch Events, see the Amazon CloudWatch
 // Events User Guide (https://docs.aws.amazon.com/AmazonCloudWatch/latest/events/).
-// You can also track the status of a modification using the DescribeVolumesModifications
-// API. For information about tracking status changes using either method, see
-// Monitoring Volume Modifications (https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/ebs-expand-volume.html#monitoring_mods).
+// You can also track the status of a modification using DescribeVolumesModifications.
+// For information about tracking status changes using either method, see Monitoring
+// Volume Modifications (https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/ebs-expand-volume.html#monitoring_mods).
 //
 // With previous-generation instance types, resizing an EBS volume may require
 // detaching and reattaching the volume or stopping and restarting the instance.
@@ -26606,7 +27926,7 @@ func (c *EC2) ModifyVpcEndpointRequest(input *ModifyVpcEndpointInput) (req *requ
 //
 // Modifies attributes of a specified VPC endpoint. The attributes that you
 // can modify depend on the type of VPC endpoint (interface or gateway). For
-// more information, see VPC Endpoints (https://docs.aws.amazon.com/AmazonVPC/latest/UserGuide/vpc-endpoints.html)
+// more information, see VPC Endpoints (https://docs.aws.amazon.com/vpc/latest/userguide/vpc-endpoints.html)
 // in the Amazon Virtual Private Cloud User Guide.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
@@ -26834,7 +28154,7 @@ func (c *EC2) ModifyVpcEndpointServicePermissionsRequest(input *ModifyVpcEndpoin
 
 // ModifyVpcEndpointServicePermissions API operation for Amazon Elastic Compute Cloud.
 //
-// Modifies the permissions for your VPC endpoint service (https://docs.aws.amazon.com/AmazonVPC/latest/UserGuide/endpoint-service.html).
+// Modifies the permissions for your VPC endpoint service (https://docs.aws.amazon.com/vpc/latest/userguide/endpoint-service.html).
 // You can add or remove permissions for service consumers (IAM users, IAM roles,
 // and AWS accounts) to connect to your endpoint service.
 //
@@ -28378,7 +29698,7 @@ func (c *EC2) ReplaceNetworkAclAssociationRequest(input *ReplaceNetworkAclAssoci
 //
 // Changes which network ACL a subnet is associated with. By default when you
 // create a subnet, it's automatically associated with the default network ACL.
-// For more information, see Network ACLs (https://docs.aws.amazon.com/AmazonVPC/latest/UserGuide/VPC_ACLs.html)
+// For more information, see Network ACLs (https://docs.aws.amazon.com/vpc/latest/userguide/VPC_ACLs.html)
 // in the Amazon Virtual Private Cloud User Guide.
 //
 // This is an idempotent operation.
@@ -28457,8 +29777,8 @@ func (c *EC2) ReplaceNetworkAclEntryRequest(input *ReplaceNetworkAclEntryInput) 
 // ReplaceNetworkAclEntry API operation for Amazon Elastic Compute Cloud.
 //
 // Replaces an entry (rule) in a network ACL. For more information, see Network
-// ACLs (https://docs.aws.amazon.com/AmazonVPC/latest/UserGuide/VPC_ACLs.html)
-// in the Amazon Virtual Private Cloud User Guide.
+// ACLs (https://docs.aws.amazon.com/vpc/latest/userguide/VPC_ACLs.html) in
+// the Amazon Virtual Private Cloud User Guide.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -28538,7 +29858,7 @@ func (c *EC2) ReplaceRouteRequest(input *ReplaceRouteInput) (req *request.Reques
 // instance, NAT gateway, VPC peering connection, network interface, or egress-only
 // internet gateway.
 //
-// For more information, see Route Tables (https://docs.aws.amazon.com/AmazonVPC/latest/UserGuide/VPC_Route_Tables.html)
+// For more information, see Route Tables (https://docs.aws.amazon.com/vpc/latest/userguide/VPC_Route_Tables.html)
 // in the Amazon Virtual Private Cloud User Guide.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
@@ -28616,7 +29936,7 @@ func (c *EC2) ReplaceRouteTableAssociationRequest(input *ReplaceRouteTableAssoci
 // Changes the route table associated with a given subnet in a VPC. After the
 // operation completes, the subnet uses the routes in the new route table it's
 // associated with. For more information about route tables, see Route Tables
-// (https://docs.aws.amazon.com/AmazonVPC/latest/UserGuide/VPC_Route_Tables.html)
+// (https://docs.aws.amazon.com/vpc/latest/userguide/VPC_Route_Tables.html)
 // in the Amazon Virtual Private Cloud User Guide.
 //
 // You can also use ReplaceRouteTableAssociation to change which table is the
@@ -29025,19 +30345,13 @@ func (c *EC2) ResetEbsDefaultKmsKeyIdRequest(input *ResetEbsDefaultKmsKeyIdInput
 
 // ResetEbsDefaultKmsKeyId API operation for Amazon Elastic Compute Cloud.
 //
-// Resets the account's default customer master key (CMK) to the account's AWS-managed
-// default CMK. This default CMK is used to encrypt EBS volumes when you have
-// enabled EBS encryption by default without specifying a CMK in the API call.
-// If you have not enabled encryption by default, then this CMK is used when
-// you set the Encrypted parameter to true without specifying a custom CMK in
-// the API call.
+// Resets the default customer master key (CMK) for EBS encryption for your
+// account in this Region to the AWS managed CMK for EBS.
 //
-// Call this API if you have modified the default CMK that is used for encrypting
-// your EBS volume using ModifyEbsDefaultKmsKeyId and you want to reset it to
-// the AWS-managed default CMK. After resetting, you can continue to provide
-// a CMK of your choice in the API call that creates the volume. However, if
-// no CMK is specified, your account will encrypt the volume to the AWS-managed
-// default CMK.
+// After resetting the default CMK to the AWS managed CMK, you can continue
+// to encrypt by a customer managed CMK by specifying it when you create the
+// volume. For more information, see Amazon EBS Encryption (https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/EBSEncryption.html)
+// in the Amazon Elastic Compute Cloud User Guide.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -31657,9 +32971,16 @@ type AllocateHostsInput struct {
 	AvailabilityZone *string `locationName:"availabilityZone" type:"string" required:"true"`
 
 	// Unique, case-sensitive identifier that you provide to ensure the idempotency
-	// of the request. For more information, see How to Ensure Idempotency (https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/Run_Instance_Idempotency.html)
-	// in the Amazon Elastic Compute Cloud User Guide.
+	// of the request. For more information, see How to Ensure Idempotency (https://docs.aws.amazon.com/AWSEC2/latest/APIReference/Run_Instance_Idempotency.html).
 	ClientToken *string `locationName:"clientToken" type:"string"`
+
+	// Indicates whether to enable or disable host recovery for the Dedicated Host.
+	// Host recovery is disabled by default. For more information, see Host Recovery
+	// (https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/dedicated-hosts-recovery.html)
+	// in the Amazon Elastic Compute Cloud User Guide.
+	//
+	// Default: off
+	HostRecovery *string `type:"string" enum:"HostRecovery"`
 
 	// Specifies the instance type for which to configure your Dedicated Hosts.
 	// When you specify the instance type, that is the only instance type that you
@@ -31721,6 +33042,12 @@ func (s *AllocateHostsInput) SetAvailabilityZone(v string) *AllocateHostsInput {
 // SetClientToken sets the ClientToken field's value.
 func (s *AllocateHostsInput) SetClientToken(v string) *AllocateHostsInput {
 	s.ClientToken = &v
+	return s
+}
+
+// SetHostRecovery sets the HostRecovery field's value.
+func (s *AllocateHostsInput) SetHostRecovery(v string) *AllocateHostsInput {
+	s.HostRecovery = &v
 	return s
 }
 
@@ -32068,6 +33395,12 @@ func (s *AssignPrivateIpAddressesInput) SetSecondaryPrivateIpAddressCount(v int6
 
 type AssignPrivateIpAddressesOutput struct {
 	_ struct{} `type:"structure"`
+
+	// The private IP addresses assigned to the network interface.
+	AssignedPrivateIpAddresses []*AssignedPrivateIpAddress `locationName:"assignedPrivateIpAddressesSet" locationNameList:"item" type:"list"`
+
+	// The ID of the network interface.
+	NetworkInterfaceId *string `locationName:"networkInterfaceId" type:"string"`
 }
 
 // String returns the string representation
@@ -32078,6 +33411,42 @@ func (s AssignPrivateIpAddressesOutput) String() string {
 // GoString returns the string representation
 func (s AssignPrivateIpAddressesOutput) GoString() string {
 	return s.String()
+}
+
+// SetAssignedPrivateIpAddresses sets the AssignedPrivateIpAddresses field's value.
+func (s *AssignPrivateIpAddressesOutput) SetAssignedPrivateIpAddresses(v []*AssignedPrivateIpAddress) *AssignPrivateIpAddressesOutput {
+	s.AssignedPrivateIpAddresses = v
+	return s
+}
+
+// SetNetworkInterfaceId sets the NetworkInterfaceId field's value.
+func (s *AssignPrivateIpAddressesOutput) SetNetworkInterfaceId(v string) *AssignPrivateIpAddressesOutput {
+	s.NetworkInterfaceId = &v
+	return s
+}
+
+// Describes the private IP addresses assigned to a network interface.
+type AssignedPrivateIpAddress struct {
+	_ struct{} `type:"structure"`
+
+	// The private IP address assigned to the network interface.
+	PrivateIpAddress *string `locationName:"privateIpAddress" type:"string"`
+}
+
+// String returns the string representation
+func (s AssignedPrivateIpAddress) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s AssignedPrivateIpAddress) GoString() string {
+	return s.String()
+}
+
+// SetPrivateIpAddress sets the PrivateIpAddress field's value.
+func (s *AssignedPrivateIpAddress) SetPrivateIpAddress(v string) *AssignedPrivateIpAddress {
+	s.PrivateIpAddress = &v
+	return s
 }
 
 type AssociateAddressInput struct {
@@ -34493,7 +35862,6 @@ func (s *CancelCapacityReservationOutput) SetReturn(v bool) *CancelCapacityReser
 	return s
 }
 
-// Contains the parameters for CancelConversionTask.
 type CancelConversionTaskInput struct {
 	_ struct{} `type:"structure"`
 
@@ -34567,7 +35935,6 @@ func (s CancelConversionTaskOutput) GoString() string {
 	return s.String()
 }
 
-// Contains the parameters for CancelExportTask.
 type CancelExportTaskInput struct {
 	_ struct{} `type:"structure"`
 
@@ -34620,7 +35987,6 @@ func (s CancelExportTaskOutput) GoString() string {
 	return s.String()
 }
 
-// Contains the parameters for CancelImportTask.
 type CancelImportTaskInput struct {
 	_ struct{} `type:"structure"`
 
@@ -34665,7 +36031,6 @@ func (s *CancelImportTaskInput) SetImportTaskId(v string) *CancelImportTaskInput
 	return s
 }
 
-// Contains the output for CancelImportTask.
 type CancelImportTaskOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -35092,9 +36457,13 @@ type CapacityReservation struct {
 	// The Availability Zone in which the capacity is reserved.
 	AvailabilityZone *string `locationName:"availabilityZone" type:"string"`
 
+	AvailabilityZoneId *string `locationName:"availabilityZoneId" type:"string"`
+
 	// The remaining capacity. Indicates the number of instances that can be launched
 	// in the Capacity Reservation.
 	AvailableInstanceCount *int64 `locationName:"availableInstanceCount" type:"integer"`
+
+	CapacityReservationArn *string `locationName:"capacityReservationArn" type:"string"`
 
 	// The ID of the Capacity Reservation.
 	CapacityReservationId *string `locationName:"capacityReservationId" type:"string"`
@@ -35150,6 +36519,8 @@ type CapacityReservation struct {
 	// The type of instance for which the Capacity Reservation reserves capacity.
 	InstanceType *string `locationName:"instanceType" type:"string"`
 
+	OwnerId *string `locationName:"ownerId" type:"string"`
+
 	// The current state of the Capacity Reservation. A Capacity Reservation can
 	// be in one of the following states:
 	//
@@ -35204,9 +36575,21 @@ func (s *CapacityReservation) SetAvailabilityZone(v string) *CapacityReservation
 	return s
 }
 
+// SetAvailabilityZoneId sets the AvailabilityZoneId field's value.
+func (s *CapacityReservation) SetAvailabilityZoneId(v string) *CapacityReservation {
+	s.AvailabilityZoneId = &v
+	return s
+}
+
 // SetAvailableInstanceCount sets the AvailableInstanceCount field's value.
 func (s *CapacityReservation) SetAvailableInstanceCount(v int64) *CapacityReservation {
 	s.AvailableInstanceCount = &v
+	return s
+}
+
+// SetCapacityReservationArn sets the CapacityReservationArn field's value.
+func (s *CapacityReservation) SetCapacityReservationArn(v string) *CapacityReservation {
+	s.CapacityReservationArn = &v
 	return s
 }
 
@@ -35261,6 +36644,12 @@ func (s *CapacityReservation) SetInstancePlatform(v string) *CapacityReservation
 // SetInstanceType sets the InstanceType field's value.
 func (s *CapacityReservation) SetInstanceType(v string) *CapacityReservation {
 	s.InstanceType = &v
+	return s
+}
+
+// SetOwnerId sets the OwnerId field's value.
+func (s *CapacityReservation) SetOwnerId(v string) *CapacityReservation {
+	s.OwnerId = &v
 	return s
 }
 
@@ -36126,7 +37515,12 @@ type ClientVpnEndpoint struct {
 	// The ARN of the server certificate.
 	ServerCertificateArn *string `locationName:"serverCertificateArn" type:"string"`
 
-	// Indicates whether VPN split tunneling is supported.
+	// Indicates whether split-tunnel is enabled in the AWS Client VPN endpoint
+	// endpoint.
+	//
+	// For information about split-tunnel VPN endpoints, see Split-Tunnel AWS Client
+	// VPN Endpoint (https://docs.aws.amazon.com/vpn/latest/clientvpn-admin/split-tunnel-vpn.html)
+	// in the AWS Client VPN Administrator Guide.
 	SplitTunnel *bool `locationName:"splitTunnel" type:"boolean"`
 
 	// The current state of the Client VPN endpoint.
@@ -37062,39 +38456,32 @@ type CopySnapshotInput struct {
 	// it is UnauthorizedOperation.
 	DryRun *bool `locationName:"dryRun" type:"boolean"`
 
-	// Specifies whether the destination snapshot should be encrypted. You can encrypt
-	// a copy of an unencrypted snapshot, but you cannot use it to create an unencrypted
-	// copy of an encrypted snapshot. Your default CMK for EBS is used unless you
-	// specify a non-default AWS Key Management Service (AWS KMS) CMK using KmsKeyId.
-	// For more information, see Amazon EBS Encryption (https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/EBSEncryption.html)
+	// To encrypt a copy of an unencrypted snapshot if encryption by default is
+	// not enabled, enable encryption using this parameter. Otherwise, omit this
+	// parameter. Encrypted snapshots are encrypted, even if you omit this parameter
+	// and encryption by default is not enabled. You cannot set this parameter to
+	// false. For more information, see Amazon EBS Encryption (https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/EBSEncryption.html)
 	// in the Amazon Elastic Compute Cloud User Guide.
 	Encrypted *bool `locationName:"encrypted" type:"boolean"`
 
-	// An identifier for the AWS Key Management Service (AWS KMS) customer master
-	// key (CMK) to use when creating the encrypted volume. This parameter is only
-	// required if you want to use a non-default CMK; if this parameter is not specified,
-	// the default CMK for EBS is used. If a KmsKeyId is specified, the Encrypted
-	// flag must also be set.
+	// The identifier of the AWS Key Management Service (AWS KMS) customer master
+	// key (CMK) to use for Amazon EBS encryption. If this parameter is not specified,
+	// your AWS managed CMK for EBS is used. If KmsKeyId is specified, the encrypted
+	// state must be true.
 	//
-	// The CMK identifier may be provided in any of the following formats:
+	// You can specify the CMK using any of the following:
 	//
-	//    * Key ID
+	//    * Key ID. For example, key/1234abcd-12ab-34cd-56ef-1234567890ab.
 	//
-	//    * Key alias. The alias ARN contains the arn:aws:kms namespace, followed
-	//    by the Region of the CMK, the AWS account ID of the CMK owner, the alias
-	//    namespace, and then the CMK alias. For example, arn:aws:kms:us-east-1:012345678910:alias/ExampleAlias.
+	//    * Key alias. For example, alias/ExampleAlias.
 	//
-	//    * ARN using key ID. The ID ARN contains the arn:aws:kms namespace, followed
-	//    by the Region of the CMK, the AWS account ID of the CMK owner, the key
-	//    namespace, and then the CMK ID. For example, arn:aws:kms:us-east-1:012345678910:key/abcd1234-a123-456a-a12b-a123b4cd56ef.
+	//    * Key ARN. For example, arn:aws:kms:us-east-1:012345678910:key/abcd1234-a123-456a-a12b-a123b4cd56ef.
 	//
-	//    * ARN using key alias. The alias ARN contains the arn:aws:kms namespace,
-	//    followed by the Region of the CMK, the AWS account ID of the CMK owner,
-	//    the alias namespace, and then the CMK alias. For example, arn:aws:kms:us-east-1:012345678910:alias/ExampleAlias.
+	//    * Alias ARN. For example, arn:aws:kms:us-east-1:012345678910:alias/ExampleAlias.
 	//
-	// AWS parses KmsKeyId asynchronously, meaning that the action you call may
-	// appear to complete even though you provided an invalid identifier. The action
-	// will eventually fail.
+	// AWS authenticates the CMK asynchronously. Therefore, if you specify an ID,
+	// alias, or ARN that is not valid, the action can appear to complete, but eventually
+	// fails.
 	KmsKeyId *string `locationName:"kmsKeyId" type:"string"`
 
 	// When you copy an encrypted source snapshot using the Amazon EC2 Query API,
@@ -37294,9 +38681,9 @@ type CreateCapacityReservationInput struct {
 	_ struct{} `type:"structure"`
 
 	// The Availability Zone in which to create the Capacity Reservation.
-	//
-	// AvailabilityZone is a required field
-	AvailabilityZone *string `type:"string" required:"true"`
+	AvailabilityZone *string `type:"string"`
+
+	AvailabilityZoneId *string `type:"string"`
 
 	// Unique, case-sensitive identifier that you provide to ensure the idempotency
 	// of the request. For more information, see How to Ensure Idempotency (https://docs.aws.amazon.com/AWSEC2/latest/APIReference/Run_Instance_Idempotency.html).
@@ -37406,9 +38793,6 @@ func (s CreateCapacityReservationInput) GoString() string {
 // Validate inspects the fields of the type to determine if they are valid.
 func (s *CreateCapacityReservationInput) Validate() error {
 	invalidParams := request.ErrInvalidParams{Context: "CreateCapacityReservationInput"}
-	if s.AvailabilityZone == nil {
-		invalidParams.Add(request.NewErrParamRequired("AvailabilityZone"))
-	}
 	if s.InstanceCount == nil {
 		invalidParams.Add(request.NewErrParamRequired("InstanceCount"))
 	}
@@ -37428,6 +38812,12 @@ func (s *CreateCapacityReservationInput) Validate() error {
 // SetAvailabilityZone sets the AvailabilityZone field's value.
 func (s *CreateCapacityReservationInput) SetAvailabilityZone(v string) *CreateCapacityReservationInput {
 	s.AvailabilityZone = &v
+	return s
+}
+
+// SetAvailabilityZoneId sets the AvailabilityZoneId field's value.
+func (s *CreateCapacityReservationInput) SetAvailabilityZoneId(v string) *CreateCapacityReservationInput {
+	s.AvailabilityZoneId = &v
 	return s
 }
 
@@ -37584,6 +38974,16 @@ type CreateClientVpnEndpointInput struct {
 	// ServerCertificateArn is a required field
 	ServerCertificateArn *string `type:"string" required:"true"`
 
+	// Indicates whether split-tunnel is enabled on the AWS Client VPN endpoint
+	// endpoint.
+	//
+	// By default, split-tunnel on a VPN endpoint is disabled.
+	//
+	// For information about split-tunnel VPN endpoints, see Split-Tunnel AWS Client
+	// VPN Endpoint (https://docs.aws.amazon.com/vpn/latest/clientvpn-admin/split-tunnel-vpn.html)
+	// in the AWS Client VPN Administrator Guide.
+	SplitTunnel *bool `type:"boolean"`
+
 	// The tags to apply to the Client VPN endpoint during creation.
 	TagSpecifications []*TagSpecification `locationName:"TagSpecification" locationNameList:"item" type:"list"`
 
@@ -37670,6 +39070,12 @@ func (s *CreateClientVpnEndpointInput) SetDryRun(v bool) *CreateClientVpnEndpoin
 // SetServerCertificateArn sets the ServerCertificateArn field's value.
 func (s *CreateClientVpnEndpointInput) SetServerCertificateArn(v string) *CreateClientVpnEndpointInput {
 	s.ServerCertificateArn = &v
+	return s
+}
+
+// SetSplitTunnel sets the SplitTunnel field's value.
+func (s *CreateClientVpnEndpointInput) SetSplitTunnel(v bool) *CreateClientVpnEndpointInput {
+	s.SplitTunnel = &v
 	return s
 }
 
@@ -38330,7 +39736,7 @@ type CreateFleetInput struct {
 	// LaunchTemplateConfigs is a required field
 	LaunchTemplateConfigs []*FleetLaunchTemplateConfigRequest `locationNameList:"item" type:"list" required:"true"`
 
-	// The allocation strategy of On-Demand Instances in an EC2 Fleet.
+	// Describes the configuration of On-Demand Instances in an EC2 Fleet.
 	OnDemandOptions *OnDemandOptionsRequest `type:"structure"`
 
 	// Indicates whether EC2 Fleet should replace unhealthy instances.
@@ -38345,8 +39751,7 @@ type CreateFleetInput struct {
 	// For information about tagging after launch, see Tagging Your Resources (https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/Using_Tags.html#tag-resources).
 	TagSpecifications []*TagSpecification `locationName:"TagSpecification" locationNameList:"item" type:"list"`
 
-	// The TotalTargetCapacity, OnDemandTargetCapacity, SpotTargetCapacity, and
-	// DefaultCapacityType structure.
+	// The number of units to request.
 	//
 	// TargetCapacitySpecification is a required field
 	TargetCapacitySpecification *TargetCapacitySpecificationRequest `type:"structure" required:"true"`
@@ -38923,7 +40328,7 @@ func (s *CreateFpgaImageOutput) SetFpgaImageId(v string) *CreateFpgaImageOutput 
 type CreateImageInput struct {
 	_ struct{} `type:"structure"`
 
-	// Tthe block device mappings. This parameter cannot be used to modify the encryption
+	// The block device mappings. This parameter cannot be used to modify the encryption
 	// status of existing volumes or snapshots. To create an AMI with encrypted
 	// snapshots, use the CopyImage action.
 	BlockDeviceMappings []*BlockDeviceMapping `locationName:"blockDeviceMapping" locationNameList:"BlockDeviceMapping" type:"list"`
@@ -39043,7 +40448,6 @@ func (s *CreateImageOutput) SetImageId(v string) *CreateImageOutput {
 	return s
 }
 
-// Contains the parameters for CreateInstanceExportTask.
 type CreateInstanceExportTaskInput struct {
 	_ struct{} `type:"structure"`
 
@@ -39110,7 +40514,6 @@ func (s *CreateInstanceExportTaskInput) SetTargetEnvironment(v string) *CreateIn
 	return s
 }
 
-// Contains the output for CreateInstanceExportTask.
 type CreateInstanceExportTaskOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -39302,6 +40705,9 @@ type CreateLaunchTemplateInput struct {
 	// LaunchTemplateName is a required field
 	LaunchTemplateName *string `min:"3" type:"string" required:"true"`
 
+	// The tags to apply to the launch template during creation.
+	TagSpecifications []*TagSpecification `locationName:"TagSpecification" locationNameList:"item" type:"list"`
+
 	// A description for the first version of the launch template.
 	VersionDescription *string `type:"string"`
 }
@@ -39361,6 +40767,12 @@ func (s *CreateLaunchTemplateInput) SetLaunchTemplateData(v *RequestLaunchTempla
 // SetLaunchTemplateName sets the LaunchTemplateName field's value.
 func (s *CreateLaunchTemplateInput) SetLaunchTemplateName(v string) *CreateLaunchTemplateInput {
 	s.LaunchTemplateName = &v
+	return s
+}
+
+// SetTagSpecifications sets the TagSpecifications field's value.
+func (s *CreateLaunchTemplateInput) SetTagSpecifications(v []*TagSpecification) *CreateLaunchTemplateInput {
+	s.TagSpecifications = v
 	return s
 }
 
@@ -39886,8 +41298,6 @@ type CreateNetworkInterfaceInput struct {
 	// Indicates the type of network interface. To create an Elastic Fabric Adapter
 	// (EFA), specify efa. For more information, see Elastic Fabric Adapter (https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/efa.html)
 	// in the Amazon Elastic Compute Cloud User Guide.
-	//
-	// If you are not creating an EFA, specify interface or omit this parameter.
 	InterfaceType *string `type:"string" enum:"NetworkInterfaceCreationType"`
 
 	// The number of IPv6 addresses to assign to a network interface. Amazon EC2
@@ -40734,7 +42144,7 @@ func (s *CreateSnapshotInput) SetVolumeId(v string) *CreateSnapshotInput {
 type CreateSnapshotsInput struct {
 	_ struct{} `type:"structure"`
 
-	// Copies the tags from the specified instance to all snapshots.
+	// Copies the tags from the specified volume to corresponding snapshot.
 	CopyTagsFromSource *string `type:"string" enum:"CopyTagsFromSource"`
 
 	// A description propagated to every snapshot specified by the instance.
@@ -41113,6 +42523,589 @@ func (s CreateTagsOutput) String() string {
 // GoString returns the string representation
 func (s CreateTagsOutput) GoString() string {
 	return s.String()
+}
+
+type CreateTrafficMirrorFilterInput struct {
+	_ struct{} `type:"structure"`
+
+	// Unique, case-sensitive identifier that you provide to ensure the idempotency
+	// of the request. For more information, see How to Ensure Idempotency (https://docs.aws.amazon.com/AWSEC2/latest/APIReference/Run_Instance_Idempotency.html).
+	ClientToken *string `type:"string" idempotencyToken:"true"`
+
+	// The description of the Traffic Mirror filter.
+	Description *string `type:"string"`
+
+	// Checks whether you have the required permissions for the action, without
+	// actually making the request, and provides an error response. If you have
+	// the required permissions, the error response is DryRunOperation. Otherwise,
+	// it is UnauthorizedOperation.
+	DryRun *bool `type:"boolean"`
+
+	// The tags to assign to a Traffic Mirror filter.
+	TagSpecifications []*TagSpecification `locationName:"TagSpecification" locationNameList:"item" type:"list"`
+}
+
+// String returns the string representation
+func (s CreateTrafficMirrorFilterInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s CreateTrafficMirrorFilterInput) GoString() string {
+	return s.String()
+}
+
+// SetClientToken sets the ClientToken field's value.
+func (s *CreateTrafficMirrorFilterInput) SetClientToken(v string) *CreateTrafficMirrorFilterInput {
+	s.ClientToken = &v
+	return s
+}
+
+// SetDescription sets the Description field's value.
+func (s *CreateTrafficMirrorFilterInput) SetDescription(v string) *CreateTrafficMirrorFilterInput {
+	s.Description = &v
+	return s
+}
+
+// SetDryRun sets the DryRun field's value.
+func (s *CreateTrafficMirrorFilterInput) SetDryRun(v bool) *CreateTrafficMirrorFilterInput {
+	s.DryRun = &v
+	return s
+}
+
+// SetTagSpecifications sets the TagSpecifications field's value.
+func (s *CreateTrafficMirrorFilterInput) SetTagSpecifications(v []*TagSpecification) *CreateTrafficMirrorFilterInput {
+	s.TagSpecifications = v
+	return s
+}
+
+type CreateTrafficMirrorFilterOutput struct {
+	_ struct{} `type:"structure"`
+
+	// Unique, case-sensitive identifier that you provide to ensure the idempotency
+	// of the request. For more information, see How to Ensure Idempotency (https://docs.aws.amazon.com/AWSEC2/latest/APIReference/Run_Instance_Idempotency.html).
+	ClientToken *string `locationName:"clientToken" type:"string"`
+
+	// Information about the Traffic Mirror filter.
+	TrafficMirrorFilter *TrafficMirrorFilter `locationName:"trafficMirrorFilter" type:"structure"`
+}
+
+// String returns the string representation
+func (s CreateTrafficMirrorFilterOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s CreateTrafficMirrorFilterOutput) GoString() string {
+	return s.String()
+}
+
+// SetClientToken sets the ClientToken field's value.
+func (s *CreateTrafficMirrorFilterOutput) SetClientToken(v string) *CreateTrafficMirrorFilterOutput {
+	s.ClientToken = &v
+	return s
+}
+
+// SetTrafficMirrorFilter sets the TrafficMirrorFilter field's value.
+func (s *CreateTrafficMirrorFilterOutput) SetTrafficMirrorFilter(v *TrafficMirrorFilter) *CreateTrafficMirrorFilterOutput {
+	s.TrafficMirrorFilter = v
+	return s
+}
+
+type CreateTrafficMirrorFilterRuleInput struct {
+	_ struct{} `type:"structure"`
+
+	// Unique, case-sensitive identifier that you provide to ensure the idempotency
+	// of the request. For more information, see How to Ensure Idempotency (https://docs.aws.amazon.com/AWSEC2/latest/APIReference/Run_Instance_Idempotency.html).
+	ClientToken *string `type:"string" idempotencyToken:"true"`
+
+	// The description of the Traffic Mirror rule.
+	Description *string `type:"string"`
+
+	// The destination CIDR block to assign to the Traffic Mirror rule.
+	//
+	// DestinationCidrBlock is a required field
+	DestinationCidrBlock *string `type:"string" required:"true"`
+
+	// The destination port range.
+	DestinationPortRange *TrafficMirrorPortRangeRequest `type:"structure"`
+
+	// Checks whether you have the required permissions for the action, without
+	// actually making the request, and provides an error response. If you have
+	// the required permissions, the error response is DryRunOperation. Otherwise,
+	// it is UnauthorizedOperation.
+	DryRun *bool `type:"boolean"`
+
+	// The protocol, for example UDP, to assign to the Traffic Mirror rule.
+	//
+	// For information about the protocol value, see Protocol Numbers (https://www.iana.org/assignments/protocol-numbers/protocol-numbers.xhtml)
+	// on the Internet Assigned Numbers Authority (IANA) website.
+	Protocol *int64 `type:"integer"`
+
+	// The action to take (accept | reject) on the filtered traffic.
+	//
+	// RuleAction is a required field
+	RuleAction *string `type:"string" required:"true" enum:"TrafficMirrorRuleAction"`
+
+	// The number of the Traffic Mirror rule. This number must be unique for each
+	// Traffic Mirror rule in a given direction. The rules are processed in ascending
+	// order by rule number.
+	//
+	// RuleNumber is a required field
+	RuleNumber *int64 `type:"integer" required:"true"`
+
+	// The source CIDR block to assign to the Traffic Mirror rule.
+	//
+	// SourceCidrBlock is a required field
+	SourceCidrBlock *string `type:"string" required:"true"`
+
+	// The source port range.
+	SourcePortRange *TrafficMirrorPortRangeRequest `type:"structure"`
+
+	// The type of traffic (ingress | egress).
+	//
+	// TrafficDirection is a required field
+	TrafficDirection *string `type:"string" required:"true" enum:"TrafficDirection"`
+
+	// The ID of the filter that this rule is associated with.
+	//
+	// TrafficMirrorFilterId is a required field
+	TrafficMirrorFilterId *string `type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s CreateTrafficMirrorFilterRuleInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s CreateTrafficMirrorFilterRuleInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *CreateTrafficMirrorFilterRuleInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "CreateTrafficMirrorFilterRuleInput"}
+	if s.DestinationCidrBlock == nil {
+		invalidParams.Add(request.NewErrParamRequired("DestinationCidrBlock"))
+	}
+	if s.RuleAction == nil {
+		invalidParams.Add(request.NewErrParamRequired("RuleAction"))
+	}
+	if s.RuleNumber == nil {
+		invalidParams.Add(request.NewErrParamRequired("RuleNumber"))
+	}
+	if s.SourceCidrBlock == nil {
+		invalidParams.Add(request.NewErrParamRequired("SourceCidrBlock"))
+	}
+	if s.TrafficDirection == nil {
+		invalidParams.Add(request.NewErrParamRequired("TrafficDirection"))
+	}
+	if s.TrafficMirrorFilterId == nil {
+		invalidParams.Add(request.NewErrParamRequired("TrafficMirrorFilterId"))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetClientToken sets the ClientToken field's value.
+func (s *CreateTrafficMirrorFilterRuleInput) SetClientToken(v string) *CreateTrafficMirrorFilterRuleInput {
+	s.ClientToken = &v
+	return s
+}
+
+// SetDescription sets the Description field's value.
+func (s *CreateTrafficMirrorFilterRuleInput) SetDescription(v string) *CreateTrafficMirrorFilterRuleInput {
+	s.Description = &v
+	return s
+}
+
+// SetDestinationCidrBlock sets the DestinationCidrBlock field's value.
+func (s *CreateTrafficMirrorFilterRuleInput) SetDestinationCidrBlock(v string) *CreateTrafficMirrorFilterRuleInput {
+	s.DestinationCidrBlock = &v
+	return s
+}
+
+// SetDestinationPortRange sets the DestinationPortRange field's value.
+func (s *CreateTrafficMirrorFilterRuleInput) SetDestinationPortRange(v *TrafficMirrorPortRangeRequest) *CreateTrafficMirrorFilterRuleInput {
+	s.DestinationPortRange = v
+	return s
+}
+
+// SetDryRun sets the DryRun field's value.
+func (s *CreateTrafficMirrorFilterRuleInput) SetDryRun(v bool) *CreateTrafficMirrorFilterRuleInput {
+	s.DryRun = &v
+	return s
+}
+
+// SetProtocol sets the Protocol field's value.
+func (s *CreateTrafficMirrorFilterRuleInput) SetProtocol(v int64) *CreateTrafficMirrorFilterRuleInput {
+	s.Protocol = &v
+	return s
+}
+
+// SetRuleAction sets the RuleAction field's value.
+func (s *CreateTrafficMirrorFilterRuleInput) SetRuleAction(v string) *CreateTrafficMirrorFilterRuleInput {
+	s.RuleAction = &v
+	return s
+}
+
+// SetRuleNumber sets the RuleNumber field's value.
+func (s *CreateTrafficMirrorFilterRuleInput) SetRuleNumber(v int64) *CreateTrafficMirrorFilterRuleInput {
+	s.RuleNumber = &v
+	return s
+}
+
+// SetSourceCidrBlock sets the SourceCidrBlock field's value.
+func (s *CreateTrafficMirrorFilterRuleInput) SetSourceCidrBlock(v string) *CreateTrafficMirrorFilterRuleInput {
+	s.SourceCidrBlock = &v
+	return s
+}
+
+// SetSourcePortRange sets the SourcePortRange field's value.
+func (s *CreateTrafficMirrorFilterRuleInput) SetSourcePortRange(v *TrafficMirrorPortRangeRequest) *CreateTrafficMirrorFilterRuleInput {
+	s.SourcePortRange = v
+	return s
+}
+
+// SetTrafficDirection sets the TrafficDirection field's value.
+func (s *CreateTrafficMirrorFilterRuleInput) SetTrafficDirection(v string) *CreateTrafficMirrorFilterRuleInput {
+	s.TrafficDirection = &v
+	return s
+}
+
+// SetTrafficMirrorFilterId sets the TrafficMirrorFilterId field's value.
+func (s *CreateTrafficMirrorFilterRuleInput) SetTrafficMirrorFilterId(v string) *CreateTrafficMirrorFilterRuleInput {
+	s.TrafficMirrorFilterId = &v
+	return s
+}
+
+type CreateTrafficMirrorFilterRuleOutput struct {
+	_ struct{} `type:"structure"`
+
+	// Unique, case-sensitive identifier that you provide to ensure the idempotency
+	// of the request. For more information, see How to Ensure Idempotency (https://docs.aws.amazon.com/AWSEC2/latest/APIReference/Run_Instance_Idempotency.html).
+	ClientToken *string `locationName:"clientToken" type:"string"`
+
+	// The Traffic Mirror rule.
+	TrafficMirrorFilterRule *TrafficMirrorFilterRule `locationName:"trafficMirrorFilterRule" type:"structure"`
+}
+
+// String returns the string representation
+func (s CreateTrafficMirrorFilterRuleOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s CreateTrafficMirrorFilterRuleOutput) GoString() string {
+	return s.String()
+}
+
+// SetClientToken sets the ClientToken field's value.
+func (s *CreateTrafficMirrorFilterRuleOutput) SetClientToken(v string) *CreateTrafficMirrorFilterRuleOutput {
+	s.ClientToken = &v
+	return s
+}
+
+// SetTrafficMirrorFilterRule sets the TrafficMirrorFilterRule field's value.
+func (s *CreateTrafficMirrorFilterRuleOutput) SetTrafficMirrorFilterRule(v *TrafficMirrorFilterRule) *CreateTrafficMirrorFilterRuleOutput {
+	s.TrafficMirrorFilterRule = v
+	return s
+}
+
+type CreateTrafficMirrorSessionInput struct {
+	_ struct{} `type:"structure"`
+
+	// Unique, case-sensitive identifier that you provide to ensure the idempotency
+	// of the request. For more information, see How to Ensure Idempotency (https://docs.aws.amazon.com/AWSEC2/latest/APIReference/Run_Instance_Idempotency.html).
+	ClientToken *string `type:"string" idempotencyToken:"true"`
+
+	// The description of the Traffic Mirror session.
+	Description *string `type:"string"`
+
+	// Checks whether you have the required permissions for the action, without
+	// actually making the request, and provides an error response. If you have
+	// the required permissions, the error response is DryRunOperation. Otherwise,
+	// it is UnauthorizedOperation.
+	DryRun *bool `type:"boolean"`
+
+	// The ID of the source network interface.
+	//
+	// NetworkInterfaceId is a required field
+	NetworkInterfaceId *string `type:"string" required:"true"`
+
+	// The number of bytes in each packet to mirror. These are bytes after the VXLAN
+	// header. Do not specify this parameter when you want to mirror the entire
+	// packet. To mirror a subset of the packet, set this to the length (in bytes)
+	// that you want to mirror. For example, if you set this value to 1network0,
+	// then the first 100 bytes that meet the filter criteria are copied to the
+	// target.
+	//
+	// If you do not want to mirror the entire packet, use the PacketLength parameter
+	// to specify the number of bytes in each packet to mirror.
+	PacketLength *int64 `type:"integer"`
+
+	// The session number determines the order in which sessions are evaluated when
+	// an interface is used by multiple sessions. The first session with a matching
+	// filter is the one that mirrors the packets.
+	//
+	// Valid values are 1-32766.
+	//
+	// SessionNumber is a required field
+	SessionNumber *int64 `type:"integer" required:"true"`
+
+	// The tags to assign to a Traffic Mirror session.
+	TagSpecifications []*TagSpecification `locationName:"TagSpecification" locationNameList:"item" type:"list"`
+
+	// The ID of the Traffic Mirror filter.
+	//
+	// TrafficMirrorFilterId is a required field
+	TrafficMirrorFilterId *string `type:"string" required:"true"`
+
+	// The ID of the Traffic Mirror target.
+	//
+	// TrafficMirrorTargetId is a required field
+	TrafficMirrorTargetId *string `type:"string" required:"true"`
+
+	// The VXLAN ID for the Traffic Mirror session. For more information about the
+	// VXLAN protocol, see RFC 7348 (https://tools.ietf.org/html/rfc7348). If you
+	// do not specify a VirtualNetworkId, an account-wide unique id is chosen at
+	// random.
+	VirtualNetworkId *int64 `type:"integer"`
+}
+
+// String returns the string representation
+func (s CreateTrafficMirrorSessionInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s CreateTrafficMirrorSessionInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *CreateTrafficMirrorSessionInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "CreateTrafficMirrorSessionInput"}
+	if s.NetworkInterfaceId == nil {
+		invalidParams.Add(request.NewErrParamRequired("NetworkInterfaceId"))
+	}
+	if s.SessionNumber == nil {
+		invalidParams.Add(request.NewErrParamRequired("SessionNumber"))
+	}
+	if s.TrafficMirrorFilterId == nil {
+		invalidParams.Add(request.NewErrParamRequired("TrafficMirrorFilterId"))
+	}
+	if s.TrafficMirrorTargetId == nil {
+		invalidParams.Add(request.NewErrParamRequired("TrafficMirrorTargetId"))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetClientToken sets the ClientToken field's value.
+func (s *CreateTrafficMirrorSessionInput) SetClientToken(v string) *CreateTrafficMirrorSessionInput {
+	s.ClientToken = &v
+	return s
+}
+
+// SetDescription sets the Description field's value.
+func (s *CreateTrafficMirrorSessionInput) SetDescription(v string) *CreateTrafficMirrorSessionInput {
+	s.Description = &v
+	return s
+}
+
+// SetDryRun sets the DryRun field's value.
+func (s *CreateTrafficMirrorSessionInput) SetDryRun(v bool) *CreateTrafficMirrorSessionInput {
+	s.DryRun = &v
+	return s
+}
+
+// SetNetworkInterfaceId sets the NetworkInterfaceId field's value.
+func (s *CreateTrafficMirrorSessionInput) SetNetworkInterfaceId(v string) *CreateTrafficMirrorSessionInput {
+	s.NetworkInterfaceId = &v
+	return s
+}
+
+// SetPacketLength sets the PacketLength field's value.
+func (s *CreateTrafficMirrorSessionInput) SetPacketLength(v int64) *CreateTrafficMirrorSessionInput {
+	s.PacketLength = &v
+	return s
+}
+
+// SetSessionNumber sets the SessionNumber field's value.
+func (s *CreateTrafficMirrorSessionInput) SetSessionNumber(v int64) *CreateTrafficMirrorSessionInput {
+	s.SessionNumber = &v
+	return s
+}
+
+// SetTagSpecifications sets the TagSpecifications field's value.
+func (s *CreateTrafficMirrorSessionInput) SetTagSpecifications(v []*TagSpecification) *CreateTrafficMirrorSessionInput {
+	s.TagSpecifications = v
+	return s
+}
+
+// SetTrafficMirrorFilterId sets the TrafficMirrorFilterId field's value.
+func (s *CreateTrafficMirrorSessionInput) SetTrafficMirrorFilterId(v string) *CreateTrafficMirrorSessionInput {
+	s.TrafficMirrorFilterId = &v
+	return s
+}
+
+// SetTrafficMirrorTargetId sets the TrafficMirrorTargetId field's value.
+func (s *CreateTrafficMirrorSessionInput) SetTrafficMirrorTargetId(v string) *CreateTrafficMirrorSessionInput {
+	s.TrafficMirrorTargetId = &v
+	return s
+}
+
+// SetVirtualNetworkId sets the VirtualNetworkId field's value.
+func (s *CreateTrafficMirrorSessionInput) SetVirtualNetworkId(v int64) *CreateTrafficMirrorSessionInput {
+	s.VirtualNetworkId = &v
+	return s
+}
+
+type CreateTrafficMirrorSessionOutput struct {
+	_ struct{} `type:"structure"`
+
+	// Unique, case-sensitive identifier that you provide to ensure the idempotency
+	// of the request. For more information, see How to Ensure Idempotency (https://docs.aws.amazon.com/AWSEC2/latest/APIReference/Run_Instance_Idempotency.html).
+	ClientToken *string `locationName:"clientToken" type:"string"`
+
+	// Information about the Traffic Mirror session.
+	TrafficMirrorSession *TrafficMirrorSession `locationName:"trafficMirrorSession" type:"structure"`
+}
+
+// String returns the string representation
+func (s CreateTrafficMirrorSessionOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s CreateTrafficMirrorSessionOutput) GoString() string {
+	return s.String()
+}
+
+// SetClientToken sets the ClientToken field's value.
+func (s *CreateTrafficMirrorSessionOutput) SetClientToken(v string) *CreateTrafficMirrorSessionOutput {
+	s.ClientToken = &v
+	return s
+}
+
+// SetTrafficMirrorSession sets the TrafficMirrorSession field's value.
+func (s *CreateTrafficMirrorSessionOutput) SetTrafficMirrorSession(v *TrafficMirrorSession) *CreateTrafficMirrorSessionOutput {
+	s.TrafficMirrorSession = v
+	return s
+}
+
+type CreateTrafficMirrorTargetInput struct {
+	_ struct{} `type:"structure"`
+
+	// Unique, case-sensitive identifier that you provide to ensure the idempotency
+	// of the request. For more information, see How to Ensure Idempotency (https://docs.aws.amazon.com/AWSEC2/latest/APIReference/Run_Instance_Idempotency.html).
+	ClientToken *string `type:"string" idempotencyToken:"true"`
+
+	// The description of the Traffic Mirror target.
+	Description *string `type:"string"`
+
+	// Checks whether you have the required permissions for the action, without
+	// actually making the request, and provides an error response. If you have
+	// the required permissions, the error response is DryRunOperation. Otherwise,
+	// it is UnauthorizedOperation.
+	DryRun *bool `type:"boolean"`
+
+	// The network interface ID that is associated with the target.
+	NetworkInterfaceId *string `type:"string"`
+
+	// The Amazon Resource Name (ARN) of the Network Load Balancer that is associated
+	// with the target.
+	NetworkLoadBalancerArn *string `type:"string"`
+
+	// The tags to assign to the Traffic Mirror target.
+	TagSpecifications []*TagSpecification `locationName:"TagSpecification" locationNameList:"item" type:"list"`
+}
+
+// String returns the string representation
+func (s CreateTrafficMirrorTargetInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s CreateTrafficMirrorTargetInput) GoString() string {
+	return s.String()
+}
+
+// SetClientToken sets the ClientToken field's value.
+func (s *CreateTrafficMirrorTargetInput) SetClientToken(v string) *CreateTrafficMirrorTargetInput {
+	s.ClientToken = &v
+	return s
+}
+
+// SetDescription sets the Description field's value.
+func (s *CreateTrafficMirrorTargetInput) SetDescription(v string) *CreateTrafficMirrorTargetInput {
+	s.Description = &v
+	return s
+}
+
+// SetDryRun sets the DryRun field's value.
+func (s *CreateTrafficMirrorTargetInput) SetDryRun(v bool) *CreateTrafficMirrorTargetInput {
+	s.DryRun = &v
+	return s
+}
+
+// SetNetworkInterfaceId sets the NetworkInterfaceId field's value.
+func (s *CreateTrafficMirrorTargetInput) SetNetworkInterfaceId(v string) *CreateTrafficMirrorTargetInput {
+	s.NetworkInterfaceId = &v
+	return s
+}
+
+// SetNetworkLoadBalancerArn sets the NetworkLoadBalancerArn field's value.
+func (s *CreateTrafficMirrorTargetInput) SetNetworkLoadBalancerArn(v string) *CreateTrafficMirrorTargetInput {
+	s.NetworkLoadBalancerArn = &v
+	return s
+}
+
+// SetTagSpecifications sets the TagSpecifications field's value.
+func (s *CreateTrafficMirrorTargetInput) SetTagSpecifications(v []*TagSpecification) *CreateTrafficMirrorTargetInput {
+	s.TagSpecifications = v
+	return s
+}
+
+type CreateTrafficMirrorTargetOutput struct {
+	_ struct{} `type:"structure"`
+
+	// Unique, case-sensitive identifier that you provide to ensure the idempotency
+	// of the request. For more information, see How to Ensure Idempotency (https://docs.aws.amazon.com/AWSEC2/latest/APIReference/Run_Instance_Idempotency.html).
+	ClientToken *string `locationName:"clientToken" type:"string"`
+
+	// Information about the Traffic Mirror target.
+	TrafficMirrorTarget *TrafficMirrorTarget `locationName:"trafficMirrorTarget" type:"structure"`
+}
+
+// String returns the string representation
+func (s CreateTrafficMirrorTargetOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s CreateTrafficMirrorTargetOutput) GoString() string {
+	return s.String()
+}
+
+// SetClientToken sets the ClientToken field's value.
+func (s *CreateTrafficMirrorTargetOutput) SetClientToken(v string) *CreateTrafficMirrorTargetOutput {
+	s.ClientToken = &v
+	return s
+}
+
+// SetTrafficMirrorTarget sets the TrafficMirrorTarget field's value.
+func (s *CreateTrafficMirrorTargetOutput) SetTrafficMirrorTarget(v *TrafficMirrorTarget) *CreateTrafficMirrorTargetOutput {
+	s.TrafficMirrorTarget = v
+	return s
 }
 
 type CreateTransitGatewayInput struct {
@@ -41549,18 +43542,14 @@ type CreateVolumeInput struct {
 	// it is UnauthorizedOperation.
 	DryRun *bool `locationName:"dryRun" type:"boolean"`
 
-	// Specifies the encryption state of the volume. The default effect of setting
-	// the Encrypted parameter to true depends on the volume origin (new or from
-	// a snapshot), starting encryption state, ownership, and whether account-level
-	// encryption (https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/account-level-encryption.html)
-	// is enabled. Each default case can be overridden by specifying a customer
-	// master key (CMK) using the KmsKeyId parameter, in addition to setting Encrypted
-	// to true. For a complete list of possible encryption cases, see Amazon EBS
-	// Encryption (https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/EBSEncryption.html).
+	// Specifies whether the volume should be encrypted. The effect of setting the
+	// encryption state to true depends on the volume origin (new or from a snapshot),
+	// starting encryption state, ownership, and whether encryption by default is
+	// enabled. For more information, see Encryption by Default (https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/EBSEncryption.html#encryption-by-default)
+	// in the Amazon Elastic Compute Cloud User Guide.
 	//
-	// Encrypted Amazon EBS volumes may only be attached to instances that support
-	// Amazon EBS encryption. For more information, see Supported Instance Types
-	// (https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/EBSEncryption.html#EBSEncryption_supported_instances).
+	// Encrypted Amazon EBS volumes must be attached to instances that support Amazon
+	// EBS encryption. For more information, see Supported Instance Types (https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/EBSEncryption.html#EBSEncryption_supported_instances).
 	Encrypted *bool `locationName:"encrypted" type:"boolean"`
 
 	// The number of I/O operations per second (IOPS) to provision for the volume,
@@ -41574,31 +43563,24 @@ type CreateVolumeInput struct {
 	// This parameter is valid only for Provisioned IOPS SSD (io1) volumes.
 	Iops *int64 `type:"integer"`
 
-	// An identifier for the AWS Key Management Service (AWS KMS) customer master
-	// key (CMK) to use to encrypt the volume. This parameter is only required if
-	// you want to use a non-default CMK; if this parameter is not specified, the
-	// default CMK for EBS is used. If a KmsKeyId is specified, the Encrypted flag
-	// must also be set.
+	// The identifier of the AWS Key Management Service (AWS KMS) customer master
+	// key (CMK) to use for Amazon EBS encryption. If this parameter is not specified,
+	// your AWS managed CMK for EBS is used. If KmsKeyId is specified, the encrypted
+	// state must be true.
 	//
-	// The CMK identifier may be provided in any of the following formats:
+	// You can specify the CMK using any of the following:
 	//
-	//    * Key ID
+	//    * Key ID. For example, key/1234abcd-12ab-34cd-56ef-1234567890ab.
 	//
-	//    * Key alias. The alias ARN contains the arn:aws:kms namespace, followed
-	//    by the Region of the CMK, the AWS account ID of the CMK owner, the alias
-	//    namespace, and then the CMK alias. For example, arn:aws:kms:us-east-1:012345678910:alias/ExampleAlias.
+	//    * Key alias. For example, alias/ExampleAlias.
 	//
-	//    * ARN using key ID. The ID ARN contains the arn:aws:kms namespace, followed
-	//    by the Region of the CMK, the AWS account ID of the CMK owner, the key
-	//    namespace, and then the CMK ID. For example, arn:aws:kms:us-east-1:012345678910:key/abcd1234-a123-456a-a12b-a123b4cd56ef.
+	//    * Key ARN. For example, arn:aws:kms:us-east-1:012345678910:key/abcd1234-a123-456a-a12b-a123b4cd56ef.
 	//
-	//    * ARN using key alias. The alias ARN contains the arn:aws:kms namespace,
-	//    followed by the Region of the CMK, the AWS account ID of the CMK owner,
-	//    the alias namespace, and then the CMK alias. For example, arn:aws:kms:us-east-1:012345678910:alias/ExampleAlias.
+	//    * Alias ARN. For example, arn:aws:kms:us-east-1:012345678910:alias/ExampleAlias.
 	//
-	// AWS parses KmsKeyId asynchronously, meaning that the action you call may
-	// appear to complete even though you provided an invalid identifier. The action
-	// will eventually fail.
+	// AWS authenticates the CMK asynchronously. Therefore, if you specify an ID,
+	// alias, or ARN that is not valid, the action can appear to complete, but eventually
+	// fails.
 	KmsKeyId *string `type:"string"`
 
 	// The size of the volume, in GiBs.
@@ -42403,7 +44385,7 @@ type CreateVpnConnectionInput struct {
 	// specify a virtual private gateway.
 	TransitGatewayId *string `type:"string"`
 
-	// The type of VPN connection (ipsec.1 | ipsec.2).
+	// The type of VPN connection (ipsec.1).
 	//
 	// Type is a required field
 	Type *string `type:"string" required:"true"`
@@ -44822,6 +46804,298 @@ func (s DeleteTagsOutput) GoString() string {
 	return s.String()
 }
 
+type DeleteTrafficMirrorFilterInput struct {
+	_ struct{} `type:"structure"`
+
+	// Checks whether you have the required permissions for the action, without
+	// actually making the request, and provides an error response. If you have
+	// the required permissions, the error response is DryRunOperation. Otherwise,
+	// it is UnauthorizedOperation.
+	DryRun *bool `type:"boolean"`
+
+	// The ID of the Traffic Mirror filter.
+	//
+	// TrafficMirrorFilterId is a required field
+	TrafficMirrorFilterId *string `type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s DeleteTrafficMirrorFilterInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DeleteTrafficMirrorFilterInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *DeleteTrafficMirrorFilterInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "DeleteTrafficMirrorFilterInput"}
+	if s.TrafficMirrorFilterId == nil {
+		invalidParams.Add(request.NewErrParamRequired("TrafficMirrorFilterId"))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetDryRun sets the DryRun field's value.
+func (s *DeleteTrafficMirrorFilterInput) SetDryRun(v bool) *DeleteTrafficMirrorFilterInput {
+	s.DryRun = &v
+	return s
+}
+
+// SetTrafficMirrorFilterId sets the TrafficMirrorFilterId field's value.
+func (s *DeleteTrafficMirrorFilterInput) SetTrafficMirrorFilterId(v string) *DeleteTrafficMirrorFilterInput {
+	s.TrafficMirrorFilterId = &v
+	return s
+}
+
+type DeleteTrafficMirrorFilterOutput struct {
+	_ struct{} `type:"structure"`
+
+	// The ID of the Traffic Mirror filter.
+	TrafficMirrorFilterId *string `locationName:"trafficMirrorFilterId" type:"string"`
+}
+
+// String returns the string representation
+func (s DeleteTrafficMirrorFilterOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DeleteTrafficMirrorFilterOutput) GoString() string {
+	return s.String()
+}
+
+// SetTrafficMirrorFilterId sets the TrafficMirrorFilterId field's value.
+func (s *DeleteTrafficMirrorFilterOutput) SetTrafficMirrorFilterId(v string) *DeleteTrafficMirrorFilterOutput {
+	s.TrafficMirrorFilterId = &v
+	return s
+}
+
+type DeleteTrafficMirrorFilterRuleInput struct {
+	_ struct{} `type:"structure"`
+
+	// Checks whether you have the required permissions for the action, without
+	// actually making the request, and provides an error response. If you have
+	// the required permissions, the error response is DryRunOperation. Otherwise,
+	// it is UnauthorizedOperation.
+	DryRun *bool `type:"boolean"`
+
+	// The ID of the Traffic Mirror rule.
+	//
+	// TrafficMirrorFilterRuleId is a required field
+	TrafficMirrorFilterRuleId *string `type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s DeleteTrafficMirrorFilterRuleInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DeleteTrafficMirrorFilterRuleInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *DeleteTrafficMirrorFilterRuleInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "DeleteTrafficMirrorFilterRuleInput"}
+	if s.TrafficMirrorFilterRuleId == nil {
+		invalidParams.Add(request.NewErrParamRequired("TrafficMirrorFilterRuleId"))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetDryRun sets the DryRun field's value.
+func (s *DeleteTrafficMirrorFilterRuleInput) SetDryRun(v bool) *DeleteTrafficMirrorFilterRuleInput {
+	s.DryRun = &v
+	return s
+}
+
+// SetTrafficMirrorFilterRuleId sets the TrafficMirrorFilterRuleId field's value.
+func (s *DeleteTrafficMirrorFilterRuleInput) SetTrafficMirrorFilterRuleId(v string) *DeleteTrafficMirrorFilterRuleInput {
+	s.TrafficMirrorFilterRuleId = &v
+	return s
+}
+
+type DeleteTrafficMirrorFilterRuleOutput struct {
+	_ struct{} `type:"structure"`
+
+	// The ID of the deleted Traffic Mirror rule.
+	TrafficMirrorFilterRuleId *string `locationName:"trafficMirrorFilterRuleId" type:"string"`
+}
+
+// String returns the string representation
+func (s DeleteTrafficMirrorFilterRuleOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DeleteTrafficMirrorFilterRuleOutput) GoString() string {
+	return s.String()
+}
+
+// SetTrafficMirrorFilterRuleId sets the TrafficMirrorFilterRuleId field's value.
+func (s *DeleteTrafficMirrorFilterRuleOutput) SetTrafficMirrorFilterRuleId(v string) *DeleteTrafficMirrorFilterRuleOutput {
+	s.TrafficMirrorFilterRuleId = &v
+	return s
+}
+
+type DeleteTrafficMirrorSessionInput struct {
+	_ struct{} `type:"structure"`
+
+	// Checks whether you have the required permissions for the action, without
+	// actually making the request, and provides an error response. If you have
+	// the required permissions, the error response is DryRunOperation. Otherwise,
+	// it is UnauthorizedOperation.
+	DryRun *bool `type:"boolean"`
+
+	// The ID of the Traffic Mirror session.
+	//
+	// TrafficMirrorSessionId is a required field
+	TrafficMirrorSessionId *string `type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s DeleteTrafficMirrorSessionInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DeleteTrafficMirrorSessionInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *DeleteTrafficMirrorSessionInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "DeleteTrafficMirrorSessionInput"}
+	if s.TrafficMirrorSessionId == nil {
+		invalidParams.Add(request.NewErrParamRequired("TrafficMirrorSessionId"))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetDryRun sets the DryRun field's value.
+func (s *DeleteTrafficMirrorSessionInput) SetDryRun(v bool) *DeleteTrafficMirrorSessionInput {
+	s.DryRun = &v
+	return s
+}
+
+// SetTrafficMirrorSessionId sets the TrafficMirrorSessionId field's value.
+func (s *DeleteTrafficMirrorSessionInput) SetTrafficMirrorSessionId(v string) *DeleteTrafficMirrorSessionInput {
+	s.TrafficMirrorSessionId = &v
+	return s
+}
+
+type DeleteTrafficMirrorSessionOutput struct {
+	_ struct{} `type:"structure"`
+
+	// The ID of the deleted Traffic Mirror session.
+	TrafficMirrorSessionId *string `locationName:"trafficMirrorSessionId" type:"string"`
+}
+
+// String returns the string representation
+func (s DeleteTrafficMirrorSessionOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DeleteTrafficMirrorSessionOutput) GoString() string {
+	return s.String()
+}
+
+// SetTrafficMirrorSessionId sets the TrafficMirrorSessionId field's value.
+func (s *DeleteTrafficMirrorSessionOutput) SetTrafficMirrorSessionId(v string) *DeleteTrafficMirrorSessionOutput {
+	s.TrafficMirrorSessionId = &v
+	return s
+}
+
+type DeleteTrafficMirrorTargetInput struct {
+	_ struct{} `type:"structure"`
+
+	// Checks whether you have the required permissions for the action, without
+	// actually making the request, and provides an error response. If you have
+	// the required permissions, the error response is DryRunOperation. Otherwise,
+	// it is UnauthorizedOperation.
+	DryRun *bool `type:"boolean"`
+
+	// The ID of the Traffic Mirror target.
+	//
+	// TrafficMirrorTargetId is a required field
+	TrafficMirrorTargetId *string `type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s DeleteTrafficMirrorTargetInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DeleteTrafficMirrorTargetInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *DeleteTrafficMirrorTargetInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "DeleteTrafficMirrorTargetInput"}
+	if s.TrafficMirrorTargetId == nil {
+		invalidParams.Add(request.NewErrParamRequired("TrafficMirrorTargetId"))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetDryRun sets the DryRun field's value.
+func (s *DeleteTrafficMirrorTargetInput) SetDryRun(v bool) *DeleteTrafficMirrorTargetInput {
+	s.DryRun = &v
+	return s
+}
+
+// SetTrafficMirrorTargetId sets the TrafficMirrorTargetId field's value.
+func (s *DeleteTrafficMirrorTargetInput) SetTrafficMirrorTargetId(v string) *DeleteTrafficMirrorTargetInput {
+	s.TrafficMirrorTargetId = &v
+	return s
+}
+
+type DeleteTrafficMirrorTargetOutput struct {
+	_ struct{} `type:"structure"`
+
+	// The ID of the deleted Traffic Mirror target.
+	TrafficMirrorTargetId *string `locationName:"trafficMirrorTargetId" type:"string"`
+}
+
+// String returns the string representation
+func (s DeleteTrafficMirrorTargetOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DeleteTrafficMirrorTargetOutput) GoString() string {
+	return s.String()
+}
+
+// SetTrafficMirrorTargetId sets the TrafficMirrorTargetId field's value.
+func (s *DeleteTrafficMirrorTargetOutput) SetTrafficMirrorTargetId(v string) *DeleteTrafficMirrorTargetOutput {
+	s.TrafficMirrorTargetId = &v
+	return s
+}
+
 type DeleteTransitGatewayInput struct {
 	_ struct{} `type:"structure"`
 
@@ -46305,10 +48579,10 @@ type DescribeByoipCidrsInput struct {
 	// remaining results, make another call with the returned nextToken value.
 	//
 	// MaxResults is a required field
-	MaxResults *int64 `min:"5" type:"integer" required:"true"`
+	MaxResults *int64 `min:"1" type:"integer" required:"true"`
 
 	// The token for the next page of results.
-	NextToken *string `min:"1" type:"string"`
+	NextToken *string `type:"string"`
 }
 
 // String returns the string representation
@@ -46327,11 +48601,8 @@ func (s *DescribeByoipCidrsInput) Validate() error {
 	if s.MaxResults == nil {
 		invalidParams.Add(request.NewErrParamRequired("MaxResults"))
 	}
-	if s.MaxResults != nil && *s.MaxResults < 5 {
-		invalidParams.Add(request.NewErrParamMinValue("MaxResults", 5))
-	}
-	if s.NextToken != nil && len(*s.NextToken) < 1 {
-		invalidParams.Add(request.NewErrParamMinLen("NextToken", 1))
+	if s.MaxResults != nil && *s.MaxResults < 1 {
+		invalidParams.Add(request.NewErrParamMinValue("MaxResults", 1))
 	}
 
 	if invalidParams.Len() > 0 {
@@ -46538,7 +48809,7 @@ type DescribeClassicLinkInstancesInput struct {
 	// remaining results, make another call with the returned nextToken value.
 	//
 	// Constraint: If the value is greater than 1000, we return only 1000 items.
-	MaxResults *int64 `locationName:"maxResults" type:"integer"`
+	MaxResults *int64 `locationName:"maxResults" min:"5" type:"integer"`
 
 	// The token for the next page of results.
 	NextToken *string `locationName:"nextToken" type:"string"`
@@ -46552,6 +48823,19 @@ func (s DescribeClassicLinkInstancesInput) String() string {
 // GoString returns the string representation
 func (s DescribeClassicLinkInstancesInput) GoString() string {
 	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *DescribeClassicLinkInstancesInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "DescribeClassicLinkInstancesInput"}
+	if s.MaxResults != nil && *s.MaxResults < 5 {
+		invalidParams.Add(request.NewErrParamMinValue("MaxResults", 5))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
 }
 
 // SetDryRun sets the DryRun field's value.
@@ -46640,7 +48924,7 @@ type DescribeClientVpnAuthorizationRulesInput struct {
 	MaxResults *int64 `min:"5" type:"integer"`
 
 	// The token to retrieve the next page of results.
-	NextToken *string `min:"1" type:"string"`
+	NextToken *string `type:"string"`
 }
 
 // String returns the string representation
@@ -46661,9 +48945,6 @@ func (s *DescribeClientVpnAuthorizationRulesInput) Validate() error {
 	}
 	if s.MaxResults != nil && *s.MaxResults < 5 {
 		invalidParams.Add(request.NewErrParamMinValue("MaxResults", 5))
-	}
-	if s.NextToken != nil && len(*s.NextToken) < 1 {
-		invalidParams.Add(request.NewErrParamMinLen("NextToken", 1))
 	}
 
 	if invalidParams.Len() > 0 {
@@ -46710,7 +48991,7 @@ type DescribeClientVpnAuthorizationRulesOutput struct {
 
 	// The token to use to retrieve the next page of results. This value is null
 	// when there are no more results to return.
-	NextToken *string `locationName:"nextToken" min:"1" type:"string"`
+	NextToken *string `locationName:"nextToken" type:"string"`
 }
 
 // String returns the string representation
@@ -46758,7 +49039,7 @@ type DescribeClientVpnConnectionsInput struct {
 	MaxResults *int64 `min:"5" type:"integer"`
 
 	// The token to retrieve the next page of results.
-	NextToken *string `min:"1" type:"string"`
+	NextToken *string `type:"string"`
 }
 
 // String returns the string representation
@@ -46779,9 +49060,6 @@ func (s *DescribeClientVpnConnectionsInput) Validate() error {
 	}
 	if s.MaxResults != nil && *s.MaxResults < 5 {
 		invalidParams.Add(request.NewErrParamMinValue("MaxResults", 5))
-	}
-	if s.NextToken != nil && len(*s.NextToken) < 1 {
-		invalidParams.Add(request.NewErrParamMinLen("NextToken", 1))
 	}
 
 	if invalidParams.Len() > 0 {
@@ -46828,7 +49106,7 @@ type DescribeClientVpnConnectionsOutput struct {
 
 	// The token to use to retrieve the next page of results. This value is null
 	// when there are no more results to return.
-	NextToken *string `locationName:"nextToken" min:"1" type:"string"`
+	NextToken *string `locationName:"nextToken" type:"string"`
 }
 
 // String returns the string representation
@@ -46874,7 +49152,7 @@ type DescribeClientVpnEndpointsInput struct {
 	MaxResults *int64 `min:"5" type:"integer"`
 
 	// The token to retrieve the next page of results.
-	NextToken *string `min:"1" type:"string"`
+	NextToken *string `type:"string"`
 }
 
 // String returns the string representation
@@ -46892,9 +49170,6 @@ func (s *DescribeClientVpnEndpointsInput) Validate() error {
 	invalidParams := request.ErrInvalidParams{Context: "DescribeClientVpnEndpointsInput"}
 	if s.MaxResults != nil && *s.MaxResults < 5 {
 		invalidParams.Add(request.NewErrParamMinValue("MaxResults", 5))
-	}
-	if s.NextToken != nil && len(*s.NextToken) < 1 {
-		invalidParams.Add(request.NewErrParamMinLen("NextToken", 1))
 	}
 
 	if invalidParams.Len() > 0 {
@@ -46941,7 +49216,7 @@ type DescribeClientVpnEndpointsOutput struct {
 
 	// The token to use to retrieve the next page of results. This value is null
 	// when there are no more results to return.
-	NextToken *string `locationName:"nextToken" min:"1" type:"string"`
+	NextToken *string `locationName:"nextToken" type:"string"`
 }
 
 // String returns the string representation
@@ -46989,7 +49264,7 @@ type DescribeClientVpnRoutesInput struct {
 	MaxResults *int64 `min:"5" type:"integer"`
 
 	// The token to retrieve the next page of results.
-	NextToken *string `min:"1" type:"string"`
+	NextToken *string `type:"string"`
 }
 
 // String returns the string representation
@@ -47010,9 +49285,6 @@ func (s *DescribeClientVpnRoutesInput) Validate() error {
 	}
 	if s.MaxResults != nil && *s.MaxResults < 5 {
 		invalidParams.Add(request.NewErrParamMinValue("MaxResults", 5))
-	}
-	if s.NextToken != nil && len(*s.NextToken) < 1 {
-		invalidParams.Add(request.NewErrParamMinLen("NextToken", 1))
 	}
 
 	if invalidParams.Len() > 0 {
@@ -47056,7 +49328,7 @@ type DescribeClientVpnRoutesOutput struct {
 
 	// The token to use to retrieve the next page of results. This value is null
 	// when there are no more results to return.
-	NextToken *string `locationName:"nextToken" min:"1" type:"string"`
+	NextToken *string `locationName:"nextToken" type:"string"`
 
 	// Information about the Client VPN endpoint routes.
 	Routes []*ClientVpnRoute `locationName:"routes" locationNameList:"item" type:"list"`
@@ -47110,7 +49382,7 @@ type DescribeClientVpnTargetNetworksInput struct {
 	MaxResults *int64 `min:"5" type:"integer"`
 
 	// The token to retrieve the next page of results.
-	NextToken *string `min:"1" type:"string"`
+	NextToken *string `type:"string"`
 }
 
 // String returns the string representation
@@ -47131,9 +49403,6 @@ func (s *DescribeClientVpnTargetNetworksInput) Validate() error {
 	}
 	if s.MaxResults != nil && *s.MaxResults < 5 {
 		invalidParams.Add(request.NewErrParamMinValue("MaxResults", 5))
-	}
-	if s.NextToken != nil && len(*s.NextToken) < 1 {
-		invalidParams.Add(request.NewErrParamMinLen("NextToken", 1))
 	}
 
 	if invalidParams.Len() > 0 {
@@ -47186,7 +49455,7 @@ type DescribeClientVpnTargetNetworksOutput struct {
 
 	// The token to use to retrieve the next page of results. This value is null
 	// when there are no more results to return.
-	NextToken *string `locationName:"nextToken" min:"1" type:"string"`
+	NextToken *string `locationName:"nextToken" type:"string"`
 }
 
 // String returns the string representation
@@ -47211,7 +49480,6 @@ func (s *DescribeClientVpnTargetNetworksOutput) SetNextToken(v string) *Describe
 	return s
 }
 
-// Contains the parameters for DescribeConversionTasks.
 type DescribeConversionTasksInput struct {
 	_ struct{} `type:"structure"`
 
@@ -47247,7 +49515,6 @@ func (s *DescribeConversionTasksInput) SetDryRun(v bool) *DescribeConversionTask
 	return s
 }
 
-// Contains the output for DescribeConversionTasks.
 type DescribeConversionTasksOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -47509,7 +49776,7 @@ type DescribeEgressOnlyInternetGatewaysInput struct {
 
 	// The maximum number of results to return with a single call. To retrieve the
 	// remaining results, make another call with the returned nextToken value.
-	MaxResults *int64 `type:"integer"`
+	MaxResults *int64 `min:"5" type:"integer"`
 
 	// The token for the next page of results.
 	NextToken *string `type:"string"`
@@ -47523,6 +49790,19 @@ func (s DescribeEgressOnlyInternetGatewaysInput) String() string {
 // GoString returns the string representation
 func (s DescribeEgressOnlyInternetGatewaysInput) GoString() string {
 	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *DescribeEgressOnlyInternetGatewaysInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "DescribeEgressOnlyInternetGatewaysInput"}
+	if s.MaxResults != nil && *s.MaxResults < 5 {
+		invalidParams.Add(request.NewErrParamMinValue("MaxResults", 5))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
 }
 
 // SetDryRun sets the DryRun field's value.
@@ -47717,7 +49997,6 @@ func (s *DescribeElasticGpusOutput) SetNextToken(v string) *DescribeElasticGpusO
 	return s
 }
 
-// Contains the parameters for DescribeExportTasks.
 type DescribeExportTasksInput struct {
 	_ struct{} `type:"structure"`
 
@@ -47741,7 +50020,6 @@ func (s *DescribeExportTasksInput) SetExportTaskIds(v []*string) *DescribeExport
 	return s
 }
 
-// Contains the output for DescribeExportTasks.
 type DescribeExportTasksOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -48520,7 +50798,7 @@ type DescribeFpgaImagesInput struct {
 	MaxResults *int64 `min:"5" type:"integer"`
 
 	// The token to retrieve the next page of results.
-	NextToken *string `min:"1" type:"string"`
+	NextToken *string `type:"string"`
 
 	// Filters the AFI by owner. Specify an AWS account ID, self (owner is the sender
 	// of the request), or an AWS owner alias (valid values are amazon | aws-marketplace).
@@ -48542,9 +50820,6 @@ func (s *DescribeFpgaImagesInput) Validate() error {
 	invalidParams := request.ErrInvalidParams{Context: "DescribeFpgaImagesInput"}
 	if s.MaxResults != nil && *s.MaxResults < 5 {
 		invalidParams.Add(request.NewErrParamMinValue("MaxResults", 5))
-	}
-	if s.NextToken != nil && len(*s.NextToken) < 1 {
-		invalidParams.Add(request.NewErrParamMinLen("NextToken", 1))
 	}
 
 	if invalidParams.Len() > 0 {
@@ -48597,7 +50872,7 @@ type DescribeFpgaImagesOutput struct {
 
 	// The token to use to retrieve the next page of results. This value is null
 	// when there are no more results to return.
-	NextToken *string `locationName:"nextToken" min:"1" type:"string"`
+	NextToken *string `locationName:"nextToken" type:"string"`
 }
 
 // String returns the string representation
@@ -48887,11 +51162,13 @@ type DescribeHostsInput struct {
 	// The maximum number of results to return for the request in a single page.
 	// The remaining results can be seen by sending another request with the returned
 	// nextToken value. This value can be between 5 and 500. If maxResults is given
-	// a larger value than 500, you receive an error. You cannot specify this parameter
-	// and the host IDs parameter in the same request.
+	// a larger value than 500, you receive an error.
+	//
+	// You cannot specify this parameter and the host IDs parameter in the same
+	// request.
 	MaxResults *int64 `locationName:"maxResults" type:"integer"`
 
-	// The token to retrieve the next page of results.
+	// The token to use to retrieve the next page of results.
 	NextToken *string `locationName:"nextToken" type:"string"`
 }
 
@@ -48981,7 +51258,7 @@ type DescribeIamInstanceProfileAssociationsInput struct {
 	MaxResults *int64 `min:"5" type:"integer"`
 
 	// The token to request the next page of results.
-	NextToken *string `min:"1" type:"string"`
+	NextToken *string `type:"string"`
 }
 
 // String returns the string representation
@@ -48999,9 +51276,6 @@ func (s *DescribeIamInstanceProfileAssociationsInput) Validate() error {
 	invalidParams := request.ErrInvalidParams{Context: "DescribeIamInstanceProfileAssociationsInput"}
 	if s.MaxResults != nil && *s.MaxResults < 5 {
 		invalidParams.Add(request.NewErrParamMinValue("MaxResults", 5))
-	}
-	if s.NextToken != nil && len(*s.NextToken) < 1 {
-		invalidParams.Add(request.NewErrParamMinLen("NextToken", 1))
 	}
 
 	if invalidParams.Len() > 0 {
@@ -49042,7 +51316,7 @@ type DescribeIamInstanceProfileAssociationsOutput struct {
 
 	// The token to use to retrieve the next page of results. This value is null
 	// when there are no more results to return.
-	NextToken *string `locationName:"nextToken" min:"1" type:"string"`
+	NextToken *string `locationName:"nextToken" type:"string"`
 }
 
 // String returns the string representation
@@ -49368,7 +51642,7 @@ type DescribeImagesInput struct {
 
 	// The filters.
 	//
-	//    * architecture - The image architecture (i386 | x86_64).
+	//    * architecture - The image architecture (i386 | x86_64 | arm64).
 	//
 	//    * block-device-mapping.delete-on-termination - A Boolean value that indicates
 	//    whether the Amazon EBS volume is deleted on instance termination.
@@ -49523,7 +51797,6 @@ func (s *DescribeImagesOutput) SetImages(v []*Image) *DescribeImagesOutput {
 	return s
 }
 
-// Contains the parameters for DescribeImportImageTasks.
 type DescribeImportImageTasksInput struct {
 	_ struct{} `type:"structure"`
 
@@ -49588,7 +51861,6 @@ func (s *DescribeImportImageTasksInput) SetNextToken(v string) *DescribeImportIm
 	return s
 }
 
-// Contains the output for DescribeImportImageTasks.
 type DescribeImportImageTasksOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -49623,7 +51895,6 @@ func (s *DescribeImportImageTasksOutput) SetNextToken(v string) *DescribeImportI
 	return s
 }
 
-// Contains the parameters for DescribeImportSnapshotTasks.
 type DescribeImportSnapshotTasksInput struct {
 	_ struct{} `type:"structure"`
 
@@ -49687,7 +51958,6 @@ func (s *DescribeImportSnapshotTasksInput) SetNextToken(v string) *DescribeImpor
 	return s
 }
 
-// Contains the output for DescribeImportSnapshotTasks.
 type DescribeImportSnapshotTasksOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -50228,7 +52498,7 @@ type DescribeInstancesInput struct {
 	//    * affinity - The affinity setting for an instance running on a Dedicated
 	//    Host (default | host).
 	//
-	//    * architecture - The instance architecture (i386 | x86_64).
+	//    * architecture - The instance architecture (i386 | x86_64 | arm64).
 	//
 	//    * availability-zone - The Availability Zone of the instance.
 	//
@@ -51073,7 +53343,7 @@ type DescribeMovingAddressesInput struct {
 	// 1000; if MaxResults is given a value outside of this range, an error is returned.
 	//
 	// Default: If no value is provided, the default is 1000.
-	MaxResults *int64 `locationName:"maxResults" type:"integer"`
+	MaxResults *int64 `locationName:"maxResults" min:"5" type:"integer"`
 
 	// The token for the next page of results.
 	NextToken *string `locationName:"nextToken" type:"string"`
@@ -51090,6 +53360,19 @@ func (s DescribeMovingAddressesInput) String() string {
 // GoString returns the string representation
 func (s DescribeMovingAddressesInput) GoString() string {
 	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *DescribeMovingAddressesInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "DescribeMovingAddressesInput"}
+	if s.MaxResults != nil && *s.MaxResults < 5 {
+		invalidParams.Add(request.NewErrParamMinValue("MaxResults", 5))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
 }
 
 // SetDryRun sets the DryRun field's value.
@@ -51182,7 +53465,7 @@ type DescribeNatGatewaysInput struct {
 
 	// The maximum number of results to return with a single call. To retrieve the
 	// remaining results, make another call with the returned nextToken value.
-	MaxResults *int64 `type:"integer"`
+	MaxResults *int64 `min:"5" type:"integer"`
 
 	// One or more NAT gateway IDs.
 	NatGatewayIds []*string `locationName:"NatGatewayId" locationNameList:"item" type:"list"`
@@ -51199,6 +53482,19 @@ func (s DescribeNatGatewaysInput) String() string {
 // GoString returns the string representation
 func (s DescribeNatGatewaysInput) GoString() string {
 	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *DescribeNatGatewaysInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "DescribeNatGatewaysInput"}
+	if s.MaxResults != nil && *s.MaxResults < 5 {
+		invalidParams.Add(request.NewErrParamMinValue("MaxResults", 5))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
 }
 
 // SetFilter sets the Filter field's value.
@@ -51689,7 +53985,7 @@ type DescribeNetworkInterfacesInput struct {
 	//
 	//    * attachment.attachment-id - The ID of the interface attachment.
 	//
-	//    * attachment.attach.time - The time that the network interface was attached
+	//    * attachment.attach-time - The time that the network interface was attached
 	//    to an instance.
 	//
 	//    * attachment.delete-on-termination - Indicates whether the attachment
@@ -52053,7 +54349,7 @@ type DescribePrincipalIdFormatInput struct {
 
 	// The maximum number of results to return in a single call. To retrieve the
 	// remaining results, make another call with the returned NextToken value.
-	MaxResults *int64 `type:"integer"`
+	MaxResults *int64 `min:"1" type:"integer"`
 
 	// The token to request the next page of results.
 	NextToken *string `type:"string"`
@@ -52076,6 +54372,19 @@ func (s DescribePrincipalIdFormatInput) String() string {
 // GoString returns the string representation
 func (s DescribePrincipalIdFormatInput) GoString() string {
 	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *DescribePrincipalIdFormatInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "DescribePrincipalIdFormatInput"}
+	if s.MaxResults != nil && *s.MaxResults < 1 {
+		invalidParams.Add(request.NewErrParamMinValue("MaxResults", 1))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
 }
 
 // SetDryRun sets the DryRun field's value.
@@ -52143,7 +54452,7 @@ type DescribePublicIpv4PoolsInput struct {
 	MaxResults *int64 `min:"1" type:"integer"`
 
 	// The token for the next page of results.
-	NextToken *string `min:"1" type:"string"`
+	NextToken *string `type:"string"`
 
 	// The IDs of the address pools.
 	PoolIds []*string `locationName:"PoolId" locationNameList:"item" type:"list"`
@@ -52164,9 +54473,6 @@ func (s *DescribePublicIpv4PoolsInput) Validate() error {
 	invalidParams := request.ErrInvalidParams{Context: "DescribePublicIpv4PoolsInput"}
 	if s.MaxResults != nil && *s.MaxResults < 1 {
 		invalidParams.Add(request.NewErrParamMinValue("MaxResults", 1))
-	}
-	if s.NextToken != nil && len(*s.NextToken) < 1 {
-		invalidParams.Add(request.NewErrParamMinLen("NextToken", 1))
 	}
 
 	if invalidParams.Len() > 0 {
@@ -52229,6 +54535,10 @@ func (s *DescribePublicIpv4PoolsOutput) SetPublicIpv4Pools(v []*PublicIpv4Pool) 
 type DescribeRegionsInput struct {
 	_ struct{} `type:"structure"`
 
+	// Indicates whether to display all Regions, including Regions that are disabled
+	// for your account.
+	AllRegions *bool `type:"boolean"`
+
 	// Checks whether you have the required permissions for the action, without
 	// actually making the request, and provides an error response. If you have
 	// the required permissions, the error response is DryRunOperation. Otherwise,
@@ -52242,7 +54552,8 @@ type DescribeRegionsInput struct {
 	//    * region-name - The name of the Region (for example, us-east-1).
 	Filters []*Filter `locationName:"Filter" locationNameList:"Filter" type:"list"`
 
-	// The names of the Regions.
+	// The names of the Regions. You can specify any Regions, whether they are enabled
+	// and disabled for your account.
 	RegionNames []*string `locationName:"RegionName" locationNameList:"RegionName" type:"list"`
 }
 
@@ -52254,6 +54565,12 @@ func (s DescribeRegionsInput) String() string {
 // GoString returns the string representation
 func (s DescribeRegionsInput) GoString() string {
 	return s.String()
+}
+
+// SetAllRegions sets the AllRegions field's value.
+func (s *DescribeRegionsInput) SetAllRegions(v bool) *DescribeRegionsInput {
+	s.AllRegions = &v
+	return s
 }
 
 // SetDryRun sets the DryRun field's value.
@@ -53067,7 +55384,7 @@ type DescribeScheduledInstanceAvailabilityInput struct {
 	// The maximum number of results to return in a single call. This value can
 	// be between 5 and 300. The default value is 300. To retrieve the remaining
 	// results, make another call with the returned NextToken value.
-	MaxResults *int64 `type:"integer"`
+	MaxResults *int64 `min:"5" type:"integer"`
 
 	// The maximum available duration, in hours. This value must be greater than
 	// MinSlotDurationInHours and less than 1,720.
@@ -53103,6 +55420,9 @@ func (s *DescribeScheduledInstanceAvailabilityInput) Validate() error {
 	invalidParams := request.ErrInvalidParams{Context: "DescribeScheduledInstanceAvailabilityInput"}
 	if s.FirstSlotStartTimeRange == nil {
 		invalidParams.Add(request.NewErrParamRequired("FirstSlotStartTimeRange"))
+	}
+	if s.MaxResults != nil && *s.MaxResults < 5 {
+		invalidParams.Add(request.NewErrParamMinValue("MaxResults", 5))
 	}
 	if s.Recurrence == nil {
 		invalidParams.Add(request.NewErrParamRequired("Recurrence"))
@@ -53929,7 +56249,7 @@ type DescribeSpotFleetInstancesInput struct {
 	// The maximum number of results to return in a single call. Specify a value
 	// between 1 and 1000. The default value is 1000. To retrieve the remaining
 	// results, make another call with the returned NextToken value.
-	MaxResults *int64 `locationName:"maxResults" type:"integer"`
+	MaxResults *int64 `locationName:"maxResults" min:"1" type:"integer"`
 
 	// The token for the next set of results.
 	NextToken *string `locationName:"nextToken" type:"string"`
@@ -53953,6 +56273,9 @@ func (s DescribeSpotFleetInstancesInput) GoString() string {
 // Validate inspects the fields of the type to determine if they are valid.
 func (s *DescribeSpotFleetInstancesInput) Validate() error {
 	invalidParams := request.ErrInvalidParams{Context: "DescribeSpotFleetInstancesInput"}
+	if s.MaxResults != nil && *s.MaxResults < 1 {
+		invalidParams.Add(request.NewErrParamMinValue("MaxResults", 1))
+	}
 	if s.SpotFleetRequestId == nil {
 		invalidParams.Add(request.NewErrParamRequired("SpotFleetRequestId"))
 	}
@@ -54047,7 +56370,7 @@ type DescribeSpotFleetRequestHistoryInput struct {
 	// The maximum number of results to return in a single call. Specify a value
 	// between 1 and 1000. The default value is 1000. To retrieve the remaining
 	// results, make another call with the returned NextToken value.
-	MaxResults *int64 `locationName:"maxResults" type:"integer"`
+	MaxResults *int64 `locationName:"maxResults" min:"1" type:"integer"`
 
 	// The token for the next set of results.
 	NextToken *string `locationName:"nextToken" type:"string"`
@@ -54076,6 +56399,9 @@ func (s DescribeSpotFleetRequestHistoryInput) GoString() string {
 // Validate inspects the fields of the type to determine if they are valid.
 func (s *DescribeSpotFleetRequestHistoryInput) Validate() error {
 	invalidParams := request.ErrInvalidParams{Context: "DescribeSpotFleetRequestHistoryInput"}
+	if s.MaxResults != nil && *s.MaxResults < 1 {
+		invalidParams.Add(request.NewErrParamMinValue("MaxResults", 1))
+	}
 	if s.SpotFleetRequestId == nil {
 		invalidParams.Add(request.NewErrParamRequired("SpotFleetRequestId"))
 	}
@@ -55005,6 +57331,367 @@ func (s *DescribeTagsOutput) SetNextToken(v string) *DescribeTagsOutput {
 // SetTags sets the Tags field's value.
 func (s *DescribeTagsOutput) SetTags(v []*TagDescription) *DescribeTagsOutput {
 	s.Tags = v
+	return s
+}
+
+type DescribeTrafficMirrorFiltersInput struct {
+	_ struct{} `type:"structure"`
+
+	// Checks whether you have the required permissions for the action, without
+	// actually making the request, and provides an error response. If you have
+	// the required permissions, the error response is DryRunOperation. Otherwise,
+	// it is UnauthorizedOperation.
+	DryRun *bool `type:"boolean"`
+
+	// One or more filters. The possible values are:
+	//
+	//    * description: The Traffic Mirror filter description.
+	//
+	//    * traffic-mirror-filter-id: The ID of the Traffic Mirror filter.
+	Filters []*Filter `locationName:"Filter" locationNameList:"Filter" type:"list"`
+
+	// The maximum number of results to return with a single call. To retrieve the
+	// remaining results, make another call with the returned nextToken value.
+	MaxResults *int64 `min:"5" type:"integer"`
+
+	// The token for the next page of results.
+	NextToken *string `type:"string"`
+
+	// The ID of the Traffic Mirror filter.
+	TrafficMirrorFilterIds []*string `locationName:"TrafficMirrorFilterId" locationNameList:"item" type:"list"`
+}
+
+// String returns the string representation
+func (s DescribeTrafficMirrorFiltersInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DescribeTrafficMirrorFiltersInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *DescribeTrafficMirrorFiltersInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "DescribeTrafficMirrorFiltersInput"}
+	if s.MaxResults != nil && *s.MaxResults < 5 {
+		invalidParams.Add(request.NewErrParamMinValue("MaxResults", 5))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetDryRun sets the DryRun field's value.
+func (s *DescribeTrafficMirrorFiltersInput) SetDryRun(v bool) *DescribeTrafficMirrorFiltersInput {
+	s.DryRun = &v
+	return s
+}
+
+// SetFilters sets the Filters field's value.
+func (s *DescribeTrafficMirrorFiltersInput) SetFilters(v []*Filter) *DescribeTrafficMirrorFiltersInput {
+	s.Filters = v
+	return s
+}
+
+// SetMaxResults sets the MaxResults field's value.
+func (s *DescribeTrafficMirrorFiltersInput) SetMaxResults(v int64) *DescribeTrafficMirrorFiltersInput {
+	s.MaxResults = &v
+	return s
+}
+
+// SetNextToken sets the NextToken field's value.
+func (s *DescribeTrafficMirrorFiltersInput) SetNextToken(v string) *DescribeTrafficMirrorFiltersInput {
+	s.NextToken = &v
+	return s
+}
+
+// SetTrafficMirrorFilterIds sets the TrafficMirrorFilterIds field's value.
+func (s *DescribeTrafficMirrorFiltersInput) SetTrafficMirrorFilterIds(v []*string) *DescribeTrafficMirrorFiltersInput {
+	s.TrafficMirrorFilterIds = v
+	return s
+}
+
+type DescribeTrafficMirrorFiltersOutput struct {
+	_ struct{} `type:"structure"`
+
+	// The token to use to retrieve the next page of results. The value is null
+	// when there are no more results to return.
+	NextToken *string `locationName:"nextToken" type:"string"`
+
+	// Information about one or more Traffic Mirror filters.
+	TrafficMirrorFilters []*TrafficMirrorFilter `locationName:"trafficMirrorFilterSet" locationNameList:"item" type:"list"`
+}
+
+// String returns the string representation
+func (s DescribeTrafficMirrorFiltersOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DescribeTrafficMirrorFiltersOutput) GoString() string {
+	return s.String()
+}
+
+// SetNextToken sets the NextToken field's value.
+func (s *DescribeTrafficMirrorFiltersOutput) SetNextToken(v string) *DescribeTrafficMirrorFiltersOutput {
+	s.NextToken = &v
+	return s
+}
+
+// SetTrafficMirrorFilters sets the TrafficMirrorFilters field's value.
+func (s *DescribeTrafficMirrorFiltersOutput) SetTrafficMirrorFilters(v []*TrafficMirrorFilter) *DescribeTrafficMirrorFiltersOutput {
+	s.TrafficMirrorFilters = v
+	return s
+}
+
+type DescribeTrafficMirrorSessionsInput struct {
+	_ struct{} `type:"structure"`
+
+	// Checks whether you have the required permissions for the action, without
+	// actually making the request, and provides an error response. If you have
+	// the required permissions, the error response is DryRunOperation. Otherwise,
+	// it is UnauthorizedOperation.
+	DryRun *bool `type:"boolean"`
+
+	// One or more filters. The possible values are:
+	//
+	//    * description: The Traffic Mirror session description.
+	//
+	//    * network-interface-id: The ID of the Traffic Mirror session network interface.
+	//
+	//    * owner-id: The ID of the account that owns the Traffic Mirror session.
+	//
+	//    * packet-length: The assigned number of packets to mirror.
+	//
+	//    * session-number: The assigned session number.
+	//
+	//    * traffic-mirror-filter-id: The ID of the Traffic Mirror filter.
+	//
+	//    * traffic-mirror-session-id: The ID of the Traffic Mirror session.
+	//
+	//    * traffic-mirror-target-id: The ID of the Traffic Mirror target.
+	//
+	//    * virtual-network-id: The virtual network ID of the Traffic Mirror session.
+	Filters []*Filter `locationName:"Filter" locationNameList:"Filter" type:"list"`
+
+	// The maximum number of results to return with a single call. To retrieve the
+	// remaining results, make another call with the returned nextToken value.
+	MaxResults *int64 `min:"5" type:"integer"`
+
+	// The token for the next page of results.
+	NextToken *string `type:"string"`
+
+	// The ID of the Traffic Mirror session.
+	TrafficMirrorSessionIds []*string `locationName:"TrafficMirrorSessionId" locationNameList:"item" type:"list"`
+}
+
+// String returns the string representation
+func (s DescribeTrafficMirrorSessionsInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DescribeTrafficMirrorSessionsInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *DescribeTrafficMirrorSessionsInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "DescribeTrafficMirrorSessionsInput"}
+	if s.MaxResults != nil && *s.MaxResults < 5 {
+		invalidParams.Add(request.NewErrParamMinValue("MaxResults", 5))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetDryRun sets the DryRun field's value.
+func (s *DescribeTrafficMirrorSessionsInput) SetDryRun(v bool) *DescribeTrafficMirrorSessionsInput {
+	s.DryRun = &v
+	return s
+}
+
+// SetFilters sets the Filters field's value.
+func (s *DescribeTrafficMirrorSessionsInput) SetFilters(v []*Filter) *DescribeTrafficMirrorSessionsInput {
+	s.Filters = v
+	return s
+}
+
+// SetMaxResults sets the MaxResults field's value.
+func (s *DescribeTrafficMirrorSessionsInput) SetMaxResults(v int64) *DescribeTrafficMirrorSessionsInput {
+	s.MaxResults = &v
+	return s
+}
+
+// SetNextToken sets the NextToken field's value.
+func (s *DescribeTrafficMirrorSessionsInput) SetNextToken(v string) *DescribeTrafficMirrorSessionsInput {
+	s.NextToken = &v
+	return s
+}
+
+// SetTrafficMirrorSessionIds sets the TrafficMirrorSessionIds field's value.
+func (s *DescribeTrafficMirrorSessionsInput) SetTrafficMirrorSessionIds(v []*string) *DescribeTrafficMirrorSessionsInput {
+	s.TrafficMirrorSessionIds = v
+	return s
+}
+
+type DescribeTrafficMirrorSessionsOutput struct {
+	_ struct{} `type:"structure"`
+
+	// The token to use to retrieve the next page of results. The value is null
+	// when there are no more results to return.
+	NextToken *string `locationName:"nextToken" type:"string"`
+
+	// Describes one or more Traffic Mirror sessions. By default, all Traffic Mirror
+	// sessions are described. Alternatively, you can filter the results.
+	TrafficMirrorSessions []*TrafficMirrorSession `locationName:"trafficMirrorSessionSet" locationNameList:"item" type:"list"`
+}
+
+// String returns the string representation
+func (s DescribeTrafficMirrorSessionsOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DescribeTrafficMirrorSessionsOutput) GoString() string {
+	return s.String()
+}
+
+// SetNextToken sets the NextToken field's value.
+func (s *DescribeTrafficMirrorSessionsOutput) SetNextToken(v string) *DescribeTrafficMirrorSessionsOutput {
+	s.NextToken = &v
+	return s
+}
+
+// SetTrafficMirrorSessions sets the TrafficMirrorSessions field's value.
+func (s *DescribeTrafficMirrorSessionsOutput) SetTrafficMirrorSessions(v []*TrafficMirrorSession) *DescribeTrafficMirrorSessionsOutput {
+	s.TrafficMirrorSessions = v
+	return s
+}
+
+type DescribeTrafficMirrorTargetsInput struct {
+	_ struct{} `type:"structure"`
+
+	// Checks whether you have the required permissions for the action, without
+	// actually making the request, and provides an error response. If you have
+	// the required permissions, the error response is DryRunOperation. Otherwise,
+	// it is UnauthorizedOperation.
+	DryRun *bool `type:"boolean"`
+
+	// One or more filters. The possible values are:
+	//
+	//    * description: The Traffic Mirror target description.
+	//
+	//    * network-interface-id: The ID of the Traffic Mirror session network interface.
+	//
+	//    * network-load-balancer-arn: The Amazon Resource Name (ARN) of the Network
+	//    Load Balancer that is associated with the session.
+	//
+	//    * owner-id: The ID of the account that owns the Traffic Mirror session.
+	//
+	//    * traffic-mirror-target-id: The ID of the Traffic Mirror target.
+	Filters []*Filter `locationName:"Filter" locationNameList:"Filter" type:"list"`
+
+	// The maximum number of results to return with a single call. To retrieve the
+	// remaining results, make another call with the returned nextToken value.
+	MaxResults *int64 `min:"5" type:"integer"`
+
+	// The token for the next page of results.
+	NextToken *string `type:"string"`
+
+	// The ID of the Traffic Mirror targets.
+	TrafficMirrorTargetIds []*string `locationName:"TrafficMirrorTargetId" locationNameList:"item" type:"list"`
+}
+
+// String returns the string representation
+func (s DescribeTrafficMirrorTargetsInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DescribeTrafficMirrorTargetsInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *DescribeTrafficMirrorTargetsInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "DescribeTrafficMirrorTargetsInput"}
+	if s.MaxResults != nil && *s.MaxResults < 5 {
+		invalidParams.Add(request.NewErrParamMinValue("MaxResults", 5))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetDryRun sets the DryRun field's value.
+func (s *DescribeTrafficMirrorTargetsInput) SetDryRun(v bool) *DescribeTrafficMirrorTargetsInput {
+	s.DryRun = &v
+	return s
+}
+
+// SetFilters sets the Filters field's value.
+func (s *DescribeTrafficMirrorTargetsInput) SetFilters(v []*Filter) *DescribeTrafficMirrorTargetsInput {
+	s.Filters = v
+	return s
+}
+
+// SetMaxResults sets the MaxResults field's value.
+func (s *DescribeTrafficMirrorTargetsInput) SetMaxResults(v int64) *DescribeTrafficMirrorTargetsInput {
+	s.MaxResults = &v
+	return s
+}
+
+// SetNextToken sets the NextToken field's value.
+func (s *DescribeTrafficMirrorTargetsInput) SetNextToken(v string) *DescribeTrafficMirrorTargetsInput {
+	s.NextToken = &v
+	return s
+}
+
+// SetTrafficMirrorTargetIds sets the TrafficMirrorTargetIds field's value.
+func (s *DescribeTrafficMirrorTargetsInput) SetTrafficMirrorTargetIds(v []*string) *DescribeTrafficMirrorTargetsInput {
+	s.TrafficMirrorTargetIds = v
+	return s
+}
+
+type DescribeTrafficMirrorTargetsOutput struct {
+	_ struct{} `type:"structure"`
+
+	// The token to use to retrieve the next page of results. The value is null
+	// when there are no more results to return.
+	NextToken *string `locationName:"nextToken" type:"string"`
+
+	// Information about one or more Traffic Mirror targets.
+	TrafficMirrorTargets []*TrafficMirrorTarget `locationName:"trafficMirrorTargetSet" locationNameList:"item" type:"list"`
+}
+
+// String returns the string representation
+func (s DescribeTrafficMirrorTargetsOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DescribeTrafficMirrorTargetsOutput) GoString() string {
+	return s.String()
+}
+
+// SetNextToken sets the NextToken field's value.
+func (s *DescribeTrafficMirrorTargetsOutput) SetNextToken(v string) *DescribeTrafficMirrorTargetsOutput {
+	s.NextToken = &v
+	return s
+}
+
+// SetTrafficMirrorTargets sets the TrafficMirrorTargets field's value.
+func (s *DescribeTrafficMirrorTargetsOutput) SetTrafficMirrorTargets(v []*TrafficMirrorTarget) *DescribeTrafficMirrorTargetsOutput {
+	s.TrafficMirrorTargets = v
 	return s
 }
 
@@ -58055,7 +60742,7 @@ func (s *DisableEbsEncryptionByDefaultInput) SetDryRun(v bool) *DisableEbsEncryp
 type DisableEbsEncryptionByDefaultOutput struct {
 	_ struct{} `type:"structure"`
 
-	// Account-level encryption status after performing the action.
+	// The updated status of encryption by default.
 	EbsEncryptionByDefault *bool `locationName:"ebsEncryptionByDefault" type:"boolean"`
 }
 
@@ -59168,14 +61855,10 @@ type EbsBlockDevice struct {
 	DeleteOnTermination *bool `locationName:"deleteOnTermination" type:"boolean"`
 
 	// Indicates whether the encryption state of an EBS volume is changed while
-	// being restored from a backing snapshot. The default effect of setting the
-	// Encrypted parameter to true through the console, API, or CLI depends on the
-	// volume's origin (new or from a snapshot), starting encryption state, ownership,
-	// and whether account-level encryption (https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/account-level-encryption.html)
-	// is enabled. Each default case can be overridden by specifying a customer
-	// master key (CMK) with the KmsKeyId parameter in addition to setting Encrypted
-	// to true. For a complete list of possible encryption cases, see Amazon EBS
-	// Encryption (https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/EBSEncryption.html#encryption-parameters)
+	// being restored from a backing snapshot. The effect of setting the encryption
+	// state to true depends on the volume origin (new or from a snapshot), starting
+	// encryption state, ownership, and whether encryption by default is enabled.
+	// For more information, see Amazon EBS Encryption (https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/EBSEncryption.html#encryption-parameters)
 	// in the Amazon Elastic Compute Cloud User Guide.
 	//
 	// In no case can you remove encryption from an encrypted volume.
@@ -59202,8 +61885,8 @@ type EbsBlockDevice struct {
 	// it is not used in requests to create gp2, st1, sc1, or standard volumes.
 	Iops *int64 `locationName:"iops" type:"integer"`
 
-	// Identifier (key ID, key alias, ID ARN, or alias ARN) for a user-managed CMK
-	// under which the EBS volume is encrypted.
+	// Identifier (key ID, key alias, ID ARN, or alias ARN) for a customer managed
+	// CMK under which the EBS volume is encrypted.
 	//
 	// This parameter is only supported on BlockDeviceMapping objects called by
 	// RunInstances (https://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_RunInstances.html),
@@ -59731,7 +62414,7 @@ func (s *EnableEbsEncryptionByDefaultInput) SetDryRun(v bool) *EnableEbsEncrypti
 type EnableEbsEncryptionByDefaultOutput struct {
 	_ struct{} `type:"structure"`
 
-	// Account-level encryption status after performing the action.
+	// The updated status of encryption by default.
 	EbsEncryptionByDefault *bool `locationName:"ebsEncryptionByDefault" type:"boolean"`
 }
 
@@ -60539,7 +63222,7 @@ type ExportTransitGatewayRoutesInput struct {
 
 	// One or more filters. The possible values are:
 	//
-	//    * attachment.transit-gateway-attachment-id- The id of the transit gateway
+	//    * attachment.transit-gateway-attachment-id - The id of the transit gateway
 	//    attachment.
 	//
 	//    * attachment.resource-id - The resource id of the transit gateway attachment.
@@ -60563,7 +63246,7 @@ type ExportTransitGatewayRoutesInput struct {
 	//
 	//    * transit-gateway-route-destination-cidr-block - The CIDR range.
 	//
-	//    * type - The type of roue (active | blackhole).
+	//    * type - The type of route (active | blackhole).
 	Filters []*Filter `locationName:"Filter" locationNameList:"Filter" type:"list"`
 
 	// The name of the S3 bucket.
@@ -61247,7 +63930,8 @@ type FleetLaunchTemplateSpecificationRequest struct {
 	// The name of the launch template.
 	LaunchTemplateName *string `min:"3" type:"string"`
 
-	// The version number of the launch template.
+	// The version number of the launch template. Note: This is a required parameter
+	// and will be updated soon.
 	Version *string `type:"string"`
 }
 
@@ -61669,6 +64353,139 @@ func (s *FpgaImageState) SetMessage(v string) *FpgaImageState {
 	return s
 }
 
+type GetCapacityReservationUsageInput struct {
+	_ struct{} `type:"structure"`
+
+	// CapacityReservationId is a required field
+	CapacityReservationId *string `type:"string" required:"true"`
+
+	DryRun *bool `type:"boolean"`
+
+	MaxResults *int64 `min:"1" type:"integer"`
+
+	NextToken *string `type:"string"`
+}
+
+// String returns the string representation
+func (s GetCapacityReservationUsageInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s GetCapacityReservationUsageInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *GetCapacityReservationUsageInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "GetCapacityReservationUsageInput"}
+	if s.CapacityReservationId == nil {
+		invalidParams.Add(request.NewErrParamRequired("CapacityReservationId"))
+	}
+	if s.MaxResults != nil && *s.MaxResults < 1 {
+		invalidParams.Add(request.NewErrParamMinValue("MaxResults", 1))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetCapacityReservationId sets the CapacityReservationId field's value.
+func (s *GetCapacityReservationUsageInput) SetCapacityReservationId(v string) *GetCapacityReservationUsageInput {
+	s.CapacityReservationId = &v
+	return s
+}
+
+// SetDryRun sets the DryRun field's value.
+func (s *GetCapacityReservationUsageInput) SetDryRun(v bool) *GetCapacityReservationUsageInput {
+	s.DryRun = &v
+	return s
+}
+
+// SetMaxResults sets the MaxResults field's value.
+func (s *GetCapacityReservationUsageInput) SetMaxResults(v int64) *GetCapacityReservationUsageInput {
+	s.MaxResults = &v
+	return s
+}
+
+// SetNextToken sets the NextToken field's value.
+func (s *GetCapacityReservationUsageInput) SetNextToken(v string) *GetCapacityReservationUsageInput {
+	s.NextToken = &v
+	return s
+}
+
+type GetCapacityReservationUsageOutput struct {
+	_ struct{} `type:"structure"`
+
+	AvailableInstanceCount *int64 `locationName:"availableInstanceCount" type:"integer"`
+
+	CapacityReservationId *string `locationName:"capacityReservationId" type:"string"`
+
+	InstanceType *string `locationName:"instanceType" type:"string"`
+
+	InstanceUsages []*InstanceUsage `locationName:"instanceUsageSet" locationNameList:"item" type:"list"`
+
+	NextToken *string `locationName:"nextToken" type:"string"`
+
+	State *string `locationName:"state" type:"string" enum:"CapacityReservationState"`
+
+	TotalInstanceCount *int64 `locationName:"totalInstanceCount" type:"integer"`
+}
+
+// String returns the string representation
+func (s GetCapacityReservationUsageOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s GetCapacityReservationUsageOutput) GoString() string {
+	return s.String()
+}
+
+// SetAvailableInstanceCount sets the AvailableInstanceCount field's value.
+func (s *GetCapacityReservationUsageOutput) SetAvailableInstanceCount(v int64) *GetCapacityReservationUsageOutput {
+	s.AvailableInstanceCount = &v
+	return s
+}
+
+// SetCapacityReservationId sets the CapacityReservationId field's value.
+func (s *GetCapacityReservationUsageOutput) SetCapacityReservationId(v string) *GetCapacityReservationUsageOutput {
+	s.CapacityReservationId = &v
+	return s
+}
+
+// SetInstanceType sets the InstanceType field's value.
+func (s *GetCapacityReservationUsageOutput) SetInstanceType(v string) *GetCapacityReservationUsageOutput {
+	s.InstanceType = &v
+	return s
+}
+
+// SetInstanceUsages sets the InstanceUsages field's value.
+func (s *GetCapacityReservationUsageOutput) SetInstanceUsages(v []*InstanceUsage) *GetCapacityReservationUsageOutput {
+	s.InstanceUsages = v
+	return s
+}
+
+// SetNextToken sets the NextToken field's value.
+func (s *GetCapacityReservationUsageOutput) SetNextToken(v string) *GetCapacityReservationUsageOutput {
+	s.NextToken = &v
+	return s
+}
+
+// SetState sets the State field's value.
+func (s *GetCapacityReservationUsageOutput) SetState(v string) *GetCapacityReservationUsageOutput {
+	s.State = &v
+	return s
+}
+
+// SetTotalInstanceCount sets the TotalInstanceCount field's value.
+func (s *GetCapacityReservationUsageOutput) SetTotalInstanceCount(v int64) *GetCapacityReservationUsageOutput {
+	s.TotalInstanceCount = &v
+	return s
+}
+
 type GetConsoleOutputInput struct {
 	_ struct{} `type:"structure"`
 
@@ -61893,8 +64710,7 @@ func (s *GetEbsDefaultKmsKeyIdInput) SetDryRun(v bool) *GetEbsDefaultKmsKeyIdInp
 type GetEbsDefaultKmsKeyIdOutput struct {
 	_ struct{} `type:"structure"`
 
-	// The full ARN of the default CMK that your account uses to encrypt an EBS
-	// volume when no CMK is specified in the API call that creates the volume.
+	// The Amazon Resource Name (ARN) of the default CMK for encryption by default.
 	KmsKeyId *string `locationName:"kmsKeyId" type:"string"`
 }
 
@@ -61943,7 +64759,7 @@ func (s *GetEbsEncryptionByDefaultInput) SetDryRun(v bool) *GetEbsEncryptionByDe
 type GetEbsEncryptionByDefaultOutput struct {
 	_ struct{} `type:"structure"`
 
-	// Indicates whether default encryption for EBS volumes is enabled or disabled.
+	// Indicates whether encryption by default is enabled.
 	EbsEncryptionByDefault *bool `locationName:"ebsEncryptionByDefault" type:"boolean"`
 }
 
@@ -62957,9 +65773,8 @@ type Host struct {
 	// The number of new instances that can be launched onto the Dedicated Host.
 	AvailableCapacity *AvailableCapacity `locationName:"availableCapacity" type:"structure"`
 
-	// Unique, case-sensitive identifier that you provide to ensure idempotency
-	// of the request. For more information, see How to Ensure Idempotency (https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/Run_Instance_Idempotency.html)
-	// in the Amazon Elastic Compute Cloud User Guide.
+	// Unique, case-sensitive identifier that you provide to ensure the idempotency
+	// of the request. For more information, see How to Ensure Idempotency (https://docs.aws.amazon.com/AWSEC2/latest/APIReference/Run_Instance_Idempotency.html).
 	ClientToken *string `locationName:"clientToken" type:"string"`
 
 	// The ID of the Dedicated Host.
@@ -62967,6 +65782,10 @@ type Host struct {
 
 	// The hardware specifications of the Dedicated Host.
 	HostProperties *HostProperties `locationName:"hostProperties" type:"structure"`
+
+	// Indicates whether host recovery is enabled or disabled for the Dedicated
+	// Host.
+	HostRecovery *string `locationName:"hostRecovery" type:"string" enum:"HostRecovery"`
 
 	// The reservation ID of the Dedicated Host. This returns a null response if
 	// the Dedicated Host doesn't have an associated reservation.
@@ -63034,6 +65853,12 @@ func (s *Host) SetHostId(v string) *Host {
 // SetHostProperties sets the HostProperties field's value.
 func (s *Host) SetHostProperties(v *HostProperties) *Host {
 	s.HostProperties = v
+	return s
+}
+
+// SetHostRecovery sets the HostRecovery field's value.
+func (s *Host) SetHostRecovery(v string) *Host {
+	s.HostRecovery = &v
 	return s
 }
 
@@ -63623,7 +66448,7 @@ type Image struct {
 	// The AWS account ID of the image owner.
 	OwnerId *string `locationName:"imageOwnerId" type:"string"`
 
-	// The value is Windows for Windows AMIs; otherwise blank.
+	// This value is set to windows for Windows AMIs; otherwise, it is blank.
 	Platform *string `locationName:"platform" type:"string" enum:"PlatformValues"`
 
 	// Any product codes associated with the AMI.
@@ -63979,13 +66804,12 @@ func (s *ImportClientVpnClientCertificateRevocationListOutput) SetReturn(v bool)
 	return s
 }
 
-// Contains the parameters for ImportImage.
 type ImportImageInput struct {
 	_ struct{} `type:"structure"`
 
 	// The architecture of the virtual machine.
 	//
-	// Valid values: i386 | x86_64
+	// Valid values: i386 | x86_64 | arm64
 	Architecture *string `type:"string"`
 
 	// The client-specific data.
@@ -64049,21 +66873,15 @@ type ImportImageInput struct {
 
 	// The license type to be used for the Amazon Machine Image (AMI) after importing.
 	//
-	// Note: You may only use BYOL if you have existing licenses with rights to
-	// use these licenses in a third party cloud like AWS. For more information,
-	// see Prerequisites (https://docs.aws.amazon.com/vm-import/latest/userguide/vmimport-image-import.html#prerequisites-image)
+	// By default, we detect the source-system operating system (OS) and apply the
+	// appropriate license. Specify AWS to replace the source-system license with
+	// an AWS license, if appropriate. Specify BYOL to retain the source-system
+	// license, if appropriate.
+	//
+	// To use BYOL, you must have existing licenses with rights to use these licenses
+	// in a third party cloud, such as AWS. For more information, see Prerequisites
+	// (https://docs.aws.amazon.com/vm-import/latest/userguide/vmimport-image-import.html#prerequisites-image)
 	// in the VM Import/Export User Guide.
-	//
-	// Valid values include:
-	//
-	//    * Auto - Detects the source-system operating system (OS) and applies the
-	//    appropriate license.
-	//
-	//    * AWS - Replaces the source-system license with an AWS license, if appropriate.
-	//
-	//    * BYOL - Retains the source-system license, if appropriate.
-	//
-	// Default value: Auto
 	LicenseType *string `type:"string"`
 
 	// The operating system of the virtual machine.
@@ -64157,7 +66975,6 @@ func (s *ImportImageInput) SetRoleName(v string) *ImportImageInput {
 	return s
 }
 
-// Contains the output for ImportImage.
 type ImportImageOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -64296,7 +67113,7 @@ type ImportImageTask struct {
 
 	// The architecture of the virtual machine.
 	//
-	// Valid values: i386 | x86_64
+	// Valid values: i386 | x86_64 | arm64
 	Architecture *string `locationName:"architecture" type:"string"`
 
 	// A description of the import task.
@@ -64427,7 +67244,6 @@ func (s *ImportImageTask) SetStatusMessage(v string) *ImportImageTask {
 	return s
 }
 
-// Contains the parameters for ImportInstance.
 type ImportInstanceInput struct {
 	_ struct{} `type:"structure"`
 
@@ -64632,7 +67448,6 @@ func (s *ImportInstanceLaunchSpecification) SetUserData(v *UserData) *ImportInst
 	return s
 }
 
-// Contains the output for ImportInstance.
 type ImportInstanceOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -64884,7 +67699,6 @@ func (s *ImportKeyPairOutput) SetKeyName(v string) *ImportKeyPairOutput {
 	return s
 }
 
-// Contains the parameters for ImportSnapshot.
 type ImportSnapshotInput struct {
 	_ struct{} `type:"structure"`
 
@@ -65005,7 +67819,6 @@ func (s *ImportSnapshotInput) SetRoleName(v string) *ImportSnapshotInput {
 	return s
 }
 
-// Contains the output for ImportSnapshot.
 type ImportSnapshotOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -65089,7 +67902,6 @@ func (s *ImportSnapshotTask) SetSnapshotTaskDetail(v *SnapshotTaskDetail) *Impor
 	return s
 }
 
-// Contains the parameters for ImportVolume.
 type ImportVolumeInput struct {
 	_ struct{} `type:"structure"`
 
@@ -65187,7 +67999,6 @@ func (s *ImportVolumeInput) SetVolume(v *VolumeDetail) *ImportVolumeInput {
 	return s
 }
 
-// Contains the output for ImportVolume.
 type ImportVolumeOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -66926,6 +69737,36 @@ func (s *InstanceStatusSummary) SetDetails(v []*InstanceStatusDetails) *Instance
 // SetStatus sets the Status field's value.
 func (s *InstanceStatusSummary) SetStatus(v string) *InstanceStatusSummary {
 	s.Status = &v
+	return s
+}
+
+type InstanceUsage struct {
+	_ struct{} `type:"structure"`
+
+	AccountId *string `locationName:"accountId" type:"string"`
+
+	UsedInstanceCount *int64 `locationName:"usedInstanceCount" type:"integer"`
+}
+
+// String returns the string representation
+func (s InstanceUsage) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s InstanceUsage) GoString() string {
+	return s.String()
+}
+
+// SetAccountId sets the AccountId field's value.
+func (s *InstanceUsage) SetAccountId(v string) *InstanceUsage {
+	s.AccountId = &v
+	return s
+}
+
+// SetUsedInstanceCount sets the UsedInstanceCount field's value.
+func (s *InstanceUsage) SetUsedInstanceCount(v int64) *InstanceUsage {
+	s.UsedInstanceCount = &v
 	return s
 }
 
@@ -69586,6 +72427,13 @@ type ModifyClientVpnEndpointInput struct {
 	// The ARN of the server certificate to be used. The server certificate must
 	// be provisioned in AWS Certificate Manager (ACM).
 	ServerCertificateArn *string `type:"string"`
+
+	// Indicates whether the VPN is split-tunnel.
+	//
+	// For information about split-tunnel VPN endpoints, see Split-Tunnel AWS Client
+	// VPN Endpoint (https://docs.aws.amazon.com/vpn/latest/clientvpn-admin/split-tunnel-vpn.html)
+	// in the AWS Client VPN Administrator Guide.
+	SplitTunnel *bool `type:"boolean"`
 }
 
 // String returns the string representation
@@ -69647,6 +72495,12 @@ func (s *ModifyClientVpnEndpointInput) SetServerCertificateArn(v string) *Modify
 	return s
 }
 
+// SetSplitTunnel sets the SplitTunnel field's value.
+func (s *ModifyClientVpnEndpointInput) SetSplitTunnel(v bool) *ModifyClientVpnEndpointInput {
+	s.SplitTunnel = &v
+	return s
+}
+
 type ModifyClientVpnEndpointOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -69679,25 +72533,24 @@ type ModifyEbsDefaultKmsKeyIdInput struct {
 	// it is UnauthorizedOperation.
 	DryRun *bool `type:"boolean"`
 
-	// An identifier for the AWS Key Management Service (AWS KMS) customer master
-	// key (CMK) to use to encrypt the volume. This parameter is only required if
-	// you want to use a non-default CMK; if this parameter is not specified, the
-	// default CMK for EBS is used. If a KmsKeyId is specified, the Encrypted flag
-	// must also be set.
+	// The identifier of the AWS Key Management Service (AWS KMS) customer master
+	// key (CMK) to use for Amazon EBS encryption. If this parameter is not specified,
+	// your AWS managed CMK for EBS is used. If KmsKeyId is specified, the encrypted
+	// state must be true.
 	//
-	// The CMK identifier may be provided in any of the following formats:
+	// You can specify the CMK using any of the following:
 	//
-	//    * Key ID
+	//    * Key ID. For example, key/1234abcd-12ab-34cd-56ef-1234567890ab.
 	//
-	//    * Key alias
+	//    * Key alias. For example, alias/ExampleAlias.
 	//
-	//    * ARN using key ID. The ID ARN contains the arn:aws:kms namespace, followed
-	//    by the Region of the CMK, the AWS account ID of the CMK owner, the key
-	//    namespace, and then the CMK ID. For example, arn:aws:kms:us-east-1:012345678910:key/abcd1234-a123-456a-a12b-a123b4cd56ef.
+	//    * Key ARN. For example, arn:aws:kms:us-east-1:012345678910:key/abcd1234-a123-456a-a12b-a123b4cd56ef.
 	//
-	//    * ARN using key alias. The alias ARN contains the arn:aws:kms namespace,
-	//    followed by the Region of the CMK, the AWS account ID of the CMK owner,
-	//    the alias namespace, and then the CMK alias. For example, arn:aws:kms:us-east-1:012345678910:alias/ExampleAlias.
+	//    * Alias ARN. For example, arn:aws:kms:us-east-1:012345678910:alias/ExampleAlias.
+	//
+	// AWS authenticates the CMK asynchronously. Therefore, if you specify an ID,
+	// alias, or ARN that is not valid, the action can appear to complete, but eventually
+	// fails.
 	//
 	// KmsKeyId is a required field
 	KmsKeyId *string `type:"string" required:"true"`
@@ -69741,8 +72594,7 @@ func (s *ModifyEbsDefaultKmsKeyIdInput) SetKmsKeyId(v string) *ModifyEbsDefaultK
 type ModifyEbsDefaultKmsKeyIdOutput struct {
 	_ struct{} `type:"structure"`
 
-	// The full ARN of the default CMK that your account uses to encrypt an EBS
-	// volume when no CMK is specified in the API call that creates the volume.
+	// The Amazon Resource Name (ARN) of the default CMK for encryption by default.
 	KmsKeyId *string `locationName:"kmsKeyId" type:"string"`
 }
 
@@ -70017,14 +72869,17 @@ type ModifyHostsInput struct {
 	_ struct{} `type:"structure"`
 
 	// Specify whether to enable or disable auto-placement.
-	//
-	// AutoPlacement is a required field
-	AutoPlacement *string `locationName:"autoPlacement" type:"string" required:"true" enum:"AutoPlacement"`
+	AutoPlacement *string `locationName:"autoPlacement" type:"string" enum:"AutoPlacement"`
 
 	// The IDs of the Dedicated Hosts to modify.
 	//
 	// HostIds is a required field
 	HostIds []*string `locationName:"hostId" locationNameList:"item" type:"list" required:"true"`
+
+	// Indicates whether to enable or disable host recovery for the Dedicated Host.
+	// For more information, see Host Recovery (https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/dedicated-hosts-recovery.html)
+	// in the Amazon Elastic Compute Cloud User Guide.
+	HostRecovery *string `type:"string" enum:"HostRecovery"`
 }
 
 // String returns the string representation
@@ -70040,9 +72895,6 @@ func (s ModifyHostsInput) GoString() string {
 // Validate inspects the fields of the type to determine if they are valid.
 func (s *ModifyHostsInput) Validate() error {
 	invalidParams := request.ErrInvalidParams{Context: "ModifyHostsInput"}
-	if s.AutoPlacement == nil {
-		invalidParams.Add(request.NewErrParamRequired("AutoPlacement"))
-	}
 	if s.HostIds == nil {
 		invalidParams.Add(request.NewErrParamRequired("HostIds"))
 	}
@@ -70062,6 +72914,12 @@ func (s *ModifyHostsInput) SetAutoPlacement(v string) *ModifyHostsInput {
 // SetHostIds sets the HostIds field's value.
 func (s *ModifyHostsInput) SetHostIds(v []*string) *ModifyHostsInput {
 	s.HostIds = v
+	return s
+}
+
+// SetHostRecovery sets the HostRecovery field's value.
+func (s *ModifyHostsInput) SetHostRecovery(v string) *ModifyHostsInput {
+	s.HostRecovery = &v
 	return s
 }
 
@@ -71449,6 +74307,9 @@ type ModifySpotFleetRequestInput struct {
 	// the Spot Fleet.
 	ExcessCapacityTerminationPolicy *string `locationName:"excessCapacityTerminationPolicy" type:"string" enum:"ExcessCapacityTerminationPolicy"`
 
+	// The number of On-Demand Instances in the fleet.
+	OnDemandTargetCapacity *int64 `type:"integer"`
+
 	// The ID of the Spot Fleet request.
 	//
 	// SpotFleetRequestId is a required field
@@ -71484,6 +74345,12 @@ func (s *ModifySpotFleetRequestInput) Validate() error {
 // SetExcessCapacityTerminationPolicy sets the ExcessCapacityTerminationPolicy field's value.
 func (s *ModifySpotFleetRequestInput) SetExcessCapacityTerminationPolicy(v string) *ModifySpotFleetRequestInput {
 	s.ExcessCapacityTerminationPolicy = &v
+	return s
+}
+
+// SetOnDemandTargetCapacity sets the OnDemandTargetCapacity field's value.
+func (s *ModifySpotFleetRequestInput) SetOnDemandTargetCapacity(v int64) *ModifySpotFleetRequestInput {
+	s.OnDemandTargetCapacity = &v
 	return s
 }
 
@@ -71599,6 +74466,413 @@ func (s ModifySubnetAttributeOutput) String() string {
 // GoString returns the string representation
 func (s ModifySubnetAttributeOutput) GoString() string {
 	return s.String()
+}
+
+type ModifyTrafficMirrorFilterNetworkServicesInput struct {
+	_ struct{} `type:"structure"`
+
+	// The network service, for example Amazon DNS, that you want to mirror.
+	AddNetworkServices []*string `locationName:"AddNetworkService" locationNameList:"item" type:"list"`
+
+	// Checks whether you have the required permissions for the action, without
+	// actually making the request, and provides an error response. If you have
+	// the required permissions, the error response is DryRunOperation. Otherwise,
+	// it is UnauthorizedOperation.
+	DryRun *bool `type:"boolean"`
+
+	// The network service, for example Amazon DNS, that you no longer want to mirror.
+	RemoveNetworkServices []*string `locationName:"RemoveNetworkService" locationNameList:"item" type:"list"`
+
+	// The ID of the Traffic Mirror filter.
+	//
+	// TrafficMirrorFilterId is a required field
+	TrafficMirrorFilterId *string `type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s ModifyTrafficMirrorFilterNetworkServicesInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ModifyTrafficMirrorFilterNetworkServicesInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *ModifyTrafficMirrorFilterNetworkServicesInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "ModifyTrafficMirrorFilterNetworkServicesInput"}
+	if s.TrafficMirrorFilterId == nil {
+		invalidParams.Add(request.NewErrParamRequired("TrafficMirrorFilterId"))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetAddNetworkServices sets the AddNetworkServices field's value.
+func (s *ModifyTrafficMirrorFilterNetworkServicesInput) SetAddNetworkServices(v []*string) *ModifyTrafficMirrorFilterNetworkServicesInput {
+	s.AddNetworkServices = v
+	return s
+}
+
+// SetDryRun sets the DryRun field's value.
+func (s *ModifyTrafficMirrorFilterNetworkServicesInput) SetDryRun(v bool) *ModifyTrafficMirrorFilterNetworkServicesInput {
+	s.DryRun = &v
+	return s
+}
+
+// SetRemoveNetworkServices sets the RemoveNetworkServices field's value.
+func (s *ModifyTrafficMirrorFilterNetworkServicesInput) SetRemoveNetworkServices(v []*string) *ModifyTrafficMirrorFilterNetworkServicesInput {
+	s.RemoveNetworkServices = v
+	return s
+}
+
+// SetTrafficMirrorFilterId sets the TrafficMirrorFilterId field's value.
+func (s *ModifyTrafficMirrorFilterNetworkServicesInput) SetTrafficMirrorFilterId(v string) *ModifyTrafficMirrorFilterNetworkServicesInput {
+	s.TrafficMirrorFilterId = &v
+	return s
+}
+
+type ModifyTrafficMirrorFilterNetworkServicesOutput struct {
+	_ struct{} `type:"structure"`
+
+	// The Traffic Mirror filter that the network service is associated with.
+	TrafficMirrorFilter *TrafficMirrorFilter `locationName:"trafficMirrorFilter" type:"structure"`
+}
+
+// String returns the string representation
+func (s ModifyTrafficMirrorFilterNetworkServicesOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ModifyTrafficMirrorFilterNetworkServicesOutput) GoString() string {
+	return s.String()
+}
+
+// SetTrafficMirrorFilter sets the TrafficMirrorFilter field's value.
+func (s *ModifyTrafficMirrorFilterNetworkServicesOutput) SetTrafficMirrorFilter(v *TrafficMirrorFilter) *ModifyTrafficMirrorFilterNetworkServicesOutput {
+	s.TrafficMirrorFilter = v
+	return s
+}
+
+type ModifyTrafficMirrorFilterRuleInput struct {
+	_ struct{} `type:"structure"`
+
+	// The description to assign to the Traffic Mirror rule.
+	Description *string `type:"string"`
+
+	// The destination CIDR block to assign to the Traffic Mirror rule.
+	DestinationCidrBlock *string `type:"string"`
+
+	// The destination ports that are associated with the Traffic Mirror rule.
+	DestinationPortRange *TrafficMirrorPortRangeRequest `type:"structure"`
+
+	// Checks whether you have the required permissions for the action, without
+	// actually making the request, and provides an error response. If you have
+	// the required permissions, the error response is DryRunOperation. Otherwise,
+	// it is UnauthorizedOperation.
+	DryRun *bool `type:"boolean"`
+
+	// The protocol, for example TCP, to assign to the Traffic Mirror rule.
+	Protocol *int64 `type:"integer"`
+
+	// The properties that you want to remove from the Traffic Mirror filter rule.
+	//
+	// When you remove a property from a Traffic Mirror filter rule, the property
+	// is set to the default.
+	RemoveFields []*string `locationName:"RemoveField" type:"list"`
+
+	// The action to assign to the rule.
+	RuleAction *string `type:"string" enum:"TrafficMirrorRuleAction"`
+
+	// The number of the Traffic Mirror rule. This number must be unique for each
+	// Traffic Mirror rule in a given direction. The rules are processed in ascending
+	// order by rule number.
+	RuleNumber *int64 `type:"integer"`
+
+	// The source CIDR block to assign to the Traffic Mirror rule.
+	SourceCidrBlock *string `type:"string"`
+
+	// The port range to assign to the Traffic Mirror rule.
+	SourcePortRange *TrafficMirrorPortRangeRequest `type:"structure"`
+
+	// The type of traffic (ingress | egress) to assign to the rule.
+	TrafficDirection *string `type:"string" enum:"TrafficDirection"`
+
+	// The ID of the Traffic Mirror rule.
+	//
+	// TrafficMirrorFilterRuleId is a required field
+	TrafficMirrorFilterRuleId *string `type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s ModifyTrafficMirrorFilterRuleInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ModifyTrafficMirrorFilterRuleInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *ModifyTrafficMirrorFilterRuleInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "ModifyTrafficMirrorFilterRuleInput"}
+	if s.TrafficMirrorFilterRuleId == nil {
+		invalidParams.Add(request.NewErrParamRequired("TrafficMirrorFilterRuleId"))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetDescription sets the Description field's value.
+func (s *ModifyTrafficMirrorFilterRuleInput) SetDescription(v string) *ModifyTrafficMirrorFilterRuleInput {
+	s.Description = &v
+	return s
+}
+
+// SetDestinationCidrBlock sets the DestinationCidrBlock field's value.
+func (s *ModifyTrafficMirrorFilterRuleInput) SetDestinationCidrBlock(v string) *ModifyTrafficMirrorFilterRuleInput {
+	s.DestinationCidrBlock = &v
+	return s
+}
+
+// SetDestinationPortRange sets the DestinationPortRange field's value.
+func (s *ModifyTrafficMirrorFilterRuleInput) SetDestinationPortRange(v *TrafficMirrorPortRangeRequest) *ModifyTrafficMirrorFilterRuleInput {
+	s.DestinationPortRange = v
+	return s
+}
+
+// SetDryRun sets the DryRun field's value.
+func (s *ModifyTrafficMirrorFilterRuleInput) SetDryRun(v bool) *ModifyTrafficMirrorFilterRuleInput {
+	s.DryRun = &v
+	return s
+}
+
+// SetProtocol sets the Protocol field's value.
+func (s *ModifyTrafficMirrorFilterRuleInput) SetProtocol(v int64) *ModifyTrafficMirrorFilterRuleInput {
+	s.Protocol = &v
+	return s
+}
+
+// SetRemoveFields sets the RemoveFields field's value.
+func (s *ModifyTrafficMirrorFilterRuleInput) SetRemoveFields(v []*string) *ModifyTrafficMirrorFilterRuleInput {
+	s.RemoveFields = v
+	return s
+}
+
+// SetRuleAction sets the RuleAction field's value.
+func (s *ModifyTrafficMirrorFilterRuleInput) SetRuleAction(v string) *ModifyTrafficMirrorFilterRuleInput {
+	s.RuleAction = &v
+	return s
+}
+
+// SetRuleNumber sets the RuleNumber field's value.
+func (s *ModifyTrafficMirrorFilterRuleInput) SetRuleNumber(v int64) *ModifyTrafficMirrorFilterRuleInput {
+	s.RuleNumber = &v
+	return s
+}
+
+// SetSourceCidrBlock sets the SourceCidrBlock field's value.
+func (s *ModifyTrafficMirrorFilterRuleInput) SetSourceCidrBlock(v string) *ModifyTrafficMirrorFilterRuleInput {
+	s.SourceCidrBlock = &v
+	return s
+}
+
+// SetSourcePortRange sets the SourcePortRange field's value.
+func (s *ModifyTrafficMirrorFilterRuleInput) SetSourcePortRange(v *TrafficMirrorPortRangeRequest) *ModifyTrafficMirrorFilterRuleInput {
+	s.SourcePortRange = v
+	return s
+}
+
+// SetTrafficDirection sets the TrafficDirection field's value.
+func (s *ModifyTrafficMirrorFilterRuleInput) SetTrafficDirection(v string) *ModifyTrafficMirrorFilterRuleInput {
+	s.TrafficDirection = &v
+	return s
+}
+
+// SetTrafficMirrorFilterRuleId sets the TrafficMirrorFilterRuleId field's value.
+func (s *ModifyTrafficMirrorFilterRuleInput) SetTrafficMirrorFilterRuleId(v string) *ModifyTrafficMirrorFilterRuleInput {
+	s.TrafficMirrorFilterRuleId = &v
+	return s
+}
+
+type ModifyTrafficMirrorFilterRuleOutput struct {
+	_ struct{} `type:"structure"`
+
+	// Modifies a Traffic Mirror rule.
+	TrafficMirrorFilterRule *TrafficMirrorFilterRule `locationName:"trafficMirrorFilterRule" type:"structure"`
+}
+
+// String returns the string representation
+func (s ModifyTrafficMirrorFilterRuleOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ModifyTrafficMirrorFilterRuleOutput) GoString() string {
+	return s.String()
+}
+
+// SetTrafficMirrorFilterRule sets the TrafficMirrorFilterRule field's value.
+func (s *ModifyTrafficMirrorFilterRuleOutput) SetTrafficMirrorFilterRule(v *TrafficMirrorFilterRule) *ModifyTrafficMirrorFilterRuleOutput {
+	s.TrafficMirrorFilterRule = v
+	return s
+}
+
+type ModifyTrafficMirrorSessionInput struct {
+	_ struct{} `type:"structure"`
+
+	// The description to assign to the Traffic Mirror session.
+	Description *string `type:"string"`
+
+	// Checks whether you have the required permissions for the action, without
+	// actually making the request, and provides an error response. If you have
+	// the required permissions, the error response is DryRunOperation. Otherwise,
+	// it is UnauthorizedOperation.
+	DryRun *bool `type:"boolean"`
+
+	// The number of bytes in each packet to mirror. These are bytes after the VXLAN
+	// header. To mirror a subset, set this to the length (in bytes) to mirror.
+	// For example, if you set this value to 100, then the first 100 bytes that
+	// meet the filter criteria are copied to the target. Do not specify this parameter
+	// when you want to mirror the entire packet.
+	PacketLength *int64 `type:"integer"`
+
+	// The properties that you want to remove from the Traffic Mirror session.
+	//
+	// When you remove a property from a Traffic Mirror session, the property is
+	// set to the default.
+	RemoveFields []*string `locationName:"RemoveField" type:"list"`
+
+	// The session number determines the order in which sessions are evaluated when
+	// an interface is used by multiple sessions. The first session with a matching
+	// filter is the one that mirrors the packets.
+	//
+	// Valid values are 1-32766.
+	SessionNumber *int64 `type:"integer"`
+
+	// The ID of the Traffic Mirror filter.
+	TrafficMirrorFilterId *string `type:"string"`
+
+	// The ID of the Traffic Mirror session.
+	//
+	// TrafficMirrorSessionId is a required field
+	TrafficMirrorSessionId *string `type:"string" required:"true"`
+
+	// The Traffic Mirror target. The target must be in the same VPC as the source,
+	// or have a VPC peering connection with the source.
+	TrafficMirrorTargetId *string `type:"string"`
+
+	// The virtual network ID of the Traffic Mirror session.
+	VirtualNetworkId *int64 `type:"integer"`
+}
+
+// String returns the string representation
+func (s ModifyTrafficMirrorSessionInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ModifyTrafficMirrorSessionInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *ModifyTrafficMirrorSessionInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "ModifyTrafficMirrorSessionInput"}
+	if s.TrafficMirrorSessionId == nil {
+		invalidParams.Add(request.NewErrParamRequired("TrafficMirrorSessionId"))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetDescription sets the Description field's value.
+func (s *ModifyTrafficMirrorSessionInput) SetDescription(v string) *ModifyTrafficMirrorSessionInput {
+	s.Description = &v
+	return s
+}
+
+// SetDryRun sets the DryRun field's value.
+func (s *ModifyTrafficMirrorSessionInput) SetDryRun(v bool) *ModifyTrafficMirrorSessionInput {
+	s.DryRun = &v
+	return s
+}
+
+// SetPacketLength sets the PacketLength field's value.
+func (s *ModifyTrafficMirrorSessionInput) SetPacketLength(v int64) *ModifyTrafficMirrorSessionInput {
+	s.PacketLength = &v
+	return s
+}
+
+// SetRemoveFields sets the RemoveFields field's value.
+func (s *ModifyTrafficMirrorSessionInput) SetRemoveFields(v []*string) *ModifyTrafficMirrorSessionInput {
+	s.RemoveFields = v
+	return s
+}
+
+// SetSessionNumber sets the SessionNumber field's value.
+func (s *ModifyTrafficMirrorSessionInput) SetSessionNumber(v int64) *ModifyTrafficMirrorSessionInput {
+	s.SessionNumber = &v
+	return s
+}
+
+// SetTrafficMirrorFilterId sets the TrafficMirrorFilterId field's value.
+func (s *ModifyTrafficMirrorSessionInput) SetTrafficMirrorFilterId(v string) *ModifyTrafficMirrorSessionInput {
+	s.TrafficMirrorFilterId = &v
+	return s
+}
+
+// SetTrafficMirrorSessionId sets the TrafficMirrorSessionId field's value.
+func (s *ModifyTrafficMirrorSessionInput) SetTrafficMirrorSessionId(v string) *ModifyTrafficMirrorSessionInput {
+	s.TrafficMirrorSessionId = &v
+	return s
+}
+
+// SetTrafficMirrorTargetId sets the TrafficMirrorTargetId field's value.
+func (s *ModifyTrafficMirrorSessionInput) SetTrafficMirrorTargetId(v string) *ModifyTrafficMirrorSessionInput {
+	s.TrafficMirrorTargetId = &v
+	return s
+}
+
+// SetVirtualNetworkId sets the VirtualNetworkId field's value.
+func (s *ModifyTrafficMirrorSessionInput) SetVirtualNetworkId(v int64) *ModifyTrafficMirrorSessionInput {
+	s.VirtualNetworkId = &v
+	return s
+}
+
+type ModifyTrafficMirrorSessionOutput struct {
+	_ struct{} `type:"structure"`
+
+	// Information about the Traffic Mirror session.
+	TrafficMirrorSession *TrafficMirrorSession `locationName:"trafficMirrorSession" type:"structure"`
+}
+
+// String returns the string representation
+func (s ModifyTrafficMirrorSessionOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ModifyTrafficMirrorSessionOutput) GoString() string {
+	return s.String()
+}
+
+// SetTrafficMirrorSession sets the TrafficMirrorSession field's value.
+func (s *ModifyTrafficMirrorSessionOutput) SetTrafficMirrorSession(v *TrafficMirrorSession) *ModifyTrafficMirrorSessionOutput {
+	s.TrafficMirrorSession = v
+	return s
 }
 
 type ModifyTransitGatewayVpcAttachmentInput struct {
@@ -72988,7 +76262,7 @@ type NatGateway struct {
 	NatGatewayId *string `locationName:"natGatewayId" type:"string"`
 
 	// Reserved. If you need to sustain traffic greater than the documented limits
-	// (https://docs.aws.amazon.com/AmazonVPC/latest/UserGuide/vpc-nat-gateway.html),
+	// (https://docs.aws.amazon.com/vpc/latest/userguide/vpc-nat-gateway.html),
 	// contact us through the Support Center (https://console.aws.amazon.com/support/home?).
 	ProvisionedBandwidth *ProvisionedBandwidth `locationName:"provisionedBandwidth" type:"structure"`
 
@@ -73935,7 +77209,7 @@ func (s *NewDhcpConfiguration) SetValues(v []*string) *NewDhcpConfiguration {
 	return s
 }
 
-// The allocation strategy of On-Demand Instances in an EC2 Fleet.
+// Describes the configuration of On-Demand Instances in an EC2 Fleet.
 type OnDemandOptions struct {
 	_ struct{} `type:"structure"`
 
@@ -73946,6 +77220,10 @@ type OnDemandOptions struct {
 	// launching the highest priority first. If you do not specify a value, EC2
 	// Fleet defaults to lowest-price.
 	AllocationStrategy *string `locationName:"allocationStrategy" type:"string" enum:"FleetOnDemandAllocationStrategy"`
+
+	// The maximum amount per hour for On-Demand Instances that you're willing to
+	// pay.
+	MaxTotalPrice *string `locationName:"maxTotalPrice" type:"string"`
 
 	// The minimum target capacity for On-Demand Instances in the fleet. If the
 	// minimum target capacity is not reached, the fleet launches no instances.
@@ -73976,6 +77254,12 @@ func (s *OnDemandOptions) SetAllocationStrategy(v string) *OnDemandOptions {
 	return s
 }
 
+// SetMaxTotalPrice sets the MaxTotalPrice field's value.
+func (s *OnDemandOptions) SetMaxTotalPrice(v string) *OnDemandOptions {
+	s.MaxTotalPrice = &v
+	return s
+}
+
 // SetMinTargetCapacity sets the MinTargetCapacity field's value.
 func (s *OnDemandOptions) SetMinTargetCapacity(v int64) *OnDemandOptions {
 	s.MinTargetCapacity = &v
@@ -73994,7 +77278,7 @@ func (s *OnDemandOptions) SetSingleInstanceType(v bool) *OnDemandOptions {
 	return s
 }
 
-// The allocation strategy of On-Demand Instances in an EC2 Fleet.
+// Describes the configuration of On-Demand Instances in an EC2 Fleet.
 type OnDemandOptionsRequest struct {
 	_ struct{} `type:"structure"`
 
@@ -74005,6 +77289,10 @@ type OnDemandOptionsRequest struct {
 	// launching the highest priority first. If you do not specify a value, EC2
 	// Fleet defaults to lowest-price.
 	AllocationStrategy *string `type:"string" enum:"FleetOnDemandAllocationStrategy"`
+
+	// The maximum amount per hour for On-Demand Instances that you're willing to
+	// pay.
+	MaxTotalPrice *string `type:"string"`
 
 	// The minimum target capacity for On-Demand Instances in the fleet. If the
 	// minimum target capacity is not reached, the fleet launches no instances.
@@ -74032,6 +77320,12 @@ func (s OnDemandOptionsRequest) GoString() string {
 // SetAllocationStrategy sets the AllocationStrategy field's value.
 func (s *OnDemandOptionsRequest) SetAllocationStrategy(v string) *OnDemandOptionsRequest {
 	s.AllocationStrategy = &v
+	return s
+}
+
+// SetMaxTotalPrice sets the MaxTotalPrice field's value.
+func (s *OnDemandOptionsRequest) SetMaxTotalPrice(v string) *OnDemandOptionsRequest {
+	s.MaxTotalPrice = &v
 	return s
 }
 
@@ -74831,33 +78125,33 @@ func (s *ProvisionByoipCidrOutput) SetByoipCidr(v *ByoipCidr) *ProvisionByoipCid
 }
 
 // Reserved. If you need to sustain traffic greater than the documented limits
-// (https://docs.aws.amazon.com/AmazonVPC/latest/UserGuide/vpc-nat-gateway.html),
+// (https://docs.aws.amazon.com/vpc/latest/userguide/vpc-nat-gateway.html),
 // contact us through the Support Center (https://console.aws.amazon.com/support/home?).
 type ProvisionedBandwidth struct {
 	_ struct{} `type:"structure"`
 
 	// Reserved. If you need to sustain traffic greater than the documented limits
-	// (https://docs.aws.amazon.com/AmazonVPC/latest/UserGuide/vpc-nat-gateway.html),
+	// (https://docs.aws.amazon.com/vpc/latest/userguide/vpc-nat-gateway.html),
 	// contact us through the Support Center (https://console.aws.amazon.com/support/home?).
 	ProvisionTime *time.Time `locationName:"provisionTime" type:"timestamp"`
 
 	// Reserved. If you need to sustain traffic greater than the documented limits
-	// (https://docs.aws.amazon.com/AmazonVPC/latest/UserGuide/vpc-nat-gateway.html),
+	// (https://docs.aws.amazon.com/vpc/latest/userguide/vpc-nat-gateway.html),
 	// contact us through the Support Center (https://console.aws.amazon.com/support/home?).
 	Provisioned *string `locationName:"provisioned" type:"string"`
 
 	// Reserved. If you need to sustain traffic greater than the documented limits
-	// (https://docs.aws.amazon.com/AmazonVPC/latest/UserGuide/vpc-nat-gateway.html),
+	// (https://docs.aws.amazon.com/vpc/latest/userguide/vpc-nat-gateway.html),
 	// contact us through the Support Center (https://console.aws.amazon.com/support/home?).
 	RequestTime *time.Time `locationName:"requestTime" type:"timestamp"`
 
 	// Reserved. If you need to sustain traffic greater than the documented limits
-	// (https://docs.aws.amazon.com/AmazonVPC/latest/UserGuide/vpc-nat-gateway.html),
+	// (https://docs.aws.amazon.com/vpc/latest/userguide/vpc-nat-gateway.html),
 	// contact us through the Support Center (https://console.aws.amazon.com/support/home?).
 	Requested *string `locationName:"requested" type:"string"`
 
 	// Reserved. If you need to sustain traffic greater than the documented limits
-	// (https://docs.aws.amazon.com/AmazonVPC/latest/UserGuide/vpc-nat-gateway.html),
+	// (https://docs.aws.amazon.com/vpc/latest/userguide/vpc-nat-gateway.html),
 	// contact us through the Support Center (https://console.aws.amazon.com/support/home?).
 	Status *string `locationName:"status" type:"string"`
 }
@@ -75105,9 +78399,8 @@ func (s *Purchase) SetUpfrontPrice(v string) *Purchase {
 type PurchaseHostReservationInput struct {
 	_ struct{} `type:"structure"`
 
-	// Unique, case-sensitive identifier you provide to ensure idempotency of the
-	// request. For more information, see How to Ensure Idempotency (https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/Run_Instance_Idempotency.html)
-	// in the Amazon Elastic Compute Cloud User Guide.
+	// Unique, case-sensitive identifier that you provide to ensure the idempotency
+	// of the request. For more information, see How to Ensure Idempotency (https://docs.aws.amazon.com/AWSEC2/latest/APIReference/Run_Instance_Idempotency.html).
 	ClientToken *string `type:"string"`
 
 	// The currency in which the totalUpfrontPrice, LimitPrice, and totalHourlyPrice
@@ -75192,9 +78485,8 @@ func (s *PurchaseHostReservationInput) SetOfferingId(v string) *PurchaseHostRese
 type PurchaseHostReservationOutput struct {
 	_ struct{} `type:"structure"`
 
-	// Unique, case-sensitive identifier you provide to ensure idempotency of the
-	// request. For more information, see How to Ensure Idempotency (https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/Run_Instance_Idempotency.html)
-	// in the Amazon Elastic Compute Cloud User Guide.
+	// Unique, case-sensitive identifier that you provide to ensure the idempotency
+	// of the request. For more information, see How to Ensure Idempotency (https://docs.aws.amazon.com/AWSEC2/latest/APIReference/Run_Instance_Idempotency.html).
 	ClientToken *string `locationName:"clientToken" type:"string"`
 
 	// The currency in which the totalUpfrontPrice and totalHourlyPrice amounts
@@ -75606,6 +78898,10 @@ type Region struct {
 	// The Region service endpoint.
 	Endpoint *string `locationName:"regionEndpoint" type:"string"`
 
+	// The Region opt-in status. The possible values are opt-in-not-required, opted-in,
+	// and not-opted-in.
+	OptInStatus *string `locationName:"optInStatus" type:"string"`
+
 	// The name of the Region.
 	RegionName *string `locationName:"regionName" type:"string"`
 }
@@ -75623,6 +78919,12 @@ func (s Region) GoString() string {
 // SetEndpoint sets the Endpoint field's value.
 func (s *Region) SetEndpoint(v string) *Region {
 	s.Endpoint = &v
+	return s
+}
+
+// SetOptInStatus sets the OptInStatus field's value.
+func (s *Region) SetOptInStatus(v string) *Region {
+	s.OptInStatus = &v
 	return s
 }
 
@@ -77097,7 +80399,7 @@ type RequestLaunchTemplateData struct {
 	Monitoring *LaunchTemplatesMonitoringRequest `type:"structure"`
 
 	// One or more network interfaces. If you specify a network interface, you must
-	// specify any security groups as part of the network interface.
+	// specify any security groups and subnets as part of the network interface.
 	NetworkInterfaces []*LaunchTemplateInstanceNetworkInterfaceSpecificationRequest `locationName:"NetworkInterface" locationNameList:"InstanceNetworkInterfaceSpecification" type:"list"`
 
 	// The placement for the instance.
@@ -78674,8 +81976,7 @@ func (s *ResetEbsDefaultKmsKeyIdInput) SetDryRun(v bool) *ResetEbsDefaultKmsKeyI
 type ResetEbsDefaultKmsKeyIdOutput struct {
 	_ struct{} `type:"structure"`
 
-	// The full ARN of the default CMK that your account uses to encrypt an EBS
-	// volume when no CMK is specified in the API call that creates the volume.
+	// The Amazon Resource Name (ARN) of the default CMK for EBS encryption by default.
 	KmsKeyId *string `locationName:"kmsKeyId" type:"string"`
 }
 
@@ -80106,10 +83407,7 @@ type RunInstancesInput struct {
 	// Reserved.
 	AdditionalInfo *string `locationName:"additionalInfo" type:"string"`
 
-	// The block device mapping entries. You can't specify both a snapshot ID and
-	// an encryption value. This is because only blank volumes can be encrypted
-	// on creation. If a snapshot is the basis for a volume, it is not blank and
-	// its encryption status is used for the volume encryption status.
+	// The block device mapping entries.
 	BlockDeviceMappings []*BlockDeviceMapping `locationName:"BlockDeviceMapping" locationNameList:"BlockDeviceMapping" type:"list"`
 
 	// Information about the Capacity Reservation targeting option. If you do not
@@ -80272,7 +83570,8 @@ type RunInstancesInput struct {
 	Monitoring *RunInstancesMonitoringEnabled `type:"structure"`
 
 	// The network interfaces to associate with the instance. If you specify a network
-	// interface, you must specify any security groups as part of the network interface.
+	// interface, you must specify any security groups and subnets as part of the
+	// network interface.
 	NetworkInterfaces []*InstanceNetworkInterfaceSpecification `locationName:"networkInterface" locationNameList:"item" type:"list"`
 
 	// The placement for the instance.
@@ -80318,8 +83617,8 @@ type RunInstancesInput struct {
 
 	// [EC2-VPC] The ID of the subnet to launch the instance into.
 	//
-	// You cannot specify this option and the network interfaces option in the same
-	// request.
+	// If you specify a network interface, you must specify any subnets as part
+	// of the network interface.
 	SubnetId *string `type:"string"`
 
 	// The tags to apply to the resources during launch. You can only tag instances
@@ -81864,11 +85163,9 @@ type SearchTransitGatewayRoutesInput struct {
 	//    routes in your route table and you specify supernet-of-match as 10.0.1.0/30,
 	//    then the result returns 10.0.1.0/29.
 	//
-	//    * state - The state of the attachment (available | deleted | deleting
-	//    | failed | modifying | pendingAcceptance | pending | rollingBack | rejected
-	//    | rejecting).
+	//    * state - The state of the route (active | blackhole).
 	//
-	//    * type - The type of roue (active | blackhole).
+	//    * type - The type of roue (propagated | static).
 	//
 	// Filters is a required field
 	Filters []*Filter `locationName:"Filter" locationNameList:"Filter" type:"list" required:"true"`
@@ -82483,7 +85780,7 @@ type Snapshot struct {
 	// the original volume or snapshot copy. Because data encryption keys are inherited
 	// by volumes created from snapshots, and vice versa, if snapshots share the
 	// same data encryption key identifier, then they belong to the same volume/snapshot
-	// lineage. This parameter is only returned by the DescribeSnapshots API operation.
+	// lineage. This parameter is only returned by DescribeSnapshots.
 	DataEncryptionKeyId *string `locationName:"dataEncryptionKeyId" type:"string"`
 
 	// The description for the snapshot.
@@ -82492,9 +85789,9 @@ type Snapshot struct {
 	// Indicates whether the snapshot is encrypted.
 	Encrypted *bool `locationName:"encrypted" type:"boolean"`
 
-	// The full ARN of the AWS Key Management Service (AWS KMS) customer master
-	// key (CMK) that was used to protect the volume encryption key for the parent
-	// volume.
+	// The Amazon Resource Name (ARN) of the AWS Key Management Service (AWS KMS)
+	// customer master key (CMK) that was used to protect the volume encryption
+	// key for the parent volume.
 	KmsKeyId *string `locationName:"kmsKeyId" type:"string"`
 
 	// Value from an Amazon-maintained list (amazon | self | all | aws-marketplace
@@ -82522,7 +85819,7 @@ type Snapshot struct {
 	// operation fails (for example, if the proper AWS Key Management Service (AWS
 	// KMS) permissions are not obtained) this field displays error state details
 	// to help you diagnose why the error occurred. This parameter is only returned
-	// by the DescribeSnapshots API operation.
+	// by DescribeSnapshots.
 	StateMessage *string `locationName:"statusMessage" type:"string"`
 
 	// Any tags assigned to the snapshot.
@@ -82790,7 +86087,7 @@ func (s *SnapshotDiskContainer) SetUserBucket(v *UserBucket) *SnapshotDiskContai
 	return s
 }
 
-// Object that contains information about a snapshot.
+// Information about a snapshot.
 type SnapshotInfo struct {
 	_ struct{} `type:"structure"`
 
@@ -82798,7 +86095,7 @@ type SnapshotInfo struct {
 	// to all snapshots.
 	Description *string `locationName:"description" type:"string"`
 
-	// Boolean that specifies whether or not this snapshot is encrypted.
+	// Indicates whether the snapshot is encrypted.
 	Encrypted *bool `locationName:"encrypted" type:"boolean"`
 
 	// Account id used when creating this snapshot.
@@ -83441,6 +86738,16 @@ type SpotFleetRequestConfigData struct {
 	// target On-Demand capacity.
 	OnDemandFulfilledCapacity *float64 `locationName:"onDemandFulfilledCapacity" type:"double"`
 
+	// The maximum amount per hour for On-Demand Instances that you're willing to
+	// pay. You can use the onDemandMaxTotalPrice parameter, the spotMaxTotalPrice
+	// parameter, or both parameters to ensure that your fleet cost does not exceed
+	// your budget. If you set a maximum price per hour for the On-Demand Instances
+	// and Spot Instances in your request, Spot Fleet will launch instances until
+	// it reaches the maximum amount you're willing to pay. When the maximum amount
+	// you're willing to pay is reached, the fleet stops launching instances even
+	// if it hasn’t met the target capacity.
+	OnDemandMaxTotalPrice *string `locationName:"onDemandMaxTotalPrice" type:"string"`
+
 	// The number of On-Demand units to request. You can choose to set the target
 	// capacity in terms of instances or a performance characteristic that is important
 	// to your application workload, such as vCPUs, memory, or I/O. If the request
@@ -83450,6 +86757,16 @@ type SpotFleetRequestConfigData struct {
 
 	// Indicates whether Spot Fleet should replace unhealthy instances.
 	ReplaceUnhealthyInstances *bool `locationName:"replaceUnhealthyInstances" type:"boolean"`
+
+	// The maximum amount per hour for Spot Instances that you're willing to pay.
+	// You can use the spotdMaxTotalPrice parameter, the onDemandMaxTotalPrice parameter,
+	// or both parameters to ensure that your fleet cost does not exceed your budget.
+	// If you set a maximum price per hour for the On-Demand Instances and Spot
+	// Instances in your request, Spot Fleet will launch instances until it reaches
+	// the maximum amount you're willing to pay. When the maximum amount you're
+	// willing to pay is reached, the fleet stops launching instances even if it
+	// hasn’t met the target capacity.
+	SpotMaxTotalPrice *string `locationName:"spotMaxTotalPrice" type:"string"`
 
 	// The maximum price per unit hour that you are willing to pay for a Spot Instance.
 	// The default is the On-Demand price.
@@ -83602,6 +86919,12 @@ func (s *SpotFleetRequestConfigData) SetOnDemandFulfilledCapacity(v float64) *Sp
 	return s
 }
 
+// SetOnDemandMaxTotalPrice sets the OnDemandMaxTotalPrice field's value.
+func (s *SpotFleetRequestConfigData) SetOnDemandMaxTotalPrice(v string) *SpotFleetRequestConfigData {
+	s.OnDemandMaxTotalPrice = &v
+	return s
+}
+
 // SetOnDemandTargetCapacity sets the OnDemandTargetCapacity field's value.
 func (s *SpotFleetRequestConfigData) SetOnDemandTargetCapacity(v int64) *SpotFleetRequestConfigData {
 	s.OnDemandTargetCapacity = &v
@@ -83611,6 +86934,12 @@ func (s *SpotFleetRequestConfigData) SetOnDemandTargetCapacity(v int64) *SpotFle
 // SetReplaceUnhealthyInstances sets the ReplaceUnhealthyInstances field's value.
 func (s *SpotFleetRequestConfigData) SetReplaceUnhealthyInstances(v bool) *SpotFleetRequestConfigData {
 	s.ReplaceUnhealthyInstances = &v
+	return s
+}
+
+// SetSpotMaxTotalPrice sets the SpotMaxTotalPrice field's value.
+func (s *SpotFleetRequestConfigData) SetSpotMaxTotalPrice(v string) *SpotFleetRequestConfigData {
+	s.SpotMaxTotalPrice = &v
 	return s
 }
 
@@ -84046,6 +87375,9 @@ type SpotOptions struct {
 	// the number of Spot pools that you specify.
 	InstancePoolsToUseCount *int64 `locationName:"instancePoolsToUseCount" type:"integer"`
 
+	// The maximum amount per hour for Spot Instances that you're willing to pay.
+	MaxTotalPrice *string `locationName:"maxTotalPrice" type:"string"`
+
 	// The minimum target capacity for Spot Instances in the fleet. If the minimum
 	// target capacity is not reached, the fleet launches no instances.
 	MinTargetCapacity *int64 `locationName:"minTargetCapacity" type:"integer"`
@@ -84087,6 +87419,12 @@ func (s *SpotOptions) SetInstancePoolsToUseCount(v int64) *SpotOptions {
 	return s
 }
 
+// SetMaxTotalPrice sets the MaxTotalPrice field's value.
+func (s *SpotOptions) SetMaxTotalPrice(v string) *SpotOptions {
+	s.MaxTotalPrice = &v
+	return s
+}
+
 // SetMinTargetCapacity sets the MinTargetCapacity field's value.
 func (s *SpotOptions) SetMinTargetCapacity(v int64) *SpotOptions {
 	s.MinTargetCapacity = &v
@@ -84121,6 +87459,9 @@ type SpotOptionsRequest struct {
 	// selects the cheapest Spot pools and evenly allocates your target Spot capacity
 	// across the number of Spot pools that you specify.
 	InstancePoolsToUseCount *int64 `type:"integer"`
+
+	// The maximum amount per hour for Spot Instances that you're willing to pay.
+	MaxTotalPrice *string `type:"string"`
 
 	// The minimum target capacity for Spot Instances in the fleet. If the minimum
 	// target capacity is not reached, the fleet launches no instances.
@@ -84160,6 +87501,12 @@ func (s *SpotOptionsRequest) SetInstanceInterruptionBehavior(v string) *SpotOpti
 // SetInstancePoolsToUseCount sets the InstancePoolsToUseCount field's value.
 func (s *SpotOptionsRequest) SetInstancePoolsToUseCount(v int64) *SpotOptionsRequest {
 	s.InstancePoolsToUseCount = &v
+	return s
+}
+
+// SetMaxTotalPrice sets the MaxTotalPrice field's value.
+func (s *SpotOptionsRequest) SetMaxTotalPrice(v string) *SpotOptionsRequest {
+	s.MaxTotalPrice = &v
 	return s
 }
 
@@ -85082,8 +88429,11 @@ type TagSpecification struct {
 	_ struct{} `type:"structure"`
 
 	// The type of resource to tag. Currently, the resource types that support tagging
-	// on creation are fleet, dedicated-host, instance, snapshot, and volume. To
-	// tag a resource after it has been created, see CreateTags.
+	// on creation are: capacity-reservation | client-vpn-endpoint | dedicated-host
+	// | fleet | instance | launch-template | snapshot | transit-gateway | transit-gateway-attachment
+	// | transit-gateway-route-table | volume.
+	//
+	// To tag a resource after it has been created, see CreateTags.
 	ResourceType *string `locationName:"resourceType" type:"string" enum:"ResourceType"`
 
 	// The tags to apply to the resource.
@@ -85117,16 +88467,27 @@ func (s *TagSpecification) SetTags(v []*Tag) *TagSpecification {
 // your application workload, such as vCPUs, memory, or I/O. If the request
 // type is maintain, you can specify a target capacity of 0 and add capacity
 // later.
+//
+// You can use the On-Demand Instance MaxTotalPrice parameter, the Spot Instance
+// MaxTotalPrice, or both to ensure your fleet cost does not exceed your budget.
+// If you set a maximum price per hour for the On-Demand Instances and Spot
+// Instances in your request, EC2 Fleet will launch instances until it reaches
+// the maximum amount you're willing to pay. When the maximum amount you're
+// willing to pay is reached, the fleet stops launching instances even if it
+// hasn’t met the target capacity. The MaxTotalPrice parameters are located
+// in and
 type TargetCapacitySpecification struct {
 	_ struct{} `type:"structure"`
 
 	// The default TotalTargetCapacity, which is either Spot or On-Demand.
 	DefaultTargetCapacityType *string `locationName:"defaultTargetCapacityType" type:"string" enum:"DefaultTargetCapacityType"`
 
-	// The number of On-Demand units to request.
+	// The number of On-Demand units to request. If you specify a target capacity
+	// for Spot units, you cannot specify a target capacity for On-Demand units.
 	OnDemandTargetCapacity *int64 `locationName:"onDemandTargetCapacity" type:"integer"`
 
-	// The maximum number of Spot units to launch.
+	// The maximum number of Spot units to launch. If you specify a target capacity
+	// for On-Demand units, you cannot specify a target capacity for Spot units.
 	SpotTargetCapacity *int64 `locationName:"spotTargetCapacity" type:"integer"`
 
 	// The number of units to request, filled using DefaultTargetCapacityType.
@@ -85168,10 +88529,19 @@ func (s *TargetCapacitySpecification) SetTotalTargetCapacity(v int64) *TargetCap
 }
 
 // The number of units to request. You can choose to set the target capacity
-// in terms of instances or a performance characteristic that is important to
-// your application workload, such as vCPUs, memory, or I/O. If the request
-// type is maintain, you can specify a target capacity of 0 and add capacity
-// later.
+// as the number of instances. Or you can set the target capacity to a performance
+// characteristic that is important to your application workload, such as vCPUs,
+// memory, or I/O. If the request type is maintain, you can specify a target
+// capacity of 0 and add capacity later.
+//
+// You can use the On-Demand Instance MaxTotalPrice parameter, the Spot Instance
+// MaxTotalPrice parameter, or both parameters to ensure that your fleet cost
+// does not exceed your budget. If you set a maximum price per hour for the
+// On-Demand Instances and Spot Instances in your request, EC2 Fleet will launch
+// instances until it reaches the maximum amount you're willing to pay. When
+// the maximum amount you're willing to pay is reached, the fleet stops launching
+// instances even if it hasn’t met the target capacity. The MaxTotalPrice
+// parameters are located in and .
 type TargetCapacitySpecificationRequest struct {
 	_ struct{} `type:"structure"`
 
@@ -85713,6 +89083,452 @@ func (s TerminateInstancesOutput) GoString() string {
 // SetTerminatingInstances sets the TerminatingInstances field's value.
 func (s *TerminateInstancesOutput) SetTerminatingInstances(v []*InstanceStateChange) *TerminateInstancesOutput {
 	s.TerminatingInstances = v
+	return s
+}
+
+// Describes the Traffic Mirror filter.
+type TrafficMirrorFilter struct {
+	_ struct{} `type:"structure"`
+
+	// The description of the Traffic Mirror filter.
+	Description *string `locationName:"description" type:"string"`
+
+	// Information about the egress rules that are associated with the Traffic Mirror
+	// filter.
+	EgressFilterRules []*TrafficMirrorFilterRule `locationName:"egressFilterRuleSet" locationNameList:"item" type:"list"`
+
+	// Information about the ingress rules that are associated with the Traffic
+	// Mirror filter.
+	IngressFilterRules []*TrafficMirrorFilterRule `locationName:"ingressFilterRuleSet" locationNameList:"item" type:"list"`
+
+	// The network service traffic that is associated with the Traffic Mirror filter.
+	NetworkServices []*string `locationName:"networkServiceSet" locationNameList:"item" type:"list"`
+
+	// The tags assigned to the Traffic Mirror filter.
+	Tags []*Tag `locationName:"tagSet" locationNameList:"item" type:"list"`
+
+	// The ID of the Traffic Mirror filter.
+	TrafficMirrorFilterId *string `locationName:"trafficMirrorFilterId" type:"string"`
+}
+
+// String returns the string representation
+func (s TrafficMirrorFilter) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s TrafficMirrorFilter) GoString() string {
+	return s.String()
+}
+
+// SetDescription sets the Description field's value.
+func (s *TrafficMirrorFilter) SetDescription(v string) *TrafficMirrorFilter {
+	s.Description = &v
+	return s
+}
+
+// SetEgressFilterRules sets the EgressFilterRules field's value.
+func (s *TrafficMirrorFilter) SetEgressFilterRules(v []*TrafficMirrorFilterRule) *TrafficMirrorFilter {
+	s.EgressFilterRules = v
+	return s
+}
+
+// SetIngressFilterRules sets the IngressFilterRules field's value.
+func (s *TrafficMirrorFilter) SetIngressFilterRules(v []*TrafficMirrorFilterRule) *TrafficMirrorFilter {
+	s.IngressFilterRules = v
+	return s
+}
+
+// SetNetworkServices sets the NetworkServices field's value.
+func (s *TrafficMirrorFilter) SetNetworkServices(v []*string) *TrafficMirrorFilter {
+	s.NetworkServices = v
+	return s
+}
+
+// SetTags sets the Tags field's value.
+func (s *TrafficMirrorFilter) SetTags(v []*Tag) *TrafficMirrorFilter {
+	s.Tags = v
+	return s
+}
+
+// SetTrafficMirrorFilterId sets the TrafficMirrorFilterId field's value.
+func (s *TrafficMirrorFilter) SetTrafficMirrorFilterId(v string) *TrafficMirrorFilter {
+	s.TrafficMirrorFilterId = &v
+	return s
+}
+
+// Describes the Traffic Mirror rule.
+type TrafficMirrorFilterRule struct {
+	_ struct{} `type:"structure"`
+
+	// The description of the Traffic Mirror rule.
+	Description *string `locationName:"description" type:"string"`
+
+	// The destination CIDR block assigned to the Traffic Mirror rule.
+	DestinationCidrBlock *string `locationName:"destinationCidrBlock" type:"string"`
+
+	// The destination port range assigned to the Traffic Mirror rule.
+	DestinationPortRange *TrafficMirrorPortRange `locationName:"destinationPortRange" type:"structure"`
+
+	// The protocol assigned to the Traffic Mirror rule.
+	Protocol *int64 `locationName:"protocol" type:"integer"`
+
+	// The action assigned to the Traffic Mirror rule.
+	RuleAction *string `locationName:"ruleAction" type:"string" enum:"TrafficMirrorRuleAction"`
+
+	// The rule number of the Traffic Mirror rule.
+	RuleNumber *int64 `locationName:"ruleNumber" type:"integer"`
+
+	// The source CIDR block assigned to the Traffic Mirror rule.
+	SourceCidrBlock *string `locationName:"sourceCidrBlock" type:"string"`
+
+	// The source port range assigned to the Traffic Mirror rule.
+	SourcePortRange *TrafficMirrorPortRange `locationName:"sourcePortRange" type:"structure"`
+
+	// The traffic direction assigned to the Traffic Mirror rule.
+	TrafficDirection *string `locationName:"trafficDirection" type:"string" enum:"TrafficDirection"`
+
+	// The ID of the Traffic Mirror filter that the rule is associated with.
+	TrafficMirrorFilterId *string `locationName:"trafficMirrorFilterId" type:"string"`
+
+	// The ID of the Traffic Mirror rule.
+	TrafficMirrorFilterRuleId *string `locationName:"trafficMirrorFilterRuleId" type:"string"`
+}
+
+// String returns the string representation
+func (s TrafficMirrorFilterRule) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s TrafficMirrorFilterRule) GoString() string {
+	return s.String()
+}
+
+// SetDescription sets the Description field's value.
+func (s *TrafficMirrorFilterRule) SetDescription(v string) *TrafficMirrorFilterRule {
+	s.Description = &v
+	return s
+}
+
+// SetDestinationCidrBlock sets the DestinationCidrBlock field's value.
+func (s *TrafficMirrorFilterRule) SetDestinationCidrBlock(v string) *TrafficMirrorFilterRule {
+	s.DestinationCidrBlock = &v
+	return s
+}
+
+// SetDestinationPortRange sets the DestinationPortRange field's value.
+func (s *TrafficMirrorFilterRule) SetDestinationPortRange(v *TrafficMirrorPortRange) *TrafficMirrorFilterRule {
+	s.DestinationPortRange = v
+	return s
+}
+
+// SetProtocol sets the Protocol field's value.
+func (s *TrafficMirrorFilterRule) SetProtocol(v int64) *TrafficMirrorFilterRule {
+	s.Protocol = &v
+	return s
+}
+
+// SetRuleAction sets the RuleAction field's value.
+func (s *TrafficMirrorFilterRule) SetRuleAction(v string) *TrafficMirrorFilterRule {
+	s.RuleAction = &v
+	return s
+}
+
+// SetRuleNumber sets the RuleNumber field's value.
+func (s *TrafficMirrorFilterRule) SetRuleNumber(v int64) *TrafficMirrorFilterRule {
+	s.RuleNumber = &v
+	return s
+}
+
+// SetSourceCidrBlock sets the SourceCidrBlock field's value.
+func (s *TrafficMirrorFilterRule) SetSourceCidrBlock(v string) *TrafficMirrorFilterRule {
+	s.SourceCidrBlock = &v
+	return s
+}
+
+// SetSourcePortRange sets the SourcePortRange field's value.
+func (s *TrafficMirrorFilterRule) SetSourcePortRange(v *TrafficMirrorPortRange) *TrafficMirrorFilterRule {
+	s.SourcePortRange = v
+	return s
+}
+
+// SetTrafficDirection sets the TrafficDirection field's value.
+func (s *TrafficMirrorFilterRule) SetTrafficDirection(v string) *TrafficMirrorFilterRule {
+	s.TrafficDirection = &v
+	return s
+}
+
+// SetTrafficMirrorFilterId sets the TrafficMirrorFilterId field's value.
+func (s *TrafficMirrorFilterRule) SetTrafficMirrorFilterId(v string) *TrafficMirrorFilterRule {
+	s.TrafficMirrorFilterId = &v
+	return s
+}
+
+// SetTrafficMirrorFilterRuleId sets the TrafficMirrorFilterRuleId field's value.
+func (s *TrafficMirrorFilterRule) SetTrafficMirrorFilterRuleId(v string) *TrafficMirrorFilterRule {
+	s.TrafficMirrorFilterRuleId = &v
+	return s
+}
+
+// Describes the Traffic Mirror port range.
+type TrafficMirrorPortRange struct {
+	_ struct{} `type:"structure"`
+
+	// The start of the Traffic Mirror port range. This applies to the TCP and UDP
+	// protocols.
+	FromPort *int64 `locationName:"fromPort" type:"integer"`
+
+	// The end of the Traffic Mirror port range. This applies to the TCP and UDP
+	// protocols.
+	ToPort *int64 `locationName:"toPort" type:"integer"`
+}
+
+// String returns the string representation
+func (s TrafficMirrorPortRange) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s TrafficMirrorPortRange) GoString() string {
+	return s.String()
+}
+
+// SetFromPort sets the FromPort field's value.
+func (s *TrafficMirrorPortRange) SetFromPort(v int64) *TrafficMirrorPortRange {
+	s.FromPort = &v
+	return s
+}
+
+// SetToPort sets the ToPort field's value.
+func (s *TrafficMirrorPortRange) SetToPort(v int64) *TrafficMirrorPortRange {
+	s.ToPort = &v
+	return s
+}
+
+// Information about the Traffic Mirror filter rule port range.
+type TrafficMirrorPortRangeRequest struct {
+	_ struct{} `type:"structure"`
+
+	// The first port in the Traffic Mirror port range. This applies to the TCP
+	// and UDP protocols.
+	FromPort *int64 `type:"integer"`
+
+	// The last port in the Traffic Mirror port range. This applies to the TCP and
+	// UDP protocols.
+	ToPort *int64 `type:"integer"`
+}
+
+// String returns the string representation
+func (s TrafficMirrorPortRangeRequest) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s TrafficMirrorPortRangeRequest) GoString() string {
+	return s.String()
+}
+
+// SetFromPort sets the FromPort field's value.
+func (s *TrafficMirrorPortRangeRequest) SetFromPort(v int64) *TrafficMirrorPortRangeRequest {
+	s.FromPort = &v
+	return s
+}
+
+// SetToPort sets the ToPort field's value.
+func (s *TrafficMirrorPortRangeRequest) SetToPort(v int64) *TrafficMirrorPortRangeRequest {
+	s.ToPort = &v
+	return s
+}
+
+// Describes a Traffic Mirror session.
+type TrafficMirrorSession struct {
+	_ struct{} `type:"structure"`
+
+	// The description of the Traffic Mirror session.
+	Description *string `locationName:"description" type:"string"`
+
+	// The ID of the Traffic Mirror session's network interface.
+	NetworkInterfaceId *string `locationName:"networkInterfaceId" type:"string"`
+
+	// The ID of the account that owns the Traffic Mirror session.
+	OwnerId *string `locationName:"ownerId" type:"string"`
+
+	// The number of bytes in each packet to mirror. These are the bytes after the
+	// VXLAN header. To mirror a subset, set this to the length (in bytes) to mirror.
+	// For example, if you set this value to 100, then the first 100 bytes that
+	// meet the filter criteria are copied to the target. Do not specify this parameter
+	// when you want to mirror the entire packet
+	PacketLength *int64 `locationName:"packetLength" type:"integer"`
+
+	// The session number determines the order in which sessions are evaluated when
+	// an interface is used by multiple sessions. The first session with a matching
+	// filter is the one that mirrors the packets.
+	//
+	// Valid values are 1-32766.
+	SessionNumber *int64 `locationName:"sessionNumber" type:"integer"`
+
+	// The tags assigned to the Traffic Mirror session.
+	Tags []*Tag `locationName:"tagSet" locationNameList:"item" type:"list"`
+
+	// The ID of the Traffic Mirror filter.
+	TrafficMirrorFilterId *string `locationName:"trafficMirrorFilterId" type:"string"`
+
+	// The ID for the Traffic Mirror session.
+	TrafficMirrorSessionId *string `locationName:"trafficMirrorSessionId" type:"string"`
+
+	// The ID of the Traffic Mirror target.
+	TrafficMirrorTargetId *string `locationName:"trafficMirrorTargetId" type:"string"`
+
+	// The virtual network ID associated with the Traffic Mirror session.
+	VirtualNetworkId *int64 `locationName:"virtualNetworkId" type:"integer"`
+}
+
+// String returns the string representation
+func (s TrafficMirrorSession) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s TrafficMirrorSession) GoString() string {
+	return s.String()
+}
+
+// SetDescription sets the Description field's value.
+func (s *TrafficMirrorSession) SetDescription(v string) *TrafficMirrorSession {
+	s.Description = &v
+	return s
+}
+
+// SetNetworkInterfaceId sets the NetworkInterfaceId field's value.
+func (s *TrafficMirrorSession) SetNetworkInterfaceId(v string) *TrafficMirrorSession {
+	s.NetworkInterfaceId = &v
+	return s
+}
+
+// SetOwnerId sets the OwnerId field's value.
+func (s *TrafficMirrorSession) SetOwnerId(v string) *TrafficMirrorSession {
+	s.OwnerId = &v
+	return s
+}
+
+// SetPacketLength sets the PacketLength field's value.
+func (s *TrafficMirrorSession) SetPacketLength(v int64) *TrafficMirrorSession {
+	s.PacketLength = &v
+	return s
+}
+
+// SetSessionNumber sets the SessionNumber field's value.
+func (s *TrafficMirrorSession) SetSessionNumber(v int64) *TrafficMirrorSession {
+	s.SessionNumber = &v
+	return s
+}
+
+// SetTags sets the Tags field's value.
+func (s *TrafficMirrorSession) SetTags(v []*Tag) *TrafficMirrorSession {
+	s.Tags = v
+	return s
+}
+
+// SetTrafficMirrorFilterId sets the TrafficMirrorFilterId field's value.
+func (s *TrafficMirrorSession) SetTrafficMirrorFilterId(v string) *TrafficMirrorSession {
+	s.TrafficMirrorFilterId = &v
+	return s
+}
+
+// SetTrafficMirrorSessionId sets the TrafficMirrorSessionId field's value.
+func (s *TrafficMirrorSession) SetTrafficMirrorSessionId(v string) *TrafficMirrorSession {
+	s.TrafficMirrorSessionId = &v
+	return s
+}
+
+// SetTrafficMirrorTargetId sets the TrafficMirrorTargetId field's value.
+func (s *TrafficMirrorSession) SetTrafficMirrorTargetId(v string) *TrafficMirrorSession {
+	s.TrafficMirrorTargetId = &v
+	return s
+}
+
+// SetVirtualNetworkId sets the VirtualNetworkId field's value.
+func (s *TrafficMirrorSession) SetVirtualNetworkId(v int64) *TrafficMirrorSession {
+	s.VirtualNetworkId = &v
+	return s
+}
+
+// Describes a Traffic Mirror target.
+type TrafficMirrorTarget struct {
+	_ struct{} `type:"structure"`
+
+	// Information about the Traffic Mirror target.
+	Description *string `locationName:"description" type:"string"`
+
+	// The network interface ID that is attached to the target.
+	NetworkInterfaceId *string `locationName:"networkInterfaceId" type:"string"`
+
+	// The Amazon Resource Name (ARN) of the Network Load Balancer.
+	NetworkLoadBalancerArn *string `locationName:"networkLoadBalancerArn" type:"string"`
+
+	// The ID of the account that owns the Traffic Mirror target.
+	OwnerId *string `locationName:"ownerId" type:"string"`
+
+	// The tags assigned to the Traffic Mirror target.
+	Tags []*Tag `locationName:"tagSet" locationNameList:"item" type:"list"`
+
+	// The ID of the Traffic Mirror target.
+	TrafficMirrorTargetId *string `locationName:"trafficMirrorTargetId" type:"string"`
+
+	// The type of Traffic Mirror target.
+	Type *string `locationName:"type" type:"string" enum:"TrafficMirrorTargetType"`
+}
+
+// String returns the string representation
+func (s TrafficMirrorTarget) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s TrafficMirrorTarget) GoString() string {
+	return s.String()
+}
+
+// SetDescription sets the Description field's value.
+func (s *TrafficMirrorTarget) SetDescription(v string) *TrafficMirrorTarget {
+	s.Description = &v
+	return s
+}
+
+// SetNetworkInterfaceId sets the NetworkInterfaceId field's value.
+func (s *TrafficMirrorTarget) SetNetworkInterfaceId(v string) *TrafficMirrorTarget {
+	s.NetworkInterfaceId = &v
+	return s
+}
+
+// SetNetworkLoadBalancerArn sets the NetworkLoadBalancerArn field's value.
+func (s *TrafficMirrorTarget) SetNetworkLoadBalancerArn(v string) *TrafficMirrorTarget {
+	s.NetworkLoadBalancerArn = &v
+	return s
+}
+
+// SetOwnerId sets the OwnerId field's value.
+func (s *TrafficMirrorTarget) SetOwnerId(v string) *TrafficMirrorTarget {
+	s.OwnerId = &v
+	return s
+}
+
+// SetTags sets the Tags field's value.
+func (s *TrafficMirrorTarget) SetTags(v []*Tag) *TrafficMirrorTarget {
+	s.Tags = v
+	return s
+}
+
+// SetTrafficMirrorTargetId sets the TrafficMirrorTargetId field's value.
+func (s *TrafficMirrorTarget) SetTrafficMirrorTargetId(v string) *TrafficMirrorTarget {
+	s.TrafficMirrorTargetId = &v
+	return s
+}
+
+// SetType sets the Type field's value.
+func (s *TrafficMirrorTarget) SetType(v string) *TrafficMirrorTarget {
+	s.Type = &v
 	return s
 }
 
@@ -87473,7 +91289,7 @@ type Volume struct {
 	// The time stamp when volume creation was initiated.
 	CreateTime *time.Time `locationName:"createTime" type:"timestamp"`
 
-	// Indicates whether the volume will be encrypted.
+	// Indicates whether the volume is encrypted.
 	Encrypted *bool `locationName:"encrypted" type:"boolean"`
 
 	// The number of I/O operations per second (IOPS) that the volume supports.
@@ -87493,8 +91309,9 @@ type Volume struct {
 	// it is not used in requests to create gp2, st1, sc1, or standard volumes.
 	Iops *int64 `locationName:"iops" type:"integer"`
 
-	// The full ARN of the AWS Key Management Service (AWS KMS) customer master
-	// key (CMK) that was used to protect the volume encryption key for the volume.
+	// The Amazon Resource Name (ARN) of the AWS Key Management Service (AWS KMS)
+	// customer master key (CMK) that was used to protect the volume encryption
+	// key for the volume.
 	KmsKeyId *string `locationName:"kmsKeyId" type:"string"`
 
 	// The size of the volume, in GiBs.
@@ -88344,6 +92161,9 @@ type VpcEndpoint struct {
 	// (Interface endpoint) One or more network interfaces for the endpoint.
 	NetworkInterfaceIds []*string `locationName:"networkInterfaceIdSet" locationNameList:"item" type:"list"`
 
+	// The ID of the AWS account that owns the VPC endpoint.
+	OwnerId *string `locationName:"ownerId" type:"string"`
+
 	// The policy document associated with the endpoint, if applicable.
 	PolicyDocument *string `locationName:"policyDocument" type:"string"`
 
@@ -88410,6 +92230,12 @@ func (s *VpcEndpoint) SetGroups(v []*SecurityGroupIdentifier) *VpcEndpoint {
 // SetNetworkInterfaceIds sets the NetworkInterfaceIds field's value.
 func (s *VpcEndpoint) SetNetworkInterfaceIds(v []*string) *VpcEndpoint {
 	s.NetworkInterfaceIds = v
+	return s
+}
+
+// SetOwnerId sets the OwnerId field's value.
+func (s *VpcEndpoint) SetOwnerId(v string) *VpcEndpoint {
+	s.OwnerId = &v
 	return s
 }
 
@@ -88486,6 +92312,12 @@ type VpcEndpointConnection struct {
 	// The date and time the VPC endpoint was created.
 	CreationTimestamp *time.Time `locationName:"creationTimestamp" type:"timestamp"`
 
+	// The DNS entries for the VPC endpoint.
+	DnsEntries []*DnsEntry `locationName:"dnsEntrySet" locationNameList:"item" type:"list"`
+
+	// The Amazon Resource Names (ARNs) of the network load balancers for the service.
+	NetworkLoadBalancerArns []*string `locationName:"networkLoadBalancerArnSet" locationNameList:"item" type:"list"`
+
 	// The ID of the service to which the endpoint is connected.
 	ServiceId *string `locationName:"serviceId" type:"string"`
 
@@ -88512,6 +92344,18 @@ func (s VpcEndpointConnection) GoString() string {
 // SetCreationTimestamp sets the CreationTimestamp field's value.
 func (s *VpcEndpointConnection) SetCreationTimestamp(v time.Time) *VpcEndpointConnection {
 	s.CreationTimestamp = &v
+	return s
+}
+
+// SetDnsEntries sets the DnsEntries field's value.
+func (s *VpcEndpointConnection) SetDnsEntries(v []*DnsEntry) *VpcEndpointConnection {
+	s.DnsEntries = v
+	return s
+}
+
+// SetNetworkLoadBalancerArns sets the NetworkLoadBalancerArns field's value.
+func (s *VpcEndpointConnection) SetNetworkLoadBalancerArns(v []*string) *VpcEndpointConnection {
+	s.NetworkLoadBalancerArns = v
 	return s
 }
 
@@ -89293,6 +93137,9 @@ const (
 
 	// AllocationStateReleasedPermanentFailure is a AllocationState enum value
 	AllocationStateReleasedPermanentFailure = "released-permanent-failure"
+
+	// AllocationStatePending is a AllocationState enum value
+	AllocationStatePending = "pending"
 )
 
 const (
@@ -89301,6 +93148,9 @@ const (
 
 	// AllocationStrategyDiversified is a AllocationStrategy enum value
 	AllocationStrategyDiversified = "diversified"
+
+	// AllocationStrategyCapacityOptimized is a AllocationStrategy enum value
+	AllocationStrategyCapacityOptimized = "capacityOptimized"
 )
 
 const (
@@ -89790,6 +93640,9 @@ const (
 
 	// EventTypeError is a EventType enum value
 	EventTypeError = "error"
+
+	// EventTypeInformation is a EventType enum value
+	EventTypeInformation = "information"
 )
 
 const (
@@ -89942,6 +93795,14 @@ const (
 const (
 	// GatewayTypeIpsec1 is a GatewayType enum value
 	GatewayTypeIpsec1 = "ipsec.1"
+)
+
+const (
+	// HostRecoveryOn is a HostRecovery enum value
+	HostRecoveryOn = "on"
+
+	// HostRecoveryOff is a HostRecovery enum value
+	HostRecoveryOff = "off"
 )
 
 const (
@@ -90304,8 +94165,14 @@ const (
 	// InstanceTypeR54xlarge is a InstanceType enum value
 	InstanceTypeR54xlarge = "r5.4xlarge"
 
+	// InstanceTypeR58xlarge is a InstanceType enum value
+	InstanceTypeR58xlarge = "r5.8xlarge"
+
 	// InstanceTypeR512xlarge is a InstanceType enum value
 	InstanceTypeR512xlarge = "r5.12xlarge"
+
+	// InstanceTypeR516xlarge is a InstanceType enum value
+	InstanceTypeR516xlarge = "r5.16xlarge"
 
 	// InstanceTypeR524xlarge is a InstanceType enum value
 	InstanceTypeR524xlarge = "r5.24xlarge"
@@ -90325,8 +94192,14 @@ const (
 	// InstanceTypeR5a4xlarge is a InstanceType enum value
 	InstanceTypeR5a4xlarge = "r5a.4xlarge"
 
+	// InstanceTypeR5a8xlarge is a InstanceType enum value
+	InstanceTypeR5a8xlarge = "r5a.8xlarge"
+
 	// InstanceTypeR5a12xlarge is a InstanceType enum value
 	InstanceTypeR5a12xlarge = "r5a.12xlarge"
+
+	// InstanceTypeR5a16xlarge is a InstanceType enum value
+	InstanceTypeR5a16xlarge = "r5a.16xlarge"
 
 	// InstanceTypeR5a24xlarge is a InstanceType enum value
 	InstanceTypeR5a24xlarge = "r5a.24xlarge"
@@ -90343,8 +94216,14 @@ const (
 	// InstanceTypeR5d4xlarge is a InstanceType enum value
 	InstanceTypeR5d4xlarge = "r5d.4xlarge"
 
+	// InstanceTypeR5d8xlarge is a InstanceType enum value
+	InstanceTypeR5d8xlarge = "r5d.8xlarge"
+
 	// InstanceTypeR5d12xlarge is a InstanceType enum value
 	InstanceTypeR5d12xlarge = "r5d.12xlarge"
+
+	// InstanceTypeR5d16xlarge is a InstanceType enum value
+	InstanceTypeR5d16xlarge = "r5d.16xlarge"
 
 	// InstanceTypeR5d24xlarge is a InstanceType enum value
 	InstanceTypeR5d24xlarge = "r5d.24xlarge"
@@ -90511,8 +94390,17 @@ const (
 	// InstanceTypeC59xlarge is a InstanceType enum value
 	InstanceTypeC59xlarge = "c5.9xlarge"
 
+	// InstanceTypeC512xlarge is a InstanceType enum value
+	InstanceTypeC512xlarge = "c5.12xlarge"
+
 	// InstanceTypeC518xlarge is a InstanceType enum value
 	InstanceTypeC518xlarge = "c5.18xlarge"
+
+	// InstanceTypeC524xlarge is a InstanceType enum value
+	InstanceTypeC524xlarge = "c5.24xlarge"
+
+	// InstanceTypeC5Metal is a InstanceType enum value
+	InstanceTypeC5Metal = "c5.metal"
 
 	// InstanceTypeC5dLarge is a InstanceType enum value
 	InstanceTypeC5dLarge = "c5d.large"
@@ -90631,8 +94519,14 @@ const (
 	// InstanceTypeM54xlarge is a InstanceType enum value
 	InstanceTypeM54xlarge = "m5.4xlarge"
 
+	// InstanceTypeM58xlarge is a InstanceType enum value
+	InstanceTypeM58xlarge = "m5.8xlarge"
+
 	// InstanceTypeM512xlarge is a InstanceType enum value
 	InstanceTypeM512xlarge = "m5.12xlarge"
+
+	// InstanceTypeM516xlarge is a InstanceType enum value
+	InstanceTypeM516xlarge = "m5.16xlarge"
 
 	// InstanceTypeM524xlarge is a InstanceType enum value
 	InstanceTypeM524xlarge = "m5.24xlarge"
@@ -90652,8 +94546,14 @@ const (
 	// InstanceTypeM5a4xlarge is a InstanceType enum value
 	InstanceTypeM5a4xlarge = "m5a.4xlarge"
 
+	// InstanceTypeM5a8xlarge is a InstanceType enum value
+	InstanceTypeM5a8xlarge = "m5a.8xlarge"
+
 	// InstanceTypeM5a12xlarge is a InstanceType enum value
 	InstanceTypeM5a12xlarge = "m5a.12xlarge"
+
+	// InstanceTypeM5a16xlarge is a InstanceType enum value
+	InstanceTypeM5a16xlarge = "m5a.16xlarge"
 
 	// InstanceTypeM5a24xlarge is a InstanceType enum value
 	InstanceTypeM5a24xlarge = "m5a.24xlarge"
@@ -90670,8 +94570,14 @@ const (
 	// InstanceTypeM5d4xlarge is a InstanceType enum value
 	InstanceTypeM5d4xlarge = "m5d.4xlarge"
 
+	// InstanceTypeM5d8xlarge is a InstanceType enum value
+	InstanceTypeM5d8xlarge = "m5d.8xlarge"
+
 	// InstanceTypeM5d12xlarge is a InstanceType enum value
 	InstanceTypeM5d12xlarge = "m5d.12xlarge"
+
+	// InstanceTypeM5d16xlarge is a InstanceType enum value
+	InstanceTypeM5d16xlarge = "m5d.16xlarge"
 
 	// InstanceTypeM5d24xlarge is a InstanceType enum value
 	InstanceTypeM5d24xlarge = "m5d.24xlarge"
@@ -91214,6 +95120,15 @@ const (
 	// ResourceTypeSubnet is a ResourceType enum value
 	ResourceTypeSubnet = "subnet"
 
+	// ResourceTypeTrafficMirrorFilter is a ResourceType enum value
+	ResourceTypeTrafficMirrorFilter = "traffic-mirror-filter"
+
+	// ResourceTypeTrafficMirrorSession is a ResourceType enum value
+	ResourceTypeTrafficMirrorSession = "traffic-mirror-session"
+
+	// ResourceTypeTrafficMirrorTarget is a ResourceType enum value
+	ResourceTypeTrafficMirrorTarget = "traffic-mirror-target"
+
 	// ResourceTypeTransitGateway is a ResourceType enum value
 	ResourceTypeTransitGateway = "transit-gateway"
 
@@ -91324,6 +95239,9 @@ const (
 
 	// SpotAllocationStrategyDiversified is a SpotAllocationStrategy enum value
 	SpotAllocationStrategyDiversified = "diversified"
+
+	// SpotAllocationStrategyCapacityOptimized is a SpotAllocationStrategy enum value
+	SpotAllocationStrategyCapacityOptimized = "capacity-optimized"
 )
 
 const (
@@ -91483,6 +95401,60 @@ const (
 )
 
 const (
+	// TrafficDirectionIngress is a TrafficDirection enum value
+	TrafficDirectionIngress = "ingress"
+
+	// TrafficDirectionEgress is a TrafficDirection enum value
+	TrafficDirectionEgress = "egress"
+)
+
+const (
+	// TrafficMirrorFilterRuleFieldDestinationPortRange is a TrafficMirrorFilterRuleField enum value
+	TrafficMirrorFilterRuleFieldDestinationPortRange = "destination-port-range"
+
+	// TrafficMirrorFilterRuleFieldSourcePortRange is a TrafficMirrorFilterRuleField enum value
+	TrafficMirrorFilterRuleFieldSourcePortRange = "source-port-range"
+
+	// TrafficMirrorFilterRuleFieldProtocol is a TrafficMirrorFilterRuleField enum value
+	TrafficMirrorFilterRuleFieldProtocol = "protocol"
+
+	// TrafficMirrorFilterRuleFieldDescription is a TrafficMirrorFilterRuleField enum value
+	TrafficMirrorFilterRuleFieldDescription = "description"
+)
+
+const (
+	// TrafficMirrorNetworkServiceAmazonDns is a TrafficMirrorNetworkService enum value
+	TrafficMirrorNetworkServiceAmazonDns = "amazon-dns"
+)
+
+const (
+	// TrafficMirrorRuleActionAccept is a TrafficMirrorRuleAction enum value
+	TrafficMirrorRuleActionAccept = "accept"
+
+	// TrafficMirrorRuleActionReject is a TrafficMirrorRuleAction enum value
+	TrafficMirrorRuleActionReject = "reject"
+)
+
+const (
+	// TrafficMirrorSessionFieldPacketLength is a TrafficMirrorSessionField enum value
+	TrafficMirrorSessionFieldPacketLength = "packet-length"
+
+	// TrafficMirrorSessionFieldDescription is a TrafficMirrorSessionField enum value
+	TrafficMirrorSessionFieldDescription = "description"
+
+	// TrafficMirrorSessionFieldVirtualNetworkId is a TrafficMirrorSessionField enum value
+	TrafficMirrorSessionFieldVirtualNetworkId = "virtual-network-id"
+)
+
+const (
+	// TrafficMirrorTargetTypeNetworkInterface is a TrafficMirrorTargetType enum value
+	TrafficMirrorTargetTypeNetworkInterface = "network-interface"
+
+	// TrafficMirrorTargetTypeNetworkLoadBalancer is a TrafficMirrorTargetType enum value
+	TrafficMirrorTargetTypeNetworkLoadBalancer = "network-load-balancer"
+)
+
+const (
 	// TrafficTypeAccept is a TrafficType enum value
 	TrafficTypeAccept = "ACCEPT"
 
@@ -91513,6 +95485,9 @@ const (
 
 	// TransitGatewayAttachmentResourceTypeVpn is a TransitGatewayAttachmentResourceType enum value
 	TransitGatewayAttachmentResourceTypeVpn = "vpn"
+
+	// TransitGatewayAttachmentResourceTypeDirectConnectGateway is a TransitGatewayAttachmentResourceType enum value
+	TransitGatewayAttachmentResourceTypeDirectConnectGateway = "direct-connect-gateway"
 )
 
 const (

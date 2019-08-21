@@ -11,5 +11,5 @@ so we recommend using our other community resources instead of asking here 👍.
 
 If you have a support request or question please submit them to one of these resources:
 
-* [Terraform community resources](https://www.terraform.io/docs/extend/community/index.html)
+* [HashiCorp Community Forum](https://discuss.hashicorp.com/c/terraform-providers)
 * [HashiCorp support](https://support.hashicorp.com) (Terraform Enterprise customers)

@@ -63,7 +63,7 @@ func TestAccAWSDAXCluster_importBasic(t *testing.T) {
 	rString := acctest.RandString(10)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSDax(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSDAXClusterDestroy,
 		Steps: []resource.TestStep{
@@ -86,7 +86,7 @@ func TestAccAWSDAXCluster_basic(t *testing.T) {
 	iamRoleResourceName := "aws_iam_role.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSDax(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSDAXClusterDestroy,
 		Steps: []resource.TestStep{
@@ -132,7 +132,7 @@ func TestAccAWSDAXCluster_resize(t *testing.T) {
 	var dc dax.Cluster
 	rString := acctest.RandString(10)
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSDax(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSDAXClusterDestroy,
 		Steps: []resource.TestStep{
@@ -168,7 +168,7 @@ func TestAccAWSDAXCluster_encryption_disabled(t *testing.T) {
 	var dc dax.Cluster
 	rString := acctest.RandString(10)
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSDax(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSDAXClusterDestroy,
 		Steps: []resource.TestStep{
@@ -194,7 +194,7 @@ func TestAccAWSDAXCluster_encryption_enabled(t *testing.T) {
 	var dc dax.Cluster
 	rString := acctest.RandString(10)
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSDax(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSDAXClusterDestroy,
 		Steps: []resource.TestStep{
@@ -269,11 +269,23 @@ func testAccCheckAWSDAXClusterExists(n string, v *dax.Cluster) resource.TestChec
 	}
 }
 
-var baseConfig = `
-provider "aws" {
-  region = "us-west-2"
+func testAccPreCheckAWSDax(t *testing.T) {
+	conn := testAccProvider.Meta().(*AWSClient).daxconn
+
+	input := &dax.DescribeClustersInput{}
+
+	_, err := conn.DescribeClusters(input)
+
+	if testAccPreCheckSkipError(err) || isAWSErr(err, "InvalidParameterValueException", "Access Denied to API Version: DAX_V3") {
+		t.Skipf("skipping acceptance testing: %s", err)
+	}
+
+	if err != nil {
+		t.Fatalf("unexpected PreCheck error: %s", err)
+	}
 }
 
+const baseConfig = `
 resource "aws_iam_role" "test" {
   assume_role_policy = <<EOF
 {

@@ -3,7 +3,6 @@ package aws
 import (
 	"fmt"
 	"log"
-	"strings"
 	"time"
 
 	"github.com/hashicorp/terraform/helper/resource"
@@ -436,33 +435,31 @@ func resourceAwsOpsworksStackCreate(d *schema.ResourceData, meta interface{}) er
 
 	var resp *opsworks.CreateStackOutput
 	err = resource.Retry(20*time.Minute, func() *resource.RetryError {
-		var cerr error
-		resp, cerr = client.CreateStack(req)
-		if cerr != nil {
-			if opserr, ok := cerr.(awserr.Error); ok {
-				// If Terraform is also managing the service IAM role,
-				// it may have just been created and not yet be
-				// propagated.
-				// AWS doesn't provide a machine-readable code for this
-				// specific error, so we're forced to do fragile message
-				// matching.
-				// The full error we're looking for looks something like
-				// the following:
-				// Service Role Arn: [...] is not yet propagated, please try again in a couple of minutes
-				propErr := "not yet propagated"
-				trustErr := "not the necessary trust relationship"
-				validateErr := "validate IAM role permission"
-				if opserr.Code() == "ValidationException" && (strings.Contains(opserr.Message(), trustErr) || strings.Contains(opserr.Message(), propErr) || strings.Contains(opserr.Message(), validateErr)) {
-					log.Printf("[INFO] Waiting for service IAM role to propagate")
-					return resource.RetryableError(cerr)
-				}
+		resp, err = client.CreateStack(req)
+		if err != nil {
+			// If Terraform is also managing the service IAM role, it may have just been created and not yet be
+			// propagated. AWS doesn't provide a machine-readable code for this specific error, so we're forced
+			// to do fragile message matching.
+			// The full error we're looking for looks something like the following:
+			// Service Role Arn: [...] is not yet propagated, please try again in a couple of minutes
+			propErr := "not yet propagated"
+			trustErr := "not the necessary trust relationship"
+			validateErr := "validate IAM role permission"
+
+			if isAWSErr(err, "ValidationException", propErr) || isAWSErr(err, "ValidationException", trustErr) || isAWSErr(err, "ValidationException", validateErr) {
+				log.Printf("[INFO] Waiting for service IAM role to propagate")
+				return resource.RetryableError(err)
 			}
-			return resource.NonRetryableError(cerr)
+
+			return resource.NonRetryableError(err)
 		}
 		return nil
 	})
+	if isResourceTimeoutError(err) {
+		resp, err = client.CreateStack(req)
+	}
 	if err != nil {
-		return err
+		return fmt.Errorf("Error creating Opsworks stack: %s", err)
 	}
 
 	stackId := *resp.StackId

@@ -206,6 +206,9 @@ func resourceAwsSqsQueueCreate(d *schema.ResourceData, meta interface{}) error {
 		}
 		return nil
 	})
+	if isResourceTimeoutError(err) {
+		output, err = sqsconn.CreateQueue(req)
+	}
 	if err != nil {
 		return fmt.Errorf("Error creating SQS queue: %s", err)
 	}

@@ -1,6 +1,6 @@
 ---
 layout: "aws"
-page_title: "AWS: wafregional_rate_based_rule"
+page_title: "AWS: aws_wafregional_rate_based_rule"
 sidebar_current: "docs-aws-resource-wafregional-rate-based-rule"
 description: |-
   Provides a AWS WAF Regional rate based rule resource.
@@ -46,7 +46,7 @@ The following arguments are supported:
 * `name` - (Required) The name or description of the rule.
 * `rate_key` - (Required) Valid value is IP.
 * `rate_limit` - (Required) The maximum number of requests, which have an identical value in the field specified by the RateKey, allowed in a five-minute period. Minimum value is 2000.
-* `predicate` - (Optional) One of ByteMatchSet, IPSet, SizeConstraintSet, SqlInjectionMatchSet, or XssMatchSet objects to include in a rule.
+* `predicate` - (Optional) The objects to include in a rule (documented below).
 
 ## Nested Blocks
 
@@ -68,3 +68,11 @@ See the [WAF Documentation](https://docs.aws.amazon.com/waf/latest/APIReference/
 In addition to all arguments above, the following attributes are exported:
 
 * `id` - The ID of the WAF Regional rate based rule.
+
+## Import
+
+WAF Regional Rate Based Rule can be imported using the id, e.g.
+
+```
+$ terraform import aws_wafregional_rate_based_rule.wafrule a1b2c3d4-d5f6-7777-8888-9999aaaabbbbcccc
+```

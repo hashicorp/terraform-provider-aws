@@ -10,8 +10,6 @@ description: |-
 
 Manages AWS Managed Streaming for Kafka cluster
 
-~> **NOTE:** This AWS service is in Preview and may change before General Availability release. Backwards compatibility is not guaranteed between Terraform AWS Provider releases.
-
 ## Example Usage
 
 ```hcl
@@ -57,6 +55,7 @@ resource "aws_msk_cluster" "example" {
 
   broker_node_group_info {
     instance_type  = "kafka.m5.large"
+    ebs_volume_size = "1000"
     client_subnets = [
       "${aws_subnet.subnet_az1.id}",
       "${aws_subnet.subnet_az2.id}",
@@ -75,32 +74,35 @@ resource "aws_msk_cluster" "example" {
 }
 
 output "zookeeper_connect_string" {
-    value = "${aws_msk_cluster.example.zookeeper_connect_string}"
+  value = "${aws_msk_cluster.example.zookeeper_connect_string}"
 }
 
 output "bootstrap_brokers" {
-    value = "${aws_msk_cluster.example.bootstrap_brokers"}
+  description = "Plaintext connection host:port pairs"
+  value       = "${aws_msk_cluster.example.bootstrap_brokers}"
 }
 
+output "bootstrap_brokers_tls" {
+  description = "TLS connection host:port pairs"
+  value       = "${aws_msk_cluster.example.bootstrap_brokers_tls}"
+}
 ```
 
 ## Argument Reference
 
 The following arguments are supported:
 
-* `broker_node_group_info` - (Required) Nested data for configuring the broker nodes of the Kafka cluster.
+* `broker_node_group_info` - (Required) Configuration block for the broker nodes of the Kafka cluster.
 * `cluster_name` - (Required) Name of the MSK cluster.
 * `kafka_version` - (Required) Specify the desired Kafka software version.
 * `number_of_broker_nodes` - (Required) The desired total number of broker nodes in the kafka cluster.  It must be a multiple of the number of specified client subnets.
-* `encryption_info` - (Optional) Nested data for specifying encryption at rest info.  See below.
+* `client_authentication` - (Optional) Configuration block for specifying a client authentication. See below.
+* `configuration_info` - (Optional) Configuration block for specifying a MSK Configuration to attach to Kafka brokers. See below.
+* `encryption_info` - (Optional) Configuration block for specifying encryption. See below.
 * `enhanced_monitoring` - (Optional) Specify the desired enhanced MSK CloudWatch monitoring level.  See [Monitoring Amazon MSK with Amazon CloudWatch](https://docs.aws.amazon.com/msk/latest/developerguide/monitoring.html)
 * `tags` - (Optional) A mapping of tags to assign to the resource
 
-**encryption_info** supports the following attributes:
-
-* `encryption_at_rest_kms_key_arn` - (Optional) You may specify a KMS key short ID or ARN (it will always output an ARN) to use for encrypting your data at rest.  If no key is specified, an AWS managed KMS ('aws/msk' managed service) key will be used for encrypting the data at rest.
-
-**broker_node_group_info** supports the following attributes:
+### broker_node_group_info Argument Reference
 
 * `client_subnets` - (Required) A list of subnets to connect to in client VPC ([documentation](https://docs.aws.amazon.com/msk/1.0/apireference/clusters.html#clusters-prop-brokernodegroupinfo-clientsubnets)).
 * `ebs_volume_size` - (Required) The size in GiB of the EBS volume for the data drive on each broker node.
@@ -108,12 +110,37 @@ The following arguments are supported:
 * `security_groups` - (Required) A list of the security groups to associate with the elastic network interfaces to control who can communicate with the cluster.
 * `az_distribution` - (Optional) The distribution of broker nodes across availability zones ([documentation](https://docs.aws.amazon.com/msk/1.0/apireference/clusters.html#clusters-model-brokerazdistribution)). Currently the only valid value is `DEFAULT`.
 
+### client_authentication Argument Reference
+
+* `tls` - (Optional) Configuration block for specifying TLS client authentication. See below.
+
+#### client_authentication tls Argument Reference
+
+* `certificate_authority_arns` - (Optional) List of ACM Certificate Authority Amazon Resource Names (ARNs).
+
+### configuration_info Argument Reference
+
+* `arn` - (Required) Amazon Resource Name (ARN) of the MSK Configuration to use in the cluster.
+* `revision` - (Required) Revision of the MSK Configuration to use in the cluster.
+
+### encryption_info Argument Reference
+
+* `encryption_in_transit` - (Optional) Configuration block to specify encryption in transit. See below.
+* `encryption_at_rest_kms_key_arn` - (Optional) You may specify a KMS key short ID or ARN (it will always output an ARN) to use for encrypting your data at rest.  If no key is specified, an AWS managed KMS ('aws/msk' managed service) key will be used for encrypting the data at rest.
+
+#### encryption_info encryption_in_transit Argument Reference
+
+* `client_broker` - (Optional) Encryption setting for data in transit between clients and brokers. Valid values: `TLS`, `TLS_PLAINTEXT`, and `PLAINTEXT`. Default value: `TLS_PLAINTEXT`.
+* `in_cluster` - (Optional) Whether data communication among broker nodes is encrypted. Default value: `true`.
+
 ## Attributes Reference
 
 In addition to all arguments above, the following attributes are exported:
 
 * `arn` - Amazon Resource Name (ARN) of the MSK cluster.
-* `bootstrap_brokers` - A comma separated list of one or more hostname:port pairs of kafka brokers suitable to boostrap connectivity to the kafka cluster.
+* `bootstrap_brokers` - A comma separated list of one or more hostname:port pairs of kafka brokers suitable to boostrap connectivity to the kafka cluster. Only contains value if `client_broker` encryption in transit is set to `PLAINTEXT` or `TLS_PLAINTEXT`.
+* `bootstrap_brokers_tls` - A comma separated list of one or more DNS names (or IPs) and TLS port pairs kafka brokers suitable to boostrap connectivity to the kafka cluster. Only contains value if `client_broker` encryption in transit is set to `TLS_PLAINTEXT` or `TLS`.
+* `current_version` - Current version of the MSK Cluster used for updates, e.g. `K13V1IB3VIYZZH`
 * `encryption_info.0.encryption_at_rest_kms_key_arn` - The ARN of the KMS key used for encryption at rest of the broker data volumes.
 * `zookeeper_connect_string` - A comma separated list of one or more IP:port pairs to use to connect to the Apache Zookeeper cluster.
 

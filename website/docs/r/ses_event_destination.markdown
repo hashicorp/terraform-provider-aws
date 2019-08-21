@@ -1,6 +1,6 @@
 ---
 layout: "aws"
-page_title: "AWS: ses_event_destination"
+page_title: "AWS: aws_ses_event_destination"
 sidebar_current: "docs-aws-resource-ses-event-destination"
 description: |-
   Provides an SES event destination
@@ -21,7 +21,7 @@ resource "aws_ses_event_destination" "cloudwatch" {
   enabled                = true
   matching_types         = ["bounce", "send"]
 
-  cloudwatch_destination = {
+  cloudwatch_destination {
     default_value  = "default"
     dimension_name = "dimension"
     value_source   = "emailHeader"
@@ -38,7 +38,7 @@ resource "aws_ses_event_destination" "kinesis" {
   enabled                = true
   matching_types         = ["bounce", "send"]
 
-  kinesis_destination = {
+  kinesis_destination {
     stream_arn = "${aws_kinesis_firehose_delivery_stream.example.arn}"
     role_arn   = "${aws_iam_role.example.arn}"
   }

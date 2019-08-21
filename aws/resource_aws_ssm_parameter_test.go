@@ -54,6 +54,7 @@ func TestAccAWSSSMParameter_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("aws_ssm_parameter.foo", "tier", "Standard"),
 					resource.TestCheckResourceAttr("aws_ssm_parameter.foo", "tags.%", "1"),
 					resource.TestCheckResourceAttr("aws_ssm_parameter.foo", "tags.Name", "My Parameter"),
+					resource.TestCheckResourceAttrSet("aws_ssm_parameter.foo", "version"),
 				),
 			},
 		},

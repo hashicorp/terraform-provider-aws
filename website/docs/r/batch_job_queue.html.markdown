@@ -1,6 +1,6 @@
 ---
 layout: "aws"
-page_title: "AWS: batch"
+page_title: "AWS: aws_batch_job_queue"
 sidebar_current: "docs-aws-resource-batch-job-queue"
 description: |-
   Provides a Batch Job Queue resource.

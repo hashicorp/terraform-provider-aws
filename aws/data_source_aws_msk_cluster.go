@@ -22,6 +22,10 @@ func dataSourceAwsMskCluster() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"bootstrap_brokers_tls": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"cluster_name": {
 				Type:         schema.TypeString,
 				Required:     true,
@@ -92,23 +96,14 @@ func dataSourceAwsMskClusterRead(d *schema.ResourceData, meta interface{}) error
 		return fmt.Errorf("error reading MSK Cluster (%s) bootstrap brokers: %s", aws.StringValue(cluster.ClusterArn), err)
 	}
 
-	listTagsInput := &kafka.ListTagsForResourceInput{
-		ResourceArn: cluster.ClusterArn,
-	}
-
-	listTagsOutput, err := conn.ListTagsForResource(listTagsInput)
-
-	if err != nil {
-		return fmt.Errorf("error reading MSK Cluster (%s) tags: %s", aws.StringValue(cluster.ClusterArn), err)
-	}
-
 	d.Set("arn", aws.StringValue(cluster.ClusterArn))
 	d.Set("bootstrap_brokers", aws.StringValue(bootstrapBrokersoOutput.BootstrapBrokerString))
+	d.Set("bootstrap_brokers_tls", aws.StringValue(bootstrapBrokersoOutput.BootstrapBrokerStringTls))
 	d.Set("cluster_name", aws.StringValue(cluster.ClusterName))
 	d.Set("kafka_version", aws.StringValue(cluster.CurrentBrokerSoftwareInfo.KafkaVersion))
 	d.Set("number_of_broker_nodes", aws.Int64Value(cluster.NumberOfBrokerNodes))
 
-	if err := d.Set("tags", tagsToMapMskCluster(listTagsOutput.Tags)); err != nil {
+	if err := d.Set("tags", tagsToMapMskCluster(cluster.Tags)); err != nil {
 		return fmt.Errorf("error setting tags: %s", err)
 	}
 

@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 	"regexp"
+	"strconv"
 	"strings"
 	"time"
 
@@ -97,6 +98,29 @@ func resourceAwsDbInstance() *schema.Resource {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
+				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+					mas := d.Get("max_allocated_storage").(int)
+
+					newInt, err := strconv.Atoi(new)
+
+					if err != nil {
+						return false
+					}
+
+					oldInt, err := strconv.Atoi(old)
+
+					if err != nil {
+						return false
+					}
+
+					// Allocated is higher than the configuration
+					// and autoscaling is enabled
+					if oldInt > newInt && mas > newInt {
+						return true
+					}
+
+					return false
+				},
 			},
 
 			"storage_type": {
@@ -171,6 +195,17 @@ func resourceAwsDbInstance() *schema.Resource {
 				ValidateFunc: validateOnceAWeekWindowFormat,
 			},
 
+			"max_allocated_storage": {
+				Type:     schema.TypeInt,
+				Optional: true,
+				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+					if old == "0" && new == fmt.Sprintf("%d", d.Get("allocated_storage").(int)) {
+						return true
+					}
+					return false
+				},
+			},
+
 			"multi_az": {
 				Type:     schema.TypeBool,
 				Optional: true,
@@ -240,7 +275,6 @@ func resourceAwsDbInstance() *schema.Resource {
 						},
 						"bucket_prefix": {
 							Type:     schema.TypeString,
-							Required: false,
 							Optional: true,
 							ForceNew: true,
 						},
@@ -329,7 +363,6 @@ func resourceAwsDbInstance() *schema.Resource {
 
 			"snapshot_identifier": {
 				Type:     schema.TypeString,
-				Computed: false,
 				Optional: true,
 				ForceNew: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
@@ -343,7 +376,6 @@ func resourceAwsDbInstance() *schema.Resource {
 
 			"allow_major_version_upgrade": {
 				Type:     schema.TypeBool,
-				Computed: false,
 				Optional: true,
 			},
 
@@ -509,6 +541,12 @@ func resourceAwsDbInstanceCreate(d *schema.ResourceData, meta interface{}) error
 			opts.AvailabilityZone = aws.String(attr.(string))
 		}
 
+		if attr, ok := d.GetOk("allow_major_version_upgrade"); ok {
+			modifyDbInstanceInput.AllowMajorVersionUpgrade = aws.Bool(attr.(bool))
+			// Having allowing_major_version_upgrade by itself should not trigger ModifyDBInstance
+			// InvalidParameterCombination: No modifications were requested
+		}
+
 		if attr, ok := d.GetOk("backup_retention_period"); ok {
 			modifyDbInstanceInput.BackupRetentionPeriod = aws.Int64(int64(attr.(int)))
 			requiresModifyDbInstance = true
@@ -544,6 +582,11 @@ func resourceAwsDbInstanceCreate(d *schema.ResourceData, meta interface{}) error
 
 		if attr, ok := d.GetOk("maintenance_window"); ok {
 			modifyDbInstanceInput.PreferredMaintenanceWindow = aws.String(attr.(string))
+			requiresModifyDbInstance = true
+		}
+
+		if attr, ok := d.GetOk("max_allocated_storage"); ok {
+			modifyDbInstanceInput.MaxAllocatedStorage = aws.Int64(int64(attr.(int)))
 			requiresModifyDbInstance = true
 		}
 
@@ -649,7 +692,6 @@ func resourceAwsDbInstanceCreate(d *schema.ResourceData, meta interface{}) error
 
 		if attr, ok := d.GetOk("multi_az"); ok {
 			opts.MultiAZ = aws.Bool(attr.(bool))
-
 		}
 
 		if _, ok := d.GetOk("character_set_name"); ok {
@@ -767,6 +809,9 @@ func resourceAwsDbInstanceCreate(d *schema.ResourceData, meta interface{}) error
 			}
 			return nil
 		})
+		if isResourceTimeoutError(err) {
+			_, err = conn.RestoreDBInstanceFromS3(&opts)
+		}
 		if err != nil {
 			return fmt.Errorf("Error creating DB Instance: %s", err)
 		}
@@ -826,6 +871,12 @@ func resourceAwsDbInstanceCreate(d *schema.ResourceData, meta interface{}) error
 			opts.AvailabilityZone = aws.String(attr.(string))
 		}
 
+		if attr, ok := d.GetOk("allow_major_version_upgrade"); ok {
+			modifyDbInstanceInput.AllowMajorVersionUpgrade = aws.Bool(attr.(bool))
+			// Having allowing_major_version_upgrade by itself should not trigger ModifyDBInstance
+			// InvalidParameterCombination: No modifications were requested
+		}
+
 		if attr, ok := d.GetOkExists("backup_retention_period"); ok {
 			modifyDbInstanceInput.BackupRetentionPeriod = aws.Int64(int64(attr.(int)))
 			requiresModifyDbInstance = true
@@ -876,6 +927,11 @@ func resourceAwsDbInstanceCreate(d *schema.ResourceData, meta interface{}) error
 
 		if attr, ok := d.GetOk("maintenance_window"); ok {
 			modifyDbInstanceInput.PreferredMaintenanceWindow = aws.String(attr.(string))
+			requiresModifyDbInstance = true
+		}
+
+		if attr, ok := d.GetOk("max_allocated_storage"); ok {
+			modifyDbInstanceInput.MaxAllocatedStorage = aws.Int64(int64(attr.(int)))
 			requiresModifyDbInstance = true
 		}
 
@@ -1030,6 +1086,11 @@ func resourceAwsDbInstanceCreate(d *schema.ResourceData, meta interface{}) error
 		if attr, ok := d.GetOk("license_model"); ok {
 			opts.LicenseModel = aws.String(attr.(string))
 		}
+
+		if attr, ok := d.GetOk("max_allocated_storage"); ok {
+			opts.MaxAllocatedStorage = aws.Int64(int64(attr.(int)))
+		}
+
 		if attr, ok := d.GetOk("parameter_group_name"); ok {
 			opts.DBParameterGroupName = aws.String(attr.(string))
 		}
@@ -1125,12 +1186,15 @@ func resourceAwsDbInstanceCreate(d *schema.ResourceData, meta interface{}) error
 			}
 			return nil
 		})
+		if isResourceTimeoutError(err) {
+			_, err = conn.CreateDBInstance(&opts)
+		}
 		if err != nil {
 			if isAWSErr(err, "InvalidParameterValue", "") {
+				opts.MasterUserPassword = aws.String("********")
 				return fmt.Errorf("Error creating DB Instance: %s, %+v", err, opts)
 			}
 			return fmt.Errorf("Error creating DB Instance: %s", err)
-
 		}
 	}
 
@@ -1217,6 +1281,7 @@ func resourceAwsDbInstanceRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("backup_window", v.PreferredBackupWindow)
 	d.Set("license_model", v.LicenseModel)
 	d.Set("maintenance_window", v.PreferredMaintenanceWindow)
+	d.Set("max_allocated_storage", v.MaxAllocatedStorage)
 	d.Set("publicly_accessible", v.PubliclyAccessible)
 	d.Set("multi_az", v.MultiAZ)
 	d.Set("kms_key_id", v.KmsKeyId)
@@ -1255,13 +1320,8 @@ func resourceAwsDbInstanceRead(d *schema.ResourceData, meta interface{}) error {
 		d.Set("option_group_name", v.OptionGroupMemberships[0].OptionGroupName)
 	}
 
-	if v.MonitoringInterval != nil {
-		d.Set("monitoring_interval", v.MonitoringInterval)
-	}
-
-	if v.MonitoringRoleArn != nil {
-		d.Set("monitoring_role_arn", v.MonitoringRoleArn)
-	}
+	d.Set("monitoring_interval", v.MonitoringInterval)
+	d.Set("monitoring_role_arn", v.MonitoringRoleArn)
 
 	if err := d.Set("enabled_cloudwatch_logs_exports", flattenStringList(v.EnabledCloudwatchLogsExports)); err != nil {
 		return fmt.Errorf("error setting enabled_cloudwatch_logs_exports: %s", err)
@@ -1411,7 +1471,8 @@ func resourceAwsDbInstanceUpdate(d *schema.ResourceData, meta interface{}) error
 	if d.HasChange("allow_major_version_upgrade") {
 		d.SetPartial("allow_major_version_upgrade")
 		req.AllowMajorVersionUpgrade = aws.Bool(d.Get("allow_major_version_upgrade").(bool))
-		requestUpdate = true
+		// Having allowing_major_version_upgrade by itself should not trigger ModifyDBInstance
+		// as it results in InvalidParameterCombination: No modifications were requested
 	}
 	if d.HasChange("backup_retention_period") {
 		d.SetPartial("backup_retention_period")
@@ -1452,6 +1513,20 @@ func resourceAwsDbInstanceUpdate(d *schema.ResourceData, meta interface{}) error
 	if d.HasChange("maintenance_window") {
 		d.SetPartial("maintenance_window")
 		req.PreferredMaintenanceWindow = aws.String(d.Get("maintenance_window").(string))
+		requestUpdate = true
+	}
+	if d.HasChange("max_allocated_storage") {
+		d.SetPartial("max_allocated_storage")
+		mas := d.Get("max_allocated_storage").(int)
+
+		// The API expects the max allocated storage value to be set to the allocated storage
+		// value when disabling autoscaling. This check ensures that value is set correctly
+		// if the update to the Terraform configuration was removing the argument completely.
+		if mas == 0 {
+			mas = d.Get("allocated_storage").(int)
+		}
+
+		req.MaxAllocatedStorage = aws.Int64(int64(mas))
 		requestUpdate = true
 	}
 	if d.HasChange("password") {
@@ -1550,18 +1625,42 @@ func resourceAwsDbInstanceUpdate(d *schema.ResourceData, meta interface{}) error
 		d.SetPartial("performance_insights_enabled")
 		req.EnablePerformanceInsights = aws.Bool(d.Get("performance_insights_enabled").(bool))
 
-		d.SetPartial("performance_insights_kms_key_id")
-		req.PerformanceInsightsKMSKeyId = aws.String(d.Get("performance_insights_kms_key_id").(string))
+		if v, ok := d.GetOk("performance_insights_kms_key_id"); ok {
+			d.SetPartial("performance_insights_kms_key_id")
+			req.PerformanceInsightsKMSKeyId = aws.String(v.(string))
+		}
 
-		d.SetPartial("performance_insights_retention_period")
-		req.PerformanceInsightsRetentionPeriod = aws.Int64(int64(d.Get("performance_insights_retention_period").(int)))
+		if v, ok := d.GetOk("performance_insights_retention_period"); ok {
+			d.SetPartial("performance_insights_retention_period")
+			req.PerformanceInsightsRetentionPeriod = aws.Int64(int64(v.(int)))
+		}
+
 		requestUpdate = true
 	}
 
 	log.Printf("[DEBUG] Send DB Instance Modification request: %t", requestUpdate)
 	if requestUpdate {
 		log.Printf("[DEBUG] DB Instance Modification request: %s", req)
-		_, err := conn.ModifyDBInstance(req)
+
+		err := resource.Retry(2*time.Minute, func() *resource.RetryError {
+			_, err := conn.ModifyDBInstance(req)
+
+			// Retry for IAM eventual consistency
+			if isAWSErr(err, "InvalidParameterValue", "IAM role ARN value is invalid or does not include the required permissions") {
+				return resource.RetryableError(err)
+			}
+
+			if err != nil {
+				return resource.NonRetryableError(err)
+			}
+
+			return nil
+		})
+
+		if isResourceTimeoutError(err) {
+			_, err = conn.ModifyDBInstance(req)
+		}
+
 		if err != nil {
 			return fmt.Errorf("Error modifying DB Instance %s: %s", d.Id(), err)
 		}

@@ -14,6 +14,7 @@ description: |-
 ```hcl
 data "aws_ram_resource_share" "example" {
   name = "example"
+  resource_owner = "SELF"
 }
 ```
 

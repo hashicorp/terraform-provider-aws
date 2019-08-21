@@ -12,8 +12,6 @@ Manages an Amazon Managed Streaming for Kafka configuration. More information ca
 
 ~> **NOTE:** The API does not support deleting MSK configurations. Removing this Terraform resource will only remove the Terraform state for it.
 
-~> **NOTE:** This AWS service is in Preview and may change before General Availability release. Backwards compatibility is not guaranteed between Terraform AWS Provider releases.
-
 ## Example Usage
 
 ```hcl

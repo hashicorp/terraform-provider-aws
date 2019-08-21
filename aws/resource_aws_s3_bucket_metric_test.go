@@ -292,6 +292,29 @@ func TestAccAWSS3BucketMetric_basic(t *testing.T) {
 	})
 }
 
+func TestAccAWSS3BucketMetric_WithEmptyFilter(t *testing.T) {
+	var conf s3.MetricsConfiguration
+	rInt := acctest.RandInt()
+	resourceName := "aws_s3_bucket_metric.test"
+
+	bucketName := fmt.Sprintf("tf-acc-%d", rInt)
+	metricName := t.Name()
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSS3BucketMetricDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSS3BucketMetricsConfigWithEmptyFilter(bucketName, metricName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSS3BucketMetricsConfigExists(resourceName, &conf),
+				),
+			},
+		},
+	})
+}
+
 func TestAccAWSS3BucketMetric_WithFilterPrefix(t *testing.T) {
 	var conf s3.MetricsConfiguration
 	rInt := acctest.RandInt()
@@ -602,6 +625,18 @@ resource "aws_s3_bucket" "bucket" {
   bucket = "%s"
 }
 `, name)
+}
+
+func testAccAWSS3BucketMetricsConfigWithEmptyFilter(bucketName, metricName string) string {
+	return fmt.Sprintf(`
+%s
+
+resource "aws_s3_bucket_metric" "test" {
+  bucket = "${aws_s3_bucket.bucket.id}"
+  name = "%s"
+  filter {}
+}
+`, testAccAWSS3BucketMetricsConfigBucket(bucketName), metricName)
 }
 
 func testAccAWSS3BucketMetricsConfigWithFilterPrefix(bucketName, metricName, prefix string) string {
