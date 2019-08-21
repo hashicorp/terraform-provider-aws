@@ -42,6 +42,8 @@ BUG FIXES:
 * resource/aws_wafregional_web_acl_association: Final retry after timeout creating association [GH-9820]
 * service/dynamodb: Final retries after timeouts setting dynamodb tags [GH-9821]
 * service/sagemaker: Final retries after timeouts setting sagemaker tags [GH-9821]
+* service/waf: Final retry after timeout getting change token [GH-9826]
+* service/wafregional: Final retry after timeout getting change token [GH-9826]
 
 ## 2.24.0 (August 15, 2019)
 
