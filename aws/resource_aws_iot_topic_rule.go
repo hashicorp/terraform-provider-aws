@@ -318,7 +318,7 @@ func resourceAwsIotTopicRule() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"iot_analytics_actions": {
+			"iot_analytics": {
 				Type:     schema.TypeSet,
 				Optional: true,
 				Elem: &schema.Resource{
@@ -351,7 +351,7 @@ func createTopicRulePayload(d *schema.ResourceData) *iot.TopicRulePayload {
 	s3Actions := d.Get("s3").(*schema.Set).List()
 	snsActions := d.Get("sns").(*schema.Set).List()
 	sqsActions := d.Get("sqs").(*schema.Set).List()
-	iotAnalyticsActions := d.Get("iot_analytics_actions").(*schema.Set).List()
+	iotAnalyticsActions := d.Get("iot_analytics").(*schema.Set).List()
 
 	numActions := len(cloudwatchAlarmActions) + len(cloudwatchMetricActions) +
 		len(dynamoDbActions) + len(elasticsearchActions) + len(firehoseActions) +
