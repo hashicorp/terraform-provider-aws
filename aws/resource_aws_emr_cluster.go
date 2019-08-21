@@ -270,6 +270,11 @@ func resourceAwsEMRCluster() *schema.Resource {
 							DiffSuppressFunc: suppressEquivalentJsonDiffs,
 							ValidateFunc:     validation.ValidateJsonString,
 						},
+						"market": {
+							Type:     schema.TypeString,
+							Required: true,
+							ForceNew: true,
+						},
 						"bid_price": {
 							Type:     schema.TypeString,
 							Optional: true,
@@ -340,6 +345,11 @@ func resourceAwsEMRCluster() *schema.Resource {
 				ConflictsWith: []string{"master_instance_type", "instance_group"},
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
+						"market": {
+							Type:     schema.TypeString,
+							Required: true,
+							ForceNew: true,
+						},
 						"bid_price": {
 							Type:     schema.TypeString,
 							Optional: true,
@@ -411,9 +421,15 @@ func resourceAwsEMRCluster() *schema.Resource {
 				Deprecated:    "use `master_instance_group` configuration block, `core_instance_group` configuration block, and `aws_emr_instance_group` resource(s) instead",
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
+						"market": {
+							Type:     schema.TypeString,
+							Required: true,
+							ForceNew: true,
+						},
 						"bid_price": {
 							Type:     schema.TypeString,
 							Optional: true,
+							ForceNew: true,
 						},
 						"ebs_config": {
 							Type:     schema.TypeSet,
@@ -661,13 +677,24 @@ func resourceAwsEMRClusterCreate(d *schema.ResourceData, meta interface{}) error
 			InstanceCount: aws.Int64(int64(m["instance_count"].(int))),
 			InstanceRole:  aws.String(emr.InstanceRoleTypeMaster),
 			InstanceType:  aws.String(m["instance_type"].(string)),
-			Market:        aws.String(emr.MarketTypeOnDemand),
 			Name:          aws.String(m["name"].(string)),
 		}
 
-		if v, ok := m["bid_price"]; ok && v.(string) != "" {
-			instanceGroup.BidPrice = aws.String(v.(string))
-			instanceGroup.Market = aws.String(emr.MarketTypeSpot)
+		if Market, ok := m["market"]; ok {
+			if Market == "ON_DEMAND" {
+				instanceGroup.Market = aws.String(emr.MarketTypeOnDemand)
+			} else if Market == "SPOT" {
+				instanceGroup.Market = aws.String(emr.MarketTypeSpot)
+				if bidPrice, ok := m["bid_price"]; ok {
+					if bidPrice != "" {
+						instanceGroup.BidPrice = aws.String(bidPrice.(string))
+					} else {
+						log.Printf("[INFO] the maximum Spot price is set equal to the On-Demand price")
+					}
+				}
+			} else {
+				return fmt.Errorf("Market parameter must be ON_DEMAND or SPOT not: %s", Market)
+			}
 		}
 
 		expandEbsConfig(m, instanceGroup)
@@ -682,7 +709,6 @@ func resourceAwsEMRClusterCreate(d *schema.ResourceData, meta interface{}) error
 			InstanceCount: aws.Int64(int64(m["instance_count"].(int))),
 			InstanceRole:  aws.String(emr.InstanceRoleTypeCore),
 			InstanceType:  aws.String(m["instance_type"].(string)),
-			Market:        aws.String(emr.MarketTypeOnDemand),
 			Name:          aws.String(m["name"].(string)),
 		}
 
@@ -696,9 +722,21 @@ func resourceAwsEMRClusterCreate(d *schema.ResourceData, meta interface{}) error
 			instanceGroup.AutoScalingPolicy = autoScalingPolicy
 		}
 
-		if v, ok := m["bid_price"]; ok && v.(string) != "" {
-			instanceGroup.BidPrice = aws.String(v.(string))
-			instanceGroup.Market = aws.String(emr.MarketTypeSpot)
+		if Market, ok := m["market"]; ok {
+			if Market == "ON_DEMAND" {
+				instanceGroup.Market = aws.String(emr.MarketTypeOnDemand)
+			} else if Market == "SPOT" {
+				instanceGroup.Market = aws.String(emr.MarketTypeSpot)
+				if bidPrice, ok := m["bid_price"]; ok {
+					if bidPrice != "" {
+						instanceGroup.BidPrice = aws.String(bidPrice.(string))
+					} else {
+						log.Printf("[INFO] the maximum Spot price is set equal to the On-Demand price")
+					}
+				}
+			} else {
+				return fmt.Errorf("Market parameter must be ON_DEMAND or SPOT not: %s", Market)
+			}
 		}
 
 		expandEbsConfig(m, instanceGroup)
@@ -1546,6 +1584,7 @@ func flattenEmrCoreInstanceGroup(instanceGroup *emr.InstanceGroup) ([]interface{
 	m := map[string]interface{}{
 		"autoscaling_policy": autoscalingPolicy,
 		"bid_price":          aws.StringValue(instanceGroup.BidPrice),
+		"market":             aws.StringValue(instanceGroup.Market),
 		"ebs_config":         flattenEBSConfig(instanceGroup.EbsBlockDevices),
 		"id":                 aws.StringValue(instanceGroup.Id),
 		"instance_count":     aws.Int64Value(instanceGroup.RequestedInstanceCount),
@@ -1563,6 +1602,7 @@ func flattenEmrMasterInstanceGroup(instanceGroup *emr.InstanceGroup) []interface
 
 	m := map[string]interface{}{
 		"bid_price":      aws.StringValue(instanceGroup.BidPrice),
+		"market":         aws.StringValue(instanceGroup.Market),
 		"ebs_config":     flattenEBSConfig(instanceGroup.EbsBlockDevices),
 		"id":             aws.StringValue(instanceGroup.Id),
 		"instance_count": aws.Int64Value(instanceGroup.RequestedInstanceCount),
@@ -1656,7 +1696,7 @@ func flattenInstanceGroup(ig *emr.InstanceGroup) (map[string]interface{}, error)
 	if ig.BidPrice != nil {
 		attrs["bid_price"] = *ig.BidPrice
 	}
-
+	attrs["market"] = *ig.Market
 	attrs["id"] = *ig.Id
 	attrs["ebs_config"] = flattenEBSConfig(ig.EbsBlockDevices)
 	attrs["instance_count"] = int(*ig.RequestedInstanceCount)
@@ -1931,7 +1971,7 @@ func expandInstanceGroupConfigs(instanceGroupConfigs []interface{}) ([]*emr.Inst
 			InstanceCount: aws.Int64(int64(configInstanceCount)),
 		}
 
-		expandBidPrice(config, configAttributes)
+		expandMarket(config, configAttributes)
 		expandEbsConfig(configAttributes, config)
 
 		if v, ok := configAttributes["autoscaling_policy"]; ok && v.(string) != "" {
@@ -1952,13 +1992,19 @@ func expandInstanceGroupConfigs(instanceGroupConfigs []interface{}) ([]*emr.Inst
 	return instanceGroupConfig, nil
 }
 
-func expandBidPrice(config *emr.InstanceGroupConfig, configAttributes map[string]interface{}) {
-	if bidPrice, ok := configAttributes["bid_price"]; ok {
-		if bidPrice != "" {
-			config.BidPrice = aws.String(bidPrice.(string))
-			config.Market = aws.String("SPOT")
-		} else {
-			config.Market = aws.String("ON_DEMAND")
+func expandMarket(config *emr.InstanceGroupConfig, configAttributes map[string]interface{}) {
+	if Market, ok := configAttributes["market"]; ok {
+		if Market == "ON_DEMAND" {
+			config.Market = aws.String(emr.MarketTypeOnDemand)
+		} else if Market == "SPOT" {
+			config.Market = aws.String(emr.MarketTypeSpot)
+			if bidPrice, ok := configAttributes["bid_price"]; ok {
+				if bidPrice != "" {
+					config.BidPrice = aws.String(bidPrice.(string))
+				} else {
+					log.Printf("[INFO] the maximum Spot price is set equal to the On-Demand price")
+				}
+			}
 		}
 	}
 }
@@ -2125,7 +2171,9 @@ func resourceAwsEMRClusterInstanceGroupHash(v interface{}) int {
 	if v, ok := m["bid_price"]; ok {
 		buf.WriteString(fmt.Sprintf("%s-", v.(string)))
 	}
-
+	if v, ok := m["market"]; ok {
+		buf.WriteString(fmt.Sprintf("%s-", v.(string)))
+	}
 	if v, ok := m["autoscaling_policy"]; ok {
 		pleaseWork, _ := structure.NormalizeJsonString(v.(string))
 		buf.WriteString(fmt.Sprintf("%s-", pleaseWork))
