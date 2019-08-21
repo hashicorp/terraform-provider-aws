@@ -458,31 +458,33 @@ func resourceAwsSecurityGroupDelete(d *schema.ResourceData, meta interface{}) er
 			return err
 		}
 	}
-
-	return resource.Retry(d.Timeout(schema.TimeoutDelete), func() *resource.RetryError {
-		_, err := conn.DeleteSecurityGroup(&ec2.DeleteSecurityGroupInput{
-			GroupId: aws.String(d.Id()),
-		})
+	input := &ec2.DeleteSecurityGroupInput{
+		GroupId: aws.String(d.Id()),
+	}
+	err := resource.Retry(d.Timeout(schema.TimeoutDelete), func() *resource.RetryError {
+		_, err := conn.DeleteSecurityGroup(input)
 		if err != nil {
-			ec2err, ok := err.(awserr.Error)
-			if !ok {
-				return resource.RetryableError(err)
-			}
-
-			switch ec2err.Code() {
-			case "InvalidGroup.NotFound":
+			if isAWSErr(err, "InvalidGroup.NotFound", "") {
 				return nil
-			case "DependencyViolation":
+			}
+			if isAWSErr(err, "DependencyViolation", "") {
 				// If it is a dependency violation, we want to retry
 				return resource.RetryableError(err)
-			default:
-				// Any other error, we want to quit the retry loop immediately
-				return resource.NonRetryableError(err)
 			}
+			resource.NonRetryableError(err)
 		}
-
 		return nil
 	})
+	if isResourceTimeoutError(err) {
+		_, err = conn.DeleteSecurityGroup(input)
+		if isAWSErr(err, "InvalidGroup.NotFound", "") {
+			return nil
+		}
+	}
+	if err != nil {
+		return fmt.Errorf("Error deleting security group: %s", err)
+	}
+	return nil
 }
 
 // Revoke all ingress/egress rules that a Security Group has
