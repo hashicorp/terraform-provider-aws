@@ -152,6 +152,10 @@ The `sqs` object takes the following arguments:
 * `role_arn` - (Required) The ARN of the IAM role that grants access.
 * `use_base64` - (Required) Specifies whether to use Base64 encoding.
 
+The `iot_analytics` object takes the following arguments:
+
+* `channel_name` - (Required) Name of AWS IOT Analytics channel.
+* `role_arn` - (Required) The ARN of the IAM role that grants access.
 ## Attributes Reference
 
 In addition to all arguments above, the following attributes are exported:

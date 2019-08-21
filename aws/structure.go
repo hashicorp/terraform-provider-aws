@@ -2985,6 +2985,23 @@ func flattenIoTRuleSqsActions(actions []*iot.Action) []map[string]interface{} {
 	return results
 }
 
+func flattenIoTRuleIotAnalyticsActions(actions []*iot.Action) []map[string]interface{} {
+	results := make([]map[string]interface{}, 0)
+
+	for _, a := range actions {
+		result := make(map[string]interface{})
+		v := a.IotAnalytics
+		if v != nil {
+			result["role_arn"] = aws.StringValue(v.RoleArn)
+			result["channel_name"] = aws.StringValue(v.ChannelName)
+
+			results = append(results, result)
+		}
+	}
+
+	return results
+}
+
 func flattenCognitoUserPoolPasswordPolicy(s *cognitoidentityprovider.PasswordPolicyType) []map[string]interface{} {
 	m := map[string]interface{}{}
 
