@@ -149,7 +149,6 @@ func resourceAwsS3BucketObject() *schema.Resource {
 				Optional:      true,
 				Computed:      true,
 				ConflictsWith: []string{"kms_key_id"},
-				ForceNew:      true,
 			},
 
 			"version_id": {
