@@ -727,7 +727,7 @@ EOF
 func testAccAWSCloudWatchEventTargetConfigEcsWithBlankTaskCount(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_cloudwatch_event_rule" "schedule" {
-  name        = "%s"
+  name        = "%[1]s"
   description = "schedule_ecs_test"
 
   schedule_expression = "rate(5 minutes)"
@@ -758,7 +758,7 @@ resource "aws_cloudwatch_event_target" "test" {
 }
 
 resource "aws_iam_role" "test_role" {
-  name = "%s"
+  name = "%[1]s"
 
   assume_role_policy = <<EOF
 {
@@ -778,7 +778,7 @@ EOF
 }
 
 resource "aws_iam_role_policy" "test_policy" {
-  name = "%s"
+  name = "%[1]s"
   role = "${aws_iam_role.test_role.id}"
 
   policy = <<EOF
@@ -800,11 +800,11 @@ EOF
 }
 
 resource "aws_ecs_cluster" "test" {
-  name = "%s"
+  name = "%[1]s"
 }
 
 resource "aws_ecs_task_definition" "task" {
-  family                   = "%s"
+  family                   = "%[1]s"
   cpu                      = 256
   memory                   = 512
   requires_compatibilities = ["FARGATE"]
@@ -822,7 +822,7 @@ resource "aws_ecs_task_definition" "task" {
 ]
 EOF
 }
-`, rName, rName, rName, rName, rName)
+`, rName)
 }
 
 func testAccAWSCloudWatchEventTargetConfigBatch(rName string) string {
