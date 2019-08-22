@@ -23,6 +23,8 @@ BUG FIXES:
 * resource/aws_lb_listener_certificate: Final retry after timeout reading listener certificate [GH-9787]
 * resource/aws_lb_listener_rule: Final retries after timeout reading and creating listener rules [GH-9787]
 * resource/aws_msk_cluster: Final retries after timeouts creating and deleting clusters [GH-9793]
+* resource/aws_network_acl: Final retry after timeout deleting ACLs [GH-9830]
+* resource/aws_network_acl_rule: Final retry after timeout creating ACL rules [GH-9830]
 * resource/aws_network_acl_rule: Remove resource from Terraform state on `InvalidNetworkAclID.NotFound` errors [GH-9710]
 * resource/aws_opsworks_stack: Final retry after timeout creating stack [GH-9818]
 * resource/aws_rds_cluster_instance: Ensure `monitoring_interval` and `monitoring_role_arn` attributes are always written to the Terraform state [GH-9748]
