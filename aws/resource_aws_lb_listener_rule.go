@@ -41,7 +41,6 @@ func resourceAwsLbbListenerRule() *schema.Resource {
 				Type:         schema.TypeInt,
 				Optional:     true,
 				Computed:     true,
-				ForceNew:     true,
 				ValidateFunc: validateAwsLbListenerRulePriority,
 			},
 			"action": {
