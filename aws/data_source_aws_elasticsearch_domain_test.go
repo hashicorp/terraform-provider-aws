@@ -63,7 +63,6 @@ func TestAccAWSDataElasticsearchDomain_advanced(t *testing.T) {
 					resource.TestCheckResourceAttrPair(datasourceName, "snapshot_options.#", resourceName, "snapshot_options.#"),
 					resource.TestCheckResourceAttrPair(datasourceName, "snapshot_options.0.automated_snapshot_start_hour", resourceName, "snapshot_options.0.automated_snapshot_start_hour"),
 					resource.TestCheckResourceAttrPair(datasourceName, "log_publishing_options.#", resourceName, "log_publishing_options.#"),
-					resource.TestCheckResourceAttrPair(datasourceName, "log_publishing_options.0.log_type", resourceName, "log_publishing_options.0.log_type"),
 					resource.TestCheckResourceAttrPair(datasourceName, "vpc_options.#", resourceName, "vpc_options.#"),
 				),
 			},
