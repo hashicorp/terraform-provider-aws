@@ -84,6 +84,9 @@ func resourceAwsS3BucketMetricPut(d *schema.ResourceData, meta interface{}) erro
 		}
 		return nil
 	})
+	if isResourceTimeoutError(err) {
+		_, err = conn.PutBucketMetricsConfiguration(input)
+	}
 	if err != nil {
 		return fmt.Errorf("Error putting S3 metric configuration: %s", err)
 	}
