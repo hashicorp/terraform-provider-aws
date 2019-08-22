@@ -6,6 +6,7 @@ ENHANCEMENTS:
 
 BUG FIXES:
 
+* resource/aws_cloudwatch_event_target: Add default setting for ecs_target task_count [GH-9773]
 * resource/aws_cloudwatch_log_subscription_filter: Prevent difference when omitting default `distribution` argument value of `ByLogStream` [GH-9265]
 * resource/aws_db_instance: Fix enabling Enhanced Monitoring on update to handle IAM eventual consistency [GH-9747]
 * resource/aws_elb: Final retries after timeouts creating and updating ELBs [GH-9765]
