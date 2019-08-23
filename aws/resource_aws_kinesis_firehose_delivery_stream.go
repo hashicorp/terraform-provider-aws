@@ -18,7 +18,7 @@ import (
 )
 
 const (
-	FirehoseDeliveryStreamStatusDeleted = "DESTROYED"
+	firehoseDeliveryStreamStatusDeleted = "DESTROYED"
 )
 
 func cloudWatchLoggingOptionsSchema() *schema.Schema {
