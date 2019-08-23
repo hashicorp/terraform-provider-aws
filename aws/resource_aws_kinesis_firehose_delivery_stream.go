@@ -2497,7 +2497,7 @@ func firehoseDeliveryStreamSSEWaitUntilTargetState(conn *firehose.Firehose, deli
 
 func isKinesisFirehoseDeliveryStreamOptionDisabled(v interface{}) bool {
 	options := v.([]interface{})
-	if len(options) == 0 || options[0] == nil  {
+	if len(options) == 0 || options[0] == nil {
 		return true
 	}
 	m := options[0].(map[string]interface{})
@@ -2507,7 +2507,7 @@ func isKinesisFirehoseDeliveryStreamOptionDisabled(v interface{}) bool {
 	if v, ok := m["enabled"]; ok {
 		enabled = v.(bool)
 	}
-	
+
 	return !enabled
 	return !e.(bool)
 }
