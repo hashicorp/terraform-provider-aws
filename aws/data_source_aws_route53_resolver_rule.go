@@ -89,7 +89,7 @@ func dataSourceAwsRoute53ResolverRuleRead(d *schema.ResourceData, meta interface
 		}
 
 		if state == route53ResolverRuleStatusDeleted {
-			return fmt.Errorf("no Route53 Resolver rules matched")
+			return fmt.Errorf("no Route53 Resolver rules matched found with the id (%q)", v)
 		}
 
 		rule = ruleRaw.(*route53resolver.ResolverRule)
