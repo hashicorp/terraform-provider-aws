@@ -2500,6 +2500,14 @@ func isKinesisFirehoseDeliveryStreamOptionDisabled(v interface{}) bool {
 	if len(options) == 0 || options[0] == nil  {
 		return true
 	}
-	e := options[0].(map[string]interface{})["enabled"]
+	m := options[0].(map[string]interface{})
+
+	var enabled bool
+
+	if v, ok := m["enabled"]; ok {
+		enabled = v.(bool)
+	}
+	
+	return !enabled
 	return !e.(bool)
 }
