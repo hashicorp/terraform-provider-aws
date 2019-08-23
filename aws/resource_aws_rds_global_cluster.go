@@ -48,8 +48,7 @@ func resourceAwsRDSGlobalCluster() *schema.Resource {
 			},
 			"engine_version": {
 				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
+				Required: true,
 				ForceNew: true,
 			},
 			"global_cluster_identifier": {
@@ -76,6 +75,7 @@ func resourceAwsRDSGlobalClusterCreate(d *schema.ResourceData, meta interface{})
 	input := &rds.CreateGlobalClusterInput{
 		DeletionProtection:      aws.Bool(d.Get("deletion_protection").(bool)),
 		GlobalClusterIdentifier: aws.String(d.Get("global_cluster_identifier").(string)),
+		EngineVersion:           aws.String(d.Get("engine_version").(string)),
 		StorageEncrypted:        aws.Bool(d.Get("storage_encrypted").(bool)),
 	}
 
@@ -85,10 +85,6 @@ func resourceAwsRDSGlobalClusterCreate(d *schema.ResourceData, meta interface{})
 
 	if v, ok := d.GetOk("engine"); ok {
 		input.Engine = aws.String(v.(string))
-	}
-
-	if v, ok := d.GetOk("engine_version"); ok {
-		input.EngineVersion = aws.String(v.(string))
 	}
 
 	log.Printf("[DEBUG] Creating RDS Global Cluster: %s", input)

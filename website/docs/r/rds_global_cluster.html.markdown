@@ -31,6 +31,7 @@ resource "aws_rds_global_cluster" "example" {
   provider = "aws.primary"
 
   global_cluster_identifier = "example"
+  engine_version = "5.6.10a" 
 }
 
 resource "aws_rds_cluster" "primary" {
@@ -73,7 +74,7 @@ The following arguments are supported:
 * `database_name` - (Optional, Forces new resources) Name for an automatically created database on cluster creation.
 * `deletion_protection` - (Optional) If the Global Cluster should have deletion protection enabled. The database can't be deleted when this value is set to `true`. The default is `false`.
 * `engine` - (Optional, Forces new resources) Name of the database engine to be used for this DB cluster. Valid values: `aurora`. Defaults to `aurora`.
-* `engine_version` - (Optional, Forces new resources) Engine version of the Aurora global database.
+* `engine_version` - (Required, Forces new resources) Engine version of the Aurora global database.
 * `storage_encrypted` - (Optional, Forces new resources) Specifies whether the DB cluster is encrypted. The default is `false`.
 
 ## Attribute Reference
