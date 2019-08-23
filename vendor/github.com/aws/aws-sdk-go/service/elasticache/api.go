@@ -10641,6 +10641,14 @@ type ListAllowedNodeTypeModificationsOutput struct {
 	// A string list, each element of which specifies a cache node type which you
 	// can use to scale your cluster or replication group.
 	//
+	// When scaling down on a Redis cluster or replication group using ModifyCacheCluster
+	// or ModifyReplicationGroup, use a value from this list for the CacheNodeType
+	// parameter.
+	ScaleDownModifications []*string `type:"list"`
+
+	// A string list, each element of which specifies a cache node type which you
+	// can use to scale your cluster or replication group.
+	//
 	// When scaling up a Redis cluster or replication group using ModifyCacheCluster
 	// or ModifyReplicationGroup, use a value from this list for the CacheNodeType
 	// parameter.
@@ -10655,6 +10663,12 @@ func (s ListAllowedNodeTypeModificationsOutput) String() string {
 // GoString returns the string representation
 func (s ListAllowedNodeTypeModificationsOutput) GoString() string {
 	return s.String()
+}
+
+// SetScaleDownModifications sets the ScaleDownModifications field's value.
+func (s *ListAllowedNodeTypeModificationsOutput) SetScaleDownModifications(v []*string) *ListAllowedNodeTypeModificationsOutput {
+	s.ScaleDownModifications = v
+	return s
 }
 
 // SetScaleUpModifications sets the ScaleUpModifications field's value.

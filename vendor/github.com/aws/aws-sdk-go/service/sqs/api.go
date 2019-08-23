@@ -1884,9 +1884,6 @@ func (c *SQS) TagQueueRequest(input *TagQueueInput) (req *request.Request, outpu
 //    * A new tag with a key identical to that of an existing tag overwrites
 //    the existing tag.
 //
-//    * Tagging actions are limited to 5 TPS per AWS account. If your application
-//    requires a higher throughput, file a technical support request (https://console.aws.amazon.com/support/home#/case/create?issueType=technical).
-//
 // For a full list of tag restrictions, see Limits Related to Queues (https://docs.aws.amazon.com/AWSSimpleQueueService/latest/SQSDeveloperGuide/sqs-limits.html#limits-queues)
 // in the Amazon Simple Queue Service Developer Guide.
 //
@@ -2570,6 +2567,33 @@ type CreateQueueInput struct {
 	//
 	// QueueName is a required field
 	QueueName *string `type:"string" required:"true"`
+
+	// Add cost allocation tags to the specified Amazon SQS queue. For an overview,
+	// see Tagging Your Amazon SQS Queues (https://docs.aws.amazon.com/AWSSimpleQueueService/latest/SQSDeveloperGuide/sqs-queue-tags.html)
+	// in the Amazon Simple Queue Service Developer Guide.
+	//
+	// When you use queue tags, keep the following guidelines in mind:
+	//
+	//    * Adding more than 50 tags to a queue isn't recommended.
+	//
+	//    * Tags don't have any semantic meaning. Amazon SQS interprets tags as
+	//    character strings.
+	//
+	//    * Tags are case-sensitive.
+	//
+	//    * A new tag with a key identical to that of an existing tag overwrites
+	//    the existing tag.
+	//
+	// For a full list of tag restrictions, see Limits Related to Queues (https://docs.aws.amazon.com/AWSSimpleQueueService/latest/SQSDeveloperGuide/sqs-limits.html#limits-queues)
+	// in the Amazon Simple Queue Service Developer Guide.
+	//
+	// To be able to tag a queue on creation, you must have the sqs:CreateQueue
+	// and sqs:TagQueue permissions.
+	//
+	// Cross-account permissions don't apply to this action. For more information,
+	// see Grant Cross-Account Permissions to a Role and a User Name (https://docs.aws.amazon.com/AWSSimpleQueueService/latest/SQSDeveloperGuide/sqs-customer-managed-policy-examples.html#grant-cross-account-permissions-to-role-and-user-name)
+	// in the Amazon Simple Queue Service Developer Guide.
+	Tags map[string]*string `locationName:"Tag" locationNameKey:"Key" locationNameValue:"Value" type:"map" flattened:"true"`
 }
 
 // String returns the string representation
@@ -2604,6 +2628,12 @@ func (s *CreateQueueInput) SetAttributes(v map[string]*string) *CreateQueueInput
 // SetQueueName sets the QueueName field's value.
 func (s *CreateQueueInput) SetQueueName(v string) *CreateQueueInput {
 	s.QueueName = &v
+	return s
+}
+
+// SetTags sets the Tags field's value.
+func (s *CreateQueueInput) SetTags(v map[string]*string) *CreateQueueInput {
+	s.Tags = v
 	return s
 }
 
