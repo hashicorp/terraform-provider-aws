@@ -306,9 +306,6 @@ func resourceAwsAcmCertificateRead(d *schema.ResourceData, meta interface{}) err
 		return fmt.Errorf("Error setting tags for certificate: %s", err)
 	}
 
-	if err != nil {
-		return fmt.Errorf("Error reading ACM certificate: %s", err)
-	}
 	return nil
 }
 func resourceAwsAcmCertificateGuessValidationMethod(domainValidationOptions []map[string]interface{}, emailValidationOptions []string) string {
