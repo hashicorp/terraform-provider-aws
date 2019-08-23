@@ -678,12 +678,6 @@ func resourceAwsKinesisFirehoseDeliveryStream() *schema.Resource {
 			},
 		},
 
-		Timeouts: &schema.ResourceTimeout{
-			Create: schema.DefaultTimeout(20 * time.Minute),
-			Update: schema.DefaultTimeout(10 * time.Minute),
-			Delete: schema.DefaultTimeout(20 * time.Minute),
-		},
-
 		CustomizeDiff: customdiff.Sequence(
 			func(diff *schema.ResourceDiff, v interface{}) error {
 				if diff.Id() != "" && diff.HasChange("server_side_encryption") {
@@ -2190,7 +2184,7 @@ func resourceAwsKinesisFirehoseDeliveryStreamCreate(d *schema.ResourceData, meta
 		return fmt.Errorf("error creating Kinesis Firehose Delivery Stream: %s", err)
 	}
 
-	s, err := firehoseDeliveryStreamWaitUntilTargetState(conn, sn, d.Timeout(schema.TimeoutCreate), []string{firehose.DeliveryStreamStatusCreating}, []string{firehose.DeliveryStreamStatusActive})
+	s, err := firehoseDeliveryStreamWaitUntilTargetState(conn, sn, 20*time.Minute, []string{firehose.DeliveryStreamStatusCreating}, []string{firehose.DeliveryStreamStatusActive})
 	if err != nil {
 		return fmt.Errorf(
 			"Error waiting for Kinesis Stream (%s) to become active: %s",
@@ -2210,7 +2204,7 @@ func resourceAwsKinesisFirehoseDeliveryStreamCreate(d *schema.ResourceData, meta
 				return fmt.Errorf("error starting Kinesis Firehose Delivery Stream encryption: %s", err)
 			}
 
-			err = firehoseDeliveryStreamSSEWaitUntilTargetState(conn, sn, d.Timeout(schema.TimeoutCreate), []string{firehose.DeliveryStreamEncryptionStatusEnabling}, []string{firehose.DeliveryStreamEncryptionStatusEnabled})
+			err = firehoseDeliveryStreamSSEWaitUntilTargetState(conn, sn, 20*time.Minute, []string{firehose.DeliveryStreamEncryptionStatusEnabling}, []string{firehose.DeliveryStreamEncryptionStatusEnabled})
 			if err != nil {
 				return fmt.Errorf(
 					"Error waiting for Kinesis Stream (%s) encryption to become enabled: %s",
@@ -2350,7 +2344,7 @@ func resourceAwsKinesisFirehoseDeliveryStreamUpdate(d *schema.ResourceData, meta
 				return fmt.Errorf("error stopping Kinesis Firehose Delivery Stream encryption: %s", err)
 			}
 
-			err = firehoseDeliveryStreamSSEWaitUntilTargetState(conn, sn, d.Timeout(schema.TimeoutUpdate), []string{firehose.DeliveryStreamEncryptionStatusDisabling}, []string{firehose.DeliveryStreamEncryptionStatusDisabled})
+			err = firehoseDeliveryStreamSSEWaitUntilTargetState(conn, sn, 10*time.Minute, []string{firehose.DeliveryStreamEncryptionStatusDisabling}, []string{firehose.DeliveryStreamEncryptionStatusDisabled})
 			if err != nil {
 				return fmt.Errorf(
 					"Error waiting for Kinesis Stream (%s) encryption to become disabled: %s",
@@ -2364,7 +2358,7 @@ func resourceAwsKinesisFirehoseDeliveryStreamUpdate(d *schema.ResourceData, meta
 				return fmt.Errorf("error starting Kinesis Firehose Delivery Stream encryption: %s", err)
 			}
 
-			err = firehoseDeliveryStreamSSEWaitUntilTargetState(conn, sn, d.Timeout(schema.TimeoutUpdate), []string{firehose.DeliveryStreamEncryptionStatusEnabling}, []string{firehose.DeliveryStreamEncryptionStatusEnabled})
+			err = firehoseDeliveryStreamSSEWaitUntilTargetState(conn, sn, 10*time.Minute, []string{firehose.DeliveryStreamEncryptionStatusEnabling}, []string{firehose.DeliveryStreamEncryptionStatusEnabled})
 			if err != nil {
 				return fmt.Errorf(
 					"Error waiting for Kinesis Stream (%s) encryption to become enabled: %s",
@@ -2417,7 +2411,7 @@ func resourceAwsKinesisFirehoseDeliveryStreamDelete(d *schema.ResourceData, meta
 		return fmt.Errorf("error deleting Kinesis Firehose Delivery Stream (%s): %s", sn, err)
 	}
 
-	if err := waitForKinesisFirehoseDeliveryStreamDeletion(conn, sn, d.Timeout(schema.TimeoutDelete)); err != nil {
+	if err := waitForKinesisFirehoseDeliveryStreamDeletion(conn, sn, 20*time.Minute); err != nil {
 		return fmt.Errorf(
 			"Error waiting for Delivery Stream (%s) to be destroyed: %s",
 			sn, err)
@@ -2433,7 +2427,7 @@ func firehoseDeliveryStreamStateRefreshFunc(conn *firehose.Firehose, sn string) 
 		})
 		if err != nil {
 			if isAWSErr(err, firehose.ErrCodeResourceNotFoundException, "") {
-				return &firehose.DeliveryStreamDescription{}, FirehoseDeliveryStreamStatusDeleted, nil
+				return &firehose.DeliveryStreamDescription{}, firehoseDeliveryStreamStatusDeleted, nil
 			}
 			return nil, "", err
 		}
@@ -2456,7 +2450,7 @@ func firehoseDeliveryStreamSSEStateRefreshFunc(conn *firehose.Firehose, sn strin
 }
 
 func waitForKinesisFirehoseDeliveryStreamDeletion(conn *firehose.Firehose, deliveryStreamName string, timeout time.Duration) error {
-	_, err := firehoseDeliveryStreamWaitUntilTargetState(conn, deliveryStreamName, timeout, []string{firehose.DeliveryStreamStatusDeleting}, []string{FirehoseDeliveryStreamStatusDeleted})
+	_, err := firehoseDeliveryStreamWaitUntilTargetState(conn, deliveryStreamName, timeout, []string{firehose.DeliveryStreamStatusDeleting}, []string{firehoseDeliveryStreamStatusDeleted})
 
 	return err
 }
@@ -2509,5 +2503,4 @@ func isKinesisFirehoseDeliveryStreamOptionDisabled(v interface{}) bool {
 	}
 
 	return !enabled
-	return !e.(bool)
 }

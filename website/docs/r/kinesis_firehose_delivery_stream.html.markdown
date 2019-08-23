@@ -354,14 +354,6 @@ The `parameters` array objects support the following:
 * `parameter_name` - (Required) Parameter name. Valid Values: `LambdaArn`, `NumberOfRetries`, `RoleArn`, `BufferSizeInMBs`, `BufferIntervalInSeconds`
 * `parameter_value` - (Required) Parameter value. Must be between 1 and 512 length (inclusive). When providing a Lambda ARN, you should specify the resource version as well.
 
-### Timeouts
-
-The `timeouts` block allows you to specify [timeouts](https://www.terraform.io/docs/configuration/resources.html#timeouts) for certain actions:
-
-* `create` - (Defaults to 20 mins) Used when creating the firehose delivery stream.
-* `update` - (Defaults to 10 mins) Used when updating the firehose delivery stream.
-* `delete` - (Defaults to 20 mins) Used when deleting the firehose delivery stream.
-
 ### data_format_conversion_configuration
 
 ~> **NOTE:** Once configured, the data format conversion configuration can only be disabled, in which the configuration values will remain, but will not be active. It is not currently possible to completely remove the configuration without recreating the resource.
