@@ -243,58 +243,73 @@ func resourceAwsAcmCertificateRead(d *schema.ResourceData, meta interface{}) err
 		CertificateArn: aws.String(d.Id()),
 	}
 
-	return resource.Retry(time.Duration(1)*time.Minute, func() *resource.RetryError {
-		resp, err := acmconn.DescribeCertificate(params)
-
-		if err != nil {
-			if isAWSErr(err, acm.ErrCodeResourceNotFoundException, "") {
-				d.SetId("")
-				return nil
-			}
-			return resource.NonRetryableError(fmt.Errorf("Error describing certificate: %s", err))
+	resp, err := acmconn.DescribeCertificate(params)
+	if err != nil {
+		if !isAWSErr(err, acm.ErrCodeResourceNotFoundException, "") {
+			d.SetId("")
+			return nil
 		}
+		return fmt.Errorf("Error describing certificate: %s", err)
+	}
 
-		d.Set("domain_name", resp.Certificate.DomainName)
-		d.Set("arn", resp.Certificate.CertificateArn)
-		d.Set("certificate_authority_arn", resp.Certificate.CertificateAuthorityArn)
+	if resp == nil {
+		return fmt.Errorf("Empty response received when describing ACM certificate")
+	}
+	d.Set("domain_name", resp.Certificate.DomainName)
+	d.Set("arn", resp.Certificate.CertificateArn)
+	d.Set("certificate_authority_arn", resp.Certificate.CertificateAuthorityArn)
 
-		if err := d.Set("subject_alternative_names", cleanUpSubjectAlternativeNames(resp.Certificate)); err != nil {
-			return resource.NonRetryableError(err)
-		}
+	if err := d.Set("subject_alternative_names", cleanUpSubjectAlternativeNames(resp.Certificate)); err != nil {
+		return fmt.Errorf("Error setting subject alternative nates: %s", err)
+	}
 
-		domainValidationOptions, emailValidationOptions, err := convertValidationOptions(resp.Certificate)
+	var domainValidationOptions []map[string]interface{}
+	var emailValidationOptions []string
+	err = resource.Retry(time.Duration(1)*time.Minute, func() *resource.RetryError {
+		var err error
+		domainValidationOptions, emailValidationOptions, err = convertValidationOptions(resp.Certificate)
 
 		if err != nil {
 			return resource.RetryableError(err)
 		}
-
-		if err := d.Set("domain_validation_options", domainValidationOptions); err != nil {
-			return resource.NonRetryableError(err)
-		}
-		if err := d.Set("validation_emails", emailValidationOptions); err != nil {
-			return resource.NonRetryableError(err)
-		}
-
-		d.Set("validation_method", resourceAwsAcmCertificateGuessValidationMethod(domainValidationOptions, emailValidationOptions))
-
-		if err := d.Set("options", flattenAcmCertificateOptions(resp.Certificate.Options)); err != nil {
-			return resource.NonRetryableError(fmt.Errorf("error setting certificate options: %s", err))
-		}
-
-		params := &acm.ListTagsForCertificateInput{
-			CertificateArn: aws.String(d.Id()),
-		}
-
-		tagResp, err := acmconn.ListTagsForCertificate(params)
-		if err != nil {
-			return resource.NonRetryableError(fmt.Errorf("error listing tags for certificate (%s): %s", d.Id(), err))
-		}
-		if err := d.Set("tags", tagsToMapACM(tagResp.Tags)); err != nil {
-			return resource.NonRetryableError(err)
-		}
-
 		return nil
 	})
+	if isResourceTimeoutError(err) {
+		domainValidationOptions, emailValidationOptions, err = convertValidationOptions(resp.Certificate)
+	}
+	if err != nil {
+		return fmt.Errorf("Error getting validation options for ACM certificate: %s", err)
+	}
+
+	if err := d.Set("domain_validation_options", domainValidationOptions); err != nil {
+		return fmt.Errorf("Error setting domain validation options: %s", err)
+	}
+	if err := d.Set("validation_emails", emailValidationOptions); err != nil {
+		return fmt.Errorf("Error setting email validation options: %s", err)
+	}
+
+	d.Set("validation_method", resourceAwsAcmCertificateGuessValidationMethod(domainValidationOptions, emailValidationOptions))
+
+	if err := d.Set("options", flattenAcmCertificateOptions(resp.Certificate.Options)); err != nil {
+		return fmt.Errorf("error setting certificate options: %s", err)
+	}
+
+	input := &acm.ListTagsForCertificateInput{
+		CertificateArn: aws.String(d.Id()),
+	}
+
+	tagResp, err := acmconn.ListTagsForCertificate(input)
+	if err != nil {
+		return fmt.Errorf("error listing tags for certificate (%s): %s", d.Id(), err)
+	}
+	if err := d.Set("tags", tagsToMapACM(tagResp.Tags)); err != nil {
+		return fmt.Errorf("Error setting tags for certificate: %s", err)
+	}
+
+	if err != nil {
+		return fmt.Errorf("Error reading ACM certificate: %s", err)
+	}
+	return nil
 }
 func resourceAwsAcmCertificateGuessValidationMethod(domainValidationOptions []map[string]interface{}, emailValidationOptions []string) string {
 	// The DescribeCertificate Response doesn't have information on what validation method was used
@@ -398,7 +413,9 @@ func resourceAwsAcmCertificateDelete(d *schema.ResourceData, meta interface{}) e
 		}
 		return nil
 	})
-
+	if isResourceTimeoutError(err) {
+		_, err = acmconn.DeleteCertificate(params)
+	}
 	if err != nil && !isAWSErr(err, acm.ErrCodeResourceNotFoundException, "") {
 		return fmt.Errorf("Error deleting certificate: %s", err)
 	}
