@@ -26,7 +26,7 @@ data "aws_route53_resolver_rules" "example" {
 
 The arguments of this data source act as filters for querying the available resolver rules in the current region.
 
-* `owner_id` (Optional) When the desired resolver rules are shared shared with another AWS account, the account ID of the account that the rules are shared with.
+* `owner_id` (Optional) When the desired resolver rules are shared with another AWS account, the account ID of the account that the rules are shared with.
 * `resolver_endpoint_id` (Optional) The ID of the outbound resolver endpoint of the desired resolver rules.
 * `rule_type` (Optional) The rule type of the desired resolver rules. Valid values are `FORWARD`, `SYSTEM` and `RECURSIVE`.
 * `share_status` (Optional) Whether the desired resolver rules are shared and, if so, whether the current account is sharing the rules with another account, or another account is sharing the rules with the current account.
