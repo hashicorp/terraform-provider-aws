@@ -9,14 +9,14 @@ import (
 var readDuration = 5 * time.Second
 
 func init() {
-	initRequest = customizeRequest
-}
-
-func customizeRequest(r *request.Request) {
-	if r.Operation.Name == opGetRecords {
-		r.ApplyOptions(request.WithResponseReadTimeout(readDuration))
+	ops := []string{
+		opGetRecords,
 	}
-
-	// Service specific error codes. Github(aws/aws-sdk-go#1376)
-	r.RetryErrorCodes = append(r.RetryErrorCodes, ErrCodeLimitExceededException)
+	initRequest = func(r *request.Request) {
+		for _, operation := range ops {
+			if r.Operation.Name == operation {
+				r.ApplyOptions(request.WithResponseReadTimeout(readDuration))
+			}
+		}
+	}
 }

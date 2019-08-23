@@ -76,15 +76,12 @@ func (p *WebIdentityRoleProvider) Retrieve() (credentials.Value, error) {
 		// uses unix time in nanoseconds to uniquely identify sessions.
 		sessionName = strconv.FormatInt(now().UnixNano(), 10)
 	}
-	req, resp := p.client.AssumeRoleWithWebIdentityRequest(&sts.AssumeRoleWithWebIdentityInput{
+	resp, err := p.client.AssumeRoleWithWebIdentity(&sts.AssumeRoleWithWebIdentityInput{
 		RoleArn:          &p.roleARN,
 		RoleSessionName:  &sessionName,
 		WebIdentityToken: aws.String(string(b)),
 	})
-	// InvalidIdentityToken error is a temporary error that can occur
-	// when assuming an Role with a JWT web identity token.
-	req.RetryErrorCodes = append(req.RetryErrorCodes, sts.ErrCodeInvalidIdentityTokenException)
-	if err := req.Send(); err != nil {
+	if err != nil {
 		return credentials.Value{}, awserr.New(ErrCodeWebIdentity, "failed to retrieve credentials", err)
 	}
 
