@@ -94,7 +94,7 @@ func TestAccDataSourceAwsRoute53ResolverRule_ResolverEndpointIdWithTags(t *testi
 func testAccDataSourceAwsRoute53ResolverRule_basic(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_route53_resolver_rule" "example" {
-  domain_name = "example.com"
+  domain_name = "%[1]s.example.com"
   rule_type   = "SYSTEM"
   name        = %[1]q
 }
@@ -117,7 +117,7 @@ data "aws_route53_resolver_rule" "by_name_and_rule_type" {
 func testAccDataSourceAwsRoute53ResolverRule_resolverEndpointIdWithTags(rName string) string {
 	return testAccRoute53ResolverRuleConfig_resolverEndpoint(rName) + fmt.Sprintf(`
 resource "aws_route53_resolver_rule" "example" {
-  domain_name = "example.com"
+  domain_name = "%[1]s.example.com"
   rule_type   = "FORWARD"
   name        = %[1]q
 
