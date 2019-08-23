@@ -10,7 +10,6 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/firehose"
-	"github.com/hashicorp/terraform/helper/customdiff"
 	"github.com/hashicorp/terraform/helper/hashcode"
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/helper/schema"
@@ -678,18 +677,6 @@ func resourceAwsKinesisFirehoseDeliveryStream() *schema.Resource {
 			},
 		},
 
-		CustomizeDiff: customdiff.Sequence(
-			func(diff *schema.ResourceDiff, v interface{}) error {
-				if diff.Id() != "" && diff.HasChange("server_side_encryption") {
-					o, n := diff.GetChange("server_side_encryption")
-					if isKinesisFirehoseDeliveryStreamOptionDisabled(o) && isKinesisFirehoseDeliveryStreamOptionDisabled(n) {
-						return diff.Clear("server_side_encryption")
-					}
-				}
-				return nil
-			},
-		),
-
 		SchemaVersion: 1,
 		MigrateState:  resourceAwsKinesisFirehoseMigrateState,
 		Schema: map[string]*schema.Schema{
@@ -710,11 +697,12 @@ func resourceAwsKinesisFirehoseDeliveryStream() *schema.Resource {
 			"tags": tagsSchema(),
 
 			"server_side_encryption": {
-				Type:          schema.TypeList,
-				Optional:      true,
-				Computed:      true,
-				MaxItems:      1,
-				ConflictsWith: []string{"kinesis_source_configuration"},
+				Type:             schema.TypeList,
+				Optional:         true,
+				Computed:         true,
+				MaxItems:         1,
+				DiffSuppressFunc: suppressMissingOptionalConfigurationBlock,
+				ConflictsWith:    []string{"kinesis_source_configuration"},
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"enabled": {
