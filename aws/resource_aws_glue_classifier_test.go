@@ -89,7 +89,6 @@ func TestAccAWSGlueClassifier_CsvClassifier(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "csv_classifier.0.disable_value_trimming", "false"),
 					resource.TestCheckResourceAttr(resourceName, "csv_classifier.0.header", "header_column1"),
 					resource.TestCheckResourceAttr(resourceName, "csv_classifier.1.header", "header_column2"),
-					resource.TestCheckResourceAttr(resourceName, "csv_classifier.0.quote_symbol", "'"),
 					resource.TestCheckResourceAttr(resourceName, "grok_classifier.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "json_classifier.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
@@ -107,7 +106,6 @@ func TestAccAWSGlueClassifier_CsvClassifier(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "csv_classifier.0.disable_value_trimming", "false"),
 					resource.TestCheckResourceAttr(resourceName, "csv_classifier.0.header", "header_column1"),
 					resource.TestCheckResourceAttr(resourceName, "csv_classifier.1.header", "header_column2"),
-					resource.TestCheckResourceAttr(resourceName, "csv_classifier.0.quote_symbol", "'"),
 					resource.TestCheckResourceAttr(resourceName, "grok_classifier.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "json_classifier.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
@@ -446,8 +444,7 @@ resource "aws_glue_classifier" "test" {
 	contains_header        = "%s"
 	delimiter              = "%s"
 	disable_value_trimming = "%t"
-	header                 = ["header_column1", "header_column2]
-	quote_symbol           = "'"
+	header                 = ["header_column1", "header_column2"]
   }
 }
 `, rName, allowSingleColumn, containsHeader, delimiter, disableValueTrimming)
