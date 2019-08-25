@@ -82,11 +82,6 @@ func resourceAwsGlueClassifier() *schema.Resource {
 							Optional: true,
 							Elem:     &schema.Schema{Type: schema.TypeString},
 						},
-						"name": {
-							Type:         schema.TypeString,
-							Required:     true,
-							ValidateFunc: validation.StringLenBetween(1, 255),
-						},
 						"quote_symbol": {
 							Type:     schema.TypeString,
 							Optional: true,
@@ -436,7 +431,6 @@ func flattenGlueCsvClassifier(csvClassifier *glue.CsvClassifier) []map[string]in
 		"delimiter":              aws.StringValue(csvClassifier.Delimiter),
 		"disable_value_trimming": aws.BoolValue(csvClassifier.DisableValueTrimming),
 		"header":                 aws.StringValueSlice(csvClassifier.Header),
-		"name":                   aws.StringValue(csvClassifier.Name),
 		"quote_symbol":           aws.StringValue(csvClassifier.QuoteSymbol),
 	}
 
