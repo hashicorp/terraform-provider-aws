@@ -54,7 +54,7 @@ resource "aws_spot_fleet_request" "cheap_compute" {
 }
 ```
 
-Using launch templates:
+### Using launch templates:
 
 ```
 resource "aws_launch_template" "foo" {
