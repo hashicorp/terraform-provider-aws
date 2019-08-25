@@ -205,14 +205,21 @@ func findAwsRedshiftSnapshotCopyGrantWithRetry(conn *redshift.Redshift, grantNam
 
 		return nil
 	})
-
-	return grant, err
+	if isResourceTimeoutError(err) {
+		grant, err = findAwsRedshiftSnapshotCopyGrant(conn, grantName, nil)
+	}
+	if err != nil {
+		return nil, fmt.Errorf("Error finding snapshot copy grant: %s", err)
+	}
+	return grant, nil
 }
 
 // Used by the tests as well
 func waitForAwsRedshiftSnapshotCopyGrantToBeDeleted(conn *redshift.Redshift, grantName string) error {
+	var grant *redshift.SnapshotCopyGrant
 	err := resource.Retry(3*time.Minute, func() *resource.RetryError {
-		grant, err := findAwsRedshiftSnapshotCopyGrant(conn, grantName, nil)
+		var err error
+		grant, err = findAwsRedshiftSnapshotCopyGrant(conn, grantName, nil)
 		if err != nil {
 			if isAWSErr(err, redshift.ErrCodeSnapshotCopyGrantNotFoundFault, "") {
 				return nil
@@ -227,8 +234,16 @@ func waitForAwsRedshiftSnapshotCopyGrantToBeDeleted(conn *redshift.Redshift, gra
 
 		return resource.NonRetryableError(err)
 	})
-
-	return err
+	if isResourceTimeoutError(err) {
+		grant, err = findAwsRedshiftSnapshotCopyGrant(conn, grantName, nil)
+		if isAWSErr(err, redshift.ErrCodeSnapshotCopyGrantNotFoundFault, "") {
+			return nil
+		}
+	}
+	if err != nil {
+		return fmt.Errorf("Error waiting for snapshot copy grant to be deleted: %s", err)
+	}
+	return nil
 }
 
 // The DescribeSnapshotCopyGrants API defaults to listing only 100 grants
@@ -260,6 +275,9 @@ func findAwsRedshiftSnapshotCopyGrant(conn *redshift.Redshift, grantName string,
 
 		return nil
 	})
+	if isResourceTimeoutError(err) {
+		out, err = conn.DescribeSnapshotCopyGrants(&input)
+	}
 	if err != nil {
 		return nil, err
 	}

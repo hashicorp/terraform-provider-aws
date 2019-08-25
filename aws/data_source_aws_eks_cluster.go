@@ -60,6 +60,10 @@ func dataSourceAwsEksCluster() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"status": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"vpc_config": {
 				Type:     schema.TypeList,
 				MaxItems: 1,
@@ -133,6 +137,7 @@ func dataSourceAwsEksClusterRead(d *schema.ResourceData, meta interface{}) error
 	d.Set("name", cluster.Name)
 	d.Set("platform_version", cluster.PlatformVersion)
 	d.Set("role_arn", cluster.RoleArn)
+	d.Set("status", cluster.Status)
 	d.Set("version", cluster.Version)
 
 	if err := d.Set("vpc_config", flattenEksVpcConfigResponse(cluster.ResourcesVpcConfig)); err != nil {

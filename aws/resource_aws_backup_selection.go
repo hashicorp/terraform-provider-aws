@@ -5,9 +5,11 @@ import (
 	"log"
 	"regexp"
 	"strings"
+	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/backup"
+	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/helper/schema"
 	"github.com/hashicorp/terraform/helper/validation"
 )
@@ -94,12 +96,34 @@ func resourceAwsBackupSelectionCreate(d *schema.ResourceData, meta interface{}) 
 		BackupSelection: selection,
 	}
 
-	resp, err := conn.CreateBackupSelection(input)
+	// Retry for IAM eventual consistency
+	var output *backup.CreateBackupSelectionOutput
+	err := resource.Retry(1*time.Minute, func() *resource.RetryError {
+		var err error
+		output, err = conn.CreateBackupSelection(input)
+
+		// Retry on the following error:
+		// InvalidParameterValueException: IAM Role arn:aws:iam::123456789012:role/XXX cannot be assumed by AWS Backup
+		if isAWSErr(err, backup.ErrCodeInvalidParameterValueException, "cannot be assumed") {
+			return resource.RetryableError(err)
+		}
+
+		if err != nil {
+			return resource.NonRetryableError(err)
+		}
+
+		return nil
+	})
+
+	if isResourceTimeoutError(err) {
+		output, err = conn.CreateBackupSelection(input)
+	}
+
 	if err != nil {
 		return fmt.Errorf("error creating Backup Selection: %s", err)
 	}
 
-	d.SetId(*resp.SelectionId)
+	d.SetId(aws.StringValue(output.SelectionId))
 
 	return resourceAwsBackupSelectionRead(d, meta)
 }

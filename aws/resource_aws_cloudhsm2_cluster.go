@@ -176,6 +176,9 @@ func resourceAwsCloudHsm2ClusterCreate(d *schema.ResourceData, meta interface{})
 		}
 		return nil
 	})
+	if isResourceTimeoutError(err) {
+		output, err = cloudhsm2.CreateCluster(input)
+	}
 
 	if err != nil {
 		return fmt.Errorf("error creating CloudHSMv2 Cluster: %s", err)
@@ -261,13 +264,14 @@ func resourceAwsCloudHsm2ClusterUpdate(d *schema.ResourceData, meta interface{})
 
 func resourceAwsCloudHsm2ClusterDelete(d *schema.ResourceData, meta interface{}) error {
 	cloudhsm2 := meta.(*AWSClient).cloudhsmv2conn
+	input := &cloudhsmv2.DeleteClusterInput{
+		ClusterId: aws.String(d.Id()),
+	}
 
 	log.Printf("[DEBUG] CloudHSMv2 Delete cluster: %s", d.Id())
 	err := resource.Retry(180*time.Second, func() *resource.RetryError {
 		var err error
-		_, err = cloudhsm2.DeleteCluster(&cloudhsmv2.DeleteClusterInput{
-			ClusterId: aws.String(d.Id()),
-		})
+		_, err = cloudhsm2.DeleteCluster(input)
 		if err != nil {
 			if isAWSErr(err, cloudhsmv2.ErrCodeCloudHsmInternalFailureException, "request was rejected because of an AWS CloudHSM internal failure") {
 				log.Printf("[DEBUG] CloudHSMv2 Cluster re-try deleting %s", d.Id())
@@ -277,6 +281,9 @@ func resourceAwsCloudHsm2ClusterDelete(d *schema.ResourceData, meta interface{})
 		}
 		return nil
 	})
+	if isResourceTimeoutError(err) {
+		_, err = cloudhsm2.DeleteCluster(input)
+	}
 
 	if err != nil {
 		return err

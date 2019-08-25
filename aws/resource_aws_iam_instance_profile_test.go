@@ -7,7 +7,6 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/iam"
 	"github.com/hashicorp/terraform/helper/acctest"
 	"github.com/hashicorp/terraform/helper/resource"
@@ -42,8 +41,9 @@ func TestAccAWSIAMInstanceProfile_basic(t *testing.T) {
 
 	rName := acctest.RandString(5)
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:  func() { testAccPreCheck(t) },
-		Providers: testAccProviders,
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSInstanceProfileDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAwsIamInstanceProfileConfig(rName),
@@ -60,8 +60,9 @@ func TestAccAWSIAMInstanceProfile_withRoleNotRoles(t *testing.T) {
 
 	rName := acctest.RandString(5)
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:  func() { testAccPreCheck(t) },
-		Providers: testAccProviders,
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSInstanceProfileDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSInstanceProfileWithRoleSpecified(rName),
@@ -76,8 +77,9 @@ func TestAccAWSIAMInstanceProfile_withRoleNotRoles(t *testing.T) {
 func TestAccAWSIAMInstanceProfile_missingRoleThrowsError(t *testing.T) {
 	rName := acctest.RandString(5)
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:  func() { testAccPreCheck(t) },
-		Providers: testAccProviders,
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSInstanceProfileDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccAwsIamInstanceProfileConfigMissingRole(rName),
@@ -143,14 +145,11 @@ func testAccCheckAWSInstanceProfileDestroy(s *terraform.State) error {
 			return fmt.Errorf("still exist.")
 		}
 
-		// Verify the error is what we want
-		ec2err, ok := err.(awserr.Error)
-		if !ok {
-			return err
+		if isAWSErr(err, "NoSuchEntity", "") {
+			continue
 		}
-		if ec2err.Code() != "NoSuchEntity" {
-			return err
-		}
+
+		return err
 	}
 
 	return nil

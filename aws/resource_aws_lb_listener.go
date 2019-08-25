@@ -61,6 +61,8 @@ func resourceAwsLbListener() *schema.Resource {
 					elbv2.ProtocolEnumHttps,
 					elbv2.ProtocolEnumTcp,
 					elbv2.ProtocolEnumTls,
+					elbv2.ProtocolEnumUdp,
+					elbv2.ProtocolEnumTcpUdp,
 				}, true),
 			},
 

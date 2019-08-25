@@ -1382,6 +1382,91 @@ func (c *ApplicationInsights) ListProblemsPagesWithContext(ctx aws.Context, inpu
 	return p.Err()
 }
 
+const opUpdateApplication = "UpdateApplication"
+
+// UpdateApplicationRequest generates a "aws/request.Request" representing the
+// client's request for the UpdateApplication operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See UpdateApplication for more information on using the UpdateApplication
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the UpdateApplicationRequest method.
+//    req, resp := client.UpdateApplicationRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/application-insights-2018-11-25/UpdateApplication
+func (c *ApplicationInsights) UpdateApplicationRequest(input *UpdateApplicationInput) (req *request.Request, output *UpdateApplicationOutput) {
+	op := &request.Operation{
+		Name:       opUpdateApplication,
+		HTTPMethod: "POST",
+		HTTPPath:   "/",
+	}
+
+	if input == nil {
+		input = &UpdateApplicationInput{}
+	}
+
+	output = &UpdateApplicationOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// UpdateApplication API operation for Amazon CloudWatch Application Insights.
+//
+// Updates the application.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for Amazon CloudWatch Application Insights's
+// API operation UpdateApplication for usage and error information.
+//
+// Returned Error Codes:
+//   * ErrCodeInternalServerException "InternalServerException"
+//   The server encountered an internal error and is unable to complete the request.
+//
+//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   The resource does not exist in the customer account.
+//
+//   * ErrCodeValidationException "ValidationException"
+//   The parameter is not valid.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/application-insights-2018-11-25/UpdateApplication
+func (c *ApplicationInsights) UpdateApplication(input *UpdateApplicationInput) (*UpdateApplicationOutput, error) {
+	req, out := c.UpdateApplicationRequest(input)
+	return out, req.Send()
+}
+
+// UpdateApplicationWithContext is the same as UpdateApplication with the addition of
+// the ability to pass a context and additional request options.
+//
+// See UpdateApplication for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *ApplicationInsights) UpdateApplicationWithContext(ctx aws.Context, input *UpdateApplicationInput, opts ...request.Option) (*UpdateApplicationOutput, error) {
+	req, out := c.UpdateApplicationRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
 const opUpdateComponent = "UpdateComponent"
 
 // UpdateComponentRequest generates a "aws/request.Request" representing the
@@ -1620,8 +1705,16 @@ type ApplicationInfo struct {
 	// The lifecycle of the application.
 	LifeCycle *string `type:"string"`
 
-	// The issues on the user side that are blocking Application Insights from fully
-	// monitoring the application.
+	// Indicates whether Application Insights will create opsItems for any problem
+	// detected by Application Insights for an application.
+	OpsCenterEnabled *bool `type:"boolean"`
+
+	// The SNS topic provided to Application Insights that is associated to the
+	// created opsItems to receive SNS notifications for opsItem updates.
+	OpsItemSNSTopicArn *string `type:"string"`
+
+	// The issues on the user side that block Application Insights from successfully
+	// monitoring an application.
 	Remarks *string `type:"string"`
 
 	// The name of the resource group used for the application.
@@ -1644,6 +1737,18 @@ func (s *ApplicationInfo) SetLifeCycle(v string) *ApplicationInfo {
 	return s
 }
 
+// SetOpsCenterEnabled sets the OpsCenterEnabled field's value.
+func (s *ApplicationInfo) SetOpsCenterEnabled(v bool) *ApplicationInfo {
+	s.OpsCenterEnabled = &v
+	return s
+}
+
+// SetOpsItemSNSTopicArn sets the OpsItemSNSTopicArn field's value.
+func (s *ApplicationInfo) SetOpsItemSNSTopicArn(v string) *ApplicationInfo {
+	s.OpsItemSNSTopicArn = &v
+	return s
+}
+
 // SetRemarks sets the Remarks field's value.
 func (s *ApplicationInfo) SetRemarks(v string) *ApplicationInfo {
 	s.Remarks = &v
@@ -1658,6 +1763,13 @@ func (s *ApplicationInfo) SetResourceGroupName(v string) *ApplicationInfo {
 
 type CreateApplicationInput struct {
 	_ struct{} `type:"structure"`
+
+	// When set to true, creates opsItems for any problems detected on an application.
+	OpsCenterEnabled *bool `type:"boolean"`
+
+	// The SNS topic provided to Application Insights that is associated to the
+	// created opsItem. Allows you to receive notifications for updates to the opsItem.
+	OpsItemSNSTopicArn *string `type:"string"`
 
 	// The name of the resource group.
 	//
@@ -1686,6 +1798,18 @@ func (s *CreateApplicationInput) Validate() error {
 		return invalidParams
 	}
 	return nil
+}
+
+// SetOpsCenterEnabled sets the OpsCenterEnabled field's value.
+func (s *CreateApplicationInput) SetOpsCenterEnabled(v bool) *CreateApplicationInput {
+	s.OpsCenterEnabled = &v
+	return s
+}
+
+// SetOpsItemSNSTopicArn sets the OpsItemSNSTopicArn field's value.
+func (s *CreateApplicationInput) SetOpsItemSNSTopicArn(v string) *CreateApplicationInput {
+	s.OpsItemSNSTopicArn = &v
+	return s
 }
 
 // SetResourceGroupName sets the ResourceGroupName field's value.
@@ -2039,7 +2163,7 @@ type DescribeComponentConfigurationOutput struct {
 	Monitor *bool `type:"boolean"`
 
 	// The tier of the application component. Supported tiers include DOT_NET_WORKER,
-	// DOT_NET_WEB_TIER, SQL_SERVER, and DEFAULT
+	// DOT_NET_WEB, SQL_SERVER, and DEFAULT
 	Tier *string `type:"string"`
 }
 
@@ -2085,7 +2209,7 @@ type DescribeComponentConfigurationRecommendationInput struct {
 	ResourceGroupName *string `type:"string" required:"true"`
 
 	// The tier of the application component. Supported tiers include DOT_NET_WORKER,
-	// DOT_NET_WEB_TIER, SQL_SERVER, and DEFAULT.
+	// DOT_NET_WEB, SQL_SERVER, and DEFAULT.
 	//
 	// Tier is a required field
 	Tier *string `type:"string" required:"true"`
@@ -2971,6 +3095,95 @@ func (s *RelatedObservations) SetObservationList(v []*Observation) *RelatedObser
 	return s
 }
 
+type UpdateApplicationInput struct {
+	_ struct{} `type:"structure"`
+
+	// When set to true, creates opsItems for any problems detected on an application.
+	OpsCenterEnabled *bool `type:"boolean"`
+
+	// The SNS topic provided to Application Insights that is associated to the
+	// created opsItem. Allows you to receive notifications for updates to the opsItem.
+	OpsItemSNSTopicArn *string `type:"string"`
+
+	// Disassociates the SNS topic from the opsItem created for detected problems.
+	RemoveSNSTopic *bool `type:"boolean"`
+
+	// The name of the resource group.
+	//
+	// ResourceGroupName is a required field
+	ResourceGroupName *string `type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s UpdateApplicationInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s UpdateApplicationInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *UpdateApplicationInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "UpdateApplicationInput"}
+	if s.ResourceGroupName == nil {
+		invalidParams.Add(request.NewErrParamRequired("ResourceGroupName"))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetOpsCenterEnabled sets the OpsCenterEnabled field's value.
+func (s *UpdateApplicationInput) SetOpsCenterEnabled(v bool) *UpdateApplicationInput {
+	s.OpsCenterEnabled = &v
+	return s
+}
+
+// SetOpsItemSNSTopicArn sets the OpsItemSNSTopicArn field's value.
+func (s *UpdateApplicationInput) SetOpsItemSNSTopicArn(v string) *UpdateApplicationInput {
+	s.OpsItemSNSTopicArn = &v
+	return s
+}
+
+// SetRemoveSNSTopic sets the RemoveSNSTopic field's value.
+func (s *UpdateApplicationInput) SetRemoveSNSTopic(v bool) *UpdateApplicationInput {
+	s.RemoveSNSTopic = &v
+	return s
+}
+
+// SetResourceGroupName sets the ResourceGroupName field's value.
+func (s *UpdateApplicationInput) SetResourceGroupName(v string) *UpdateApplicationInput {
+	s.ResourceGroupName = &v
+	return s
+}
+
+type UpdateApplicationOutput struct {
+	_ struct{} `type:"structure"`
+
+	// Information about the application.
+	ApplicationInfo *ApplicationInfo `type:"structure"`
+}
+
+// String returns the string representation
+func (s UpdateApplicationOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s UpdateApplicationOutput) GoString() string {
+	return s.String()
+}
+
+// SetApplicationInfo sets the ApplicationInfo field's value.
+func (s *UpdateApplicationOutput) SetApplicationInfo(v *ApplicationInfo) *UpdateApplicationOutput {
+	s.ApplicationInfo = v
+	return s
+}
+
 type UpdateComponentConfigurationInput struct {
 	_ struct{} `type:"structure"`
 
@@ -2995,7 +3208,7 @@ type UpdateComponentConfigurationInput struct {
 	ResourceGroupName *string `type:"string" required:"true"`
 
 	// The tier of the application component. Supported tiers include DOT_NET_WORKER,
-	// DOT_NET_WEB_TIER, SQL_SERVER, and DEFAULT.
+	// DOT_NET_WEB, SQL_SERVER, and DEFAULT.
 	Tier *string `type:"string"`
 }
 

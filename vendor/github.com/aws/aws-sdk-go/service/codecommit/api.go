@@ -121,6 +121,10 @@ func (c *CodeCommit) BatchDescribeMergeConflictsRequest(input *BatchDescribeMerg
 //   * ErrCodeMaximumFileContentToLoadExceededException "MaximumFileContentToLoadExceededException"
 //   The number of files to load exceeds the allowed limit.
 //
+//   * ErrCodeMaximumItemsToCompareExceededException "MaximumItemsToCompareExceededException"
+//   The maximum number of items to compare between the source or destination
+//   branches and the merge base has exceeded the maximum allowed.
+//
 //   * ErrCodeEncryptionIntegrityChecksFailedException "EncryptionIntegrityChecksFailedException"
 //   An encryption integrity check failed.
 //
@@ -562,8 +566,7 @@ func (c *CodeCommit) CreateCommitRequest(input *CreateCommitInput) (req *request
 //
 //   * ErrCodeNameLengthExceededException "NameLengthExceededException"
 //   The user name is not valid because it has exceeded the character limit for
-//   file names. File names, including the path to the file, cannot exceed the
-//   character limit.
+//   author names.
 //
 //   * ErrCodeInvalidEmailException "InvalidEmailException"
 //   The specified email address either contains one or more characters that are
@@ -974,9 +977,10 @@ func (c *CodeCommit) CreateUnreferencedMergeCommitRequest(input *CreateUnreferen
 
 // CreateUnreferencedMergeCommit API operation for AWS CodeCommit.
 //
-// Creates an unerferenced commit that represents the result of merging two
+// Creates an unreferenced commit that represents the result of merging two
 // branches using a specified merge strategy. This can help you determine the
-// outcome of a potential merge.
+// outcome of a potential merge. This API cannot be used with the fast-forward
+// merge strategy, as that strategy does not create a merge commit.
 //
 // This unreferenced merge commit can only be accessed using the GetCommit API
 // or through git commands such as git fetch. To retrieve this commit, you must
@@ -1079,6 +1083,15 @@ func (c *CodeCommit) CreateUnreferencedMergeCommitRequest(input *CreateUnreferen
 //   * ErrCodeMaximumFileContentToLoadExceededException "MaximumFileContentToLoadExceededException"
 //   The number of files to load exceeds the allowed limit.
 //
+//   * ErrCodeMaximumItemsToCompareExceededException "MaximumItemsToCompareExceededException"
+//   The maximum number of items to compare between the source or destination
+//   branches and the merge base has exceeded the maximum allowed.
+//
+//   * ErrCodeConcurrentReferenceUpdateException "ConcurrentReferenceUpdateException"
+//   The merge cannot be completed because the target branch has been modified.
+//   Another user might have modified the target branch while the merge was in
+//   progress. Wait a few minutes, and then try again.
+//
 //   * ErrCodeFileModeRequiredException "FileModeRequiredException"
 //   The commit cannot be created because a file mode is required to update mode
 //   permissions for an existing file, but no file mode has been specified.
@@ -1089,8 +1102,7 @@ func (c *CodeCommit) CreateUnreferencedMergeCommitRequest(input *CreateUnreferen
 //
 //   * ErrCodeNameLengthExceededException "NameLengthExceededException"
 //   The user name is not valid because it has exceeded the character limit for
-//   file names. File names, including the path to the file, cannot exceed the
-//   character limit.
+//   author names.
 //
 //   * ErrCodeInvalidEmailException "InvalidEmailException"
 //   The specified email address either contains one or more characters that are
@@ -1458,8 +1470,7 @@ func (c *CodeCommit) DeleteFileRequest(input *DeleteFileInput) (req *request.Req
 //
 //   * ErrCodeNameLengthExceededException "NameLengthExceededException"
 //   The user name is not valid because it has exceeded the character limit for
-//   file names. File names, including the path to the file, cannot exceed the
-//   character limit.
+//   author names.
 //
 //   * ErrCodeInvalidEmailException "InvalidEmailException"
 //   The specified email address either contains one or more characters that are
@@ -1734,6 +1745,10 @@ func (c *CodeCommit) DescribeMergeConflictsRequest(input *DescribeMergeConflicts
 //
 //   * ErrCodeMaximumFileContentToLoadExceededException "MaximumFileContentToLoadExceededException"
 //   The number of files to load exceeds the allowed limit.
+//
+//   * ErrCodeMaximumItemsToCompareExceededException "MaximumItemsToCompareExceededException"
+//   The maximum number of items to compare between the source or destination
+//   branches and the merge base has exceeded the maximum allowed.
 //
 //   * ErrCodeEncryptionIntegrityChecksFailedException "EncryptionIntegrityChecksFailedException"
 //   An encryption integrity check failed.
@@ -3477,6 +3492,10 @@ func (c *CodeCommit) GetMergeConflictsRequest(input *GetMergeConflictsInput) (re
 //   * ErrCodeMaximumFileContentToLoadExceededException "MaximumFileContentToLoadExceededException"
 //   The number of files to load exceeds the allowed limit.
 //
+//   * ErrCodeMaximumItemsToCompareExceededException "MaximumItemsToCompareExceededException"
+//   The maximum number of items to compare between the source or destination
+//   branches and the merge base has exceeded the maximum allowed.
+//
 //   * ErrCodeEncryptionIntegrityChecksFailedException "EncryptionIntegrityChecksFailedException"
 //   An encryption integrity check failed.
 //
@@ -3656,6 +3675,10 @@ func (c *CodeCommit) GetMergeOptionsRequest(input *GetMergeOptionsInput) (req *r
 //
 //   * ErrCodeMaximumFileContentToLoadExceededException "MaximumFileContentToLoadExceededException"
 //   The number of files to load exceeds the allowed limit.
+//
+//   * ErrCodeMaximumItemsToCompareExceededException "MaximumItemsToCompareExceededException"
+//   The maximum number of items to compare between the source or destination
+//   branches and the merge base has exceeded the maximum allowed.
 //
 //   * ErrCodeEncryptionIntegrityChecksFailedException "EncryptionIntegrityChecksFailedException"
 //   An encryption integrity check failed.
@@ -4696,6 +4719,11 @@ func (c *CodeCommit) MergeBranchesByFastForwardRequest(input *MergeBranchesByFas
 //   The pull request cannot be merged automatically into the destination branch.
 //   You must manually merge the branches and resolve any conflicts.
 //
+//   * ErrCodeConcurrentReferenceUpdateException "ConcurrentReferenceUpdateException"
+//   The merge cannot be completed because the target branch has been modified.
+//   Another user might have modified the target branch while the merge was in
+//   progress. Wait a few minutes, and then try again.
+//
 //   * ErrCodeEncryptionIntegrityChecksFailedException "EncryptionIntegrityChecksFailedException"
 //   An encryption integrity check failed.
 //
@@ -4886,6 +4914,10 @@ func (c *CodeCommit) MergeBranchesBySquashRequest(input *MergeBranchesBySquashIn
 //   * ErrCodeMaximumFileContentToLoadExceededException "MaximumFileContentToLoadExceededException"
 //   The number of files to load exceeds the allowed limit.
 //
+//   * ErrCodeMaximumItemsToCompareExceededException "MaximumItemsToCompareExceededException"
+//   The maximum number of items to compare between the source or destination
+//   branches and the merge base has exceeded the maximum allowed.
+//
 //   * ErrCodeFileModeRequiredException "FileModeRequiredException"
 //   The commit cannot be created because a file mode is required to update mode
 //   permissions for an existing file, but no file mode has been specified.
@@ -4896,8 +4928,7 @@ func (c *CodeCommit) MergeBranchesBySquashRequest(input *MergeBranchesBySquashIn
 //
 //   * ErrCodeNameLengthExceededException "NameLengthExceededException"
 //   The user name is not valid because it has exceeded the character limit for
-//   file names. File names, including the path to the file, cannot exceed the
-//   character limit.
+//   author names.
 //
 //   * ErrCodeInvalidEmailException "InvalidEmailException"
 //   The specified email address either contains one or more characters that are
@@ -4906,6 +4937,11 @@ func (c *CodeCommit) MergeBranchesBySquashRequest(input *MergeBranchesBySquashIn
 //
 //   * ErrCodeCommitMessageLengthExceededException "CommitMessageLengthExceededException"
 //   The commit message is too long. Provide a shorter string.
+//
+//   * ErrCodeConcurrentReferenceUpdateException "ConcurrentReferenceUpdateException"
+//   The merge cannot be completed because the target branch has been modified.
+//   Another user might have modified the target branch while the merge was in
+//   progress. Wait a few minutes, and then try again.
 //
 //   * ErrCodeEncryptionIntegrityChecksFailedException "EncryptionIntegrityChecksFailedException"
 //   An encryption integrity check failed.
@@ -5047,6 +5083,11 @@ func (c *CodeCommit) MergeBranchesByThreeWayRequest(input *MergeBranchesByThreeW
 //   The pull request cannot be merged automatically into the destination branch.
 //   You must manually merge the branches and resolve any conflicts.
 //
+//   * ErrCodeConcurrentReferenceUpdateException "ConcurrentReferenceUpdateException"
+//   The merge cannot be completed because the target branch has been modified.
+//   Another user might have modified the target branch while the merge was in
+//   progress. Wait a few minutes, and then try again.
+//
 //   * ErrCodeInvalidConflictDetailLevelException "InvalidConflictDetailLevelException"
 //   The specified conflict detail level is not valid.
 //
@@ -5097,6 +5138,10 @@ func (c *CodeCommit) MergeBranchesByThreeWayRequest(input *MergeBranchesByThreeW
 //   * ErrCodeMaximumFileContentToLoadExceededException "MaximumFileContentToLoadExceededException"
 //   The number of files to load exceeds the allowed limit.
 //
+//   * ErrCodeMaximumItemsToCompareExceededException "MaximumItemsToCompareExceededException"
+//   The maximum number of items to compare between the source or destination
+//   branches and the merge base has exceeded the maximum allowed.
+//
 //   * ErrCodeFileModeRequiredException "FileModeRequiredException"
 //   The commit cannot be created because a file mode is required to update mode
 //   permissions for an existing file, but no file mode has been specified.
@@ -5107,8 +5152,7 @@ func (c *CodeCommit) MergeBranchesByThreeWayRequest(input *MergeBranchesByThreeW
 //
 //   * ErrCodeNameLengthExceededException "NameLengthExceededException"
 //   The user name is not valid because it has exceeded the character limit for
-//   file names. File names, including the path to the file, cannot exceed the
-//   character limit.
+//   author names.
 //
 //   * ErrCodeInvalidEmailException "InvalidEmailException"
 //   The specified email address either contains one or more characters that are
@@ -5199,9 +5243,10 @@ func (c *CodeCommit) MergePullRequestByFastForwardRequest(input *MergePullReques
 
 // MergePullRequestByFastForward API operation for AWS CodeCommit.
 //
-// Closes a pull request and attempts to merge the source commit of a pull request
-// into the specified destination branch for that pull request at the specified
-// commit using the fast-forward merge strategy.
+// Attempts to merge the source commit of a pull request into the specified
+// destination branch for that pull request at the specified commit using the
+// fast-forward merge strategy. If the merge is successful, it closes the pull
+// request.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -5258,6 +5303,11 @@ func (c *CodeCommit) MergePullRequestByFastForwardRequest(input *MergePullReques
 //
 //   * ErrCodeRepositoryDoesNotExistException "RepositoryDoesNotExistException"
 //   The specified repository does not exist.
+//
+//   * ErrCodeConcurrentReferenceUpdateException "ConcurrentReferenceUpdateException"
+//   The merge cannot be completed because the target branch has been modified.
+//   Another user might have modified the target branch while the merge was in
+//   progress. Wait a few minutes, and then try again.
 //
 //   * ErrCodeEncryptionIntegrityChecksFailedException "EncryptionIntegrityChecksFailedException"
 //   An encryption integrity check failed.
@@ -5340,9 +5390,9 @@ func (c *CodeCommit) MergePullRequestBySquashRequest(input *MergePullRequestBySq
 
 // MergePullRequestBySquash API operation for AWS CodeCommit.
 //
-// Closes a pull request and attempts to merge the source commit of a pull request
-// into the specified destination branch for that pull request at the specified
-// commit using the squash merge strategy.
+// Attempts to merge the source commit of a pull request into the specified
+// destination branch for that pull request at the specified commit using the
+// squash merge strategy. If the merge is successful, it closes the pull request.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -5386,8 +5436,7 @@ func (c *CodeCommit) MergePullRequestBySquashRequest(input *MergePullRequestBySq
 //
 //   * ErrCodeNameLengthExceededException "NameLengthExceededException"
 //   The user name is not valid because it has exceeded the character limit for
-//   file names. File names, including the path to the file, cannot exceed the
-//   character limit.
+//   author names.
 //
 //   * ErrCodeInvalidEmailException "InvalidEmailException"
 //   The specified email address either contains one or more characters that are
@@ -5423,6 +5472,11 @@ func (c *CodeCommit) MergePullRequestBySquashRequest(input *MergePullRequestBySq
 //   * ErrCodeMaximumConflictResolutionEntriesExceededException "MaximumConflictResolutionEntriesExceededException"
 //   The number of allowed conflict resolution entries was exceeded.
 //
+//   * ErrCodeConcurrentReferenceUpdateException "ConcurrentReferenceUpdateException"
+//   The merge cannot be completed because the target branch has been modified.
+//   Another user might have modified the target branch while the merge was in
+//   progress. Wait a few minutes, and then try again.
+//
 //   * ErrCodePathRequiredException "PathRequiredException"
 //   The folderPath for a location cannot be null.
 //
@@ -5450,6 +5504,10 @@ func (c *CodeCommit) MergePullRequestBySquashRequest(input *MergePullRequestBySq
 //
 //   * ErrCodeMaximumFileContentToLoadExceededException "MaximumFileContentToLoadExceededException"
 //   The number of files to load exceeds the allowed limit.
+//
+//   * ErrCodeMaximumItemsToCompareExceededException "MaximumItemsToCompareExceededException"
+//   The maximum number of items to compare between the source or destination
+//   branches and the merge base has exceeded the maximum allowed.
 //
 //   * ErrCodeRepositoryNameRequiredException "RepositoryNameRequiredException"
 //   A repository name is required but was not specified.
@@ -5550,9 +5608,10 @@ func (c *CodeCommit) MergePullRequestByThreeWayRequest(input *MergePullRequestBy
 
 // MergePullRequestByThreeWay API operation for AWS CodeCommit.
 //
-// Closes a pull request and attempts to merge the source commit of a pull request
-// into the specified destination branch for that pull request at the specified
-// commit using the three-way merge strategy.
+// Attempts to merge the source commit of a pull request into the specified
+// destination branch for that pull request at the specified commit using the
+// three-way merge strategy. If the merge is successful, it closes the pull
+// request.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -5596,8 +5655,7 @@ func (c *CodeCommit) MergePullRequestByThreeWayRequest(input *MergePullRequestBy
 //
 //   * ErrCodeNameLengthExceededException "NameLengthExceededException"
 //   The user name is not valid because it has exceeded the character limit for
-//   file names. File names, including the path to the file, cannot exceed the
-//   character limit.
+//   author names.
 //
 //   * ErrCodeInvalidEmailException "InvalidEmailException"
 //   The specified email address either contains one or more characters that are
@@ -5661,6 +5719,10 @@ func (c *CodeCommit) MergePullRequestByThreeWayRequest(input *MergePullRequestBy
 //   * ErrCodeMaximumFileContentToLoadExceededException "MaximumFileContentToLoadExceededException"
 //   The number of files to load exceeds the allowed limit.
 //
+//   * ErrCodeMaximumItemsToCompareExceededException "MaximumItemsToCompareExceededException"
+//   The maximum number of items to compare between the source or destination
+//   branches and the merge base has exceeded the maximum allowed.
+//
 //   * ErrCodeRepositoryNameRequiredException "RepositoryNameRequiredException"
 //   A repository name is required but was not specified.
 //
@@ -5678,6 +5740,11 @@ func (c *CodeCommit) MergePullRequestByThreeWayRequest(input *MergePullRequestBy
 //   The repository does not contain any pull requests with that pull request
 //   ID. Use GetPullRequest to verify the correct repository name for the pull
 //   request ID.
+//
+//   * ErrCodeConcurrentReferenceUpdateException "ConcurrentReferenceUpdateException"
+//   The merge cannot be completed because the target branch has been modified.
+//   Another user might have modified the target branch while the merge was in
+//   progress. Wait a few minutes, and then try again.
 //
 //   * ErrCodeEncryptionIntegrityChecksFailedException "EncryptionIntegrityChecksFailedException"
 //   An encryption integrity check failed.
@@ -6293,8 +6360,7 @@ func (c *CodeCommit) PutFileRequest(input *PutFileInput) (req *request.Request, 
 //
 //   * ErrCodeNameLengthExceededException "NameLengthExceededException"
 //   The user name is not valid because it has exceeded the character limit for
-//   file names. File names, including the path to the file, cannot exceed the
-//   character limit.
+//   author names.
 //
 //   * ErrCodeInvalidEmailException "InvalidEmailException"
 //   The specified email address either contains one or more characters that are
@@ -8487,8 +8553,8 @@ type ConflictMetadata struct {
 	// The number of conflicts, including both hunk conflicts and metadata conflicts.
 	NumberOfConflicts *int64 `locationName:"numberOfConflicts" type:"integer"`
 
-	// A boolean value (true or false) indicating whether there are conflicts in
-	// the object type of a file.
+	// A boolean value (true or false) indicating whether there are conflicts between
+	// the branches in the object type of a file, folder, or submodule.
 	ObjectTypeConflict *bool `locationName:"objectTypeConflict" type:"boolean"`
 
 	// Information about any object type conflicts in a merge operation.
@@ -8573,7 +8639,7 @@ type ConflictResolution struct {
 	// Files that will be deleted as part of the merge conflict resolution.
 	DeleteFiles []*DeleteFileEntry `locationName:"deleteFiles" type:"list"`
 
-	// Information about how a conflict in a merge will be resolved.
+	// Files that will have content replaced as part of the merge conflict resolution.
 	ReplaceContents []*ReplaceContentEntry `locationName:"replaceContents" type:"list"`
 
 	// File modes that will be set as part of the merge conflict resolution.
@@ -11711,7 +11777,8 @@ type GetMergeConflictsOutput struct {
 	// The commit ID of the merge base.
 	BaseCommitId *string `locationName:"baseCommitId" type:"string"`
 
-	// A list of metadata for any conflicts found.
+	// A list of metadata for any conflicting files. If the specified merge strategy
+	// is FAST_FORWARD_MERGE, this list will always be empty.
 	//
 	// ConflictMetadataList is a required field
 	ConflictMetadataList []*ConflictMetadata `locationName:"conflictMetadataList" type:"list" required:"true"`
@@ -13116,7 +13183,9 @@ type MergeHunk struct {
 	// A Boolean value indicating whether a combination of hunks contains a conflict.
 	// Conflicts occur when the same file or the same lines in a file were modified
 	// in both the source and destination of a merge or pull request. Valid values
-	// include true, false, and null.
+	// include true, false, and null. This will be true when the hunk represents
+	// a conflict and one or more files contains a line conflict. File mode conflicts
+	// in a merge will not set this to be true.
 	IsConflict *bool `locationName:"isConflict" type:"boolean"`
 
 	// Information about the merge hunk in the source of a merge or pull request.
@@ -13162,13 +13231,14 @@ func (s *MergeHunk) SetSource(v *MergeHunkDetail) *MergeHunk {
 type MergeHunkDetail struct {
 	_ struct{} `type:"structure"`
 
-	// The line number where a merge conflict ends.
+	// The end position of the hunk in the merge result.
 	EndLine *int64 `locationName:"endLine" type:"integer"`
 
-	// The base-64 encoded content of the hunk that contains the conflict.
+	// The base-64 encoded content of the hunk merged region that might or might
+	// not contain a conflict.
 	HunkContent *string `locationName:"hunkContent" type:"string"`
 
-	// The line number where a merge conflict begins.
+	// The start position of the hunk in the merge result.
 	StartLine *int64 `locationName:"startLine" type:"integer"`
 }
 
@@ -13767,6 +13837,9 @@ type PostCommentForComparedCommitInput struct {
 
 	// To establish the directionality of the comparison, the full commit ID of
 	// the 'before' commit.
+	//
+	// This is required for commenting on any commit unless that commit is the initial
+	// commit.
 	BeforeCommitId *string `locationName:"beforeCommitId" type:"string"`
 
 	// A unique, client-generated idempotency token that when provided in a request,
@@ -15272,7 +15345,8 @@ type RepositoryTrigger struct {
 	// The branches that will be included in the trigger configuration. If you specify
 	// an empty array, the trigger will apply to all branches.
 	//
-	// While no content is required in the array, you must include the array itself.
+	// Although no content is required in the array, you must include the array
+	// itself.
 	Branches []*string `locationName:"branches" type:"list"`
 
 	// Any custom data associated with the trigger that will be included in the
@@ -15280,14 +15354,13 @@ type RepositoryTrigger struct {
 	CustomData *string `locationName:"customData" type:"string"`
 
 	// The ARN of the resource that is the target for a trigger. For example, the
-	// ARN of a topic in Amazon Simple Notification Service (SNS).
+	// ARN of a topic in Amazon SNS.
 	//
 	// DestinationArn is a required field
 	DestinationArn *string `locationName:"destinationArn" type:"string" required:"true"`
 
 	// The repository events that will cause the trigger to run actions in another
-	// service, such as sending a notification through Amazon Simple Notification
-	// Service (SNS).
+	// service, such as sending a notification through Amazon SNS.
 	//
 	// The valid value "all" cannot be used with any other values.
 	//

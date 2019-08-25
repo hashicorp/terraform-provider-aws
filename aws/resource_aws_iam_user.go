@@ -358,10 +358,11 @@ func deleteAwsIamUserMFADevices(svc *iam.IAM, username string) error {
 
 func deleteAwsIamUserLoginProfile(svc *iam.IAM, username string) error {
 	var err error
+	input := &iam.DeleteLoginProfileInput{
+		UserName: aws.String(username),
+	}
 	err = resource.Retry(1*time.Minute, func() *resource.RetryError {
-		_, err = svc.DeleteLoginProfile(&iam.DeleteLoginProfileInput{
-			UserName: aws.String(username),
-		})
+		_, err = svc.DeleteLoginProfile(input)
 		if err != nil {
 			if isAWSErr(err, iam.ErrCodeNoSuchEntityException, "") {
 				return nil
@@ -374,7 +375,9 @@ func deleteAwsIamUserLoginProfile(svc *iam.IAM, username string) error {
 		}
 		return nil
 	})
-
+	if isResourceTimeoutError(err) {
+		_, err = svc.DeleteLoginProfile(input)
+	}
 	if err != nil {
 		return fmt.Errorf("Error deleting Account Login Profile: %s", err)
 	}

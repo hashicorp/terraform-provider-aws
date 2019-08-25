@@ -98,6 +98,7 @@ func testAccAWSWafRegionalRegexMatchSet_basic(t *testing.T) {
 	var patternSet waf.RegexPatternSet
 	var idx int
 
+	resourceName := "aws_wafregional_regex_match_set.test"
 	matchSetName := fmt.Sprintf("tfacc-%s", acctest.RandString(5))
 	patternSetName := fmt.Sprintf("tfacc-%s", acctest.RandString(5))
 
@@ -114,16 +115,21 @@ func testAccAWSWafRegionalRegexMatchSet_basic(t *testing.T) {
 			{
 				Config: testAccAWSWafRegionalRegexMatchSetConfig(matchSetName, patternSetName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSWafRegionalRegexMatchSetExists("aws_wafregional_regex_match_set.test", &matchSet),
+					testAccCheckAWSWafRegionalRegexMatchSetExists(resourceName, &matchSet),
 					testAccCheckAWSWafRegionalRegexPatternSetExists("aws_wafregional_regex_pattern_set.test", &patternSet),
 					computeWafRegexMatchSetTuple(&patternSet, &fieldToMatch, "NONE", &idx),
-					resource.TestCheckResourceAttr("aws_wafregional_regex_match_set.test", "name", matchSetName),
-					resource.TestCheckResourceAttr("aws_wafregional_regex_match_set.test", "regex_match_tuple.#", "1"),
-					testCheckResourceAttrWithIndexesAddr("aws_wafregional_regex_match_set.test", "regex_match_tuple.%d.field_to_match.#", &idx, "1"),
-					testCheckResourceAttrWithIndexesAddr("aws_wafregional_regex_match_set.test", "regex_match_tuple.%d.field_to_match.0.data", &idx, "user-agent"),
-					testCheckResourceAttrWithIndexesAddr("aws_wafregional_regex_match_set.test", "regex_match_tuple.%d.field_to_match.0.type", &idx, "HEADER"),
-					testCheckResourceAttrWithIndexesAddr("aws_wafregional_regex_match_set.test", "regex_match_tuple.%d.text_transformation", &idx, "NONE"),
+					resource.TestCheckResourceAttr(resourceName, "name", matchSetName),
+					resource.TestCheckResourceAttr(resourceName, "regex_match_tuple.#", "1"),
+					testCheckResourceAttrWithIndexesAddr(resourceName, "regex_match_tuple.%d.field_to_match.#", &idx, "1"),
+					testCheckResourceAttrWithIndexesAddr(resourceName, "regex_match_tuple.%d.field_to_match.0.data", &idx, "user-agent"),
+					testCheckResourceAttrWithIndexesAddr(resourceName, "regex_match_tuple.%d.field_to_match.0.type", &idx, "HEADER"),
+					testCheckResourceAttrWithIndexesAddr(resourceName, "regex_match_tuple.%d.text_transformation", &idx, "NONE"),
 				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})
@@ -134,6 +140,7 @@ func testAccAWSWafRegionalRegexMatchSet_changePatterns(t *testing.T) {
 	var patternSet waf.RegexPatternSet
 	var idx1, idx2 int
 
+	resourceName := "aws_wafregional_regex_match_set.test"
 	matchSetName := fmt.Sprintf("tfacc-%s", acctest.RandString(5))
 	patternSetName := fmt.Sprintf("tfacc-%s", acctest.RandString(5))
 
@@ -145,30 +152,35 @@ func testAccAWSWafRegionalRegexMatchSet_changePatterns(t *testing.T) {
 			{
 				Config: testAccAWSWafRegionalRegexMatchSetConfig(matchSetName, patternSetName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAWSWafRegionalRegexMatchSetExists("aws_wafregional_regex_match_set.test", &before),
+					testAccCheckAWSWafRegionalRegexMatchSetExists(resourceName, &before),
 					testAccCheckAWSWafRegionalRegexPatternSetExists("aws_wafregional_regex_pattern_set.test", &patternSet),
 					computeWafRegexMatchSetTuple(&patternSet, &waf.FieldToMatch{Data: aws.String("User-Agent"), Type: aws.String("HEADER")}, "NONE", &idx1),
-					resource.TestCheckResourceAttr("aws_wafregional_regex_match_set.test", "name", matchSetName),
-					resource.TestCheckResourceAttr("aws_wafregional_regex_match_set.test", "regex_match_tuple.#", "1"),
-					testCheckResourceAttrWithIndexesAddr("aws_wafregional_regex_match_set.test", "regex_match_tuple.%d.field_to_match.#", &idx1, "1"),
-					testCheckResourceAttrWithIndexesAddr("aws_wafregional_regex_match_set.test", "regex_match_tuple.%d.field_to_match.0.data", &idx1, "user-agent"),
-					testCheckResourceAttrWithIndexesAddr("aws_wafregional_regex_match_set.test", "regex_match_tuple.%d.field_to_match.0.type", &idx1, "HEADER"),
-					testCheckResourceAttrWithIndexesAddr("aws_wafregional_regex_match_set.test", "regex_match_tuple.%d.text_transformation", &idx1, "NONE"),
+					resource.TestCheckResourceAttr(resourceName, "name", matchSetName),
+					resource.TestCheckResourceAttr(resourceName, "regex_match_tuple.#", "1"),
+					testCheckResourceAttrWithIndexesAddr(resourceName, "regex_match_tuple.%d.field_to_match.#", &idx1, "1"),
+					testCheckResourceAttrWithIndexesAddr(resourceName, "regex_match_tuple.%d.field_to_match.0.data", &idx1, "user-agent"),
+					testCheckResourceAttrWithIndexesAddr(resourceName, "regex_match_tuple.%d.field_to_match.0.type", &idx1, "HEADER"),
+					testCheckResourceAttrWithIndexesAddr(resourceName, "regex_match_tuple.%d.text_transformation", &idx1, "NONE"),
 				),
 			},
 			{
 				Config: testAccAWSWafRegionalRegexMatchSetConfig_changePatterns(matchSetName, patternSetName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAWSWafRegionalRegexMatchSetExists("aws_wafregional_regex_match_set.test", &after),
-					resource.TestCheckResourceAttr("aws_wafregional_regex_match_set.test", "name", matchSetName),
-					resource.TestCheckResourceAttr("aws_wafregional_regex_match_set.test", "regex_match_tuple.#", "1"),
+					testAccCheckAWSWafRegionalRegexMatchSetExists(resourceName, &after),
+					resource.TestCheckResourceAttr(resourceName, "name", matchSetName),
+					resource.TestCheckResourceAttr(resourceName, "regex_match_tuple.#", "1"),
 
 					computeWafRegexMatchSetTuple(&patternSet, &waf.FieldToMatch{Data: aws.String("Referer"), Type: aws.String("HEADER")}, "COMPRESS_WHITE_SPACE", &idx2),
-					testCheckResourceAttrWithIndexesAddr("aws_wafregional_regex_match_set.test", "regex_match_tuple.%d.field_to_match.#", &idx2, "1"),
-					testCheckResourceAttrWithIndexesAddr("aws_wafregional_regex_match_set.test", "regex_match_tuple.%d.field_to_match.0.data", &idx2, "referer"),
-					testCheckResourceAttrWithIndexesAddr("aws_wafregional_regex_match_set.test", "regex_match_tuple.%d.field_to_match.0.type", &idx2, "HEADER"),
-					testCheckResourceAttrWithIndexesAddr("aws_wafregional_regex_match_set.test", "regex_match_tuple.%d.text_transformation", &idx2, "COMPRESS_WHITE_SPACE"),
+					testCheckResourceAttrWithIndexesAddr(resourceName, "regex_match_tuple.%d.field_to_match.#", &idx2, "1"),
+					testCheckResourceAttrWithIndexesAddr(resourceName, "regex_match_tuple.%d.field_to_match.0.data", &idx2, "referer"),
+					testCheckResourceAttrWithIndexesAddr(resourceName, "regex_match_tuple.%d.field_to_match.0.type", &idx2, "HEADER"),
+					testCheckResourceAttrWithIndexesAddr(resourceName, "regex_match_tuple.%d.text_transformation", &idx2, "COMPRESS_WHITE_SPACE"),
 				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})
@@ -176,6 +188,7 @@ func testAccAWSWafRegionalRegexMatchSet_changePatterns(t *testing.T) {
 
 func testAccAWSWafRegionalRegexMatchSet_noPatterns(t *testing.T) {
 	var matchSet waf.RegexMatchSet
+	resourceName := "aws_wafregional_regex_match_set.test"
 	matchSetName := fmt.Sprintf("tfacc-%s", acctest.RandString(5))
 
 	resource.Test(t, resource.TestCase{
@@ -186,10 +199,15 @@ func testAccAWSWafRegionalRegexMatchSet_noPatterns(t *testing.T) {
 			{
 				Config: testAccAWSWafRegionalRegexMatchSetConfig_noPatterns(matchSetName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAWSWafRegionalRegexMatchSetExists("aws_wafregional_regex_match_set.test", &matchSet),
-					resource.TestCheckResourceAttr("aws_wafregional_regex_match_set.test", "name", matchSetName),
-					resource.TestCheckResourceAttr("aws_wafregional_regex_match_set.test", "regex_match_tuple.#", "0"),
+					testAccCheckAWSWafRegionalRegexMatchSetExists(resourceName, &matchSet),
+					resource.TestCheckResourceAttr(resourceName, "name", matchSetName),
+					resource.TestCheckResourceAttr(resourceName, "regex_match_tuple.#", "0"),
 				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})
@@ -197,6 +215,7 @@ func testAccAWSWafRegionalRegexMatchSet_noPatterns(t *testing.T) {
 
 func testAccAWSWafRegionalRegexMatchSet_disappears(t *testing.T) {
 	var matchSet waf.RegexMatchSet
+	resourceName := "aws_wafregional_regex_match_set.test"
 	matchSetName := fmt.Sprintf("tfacc-%s", acctest.RandString(5))
 	patternSetName := fmt.Sprintf("tfacc-%s", acctest.RandString(5))
 
@@ -208,7 +227,7 @@ func testAccAWSWafRegionalRegexMatchSet_disappears(t *testing.T) {
 			{
 				Config: testAccAWSWafRegionalRegexMatchSetConfig(matchSetName, patternSetName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSWafRegionalRegexMatchSetExists("aws_wafregional_regex_match_set.test", &matchSet),
+					testAccCheckAWSWafRegionalRegexMatchSetExists(resourceName, &matchSet),
 					testAccCheckAWSWafRegionalRegexMatchSetDisappears(&matchSet),
 				),
 				ExpectNonEmptyPlan: true,

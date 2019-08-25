@@ -26,12 +26,21 @@ data "aws_lambda_invocation" "example" {
 JSON
 }
 
-output "result_entry" {
+output "result" {
+  description = "String result of Lambda execution"
+  value       = "${data.aws_lambda_invocation.example.result}"
+}
+
+# In Terraform 0.11 and earlier, the result_map attribute can be used
+# to convert a result JSON string to a map of string keys to string values.
+output "result_entry_tf011" {
   value = "${data.aws_lambda_invocation.example.result_map["key1"]}"
 }
 
-output "result" {
-  value = "${data.aws_lambda_invocation.example.result}"
+# In Terraform 0.12 and later, the jsondecode() function can be used
+# to convert a result JSON string to native Terraform types.
+output "result_entry_tf012" {
+  value = jsondecode(data.aws_lambda_invocation.example.result)["key1"]
 }
 ```
 
@@ -44,5 +53,5 @@ output "result" {
 
 ## Attributes Reference
 
- * `result` - A result of the lambda function invocation.
- * `result_map` - This field is set only if result is a map of primitive types.
+ * `result` - String result of the lambda function invocation.
+ * `result_map` - This field is set only if result is a map of primitive types, where the map is string keys and string values. In Terraform 0.12 and later, use the [`jsondecode()` function](/docs/configuration/functions/jsondecode.html) with the `result` attribute instead to convert the result to all supported native Terraform types.

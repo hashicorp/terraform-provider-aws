@@ -143,6 +143,7 @@ func resourceAwsRDSCluster() *schema.Resource {
 				Default:  "provisioned",
 				ValidateFunc: validation.StringInSlice([]string{
 					"global",
+					"multimaster",
 					"parallelquery",
 					"provisioned",
 					"serverless",
@@ -187,6 +188,15 @@ func resourceAwsRDSCluster() *schema.Resource {
 							Optional:     true,
 							Default:      300,
 							ValidateFunc: validation.IntBetween(300, 86400),
+						},
+						"timeout_action": {
+							Type:     schema.TypeString,
+							Optional: true,
+							Default:  "RollbackCapacityChange",
+							ValidateFunc: validation.StringInSlice([]string{
+								"ForceApplyCapacityChange",
+								"RollbackCapacityChange",
+							}, false),
 						},
 					},
 				},
@@ -388,6 +398,7 @@ func resourceAwsRDSCluster() *schema.Resource {
 						"error",
 						"general",
 						"slowquery",
+						"postgresql",
 					}, false),
 				},
 			},
@@ -478,6 +489,11 @@ func resourceAwsRDSClusterCreate(d *schema.ResourceData, meta interface{}) error
 
 		if attr, ok := d.GetOk("kms_key_id"); ok {
 			opts.KmsKeyId = aws.String(attr.(string))
+		}
+
+		if attr, ok := d.GetOk("master_password"); ok {
+			modifyDbClusterInput.MasterUserPassword = aws.String(attr.(string))
+			requiresModifyDbCluster = true
 		}
 
 		if attr, ok := d.GetOk("option_group_name"); ok {

@@ -55,6 +55,7 @@ resource "aws_msk_cluster" "example" {
 
   broker_node_group_info {
     instance_type  = "kafka.m5.large"
+    ebs_volume_size = "1000"
     client_subnets = [
       "${aws_subnet.subnet_az1.id}",
       "${aws_subnet.subnet_az2.id}",
@@ -113,7 +114,7 @@ The following arguments are supported:
 
 * `tls` - (Optional) Configuration block for specifying TLS client authentication. See below.
 
-#### client_authenication tls Argument Reference
+#### client_authentication tls Argument Reference
 
 * `certificate_authority_arns` - (Optional) List of ACM Certificate Authority Amazon Resource Names (ARNs).
 

@@ -29,6 +29,12 @@ func resourceAwsAthenaNamedQuery() *schema.Resource {
 				Required: true,
 				ForceNew: true,
 			},
+			"workgroup": {
+				Type:     schema.TypeString,
+				Optional: true,
+				ForceNew: true,
+				Default:  "primary",
+			},
 			"database": {
 				Type:     schema.TypeString,
 				Required: true,
@@ -50,6 +56,9 @@ func resourceAwsAthenaNamedQueryCreate(d *schema.ResourceData, meta interface{})
 		Database:    aws.String(d.Get("database").(string)),
 		Name:        aws.String(d.Get("name").(string)),
 		QueryString: aws.String(d.Get("query").(string)),
+	}
+	if raw, ok := d.GetOk("workgroup"); ok {
+		input.WorkGroup = aws.String(raw.(string))
 	}
 	if raw, ok := d.GetOk("description"); ok {
 		input.Description = aws.String(raw.(string))
@@ -82,6 +91,7 @@ func resourceAwsAthenaNamedQueryRead(d *schema.ResourceData, meta interface{}) e
 
 	d.Set("name", resp.NamedQuery.Name)
 	d.Set("query", resp.NamedQuery.QueryString)
+	d.Set("workgroup", resp.NamedQuery.WorkGroup)
 	d.Set("database", resp.NamedQuery.Database)
 	d.Set("description", resp.NamedQuery.Description)
 	return nil

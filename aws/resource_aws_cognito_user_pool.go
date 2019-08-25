@@ -673,6 +673,9 @@ func resourceAwsCognitoUserPoolCreate(d *schema.ResourceData, meta interface{}) 
 
 		return resource.NonRetryableError(err)
 	})
+	if isResourceTimeoutError(err) {
+		resp, err = conn.CreateUserPool(params)
+	}
 	if err != nil {
 		return fmt.Errorf("Error creating Cognito User Pool: %s", err)
 	}
@@ -944,6 +947,9 @@ func resourceAwsCognitoUserPoolUpdate(d *schema.ResourceData, meta interface{}) 
 
 		return resource.NonRetryableError(err)
 	})
+	if isResourceTimeoutError(err) {
+		_, err = conn.UpdateUserPool(params)
+	}
 	if err != nil {
 		return fmt.Errorf("Error updating Cognito User pool: %s", err)
 	}

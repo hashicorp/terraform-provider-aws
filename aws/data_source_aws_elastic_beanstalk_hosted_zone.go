@@ -19,6 +19,7 @@ var elasticBeanstalkHostedZoneIds = map[string]string{
 	"eu-west-1":      "Z2NYPWQ7DFZAZH",
 	"eu-west-2":      "Z1GKAAAUGATPF1",
 	"eu-west-3":      "Z5WN6GAYWG5OB",
+	"me-south-1":     "Z2BBTEKR2I36N2",
 	"sa-east-1":      "Z10X7K2B4QSOFV",
 	"us-east-1":      "Z117KPS5GTRQ2G",
 	"us-east-2":      "Z14LCN19Q5QHIC",

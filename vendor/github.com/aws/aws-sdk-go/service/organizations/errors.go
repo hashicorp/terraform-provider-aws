@@ -304,7 +304,7 @@ const (
 	//
 	//    * INPUT_REQUIRED: You must include a value for all required parameters.
 	//
-	//    * INVALID_ENUM: You specified a value that isn't valid for that parameter.
+	//    * INVALID_ENUM: You specified an invalid value.
 	//
 	//    * INVALID_FULL_NAME_TARGET: You specified a full name that contains invalid
 	//    characters.

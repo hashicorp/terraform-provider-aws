@@ -5739,8 +5739,7 @@ func (c *Redshift) DescribeStorageRequest(input *DescribeStorageInput) (req *req
 
 // DescribeStorage API operation for Amazon Redshift.
 //
-// Returns the total amount of snapshot usage and provisioned storage for a
-// user in megabytes.
+// Returns the total amount of snapshot usage and provisioned storage in megabytes.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -8144,6 +8143,12 @@ func (c *Redshift) RestoreFromClusterSnapshotRequest(input *RestoreFromClusterSn
 //   * ErrCodeSnapshotScheduleNotFoundFault "SnapshotScheduleNotFound"
 //   We could not find the specified snapshot schedule.
 //
+//   * ErrCodeTagLimitExceededFault "TagLimitExceededFault"
+//   You have exceeded the number of tags allowed.
+//
+//   * ErrCodeInvalidTagFault "InvalidTagFault"
+//   The tag is invalid.
+//
 // See also, https://docs.aws.amazon.com/goto/WebAPI/redshift-2012-12-01/RestoreFromClusterSnapshot
 func (c *Redshift) RestoreFromClusterSnapshot(input *RestoreFromClusterSnapshotInput) (*RestoreFromClusterSnapshotOutput, error) {
 	req, out := c.RestoreFromClusterSnapshotRequest(input)
@@ -9346,6 +9351,22 @@ type Cluster struct {
 	// The name of the Availability Zone in which the cluster is located.
 	AvailabilityZone *string `type:"string"`
 
+	// The availability status of the cluster for queries. Possible values are the
+	// following:
+	//
+	//    * Available - The cluster is available for queries.
+	//
+	//    * Unavailable - The cluster is not available for queries.
+	//
+	//    * Maintenance - The cluster is intermittently available for queries due
+	//    to maintenance activities.
+	//
+	//    * Modifying - The cluster is intermittently available for queries due
+	//    to changes that modify the cluster.
+	//
+	//    * Failed - The cluster failed and is not available for queries.
+	ClusterAvailabilityStatus *string `type:"string"`
+
 	// The date and time that the cluster was created.
 	ClusterCreateTime *time.Time `type:"timestamp"`
 
@@ -9463,6 +9484,18 @@ type Cluster struct {
 	// Default: false
 	EnhancedVpcRouting *bool `type:"boolean"`
 
+	// The date and time when the next snapshot is expected to be taken for clusters
+	// with a valid snapshot schedule and backups enabled.
+	ExpectedNextSnapshotScheduleTime *time.Time `type:"timestamp"`
+
+	// The status of next expected snapshot for clusters having a valid snapshot
+	// schedule and backups enabled. Possible values are the following:
+	//
+	//    * OnTrack - The next snapshot is expected to be taken on time.
+	//
+	//    * Pending - The next snapshot is pending to be taken.
+	ExpectedNextSnapshotScheduleTimeStatus *string `type:"string"`
+
 	// A value that reports whether the Amazon Redshift cluster has finished applying
 	// any hardware security module (HSM) settings changes specified in a modify
 	// cluster command.
@@ -9571,6 +9604,12 @@ func (s *Cluster) SetAutomatedSnapshotRetentionPeriod(v int64) *Cluster {
 // SetAvailabilityZone sets the AvailabilityZone field's value.
 func (s *Cluster) SetAvailabilityZone(v string) *Cluster {
 	s.AvailabilityZone = &v
+	return s
+}
+
+// SetClusterAvailabilityStatus sets the ClusterAvailabilityStatus field's value.
+func (s *Cluster) SetClusterAvailabilityStatus(v string) *Cluster {
+	s.ClusterAvailabilityStatus = &v
 	return s
 }
 
@@ -9685,6 +9724,18 @@ func (s *Cluster) SetEndpoint(v *Endpoint) *Cluster {
 // SetEnhancedVpcRouting sets the EnhancedVpcRouting field's value.
 func (s *Cluster) SetEnhancedVpcRouting(v bool) *Cluster {
 	s.EnhancedVpcRouting = &v
+	return s
+}
+
+// SetExpectedNextSnapshotScheduleTime sets the ExpectedNextSnapshotScheduleTime field's value.
+func (s *Cluster) SetExpectedNextSnapshotScheduleTime(v time.Time) *Cluster {
+	s.ExpectedNextSnapshotScheduleTime = &v
+	return s
+}
+
+// SetExpectedNextSnapshotScheduleTimeStatus sets the ExpectedNextSnapshotScheduleTimeStatus field's value.
+func (s *Cluster) SetExpectedNextSnapshotScheduleTimeStatus(v string) *Cluster {
+	s.ExpectedNextSnapshotScheduleTimeStatus = &v
 	return s
 }
 
@@ -19474,7 +19525,8 @@ type ResizeClusterInput struct {
 	// The new cluster type for the specified cluster.
 	ClusterType *string `type:"string"`
 
-	// The new node type for the nodes you are adding.
+	// The new node type for the nodes you are adding. If not specified, the cluster's
+	// current node type is used.
 	NodeType *string `type:"string"`
 
 	// The new number of nodes for the cluster.

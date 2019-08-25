@@ -48,19 +48,19 @@
 //    * DeleteFile, which deletes the content of a specified file from a specified
 //    branch.
 //
+//    * GetBlob, which returns the base-64 encoded content of an individual
+//    Git blob object within a repository.
+//
 //    * GetFile, which returns the base-64 encoded content of a specified file.
 //
 //    * GetFolder, which returns the contents of a specified folder or directory.
 //
-//    * PutFile, which adds or modifies a file in a specified repository and
-//    branch.
+//    * PutFile, which adds or modifies a single file in a specified repository
+//    and branch.
 //
-// Information about committed code in a repository, by calling the following:
+// Commits, by calling the following:
 //
 //    * CreateCommit, which creates a commit for changes to a repository.
-//
-//    * GetBlob, which returns the base-64 encoded content of an individual
-//    Git blob object within a repository.
 //
 //    * GetCommit, which returns information about a commit, including commit
 //    messages and author and committer information.
@@ -136,7 +136,7 @@
 //
 //    * UpdatePullRequestTitle, which updates the title of a pull request.
 //
-// Information about comments in a repository, by calling the following:
+// Comments in a repository, by calling the following:
 //
 //    * DeleteCommentContent, which deletes the content of a comment on a commit
 //    in a repository.

@@ -153,7 +153,7 @@ func resourceAwsCloudHsm2HsmCreate(d *schema.ResourceData, meta interface{}) err
 
 	var output *cloudhsmv2.CreateHsmOutput
 
-	errRetry := resource.Retry(180*time.Second, func() *resource.RetryError {
+	err = resource.Retry(180*time.Second, func() *resource.RetryError {
 		var err error
 		output, err = cloudhsm2.CreateHsm(input)
 		if err != nil {
@@ -165,9 +165,12 @@ func resourceAwsCloudHsm2HsmCreate(d *schema.ResourceData, meta interface{}) err
 		}
 		return nil
 	})
+	if isResourceTimeoutError(err) {
+		output, err = cloudhsm2.CreateHsm(input)
+	}
 
-	if errRetry != nil {
-		return fmt.Errorf("error creating CloudHSM v2 HSM module: %s", errRetry)
+	if err != nil {
+		return fmt.Errorf("error creating CloudHSM v2 HSM module: %s", err)
 	}
 
 	d.SetId(aws.StringValue(output.Hsm.HsmId))
@@ -220,13 +223,13 @@ func resourceAwsCloudHsm2HsmDelete(d *schema.ResourceData, meta interface{}) err
 	clusterId := d.Get("cluster_id").(string)
 
 	log.Printf("[DEBUG] CloudHSMv2 HSM delete %s %s", clusterId, d.Id())
-
-	errRetry := resource.Retry(180*time.Second, func() *resource.RetryError {
+	input := &cloudhsmv2.DeleteHsmInput{
+		ClusterId: aws.String(clusterId),
+		HsmId:     aws.String(d.Id()),
+	}
+	err := resource.Retry(180*time.Second, func() *resource.RetryError {
 		var err error
-		_, err = cloudhsm2.DeleteHsm(&cloudhsmv2.DeleteHsmInput{
-			ClusterId: aws.String(clusterId),
-			HsmId:     aws.String(d.Id()),
-		})
+		_, err = cloudhsm2.DeleteHsm(input)
 		if err != nil {
 			if isAWSErr(err, cloudhsmv2.ErrCodeCloudHsmInternalFailureException, "request was rejected because of an AWS CloudHSM internal failure") {
 				log.Printf("[DEBUG] CloudHSMv2 HSM re-try deleting %s", d.Id())
@@ -237,8 +240,11 @@ func resourceAwsCloudHsm2HsmDelete(d *schema.ResourceData, meta interface{}) err
 		return nil
 	})
 
-	if errRetry != nil {
-		return fmt.Errorf("error deleting CloudHSM v2 HSM module (%s): %s", d.Id(), errRetry)
+	if isResourceTimeoutError(err) {
+		_, err = cloudhsm2.DeleteHsm(input)
+	}
+	if err != nil {
+		return fmt.Errorf("error deleting CloudHSM v2 HSM module (%s): %s", d.Id(), err)
 	}
 	log.Println("[INFO] Waiting for CloudHSMv2 HSM to be deleted")
 
