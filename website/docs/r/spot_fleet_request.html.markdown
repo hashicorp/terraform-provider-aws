@@ -13,7 +13,7 @@ instances to be requested on the Spot market.
 
 ## Example Usage
 
-Using launch specifications:
+### Using launch specifications:
 
 ```hcl
 # Request a Spot fleet
