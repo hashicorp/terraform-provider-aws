@@ -515,6 +515,10 @@ func resourceAwsCodeBuildProject() *schema.Resource {
 							Type:     schema.TypeBool,
 							Optional: true,
 						},
+						"source_version": {
+							Type:     schema.TypeString,
+							Optional: true,
+						},
 					},
 				},
 				Required: true,
@@ -983,6 +987,10 @@ func expandProjectSourceData(data map[string]interface{}) codebuild.ProjectSourc
 
 	if data["location"].(string) != "" {
 		projectSource.Location = aws.String(data["location"].(string))
+	}
+
+	if data["source_version"].(string) != "" {
+		projectSource.SourceVersion = aws.String(data["source_version"].(string))
 	}
 
 	// Only valid for BITBUCKET, GITHUB, and GITHUB_ENTERPRISE source types, e.g.

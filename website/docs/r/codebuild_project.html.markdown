@@ -150,6 +150,7 @@ resource "aws_codebuild_project" "example" {
     type            = "GITHUB"
     location        = "https://github.com/mitchellh/packer.git"
     git_clone_depth = 1
+    source_version = 'master'
   }
 
   vpc_config {
@@ -291,6 +292,7 @@ The following arguments are supported:
 * `insecure_ssl` - (Optional) Ignore SSL warnings when connecting to source control.
 * `location` - (Optional) The location of the source code from git or s3.
 * `report_build_status` - (Optional) Set to `true` to report the status of a build's start and finish to your source provider. This option is only valid when the `type` is `BITBUCKET` or `GITHUB`.
+* `source_version` - (Optional) A version of the build input to be built for this project. If not specified, the latest version is used.
 
 `auth` supports the following:
 
