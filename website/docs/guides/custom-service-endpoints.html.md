@@ -49,6 +49,7 @@ The Terraform AWS Provider allows the following endpoints to be customized:
 
 - `acm`
 - `acmpca`
+- `amplify`
 - `apigateway`
 - `applicationautoscaling`
 - `applicationinsights`
