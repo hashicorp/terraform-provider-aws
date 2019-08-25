@@ -900,6 +900,7 @@ func init() {
 		"applicationautoscaling",
 		"applicationinsights",
 		"appmesh",
+		"appstream",
 		"appsync",
 		"athena",
 		"autoscaling",
