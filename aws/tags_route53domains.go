@@ -16,28 +16,24 @@ func setTagsRoute53Domains(conn *route53domains.Route53Domains, d *schema.Resour
 		oraw, nraw := d.GetChange("tags")
 		o := oraw.(map[string]interface{})
 		n := nraw.(map[string]interface{})
-		create, remove := diffTagsRoute53Domains(tagsFromMapRoute53Domains(o), tagsFromMapRoute53Domains(n))
+		updateTags, deleteTags := diffTagsRoute53Domains(o, n)
 
 		// Set tags
-		if len(remove) > 0 {
-			log.Printf("[DEBUG] Removing tags: %#v", remove)
-			keys := make([]*string, 0, len(remove))
-			// for k := range remove {
-			// 	keys = append(keys, aws.String(k))
-			// }
+		if len(deleteTags) > 0 {
+			log.Printf("[DEBUG] Removing tags: %#v", deleteTags)
 			_, err := conn.DeleteTagsForDomain(&route53domains.DeleteTagsForDomainInput{
 				DomainName:   aws.String(d.Id()),
-				TagsToDelete: keys,
+				TagsToDelete: deleteTags,
 			})
 			if err != nil {
 				return err
 			}
 		}
-		if len(create) > 0 {
-			log.Printf("[DEBUG] Creating tags: %#v", create)
+		if len(updateTags) > 0 {
+			log.Printf("[DEBUG] Updating tags: %#v", updateTags)
 			_, err := conn.UpdateTagsForDomain(&route53domains.UpdateTagsForDomainInput{
 				DomainName:   aws.String(d.Id()),
-				TagsToUpdate: create,
+				TagsToUpdate: updateTags,
 			})
 			if err != nil {
 				return err
@@ -49,26 +45,40 @@ func setTagsRoute53Domains(conn *route53domains.Route53Domains, d *schema.Resour
 }
 
 // diffTags takes our tags locally and the ones remotely and returns
-// the set of tags that must be created, and the set of tags that must
-// be destroyed.
-func diffTagsRoute53Domains(oldTags, newTags []*route53domains.Tag) ([]*route53domains.Tag, []*route53domains.Tag) {
-	// First, we're creating everything we have
-	create := make(map[string]interface{})
-	for _, t := range newTags {
-		create[*t.Key] = *t.Value
-	}
-
-	// Build the list of what to remove
-	var remove []*route53domains.Tag
-	for _, t := range oldTags {
-		old, ok := create[*t.Key]
-		if !ok || old != *t.Value {
-			// Delete it!
-			remove = append(remove, t)
+// the set of tags that must be updated, and the set of tags that must
+// be deleted.
+func diffTagsRoute53Domains(oldTags, newTags map[string]interface{}) ([]*route53domains.Tag, []*string) {
+	// Is the key from newTags in oldTags
+	// No - it's a creation
+	// Yes - if it's differnet, it's an update
+	updateTags := make(map[string]interface{})
+	for k, v := range newTags {
+		old, ok := oldTags[k]
+		if !ok || old != v {
+			updateTags[k] = v
 		}
 	}
+	log.Printf("[DEBUG] Route 53 Domain tags to update: %#v", updateTags)
 
-	return tagsFromMapRoute53Domains(create), remove
+	// Is the key from oldTags in newTags
+	// No - it's a deletion
+	var deleteTags []*string
+	for k, _ := range oldTags {
+		_, ok := newTags[k]
+		if !ok {
+			deleteTags = append(deleteTags, aws.String(k))
+		}
+	}
+	log.Printf("[DEBUG] Route 53 Domain tags to delete: %#v", deleteTags)
+
+	// aws/tags_route53domains.go:56:22: invalid indirect of k (type string)
+	// aws/tags_route53domains.go:57:20: invalid indirect of v (type interface {})
+	// aws/tags_route53domains.go:58:15: invalid indirect of k (type string)
+	// aws/tags_route53domains.go:58:21: invalid indirect of v (type interface {})
+	// aws/tags_route53domains.go:66:20: invalid indirect of k (type string)
+	// aws/tags_route53domains.go:68:23: cannot use k (type string) as type *string in append
+
+	return tagsFromMapRoute53Domains(updateTags), deleteTags
 }
 
 // tagsFromMap returns the tags for the given map of data.

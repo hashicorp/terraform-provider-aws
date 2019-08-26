@@ -176,7 +176,7 @@ func resourceAwsRoute53Domain() *schema.Resource {
 				Computed: true,
 			},
 
-			"tags": tagsSchema(),
+			"tags": tagsSchemaComputed(),
 
 			"tech_contact": resourceAwsRoute53DomainContactDetail(),
 
