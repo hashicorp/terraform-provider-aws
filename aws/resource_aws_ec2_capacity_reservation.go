@@ -6,7 +6,6 @@ import (
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/hashicorp/terraform/helper/schema"
 	"github.com/hashicorp/terraform/helper/validation"
@@ -166,7 +165,7 @@ func resourceAwsEc2CapacityReservationRead(d *schema.ResourceData, meta interfac
 	})
 
 	if err != nil {
-		if ec2err, ok := err.(awserr.Error); ok && ec2err.Code() == "InvalidCapacityReservationId.NotFound" {
+		if isAWSErr(err, "InvalidCapacityReservationId.NotFound", "") {
 			log.Printf("[WARN] EC2 Capacity Reservation (%s) not found, removing from state", d.Id())
 			d.SetId("")
 			return nil
