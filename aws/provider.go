@@ -727,6 +727,7 @@ func Provider() terraform.ResourceProvider {
 			"aws_redshift_event_subscription":                         resourceAwsRedshiftEventSubscription(),
 			"aws_resourcegroups_group":                                resourceAwsResourceGroupsGroup(),
 			"aws_route53_delegation_set":                              resourceAwsRoute53DelegationSet(),
+			"aws_route53_domain":                                      resourceAwsRoute53Domain(),
 			"aws_route53_query_log":                                   resourceAwsRoute53QueryLog(),
 			"aws_route53_record":                                      resourceAwsRoute53Record(),
 			"aws_route53_zone_association":                            resourceAwsRoute53ZoneAssociation(),
