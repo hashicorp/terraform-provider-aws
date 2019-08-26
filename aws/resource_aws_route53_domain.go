@@ -280,6 +280,20 @@ func resourceAwsRoute53DomainRead(d *schema.ResourceData, meta interface{}) erro
 	return nil
 }
 
+func resourceAwsRoute53DomainExpandNameservers(in []interface{}) []*route53domains.Nameserver {
+	nameservers := []*route53domains.Nameserver{}
+	for _, mRaw := range in {
+		m := mRaw.(map[string]interface{})
+		nameserver := &route53domains.Nameserver{
+			GlueIps: expandStringList(m["glue_ips"].([]interface{})),
+			Name:    aws.String(m["name"].(string)),
+		}
+		nameservers = append(nameservers, nameserver)
+	}
+	log.Printf("[DEBUG] Route 53 Domain expanded name servers: %#v", nameservers)
+	return nameservers
+}
+
 func resourceAwsRoute53DomainFlattenNameservers(in []*route53domains.Nameserver) []map[string]interface{} {
 	var out = make([]map[string]interface{}, len(in), len(in))
 	for i, v := range in {
@@ -429,18 +443,20 @@ func resourceAwsRoute53DomainUpdate(d *schema.ResourceData, meta interface{}) er
 		}
 	}
 
-	// // Changes to domain nameservers
-	// if d.HasChange("name_servers" {
-	// 	log.Printf("[DEBUG] Updating domain name servers for Route 53 domain (%s)", d.Id())
-	// 	out, err := conn.UpdateDomainNameservers(&route53domains.UpdateDomainNameserversInput{
-	// 		DomainName: aws.String(d.Id()),
-	// 		// TODO: expand name_servers for request
-	// 	})
-	// 	if err != nil {
-	// 		return fmt.Errorf("Error updating domain name servers for Route 53 domain (%s), error: %s", d.Id(), err)
-	// 	}
-	// 	// TODO: await operation using GetOperationDetail
-	// })
+	// Changes to domain nameservers
+	if d.HasChange("name_servers") {
+		log.Printf("[DEBUG] Updating domain name servers for Route 53 domain (%s)", d.Id())
+		out, err := conn.UpdateDomainNameservers(&route53domains.UpdateDomainNameserversInput{
+			DomainName:  aws.String(d.Id()),
+			Nameservers: resourceAwsRoute53DomainExpandNameservers(d.Get("name_servers").([]interface{})),
+		})
+		if err != nil {
+			return fmt.Errorf("Error updating domain name servers for Route 53 domain (%s), error: %s", d.Id(), err)
+		}
+		if err := resourceAwsRoute53DomainWaitForOperation(conn, *out.OperationId, d.Timeout(schema.TimeoutUpdate)); err != nil {
+			return fmt.Errorf("Error waiting for Route 53 domain operation (%s) on domain (%s) to complete: %s", out.OperationId, d.Id(), err)
+		}
+	}
 
 	return resourceAwsRoute53DomainRead(d, meta)
 }
