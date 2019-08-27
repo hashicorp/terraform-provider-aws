@@ -120,7 +120,7 @@ func dataSourceAwsElasticSearchDomain() *schema.Resource {
 							Computed: true,
 						},
 						"zone_awareness_config": {
-							Type:     schema.TypeSet,
+							Type:     schema.TypeList,
 							Computed: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
