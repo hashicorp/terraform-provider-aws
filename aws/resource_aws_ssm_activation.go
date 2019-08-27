@@ -109,6 +109,10 @@ func resourceAwsSsmActivationCreate(d *schema.ResourceData, meta interface{}) er
 		return resource.NonRetryableError(err)
 	})
 
+	if isResourceTimeoutError(err) {
+		resp, err = ssmconn.CreateActivation(activationInput)
+	}
+
 	if err != nil {
 		return fmt.Errorf("Error creating SSM activation: %s", err)
 	}

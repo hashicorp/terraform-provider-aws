@@ -141,7 +141,9 @@ func resourceAwsIamPolicyRead(d *schema.ResourceData, meta interface{}) error {
 
 		return nil
 	})
-
+	if isResourceTimeoutError(err) {
+		getPolicyResponse, err = iamconn.GetPolicy(getPolicyRequest)
+	}
 	if isAWSErr(err, iam.ErrCodeNoSuchEntityException, "") {
 		log.Printf("[WARN] IAM Policy (%s) not found, removing from state", d.Id())
 		d.SetId("")
@@ -187,7 +189,9 @@ func resourceAwsIamPolicyRead(d *schema.ResourceData, meta interface{}) error {
 
 		return nil
 	})
-
+	if isResourceTimeoutError(err) {
+		getPolicyVersionResponse, err = iamconn.GetPolicyVersion(getPolicyVersionRequest)
+	}
 	if isAWSErr(err, iam.ErrCodeNoSuchEntityException, "") {
 		log.Printf("[WARN] IAM Policy (%s) not found, removing from state", d.Id())
 		d.SetId("")

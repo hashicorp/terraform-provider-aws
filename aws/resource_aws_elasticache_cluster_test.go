@@ -1171,7 +1171,7 @@ resource "aws_subnet" "foo" {
 resource "aws_subnet" "bar" {
     vpc_id = "${aws_vpc.foo.id}"
     cidr_block = "192.168.16.0/20"
-    availability_zone = "us-west-2b"
+    availability_zone = "us-east-1c"
   tags = {
         Name = "tf-acc-elasticache-cluster-multi-az-in-vpc-bar"
     }

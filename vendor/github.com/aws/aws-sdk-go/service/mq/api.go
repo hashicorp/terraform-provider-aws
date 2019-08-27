@@ -2421,6 +2421,9 @@ type CreateBrokerRequest struct {
 	// The deployment mode of the broker.
 	DeploymentMode *string `locationName:"deploymentMode" type:"string" enum:"DeploymentMode"`
 
+	// Encryption options for the broker.
+	EncryptionOptions *EncryptionOptions `locationName:"encryptionOptions" type:"structure"`
+
 	// The type of broker engine. Note: Currently, Amazon MQ supports only ActiveMQ.
 	EngineType *string `locationName:"engineType" type:"string" enum:"EngineType"`
 
@@ -2456,6 +2459,21 @@ func (s CreateBrokerRequest) GoString() string {
 	return s.String()
 }
 
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *CreateBrokerRequest) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "CreateBrokerRequest"}
+	if s.EncryptionOptions != nil {
+		if err := s.EncryptionOptions.Validate(); err != nil {
+			invalidParams.AddNested("EncryptionOptions", err.(request.ErrInvalidParams))
+		}
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
 // SetAutoMinorVersionUpgrade sets the AutoMinorVersionUpgrade field's value.
 func (s *CreateBrokerRequest) SetAutoMinorVersionUpgrade(v bool) *CreateBrokerRequest {
 	s.AutoMinorVersionUpgrade = &v
@@ -2483,6 +2501,12 @@ func (s *CreateBrokerRequest) SetCreatorRequestId(v string) *CreateBrokerRequest
 // SetDeploymentMode sets the DeploymentMode field's value.
 func (s *CreateBrokerRequest) SetDeploymentMode(v string) *CreateBrokerRequest {
 	s.DeploymentMode = &v
+	return s
+}
+
+// SetEncryptionOptions sets the EncryptionOptions field's value.
+func (s *CreateBrokerRequest) SetEncryptionOptions(v *EncryptionOptions) *CreateBrokerRequest {
+	s.EncryptionOptions = v
 	return s
 }
 
@@ -3274,6 +3298,9 @@ type DescribeBrokerResponse struct {
 	// The deployment mode of the broker.
 	DeploymentMode *string `locationName:"deploymentMode" type:"string" enum:"DeploymentMode"`
 
+	// Encryption options for the broker.
+	EncryptionOptions *EncryptionOptions `locationName:"encryptionOptions" type:"structure"`
+
 	// The type of broker engine. Note: Currently, Amazon MQ supports only ActiveMQ.
 	EngineType *string `locationName:"engineType" type:"string" enum:"EngineType"`
 
@@ -3363,6 +3390,12 @@ func (s *DescribeBrokerResponse) SetCreated(v time.Time) *DescribeBrokerResponse
 // SetDeploymentMode sets the DeploymentMode field's value.
 func (s *DescribeBrokerResponse) SetDeploymentMode(v string) *DescribeBrokerResponse {
 	s.DeploymentMode = &v
+	return s
+}
+
+// SetEncryptionOptions sets the EncryptionOptions field's value.
+func (s *DescribeBrokerResponse) SetEncryptionOptions(v *EncryptionOptions) *DescribeBrokerResponse {
+	s.EncryptionOptions = v
 	return s
 }
 
@@ -3766,6 +3799,56 @@ func (s *DescribeUserResponse) SetPending(v *UserPendingChanges) *DescribeUserRe
 // SetUsername sets the Username field's value.
 func (s *DescribeUserResponse) SetUsername(v string) *DescribeUserResponse {
 	s.Username = &v
+	return s
+}
+
+// Encryption options for the broker.
+type EncryptionOptions struct {
+	_ struct{} `type:"structure"`
+
+	// The customer master key (CMK) to use for the AWS Key Management Service (KMS).
+	// This key is used to encrypt your data at rest. If not provided, Amazon MQ
+	// will use a default CMK to encrypt your data.
+	KmsKeyId *string `locationName:"kmsKeyId" type:"string"`
+
+	// Enables the use of an AWS owned CMK using AWS Key Management Service (KMS).
+	//
+	// UseAwsOwnedKey is a required field
+	UseAwsOwnedKey *bool `locationName:"useAwsOwnedKey" type:"boolean" required:"true"`
+}
+
+// String returns the string representation
+func (s EncryptionOptions) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s EncryptionOptions) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *EncryptionOptions) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "EncryptionOptions"}
+	if s.UseAwsOwnedKey == nil {
+		invalidParams.Add(request.NewErrParamRequired("UseAwsOwnedKey"))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetKmsKeyId sets the KmsKeyId field's value.
+func (s *EncryptionOptions) SetKmsKeyId(v string) *EncryptionOptions {
+	s.KmsKeyId = &v
+	return s
+}
+
+// SetUseAwsOwnedKey sets the UseAwsOwnedKey field's value.
+func (s *EncryptionOptions) SetUseAwsOwnedKey(v bool) *EncryptionOptions {
+	s.UseAwsOwnedKey = &v
 	return s
 }
 

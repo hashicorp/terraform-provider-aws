@@ -580,24 +580,26 @@ func waitForNLBNetworkInterfacesToDetach(conn *ec2.EC2, lbArn string) error {
 	// We cannot cleanup these ENIs ourselves as that would result in
 	// OperationNotPermitted: You are not allowed to manage 'ela-attach' attachments.
 	// yet presence of these ENIs may prevent us from deleting EIPs associated w/ the NLB
-
-	return resource.Retry(5*time.Minute, func() *resource.RetryError {
-		out, err := conn.DescribeNetworkInterfaces(&ec2.DescribeNetworkInterfacesInput{
-			Filters: []*ec2.Filter{
-				{
-					Name:   aws.String("attachment.instance-owner-id"),
-					Values: []*string{aws.String("amazon-aws")},
-				},
-				{
-					Name:   aws.String("attachment.attachment-id"),
-					Values: []*string{aws.String("ela-attach-*")},
-				},
-				{
-					Name:   aws.String("description"),
-					Values: []*string{aws.String("ELB " + name)},
-				},
+	input := &ec2.DescribeNetworkInterfacesInput{
+		Filters: []*ec2.Filter{
+			{
+				Name:   aws.String("attachment.instance-owner-id"),
+				Values: []*string{aws.String("amazon-aws")},
 			},
-		})
+			{
+				Name:   aws.String("attachment.attachment-id"),
+				Values: []*string{aws.String("ela-attach-*")},
+			},
+			{
+				Name:   aws.String("description"),
+				Values: []*string{aws.String("ELB " + name)},
+			},
+		},
+	}
+	var out *ec2.DescribeNetworkInterfacesOutput
+	err = resource.Retry(5*time.Minute, func() *resource.RetryError {
+		var err error
+		out, err = conn.DescribeNetworkInterfaces(input)
 		if err != nil {
 			return resource.NonRetryableError(err)
 		}
@@ -611,6 +613,20 @@ func waitForNLBNetworkInterfacesToDetach(conn *ec2.EC2, lbArn string) error {
 
 		return nil
 	})
+	if isResourceTimeoutError(err) {
+		out, err = conn.DescribeNetworkInterfaces(input)
+		if err != nil {
+			return fmt.Errorf("Error describing network inferfaces: %s", err)
+		}
+		niCount := len(out.NetworkInterfaces)
+		if niCount > 0 {
+			return fmt.Errorf("Error waiting for %d ENIs of %q to clean up", niCount, lbArn)
+		}
+	}
+	if err != nil {
+		return fmt.Errorf("Error describing network inferfaces: %s", err)
+	}
+	return nil
 }
 
 func getLbNameFromArn(arn string) (string, error) {

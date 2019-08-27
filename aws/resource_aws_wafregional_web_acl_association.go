@@ -59,8 +59,11 @@ func resourceAwsWafRegionalWebAclAssociationCreate(d *schema.ResourceData, meta 
 		}
 		return nil
 	})
+	if isResourceTimeoutError(err) {
+		_, err = conn.AssociateWebACL(params)
+	}
 	if err != nil {
-		return err
+		return fmt.Errorf("Error creating WAF Regional Web ACL association: %s", err)
 	}
 
 	// Store association id

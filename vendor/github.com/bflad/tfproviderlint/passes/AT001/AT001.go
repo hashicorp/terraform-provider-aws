@@ -4,6 +4,8 @@ package AT001
 
 import (
 	"go/ast"
+	"path/filepath"
+	"strings"
 
 	"golang.org/x/tools/go/analysis"
 
@@ -16,6 +18,7 @@ const Doc = `check for TestCase missing CheckDestroy
 The AT001 analyzer reports likely incorrect uses of TestCase
 which do not define a CheckDestroy function. CheckDestroy is used to verify
 that test infrastructure has been removed at the end of an acceptance test.
+Ignores file names beginning with data_source_.
 
 More information can be found at:
 https://www.terraform.io/docs/extend/testing/acceptance-tests/testcase.html#checkdestroy`
@@ -36,6 +39,12 @@ func run(pass *analysis.Pass) (interface{}, error) {
 	ignorer := pass.ResultOf[commentignore.Analyzer].(*commentignore.Ignorer)
 	testCases := pass.ResultOf[acctestcase.Analyzer].([]*ast.CompositeLit)
 	for _, testCase := range testCases {
+		fileName := filepath.Base(pass.Fset.File(testCase.Pos()).Name())
+
+		if strings.HasPrefix(fileName, "data_source_") {
+			continue
+		}
+
 		if ignorer.ShouldIgnore(analyzerName, testCase) {
 			continue
 		}

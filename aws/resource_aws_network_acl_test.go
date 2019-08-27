@@ -121,6 +121,27 @@ func TestAccAWSNetworkAcl_importBasic(t *testing.T) {
 	})
 }
 
+func TestAccAWSNetworkAcl_disappears(t *testing.T) {
+	var networkAcl ec2.NetworkAcl
+	resourceName := "aws_network_acl.bar"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSNetworkAclDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSNetworkAclEgressNIngressConfig,
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckAWSNetworkAclExists(resourceName, &networkAcl),
+					testAccCheckAWSNetworkAclDisappears(&networkAcl),
+				),
+				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}
+
 func TestAccAWSNetworkAcl_Egress_ConfigMode(t *testing.T) {
 	var networkAcl1, networkAcl2, networkAcl3 ec2.NetworkAcl
 	resourceName := "aws_network_acl.test"
@@ -636,6 +657,20 @@ func testAccCheckAWSNetworkAclDestroy(s *terraform.State) error {
 	}
 
 	return nil
+}
+
+func testAccCheckAWSNetworkAclDisappears(networkAcl *ec2.NetworkAcl) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := testAccProvider.Meta().(*AWSClient).ec2conn
+
+		input := &ec2.DeleteNetworkAclInput{
+			NetworkAclId: networkAcl.NetworkAclId,
+		}
+
+		_, err := conn.DeleteNetworkAcl(input)
+
+		return err
+	}
 }
 
 func testAccCheckAWSNetworkAclExists(n string, networkAcl *ec2.NetworkAcl) resource.TestCheckFunc {

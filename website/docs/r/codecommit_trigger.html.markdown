@@ -17,12 +17,15 @@ in all regions - available regions are listed
 ## Example Usage
 
 ```hcl
+resource "aws_codecommit_repository" "test" {
+  repository_name = "test"
+}
+
 resource "aws_codecommit_trigger" "test" {
-  depends_on      = ["aws_codecommit_repository.test"]
-  repository_name = "my_test_repository"
+  repository_name = "${aws_codecommit_repository.test.repository_name}"
 
   trigger {
-    name            = "noname"
+    name            = "all"
     events          = ["all"]
     destination_arn = "${aws_sns_topic.test.arn}"
   }

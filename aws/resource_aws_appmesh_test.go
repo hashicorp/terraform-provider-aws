@@ -9,22 +9,28 @@ func TestAccAWSAppmesh(t *testing.T) {
 		"Mesh": {
 			"basic":        testAccAwsAppmeshMesh_basic,
 			"egressFilter": testAccAwsAppmeshMesh_egressFilter,
+			"tags":         testAccAwsAppmeshMesh_tags,
 		},
 		"Route": {
 			"httpRoute": testAccAwsAppmeshRoute_httpRoute,
 			"tcpRoute":  testAccAwsAppmeshRoute_tcpRoute,
+			"tags":      testAccAwsAppmeshRoute_tags,
 		},
 		"VirtualNode": {
-			"basic":                testAccAwsAppmeshVirtualNode_basic,
-			"listenerHealthChecks": testAccAwsAppmeshVirtualNode_listenerHealthChecks,
-			"logging":              testAccAwsAppmeshVirtualNode_logging,
+			"basic":                    testAccAwsAppmeshVirtualNode_basic,
+			"cloudMapServiceDiscovery": testAccAwsAppmeshVirtualNode_cloudMapServiceDiscovery,
+			"listenerHealthChecks":     testAccAwsAppmeshVirtualNode_listenerHealthChecks,
+			"logging":                  testAccAwsAppmeshVirtualNode_logging,
+			"tags":                     testAccAwsAppmeshVirtualNode_tags,
 		},
 		"VirtualRouter": {
 			"basic": testAccAwsAppmeshVirtualRouter_basic,
+			"tags":  testAccAwsAppmeshVirtualRouter_tags,
 		},
 		"VirtualService": {
 			"virtualNode":   testAccAwsAppmeshVirtualService_virtualNode,
 			"virtualRouter": testAccAwsAppmeshVirtualService_virtualRouter,
+			"tags":          testAccAwsAppmeshVirtualService_tags,
 		},
 	}
 
