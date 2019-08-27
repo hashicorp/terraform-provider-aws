@@ -62,8 +62,7 @@ func TestAccAWSConfig(t *testing.T) {
 			"TagValueScope":             testAccConfigOrganizationManagedRule_TagValueScope,
 		},
 		"RemediationConfiguration": {
-			"basic":     testAccConfigRemediationConfiguration_basic,
-			"importAws": testAccConfigRemediationConfiguration_importAws,
+			"basic": testAccConfigRemediationConfiguration_basic,
 		},
 	}
 

@@ -10,7 +10,6 @@ import (
 	"github.com/hashicorp/terraform/helper/validation"
 
 	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/configservice"
 )
 
@@ -29,19 +28,24 @@ func resourceAwsConfigRemediationConfiguration() *schema.Resource {
 			"config_rule_name": {
 				Type:         schema.TypeString,
 				Required:     true,
-				ValidateFunc: validation.StringLenBetween(0, 64),
+				ForceNew:     true,
+				ValidateFunc: validation.StringLenBetween(1, 64),
 			},
 			"resource_type": {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
 			"target_id": {
-				Type:     schema.TypeString,
-				Required: true,
+				Type:         schema.TypeString,
+				Required:     true,
+				ValidateFunc: validation.StringLenBetween(1, 256),
 			},
 			"target_type": {
 				Type:     schema.TypeString,
 				Required: true,
+				ValidateFunc: validation.StringInSlice([]string{
+					configservice.RemediationTargetTypeSsmDocument,
+				}, false),
 			},
 			"target_version": {
 				Type:     schema.TypeString,
@@ -93,7 +97,7 @@ func resourceAwsConfigRemediationConfigurationPut(d *schema.ResourceData, meta i
 		remediationConfigurationInput.Parameters = expandConfigRemediationConfigurationParameters(v.(*schema.Set))
 	}
 
-	if v, ok := d.GetOk("resource_type"); ok && v.(string) != "" {
+	if v, ok := d.GetOk("resource_type"); ok {
 		remediationConfigurationInput.ResourceType = aws.String(v.(string))
 	}
 	if v, ok := d.GetOk("target_id"); ok && v.(string) != "" {
@@ -106,21 +110,16 @@ func resourceAwsConfigRemediationConfigurationPut(d *schema.ResourceData, meta i
 		remediationConfigurationInput.TargetVersion = aws.String(v.(string))
 	}
 
-	remediationConfigurations := make([]*configservice.RemediationConfiguration, 1)
-	remediationConfigurations = append(remediationConfigurations, &remediationConfigurationInput)
-
 	input := configservice.PutRemediationConfigurationsInput{
-		RemediationConfigurations: remediationConfigurations,
+		RemediationConfigurations: []*configservice.RemediationConfiguration{&remediationConfigurationInput},
 	}
 	log.Printf("[DEBUG] Creating AWSConfig remediation configuration: %s", input)
 	err := resource.Retry(2*time.Minute, func() *resource.RetryError {
 		_, err := conn.PutRemediationConfigurations(&input)
 		if err != nil {
-			if awsErr, ok := err.(awserr.Error); ok {
-				if awsErr.Code() == "InsufficientPermissionsException" {
-					// IAM is eventually consistent
-					return resource.RetryableError(err)
-				}
+			if isAWSErr(err, configservice.ErrCodeInsufficientPermissionsException, "") {
+				// IAM is eventually consistent
+				return resource.RetryableError(err)
 			}
 
 			return resource.NonRetryableError(fmt.Errorf("Failed to create AWSConfig remediation configuration: %s", err))
@@ -145,7 +144,7 @@ func resourceAwsConfigRemediationConfigurationRead(d *schema.ResourceData, meta 
 		ConfigRuleNames: []*string{aws.String(d.Id())},
 	})
 	if err != nil {
-		if awsErr, ok := err.(awserr.Error); ok && awsErr.Code() == "NoSuchConfigRuleException" {
+		if isAWSErr(err, configservice.ErrCodeNoSuchConfigRuleException, "") {
 			log.Printf("[WARN] Config Rule %q is gone (NoSuchConfigRuleException)", d.Id())
 			d.SetId("")
 			return nil
@@ -185,7 +184,7 @@ func resourceAwsConfigRemediationConfigurationDelete(d *schema.ResourceData, met
 	err := resource.Retry(2*time.Minute, func() *resource.RetryError {
 		_, err := conn.DeleteRemediationConfiguration(&deleteRemediationConfigurationInput)
 		if err != nil {
-			if awsErr, ok := err.(awserr.Error); ok && awsErr.Code() == "ResourceInUseException" {
+			if isAWSErr(err, configservice.ErrCodeResourceInUseException, "") {
 				return resource.RetryableError(err)
 			}
 			return resource.NonRetryableError(err)
