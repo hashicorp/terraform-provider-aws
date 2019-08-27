@@ -1,4 +1,9 @@
 ## 2.26.0 (Unreleased)
+
+BUG FIXES:
+
+* resource/aws_ec2_capacity_reservation: Fixes error handling when an EC2 Capacity Reservation is deleted manually but is still in state [GH-9862]
+
 ## 2.25.0 (August 23, 2019)
 
 ENHANCEMENTS:
