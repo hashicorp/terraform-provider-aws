@@ -10,7 +10,7 @@ description: |-
 
 `aws_subnet_ids` provides a list of ids for a vpc_id
 
-This resource can be useful for getting back a list of subnet ids for a vpc.
+This resource can be useful for getting back a set of subnet ids for a vpc.
 
 ## Example Usage
 
