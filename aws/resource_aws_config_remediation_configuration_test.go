@@ -26,7 +26,6 @@ func testAccConfigRemediationConfiguration_basic(t *testing.T) {
 				Config: testAccConfigRemediationConfigurationConfig_basic(rInt),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckConfigRemediationConfigurationExists("aws_config_remediation_configuration.foo", &rc),
-					testAccCheckConfigRemediationConfigurationName("aws_config_remediation_configuration.foo", expectedName, &rc),
 					resource.TestCheckResourceAttr("aws_config_remediation_configuration.foo", "config_rule_name", expectedName),
 					resource.TestCheckResourceAttr("aws_config_remediation_configuration.foo", "target_id", "SSM_DOCUMENT"),
 					resource.TestCheckResourceAttr("aws_config_remediation_configuration.foo", "target_type", "AWS-PublishSNSNotification"),
@@ -40,19 +39,6 @@ func testAccConfigRemediationConfiguration_basic(t *testing.T) {
 			},
 		},
 	})
-}
-
-func testAccCheckConfigRemediationConfigurationName(n, desired string, obj *configservice.RemediationConfiguration) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		rs, ok := s.RootModule().Resources[n]
-		if !ok {
-			return fmt.Errorf("Not found: %s", n)
-		}
-		if rs.Primary.Attributes["cnofig_rule_name"] != *obj.ConfigRuleName {
-			return fmt.Errorf("Expected name: %q, given: %q", desired, *obj.ConfigRuleName)
-		}
-		return nil
-	}
 }
 
 func testAccCheckConfigRemediationConfigurationExists(n string, obj *configservice.RemediationConfiguration) resource.TestCheckFunc {
@@ -131,7 +117,7 @@ resource "aws_config_remediation_configuration" "foo" {
 	parameter {
 		static_value {
 			key   = "AutomationAssumeRole"
-			value = "${aws_iam_role.aar.arn}"
+			value = "${aws_iam_role.r.arn}"
 		}
 	}
 }
