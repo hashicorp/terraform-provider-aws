@@ -45,6 +45,8 @@ The following attributes are exported:
 ** `dedicated_master_type` - Instance type of the dedicated master nodes in the cluster.
 ** `dedicated_master_count` - Number of dedicated master nodes in the cluster.
 ** `zone_awareness_enabled` - Indicates whether zone awareness is enabled.
+** `zone_awareness_config` - Configuration block containing zone awareness settings.
+*** `availability_zone_count` - Number of availability zones used.
 * `ebs_options` - EBS Options for the instances in the domain.
 ** `ebs_enabled` - Whether EBS volumes are attached to data nodes in the domain.
 ** `volume_type` - The type of EBS volumes attached to data nodes.
