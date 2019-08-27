@@ -13,6 +13,7 @@ import (
 
 func testAccConfigRemediationConfiguration_basic(t *testing.T) {
 	var rc configservice.RemediationConfiguration
+	resourceName := "aws_config_remediation_configuration.foo"
 	rInt := acctest.RandInt()
 	expectedName := fmt.Sprintf("tf-acc-test-%d", rInt)
 
@@ -29,26 +30,9 @@ func testAccConfigRemediationConfiguration_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("aws_config_remediation_configuration.foo", "config_rule_name", expectedName),
 					resource.TestCheckResourceAttr("aws_config_remediation_configuration.foo", "target_id", "SSM_DOCUMENT"),
 					resource.TestCheckResourceAttr("aws_config_remediation_configuration.foo", "target_type", "AWS-PublishSNSNotification"),
-					resource.TestCheckResourceAttr("aws_config_remediation_configuration.foo", "parameters.0.resource_value", "Message"),
+					resource.TestCheckResourceAttr("aws_config_remediation_configuration.foo", "parameters.#", "2"),
 				),
 			},
-		},
-	})
-}
-
-func testAccConfigRemediationConfiguration_importAws(t *testing.T) {
-	resourceName := "aws_config_remediation_configuration.foo"
-	rInt := acctest.RandInt()
-
-	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckConfigRemediationConfigurationDestroy,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccConfigRemediationConfigurationConfig_ownerAws(rInt),
-			},
-
 			{
 				ResourceName:      resourceName,
 				ImportState:       true,
@@ -168,111 +152,6 @@ resource "aws_config_config_rule" "foo" {
     owner             = "AWS"
     source_identifier = "S3_BUCKET_VERSIONING_ENABLED"
   }
-
-  depends_on = ["aws_config_configuration_recorder.foo"]
-}
-
-resource "aws_config_configuration_recorder" "foo" {
-  name     = "tf-acc-test-%d"
-  role_arn = "${aws_iam_role.r.arn}"
-}
-
-resource "aws_iam_role" "r" {
-  name = "tf-acc-test-awsconfig-%d"
-
-  assume_role_policy = <<EOF
-{
-  "Version": "2012-10-17",
-  "Statement": [
-    {
-      "Action": "sts:AssumeRole",
-      "Principal": {
-        "Service": "config.amazonaws.com"
-      },
-      "Effect": "Allow",
-      "Sid": ""
-    }
-  ]
-}
-EOF
-}
-
-resource "aws_iam_role_policy" "p" {
-  name = "tf-acc-test-awsconfig-%d"
-  role = "${aws_iam_role.r.id}"
-
-  policy = <<EOF
-{
-  "Version": "2012-10-17",
-  "Statement": [
-    {
-        "Action": "config:Put*",
-        "Effect": "Allow",
-        "Resource": "*"
-
-    }
-  ]
-}
-EOF
-}
-`, randInt, randInt, randInt, randInt)
-}
-
-func testAccConfigRemediationConfigurationConfig_ownerAws(randInt int) string {
-	return fmt.Sprintf(`
-resource "aws_config_remediation_configuration" "foo" {
-	config_rule_name = "${aws_config_config_rule.foo.name}"
-
-	resource_type = ""
-	target_id = "SSM_DOCUMENT"
-	target_type = "AWS-PublishSNSNotification"
-	target_version = "1"
-
-	parameters = [
-		{
-			resource_value = "Message"
-		},
-		{
-			static_value = {
-				key = "TopicArn"
-				value = "${aws_sns_topic.foo.arn}"
-			}
-		},
-		{
-			static_value = {
-				key = "AutomationAssumeRole"
-				value = "${aws_iam_role.aar.arn}"
-			}
-		}
-	]
-
-	depends_on = [
-		"aws_config_config_rule.foo",
-		"aws_sns_topic.foo"
-	]
-}
-
-resource "aws_sns_topic" "foo" {
-	name = "sns_topic_name"
-}
-
-resource "aws_config_config_rule" "foo" {
-  name        = "tf-acc-test-%d"
-  description = "Terraform Acceptance tests"
-
-  source {
-    owner             = "AWS"
-    source_identifier = "REQUIRED_TAGS"
-  }
-
-  scope {
-    compliance_resource_id    = "blablah"
-    compliance_resource_types = ["AWS::EC2::Instance"]
-  }
-
-  input_parameters = <<PARAMS
-{"tag1Key":"CostCenter", "tag2Key":"Owner"}
-PARAMS
 
   depends_on = ["aws_config_configuration_recorder.foo"]
 }
