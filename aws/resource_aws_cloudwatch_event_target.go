@@ -138,6 +138,7 @@ func resourceAwsCloudWatchEventTarget() *schema.Resource {
 							Type:         schema.TypeInt,
 							Optional:     true,
 							ValidateFunc: validation.IntBetween(1, math.MaxInt32),
+							Default:      1,
 						},
 						"task_definition_arn": {
 							Type:         schema.TypeString,

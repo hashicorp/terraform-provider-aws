@@ -22,9 +22,9 @@ func (t *WafRegionalRetryer) RetryWithToken(f withRegionalTokenFunc) (interface{
 	defer awsMutexKV.Unlock(t.Region)
 
 	var out interface{}
+	var tokenOut *waf.GetChangeTokenOutput
 	err := resource.Retry(15*time.Minute, func() *resource.RetryError {
 		var err error
-		var tokenOut *waf.GetChangeTokenOutput
 
 		tokenOut, err = t.Connection.GetChangeToken(&waf.GetChangeTokenInput{})
 		if err != nil {
@@ -41,8 +41,16 @@ func (t *WafRegionalRetryer) RetryWithToken(f withRegionalTokenFunc) (interface{
 		}
 		return nil
 	})
-
-	return out, err
+	if isResourceTimeoutError(err) {
+		tokenOut, err = t.Connection.GetChangeToken(&waf.GetChangeTokenInput{})
+		if err == nil {
+			out, err = f(tokenOut.ChangeToken)
+		}
+	}
+	if err != nil {
+		return nil, fmt.Errorf("Error getting WAF regional change token: %s", err)
+	}
+	return out, nil
 }
 
 func newWafRegionalRetryer(conn *wafregional.WAFRegional, region string) *WafRegionalRetryer {
