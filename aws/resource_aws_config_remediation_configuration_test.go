@@ -117,28 +117,23 @@ resource "aws_config_remediation_configuration" "foo" {
 	target_type = "AWS-PublishSNSNotification"
 	target_version = "1"
 
-	parameters = [
-		{
-			resource_value = "Message"
-		},
-		{
-			static_value = {
-				key = "TopicArn"
-				value = "${aws_sns_topic.foo.arn}"
-			}
-		},
-		{
-			static_value = {
-				key = "AutomationAssumeRole"
-				value = "${aws_iam_role.aar.arn}"
-			}
+	parameter {
+		resource_value = "Message"
+	}
+	
+	parameter {
+		static_value {
+			key   = "TopicArn"
+			value = "${aws_sns_topic.foo.arn}"
 		}
-	]
-
-	depends_on = [
-		"aws_config_config_rule.foo",
-		"aws_sns_topic.foo"
-	]
+	}
+	
+	parameter {
+		static_value {
+			key   = "AutomationAssumeRole"
+			value = "${aws_iam_role.aar.arn}"
+		}
+	}
 }
 
 resource "aws_sns_topic" "foo" {

@@ -13,6 +13,62 @@ import (
 	"github.com/aws/aws-sdk-go/service/configservice"
 )
 
+func expandConfigRemediationConfigurationParameters(configured *schema.Set) map[string]*configservice.RemediationParameterValue {
+	var staticValues []*string
+	results := make(map[string]*configservice.RemediationParameterValue)
+
+	emptyString := ""
+
+	for _, item := range configured.List() {
+		detail := item.(map[string]interface{})
+		rpv := configservice.RemediationParameterValue{}
+
+		if resourceValue, ok := detail["resource_value"].(string); ok {
+			rv := configservice.ResourceValue{
+				Value: &emptyString,
+			}
+			rpv.ResourceValue = &rv
+			results[resourceValue] = &rpv
+		}
+		if staticValue, ok := detail["static_value"].(map[string]string); ok {
+			value := staticValue["value"]
+			staticValues = make([]*string, 0)
+			staticValues = append(staticValues, &value)
+			sv := configservice.StaticValue{
+				Values: staticValues,
+			}
+			rpv.StaticValue = &sv
+			results[staticValue["key"]] = &rpv
+		}
+	}
+
+	return results
+}
+
+func flattenRemediationConfigurations(c []*configservice.RemediationConfiguration) []map[string]interface{} {
+	configurations := make([]map[string]interface{}, 0)
+
+	for _, bd := range c {
+		if bd.ConfigRuleName != nil && bd.Parameters != nil {
+			configuration := make(map[string]interface{})
+			configuration["config_rule_name"] = *bd.ConfigRuleName
+			configuration["parameters"] = flattenRemediationConfigurationParameters(bd.Parameters)
+			configuration["resource_type"] = *bd.ResourceType
+			configuration["target_id"] = *bd.TargetId
+			configuration["target_type"] = *bd.TargetType
+			configuration["target_version"] = *bd.TargetVersion
+
+			configurations = append(configurations, configuration)
+		}
+	}
+
+	if len(configurations) > 0 {
+		return configurations
+	}
+
+	return nil
+}
+
 func resourceAwsConfigRemediationConfiguration() *schema.Resource {
 	return &schema.Resource{
 		Create: resourceAwsConfigRemediationConfigurationPut,
@@ -199,18 +255,3 @@ func resourceAwsConfigRemediationConfigurationDelete(d *schema.ResourceData, met
 
 	return nil
 }
-
-/*func configRuleSourceDetailsHash(v interface{}) int {
-	var buf bytes.Buffer
-	m := v.(map[string]interface{})
-	if v, ok := m["message_type"]; ok {
-		buf.WriteString(fmt.Sprintf("%s-", v.(string)))
-	}
-	if v, ok := m["event_source"]; ok {
-		buf.WriteString(fmt.Sprintf("%s-", v.(string)))
-	}
-	if v, ok := m["maximum_execution_frequency"]; ok {
-		buf.WriteString(fmt.Sprintf("%s-", v.(string)))
-	}
-	return hashcode.String(buf.String())
-}*/

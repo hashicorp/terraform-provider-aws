@@ -2185,38 +2185,6 @@ func expandConfigRuleSource(configured []interface{}) *configservice.Source {
 	return &source
 }
 
-func expandConfigRemediationConfigurationParameters(configured *schema.Set) map[string]*configservice.RemediationParameterValue {
-	var staticValues []*string
-	results := make(map[string]*configservice.RemediationParameterValue)
-
-	emptyString := ""
-
-	for _, item := range configured.List() {
-		detail := item.(map[string]interface{})
-		rpv := configservice.RemediationParameterValue{}
-
-		if resourceValue, ok := detail["resource_value"].(string); ok {
-			rv := configservice.ResourceValue{
-				Value: &emptyString,
-			}
-			rpv.ResourceValue = &rv
-			results[resourceValue] = &rpv
-		}
-		if staticValue, ok := detail["static_value"].(map[string]string); ok {
-			value := staticValue["value"]
-			staticValues = make([]*string, 0)
-			staticValues = append(staticValues, &value)
-			sv := configservice.StaticValue{
-				Values: staticValues,
-			}
-			rpv.StaticValue = &sv
-			results[staticValue["key"]] = &rpv
-		}
-	}
-
-	return results
-}
-
 func expandConfigRuleSourceDetails(configured *schema.Set) []*configservice.SourceDetail {
 	var results []*configservice.SourceDetail
 
@@ -2327,30 +2295,6 @@ func flattenApiGatewayUsageApiStages(s []*apigateway.ApiStage) []map[string]inte
 
 	if len(stages) > 0 {
 		return stages
-	}
-
-	return nil
-}
-
-func flattenRemediationConfigurations(c []*configservice.RemediationConfiguration) []map[string]interface{} {
-	configurations := make([]map[string]interface{}, 0)
-
-	for _, bd := range c {
-		if bd.ConfigRuleName != nil && bd.Parameters != nil {
-			configuration := make(map[string]interface{})
-			configuration["config_rule_name"] = *bd.ConfigRuleName
-			configuration["parameters"] = flattenRemediationConfigurationParameters(bd.Parameters)
-			configuration["resource_type"] = *bd.ResourceType
-			configuration["target_id"] = *bd.TargetId
-			configuration["target_type"] = *bd.TargetType
-			configuration["target_version"] = *bd.TargetVersion
-
-			configurations = append(configurations, configuration)
-		}
-	}
-
-	if len(configurations) > 0 {
-		return configurations
 	}
 
 	return nil
