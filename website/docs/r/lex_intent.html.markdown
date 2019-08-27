@@ -24,7 +24,8 @@ resource "aws_lex_intent" "order_flowers_intent" {
     }
   }
 
-  description = "Intent to order a bouquet of flowers for pick up"
+  create_version = false
+  description    = "Intent to order a bouquet of flowers for pick up"
 
   fulfillment_activity {
     type = "ReturnIntent"
@@ -129,6 +130,8 @@ Attributes are documented under [statement](#statement).
 * `confirmation_prompt` - (Optional) Prompts the user to confirm the intent. This question should 
 have a yes or no answer. You you must provide both the `rejection_statement` and `confirmation_prompt`, 
 or neither. Attributes are documented under [prompt](#prompt-1).
+* `create_version` - (Optional) Determines if a new slot type version is created when the initial 
+resource is created and on each update. Defaults to true.
 * `description` - (Optional) A description of the intent.
 * `dialog_code_hook` - (Optional) Specifies a Lambda function to invoke for each user input. You can 
 invoke this Lambda function to personalize user interaction. Attributes are documented under [code_hook](#code_hook-1).
