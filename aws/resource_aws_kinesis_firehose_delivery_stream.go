@@ -98,9 +98,10 @@ func s3ConfigurationSchema() *schema.Schema {
 
 func processingConfigurationSchema() *schema.Schema {
 	return &schema.Schema{
-		Type:     schema.TypeList,
-		Optional: true,
-		MaxItems: 1,
+		Type:             schema.TypeList,
+		Optional:         true,
+		MaxItems:         1,
+		DiffSuppressFunc: suppressMissingOptionalConfigurationBlock,
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
 				"enabled": {
@@ -328,11 +329,25 @@ func flattenFirehoseDataFormatConversionConfiguration(dfcc *firehose.DataFormatC
 		return []map[string]interface{}{}
 	}
 
+	enabled := aws.BoolValue(dfcc.Enabled)
+	ifc := flattenFirehoseInputFormatConfiguration(dfcc.InputFormatConfiguration)
+	ofc := flattenFirehoseOutputFormatConfiguration(dfcc.OutputFormatConfiguration)
+	sc := flattenFirehoseSchemaConfiguration(dfcc.SchemaConfiguration)
+
+	// The AWS SDK can represent "no data format conversion configuration" in two ways:
+	// 1. With a nil value
+	// 2. With enabled set to false and nil for ALL the config sections.
+	// We normalize this with an empty configuration in the state due
+	// to the existing Default: true on the enabled attribute.
+	if !enabled && len(ifc) == 0 && len(ofc) == 0 && len(sc) == 0 {
+		return []map[string]interface{}{}
+	}
+
 	m := map[string]interface{}{
-		"enabled":                     aws.BoolValue(dfcc.Enabled),
-		"input_format_configuration":  flattenFirehoseInputFormatConfiguration(dfcc.InputFormatConfiguration),
-		"output_format_configuration": flattenFirehoseOutputFormatConfiguration(dfcc.OutputFormatConfiguration),
-		"schema_configuration":        flattenFirehoseSchemaConfiguration(dfcc.SchemaConfiguration),
+		"enabled":                     enabled,
+		"input_format_configuration":  ifc,
+		"output_format_configuration": ofc,
+		"schema_configuration":        sc,
 	}
 
 	return []map[string]interface{}{m}
@@ -1501,7 +1516,11 @@ func updateExtendedS3Config(d *schema.ResourceData) *firehose.ExtendedS3Destinat
 
 func expandFirehoseDataFormatConversionConfiguration(l []interface{}) *firehose.DataFormatConversionConfiguration {
 	if len(l) == 0 || l[0] == nil {
-		return nil
+		// It is possible to just pass nil here, but this seems to be the
+		// canonical form that AWS uses, and is less likely to produce diffs.
+		return &firehose.DataFormatConversionConfiguration{
+			Enabled: aws.Bool(false),
+		}
 	}
 
 	m := l[0].(map[string]interface{})
@@ -1676,7 +1695,12 @@ func expandFirehoseSchemaConfiguration(l []interface{}) *firehose.SchemaConfigur
 func extractProcessingConfiguration(s3 map[string]interface{}) *firehose.ProcessingConfiguration {
 	config := s3["processing_configuration"].([]interface{})
 	if len(config) == 0 {
-		return nil
+		// It is possible to just pass nil here, but this seems to be the
+		// canonical form that AWS uses, and is less likely to produce diffs.
+		return &firehose.ProcessingConfiguration{
+			Enabled:    aws.Bool(false),
+			Processors: []*firehose.Processor{},
+		}
 	}
 
 	processingConfiguration := config[0].(map[string]interface{})
@@ -2078,6 +2102,10 @@ func resourceAwsKinesisFirehoseDeliveryStreamCreate(d *schema.ResourceData, meta
 		}
 	}
 
+	if v, ok := d.GetOk("tags"); ok {
+		createInput.Tags = tagsFromMapKinesisFirehose(v.(map[string]interface{}))
+	}
+
 	err := resource.Retry(1*time.Minute, func() *resource.RetryError {
 		_, err := conn.CreateDeliveryStream(createInput)
 		if err != nil {
@@ -2103,6 +2131,9 @@ func resourceAwsKinesisFirehoseDeliveryStreamCreate(d *schema.ResourceData, meta
 
 		return nil
 	})
+	if isResourceTimeoutError(err) {
+		_, err = conn.CreateDeliveryStream(createInput)
+	}
 	if err != nil {
 		return fmt.Errorf("error creating Kinesis Firehose Delivery Stream: %s", err)
 	}
@@ -2126,12 +2157,6 @@ func resourceAwsKinesisFirehoseDeliveryStreamCreate(d *schema.ResourceData, meta
 	s := firehoseStream.(*firehose.DeliveryStreamDescription)
 	d.SetId(*s.DeliveryStreamARN)
 	d.Set("arn", s.DeliveryStreamARN)
-
-	if err := setTagsKinesisFirehose(conn, d, sn); err != nil {
-		return fmt.Errorf(
-			"Error setting for Kinesis Stream (%s) tags: %s",
-			sn, err)
-	}
 
 	return resourceAwsKinesisFirehoseDeliveryStreamRead(d, meta)
 }
@@ -2237,6 +2262,10 @@ func resourceAwsKinesisFirehoseDeliveryStreamUpdate(d *schema.ResourceData, meta
 
 		return nil
 	})
+
+	if isResourceTimeoutError(err) {
+		_, err = conn.UpdateDestination(updateInput)
+	}
 
 	if err != nil {
 		return fmt.Errorf(

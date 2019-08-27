@@ -70,3 +70,11 @@ The following arguments are supported:
 In addition to all arguments above, the following attributes are exported:
 
 * `id` - The ID of the WAF Size Constraint Set.
+
+## Import
+
+WAF Size Constraint Set can be imported using the id, e.g.
+
+```
+$ terraform import aws_wafregional_size_constraint_set.size_constraint_set a1b2c3d4-d5f6-7777-8888-9999aaaabbbbcccc
+```

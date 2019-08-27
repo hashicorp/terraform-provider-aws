@@ -117,6 +117,11 @@ func resourceAwsSecretsManagerSecretCreate(d *schema.ResourceData, meta interfac
 		Name:        aws.String(secretName),
 	}
 
+	if v, ok := d.GetOk("tags"); ok {
+		input.Tags = tagsFromMapSecretsManager(v.(map[string]interface{}))
+		log.Printf("[DEBUG] Tagging Secrets Manager Secret: %s", input.Tags)
+	}
+
 	if v, ok := d.GetOk("kms_key_id"); ok && v.(string) != "" {
 		input.KmsKeyId = aws.String(v.(string))
 	}
@@ -139,6 +144,9 @@ func resourceAwsSecretsManagerSecretCreate(d *schema.ResourceData, meta interfac
 		}
 		return nil
 	})
+	if isResourceTimeoutError(err) {
+		output, err = conn.CreateSecret(input)
+	}
 	if err != nil {
 		return fmt.Errorf("error creating Secrets Manager Secret: %s", err)
 	}
@@ -177,21 +185,11 @@ func resourceAwsSecretsManagerSecretCreate(d *schema.ResourceData, meta interfac
 			}
 			return nil
 		})
+		if isResourceTimeoutError(err) {
+			_, err = conn.RotateSecret(input)
+		}
 		if err != nil {
 			return fmt.Errorf("error enabling Secrets Manager Secret %q rotation: %s", d.Id(), err)
-		}
-	}
-
-	if v, ok := d.GetOk("tags"); ok {
-		input := &secretsmanager.TagResourceInput{
-			SecretId: aws.String(d.Id()),
-			Tags:     tagsFromMapSecretsManager(v.(map[string]interface{})),
-		}
-
-		log.Printf("[DEBUG] Tagging Secrets Manager Secret: %s", input)
-		_, err := conn.TagResource(input)
-		if err != nil {
-			return fmt.Errorf("error tagging Secrets Manager Secret %q: %s", d.Id(), input)
 		}
 	}
 
@@ -326,6 +324,9 @@ func resourceAwsSecretsManagerSecretUpdate(d *schema.ResourceData, meta interfac
 				}
 				return nil
 			})
+			if isResourceTimeoutError(err) {
+				_, err = conn.RotateSecret(input)
+			}
 			if err != nil {
 				return fmt.Errorf("error updating Secrets Manager Secret %q rotation: %s", d.Id(), err)
 			}

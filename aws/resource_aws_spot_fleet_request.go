@@ -99,6 +99,12 @@ func resourceAwsSpotFleetRequest() *schema.Resource {
 										Computed: true,
 										ForceNew: true,
 									},
+									"kms_key_id": {
+										Type:     schema.TypeString,
+										Optional: true,
+										Computed: true,
+										ForceNew: true,
+									},
 									"snapshot_id": {
 										Type:     schema.TypeString,
 										Optional: true,
@@ -159,8 +165,20 @@ func resourceAwsSpotFleetRequest() *schema.Resource {
 										Default:  true,
 										ForceNew: true,
 									},
+									"encrypted": {
+										Type:     schema.TypeBool,
+										Optional: true,
+										Computed: true,
+										ForceNew: true,
+									},
 									"iops": {
 										Type:     schema.TypeInt,
+										Optional: true,
+										Computed: true,
+										ForceNew: true,
+									},
+									"kms_key_id": {
+										Type:     schema.TypeString,
 										Optional: true,
 										Computed: true,
 										ForceNew: true,
@@ -512,6 +530,10 @@ func readSpotFleetBlockDeviceMappingsFromConfig(
 				ebs.Encrypted = aws.Bool(v)
 			}
 
+			if v, ok := bd["kms_key_id"].(string); ok && v != "" {
+				ebs.KmsKeyId = aws.String(v)
+			}
+
 			if v, ok := bd["volume_size"].(int); ok && v != 0 {
 				ebs.VolumeSize = aws.Int64(int64(v))
 			}
@@ -551,6 +573,14 @@ func readSpotFleetBlockDeviceMappingsFromConfig(
 			bd := v.(map[string]interface{})
 			ebs := &ec2.EbsBlockDevice{
 				DeleteOnTermination: aws.Bool(bd["delete_on_termination"].(bool)),
+			}
+
+			if v, ok := bd["encrypted"].(bool); ok && v {
+				ebs.Encrypted = aws.Bool(v)
+			}
+
+			if v, ok := bd["kms_key_id"].(string); ok && v != "" {
+				ebs.KmsKeyId = aws.String(v)
 			}
 
 			if v, ok := bd["volume_size"].(int); ok && v != 0 {
@@ -703,21 +733,20 @@ func resourceAwsSpotFleetRequestCreate(d *schema.ResourceData, meta interface{})
 	// take effect immediately, resulting in an InvalidSpotFleetRequestConfig error
 	var resp *ec2.RequestSpotFleetOutput
 	err = resource.Retry(10*time.Minute, func() *resource.RetryError {
-		var err error
 		resp, err = conn.RequestSpotFleet(spotFleetOpts)
 
+		if isAWSErr(err, "InvalidSpotFleetRequestConfig", "") {
+			return resource.RetryableError(fmt.Errorf("Error creating Spot fleet request, retrying: %s", err))
+		}
 		if err != nil {
-			if awsErr, ok := err.(awserr.Error); ok {
-				// IAM is eventually consistent :/
-				if awsErr.Code() == "InvalidSpotFleetRequestConfig" {
-					return resource.RetryableError(
-						fmt.Errorf("Error creating Spot fleet request, retrying: %s", err))
-				}
-			}
 			return resource.NonRetryableError(err)
 		}
 		return nil
 	})
+
+	if isResourceTimeoutError(err) {
+		resp, err = conn.RequestSpotFleet(spotFleetOpts)
+	}
 
 	if err != nil {
 		return fmt.Errorf("Error requesting spot fleet: %s", err)
@@ -1066,6 +1095,10 @@ func ebsBlockDevicesToSet(bdm []*ec2.BlockDeviceMapping, rootDevName *string) *s
 				m["encrypted"] = aws.BoolValue(ebs.Encrypted)
 			}
 
+			if ebs.KmsKeyId != nil {
+				m["kms_key_id"] = aws.StringValue(ebs.KmsKeyId)
+			}
+
 			if ebs.VolumeSize != nil {
 				m["volume_size"] = aws.Int64Value(ebs.VolumeSize)
 			}
@@ -1116,6 +1149,14 @@ func rootBlockDeviceToSet(
 				m := make(map[string]interface{})
 				if val.Ebs.DeleteOnTermination != nil {
 					m["delete_on_termination"] = aws.BoolValue(val.Ebs.DeleteOnTermination)
+				}
+
+				if val.Ebs.Encrypted != nil {
+					m["encrypted"] = aws.BoolValue(val.Ebs.Encrypted)
+				}
+
+				if val.Ebs.KmsKeyId != nil {
+					m["kms_key_id"] = aws.StringValue(val.Ebs.KmsKeyId)
 				}
 
 				if val.Ebs.VolumeSize != nil {

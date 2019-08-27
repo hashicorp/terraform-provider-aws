@@ -2,6 +2,7 @@ package aws
 
 import (
 	"fmt"
+	"log"
 	"regexp"
 	"testing"
 	"time"
@@ -14,6 +15,63 @@ import (
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/terraform"
 )
+
+func init() {
+	resource.AddTestSweepers("aws_vpn_connection", &resource.Sweeper{
+		Name: "aws_vpn_connection",
+		F:    testSweepEc2VpnConnections,
+	})
+}
+
+func testSweepEc2VpnConnections(region string) error {
+	client, err := sharedClientForRegion(region)
+	if err != nil {
+		return fmt.Errorf("error getting client: %s", err)
+	}
+	conn := client.(*AWSClient).ec2conn
+	input := &ec2.DescribeVpnConnectionsInput{}
+
+	// DescribeVpnConnections does not currently have any form of pagination
+	output, err := conn.DescribeVpnConnections(input)
+
+	if testSweepSkipSweepError(err) {
+		log.Printf("[WARN] Skipping EC2 VPN Connection sweep for %s: %s", region, err)
+		return nil
+	}
+
+	if err != nil {
+		return fmt.Errorf("error retrieving EC2 VPN Connections: %s", err)
+	}
+
+	for _, vpnConnection := range output.VpnConnections {
+		if aws.StringValue(vpnConnection.State) == ec2.VpnStateDeleted {
+			continue
+		}
+
+		id := aws.StringValue(vpnConnection.VpnConnectionId)
+		input := &ec2.DeleteVpnConnectionInput{
+			VpnConnectionId: vpnConnection.VpnConnectionId,
+		}
+
+		log.Printf("[INFO] Deleting EC2 VPN Connection: %s", id)
+
+		_, err := conn.DeleteVpnConnection(input)
+
+		if isAWSErr(err, "InvalidVpnConnectionID.NotFound", "") {
+			continue
+		}
+
+		if err != nil {
+			return fmt.Errorf("error deleting EC2 VPN Connection (%s): %s", id, err)
+		}
+
+		if err := waitForEc2VpnConnectionDeletion(conn, id); err != nil {
+			return fmt.Errorf("error waiting for VPN connection (%s) to delete: %s", id, err)
+		}
+	}
+
+	return nil
+}
 
 func TestAccAWSVpnConnection_importBasic(t *testing.T) {
 	resourceName := "aws_vpn_connection.foo"

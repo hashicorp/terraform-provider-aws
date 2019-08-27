@@ -100,6 +100,8 @@ resource "aws_ec2_transit_gateway_vpc_attachment" "example" {
 
 // ...and accept it in the first account.
 resource "aws_ec2_transit_gateway_vpc_attachment_accepter" "example" {
+  provider = "aws.first"
+
   transit_gateway_attachment_id = "${aws_ec2_transit_gateway_vpc_attachment.example.id}"
 
   tags = {

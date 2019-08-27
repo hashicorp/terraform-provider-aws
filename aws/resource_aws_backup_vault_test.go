@@ -15,6 +15,7 @@ func TestAccAwsBackupVault_basic(t *testing.T) {
 	var vault backup.DescribeBackupVaultOutput
 
 	rInt := acctest.RandInt()
+	resourceName := "aws_backup_vault.test"
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSBackup(t) },
 		Providers:    testAccProviders,
@@ -23,8 +24,13 @@ func TestAccAwsBackupVault_basic(t *testing.T) {
 			{
 				Config: testAccBackupVaultConfig(rInt),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsBackupVaultExists("aws_backup_vault.test", &vault),
+					testAccCheckAwsBackupVaultExists(resourceName, &vault),
 				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})
@@ -34,6 +40,7 @@ func TestAccAwsBackupVault_withKmsKey(t *testing.T) {
 	var vault backup.DescribeBackupVaultOutput
 
 	rInt := acctest.RandInt()
+	resourceName := "aws_backup_vault.test"
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSBackup(t) },
 		Providers:    testAccProviders,
@@ -42,9 +49,14 @@ func TestAccAwsBackupVault_withKmsKey(t *testing.T) {
 			{
 				Config: testAccBackupVaultWithKmsKey(rInt),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsBackupVaultExists("aws_backup_vault.test", &vault),
-					resource.TestCheckResourceAttrPair("aws_backup_vault.test", "kms_key_arn", "aws_kms_key.test", "arn"),
+					testAccCheckAwsBackupVaultExists(resourceName, &vault),
+					resource.TestCheckResourceAttrPair(resourceName, "kms_key_arn", "aws_kms_key.test", "arn"),
 				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})
@@ -54,6 +66,7 @@ func TestAccAwsBackupVault_withTags(t *testing.T) {
 	var vault backup.DescribeBackupVaultOutput
 
 	rInt := acctest.RandInt()
+	resourceName := "aws_backup_vault.test"
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSBackup(t) },
 		Providers:    testAccProviders,
@@ -62,30 +75,35 @@ func TestAccAwsBackupVault_withTags(t *testing.T) {
 			{
 				Config: testAccBackupVaultWithTags(rInt),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsBackupVaultExists("aws_backup_vault.test", &vault),
-					resource.TestCheckResourceAttr("aws_backup_vault.test", "tags.%", "2"),
-					resource.TestCheckResourceAttr("aws_backup_vault.test", "tags.up", "down"),
-					resource.TestCheckResourceAttr("aws_backup_vault.test", "tags.left", "right"),
+					testAccCheckAwsBackupVaultExists(resourceName, &vault),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, "tags.up", "down"),
+					resource.TestCheckResourceAttr(resourceName, "tags.left", "right"),
 				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 			{
 				Config: testAccBackupVaultWithUpdateTags(rInt),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsBackupVaultExists("aws_backup_vault.test", &vault),
-					resource.TestCheckResourceAttr("aws_backup_vault.test", "tags.%", "4"),
-					resource.TestCheckResourceAttr("aws_backup_vault.test", "tags.up", "downdown"),
-					resource.TestCheckResourceAttr("aws_backup_vault.test", "tags.left", "rightright"),
-					resource.TestCheckResourceAttr("aws_backup_vault.test", "tags.foo", "bar"),
-					resource.TestCheckResourceAttr("aws_backup_vault.test", "tags.fizz", "buzz"),
+					testAccCheckAwsBackupVaultExists(resourceName, &vault),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "4"),
+					resource.TestCheckResourceAttr(resourceName, "tags.up", "downdown"),
+					resource.TestCheckResourceAttr(resourceName, "tags.left", "rightright"),
+					resource.TestCheckResourceAttr(resourceName, "tags.foo", "bar"),
+					resource.TestCheckResourceAttr(resourceName, "tags.fizz", "buzz"),
 				),
 			},
 			{
 				Config: testAccBackupVaultWithRemoveTags(rInt),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsBackupVaultExists("aws_backup_vault.test", &vault),
-					resource.TestCheckResourceAttr("aws_backup_vault.test", "tags.%", "2"),
-					resource.TestCheckResourceAttr("aws_backup_vault.test", "tags.foo", "bar"),
-					resource.TestCheckResourceAttr("aws_backup_vault.test", "tags.fizz", "buzz"),
+					testAccCheckAwsBackupVaultExists(resourceName, &vault),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, "tags.foo", "bar"),
+					resource.TestCheckResourceAttr(resourceName, "tags.fizz", "buzz"),
 				),
 			},
 		},

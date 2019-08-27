@@ -299,7 +299,7 @@ func resourceAwsAmiRead(d *schema.ResourceData, meta interface{}) error {
 		var err error
 		res, err = client.DescribeImages(req)
 		if err != nil {
-			if ec2err, ok := err.(awserr.Error); ok && ec2err.Code() == "InvalidAMIID.NotFound" {
+			if isAWSErr(err, "InvalidAMIID.NotFound", "") {
 				if d.IsNewResource() {
 					return resource.RetryableError(err)
 				}
@@ -313,6 +313,9 @@ func resourceAwsAmiRead(d *schema.ResourceData, meta interface{}) error {
 		}
 		return nil
 	})
+	if isResourceTimeoutError(err) {
+		res, err = client.DescribeImages(req)
+	}
 	if err != nil {
 		return fmt.Errorf("Unable to find AMI after retries: %s", err)
 	}

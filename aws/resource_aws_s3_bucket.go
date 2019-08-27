@@ -1011,6 +1011,7 @@ func resourceAwsS3BucketRead(d *schema.ResourceData, meta interface{}) error {
 		lifecycleRules = make([]map[string]interface{}, 0, len(lifecycle.Rules))
 
 		for _, lifecycleRule := range lifecycle.Rules {
+			log.Printf("[DEBUG] S3 bucket: %s, read lifecycle rule: %v", d.Id(), lifecycleRule)
 			rule := make(map[string]interface{})
 
 			// ID
@@ -1032,6 +1033,10 @@ func resourceAwsS3BucketRead(d *schema.ResourceData, meta interface{}) error {
 					// Prefix
 					if filter.Prefix != nil && *filter.Prefix != "" {
 						rule["prefix"] = *filter.Prefix
+					}
+					// Tag
+					if filter.Tag != nil {
+						rule["tags"] = tagsToMapS3([]*s3.Tag{filter.Tag})
 					}
 				}
 			} else {
@@ -1584,10 +1589,14 @@ func WebsiteEndpoint(bucket string, region string) *S3Website {
 func WebsiteDomainUrl(region string) string {
 	region = normalizeRegion(region)
 
-	// New regions uses different syntax for website endpoints
-	// http://docs.aws.amazon.com/AmazonS3/latest/dev/WebsiteEndpoints.html
+	// Different regions have different syntax for website endpoints
+	// https://docs.aws.amazon.com/AmazonS3/latest/dev/WebsiteEndpoints.html
+	// https://docs.aws.amazon.com/general/latest/gr/rande.html#s3_website_region_endpoints
 	if isOldRegion(region) {
 		return fmt.Sprintf("s3-website-%s.amazonaws.com", region)
+	}
+	if partition, ok := endpoints.PartitionForRegion(endpoints.DefaultPartitions(), region); ok && partition.ID() == endpoints.AwsCnPartitionID {
+		return fmt.Sprintf("s3-website.%s.amazonaws.com.cn", region)
 	}
 	return fmt.Sprintf("s3-website.%s.amazonaws.com", region)
 }

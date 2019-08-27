@@ -119,6 +119,7 @@ func testSweepWafRegionalRateBasedRules(region string) error {
 
 func TestAccAWSWafRegionalRateBasedRule_basic(t *testing.T) {
 	var v waf.RateBasedRule
+	resourceName := "aws_wafregional_rate_based_rule.wafrule"
 	wafRuleName := fmt.Sprintf("wafrule%s", acctest.RandString(5))
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -128,14 +129,19 @@ func TestAccAWSWafRegionalRateBasedRule_basic(t *testing.T) {
 			{
 				Config: testAccAWSWafRegionalRateBasedRuleConfig(wafRuleName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSWafRegionalRateBasedRuleExists("aws_wafregional_rate_based_rule.wafrule", &v),
+					testAccCheckAWSWafRegionalRateBasedRuleExists(resourceName, &v),
 					resource.TestCheckResourceAttr(
-						"aws_wafregional_rate_based_rule.wafrule", "name", wafRuleName),
+						resourceName, "name", wafRuleName),
 					resource.TestCheckResourceAttr(
-						"aws_wafregional_rate_based_rule.wafrule", "predicate.#", "1"),
+						resourceName, "predicate.#", "1"),
 					resource.TestCheckResourceAttr(
-						"aws_wafregional_rate_based_rule.wafrule", "metric_name", wafRuleName),
+						resourceName, "metric_name", wafRuleName),
 				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})
@@ -143,6 +149,7 @@ func TestAccAWSWafRegionalRateBasedRule_basic(t *testing.T) {
 
 func TestAccAWSWafRegionalRateBasedRule_changeNameForceNew(t *testing.T) {
 	var before, after waf.RateBasedRule
+	resourceName := "aws_wafregional_rate_based_rule.wafrule"
 	wafRuleName := fmt.Sprintf("wafrule%s", acctest.RandString(5))
 	wafRuleNewName := fmt.Sprintf("wafrulenew%s", acctest.RandString(5))
 
@@ -154,27 +161,32 @@ func TestAccAWSWafRegionalRateBasedRule_changeNameForceNew(t *testing.T) {
 			{
 				Config: testAccAWSWafRegionalRateBasedRuleConfig(wafRuleName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSWafRegionalRateBasedRuleExists("aws_wafregional_rate_based_rule.wafrule", &before),
+					testAccCheckAWSWafRegionalRateBasedRuleExists(resourceName, &before),
 					resource.TestCheckResourceAttr(
-						"aws_wafregional_rate_based_rule.wafrule", "name", wafRuleName),
+						resourceName, "name", wafRuleName),
 					resource.TestCheckResourceAttr(
-						"aws_wafregional_rate_based_rule.wafrule", "predicate.#", "1"),
+						resourceName, "predicate.#", "1"),
 					resource.TestCheckResourceAttr(
-						"aws_wafregional_rate_based_rule.wafrule", "metric_name", wafRuleName),
+						resourceName, "metric_name", wafRuleName),
 				),
 			},
 			{
 				Config: testAccAWSWafRegionalRateBasedRuleConfigChangeName(wafRuleNewName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSWafRegionalRateBasedRuleExists("aws_wafregional_rate_based_rule.wafrule", &after),
+					testAccCheckAWSWafRegionalRateBasedRuleExists(resourceName, &after),
 					testAccCheckAWSWafRateBasedRuleIdDiffers(&before, &after),
 					resource.TestCheckResourceAttr(
-						"aws_wafregional_rate_based_rule.wafrule", "name", wafRuleNewName),
+						resourceName, "name", wafRuleNewName),
 					resource.TestCheckResourceAttr(
-						"aws_wafregional_rate_based_rule.wafrule", "predicate.#", "1"),
+						resourceName, "predicate.#", "1"),
 					resource.TestCheckResourceAttr(
-						"aws_wafregional_rate_based_rule.wafrule", "metric_name", wafRuleNewName),
+						resourceName, "metric_name", wafRuleNewName),
 				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})
@@ -182,6 +194,7 @@ func TestAccAWSWafRegionalRateBasedRule_changeNameForceNew(t *testing.T) {
 
 func TestAccAWSWafRegionalRateBasedRule_disappears(t *testing.T) {
 	var v waf.RateBasedRule
+	resourceName := "aws_wafregional_rate_based_rule.wafrule"
 	wafRuleName := fmt.Sprintf("wafrule%s", acctest.RandString(5))
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -191,7 +204,7 @@ func TestAccAWSWafRegionalRateBasedRule_disappears(t *testing.T) {
 			{
 				Config: testAccAWSWafRegionalRateBasedRuleConfig(wafRuleName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSWafRegionalRateBasedRuleExists("aws_wafregional_rate_based_rule.wafrule", &v),
+					testAccCheckAWSWafRegionalRateBasedRuleExists(resourceName, &v),
 					testAccCheckAWSWafRegionalRateBasedRuleDisappears(&v),
 				),
 				ExpectNonEmptyPlan: true,
@@ -206,6 +219,7 @@ func TestAccAWSWafRegionalRateBasedRule_changePredicates(t *testing.T) {
 
 	var before, after waf.RateBasedRule
 	var idx int
+	resourceName := "aws_wafregional_rate_based_rule.wafrule"
 	ruleName := fmt.Sprintf("wafrule%s", acctest.RandString(5))
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -217,25 +231,30 @@ func TestAccAWSWafRegionalRateBasedRule_changePredicates(t *testing.T) {
 				Config: testAccAWSWafRegionalRateBasedRuleConfig(ruleName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAWSWafRegionalIPSetExists("aws_wafregional_ipset.ipset", &ipset),
-					testAccCheckAWSWafRegionalRateBasedRuleExists("aws_wafregional_rate_based_rule.wafrule", &before),
-					resource.TestCheckResourceAttr("aws_wafregional_rate_based_rule.wafrule", "name", ruleName),
-					resource.TestCheckResourceAttr("aws_wafregional_rate_based_rule.wafrule", "predicate.#", "1"),
+					testAccCheckAWSWafRegionalRateBasedRuleExists(resourceName, &before),
+					resource.TestCheckResourceAttr(resourceName, "name", ruleName),
+					resource.TestCheckResourceAttr(resourceName, "predicate.#", "1"),
 					computeWafRegionalRateBasedRulePredicateWithIpSet(&ipset, false, "IPMatch", &idx),
-					testCheckResourceAttrWithIndexesAddr("aws_wafregional_rate_based_rule.wafrule", "predicate.%d.negated", &idx, "false"),
-					testCheckResourceAttrWithIndexesAddr("aws_wafregional_rate_based_rule.wafrule", "predicate.%d.type", &idx, "IPMatch"),
+					testCheckResourceAttrWithIndexesAddr(resourceName, "predicate.%d.negated", &idx, "false"),
+					testCheckResourceAttrWithIndexesAddr(resourceName, "predicate.%d.type", &idx, "IPMatch"),
 				),
 			},
 			{
 				Config: testAccAWSWafRegionalRateBasedRuleConfig_changePredicates(ruleName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAWSWafRegionalByteMatchSetExists("aws_wafregional_byte_match_set.set", &byteMatchSet),
-					testAccCheckAWSWafRegionalRateBasedRuleExists("aws_wafregional_rate_based_rule.wafrule", &after),
-					resource.TestCheckResourceAttr("aws_wafregional_rate_based_rule.wafrule", "name", ruleName),
-					resource.TestCheckResourceAttr("aws_wafregional_rate_based_rule.wafrule", "predicate.#", "1"),
+					testAccCheckAWSWafRegionalRateBasedRuleExists(resourceName, &after),
+					resource.TestCheckResourceAttr(resourceName, "name", ruleName),
+					resource.TestCheckResourceAttr(resourceName, "predicate.#", "1"),
 					computeWafRegionalRateBasedRulePredicateWithByteMatchSet(&byteMatchSet, true, "ByteMatch", &idx),
-					testCheckResourceAttrWithIndexesAddr("aws_wafregional_rate_based_rule.wafrule", "predicate.%d.negated", &idx, "true"),
-					testCheckResourceAttrWithIndexesAddr("aws_wafregional_rate_based_rule.wafrule", "predicate.%d.type", &idx, "ByteMatch"),
+					testCheckResourceAttrWithIndexesAddr(resourceName, "predicate.%d.negated", &idx, "true"),
+					testCheckResourceAttrWithIndexesAddr(resourceName, "predicate.%d.type", &idx, "ByteMatch"),
 				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})
@@ -243,6 +262,7 @@ func TestAccAWSWafRegionalRateBasedRule_changePredicates(t *testing.T) {
 
 func TestAccAWSWafRegionalRateBasedRule_changeRateLimit(t *testing.T) {
 	var before, after waf.RateBasedRule
+	resourceName := "aws_wafregional_rate_based_rule.wafrule"
 	ruleName := fmt.Sprintf("wafrule%s", acctest.RandString(5))
 	rateLimitBefore := "2000"
 	rateLimitAfter := "2001"
@@ -255,18 +275,23 @@ func TestAccAWSWafRegionalRateBasedRule_changeRateLimit(t *testing.T) {
 			{
 				Config: testAccAWSWafRegionalRateBasedRuleWithRateLimitConfig(ruleName, rateLimitBefore),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAWSWafRegionalRateBasedRuleExists("aws_wafregional_rate_based_rule.wafrule", &before),
-					resource.TestCheckResourceAttr("aws_wafregional_rate_based_rule.wafrule", "name", ruleName),
-					resource.TestCheckResourceAttr("aws_wafregional_rate_based_rule.wafrule", "rate_limit", rateLimitBefore),
+					testAccCheckAWSWafRegionalRateBasedRuleExists(resourceName, &before),
+					resource.TestCheckResourceAttr(resourceName, "name", ruleName),
+					resource.TestCheckResourceAttr(resourceName, "rate_limit", rateLimitBefore),
 				),
 			},
 			{
 				Config: testAccAWSWafRegionalRateBasedRuleWithRateLimitConfig(ruleName, rateLimitAfter),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAWSWafRegionalRateBasedRuleExists("aws_wafregional_rate_based_rule.wafrule", &after),
-					resource.TestCheckResourceAttr("aws_wafregional_rate_based_rule.wafrule", "name", ruleName),
-					resource.TestCheckResourceAttr("aws_wafregional_rate_based_rule.wafrule", "rate_limit", rateLimitAfter),
+					testAccCheckAWSWafRegionalRateBasedRuleExists(resourceName, &after),
+					resource.TestCheckResourceAttr(resourceName, "name", ruleName),
+					resource.TestCheckResourceAttr(resourceName, "rate_limit", rateLimitAfter),
 				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})
@@ -312,6 +337,7 @@ func computeWafRegionalRateBasedRulePredicateWithByteMatchSet(set *waf.ByteMatch
 
 func TestAccAWSWafRegionalRateBasedRule_noPredicates(t *testing.T) {
 	var rule waf.RateBasedRule
+	resourceName := "aws_wafregional_rate_based_rule.wafrule"
 	ruleName := fmt.Sprintf("wafrule%s", acctest.RandString(5))
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -322,12 +348,17 @@ func TestAccAWSWafRegionalRateBasedRule_noPredicates(t *testing.T) {
 			{
 				Config: testAccAWSWafRegionalRateBasedRuleConfig_noPredicates(ruleName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAWSWafRegionalRateBasedRuleExists("aws_wafregional_rate_based_rule.wafrule", &rule),
+					testAccCheckAWSWafRegionalRateBasedRuleExists(resourceName, &rule),
 					resource.TestCheckResourceAttr(
-						"aws_wafregional_rate_based_rule.wafrule", "name", ruleName),
+						resourceName, "name", ruleName),
 					resource.TestCheckResourceAttr(
-						"aws_wafregional_rate_based_rule.wafrule", "predicate.#", "0"),
+						resourceName, "predicate.#", "0"),
 				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})

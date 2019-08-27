@@ -70,7 +70,12 @@ func run(pass *analysis.Pass) (interface{}, error) {
 		}
 
 		if computedEnabled && requiredEnabled {
-			pass.Reportf(schema.Type.(*ast.SelectorExpr).Sel.Pos(), "%s: schema should not enable Required and Computed", analyzerName)
+			switch t := schema.Type.(type) {
+			default:
+				pass.Reportf(schema.Lbrace, "%s: schema should not enable Required and Computed", analyzerName)
+			case *ast.SelectorExpr:
+				pass.Reportf(t.Sel.Pos(), "%s: schema should not enable Required and Computed", analyzerName)
+			}
 		}
 	}
 

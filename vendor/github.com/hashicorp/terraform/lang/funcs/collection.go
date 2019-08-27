@@ -246,7 +246,7 @@ var CompactFunc = function.New(&function.Spec{
 
 		for it := listVal.ElementIterator(); it.Next(); {
 			_, v := it.Element()
-			if v.AsString() == "" {
+			if v.IsNull() || v.AsString() == "" {
 				continue
 			}
 			outputList = append(outputList, v)
@@ -390,6 +390,10 @@ var ChunklistFunc = function.New(&function.Spec{
 		listVal := args[0]
 		if !listVal.IsKnown() {
 			return cty.UnknownVal(retType), nil
+		}
+
+		if listVal.LengthInt() == 0 {
+			return cty.ListValEmpty(listVal.Type()), nil
 		}
 
 		var size int
@@ -689,8 +693,10 @@ var LookupFunc = function.New(&function.Spec{
 					return cty.StringVal(v.AsString()), nil
 				case ty.Equals(cty.Number):
 					return cty.NumberVal(v.AsBigFloat()), nil
+				case ty.Equals(cty.Bool):
+					return cty.BoolVal(v.True()), nil
 				default:
-					return cty.NilVal, errors.New("lookup() can only be used with flat lists")
+					return cty.NilVal, errors.New("lookup() can only be used with maps of primitive types")
 				}
 			}
 		}
@@ -876,7 +882,6 @@ var MergeFunc = function.New(&function.Spec{
 		Name:             "maps",
 		Type:             cty.DynamicPseudoType,
 		AllowDynamicType: true,
-		AllowNull:        true,
 	},
 	Type: function.StaticReturnType(cty.DynamicPseudoType),
 	Impl: func(args []cty.Value, retType cty.Type) (ret cty.Value, err error) {

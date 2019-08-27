@@ -54,9 +54,9 @@ Only valid with `egress`.
 * `protocol` - (Required) The protocol. If not icmp, tcp, udp, or all use the [protocol number](https://www.iana.org/assignments/protocol-numbers/protocol-numbers.xhtml)
 * `security_group_id` - (Required) The security group to apply this rule to.
 * `source_security_group_id` - (Optional) The security group id to allow access to/from,
-     depending on the `type`. Cannot be specified with `cidr_blocks`.
+     depending on the `type`. Cannot be specified with `cidr_blocks` and `self`.
 * `self` - (Optional) If true, the security group itself will be added as
-     a source to this ingress rule.
+     a source to this ingress rule. Cannot be specified with `source_security_group_id`.
 * `to_port` - (Required) The end port (or ICMP code if protocol is "icmp").
 * `description` - (Optional) Description of the rule.
 

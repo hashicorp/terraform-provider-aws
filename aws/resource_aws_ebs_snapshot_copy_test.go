@@ -15,8 +15,9 @@ import (
 func TestAccAWSEbsSnapshotCopy_basic(t *testing.T) {
 	var v ec2.Snapshot
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:  func() { testAccPreCheck(t) },
-		Providers: testAccProviders,
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckEbsSnapshotCopyDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAwsEbsSnapshotCopyConfig,
@@ -32,8 +33,9 @@ func TestAccAWSEbsSnapshotCopy_basic(t *testing.T) {
 func TestAccAWSEbsSnapshotCopy_withDescription(t *testing.T) {
 	var v ec2.Snapshot
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:  func() { testAccPreCheck(t) },
-		Providers: testAccProviders,
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckEbsSnapshotCopyDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAwsEbsSnapshotCopyConfigWithDescription,
@@ -63,6 +65,7 @@ func TestAccAWSEbsSnapshotCopy_withRegions(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:          func() { testAccPreCheck(t) },
 		ProviderFactories: providerFactories,
+		CheckDestroy:      testAccCheckEbsSnapshotCopyDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAwsEbsSnapshotCopyConfigWithRegions,
@@ -78,8 +81,9 @@ func TestAccAWSEbsSnapshotCopy_withRegions(t *testing.T) {
 func TestAccAWSEbsSnapshotCopy_withKms(t *testing.T) {
 	var v ec2.Snapshot
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:  func() { testAccPreCheck(t) },
-		Providers: testAccProviders,
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckEbsSnapshotCopyDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAwsEbsSnapshotCopyConfigWithKms,
@@ -91,6 +95,67 @@ func TestAccAWSEbsSnapshotCopy_withKms(t *testing.T) {
 			},
 		},
 	})
+}
+
+func TestAccAWSEbsSnapshotCopy_disappears(t *testing.T) {
+	var v ec2.Snapshot
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckEbsSnapshotCopyDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAwsEbsSnapshotCopyConfig,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckEbsSnapshotCopyExists("aws_ebs_snapshot_copy.test", &v),
+					testAccCheckEbsSnapshotCopyDisappears(&v),
+				),
+				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}
+
+func testAccCheckEbsSnapshotCopyDestroy(s *terraform.State) error {
+	conn := testAccProvider.Meta().(*AWSClient).ec2conn
+
+	for _, rs := range s.RootModule().Resources {
+		if rs.Type != "aws_ebs_snapshot_copy" {
+			continue
+		}
+
+		resp, err := conn.DescribeSnapshots(&ec2.DescribeSnapshotsInput{
+			SnapshotIds: []*string{aws.String(rs.Primary.ID)},
+		})
+
+		if isAWSErr(err, "InvalidSnapshot.NotFound", "") {
+			continue
+		}
+
+		if err == nil {
+			for _, snapshot := range resp.Snapshots {
+				if aws.StringValue(snapshot.SnapshotId) == rs.Primary.ID {
+					return fmt.Errorf("EBS Snapshot still exists")
+				}
+			}
+		}
+
+		return err
+	}
+
+	return nil
+}
+
+func testAccCheckEbsSnapshotCopyDisappears(snapshot *ec2.Snapshot) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := testAccProvider.Meta().(*AWSClient).ec2conn
+
+		_, err := conn.DeleteSnapshot(&ec2.DeleteSnapshotInput{
+			SnapshotId: snapshot.SnapshotId,
+		})
+
+		return err
+	}
 }
 
 func testAccCheckEbsSnapshotCopyExists(n string, v *ec2.Snapshot) resource.TestCheckFunc {

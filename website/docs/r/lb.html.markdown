@@ -76,6 +76,10 @@ resource "aws_lb" "example" {
 
 ## Argument Reference
 
+~> **NOTE:** Please note that internal LBs can only use `ipv4` as the ip_address_type. You can only change to `dualstack` ip_address_type if the selected subnets are IPv6 enabled.
+
+~> **NOTE:** Please note that one of either `subnets` or `subnet_mapping` is required.
+
 The following arguments are supported:
 
 * `name` - (Optional) The name of the LB. This name must be unique within your AWS account, can have a maximum of 32 characters,
@@ -98,8 +102,6 @@ for load balancers of type `network` will force a recreation of the resource.
 * `enable_http2` - (Optional) Indicates whether HTTP/2 is enabled in `application` load balancers. Defaults to `true`.
 * `ip_address_type` - (Optional) The type of IP addresses used by the subnets for your load balancer. The possible values are `ipv4` and `dualstack`
 * `tags` - (Optional) A mapping of tags to assign to the resource.
-
-~> **NOTE::** Please note that internal LBs can only use `ipv4` as the ip_address_type. You can only change to `dualstack` ip_address_type if the selected subnets are IPv6 enabled.
 
 Access Logs (`access_logs`) support the following:
 

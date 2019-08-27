@@ -55,6 +55,7 @@ resource "aws_msk_cluster" "example" {
 
   broker_node_group_info {
     instance_type  = "kafka.m5.large"
+    ebs_volume_size = "1000"
     client_subnets = [
       "${aws_subnet.subnet_az1.id}",
       "${aws_subnet.subnet_az2.id}",
@@ -73,13 +74,18 @@ resource "aws_msk_cluster" "example" {
 }
 
 output "zookeeper_connect_string" {
-    value = "${aws_msk_cluster.example.zookeeper_connect_string}"
+  value = "${aws_msk_cluster.example.zookeeper_connect_string}"
 }
 
 output "bootstrap_brokers" {
-    value = "${aws_msk_cluster.example.bootstrap_brokers"}
+  description = "Plaintext connection host:port pairs"
+  value       = "${aws_msk_cluster.example.bootstrap_brokers}"
 }
 
+output "bootstrap_brokers_tls" {
+  description = "TLS connection host:port pairs"
+  value       = "${aws_msk_cluster.example.bootstrap_brokers_tls}"
+}
 ```
 
 ## Argument Reference
@@ -108,7 +114,7 @@ The following arguments are supported:
 
 * `tls` - (Optional) Configuration block for specifying TLS client authentication. See below.
 
-#### client_authenication tls Argument Reference
+#### client_authentication tls Argument Reference
 
 * `certificate_authority_arns` - (Optional) List of ACM Certificate Authority Amazon Resource Names (ARNs).
 
@@ -132,8 +138,8 @@ The following arguments are supported:
 In addition to all arguments above, the following attributes are exported:
 
 * `arn` - Amazon Resource Name (ARN) of the MSK cluster.
-* `bootstrap_brokers` - A comma separated list of one or more hostname:port pairs of kafka brokers suitable to boostrap connectivity to the kafka cluster.
-* `bootstrap_brokers_tls` - A comma separated list of one or more DNS names (or IPs) and TLS port pairs kafka brokers suitable to boostrap connectivity to the kafka cluster.
+* `bootstrap_brokers` - A comma separated list of one or more hostname:port pairs of kafka brokers suitable to boostrap connectivity to the kafka cluster. Only contains value if `client_broker` encryption in transit is set to `PLAINTEXT` or `TLS_PLAINTEXT`.
+* `bootstrap_brokers_tls` - A comma separated list of one or more DNS names (or IPs) and TLS port pairs kafka brokers suitable to boostrap connectivity to the kafka cluster. Only contains value if `client_broker` encryption in transit is set to `TLS_PLAINTEXT` or `TLS`.
 * `current_version` - Current version of the MSK Cluster used for updates, e.g. `K13V1IB3VIYZZH`
 * `encryption_info.0.encryption_at_rest_kms_key_arn` - The ARN of the KMS key used for encryption at rest of the broker data volumes.
 * `zookeeper_connect_string` - A comma separated list of one or more IP:port pairs to use to connect to the Apache Zookeeper cluster.

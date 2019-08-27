@@ -94,6 +94,9 @@ func resourceAwsOrganizationsOrganizationalUnitCreate(d *schema.ResourceData, me
 
 		return nil
 	})
+	if isResourceTimeoutError(err) {
+		resp, err = conn.CreateOrganizationalUnit(createOpts)
+	}
 
 	if err != nil {
 		return fmt.Errorf("Error creating organizational unit: %s", err)

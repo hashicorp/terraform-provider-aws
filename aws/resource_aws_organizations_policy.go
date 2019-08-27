@@ -85,6 +85,9 @@ func resourceAwsOrganizationsPolicyCreate(d *schema.ResourceData, meta interface
 
 		return nil
 	})
+	if isResourceTimeoutError(err) {
+		resp, err = conn.CreatePolicy(input)
+	}
 
 	if err != nil {
 		return fmt.Errorf("error creating Organizations Policy: %s", err)

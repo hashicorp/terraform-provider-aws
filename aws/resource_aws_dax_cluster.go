@@ -229,6 +229,9 @@ func resourceAwsDaxClusterCreate(d *schema.ResourceData, meta interface{}) error
 		}
 		return nil
 	})
+	if isResourceTimeoutError(err) {
+		resp, err = conn.CreateCluster(req)
+	}
 	if err != nil {
 		return fmt.Errorf("Error creating DAX cluster: %s", err)
 	}
@@ -486,8 +489,11 @@ func resourceAwsDaxClusterDelete(d *schema.ResourceData, meta interface{}) error
 		}
 		return nil
 	})
+	if isResourceTimeoutError(err) {
+		_, err = conn.DeleteCluster(req)
+	}
 	if err != nil {
-		return err
+		return fmt.Errorf("Error deleting DAX cluster: %s", err)
 	}
 
 	log.Printf("[DEBUG] Waiting for deletion: %v", d.Id())
