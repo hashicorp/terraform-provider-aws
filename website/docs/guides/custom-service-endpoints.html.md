@@ -109,6 +109,7 @@ The Terraform AWS Provider allows the following endpoints to be customized:
 - `iam`
 - `inspector`
 - `iot`
+- `iotevents`
 - `kafka`
 - `kinesis_analytics` (**DEPRECATED** Use `kinesisanalytics` instead)
 - `kinesis`
