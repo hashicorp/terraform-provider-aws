@@ -79,7 +79,7 @@ func resourceAwsApiGatewayRestApi() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-
+			"tags": tagsSchema(),
 			"endpoint_configuration": {
 				Type:     schema.TypeList,
 				Optional: true,
@@ -143,6 +143,14 @@ func resourceAwsApiGatewayRestApiCreate(d *schema.ResourceData, meta interface{}
 	minimumCompressionSize := d.Get("minimum_compression_size").(int)
 	if minimumCompressionSize > -1 {
 		params.MinimumCompressionSize = aws.Int64(int64(minimumCompressionSize))
+	}
+
+	if vars, ok := d.GetOk("tags"); ok {
+		newMap := make(map[string]string, len(vars.(map[string]interface{})))
+		for k, v := range vars.(map[string]interface{}) {
+			newMap[k] = v.(string)
+		}
+		params.Tags = aws.StringMap(newMap)
 	}
 
 	gateway, err := conn.CreateRestApi(params)
@@ -220,6 +228,10 @@ func resourceAwsApiGatewayRestApiRead(d *schema.ResourceData, meta interface{}) 
 	d.Set("policy", policy)
 
 	d.Set("binary_media_types", api.BinaryMediaTypes)
+
+	if err := d.Set("tags", aws.StringValueMap(api.Tags)); err != nil {
+		return fmt.Errorf("error setting tags: %s", err)
+	}
 
 	arn := arn.ARN{
 		Partition: meta.(*AWSClient).partition,
@@ -355,6 +367,18 @@ func resourceAwsApiGatewayRestApiUpdate(d *schema.ResourceData, meta interface{}
 			}
 		}
 	}
+
+	apiArn := arn.ARN{
+		Partition: meta.(*AWSClient).partition,
+		Region:    meta.(*AWSClient).region,
+		Service:   "apigateway",
+		Resource:  fmt.Sprintf("/restapis/%s", d.Get("rest_api_id").(string)),
+	}.String()
+
+	if tagErr := setTagsAPIGatewayRestApi(conn, d, apiArn); tagErr != nil {
+		return tagErr
+	}
+	d.SetPartial("tags")
 
 	_, err := conn.UpdateRestApi(&apigateway.UpdateRestApiInput{
 		RestApiId:       aws.String(d.Id()),

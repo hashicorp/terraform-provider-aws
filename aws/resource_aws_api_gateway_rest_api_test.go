@@ -81,6 +81,7 @@ func TestAccAWSAPIGatewayRestApi_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("aws_api_gateway_rest_api.test", "api_key_source", "HEADER"),
 					resource.TestCheckResourceAttr("aws_api_gateway_rest_api.test", "minimum_compression_size", "0"),
 					resource.TestCheckResourceAttrSet("aws_api_gateway_rest_api.test", "created_date"),
+					resource.TestCheckResourceAttr("aws_api_gateway_rest_api.test", "tags.%", "1"),
 					resource.TestCheckResourceAttrSet("aws_api_gateway_rest_api.test", "execution_arn"),
 					resource.TestCheckNoResourceAttr("aws_api_gateway_rest_api.test", "binary_media_types"),
 					resource.TestCheckResourceAttr("aws_api_gateway_rest_api.test", "endpoint_configuration.#", "1"),
@@ -104,6 +105,7 @@ func TestAccAWSAPIGatewayRestApi_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("aws_api_gateway_rest_api.test", "minimum_compression_size", "10485760"),
 					resource.TestCheckResourceAttrSet("aws_api_gateway_rest_api.test", "created_date"),
 					resource.TestCheckResourceAttrSet("aws_api_gateway_rest_api.test", "execution_arn"),
+					resource.TestCheckResourceAttr("aws_api_gateway_rest_api.test", "tags.%", "2"),
 					resource.TestCheckResourceAttr("aws_api_gateway_rest_api.test", "binary_media_types.#", "1"),
 					resource.TestCheckResourceAttr("aws_api_gateway_rest_api.test", "binary_media_types.0", "application/octet-stream"),
 				),
@@ -492,6 +494,9 @@ const testAccAWSAPIGatewayRestAPIConfig = `
 resource "aws_api_gateway_rest_api" "test" {
   name = "bar"
   minimum_compression_size = 0
+  tags = {
+    Name = "tf-test"
+	}
 }
 `
 
@@ -583,6 +588,10 @@ resource "aws_api_gateway_rest_api" "test" {
   description = "test"
   binary_media_types = ["application/octet-stream"]
   minimum_compression_size = 10485760
+  tags = {
+    Name = "tf-test"
+    ExtraName = "tf-test"
+  }
 }
 `
 
