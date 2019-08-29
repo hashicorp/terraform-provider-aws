@@ -65,6 +65,10 @@ func ResourceRepository() *schema.Resource {
 				DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
 				ForceNew:         true,
 			},
+			"force_delete": {
+				Type:     schema.TypeBool,
+				Optional: true,
+			},
 			"image_scanning_configuration": {
 				Type:     schema.TypeList,
 				MaxItems: 1,
@@ -346,13 +350,16 @@ func resourceRepositoryDelete(d *schema.ResourceData, meta interface{}) error {
 	_, err := conn.DeleteRepository(&ecr.DeleteRepositoryInput{
 		RepositoryName: aws.String(d.Id()),
 		RegistryId:     aws.String(d.Get("registry_id").(string)),
-		Force:          aws.Bool(true),
+		Force:          aws.Bool(d.Get("force_delete").(bool)),
 	})
 	if err != nil {
 		if tfawserr.ErrCodeEquals(err, ecr.ErrCodeRepositoryNotFoundException) {
 			return nil
 		}
-		return fmt.Errorf("error deleting ECR repository: %s", err)
+		if tfawserr.ErrCodeEquals(err, ecr.ErrCodeRepositoryNotEmptyException) {
+			return fmt.Errorf("ECR Repository (%s) not empty, consider using force_delete: %w", d.Id(), err)
+		}
+		return fmt.Errorf("error deleting ECR Repository (%s): %w", d.Id(), err)
 	}
 
 	log.Printf("[DEBUG] Waiting for ECR Repository %q to be deleted", d.Id())

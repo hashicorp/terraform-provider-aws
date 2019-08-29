@@ -29,6 +29,8 @@ The following arguments are supported:
 
 * `name` - (Required) Name of the repository.
 * `encryption_configuration` - (Optional) Encryption configuration for the repository. See [below for schema](#encryption_configuration).
+* `force_delete` - (Optional) If `true`, will delete the repository even if it contains images.
+  Defaults to `false`.
 * `image_tag_mutability` - (Optional) The tag mutability setting for the repository. Must be one of: `MUTABLE` or `IMMUTABLE`. Defaults to `MUTABLE`.
 * `image_scanning_configuration` - (Optional) Configuration block that defines image scanning configuration for the repository. By default, image scanning must be manually triggered. See the [ECR User Guide](https://docs.aws.amazon.com/AmazonECR/latest/userguide/image-scanning.html) for more information about image scanning.
     * `scan_on_push` - (Required) Indicates whether images are scanned after being pushed to the repository (true) or not scanned (false).
