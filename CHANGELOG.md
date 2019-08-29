@@ -1,4 +1,9 @@
 ## 2.27.0 (Unreleased)
+
+BUG FIXES:
+
+* r/aws_s3_bucket: Include any system tags that Terraform ignores when setting S3 bucket tags [GH-7342]
+
 ## 2.26.0 (August 29, 2019)
 
 FEATURES:
