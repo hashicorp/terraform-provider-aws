@@ -28,8 +28,10 @@ func resourceAwsApiGatewayDeployment() *schema.Resource {
 			},
 
 			"stage_name": {
-				Type:     schema.TypeString,
-				Required: true,
+				Type: schema.TypeString,
+				// Switched to optional for RM-2025
+				// Required: true,
+				Optional: true,
 				ForceNew: true,
 			},
 
