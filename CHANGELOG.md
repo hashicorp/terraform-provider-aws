@@ -1,5 +1,9 @@
 ## 2.26.0 (Unreleased)
 
+FEATURES:
+
+* **New Data Source:** `aws_elasticsearch_domain` [GH-1867]
+
 BUG FIXES:
 
 * resource/aws_ec2_capacity_reservation: Fixes error handling when an EC2 Capacity Reservation is deleted manually but is still in state [GH-9862]
