@@ -1,18 +1,18 @@
-## 2.26.0 (Unreleased)
+## 2.26.0 (August 29, 2019)
 
 FEATURES:
 
-* **New Data Source:** `aws_elasticsearch_domain` [GH-1867]
+* **New Data Source:** `aws_elasticsearch_domain` ([#1867](https://github.com/terraform-providers/terraform-provider-aws/issues/1867))
 
 BUG FIXES:
 
-* resource/aws_ec2_capacity_reservation: Fixes error handling when an EC2 Capacity Reservation is deleted manually but is still in state [GH-9862]
-* resource/aws_s3_bucket: Final retries after timeouts creating, updating and updating replication configuration for s3 buckets [GH-9861]
-* resource/aws_s3_bucket_inventory: Final retries after timeous reading and putting bucket inventories [GH-9861]
-* resource/aws_s3_bucket_metric: Final retry after timeout putting bucket metric [GH-9861]
-* resource/aws_s3_bucket_notification: Final retry after timeout putting notification [GH-9861]
-* resource/aws_s3_bucket_policy: Final retry after timeout putting policy [GH-9861]
-* resource/aws_s3_bucket_public_access_block: Final retries after timeouts creating and reading blocks [GH-9861]
+* resource/aws_ec2_capacity_reservation: Fixes error handling when an EC2 Capacity Reservation is deleted manually but is still in state ([#9862](https://github.com/terraform-providers/terraform-provider-aws/issues/9862))
+* resource/aws_s3_bucket: Final retries after timeouts creating, updating and updating replication configuration for s3 buckets ([#9861](https://github.com/terraform-providers/terraform-provider-aws/issues/9861))
+* resource/aws_s3_bucket_inventory: Final retries after timeous reading and putting bucket inventories ([#9861](https://github.com/terraform-providers/terraform-provider-aws/issues/9861))
+* resource/aws_s3_bucket_metric: Final retry after timeout putting bucket metric ([#9861](https://github.com/terraform-providers/terraform-provider-aws/issues/9861))
+* resource/aws_s3_bucket_notification: Final retry after timeout putting notification ([#9861](https://github.com/terraform-providers/terraform-provider-aws/issues/9861))
+* resource/aws_s3_bucket_policy: Final retry after timeout putting policy ([#9861](https://github.com/terraform-providers/terraform-provider-aws/issues/9861))
+* resource/aws_s3_bucket_public_access_block: Final retries after timeouts creating and reading blocks ([#9861](https://github.com/terraform-providers/terraform-provider-aws/issues/9861))
 
 ## 2.25.0 (August 23, 2019)
 
