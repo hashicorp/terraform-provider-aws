@@ -278,6 +278,7 @@ func TestAccAWSS3Bucket_tagsWithNoSystemTags(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 				),
 			},
+			// Verify update from 0 tags.
 			{
 				Config: testAccAWSS3BucketConfig_withTags(bucketName),
 				Check: resource.ComposeTestCheckFunc(
