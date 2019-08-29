@@ -113,6 +113,8 @@ The `deployment_controller` configuration block supports the following:
 * `container_name` - (Required) The name of the container to associate with the load balancer (as it appears in a container definition).
 * `container_port` - (Required) The port on the container to associate with the load balancer.
 
+**Note:** With aws provider >=2.22.0 multiple load_balancer blocks are supported. This allows configuration of ECS service support for multiple target groups (https://aws.amazon.com/about-aws/whats-new/2019/07/amazon-ecs-services-now-support-multiple-load-balancer-target-groups/)
+
 ## ordered_placement_strategy
 
 `ordered_placement_strategy` supports the following:
