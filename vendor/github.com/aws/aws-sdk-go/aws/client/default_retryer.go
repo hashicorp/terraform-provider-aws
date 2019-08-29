@@ -33,7 +33,7 @@ func (d DefaultRetryer) MaxRetries() int {
 // RetryRules returns the delay duration before retrying this request again
 func (d DefaultRetryer) RetryRules(r *request.Request) time.Duration {
 	// Set the upper limit of delay in retrying at ~five minutes
-	minTime := 30
+	var minTime int64 = 30
 	isThrottle := r.IsErrorThrottle()
 	if isThrottle {
 		if delay, ok := getRetryDelay(r); ok {
@@ -50,7 +50,7 @@ func (d DefaultRetryer) RetryRules(r *request.Request) time.Duration {
 		retryCount = 13
 	}
 
-	delay := (1 << uint(retryCount)) * (sdkrand.SeededRand.Intn(minTime) + minTime)
+	delay := (1 << uint(retryCount)) * (sdkrand.SeededRand.Int63n(minTime) + minTime)
 	return time.Duration(delay) * time.Millisecond
 }
 
