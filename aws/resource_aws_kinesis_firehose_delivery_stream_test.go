@@ -713,54 +713,6 @@ func TestAccAWSKinesisFirehoseDeliveryStream_ExtendedS3KmsKeyArn(t *testing.T) {
 	})
 }
 
-// func TestAccAWSKinesisFirehoseDeliveryStream_ExtendedS3InvalidProcessorType(t *testing.T) {
-// 	rString := acctest.RandString(8)
-// 	funcName := fmt.Sprintf("aws_kinesis_firehose_delivery_stream_test_%s", rString)
-// 	policyName := fmt.Sprintf("tf_acc_policy_%s", rString)
-// 	roleName := fmt.Sprintf("tf_acc_role_%s", rString)
-
-// 	ri := acctest.RandInt()
-// 	config := testAccFirehoseAWSLambdaConfigBasic(funcName, policyName, roleName) +
-// 		fmt.Sprintf(testAccKinesisFirehoseDeliveryStreamConfig_extendedS3InvalidProcessorType,
-// 			ri, ri, ri, ri)
-
-// 	resource.ParallelTest(t, resource.TestCase{
-// 		PreCheck:     func() { testAccPreCheck(t) },
-// 		Providers:    testAccProviders,
-// 		CheckDestroy: testAccCheckKinesisFirehoseDeliveryStreamDestroy_ExtendedS3,
-// 		Steps: []resource.TestStep{
-// 			{
-// 				Config:      config,
-// 				ExpectError: regexp.MustCompile("(must be 'Lambda'|Member must satisfy enum value set)"),
-// 			},
-// 		},
-// 	})
-// }
-
-// func TestAccAWSKinesisFirehoseDeliveryStream_ExtendedS3InvalidParameterName(t *testing.T) {
-// 	rString := acctest.RandString(8)
-// 	funcName := fmt.Sprintf("aws_kinesis_firehose_delivery_stream_test_%s", rString)
-// 	policyName := fmt.Sprintf("tf_acc_policy_%s", rString)
-// 	roleName := fmt.Sprintf("tf_acc_role_%s", rString)
-
-// 	ri := acctest.RandInt()
-// 	config := testAccFirehoseAWSLambdaConfigBasic(funcName, policyName, roleName) +
-// 		fmt.Sprintf(testAccKinesisFirehoseDeliveryStreamConfig_extendedS3InvalidParameterName,
-// 			ri, ri, ri, ri)
-
-// 	resource.ParallelTest(t, resource.TestCase{
-// 		PreCheck:     func() { testAccPreCheck(t) },
-// 		Providers:    testAccProviders,
-// 		CheckDestroy: testAccCheckKinesisFirehoseDeliveryStreamDestroy_ExtendedS3,
-// 		Steps: []resource.TestStep{
-// 			{
-// 				Config:      config,
-// 				ExpectError: regexp.MustCompile("(must be one of 'LambdaArn', 'NumberOfRetries'|Member must satisfy enum value set)"),
-// 			},
-// 		},
-// 	})
-// }
-
 func TestAccAWSKinesisFirehoseDeliveryStream_ExtendedS3Updates(t *testing.T) {
 	rString := acctest.RandString(8)
 	funcName := fmt.Sprintf("aws_kinesis_firehose_delivery_stream_test_%s", rString)
@@ -1988,50 +1940,6 @@ resource "aws_kinesis_firehose_delivery_stream" "test_stream" {
   }
 }
 `
-
-// var testAccKinesisFirehoseDeliveryStreamConfig_extendedS3InvalidProcessorType = testAccKinesisFirehoseDeliveryStreamBaseConfig + `
-// resource "aws_kinesis_firehose_delivery_stream" "test_stream" {
-//   depends_on = ["aws_iam_role_policy.firehose"]
-//   name = "terraform-kinesis-firehose-basictest-%d"
-//   destination = "extended_s3"
-//   extended_s3_configuration {
-//     role_arn = "${aws_iam_role.firehose.arn}"
-//     bucket_arn = "${aws_s3_bucket.bucket.arn}"
-//     processing_configuration {
-//       enabled = false
-//       processors {
-//         type = "NotLambda"
-//         parameters {
-//           parameter_name = "LambdaArn"
-//           parameter_value = "${aws_lambda_function.lambda_function_test.arn}:$LATEST"
-//         }
-//       }
-//     }
-//   }
-// }
-// `
-
-// var testAccKinesisFirehoseDeliveryStreamConfig_extendedS3InvalidParameterName = testAccKinesisFirehoseDeliveryStreamBaseConfig + `
-// resource "aws_kinesis_firehose_delivery_stream" "test_stream" {
-//   depends_on = ["aws_iam_role_policy.firehose"]
-//   name = "terraform-kinesis-firehose-basictest-%d"
-//   destination = "extended_s3"
-//   extended_s3_configuration {
-//     role_arn = "${aws_iam_role.firehose.arn}"
-//     bucket_arn = "${aws_s3_bucket.bucket.arn}"
-//     processing_configuration {
-//       enabled = false
-//       processors {
-//         type = "Lambda"
-//         parameters {
-//           parameter_name = "NotLambdaArn"
-//           parameter_value = "${aws_lambda_function.lambda_function_test.arn}:$LATEST"
-//         }
-//       }
-//     }
-//   }
-// }
-// `
 
 var testAccKinesisFirehoseDeliveryStreamConfig_extendedS3Updates = testAccKinesisFirehoseDeliveryStreamBaseConfig + `
 resource "aws_kinesis_firehose_delivery_stream" "test_stream" {

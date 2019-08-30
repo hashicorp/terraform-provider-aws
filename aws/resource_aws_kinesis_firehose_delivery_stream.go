@@ -699,7 +699,6 @@ func resourceAwsKinesisFirehoseDeliveryStream() *schema.Resource {
 			"server_side_encryption": {
 				Type:             schema.TypeList,
 				Optional:         true,
-				Computed:         true,
 				MaxItems:         1,
 				DiffSuppressFunc: suppressMissingOptionalConfigurationBlock,
 				ConflictsWith:    []string{"kinesis_source_configuration"},
