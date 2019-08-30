@@ -36,8 +36,9 @@ func resourceAwsCognitoIdentityProvider() *schema.Resource {
 			},
 
 			"provider_details": {
-				Type:     schema.TypeMap,
-				Required: true,
+				Type:      schema.TypeMap,
+				Required:  true,
+				Sensitive: true,
 			},
 
 			"provider_name": {
