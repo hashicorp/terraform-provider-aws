@@ -897,6 +897,7 @@ func init() {
 	endpointServiceNames = []string{
 		"acm",
 		"acmpca",
+		"amplify",
 		"apigateway",
 		"applicationautoscaling",
 		"applicationinsights",
