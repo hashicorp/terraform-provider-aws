@@ -69,11 +69,23 @@ func testSweepS3BucketObjects(region string) error {
 			continue
 		}
 
+		bucketRegion, err := testS3BucketRegion(conn, bucketName)
+
+		if err != nil {
+			log.Printf("[ERROR] Error getting S3 Bucket (%s) Location: %s", bucketName, err)
+			continue
+		}
+
+		if bucketRegion != region {
+			log.Printf("[INFO] Skipping S3 Bucket (%s) in different region: %s", bucketName, bucketRegion)
+			continue
+		}
+
 		input := &s3.ListObjectVersionsInput{
 			Bucket: bucket.Name,
 		}
 
-		err := conn.ListObjectVersionsPages(input, func(page *s3.ListObjectVersionsOutput, lastPage bool) bool {
+		err = conn.ListObjectVersionsPages(input, func(page *s3.ListObjectVersionsOutput, lastPage bool) bool {
 			if page == nil {
 				return !lastPage
 			}
@@ -103,11 +115,6 @@ func testSweepS3BucketObjects(region string) error {
 		})
 
 		if isAWSErr(err, s3.ErrCodeNoSuchBucket, "") {
-			continue
-		}
-
-		if isAWSErr(err, "AuthorizationHeaderMalformed", "region") || isAWSErr(err, "BucketRegionError", "") {
-			log.Printf("[INFO] Skipping S3 Bucket (%s) Objects: %s", bucketName, err)
 			continue
 		}
 
