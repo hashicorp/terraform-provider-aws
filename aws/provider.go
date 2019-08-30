@@ -956,6 +956,7 @@ func init() {
 		"iam",
 		"inspector",
 		"iot",
+		"iotevents",
 		"kafka",
 		"kinesis_analytics",
 		"kinesis",
