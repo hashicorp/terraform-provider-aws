@@ -38,6 +38,7 @@ github.com/aws/aws-sdk-go/service/apigatewayv2
 github.com/aws/aws-sdk-go/service/applicationautoscaling
 github.com/aws/aws-sdk-go/service/applicationinsights
 github.com/aws/aws-sdk-go/service/appmesh
+github.com/aws/aws-sdk-go/service/appstream
 github.com/aws/aws-sdk-go/service/appsync
 github.com/aws/aws-sdk-go/service/athena
 github.com/aws/aws-sdk-go/service/autoscaling
