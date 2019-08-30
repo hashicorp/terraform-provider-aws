@@ -39,6 +39,7 @@ func TestAccDataSourceAWSS3BucketObject_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("data.aws_s3_bucket_object.obj", "etag", "b10a8db164e0754105b7a99be72e3fe5"),
 					resource.TestMatchResourceAttr("data.aws_s3_bucket_object.obj", "last_modified",
 						regexp.MustCompile("^[a-zA-Z]{3}, [0-9]+ [a-zA-Z]+ [0-9]{4} [0-9:]+ [A-Z]+$")),
+					resource.TestCheckResourceAttr("data.aws_s3_bucket_object.obj", "object_lock_legal_hold_status", ""),
 					resource.TestCheckNoResourceAttr("data.aws_s3_bucket_object.obj", "body"),
 				),
 			},
@@ -73,6 +74,7 @@ func TestAccDataSourceAWSS3BucketObject_readableBody(t *testing.T) {
 					resource.TestCheckResourceAttr("data.aws_s3_bucket_object.obj", "etag", "a6105c0a611b41b08f1209506350279e"),
 					resource.TestMatchResourceAttr("data.aws_s3_bucket_object.obj", "last_modified",
 						regexp.MustCompile("^[a-zA-Z]{3}, [0-9]+ [a-zA-Z]+ [0-9]{4} [0-9:]+ [A-Z]+$")),
+					resource.TestCheckResourceAttr("data.aws_s3_bucket_object.obj", "object_lock_legal_hold_status", ""),
 					resource.TestCheckResourceAttr("data.aws_s3_bucket_object.obj", "body", "yes"),
 				),
 			},
@@ -110,6 +112,7 @@ func TestAccDataSourceAWSS3BucketObject_kmsEncrypted(t *testing.T) {
 						regexp.MustCompile(`^arn:aws:kms:[a-z]{2}-[a-z]+-\d{1}:[0-9]{12}:key/[a-z0-9-]{36}$`)),
 					resource.TestMatchResourceAttr("data.aws_s3_bucket_object.obj", "last_modified",
 						regexp.MustCompile("^[a-zA-Z]{3}, [0-9]+ [a-zA-Z]+ [0-9]{4} [0-9:]+ [A-Z]+$")),
+					resource.TestCheckResourceAttr("data.aws_s3_bucket_object.obj", "object_lock_legal_hold_status", ""),
 					resource.TestCheckResourceAttr("data.aws_s3_bucket_object.obj", "body", "Keep Calm and Carry On"),
 				),
 			},
@@ -161,6 +164,42 @@ func TestAccDataSourceAWSS3BucketObject_allParams(t *testing.T) {
 					resource.TestCheckResourceAttr("data.aws_s3_bucket_object.obj", "website_redirect_location", ""),
 					resource.TestCheckResourceAttr("data.aws_s3_bucket_object.obj", "metadata.%", "0"),
 					resource.TestCheckResourceAttr("data.aws_s3_bucket_object.obj", "tags.%", "1"),
+					resource.TestCheckResourceAttr("data.aws_s3_bucket_object.obj", "object_lock_legal_hold_status", ""),
+				),
+			},
+		},
+	})
+}
+
+func TestAccDataSourceAWSS3BucketObject_ObjectLockLegalHold(t *testing.T) {
+	rInt := acctest.RandInt()
+	resourceOnlyConf, conf := testAccAWSDataSourceS3ObjectConfig_objectLockLegalHold(rInt)
+
+	var rObj s3.GetObjectOutput
+	var dsObj s3.GetObjectOutput
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                  func() { testAccPreCheck(t) },
+		Providers:                 testAccProviders,
+		PreventPostDestroyRefresh: true,
+		Steps: []resource.TestStep{
+			{
+				Config: resourceOnlyConf,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSS3BucketObjectExists("aws_s3_bucket_object.object", &rObj),
+				),
+			},
+			{
+				Config: conf,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAwsS3ObjectDataSourceExists("data.aws_s3_bucket_object.obj", &dsObj),
+					resource.TestCheckResourceAttr("data.aws_s3_bucket_object.obj", "content_length", "11"),
+					resource.TestCheckResourceAttr("data.aws_s3_bucket_object.obj", "content_type", "binary/octet-stream"),
+					resource.TestCheckResourceAttr("data.aws_s3_bucket_object.obj", "etag", "b10a8db164e0754105b7a99be72e3fe5"),
+					resource.TestMatchResourceAttr("data.aws_s3_bucket_object.obj", "last_modified",
+						regexp.MustCompile("^[a-zA-Z]{3}, [0-9]+ [a-zA-Z]+ [0-9]{4} [0-9:]+ [A-Z]+$")),
+					resource.TestCheckResourceAttr("data.aws_s3_bucket_object.obj", "object_lock_legal_hold_status", "OFF"),
+					resource.TestCheckNoResourceAttr("data.aws_s3_bucket_object.obj", "body"),
 				),
 			},
 		},
@@ -298,6 +337,37 @@ CONTENT
 data "aws_s3_bucket_object" "obj" {
 	bucket = "tf-object-test-bucket-%d"
 	key = "tf-testing-obj-%d-all-params"
+}
+`, resources, randInt, randInt)
+
+	return resources, both
+}
+
+func testAccAWSDataSourceS3ObjectConfig_objectLockLegalHold(randInt int) (string, string) {
+	resources := fmt.Sprintf(`
+resource "aws_s3_bucket" "object_bucket" {
+  bucket = "tf-object-test-bucket-%d"
+
+  versioning {
+    enabled = true
+  }
+
+  object_lock_configuration {
+    object_lock_enabled = "Enabled"
+  }
+}
+resource "aws_s3_bucket_object" "object" {
+  bucket = "${aws_s3_bucket.object_bucket.bucket}"
+  key = "tf-testing-obj-%d"
+  content = "Hello World"
+  object_lock_legal_hold_status = "OFF"
+}
+`, randInt, randInt)
+
+	both := fmt.Sprintf(`%s
+data "aws_s3_bucket_object" "obj" {
+  bucket = "tf-object-test-bucket-%d"
+  key = "tf-testing-obj-%d"
 }
 `, resources, randInt, randInt)
 

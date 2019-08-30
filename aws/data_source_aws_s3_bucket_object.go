@@ -74,6 +74,10 @@ func dataSourceAwsS3BucketObject() *schema.Resource {
 				Type:     schema.TypeMap,
 				Computed: true,
 			},
+			"object_lock_legal_hold_status": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"range": {
 				Type:     schema.TypeString,
 				Optional: true,
@@ -155,6 +159,7 @@ func dataSourceAwsS3BucketObjectRead(d *schema.ResourceData, meta interface{}) e
 	d.Set("expires", out.Expires)
 	d.Set("last_modified", out.LastModified.Format(time.RFC1123))
 	d.Set("metadata", pointersMapToStringList(out.Metadata))
+	d.Set("object_lock_legal_hold_status", out.ObjectLockLegalHoldStatus)
 	d.Set("server_side_encryption", out.ServerSideEncryption)
 	d.Set("sse_kms_key_id", out.SSEKMSKeyId)
 	d.Set("version_id", out.VersionId)
