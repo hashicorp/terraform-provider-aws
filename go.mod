@@ -13,14 +13,13 @@ require (
 	github.com/hashicorp/go-cleanhttp v0.5.1
 	github.com/hashicorp/go-multierror v1.0.0
 	github.com/hashicorp/go-version v1.2.0
-	github.com/hashicorp/terraform v0.12.6
+	github.com/hashicorp/terraform v0.12.7
 	github.com/hashicorp/vault v0.10.4
 	github.com/jen20/awspolicyequivalence v1.0.0
 	github.com/kubernetes-sigs/aws-iam-authenticator v0.3.1-0.20181019024009-82544ec86140
 	github.com/mitchellh/copystructure v1.0.0
 	github.com/mitchellh/go-homedir v1.1.0
 	github.com/pquerna/otp v1.2.0
-	github.com/spf13/pflag v1.0.3 // indirect
 	github.com/terraform-providers/terraform-provider-template v2.1.2+incompatible
 	github.com/terraform-providers/terraform-provider-tls v2.1.0+incompatible
 	gopkg.in/yaml.v2 v2.2.2
