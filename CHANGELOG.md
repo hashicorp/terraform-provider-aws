@@ -1,8 +1,12 @@
 ## 2.27.0 (Unreleased)
 
+ENHANCEMENTS:
+
+* resource/aws_kinesis_firehose_delivery_stream: Add `server_side_encryption` configuration block (support Server Side Encryption) [GH-6523]
+
 BUG FIXES:
 
-* r/aws_s3_bucket: Include any system tags that Terraform ignores when setting S3 bucket tags [GH-7342]
+* resource/aws_s3_bucket: Include any system tags that Terraform ignores when setting S3 bucket tags [GH-7342]
 
 ## 2.26.0 (August 29, 2019)
 
