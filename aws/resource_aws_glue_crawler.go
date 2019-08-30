@@ -339,36 +339,43 @@ func expandGlueJdbcTarget(cfg map[string]interface{}) *glue.JdbcTarget {
 }
 
 func resourceAwsGlueCrawlerUpdate(d *schema.ResourceData, meta interface{}) error {
-	glueConn := meta.(*AWSClient).glueconn
-	name := d.Get("name").(string)
+	/*
+		glueConn := meta.(*AWSClient).glueconn
+		name := d.Get("name").(string)
 
-	crawlerInput, err := createCrawlerInput(name, d)
-	if err != nil {
-		return err
-	}
-	updateCrawlerInput := glue.UpdateCrawlerInput(*crawlerInput)
-
-	// Retry for IAM eventual consistency
-	err = resource.Retry(1*time.Minute, func() *resource.RetryError {
-		_, err := glueConn.UpdateCrawler(&updateCrawlerInput)
+		crawlerInput, err := createCrawlerInput(name, d)
 		if err != nil {
-			if isAWSErr(err, glue.ErrCodeInvalidInputException, "Service is unable to assume role") {
-				return resource.RetryableError(err)
-			}
-			// InvalidInputException: Unable to retrieve connection tf-acc-test-8656357591012534997: User: arn:aws:sts::*******:assumed-role/tf-acc-test-8656357591012534997/AWS-Crawler is not authorized to perform: glue:GetConnection on resource: * (Service: AmazonDataCatalog; Status Code: 400; Error Code: AccessDeniedException; Request ID: 4d72b66f-9c75-11e8-9faf-5b526c7be968)
-			if isAWSErr(err, glue.ErrCodeInvalidInputException, "is not authorized") {
-				return resource.RetryableError(err)
-			}
-			return resource.NonRetryableError(err)
+			return err
 		}
-		return nil
-	})
+		updateCrawlerInput := glue.UpdateCrawlerInput(*crawlerInput)
 
-	if err != nil {
-		return fmt.Errorf("error updating Glue crawler: %s", err)
-	}
+		// Retry for IAM eventual consistency
+		err = resource.Retry(1*time.Minute, func() *resource.RetryError {
+			_, err := glueConn.UpdateCrawler(&updateCrawlerInput)
+			if err != nil {
+				if isAWSErr(err, glue.ErrCodeInvalidInputException, "Service is unable to assume role") {
+					return resource.RetryableError(err)
+				}
+				// InvalidInputException: Unable to retrieve connection tf-acc-test-8656357591012534997: User: arn:aws:sts::*******:assumed-role/tf-acc-test-8656357591012534997/AWS-Crawler is not authorized to perform: glue:GetConnection on resource: * (Service: AmazonDataCatalog; Status Code: 400; Error Code: AccessDeniedException; Request ID: 4d72b66f-9c75-11e8-9faf-5b526c7be968)
+				if isAWSErr(err, glue.ErrCodeInvalidInputException, "is not authorized") {
+					return resource.RetryableError(err)
+				}
+				return resource.NonRetryableError(err)
+			}
+			return nil
+		})
 
-	return resourceAwsGlueCrawlerRead(d, meta)
+		if err != nil {
+			return fmt.Errorf("error updating Glue crawler: %s", err)
+		}
+
+		return resourceAwsGlueCrawlerRead(d, meta)
+	*/
+
+	// The above code is incompatible with aws-sdk-go @ v1.23.8.
+	// For now we will not update the glue crawler resource type.
+	// See RM-2025 - Curtis
+	return fmt.Errorf("error updating Glue crawler: unsupported")
 }
 
 func resourceAwsGlueCrawlerRead(d *schema.ResourceData, meta interface{}) error {
