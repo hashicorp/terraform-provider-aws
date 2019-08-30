@@ -130,6 +130,18 @@ const (
 	// A commit ID was not specified.
 	ErrCodeCommitIdRequiredException = "CommitIdRequiredException"
 
+	// ErrCodeCommitIdsLimitExceededException for service response error code
+	// "CommitIdsLimitExceededException".
+	//
+	// The maximum number of allowed commit IDs in a batch request is 100. Verify
+	// that your batch requests contains no more than 100 commit IDs, and then try
+	// again.
+	ErrCodeCommitIdsLimitExceededException = "CommitIdsLimitExceededException"
+
+	// ErrCodeCommitIdsListRequiredException for service response error code
+	// "CommitIdsListRequiredException".
+	ErrCodeCommitIdsListRequiredException = "CommitIdsListRequiredException"
+
 	// ErrCodeCommitMessageLengthExceededException for service response error code
 	// "CommitMessageLengthExceededException".
 	//
