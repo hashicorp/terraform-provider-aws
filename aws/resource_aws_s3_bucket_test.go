@@ -14,6 +14,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
+	"github.com/aws/aws-sdk-go/service/cloudformation"
 	"github.com/aws/aws-sdk-go/service/s3"
 	"github.com/hashicorp/terraform/helper/acctest"
 	"github.com/hashicorp/terraform/helper/resource"
@@ -232,6 +233,137 @@ func TestAccAWSS3Bucket_Bucket_EmptyString(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSS3BucketExists(resourceName),
 					resource.TestMatchResourceAttr(resourceName, "bucket", regexp.MustCompile("^terraform-")),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAWSS3Bucket_tagsWithNoSystemTags(t *testing.T) {
+	resourceName := "aws_s3_bucket.bucket"
+	rInt := acctest.RandInt()
+	bucketName := fmt.Sprintf("tf-test-bucket-%d", rInt)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSS3BucketDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSS3BucketConfig_withTags(bucketName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSS3BucketExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "3"),
+					resource.TestCheckResourceAttr(resourceName, "tags.Key1", "AAA"),
+					resource.TestCheckResourceAttr(resourceName, "tags.Key2", "BBB"),
+					resource.TestCheckResourceAttr(resourceName, "tags.Key3", "CCC"),
+				),
+			},
+			{
+				Config: testAccAWSS3BucketConfig_withUpdatedTags(bucketName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSS3BucketExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "4"),
+					resource.TestCheckResourceAttr(resourceName, "tags.Key2", "BBB"),
+					resource.TestCheckResourceAttr(resourceName, "tags.Key3", "XXX"),
+					resource.TestCheckResourceAttr(resourceName, "tags.Key4", "DDD"),
+					resource.TestCheckResourceAttr(resourceName, "tags.Key5", "EEE"),
+				),
+			},
+			{
+
+				Config: testAccAWSS3BucketConfig_withNoTags(bucketName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSS3BucketExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+				),
+			},
+			// Verify update from 0 tags.
+			{
+				Config: testAccAWSS3BucketConfig_withTags(bucketName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSS3BucketExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "3"),
+					resource.TestCheckResourceAttr(resourceName, "tags.Key1", "AAA"),
+					resource.TestCheckResourceAttr(resourceName, "tags.Key2", "BBB"),
+					resource.TestCheckResourceAttr(resourceName, "tags.Key3", "CCC"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAWSS3Bucket_tagsWithSystemTags(t *testing.T) {
+	resourceName := "aws_s3_bucket.bucket"
+	rInt := acctest.RandInt()
+	bucketName := fmt.Sprintf("tf-test-bucket-%d", rInt)
+	var stackId string
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:  func() { testAccPreCheck(t) },
+		Providers: testAccProviders,
+		CheckDestroy: resource.ComposeAggregateTestCheckFunc(
+			testAccCheckAWSS3BucketDestroy,
+			func(s *terraform.State) error {
+				// Tear down CF stack.
+				conn := testAccProvider.Meta().(*AWSClient).cfconn
+
+				req := &cloudformation.DeleteStackInput{
+					StackName: aws.String(stackId),
+				}
+
+				log.Printf("[DEBUG] Deleting CloudFormation stack: %#v", req)
+				if _, err := conn.DeleteStack(req); err != nil {
+					return fmt.Errorf("Error deleting CloudFormation stack: %s", err)
+				}
+
+				if err := waitForCloudFormationStackDeletion(conn, stackId, 10*time.Minute); err != nil {
+					return fmt.Errorf("Error waiting for CloudFormation stack deletion: %s", err)
+				}
+
+				return nil
+			},
+		),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSS3BucketConfig_withNoTags(bucketName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSS3BucketExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					testAccCheckAWSS3DestroyBucket(resourceName),
+					testAccCheckAWSS3BucketCreateViaCloudFormation(bucketName, &stackId),
+				),
+			},
+			{
+				Config: testAccAWSS3BucketConfig_withTags(bucketName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSS3BucketExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "3"),
+					resource.TestCheckResourceAttr(resourceName, "tags.Key1", "AAA"),
+					resource.TestCheckResourceAttr(resourceName, "tags.Key2", "BBB"),
+					resource.TestCheckResourceAttr(resourceName, "tags.Key3", "CCC"),
+					testAccCheckAWSS3BucketTagKeys(resourceName, "aws:cloudformation:stack-name", "aws:cloudformation:stack-id", "aws:cloudformation:logical-id"),
+				),
+			},
+			{
+				Config: testAccAWSS3BucketConfig_withUpdatedTags(bucketName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSS3BucketExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "4"),
+					resource.TestCheckResourceAttr(resourceName, "tags.Key2", "BBB"),
+					resource.TestCheckResourceAttr(resourceName, "tags.Key3", "XXX"),
+					resource.TestCheckResourceAttr(resourceName, "tags.Key4", "DDD"),
+					resource.TestCheckResourceAttr(resourceName, "tags.Key5", "EEE"),
+					testAccCheckAWSS3BucketTagKeys(resourceName, "aws:cloudformation:stack-name", "aws:cloudformation:stack-id", "aws:cloudformation:logical-id"),
+				),
+			},
+			{
+
+				Config: testAccAWSS3BucketConfig_withNoTags(bucketName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSS3BucketExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					testAccCheckAWSS3BucketTagKeys(resourceName, "aws:cloudformation:stack-name", "aws:cloudformation:stack-id", "aws:cloudformation:logical-id"),
 				),
 			},
 		},
@@ -1739,6 +1871,77 @@ func testAccCheckAWSS3DestroyBucket(n string) resource.TestCheckFunc {
 	}
 }
 
+// Create an S3 bucket via a CF stack so that it has system tags.
+func testAccCheckAWSS3BucketCreateViaCloudFormation(n string, stackId *string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := testAccProvider.Meta().(*AWSClient).cfconn
+		stackName := fmt.Sprintf("tf-acc-test-s3tags-%d", acctest.RandInt())
+		templateBody := fmt.Sprintf(`
+        {
+            "Resources": {
+                "TfTestBucket": {
+                    "Type": "AWS::S3::Bucket",
+                    "Properties": {
+                        "BucketName": "%s",
+                    }
+                }
+            }
+        }
+        `, n)
+
+		req := &cloudformation.CreateStackInput{
+			StackName:    aws.String(stackName),
+			TemplateBody: aws.String(templateBody),
+		}
+
+		log.Printf("[DEBUG] Creating CloudFormation stack: %#v", req)
+		resp, err := conn.CreateStack(req)
+		if err != nil {
+			return fmt.Errorf("Error creating CloudFormation stack: %s", err)
+		}
+
+		status, err := waitForCloudFormationStackCreation(conn, aws.StringValue(resp.StackId), 10*time.Minute)
+		if err != nil {
+			return fmt.Errorf("Error waiting for CloudFormation stack creation: %s", err)
+		}
+		if status != cloudformation.StackStatusCreateComplete {
+			return fmt.Errorf("Invalid CloudFormation stack creation status: %s", status)
+		}
+
+		*stackId = aws.StringValue(resp.StackId)
+		return nil
+	}
+}
+
+func testAccCheckAWSS3BucketTagKeys(n string, keys ...string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		rs := s.RootModule().Resources[n]
+		conn := testAccProvider.Meta().(*AWSClient).s3conn
+
+		resp, err := conn.GetBucketTagging(&s3.GetBucketTaggingInput{
+			Bucket: aws.String(rs.Primary.ID),
+		})
+		if err != nil {
+			return err
+		}
+
+		for _, key := range keys {
+			ok := false
+			for _, tag := range resp.TagSet {
+				if key == aws.StringValue(tag.Key) {
+					ok = true
+					break
+				}
+			}
+			if !ok {
+				return fmt.Errorf("Key %s not found in bucket's tag set", key)
+			}
+		}
+
+		return nil
+	}
+}
+
 func testAccCheckAWSS3BucketPolicy(n string, policy string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs := s.RootModule().Resources[n]
@@ -2092,6 +2295,47 @@ resource "aws_s3_bucket" "bucket" {
   acl    = "public-read"
 }
 `, randInt)
+}
+
+func testAccAWSS3BucketConfig_withNoTags(bucketName string) string {
+	return fmt.Sprintf(`
+resource "aws_s3_bucket" "bucket" {
+  bucket = %[1]q
+  acl = "private"
+  force_destroy = false
+}
+`, bucketName)
+}
+
+func testAccAWSS3BucketConfig_withTags(bucketName string) string {
+	return fmt.Sprintf(`
+resource "aws_s3_bucket" "bucket" {
+  bucket = %[1]q
+  acl = "private"
+  force_destroy = false
+  tags = {
+    Key1 = "AAA"
+    Key2 = "BBB"
+    Key3 = "CCC"
+  }
+}
+`, bucketName)
+}
+
+func testAccAWSS3BucketConfig_withUpdatedTags(bucketName string) string {
+	return fmt.Sprintf(`
+resource "aws_s3_bucket" "bucket" {
+  bucket = %[1]q
+  acl = "private"
+  force_destroy = false
+  tags = {
+    Key2 = "BBB"
+    Key3 = "XXX"
+    Key4 = "DDD"
+    Key5 = "EEE"
+  }
+}
+`, bucketName)
 }
 
 func testAccAWSS3MultiBucketConfigWithTags(randInt int) string {

@@ -21,7 +21,7 @@ github.com/apparentlymart/go-cidr/cidr
 github.com/apparentlymart/go-textseg/textseg
 # github.com/armon/go-radix v1.0.0
 github.com/armon/go-radix
-# github.com/aws/aws-sdk-go v1.23.0
+# github.com/aws/aws-sdk-go v1.23.12
 github.com/aws/aws-sdk-go/aws
 github.com/aws/aws-sdk-go/aws/arn
 github.com/aws/aws-sdk-go/aws/awserr
@@ -32,11 +32,13 @@ github.com/aws/aws-sdk-go/aws/session
 github.com/aws/aws-sdk-go/private/protocol/json/jsonutil
 github.com/aws/aws-sdk-go/service/acm
 github.com/aws/aws-sdk-go/service/acmpca
+github.com/aws/aws-sdk-go/service/amplify
 github.com/aws/aws-sdk-go/service/apigateway
 github.com/aws/aws-sdk-go/service/apigatewayv2
 github.com/aws/aws-sdk-go/service/applicationautoscaling
 github.com/aws/aws-sdk-go/service/applicationinsights
 github.com/aws/aws-sdk-go/service/appmesh
+github.com/aws/aws-sdk-go/service/appstream
 github.com/aws/aws-sdk-go/service/appsync
 github.com/aws/aws-sdk-go/service/athena
 github.com/aws/aws-sdk-go/service/autoscaling
@@ -118,6 +120,7 @@ github.com/aws/aws-sdk-go/service/mq
 github.com/aws/aws-sdk-go/service/neptune
 github.com/aws/aws-sdk-go/service/opsworks
 github.com/aws/aws-sdk-go/service/organizations
+github.com/aws/aws-sdk-go/service/personalize
 github.com/aws/aws-sdk-go/service/pinpoint
 github.com/aws/aws-sdk-go/service/pricing
 github.com/aws/aws-sdk-go/service/quicksight
@@ -182,6 +185,7 @@ github.com/aws/aws-sdk-go/aws/credentials/ec2rolecreds
 github.com/aws/aws-sdk-go/aws/ec2metadata
 github.com/aws/aws-sdk-go/service/sts/stsiface
 github.com/aws/aws-sdk-go/aws/credentials/endpointcreds
+github.com/aws/aws-sdk-go/internal/sdkmath
 github.com/aws/aws-sdk-go/private/protocol/query/queryutil
 github.com/aws/aws-sdk-go/internal/sdkuri
 # github.com/beevik/etree v1.1.0

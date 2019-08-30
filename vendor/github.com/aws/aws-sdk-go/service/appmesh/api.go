@@ -1957,6 +1957,9 @@ func (c *AppMesh) ListTagsForResourceRequest(input *ListTagsForResourceInput) (r
 //   * ErrCodeBadRequestException "BadRequestException"
 //   The request syntax was malformed. Check your request syntax and try again.
 //
+//   * ErrCodeForbiddenException "ForbiddenException"
+//   You don't have permissions to perform this action.
+//
 //   * ErrCodeInternalServerErrorException "InternalServerErrorException"
 //   The request processing has failed because of an unknown error, exception,
 //   or failure.
@@ -1966,6 +1969,11 @@ func (c *AppMesh) ListTagsForResourceRequest(input *ListTagsForResourceInput) (r
 //
 //   * ErrCodeServiceUnavailableException "ServiceUnavailableException"
 //   The request has failed due to a temporary failure of the service.
+//
+//   * ErrCodeTooManyRequestsException "TooManyRequestsException"
+//   The maximum request rate permitted by the App Mesh APIs has been exceeded
+//   for your account. For best results, use an increasing or variable sleep interval
+//   between requests.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/appmesh-2019-01-25/ListTagsForResource
 func (c *AppMesh) ListTagsForResource(input *ListTagsForResourceInput) (*ListTagsForResourceOutput, error) {
@@ -2559,6 +2567,9 @@ func (c *AppMesh) TagResourceRequest(input *TagResourceInput) (req *request.Requ
 //   * ErrCodeBadRequestException "BadRequestException"
 //   The request syntax was malformed. Check your request syntax and try again.
 //
+//   * ErrCodeForbiddenException "ForbiddenException"
+//   You don't have permissions to perform this action.
+//
 //   * ErrCodeInternalServerErrorException "InternalServerErrorException"
 //   The request processing has failed because of an unknown error, exception,
 //   or failure.
@@ -2568,6 +2579,11 @@ func (c *AppMesh) TagResourceRequest(input *TagResourceInput) (req *request.Requ
 //
 //   * ErrCodeServiceUnavailableException "ServiceUnavailableException"
 //   The request has failed due to a temporary failure of the service.
+//
+//   * ErrCodeTooManyRequestsException "TooManyRequestsException"
+//   The maximum request rate permitted by the App Mesh APIs has been exceeded
+//   for your account. For best results, use an increasing or variable sleep interval
+//   between requests.
 //
 //   * ErrCodeTooManyTagsException "TooManyTagsException"
 //   The request exceeds the maximum allowed number of tags allowed per resource.
@@ -2654,6 +2670,9 @@ func (c *AppMesh) UntagResourceRequest(input *UntagResourceInput) (req *request.
 //   * ErrCodeBadRequestException "BadRequestException"
 //   The request syntax was malformed. Check your request syntax and try again.
 //
+//   * ErrCodeForbiddenException "ForbiddenException"
+//   You don't have permissions to perform this action.
+//
 //   * ErrCodeInternalServerErrorException "InternalServerErrorException"
 //   The request processing has failed because of an unknown error, exception,
 //   or failure.
@@ -2663,6 +2682,11 @@ func (c *AppMesh) UntagResourceRequest(input *UntagResourceInput) (req *request.
 //
 //   * ErrCodeServiceUnavailableException "ServiceUnavailableException"
 //   The request has failed due to a temporary failure of the service.
+//
+//   * ErrCodeTooManyRequestsException "TooManyRequestsException"
+//   The maximum request rate permitted by the App Mesh APIs has been exceeded
+//   for your account. For best results, use an increasing or variable sleep interval
+//   between requests.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/appmesh-2019-01-25/UntagResource
 func (c *AppMesh) UntagResource(input *UntagResourceInput) (*UntagResourceOutput, error) {
@@ -4942,6 +4966,92 @@ func (s *FileAccessLog) SetPath(v string) *FileAccessLog {
 	return s
 }
 
+// An object representing the method and value to match the header value sent
+// with a request. Specify one match method.
+type HeaderMatchMethod struct {
+	_ struct{} `type:"structure"`
+
+	Exact *string `locationName:"exact" min:"1" type:"string"`
+
+	Prefix *string `locationName:"prefix" min:"1" type:"string"`
+
+	// The range of values to match on. The first character of the range is included
+	// in the range, though the last character is not. For example, if the range
+	// specified were 1-100, only values 1-99 would be matched.
+	Range *MatchRange `locationName:"range" type:"structure"`
+
+	Regex *string `locationName:"regex" min:"1" type:"string"`
+
+	Suffix *string `locationName:"suffix" min:"1" type:"string"`
+}
+
+// String returns the string representation
+func (s HeaderMatchMethod) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s HeaderMatchMethod) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *HeaderMatchMethod) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "HeaderMatchMethod"}
+	if s.Exact != nil && len(*s.Exact) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("Exact", 1))
+	}
+	if s.Prefix != nil && len(*s.Prefix) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("Prefix", 1))
+	}
+	if s.Regex != nil && len(*s.Regex) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("Regex", 1))
+	}
+	if s.Suffix != nil && len(*s.Suffix) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("Suffix", 1))
+	}
+	if s.Range != nil {
+		if err := s.Range.Validate(); err != nil {
+			invalidParams.AddNested("Range", err.(request.ErrInvalidParams))
+		}
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetExact sets the Exact field's value.
+func (s *HeaderMatchMethod) SetExact(v string) *HeaderMatchMethod {
+	s.Exact = &v
+	return s
+}
+
+// SetPrefix sets the Prefix field's value.
+func (s *HeaderMatchMethod) SetPrefix(v string) *HeaderMatchMethod {
+	s.Prefix = &v
+	return s
+}
+
+// SetRange sets the Range field's value.
+func (s *HeaderMatchMethod) SetRange(v *MatchRange) *HeaderMatchMethod {
+	s.Range = v
+	return s
+}
+
+// SetRegex sets the Regex field's value.
+func (s *HeaderMatchMethod) SetRegex(v string) *HeaderMatchMethod {
+	s.Regex = &v
+	return s
+}
+
+// SetSuffix sets the Suffix field's value.
+func (s *HeaderMatchMethod) SetSuffix(v string) *HeaderMatchMethod {
+	s.Suffix = &v
+	return s
+}
+
 // An object representing the health check policy for a virtual node's listener.
 type HealthCheckPolicy struct {
 	_ struct{} `type:"structure"`
@@ -5174,13 +5284,82 @@ func (s *HttpRouteAction) SetWeightedTargets(v []*WeightedTarget) *HttpRouteActi
 	return s
 }
 
+// An object representing the HTTP header in the request.
+type HttpRouteHeader struct {
+	_ struct{} `type:"structure"`
+
+	Invert *bool `locationName:"invert" type:"boolean"`
+
+	// An object representing the method and value to match the header value sent
+	// with a request. Specify one match method.
+	Match *HeaderMatchMethod `locationName:"match" type:"structure"`
+
+	// Name is a required field
+	Name *string `locationName:"name" min:"1" type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s HttpRouteHeader) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s HttpRouteHeader) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *HttpRouteHeader) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "HttpRouteHeader"}
+	if s.Name == nil {
+		invalidParams.Add(request.NewErrParamRequired("Name"))
+	}
+	if s.Name != nil && len(*s.Name) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("Name", 1))
+	}
+	if s.Match != nil {
+		if err := s.Match.Validate(); err != nil {
+			invalidParams.AddNested("Match", err.(request.ErrInvalidParams))
+		}
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetInvert sets the Invert field's value.
+func (s *HttpRouteHeader) SetInvert(v bool) *HttpRouteHeader {
+	s.Invert = &v
+	return s
+}
+
+// SetMatch sets the Match field's value.
+func (s *HttpRouteHeader) SetMatch(v *HeaderMatchMethod) *HttpRouteHeader {
+	s.Match = v
+	return s
+}
+
+// SetName sets the Name field's value.
+func (s *HttpRouteHeader) SetName(v string) *HttpRouteHeader {
+	s.Name = &v
+	return s
+}
+
 // An object representing the requirements for a route to match HTTP requests
 // for a virtual router.
 type HttpRouteMatch struct {
 	_ struct{} `type:"structure"`
 
+	Headers []*HttpRouteHeader `locationName:"headers" min:"1" type:"list"`
+
+	Method *string `locationName:"method" type:"string" enum:"HttpMethod"`
+
 	// Prefix is a required field
 	Prefix *string `locationName:"prefix" type:"string" required:"true"`
+
+	Scheme *string `locationName:"scheme" type:"string" enum:"HttpScheme"`
 }
 
 // String returns the string representation
@@ -5196,8 +5375,21 @@ func (s HttpRouteMatch) GoString() string {
 // Validate inspects the fields of the type to determine if they are valid.
 func (s *HttpRouteMatch) Validate() error {
 	invalidParams := request.ErrInvalidParams{Context: "HttpRouteMatch"}
+	if s.Headers != nil && len(s.Headers) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("Headers", 1))
+	}
 	if s.Prefix == nil {
 		invalidParams.Add(request.NewErrParamRequired("Prefix"))
+	}
+	if s.Headers != nil {
+		for i, v := range s.Headers {
+			if v == nil {
+				continue
+			}
+			if err := v.Validate(); err != nil {
+				invalidParams.AddNested(fmt.Sprintf("%s[%v]", "Headers", i), err.(request.ErrInvalidParams))
+			}
+		}
 	}
 
 	if invalidParams.Len() > 0 {
@@ -5206,9 +5398,27 @@ func (s *HttpRouteMatch) Validate() error {
 	return nil
 }
 
+// SetHeaders sets the Headers field's value.
+func (s *HttpRouteMatch) SetHeaders(v []*HttpRouteHeader) *HttpRouteMatch {
+	s.Headers = v
+	return s
+}
+
+// SetMethod sets the Method field's value.
+func (s *HttpRouteMatch) SetMethod(v string) *HttpRouteMatch {
+	s.Method = &v
+	return s
+}
+
 // SetPrefix sets the Prefix field's value.
 func (s *HttpRouteMatch) SetPrefix(v string) *HttpRouteMatch {
 	s.Prefix = &v
+	return s
+}
+
+// SetScheme sets the Scheme field's value.
+func (s *HttpRouteMatch) SetScheme(v string) *HttpRouteMatch {
+	s.Scheme = &v
 	return s
 }
 
@@ -5840,6 +6050,57 @@ func (s *Logging) SetAccessLog(v *AccessLog) *Logging {
 	return s
 }
 
+// The range of values to match on. The first character of the range is included
+// in the range, though the last character is not. For example, if the range
+// specified were 1-100, only values 1-99 would be matched.
+type MatchRange struct {
+	_ struct{} `type:"structure"`
+
+	// End is a required field
+	End *int64 `locationName:"end" type:"long" required:"true"`
+
+	// Start is a required field
+	Start *int64 `locationName:"start" type:"long" required:"true"`
+}
+
+// String returns the string representation
+func (s MatchRange) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s MatchRange) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *MatchRange) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "MatchRange"}
+	if s.End == nil {
+		invalidParams.Add(request.NewErrParamRequired("End"))
+	}
+	if s.Start == nil {
+		invalidParams.Add(request.NewErrParamRequired("Start"))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetEnd sets the End field's value.
+func (s *MatchRange) SetEnd(v int64) *MatchRange {
+	s.End = &v
+	return s
+}
+
+// SetStart sets the Start field's value.
+func (s *MatchRange) SetStart(v int64) *MatchRange {
+	s.Start = &v
+	return s
+}
+
 // An object representing a service mesh returned by a describe operation.
 type MeshData struct {
 	_ struct{} `type:"structure"`
@@ -6237,6 +6498,8 @@ type RouteSpec struct {
 	// An object representing the HTTP routing specification for a route.
 	HttpRoute *HttpRoute `locationName:"httpRoute" type:"structure"`
 
+	Priority *int64 `locationName:"priority" type:"integer"`
+
 	// An object representing the TCP routing specification for a route.
 	TcpRoute *TcpRoute `locationName:"tcpRoute" type:"structure"`
 }
@@ -6274,6 +6537,12 @@ func (s *RouteSpec) Validate() error {
 // SetHttpRoute sets the HttpRoute field's value.
 func (s *RouteSpec) SetHttpRoute(v *HttpRoute) *RouteSpec {
 	s.HttpRoute = v
+	return s
+}
+
+// SetPriority sets the Priority field's value.
+func (s *RouteSpec) SetPriority(v int64) *RouteSpec {
+	s.Priority = &v
 	return s
 }
 
@@ -8013,6 +8282,43 @@ const (
 
 	// EgressFilterTypeDropAll is a EgressFilterType enum value
 	EgressFilterTypeDropAll = "DROP_ALL"
+)
+
+const (
+	// HttpMethodConnect is a HttpMethod enum value
+	HttpMethodConnect = "CONNECT"
+
+	// HttpMethodDelete is a HttpMethod enum value
+	HttpMethodDelete = "DELETE"
+
+	// HttpMethodGet is a HttpMethod enum value
+	HttpMethodGet = "GET"
+
+	// HttpMethodHead is a HttpMethod enum value
+	HttpMethodHead = "HEAD"
+
+	// HttpMethodOptions is a HttpMethod enum value
+	HttpMethodOptions = "OPTIONS"
+
+	// HttpMethodPatch is a HttpMethod enum value
+	HttpMethodPatch = "PATCH"
+
+	// HttpMethodPost is a HttpMethod enum value
+	HttpMethodPost = "POST"
+
+	// HttpMethodPut is a HttpMethod enum value
+	HttpMethodPut = "PUT"
+
+	// HttpMethodTrace is a HttpMethod enum value
+	HttpMethodTrace = "TRACE"
+)
+
+const (
+	// HttpSchemeHttp is a HttpScheme enum value
+	HttpSchemeHttp = "http"
+
+	// HttpSchemeHttps is a HttpScheme enum value
+	HttpSchemeHttps = "https"
 )
 
 const (
