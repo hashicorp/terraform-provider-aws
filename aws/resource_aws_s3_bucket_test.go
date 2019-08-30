@@ -75,20 +75,27 @@ func testSweepS3Buckets(region string) error {
 			continue
 		}
 
+		bucketRegion, err := testS3BucketRegion(conn, name)
+
+		if err != nil {
+			log.Printf("[ERROR] Error getting S3 Bucket (%s) Location: %s", name, err)
+			continue
+		}
+
+		if bucketRegion != region {
+			log.Printf("[INFO] Skipping S3 Bucket (%s) in different region: %s", name, bucketRegion)
+			continue
+		}
+
 		input := &s3.DeleteBucketInput{
 			Bucket: bucket.Name,
 		}
 
 		log.Printf("[INFO] Deleting S3 Bucket: %s", name)
-		err := resource.Retry(1*time.Minute, func() *resource.RetryError {
+		err = resource.Retry(1*time.Minute, func() *resource.RetryError {
 			_, err := conn.DeleteBucket(input)
 
 			if isAWSErr(err, s3.ErrCodeNoSuchBucket, "") {
-				return nil
-			}
-
-			if isAWSErr(err, "AuthorizationHeaderMalformed", "region") || isAWSErr(err, "BucketRegionError", "") {
-				log.Printf("[INFO] Skipping S3 Bucket (%s): %s", name, err)
 				return nil
 			}
 
@@ -109,6 +116,24 @@ func testSweepS3Buckets(region string) error {
 	}
 
 	return nil
+}
+
+func testS3BucketRegion(conn *s3.S3, bucket string) (string, error) {
+	input := &s3.GetBucketLocationInput{
+		Bucket: aws.String(bucket),
+	}
+
+	output, err := conn.GetBucketLocation(input)
+
+	if err != nil {
+		return "", err
+	}
+
+	if output == nil || output.LocationConstraint == nil {
+		return "us-east-1", nil
+	}
+
+	return aws.StringValue(output.LocationConstraint), nil
 }
 
 func TestAccAWSS3Bucket_importBasic(t *testing.T) {
