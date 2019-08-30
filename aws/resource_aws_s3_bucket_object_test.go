@@ -353,6 +353,52 @@ func TestAccAWSS3BucketObject_updates(t *testing.T) {
 	})
 }
 
+func TestAccAWSS3BucketObject_updateSameFile(t *testing.T) {
+	var originalObj, modifiedObj s3.GetObjectOutput
+	resourceName := "aws_s3_bucket_object.object"
+	rInt := acctest.RandInt()
+
+	startingData := "lane 8"
+	changingData := "chicane"
+
+	filename := testAccAWSS3BucketObjectCreateTempFile(t, startingData)
+	defer os.Remove(filename)
+
+	rewriteFile := func(*terraform.State) error {
+		if err := ioutil.WriteFile(filename, []byte(changingData), 0644); err != nil {
+			os.Remove(filename)
+			t.Fatal(err)
+		}
+		return nil
+	}
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSS3BucketObjectDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSS3BucketObjectConfig_updateable(rInt, false, filename),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSS3BucketObjectExists(resourceName, &originalObj),
+					testAccCheckAWSS3BucketObjectBody(&originalObj, startingData),
+					resource.TestCheckResourceAttr(resourceName, "etag", "aa48b42f36a2652cbee40c30a5df7d25"),
+					rewriteFile,
+				),
+				ExpectNonEmptyPlan: true,
+			},
+			{
+				Config: testAccAWSS3BucketObjectConfig_updateable(rInt, false, filename),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSS3BucketObjectExists(resourceName, &modifiedObj),
+					testAccCheckAWSS3BucketObjectBody(&modifiedObj, changingData),
+					resource.TestCheckResourceAttr(resourceName, "etag", "fafc05f8c4da0266a99154681ab86e8c"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccAWSS3BucketObject_updatesWithVersioning(t *testing.T) {
 	var originalObj, modifiedObj s3.GetObjectOutput
 	resourceName := "aws_s3_bucket_object.object"
