@@ -3318,6 +3318,8 @@ type DescribeBrokerResponse struct {
 
 	PendingEngineVersion *string `locationName:"pendingEngineVersion" type:"string"`
 
+	PendingSecurityGroups []*string `locationName:"pendingSecurityGroups" type:"list"`
+
 	PubliclyAccessible *bool `locationName:"publiclyAccessible" type:"boolean"`
 
 	SecurityGroups []*string `locationName:"securityGroups" type:"list"`
@@ -3432,6 +3434,12 @@ func (s *DescribeBrokerResponse) SetMaintenanceWindowStartTime(v *WeeklyStartTim
 // SetPendingEngineVersion sets the PendingEngineVersion field's value.
 func (s *DescribeBrokerResponse) SetPendingEngineVersion(v string) *DescribeBrokerResponse {
 	s.PendingEngineVersion = &v
+	return s
+}
+
+// SetPendingSecurityGroups sets the PendingSecurityGroups field's value.
+func (s *DescribeBrokerResponse) SetPendingSecurityGroups(v []*string) *DescribeBrokerResponse {
+	s.PendingSecurityGroups = v
 	return s
 }
 
@@ -4541,6 +4549,8 @@ type UpdateBrokerRequest struct {
 
 	// The list of information about logs to be enabled for the specified broker.
 	Logs *Logs `locationName:"logs" type:"structure"`
+
+	SecurityGroups []*string `locationName:"securityGroups" type:"list"`
 }
 
 // String returns the string representation
@@ -4599,6 +4609,12 @@ func (s *UpdateBrokerRequest) SetLogs(v *Logs) *UpdateBrokerRequest {
 	return s
 }
 
+// SetSecurityGroups sets the SecurityGroups field's value.
+func (s *UpdateBrokerRequest) SetSecurityGroups(v []*string) *UpdateBrokerRequest {
+	s.SecurityGroups = v
+	return s
+}
+
 type UpdateBrokerResponse struct {
 	_ struct{} `type:"structure"`
 
@@ -4613,6 +4629,8 @@ type UpdateBrokerResponse struct {
 
 	// The list of information about logs to be enabled for the specified broker.
 	Logs *Logs `locationName:"logs" type:"structure"`
+
+	SecurityGroups []*string `locationName:"securityGroups" type:"list"`
 }
 
 // String returns the string representation
@@ -4652,6 +4670,12 @@ func (s *UpdateBrokerResponse) SetEngineVersion(v string) *UpdateBrokerResponse 
 // SetLogs sets the Logs field's value.
 func (s *UpdateBrokerResponse) SetLogs(v *Logs) *UpdateBrokerResponse {
 	s.Logs = v
+	return s
+}
+
+// SetSecurityGroups sets the SecurityGroups field's value.
+func (s *UpdateBrokerResponse) SetSecurityGroups(v []*string) *UpdateBrokerResponse {
+	s.SecurityGroups = v
 	return s
 }
 
