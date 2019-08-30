@@ -2718,7 +2718,7 @@ type GetQueryResultsInput struct {
 	_ struct{} `type:"structure"`
 
 	// The maximum number of results (rows) to return in this request.
-	MaxResults *int64 `type:"integer"`
+	MaxResults *int64 `min:"1" type:"integer"`
 
 	// The token that specifies where to start pagination if a previous request
 	// was truncated.
@@ -2743,6 +2743,9 @@ func (s GetQueryResultsInput) GoString() string {
 // Validate inspects the fields of the type to determine if they are valid.
 func (s *GetQueryResultsInput) Validate() error {
 	invalidParams := request.ErrInvalidParams{Context: "GetQueryResultsInput"}
+	if s.MaxResults != nil && *s.MaxResults < 1 {
+		invalidParams.Add(request.NewErrParamMinValue("MaxResults", 1))
+	}
 	if s.NextToken != nil && len(*s.NextToken) < 1 {
 		invalidParams.Add(request.NewErrParamMinLen("NextToken", 1))
 	}
@@ -3534,8 +3537,7 @@ func (s *QueryExecutionStatus) SetSubmissionDateTime(v time.Time) *QueryExecutio
 // The location in Amazon S3 where query results are stored and the encryption
 // option, if any, used for query results. These are known as "client-side settings".
 // If workgroup settings override client-side settings, then the query uses
-// the location for the query results and the encryption configuration that
-// are specified for the workgroup.
+// the workgroup settings.
 type ResultConfiguration struct {
 	_ struct{} `type:"structure"`
 
@@ -3549,12 +3551,13 @@ type ResultConfiguration struct {
 	EncryptionConfiguration *EncryptionConfiguration `type:"structure"`
 
 	// The location in Amazon S3 where your query results are stored, such as s3://path/to/query/bucket/.
-	// For more information, see Queries and Query Result Files. (https://docs.aws.amazon.com/athena/latest/ug/querying.html)
+	// To run the query, you must specify the query results location using one of
+	// the ways: either for individual queries using either this setting (client-side),
+	// or in the workgroup, using WorkGroupConfiguration. If none of them is set,
+	// Athena issues an error that no output location is provided. For more information,
+	// see Query Results (https://docs.aws.amazon.com/athena/latest/ug/querying.html).
 	// If workgroup settings override client-side settings, then the query uses
-	// the location for the query results and the encryption configuration that
-	// are specified for the workgroup. The "workgroup settings override" is specified
-	// in EnforceWorkGroupConfiguration (true/false) in the WorkGroupConfiguration.
-	// See WorkGroupConfiguration$EnforceWorkGroupConfiguration.
+	// the settings specified for the workgroup. See WorkGroupConfiguration$EnforceWorkGroupConfiguration.
 	OutputLocation *string `type:"string"`
 }
 
@@ -3604,7 +3607,7 @@ type ResultConfigurationUpdates struct {
 	EncryptionConfiguration *EncryptionConfiguration `type:"structure"`
 
 	// The location in Amazon S3 where your query results are stored, such as s3://path/to/query/bucket/.
-	// For more information, see Queries and Query Result Files. (https://docs.aws.amazon.com/athena/latest/ug/querying.html)
+	// For more information, see Query Results (https://docs.aws.amazon.com/athena/latest/ug/querying.html)
 	// If workgroup settings override client-side settings, then the query uses
 	// the location for the query results and the encryption configuration that
 	// are specified for the workgroup. The "workgroup settings override" is specified
@@ -4323,8 +4326,8 @@ type WorkGroup struct {
 	// S3 where query results are stored, the encryption configuration, if any,
 	// used for query results; whether the Amazon CloudWatch Metrics are enabled
 	// for the workgroup; whether workgroup settings override client-side settings;
-	// and the data usage limit for the amount of data scanned per query, if it
-	// is specified. The workgroup settings override is specified in EnforceWorkGroupConfiguration
+	// and the data usage limits for the amount of data scanned per query or per
+	// workgroup. The workgroup settings override is specified in EnforceWorkGroupConfiguration
 	// (true/false) in the WorkGroupConfiguration. See WorkGroupConfiguration$EnforceWorkGroupConfiguration.
 	Configuration *WorkGroupConfiguration `type:"structure"`
 
@@ -4387,7 +4390,7 @@ func (s *WorkGroup) SetState(v string) *WorkGroup {
 // S3 where query results are stored, the encryption option, if any, used for
 // query results, whether the Amazon CloudWatch Metrics are enabled for the
 // workgroup and whether workgroup settings override query settings, and the
-// data usage limit for the amount of data scanned per query, if it is specified.
+// data usage limits for the amount of data scanned per query or per workgroup.
 // The workgroup settings override is specified in EnforceWorkGroupConfiguration
 // (true/false) in the WorkGroupConfiguration. See WorkGroupConfiguration$EnforceWorkGroupConfiguration.
 type WorkGroupConfiguration struct {
@@ -4405,9 +4408,22 @@ type WorkGroupConfiguration struct {
 	// Indicates that the Amazon CloudWatch metrics are enabled for the workgroup.
 	PublishCloudWatchMetricsEnabled *bool `type:"boolean"`
 
+	// If set to true, allows members assigned to a workgroup to reference Amazon
+	// S3 Requester Pays buckets in queries. If set to false, workgroup members
+	// cannot query data from Requester Pays buckets, and queries that retrieve
+	// data from Requester Pays buckets cause an error. The default is false. For
+	// more information about Requester Pays buckets, see Requester Pays Buckets
+	// (https://docs.aws.amazon.com/AmazonS3/latest/dev/RequesterPaysBuckets.html)
+	// in the Amazon Simple Storage Service Developer Guide.
+	RequesterPaysEnabled *bool `type:"boolean"`
+
 	// The configuration for the workgroup, which includes the location in Amazon
 	// S3 where query results are stored and the encryption option, if any, used
-	// for query results.
+	// for query results. To run the query, you must specify the query results location
+	// using one of the ways: either in the workgroup using this setting, or for
+	// individual queries (client-side), using ResultConfiguration$OutputLocation.
+	// If none of them is set, Athena issues an error that no output location is
+	// provided. For more information, see Query Results (https://docs.aws.amazon.com/athena/latest/ug/querying.html).
 	ResultConfiguration *ResultConfiguration `type:"structure"`
 }
 
@@ -4457,6 +4473,12 @@ func (s *WorkGroupConfiguration) SetPublishCloudWatchMetricsEnabled(v bool) *Wor
 	return s
 }
 
+// SetRequesterPaysEnabled sets the RequesterPaysEnabled field's value.
+func (s *WorkGroupConfiguration) SetRequesterPaysEnabled(v bool) *WorkGroupConfiguration {
+	s.RequesterPaysEnabled = &v
+	return s
+}
+
 // SetResultConfiguration sets the ResultConfiguration field's value.
 func (s *WorkGroupConfiguration) SetResultConfiguration(v *ResultConfiguration) *WorkGroupConfiguration {
 	s.ResultConfiguration = v
@@ -4486,6 +4508,15 @@ type WorkGroupConfigurationUpdates struct {
 
 	// Indicates that the data usage control limit per query is removed. WorkGroupConfiguration$BytesScannedCutoffPerQuery
 	RemoveBytesScannedCutoffPerQuery *bool `type:"boolean"`
+
+	// If set to true, allows members assigned to a workgroup to specify Amazon
+	// S3 Requester Pays buckets in queries. If set to false, workgroup members
+	// cannot query data from Requester Pays buckets, and queries that retrieve
+	// data from Requester Pays buckets cause an error. The default is false. For
+	// more information about Requester Pays buckets, see Requester Pays Buckets
+	// (https://docs.aws.amazon.com/AmazonS3/latest/dev/RequesterPaysBuckets.html)
+	// in the Amazon Simple Storage Service Developer Guide.
+	RequesterPaysEnabled *bool `type:"boolean"`
 
 	// The result configuration information about the queries in this workgroup
 	// that will be updated. Includes the updated results location and an updated
@@ -4542,6 +4573,12 @@ func (s *WorkGroupConfigurationUpdates) SetPublishCloudWatchMetricsEnabled(v boo
 // SetRemoveBytesScannedCutoffPerQuery sets the RemoveBytesScannedCutoffPerQuery field's value.
 func (s *WorkGroupConfigurationUpdates) SetRemoveBytesScannedCutoffPerQuery(v bool) *WorkGroupConfigurationUpdates {
 	s.RemoveBytesScannedCutoffPerQuery = &v
+	return s
+}
+
+// SetRequesterPaysEnabled sets the RequesterPaysEnabled field's value.
+func (s *WorkGroupConfigurationUpdates) SetRequesterPaysEnabled(v bool) *WorkGroupConfigurationUpdates {
+	s.RequesterPaysEnabled = &v
 	return s
 }
 
