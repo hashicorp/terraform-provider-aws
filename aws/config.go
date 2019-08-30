@@ -75,6 +75,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/iam"
 	"github.com/aws/aws-sdk-go/service/inspector"
 	"github.com/aws/aws-sdk-go/service/iot"
+	"github.com/aws/aws-sdk-go/service/iotevents"
 	"github.com/aws/aws-sdk-go/service/kafka"
 	"github.com/aws/aws-sdk-go/service/kinesis"
 	"github.com/aws/aws-sdk-go/service/kinesisanalytics"
@@ -235,6 +236,7 @@ type AWSClient struct {
 	iamconn                             *iam.IAM
 	inspectorconn                       *inspector.Inspector
 	iotconn                             *iot.IoT
+	ioteventsconn                       *iotevents.IoTEvents
 	kafkaconn                           *kafka.Kafka
 	kinesisanalyticsconn                *kinesisanalytics.KinesisAnalytics
 	kinesisanalyticsv2conn              *kinesisanalyticsv2.KinesisAnalyticsV2
@@ -421,6 +423,7 @@ func (c *Config) Client() (interface{}, error) {
 		iamconn:                             iam.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["iam"])})),
 		inspectorconn:                       inspector.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["inspector"])})),
 		iotconn:                             iot.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["iot"])})),
+		ioteventsconn:                       iotevents.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["iotevents"])})),
 		kafkaconn:                           kafka.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["kafka"])})),
 		kinesisanalyticsconn:                kinesisanalytics.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["kinesisanalytics"])})),
 		kinesisanalyticsv2conn:              kinesisanalyticsv2.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["kinesisanalytics"])})),
