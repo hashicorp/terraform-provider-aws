@@ -162,6 +162,15 @@ func resourceAwsS3BucketObject() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
+
+			"object_lock_legal_hold_status": {
+				Type:     schema.TypeString,
+				Optional: true,
+				ValidateFunc: validation.StringInSlice([]string{
+					s3.ObjectLockLegalHoldStatusOn,
+					s3.ObjectLockLegalHoldStatusOff,
+				}, false),
+			},
 		},
 	}
 }
@@ -263,6 +272,10 @@ func resourceAwsS3BucketObjectPut(d *schema.ResourceData, meta interface{}) erro
 		putInput.WebsiteRedirectLocation = aws.String(v.(string))
 	}
 
+	if v, ok := d.GetOk("object_lock_legal_hold_status"); ok {
+		putInput.ObjectLockLegalHoldStatus = aws.String(v.(string))
+	}
+
 	if _, err := s3conn.PutObject(putInput); err != nil {
 		return fmt.Errorf("Error putting object in S3 bucket (%s): %s", bucket, err)
 	}
@@ -317,6 +330,7 @@ func resourceAwsS3BucketObjectRead(d *schema.ResourceData, meta interface{}) err
 	d.Set("version_id", resp.VersionId)
 	d.Set("server_side_encryption", resp.ServerSideEncryption)
 	d.Set("website_redirect", resp.WebsiteRedirectLocation)
+	d.Set("object_lock_legal_hold_status", resp.ObjectLockLegalHoldStatus)
 
 	// Only set non-default KMS key ID (one that doesn't match default)
 	if resp.SSEKMSKeyId != nil {
@@ -384,6 +398,19 @@ func resourceAwsS3BucketObjectUpdate(d *schema.ResourceData, meta interface{}) e
 		})
 		if err != nil {
 			return fmt.Errorf("error putting S3 object ACL: %s", err)
+		}
+	}
+
+	if d.HasChange("object_lock_legal_hold_status") {
+		_, err := conn.PutObjectLegalHold(&s3.PutObjectLegalHoldInput{
+			Bucket: aws.String(d.Get("bucket").(string)),
+			Key:    aws.String(d.Get("key").(string)),
+			LegalHold: &s3.ObjectLockLegalHold{
+				Status: aws.String(d.Get("object_lock_legal_hold_status").(string)),
+			},
+		})
+		if err != nil {
+			return fmt.Errorf("error putting S3 object lock legal hold: %s", err)
 		}
 	}
 

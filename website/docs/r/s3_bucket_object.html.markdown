@@ -109,6 +109,7 @@ use the exported `arn` attribute:
       `kms_key_id = "${aws_kms_key.foo.arn}"`
 * `metadata` - (Optional) A mapping of keys/values to provision metadata (will be automatically prefixed by `x-amz-meta-`, note that only lowercase label are currently supported by the AWS Go API).
 * `tags` - (Optional) A mapping of tags to assign to the object.
+* `object_lock_legal_hold_status` - (Optional) Indicates whether this object has an active [legal hold](https://docs.aws.amazon.com/AmazonS3/latest/dev/object-lock-overview.html#object-lock-legal-holds). Valid values are `ON` and `OFF`.
 
 If no content is provided through `source`, `content` or `content_base64`, then the object will be empty.
 
