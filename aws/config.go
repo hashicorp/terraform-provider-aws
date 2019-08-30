@@ -521,20 +521,6 @@ func (c *Config) Client() (interface{}, error) {
 	client.r53conn = route53.New(sess.Copy(route53Config))
 	client.shieldconn = shield.New(sess.Copy(shieldConfig))
 
-	// Workaround for https://github.com/aws/aws-sdk-go/issues/1376
-	client.kinesisconn.Handlers.Retry.PushBack(func(r *request.Request) {
-		if !strings.HasPrefix(r.Operation.Name, "Describe") && !strings.HasPrefix(r.Operation.Name, "List") {
-			return
-		}
-		err, ok := r.Error.(awserr.Error)
-		if !ok || err == nil {
-			return
-		}
-		if err.Code() == kinesis.ErrCodeLimitExceededException {
-			r.Retryable = aws.Bool(true)
-		}
-	})
-
 	// Workaround for https://github.com/aws/aws-sdk-go/issues/1472
 	client.appautoscalingconn.Handlers.Retry.PushBack(func(r *request.Request) {
 		if !strings.HasPrefix(r.Operation.Name, "Describe") && !strings.HasPrefix(r.Operation.Name, "List") {
