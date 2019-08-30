@@ -132,6 +132,7 @@ The Terraform AWS Provider allows the following endpoints to be customized:
 - `neptune`
 - `opsworks`
 - `organizations`
+- `personalize`
 - `pinpoint`
 - `pricing`
 - `quicksight`

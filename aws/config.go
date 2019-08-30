@@ -96,6 +96,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/neptune"
 	"github.com/aws/aws-sdk-go/service/opsworks"
 	"github.com/aws/aws-sdk-go/service/organizations"
+	"github.com/aws/aws-sdk-go/service/personalize"
 	"github.com/aws/aws-sdk-go/service/pinpoint"
 	"github.com/aws/aws-sdk-go/service/pricing"
 	"github.com/aws/aws-sdk-go/service/quicksight"
@@ -254,6 +255,7 @@ type AWSClient struct {
 	opsworksconn                        *opsworks.OpsWorks
 	organizationsconn                   *organizations.Organizations
 	partition                           string
+	personalizeconn                     *personalize.Personalize
 	pinpointconn                        *pinpoint.Pinpoint
 	pricingconn                         *pricing.Pricing
 	quicksightconn                      *quicksight.QuickSight
@@ -437,6 +439,7 @@ func (c *Config) Client() (interface{}, error) {
 		opsworksconn:                        opsworks.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["opsworks"])})),
 		organizationsconn:                   organizations.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["organizations"])})),
 		partition:                           partition,
+		personalizeconn:                     personalize.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["personalize"])})),
 		pinpointconn:                        pinpoint.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["pinpoint"])})),
 		pricingconn:                         pricing.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["pricing"])})),
 		quicksightconn:                      quicksight.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["quicksight"])})),
