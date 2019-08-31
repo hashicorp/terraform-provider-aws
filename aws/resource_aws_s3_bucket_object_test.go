@@ -81,79 +81,8 @@ func testSweepS3BucketObjects(region string) error {
 			continue
 		}
 
-		input := &s3.ListObjectVersionsInput{
-			Bucket: bucket.Name,
-		}
-
-		err = conn.ListObjectVersionsPages(input, func(page *s3.ListObjectVersionsOutput, lastPage bool) bool {
-			if page == nil {
-				return !lastPage
-			}
-
-			for _, objectVersion := range page.Versions {
-				input := &s3.DeleteObjectInput{
-					Bucket:    bucket.Name,
-					Key:       objectVersion.Key,
-					VersionId: objectVersion.VersionId,
-				}
-				objectKey := aws.StringValue(objectVersion.Key)
-				objectVersionID := aws.StringValue(objectVersion.VersionId)
-
-				log.Printf("[INFO] Deleting S3 Bucket (%s) Object (%s) Version: %s", bucketName, objectKey, objectVersionID)
-				_, err := conn.DeleteObject(input)
-
-				if isAWSErr(err, s3.ErrCodeNoSuchBucket, "") || isAWSErr(err, s3.ErrCodeNoSuchKey, "") {
-					continue
-				}
-
-				if err != nil {
-					log.Printf("[ERROR] Error deleting S3 Bucket (%s) Object (%s) Version (%s): %s", bucketName, objectKey, objectVersionID, err)
-				}
-			}
-
-			return !lastPage
-		})
-
-		if isAWSErr(err, s3.ErrCodeNoSuchBucket, "") {
-			continue
-		}
-
-		if err != nil {
-			return fmt.Errorf("error listing S3 Bucket (%s) Objects: %s", bucketName, err)
-		}
-
-		err = conn.ListObjectVersionsPages(input, func(page *s3.ListObjectVersionsOutput, lastPage bool) bool {
-			if page == nil {
-				return !lastPage
-			}
-
-			for _, deleteMarker := range page.DeleteMarkers {
-				input := &s3.DeleteObjectInput{
-					Bucket:    bucket.Name,
-					Key:       deleteMarker.Key,
-					VersionId: deleteMarker.VersionId,
-				}
-				deleteMarkerKey := aws.StringValue(deleteMarker.Key)
-				deleteMarkerVersionID := aws.StringValue(deleteMarker.VersionId)
-
-				log.Printf("[INFO] Deleting S3 Bucket (%s) Object (%s) Delete Marker: %s", bucketName, deleteMarkerKey, deleteMarkerVersionID)
-				_, err := conn.DeleteObject(input)
-
-				if isAWSErr(err, s3.ErrCodeNoSuchBucket, "") || isAWSErr(err, s3.ErrCodeNoSuchKey, "") {
-					continue
-				}
-
-				if err != nil {
-					log.Printf("[ERROR] Error deleting S3 Bucket (%s) Object (%s) Version (%s): %s", bucketName, deleteMarkerKey, deleteMarkerVersionID, err)
-				}
-			}
-
-			return !lastPage
-		})
-
-		if isAWSErr(err, s3.ErrCodeNoSuchBucket, "") {
-			continue
-		}
+		// Delete everything including locked objects. Ignore any object errors.
+		err = deleteAllS3ObjectVersions(conn, bucketName, "", true, true)
 
 		if err != nil {
 			return fmt.Errorf("error listing S3 Bucket (%s) Objects: %s", bucketName, err)
@@ -788,25 +717,16 @@ func TestAccAWSS3BucketObject_ObjectLockLegalHoldStartWithNone(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "object_lock_legal_hold_status", "ON"),
 				),
 			},
+			// Remove legal hold but create a new object version to test force_destroy
 			{
-				Config: testAccAWSS3BucketObjectConfig_withObjectLockLegalHold(rInt, "stuff", "OFF"),
+				Config: testAccAWSS3BucketObjectConfig_withObjectLockLegalHold(rInt, "changed stuff", "OFF"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSS3BucketObjectExists(resourceName, &obj3),
-					testAccCheckAWSS3BucketObjectVersionIdEquals(&obj3, &obj2),
-					testAccCheckAWSS3BucketObjectBody(&obj3, "stuff"),
+					testAccCheckAWSS3BucketObjectVersionIdDiffers(&obj3, &obj2),
+					testAccCheckAWSS3BucketObjectBody(&obj3, "changed stuff"),
 					resource.TestCheckResourceAttr(resourceName, "object_lock_legal_hold_status", "OFF"),
 				),
 			},
-			// Remove legal hold but create a new object version to test force_destroy
-			// {
-			// 	Config: testAccAWSS3BucketObjectConfig_withObjectLockLegalHold(rInt, "changed stuff", "OFF"),
-			// 	Check: resource.ComposeTestCheckFunc(
-			// 		testAccCheckAWSS3BucketObjectExists(resourceName, &obj3),
-			// 		testAccCheckAWSS3BucketObjectVersionIdDiffers(&obj3, &obj2),
-			// 		testAccCheckAWSS3BucketObjectBody(&obj3, "changed stuff"),
-			// 		resource.TestCheckResourceAttr(resourceName, "object_lock_legal_hold_status", "OFF"),
-			// 	),
-			// },
 		},
 	})
 }
@@ -1327,7 +1247,7 @@ resource "aws_s3_bucket_object" "object" {
   bucket = "${aws_s3_bucket.object_bucket.bucket}"
   key = "test-key"
   content = "%s"
-  //force_destroy = true
+  force_destroy = true
 }
 `, randInt, content)
 }
@@ -1349,7 +1269,7 @@ resource "aws_s3_bucket_object" "object" {
   key = "test-key"
   content = "%s"
   object_lock_legal_hold_status = "%s"
-  //force_destroy = true
+  force_destroy = true
 }
 `, randInt, content, legalHoldStatus)
 }

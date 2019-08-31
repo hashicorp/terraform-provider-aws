@@ -163,6 +163,12 @@ func resourceAwsS3BucketObject() *schema.Resource {
 				Optional: true,
 			},
 
+			"force_destroy": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				Default:  false,
+			},
+
 			"object_lock_legal_hold_status": {
 				Type:     schema.TypeString,
 				Optional: true,
@@ -429,39 +435,8 @@ func resourceAwsS3BucketObjectDelete(d *schema.ResourceData, meta interface{}) e
 	// We are effectively ignoring any leading '/' in the key name as aws.Config.DisableRestProtocolURICleaning is false
 	key = strings.TrimPrefix(key, "/")
 
-	if _, ok := d.GetOk("version_id"); ok {
-		// Bucket is versioned, we need to delete all versions
-		vInput := s3.ListObjectVersionsInput{
-			Bucket: aws.String(bucket),
-			Prefix: aws.String(key),
-		}
-		out, err := s3conn.ListObjectVersions(&vInput)
-		if err != nil {
-			return fmt.Errorf("Failed listing S3 object versions: %s", err)
-		}
-
-		for _, v := range out.Versions {
-			input := s3.DeleteObjectInput{
-				Bucket:    aws.String(bucket),
-				Key:       aws.String(key),
-				VersionId: v.VersionId,
-			}
-			_, err := s3conn.DeleteObject(&input)
-			if err != nil {
-				return fmt.Errorf("Error deleting S3 object version of %s:\n %s:\n %s",
-					key, v, err)
-			}
-		}
-	} else {
-		// Just delete the object
-		input := s3.DeleteObjectInput{
-			Bucket: aws.String(bucket),
-			Key:    aws.String(key),
-		}
-		_, err := s3conn.DeleteObject(&input)
-		if err != nil {
-			return fmt.Errorf("Error deleting S3 bucket object: %s  Bucket: %q Object: %q", err, bucket, key)
-		}
+	if err := deleteAllS3ObjectVersions(s3conn, bucket, key, d.Get("force_destroy").(bool), false); err != nil {
+		return fmt.Errorf("error deleting S3 Bucket (%s) Object (%s): %s", bucket, key, err)
 	}
 
 	return nil
@@ -485,4 +460,161 @@ func resourceAwsS3BucketObjectCustomizeDiff(d *schema.ResourceDiff, meta interfa
 	}
 
 	return nil
+}
+
+// deleteAllS3ObjectVersions deletes all versions of a specified key from an S3 bucket.
+// If key is empty then all versions of all objects are deleted.
+// Set force to true to override any S3 object lock protections.
+func deleteAllS3ObjectVersions(conn *s3.S3, bucketName, key string, force, ignoreObjectErrors bool) error {
+	input := &s3.ListObjectVersionsInput{
+		Bucket: aws.String(bucketName),
+	}
+	if key != "" {
+		input.Prefix = aws.String(key)
+	}
+
+	var lastErr error
+	err := conn.ListObjectVersionsPages(input, func(page *s3.ListObjectVersionsOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
+		}
+
+		for _, objectVersion := range page.Versions {
+			objectKey := aws.StringValue(objectVersion.Key)
+			objectVersionID := aws.StringValue(objectVersion.VersionId)
+
+			if key != "" && key != objectKey {
+				continue
+			}
+
+			err := deleteS3ObjectVersion(conn, bucketName, objectKey, objectVersionID)
+			if isAWSErr(err, "AccessDenied", "") && force {
+				// Remove any legal hold.
+				resp, err := conn.HeadObject(&s3.HeadObjectInput{
+					Bucket:    aws.String(bucketName),
+					Key:       objectVersion.Key,
+					VersionId: objectVersion.VersionId,
+				})
+
+				if err != nil {
+					log.Printf("[ERROR] Error getting S3 Bucket (%s) Object (%s) Version (%s) metadata: %s", bucketName, objectKey, objectVersionID, err)
+					lastErr = err
+					continue
+				}
+
+				if aws.StringValue(resp.ObjectLockLegalHoldStatus) == s3.ObjectLockLegalHoldStatusOn {
+					_, err := conn.PutObjectLegalHold(&s3.PutObjectLegalHoldInput{
+						Bucket:    aws.String(bucketName),
+						Key:       objectVersion.Key,
+						VersionId: objectVersion.VersionId,
+						LegalHold: &s3.ObjectLockLegalHold{
+							Status: aws.String(s3.ObjectLockLegalHoldStatusOff),
+						},
+					})
+
+					if err != nil {
+						log.Printf("[ERROR] Error putting S3 Bucket (%s) Object (%s) Version(%s) legal hold: %s", bucketName, objectKey, objectVersionID, err)
+						lastErr = err
+						continue
+					}
+
+					// Attempt to delete again.
+					err = deleteS3ObjectVersion(conn, bucketName, objectKey, objectVersionID)
+
+					if err != nil {
+						lastErr = err
+					}
+
+					continue
+				}
+
+				// AccessDenied for another reason.
+				lastErr = fmt.Errorf("AccessDenied deleting S3 Bucket (%s) Object (%s) Version: %s", bucketName, objectKey, objectVersionID)
+				continue
+			}
+
+			if err != nil {
+				lastErr = err
+			}
+		}
+
+		return !lastPage
+	})
+
+	if isAWSErr(err, s3.ErrCodeNoSuchBucket, "") {
+		err = nil
+	}
+
+	if err != nil {
+		return err
+	}
+
+	if lastErr != nil {
+		if !ignoreObjectErrors {
+			return fmt.Errorf("error deleting at least one object version, last error: %s", lastErr)
+		}
+
+		lastErr = nil
+	}
+
+	err = conn.ListObjectVersionsPages(input, func(page *s3.ListObjectVersionsOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
+		}
+
+		for _, deleteMarker := range page.DeleteMarkers {
+			deleteMarkerKey := aws.StringValue(deleteMarker.Key)
+			deleteMarkerVersionID := aws.StringValue(deleteMarker.VersionId)
+
+			if key != "" && key != deleteMarkerKey {
+				continue
+			}
+
+			err := deleteS3ObjectVersion(conn, bucketName, deleteMarkerKey, deleteMarkerVersionID)
+
+			if err != nil {
+				lastErr = err
+			}
+		}
+
+		return !lastPage
+	})
+
+	if isAWSErr(err, s3.ErrCodeNoSuchBucket, "") {
+		err = nil
+	}
+
+	if err != nil {
+		return err
+	}
+
+	if lastErr != nil {
+		if !ignoreObjectErrors {
+			return fmt.Errorf("error deleting at least one object delete marker, last error: %s", lastErr)
+		}
+
+		lastErr = nil
+	}
+
+	return nil
+}
+
+// deleteS3ObjectVersion deletes a specific bucket object version.
+func deleteS3ObjectVersion(conn *s3.S3, b, k, v string) error {
+	log.Printf("[INFO] Deleting S3 Bucket (%s) Object (%s) Version: %s", b, k, v)
+	_, err := conn.DeleteObject(&s3.DeleteObjectInput{
+		Bucket:    aws.String(b),
+		Key:       aws.String(k),
+		VersionId: aws.String(v),
+	})
+
+	if err != nil {
+		log.Printf("[WARN] Error deleting S3 Bucket (%s) Object (%s) Version (%s): %s", b, k, v, err)
+	}
+
+	if isAWSErr(err, s3.ErrCodeNoSuchBucket, "") || isAWSErr(err, s3.ErrCodeNoSuchKey, "") {
+		return nil
+	}
+
+	return err
 }
