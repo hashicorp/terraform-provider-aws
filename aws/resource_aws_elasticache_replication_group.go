@@ -158,9 +158,9 @@ func resourceAwsElasticacheReplicationGroup() *schema.Resource {
 				Required: true,
 			},
 			"replication_group_id": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
+				Type:     schema.TypeString,
+				Required: true,
+				ForceNew: true,
 				ValidateFunc: validation.All(
 					validation.StringLenBetween(1, 40),
 					validation.StringMatch(regexp.MustCompile(`^[0-9a-zA-Z-]+$`), "must contain only alphanumeric characters and hyphens"),
