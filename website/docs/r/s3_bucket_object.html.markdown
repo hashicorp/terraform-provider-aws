@@ -109,7 +109,7 @@ use the exported `arn` attribute:
       `kms_key_id = "${aws_kms_key.foo.arn}"`
 * `metadata` - (Optional) A mapping of keys/values to provision metadata (will be automatically prefixed by `x-amz-meta-`, note that only lowercase label are currently supported by the AWS Go API).
 * `tags` - (Optional) A mapping of tags to assign to the object.
-`force_destroy` - (Optional) Allow the object to be deleted by removing any legal hold on any object version.
+* `force_destroy` - (Optional) Allow the object to be deleted by removing any legal hold on any object version.
 Default is `false`.
 * `object_lock_legal_hold_status` - (Optional) The [legal hold](https://docs.aws.amazon.com/AmazonS3/latest/dev/object-lock-overview.html#object-lock-legal-holds) status that you want to apply to the specified object. Valid values are `ON` and `OFF`.
 * `object_lock_mode` - (Optional) The object lock [retention mode](https://docs.aws.amazon.com/AmazonS3/latest/dev/object-lock-overview.html#object-lock-retention-modes) that you want to apply to this object. Valid values are `GOVERNANCE` and `COMPLIANCE`.
