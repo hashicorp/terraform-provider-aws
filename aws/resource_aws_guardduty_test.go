@@ -11,6 +11,10 @@ func TestAccAWSGuardDuty(t *testing.T) {
 			"basic":  testAccAwsGuardDutyDetector_basic,
 			"import": testAccAwsGuardDutyDetector_import,
 		},
+		"Filter": {
+			"basic":  testAccAwsGuardDutyFilter_basic,
+			"import": testAccAwsGuardDutyFilter_import,
+		},
 		"InviteAccepter": {
 			"basic": testAccAwsGuardDutyInviteAccepter_basic,
 		},
