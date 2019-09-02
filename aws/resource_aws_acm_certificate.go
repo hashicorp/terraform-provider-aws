@@ -170,7 +170,7 @@ func resourceAwsAcmCertificateCreateImported(d *schema.ResourceData, meta interf
 	acmconn := meta.(*AWSClient).acmconn
 	resp, err := resourceAwsAcmCertificateImport(acmconn, d, false)
 	if err != nil {
-		return fmt.Errorf("Error importing certificate: %s", err)
+		return fmt.Errorf("error importing certificate: %s", err)
 	}
 
 	d.SetId(*resp.CertificateArn)
@@ -182,7 +182,7 @@ func resourceAwsAcmCertificateCreateImported(d *schema.ResourceData, meta interf
 		_, err := acmconn.AddTagsToCertificate(params)
 
 		if err != nil {
-			return fmt.Errorf("Error requesting certificate: %s", err)
+			return fmt.Errorf("error requesting certificate: %s", err)
 		}
 	}
 
@@ -217,7 +217,7 @@ func resourceAwsAcmCertificateCreateRequested(d *schema.ResourceData, meta inter
 	resp, err := acmconn.RequestCertificate(params)
 
 	if err != nil {
-		return fmt.Errorf("Error requesting certificate: %s", err)
+		return fmt.Errorf("error requesting certificate: %s", err)
 	}
 
 	d.SetId(*resp.CertificateArn)
@@ -229,7 +229,7 @@ func resourceAwsAcmCertificateCreateRequested(d *schema.ResourceData, meta inter
 		_, err := acmconn.AddTagsToCertificate(params)
 
 		if err != nil {
-			return fmt.Errorf("Error requesting certificate: %s", err)
+			return fmt.Errorf("error requesting certificate: %s", err)
 		}
 	}
 
@@ -249,18 +249,18 @@ func resourceAwsAcmCertificateRead(d *schema.ResourceData, meta interface{}) err
 			d.SetId("")
 			return nil
 		}
-		return fmt.Errorf("Error describing certificate: %s", err)
+		return fmt.Errorf("error describing certificate: %s", err)
 	}
 
 	if resp == nil {
-		return fmt.Errorf("Empty response received when describing ACM certificate")
+		return fmt.Errorf("empty response received when describing ACM certificate")
 	}
 	d.Set("domain_name", resp.Certificate.DomainName)
 	d.Set("arn", resp.Certificate.CertificateArn)
 	d.Set("certificate_authority_arn", resp.Certificate.CertificateAuthorityArn)
 
 	if err := d.Set("subject_alternative_names", cleanUpSubjectAlternativeNames(resp.Certificate)); err != nil {
-		return fmt.Errorf("Error setting subject alternative nates: %s", err)
+		return fmt.Errorf("error setting subject alternative nates: %s", err)
 	}
 
 	var domainValidationOptions []map[string]interface{}
@@ -278,14 +278,14 @@ func resourceAwsAcmCertificateRead(d *schema.ResourceData, meta interface{}) err
 		domainValidationOptions, emailValidationOptions, err = convertValidationOptions(resp.Certificate)
 	}
 	if err != nil {
-		return fmt.Errorf("Error getting validation options for ACM certificate: %s", err)
+		return fmt.Errorf("error getting validation options for ACM certificate: %s", err)
 	}
 
 	if err := d.Set("domain_validation_options", domainValidationOptions); err != nil {
-		return fmt.Errorf("Error setting domain validation options: %s", err)
+		return fmt.Errorf("error setting domain validation options: %s", err)
 	}
 	if err := d.Set("validation_emails", emailValidationOptions); err != nil {
-		return fmt.Errorf("Error setting email validation options: %s", err)
+		return fmt.Errorf("error setting email validation options: %s", err)
 	}
 
 	d.Set("validation_method", resourceAwsAcmCertificateGuessValidationMethod(domainValidationOptions, emailValidationOptions))
@@ -303,7 +303,7 @@ func resourceAwsAcmCertificateRead(d *schema.ResourceData, meta interface{}) err
 		return fmt.Errorf("error listing tags for certificate (%s): %s", d.Id(), err)
 	}
 	if err := d.Set("tags", tagsToMapACM(tagResp.Tags)); err != nil {
-		return fmt.Errorf("Error setting tags for certificate: %s", err)
+		return fmt.Errorf("error setting tags for certificate: %s", err)
 	}
 
 	return nil
@@ -326,7 +326,7 @@ func resourceAwsAcmCertificateUpdate(d *schema.ResourceData, meta interface{}) e
 	if d.HasChange("private_key") || d.HasChange("certificate_body") || d.HasChange("certificate_chain") {
 		_, err := resourceAwsAcmCertificateImport(acmconn, d, true)
 		if err != nil {
-			return fmt.Errorf("Error updating certificate: %s", err)
+			return fmt.Errorf("error updating certificate: %s", err)
 		}
 	}
 
@@ -359,7 +359,7 @@ func convertValidationOptions(certificate *acm.CertificateDetail) ([]map[string]
 	case acm.CertificateTypeAmazonIssued:
 		if len(certificate.DomainValidationOptions) == 0 && aws.StringValue(certificate.Status) == acm.DomainStatusPendingValidation {
 			log.Printf("[DEBUG] No validation options need to retry.")
-			return nil, nil, fmt.Errorf("No validation options need to retry.")
+			return nil, nil, fmt.Errorf("no validation options need to retry.")
 		}
 		for _, o := range certificate.DomainValidationOptions {
 			if o.ResourceRecord != nil {
@@ -376,7 +376,7 @@ func convertValidationOptions(certificate *acm.CertificateDetail) ([]map[string]
 				}
 			} else if o.ValidationStatus == nil || aws.StringValue(o.ValidationStatus) == acm.DomainStatusPendingValidation {
 				log.Printf("[DEBUG] No validation options need to retry: %#v", o)
-				return nil, nil, fmt.Errorf("No validation options need to retry: %#v", o)
+				return nil, nil, fmt.Errorf("no validation options need to retry: %#v", o)
 			}
 		}
 	case acm.CertificateTypePrivate:
@@ -414,7 +414,7 @@ func resourceAwsAcmCertificateDelete(d *schema.ResourceData, meta interface{}) e
 		_, err = acmconn.DeleteCertificate(params)
 	}
 	if err != nil && !isAWSErr(err, acm.ErrCodeResourceNotFoundException, "") {
-		return fmt.Errorf("Error deleting certificate: %s", err)
+		return fmt.Errorf("error deleting certificate: %s", err)
 	}
 
 	return nil
