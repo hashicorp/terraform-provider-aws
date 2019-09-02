@@ -111,7 +111,9 @@ use the exported `arn` attribute:
 * `tags` - (Optional) A mapping of tags to assign to the object.
 `force_destroy` - (Optional) Allow the object to be deleted by removing any legal hold on any object version.
 Default is `false`.
-* `object_lock_legal_hold_status` - (Optional) Indicates whether this object has an active [legal hold](https://docs.aws.amazon.com/AmazonS3/latest/dev/object-lock-overview.html#object-lock-legal-holds). Valid values are `ON` and `OFF`.
+* `object_lock_legal_hold_status` - (Optional) The [legal hold](https://docs.aws.amazon.com/AmazonS3/latest/dev/object-lock-overview.html#object-lock-legal-holds) status that you want to apply to the specified object. Valid values are `ON` and `OFF`.
+* `object_lock_mode` - (Optional) The object lock [retention mode](https://docs.aws.amazon.com/AmazonS3/latest/dev/object-lock-overview.html#object-lock-retention-modes) that you want to apply to this object. Valid values are `GOVERNANCE` and `COMPLIANCE`.
+* `object_lock_retain_until_date` - (Optional) The date and time, in [RFC3339 format](https://tools.ietf.org/html/rfc3339#section-5.8), when this object's object lock will [expire](https://docs.aws.amazon.com/AmazonS3/latest/dev/object-lock-overview.html#object-lock-retention-periods).
 
 If no content is provided through `source`, `content` or `content_base64`, then the object will be empty.
 
