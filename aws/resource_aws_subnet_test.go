@@ -106,29 +106,9 @@ func testSweepSubnets(region string) error {
 	return nil
 }
 
-func TestAccAWSSubnet_importBasic(t *testing.T) {
-	resourceName := "aws_subnet.foo"
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckSubnetDestroy,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccSubnetConfig,
-			},
-
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-			},
-		},
-	})
-}
-
 func TestAccAWSSubnet_basic(t *testing.T) {
 	var v ec2.Subnet
+	resourceName := "aws_subnet.test"
 
 	testCheck := func(*terraform.State) error {
 		if aws.StringValue(v.CidrBlock) != "10.1.1.0/24" {
@@ -144,7 +124,7 @@ func TestAccAWSSubnet_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:      func() { testAccPreCheck(t) },
-		IDRefreshName: "aws_subnet.foo",
+		IDRefreshName: resourceName,
 		Providers:     testAccProviders,
 		CheckDestroy:  testAccCheckSubnetDestroy,
 		Steps: []resource.TestStep{
@@ -152,21 +132,26 @@ func TestAccAWSSubnet_basic(t *testing.T) {
 				Config: testAccSubnetConfig,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSubnetExists(
-						"aws_subnet.foo", &v),
+						resourceName, &v),
 					testCheck,
 					// ipv6 should be empty if disabled so we can still use the property in conditionals
 					resource.TestCheckResourceAttr(
-						"aws_subnet.foo", "ipv6_cidr_block", ""),
+						resourceName, "ipv6_cidr_block", ""),
 					resource.TestMatchResourceAttr(
-						"aws_subnet.foo",
+						resourceName,
 						"arn",
 						regexp.MustCompile(`^arn:[^:]+:ec2:[^:]+:\d{12}:subnet/subnet-.+`)),
-					testAccCheckResourceAttrAccountID("aws_subnet.foo", "owner_id"),
+					testAccCheckResourceAttrAccountID(resourceName, "owner_id"),
 					resource.TestCheckResourceAttrSet(
-						"aws_subnet.foo", "availability_zone"),
+						resourceName, "availability_zone"),
 					resource.TestCheckResourceAttrSet(
-						"aws_subnet.foo", "availability_zone_id"),
+						resourceName, "availability_zone_id"),
 				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})
@@ -174,10 +159,11 @@ func TestAccAWSSubnet_basic(t *testing.T) {
 
 func TestAccAWSSubnet_ipv6(t *testing.T) {
 	var before, after ec2.Subnet
+	resourceName := "aws_subnet.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:      func() { testAccPreCheck(t) },
-		IDRefreshName: "aws_subnet.foo",
+		IDRefreshName: resourceName,
 		Providers:     testAccProviders,
 		CheckDestroy:  testAccCheckSubnetDestroy,
 		Steps: []resource.TestStep{
@@ -185,15 +171,20 @@ func TestAccAWSSubnet_ipv6(t *testing.T) {
 				Config: testAccSubnetConfigIpv6,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSubnetExists(
-						"aws_subnet.foo", &before),
+						resourceName, &before),
 					testAccCheckAwsSubnetIpv6BeforeUpdate(t, &before),
 				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 			{
 				Config: testAccSubnetConfigIpv6UpdateAssignIpv6OnCreation,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSubnetExists(
-						"aws_subnet.foo", &after),
+						resourceName, &after),
 					testAccCheckAwsSubnetIpv6AfterUpdate(t, &after),
 				),
 			},
@@ -201,7 +192,7 @@ func TestAccAWSSubnet_ipv6(t *testing.T) {
 				Config: testAccSubnetConfigIpv6UpdateIpv6Cidr,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSubnetExists(
-						"aws_subnet.foo", &after),
+						resourceName, &after),
 
 					testAccCheckAwsSubnetNotRecreated(t, &before, &after),
 				),
@@ -212,10 +203,11 @@ func TestAccAWSSubnet_ipv6(t *testing.T) {
 
 func TestAccAWSSubnet_enableIpv6(t *testing.T) {
 	var subnet ec2.Subnet
+	resourceName := "aws_subnet.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:      func() { testAccPreCheck(t) },
-		IDRefreshName: "aws_subnet.foo",
+		IDRefreshName: resourceName,
 		Providers:     testAccProviders,
 		CheckDestroy:  testAccCheckSubnetDestroy,
 		Steps: []resource.TestStep{
@@ -223,14 +215,19 @@ func TestAccAWSSubnet_enableIpv6(t *testing.T) {
 				Config: testAccSubnetConfigPreIpv6,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSubnetExists(
-						"aws_subnet.foo", &subnet),
+						resourceName, &subnet),
 				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 			{
 				Config: testAccSubnetConfigIpv6,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSubnetExists(
-						"aws_subnet.foo", &subnet),
+						resourceName, &subnet),
 				),
 			},
 		},
@@ -239,10 +236,11 @@ func TestAccAWSSubnet_enableIpv6(t *testing.T) {
 
 func TestAccAWSSubnet_availabilityZoneId(t *testing.T) {
 	var v ec2.Subnet
+	resourceName := "aws_subnet.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:      func() { testAccPreCheck(t) },
-		IDRefreshName: "aws_subnet.foo",
+		IDRefreshName: resourceName,
 		Providers:     testAccProviders,
 		CheckDestroy:  testAccCheckSubnetDestroy,
 		Steps: []resource.TestStep{
@@ -250,12 +248,17 @@ func TestAccAWSSubnet_availabilityZoneId(t *testing.T) {
 				Config: testAccSubnetConfigAvailabilityZoneId,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSubnetExists(
-						"aws_subnet.foo", &v),
+						resourceName, &v),
 					resource.TestCheckResourceAttrSet(
-						"aws_subnet.foo", "availability_zone"),
+						resourceName, "availability_zone"),
 					resource.TestCheckResourceAttr(
-						"aws_subnet.foo", "availability_zone_id", "usw2-az3"),
+						resourceName, "availability_zone_id", "usw2-az3"),
 				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})
@@ -357,16 +360,16 @@ func testAccCheckSubnetExists(n string, v *ec2.Subnet) resource.TestCheckFunc {
 }
 
 const testAccSubnetConfig = `
-resource "aws_vpc" "foo" {
+resource "aws_vpc" "test" {
 	cidr_block = "10.1.0.0/16"
 	tags = {
 		Name = "terraform-testacc-subnet"
 	}
 }
 
-resource "aws_subnet" "foo" {
+resource "aws_subnet" "test" {
 	cidr_block = "10.1.1.0/24"
-	vpc_id = "${aws_vpc.foo.id}"
+	vpc_id = "${aws_vpc.test.id}"
 	map_public_ip_on_launch = true
 	tags = {
 		Name = "tf-acc-subnet"
@@ -375,7 +378,7 @@ resource "aws_subnet" "foo" {
 `
 
 const testAccSubnetConfigPreIpv6 = `
-resource "aws_vpc" "foo" {
+resource "aws_vpc" "test" {
 	cidr_block = "10.10.0.0/16"
 	assign_generated_ipv6_cidr_block = true
 	tags = {
@@ -383,9 +386,9 @@ resource "aws_vpc" "foo" {
 	}
 }
 
-resource "aws_subnet" "foo" {
+resource "aws_subnet" "test" {
 	cidr_block = "10.10.1.0/24"
-	vpc_id = "${aws_vpc.foo.id}"
+	vpc_id = "${aws_vpc.test.id}"
 	map_public_ip_on_launch = true
 	tags = {
 		Name = "tf-acc-subnet-ipv6"
@@ -394,7 +397,7 @@ resource "aws_subnet" "foo" {
 `
 
 const testAccSubnetConfigIpv6 = `
-resource "aws_vpc" "foo" {
+resource "aws_vpc" "test" {
 	cidr_block = "10.10.0.0/16"
 	assign_generated_ipv6_cidr_block = true
 	tags = {
@@ -402,10 +405,10 @@ resource "aws_vpc" "foo" {
 	}
 }
 
-resource "aws_subnet" "foo" {
+resource "aws_subnet" "test" {
 	cidr_block = "10.10.1.0/24"
-	vpc_id = "${aws_vpc.foo.id}"
-	ipv6_cidr_block = "${cidrsubnet(aws_vpc.foo.ipv6_cidr_block, 8, 1)}"
+	vpc_id = "${aws_vpc.test.id}"
+	ipv6_cidr_block = "${cidrsubnet(aws_vpc.test.ipv6_cidr_block, 8, 1)}"
 	map_public_ip_on_launch = true
 	assign_ipv6_address_on_creation = true
 	tags = {
@@ -415,7 +418,7 @@ resource "aws_subnet" "foo" {
 `
 
 const testAccSubnetConfigIpv6UpdateAssignIpv6OnCreation = `
-resource "aws_vpc" "foo" {
+resource "aws_vpc" "test" {
 	cidr_block = "10.10.0.0/16"
 	assign_generated_ipv6_cidr_block = true
 	tags = {
@@ -423,10 +426,10 @@ resource "aws_vpc" "foo" {
 	}
 }
 
-resource "aws_subnet" "foo" {
+resource "aws_subnet" "test" {
 	cidr_block = "10.10.1.0/24"
-	vpc_id = "${aws_vpc.foo.id}"
-	ipv6_cidr_block = "${cidrsubnet(aws_vpc.foo.ipv6_cidr_block, 8, 1)}"
+	vpc_id = "${aws_vpc.test.id}"
+	ipv6_cidr_block = "${cidrsubnet(aws_vpc.test.ipv6_cidr_block, 8, 1)}"
 	map_public_ip_on_launch = true
 	assign_ipv6_address_on_creation = false
 	tags = {
@@ -436,7 +439,7 @@ resource "aws_subnet" "foo" {
 `
 
 const testAccSubnetConfigIpv6UpdateIpv6Cidr = `
-resource "aws_vpc" "foo" {
+resource "aws_vpc" "test" {
 	cidr_block = "10.10.0.0/16"
 	assign_generated_ipv6_cidr_block = true
 	tags = {
@@ -444,10 +447,10 @@ resource "aws_vpc" "foo" {
 	}
 }
 
-resource "aws_subnet" "foo" {
+resource "aws_subnet" "test" {
 	cidr_block = "10.10.1.0/24"
-	vpc_id = "${aws_vpc.foo.id}"
-	ipv6_cidr_block = "${cidrsubnet(aws_vpc.foo.ipv6_cidr_block, 8, 3)}"
+	vpc_id = "${aws_vpc.test.id}"
+	ipv6_cidr_block = "${cidrsubnet(aws_vpc.test.ipv6_cidr_block, 8, 3)}"
 	map_public_ip_on_launch = true
 	assign_ipv6_address_on_creation = false
 	tags = {
@@ -457,16 +460,16 @@ resource "aws_subnet" "foo" {
 `
 
 const testAccSubnetConfigAvailabilityZoneId = `
-resource "aws_vpc" "foo" {
+resource "aws_vpc" "test" {
   cidr_block = "10.1.0.0/16"
   tags = {
     Name = "terraform-testacc-subnet"
   }
 }
 
-resource "aws_subnet" "foo" {
+resource "aws_subnet" "test" {
   cidr_block = "10.1.1.0/24"
-  vpc_id = "${aws_vpc.foo.id}"
+  vpc_id = "${aws_vpc.test.id}"
   availability_zone_id = "usw2-az3"
   tags = {
     Name = "tf-acc-subnet"
