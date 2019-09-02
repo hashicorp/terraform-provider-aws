@@ -173,9 +173,10 @@ func TestAccAWSVpnGateway_withAvailabilityZoneSetToState(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"availability_zone"},
 			},
 		},
 	})
@@ -276,7 +277,7 @@ func TestAccAWSVpnGateway_reattach(t *testing.T) {
 				Config: testAccCheckVpnGatewayConfigReattach,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVpcExists("aws_vpc.test", &vpc1),
-					testAccCheckVpcExists("aws_vpc.bar", &vpc2),
+					testAccCheckVpcExists("aws_vpc.test2", &vpc2),
 					testAccCheckVpnGatewayExists(
 						resourceName, &vgw1),
 					testAccCheckVpnGatewayExists(
@@ -530,7 +531,7 @@ resource "aws_vpn_gateway" "test" {
 `
 
 const testAccVpnGatewayConfigChangeVPC = `
-resource "aws_vpc" "bar" {
+resource "aws_vpc" "test2" {
   cidr_block = "10.2.0.0/16"
   tags = {
     Name = "terraform-testacc-vpn-gateway-change-vpc"
@@ -538,7 +539,7 @@ resource "aws_vpc" "bar" {
 }
 
 resource "aws_vpn_gateway" "test" {
-  vpc_id = "${aws_vpc.bar.id}"
+  vpc_id = "${aws_vpc.test2.id}"
   tags = {
     Name = "terraform-testacc-vpn-gateway-basic"
   }
@@ -585,10 +586,10 @@ resource "aws_vpc" "test" {
   }
 }
 
-resource "aws_vpc" "bar" {
+resource "aws_vpc" "test2" {
   cidr_block = "10.2.0.0/16"
   tags = {
-    Name = "terraform-testacc-vpn-gateway-reattach-bar"
+    Name = "terraform-testacc-vpn-gateway-reattach-test2"
   }
 }
 
@@ -599,8 +600,8 @@ resource "aws_vpn_gateway" "test" {
   }
 }
 
-resource "aws_vpn_gateway" "bar" {
-  vpc_id = "${aws_vpc.bar.id}"
+resource "aws_vpn_gateway" "test2" {
+  vpc_id = "${aws_vpc.test2.id}"
   tags = {
     Name = "terraform-testacc-vpn-gateway-reattach"
   }
@@ -615,21 +616,21 @@ resource "aws_vpc" "test" {
   }
 }
 
-resource "aws_vpc" "bar" {
+resource "aws_vpc" "test2" {
   cidr_block = "10.2.0.0/16"
   tags = {
-    Name = "terraform-testacc-vpn-gateway-reattach-bar"
+    Name = "terraform-testacc-vpn-gateway-reattach-test2"
   }
 }
 
 resource "aws_vpn_gateway" "test" {
-  vpc_id = "${aws_vpc.bar.id}"
+  vpc_id = "${aws_vpc.test2.id}"
   tags = {
     Name = "terraform-testacc-vpn-gateway-reattach"
   }
 }
 
-resource "aws_vpn_gateway" "bar" {
+resource "aws_vpn_gateway" "test2" {
   vpc_id = "${aws_vpc.test.id}"
   tags = {
     Name = "terraform-testacc-vpn-gateway-reattach"
