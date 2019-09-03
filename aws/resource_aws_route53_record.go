@@ -630,7 +630,14 @@ func findRecord(d *schema.ResourceData, meta interface{}) (*route53.ResourceReco
 		return nil, err
 	}
 
-	en := expandRecordName(d.Get("name").(string), *zoneRecord.HostedZone.Name)
+	var en string
+
+	if o, _ := d.GetChange("name"); o.(string) != "" {
+		en = expandRecordName(o.(string), *zoneRecord.HostedZone.Name)
+	} else {
+		en = expandRecordName(d.Get("name").(string), *zoneRecord.HostedZone.Name)
+	}
+
 	log.Printf("[DEBUG] Expanded record name: %s", en)
 	d.Set("fqdn", en)
 
