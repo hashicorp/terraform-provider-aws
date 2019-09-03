@@ -12,8 +12,8 @@ import (
 
 func resourceAwsGuardDutyFilter() *schema.Resource {
 	return &schema.Resource{
-		// Create: resourceAwsGuardDutyFilterCreate,
-		Read: resourceAwsGuardDutyFilterRead,
+		Create: resourceAwsGuardDutyFilterCreate,
+		Read:   resourceAwsGuardDutyFilterRead,
 		// Update: resourceAwsGuardDutyFilterUpdate,
 		Delete: resourceAwsGuardDutyFilterDelete,
 
@@ -69,51 +69,25 @@ func resourceAwsGuardDutyFilter() *schema.Resource {
 	}
 }
 
-// func resourceAwsGuardDutyFilterCreate(d *schema.ResourceData, meta interface{}) error {
-// 	conn := meta.(*AWSClient).guarddutyconn
-// 	accountID := d.Get("account_id").(string)
-// 	detectorID := d.Get("detector_id").(string)
-//
-// 	input := guardduty.CreateMembersInput{
-// 		AccountDetails: []*guardduty.AccountDetail{{
-// 			AccountId: aws.String(accountID),
-// 			Email:     aws.String(d.Get("email").(string)),
-// 		}},
-// 		DetectorId: aws.String(detectorID),
-// 	}
-//
-// 	log.Printf("[DEBUG] Creating GuardDuty Member: %s", input)
-// 	_, err := conn.CreateMembers(&input)
-// 	if err != nil {
-// 		return fmt.Errorf("Creating GuardDuty Member failed: %s", err.Error())
-// 	}
-//
-// 	d.SetId(fmt.Sprintf("%s:%s", detectorID, accountID))
-//
-// 	if !d.Get("invite").(bool) {
-// 		return resourceAwsGuardDutyFilterRead(d, meta)
-// 	}
-//
-// 	imi := &guardduty.InviteMembersInput{
-// 		DetectorId:               aws.String(detectorID),
-// 		AccountIds:               []*string{aws.String(accountID)},
-// 		DisableEmailNotification: aws.Bool(d.Get("disable_email_notification").(bool)),
-// 		Message:                  aws.String(d.Get("invitation_message").(string)),
-// 	}
-//
-// 	log.Printf("[INFO] Inviting GuardDuty Member: %s", input)
-// 	_, err = conn.InviteMembers(imi)
-// 	if err != nil {
-// 		return fmt.Errorf("error inviting GuardDuty Member %q: %s", d.Id(), err)
-// 	}
-//
-// 	err = inviteGuardDutyMemberWaiter(accountID, detectorID, d.Timeout(schema.TimeoutUpdate), conn)
-// 	if err != nil {
-// 		return fmt.Errorf("error waiting for GuardDuty Member %q invite: %s", d.Id(), err)
-// 	}
-//
-// 	return resourceAwsGuardDutyFilterRead(d, meta)
-// }
+func resourceAwsGuardDutyFilterCreate(d *schema.ResourceData, meta interface{}) error {
+	conn := meta.(*AWSClient).guarddutyconn
+
+	input := guardduty.CreateFilterInput{
+		Name:        aws.String(d.Get("name").(string)),
+		Description: aws.String(d.Get("description").(string)),
+		Action:      aws.String(d.Get("action").(string)),
+		Rank:        aws.Int64(int64(d.Get("rank").(int))),
+	}
+
+	log.Printf("[DEBUG] Creating GuardDuty Filter: %s", input)
+	output, err := conn.CreateFilter(&input)
+	if err != nil {
+		return fmt.Errorf("Creating GuardDuty Filter failed: %s", err.Error())
+	}
+	d.SetId(*output.Name)
+
+	return resourceAwsGuardDutyFilterRead(d, meta)
+}
 
 func resourceAwsGuardDutyFilterRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).guarddutyconn
