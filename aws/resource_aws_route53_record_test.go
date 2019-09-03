@@ -148,7 +148,7 @@ func TestAccAWSRoute53Record_importUnderscored(t *testing.T) {
 }
 
 func TestAccAWSRoute53Record_basic(t *testing.T) {
-	var record1 route53.ResourceRecordSet
+	var record1, record2 route53.ResourceRecordSet
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:      func() { testAccPreCheck(t) },
@@ -160,6 +160,12 @@ func TestAccAWSRoute53Record_basic(t *testing.T) {
 				Config: testAccRoute53RecordConfig,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRoute53RecordExists("aws_route53_record.default", &record1),
+				),
+			},
+			{
+				Config: testAccRoute53RecordConfigUpdateName,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckRoute53RecordExists("aws_route53_record.default", &record2),
 				),
 			},
 		},
@@ -891,6 +897,20 @@ resource "aws_route53_zone" "main" {
 resource "aws_route53_record" "default" {
 	zone_id = "${aws_route53_zone.main.zone_id}"
 	name = "www.NOTexamplE.com"
+	type = "A"
+	ttl = "30"
+	records = ["127.0.0.1", "127.0.0.27"]
+}
+`
+
+const testAccRoute53RecordConfigUpdateName = `
+resource "aws_route53_zone" "main" {
+	name = "notexample.com"
+}
+
+resource "aws_route53_record" "default" {
+	zone_id = "${aws_route53_zone.main.zone_id}"
+	name = "www2.NOTexamplE.com"
 	type = "A"
 	ttl = "30"
 	records = ["127.0.0.1", "127.0.0.27"]
