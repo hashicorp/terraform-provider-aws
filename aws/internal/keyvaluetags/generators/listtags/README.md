@@ -11,7 +11,22 @@ To run this code generator, execute `go generate ./...` from the root of the rep
 ## Example Output
 
 ```go
+// AmplifyListTags lists amplify service tags.
+// The identifier is typically the Amazon Resource Name (ARN), although
+// it may also be a different identifier depending on the service.
+func AmplifyListTags(conn *amplify.Amplify, identifier string) (KeyValueTags, error) {
+    input := &amplify.ListTagsForResourceInput{
+        ResourceArn: aws.String(identifier),
+    }
 
+    output, err := conn.ListTagsForResource(input)
+
+    if err != nil {
+        return New(nil), err
+    }
+
+    return AmplifyKeyValueTags(output.Tags), nil
+}
 ```
 
 ## Implementing a New Generated Service

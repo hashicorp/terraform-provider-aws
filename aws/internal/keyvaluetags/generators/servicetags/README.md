@@ -1,4 +1,4 @@
-# updatetags
+# servicetags
 
 This package contains a code generator to consistently handle the various AWS Go SDK service implementations for converting service tag/map types to/from `KeyValueTags`. Not all AWS Go SDK services that support tagging are generated in this manner.
 
