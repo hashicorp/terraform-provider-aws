@@ -304,6 +304,8 @@ func TestAccAWSElasticacheReplicationGroup_multiAzInVpc(t *testing.T) {
 						"aws_elasticache_replication_group.bar", "snapshot_retention_limit", "7"),
 					resource.TestCheckResourceAttrSet(
 						"aws_elasticache_replication_group.bar", "primary_endpoint_address"),
+					resource.TestCheckResourceAttrSet(
+						"aws_elasticache_replication_group.bar", "reader_endpoint_address"),
 				),
 			},
 		},
@@ -331,6 +333,8 @@ func TestAccAWSElasticacheReplicationGroup_redisClusterInVpc2(t *testing.T) {
 						"aws_elasticache_replication_group.bar", "snapshot_retention_limit", "7"),
 					resource.TestCheckResourceAttrSet(
 						"aws_elasticache_replication_group.bar", "primary_endpoint_address"),
+					resource.TestCheckResourceAttrSet(
+						"aws_elasticache_replication_group.bar", "reader_endpoint_address"),
 				),
 			},
 		},
