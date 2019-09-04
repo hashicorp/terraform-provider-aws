@@ -20,7 +20,7 @@ func resourceAwsGuardDutyFilter() *schema.Resource {
 		// Importer: &schema.ResourceImporter{
 		// 	State: schema.ImportStatePassthrough,
 		// },
-		Schema: map[string]*schema.Schema{
+		Schema: map[string]*schema.Schema{ // TODO: add validations
 			// "account_id": { // idk, do we need it
 			// 	Type:         schema.TypeString,
 			// 	Required:     true,
@@ -46,11 +46,58 @@ func resourceAwsGuardDutyFilter() *schema.Resource {
 			// 	Type:     schema.TypeTags, // probably wrong type
 			// 	Optional: true,
 			// },
-			// "findingCriteria": {
-			// 	Type:     schema.TypeString, // need to implement a new type
-			// 	Optional: true,              // change to required
-			// 	ForceNew: true,              // perhaps remove here and below, when Update is back
-			// },
+			"finding_criteria": {
+				Type:     schema.TypeList, // Probably need to use FindingCriteria type
+				MaxItems: 1,
+				Required: true, // change to required
+				ForceNew: true, // perhaps remove here and below, when Update is back
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"criterion": &schema.Schema{
+							Type:     schema.TypeSet,
+							Optional: true,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"condition": &schema.Schema{
+										Type:     schema.TypeSet,
+										Optional: true,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"equals": {
+													Type:     schema.TypeList,
+													Optional: true,
+													Elem:     &schema.Schema{Type: schema.TypeString},
+												},
+												"greater_than": {
+													Type:     schema.TypeInt,
+													Optional: true,
+												},
+												"greater_than_or_equal": {
+													Type:     schema.TypeInt,
+													Optional: true,
+												},
+												"less_than": {
+													Type:     schema.TypeInt,
+													Optional: true,
+												},
+												"less_than_or_equal": {
+													Type:     schema.TypeInt,
+													Optional: true,
+												},
+												"not_equals": {
+													Type:     schema.TypeList,
+													Optional: true,
+													Elem:     &schema.Schema{Type: schema.TypeString},
+												},
+											},
+										},
+									},
+								},
+							},
+						},
+					},
+				},
+			},
 			"action": {
 				Type:     schema.TypeString, // should have a new type or a validation for NOOP/ARCHIVE
 				Optional: true,
@@ -73,11 +120,53 @@ func resourceAwsGuardDutyFilterCreate(d *schema.ResourceData, meta interface{}) 
 	conn := meta.(*AWSClient).guarddutyconn
 
 	input := guardduty.CreateFilterInput{
+		DetectorId:  aws.String(d.Get("detector_id").(string)),
 		Name:        aws.String(d.Get("name").(string)),
 		Description: aws.String(d.Get("description").(string)),
-		Action:      aws.String(d.Get("action").(string)),
 		Rank:        aws.Int64(int64(d.Get("rank").(int))),
 	}
+
+	// building FindingCriteria
+	findingCriteria := d.Get("finding_criteria").([]interface{})[0].(map[string]interface{})
+	criterion := findingCriteria["criterion"].(*schema.Set).List()[0].(map[string]interface{})
+	condition := criterion["condition"].(*schema.Set).List()[0].(map[string]interface{})
+
+	interfaceForEquals := condition["equals"].([]interface{})
+
+	equals := make([]string, len(interfaceForEquals))
+	for i, v := range interfaceForEquals {
+		new[i] = string(v.(string))
+	}
+
+	interfaceForNotEquals := condition["equals"].([]interface{})
+
+	notEquals := make([]string, len(interfaceForNotEquals))
+	for i, v := range interfaceForNotEquals {
+		new[i] = string(v.(string))
+	}
+
+	input.FindingCriteria = &guardduty.FindingCriteria{
+		Criterion: map[string]*guardduty.Condition{ // with star or without, that't the question!
+			"condition": &guardduty.Condition{
+				Equals:             aws.StringSlice(equals),
+				GreaterThan:        aws.Int64(int64(condition["greater_than"].(int))),
+				GreaterThanOrEqual: aws.Int64(int64(condition["greater_than_or_equal"].(int))),
+				LessThan:           aws.Int64(int64(condition["less_than"].(int))),
+				LessThanOrEqual:    aws.Int64(int64(condition["less_than_or_equal"].(int))),
+				NotEquals:          aws.StringSlice(notEquals), //aws.StringSlice([]string(condition["equals"].([]interface{}))),
+			},
+		},
+	}
+	log.Printf("[DEBUG] Creating FindingCriteria map: %#v", findingCriteria)
+
+	// Setting the default value for `action`
+	action := "NOOP"
+
+	if len(d.Get("action").(string)) > 0 {
+		action = d.Get("action").(string)
+	}
+
+	input.Action = aws.String(action)
 
 	log.Printf("[DEBUG] Creating GuardDuty Filter: %s", input)
 	output, err := conn.CreateFilter(&input)
@@ -111,11 +200,10 @@ func resourceAwsGuardDutyFilterRead(d *schema.ResourceData, meta interface{}) er
 		return fmt.Errorf("Reading GuardDuty Filter '%s' failed: %s", filterName, err.Error())
 	}
 
-	d.Set("account_id", filter.Action)
-	d.Set("account_id", filter.Description)
-	d.Set("account_id", filter.Name)
-	d.Set("account_id", filter.Rank)
-	d.Set("detector_id", d.Id())
+	d.Set("action", filter.Action)
+	d.Set("description", filter.Description)
+	d.Set("rank", filter.Rank)
+	d.Set("name", d.Id())
 
 	// need to find a way how to fill it interface{}
 	// d.Set("account_id", filter.FindingCriteria)
