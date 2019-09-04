@@ -4165,7 +4165,16 @@ func diffDynamoDbGSI(oldGsi, newGsi []interface{}, billingMode string) (ops []*d
 			newWriteCapacity, newReadCapacity := newMap["write_capacity"].(int), newMap["read_capacity"].(int)
 			capacityChanged := (oldWriteCapacity != newWriteCapacity || oldReadCapacity != newReadCapacity)
 
+			// pluck non_key_attributes from oldAttributes and newAttributes as reflect.DeepEquals will compare
+			// ordinal of elements in its equality (which we actually don't care about)
+			nonKeyAttributesChanged := checkIfNonKeyAttributesChanged(oldMap, newMap)
+
 			oldAttributes, err := stripCapacityAttributes(oldMap)
+			if err != nil {
+				e = err
+				return
+			}
+			oldAttributes, err = stripNonKeyAttributes(oldAttributes)
 			if err != nil {
 				e = err
 				return
@@ -4175,7 +4184,12 @@ func diffDynamoDbGSI(oldGsi, newGsi []interface{}, billingMode string) (ops []*d
 				e = err
 				return
 			}
-			otherAttributesChanged := !reflect.DeepEqual(oldAttributes, newAttributes)
+			newAttributes, err = stripNonKeyAttributes(newAttributes)
+			if err != nil {
+				e = err
+				return
+			}
+			otherAttributesChanged := nonKeyAttributesChanged || !reflect.DeepEqual(oldAttributes, newAttributes)
 
 			if capacityChanged && !otherAttributesChanged {
 				update := &dynamodb.GlobalSecondaryIndexUpdate{
@@ -4212,6 +4226,49 @@ func diffDynamoDbGSI(oldGsi, newGsi []interface{}, billingMode string) (ops []*d
 		}
 	}
 	return
+}
+
+func stripNonKeyAttributes(in map[string]interface{}) (map[string]interface{}, error) {
+	mapCopy, err := copystructure.Copy(in)
+	if err != nil {
+		return nil, err
+	}
+
+	m := mapCopy.(map[string]interface{})
+
+	delete(m, "non_key_attributes")
+
+	return m, nil
+}
+
+// checkIfNonKeyAttributesChanged returns true if non_key_attributes between old map and new map are different
+func checkIfNonKeyAttributesChanged(oldMap, newMap map[string]interface{}) bool {
+	oldNonKeyAttributes, oldNkaExists := oldMap["non_key_attributes"].([]string)
+	newNonKeyAttributes, newNkaExists := newMap["non_key_attributes"].([]string)
+	if oldNkaExists != newNkaExists {
+		return true
+	}
+
+	o := map[string]bool{}
+	for _, oldNonKeyAttribute := range oldNonKeyAttributes {
+		o[oldNonKeyAttribute] = true
+	}
+	n := map[string]bool{}
+	for _, newNonKeyAttribute := range newNonKeyAttributes {
+		n[newNonKeyAttribute] = true
+	}
+
+	// perform this check after populating map so we ignore duplicated fields in non_key_attributes
+	if len(o) != len(n) {
+		return true
+	}
+
+	for k, v := range n {
+		if oVal, oExists := o[k]; !oExists || v != oVal {
+			return true
+		}
+	}
+	return false
 }
 
 func stripCapacityAttributes(in map[string]interface{}) (map[string]interface{}, error) {
@@ -4472,6 +4529,10 @@ func expandDynamoDbProjection(data map[string]interface{}) *dynamodb.Projection 
 
 	if v, ok := data["non_key_attributes"].([]interface{}); ok && len(v) > 0 {
 		projection.NonKeyAttributes = expandStringList(v)
+	}
+
+	if v, ok := data["non_key_attributes"].(*schema.Set); ok && v.Len() > 0 {
+		projection.NonKeyAttributes = expandStringList(v.List())
 	}
 
 	return projection

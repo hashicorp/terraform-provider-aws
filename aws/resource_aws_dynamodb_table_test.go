@@ -58,7 +58,7 @@ func TestDiffDynamoDbGSI(t *testing.T) {
 		New             []interface{}
 		ExpectedUpdates []*dynamodb.GlobalSecondaryIndexUpdate
 	}{
-		{ // No-op
+		{ // No-op => no changes
 			Old: []interface{}{
 				map[string]interface{}{
 					"name":            "att1-index",
@@ -75,6 +75,29 @@ func TestDiffDynamoDbGSI(t *testing.T) {
 					"write_capacity":  10,
 					"read_capacity":   10,
 					"projection_type": "ALL",
+				},
+			},
+			ExpectedUpdates: []*dynamodb.GlobalSecondaryIndexUpdate{},
+		},
+		{ // No-op => ignore ordering of non_key_attributes
+			Old: []interface{}{
+				map[string]interface{}{
+					"name":               "att1-index",
+					"hash_key":           "att1",
+					"write_capacity":     10,
+					"read_capacity":      10,
+					"projection_type":    "INCLUDE",
+					"non_key_attributes": []interface{}{"attr3", "attr1", "attr2"},
+				},
+			},
+			New: []interface{}{
+				map[string]interface{}{
+					"name":               "att1-index",
+					"hash_key":           "att1",
+					"write_capacity":     10,
+					"read_capacity":      10,
+					"projection_type":    "INCLUDE",
+					"non_key_attributes": []interface{}{"attr1", "attr2", "attr3"},
 				},
 			},
 			ExpectedUpdates: []*dynamodb.GlobalSecondaryIndexUpdate{},

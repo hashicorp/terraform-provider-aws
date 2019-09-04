@@ -208,7 +208,7 @@ func resourceAwsDynamoDbTable() *schema.Resource {
 							Required: true,
 						},
 						"non_key_attributes": {
-							Type:     schema.TypeList,
+							Type:     schema.TypeSet,
 							Optional: true,
 							Elem:     &schema.Schema{Type: schema.TypeString},
 						},
