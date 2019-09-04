@@ -96,6 +96,7 @@ github.com/aws/aws-sdk-go/service/guardduty
 github.com/aws/aws-sdk-go/service/iam
 github.com/aws/aws-sdk-go/service/inspector
 github.com/aws/aws-sdk-go/service/iot
+github.com/aws/aws-sdk-go/service/iotanalytics
 github.com/aws/aws-sdk-go/service/iotevents
 github.com/aws/aws-sdk-go/service/kafka
 github.com/aws/aws-sdk-go/service/kinesis
