@@ -2,6 +2,8 @@
 
 ENHANCEMENTS:
 
+* data-source/aws_ecs_cluster: Add `setting` attribute [GH-9720]
+* resource/aws_ecs_cluster: Add `setting` configuration blocks (support enabling Container Insights) [GH-9720]
 * resource/aws_kinesis_firehose_delivery_stream: Add `server_side_encryption` configuration block (support Server Side Encryption) [GH-6523]
 
 BUG FIXES:
