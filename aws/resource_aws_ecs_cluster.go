@@ -333,8 +333,8 @@ func flattenEcsSettings(list []*ecs.ClusterSetting) []map[string]interface{} {
 	result := make([]map[string]interface{}, 0, len(list))
 	for _, setting := range list {
 		l := map[string]interface{}{
-			"name":  *setting.Name,
-			"value": *setting.Value,
+			"name":  aws.StringValue(setting.Name),
+			"value": aws.StringValue(setting.Value),
 		}
 
 		result = append(result, l)

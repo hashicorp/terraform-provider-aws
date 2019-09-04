@@ -24,7 +24,7 @@ The following arguments are supported:
 
 * `name` - (Required) The name of the cluster (up to 255 letters, numbers, hyphens, and underscores)
 * `tags` - (Optional) Key-value mapping of resource tags
-* `setting` - (Optional) The setting to use when creating a cluster. This parameter is used to enable CloudWatch Container Insights for a cluster. Defined below.
+* `setting` - (Optional) Configuration block(s) with cluster settings. For example, this can be used to enable CloudWatch Container Insights for a cluster. Defined below.
  
 ## setting
 
