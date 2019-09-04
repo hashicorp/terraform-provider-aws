@@ -1375,6 +1375,7 @@ func TestAccAWSS3Bucket_Replication(t *testing.T) {
 				),
 			},
 			{
+				Config:            testAccAWSS3BucketConfigReplication(rInt),
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
@@ -1513,11 +1514,12 @@ func TestAccAWSS3Bucket_ReplicationConfiguration_Rule_Destination_AccessControlT
 				),
 			},
 			{
+				Config:            testAccAWSS3BucketConfigReplicationWithAccessControlTranslation(rInt),
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
-					"force_destroy", "acl"},
+					"force_destroy", "acl", "versioning"},
 			},
 			{
 				Config: testAccAWSS3BucketConfigReplicationWithSseKmsEncryptedObjectsAndAccessControlTranslation(rInt),
@@ -1584,6 +1586,7 @@ func TestAccAWSS3Bucket_ReplicationWithoutStorageClass(t *testing.T) {
 				),
 			},
 			{
+				Config:            testAccAWSS3BucketConfigReplicationWithoutStorageClass(rInt),
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
@@ -1641,6 +1644,7 @@ func TestAccAWSS3Bucket_ReplicationWithoutPrefix(t *testing.T) {
 				),
 			},
 			{
+				Config:            testAccAWSS3BucketConfigReplicationWithoutPrefix(rInt),
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
@@ -1700,6 +1704,7 @@ func TestAccAWSS3Bucket_ReplicationSchemaV2(t *testing.T) {
 				),
 			},
 			{
+				Config:            testAccAWSS3BucketConfigReplicationWithV2ConfigurationNoTags(rInt),
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
