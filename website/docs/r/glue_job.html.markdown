@@ -62,7 +62,7 @@ be removed in future releases, please use `max_capacity` instead.
 * `timeout` – (Optional) The job timeout in minutes. The default is 2880 minutes (48 hours).
 * `security_configuration` - (Optional) The name of the Security Configuration to be associated with the job.
 * `worker_type` - (Optional) The type of predefined worker that is allocated when a job runs. Accepts a value of Standard, G.1X, or G.2X.
-* `number_of_workers` - (Optional) he number of workers of a defined workerType that are allocated when a job runs.
+* `number_of_workers` - (Optional) The number of workers of a defined workerType that are allocated when a job runs.
 
 ### command Argument Reference
 
