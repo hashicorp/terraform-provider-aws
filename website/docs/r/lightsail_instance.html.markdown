@@ -133,6 +133,7 @@ The following attributes are exported in addition to the arguments listed above:
 
 * `id` - The ARN of the Lightsail instance (matches `arn`).
 * `arn` - The ARN of the Lightsail instance (matches `id`).
+* `created_at` - The timestamp when the instance was created.
 * `availability_zone`
 * `blueprint_id`
 * `bundle_id`
