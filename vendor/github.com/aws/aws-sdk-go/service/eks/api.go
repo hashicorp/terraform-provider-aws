@@ -480,6 +480,12 @@ func (c *EKS) ListClustersRequest(input *ListClustersInput) (req *request.Reques
 		Name:       opListClusters,
 		HTTPMethod: "GET",
 		HTTPPath:   "/clusters",
+		Paginator: &request.Paginator{
+			InputTokens:     []string{"nextToken"},
+			OutputTokens:    []string{"nextToken"},
+			LimitToken:      "maxResults",
+			TruncationToken: "",
+		},
 	}
 
 	if input == nil {
@@ -540,6 +546,56 @@ func (c *EKS) ListClustersWithContext(ctx aws.Context, input *ListClustersInput,
 	return out, req.Send()
 }
 
+// ListClustersPages iterates over the pages of a ListClusters operation,
+// calling the "fn" function with the response data for each page. To stop
+// iterating, return false from the fn function.
+//
+// See ListClusters method for more information on how to use this operation.
+//
+// Note: This operation can generate multiple requests to a service.
+//
+//    // Example iterating over at most 3 pages of a ListClusters operation.
+//    pageNum := 0
+//    err := client.ListClustersPages(params,
+//        func(page *eks.ListClustersOutput, lastPage bool) bool {
+//            pageNum++
+//            fmt.Println(page)
+//            return pageNum <= 3
+//        })
+//
+func (c *EKS) ListClustersPages(input *ListClustersInput, fn func(*ListClustersOutput, bool) bool) error {
+	return c.ListClustersPagesWithContext(aws.BackgroundContext(), input, fn)
+}
+
+// ListClustersPagesWithContext same as ListClustersPages except
+// it takes a Context and allows setting request options on the pages.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *EKS) ListClustersPagesWithContext(ctx aws.Context, input *ListClustersInput, fn func(*ListClustersOutput, bool) bool, opts ...request.Option) error {
+	p := request.Pagination{
+		NewRequest: func() (*request.Request, error) {
+			var inCpy *ListClustersInput
+			if input != nil {
+				tmp := *input
+				inCpy = &tmp
+			}
+			req, _ := c.ListClustersRequest(inCpy)
+			req.SetContext(ctx)
+			req.ApplyOptions(opts...)
+			return req, nil
+		},
+	}
+
+	cont := true
+	for p.Next() && cont {
+		cont = fn(p.Page().(*ListClustersOutput), !p.HasNextPage())
+	}
+	return p.Err()
+}
+
 const opListUpdates = "ListUpdates"
 
 // ListUpdatesRequest generates a "aws/request.Request" representing the
@@ -571,6 +627,12 @@ func (c *EKS) ListUpdatesRequest(input *ListUpdatesInput) (req *request.Request,
 		Name:       opListUpdates,
 		HTTPMethod: "GET",
 		HTTPPath:   "/clusters/{name}/updates",
+		Paginator: &request.Paginator{
+			InputTokens:     []string{"nextToken"},
+			OutputTokens:    []string{"nextToken"},
+			LimitToken:      "maxResults",
+			TruncationToken: "",
+		},
 	}
 
 	if input == nil {
@@ -631,6 +693,56 @@ func (c *EKS) ListUpdatesWithContext(ctx aws.Context, input *ListUpdatesInput, o
 	req.SetContext(ctx)
 	req.ApplyOptions(opts...)
 	return out, req.Send()
+}
+
+// ListUpdatesPages iterates over the pages of a ListUpdates operation,
+// calling the "fn" function with the response data for each page. To stop
+// iterating, return false from the fn function.
+//
+// See ListUpdates method for more information on how to use this operation.
+//
+// Note: This operation can generate multiple requests to a service.
+//
+//    // Example iterating over at most 3 pages of a ListUpdates operation.
+//    pageNum := 0
+//    err := client.ListUpdatesPages(params,
+//        func(page *eks.ListUpdatesOutput, lastPage bool) bool {
+//            pageNum++
+//            fmt.Println(page)
+//            return pageNum <= 3
+//        })
+//
+func (c *EKS) ListUpdatesPages(input *ListUpdatesInput, fn func(*ListUpdatesOutput, bool) bool) error {
+	return c.ListUpdatesPagesWithContext(aws.BackgroundContext(), input, fn)
+}
+
+// ListUpdatesPagesWithContext same as ListUpdatesPages except
+// it takes a Context and allows setting request options on the pages.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *EKS) ListUpdatesPagesWithContext(ctx aws.Context, input *ListUpdatesInput, fn func(*ListUpdatesOutput, bool) bool, opts ...request.Option) error {
+	p := request.Pagination{
+		NewRequest: func() (*request.Request, error) {
+			var inCpy *ListUpdatesInput
+			if input != nil {
+				tmp := *input
+				inCpy = &tmp
+			}
+			req, _ := c.ListUpdatesRequest(inCpy)
+			req.SetContext(ctx)
+			req.ApplyOptions(opts...)
+			return req, nil
+		},
+	}
+
+	cont := true
+	for p.Next() && cont {
+		cont = fn(p.Page().(*ListUpdatesOutput), !p.HasNextPage())
+	}
+	return p.Err()
 }
 
 const opUpdateClusterConfig = "UpdateClusterConfig"
@@ -912,6 +1024,9 @@ type Cluster struct {
 	// The endpoint for your Kubernetes API server.
 	Endpoint *string `locationName:"endpoint" type:"string"`
 
+	// The identity provider information for the cluster.
+	Identity *Identity `locationName:"identity" type:"structure"`
+
 	// The logging configuration for your cluster.
 	Logging *Logging `locationName:"logging" type:"structure"`
 
@@ -979,6 +1094,12 @@ func (s *Cluster) SetCreatedAt(v time.Time) *Cluster {
 // SetEndpoint sets the Endpoint field's value.
 func (s *Cluster) SetEndpoint(v string) *Cluster {
 	s.Endpoint = &v
+	return s
+}
+
+// SetIdentity sets the Identity field's value.
+func (s *Cluster) SetIdentity(v *Identity) *Cluster {
+	s.Identity = v
 	return s
 }
 
@@ -1432,6 +1553,31 @@ func (s *ErrorDetail) SetResourceIds(v []*string) *ErrorDetail {
 	return s
 }
 
+// An object representing an identity provider for authentication credentials.
+type Identity struct {
+	_ struct{} `type:"structure"`
+
+	// The OpenID Connect (https://openid.net/connect/) identity provider information
+	// for the cluster.
+	Oidc *OIDC `locationName:"oidc" type:"structure"`
+}
+
+// String returns the string representation
+func (s Identity) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s Identity) GoString() string {
+	return s.String()
+}
+
+// SetOidc sets the Oidc field's value.
+func (s *Identity) SetOidc(v *OIDC) *Identity {
+	s.Oidc = v
+	return s
+}
+
 type ListClustersInput struct {
 	_ struct{} `type:"structure"`
 
@@ -1688,6 +1834,31 @@ func (s Logging) GoString() string {
 // SetClusterLogging sets the ClusterLogging field's value.
 func (s *Logging) SetClusterLogging(v []*LogSetup) *Logging {
 	s.ClusterLogging = v
+	return s
+}
+
+// An object representing the OpenID Connect (https://openid.net/connect/) identity
+// provider information for the cluster.
+type OIDC struct {
+	_ struct{} `type:"structure"`
+
+	// The issuer URL for the OpenID Connect identity provider.
+	Issuer *string `locationName:"issuer" type:"string"`
+}
+
+// String returns the string representation
+func (s OIDC) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s OIDC) GoString() string {
+	return s.String()
+}
+
+// SetIssuer sets the Issuer field's value.
+func (s *OIDC) SetIssuer(v string) *OIDC {
+	s.Issuer = &v
 	return s
 }
 

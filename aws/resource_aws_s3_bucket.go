@@ -653,8 +653,7 @@ func resourceAwsS3BucketCreate(d *schema.ResourceData, meta interface{}) error {
 			if awsErr.Code() == "OperationAborted" {
 				log.Printf("[WARN] Got an error while trying to create S3 bucket %s: %s", bucket, err)
 				return resource.RetryableError(
-					fmt.Errorf("Error creating S3 bucket %s, retrying: %s",
-						bucket, err))
+					fmt.Errorf("Error creating S3 bucket %s, retrying: %s", bucket, err))
 			}
 		}
 		if err != nil {
@@ -663,7 +662,9 @@ func resourceAwsS3BucketCreate(d *schema.ResourceData, meta interface{}) error {
 
 		return nil
 	})
-
+	if isResourceTimeoutError(err) {
+		_, err = s3conn.CreateBucket(req)
+	}
 	if err != nil {
 		return fmt.Errorf("Error creating S3 bucket: %s", err)
 	}
@@ -675,7 +676,7 @@ func resourceAwsS3BucketCreate(d *schema.ResourceData, meta interface{}) error {
 
 func resourceAwsS3BucketUpdate(d *schema.ResourceData, meta interface{}) error {
 	s3conn := meta.(*AWSClient).s3conn
-	if err := setTagsS3(s3conn, d); err != nil {
+	if err := setTagsS3Bucket(s3conn, d); err != nil {
 		return fmt.Errorf("%q: %s", d.Get("bucket").(string), err)
 	}
 
@@ -1222,9 +1223,9 @@ func resourceAwsS3BucketRead(d *schema.ResourceData, meta interface{}) error {
 		}
 	}
 
-	tagSet, err := getTagSetS3(s3conn, d.Id())
+	tagSet, err := getTagSetS3Bucket(s3conn, d.Id())
 	if err != nil {
-		return err
+		return fmt.Errorf("error getting S3 bucket tags: %s", err)
 	}
 
 	if err := d.Set("tags", tagsToMapS3(tagSet)); err != nil {
@@ -1328,17 +1329,18 @@ func resourceAwsS3BucketPolicyUpdate(s3conn *s3.S3, d *schema.ResourceData) erro
 		}
 
 		err := resource.Retry(1*time.Minute, func() *resource.RetryError {
-			if _, err := s3conn.PutBucketPolicy(params); err != nil {
-				if awserr, ok := err.(awserr.Error); ok {
-					if awserr.Code() == "MalformedPolicy" || awserr.Code() == s3.ErrCodeNoSuchBucket {
-						return resource.RetryableError(awserr)
-					}
-				}
+			_, err := s3conn.PutBucketPolicy(params)
+			if isAWSErr(err, "MalformedPolicy", "") || isAWSErr(err, s3.ErrCodeNoSuchBucket, "") {
+				return resource.RetryableError(err)
+			}
+			if err != nil {
 				return resource.NonRetryableError(err)
 			}
 			return nil
 		})
-
+		if isResourceTimeoutError(err) {
+			_, err = s3conn.PutBucketPolicy(params)
+		}
 		if err != nil {
 			return fmt.Errorf("Error putting S3 policy: %s", err)
 		}
@@ -1769,12 +1771,7 @@ func resourceAwsS3BucketServerSideEncryptionConfigurationUpdate(s3conn *s3.S3, d
 			Bucket: aws.String(bucket),
 		}
 
-		err := resource.Retry(1*time.Minute, func() *resource.RetryError {
-			if _, err := s3conn.DeleteBucketEncryption(i); err != nil {
-				return resource.NonRetryableError(err)
-			}
-			return nil
-		})
+		_, err := s3conn.DeleteBucketEncryption(i)
 		if err != nil {
 			return fmt.Errorf("error removing S3 bucket server side encryption: %s", err)
 		}
@@ -1848,12 +1845,7 @@ func resourceAwsS3BucketReplicationConfigurationUpdate(s3conn *s3.S3, d *schema.
 			Bucket: aws.String(bucket),
 		}
 
-		err := resource.Retry(1*time.Minute, func() *resource.RetryError {
-			if _, err := s3conn.DeleteBucketReplication(i); err != nil {
-				return resource.NonRetryableError(err)
-			}
-			return nil
-		})
+		_, err := s3conn.DeleteBucketReplication(i)
 		if err != nil {
 			return fmt.Errorf("Error removing S3 bucket replication: %s", err)
 		}
@@ -1974,15 +1966,18 @@ func resourceAwsS3BucketReplicationConfigurationUpdate(s3conn *s3.S3, d *schema.
 	log.Printf("[DEBUG] S3 put bucket replication configuration: %#v", i)
 
 	err := resource.Retry(1*time.Minute, func() *resource.RetryError {
-		if _, err := s3conn.PutBucketReplication(i); err != nil {
-			if isAWSErr(err, s3.ErrCodeNoSuchBucket, "") ||
-				isAWSErr(err, "InvalidRequest", "Versioning must be 'Enabled' on the bucket") {
-				return resource.RetryableError(err)
-			}
+		_, err := s3conn.PutBucketReplication(i)
+		if isAWSErr(err, s3.ErrCodeNoSuchBucket, "") || isAWSErr(err, "InvalidRequest", "Versioning must be 'Enabled' on the bucket") {
+			return resource.RetryableError(err)
+		}
+		if err != nil {
 			return resource.NonRetryableError(err)
 		}
 		return nil
 	})
+	if isResourceTimeoutError(err) {
+		_, err = s3conn.PutBucketReplication(i)
+	}
 	if err != nil {
 		return fmt.Errorf("Error putting S3 replication configuration: %s", err)
 	}
@@ -2000,12 +1995,7 @@ func resourceAwsS3BucketLifecycleUpdate(s3conn *s3.S3, d *schema.ResourceData) e
 			Bucket: aws.String(bucket),
 		}
 
-		err := resource.Retry(1*time.Minute, func() *resource.RetryError {
-			if _, err := s3conn.DeleteBucketLifecycle(i); err != nil {
-				return resource.NonRetryableError(err)
-			}
-			return nil
-		})
+		_, err := s3conn.DeleteBucketLifecycle(i)
 		if err != nil {
 			return fmt.Errorf("Error removing S3 lifecycle: %s", err)
 		}

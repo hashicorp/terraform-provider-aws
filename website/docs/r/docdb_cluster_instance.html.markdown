@@ -75,7 +75,6 @@ In addition to all arguments above, the following attributes are exported:
 * `kms_key_id` - The ARN for the KMS encryption key if one is set to the cluster.
 * `port` - The database port
 * `preferred_backup_window` - The daily time range during which automated backups are created if automated backups are enabled.
-* `status` - The DocDB instance status
 * `storage_encrypted` - Specifies whether the DB cluster is encrypted.
 * `writer` – Boolean indicating if this instance is writable. `False` indicates this instance is a read replica.
 

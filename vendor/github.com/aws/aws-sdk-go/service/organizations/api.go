@@ -312,29 +312,29 @@ func (c *Organizations) AttachPolicyRequest(input *AttachPolicyInput) (req *requ
 //    * Service control policy (SCP) - An SCP specifies what permissions can
 //    be delegated to users in affected member accounts. The scope of influence
 //    for a policy depends on what you attach the policy to: If you attach an
-//    SCP to a root, it affects all accounts in the organization If you attach
-//    an SCP to an OU, it affects all accounts in that OU and in any child OUs
+//    SCP to a root, it affects all accounts in the organization. If you attach
+//    an SCP to an OU, it affects all accounts in that OU and in any child OUs.
 //    If you attach the policy directly to an account, it affects only that
-//    account SCPs are JSON policies that specify the maximum permissions for
-//    an organization or organizational unit (OU). When you attach one SCP to
-//    a higher level root or OU, and you also attach a different SCP to a child
-//    OU or to an account, the child policy can further restrict only the permissions
-//    that pass through the parent filter and are available to the child. An
-//    SCP that is attached to a child can't grant a permission that the paren't
-//    hasn't already granted. For example, imagine that the parent SCP allows
-//    permissions A, B, C, D, and E. The child SCP allows C, D, E, F, and G.
-//    The result is that the accounts affected by the child SCP are allowed
-//    to use only C, D, and E. They can't use A or B because the child OU filtered
-//    them out. They also can't use F and G because the parent OU filtered them
-//    out. They can't be granted back by the child SCP; child SCPs can only
-//    filter the permissions they receive from the parent SCP. AWS Organizations
-//    attaches a default SCP named "FullAWSAccess to every root, OU, and account.
-//    This default SCP allows all services and actions, enabling any new child
-//    OU or account to inherit the permissions of the parent root or OU. If
-//    you detach the default policy, you must replace it with a policy that
-//    specifies the permissions that you want to allow in that OU or account.
-//    For more information about how AWS Organizations policies permissions
-//    work, see Using Service Control Policies (https://docs.aws.amazon.com/organizations/latest/userguide/orgs_manage_policies_scp.html)
+//    account. SCPs are JSON policies that specify the maximum permissions for
+//    an organization or organizational unit (OU). You can attach one SCP to
+//    a higher level root or OU, and a different SCP to a child OU or to an
+//    account. The child policy can further restrict only the permissions that
+//    pass through the parent filter and are available to the child. An SCP
+//    that is attached to a child can't grant a permission that the parent hasn't
+//    already granted. For example, imagine that the parent SCP allows permissions
+//    A, B, C, D, and E. The child SCP allows C, D, E, F, and G. The result
+//    is that the accounts affected by the child SCP are allowed to use only
+//    C, D, and E. They can't use A or B because the child OU filtered them
+//    out. They also can't use F and G because the parent OU filtered them out.
+//    They can't be granted back by the child SCP; child SCPs can only filter
+//    the permissions they receive from the parent SCP. AWS Organizations attaches
+//    a default SCP named "FullAWSAccess to every root, OU, and account. This
+//    default SCP allows all services and actions, enabling any new child OU
+//    or account to inherit the permissions of the parent root or OU. If you
+//    detach the default policy, you must replace it with a policy that specifies
+//    the permissions that you want to allow in that OU or account. For more
+//    information about how AWS Organizations policies permissions work, see
+//    Using Service Control Policies (https://docs.aws.amazon.com/organizations/latest/userguide/orgs_manage_policies_scp.html)
 //    in the AWS Organizations User Guide.
 //
 // This operation can be called only from the organization's master account.
@@ -819,7 +819,7 @@ func (c *Organizations) CreateAccountRequest(input *CreateAccountInput) (req *re
 //
 // The user who calls the API to create an account must have the organizations:CreateAccount
 // permission. If you enabled all features in the organization, AWS Organizations
-// will create the required service-linked role named AWSServiceRoleForOrganizations.
+// creates the required service-linked role named AWSServiceRoleForOrganizations.
 // For more information, see AWS Organizations and Service-Linked Roles (http://docs.aws.amazon.com/organizations/latest/userguide/orgs_integrate_services.html#orgs_integrate_services-using_slrs)
 // in the AWS Organizations User Guide.
 //
@@ -4050,7 +4050,7 @@ func (c *Organizations) DetachPolicyRequest(input *DetachPolicyInput) (req *requ
 // If you instead attach a second SCP and leave the FullAWSAccess SCP still
 // attached, and specify "Effect": "Deny" in the second SCP to override the
 // "Effect": "Allow" in the FullAWSAccess policy (or any other attached SCP),
-// you're using the authorization strategy of blacklisting (https://docs.aws.amazon.com/organizations/latest/userguide/orgs_manage_policies_about-scps.html#orgs_policies_blacklist).
+// you're using the authorization strategy of blacklisting (https://docs.aws.amazon.com/organizations/latest/userguide/orgs_manage_policies_about-scps.html#orgs_policies_blacklist) .
 //
 // This operation can be called only from the organization's master account.
 //
@@ -4624,12 +4624,16 @@ func (c *Organizations) DisablePolicyTypeRequest(input *DisablePolicyTypeInput) 
 // of the specified type to that root or to any organizational unit (OU) or
 // account in that root. You can undo this by using the EnablePolicyType operation.
 //
+// This is an asynchronous request that AWS performs in the background. If you
+// disable a policy for a root, it still appears enabled for the organization
+// if all features (https://docs.aws.amazon.com/organizations/latest/userguide/orgs_manage_org_support-all-features.html)
+// are enabled for the organization. AWS recommends that you first use ListRoots
+// to see the status of policy types for a specified root, and then use this
+// operation.
+//
 // This operation can be called only from the organization's master account.
 //
-// If you disable a policy type for a root, it still shows as enabled for the
-// organization if all features are enabled in that organization. Use ListRoots
-// to see the status of policy types for a specified root. Use DescribeOrganization
-// to see the status of policy types in the organization.
+// To view the status of available policy types in the organization, use DescribeOrganization.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -5430,13 +5434,15 @@ func (c *Organizations) EnablePolicyTypeRequest(input *EnablePolicyTypeInput) (r
 // (OU), or account in that root. You can undo this by using the DisablePolicyType
 // operation.
 //
+// This is an asynchronous request that AWS performs in the background. AWS
+// recommends that you first use ListRoots to see the status of policy types
+// for a specified root, and then use this operation.
+//
 // This operation can be called only from the organization's master account.
 //
 // You can enable a policy type in a root only if that policy type is available
-// in the organization. Use DescribeOrganization to view the status of available
-// policy types in the organization.
-//
-// To view the status of policy type in a root, use ListRoots.
+// in the organization. To view the status of available policy types in the
+// organization, use DescribeOrganization.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -11201,15 +11207,15 @@ type AttachPolicyInput struct {
 	// The regex pattern (http://wikipedia.org/wiki/regex) for a target ID string
 	// requires one of the following:
 	//
-	//    * Root: a string that begins with "r-" followed by from 4 to 32 lower-case
+	//    * Root - A string that begins with "r-" followed by from 4 to 32 lower-case
 	//    letters or digits.
 	//
-	//    * Account: a string that consists of exactly 12 digits.
+	//    * Account - A string that consists of exactly 12 digits.
 	//
-	//    * Organizational unit (OU): a string that begins with "ou-" followed by
-	//    from 4 to 32 lower-case letters or digits (the ID of the root that the
-	//    OU is in) followed by a second "-" dash and from 8 to 32 additional lower-case
-	//    letters or digits.
+	//    * Organizational unit (OU) - A string that begins with "ou-" followed
+	//    by from 4 to 32 lower-case letters or digits (the ID of the root that
+	//    the OU is in) followed by a second "-" dash and from 8 to 32 additional
+	//    lower-case letters or digits.
 	//
 	// TargetId is a required field
 	TargetId *string `type:"string" required:"true"`
@@ -11776,7 +11782,7 @@ type CreateOrganizationInput struct {
 	//    subset isn't available for organizations in the AWS GovCloud (US) Region.
 	//
 	//    * ALL: In addition to all the features supported by the consolidated billing
-	//    feature set, the master account can also apply any type of policy to any
+	//    feature set, the master account can also apply any policy type to any
 	//    member account in the organization. For more information, see All features
 	//    (https://docs.aws.amazon.com/organizations/latest/userguide/orgs_getting-started_concepts.html#feature-set-all)
 	//    in the AWS Organizations User Guide.
@@ -11836,13 +11842,13 @@ type CreateOrganizationalUnitInput struct {
 	// The regex pattern (http://wikipedia.org/wiki/regex) for a parent ID string
 	// requires one of the following:
 	//
-	//    * Root: a string that begins with "r-" followed by from 4 to 32 lower-case
+	//    * Root - A string that begins with "r-" followed by from 4 to 32 lower-case
 	//    letters or digits.
 	//
-	//    * Organizational unit (OU): a string that begins with "ou-" followed by
-	//    from 4 to 32 lower-case letters or digits (the ID of the root that the
-	//    OU is in) followed by a second "-" dash and from 8 to 32 additional lower-case
-	//    letters or digits.
+	//    * Organizational unit (OU) - A string that begins with "ou-" followed
+	//    by from 4 to 32 lower-case letters or digits (the ID of the root that
+	//    the OU is in) followed by a second "-" dash and from 8 to 32 additional
+	//    lower-case letters or digits.
 	//
 	// ParentId is a required field
 	ParentId *string `type:"string" required:"true"`
@@ -12314,7 +12320,7 @@ type DescribeCreateAccountStatusInput struct {
 	// the ID from the response to an earlier CreateAccount request, or from the
 	// ListCreateAccountStatus operation.
 	//
-	// The regex pattern (http://wikipedia.org/wiki/regex) for an create account
+	// The regex pattern (http://wikipedia.org/wiki/regex) for a create account
 	// request ID string requires "car-" followed by from 8 to 32 lower-case letters
 	// or digits.
 	//
@@ -12628,15 +12634,15 @@ type DetachPolicyInput struct {
 	// The regex pattern (http://wikipedia.org/wiki/regex) for a target ID string
 	// requires one of the following:
 	//
-	//    * Root: a string that begins with "r-" followed by from 4 to 32 lower-case
+	//    * Root - A string that begins with "r-" followed by from 4 to 32 lower-case
 	//    letters or digits.
 	//
-	//    * Account: a string that consists of exactly 12 digits.
+	//    * Account - A string that consists of exactly 12 digits.
 	//
-	//    * Organizational unit (OU): a string that begins with "ou-" followed by
-	//    from 4 to 32 lower-case letters or digits (the ID of the root that the
-	//    OU is in) followed by a second "-" dash and from 8 to 32 additional lower-case
-	//    letters or digits.
+	//    * Organizational unit (OU) - A string that begins with "ou-" followed
+	//    by from 4 to 32 lower-case letters or digits (the ID of the root that
+	//    the OU is in) followed by a second "-" dash and from 8 to 32 additional
+	//    lower-case letters or digits.
 	//
 	// TargetId is a required field
 	TargetId *string `type:"string" required:"true"`
@@ -13785,13 +13791,13 @@ type ListChildrenInput struct {
 	// The regex pattern (http://wikipedia.org/wiki/regex) for a parent ID string
 	// requires one of the following:
 	//
-	//    * Root: a string that begins with "r-" followed by from 4 to 32 lower-case
+	//    * Root - A string that begins with "r-" followed by from 4 to 32 lower-case
 	//    letters or digits.
 	//
-	//    * Organizational unit (OU): a string that begins with "ou-" followed by
-	//    from 4 to 32 lower-case letters or digits (the ID of the root that the
-	//    OU is in) followed by a second "-" dash and from 8 to 32 additional lower-case
-	//    letters or digits.
+	//    * Organizational unit (OU) - A string that begins with "ou-" followed
+	//    by from 4 to 32 lower-case letters or digits (the ID of the root that
+	//    the OU is in) followed by a second "-" dash and from 8 to 32 additional
+	//    lower-case letters or digits.
 	//
 	// ParentId is a required field
 	ParentId *string `type:"string" required:"true"`
@@ -14230,13 +14236,13 @@ type ListOrganizationalUnitsForParentInput struct {
 	// The regex pattern (http://wikipedia.org/wiki/regex) for a parent ID string
 	// requires one of the following:
 	//
-	//    * Root: a string that begins with "r-" followed by from 4 to 32 lower-case
+	//    * Root - A string that begins with "r-" followed by from 4 to 32 lower-case
 	//    letters or digits.
 	//
-	//    * Organizational unit (OU): a string that begins with "ou-" followed by
-	//    from 4 to 32 lower-case letters or digits (the ID of the root that the
-	//    OU is in) followed by a second "-" dash and from 8 to 32 additional lower-case
-	//    letters or digits.
+	//    * Organizational unit (OU) - A string that begins with "ou-" followed
+	//    by from 4 to 32 lower-case letters or digits (the ID of the root that
+	//    the OU is in) followed by a second "-" dash and from 8 to 32 additional
+	//    lower-case letters or digits.
 	//
 	// ParentId is a required field
 	ParentId *string `type:"string" required:"true"`
@@ -14331,12 +14337,12 @@ type ListParentsInput struct {
 	// The regex pattern (http://wikipedia.org/wiki/regex) for a child ID string
 	// requires one of the following:
 	//
-	//    * Account: a string that consists of exactly 12 digits.
+	//    * Account - A string that consists of exactly 12 digits.
 	//
-	//    * Organizational unit (OU): a string that begins with "ou-" followed by
-	//    from 4 to 32 lower-case letters or digits (the ID of the root that contains
-	//    the OU) followed by a second "-" dash and from 8 to 32 additional lower-case
-	//    letters or digits.
+	//    * Organizational unit (OU) - A string that begins with "ou-" followed
+	//    by from 4 to 32 lower-case letters or digits (the ID of the root that
+	//    contains the OU) followed by a second "-" dash and from 8 to 32 additional
+	//    lower-case letters or digits.
 	//
 	// ChildId is a required field
 	ChildId *string `type:"string" required:"true"`
@@ -14470,15 +14476,15 @@ type ListPoliciesForTargetInput struct {
 	// The regex pattern (http://wikipedia.org/wiki/regex) for a target ID string
 	// requires one of the following:
 	//
-	//    * Root: a string that begins with "r-" followed by from 4 to 32 lower-case
+	//    * Root - A string that begins with "r-" followed by from 4 to 32 lower-case
 	//    letters or digits.
 	//
-	//    * Account: a string that consists of exactly 12 digits.
+	//    * Account - A string that consists of exactly 12 digits.
 	//
-	//    * Organizational unit (OU): a string that begins with "ou-" followed by
-	//    from 4 to 32 lower-case letters or digits (the ID of the root that the
-	//    OU is in) followed by a second "-" dash and from 8 to 32 additional lower-case
-	//    letters or digits.
+	//    * Organizational unit (OU) - A string that begins with "ou-" followed
+	//    by from 4 to 32 lower-case letters or digits (the ID of the root that
+	//    the OU is in) followed by a second "-" dash and from 8 to 32 additional
+	//    lower-case letters or digits.
 	//
 	// TargetId is a required field
 	TargetId *string `type:"string" required:"true"`
@@ -14986,13 +14992,13 @@ type MoveAccountInput struct {
 	// The regex pattern (http://wikipedia.org/wiki/regex) for a parent ID string
 	// requires one of the following:
 	//
-	//    * Root: a string that begins with "r-" followed by from 4 to 32 lower-case
+	//    * Root - A string that begins with "r-" followed by from 4 to 32 lower-case
 	//    letters or digits.
 	//
-	//    * Organizational unit (OU): a string that begins with "ou-" followed by
-	//    from 4 to 32 lower-case letters or digits (the ID of the root that the
-	//    OU is in) followed by a second "-" dash and from 8 to 32 additional lower-case
-	//    letters or digits.
+	//    * Organizational unit (OU) - A string that begins with "ou-" followed
+	//    by from 4 to 32 lower-case letters or digits (the ID of the root that
+	//    the OU is in) followed by a second "-" dash and from 8 to 32 additional
+	//    lower-case letters or digits.
 	//
 	// DestinationParentId is a required field
 	DestinationParentId *string `type:"string" required:"true"`
@@ -15003,13 +15009,13 @@ type MoveAccountInput struct {
 	// The regex pattern (http://wikipedia.org/wiki/regex) for a parent ID string
 	// requires one of the following:
 	//
-	//    * Root: a string that begins with "r-" followed by from 4 to 32 lower-case
+	//    * Root - A string that begins with "r-" followed by from 4 to 32 lower-case
 	//    letters or digits.
 	//
-	//    * Organizational unit (OU): a string that begins with "ou-" followed by
-	//    from 4 to 32 lower-case letters or digits (the ID of the root that the
-	//    OU is in) followed by a second "-" dash and from 8 to 32 additional lower-case
-	//    letters or digits.
+	//    * Organizational unit (OU) - A string that begins with "ou-" followed
+	//    by from 4 to 32 lower-case letters or digits (the ID of the root that
+	//    the OU is in) followed by a second "-" dash and from 8 to 32 additional
+	//    lower-case letters or digits.
 	//
 	// SourceParentId is a required field
 	SourceParentId *string `type:"string" required:"true"`

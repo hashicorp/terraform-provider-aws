@@ -4976,6 +4976,12 @@ type CreateJobInput struct {
 	// Settings is a required field
 	Settings *JobSettings `locationName:"settings" type:"structure" required:"true"`
 
+	// Enable this setting when you run a test job to estimate how many reserved
+	// transcoding slots (RTS) you need. When this is enabled, MediaConvert runs
+	// your job from an on-demand queue with similar performance to what you will
+	// see with one RTS in a reserved queue. This setting is disabled by default.
+	SimulateReservedQueue *string `locationName:"simulateReservedQueue" type:"string" enum:"SimulateReservedQueue"`
+
 	// Specify how often MediaConvert sends STATUS_UPDATE events to Amazon CloudWatch
 	// Events. Set the interval, in seconds, between status updates. MediaConvert
 	// sends an update at this interval from the time the service begins processing
@@ -5071,6 +5077,12 @@ func (s *CreateJobInput) SetRole(v string) *CreateJobInput {
 // SetSettings sets the Settings field's value.
 func (s *CreateJobInput) SetSettings(v *JobSettings) *CreateJobInput {
 	s.Settings = v
+	return s
+}
+
+// SetSimulateReservedQueue sets the SimulateReservedQueue field's value.
+func (s *CreateJobInput) SetSimulateReservedQueue(v string) *CreateJobInput {
+	s.SimulateReservedQueue = &v
 	return s
 }
 
@@ -10552,6 +10564,12 @@ type Job struct {
 	// Settings is a required field
 	Settings *JobSettings `locationName:"settings" type:"structure" required:"true"`
 
+	// Enable this setting when you run a test job to estimate how many reserved
+	// transcoding slots (RTS) you need. When this is enabled, MediaConvert runs
+	// your job from an on-demand queue with similar performance to what you will
+	// see with one RTS in a reserved queue. This setting is disabled by default.
+	SimulateReservedQueue *string `locationName:"simulateReservedQueue" type:"string" enum:"SimulateReservedQueue"`
+
 	// A job's status can be SUBMITTED, PROGRESSING, COMPLETE, CANCELED, or ERROR.
 	Status *string `locationName:"status" type:"string" enum:"JobStatus"`
 
@@ -10673,6 +10691,12 @@ func (s *Job) SetRole(v string) *Job {
 // SetSettings sets the Settings field's value.
 func (s *Job) SetSettings(v *JobSettings) *Job {
 	s.Settings = v
+	return s
+}
+
+// SetSimulateReservedQueue sets the SimulateReservedQueue field's value.
+func (s *Job) SetSimulateReservedQueue(v string) *Job {
+	s.SimulateReservedQueue = &v
 	return s
 }
 
@@ -20542,6 +20566,18 @@ const (
 
 	// SccDestinationFramerateFramerate2997NonDropframe is a SccDestinationFramerate enum value
 	SccDestinationFramerateFramerate2997NonDropframe = "FRAMERATE_29_97_NON_DROPFRAME"
+)
+
+// Enable this setting when you run a test job to estimate how many reserved
+// transcoding slots (RTS) you need. When this is enabled, MediaConvert runs
+// your job from an on-demand queue with similar performance to what you will
+// see with one RTS in a reserved queue. This setting is disabled by default.
+const (
+	// SimulateReservedQueueDisabled is a SimulateReservedQueue enum value
+	SimulateReservedQueueDisabled = "DISABLED"
+
+	// SimulateReservedQueueEnabled is a SimulateReservedQueue enum value
+	SimulateReservedQueueEnabled = "ENABLED"
 )
 
 // Specify how often MediaConvert sends STATUS_UPDATE events to Amazon CloudWatch
