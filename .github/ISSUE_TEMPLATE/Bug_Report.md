@@ -42,10 +42,6 @@ If you are running into one of these scenarios, we recommend opening an issue in
 
 * aws_XXXXX
 
-### Is the affected resource new or existing
-
-<!--- Please respond with either "New" or "Existing". --->
-
 ### Terraform Configuration Files
 
 <!--- Information about code formatting: https://help.github.com/articles/basic-writing-and-formatting-syntax/#quoting-code --->
