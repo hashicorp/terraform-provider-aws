@@ -9300,6 +9300,42 @@ func (s *Build) SetVersion(v string) *Build {
 	return s
 }
 
+type CertificateConfiguration struct {
+	_ struct{} `type:"structure"`
+
+	// CertificateType is a required field
+	CertificateType *string `type:"string" required:"true" enum:"CertificateType"`
+}
+
+// String returns the string representation
+func (s CertificateConfiguration) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s CertificateConfiguration) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *CertificateConfiguration) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "CertificateConfiguration"}
+	if s.CertificateType == nil {
+		invalidParams.Add(request.NewErrParamRequired("CertificateType"))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetCertificateType sets the CertificateType field's value.
+func (s *CertificateConfiguration) SetCertificateType(v string) *CertificateConfiguration {
+	s.CertificateType = &v
+	return s
+}
+
 // Represents the input for a request action.
 type CreateAliasInput struct {
 	_ struct{} `type:"structure"`
@@ -9532,6 +9568,8 @@ type CreateFleetInput struct {
 	// is created.
 	BuildId *string `type:"string"`
 
+	CertificateConfiguration *CertificateConfiguration `type:"structure"`
+
 	// Human-readable description of a fleet.
 	Description *string `min:"1" type:"string"`
 
@@ -9681,6 +9719,11 @@ func (s *CreateFleetInput) Validate() error {
 	if s.ServerLaunchPath != nil && len(*s.ServerLaunchPath) < 1 {
 		invalidParams.Add(request.NewErrParamMinLen("ServerLaunchPath", 1))
 	}
+	if s.CertificateConfiguration != nil {
+		if err := s.CertificateConfiguration.Validate(); err != nil {
+			invalidParams.AddNested("CertificateConfiguration", err.(request.ErrInvalidParams))
+		}
+	}
 	if s.EC2InboundPermissions != nil {
 		for i, v := range s.EC2InboundPermissions {
 			if v == nil {
@@ -9706,6 +9749,12 @@ func (s *CreateFleetInput) Validate() error {
 // SetBuildId sets the BuildId field's value.
 func (s *CreateFleetInput) SetBuildId(v string) *CreateFleetInput {
 	s.BuildId = &v
+	return s
+}
+
+// SetCertificateConfiguration sets the CertificateConfiguration field's value.
+func (s *CreateFleetInput) SetCertificateConfiguration(v *CertificateConfiguration) *CreateFleetInput {
+	s.CertificateConfiguration = v
 	return s
 }
 
@@ -13906,6 +13955,8 @@ type FleetAttributes struct {
 	// Unique identifier for a build.
 	BuildId *string `type:"string"`
 
+	CertificateConfiguration *CertificateConfiguration `type:"structure"`
+
 	// Time stamp indicating when this data object was created. Format is a number
 	// expressed in Unix time as milliseconds (for example "1469498468.057").
 	CreationTime *time.Time `type:"timestamp"`
@@ -14033,6 +14084,12 @@ func (s FleetAttributes) GoString() string {
 // SetBuildId sets the BuildId field's value.
 func (s *FleetAttributes) SetBuildId(v string) *FleetAttributes {
 	s.BuildId = &v
+	return s
+}
+
+// SetCertificateConfiguration sets the CertificateConfiguration field's value.
+func (s *FleetAttributes) SetCertificateConfiguration(v *CertificateConfiguration) *FleetAttributes {
+	s.CertificateConfiguration = v
 	return s
 }
 
@@ -14391,6 +14448,8 @@ type GameSession struct {
 	// Number of players currently in the game session.
 	CurrentPlayerSessionCount *int64 `type:"integer"`
 
+	DnsName *string `type:"string"`
+
 	// Unique identifier for a fleet that the game session is running on.
 	FleetId *string `type:"string"`
 
@@ -14477,6 +14536,12 @@ func (s *GameSession) SetCreatorId(v string) *GameSession {
 // SetCurrentPlayerSessionCount sets the CurrentPlayerSessionCount field's value.
 func (s *GameSession) SetCurrentPlayerSessionCount(v int64) *GameSession {
 	s.CurrentPlayerSessionCount = &v
+	return s
+}
+
+// SetDnsName sets the DnsName field's value.
+func (s *GameSession) SetDnsName(v string) *GameSession {
+	s.DnsName = &v
 	return s
 }
 
@@ -14567,6 +14632,8 @@ func (s *GameSession) SetTerminationTime(v time.Time) *GameSession {
 type GameSessionConnectionInfo struct {
 	_ struct{} `type:"structure"`
 
+	DnsName *string `type:"string"`
+
 	// Amazon Resource Name (ARN (https://docs.aws.amazon.com/AmazonS3/latest/dev/s3-arn-format.html))
 	// that is assigned to a game session and uniquely identifies it.
 	GameSessionArn *string `min:"1" type:"string"`
@@ -14592,6 +14659,12 @@ func (s GameSessionConnectionInfo) String() string {
 // GoString returns the string representation
 func (s GameSessionConnectionInfo) GoString() string {
 	return s.String()
+}
+
+// SetDnsName sets the DnsName field's value.
+func (s *GameSessionConnectionInfo) SetDnsName(v string) *GameSessionConnectionInfo {
+	s.DnsName = &v
+	return s
 }
 
 // SetGameSessionArn sets the GameSessionArn field's value.
@@ -14670,6 +14743,8 @@ func (s *GameSessionDetail) SetProtectionPolicy(v string) *GameSessionDetail {
 //    * StopGameSessionPlacement
 type GameSessionPlacement struct {
 	_ struct{} `type:"structure"`
+
+	DnsName *string `type:"string"`
 
 	// Time stamp indicating when this request was completed, canceled, or timed
 	// out.
@@ -14772,6 +14847,12 @@ func (s GameSessionPlacement) String() string {
 // GoString returns the string representation
 func (s GameSessionPlacement) GoString() string {
 	return s.String()
+}
+
+// SetDnsName sets the DnsName field's value.
+func (s *GameSessionPlacement) SetDnsName(v string) *GameSessionPlacement {
+	s.DnsName = &v
+	return s
 }
 
 // SetEndTime sets the EndTime field's value.
@@ -15182,6 +15263,8 @@ type Instance struct {
 	// expressed in Unix time as milliseconds (for example "1469498468.057").
 	CreationTime *time.Time `type:"timestamp"`
 
+	DnsName *string `type:"string"`
+
 	// Unique identifier for a fleet that the instance is in.
 	FleetId *string `type:"string"`
 
@@ -15226,6 +15309,12 @@ func (s Instance) GoString() string {
 // SetCreationTime sets the CreationTime field's value.
 func (s *Instance) SetCreationTime(v time.Time) *Instance {
 	s.CreationTime = &v
+	return s
+}
+
+// SetDnsName sets the DnsName field's value.
+func (s *Instance) SetDnsName(v string) *Instance {
+	s.DnsName = &v
 	return s
 }
 
@@ -16596,6 +16685,8 @@ type PlayerSession struct {
 	// expressed in Unix time as milliseconds (for example "1469498468.057").
 	CreationTime *time.Time `type:"timestamp"`
 
+	DnsName *string `type:"string"`
+
 	// Unique identifier for a fleet that the player's game session is running on.
 	FleetId *string `type:"string"`
 
@@ -16655,6 +16746,12 @@ func (s PlayerSession) GoString() string {
 // SetCreationTime sets the CreationTime field's value.
 func (s *PlayerSession) SetCreationTime(v time.Time) *PlayerSession {
 	s.CreationTime = &v
+	return s
+}
+
+// SetDnsName sets the DnsName field's value.
+func (s *PlayerSession) SetDnsName(v string) *PlayerSession {
+	s.DnsName = &v
 	return s
 }
 
@@ -20143,6 +20240,14 @@ const (
 )
 
 const (
+	// CertificateTypeDisabled is a CertificateType enum value
+	CertificateTypeDisabled = "DISABLED"
+
+	// CertificateTypeGenerated is a CertificateType enum value
+	CertificateTypeGenerated = "GENERATED"
+)
+
+const (
 	// ComparisonOperatorTypeGreaterThanOrEqualToThreshold is a ComparisonOperatorType enum value
 	ComparisonOperatorTypeGreaterThanOrEqualToThreshold = "GreaterThanOrEqualToThreshold"
 
@@ -20415,6 +20520,9 @@ const (
 
 	// GameSessionPlacementStateTimedOut is a GameSessionPlacementState enum value
 	GameSessionPlacementStateTimedOut = "TIMED_OUT"
+
+	// GameSessionPlacementStateFailed is a GameSessionPlacementState enum value
+	GameSessionPlacementStateFailed = "FAILED"
 )
 
 const (

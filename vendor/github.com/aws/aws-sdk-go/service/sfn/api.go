@@ -67,6 +67,13 @@ func (c *SFN) CreateActivityRequest(input *CreateActivityInput) (req *request.Re
 // This operation is eventually consistent. The results are best effort and
 // may not reflect very recent updates and changes.
 //
+// CreateActivity is an idempotent API. Subsequent requests won’t create a
+// duplicate resource if it was already created. CreateActivity's idempotency
+// check is based on the activity name. If a following request has different
+// tags values, Step Functions will ignore these differences and treat it as
+// an idempotent request of the previous. In this case, tags will not be updated,
+// even if they are different.
+//
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
 // the error.
@@ -160,6 +167,13 @@ func (c *SFN) CreateStateMachineRequest(input *CreateStateMachineInput) (req *re
 //
 // This operation is eventually consistent. The results are best effort and
 // may not reflect very recent updates and changes.
+//
+// CreateStateMachine is an idempotent API. Subsequent requests won’t create
+// a duplicate resource if it was already created. CreateStateMachine's idempotency
+// check is based on the state machine name and definition. If a following request
+// has a different roleArn or tags, Step Functions will ignore these differences
+// and treat it as an idempotent request of the previous. In this case, roleArn
+// and tags will not be updated, even if they are different.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -1454,6 +1468,9 @@ func (c *SFN) ListTagsForResourceRequest(input *ListTagsForResourceInput) (req *
 //
 // List tags for a given resource.
 //
+// Tags may only contain Unicode letters, digits, white space, or these symbols:
+// _ . : / = + - @.
+//
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
 // the error.
@@ -1466,7 +1483,7 @@ func (c *SFN) ListTagsForResourceRequest(input *ListTagsForResourceInput) (req *
 //   The provided Amazon Resource Name (ARN) is invalid.
 //
 //   * ErrCodeResourceNotFound "ResourceNotFound"
-//   Could not fine the referenced resource. Only state machine and activity ARNs
+//   Could not find the referenced resource. Only state machine and activity ARNs
 //   are supported.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/states-2016-11-23/ListTagsForResource
@@ -1536,7 +1553,8 @@ func (c *SFN) SendTaskFailureRequest(input *SendTaskFailureInput) (req *request.
 
 // SendTaskFailure API operation for AWS Step Functions.
 //
-// Used by workers to report that the task identified by the taskToken failed.
+// Used by activity workers and task states using the callback (https://docs.aws.amazon.com/step-functions/latest/dg/connect-to-resource.html#connect-wait-token)
+// pattern to report that the task identified by the taskToken failed.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -1620,19 +1638,21 @@ func (c *SFN) SendTaskHeartbeatRequest(input *SendTaskHeartbeatInput) (req *requ
 
 // SendTaskHeartbeat API operation for AWS Step Functions.
 //
-// Used by workers to report to the service that the task represented by the
-// specified taskToken is still making progress. This action resets the Heartbeat
-// clock. The Heartbeat threshold is specified in the state machine's Amazon
-// States Language definition. This action does not in itself create an event
-// in the execution history. However, if the task times out, the execution history
-// contains an ActivityTimedOut event.
+// Used by activity workers and task states using the callback (https://docs.aws.amazon.com/step-functions/latest/dg/connect-to-resource.html#connect-wait-token)
+// pattern to report to Step Functions that the task represented by the specified
+// taskToken is still making progress. This action resets the Heartbeat clock.
+// The Heartbeat threshold is specified in the state machine's Amazon States
+// Language definition (HeartbeatSeconds). This action does not in itself create
+// an event in the execution history. However, if the task times out, the execution
+// history contains an ActivityTimedOut entry for activities, or a TaskTimedOut
+// entry for for tasks using the job run (https://docs.aws.amazon.com/step-functions/latest/dg/connect-to-resource.html#connect-sync)
+// or callback (https://docs.aws.amazon.com/step-functions/latest/dg/connect-to-resource.html#connect-wait-token)
+// pattern.
 //
 // The Timeout of a task, defined in the state machine's Amazon States Language
 // definition, is its maximum allowed duration, regardless of the number of
-// SendTaskHeartbeat requests received.
-//
-// This operation is only useful for long-lived tasks to report the liveliness
-// of the task.
+// SendTaskHeartbeat requests received. Use HeartbeatSeconds to configure the
+// timeout interval for heartbeats.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -1716,8 +1736,8 @@ func (c *SFN) SendTaskSuccessRequest(input *SendTaskSuccessInput) (req *request.
 
 // SendTaskSuccess API operation for AWS Step Functions.
 //
-// Used by workers to report that the task identified by the taskToken completed
-// successfully.
+// Used by activity workers and task states using the callback (https://docs.aws.amazon.com/step-functions/latest/dg/connect-to-resource.html#connect-wait-token)
+// pattern to report that the task identified by the taskToken completed successfully.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -1994,6 +2014,14 @@ func (c *SFN) TagResourceRequest(input *TagResourceInput) (req *request.Request,
 //
 // Add a tag to a Step Functions resource.
 //
+// An array of key-value pairs. For more information, see Using Cost Allocation
+// Tags (https://docs.aws.amazon.com/awsaccountbilling/latest/aboutv2/cost-alloc-tags.html)
+// in the AWS Billing and Cost Management User Guide, and Controlling Access
+// Using IAM Tags (https://docs.aws.amazon.com/IAM/latest/UserGuide/access_iam-tags.html).
+//
+// Tags may only contain Unicode letters, digits, white space, or these symbols:
+// _ . : / = + - @.
+//
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
 // the error.
@@ -2006,7 +2034,7 @@ func (c *SFN) TagResourceRequest(input *TagResourceInput) (req *request.Request,
 //   The provided Amazon Resource Name (ARN) is invalid.
 //
 //   * ErrCodeResourceNotFound "ResourceNotFound"
-//   Could not fine the referenced resource. Only state machine and activity ARNs
+//   Could not find the referenced resource. Only state machine and activity ARNs
 //   are supported.
 //
 //   * ErrCodeTooManyTags "TooManyTags"
@@ -2095,7 +2123,7 @@ func (c *SFN) UntagResourceRequest(input *UntagResourceInput) (req *request.Requ
 //   The provided Amazon Resource Name (ARN) is invalid.
 //
 //   * ErrCodeResourceNotFound "ResourceNotFound"
-//   Could not fine the referenced resource. Only state machine and activity ARNs
+//   Could not find the referenced resource. Only state machine and activity ARNs
 //   are supported.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/states-2016-11-23/UntagResource
@@ -2270,7 +2298,7 @@ type ActivityListItem struct {
 	//
 	// A name must not contain:
 	//
-	//    * whitespace
+	//    * white space
 	//
 	//    * brackets < > { } [ ]
 	//
@@ -2492,7 +2520,7 @@ type CreateActivityInput struct {
 	//
 	// A name must not contain:
 	//
-	//    * whitespace
+	//    * white space
 	//
 	//    * brackets < > { } [ ]
 	//
@@ -2506,6 +2534,14 @@ type CreateActivityInput struct {
 	Name *string `locationName:"name" min:"1" type:"string" required:"true"`
 
 	// The list of tags to add to a resource.
+	//
+	// An array of key-value pairs. For more information, see Using Cost Allocation
+	// Tags (https://docs.aws.amazon.com/awsaccountbilling/latest/aboutv2/cost-alloc-tags.html)
+	// in the AWS Billing and Cost Management User Guide, and Controlling Access
+	// Using IAM Tags (https://docs.aws.amazon.com/IAM/latest/UserGuide/access_iam-tags.html).
+	//
+	// Tags may only contain Unicode letters, digits, white space, or these symbols:
+	// _ . : / = + - @.
 	Tags []*Tag `locationName:"tags" type:"list"`
 }
 
@@ -2606,7 +2642,7 @@ type CreateStateMachineInput struct {
 	//
 	// A name must not contain:
 	//
-	//    * whitespace
+	//    * white space
 	//
 	//    * brackets < > { } [ ]
 	//
@@ -2625,6 +2661,14 @@ type CreateStateMachineInput struct {
 	RoleArn *string `locationName:"roleArn" min:"1" type:"string" required:"true"`
 
 	// Tags to be added when creating a state machine.
+	//
+	// An array of key-value pairs. For more information, see Using Cost Allocation
+	// Tags (https://docs.aws.amazon.com/awsaccountbilling/latest/aboutv2/cost-alloc-tags.html)
+	// in the AWS Billing and Cost Management User Guide, and Controlling Access
+	// Using IAM Tags (https://docs.aws.amazon.com/IAM/latest/UserGuide/access_iam-tags.html).
+	//
+	// Tags may only contain Unicode letters, digits, white space, or these symbols:
+	// _ . : / = + - @.
 	Tags []*Tag `locationName:"tags" type:"list"`
 }
 
@@ -2904,7 +2948,7 @@ type DescribeActivityOutput struct {
 	//
 	// A name must not contain:
 	//
-	//    * whitespace
+	//    * white space
 	//
 	//    * brackets < > { } [ ]
 	//
@@ -3004,7 +3048,7 @@ type DescribeExecutionOutput struct {
 	//
 	// A name must not contain:
 	//
-	//    * whitespace
+	//    * white space
 	//
 	//    * brackets < > { } [ ]
 	//
@@ -3271,7 +3315,7 @@ type DescribeStateMachineOutput struct {
 	//
 	// A name must not contain:
 	//
-	//    * whitespace
+	//    * white space
 	//
 	//    * brackets < > { } [ ]
 	//
@@ -3425,7 +3469,7 @@ type ExecutionListItem struct {
 	//
 	// A name must not contain:
 	//
-	//    * whitespace
+	//    * white space
 	//
 	//    * brackets < > { } [ ]
 	//
@@ -3866,6 +3910,21 @@ type HistoryEvent struct {
 	// execution.
 	LambdaFunctionTimedOutEventDetails *LambdaFunctionTimedOutEventDetails `locationName:"lambdaFunctionTimedOutEventDetails" type:"structure"`
 
+	// Contains details about an iteration of a Map state that was aborted.
+	MapIterationAbortedEventDetails *MapIterationEventDetails `locationName:"mapIterationAbortedEventDetails" type:"structure"`
+
+	// Contains details about an iteration of a Map state that failed.
+	MapIterationFailedEventDetails *MapIterationEventDetails `locationName:"mapIterationFailedEventDetails" type:"structure"`
+
+	// Contains details about an iteration of a Map state that was started.
+	MapIterationStartedEventDetails *MapIterationEventDetails `locationName:"mapIterationStartedEventDetails" type:"structure"`
+
+	// Contains details about an iteration of a Map state that succeeded.
+	MapIterationSucceededEventDetails *MapIterationEventDetails `locationName:"mapIterationSucceededEventDetails" type:"structure"`
+
+	// Contains details about Map state that was started.
+	MapStateStartedEventDetails *MapStateStartedEventDetails `locationName:"mapStateStartedEventDetails" type:"structure"`
+
 	// The id of the previous event.
 	PreviousEventId *int64 `locationName:"previousEventId" type:"long"`
 
@@ -4025,6 +4084,36 @@ func (s *HistoryEvent) SetLambdaFunctionSucceededEventDetails(v *LambdaFunctionS
 // SetLambdaFunctionTimedOutEventDetails sets the LambdaFunctionTimedOutEventDetails field's value.
 func (s *HistoryEvent) SetLambdaFunctionTimedOutEventDetails(v *LambdaFunctionTimedOutEventDetails) *HistoryEvent {
 	s.LambdaFunctionTimedOutEventDetails = v
+	return s
+}
+
+// SetMapIterationAbortedEventDetails sets the MapIterationAbortedEventDetails field's value.
+func (s *HistoryEvent) SetMapIterationAbortedEventDetails(v *MapIterationEventDetails) *HistoryEvent {
+	s.MapIterationAbortedEventDetails = v
+	return s
+}
+
+// SetMapIterationFailedEventDetails sets the MapIterationFailedEventDetails field's value.
+func (s *HistoryEvent) SetMapIterationFailedEventDetails(v *MapIterationEventDetails) *HistoryEvent {
+	s.MapIterationFailedEventDetails = v
+	return s
+}
+
+// SetMapIterationStartedEventDetails sets the MapIterationStartedEventDetails field's value.
+func (s *HistoryEvent) SetMapIterationStartedEventDetails(v *MapIterationEventDetails) *HistoryEvent {
+	s.MapIterationStartedEventDetails = v
+	return s
+}
+
+// SetMapIterationSucceededEventDetails sets the MapIterationSucceededEventDetails field's value.
+func (s *HistoryEvent) SetMapIterationSucceededEventDetails(v *MapIterationEventDetails) *HistoryEvent {
+	s.MapIterationSucceededEventDetails = v
+	return s
+}
+
+// SetMapStateStartedEventDetails sets the MapStateStartedEventDetails field's value.
+func (s *HistoryEvent) SetMapStateStartedEventDetails(v *MapStateStartedEventDetails) *HistoryEvent {
+	s.MapStateStartedEventDetails = v
 	return s
 }
 
@@ -4674,6 +4763,63 @@ func (s *ListTagsForResourceOutput) SetTags(v []*Tag) *ListTagsForResourceOutput
 	return s
 }
 
+// Contains details about an iteration of a Map state.
+type MapIterationEventDetails struct {
+	_ struct{} `type:"structure"`
+
+	// The index of the array belonging to the Map state iteration.
+	Index *int64 `type:"integer"`
+
+	// The name of the iteration’s parent Map state.
+	Name *string `min:"1" type:"string"`
+}
+
+// String returns the string representation
+func (s MapIterationEventDetails) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s MapIterationEventDetails) GoString() string {
+	return s.String()
+}
+
+// SetIndex sets the Index field's value.
+func (s *MapIterationEventDetails) SetIndex(v int64) *MapIterationEventDetails {
+	s.Index = &v
+	return s
+}
+
+// SetName sets the Name field's value.
+func (s *MapIterationEventDetails) SetName(v string) *MapIterationEventDetails {
+	s.Name = &v
+	return s
+}
+
+// Details about a Map state that was started.
+type MapStateStartedEventDetails struct {
+	_ struct{} `type:"structure"`
+
+	// The size of the array for Map state iterations.
+	Length *int64 `type:"integer"`
+}
+
+// String returns the string representation
+func (s MapStateStartedEventDetails) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s MapStateStartedEventDetails) GoString() string {
+	return s.String()
+}
+
+// SetLength sets the Length field's value.
+func (s *MapStateStartedEventDetails) SetLength(v int64) *MapStateStartedEventDetails {
+	s.Length = &v
+	return s
+}
+
 type SendTaskFailureInput struct {
 	_ struct{} `type:"structure"`
 
@@ -4683,8 +4829,9 @@ type SendTaskFailureInput struct {
 	// The error code of the failure.
 	Error *string `locationName:"error" type:"string" sensitive:"true"`
 
-	// The token that represents this task. Task tokens are generated by the service
-	// when the tasks are assigned to a worker (see GetActivityTask::taskToken).
+	// The token that represents this task. Task tokens are generated by Step Functions
+	// when tasks are assigned to a worker, or in the context object (https://docs.aws.amazon.com/step-functions/latest/dg/input-output-contextobject.html)
+	// when a workflow enters a task state. See GetActivityTaskOutput$taskToken.
 	//
 	// TaskToken is a required field
 	TaskToken *string `locationName:"taskToken" min:"1" type:"string" required:"true"`
@@ -4751,8 +4898,9 @@ func (s SendTaskFailureOutput) GoString() string {
 type SendTaskHeartbeatInput struct {
 	_ struct{} `type:"structure"`
 
-	// The token that represents this task. Task tokens are generated by the service
-	// when the tasks are assigned to a worker (see GetActivityTaskOutput$taskToken).
+	// The token that represents this task. Task tokens are generated by Step Functions
+	// when tasks are assigned to a worker, or in the context object (https://docs.aws.amazon.com/step-functions/latest/dg/input-output-contextobject.html)
+	// when a workflow enters a task state. See GetActivityTaskOutput$taskToken.
 	//
 	// TaskToken is a required field
 	TaskToken *string `locationName:"taskToken" min:"1" type:"string" required:"true"`
@@ -4812,8 +4960,9 @@ type SendTaskSuccessInput struct {
 	// Output is a required field
 	Output *string `locationName:"output" type:"string" required:"true" sensitive:"true"`
 
-	// The token that represents this task. Task tokens are generated by the service
-	// when the tasks are assigned to a worker (see GetActivityTaskOutput$taskToken).
+	// The token that represents this task. Task tokens are generated by Step Functions
+	// when tasks are assigned to a worker, or in the context object (https://docs.aws.amazon.com/step-functions/latest/dg/input-output-contextobject.html)
+	// when a workflow enters a task state. See GetActivityTaskOutput$taskToken.
 	//
 	// TaskToken is a required field
 	TaskToken *string `locationName:"taskToken" min:"1" type:"string" required:"true"`
@@ -4892,7 +5041,7 @@ type StartExecutionInput struct {
 	//
 	// A name must not contain:
 	//
-	//    * whitespace
+	//    * white space
 	//
 	//    * brackets < > { } [ ]
 	//
@@ -5035,7 +5184,7 @@ type StateExitedEventDetails struct {
 	//
 	// A name must not contain:
 	//
-	//    * whitespace
+	//    * white space
 	//
 	//    * brackets < > { } [ ]
 	//
@@ -5087,7 +5236,7 @@ type StateMachineListItem struct {
 	//
 	// A name must not contain:
 	//
-	//    * whitespace
+	//    * white space
 	//
 	//    * brackets < > { } [ ]
 	//
@@ -5220,6 +5369,14 @@ func (s *StopExecutionOutput) SetStopDate(v time.Time) *StopExecutionOutput {
 
 // Tags are key-value pairs that can be associated with Step Functions state
 // machines and activities.
+//
+// An array of key-value pairs. For more information, see Using Cost Allocation
+// Tags (https://docs.aws.amazon.com/awsaccountbilling/latest/aboutv2/cost-alloc-tags.html)
+// in the AWS Billing and Cost Management User Guide, and Controlling Access
+// Using IAM Tags (https://docs.aws.amazon.com/IAM/latest/UserGuide/access_iam-tags.html).
+//
+// Tags may only contain Unicode letters, digits, white space, or these symbols:
+// _ . : / = + - @.
 type Tag struct {
 	_ struct{} `type:"structure"`
 
@@ -5275,7 +5432,7 @@ type TagResourceInput struct {
 
 	// The list of tags to add to a resource.
 	//
-	// Tags may only contain unicode letters, digits, whitespace, or these symbols:
+	// Tags may only contain Unicode letters, digits, white space, or these symbols:
 	// _ . : / = + - @.
 	//
 	// Tags is a required field
@@ -5946,11 +6103,11 @@ const (
 	// HistoryEventTypeActivityFailed is a HistoryEventType enum value
 	HistoryEventTypeActivityFailed = "ActivityFailed"
 
-	// HistoryEventTypeActivityScheduleFailed is a HistoryEventType enum value
-	HistoryEventTypeActivityScheduleFailed = "ActivityScheduleFailed"
-
 	// HistoryEventTypeActivityScheduled is a HistoryEventType enum value
 	HistoryEventTypeActivityScheduled = "ActivityScheduled"
+
+	// HistoryEventTypeActivityScheduleFailed is a HistoryEventType enum value
+	HistoryEventTypeActivityScheduleFailed = "ActivityScheduleFailed"
 
 	// HistoryEventTypeActivityStarted is a HistoryEventType enum value
 	HistoryEventTypeActivityStarted = "ActivityStarted"
@@ -5967,29 +6124,8 @@ const (
 	// HistoryEventTypeChoiceStateExited is a HistoryEventType enum value
 	HistoryEventTypeChoiceStateExited = "ChoiceStateExited"
 
-	// HistoryEventTypeTaskFailed is a HistoryEventType enum value
-	HistoryEventTypeTaskFailed = "TaskFailed"
-
-	// HistoryEventTypeTaskScheduled is a HistoryEventType enum value
-	HistoryEventTypeTaskScheduled = "TaskScheduled"
-
-	// HistoryEventTypeTaskStartFailed is a HistoryEventType enum value
-	HistoryEventTypeTaskStartFailed = "TaskStartFailed"
-
-	// HistoryEventTypeTaskStarted is a HistoryEventType enum value
-	HistoryEventTypeTaskStarted = "TaskStarted"
-
-	// HistoryEventTypeTaskSubmitFailed is a HistoryEventType enum value
-	HistoryEventTypeTaskSubmitFailed = "TaskSubmitFailed"
-
-	// HistoryEventTypeTaskSubmitted is a HistoryEventType enum value
-	HistoryEventTypeTaskSubmitted = "TaskSubmitted"
-
-	// HistoryEventTypeTaskSucceeded is a HistoryEventType enum value
-	HistoryEventTypeTaskSucceeded = "TaskSucceeded"
-
-	// HistoryEventTypeTaskTimedOut is a HistoryEventType enum value
-	HistoryEventTypeTaskTimedOut = "TaskTimedOut"
+	// HistoryEventTypeExecutionAborted is a HistoryEventType enum value
+	HistoryEventTypeExecutionAborted = "ExecutionAborted"
 
 	// HistoryEventTypeExecutionFailed is a HistoryEventType enum value
 	HistoryEventTypeExecutionFailed = "ExecutionFailed"
@@ -6000,9 +6136,6 @@ const (
 	// HistoryEventTypeExecutionSucceeded is a HistoryEventType enum value
 	HistoryEventTypeExecutionSucceeded = "ExecutionSucceeded"
 
-	// HistoryEventTypeExecutionAborted is a HistoryEventType enum value
-	HistoryEventTypeExecutionAborted = "ExecutionAborted"
-
 	// HistoryEventTypeExecutionTimedOut is a HistoryEventType enum value
 	HistoryEventTypeExecutionTimedOut = "ExecutionTimedOut"
 
@@ -6012,17 +6145,17 @@ const (
 	// HistoryEventTypeLambdaFunctionFailed is a HistoryEventType enum value
 	HistoryEventTypeLambdaFunctionFailed = "LambdaFunctionFailed"
 
-	// HistoryEventTypeLambdaFunctionScheduleFailed is a HistoryEventType enum value
-	HistoryEventTypeLambdaFunctionScheduleFailed = "LambdaFunctionScheduleFailed"
-
 	// HistoryEventTypeLambdaFunctionScheduled is a HistoryEventType enum value
 	HistoryEventTypeLambdaFunctionScheduled = "LambdaFunctionScheduled"
 
-	// HistoryEventTypeLambdaFunctionStartFailed is a HistoryEventType enum value
-	HistoryEventTypeLambdaFunctionStartFailed = "LambdaFunctionStartFailed"
+	// HistoryEventTypeLambdaFunctionScheduleFailed is a HistoryEventType enum value
+	HistoryEventTypeLambdaFunctionScheduleFailed = "LambdaFunctionScheduleFailed"
 
 	// HistoryEventTypeLambdaFunctionStarted is a HistoryEventType enum value
 	HistoryEventTypeLambdaFunctionStarted = "LambdaFunctionStarted"
+
+	// HistoryEventTypeLambdaFunctionStartFailed is a HistoryEventType enum value
+	HistoryEventTypeLambdaFunctionStartFailed = "LambdaFunctionStartFailed"
 
 	// HistoryEventTypeLambdaFunctionSucceeded is a HistoryEventType enum value
 	HistoryEventTypeLambdaFunctionSucceeded = "LambdaFunctionSucceeded"
@@ -6030,26 +6163,35 @@ const (
 	// HistoryEventTypeLambdaFunctionTimedOut is a HistoryEventType enum value
 	HistoryEventTypeLambdaFunctionTimedOut = "LambdaFunctionTimedOut"
 
-	// HistoryEventTypeSucceedStateEntered is a HistoryEventType enum value
-	HistoryEventTypeSucceedStateEntered = "SucceedStateEntered"
+	// HistoryEventTypeMapIterationAborted is a HistoryEventType enum value
+	HistoryEventTypeMapIterationAborted = "MapIterationAborted"
 
-	// HistoryEventTypeSucceedStateExited is a HistoryEventType enum value
-	HistoryEventTypeSucceedStateExited = "SucceedStateExited"
+	// HistoryEventTypeMapIterationFailed is a HistoryEventType enum value
+	HistoryEventTypeMapIterationFailed = "MapIterationFailed"
 
-	// HistoryEventTypeTaskStateAborted is a HistoryEventType enum value
-	HistoryEventTypeTaskStateAborted = "TaskStateAborted"
+	// HistoryEventTypeMapIterationStarted is a HistoryEventType enum value
+	HistoryEventTypeMapIterationStarted = "MapIterationStarted"
 
-	// HistoryEventTypeTaskStateEntered is a HistoryEventType enum value
-	HistoryEventTypeTaskStateEntered = "TaskStateEntered"
+	// HistoryEventTypeMapIterationSucceeded is a HistoryEventType enum value
+	HistoryEventTypeMapIterationSucceeded = "MapIterationSucceeded"
 
-	// HistoryEventTypeTaskStateExited is a HistoryEventType enum value
-	HistoryEventTypeTaskStateExited = "TaskStateExited"
+	// HistoryEventTypeMapStateAborted is a HistoryEventType enum value
+	HistoryEventTypeMapStateAborted = "MapStateAborted"
 
-	// HistoryEventTypePassStateEntered is a HistoryEventType enum value
-	HistoryEventTypePassStateEntered = "PassStateEntered"
+	// HistoryEventTypeMapStateEntered is a HistoryEventType enum value
+	HistoryEventTypeMapStateEntered = "MapStateEntered"
 
-	// HistoryEventTypePassStateExited is a HistoryEventType enum value
-	HistoryEventTypePassStateExited = "PassStateExited"
+	// HistoryEventTypeMapStateExited is a HistoryEventType enum value
+	HistoryEventTypeMapStateExited = "MapStateExited"
+
+	// HistoryEventTypeMapStateFailed is a HistoryEventType enum value
+	HistoryEventTypeMapStateFailed = "MapStateFailed"
+
+	// HistoryEventTypeMapStateStarted is a HistoryEventType enum value
+	HistoryEventTypeMapStateStarted = "MapStateStarted"
+
+	// HistoryEventTypeMapStateSucceeded is a HistoryEventType enum value
+	HistoryEventTypeMapStateSucceeded = "MapStateSucceeded"
 
 	// HistoryEventTypeParallelStateAborted is a HistoryEventType enum value
 	HistoryEventTypeParallelStateAborted = "ParallelStateAborted"
@@ -6068,6 +6210,51 @@ const (
 
 	// HistoryEventTypeParallelStateSucceeded is a HistoryEventType enum value
 	HistoryEventTypeParallelStateSucceeded = "ParallelStateSucceeded"
+
+	// HistoryEventTypePassStateEntered is a HistoryEventType enum value
+	HistoryEventTypePassStateEntered = "PassStateEntered"
+
+	// HistoryEventTypePassStateExited is a HistoryEventType enum value
+	HistoryEventTypePassStateExited = "PassStateExited"
+
+	// HistoryEventTypeSucceedStateEntered is a HistoryEventType enum value
+	HistoryEventTypeSucceedStateEntered = "SucceedStateEntered"
+
+	// HistoryEventTypeSucceedStateExited is a HistoryEventType enum value
+	HistoryEventTypeSucceedStateExited = "SucceedStateExited"
+
+	// HistoryEventTypeTaskFailed is a HistoryEventType enum value
+	HistoryEventTypeTaskFailed = "TaskFailed"
+
+	// HistoryEventTypeTaskScheduled is a HistoryEventType enum value
+	HistoryEventTypeTaskScheduled = "TaskScheduled"
+
+	// HistoryEventTypeTaskStarted is a HistoryEventType enum value
+	HistoryEventTypeTaskStarted = "TaskStarted"
+
+	// HistoryEventTypeTaskStartFailed is a HistoryEventType enum value
+	HistoryEventTypeTaskStartFailed = "TaskStartFailed"
+
+	// HistoryEventTypeTaskStateAborted is a HistoryEventType enum value
+	HistoryEventTypeTaskStateAborted = "TaskStateAborted"
+
+	// HistoryEventTypeTaskStateEntered is a HistoryEventType enum value
+	HistoryEventTypeTaskStateEntered = "TaskStateEntered"
+
+	// HistoryEventTypeTaskStateExited is a HistoryEventType enum value
+	HistoryEventTypeTaskStateExited = "TaskStateExited"
+
+	// HistoryEventTypeTaskSubmitFailed is a HistoryEventType enum value
+	HistoryEventTypeTaskSubmitFailed = "TaskSubmitFailed"
+
+	// HistoryEventTypeTaskSubmitted is a HistoryEventType enum value
+	HistoryEventTypeTaskSubmitted = "TaskSubmitted"
+
+	// HistoryEventTypeTaskSucceeded is a HistoryEventType enum value
+	HistoryEventTypeTaskSucceeded = "TaskSucceeded"
+
+	// HistoryEventTypeTaskTimedOut is a HistoryEventType enum value
+	HistoryEventTypeTaskTimedOut = "TaskTimedOut"
 
 	// HistoryEventTypeWaitStateAborted is a HistoryEventType enum value
 	HistoryEventTypeWaitStateAborted = "WaitStateAborted"
