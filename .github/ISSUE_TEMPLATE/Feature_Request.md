@@ -24,6 +24,10 @@ labels: enhancement
 
 * aws_XXXXX
 
+### Is the affected resource new or existing
+
+<!--- Please respond with either "New" or "Existing". --->
+
 ### Potential Terraform Configuration
 
 <!--- Information about code formatting: https://help.github.com/articles/basic-writing-and-formatting-syntax/#quoting-code --->
