@@ -127,10 +127,10 @@ func TestAccAWSEksCluster_Version(t *testing.T) {
 		CheckDestroy: testAccCheckAWSEksClusterDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSEksClusterConfig_Version(rName, "1.10"),
+				Config: testAccAWSEksClusterConfig_Version(rName, "1.13"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSEksClusterExists(resourceName, &cluster1),
-					resource.TestCheckResourceAttr(resourceName, "version", "1.10"),
+					resource.TestCheckResourceAttr(resourceName, "version", "1.13"),
 				),
 			},
 			{
@@ -139,11 +139,11 @@ func TestAccAWSEksCluster_Version(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccAWSEksClusterConfig_Version(rName, "1.11"),
+				Config: testAccAWSEksClusterConfig_Version(rName, "1.14"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSEksClusterExists(resourceName, &cluster2),
 					testAccCheckAWSEksClusterNotRecreated(&cluster1, &cluster2),
-					resource.TestCheckResourceAttr(resourceName, "version", "1.11"),
+					resource.TestCheckResourceAttr(resourceName, "version", "1.14"),
 				),
 			},
 		},
