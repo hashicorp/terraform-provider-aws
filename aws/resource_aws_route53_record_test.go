@@ -118,7 +118,7 @@ func TestAccAWSRoute53Record_basic(t *testing.T) {
 			{
 				Config: testAccRoute53RecordConfig,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckRoute53RecordExists("aws_route53_record.default", &record1),
+					testAccCheckRoute53RecordExists(resourceName, &record1),
 				),
 			},
 			{
