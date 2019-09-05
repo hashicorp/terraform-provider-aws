@@ -30,11 +30,21 @@ If you are running into one of these scenarios, we recommend opening an issue in
 
 <!--- Please run `terraform -v` to show the Terraform core version and provider version(s). If you are not running the latest version of Terraform or the provider, please upgrade because your issue may have already been fixed. [Terraform documentation on provider versioning](https://www.terraform.io/docs/configuration/providers.html#provider-versions). --->
 
+### Has this been tested with the latest version of Terraform?
+<!-- Please respond with "yes" or "no". -->
+
+### If not, please let us know why
+<!-- As stated above, your issue may have been resolved in the latest release. If you are not able to upgrade, having a bit of background will help us while investigating your issue. If this doesn't apply to you, please, just enter "N/A" into this section. -->
+
 ### Affected Resource(s)
 
 <!--- Please list the affected resources and data sources. --->
 
 * aws_XXXXX
+
+### Is the affected resource new or existing
+
+<!--- Please respond with either "New" or "Existing". --->
 
 ### Terraform Configuration Files
 
