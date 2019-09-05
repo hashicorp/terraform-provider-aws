@@ -730,7 +730,7 @@ func resourceAwsCloudFrontDistributionRead(d *schema.ResourceData, meta interfac
 
 	// Update other attributes outside of DistributionConfig
 
-	if d.Set("active_trusted_signers", flattenCloudfrontActiveTrustedSigners(resp.Distribution.ActiveTrustedSigners)); err != nil {
+	if err := d.Set("active_trusted_signers", flattenCloudfrontActiveTrustedSigners(resp.Distribution.ActiveTrustedSigners)); err != nil {
 		return fmt.Errorf("error setting active_trusted_signers: %s", err)
 	}
 
