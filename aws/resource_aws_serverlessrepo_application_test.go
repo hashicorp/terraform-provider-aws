@@ -33,6 +33,7 @@ func TestAccAwsServerlessRepositoryApplication_basic(t *testing.T) {
 					resource.TestCheckResourceAttrSet("aws_serverlessrepository_application.postgres-rotator", "outputs.RotationLambdaARN"),
 					resource.TestCheckResourceAttr("aws_serverlessrepository_application.postgres-rotator", "capabilities.#", "1"),
 					//resource.TestCheckResourceAttr("aws_serverlessrepository_application.postgres-rotator", "capabilities.0", "CAPABILITY_NAMED_IAM"),
+					resource.TestCheckResourceAttr("aws_serverlessrepository_application.postgres-rotator", "tags.%", "0"),
 				),
 			},
 		},
