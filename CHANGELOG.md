@@ -1,15 +1,15 @@
-## 2.27.0 (Unreleased)
+## 2.27.0 (September 05, 2019)
 
 ENHANCEMENTS:
 
-* data-source/aws_ecs_cluster: Add `setting` attribute [GH-9720]
-* provider: Support AWS C2S and SC2S endpoints [GH-9998]
-* resource/aws_ecs_cluster: Add `setting` configuration blocks (support enabling Container Insights) [GH-9720]
-* resource/aws_kinesis_firehose_delivery_stream: Add `server_side_encryption` configuration block (support Server Side Encryption) [GH-6523]
+* data-source/aws_ecs_cluster: Add `setting` attribute ([#9720](https://github.com/terraform-providers/terraform-provider-aws/issues/9720))
+* provider: Support AWS C2S and SC2S endpoints ([#9998](https://github.com/terraform-providers/terraform-provider-aws/issues/9998))
+* resource/aws_ecs_cluster: Add `setting` configuration blocks (support enabling Container Insights) ([#9720](https://github.com/terraform-providers/terraform-provider-aws/issues/9720))
+* resource/aws_kinesis_firehose_delivery_stream: Add `server_side_encryption` configuration block (support Server Side Encryption) ([#6523](https://github.com/terraform-providers/terraform-provider-aws/issues/6523))
 
 BUG FIXES:
 
-* resource/aws_s3_bucket: Include any system tags that Terraform ignores when setting S3 bucket tags [GH-7342]
+* resource/aws_s3_bucket: Include any system tags that Terraform ignores when setting S3 bucket tags ([#7342](https://github.com/terraform-providers/terraform-provider-aws/issues/7342))
 
 ## 2.26.0 (August 29, 2019)
 
