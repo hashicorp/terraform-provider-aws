@@ -5976,15 +5976,14 @@ type ContainerDefinition struct {
 	// section of the Docker Remote API (https://docs.docker.com/engine/api/v1.35/)
 	// and the --memory option to docker run (https://docs.docker.com/engine/reference/run/).
 	//
-	// If your containers are part of a task using the Fargate launch type, this
-	// field is optional.
+	// If using the Fargate launch type, this parameter is optional.
 	//
-	// For containers that are part of a task using the EC2 launch type, you must
-	// specify a non-zero integer for one or both of memory or memoryReservation
-	// in container definitions. If you specify both, memory must be greater than
-	// memoryReservation. If you specify memoryReservation, then that value is subtracted
-	// from the available memory resources for the container instance on which the
-	// container is placed. Otherwise, the value of memory is used.
+	// If using the EC2 launch type, you must specify either a task-level memory
+	// value or a container-level memory value. If you specify both a container-level
+	// memory and memoryReservation value, memory must be greater than memoryReservation.
+	// If you specify memoryReservation, then that value is subtracted from the
+	// available memory resources for the container instance on which the container
+	// is placed. Otherwise, the value of memory is used.
 	//
 	// The Docker daemon reserves a minimum of 4 MiB of memory for a container,
 	// so you should not specify fewer than 4 MiB of memory for your containers.
@@ -6000,11 +5999,12 @@ type ContainerDefinition struct {
 	// section of the Docker Remote API (https://docs.docker.com/engine/api/v1.35/)
 	// and the --memory-reservation option to docker run (https://docs.docker.com/engine/reference/run/).
 	//
-	// You must specify a non-zero integer for one or both of memory or memoryReservation
-	// in container definitions. If you specify both, memory must be greater than
-	// memoryReservation. If you specify memoryReservation, then that value is subtracted
-	// from the available memory resources for the container instance on which the
-	// container is placed. Otherwise, the value of memory is used.
+	// If a task-level memory value is not specified, you must specify a non-zero
+	// integer for one or both of memory or memoryReservation in a container definition.
+	// If you specify both, memory must be greater than memoryReservation. If you
+	// specify memoryReservation, then that value is subtracted from the available
+	// memory resources for the container instance on which the container is placed.
+	// Otherwise, the value of memory is used.
 	//
 	// For example, if your container normally uses 128 MiB of memory, but occasionally
 	// bursts to 256 MiB of memory for short periods of time, you can set a memoryReservation
@@ -7168,6 +7168,9 @@ type CreateServiceInput struct {
 
 	// The number of instantiations of the specified task definition to place and
 	// keep running on your cluster.
+	//
+	// This is required if schedulingStrategy is REPLICA or is not specified. If
+	// schedulingStrategy is DAEMON then this is not required.
 	DesiredCount *int64 `locationName:"desiredCount" type:"integer"`
 
 	// Specifies whether to enable Amazon ECS managed tags for the tasks within
@@ -9643,6 +9646,100 @@ func (s *HostVolumeProperties) SetSourcePath(v string) *HostVolumeProperties {
 	return s
 }
 
+// Details on a Elastic Inference accelerator. For more information, see Working
+// with Amazon Elastic Inference on Amazon ECS (https://docs.aws.amazon.com/AmazonECS/latest/developerguide/ecs-eia.html)
+// in the Amazon Elastic Container Service Developer Guide.
+type InferenceAccelerator struct {
+	_ struct{} `type:"structure"`
+
+	// The Elastic Inference accelerator device name. The deviceName must also be
+	// referenced in a container definition as a ResourceRequirement.
+	//
+	// DeviceName is a required field
+	DeviceName *string `locationName:"deviceName" type:"string" required:"true"`
+
+	// The Elastic Inference accelerator type to use.
+	//
+	// DeviceType is a required field
+	DeviceType *string `locationName:"deviceType" type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s InferenceAccelerator) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s InferenceAccelerator) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *InferenceAccelerator) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "InferenceAccelerator"}
+	if s.DeviceName == nil {
+		invalidParams.Add(request.NewErrParamRequired("DeviceName"))
+	}
+	if s.DeviceType == nil {
+		invalidParams.Add(request.NewErrParamRequired("DeviceType"))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetDeviceName sets the DeviceName field's value.
+func (s *InferenceAccelerator) SetDeviceName(v string) *InferenceAccelerator {
+	s.DeviceName = &v
+	return s
+}
+
+// SetDeviceType sets the DeviceType field's value.
+func (s *InferenceAccelerator) SetDeviceType(v string) *InferenceAccelerator {
+	s.DeviceType = &v
+	return s
+}
+
+// Details on an Elastic Inference accelerator task override. This parameter
+// is used to override the Elastic Inference accelerator specified in the task
+// definition. For more information, see Working with Amazon Elastic Inference
+// on Amazon ECS (https://docs.aws.amazon.com/AmazonECS/latest/developerguide/ecs-eia.html)
+// in the Amazon Elastic Container Service Developer Guide.
+type InferenceAcceleratorOverride struct {
+	_ struct{} `type:"structure"`
+
+	// The Elastic Inference accelerator device name to override for the task. This
+	// parameter must match a deviceName specified in the task definition.
+	DeviceName *string `locationName:"deviceName" type:"string"`
+
+	// The Elastic Inference accelerator type to use.
+	DeviceType *string `locationName:"deviceType" type:"string"`
+}
+
+// String returns the string representation
+func (s InferenceAcceleratorOverride) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s InferenceAcceleratorOverride) GoString() string {
+	return s.String()
+}
+
+// SetDeviceName sets the DeviceName field's value.
+func (s *InferenceAcceleratorOverride) SetDeviceName(v string) *InferenceAcceleratorOverride {
+	s.DeviceName = &v
+	return s
+}
+
+// SetDeviceType sets the DeviceType field's value.
+func (s *InferenceAcceleratorOverride) SetDeviceType(v string) *InferenceAcceleratorOverride {
+	s.DeviceType = &v
+	return s
+}
+
 // The Linux capabilities for the container that are added to or dropped from
 // the default configuration provided by Docker. For more information on the
 // default capabilities and the non-default available capabilities, see Runtime
@@ -10998,7 +11095,7 @@ type LogConfiguration struct {
 	// and splunk.
 	//
 	// For tasks using the EC2 launch type, the supported log drivers are awslogs,
-	// fluentd, gelf, json-file, journald, logentries, syslog, splunk, and syslog.
+	// fluentd, gelf, json-file, journald, logentries, syslog, and splunk.
 	//
 	// For more information about using the awslogs log driver, see Using the awslogs
 	// Log Driver (https://docs.aws.amazon.com/AmazonECS/latest/developerguide/using_awslogs.html)
@@ -11267,6 +11364,9 @@ func (s *NetworkInterface) SetPrivateIpv4Address(v string) *NetworkInterface {
 // An object representing a constraint on task placement. For more information,
 // see Task Placement Constraints (https://docs.aws.amazon.com/AmazonECS/latest/developerguide/task-placement-constraints.html)
 // in the Amazon Elastic Container Service Developer Guide.
+//
+// If you are using the Fargate launch type, task placement constraints are
+// not supported.
 type PlacementConstraint struct {
 	_ struct{} `type:"structure"`
 
@@ -11278,8 +11378,7 @@ type PlacementConstraint struct {
 
 	// The type of constraint. Use distinctInstance to ensure that each task in
 	// a particular group is running on a different container instance. Use memberOf
-	// to restrict the selection to a group of valid candidates. The value distinctInstance
-	// is not supported in task definitions.
+	// to restrict the selection to a group of valid candidates.
 	Type *string `locationName:"type" type:"string" enum:"PlacementConstraintType"`
 }
 
@@ -12104,6 +12203,9 @@ type RegisterTaskDefinitionInput struct {
 	// Family is a required field
 	Family *string `locationName:"family" type:"string" required:"true"`
 
+	// The Elastic Inference accelerators to use for the containers in the task.
+	InferenceAccelerators []*InferenceAccelerator `locationName:"inferenceAccelerators" type:"list"`
+
 	// The IPC resource namespace to use for the containers in the task. The valid
 	// values are host, task, or none. If host is specified, then all containers
 	// within the tasks that specified the host IPC mode on the same container instance
@@ -12311,6 +12413,16 @@ func (s *RegisterTaskDefinitionInput) Validate() error {
 			}
 		}
 	}
+	if s.InferenceAccelerators != nil {
+		for i, v := range s.InferenceAccelerators {
+			if v == nil {
+				continue
+			}
+			if err := v.Validate(); err != nil {
+				invalidParams.AddNested(fmt.Sprintf("%s[%v]", "InferenceAccelerators", i), err.(request.ErrInvalidParams))
+			}
+		}
+	}
 	if s.ProxyConfiguration != nil {
 		if err := s.ProxyConfiguration.Validate(); err != nil {
 			invalidParams.AddNested("ProxyConfiguration", err.(request.ErrInvalidParams))
@@ -12354,6 +12466,12 @@ func (s *RegisterTaskDefinitionInput) SetExecutionRoleArn(v string) *RegisterTas
 // SetFamily sets the Family field's value.
 func (s *RegisterTaskDefinitionInput) SetFamily(v string) *RegisterTaskDefinitionInput {
 	s.Family = &v
+	return s
+}
+
+// SetInferenceAccelerators sets the InferenceAccelerators field's value.
+func (s *RegisterTaskDefinitionInput) SetInferenceAccelerators(v []*InferenceAccelerator) *RegisterTaskDefinitionInput {
+	s.InferenceAccelerators = v
 	return s
 }
 
@@ -12567,23 +12685,29 @@ func (s *Resource) SetType(v string) *Resource {
 	return s
 }
 
-// The type and amount of a resource to assign to a container. The only supported
-// resource is a GPU. For more information, see Working with GPUs on Amazon
-// ECS (https://docs.aws.amazon.com/AmazonECS/latest/developerguide/ecs-gpu.html)
+// The type and amount of a resource to assign to a container. The supported
+// resource types are GPUs and Elastic Inference accelerators. For more information,
+// see Working with GPUs on Amazon ECS (https://docs.aws.amazon.com/AmazonECS/latest/developerguide/ecs-gpu.html)
+// or Working with Amazon Elastic Inference on Amazon ECS (https://docs.aws.amazon.com/AmazonECS/latest/developerguide/ecs-eia.html)
 // in the Amazon Elastic Container Service Developer Guide
 type ResourceRequirement struct {
 	_ struct{} `type:"structure"`
 
-	// The type of resource to assign to a container. The only supported value is
-	// GPU.
+	// The type of resource to assign to a container. The supported values are GPU
+	// or InferenceAccelerator.
 	//
 	// Type is a required field
 	Type *string `locationName:"type" type:"string" required:"true" enum:"ResourceType"`
 
-	// The number of physical GPUs the Amazon ECS container agent will reserve for
-	// the container. The number of GPUs reserved for all containers in a task should
-	// not exceed the number of available GPUs on the container instance the task
-	// is launched on.
+	// The value for the specified resource type.
+	//
+	// If the GPU type is used, the value is the number of physical GPUs the Amazon
+	// ECS container agent will reserve for the container. The number of GPUs reserved
+	// for all containers in a task should not exceed the number of available GPUs
+	// on the container instance the task is launched on.
+	//
+	// If the InferenceAccelerator type is used, the value should match the deviceName
+	// for an InferenceAccelerator specified in a task definition.
 	//
 	// Value is a required field
 	Value *string `locationName:"value" type:"string" required:"true"`
@@ -14444,6 +14568,9 @@ type Task struct {
 	// override any Docker health checks that exist in the container image.
 	HealthStatus *string `locationName:"healthStatus" type:"string" enum:"HealthStatus"`
 
+	// The Elastic Inference accelerator associated with the task.
+	InferenceAccelerators []*InferenceAccelerator `locationName:"inferenceAccelerators" type:"list"`
+
 	// The last known status of the task. For more information, see Task Lifecycle
 	// (https://docs.aws.amazon.com/AmazonECS/latest/developerguide/task-lifecycle.html).
 	LastStatus *string `locationName:"lastStatus" type:"string"`
@@ -14646,6 +14773,12 @@ func (s *Task) SetHealthStatus(v string) *Task {
 	return s
 }
 
+// SetInferenceAccelerators sets the InferenceAccelerators field's value.
+func (s *Task) SetInferenceAccelerators(v []*InferenceAccelerator) *Task {
+	s.InferenceAccelerators = v
+	return s
+}
+
 // SetLastStatus sets the LastStatus field's value.
 func (s *Task) SetLastStatus(v string) *Task {
 	s.LastStatus = &v
@@ -14831,10 +14964,15 @@ type TaskDefinition struct {
 	// Fargate launch type.
 	IpcMode *string `locationName:"ipcMode" type:"string" enum:"IpcMode"`
 
-	// The amount (in MiB) of memory used by the task. If using the EC2 launch type,
-	// this field is optional and any value can be used. If using the Fargate launch
-	// type, this field is required and you must use one of the following values,
-	// which determines your range of valid values for the cpu parameter:
+	// The amount (in MiB) of memory used by the task.
+	//
+	// If using the EC2 launch type, this field is optional and any value can be
+	// used. If a task-level memory value is specified then the container-level
+	// memory value is optional.
+	//
+	// If using the Fargate launch type, this field is required and you must use
+	// one of the following values, which determines your range of valid values
+	// for the cpu parameter:
 	//
 	//    * 512 (0.5 GB), 1024 (1 GB), 2048 (2 GB) - Available cpu values: 256 (.25
 	//    vCPU)
@@ -15086,12 +15224,11 @@ func (s *TaskDefinition) SetVolumes(v []*Volume) *TaskDefinition {
 }
 
 // An object representing a constraint on task placement in the task definition.
+// For more information, see Task Placement Constraints (https://docs.aws.amazon.com/AmazonECS/latest/developerguide/task-placement-constraints.html)
+// in the Amazon Elastic Container Service Developer Guide.
 //
 // If you are using the Fargate launch type, task placement constraints are
 // not supported.
-//
-// For more information, see Task Placement Constraints (https://docs.aws.amazon.com/AmazonECS/latest/developerguide/task-placement-constraints.html)
-// in the Amazon Elastic Container Service Developer Guide.
 type TaskDefinitionPlacementConstraint struct {
 	_ struct{} `type:"structure"`
 
@@ -15100,9 +15237,8 @@ type TaskDefinitionPlacementConstraint struct {
 	// in the Amazon Elastic Container Service Developer Guide.
 	Expression *string `locationName:"expression" type:"string"`
 
-	// The type of constraint. The DistinctInstance constraint ensures that each
-	// task in a particular group is running on a different container instance.
-	// The MemberOf constraint restricts selection to be from a group of valid candidates.
+	// The type of constraint. The MemberOf constraint restricts selection to be
+	// from a group of valid candidates.
 	Type *string `locationName:"type" type:"string" enum:"TaskDefinitionPlacementConstraintType"`
 }
 
@@ -15138,6 +15274,9 @@ type TaskOverride struct {
 	// The Amazon Resource Name (ARN) of the task execution role that the Amazon
 	// ECS container agent and the Docker daemon can assume.
 	ExecutionRoleArn *string `locationName:"executionRoleArn" type:"string"`
+
+	// The Elastic Inference accelerator override for the task.
+	InferenceAcceleratorOverrides []*InferenceAcceleratorOverride `locationName:"inferenceAcceleratorOverrides" type:"list"`
 
 	// The Amazon Resource Name (ARN) of the IAM role that containers in this task
 	// can assume. All containers in this task are granted the permissions that
@@ -15184,6 +15323,12 @@ func (s *TaskOverride) SetContainerOverrides(v []*ContainerOverride) *TaskOverri
 // SetExecutionRoleArn sets the ExecutionRoleArn field's value.
 func (s *TaskOverride) SetExecutionRoleArn(v string) *TaskOverride {
 	s.ExecutionRoleArn = &v
+	return s
+}
+
+// SetInferenceAcceleratorOverrides sets the InferenceAcceleratorOverrides field's value.
+func (s *TaskOverride) SetInferenceAcceleratorOverrides(v []*InferenceAcceleratorOverride) *TaskOverride {
+	s.InferenceAcceleratorOverrides = v
 	return s
 }
 
@@ -15938,10 +16083,10 @@ type UpdateServiceInput struct {
 	// has first started. This is only valid if your service is configured to use
 	// a load balancer. If your service's tasks take a while to start and respond
 	// to Elastic Load Balancing health checks, you can specify a health check grace
-	// period of up to 1,800 seconds. During that time, the ECS service scheduler
-	// ignores the Elastic Load Balancing health check status. This grace period
-	// can prevent the ECS service scheduler from marking tasks as unhealthy and
-	// stopping them before they have time to come up.
+	// period of up to 2,147,483,647 seconds. During that time, the ECS service
+	// scheduler ignores the Elastic Load Balancing health check status. This grace
+	// period can prevent the ECS service scheduler from marking tasks as unhealthy
+	// and stopping them before they have time to come up.
 	HealthCheckGracePeriodSeconds *int64 `locationName:"healthCheckGracePeriodSeconds" type:"integer"`
 
 	// The network configuration for the service. This parameter is required for
@@ -16678,6 +16823,9 @@ const (
 const (
 	// ResourceTypeGpu is a ResourceType enum value
 	ResourceTypeGpu = "GPU"
+
+	// ResourceTypeInferenceAccelerator is a ResourceType enum value
+	ResourceTypeInferenceAccelerator = "InferenceAccelerator"
 )
 
 const (
