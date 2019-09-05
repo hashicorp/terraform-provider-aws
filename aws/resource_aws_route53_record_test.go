@@ -143,7 +143,7 @@ func TestAccAWSRoute53Record_underscored(t *testing.T) {
 			{
 				Config: testAccRoute53RecordConfigUnderscoreInName,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckRoute53RecordExists("aws_route53_record.underscore", &record1),
+					testAccCheckRoute53RecordExists(resourceName, &record1),
 				),
 			},
 			{
