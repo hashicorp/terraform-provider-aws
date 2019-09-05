@@ -528,11 +528,11 @@ In addition to all arguments above, the following attributes are exported:
     distribution's information is fully propagated throughout the Amazon
     CloudFront system.
 
-  * `active_trusted_signers` - Nested attributes of trusted signers that CloudFront is aware, if the distribution is set up to serve private content with signed URLs.
-    * `enabled` - Enabled is `true` if any of the AWS accounts listed as trusted signers have active CloudFront key pairs.
-    * `items` - Nested attributes of each trusted signer.
+  * `active_trusted_signers` - Nested attributes of active trusted signers, if the distribution is set up to serve private content with signed URLs
+    * `enabled` - `true` if any of the AWS accounts listed as trusted signers have active CloudFront key pairs
+    * `items` - Nested attributes of each trusted signer
       * `aws_account_number` - AWS account ID or `self`
-      * `key_pair_ids` - Set of active CloudFront key pairs associated with the signer account.
+      * `key_pair_ids` - Set of active CloudFront key pairs associated with the signer account
 
 * `domain_name` - The domain name corresponding to the distribution. For
     example: `d604721fxaaqy9.cloudfront.net`.
