@@ -1,4 +1,9 @@
 ## 2.28.0 (Unreleased)
+
+BUG FIXES:
+
+* resource/aws_cognito_user_pool: Fix perpetual diffs on `sms_verification_message` [GH-9758]
+
 ## 2.27.0 (September 05, 2019)
 
 ENHANCEMENTS:
