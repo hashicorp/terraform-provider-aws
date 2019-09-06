@@ -14,7 +14,6 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/cloudfront"
-	"github.com/hashicorp/terraform/flatmap"
 	"github.com/hashicorp/terraform/helper/hashcode"
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/helper/schema"
@@ -1097,20 +1096,30 @@ func flattenViewerCertificate(vc *cloudfront.ViewerCertificate) []interface{} {
 	return []interface{}{m}
 }
 
-// Convert *cloudfront.ActiveTrustedSigners to a flatmap.Map type, which ensures
-// it can probably be inserted into the schema.TypeMap type used by the
-// active_trusted_signers attribute.
-func flattenActiveTrustedSigners(ats *cloudfront.ActiveTrustedSigners) flatmap.Map {
-	m := make(map[string]interface{})
-	s := []interface{}{}
-	m["enabled"] = *ats.Enabled
-
-	for _, v := range ats.Items {
-		signer := make(map[string]interface{})
-		signer["aws_account_number"] = *v.AwsAccountNumber
-		signer["key_pair_ids"] = aws.StringValueSlice(v.KeyPairIds.Items)
-		s = append(s, signer)
+func flattenCloudfrontActiveTrustedSigners(ats *cloudfront.ActiveTrustedSigners) []interface{} {
+	if ats == nil {
+		return []interface{}{}
 	}
-	m["items"] = s
-	return flatmap.Flatten(m)
+
+	m := map[string]interface{}{
+		"enabled": aws.BoolValue(ats.Enabled),
+		"items":   flattenCloudfrontSigners(ats.Items),
+	}
+
+	return []interface{}{m}
+}
+
+func flattenCloudfrontSigners(signers []*cloudfront.Signer) []interface{} {
+	result := make([]interface{}, 0, len(signers))
+
+	for _, signer := range signers {
+		m := map[string]interface{}{
+			"aws_account_number": aws.StringValue(signer.AwsAccountNumber),
+			"key_pair_ids":       aws.StringValueSlice(signer.KeyPairIds.Items),
+		}
+
+		result = append(result, m)
+	}
+
+	return result
 }

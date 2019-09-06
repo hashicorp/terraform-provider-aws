@@ -307,8 +307,7 @@ of several sub-resources - these resources are laid out below.
     CloudFront to route requests to when a request matches the path pattern
     either for a cache behavior or for the default cache behavior.
 
-  * `trusted_signers` (Optional) - The AWS accounts, if any, that you want to
-    allow to create signed URLs for private content.
+  * `trusted_signers` (Optional) - List of AWS account IDs (or `self`) that you want to allow to create signed URLs for private content. See the [CloudFront User Guide]() for more information about this feature.
 
   * `viewer_protocol_policy` (Required) - Use this element to specify the
     protocol that users can use to access the files in the origin specified by
@@ -528,9 +527,11 @@ In addition to all arguments above, the following attributes are exported:
     distribution's information is fully propagated throughout the Amazon
     CloudFront system.
 
-  * `active_trusted_signers` - The key pair IDs that CloudFront is aware of for
-    each trusted signer, if the distribution is set up to serve private content
-    with signed URLs.
+  * `active_trusted_signers` - Nested attributes of active trusted signers, if the distribution is set up to serve private content with signed URLs
+    * `enabled` - `true` if any of the AWS accounts listed as trusted signers have active CloudFront key pairs
+    * `items` - Nested attributes of each trusted signer
+      * `aws_account_number` - AWS account ID or `self`
+      * `key_pair_ids` - Set of active CloudFront key pairs associated with the signer account
 
   * `domain_name` - The domain name corresponding to the distribution. For
     example: `d604721fxaaqy9.cloudfront.net`.

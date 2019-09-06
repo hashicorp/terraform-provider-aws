@@ -695,8 +695,33 @@ func resourceAwsCloudFrontDistribution() *schema.Resource {
 				Computed: true,
 			},
 			"active_trusted_signers": {
-				Type:     schema.TypeMap,
+				Type:     schema.TypeList,
 				Computed: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"enabled": {
+							Type:     schema.TypeBool,
+							Computed: true,
+						},
+						"items": {
+							Type:     schema.TypeList,
+							Computed: true,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"aws_account_number": {
+										Type:     schema.TypeString,
+										Computed: true,
+									},
+									"key_pair_ids": {
+										Type:     schema.TypeSet,
+										Computed: true,
+										Elem:     &schema.Schema{Type: schema.TypeString},
+									},
+								},
+							},
+						},
+					},
+				},
 			},
 			"domain_name": {
 				Type:     schema.TypeString,
@@ -815,10 +840,11 @@ func resourceAwsCloudFrontDistributionRead(d *schema.ResourceData, meta interfac
 		return err
 	}
 	// Update other attributes outside of DistributionConfig
-	err = d.Set("active_trusted_signers", flattenActiveTrustedSigners(resp.Distribution.ActiveTrustedSigners))
-	if err != nil {
-		return err
+
+	if err := d.Set("active_trusted_signers", flattenCloudfrontActiveTrustedSigners(resp.Distribution.ActiveTrustedSigners)); err != nil {
+		return fmt.Errorf("error setting active_trusted_signers: %s", err)
 	}
+
 	d.Set("status", resp.Distribution.Status)
 	d.Set("domain_name", resp.Distribution.DomainName)
 	d.Set("last_modified_time", aws.String(resp.Distribution.LastModifiedTime.String()))
