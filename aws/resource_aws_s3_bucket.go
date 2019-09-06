@@ -1261,7 +1261,12 @@ func resourceAwsS3BucketDelete(d *schema.ResourceData, meta interface{}) error {
 
 			// Delete everything including locked objects.
 			// Don't ignore any object errors or we could recurse infinitely.
-			err = deleteAllS3ObjectVersions(s3conn, d.Id(), "", true, false)
+			objectLockEnabled := false
+			objectLockConfiguration := expandS3ObjectLockConfiguration(d.Get("object_lock_configuration").([]interface{}))
+			if objectLockConfiguration != nil && aws.StringValue(objectLockConfiguration.ObjectLockEnabled) == s3.ObjectLockEnabledEnabled {
+				objectLockEnabled = true
+			}
+			err = deleteAllS3ObjectVersions(s3conn, d.Id(), "", objectLockEnabled, false)
 
 			if err != nil {
 				return fmt.Errorf("error S3 Bucket force_destroy: %s", err)

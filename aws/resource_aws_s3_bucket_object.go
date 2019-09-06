@@ -516,7 +516,7 @@ func resourceAwsS3BucketObjectCustomizeDiff(d *schema.ResourceDiff, meta interfa
 
 // deleteAllS3ObjectVersions deletes all versions of a specified key from an S3 bucket.
 // If key is empty then all versions of all objects are deleted.
-// Set force to true to override any S3 object lock protections.
+// Set force to true to override any S3 object lock protections on object lock enabled buckets.
 func deleteAllS3ObjectVersions(conn *s3.S3, bucketName, key string, force, ignoreObjectErrors bool) error {
 	input := &s3.ListObjectVersionsInput{
 		Bucket: aws.String(bucketName),

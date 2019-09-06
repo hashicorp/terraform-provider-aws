@@ -82,8 +82,15 @@ func testSweepS3BucketObjects(region string) error {
 			continue
 		}
 
+		objectLockEnabled, err := testS3BucketObjectLockEnabled(conn, bucketName)
+
+		if err != nil {
+			log.Printf("[ERROR] Error getting S3 Bucket (%s) Object Lock: %s", bucketName, err)
+			continue
+		}
+
 		// Delete everything including locked objects. Ignore any object errors.
-		err = deleteAllS3ObjectVersions(conn, bucketName, "", true, true)
+		err = deleteAllS3ObjectVersions(conn, bucketName, "", objectLockEnabled, true)
 
 		if err != nil {
 			return fmt.Errorf("error listing S3 Bucket (%s) Objects: %s", bucketName, err)

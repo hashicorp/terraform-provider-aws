@@ -136,6 +136,24 @@ func testS3BucketRegion(conn *s3.S3, bucket string) (string, error) {
 	return aws.StringValue(output.LocationConstraint), nil
 }
 
+func testS3BucketObjectLockEnabled(conn *s3.S3, bucket string) (bool, error) {
+	input := &s3.GetObjectLockConfigurationInput{
+		Bucket: aws.String(bucket),
+	}
+
+	output, err := conn.GetObjectLockConfiguration(input)
+
+	if isAWSErr(err, "ObjectLockConfigurationNotFoundError", "") {
+		return false, nil
+	}
+
+	if err != nil {
+		return false, err
+	}
+
+	return aws.StringValue(output.ObjectLockConfiguration.ObjectLockEnabled) == s3.ObjectLockEnabledEnabled, nil
+}
+
 func TestAccAWSS3Bucket_basic(t *testing.T) {
 	rInt := acctest.RandInt()
 	arnRegexp := regexp.MustCompile(`^arn:aws[\w-]*:s3:::`)
