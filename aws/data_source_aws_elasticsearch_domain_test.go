@@ -79,15 +79,15 @@ provider "aws" {
 locals {
 	random_name = "test-es-%d"
 }
-		
+
 data "aws_region" "current" {}
-		
+
 data "aws_caller_identity" "current" {}
-					
+
 resource "aws_elasticsearch_domain" "test" {
 	domain_name = "${local.random_name}"
 	elasticsearch_version = "1.5"
-	
+
 	access_policies = <<POLICY
 {
 	"Version": "2012-10-17",
@@ -135,9 +135,9 @@ func testAccAWSElasticsearchDomainConfigAdvancedWithDataSource(rInt int) string 
 provider "aws" {
 	region = "us-east-1"
 }
-		
+
 data "aws_region" "current" {}
-		
+
 data "aws_caller_identity" "current" {}
 
 locals {
@@ -200,14 +200,10 @@ resource "aws_security_group_rule" "test" {
 	security_group_id = "${aws_security_group.test.id}"
 }
 
-resource "aws_iam_service_linked_role" "test" {
-	aws_service_name = "es.amazonaws.com"
-}
-
 resource "aws_elasticsearch_domain" "test" {
 	domain_name = "${local.random_name}"
 	elasticsearch_version = "1.5"
-	
+
 	access_policies = <<POLICY
 {
 	"Version": "2012-10-17",
@@ -256,10 +252,6 @@ POLICY
   tags = {
 	Domain = "TestDomain"
   }
-	
-  depends_on = [
-    "aws_iam_service_linked_role.test",
-  ]
 }
 
 data "aws_elasticsearch_domain" "test" {
