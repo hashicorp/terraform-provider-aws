@@ -12,15 +12,15 @@ import (
 )
 
 const (
-	pemBlockTypeCertificate = `CERTIFICATE`
+	pemBlockTypeCertificate   = `CERTIFICATE`
 	pemBlockTypeRsaPrivateKey = `RSA PRIVATE KEY`
 )
 
 var tlsX509CertificateSerialNumberLimit = new(big.Int).Lsh(big.NewInt(1), 128)
 
 // tlsRsaPrivateKeyPem generates a RSA private key PEM string.
-// To allow simple fmt.Sprintf() configurations such as: private_key_pem = %[1]q
-// Escape the result with strings.ReplaceAll(key, "\n", "\\n")
+// Wrap with tlsPemEscapeNewlines() to allow simple fmt.Sprintf()
+// configurations such as: private_key_pem = "%[1]s"
 func tlsRsaPrivateKeyPem(bits int) string {
 	key, err := rsa.GenerateKey(rand.Reader, bits)
 
@@ -37,8 +37,8 @@ func tlsRsaPrivateKeyPem(bits int) string {
 }
 
 // tlsRsaX509SelfSignedCertificatePem generates a x509 certificate PEM string.
-// To allow simple fmt.Sprintf() configurations such as: certificate_pem = %[1]q
-// Escape the result with strings.ReplaceAll(certificate, "\n", "\\n")
+// Wrap with tlsPemEscapeNewlines() to allow simple fmt.Sprintf()
+// configurations such as: private_key_pem = "%[1]s"
 func tlsRsaX509SelfSignedCertificatePem(keyPem, commonName string) string {
 	keyBlock, _ := pem.Decode([]byte(keyPem))
 
