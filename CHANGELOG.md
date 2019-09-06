@@ -1,5 +1,10 @@
 ## 2.28.0 (Unreleased)
 
+ENHANCEMENTS:
+
+* data-source/aws_eks_cluster: Add `identity` attribute (support getting OIDC issuer URL) [GH-10006]
+* resource/aws_eks_cluster: Add `identity` attribute (support getting OIDC issuer URL) [GH-10006]
+
 BUG FIXES:
 
 * resource/aws_cognito_user_pool: Fix perpetual diffs on `sms_verification_message` [GH-9758]
