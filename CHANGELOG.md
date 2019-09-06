@@ -4,6 +4,11 @@ NOTES:
 
 * resource/aws_cloudfront_distribution: This attribute implemented a legacy Terraform library (flatmap), which does not work with Terraform 0.12's data types and whose only usage was on this single attribute across all Terraform Providers. The attribute now implements (in the closest approximation to the previous implementation) the nested object data into the Terraform state in all Terraform versions. Any references to nested attributes such as `active_trusted_signers.enabled` will need to be updated to `active_trusted_signers.0.enabled`. [GH-10013]
 
+FEATURES:
+
+* **New Data Source:** `aws_route53_resolver_rule` [GH-9805]
+* **New Data Source:** `aws_route53_resolver_rules` [GH-9805]
+
 ENHANCEMENTS:
 
 * data-source/aws_eks_cluster: Add `identity` attribute (support getting OIDC issuer URL) [GH-10006]
