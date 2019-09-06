@@ -72,9 +72,9 @@ resource "aws_route53_resolver_rule" "forward" {
   }
 }
 
-resource "aws_route53_resolver_rule" "system" {
+resource "aws_route53_resolver_rule" "recursive" {
   domain_name = "%[2]s.example.org"
-  rule_type   = "SYSTEM"
+  rule_type   = "RECURSIVE"
   name        = %[2]q
 }
 
@@ -84,10 +84,10 @@ data "aws_route53_resolver_rules" "by_resolver_endpoint_id" {
 }
 
 data "aws_route53_resolver_rules" "by_resolver_endpoint_id_rule_type_share_status" {
-  owner_id             = "${aws_route53_resolver_rule.system.owner_id}"
-  resolver_endpoint_id = "${aws_route53_resolver_rule.system.resolver_endpoint_id}"
-  rule_type            = "${aws_route53_resolver_rule.system.rule_type}"
-  share_status         = "${aws_route53_resolver_rule.system.share_status}"
+  owner_id             = "${aws_route53_resolver_rule.recursive.owner_id}"
+  resolver_endpoint_id = "${aws_route53_resolver_rule.recursive.resolver_endpoint_id}"
+  rule_type            = "${aws_route53_resolver_rule.recursive.rule_type}"
+  share_status         = "${aws_route53_resolver_rule.recursive.share_status}"
 }
 
 data "aws_route53_resolver_rules" "by_invalid_owner_id" {
