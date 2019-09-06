@@ -1,5 +1,9 @@
 ## 2.28.0 (Unreleased)
 
+NOTES:
+
+* resource/aws_cloudfront_distribution: This attribute implemented a legacy Terraform library (flatmap), which does not work with Terraform 0.12's data types and whose only usage was on this single attribute across all Terraform Providers. The attribute now implements (in the closest approximation to the previous implementation) the nested object data into the Terraform state in all Terraform versions. Any references to nested attributes such as `active_trusted_signers.enabled` will need to be updated to `active_trusted_signers.0.enabled`. [GH-10013]
+
 ENHANCEMENTS:
 
 * data-source/aws_eks_cluster: Add `identity` attribute (support getting OIDC issuer URL) [GH-10006]
@@ -7,6 +11,7 @@ ENHANCEMENTS:
 
 BUG FIXES:
 
+* resource/aws_cloudfront_distribution: Support accessing `active_trusted_signers` attribute `items` in Terraform 0.12 [GH-10013]
 * resource/aws_cognito_user_pool: Fix perpetual diffs on `sms_verification_message` [GH-9758]
 
 ## 2.27.0 (September 05, 2019)
