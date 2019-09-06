@@ -80,6 +80,25 @@ resource "aws_s3_bucket_object" "examplebucket_object" {
 }
 ```
 
+### S3 Object Lock
+
+```hcl
+resource "aws_s3_bucket" "examplebucket" {
+  bucket = "examplebuckettftest"
+  acl    = "private"
+}
+
+resource "aws_s3_bucket_object" "examplebucket_object" {
+  key    = "someobject"
+  bucket = "${aws_s3_bucket.examplebucket.id}"
+  source = "important.txt"
+
+  object_lock_legal_hold_status = "ON"
+  object_lock_mode              = "GOVERNANCE"
+  object_lock_retain_until_date = "2021-12-31T23:59:60Z"
+}
+```
+
 ## Argument Reference
 
 -> **Note:** If you specify `content_encoding` you are responsible for encoding the body appropriately. `source`, `content`, and `content_base64` all expect already encoded/compressed bytes.
@@ -110,7 +129,7 @@ use the exported `arn` attribute:
 * `metadata` - (Optional) A mapping of keys/values to provision metadata (will be automatically prefixed by `x-amz-meta-`, note that only lowercase label are currently supported by the AWS Go API).
 * `tags` - (Optional) A mapping of tags to assign to the object.
 * `force_destroy` - (Optional) Allow the object to be deleted by removing any legal hold on any object version.
-Default is `false`.
+Default is `false`. This value should be set to `true` only if the bucket has S3 object lock enabled.
 * `object_lock_legal_hold_status` - (Optional) The [legal hold](https://docs.aws.amazon.com/AmazonS3/latest/dev/object-lock-overview.html#object-lock-legal-holds) status that you want to apply to the specified object. Valid values are `ON` and `OFF`.
 * `object_lock_mode` - (Optional) The object lock [retention mode](https://docs.aws.amazon.com/AmazonS3/latest/dev/object-lock-overview.html#object-lock-retention-modes) that you want to apply to this object. Valid values are `GOVERNANCE` and `COMPLIANCE`.
 * `object_lock_retain_until_date` - (Optional) The date and time, in [RFC3339 format](https://tools.ietf.org/html/rfc3339#section-5.8), when this object's object lock will [expire](https://docs.aws.amazon.com/AmazonS3/latest/dev/object-lock-overview.html#object-lock-retention-periods).
