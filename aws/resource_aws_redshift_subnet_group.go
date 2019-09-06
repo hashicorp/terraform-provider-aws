@@ -23,10 +23,10 @@ func resourceAwsRedshiftSubnetGroup() *schema.Resource {
 
 		Schema: map[string]*schema.Schema{
 			"name": {
-				Type:         schema.TypeString,
-				ForceNew:     true,
-				Required:     true,
-				ValidateFunc: validateRedshiftSubnetGroupName,
+				Type:     schema.TypeString,
+				ForceNew: true,
+				Required: true,
+				// ValidateFunc: validateRedshiftSubnetGroupName,
 			},
 
 			"description": {
