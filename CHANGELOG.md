@@ -8,6 +8,8 @@ ENHANCEMENTS:
 
 * data-source/aws_eks_cluster: Add `identity` attribute (support getting OIDC issuer URL) [GH-10006]
 * resource/aws_eks_cluster: Add `identity` attribute (support getting OIDC issuer URL) [GH-10006]
+* resource/aws_elasticache_cluster: Support `cluster_id` validation up to 50 characters [GH-9941]
+* resource/aws_elasticache_replication_group: Support `replication_group_id` validation up to 40 characters [GH-9941]
 
 BUG FIXES:
 
