@@ -44,6 +44,10 @@ func TestAccAWSRedshiftSecurityGroup_basic(t *testing.T) {
 }
 
 func TestAccAWSRedshiftSecurityGroup_ingressCidr(t *testing.T) {
+	oldvar := os.Getenv("AWS_DEFAULT_REGION")
+	os.Setenv("AWS_DEFAULT_REGION", "us-east-1")
+	defer os.Setenv("AWS_DEFAULT_REGION", oldvar)
+
 	var v redshift.ClusterSecurityGroup
 	rInt := acctest.RandInt()
 	resourceName := "aws_redshift_security_group.test"
@@ -77,6 +81,10 @@ func TestAccAWSRedshiftSecurityGroup_ingressCidr(t *testing.T) {
 }
 
 func TestAccAWSRedshiftSecurityGroup_updateIngressCidr(t *testing.T) {
+	oldvar := os.Getenv("AWS_DEFAULT_REGION")
+	os.Setenv("AWS_DEFAULT_REGION", "us-east-1")
+	defer os.Setenv("AWS_DEFAULT_REGION", oldvar)
+
 	var v redshift.ClusterSecurityGroup
 	rInt := acctest.RandInt()
 	resourceName := "aws_redshift_security_group.test"
@@ -120,6 +128,10 @@ func TestAccAWSRedshiftSecurityGroup_updateIngressCidr(t *testing.T) {
 }
 
 func TestAccAWSRedshiftSecurityGroup_ingressSecurityGroup(t *testing.T) {
+	oldvar := os.Getenv("AWS_DEFAULT_REGION")
+	os.Setenv("AWS_DEFAULT_REGION", "us-east-1")
+	defer os.Setenv("AWS_DEFAULT_REGION", oldvar)
+
 	var v redshift.ClusterSecurityGroup
 	rInt := acctest.RandInt()
 	resourceName := "aws_redshift_security_group.test"
@@ -151,6 +163,10 @@ func TestAccAWSRedshiftSecurityGroup_ingressSecurityGroup(t *testing.T) {
 }
 
 func TestAccAWSRedshiftSecurityGroup_updateIngressSecurityGroup(t *testing.T) {
+	oldvar := os.Getenv("AWS_DEFAULT_REGION")
+	os.Setenv("AWS_DEFAULT_REGION", "us-east-1")
+	defer os.Setenv("AWS_DEFAULT_REGION", oldvar)
+
 	var v redshift.ClusterSecurityGroup
 	rInt := acctest.RandInt()
 	resourceName := "aws_redshift_security_group.test"
@@ -295,10 +311,6 @@ func TestResourceAWSRedshiftSecurityGroupNameValidation(t *testing.T) {
 
 func testAccAWSRedshiftSecurityGroupConfig_ingressCidr(rInt int) string {
 	return fmt.Sprintf(`
-provider "aws" {
-  region = "us-east-1"
-}
-
 resource "aws_redshift_security_group" "test" {
   name = "redshift-sg-terraform-%d"
 
@@ -311,10 +323,6 @@ resource "aws_redshift_security_group" "test" {
 
 func testAccAWSRedshiftSecurityGroupConfig_ingressCidrAdd(rInt int) string {
 	return fmt.Sprintf(`
-provider "aws" {
-  region = "us-east-1"
-}
-
 resource "aws_redshift_security_group" "test" {
   name        = "redshift-sg-terraform-%d"
   description = "this is a description"
@@ -336,10 +344,6 @@ resource "aws_redshift_security_group" "test" {
 
 func testAccAWSRedshiftSecurityGroupConfig_ingressCidrReduce(rInt int) string {
 	return fmt.Sprintf(`
-provider "aws" {
-  region = "us-east-1"
-}
-
 resource "aws_redshift_security_group" "test" {
   name        = "redshift-sg-terraform-%d"
   description = "this is a description"
@@ -357,10 +361,6 @@ resource "aws_redshift_security_group" "test" {
 
 func testAccAWSRedshiftSecurityGroupConfig_ingressSgId(rInt int) string {
 	return fmt.Sprintf(`
-provider "aws" {
-  region = "us-east-1"
-}
-
 resource "aws_security_group" "redshift" {
   name        = "terraform_redshift_test_%d"
   description = "Used in the redshift acceptance tests"
@@ -387,10 +387,6 @@ resource "aws_redshift_security_group" "test" {
 
 func testAccAWSRedshiftSecurityGroupConfig_ingressSgIdAdd(rInt int) string {
 	return fmt.Sprintf(`
-provider "aws" {
-  region = "us-east-1"
-}
-
 resource "aws_security_group" "redshift" {
   name        = "terraform_redshift_test_%d"
   description = "Used in the redshift acceptance tests"
@@ -451,10 +447,6 @@ resource "aws_redshift_security_group" "test" {
 
 func testAccAWSRedshiftSecurityGroupConfig_ingressSgIdReduce(rInt int) string {
 	return fmt.Sprintf(`
-provider "aws" {
-  region = "us-east-1"
-}
-
 resource "aws_security_group" "redshift" {
   name        = "terraform_redshift_test_%d"
   description = "Used in the redshift acceptance tests"
