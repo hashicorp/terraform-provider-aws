@@ -410,6 +410,7 @@ func resourceAwsCognitoUserPool() *schema.Resource {
 			"sms_verification_message": {
 				Type:          schema.TypeString,
 				Optional:      true,
+				Computed:      true,
 				ValidateFunc:  validateCognitoUserPoolSmsVerificationMessage,
 				ConflictsWith: []string{"verification_message_template.0.sms_message"},
 			},
