@@ -25,10 +25,10 @@ func resourceAwsRedshiftParameterGroup() *schema.Resource {
 
 		Schema: map[string]*schema.Schema{
 			"name": {
-				Type:         schema.TypeString,
-				ForceNew:     true,
-				Required:     true,
-				ValidateFunc: validateRedshiftParamGroupName,
+				Type:     schema.TypeString,
+				ForceNew: true,
+				Required: true,
+				// ValidateFunc: validateRedshiftParamGroupName,
 			},
 
 			"family": {
