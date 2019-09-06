@@ -488,7 +488,6 @@ github.com/hashicorp/terraform/internal/earlyconfig
 github.com/hashicorp/terraform/helper/hilmapstructure
 github.com/hashicorp/terraform/lang/blocktoattr
 github.com/hashicorp/terraform/lang/funcs
-github.com/hashicorp/terraform/helper/pathorcontents
 github.com/hashicorp/terraform/svchost
 github.com/hashicorp/terraform/svchost/auth
 # github.com/hashicorp/terraform-config-inspect v0.0.0-20190821133035-82a99dc22ef4
@@ -589,8 +588,6 @@ github.com/spf13/jwalterweatherman
 github.com/spf13/pflag
 # github.com/spf13/viper v1.0.2
 github.com/spf13/viper
-# github.com/terraform-providers/terraform-provider-template v2.1.2+incompatible
-github.com/terraform-providers/terraform-provider-template/template
 # github.com/terraform-providers/terraform-provider-tls v2.1.0+incompatible
 github.com/terraform-providers/terraform-provider-tls/tls
 # github.com/timakin/bodyclose v0.0.0-20190407043127-4a873e97b2bb

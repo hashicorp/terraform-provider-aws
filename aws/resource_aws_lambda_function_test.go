@@ -470,14 +470,10 @@ func TestAccAWSLambdaFunction_versionedUpdate(t *testing.T) {
 					testAccCheckAwsLambdaFunctionArnHasSuffix(&conf, ":"+funcName),
 					resource.TestMatchResourceAttr("aws_lambda_function.lambda_function_test", "version",
 						regexp.MustCompile("^2$")),
-					resource.TestMatchResourceAttr("data.template_file.function_version", "rendered",
-						regexp.MustCompile("^2$")),
 					resource.TestMatchResourceAttr("aws_lambda_function.lambda_function_test", "qualified_arn",
-						regexp.MustCompile(":"+funcName+":[0-9]+$")),
-					resource.TestMatchResourceAttr("data.template_file.qualified_arn", "rendered",
 						regexp.MustCompile(fmt.Sprintf(":function:%s:2$", funcName))),
 					func(s *terraform.State) error {
-						return testAccCheckAttributeIsDateAfter(s, "data.template_file.last_modified", "rendered", timeBeforeUpdate)
+						return testAccCheckAttributeIsDateAfter(s, "aws_lambda_function.lambda_function_test", "last_modified", timeBeforeUpdate)
 					},
 				),
 			},
@@ -931,7 +927,7 @@ func TestAccAWSLambdaFunction_localUpdate(t *testing.T) {
 					testAccCheckAwsLambdaFunctionArnHasSuffix(&conf, funcName),
 					testAccCheckAwsLambdaSourceCodeHash(&conf, "0tdaP9H9hsk9c2CycSwOG/sa/x5JyAmSYunA/ce99Pg="),
 					func(s *terraform.State) error {
-						return testAccCheckAttributeIsDateAfter(s, "data.template_file.last_modified", "rendered", timeBeforeUpdate)
+						return testAccCheckAttributeIsDateAfter(s, "aws_lambda_function.lambda_function_local", "last_modified", timeBeforeUpdate)
 					},
 				),
 			},
@@ -1874,30 +1870,6 @@ resource "aws_lambda_function" "lambda_function_test" {
     handler = "exports.example"
     runtime = "nodejs8.10"
 }
-
-data "template_file" "function_version" {
-  template = "$${function_version}"
-
-  vars = {
-    function_version = "${aws_lambda_function.lambda_function_test.version}"
-  }
-}
-
-data "template_file" "last_modified" {
-  template = "$${last_modified}"
-
-  vars = {
-    last_modified = "${aws_lambda_function.lambda_function_test.last_modified}"
-  }
-}
-
-data "template_file" "qualified_arn" {
-  template = "$${qualified_arn}"
-
-  vars = {
-    qualified_arn = "${aws_lambda_function.lambda_function_test.qualified_arn}"
-  }
-}
 `, fileName, funcName)
 }
 
@@ -2333,14 +2305,6 @@ resource "aws_lambda_function" "lambda_function_local" {
   role             = "${aws_iam_role.iam_for_lambda.arn}"
   handler          = "exports.example"
   runtime          = "nodejs8.10"
-}
-
-data "template_file" "last_modified" {
-  template = "$${last_modified}"
-
-  vars = {
-    last_modified = "${aws_lambda_function.lambda_function_local.last_modified}"
-  }
 }
 `, roleName, filePath, filePath, funcName)
 }
