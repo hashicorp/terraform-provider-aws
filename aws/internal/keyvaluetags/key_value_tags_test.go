@@ -118,6 +118,62 @@ func TestKeyValueTagsIgnoreElasticbeanstalk(t *testing.T) {
 	}
 }
 
+func TestKeyValueTagsIgnoreRds(t *testing.T) {
+	testCases := []struct {
+		name string
+		tags KeyValueTags
+		want map[string]string
+	}{
+		{
+			name: "empty",
+			tags: New(map[string]string{}),
+			want: map[string]string{},
+		},
+		{
+			name: "all",
+			tags: New(map[string]string{
+				"aws:cloudformation:key1": "value1",
+				"rds:key2":                "value2",
+			}),
+			want: map[string]string{},
+		},
+		{
+			name: "mixed",
+			tags: New(map[string]string{
+				"aws:cloudformation:key1": "value1",
+				"key2":                    "value2",
+				"rds:key3":                "value3",
+				"key4":                    "value4",
+			}),
+			want: map[string]string{
+				"key2": "value2",
+				"key4": "value4",
+			},
+		},
+		{
+			name: "none",
+			tags: New(map[string]string{
+				"key1": "value1",
+				"key2": "value2",
+				"key3": "value3",
+			}),
+			want: map[string]string{
+				"key1": "value1",
+				"key2": "value2",
+				"key3": "value3",
+			},
+		},
+	}
+
+	for _, testCase := range testCases {
+		t.Run(testCase.name, func(t *testing.T) {
+			got := testCase.tags.IgnoreRds()
+
+			testKeyValueTagsVerifyMap(t, got.Map(), testCase.want)
+		})
+	}
+}
+
 func TestKeyValueTagsIgnore(t *testing.T) {
 	testCases := []struct {
 		name       string

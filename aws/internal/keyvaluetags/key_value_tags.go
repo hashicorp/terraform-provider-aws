@@ -8,9 +8,12 @@ import (
 	"strings"
 )
 
-const AwsTagKeyPrefix = `aws:`
-const ElasticbeanstalkTagKeyPrefix = `elasticbeanstalk:`
-const NameTagKey = `Name`
+const (
+	AwsTagKeyPrefix              = `aws:`
+	ElasticbeanstalkTagKeyPrefix = `elasticbeanstalk:`
+	NameTagKey                   = `Name`
+	RdsTagKeyPrefix              = `rds:`
+)
 
 // KeyValueTags is a standard implementation for AWS key-value resource tags.
 // The AWS Go SDK is split into multiple service packages, each service with
@@ -31,7 +34,7 @@ func (tags KeyValueTags) IgnoreAws() KeyValueTags {
 	return result
 }
 
-// IgnoreAws returns non-AWS and non-Elasticbeanstalk tag keys.
+// IgnoreElasticbeanstalk returns non-AWS and non-Elasticbeanstalk tag keys.
 func (tags KeyValueTags) IgnoreElasticbeanstalk() KeyValueTags {
 	result := make(KeyValueTags)
 
@@ -45,6 +48,25 @@ func (tags KeyValueTags) IgnoreElasticbeanstalk() KeyValueTags {
 		}
 
 		if k == NameTagKey {
+			continue
+		}
+
+		result[k] = v
+	}
+
+	return result
+}
+
+// IgnoreRDS returns non-AWS and non-RDS tag keys.
+func (tags KeyValueTags) IgnoreRds() KeyValueTags {
+	result := make(KeyValueTags)
+
+	for k, v := range tags {
+		if strings.HasPrefix(k, AwsTagKeyPrefix) {
+			continue
+		}
+
+		if strings.HasPrefix(k, RdsTagKeyPrefix) {
 			continue
 		}
 
