@@ -5,6 +5,7 @@ import (
 	"log"
 
 	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/mediaconvert"
 
 	"github.com/hashicorp/terraform/helper/schema"
@@ -17,6 +18,10 @@ func resourceAwsMediaConvertQueue() *schema.Resource {
 		Read:   resourceAwsMediaConvertQueueRead,
 		Update: resourceAwsMediaConvertQueueUpdate,
 		Delete: resourceAwsMediaConvertQueueDelete,
+
+		Importer: &schema.ResourceImporter{
+			State: schema.ImportStatePassthrough,
+		},
 
 		Schema: map[string]*schema.Schema{
 			"arn": {
@@ -85,7 +90,18 @@ func resourceAwsMediaConvertQueue() *schema.Resource {
 }
 
 func resourceAwsMediaConvertQueueCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).mediaconvertconn
+	originalConn := meta.(*AWSClient).mediaconvertconn
+
+	endpointURL, err := getAwsMediaConvertEndpoint(originalConn)
+	if err != nil {
+		return fmt.Errorf("Error getting Media Convert Endpoint: %s", err)
+	}
+
+	sess, err := session.NewSession(&originalConn.Config)
+	if err != nil {
+		return fmt.Errorf("Error creating AWS session: %s", err)
+	}
+	conn := mediaconvert.New(sess.Copy(&aws.Config{Endpoint: aws.String(endpointURL)}))
 
 	createOpts := &mediaconvert.CreateQueueInput{
 		Name:        aws.String(d.Get("name").(string)),
@@ -114,7 +130,18 @@ func resourceAwsMediaConvertQueueCreate(d *schema.ResourceData, meta interface{}
 }
 
 func resourceAwsMediaConvertQueueRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).mediaconvertconn
+	originalConn := meta.(*AWSClient).mediaconvertconn
+
+	endpointURL, err := getAwsMediaConvertEndpoint(originalConn)
+	if err != nil {
+		return fmt.Errorf("Error getting Media Convert Endpoint: %s", err)
+	}
+
+	sess, err := session.NewSession(&originalConn.Config)
+	if err != nil {
+		return fmt.Errorf("Error creating AWS session: %s", err)
+	}
+	conn := mediaconvert.New(sess.Copy(&aws.Config{Endpoint: aws.String(endpointURL)}))
 
 	getOpts := &mediaconvert.GetQueueInput{
 		Name: aws.String(d.Id()),
@@ -148,7 +175,18 @@ func resourceAwsMediaConvertQueueRead(d *schema.ResourceData, meta interface{}) 
 }
 
 func resourceAwsMediaConvertQueueUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).mediaconvertconn
+	originalConn := meta.(*AWSClient).mediaconvertconn
+
+	endpointURL, err := getAwsMediaConvertEndpoint(originalConn)
+	if err != nil {
+		return fmt.Errorf("Error getting Media Convert Endpoint: %s", err)
+	}
+
+	sess, err := session.NewSession(&originalConn.Config)
+	if err != nil {
+		return fmt.Errorf("Error creating AWS session: %s", err)
+	}
+	conn := mediaconvert.New(sess.Copy(&aws.Config{Endpoint: aws.String(endpointURL)}))
 
 	updateOpts := &mediaconvert.UpdateQueueInput{
 		Name:   aws.String(d.Id()),
@@ -164,7 +202,7 @@ func resourceAwsMediaConvertQueueUpdate(d *schema.ResourceData, meta interface{}
 		updateOpts.ReservationPlanSettings = expandMediaConvertReservationPlanSettings(reservationPlanSettings)
 	}
 
-	_, err := conn.UpdateQueue(updateOpts)
+	_, err = conn.UpdateQueue(updateOpts)
 	if isAWSErr(err, mediaconvert.ErrCodeNotFoundException, "") {
 		log.Printf("[WARN] Media Convert Queue (%s) not found, removing from state", d.Id())
 		d.SetId("")
@@ -182,12 +220,24 @@ func resourceAwsMediaConvertQueueUpdate(d *schema.ResourceData, meta interface{}
 }
 
 func resourceAwsMediaConvertQueueDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).mediaconvertconn
+	originalConn := meta.(*AWSClient).mediaconvertconn
+
+	endpointURL, err := getAwsMediaConvertEndpoint(originalConn)
+	if err != nil {
+		return fmt.Errorf("Error getting Media Convert Endpoint: %s", err)
+	}
+
+	sess, err := session.NewSession(&originalConn.Config)
+	if err != nil {
+		return fmt.Errorf("Error creating AWS session: %s", err)
+	}
+	conn := mediaconvert.New(sess.Copy(&aws.Config{Endpoint: aws.String(endpointURL)}))
+
 	delOpts := &mediaconvert.DeleteQueueInput{
 		Name: aws.String(d.Id()),
 	}
 
-	_, err := conn.DeleteQueue(delOpts)
+	_, err = conn.DeleteQueue(delOpts)
 	if isAWSErr(err, mediaconvert.ErrCodeNotFoundException, "") {
 		return nil
 	}
@@ -196,4 +246,19 @@ func resourceAwsMediaConvertQueueDelete(d *schema.ResourceData, meta interface{}
 	}
 
 	return nil
+}
+
+func getAwsMediaConvertEndpoint(conn *mediaconvert.MediaConvert) (string, error) {
+	descOpts := &mediaconvert.DescribeEndpointsInput{
+		Mode: aws.String(mediaconvert.DescribeEndpointsModeDefault),
+	}
+
+	resp, err := conn.DescribeEndpoints(descOpts)
+	if err != nil {
+		return "", err
+	}
+
+	endpoint := resp.Endpoints[0]
+
+	return aws.StringValue(endpoint.Url), nil
 }

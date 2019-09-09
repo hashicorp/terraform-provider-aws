@@ -13,19 +13,10 @@ Provides an AWS Elemental MediaConvert Queue.
 ## Example Usage
 
 ```hcl
-provider "aws" {
-  endpoints {
-    mediaconvert = "https://customer-specific-endpoint.mediaconvert.us-west-2.amazonaws.com"
-  }
-}
-
 resource "aws_media_convert_queue" "test" {
   name = "tf-test-queue"
 }
-
 ```
-
-~> **Note:** AWS Media Convert need to set customer specific endpoint. See the AWS [Docs](https://docs.aws.amazon.com/ja_jp/mediaconvert/latest/apireference/getting-started.html) for more information.
 
 ## Argument Reference
 

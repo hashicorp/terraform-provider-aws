@@ -2,7 +2,6 @@ package aws
 
 import (
 	"fmt"
-	"os"
 	"regexp"
 	"testing"
 
@@ -19,7 +18,6 @@ func TestAccAWSMediaConvertQueue_basic(t *testing.T) {
 	var queue mediaconvert.Queue
 	resourceName := "aws_media_convert_queue.test"
 	rName := acctest.RandomWithPrefix("tf-acc-test")
-	endpointURL := os.Getenv("AWS_MEDIA_CONVERT_ENDPOINT")
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -27,7 +25,7 @@ func TestAccAWSMediaConvertQueue_basic(t *testing.T) {
 		CheckDestroy: testAccCheckAwsMediaConvertQueueDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccMediaConvertQueueConfig_Basic(endpointURL, rName),
+				Config: testAccMediaConvertQueueConfig_Basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsMediaConvertQueueExists(resourceName, &queue),
 					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "mediaconvert", regexp.MustCompile(`queues/.+`)),
@@ -35,6 +33,54 @@ func TestAccAWSMediaConvertQueue_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "pricing_plan", mediaconvert.PricingPlanOnDemand),
 					resource.TestCheckResourceAttr(resourceName, "status", mediaconvert.QueueStatusActive),
 				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccAWSMediaConvertReservedQueue_basic(t *testing.T) {
+	var queue mediaconvert.Queue
+	resourceName := "aws_media_convert_queue.test"
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAwsMediaConvertQueueDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccMediaConvertQueueConfig_ReservedQueue(rName, mediaconvert.CommitmentOneYear, mediaconvert.RenewalTypeAutoRenew, 1),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAwsMediaConvertQueueExists(resourceName, &queue),
+					resource.TestCheckResourceAttr(resourceName, "pricing_plan", mediaconvert.PricingPlanReserved),
+					resource.TestCheckResourceAttr(resourceName, "reservation_plan_settings.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "reservation_plan_settings.0.commitment", "1"),
+					resource.TestCheckResourceAttr(resourceName, "reservation_plan_settings.0.commitment", mediaconvert.CommitmentOneYear),
+					resource.TestCheckResourceAttr(resourceName, "reservation_plan_settings.0.renewal_type", mediaconvert.RenewalTypeAutoRenew),
+					resource.TestCheckResourceAttr(resourceName, "reservation_plan_settings.0.reserved_slots", "1"),
+				),
+			},
+			{
+				Config: testAccMediaConvertQueueConfig_ReservedQueue(rName, mediaconvert.CommitmentOneYear, mediaconvert.RenewalTypeExpire, 2),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAwsMediaConvertQueueExists(resourceName, &queue),
+					resource.TestCheckResourceAttr(resourceName, "pricing_plan", mediaconvert.PricingPlanReserved),
+					resource.TestCheckResourceAttr(resourceName, "reservation_plan_settings.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "reservation_plan_settings.0.commitment", "1"),
+					resource.TestCheckResourceAttr(resourceName, "reservation_plan_settings.0.commitment", mediaconvert.CommitmentOneYear),
+					resource.TestCheckResourceAttr(resourceName, "reservation_plan_settings.0.renewal_type", mediaconvert.RenewalTypeExpire),
+					resource.TestCheckResourceAttr(resourceName, "reservation_plan_settings.0.reserved_slots", "1"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})
@@ -44,7 +90,6 @@ func TestAccAWSMediaConvertQueue_withStatus(t *testing.T) {
 	var queue mediaconvert.Queue
 	resourceName := "aws_media_convert_queue.test"
 	rName := acctest.RandomWithPrefix("tf-acc-test")
-	endpointURL := os.Getenv("AWS_MEDIA_CONVERT_ENDPOINT")
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -52,18 +97,23 @@ func TestAccAWSMediaConvertQueue_withStatus(t *testing.T) {
 		CheckDestroy: testAccCheckAwsMediaConvertQueueDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccMediaConvertQueueConfig_withStatus(endpointURL, rName, mediaconvert.QueueStatusPaused),
+				Config: testAccMediaConvertQueueConfig_withStatus(rName, mediaconvert.QueueStatusPaused),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsMediaConvertQueueExists(resourceName, &queue),
 					resource.TestCheckResourceAttr(resourceName, "status", mediaconvert.QueueStatusPaused),
 				),
 			},
 			{
-				Config: testAccMediaConvertQueueConfig_withStatus(endpointURL, rName, mediaconvert.QueueStatusActive),
+				Config: testAccMediaConvertQueueConfig_withStatus(rName, mediaconvert.QueueStatusActive),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsMediaConvertQueueExists(resourceName, &queue),
 					resource.TestCheckResourceAttr(resourceName, "status", mediaconvert.QueueStatusActive),
 				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})
@@ -73,7 +123,6 @@ func TestAccAWSMediaConvertQueue_withTags(t *testing.T) {
 	var queue mediaconvert.Queue
 	resourceName := "aws_media_convert_queue.test"
 	rName := acctest.RandomWithPrefix("tf-acc-test")
-	endpointURL := os.Getenv("AWS_MEDIA_CONVERT_ENDPOINT")
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -81,7 +130,7 @@ func TestAccAWSMediaConvertQueue_withTags(t *testing.T) {
 		CheckDestroy: testAccCheckAwsMediaConvertQueueDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccMediaConvertQueueConfig_withTags(endpointURL, rName, "foo", "bar", "fizz", "buzz"),
+				Config: testAccMediaConvertQueueConfig_withTags(rName, "foo", "bar", "fizz", "buzz"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsMediaConvertQueueExists(resourceName, &queue),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
@@ -90,7 +139,7 @@ func TestAccAWSMediaConvertQueue_withTags(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccMediaConvertQueueConfig_withTags(endpointURL, rName, "foo", "bar2", "fizz2", "buzz2"),
+				Config: testAccMediaConvertQueueConfig_withTags(rName, "foo", "bar2", "fizz2", "buzz2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsMediaConvertQueueExists(resourceName, &queue),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
@@ -99,11 +148,38 @@ func TestAccAWSMediaConvertQueue_withTags(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccMediaConvertQueueConfig_Basic(endpointURL, rName),
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccMediaConvertQueueConfig_Basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsMediaConvertQueueExists(resourceName, &queue),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 				),
+			},
+		},
+	})
+}
+
+func TestAccAWSMediaConvertQueue_disappears(t *testing.T) {
+	var queue mediaconvert.Queue
+	resourceName := "aws_media_convert_queue.test"
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAwsMediaConvertQueueDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccMediaConvertQueueConfig_Basic(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAwsMediaConvertQueueExists(resourceName, &queue),
+					testAccCheckAwsMediaConvertQueueDisappears(&queue),
+				),
+				ExpectNonEmptyPlan: true,
 			},
 		},
 	})
@@ -115,7 +191,6 @@ func TestAccAWSMediaConvertQueue_withDescription(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 	description1 := acctest.RandomWithPrefix("Description: ")
 	description2 := acctest.RandomWithPrefix("Description: ")
-	endpointURL := os.Getenv("AWS_MEDIA_CONVERT_ENDPOINT")
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -123,14 +198,14 @@ func TestAccAWSMediaConvertQueue_withDescription(t *testing.T) {
 		CheckDestroy: testAccCheckAwsMediaConvertQueueDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccMediaConvertQueueConfig_withDescription(endpointURL, rName, description1),
+				Config: testAccMediaConvertQueueConfig_withDescription(rName, description1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsMediaConvertQueueExists(resourceName, &queue),
 					resource.TestCheckResourceAttr(resourceName, "description", description1),
 				),
 			},
 			{
-				Config: testAccMediaConvertQueueConfig_withDescription(endpointURL, rName, description2),
+				Config: testAccMediaConvertQueueConfig_withDescription(rName, description2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsMediaConvertQueueExists(resourceName, &queue),
 					resource.TestCheckResourceAttr(resourceName, "description", description2),
@@ -146,9 +221,9 @@ func testAccCheckAwsMediaConvertQueueDestroy(s *terraform.State) error {
 			continue
 		}
 		originalConn := testAccProvider.Meta().(*AWSClient).mediaconvertconn
-		endpointURL := os.Getenv("AWS_MEDIA_CONVERT_ENDPOINT")
-		if endpointURL == "" {
-			return fmt.Errorf("No AWS Media Convert Endpoint is set")
+		endpointURL, err := getAwsMediaConvertEndpoint(originalConn)
+		if err != nil {
+			return fmt.Errorf("Error getting Media Convert Endpoint: %s", err)
 		}
 
 		sess, err := session.NewSession(&originalConn.Config)
@@ -171,6 +246,30 @@ func testAccCheckAwsMediaConvertQueueDestroy(s *terraform.State) error {
 	return nil
 }
 
+func testAccCheckAwsMediaConvertQueueDisappears(queue *mediaconvert.Queue) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		originalConn := testAccProvider.Meta().(*AWSClient).mediaconvertconn
+		endpointURL, err := getAwsMediaConvertEndpoint(originalConn)
+		if err != nil {
+			return fmt.Errorf("Error getting Media Convert Endpoint: %s", err)
+		}
+
+		sess, err := session.NewSession(&originalConn.Config)
+		if err != nil {
+			return fmt.Errorf("Error creating AWS session: %s", err)
+		}
+		conn := mediaconvert.New(sess.Copy(&aws.Config{Endpoint: aws.String(endpointURL)}))
+
+		_, err = conn.DeleteQueue(&mediaconvert.DeleteQueueInput{
+			Name: queue.Name,
+		})
+		if err != nil {
+			return fmt.Errorf("Deleting Media Convert Queue: %s", err)
+		}
+		return nil
+	}
+}
+
 func testAccCheckAwsMediaConvertQueueExists(n string, queue *mediaconvert.Queue) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
@@ -183,9 +282,9 @@ func testAccCheckAwsMediaConvertQueueExists(n string, queue *mediaconvert.Queue)
 		}
 
 		originalConn := testAccProvider.Meta().(*AWSClient).mediaconvertconn
-		endpointURL := os.Getenv("AWS_MEDIA_CONVERT_ENDPOINT")
-		if endpointURL == "" {
-			return fmt.Errorf("No AWS Media Convert Endpoint is set")
+		endpointURL, err := getAwsMediaConvertEndpoint(originalConn)
+		if err != nil {
+			return fmt.Errorf("Error getting Media Convert Endpoint: %s", err)
 		}
 
 		sess, err := session.NewSession(&originalConn.Config)
@@ -206,19 +305,8 @@ func testAccCheckAwsMediaConvertQueueExists(n string, queue *mediaconvert.Queue)
 	}
 }
 
-func testAccMediaConvertQueueConfig_Base(endpoint string) string {
+func testAccMediaConvertQueueConfig_Basic(rName string) string {
 	return fmt.Sprintf(`
-provider "aws" {
-  endpoints {
-    mediaconvert = %[1]q
-  }
-}
-
-`, endpoint)
-}
-
-func testAccMediaConvertQueueConfig_Basic(endpoint, rName string) string {
-	return testAccMediaConvertQueueConfig_Base(endpoint) + fmt.Sprintf(`
 resource "aws_media_convert_queue" "test" {
   name = %[1]q
 }
@@ -226,8 +314,8 @@ resource "aws_media_convert_queue" "test" {
 `, rName)
 }
 
-func testAccMediaConvertQueueConfig_withStatus(endpoint, rName, status string) string {
-	return testAccMediaConvertQueueConfig_Base(endpoint) + fmt.Sprintf(`
+func testAccMediaConvertQueueConfig_withStatus(rName, status string) string {
+	return fmt.Sprintf(`
 resource "aws_media_convert_queue" "test" {
   name   = %[1]q
   status = %[2]q
@@ -236,18 +324,18 @@ resource "aws_media_convert_queue" "test" {
 `, rName, status)
 }
 
-func testAccMediaConvertQueueConfig_withDescription(endpoint, rName, description string) string {
-	return testAccMediaConvertQueueConfig_Base(endpoint) + fmt.Sprintf(`
+func testAccMediaConvertQueueConfig_withDescription(rName, description string) string {
+	return fmt.Sprintf(`
 resource "aws_media_convert_queue" "test" {
-  name   = %[1]q
+  name        = %[1]q
   description = %[2]q
 }
 
 `, rName, description)
 }
 
-func testAccMediaConvertQueueConfig_withTags(endpoint, rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
-	return testAccMediaConvertQueueConfig_Base(endpoint) + fmt.Sprintf(`
+func testAccMediaConvertQueueConfig_withTags(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
+	return fmt.Sprintf(`
 resource "aws_media_convert_queue" "test" {
   name   = %[1]q
   
@@ -258,4 +346,20 @@ resource "aws_media_convert_queue" "test" {
 }
 
 `, rName, tagKey1, tagValue1, tagKey2, tagValue2)
+}
+
+func testAccMediaConvertQueueConfig_ReservedQueue(rName, commitment, renewalType string, reservedSlots int) string {
+	return fmt.Sprintf(`
+resource "aws_media_convert_queue" "test" {
+  name         = %[1]q
+  pricing_plan = %[2]q
+
+  reservation_plan_settings = {
+	commitment     = %[3]q
+	renewal_type   = %[4]q
+	reserved_slots = %[5]d
+  }
+}
+
+`, rName, mediaconvert.PricingPlanReserved, commitment, renewalType, reservedSlots)
 }
