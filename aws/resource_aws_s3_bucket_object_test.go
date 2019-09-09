@@ -146,6 +146,13 @@ func TestAccAWSS3BucketObject_empty(t *testing.T) {
 					testAccCheckAWSS3BucketObjectBody(&obj, ""),
 				),
 			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"acl"},
+				ImportStateId:           fmt.Sprintf("s3://tf-object-test-bucket-%d/test-key", rInt),
+			},
 		},
 	})
 }
@@ -171,6 +178,13 @@ func TestAccAWSS3BucketObject_source(t *testing.T) {
 					testAccCheckAWSS3BucketObjectBody(&obj, "{anything will do }"),
 				),
 			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"acl", "source"},
+				ImportStateId:           fmt.Sprintf("s3://tf-object-test-bucket-%d/test-key", rInt),
+			},
 		},
 	})
 }
@@ -193,6 +207,13 @@ func TestAccAWSS3BucketObject_content(t *testing.T) {
 					testAccCheckAWSS3BucketObjectExists(resourceName, &obj),
 					testAccCheckAWSS3BucketObjectBody(&obj, "some_bucket_content"),
 				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"acl", "content", "content_base64"},
+				ImportStateId:           fmt.Sprintf("s3://tf-object-test-bucket-%d/test-key", rInt),
 			},
 		},
 	})
@@ -219,6 +240,13 @@ func TestAccAWSS3BucketObject_etagEncryption(t *testing.T) {
 					testAccCheckAWSS3BucketObjectBody(&obj, "{anything will do }"),
 					resource.TestCheckResourceAttr(resourceName, "etag", "7b006ff4d70f68cc65061acf2f802e6f"),
 				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"acl", "source"},
+				ImportStateId:           fmt.Sprintf("s3://tf-object-test-bucket-%d/test-key", rInt),
 			},
 		},
 	})
@@ -292,6 +320,13 @@ func TestAccAWSS3BucketObject_sourceHashTrigger(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "source_hash", "cffc5e20de2d21764145b1124c9b337b"),
 				),
 			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"acl", "content", "content_base64"},
+				ImportStateId:           fmt.Sprintf("s3://tf-object-test-bucket-%d/test-key", rInt),
+			},
 		},
 	})
 }
@@ -337,12 +372,11 @@ func TestAccAWSS3BucketObject_nonVersioned(t *testing.T) {
 		CheckDestroy: testAccCheckAWSS3BucketObjectDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSS3BucketObjectConfig_nonVersioned(rName, sourceInitial),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSS3BucketObjectExists(resourceName, &originalObj),
-					testAccCheckAWSS3BucketObjectBody(&originalObj, "initial object state"),
-					resource.TestCheckResourceAttr(resourceName, "version_id", ""),
-				),
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"acl", "source"},
+				ImportStateId:           fmt.Sprintf("s3://tf-object-test-bucket-%d/test-key", rInt),
 			},
 		},
 	})
@@ -385,6 +419,13 @@ func TestAccAWSS3BucketObject_updates(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "object_lock_mode", ""),
 					resource.TestCheckResourceAttr(resourceName, "object_lock_retain_until_date", ""),
 				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"acl", "source"},
+				ImportStateId:           fmt.Sprintf("s3://tf-object-test-bucket-%d/updateable-key", rInt),
 			},
 		},
 	})
@@ -470,6 +511,13 @@ func TestAccAWSS3BucketObject_updatesWithVersioning(t *testing.T) {
 					testAccCheckAWSS3BucketObjectVersionIdDiffers(&modifiedObj, &originalObj),
 				),
 			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"acl", "source"},
+				ImportStateId:           fmt.Sprintf("s3://tf-object-test-bucket-%d/updateable-key", rInt),
+			},
 		},
 	})
 }
@@ -536,6 +584,13 @@ func TestAccAWSS3BucketObject_kms(t *testing.T) {
 					testAccCheckAWSS3BucketObjectBody(&obj, "{anything will do }"),
 				),
 			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"acl", "source"},
+				ImportStateId:           fmt.Sprintf("s3://tf-object-test-bucket-%d/test-key", rInt),
+			},
 		},
 	})
 }
@@ -562,6 +617,13 @@ func TestAccAWSS3BucketObject_sse(t *testing.T) {
 					testAccCheckAWSS3BucketObjectSSE(resourceName, "AES256"),
 					testAccCheckAWSS3BucketObjectBody(&obj, "{anything will do }"),
 				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"acl", "source"},
+				ImportStateId:           fmt.Sprintf("s3://tf-object-test-bucket-%d/test-key", rInt),
 			},
 		},
 	})
@@ -607,6 +669,13 @@ func TestAccAWSS3BucketObject_acl(t *testing.T) {
 					testAccCheckAWSS3BucketObjectAcl(resourceName, []string{"FULL_CONTROL"}),
 				),
 			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"acl", "content"},
+				ImportStateId:           fmt.Sprintf("s3://tf-object-test-bucket-%d/test-key", rInt),
+			},
 		},
 	})
 }
@@ -646,6 +715,13 @@ func TestAccAWSS3BucketObject_metadata(t *testing.T) {
 					testAccCheckAWSS3BucketObjectExists(resourceName, &obj),
 					resource.TestCheckResourceAttr(resourceName, "metadata.%", "0"),
 				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"acl"},
+				ImportStateId:           fmt.Sprintf("s3://tf-object-test-bucket-%d/test-key", rInt),
 			},
 		},
 	})
@@ -702,6 +778,13 @@ func TestAccAWSS3BucketObject_storageClass(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "storage_class", "DEEP_ARCHIVE"),
 					testAccCheckAWSS3BucketObjectStorageClass(resourceName, "DEEP_ARCHIVE"),
 				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"content", "acl"},
+				ImportStateId:           fmt.Sprintf("s3://tf-object-test-bucket-%d/test-key", rInt),
 			},
 		},
 	})
@@ -768,6 +851,13 @@ func TestAccAWSS3BucketObject_tags(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "tags.Key3", "CCC"),
 				),
 			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"content", "acl"},
+				ImportStateId:           fmt.Sprintf("s3://tf-object-test-bucket-%d/%s", rInt, key),
+			},
 		},
 	})
 }
@@ -832,6 +922,13 @@ func TestAccAWSS3BucketObject_tagsLeadingSingleSlash(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "tags.Key2", "BBB"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Key3", "CCC"),
 				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"content", "acl"},
+				ImportStateId:           fmt.Sprintf("s3://tf-object-test-bucket-%d/%s", rInt, key),
 			},
 		},
 	})
