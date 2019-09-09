@@ -394,19 +394,23 @@ func resourceAwsLambdaFunctionCreate(d *schema.ResourceData, meta interface{}) e
 		if err != nil {
 			log.Printf("[DEBUG] Error creating Lambda Function: %s", err)
 
-			if isAWSErr(err, "InvalidParameterValueException", "The role defined for the function cannot be assumed by Lambda") {
+			if isAWSErr(err, lambda.ErrCodeInvalidParameterValueException, "The role defined for the function cannot be assumed by Lambda") {
 				log.Printf("[DEBUG] Received %s, retrying CreateFunction", err)
 				return resource.RetryableError(err)
 			}
-			if isAWSErr(err, "InvalidParameterValueException", "The provided execution role does not have permissions") {
+			if isAWSErr(err, lambda.ErrCodeInvalidParameterValueException, "The provided execution role does not have permissions") {
 				log.Printf("[DEBUG] Received %s, retrying CreateFunction", err)
 				return resource.RetryableError(err)
 			}
-			if isAWSErr(err, "InvalidParameterValueException", "Your request has been throttled by EC2") {
+			if isAWSErr(err, lambda.ErrCodeInvalidParameterValueException, "Your request has been throttled by EC2") {
 				log.Printf("[DEBUG] Received %s, retrying CreateFunction", err)
 				return resource.RetryableError(err)
 			}
-			if isAWSErr(err, "InvalidParameterValueException", "Lambda was unable to configure access to your environment variables because the KMS key is invalid for CreateGrant") {
+			if isAWSErr(err, lambda.ErrCodeInvalidParameterValueException, "Lambda was unable to configure access to your environment variables because the KMS key is invalid for CreateGrant") {
+				log.Printf("[DEBUG] Received %s, retrying CreateFunction", err)
+				return resource.RetryableError(err)
+			}
+			if isAWSErr(err, lambda.ErrCodeResourceConflictException, "") {
 				log.Printf("[DEBUG] Received %s, retrying CreateFunction", err)
 				return resource.RetryableError(err)
 			}
@@ -416,7 +420,7 @@ func resourceAwsLambdaFunctionCreate(d *schema.ResourceData, meta interface{}) e
 		return nil
 	})
 	if err != nil {
-		if !isResourceTimeoutError(err) && !isAWSErr(err, "InvalidParameterValueException", "Your request has been throttled by EC2") {
+		if !isResourceTimeoutError(err) && !isAWSErr(err, lambda.ErrCodeInvalidParameterValueException, "Your request has been throttled by EC2") {
 			return fmt.Errorf("Error creating Lambda function: %s", err)
 		}
 		// Allow additional time for slower uploads or EC2 throttling
@@ -425,7 +429,7 @@ func resourceAwsLambdaFunctionCreate(d *schema.ResourceData, meta interface{}) e
 			if err != nil {
 				log.Printf("[DEBUG] Error creating Lambda Function: %s", err)
 
-				if isAWSErr(err, "InvalidParameterValueException", "Your request has been throttled by EC2") {
+				if isAWSErr(err, lambda.ErrCodeInvalidParameterValueException, "Your request has been throttled by EC2") {
 					log.Printf("[DEBUG] Received %s, retrying CreateFunction", err)
 					return resource.RetryableError(err)
 				}
@@ -494,7 +498,7 @@ func resourceAwsLambdaFunctionRead(d *schema.ResourceData, meta interface{}) err
 
 	getFunctionOutput, err := conn.GetFunction(params)
 	if err != nil {
-		if awsErr, ok := err.(awserr.Error); ok && awsErr.Code() == "ResourceNotFoundException" && !d.IsNewResource() {
+		if awsErr, ok := err.(awserr.Error); ok && awsErr.Code() == lambda.ErrCodeResourceNotFoundException && !d.IsNewResource() {
 			d.SetId("")
 			return nil
 		}
@@ -769,20 +773,24 @@ func resourceAwsLambdaFunctionUpdate(d *schema.ResourceData, meta interface{}) e
 			if err != nil {
 				log.Printf("[DEBUG] Received error modifying Lambda Function Configuration %s: %s", d.Id(), err)
 
-				if isAWSErr(err, "InvalidParameterValueException", "The role defined for the function cannot be assumed by Lambda") {
+				if isAWSErr(err, lambda.ErrCodeInvalidParameterValueException, "The role defined for the function cannot be assumed by Lambda") {
 					log.Printf("[DEBUG] Received %s, retrying UpdateFunctionConfiguration", err)
 					return resource.RetryableError(err)
 				}
-				if isAWSErr(err, "InvalidParameterValueException", "The provided execution role does not have permissions") {
+				if isAWSErr(err, lambda.ErrCodeInvalidParameterValueException, "The provided execution role does not have permissions") {
 					log.Printf("[DEBUG] Received %s, retrying UpdateFunctionConfiguration", err)
 					return resource.RetryableError(err)
 				}
-				if isAWSErr(err, "InvalidParameterValueException", "Your request has been throttled by EC2, please make sure you have enough API rate limit.") {
+				if isAWSErr(err, lambda.ErrCodeInvalidParameterValueException, "Your request has been throttled by EC2, please make sure you have enough API rate limit.") {
 					log.Printf("[DEBUG] Received %s, retrying UpdateFunctionConfiguration", err)
 					return resource.RetryableError(err)
 				}
-				if isAWSErr(err, "InvalidParameterValueException", "Lambda was unable to configure access to your environment variables because the KMS key is invalid for CreateGrant") {
-					log.Printf("[DEBUG] Received %s, retrying CreateFunction", err)
+				if isAWSErr(err, lambda.ErrCodeInvalidParameterValueException, "Lambda was unable to configure access to your environment variables because the KMS key is invalid for CreateGrant") {
+					log.Printf("[DEBUG] Received %s, retrying UpdateFunctionConfiguration", err)
+					return resource.RetryableError(err)
+				}
+				if isAWSErr(err, lambda.ErrCodeResourceConflictException, "") {
+					log.Printf("[DEBUG] Received %s, retrying UpdateFunctionConfiguration", err)
 					return resource.RetryableError(err)
 				}
 
@@ -791,7 +799,7 @@ func resourceAwsLambdaFunctionUpdate(d *schema.ResourceData, meta interface{}) e
 			return nil
 		})
 		if err != nil {
-			if !isAWSErr(err, "InvalidParameterValueException", "Your request has been throttled by EC2, please make sure you have enough API rate limit.") {
+			if !isAWSErr(err, lambda.ErrCodeInvalidParameterValueException, "Your request has been throttled by EC2, please make sure you have enough API rate limit.") {
 				return fmt.Errorf("Error modifying Lambda Function Configuration %s: %s", d.Id(), err)
 			}
 			// Allow 9 more minutes for EC2 throttling
@@ -800,7 +808,7 @@ func resourceAwsLambdaFunctionUpdate(d *schema.ResourceData, meta interface{}) e
 				if err != nil {
 					log.Printf("[DEBUG] Received error modifying Lambda Function Configuration %s: %s", d.Id(), err)
 
-					if isAWSErr(err, "InvalidParameterValueException", "Your request has been throttled by EC2, please make sure you have enough API rate limit.") {
+					if isAWSErr(err, lambda.ErrCodeInvalidParameterValueException, "Your request has been throttled by EC2, please make sure you have enough API rate limit.") {
 						log.Printf("[DEBUG] Received %s, retrying UpdateFunctionConfiguration", err)
 						return resource.RetryableError(err)
 					}
