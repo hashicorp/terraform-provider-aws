@@ -13,12 +13,12 @@ import (
 
 func TestAccAWSProxyProtocolPolicy_basic(t *testing.T) {
 	lbName := fmt.Sprintf("tf-test-lb-%s", acctest.RandString(5))
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckProxyProtocolPolicyDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccProxyProtocolPolicyConfig(lbName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(
@@ -29,7 +29,7 @@ func TestAccAWSProxyProtocolPolicy_basic(t *testing.T) {
 						"aws_proxy_protocol_policy.smtp", "instance_ports.4196041389", "25"),
 				),
 			},
-			resource.TestStep{
+			{
 				Config: testAccProxyProtocolPolicyConfigUpdate(lbName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(
@@ -75,53 +75,55 @@ func testAccCheckProxyProtocolPolicyDestroy(s *terraform.State) error {
 func testAccProxyProtocolPolicyConfig(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_elb" "lb" {
-	name = "%s"
-	availability_zones = ["us-west-2a"]
+  name               = "%s"
+  availability_zones = ["us-west-2a"]
 
-	listener {
-		instance_port = 25
-		instance_protocol = "tcp"
-		lb_port = 25
-		lb_protocol = "tcp"
-	}
+  listener {
+    instance_port     = 25
+    instance_protocol = "tcp"
+    lb_port           = 25
+    lb_protocol       = "tcp"
+  }
 
-	listener {
-		instance_port = 587
-		instance_protocol = "tcp"
-		lb_port = 587
-		lb_protocol = "tcp"
-	}
+  listener {
+    instance_port     = 587
+    instance_protocol = "tcp"
+    lb_port           = 587
+    lb_protocol       = "tcp"
+  }
 }
 
 resource "aws_proxy_protocol_policy" "smtp" {
-	load_balancer = "${aws_elb.lb.name}"
-	instance_ports = ["25"]
-}`, rName)
+  load_balancer  = "${aws_elb.lb.name}"
+  instance_ports = ["25"]
+}
+`, rName)
 }
 
 func testAccProxyProtocolPolicyConfigUpdate(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_elb" "lb" {
-	name = "%s"
-	availability_zones = ["us-west-2a"]
+  name               = "%s"
+  availability_zones = ["us-west-2a"]
 
-	listener {
-		instance_port = 25
-		instance_protocol = "tcp"
-		lb_port = 25
-		lb_protocol = "tcp"
-	}
+  listener {
+    instance_port     = 25
+    instance_protocol = "tcp"
+    lb_port           = 25
+    lb_protocol       = "tcp"
+  }
 
-	listener {
-		instance_port = 587
-		instance_protocol = "tcp"
-		lb_port = 587
-		lb_protocol = "tcp"
-	}
+  listener {
+    instance_port     = 587
+    instance_protocol = "tcp"
+    lb_port           = 587
+    lb_protocol       = "tcp"
+  }
 }
 
 resource "aws_proxy_protocol_policy" "smtp" {
-	load_balancer = "${aws_elb.lb.name}"
-	instance_ports = ["25", "587"]
-}`, rName)
+  load_balancer  = "${aws_elb.lb.name}"
+  instance_ports = ["25", "587"]
+}
+`, rName)
 }

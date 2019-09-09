@@ -44,25 +44,8 @@ func testSweepLaunchConfigurations(region string) error {
 		return nil
 	}
 
-	prefixes := []string{
-		"foobar",
-		"terraform-",
-		"tf-acc-",
-		"TestAcc",
-	}
 	for _, lc := range resp.LaunchConfigurations {
 		name := *lc.LaunchConfigurationName
-		skip := true
-		for _, prefix := range prefixes {
-			if strings.HasPrefix(name, prefix) {
-				skip = false
-			}
-		}
-
-		if skip {
-			log.Printf("[INFO] Skipping Launch Configuration: %s", name)
-			continue
-		}
 
 		log.Printf("[INFO] Deleting Launch Configuration: %s", name)
 		_, err := autoscalingconn.DeleteLaunchConfiguration(
@@ -80,10 +63,32 @@ func testSweepLaunchConfigurations(region string) error {
 	return nil
 }
 
+func TestAccAWSLaunchConfiguration_importBasic(t *testing.T) {
+	resourceName := "aws_launch_configuration.bar"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSLaunchConfigurationDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSLaunchConfigurationNoNameConfig(),
+			},
+
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"associate_public_ip_address"},
+			},
+		},
+	})
+}
+
 func TestAccAWSLaunchConfiguration_basic(t *testing.T) {
 	var conf autoscaling.LaunchConfiguration
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSLaunchConfigurationDestroy,
@@ -109,7 +114,7 @@ func TestAccAWSLaunchConfiguration_basic(t *testing.T) {
 func TestAccAWSLaunchConfiguration_withBlockDevices(t *testing.T) {
 	var conf autoscaling.LaunchConfiguration
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSLaunchConfigurationDestroy,
@@ -133,7 +138,7 @@ func TestAccAWSLaunchConfiguration_updateRootBlockDevice(t *testing.T) {
 	var conf autoscaling.LaunchConfiguration
 	rInt := acctest.RandInt()
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSLaunchConfigurationDestroy,
@@ -156,10 +161,30 @@ func TestAccAWSLaunchConfiguration_updateRootBlockDevice(t *testing.T) {
 	})
 }
 
+func TestAccAWSLaunchConfiguration_encryptedRootBlockDevice(t *testing.T) {
+	var conf autoscaling.LaunchConfiguration
+	rInt := acctest.RandInt()
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSLaunchConfigurationDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSLaunchConfigurationConfigWithEncryptedRootBlockDevice(rInt),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSLaunchConfigurationExists("aws_launch_configuration.bar", &conf),
+					resource.TestCheckResourceAttr("aws_launch_configuration.bar", "root_block_device.0.encrypted", "true"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccAWSLaunchConfiguration_withSpotPrice(t *testing.T) {
 	var conf autoscaling.LaunchConfiguration
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSLaunchConfigurationDestroy,
@@ -181,7 +206,7 @@ func TestAccAWSLaunchConfiguration_withVpcClassicLink(t *testing.T) {
 	var conf autoscaling.LaunchConfiguration
 	rInt := acctest.RandInt()
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSLaunchConfigurationDestroy,
@@ -207,7 +232,7 @@ func TestAccAWSLaunchConfiguration_withIAMProfile(t *testing.T) {
 	var conf autoscaling.LaunchConfiguration
 	rInt := acctest.RandInt()
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSLaunchConfigurationDestroy,
@@ -251,7 +276,7 @@ func testAccCheckAWSLaunchConfigurationWithEncryption(conf *autoscaling.LaunchCo
 func TestAccAWSLaunchConfiguration_withEncryption(t *testing.T) {
 	var conf autoscaling.LaunchConfiguration
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSLaunchConfigurationDestroy,
@@ -270,7 +295,7 @@ func TestAccAWSLaunchConfiguration_withEncryption(t *testing.T) {
 func TestAccAWSLaunchConfiguration_updateEbsBlockDevices(t *testing.T) {
 	var conf autoscaling.LaunchConfiguration
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSLaunchConfigurationDestroy,
@@ -297,7 +322,7 @@ func TestAccAWSLaunchConfiguration_ebs_noDevice(t *testing.T) {
 	var conf autoscaling.LaunchConfiguration
 	rInt := acctest.RandInt()
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSLaunchConfigurationDestroy,
@@ -317,7 +342,7 @@ func TestAccAWSLaunchConfiguration_ebs_noDevice(t *testing.T) {
 func TestAccAWSLaunchConfiguration_userData(t *testing.T) {
 	var conf autoscaling.LaunchConfiguration
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSLaunchConfigurationDestroy,
@@ -464,7 +489,7 @@ func testAccAWSLaunchConfigurationConfig_ami() string {
 	return fmt.Sprintf(`
 data "aws_ami" "ubuntu" {
   most_recent = true
-  owners = ["099720109477"] # Canonical
+  owners      = ["099720109477"] # Canonical
 
   filter {
     name   = "name"
@@ -489,6 +514,42 @@ resource "aws_launch_configuration" "bar" {
   }
 }
 `, rInt)
+}
+
+func testAccAWSLaunchConfigurationConfigWithEncryptedRootBlockDevice(rInt int) string {
+	return testAccAWSLaunchConfigurationConfig_ami() + fmt.Sprintf(`
+resource "aws_vpc" "foo" {
+  cidr_block = "10.1.0.0/16"
+
+  tags = {
+    Name = "terraform-testacc-instance-%d"
+  }
+}
+
+resource "aws_subnet" "foo" {
+  cidr_block = "10.1.1.0/24"
+  vpc_id = "${aws_vpc.foo.id}"
+  availability_zone = "us-west-2a"
+
+  tags = {
+    Name = "terraform-testacc-instance-%d"
+  }
+}
+
+resource "aws_launch_configuration" "bar" {
+  name_prefix = "tf-acc-test-%d"
+  image_id = "${data.aws_ami.ubuntu.id}"
+  instance_type = "t3.nano"
+  user_data = "foobar-user-data"
+  associate_public_ip_address = true
+
+  root_block_device {
+    encrypted   = true
+    volume_type = "gp2"
+    volume_size = 11
+  }
+}
+`, rInt, rInt, rInt)
 }
 
 func testAccAWSLaunchConfigurationConfigWithRootBlockDeviceUpdated(rInt int) string {
@@ -618,7 +679,7 @@ func testAccAWSLaunchConfigurationConfig_withVpcClassicLink(rInt int) string {
 resource "aws_vpc" "foo" {
     cidr_block = "10.0.0.0/16"
     enable_classiclink = true
-    tags {
+  tags = {
         Name = "terraform-testacc-launch-configuration-with-vpc-classic-link"
     }
 }

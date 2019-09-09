@@ -3,12 +3,11 @@ package aws
 import (
 	"fmt"
 	"log"
-	"time"
+	"strings"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/apigateway"
-	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/helper/schema"
 )
 
@@ -18,6 +17,20 @@ func resourceAwsApiGatewayGatewayResponse() *schema.Resource {
 		Read:   resourceAwsApiGatewayGatewayResponseRead,
 		Update: resourceAwsApiGatewayGatewayResponsePut,
 		Delete: resourceAwsApiGatewayGatewayResponseDelete,
+		Importer: &schema.ResourceImporter{
+			State: func(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
+				idParts := strings.Split(d.Id(), "/")
+				if len(idParts) != 2 || idParts[0] == "" || idParts[1] == "" {
+					return nil, fmt.Errorf("Unexpected format of ID (%q), expected REST-API-ID/RESPONSE-TYPE", d.Id())
+				}
+				restApiID := idParts[0]
+				responseType := idParts[1]
+				d.Set("response_type", responseType)
+				d.Set("rest_api_id", restApiID)
+				d.SetId(fmt.Sprintf("aggr-%s-%s", restApiID, responseType))
+				return []*schema.ResourceData{d}, nil
+			},
+		},
 
 		Schema: map[string]*schema.Schema{
 			"rest_api_id": {
@@ -124,22 +137,17 @@ func resourceAwsApiGatewayGatewayResponseDelete(d *schema.ResourceData, meta int
 	conn := meta.(*AWSClient).apigateway
 	log.Printf("[DEBUG] Deleting API Gateway Gateway Response: %s", d.Id())
 
-	return resource.Retry(1*time.Minute, func() *resource.RetryError {
-		_, err := conn.DeleteGatewayResponse(&apigateway.DeleteGatewayResponseInput{
-			RestApiId:    aws.String(d.Get("rest_api_id").(string)),
-			ResponseType: aws.String(d.Get("response_type").(string)),
-		})
-
-		if err == nil {
-			return nil
-		}
-
-		apigatewayErr, ok := err.(awserr.Error)
-
-		if ok && apigatewayErr.Code() == "NotFoundException" {
-			return nil
-		}
-
-		return resource.NonRetryableError(err)
+	_, err := conn.DeleteGatewayResponse(&apigateway.DeleteGatewayResponseInput{
+		RestApiId:    aws.String(d.Get("rest_api_id").(string)),
+		ResponseType: aws.String(d.Get("response_type").(string)),
 	})
+
+	if isAWSErr(err, "NotFoundException", "") {
+		return nil
+	}
+
+	if err != nil {
+		return fmt.Errorf("Error deleting API Gateway gateway response: %s", err)
+	}
+	return nil
 }

@@ -3,6 +3,7 @@ package aws
 import (
 	"fmt"
 	"os"
+	"regexp"
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -13,6 +14,32 @@ import (
 	"github.com/hashicorp/terraform/terraform"
 )
 
+func TestAccAWSDBSecurityGroup_importBasic(t *testing.T) {
+	oldvar := os.Getenv("AWS_DEFAULT_REGION")
+	os.Setenv("AWS_DEFAULT_REGION", "us-east-1")
+	defer os.Setenv("AWS_DEFAULT_REGION", oldvar)
+
+	rName := fmt.Sprintf("tf-acc-%s", acctest.RandString(5))
+	resourceName := "aws_db_security_group.bar"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSDBSecurityGroupDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSDBSecurityGroupConfig(rName),
+			},
+
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func TestAccAWSDBSecurityGroup_basic(t *testing.T) {
 	var v rds.DBSecurityGroup
 
@@ -22,16 +49,17 @@ func TestAccAWSDBSecurityGroup_basic(t *testing.T) {
 
 	rName := fmt.Sprintf("tf-acc-%s", acctest.RandString(5))
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSDBSecurityGroupDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccAWSDBSecurityGroupConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSDBSecurityGroupExists("aws_db_security_group.bar", &v),
 					testAccCheckAWSDBSecurityGroupAttributes(&v),
+					resource.TestMatchResourceAttr("aws_db_security_group.bar", "arn", regexp.MustCompile(`^arn:[^:]+:rds:[^:]+:\d{12}:secgrp:.+`)),
 					resource.TestCheckResourceAttr(
 						"aws_db_security_group.bar", "name", rName),
 					resource.TestCheckResourceAttr(
@@ -142,15 +170,15 @@ func testAccCheckAWSDBSecurityGroupExists(n string, v *rds.DBSecurityGroup) reso
 func testAccAWSDBSecurityGroupConfig(name string) string {
 	return fmt.Sprintf(`
 resource "aws_db_security_group" "bar" {
-    name = "%s"
+  name = "%s"
 
-    ingress {
-        cidr = "10.0.0.1/24"
-    }
+  ingress {
+    cidr = "10.0.0.1/24"
+  }
 
-    tags {
-		foo = "bar"
-    }
+  tags = {
+    foo = "bar"
+  }
 }
 `, name)
 }

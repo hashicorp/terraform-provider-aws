@@ -87,6 +87,12 @@ func dataSourceAwsDbInstance() *schema.Resource {
 				Computed: true,
 			},
 
+			"enabled_cloudwatch_logs_exports": {
+				Type:     schema.TypeList,
+				Computed: true,
+				Elem:     &schema.Schema{Type: schema.TypeString},
+			},
+
 			"endpoint": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -168,6 +174,11 @@ func dataSourceAwsDbInstance() *schema.Resource {
 				Computed: true,
 			},
 
+			"resource_id": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+
 			"storage_encrypted": {
 				Type:     schema.TypeBool,
 				Computed: true,
@@ -235,13 +246,14 @@ func dataSourceAwsDbInstanceRead(d *schema.ResourceData, meta interface{}) error
 	d.Set("db_instance_arn", dbInstance.DBInstanceArn)
 	d.Set("db_instance_class", dbInstance.DBInstanceClass)
 	d.Set("db_name", dbInstance.DBName)
+	d.Set("resource_id", dbInstance.DbiResourceId)
 
 	var parameterGroups []string
 	for _, v := range dbInstance.DBParameterGroups {
 		parameterGroups = append(parameterGroups, *v.DBParameterGroupName)
 	}
 	if err := d.Set("db_parameter_groups", parameterGroups); err != nil {
-		return fmt.Errorf("[DEBUG] Error setting db_parameter_groups attribute: %#v, error: %#v", parameterGroups, err)
+		return fmt.Errorf("Error setting db_parameter_groups attribute: %#v, error: %#v", parameterGroups, err)
 	}
 
 	var dbSecurityGroups []string
@@ -249,7 +261,7 @@ func dataSourceAwsDbInstanceRead(d *schema.ResourceData, meta interface{}) error
 		dbSecurityGroups = append(dbSecurityGroups, *v.DBSecurityGroupName)
 	}
 	if err := d.Set("db_security_groups", dbSecurityGroups); err != nil {
-		return fmt.Errorf("[DEBUG] Error setting db_security_groups attribute: %#v, error: %#v", dbSecurityGroups, err)
+		return fmt.Errorf("Error setting db_security_groups attribute: %#v, error: %#v", dbSecurityGroups, err)
 	}
 
 	if dbInstance.DBSubnetGroup != nil {
@@ -272,12 +284,16 @@ func dataSourceAwsDbInstanceRead(d *schema.ResourceData, meta interface{}) error
 	d.Set("hosted_zone_id", dbInstance.Endpoint.HostedZoneId)
 	d.Set("endpoint", fmt.Sprintf("%s:%d", *dbInstance.Endpoint.Address, *dbInstance.Endpoint.Port))
 
+	if err := d.Set("enabled_cloudwatch_logs_exports", aws.StringValueSlice(dbInstance.EnabledCloudwatchLogsExports)); err != nil {
+		return fmt.Errorf("error setting enabled_cloudwatch_logs_exports: %#v", err)
+	}
+
 	var optionGroups []string
 	for _, v := range dbInstance.OptionGroupMemberships {
 		optionGroups = append(optionGroups, *v.OptionGroupName)
 	}
 	if err := d.Set("option_group_memberships", optionGroups); err != nil {
-		return fmt.Errorf("[DEBUG] Error setting option_group_memberships attribute: %#v, error: %#v", optionGroups, err)
+		return fmt.Errorf("Error setting option_group_memberships attribute: %#v, error: %#v", optionGroups, err)
 	}
 
 	d.Set("preferred_backup_window", dbInstance.PreferredBackupWindow)
@@ -294,7 +310,7 @@ func dataSourceAwsDbInstanceRead(d *schema.ResourceData, meta interface{}) error
 		vpcSecurityGroups = append(vpcSecurityGroups, *v.VpcSecurityGroupId)
 	}
 	if err := d.Set("vpc_security_groups", vpcSecurityGroups); err != nil {
-		return fmt.Errorf("[DEBUG] Error setting vpc_security_groups attribute: %#v, error: %#v", vpcSecurityGroups, err)
+		return fmt.Errorf("Error setting vpc_security_groups attribute: %#v, error: %#v", vpcSecurityGroups, err)
 	}
 
 	return nil

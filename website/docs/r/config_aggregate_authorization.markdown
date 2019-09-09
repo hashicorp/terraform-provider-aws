@@ -6,7 +6,7 @@ description: |-
   Manages an AWS Config Aggregate Authorization.
 ---
 
-# aws_config_aggregate_authorization
+# Resource: aws_config_aggregate_authorization
 
 Manages an AWS Config Aggregate Authorization
 
@@ -25,6 +25,7 @@ The following arguments are supported:
 
 * `account_id` - (Required) Account ID
 * `region` - (Required) Region
+* `tags` - (Optional) A mapping of tags to assign to the resource.
 
 ## Attributes Reference
 

@@ -32,15 +32,25 @@ func resourceAwsRoute53HealthCheck() *schema.Resource {
 				StateFunc: func(val interface{}) string {
 					return strings.ToUpper(val.(string))
 				},
+				ValidateFunc: validation.StringInSlice([]string{
+					route53.HealthCheckTypeCalculated,
+					route53.HealthCheckTypeCloudwatchMetric,
+					route53.HealthCheckTypeHttp,
+					route53.HealthCheckTypeHttpStrMatch,
+					route53.HealthCheckTypeHttps,
+					route53.HealthCheckTypeHttpsStrMatch,
+					route53.HealthCheckTypeTcp,
+				}, true),
 			},
 			"failure_threshold": {
 				Type:     schema.TypeInt,
 				Optional: true,
 			},
 			"request_interval": {
-				Type:     schema.TypeInt,
-				Optional: true,
-				ForceNew: true, // todo this should be updateable but the awslabs route53 service doesnt have the ability
+				Type:         schema.TypeInt,
+				Optional:     true,
+				ForceNew:     true, // todo this should be updateable but the awslabs route53 service doesnt have the ability
+				ValidateFunc: validation.IntInSlice([]int{10, 30}),
 			},
 			"ip_address": {
 				Type:     schema.TypeString,
@@ -333,7 +343,11 @@ func resourceAwsRoute53HealthCheckRead(d *schema.ResourceData, meta interface{})
 	d.Set("resource_path", updated.ResourcePath)
 	d.Set("measure_latency", updated.MeasureLatency)
 	d.Set("invert_healthcheck", updated.Inverted)
-	d.Set("child_healthchecks", updated.ChildHealthChecks)
+
+	if err := d.Set("child_healthchecks", flattenStringList(updated.ChildHealthChecks)); err != nil {
+		return fmt.Errorf("error setting child_healthchecks: %s", err)
+	}
+
 	d.Set("child_health_threshold", updated.HealthThreshold)
 	d.Set("insufficient_data_health_status", updated.InsufficientDataHealthStatus)
 	d.Set("enable_sni", updated.EnableSNI)
@@ -371,20 +385,7 @@ func resourceAwsRoute53HealthCheckRead(d *schema.ResourceData, meta interface{})
 func resourceAwsRoute53HealthCheckDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).r53conn
 
-	log.Printf("[DEBUG] Deleteing Route53 health check: %s", d.Id())
+	log.Printf("[DEBUG] Deleting Route53 health check: %s", d.Id())
 	_, err := conn.DeleteHealthCheck(&route53.DeleteHealthCheckInput{HealthCheckId: aws.String(d.Id())})
-	if err != nil {
-		return err
-	}
-
-	return nil
-}
-
-func createChildHealthCheckList(s *schema.Set) (nl []*string) {
-	l := s.List()
-	for _, n := range l {
-		nl = append(nl, aws.String(n.(string)))
-	}
-
-	return nl
+	return err
 }

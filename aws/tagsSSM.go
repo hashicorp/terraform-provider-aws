@@ -1,6 +1,7 @@
 package aws
 
 import (
+	"fmt"
 	"log"
 	"regexp"
 
@@ -21,7 +22,7 @@ func setTagsSSM(conn *ssm.SSM, d *schema.ResourceData, id, resourceType string) 
 		// Set tags
 		if len(remove) > 0 {
 			log.Printf("[DEBUG] Removing tags: %#v", remove)
-			k := make([]*string, len(remove), len(remove))
+			k := make([]*string, len(remove))
 			for i, t := range remove {
 				k[i] = t.Key
 			}
@@ -108,10 +109,29 @@ func tagIgnoredSSM(t *ssm.Tag) bool {
 	filter := []string{"^aws:"}
 	for _, v := range filter {
 		log.Printf("[DEBUG] Matching %v with %v\n", v, *t.Key)
-		if r, _ := regexp.MatchString(v, *t.Key); r == true {
+		r, _ := regexp.MatchString(v, *t.Key)
+		if r {
 			log.Printf("[DEBUG] Found AWS specific tag %s (val: %s), ignoring.\n", *t.Key, *t.Value)
 			return true
 		}
 	}
 	return false
+}
+
+func saveTagsSSM(conn *ssm.SSM, d *schema.ResourceData, id, resourceType string) error {
+	resp, err := conn.ListTagsForResource(&ssm.ListTagsForResourceInput{
+		ResourceId:   aws.String(id),
+		ResourceType: aws.String(resourceType),
+	})
+
+	if err != nil {
+		return fmt.Errorf("Error retrieving tags for SSM resource (%s): %s", id, err)
+	}
+
+	var dt []*ssm.Tag
+	if len(resp.TagList) > 0 {
+		dt = resp.TagList
+	}
+
+	return d.Set("tags", tagsToMapSSM(dt))
 }

@@ -17,7 +17,7 @@ import (
 
 func TestAccAWSOpsworksRailsAppLayer(t *testing.T) {
 	stackName := fmt.Sprintf("tf-%d", acctest.RandInt())
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsOpsworksRailsAppLayerDestroy,
@@ -77,13 +77,10 @@ func testAccCheckAwsOpsworksRailsAppLayerDestroy(s *terraform.State) error {
 
 func testAccAwsOpsworksRailsAppLayerConfigVpcCreate(name string) string {
 	return fmt.Sprintf(`
-provider "aws" {
-	region = "us-west-2"
-}
-
 resource "aws_opsworks_rails_app_layer" "tf-acc" {
   stack_id = "${aws_opsworks_stack.tf-acc.id}"
-  name = "%s"
+  name     = "%s"
+
   custom_security_group_ids = [
     "${aws_security_group.tf-ops-acc-layer1.id}",
     "${aws_security_group.tf-ops-acc-layer2.id}",
@@ -91,6 +88,7 @@ resource "aws_opsworks_rails_app_layer" "tf-acc" {
 }
 
 %s
+
 
 %s
 
@@ -99,21 +97,20 @@ resource "aws_opsworks_rails_app_layer" "tf-acc" {
 
 func testAccAwsOpsworksRailsAppLayerNoManageBundlerConfigVpcCreate(name string) string {
 	return fmt.Sprintf(`
-provider "aws" {
-	region = "us-west-2"
-}
-
 resource "aws_opsworks_rails_app_layer" "tf-acc" {
   stack_id = "${aws_opsworks_stack.tf-acc.id}"
-  name = "%s"
+  name     = "%s"
+
   custom_security_group_ids = [
     "${aws_security_group.tf-ops-acc-layer1.id}",
     "${aws_security_group.tf-ops-acc-layer2.id}",
   ]
+
   manage_bundler = false
 }
 
 %s
+
 
 %s
 

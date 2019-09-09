@@ -17,8 +17,8 @@ func TestAccAWSLightsailDomain_basic(t *testing.T) {
 	var domain lightsail.Domain
 	lightsailDomainName := fmt.Sprintf("tf-test-lightsail-%s.com", acctest.RandString(5))
 
-	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSLightsail(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSLightsailDomainDestroy,
 		Steps: []resource.TestStep{
@@ -50,8 +50,8 @@ func TestAccAWSLightsailDomain_disappears(t *testing.T) {
 		return nil
 	}
 
-	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSLightsail(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSLightsailDomainDestroy,
 		Steps: []resource.TestStep{
@@ -132,6 +132,7 @@ func testAccAWSLightsailDomainConfig_basic(lightsailDomainName string) string {
 provider "aws" {
   region = "us-east-1"
 }
+
 resource "aws_lightsail_domain" "domain_test" {
   domain_name = "%s"
 }

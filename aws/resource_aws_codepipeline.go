@@ -161,23 +161,16 @@ func resourceAwsCodePipeline() *schema.Resource {
 					},
 				},
 			},
+			"tags": tagsSchema(),
 		},
 	}
-}
-
-func validateAwsCodePipelineStageActionConfiguration(v interface{}, k string) (ws []string, errors []error) {
-	for k := range v.(map[string]interface{}) {
-		if k == "OAuthToken" {
-			errors = append(errors, fmt.Errorf("CodePipeline: OAuthToken should be set as environment variable 'GITHUB_TOKEN'"))
-		}
-	}
-	return
 }
 
 func resourceAwsCodePipelineCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).codepipelineconn
 	params := &codepipeline.CreatePipelineInput{
 		Pipeline: expandAwsCodePipeline(d),
+		Tags:     tagsFromMapCodePipeline(d.Get("tags").(map[string]interface{})),
 	}
 
 	var resp *codepipeline.CreatePipelineOutput
@@ -192,11 +185,14 @@ func resourceAwsCodePipelineCreate(d *schema.ResourceData, meta interface{}) err
 
 		return resource.NonRetryableError(err)
 	})
+	if isResourceTimeoutError(err) {
+		resp, err = conn.CreatePipeline(params)
+	}
 	if err != nil {
-		return fmt.Errorf("[ERROR] Error creating CodePipeline: %s", err)
+		return fmt.Errorf("Error creating CodePipeline: %s", err)
 	}
 	if resp.Pipeline == nil {
-		return fmt.Errorf("[ERROR] Error creating CodePipeline: invalid response from AWS")
+		return fmt.Errorf("Error creating CodePipeline: invalid response from AWS")
 	}
 
 	d.SetId(*resp.Pipeline.Name)
@@ -440,7 +436,7 @@ func resourceAwsCodePipelineRead(d *schema.ResourceData, meta interface{}) error
 			d.SetId("")
 			return nil
 		}
-		return fmt.Errorf("[ERROR] Error retreiving Pipeline: %q", err)
+		return fmt.Errorf("Error retreiving Pipeline: %q", err)
 	}
 	metadata := resp.Metadata
 	pipeline := resp.Pipeline
@@ -456,6 +452,11 @@ func resourceAwsCodePipelineRead(d *schema.ResourceData, meta interface{}) error
 	d.Set("arn", metadata.PipelineArn)
 	d.Set("name", pipeline.Name)
 	d.Set("role_arn", pipeline.RoleArn)
+
+	if err := saveTagsCodePipeline(conn, d); err != nil {
+		return err
+	}
+
 	return nil
 }
 
@@ -474,6 +475,10 @@ func resourceAwsCodePipelineUpdate(d *schema.ResourceData, meta interface{}) err
 			d.Id(), err)
 	}
 
+	if err := setTagsCodePipeline(conn, d); err != nil {
+		return fmt.Errorf("Error updating CodePipeline tags: %s", d.Id())
+	}
+
 	return resourceAwsCodePipelineRead(d, meta)
 }
 
@@ -484,9 +489,5 @@ func resourceAwsCodePipelineDelete(d *schema.ResourceData, meta interface{}) err
 		Name: aws.String(d.Id()),
 	})
 
-	if err != nil {
-		return err
-	}
-
-	return nil
+	return err
 }

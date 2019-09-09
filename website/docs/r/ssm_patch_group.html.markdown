@@ -6,7 +6,7 @@ description: |-
   Provides an SSM Patch Group resource
 ---
 
-# aws_ssm_patch_group
+# Resource: aws_ssm_patch_group
 
 Provides an SSM Patch Group resource
 
@@ -14,7 +14,7 @@ Provides an SSM Patch Group resource
 
 ```hcl
 resource "aws_ssm_patch_baseline" "production" {
-  name  = "patch-baseline"
+  name             = "patch-baseline"
   approved_patches = ["KB123456"]
 }
 

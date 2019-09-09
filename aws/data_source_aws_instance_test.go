@@ -1,16 +1,16 @@
 package aws
 
 import (
-	"testing"
-
 	"fmt"
+	"regexp"
+	"testing"
 
 	"github.com/hashicorp/terraform/helper/acctest"
 	"github.com/hashicorp/terraform/helper/resource"
 )
 
 func TestAccAWSInstanceDataSource_basic(t *testing.T) {
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:  func() { testAccPreCheck(t) },
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
@@ -20,6 +20,8 @@ func TestAccAWSInstanceDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("data.aws_instance.web-instance", "ami", "ami-4fccb37f"),
 					resource.TestCheckResourceAttr("data.aws_instance.web-instance", "tags.%", "1"),
 					resource.TestCheckResourceAttr("data.aws_instance.web-instance", "instance_type", "m1.small"),
+					resource.TestMatchResourceAttr("data.aws_instance.web-instance", "arn", regexp.MustCompile(`^arn:[^:]+:ec2:[^:]+:\d{12}:instance/i-.+`)),
+					resource.TestCheckNoResourceAttr("data.aws_instance.web-instance", "user_data_base64"),
 				),
 			},
 		},
@@ -28,7 +30,7 @@ func TestAccAWSInstanceDataSource_basic(t *testing.T) {
 
 func TestAccAWSInstanceDataSource_tags(t *testing.T) {
 	rInt := acctest.RandInt()
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:  func() { testAccPreCheck(t) },
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
@@ -45,7 +47,7 @@ func TestAccAWSInstanceDataSource_tags(t *testing.T) {
 }
 
 func TestAccAWSInstanceDataSource_AzUserData(t *testing.T) {
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:  func() { testAccPreCheck(t) },
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
@@ -64,7 +66,7 @@ func TestAccAWSInstanceDataSource_AzUserData(t *testing.T) {
 }
 
 func TestAccAWSInstanceDataSource_gp2IopsDevice(t *testing.T) {
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:  func() { testAccPreCheck(t) },
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
@@ -84,7 +86,7 @@ func TestAccAWSInstanceDataSource_gp2IopsDevice(t *testing.T) {
 }
 
 func TestAccAWSInstanceDataSource_blockDevices(t *testing.T) {
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:  func() { testAccPreCheck(t) },
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
@@ -104,8 +106,34 @@ func TestAccAWSInstanceDataSource_blockDevices(t *testing.T) {
 	})
 }
 
+// Test to verify that ebs_block_device kms_key_id does not elicit a panic
+func TestAccAWSInstanceDataSource_EbsBlockDevice_KmsKeyId(t *testing.T) {
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:  func() { testAccPreCheck(t) },
+		Providers: testAccProviders,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccInstanceDataSourceConfig_EbsBlockDevice_KmsKeyId,
+			},
+		},
+	})
+}
+
+// Test to verify that root_block_device kms_key_id does not elicit a panic
+func TestAccAWSInstanceDataSource_RootBlockDevice_KmsKeyId(t *testing.T) {
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:  func() { testAccPreCheck(t) },
+		Providers: testAccProviders,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccInstanceDataSourceConfig_RootBlockDevice_KmsKeyId,
+			},
+		},
+	})
+}
+
 func TestAccAWSInstanceDataSource_rootInstanceStore(t *testing.T) {
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:  func() { testAccPreCheck(t) },
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
@@ -124,7 +152,7 @@ func TestAccAWSInstanceDataSource_rootInstanceStore(t *testing.T) {
 }
 
 func TestAccAWSInstanceDataSource_privateIP(t *testing.T) {
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:  func() { testAccPreCheck(t) },
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
@@ -142,7 +170,7 @@ func TestAccAWSInstanceDataSource_privateIP(t *testing.T) {
 
 func TestAccAWSInstanceDataSource_keyPair(t *testing.T) {
 	rName := fmt.Sprintf("tf-test-key-%d", acctest.RandInt())
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:  func() { testAccPreCheck(t) },
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
@@ -160,7 +188,7 @@ func TestAccAWSInstanceDataSource_keyPair(t *testing.T) {
 }
 
 func TestAccAWSInstanceDataSource_VPC(t *testing.T) {
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:  func() { testAccPreCheck(t) },
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
@@ -181,7 +209,7 @@ func TestAccAWSInstanceDataSource_VPC(t *testing.T) {
 func TestAccAWSInstanceDataSource_PlacementGroup(t *testing.T) {
 	rStr := acctest.RandString(5)
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:  func() { testAccPreCheck(t) },
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
@@ -197,7 +225,7 @@ func TestAccAWSInstanceDataSource_PlacementGroup(t *testing.T) {
 
 func TestAccAWSInstanceDataSource_SecurityGroups(t *testing.T) {
 	rInt := acctest.RandInt()
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:  func() { testAccPreCheck(t) },
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
@@ -216,7 +244,7 @@ func TestAccAWSInstanceDataSource_SecurityGroups(t *testing.T) {
 }
 
 func TestAccAWSInstanceDataSource_VPCSecurityGroups(t *testing.T) {
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:  func() { testAccPreCheck(t) },
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
@@ -236,7 +264,7 @@ func TestAccAWSInstanceDataSource_VPCSecurityGroups(t *testing.T) {
 func TestAccAWSInstanceDataSource_getPasswordData_trueToFalse(t *testing.T) {
 	rInt := acctest.RandInt()
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:  func() { testAccPreCheck(t) },
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
@@ -261,7 +289,7 @@ func TestAccAWSInstanceDataSource_getPasswordData_trueToFalse(t *testing.T) {
 func TestAccAWSInstanceDataSource_getPasswordData_falseToTrue(t *testing.T) {
 	rInt := acctest.RandInt()
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:  func() { testAccPreCheck(t) },
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
@@ -283,8 +311,72 @@ func TestAccAWSInstanceDataSource_getPasswordData_falseToTrue(t *testing.T) {
 	})
 }
 
+func TestAccAWSInstanceDataSource_GetUserData(t *testing.T) {
+	dataSourceName := "data.aws_instance.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:  func() { testAccPreCheck(t) },
+		Providers: testAccProviders,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccInstanceDataSourceConfigGetUserData(true),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(dataSourceName, "get_user_data", "true"),
+					resource.TestCheckResourceAttr(dataSourceName, "user_data_base64", "IyEvYmluL2Jhc2gKCmVjaG8gImhlbGxvIHdvcmxkIgo="),
+				),
+			},
+			{
+				Config: testAccInstanceDataSourceConfigGetUserData(false),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(dataSourceName, "get_user_data", "false"),
+					resource.TestCheckNoResourceAttr(dataSourceName, "user_data_base64"),
+				),
+			},
+			{
+				Config: testAccInstanceDataSourceConfigGetUserData(true),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(dataSourceName, "get_user_data", "true"),
+					resource.TestCheckResourceAttr(dataSourceName, "user_data_base64", "IyEvYmluL2Jhc2gKCmVjaG8gImhlbGxvIHdvcmxkIgo="),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAWSInstanceDataSource_GetUserData_NoUserData(t *testing.T) {
+	dataSourceName := "data.aws_instance.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:  func() { testAccPreCheck(t) },
+		Providers: testAccProviders,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccInstanceDataSourceConfigGetUserDataNoUserData(true),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(dataSourceName, "get_user_data", "true"),
+					resource.TestCheckNoResourceAttr(dataSourceName, "user_data_base64"),
+				),
+			},
+			{
+				Config: testAccInstanceDataSourceConfigGetUserDataNoUserData(false),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(dataSourceName, "get_user_data", "false"),
+					resource.TestCheckNoResourceAttr(dataSourceName, "user_data_base64"),
+				),
+			},
+			{
+				Config: testAccInstanceDataSourceConfigGetUserDataNoUserData(true),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(dataSourceName, "get_user_data", "true"),
+					resource.TestCheckNoResourceAttr(dataSourceName, "user_data_base64"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccAWSInstanceDataSource_creditSpecification(t *testing.T) {
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:  func() { testAccPreCheck(t) },
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
@@ -307,7 +399,7 @@ resource "aws_instance" "web" {
   # us-west-2
   ami = "ami-4fccb37f"
   instance_type = "m1.small"
-  tags {
+  tags = {
     Name = "HelloWorld"
   }
 }
@@ -325,17 +417,18 @@ func testAccInstanceDataSourceConfig_Tags(rInt int) string {
 	return fmt.Sprintf(`
 resource "aws_instance" "web" {
   # us-west-2
-  ami = "ami-4fccb37f"
+  ami           = "ami-4fccb37f"
   instance_type = "m1.small"
-  tags {
-    Name = "HelloWorld"
+
+  tags = {
+    Name     = "HelloWorld"
     TestSeed = "%d"
   }
 }
 
 data "aws_instance" "web-instance" {
-  instance_tags {
-    Name = "${aws_instance.web.tags["Name"]}"
+  instance_tags = {
+    Name     = "${aws_instance.web.tags["Name"]}"
     TestSeed = "%d"
   }
 }
@@ -351,7 +444,7 @@ resource "aws_instance" "foo" {
 
   instance_type = "m1.small"
   user_data = "foo:-with-character's"
-  tags {
+  tags = {
     TFAccTest = "YesThisIsATest"
   }
 }
@@ -418,6 +511,56 @@ data "aws_instance" "foo" {
 }
 `
 
+const testAccInstanceDataSourceConfig_EbsBlockDevice_KmsKeyId = `
+resource "aws_kms_key" "foo" {
+  deletion_window_in_days = 7
+}
+
+resource "aws_instance" "foo" {
+  # us-west-2
+  ami = "ami-55a7ea65"
+  instance_type = "m3.medium"
+
+  root_block_device {
+    volume_type = "gp2"
+    volume_size = 11
+  }
+  ebs_block_device {
+    device_name = "/dev/sdb"
+    encrypted   = true
+    kms_key_id = "${aws_kms_key.foo.arn}"
+    volume_size = 9
+  }
+}
+
+data "aws_instance" "foo" {
+  instance_id = "${aws_instance.foo.id}"
+}
+`
+
+const testAccInstanceDataSourceConfig_RootBlockDevice_KmsKeyId = `
+resource "aws_kms_key" "foo" {
+  deletion_window_in_days = 7
+}
+
+resource "aws_instance" "foo" {
+  # us-west-2
+  ami = "ami-55a7ea65"
+  instance_type = "m3.medium"
+
+  root_block_device {
+    encrypted   = true
+    kms_key_id = "${aws_kms_key.foo.arn}"
+    volume_type = "gp2"
+    volume_size = 11
+  }
+}
+
+data "aws_instance" "foo" {
+  instance_id = "${aws_instance.foo.id}"
+}
+`
+
 const testAccInstanceDataSourceConfig_rootInstanceStore = `
 resource "aws_instance" "foo" {
   ami = "ami-44c36524"
@@ -431,7 +574,7 @@ data "aws_instance" "foo" {
 const testAccInstanceDataSourceConfig_privateIP = `
 resource "aws_vpc" "foo" {
   cidr_block = "10.1.0.0/16"
-  tags {
+  tags = {
     Name = "terraform-testacc-instance-ds-private-ip"
   }
 }
@@ -439,7 +582,7 @@ resource "aws_vpc" "foo" {
 resource "aws_subnet" "foo" {
   cidr_block = "10.1.1.0/24"
   vpc_id = "${aws_vpc.foo.id}"
-  tags {
+  tags = {
     Name = "tf-acc-instance-ds-private-ip"
   }
 }
@@ -463,35 +606,38 @@ provider "aws" {
 }
 
 resource "aws_key_pair" "debugging" {
-  key_name = "%s"
+  key_name   = "%s"
   public_key = "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQD3F6tyPEFEzV0LX3X8BsXdMsQz1x2cEikKDEY0aIj41qgxMCP/iteneqXSIFZBp5vizPvaoIR3Um9xK7PGoW8giupGn+EPuxIA4cDM4vzOqOkiMPhz5XK0whEjkVzTo4+S0puvDZuwIsdiW9mxhJc7tgBNL0cYlWSYVkz4G/fslNfRPW5mYAM49f4fhtxPb5ok4Q2Lg9dPKVHO/Bgeu5woMc7RY0p1ej6D4CKFE6lymSDJpW0YHX/wqE9+cfEauh7xZcG0q9t2ta6F6fmX0agvpFyZo8aFbXeUBr7osSCJNgvavWbM/06niWrOvYX2xwWdhXmXSrbX8ZbabVohBK41 phodgson@thoughtworks.com"
 }
 
 resource "aws_instance" "foo" {
-  ami = "ami-408c7f28"
+  ami           = "ami-408c7f28"
   instance_type = "t1.micro"
-  key_name = "${aws_key_pair.debugging.key_name}"
-  tags {
+  key_name      = "${aws_key_pair.debugging.key_name}"
+
+  tags = {
     Name = "testAccInstanceDataSourceConfigKeyPair_TestAMI"
   }
 }
 
 data "aws_instance" "foo" {
   filter {
-    name = "tag:Name"
+    name   = "tag:Name"
     values = ["testAccInstanceDataSourceConfigKeyPair_TestAMI"]
   }
+
   filter {
-    name = "key-name"
+    name   = "key-name"
     values = ["${aws_instance.foo.key_name}"]
   }
-}`, rName)
+}
+`, rName)
 }
 
 const testAccInstanceDataSourceConfig_VPC = `
 resource "aws_vpc" "foo" {
   cidr_block = "10.1.0.0/16"
-  tags {
+  tags = {
     Name = "terraform-testacc-instance-data-source-vpc"
   }
 }
@@ -499,7 +645,7 @@ resource "aws_vpc" "foo" {
 resource "aws_subnet" "foo" {
   cidr_block = "10.1.1.0/24"
   vpc_id = "${aws_vpc.foo.id}"
-  tags {
+  tags = {
    Name = "tf-acc-instance-data-source-vpc"
   }
 }
@@ -524,32 +670,35 @@ func testAccInstanceDataSourceConfig_PlacementGroup(rStr string) string {
 	return fmt.Sprintf(`
 resource "aws_vpc" "foo" {
   cidr_block = "10.1.0.0/16"
-  tags {
+
+  tags = {
     Name = "terraform-testacc-instance-data-source-placement-group"
   }
 }
 
 resource "aws_subnet" "foo" {
   cidr_block = "10.1.1.0/24"
-  vpc_id = "${aws_vpc.foo.id}"
-  tags {
+  vpc_id     = "${aws_vpc.foo.id}"
+
+  tags = {
     Name = "tf-acc-instance-data-source-placement-group"
   }
 }
 
 resource "aws_placement_group" "foo" {
-  name = "testAccInstanceDataSourceConfig_PlacementGroup_%s"
+  name     = "testAccInstanceDataSourceConfig_PlacementGroup_%s"
   strategy = "cluster"
 }
 
 # Limitations: https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/placement-groups.html#concepts-placement-groups
 resource "aws_instance" "foo" {
   # us-west-2
-  ami = "ami-55a7ea65"
-  instance_type = "c3.large"
-  subnet_id = "${aws_subnet.foo.id}"
+  ami                         = "ami-55a7ea65"
+  instance_type               = "c3.large"
+  subnet_id                   = "${aws_subnet.foo.id}"
   associate_public_ip_address = true
-  placement_group = "${aws_placement_group.foo.name}"
+  placement_group             = "${aws_placement_group.foo.name}"
+
   # pre-encoded base64 data
   user_data = "3dc39dda39be1205215e776bad998da361a5955d"
 }
@@ -567,22 +716,22 @@ provider "aws" {
 }
 
 resource "aws_security_group" "tf_test_foo" {
-  name = "tf_test_foo-%d"
+  name        = "tf_test_foo-%d"
   description = "foo"
 
   ingress {
-    protocol = "icmp"
+    protocol  = "icmp"
     from_port = -1
-    to_port = -1
-    cidr_blocks = ["0.0.0.0/0"]
+    to_port   = -1
+    self      = true
   }
 }
 
 resource "aws_instance" "foo" {
-  ami = "ami-408c7f28"
-  instance_type = "m1.small"
+  ami             = "ami-408c7f28"
+  instance_type   = "m1.small"
   security_groups = ["${aws_security_group.tf_test_foo.name}"]
-  user_data = "foo:-with-character's"
+  user_data       = "foo:-with-character's"
 }
 
 data "aws_instance" "foo" {
@@ -595,14 +744,14 @@ const testAccInstanceDataSourceConfig_VPCSecurityGroups = `
 resource "aws_internet_gateway" "gw" {
   vpc_id = "${aws_vpc.foo.id}"
 
-  tags {
+  tags = {
     Name = "terraform-testacc-instance-data-source-vpc-sgs"
   }
 }
 
 resource "aws_vpc" "foo" {
   cidr_block = "10.1.0.0/16"
-  tags {
+  tags = {
     Name = "terraform-testacc-instance-data-source-vpc-sgs"
   }
 }
@@ -616,14 +765,14 @@ resource "aws_security_group" "tf_test_foo" {
     protocol = "icmp"
     from_port = -1
     to_port = -1
-    cidr_blocks = ["0.0.0.0/0"]
+    self = true
   }
 }
 
 resource "aws_subnet" "foo" {
   cidr_block = "10.1.1.0/24"
   vpc_id = "${aws_vpc.foo.id}"
-  tags {
+  tags = {
     Name = "tf-acc-instance-data-source-vpc-sgs"
   }
 }
@@ -643,38 +792,134 @@ data "aws_instance" "foo" {
 
 func testAccInstanceDataSourceConfig_getPasswordData(val bool, rInt int) string {
 	return fmt.Sprintf(`
-	# Find latest Microsoft Windows Server 2016 Core image (Amazon deletes old ones)
-	data "aws_ami" "win2016core" {
-		most_recent = true
+# Find latest Microsoft Windows Server 2016 Core image (Amazon deletes old ones)
+data "aws_ami" "win2016core" {
+  most_recent = true
+  owners      = ["amazon"]
 
-		filter {
-			name = "owner-alias"
-			values = ["amazon"]
-		}
+  filter {
+    name   = "name"
+    values = ["Windows_Server-2016-English-Core-Base-*"]
+  }
+}
 
-		filter {
-			name = "name"
-			values = ["Windows_Server-2016-English-Core-Base-*"]
-		}
-	}
+resource "aws_key_pair" "foo" {
+  key_name   = "tf-acctest-%d"
+  public_key = "ssh-rsa AAAAB3NzaC1yc2EAAAABJQAAAQEAq6U3HQYC4g8WzU147gZZ7CKQH8TgYn3chZGRPxaGmHW1RUwsyEs0nmombmIhwxudhJ4ehjqXsDLoQpd6+c7BuLgTMvbv8LgE9LX53vnljFe1dsObsr/fYLvpU9LTlo8HgHAqO5ibNdrAUvV31ronzCZhms/Gyfdaue88Fd0/YnsZVGeOZPayRkdOHSpqme2CBrpa8myBeL1CWl0LkDG4+YCURjbaelfyZlIApLYKy3FcCan9XQFKaL32MJZwCgzfOvWIMtYcU8QtXMgnA3/I3gXk8YDUJv5P4lj0s/PJXuTM8DygVAUtebNwPuinS7wwonm5FXcWMuVGsVpG5K7FGQ== tf-acc-winpasswordtest"
+}
 
-	resource "aws_key_pair" "foo" {
-		key_name = "tf-acctest-%d"
-		public_key = "ssh-rsa AAAAB3NzaC1yc2EAAAABJQAAAQEAq6U3HQYC4g8WzU147gZZ7CKQH8TgYn3chZGRPxaGmHW1RUwsyEs0nmombmIhwxudhJ4ehjqXsDLoQpd6+c7BuLgTMvbv8LgE9LX53vnljFe1dsObsr/fYLvpU9LTlo8HgHAqO5ibNdrAUvV31ronzCZhms/Gyfdaue88Fd0/YnsZVGeOZPayRkdOHSpqme2CBrpa8myBeL1CWl0LkDG4+YCURjbaelfyZlIApLYKy3FcCan9XQFKaL32MJZwCgzfOvWIMtYcU8QtXMgnA3/I3gXk8YDUJv5P4lj0s/PJXuTM8DygVAUtebNwPuinS7wwonm5FXcWMuVGsVpG5K7FGQ== tf-acc-winpasswordtest"
-	}
+resource "aws_instance" "foo" {
+  ami           = "${data.aws_ami.win2016core.id}"
+  instance_type = "t2.medium"
+  key_name      = "${aws_key_pair.foo.key_name}"
+}
 
-	resource "aws_instance" "foo" {
-		ami = "${data.aws_ami.win2016core.id}"
-		instance_type = "t2.medium"
-		key_name = "${aws_key_pair.foo.key_name}"
-	}
+data "aws_instance" "foo" {
+  instance_id = "${aws_instance.foo.id}"
 
-	data "aws_instance" "foo" {
-		instance_id = "${aws_instance.foo.id}"
+  get_password_data = %t
+}
+`, rInt, val)
+}
 
-		get_password_data = %t
-	}
-	`, rInt, val)
+func testAccInstanceDataSourceConfigGetUserData(getUserData bool) string {
+	return fmt.Sprintf(`
+data "aws_ami" "amzn-ami-minimal-hvm-ebs" {
+  most_recent = true
+  owners      = ["amazon"]
+
+  filter {
+    name   = "name"
+    values = ["amzn-ami-minimal-hvm-*"]
+  }
+
+  filter {
+    name   = "root-device-type"
+    values = ["ebs"]
+  }
+}
+
+resource "aws_vpc" "test" {
+  cidr_block = "172.16.0.0/16"
+
+  tags = {
+    Name = "tf-acc-test-instance-datasource-get-user-data"
+  }
+}
+
+resource "aws_subnet" "test" {
+  cidr_block = "172.16.0.0/24"
+  vpc_id     = "${aws_vpc.test.id}"
+
+  tags = {
+    Name = "tf-acc-test-instance-datasource-get-user-data"
+  }
+}
+
+resource "aws_instance" "test" {
+  ami           = "${data.aws_ami.amzn-ami-minimal-hvm-ebs.id}"
+  instance_type = "t2.micro"
+  subnet_id     = "${aws_subnet.test.id}"
+
+  user_data = <<EUD
+#!/bin/bash
+
+echo "hello world"
+EUD
+}
+
+data "aws_instance" "test" {
+  get_user_data = %t
+  instance_id   = "${aws_instance.test.id}"
+}
+`, getUserData)
+}
+
+func testAccInstanceDataSourceConfigGetUserDataNoUserData(getUserData bool) string {
+	return fmt.Sprintf(`
+data "aws_ami" "amzn-ami-minimal-hvm-ebs" {
+  most_recent = true
+  owners      = ["amazon"]
+
+  filter {
+    name   = "name"
+    values = ["amzn-ami-minimal-hvm-*"]
+  }
+
+  filter {
+    name   = "root-device-type"
+    values = ["ebs"]
+  }
+}
+
+resource "aws_vpc" "test" {
+  cidr_block = "172.16.0.0/16"
+
+  tags = {
+    Name = "tf-acc-test-instance-datasource-get-user-data"
+  }
+}
+
+resource "aws_subnet" "test" {
+  cidr_block = "172.16.0.0/24"
+  vpc_id     = "${aws_vpc.test.id}"
+
+  tags = {
+    Name = "tf-acc-test-instance-datasource-get-user-data"
+  }
+}
+
+resource "aws_instance" "test" {
+  ami           = "${data.aws_ami.amzn-ami-minimal-hvm-ebs.id}"
+  instance_type = "t2.micro"
+  subnet_id     = "${aws_subnet.test.id}"
+}
+
+data "aws_instance" "test" {
+  get_user_data = %t
+  instance_id   = "${aws_instance.test.id}"
+}
+`, getUserData)
 }
 
 const testAccInstanceDataSourceConfig_creditSpecification = `

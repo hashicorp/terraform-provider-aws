@@ -24,12 +24,12 @@ func TestAccAWSAPIGatewayAuthorizer_basic(t *testing.T) {
 		"arn:aws:lambda:[a-z0-9-]+:[0-9]{12}:function:" + lambdaName + "/invocations")
 	expectedCreds := regexp.MustCompile("arn:aws:iam::[0-9]{12}:role/" + apiGatewayName + "_auth_invocation_role")
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSAPIGatewayAuthorizerDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccAWSAPIGatewayAuthorizerConfig_lambda(apiGatewayName, authorizerName, lambdaName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSAPIGatewayAuthorizerExists("aws_api_gateway_authorizer.acctest", &conf),
@@ -49,7 +49,7 @@ func TestAccAWSAPIGatewayAuthorizer_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("aws_api_gateway_authorizer.acctest", "identity_validation_expression", ""),
 				),
 			},
-			resource.TestStep{
+			{
 				Config: testAccAWSAPIGatewayAuthorizerConfig_lambdaUpdate(apiGatewayName, authorizerName, lambdaName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSAPIGatewayAuthorizerExists("aws_api_gateway_authorizer.acctest", &conf),
@@ -79,19 +79,19 @@ func TestAccAWSAPIGatewayAuthorizer_cognito(t *testing.T) {
 	authorizerName := "tf-acctest-igw-authorizer-" + rString
 	cognitoName := "tf-acctest-cognito-user-pool-" + rString
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSAPIGatewayAuthorizerDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccAWSAPIGatewayAuthorizerConfig_cognito(apiGatewayName, authorizerName, cognitoName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("aws_api_gateway_authorizer.acctest", "name", authorizerName+"-cognito"),
 					resource.TestCheckResourceAttr("aws_api_gateway_authorizer.acctest", "provider_arns.#", "2"),
 				),
 			},
-			resource.TestStep{
+			{
 				Config: testAccAWSAPIGatewayAuthorizerConfig_cognitoUpdate(apiGatewayName, authorizerName, cognitoName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("aws_api_gateway_authorizer.acctest", "name", authorizerName+"-cognito-update"),
@@ -113,12 +113,12 @@ func TestAccAWSAPIGatewayAuthorizer_switchAuthType(t *testing.T) {
 		"arn:aws:lambda:[a-z0-9-]+:[0-9]{12}:function:" + lambdaName + "/invocations")
 	expectedCreds := regexp.MustCompile("arn:aws:iam::[0-9]{12}:role/" + apiGatewayName + "_auth_invocation_role")
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSAPIGatewayAuthorizerDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccAWSAPIGatewayAuthorizerConfig_lambda(apiGatewayName, authorizerName, lambdaName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("aws_api_gateway_authorizer.acctest", "name", authorizerName),
@@ -127,7 +127,7 @@ func TestAccAWSAPIGatewayAuthorizer_switchAuthType(t *testing.T) {
 					resource.TestMatchResourceAttr("aws_api_gateway_authorizer.acctest", "authorizer_credentials", expectedCreds),
 				),
 			},
-			resource.TestStep{
+			{
 				Config: testAccAWSAPIGatewayAuthorizerConfig_cognito(apiGatewayName, authorizerName, cognitoName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("aws_api_gateway_authorizer.acctest", "name", authorizerName+"-cognito"),
@@ -135,7 +135,7 @@ func TestAccAWSAPIGatewayAuthorizer_switchAuthType(t *testing.T) {
 					resource.TestCheckResourceAttr("aws_api_gateway_authorizer.acctest", "provider_arns.#", "2"),
 				),
 			},
-			resource.TestStep{
+			{
 				Config: testAccAWSAPIGatewayAuthorizerConfig_lambdaUpdate(apiGatewayName, authorizerName, lambdaName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("aws_api_gateway_authorizer.acctest", "name", authorizerName+"_modified"),
@@ -155,20 +155,20 @@ func TestAccAWSAPIGatewayAuthorizer_authTypeValidation(t *testing.T) {
 	cognitoName := "tf-acctest-cognito-user-pool-" + rString
 	lambdaName := "tf-acctest-igw-auth-lambda-" + rString
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSAPIGatewayAuthorizerDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config:      testAccAWSAPIGatewayAuthorizerConfig_authTypeValidationDefaultToken(apiGatewayName, authorizerName, lambdaName),
 				ExpectError: regexp.MustCompile(`authorizer_uri must be set non-empty when authorizer type is TOKEN`),
 			},
-			resource.TestStep{
+			{
 				Config:      testAccAWSAPIGatewayAuthorizerConfig_authTypeValidationRequest(apiGatewayName, authorizerName, lambdaName),
 				ExpectError: regexp.MustCompile(`authorizer_uri must be set non-empty when authorizer type is REQUEST`),
 			},
-			resource.TestStep{
+			{
 				Config:      testAccAWSAPIGatewayAuthorizerConfig_authTypeValidationCognito(apiGatewayName, authorizerName, cognitoName),
 				ExpectError: regexp.MustCompile(`provider_arns must be set non-empty when authorizer type is COGNITO_USER_POOLS`),
 			},
@@ -345,6 +345,7 @@ resource "aws_api_gateway_rest_api" "acctest" {
 resource "aws_iam_role" "invocation_role" {
   name = "%s_auth_invocation_role"
   path = "/"
+
   assume_role_policy = <<EOF
 {
   "Version": "2012-10-17",
@@ -365,6 +366,7 @@ EOF
 resource "aws_iam_role_policy" "invocation_policy" {
   name = "default"
   role = "${aws_iam_role.invocation_role.id}"
+
   policy = <<EOF
 {
   "Version": "2012-10-17",
@@ -381,6 +383,7 @@ EOF
 
 resource "aws_iam_role" "iam_for_lambda" {
   name = "%s_authorizer_lambda"
+
   assume_role_policy = <<EOF
 {
   "Version": "2012-10-17",
@@ -399,12 +402,12 @@ EOF
 }
 
 resource "aws_lambda_function" "authorizer" {
-  filename = "test-fixtures/lambdatest.zip"
-  source_code_hash = "${base64sha256(file("test-fixtures/lambdatest.zip"))}"
-  function_name = "%s"
-  role = "${aws_iam_role.iam_for_lambda.arn}"
-  handler = "exports.example"
-  runtime = "nodejs4.3"
+  filename         = "test-fixtures/lambdatest.zip"
+  source_code_hash = "${filebase64sha256("test-fixtures/lambdatest.zip")}"
+  function_name    = "%s"
+  role             = "${aws_iam_role.iam_for_lambda.arn}"
+  handler          = "exports.example"
+  runtime          = "nodejs8.10"
 }
 `, apiGatewayName, apiGatewayName, apiGatewayName, lambdaName)
 }
@@ -429,7 +432,8 @@ resource "aws_api_gateway_authorizer" "acctest" {
   authorizer_credentials = "${aws_iam_role.invocation_role.arn}"
   authorizer_result_ttl_in_seconds = 360
   identity_validation_expression = ".*"
-}`, authorizerName)
+}
+`, authorizerName)
 }
 
 func testAccAWSAPIGatewayAuthorizerConfig_cognito(apiGatewayName, authorizerName, cognitoName string) string {
@@ -440,14 +444,14 @@ resource "aws_api_gateway_rest_api" "acctest" {
 
 resource "aws_cognito_user_pool" "acctest" {
   count = 2
-  name = "%s-${count.index}"
+  name  = "%s-${count.index}"
 }
 
 resource "aws_api_gateway_authorizer" "acctest" {
-  name = "%s-cognito"
-  type = "COGNITO_USER_POOLS"
-  rest_api_id = "${aws_api_gateway_rest_api.acctest.id}"
-  provider_arns = ["${aws_cognito_user_pool.acctest.*.arn}"]
+  name          = "%s-cognito"
+  type          = "COGNITO_USER_POOLS"
+  rest_api_id   = "${aws_api_gateway_rest_api.acctest.id}"
+  provider_arns = ["${aws_cognito_user_pool.acctest.*.arn[0]}", "${aws_cognito_user_pool.acctest.*.arn[1]}"]
 }
 `, apiGatewayName, cognitoName, authorizerName)
 }
@@ -460,14 +464,14 @@ resource "aws_api_gateway_rest_api" "acctest" {
 
 resource "aws_cognito_user_pool" "acctest_update" {
   count = 3
-  name = "%s-${count.index}-update"
+  name  = "%s-${count.index}-update"
 }
 
 resource "aws_api_gateway_authorizer" "acctest" {
-  name = "%s-cognito-update"
-  type = "COGNITO_USER_POOLS"
-  rest_api_id = "${aws_api_gateway_rest_api.acctest.id}"
-  provider_arns = ["${aws_cognito_user_pool.acctest_update.*.arn}"]
+  name          = "%s-cognito-update"
+  type          = "COGNITO_USER_POOLS"
+  rest_api_id   = "${aws_api_gateway_rest_api.acctest.id}"
+  provider_arns = ["${aws_cognito_user_pool.acctest_update.*.arn[0]}", "${aws_cognito_user_pool.acctest_update.*.arn[1]}", "${aws_cognito_user_pool.acctest_update.*.arn[2]}"]
 }
 `, apiGatewayName, cognitoName, authorizerName)
 }
@@ -501,12 +505,12 @@ resource "aws_api_gateway_rest_api" "acctest" {
 
 resource "aws_cognito_user_pool" "acctest" {
   count = 2
-  name = "%s-${count.index}"
+  name  = "%s-${count.index}"
 }
 
 resource "aws_api_gateway_authorizer" "acctest" {
-  name = "%s-cognito"
-  type = "COGNITO_USER_POOLS"
+  name        = "%s-cognito"
+  type        = "COGNITO_USER_POOLS"
   rest_api_id = "${aws_api_gateway_rest_api.acctest.id}"
 }
 `, apiGatewayName, cognitoName, authorizerName)

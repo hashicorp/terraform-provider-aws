@@ -11,11 +11,34 @@ import (
 	"github.com/hashicorp/terraform/terraform"
 )
 
+func TestAccAWSCloudWatchLogGroup_importBasic(t *testing.T) {
+	resourceName := "aws_cloudwatch_log_group.foobar"
+	rInt := acctest.RandInt()
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSCloudWatchLogGroupDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSCloudWatchLogGroupConfig(rInt),
+			},
+
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"retention_in_days"}, //this has a default value
+			},
+		},
+	})
+}
+
 func TestAccAWSCloudWatchLogGroup_basic(t *testing.T) {
 	var lg cloudwatchlogs.LogGroup
 	rInt := acctest.RandInt()
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSCloudWatchLogGroupDestroy,
@@ -34,7 +57,7 @@ func TestAccAWSCloudWatchLogGroup_basic(t *testing.T) {
 func TestAccAWSCloudWatchLogGroup_namePrefix(t *testing.T) {
 	var lg cloudwatchlogs.LogGroup
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSCloudWatchLogGroupDestroy,
@@ -54,7 +77,7 @@ func TestAccAWSCloudWatchLogGroup_namePrefix_retention(t *testing.T) {
 	var lg cloudwatchlogs.LogGroup
 	rName := acctest.RandString(5)
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSCloudWatchLogGroupDestroy,
@@ -82,7 +105,7 @@ func TestAccAWSCloudWatchLogGroup_namePrefix_retention(t *testing.T) {
 func TestAccAWSCloudWatchLogGroup_generatedName(t *testing.T) {
 	var lg cloudwatchlogs.LogGroup
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSCloudWatchLogGroupDestroy,
@@ -101,7 +124,7 @@ func TestAccAWSCloudWatchLogGroup_retentionPolicy(t *testing.T) {
 	var lg cloudwatchlogs.LogGroup
 	rInt := acctest.RandInt()
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSCloudWatchLogGroupDestroy,
@@ -128,7 +151,7 @@ func TestAccAWSCloudWatchLogGroup_multiple(t *testing.T) {
 	var lg cloudwatchlogs.LogGroup
 	rInt := acctest.RandInt()
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSCloudWatchLogGroupDestroy,
@@ -152,7 +175,7 @@ func TestAccAWSCloudWatchLogGroup_disappears(t *testing.T) {
 	var lg cloudwatchlogs.LogGroup
 	rInt := acctest.RandInt()
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSCloudWatchLogGroupDestroy,
@@ -173,7 +196,7 @@ func TestAccAWSCloudWatchLogGroup_tagging(t *testing.T) {
 	var lg cloudwatchlogs.LogGroup
 	rInt := acctest.RandInt()
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSCloudWatchLogGroupDestroy,
@@ -228,7 +251,7 @@ func TestAccAWSCloudWatchLogGroup_kmsKey(t *testing.T) {
 	var lg cloudwatchlogs.LogGroup
 	rInt := acctest.RandInt()
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSCloudWatchLogGroupDestroy,
@@ -256,10 +279,8 @@ func testAccCheckCloudWatchLogGroupDisappears(lg *cloudwatchlogs.LogGroup) resou
 		opts := &cloudwatchlogs.DeleteLogGroupInput{
 			LogGroupName: lg.LogGroupName,
 		}
-		if _, err := conn.DeleteLogGroup(opts); err != nil {
-			return err
-		}
-		return nil
+		_, err := conn.DeleteLogGroup(opts)
+		return err
 	}
 }
 
@@ -309,7 +330,7 @@ func testAccCheckAWSCloudWatchLogGroupDestroy(s *terraform.State) error {
 func testAccAWSCloudWatchLogGroupConfig(rInt int) string {
 	return fmt.Sprintf(`
 resource "aws_cloudwatch_log_group" "foobar" {
-    name = "foo-bar-%d"
+  name = "foo-bar-%d"
 }
 `, rInt)
 }
@@ -317,13 +338,13 @@ resource "aws_cloudwatch_log_group" "foobar" {
 func testAccAWSCloudWatchLogGroupConfigWithTags(rInt int) string {
 	return fmt.Sprintf(`
 resource "aws_cloudwatch_log_group" "foobar" {
-    name = "foo-bar-%d"
+  name = "foo-bar-%d"
 
-    tags {
-    	Environment = "Production"
-    	Foo = "Bar"
-    	Empty = ""
-    }
+  tags = {
+    Environment = "Production"
+    Foo         = "Bar"
+    Empty       = ""
+  }
 }
 `, rInt)
 }
@@ -331,14 +352,14 @@ resource "aws_cloudwatch_log_group" "foobar" {
 func testAccAWSCloudWatchLogGroupConfigWithTagsAdded(rInt int) string {
 	return fmt.Sprintf(`
 resource "aws_cloudwatch_log_group" "foobar" {
-    name = "foo-bar-%d"
+  name = "foo-bar-%d"
 
-    tags {
-    	Environment = "Development"
-    	Foo = "Bar"
-    	Empty = ""
-    	Bar = "baz"
-    }
+  tags = {
+    Environment = "Development"
+    Foo         = "Bar"
+    Empty       = ""
+    Bar         = "baz"
+  }
 }
 `, rInt)
 }
@@ -346,28 +367,14 @@ resource "aws_cloudwatch_log_group" "foobar" {
 func testAccAWSCloudWatchLogGroupConfigWithTagsUpdated(rInt int) string {
 	return fmt.Sprintf(`
 resource "aws_cloudwatch_log_group" "foobar" {
-    name = "foo-bar-%d"
+  name = "foo-bar-%d"
 
-    tags {
-    	Environment = "Development"
-    	Foo = "UpdatedBar"
-    	Empty = "NotEmpty"
-    	Bar = "baz"
-    }
-}
-`, rInt)
-}
-
-func testAccAWSCloudWatchLogGroupConfigWithTagsRemoval(rInt int) string {
-	return fmt.Sprintf(`
-resource "aws_cloudwatch_log_group" "foobar" {
-    name = "foo-bar-%d"
-
-    tags {
-    	Environment = "Production"
-    	Foo = "Bar"
-    	Empty = ""
-    }
+  tags = {
+    Environment = "Development"
+    Foo         = "UpdatedBar"
+    Empty       = "NotEmpty"
+    Bar         = "baz"
+  }
 }
 `, rInt)
 }
@@ -375,8 +382,8 @@ resource "aws_cloudwatch_log_group" "foobar" {
 func testAccAWSCloudWatchLogGroupConfig_withRetention(rInt int) string {
 	return fmt.Sprintf(`
 resource "aws_cloudwatch_log_group" "foobar" {
-    name = "foo-bar-%d"
-    retention_in_days = 365
+  name              = "foo-bar-%d"
+  retention_in_days = 365
 }
 `, rInt)
 }
@@ -384,7 +391,7 @@ resource "aws_cloudwatch_log_group" "foobar" {
 func testAccAWSCloudWatchLogGroupConfigModified_withRetention(rInt int) string {
 	return fmt.Sprintf(`
 resource "aws_cloudwatch_log_group" "foobar" {
-    name = "foo-bar-%d"
+  name = "foo-bar-%d"
 }
 `, rInt)
 }
@@ -392,15 +399,17 @@ resource "aws_cloudwatch_log_group" "foobar" {
 func testAccAWSCloudWatchLogGroupConfig_multiple(rInt int) string {
 	return fmt.Sprintf(`
 resource "aws_cloudwatch_log_group" "alpha" {
-    name = "foo-bar-%d"
-    retention_in_days = 14
+  name              = "foo-bar-%d"
+  retention_in_days = 14
 }
+
 resource "aws_cloudwatch_log_group" "beta" {
-    name = "foo-bar-%d"
+  name = "foo-bar-%d"
 }
+
 resource "aws_cloudwatch_log_group" "charlie" {
-    name = "foo-bar-%d"
-    retention_in_days = 3653
+  name              = "foo-bar-%d"
+  retention_in_days = 3653
 }
 `, rInt, rInt+1, rInt+2)
 }
@@ -408,9 +417,10 @@ resource "aws_cloudwatch_log_group" "charlie" {
 func testAccAWSCloudWatchLogGroupConfigWithKmsKeyId(rInt int) string {
 	return fmt.Sprintf(`
 resource "aws_kms_key" "foo" {
-    description = "Terraform acc test %d"
-    deletion_window_in_days = 7
-    policy = <<POLICY
+  description             = "Terraform acc test %d"
+  deletion_window_in_days = 7
+
+  policy = <<POLICY
 {
   "Version": "2012-10-17",
   "Id": "kms-tf-1",
@@ -430,8 +440,8 @@ POLICY
 }
 
 resource "aws_cloudwatch_log_group" "foobar" {
-    name = "foo-bar-%d"
-	kms_key_id = "${aws_kms_key.foo.arn}"
+  name       = "foo-bar-%d"
+  kms_key_id = "${aws_kms_key.foo.arn}"
 }
 `, rInt, rInt)
 }
@@ -445,7 +455,7 @@ resource "aws_cloudwatch_log_group" "test" {
 func testAccAWSCloudWatchLogGroup_namePrefix_retention(rName string, retention int) string {
 	return fmt.Sprintf(`
 resource "aws_cloudwatch_log_group" "test" {
-  name_prefix = "tf-test-%s"
+  name_prefix       = "tf-test-%s"
   retention_in_days = %d
 }
 `, rName, retention)

@@ -4,12 +4,10 @@ import (
 	"fmt"
 	"log"
 	"strings"
-	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/opsworks"
-	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/helper/schema"
 	"github.com/hashicorp/terraform/helper/validation"
 )
@@ -30,6 +28,7 @@ func resourceAwsOpsworksApplication() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 				Optional: true,
+				ForceNew: true,
 			},
 			"type": {
 				Type:     schema.TypeString,
@@ -167,9 +166,9 @@ func resourceAwsOpsworksApplication() *schema.Resource {
 							Type:     schema.TypeString,
 							Required: true,
 							StateFunc: func(v interface{}) string {
-								switch v.(type) {
+								switch v := v.(type) {
 								case string:
-									return strings.TrimSpace(v.(string))
+									return strings.TrimSpace(v)
 								default:
 									return ""
 								}
@@ -180,9 +179,9 @@ func resourceAwsOpsworksApplication() *schema.Resource {
 							Required:  true,
 							Sensitive: true,
 							StateFunc: func(v interface{}) string {
-								switch v.(type) {
+								switch v := v.(type) {
 								case string:
-									return strings.TrimSpace(v.(string))
+									return strings.TrimSpace(v)
 								default:
 									return ""
 								}
@@ -192,9 +191,9 @@ func resourceAwsOpsworksApplication() *schema.Resource {
 							Type:     schema.TypeString,
 							Optional: true,
 							StateFunc: func(v interface{}) string {
-								switch v.(type) {
+								switch v := v.(type) {
 								case string:
-									return strings.TrimSpace(v.(string))
+									return strings.TrimSpace(v)
 								default:
 									return ""
 								}
@@ -311,24 +310,9 @@ func resourceAwsOpsworksApplicationCreate(d *schema.ResourceData, meta interface
 		Attributes:       resourceAwsOpsworksApplicationAttributes(d),
 	}
 
-	var resp *opsworks.CreateAppOutput
-	err = resource.Retry(2*time.Minute, func() *resource.RetryError {
-		var cerr error
-		resp, cerr = client.CreateApp(req)
-		if cerr != nil {
-			log.Printf("[INFO] client error")
-			if opserr, ok := cerr.(awserr.Error); ok {
-				// XXX: handle errors
-				log.Printf("[ERROR] OpsWorks error: %s message: %s", opserr.Code(), opserr.Message())
-				return resource.RetryableError(cerr)
-			}
-			return resource.NonRetryableError(cerr)
-		}
-		return nil
-	})
-
+	resp, err := client.CreateApp(req)
 	if err != nil {
-		return err
+		return fmt.Errorf("Error creating OpsWorks application: %s", err)
 	}
 
 	appID := *resp.AppId
@@ -361,23 +345,11 @@ func resourceAwsOpsworksApplicationUpdate(d *schema.ResourceData, meta interface
 
 	log.Printf("[DEBUG] Updating OpsWorks layer: %s", d.Id())
 
-	err = resource.Retry(2*time.Minute, func() *resource.RetryError {
-		_, cerr := client.UpdateApp(req)
-		if cerr != nil {
-			log.Printf("[INFO] client error")
-			if opserr, ok := cerr.(awserr.Error); ok {
-				// XXX: handle errors
-				log.Printf("[ERROR] OpsWorks error: %s message: %s", opserr.Code(), opserr.Message())
-				return resource.NonRetryableError(cerr)
-			}
-			return resource.RetryableError(cerr)
-		}
-		return nil
-	})
-
+	_, err = client.UpdateApp(req)
 	if err != nil {
-		return err
+		return fmt.Errorf("Error updating OpsWorks app: %s", err)
 	}
+
 	return resourceAwsOpsworksApplicationRead(d, meta)
 }
 
@@ -415,7 +387,7 @@ func resourceAwsOpsworksSetApplicationEnvironmentVariable(d *schema.ResourceData
 		}
 		if config.Secure != nil {
 
-			if bool(*config.Secure) {
+			if aws.BoolValue(config.Secure) {
 				data["secure"] = &opsworksTrueString
 			} else {
 				data["secure"] = &opsworksFalseString
@@ -616,5 +588,4 @@ func resourceAwsOpsworksSetApplicationAttributes(d *schema.ResourceData, v map[s
 		return
 	}
 
-	return
 }

@@ -231,7 +231,7 @@ func (d *ResourceDiff) UpdatedKeys() []string {
 // Note that this does not wipe an override. This function is only allowed on
 // computed keys.
 func (d *ResourceDiff) Clear(key string) error {
-	if err := d.checkKey(key, "Clear"); err != nil {
+	if err := d.checkKey(key, "Clear", true); err != nil {
 		return err
 	}
 
@@ -287,7 +287,7 @@ func (d *ResourceDiff) diffChange(key string) (interface{}, interface{}, bool, b
 //
 // This function is only allowed on computed attributes.
 func (d *ResourceDiff) SetNew(key string, value interface{}) error {
-	if err := d.checkKey(key, "SetNew"); err != nil {
+	if err := d.checkKey(key, "SetNew", false); err != nil {
 		return err
 	}
 
@@ -299,7 +299,7 @@ func (d *ResourceDiff) SetNew(key string, value interface{}) error {
 //
 // This function is only allowed on computed attributes.
 func (d *ResourceDiff) SetNewComputed(key string) error {
-	if err := d.checkKey(key, "SetNewComputed"); err != nil {
+	if err := d.checkKey(key, "SetNewComputed", false); err != nil {
 		return err
 	}
 
@@ -367,7 +367,7 @@ func (d *ResourceDiff) Get(key string) interface{} {
 }
 
 // GetChange gets the change between the state and diff, checking first to see
-// if a overridden diff exists.
+// if an overridden diff exists.
 //
 // This implementation differs from ResourceData's in the way that we first get
 // results from the exact levels for the new diff, then from state and diff as
@@ -535,12 +535,24 @@ func childAddrOf(child, parent string) bool {
 }
 
 // checkKey checks the key to make sure it exists and is computed.
-func (d *ResourceDiff) checkKey(key, caller string) error {
-	s, ok := d.schema[key]
-	if !ok {
+func (d *ResourceDiff) checkKey(key, caller string, nested bool) error {
+	var schema *Schema
+	if nested {
+		keyParts := strings.Split(key, ".")
+		schemaL := addrToSchema(keyParts, d.schema)
+		if len(schemaL) > 0 {
+			schema = schemaL[len(schemaL)-1]
+		}
+	} else {
+		s, ok := d.schema[key]
+		if ok {
+			schema = s
+		}
+	}
+	if schema == nil {
 		return fmt.Errorf("%s: invalid key: %s", caller, key)
 	}
-	if !s.Computed {
+	if !schema.Computed {
 		return fmt.Errorf("%s only operates on computed keys - %s is not one", caller, key)
 	}
 	return nil

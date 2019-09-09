@@ -9,8 +9,6 @@ import (
 	"encoding/pem"
 	"fmt"
 
-	"golang.org/x/crypto/ssh"
-
 	"github.com/hashicorp/terraform/helper/schema"
 )
 
@@ -55,14 +53,14 @@ func resourcePrivateKey() *schema.Resource {
 		Read:   ReadPrivateKey,
 
 		Schema: map[string]*schema.Schema{
-			"algorithm": &schema.Schema{
+			"algorithm": {
 				Type:        schema.TypeString,
 				Required:    true,
 				Description: "Name of the algorithm to use to generate the private key",
 				ForceNew:    true,
 			},
 
-			"rsa_bits": &schema.Schema{
+			"rsa_bits": {
 				Type:        schema.TypeInt,
 				Optional:    true,
 				Description: "Number of bits to use when generating an RSA key",
@@ -70,7 +68,7 @@ func resourcePrivateKey() *schema.Resource {
 				Default:     2048,
 			},
 
-			"ecdsa_curve": &schema.Schema{
+			"ecdsa_curve": {
 				Type:        schema.TypeString,
 				Optional:    true,
 				Description: "ECDSA curve to use when generating a key",
@@ -78,17 +76,23 @@ func resourcePrivateKey() *schema.Resource {
 				Default:     "P224",
 			},
 
-			"private_key_pem": &schema.Schema{
+			"private_key_pem": {
+				Type:      schema.TypeString,
+				Computed:  true,
+				Sensitive: true,
+			},
+
+			"public_key_pem": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
 
-			"public_key_pem": &schema.Schema{
+			"public_key_openssh": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
 
-			"public_key_openssh": &schema.Schema{
+			"public_key_fingerprint_md5": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -130,31 +134,9 @@ func CreatePrivateKey(d *schema.ResourceData, meta interface{}) error {
 	}
 	keyPem := string(pem.EncodeToMemory(keyPemBlock))
 
-	pubKey := publicKey(key)
-	pubKeyBytes, err := x509.MarshalPKIXPublicKey(pubKey)
-	if err != nil {
-		return fmt.Errorf("failed to marshal public key: %s", err)
-	}
-	pubKeyPemBlock := &pem.Block{
-		Type:  "PUBLIC KEY",
-		Bytes: pubKeyBytes,
-	}
-
-	d.SetId(hashForState(string((pubKeyBytes))))
 	d.Set("private_key_pem", keyPem)
-	d.Set("public_key_pem", string(pem.EncodeToMemory(pubKeyPemBlock)))
 
-	sshPubKey, err := ssh.NewPublicKey(pubKey)
-	if err == nil {
-		// Not all EC types can be SSH keys, so we'll produce this only
-		// if an appropriate type was selected.
-		sshPubKeyBytes := ssh.MarshalAuthorizedKey(sshPubKey)
-		d.Set("public_key_openssh", string(sshPubKeyBytes))
-	} else {
-		d.Set("public_key_openssh", "")
-	}
-
-	return nil
+	return readPublicKey(d, key)
 }
 
 func DeletePrivateKey(d *schema.ResourceData, meta interface{}) error {

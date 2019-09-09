@@ -20,14 +20,15 @@ func TestAccAwsDxPublicVirtualInterface_basic(t *testing.T) {
 	}
 	vifName := fmt.Sprintf("terraform-testacc-dxvif-%s", acctest.RandString(5))
 	bgpAsn := randIntRange(64512, 65534)
+	vlan := randIntRange(2049, 4094)
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsDxPublicVirtualInterfaceDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDxPublicVirtualInterfaceConfig_noTags(connectionId, vifName, bgpAsn),
+				Config: testAccDxPublicVirtualInterfaceConfig_noTags(connectionId, vifName, bgpAsn, vlan),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsDxPublicVirtualInterfaceExists("aws_dx_public_virtual_interface.foo"),
 					resource.TestCheckResourceAttr("aws_dx_public_virtual_interface.foo", "name", vifName),
@@ -35,7 +36,7 @@ func TestAccAwsDxPublicVirtualInterface_basic(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccDxPublicVirtualInterfaceConfig_tags(connectionId, vifName, bgpAsn),
+				Config: testAccDxPublicVirtualInterfaceConfig_tags(connectionId, vifName, bgpAsn, vlan),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsDxPublicVirtualInterfaceExists("aws_dx_public_virtual_interface.foo"),
 					resource.TestCheckResourceAttr("aws_dx_public_virtual_interface.foo", "name", vifName),
@@ -89,46 +90,48 @@ func testAccCheckAwsDxPublicVirtualInterfaceExists(name string) resource.TestChe
 	}
 }
 
-func testAccDxPublicVirtualInterfaceConfig_noTags(cid, n string, bgpAsn int) string {
+func testAccDxPublicVirtualInterfaceConfig_noTags(cid, n string, bgpAsn, vlan int) string {
 	return fmt.Sprintf(`
 resource "aws_dx_public_virtual_interface" "foo" {
-  connection_id    = "%s"
+  connection_id = "%s"
 
   name           = "%s"
-  vlan           = 4094
+  vlan           = %d
   address_family = "ipv4"
   bgp_asn        = %d
 
   customer_address = "175.45.176.1/30"
   amazon_address   = "175.45.176.2/30"
+
   route_filter_prefixes = [
     "210.52.109.0/24",
-	"175.45.176.0/22"
+    "175.45.176.0/22",
   ]
 }
-`, cid, n, bgpAsn)
+`, cid, n, vlan, bgpAsn)
 }
 
-func testAccDxPublicVirtualInterfaceConfig_tags(cid, n string, bgpAsn int) string {
+func testAccDxPublicVirtualInterfaceConfig_tags(cid, n string, bgpAsn, vlan int) string {
 	return fmt.Sprintf(`
 resource "aws_dx_public_virtual_interface" "foo" {
-  connection_id    = "%s"
+  connection_id = "%s"
 
   name           = "%s"
-  vlan           = 4094
+  vlan           = %d
   address_family = "ipv4"
   bgp_asn        = %d
 
   customer_address = "175.45.176.1/30"
   amazon_address   = "175.45.176.2/30"
+
   route_filter_prefixes = [
     "210.52.109.0/24",
-	"175.45.176.0/22"
+    "175.45.176.0/22",
   ]
 
-  tags {
+  tags = {
     Environment = "test"
   }
 }
-`, cid, n, bgpAsn)
+`, cid, n, vlan, bgpAsn)
 }

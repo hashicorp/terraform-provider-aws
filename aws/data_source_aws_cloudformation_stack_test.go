@@ -13,16 +13,16 @@ func TestAccAWSCloudFormationStack_dataSource_basic(t *testing.T) {
 	rString := acctest.RandString(8)
 	stackName := fmt.Sprintf("tf-acc-ds-basic-%s", rString)
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:  func() { testAccPreCheck(t) },
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccCheckAwsCloudFormationStackDataSourceConfig_basic(stackName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("data.aws_cloudformation_stack.network", "outputs.%", "1"),
 					resource.TestMatchResourceAttr("data.aws_cloudformation_stack.network", "outputs.VPCId",
-						regexp.MustCompile("^vpc-[a-z0-9]{8}$")),
+						regexp.MustCompile("^vpc-[a-z0-9]+")),
 					resource.TestCheckResourceAttr("data.aws_cloudformation_stack.network", "capabilities.#", "0"),
 					resource.TestCheckResourceAttr("data.aws_cloudformation_stack.network", "disable_rollback", "false"),
 					resource.TestCheckResourceAttr("data.aws_cloudformation_stack.network", "notification_arns.#", "0"),
@@ -42,10 +42,13 @@ func testAccCheckAwsCloudFormationStackDataSourceConfig_basic(stackName string) 
 	return fmt.Sprintf(`
 resource "aws_cloudformation_stack" "cfs" {
   name = "%s"
-  parameters {
+
+  parameters = {
     CIDR = "10.10.10.0/24"
   }
+
   timeout_in_minutes = 6
+
   template_body = <<STACK
 {
   "Parameters": {
@@ -72,8 +75,9 @@ resource "aws_cloudformation_stack" "cfs" {
   }
 }
 STACK
-  tags {
-    Name = "Form the Cloud"
+
+  tags = {
+    Name   = "Form the Cloud"
     Second = "meh"
   }
 }
@@ -88,16 +92,16 @@ func TestAccAWSCloudFormationStack_dataSource_yaml(t *testing.T) {
 	rString := acctest.RandString(8)
 	stackName := fmt.Sprintf("tf-acc-ds-yaml-%s", rString)
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:  func() { testAccPreCheck(t) },
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccCheckAwsCloudFormationStackDataSourceConfig_yaml(stackName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("data.aws_cloudformation_stack.yaml", "outputs.%", "1"),
 					resource.TestMatchResourceAttr("data.aws_cloudformation_stack.yaml", "outputs.VPCId",
-						regexp.MustCompile("^vpc-[a-z0-9]{8}$")),
+						regexp.MustCompile("^vpc-[a-z0-9]+")),
 					resource.TestCheckResourceAttr("data.aws_cloudformation_stack.yaml", "capabilities.#", "0"),
 					resource.TestCheckResourceAttr("data.aws_cloudformation_stack.yaml", "disable_rollback", "false"),
 					resource.TestCheckResourceAttr("data.aws_cloudformation_stack.yaml", "notification_arns.#", "0"),
@@ -117,10 +121,13 @@ func testAccCheckAwsCloudFormationStackDataSourceConfig_yaml(stackName string) s
 	return fmt.Sprintf(`
 resource "aws_cloudformation_stack" "yaml" {
   name = "%s"
-  parameters {
+
+  parameters = {
     CIDR = "10.10.10.0/24"
   }
+
   timeout_in_minutes = 6
+
   template_body = <<STACK
 Parameters:
   CIDR:
@@ -141,8 +148,9 @@ Outputs:
     Value: !Ref myvpc
     Description: VPC ID
 STACK
-  tags {
-    Name = "Form the Cloud"
+
+  tags = {
+    Name   = "Form the Cloud"
     Second = "meh"
   }
 }

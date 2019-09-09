@@ -6,7 +6,7 @@ description: |-
   Provides a resource to manage the accepter's side of a Direct Connect hosted private virtual interface.
 ---
 
-# aws_dx_hosted_private_virtual_interface_accepter
+# Resource: aws_dx_hosted_private_virtual_interface_accepter
 
 Provides a resource to manage the accepter's side of a Direct Connect hosted private virtual interface.
 This resource accepts ownership of a private virtual interface created by another AWS account.
@@ -37,6 +37,10 @@ resource "aws_dx_hosted_private_virtual_interface" "creator" {
   vlan           = 4094
   address_family = "ipv4"
   bgp_asn        = 65352
+
+  # The aws_dx_hosted_private_virtual_interface
+  # must be destroyed before the aws_vpn_gateway.
+  depends_on = ["aws_vpn_gateway.vpn_gw"]
 }
 
 # Accepter's side of the VIF.
@@ -49,7 +53,7 @@ resource "aws_dx_hosted_private_virtual_interface_accepter" "accepter" {
   virtual_interface_id = "${aws_dx_hosted_private_virtual_interface.creator.id}"
   vpn_gateway_id       = "${aws_vpn_gateway.vpn_gw.id}"
 
-  tags {
+  tags = {
     Side = "Accepter"
   }
 }

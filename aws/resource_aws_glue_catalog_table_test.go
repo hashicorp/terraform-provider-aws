@@ -12,11 +12,67 @@ import (
 	"github.com/hashicorp/terraform/terraform"
 )
 
+func TestAccAWSGlueCatalogTable_recreates(t *testing.T) {
+	resourceName := "aws_glue_catalog_table.test"
+	rInt := acctest.RandInt()
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckGlueTableDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccGlueCatalogTable_basic(rInt),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckGlueCatalogTableExists(resourceName),
+				),
+			},
+			{
+				PreConfig: func() {
+					conn := testAccProvider.Meta().(*AWSClient).glueconn
+					input := &glue.DeleteTableInput{
+						Name:         aws.String(fmt.Sprintf("my_test_catalog_table_%d", rInt)),
+						DatabaseName: aws.String(fmt.Sprintf("my_test_catalog_database_%d", rInt)),
+					}
+					_, err := conn.DeleteTable(input)
+					if err != nil {
+						t.Fatalf("error deleting Glue Catalog Table: %s", err)
+					}
+				},
+				Config:             testAccGlueCatalogTable_basic(rInt),
+				ExpectNonEmptyPlan: true,
+				PlanOnly:           true,
+			},
+		},
+	})
+}
+
+func TestAccAWSGlueCatalogTable_importBasic(t *testing.T) {
+	resourceName := "aws_glue_catalog_table.test"
+	rInt := acctest.RandInt()
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckGlueTableDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccGlueCatalogTable_full(rInt, "A test table from terraform"),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func TestAccAWSGlueCatalogTable_basic(t *testing.T) {
 	rInt := acctest.RandInt()
 	tableName := "aws_glue_catalog_table.test"
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckGlueTableDestroy,
@@ -47,7 +103,7 @@ func TestAccAWSGlueCatalogTable_full(t *testing.T) {
 	description := "A test table from terraform"
 	tableName := "aws_glue_catalog_table.test"
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckGlueTableDestroy,
@@ -105,7 +161,7 @@ func TestAccAWSGlueCatalogTable_update_addValues(t *testing.T) {
 	description := "A test table from terraform"
 	tableName := "aws_glue_catalog_table.test"
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckGlueTableDestroy,
@@ -180,7 +236,7 @@ func TestAccAWSGlueCatalogTable_update_replaceValues(t *testing.T) {
 	description := "A test table from terraform"
 	tableName := "aws_glue_catalog_table.test"
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckGlueTableDestroy,
@@ -290,7 +346,7 @@ resource "aws_glue_catalog_database" "test" {
 }
 
 resource "aws_glue_catalog_table" "test" {
-  name     = "my_test_catalog_table_%d"
+  name          = "my_test_catalog_table_%d"
   database_name = "${aws_glue_catalog_database.test.name}"
 }
 `, rInt, rInt)
@@ -303,76 +359,84 @@ resource "aws_glue_catalog_database" "test" {
 }
 
 resource "aws_glue_catalog_table" "test" {
-  name = "my_test_catalog_table_%d"
-  database_name = "${aws_glue_catalog_database.test.name}"
-  description = "%s"
-  owner = "my_owner"
-  retention = 1
+  name               = "my_test_catalog_table_%d"
+  database_name      = "${aws_glue_catalog_database.test.name}"
+  description        = "%s"
+  owner              = "my_owner"
+  retention          = 1
+  table_type         = "VIRTUAL_VIEW"
+  view_expanded_text = "view_expanded_text_1"
+  view_original_text = "view_original_text_1"
+
   storage_descriptor {
-    columns = [
-     {
-       name = "my_column_1"
-       type = "int"
-       comment = "my_column1_comment"
-     },
-     {
-       name = "my_column_2"
-       type = "string"
-       comment = "my_column2_comment"
-     }
-    ]
-	location = "my_location"
-	input_format = "SequenceFileInputFormat"
-	output_format = "SequenceFileInputFormat"
-	compressed = false
-	number_of_buckets = 1
-	ser_de_info {
+    bucket_columns            = ["bucket_column_1"]
+    compressed                = false
+    input_format              = "SequenceFileInputFormat"
+    location                  = "my_location"
+    number_of_buckets         = 1
+    output_format             = "SequenceFileInputFormat"
+    stored_as_sub_directories = false
+
+    parameters = {
+      param1 = "param1_val"
+    }
+
+    columns {
+      name    = "my_column_1"
+      type    = "int"
+      comment = "my_column1_comment"
+    }
+
+    columns {
+      name    = "my_column_2"
+      type    = "string"
+      comment = "my_column2_comment"
+    }
+
+    ser_de_info {
       name = "ser_de_name"
-      parameters {
+
+      parameters = {
         param1 = "param_val_1"
       }
+
       serialization_library = "org.apache.hadoop.hive.serde2.columnar.ColumnarSerDe"
-	}
-	bucket_columns = ["bucket_column_1"]
-	sort_columns = [
-      {
-        column = "my_column_1"
-        sort_order = 1
-      }
-	]
-	parameters {
-      param1 = "param1_val"
-	}
-	skewed_info {
+    }
+
+    sort_columns {
+      column     = "my_column_1"
+      sort_order = 1
+    }
+
+    skewed_info {
       skewed_column_names = [
-        "my_column_1"
+        "my_column_1",
       ]
-      skewed_column_value_location_maps {
+
+      skewed_column_value_location_maps = {
         my_column_1 = "my_column_1_val_loc_map"
       }
+
       skewed_column_values = [
-        "skewed_val_1"
+        "skewed_val_1",
       ]
-	}
-	stored_as_sub_directories = false
-  }
-  partition_keys = [
-    {
-      name = "my_column_1"
-      type = "int"
-      comment = "my_column_1_comment"
-    },
-    {
-      name = "my_column_2"
-      type = "string"
-      comment = "my_column_2_comment"
     }
-  ]
-  view_original_text = "view_original_text_1"
-  view_expanded_text = "view_expanded_text_1"
-  table_type = "VIRTUAL_VIEW"
-  parameters {
-  	param1 = "param1_val"
+  }
+
+  partition_keys {
+    name    = "my_column_1"
+    type    = "int"
+    comment = "my_column_1_comment"
+  }
+
+  partition_keys {
+    name    = "my_column_2"
+    type    = "string"
+    comment = "my_column_2_comment"
+  }
+
+  parameters = {
+    param1 = "param1_val"
   }
 }
 `, rInt, rInt, desc)
@@ -385,80 +449,89 @@ resource "aws_glue_catalog_database" "test" {
 }
 
 resource "aws_glue_catalog_table" "test" {
-  name = "my_test_catalog_table_%d"
-  database_name = "${aws_glue_catalog_database.test.name}"
-  description = "A test table from terraform2"
-  owner = "my_owner2"
-  retention = 2
+  name               = "my_test_catalog_table_%d"
+  database_name      = "${aws_glue_catalog_database.test.name}"
+  description        = "A test table from terraform2"
+  owner              = "my_owner2"
+  retention          = 2
+  table_type         = "EXTERNAL_TABLE"
+  view_expanded_text = "view_expanded_text_12"
+  view_original_text = "view_original_text_12"
+
   storage_descriptor {
-    columns = [
-     {
-       name = "my_column_12"
-       type = "date"
-       comment = "my_column1_comment2"
-     },
-     {
-       name = "my_column_22"
-       type = "timestamp"
-       comment = "my_column2_comment2"
-     }
+    bucket_columns = [
+      "bucket_column_12",
+      "bucket_column_2",
     ]
-	location = "my_location2"
-	input_format = "TextInputFormat"
-	output_format = "TextInputFormat"
-	compressed = true
-	number_of_buckets = 12
-	ser_de_info {
+
+    compressed                = true
+    input_format              = "TextInputFormat"
+    location                  = "my_location2"
+    number_of_buckets         = 12
+    output_format             = "TextInputFormat"
+    stored_as_sub_directories = true
+
+    parameters = {
+      param12 = "param1_val2"
+    }
+
+    columns {
+      name    = "my_column_12"
+      type    = "date"
+      comment = "my_column1_comment2"
+    }
+
+    columns {
+      name    = "my_column_22"
+      type    = "timestamp"
+      comment = "my_column2_comment2"
+    }
+
+    ser_de_info {
       name = "ser_de_name2"
-      parameters {
+
+      parameters = {
         param2 = "param_val_12"
       }
+
       serialization_library = "org.apache.hadoop.hive.serde2.columnar.ColumnarSerDe2"
-	}
-	bucket_columns = [
-      "bucket_column_12",
-      "bucket_column_2"
-	]
-	sort_columns = [
-      {
-        column = "my_column_12"
-        sort_order = 0
-      }
-	]
-	parameters {
-      param12 = "param1_val2"
-	}
-	skewed_info {
+    }
+
+    skewed_info {
       skewed_column_names = [
-        "my_column_12"
+        "my_column_12",
       ]
-      skewed_column_value_location_maps {
+
+      skewed_column_value_location_maps = {
         my_column_12 = "my_column_1_val_loc_map2"
       }
+
       skewed_column_values = [
         "skewed_val_12",
-		"skewed_val_2"
+        "skewed_val_2",
       ]
-	}
-	stored_as_sub_directories = true
-  }
-  partition_keys = [
-    {
-      name = "my_column_12"
-      type = "date"
-      comment = "my_column_1_comment2"
-    },
-    {
-      name = "my_column_22"
-      type = "timestamp"
-      comment = "my_column_2_comment2"
     }
-  ]
-  view_original_text = "view_original_text_12"
-  view_expanded_text = "view_expanded_text_12"
-  table_type = "EXTERNAL_TABLE"
-  parameters {
-  	param2 = "param1_val2"
+
+    sort_columns {
+      column     = "my_column_12"
+      sort_order = 0
+    }
+  }
+
+  partition_keys {
+    name    = "my_column_12"
+    type    = "date"
+    comment = "my_column_1_comment2"
+  }
+
+  partition_keys {
+    name    = "my_column_22"
+    type    = "timestamp"
+    comment = "my_column_2_comment2"
+  }
+
+  parameters = {
+    param2 = "param1_val2"
   }
 }
 `, rInt, rInt)

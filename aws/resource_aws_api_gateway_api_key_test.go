@@ -2,55 +2,139 @@ package aws
 
 import (
 	"fmt"
-	"strings"
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/apigateway"
+	"github.com/hashicorp/terraform/helper/acctest"
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/terraform"
 )
 
 func TestAccAWSAPIGatewayApiKey_basic(t *testing.T) {
-	var conf apigateway.ApiKey
+	var apiKey1 apigateway.ApiKey
+	resourceName := "aws_api_gateway_api_key.test"
+	rName := acctest.RandomWithPrefix("tf-acc-test")
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSAPIGatewayApiKeyDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSAPIGatewayApiKeyConfig,
+				Config: testAccAWSAPIGatewayApiKeyConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSAPIGatewayApiKeyExists("aws_api_gateway_api_key.test", &conf),
-					testAccCheckAWSAPIGatewayApiKeyStageKeyAttribute(&conf),
-					resource.TestCheckResourceAttr(
-						"aws_api_gateway_api_key.test", "name", "foo"),
-					resource.TestCheckResourceAttr(
-						"aws_api_gateway_api_key.test", "description", "Managed by Terraform"),
-					resource.TestCheckResourceAttrSet(
-						"aws_api_gateway_api_key.test", "created_date"),
-					resource.TestCheckResourceAttrSet(
-						"aws_api_gateway_api_key.test", "last_updated_date"),
-					resource.TestCheckResourceAttr(
-						"aws_api_gateway_api_key.custom", "value", "MyCustomToken#@&\"'(§!ç)-_*$€¨^£%ù+=/:.;?,|"),
+					testAccCheckAWSAPIGatewayApiKeyExists(resourceName, &apiKey1),
+					resource.TestCheckResourceAttrSet(resourceName, "created_date"),
+					resource.TestCheckResourceAttr(resourceName, "description", "Managed by Terraform"),
+					resource.TestCheckResourceAttr(resourceName, "enabled", "true"),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttrSet(resourceName, "last_updated_date"),
+					resource.TestCheckResourceAttrSet(resourceName, "value"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccAWSAPIGatewayApiKey_Description(t *testing.T) {
+	var apiKey1, apiKey2 apigateway.ApiKey
+	resourceName := "aws_api_gateway_api_key.test"
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSAPIGatewayApiKeyDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSAPIGatewayApiKeyConfigDescription(rName, "description1"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSAPIGatewayApiKeyExists(resourceName, &apiKey1),
+					resource.TestCheckResourceAttr(resourceName, "description", "description1"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccAWSAPIGatewayApiKeyConfigDescription(rName, "description2"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSAPIGatewayApiKeyExists(resourceName, &apiKey2),
+					testAccCheckAWSAPIGatewayApiKeyNotRecreated(&apiKey1, &apiKey2),
+					resource.TestCheckResourceAttr(resourceName, "description", "description2"),
 				),
 			},
 		},
 	})
 }
 
-func testAccCheckAWSAPIGatewayApiKeyStageKeyAttribute(conf *apigateway.ApiKey) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		if len(conf.StageKeys) != 1 {
-			return fmt.Errorf("Expected one apikey. Got %d", len(conf.StageKeys))
-		}
-		if !strings.Contains(*conf.StageKeys[0], "test") {
-			return fmt.Errorf("Expected apikey for test. Got %q", *conf.StageKeys[0])
-		}
-		return nil
-	}
+func TestAccAWSAPIGatewayApiKey_Enabled(t *testing.T) {
+	var apiKey1, apiKey2 apigateway.ApiKey
+	resourceName := "aws_api_gateway_api_key.test"
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSAPIGatewayApiKeyDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSAPIGatewayApiKeyConfigEnabled(rName, false),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSAPIGatewayApiKeyExists(resourceName, &apiKey1),
+					resource.TestCheckResourceAttr(resourceName, "enabled", "false"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccAWSAPIGatewayApiKeyConfigEnabled(rName, true),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSAPIGatewayApiKeyExists(resourceName, &apiKey2),
+					testAccCheckAWSAPIGatewayApiKeyNotRecreated(&apiKey1, &apiKey2),
+					resource.TestCheckResourceAttr(resourceName, "enabled", "true"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAWSAPIGatewayApiKey_Value(t *testing.T) {
+	var apiKey1 apigateway.ApiKey
+	resourceName := "aws_api_gateway_api_key.test"
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSAPIGatewayApiKeyDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSAPIGatewayApiKeyConfigValue(rName, `MyCustomToken#@&\"'(§!ç)-_*$€¨^£%ù+=/:.;?,|`),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSAPIGatewayApiKeyExists(resourceName, &apiKey1),
+					resource.TestCheckResourceAttr(resourceName, "value", `MyCustomToken#@&\"'(§!ç)-_*$€¨^£%ù+=/:.;?,|`),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
 }
 
 func testAccCheckAWSAPIGatewayApiKeyExists(n string, res *apigateway.ApiKey) resource.TestCheckFunc {
@@ -115,78 +199,47 @@ func testAccCheckAWSAPIGatewayApiKeyDestroy(s *terraform.State) error {
 	return nil
 }
 
-const testAccAWSAPIGatewayApiKeyConfig = `
-resource "aws_api_gateway_rest_api" "test" {
-  name = "test"
+func testAccCheckAWSAPIGatewayApiKeyNotRecreated(i, j *apigateway.ApiKey) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		if aws.TimeValue(i.CreatedDate) != aws.TimeValue(j.CreatedDate) {
+			return fmt.Errorf("API Gateway API Key recreated")
+		}
+
+		return nil
+	}
 }
 
-resource "aws_api_gateway_resource" "test" {
-  rest_api_id = "${aws_api_gateway_rest_api.test.id}"
-  parent_id = "${aws_api_gateway_rest_api.test.root_resource_id}"
-  path_part = "test"
-}
-
-resource "aws_api_gateway_method" "test" {
-  rest_api_id = "${aws_api_gateway_rest_api.test.id}"
-  resource_id = "${aws_api_gateway_resource.test.id}"
-  http_method = "GET"
-  authorization = "NONE"
-}
-
-resource "aws_api_gateway_method_response" "error" {
-  rest_api_id = "${aws_api_gateway_rest_api.test.id}"
-  resource_id = "${aws_api_gateway_resource.test.id}"
-  http_method = "${aws_api_gateway_method.test.http_method}"
-  status_code = "400"
-}
-
-resource "aws_api_gateway_integration" "test" {
-  rest_api_id = "${aws_api_gateway_rest_api.test.id}"
-  resource_id = "${aws_api_gateway_resource.test.id}"
-  http_method = "${aws_api_gateway_method.test.http_method}"
-
-  type = "HTTP"
-  uri = "https://www.google.de"
-  integration_http_method = "GET"
-}
-
-resource "aws_api_gateway_integration_response" "test" {
-  rest_api_id = "${aws_api_gateway_rest_api.test.id}"
-  resource_id = "${aws_api_gateway_resource.test.id}"
-  http_method = "${aws_api_gateway_integration.test.http_method}"
-  status_code = "${aws_api_gateway_method_response.error.status_code}"
-}
-
-resource "aws_api_gateway_deployment" "test" {
-  depends_on = ["aws_api_gateway_integration.test"]
-
-  rest_api_id = "${aws_api_gateway_rest_api.test.id}"
-  stage_name = "test"
-  description = "This is a test"
-
-  variables = {
-    "a" = "2"
-  }
-}
-
+func testAccAWSAPIGatewayApiKeyConfig(rName string) string {
+	return fmt.Sprintf(`
 resource "aws_api_gateway_api_key" "test" {
-  name = "foo"
-  enabled = true
-
-  stage_key {
-    rest_api_id = "${aws_api_gateway_rest_api.test.id}"
-    stage_name = "${aws_api_gateway_deployment.test.stage_name}"
-  }
+  name = %[1]q
+}
+`, rName)
 }
 
-resource "aws_api_gateway_api_key" "custom" {
-  name = "bar"
-  enabled = true
-  value = "MyCustomToken#@&\"'(§!ç)-_*$€¨^£%ù+=/:.;?,|"
-
-  stage_key {
-    rest_api_id = "${aws_api_gateway_rest_api.test.id}"
-    stage_name = "${aws_api_gateway_deployment.test.stage_name}"
-  }
+func testAccAWSAPIGatewayApiKeyConfigDescription(rName, description string) string {
+	return fmt.Sprintf(`
+resource "aws_api_gateway_api_key" "test" {
+  description = %[2]q
+  name        = %[1]q
 }
-`
+`, rName, description)
+}
+
+func testAccAWSAPIGatewayApiKeyConfigEnabled(rName string, enabled bool) string {
+	return fmt.Sprintf(`
+resource "aws_api_gateway_api_key" "test" {
+  enabled = %[2]t
+  name    = %[1]q
+}
+`, rName, enabled)
+}
+
+func testAccAWSAPIGatewayApiKeyConfigValue(rName, value string) string {
+	return fmt.Sprintf(`
+resource "aws_api_gateway_api_key" "test" {
+  name  = %[1]q
+  value = %[2]q
+}
+`, rName, value)
+}

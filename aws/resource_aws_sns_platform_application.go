@@ -138,7 +138,7 @@ func resourceAwsSnsPlatformApplicationUpdate(d *schema.ResourceData, meta interf
 
 	attributes := make(map[string]*string)
 
-	for k, _ := range resourceAwsSnsPlatformApplication().Schema {
+	for k := range resourceAwsSnsPlatformApplication().Schema {
 		if attrKey, ok := snsPlatformApplicationAttributeMap[k]; ok {
 			if d.HasChange(k) {
 				log.Printf("[DEBUG] Updating %s", attrKey)
@@ -174,6 +174,9 @@ func resourceAwsSnsPlatformApplicationUpdate(d *schema.ResourceData, meta interf
 		}
 		return nil
 	})
+	if isResourceTimeoutError(err) {
+		_, err = snsconn.SetPlatformApplicationAttributes(req)
+	}
 
 	if err != nil {
 		return fmt.Errorf("Error updating SNS platform application: %s", err)
@@ -203,6 +206,11 @@ func resourceAwsSnsPlatformApplicationRead(d *schema.ResourceData, meta interfac
 	})
 
 	if err != nil {
+		if isAWSErr(err, sns.ErrCodeNotFoundException, "") {
+			log.Printf("[WARN] SNS Platform Application (%s) not found, removing from state", d.Id())
+			d.SetId("")
+			return nil
+		}
 		return err
 	}
 
@@ -235,10 +243,7 @@ func resourceAwsSnsPlatformApplicationDelete(d *schema.ResourceData, meta interf
 	_, err := snsconn.DeletePlatformApplication(&sns.DeletePlatformApplicationInput{
 		PlatformApplicationArn: aws.String(d.Id()),
 	})
-	if err != nil {
-		return err
-	}
-	return nil
+	return err
 }
 
 func decodeResourceAwsSnsPlatformApplicationID(input string) (arnS, name, platform string, err error) {

@@ -15,7 +15,7 @@ import (
 func TestAccAWSOpsworksRdsDbInstance(t *testing.T) {
 	sName := fmt.Sprintf("test-db-instance-%d", acctest.RandInt())
 	var opsdb opsworks.RdsDbInstance
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsOpsworksRdsDbDestroy,
@@ -158,7 +158,9 @@ resource "aws_opsworks_rds_db_instance" "tf-acc-opsworks-db" {
 
 %s
 
+
 %s
+
 `, userName, password, testAccAwsOpsworksStackConfigVpcCreate(name), testAccAWSDBInstanceConfig)
 }
 

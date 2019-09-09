@@ -16,32 +16,8 @@ import (
 	"github.com/aws/aws-sdk-go/service/rds"
 	"github.com/aws/aws-sdk-go/service/redshift"
 	"github.com/aws/aws-sdk-go/service/route53"
-	"github.com/hashicorp/terraform/flatmap"
 	"github.com/hashicorp/terraform/helper/schema"
 )
-
-// Returns test configuration
-func testConf() map[string]string {
-	return map[string]string{
-		"listener.#":                   "1",
-		"listener.0.lb_port":           "80",
-		"listener.0.lb_protocol":       "http",
-		"listener.0.instance_port":     "8000",
-		"listener.0.instance_protocol": "http",
-		"availability_zones.#":         "2",
-		"availability_zones.0":         "us-east-1a",
-		"availability_zones.1":         "us-east-1b",
-		"ingress.#":                    "1",
-		"ingress.0.protocol":           "icmp",
-		"ingress.0.from_port":          "1",
-		"ingress.0.to_port":            "-1",
-		"ingress.0.cidr_blocks.#":      "1",
-		"ingress.0.cidr_blocks.0":      "0.0.0.0/0",
-		"ingress.0.security_groups.#":  "2",
-		"ingress.0.security_groups.0":  "sg-11111",
-		"ingress.0.security_groups.1":  "foo/sg-22222",
-	}
-}
 
 func TestExpandIPPerms(t *testing.T) {
 	hash := schema.HashString
@@ -75,34 +51,34 @@ func TestExpandIPPerms(t *testing.T) {
 	}
 
 	expected := []ec2.IpPermission{
-		ec2.IpPermission{
+		{
 			IpProtocol: aws.String("icmp"),
 			FromPort:   aws.Int64(int64(1)),
 			ToPort:     aws.Int64(int64(-1)),
 			IpRanges: []*ec2.IpRange{
-				&ec2.IpRange{
+				{
 					CidrIp:      aws.String("0.0.0.0/0"),
 					Description: aws.String("desc"),
 				},
 			},
 			UserIdGroupPairs: []*ec2.UserIdGroupPair{
-				&ec2.UserIdGroupPair{
+				{
 					UserId:      aws.String("foo"),
 					GroupId:     aws.String("sg-22222"),
 					Description: aws.String("desc"),
 				},
-				&ec2.UserIdGroupPair{
+				{
 					GroupId:     aws.String("sg-11111"),
 					Description: aws.String("desc"),
 				},
 			},
 		},
-		ec2.IpPermission{
+		{
 			IpProtocol: aws.String("icmp"),
 			FromPort:   aws.Int64(int64(1)),
 			ToPort:     aws.Int64(int64(-1)),
 			UserIdGroupPairs: []*ec2.UserIdGroupPair{
-				&ec2.UserIdGroupPair{
+				{
 					GroupId: aws.String("foo"),
 				},
 			},
@@ -184,17 +160,17 @@ func TestExpandIPPerms_NegOneProtocol(t *testing.T) {
 	}
 
 	expected := []ec2.IpPermission{
-		ec2.IpPermission{
+		{
 			IpProtocol: aws.String("-1"),
 			FromPort:   aws.Int64(int64(0)),
 			ToPort:     aws.Int64(int64(0)),
-			IpRanges:   []*ec2.IpRange{&ec2.IpRange{CidrIp: aws.String("0.0.0.0/0")}},
+			IpRanges:   []*ec2.IpRange{{CidrIp: aws.String("0.0.0.0/0")}},
 			UserIdGroupPairs: []*ec2.UserIdGroupPair{
-				&ec2.UserIdGroupPair{
+				{
 					UserId:  aws.String("foo"),
 					GroupId: aws.String("sg-22222"),
 				},
-				&ec2.UserIdGroupPair{
+				{
 					GroupId: aws.String("sg-11111"),
 				},
 			},
@@ -280,26 +256,26 @@ func TestExpandIPPerms_nonVPC(t *testing.T) {
 	}
 
 	expected := []ec2.IpPermission{
-		ec2.IpPermission{
+		{
 			IpProtocol: aws.String("icmp"),
 			FromPort:   aws.Int64(int64(1)),
 			ToPort:     aws.Int64(int64(-1)),
-			IpRanges:   []*ec2.IpRange{&ec2.IpRange{CidrIp: aws.String("0.0.0.0/0")}},
+			IpRanges:   []*ec2.IpRange{{CidrIp: aws.String("0.0.0.0/0")}},
 			UserIdGroupPairs: []*ec2.UserIdGroupPair{
-				&ec2.UserIdGroupPair{
+				{
 					GroupName: aws.String("sg-22222"),
 				},
-				&ec2.UserIdGroupPair{
+				{
 					GroupName: aws.String("sg-11111"),
 				},
 			},
 		},
-		ec2.IpPermission{
+		{
 			IpProtocol: aws.String("icmp"),
 			FromPort:   aws.Int64(int64(1)),
 			ToPort:     aws.Int64(int64(-1)),
 			UserIdGroupPairs: []*ec2.UserIdGroupPair{
-				&ec2.UserIdGroupPair{
+				{
 					GroupName: aws.String("foo"),
 				},
 			},
@@ -423,7 +399,7 @@ func TestFlattenHealthCheck(t *testing.T) {
 				Interval:           aws.Int64(int64(30)),
 			},
 			Output: []map[string]interface{}{
-				map[string]interface{}{
+				{
 					"unhealthy_threshold": int64(10),
 					"healthy_threshold":   int64(10),
 					"target":              "HTTP:80/",
@@ -443,7 +419,7 @@ func TestFlattenHealthCheck(t *testing.T) {
 }
 
 func TestExpandStringList(t *testing.T) {
-	expanded := flatmap.Expand(testConf(), "availability_zones").([]interface{})
+	expanded := []interface{}{"us-east-1a", "us-east-1b"}
 	stringList := expandStringList(expanded)
 	expected := []*string{
 		aws.String("us-east-1a"),
@@ -459,12 +435,8 @@ func TestExpandStringList(t *testing.T) {
 }
 
 func TestExpandStringListEmptyItems(t *testing.T) {
-	initialList := []string{"foo", "bar", "", "baz"}
-	l := make([]interface{}, len(initialList))
-	for i, v := range initialList {
-		l[i] = v
-	}
-	stringList := expandStringList(l)
+	expanded := []interface{}{"foo", "bar", "", "baz"}
+	stringList := expandStringList(expanded)
 	expected := []*string{
 		aws.String("foo"),
 		aws.String("bar"),
@@ -591,13 +563,13 @@ func TestFlattenParameters(t *testing.T) {
 	}{
 		{
 			Input: []*rds.Parameter{
-				&rds.Parameter{
+				{
 					ParameterName:  aws.String("character_set_client"),
 					ParameterValue: aws.String("utf8"),
 				},
 			},
 			Output: []map[string]interface{}{
-				map[string]interface{}{
+				{
 					"name":  "character_set_client",
 					"value": "utf8",
 				},
@@ -620,13 +592,13 @@ func TestFlattenRedshiftParameters(t *testing.T) {
 	}{
 		{
 			Input: []*redshift.Parameter{
-				&redshift.Parameter{
+				{
 					ParameterName:  aws.String("character_set_client"),
 					ParameterValue: aws.String("utf8"),
 				},
 			},
 			Output: []map[string]interface{}{
-				map[string]interface{}{
+				{
 					"name":  "character_set_client",
 					"value": "utf8",
 				},
@@ -649,13 +621,13 @@ func TestFlattenElasticacheParameters(t *testing.T) {
 	}{
 		{
 			Input: []*elasticache.Parameter{
-				&elasticache.Parameter{
+				{
 					ParameterName:  aws.String("activerehashing"),
 					ParameterValue: aws.String("yes"),
 				},
 			},
 			Output: []map[string]interface{}{
-				map[string]interface{}{
+				{
 					"name":  "activerehashing",
 					"value": "yes",
 				},
@@ -674,8 +646,8 @@ func TestFlattenElasticacheParameters(t *testing.T) {
 func TestExpandInstanceString(t *testing.T) {
 
 	expected := []*elb.Instance{
-		&elb.Instance{InstanceId: aws.String("test-one")},
-		&elb.Instance{InstanceId: aws.String("test-two")},
+		{InstanceId: aws.String("test-one")},
+		{InstanceId: aws.String("test-two")},
 	}
 
 	ids := []interface{}{
@@ -692,8 +664,8 @@ func TestExpandInstanceString(t *testing.T) {
 
 func TestFlattenNetworkInterfacesPrivateIPAddresses(t *testing.T) {
 	expanded := []*ec2.NetworkInterfacePrivateIpAddress{
-		&ec2.NetworkInterfacePrivateIpAddress{PrivateIpAddress: aws.String("192.168.0.1")},
-		&ec2.NetworkInterfacePrivateIpAddress{PrivateIpAddress: aws.String("192.168.0.2")},
+		{PrivateIpAddress: aws.String("192.168.0.1")},
+		{PrivateIpAddress: aws.String("192.168.0.2")},
 	}
 
 	result := flattenNetworkInterfacesPrivateIPAddresses(expanded)
@@ -717,8 +689,8 @@ func TestFlattenNetworkInterfacesPrivateIPAddresses(t *testing.T) {
 
 func TestFlattenGroupIdentifiers(t *testing.T) {
 	expanded := []*ec2.GroupIdentifier{
-		&ec2.GroupIdentifier{GroupId: aws.String("sg-001")},
-		&ec2.GroupIdentifier{GroupId: aws.String("sg-002")},
+		{GroupId: aws.String("sg-001")},
+		{GroupId: aws.String("sg-002")},
 	}
 
 	result := flattenGroupIdentifiers(expanded)
@@ -805,9 +777,9 @@ func TestFlattenAttachmentWhenNoInstanceId(t *testing.T) {
 
 func TestFlattenStepAdjustments(t *testing.T) {
 	expanded := []*autoscaling.StepAdjustment{
-		&autoscaling.StepAdjustment{
+		{
 			MetricIntervalLowerBound: aws.Float64(1.0),
-			MetricIntervalUpperBound: aws.Float64(2.0),
+			MetricIntervalUpperBound: aws.Float64(2.5),
 			ScalingAdjustment:        aws.Int64(int64(1)),
 		},
 	}
@@ -816,11 +788,11 @@ func TestFlattenStepAdjustments(t *testing.T) {
 	if result == nil {
 		t.Fatal("expected result to have value, but got nil")
 	}
-	if result["metric_interval_lower_bound"] != float64(1.0) {
-		t.Fatalf("expected metric_interval_lower_bound to be 1.0, but got %d", result["metric_interval_lower_bound"])
+	if result["metric_interval_lower_bound"] != "1" {
+		t.Fatalf("expected metric_interval_lower_bound to be 1, but got %s", result["metric_interval_lower_bound"])
 	}
-	if result["metric_interval_upper_bound"] != float64(2.0) {
-		t.Fatalf("expected metric_interval_upper_bound to be 1.0, but got %d", result["metric_interval_upper_bound"])
+	if result["metric_interval_upper_bound"] != "2.5" {
+		t.Fatalf("expected metric_interval_upper_bound to be 2.5, but got %s", result["metric_interval_upper_bound"])
 	}
 	if result["scaling_adjustment"] != int64(1) {
 		t.Fatalf("expected scaling_adjustment to be 1, but got %d", result["scaling_adjustment"])
@@ -887,8 +859,8 @@ func checkFlattenResourceRecords(
 
 func TestFlattenAsgEnabledMetrics(t *testing.T) {
 	expanded := []*autoscaling.EnabledMetric{
-		&autoscaling.EnabledMetric{Granularity: aws.String("1Minute"), Metric: aws.String("GroupTotalInstances")},
-		&autoscaling.EnabledMetric{Granularity: aws.String("1Minute"), Metric: aws.String("GroupMaxSize")},
+		{Granularity: aws.String("1Minute"), Metric: aws.String("GroupTotalInstances")},
+		{Granularity: aws.String("1Minute"), Metric: aws.String("GroupMaxSize")},
 	}
 
 	result := flattenAsgEnabledMetrics(expanded)
@@ -908,7 +880,7 @@ func TestFlattenAsgEnabledMetrics(t *testing.T) {
 
 func TestFlattenKinesisShardLevelMetrics(t *testing.T) {
 	expanded := []*kinesis.EnhancedMetrics{
-		&kinesis.EnhancedMetrics{
+		{
 			ShardLevelMetrics: []*string{
 				aws.String("IncomingBytes"),
 				aws.String("IncomingRecords"),
@@ -937,12 +909,12 @@ func TestFlattenSecurityGroups(t *testing.T) {
 		{
 			ownerId: aws.String("user1234"),
 			pairs: []*ec2.UserIdGroupPair{
-				&ec2.UserIdGroupPair{
+				{
 					GroupId: aws.String("sg-12345"),
 				},
 			},
 			expected: []*GroupIdentifier{
-				&GroupIdentifier{
+				{
 					GroupId: aws.String("sg-12345"),
 				},
 			},
@@ -952,13 +924,13 @@ func TestFlattenSecurityGroups(t *testing.T) {
 		{
 			ownerId: aws.String("user1234"),
 			pairs: []*ec2.UserIdGroupPair{
-				&ec2.UserIdGroupPair{
+				{
 					GroupId: aws.String("sg-12345"),
 					UserId:  aws.String("user1234"),
 				},
 			},
 			expected: []*GroupIdentifier{
-				&GroupIdentifier{
+				{
 					GroupId: aws.String("sg-12345"),
 				},
 			},
@@ -969,14 +941,14 @@ func TestFlattenSecurityGroups(t *testing.T) {
 		{
 			ownerId: aws.String("user1234"),
 			pairs: []*ec2.UserIdGroupPair{
-				&ec2.UserIdGroupPair{
+				{
 					GroupId:   aws.String("sg-12345"),
 					GroupName: aws.String("somegroup"), // GroupName is only included in Classic
 					UserId:    aws.String("user4321"),
 				},
 			},
 			expected: []*GroupIdentifier{
-				&GroupIdentifier{
+				{
 					GroupId:   aws.String("sg-12345"),
 					GroupName: aws.String("user4321/somegroup"),
 				},
@@ -988,13 +960,13 @@ func TestFlattenSecurityGroups(t *testing.T) {
 		{
 			ownerId: aws.String("user1234"),
 			pairs: []*ec2.UserIdGroupPair{
-				&ec2.UserIdGroupPair{
+				{
 					GroupId: aws.String("sg-12345"),
 					UserId:  aws.String("user4321"),
 				},
 			},
 			expected: []*GroupIdentifier{
-				&GroupIdentifier{
+				{
 					GroupId: aws.String("user4321/sg-12345"),
 				},
 			},
@@ -1004,13 +976,13 @@ func TestFlattenSecurityGroups(t *testing.T) {
 		{
 			ownerId: aws.String("user1234"),
 			pairs: []*ec2.UserIdGroupPair{
-				&ec2.UserIdGroupPair{
+				{
 					GroupId:     aws.String("sg-12345"),
 					Description: aws.String("desc"),
 				},
 			},
 			expected: []*GroupIdentifier{
-				&GroupIdentifier{
+				{
 					GroupId:     aws.String("sg-12345"),
 					Description: aws.String("desc"),
 				},
@@ -1062,37 +1034,6 @@ func TestFlattenApiGatewayThrottleSettings(t *testing.T) {
 	}
 	if rateLimitFloat != expectedRateLimit {
 		t.Fatalf("Expected 'rate_limit' to equal %f, got %f", expectedRateLimit, rateLimitFloat)
-	}
-}
-
-func TestFlattenApiGatewayStageKeys(t *testing.T) {
-	cases := []struct {
-		Input  []*string
-		Output []map[string]interface{}
-	}{
-		{
-			Input: []*string{
-				aws.String("a1b2c3d4e5/dev"),
-				aws.String("e5d4c3b2a1/test"),
-			},
-			Output: []map[string]interface{}{
-				map[string]interface{}{
-					"stage_name":  "dev",
-					"rest_api_id": "a1b2c3d4e5",
-				},
-				map[string]interface{}{
-					"stage_name":  "test",
-					"rest_api_id": "e5d4c3b2a1",
-				},
-			},
-		},
-	}
-
-	for _, tc := range cases {
-		output := flattenApiGatewayStageKeys(tc.Input)
-		if !reflect.DeepEqual(output, tc.Output) {
-			t.Fatalf("Got:\n\n%#v\n\nExpected:\n\n%#v", output, tc.Output)
-		}
 	}
 }
 
@@ -1178,7 +1119,7 @@ func TestFlattenPolicyAttributes(t *testing.T) {
 	}{
 		{
 			Input: []*elb.PolicyAttributeDescription{
-				&elb.PolicyAttributeDescription{
+				{
 					AttributeName:  aws.String("Protocol-TLSv1.2"),
 					AttributeValue: aws.String("true"),
 				},

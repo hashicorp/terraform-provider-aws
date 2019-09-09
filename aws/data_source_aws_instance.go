@@ -3,8 +3,10 @@ package aws
 import (
 	"fmt"
 	"log"
+	"strings"
 
 	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/hashicorp/terraform/helper/schema"
 )
@@ -26,6 +28,10 @@ func dataSourceAwsInstance() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"arn": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"instance_type": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -43,6 +49,10 @@ func dataSourceAwsInstance() *schema.Resource {
 				Computed: true,
 			},
 			"tenancy": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"host_id": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -103,7 +113,16 @@ func dataSourceAwsInstance() *schema.Resource {
 				Type:     schema.TypeBool,
 				Computed: true,
 			},
+			"get_user_data": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				Default:  false,
+			},
 			"user_data": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"user_data_base64": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -168,6 +187,11 @@ func dataSourceAwsInstance() *schema.Resource {
 							Computed: true,
 						},
 
+						"kms_key_id": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+
 						"snapshot_id": {
 							Type:     schema.TypeString,
 							Computed: true,
@@ -200,8 +224,18 @@ func dataSourceAwsInstance() *schema.Resource {
 							Computed: true,
 						},
 
+						"encrypted": {
+							Type:     schema.TypeBool,
+							Computed: true,
+						},
+
 						"iops": {
 							Type:     schema.TypeInt,
+							Computed: true,
+						},
+
+						"kms_key_id": {
+							Type:     schema.TypeString,
 							Computed: true,
 						},
 
@@ -250,7 +284,7 @@ func dataSourceAwsInstanceRead(d *schema.ResourceData, meta interface{}) error {
 	instanceID, instanceIDOk := d.GetOk("instance_id")
 	tags, tagsOk := d.GetOk("instance_tags")
 
-	if filtersOk == false && instanceIDOk == false && tagsOk == false {
+	if !filtersOk && !instanceIDOk && !tagsOk {
 		return fmt.Errorf("One of filters, instance_tags, or instance_id must be assigned")
 	}
 
@@ -317,6 +351,16 @@ func dataSourceAwsInstanceRead(d *schema.ResourceData, meta interface{}) error {
 		d.Set("password_data", passwordData)
 	}
 
+	// ARN
+	arn := arn.ARN{
+		Partition: meta.(*AWSClient).partition,
+		Region:    meta.(*AWSClient).region,
+		Service:   "ec2",
+		AccountID: meta.(*AWSClient).accountid,
+		Resource:  fmt.Sprintf("instance/%s", d.Id()),
+	}
+	d.Set("arn", arn.String())
+
 	return nil
 }
 
@@ -333,6 +377,9 @@ func instanceDescriptionAttributes(d *schema.ResourceData, instance *ec2.Instanc
 	}
 	if instance.Placement.Tenancy != nil {
 		d.Set("tenancy", instance.Placement.Tenancy)
+	}
+	if instance.Placement.HostId != nil {
+		d.Set("host_id", instance.Placement.HostId)
 	}
 	d.Set("ami", instance.ImageId)
 	d.Set("instance_type", instance.InstanceType)
@@ -401,18 +448,31 @@ func instanceDescriptionAttributes(d *schema.ResourceData, instance *ec2.Instanc
 		if err != nil {
 			return err
 		}
-		if attr.UserData.Value != nil {
-			d.Set("user_data", userDataHashSum(*attr.UserData.Value))
+		if attr != nil && attr.UserData != nil && attr.UserData.Value != nil {
+			d.Set("user_data", userDataHashSum(aws.StringValue(attr.UserData.Value)))
+			if d.Get("get_user_data").(bool) {
+				d.Set("user_data_base64", aws.StringValue(attr.UserData.Value))
+			}
 		}
 	}
-	{
-		creditSpecifications, err := getCreditSpecifications(conn, d.Id())
+
+	var creditSpecifications []map[string]interface{}
+
+	// AWS Standard will return InstanceCreditSpecification.NotSupported errors for EC2 Instance IDs outside T2 and T3 instance types
+	// Reference: https://github.com/terraform-providers/terraform-provider-aws/issues/8055
+	if strings.HasPrefix(aws.StringValue(instance.InstanceType), "t2") || strings.HasPrefix(aws.StringValue(instance.InstanceType), "t3") {
+		var err error
+		creditSpecifications, err = getCreditSpecifications(conn, d.Id())
+
+		// Ignore UnsupportedOperation errors for AWS China and GovCloud (US)
+		// Reference: https://github.com/terraform-providers/terraform-provider-aws/pull/4362
 		if err != nil && !isAWSErr(err, "UnsupportedOperation", "") {
-			return err
+			return fmt.Errorf("error getting EC2 Instance (%s) Credit Specifications: %s", d.Id(), err)
 		}
-		if err := d.Set("credit_specification", creditSpecifications); err != nil {
-			return fmt.Errorf("error setting credit_specification: %s", err)
-		}
+	}
+
+	if err := d.Set("credit_specification", creditSpecifications); err != nil {
+		return fmt.Errorf("error setting credit_specification: %s", err)
 	}
 
 	return nil

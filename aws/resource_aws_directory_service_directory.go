@@ -215,6 +215,7 @@ func createDirectoryConnector(dsconn *directoryservice.DirectoryService, d *sche
 	input := directoryservice.ConnectDirectoryInput{
 		Name:     aws.String(d.Get("name").(string)),
 		Password: aws.String(d.Get("password").(string)),
+		Tags:     tagsFromMapDS(d.Get("tags").(map[string]interface{})),
 	}
 
 	if v, ok := d.GetOk("description"); ok {
@@ -249,6 +250,7 @@ func createSimpleDirectoryService(dsconn *directoryservice.DirectoryService, d *
 	input := directoryservice.CreateDirectoryInput{
 		Name:     aws.String(d.Get("name").(string)),
 		Password: aws.String(d.Get("password").(string)),
+		Tags:     tagsFromMapDS(d.Get("tags").(map[string]interface{})),
 	}
 
 	if v, ok := d.GetOk("description"); ok {
@@ -283,6 +285,7 @@ func createActiveDirectoryService(dsconn *directoryservice.DirectoryService, d *
 	input := directoryservice.CreateMicrosoftADInput{
 		Name:     aws.String(d.Get("name").(string)),
 		Password: aws.String(d.Get("password").(string)),
+		Tags:     tagsFromMapDS(d.Get("tags").(map[string]interface{})),
 	}
 
 	if v, ok := d.GetOk("description"); ok {
@@ -308,6 +311,28 @@ func createActiveDirectoryService(dsconn *directoryservice.DirectoryService, d *
 	log.Printf("[DEBUG] Microsoft AD Directory Service created: %s", out)
 
 	return *out.DirectoryId, nil
+}
+
+func enableDirectoryServiceSso(dsconn *directoryservice.DirectoryService, d *schema.ResourceData) error {
+	d.SetPartial("enable_sso")
+
+	if v, ok := d.GetOk("enable_sso"); ok && v.(bool) {
+		log.Printf("[DEBUG] Enabling SSO for DS directory %q", d.Id())
+		if _, err := dsconn.EnableSso(&directoryservice.EnableSsoInput{
+			DirectoryId: aws.String(d.Id()),
+		}); err != nil {
+			return fmt.Errorf("Error Enabling SSO for DS directory %s: %s", d.Id(), err)
+		}
+	} else {
+		log.Printf("[DEBUG] Disabling SSO for DS directory %q", d.Id())
+		if _, err := dsconn.DisableSso(&directoryservice.DisableSsoInput{
+			DirectoryId: aws.String(d.Id()),
+		}); err != nil {
+			return fmt.Errorf("Error Disabling SSO for DS directory %s: %s", d.Id(), err)
+		}
+	}
+
+	return nil
 }
 
 func resourceAwsDirectoryServiceDirectoryCreate(d *schema.ResourceData, meta interface{}) error {
@@ -380,29 +405,20 @@ func resourceAwsDirectoryServiceDirectoryCreate(d *schema.ResourceData, meta int
 			*out.Alias, *out.DirectoryId)
 	}
 
-	return resourceAwsDirectoryServiceDirectoryUpdate(d, meta)
+	if d.HasChange("enable_sso") {
+		if err := enableDirectoryServiceSso(dsconn, d); err != nil {
+			return err
+		}
+	}
+
+	return resourceAwsDirectoryServiceDirectoryRead(d, meta)
 }
 
 func resourceAwsDirectoryServiceDirectoryUpdate(d *schema.ResourceData, meta interface{}) error {
 	dsconn := meta.(*AWSClient).dsconn
 
 	if d.HasChange("enable_sso") {
-		d.SetPartial("enable_sso")
-		var err error
-
-		if v, ok := d.GetOk("enable_sso"); ok && v.(bool) {
-			log.Printf("[DEBUG] Enabling SSO for DS directory %q", d.Id())
-			_, err = dsconn.EnableSso(&directoryservice.EnableSsoInput{
-				DirectoryId: aws.String(d.Id()),
-			})
-		} else {
-			log.Printf("[DEBUG] Disabling SSO for DS directory %q", d.Id())
-			_, err = dsconn.DisableSso(&directoryservice.DisableSsoInput{
-				DirectoryId: aws.String(d.Id()),
-			})
-		}
-
-		if err != nil {
+		if err := enableDirectoryServiceSso(dsconn, d); err != nil {
 			return err
 		}
 	}
@@ -453,8 +469,10 @@ func resourceAwsDirectoryServiceDirectoryRead(d *schema.ResourceData, meta inter
 	d.Set("connect_settings", flattenDSConnectSettings(dir.DnsIpAddrs, dir.ConnectSettings))
 	d.Set("enable_sso", dir.SsoEnabled)
 
-	if dir.VpcSettings != nil {
-		d.Set("security_group_id", *dir.VpcSettings.SecurityGroupId)
+	if aws.StringValue(dir.Type) == directoryservice.DirectoryTypeAdconnector {
+		d.Set("security_group_id", aws.StringValue(dir.ConnectSettings.SecurityGroupId))
+	} else {
+		d.Set("security_group_id", aws.StringValue(dir.VpcSettings.SecurityGroupId))
 	}
 
 	tagList, err := dsconn.ListTagsForResource(&directoryservice.ListTagsForResourceInput{
@@ -475,14 +493,22 @@ func resourceAwsDirectoryServiceDirectoryDelete(d *schema.ResourceData, meta int
 		DirectoryId: aws.String(d.Id()),
 	}
 
-	log.Printf("[DEBUG] Delete Directory input: %s", input)
+	log.Printf("[DEBUG] Deleting Directory Service Directory: %s", input)
 	_, err := dsconn.DeleteDirectory(&input)
 	if err != nil {
-		return err
+		return fmt.Errorf("error deleting Directory Service Directory (%s): %s", d.Id(), err)
 	}
 
-	// Wait for deletion
-	log.Printf("[DEBUG] Waiting for DS (%q) to be deleted", d.Id())
+	log.Printf("[DEBUG] Waiting for Directory Service Directory (%q) to be deleted", d.Id())
+	err = waitForDirectoryServiceDirectoryDeletion(dsconn, d.Id())
+	if err != nil {
+		return fmt.Errorf("error waiting for Directory Service (%s) to be deleted: %s", d.Id(), err)
+	}
+
+	return nil
+}
+
+func waitForDirectoryServiceDirectoryDeletion(conn *directoryservice.DirectoryService, directoryID string) error {
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{
 			directoryservice.DirectoryStageActive,
@@ -490,8 +516,8 @@ func resourceAwsDirectoryServiceDirectoryDelete(d *schema.ResourceData, meta int
 		},
 		Target: []string{directoryservice.DirectoryStageDeleted},
 		Refresh: func() (interface{}, string, error) {
-			resp, err := dsconn.DescribeDirectories(&directoryservice.DescribeDirectoriesInput{
-				DirectoryIds: []*string{aws.String(d.Id())},
+			resp, err := conn.DescribeDirectories(&directoryservice.DescribeDirectoriesInput{
+				DirectoryIds: []*string{aws.String(directoryID)},
 			})
 			if err != nil {
 				if isAWSErr(err, directoryservice.ErrCodeEntityDoesNotExistException, "") {
@@ -500,22 +526,17 @@ func resourceAwsDirectoryServiceDirectoryDelete(d *schema.ResourceData, meta int
 				return nil, "error", err
 			}
 
-			if len(resp.DirectoryDescriptions) == 0 {
+			if len(resp.DirectoryDescriptions) == 0 || resp.DirectoryDescriptions[0] == nil {
 				return 42, directoryservice.DirectoryStageDeleted, nil
 			}
 
 			ds := resp.DirectoryDescriptions[0]
-			log.Printf("[DEBUG] Deletion of DS %q is in following stage: %q.",
-				d.Id(), *ds.Stage)
-			return ds, *ds.Stage, nil
+			log.Printf("[DEBUG] Deletion of Directory Service Directory %q is in following stage: %q.", directoryID, aws.StringValue(ds.Stage))
+			return ds, aws.StringValue(ds.Stage), nil
 		},
 		Timeout: 60 * time.Minute,
 	}
-	if _, err := stateConf.WaitForState(); err != nil {
-		return fmt.Errorf(
-			"Error waiting for Directory Service (%s) to be deleted: %q",
-			d.Id(), err.Error())
-	}
+	_, err := stateConf.WaitForState()
 
-	return nil
+	return err
 }

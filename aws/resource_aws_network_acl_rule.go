@@ -42,10 +42,15 @@ func resourceAwsNetworkAclRule() *schema.Resource {
 				Required: true,
 				ForceNew: true,
 				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
-					if old == "all" && new == "-1" || old == "-1" && new == "all" {
-						return true
+					pi := protocolIntegers()
+					if val, ok := pi[old]; ok {
+						old = strconv.Itoa(val)
 					}
-					return false
+					if val, ok := pi[new]; ok {
+						new = strconv.Itoa(val)
+					}
+
+					return old == new
 				},
 			},
 			"rule_action": {
@@ -120,7 +125,7 @@ func resourceAwsNetworkAclRuleCreate(d *schema.ResourceData, meta interface{}) e
 	cidr, hasCidr := d.GetOk("cidr_block")
 	ipv6Cidr, hasIpv6Cidr := d.GetOk("ipv6_cidr_block")
 
-	if hasCidr == false && hasIpv6Cidr == false {
+	if !hasCidr && !hasIpv6Cidr {
 		return fmt.Errorf("Either `cidr_block` or `ipv6_cidr_block` must be defined")
 	}
 
@@ -133,8 +138,8 @@ func resourceAwsNetworkAclRuleCreate(d *schema.ResourceData, meta interface{}) e
 	}
 
 	// Specify additional required fields for ICMP. For the list
-	// of ICMP codes and types, see: http://www.nthelp.com/icmp.html
-	if p == 1 {
+	// of ICMP codes and types, see: https://www.iana.org/assignments/icmp-parameters/icmp-parameters.xhtml
+	if p == 1 || p == 58 {
 		params.IcmpTypeCode = &ec2.IcmpTypeCode{}
 		if v, ok := d.GetOk("icmp_type"); ok {
 			icmpType, err := strconv.Atoi(v.(string))
@@ -164,18 +169,24 @@ func resourceAwsNetworkAclRuleCreate(d *schema.ResourceData, meta interface{}) e
 	// It appears it might be a while until the newly created rule is visible via the
 	// API (see issue GH-4721). Retry the `findNetworkAclRule` function until it is
 	// visible (which in most cases is likely immediately).
+	var r *ec2.NetworkAclEntry
 	err = resource.Retry(3*time.Minute, func() *resource.RetryError {
-		r, findErr := findNetworkAclRule(d, meta)
-		if findErr != nil {
-			return resource.RetryableError(findErr)
+		r, err = findNetworkAclRule(d, meta)
+		if err != nil {
+			return resource.RetryableError(err)
 		}
 		if r == nil {
-			err := fmt.Errorf("Network ACL rule (%s) not found", d.Id())
-			return resource.RetryableError(err)
+			return resource.RetryableError(fmt.Errorf("Network ACL rule (%s) not found", d.Id()))
 		}
 
 		return nil
 	})
+	if isResourceTimeoutError(err) {
+		r, err = findNetworkAclRule(d, meta)
+		if r == nil {
+			return fmt.Errorf("Network ACL rule (%s) not found", d.Id())
+		}
+	}
 	if err != nil {
 		return fmt.Errorf("Created Network ACL Rule was not visible in API within 3 minute period. Running 'terraform apply' again will resume infrastructure creation.")
 	}
@@ -264,6 +275,11 @@ func findNetworkAclRule(d *schema.ResourceData, meta interface{}) (*ec2.NetworkA
 	log.Printf("[INFO] Describing Network Acl: %s", d.Get("network_acl_id").(string))
 	log.Printf("[INFO] Describing Network Acl with the Filters %#v", params)
 	resp, err := conn.DescribeNetworkAcls(params)
+
+	if isAWSErr(err, "InvalidNetworkAclID.NotFound", "") {
+		return nil, nil
+	}
+
 	if err != nil {
 		return nil, fmt.Errorf("Error Finding Network Acl Rule %d: %s", d.Get("rule_number").(int), err.Error())
 	}

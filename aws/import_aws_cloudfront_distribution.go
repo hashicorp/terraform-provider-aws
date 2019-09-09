@@ -10,6 +10,7 @@ func resourceAwsCloudFrontDistributionImport(d *schema.ResourceData, meta interf
 	// This is a non API attribute
 	// We are merely setting this to the same value as the Default setting in the schema
 	d.Set("retain_on_delete", false)
+	d.Set("wait_for_deployment", true)
 
 	conn := meta.(*AWSClient).cloudfrontconn
 	id := d.Id()

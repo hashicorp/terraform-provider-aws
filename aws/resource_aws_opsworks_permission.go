@@ -98,7 +98,7 @@ func resourceAwsOpsworksPermissionRead(d *schema.ResourceData, meta interface{})
 
 	}
 
-	if false == found {
+	if !found {
 		d.SetId("")
 		log.Printf("[INFO] The correct permission could not be found for: %s on stack: %s", d.Get("user_arn"), d.Get("stack_id"))
 	}
@@ -121,19 +121,20 @@ func resourceAwsOpsworksSetPermission(d *schema.ResourceData, meta interface{}) 
 	}
 
 	err := resource.Retry(2*time.Minute, func() *resource.RetryError {
-		var cerr error
-		_, cerr = client.SetPermission(req)
-		if cerr != nil {
-			log.Printf("[INFO] client error")
-			if opserr, ok := cerr.(awserr.Error); ok {
-				// XXX: handle errors
-				log.Printf("[ERROR] OpsWorks error: %s message: %s", opserr.Code(), opserr.Message())
-				return resource.RetryableError(cerr)
+		_, err := client.SetPermission(req)
+		if err != nil {
+
+			if isAWSErr(err, opsworks.ErrCodeResourceNotFoundException, "Unable to find user with ARN") {
+				return resource.RetryableError(err)
 			}
-			return resource.NonRetryableError(cerr)
+			return resource.NonRetryableError(err)
 		}
 		return nil
 	})
+
+	if isResourceTimeoutError(err) {
+		_, err = client.SetPermission(req)
+	}
 
 	if err != nil {
 		return err

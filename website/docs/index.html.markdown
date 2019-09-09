@@ -19,14 +19,13 @@ Use the navigation to the left to read about the available resources.
 ```hcl
 # Configure the AWS Provider
 provider "aws" {
-  access_key = "${var.aws_access_key}"
-  secret_key = "${var.aws_secret_key}"
-  region     = "us-east-1"
+  version = "~> 2.0"
+  region  = "us-east-1"
 }
 
-# Create a web server
-resource "aws_instance" "web" {
-  # ...
+# Create a VPC
+resource "aws_vpc" "example" {
+  cidr_block = "10.0.0.0/16"
 }
 ```
 
@@ -43,16 +42,20 @@ explained below:
 
 ### Static credentials ###
 
-Static credentials can be provided by adding an `access_key` and `secret_key` in-line in the
-AWS provider block:
+!> **Warning:** Hard-coding credentials into any Terraform configuration is not
+recommended, and risks secret leakage should this file ever be committed to a
+public version control system.
+
+Static credentials can be provided by adding an `access_key` and `secret_key`
+in-line in the AWS provider block:
 
 Usage:
 
 ```hcl
 provider "aws" {
   region     = "us-west-2"
-  access_key = "anaccesskey"
-  secret_key = "asecretkey"
+  access_key = "my-access-key"
+  secret_key = "my-secret-key"
 }
 ```
 
@@ -72,7 +75,7 @@ provider "aws" {}
 
 Usage:
 
-```hcl
+```sh
 $ export AWS_ACCESS_KEY_ID="anaccesskey"
 $ export AWS_SECRET_ACCESS_KEY="asecretkey"
 $ export AWS_DEFAULT_REGION="us-west-2"
@@ -100,6 +103,9 @@ provider "aws" {
   profile                 = "customprofile"
 }
 ```
+
+If specifying the profile through the `AWS_PROFILE` environment variable, you
+may also need to set `AWS_SDK_LOAD_CONFIG` to a truthy value (e.g. `AWS_SDK_LOAD_CONFIG=1`) for advanced AWS client configurations, such as profiles that use the `source_profile` or `role_arn` configurations.
 
 ### ECS and CodeBuild Task Roles
 
@@ -171,11 +177,14 @@ In addition to [generic `provider` arguments](https://www.terraform.io/docs/conf
 * `assume_role` - (Optional) An `assume_role` block (documented below). Only one
   `assume_role` block may be in the configuration.
 
+* `endpoints` - (Optional) Configuration block for customizing service endpoints. See the
+[Custom Service Endpoints Guide](/docs/providers/aws/guides/custom-service-endpoints.html)
+for more information about connecting to alternate AWS endpoints or AWS compatible solutions.
+
 * `shared_credentials_file` = (Optional) This is the path to the shared credentials file.
   If this is not set and a profile is specified, `~/.aws/credentials` will be used.
 
-* `token` - (Optional) Use this to set an MFA token. It can also be sourced
-  from the `AWS_SESSION_TOKEN` environment variable.
+* `token` - (Optional) Session token for validating temporary credentials. Typically provided after successful identity federation or Multi-Factor Authentication (MFA) login. With MFA login, this is the session token provided afterwards, not the 6 digit MFA code used to get temporary credentials.  It can also be sourced from the `AWS_SESSION_TOKEN` environment variable.
 
 * `max_retries` - (Optional) This is the maximum number of times an API
   call is retried, in the case where requests are being throttled or
@@ -209,19 +218,50 @@ In addition to [generic `provider` arguments](https://www.terraform.io/docs/conf
 
 * `skip_requesting_account_id` - (Optional) Skip requesting the account
   ID.  Useful for AWS API implementations that do not have the IAM, STS
-  API, or metadata API.  When set to `true`, prevents you from managing
-  any resource that requires Account ID to construct an ARN, e.g.
-  - `aws_db_instance`
-  - `aws_db_option_group`
-  - `aws_db_parameter_group`
-  - `aws_db_security_group`
-  - `aws_db_subnet_group`
-  - `aws_elasticache_cluster`
-  - `aws_glacier_vault`
-  - `aws_rds_cluster`
-  - `aws_rds_cluster_instance`
-  - `aws_rds_cluster_parameter_group`
-  - `aws_redshift_cluster`
+  API, or metadata API.  When set to `true` and not determined previously,
+  returns an empty account ID when manually constructing ARN attributes with
+  the following:
+  - [`aws_api_gateway_deployment` resource](/docs/providers/aws/r/api_gateway_deployment.html)
+  - [`aws_api_gateway_rest_api` resource](/docs/providers/aws/r/api_gateway_rest_api.html)
+  - [`aws_api_gateway_stage` resource](/docs/providers/aws/r/api_gateway_stage.html)
+  - [`aws_budgets_budget` resource](/docs/providers/aws/r/budgets_budget.html)
+  - [`aws_cognito_identity_pool` resource](/docs/providers/aws/r/cognito_identity_pool.html)
+  - [`aws_cognito_user_pool` resource](/docs/providers/aws/r/cognito_user_pool.html)
+  - [`aws_cognito_user_pools` data source](/docs/providers/aws/d/cognito_user_pools.html)
+  - [`aws_dms_replication_subnet_group` resource](/docs/providers/aws/r/dms_replication_subnet_group.html)
+  - [`aws_dx_connection` resource](/docs/providers/aws/r/dx_connection.html)
+  - [`aws_dx_hosted_private_virtual_interface_accepter` resource](/docs/providers/aws/r/dx_hosted_private_virtual_interface_accepter.html)
+  - [`aws_dx_hosted_private_virtual_interface` resource](/docs/providers/aws/r/dx_hosted_private_virtual_interface.html)
+  - [`aws_dx_hosted_public_virtual_interface_accepter` resource](/docs/providers/aws/r/dx_hosted_public_virtual_interface_accepter.html)
+  - [`aws_dx_hosted_public_virtual_interface` resource](/docs/providers/aws/r/dx_hosted_public_virtual_interface.html)
+  - [`aws_dx_lag` resource](/docs/providers/aws/r/dx_lag.html)
+  - [`aws_dx_private_virtual_interface` resource](/docs/providers/aws/r/dx_private_virtual_interface.html)
+  - [`aws_dx_public_virtual_interface` resource](/docs/providers/aws/r/dx_public_virtual_interface.html)
+  - [`aws_ebs_volume` data source](/docs/providers/aws/d/ebs_volume.html)
+  - [`aws_ecs_cluster` resource (import)](/docs/providers/aws/r/ecs_cluster.html)
+  - [`aws_ecs_service` resource (import)](/docs/providers/aws/r/ecs_service.html)
+  - [`aws_efs_file_system` data source](/docs/providers/aws/d/efs_file_system.html)
+  - [`aws_efs_file_system` resource](/docs/providers/aws/r/efs_file_system.html)
+  - [`aws_efs_mount_target` data source](/docs/providers/aws/d/efs_mount_target.html)
+  - [`aws_efs_mount_target` resource](/docs/providers/aws/r/efs_mount_target.html)
+  - [`aws_elasticache_cluster` data source](/docs/providers/aws/d/elasticache_cluster.html)
+  - [`aws_elasticache_cluster` resource](/docs/providers/aws/r/elasticache_cluster.html)
+  - [`aws_elb` resource](/docs/providers/aws/r/elb.html)
+  - [`aws_glue_crawler` resource](/docs/providers/aws/r/glue_crawler.html)
+  - [`aws_instance` data source](/docs/providers/aws/d/instance.html)
+  - [`aws_instance` resource](/docs/providers/aws/r/instance.html)
+  - [`aws_launch_template` resource](/docs/providers/aws/r/launch_template.html)
+  - [`aws_redshift_cluster` resource](/docs/providers/aws/r/redshift_cluster.html)
+  - [`aws_redshift_subnet_group` resource](/docs/providers/aws/r/redshift_subnet_group.html)
+  - [`aws_s3_account_public_access_block` resource](/docs/providers/aws/r/s3_account_public_access_block.html)
+  - [`aws_ses_domain_identity_verification` resource](/docs/providers/aws/r/ses_domain_identity_verification.html)
+  - [`aws_ses_domain_identity` resource](/docs/providers/aws/r/ses_domain_identity.html)
+  - [`aws_ssm_document` resource](/docs/providers/aws/r/ssm_document.html)
+  - [`aws_ssm_parameter` resource](/docs/providers/aws/r/ssm_parameter.html)
+  - [`aws_vpc` data source](/docs/providers/aws/d/vpc.html)
+  - [`aws_vpc` resource](/docs/providers/aws/r/vpc.html)
+  - [`aws_waf_ipset` resource](/docs/providers/aws/r/waf_ipset.html)
+  - [`aws_wafregional_ipset` resource](/docs/providers/aws/r/wafregional_ipset.html)
 
 * `skip_metadata_api_check` - (Optional) Skip the AWS Metadata API
   check.  Useful for AWS API implementations that do not have a metadata
@@ -250,112 +290,6 @@ The nested `assume_role` block supports the following:
 This gives you a way to further restrict the permissions for the resulting temporary
 security credentials. You cannot use the passed policy to grant permissions that are
 in excess of those allowed by the access policy of the role that is being assumed.
-
-Nested `endpoints` block supports the following:
-
-* `acm` - (Optional) Use this to override the default endpoint
-  URL constructed from the `region`. It's typically used to connect to
-  custom ACM endpoints.
-
-* `apigateway` - (Optional) Use this to override the default endpoint
-  URL constructed from the `region`. It's typically used to connect to
-  custom API Gateway endpoints.
-
-* `cloudformation` - (Optional) Use this to override the default endpoint
-  URL constructed from the `region`. It's typically used to connect to
-  custom CloudFormation endpoints.
-
-* `cloudwatch` - (Optional) Use this to override the default endpoint
-  URL constructed from the `region`. It's typically used to connect to
-  custom CloudWatch endpoints.
-
-* `cloudwatchevents` - (Optional) Use this to override the default endpoint
-  URL constructed from the `region`. It's typically used to connect to
-  custom CloudWatchEvents endpoints.
-
-* `cloudwatchlogs` - (Optional) Use this to override the default endpoint
-  URL constructed from the `region`. It's typically used to connect to
-  custom CloudWatchLogs endpoints.
-
-* `devicefarm` - (Optional) Use this to override the default endpoint
-  URL constructed from the `region`. It's typically used to connect to
-  custom DeviceFarm endpoints.
-
-* `dynamodb` - (Optional) Use this to override the default endpoint
-  URL constructed from the `region`. It's typically used to connect to
-  `dynamodb-local`.
-
-* `ec2` - (Optional) Use this to override the default endpoint
-  URL constructed from the `region`. It's typically used to connect to
-  custom EC2 endpoints.
-
-* `autoscaling` - (Optional) Use this to override the default endpoint
-  URL constructed from the `region`. It's typically used to connect to
-  custom Autoscaling endpoints.
-
-* `ecr` - (Optional) Use this to override the default endpoint
-  URL constructed from the `region`. It's typically used to connect to
-  custom ECR endpoints.
-
-* `ecs` - (Optional) Use this to override the default endpoint
-  URL constructed from the `region`. It's typically used to connect to
-  custom ECS endpoints.
-
-* `elb` - (Optional) Use this to override the default endpoint
-  URL constructed from the `region`. It's typically used to connect to
-  custom ELB endpoints.
-
-* `efs` - (Optional) Use this to override the default endpoint
-  URL constructed from the `region`. It's typically used to connect to
-  custom EFS endpoints.
-
-* `es` - (Optional) Use this to override the default endpoint
-  URL constructed from the `region`.  It's typically used to connect to
-  custom Elasticsearch endpoints.
-
-* `iam` - (Optional) Use this to override the default endpoint
-  URL constructed from the `region`. It's typically used to connect to
-  custom IAM endpoints.
-
-* `kinesis` - (Optional) Use this to override the default endpoint
-  URL constructed from the `region`. It's typically used to connect to
-  `kinesalite`.
-
-* `kms` - (Optional) Use this to override the default endpoint
-  URL constructed from the `region`. It's typically used to connect to
-  custom KMS endpoints.
-
-* `lambda` - (Optional) Use this to override the default endpoint
-  URL constructed from the `region`. It's typically used to connect to
-  custom Lambda endpoints.
-
-* `r53` - (Optional) Use this to override the default endpoint
-  URL constructed from the `region`. It's typically used to connect to
-  custom Route53 endpoints.
-
-* `rds` - (Optional) Use this to override the default endpoint
-  URL constructed from the `region`. It's typically used to connect to
-  custom RDS endpoints.
-
-* `s3` - (Optional) Use this to override the default endpoint
-  URL constructed from the `region`. It's typically used to connect to
-  custom S3 endpoints.
-
-* `sns` - (Optional) Use this to override the default endpoint
-  URL constructed from the `region`. It's typically used to connect to
-  custom SNS endpoints.
-
-* `sqs` - (Optional) Use this to override the default endpoint
-  URL constructed from the `region`. It's typically used to connect to
-  custom SQS endpoints.
-
-* `sts` - (Optional) Use this to override the default endpoint
-  URL constructed from the `region`. It's typically used to connect to
-  custom STS endpoints.
-
-* `ssm` - (Optional) Use this to override the default endpoint
-  URL constructed from the `region`. It's typically used to connect to
-  custom SSM endpoints.
 
 ## Getting the Account ID
 

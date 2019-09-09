@@ -6,7 +6,7 @@ description: |-
   Provides an SSM Document resource
 ---
 
-# aws_ssm_document
+# Resource: aws_ssm_document
 
 Provides an SSM Document resource
 
@@ -50,7 +50,7 @@ The following arguments are supported:
 * `name` - (Required) The name of the document.
 * `content` - (Required) The JSON or YAML content of the document.
 * `document_format` - (Optional, defaults to JSON) The format of the document. Valid document types include: `JSON` and `YAML`
-* `document_type` - (Required) The type of the document. Valid document types include: `Command`, `Policy` and `Automation`
+* `document_type` - (Required) The type of the document. Valid document types include: `Command`, `Policy`, `Automation` and `Session`
 * `permissions` - (Optional) Additional Permissions to attach to the document. See [Permissions](#permissions) below for details.
 * `tags` - (Optional) A mapping of tags to assign to the object.
 
@@ -82,3 +82,11 @@ The permissions mapping supports the following:
 
 * `type` - The permission type for the document. The permission type can be `Share`.
 * `account_ids` - The AWS user accounts that should have access to the document. The account IDs can either be a group of account IDs or `All`.
+
+## Import
+
+SSM Documents can be imported using the name, e.g.
+
+```
+$ terraform import aws_ssm_document.example example
+```

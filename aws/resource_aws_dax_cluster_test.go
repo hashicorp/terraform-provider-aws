@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"log"
 	"regexp"
-	"strings"
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -47,10 +46,6 @@ func testSweepDAXClusters(region string) error {
 	log.Printf("[INFO] Found %d DAX clusters", len(resp.Clusters))
 
 	for _, cluster := range resp.Clusters {
-		if !strings.HasPrefix(*cluster.ClusterName, "tf-") {
-			continue
-		}
-
 		log.Printf("[INFO] Deleting DAX cluster %s", *cluster.ClusterName)
 		_, err := conn.DeleteCluster(&dax.DeleteClusterInput{
 			ClusterName: cluster.ClusterName,
@@ -63,11 +58,35 @@ func testSweepDAXClusters(region string) error {
 	return nil
 }
 
+func TestAccAWSDAXCluster_importBasic(t *testing.T) {
+	resourceName := "aws_dax_cluster.test"
+	rString := acctest.RandString(10)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSDax(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSDAXClusterDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSDAXClusterConfig(rString),
+			},
+
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func TestAccAWSDAXCluster_basic(t *testing.T) {
 	var dc dax.Cluster
 	rString := acctest.RandString(10)
-	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+	iamRoleResourceName := "aws_iam_role.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSDax(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSDAXClusterDestroy,
 		Steps: []resource.TestStep{
@@ -75,32 +94,34 @@ func TestAccAWSDAXCluster_basic(t *testing.T) {
 				Config: testAccAWSDAXClusterConfig(rString),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSDAXClusterExists("aws_dax_cluster.test", &dc),
+					testAccMatchResourceAttrRegionalARN("aws_dax_cluster.test", "arn", "dax", regexp.MustCompile("cache/.+")),
 					resource.TestMatchResourceAttr(
-						"aws_dax_cluster.test", "arn", regexp.MustCompile("^arn:aws:dax:[\\w-]+:\\d+:cache/")),
-					resource.TestMatchResourceAttr(
-						"aws_dax_cluster.test", "cluster_name", regexp.MustCompile("^tf-\\w+$")),
-					resource.TestMatchResourceAttr(
-						"aws_dax_cluster.test", "iam_role_arn", regexp.MustCompile("^arn:aws:iam::\\d+:role/")),
+						"aws_dax_cluster.test", "cluster_name", regexp.MustCompile(`^tf-\w+$`)),
+					resource.TestCheckResourceAttrPair("aws_dax_cluster.test", "iam_role_arn", iamRoleResourceName, "arn"),
 					resource.TestCheckResourceAttr(
-						"aws_dax_cluster.test", "node_type", "dax.r3.large"),
+						"aws_dax_cluster.test", "node_type", "dax.t2.small"),
 					resource.TestCheckResourceAttr(
 						"aws_dax_cluster.test", "replication_factor", "1"),
 					resource.TestCheckResourceAttr(
 						"aws_dax_cluster.test", "description", "test cluster"),
 					resource.TestMatchResourceAttr(
-						"aws_dax_cluster.test", "parameter_group_name", regexp.MustCompile("^default.dax")),
+						"aws_dax_cluster.test", "parameter_group_name", regexp.MustCompile(`^default.dax`)),
 					resource.TestMatchResourceAttr(
-						"aws_dax_cluster.test", "maintenance_window", regexp.MustCompile("^\\w{3}:\\d{2}:\\d{2}-\\w{3}:\\d{2}:\\d{2}$")),
+						"aws_dax_cluster.test", "maintenance_window", regexp.MustCompile(`^\w{3}:\d{2}:\d{2}-\w{3}:\d{2}:\d{2}$`)),
 					resource.TestCheckResourceAttr(
 						"aws_dax_cluster.test", "subnet_group_name", "default"),
 					resource.TestMatchResourceAttr(
-						"aws_dax_cluster.test", "nodes.0.id", regexp.MustCompile("^tf-[\\w-]+$")),
+						"aws_dax_cluster.test", "nodes.0.id", regexp.MustCompile(`^tf-[\w-]+$`)),
 					resource.TestMatchResourceAttr(
-						"aws_dax_cluster.test", "configuration_endpoint", regexp.MustCompile(":\\d+$")),
+						"aws_dax_cluster.test", "configuration_endpoint", regexp.MustCompile(`:\d+$`)),
 					resource.TestCheckResourceAttrSet(
 						"aws_dax_cluster.test", "cluster_address"),
 					resource.TestMatchResourceAttr(
-						"aws_dax_cluster.test", "port", regexp.MustCompile("^\\d+$")),
+						"aws_dax_cluster.test", "port", regexp.MustCompile(`^\d+$`)),
+					resource.TestCheckResourceAttr(
+						"aws_dax_cluster.test", "server_side_encryption.#", "1"),
+					resource.TestCheckResourceAttr(
+						"aws_dax_cluster.test", "server_side_encryption.0.enabled", "false"),
 				),
 			},
 		},
@@ -110,8 +131,8 @@ func TestAccAWSDAXCluster_basic(t *testing.T) {
 func TestAccAWSDAXCluster_resize(t *testing.T) {
 	var dc dax.Cluster
 	rString := acctest.RandString(10)
-	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSDax(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSDAXClusterDestroy,
 		Steps: []resource.TestStep{
@@ -138,6 +159,58 @@ func TestAccAWSDAXCluster_resize(t *testing.T) {
 					resource.TestCheckResourceAttr(
 						"aws_dax_cluster.test", "replication_factor", "1"),
 				),
+			},
+		},
+	})
+}
+
+func TestAccAWSDAXCluster_encryption_disabled(t *testing.T) {
+	var dc dax.Cluster
+	rString := acctest.RandString(10)
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSDax(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSDAXClusterDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSDAXClusterConfigWithEncryption(rString, false),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSDAXClusterExists("aws_dax_cluster.test", &dc),
+					resource.TestCheckResourceAttr("aws_dax_cluster.test", "server_side_encryption.#", "1"),
+					resource.TestCheckResourceAttr("aws_dax_cluster.test", "server_side_encryption.0.enabled", "false"),
+				),
+			},
+			// Ensure it shows no difference when removing server_side_encryption configuration
+			{
+				Config:             testAccAWSDAXClusterConfig(rString),
+				PlanOnly:           true,
+				ExpectNonEmptyPlan: false,
+			},
+		},
+	})
+}
+
+func TestAccAWSDAXCluster_encryption_enabled(t *testing.T) {
+	var dc dax.Cluster
+	rString := acctest.RandString(10)
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSDax(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSDAXClusterDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSDAXClusterConfigWithEncryption(rString, true),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSDAXClusterExists("aws_dax_cluster.test", &dc),
+					resource.TestCheckResourceAttr("aws_dax_cluster.test", "server_side_encryption.#", "1"),
+					resource.TestCheckResourceAttr("aws_dax_cluster.test", "server_side_encryption.0.enabled", "true"),
+				),
+			},
+			// Ensure it shows a difference when removing server_side_encryption configuration
+			{
+				Config:             testAccAWSDAXClusterConfig(rString),
+				PlanOnly:           true,
+				ExpectNonEmptyPlan: true,
 			},
 		},
 	})
@@ -196,11 +269,23 @@ func testAccCheckAWSDAXClusterExists(n string, v *dax.Cluster) resource.TestChec
 	}
 }
 
-var baseConfig = `
-provider "aws" {
-  region = "us-west-2"
+func testAccPreCheckAWSDax(t *testing.T) {
+	conn := testAccProvider.Meta().(*AWSClient).daxconn
+
+	input := &dax.DescribeClustersInput{}
+
+	_, err := conn.DescribeClusters(input)
+
+	if testAccPreCheckSkipError(err) || isAWSErr(err, "InvalidParameterValueException", "Access Denied to API Version: DAX_V3") {
+		t.Skipf("skipping acceptance testing: %s", err)
+	}
+
+	if err != nil {
+		t.Fatalf("unexpected PreCheck error: %s", err)
+	}
 }
 
+const baseConfig = `
 resource "aws_iam_role" "test" {
   assume_role_policy = <<EOF
 {
@@ -238,38 +323,58 @@ EOF
 
 func testAccAWSDAXClusterConfig(rString string) string {
 	return fmt.Sprintf(`%s
-		resource "aws_dax_cluster" "test" {
- 		  cluster_name       = "tf-%s"
-		  iam_role_arn       = "${aws_iam_role.test.arn}"
-		  node_type          = "dax.r3.large"
-		  replication_factor = 1
-		  description        = "test cluster"
+resource "aws_dax_cluster" "test" {
+  cluster_name       = "tf-%s"
+  iam_role_arn       = "${aws_iam_role.test.arn}"
+  node_type          = "dax.t2.small"
+  replication_factor = 1
+  description        = "test cluster"
 
-		  tags {
-		    foo = "bar"
-		  }
-		}
-		`, baseConfig, rString)
+  tags = {
+    foo = "bar"
+  }
+}
+`, baseConfig, rString)
+}
+
+func testAccAWSDAXClusterConfigWithEncryption(rString string, enabled bool) string {
+	return fmt.Sprintf(`%s
+resource "aws_dax_cluster" "test" {
+  cluster_name       = "tf-%s"
+  iam_role_arn       = "${aws_iam_role.test.arn}"
+  node_type          = "dax.t2.small"
+  replication_factor = 1
+  description        = "test cluster"
+
+  tags = {
+    foo = "bar"
+  }
+
+  server_side_encryption {
+    enabled = %t
+  }
+}
+`, baseConfig, rString, enabled)
 }
 
 func testAccAWSDAXClusterConfigResize_singleNode(rString string) string {
 	return fmt.Sprintf(`%s
-		resource "aws_dax_cluster" "test" {
-		  cluster_name       = "tf-%s"
-		  iam_role_arn       = "${aws_iam_role.test.arn}"
-		  node_type          = "dax.r3.large"
-		  replication_factor = 1
-		}
-		`, baseConfig, rString)
+resource "aws_dax_cluster" "test" {
+  cluster_name       = "tf-%s"
+  iam_role_arn       = "${aws_iam_role.test.arn}"
+  node_type          = "dax.r3.large"
+  replication_factor = 1
+}
+`, baseConfig, rString)
 }
 
 func testAccAWSDAXClusterConfigResize_multiNode(rString string) string {
 	return fmt.Sprintf(`%s
-		resource "aws_dax_cluster" "test" {
-		  cluster_name       = "tf-%s"
-		  iam_role_arn       = "${aws_iam_role.test.arn}"
-		  node_type          = "dax.r3.large"
-		  replication_factor = 2
-		}
-		`, baseConfig, rString)
+resource "aws_dax_cluster" "test" {
+  cluster_name       = "tf-%s"
+  iam_role_arn       = "${aws_iam_role.test.arn}"
+  node_type          = "dax.r3.large"
+  replication_factor = 2
+}
+`, baseConfig, rString)
 }

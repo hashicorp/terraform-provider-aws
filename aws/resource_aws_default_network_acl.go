@@ -35,7 +35,6 @@ func resourceAwsDefaultNetworkAcl() *schema.Resource {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
-				Computed: false,
 			},
 			// We want explicit management of Subnets here, so we do not allow them to be
 			// computed. Instead, an empty config will enforce just that; removal of the
@@ -54,7 +53,6 @@ func resourceAwsDefaultNetworkAcl() *schema.Resource {
 			// rules
 			"ingress": {
 				Type:     schema.TypeSet,
-				Required: false,
 				Optional: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
@@ -100,7 +98,6 @@ func resourceAwsDefaultNetworkAcl() *schema.Resource {
 			},
 			"egress": {
 				Type:     schema.TypeSet,
-				Required: false,
 				Optional: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
@@ -146,6 +143,11 @@ func resourceAwsDefaultNetworkAcl() *schema.Resource {
 			},
 
 			"tags": tagsSchema(),
+
+			"owner_id": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 		},
 	}
 }
@@ -261,7 +263,7 @@ func revokeAllNetworkACLEntries(netaclId string, meta interface{}) error {
 	}
 
 	if resp == nil {
-		return fmt.Errorf("[ERR] Error looking up Default Network ACL Entries: No results")
+		return fmt.Errorf("Error looking up Default Network ACL Entries: No results")
 	}
 
 	networkAcl := resp.NetworkAcls[0]
@@ -275,7 +277,7 @@ func revokeAllNetworkACLEntries(netaclId string, meta interface{}) error {
 
 		// track if this is an egress or ingress rule, for logging purposes
 		rt := "ingress"
-		if *e.Egress == true {
+		if *e.Egress {
 			rt = "egress"
 		}
 

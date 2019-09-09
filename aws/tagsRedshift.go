@@ -9,8 +9,9 @@ import (
 	"github.com/hashicorp/terraform/helper/schema"
 )
 
-func setTagsRedshift(conn *redshift.Redshift, d *schema.ResourceData, arn string) error {
+func setTagsRedshift(conn *redshift.Redshift, d *schema.ResourceData) error {
 	if d.HasChange("tags") {
+		arn := d.Get("arn").(string)
 		oraw, nraw := d.GetChange("tags")
 		o := oraw.(map[string]interface{})
 		n := nraw.(map[string]interface{})
@@ -19,7 +20,7 @@ func setTagsRedshift(conn *redshift.Redshift, d *schema.ResourceData, arn string
 		// Set tags
 		if len(remove) > 0 {
 			log.Printf("[DEBUG] Removing tags: %#v", remove)
-			k := make([]*string, len(remove), len(remove))
+			k := make([]*string, len(remove))
 			for i, t := range remove {
 				k[i] = t.Key
 			}
@@ -99,7 +100,8 @@ func tagIgnoredRedshift(t *redshift.Tag) bool {
 	filter := []string{"^aws:"}
 	for _, v := range filter {
 		log.Printf("[DEBUG] Matching %v with %v\n", v, *t.Key)
-		if r, _ := regexp.MatchString(v, *t.Key); r == true {
+		r, _ := regexp.MatchString(v, *t.Key)
+		if r {
 			log.Printf("[DEBUG] Found AWS specific tag %s (val: %s), ignoring.\n", *t.Key, *t.Value)
 			return true
 		}

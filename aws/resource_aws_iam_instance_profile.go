@@ -2,11 +2,11 @@ package aws
 
 import (
 	"fmt"
+	"log"
 	"regexp"
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/iam"
 
 	"github.com/hashicorp/terraform/helper/resource"
@@ -52,7 +52,7 @@ func resourceAwsIamInstanceProfile() *schema.Resource {
 						errors = append(errors, fmt.Errorf(
 							"%q cannot be longer than 128 characters", k))
 					}
-					if !regexp.MustCompile("^[\\w+=,.@-]+$").MatchString(value) {
+					if !regexp.MustCompile(`^[\w+=,.@-]+$`).MatchString(value) {
 						errors = append(errors, fmt.Errorf(
 							"%q must match [\\w+=,.@-]", k))
 					}
@@ -72,7 +72,7 @@ func resourceAwsIamInstanceProfile() *schema.Resource {
 						errors = append(errors, fmt.Errorf(
 							"%q cannot be longer than 64 characters, name is limited to 128", k))
 					}
-					if !regexp.MustCompile("^[\\w+=,.@-]+$").MatchString(value) {
+					if !regexp.MustCompile(`^[\w+=,.@-]+$`).MatchString(value) {
 						errors = append(errors, fmt.Errorf(
 							"%q must match [\\w+=,.@-]", k))
 					}
@@ -122,7 +122,7 @@ func resourceAwsIamInstanceProfileCreate(d *schema.ResourceData, meta interface{
 	_, hasRoles := d.GetOk("roles")
 	_, hasRole := d.GetOk("role")
 
-	if hasRole == false && hasRoles == false {
+	if !hasRole && !hasRoles {
 		return fmt.Errorf("Either `role` or `roles` (deprecated) must be specified when creating an IAM Instance Profile")
 	}
 
@@ -160,7 +160,27 @@ func instanceProfileAddRole(iamconn *iam.IAM, profileName, roleName string) erro
 		RoleName:            aws.String(roleName),
 	}
 
-	_, err := iamconn.AddRoleToInstanceProfile(request)
+	err := resource.Retry(30*time.Second, func() *resource.RetryError {
+		var err error
+		_, err = iamconn.AddRoleToInstanceProfile(request)
+		// IAM unfortunately does not provide a better error code or message for eventual consistency
+		// InvalidParameterValue: Value (XXX) for parameter iamInstanceProfile.name is invalid. Invalid IAM Instance Profile name
+		// NoSuchEntity: The request was rejected because it referenced an entity that does not exist. The error message describes the entity. HTTP Status Code: 404
+		if isAWSErr(err, "InvalidParameterValue", "Invalid IAM Instance Profile name") || isAWSErr(err, "NoSuchEntity", "The role with name") {
+			return resource.RetryableError(err)
+		}
+		if err != nil {
+			return resource.NonRetryableError(err)
+		}
+		return nil
+	})
+	if isResourceTimeoutError(err) {
+		_, err = iamconn.AddRoleToInstanceProfile(request)
+	}
+	if err != nil {
+		return fmt.Errorf("Error adding IAM Role %s to Instance Profile %s: %s", roleName, profileName, err)
+	}
+
 	return err
 }
 
@@ -171,7 +191,7 @@ func instanceProfileRemoveRole(iamconn *iam.IAM, profileName, roleName string) e
 	}
 
 	_, err := iamconn.RemoveRoleFromInstanceProfile(request)
-	if iamerr, ok := err.(awserr.Error); ok && iamerr.Code() == "NoSuchEntity" {
+	if isAWSErr(err, "NoSuchEntity", "") {
 		return nil
 	}
 	return err
@@ -272,11 +292,12 @@ func resourceAwsIamInstanceProfileRead(d *schema.ResourceData, meta interface{})
 	}
 
 	result, err := iamconn.GetInstanceProfile(request)
+	if isAWSErr(err, "NoSuchEntity", "") {
+		log.Printf("[WARN] IAM Instance Profile %s is already gone", d.Id())
+		d.SetId("")
+		return nil
+	}
 	if err != nil {
-		if iamerr, ok := err.(awserr.Error); ok && iamerr.Code() == "NoSuchEntity" {
-			d.SetId("")
-			return nil
-		}
 		return fmt.Errorf("Error reading IAM instance profile %s: %s", d.Id(), err)
 	}
 
@@ -325,9 +346,6 @@ func instanceProfileReadResult(d *schema.ResourceData, result *iam.InstanceProfi
 	for _, role := range result.Roles {
 		roles.Add(*role.RoleName)
 	}
-	if err := d.Set("roles", roles); err != nil {
-		return err
-	}
-
-	return nil
+	err := d.Set("roles", roles)
+	return err
 }

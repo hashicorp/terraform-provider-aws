@@ -26,6 +26,28 @@ func TestAccAWSSpotDatafeedSubscription(t *testing.T) {
 	}
 }
 
+func testAccAWSSpotDatafeedSubscription_importBasic(t *testing.T) {
+	resourceName := "aws_spot_datafeed_subscription.default"
+	ri := acctest.RandInt()
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSSpotDatafeedSubscriptionDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSSpotDatafeedSubscription(ri),
+			},
+
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func testAccAWSSpotDatafeedSubscription_basic(t *testing.T) {
 	var subscription ec2.SpotDatafeedSubscription
 	ri := acctest.RandInt()
@@ -143,11 +165,11 @@ func testAccCheckAWSSpotDatafeedSubscriptionDestroy(s *terraform.State) error {
 func testAccAWSSpotDatafeedSubscription(randInt int) string {
 	return fmt.Sprintf(`
 resource "aws_s3_bucket" "default" {
-	bucket = "tf-spot-datafeed-%d"
+  bucket = "tf-spot-datafeed-%d"
 }
 
 resource "aws_spot_datafeed_subscription" "default" {
-	bucket = "${aws_s3_bucket.default.bucket}"
+  bucket = "${aws_s3_bucket.default.bucket}"
 }
 `, randInt)
 }

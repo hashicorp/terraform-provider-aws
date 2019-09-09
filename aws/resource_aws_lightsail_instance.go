@@ -3,6 +3,7 @@ package aws
 import (
 	"fmt"
 	"log"
+	"regexp"
 	"strconv"
 	"time"
 
@@ -11,12 +12,14 @@ import (
 	"github.com/aws/aws-sdk-go/service/lightsail"
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/helper/schema"
+	"github.com/hashicorp/terraform/helper/validation"
 )
 
 func resourceAwsLightsailInstance() *schema.Resource {
 	return &schema.Resource{
 		Create: resourceAwsLightsailInstanceCreate,
 		Read:   resourceAwsLightsailInstanceRead,
+		Update: resourceAwsLightsailInstanceUpdate,
 		Delete: resourceAwsLightsailInstanceDelete,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
@@ -27,6 +30,11 @@ func resourceAwsLightsailInstance() *schema.Resource {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
+				ValidateFunc: validation.All(
+					validation.StringLenBetween(3, 255),
+					validation.StringMatch(regexp.MustCompile(`^[a-zA-Z]`), "must begin with an alphabetic character"),
+					validation.StringMatch(regexp.MustCompile(`^[a-zA-Z0-9_\-.]+[^._\-]$`), "must contain only alphanumeric characters, underscores, hyphens, and dots"),
+				),
 			},
 			"availability_zone": {
 				Type:     schema.TypeString,
@@ -103,6 +111,7 @@ func resourceAwsLightsailInstance() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"tags": tagsSchema(),
 		},
 	}
 }
@@ -126,13 +135,19 @@ func resourceAwsLightsailInstanceCreate(d *schema.ResourceData, meta interface{}
 		req.UserData = aws.String(v.(string))
 	}
 
+	tags := tagsFromMapLightsail(d.Get("tags").(map[string]interface{}))
+
+	if len(tags) != 0 {
+		req.Tags = tags
+	}
+
 	resp, err := conn.CreateInstances(&req)
 	if err != nil {
 		return err
 	}
 
 	if len(resp.Operations) == 0 {
-		return fmt.Errorf("[ERR] No operations found for CreateInstance request")
+		return fmt.Errorf("No operations found for CreateInstance request")
 	}
 
 	op := resp.Operations[0]
@@ -149,7 +164,7 @@ func resourceAwsLightsailInstanceCreate(d *schema.ResourceData, meta interface{}
 
 	_, err = stateConf.WaitForState()
 	if err != nil {
-		// We don't return an error here because the Create call succeded
+		// We don't return an error here because the Create call succeeded
 		log.Printf("[ERR] Error waiting for instance (%s) to become ready: %s", d.Id(), err)
 	}
 
@@ -199,6 +214,10 @@ func resourceAwsLightsailInstanceRead(d *schema.ResourceData, meta interface{}) 
 	d.Set("private_ip_address", i.PrivateIpAddress)
 	d.Set("public_ip_address", i.PublicIpAddress)
 
+	if err := d.Set("tags", tagsToMapLightsail(i.Tags)); err != nil {
+		return fmt.Errorf("Error setting tags: %s", err)
+	}
+
 	return nil
 }
 
@@ -233,6 +252,19 @@ func resourceAwsLightsailInstanceDelete(d *schema.ResourceData, meta interface{}
 	return nil
 }
 
+func resourceAwsLightsailInstanceUpdate(d *schema.ResourceData, meta interface{}) error {
+	conn := meta.(*AWSClient).lightsailconn
+
+	if d.HasChange("tags") {
+		if err := setTagsLightsail(conn, d); err != nil {
+			return err
+		}
+		d.SetPartial("tags")
+	}
+
+	return resourceAwsLightsailInstanceRead(d, meta)
+}
+
 // method to check the status of an Operation, which is returned from
 // Create/Delete methods.
 // Status's are an aws.OperationStatus enum:
@@ -254,7 +286,7 @@ func resourceAwsLightsailOperationRefreshFunc(
 		}
 
 		if o.Operation == nil {
-			return nil, "Failed", fmt.Errorf("[ERR] Error retrieving Operation info for operation (%s)", *oid)
+			return nil, "Failed", fmt.Errorf("Error retrieving Operation info for operation (%s)", *oid)
 		}
 
 		log.Printf("[DEBUG] Lightsail Operation (%s) is currently %q", *oid, *o.Operation.Status)

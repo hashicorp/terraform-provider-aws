@@ -16,11 +16,10 @@ func resourceAwsVpcPeeringConnectionAccepter() *schema.Resource {
 		Delete: resourceAwsVPCPeeringAccepterDelete,
 
 		Schema: map[string]*schema.Schema{
-			"vpc_peering_connection_id": &schema.Schema{
+			"vpc_peering_connection_id": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
-				Computed: false,
 			},
 			"auto_accept": {
 				Type:     schema.TypeBool,

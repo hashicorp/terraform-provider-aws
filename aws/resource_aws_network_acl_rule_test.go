@@ -9,6 +9,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/ec2"
+	"github.com/hashicorp/terraform/helper/acctest"
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/terraform"
 )
@@ -16,7 +17,7 @@ import (
 func TestAccAWSNetworkAclRule_basic(t *testing.T) {
 	var networkAcl ec2.NetworkAcl
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSNetworkAclRuleDestroy,
@@ -33,9 +34,50 @@ func TestAccAWSNetworkAclRule_basic(t *testing.T) {
 	})
 }
 
+func TestAccAWSNetworkAclRule_disappears(t *testing.T) {
+	var networkAcl ec2.NetworkAcl
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSNetworkAclRuleDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSNetworkAclRuleBasicConfig,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSNetworkAclRuleExists("aws_network_acl_rule.baz", &networkAcl),
+					testAccCheckAWSNetworkAclRuleDelete("aws_network_acl_rule.baz"),
+				),
+				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}
+
+func TestAccAWSNetworkAclRule_disappears_NetworkAcl(t *testing.T) {
+	var networkAcl ec2.NetworkAcl
+	resourceName := "aws_network_acl.bar"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSNetworkAclRuleDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSNetworkAclRuleBasicConfig,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSNetworkAclExists(resourceName, &networkAcl),
+					testAccCheckAWSNetworkAclDisappears(&networkAcl),
+				),
+				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}
+
 func TestAccAWSNetworkAclRule_missingParam(t *testing.T) {
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSNetworkAclRuleDestroy,
@@ -51,7 +93,7 @@ func TestAccAWSNetworkAclRule_missingParam(t *testing.T) {
 func TestAccAWSNetworkAclRule_ipv6(t *testing.T) {
 	var networkAcl ec2.NetworkAcl
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSNetworkAclRuleDestroy,
@@ -66,9 +108,62 @@ func TestAccAWSNetworkAclRule_ipv6(t *testing.T) {
 	})
 }
 
+func TestAccAWSNetworkAclRule_ipv6ICMP(t *testing.T) {
+	var networkAcl ec2.NetworkAcl
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_network_acl_rule.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSNetworkAclRuleDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSNetworkAclRuleConfigIpv6ICMP(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSNetworkAclRuleExists(resourceName, &networkAcl),
+				),
+			},
+		},
+	})
+}
+
+// Reference: https://github.com/terraform-providers/terraform-provider-aws/issues/6710
+func TestAccAWSNetworkAclRule_ipv6VpcAssignGeneratedIpv6CidrBlockUpdate(t *testing.T) {
+	var networkAcl ec2.NetworkAcl
+	var vpc ec2.Vpc
+	vpcResourceName := "aws_vpc.test"
+	resourceName := "aws_network_acl_rule.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSNetworkAclRuleDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSNetworkAclRuleConfigIpv6VpcAssignGeneratedIpv6CidrBlockUpdate(false),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckVpcExists(vpcResourceName, &vpc),
+					resource.TestCheckResourceAttr(vpcResourceName, "assign_generated_ipv6_cidr_block", "false"),
+					resource.TestCheckResourceAttr(vpcResourceName, "ipv6_cidr_block", ""),
+				),
+			},
+			{
+				Config: testAccAWSNetworkAclRuleConfigIpv6VpcAssignGeneratedIpv6CidrBlockUpdate(true),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckVpcExists(vpcResourceName, &vpc),
+					resource.TestCheckResourceAttr(vpcResourceName, "assign_generated_ipv6_cidr_block", "true"),
+					resource.TestMatchResourceAttr(vpcResourceName, "ipv6_cidr_block", regexp.MustCompile(`/56$`)),
+					testAccCheckAWSNetworkAclRuleExists(resourceName, &networkAcl),
+				),
+			},
+		},
+	})
+}
+
 func TestAccAWSNetworkAclRule_allProtocol(t *testing.T) {
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSNetworkAclRuleDestroy,
@@ -79,6 +174,25 @@ func TestAccAWSNetworkAclRule_allProtocol(t *testing.T) {
 			},
 			{
 				Config:             testAccAWSNetworkAclRuleAllProtocolConfigNoRealUpdate,
+				ExpectNonEmptyPlan: false,
+			},
+		},
+	})
+}
+
+func TestAccAWSNetworkAclRule_tcpProtocol(t *testing.T) {
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSNetworkAclRuleDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config:             testAccAWSNetworkAclRuleTcpProtocolConfig,
+				ExpectNonEmptyPlan: false,
+			},
+			{
+				Config:             testAccAWSNetworkAclRuleTcpProtocolConfigNoRealUpdate,
 				ExpectNonEmptyPlan: false,
 			},
 		},
@@ -135,26 +249,6 @@ func TestResourceAWSNetworkAclRule_validateICMPArgumentValue(t *testing.T) {
 		}
 	}
 
-}
-
-func TestAccAWSNetworkAclRule_deleteRule(t *testing.T) {
-	var networkAcl ec2.NetworkAcl
-
-	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckAWSNetworkAclRuleDestroy,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccAWSNetworkAclRuleBasicConfig,
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSNetworkAclRuleExists("aws_network_acl_rule.baz", &networkAcl),
-					testAccCheckAWSNetworkAclRuleDelete("aws_network_acl_rule.baz"),
-				),
-				ExpectNonEmptyPlan: true,
-			},
-		},
-	})
 }
 
 func testAccCheckAWSNetworkAclRuleDestroy(s *terraform.State) error {
@@ -264,20 +358,16 @@ func testAccCheckAWSNetworkAclRuleDelete(n string) resource.TestCheckFunc {
 }
 
 const testAccAWSNetworkAclRuleBasicConfig = `
-provider "aws" {
-  region = "us-east-1"
-}
-
 resource "aws_vpc" "foo" {
 	cidr_block = "10.3.0.0/16"
-	tags {
+	tags = {
 		Name = "terraform-testacc-network-acl-rule-basic"
 	}
 }
 
 resource "aws_network_acl" "bar" {
 	vpc_id = "${aws_vpc.foo.id}"
-	tags {
+	tags = {
 		Name = "tf-acc-acl-rule-basic"
 	}
 }
@@ -315,20 +405,16 @@ resource "aws_network_acl_rule" "wibble" {
 `
 
 const testAccAWSNetworkAclRuleMissingParam = `
-provider "aws" {
-  region = "us-east-1"
-}
-
 resource "aws_vpc" "foo" {
 	cidr_block = "10.3.0.0/16"
-	tags {
+	tags = {
 		Name = "terraform-testacc-network-acl-rule-missing-param"
 	}
 }
 
 resource "aws_network_acl" "bar" {
 	vpc_id = "${aws_vpc.foo.id}"
-	tags {
+	tags = {
 		Name = "tf-acc-acl-rule-missing-param"
 	}
 }
@@ -347,14 +433,14 @@ resource "aws_network_acl_rule" "baz" {
 const testAccAWSNetworkAclRuleAllProtocolConfigNoRealUpdate = `
 resource "aws_vpc" "foo" {
 	cidr_block = "10.3.0.0/16"
-	tags {
+	tags = {
 		Name = "terraform-testacc-network-acl-rule-all-proto-no-real-upd"
 	}
 }
 
 resource "aws_network_acl" "bar" {
 	vpc_id = "${aws_vpc.foo.id}"
-	tags {
+	tags = {
 		Name = "tf-acc-acl-rule-no-real-update"
 	}
 }
@@ -371,17 +457,39 @@ resource "aws_network_acl_rule" "baz" {
 }
 `
 
+const testAccAWSNetworkAclRuleTcpProtocolConfigNoRealUpdate = `
+resource "aws_vpc" "foo" {
+	cidr_block = "10.3.0.0/16"
+	tags = {
+		Name = "testAccAWSNetworkAclRuleTcpProtocolConfigNoRealUpdate"
+	}
+}
+resource "aws_network_acl" "bar" {
+	vpc_id = "${aws_vpc.foo.id}"
+}
+resource "aws_network_acl_rule" "baz" {
+	network_acl_id = "${aws_network_acl.bar.id}"
+	rule_number = 150
+	egress = false
+	protocol = "tcp"
+	rule_action = "allow"
+	cidr_block = "0.0.0.0/0"
+	from_port = 22
+	to_port = 22
+}
+`
+
 const testAccAWSNetworkAclRuleAllProtocolConfig = `
 resource "aws_vpc" "foo" {
 	cidr_block = "10.3.0.0/16"
-	tags {
+	tags = {
 		Name = "terraform-testacc-network-acl-rule-proto"
 	}
 }
 
 resource "aws_network_acl" "bar" {
 	vpc_id = "${aws_vpc.foo.id}"
-	tags {
+	tags = {
 		Name = "tf-acc-acl-rule-all-protocol"
 	}
 }
@@ -398,17 +506,39 @@ resource "aws_network_acl_rule" "baz" {
 }
 `
 
+const testAccAWSNetworkAclRuleTcpProtocolConfig = `
+resource "aws_vpc" "foo" {
+	cidr_block = "10.3.0.0/16"
+	tags = {
+		Name = "testAccAWSNetworkAclRuleTcpProtocolConfig"
+	}
+}
+resource "aws_network_acl" "bar" {
+	vpc_id = "${aws_vpc.foo.id}"
+}
+resource "aws_network_acl_rule" "baz" {
+	network_acl_id = "${aws_network_acl.bar.id}"
+	rule_number = 150
+	egress = false
+	protocol = "6"
+	rule_action = "allow"
+	cidr_block = "0.0.0.0/0"
+	from_port = 22
+	to_port = 22
+}
+`
+
 const testAccAWSNetworkAclRuleIpv6Config = `
 resource "aws_vpc" "foo" {
 	cidr_block = "10.3.0.0/16"
-	tags {
+	tags = {
 		Name = "terraform-testacc-network-acl-rule-ipv6"
 	}
 }
 
 resource "aws_network_acl" "bar" {
 	vpc_id = "${aws_vpc.foo.id}"
-	tags {
+	tags = {
 		Name = "tf-acc-acl-rule-ipv6"
 	}
 }
@@ -424,3 +554,68 @@ resource "aws_network_acl_rule" "baz" {
 	to_port = 22
 }
 `
+
+func testAccAWSNetworkAclRuleConfigIpv6ICMP(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_vpc" "test" {
+  cidr_block = "10.3.0.0/16"
+
+  tags = {
+    Name = %q
+  }
+}
+
+resource "aws_network_acl" "test" {
+  vpc_id = "${aws_vpc.test.id}"
+
+  tags = {
+    Name = %q
+  }
+}
+
+resource "aws_network_acl_rule" "test" {
+  from_port       = -1
+  icmp_code       = -1
+  icmp_type       = -1
+  ipv6_cidr_block = "::/0"
+  network_acl_id  = "${aws_network_acl.test.id}"
+  protocol        = 58
+  rule_action     = "allow"
+  rule_number     = 150
+  to_port         = -1
+}
+`, rName, rName)
+}
+
+func testAccAWSNetworkAclRuleConfigIpv6VpcAssignGeneratedIpv6CidrBlockUpdate(ipv6Enabled bool) string {
+	return fmt.Sprintf(`
+resource "aws_vpc" "test" {
+  assign_generated_ipv6_cidr_block = %[1]t
+  cidr_block                       = "10.3.0.0/16"
+
+  tags = {
+    Name = "tf-acc-test-network-acl-rule-ipv6-enabled"
+  }
+}
+
+resource "aws_network_acl" "test" {
+  vpc_id = "${aws_vpc.test.id}"
+
+  tags = {
+    Name = "tf-acc-test-network-acl-rule-ipv6-enabled"
+  }
+}
+
+resource "aws_network_acl_rule" "test" {
+  count = "${%[1]t ? 1 : 0}"
+
+  from_port       = 22
+  ipv6_cidr_block = "${aws_vpc.test.ipv6_cidr_block}"
+  network_acl_id  = "${aws_network_acl.test.id}"
+  protocol        = "tcp"
+  rule_action     = "allow"
+  rule_number     = 150
+  to_port         = 22
+}
+`, ipv6Enabled)
+}

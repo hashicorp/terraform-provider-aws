@@ -16,6 +16,7 @@ import (
 	"github.com/hashicorp/terraform/helper/hashcode"
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/helper/schema"
+	"github.com/hashicorp/terraform/helper/validation"
 )
 
 func resourceAwsSecurityGroup() *schema.Resource {
@@ -43,7 +44,7 @@ func resourceAwsSecurityGroup() *schema.Resource {
 				Computed:      true,
 				ForceNew:      true,
 				ConflictsWith: []string{"name_prefix"},
-				ValidateFunc:  validateMaxLength(255),
+				ValidateFunc:  validation.StringLenBetween(0, 255),
 			},
 
 			"name_prefix": {
@@ -51,7 +52,7 @@ func resourceAwsSecurityGroup() *schema.Resource {
 				Optional:      true,
 				ForceNew:      true,
 				ConflictsWith: []string{"name"},
-				ValidateFunc:  validateMaxLength(100),
+				ValidateFunc:  validation.StringLenBetween(0, 100),
 			},
 
 			"description": {
@@ -59,7 +60,7 @@ func resourceAwsSecurityGroup() *schema.Resource {
 				Optional:     true,
 				ForceNew:     true,
 				Default:      "Managed by Terraform",
-				ValidateFunc: validateMaxLength(255),
+				ValidateFunc: validation.StringLenBetween(0, 255),
 			},
 
 			"vpc_id": {
@@ -70,9 +71,10 @@ func resourceAwsSecurityGroup() *schema.Resource {
 			},
 
 			"ingress": {
-				Type:     schema.TypeSet,
-				Optional: true,
-				Computed: true,
+				Type:       schema.TypeSet,
+				Optional:   true,
+				Computed:   true,
+				ConfigMode: schema.SchemaConfigModeAttr,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"from_port": {
@@ -109,6 +111,12 @@ func resourceAwsSecurityGroup() *schema.Resource {
 							},
 						},
 
+						"prefix_list_ids": {
+							Type:     schema.TypeList,
+							Optional: true,
+							Elem:     &schema.Schema{Type: schema.TypeString},
+						},
+
 						"security_groups": {
 							Type:     schema.TypeSet,
 							Optional: true,
@@ -133,9 +141,10 @@ func resourceAwsSecurityGroup() *schema.Resource {
 			},
 
 			"egress": {
-				Type:     schema.TypeSet,
-				Optional: true,
-				Computed: true,
+				Type:       schema.TypeSet,
+				Optional:   true,
+				Computed:   true,
+				ConfigMode: schema.SchemaConfigModeAttr,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"from_port": {
@@ -439,7 +448,7 @@ func resourceAwsSecurityGroupDelete(d *schema.ResourceData, meta interface{}) er
 
 	log.Printf("[DEBUG] Security Group destroy: %v", d.Id())
 
-	if err := deleteLingeringLambdaENIs(conn, d); err != nil {
+	if err := deleteLingeringLambdaENIs(conn, d, "group-id"); err != nil {
 		return fmt.Errorf("Failed to delete Lambda ENIs: %s", err)
 	}
 
@@ -449,31 +458,33 @@ func resourceAwsSecurityGroupDelete(d *schema.ResourceData, meta interface{}) er
 			return err
 		}
 	}
-
-	return resource.Retry(d.Timeout(schema.TimeoutDelete), func() *resource.RetryError {
-		_, err := conn.DeleteSecurityGroup(&ec2.DeleteSecurityGroupInput{
-			GroupId: aws.String(d.Id()),
-		})
+	input := &ec2.DeleteSecurityGroupInput{
+		GroupId: aws.String(d.Id()),
+	}
+	err := resource.Retry(d.Timeout(schema.TimeoutDelete), func() *resource.RetryError {
+		_, err := conn.DeleteSecurityGroup(input)
 		if err != nil {
-			ec2err, ok := err.(awserr.Error)
-			if !ok {
-				return resource.RetryableError(err)
-			}
-
-			switch ec2err.Code() {
-			case "InvalidGroup.NotFound":
+			if isAWSErr(err, "InvalidGroup.NotFound", "") {
 				return nil
-			case "DependencyViolation":
+			}
+			if isAWSErr(err, "DependencyViolation", "") {
 				// If it is a dependency violation, we want to retry
 				return resource.RetryableError(err)
-			default:
-				// Any other error, we want to quit the retry loop immediately
-				return resource.NonRetryableError(err)
 			}
+			resource.NonRetryableError(err)
 		}
-
 		return nil
 	})
+	if isResourceTimeoutError(err) {
+		_, err = conn.DeleteSecurityGroup(input)
+		if isAWSErr(err, "InvalidGroup.NotFound", "") {
+			return nil
+		}
+	}
+	if err != nil {
+		return fmt.Errorf("Error deleting security group: %s", err)
+	}
+	return nil
 }
 
 // Revoke all ingress/egress rules that a Security Group has
@@ -1130,7 +1141,7 @@ func matchRules(rType string, local []interface{}, remote []map[string]interface
 		}
 
 		if _, ok := r["self"]; ok {
-			if r["self"].(bool) == true {
+			if r["self"].(bool) {
 				lenSGs++
 			}
 		}
@@ -1328,9 +1339,9 @@ func idHash(rType, protocol string, toPort, fromPort int64, self bool) string {
 
 // protocolStateFunc ensures we only store a string in any protocol field
 func protocolStateFunc(v interface{}) string {
-	switch v.(type) {
+	switch v := v.(type) {
 	case string:
-		p := protocolForValue(v.(string))
+		p := protocolForValue(v)
 		return p
 	default:
 		log.Printf("[WARN] Non String value given for Protocol: %#v", v)
@@ -1381,24 +1392,22 @@ func protocolForValue(v string) string {
 // Similar to protocolIntegers() used by Network ACLs, but explicitly only
 // supports "tcp", "udp", "icmp", and "all"
 func sgProtocolIntegers() map[string]int {
-	var protocolIntegers = make(map[string]int)
-	protocolIntegers = map[string]int{
+	return map[string]int{
 		"udp":  17,
 		"tcp":  6,
 		"icmp": 1,
 		"all":  -1,
 	}
-	return protocolIntegers
 }
 
 // The AWS Lambda service creates ENIs behind the scenes and keeps these around for a while
 // which would prevent SGs attached to such ENIs from being destroyed
-func deleteLingeringLambdaENIs(conn *ec2.EC2, d *schema.ResourceData) error {
+func deleteLingeringLambdaENIs(conn *ec2.EC2, d *schema.ResourceData, filterName string) error {
 	// Here we carefully find the offenders
 	params := &ec2.DescribeNetworkInterfacesInput{
 		Filters: []*ec2.Filter{
 			{
-				Name:   aws.String("group-id"),
+				Name:   aws.String(filterName),
 				Values: []*string{aws.String(d.Id())},
 			},
 			{
@@ -1408,6 +1417,11 @@ func deleteLingeringLambdaENIs(conn *ec2.EC2, d *schema.ResourceData) error {
 		},
 	}
 	networkInterfaceResp, err := conn.DescribeNetworkInterfaces(params)
+
+	if isAWSErr(err, "InvalidNetworkInterfaceID.NotFound", "") {
+		return nil
+	}
+
 	if err != nil {
 		return err
 	}
@@ -1420,6 +1434,10 @@ func deleteLingeringLambdaENIs(conn *ec2.EC2, d *schema.ResourceData) error {
 				AttachmentId: eni.Attachment.AttachmentId,
 			}
 			_, detachNetworkInterfaceErr := conn.DetachNetworkInterface(detachNetworkInterfaceParams)
+
+			if isAWSErr(detachNetworkInterfaceErr, "InvalidNetworkInterfaceID.NotFound", "") {
+				return nil
+			}
 
 			if detachNetworkInterfaceErr != nil {
 				return detachNetworkInterfaceErr
@@ -1443,6 +1461,10 @@ func deleteLingeringLambdaENIs(conn *ec2.EC2, d *schema.ResourceData) error {
 		}
 		_, deleteNetworkInterfaceErr := conn.DeleteNetworkInterface(deleteNetworkInterfaceParams)
 
+		if isAWSErr(deleteNetworkInterfaceErr, "InvalidNetworkInterfaceID.NotFound", "") {
+			return nil
+		}
+
 		if deleteNetworkInterfaceErr != nil {
 			return deleteNetworkInterfaceErr
 		}
@@ -1459,8 +1481,11 @@ func networkInterfaceAttachedRefreshFunc(conn *ec2.EC2, id string) resource.Stat
 		}
 		describeResp, err := conn.DescribeNetworkInterfaces(describe_network_interfaces_request)
 
+		if isAWSErr(err, "InvalidNetworkInterfaceID.NotFound", "") {
+			return 42, "false", nil
+		}
+
 		if err != nil {
-			log.Printf("[ERROR] Could not find network interface %s. %s", id, err)
 			return nil, "", err
 		}
 

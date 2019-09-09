@@ -94,14 +94,14 @@ func resourceAwsSpotInstanceRequest() *schema.Resource {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ForceNew:     true,
-				ValidateFunc: validateRFC3339TimeString,
+				ValidateFunc: validation.ValidateRFC3339TimeString,
 				Computed:     true,
 			}
 			s["valid_until"] = &schema.Schema{
 				Type:         schema.TypeString,
 				Optional:     true,
 				ForceNew:     true,
-				ValidateFunc: validateRFC3339TimeString,
+				ValidateFunc: validation.ValidateRFC3339TimeString,
 				Computed:     true,
 			}
 			return s
@@ -118,8 +118,8 @@ func resourceAwsSpotInstanceRequestCreate(d *schema.ResourceData, meta interface
 	}
 
 	spotOpts := &ec2.RequestSpotInstancesInput{
-		SpotPrice: aws.String(d.Get("spot_price").(string)),
-		Type:      aws.String(d.Get("spot_type").(string)),
+		SpotPrice:                    aws.String(d.Get("spot_price").(string)),
+		Type:                         aws.String(d.Get("spot_type").(string)),
 		InstanceInterruptionBehavior: aws.String(d.Get("instance_interruption_behaviour").(string)),
 
 		// Though the AWS API supports creating spot instance requests for multiple
@@ -177,7 +177,6 @@ func resourceAwsSpotInstanceRequestCreate(d *schema.ResourceData, meta interface
 
 	var resp *ec2.RequestSpotInstancesOutput
 	err = resource.Retry(1*time.Minute, func() *resource.RetryError {
-		var err error
 		resp, err = conn.RequestSpotInstances(spotOpts)
 		// IAM instance profiles can take ~10 seconds to propagate in AWS:
 		// http://docs.aws.amazon.com/AWSEC2/latest/UserGuide/iam-roles-for-amazon-ec2.html#launch-instance-with-role-console
@@ -192,6 +191,10 @@ func resourceAwsSpotInstanceRequestCreate(d *schema.ResourceData, meta interface
 		}
 		return resource.NonRetryableError(err)
 	})
+
+	if isResourceTimeoutError(err) {
+		resp, err = conn.RequestSpotInstances(spotOpts)
+	}
 
 	if err != nil {
 		return fmt.Errorf("Error requesting spot instances: %s", err)
@@ -267,7 +270,7 @@ func resourceAwsSpotInstanceRequestRead(d *schema.ResourceData, meta interface{}
 		d.Set("spot_instance_id", *request.InstanceId)
 		// Read the instance data, setting up connection information
 		if err := readInstance(d, meta); err != nil {
-			return fmt.Errorf("[ERR] Error reading Spot Instance Data: %s", err)
+			return fmt.Errorf("Error reading Spot Instance Data: %s", err)
 		}
 	}
 
@@ -396,7 +399,7 @@ func resourceAwsSpotInstanceRequestDelete(d *schema.ResourceData, meta interface
 
 	if instanceId := d.Get("spot_instance_id").(string); instanceId != "" {
 		log.Printf("[INFO] Terminating instance: %s", instanceId)
-		if err := awsTerminateInstance(conn, instanceId, d); err != nil {
+		if err := awsTerminateInstance(conn, instanceId, d.Timeout(schema.TimeoutDelete)); err != nil {
 			return fmt.Errorf("Error terminating spot instance: %s", err)
 		}
 	}

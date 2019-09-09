@@ -3,7 +3,7 @@
 #
 
 locals {
-  config-map-aws-auth = <<CONFIGMAPAWSAUTH
+  config_map_aws_auth = <<CONFIGMAPAWSAUTH
 
 
 apiVersion: v1
@@ -50,8 +50,8 @@ users:
 KUBECONFIG
 }
 
-output "config-map-aws-auth" {
-  value = "${local.config-map-aws-auth}"
+output "config_map_aws_auth" {
+  value = "${local.config_map_aws_auth}"
 }
 
 output "kubeconfig" {

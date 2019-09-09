@@ -6,7 +6,7 @@ description: |-
   Provides a resource to create a new launch configuration, used for autoscaling groups.
 ---
 
-# aws_launch_configuration
+# Resource: aws_launch_configuration
 
 Provides a resource to create a new launch configuration, used for autoscaling groups.
 
@@ -141,7 +141,7 @@ The following arguments are supported:
   prefix. Conflicts with `name`.
 * `image_id` - (Required) The EC2 image ID to launch.
 * `instance_type` - (Required) The size of instance to launch.
-* `iam_instance_profile` - (Optional) The IAM instance profile to associate
+* `iam_instance_profile` - (Optional) The name attribute of the IAM instance profile to associate
      with launched instances.
 * `key_name` - (Optional) The key name that should be used for the instance.
 * `security_groups` - (Optional) A list of associated security group IDS.
@@ -180,6 +180,7 @@ The `root_block_device` mapping supports the following:
   This must be set with a `volume_type` of `"io1"`.
 * `delete_on_termination` - (Optional) Whether the volume should be destroyed
   on instance termination (Default: `true`).
+* `encrypted` - (Optional) Whether the volume should be encrypted or not. (Default: `false`).
 
 Modifying any of the `root_block_device` settings requires resource
 replacement.

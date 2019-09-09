@@ -25,6 +25,15 @@ func resourceAwsKinesisStream() *schema.Resource {
 			State: resourceAwsKinesisStreamImport,
 		},
 
+		SchemaVersion: 1,
+		StateUpgraders: []schema.StateUpgrader{
+			{
+				Type:    resourceAwsKinesisStreamResourceV0().CoreConfigSchema().ImpliedType(),
+				Upgrade: resourceAwsKinesisStreamStateUpgradeV0,
+				Version: 0,
+			},
+		},
+
 		Timeouts: &schema.ResourceTimeout{
 			Create: schema.DefaultTimeout(5 * time.Minute),
 			Update: schema.DefaultTimeout(120 * time.Minute),
@@ -57,6 +66,12 @@ func resourceAwsKinesisStream() *schema.Resource {
 				Set:      schema.HashString,
 			},
 
+			"enforce_consumer_deletion": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				Default:  false,
+			},
+
 			"encryption_type": {
 				Type:     schema.TypeString,
 				Optional: true,
@@ -66,10 +81,7 @@ func resourceAwsKinesisStream() *schema.Resource {
 					kinesis.EncryptionTypeKms,
 				}, true),
 				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
-					if strings.ToLower(old) == strings.ToLower(new) {
-						return true
-					}
-					return false
+					return strings.EqualFold(old, new)
 				},
 			},
 
@@ -171,7 +183,7 @@ func resourceAwsKinesisStreamRead(d *schema.ResourceData, meta interface{}) erro
 				d.SetId("")
 				return nil
 			}
-			return fmt.Errorf("[WARN] Error reading Kinesis Stream: \"%s\", code: \"%s\"", awsErr.Message(), awsErr.Code())
+			return fmt.Errorf("Error reading Kinesis Stream: \"%s\", code: \"%s\"", awsErr.Message(), awsErr.Code())
 		}
 		return err
 
@@ -207,7 +219,8 @@ func resourceAwsKinesisStreamDelete(d *schema.ResourceData, meta interface{}) er
 	sn := d.Get("name").(string)
 
 	_, err := conn.DeleteStream(&kinesis.DeleteStreamInput{
-		StreamName: aws.String(sn),
+		StreamName:              aws.String(sn),
+		EnforceConsumerDeletion: aws.Bool(d.Get("enforce_consumer_deletion").(bool)),
 	})
 	if err != nil {
 		return err
