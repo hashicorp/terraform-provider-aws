@@ -36,26 +36,26 @@ func resourceAwsLambdaFunction() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"filename": {
-				Type:          schema.TypeString,
-				Optional:      true,
-				ConflictsWith: []string{"s3_bucket", "s3_key", "s3_object_version"},
-			},
-			"s3_bucket": {
-				Type:          schema.TypeString,
-				Optional:      true,
-				ConflictsWith: []string{"filename"},
-			},
-			"s3_key": {
-				Type:          schema.TypeString,
-				Optional:      true,
-				ConflictsWith: []string{"filename"},
-			},
-			"s3_object_version": {
-				Type:          schema.TypeString,
-				Optional:      true,
-				ConflictsWith: []string{"filename"},
-			},
+			// "filename": {
+			// 	Type:          schema.TypeString,
+			// 	Optional:      true,
+			// 	ConflictsWith: []string{"s3_bucket", "s3_key", "s3_object_version"},
+			// },
+			// "s3_bucket": {
+			// 	Type:          schema.TypeString,
+			// 	Optional:      true,
+			// 	ConflictsWith: []string{"filename"},
+			// },
+			// "s3_key": {
+			// 	Type:          schema.TypeString,
+			// 	Optional:      true,
+			// 	ConflictsWith: []string{"filename"},
+			// },
+			// "s3_object_version": {
+			// 	Type:          schema.TypeString,
+			// 	Optional:      true,
+			// 	ConflictsWith: []string{"filename"},
+			// },
 			"description": {
 				Type:     schema.TypeString,
 				Optional: true,
@@ -100,20 +100,20 @@ func resourceAwsLambdaFunction() *schema.Resource {
 			"runtime": {
 				Type:     schema.TypeString,
 				Required: true,
-				ValidateFunc: validation.StringInSlice([]string{
-					// lambda.RuntimeNodejs has reached end of life since October 2016 so not included here
-					lambda.RuntimeDotnetcore10,
-					lambda.RuntimeDotnetcore20,
-					lambda.RuntimeDotnetcore21,
-					lambda.RuntimeGo1X,
-					lambda.RuntimeJava8,
-					lambda.RuntimeNodejs43,
-					lambda.RuntimeNodejs43Edge,
-					lambda.RuntimeNodejs610,
-					lambda.RuntimeNodejs810,
-					lambda.RuntimePython27,
-					lambda.RuntimePython36,
-				}, false),
+				// ValidateFunc: validation.StringInSlice([]string{
+				// 	// lambda.RuntimeNodejs has reached end of life since October 2016 so not included here
+				// 	lambda.RuntimeDotnetcore10,
+				// 	lambda.RuntimeDotnetcore20,
+				// 	lambda.RuntimeDotnetcore21,
+				// 	lambda.RuntimeGo1X,
+				// 	lambda.RuntimeJava8,
+				// 	lambda.RuntimeNodejs43,
+				// 	lambda.RuntimeNodejs43Edge,
+				// 	lambda.RuntimeNodejs610,
+				// 	lambda.RuntimeNodejs810,
+				// 	lambda.RuntimePython27,
+				// 	lambda.RuntimePython36,
+				// }, false),
 			},
 			"timeout": {
 				Type:     schema.TypeInt,
@@ -171,8 +171,8 @@ func resourceAwsLambdaFunction() *schema.Resource {
 				Computed: true,
 			},
 			"source_code_hash": {
-				Type:     schema.TypeString,
-				Optional: true,
+				Type: schema.TypeString,
+				// Optional: true,
 				Computed: true,
 			},
 			"source_code_size": {
@@ -613,7 +613,8 @@ type resourceDiffer interface {
 }
 
 func needsFunctionCodeUpdate(d resourceDiffer) bool {
-	return d.HasChange("filename") || d.HasChange("source_code_hash") || d.HasChange("s3_bucket") || d.HasChange("s3_key") || d.HasChange("s3_object_version")
+	return false
+	// return d.HasChange("filename") || d.HasChange("source_code_hash") || d.HasChange("s3_bucket") || d.HasChange("s3_key") || d.HasChange("s3_object_version")
 }
 
 // resourceAwsLambdaFunctionUpdate maps to:
