@@ -336,19 +336,19 @@ func resourceAwsInstance() *schema.Resource {
 							ForceNew: true,
 						},
 
-						"kms_key_id": {
-							Type:     schema.TypeString,
-							Optional: true,
-							Computed: true,
-							ForceNew: true,
-						},
-
 						"iops": {
 							Type:             schema.TypeInt,
 							Optional:         true,
 							Computed:         true,
 							ForceNew:         true,
 							DiffSuppressFunc: iopsDiffSuppressFunc,
+						},
+
+						"kms_key_id": {
+							Type:     schema.TypeString,
+							Optional: true,
+							Computed: true,
+							ForceNew: true,
 						},
 
 						"snapshot_id": {
@@ -1315,6 +1315,7 @@ func readBlockDevicesFromInstance(instance *ec2.Instance, conn *ec2.EC2) (map[st
 	blockDevices := make(map[string]interface{})
 	blockDevices["ebs"] = make([]map[string]interface{}, 0)
 	blockDevices["root"] = nil
+	// Ephemeral devices don't show up in BlockDeviceMappings or DescribeVolumes so we can't actually set them
 
 	instanceBlockDevices := make(map[string]*ec2.InstanceBlockDeviceMapping)
 	for _, bd := range instance.BlockDeviceMappings {
