@@ -26,8 +26,8 @@ func resourceAwsCognitoUserPoolSchemaCustomAttribute() *schema.Resource {
 				ForceNew: true,
 			},
 
-			"custom_attributes": {
-				Type:     schema.TypeList,
+			"schema": {
+				Type:     schema.TypeSet,
 				Required: true,
 				MinItems: 1,
 				MaxItems: 50,
@@ -107,7 +107,7 @@ func resourceAwsCognitoUserPoolSchemaCustomAttributCreate(d *schema.ResourceData
 		UserPoolId: aws.String(d.Get("user_pool_id").(string)),
 	}
 
-	if v, ok := d.GetOk("custom_attributes"); ok {
+	if v, ok := d.GetOk("schema"); ok {
 		configs := v.(*schema.Set).List()
 		params.CustomAttributes = expandCognitoUserPoolSchema(configs)
 	}
@@ -119,6 +119,7 @@ func resourceAwsCognitoUserPoolSchemaCustomAttributCreate(d *schema.ResourceData
 	}
 
 	log.Printf("[DEBUG] Created the custom attribute on the user pool: %s", resp.String())
+
 	return resourceAwsCognitoUserPoolSchemaAttributRead(d, meta)
 }
 
@@ -126,7 +127,7 @@ func resourceAwsCognitoUserPoolSchemaAttributRead(d *schema.ResourceData, meta i
 	conn := meta.(*AWSClient).cognitoidpconn
 
 	params := &cognitoidentityprovider.DescribeUserPoolInput{
-		UserPoolId: aws.String(d.Id()),
+		UserPoolId: aws.String(d.Get("user_pool_id").(string)),
 	}
 
 	log.Printf("[DEBUG] Reading Cognito User Pool: %s", params)
@@ -152,6 +153,7 @@ func resourceAwsCognitoUserPoolSchemaAttributRead(d *schema.ResourceData, meta i
 		Resource:  fmt.Sprintf("userpool/%s", d.Id()),
 	}
 	d.Set("arn", arn.String())
+	d.SetId(*resp.UserPool.Id)
 	return nil
 }
 
