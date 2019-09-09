@@ -178,7 +178,7 @@ func generateTransitionEventSchema() *schema.Resource {
 			},
 			"condition": {
 				Type:     schema.TypeString,
-				Optional: true,
+				Required: true,
 			},
 			"next_state": {
 				Type:     schema.TypeString,
@@ -240,7 +240,7 @@ func generateStateSchema() *schema.Resource {
 	}
 }
 
-func resourceAwsIotDetectorModel() *schema.Resource {
+func resourceAwsIotEventsDetectorModel() *schema.Resource {
 	return &schema.Resource{
 		Create: resourceAwsIotDetectorCreate,
 		Read:   resourceAwsIotDetectorRead,
@@ -265,7 +265,7 @@ func resourceAwsIotDetectorModel() *schema.Resource {
 							Type:     schema.TypeString,
 							Required: true,
 						},
-						"states": {
+						"state": {
 							Type:     schema.TypeSet,
 							MinItems: 1,
 							Required: true,
@@ -392,7 +392,7 @@ func parseEvent(rawEvent map[string]interface{}) *iotevents.Event {
 	}
 
 	actions := make([]*iotevents.ActionData, 0)
-	for i, rawAct := range rawEvent["action"].(*schema.Set).List() {
+	for _, rawAct := range rawEvent["action"].(*schema.Set).List() {
 		actions = append(actions, parseAction(rawAct.(map[string]interface{})))
 	}
 
@@ -408,19 +408,16 @@ func parseEvent(rawEvent map[string]interface{}) *iotevents.Event {
 func parseTransitionEvent(rawTransitionEvent map[string]interface{}) *iotevents.TransitionEvent {
 	event := &iotevents.TransitionEvent{
 		EventName: aws.String(rawTransitionEvent["name"].(string)),
+		Condition: aws.String(rawTransitionEvent["condition"].(string)),
 		NextState: aws.String(rawTransitionEvent["next_state"].(string)),
 	}
 
 	actions := make([]*iotevents.ActionData, 0)
-	for i, rawAct := range rawTransitionEvent["action"].(*schema.Set).List() {
+	for _, rawAct := range rawTransitionEvent["action"].(*schema.Set).List() {
 		actions = append(actions, parseAction(rawAct.(map[string]interface{})))
 	}
 
 	event.Actions = actions
-
-	if v, ok := rawTransitionEvent["condition"].(string); ok && v != "" {
-		event.Condition = aws.String(v)
-	}
 
 	return event
 }
@@ -428,7 +425,7 @@ func parseTransitionEvent(rawTransitionEvent map[string]interface{}) *iotevents.
 func parseEventsList(rawEvents []interface{}) []*iotevents.Event {
 	events := make([]*iotevents.Event, 0)
 
-	for i, rawEvent := range rawEvents {
+	for _, rawEvent := range rawEvents {
 		events = append(events, parseEvent(rawEvent.(map[string]interface{})))
 	}
 
@@ -465,13 +462,13 @@ func parseOnInput(rawOnInput map[string]interface{}) *iotevents.OnInputLifecycle
 
 	events := parseEventsList(rawOnInput["event"].(*schema.Set).List())
 	if len(events) != 0 {
-		onInput := &iotevents.OnInputLifecycle{
+		onInput = &iotevents.OnInputLifecycle{
 			Events: events,
 		}
 	}
 
 	transitionEvents := make([]*iotevents.TransitionEvent, 0)
-	for i, rawEvent := range rawOnInput["transition_event"].(*schema.Set).List() {
+	for _, rawEvent := range rawOnInput["transition_event"].(*schema.Set).List() {
 		transitionEvents = append(transitionEvents, parseTransitionEvent(rawEvent.(map[string]interface{})))
 	}
 	if len(transitionEvents) != 0 {
@@ -491,8 +488,6 @@ func parseOnInput(rawOnInput map[string]interface{}) *iotevents.OnInputLifecycle
 	return nil
 }
 
-// TODO: separate this function on different function that parse on... structures:
-// parseOnEnter, parseOnExit, parseOnInput
 func parseState(rawState map[string]interface{}) *iotevents.State {
 	state := &iotevents.State{
 		StateName: aws.String(rawState["name"].(string)),
@@ -516,22 +511,28 @@ func parseState(rawState map[string]interface{}) *iotevents.State {
 	return state
 }
 
-// func parseDetectorModelDefinition(rawDetectorModelDefinition map[string]interface{}) *iotevents.DetectorModelDefinition {
+func parseDetectorModelDefinition(rawDetectorModelDefinition map[string]interface{}) *iotevents.DetectorModelDefinition {
+	states := make([]*iotevents.State, 0)
 
-// }
+	for _, rawState := range rawDetectorModelDefinition["state"].(*schema.Set).List() {
+		states = append(states, parseState(rawState.(map[string]interface{})))
+	}
+
+	detectorDefinitionParams := &iotevents.DetectorModelDefinition{
+		InitialStateName: aws.String(rawDetectorModelDefinition["initial_state_name"].(string)),
+		States:           states,
+	}
+
+	return detectorDefinitionParams
+}
 
 func resourceAwsIotDetectorCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).ioteventsconn
 
-	detectorName := d.Get("name").(string)
 	detectorDefinition := d.Get("definition").(map[string]interface{})
+	detectorDefinitionParams := parseDetectorModelDefinition(detectorDefinition)
 
-	// How to convert list of structures to appropriate format usign aws. package
-	detectorDefinitionParams := &iotevents.DetectorModelDefinition{
-		InitialStateName: aws.String(detectorDefinition["initial_state_name"].(string)),
-		States:           expandStringList(detectorDefinition["states"].([]interface{})),
-	}
-
+	detectorName := d.Get("name").(string)
 	roleArn := d.Get("role_arn").(string)
 
 	params := &iotevents.CreateDetectorModelInput{
@@ -560,6 +561,182 @@ func resourceAwsIotDetectorCreate(d *schema.ResourceData, meta interface{}) erro
 	return resourceAwsIotDetectorRead(d, meta)
 }
 
+func flattenAction(action *iotevents.ActionData) map[string]interface{} {
+	rawAction := make(map[string]interface{})
+
+	if v := action.ClearTimer; v != nil {
+		clearTimer := make(map[string]interface{})
+		clearTimer["name"] = aws.StringValue(v.TimerName)
+		rawAction["clear_timer"] = []map[string]interface{}{clearTimer}
+	}
+
+	if v := action.Firehose; v != nil {
+		firehose := make(map[string]interface{})
+		firehose["delivery_stream_name"] = aws.StringValue(v.DeliveryStreamName)
+
+		if v.Separator != nil {
+			firehose["separator"] = aws.StringValue(v.Separator)
+		}
+
+		rawAction["firehose"] = []map[string]interface{}{firehose}
+	}
+
+	if v := action.IotEvents; v != nil {
+		iotEvents := make(map[string]interface{})
+		iotEvents["name"] = aws.StringValue(v.InputName)
+		rawAction["iot_events"] = []map[string]interface{}{iotEvents}
+	}
+
+	if v := action.IotTopicPublish; v != nil {
+		iotTopicPublish := make(map[string]interface{})
+		iotTopicPublish["mqtt_topic"] = aws.StringValue(v.MqttTopic)
+		rawAction["iot_topic_publish"] = []map[string]interface{}{iotTopicPublish}
+	}
+
+	if v := action.Lambda; v != nil {
+		lambda := make(map[string]interface{})
+		lambda["function_arn"] = aws.StringValue(v.FunctionArn)
+		rawAction["lambda"] = []map[string]interface{}{lambda}
+	}
+
+	if v := action.ResetTimer; v != nil {
+		resetTimer := make(map[string]interface{})
+		resetTimer["name"] = aws.StringValue(v.TimerName)
+		rawAction["reset_timer"] = []map[string]interface{}{resetTimer}
+	}
+
+	if v := action.SetTimer; v != nil {
+		setTimer := make(map[string]interface{})
+		setTimer["name"] = aws.StringValue(v.TimerName)
+		setTimer["seconds"] = aws.Int64Value(v.Seconds)
+		rawAction["set_timer"] = []map[string]interface{}{setTimer}
+	}
+
+	if v := action.SetVariable; v != nil {
+		setVariable := make(map[string]interface{})
+		setVariable["name"] = aws.StringValue(v.VariableName)
+		setVariable["value"] = aws.StringValue(v.Value)
+		rawAction["set_variable"] = []map[string]interface{}{setVariable}
+	}
+
+	if v := action.Sns; v != nil {
+		sns := make(map[string]interface{})
+		sns["target_arn"] = aws.StringValue(v.TargetArn)
+		rawAction["sns"] = []map[string]interface{}{sns}
+	}
+
+	if v := action.Sqs; v != nil {
+		sqs := make(map[string]interface{})
+		sqs["queue_url"] = aws.StringValue(v.QueueUrl)
+
+		if v.UseBase64 != nil {
+			sqs["use_base64"] = aws.BoolValue(v.UseBase64)
+		}
+
+		rawAction["sqs"] = []map[string]interface{}{sqs}
+	}
+
+	return rawAction
+}
+
+func flattenEvent(event *iotevents.Event) map[string]interface{} {
+	rawEvent := make(map[string]interface{})
+	rawEvent["name"] = aws.StringValue(event.EventName)
+
+	if event.Condition != nil {
+		rawEvent["condition"] = aws.StringValue(event.Condition)
+	}
+
+	rawActions := make([]interface{}, 0)
+	for _, act := range event.Actions {
+		rawActions = append(rawActions, act)
+	}
+
+	rawEvent["action"] = rawActions
+
+	return rawEvent
+}
+
+func flattenTransitionEvent(transitionEvent *iotevents.TransitionEvent) map[string]interface{} {
+	rawTransitionEvent := make(map[string]interface{})
+	rawTransitionEvent["name"] = aws.StringValue(transitionEvent.EventName)
+	rawTransitionEvent["condition"] = aws.StringValue(transitionEvent.Condition)
+	rawTransitionEvent["next_state"] = aws.StringValue(transitionEvent.NextState)
+
+	rawActions := make([]interface{}, 0)
+	for _, act := range transitionEvent.Actions {
+		rawActions = append(rawActions, act)
+	}
+
+	rawTransitionEvent["action"] = rawActions
+
+	return rawTransitionEvent
+}
+
+func flattenOnEnter(onEnter *iotevents.OnEnterLifecycle) map[string]interface{} {
+	rawEvents := make([]interface{}, 0)
+	for _, event := range onEnter.Events {
+		rawEvents = append(rawEvents, flattenEvent(event))
+	}
+
+	rawOnEnter := make(map[string]interface{})
+	rawOnEnter["event"] = rawEvents
+	return rawOnEnter
+}
+
+func flattenOnExit(onExit *iotevents.OnExitLifecycle) map[string]interface{} {
+	rawEvents := make([]interface{}, 0)
+	for _, event := range onExit.Events {
+		rawEvents = append(rawEvents, flattenEvent(event))
+	}
+
+	rawOnExit := make(map[string]interface{})
+	rawOnExit["event"] = rawEvents
+	return rawOnExit
+}
+
+func flattenOnInput(onInput *iotevents.OnInputLifecycle) map[string]interface{} {
+	rawOnInput := make(map[string]interface{})
+
+	rawEvents := make([]interface{}, 0)
+	for _, event := range onInput.Events {
+		rawEvents = append(rawEvents, flattenEvent(event))
+	}
+	rawOnInput["event"] = rawEvents
+
+	rawTransitionEvents := make([]interface{}, 0)
+	for _, transitionEvent := range onInput.TransitionEvents {
+		rawTransitionEvents = append(rawTransitionEvents, flattenTransitionEvent(transitionEvent))
+	}
+	rawOnInput["transition_event"] = rawTransitionEvents
+
+	return rawOnInput
+}
+
+func flattenState(state *iotevents.State) map[string]interface{} {
+	rawState := make(map[string]interface{})
+
+	rawState["name"] = aws.StringValue(state.StateName)
+	rawState["on_enter"] = []interface{}{flattenOnEnter(state.OnEnter)}
+	rawState["on_exit"] = []interface{}{flattenOnExit(state.OnExit)}
+	rawState["on_input"] = []interface{}{flattenOnInput(state.OnInput)}
+
+	return rawState
+}
+
+func flattenDetectorModelDefinition(detectorModelDefinition *iotevents.DetectorModelDefinition) map[string]interface{} {
+	rawStates := make([]interface{}, 0)
+	for _, state := range detectorModelDefinition.States {
+		rawStates = append(rawStates, flattenState(state))
+	}
+
+	rawDetectorModelDefinition := make(map[string]interface{})
+	rawDetectorModelDefinition["state"] = rawStates
+	rawDetectorModelDefinition["initial_state_name"] = aws.StringValue(detectorModelDefinition.InitialStateName)
+
+	return rawDetectorModelDefinition
+}
+
 func resourceAwsIotDetectorRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).ioteventsconn
 
@@ -573,19 +750,22 @@ func resourceAwsIotDetectorRead(d *schema.ResourceData, meta interface{}) error 
 		return err
 	}
 
+	d.Set("name", out.DetectorModel.DetectorModelConfiguration.DetectorModelName)
+	d.Set("description", out.DetectorModel.DetectorModelConfiguration.DetectorModelDescription)
+	d.Set("key", out.DetectorModel.DetectorModelConfiguration.Key)
+	d.Set("role_arn", out.DetectorModel.DetectorModelConfiguration.RoleArn)
+	d.Set("definition", flattenDetectorModelDefinition(out.DetectorModel.DetectorModelDefinition))
+
 	return nil
 }
 
 func resourceAwsIotDetectorUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).ioteventsconn
 
-	detectorName := d.Get("name").(string)
 	detectorDefinition := d.Get("definition").(map[string]interface{})
+	detectorDefinitionParams := parseDetectorModelDefinition(detectorDefinition)
 
-	detectorDefinitionParams := &iotevents.DetectorModelDefinition{
-		InitialStateName: aws.String(detectorDefinition["initial_state_name"].(string)),
-		States:           aws.String(detectorDefinition["initial_state_name"].([]string)),
-	}
+	detectorName := d.Get("name").(string)
 	roleArn := d.Get("role_arn").(string)
 
 	params := &iotevents.UpdateDetectorModelInput{
