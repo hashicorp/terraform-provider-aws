@@ -20,6 +20,8 @@ BUG FIXES:
 
 * resource/aws_cloudfront_distribution: Support accessing `active_trusted_signers` attribute `items` in Terraform 0.12 [GH-10013]
 * resource/aws_cognito_user_pool: Fix perpetual diffs on `sms_verification_message` [GH-9758]
+* resource/aws_elasticsearch_domain: Final retries after timeouts creating, updating, and deleting domains [GH-9892]
+* resource/aws_elasticsearch_domain_policy: Final retries after timeouts upserting and deleting domain policies [GH-9892]
 
 ## 2.27.0 (September 05, 2019)
 
