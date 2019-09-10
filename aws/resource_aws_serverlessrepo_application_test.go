@@ -28,7 +28,7 @@ func TestAccAwsServerlessRepositoryApplication_basic(t *testing.T) {
 					resource.TestCheckResourceAttrSet("aws_serverlessrepository_application.postgres-rotator", "semantic_version"),
 					resource.TestCheckResourceAttr("aws_serverlessrepository_application.postgres-rotator", "parameters.%", "2"),
 					resource.TestCheckResourceAttr("aws_serverlessrepository_application.postgres-rotator", "parameters.functionName", fmt.Sprintf("func-%s", stackName)),
-					resource.TestCheckResourceAttr("aws_serverlessrepository_application.postgres-rotator", "parameters.endpoint", "secretsmanager.us-east-2.amazonaws.com"),
+					resource.TestCheckResourceAttr("aws_serverlessrepository_application.postgres-rotator", "parameters.endpoint", "secretsmanager.us-west-2.amazonaws.com"),
 					resource.TestCheckResourceAttr("aws_serverlessrepository_application.postgres-rotator", "outputs.%", "1"),
 					resource.TestCheckResourceAttrSet("aws_serverlessrepository_application.postgres-rotator", "outputs.RotationLambdaARN"),
 					resource.TestCheckResourceAttr("aws_serverlessrepository_application.postgres-rotator", "capabilities.#", "1"),
@@ -156,7 +156,7 @@ resource "aws_serverlessrepository_application" "postgres-rotator" {
   application_id = "arn:aws:serverlessrepo:us-east-1:297356227824:applications/SecretsManagerRDSPostgreSQLRotationSingleUser"
   parameters = {
     functionName = "func-%[1]s"
-    endpoint     = "secretsmanager.us-east-2.amazonaws.com"
+    endpoint     = "secretsmanager.us-west-2.amazonaws.com"
   }
 }`, stackName)
 }
@@ -168,7 +168,7 @@ resource "aws_serverlessrepository_application" "postgres-rotator" {
   application_id = "arn:aws:serverlessrepo:us-east-1:297356227824:applications/SecretsManagerRDSPostgreSQLRotationSingleUser"
   parameters = {
     functionName = "%[2]s"
-    endpoint     = "secretsmanager.us-east-2.amazonaws.com"
+    endpoint     = "secretsmanager.us-west-2.amazonaws.com"
   }
   tags = {
 	ToDelete = "ToBeDeleted"
@@ -184,7 +184,7 @@ resource "aws_serverlessrepository_application" "postgres-rotator" {
   application_id = "arn:aws:serverlessrepo:us-east-1:297356227824:applications/SecretsManagerRDSPostgreSQLRotationSingleUser"
   parameters = {
     functionName = "%[2]s"
-    endpoint     = "secretsmanager.us-east-2.amazonaws.com"
+    endpoint     = "secretsmanager.us-west-2.amazonaws.com"
   }
   tags = {
 	ToUpdate = "UpdatedValue"
@@ -201,7 +201,7 @@ resource "aws_serverlessrepository_application" "postgres-rotator" {
   semantic_version = "%[2]s"
   parameters = {
     functionName = "func-%[1]s"
-    endpoint     = "secretsmanager.us-east-2.amazonaws.com"
+    endpoint     = "secretsmanager.us-west-2.amazonaws.com"
   }
 }`, stackName, version)
 }
@@ -213,7 +213,7 @@ resource "aws_serverlessrepository_application" "postgres-rotator" {
   application_id = "arn:aws:serverlessrepo:us-east-1:297356227824:applications/SecretsManagerRDSPostgreSQLRotationSingleUser"
   parameters = {
     functionName = "func-%[1]s"
-    endpoint     = "secretsmanager.us-east-2.amazonaws.com"
+    endpoint     = "secretsmanager.us-west-2.amazonaws.com"
   }
   tags = {
     MyTag = "My value"
