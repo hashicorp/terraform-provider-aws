@@ -340,6 +340,7 @@ func TestAccAWSLambdaEventSourceMapping_BatchWindow(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
+					"batch_window",
 					"starting_position",
 					"starting_position_timestamp",
 				},
@@ -603,7 +604,6 @@ resource "aws_lambda_event_source_mapping" "test" {
 }
 `, batchWindow)
 }
-
 
 func testAccAWSLambdaEventSourceMappingConfig_kinesis(roleName, policyName, attName, streamName,
 	funcName, uFuncName string) string {
