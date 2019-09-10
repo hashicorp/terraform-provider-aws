@@ -96,7 +96,7 @@ func resourceAwsLambdaEventSourceMapping() *schema.Resource {
 				Optional: true,
 				Default:  true,
 			},
-			"batch_window": {
+			"maximum_batching_window_in_seconds": {
 				Type:     schema.TypeInt,
 				Optional: true,
 			},
@@ -148,7 +148,7 @@ func resourceAwsLambdaEventSourceMappingCreate(d *schema.ResourceData, meta inte
 		params.BatchSize = aws.Int64(int64(batchSize.(int)))
 	}
 
-	if batchWindow, ok := d.GetOk("batch_window"); ok {
+	if batchWindow, ok := d.GetOk("maximum_batching_window_in_seconds"); ok {
 		params.MaximumBatchingWindowInSeconds = aws.Int64(int64(batchWindow.(int)))
 	}
 
@@ -218,7 +218,7 @@ func resourceAwsLambdaEventSourceMappingRead(d *schema.ResourceData, meta interf
 	}
 
 	d.Set("batch_size", eventSourceMappingConfiguration.BatchSize)
-	d.Set("batch_window", eventSourceMappingConfiguration.MaximumBatchingWindowInSeconds)
+	d.Set("maximum_batching_window_in_seconds", eventSourceMappingConfiguration.MaximumBatchingWindowInSeconds)
 	d.Set("event_source_arn", eventSourceMappingConfiguration.EventSourceArn)
 	d.Set("function_arn", eventSourceMappingConfiguration.FunctionArn)
 	d.Set("last_modified", eventSourceMappingConfiguration.LastModified)
@@ -283,7 +283,7 @@ func resourceAwsLambdaEventSourceMappingUpdate(d *schema.ResourceData, meta inte
 	params := &lambda.UpdateEventSourceMappingInput{
 		UUID:                           aws.String(d.Id()),
 		BatchSize:                      aws.Int64(int64(d.Get("batch_size").(int))),
-		MaximumBatchingWindowInSeconds: aws.Int64(int64(d.Get("batch_window").(int))),
+		MaximumBatchingWindowInSeconds: aws.Int64(int64(d.Get("maximum_batching_window_in_seconds").(int))),
 		FunctionName:                   aws.String(d.Get("function_name").(string)),
 		Enabled:                        aws.Bool(d.Get("enabled").(bool)),
 	}

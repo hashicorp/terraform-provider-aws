@@ -332,7 +332,7 @@ func TestAccAWSLambdaEventSourceMapping_BatchWindow(t *testing.T) {
 				Config: testAccAWSLambdaEventSourceMappingConfigKinesisBatchWindow(rName, batchWindow),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsLambdaEventSourceMappingExists(resourceName, &conf),
-					resource.TestCheckResourceAttr(resourceName, "batch_window", strconv.Itoa(int(batchWindow))),
+					resource.TestCheckResourceAttr(resourceName, "maximum_batching_window_in_seconds", strconv.Itoa(int(batchWindow))),
 				),
 			},
 			{
@@ -594,12 +594,12 @@ resource "aws_lambda_event_source_mapping" "test" {
 func testAccAWSLambdaEventSourceMappingConfigKinesisBatchWindow(rName string, batchWindow int64) string {
 	return testAccAWSLambdaEventSourceMappingConfigKinesisBase(rName) + fmt.Sprintf(`
 resource "aws_lambda_event_source_mapping" "test" {
-  batch_size                  = 100
-  batch_window                = %v
-  enabled                     = true
-  event_source_arn            = "${aws_kinesis_stream.test.arn}"
-  function_name               = "${aws_lambda_function.test.arn}"
-  starting_position           = "TRIM_HORIZON"
+  batch_size                          = 100
+  maximum_batching_window_in_seconds  = %v
+  enabled                             = true
+  event_source_arn                    = "${aws_kinesis_stream.test.arn}"
+  function_name                       = "${aws_lambda_function.test.arn}"
+  starting_position                   = "TRIM_HORIZON"
 }
 `, batchWindow)
 }
