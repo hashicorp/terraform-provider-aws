@@ -61,7 +61,28 @@ func TestAccAwsServerlessRepositoryApplication_versioned(t *testing.T) {
 	})
 }
 
-func TestAccAwsServerlessRepositoryApplication_updateVersion(t *testing.T) {
+func TestAccAwsServerlessRepositoryApplication_tagged(t *testing.T) {
+	var stack cloudformation.Stack
+	stackName := fmt.Sprintf("tf-acc-test-tagged-%s", acctest.RandString(10))
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSCloudFormationDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAwsServerlessRepositoryApplicationConfig_tagged(stackName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckerverlessRepositoryApplicationExists("aws_serverlessrepository_application.postgres-rotator", &stack),
+					resource.TestCheckResourceAttr("aws_serverlessrepository_application.postgres-rotator", "tags.%", "1"),
+					resource.TestCheckResourceAttr("aws_serverlessrepository_application.postgres-rotator", "tags.MyTag", "My value"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAwsServerlessRepositoryApplication_versionUpdate(t *testing.T) {
 	var stack cloudformation.Stack
 	stackName := fmt.Sprintf("tf-acc-test-update-%s", acctest.RandString(10))
 	const initialVersion = "1.0.15"
@@ -92,7 +113,7 @@ func TestAccAwsServerlessRepositoryApplication_updateVersion(t *testing.T) {
 	})
 }
 
-func TestAccAwsServerlessRepositoryApplication_updateFunctionName(t *testing.T) {
+func TestAccAwsServerlessRepositoryApplication_update(t *testing.T) {
 	var stack cloudformation.Stack
 	stackName := fmt.Sprintf("tf-acc-test-update-name-%s", acctest.RandString(10))
 	const initialName = "FuncName1"
@@ -104,18 +125,24 @@ func TestAccAwsServerlessRepositoryApplication_updateFunctionName(t *testing.T) 
 		CheckDestroy: testAccCheckAWSCloudFormationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSServerlessRepositoryApplicationConfig_functionName(stackName, initialName),
+				Config: testAccAWSServerlessRepositoryApplicationConfig_updateInitial(stackName, initialName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckerverlessRepositoryApplicationExists("aws_serverlessrepository_application.postgres-rotator", &stack),
 					resource.TestCheckResourceAttr("aws_serverlessrepository_application.postgres-rotator", "application_id", "arn:aws:serverlessrepo:us-east-1:297356227824:applications/SecretsManagerRDSPostgreSQLRotationSingleUser"),
 					resource.TestCheckResourceAttr("aws_serverlessrepository_application.postgres-rotator", "parameters.functionName", initialName),
+					resource.TestCheckResourceAttr("aws_serverlessrepository_application.postgres-rotator", "tags.%", "2"),
+					resource.TestCheckResourceAttr("aws_serverlessrepository_application.postgres-rotator", "tags.ToDelete", "ToBeDeleted"),
+					resource.TestCheckResourceAttr("aws_serverlessrepository_application.postgres-rotator", "tags.ToUpdate", "InitialValue"),
 				),
 			},
 			{
-				Config: testAccAWSServerlessRepositoryApplicationConfig_functionName(stackName, updatedName),
+				Config: testAccAWSServerlessRepositoryApplicationConfig_updateUpdated(stackName, updatedName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckerverlessRepositoryApplicationExists("aws_serverlessrepository_application.postgres-rotator", &stack),
 					resource.TestCheckResourceAttr("aws_serverlessrepository_application.postgres-rotator", "parameters.functionName", updatedName),
+					resource.TestCheckResourceAttr("aws_serverlessrepository_application.postgres-rotator", "tags.%", "2"),
+					resource.TestCheckResourceAttr("aws_serverlessrepository_application.postgres-rotator", "tags.ToUpdate", "UpdatedValue"),
+					resource.TestCheckResourceAttr("aws_serverlessrepository_application.postgres-rotator", "tags.ToAdd", "AddedValue"),
 				),
 			},
 		},
@@ -134,7 +161,7 @@ resource "aws_serverlessrepository_application" "postgres-rotator" {
 }`, stackName)
 }
 
-func testAccAWSServerlessRepositoryApplicationConfig_functionName(stackName, functionName string) string {
+func testAccAWSServerlessRepositoryApplicationConfig_updateInitial(stackName, functionName string) string {
 	return fmt.Sprintf(`
 resource "aws_serverlessrepository_application" "postgres-rotator" {
   name           = "%[1]s"
@@ -142,6 +169,26 @@ resource "aws_serverlessrepository_application" "postgres-rotator" {
   parameters = {
     functionName = "%[2]s"
     endpoint     = "secretsmanager.us-east-2.amazonaws.com"
+  }
+  tags = {
+	ToDelete = "ToBeDeleted"
+	ToUpdate = "InitialValue"
+  }
+}`, stackName, functionName)
+}
+
+func testAccAWSServerlessRepositoryApplicationConfig_updateUpdated(stackName, functionName string) string {
+	return fmt.Sprintf(`
+resource "aws_serverlessrepository_application" "postgres-rotator" {
+  name           = "%[1]s"
+  application_id = "arn:aws:serverlessrepo:us-east-1:297356227824:applications/SecretsManagerRDSPostgreSQLRotationSingleUser"
+  parameters = {
+    functionName = "%[2]s"
+    endpoint     = "secretsmanager.us-east-2.amazonaws.com"
+  }
+  tags = {
+	ToUpdate = "UpdatedValue"
+	ToAdd    = "AddedValue"
   }
 }`, stackName, functionName)
 }
@@ -157,6 +204,21 @@ resource "aws_serverlessrepository_application" "postgres-rotator" {
     endpoint     = "secretsmanager.us-east-2.amazonaws.com"
   }
 }`, stackName, version)
+}
+
+func testAccAwsServerlessRepositoryApplicationConfig_tagged(stackName string) string {
+	return fmt.Sprintf(`
+resource "aws_serverlessrepository_application" "postgres-rotator" {
+  name           = "%[1]s"
+  application_id = "arn:aws:serverlessrepo:us-east-1:297356227824:applications/SecretsManagerRDSPostgreSQLRotationSingleUser"
+  parameters = {
+    functionName = "func-%[1]s"
+    endpoint     = "secretsmanager.us-east-2.amazonaws.com"
+  }
+  tags = {
+    MyTag = "My value"
+  }
+}`, stackName)
 }
 
 func testAccCheckerverlessRepositoryApplicationExists(n string, stack *cloudformation.Stack) resource.TestCheckFunc {

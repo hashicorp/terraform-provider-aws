@@ -85,6 +85,9 @@ func resourceAwsServerlessRepositoryApplicationCreate(d *schema.ResourceData, me
 	if v, ok := d.GetOk("parameters"); ok {
 		changeSetRequest.ParameterOverrides = expandServerlessRepositoryApplicationParameters(v.(map[string]interface{}))
 	}
+	if v, ok := d.GetOk("tags"); ok {
+		changeSetRequest.Tags = expandServerlessRepositoryTags(v.(map[string]interface{}))
+	}
 
 	log.Printf("[DEBUG] Creating Serverless Repo Application change set: %s", changeSetRequest)
 	changeSetResponse, err := serverlessConn.CreateCloudFormationChangeSet(&changeSetRequest)
@@ -272,6 +275,17 @@ func resourceAwsServerlessRepositoryApplicationRead(d *schema.ResourceData, meta
 	return nil
 }
 
+func expandServerlessRepositoryTags(tags map[string]interface{}) []*serverlessapplicationrepository.Tag {
+	var cfTags []*serverlessapplicationrepository.Tag
+	for k, v := range tags {
+		cfTags = append(cfTags, &serverlessapplicationrepository.Tag{
+			Key:   aws.String(k),
+			Value: aws.String(v.(string)),
+		})
+	}
+	return cfTags
+}
+
 func flattenServerlessRepositoryCloudFormationTags(cfTags []*cloudformation.Tag) map[string]string {
 	tags := make(map[string]string, len(cfTags))
 	for _, t := range cfTags {
@@ -310,6 +324,10 @@ func resourceAwsServerlessRepositoryApplicationUpdate(d *schema.ResourceData, me
 	// Parameters must be present whether they are changed or not
 	if v, ok := d.GetOk("parameters"); ok {
 		input.Parameters = expandCloudFormationParameters(v.(map[string]interface{}))
+	}
+
+	if v, ok := d.GetOk("tags"); ok {
+		input.Tags = expandCloudFormationTags(v.(map[string]interface{}))
 	}
 
 	capabilities := d.Get("capabilities")
