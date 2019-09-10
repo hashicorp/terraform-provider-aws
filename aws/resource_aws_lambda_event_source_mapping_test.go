@@ -340,7 +340,6 @@ func TestAccAWSLambdaEventSourceMapping_BatchWindow(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
-					"batch_window",
 					"starting_position",
 					"starting_position_timestamp",
 				},

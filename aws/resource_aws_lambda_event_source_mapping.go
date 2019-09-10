@@ -218,6 +218,7 @@ func resourceAwsLambdaEventSourceMappingRead(d *schema.ResourceData, meta interf
 	}
 
 	d.Set("batch_size", eventSourceMappingConfiguration.BatchSize)
+	d.Set("batch_window", eventSourceMappingConfiguration.MaximumBatchingWindowInSeconds)
 	d.Set("event_source_arn", eventSourceMappingConfiguration.EventSourceArn)
 	d.Set("function_arn", eventSourceMappingConfiguration.FunctionArn)
 	d.Set("last_modified", eventSourceMappingConfiguration.LastModified)
@@ -280,10 +281,11 @@ func resourceAwsLambdaEventSourceMappingUpdate(d *schema.ResourceData, meta inte
 	log.Printf("[DEBUG] Updating Lambda event source mapping: %s", d.Id())
 
 	params := &lambda.UpdateEventSourceMappingInput{
-		UUID:         aws.String(d.Id()),
-		BatchSize:    aws.Int64(int64(d.Get("batch_size").(int))),
-		FunctionName: aws.String(d.Get("function_name").(string)),
-		Enabled:      aws.Bool(d.Get("enabled").(bool)),
+		UUID:                           aws.String(d.Id()),
+		BatchSize:                      aws.Int64(int64(d.Get("batch_size").(int))),
+		MaximumBatchingWindowInSeconds: aws.Int64(int64(d.Get("batch_window").(int))),
+		FunctionName:                   aws.String(d.Get("function_name").(string)),
+		Enabled:                        aws.Bool(d.Get("enabled").(bool)),
 	}
 
 	err := resource.Retry(5*time.Minute, func() *resource.RetryError {
