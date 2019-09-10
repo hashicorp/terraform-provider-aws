@@ -5348,12 +5348,12 @@ func (c *StorageGateway) NotifyWhenUploadedRequest(input *NotifyWhenUploadedInpu
 // NotifyWhenUploaded API operation for AWS Storage Gateway.
 //
 // Sends you notification through CloudWatch Events when all files written to
-// your NFS file share have been uploaded to Amazon S3.
+// your file share have been uploaded to Amazon S3.
 //
 // AWS Storage Gateway can send a notification through Amazon CloudWatch Events
 // when all files written to your file share up to that point in time have been
-// uploaded to Amazon S3. These files include files written to the NFS file
-// share up to the time that you make a request for notification. When the upload
+// uploaded to Amazon S3. These files include files written to the file share
+// up to the time that you make a request for notification. When the upload
 // is done, Storage Gateway sends you notification through an Amazon CloudWatch
 // Event. You can configure CloudWatch Events to send the notification through
 // event targets such as Amazon SNS or AWS Lambda function. This operation is
@@ -6934,6 +6934,10 @@ func (c *StorageGateway) UpdateSMBSecurityStrategyRequest(input *UpdateSMBSecuri
 //
 // Updates the SMB security strategy on a file gateway. This action is only
 // supported in file gateways.
+//
+// This API is called Security level in the User Guide.
+//
+// A higher security level can affect performance of the gateway.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -8849,9 +8853,12 @@ func (s *CreateNFSFileShareOutput) SetFileShareARN(v string) *CreateNFSFileShare
 type CreateSMBFileShareInput struct {
 	_ struct{} `type:"structure"`
 
-	// A list of users or groups in the Active Directory that have administrator
-	// rights to the file share. A group must be prefixed with the @ character.
-	// For example @group1. Can only be set if Authentication is set to ActiveDirectory.
+	// A list of users in the Active Directory that will be granted administrator
+	// privileges on the file share. These users can do all file operations as the
+	// super-user.
+	//
+	// Use this option very carefully, because any user in this list can do anything
+	// they like on the file share, regardless of file permissions.
 	AdminUserList []*string `type:"list"`
 
 	// The authentication method that users use to access the file share.
@@ -9145,6 +9152,15 @@ type CreateSnapshotFromVolumeRecoveryPointInput struct {
 	// SnapshotDescription is a required field
 	SnapshotDescription *string `min:"1" type:"string" required:"true"`
 
+	// A list of up to 50 tags that can be assigned to a snapshot. Each tag is a
+	// key-value pair.
+	//
+	// Valid characters for key and value are letters, spaces, and numbers representable
+	// in UTF-8 format, and the following special characters: + - = . _ : / @. The
+	// maximum length of a tag's key is 128 characters, and the maximum length for
+	// a tag's value is 256.
+	Tags []*Tag `type:"list"`
+
 	// The Amazon Resource Name (ARN) of the iSCSI volume target. Use the DescribeStorediSCSIVolumes
 	// operation to return to retrieve the TargetARN for specified VolumeARN.
 	//
@@ -9177,6 +9193,16 @@ func (s *CreateSnapshotFromVolumeRecoveryPointInput) Validate() error {
 	if s.VolumeARN != nil && len(*s.VolumeARN) < 50 {
 		invalidParams.Add(request.NewErrParamMinLen("VolumeARN", 50))
 	}
+	if s.Tags != nil {
+		for i, v := range s.Tags {
+			if v == nil {
+				continue
+			}
+			if err := v.Validate(); err != nil {
+				invalidParams.AddNested(fmt.Sprintf("%s[%v]", "Tags", i), err.(request.ErrInvalidParams))
+			}
+		}
+	}
 
 	if invalidParams.Len() > 0 {
 		return invalidParams
@@ -9187,6 +9213,12 @@ func (s *CreateSnapshotFromVolumeRecoveryPointInput) Validate() error {
 // SetSnapshotDescription sets the SnapshotDescription field's value.
 func (s *CreateSnapshotFromVolumeRecoveryPointInput) SetSnapshotDescription(v string) *CreateSnapshotFromVolumeRecoveryPointInput {
 	s.SnapshotDescription = &v
+	return s
+}
+
+// SetTags sets the Tags field's value.
+func (s *CreateSnapshotFromVolumeRecoveryPointInput) SetTags(v []*Tag) *CreateSnapshotFromVolumeRecoveryPointInput {
+	s.Tags = v
 	return s
 }
 
@@ -11472,14 +11504,18 @@ type DescribeSMBSettingsOutput struct {
 
 	// The type of security strategy that was specified for file gateway.
 	//
-	// ClientSpecified: SMBv1 is enabled, SMB signing is offered but not required,
-	// SMB encryption is offered but not required.
+	// ClientSpecified: if you use this option, requests are established based on
+	// what is negotiated by the client. This option is recommended when you want
+	// to maximize compatibility across different clients in your environment.
 	//
-	// MandatorySigning: SMBv1 is disabled, SMB signing is required, SMB encryption
-	// is offered but not required.
+	// MandatorySigning: if you use this option, file gateway only allows connections
+	// from SMBv2 or SMBv3 clients that have signing enabled. This option works
+	// with SMB clients on Microsoft Windows Vista, Windows Server 2008 or newer.
 	//
-	// MandatoryEncryption: SMBv1 is disabled, SMB signing is offered but not required,
-	// SMB encryption is required.
+	// MandatoryEncryption: if you use this option, file gateway only allows connections
+	// from SMBv3 clients that have encryption enabled. This option is highly recommended
+	// for environments that handle sensitive data. This option works with SMB clients
+	// on Microsoft Windows 8, Windows Server 2012 or newer.
 	SMBSecurityStrategy *string `type:"string" enum:"SMBSecurityStrategy"`
 }
 
@@ -11575,6 +11611,11 @@ type DescribeSnapshotScheduleOutput struct {
 	// of the gateway.
 	StartAt *int64 `type:"integer"`
 
+	// A list of up to 50 tags assigned to the snapshot schedule, sorted alphabetically
+	// by key name. Each tag is a key-value pair. For a gateway with more than 10
+	// tags assigned, you can view all tags using the ListTagsForResource API operation.
+	Tags []*Tag `type:"list"`
+
 	// A value that indicates the time zone of the gateway.
 	Timezone *string `min:"3" type:"string"`
 
@@ -11607,6 +11648,12 @@ func (s *DescribeSnapshotScheduleOutput) SetRecurrenceInHours(v int64) *Describe
 // SetStartAt sets the StartAt field's value.
 func (s *DescribeSnapshotScheduleOutput) SetStartAt(v int64) *DescribeSnapshotScheduleOutput {
 	s.StartAt = &v
+	return s
+}
+
+// SetTags sets the Tags field's value.
+func (s *DescribeSnapshotScheduleOutput) SetTags(v []*Tag) *DescribeSnapshotScheduleOutput {
+	s.Tags = v
 	return s
 }
 
@@ -12885,8 +12932,8 @@ type JoinDomainInput struct {
 	// GatewayARN is a required field
 	GatewayARN *string `min:"50" type:"string" required:"true"`
 
-	// The organizational unit (OU) is a container with an Active Directory that
-	// can hold users, groups, computers, and other OUs and this parameter specifies
+	// The organizational unit (OU) is a container in an Active Directory that can
+	// hold users, groups, computers, and other OUs and this parameter specifies
 	// the OU that the gateway will join within the AD domain.
 	OrganizationalUnit *string `min:"1" type:"string"`
 
@@ -16482,9 +16529,9 @@ func (s *UpdateNFSFileShareOutput) SetFileShareARN(v string) *UpdateNFSFileShare
 type UpdateSMBFileShareInput struct {
 	_ struct{} `type:"structure"`
 
-	// A list of users or groups in the Active Directory that have administrator
-	// rights to the file share. A group must be prefixed with the @ character.
-	// For example @group1. Can only be set if Authentication is set to ActiveDirectory.
+	// A list of users in the Active Directory that have administrator rights to
+	// the file share. A group must be prefixed with the @ character. For example
+	// @group1. Can only be set if Authentication is set to ActiveDirectory.
 	AdminUserList []*string `type:"list"`
 
 	// The default storage class for objects put into an Amazon S3 bucket by the
@@ -16686,14 +16733,18 @@ type UpdateSMBSecurityStrategyInput struct {
 
 	// Specifies the type of security strategy.
 	//
-	// ClientSpecified: SMBv1 is enabled, SMB signing is offered but not required,
-	// SMB encryption is offered but not required.
+	// ClientSpecified: if you use this option, requests are established based on
+	// what is negotiated by the client. This option is recommended when you want
+	// to maximize compatibility across different clients in your environment.
 	//
-	// MandatorySigning: SMBv1 is disabled, SMB signing is required, SMB encryption
-	// is offered but not required.
+	// MandatorySigning: if you use this option, file gateway only allows connections
+	// from SMBv2 or SMBv3 clients that have signing enabled. This option works
+	// with SMB clients on Microsoft Windows Vista, Windows Server 2008 or newer.
 	//
-	// MandatoryEncryption: SMBv1 is disabled, SMB signing is offered but not required,
-	// SMB encryption is required.
+	// MandatoryEncryption: if you use this option, file gateway only allows connections
+	// from SMBv3 clients that have encryption enabled. This option is highly recommended
+	// for environments that handle sensitive data. This option works with SMB clients
+	// on Microsoft Windows 8, Windows Server 2012 or newer.
 	//
 	// SMBSecurityStrategy is a required field
 	SMBSecurityStrategy *string `type:"string" required:"true" enum:"SMBSecurityStrategy"`

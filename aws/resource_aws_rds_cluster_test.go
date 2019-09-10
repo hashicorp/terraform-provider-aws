@@ -413,7 +413,7 @@ func TestAccAWSRDSCluster_Tags(t *testing.T) {
 }
 
 func TestAccAWSRDSCluster_EnabledCloudwatchLogsExports(t *testing.T) {
-	var dbCluster1, dbCluster2, dbCluster3 rds.DBCluster
+	var dbCluster1, dbCluster2, dbCluster3, dbCluster4 rds.DBCluster
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_rds_cluster.test"
 
@@ -457,6 +457,14 @@ func TestAccAWSRDSCluster_EnabledCloudwatchLogsExports(t *testing.T) {
 					testAccCheckAWSClusterExists(resourceName, &dbCluster3),
 					resource.TestCheckResourceAttr(resourceName, "enabled_cloudwatch_logs_exports.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "enabled_cloudwatch_logs_exports.0", "error"),
+				),
+			},
+			{
+				Config: testAccAWSClusterConfigEnabledCloudwatchLogsExportsPostgres1(rName, "postgresql"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSClusterExists(resourceName, &dbCluster4),
+					resource.TestCheckResourceAttr(resourceName, "enabled_cloudwatch_logs_exports.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "enabled_cloudwatch_logs_exports.0", "postgresql"),
 				),
 			},
 		},
@@ -770,6 +778,40 @@ func TestAccAWSRDSCluster_EngineMode_Global(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSClusterExists(resourceName, &dbCluster1),
 					resource.TestCheckResourceAttr(resourceName, "engine_mode", "global"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"apply_immediately",
+					"cluster_identifier_prefix",
+					"master_password",
+					"skip_final_snapshot",
+					"snapshot_identifier",
+				},
+			},
+		},
+	})
+}
+
+func TestAccAWSRDSCluster_EngineMode_Multimaster(t *testing.T) {
+	var dbCluster1 rds.DBCluster
+
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_rds_cluster.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSClusterDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSRDSClusterConfig_EngineMode_Multimaster(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSClusterExists(resourceName, &dbCluster1),
+					resource.TestCheckResourceAttr(resourceName, "engine_mode", "multimaster"),
 				),
 			},
 			{
@@ -2046,6 +2088,19 @@ resource "aws_rds_cluster" "test" {
 `, rName, enabledCloudwatchLogExports1, enabledCloudwatchLogExports2)
 }
 
+func testAccAWSClusterConfigEnabledCloudwatchLogsExportsPostgres1(rName, enabledCloudwatchLogExports1 string) string {
+	return fmt.Sprintf(`
+resource "aws_rds_cluster" "test" {
+  cluster_identifier              = %[1]q
+  enabled_cloudwatch_logs_exports = [%[2]q]
+  engine                          = "aurora-postgresql"
+  master_username                 = "foo"
+  master_password                 = "mustbeeightcharaters"
+  skip_final_snapshot             = true
+}
+`, rName, enabledCloudwatchLogExports1)
+}
+
 func testAccAWSClusterConfig_kmsKey(n int) string {
 	return fmt.Sprintf(`
 
@@ -2578,6 +2633,57 @@ resource "aws_rds_cluster" "test" {
   skip_final_snapshot = true
 }
 `, rName, engineMode)
+}
+
+func testAccAWSRDSClusterConfig_EngineMode_Multimaster(rName string) string {
+	return fmt.Sprintf(`
+data "aws_availability_zones" "available" {
+  state = "available"
+}
+
+resource "aws_vpc" "test" {
+  cidr_block = "10.0.0.0/16"
+
+  tags = {
+    Name = "tf-acc-test-rds-cluster-multimaster"
+  }
+}
+
+resource "aws_subnet" "test1" {
+  vpc_id            = "${aws_vpc.test.id}"
+  cidr_block        = "10.0.0.0/24"
+  availability_zone = "${data.aws_availability_zones.available.names[0]}"
+
+  tags = {
+    Name = "tf-acc-test-rds-cluster-multimaster"
+  }
+}
+
+resource "aws_subnet" "test2" {
+  vpc_id            = "${aws_vpc.test.id}"
+  cidr_block        = "10.0.1.0/24"
+  availability_zone = "${data.aws_availability_zones.available.names[1]}"
+
+  tags = {
+    Name = "tf-acc-test-rds-cluster-multimaster"
+  }
+}
+
+resource "aws_db_subnet_group" "test" {
+  name       = %[1]q
+  subnet_ids = ["${aws_subnet.test1.id}", "${aws_subnet.test2.id}"]
+}
+
+# multimaster requires db_subnet_group_name
+resource "aws_rds_cluster" "test" {
+  cluster_identifier   = %[1]q
+  db_subnet_group_name = "${aws_db_subnet_group.test.name}"
+  engine_mode          = "multimaster"
+  master_password      = "barbarbarbar"
+  master_username      = "foo"
+  skip_final_snapshot  = true
+}
+`, rName)
 }
 
 func testAccAWSRDSClusterConfig_GlobalClusterIdentifier(rName string) string {

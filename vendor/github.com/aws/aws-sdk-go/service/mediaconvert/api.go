@@ -3190,9 +3190,10 @@ type AudioDescription struct {
 	// Advanced audio remixing settings.
 	RemixSettings *RemixSettings `locationName:"remixSettings" type:"structure"`
 
-	// Used for MS Smooth and Apple HLS outputs. Indicates the name displayed by
-	// the player (eg. English, or Director Commentary). Alphanumeric characters,
-	// spaces, and underscore are legal.
+	// Specify a label for this output audio stream. For example, "English", "Director
+	// commentary", or "track_2". For streaming outputs, MediaConvert passes this
+	// information into destination manifests for display on the end-viewer's player
+	// device. For outputs in other output groups, the service ignores this setting.
 	StreamName *string `locationName:"streamName" type:"string"`
 }
 
@@ -3927,9 +3928,11 @@ type CaptionDescription struct {
 	// the captions text.
 	LanguageCode *string `locationName:"languageCode" type:"string" enum:"LanguageCode"`
 
-	// Human readable information to indicate captions available for players (eg.
-	// English, or Spanish). Alphanumeric characters, spaces, and underscore are
-	// legal.
+	// Specify a label for this set of output captions. For example, "English",
+	// "Director commentary", or "track_2". For streaming outputs, MediaConvert
+	// passes this information into destination manifests for display on the end-viewer's
+	// player device. For outputs in other output groups, the service ignores this
+	// setting.
 	LanguageDescription *string `locationName:"languageDescription" type:"string"`
 }
 
@@ -4017,9 +4020,11 @@ type CaptionDescriptionPreset struct {
 	// the captions text.
 	LanguageCode *string `locationName:"languageCode" type:"string" enum:"LanguageCode"`
 
-	// Human readable information to indicate captions available for players (eg.
-	// English, or Spanish). Alphanumeric characters, spaces, and underscore are
-	// legal.
+	// Specify a label for this set of output captions. For example, "English",
+	// "Director commentary", or "track_2". For streaming outputs, MediaConvert
+	// passes this information into destination manifests for display on the end-viewer's
+	// player device. For outputs in other output groups, the service ignores this
+	// setting.
 	LanguageDescription *string `locationName:"languageDescription" type:"string"`
 }
 
@@ -4420,19 +4425,23 @@ type CmafEncryptionSettings struct {
 	// segment number by default.
 	ConstantInitializationVector *string `locationName:"constantInitializationVector" min:"32" type:"string"`
 
-	// Encrypts the segments with the given encryption scheme. Leave blank to disable.
-	// Selecting 'Disabled' in the web interface also disables encryption.
+	// For DRM with CMAF, the encryption type is always sample AES.
 	EncryptionMethod *string `locationName:"encryptionMethod" type:"string" enum:"CmafEncryptionType"`
 
-	// The Initialization Vector is a 128-bit number used in conjunction with the
-	// key for encrypting blocks. If set to INCLUDE, Initialization Vector is listed
-	// in the manifest. Otherwise Initialization Vector is not in the manifest.
+	// When you use DRM with CMAF outputs, choose whether the service writes the
+	// 128-bit encryption initialization vector in the HLS and DASH manifests.
 	InitializationVectorInManifest *string `locationName:"initializationVectorInManifest" type:"string" enum:"CmafInitializationVectorInManifest"`
+
+	// Use these settings when doing DRM encryption with a SPEKE-compliant key provider,
+	// if your output group type is CMAF. If your output group type is HLS, MS Smooth,
+	// or DASH, use the SpekeKeyProvider settings instead.
+	SpekeKeyProvider *SpekeKeyProviderCmaf `locationName:"spekeKeyProvider" type:"structure"`
 
 	// Use these settings to set up encryption with a static key provider.
 	StaticKeyProvider *StaticKeyProvider `locationName:"staticKeyProvider" type:"structure"`
 
-	// Indicates which type of key provider is used for encryption.
+	// Specify whether your DRM encryption key is static or from a key provider
+	// that follows the SPEKE standard. For more information about SPEKE, see https://docs.aws.amazon.com/speke/latest/documentation/what-is-speke.html.
 	Type *string `locationName:"type" type:"string" enum:"CmafKeyProviderType"`
 }
 
@@ -4474,6 +4483,12 @@ func (s *CmafEncryptionSettings) SetEncryptionMethod(v string) *CmafEncryptionSe
 // SetInitializationVectorInManifest sets the InitializationVectorInManifest field's value.
 func (s *CmafEncryptionSettings) SetInitializationVectorInManifest(v string) *CmafEncryptionSettings {
 	s.InitializationVectorInManifest = &v
+	return s
+}
+
+// SetSpekeKeyProvider sets the SpekeKeyProvider field's value.
+func (s *CmafEncryptionSettings) SetSpekeKeyProvider(v *SpekeKeyProviderCmaf) *CmafEncryptionSettings {
+	s.SpekeKeyProvider = v
 	return s
 }
 
@@ -4714,18 +4729,28 @@ type ColorCorrector struct {
 	// Brightness level.
 	Brightness *int64 `locationName:"brightness" min:"1" type:"integer"`
 
-	// Determines if colorspace conversion will be performed. If set to _None_,
-	// no conversion will be performed. If _Force 601_ or _Force 709_ are selected,
-	// conversion will be performed for inputs with differing colorspaces. An input's
-	// colorspace can be specified explicitly in the "Video Selector":#inputs-video_selector
-	// if necessary.
+	// Specify the color space you want for this output. The service supports conversion
+	// between HDR formats, between SDR formats, and from SDR to HDR. The service
+	// doesn't support conversion from HDR to SDR. SDR to HDR conversion doesn't
+	// upgrade the dynamic range. The converted video has an HDR format, but visually
+	// appears the same as an unconverted output.
 	ColorSpaceConversion *string `locationName:"colorSpaceConversion" type:"string" enum:"ColorSpaceConversion"`
 
 	// Contrast level.
 	Contrast *int64 `locationName:"contrast" min:"1" type:"integer"`
 
-	// Use the HDR master display (Hdr10Metadata) settings to correct HDR metadata
-	// or to provide missing metadata. Note that these settings are not color correction.
+	// Use these settings when you convert to the HDR 10 color space. Specify the
+	// SMPTE ST 2086 Mastering Display Color Volume static metadata that you want
+	// signaled in the output. These values don't affect the pixel values that are
+	// encoded in the video stream. They are intended to help the downstream video
+	// player display content in a way that reflects the intentions of the the content
+	// creator. When you set Color space conversion (ColorSpaceConversion) to HDR
+	// 10 (FORCE_HDR10), these settings are required. You must set values for Max
+	// frame average light level (maxFrameAverageLightLevel) and Max content light
+	// level (maxContentLightLevel); these settings don't have a default value.
+	// The default values for the other HDR 10 metadata settings are defined by
+	// the P3D65 color space. For more information about MediaConvert HDR jobs,
+	// see https://docs.aws.amazon.com/console/mediaconvert/hdr.
 	Hdr10Metadata *Hdr10Metadata `locationName:"hdr10Metadata" type:"structure"`
 
 	// Hue in degrees.
@@ -4951,6 +4976,12 @@ type CreateJobInput struct {
 	// Settings is a required field
 	Settings *JobSettings `locationName:"settings" type:"structure" required:"true"`
 
+	// Enable this setting when you run a test job to estimate how many reserved
+	// transcoding slots (RTS) you need. When this is enabled, MediaConvert runs
+	// your job from an on-demand queue with similar performance to what you will
+	// see with one RTS in a reserved queue. This setting is disabled by default.
+	SimulateReservedQueue *string `locationName:"simulateReservedQueue" type:"string" enum:"SimulateReservedQueue"`
+
 	// Specify how often MediaConvert sends STATUS_UPDATE events to Amazon CloudWatch
 	// Events. Set the interval, in seconds, between status updates. MediaConvert
 	// sends an update at this interval from the time the service begins processing
@@ -5046,6 +5077,12 @@ func (s *CreateJobInput) SetRole(v string) *CreateJobInput {
 // SetSettings sets the Settings field's value.
 func (s *CreateJobInput) SetSettings(v *JobSettings) *CreateJobInput {
 	s.Settings = v
+	return s
+}
+
+// SetSimulateReservedQueue sets the SimulateReservedQueue field's value.
+func (s *CreateJobInput) SetSimulateReservedQueue(v string) *CreateJobInput {
+	s.SimulateReservedQueue = &v
 	return s
 }
 
@@ -5395,6 +5432,10 @@ type CreateQueueInput struct {
 	// queues and not applicable to on-demand queues.
 	ReservationPlanSettings *ReservationPlanSettings `locationName:"reservationPlanSettings" type:"structure"`
 
+	// Initial state of the queue. If you create a paused queue, then jobs in that
+	// queue won't begin.
+	Status *string `locationName:"status" type:"string" enum:"QueueStatus"`
+
 	// The tags that you want to add to the resource. You can tag resources with
 	// a key-value pair or with only a key.
 	Tags map[string]*string `locationName:"tags" type:"map"`
@@ -5452,6 +5493,12 @@ func (s *CreateQueueInput) SetReservationPlanSettings(v *ReservationPlanSettings
 	return s
 }
 
+// SetStatus sets the Status field's value.
+func (s *CreateQueueInput) SetStatus(v string) *CreateQueueInput {
+	s.Status = &v
+	return s
+}
+
 // SetTags sets the Tags field's value.
 func (s *CreateQueueInput) SetTags(v map[string]*string) *CreateQueueInput {
 	s.Tags = v
@@ -5498,7 +5545,9 @@ type DashIsoEncryptionSettings struct {
 	// the access unit delimiter and will leave the SEI NAL units unencrypted.
 	PlaybackDeviceCompatibility *string `locationName:"playbackDeviceCompatibility" type:"string" enum:"DashIsoPlaybackDeviceCompatibility"`
 
-	// Settings for use with a SPEKE key provider
+	// Use these settings when doing DRM encryption with a SPEKE-compliant key provider,
+	// if your output group type is HLS, MS Smooth, or DASH. If your output group
+	// type is CMAF, use the SpekeKeyProviderCmaf settings instead.
 	SpekeKeyProvider *SpekeKeyProvider `locationName:"spekeKeyProvider" type:"structure"`
 }
 
@@ -6986,23 +7035,21 @@ func (s *Eac3Settings) SetSurroundMode(v string) *Eac3Settings {
 type EmbeddedDestinationSettings struct {
 	_ struct{} `type:"structure"`
 
-	// Ignore this setting unless your input captions are SCC format. With SCC inputs,
-	// you can optionally use this setting to replace the input channel number with
-	// the channel number that you specify. Specify a different number for each
-	// output captions track for a particular output. If you don't specify an output
-	// channel number, the system uses the input channel number for the output channel
-	// number. You can optionally combine two captions channels in your output.
-	// The two output channel numbers can be one of the following pairs: 1,3; 2,4;
-	// 1,4; or 2,3.
+	// Ignore this setting unless your input captions are SCC format and your output
+	// captions are embedded in the video stream. Specify a CC number for each captions
+	// channel in this output. If you have two channels, pick CC numbers that aren't
+	// in the same field. For example, choose 1 and 3. For more information, see
+	// https://docs.aws.amazon.com/console/mediaconvert/dual-scc-to-embedded.
 	Destination608ChannelNumber *int64 `locationName:"destination608ChannelNumber" min:"1" type:"integer"`
 
-	// Ignore this setting unless your input captions are SCC format and you are
-	// performing SCC upconvert. With SCC inputs, you can optionally use this setting
-	// to specify the 708 service number that is in the output. Specify a different
-	// service number for each output captions track for a particular output. If
-	// you don't specify an output track number, the system uses the 608 channel
-	// number for the output 708 service number. You can combine two captions channels
-	// in your output. Service numbers must be distinct.
+	// Ignore this setting unless your input captions are SCC format and you want
+	// both 608 and 708 captions embedded in your output stream. Optionally, specify
+	// the 708 service number for each output captions channel. Choose a different
+	// number for each channel. To use this setting, also set Force 608 to 708 upconvert
+	// (Convert608To708) to Upconvert (UPCONVERT) in your input captions selector
+	// settings. If you choose to upconvert but don't specify a 708 service number,
+	// MediaConvert uses the number you specify for CC channel number (destination608ChannelNumber)
+	// for the 708 service number. For more information, see https://docs.aws.amazon.com/console/mediaconvert/dual-scc-to-embedded.
 	Destination708ServiceNumber *int64 `locationName:"destination708ServiceNumber" min:"1" type:"integer"`
 }
 
@@ -7936,7 +7983,11 @@ type H264Settings struct {
 	// Places a PPS header on each encoded picture, even if repeated.
 	RepeatPps *string `locationName:"repeatPps" type:"string" enum:"H264RepeatPps"`
 
-	// Scene change detection (inserts I-frames on scene changes).
+	// Enable this setting to insert I-frames at scene changes that the service
+	// automatically detects. This improves video quality and is enabled by default.
+	// If this output uses QVBR, choose Transition detection (TRANSITION_DETECTION)
+	// for further video quality improvement. For more information about QVBR, see
+	// https://docs.aws.amazon.com/console/mediaconvert/cbr-vbr-qvbr.
 	SceneChangeDetect *string `locationName:"sceneChangeDetect" type:"string" enum:"H264SceneChangeDetect"`
 
 	// Number of slices per picture. Must be less than or equal to the number of
@@ -8402,17 +8453,18 @@ type H265Settings struct {
 	// as 5000000.
 	HrdBufferSize *int64 `locationName:"hrdBufferSize" type:"integer"`
 
-	// Use Interlace mode (InterlaceMode) to choose the scan line type for the output.
-	// * Top Field First (TOP_FIELD) and Bottom Field First (BOTTOM_FIELD) produce
-	// interlaced output with the entire output having the same field polarity (top
-	// or bottom first). * Follow, Default Top (FOLLOW_TOP_FIELD) and Follow, Default
-	// Bottom (FOLLOW_BOTTOM_FIELD) use the same field polarity as the source. Therefore,
-	// behavior depends on the input scan type. - If the source is interlaced, the
-	// output will be interlaced with the same polarity as the source (it will follow
-	// the source). The output could therefore be a mix of "top field first" and
-	// "bottom field first". - If the source is progressive, the output will be
-	// interlaced with "top field first" or "bottom field first" polarity, depending
-	// on which of the Follow options you chose.
+	// Choose the scan line type for the output. Choose Progressive (PROGRESSIVE)
+	// to create a progressive output, regardless of the scan type of your input.
+	// Choose Top Field First (TOP_FIELD) or Bottom Field First (BOTTOM_FIELD) to
+	// create an output that's interlaced with the same field polarity throughout.
+	// Choose Follow, Default Top (FOLLOW_TOP_FIELD) or Follow, Default Bottom (FOLLOW_BOTTOM_FIELD)
+	// to create an interlaced output with the same field polarity as the source.
+	// If the source is interlaced, the output will be interlaced with the same
+	// polarity as the source (it will follow the source). The output could therefore
+	// be a mix of "top field first" and "bottom field first". If the source is
+	// progressive, your output will be interlaced with "top field first" or "bottom
+	// field first" polarity, depending on which of the Follow options you chose.
+	// If you don't choose a value, the service will default to Progressive (PROGRESSIVE).
 	InterlaceMode *string `locationName:"interlaceMode" type:"string" enum:"H265InterlaceMode"`
 
 	// Maximum bitrate in bits/second. For example, enter five megabits per second
@@ -8465,7 +8517,11 @@ type H265Settings struct {
 	// selects best strength based on content
 	SampleAdaptiveOffsetFilterMode *string `locationName:"sampleAdaptiveOffsetFilterMode" type:"string" enum:"H265SampleAdaptiveOffsetFilterMode"`
 
-	// Scene change detection (inserts I-frames on scene changes).
+	// Enable this setting to insert I-frames at scene changes that the service
+	// automatically detects. This improves video quality and is enabled by default.
+	// If this output uses QVBR, choose Transition detection (TRANSITION_DETECTION)
+	// for further video quality improvement. For more information about QVBR, see
+	// https://docs.aws.amazon.com/console/mediaconvert/cbr-vbr-qvbr.
 	SceneChangeDetect *string `locationName:"sceneChangeDetect" type:"string" enum:"H265SceneChangeDetect"`
 
 	// Number of slices per picture. Must be less than or equal to the number of
@@ -8808,15 +8864,11 @@ func (s *H265Settings) SetWriteMp4PackagingType(v string) *H265Settings {
 	return s
 }
 
-// Use the "HDR master display information" (Hdr10Metadata) settings to correct
-// HDR metadata or to provide missing metadata. These values vary depending
-// on the input video and must be provided by a color grader. Range is 0 to
-// 50,000; each increment represents 0.00002 in CIE1931 color coordinate. Note
-// that these settings are not color correction. Note that if you are creating
-// HDR outputs inside of an HLS CMAF package, to comply with the Apple specification,
-// you must use the following settings. Set "MP4 packaging type" (writeMp4PackagingType)
-// to HVC1 (HVC1). Set "Profile" (H265Settings > codecProfile) to Main10/High
-// (MAIN10_HIGH). Set "Level" (H265Settings > codecLevel) to 5 (LEVEL_5).
+// Use these settings to specify static color calibration metadata, as defined
+// by SMPTE ST 2086. These values don't affect the pixel values that are encoded
+// in the video stream. They are intended to help the downstream video player
+// display content in a way that reflects the intentions of the the content
+// creator.
 type Hdr10Metadata struct {
 	_ struct{} `type:"structure"`
 
@@ -8841,11 +8893,13 @@ type Hdr10Metadata struct {
 	GreenPrimaryY *int64 `locationName:"greenPrimaryY" type:"integer"`
 
 	// Maximum light level among all samples in the coded video sequence, in units
-	// of candelas per square meter.
+	// of candelas per square meter. This setting doesn't have a default value;
+	// you must specify a value that is suitable for the content.
 	MaxContentLightLevel *int64 `locationName:"maxContentLightLevel" type:"integer"`
 
 	// Maximum average light level of any frame in the coded video sequence, in
-	// units of candelas per square meter.
+	// units of candelas per square meter. This setting doesn't have a default value;
+	// you must specify a value that is suitable for the content.
 	MaxFrameAverageLightLevel *int64 `locationName:"maxFrameAverageLightLevel" type:"integer"`
 
 	// Nominal maximum mastering display luminance in units of of 0.0001 candelas
@@ -9049,13 +9103,16 @@ type HlsEncryptionSettings struct {
 	// playlist. This allows for offline Apple HLS FairPlay content protection.
 	OfflineEncrypted *string `locationName:"offlineEncrypted" type:"string" enum:"HlsOfflineEncrypted"`
 
-	// Settings for use with a SPEKE key provider
+	// Use these settings when doing DRM encryption with a SPEKE-compliant key provider,
+	// if your output group type is HLS, MS Smooth, or DASH. If your output group
+	// type is CMAF, use the SpekeKeyProviderCmaf settings instead.
 	SpekeKeyProvider *SpekeKeyProvider `locationName:"spekeKeyProvider" type:"structure"`
 
 	// Use these settings to set up encryption with a static key provider.
 	StaticKeyProvider *StaticKeyProvider `locationName:"staticKeyProvider" type:"structure"`
 
-	// Indicates which type of key provider is used for encryption.
+	// Specify whether your DRM encryption key is static or from a key provider
+	// that follows the SPEKE standard. For more information about SPEKE, see https://docs.aws.amazon.com/speke/latest/documentation/what-is-speke.html.
 	Type *string `locationName:"type" type:"string" enum:"HlsKeyProviderType"`
 }
 
@@ -10507,6 +10564,12 @@ type Job struct {
 	// Settings is a required field
 	Settings *JobSettings `locationName:"settings" type:"structure" required:"true"`
 
+	// Enable this setting when you run a test job to estimate how many reserved
+	// transcoding slots (RTS) you need. When this is enabled, MediaConvert runs
+	// your job from an on-demand queue with similar performance to what you will
+	// see with one RTS in a reserved queue. This setting is disabled by default.
+	SimulateReservedQueue *string `locationName:"simulateReservedQueue" type:"string" enum:"SimulateReservedQueue"`
+
 	// A job's status can be SUBMITTED, PROGRESSING, COMPLETE, CANCELED, or ERROR.
 	Status *string `locationName:"status" type:"string" enum:"JobStatus"`
 
@@ -10628,6 +10691,12 @@ func (s *Job) SetRole(v string) *Job {
 // SetSettings sets the Settings field's value.
 func (s *Job) SetSettings(v *JobSettings) *Job {
 	s.Settings = v
+	return s
+}
+
+// SetSimulateReservedQueue sets the SimulateReservedQueue field's value.
+func (s *Job) SetSimulateReservedQueue(v string) *Job {
+	s.SimulateReservedQueue = &v
 	return s
 }
 
@@ -12869,7 +12938,8 @@ type Mpeg2Settings struct {
 	// is variable (vbr) or constant (cbr).
 	RateControlMode *string `locationName:"rateControlMode" type:"string" enum:"Mpeg2RateControlMode"`
 
-	// Scene change detection (inserts I-frames on scene changes).
+	// Enable this setting to insert I-frames at scene changes that the service
+	// automatically detects. This improves video quality and is enabled by default.
 	SceneChangeDetect *string `locationName:"sceneChangeDetect" type:"string" enum:"Mpeg2SceneChangeDetect"`
 
 	// Enables Slow PAL rate conversion. 23.976fps and 24fps input is relabeled
@@ -13127,7 +13197,9 @@ func (s *Mpeg2Settings) SetTemporalAdaptiveQuantization(v string) *Mpeg2Settings
 type MsSmoothEncryptionSettings struct {
 	_ struct{} `type:"structure"`
 
-	// Settings for use with a SPEKE key provider
+	// Use these settings when doing DRM encryption with a SPEKE-compliant key provider,
+	// if your output group type is HLS, MS Smooth, or DASH. If your output group
+	// type is CMAF, use the SpekeKeyProviderCmaf settings instead.
 	SpekeKeyProvider *SpekeKeyProvider `locationName:"spekeKeyProvider" type:"structure"`
 }
 
@@ -13290,10 +13362,11 @@ type NoiseReducer struct {
 
 	// Use Noise reducer filter (NoiseReducerFilter) to select one of the following
 	// spatial image filtering functions. To use this setting, you must also enable
-	// Noise reducer (NoiseReducer). * Bilateral is an edge preserving noise reduction
-	// filter. * Mean (softest), Gaussian, Lanczos, and Sharpen (sharpest) are convolution
-	// filters. * Conserve is a min/max noise reduction filter. * Spatial is a frequency-domain
-	// filter based on JND principles.
+	// Noise reducer (NoiseReducer). * Bilateral preserves edges while reducing
+	// noise. * Mean (softest), Gaussian, Lanczos, and Sharpen (sharpest) do convolution
+	// filtering. * Conserve does min/max noise reduction. * Spatial does frequency-domain
+	// filtering based on JND principles. * Temporal optimizes video quality for
+	// complex motion.
 	Filter *string `locationName:"filter" type:"string" enum:"NoiseReducerFilter"`
 
 	// Settings for a noise reducer filter
@@ -13301,6 +13374,9 @@ type NoiseReducer struct {
 
 	// Noise reducer filter settings for spatial filter.
 	SpatialFilterSettings *NoiseReducerSpatialFilterSettings `locationName:"spatialFilterSettings" type:"structure"`
+
+	// Noise reducer filter settings for temporal filter.
+	TemporalFilterSettings *NoiseReducerTemporalFilterSettings `locationName:"temporalFilterSettings" type:"structure"`
 }
 
 // String returns the string representation
@@ -13319,6 +13395,11 @@ func (s *NoiseReducer) Validate() error {
 	if s.SpatialFilterSettings != nil {
 		if err := s.SpatialFilterSettings.Validate(); err != nil {
 			invalidParams.AddNested("SpatialFilterSettings", err.(request.ErrInvalidParams))
+		}
+	}
+	if s.TemporalFilterSettings != nil {
+		if err := s.TemporalFilterSettings.Validate(); err != nil {
+			invalidParams.AddNested("TemporalFilterSettings", err.(request.ErrInvalidParams))
 		}
 	}
 
@@ -13343,6 +13424,12 @@ func (s *NoiseReducer) SetFilterSettings(v *NoiseReducerFilterSettings) *NoiseRe
 // SetSpatialFilterSettings sets the SpatialFilterSettings field's value.
 func (s *NoiseReducer) SetSpatialFilterSettings(v *NoiseReducerSpatialFilterSettings) *NoiseReducer {
 	s.SpatialFilterSettings = v
+	return s
+}
+
+// SetTemporalFilterSettings sets the TemporalFilterSettings field's value.
+func (s *NoiseReducer) SetTemporalFilterSettings(v *NoiseReducerTemporalFilterSettings) *NoiseReducer {
+	s.TemporalFilterSettings = v
 	return s
 }
 
@@ -13425,6 +13512,68 @@ func (s *NoiseReducerSpatialFilterSettings) SetSpeed(v int64) *NoiseReducerSpati
 
 // SetStrength sets the Strength field's value.
 func (s *NoiseReducerSpatialFilterSettings) SetStrength(v int64) *NoiseReducerSpatialFilterSettings {
+	s.Strength = &v
+	return s
+}
+
+// Noise reducer filter settings for temporal filter.
+type NoiseReducerTemporalFilterSettings struct {
+	_ struct{} `type:"structure"`
+
+	// Use Aggressive mode for content that has complex motion. Higher values produce
+	// stronger temporal filtering. This filters highly complex scenes more aggressively
+	// and creates better VQ for low bitrate outputs.
+	AggressiveMode *int64 `locationName:"aggressiveMode" type:"integer"`
+
+	// The speed of the filter (higher number is faster). Low setting reduces bit
+	// rate at the cost of transcode time, high setting improves transcode time
+	// at the cost of bit rate.
+	Speed *int64 `locationName:"speed" type:"integer"`
+
+	// Relative strength of noise reducing filter. Higher values produce stronger
+	// filtering. Recommended Range: * [0 .. 2] for complexity reduction with minimal
+	// sharpness loss * [2 .. 8] for complexity reduction with image preservation
+	// * [8 .. 16] for noise reduction. Reduce noise combined high complexity reduction
+	Strength *int64 `locationName:"strength" type:"integer"`
+}
+
+// String returns the string representation
+func (s NoiseReducerTemporalFilterSettings) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s NoiseReducerTemporalFilterSettings) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *NoiseReducerTemporalFilterSettings) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "NoiseReducerTemporalFilterSettings"}
+	if s.Speed != nil && *s.Speed < -1 {
+		invalidParams.Add(request.NewErrParamMinValue("Speed", -1))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetAggressiveMode sets the AggressiveMode field's value.
+func (s *NoiseReducerTemporalFilterSettings) SetAggressiveMode(v int64) *NoiseReducerTemporalFilterSettings {
+	s.AggressiveMode = &v
+	return s
+}
+
+// SetSpeed sets the Speed field's value.
+func (s *NoiseReducerTemporalFilterSettings) SetSpeed(v int64) *NoiseReducerTemporalFilterSettings {
+	s.Speed = &v
+	return s
+}
+
+// SetStrength sets the Strength field's value.
+func (s *NoiseReducerTemporalFilterSettings) SetStrength(v int64) *NoiseReducerTemporalFilterSettings {
 	s.Strength = &v
 	return s
 }
@@ -14786,24 +14935,28 @@ func (s *SccDestinationSettings) SetFramerate(v string) *SccDestinationSettings 
 	return s
 }
 
-// Settings for use with a SPEKE key provider
+// Use these settings when doing DRM encryption with a SPEKE-compliant key provider,
+// if your output group type is HLS, MS Smooth, or DASH. If your output group
+// type is CMAF, use the SpekeKeyProviderCmaf settings instead.
 type SpekeKeyProvider struct {
 	_ struct{} `type:"structure"`
 
-	// Optional AWS Certificate Manager ARN for a certificate to send to the keyprovider.
-	// The certificate holds a key used by the keyprovider to encrypt the keys in
-	// its response.
+	// If you want your key provider to encrypt the content keys that it provides
+	// to MediaConvert, set up a certificate with a master key using AWS Certificate
+	// Manager. Specify the certificate's Amazon Resource Name (ARN) here.
 	CertificateArn *string `locationName:"certificateArn" type:"string"`
 
-	// The SPEKE-compliant server uses Resource ID (ResourceId) to identify content.
+	// Specify the resource ID that your SPEKE-compliant key provider uses to identify
+	// this content.
 	ResourceId *string `locationName:"resourceId" type:"string"`
 
 	// Relates to SPEKE implementation. DRM system identifiers. DASH output groups
 	// support a max of two system ids. Other group types support one system id.
+	// See https://dashif.org/identifiers/content_protection/ for more details.
 	SystemIds []*string `locationName:"systemIds" type:"list"`
 
-	// Use URL (Url) to specify the SPEKE-compliant server that will provide keys
-	// for content.
+	// Specify the URL to the key server that your SPEKE-compliant DRM key provider
+	// uses to provide keys for encrypting your content.
 	Url *string `locationName:"url" type:"string"`
 }
 
@@ -14837,6 +14990,76 @@ func (s *SpekeKeyProvider) SetSystemIds(v []*string) *SpekeKeyProvider {
 
 // SetUrl sets the Url field's value.
 func (s *SpekeKeyProvider) SetUrl(v string) *SpekeKeyProvider {
+	s.Url = &v
+	return s
+}
+
+// Use these settings when doing DRM encryption with a SPEKE-compliant key provider,
+// if your output group type is CMAF. If your output group type is HLS, MS Smooth,
+// or DASH, use the SpekeKeyProvider settings instead.
+type SpekeKeyProviderCmaf struct {
+	_ struct{} `type:"structure"`
+
+	// If you want your key provider to encrypt the content keys that it provides
+	// to MediaConvert, set up a certificate with a master key using AWS Certificate
+	// Manager. Specify the certificate's Amazon Resource Name (ARN) here.
+	CertificateArn *string `locationName:"certificateArn" type:"string"`
+
+	// Specify the DRM system IDs that you want signaled in the DASH manifest that
+	// MediaConvert creates as part of this CMAF package. The DASH manifest can
+	// currently signal up to three system IDs. For more information, see https://dashif.org/identifiers/content_protection/.
+	DashSignaledSystemIds []*string `locationName:"dashSignaledSystemIds" type:"list"`
+
+	// Specify the DRM system ID that you want signaled in the HLS manifest that
+	// MediaConvert creates as part of this CMAF package. The HLS manifest can currently
+	// signal only one system ID. For more information, see https://dashif.org/identifiers/content_protection/.
+	HlsSignaledSystemIds []*string `locationName:"hlsSignaledSystemIds" type:"list"`
+
+	// Specify the resource ID that your SPEKE-compliant key provider uses to identify
+	// this content.
+	ResourceId *string `locationName:"resourceId" type:"string"`
+
+	// Specify the URL to the key server that your SPEKE-compliant DRM key provider
+	// uses to provide keys for encrypting your content.
+	Url *string `locationName:"url" type:"string"`
+}
+
+// String returns the string representation
+func (s SpekeKeyProviderCmaf) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s SpekeKeyProviderCmaf) GoString() string {
+	return s.String()
+}
+
+// SetCertificateArn sets the CertificateArn field's value.
+func (s *SpekeKeyProviderCmaf) SetCertificateArn(v string) *SpekeKeyProviderCmaf {
+	s.CertificateArn = &v
+	return s
+}
+
+// SetDashSignaledSystemIds sets the DashSignaledSystemIds field's value.
+func (s *SpekeKeyProviderCmaf) SetDashSignaledSystemIds(v []*string) *SpekeKeyProviderCmaf {
+	s.DashSignaledSystemIds = v
+	return s
+}
+
+// SetHlsSignaledSystemIds sets the HlsSignaledSystemIds field's value.
+func (s *SpekeKeyProviderCmaf) SetHlsSignaledSystemIds(v []*string) *SpekeKeyProviderCmaf {
+	s.HlsSignaledSystemIds = v
+	return s
+}
+
+// SetResourceId sets the ResourceId field's value.
+func (s *SpekeKeyProviderCmaf) SetResourceId(v string) *SpekeKeyProviderCmaf {
+	s.ResourceId = &v
+	return s
+}
+
+// SetUrl sets the Url field's value.
+func (s *SpekeKeyProviderCmaf) SetUrl(v string) *SpekeKeyProviderCmaf {
 	s.Url = &v
 	return s
 }
@@ -14978,6 +15201,13 @@ type TeletextDestinationSettings struct {
 	// ending in -FF are invalid. If you are passing through the entire set of Teletext
 	// data, do not use this field.
 	PageNumber *string `locationName:"pageNumber" min:"3" type:"string"`
+
+	// Specify the page types for this Teletext page. If you don't specify a value
+	// here, the service sets the page type to the default value Subtitle (PAGE_TYPE_SUBTITLE).
+	// If you pass through the entire set of Teletext data, don't use this field.
+	// When you pass through a set of Teletext pages, your output has the same page
+	// types as your input.
+	PageTypes []*string `locationName:"pageTypes" type:"list"`
 }
 
 // String returns the string representation
@@ -15006,6 +15236,12 @@ func (s *TeletextDestinationSettings) Validate() error {
 // SetPageNumber sets the PageNumber field's value.
 func (s *TeletextDestinationSettings) SetPageNumber(v string) *TeletextDestinationSettings {
 	s.PageNumber = &v
+	return s
+}
+
+// SetPageTypes sets the PageTypes field's value.
+func (s *TeletextDestinationSettings) SetPageTypes(v []*string) *TeletextDestinationSettings {
+	s.PageTypes = v
 	return s
 }
 
@@ -15906,8 +16142,9 @@ type VideoDescription struct {
 	// FrameCaptureSettings
 	CodecSettings *VideoCodecSettings `locationName:"codecSettings" type:"structure"`
 
-	// Enable Insert color metadata (ColorMetadata) to include color metadata in
-	// this output. This setting is enabled by default.
+	// Choose Insert (INSERT) for this setting to include color metadata in this
+	// output. Choose Ignore (IGNORE) to exclude color metadata from this output.
+	// If you don't specify a value, the service sets this to Insert by default.
 	ColorMetadata *string `locationName:"colorMetadata" type:"string" enum:"ColorMetadata"`
 
 	// Use Cropping selection (crop) to specify the video area that the service
@@ -16258,33 +16495,37 @@ type VideoSelector struct {
 	_ struct{} `type:"structure"`
 
 	// If your input video has accurate color space metadata, or if you don't know
-	// about color space, leave this set to the default value FOLLOW. The service
-	// will automatically detect your input color space. If your input video has
-	// metadata indicating the wrong color space, or if your input video is missing
-	// color space metadata that should be there, specify the accurate color space
-	// here. If you choose HDR10, you can also correct inaccurate color space coefficients,
-	// using the HDR master display information controls. You must also set Color
-	// space usage (ColorSpaceUsage) to FORCE for the service to use these values.
+	// about color space, leave this set to the default value Follow (FOLLOW). The
+	// service will automatically detect your input color space. If your input video
+	// has metadata indicating the wrong color space, specify the accurate color
+	// space here. If your input video is HDR 10 and the SMPTE ST 2086 Mastering
+	// Display Color Volume static metadata isn't present in your video stream,
+	// or if that metadata is present but not accurate, choose Force HDR 10 (FORCE_HDR10)
+	// here and specify correct values in the input HDR 10 metadata (Hdr10Metadata)
+	// settings. For more information about MediaConvert HDR jobs, see https://docs.aws.amazon.com/console/mediaconvert/hdr.
 	ColorSpace *string `locationName:"colorSpace" type:"string" enum:"ColorSpace"`
 
-	// There are two sources for color metadata, the input file and the job configuration
-	// (in the Color space and HDR master display informaiton settings). The Color
-	// space usage setting controls which takes precedence. FORCE: The system will
-	// use color metadata supplied by user, if any. If the user does not supply
-	// color metadata, the system will use data from the source. FALLBACK: The system
-	// will use color metadata from the source. If source has no color metadata,
-	// the system will use user-supplied color metadata values if available.
+	// There are two sources for color metadata, the input file and the job input
+	// settings Color space (ColorSpace) and HDR master display information settings(Hdr10Metadata).
+	// The Color space usage setting determines which takes precedence. Choose Force
+	// (FORCE) to use color metadata from the input job settings. If you don't specify
+	// values for those settings, the service defaults to using metadata from your
+	// input. FALLBACK - Choose Fallback (FALLBACK) to use color metadata from the
+	// source when it is present. If there's no color metadata in your input file,
+	// the service defaults to using values you specify in the input settings.
 	ColorSpaceUsage *string `locationName:"colorSpaceUsage" type:"string" enum:"ColorSpaceUsage"`
 
-	// Use the "HDR master display information" (Hdr10Metadata) settings to correct
-	// HDR metadata or to provide missing metadata. These values vary depending
-	// on the input video and must be provided by a color grader. Range is 0 to
-	// 50,000; each increment represents 0.00002 in CIE1931 color coordinate. Note
-	// that these settings are not color correction. Note that if you are creating
-	// HDR outputs inside of an HLS CMAF package, to comply with the Apple specification,
-	// you must use the following settings. Set "MP4 packaging type" (writeMp4PackagingType)
-	// to HVC1 (HVC1). Set "Profile" (H265Settings > codecProfile) to Main10/High
-	// (MAIN10_HIGH). Set "Level" (H265Settings > codecLevel) to 5 (LEVEL_5).
+	// Use these settings to provide HDR 10 metadata that is missing or inaccurate
+	// in your input video. Appropriate values vary depending on the input video
+	// and must be provided by a color grader. The color grader generates these
+	// values during the HDR 10 mastering process. The valid range for each of these
+	// settings is 0 to 50,000. Each increment represents 0.00002 in CIE1931 color
+	// coordinate. Related settings - When you specify these values, you must also
+	// set Color space (ColorSpace) to HDR 10 (HDR10). To specify whether the the
+	// values you specify here take precedence over the values in the metadata of
+	// your input file, set Color space usage (ColorSpaceUsage). To specify whether
+	// color metadata is included in an output, set Color metadata (ColorMetadata).
+	// For more information about MediaConvert HDR jobs, see https://docs.aws.amazon.com/console/mediaconvert/hdr.
 	Hdr10Metadata *Hdr10Metadata `locationName:"hdr10Metadata" type:"structure"`
 
 	// Use PID (Pid) to select specific video data from an input file. Specify this
@@ -17004,16 +17245,14 @@ const (
 	CmafCodecSpecificationRfc4281 = "RFC_4281"
 )
 
-// Encrypts the segments with the given encryption scheme. Leave blank to disable.
-// Selecting 'Disabled' in the web interface also disables encryption.
+// For DRM with CMAF, the encryption type is always sample AES.
 const (
 	// CmafEncryptionTypeSampleAes is a CmafEncryptionType enum value
 	CmafEncryptionTypeSampleAes = "SAMPLE_AES"
 )
 
-// The Initialization Vector is a 128-bit number used in conjunction with the
-// key for encrypting blocks. If set to INCLUDE, Initialization Vector is listed
-// in the manifest. Otherwise Initialization Vector is not in the manifest.
+// When you use DRM with CMAF outputs, choose whether the service writes the
+// 128-bit encryption initialization vector in the HLS and DASH manifests.
 const (
 	// CmafInitializationVectorInManifestInclude is a CmafInitializationVectorInManifest enum value
 	CmafInitializationVectorInManifestInclude = "INCLUDE"
@@ -17022,8 +17261,12 @@ const (
 	CmafInitializationVectorInManifestExclude = "EXCLUDE"
 )
 
-// Indicates which type of key provider is used for encryption.
+// Specify whether your DRM encryption key is static or from a key provider
+// that follows the SPEKE standard. For more information about SPEKE, see https://docs.aws.amazon.com/speke/latest/documentation/what-is-speke.html.
 const (
+	// CmafKeyProviderTypeSpeke is a CmafKeyProviderType enum value
+	CmafKeyProviderTypeSpeke = "SPEKE"
+
 	// CmafKeyProviderTypeStaticKey is a CmafKeyProviderType enum value
 	CmafKeyProviderTypeStaticKey = "STATIC_KEY"
 )
@@ -17086,8 +17329,9 @@ const (
 	CmafWriteHLSManifestEnabled = "ENABLED"
 )
 
-// Enable Insert color metadata (ColorMetadata) to include color metadata in
-// this output. This setting is enabled by default.
+// Choose Insert (INSERT) for this setting to include color metadata in this
+// output. Choose Ignore (IGNORE) to exclude color metadata from this output.
+// If you don't specify a value, the service sets this to Insert by default.
 const (
 	// ColorMetadataIgnore is a ColorMetadata enum value
 	ColorMetadataIgnore = "IGNORE"
@@ -17097,13 +17341,14 @@ const (
 )
 
 // If your input video has accurate color space metadata, or if you don't know
-// about color space, leave this set to the default value FOLLOW. The service
-// will automatically detect your input color space. If your input video has
-// metadata indicating the wrong color space, or if your input video is missing
-// color space metadata that should be there, specify the accurate color space
-// here. If you choose HDR10, you can also correct inaccurate color space coefficients,
-// using the HDR master display information controls. You must also set Color
-// space usage (ColorSpaceUsage) to FORCE for the service to use these values.
+// about color space, leave this set to the default value Follow (FOLLOW). The
+// service will automatically detect your input color space. If your input video
+// has metadata indicating the wrong color space, specify the accurate color
+// space here. If your input video is HDR 10 and the SMPTE ST 2086 Mastering
+// Display Color Volume static metadata isn't present in your video stream,
+// or if that metadata is present but not accurate, choose Force HDR 10 (FORCE_HDR10)
+// here and specify correct values in the input HDR 10 metadata (Hdr10Metadata)
+// settings. For more information about MediaConvert HDR jobs, see https://docs.aws.amazon.com/console/mediaconvert/hdr.
 const (
 	// ColorSpaceFollow is a ColorSpace enum value
 	ColorSpaceFollow = "FOLLOW"
@@ -17121,11 +17366,11 @@ const (
 	ColorSpaceHlg2020 = "HLG_2020"
 )
 
-// Determines if colorspace conversion will be performed. If set to _None_,
-// no conversion will be performed. If _Force 601_ or _Force 709_ are selected,
-// conversion will be performed for inputs with differing colorspaces. An input's
-// colorspace can be specified explicitly in the "Video Selector":#inputs-video_selector
-// if necessary.
+// Specify the color space you want for this output. The service supports conversion
+// between HDR formats, between SDR formats, and from SDR to HDR. The service
+// doesn't support conversion from HDR to SDR. SDR to HDR conversion doesn't
+// upgrade the dynamic range. The converted video has an HDR format, but visually
+// appears the same as an unconverted output.
 const (
 	// ColorSpaceConversionNone is a ColorSpaceConversion enum value
 	ColorSpaceConversionNone = "NONE"
@@ -17143,13 +17388,14 @@ const (
 	ColorSpaceConversionForceHlg2020 = "FORCE_HLG_2020"
 )
 
-// There are two sources for color metadata, the input file and the job configuration
-// (in the Color space and HDR master display informaiton settings). The Color
-// space usage setting controls which takes precedence. FORCE: The system will
-// use color metadata supplied by user, if any. If the user does not supply
-// color metadata, the system will use data from the source. FALLBACK: The system
-// will use color metadata from the source. If source has no color metadata,
-// the system will use user-supplied color metadata values if available.
+// There are two sources for color metadata, the input file and the job input
+// settings Color space (ColorSpace) and HDR master display information settings(Hdr10Metadata).
+// The Color space usage setting determines which takes precedence. Choose Force
+// (FORCE) to use color metadata from the input job settings. If you don't specify
+// values for those settings, the service defaults to using metadata from your
+// input. FALLBACK - Choose Fallback (FALLBACK) to use color metadata from the
+// source when it is present. If there's no color metadata in your input file,
+// the service defaults to using values you specify in the input settings.
 const (
 	// ColorSpaceUsageForce is a ColorSpaceUsage enum value
 	ColorSpaceUsageForce = "FORCE"
@@ -18046,13 +18292,20 @@ const (
 	H264RepeatPpsEnabled = "ENABLED"
 )
 
-// Scene change detection (inserts I-frames on scene changes).
+// Enable this setting to insert I-frames at scene changes that the service
+// automatically detects. This improves video quality and is enabled by default.
+// If this output uses QVBR, choose Transition detection (TRANSITION_DETECTION)
+// for further video quality improvement. For more information about QVBR, see
+// https://docs.aws.amazon.com/console/mediaconvert/cbr-vbr-qvbr.
 const (
 	// H264SceneChangeDetectDisabled is a H264SceneChangeDetect enum value
 	H264SceneChangeDetectDisabled = "DISABLED"
 
 	// H264SceneChangeDetectEnabled is a H264SceneChangeDetect enum value
 	H264SceneChangeDetectEnabled = "ENABLED"
+
+	// H264SceneChangeDetectTransitionDetection is a H264SceneChangeDetect enum value
+	H264SceneChangeDetectTransitionDetection = "TRANSITION_DETECTION"
 )
 
 // Enables Slow PAL rate conversion. 23.976fps and 24fps input is relabeled
@@ -18297,17 +18550,18 @@ const (
 	H265GopSizeUnitsSeconds = "SECONDS"
 )
 
-// Use Interlace mode (InterlaceMode) to choose the scan line type for the output.
-// * Top Field First (TOP_FIELD) and Bottom Field First (BOTTOM_FIELD) produce
-// interlaced output with the entire output having the same field polarity (top
-// or bottom first). * Follow, Default Top (FOLLOW_TOP_FIELD) and Follow, Default
-// Bottom (FOLLOW_BOTTOM_FIELD) use the same field polarity as the source. Therefore,
-// behavior depends on the input scan type. - If the source is interlaced, the
-// output will be interlaced with the same polarity as the source (it will follow
-// the source). The output could therefore be a mix of "top field first" and
-// "bottom field first". - If the source is progressive, the output will be
-// interlaced with "top field first" or "bottom field first" polarity, depending
-// on which of the Follow options you chose.
+// Choose the scan line type for the output. Choose Progressive (PROGRESSIVE)
+// to create a progressive output, regardless of the scan type of your input.
+// Choose Top Field First (TOP_FIELD) or Bottom Field First (BOTTOM_FIELD) to
+// create an output that's interlaced with the same field polarity throughout.
+// Choose Follow, Default Top (FOLLOW_TOP_FIELD) or Follow, Default Bottom (FOLLOW_BOTTOM_FIELD)
+// to create an interlaced output with the same field polarity as the source.
+// If the source is interlaced, the output will be interlaced with the same
+// polarity as the source (it will follow the source). The output could therefore
+// be a mix of "top field first" and "bottom field first". If the source is
+// progressive, your output will be interlaced with "top field first" or "bottom
+// field first" polarity, depending on which of the Follow options you chose.
+// If you don't choose a value, the service will default to Progressive (PROGRESSIVE).
 const (
 	// H265InterlaceModeProgressive is a H265InterlaceMode enum value
 	H265InterlaceModeProgressive = "PROGRESSIVE"
@@ -18376,13 +18630,20 @@ const (
 	H265SampleAdaptiveOffsetFilterModeOff = "OFF"
 )
 
-// Scene change detection (inserts I-frames on scene changes).
+// Enable this setting to insert I-frames at scene changes that the service
+// automatically detects. This improves video quality and is enabled by default.
+// If this output uses QVBR, choose Transition detection (TRANSITION_DETECTION)
+// for further video quality improvement. For more information about QVBR, see
+// https://docs.aws.amazon.com/console/mediaconvert/cbr-vbr-qvbr.
 const (
 	// H265SceneChangeDetectDisabled is a H265SceneChangeDetect enum value
 	H265SceneChangeDetectDisabled = "DISABLED"
 
 	// H265SceneChangeDetectEnabled is a H265SceneChangeDetect enum value
 	H265SceneChangeDetectEnabled = "ENABLED"
+
+	// H265SceneChangeDetectTransitionDetection is a H265SceneChangeDetect enum value
+	H265SceneChangeDetectTransitionDetection = "TRANSITION_DETECTION"
 )
 
 // Enables Slow PAL rate conversion. 23.976fps and 24fps input is relabeled
@@ -18613,7 +18874,8 @@ const (
 	HlsInitializationVectorInManifestExclude = "EXCLUDE"
 )
 
-// Indicates which type of key provider is used for encryption.
+// Specify whether your DRM encryption key is static or from a key provider
+// that follows the SPEKE standard. For more information about SPEKE, see https://docs.aws.amazon.com/speke/latest/documentation/what-is-speke.html.
 const (
 	// HlsKeyProviderTypeSpeke is a HlsKeyProviderType enum value
 	HlsKeyProviderTypeSpeke = "SPEKE"
@@ -19893,7 +20155,8 @@ const (
 	Mpeg2RateControlModeCbr = "CBR"
 )
 
-// Scene change detection (inserts I-frames on scene changes).
+// Enable this setting to insert I-frames at scene changes that the service
+// automatically detects. This improves video quality and is enabled by default.
 const (
 	// Mpeg2SceneChangeDetectDisabled is a Mpeg2SceneChangeDetect enum value
 	Mpeg2SceneChangeDetectDisabled = "DISABLED"
@@ -19978,10 +20241,11 @@ const (
 
 // Use Noise reducer filter (NoiseReducerFilter) to select one of the following
 // spatial image filtering functions. To use this setting, you must also enable
-// Noise reducer (NoiseReducer). * Bilateral is an edge preserving noise reduction
-// filter. * Mean (softest), Gaussian, Lanczos, and Sharpen (sharpest) are convolution
-// filters. * Conserve is a min/max noise reduction filter. * Spatial is a frequency-domain
-// filter based on JND principles.
+// Noise reducer (NoiseReducer). * Bilateral preserves edges while reducing
+// noise. * Mean (softest), Gaussian, Lanczos, and Sharpen (sharpest) do convolution
+// filtering. * Conserve does min/max noise reduction. * Spatial does frequency-domain
+// filtering based on JND principles. * Temporal optimizes video quality for
+// complex motion.
 const (
 	// NoiseReducerFilterBilateral is a NoiseReducerFilter enum value
 	NoiseReducerFilterBilateral = "BILATERAL"
@@ -20003,6 +20267,9 @@ const (
 
 	// NoiseReducerFilterSpatial is a NoiseReducerFilter enum value
 	NoiseReducerFilterSpatial = "SPATIAL"
+
+	// NoiseReducerFilterTemporal is a NoiseReducerFilter enum value
+	NoiseReducerFilterTemporal = "TEMPORAL"
 )
 
 // When you request lists of resources, you can optionally specify whether they
@@ -20301,6 +20568,18 @@ const (
 	SccDestinationFramerateFramerate2997NonDropframe = "FRAMERATE_29_97_NON_DROPFRAME"
 )
 
+// Enable this setting when you run a test job to estimate how many reserved
+// transcoding slots (RTS) you need. When this is enabled, MediaConvert runs
+// your job from an on-demand queue with similar performance to what you will
+// see with one RTS in a reserved queue. This setting is disabled by default.
+const (
+	// SimulateReservedQueueDisabled is a SimulateReservedQueue enum value
+	SimulateReservedQueueDisabled = "DISABLED"
+
+	// SimulateReservedQueueEnabled is a SimulateReservedQueue enum value
+	SimulateReservedQueueEnabled = "ENABLED"
+)
+
 // Specify how often MediaConvert sends STATUS_UPDATE events to Amazon CloudWatch
 // Events. Set the interval, in seconds, between status updates. MediaConvert
 // sends an update at this interval from the time the service begins processing
@@ -20350,6 +20629,24 @@ const (
 
 	// StatusUpdateIntervalSeconds600 is a StatusUpdateInterval enum value
 	StatusUpdateIntervalSeconds600 = "SECONDS_600"
+)
+
+// A page type as defined in the standard ETSI EN 300 468, Table 94
+const (
+	// TeletextPageTypePageTypeInitial is a TeletextPageType enum value
+	TeletextPageTypePageTypeInitial = "PAGE_TYPE_INITIAL"
+
+	// TeletextPageTypePageTypeSubtitle is a TeletextPageType enum value
+	TeletextPageTypePageTypeSubtitle = "PAGE_TYPE_SUBTITLE"
+
+	// TeletextPageTypePageTypeAddlInfo is a TeletextPageType enum value
+	TeletextPageTypePageTypeAddlInfo = "PAGE_TYPE_ADDL_INFO"
+
+	// TeletextPageTypePageTypeProgramSchedule is a TeletextPageType enum value
+	TeletextPageTypePageTypeProgramSchedule = "PAGE_TYPE_PROGRAM_SCHEDULE"
+
+	// TeletextPageTypePageTypeHearingImpairedSubtitle is a TeletextPageType enum value
+	TeletextPageTypePageTypeHearingImpairedSubtitle = "PAGE_TYPE_HEARING_IMPAIRED_SUBTITLE"
 )
 
 // Use Position (Position) under under Timecode burn-in (TimecodeBurnIn) to

@@ -32,7 +32,27 @@ func TestAccAWSLBTargetGroupAttachment_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSLBTargetGroupAttachmentBackwardsCompatibility(t *testing.T) {
+func TestAccAWSLBTargetGroupAttachment_disappears(t *testing.T) {
+	targetGroupName := fmt.Sprintf("test-target-group-%s", acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum))
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:      func() { testAccPreCheck(t) },
+		IDRefreshName: "aws_lb_target_group.test",
+		Providers:     testAccProviders,
+		CheckDestroy:  testAccCheckAWSLBTargetGroupAttachmentDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSLBTargetGroupAttachmentConfig_basic(targetGroupName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSLBTargetGroupAttachmentExists("aws_lb_target_group_attachment.test"),
+					testAccCheckAWSLBTargetGroupAttachmentDisappears("aws_lb_target_group_attachment.test"),
+				),
+				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}
+
+func TestAccAWSLBTargetGroupAttachment_BackwardsCompatibility(t *testing.T) {
 	targetGroupName := fmt.Sprintf("test-target-group-%s", acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum))
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -70,7 +90,7 @@ func TestAccAWSLBTargetGroupAttachment_withoutPort(t *testing.T) {
 	})
 }
 
-func TestAccAWSALBTargetGroupAttachment_ipAddress(t *testing.T) {
+func TestAccAWSLBTargetGroupAttachment_ipAddress(t *testing.T) {
 	targetGroupName := fmt.Sprintf("test-target-group-%s", acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum))
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -89,7 +109,7 @@ func TestAccAWSALBTargetGroupAttachment_ipAddress(t *testing.T) {
 	})
 }
 
-func TestAccAWSALBTargetGroupAttachment_lambda(t *testing.T) {
+func TestAccAWSLBTargetGroupAttachment_lambda(t *testing.T) {
 	targetGroupName := fmt.Sprintf("test-target-group-%s", acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum))
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -106,6 +126,40 @@ func TestAccAWSALBTargetGroupAttachment_lambda(t *testing.T) {
 			},
 		},
 	})
+}
+
+func testAccCheckAWSLBTargetGroupAttachmentDisappears(n string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		rs, ok := s.RootModule().Resources[n]
+		if !ok {
+			return fmt.Errorf("Attachment not found: %s", n)
+		}
+
+		conn := testAccProvider.Meta().(*AWSClient).elbv2conn
+		targetGroupArn := rs.Primary.Attributes["target_group_arn"]
+
+		target := &elbv2.TargetDescription{
+			Id: aws.String(rs.Primary.Attributes["target_id"]),
+		}
+
+		_, hasPort := rs.Primary.Attributes["port"]
+		if hasPort {
+			port, _ := strconv.Atoi(rs.Primary.Attributes["port"])
+			target.Port = aws.Int64(int64(port))
+		}
+
+		params := &elbv2.DeregisterTargetsInput{
+			TargetGroupArn: aws.String(targetGroupArn),
+			Targets:        []*elbv2.TargetDescription{target},
+		}
+
+		_, err := conn.DeregisterTargets(params)
+		if err != nil && !isAWSErr(err, elbv2.ErrCodeTargetGroupNotFoundException, "") {
+			return fmt.Errorf("Error deregistering Targets: %s", err)
+		}
+
+		return err
+	}
 }
 
 func testAccCheckAWSLBTargetGroupAttachmentExists(n string) resource.TestCheckFunc {

@@ -459,6 +459,88 @@ func (c *DataSync) CreateLocationS3WithContext(ctx aws.Context, input *CreateLoc
 	return out, req.Send()
 }
 
+const opCreateLocationSmb = "CreateLocationSmb"
+
+// CreateLocationSmbRequest generates a "aws/request.Request" representing the
+// client's request for the CreateLocationSmb operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See CreateLocationSmb for more information on using the CreateLocationSmb
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the CreateLocationSmbRequest method.
+//    req, resp := client.CreateLocationSmbRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/datasync-2018-11-09/CreateLocationSmb
+func (c *DataSync) CreateLocationSmbRequest(input *CreateLocationSmbInput) (req *request.Request, output *CreateLocationSmbOutput) {
+	op := &request.Operation{
+		Name:       opCreateLocationSmb,
+		HTTPMethod: "POST",
+		HTTPPath:   "/",
+	}
+
+	if input == nil {
+		input = &CreateLocationSmbInput{}
+	}
+
+	output = &CreateLocationSmbOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// CreateLocationSmb API operation for AWS DataSync.
+//
+// Creates an endpoint for a Server Message Block (SMB) file system.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for AWS DataSync's
+// API operation CreateLocationSmb for usage and error information.
+//
+// Returned Error Codes:
+//   * ErrCodeInvalidRequestException "InvalidRequestException"
+//   This exception is thrown when the client submits a malformed request.
+//
+//   * ErrCodeInternalException "InternalException"
+//   This exception is thrown when an error occurs in the AWS DataSync service.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/datasync-2018-11-09/CreateLocationSmb
+func (c *DataSync) CreateLocationSmb(input *CreateLocationSmbInput) (*CreateLocationSmbOutput, error) {
+	req, out := c.CreateLocationSmbRequest(input)
+	return out, req.Send()
+}
+
+// CreateLocationSmbWithContext is the same as CreateLocationSmb with the addition of
+// the ability to pass a context and additional request options.
+//
+// See CreateLocationSmb for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *DataSync) CreateLocationSmbWithContext(ctx aws.Context, input *CreateLocationSmbInput, opts ...request.Option) (*CreateLocationSmbOutput, error) {
+	req, out := c.CreateLocationSmbRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
 const opCreateTask = "CreateTask"
 
 // CreateTaskRequest generates a "aws/request.Request" representing the
@@ -1135,6 +1217,88 @@ func (c *DataSync) DescribeLocationS3(input *DescribeLocationS3Input) (*Describe
 // for more information on using Contexts.
 func (c *DataSync) DescribeLocationS3WithContext(ctx aws.Context, input *DescribeLocationS3Input, opts ...request.Option) (*DescribeLocationS3Output, error) {
 	req, out := c.DescribeLocationS3Request(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
+const opDescribeLocationSmb = "DescribeLocationSmb"
+
+// DescribeLocationSmbRequest generates a "aws/request.Request" representing the
+// client's request for the DescribeLocationSmb operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See DescribeLocationSmb for more information on using the DescribeLocationSmb
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the DescribeLocationSmbRequest method.
+//    req, resp := client.DescribeLocationSmbRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/datasync-2018-11-09/DescribeLocationSmb
+func (c *DataSync) DescribeLocationSmbRequest(input *DescribeLocationSmbInput) (req *request.Request, output *DescribeLocationSmbOutput) {
+	op := &request.Operation{
+		Name:       opDescribeLocationSmb,
+		HTTPMethod: "POST",
+		HTTPPath:   "/",
+	}
+
+	if input == nil {
+		input = &DescribeLocationSmbInput{}
+	}
+
+	output = &DescribeLocationSmbOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// DescribeLocationSmb API operation for AWS DataSync.
+//
+// Returns metadata, such as the path and user information about a SMB location.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for AWS DataSync's
+// API operation DescribeLocationSmb for usage and error information.
+//
+// Returned Error Codes:
+//   * ErrCodeInvalidRequestException "InvalidRequestException"
+//   This exception is thrown when the client submits a malformed request.
+//
+//   * ErrCodeInternalException "InternalException"
+//   This exception is thrown when an error occurs in the AWS DataSync service.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/datasync-2018-11-09/DescribeLocationSmb
+func (c *DataSync) DescribeLocationSmb(input *DescribeLocationSmbInput) (*DescribeLocationSmbOutput, error) {
+	req, out := c.DescribeLocationSmbRequest(input)
+	return out, req.Send()
+}
+
+// DescribeLocationSmbWithContext is the same as DescribeLocationSmb with the addition of
+// the ability to pass a context and additional request options.
+//
+// See DescribeLocationSmb for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *DataSync) DescribeLocationSmbWithContext(ctx aws.Context, input *DescribeLocationSmbInput, opts ...request.Option) (*DescribeLocationSmbOutput, error) {
+	req, out := c.DescribeLocationSmbRequest(input)
 	req.SetContext(ctx)
 	req.ApplyOptions(opts...)
 	return out, req.Send()
@@ -3086,6 +3250,188 @@ func (s *CreateLocationS3Output) SetLocationArn(v string) *CreateLocationS3Outpu
 	return s
 }
 
+// CreateLocationSmbRequest
+type CreateLocationSmbInput struct {
+	_ struct{} `type:"structure"`
+
+	// The Amazon Resource Names (ARNs) of agents to use for a Simple Message Block
+	// (SMB) location.
+	//
+	// AgentArns is a required field
+	AgentArns []*string `min:"1" type:"list" required:"true"`
+
+	// The name of the domain that the SMB server belongs to.
+	Domain *string `type:"string"`
+
+	// The mount options that are available for DataSync to use to access an SMB
+	// location.
+	MountOptions *SmbMountOptions `type:"structure"`
+
+	// The password of the user who has permission to access the SMB server.
+	//
+	// Password is a required field
+	Password *string `type:"string" required:"true"`
+
+	// The name of the SMB server. This value is the IP address or Domain Name Service
+	// (DNS) name of the SMB server. An agent that is installed on-premises uses
+	// this host name to mount the SMB server in a network.
+	//
+	// This name must either be DNS-compliant or must be an IP version 4 (IPv4)
+	// address.
+	//
+	// ServerHostname is a required field
+	ServerHostname *string `type:"string" required:"true"`
+
+	// The subdirectory in the SMB file system that is used to read data from the
+	// SMB source location or write data to the SMB destination. The SMB path should
+	// be a path that's exported by the SMB server, or a subdirectory of that path.
+	// The path should be such that it can be mounted by other SMB clients in your
+	// network.
+	//
+	// To transfer all the data in the folder you specified, DataSync needs to have
+	// permissions to mount the SMB share, as well as to access all the data in
+	// that share. To ensure this, either ensure that the user/password specified
+	// belongs to the user who can mount the share, and who has the appropriate
+	// permissions for all of the files and directories that you want DataSync to
+	// access, or use credentials of a member of the Backup Operators group to mount
+	// the share. Doing either enables the agent to access the data. For the agent
+	// to access directories, you must additionally enable all execute access.
+	//
+	// Subdirectory is a required field
+	Subdirectory *string `type:"string" required:"true"`
+
+	// The key-value pair that represents the tag that you want to add to the location.
+	// The value can be an empty string. We recommend using tags to name your resources.
+	Tags []*TagListEntry `type:"list"`
+
+	// The user who can mount the share, has the permissions to access files and
+	// directories in the SMB share.
+	//
+	// User is a required field
+	User *string `type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s CreateLocationSmbInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s CreateLocationSmbInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *CreateLocationSmbInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "CreateLocationSmbInput"}
+	if s.AgentArns == nil {
+		invalidParams.Add(request.NewErrParamRequired("AgentArns"))
+	}
+	if s.AgentArns != nil && len(s.AgentArns) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("AgentArns", 1))
+	}
+	if s.Password == nil {
+		invalidParams.Add(request.NewErrParamRequired("Password"))
+	}
+	if s.ServerHostname == nil {
+		invalidParams.Add(request.NewErrParamRequired("ServerHostname"))
+	}
+	if s.Subdirectory == nil {
+		invalidParams.Add(request.NewErrParamRequired("Subdirectory"))
+	}
+	if s.User == nil {
+		invalidParams.Add(request.NewErrParamRequired("User"))
+	}
+	if s.Tags != nil {
+		for i, v := range s.Tags {
+			if v == nil {
+				continue
+			}
+			if err := v.Validate(); err != nil {
+				invalidParams.AddNested(fmt.Sprintf("%s[%v]", "Tags", i), err.(request.ErrInvalidParams))
+			}
+		}
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetAgentArns sets the AgentArns field's value.
+func (s *CreateLocationSmbInput) SetAgentArns(v []*string) *CreateLocationSmbInput {
+	s.AgentArns = v
+	return s
+}
+
+// SetDomain sets the Domain field's value.
+func (s *CreateLocationSmbInput) SetDomain(v string) *CreateLocationSmbInput {
+	s.Domain = &v
+	return s
+}
+
+// SetMountOptions sets the MountOptions field's value.
+func (s *CreateLocationSmbInput) SetMountOptions(v *SmbMountOptions) *CreateLocationSmbInput {
+	s.MountOptions = v
+	return s
+}
+
+// SetPassword sets the Password field's value.
+func (s *CreateLocationSmbInput) SetPassword(v string) *CreateLocationSmbInput {
+	s.Password = &v
+	return s
+}
+
+// SetServerHostname sets the ServerHostname field's value.
+func (s *CreateLocationSmbInput) SetServerHostname(v string) *CreateLocationSmbInput {
+	s.ServerHostname = &v
+	return s
+}
+
+// SetSubdirectory sets the Subdirectory field's value.
+func (s *CreateLocationSmbInput) SetSubdirectory(v string) *CreateLocationSmbInput {
+	s.Subdirectory = &v
+	return s
+}
+
+// SetTags sets the Tags field's value.
+func (s *CreateLocationSmbInput) SetTags(v []*TagListEntry) *CreateLocationSmbInput {
+	s.Tags = v
+	return s
+}
+
+// SetUser sets the User field's value.
+func (s *CreateLocationSmbInput) SetUser(v string) *CreateLocationSmbInput {
+	s.User = &v
+	return s
+}
+
+// CreateLocationSmbResponse
+type CreateLocationSmbOutput struct {
+	_ struct{} `type:"structure"`
+
+	// The Amazon Resource Name (ARN) of the source SMB file system location that
+	// is created.
+	LocationArn *string `type:"string"`
+}
+
+// String returns the string representation
+func (s CreateLocationSmbOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s CreateLocationSmbOutput) GoString() string {
+	return s.String()
+}
+
+// SetLocationArn sets the LocationArn field's value.
+func (s *CreateLocationSmbOutput) SetLocationArn(v string) *CreateLocationSmbOutput {
+	s.LocationArn = &v
+	return s
+}
+
 // CreateTaskRequest
 type CreateTaskInput struct {
 	_ struct{} `type:"structure"`
@@ -3464,7 +3810,8 @@ type DescribeAgentOutput struct {
 	// The name of the agent.
 	Name *string `min:"1" type:"string"`
 
-	// The subnet and the security group that DataSync used to access a VPC endpoint.
+	// The VPC endpoint, subnet and security group that an agent uses to access
+	// IP addresses in a VPC (Virtual Private Cloud).
 	PrivateLinkConfig *PrivateLinkConfig `type:"structure"`
 
 	// The status of the agent. If the status is ONLINE, then the agent is configured
@@ -3811,6 +4158,125 @@ func (s *DescribeLocationS3Output) SetLocationUri(v string) *DescribeLocationS3O
 // SetS3Config sets the S3Config field's value.
 func (s *DescribeLocationS3Output) SetS3Config(v *S3Config) *DescribeLocationS3Output {
 	s.S3Config = v
+	return s
+}
+
+// DescribeLocationSmbRequest
+type DescribeLocationSmbInput struct {
+	_ struct{} `type:"structure"`
+
+	// The Amazon resource Name (ARN) of the SMB location to describe.
+	//
+	// LocationArn is a required field
+	LocationArn *string `type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s DescribeLocationSmbInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DescribeLocationSmbInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *DescribeLocationSmbInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "DescribeLocationSmbInput"}
+	if s.LocationArn == nil {
+		invalidParams.Add(request.NewErrParamRequired("LocationArn"))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetLocationArn sets the LocationArn field's value.
+func (s *DescribeLocationSmbInput) SetLocationArn(v string) *DescribeLocationSmbInput {
+	s.LocationArn = &v
+	return s
+}
+
+// DescribeLocationSmbResponse
+type DescribeLocationSmbOutput struct {
+	_ struct{} `type:"structure"`
+
+	// The Amazon Resource Name (ARN) of the source SMB file system location that
+	// is created.
+	AgentArns []*string `min:"1" type:"list"`
+
+	// The time that the SMB location was created.
+	CreationTime *time.Time `type:"timestamp"`
+
+	// The name of the domain that the SMB server belongs to.
+	Domain *string `type:"string"`
+
+	// The Amazon resource Name (ARN) of the SMB location that was described.
+	LocationArn *string `type:"string"`
+
+	// The URL of the source SBM location that was described.
+	LocationUri *string `type:"string"`
+
+	// The mount options that are available for DataSync to use to access an SMB
+	// location.
+	MountOptions *SmbMountOptions `type:"structure"`
+
+	// The user who is logged on the SMB server.
+	User *string `type:"string"`
+}
+
+// String returns the string representation
+func (s DescribeLocationSmbOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DescribeLocationSmbOutput) GoString() string {
+	return s.String()
+}
+
+// SetAgentArns sets the AgentArns field's value.
+func (s *DescribeLocationSmbOutput) SetAgentArns(v []*string) *DescribeLocationSmbOutput {
+	s.AgentArns = v
+	return s
+}
+
+// SetCreationTime sets the CreationTime field's value.
+func (s *DescribeLocationSmbOutput) SetCreationTime(v time.Time) *DescribeLocationSmbOutput {
+	s.CreationTime = &v
+	return s
+}
+
+// SetDomain sets the Domain field's value.
+func (s *DescribeLocationSmbOutput) SetDomain(v string) *DescribeLocationSmbOutput {
+	s.Domain = &v
+	return s
+}
+
+// SetLocationArn sets the LocationArn field's value.
+func (s *DescribeLocationSmbOutput) SetLocationArn(v string) *DescribeLocationSmbOutput {
+	s.LocationArn = &v
+	return s
+}
+
+// SetLocationUri sets the LocationUri field's value.
+func (s *DescribeLocationSmbOutput) SetLocationUri(v string) *DescribeLocationSmbOutput {
+	s.LocationUri = &v
+	return s
+}
+
+// SetMountOptions sets the MountOptions field's value.
+func (s *DescribeLocationSmbOutput) SetMountOptions(v *SmbMountOptions) *DescribeLocationSmbOutput {
+	s.MountOptions = v
+	return s
+}
+
+// SetUser sets the User field's value.
+func (s *DescribeLocationSmbOutput) SetUser(v string) *DescribeLocationSmbOutput {
+	s.User = &v
 	return s
 }
 
@@ -5100,6 +5566,34 @@ func (s *S3Config) SetBucketAccessRoleArn(v string) *S3Config {
 	return s
 }
 
+// Represents the mount options that are available for DataSync to access an
+// SMB location.
+type SmbMountOptions struct {
+	_ struct{} `type:"structure"`
+
+	// The specific SMB version that you want DataSync to use to mount your SMB
+	// share. If you don't specify a version, DataSync defaults to AUTOMATIC. That
+	// is, DataSync automatically selects a version based on negotiation with the
+	// SMB Server server.
+	Version *string `type:"string" enum:"SmbVersion"`
+}
+
+// String returns the string representation
+func (s SmbMountOptions) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s SmbMountOptions) GoString() string {
+	return s.String()
+}
+
+// SetVersion sets the Version field's value.
+func (s *SmbMountOptions) SetVersion(v string) *SmbMountOptions {
+	s.Version = &v
+	return s
+}
+
 // StartTaskExecutionRequest
 type StartTaskExecutionInput struct {
 	_ struct{} `type:"structure"`
@@ -5846,6 +6340,17 @@ const (
 
 	// PreserveDevicesPreserve is a PreserveDevices enum value
 	PreserveDevicesPreserve = "PRESERVE"
+)
+
+const (
+	// SmbVersionAutomatic is a SmbVersion enum value
+	SmbVersionAutomatic = "AUTOMATIC"
+
+	// SmbVersionSmb2 is a SmbVersion enum value
+	SmbVersionSmb2 = "SMB2"
+
+	// SmbVersionSmb3 is a SmbVersion enum value
+	SmbVersionSmb3 = "SMB3"
 )
 
 const (

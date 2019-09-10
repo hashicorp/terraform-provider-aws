@@ -69,7 +69,7 @@ Lightsail currently supports the following Blueprint IDs:
 ### OS Only
 
 - `amazon_linux_2018_03_0_2`
-- `centos_7_1805_01`
+- `centos_7_1901_01`
 - `debian_8_7`
 - `debian_9_5`
 - `freebsd_11_1`
@@ -133,6 +133,7 @@ The following attributes are exported in addition to the arguments listed above:
 
 * `id` - The ARN of the Lightsail instance (matches `arn`).
 * `arn` - The ARN of the Lightsail instance (matches `id`).
+* `created_at` - The timestamp when the instance was created.
 * `availability_zone`
 * `blueprint_id`
 * `bundle_id`

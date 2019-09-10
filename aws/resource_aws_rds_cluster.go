@@ -143,6 +143,7 @@ func resourceAwsRDSCluster() *schema.Resource {
 				Default:  "provisioned",
 				ValidateFunc: validation.StringInSlice([]string{
 					"global",
+					"multimaster",
 					"parallelquery",
 					"provisioned",
 					"serverless",
@@ -397,6 +398,7 @@ func resourceAwsRDSCluster() *schema.Resource {
 						"error",
 						"general",
 						"slowquery",
+						"postgresql",
 					}, false),
 				},
 			},

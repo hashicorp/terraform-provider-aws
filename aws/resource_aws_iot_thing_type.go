@@ -185,7 +185,7 @@ func resourceAwsIotThingTypeDelete(d *schema.ResourceData, meta interface{}) err
 	}
 	log.Printf("[DEBUG] Deleting IoT Thing Type: %s", deleteParams)
 
-	return resource.Retry(6*time.Minute, func() *resource.RetryError {
+	err = resource.Retry(6*time.Minute, func() *resource.RetryError {
 		_, err := conn.DeleteThingType(deleteParams)
 
 		if err != nil {
@@ -204,4 +204,14 @@ func resourceAwsIotThingTypeDelete(d *schema.ResourceData, meta interface{}) err
 
 		return nil
 	})
+	if isResourceTimeoutError(err) {
+		_, err = conn.DeleteThingType(deleteParams)
+		if isAWSErr(err, iot.ErrCodeResourceNotFoundException, "") {
+			return nil
+		}
+	}
+	if err != nil {
+		return fmt.Errorf("Error deleting IOT thing type: %s", err)
+	}
+	return nil
 }
