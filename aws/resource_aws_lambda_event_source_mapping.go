@@ -96,6 +96,10 @@ func resourceAwsLambdaEventSourceMapping() *schema.Resource {
 				Optional: true,
 				Default:  true,
 			},
+			"batch_window": {
+				Type:     schema.TypeInt,
+				Optional: true,
+			},
 			"function_arn": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -142,6 +146,10 @@ func resourceAwsLambdaEventSourceMappingCreate(d *schema.ResourceData, meta inte
 
 	if batchSize, ok := d.GetOk("batch_size"); ok {
 		params.BatchSize = aws.Int64(int64(batchSize.(int)))
+	}
+
+	if batchWindow, ok := d.GetOk("batch_window"); ok {
+		params.MaximumBatchingWindowInSeconds = aws.Int64(int64(batchWindow.(int)))
 	}
 
 	if startingPosition, ok := d.GetOk("starting_position"); ok {
