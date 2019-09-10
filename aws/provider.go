@@ -701,7 +701,7 @@ func Provider() terraform.ResourceProvider {
 			"aws_securityhub_account":                                 resourceAwsSecurityHubAccount(),
 			"aws_securityhub_product_subscription":                    resourceAwsSecurityHubProductSubscription(),
 			"aws_securityhub_standards_subscription":                  resourceAwsSecurityHubStandardsSubscription(),
-			"aws_serverlessrepository_application":                    resourceAwsServerlessRepositoryApplication(),
+			"aws_serverlessrepository_stack":                          resourceAwsServerlessRepositoryStack(),
 			"aws_servicecatalog_portfolio":                            resourceAwsServiceCatalogPortfolio(),
 			"aws_service_discovery_http_namespace":                    resourceAwsServiceDiscoveryHttpNamespace(),
 			"aws_service_discovery_private_dns_namespace":             resourceAwsServiceDiscoveryPrivateDnsNamespace(),

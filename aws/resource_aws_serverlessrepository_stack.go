@@ -15,12 +15,12 @@ import (
 	"github.com/hashicorp/terraform/helper/schema"
 )
 
-func resourceAwsServerlessRepositoryApplication() *schema.Resource {
+func resourceAwsServerlessRepositoryStack() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsServerlessRepositoryApplicationCreate,
-		Read:   resourceAwsServerlessRepositoryApplicationRead,
-		Update: resourceAwsServerlessRepositoryApplicationUpdate,
-		Delete: resourceAwsServerlessRepositoryApplicationDelete,
+		Create: resourceAwsServerlessRepositoryStackCreate,
+		Read:   resourceAwsServerlessRepositoryStackRead,
+		Update: resourceAwsServerlessRepositoryStackUpdate,
+		Delete: resourceAwsServerlessRepositoryStackDelete,
 
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
@@ -70,7 +70,7 @@ func resourceAwsServerlessRepositoryApplication() *schema.Resource {
 	}
 }
 
-func resourceAwsServerlessRepositoryApplicationCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceAwsServerlessRepositoryStackCreate(d *schema.ResourceData, meta interface{}) error {
 	serverlessConn := meta.(*AWSClient).serverlessapplicationrepositoryconn
 	cfConn := meta.(*AWSClient).cfconn
 
@@ -83,16 +83,16 @@ func resourceAwsServerlessRepositoryApplicationCreate(d *schema.ResourceData, me
 		changeSetRequest.SemanticVersion = aws.String(version)
 	}
 	if v, ok := d.GetOk("parameters"); ok {
-		changeSetRequest.ParameterOverrides = expandServerlessRepositoryApplicationParameters(v.(map[string]interface{}))
+		changeSetRequest.ParameterOverrides = expandServerlessRepositoryChangeSetParameters(v.(map[string]interface{}))
 	}
 	if v, ok := d.GetOk("tags"); ok {
-		changeSetRequest.Tags = expandServerlessRepositoryTags(v.(map[string]interface{}))
+		changeSetRequest.Tags = expandServerlessRepositoryChangeSetTags(v.(map[string]interface{}))
 	}
 
-	log.Printf("[DEBUG] Creating Serverless Repo Application change set: %s", changeSetRequest)
+	log.Printf("[DEBUG] Creating Serverless Application Repository change set: %s", changeSetRequest)
 	changeSetResponse, err := serverlessConn.CreateCloudFormationChangeSet(&changeSetRequest)
 	if err != nil {
-		return fmt.Errorf("Creating Serverless Repo Application change set failed: %s", err.Error())
+		return fmt.Errorf("Creating Serverless Application Repository change set failed: %s", err.Error())
 	}
 
 	d.SetId(*changeSetResponse.StackId)
@@ -190,10 +190,10 @@ func resourceAwsServerlessRepositoryApplicationCreate(d *schema.ResourceData, me
 
 	log.Printf("[INFO] CloudFormation Stack %q created", d.Id())
 
-	return resourceAwsServerlessRepositoryApplicationRead(d, meta)
+	return resourceAwsServerlessRepositoryStackRead(d, meta)
 }
 
-func resourceAwsServerlessRepositoryApplicationRead(d *schema.ResourceData, meta interface{}) error {
+func resourceAwsServerlessRepositoryStackRead(d *schema.ResourceData, meta interface{}) error {
 	serverlessConn := meta.(*AWSClient).serverlessapplicationrepositoryconn
 	cfConn := meta.(*AWSClient).cfconn
 
@@ -275,7 +275,7 @@ func resourceAwsServerlessRepositoryApplicationRead(d *schema.ResourceData, meta
 	return nil
 }
 
-func expandServerlessRepositoryTags(tags map[string]interface{}) []*serverlessapplicationrepository.Tag {
+func expandServerlessRepositoryChangeSetTags(tags map[string]interface{}) []*serverlessapplicationrepository.Tag {
 	var cfTags []*serverlessapplicationrepository.Tag
 	for k, v := range tags {
 		cfTags = append(cfTags, &serverlessapplicationrepository.Tag{
@@ -308,7 +308,7 @@ func tagIgnoredServerlessRepositoryCloudFormation(k string) bool {
 	return false
 }
 
-func resourceAwsServerlessRepositoryApplicationUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceAwsServerlessRepositoryStackUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).cfconn
 
 	input := &cloudformation.CreateChangeSetInput{
@@ -410,10 +410,10 @@ func resourceAwsServerlessRepositoryApplicationUpdate(d *schema.ResourceData, me
 
 	log.Printf("[DEBUG] CloudFormation stack %q has been updated", stackId)
 
-	return resourceAwsServerlessRepositoryApplicationRead(d, meta)
+	return resourceAwsServerlessRepositoryStackRead(d, meta)
 }
 
-func resourceAwsServerlessRepositoryApplicationDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceAwsServerlessRepositoryStackDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).cfconn
 
 	input := &cloudformation.DeleteStackInput{
@@ -539,7 +539,7 @@ func waitForCreateChangeSet(d *schema.ResourceData, conn *cloudformation.CloudFo
 }
 
 // Move to `structure.go`?
-func expandServerlessRepositoryApplicationParameters(params map[string]interface{}) []*serverlessapplicationrepository.ParameterValue {
+func expandServerlessRepositoryChangeSetParameters(params map[string]interface{}) []*serverlessapplicationrepository.ParameterValue {
 	var appParams []*serverlessapplicationrepository.ParameterValue
 	for k, v := range params {
 		appParams = append(appParams, &serverlessapplicationrepository.ParameterValue{
