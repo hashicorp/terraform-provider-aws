@@ -139,6 +139,25 @@ func TestAccAWSElasticacheCluster_Engine_Redis_Ec2Classic(t *testing.T) {
 	})
 }
 
+func TestAccAWSElasticacheCluster_Port_Redis_Default(t *testing.T) {
+	var ec elasticache.CacheCluster
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSElasticacheClusterDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSElasticacheClusterConfig_RedisDefaultPort,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSElasticacheClusterExists("aws_elasticache_cluster.foo", &ec),
+					resource.TestCheckResourceAttr("aws_security_group_rule.baz", "to_port", "6379"),
+					resource.TestCheckResourceAttr("aws_security_group_rule.baz", "from_port", "6379"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccAWSElasticacheCluster_ParameterGroupName_Default(t *testing.T) {
 	var ec elasticache.CacheCluster
 	rName := acctest.RandomWithPrefix("tf-acc-test")
@@ -1223,6 +1242,31 @@ resource "aws_elasticache_cluster" "bar" {
     ]
 }
 `, acctest.RandInt(), acctest.RandInt(), acctest.RandString(10))
+
+var testAccAWSElasticacheClusterConfig_RedisDefaultPort = `
+resource "aws_security_group" "bar" {
+    name        = "tf-test-security-group"
+    description = "tf-test-security-group-descr"
+}
+
+resource "aws_security_group_rule" "baz" {
+  cidr_blocks       = ["0.0.0.0/0"]
+  from_port         = aws_elasticache_cluster.foo.port
+  protocol          = "tcp"
+  security_group_id = aws_security_group.bar.id
+  to_port           = aws_elasticache_cluster.foo.port
+  type              = "ingress"
+}
+
+resource "aws_elasticache_cluster" "foo" {
+    cluster_id           = "foo-cluster"
+    engine               = "redis"
+    engine_version       = "5.0.4"
+    node_type            = "cache.t2.micro"
+    num_cache_nodes      = 1
+    parameter_group_name = "default.redis5.0"
+}
+`
 
 func testAccAWSElasticacheClusterConfig_AZMode_Memcached_Ec2Classic(rName, azMode string) string {
 	return fmt.Sprintf(`
