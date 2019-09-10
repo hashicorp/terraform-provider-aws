@@ -1,15 +1,42 @@
-## 2.27.0 (Unreleased)
+## 2.28.0 (Unreleased)
+
+NOTES:
+
+* resource/aws_cloudfront_distribution: This attribute implemented a legacy Terraform library (flatmap), which does not work with Terraform 0.12's data types and whose only usage was on this single attribute across all Terraform Providers. The attribute now implements (in the closest approximation to the previous implementation) the nested object data into the Terraform state in all Terraform versions. Any references to nested attributes such as `active_trusted_signers.enabled` will need to be updated to `active_trusted_signers.0.enabled`. [GH-10013]
+
+FEATURES:
+
+* **New Data Source:** `aws_route53_resolver_rule` [GH-9805]
+* **New Data Source:** `aws_route53_resolver_rules` [GH-9805]
 
 ENHANCEMENTS:
 
-* data-source/aws_ecs_cluster: Add `setting` attribute [GH-9720]
-* provider: Support AWS C2S and SC2S endpoints [GH-9998]
-* resource/aws_ecs_cluster: Add `setting` configuration blocks (support enabling Container Insights) [GH-9720]
-* resource/aws_kinesis_firehose_delivery_stream: Add `server_side_encryption` configuration block (support Server Side Encryption) [GH-6523]
+* data-source/aws_eks_cluster: Add `identity` attribute (support getting OIDC issuer URL) [GH-10006]
+* resource/aws_eks_cluster: Add `identity` attribute (support getting OIDC issuer URL) [GH-10006]
+* resource/aws_elasticache_cluster: Support `cluster_id` validation up to 50 characters [GH-9941]
+* resource/aws_elasticache_replication_group: Support `replication_group_id` validation up to 40 characters [GH-9941]
 
 BUG FIXES:
 
-* resource/aws_s3_bucket: Include any system tags that Terraform ignores when setting S3 bucket tags [GH-7342]
+* resource/aws_cloudfront_distribution: Support accessing `active_trusted_signers` attribute `items` in Terraform 0.12 [GH-10013]
+* resource/aws_cognito_user_pool: Fix perpetual diffs on `sms_verification_message` [GH-9758]
+* resource/aws_elasticsearch_domain: Final retries after timeouts creating, updating, and deleting domains [GH-9892]
+* resource/aws_elasticsearch_domain_policy: Final retries after timeouts upserting and deleting domain policies [GH-9892]
+* resource/aws_lightsail_instance: Fixes an issue where 2-character lightsail instance names didn't get validated properly [GH-10046]
+
+
+## 2.27.0 (September 05, 2019)
+
+ENHANCEMENTS:
+
+* data-source/aws_ecs_cluster: Add `setting` attribute ([#9720](https://github.com/terraform-providers/terraform-provider-aws/issues/9720))
+* provider: Support AWS C2S and SC2S endpoints ([#9998](https://github.com/terraform-providers/terraform-provider-aws/issues/9998))
+* resource/aws_ecs_cluster: Add `setting` configuration blocks (support enabling Container Insights) ([#9720](https://github.com/terraform-providers/terraform-provider-aws/issues/9720))
+* resource/aws_kinesis_firehose_delivery_stream: Add `server_side_encryption` configuration block (support Server Side Encryption) ([#6523](https://github.com/terraform-providers/terraform-provider-aws/issues/6523))
+
+BUG FIXES:
+
+* resource/aws_s3_bucket: Include any system tags that Terraform ignores when setting S3 bucket tags ([#7342](https://github.com/terraform-providers/terraform-provider-aws/issues/7342))
 
 ## 2.26.0 (August 29, 2019)
 

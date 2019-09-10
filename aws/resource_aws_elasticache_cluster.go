@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"log"
+	"regexp"
 	"sort"
 	"strings"
 	"time"
@@ -95,7 +96,13 @@ func resourceAwsElasticacheCluster() *schema.Resource {
 					// with non-converging diffs.
 					return strings.ToLower(val.(string))
 				},
-				ValidateFunc: validateElastiCacheClusterId,
+				ValidateFunc: validation.All(
+					validation.StringLenBetween(1, 50),
+					validation.StringMatch(regexp.MustCompile(`^[0-9a-z-]+$`), "must contain only lowercase alphanumeric characters and hyphens"),
+					validation.StringMatch(regexp.MustCompile(`^[a-z]`), "must begin with a lowercase letter"),
+					validateStringNotMatch(regexp.MustCompile(`--`), "cannot contain two consecutive hyphens"),
+					validateStringNotMatch(regexp.MustCompile(`-$`), "cannot end with a hyphen"),
+				),
 			},
 			"configuration_endpoint": {
 				Type:     schema.TypeString,
