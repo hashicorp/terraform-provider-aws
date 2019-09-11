@@ -22,6 +22,7 @@ BUG FIXES:
 * resource/aws_cognito_user_pool: Fix perpetual diffs on `sms_verification_message` [GH-9758]
 * resource/aws_elasticsearch_domain: Final retries after timeouts creating, updating, and deleting domains [GH-9892]
 * resource/aws_elasticsearch_domain_policy: Final retries after timeouts upserting and deleting domain policies [GH-9892]
+* resource/aws_iam_policy_attachment: Revert a change causing errors with policies not being found during attachment [GH-10063]
 * resource/aws_lightsail_instance: Fixes an issue where 2-character lightsail instance names didn't get validated properly [GH-10046]
 
 
