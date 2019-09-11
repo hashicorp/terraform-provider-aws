@@ -142,9 +142,8 @@ func resourceAwsGuardDutyFilterCreate(d *schema.ResourceData, meta interface{}) 
 		notEquals[i] = string(v.(string))
 	}
 
-	if len(d.Get("tags")) > 0 {
-		tagsInterface := d.Get("tags").(map[string]interface{})
-
+	tagsInterface := d.Get("tags").(map[string]interface{})
+	if len(tagsInterface) > 0 {
 		tags := make(map[string]*string, len(tagsInterface))
 		for i, v := range tagsInterface {
 			tags[i] = aws.String(v.(string))
