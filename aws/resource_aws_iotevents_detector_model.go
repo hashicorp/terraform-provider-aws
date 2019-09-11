@@ -16,10 +16,12 @@ func generateActionSchema() *schema.Resource {
 				Type:     schema.TypeSet,
 				MaxItems: 1,
 				Optional: true,
-				Elem: map[string]*schema.Schema{
-					"name": {
-						Type:     schema.TypeString,
-						Required: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"name": {
+							Type:     schema.TypeString,
+							Required: true,
+						},
 					},
 				},
 			},
@@ -27,14 +29,16 @@ func generateActionSchema() *schema.Resource {
 				Type:     schema.TypeSet,
 				MaxItems: 1,
 				Optional: true,
-				Elem: map[string]*schema.Schema{
-					"delivery_stream_name": {
-						Type:     schema.TypeString,
-						Required: true,
-					},
-					"separator": {
-						Type:     schema.TypeString,
-						Optional: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"delivery_stream_name": {
+							Type:     schema.TypeString,
+							Required: true,
+						},
+						"separator": {
+							Type:     schema.TypeString,
+							Optional: true,
+						},
 					},
 				},
 			},
@@ -42,10 +46,12 @@ func generateActionSchema() *schema.Resource {
 				Type:     schema.TypeSet,
 				MaxItems: 1,
 				Optional: true,
-				Elem: map[string]*schema.Schema{
-					"name": {
-						Type:     schema.TypeString,
-						Required: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"name": {
+							Type:     schema.TypeString,
+							Required: true,
+						},
 					},
 				},
 			},
@@ -53,10 +59,12 @@ func generateActionSchema() *schema.Resource {
 				Type:     schema.TypeSet,
 				MaxItems: 1,
 				Optional: true,
-				Elem: map[string]*schema.Schema{
-					"mqtt_topic": {
-						Type:     schema.TypeString,
-						Required: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"mqtt_topic": {
+							Type:     schema.TypeString,
+							Required: true,
+						},
 					},
 				},
 			},
@@ -64,10 +72,12 @@ func generateActionSchema() *schema.Resource {
 				Type:     schema.TypeSet,
 				MaxItems: 1,
 				Optional: true,
-				Elem: map[string]*schema.Schema{
-					"function_arn": {
-						Type:     schema.TypeString,
-						Required: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"function_arn": {
+							Type:     schema.TypeString,
+							Required: true,
+						},
 					},
 				},
 			},
@@ -75,10 +85,12 @@ func generateActionSchema() *schema.Resource {
 				Type:     schema.TypeSet,
 				MaxItems: 1,
 				Optional: true,
-				Elem: map[string]*schema.Schema{
-					"name": {
-						Type:     schema.TypeString,
-						Required: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"name": {
+							Type:     schema.TypeString,
+							Required: true,
+						},
 					},
 				},
 			},
@@ -86,15 +98,17 @@ func generateActionSchema() *schema.Resource {
 				Type:     schema.TypeSet,
 				MaxItems: 1,
 				Optional: true,
-				Elem: map[string]*schema.Schema{
-					"name": {
-						Type:     schema.TypeString,
-						Required: true,
-					},
-					"seconds": {
-						Type:         schema.TypeInt,
-						Required:     true,
-						ValidateFunc: validation.IntAtLeast(1),
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"name": {
+							Type:     schema.TypeString,
+							Required: true,
+						},
+						"seconds": {
+							Type:         schema.TypeInt,
+							Required:     true,
+							ValidateFunc: validation.IntAtLeast(1),
+						},
 					},
 				},
 			},
@@ -102,15 +116,17 @@ func generateActionSchema() *schema.Resource {
 				Type:     schema.TypeSet,
 				MaxItems: 1,
 				Optional: true,
-				Elem: map[string]*schema.Schema{
-					"name": {
-						Type:         schema.TypeString,
-						Required:     true,
-						ValidateFunc: validation.StringLenBetween(1, 128),
-					},
-					"value": {
-						Type:     schema.TypeString,
-						Required: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"name": {
+							Type:         schema.TypeString,
+							Required:     true,
+							ValidateFunc: validation.StringLenBetween(1, 128),
+						},
+						"value": {
+							Type:     schema.TypeString,
+							Required: true,
+						},
 					},
 				},
 			},
@@ -118,10 +134,12 @@ func generateActionSchema() *schema.Resource {
 				Type:     schema.TypeSet,
 				MaxItems: 1,
 				Optional: true,
-				Elem: map[string]*schema.Schema{
-					"target_arn": {
-						Type:     schema.TypeString,
-						Required: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"target_arn": {
+							Type:     schema.TypeString,
+							Required: true,
+						},
 					},
 				},
 			},
@@ -129,14 +147,16 @@ func generateActionSchema() *schema.Resource {
 				Type:     schema.TypeSet,
 				MaxItems: 1,
 				Optional: true,
-				Elem: map[string]*schema.Schema{
-					"queue_url": {
-						Type:     schema.TypeString,
-						Required: true,
-					},
-					"use_base64": {
-						Type:     schema.TypeBool,
-						Optional: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"queue_url": {
+							Type:     schema.TypeString,
+							Required: true,
+						},
+						"use_base64": {
+							Type:     schema.TypeBool,
+							Optional: true,
+						},
 					},
 				},
 			},
@@ -199,11 +219,13 @@ func generateStateSchema() *schema.Resource {
 				Type:     schema.TypeSet,
 				MaxItems: 1,
 				Optional: true,
-				Elem: map[string]*schema.Schema{
-					"event": {
-						Type:     schema.TypeSet,
-						Optional: true,
-						Elem:     generateEventSchema(),
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"event": {
+							Type:     schema.TypeSet,
+							Optional: true,
+							Elem:     generateEventSchema(),
+						},
 					},
 				},
 			},
@@ -211,11 +233,13 @@ func generateStateSchema() *schema.Resource {
 				Type:     schema.TypeSet,
 				MaxItems: 1,
 				Optional: true,
-				Elem: map[string]*schema.Schema{
-					"event": {
-						Type:     schema.TypeSet,
-						Optional: true,
-						Elem:     generateEventSchema(),
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"event": {
+							Type:     schema.TypeSet,
+							Optional: true,
+							Elem:     generateEventSchema(),
+						},
 					},
 				},
 			},
@@ -223,16 +247,18 @@ func generateStateSchema() *schema.Resource {
 				Type:     schema.TypeSet,
 				MaxItems: 1,
 				Optional: true,
-				Elem: map[string]*schema.Schema{
-					"event": {
-						Type:     schema.TypeSet,
-						Optional: true,
-						Elem:     generateEventSchema(),
-					},
-					"transition_event": {
-						Type:     schema.TypeSet,
-						Optional: true,
-						Elem:     generateTransitionEventSchema(),
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"event": {
+							Type:     schema.TypeSet,
+							Optional: true,
+							Elem:     generateEventSchema(),
+						},
+						"transition_event": {
+							Type:     schema.TypeSet,
+							Optional: true,
+							Elem:     generateTransitionEventSchema(),
+						},
 					},
 				},
 			},
@@ -272,7 +298,8 @@ func resourceAwsIotEventsDetectorModel() *schema.Resource {
 							Elem:     generateStateSchema(),
 						},
 					},
-				}},
+				},
+			},
 			"description": {
 				Type:     schema.TypeString,
 				Optional: true,
@@ -529,7 +556,7 @@ func parseDetectorModelDefinition(rawDetectorModelDefinition map[string]interfac
 func resourceAwsIotDetectorCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).ioteventsconn
 
-	detectorDefinition := d.Get("definition").(map[string]interface{})
+	detectorDefinition := d.Get("definition").(*schema.Set).List()[0].(map[string]interface{})
 	detectorDefinitionParams := parseDetectorModelDefinition(detectorDefinition)
 
 	detectorName := d.Get("name").(string)
@@ -754,7 +781,8 @@ func resourceAwsIotDetectorRead(d *schema.ResourceData, meta interface{}) error 
 	d.Set("description", out.DetectorModel.DetectorModelConfiguration.DetectorModelDescription)
 	d.Set("key", out.DetectorModel.DetectorModelConfiguration.Key)
 	d.Set("role_arn", out.DetectorModel.DetectorModelConfiguration.RoleArn)
-	d.Set("definition", flattenDetectorModelDefinition(out.DetectorModel.DetectorModelDefinition))
+	detectorModelDefinition := []interface{}{flattenDetectorModelDefinition(out.DetectorModel.DetectorModelDefinition)}
+	d.Set("definition", detectorModelDefinition)
 
 	return nil
 }
@@ -762,7 +790,7 @@ func resourceAwsIotDetectorRead(d *schema.ResourceData, meta interface{}) error 
 func resourceAwsIotDetectorUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).ioteventsconn
 
-	detectorDefinition := d.Get("definition").(map[string]interface{})
+	detectorDefinition := d.Get("definition").(*schema.Set).List()[0].(map[string]interface{})
 	detectorDefinitionParams := parseDetectorModelDefinition(detectorDefinition)
 
 	detectorName := d.Get("name").(string)
