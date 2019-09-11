@@ -340,20 +340,19 @@ func resourceAwsGuardDutyFilterRead(d *schema.ResourceData, meta interface{}) er
 func resourceAwsGuardDutyFilterDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).guarddutyconn
 
-	accountID, detectorID, err := decodeGuardDutyMemberID(d.Id())
-	if err != nil {
-		return err
+	detectorId := d.Get("detector_id").(string)
+	name := d.Get("name").(string)
+
+	input := guardduty.DeleteFilterInput{
+		FilterName: aws.String(name),
+		DetectorId: aws.String(detectorId),
 	}
 
-	input := guardduty.DeleteMembersInput{
-		AccountIds: []*string{aws.String(accountID)},
-		DetectorId: aws.String(detectorID),
-	}
+	log.Printf("[DEBUG] Delete GuardDuty Filter: %s", input)
 
-	log.Printf("[DEBUG] Delete GuardDuty Member: %s", input)
-	_, err = conn.DeleteMembers(&input)
+	_, err := conn.DeleteFilter(&input)
 	if err != nil {
-		return fmt.Errorf("Deleting GuardDuty Member '%s' failed: %s", d.Id(), err.Error())
+		return fmt.Errorf("Deleting GuardDuty Filter '%s' failed: %s", d.Id(), err.Error())
 	}
 	return nil
 }
