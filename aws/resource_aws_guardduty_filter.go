@@ -42,14 +42,11 @@ func resourceAwsGuardDutyFilter() *schema.Resource {
 				Optional: true,
 				ForceNew: true, // perhaps remove here and below, when Update is back
 			},
-			// "tags": { // Must be added back
-			// 	Type:     schema.TypeTags, // probably wrong type
-			// 	Optional: true,
-			// },
+			"tags": tagsSchemaForceNew(),
 			"finding_criteria": {
-				Type:     schema.TypeList, // Probably need to use FindingCriteria type
+				Type:     schema.TypeList,
 				MaxItems: 1,
-				Required: true, // change to required
+				Required: true,
 				ForceNew: true, // perhaps remove here and below, when Update is back
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
@@ -126,7 +123,7 @@ func resourceAwsGuardDutyFilterCreate(d *schema.ResourceData, meta interface{}) 
 		Rank:        aws.Int64(int64(d.Get("rank").(int))),
 	}
 
-	// building FindingCriteria
+	// building `FindingCriteria`
 	findingCriteria := d.Get("finding_criteria").([]interface{})[0].(map[string]interface{})
 	criterion := findingCriteria["criterion"].(*schema.Set).List()[0].(map[string]interface{})
 	condition := criterion["condition"].(*schema.Set).List()[0].(map[string]interface{})
@@ -135,25 +132,36 @@ func resourceAwsGuardDutyFilterCreate(d *schema.ResourceData, meta interface{}) 
 
 	equals := make([]string, len(interfaceForEquals))
 	for i, v := range interfaceForEquals {
-		new[i] = string(v.(string))
+		equals[i] = string(v.(string)) // Maybe aws.string?
 	}
 
 	interfaceForNotEquals := condition["equals"].([]interface{})
 
 	notEquals := make([]string, len(interfaceForNotEquals))
 	for i, v := range interfaceForNotEquals {
-		new[i] = string(v.(string))
+		notEquals[i] = string(v.(string))
+	}
+
+	if len(d.Get("tags")) > 0 {
+		tagsInterface := d.Get("tags").(map[string]interface{})
+
+		tags := make(map[string]*string, len(tagsInterface))
+		for i, v := range tagsInterface {
+			tags[i] = aws.String(v.(string))
+		}
+
+		input.Tags = tags
 	}
 
 	input.FindingCriteria = &guardduty.FindingCriteria{
-		Criterion: map[string]*guardduty.Condition{ // with star or without, that't the question!
+		Criterion: map[string]*guardduty.Condition{
 			"condition": &guardduty.Condition{
 				Equals:             aws.StringSlice(equals),
 				GreaterThan:        aws.Int64(int64(condition["greater_than"].(int))),
 				GreaterThanOrEqual: aws.Int64(int64(condition["greater_than_or_equal"].(int))),
 				LessThan:           aws.Int64(int64(condition["less_than"].(int))),
 				LessThanOrEqual:    aws.Int64(int64(condition["less_than_or_equal"].(int))),
-				NotEquals:          aws.StringSlice(notEquals), //aws.StringSlice([]string(condition["equals"].([]interface{}))),
+				NotEquals:          aws.StringSlice(notEquals),
 			},
 		},
 	}
