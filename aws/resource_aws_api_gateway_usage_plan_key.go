@@ -3,12 +3,15 @@ package aws
 import (
 	"fmt"
 	"log"
+	"sync"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/apigateway"
 	"github.com/hashicorp/terraform/helper/schema"
 )
+
+var resourceAwsApiGatewayUsagePlanKeyMutex = &sync.Mutex{}
 
 func resourceAwsApiGatewayUsagePlanKey() *schema.Resource {
 	return &schema.Resource{
@@ -58,10 +61,18 @@ func resourceAwsApiGatewayUsagePlanKeyCreate(d *schema.ResourceData, meta interf
 		UsagePlanId: aws.String(d.Get("usage_plan_id").(string)),
 	}
 
-	up, err := conn.CreateUsagePlanKey(params)
+	resourceAwsApiGatewayUsagePlanKeyMutex.Lock()
+	defer resourceAwsApiGatewayUsagePlanKeyMutex.Unlock()
+
+	o, err := retryOnAwsCode(apigateway.ErrCodeConflictException, func() (interface{}, error) {
+		return conn.CreateUsagePlanKey(params)
+	})
+
 	if err != nil {
 		return fmt.Errorf("Error creating API Gateway Usage Plan Key: %s", err)
 	}
+
+	up := o.(*apigateway.UsagePlanKey)
 
 	d.SetId(*up.Id)
 
