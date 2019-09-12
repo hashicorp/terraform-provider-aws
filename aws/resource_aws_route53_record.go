@@ -280,6 +280,18 @@ func resourceAwsRoute53RecordUpdate(d *schema.ResourceData, meta interface{}) er
 		Type: aws.String(typeo.(string)),
 	}
 
+	// If the old record had a weighted_routing_policy we need to pass that in
+	// here because otherwise the API will give us an error.
+	if v, _ := d.GetChange("weighted_routing_policy"); v != nil {
+		if o, ok := v.([]interface{}); ok {
+			if len(o) == 1 {
+				if v, ok := o[0].(map[string]interface{}); ok {
+					oldRec.Weight = aws.Int64(int64(v["weight"].(int)))
+				}
+			}
+		}
+	}
+
 	if v, _ := d.GetChange("ttl"); v.(int) != 0 {
 		oldRec.TTL = aws.Int64(int64(v.(int)))
 	}

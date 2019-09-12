@@ -1990,14 +1990,17 @@ func (s *AddFlowOutputsOutput) SetOutputs(v []*Output) *AddFlowOutputsOutput {
 type AddOutputRequest struct {
 	_ struct{} `type:"structure"`
 
+	// The range of IP addresses that should be allowed to initiate output requests
+	// to this flow. These IP addresses should be in the form of a Classless Inter-Domain
+	// Routing (CIDR) block; for example, 10.0.0.0/16.
+	CidrAllowList []*string `locationName:"cidrAllowList" type:"list"`
+
 	// A description of the output. This description appears only on the AWS Elemental
 	// MediaConnect console and will not be seen by the end user.
 	Description *string `locationName:"description" type:"string"`
 
 	// The IP address from which video will be sent to output destinations.
-	//
-	// Destination is a required field
-	Destination *string `locationName:"destination" type:"string" required:"true"`
+	Destination *string `locationName:"destination" type:"string"`
 
 	// The type of key used for the encryption. If no keyType is provided, the service
 	// will use the default setting (static-key).
@@ -2010,14 +2013,15 @@ type AddOutputRequest struct {
 	Name *string `locationName:"name" type:"string"`
 
 	// The port to use when content is distributed to this output.
-	//
-	// Port is a required field
-	Port *int64 `locationName:"port" type:"integer" required:"true"`
+	Port *int64 `locationName:"port" type:"integer"`
 
 	// The protocol to use for the output.
 	//
 	// Protocol is a required field
 	Protocol *string `locationName:"protocol" type:"string" required:"true" enum:"Protocol"`
+
+	// The remote ID for the Zixi-pull output stream.
+	RemoteId *string `locationName:"remoteId" type:"string"`
 
 	// The smoothing latency in milliseconds for RTP and RTP-FEC streams.
 	SmoothingLatency *int64 `locationName:"smoothingLatency" type:"integer"`
@@ -2040,12 +2044,6 @@ func (s AddOutputRequest) GoString() string {
 // Validate inspects the fields of the type to determine if they are valid.
 func (s *AddOutputRequest) Validate() error {
 	invalidParams := request.ErrInvalidParams{Context: "AddOutputRequest"}
-	if s.Destination == nil {
-		invalidParams.Add(request.NewErrParamRequired("Destination"))
-	}
-	if s.Port == nil {
-		invalidParams.Add(request.NewErrParamRequired("Port"))
-	}
 	if s.Protocol == nil {
 		invalidParams.Add(request.NewErrParamRequired("Protocol"))
 	}
@@ -2059,6 +2057,12 @@ func (s *AddOutputRequest) Validate() error {
 		return invalidParams
 	}
 	return nil
+}
+
+// SetCidrAllowList sets the CidrAllowList field's value.
+func (s *AddOutputRequest) SetCidrAllowList(v []*string) *AddOutputRequest {
+	s.CidrAllowList = v
+	return s
 }
 
 // SetDescription sets the Description field's value.
@@ -2100,6 +2104,12 @@ func (s *AddOutputRequest) SetPort(v int64) *AddOutputRequest {
 // SetProtocol sets the Protocol field's value.
 func (s *AddOutputRequest) SetProtocol(v string) *AddOutputRequest {
 	s.Protocol = &v
+	return s
+}
+
+// SetRemoteId sets the RemoteId field's value.
+func (s *AddOutputRequest) SetRemoteId(v string) *AddOutputRequest {
+	s.RemoteId = &v
 	return s
 }
 
@@ -3568,7 +3578,7 @@ type SetSourceRequest struct {
 	StreamId *string `locationName:"streamId" type:"string"`
 
 	// The range of IP addresses that should be allowed to contribute content to
-	// your source. These IP addresses should in the form of a Classless Inter-Domain
+	// your source. These IP addresses should be in the form of a Classless Inter-Domain
 	// Routing (CIDR) block; for example, 10.0.0.0/16.
 	WhitelistCidr *string `locationName:"whitelistCidr" type:"string"`
 }
@@ -3694,7 +3704,7 @@ type Source struct {
 	Transport *Transport `locationName:"transport" type:"structure"`
 
 	// The range of IP addresses that should be allowed to contribute content to
-	// your source. These IP addresses should in the form of a Classless Inter-Domain
+	// your source. These IP addresses should be in the form of a Classless Inter-Domain
 	// Routing (CIDR) block; for example, 10.0.0.0/16.
 	WhitelistCidr *string `locationName:"whitelistCidr" type:"string"`
 }
@@ -3981,6 +3991,11 @@ func (s TagResourceOutput) GoString() string {
 type Transport struct {
 	_ struct{} `type:"structure"`
 
+	// The range of IP addresses that should be allowed to initiate output requests
+	// to this flow. These IP addresses should be in the form of a Classless Inter-Domain
+	// Routing (CIDR) block; for example, 10.0.0.0/16.
+	CidrAllowList []*string `locationName:"cidrAllowList" type:"list"`
+
 	// The smoothing max bitrate for RTP and RTP-FEC streams.
 	MaxBitrate *int64 `locationName:"maxBitrate" type:"integer"`
 
@@ -3991,6 +4006,9 @@ type Transport struct {
 	//
 	// Protocol is a required field
 	Protocol *string `locationName:"protocol" type:"string" required:"true" enum:"Protocol"`
+
+	// The remote ID for the Zixi-pull stream.
+	RemoteId *string `locationName:"remoteId" type:"string"`
 
 	// The smoothing latency in milliseconds for RTP and RTP-FEC streams.
 	SmoothingLatency *int64 `locationName:"smoothingLatency" type:"integer"`
@@ -4010,6 +4028,12 @@ func (s Transport) GoString() string {
 	return s.String()
 }
 
+// SetCidrAllowList sets the CidrAllowList field's value.
+func (s *Transport) SetCidrAllowList(v []*string) *Transport {
+	s.CidrAllowList = v
+	return s
+}
+
 // SetMaxBitrate sets the MaxBitrate field's value.
 func (s *Transport) SetMaxBitrate(v int64) *Transport {
 	s.MaxBitrate = &v
@@ -4025,6 +4049,12 @@ func (s *Transport) SetMaxLatency(v int64) *Transport {
 // SetProtocol sets the Protocol field's value.
 func (s *Transport) SetProtocol(v string) *Transport {
 	s.Protocol = &v
+	return s
+}
+
+// SetRemoteId sets the RemoteId field's value.
+func (s *Transport) SetRemoteId(v string) *Transport {
+	s.RemoteId = &v
 	return s
 }
 
@@ -4341,6 +4371,11 @@ func (s *UpdateFlowEntitlementOutput) SetFlowArn(v string) *UpdateFlowEntitlemen
 type UpdateFlowOutputInput struct {
 	_ struct{} `type:"structure"`
 
+	// The range of IP addresses that should be allowed to initiate output requests
+	// to this flow. These IP addresses should be in the form of a Classless Inter-Domain
+	// Routing (CIDR) block; for example, 10.0.0.0/16.
+	CidrAllowList []*string `locationName:"cidrAllowList" type:"list"`
+
 	// A description of the output. This description appears only on the AWS Elemental
 	// MediaConnect console and will not be seen by the end user.
 	Description *string `locationName:"description" type:"string"`
@@ -4366,6 +4401,9 @@ type UpdateFlowOutputInput struct {
 
 	// The protocol to use for the output.
 	Protocol *string `locationName:"protocol" type:"string" enum:"Protocol"`
+
+	// The remote ID for the Zixi-pull stream.
+	RemoteId *string `locationName:"remoteId" type:"string"`
 
 	// The smoothing latency in milliseconds for RTP and RTP-FEC streams.
 	SmoothingLatency *int64 `locationName:"smoothingLatency" type:"integer"`
@@ -4405,6 +4443,12 @@ func (s *UpdateFlowOutputInput) Validate() error {
 		return invalidParams
 	}
 	return nil
+}
+
+// SetCidrAllowList sets the CidrAllowList field's value.
+func (s *UpdateFlowOutputInput) SetCidrAllowList(v []*string) *UpdateFlowOutputInput {
+	s.CidrAllowList = v
+	return s
 }
 
 // SetDescription sets the Description field's value.
@@ -4452,6 +4496,12 @@ func (s *UpdateFlowOutputInput) SetPort(v int64) *UpdateFlowOutputInput {
 // SetProtocol sets the Protocol field's value.
 func (s *UpdateFlowOutputInput) SetProtocol(v string) *UpdateFlowOutputInput {
 	s.Protocol = &v
+	return s
+}
+
+// SetRemoteId sets the RemoteId field's value.
+func (s *UpdateFlowOutputInput) SetRemoteId(v string) *UpdateFlowOutputInput {
+	s.RemoteId = &v
 	return s
 }
 
@@ -4540,7 +4590,7 @@ type UpdateFlowSourceInput struct {
 	StreamId *string `locationName:"streamId" type:"string"`
 
 	// The range of IP addresses that should be allowed to contribute content to
-	// your source. These IP addresses should in the form of a Classless Inter-Domain
+	// your source. These IP addresses should be in the form of a Classless Inter-Domain
 	// Routing (CIDR) block; for example, 10.0.0.0/16.
 	WhitelistCidr *string `locationName:"whitelistCidr" type:"string"`
 }
@@ -4705,6 +4755,9 @@ const (
 
 	// ProtocolRtp is a Protocol enum value
 	ProtocolRtp = "rtp"
+
+	// ProtocolZixiPull is a Protocol enum value
+	ProtocolZixiPull = "zixi-pull"
 )
 
 const (

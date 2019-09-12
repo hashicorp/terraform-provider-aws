@@ -12,7 +12,9 @@ import (
 )
 
 func TestAccAWSServiceDiscoveryService_private(t *testing.T) {
+	resourceName := "aws_service_discovery_service.test"
 	rName := acctest.RandString(5)
+
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSServiceDiscovery(t) },
 		Providers:    testAccProviders,
@@ -21,25 +23,30 @@ func TestAccAWSServiceDiscoveryService_private(t *testing.T) {
 			{
 				Config: testAccServiceDiscoveryServiceConfig_private(rName, 5),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsServiceDiscoveryServiceExists("aws_service_discovery_service.test"),
-					resource.TestCheckResourceAttr("aws_service_discovery_service.test", "health_check_custom_config.0.failure_threshold", "5"),
-					resource.TestCheckResourceAttr("aws_service_discovery_service.test", "dns_config.0.dns_records.#", "1"),
-					resource.TestCheckResourceAttr("aws_service_discovery_service.test", "dns_config.0.dns_records.0.type", "A"),
-					resource.TestCheckResourceAttr("aws_service_discovery_service.test", "dns_config.0.dns_records.0.ttl", "5"),
-					resource.TestCheckResourceAttr("aws_service_discovery_service.test", "dns_config.0.routing_policy", "MULTIVALUE"),
-					resource.TestCheckResourceAttrSet("aws_service_discovery_service.test", "arn"),
+					testAccCheckAwsServiceDiscoveryServiceExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "health_check_custom_config.0.failure_threshold", "5"),
+					resource.TestCheckResourceAttr(resourceName, "dns_config.0.dns_records.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "dns_config.0.dns_records.0.type", "A"),
+					resource.TestCheckResourceAttr(resourceName, "dns_config.0.dns_records.0.ttl", "5"),
+					resource.TestCheckResourceAttr(resourceName, "dns_config.0.routing_policy", "MULTIVALUE"),
+					resource.TestCheckResourceAttrSet(resourceName, "arn"),
 				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 			{
 				Config: testAccServiceDiscoveryServiceConfig_private_update(rName, 5),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsServiceDiscoveryServiceExists("aws_service_discovery_service.test"),
-					resource.TestCheckResourceAttr("aws_service_discovery_service.test", "dns_config.0.dns_records.#", "2"),
-					resource.TestCheckResourceAttr("aws_service_discovery_service.test", "dns_config.0.dns_records.0.type", "A"),
-					resource.TestCheckResourceAttr("aws_service_discovery_service.test", "dns_config.0.dns_records.0.ttl", "10"),
-					resource.TestCheckResourceAttr("aws_service_discovery_service.test", "dns_config.0.dns_records.1.type", "AAAA"),
-					resource.TestCheckResourceAttr("aws_service_discovery_service.test", "dns_config.0.dns_records.1.ttl", "5"),
-					resource.TestCheckResourceAttrSet("aws_service_discovery_service.test", "arn"),
+					testAccCheckAwsServiceDiscoveryServiceExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "dns_config.0.dns_records.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "dns_config.0.dns_records.0.type", "A"),
+					resource.TestCheckResourceAttr(resourceName, "dns_config.0.dns_records.0.ttl", "10"),
+					resource.TestCheckResourceAttr(resourceName, "dns_config.0.dns_records.1.type", "AAAA"),
+					resource.TestCheckResourceAttr(resourceName, "dns_config.0.dns_records.1.ttl", "5"),
+					resource.TestCheckResourceAttrSet(resourceName, "arn"),
 				),
 			},
 		},
@@ -48,56 +55,6 @@ func TestAccAWSServiceDiscoveryService_private(t *testing.T) {
 
 func TestAccAWSServiceDiscoveryService_public(t *testing.T) {
 	rName := acctest.RandString(5)
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSServiceDiscovery(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckAwsServiceDiscoveryServiceDestroy,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccServiceDiscoveryServiceConfig_public(rName, 5, "/path"),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsServiceDiscoveryServiceExists("aws_service_discovery_service.test"),
-					resource.TestCheckResourceAttr("aws_service_discovery_service.test", "health_check_config.0.type", "HTTP"),
-					resource.TestCheckResourceAttr("aws_service_discovery_service.test", "health_check_config.0.failure_threshold", "5"),
-					resource.TestCheckResourceAttr("aws_service_discovery_service.test", "health_check_config.0.resource_path", "/path"),
-					resource.TestCheckResourceAttr("aws_service_discovery_service.test", "dns_config.0.routing_policy", "WEIGHTED"),
-					resource.TestCheckResourceAttrSet("aws_service_discovery_service.test", "arn"),
-				),
-			},
-			{
-				Config: testAccServiceDiscoveryServiceConfig_public(rName, 3, "/updated-path"),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsServiceDiscoveryServiceExists("aws_service_discovery_service.test"),
-					resource.TestCheckResourceAttr("aws_service_discovery_service.test", "health_check_config.0.type", "HTTP"),
-					resource.TestCheckResourceAttr("aws_service_discovery_service.test", "health_check_config.0.failure_threshold", "3"),
-					resource.TestCheckResourceAttr("aws_service_discovery_service.test", "health_check_config.0.resource_path", "/updated-path"),
-					resource.TestCheckResourceAttrSet("aws_service_discovery_service.test", "arn"),
-				),
-			},
-		},
-	})
-}
-
-func TestAccAWSServiceDiscoveryService_http(t *testing.T) {
-	rName := acctest.RandString(5)
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckAwsServiceDiscoveryServiceDestroy,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccServiceDiscoveryServiceConfig_http(rName),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsServiceDiscoveryServiceExists("aws_service_discovery_service.test"),
-					resource.TestCheckResourceAttrSet("aws_service_discovery_service.test", "namespace_id"),
-					resource.TestCheckResourceAttrSet("aws_service_discovery_service.test", "arn"),
-				),
-			},
-		},
-	})
-}
-
-func TestAccAWSServiceDiscoveryService_import(t *testing.T) {
 	resourceName := "aws_service_discovery_service.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -106,9 +63,52 @@ func TestAccAWSServiceDiscoveryService_import(t *testing.T) {
 		CheckDestroy: testAccCheckAwsServiceDiscoveryServiceDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccServiceDiscoveryServiceConfig_private(acctest.RandString(5), 5),
+				Config: testAccServiceDiscoveryServiceConfig_public(rName, 5, "/path"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAwsServiceDiscoveryServiceExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "health_check_config.0.type", "HTTP"),
+					resource.TestCheckResourceAttr(resourceName, "health_check_config.0.failure_threshold", "5"),
+					resource.TestCheckResourceAttr(resourceName, "health_check_config.0.resource_path", "/path"),
+					resource.TestCheckResourceAttr(resourceName, "dns_config.0.routing_policy", "WEIGHTED"),
+					resource.TestCheckResourceAttrSet(resourceName, "arn"),
+				),
 			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccServiceDiscoveryServiceConfig_public(rName, 3, "/updated-path"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAwsServiceDiscoveryServiceExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "health_check_config.0.type", "HTTP"),
+					resource.TestCheckResourceAttr(resourceName, "health_check_config.0.failure_threshold", "3"),
+					resource.TestCheckResourceAttr(resourceName, "health_check_config.0.resource_path", "/updated-path"),
+					resource.TestCheckResourceAttrSet(resourceName, "arn"),
+				),
+			},
+		},
+	})
+}
 
+func TestAccAWSServiceDiscoveryService_http(t *testing.T) {
+	rName := acctest.RandString(5)
+	resourceName := "aws_service_discovery_service.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAwsServiceDiscoveryServiceDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccServiceDiscoveryServiceConfig_http(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAwsServiceDiscoveryServiceExists(resourceName),
+					resource.TestCheckResourceAttrSet(resourceName, "namespace_id"),
+					resource.TestCheckResourceAttrSet(resourceName, "arn"),
+				),
+			},
 			{
 				ResourceName:      resourceName,
 				ImportState:       true,

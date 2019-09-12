@@ -114,7 +114,7 @@ The following arguments are supported:
 
 * `tls` - (Optional) Configuration block for specifying TLS client authentication. See below.
 
-#### client_authenication tls Argument Reference
+#### client_authentication tls Argument Reference
 
 * `certificate_authority_arns` - (Optional) List of ACM Certificate Authority Amazon Resource Names (ARNs).
 

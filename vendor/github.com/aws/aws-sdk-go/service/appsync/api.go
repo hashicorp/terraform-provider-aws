@@ -6745,6 +6745,10 @@ type LogConfig struct {
 	// CloudWatchLogsRoleArn is a required field
 	CloudWatchLogsRoleArn *string `locationName:"cloudWatchLogsRoleArn" type:"string" required:"true"`
 
+	// Set to TRUE to exclude sections that contain information such as headers,
+	// context, and evaluated mapping templates, regardless of logging level.
+	ExcludeVerboseContent *bool `locationName:"excludeVerboseContent" type:"boolean"`
+
 	// The field logging level. Values can be NONE, ERROR, or ALL.
 	//
 	//    * NONE: No field-level logs are captured.
@@ -6790,6 +6794,12 @@ func (s *LogConfig) Validate() error {
 // SetCloudWatchLogsRoleArn sets the CloudWatchLogsRoleArn field's value.
 func (s *LogConfig) SetCloudWatchLogsRoleArn(v string) *LogConfig {
 	s.CloudWatchLogsRoleArn = &v
+	return s
+}
+
+// SetExcludeVerboseContent sets the ExcludeVerboseContent field's value.
+func (s *LogConfig) SetExcludeVerboseContent(v bool) *LogConfig {
+	s.ExcludeVerboseContent = &v
 	return s
 }
 

@@ -85,7 +85,6 @@ In addition to all arguments above, the following attributes are exported:
 * `id` - The DocDB Cluster Identifier
 * `maintenance_window` - The instance maintenance window
 * `reader_endpoint` - A read-only endpoint for the DocDB cluster, automatically load-balanced across replicas
-* `status` - The DocDB instance status
 
 ## Timeouts
 

@@ -17,6 +17,10 @@ func resourceAwsEc2Tag() *schema.Resource {
 		Read:   resourceAwsEc2TagRead,
 		Delete: resourceAwsEc2TagDelete,
 
+		Timeouts: &schema.ResourceTimeout{
+			Create: schema.DefaultTimeout(10 * time.Minute),
+		},
+
 		Schema: map[string]*schema.Schema{
 			"resource_id": {
 				Type:     schema.TypeString,
@@ -85,7 +89,7 @@ func resourceAwsEc2TagRead(d *schema.ResourceData, meta interface{}) error {
 	// The EC2 API is eventually consistent. This means that writing a tag
 	// followed by an immediate describe call can sometimes fail. To address
 	// this we retry for a couple of minutes before failing.
-	retryError := resource.Retry(2*time.Minute, func() *resource.RetryError {
+	retryError := resource.Retry(d.Timeout(schema.TimeoutCreate), func() *resource.RetryError {
 		tags, err = conn.DescribeTags(&ec2.DescribeTagsInput{
 			Filters: []*ec2.Filter{
 				{

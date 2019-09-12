@@ -58,11 +58,9 @@ func (c *Transfer) CreateServerRequest(input *CreateServerInput) (req *request.R
 // CreateServer API operation for AWS Transfer for SFTP.
 //
 // Instantiates an autoscaling virtual server based on Secure File Transfer
-// Protocol (SFTP) in AWS. The call returns the ServerId property assigned by
-// the service to the newly created server. Reference this ServerId property
-// when you make updates to your server, or work with users.
-//
-// The response returns the ServerId value for the newly created server.
+// Protocol (SFTP) in AWS. When you make updates to your server or when you
+// work with users, use the service-generated ServerId property that is assigned
+// to the newly created server.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -151,15 +149,13 @@ func (c *Transfer) CreateUserRequest(input *CreateUserInput) (req *request.Reque
 
 // CreateUser API operation for AWS Transfer for SFTP.
 //
-// Adds a user and associate them with an existing Secure File Transfer Protocol
-// (SFTP) server. Using parameters for CreateUser, you can specify the user
-// name, set the home directory, store the user's public key, and assign the
-// user's AWS Identity and Access Management (IAM) role. You can also optionally
-// add a scope-down policy, and assign metadata with tags that can be used to
-// group and search for users.
-//
-// The response returns the UserName and ServerId values of the new user for
-// that server.
+// Creates a user and associates them with an existing Secure File Transfer
+// Protocol (SFTP) server. You can only create and associate users with SFTP
+// servers that have the IdentityProviderType set to SERVICE_MANAGED. Using
+// parameters for CreateUser, you can specify the user name, set the home directory,
+// store the user's public key, and assign the user's AWS Identity and Access
+// Management (IAM) role. You can also optionally add a scope-down policy, and
+// assign metadata with tags that can be used to group and search for users.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -254,10 +250,8 @@ func (c *Transfer) DeleteServerRequest(input *DeleteServerInput) (req *request.R
 // DeleteServer API operation for AWS Transfer for SFTP.
 //
 // Deletes the Secure File Transfer Protocol (SFTP) server that you specify.
-// If you used SERVICE_MANAGED as your IdentityProviderType, you need to delete
-// all users associated with this server before deleting the server itself
 //
-// No response returns from this call.
+// No response returns from this operation.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -350,7 +344,7 @@ func (c *Transfer) DeleteSshPublicKeyRequest(input *DeleteSshPublicKeyInput) (re
 //
 // Deletes a user's Secure Shell (SSH) public key.
 //
-// No response is returned from this call.
+// No response is returned from this operation.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -443,7 +437,7 @@ func (c *Transfer) DeleteUserRequest(input *DeleteUserInput) (req *request.Reque
 //
 // Deletes the user belonging to the server you specify.
 //
-// No response returns from this call.
+// No response returns from this operation.
 //
 // When you delete a user from a server, the user's information is lost.
 //
@@ -1365,7 +1359,7 @@ func (c *Transfer) StopServerRequest(input *StopServerInput) (req *request.Reque
 // Stopping a server will not reduce or impact your Secure File Transfer Protocol
 // (SFTP) endpoint billing.
 //
-// The states of STOPPING indicates that the server is in an intermediate state,
+// The state of STOPPING indicates that the server is in an intermediate state,
 // either not fully able to respond, or not fully offline. The values of STOP_FAILED
 // can indicate an error condition.
 //
@@ -1551,7 +1545,7 @@ func (c *Transfer) TestIdentityProviderRequest(input *TestIdentityProviderInput)
 //
 // If the IdentityProviderType of the server is API_Gateway, tests whether your
 // API Gateway is set up successfully. We highly recommend that you call this
-// method to test your authentication method as soon as you create your server.
+// operation to test your authentication method as soon as you create your server.
 // By doing so, you can troubleshoot issues with the API Gateway integration
 // to ensure that your users can successfully use the service.
 //
@@ -1880,33 +1874,38 @@ type CreateServerInput struct {
 	_ struct{} `type:"structure"`
 
 	// The virtual private cloud (VPC) endpoint settings that you want to configure
-	// for your SFTP server.
+	// for your SFTP server. This parameter is required when you specify a value
+	// for the EndpointType parameter.
 	EndpointDetails *EndpointDetails `type:"structure"`
 
-	// The type of VPC endpoint that you want your SFTP server connect to. If you
-	// connect to a VPC endpoint, your SFTP server isn't accessible over the public
-	// internet.
+	// The type of VPC endpoint that you want your SFTP server to connect to. If
+	// you connect to a VPC endpoint, your SFTP server isn't accessible over the
+	// public internet.
 	EndpointType *string `type:"string" enum:"EndpointType"`
 
-	// The RSA private key as generated by ssh-keygen -N "" -f my-new-server-key
+	// The RSA private key as generated by the ssh-keygen -N "" -f my-new-server-key
 	// command.
 	//
 	// If you aren't planning to migrate existing users from an existing SFTP server
 	// to a new AWS SFTP server, don't update the host key. Accidentally changing
-	// a server's host key can be disruptive. For more information, see change-host-key
+	// a server's host key can be disruptive.
+	//
+	// For more information, see "https://docs.aws.amazon.com/transfer/latest/userguide/change-host-key"
 	// in the AWS SFTP User Guide.
-	HostKey *string `type:"string"`
+	HostKey *string `type:"string" sensitive:"true"`
 
-	// An array containing all of the information required to call a customer-supplied
-	// authentication API. This parameter is not required when the IdentityProviderType
-	// value of server that is created uses the SERVICE_MANAGED authentication method.
+	// This parameter is required when the IdentityProviderType is set to API_GATEWAY.
+	// Accepts an array containing all of the information required to call a customer-supplied
+	// authentication API, including the API Gateway URL. This property is not required
+	// when the IdentityProviderType is set to SERVICE_MANAGED.
 	IdentityProviderDetails *IdentityProviderDetails `type:"structure"`
 
-	// The mode of authentication enabled for this service. The default value is
-	// SERVICE_MANAGED, which allows you to store and access SFTP user credentials
-	// within the service. An IdentityProviderType value of API_GATEWAY indicates
-	// that user authentication requires a call to an API Gateway endpoint URL provided
-	// by you to integrate an identity provider of your choice.
+	// Specifies the mode of authentication for the SFTP server. The default value
+	// is SERVICE_MANAGED, which allows you to store and access SFTP user credentials
+	// within the AWS Transfer for SFTP service. Use the API_GATEWAY value to integrate
+	// with an identity provider of your choosing. The API_GATEWAY setting requires
+	// you to provide an API Gateway endpoint URL to call for authentication using
+	// the IdentityProviderDetails parameter.
 	IdentityProviderType *string `type:"string" enum:"IdentityProviderType"`
 
 	// A value that allows the service to write your SFTP users' activity to your
@@ -2026,8 +2025,18 @@ type CreateUserInput struct {
 
 	// A scope-down policy for your user so you can use the same IAM role across
 	// multiple users. This policy scopes down user access to portions of their
-	// Amazon S3 bucket. Variables you can use inside this policy include ${Transfer:UserName},
+	// Amazon S3 bucket. Variables that you can use inside this policy include ${Transfer:UserName},
 	// ${Transfer:HomeDirectory}, and ${Transfer:HomeBucket}.
+	//
+	// For scope-down policies, AWS Transfer for SFTP stores the policy as a JSON
+	// blob, instead of the Amazon Resource Name (ARN) of the policy. You save the
+	// policy as a JSON blob and pass it in the Policy argument.
+	//
+	// For an example of a scope-down policy, see "https://docs.aws.amazon.com/transfer/latest/userguide/users.html#users-policies-scope-down">Creating
+	// a Scope-Down Policy.
+	//
+	// For more information, see "https://docs.aws.amazon.com/STS/latest/APIReference/API_AssumeRole.html"
+	// in the AWS Security Token Service API Reference.
 	Policy *string `type:"string"`
 
 	// The IAM role that controls your user's access to your Amazon S3 bucket. The
@@ -2046,7 +2055,7 @@ type CreateUserInput struct {
 	// ServerId is a required field
 	ServerId *string `type:"string" required:"true"`
 
-	// The public portion of the Secure Shall (SSH) key used to authenticate the
+	// The public portion of the Secure Shell (SSH) key used to authenticate the
 	// user to the SFTP server.
 	SshPublicKeyBody *string `type:"string"`
 
@@ -2456,8 +2465,8 @@ type DescribeUserInput struct {
 	ServerId *string `type:"string" required:"true"`
 
 	// The name of the user assigned to one or more servers. User names are part
-	// of the sign-in credentials to use the AWS Transfer service and perform file
-	// transfer tasks.
+	// of the sign-in credentials to use the AWS Transfer for SFTP service and perform
+	// file transfer tasks.
 	//
 	// UserName is a required field
 	UserName *string `type:"string" required:"true"`
@@ -2539,9 +2548,10 @@ func (s *DescribeUserOutput) SetUser(v *DescribedUser) *DescribeUserOutput {
 	return s
 }
 
-// Describe the properties of the server that was specified. Information returned
-// includes: the server Amazon Resource Name (ARN), the authentication configuration
-// and type, the logging role, server Id and state, and assigned tags or metadata.
+// Describes the properties of the server that was specified. Information returned
+// includes the following: the server Amazon Resource Name (ARN), the authentication
+// configuration and type, the logging role, the server ID and state, and assigned
+// tags or metadata.
 type DescribedServer struct {
 	_ struct{} `type:"structure"`
 
@@ -2559,9 +2569,9 @@ type DescribedServer struct {
 	// the public internet.
 	EndpointType *string `type:"string" enum:"EndpointType"`
 
-	// This value contains the Message-Digest Algorithm (MD5) hash of the server's
-	// host key. This value is equivalent to the output of ssh-keygen -l -E md5
-	// -f my-new-server-key command.
+	// This value contains the message-digest algorithm (MD5) hash of the server's
+	// host key. This value is equivalent to the output of the ssh-keygen -l -E
+	// md5 -f my-new-server-key command.
 	HostKeyFingerprint *string `type:"string"`
 
 	// Specifies information to call a customer-supplied authentication API. This
@@ -2569,7 +2579,7 @@ type DescribedServer struct {
 	IdentityProviderDetails *IdentityProviderDetails `type:"structure"`
 
 	// This property defines the mode of authentication method enabled for this
-	// service. A value of SERVICE_MANAGED, means that you are using this Server
+	// service. A value of SERVICE_MANAGED means that you are using this server
 	// to store and access SFTP user credentials within the service. A value of
 	// API_GATEWAY indicates that you have integrated an API Gateway endpoint that
 	// will be invoked for authenticating your user into the service.
@@ -2577,10 +2587,10 @@ type DescribedServer struct {
 
 	// This property is an AWS Identity and Access Management (IAM) entity that
 	// allows the server to turn on Amazon CloudWatch logging for Amazon S3 events.
-	// When set, user activity can be view in your CloudWatch logs.
+	// When set, user activity can be viewed in your CloudWatch logs.
 	LoggingRole *string `type:"string"`
 
-	// This property is a unique system assigned identifier for the SFTP server
+	// This property is a unique system-assigned identifier for the SFTP server
 	// that you instantiate.
 	ServerId *string `type:"string"`
 
@@ -2589,7 +2599,7 @@ type DescribedServer struct {
 	// State value of OFFLINE means that the server cannot perform file transfer
 	// operations.
 	//
-	// The states of STARTING and STOPPING indicated that the server is in an intermediate
+	// The states of STARTING and STOPPING indicate that the server is in an intermediate
 	// state, either not fully able to respond, or not fully offline. The values
 	// of START_FAILED or STOP_FAILED can indicate an error condition.
 	State *string `type:"string" enum:"State"`
@@ -2679,7 +2689,7 @@ func (s *DescribedServer) SetUserCount(v int64) *DescribedServer {
 	return s
 }
 
-// Returns properties of the user that you wish to describe.
+// Returns properties of the user that you want to describe.
 type DescribedUser struct {
 	_ struct{} `type:"structure"`
 
@@ -2689,9 +2699,9 @@ type DescribedUser struct {
 	// Arn is a required field
 	Arn *string `min:"20" type:"string" required:"true"`
 
-	// This property specifies the landing directory (or folder) which is the location
+	// This property specifies the landing directory (or folder), which is the location
 	// that files are written to or read from in an Amazon S3 bucket for the described
-	// user. An example would be: /bucket_name/home/username .
+	// user. An example is /bucket_name/home/username .
 	HomeDirectory *string `type:"string"`
 
 	// Specifies the name of the policy in use for the described user.
@@ -2797,16 +2807,16 @@ func (s *EndpointDetails) SetVpcEndpointId(v string) *EndpointDetails {
 }
 
 // Returns information related to the type of user authentication that is in
-// use for a server's users. A server can only have one method of authentication.
+// use for a server's users. A server can have only one method of authentication.
 type IdentityProviderDetails struct {
 	_ struct{} `type:"structure"`
 
-	// The Role parameter provides the type of InvocationRole used to authenticate
-	// the user account.
+	// The InvocationRole parameter provides the type of InvocationRole used to
+	// authenticate the user account.
 	InvocationRole *string `type:"string"`
 
-	// The IdentityProviderDetail parameter contains the location of the service
-	// endpoint used to authenticate users.
+	// The Url parameter provides contains the location of the service endpoint
+	// used to authenticate users.
 	Url *string `type:"string"`
 }
 
@@ -2898,9 +2908,9 @@ func (s *ImportSshPublicKeyInput) SetUserName(v string) *ImportSshPublicKeyInput
 	return s
 }
 
-// This response identifies the user, server they belong to, and the identifier
+// This response identifies the user, the server they belong to, and the identifier
 // of the SSH public key associated with that user. A user can have more than
-// one key on each server that they are associate with.
+// one key on each server that they are associated with.
 type ImportSshPublicKeyOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -3050,9 +3060,9 @@ type ListTagsForResourceInput struct {
 	// request.
 	MaxResults *int64 `min:"1" type:"integer"`
 
-	// When you request additional results from the ListTagsForResource call, a
-	// NextToken parameter is returned in the input. You can then pass in a subsequent
-	// command the NextToken parameter to continue listing additional tags.
+	// When you request additional results from the ListTagsForResource operation,
+	// a NextToken parameter is returned in the input. You can then pass in a subsequent
+	// command to the NextToken parameter to continue listing additional tags.
 	NextToken *string `min:"1" type:"string"`
 }
 
@@ -3114,12 +3124,11 @@ type ListTagsForResourceOutput struct {
 
 	// When you can get additional results from the ListTagsForResource call, a
 	// NextToken parameter is returned in the output. You can then pass in a subsequent
-	// command the NextToken parameter to continue listing additional tags.
+	// command to the NextToken parameter to continue listing additional tags.
 	NextToken *string `min:"1" type:"string"`
 
 	// Key-value pairs that are assigned to a resource, usually for the purpose
-	// of grouping and searching for items. Tags are metadata that you define that
-	// you can use for any purpose.
+	// of grouping and searching for items. Tags are metadata that you define.
 	Tags []*Tag `min:"1" type:"list"`
 }
 
@@ -3159,11 +3168,11 @@ type ListUsersInput struct {
 
 	// When you can get additional results from the ListUsers call, a NextToken
 	// parameter is returned in the output. You can then pass in a subsequent command
-	// the NextToken parameter to continue listing additional users.
+	// to the NextToken parameter to continue listing additional users.
 	NextToken *string `min:"1" type:"string"`
 
 	// A system-assigned unique identifier for a Secure File Transfer Protocol (SFTP)
-	// server that has users are assigned to it.
+	// server that has users assigned to it.
 	//
 	// ServerId is a required field
 	ServerId *string `type:"string" required:"true"`
@@ -3221,7 +3230,7 @@ type ListUsersOutput struct {
 
 	// When you can get additional results from the ListUsers call, a NextToken
 	// parameter is returned in the output. You can then pass in a subsequent command
-	// the NextToken parameter to continue listing additional users.
+	// to the NextToken parameter to continue listing additional users.
 	NextToken *string `min:"1" type:"string"`
 
 	// A system-assigned unique identifier for an SFTP server that the users are
@@ -3280,9 +3289,9 @@ type ListedServer struct {
 	EndpointType *string `type:"string" enum:"EndpointType"`
 
 	// The authentication method used to validate a user for the server that was
-	// specified. listed. This can include Secure Shell (SSH), user name and password
-	// combinations, or your own custom authentication method. Valid values include
-	// SERVICE_MANAGED or API_GATEWAY.
+	// specified. This can include Secure Shell (SSH), user name and password combinations,
+	// or your own custom authentication method. Valid values include SERVICE_MANAGED
+	// or API_GATEWAY.
 	IdentityProviderType *string `type:"string" enum:"IdentityProviderType"`
 
 	// The AWS Identity and Access Management entity that allows the server to turn
@@ -3298,7 +3307,7 @@ type ListedServer struct {
 	// and transfer files. A State value of OFFLINE means that the server cannot
 	// perform file transfer operations.
 	//
-	// The states of STARTING and STOPPING indicated that the server is in an intermediate
+	// The states of STARTING and STOPPING indicate that the server is in an intermediate
 	// state, either not fully able to respond, or not fully offline. The values
 	// of START_FAILED or STOP_FAILED can indicate an error condition.
 	State *string `type:"string" enum:"State"`
@@ -3365,7 +3374,7 @@ type ListedUser struct {
 	_ struct{} `type:"structure"`
 
 	// This property is the unique Amazon Resource Name (ARN) for the user that
-	// you wish to learn about.
+	// you want to learn about.
 	//
 	// Arn is a required field
 	Arn *string `min:"20" type:"string" required:"true"`
@@ -3375,7 +3384,7 @@ type ListedUser struct {
 	HomeDirectory *string `type:"string"`
 
 	// The role in use by this user. A role is an AWS Identity and Access Management
-	// (IAM) entity that in this case allows the SFTP server to act on a user's
+	// (IAM) entity that, in this case, allows the SFTP server to act on a user's
 	// behalf. It allows the server to inherit the trust relationship that enables
 	// that user to perform file operations to their Amazon S3 bucket.
 	Role *string `type:"string"`
@@ -3731,19 +3740,19 @@ func (s TagResourceOutput) GoString() string {
 type TestIdentityProviderInput struct {
 	_ struct{} `type:"structure"`
 
-	// A system assigned identifier for a specific server. That server's user authentication
+	// A system-assigned identifier for a specific server. That server's user authentication
 	// method is tested with a user name and password.
 	//
 	// ServerId is a required field
 	ServerId *string `type:"string" required:"true"`
 
-	// This request parameter is name of the user account to be tested.
+	// This request parameter is the name of the user account to be tested.
 	//
 	// UserName is a required field
 	UserName *string `type:"string" required:"true"`
 
 	// The password of the user account to be tested.
-	UserPassword *string `type:"string"`
+	UserPassword *string `type:"string" sensitive:"true"`
 }
 
 // String returns the string representation
@@ -3793,8 +3802,11 @@ func (s *TestIdentityProviderInput) SetUserPassword(v string) *TestIdentityProvi
 type TestIdentityProviderOutput struct {
 	_ struct{} `type:"structure"`
 
-	// The result of the authorization test as a message.
+	// A message that indicates whether the test was successful or not.
 	Message *string `type:"string"`
+
+	// The response that is returned from your API Gateway.
+	Response *string `type:"string"`
 
 	// The HTTP status code that is the response from your API Gateway.
 	//
@@ -3820,6 +3832,12 @@ func (s TestIdentityProviderOutput) GoString() string {
 // SetMessage sets the Message field's value.
 func (s *TestIdentityProviderOutput) SetMessage(v string) *TestIdentityProviderOutput {
 	s.Message = &v
+	return s
+}
+
+// SetResponse sets the Response field's value.
+func (s *TestIdentityProviderOutput) SetResponse(v string) *TestIdentityProviderOutput {
+	s.Response = &v
 	return s
 }
 
@@ -3929,9 +3947,11 @@ type UpdateServerInput struct {
 	//
 	// If you aren't planning to migrate existing users from an existing SFTP server
 	// to a new AWS SFTP server, don't update the host key. Accidentally changing
-	// a server's host key can be disruptive. For more information, see change-host-key
+	// a server's host key can be disruptive.
+	//
+	// For more information, see "https://docs.aws.amazon.com/transfer/latest/userguide/configuring-servers.html#change-host-key"
 	// in the AWS SFTP User Guide.
-	HostKey *string `type:"string"`
+	HostKey *string `type:"string" sensitive:"true"`
 
 	// This response parameter is an array containing all of the information required
 	// to call a customer's authentication API method.
@@ -4037,16 +4057,25 @@ func (s *UpdateServerOutput) SetServerId(v string) *UpdateServerOutput {
 type UpdateUserInput struct {
 	_ struct{} `type:"structure"`
 
-	// The HomeDirectory parameter specifies the landing directory (folder) for
-	// a user when they log in to the server using their client. An example would
-	// be: /home/username .
+	// A parameter that specifies the landing directory (folder) for a user when
+	// they log in to the server using their client. An example is /home/username .
 	HomeDirectory *string `type:"string"`
 
 	// Allows you to supply a scope-down policy for your user so you can use the
 	// same AWS Identity and Access Management (IAM) role across multiple users.
-	// The policy scopes down users access to portions of your Amazon S3 bucket.
+	// The policy scopes down user access to portions of your Amazon S3 bucket.
 	// Variables you can use inside this policy include ${Transfer:UserName}, ${Transfer:HomeDirectory},
 	// and ${Transfer:HomeBucket}.
+	//
+	// For scope-down policies, AWS Transfer for SFTP stores the policy as a JSON
+	// blob, instead of the Amazon Resource Name (ARN) of the policy. You save the
+	// policy as a JSON blob and pass it in the Policy argument.
+	//
+	// For an example of a scope-down policy, see "https://docs.aws.amazon.com/transfer/latest/userguide/users.html#users-policies-scope-down">Creating
+	// a Scope-Down Policy.
+	//
+	// For more information, see "https://docs.aws.amazon.com/STS/latest/APIReference/API_AssumeRole.html"
+	// in the AWS Security Token Service API Reference.
 	Policy *string `type:"string"`
 
 	// The IAM role that controls your user's access to your Amazon S3 bucket. The
@@ -4181,7 +4210,7 @@ const (
 // use for a server's users. For SERVICE_MANAGED authentication, the Secure
 // Shell (SSH) public keys are stored with a user on an SFTP server instance.
 // For API_GATEWAY authentication, your custom authentication method is implemented
-// by using an API call. A server can only have one method of authentication.
+// by using an API call. A server can have only one method of authentication.
 const (
 	// IdentityProviderTypeServiceManaged is a IdentityProviderType enum value
 	IdentityProviderTypeServiceManaged = "SERVICE_MANAGED"

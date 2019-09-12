@@ -1,6 +1,7 @@
 package aws
 
 import (
+	"fmt"
 	"log"
 	"time"
 
@@ -93,8 +94,11 @@ func resourceAwsGameliftBuildCreate(d *schema.ResourceData, meta interface{}) er
 		}
 		return nil
 	})
+	if isResourceTimeoutError(err) {
+		out, err = conn.CreateBuild(&input)
+	}
 	if err != nil {
-		return err
+		return fmt.Errorf("Error creating Gamelift build client: %s", err)
 	}
 
 	d.SetId(*out.Build.BuildId)
