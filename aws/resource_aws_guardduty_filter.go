@@ -21,12 +21,6 @@ func resourceAwsGuardDutyFilter() *schema.Resource {
 		// 	State: schema.ImportStatePassthrough,
 		// },
 		Schema: map[string]*schema.Schema{ // TODO: add validations
-			// "account_id": { // idk, do we need it
-			// 	Type:         schema.TypeString,
-			// 	Required:     true,
-			// 	ForceNew:     true,
-			// 	ValidateFunc: validateAwsAccountId,
-			// },
 			"detector_id": {
 				Type:     schema.TypeString,
 				Required: true,
@@ -155,6 +149,796 @@ func resourceAwsGuardDutyFilter() *schema.Resource {
 													Type:     schema.TypeList,
 													Optional: true,
 													Elem:     &schema.Schema{Type: schema.TypeString},
+												},
+											},
+										},
+									},
+									"resource.accessKeyDetails.accessKeyId": &schema.Schema{
+										Type:     schema.TypeSet,
+										Optional: true,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"equals": {
+													Type:     schema.TypeList,
+													Optional: true,
+													Elem:     &schema.Schema{Type: schema.TypeString},
+												},
+												"not_equals": {
+													Type:     schema.TypeList,
+													Optional: true,
+													Elem:     &schema.Schema{Type: schema.TypeString},
+												},
+											},
+										},
+									},
+									"resource.accessKeyDetails.principalId": &schema.Schema{
+										Type:     schema.TypeSet,
+										Optional: true,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"equals": {
+													Type:     schema.TypeList,
+													Optional: true,
+													Elem:     &schema.Schema{Type: schema.TypeString},
+												},
+												"not_equals": {
+													Type:     schema.TypeList,
+													Optional: true,
+													Elem:     &schema.Schema{Type: schema.TypeString},
+												},
+											},
+										},
+									},
+									"resource.accessKeyDetails.userName": &schema.Schema{
+										Type:     schema.TypeSet,
+										Optional: true,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"equals": {
+													Type:     schema.TypeList,
+													Optional: true,
+													Elem:     &schema.Schema{Type: schema.TypeString},
+												},
+												"not_equals": {
+													Type:     schema.TypeList,
+													Optional: true,
+													Elem:     &schema.Schema{Type: schema.TypeString},
+												},
+											},
+										},
+									},
+									"resource.accessKeyDetails.userType": &schema.Schema{
+										Type:     schema.TypeSet,
+										Optional: true,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"equals": {
+													Type:     schema.TypeList,
+													Optional: true,
+													Elem:     &schema.Schema{Type: schema.TypeString},
+												},
+												"not_equals": {
+													Type:     schema.TypeList,
+													Optional: true,
+													Elem:     &schema.Schema{Type: schema.TypeString},
+												},
+											},
+										},
+									},
+									"resource.instanceDetails.iamInstanceProfile.id": &schema.Schema{
+										Type:     schema.TypeSet,
+										Optional: true,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"equals": {
+													Type:     schema.TypeList,
+													Optional: true,
+													Elem:     &schema.Schema{Type: schema.TypeString},
+												},
+												"not_equals": {
+													Type:     schema.TypeList,
+													Optional: true,
+													Elem:     &schema.Schema{Type: schema.TypeString},
+												},
+											},
+										},
+									},
+									"resource.instanceDetails.imageId": &schema.Schema{
+										Type:     schema.TypeSet,
+										Optional: true,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"equals": {
+													Type:     schema.TypeList,
+													Optional: true,
+													Elem:     &schema.Schema{Type: schema.TypeString},
+												},
+												"not_equals": {
+													Type:     schema.TypeList,
+													Optional: true,
+													Elem:     &schema.Schema{Type: schema.TypeString},
+												},
+											},
+										},
+									},
+									"resource.instanceDetails.instanceId": &schema.Schema{
+										Type:     schema.TypeSet,
+										Optional: true,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"equals": {
+													Type:     schema.TypeList,
+													Optional: true,
+													Elem:     &schema.Schema{Type: schema.TypeString},
+												},
+												"not_equals": {
+													Type:     schema.TypeList,
+													Optional: true,
+													Elem:     &schema.Schema{Type: schema.TypeString},
+												},
+											},
+										},
+									},
+									"resource.instanceDetails.networkInterfaces.ipv6Addresses": &schema.Schema{
+										Type:     schema.TypeSet,
+										Optional: true,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"equals": {
+													Type:     schema.TypeList,
+													Optional: true,
+													Elem:     &schema.Schema{Type: schema.TypeString},
+												},
+												"not_equals": {
+													Type:     schema.TypeList,
+													Optional: true,
+													Elem:     &schema.Schema{Type: schema.TypeString},
+												},
+											},
+										},
+									},
+									"resource.instanceDetails.networkInterfaces.privateIpAddresses.privateIpAddress": &schema.Schema{
+										Type:     schema.TypeSet,
+										Optional: true,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"equals": {
+													Type:     schema.TypeList,
+													Optional: true,
+													Elem:     &schema.Schema{Type: schema.TypeString},
+												},
+												"not_equals": {
+													Type:     schema.TypeList,
+													Optional: true,
+													Elem:     &schema.Schema{Type: schema.TypeString},
+												},
+											},
+										},
+									},
+									"resource.instanceDetails.networkInterfaces.publicDnsName": &schema.Schema{
+										Type:     schema.TypeSet,
+										Optional: true,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"equals": {
+													Type:     schema.TypeList,
+													Optional: true,
+													Elem:     &schema.Schema{Type: schema.TypeString},
+												},
+												"not_equals": {
+													Type:     schema.TypeList,
+													Optional: true,
+													Elem:     &schema.Schema{Type: schema.TypeString},
+												},
+											},
+										},
+									},
+									"resource.instanceDetails.networkInterfaces.publicIp": &schema.Schema{
+										Type:     schema.TypeSet,
+										Optional: true,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"equals": {
+													Type:     schema.TypeList,
+													Optional: true,
+													Elem:     &schema.Schema{Type: schema.TypeString},
+												},
+												"not_equals": {
+													Type:     schema.TypeList,
+													Optional: true,
+													Elem:     &schema.Schema{Type: schema.TypeString},
+												},
+											},
+										},
+									},
+									"resource.instanceDetails.networkInterfaces.securityGroups.groupId": &schema.Schema{
+										Type:     schema.TypeSet,
+										Optional: true,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"equals": {
+													Type:     schema.TypeList,
+													Optional: true,
+													Elem:     &schema.Schema{Type: schema.TypeString},
+												},
+												"not_equals": {
+													Type:     schema.TypeList,
+													Optional: true,
+													Elem:     &schema.Schema{Type: schema.TypeString},
+												},
+											},
+										},
+									},
+									"resource.instanceDetails.networkInterfaces.securityGroups.groupName": &schema.Schema{
+										Type:     schema.TypeSet,
+										Optional: true,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"equals": {
+													Type:     schema.TypeList,
+													Optional: true,
+													Elem:     &schema.Schema{Type: schema.TypeString},
+												},
+												"not_equals": {
+													Type:     schema.TypeList,
+													Optional: true,
+													Elem:     &schema.Schema{Type: schema.TypeString},
+												},
+											},
+										},
+									},
+									"resource.instanceDetails.networkInterfaces.subnetId": &schema.Schema{
+										Type:     schema.TypeSet,
+										Optional: true,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"equals": {
+													Type:     schema.TypeList,
+													Optional: true,
+													Elem:     &schema.Schema{Type: schema.TypeString},
+												},
+												"not_equals": {
+													Type:     schema.TypeList,
+													Optional: true,
+													Elem:     &schema.Schema{Type: schema.TypeString},
+												},
+											},
+										},
+									},
+									"resource.instanceDetails.networkInterfaces.vpcId": &schema.Schema{
+										Type:     schema.TypeSet,
+										Optional: true,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"equals": {
+													Type:     schema.TypeList,
+													Optional: true,
+													Elem:     &schema.Schema{Type: schema.TypeString},
+												},
+												"not_equals": {
+													Type:     schema.TypeList,
+													Optional: true,
+													Elem:     &schema.Schema{Type: schema.TypeString},
+												},
+											},
+										},
+									},
+									"resource.instanceDetails.tags.key": &schema.Schema{
+										Type:     schema.TypeSet,
+										Optional: true,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"equals": {
+													Type:     schema.TypeList,
+													Optional: true,
+													Elem:     &schema.Schema{Type: schema.TypeString},
+												},
+												"not_equals": {
+													Type:     schema.TypeList,
+													Optional: true,
+													Elem:     &schema.Schema{Type: schema.TypeString},
+												},
+											},
+										},
+									},
+									"resource.instanceDetails.tags.value": &schema.Schema{
+										Type:     schema.TypeSet,
+										Optional: true,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"equals": {
+													Type:     schema.TypeList,
+													Optional: true,
+													Elem:     &schema.Schema{Type: schema.TypeString},
+												},
+												"not_equals": {
+													Type:     schema.TypeList,
+													Optional: true,
+													Elem:     &schema.Schema{Type: schema.TypeString},
+												},
+											},
+										},
+									},
+									"resource.resourceType": &schema.Schema{
+										Type:     schema.TypeSet,
+										Optional: true,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"equals": {
+													Type:     schema.TypeList,
+													Optional: true,
+													Elem:     &schema.Schema{Type: schema.TypeString},
+												},
+												"not_equals": {
+													Type:     schema.TypeList,
+													Optional: true,
+													Elem:     &schema.Schema{Type: schema.TypeString},
+												},
+											},
+										},
+									},
+									"service.action.actionType": &schema.Schema{
+										Type:     schema.TypeSet,
+										Optional: true,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"equals": {
+													Type:     schema.TypeList,
+													Optional: true,
+													Elem:     &schema.Schema{Type: schema.TypeString},
+												},
+												"not_equals": {
+													Type:     schema.TypeList,
+													Optional: true,
+													Elem:     &schema.Schema{Type: schema.TypeString},
+												},
+											},
+										},
+									},
+									"service.action.awsApiCallAction.api": &schema.Schema{
+										Type:     schema.TypeSet,
+										Optional: true,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"equals": {
+													Type:     schema.TypeList,
+													Optional: true,
+													Elem:     &schema.Schema{Type: schema.TypeString},
+												},
+												"not_equals": {
+													Type:     schema.TypeList,
+													Optional: true,
+													Elem:     &schema.Schema{Type: schema.TypeString},
+												},
+											},
+										},
+									},
+									"service.action.awsApiCallAction.callerType": &schema.Schema{
+										Type:     schema.TypeSet,
+										Optional: true,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"equals": {
+													Type:     schema.TypeList,
+													Optional: true,
+													Elem:     &schema.Schema{Type: schema.TypeString},
+												},
+												"not_equals": {
+													Type:     schema.TypeList,
+													Optional: true,
+													Elem:     &schema.Schema{Type: schema.TypeString},
+												},
+											},
+										},
+									},
+									"service.action.awsApiCallAction.remoteIpDetails.city.cityName": &schema.Schema{
+										Type:     schema.TypeSet,
+										Optional: true,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"equals": {
+													Type:     schema.TypeList,
+													Optional: true,
+													Elem:     &schema.Schema{Type: schema.TypeString},
+												},
+												"not_equals": {
+													Type:     schema.TypeList,
+													Optional: true,
+													Elem:     &schema.Schema{Type: schema.TypeString},
+												},
+											},
+										},
+									},
+									"service.action.awsApiCallAction.remoteIpDetails.country.countryName": &schema.Schema{
+										Type:     schema.TypeSet,
+										Optional: true,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"equals": {
+													Type:     schema.TypeList,
+													Optional: true,
+													Elem:     &schema.Schema{Type: schema.TypeString},
+												},
+												"not_equals": {
+													Type:     schema.TypeList,
+													Optional: true,
+													Elem:     &schema.Schema{Type: schema.TypeString},
+												},
+											},
+										},
+									},
+									"service.action.awsApiCallAction.remoteIpDetails.ipAddressV4": &schema.Schema{
+										Type:     schema.TypeSet,
+										Optional: true,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"equals": {
+													Type:     schema.TypeList,
+													Optional: true,
+													Elem:     &schema.Schema{Type: schema.TypeString},
+												},
+												"not_equals": {
+													Type:     schema.TypeList,
+													Optional: true,
+													Elem:     &schema.Schema{Type: schema.TypeString},
+												},
+											},
+										},
+									},
+									"service.action.awsApiCallAction.remoteIpDetails.organization.asn": &schema.Schema{
+										Type:     schema.TypeSet,
+										Optional: true,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"equals": {
+													Type:     schema.TypeList,
+													Optional: true,
+													Elem:     &schema.Schema{Type: schema.TypeString},
+												},
+												"not_equals": {
+													Type:     schema.TypeList,
+													Optional: true,
+													Elem:     &schema.Schema{Type: schema.TypeString},
+												},
+											},
+										},
+									},
+									"service.action.awsApiCallAction.remoteIpDetails.organization.asnOrg": &schema.Schema{
+										Type:     schema.TypeSet,
+										Optional: true,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"equals": {
+													Type:     schema.TypeList,
+													Optional: true,
+													Elem:     &schema.Schema{Type: schema.TypeString},
+												},
+												"not_equals": {
+													Type:     schema.TypeList,
+													Optional: true,
+													Elem:     &schema.Schema{Type: schema.TypeString},
+												},
+											},
+										},
+									},
+									"service.action.awsApiCallAction.serviceName": &schema.Schema{
+										Type:     schema.TypeSet,
+										Optional: true,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"equals": {
+													Type:     schema.TypeList,
+													Optional: true,
+													Elem:     &schema.Schema{Type: schema.TypeString},
+												},
+												"not_equals": {
+													Type:     schema.TypeList,
+													Optional: true,
+													Elem:     &schema.Schema{Type: schema.TypeString},
+												},
+											},
+										},
+									},
+									"service.action.dnsRequestAction.domain": &schema.Schema{
+										Type:     schema.TypeSet,
+										Optional: true,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"equals": {
+													Type:     schema.TypeList,
+													Optional: true,
+													Elem:     &schema.Schema{Type: schema.TypeString},
+												},
+												"not_equals": {
+													Type:     schema.TypeList,
+													Optional: true,
+													Elem:     &schema.Schema{Type: schema.TypeString},
+												},
+											},
+										},
+									},
+									"service.action.networkConnectionAction.blocked": &schema.Schema{
+										Type:     schema.TypeSet,
+										Optional: true,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"equals": {
+													Type:     schema.TypeList,
+													Optional: true,
+													Elem:     &schema.Schema{Type: schema.TypeString},
+												},
+												"not_equals": {
+													Type:     schema.TypeList,
+													Optional: true,
+													Elem:     &schema.Schema{Type: schema.TypeString},
+												},
+											},
+										},
+									},
+									"service.action.networkConnectionAction.connectionDirection": &schema.Schema{
+										Type:     schema.TypeSet,
+										Optional: true,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"equals": {
+													Type:     schema.TypeList,
+													Optional: true,
+													Elem:     &schema.Schema{Type: schema.TypeString},
+												},
+												"not_equals": {
+													Type:     schema.TypeList,
+													Optional: true,
+													Elem:     &schema.Schema{Type: schema.TypeString},
+												},
+											},
+										},
+									},
+									"service.action.networkConnectionAction.localPortDetails.port": &schema.Schema{
+										Type:     schema.TypeSet,
+										Optional: true,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"equals": {
+													Type:     schema.TypeList,
+													Optional: true,
+													Elem:     &schema.Schema{Type: schema.TypeString},
+												},
+												"not_equals": {
+													Type:     schema.TypeList,
+													Optional: true,
+													Elem:     &schema.Schema{Type: schema.TypeString},
+												},
+											},
+										},
+									},
+									"service.action.networkConnectionAction.protocol": &schema.Schema{
+										Type:     schema.TypeSet,
+										Optional: true,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"equals": {
+													Type:     schema.TypeList,
+													Optional: true,
+													Elem:     &schema.Schema{Type: schema.TypeString},
+												},
+												"not_equals": {
+													Type:     schema.TypeList,
+													Optional: true,
+													Elem:     &schema.Schema{Type: schema.TypeString},
+												},
+											},
+										},
+									},
+									"service.action.networkConnectionAction.remoteIpDetails.city.cityName": &schema.Schema{
+										Type:     schema.TypeSet,
+										Optional: true,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"equals": {
+													Type:     schema.TypeList,
+													Optional: true,
+													Elem:     &schema.Schema{Type: schema.TypeString},
+												},
+												"not_equals": {
+													Type:     schema.TypeList,
+													Optional: true,
+													Elem:     &schema.Schema{Type: schema.TypeString},
+												},
+											},
+										},
+									},
+									"service.action.networkConnectionAction.remoteIpDetails.country.countryName": &schema.Schema{
+										Type:     schema.TypeSet,
+										Optional: true,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"equals": {
+													Type:     schema.TypeList,
+													Optional: true,
+													Elem:     &schema.Schema{Type: schema.TypeString},
+												},
+												"not_equals": {
+													Type:     schema.TypeList,
+													Optional: true,
+													Elem:     &schema.Schema{Type: schema.TypeString},
+												},
+											},
+										},
+									},
+									"service.action.networkConnectionAction.remoteIpDetails.ipAddressV4": &schema.Schema{
+										Type:     schema.TypeSet,
+										Optional: true,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"equals": {
+													Type:     schema.TypeList,
+													Optional: true,
+													Elem:     &schema.Schema{Type: schema.TypeString},
+												},
+												"not_equals": {
+													Type:     schema.TypeList,
+													Optional: true,
+													Elem:     &schema.Schema{Type: schema.TypeString},
+												},
+											},
+										},
+									},
+									"service.action.networkConnectionAction.remoteIpDetails.organization.asn": &schema.Schema{
+										Type:     schema.TypeSet,
+										Optional: true,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"equals": {
+													Type:     schema.TypeList,
+													Optional: true,
+													Elem:     &schema.Schema{Type: schema.TypeString},
+												},
+												"not_equals": {
+													Type:     schema.TypeList,
+													Optional: true,
+													Elem:     &schema.Schema{Type: schema.TypeString},
+												},
+											},
+										},
+									},
+									"service.action.networkConnectionAction.remoteIpDetails.organization.asnOrg": &schema.Schema{
+										Type:     schema.TypeSet,
+										Optional: true,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"equals": {
+													Type:     schema.TypeList,
+													Optional: true,
+													Elem:     &schema.Schema{Type: schema.TypeString},
+												},
+												"not_equals": {
+													Type:     schema.TypeList,
+													Optional: true,
+													Elem:     &schema.Schema{Type: schema.TypeString},
+												},
+											},
+										},
+									},
+									"service.action.networkConnectionAction.remotePortDetails.port": &schema.Schema{
+										Type:     schema.TypeSet,
+										Optional: true,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"equals": {
+													Type:     schema.TypeList,
+													Optional: true,
+													Elem:     &schema.Schema{Type: schema.TypeString},
+												},
+												"not_equals": {
+													Type:     schema.TypeList,
+													Optional: true,
+													Elem:     &schema.Schema{Type: schema.TypeString},
+												},
+											},
+										},
+									},
+									"service.additionalInfo.threatListName": &schema.Schema{
+										Type:     schema.TypeSet,
+										Optional: true,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"equals": {
+													Type:     schema.TypeList,
+													Optional: true,
+													Elem:     &schema.Schema{Type: schema.TypeString},
+												},
+												"not_equals": {
+													Type:     schema.TypeList,
+													Optional: true,
+													Elem:     &schema.Schema{Type: schema.TypeString},
+												},
+											},
+										},
+									},
+									"service.archived": &schema.Schema{
+										Type:     schema.TypeSet,
+										Optional: true,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"equals": {
+													Type:     schema.TypeBool,
+													Optional: true,
+												},
+												"not_equals": {
+													Type:     schema.TypeBool,
+													Optional: true,
+												},
+											},
+										},
+									},
+									"service.resourceRole": &schema.Schema{
+										Type:     schema.TypeSet,
+										Optional: true,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"equals": {
+													Type:     schema.TypeList,
+													Optional: true,
+													Elem:     &schema.Schema{Type: schema.TypeString},
+												},
+												"not_equals": {
+													Type:     schema.TypeList,
+													Optional: true,
+													Elem:     &schema.Schema{Type: schema.TypeString},
+												},
+											},
+										},
+									},
+									"severity": &schema.Schema{
+										Type:     schema.TypeSet,
+										Optional: true,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"equals": {
+													Type:     schema.TypeList,
+													Optional: true,
+													Elem:     &schema.Schema{Type: schema.TypeString},
+												},
+												"not_equals": {
+													Type:     schema.TypeList,
+													Optional: true,
+													Elem:     &schema.Schema{Type: schema.TypeString},
+												},
+											},
+										},
+									},
+									"type": &schema.Schema{
+										Type:     schema.TypeSet,
+										Optional: true,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"equals": {
+													Type:     schema.TypeList,
+													Optional: true,
+													Elem:     &schema.Schema{Type: schema.TypeString},
+												},
+												"not_equals": {
+													Type:     schema.TypeList,
+													Optional: true,
+													Elem:     &schema.Schema{Type: schema.TypeString},
+												},
+											},
+										},
+									},
+									"updatedAt": &schema.Schema{
+										Type:     schema.TypeSet,
+										Optional: true,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"equals": {
+													Type:     schema.TypeList,
+													Optional: true,
+													Elem:     &schema.Schema{Type: schema.TypeInt},
+												},
+												"not_equals": {
+													Type:     schema.TypeList,
+													Optional: true,
+													Elem:     &schema.Schema{Type: schema.TypeInt},
 												},
 											},
 										},
