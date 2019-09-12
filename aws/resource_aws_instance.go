@@ -618,6 +618,9 @@ func resourceAwsInstanceCreate(d *schema.ResourceData, meta interface{}) error {
 		}
 		return resource.NonRetryableError(err)
 	})
+	if isResourceTimeoutError(err) {
+		runResp, err = conn.RunInstances(runOpts)
+	}
 	// Warn if the AWS Error involves group ids, to help identify situation
 	// where a user uses group ids in security_groups for the Default VPC.
 	//   See https://github.com/hashicorp/terraform/issues/3798
@@ -952,13 +955,14 @@ func resourceAwsInstanceUpdate(d *schema.ResourceData, meta interface{}) error {
 		if _, ok := d.GetOk("iam_instance_profile"); ok {
 			// Does not have an Iam Instance Profile associated with it, need to associate
 			if len(resp.IamInstanceProfileAssociations) == 0 {
+				input := &ec2.AssociateIamInstanceProfileInput{
+					InstanceId: aws.String(d.Id()),
+					IamInstanceProfile: &ec2.IamInstanceProfileSpecification{
+						Name: aws.String(d.Get("iam_instance_profile").(string)),
+					},
+				}
 				err := resource.Retry(1*time.Minute, func() *resource.RetryError {
-					_, err := conn.AssociateIamInstanceProfile(&ec2.AssociateIamInstanceProfileInput{
-						InstanceId: aws.String(d.Id()),
-						IamInstanceProfile: &ec2.IamInstanceProfileSpecification{
-							Name: aws.String(d.Get("iam_instance_profile").(string)),
-						},
-					})
+					_, err := conn.AssociateIamInstanceProfile(input)
 					if err != nil {
 						if isAWSErr(err, "InvalidParameterValue", "Invalid IAM Instance Profile") {
 							return resource.RetryableError(err)
@@ -967,21 +971,24 @@ func resourceAwsInstanceUpdate(d *schema.ResourceData, meta interface{}) error {
 					}
 					return nil
 				})
+				if isResourceTimeoutError(err) {
+					_, err = conn.AssociateIamInstanceProfile(input)
+				}
 				if err != nil {
-					return err
+					return fmt.Errorf("Error associating instance with instance profile: %s", err)
 				}
 
 			} else {
 				// Has an Iam Instance Profile associated with it, need to replace the association
 				associationId := resp.IamInstanceProfileAssociations[0].AssociationId
-
+				input := &ec2.ReplaceIamInstanceProfileAssociationInput{
+					AssociationId: associationId,
+					IamInstanceProfile: &ec2.IamInstanceProfileSpecification{
+						Name: aws.String(d.Get("iam_instance_profile").(string)),
+					},
+				}
 				err := resource.Retry(1*time.Minute, func() *resource.RetryError {
-					_, err := conn.ReplaceIamInstanceProfileAssociation(&ec2.ReplaceIamInstanceProfileAssociationInput{
-						AssociationId: associationId,
-						IamInstanceProfile: &ec2.IamInstanceProfileSpecification{
-							Name: aws.String(d.Get("iam_instance_profile").(string)),
-						},
-					})
+					_, err := conn.ReplaceIamInstanceProfileAssociation(input)
 					if err != nil {
 						if isAWSErr(err, "InvalidParameterValue", "Invalid IAM Instance Profile") {
 							return resource.RetryableError(err)
@@ -990,8 +997,11 @@ func resourceAwsInstanceUpdate(d *schema.ResourceData, meta interface{}) error {
 					}
 					return nil
 				})
+				if isResourceTimeoutError(err) {
+					_, err = conn.ReplaceIamInstanceProfileAssociation(input)
+				}
 				if err != nil {
-					return err
+					return fmt.Errorf("Error replacing instance profile association: %s", err)
 				}
 			}
 			// An Iam Instance Profile has _not_ been provided but is pending a change. This means there is a pending removal
@@ -1722,11 +1732,13 @@ func getAwsEc2InstancePasswordData(instanceID string, conn *ec2.EC2) (string, er
 	log.Printf("[INFO] Reading password data for instance %s", instanceID)
 
 	var passwordData string
-
+	var resp *ec2.GetPasswordDataOutput
+	input := &ec2.GetPasswordDataInput{
+		InstanceId: aws.String(instanceID),
+	}
 	err := resource.Retry(15*time.Minute, func() *resource.RetryError {
-		resp, err := conn.GetPasswordData(&ec2.GetPasswordDataInput{
-			InstanceId: aws.String(instanceID),
-		})
+		var err error
+		resp, err = conn.GetPasswordData(input)
 
 		if err != nil {
 			return resource.NonRetryableError(err)
@@ -1741,7 +1753,16 @@ func getAwsEc2InstancePasswordData(instanceID string, conn *ec2.EC2) (string, er
 		log.Printf("[INFO] Password data read for instance %s", instanceID)
 		return nil
 	})
-
+	if isResourceTimeoutError(err) {
+		resp, err = conn.GetPasswordData(input)
+		if err != nil {
+			return "", fmt.Errorf("Error getting password data: %s", err)
+		}
+		if resp.PasswordData == nil || *resp.PasswordData == "" {
+			return "", fmt.Errorf("Password data is blank for instance ID: %s", instanceID)
+		}
+		passwordData = strings.TrimSpace(*resp.PasswordData)
+	}
 	if err != nil {
 		return "", err
 	}
