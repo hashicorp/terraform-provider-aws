@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/iotevents"
 	"github.com/hashicorp/terraform/helper/acctest"
 	"github.com/hashicorp/terraform/helper/resource"
@@ -21,9 +22,10 @@ func TestAccAWSIoTEventsDetectorModel_basic(t *testing.T) {
 			{
 				Config: testAccAWSIoTEventsDetectorModel_basic(dName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccDetectorModelBasic("aws_iotevents_detector_model.detector"),
-					resource.TestCheckResourceAttr("aws_iotevents_detector_model.detector", "name", fmt.Sprintf("test_detector_%s", rName)),
+					testAccCheckAWSIoTEventsDetectorModelExists("aws_iotevents_detector_model.detector"),
+					resource.TestCheckResourceAttr("aws_iotevents_detector_model.detector", "name", fmt.Sprintf("test_detector_%s", dName)),
 					resource.TestCheckResourceAttr("aws_iotevents_detector_model.detector", "description", "Example detector model"),
+					testAccDetectorModelBasic,
 				),
 			},
 		},
@@ -41,14 +43,71 @@ func TestAccAWSIoTEventsDetectorModel_full(t *testing.T) {
 			{
 				Config: testAccAWSIoTEventsDetectorModel_full(dName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccDetectorModelFull("aws_iotevents_detector_model.detector"),
+					testAccCheckAWSIoTEventsDetectorModelExists("aws_iotevents_detector_model.detector"),
+					testAccDetectorModelFull,
 				),
 			},
 		},
 	})
 }
 
-func testAccDetectorModelBasic() {
+func testAccCheckAWSIoTEventsDetectorModelExists(name string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		_, ok := s.RootModule().Resources[name]
+		if !ok {
+			return fmt.Errorf("Not found: %s", name)
+		}
+
+		return nil
+	}
+}
+
+func testClearTimer(clearTimer *iotevents.ClearTimerAction, expectedClearTimer map[string]interface{}) error {
+	if clearTimer == nil {
+		return fmt.Errorf("ClearTimer is equal Nil")
+	}
+
+	expectedTimerName := expectedClearTimer["TimerName"].(string)
+	if *clearTimer.TimerName != expectedTimerName {
+		return fmt.Errorf("Clear Timer name %s not equals to %s", *clearTimer.TimerName, expectedTimerName)
+	}
+
+	return nil
+}
+
+func testEvent(event *iotevents.Event, expectedEvent map[string]interface{}) error {
+
+	expectedEventName := expectedEvent["EventName"].(string)
+	expectedEventCondition := expectedEvent["Condition"].(string)
+	if *event.EventName != expectedEventName {
+		return fmt.Errorf("Event name %s not equals to %s", *event.EventName, expectedEventName)
+	}
+	if *event.Condition != expectedEventCondition {
+		return fmt.Errorf("Event condition %s not equals to %s", *event.Condition, expectedEventCondition)
+	}
+
+	return nil
+}
+
+func testTransitionEvent(transitionEvent *iotevents.TransitionEvent, expectedTransitionEvent map[string]interface{}) error {
+	expectedTransitionEventName := expectedTransitionEvent["EventName"].(string)
+	expectedTransitionEventCondition := expectedTransitionEvent["Condition"].(string)
+	expectedTransitionEventNextState := expectedTransitionEvent["NextState"].(string)
+
+	if *transitionEvent.EventName != expectedTransitionEventName {
+		return fmt.Errorf("Event name %s not equals to %s", *transitionEvent.EventName, expectedTransitionEventName)
+	}
+	if *transitionEvent.Condition != expectedTransitionEventCondition {
+		return fmt.Errorf("Event condition %s not equals to %s", *transitionEvent.Condition, expectedTransitionEventCondition)
+	}
+	if *transitionEvent.NextState != expectedTransitionEventNextState {
+		return fmt.Errorf("Next state %s not equals to %s", *transitionEvent.NextState, expectedTransitionEventNextState)
+	}
+
+	return nil
+}
+
+func testAccDetectorModelBasic(s *terraform.State) error {
 	conn := testAccProvider.Meta().(*AWSClient).ioteventsconn
 
 	for _, rs := range s.RootModule().Resources {
@@ -57,7 +116,7 @@ func testAccDetectorModelBasic() {
 		}
 
 		params := &iotevents.DescribeDetectorModelInput{
-			DetectorModelName: aws.string(rs.Primary.ID),
+			DetectorModelName: aws.String(rs.Primary.ID),
 		}
 
 		out, err := conn.DescribeDetectorModel(params)
@@ -68,8 +127,8 @@ func testAccDetectorModelBasic() {
 
 		detectorDefinition := out.DetectorModel.DetectorModelDefinition
 		testInitialStateName := "first_state"
-		if detectorDefinition.InitialStateName != testInitialStateName {
-			return fmt.Errorf("Initial state name %s not equals to %s", detectorDefinition.InitialStateName, testInitialStateName)
+		if *detectorDefinition.InitialStateName != testInitialStateName {
+			return fmt.Errorf("Initial state name %s not equals to %s", *detectorDefinition.InitialStateName, testInitialStateName)
 		}
 
 		states := detectorDefinition.States
@@ -81,8 +140,8 @@ func testAccDetectorModelBasic() {
 		// Test first state
 		firstState := states[0]
 		testFirstStateName := "first_state"
-		if firstState.StateName != testFirstStateName {
-			return fmt.Errorf("State name %s not equals to %s", firstState.StateName, testFirstStateName)
+		if *firstState.StateName != testFirstStateName {
+			return fmt.Errorf("State name %s not equals to %s", *firstState.StateName, testFirstStateName)
 		}
 		if firstState.OnEnter == nil {
 			return fmt.Errorf("State OnEnter is equal Nil")
@@ -103,13 +162,12 @@ func testAccDetectorModelBasic() {
 		}
 
 		event := events[0]
-		testEventName := "test_event_name"
-		testEventCondition := "convert(Decimal, $input.test_input.temperature) > 20"
-		if event.EventName != testEventName {
-			return fmt.Errorf("Event name %s not equals to %s", event.EventName, testEventName)
+		expectedEventData := map[string]interface{}{
+			"EventName": "test_event_name",
+			"Condition": "convert(Decimal, $input.test_input.temperature) > 20",
 		}
-		if event.Condition != testEventCondition {
-			return fmt.Errorf("Event condition %s not equals to %s", event.Condition, testEventCondition)
+		if err := testEvent(event, expectedEventData); err != nil {
+			return err
 		}
 
 		actions := event.Actions
@@ -118,15 +176,12 @@ func testAccDetectorModelBasic() {
 			return fmt.Errorf("Actions len %d not equals to %d", len(actions), testActionsLen)
 		}
 
-		action := actions[0]
-		if action.ClearTimer == nil {
-			return fmt.Errorf("ClearTimer is equal Nil")
+		clearTimerAction := actions[0]
+		clearTimerExpectedData := map[string]interface{}{
+			"TimerName": "test_timer_name",
 		}
-
-		clearTimer := action.ClearTimer
-		testClearTimerName := "test_timer_name"
-		if clearTimer.TimerName != testClearTimerName {
-			return fmt.Errorf("Clear Timer name %s not equals to %s", clearTimer.TimerName, testClearTimerName)
+		if err := testClearTimer(clearTimerAction.ClearTimer, clearTimerExpectedData); err != nil {
+			return err
 		}
 	}
 
@@ -135,8 +190,8 @@ func testAccDetectorModelBasic() {
 
 func checkAccFirstStateFull(state *iotevents.State) error {
 	testFirstStateName := "first_state"
-	if state.StateName != testFirstStateName {
-		return fmt.Errorf("State name %s not equals to %s", state.StateName, testFirstStateName)
+	if *state.StateName != testFirstStateName {
+		return fmt.Errorf("State name %s not equals to %s", *state.StateName, testFirstStateName)
 	}
 	if state.OnEnter == nil {
 		return fmt.Errorf("State OnEnter is equal Nil")
@@ -157,13 +212,12 @@ func checkAccFirstStateFull(state *iotevents.State) error {
 	}
 
 	event := events[0]
-	testEventName := "test_event_name"
-	testEventCondition := "convert(Decimal, $input.test_input.temperature) > 20"
-	if event.EventName != testEventName {
-		return fmt.Errorf("Event name %s not equals to %s", event.EventName, testEventName)
+	expectedEventData := map[string]interface{}{
+		"EventName": "test_event_name",
+		"Condition": "convert(Decimal, $input.test_input.temperature) > 20",
 	}
-	if event.Condition != testEventCondition {
-		return fmt.Errorf("Event condition %s not equals to %s", event.Condition, testEventCondition)
+	if err := testEvent(event, expectedEventData); err != nil {
+		return err
 	}
 
 	actions := event.Actions
@@ -172,15 +226,12 @@ func checkAccFirstStateFull(state *iotevents.State) error {
 		return fmt.Errorf("Actions len %d not equals to %d", len(actions), testActionsLen)
 	}
 
-	action := actions[0]
-	if action.ClearTimer == nil {
-		return fmt.Errorf("ClearTimer is equal Nil")
+	clearTimerAction := actions[0]
+	clearTimerExpectedData := map[string]interface{}{
+		"TimerName": "test_timer_name",
 	}
-
-	clearTimer := action.ClearTimer
-	testClearTimerName := "test_timer_name"
-	if clearTimer.TimerName != testClearTimerName {
-		return fmt.Errorf("Clear Timer name %s not equals to %s", clearTimer.TimerName, testClearTimerName)
+	if err := testClearTimer(clearTimerAction.ClearTimer, clearTimerExpectedData); err != nil {
+		return err
 	}
 
 	// Test OnExit
@@ -192,13 +243,12 @@ func checkAccFirstStateFull(state *iotevents.State) error {
 	}
 
 	event = events[0]
-	testEventName = "test_event_name"
-	testEventCondition = "convert(Decimal, $input.test_input.temperature) > 20"
-	if event.EventName != testEventName {
-		return fmt.Errorf("Event name %s not equals to %s", event.EventName, testEventName)
+	expectedEventData = map[string]interface{}{
+		"EventName": "test_event_name",
+		"Condition": "convert(Decimal, $input.test_input.temperature) > 20",
 	}
-	if event.Condition != testEventCondition {
-		return fmt.Errorf("Event condition %s not equals to %s", event.Condition, testEventCondition)
+	if err := testEvent(event, expectedEventData); err != nil {
+		return err
 	}
 
 	actions = event.Actions
@@ -207,19 +257,16 @@ func checkAccFirstStateFull(state *iotevents.State) error {
 		return fmt.Errorf("Actions len %d not equals to %d", len(actions), testActionsLen)
 	}
 
-	action = actions[0]
-	if action.ClearTimer == nil {
-		return fmt.Errorf("ClearTimer is equal Nil")
+	clearTimerAction = actions[0]
+	clearTimerExpectedData = map[string]interface{}{
+		"TimerName": "test_timer_name",
 	}
-
-	clearTimer = action.ClearTimer
-	testClearTimerName = "test_timer_name"
-	if clearTimer.TimerName != testClearTimerName {
-		return fmt.Errorf("Clear Timer name %s not equals to %s", clearTimer.TimerName, testClearTimerName)
+	if err := testClearTimer(clearTimerAction.ClearTimer, clearTimerExpectedData); err != nil {
+		return err
 	}
 
 	// Test OnInput
-	onInput = state.OnInput
+	onInput := state.OnInput
 	events = onInput.Events
 	testEventsLen = 1
 	if len(events) != testEventsLen {
@@ -227,13 +274,12 @@ func checkAccFirstStateFull(state *iotevents.State) error {
 	}
 
 	event = events[0]
-	testEventName = "test_event_name"
-	testEventCondition = "convert(Decimal, $input.test_input.temperature) > 20"
-	if event.EventName != testEventName {
-		return fmt.Errorf("Event name %s not equals to %s", event.EventName, testEventName)
+	expectedEventData = map[string]interface{}{
+		"EventName": "test_event_name",
+		"Condition": "convert(Decimal, $input.test_input.temperature) > 20",
 	}
-	if event.Condition != testEventCondition {
-		return fmt.Errorf("Event condition %s not equals to %s", event.Condition, testEventCondition)
+	if err := testEvent(event, expectedEventData); err != nil {
+		return err
 	}
 
 	actions = event.Actions
@@ -242,44 +288,46 @@ func checkAccFirstStateFull(state *iotevents.State) error {
 		return fmt.Errorf("Actions len %d not equals to %d", len(actions), testActionsLen)
 	}
 
-	action = actions[0]
-	if action.ClearTimer == nil {
-		return fmt.Errorf("ClearTimer is equal Nil")
+	clearTimerAction = actions[0]
+	clearTimerExpectedData = map[string]interface{}{
+		"TimerName": "test_timer_name",
 	}
-
-	clearTimer = action.ClearTimer
-	testClearTimerName = "test_timer_name"
-	if clearTimer.TimerName != testClearTimerName {
-		return fmt.Errorf("Clear Timer name %s not equals to %s", clearTimer.TimerName, testClearTimerName)
+	if err := testClearTimer(clearTimerAction.ClearTimer, clearTimerExpectedData); err != nil {
+		return err
 	}
 
 	transitionEvents := onInput.TransitionEvents
-	testTransitionEventsLen = 1
+	testTransitionEventsLen := 1
 	if len(transitionEvents) != testTransitionEventsLen {
 		return fmt.Errorf("Transition Events len %d not equals to %d", len(transitionEvents), testTransitionEventsLen)
 	}
 
 	transitionEvent := transitionEvents[0]
-	testTransitionEventName := "test_transition_event_name"
-	testTransitionEventCondition := "convert(Decimal, $input.test_input.temperature) > 20"
-	testTransitionEventNextState := "second_state"
-	if transitionEvent.EventName != testTransitionEventName {
-		return fmt.Errorf("Event name %s not equals to %s", transitionEvent.EventName, testTransitionEventName)
-	}
-	if transitionEvent.Condition != testTransitionEventCondition {
-		return fmt.Errorf("Event condition %s not equals to %s", transitionEvent.Condition, testTransitionEventCondition)
-	}
-	if transitionEvent.NextState != testTransitionEventNextState {
-		return fmt.Errorf("Next state %s not equals to %s", transitionEvent.NextState, testTransitionEventNextState)
+	expectedTransitionEventData := map[string]interface{}{
+		"EventName": "test_event_name",
+		"Condition": "convert(Decimal, $input.test_input.temperature) > 20",
+		"NextState": "second_state",
 	}
 
+	if err := testTransitionEvent(transitionEvent, expectedTransitionEventData); err != nil {
+		return err
+	}
+
+	actions = transitionEvent.Actions
+	clearTimerAction = actions[0]
+	clearTimerExpectedData = map[string]interface{}{
+		"TimerName": "test_timer_name",
+	}
+	if err := testClearTimer(clearTimerAction.ClearTimer, clearTimerExpectedData); err != nil {
+		return err
+	}
 	return nil
 }
 
-func checkAccSecondStateFull(state *iotevents.State) {
+func checkAccSecondStateFull(state *iotevents.State) error {
 	testStateName := "second_state"
-	if state.StateName != testStateName {
-		return fmt.Errorf("State name %s not equals to %s", state.StateName, testStateName)
+	if *state.StateName != testStateName {
+		return fmt.Errorf("State name %s not equals to %s", *state.StateName, testStateName)
 	}
 	if state.OnEnter == nil {
 		return fmt.Errorf("State OnEnter is equal Nil")
@@ -300,13 +348,12 @@ func checkAccSecondStateFull(state *iotevents.State) {
 	}
 
 	event := events[0]
-	testEventName := "test_event_name"
-	testEventCondition := "convert(Decimal, $input.test_input.temperature) > 20"
-	if event.EventName != testEventName {
-		return fmt.Errorf("Event name %s not equals to %s", event.EventName, testEventName)
+	expectedEventData := map[string]interface{}{
+		"EventName": "test_event_name",
+		"Condition": "convert(Decimal, $input.test_input.temperature) > 20",
 	}
-	if event.Condition != testEventCondition {
-		return fmt.Errorf("Event condition %s not equals to %s", event.Condition, testEventCondition)
+	if err := testEvent(event, expectedEventData); err != nil {
+		return err
 	}
 
 	actions := event.Actions
@@ -315,22 +362,19 @@ func checkAccSecondStateFull(state *iotevents.State) {
 		return fmt.Errorf("Actions len %d not equals to %d", len(actions), testActionsLen)
 	}
 
-	action := actions[0]
-	if action.ClearTimer == nil {
-		return fmt.Errorf("ClearTimer is equal Nil")
+	clearTimerAction := actions[0]
+	clearTimerExpectedData := map[string]interface{}{
+		"TimerName": "test_timer_name",
 	}
-
-	clearTimer := action.ClearTimer
-	testClearTimerName := "test_timer_name"
-	if clearTimer.TimerName != testClearTimerName {
-		return fmt.Errorf("Clear Timer name %s not equals to %s", clearTimer.TimerName, testClearTimerName)
+	if err := testClearTimer(clearTimerAction.ClearTimer, clearTimerExpectedData); err != nil {
+		return err
 	}
 
 	return nil
 
 }
 
-func testAccDetectorModelFull() {
+func testAccDetectorModelFull(s *terraform.State) error {
 	conn := testAccProvider.Meta().(*AWSClient).ioteventsconn
 
 	for _, rs := range s.RootModule().Resources {
@@ -339,7 +383,7 @@ func testAccDetectorModelFull() {
 		}
 
 		params := &iotevents.DescribeDetectorModelInput{
-			DetectorModelName: aws.string(rs.Primary.ID),
+			DetectorModelName: aws.String(rs.Primary.ID),
 		}
 
 		out, err := conn.DescribeDetectorModel(params)
@@ -350,8 +394,8 @@ func testAccDetectorModelFull() {
 
 		detectorDefinition := out.DetectorModel.DetectorModelDefinition
 		testInitialStateName := "first_state"
-		if detectorDefinition.InitialStateName != testInitialStateName {
-			return fmt.Errorf("Initial state name %s not equals to %s", detectorDefinition.InitialStateName, testInitialStateName)
+		if *detectorDefinition.InitialStateName != testInitialStateName {
+			return fmt.Errorf("Initial state name %s not equals to %s", *detectorDefinition.InitialStateName, testInitialStateName)
 		}
 
 		states := detectorDefinition.States
@@ -378,7 +422,7 @@ func testAccDetectorModelFull() {
 	return nil
 }
 
-func checkAWSResponseError(responseErr error, checkErr error, responseErrNilValueMessage string) error {
+func checkAWSResponseError(responseErr error, checkErr string, responseErrNilValueMessage string) error {
 	// responseErr: error part of response to AWS API.
 	// checkErr: expected error
 	// responseErrNilValueMessage: text of error that should be returned if responseErr equals nil.
@@ -386,7 +430,7 @@ func checkAWSResponseError(responseErr error, checkErr error, responseErrNilValu
 	//		   error if responseErr is nil or does not equal to checkErr
 
 	if responseErr != nil {
-		if isAWSErr(err, checkErr, "") {
+		if isAWSErr(responseErr, checkErr, "") {
 			return nil
 		} else {
 			return responseErr
@@ -405,7 +449,7 @@ func testAccCheckAWSIoTEventsDetectorModelDestroy(s *terraform.State) error {
 		}
 
 		params := &iotevents.DescribeDetectorModelInput{
-			DetectorModelName: aws.string(rs.Primary.ID),
+			DetectorModelName: aws.String(rs.Primary.ID),
 		}
 
 		_, err := conn.DescribeDetectorModel(params)
@@ -454,19 +498,17 @@ resource "aws_iam_policy_attachment" "attach_policy" {
     name = "test_policy_attachment_%[1]s"
     roles = ["${aws_iam_role.iotevents_role.name}"]
     policy_arn = "${aws_iam_policy.policy.arn}"
-EOF
 }
 
 resource "aws_iotevents_input" "test_input" {
-	name = "test_input"
-  
+	name = "test_input_%[1]s"
+
 	definition {
 	  attribute {
 		json_path = "temperature"
 	  }
 	}
 }
-
 `
 
 func testAccAWSIoTEventsDetectorModel_basic(dName string) string {
@@ -484,7 +526,7 @@ resource "aws_iotevents_detector_model" "detector" {
       on_enter {
         event {
           name      = "test_event_name"
-          condition = "convert(Decimal, $input.test_input.temperature) > 20"
+          condition = "convert(Decimal, $input.test_input_%[1]s.temperature) > 20"
 
           action {
             clear_timer {
@@ -514,7 +556,7 @@ resource "aws_iotevents_detector_model" "detector" {
       on_enter {
 		event {
 			name      = "test_event_name"
-			condition = "convert(Decimal, $input.test_input.temperature) > 20"
+			condition = "convert(Decimal, $input.test_input_%[1]s.temperature) > 20"
   
 			action {
 			  clear_timer {
@@ -526,7 +568,7 @@ resource "aws_iotevents_detector_model" "detector" {
       on_exit {
 		event {
 			name      = "test_event_name"
-			condition = "convert(Decimal, $input.test_input.temperature) > 20"
+			condition = "convert(Decimal, $input.test_input_%[1]s.temperature) > 20"
   
 			action {
 			  clear_timer {
@@ -538,7 +580,7 @@ resource "aws_iotevents_detector_model" "detector" {
       on_input {
 		event {
 			name      = "test_event_name"
-			condition = "convert(Decimal, $input.test_input.temperature) > 20"
+			condition = "convert(Decimal, $input.test_input_%[1]s.temperature) > 20"
   
 			action {
 			  clear_timer {
@@ -548,7 +590,7 @@ resource "aws_iotevents_detector_model" "detector" {
 		  }
         transition_event {
           name      = "test_transition_event_name"
-          condition = "convert(Decimal, $input.test_input.temperature) > 20"
+          condition = "convert(Decimal, $input.test_input_%[1]s.temperature) > 20"
 		  next_state = "second_state"
 
           action {
@@ -565,7 +607,7 @@ resource "aws_iotevents_detector_model" "detector" {
 		on_enter {
 		  event {
 			  name      = "test_event_name"
-			  condition = "convert(Decimal, $input.test_input.temperature) > 20"
+			  condition = "convert(Decimal, $input.test_input_%[1]s.temperature) > 20"
 	
 			  action {
 				clear_timer {
