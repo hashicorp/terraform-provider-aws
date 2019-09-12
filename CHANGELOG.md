@@ -18,6 +18,7 @@ ENHANCEMENTS:
 
 BUG FIXES:
 
+* resource/aws_instance: Final retries after timeouts creating and updating instance and getting instance password data
 * resource/aws_cloudfront_distribution: Support accessing `active_trusted_signers` attribute `items` in Terraform 0.12 [GH-10013]
 * resource/aws_cognito_user_pool: Fix perpetual diffs on `sms_verification_message` [GH-9758]
 * resource/aws_elasticsearch_domain: Final retries after timeouts creating, updating, and deleting domains [GH-9892]
