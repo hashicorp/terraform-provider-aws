@@ -1,8 +1,8 @@
-## 2.28.1 (Unreleased)
+## 2.28.1 (September 12, 2019)
 
 BUG FIXES:
 
-* Revert "resource/aws_cloudfront_distribution: Fix `active_trusted_signers` attribute for Terraform 0.12" [GH-10093]
+* Revert "resource/aws_cloudfront_distribution: Fix `active_trusted_signers` attribute for Terraform 0.12" ([#10093](https://github.com/terraform-providers/terraform-provider-aws/issues/10093))
 
 ## 2.28.0 (September 12, 2019)
 
