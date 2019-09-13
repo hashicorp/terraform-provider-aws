@@ -3,7 +3,6 @@ package aws
 import (
 	"fmt"
 	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/cognitoidentityprovider"
 	"github.com/hashicorp/errwrap"
@@ -12,7 +11,7 @@ import (
 	"log"
 )
 
-func resourceAwsCognitoUserPoolSchemaCustomAttribute() *schema.Resource {
+func resourceAwsCognitoUserPoolSchemaCustomAttributes() *schema.Resource {
 	return &schema.Resource{
 		Create: resourceAwsCognitoUserPoolSchemaCustomAttributCreate,
 		Read:   resourceAwsCognitoUserPoolSchemaAttributRead,
@@ -103,6 +102,30 @@ func resourceAwsCognitoUserPoolSchemaCustomAttribute() *schema.Resource {
 
 func resourceAwsCognitoUserPoolSchemaCustomAttributCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).cognitoidpconn
+
+	//If the attribute already exists, skip adding, just update the tf_state.
+	params1 := &cognitoidentityprovider.DescribeUserPoolInput{
+		UserPoolId: aws.String(d.Get("user_pool_id").(string)),
+	}
+
+	resp1, err1 := conn.DescribeUserPool(params1)
+	if err1 != nil {
+		if awsErr, ok := err1.(awserr.Error); ok && awsErr.Code() == "ResourceNotFoundException" {
+			log.Printf("[WARN] Cognito User Pool %s is already gone", d.Id())
+			d.SetId("")
+			return nil
+		}
+		return err1
+	}
+
+	for i := 0; i < len(resp1.UserPool.SchemaAttributes); i++ {
+		if resp1.UserPool.SchemaAttributes[i].Name == d.Get("name") {
+			d.SetId("")
+			return nil
+		}
+	}
+
+	//Continue adding the attribute
 	params := &cognitoidentityprovider.AddCustomAttributesInput{
 		UserPoolId: aws.String(d.Get("user_pool_id").(string)),
 	}
@@ -145,21 +168,15 @@ func resourceAwsCognitoUserPoolSchemaAttributRead(d *schema.ResourceData, meta i
 	if resp.UserPool.AliasAttributes != nil {
 		d.Set("alias_attributes", flattenStringList(resp.UserPool.AliasAttributes))
 	}
-	arn := arn.ARN{
-		Partition: meta.(*AWSClient).partition,
-		Region:    meta.(*AWSClient).region,
-		Service:   "cognito-idp",
-		AccountID: meta.(*AWSClient).accountid,
-		Resource:  fmt.Sprintf("userpool/%s", d.Id()),
-	}
-	d.Set("arn", arn.String())
 	d.SetId(*resp.UserPool.Id)
 	return nil
 }
 
 func resourceAwsCognitoUserPoolSchemaCustomAttributUpdate(d *schema.ResourceData, meta interface{}) error {
-	return fmt.Errorf("update custom attribute operation is not supported")
+	fmt.Errorf("update custom attribute operation is not supported")
+	return nil
 }
 func resourceAwsCognitoUserPoolSchemaCustomAttributDelete(d *schema.ResourceData, meta interface{}) error {
-	return fmt.Errorf("delete custom attribute operation is not supported")
+	fmt.Errorf("update custom attribute operation is not supported")
+	return nil
 }
