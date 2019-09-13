@@ -2985,3 +2985,42 @@ func TestValidateRoute53ResolverName(t *testing.T) {
 		}
 	}
 }
+
+func TestCloudWatchEventBusName(t *testing.T) {
+	cases := []struct {
+		Value   string
+		IsValid bool
+	}{
+		{
+			Value:   "",
+			IsValid: false,
+		},
+		{
+			Value:   acctest.RandStringFromCharSet(256, acctest.CharSetAlpha),
+			IsValid: true,
+		},
+		{
+			Value:   acctest.RandStringFromCharSet(257, acctest.CharSetAlpha),
+			IsValid: false,
+		},
+		{
+			Value:   "aws.partner/test/test",
+			IsValid: false,
+		},
+		{
+			Value:   "/test0._1-",
+			IsValid: false,
+		},
+		{
+			Value:   "test0._1-",
+			IsValid: true,
+		},
+	}
+	for _, tc := range cases {
+		_, errors := validateCloudWatchEventBusName(tc.Value, "aws_cloudwatch_event_bus")
+		isValid := len(errors) == 0
+		if tc.IsValid != isValid {
+			t.Fatalf("Expected the AWS CloudWatch Event Bus Name to not trigger a validation error for %q", tc.Value)
+		}
+	}
+}
