@@ -424,6 +424,7 @@ func resourceAwsDbInstance() *schema.Resource {
 
 			"ca_cert_identifier": {
 				Type:     schema.TypeString,
+				Optional: true,
 				Computed: true,
 			},
 
@@ -1477,6 +1478,11 @@ func resourceAwsDbInstanceUpdate(d *schema.ResourceData, meta interface{}) error
 	if d.HasChange("backup_retention_period") {
 		d.SetPartial("backup_retention_period")
 		req.BackupRetentionPeriod = aws.Int64(int64(d.Get("backup_retention_period").(int)))
+		requestUpdate = true
+	}
+	if d.HasChange("ca_cert_identifier") {
+		d.SetPartial("ca_cert_identifier")
+		req.CACertificateIdentifier = aws.String(d.Get("ca_cert_identifier").(string))
 		requestUpdate = true
 	}
 	if d.HasChange("copy_tags_to_snapshot") {
