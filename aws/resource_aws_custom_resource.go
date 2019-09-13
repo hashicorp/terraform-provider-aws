@@ -126,7 +126,7 @@ func invokeLambda(requestType string, d *schema.ResourceData, meta interface{}) 
 	logType := "Tail"
 	invokeRequest := &lambda.InvokeInput{
 		FunctionName: aws.String(serviceToken),
-		Payload:      []byte(payload),
+		Payload:      payload,
 		LogType:      &logType,
 	}
 
@@ -140,7 +140,10 @@ func invokeLambda(requestType string, d *schema.ResourceData, meta interface{}) 
 		return nil, fmt.Errorf("Lambda returned %d status code with error message: %s", *invokeResponse.StatusCode, *invokeResponse.LogResult)
 	}
 	var customResourceResponse CustomResourceResponse
-	json.Unmarshal(invokeResponse.Payload, &customResourceResponse)
+	err = json.Unmarshal(invokeResponse.Payload, &customResourceResponse)
+	if err != nil {
+		return nil, fmt.Errorf("Response cannot be unmarshalled into JSON: %v", err)
+	}
 	log.Printf("[DEBUG] Output from lambda function: %v", customResourceResponse)
 	if customResourceResponse.Status == "FAILED" {
 		return nil, fmt.Errorf(`Custom resource returned "FAILED" Status code with Reason: %s`, customResourceResponse.Reason)

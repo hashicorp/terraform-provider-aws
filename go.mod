@@ -28,5 +28,3 @@ require (
 	k8s.io/klog v0.1.0 // indirect
 	sigs.k8s.io/yaml v1.1.0 // indirect
 )
-
-replace git.apache.org/thrift.git => github.com/apache/thrift v0.12.0
