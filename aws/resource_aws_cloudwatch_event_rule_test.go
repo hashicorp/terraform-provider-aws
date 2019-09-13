@@ -97,7 +97,7 @@ func TestAccAWSCloudWatchEventRule_basic(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"is_enabled"}, //this has a default value
+				ImportStateVerifyIgnore: []string{"event_bus_name", "is_enabled"}, //this has a default value
 			},
 			{
 				Config: testAccAWSCloudWatchEventRuleConfig(rName2),
@@ -134,9 +134,10 @@ func TestAccAWSCloudWatchEventRule_role(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"event_bus_name"}, //this has a default value
 			},
 		},
 	})
@@ -161,9 +162,10 @@ func TestAccAWSCloudWatchEventRule_description(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"event_bus_name"}, //this has a default value
 			},
 			{
 				Config: testAccAWSCloudWatchEventRuleConfigDescription(rName, "description2"),
@@ -196,9 +198,10 @@ func TestAccAWSCloudWatchEventRule_pattern(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"event_bus_name"}, //this has a default value
 			},
 			{
 				Config: testAccAWSCloudWatchEventRuleConfigPattern(rName, "{\"source\":[\"aws.lambda\"]}"),
@@ -253,9 +256,10 @@ func TestAccAWSCloudWatchEventRule_tags(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"event_bus_name"}, //this has a default value
 			},
 			{
 				Config: testAccAWSCloudWatchEventRuleConfigTags2(rName, "key1", "value1updated", "key2", "value2"),
@@ -297,9 +301,10 @@ func TestAccAWSCloudWatchEventRule_IsEnabled(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"event_bus_name"}, //this has a default value
 			},
 			{
 				Config: testAccAWSCloudWatchEventRuleConfigIsEnabled(rName, true),

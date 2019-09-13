@@ -28,6 +28,13 @@ func resourceAwsCloudWatchEventTarget() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
+			"event_bus_name": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				ForceNew:     true,
+				ValidateFunc: validateCloudWatchEventBusName,
+			},
+
 			"rule": {
 				Type:         schema.TypeString,
 				Required:     true,
@@ -255,6 +262,10 @@ func resourceAwsCloudWatchEventTargetCreate(d *schema.ResourceData, meta interfa
 	}
 
 	id := rule + "-" + targetId
+	eventBusName := aws.StringValue(input.EventBusName)
+	if len(eventBusName) > 0 {
+		id = eventBusName + "-" + id
+	}
 	d.SetId(id)
 
 	log.Printf("[INFO] CloudWatch Event Target %q created", d.Id())
@@ -267,6 +278,7 @@ func resourceAwsCloudWatchEventTargetRead(d *schema.ResourceData, meta interface
 
 	t, err := findEventTargetById(
 		d.Get("target_id").(string),
+		d.Get("event_bus_name").(string),
 		d.Get("rule").(string),
 		nil, conn)
 	if err != nil {
@@ -340,11 +352,14 @@ func resourceAwsCloudWatchEventTargetRead(d *schema.ResourceData, meta interface
 	return nil
 }
 
-func findEventTargetById(id, rule string, nextToken *string, conn *events.CloudWatchEvents) (*events.Target, error) {
+func findEventTargetById(id, eventBus string, rule string, nextToken *string, conn *events.CloudWatchEvents) (*events.Target, error) {
 	input := events.ListTargetsByRuleInput{
 		Rule:      aws.String(rule),
 		NextToken: nextToken,
 		Limit:     aws.Int64(100), // Set limit to allowed maximum to prevent API throttling
+	}
+	if len(eventBus) > 0 {
+		input.EventBusName = aws.String(eventBus)
 	}
 	log.Printf("[DEBUG] Reading CloudWatch Event Target: %s", input)
 	out, err := conn.ListTargetsByRule(&input)
@@ -359,7 +374,7 @@ func findEventTargetById(id, rule string, nextToken *string, conn *events.CloudW
 	}
 
 	if out.NextToken != nil {
-		return findEventTargetById(id, rule, nextToken, conn)
+		return findEventTargetById(id, eventBus, rule, nextToken, conn)
 	}
 
 	return nil, fmt.Errorf("CloudWatch Event Target %q (%q) not found", id, rule)
@@ -385,6 +400,9 @@ func resourceAwsCloudWatchEventTargetDelete(d *schema.ResourceData, meta interfa
 	input := &events.RemoveTargetsInput{
 		Ids:  []*string{aws.String(d.Get("target_id").(string))},
 		Rule: aws.String(d.Get("rule").(string)),
+	}
+	if v, ok := d.GetOk("event_bus_name"); ok {
+		input.EventBusName = aws.String(v.(string))
 	}
 
 	output, err := conn.RemoveTargets(input)
@@ -443,6 +461,10 @@ func buildPutTargetInputStruct(d *schema.ResourceData) *events.PutTargetsInput {
 	input := events.PutTargetsInput{
 		Rule:    aws.String(d.Get("rule").(string)),
 		Targets: []*events.Target{e},
+	}
+
+	if v, ok := d.GetOk("event_bus_name"); ok {
+		input.EventBusName = aws.String(v.(string))
 	}
 
 	return &input
@@ -664,17 +686,27 @@ func flattenAwsCloudWatchInputTransformer(inputTransformer *events.InputTransfor
 }
 
 func resourceAwsCloudWatchEventTargetImport(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
-	idParts := strings.SplitN(d.Id(), "/", 2)
-	if len(idParts) != 2 || idParts[0] == "" || idParts[1] == "" {
-		return nil, fmt.Errorf("unexpected format (%q), expected <rule-name>/<target-id>", d.Id())
+	idParts := strings.Split(d.Id(), "#")
+	var eventBusName string
+	var ruleName string
+	var targetName string
+	if len(idParts) > 3 || len(idParts) < 2 {
+		return nil, fmt.Errorf("unexpected format (%q), expected <event-bus-name>#<rule-name>#<target-id> or <rule-name>#<target-id>", d.Id())
+	} else if len(idParts) == 3 {
+		eventBusName = idParts[0]
+		ruleName = idParts[1]
+		targetName = idParts[2]
+	} else {
+		ruleName = idParts[0]
+		targetName = idParts[1]
 	}
-
-	ruleName := idParts[0]
-	targetName := idParts[1]
 
 	d.Set("target_id", targetName)
 	d.Set("rule", ruleName)
-	d.SetId(ruleName + "-" + targetName)
+	if len(eventBusName) > 0 {
+		d.Set("event_bus_name", eventBusName)
+	}
+	d.SetId(strings.Join(idParts, "-"))
 
 	return []*schema.ResourceData{d}, nil
 }

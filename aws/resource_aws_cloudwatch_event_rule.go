@@ -3,6 +3,7 @@ package aws
 import (
 	"fmt"
 	"log"
+	"strings"
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -26,7 +27,7 @@ func resourceAwsCloudWatchEventRule() *schema.Resource {
 		Update: resourceAwsCloudWatchEventRuleUpdate,
 		Delete: resourceAwsCloudWatchEventRuleDelete,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			State: resourceAwsCloudWatchEventRuleImport,
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -48,6 +49,12 @@ func resourceAwsCloudWatchEventRule() *schema.Resource {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ValidateFunc: validation.StringLenBetween(0, 256),
+			},
+			"event_bus_name": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				ForceNew:     true,
+				ValidateFunc: validateCloudWatchEventBusName,
 			},
 			"event_pattern": {
 				Type:         schema.TypeString,
@@ -123,7 +130,12 @@ func resourceAwsCloudWatchEventRuleCreate(d *schema.ResourceData, meta interface
 	}
 
 	d.Set("arn", out.RuleArn)
-	d.SetId(*input.Name)
+	id := aws.StringValue(input.Name)
+	eventBusName := aws.StringValue(input.EventBusName)
+	if len(eventBusName) > 0 {
+		id = eventBusName + "-" + id
+	}
+	d.SetId(id)
 
 	log.Printf("[INFO] CloudWatch Event Rule %q created", *out.RuleArn)
 
@@ -134,7 +146,10 @@ func resourceAwsCloudWatchEventRuleRead(d *schema.ResourceData, meta interface{}
 	conn := meta.(*AWSClient).cloudwatcheventsconn
 
 	input := events.DescribeRuleInput{
-		Name: aws.String(d.Id()),
+		Name: aws.String(determineAwsCloudWatchEventRuleNameFromResourceData(d)),
+	}
+	if v, ok := d.GetOk("event_bus_name"); ok {
+		input.EventBusName = aws.String(v.(string))
 	}
 	log.Printf("[DEBUG] Reading CloudWatch Event Rule: %s", input)
 	out, err := conn.DescribeRule(&input)
@@ -187,7 +202,7 @@ func resourceAwsCloudWatchEventRuleRead(d *schema.ResourceData, meta interface{}
 func resourceAwsCloudWatchEventRuleUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).cloudwatcheventsconn
 
-	input, err := buildPutRuleInputStruct(d, d.Id())
+	input, err := buildPutRuleInputStruct(d, determineAwsCloudWatchEventRuleNameFromResourceData(d))
 	if err != nil {
 		return fmt.Errorf("Updating CloudWatch Event Rule failed: %s", err)
 	}
@@ -230,7 +245,10 @@ func resourceAwsCloudWatchEventRuleDelete(d *schema.ResourceData, meta interface
 	conn := meta.(*AWSClient).cloudwatcheventsconn
 
 	input := &events.DeleteRuleInput{
-		Name: aws.String(d.Id()),
+		Name: aws.String(determineAwsCloudWatchEventRuleNameFromResourceData(d)),
+	}
+	if v, ok := d.GetOk("event_bus_name"); ok {
+		input.EventBusName = aws.String(v.(string))
 	}
 
 	err := resource.Retry(cloudWatchEventRuleDeleteRetryTimeout, func() *resource.RetryError {
@@ -258,12 +276,35 @@ func resourceAwsCloudWatchEventRuleDelete(d *schema.ResourceData, meta interface
 	return nil
 }
 
+func resourceAwsCloudWatchEventRuleImport(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
+	splitId := strings.Split(d.Id(), "#")
+	var eventBusName string
+	var ruleName string
+	if len(splitId) > 2 {
+		return []*schema.ResourceData{}, fmt.Errorf("wrong format of resource: %s. Please follow <event-bus-name>#<rule-name> or <rule-name>", d.Id())
+	} else if len(splitId) == 2 {
+		eventBusName = splitId[0]
+		ruleName = splitId[1]
+	} else {
+		ruleName = splitId[0]
+	}
+
+	d.SetId(strings.Join(splitId, "-"))
+	d.Set("event_bus_name", eventBusName)
+	d.Set("name", ruleName)
+
+	return []*schema.ResourceData{d}, nil
+}
+
 func buildPutRuleInputStruct(d *schema.ResourceData, name string) (*events.PutRuleInput, error) {
 	input := events.PutRuleInput{
 		Name: aws.String(name),
 	}
 	if v, ok := d.GetOk("description"); ok {
 		input.Description = aws.String(v.(string))
+	}
+	if v, ok := d.GetOk("event_bus_name"); ok {
+		input.EventBusName = aws.String(v.(string))
 	}
 	if v, ok := d.GetOk("event_pattern"); ok {
 		pattern, err := structure.NormalizeJsonString(v)
@@ -327,4 +368,12 @@ func validateEventPatternValue() schema.SchemaValidateFunc {
 		}
 		return
 	}
+}
+
+func determineAwsCloudWatchEventRuleNameFromResourceData(d *schema.ResourceData) string {
+	eventBusName := d.Get("event_bus_name").(string)
+	if len(eventBusName) == 0 {
+		return d.Id()
+	}
+	return strings.TrimPrefix(d.Id(), eventBusName+"-")
 }
