@@ -406,6 +406,14 @@ func buildSpotFleetLaunchSpecification(d map[string]interface{}, meta interface{
 		opts.Placement = placement
 	}
 
+	if v, ok := d["placement_group"]; ok {
+		if v.(string) != "" {
+			// If instanceInterruptionBehavior is set to STOP, this can't be set at all, even to an empty string, so check for "" to avoid those errors
+			placement.GroupName = aws.String(v.(string))
+			opts.Placement = placement
+		}
+	}
+
 	if v, ok := d["ebs_optimized"]; ok {
 		opts.EbsOptimized = aws.Bool(v.(bool))
 	}
