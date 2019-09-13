@@ -12,8 +12,9 @@ func TestAccAWSCustomResource_basic(t *testing.T) {
 	resourceName := "aws_custom_resource.custom_resource"
 	rType := "CustomResource"
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:  func() { testAccPreCheck(t) },
-		Providers: testAccProviders,
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAwsCustomResourceDestroy, //theres nothing to cleanup
 		Steps: []resource.TestStep{
 			{
 				Config: testAccCustomResourceConfig(rType),
@@ -23,6 +24,12 @@ func TestAccAWSCustomResource_basic(t *testing.T) {
 			},
 		},
 	})
+}
+
+func testAccCheckAwsCustomResourceDestroy(s *terraform.State) error {
+	//there is nothing to delete because Custom Resource doesn't actually provision anything
+	return nil
+
 }
 
 func testAccCheckCustomResource(customResource string) resource.TestCheckFunc {
