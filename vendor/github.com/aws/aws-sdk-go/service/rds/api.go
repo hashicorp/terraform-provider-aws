@@ -13854,8 +13854,22 @@ type CreateDBClusterInput struct {
 	// in the Amazon Aurora User Guide.
 	EnableCloudwatchLogsExports []*string `type:"list"`
 
+	// A value that indicates whether to enable the HTTP endpoint for an Aurora
+	// Serverless DB cluster. By default, the HTTP endpoint is disabled.
+	//
+	// When enabled, the HTTP endpoint provides a connectionless web service API
+	// for running SQL queries on the Aurora Serverless DB cluster. You can also
+	// query your database from inside the RDS console with the query editor.
+	//
+	// For more information, see Using the Data API for Aurora Serverless (https://docs.aws.amazon.com/AmazonRDS/latest/AuroraUserGuide/data-api.html)
+	// in the Amazon Aurora User Guide.
+	EnableHttpEndpoint *bool `type:"boolean"`
+
 	// A value that indicates whether to enable mapping of AWS Identity and Access
 	// Management (IAM) accounts to database accounts. By default, mapping is disabled.
+	//
+	// For more information, see IAM Database Authentication (https://docs.aws.amazon.com/AmazonRDS/latest/AuroraUserGuide/UsingWithRDS.IAMDBAuth.html)
+	// in the Amazon Aurora User Guide.
 	EnableIAMDatabaseAuthentication *bool `type:"boolean"`
 
 	// The name of the database engine to be used for this DB cluster.
@@ -13872,13 +13886,28 @@ type CreateDBClusterInput struct {
 
 	// The version number of the database engine to use.
 	//
+	// To list all of the available engine versions for aurora (for MySQL 5.6-compatible
+	// Aurora), use the following command:
+	//
+	// aws rds describe-db-engine-versions --engine aurora --query "DBEngineVersions[].EngineVersion"
+	//
+	// To list all of the available engine versions for aurora-mysql (for MySQL
+	// 5.7-compatible Aurora), use the following command:
+	//
+	// aws rds describe-db-engine-versions --engine aurora-mysql --query "DBEngineVersions[].EngineVersion"
+	//
+	// To list all of the available engine versions for aurora-postgresql, use the
+	// following command:
+	//
+	// aws rds describe-db-engine-versions --engine aurora-postgresql --query "DBEngineVersions[].EngineVersion"
+	//
 	// Aurora MySQL
 	//
-	// Example: 5.6.10a, 5.7.12
+	// Example: 5.6.10a, 5.6.mysql_aurora.1.19.2, 5.7.12, 5.7.mysql_aurora.2.04.5
 	//
 	// Aurora PostgreSQL
 	//
-	// Example: 9.6.3
+	// Example: 9.6.3, 10.7
 	EngineVersion *string `type:"string"`
 
 	// The global cluster ID of an Aurora cluster that becomes the primary cluster
@@ -14122,6 +14151,12 @@ func (s *CreateDBClusterInput) SetDestinationRegion(v string) *CreateDBClusterIn
 // SetEnableCloudwatchLogsExports sets the EnableCloudwatchLogsExports field's value.
 func (s *CreateDBClusterInput) SetEnableCloudwatchLogsExports(v []*string) *CreateDBClusterInput {
 	s.EnableCloudwatchLogsExports = v
+	return s
+}
+
+// SetEnableHttpEndpoint sets the EnableHttpEndpoint field's value.
+func (s *CreateDBClusterInput) SetEnableHttpEndpoint(v bool) *CreateDBClusterInput {
+	s.EnableHttpEndpoint = &v
 	return s
 }
 
@@ -14771,6 +14806,20 @@ type CreateDBInstanceInput struct {
 	//    * For MySQL 5.6, minor version 5.6.34 or higher
 	//
 	//    * For MySQL 5.7, minor version 5.7.16 or higher
+	//
+	//    * For MySQL 8.0, minor version 8.0.16 or higher
+	//
+	// PostgreSQL
+	//
+	//    * For PostgreSQL 9.5, minor version 9.5.15 or higher
+	//
+	//    * For PostgreSQL 9.6, minor version 9.6.11 or higher
+	//
+	//    * PostgreSQL 10.6, 10.7, and 10.9
+	//
+	// For more information, see IAM Database Authentication for MySQL and PostgreSQL
+	// (https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/UsingWithRDS.IAMDBAuth.html)
+	// in the Amazon RDS User Guide.
 	EnableIAMDatabaseAuthentication *bool `type:"boolean"`
 
 	// A value that indicates whether to enable Performance Insights for the DB
@@ -14858,8 +14907,7 @@ type CreateDBInstanceInput struct {
 
 	// The amount of Provisioned IOPS (input/output operations per second) to be
 	// initially allocated for the DB instance. For information about valid Iops
-	// values, see see Amazon RDS Provisioned IOPS Storage to Improve Performance
-	// (https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/CHAP_Storage.html#USER_PIOPS)
+	// values, see Amazon RDS Provisioned IOPS Storage to Improve Performance (https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/CHAP_Storage.html#USER_PIOPS)
 	// in the Amazon RDS User Guide.
 	//
 	// Constraints: Must be a multiple between 1 and 50 of the storage amount for
@@ -15611,14 +15659,11 @@ type CreateDBInstanceReadReplicaInput struct {
 
 	// A value that indicates whether to enable mapping of AWS Identity and Access
 	// Management (IAM) accounts to database accounts. By default, mapping is disabled.
+	// For information about the supported DB engines, see CreateDBInstance.
 	//
-	// You can enable IAM database authentication for the following database engines
-	//
-	//    * For MySQL 5.6, minor version 5.6.34 or higher
-	//
-	//    * For MySQL 5.7, minor version 5.7.16 or higher
-	//
-	//    * Aurora MySQL 5.6 or higher
+	// For more information about IAM database authentication, see IAM Database
+	// Authentication for MySQL and PostgreSQL (https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/UsingWithRDS.IAMDBAuth.html)
+	// in the Amazon RDS User Guide.
 	EnableIAMDatabaseAuthentication *bool `type:"boolean"`
 
 	// A value that indicates whether to enable Performance Insights for the Read
@@ -21660,7 +21705,18 @@ type DescribeDBClusterSnapshotsInput struct {
 	//    must also be specified.
 	DBClusterSnapshotIdentifier *string `type:"string"`
 
-	// This parameter is not currently supported.
+	// A filter that specifies one or more DB cluster snapshots to describe.
+	//
+	// Supported filters:
+	//
+	//    * db-cluster-id - Accepts DB cluster identifiers and DB cluster Amazon
+	//    Resource Names (ARNs).
+	//
+	//    * db-cluster-snapshot-id - Accepts DB cluster snapshot identifiers.
+	//
+	//    * snapshot-type - Accepts types of DB cluster snapshots.
+	//
+	//    * engine - Accepts names of database engines.
 	Filters []*Filter `locationNameList:"Filter" type:"list"`
 
 	// A value that indicates whether to include manual DB cluster snapshots that
@@ -22317,6 +22373,10 @@ type DescribeDBInstancesInput struct {
 	//    * db-instance-id - Accepts DB instance identifiers and DB instance Amazon
 	//    Resource Names (ARNs). The results list will only include information
 	//    about the DB instances identified by these ARNs.
+	//
+	//    * dbi-resource-id - Accepts DB instance resource identifiers. The results
+	//    list will only include information about the DB instances identified by
+	//    these resource identifiers.
 	Filters []*Filter `locationNameList:"Filter" type:"list"`
 
 	// An optional pagination token provided by a previous DescribeDBInstances request.
@@ -23073,7 +23133,20 @@ type DescribeDBSnapshotsInput struct {
 	// A specific DB resource ID to describe.
 	DbiResourceId *string `type:"string"`
 
-	// This parameter is not currently supported.
+	// A filter that specifies one or more DB snapshots to describe.
+	//
+	// Supported filters:
+	//
+	//    * db-instance-id - Accepts DB instance identifiers and DB instance Amazon
+	//    Resource Names (ARNs).
+	//
+	//    * db-snapshot-id - Accepts DB snapshot identifiers.
+	//
+	//    * dbi-resource-id - Accepts identifiers of source DB instances.
+	//
+	//    * snapshot-type - Accepts types of DB snapshots.
+	//
+	//    * engine - Accepts names of database engines.
 	Filters []*Filter `locationNameList:"Filter" type:"list"`
 
 	// A value that indicates whether to include manual DB cluster snapshots that
@@ -26672,13 +26745,29 @@ type ModifyDBClusterInput struct {
 
 	// A value that indicates whether to enable mapping of AWS Identity and Access
 	// Management (IAM) accounts to database accounts. By default, mapping is disabled.
+	//
+	// For more information, see IAM Database Authentication (https://docs.aws.amazon.com/AmazonRDS/latest/AuroraUserGuide/UsingWithRDS.IAMDBAuth.html)
+	// in the Amazon Aurora User Guide.
 	EnableIAMDatabaseAuthentication *bool `type:"boolean"`
 
 	// The version number of the database engine to which you want to upgrade. Changing
 	// this parameter results in an outage. The change is applied during the next
 	// maintenance window unless ApplyImmediately is enabled.
 	//
-	// For a list of valid engine versions, use DescribeDBEngineVersions.
+	// To list all of the available engine versions for aurora (for MySQL 5.6-compatible
+	// Aurora), use the following command:
+	//
+	// aws rds describe-db-engine-versions --engine aurora --query "DBEngineVersions[].EngineVersion"
+	//
+	// To list all of the available engine versions for aurora-mysql (for MySQL
+	// 5.7-compatible Aurora), use the following command:
+	//
+	// aws rds describe-db-engine-versions --engine aurora-mysql --query "DBEngineVersions[].EngineVersion"
+	//
+	// To list all of the available engine versions for aurora-postgresql, use the
+	// following command:
+	//
+	// aws rds describe-db-engine-versions --engine aurora-postgresql --query "DBEngineVersions[].EngineVersion"
 	EngineVersion *string `type:"string"`
 
 	// The new password for the master database user. This password can contain
@@ -27324,19 +27413,11 @@ type ModifyDBInstanceInput struct {
 
 	// A value that indicates whether to enable mapping of AWS Identity and Access
 	// Management (IAM) accounts to database accounts. By default, mapping is disabled.
+	// For information about the supported DB engines, see CreateDBInstance.
 	//
-	// You can enable IAM database authentication for the following database engines
-	//
-	// Amazon Aurora
-	//
-	// Not applicable. Mapping AWS IAM accounts to database accounts is managed
-	// by the DB cluster. For more information, see ModifyDBCluster.
-	//
-	// MySQL
-	//
-	//    * For MySQL 5.6, minor version 5.6.34 or higher
-	//
-	//    * For MySQL 5.7, minor version 5.7.16 or higher
+	// For more information about IAM database authentication, see IAM Database
+	// Authentication for MySQL and PostgreSQL (https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/UsingWithRDS.IAMDBAuth.html)
+	// in the Amazon RDS User Guide.
 	EnableIAMDatabaseAuthentication *bool `type:"boolean"`
 
 	// A value that indicates whether to enable Performance Insights for the DB
@@ -29681,8 +29762,7 @@ type PendingMaintenanceAction struct {
 
 	// The date of the maintenance window when the action is applied. The maintenance
 	// action is applied to the resource during its first maintenance window after
-	// this date. If this date is specified, any next-maintenance opt-in requests
-	// are ignored.
+	// this date.
 	AutoAppliedAfterDate *time.Time `type:"timestamp"`
 
 	// The effective date when the pending maintenance action is applied to the
@@ -29697,8 +29777,7 @@ type PendingMaintenanceAction struct {
 
 	// The date when the maintenance action is automatically applied. The maintenance
 	// action is applied to the resource on this date regardless of the maintenance
-	// window for the resource. If this date is specified, any immediate opt-in
-	// requests are ignored.
+	// window for the resource.
 	ForcedApplyDate *time.Time `type:"timestamp"`
 
 	// Indicates the type of opt-in request that has been received for the resource.
@@ -31295,6 +31374,9 @@ type RestoreDBClusterFromS3Input struct {
 
 	// A value that indicates whether to enable mapping of AWS Identity and Access
 	// Management (IAM) accounts to database accounts. By default, mapping is disabled.
+	//
+	// For more information, see IAM Database Authentication (https://docs.aws.amazon.com/AmazonRDS/latest/AuroraUserGuide/UsingWithRDS.IAMDBAuth.html)
+	// in the Amazon Aurora User Guide.
 	EnableIAMDatabaseAuthentication *bool `type:"boolean"`
 
 	// The name of the database engine to be used for the restored DB cluster.
@@ -31306,13 +31388,28 @@ type RestoreDBClusterFromS3Input struct {
 
 	// The version number of the database engine to use.
 	//
+	// To list all of the available engine versions for aurora (for MySQL 5.6-compatible
+	// Aurora), use the following command:
+	//
+	// aws rds describe-db-engine-versions --engine aurora --query "DBEngineVersions[].EngineVersion"
+	//
+	// To list all of the available engine versions for aurora-mysql (for MySQL
+	// 5.7-compatible Aurora), use the following command:
+	//
+	// aws rds describe-db-engine-versions --engine aurora-mysql --query "DBEngineVersions[].EngineVersion"
+	//
+	// To list all of the available engine versions for aurora-postgresql, use the
+	// following command:
+	//
+	// aws rds describe-db-engine-versions --engine aurora-postgresql --query "DBEngineVersions[].EngineVersion"
+	//
 	// Aurora MySQL
 	//
-	// Example: 5.6.10a
+	// Example: 5.6.10a, 5.6.mysql_aurora.1.19.2, 5.7.12, 5.7.mysql_aurora.2.04.5
 	//
 	// Aurora PostgreSQL
 	//
-	// Example: 9.6.3
+	// Example: 9.6.3, 10.7
 	EngineVersion *string `type:"string"`
 
 	// The AWS KMS key identifier for an encrypted DB cluster.
@@ -31765,6 +31862,9 @@ type RestoreDBClusterFromSnapshotInput struct {
 
 	// A value that indicates whether to enable mapping of AWS Identity and Access
 	// Management (IAM) accounts to database accounts. By default, mapping is disabled.
+	//
+	// For more information, see IAM Database Authentication (https://docs.aws.amazon.com/AmazonRDS/latest/AuroraUserGuide/UsingWithRDS.IAMDBAuth.html)
+	// in the Amazon Aurora User Guide.
 	EnableIAMDatabaseAuthentication *bool `type:"boolean"`
 
 	// The database engine to use for the new DB cluster.
@@ -31781,6 +31881,29 @@ type RestoreDBClusterFromSnapshotInput struct {
 	EngineMode *string `type:"string"`
 
 	// The version of the database engine to use for the new DB cluster.
+	//
+	// To list all of the available engine versions for aurora (for MySQL 5.6-compatible
+	// Aurora), use the following command:
+	//
+	// aws rds describe-db-engine-versions --engine aurora --query "DBEngineVersions[].EngineVersion"
+	//
+	// To list all of the available engine versions for aurora-mysql (for MySQL
+	// 5.7-compatible Aurora), use the following command:
+	//
+	// aws rds describe-db-engine-versions --engine aurora-mysql --query "DBEngineVersions[].EngineVersion"
+	//
+	// To list all of the available engine versions for aurora-postgresql, use the
+	// following command:
+	//
+	// aws rds describe-db-engine-versions --engine aurora-postgresql --query "DBEngineVersions[].EngineVersion"
+	//
+	// Aurora MySQL
+	//
+	// Example: 5.6.10a, 5.6.mysql_aurora.1.19.2, 5.7.12, 5.7.mysql_aurora.2.04.5
+	//
+	// Aurora PostgreSQL
+	//
+	// Example: 9.6.3, 10.7
 	EngineVersion *string `type:"string"`
 
 	// The AWS KMS key identifier to use when restoring an encrypted DB cluster
@@ -32078,6 +32201,9 @@ type RestoreDBClusterToPointInTimeInput struct {
 
 	// A value that indicates whether to enable mapping of AWS Identity and Access
 	// Management (IAM) accounts to database accounts. By default, mapping is disabled.
+	//
+	// For more information, see IAM Database Authentication (https://docs.aws.amazon.com/AmazonRDS/latest/AuroraUserGuide/UsingWithRDS.IAMDBAuth.html)
+	// in the Amazon Aurora User Guide.
 	EnableIAMDatabaseAuthentication *bool `type:"boolean"`
 
 	// The AWS KMS key identifier to use when restoring an encrypted DB cluster
@@ -32433,12 +32559,11 @@ type RestoreDBInstanceFromDBSnapshotInput struct {
 
 	// A value that indicates whether to enable mapping of AWS Identity and Access
 	// Management (IAM) accounts to database accounts. By default, mapping is disabled.
+	// For information about the supported DB engines, see CreateDBInstance.
 	//
-	// You can enable IAM database authentication for the following database engines
-	//
-	//    * For MySQL 5.6, minor version 5.6.34 or higher
-	//
-	//    * For MySQL 5.7, minor version 5.7.16 or higher
+	// For more information about IAM database authentication, see IAM Database
+	// Authentication for MySQL and PostgreSQL (https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/UsingWithRDS.IAMDBAuth.html)
+	// in the Amazon RDS User Guide.
 	EnableIAMDatabaseAuthentication *bool `type:"boolean"`
 
 	// The database engine to use for the new instance.
@@ -32874,6 +32999,11 @@ type RestoreDBInstanceFromS3Input struct {
 
 	// A value that indicates whether to enable mapping of AWS Identity and Access
 	// Management (IAM) accounts to database accounts. By default, mapping is disabled.
+	// For information about the supported DB engines, see CreateDBInstance.
+	//
+	// For more information about IAM database authentication, see IAM Database
+	// Authentication for MySQL and PostgreSQL (https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/UsingWithRDS.IAMDBAuth.html)
+	// in the Amazon RDS User Guide.
 	EnableIAMDatabaseAuthentication *bool `type:"boolean"`
 
 	// A value that indicates whether to enable Performance Insights for the DB
@@ -32897,7 +33027,7 @@ type RestoreDBInstanceFromS3Input struct {
 
 	// The amount of Provisioned IOPS (input/output operations per second) to allocate
 	// initially for the DB instance. For information about valid Iops values, see
-	// see Amazon RDS Provisioned IOPS Storage to Improve Performance (https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/CHAP_Storage.html#USER_PIOPS)
+	// Amazon RDS Provisioned IOPS Storage to Improve Performance (https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/CHAP_Storage.html#USER_PIOPS)
 	// in the Amazon RDS User Guide.
 	Iops *int64 `type:"integer"`
 
@@ -33489,12 +33619,11 @@ type RestoreDBInstanceToPointInTimeInput struct {
 
 	// A value that indicates whether to enable mapping of AWS Identity and Access
 	// Management (IAM) accounts to database accounts. By default, mapping is disabled.
+	// For information about the supported DB engines, see CreateDBInstance.
 	//
-	// You can enable IAM database authentication for the following database engines
-	//
-	//    * For MySQL 5.6, minor version 5.6.34 or higher
-	//
-	//    * For MySQL 5.7, minor version 5.7.16 or higher
+	// For more information about IAM database authentication, see IAM Database
+	// Authentication for MySQL and PostgreSQL (https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/UsingWithRDS.IAMDBAuth.html)
+	// in the Amazon RDS User Guide.
 	EnableIAMDatabaseAuthentication *bool `type:"boolean"`
 
 	// The database engine to use for the new instance.

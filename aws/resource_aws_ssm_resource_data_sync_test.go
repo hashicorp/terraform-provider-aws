@@ -11,6 +11,8 @@ import (
 )
 
 func TestAccAWSSsmResourceDataSync_basic(t *testing.T) {
+	resourceName := "aws_ssm_resource_data_sync.test"
+
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
@@ -19,8 +21,13 @@ func TestAccAWSSsmResourceDataSync_basic(t *testing.T) {
 			{
 				Config: testAccSsmResourceDataSyncConfig(acctest.RandInt(), acctest.RandString(5)),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSSsmResourceDataSyncExists("aws_ssm_resource_data_sync.foo"),
+					testAccCheckAWSSsmResourceDataSyncExists(resourceName),
 				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})
@@ -28,6 +35,8 @@ func TestAccAWSSsmResourceDataSync_basic(t *testing.T) {
 
 func TestAccAWSSsmResourceDataSync_update(t *testing.T) {
 	rName := acctest.RandString(5)
+	resourceName := "aws_ssm_resource_data_sync.test"
+
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
@@ -36,35 +45,19 @@ func TestAccAWSSsmResourceDataSync_update(t *testing.T) {
 			{
 				Config: testAccSsmResourceDataSyncConfig(acctest.RandInt(), rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSSsmResourceDataSyncExists("aws_ssm_resource_data_sync.foo"),
+					testAccCheckAWSSsmResourceDataSyncExists(resourceName),
 				),
 			},
-			{
-				Config: testAccSsmResourceDataSyncConfigUpdate(acctest.RandInt(), rName),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSSsmResourceDataSyncExists("aws_ssm_resource_data_sync.foo"),
-				),
-			},
-		},
-	})
-}
-
-func TestAccAWSSsmResourceDataSync_import(t *testing.T) {
-	resourceName := "aws_ssm_resource_data_sync.foo"
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckAWSSsmResourceDataSyncDestroy,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccSsmResourceDataSyncConfig(acctest.RandInt(), acctest.RandString(5)),
-			},
-
 			{
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
+			},
+			{
+				Config: testAccSsmResourceDataSyncConfigUpdate(acctest.RandInt(), rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSSsmResourceDataSyncExists(resourceName),
+				),
 			},
 		},
 	})
@@ -142,7 +135,7 @@ resource "aws_s3_bucket_policy" "hoge" {
       EOF
 }
 
-resource "aws_ssm_resource_data_sync" "foo" {
+resource "aws_ssm_resource_data_sync" "test" {
   name = "tf-test-ssm-%s"
 
   s3_destination {
@@ -196,7 +189,7 @@ resource "aws_s3_bucket_policy" "hoge" {
       EOF
 }
 
-resource "aws_ssm_resource_data_sync" "foo" {
+resource "aws_ssm_resource_data_sync" "test" {
   name = "tf-test-ssm-%s"
 
   s3_destination {

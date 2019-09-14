@@ -3,6 +3,7 @@ package aws
 import (
 	"fmt"
 	"log"
+	"regexp"
 	"sort"
 	"strings"
 	"time"
@@ -11,6 +12,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/dax"
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/helper/schema"
+	"github.com/hashicorp/terraform/helper/validation"
 )
 
 func resourceAwsDaxCluster() *schema.Resource {
@@ -41,8 +43,13 @@ func resourceAwsDaxCluster() *schema.Resource {
 				StateFunc: func(val interface{}) string {
 					return strings.ToLower(val.(string))
 				},
-				// DAX follows the same naming convention as ElastiCache clusters
-				ValidateFunc: validateElastiCacheClusterId,
+				ValidateFunc: validation.All(
+					validation.StringLenBetween(1, 20),
+					validation.StringMatch(regexp.MustCompile(`^[0-9a-z-]+$`), "must contain only lowercase alphanumeric characters and hyphens"),
+					validation.StringMatch(regexp.MustCompile(`^[a-z]`), "must begin with a lowercase letter"),
+					validateStringNotMatch(regexp.MustCompile(`--`), "cannot contain two consecutive hyphens"),
+					validateStringNotMatch(regexp.MustCompile(`-$`), "cannot end with a hyphen"),
+				),
 			},
 			"iam_role_arn": {
 				Type:         schema.TypeString,
