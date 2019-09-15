@@ -60,7 +60,8 @@ be removed in future releases, please use `max_capacity` instead.
 * `name` – (Required) The name you assign to this job. It must be unique in your account.
 * `role_arn` – (Required) The ARN of the IAM role associated with this job.
 * `timeout` – (Optional) The job timeout in minutes. The default is 2880 minutes (48 hours).
-* `security_configuration` - (Optional) The name of the Security Configuration to be associated with the job. 
+* `security_configuration` - (Optional) The name of the Security Configuration to be associated with the job.
+* `tags` - (Optional) Key-value mapping of resource tags 
 
 ### command Argument Reference
 
