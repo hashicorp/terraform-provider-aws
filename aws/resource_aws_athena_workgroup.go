@@ -114,6 +114,11 @@ func resourceAwsAthenaWorkgroup() *schema.Resource {
 					athena.WorkGroupStateEnabled,
 				}, false),
 			},
+			"force_destroy": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				Default:  false,
+			},
 			"tags": tagsSchema(),
 		},
 	}
@@ -216,6 +221,12 @@ func resourceAwsAthenaWorkgroupRead(d *schema.ResourceData, meta interface{}) er
 func resourceAwsAthenaWorkgroupDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).athenaconn
 
+	if d.Get("force_destroy").(bool) {
+		if err := deleteAllNamedQueryInWorkGroup(conn, d.Id()); err != nil {
+			return fmt.Errorf("error deleting All Athena Named Query in Workgroup (%s): %s", d.Id(), err)
+		}
+	}
+
 	input := &athena.DeleteWorkGroupInput{
 		WorkGroup: aws.String(d.Id()),
 	}
@@ -224,6 +235,30 @@ func resourceAwsAthenaWorkgroupDelete(d *schema.ResourceData, meta interface{}) 
 
 	if err != nil {
 		return fmt.Errorf("error deleting Athena WorkGroup (%s): %s", d.Id(), err)
+	}
+
+	return nil
+}
+
+func deleteAllNamedQueryInWorkGroup(conn *athena.Athena, workGroup string) error {
+	listInput := &athena.ListNamedQueriesInput{
+		WorkGroup: aws.String(workGroup),
+	}
+	var namedQueryIDList []*string
+	if err := conn.ListNamedQueriesPages(listInput,
+		func(page *athena.ListNamedQueriesOutput, lastPage bool) bool {
+			namedQueryIDList = append(namedQueryIDList, page.NamedQueryIds...)
+			return !lastPage
+		}); err != nil {
+		return fmt.Errorf("error listing Athena Named Query by Workgroup(%s): %s", workGroup, err)
+	}
+
+	for _, namedQueryID := range namedQueryIDList {
+		if _, err := conn.DeleteNamedQuery(&athena.DeleteNamedQueryInput{
+			NamedQueryId: namedQueryID,
+		}); err != nil {
+			return fmt.Errorf("error deleting Athena Named Query (%s): %s", aws.StringValue(namedQueryID), err)
+		}
 	}
 
 	return nil
