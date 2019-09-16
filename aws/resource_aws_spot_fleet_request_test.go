@@ -691,6 +691,7 @@ func TestAccAWSSpotFleetRequest_WithTargetGroups(t *testing.T) {
 }
 
 func TestAccAWSSpotFleetRequest_WithInstanceStoreAmi(t *testing.T) {
+	t.Skip("Test fails due to test harness constraints")
 	rName := acctest.RandString(10)
 	rInt := acctest.RandInt()
 
