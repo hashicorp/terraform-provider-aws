@@ -42,12 +42,6 @@ func generateStorageSchema() *schema.Resource {
 				MaxItems: 1,
 				Elem:     generateCustomerManagedS3Schema(),
 			},
-			"service_managed_s3": {
-				Type:     schema.TypeSet,
-				Optional: true,
-				MaxItems: 1,
-				Elem:     generateServiceManagedS3Schema(),
-			},
 		},
 	}
 }
@@ -125,22 +119,9 @@ func parseStorage(rawChannelStorage map[string]interface{}) *iotanalytics.Channe
 		rawCustomerManagedS3 := set[0].(map[string]interface{})
 		customerManagedS3 = parseCustomerManagedS3(rawCustomerManagedS3)
 	}
-
-	var serviceManagedS3 *iotanalytics.ServiceManagedChannelS3Storage
-	if set := rawChannelStorage["service_managed_s3"].(*schema.Set).List(); len(set) > 0 {
-		rawServiceManagedS3 := set[0].(map[string]interface{})
-		serviceManagedS3 = parseServiceManagedS3(rawServiceManagedS3)
-	}
 	return &iotanalytics.ChannelStorage{
 		CustomerManagedS3: customerManagedS3,
-		ServiceManagedS3:  serviceManagedS3,
 	}
-
-	// if customerManagedS3 != nil || serviceManagedS3 != nil {
-
-	// } else {
-	// 	return nil
-	// }
 }
 
 func parseRetentionPeriod(rawRetentionPeriod map[string]interface{}) *iotanalytics.RetentionPeriod {
@@ -157,15 +138,6 @@ func parseRetentionPeriod(rawRetentionPeriod map[string]interface{}) *iotanalyti
 		NumberOfDays: numberOfDays,
 		Unlimited:    unlimited,
 	}
-
-	// if numberOfDays != nil || unlimited != nil {
-	// 	return &iotanalytics.RetentionPeriod{
-	// 		NumberOfDays: numberOfDays,
-	// 		Unlimited: unlimited
-	// 	}
-	// } else {
-	// 	return nil
-	// }
 }
 
 func resourceAwsIotAnalyticsChannelCreate(d *schema.ResourceData, meta interface{}) error {
@@ -217,12 +189,12 @@ func flattenCustomerManagedS3(customerManagedS3 *iotanalytics.CustomerManagedCha
 }
 
 func flattenServiceManagedS3(serviceManagedS3 *iotanalytics.ServiceManagedChannelS3Storage) map[string]interface{} {
-	// if serviceManagedS3 == nil {
-	// 	return nil
-	// }
+	if serviceManagedS3 == nil {
+		return nil
+	}
 
-	// rawServiceManagedS3 := make(map[string]interface{})
-	return nil
+	rawServiceManagedS3 := make(map[string]interface{})
+	return rawServiceManagedS3
 }
 
 func flattenStorage(channelStorage *iotanalytics.ChannelStorage) map[string]interface{} {
@@ -234,14 +206,8 @@ func flattenStorage(channelStorage *iotanalytics.ChannelStorage) map[string]inte
 	}
 
 	rawStorage := make(map[string]interface{})
-	if customerManagedS3 != nil {
-		rawStorage["customer_managed_s3"] = wrapMapInList(customerManagedS3)
-	}
-	if serviceManagedS3 != nil {
-		rawStorage["service_managed_s3"] = wrapMapInList(serviceManagedS3)
-	}
-	return
-
+	rawStorage["customer_managed_s3"] = wrapMapInList(customerManagedS3)
+	return rawStorage
 }
 
 func flattenRetentionPeriod(retentionPeriod *iotanalytics.RetentionPeriod) map[string]interface{} {
