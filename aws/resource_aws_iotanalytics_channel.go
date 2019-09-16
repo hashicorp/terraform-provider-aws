@@ -6,6 +6,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/iotanalytics"
 	"github.com/hashicorp/terraform/helper/schema"
+	"github.com/hashicorp/terraform/helper/validation"
 )
 
 func generateCustomerManagedS3Schema() *schema.Resource {
@@ -37,10 +38,18 @@ func generateStorageSchema() *schema.Resource {
 	return &schema.Resource{
 		Schema: map[string]*schema.Schema{
 			"customer_managed_s3": {
-				Type:     schema.TypeSet,
-				Optional: true,
-				MaxItems: 1,
-				Elem:     generateCustomerManagedS3Schema(),
+				Type:          schema.TypeList,
+				Optional:      true,
+				MaxItems:      1,
+				ConflictsWith: []string{"storage.0.service_managed_s3"},
+				Elem:          generateCustomerManagedS3Schema(),
+			},
+			"service_managed_s3": {
+				Type:          schema.TypeList,
+				Optional:      true,
+				MaxItems:      1,
+				ConflictsWith: []string{"storage.0.customer_managed_s3"},
+				Elem:          generateServiceManagedS3Schema(),
 			},
 		},
 	}
@@ -50,12 +59,15 @@ func generateRetentionPeriodSchema() *schema.Resource {
 	return &schema.Resource{
 		Schema: map[string]*schema.Schema{
 			"number_of_days": {
-				Type:     schema.TypeInt,
-				Optional: true,
+				Type:          schema.TypeInt,
+				Optional:      true,
+				ConflictsWith: []string{"retention_period.0.unlimited"},
+				ValidateFunc:  validation.IntAtLeast(1),
 			},
 			"unlimited": {
-				Type:     schema.TypeString,
-				Optional: true,
+				Type:          schema.TypeString,
+				Optional:      true,
+				ConflictsWith: []string{"retention_period.0.number_of_days"},
 			},
 		},
 	}
@@ -119,8 +131,16 @@ func parseStorage(rawChannelStorage map[string]interface{}) *iotanalytics.Channe
 		rawCustomerManagedS3 := set[0].(map[string]interface{})
 		customerManagedS3 = parseCustomerManagedS3(rawCustomerManagedS3)
 	}
+
+	var serviceManagedS3 *iotanalytics.ServiceManagedChannelS3Storage
+	if set := rawChannelStorage["service_managed_s3"].(*schema.Set).List(); len(set) > 0 {
+		rawServiceManagedS3 := set[0].(map[string]interface{})
+		serviceManagedS3 = parseServiceManagedS3(rawServiceManagedS3)
+	}
+
 	return &iotanalytics.ChannelStorage{
 		CustomerManagedS3: customerManagedS3,
+		ServiceManagedS3:  serviceManagedS3,
 	}
 }
 
@@ -207,6 +227,7 @@ func flattenStorage(channelStorage *iotanalytics.ChannelStorage) map[string]inte
 
 	rawStorage := make(map[string]interface{})
 	rawStorage["customer_managed_s3"] = wrapMapInList(customerManagedS3)
+	rawStorage["service_managed_s3"] = wrapMapInList(serviceManagedS3)
 	return rawStorage
 }
 
