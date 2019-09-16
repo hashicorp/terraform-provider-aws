@@ -1,4 +1,9 @@
 ## 2.29.0 (Unreleased)
+
+ENHANCEMENTS:
+* resource/aws_waf_rate_based_rule: Update rate based rule limit for WAF ([#9946](https://github.com/terraform-providers/terraform-provider-aws/pull/9946))
+* resource/aws_wafregional_rate_based_rule: Update rate based rule limit for WAF ([#9946](https://github.com/terraform-providers/terraform-provider-aws/pull/9946))
+
 ## 2.28.1 (September 12, 2019)
 
 BUG FIXES:
