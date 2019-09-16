@@ -177,17 +177,17 @@ func _getCurrentAttributeMapFromUserPool(d *schema.ResourceData, meta interface{
 		UserPoolId: aws.String(userPoolId),
 	}
 
-	resp1, err1 := conn.DescribeUserPool(params1)
-	if err1 != nil {
-		if awsErr, ok := err1.(awserr.Error); ok && awsErr.Code() == "ResourceNotFoundException" {
+	resp, err := conn.DescribeUserPool(params1)
+	if err != nil {
+		if awsErr, ok := err.(awserr.Error); ok && awsErr.Code() == "ResourceNotFoundException" {
 			log.Printf("[WARN] Cognito User Pool %s is not found", userPoolId)
 		}
 		d.SetId(userPoolId)
-		return nil, err1
+		return nil, err
 	}
 
-	attributeMap := make(map[string]struct{}, len(resp1.UserPool.SchemaAttributes))
-	for _, sa := range resp1.UserPool.SchemaAttributes {
+	attributeMap := make(map[string]struct{}, len(resp.UserPool.SchemaAttributes))
+	for _, sa := range resp.UserPool.SchemaAttributes {
 		attributeMap[*sa.Name] = struct{}{}
 	}
 
