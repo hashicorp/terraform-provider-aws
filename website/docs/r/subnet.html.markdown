@@ -69,6 +69,14 @@ In addition to all arguments above, the following attributes are exported:
 * `ipv6_cidr_block_association_id` - The association ID for the IPv6 CIDR block.
 * `owner_id` - The ID of the AWS account that owns the subnet.
 
+## Timeouts
+
+`aws_subnet` provides the following [Timeouts](/docs/configuration/resources.html#timeouts)
+configuration options:
+
+- `create` - (Default `10 minutes`) How long to wait for a subnet to be created.
+- `delete` - (Default `30 minutes`) How long to wait for a subnet to be deleted.
+
 ## Import
 
 Subnets can be imported using the `subnet id`, e.g.
