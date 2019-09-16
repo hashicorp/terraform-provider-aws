@@ -965,7 +965,7 @@ func resourceAwsSpotFleetRequestRead(d *schema.ResourceData, meta interface{}) e
 
 	launchSpec, err := launchSpecsToSet(config.LaunchSpecifications, conn)
 	if err != nil {
-		return err
+		return fmt.Errorf("error occurred while reading launch specification: %s", err)
 	}
 
 	d.Set("replace_unhealthy_instances", config.ReplaceUnhealthyInstances)
