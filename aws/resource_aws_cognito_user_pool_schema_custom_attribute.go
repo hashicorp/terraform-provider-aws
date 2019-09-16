@@ -13,9 +13,9 @@ import (
 
 func resourceAwsCognitoUserPoolSchemaCustomAttributes() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsCognitoUserPoolSchemaCustomAttributCreate,
+		Create: resourceAwsCognitoUserPoolSchemaCustomAttributeAdd,
 		Read:   resourceAwsCognitoUserPoolSchemaAttributRead,
-		Update: resourceAwsCognitoUserPoolSchemaCustomAttributUpdate,
+		Update: resourceAwsCognitoUserPoolSchemaCustomAttributeAdd,
 		Delete: resourceAwsCognitoUserPoolSchemaCustomAttributDelete,
 
 		Schema: map[string]*schema.Schema{
@@ -100,34 +100,34 @@ func resourceAwsCognitoUserPoolSchemaCustomAttributes() *schema.Resource {
 	}
 }
 
-func resourceAwsCognitoUserPoolSchemaCustomAttributCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceAwsCognitoUserPoolSchemaCustomAttributeAdd(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).cognitoidpconn
 
-	//If the attribute already exists, skip adding, just update the tf_state.
+	log.Printf("[DEBUG] Adding attributes.")
+
+	userPoolId := d.Get("user_pool_id").(string)
+
 	params1 := &cognitoidentityprovider.DescribeUserPoolInput{
-		UserPoolId: aws.String(d.Get("user_pool_id").(string)),
+		UserPoolId: aws.String(userPoolId),
 	}
 
 	resp1, err1 := conn.DescribeUserPool(params1)
 	if err1 != nil {
 		if awsErr, ok := err1.(awserr.Error); ok && awsErr.Code() == "ResourceNotFoundException" {
-			log.Printf("[WARN] Cognito User Pool %s is already gone", d.Id())
-			d.SetId("")
+			log.Printf("[WARN] Cognito User Pool %s is not found", userPoolId)
+			d.SetId(userPoolId)
 			return nil
 		}
 		return err1
 	}
 
-	for i := 0; i < len(resp1.UserPool.SchemaAttributes); i++ {
-		if resp1.UserPool.SchemaAttributes[i].Name == d.Get("name") {
-			d.SetId("")
-			return nil
-		}
+	attributeMap := make(map[string]struct{}, len(resp1.UserPool.SchemaAttributes))
+	for _, sa := range resp1.UserPool.SchemaAttributes {
+		attributeMap[*sa.Name] = struct{}{}
 	}
 
-	//Continue adding the attribute
 	params := &cognitoidentityprovider.AddCustomAttributesInput{
-		UserPoolId: aws.String(d.Get("user_pool_id").(string)),
+		UserPoolId: aws.String(userPoolId),
 	}
 
 	if v, ok := d.GetOk("schema"); ok {
@@ -135,13 +135,34 @@ func resourceAwsCognitoUserPoolSchemaCustomAttributCreate(d *schema.ResourceData
 		params.CustomAttributes = expandCognitoUserPoolSchema(configs)
 	}
 
-	resp, err := conn.AddCustomAttributes(params)
+	// if attribute already exist in user pool remove it from the request attributes.
+	i := 0
+	for _, p := range params.CustomAttributes {
+		_, s := attributeMap[*p.Name]
+		if !s {
+			_, c := attributeMap["custom:"+*p.Name]
+			if !c {
+				params.CustomAttributes[i] = p
+				i++
+			}
+		}
+	}
+
+	params.CustomAttributes = params.CustomAttributes[:i]
+
+	log.Printf("[DEBUG] Attributes to add: %s", params)
+	if len(params.CustomAttributes) == 0 {
+		d.SetId(*resp1.UserPool.Id)
+		return nil
+	}
+
+	_, err := conn.AddCustomAttributes(params)
 
 	if err != nil {
 		return errwrap.Wrapf("Error creating Cognito User Pool Custom Attribute: {{err}}", err)
 	}
 
-	log.Printf("[DEBUG] Created the custom attribute on the user pool: %s", resp.String())
+	log.Printf("[DEBUG] Attributes Added Successfully...")
 
 	return resourceAwsCognitoUserPoolSchemaAttributRead(d, meta)
 }
@@ -149,8 +170,9 @@ func resourceAwsCognitoUserPoolSchemaCustomAttributCreate(d *schema.ResourceData
 func resourceAwsCognitoUserPoolSchemaAttributRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).cognitoidpconn
 
+	userPoolId := d.Get("user_pool_id").(string)
 	params := &cognitoidentityprovider.DescribeUserPoolInput{
-		UserPoolId: aws.String(d.Get("user_pool_id").(string)),
+		UserPoolId: aws.String(userPoolId),
 	}
 
 	log.Printf("[DEBUG] Reading Cognito User Pool: %s", params)
@@ -159,24 +181,43 @@ func resourceAwsCognitoUserPoolSchemaAttributRead(d *schema.ResourceData, meta i
 
 	if err != nil {
 		if awsErr, ok := err.(awserr.Error); ok && awsErr.Code() == "ResourceNotFoundException" {
-			log.Printf("[WARN] Cognito User Pool %s is already gone", d.Id())
-			d.SetId("")
+			log.Printf("[WARN] Cognito User Pool %s is already gone", userPoolId)
+			d.SetId(userPoolId)
 			return nil
 		}
 		return err
-	}
-	if resp.UserPool.AliasAttributes != nil {
-		d.Set("alias_attributes", flattenStringList(resp.UserPool.AliasAttributes))
 	}
 	d.SetId(*resp.UserPool.Id)
 	return nil
 }
 
-func resourceAwsCognitoUserPoolSchemaCustomAttributUpdate(d *schema.ResourceData, meta interface{}) error {
-	fmt.Errorf("update custom attribute operation is not supported")
-	return nil
-}
 func resourceAwsCognitoUserPoolSchemaCustomAttributDelete(d *schema.ResourceData, meta interface{}) error {
 	fmt.Errorf("update custom attribute operation is not supported")
 	return nil
+}
+
+func _getCurrentAttributeMapFromUserPool(d *schema.ResourceData, meta interface{}) (map[string]struct{}, error) {
+	conn := meta.(*AWSClient).cognitoidpconn
+
+	userPoolId := d.Get("user_pool_id").(string)
+
+	params1 := &cognitoidentityprovider.DescribeUserPoolInput{
+		UserPoolId: aws.String(userPoolId),
+	}
+
+	resp1, err1 := conn.DescribeUserPool(params1)
+	if err1 != nil {
+		if awsErr, ok := err1.(awserr.Error); ok && awsErr.Code() == "ResourceNotFoundException" {
+			log.Printf("[WARN] Cognito User Pool %s is not found", userPoolId)
+		}
+		d.SetId(userPoolId)
+		return nil, err1
+	}
+
+	attributeMap := make(map[string]struct{}, len(resp1.UserPool.SchemaAttributes))
+	for _, sa := range resp1.UserPool.SchemaAttributes {
+		attributeMap[*sa.Name] = struct{}{}
+	}
+
+	return attributeMap, nil
 }
