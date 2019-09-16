@@ -106,26 +106,6 @@ func resourceAwsCognitoUserPoolSchemaCustomAttributeAdd(d *schema.ResourceData, 
 	log.Printf("[DEBUG] Adding attributes.")
 
 	userPoolId := d.Get("user_pool_id").(string)
-
-	params1 := &cognitoidentityprovider.DescribeUserPoolInput{
-		UserPoolId: aws.String(userPoolId),
-	}
-
-	resp1, err1 := conn.DescribeUserPool(params1)
-	if err1 != nil {
-		if awsErr, ok := err1.(awserr.Error); ok && awsErr.Code() == "ResourceNotFoundException" {
-			log.Printf("[WARN] Cognito User Pool %s is not found", userPoolId)
-			d.SetId(userPoolId)
-			return nil
-		}
-		return err1
-	}
-
-	attributeMap := make(map[string]struct{}, len(resp1.UserPool.SchemaAttributes))
-	for _, sa := range resp1.UserPool.SchemaAttributes {
-		attributeMap[*sa.Name] = struct{}{}
-	}
-
 	params := &cognitoidentityprovider.AddCustomAttributesInput{
 		UserPoolId: aws.String(userPoolId),
 	}
@@ -135,31 +115,23 @@ func resourceAwsCognitoUserPoolSchemaCustomAttributeAdd(d *schema.ResourceData, 
 		params.CustomAttributes = expandCognitoUserPoolSchema(configs)
 	}
 
-	// if attribute already exist in user pool remove it from the request attributes.
-	i := 0
-	for _, p := range params.CustomAttributes {
-		_, s := attributeMap[*p.Name]
-		if !s {
-			_, c := attributeMap["custom:"+*p.Name]
-			if !c {
-				params.CustomAttributes[i] = p
-				i++
-			}
-		}
-	}
-
-	params.CustomAttributes = params.CustomAttributes[:i]
-
-	log.Printf("[DEBUG] Attributes to add: %s", params)
-	if len(params.CustomAttributes) == 0 {
-		d.SetId(*resp1.UserPool.Id)
+	attributeMap, err := _getCurrentAttributeMapFromUserPool(d, meta)
+	if err != nil {
 		return nil
 	}
 
-	_, err := conn.AddCustomAttributes(params)
+	params.CustomAttributes = _filterCustomAttributes(params.CustomAttributes, attributeMap)
 
-	if err != nil {
-		return errwrap.Wrapf("Error creating Cognito User Pool Custom Attribute: {{err}}", err)
+	log.Printf("[DEBUG] Attributes to add: %s", params)
+	if len(params.CustomAttributes) == 0 {
+		d.SetId(userPoolId)
+		return nil
+	}
+
+	_, er := conn.AddCustomAttributes(params)
+
+	if er != nil {
+		return errwrap.Wrapf("Error creating Cognito User Pool Custom Attribute: {{err}}", er)
 	}
 
 	log.Printf("[DEBUG] Attributes Added Successfully...")
@@ -220,4 +192,22 @@ func _getCurrentAttributeMapFromUserPool(d *schema.ResourceData, meta interface{
 	}
 
 	return attributeMap, nil
+}
+
+// if attribute already exist in user pool remove it from the request attributes.
+func _filterCustomAttributes(attr []*cognitoidentityprovider.SchemaAttributeType, attributeMap map[string]struct{}) []*cognitoidentityprovider.SchemaAttributeType {
+	i := 0
+	for _, p := range attr {
+		_, s := attributeMap[*p.Name]
+		if !s {
+			_, c := attributeMap["custom:"+*p.Name]
+			if !c {
+				attr[i] = p
+				i++
+			}
+		}
+	}
+
+	attr = attr[:i]
+	return attr
 }
