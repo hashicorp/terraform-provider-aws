@@ -6,6 +6,7 @@ ENHANCEMENTS:
 
 BUG FIXES: 
 * resource/aws_acm_certificate: Final retries after timeouts reading and deleting certificates [GH-9863]
+* ecs_task_definition_equivalency: Fix a crash if environment name is missing [GH-10074]
 
 ## 2.28.1 (September 12, 2019)
 
