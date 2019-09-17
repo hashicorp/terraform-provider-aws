@@ -298,80 +298,6 @@ func resourceAwsCognitoUserPool() *schema.Resource {
 				},
 			},
 
-			//"schema": {
-			//	Type:     schema.TypeSet,
-			//	Optional: true,
-			//	MinItems: 1,
-			//	MaxItems: 50,
-			//	Elem: &schema.Resource{
-			//		Schema: map[string]*schema.Schema{
-			//			"attribute_data_type": {
-			//				Type:     schema.TypeString,
-			//				Required: true,
-			//				ValidateFunc: validation.StringInSlice([]string{
-			//					cognitoidentityprovider.AttributeDataTypeString,
-			//					cognitoidentityprovider.AttributeDataTypeNumber,
-			//					cognitoidentityprovider.AttributeDataTypeDateTime,
-			//					cognitoidentityprovider.AttributeDataTypeBoolean,
-			//				}, false),
-			//			},
-			//			"developer_only_attribute": {
-			//				Type:     schema.TypeBool,
-			//				Optional: true,
-			//			},
-			//			"mutable": {
-			//				Type:     schema.TypeBool,
-			//				Optional: true,
-			//			},
-			//			"name": {
-			//				Type:         schema.TypeString,
-			//				Required:     true,
-			//				ValidateFunc: validateCognitoUserPoolSchemaName,
-			//			},
-			//			"number_attribute_constraints": {
-			//				Type:     schema.TypeList,
-			//				Optional: true,
-			//				MaxItems: 1,
-			//				Elem: &schema.Resource{
-			//					Schema: map[string]*schema.Schema{
-			//						"min_value": {
-			//							Type:     schema.TypeString,
-			//							Optional: true,
-			//							ForceNew: true,
-			//						},
-			//						"max_value": {
-			//							Type:     schema.TypeString,
-			//							Optional: true,
-			//							ForceNew: true,
-			//						},
-			//					},
-			//				},
-			//			},
-			//			"required": {
-			//				Type:     schema.TypeBool,
-			//				Optional: true,
-			//			},
-			//			"string_attribute_constraints": {
-			//				Type:     schema.TypeList,
-			//				Optional: true,
-			//				MaxItems: 1,
-			//				Elem: &schema.Resource{
-			//					Schema: map[string]*schema.Schema{
-			//						"min_length": {
-			//							Type:     schema.TypeString,
-			//							Optional: true,
-			//						},
-			//						"max_length": {
-			//							Type:     schema.TypeString,
-			//							Optional: true,
-			//						},
-			//					},
-			//				},
-			//			},
-			//		},
-			//	},
-			//},
-
 			"sms_authentication_message": {
 				Type:         schema.TypeString,
 				Optional:     true,
@@ -593,11 +519,6 @@ func resourceAwsCognitoUserPoolCreate(d *schema.ResourceData, meta interface{}) 
 		}
 	}
 
-	//if v, ok := d.GetOk("schema"); ok {
-	//	configs := v.(*schema.Set).List()
-	//	params.Schema = expandCognitoUserPoolSchema(configs)
-	//}
-
 	if v, ok := d.GetOk("sms_authentication_message"); ok {
 		params.SmsAuthenticationMessage = aws.String(v.(string))
 	}
@@ -747,14 +668,6 @@ func resourceAwsCognitoUserPoolRead(d *schema.ResourceData, meta interface{}) er
 			return fmt.Errorf("Failed setting password_policy: %s", err)
 		}
 	}
-
-	//var configuredSchema []interface{}
-	//if v, ok := d.GetOk("schema"); ok {
-	//	configuredSchema = v.(*schema.Set).List()
-	//}
-	//if err := d.Set("schema", flattenCognitoUserPoolSchema(expandCognitoUserPoolSchema(configuredSchema), resp.UserPool.SchemaAttributes)); err != nil {
-	//	return fmt.Errorf("Failed setting schema: %s", err)
-	//}
 
 	if err := d.Set("sms_configuration", flattenCognitoUserPoolSmsConfiguration(resp.UserPool.SmsConfiguration)); err != nil {
 		return fmt.Errorf("Failed setting sms_configuration: %s", err)
