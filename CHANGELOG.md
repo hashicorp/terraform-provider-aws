@@ -2,6 +2,7 @@
 
 ENHANCEMENTS:
 * data-source/aws_s3_bucket_object: Add `object_lock_legal_hold_status`, `object_lock_mode` and `object_lock_retain_until_date` attributes [GH-9942]
+* resource/aws_glue_job: Add ability to specify python version for pythonshell in glue jobs [GH-9409]
 * resource/aws_s3_bucket_object: Add `force_destroy`, `object_lock_legal_hold_status`, `object_lock_mode` and `object_lock_retain_until_date` attributes [GH-9942]
 * resource/aws_ssm_association: Add import support [GH-10055]
 * resource/aws_waf_rate_based_rule: Update rate based rule limit for WAF ([#9946](https://github.com/terraform-providers/terraform-provider-aws/pull/9946))
