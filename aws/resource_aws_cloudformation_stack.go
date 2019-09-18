@@ -110,6 +110,11 @@ func resourceAwsCloudFormationStack() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
+			"termination_protection": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				Default:  false,
+			},
 		},
 	}
 }
@@ -164,6 +169,9 @@ func resourceAwsCloudFormationStackCreate(d *schema.ResourceData, meta interface
 	}
 	if v, ok := d.GetOk("iam_role_arn"); ok {
 		input.RoleARN = aws.String(v.(string))
+	}
+	if v, ok := d.GetOk("termination_protection"); ok {
+		input.EnableTerminationProtection = aws.Bool(v.(bool))
 	}
 
 	log.Printf("[DEBUG] Creating CloudFormation Stack: %s", input)
@@ -402,6 +410,18 @@ func resourceAwsCloudFormationStackUpdate(d *schema.ResourceData, meta interface
 
 	if d.HasChange("iam_role_arn") {
 		input.RoleARN = aws.String(d.Get("iam_role_arn").(string))
+	}
+
+	if d.HasChange("termination_protection") {
+		terminationInput := &cloudformation.UpdateTerminationProtectionInput{
+			StackName:                   aws.String(d.Id()),
+			EnableTerminationProtection: aws.Bool(v.(bool)),
+		}
+		_, err := conn.UpdateTerminationProtection(terminationInput)
+		if err != nil {
+			return err
+		}
+		log.Printf("[DEBUG] Updating CloudFormation stack termination protection: %s", input)
 	}
 
 	log.Printf("[DEBUG] Updating CloudFormation stack: %s", input)
