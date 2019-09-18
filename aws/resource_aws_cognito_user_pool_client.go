@@ -264,7 +264,7 @@ func resourceAwsCognitoUserPoolClientCreate(d *schema.ResourceData, meta interfa
 	d.SetId(aws.StringValue(resp.UserPoolClient.ClientId))
 
 	if err = cognitoUserPoolUICustomizationSet(d, conn); err != nil {
-		return fmt.Errorf("Error setting User Pool Client UI Customization: %s", err)
+		return fmt.Errorf("Error setting Cognito User Pool Client UI Customization: %s", err)
 	}
 
 	return resourceAwsCognitoUserPoolClientRead(d, meta)
