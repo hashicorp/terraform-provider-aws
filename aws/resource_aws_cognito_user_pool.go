@@ -1211,7 +1211,7 @@ func resourceAwsCognitoUserPoolUpdate(d *schema.ResourceData, meta interface{}) 
 	}
 
 	if err := cognitoUserPoolUICustomizationSet(d, conn); err != nil {
-		return fmt.Errorf("Error updating User Pool UI Customization: %s", err)
+		return fmt.Errorf("Error updating Cognito User Pool UI Customization: %s", err)
 	}
 
 	return resourceAwsCognitoUserPoolRead(d, meta)
