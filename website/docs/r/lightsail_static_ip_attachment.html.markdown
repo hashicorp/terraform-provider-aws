@@ -45,5 +45,3 @@ The following arguments are supported:
 The following attributes are exported in addition to the arguments listed above:
 
 * `id` - The ID of the Static IP attachment.
-* `static_ip_name` - The name of the allocated static IP.
-* `instance_name` - The name of the Lightsail instance to attach the IP to.
