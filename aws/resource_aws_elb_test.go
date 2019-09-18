@@ -1007,7 +1007,8 @@ func TestResourceAWSELB_validateHealthCheckTarget(t *testing.T) {
 			ErrCount: 1,
 		},
 		{
-			Value:    fmt.Sprintf("HTTP:8080/%s%s", randomString(512), randomRunes(512)),
+			Value: fmt.Sprintf("HTTP:8080/%s%s",
+				acctest.RandStringFromCharSet(512, acctest.CharSetAlpha), randomRunes(512)),
 			ErrCount: 1,
 		},
 	}
