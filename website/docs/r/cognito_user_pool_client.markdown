@@ -166,8 +166,8 @@ Either `application_arn` or `application_id` is required.
 
 #### UI Customization
 
-  * `css` (Optional) - The customized CSS.
-  * `image_file` (Optional) - Le local image file path.
+* `css` (Optional) - The customized CSS.
+* `image_file` (Optional) - The local image file path.
   
 ## Attributes Reference
 
