@@ -217,7 +217,7 @@ The following arguments are required in the `software_token_mfa_configuration` c
 #### UI Customization
 
   * `css` (Optional) - The customized CSS.
-  * `image_file` (Optional) - Le local image file path.
+  * `image_file` (Optional) - The local image file path.
 
 ## Attributes Reference
 
