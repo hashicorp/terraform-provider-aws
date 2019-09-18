@@ -415,7 +415,7 @@ func resourceAwsCloudFormationStackUpdate(d *schema.ResourceData, meta interface
 	if d.HasChange("termination_protection") {
 		terminationInput := &cloudformation.UpdateTerminationProtectionInput{
 			StackName:                   aws.String(d.Id()),
-			EnableTerminationProtection: aws.Bool(v.(bool)),
+			EnableTerminationProtection: aws.Bool(d.Get("termination_protection").(bool)),
 		}
 		_, err := conn.UpdateTerminationProtection(terminationInput)
 		if err != nil {
