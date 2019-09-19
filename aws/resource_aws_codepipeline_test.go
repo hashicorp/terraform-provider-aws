@@ -997,7 +997,7 @@ resource "aws_codepipeline" "bar" {
 
   stage {
     name = "Approval"
-		enable = false
+    enable = false
 
     action {
       name            = "Approval"
@@ -1010,7 +1010,7 @@ resource "aws_codepipeline" "bar" {
 
   stage {
     name = "Build"
-		enable = true
+    enable = true
 
     action {
       name            = "Build"
