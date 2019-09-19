@@ -51,6 +51,38 @@ func TestAccAWSFlowLog_VPCID(t *testing.T) {
 	})
 }
 
+func TestAccAWSFlowLog_LogFormat(t *testing.T) {
+	var flowLog ec2.FlowLog
+	resourceName := "aws_flow_log.test"
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	logFormat := "${version} ${vpc-id} ${subnet-id}"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckFlowLogDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccFlowLogConfig_LogFormat(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckFlowLogExists(resourceName, &flowLog),
+					testAccCheckAWSFlowLogAttributes(&flowLog),
+					resource.TestCheckResourceAttr(resourceName, "log_format", logFormat),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config:             testAccFlowLogConfig_LogDestinationType_CloudWatchLogs(rName),
+				ExpectNonEmptyPlan: false,
+			},
+		},
+	})
+}
+
 func TestAccAWSFlowLog_SubnetID(t *testing.T) {
 	var flowLog ec2.FlowLog
 	cloudwatchLogGroupResourceName := "aws_cloudwatch_log_group.test"
@@ -403,6 +435,52 @@ resource "aws_flow_log" "test" {
   log_group_name = "${aws_cloudwatch_log_group.test.name}"
   traffic_type   = "ALL"
   vpc_id         = "${aws_vpc.test.id}"
+}
+`, rName, rName, rName)
+}
+func testAccFlowLogConfig_LogFormat(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_vpc" "test" {
+  cidr_block = "10.0.0.0/16"
+
+  tags = {
+    Name = %q
+  }
+}
+
+resource "aws_iam_role" "test" {
+  name = %q
+
+  assume_role_policy = <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Principal": {
+        "Service": [
+          "ec2.amazonaws.com"
+        ]
+      },
+      "Action": [
+        "sts:AssumeRole"
+      ]
+    }
+  ]
+}
+EOF
+}
+
+resource "aws_cloudwatch_log_group" "test" {
+  name = %q
+}
+
+resource "aws_flow_log" "test" {
+  iam_role_arn   = "${aws_iam_role.test.arn}"
+  log_group_name = "${aws_cloudwatch_log_group.test.name}"
+  traffic_type   = "ALL"
+  vpc_id         = "${aws_vpc.test.id}"
+  log_format     = "${version} ${vpc-id} ${subnet-id}"
 }
 `, rName, rName, rName)
 }

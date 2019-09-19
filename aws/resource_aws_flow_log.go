@@ -86,6 +86,12 @@ func resourceAwsFlowLog() *schema.Resource {
 				Required: true,
 				ForceNew: true,
 			},
+
+			"log_format": {
+				Type:     schema.TypeString,
+				Optional: true,
+				ForceNew: true,
+			},
 		},
 	}
 }
@@ -133,6 +139,9 @@ func resourceAwsLogFlowCreate(d *schema.ResourceData, meta interface{}) error {
 
 	if v, ok := d.GetOk("log_group_name"); ok && v != "" {
 		opts.LogGroupName = aws.String(v.(string))
+	}
+	if v, ok := d.GetOk("log_format"); ok && v != "" {
+		opts.LogFormat = aws.String(v.(string))
 	}
 
 	log.Printf(
