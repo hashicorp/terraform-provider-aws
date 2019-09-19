@@ -270,6 +270,35 @@ func resourceAwsDbParameterGroupUpdate(d *schema.ResourceData, meta interface{})
 			return err
 		}
 
+		// Any parameters in os are being removed and should be reset to default values
+		resetParameters, err := expandParameters(os.Difference(ns).List())
+		if err != nil {
+			return err
+		}
+
+		if len(resetParameters) > 0 {
+			maxParams := 20
+			for resetParameters != nil {
+				var paramsToReset []*rds.Parameter
+				if len(resetParameters) <= maxParams {
+					paramsToReset, resetParameters = resetParameters[:], nil
+				} else {
+					paramsToReset, resetParameters = resetParameters[:maxParams], resetParameters[maxParams:]
+				}
+				resetOpts := rds.ResetDBParameterGroupInput{
+					DBParameterGroupName: aws.String(d.Get("name").(string)),
+					ResetAllParameters:   aws.Bool(false),
+					Parameters:           paramsToReset,
+				}
+
+				_, err = rdsconn.ResetDBParameterGroup(&resetOpts)
+				if err != nil {
+					return fmt.Errorf("Error reseting DB Parameter Group: %s", err)
+				}
+			}
+			d.SetPartial("parameter")
+		}
+
 		if len(parameters) > 0 {
 			// We can only modify 20 parameters at a time, so walk them until
 			// we've got them all.

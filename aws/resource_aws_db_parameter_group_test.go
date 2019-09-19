@@ -377,6 +377,64 @@ func TestAccAWSDBParameterGroup_basic(t *testing.T) {
 	})
 }
 
+func TestAccAWSDBParameterGroup_resetParameters(t *testing.T) {
+	var v rds.DBParameterGroup
+
+	groupName := fmt.Sprintf("parameter-group-test-terraform-%d", acctest.RandInt())
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSDBParameterGroupDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSDBParameterGroupConfig(groupName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSDBParameterGroupExists("aws_db_parameter_group.bar", &v),
+					testAccCheckAWSDBParameterGroupAttributes(&v, groupName),
+					resource.TestCheckResourceAttr(
+						"aws_db_parameter_group.bar", "name", groupName),
+					resource.TestCheckResourceAttr(
+						"aws_db_parameter_group.bar", "family", "mysql5.6"),
+					resource.TestCheckResourceAttr(
+						"aws_db_parameter_group.bar", "description", "Managed by Terraform"),
+					resource.TestCheckResourceAttr(
+						"aws_db_parameter_group.bar", "parameter.1708034931.name", "character_set_results"),
+					resource.TestCheckResourceAttr(
+						"aws_db_parameter_group.bar", "parameter.1708034931.value", "utf8"),
+					resource.TestCheckResourceAttr(
+						"aws_db_parameter_group.bar", "parameter.2421266705.name", "character_set_server"),
+					resource.TestCheckResourceAttr(
+						"aws_db_parameter_group.bar", "parameter.2421266705.value", "utf8"),
+					resource.TestCheckResourceAttr(
+						"aws_db_parameter_group.bar", "parameter.2478663599.name", "character_set_client"),
+					resource.TestCheckResourceAttr(
+						"aws_db_parameter_group.bar", "parameter.2478663599.value", "utf8"),
+					resource.TestCheckResourceAttr(
+						"aws_db_parameter_group.bar", "tags.%", "1"),
+					resource.TestMatchResourceAttr(
+						"aws_db_parameter_group.bar", "arn", regexp.MustCompile(fmt.Sprintf("^arn:[^:]+:rds:[^:]+:\\d{12}:pg:%s", groupName))),
+				),
+			},
+			{
+				Config: testAccAWSDBParameterGroupRemoveParametersConfig(groupName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSDBParameterGroupExists("aws_db_parameter_group.bar", &v),
+					testAccCheckAWSDBParameterGroupAttributes(&v, groupName),
+					resource.TestCheckNoResourceAttr(
+						"aws_db_parameter_group.bar", "parameter.2478663599.value"),
+					resource.TestCheckNoResourceAttr(
+						"aws_db_parameter_group.bar", "parameter.1708034931.value"),
+					resource.TestCheckResourceAttr(
+						"aws_db_parameter_group.bar", "parameter.2421266705.name", "character_set_server"),
+					resource.TestCheckResourceAttr(
+						"aws_db_parameter_group.bar", "parameter.2421266705.value", "utf8"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccAWSDBParameterGroup_Disappears(t *testing.T) {
 	var v rds.DBParameterGroup
 	groupName := fmt.Sprintf("parameter-group-test-terraform-%d", acctest.RandInt())
@@ -719,6 +777,20 @@ resource "aws_db_parameter_group" "bar" {
     foo = "bar"
     baz = "foo"
   }
+}
+`, n)
+}
+
+func testAccAWSDBParameterGroupRemoveParametersConfig(n string) string {
+	return fmt.Sprintf(`
+resource "aws_db_parameter_group" "bar" {
+	name   = "%s"
+	family = "mysql5.6"
+
+	parameter {
+	name  = "character_set_server"
+	value = "utf8"
+	}
 }
 `, n)
 }
