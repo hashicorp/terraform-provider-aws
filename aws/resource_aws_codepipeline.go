@@ -94,6 +94,11 @@ func resourceAwsCodePipeline() *schema.Resource {
 							Type:     schema.TypeString,
 							Required: true,
 						},
+						"enable": {
+							Type:     schema.TypeBool,
+							Optional: true,
+							Default:  true,
+						},
 						"action": {
 							Type:     schema.TypeList,
 							Required: true,
@@ -211,6 +216,7 @@ func expandAwsCodePipeline(d *schema.ResourceData) *codepipeline.PipelineDeclara
 	}
 	return &pipeline
 }
+
 func expandAwsCodePipelineArtifactStore(d *schema.ResourceData) *codepipeline.ArtifactStore {
 	configs := d.Get("artifact_store").([]interface{})
 	data := configs[0].(map[string]interface{})
@@ -263,13 +269,14 @@ func expandAwsCodePipelineStages(d *schema.ResourceData) []*codepipeline.StageDe
 func flattenAwsCodePipelineStages(stages []*codepipeline.StageDeclaration) []interface{} {
 	stagesList := []interface{}{}
 	for _, stage := range stages {
-		values := map[string]interface{}{}
-		values["name"] = *stage.Name
-		values["action"] = flattenAwsCodePipelineStageActions(stage.Actions)
-		stagesList = append(stagesList, values)
+		if *stage.Enable == true {
+			values := map[string]interface{}{}
+			values["name"] = *stage.Name
+			values["action"] = flattenAwsCodePipelineStageActions(stage.Actions)
+			stagesList = append(stagesList, values)
+		}
 	}
 	return stagesList
-
 }
 
 func expandAwsCodePipelineActions(s []interface{}) []*codepipeline.ActionDeclaration {
@@ -283,7 +290,6 @@ func expandAwsCodePipelineActions(s []interface{}) []*codepipeline.ActionDeclara
 			if githubToken != "" {
 				conf["OAuthToken"] = aws.String(githubToken)
 			}
-
 		}
 
 		action := codepipeline.ActionDeclaration{

@@ -176,6 +176,7 @@ An `encryption_key` block supports the following arguments:
 A `stage` block supports the following arguments:
 
 * `name` - (Required) The name of the stage.
+* `enable` - (Optional) Whether this stage is enabled or not. Defaults to `true`.
 * `action` - (Required) The action(s) to include in the stage. Defined as an `action` block below
 
 A `action` block supports the following arguments:
