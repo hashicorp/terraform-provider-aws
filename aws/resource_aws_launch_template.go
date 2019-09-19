@@ -1277,7 +1277,12 @@ func readNetworkInterfacesFromConfig(ni map[string]interface{}) *ec2.LaunchTempl
 	if v, ok := ni["network_interface_id"].(string); ok && v != "" {
 		networkInterface.NetworkInterfaceId = aws.String(v)
 	} else if v, ok := ni["associate_public_ip_address"]; ok {
-		networkInterface.AssociatePublicIpAddress = aws.Bool(v.(bool))
+		if ni["associate_public_ip_address"] == true {
+			// If there are multiple network interfaces, having this be explicitly set, even to false, will cause problems
+			// so don't set it unless we actually need to
+			networkInterface.AssociatePublicIpAddress = aws.Bool(v.(bool))
+		}
+
 	}
 
 	if v, ok := ni["private_ip_address"].(string); ok && v != "" {
