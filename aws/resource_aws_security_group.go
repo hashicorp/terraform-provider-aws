@@ -1435,11 +1435,13 @@ func deleteLingeringLambdaENIs(conn *ec2.EC2, filterName, resourceId string, tim
 				ContinuousTargetOccurence: 10,
 			}
 
-			_, err = stateConf.WaitForState()
+			eniRaw, err := stateConf.WaitForState()
 
 			if err != nil {
 				return fmt.Errorf("error waiting for ENI (%s) to become available: %s", eniId, err)
 			}
+
+			eni = eniRaw.(*ec2.NetworkInterface)
 		}
 
 		err = detachNetworkInterface(conn, eni, timeout)
