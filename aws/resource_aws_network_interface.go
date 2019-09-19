@@ -529,11 +529,11 @@ func networkInterfaceAttachmentStateRefresh(conn *ec2.EC2, eniId string) resourc
 			return "", ec2.AttachmentStatusDetached, nil
 
 		case 1:
-			eni := resp.NetworkInterfaces[0]
-			if eni.Attachment == nil {
-				return eni, ec2.AttachmentStatusDetached, nil
+			attachment := resp.NetworkInterfaces[0].Attachment
+			if attachment == nil {
+				return "", ec2.AttachmentStatusDetached, nil
 			}
-			return eni, aws.StringValue(eni.Attachment.Status), nil
+			return attachment, aws.StringValue(attachment.Status), nil
 
 		default:
 			return nil, "", fmt.Errorf("found %d ENIs for %s, expected 1", n, eniId)
