@@ -903,7 +903,7 @@ resource "aws_codepipeline" "bar" {
 `, rName, tag1, tag2)
 }
 
-func testAccAWSCodePipelineConfig_disabledStage(rName, tag1, tag2 string) string {
+func testAccAWSCodePipelineConfig_disabledStage(rName) string {
 	return fmt.Sprintf(`
 resource "aws_s3_bucket" "foo" {
   bucket = "tf-test-pipeline-%[1]s"
