@@ -269,8 +269,8 @@ func expandAwsCodePipelineStages(d *schema.ResourceData) []*codepipeline.StageDe
 func flattenAwsCodePipelineStages(stages []*codepipeline.StageDeclaration) []interface{} {
 	stagesList := []interface{}{}
 	for _, stage := range stages {
-		if *stage.Enable == true {
-			values := map[string]interface{}{}
+		values := map[string]interface{}{}
+		if values["enable"] == true {
 			values["name"] = *stage.Name
 			values["action"] = flattenAwsCodePipelineStageActions(stage.Actions)
 			stagesList = append(stagesList, values)
