@@ -2,8 +2,12 @@ package aws
 
 import (
 	"fmt"
+	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/awserr"
+	"github.com/aws/aws-sdk-go/service/cognitoidentityprovider"
 	"github.com/hashicorp/terraform/helper/acctest"
 	"github.com/hashicorp/terraform/helper/resource"
+	"github.com/hashicorp/terraform/terraform"
 	"testing"
 )
 
@@ -12,8 +16,9 @@ func TestAccAWSCognitoUserPoolAddCustomAttribute_basic(t *testing.T) {
 	attributeName := "test_attribute"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:  func() { testAccPreCheck(t); testAccPreCheckAWSCognitoIdentityProvider(t) },
-		Providers: testAccProviders,
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSCognitoIdentityProvider(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSCognitoUserPoolAttributeDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSCognitoUserPoolAddCustomAttributeConfig_basic(userPoolName, attributeName),
@@ -47,4 +52,30 @@ func testAccAWSCognitoUserPoolAddCustomAttributeConfig_basic(userPoolName, attri
 		  }
 	}
 	`, userPoolName, attributeName)
+}
+
+// If user pool is destroyed the custom attributes will also get automatically destroyed
+func testAccCheckAWSCognitoUserPoolAttributeDestroy(s *terraform.State) error {
+	conn := testAccProvider.Meta().(*AWSClient).cognitoidpconn
+
+	for _, rs := range s.RootModule().Resources {
+		if rs.Type != "aws_cognito_user_pool" {
+			continue
+		}
+
+		params := &cognitoidentityprovider.DescribeUserPoolInput{
+			UserPoolId: aws.String(rs.Primary.ID),
+		}
+
+		_, err := conn.DescribeUserPool(params)
+
+		if err != nil {
+			if awsErr, ok := err.(awserr.Error); ok && awsErr.Code() == "ResourceNotFoundException" {
+				return nil
+			}
+			return err
+		}
+	}
+
+	return nil
 }
