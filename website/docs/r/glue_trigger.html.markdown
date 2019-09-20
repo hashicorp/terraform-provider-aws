@@ -59,6 +59,50 @@ resource "aws_glue_trigger" "example" {
 }
 ```
 
+### Conditional Trigger with Crawler Action
+
+**Note:** Triggers can have both a crawler action and a crawler condition, just no example provided.
+
+```hcl
+resource "aws_glue_trigger" "example" {
+  name = "example"
+  type = "CONDITIONAL"
+
+  actions {
+    crawler_name = "${aws_glue_crawler.example1.name}"
+  }
+
+  predicate {
+    conditions {
+      job_name = "${aws_glue_job.example2.name}"
+      state    = "SUCCEEDED"
+    }
+  }
+}
+```
+
+### Conditional Trigger with Crawler Condition 
+
+**Note:** Triggers can have both a crawler action and a crawler condition, just no example provided.
+
+```hcl
+resource "aws_glue_trigger" "example" {
+  name = "example"
+  type = "CONDITIONAL"
+
+  actions {
+    job_name = "${aws_glue_job.example1.name}"
+  }
+
+  predicate {
+    conditions {
+      crawler_name = "${aws_glue_crawler.example2.name}"
+      crawl_state    = "SUCCEEDED"
+    }
+  }
+}
+```
+
 ## Argument Reference
 
 The following arguments are supported:
@@ -74,7 +118,8 @@ The following arguments are supported:
 ### actions Argument Reference
 
 * `arguments` - (Optional) Arguments to be passed to the job. You can specify arguments here that your own job-execution script consumes, as well as arguments that AWS Glue itself consumes.
-* `job_name` - (Required) The name of a job to be executed.
+* `job_name` - (Optional) The name of a job to be executed. Either this one or `crawler_name` must be specified.
+* `crawler_name` - (Optional) The name of a crawler to be executed. Either this one or `job_name` must be specified.
 * `timeout` - (Optional) The job run timeout in minutes. It overrides the timeout value of the job.
 
 ### predicate Argument Reference
@@ -84,9 +129,11 @@ The following arguments are supported:
 
 #### conditions Argument Reference
 
-* `job_name` - (Required) The name of the job to watch.
+* `job_name` - (Optional) The name of the job to watch. If this is specified, `state` must also be specified. Conflicts with `crawler_name`.
+* `state` - (Optional) The condition job state. Currently, the values supported are `SUCCEEDED`, `STOPPED`, `TIMEOUT` and `FAILED`. If this is specified, `job_name` must also be specified. Conflicts with `crawler_state`.
+* `crawler_name` - (Optional) The name of the crawler to watch. If this is specified, `crawl_state` must also be specified. Conflicts with `job_name`.
+* `crawl_state` - (Optional) The condition crawl state. Currently, the values supported are `RUNNING`, `SUCCEEDED`, `CANCELLED`, and `FAILED`. If this is specified, `crawler_name` must also be specified. Conflicts with `state`.
 * `logical_operator` - (Optional) A logical operator. Defaults to `EQUALS`.
-* `state` - (Required) The condition state. Currently, the values supported are `SUCCEEDED`, `STOPPED`, `TIMEOUT` and `FAILED`.
 
 ## Attributes Reference
 
