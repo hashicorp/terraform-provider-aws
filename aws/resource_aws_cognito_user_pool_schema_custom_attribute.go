@@ -1,7 +1,6 @@
 package aws
 
 import (
-	"fmt"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/cognitoidentityprovider"
@@ -164,7 +163,7 @@ func resourceAwsCognitoUserPoolSchemaAttributRead(d *schema.ResourceData, meta i
 }
 
 func resourceAwsCognitoUserPoolSchemaCustomAttributDelete(d *schema.ResourceData, meta interface{}) error {
-	fmt.Errorf("update custom attribute operation is not supported")
+	log.Printf("delete custom attribute operation is not supported")
 	return nil
 }
 
