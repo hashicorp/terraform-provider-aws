@@ -1026,5 +1026,5 @@ resource "aws_codepipeline" "bar" {
     }
   }
 }
-`, rName, tag1, tag2)
+`, rName)
 }
