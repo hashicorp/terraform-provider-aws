@@ -43,7 +43,7 @@ resource "aws_route_table_association" "a" {
 
 resource "aws_autoscaling_group" "app" {
   name                 = "tf-test-asg"
-  vpc_zone_identifier  = ["${aws_subnet.main.*.id}"]
+  vpc_zone_identifier  = "${aws_subnet.main.*.id}"
   min_size             = "${var.asg_min}"
   max_size             = "${var.asg_max}"
   desired_capacity     = "${var.asg_desired}"
@@ -53,7 +53,7 @@ resource "aws_autoscaling_group" "app" {
 data "template_file" "cloud_config" {
   template = "${file("${path.module}/cloud-config.yml")}"
 
-  vars {
+  vars = {
     aws_region         = "${var.aws_region}"
     ecs_cluster_name   = "${aws_ecs_cluster.main.name}"
     ecs_log_level      = "info"
@@ -168,7 +168,7 @@ resource "aws_ecs_cluster" "main" {
 data "template_file" "task_definition" {
   template = "${file("${path.module}/task-definition.json")}"
 
-  vars {
+  vars = {
     image_url        = "ghost:latest"
     container_name   = "ghost"
     log_group_region = "${var.aws_region}"
@@ -275,7 +275,7 @@ EOF
 data "template_file" "instance_profile" {
   template = "${file("${path.module}/instance-profile-policy.json")}"
 
-  vars {
+  vars = {
     app_log_group_arn = "${aws_cloudwatch_log_group.app.arn}"
     ecs_log_group_arn = "${aws_cloudwatch_log_group.ecs.arn}"
   }
@@ -298,7 +298,7 @@ resource "aws_alb_target_group" "test" {
 
 resource "aws_alb" "main" {
   name            = "tf-example-alb-ecs"
-  subnets         = ["${aws_subnet.main.*.id}"]
+  subnets         = "${aws_subnet.main.*.id}"
   security_groups = ["${aws_security_group.lb_sg.id}"]
 }
 
