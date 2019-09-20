@@ -18,10 +18,10 @@ func resourceAwsElasticacheReplicationGroup() *schema.Resource {
 	resourceSchema := resourceAwsElastiCacheCommonSchema()
 
 	resourceSchema["replication_group_id"] = &schema.Schema{
-		Type:         schema.TypeString,
-		Required:     true,
-		ForceNew:     true,
-		ValidateFunc: validateAwsElastiCacheReplicationGroupId,
+		Type:     schema.TypeString,
+		Required: true,
+		ForceNew: true,
+		// ValidateFunc: validateAwsElastiCacheReplicationGroupId,
 		StateFunc: func(val interface{}) string {
 			return strings.ToLower(val.(string))
 		},
