@@ -2,6 +2,7 @@ package aws
 
 import (
 	"log"
+	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/iotevents"
@@ -377,7 +378,7 @@ func parseAction(rawAction map[string]interface{}) *iotevents.ActionData {
 		rawSetTimer := v.List()[0].(map[string]interface{})
 		action.SetTimer = &iotevents.SetTimerAction{
 			TimerName: aws.String(rawSetTimer["name"].(string)),
-			Seconds:   aws.Int64(rawSetTimer["seconds"].(int64)),
+			Seconds:   aws.Int64(int64(rawSetTimer["seconds"].(int))),
 		}
 	}
 
@@ -577,7 +578,29 @@ func resourceAwsIotDetectorCreate(d *schema.ResourceData, meta interface{}) erro
 	}
 
 	log.Printf("[DEBUG] Creating IoT Model Detector: %s", params)
-	_, err := conn.CreateDetectorModel(params)
+
+	retrySecondsList := [6]int{1, 2, 5, 8, 10, 0}
+
+	var err error
+
+	// Primitive retry.
+	// During testing detector model, problem was detected.
+	// When we try to create detector model and role arn that
+	// will be assumed by detector during one apply we get:
+	// 'Unable to assume role, role ARN' error. However if we run apply
+	// second time(when all required resources are created) detector will be created successfully.
+	// So we suppose that problem is that AWS return response of successful role arn creation before
+	// process of creation is really ended, and then creation of detector model fails.
+	for _, sleepSeconds := range retrySecondsList {
+		err = nil
+
+		_, err = conn.CreateDetectorModel(params)
+		if err == nil {
+			break
+		}
+
+		time.Sleep(time.Duration(sleepSeconds) * time.Second)
+	}
 
 	if err != nil {
 		return err
@@ -807,7 +830,23 @@ func resourceAwsIotDetectorUpdate(d *schema.ResourceData, meta interface{}) erro
 	}
 
 	log.Printf("[DEBUG] Updating IoT Events Detector Model: %s", params)
-	_, err := conn.UpdateDetectorModel(params)
+
+	retrySecondsList := [6]int{1, 2, 5, 8, 10, 0}
+	var err error
+	// Primitive retry.
+	// Full explanation can be found in function `resourceAwsIotDetectorCreate`.
+	// We suppose that such error can appear during update also, if you update
+	// role arn.
+	for _, sleepSeconds := range retrySecondsList {
+		err = nil
+
+		_, err = conn.UpdateDetectorModel(params)
+		if err == nil {
+			break
+		}
+
+		time.Sleep(time.Duration(sleepSeconds) * time.Second)
+	}
 
 	if err != nil {
 		return err
