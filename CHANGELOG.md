@@ -10,7 +10,8 @@ ENHANCEMENTS:
 * resource/aws_wafregional_rate_based_rule: Update rate based rule limit for WAF ([#9946](https://github.com/terraform-providers/terraform-provider-aws/pull/9946))
 
 BUG FIXES:
-* ecs_task_definition_equivalency: Fix a crash if environment name is missing ([#10074](https://github.com/terraform-providers/terraform-provider-aws/issues/10074))
+
+* resource/aws_ecs_task_definition: Fix a crash if `containers_definition` argument JSON defines `environment` without `name` value ([#10074](https://github.com/terraform-providers/terraform-provider-aws/issues/10074))
 
 ## 2.28.1 (September 12, 2019)
 
