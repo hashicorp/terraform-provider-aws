@@ -75,6 +75,66 @@ func TestAccAWSEc2ResourceTag_subnet(t *testing.T) {
 	})
 }
 
+func TestAccAWSEc2ResourceTag_out_of_band_delete(t *testing.T) {
+	var tag ec2.TagDescription
+
+	testCheck := func(*terraform.State) error {
+		key := aws.StringValue(tag.Key)
+		if key != "Name" {
+			return fmt.Errorf("Expected Key to be 'Name'; got '%s'", key)
+		}
+
+		value := aws.StringValue(tag.Value)
+		if value != "Hello World" {
+			return fmt.Errorf("Expected Value to be 'Hello World'; got '%s'", value)
+		}
+
+		return nil
+	}
+
+	resource.ParallelTest(t, resource.TestCase{
+		Providers: testAccProviders,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccEc2ResourceTagConfig,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckEc2ResourceTagExists(
+						"aws_ec2_tag.test", &tag),
+					testCheck,
+				),
+			},
+			{
+				PreConfig: deleteTag(t, &tag), // Simulate out of band delete
+				Config:    testAccEc2ResourceTagConfig,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckEc2ResourceTagExists(
+						"aws_ec2_tag.test", &tag),
+					testCheck,
+				),
+			},
+		},
+	})
+}
+
+func deleteTag(t *testing.T, tag *ec2.TagDescription) func() {
+	return func() {
+		conn := testAccProvider.Meta().(*AWSClient).ec2conn
+		_, err := conn.DeleteTags(&ec2.DeleteTagsInput{
+			Resources: []*string{tag.ResourceId},
+			Tags: []*ec2.Tag{
+				{
+					Key:   tag.Key,
+					Value: tag.Value,
+				},
+			},
+		})
+
+		if err != nil {
+			t.Errorf("Failed to delete the tag: %v", tag)
+		}
+	}
+}
+
 func testAccCheckEc2ResourceTagExists(n string, tag *ec2.TagDescription) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
@@ -127,6 +187,10 @@ resource "aws_ec2_tag" "test" {
   resource_id = "${aws_vpc.test.id}"
   key         = "Name"
   value       = "Hello World"
+
+  timeouts {
+    create = "2s"
+  }
 }
 `
 
