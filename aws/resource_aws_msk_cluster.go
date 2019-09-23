@@ -3,6 +3,8 @@ package aws
 import (
 	"fmt"
 	"log"
+	"sort"
+	"strings"
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -310,9 +312,17 @@ func resourceAwsMskClusterRead(d *schema.ResourceData, meta interface{}) error {
 
 	cluster := out.ClusterInfo
 
+	bootstrapBrokersSorted := strings.Split(*brokerOut.BootstrapBrokerString, ",")
+	sort.Strings(bootstrapBrokersSorted)
+	bootstrapBrokersSortedJoined := strings.Join(bootstrapBrokersSorted, ",")
+
+	bootstrapBrokersTlsSorted := strings.Split(*brokerOut.BootstrapBrokerStringTls, ",")
+	sort.Strings(bootstrapBrokersTlsSorted)
+	bootstrapBrokersTlsSortedJoined := strings.Join(bootstrapBrokersTlsSorted, ",")
+
 	d.Set("arn", aws.StringValue(cluster.ClusterArn))
-	d.Set("bootstrap_brokers", aws.StringValue(brokerOut.BootstrapBrokerString))
-	d.Set("bootstrap_brokers_tls", aws.StringValue(brokerOut.BootstrapBrokerStringTls))
+	d.Set("bootstrap_brokers", aws.StringValue(&bootstrapBrokersSortedJoined))
+	d.Set("bootstrap_brokers_tls", aws.StringValue(&bootstrapBrokersTlsSortedJoined))
 
 	if err := d.Set("broker_node_group_info", flattenMskBrokerNodeGroupInfo(cluster.BrokerNodeGroupInfo)); err != nil {
 		return fmt.Errorf("error setting broker_node_group_info: %s", err)
