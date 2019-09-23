@@ -729,13 +729,16 @@ func resourceAwsSpotFleetRequestCreate(d *schema.ResourceData, meta interface{})
 
 	log.Printf("[DEBUG] Requesting spot fleet with these opts: %+v", spotFleetOpts)
 
-	// Since IAM is eventually consistent, we retry creation as a newly created role may not
-	// take effect immediately, resulting in an InvalidSpotFleetRequestConfig error
 	var resp *ec2.RequestSpotFleetOutput
 	err = resource.Retry(10*time.Minute, func() *resource.RetryError {
 		resp, err = conn.RequestSpotFleet(spotFleetOpts)
 
+		if isAWSErr(err, "InvalidSpotFleetRequestConfig", "invalid.instanceType") {
+			return resource.NonRetryableError(fmt.Errorf("error: Invalid instance type in spot fleet request: %s", err))
+		}
 		if isAWSErr(err, "InvalidSpotFleetRequestConfig", "") {
+			// Since IAM is eventually consistent, we retry creation as a newly created role may not
+			// take effect immediately, resulting in an InvalidSpotFleetRequestConfig error
 			return resource.RetryableError(fmt.Errorf("Error creating Spot fleet request, retrying: %s", err))
 		}
 		if err != nil {

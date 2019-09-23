@@ -78,6 +78,23 @@ func TestAccAWSSpotFleetRequest_basic(t *testing.T) {
 	})
 }
 
+func TestAccAWSSpotFleetRequest_invalidInstanceType(t *testing.T) {
+	rName := acctest.RandString(10)
+	rInt := acctest.RandInt()
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSEc2SpotFleetRequest(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSSpotFleetRequestDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config:      testAccAWSSpotFleetRequestConfig_invalidInstanceType(rName, rInt),
+				ExpectError: regexp.MustCompile("Invalid instance type in spot fleet request"),
+			},
+		},
+	})
+}
+
 func TestAccAWSSpotFleetRequest_associatePublicIpAddress(t *testing.T) {
 	var sfr ec2.SpotFleetRequestConfig
 	rName := acctest.RandString(10)
@@ -931,6 +948,26 @@ resource "aws_spot_fleet_request" "foo" {
     wait_for_fulfillment = true
     launch_specification {
         instance_type = "m1.small"
+        ami = "ami-516b9131"
+        key_name = "${aws_key_pair.debugging.key_name}"
+    }
+    depends_on = ["aws_iam_policy_attachment.test-attach"]
+}
+`)
+}
+
+func testAccAWSSpotFleetRequestConfig_invalidInstanceType(rName string, rInt int) string {
+	return testAccAWSSpotFleetRequestConfigBase(rName, rInt) + fmt.Sprint(`
+resource "aws_spot_fleet_request" "foo" {
+    iam_fleet_role = "${aws_iam_role.test-role.arn}"
+    spot_price = "0.005"
+    target_capacity = 2
+    valid_until = "2019-11-04T20:44:20Z"
+    terminate_instances_with_expiration = true
+    instance_interruption_behaviour = "stop"
+    wait_for_fulfillment = true
+    launch_specification {
+        instance_type = "invalid.instanceType"
         ami = "ami-516b9131"
         key_name = "${aws_key_pair.debugging.key_name}"
     }
