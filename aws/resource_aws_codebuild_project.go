@@ -380,6 +380,8 @@ func resourceAwsCodeBuildProject() *schema.Resource {
 							Type:     schema.TypeString,
 							Required: true,
 							ValidateFunc: validation.StringInSlice([]string{
+								codebuild.ArtifactsTypeCodepipeline,
+								codebuild.ArtifactsTypeNoArtifacts,
 								codebuild.ArtifactsTypeS3,
 							}, false),
 						},
