@@ -1,4 +1,9 @@
 ## 2.30.0 (Unreleased)
+
+NOTES:
+
+* provider: The default development, testing, and building of the Terraform AWS Provider binary is now done with Go 1.13. This version of Go now requires macOS 10.11 El Capitan or later and FreeBSD 11.2 or later. Support for previous versions of those operating systems has been discontinued. [GH-10206]
+
 ## 2.29.0 (September 20, 2019)
 
 ENHANCEMENTS:
