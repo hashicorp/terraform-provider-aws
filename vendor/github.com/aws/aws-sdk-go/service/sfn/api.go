@@ -4768,10 +4768,10 @@ type MapIterationEventDetails struct {
 	_ struct{} `type:"structure"`
 
 	// The index of the array belonging to the Map state iteration.
-	Index *int64 `type:"integer"`
+	Index *int64 `locationName:"index" type:"integer"`
 
 	// The name of the iteration’s parent Map state.
-	Name *string `min:"1" type:"string"`
+	Name *string `locationName:"name" min:"1" type:"string"`
 }
 
 // String returns the string representation
@@ -4801,7 +4801,7 @@ type MapStateStartedEventDetails struct {
 	_ struct{} `type:"structure"`
 
 	// The size of the array for Map state iterations.
-	Length *int64 `type:"integer"`
+	Length *int64 `locationName:"length" type:"integer"`
 }
 
 // String returns the string representation
