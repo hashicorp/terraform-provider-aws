@@ -620,7 +620,7 @@ func TestAccAWSSpotFleetRequest_withTags(t *testing.T) {
 	})
 }
 
-func TestAccAWSSpotFleetRequest_placementTenancy(t *testing.T) {
+func TestAccAWSSpotFleetRequest_placementTenancyAndGroup(t *testing.T) {
 	var sfr ec2.SpotFleetRequestConfig
 	rName := acctest.RandString(10)
 	rInt := acctest.RandInt()
@@ -631,11 +631,11 @@ func TestAccAWSSpotFleetRequest_placementTenancy(t *testing.T) {
 		CheckDestroy: testAccCheckAWSSpotFleetRequestDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSSpotFleetRequestTenancyConfig(rName, rInt),
+				Config: testAccAWSSpotFleetRequestTenancyGroupConfig(rName, rInt),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAWSSpotFleetRequestExists("aws_spot_fleet_request.foo", &sfr),
 					resource.TestCheckResourceAttr("aws_spot_fleet_request.foo", "spot_request_state", "active"),
-					testAccCheckAWSSpotFleetRequest_PlacementAttributes(&sfr),
+					testAccCheckAWSSpotFleetRequest_PlacementAttributes(&sfr, rName),
 				),
 			},
 		},
@@ -798,7 +798,7 @@ func testAccCheckAWSSpotFleetRequest_EBSAttributes(
 }
 
 func testAccCheckAWSSpotFleetRequest_PlacementAttributes(
-	sfr *ec2.SpotFleetRequestConfig) resource.TestCheckFunc {
+	sfr *ec2.SpotFleetRequestConfig, rName string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		if len(sfr.SpotFleetRequestConfig.LaunchSpecifications) == 0 {
 			return errors.New("Missing launch specification")
@@ -812,6 +812,9 @@ func testAccCheckAWSSpotFleetRequest_PlacementAttributes(
 		}
 		if *placement.Tenancy != "dedicated" {
 			return fmt.Errorf("Expected placement tenancy to be %q, got %q", "dedicated", *placement.Tenancy)
+		}
+		if aws.StringValue(placement.GroupName) != fmt.Sprintf("test-pg-%s", rName) {
+			return fmt.Errorf("Expected placement group to be %q, got %q", fmt.Sprintf("test-pg-%s", rName), aws.StringValue(placement.GroupName))
 		}
 
 		return nil
@@ -1695,8 +1698,13 @@ resource "aws_spot_fleet_request" "foo" {
 `)
 }
 
-func testAccAWSSpotFleetRequestTenancyConfig(rName string, rInt int) string {
-	return testAccAWSSpotFleetRequestConfigBase(rName, rInt) + fmt.Sprint(`
+func testAccAWSSpotFleetRequestTenancyGroupConfig(rName string, rInt int) string {
+	return testAccAWSSpotFleetRequestConfigBase(rName, rInt) + fmt.Sprintf(`
+resource "aws_placement_group" "test" {
+	name     = "test-pg-%s"
+	strategy = "cluster"
+}
+
 resource "aws_spot_fleet_request" "foo" {
     iam_fleet_role = "${aws_iam_role.test-role.arn}"
     spot_price = "0.005"
@@ -1707,9 +1715,10 @@ resource "aws_spot_fleet_request" "foo" {
         instance_type = "m1.small"
         ami = "ami-d06a90b0"
         key_name = "${aws_key_pair.debugging.key_name}"
-        placement_tenancy = "dedicated"
+		placement_tenancy = "dedicated"
+		placement_group = "${aws_placement_group.test.name}"
     }
     depends_on = ["aws_iam_policy_attachment.test-attach"]
 }
-`)
+`, rName)
 }
