@@ -2023,7 +2023,7 @@ type AddOutputRequest struct {
 	// The remote ID for the Zixi-pull output stream.
 	RemoteId *string `locationName:"remoteId" type:"string"`
 
-	// The smoothing latency in milliseconds for RTP and RTP-FEC streams.
+	// The smoothing latency in milliseconds for RIST, RTP, and RTP-FEC streams.
 	SmoothingLatency *int64 `locationName:"smoothingLatency" type:"integer"`
 
 	// The stream ID that you want to use for this transport. This parameter applies
@@ -2535,6 +2535,9 @@ func (s *Encryption) SetUrl(v string) *Encryption {
 type Entitlement struct {
 	_ struct{} `type:"structure"`
 
+	// Percentage from 0-100 of the data transfer cost to be billed to the subscriber.
+	DataTransferSubscriberFeePercent *int64 `locationName:"dataTransferSubscriberFeePercent" type:"integer"`
+
 	// A description of the entitlement.
 	Description *string `locationName:"description" type:"string"`
 
@@ -2568,6 +2571,12 @@ func (s Entitlement) String() string {
 // GoString returns the string representation
 func (s Entitlement) GoString() string {
 	return s.String()
+}
+
+// SetDataTransferSubscriberFeePercent sets the DataTransferSubscriberFeePercent field's value.
+func (s *Entitlement) SetDataTransferSubscriberFeePercent(v int64) *Entitlement {
+	s.DataTransferSubscriberFeePercent = &v
+	return s
 }
 
 // SetDescription sets the Description field's value.
@@ -2717,6 +2726,9 @@ func (s *Flow) SetStatus(v string) *Flow {
 type GrantEntitlementRequest struct {
 	_ struct{} `type:"structure"`
 
+	// Percentage from 0-100 of the data transfer cost to be billed to the subscriber.
+	DataTransferSubscriberFeePercent *int64 `locationName:"dataTransferSubscriberFeePercent" type:"integer"`
+
 	// A description of the entitlement. This description appears only on the AWS
 	// Elemental MediaConnect console and will not be seen by the subscriber or
 	// end user.
@@ -2764,6 +2776,12 @@ func (s *GrantEntitlementRequest) Validate() error {
 		return invalidParams
 	}
 	return nil
+}
+
+// SetDataTransferSubscriberFeePercent sets the DataTransferSubscriberFeePercent field's value.
+func (s *GrantEntitlementRequest) SetDataTransferSubscriberFeePercent(v int64) *GrantEntitlementRequest {
+	s.DataTransferSubscriberFeePercent = &v
+	return s
 }
 
 // SetDescription sets the Description field's value.
@@ -3118,6 +3136,9 @@ func (s *ListTagsForResourceOutput) SetTags(v map[string]*string) *ListTagsForRe
 type ListedEntitlement struct {
 	_ struct{} `type:"structure"`
 
+	// Percentage from 0-100 of the data transfer cost to be billed to the subscriber.
+	DataTransferSubscriberFeePercent *int64 `locationName:"dataTransferSubscriberFeePercent" type:"integer"`
+
 	// The ARN of the entitlement.
 	//
 	// EntitlementArn is a required field
@@ -3137,6 +3158,12 @@ func (s ListedEntitlement) String() string {
 // GoString returns the string representation
 func (s ListedEntitlement) GoString() string {
 	return s.String()
+}
+
+// SetDataTransferSubscriberFeePercent sets the DataTransferSubscriberFeePercent field's value.
+func (s *ListedEntitlement) SetDataTransferSubscriberFeePercent(v int64) *ListedEntitlement {
+	s.DataTransferSubscriberFeePercent = &v
+	return s
 }
 
 // SetEntitlementArn sets the EntitlementArn field's value.
@@ -3266,6 +3293,9 @@ func (s *Messages) SetErrors(v []*string) *Messages {
 type Output struct {
 	_ struct{} `type:"structure"`
 
+	// Percentage from 0-100 of the data transfer cost to be billed to the subscriber.
+	DataTransferSubscriberFeePercent *int64 `locationName:"dataTransferSubscriberFeePercent" type:"integer"`
+
 	// A description of the output.
 	Description *string `locationName:"description" type:"string"`
 
@@ -3309,6 +3339,12 @@ func (s Output) String() string {
 // GoString returns the string representation
 func (s Output) GoString() string {
 	return s.String()
+}
+
+// SetDataTransferSubscriberFeePercent sets the DataTransferSubscriberFeePercent field's value.
+func (s *Output) SetDataTransferSubscriberFeePercent(v int64) *Output {
+	s.DataTransferSubscriberFeePercent = &v
+	return s
 }
 
 // SetDescription sets the Description field's value.
@@ -3561,10 +3597,11 @@ type SetSourceRequest struct {
 	// The port that the flow will be listening on for incoming content.
 	IngestPort *int64 `locationName:"ingestPort" type:"integer"`
 
-	// The smoothing max bitrate for RTP and RTP-FEC streams.
+	// The smoothing max bitrate for RIST, RTP, and RTP-FEC streams.
 	MaxBitrate *int64 `locationName:"maxBitrate" type:"integer"`
 
-	// The maximum latency in milliseconds for Zixi-based streams.
+	// The maximum latency in milliseconds. This parameter applies only to RIST-based
+	// and Zixi-based streams.
 	MaxLatency *int64 `locationName:"maxLatency" type:"integer"`
 
 	// The name of the source.
@@ -3672,6 +3709,9 @@ func (s *SetSourceRequest) SetWhitelistCidr(v string) *SetSourceRequest {
 type Source struct {
 	_ struct{} `type:"structure"`
 
+	// Percentage from 0-100 of the data transfer cost to be billed to the subscriber.
+	DataTransferSubscriberFeePercent *int64 `locationName:"dataTransferSubscriberFeePercent" type:"integer"`
+
 	// The type of encryption that is used on the content ingested from this source.
 	Decryption *Encryption `locationName:"decryption" type:"structure"`
 
@@ -3717,6 +3757,12 @@ func (s Source) String() string {
 // GoString returns the string representation
 func (s Source) GoString() string {
 	return s.String()
+}
+
+// SetDataTransferSubscriberFeePercent sets the DataTransferSubscriberFeePercent field's value.
+func (s *Source) SetDataTransferSubscriberFeePercent(v int64) *Source {
+	s.DataTransferSubscriberFeePercent = &v
+	return s
 }
 
 // SetDecryption sets the Decryption field's value.
@@ -3996,10 +4042,11 @@ type Transport struct {
 	// Routing (CIDR) block; for example, 10.0.0.0/16.
 	CidrAllowList []*string `locationName:"cidrAllowList" type:"list"`
 
-	// The smoothing max bitrate for RTP and RTP-FEC streams.
+	// The smoothing max bitrate for RIST, RTP, and RTP-FEC streams.
 	MaxBitrate *int64 `locationName:"maxBitrate" type:"integer"`
 
-	// The maximum latency in milliseconds for Zixi-based streams.
+	// The maximum latency in milliseconds. This parameter applies only to RIST-based
+	// and Zixi-based streams.
 	MaxLatency *int64 `locationName:"maxLatency" type:"integer"`
 
 	// The protocol that is used by the source or output.
@@ -4010,7 +4057,7 @@ type Transport struct {
 	// The remote ID for the Zixi-pull stream.
 	RemoteId *string `locationName:"remoteId" type:"string"`
 
-	// The smoothing latency in milliseconds for RTP and RTP-FEC streams.
+	// The smoothing latency in milliseconds for RIST, RTP, and RTP-FEC streams.
 	SmoothingLatency *int64 `locationName:"smoothingLatency" type:"integer"`
 
 	// The stream ID that you want to use for this transport. This parameter applies
@@ -4405,7 +4452,7 @@ type UpdateFlowOutputInput struct {
 	// The remote ID for the Zixi-pull stream.
 	RemoteId *string `locationName:"remoteId" type:"string"`
 
-	// The smoothing latency in milliseconds for RTP and RTP-FEC streams.
+	// The smoothing latency in milliseconds for RIST, RTP, and RTP-FEC streams.
 	SmoothingLatency *int64 `locationName:"smoothingLatency" type:"integer"`
 
 	// The stream ID that you want to use for this transport. This parameter applies
@@ -4573,10 +4620,11 @@ type UpdateFlowSourceInput struct {
 	// The port that the flow will be listening on for incoming content.
 	IngestPort *int64 `locationName:"ingestPort" type:"integer"`
 
-	// The smoothing max bitrate for RTP and RTP-FEC streams.
+	// The smoothing max bitrate for RIST, RTP, and RTP-FEC streams.
 	MaxBitrate *int64 `locationName:"maxBitrate" type:"integer"`
 
-	// The maximum latency in milliseconds for Zixi-based streams.
+	// The maximum latency in milliseconds. This parameter applies only to RIST-based
+	// and Zixi-based streams.
 	MaxLatency *int64 `locationName:"maxLatency" type:"integer"`
 
 	// The protocol that is used by the source.
@@ -4758,6 +4806,9 @@ const (
 
 	// ProtocolZixiPull is a Protocol enum value
 	ProtocolZixiPull = "zixi-pull"
+
+	// ProtocolRist is a Protocol enum value
+	ProtocolRist = "rist"
 )
 
 const (

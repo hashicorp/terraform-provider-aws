@@ -486,6 +486,9 @@ func (c *Personalize) CreateDatasetImportJobRequest(input *CreateDatasetImportJo
 //   * ErrCodeLimitExceededException "LimitExceededException"
 //   The limit on the number of requests per second has been exceeded.
 //
+//   * ErrCodeResourceInUseException "ResourceInUseException"
+//   The specified resource is in use.
+//
 // See also, https://docs.aws.amazon.com/goto/WebAPI/personalize-2018-05-22/CreateDatasetImportJob
 func (c *Personalize) CreateDatasetImportJob(input *CreateDatasetImportJobInput) (*CreateDatasetImportJobOutput, error) {
 	req, out := c.CreateDatasetImportJobRequest(input)
@@ -3571,6 +3574,9 @@ func (c *Personalize) ListSolutionVersionsRequest(input *ListSolutionVersionsInp
 //
 //   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
 //   Could not find the specified resource.
+//
+//   * ErrCodeInvalidNextTokenException "InvalidNextTokenException"
+//   The token is not valid.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/personalize-2018-05-22/ListSolutionVersions
 func (c *Personalize) ListSolutionVersions(input *ListSolutionVersionsInput) (*ListSolutionVersionsOutput, error) {
@@ -8918,6 +8924,9 @@ type SolutionVersion struct {
 	//
 	//    * CREATE PENDING > CREATE IN_PROGRESS > ACTIVE -or- CREATE FAILED
 	Status *string `locationName:"status" type:"string"`
+
+	// The time used to train the model.
+	TrainingHours *float64 `locationName:"trainingHours" type:"double"`
 }
 
 // String returns the string representation
@@ -8999,6 +9008,12 @@ func (s *SolutionVersion) SetSolutionVersionArn(v string) *SolutionVersion {
 // SetStatus sets the Status field's value.
 func (s *SolutionVersion) SetStatus(v string) *SolutionVersion {
 	s.Status = &v
+	return s
+}
+
+// SetTrainingHours sets the TrainingHours field's value.
+func (s *SolutionVersion) SetTrainingHours(v float64) *SolutionVersion {
+	s.TrainingHours = &v
 	return s
 }
 
