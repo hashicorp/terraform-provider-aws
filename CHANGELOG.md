@@ -20,6 +20,7 @@ BUG FIXES:
 * resource/aws_ec2_client_vpn_endpoint: Ensure missing resource triggers state removal [GH-10187]
 * resource/aws_instance: Prevent panic when updating `credit_specification` to empty configuration block [GH-10212]
 * resource/aws_security_group: Ensure deletion errors are properly raised [GH-10165]
+* resource/aws_spot_fleet_request: Ensure `launch_specification` configuration block `placement_group` argument is passed through to the API when it is specified [GH-10103]
 
 ## 2.29.0 (September 20, 2019)
 
