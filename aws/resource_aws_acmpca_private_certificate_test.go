@@ -82,7 +82,6 @@ resource "tls_cert_request" "csr" {
   subject {
     common_name = "testing"
   }
-
 }
 
 resource "aws_acmpca_certificate_authority" "test" {
