@@ -162,6 +162,7 @@ func TestAccAWSFsxLustreFileSystem_ExportPath(t *testing.T) {
 	})
 }
 
+// lintignore: AT002
 func TestAccAWSFsxLustreFileSystem_ImportPath(t *testing.T) {
 	var filesystem1, filesystem2 fsx.FileSystem
 	resourceName := "aws_fsx_lustre_file_system.test"
@@ -197,6 +198,7 @@ func TestAccAWSFsxLustreFileSystem_ImportPath(t *testing.T) {
 	})
 }
 
+// lintignore: AT002
 func TestAccAWSFsxLustreFileSystem_ImportedFileChunkSize(t *testing.T) {
 	var filesystem1, filesystem2 fsx.FileSystem
 	resourceName := "aws_fsx_lustre_file_system.test"
