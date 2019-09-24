@@ -1594,6 +1594,91 @@ func (c *WorkSpaces) DescribeWorkspaceImagesWithContext(ctx aws.Context, input *
 	return out, req.Send()
 }
 
+const opDescribeWorkspaceSnapshots = "DescribeWorkspaceSnapshots"
+
+// DescribeWorkspaceSnapshotsRequest generates a "aws/request.Request" representing the
+// client's request for the DescribeWorkspaceSnapshots operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See DescribeWorkspaceSnapshots for more information on using the DescribeWorkspaceSnapshots
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the DescribeWorkspaceSnapshotsRequest method.
+//    req, resp := client.DescribeWorkspaceSnapshotsRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/workspaces-2015-04-08/DescribeWorkspaceSnapshots
+func (c *WorkSpaces) DescribeWorkspaceSnapshotsRequest(input *DescribeWorkspaceSnapshotsInput) (req *request.Request, output *DescribeWorkspaceSnapshotsOutput) {
+	op := &request.Operation{
+		Name:       opDescribeWorkspaceSnapshots,
+		HTTPMethod: "POST",
+		HTTPPath:   "/",
+	}
+
+	if input == nil {
+		input = &DescribeWorkspaceSnapshotsInput{}
+	}
+
+	output = &DescribeWorkspaceSnapshotsOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// DescribeWorkspaceSnapshots API operation for Amazon WorkSpaces.
+//
+// Describes the snapshots for the specified WorkSpace.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for Amazon WorkSpaces's
+// API operation DescribeWorkspaceSnapshots for usage and error information.
+//
+// Returned Error Codes:
+//   * ErrCodeInvalidParameterValuesException "InvalidParameterValuesException"
+//   One or more parameter values are not valid.
+//
+//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   The resource could not be found.
+//
+//   * ErrCodeAccessDeniedException "AccessDeniedException"
+//   The user is not authorized to access a resource.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/workspaces-2015-04-08/DescribeWorkspaceSnapshots
+func (c *WorkSpaces) DescribeWorkspaceSnapshots(input *DescribeWorkspaceSnapshotsInput) (*DescribeWorkspaceSnapshotsOutput, error) {
+	req, out := c.DescribeWorkspaceSnapshotsRequest(input)
+	return out, req.Send()
+}
+
+// DescribeWorkspaceSnapshotsWithContext is the same as DescribeWorkspaceSnapshots with the addition of
+// the ability to pass a context and additional request options.
+//
+// See DescribeWorkspaceSnapshots for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *WorkSpaces) DescribeWorkspaceSnapshotsWithContext(ctx aws.Context, input *DescribeWorkspaceSnapshotsInput, opts ...request.Option) (*DescribeWorkspaceSnapshotsOutput, error) {
+	req, out := c.DescribeWorkspaceSnapshotsRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
 const opDescribeWorkspaces = "DescribeWorkspaces"
 
 // DescribeWorkspacesRequest generates a "aws/request.Request" representing the
@@ -2614,6 +2699,100 @@ func (c *WorkSpaces) RebuildWorkspaces(input *RebuildWorkspacesInput) (*RebuildW
 // for more information on using Contexts.
 func (c *WorkSpaces) RebuildWorkspacesWithContext(ctx aws.Context, input *RebuildWorkspacesInput, opts ...request.Option) (*RebuildWorkspacesOutput, error) {
 	req, out := c.RebuildWorkspacesRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
+const opRestoreWorkspace = "RestoreWorkspace"
+
+// RestoreWorkspaceRequest generates a "aws/request.Request" representing the
+// client's request for the RestoreWorkspace operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See RestoreWorkspace for more information on using the RestoreWorkspace
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the RestoreWorkspaceRequest method.
+//    req, resp := client.RestoreWorkspaceRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/workspaces-2015-04-08/RestoreWorkspace
+func (c *WorkSpaces) RestoreWorkspaceRequest(input *RestoreWorkspaceInput) (req *request.Request, output *RestoreWorkspaceOutput) {
+	op := &request.Operation{
+		Name:       opRestoreWorkspace,
+		HTTPMethod: "POST",
+		HTTPPath:   "/",
+	}
+
+	if input == nil {
+		input = &RestoreWorkspaceInput{}
+	}
+
+	output = &RestoreWorkspaceOutput{}
+	req = c.newRequest(op, input, output)
+	req.Handlers.Unmarshal.Swap(jsonrpc.UnmarshalHandler.Name, protocol.UnmarshalDiscardBodyHandler)
+	return
+}
+
+// RestoreWorkspace API operation for Amazon WorkSpaces.
+//
+// Restores the specified WorkSpace to its last known healthy state.
+//
+// You cannot restore a WorkSpace unless its state is AVAILABLE, ERROR, or UNHEALTHY.
+//
+// Restoring a WorkSpace is a potentially destructive action that can result
+// in the loss of data. For more information, see Restore a WorkSpace (https://docs.aws.amazon.com/workspaces/latest/adminguide/restore-workspace.html).
+//
+// This operation is asynchronous and returns before the WorkSpace is completely
+// restored.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for Amazon WorkSpaces's
+// API operation RestoreWorkspace for usage and error information.
+//
+// Returned Error Codes:
+//   * ErrCodeInvalidParameterValuesException "InvalidParameterValuesException"
+//   One or more parameter values are not valid.
+//
+//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   The resource could not be found.
+//
+//   * ErrCodeAccessDeniedException "AccessDeniedException"
+//   The user is not authorized to access a resource.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/workspaces-2015-04-08/RestoreWorkspace
+func (c *WorkSpaces) RestoreWorkspace(input *RestoreWorkspaceInput) (*RestoreWorkspaceOutput, error) {
+	req, out := c.RestoreWorkspaceRequest(input)
+	return out, req.Send()
+}
+
+// RestoreWorkspaceWithContext is the same as RestoreWorkspace with the addition of
+// the ability to pass a context and additional request options.
+//
+// See RestoreWorkspace for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *WorkSpaces) RestoreWorkspaceWithContext(ctx aws.Context, input *RestoreWorkspaceInput, opts ...request.Option) (*RestoreWorkspaceOutput, error) {
+	req, out := c.RestoreWorkspaceRequest(input)
 	req.SetContext(ctx)
 	req.ApplyOptions(opts...)
 	return out, req.Send()
@@ -4570,6 +4749,78 @@ func (s *DescribeWorkspaceImagesOutput) SetNextToken(v string) *DescribeWorkspac
 	return s
 }
 
+type DescribeWorkspaceSnapshotsInput struct {
+	_ struct{} `type:"structure"`
+
+	// The identifier of the WorkSpace.
+	//
+	// WorkspaceId is a required field
+	WorkspaceId *string `type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s DescribeWorkspaceSnapshotsInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DescribeWorkspaceSnapshotsInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *DescribeWorkspaceSnapshotsInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "DescribeWorkspaceSnapshotsInput"}
+	if s.WorkspaceId == nil {
+		invalidParams.Add(request.NewErrParamRequired("WorkspaceId"))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetWorkspaceId sets the WorkspaceId field's value.
+func (s *DescribeWorkspaceSnapshotsInput) SetWorkspaceId(v string) *DescribeWorkspaceSnapshotsInput {
+	s.WorkspaceId = &v
+	return s
+}
+
+type DescribeWorkspaceSnapshotsOutput struct {
+	_ struct{} `type:"structure"`
+
+	// Information about the snapshots that can be used to rebuild a WorkSpace.
+	// These snapshots include the root volume.
+	RebuildSnapshots []*Snapshot `type:"list"`
+
+	// Information about the snapshots that can be used to restore a WorkSpace.
+	// These snapshots include both the root volume and the user volume.
+	RestoreSnapshots []*Snapshot `type:"list"`
+}
+
+// String returns the string representation
+func (s DescribeWorkspaceSnapshotsOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DescribeWorkspaceSnapshotsOutput) GoString() string {
+	return s.String()
+}
+
+// SetRebuildSnapshots sets the RebuildSnapshots field's value.
+func (s *DescribeWorkspaceSnapshotsOutput) SetRebuildSnapshots(v []*Snapshot) *DescribeWorkspaceSnapshotsOutput {
+	s.RebuildSnapshots = v
+	return s
+}
+
+// SetRestoreSnapshots sets the RestoreSnapshots field's value.
+func (s *DescribeWorkspaceSnapshotsOutput) SetRestoreSnapshots(v []*Snapshot) *DescribeWorkspaceSnapshotsOutput {
+	s.RestoreSnapshots = v
+	return s
+}
+
 type DescribeWorkspacesConnectionStatusInput struct {
 	_ struct{} `type:"structure"`
 
@@ -4897,8 +5148,8 @@ func (s *FailedCreateWorkspaceRequest) SetWorkspaceRequest(v *WorkspaceRequest) 
 }
 
 // Describes a WorkSpace that could not be rebooted. (RebootWorkspaces), rebuilt
-// (RebuildWorkspaces), terminated (TerminateWorkspaces), started (StartWorkspaces),
-// or stopped (StopWorkspaces).
+// (RebuildWorkspaces), restored (RestoreWorkspace), terminated (TerminateWorkspaces),
+// started (StartWorkspaces), or stopped (StopWorkspaces).
 type FailedWorkspaceChangeRequest struct {
 	_ struct{} `type:"structure"`
 
@@ -5786,6 +6037,58 @@ func (s *RebuildWorkspacesOutput) SetFailedRequests(v []*FailedWorkspaceChangeRe
 	return s
 }
 
+type RestoreWorkspaceInput struct {
+	_ struct{} `type:"structure"`
+
+	// The identifier of the WorkSpace.
+	//
+	// WorkspaceId is a required field
+	WorkspaceId *string `type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s RestoreWorkspaceInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s RestoreWorkspaceInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *RestoreWorkspaceInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "RestoreWorkspaceInput"}
+	if s.WorkspaceId == nil {
+		invalidParams.Add(request.NewErrParamRequired("WorkspaceId"))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetWorkspaceId sets the WorkspaceId field's value.
+func (s *RestoreWorkspaceInput) SetWorkspaceId(v string) *RestoreWorkspaceInput {
+	s.WorkspaceId = &v
+	return s
+}
+
+type RestoreWorkspaceOutput struct {
+	_ struct{} `type:"structure"`
+}
+
+// String returns the string representation
+func (s RestoreWorkspaceOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s RestoreWorkspaceOutput) GoString() string {
+	return s.String()
+}
+
 type RevokeIpRulesInput struct {
 	_ struct{} `type:"structure"`
 
@@ -5873,6 +6176,30 @@ func (s RootStorage) GoString() string {
 // SetCapacity sets the Capacity field's value.
 func (s *RootStorage) SetCapacity(v string) *RootStorage {
 	s.Capacity = &v
+	return s
+}
+
+// Describes a snapshot.
+type Snapshot struct {
+	_ struct{} `type:"structure"`
+
+	// The time when the snapshot was created.
+	SnapshotTime *time.Time `type:"timestamp"`
+}
+
+// String returns the string representation
+func (s Snapshot) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s Snapshot) GoString() string {
+	return s.String()
+}
+
+// SetSnapshotTime sets the SnapshotTime field's value.
+func (s *Snapshot) SetSnapshotTime(v time.Time) *Snapshot {
+	s.SnapshotTime = &v
 	return s
 }
 
@@ -7185,6 +7512,9 @@ const (
 
 	// WorkspaceStateRebuilding is a WorkspaceState enum value
 	WorkspaceStateRebuilding = "REBUILDING"
+
+	// WorkspaceStateRestoring is a WorkspaceState enum value
+	WorkspaceStateRestoring = "RESTORING"
 
 	// WorkspaceStateMaintenance is a WorkspaceState enum value
 	WorkspaceStateMaintenance = "MAINTENANCE"

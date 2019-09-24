@@ -13569,7 +13569,7 @@ type CreateDBClusterEndpointInput struct {
 	// DBClusterIdentifier is a required field
 	DBClusterIdentifier *string `type:"string" required:"true"`
 
-	// The type of the endpoint. One of: READER, ANY.
+	// The type of the endpoint. One of: READER, WRITER, ANY.
 	//
 	// EndpointType is a required field
 	EndpointType *string `type:"string" required:"true"`
@@ -13659,7 +13659,7 @@ func (s *CreateDBClusterEndpointInput) SetStaticMembers(v []*string) *CreateDBCl
 type CreateDBClusterEndpointOutput struct {
 	_ struct{} `type:"structure"`
 
-	// The type associated with a custom endpoint. One of: READER, ANY.
+	// The type associated with a custom endpoint. One of: READER, WRITER, ANY.
 	CustomEndpointType *string `type:"string"`
 
 	// The Amazon Resource Name (ARN) for the endpoint.
@@ -13881,7 +13881,7 @@ type CreateDBClusterInput struct {
 	Engine *string `type:"string" required:"true"`
 
 	// The DB engine mode of the DB cluster, either provisioned, serverless, parallelquery,
-	// or global.
+	// global, or multimaster.
 	EngineMode *string `type:"string"`
 
 	// The version number of the database engine to use.
@@ -14745,8 +14745,8 @@ type CreateDBInstanceInput struct {
 	DBName *string `type:"string"`
 
 	// The name of the DB parameter group to associate with this DB instance. If
-	// this argument is omitted, the default DBParameterGroup for the specified
-	// engine is used.
+	// you do not specify a value for DBParameterGroupName, then the default DBParameterGroup
+	// for the specified DB engine is used.
 	//
 	// Constraints:
 	//
@@ -15620,6 +15620,22 @@ type CreateDBInstanceReadReplicaInput struct {
 	// DBInstanceIdentifier is a required field
 	DBInstanceIdentifier *string `type:"string" required:"true"`
 
+	// The name of the DB parameter group to associate with this DB instance.
+	//
+	// If you do not specify a value for DBParameterGroupName, then Amazon RDS uses
+	// the DBParameterGroup of source DB instance for a same region Read Replica,
+	// or the default DBParameterGroup for the specified DB engine for a cross region
+	// Read Replica.
+	//
+	// Constraints:
+	//
+	//    * Must be 1 to 255 letters, numbers, or hyphens.
+	//
+	//    * First character must be a letter
+	//
+	//    * Can't end with a hyphen or contain two consecutive hyphens
+	DBParameterGroupName *string `type:"string"`
+
 	// Specifies a DB subnet group for the DB instance. The new DB instance is created
 	// in the VPC associated with the DB subnet group. If no DB subnet group is
 	// specified, then the new DB instance is not created in a VPC.
@@ -15912,6 +15928,12 @@ func (s *CreateDBInstanceReadReplicaInput) SetDBInstanceClass(v string) *CreateD
 // SetDBInstanceIdentifier sets the DBInstanceIdentifier field's value.
 func (s *CreateDBInstanceReadReplicaInput) SetDBInstanceIdentifier(v string) *CreateDBInstanceReadReplicaInput {
 	s.DBInstanceIdentifier = &v
+	return s
+}
+
+// SetDBParameterGroupName sets the DBParameterGroupName field's value.
+func (s *CreateDBInstanceReadReplicaInput) SetDBParameterGroupName(v string) *CreateDBInstanceReadReplicaInput {
+	s.DBParameterGroupName = &v
 	return s
 }
 
@@ -17030,8 +17052,8 @@ type DBCluster struct {
 	// Provides the name of the database engine to be used for this DB cluster.
 	Engine *string `type:"string"`
 
-	// The DB engine mode of the DB cluster, either provisioned, serverless, or
-	// parallelquery.
+	// The DB engine mode of the DB cluster, either provisioned, serverless, parallelquery,
+	// global, or multimaster.
 	EngineMode *string `type:"string"`
 
 	// Indicates the database engine version.
@@ -17454,7 +17476,7 @@ func (s *DBCluster) SetVpcSecurityGroups(v []*VpcSecurityGroupMembership) *DBClu
 type DBClusterEndpoint struct {
 	_ struct{} `type:"structure"`
 
-	// The type associated with a custom endpoint. One of: READER, ANY.
+	// The type associated with a custom endpoint. One of: READER, WRITER, ANY.
 	CustomEndpointType *string `type:"string"`
 
 	// The Amazon Resource Name (ARN) for the endpoint.
@@ -17572,8 +17594,8 @@ type DBClusterMember struct {
 	// Specifies the instance identifier for this member of the DB cluster.
 	DBInstanceIdentifier *string `type:"string"`
 
-	// A value that indicates whehter the cluster member is the primary instance
-	// for the DB cluster.
+	// Value that is true if the cluster member is the primary instance for the
+	// DB cluster and false otherwise.
 	IsClusterWriter *bool `type:"boolean"`
 
 	// A value that specifies the order in which an Aurora Replica is promoted to
@@ -19320,7 +19342,7 @@ func (s *DBParameterGroupNameMessage) SetDBParameterGroupName(v string) *DBParam
 type DBParameterGroupStatus struct {
 	_ struct{} `type:"structure"`
 
-	// The name of the DP parameter group.
+	// The name of the DB parameter group.
 	DBParameterGroupName *string `type:"string"`
 
 	// The status of parameter updates.
@@ -19964,7 +19986,7 @@ func (s *DeleteDBClusterEndpointInput) SetDBClusterEndpointIdentifier(v string) 
 type DeleteDBClusterEndpointOutput struct {
 	_ struct{} `type:"structure"`
 
-	// The type associated with a custom endpoint. One of: READER, ANY.
+	// The type associated with a custom endpoint. One of: READER, WRITER, ANY.
 	CustomEndpointType *string `type:"string"`
 
 	// The Amazon Resource Name (ARN) for the endpoint.
@@ -24723,6 +24745,13 @@ type DescribeReservedDBInstancesInput struct {
 	// This parameter is not currently supported.
 	Filters []*Filter `locationNameList:"Filter" type:"list"`
 
+	// The lease identifier filter value. Specify this parameter to show only the
+	// reservation that matches the specified lease ID.
+	//
+	// AWS Support might request the lease ID for an issue related to a reserved
+	// DB instance.
+	LeaseId *string `type:"string"`
+
 	// An optional pagination token provided by a previous request. If this parameter
 	// is specified, the response includes only records beyond the marker, up to
 	// the value specified by MaxRecords.
@@ -24805,6 +24834,12 @@ func (s *DescribeReservedDBInstancesInput) SetDuration(v string) *DescribeReserv
 // SetFilters sets the Filters field's value.
 func (s *DescribeReservedDBInstancesInput) SetFilters(v []*Filter) *DescribeReservedDBInstancesInput {
 	s.Filters = v
+	return s
+}
+
+// SetLeaseId sets the LeaseId field's value.
+func (s *DescribeReservedDBInstancesInput) SetLeaseId(v string) *DescribeReservedDBInstancesInput {
+	s.LeaseId = &v
 	return s
 }
 
@@ -26460,7 +26495,7 @@ type ModifyDBClusterEndpointInput struct {
 	// DBClusterEndpointIdentifier is a required field
 	DBClusterEndpointIdentifier *string `type:"string" required:"true"`
 
-	// The type of the endpoint. One of: READER, ANY.
+	// The type of the endpoint. One of: READER, WRITER, ANY.
 	EndpointType *string `type:"string"`
 
 	// List of DB instance identifiers that aren't part of the custom endpoint group.
@@ -26536,7 +26571,7 @@ func (s *ModifyDBClusterEndpointInput) SetStaticMembers(v []*string) *ModifyDBCl
 type ModifyDBClusterEndpointOutput struct {
 	_ struct{} `type:"structure"`
 
-	// The type associated with a custom endpoint. One of: READER, ANY.
+	// The type associated with a custom endpoint. One of: READER, WRITER, ANY.
 	CustomEndpointType *string `type:"string"`
 
 	// The Amazon Resource Name (ARN) for the endpoint.
@@ -30130,15 +30165,17 @@ func (s *PromoteReadReplicaDBClusterOutput) SetDBCluster(v *DBCluster) *PromoteR
 type PromoteReadReplicaInput struct {
 	_ struct{} `type:"structure"`
 
-	// The number of days to retain automated backups. Setting this parameter to
-	// a positive number enables backups. Setting this parameter to 0 disables automated
-	// backups.
+	// The number of days for which automated backups are retained. Setting this
+	// parameter to a positive number enables backups. Setting this parameter to
+	// 0 disables automated backups.
 	//
 	// Default: 1
 	//
 	// Constraints:
 	//
-	//    * Must be a value from 0 to 8
+	//    * Must be a value from 0 to 35.
+	//
+	//    * Can't be set to 0 if the DB instance is a source to Read Replicas.
 	BackupRetentionPeriod *int64 `type:"integer"`
 
 	// The DB instance identifier. This value is stored as a lowercase string.
@@ -30875,6 +30912,12 @@ type ReservedDBInstance struct {
 	// The fixed price charged for this reserved DB instance.
 	FixedPrice *float64 `type:"double"`
 
+	// The unique identifier for the lease associated with the reserved DB instance.
+	//
+	// AWS Support might request the lease ID for an issue related to a reserved
+	// DB instance.
+	LeaseId *string `type:"string"`
+
 	// Indicates if the reservation applies to Multi-AZ deployments.
 	MultiAZ *bool `type:"boolean"`
 
@@ -30943,6 +30986,12 @@ func (s *ReservedDBInstance) SetDuration(v int64) *ReservedDBInstance {
 // SetFixedPrice sets the FixedPrice field's value.
 func (s *ReservedDBInstance) SetFixedPrice(v float64) *ReservedDBInstance {
 	s.FixedPrice = &v
+	return s
+}
+
+// SetLeaseId sets the LeaseId field's value.
+func (s *ReservedDBInstance) SetLeaseId(v string) *ReservedDBInstance {
+	s.LeaseId = &v
 	return s
 }
 
@@ -31876,8 +31925,8 @@ type RestoreDBClusterFromSnapshotInput struct {
 	// Engine is a required field
 	Engine *string `type:"string" required:"true"`
 
-	// The DB engine mode of the DB cluster, either provisioned, serverless, or
-	// parallelquery.
+	// The DB engine mode of the DB cluster, either provisioned, serverless, parallelquery,
+	// global, or multimaster.
 	EngineMode *string `type:"string"`
 
 	// The version of the database engine to use for the new DB cluster.
@@ -32504,9 +32553,10 @@ type RestoreDBInstanceFromDBSnapshotInput struct {
 	// This parameter doesn't apply to the MySQL, PostgreSQL, or MariaDB engines.
 	DBName *string `type:"string"`
 
-	// The name of the DB parameter group to associate with this DB instance. If
-	// this argument is omitted, the default DBParameterGroup for the specified
-	// engine is used.
+	// The name of the DB parameter group to associate with this DB instance.
+	//
+	// If you do not specify a value for DBParameterGroupName, then the default
+	// DBParameterGroup for the specified DB engine is used.
 	//
 	// Constraints:
 	//
@@ -32972,9 +33022,10 @@ type RestoreDBInstanceFromS3Input struct {
 	// the naming rules specified in CreateDBInstance.
 	DBName *string `type:"string"`
 
-	// The name of the DB parameter group to associate with this DB instance. If
-	// this argument is omitted, the default parameter group for the specified engine
-	// is used.
+	// The name of the DB parameter group to associate with this DB instance.
+	//
+	// If you do not specify a value for DBParameterGroupName, then the default
+	// DBParameterGroup for the specified DB engine is used.
 	DBParameterGroupName *string `type:"string"`
 
 	// A list of DB security groups to associate with this DB instance.
@@ -33576,9 +33627,10 @@ type RestoreDBInstanceToPointInTimeInput struct {
 	// This parameter is not used for the MySQL or MariaDB engines.
 	DBName *string `type:"string"`
 
-	// The name of the DB parameter group to associate with this DB instance. If
-	// this argument is omitted, the default DBParameterGroup for the specified
-	// engine is used.
+	// The name of the DB parameter group to associate with this DB instance.
+	//
+	// If you do not specify a value for DBParameterGroupName, then the default
+	// DBParameterGroup for the specified DB engine is used.
 	//
 	// Constraints:
 	//

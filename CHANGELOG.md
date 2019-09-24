@@ -1,28 +1,60 @@
-## 2.28.0 (Unreleased)
+## 2.30.0 (Unreleased)
 
 NOTES:
 
-* resource/aws_cloudfront_distribution: This attribute implemented a legacy Terraform library (flatmap), which does not work with Terraform 0.12's data types and whose only usage was on this single attribute across all Terraform Providers. The attribute now implements (in the closest approximation to the previous implementation) the nested object data into the Terraform state in all Terraform versions. Any references to nested attributes such as `active_trusted_signers.enabled` will need to be updated to `active_trusted_signers.0.enabled`. [GH-10013]
-
-FEATURES:
-
-* **New Data Source:** `aws_route53_resolver_rule` [GH-9805]
-* **New Data Source:** `aws_route53_resolver_rules` [GH-9805]
-
-ENHANCEMENTS:
-
-* data-source/aws_eks_cluster: Add `identity` attribute (support getting OIDC issuer URL) [GH-10006]
-* resource/aws_eks_cluster: Add `identity` attribute (support getting OIDC issuer URL) [GH-10006]
-* resource/aws_elasticache_cluster: Support `cluster_id` validation up to 50 characters [GH-9941]
-* resource/aws_elasticache_replication_group: Support `replication_group_id` validation up to 40 characters [GH-9941]
+* provider: The default development, testing, and building of the Terraform AWS Provider binary is now done with Go 1.13. This version of Go now requires macOS 10.11 El Capitan or later and FreeBSD 11.2 or later. Support for previous versions of those operating systems has been discontinued. [GH-10206]
 
 BUG FIXES:
 
-* resource/aws_cloudfront_distribution: Support accessing `active_trusted_signers` attribute `items` in Terraform 0.12 [GH-10013]
-* resource/aws_cognito_user_pool: Fix perpetual diffs on `sms_verification_message` [GH-9758]
-* resource/aws_elasticsearch_domain: Final retries after timeouts creating, updating, and deleting domains [GH-9892]
-* resource/aws_elasticsearch_domain_policy: Final retries after timeouts upserting and deleting domain policies [GH-9892]
-* resource/aws_lightsail_instance: Fixes an issue where 2-character lightsail instance names didn't get validated properly [GH-10046]
+* resource/aws_ec2_client_vpn_endpoint: Ensure missing resource triggers state removal [GH-10187]
+
+## 2.29.0 (September 20, 2019)
+
+ENHANCEMENTS:
+* data-source/aws_s3_bucket_object: Add `object_lock_legal_hold_status`, `object_lock_mode` and `object_lock_retain_until_date` attributes ([#9942](https://github.com/terraform-providers/terraform-provider-aws/issues/9942))
+* resource/aws_glue_job: Add ability to specify python version for pythonshell in glue jobs ([#9409](https://github.com/terraform-providers/terraform-provider-aws/issues/9409))
+* resource/aws_s3_bucket_object: Add `force_destroy`, `object_lock_legal_hold_status`, `object_lock_mode` and `object_lock_retain_until_date` attributes ([#9942](https://github.com/terraform-providers/terraform-provider-aws/issues/9942))
+* resource/aws_ssm_association: Add import support ([#10055](https://github.com/terraform-providers/terraform-provider-aws/issues/10055))
+* resource/aws_waf_rate_based_rule: Update rate based rule limit for WAF ([#9946](https://github.com/terraform-providers/terraform-provider-aws/pull/9946))
+* resource/aws_wafregional_rate_based_rule: Update rate based rule limit for WAF ([#9946](https://github.com/terraform-providers/terraform-provider-aws/pull/9946))
+
+BUG FIXES:
+
+* resource/aws_ecs_task_definition: Fix a crash if `containers_definition` argument JSON defines `environment` without `name` value ([#10074](https://github.com/terraform-providers/terraform-provider-aws/issues/10074))
+
+## 2.28.1 (September 12, 2019)
+
+BUG FIXES:
+
+* Revert "resource/aws_cloudfront_distribution: Fix `active_trusted_signers` attribute for Terraform 0.12" ([#10093](https://github.com/terraform-providers/terraform-provider-aws/issues/10093))
+
+## 2.28.0 (September 12, 2019)
+
+NOTES:
+
+* resource/aws_cloudfront_distribution: This attribute implemented a legacy Terraform library (flatmap), which does not work with Terraform 0.12's data types and whose only usage was on this single attribute across all Terraform Providers. The attribute now implements (in the closest approximation to the previous implementation) the nested object data into the Terraform state in all Terraform versions. Any references to nested attributes such as `active_trusted_signers.enabled` will need to be updated to `active_trusted_signers.0.enabled`. ([#10013](https://github.com/terraform-providers/terraform-provider-aws/issues/10013))
+
+FEATURES:
+
+* **New Data Source:** `aws_route53_resolver_rule` ([#9805](https://github.com/terraform-providers/terraform-provider-aws/issues/9805))
+* **New Data Source:** `aws_route53_resolver_rules` ([#9805](https://github.com/terraform-providers/terraform-provider-aws/issues/9805))
+
+ENHANCEMENTS:
+
+* data-source/aws_eks_cluster: Add `identity` attribute (support getting OIDC issuer URL) ([#10006](https://github.com/terraform-providers/terraform-provider-aws/issues/10006))
+* resource/aws_eks_cluster: Add `identity` attribute (support getting OIDC issuer URL) ([#10006](https://github.com/terraform-providers/terraform-provider-aws/issues/10006))
+* resource/aws_elasticache_cluster: Support `cluster_id` validation up to 50 characters ([#9941](https://github.com/terraform-providers/terraform-provider-aws/issues/9941))
+* resource/aws_elasticache_replication_group: Support `replication_group_id` validation up to 40 characters ([#9941](https://github.com/terraform-providers/terraform-provider-aws/issues/9941))
+
+BUG FIXES:
+
+* resource/aws_instance: Final retries after timeouts creating and updating instance and getting instance password data
+* resource/aws_cloudfront_distribution: Support accessing `active_trusted_signers` attribute `items` in Terraform 0.12 ([#10013](https://github.com/terraform-providers/terraform-provider-aws/issues/10013))
+* resource/aws_cognito_user_pool: Fix perpetual diffs on `sms_verification_message` ([#9758](https://github.com/terraform-providers/terraform-provider-aws/issues/9758))
+* resource/aws_elasticsearch_domain: Final retries after timeouts creating, updating, and deleting domains ([#9892](https://github.com/terraform-providers/terraform-provider-aws/issues/9892))
+* resource/aws_elasticsearch_domain_policy: Final retries after timeouts upserting and deleting domain policies ([#9892](https://github.com/terraform-providers/terraform-provider-aws/issues/9892))
+* resource/aws_iam_policy_attachment: Revert a change causing errors with policies not being found during attachment ([#10063](https://github.com/terraform-providers/terraform-provider-aws/issues/10063))
+* resource/aws_lightsail_instance: Fixes an issue where 2-character lightsail instance names didn't get validated properly ([#10046](https://github.com/terraform-providers/terraform-provider-aws/issues/10046))
 
 
 ## 2.27.0 (September 05, 2019)
@@ -326,7 +358,7 @@ ENHANCEMENTS:
 
 BUG FIXES:
 
-* resource/aws_appautoscaling_policy: Properly support importing of dynamodb policies [[#8397](https://github.com/terraform-providers/terraform-provider-aws/issues/8397)] 
+* resource/aws_appautoscaling_policy: Properly support importing of dynamodb policies ([#8397](https://github.com/terraform-providers/terraform-provider-aws/issues/8397))
 * resource/aws_cloudwatch_event_permissions: Clean up error handling when reading event permissions ([#9065](https://github.com/terraform-providers/terraform-provider-aws/issues/9065))
 * resource/aws_cloudwatch_event_rule: Retry error handling when creating and updating event rules ([#9065](https://github.com/terraform-providers/terraform-provider-aws/issues/9065))
 * resource/aws_cloudwatch_log_destination: Clean up error handling when putting log destination ([#9065](https://github.com/terraform-providers/terraform-provider-aws/issues/9065))
@@ -456,7 +488,7 @@ ENHANCEMENTS:
 * resource/aws_backup_vault: Support resource import ([#9041](https://github.com/terraform-providers/terraform-provider-aws/issues/9041))
 * resource/aws_codepipeline: Add `tags` argument ([#8993](https://github.com/terraform-providers/terraform-provider-aws/issues/8993))
 * resource/aws_codepipeline_webhook: Add `tags` argument ([#8993](https://github.com/terraform-providers/terraform-provider-aws/issues/8993))
-* resource/aws_ecs_task_definition: Add `proxy_configuration` configuration block (support AppMesh proxying) [[#8780](https://github.com/terraform-providers/terraform-provider-aws/issues/8780)] 
+* resource/aws_ecs_task_definition: Add `proxy_configuration` configuration block (support AppMesh proxying) ([#8780](https://github.com/terraform-providers/terraform-provider-aws/issues/8780))
 * resource/aws_instance: Prevent panic when `credit_specification` configuration block is missing arguments ([#9003](https://github.com/terraform-providers/terraform-provider-aws/issues/9003))
 * resource/aws_organizations_organization: Add `non_master_accounts` attribute ([#8926](https://github.com/terraform-providers/terraform-provider-aws/issues/8926))
 * resource/aws_secretsmanager_secret: Tag on create (support tag limiting IAM policies) ([#9023](https://github.com/terraform-providers/terraform-provider-aws/issues/9023))
@@ -617,7 +649,7 @@ ENHANCEMENTS:
 * resource/aws_elastic_beanstalk_application: Add `tags` argument and `arn` attribute ([#8614](https://github.com/terraform-providers/terraform-provider-aws/issues/8614))
 * resource/aws_elastic_beanstalk_application_version: Add `tags` argument and `arn` attribute ([#8614](https://github.com/terraform-providers/terraform-provider-aws/issues/8614))
 * resource/aws_emr_cluster: Add `master_instance_group` and `core_instance_group` configuration blocks (deprecates other instance group configuration methods) ([#8459](https://github.com/terraform-providers/terraform-provider-aws/issues/8459))
-* resource/aws_emr_instance_group: Add support for `autoscaling_policy`, `bid_price`, and resource import [[#8078](https://github.com/terraform-providers/terraform-provider-aws/issues/8078)] 
+* resource/aws_emr_instance_group: Add support for `autoscaling_policy`, `bid_price`, and resource import ([#8078](https://github.com/terraform-providers/terraform-provider-aws/issues/8078))
 * resource/aws_kinesis_analytics_application: Add `tags` argument ([#8643](https://github.com/terraform-providers/terraform-provider-aws/issues/8643))
 * resource/aws_lambda_function: Support `nodejs10.x` in `runtime` validation ([#8622](https://github.com/terraform-providers/terraform-provider-aws/issues/8622))
 * resource/aws_organizations_account: Add parent_id argument (support moving accounts) ([#8583](https://github.com/terraform-providers/terraform-provider-aws/issues/8583))
