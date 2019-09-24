@@ -15,7 +15,7 @@ import (
 )
 
 func TestAccAWSIAMRolePolicy_importBasic(t *testing.T) {
-	suffix := randomString(10)
+	suffix := acctest.RandStringFromCharSet(10, acctest.CharSetAlpha)
 	resourceName := fmt.Sprintf("aws_iam_role_policy.foo_%s", suffix)
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -80,7 +80,7 @@ func TestAccAWSIAMRolePolicy_basic(t *testing.T) {
 
 func TestAccAWSIAMRolePolicy_disappears(t *testing.T) {
 	var out iam.GetRolePolicyOutput
-	suffix := randomString(10)
+	suffix := acctest.RandStringFromCharSet(10, acctest.CharSetAlpha)
 	roleResourceName := fmt.Sprintf("aws_iam_role.role_%s", suffix)
 	rolePolicyResourceName := fmt.Sprintf("aws_iam_role_policy.foo_%s", suffix)
 
