@@ -15,7 +15,7 @@ import (
 )
 
 func TestAccAWSIAMUserPolicy_importBasic(t *testing.T) {
-	suffix := randomString(10)
+	suffix := acctest.RandStringFromCharSet(10, acctest.CharSetAlpha)
 	resourceName := fmt.Sprintf("aws_iam_user_policy.foo_%s", suffix)
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -79,7 +79,7 @@ func TestAccAWSIAMUserPolicy_basic(t *testing.T) {
 
 func TestAccAWSIAMUserPolicy_disappears(t *testing.T) {
 	var out iam.GetUserPolicyOutput
-	suffix := randomString(10)
+	suffix := acctest.RandStringFromCharSet(10, acctest.CharSetAlpha)
 	resourceName := fmt.Sprintf("aws_iam_user_policy.foo_%s", suffix)
 
 	resource.ParallelTest(t, resource.TestCase{
