@@ -25,19 +25,17 @@ func resourceAwsAcmpcaPrivateCertificate() *schema.Resource {
 		SchemaVersion: 1,
 
 		Schema: map[string]*schema.Schema{
-			"certificate_arn": {
+			"arn": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
 			"certificate": {
-				Type:      schema.TypeString,
-				Computed:  true,
-				StateFunc: normalizeCert,
+				Type:     schema.TypeString,
+				Computed: true,
 			},
 			"certificate_chain": {
-				Type:      schema.TypeString,
-				Computed:  true,
-				StateFunc: normalizeCert,
+				Type:     schema.TypeString,
+				Computed: true,
 			},
 			"certificate_authority_arn": {
 				Type:     schema.TypeString,
@@ -47,6 +45,7 @@ func resourceAwsAcmpcaPrivateCertificate() *schema.Resource {
 			"certificate_signing_request": {
 				Type:      schema.TypeString,
 				Required:  true,
+				ForceNew:  true,
 				StateFunc: normalizeCert,
 			},
 			"signing_algorithm": {
@@ -108,7 +107,7 @@ func resourceAwsAcmpcaPrivateCertificateCreate(d *schema.ResourceData, meta inte
 		TemplateArn:             aws.String(d.Get("template_arn").(string)),
 		Validity: &acmpca.Validity{
 			Type:  aws.String(d.Get("validity_unit").(string)),
-			Value: aws.Int64(d.Get("validity_length").(int64)),
+			Value: aws.Int64(int64(d.Get("validity_length").(int))),
 		},
 	}
 
@@ -130,7 +129,6 @@ func resourceAwsAcmpcaPrivateCertificateCreate(d *schema.ResourceData, meta inte
 	}
 
 	d.SetId(aws.StringValue(output.CertificateArn))
-	d.Set("certificate_arn", aws.StringValue(output.CertificateArn))
 
 	getCertificateInput := &acmpca.GetCertificateInput{
 		CertificateArn:          output.CertificateArn,
@@ -165,7 +163,7 @@ func resourceAwsAcmpcaPrivateCertificateRead(d *schema.ResourceData, meta interf
 		return fmt.Errorf("error reading ACMPCA Certificate: %s", err)
 	}
 
-	d.Set("certificate_arn", d.Id())
+	d.Set("arn", d.Id())
 	d.Set("certificate", aws.StringValue(certificateOutput.Certificate))
 	d.Set("certificate_chain", aws.StringValue(certificateOutput.CertificateChain))
 
@@ -188,7 +186,7 @@ func resourceAwsAcmpcaPrivateCertificateRevoke(d *schema.ResourceData, meta inte
 	input := &acmpca.RevokeCertificateInput{
 		CertificateAuthorityArn: aws.String(d.Get("certificate_authority_arn").(string)),
 		CertificateSerial:       aws.String(fmt.Sprintf("%x", cert.SerialNumber)),
-		RevocationReason:        aws.String("Terraform Delete"),
+		RevocationReason:        aws.String(acmpca.RevocationReasonUnspecified),
 	}
 
 	log.Printf("[DEBUG] Revoking ACMPCA Certificate: %s", input)
