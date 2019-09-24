@@ -134,6 +134,7 @@ In addition to all arguments above, the following attributes are exported:
 * `identity` - Nested attribute containing identity provider information for your cluster. Only available on Kubernetes version 1.13 and 1.14 clusters created or upgraded on or after September 3, 2019.
   * `oidc` - Nested attribute containing [OpenID Connect](https://openid.net/connect/) identity provider information for the cluster.
     * `issuer` - Issuer URL for the OpenID Connect identity provider.
+    * `thumbprint_list` - A list of server certificate thumbprints for the OpenID Connect (OIDC) identity provider's server certificate(s)
 * `platform_version` - The platform version for the cluster.
 * `status` - The status of the EKS cluster. One of `CREATING`, `ACTIVE`, `DELETING`, `FAILED`. 
 * `version` - The Kubernetes server version for the cluster.

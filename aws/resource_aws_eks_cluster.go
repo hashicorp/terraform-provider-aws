@@ -1,8 +1,12 @@
 package aws
 
 import (
+	"crypto/sha1"
+	"encoding/hex"
+	"encoding/json"
 	"fmt"
 	"log"
+	"net/http"
 	"strings"
 	"time"
 
@@ -77,6 +81,13 @@ func resourceAwsEksCluster() *schema.Resource {
 									"issuer": {
 										Type:     schema.TypeString,
 										Computed: true,
+									},
+									"thumbprint_list": {
+										Type:     schema.TypeList,
+										Computed: true,
+										Elem: &schema.Schema{
+											Type: schema.TypeString,
+										},
 									},
 								},
 							},
@@ -254,7 +265,11 @@ func resourceAwsEksClusterRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("created_at", aws.TimeValue(cluster.CreatedAt).String())
 	d.Set("endpoint", cluster.Endpoint)
 
-	if err := d.Set("identity", flattenEksIdentity(cluster.Identity)); err != nil {
+	eksIdentity, err := flattenEksIdentity(cluster.Identity)
+	if err != nil {
+		return fmt.Errorf("error obtaining eks cluster identity: %s", err)
+	}
+	if err := d.Set("identity", eksIdentity); err != nil {
 		return fmt.Errorf("error setting identity: %s", err)
 	}
 
@@ -455,28 +470,37 @@ func flattenEksCertificate(certificate *eks.Certificate) []map[string]interface{
 	return []map[string]interface{}{m}
 }
 
-func flattenEksIdentity(identity *eks.Identity) []map[string]interface{} {
+func flattenEksIdentity(identity *eks.Identity) ([]map[string]interface{}, error) {
 	if identity == nil {
-		return []map[string]interface{}{}
+		return []map[string]interface{}{}, nil
 	}
 
+	oidc, err := flattenEksOidc(identity.Oidc)
+	if err != nil {
+		return nil, err
+	}
 	m := map[string]interface{}{
-		"oidc": flattenEksOidc(identity.Oidc),
+		"oidc": oidc,
 	}
 
-	return []map[string]interface{}{m}
+	return []map[string]interface{}{m}, nil
 }
 
-func flattenEksOidc(oidc *eks.OIDC) []map[string]interface{} {
+func flattenEksOidc(oidc *eks.OIDC) ([]map[string]interface{}, error) {
 	if oidc == nil {
-		return []map[string]interface{}{}
+		return []map[string]interface{}{}, nil
 	}
 
+	thumbprint, err := getCertThumbprintList(oidc.Issuer)
+	if err != nil {
+		return nil, err
+	}
 	m := map[string]interface{}{
-		"issuer": aws.StringValue(oidc.Issuer),
+		"issuer":          aws.StringValue(oidc.Issuer),
+		"thumbprint_list": thumbprint,
 	}
 
-	return []map[string]interface{}{m}
+	return []map[string]interface{}{m}, nil
 }
 
 func flattenEksVpcConfigResponse(vpcConfig *eks.VpcConfigResponse) []map[string]interface{} {
@@ -510,6 +534,47 @@ func flattenEksEnabledLogTypes(logging *eks.Logging) *schema.Set {
 	}
 
 	return flattenStringSet(enabledLogTypes)
+}
+
+func getCertThumbprintList(issuer *string) ([]string, error) {
+	if issuer == nil {
+		return []string{}, nil
+	}
+
+	endpoint := fmt.Sprintf("%s/.well-known/openid-configuration", *issuer)
+	resp, err := http.Get(endpoint)
+	if err != nil {
+		return []string{}, fmt.Errorf("error retrieving OIDC discovery data from %s: %s", endpoint, err)
+	}
+	defer resp.Body.Close()
+
+	issuerData := make(map[string]interface{})
+	if err := json.NewDecoder(resp.Body).Decode(&issuerData); err != nil {
+		return []string{}, fmt.Errorf("error parsing OIDC discovery data from %s: %s", endpoint, err)
+	}
+
+	jwks, ok := issuerData["jwks_uri"]
+	if !ok {
+		return []string{}, fmt.Errorf("error retrieving jwks_uri from %s: %s", endpoint, issuerData)
+	}
+	jwksUri, ok := jwks.(string)
+	if !ok {
+		return []string{}, fmt.Errorf("error retrieving jwks_uri from %s: %s", endpoint, issuerData)
+	}
+
+	jwksResp, err := http.Get(jwksUri)
+	if err != nil {
+		return []string{}, fmt.Errorf("error connecting to jwks_uri %s: %s", jwksUri, err)
+	}
+	defer jwksResp.Body.Close()
+
+	certs := jwksResp.TLS.PeerCertificates
+	if len(certs) < 1 {
+		return []string{}, fmt.Errorf("error retrieving any certificates from jwks_uri %s", jwksUri)
+	}
+
+	shasum := sha1.Sum(certs[len(certs)-1].Raw)
+	return []string{hex.EncodeToString(shasum[:])}, nil
 }
 
 func refreshEksClusterStatus(conn *eks.EKS, clusterName string) resource.StateRefreshFunc {

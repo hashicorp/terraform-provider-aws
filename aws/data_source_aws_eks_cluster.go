@@ -60,6 +60,13 @@ func dataSourceAwsEksCluster() *schema.Resource {
 										Type:     schema.TypeString,
 										Computed: true,
 									},
+									"thumbprint_list": {
+										Type:     schema.TypeList,
+										Computed: true,
+										Elem: &schema.Schema{
+											Type: schema.TypeString,
+										},
+									},
 								},
 							},
 						},
@@ -155,7 +162,11 @@ func dataSourceAwsEksClusterRead(d *schema.ResourceData, meta interface{}) error
 	}
 	d.Set("endpoint", cluster.Endpoint)
 
-	if err := d.Set("identity", flattenEksIdentity(cluster.Identity)); err != nil {
+	eksIdentity, err := flattenEksIdentity(cluster.Identity)
+	if err != nil {
+		return fmt.Errorf("error obtaining eks cluster identity: %s", err)
+	}
+	if err := d.Set("identity", eksIdentity); err != nil {
 		return fmt.Errorf("error setting identity: %s", err)
 	}
 
