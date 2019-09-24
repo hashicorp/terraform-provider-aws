@@ -10,6 +10,7 @@ ENHANCEMENTS:
 * data-source/aws_elastic_beanstalk_hosted_zone: Support `ap-east-1`, `ap-northeast-3`, `us-gov-east-1` and `us-gov-west-1` regions [GH-10134]
 * data-source/aws_elb_hosted_zone_id: Support `cn-northwest-1` region  [GH-10134]
 * data-source/aws_redshift_service_account: Support `ap-northeast-3`, `cn-north-1`, `eu-north-1` and `me-south-1` regions [GH-10134]
+* resource/aws_sns_topic_policy: Support resource import [GH-10163]
 
 BUG FIXES:
 
