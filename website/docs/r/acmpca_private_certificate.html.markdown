@@ -59,7 +59,7 @@ The following arguments are supported:
 * `signing_algorithm` - (Required) Algorithm to use to sign certificate requests. Valid values: `SHA256WITHRSA`, `SHA256WITHECDSA`, `SHA384WITHRSA`, `SHA384WITHECDSA`, `SHA512WITHRSA`, `SHA512WITHECDSA`
 * `validity_length` - (Required) Used with `validity_unit` as the number to apply with the unit
 * `validity_unit` - (Required) The unit of time for certificate validity. Cannot be set to a value higher than the validity of the Certficate Authority. Valid values: `DAYS`, `MONTHS`, `YEARS`, `ABSOLUTE`, `END_DATE`.
-* `template_arn` - (Optional) The template to use when issueing a certificate. See [ACM PCA Documentation](https://docs.aws.amazon.com/acm-pca/latest/userguide/UsingTemplates.html) for more information.
+* `template_arn` - (Optional) The template to use when issuing a certificate. See [ACM PCA Documentation](https://docs.aws.amazon.com/acm-pca/latest/userguide/UsingTemplates.html) for more information.
 
 
 ## Attribute Reference

@@ -180,7 +180,7 @@ func resourceAwsAcmpcaPrivateCertificateRevoke(d *schema.ResourceData, meta inte
 	}
 	cert, err := x509.ParseCertificate(block.Bytes)
 	if err != nil {
-		fmt.Errorf("Failed to parse ACMPCA Certificate: %s", err)
+		return fmt.Errorf("Failed to parse ACMPCA Certificate: %s", err)
 	}
 
 	input := &acmpca.RevokeCertificateInput{
