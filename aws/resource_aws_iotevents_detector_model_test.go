@@ -833,7 +833,7 @@ resource "aws_iotevents_detector_model" "detector" {
 
           action {
             iot_events {
-				name = "test_input_%[1]s"
+				      input_name = "test_input_%[1]s"
             }
           }
         }

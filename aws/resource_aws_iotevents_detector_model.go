@@ -49,7 +49,7 @@ func generateActionSchema() *schema.Resource {
 				Optional: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"name": {
+						"input_name": {
 							Type:     schema.TypeString,
 							Required: true,
 						},
@@ -76,8 +76,9 @@ func generateActionSchema() *schema.Resource {
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"function_arn": {
-							Type:     schema.TypeString,
-							Required: true,
+							Type:         schema.TypeString,
+							Required:     true,
+							ValidateFunc: validateArn,
 						},
 					},
 				},
@@ -138,8 +139,9 @@ func generateActionSchema() *schema.Resource {
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"target_arn": {
-							Type:     schema.TypeString,
-							Required: true,
+							Type:         schema.TypeString,
+							Required:     true,
+							ValidateFunc: validateArn,
 						},
 					},
 				},
@@ -345,7 +347,7 @@ func parseAction(rawAction map[string]interface{}) *iotevents.ActionData {
 
 		rawIotEvents := v.List()[0].(map[string]interface{})
 		action.IotEvents = &iotevents.Action{
-			InputName: aws.String(rawIotEvents["name"].(string)),
+			InputName: aws.String(rawIotEvents["input_name"].(string)),
 		}
 	}
 
@@ -633,7 +635,7 @@ func flattenAction(action *iotevents.ActionData) map[string]interface{} {
 
 	if v := action.IotEvents; v != nil {
 		iotEvents := make(map[string]interface{})
-		iotEvents["name"] = aws.StringValue(v.InputName)
+		iotEvents["input_name"] = aws.StringValue(v.InputName)
 		rawAction["iot_events"] = []map[string]interface{}{iotEvents}
 	}
 
