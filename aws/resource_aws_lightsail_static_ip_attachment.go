@@ -26,6 +26,10 @@ func resourceAwsLightsailStaticIpAttachment() *schema.Resource {
 				Required: true,
 				ForceNew: true,
 			},
+			"ip_address": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 		},
 	}
 }
@@ -76,6 +80,7 @@ func resourceAwsLightsailStaticIpAttachmentRead(d *schema.ResourceData, meta int
 	log.Printf("[INFO] Received Lightsail Static IP: %s", *out)
 
 	d.Set("instance_name", out.StaticIp.AttachedTo)
+	d.Set("ip_address", out.StaticIp.IpAddress)
 
 	return nil
 }
