@@ -16,11 +16,11 @@ import (
 func init() {
 	resource.AddTestSweepers("aws_cloudwatch_log_resource_policy", &resource.Sweeper{
 		Name: "aws_cloudwatch_log_resource_policy",
-		F:    testSweepCloudWatchLogResourcePolicys,
+		F:    testSweepCloudWatchLogResourcePolicies,
 	})
 }
 
-func testSweepCloudWatchLogResourcePolicys(region string) error {
+func testSweepCloudWatchLogResourcePolicies(region string) error {
 	client, err := sharedClientForRegion(region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
@@ -41,15 +41,19 @@ func testSweepCloudWatchLogResourcePolicys(region string) error {
 		}
 
 		for _, resourcePolicy := range output.ResourcePolicies {
+			policyName := aws.StringValue(resourcePolicy.PolicyName)
 			deleteInput := &cloudwatchlogs.DeleteResourcePolicyInput{
 				PolicyName: resourcePolicy.PolicyName,
 			}
+
+			log.Printf("[INFO] Deleting CloudWatch Log Resource Policy: %s", policyName)
+
 			if _, err := conn.DeleteResourcePolicy(deleteInput); err != nil {
-				return fmt.Errorf("error deleting CloudWatch log resource policy (%s): %s", aws.StringValue(resourcePolicy.PolicyName), err)
+				return fmt.Errorf("error deleting CloudWatch log resource policy (%s): %s", policyName, err)
 			}
 		}
 
-		if output.NextToken == nil {
+		if aws.StringValue(output.NextToken) == "" {
 			break
 		}
 
