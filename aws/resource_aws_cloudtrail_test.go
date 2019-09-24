@@ -71,7 +71,7 @@ func testAccAWSCloudTrail_basic(t *testing.T) {
 				Config: testAccAWSCloudTrailConfigModified(cloudTrailRandInt),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCloudTrailExists("aws_cloudtrail.foobar", &trail),
-					resource.TestCheckResourceAttr("aws_cloudtrail.foobar", "s3_key_prefix", "/prefix"),
+					resource.TestCheckResourceAttr("aws_cloudtrail.foobar", "s3_key_prefix", "prefix"),
 					resource.TestCheckResourceAttr("aws_cloudtrail.foobar", "include_global_service_events", "false"),
 					testAccCheckCloudTrailLogValidationEnabled("aws_cloudtrail.foobar", false, &trail),
 					testAccCheckCloudTrailKmsKeyIdEquals("aws_cloudtrail.foobar", "", &trail),
@@ -647,7 +647,7 @@ func testAccAWSCloudTrailConfigModified(cloudTrailRandInt int) string {
 resource "aws_cloudtrail" "foobar" {
   name                          = "tf-trail-foobar-%d"
   s3_bucket_name                = "${aws_s3_bucket.foo.id}"
-  s3_key_prefix                 = "/prefix"
+  s3_key_prefix                 = "prefix"
   include_global_service_events = false
   enable_logging                = false
 }
