@@ -56,7 +56,7 @@ func testSweepS3BucketObjects(region string) error {
 		bucketName := aws.StringValue(bucket.Name)
 
 		hasPrefix := false
-		prefixes := []string{"mybucket.", "mylogs.", "tf-acc", "tf-object-test", "tf-test"}
+		prefixes := []string{"mybucket.", "mylogs.", "tf-acc", "tf-object-test", "tf-test", "tf-emr-bootstrap"}
 
 		for _, prefix := range prefixes {
 			if strings.HasPrefix(bucketName, prefix) {
