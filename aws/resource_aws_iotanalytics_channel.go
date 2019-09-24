@@ -2,6 +2,7 @@ package aws
 
 import (
 	"log"
+	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/iotanalytics"
@@ -65,7 +66,7 @@ func generateRetentionPeriodSchema() *schema.Resource {
 				ValidateFunc:  validation.IntAtLeast(1),
 			},
 			"unlimited": {
-				Type:          schema.TypeString,
+				Type:          schema.TypeBool,
 				Optional:      true,
 				ConflictsWith: []string{"retention_period.0.number_of_days"},
 			},
@@ -127,14 +128,14 @@ func parseServiceManagedS3(rawServiceManagedS3 map[string]interface{}) *iotanaly
 func parseStorage(rawChannelStorage map[string]interface{}) *iotanalytics.ChannelStorage {
 
 	var customerManagedS3 *iotanalytics.CustomerManagedChannelS3Storage
-	if set := rawChannelStorage["customer_managed_s3"].(*schema.Set).List(); len(set) > 0 {
-		rawCustomerManagedS3 := set[0].(map[string]interface{})
+	if list := rawChannelStorage["customer_managed_s3"].([]interface{}); len(list) > 0 {
+		rawCustomerManagedS3 := list[0].(map[string]interface{})
 		customerManagedS3 = parseCustomerManagedS3(rawCustomerManagedS3)
 	}
 
 	var serviceManagedS3 *iotanalytics.ServiceManagedChannelS3Storage
-	if set := rawChannelStorage["service_managed_s3"].(*schema.Set).List(); len(set) > 0 {
-		rawServiceManagedS3 := set[0].(map[string]interface{})
+	if list := rawChannelStorage["service_managed_s3"].([]interface{}); len(list) > 0 {
+		rawServiceManagedS3 := list[0].(map[string]interface{})
 		serviceManagedS3 = parseServiceManagedS3(rawServiceManagedS3)
 	}
 
@@ -147,8 +148,8 @@ func parseStorage(rawChannelStorage map[string]interface{}) *iotanalytics.Channe
 func parseRetentionPeriod(rawRetentionPeriod map[string]interface{}) *iotanalytics.RetentionPeriod {
 
 	var numberOfDays *int64
-	if v, ok := rawRetentionPeriod["numberOfDays"]; ok && v.(int64) > 1 {
-		numberOfDays = aws.Int64(v.(int64))
+	if v, ok := rawRetentionPeriod["number_of_days"]; ok && int64(v.(int)) > 1 {
+		numberOfDays = aws.Int64(int64(v.(int)))
 	}
 	var unlimited *bool
 	if v, ok := rawRetentionPeriod["unlimited"]; ok {
@@ -180,7 +181,29 @@ func resourceAwsIotAnalyticsChannelCreate(d *schema.ResourceData, meta interface
 	}
 
 	log.Printf("[DEBUG] Create IoTAnalytics Channel: %s", params)
-	_, err := conn.CreateChannel(params)
+
+	retrySecondsList := [6]int{1, 2, 5, 8, 10, 0}
+
+	var err error
+
+	// Primitive retry.
+	// During testing channel, problem was detected.
+	// When we try to create channel model and role arn that
+	// will be assumed by channel during one apply we get:
+	// 'Unable to assume role, role ARN' error. However if we run apply
+	// second time(when all required resources are created) channel will be created successfully.
+	// So we suppose that problem is that AWS return response of successful role arn creation before
+	// process of creation is really ended, and then creation of channel model fails.
+	for _, sleepSeconds := range retrySecondsList {
+		err = nil
+
+		_, err = conn.CreateChannel(params)
+		if err == nil {
+			break
+		}
+
+		time.Sleep(time.Duration(sleepSeconds) * time.Second)
+	}
 
 	if err != nil {
 		return err
@@ -296,7 +319,25 @@ func resourceAwsIotAnalyticsChannelUpdate(d *schema.ResourceData, meta interface
 	}
 
 	log.Printf("[DEBUG] Updating IoTAnalytics Channel: %s", params)
-	_, err := conn.UpdateChannel(params)
+
+	retrySecondsList := [6]int{1, 2, 5, 8, 10, 0}
+
+	var err error
+
+	// Primitive retry.
+	// Full explanation can be found in function `resourceAwsIotAnalyticsChannelCreate`.
+	// We suppose that such error can appear during update also, if you update
+	// role arn.
+	for _, sleepSeconds := range retrySecondsList {
+		err = nil
+
+		_, err = conn.UpdateChannel(params)
+		if err == nil {
+			break
+		}
+
+		time.Sleep(time.Duration(sleepSeconds) * time.Second)
+	}
 
 	if err != nil {
 		return err
