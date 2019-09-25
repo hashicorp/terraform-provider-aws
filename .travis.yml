@@ -15,7 +15,7 @@ matrix:
     - go: "1.13.x"
       name: "Code Lint"
       env: GOGC=20
-      script: make lint
+      script: golangci-lint run -v ./aws
     - go: "1.13.x"
       name: "Code UnitTest"
       script: make test
