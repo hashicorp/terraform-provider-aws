@@ -14,8 +14,10 @@ matrix:
   include:
     - go: "1.13.x"
       name: "Code Lint"
-      env: GOGC=20
-      script: golangci-lint run -v ./aws
+      script:
+        - golangci-lint run --no-config --deadline 5m --disable-all --enable staticcheck --max-issues-per-linter 0 --max-same-issues 0 -v ./aws
+        - golangci-lint run -v ./aws
+        - tfproviderlint -c 1 -AT001 -S001 -S002 -S003 -S004 -S005 -S007 -S008 -S009 -S010 -S011 -S012 -S013 -S014 -S015 -S016 -S017 -S019 ./aws
     - go: "1.13.x"
       name: "Code UnitTest"
       script: make test
