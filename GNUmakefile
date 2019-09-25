@@ -32,7 +32,8 @@ websitefmtcheck:
 
 lint:
 	@echo "==> Checking source code against linters..."
-	@GOGC=30 golangci-lint run ./$(PKG_NAME)
+	@golangci-lint run --no-config --deadline 5m --disable-all --enable staticcheck --exclude SA1019 --max-issues-per-linter 0 --max-same-issues 0 ./$(PKG_NAME)
+	@golangci-lint run ./$(PKG_NAME)
 	@tfproviderlint \
 		-c 1 \
 		-AT001 \
