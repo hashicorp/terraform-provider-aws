@@ -24,5 +24,5 @@ linters-settings:
     ignore: github.com/hashicorp/terraform/helper/schema:ForceNew|Set,fmt:.*,io:Close
 
 run:
-  deadline: 10m
+  deadline: 5m
   modules-download-mode: vendor
