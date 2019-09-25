@@ -678,10 +678,11 @@ resource "aws_iotevents_detector_model" "detector" {
             }
           }
         }
-      }
+			}
+			on_exit {}
+			on_input {}
     }
   }
-
 }
 `, dName)
 }
@@ -703,70 +704,71 @@ resource "aws_iotevents_detector_model" "detector" {
     state {
       name = "first_state"
       on_enter {
-		event {
-			name      = "test_event_name"
-			condition = "convert(Decimal, $input.test_input_%[1]s.temperature) > 20"
-  
-			action {
-			  clear_timer {
-				name = "test_timer_name"
-			  }
-			}
-		  }
-	  }
-      on_exit {
-		event {
-			name      = "test_event_name"
-			condition = "convert(Decimal, $input.test_input_%[1]s.temperature) > 20"
-  
-			action {
-			  clear_timer {
-				name = "test_timer_name"
-			  }
-			}
-		  }	
-      }
-      on_input {
-		event {
-			name      = "test_event_name"
-			condition = "convert(Decimal, $input.test_input_%[1]s.temperature) > 20"
-  
-			action {
-			  clear_timer {
-				name = "test_timer_name"
-			  }
-			}
-		  }
-        transition_event {
-          name      = "test_transition_event_name"
-          condition = "convert(Decimal, $input.test_input_%[1]s.temperature) > 20"
-		  next_state = "second_state"
-
-          action {
-            clear_timer {
-              name = "test_timer_name"
-            }
-          }
-		}
-      }
-	}
-	
-    state {
-		name = "second_state"
-		on_enter {
-		  event {
-			  name      = "test_event_name"
-			  condition = "convert(Decimal, $input.test_input_%[1]s.temperature) > 20"
-	
-			  action {
-				clear_timer {
-				  name = "test_timer_name"
+				event {
+					name      = "test_event_name"
+					condition = "convert(Decimal, $input.test_input_%[1]s.temperature) > 20"
+			
+					action {
+						clear_timer {
+						name = "test_timer_name"
+						}
+					}
 				}
-			  }
+	  	}
+      on_exit {
+				event {
+					name      = "test_event_name"
+					condition = "convert(Decimal, $input.test_input_%[1]s.temperature) > 20"
+			
+					action {
+						clear_timer {
+						name = "test_timer_name"
+						}
+					}
+				}	
+			}
+			on_input {
+				event {
+					name      = "test_event_name"
+					condition = "convert(Decimal, $input.test_input_%[1]s.temperature) > 20"
+			
+					action {
+						clear_timer {
+							name = "test_timer_name"
+						}
+					}
+				}
+				transition_event {
+					name      = "test_transition_event_name"
+					condition = "convert(Decimal, $input.test_input_%[1]s.temperature) > 20"
+					next_state = "second_state"
+
+					action {
+						clear_timer {
+							name = "test_timer_name"
+						}
+					}
+				}
 			}
 		}
-	  }
-
+	
+		state {
+			name = "second_state"
+			on_enter {
+				event {
+					name      = "test_event_name"
+					condition = "convert(Decimal, $input.test_input_%[1]s.temperature) > 20"
+		
+					action {
+						clear_timer {
+							name = "test_timer_name"
+						}
+					}
+				}
+			}
+			on_exit {}
+			on_input {}
+		}
   }
 }
 `, dName)
@@ -801,10 +803,11 @@ resource "aws_iotevents_detector_model" "detector" {
             }
           }
         }
-      }
+			}
+			on_exit {}
+			on_input {}
     }
   }
-
 }
 `, dName)
 }
@@ -837,7 +840,9 @@ resource "aws_iotevents_detector_model" "detector" {
             }
           }
         }
-      }
+			}
+			on_exit {}
+			on_input {}
     }
   }
 
@@ -873,7 +878,9 @@ resource "aws_iotevents_detector_model" "detector" {
             }
           }
         }
-      }
+			}
+			on_exit {}
+			on_input {}
     }
   }
 
@@ -905,11 +912,13 @@ resource "aws_iotevents_detector_model" "detector" {
 
           action {
             lambda {
-				function_arn = "arn:aws:lambda:us-east-1:123456789012:function:ProcessKinesisRecords"
+							function_arn = "arn:aws:lambda:us-east-1:123456789012:function:ProcessKinesisRecords"
             }
           }
         }
-      }
+			}
+			on_exit {}
+			on_input {}
     }
   }
 
@@ -941,11 +950,13 @@ resource "aws_iotevents_detector_model" "detector" {
 
           action {
             reset_timer {
-				name = "test_timer_name"
+							name = "test_timer_name"
             }
           }
         }
-      }
+			}
+			on_exit {}
+			on_input {}
     }
   }
 
@@ -977,12 +988,14 @@ resource "aws_iotevents_detector_model" "detector" {
 
           action {
             set_timer {
-				name = "test_timer_name"
-				seconds = 60
+							name = "test_timer_name"
+							seconds = 60
             }
           }
         }
-      }
+			}
+			on_exit {}
+			on_input {}
     }
   }
 
@@ -1014,12 +1027,14 @@ resource "aws_iotevents_detector_model" "detector" {
 
           action {
             set_variable {
-				name = "test_variable_name"
-				value = "\"val\""
+							name = "test_variable_name"
+							value = "\"val\""
             }
           }
         }
-      }
+			}
+			on_exit {}
+			on_input {}
     }
   }
 
@@ -1051,11 +1066,13 @@ resource "aws_iotevents_detector_model" "detector" {
 
           action {
             sns {
-				target_arn = "arn:aws:sns:us-east-1:123456789012:my_corporate_topic"
+							target_arn = "arn:aws:sns:us-east-1:123456789012:my_corporate_topic"
             }
           }
         }
-      }
+			}
+			on_exit {}
+			on_input {}
     }
   }
 
@@ -1087,15 +1104,16 @@ resource "aws_iotevents_detector_model" "detector" {
 
           action {
             sqs {
-				queue_url = "fakedata"
-				use_base64 = false
-			}
+							queue_url = "fakedata"
+							use_base64 = false
+						}
           }
         }
-      }
+			}		
+			on_exit {}
+			on_input {}
     }
   }
-
 }
 `, dName)
 }

@@ -699,9 +699,9 @@ func flattenEvent(event *iotevents.Event) map[string]interface{} {
 		rawEvent["condition"] = aws.StringValue(event.Condition)
 	}
 
-	rawActions := make([]interface{}, 0)
+	rawActions := make([]map[string]interface{}, 0)
 	for _, act := range event.Actions {
-		rawActions = append(rawActions, act)
+		rawActions = append(rawActions, flattenAction(act))
 	}
 
 	rawEvent["action"] = rawActions
@@ -715,9 +715,9 @@ func flattenTransitionEvent(transitionEvent *iotevents.TransitionEvent) map[stri
 	rawTransitionEvent["condition"] = aws.StringValue(transitionEvent.Condition)
 	rawTransitionEvent["next_state"] = aws.StringValue(transitionEvent.NextState)
 
-	rawActions := make([]interface{}, 0)
+	rawActions := make([]map[string]interface{}, 0)
 	for _, act := range transitionEvent.Actions {
-		rawActions = append(rawActions, act)
+		rawActions = append(rawActions, flattenAction(act))
 	}
 
 	rawTransitionEvent["action"] = rawActions
@@ -726,7 +726,7 @@ func flattenTransitionEvent(transitionEvent *iotevents.TransitionEvent) map[stri
 }
 
 func flattenOnEnter(onEnter *iotevents.OnEnterLifecycle) map[string]interface{} {
-	rawEvents := make([]interface{}, 0)
+	rawEvents := make([]map[string]interface{}, 0)
 	for _, event := range onEnter.Events {
 		rawEvents = append(rawEvents, flattenEvent(event))
 	}
@@ -737,7 +737,7 @@ func flattenOnEnter(onEnter *iotevents.OnEnterLifecycle) map[string]interface{} 
 }
 
 func flattenOnExit(onExit *iotevents.OnExitLifecycle) map[string]interface{} {
-	rawEvents := make([]interface{}, 0)
+	rawEvents := make([]map[string]interface{}, 0)
 	for _, event := range onExit.Events {
 		rawEvents = append(rawEvents, flattenEvent(event))
 	}
@@ -750,13 +750,13 @@ func flattenOnExit(onExit *iotevents.OnExitLifecycle) map[string]interface{} {
 func flattenOnInput(onInput *iotevents.OnInputLifecycle) map[string]interface{} {
 	rawOnInput := make(map[string]interface{})
 
-	rawEvents := make([]interface{}, 0)
+	rawEvents := make([]map[string]interface{}, 0)
 	for _, event := range onInput.Events {
 		rawEvents = append(rawEvents, flattenEvent(event))
 	}
 	rawOnInput["event"] = rawEvents
 
-	rawTransitionEvents := make([]interface{}, 0)
+	rawTransitionEvents := make([]map[string]interface{}, 0)
 	for _, transitionEvent := range onInput.TransitionEvents {
 		rawTransitionEvents = append(rawTransitionEvents, flattenTransitionEvent(transitionEvent))
 	}
@@ -769,9 +769,9 @@ func flattenState(state *iotevents.State) map[string]interface{} {
 	rawState := make(map[string]interface{})
 
 	rawState["name"] = aws.StringValue(state.StateName)
-	rawState["on_enter"] = []interface{}{flattenOnEnter(state.OnEnter)}
-	rawState["on_exit"] = []interface{}{flattenOnExit(state.OnExit)}
-	rawState["on_input"] = []interface{}{flattenOnInput(state.OnInput)}
+	rawState["on_enter"] = []map[string]interface{}{flattenOnEnter(state.OnEnter)}
+	rawState["on_exit"] = []map[string]interface{}{flattenOnExit(state.OnExit)}
+	rawState["on_input"] = []map[string]interface{}{flattenOnInput(state.OnInput)}
 
 	return rawState
 }
@@ -806,7 +806,7 @@ func resourceAwsIotDetectorRead(d *schema.ResourceData, meta interface{}) error 
 	d.Set("description", out.DetectorModel.DetectorModelConfiguration.DetectorModelDescription)
 	d.Set("key", out.DetectorModel.DetectorModelConfiguration.Key)
 	d.Set("role_arn", out.DetectorModel.DetectorModelConfiguration.RoleArn)
-	detectorModelDefinition := []interface{}{flattenDetectorModelDefinition(out.DetectorModel.DetectorModelDefinition)}
+	detectorModelDefinition := []map[string]interface{}{flattenDetectorModelDefinition(out.DetectorModel.DetectorModelDefinition)}
 	d.Set("definition", detectorModelDefinition)
 
 	return nil
