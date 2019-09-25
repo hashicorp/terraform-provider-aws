@@ -138,7 +138,7 @@ func resourceAwsEc2TagRead(d *schema.ResourceData, meta interface{}) error {
 	if len(tags.Tags) == 0 {
 		// The API call did not fail but the tag does not exists on resource
 		// Did not find the tag, as per contract with TF report:https://www.terraform.io/docs/extend/writing-custom-providers.html
-		log.Printf("There are no tags on resource %s", id)
+		log.Printf("[WARN]There are no tags on resource %s", id)
 		d.SetId("")
 		return nil
 	}
