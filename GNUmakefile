@@ -32,7 +32,7 @@ websitefmtcheck:
 
 lint:
 	@echo "==> Checking source code against linters..."
-	@golangci-lint run ./$(PKG_NAME)
+	@GOGC=50 golangci-lint run ./$(PKG_NAME)
 	@tfproviderlint \
 		-c 1 \
 		-AT001 \
