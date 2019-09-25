@@ -15,6 +15,7 @@ ENHANCEMENTS:
 * resource/aws_appsync_graphql_api: Add `additional_authentication_providers` configuration blocks [GH-8587]
 * resource/aws_elastic_beanstalk_environment: Add `endpoint_url` attribute [GH-10015]
 * resource/aws_lightsail_static_ip_attachment: Add `ip_address` attribute [GH-10109]
+* resource/aws_opsworks_stack: Switch legacy Opsworks client User-Agent to real Terraform version [GH-10246]
 * resource/aws_sns_topic_policy: Support resource import [GH-10163]
 * resource/aws_sqs_queue: Support tag-on-create in AWS Commercial regions [GH-10156]
 
