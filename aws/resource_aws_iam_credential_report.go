@@ -86,7 +86,9 @@ func resourceAwsIamCredentialReport() *schema.Resource {
 }
 
 func resourceAwsIamCredentialReportUpdate(d *schema.ResourceData, meta interface{}) error {
-	d.SetId("iam-credential-report")
+	// RM-2550: (eric-luminal) Fugue sets the ID of this resource as something
+	// more human readable
+	d.SetId("CredentialReport")
 	return resourceAwsIamCredentialReportRead(d, meta)
 }
 

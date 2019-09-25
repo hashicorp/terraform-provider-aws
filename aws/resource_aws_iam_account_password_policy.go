@@ -115,7 +115,9 @@ func resourceAwsIamAccountPasswordPolicyUpdate(d *schema.ResourceData, meta inte
 	}
 	log.Println("[DEBUG] IAM account password policy updated")
 
-	d.SetId("iam-account-password-policy")
+	// RM-2550: (eric-luminal) Fugue sets the ID of this resource as something
+	// more human readable
+	d.SetId("PasswordPolicy")
 
 	return resourceAwsIamAccountPasswordPolicyRead(d, meta)
 }
