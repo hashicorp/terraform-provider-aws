@@ -280,7 +280,7 @@ func resourceAwsAppsyncGraphqlApiRead(d *schema.ResourceData, meta interface{}) 
 	}
 
 	if err := d.Set("additional_authentication_provider", flattenAppsyncGraphqlApiAdditionalAuthenticationProviders(resp.GraphqlApi.AdditionalAuthenticationProviders)); err != nil {
-		return fmt.Errorf("error setting additonal_authentication_provider: %s", err)
+		return fmt.Errorf("error setting additional_authentication_provider: %s", err)
 	}
 
 	if err := d.Set("uris", aws.StringValueMap(resp.GraphqlApi.Uris)); err != nil {
