@@ -68,6 +68,7 @@ be removed in future releases, please use `max_capacity` instead.
 
 * `name` - (Optional) The name of the job command. Defaults to `glueetl`
 * `script_location` - (Required) Specifies the S3 path to a script that executes a job.
+* `python_version` - (Optional) The Python version being used to execute a Python shell job. Allowed values are 2 or 3.
 
 ### execution_property Argument Reference
 

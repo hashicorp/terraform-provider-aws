@@ -98,6 +98,26 @@ func TestAccAwsEc2ClientVpnEndpoint_basic(t *testing.T) {
 	})
 }
 
+func TestAccAwsEc2ClientVpnEndpoint_disappears(t *testing.T) {
+	rStr := acctest.RandString(5)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProvidersWithTLS,
+		CheckDestroy: testAccCheckAwsEc2ClientVpnEndpointDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccEc2ClientVpnEndpointConfig(rStr),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAwsEc2ClientVpnEndpointExists("aws_ec2_client_vpn_endpoint.test"),
+					testAccCheckAwsEc2ClientVpnEndpointDisappears("aws_ec2_client_vpn_endpoint.test"),
+				),
+				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}
+
 func TestAccAwsEc2ClientVpnEndpoint_msAD(t *testing.T) {
 	rStr := acctest.RandString(5)
 
@@ -223,6 +243,38 @@ func TestAccAwsEc2ClientVpnEndpoint_tags(t *testing.T) {
 	})
 }
 
+func TestAccAwsEc2ClientVpnEndpoint_splitTunnel(t *testing.T) {
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_ec2_client_vpn_endpoint.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProvidersWithTLS,
+		CheckDestroy: testAccCheckAwsEc2ClientVpnEndpointDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccEc2ClientVpnEndpointConfigSplitTunnel(rName, true),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAwsEc2ClientVpnEndpointExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "split_tunnel", "true"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccEc2ClientVpnEndpointConfigSplitTunnel(rName, false),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAwsEc2ClientVpnEndpointExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "split_tunnel", "false"),
+				),
+			},
+		},
+	})
+}
+
 func testAccCheckAwsEc2ClientVpnEndpointDestroy(s *terraform.State) error {
 	conn := testAccProvider.Meta().(*AWSClient).ec2conn
 
@@ -243,6 +295,25 @@ func testAccCheckAwsEc2ClientVpnEndpointDestroy(s *terraform.State) error {
 		}
 	}
 	return nil
+}
+
+func testAccCheckAwsEc2ClientVpnEndpointDisappears(name string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		rs, ok := s.RootModule().Resources[name]
+		if !ok {
+			return fmt.Errorf("Not found: %s", name)
+		}
+
+		conn := testAccProvider.Meta().(*AWSClient).ec2conn
+
+		input := &ec2.DeleteClientVpnEndpointInput{
+			ClientVpnEndpointId: aws.String(rs.Primary.ID),
+		}
+
+		_, err := conn.DeleteClientVpnEndpoint(input)
+
+		return err
+	}
 }
 
 func testAccCheckAwsEc2ClientVpnEndpointExists(name string) resource.TestCheckFunc {
@@ -581,4 +652,50 @@ resource "aws_ec2_client_vpn_endpoint" "test" {
   }
 }
 `, rName)
+}
+
+func testAccEc2ClientVpnEndpointConfigSplitTunnel(rName string, splitTunnel bool) string {
+	return fmt.Sprintf(`
+resource "tls_private_key" "test" {
+  algorithm = "RSA"
+}
+
+resource "tls_self_signed_cert" "test" {
+  allowed_uses = [
+    "digital_signature",
+    "key_encipherment",
+    "server_auth",
+  ]
+
+  key_algorithm         = "RSA"
+  private_key_pem       = "${tls_private_key.test.private_key_pem}"
+  validity_period_hours = 12
+
+  subject {
+    common_name  = "example.com"
+    organization = "ACME Examples, Inc"
+  }
+}
+
+resource "aws_acm_certificate" "test" {
+  certificate_body = "${tls_self_signed_cert.test.cert_pem}"
+  private_key      = "${tls_private_key.test.private_key_pem}"
+}
+
+resource "aws_ec2_client_vpn_endpoint" "test" {
+  client_cidr_block      = "10.0.0.0/16"
+  description            = %[1]q
+  server_certificate_arn = "${aws_acm_certificate.test.arn}"
+  split_tunnel           = %[2]t
+
+  authentication_options {
+    type                       = "certificate-authentication"
+    root_certificate_chain_arn = "${aws_acm_certificate.test.arn}"
+  }
+
+  connection_log_options {
+    enabled = false
+  }
+}
+`, rName, splitTunnel)
 }

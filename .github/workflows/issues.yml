@@ -1,0 +1,14 @@
+on: issues
+name: Issue triage
+jobs:
+  applyTriageLabel:
+    name: Apply Triage Label
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v1.0.0
+    - uses: actions/github@v1.0.0
+      if: github.event.action == 'opened'
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        args: label needs-triage

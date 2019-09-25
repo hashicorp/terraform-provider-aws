@@ -292,7 +292,7 @@ func waitForTransferServerDeletion(conn *transfer.Transfer, serverID string) err
 		ServerId: aws.String(serverID),
 	}
 
-	return resource.Retry(10*time.Minute, func() *resource.RetryError {
+	err := resource.Retry(10*time.Minute, func() *resource.RetryError {
 		_, err := conn.DescribeServer(params)
 
 		if isAWSErr(err, transfer.ErrCodeResourceNotFoundException, "") {
@@ -305,6 +305,19 @@ func waitForTransferServerDeletion(conn *transfer.Transfer, serverID string) err
 
 		return resource.RetryableError(fmt.Errorf("Transfer Server (%s) still exists", serverID))
 	})
+	if isResourceTimeoutError(err) {
+		_, err = conn.DescribeServer(params)
+		if isAWSErr(err, transfer.ErrCodeResourceNotFoundException, "") {
+			return nil
+		}
+		if err == nil {
+			return fmt.Errorf("Transfer server (%s) still exists", serverID)
+		}
+	}
+	if err != nil {
+		return fmt.Errorf("Error waiting for transfer server deletion: %s", err)
+	}
+	return nil
 }
 
 func deleteTransferUsers(conn *transfer.Transfer, serverID string, nextToken *string) error {

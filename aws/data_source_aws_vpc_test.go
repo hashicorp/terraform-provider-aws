@@ -132,10 +132,6 @@ func TestAccDataSourceAwsVpc_multipleCidr(t *testing.T) {
 
 func testAccDataSourceAwsVpcConfigIpv6(cidr, tag string) string {
 	return fmt.Sprintf(`
-provider "aws" {
-  region = "us-west-2"
-}
-
 resource "aws_vpc" "test" {
   cidr_block                       = "%s"
   assign_generated_ipv6_cidr_block = true
@@ -153,10 +149,6 @@ data "aws_vpc" "by_id" {
 
 func testAccDataSourceAwsVpcConfig(cidr, tag string) string {
 	return fmt.Sprintf(`
-provider "aws" {
-  region = "us-west-2"
-}
-
 resource "aws_vpc" "test" {
   cidr_block = "%s"
 

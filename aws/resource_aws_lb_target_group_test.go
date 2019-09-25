@@ -134,6 +134,36 @@ func TestAccAWSLBTargetGroup_basic(t *testing.T) {
 	})
 }
 
+func TestAccAWSLBTargetGroup_basicUdp(t *testing.T) {
+	var conf elbv2.TargetGroup
+	targetGroupName := fmt.Sprintf("test-target-group-%s", acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum))
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:      func() { testAccPreCheck(t) },
+		IDRefreshName: "aws_lb_target_group.test",
+		Providers:     testAccProviders,
+		CheckDestroy:  testAccCheckAWSLBTargetGroupDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSLBTargetGroupConfig_basicUdp(targetGroupName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckAWSLBTargetGroupExists("aws_lb_target_group.test", &conf),
+					resource.TestCheckResourceAttrSet("aws_lb_target_group.test", "arn"),
+					resource.TestCheckResourceAttr("aws_lb_target_group.test", "name", targetGroupName),
+					resource.TestCheckResourceAttr("aws_lb_target_group.test", "port", "514"),
+					resource.TestCheckResourceAttr("aws_lb_target_group.test", "protocol", "UDP"),
+					resource.TestCheckResourceAttrSet("aws_lb_target_group.test", "vpc_id"),
+					resource.TestCheckResourceAttr("aws_lb_target_group.test", "health_check.#", "1"),
+					resource.TestCheckResourceAttr("aws_lb_target_group.test", "health_check.0.port", "514"),
+					resource.TestCheckResourceAttr("aws_lb_target_group.test", "health_check.0.protocol", "TCP"),
+					resource.TestCheckResourceAttr("aws_lb_target_group.test", "tags.%", "1"),
+					resource.TestCheckResourceAttr("aws_lb_target_group.test", "tags.TestName", "TestAccAWSLBTargetGroup_basic"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccAWSLBTargetGroup_withoutHealthcheck(t *testing.T) {
 	var conf elbv2.TargetGroup
 	targetGroupName := fmt.Sprintf("test-target-group-%s", acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum))
@@ -898,8 +928,9 @@ func TestAccAWSLBTargetGroup_stickinessWithTCPDisabled(t *testing.T) {
 
 func TestAccAWSLBTargetGroup_stickinessWithTCPEnabledShouldError(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:  func() { testAccPreCheck(t) },
-		Providers: testAccProviders,
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSLBTargetGroupDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccAWSLBTargetGroupConfig_stickinessWithTCP(true),
@@ -1132,6 +1163,32 @@ func testAccAWSLBTargetGroupConfig_basic(targetGroupName string) string {
     healthy_threshold = 3
     unhealthy_threshold = 3
     matcher = "200-299"
+  }
+
+  tags = {
+    TestName = "TestAccAWSLBTargetGroup_basic"
+  }
+}
+
+resource "aws_vpc" "test" {
+  cidr_block = "10.0.0.0/16"
+
+  tags = {
+    TestName = "terraform-testacc-lb-target-group-basic"
+  }
+}`, targetGroupName)
+}
+
+func testAccAWSLBTargetGroupConfig_basicUdp(targetGroupName string) string {
+	return fmt.Sprintf(`resource "aws_lb_target_group" "test" {
+  name = "%s"
+  port = 514
+  protocol = "UDP"
+  vpc_id = "${aws_vpc.test.id}"
+
+  health_check {
+    protocol = "TCP"
+	port = 514
   }
 
   tags = {

@@ -555,6 +555,48 @@ func TestAccAWSSpotFleetRequest_withEBSDisk(t *testing.T) {
 	})
 }
 
+func TestAccAWSSpotFleetRequest_LaunchSpecification_EbsBlockDevice_KmsKeyId(t *testing.T) {
+	var config ec2.SpotFleetRequestConfig
+	rName := acctest.RandString(10)
+	rInt := acctest.RandInt()
+	resourceName := "aws_spot_fleet_request.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSEc2SpotFleetRequest(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSSpotFleetRequestDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSSpotFleetRequestLaunchSpecificationEbsBlockDeviceKmsKeyId(rName, rInt),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckAWSSpotFleetRequestExists(resourceName, &config),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAWSSpotFleetRequest_LaunchSpecification_RootBlockDevice_KmsKeyId(t *testing.T) {
+	var config ec2.SpotFleetRequestConfig
+	rName := acctest.RandString(10)
+	rInt := acctest.RandInt()
+	resourceName := "aws_spot_fleet_request.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSEc2SpotFleetRequest(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSSpotFleetRequestDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSSpotFleetRequestLaunchSpecificationRootBlockDeviceKmsKeyId(rName, rInt),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckAWSSpotFleetRequestExists(resourceName, &config),
+				),
+			},
+		},
+	})
+}
+
 func TestAccAWSSpotFleetRequest_withTags(t *testing.T) {
 	var config ec2.SpotFleetRequestConfig
 	rName := acctest.RandString(10)
@@ -578,7 +620,7 @@ func TestAccAWSSpotFleetRequest_withTags(t *testing.T) {
 	})
 }
 
-func TestAccAWSSpotFleetRequest_placementTenancy(t *testing.T) {
+func TestAccAWSSpotFleetRequest_placementTenancyAndGroup(t *testing.T) {
 	var sfr ec2.SpotFleetRequestConfig
 	rName := acctest.RandString(10)
 	rInt := acctest.RandInt()
@@ -589,11 +631,11 @@ func TestAccAWSSpotFleetRequest_placementTenancy(t *testing.T) {
 		CheckDestroy: testAccCheckAWSSpotFleetRequestDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSSpotFleetRequestTenancyConfig(rName, rInt),
+				Config: testAccAWSSpotFleetRequestTenancyGroupConfig(rName, rInt),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAWSSpotFleetRequestExists("aws_spot_fleet_request.foo", &sfr),
 					resource.TestCheckResourceAttr("aws_spot_fleet_request.foo", "spot_request_state", "active"),
-					testAccCheckAWSSpotFleetRequest_PlacementAttributes(&sfr),
+					testAccCheckAWSSpotFleetRequest_PlacementAttributes(&sfr, rName),
 				),
 			},
 		},
@@ -643,6 +685,24 @@ func TestAccAWSSpotFleetRequest_WithTargetGroups(t *testing.T) {
 					resource.TestCheckResourceAttr("aws_spot_fleet_request.foo", "launch_specification.#", "1"),
 					resource.TestCheckResourceAttr("aws_spot_fleet_request.foo", "target_group_arns.#", "1"),
 				),
+			},
+		},
+	})
+}
+
+func TestAccAWSSpotFleetRequest_WithInstanceStoreAmi(t *testing.T) {
+	t.Skip("Test fails due to test harness constraints")
+	rName := acctest.RandString(10)
+	rInt := acctest.RandInt()
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSEc2SpotFleetRequest(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSSpotFleetRequestDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config:      testAccAWSSpotFleetRequestLaunchSpecificationWithInstanceStoreAmi(rName, rInt),
+				ExpectError: regexp.MustCompile("Instance store backed AMIs do not provide a root device name"),
 			},
 		},
 	})
@@ -738,7 +798,7 @@ func testAccCheckAWSSpotFleetRequest_EBSAttributes(
 }
 
 func testAccCheckAWSSpotFleetRequest_PlacementAttributes(
-	sfr *ec2.SpotFleetRequestConfig) resource.TestCheckFunc {
+	sfr *ec2.SpotFleetRequestConfig, rName string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		if len(sfr.SpotFleetRequestConfig.LaunchSpecifications) == 0 {
 			return errors.New("Missing launch specification")
@@ -752,6 +812,9 @@ func testAccCheckAWSSpotFleetRequest_PlacementAttributes(
 		}
 		if *placement.Tenancy != "dedicated" {
 			return fmt.Errorf("Expected placement tenancy to be %q, got %q", "dedicated", *placement.Tenancy)
+		}
+		if aws.StringValue(placement.GroupName) != fmt.Sprintf("test-pg-%s", rName) {
+			return fmt.Errorf("Expected placement group to be %q, got %q", fmt.Sprintf("test-pg-%s", rName), aws.StringValue(placement.GroupName))
 		}
 
 		return nil
@@ -1483,6 +1546,136 @@ resource "aws_spot_fleet_request" "foo" {
 `)
 }
 
+func testAccAWSSpotFleetRequestLaunchSpecificationEbsBlockDeviceKmsKeyId(rName string, rInt int) string {
+	return testAccAWSSpotFleetRequestConfigBase(rName, rInt) + fmt.Sprint(`
+data "aws_ami" "amzn-ami-minimal-hvm-ebs" {
+  most_recent = true
+  owners      = ["amazon"]
+
+  filter {
+    name   = "name"
+    values = ["amzn-ami-minimal-hvm-*"]
+  }
+
+  filter {
+    name   = "root-device-type"
+    values = ["ebs"]
+  }
+}
+
+resource "aws_kms_key" "test" {
+  deletion_window_in_days = 7
+}
+
+resource "aws_spot_fleet_request" "test" {
+  iam_fleet_role                      = "${aws_iam_role.test-role.arn}"
+  spot_price                          = "0.005"
+  target_capacity                     = 1
+  terminate_instances_with_expiration = true
+  valid_until                         = "2029-11-04T20:44:20Z"
+  wait_for_fulfillment                = true
+
+  launch_specification {
+    ami           = "${data.aws_ami.amzn-ami-minimal-hvm-ebs.id}"
+    instance_type = "t2.micro"
+
+    ebs_block_device {
+      device_name = "/dev/xvda"
+      volume_type = "gp2"
+      volume_size = 8
+    }
+
+    ebs_block_device {
+      device_name = "/dev/xvdcz"
+      encrypted   = true
+      kms_key_id  = "${aws_kms_key.test.arn}"
+      volume_type = "gp2"
+      volume_size = 10
+    }
+  }
+
+  depends_on = ["aws_iam_policy_attachment.test-attach"]
+}
+`)
+}
+
+func testAccAWSSpotFleetRequestLaunchSpecificationRootBlockDeviceKmsKeyId(rName string, rInt int) string {
+	return testAccAWSSpotFleetRequestConfigBase(rName, rInt) + fmt.Sprint(`
+data "aws_ami" "amzn-ami-minimal-hvm-ebs" {
+  most_recent = true
+  owners      = ["amazon"]
+
+  filter {
+    name   = "name"
+    values = ["amzn-ami-minimal-hvm-*"]
+  }
+
+  filter {
+    name   = "root-device-type"
+    values = ["ebs"]
+  }
+}
+
+resource "aws_kms_key" "test" {
+  deletion_window_in_days = 7
+}
+
+resource "aws_spot_fleet_request" "test" {
+  iam_fleet_role                      = "${aws_iam_role.test-role.arn}"
+  spot_price                          = "0.005"
+  target_capacity                     = 1
+  terminate_instances_with_expiration = true
+  valid_until                         = "2029-11-04T20:44:20Z"
+  wait_for_fulfillment                = true
+
+  launch_specification {
+    ami           = "${data.aws_ami.amzn-ami-minimal-hvm-ebs.id}"
+    instance_type = "t2.micro"
+
+    root_block_device {
+      encrypted   = true
+      kms_key_id  = "${aws_kms_key.test.arn}"
+      volume_type = "gp2"
+      volume_size = 10
+    }
+  }
+
+  depends_on = ["aws_iam_policy_attachment.test-attach"]
+}
+`)
+}
+
+func testAccAWSSpotFleetRequestLaunchSpecificationWithInstanceStoreAmi(rName string, rInt int) string {
+	return testAccAWSSpotFleetRequestConfigBase(rName, rInt) + fmt.Sprint(`
+data "aws_ami" "ubuntu_instance_store" {
+  most_recent = true
+  owners      = ["099720109477"] # Canonical
+
+  # Latest Ubuntu 18.04 LTS amd64 instance-store HVM AMI
+  filter {
+    name   = "name"
+    values = ["ubuntu/images/hvm-instance/ubuntu-bionic-18.04-amd64-server*"]
+  }
+}
+
+resource "aws_spot_fleet_request" "foo" {
+    iam_fleet_role = "${aws_iam_role.test-role.arn}"
+    spot_price = "0.03"
+    target_capacity = 2
+    valid_until = "2019-11-04T20:44:20Z"
+    terminate_instances_with_expiration = true
+    wait_for_fulfillment = true
+
+    launch_specification {
+      ami           = "${data.aws_ami.ubuntu_instance_store.id}"
+	  instance_type = "c3.large"
+    }
+
+	depends_on = ["aws_iam_policy_attachment.test-attach"]
+}
+`)
+}
+
 func testAccAWSSpotFleetRequestTagsConfig(rName string, rInt int) string {
 	return testAccAWSSpotFleetRequestConfigBase(rName, rInt) + fmt.Sprint(`
 resource "aws_spot_fleet_request" "foo" {
@@ -1505,8 +1698,13 @@ resource "aws_spot_fleet_request" "foo" {
 `)
 }
 
-func testAccAWSSpotFleetRequestTenancyConfig(rName string, rInt int) string {
-	return testAccAWSSpotFleetRequestConfigBase(rName, rInt) + fmt.Sprint(`
+func testAccAWSSpotFleetRequestTenancyGroupConfig(rName string, rInt int) string {
+	return testAccAWSSpotFleetRequestConfigBase(rName, rInt) + fmt.Sprintf(`
+resource "aws_placement_group" "test" {
+	name     = "test-pg-%s"
+	strategy = "cluster"
+}
+
 resource "aws_spot_fleet_request" "foo" {
     iam_fleet_role = "${aws_iam_role.test-role.arn}"
     spot_price = "0.005"
@@ -1517,9 +1715,10 @@ resource "aws_spot_fleet_request" "foo" {
         instance_type = "m1.small"
         ami = "ami-d06a90b0"
         key_name = "${aws_key_pair.debugging.key_name}"
-        placement_tenancy = "dedicated"
+		placement_tenancy = "dedicated"
+		placement_group = "${aws_placement_group.test.name}"
     }
     depends_on = ["aws_iam_policy_attachment.test-attach"]
 }
-`)
+`, rName)
 }

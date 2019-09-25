@@ -382,6 +382,13 @@ func resourceAwsEMRCluster() *schema.Resource {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
+						"instance_count": {
+							Type:         schema.TypeInt,
+							Optional:     true,
+							ForceNew:     true,
+							Default:      1,
+							ValidateFunc: validation.IntInSlice([]int{1, 3}),
+						},
 						"instance_type": {
 							Type:     schema.TypeString,
 							Required: true,
@@ -633,6 +640,11 @@ func resourceAwsEMRClusterCreate(d *schema.ResourceData, meta interface{}) error
 		keepJobFlowAliveWhenNoSteps = v.(bool)
 	}
 
+	// For multiple master nodes, EMR automatically enables
+	// termination protection and ignores this configuration at launch.
+	// There is additional handling after the job flow is running
+	// to potentially disable termination protection to match the
+	// desired Terraform configuration.
 	terminationProtection := false
 	if v, ok := d.GetOk("termination_protection"); ok {
 		terminationProtection = v.(bool)
@@ -646,7 +658,7 @@ func resourceAwsEMRClusterCreate(d *schema.ResourceData, meta interface{}) error
 		m := l[0].(map[string]interface{})
 
 		instanceGroup := &emr.InstanceGroupConfig{
-			InstanceCount: aws.Int64(1),
+			InstanceCount: aws.Int64(int64(m["instance_count"].(int))),
 			InstanceRole:  aws.String(emr.InstanceRoleTypeMaster),
 			InstanceType:  aws.String(m["instance_type"].(string)),
 			Market:        aws.String(emr.MarketTypeOnDemand),
@@ -907,9 +919,26 @@ func resourceAwsEMRClusterCreate(d *schema.ResourceData, meta interface{}) error
 		Delay:      30 * time.Second, // Wait 30 secs before starting
 	}
 
-	_, err = stateConf.WaitForState()
+	clusterRaw, err := stateConf.WaitForState()
 	if err != nil {
 		return fmt.Errorf("Error waiting for EMR Cluster state to be \"WAITING\" or \"RUNNING\": %s", err)
+	}
+
+	// For multiple master nodes, EMR automatically enables
+	// termination protection and ignores the configuration at launch.
+	// This additional handling is to potentially disable termination
+	// protection to match the desired Terraform configuration.
+	cluster := clusterRaw.(*emr.Cluster)
+
+	if aws.BoolValue(cluster.TerminationProtected) != terminationProtection {
+		input := &emr.SetTerminationProtectionInput{
+			JobFlowIds:           []*string{aws.String(d.Id())},
+			TerminationProtected: aws.Bool(terminationProtection),
+		}
+
+		if _, err := conn.SetTerminationProtection(input); err != nil {
+			return fmt.Errorf("error setting EMR Cluster (%s) termination protection to match configuration: %s", d.Id(), err)
+		}
 	}
 
 	return resourceAwsEMRClusterRead(d, meta)
@@ -1533,11 +1562,12 @@ func flattenEmrMasterInstanceGroup(instanceGroup *emr.InstanceGroup) []interface
 	}
 
 	m := map[string]interface{}{
-		"bid_price":     aws.StringValue(instanceGroup.BidPrice),
-		"ebs_config":    flattenEBSConfig(instanceGroup.EbsBlockDevices),
-		"id":            aws.StringValue(instanceGroup.Id),
-		"instance_type": aws.StringValue(instanceGroup.InstanceType),
-		"name":          aws.StringValue(instanceGroup.Name),
+		"bid_price":      aws.StringValue(instanceGroup.BidPrice),
+		"ebs_config":     flattenEBSConfig(instanceGroup.EbsBlockDevices),
+		"id":             aws.StringValue(instanceGroup.Id),
+		"instance_count": aws.Int64Value(instanceGroup.RequestedInstanceCount),
+		"instance_type":  aws.StringValue(instanceGroup.InstanceType),
+		"name":           aws.StringValue(instanceGroup.Name),
 	}
 
 	return []interface{}{m}
@@ -1552,6 +1582,7 @@ func flattenEmrKerberosAttributes(d *schema.ResourceData, kerberosAttributes *em
 
 	// Do not set from API:
 	// * ad_domain_join_password
+	// * ad_domain_join_user
 	// * cross_realm_trust_principal_password
 	// * kdc_admin_password
 
@@ -1564,8 +1595,8 @@ func flattenEmrKerberosAttributes(d *schema.ResourceData, kerberosAttributes *em
 		m["ad_domain_join_password"] = v.(string)
 	}
 
-	if kerberosAttributes.ADDomainJoinUser != nil {
-		m["ad_domain_join_user"] = *kerberosAttributes.ADDomainJoinUser
+	if v, ok := d.GetOk("kerberos_attributes.0.ad_domain_join_user"); ok {
+		m["ad_domain_join_user"] = v.(string)
 	}
 
 	if v, ok := d.GetOk("kerberos_attributes.0.cross_realm_trust_principal_password"); ok {

@@ -15,7 +15,8 @@ Get an existing AWS Customer Gateway.
 ```hcl
 data "aws_customer_gateway" "foo" {
     filter {
-        Name = "foo-prod"
+        name = "tag:Name"
+	values = ["foo-prod"]
     }
 }
 

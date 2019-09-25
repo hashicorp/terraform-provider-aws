@@ -181,10 +181,6 @@ func testAccCheckAWSLightsailStaticIpDestroy(s *terraform.State) error {
 
 func testAccAWSLightsailStaticIpConfig_basic(staticIpName string) string {
 	return fmt.Sprintf(`
-provider "aws" {
-  region = "us-east-1"
-}
-
 resource "aws_lightsail_static_ip" "test" {
   name = "%s"
 }

@@ -346,10 +346,11 @@ func resourceAwsGameliftFleetDelete(d *schema.ResourceData, meta interface{}) er
 	log.Printf("[INFO] Deleting Gamelift Fleet: %s", d.Id())
 	// It can take ~ 1 hr as Gamelift will keep retrying on errors like
 	// invalid launch path and remain in state when it can't be deleted :/
+	input := &gamelift.DeleteFleetInput{
+		FleetId: aws.String(d.Id()),
+	}
 	err := resource.Retry(60*time.Minute, func() *resource.RetryError {
-		_, err := conn.DeleteFleet(&gamelift.DeleteFleetInput{
-			FleetId: aws.String(d.Id()),
-		})
+		_, err := conn.DeleteFleet(input)
 		if err != nil {
 			msg := fmt.Sprintf("Cannot delete fleet %s that is in status of ", d.Id())
 			if isAWSErr(err, gamelift.ErrCodeInvalidRequestException, msg) {
@@ -359,8 +360,11 @@ func resourceAwsGameliftFleetDelete(d *schema.ResourceData, meta interface{}) er
 		}
 		return nil
 	})
+	if isResourceTimeoutError(err) {
+		_, err = conn.DeleteFleet(input)
+	}
 	if err != nil {
-		return err
+		return fmt.Errorf("Error deleting Gamelift fleet: %s", err)
 	}
 
 	return waitForGameliftFleetToBeDeleted(conn, d.Id(), d.Timeout(schema.TimeoutDelete))

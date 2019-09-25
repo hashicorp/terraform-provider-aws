@@ -16,8 +16,9 @@ import (
 
 func init() {
 	resource.AddTestSweepers("aws_directory_service_directory", &resource.Sweeper{
-		Name: "aws_directory_service_directory",
-		F:    testSweepDirectoryServiceDirectories,
+		Name:         "aws_directory_service_directory",
+		F:            testSweepDirectoryServiceDirectories,
+		Dependencies: []string{"aws_fsx_windows_file_system"},
 	})
 }
 
@@ -185,6 +186,26 @@ func TestAccAWSDirectoryServiceDirectory_tags(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceDirectoryExists("aws_directory_service_directory.bar"),
 					resource.TestCheckResourceAttr("aws_directory_service_directory.bar", "tags.%", "2"),
+					resource.TestCheckResourceAttr("aws_directory_service_directory.bar", "tags.foo", "bar"),
+					resource.TestCheckResourceAttr("aws_directory_service_directory.bar", "tags.project", "test"),
+				),
+			},
+			{
+				Config: testAccDirectoryServiceDirectoryUpdateTagsConfig,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckServiceDirectoryExists("aws_directory_service_directory.bar"),
+					resource.TestCheckResourceAttr("aws_directory_service_directory.bar", "tags.%", "3"),
+					resource.TestCheckResourceAttr("aws_directory_service_directory.bar", "tags.foo", "bar"),
+					resource.TestCheckResourceAttr("aws_directory_service_directory.bar", "tags.project", "test2"),
+					resource.TestCheckResourceAttr("aws_directory_service_directory.bar", "tags.fizz", "buzz"),
+				),
+			},
+			{
+				Config: testAccDirectoryServiceDirectoryRemoveTagsConfig,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckServiceDirectoryExists("aws_directory_service_directory.bar"),
+					resource.TestCheckResourceAttr("aws_directory_service_directory.bar", "tags.%", "1"),
+					resource.TestCheckResourceAttr("aws_directory_service_directory.bar", "tags.foo", "bar"),
 				),
 			},
 		},
@@ -504,6 +525,98 @@ resource "aws_directory_service_directory" "bar" {
 	tags = {
 		foo = "bar"
 		project = "test"
+	}
+}
+
+resource "aws_vpc" "main" {
+  cidr_block = "10.0.0.0/16"
+	tags = {
+		Name = "terraform-testacc-directory-service-directory-tags"
+	}
+}
+
+resource "aws_subnet" "foo" {
+  vpc_id = "${aws_vpc.main.id}"
+  availability_zone = "${data.aws_availability_zones.available.names[0]}"
+  cidr_block = "10.0.1.0/24"
+  tags = {
+    Name = "tf-acc-directory-service-directory-tags-foo"
+  }
+}
+resource "aws_subnet" "bar" {
+  vpc_id = "${aws_vpc.main.id}"
+  availability_zone = "${data.aws_availability_zones.available.names[1]}"
+  cidr_block = "10.0.2.0/24"
+  tags = {
+    Name = "tf-acc-directory-service-directory-tags-bar"
+  }
+}
+`
+
+const testAccDirectoryServiceDirectoryUpdateTagsConfig = `
+data "aws_availability_zones" "available" {
+  state = "available"
+}
+
+resource "aws_directory_service_directory" "bar" {
+  name = "corp.notexample.com"
+  password = "SuperSecretPassw0rd"
+  size = "Small"
+
+  vpc_settings {
+    vpc_id = "${aws_vpc.main.id}"
+    subnet_ids = ["${aws_subnet.foo.id}", "${aws_subnet.bar.id}"]
+  }
+
+	tags = {
+		foo = "bar"
+		project = "test2"
+		fizz = "buzz"
+	}
+}
+
+resource "aws_vpc" "main" {
+  cidr_block = "10.0.0.0/16"
+	tags = {
+		Name = "terraform-testacc-directory-service-directory-tags"
+	}
+}
+
+resource "aws_subnet" "foo" {
+  vpc_id = "${aws_vpc.main.id}"
+  availability_zone = "${data.aws_availability_zones.available.names[0]}"
+  cidr_block = "10.0.1.0/24"
+  tags = {
+    Name = "tf-acc-directory-service-directory-tags-foo"
+  }
+}
+resource "aws_subnet" "bar" {
+  vpc_id = "${aws_vpc.main.id}"
+  availability_zone = "${data.aws_availability_zones.available.names[1]}"
+  cidr_block = "10.0.2.0/24"
+  tags = {
+    Name = "tf-acc-directory-service-directory-tags-bar"
+  }
+}
+`
+
+const testAccDirectoryServiceDirectoryRemoveTagsConfig = `
+data "aws_availability_zones" "available" {
+  state = "available"
+}
+
+resource "aws_directory_service_directory" "bar" {
+  name = "corp.notexample.com"
+  password = "SuperSecretPassw0rd"
+  size = "Small"
+
+  vpc_settings {
+    vpc_id = "${aws_vpc.main.id}"
+    subnet_ids = ["${aws_subnet.foo.id}", "${aws_subnet.bar.id}"]
+  }
+
+	tags = {
+		foo = "bar"
 	}
 }
 

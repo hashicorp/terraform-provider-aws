@@ -327,6 +327,10 @@ func (c *CodePipeline) CreatePipelineRequest(input *CreatePipelineInput) (req *r
 //
 // Creates a pipeline.
 //
+// In the pipeline structure, you must include either artifactStore or artifactStores
+// in your pipeline, but you cannot use both. If you create a cross-region action
+// in your pipeline, you must use artifactStores.
+//
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
 // the error.
@@ -3998,12 +4002,26 @@ func (s *ActionContext) SetName(v string) *ActionContext {
 type ActionDeclaration struct {
 	_ struct{} `type:"structure"`
 
-	// The configuration information for the action type.
+	// Specifies the action type and the provider of the action.
 	//
 	// ActionTypeId is a required field
 	ActionTypeId *ActionTypeId `locationName:"actionTypeId" type:"structure" required:"true"`
 
-	// The action declaration's configuration.
+	// The action's configuration. These are key-value pairs that specify input
+	// values for an action. For more information, see Action Structure Requirements
+	// in CodePipeline (https://docs.aws.amazon.com/codepipeline/latest/userguide/reference-pipeline-structure.html#action-requirements).
+	// For the list of configuration properties for the AWS CloudFormation action
+	// type in CodePipeline, see Configuration Properties Reference (https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/continuous-delivery-codepipeline-action-reference.html)
+	// in the AWS CloudFormation User Guide. For template snippets with examples,
+	// see Using Parameter Override Functions with CodePipeline Pipelines (https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/continuous-delivery-codepipeline-parameter-override-functions.html)
+	// in the AWS CloudFormation User Guide.
+	//
+	// The values can be represented in either JSON or YAML format. For example,
+	// the JSON configuration item format is as follows:
+	//
+	// JSON:
+	//
+	// "Configuration" : { Key : Value },
 	Configuration map[string]*string `locationName:"configuration" type:"map"`
 
 	// The name or ID of the artifact consumed by the action, such as a test or
@@ -5183,6 +5201,10 @@ func (s *ArtifactRevision) SetRevisionUrl(v string) *ArtifactRevision {
 }
 
 // The Amazon S3 bucket where artifacts are stored for the pipeline.
+//
+// You must include either artifactStore or artifactStores in your pipeline,
+// but you cannot use both. If you create a cross-region action in your pipeline,
+// you must use artifactStores.
 type ArtifactStore struct {
 	_ struct{} `type:"structure"`
 
@@ -6154,8 +6176,12 @@ func (s EnableStageTransitionOutput) GoString() string {
 type EncryptionKey struct {
 	_ struct{} `type:"structure"`
 
-	// The ID used to identify the key. For an AWS KMS key, this is the key ID or
-	// key ARN.
+	// The ID used to identify the key. For an AWS KMS key, you can use the key
+	// ID, the key ARN, or the alias ARN.
+	//
+	// Aliases are recognized only in the account that created the customer master
+	// key (CMK). For cross-account actions, you can only use the key ID or key
+	// ARN to identify the key.
 	//
 	// Id is a required field
 	Id *string `locationName:"id" min:"1" type:"string" required:"true"`
@@ -6299,6 +6325,42 @@ func (s *ExecutionDetails) SetPercentComplete(v int64) *ExecutionDetails {
 // SetSummary sets the Summary field's value.
 func (s *ExecutionDetails) SetSummary(v string) *ExecutionDetails {
 	s.Summary = &v
+	return s
+}
+
+// The interaction or event that started a pipeline execution.
+type ExecutionTrigger struct {
+	_ struct{} `type:"structure"`
+
+	// Detail related to the event that started a pipeline execution, such as the
+	// webhook ARN of the webhook that triggered the pipeline execution or the user
+	// ARN for a user-initiated start-pipeline-execution CLI command.
+	TriggerDetail *string `locationName:"triggerDetail" type:"string"`
+
+	// The type of change-detection method, command, or user interaction that started
+	// a pipeline execution.
+	TriggerType *string `locationName:"triggerType" type:"string" enum:"TriggerType"`
+}
+
+// String returns the string representation
+func (s ExecutionTrigger) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ExecutionTrigger) GoString() string {
+	return s.String()
+}
+
+// SetTriggerDetail sets the TriggerDetail field's value.
+func (s *ExecutionTrigger) SetTriggerDetail(v string) *ExecutionTrigger {
+	s.TriggerDetail = &v
+	return s
+}
+
+// SetTriggerType sets the TriggerType field's value.
+func (s *ExecutionTrigger) SetTriggerType(v string) *ExecutionTrigger {
+	s.TriggerType = &v
 	return s
 }
 
@@ -7805,14 +7867,19 @@ type PipelineDeclaration struct {
 
 	// Represents information about the Amazon S3 bucket where artifacts are stored
 	// for the pipeline.
+	//
+	// You must include either artifactStore or artifactStores in your pipeline,
+	// but you cannot use both. If you create a cross-region action in your pipeline,
+	// you must use artifactStores.
 	ArtifactStore *ArtifactStore `locationName:"artifactStore" type:"structure"`
 
 	// A mapping of artifactStore objects and their corresponding regions. There
 	// must be an artifact store for the pipeline region and for each cross-region
-	// action within the pipeline. You can only use either artifactStore or artifactStores,
-	// not both.
+	// action within the pipeline.
 	//
-	// If you create a cross-region action in your pipeline, you must use artifactStores.
+	// You must include either artifactStore or artifactStores in your pipeline,
+	// but you cannot use both. If you create a cross-region action in your pipeline,
+	// you must use artifactStores.
 	ArtifactStores map[string]*ArtifactStore `locationName:"artifactStores" type:"map"`
 
 	// The name of the action to be performed.
@@ -8032,6 +8099,10 @@ type PipelineExecutionSummary struct {
 	//
 	//    * Failed: The pipeline execution was not completed successfully.
 	Status *string `locationName:"status" type:"string" enum:"PipelineExecutionStatus"`
+
+	// The interaction or event that started a pipeline execution, such as automated
+	// change detection or a StartPipelineExecution API call.
+	Trigger *ExecutionTrigger `locationName:"trigger" type:"structure"`
 }
 
 // String returns the string representation
@@ -8071,6 +8142,12 @@ func (s *PipelineExecutionSummary) SetStartTime(v time.Time) *PipelineExecutionS
 // SetStatus sets the Status field's value.
 func (s *PipelineExecutionSummary) SetStatus(v string) *PipelineExecutionSummary {
 	s.Status = &v
+	return s
+}
+
+// SetTrigger sets the Trigger field's value.
+func (s *PipelineExecutionSummary) SetTrigger(v *ExecutionTrigger) *PipelineExecutionSummary {
+	s.Trigger = v
 	return s
 }
 
@@ -10582,6 +10659,26 @@ const (
 
 	// StageTransitionTypeOutbound is a StageTransitionType enum value
 	StageTransitionTypeOutbound = "Outbound"
+)
+
+const (
+	// TriggerTypeCreatePipeline is a TriggerType enum value
+	TriggerTypeCreatePipeline = "CreatePipeline"
+
+	// TriggerTypeStartPipelineExecution is a TriggerType enum value
+	TriggerTypeStartPipelineExecution = "StartPipelineExecution"
+
+	// TriggerTypePollForSourceChanges is a TriggerType enum value
+	TriggerTypePollForSourceChanges = "PollForSourceChanges"
+
+	// TriggerTypeWebhook is a TriggerType enum value
+	TriggerTypeWebhook = "Webhook"
+
+	// TriggerTypeCloudWatchEvent is a TriggerType enum value
+	TriggerTypeCloudWatchEvent = "CloudWatchEvent"
+
+	// TriggerTypePutActionRevision is a TriggerType enum value
+	TriggerTypePutActionRevision = "PutActionRevision"
 )
 
 const (

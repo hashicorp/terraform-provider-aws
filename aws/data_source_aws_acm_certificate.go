@@ -8,6 +8,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/acm"
 	"github.com/hashicorp/terraform/helper/schema"
+	"github.com/hashicorp/terraform/helper/validation"
 )
 
 func dataSourceAwsAcmCertificate() *schema.Resource {
@@ -27,6 +28,21 @@ func dataSourceAwsAcmCertificate() *schema.Resource {
 				Optional: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
+			"key_types": {
+				Type:     schema.TypeSet,
+				Optional: true,
+				Elem: &schema.Schema{
+					Type: schema.TypeString,
+					ValidateFunc: validation.StringInSlice([]string{
+						acm.KeyAlgorithmEcPrime256v1,
+						acm.KeyAlgorithmEcSecp384r1,
+						acm.KeyAlgorithmEcSecp521r1,
+						acm.KeyAlgorithmRsa1024,
+						acm.KeyAlgorithmRsa2048,
+						acm.KeyAlgorithmRsa4096,
+					}, false),
+				},
+			},
 			"types": {
 				Type:     schema.TypeList,
 				Optional: true,
@@ -45,6 +61,13 @@ func dataSourceAwsAcmCertificateRead(d *schema.ResourceData, meta interface{}) e
 	conn := meta.(*AWSClient).acmconn
 
 	params := &acm.ListCertificatesInput{}
+
+	if v := d.Get("key_types").(*schema.Set); v.Len() > 0 {
+		params.Includes = &acm.Filters{
+			KeyTypes: expandStringSet(v),
+		}
+	}
+
 	target := d.Get("domain")
 	statuses, ok := d.GetOk("statuses")
 	if ok {

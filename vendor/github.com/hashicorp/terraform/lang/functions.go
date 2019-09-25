@@ -31,6 +31,7 @@ func (s *Scope) Functions() map[string]function.Function {
 
 		s.funcs = map[string]function.Function{
 			"abs":              stdlib.AbsoluteFunc,
+			"abspath":          funcs.AbsPathFunc,
 			"basename":         funcs.BasenameFunc,
 			"base64decode":     funcs.Base64DecodeFunc,
 			"base64encode":     funcs.Base64EncodeFunc,
@@ -87,6 +88,8 @@ func (s *Scope) Functions() map[string]function.Function {
 			"pathexpand":       funcs.PathExpandFunc,
 			"pow":              funcs.PowFunc,
 			"range":            stdlib.RangeFunc,
+			"regex":            stdlib.RegexFunc,
+			"regexall":         stdlib.RegexAllFunc,
 			"replace":          funcs.ReplaceFunc,
 			"reverse":          funcs.ReverseFunc,
 			"rsadecrypt":       funcs.RsaDecryptFunc,

@@ -24,6 +24,7 @@ ability to merge PRs and respond to issues.
     - [Checklists for Contribution](#checklists-for-contribution)
         - [Documentation Update](#documentation-update)
         - [Enhancement/Bugfix to a Resource](#enhancementbugfix-to-a-resource)
+        - [Adding Resource Import Support](#adding-resource-import-support)
         - [New Resource](#new-resource)
         - [New Service](#new-service)
         - [New Region](#new-region)
@@ -199,6 +200,18 @@ guidelines.
    folder. This is to avoid conflicts as the vendor versions tend to be fast-
    moving targets. We will plan to merge the PR with this change first.
 
+#### Adding Resource Import Support
+
+Adding import support for Terraform resources will allow existing infrastructure to be managed within Terraform. This type of enhancement generally requires a small to moderate amount of code changes.
+
+Comprehensive code examples and information about resource import support can be found in the [Extending Terraform documentation](https://www.terraform.io/docs/extend/resources/import.html).
+
+In addition to the below checklist and the items noted in the Extending Terraform documentation, please see the [Common Review Items](#common-review-items) sections for more specific coding and testing guidelines.
+
+- [ ] _Resource Code Implementation_: In the resource code (e.g. `aws/resource_aws_service_thing.go`), implementation of `Importer` `State` function
+- [ ] _Resource Acceptance Testing Implementation_: In the resource acceptance testing (e.g. `aws/resource_aws_service_thing_test.go`), implementation of `TestStep`s with `ImportState: true`
+- [ ] _Resource Documentation Implementation_: In the resource documentation (e.g. `website/docs/r/service_thing.html.markdown`), addition of `Import` documentation section at the bottom of the page
+
 #### New Resource
 
 Implementing a new resource is a good way to learn more about how Terraform
@@ -216,9 +229,22 @@ guidelines.
    covering their behavior. See [Writing Acceptance
    Tests](#writing-acceptance-tests) below for a detailed guide on how to
    approach these.
- - [ ] __Naming__: Resources should be named `aws_<service>_<name>` where
-   `service` is the AWS short service name and `name` is a short, preferably
-   single word, description of the resource. Use `_` as a separator.
+ - [ ] __Resource Naming__: Resources should be named `aws_<service>_<name>`,
+   using underscores (`_`) as the separator. Resources are namespaced with the
+   service name to allow easier searching of related resources, to align
+   the resource naming with the service for [Customizing Endpoints](https://www.terraform.io/docs/providers/aws/guides/custom-service-endpoints.html#available-endpoint-customizations),
+   and to prevent future conflicts with new AWS services/resources.
+   For reference:
+
+   - `service` is the AWS short service name that matches the entry in
+     `endpointServiceNames` (created via the [New Service](#new-service)
+     section)
+   - `name` represents the conceptual infrastructure represented by the
+     create, read, update, and delete methods of the service API. It should
+     be a singular noun. For example, in an API that has methods such as
+     `CreateThing`, `DeleteThing`, `DescribeThing`, and `ModifyThing` the name
+     of the resource would end in `_thing`.
+
  - [ ] __Arguments_and_Attributes__: The HCL for arguments and attributes should
    mimic the types and structs presented by the AWS API. API arguments should be
    converted from `CamelCase` to `camel_case`.
@@ -290,9 +316,9 @@ manually sourced values from documentation.
 
  - [ ] Check [Regions and Endpoints ELB regions](https://docs.aws.amazon.com/general/latest/gr/rande.html#elb_region) and add Route53 Hosted Zone ID if available to `aws/data_source_aws_elb_hosted_zone_id.go`
  - [ ] Check [Regions and Endpoints S3 website endpoints](https://docs.aws.amazon.com/general/latest/gr/rande.html#s3_website_region_endpoints) and add Route53 Hosted Zone ID if available to `aws/hosted_zones.go`
- - [ ] Check [CloudTrail Supported Regions docs](https://docs.aws.amazon.com/awscloudtrail/latest/userguide/cloudtrail-supported-regions.html) and add AWS Account ID if available to `aws/data_source_aws_cloudtrail_service_account.go`
+ - [ ] Check [CloudTrail Supported Regions docs](https://docs.aws.amazon.com/awscloudtrail/latest/userguide/cloudtrail-supported-regions.html#cloudtrail-supported-regions) and add AWS Account ID if available to `aws/data_source_aws_cloudtrail_service_account.go`
  - [ ] Check [Elastic Load Balancing Access Logs docs](https://docs.aws.amazon.com/elasticloadbalancing/latest/classic/enable-access-logs.html#attach-bucket-policy) and add Elastic Load Balancing Account ID if available to `aws/data_source_aws_elb_service_account.go`
- - [ ] Check [Redshift Database Audit Logging docs](https://docs.aws.amazon.com/redshift/latest/mgmt/db-auditing.html) and add AWS Account ID if available to `aws/data_source_aws_redshift_service_account.go`
+ - [ ] Check [Redshift Database Audit Logging docs](https://docs.aws.amazon.com/redshift/latest/mgmt/db-auditing.html#db-auditing-bucket-permissions) and add AWS Account ID if available to `aws/data_source_aws_redshift_service_account.go`
  - [ ] Check [Regions and Endpoints Elastic Beanstalk](https://docs.aws.amazon.com/general/latest/gr/rande.html#elasticbeanstalk_region) and add Route53 Hosted Zone ID if available to `aws/data_source_aws_elastic_beanstalk_hosted_zone.go`
 
 ### Common Review Items
@@ -314,7 +340,7 @@ The following Go language resources provide common coding preferences that may b
 
 #### Resource Contribution Guidelines
 
-The following resource checks need to be addressed before your contribution can be merged. The exclusion of any applicable check may result in a delayed time to merge. 
+The following resource checks need to be addressed before your contribution can be merged. The exclusion of any applicable check may result in a delayed time to merge.
 
 - [ ] __Passes Testing__: All code and documentation changes must pass unit testing, code linting, and website link testing. Resource code changes must pass all acceptance testing for the resource.
 - [ ] __Avoids API Calls Across Account, Region, and Service Boundaries__: Resources should not implement cross-account, cross-region, or cross-service API calls.
@@ -322,6 +348,7 @@ The following resource checks need to be addressed before your contribution can 
 - [ ] __Avoids resource.Retry() without resource.RetryableError()__: Resource logic should only implement [`resource.Retry()`](https://godoc.org/github.com/hashicorp/terraform/helper/resource#Retry) if there is a retryable condition (e.g. `return resource.RetryableError(err)`).
 - [ ] __Avoids Resource Read Function in Data Source Read Function__: Data sources should fully implement their own resource `Read` functionality including duplicating `d.Set()` calls.
 - [ ] __Avoids Reading Schema Structure in Resource Code__: The resource `Schema` should not be read in resource `Create`/`Read`/`Update`/`Delete` functions to perform looping or otherwise complex attribute logic. Use [`d.Get()`](https://godoc.org/github.com/hashicorp/terraform/helper/schema#ResourceData.Get) and [`d.Set()`](https://godoc.org/github.com/hashicorp/terraform/helper/schema#ResourceData.Set) directly with individual attributes instead.
+- [ ] __Avoids ResourceData.GetOkExists()__: Resource logic should avoid using [`ResourceData.GetOkExists()`](https://godoc.org/github.com/hashicorp/terraform/helper/schema#ResourceData.GetOkExists) as its expected functionality is not guaranteed in all scenarios.
 - [ ] __Implements Read After Create and Update__: Except where API eventual consistency prohibits immediate reading of resources or updated attributes,  resource `Create` and `Update` functions should return the resource `Read` function.
 - [ ] __Implements Immediate Resource ID Set During Create__: Immediately after calling the API creation function, the resource ID should be set with [`d.SetId()`](https://godoc.org/github.com/hashicorp/terraform/helper/schema#ResourceData.SetId) before other API operations or returning the `Read` function.
 - [ ] __Implements Attribute Refreshes During Read__: All attributes available in the API should have [`d.Set()`](https://godoc.org/github.com/hashicorp/terraform/helper/schema#ResourceData.Set) called their values in the Terraform state during the `Read` function.
@@ -358,6 +385,7 @@ The following resource checks need to be addressed before your contribution can 
   ```
 
 - [ ] __Uses resource.NotFoundError__: Custom errors for missing resources should use [`resource.NotFoundError`](https://godoc.org/github.com/hashicorp/terraform/helper/resource#NotFoundError).
+- [ ] __Uses resource.UniqueId()__: API fields for concurrency protection such as `CallerReference` and `IdempotencyToken` should use [`resource.UniqueId()`](https://godoc.org/github.com/hashicorp/terraform/helper/resource#UniqueId). The implementation includes a monotonic counter which is safer for concurrent operations than solutions such as `time.Now()`.
 - [ ] __Skips Exists Function__: Implementing a resource `Exists` function is extraneous as it often duplicates resource `Read` functionality. Ensure `d.SetId("")` is used to appropriately trigger resource recreation in the resource `Read` function.
 - [ ] __Skips id Attribute__: The `id` attribute is implicit for all Terraform resources and does not need to be defined in the schema.
 

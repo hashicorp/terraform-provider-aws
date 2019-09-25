@@ -342,7 +342,9 @@ func testAccCheckAWSWorkLinkFleetExists(n string) resource.TestCheckFunc {
 func testAccPreCheckAWSWorkLink(t *testing.T) {
 	conn := testAccProvider.Meta().(*AWSClient).worklinkconn
 
-	input := &worklink.ListFleetsInput{}
+	input := &worklink.ListFleetsInput{
+		MaxResults: aws.Int64(1),
+	}
 
 	_, err := conn.ListFleets(input)
 

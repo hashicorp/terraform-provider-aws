@@ -14,6 +14,10 @@ Provides an AWS Config Rule.
 
 ## Example Usage
 
+### AWS Managed Rules
+
+AWS managed rules can be used by setting the source owner to `AWS` and the source identifier to the name of the managed rule. More information about AWS managed rules can be found in the [AWS Config Developer Guide](https://docs.aws.amazon.com/config/latest/developerguide/evaluate-config_use-managed-rules.html).
+
 ```hcl
 resource "aws_config_config_rule" "r" {
   name = "example"
@@ -71,6 +75,38 @@ POLICY
 }
 ```
 
+### Custom Rules
+
+Custom rules can be used by setting the source owner to `CUSTOM_LAMBDA` and the source identifier to the Amazon Resource Name (ARN) of the Lambda Function. The AWS Config service must have permissions to invoke the Lambda Function, e.g. via the [`aws_lambda_permission` resource](/docs/providers/aws/r/lambda_permission.html). More information about custom rules can be found in the [AWS Config Developer Guide](https://docs.aws.amazon.com/config/latest/developerguide/evaluate-config_develop-rules.html).
+
+```hcl
+resource "aws_config_configuration_recorder" "example" {
+  # ... other configuration ...
+}
+
+resource "aws_lambda_function" "example" {
+  # ... other configuration ...
+}
+
+resource "aws_lambda_permission" "example" {
+  action        = "lambda:InvokeFunction"
+  function_name = "${aws_lambda_function.example.arn}"
+  principal     = "config.amazonaws.com"
+  statement_id  = "AllowExecutionFromConfig"
+}
+
+resource "aws_config_config_rule" "example" {
+  # ... other configuration ...
+
+  source {
+    owner             = "CUSTOM_LAMBDA"
+    source_identifier = "${aws_lambda_function.example.arn}"
+  }
+
+  depends_on = ["aws_config_configuration_recorder.example", "aws_lambda_permission.example"]
+}
+```
+
 ## Argument Reference
 
 The following arguments are supported:
@@ -82,6 +118,7 @@ The following arguments are supported:
 * `scope` - (Optional) Scope defines which resources can trigger an evaluation for the rule as documented below.
 * `source` - (Required) Source specifies the rule owner, the rule identifier, and the notifications that cause
 	the function to evaluate your AWS resources as documented below.
+* `tags` - (Optional) A mapping of tags to assign to the resource.
 
 ### `scope`
 
@@ -101,11 +138,8 @@ If you do not specify a scope, evaluations are triggered when any resource in th
 
 Provides the rule owner (AWS or customer), the rule identifier, and the notifications that cause the function to evaluate your AWS resources.
 
-* `owner` - (Required) Indicates whether AWS or the customer owns and manages the AWS Config rule.
-	The only valid value is `AWS` or `CUSTOM_LAMBDA`. Keep in mind that Lambda function will require `aws_lambda_permission` to allow AWSConfig to execute the function.
-* `source_identifier` - (Required) For AWS Config managed rules, a predefined identifier from a list. For example,
-	`IAM_PASSWORD_POLICY` is a managed rule. To reference a managed rule, see [Using AWS Managed Config Rules](http://docs.aws.amazon.com/config/latest/developerguide/evaluate-config_use-managed-rules.html).
-	For custom rules, the identifier is the ARN of the rule's AWS Lambda function, such as `arn:aws:lambda:us-east-1:123456789012:function:custom_rule_name`.
+* `owner` - (Required) Indicates whether AWS or the customer owns and manages the AWS Config rule. Valid values are `AWS` or `CUSTOM_LAMBDA`. For more information about managed rules, see the [AWS Config Managed Rules documentation](https://docs.aws.amazon.com/config/latest/developerguide/evaluate-config_use-managed-rules.html). For more information about custom rules, see the [AWS Config Custom Rules documentation](https://docs.aws.amazon.com/config/latest/developerguide/evaluate-config_develop-rules.html). Custom Lambda Functions require permissions to allow the AWS Config service to invoke them, e.g. via the [`aws_lambda_permission` resource](/docs/providers/aws/r/lambda_permission.html).
+* `source_identifier` - (Required) For AWS Config managed rules, a predefined identifier, e.g `IAM_PASSWORD_POLICY`. For custom Lambda rules, the identifier is the ARN of the Lambda Function, such as `arn:aws:lambda:us-east-1:123456789012:function:custom_rule_name` or the [`arn` attribute of the `aws_lambda_function` resource](/docs/providers/aws/r/lambda_function.html#arn).
 * `source_detail` - (Optional) Provides the source and type of the event that causes AWS Config to evaluate your AWS resources. Only valid if `owner` is `CUSTOM_LAMBDA`.
 	* `event_source` - (Optional) The source of the event, such as an AWS service, that triggers AWS Config
 		to evaluate your AWS resources. This defaults to `aws.config` and is the only valid value.

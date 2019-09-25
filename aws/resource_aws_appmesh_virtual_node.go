@@ -218,11 +218,40 @@ func resourceAwsAppmeshVirtualNode() *schema.Resource {
 							MaxItems: 1,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
+									"aws_cloud_map": {
+										Type:          schema.TypeList,
+										Optional:      true,
+										MinItems:      0,
+										MaxItems:      1,
+										ConflictsWith: []string{"spec.0.service_discovery.0.dns"},
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"attributes": {
+													Type:     schema.TypeMap,
+													Optional: true,
+													Elem:     &schema.Schema{Type: schema.TypeString},
+												},
+
+												"namespace_name": {
+													Type:         schema.TypeString,
+													Required:     true,
+													ValidateFunc: validateServiceDiscoveryHttpNamespaceName,
+												},
+
+												"service_name": {
+													Type:     schema.TypeString,
+													Required: true,
+												},
+											},
+										},
+									},
+
 									"dns": {
-										Type:     schema.TypeList,
-										Required: true,
-										MinItems: 1,
-										MaxItems: 1,
+										Type:          schema.TypeList,
+										Optional:      true,
+										MinItems:      0,
+										MaxItems:      1,
+										ConflictsWith: []string{"spec.0.service_discovery.0.aws_cloud_map"},
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
 												"service_name": {
@@ -261,6 +290,8 @@ func resourceAwsAppmeshVirtualNode() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+
+			"tags": tagsSchema(),
 		},
 	}
 }
@@ -272,6 +303,7 @@ func resourceAwsAppmeshVirtualNodeCreate(d *schema.ResourceData, meta interface{
 		MeshName:        aws.String(d.Get("mesh_name").(string)),
 		VirtualNodeName: aws.String(d.Get("name").(string)),
 		Spec:            expandAppmeshVirtualNodeSpec(d.Get("spec").([]interface{})),
+		Tags:            tagsFromMapAppmesh(d.Get("tags").(map[string]interface{})),
 	}
 
 	log.Printf("[DEBUG] Creating App Mesh virtual node: %#v", req)
@@ -316,6 +348,16 @@ func resourceAwsAppmeshVirtualNodeRead(d *schema.ResourceData, meta interface{})
 		return fmt.Errorf("error setting spec: %s", err)
 	}
 
+	err = saveTagsAppmesh(conn, d, aws.StringValue(resp.VirtualNode.Metadata.Arn))
+	if isAWSErr(err, appmesh.ErrCodeNotFoundException, "") {
+		log.Printf("[WARN] App Mesh virtual node (%s) not found, removing from state", d.Id())
+		d.SetId("")
+		return nil
+	}
+	if err != nil {
+		return fmt.Errorf("error saving tags: %s", err)
+	}
+
 	return nil
 }
 
@@ -335,6 +377,16 @@ func resourceAwsAppmeshVirtualNodeUpdate(d *schema.ResourceData, meta interface{
 		if err != nil {
 			return fmt.Errorf("error updating App Mesh virtual node: %s", err)
 		}
+	}
+
+	err := setTagsAppmesh(conn, d, d.Get("arn").(string))
+	if isAWSErr(err, appmesh.ErrCodeNotFoundException, "") {
+		log.Printf("[WARN] App Mesh virtual node (%s) not found, removing from state", d.Id())
+		d.SetId("")
+		return nil
+	}
+	if err != nil {
+		return fmt.Errorf("error setting tags: %s", err)
 	}
 
 	return resourceAwsAppmeshVirtualNodeRead(d, meta)

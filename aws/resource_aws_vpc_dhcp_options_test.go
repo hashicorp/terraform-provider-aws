@@ -87,17 +87,29 @@ func testSweepVpcDhcpOptions(region string) error {
 	return nil
 }
 
-func TestAccAWSDHCPOptions_importBasic(t *testing.T) {
-	resourceName := "aws_vpc_dhcp_options.foo"
+func TestAccAWSDHCPOptions_basic(t *testing.T) {
+	var d ec2.DhcpOptions
+	resourceName := "aws_vpc_dhcp_options.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:  func() { testAccPreCheck(t) },
-		Providers: testAccProviders,
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckDHCPOptionsDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDHCPOptionsConfig,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDHCPOptionsExists(resourceName, &d),
+					resource.TestCheckResourceAttr(resourceName, "domain_name", "service.consul"),
+					resource.TestCheckResourceAttr(resourceName, "domain_name_servers.0", "127.0.0.1"),
+					resource.TestCheckResourceAttr(resourceName, "domain_name_servers.1", "10.0.0.2"),
+					resource.TestCheckResourceAttr(resourceName, "ntp_servers.0", "127.0.0.1"),
+					resource.TestCheckResourceAttr(resourceName, "netbios_name_servers.0", "127.0.0.1"),
+					resource.TestCheckResourceAttr(resourceName, "netbios_node_type", "2"),
+					resource.TestCheckResourceAttr(resourceName, "tags.Name", "test-name"),
+					testAccCheckResourceAttrAccountID(resourceName, "owner_id"),
+				),
 			},
-
 			{
 				ResourceName:      resourceName,
 				ImportState:       true,
@@ -107,34 +119,9 @@ func TestAccAWSDHCPOptions_importBasic(t *testing.T) {
 	})
 }
 
-func TestAccAWSDHCPOptions_basic(t *testing.T) {
-	var d ec2.DhcpOptions
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckDHCPOptionsDestroy,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccDHCPOptionsConfig,
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDHCPOptionsExists("aws_vpc_dhcp_options.foo", &d),
-					resource.TestCheckResourceAttr("aws_vpc_dhcp_options.foo", "domain_name", "service.consul"),
-					resource.TestCheckResourceAttr("aws_vpc_dhcp_options.foo", "domain_name_servers.0", "127.0.0.1"),
-					resource.TestCheckResourceAttr("aws_vpc_dhcp_options.foo", "domain_name_servers.1", "10.0.0.2"),
-					resource.TestCheckResourceAttr("aws_vpc_dhcp_options.foo", "ntp_servers.0", "127.0.0.1"),
-					resource.TestCheckResourceAttr("aws_vpc_dhcp_options.foo", "netbios_name_servers.0", "127.0.0.1"),
-					resource.TestCheckResourceAttr("aws_vpc_dhcp_options.foo", "netbios_node_type", "2"),
-					resource.TestCheckResourceAttr("aws_vpc_dhcp_options.foo", "tags.Name", "foo-name"),
-					testAccCheckResourceAttrAccountID("aws_vpc_dhcp_options.foo", "owner_id"),
-				),
-			},
-		},
-	})
-}
-
 func TestAccAWSDHCPOptions_deleteOptions(t *testing.T) {
 	var d ec2.DhcpOptions
+	resourceName := "aws_vpc_dhcp_options.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -144,8 +131,8 @@ func TestAccAWSDHCPOptions_deleteOptions(t *testing.T) {
 			{
 				Config: testAccDHCPOptionsConfig,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDHCPOptionsExists("aws_vpc_dhcp_options.foo", &d),
-					testAccCheckDHCPOptionsDelete("aws_vpc_dhcp_options.foo"),
+					testAccCheckDHCPOptionsExists(resourceName, &d),
+					testAccCheckDHCPOptionsDelete(resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -242,7 +229,7 @@ func testAccCheckDHCPOptionsDelete(n string) resource.TestCheckFunc {
 }
 
 const testAccDHCPOptionsConfig = `
-resource "aws_vpc_dhcp_options" "foo" {
+resource "aws_vpc_dhcp_options" "test" {
 	domain_name = "service.consul"
 	domain_name_servers = ["127.0.0.1", "10.0.0.2"]
 	ntp_servers = ["127.0.0.1"]
@@ -250,7 +237,7 @@ resource "aws_vpc_dhcp_options" "foo" {
 	netbios_node_type = 2
 
 	tags = {
-		Name = "foo-name"
+		Name = "test-name"
 	}
 }
 `

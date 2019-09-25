@@ -13569,7 +13569,7 @@ type CreateDBClusterEndpointInput struct {
 	// DBClusterIdentifier is a required field
 	DBClusterIdentifier *string `type:"string" required:"true"`
 
-	// The type of the endpoint. One of: READER, ANY.
+	// The type of the endpoint. One of: READER, WRITER, ANY.
 	//
 	// EndpointType is a required field
 	EndpointType *string `type:"string" required:"true"`
@@ -13659,7 +13659,7 @@ func (s *CreateDBClusterEndpointInput) SetStaticMembers(v []*string) *CreateDBCl
 type CreateDBClusterEndpointOutput struct {
 	_ struct{} `type:"structure"`
 
-	// The type associated with a custom endpoint. One of: READER, ANY.
+	// The type associated with a custom endpoint. One of: READER, WRITER, ANY.
 	CustomEndpointType *string `type:"string"`
 
 	// The Amazon Resource Name (ARN) for the endpoint.
@@ -13854,8 +13854,22 @@ type CreateDBClusterInput struct {
 	// in the Amazon Aurora User Guide.
 	EnableCloudwatchLogsExports []*string `type:"list"`
 
+	// A value that indicates whether to enable the HTTP endpoint for an Aurora
+	// Serverless DB cluster. By default, the HTTP endpoint is disabled.
+	//
+	// When enabled, the HTTP endpoint provides a connectionless web service API
+	// for running SQL queries on the Aurora Serverless DB cluster. You can also
+	// query your database from inside the RDS console with the query editor.
+	//
+	// For more information, see Using the Data API for Aurora Serverless (https://docs.aws.amazon.com/AmazonRDS/latest/AuroraUserGuide/data-api.html)
+	// in the Amazon Aurora User Guide.
+	EnableHttpEndpoint *bool `type:"boolean"`
+
 	// A value that indicates whether to enable mapping of AWS Identity and Access
 	// Management (IAM) accounts to database accounts. By default, mapping is disabled.
+	//
+	// For more information, see IAM Database Authentication (https://docs.aws.amazon.com/AmazonRDS/latest/AuroraUserGuide/UsingWithRDS.IAMDBAuth.html)
+	// in the Amazon Aurora User Guide.
 	EnableIAMDatabaseAuthentication *bool `type:"boolean"`
 
 	// The name of the database engine to be used for this DB cluster.
@@ -13867,18 +13881,33 @@ type CreateDBClusterInput struct {
 	Engine *string `type:"string" required:"true"`
 
 	// The DB engine mode of the DB cluster, either provisioned, serverless, parallelquery,
-	// or global.
+	// global, or multimaster.
 	EngineMode *string `type:"string"`
 
 	// The version number of the database engine to use.
 	//
+	// To list all of the available engine versions for aurora (for MySQL 5.6-compatible
+	// Aurora), use the following command:
+	//
+	// aws rds describe-db-engine-versions --engine aurora --query "DBEngineVersions[].EngineVersion"
+	//
+	// To list all of the available engine versions for aurora-mysql (for MySQL
+	// 5.7-compatible Aurora), use the following command:
+	//
+	// aws rds describe-db-engine-versions --engine aurora-mysql --query "DBEngineVersions[].EngineVersion"
+	//
+	// To list all of the available engine versions for aurora-postgresql, use the
+	// following command:
+	//
+	// aws rds describe-db-engine-versions --engine aurora-postgresql --query "DBEngineVersions[].EngineVersion"
+	//
 	// Aurora MySQL
 	//
-	// Example: 5.6.10a, 5.7.12
+	// Example: 5.6.10a, 5.6.mysql_aurora.1.19.2, 5.7.12, 5.7.mysql_aurora.2.04.5
 	//
 	// Aurora PostgreSQL
 	//
-	// Example: 9.6.3
+	// Example: 9.6.3, 10.7
 	EngineVersion *string `type:"string"`
 
 	// The global cluster ID of an Aurora cluster that becomes the primary cluster
@@ -14122,6 +14151,12 @@ func (s *CreateDBClusterInput) SetDestinationRegion(v string) *CreateDBClusterIn
 // SetEnableCloudwatchLogsExports sets the EnableCloudwatchLogsExports field's value.
 func (s *CreateDBClusterInput) SetEnableCloudwatchLogsExports(v []*string) *CreateDBClusterInput {
 	s.EnableCloudwatchLogsExports = v
+	return s
+}
+
+// SetEnableHttpEndpoint sets the EnableHttpEndpoint field's value.
+func (s *CreateDBClusterInput) SetEnableHttpEndpoint(v bool) *CreateDBClusterInput {
+	s.EnableHttpEndpoint = &v
 	return s
 }
 
@@ -14710,8 +14745,8 @@ type CreateDBInstanceInput struct {
 	DBName *string `type:"string"`
 
 	// The name of the DB parameter group to associate with this DB instance. If
-	// this argument is omitted, the default DBParameterGroup for the specified
-	// engine is used.
+	// you do not specify a value for DBParameterGroupName, then the default DBParameterGroup
+	// for the specified DB engine is used.
 	//
 	// Constraints:
 	//
@@ -14771,6 +14806,20 @@ type CreateDBInstanceInput struct {
 	//    * For MySQL 5.6, minor version 5.6.34 or higher
 	//
 	//    * For MySQL 5.7, minor version 5.7.16 or higher
+	//
+	//    * For MySQL 8.0, minor version 8.0.16 or higher
+	//
+	// PostgreSQL
+	//
+	//    * For PostgreSQL 9.5, minor version 9.5.15 or higher
+	//
+	//    * For PostgreSQL 9.6, minor version 9.6.11 or higher
+	//
+	//    * PostgreSQL 10.6, 10.7, and 10.9
+	//
+	// For more information, see IAM Database Authentication for MySQL and PostgreSQL
+	// (https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/UsingWithRDS.IAMDBAuth.html)
+	// in the Amazon RDS User Guide.
 	EnableIAMDatabaseAuthentication *bool `type:"boolean"`
 
 	// A value that indicates whether to enable Performance Insights for the DB
@@ -14858,8 +14907,7 @@ type CreateDBInstanceInput struct {
 
 	// The amount of Provisioned IOPS (input/output operations per second) to be
 	// initially allocated for the DB instance. For information about valid Iops
-	// values, see see Amazon RDS Provisioned IOPS Storage to Improve Performance
-	// (https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/CHAP_Storage.html#USER_PIOPS)
+	// values, see Amazon RDS Provisioned IOPS Storage to Improve Performance (https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/CHAP_Storage.html#USER_PIOPS)
 	// in the Amazon RDS User Guide.
 	//
 	// Constraints: Must be a multiple between 1 and 50 of the storage amount for
@@ -15572,6 +15620,22 @@ type CreateDBInstanceReadReplicaInput struct {
 	// DBInstanceIdentifier is a required field
 	DBInstanceIdentifier *string `type:"string" required:"true"`
 
+	// The name of the DB parameter group to associate with this DB instance.
+	//
+	// If you do not specify a value for DBParameterGroupName, then Amazon RDS uses
+	// the DBParameterGroup of source DB instance for a same region Read Replica,
+	// or the default DBParameterGroup for the specified DB engine for a cross region
+	// Read Replica.
+	//
+	// Constraints:
+	//
+	//    * Must be 1 to 255 letters, numbers, or hyphens.
+	//
+	//    * First character must be a letter
+	//
+	//    * Can't end with a hyphen or contain two consecutive hyphens
+	DBParameterGroupName *string `type:"string"`
+
 	// Specifies a DB subnet group for the DB instance. The new DB instance is created
 	// in the VPC associated with the DB subnet group. If no DB subnet group is
 	// specified, then the new DB instance is not created in a VPC.
@@ -15611,14 +15675,11 @@ type CreateDBInstanceReadReplicaInput struct {
 
 	// A value that indicates whether to enable mapping of AWS Identity and Access
 	// Management (IAM) accounts to database accounts. By default, mapping is disabled.
+	// For information about the supported DB engines, see CreateDBInstance.
 	//
-	// You can enable IAM database authentication for the following database engines
-	//
-	//    * For MySQL 5.6, minor version 5.6.34 or higher
-	//
-	//    * For MySQL 5.7, minor version 5.7.16 or higher
-	//
-	//    * Aurora MySQL 5.6 or higher
+	// For more information about IAM database authentication, see IAM Database
+	// Authentication for MySQL and PostgreSQL (https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/UsingWithRDS.IAMDBAuth.html)
+	// in the Amazon RDS User Guide.
 	EnableIAMDatabaseAuthentication *bool `type:"boolean"`
 
 	// A value that indicates whether to enable Performance Insights for the Read
@@ -15867,6 +15928,12 @@ func (s *CreateDBInstanceReadReplicaInput) SetDBInstanceClass(v string) *CreateD
 // SetDBInstanceIdentifier sets the DBInstanceIdentifier field's value.
 func (s *CreateDBInstanceReadReplicaInput) SetDBInstanceIdentifier(v string) *CreateDBInstanceReadReplicaInput {
 	s.DBInstanceIdentifier = &v
+	return s
+}
+
+// SetDBParameterGroupName sets the DBParameterGroupName field's value.
+func (s *CreateDBInstanceReadReplicaInput) SetDBParameterGroupName(v string) *CreateDBInstanceReadReplicaInput {
+	s.DBParameterGroupName = &v
 	return s
 }
 
@@ -16923,6 +16990,10 @@ type DBCluster struct {
 	// DB cluster.
 	CopyTagsToSnapshot *bool `type:"boolean"`
 
+	// Specifies whether the DB cluster is a clone of a DB cluster owned by a different
+	// AWS account.
+	CrossAccountClone *bool `type:"boolean"`
+
 	// Identifies all custom endpoints associated with the cluster.
 	CustomEndpoints []*string `type:"list"`
 
@@ -16981,8 +17052,8 @@ type DBCluster struct {
 	// Provides the name of the database engine to be used for this DB cluster.
 	Engine *string `type:"string"`
 
-	// The DB engine mode of the DB cluster, either provisioned, serverless, or
-	// parallelquery.
+	// The DB engine mode of the DB cluster, either provisioned, serverless, parallelquery,
+	// global, or multimaster.
 	EngineMode *string `type:"string"`
 
 	// Indicates the database engine version.
@@ -17169,6 +17240,12 @@ func (s *DBCluster) SetClusterCreateTime(v time.Time) *DBCluster {
 // SetCopyTagsToSnapshot sets the CopyTagsToSnapshot field's value.
 func (s *DBCluster) SetCopyTagsToSnapshot(v bool) *DBCluster {
 	s.CopyTagsToSnapshot = &v
+	return s
+}
+
+// SetCrossAccountClone sets the CrossAccountClone field's value.
+func (s *DBCluster) SetCrossAccountClone(v bool) *DBCluster {
+	s.CrossAccountClone = &v
 	return s
 }
 
@@ -17399,7 +17476,7 @@ func (s *DBCluster) SetVpcSecurityGroups(v []*VpcSecurityGroupMembership) *DBClu
 type DBClusterEndpoint struct {
 	_ struct{} `type:"structure"`
 
-	// The type associated with a custom endpoint. One of: READER, ANY.
+	// The type associated with a custom endpoint. One of: READER, WRITER, ANY.
 	CustomEndpointType *string `type:"string"`
 
 	// The Amazon Resource Name (ARN) for the endpoint.
@@ -17517,8 +17594,8 @@ type DBClusterMember struct {
 	// Specifies the instance identifier for this member of the DB cluster.
 	DBInstanceIdentifier *string `type:"string"`
 
-	// A value that indicates whehter the cluster member is the primary instance
-	// for the DB cluster.
+	// Value that is true if the cluster member is the primary instance for the
+	// DB cluster and false otherwise.
 	IsClusterWriter *bool `type:"boolean"`
 
 	// A value that specifies the order in which an Aurora Replica is promoted to
@@ -19265,7 +19342,7 @@ func (s *DBParameterGroupNameMessage) SetDBParameterGroupName(v string) *DBParam
 type DBParameterGroupStatus struct {
 	_ struct{} `type:"structure"`
 
-	// The name of the DP parameter group.
+	// The name of the DB parameter group.
 	DBParameterGroupName *string `type:"string"`
 
 	// The status of parameter updates.
@@ -19909,7 +19986,7 @@ func (s *DeleteDBClusterEndpointInput) SetDBClusterEndpointIdentifier(v string) 
 type DeleteDBClusterEndpointOutput struct {
 	_ struct{} `type:"structure"`
 
-	// The type associated with a custom endpoint. One of: READER, ANY.
+	// The type associated with a custom endpoint. One of: READER, WRITER, ANY.
 	CustomEndpointType *string `type:"string"`
 
 	// The Amazon Resource Name (ARN) for the endpoint.
@@ -21650,7 +21727,18 @@ type DescribeDBClusterSnapshotsInput struct {
 	//    must also be specified.
 	DBClusterSnapshotIdentifier *string `type:"string"`
 
-	// This parameter is not currently supported.
+	// A filter that specifies one or more DB cluster snapshots to describe.
+	//
+	// Supported filters:
+	//
+	//    * db-cluster-id - Accepts DB cluster identifiers and DB cluster Amazon
+	//    Resource Names (ARNs).
+	//
+	//    * db-cluster-snapshot-id - Accepts DB cluster snapshot identifiers.
+	//
+	//    * snapshot-type - Accepts types of DB cluster snapshots.
+	//
+	//    * engine - Accepts names of database engines.
 	Filters []*Filter `locationNameList:"Filter" type:"list"`
 
 	// A value that indicates whether to include manual DB cluster snapshots that
@@ -21845,6 +21933,10 @@ type DescribeDBClustersInput struct {
 	//    about the DB clusters identified by these ARNs.
 	Filters []*Filter `locationNameList:"Filter" type:"list"`
 
+	// Optional Boolean parameter that specifies whether the output includes information
+	// about clusters shared from other AWS accounts.
+	IncludeShared *bool `type:"boolean"`
+
 	// An optional pagination token provided by a previous DescribeDBClusters request.
 	// If this parameter is specified, the response includes only records beyond
 	// the marker, up to the value specified by MaxRecords.
@@ -21899,6 +21991,12 @@ func (s *DescribeDBClustersInput) SetDBClusterIdentifier(v string) *DescribeDBCl
 // SetFilters sets the Filters field's value.
 func (s *DescribeDBClustersInput) SetFilters(v []*Filter) *DescribeDBClustersInput {
 	s.Filters = v
+	return s
+}
+
+// SetIncludeShared sets the IncludeShared field's value.
+func (s *DescribeDBClustersInput) SetIncludeShared(v bool) *DescribeDBClustersInput {
+	s.IncludeShared = &v
 	return s
 }
 
@@ -22297,6 +22395,10 @@ type DescribeDBInstancesInput struct {
 	//    * db-instance-id - Accepts DB instance identifiers and DB instance Amazon
 	//    Resource Names (ARNs). The results list will only include information
 	//    about the DB instances identified by these ARNs.
+	//
+	//    * dbi-resource-id - Accepts DB instance resource identifiers. The results
+	//    list will only include information about the DB instances identified by
+	//    these resource identifiers.
 	Filters []*Filter `locationNameList:"Filter" type:"list"`
 
 	// An optional pagination token provided by a previous DescribeDBInstances request.
@@ -23053,7 +23155,20 @@ type DescribeDBSnapshotsInput struct {
 	// A specific DB resource ID to describe.
 	DbiResourceId *string `type:"string"`
 
-	// This parameter is not currently supported.
+	// A filter that specifies one or more DB snapshots to describe.
+	//
+	// Supported filters:
+	//
+	//    * db-instance-id - Accepts DB instance identifiers and DB instance Amazon
+	//    Resource Names (ARNs).
+	//
+	//    * db-snapshot-id - Accepts DB snapshot identifiers.
+	//
+	//    * dbi-resource-id - Accepts identifiers of source DB instances.
+	//
+	//    * snapshot-type - Accepts types of DB snapshots.
+	//
+	//    * engine - Accepts names of database engines.
 	Filters []*Filter `locationNameList:"Filter" type:"list"`
 
 	// A value that indicates whether to include manual DB cluster snapshots that
@@ -24630,6 +24745,13 @@ type DescribeReservedDBInstancesInput struct {
 	// This parameter is not currently supported.
 	Filters []*Filter `locationNameList:"Filter" type:"list"`
 
+	// The lease identifier filter value. Specify this parameter to show only the
+	// reservation that matches the specified lease ID.
+	//
+	// AWS Support might request the lease ID for an issue related to a reserved
+	// DB instance.
+	LeaseId *string `type:"string"`
+
 	// An optional pagination token provided by a previous request. If this parameter
 	// is specified, the response includes only records beyond the marker, up to
 	// the value specified by MaxRecords.
@@ -24712,6 +24834,12 @@ func (s *DescribeReservedDBInstancesInput) SetDuration(v string) *DescribeReserv
 // SetFilters sets the Filters field's value.
 func (s *DescribeReservedDBInstancesInput) SetFilters(v []*Filter) *DescribeReservedDBInstancesInput {
 	s.Filters = v
+	return s
+}
+
+// SetLeaseId sets the LeaseId field's value.
+func (s *DescribeReservedDBInstancesInput) SetLeaseId(v string) *DescribeReservedDBInstancesInput {
+	s.LeaseId = &v
 	return s
 }
 
@@ -26367,7 +26495,7 @@ type ModifyDBClusterEndpointInput struct {
 	// DBClusterEndpointIdentifier is a required field
 	DBClusterEndpointIdentifier *string `type:"string" required:"true"`
 
-	// The type of the endpoint. One of: READER, ANY.
+	// The type of the endpoint. One of: READER, WRITER, ANY.
 	EndpointType *string `type:"string"`
 
 	// List of DB instance identifiers that aren't part of the custom endpoint group.
@@ -26443,7 +26571,7 @@ func (s *ModifyDBClusterEndpointInput) SetStaticMembers(v []*string) *ModifyDBCl
 type ModifyDBClusterEndpointOutput struct {
 	_ struct{} `type:"structure"`
 
-	// The type associated with a custom endpoint. One of: READER, ANY.
+	// The type associated with a custom endpoint. One of: READER, WRITER, ANY.
 	CustomEndpointType *string `type:"string"`
 
 	// The Amazon Resource Name (ARN) for the endpoint.
@@ -26553,6 +26681,13 @@ func (s *ModifyDBClusterEndpointOutput) SetStatus(v string) *ModifyDBClusterEndp
 type ModifyDBClusterInput struct {
 	_ struct{} `type:"structure"`
 
+	// A value that indicates whether major version upgrades are allowed.
+	//
+	// Constraints: You must allow major version upgrades when specifying a value
+	// for the EngineVersion parameter that is a different major version than the
+	// DB cluster's current version.
+	AllowMajorVersionUpgrade *bool `type:"boolean"`
+
 	// A value that indicates whether the modifications in this request and any
 	// pending modifications are asynchronously applied as soon as possible, regardless
 	// of the PreferredMaintenanceWindow setting for the DB cluster. If this parameter
@@ -26601,15 +26736,31 @@ type ModifyDBClusterInput struct {
 	// The DB cluster identifier for the cluster being modified. This parameter
 	// is not case-sensitive.
 	//
-	// Constraints:
-	//
-	//    * Must match the identifier of an existing DBCluster.
+	// Constraints: This identifier must match the identifier of an existing DB
+	// cluster.
 	//
 	// DBClusterIdentifier is a required field
 	DBClusterIdentifier *string `type:"string" required:"true"`
 
 	// The name of the DB cluster parameter group to use for the DB cluster.
 	DBClusterParameterGroupName *string `type:"string"`
+
+	// The name of the DB parameter group to apply to all instances of the DB cluster.
+	//
+	// When you apply a parameter group using the DBInstanceParameterGroupName parameter,
+	// the DB cluster isn't rebooted automatically. Also, parameter changes aren't
+	// applied during the next maintenance window but instead are applied immediately.
+	//
+	// Default: The existing name setting
+	//
+	// Constraints:
+	//
+	//    * The DB parameter group must be in the same DB parameter group family
+	//    as this DB cluster.
+	//
+	//    * The DBInstanceParameterGroupName parameter is only valid in combination
+	//    with the AllowMajorVersionUpgrade parameter.
+	DBInstanceParameterGroupName *string `type:"string"`
 
 	// A value that indicates whether the DB cluster has deletion protection enabled.
 	// The database can't be deleted when deletion protection is enabled. By default,
@@ -26629,13 +26780,29 @@ type ModifyDBClusterInput struct {
 
 	// A value that indicates whether to enable mapping of AWS Identity and Access
 	// Management (IAM) accounts to database accounts. By default, mapping is disabled.
+	//
+	// For more information, see IAM Database Authentication (https://docs.aws.amazon.com/AmazonRDS/latest/AuroraUserGuide/UsingWithRDS.IAMDBAuth.html)
+	// in the Amazon Aurora User Guide.
 	EnableIAMDatabaseAuthentication *bool `type:"boolean"`
 
 	// The version number of the database engine to which you want to upgrade. Changing
 	// this parameter results in an outage. The change is applied during the next
 	// maintenance window unless ApplyImmediately is enabled.
 	//
-	// For a list of valid engine versions, use DescribeDBEngineVersions.
+	// To list all of the available engine versions for aurora (for MySQL 5.6-compatible
+	// Aurora), use the following command:
+	//
+	// aws rds describe-db-engine-versions --engine aurora --query "DBEngineVersions[].EngineVersion"
+	//
+	// To list all of the available engine versions for aurora-mysql (for MySQL
+	// 5.7-compatible Aurora), use the following command:
+	//
+	// aws rds describe-db-engine-versions --engine aurora-mysql --query "DBEngineVersions[].EngineVersion"
+	//
+	// To list all of the available engine versions for aurora-postgresql, use the
+	// following command:
+	//
+	// aws rds describe-db-engine-versions --engine aurora-postgresql --query "DBEngineVersions[].EngineVersion"
 	EngineVersion *string `type:"string"`
 
 	// The new password for the master database user. This password can contain
@@ -26743,6 +26910,12 @@ func (s *ModifyDBClusterInput) Validate() error {
 	return nil
 }
 
+// SetAllowMajorVersionUpgrade sets the AllowMajorVersionUpgrade field's value.
+func (s *ModifyDBClusterInput) SetAllowMajorVersionUpgrade(v bool) *ModifyDBClusterInput {
+	s.AllowMajorVersionUpgrade = &v
+	return s
+}
+
 // SetApplyImmediately sets the ApplyImmediately field's value.
 func (s *ModifyDBClusterInput) SetApplyImmediately(v bool) *ModifyDBClusterInput {
 	s.ApplyImmediately = &v
@@ -26782,6 +26955,12 @@ func (s *ModifyDBClusterInput) SetDBClusterIdentifier(v string) *ModifyDBCluster
 // SetDBClusterParameterGroupName sets the DBClusterParameterGroupName field's value.
 func (s *ModifyDBClusterInput) SetDBClusterParameterGroupName(v string) *ModifyDBClusterInput {
 	s.DBClusterParameterGroupName = &v
+	return s
+}
+
+// SetDBInstanceParameterGroupName sets the DBInstanceParameterGroupName field's value.
+func (s *ModifyDBClusterInput) SetDBInstanceParameterGroupName(v string) *ModifyDBClusterInput {
+	s.DBInstanceParameterGroupName = &v
 	return s
 }
 
@@ -27171,8 +27350,8 @@ type ModifyDBInstanceInput struct {
 	// The name of the DB parameter group to apply to the DB instance. Changing
 	// this setting doesn't result in an outage. The parameter group name itself
 	// is changed immediately, but the actual parameter changes are not applied
-	// until you reboot the instance without failover. The DB instance will NOT
-	// be rebooted automatically and the parameter changes will NOT be applied during
+	// until you reboot the instance without failover. In this case, the DB instance
+	// isn't rebooted automatically and the parameter changes isn't applied during
 	// the next maintenance window.
 	//
 	// Default: Uses existing setting
@@ -27269,19 +27448,11 @@ type ModifyDBInstanceInput struct {
 
 	// A value that indicates whether to enable mapping of AWS Identity and Access
 	// Management (IAM) accounts to database accounts. By default, mapping is disabled.
+	// For information about the supported DB engines, see CreateDBInstance.
 	//
-	// You can enable IAM database authentication for the following database engines
-	//
-	// Amazon Aurora
-	//
-	// Not applicable. Mapping AWS IAM accounts to database accounts is managed
-	// by the DB cluster. For more information, see ModifyDBCluster.
-	//
-	// MySQL
-	//
-	//    * For MySQL 5.6, minor version 5.6.34 or higher
-	//
-	//    * For MySQL 5.7, minor version 5.7.16 or higher
+	// For more information about IAM database authentication, see IAM Database
+	// Authentication for MySQL and PostgreSQL (https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/UsingWithRDS.IAMDBAuth.html)
+	// in the Amazon RDS User Guide.
 	EnableIAMDatabaseAuthentication *bool `type:"boolean"`
 
 	// A value that indicates whether to enable Performance Insights for the DB
@@ -29626,8 +29797,7 @@ type PendingMaintenanceAction struct {
 
 	// The date of the maintenance window when the action is applied. The maintenance
 	// action is applied to the resource during its first maintenance window after
-	// this date. If this date is specified, any next-maintenance opt-in requests
-	// are ignored.
+	// this date.
 	AutoAppliedAfterDate *time.Time `type:"timestamp"`
 
 	// The effective date when the pending maintenance action is applied to the
@@ -29642,8 +29812,7 @@ type PendingMaintenanceAction struct {
 
 	// The date when the maintenance action is automatically applied. The maintenance
 	// action is applied to the resource on this date regardless of the maintenance
-	// window for the resource. If this date is specified, any immediate opt-in
-	// requests are ignored.
+	// window for the resource.
 	ForcedApplyDate *time.Time `type:"timestamp"`
 
 	// Indicates the type of opt-in request that has been received for the resource.
@@ -29996,15 +30165,17 @@ func (s *PromoteReadReplicaDBClusterOutput) SetDBCluster(v *DBCluster) *PromoteR
 type PromoteReadReplicaInput struct {
 	_ struct{} `type:"structure"`
 
-	// The number of days to retain automated backups. Setting this parameter to
-	// a positive number enables backups. Setting this parameter to 0 disables automated
-	// backups.
+	// The number of days for which automated backups are retained. Setting this
+	// parameter to a positive number enables backups. Setting this parameter to
+	// 0 disables automated backups.
 	//
 	// Default: 1
 	//
 	// Constraints:
 	//
-	//    * Must be a value from 0 to 8
+	//    * Must be a value from 0 to 35.
+	//
+	//    * Can't be set to 0 if the DB instance is a source to Read Replicas.
 	BackupRetentionPeriod *int64 `type:"integer"`
 
 	// The DB instance identifier. This value is stored as a lowercase string.
@@ -30741,6 +30912,12 @@ type ReservedDBInstance struct {
 	// The fixed price charged for this reserved DB instance.
 	FixedPrice *float64 `type:"double"`
 
+	// The unique identifier for the lease associated with the reserved DB instance.
+	//
+	// AWS Support might request the lease ID for an issue related to a reserved
+	// DB instance.
+	LeaseId *string `type:"string"`
+
 	// Indicates if the reservation applies to Multi-AZ deployments.
 	MultiAZ *bool `type:"boolean"`
 
@@ -30809,6 +30986,12 @@ func (s *ReservedDBInstance) SetDuration(v int64) *ReservedDBInstance {
 // SetFixedPrice sets the FixedPrice field's value.
 func (s *ReservedDBInstance) SetFixedPrice(v float64) *ReservedDBInstance {
 	s.FixedPrice = &v
+	return s
+}
+
+// SetLeaseId sets the LeaseId field's value.
+func (s *ReservedDBInstance) SetLeaseId(v string) *ReservedDBInstance {
+	s.LeaseId = &v
 	return s
 }
 
@@ -31240,6 +31423,9 @@ type RestoreDBClusterFromS3Input struct {
 
 	// A value that indicates whether to enable mapping of AWS Identity and Access
 	// Management (IAM) accounts to database accounts. By default, mapping is disabled.
+	//
+	// For more information, see IAM Database Authentication (https://docs.aws.amazon.com/AmazonRDS/latest/AuroraUserGuide/UsingWithRDS.IAMDBAuth.html)
+	// in the Amazon Aurora User Guide.
 	EnableIAMDatabaseAuthentication *bool `type:"boolean"`
 
 	// The name of the database engine to be used for the restored DB cluster.
@@ -31251,13 +31437,28 @@ type RestoreDBClusterFromS3Input struct {
 
 	// The version number of the database engine to use.
 	//
+	// To list all of the available engine versions for aurora (for MySQL 5.6-compatible
+	// Aurora), use the following command:
+	//
+	// aws rds describe-db-engine-versions --engine aurora --query "DBEngineVersions[].EngineVersion"
+	//
+	// To list all of the available engine versions for aurora-mysql (for MySQL
+	// 5.7-compatible Aurora), use the following command:
+	//
+	// aws rds describe-db-engine-versions --engine aurora-mysql --query "DBEngineVersions[].EngineVersion"
+	//
+	// To list all of the available engine versions for aurora-postgresql, use the
+	// following command:
+	//
+	// aws rds describe-db-engine-versions --engine aurora-postgresql --query "DBEngineVersions[].EngineVersion"
+	//
 	// Aurora MySQL
 	//
-	// Example: 5.6.10a
+	// Example: 5.6.10a, 5.6.mysql_aurora.1.19.2, 5.7.12, 5.7.mysql_aurora.2.04.5
 	//
 	// Aurora PostgreSQL
 	//
-	// Example: 9.6.3
+	// Example: 9.6.3, 10.7
 	EngineVersion *string `type:"string"`
 
 	// The AWS KMS key identifier for an encrypted DB cluster.
@@ -31710,6 +31911,9 @@ type RestoreDBClusterFromSnapshotInput struct {
 
 	// A value that indicates whether to enable mapping of AWS Identity and Access
 	// Management (IAM) accounts to database accounts. By default, mapping is disabled.
+	//
+	// For more information, see IAM Database Authentication (https://docs.aws.amazon.com/AmazonRDS/latest/AuroraUserGuide/UsingWithRDS.IAMDBAuth.html)
+	// in the Amazon Aurora User Guide.
 	EnableIAMDatabaseAuthentication *bool `type:"boolean"`
 
 	// The database engine to use for the new DB cluster.
@@ -31721,11 +31925,34 @@ type RestoreDBClusterFromSnapshotInput struct {
 	// Engine is a required field
 	Engine *string `type:"string" required:"true"`
 
-	// The DB engine mode of the DB cluster, either provisioned, serverless, or
-	// parallelquery.
+	// The DB engine mode of the DB cluster, either provisioned, serverless, parallelquery,
+	// global, or multimaster.
 	EngineMode *string `type:"string"`
 
 	// The version of the database engine to use for the new DB cluster.
+	//
+	// To list all of the available engine versions for aurora (for MySQL 5.6-compatible
+	// Aurora), use the following command:
+	//
+	// aws rds describe-db-engine-versions --engine aurora --query "DBEngineVersions[].EngineVersion"
+	//
+	// To list all of the available engine versions for aurora-mysql (for MySQL
+	// 5.7-compatible Aurora), use the following command:
+	//
+	// aws rds describe-db-engine-versions --engine aurora-mysql --query "DBEngineVersions[].EngineVersion"
+	//
+	// To list all of the available engine versions for aurora-postgresql, use the
+	// following command:
+	//
+	// aws rds describe-db-engine-versions --engine aurora-postgresql --query "DBEngineVersions[].EngineVersion"
+	//
+	// Aurora MySQL
+	//
+	// Example: 5.6.10a, 5.6.mysql_aurora.1.19.2, 5.7.12, 5.7.mysql_aurora.2.04.5
+	//
+	// Aurora PostgreSQL
+	//
+	// Example: 9.6.3, 10.7
 	EngineVersion *string `type:"string"`
 
 	// The AWS KMS key identifier to use when restoring an encrypted DB cluster
@@ -32023,6 +32250,9 @@ type RestoreDBClusterToPointInTimeInput struct {
 
 	// A value that indicates whether to enable mapping of AWS Identity and Access
 	// Management (IAM) accounts to database accounts. By default, mapping is disabled.
+	//
+	// For more information, see IAM Database Authentication (https://docs.aws.amazon.com/AmazonRDS/latest/AuroraUserGuide/UsingWithRDS.IAMDBAuth.html)
+	// in the Amazon Aurora User Guide.
 	EnableIAMDatabaseAuthentication *bool `type:"boolean"`
 
 	// The AWS KMS key identifier to use when restoring an encrypted DB cluster
@@ -32323,9 +32553,10 @@ type RestoreDBInstanceFromDBSnapshotInput struct {
 	// This parameter doesn't apply to the MySQL, PostgreSQL, or MariaDB engines.
 	DBName *string `type:"string"`
 
-	// The name of the DB parameter group to associate with this DB instance. If
-	// this argument is omitted, the default DBParameterGroup for the specified
-	// engine is used.
+	// The name of the DB parameter group to associate with this DB instance.
+	//
+	// If you do not specify a value for DBParameterGroupName, then the default
+	// DBParameterGroup for the specified DB engine is used.
 	//
 	// Constraints:
 	//
@@ -32378,12 +32609,11 @@ type RestoreDBInstanceFromDBSnapshotInput struct {
 
 	// A value that indicates whether to enable mapping of AWS Identity and Access
 	// Management (IAM) accounts to database accounts. By default, mapping is disabled.
+	// For information about the supported DB engines, see CreateDBInstance.
 	//
-	// You can enable IAM database authentication for the following database engines
-	//
-	//    * For MySQL 5.6, minor version 5.6.34 or higher
-	//
-	//    * For MySQL 5.7, minor version 5.7.16 or higher
+	// For more information about IAM database authentication, see IAM Database
+	// Authentication for MySQL and PostgreSQL (https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/UsingWithRDS.IAMDBAuth.html)
+	// in the Amazon RDS User Guide.
 	EnableIAMDatabaseAuthentication *bool `type:"boolean"`
 
 	// The database engine to use for the new instance.
@@ -32792,9 +33022,10 @@ type RestoreDBInstanceFromS3Input struct {
 	// the naming rules specified in CreateDBInstance.
 	DBName *string `type:"string"`
 
-	// The name of the DB parameter group to associate with this DB instance. If
-	// this argument is omitted, the default parameter group for the specified engine
-	// is used.
+	// The name of the DB parameter group to associate with this DB instance.
+	//
+	// If you do not specify a value for DBParameterGroupName, then the default
+	// DBParameterGroup for the specified DB engine is used.
 	DBParameterGroupName *string `type:"string"`
 
 	// A list of DB security groups to associate with this DB instance.
@@ -32819,6 +33050,11 @@ type RestoreDBInstanceFromS3Input struct {
 
 	// A value that indicates whether to enable mapping of AWS Identity and Access
 	// Management (IAM) accounts to database accounts. By default, mapping is disabled.
+	// For information about the supported DB engines, see CreateDBInstance.
+	//
+	// For more information about IAM database authentication, see IAM Database
+	// Authentication for MySQL and PostgreSQL (https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/UsingWithRDS.IAMDBAuth.html)
+	// in the Amazon RDS User Guide.
 	EnableIAMDatabaseAuthentication *bool `type:"boolean"`
 
 	// A value that indicates whether to enable Performance Insights for the DB
@@ -32842,7 +33078,7 @@ type RestoreDBInstanceFromS3Input struct {
 
 	// The amount of Provisioned IOPS (input/output operations per second) to allocate
 	// initially for the DB instance. For information about valid Iops values, see
-	// see Amazon RDS Provisioned IOPS Storage to Improve Performance (https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/CHAP_Storage.html#USER_PIOPS)
+	// Amazon RDS Provisioned IOPS Storage to Improve Performance (https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/CHAP_Storage.html#USER_PIOPS)
 	// in the Amazon RDS User Guide.
 	Iops *int64 `type:"integer"`
 
@@ -33391,9 +33627,10 @@ type RestoreDBInstanceToPointInTimeInput struct {
 	// This parameter is not used for the MySQL or MariaDB engines.
 	DBName *string `type:"string"`
 
-	// The name of the DB parameter group to associate with this DB instance. If
-	// this argument is omitted, the default DBParameterGroup for the specified
-	// engine is used.
+	// The name of the DB parameter group to associate with this DB instance.
+	//
+	// If you do not specify a value for DBParameterGroupName, then the default
+	// DBParameterGroup for the specified DB engine is used.
 	//
 	// Constraints:
 	//
@@ -33434,12 +33671,11 @@ type RestoreDBInstanceToPointInTimeInput struct {
 
 	// A value that indicates whether to enable mapping of AWS Identity and Access
 	// Management (IAM) accounts to database accounts. By default, mapping is disabled.
+	// For information about the supported DB engines, see CreateDBInstance.
 	//
-	// You can enable IAM database authentication for the following database engines
-	//
-	//    * For MySQL 5.6, minor version 5.6.34 or higher
-	//
-	//    * For MySQL 5.7, minor version 5.7.16 or higher
+	// For more information about IAM database authentication, see IAM Database
+	// Authentication for MySQL and PostgreSQL (https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/UsingWithRDS.IAMDBAuth.html)
+	// in the Amazon RDS User Guide.
 	EnableIAMDatabaseAuthentication *bool `type:"boolean"`
 
 	// The database engine to use for the new instance.
