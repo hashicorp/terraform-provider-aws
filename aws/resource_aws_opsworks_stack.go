@@ -7,7 +7,6 @@ import (
 
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/helper/schema"
-	"github.com/hashicorp/terraform/terraform"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
@@ -387,7 +386,7 @@ func opsworksConnForRegion(region string, meta interface{}) (*opsworks.OpsWorks,
 		return nil, fmt.Errorf("Error creating AWS session: %s", err)
 	}
 
-	sess.Handlers.Build.PushBack(request.MakeAddToUserAgentHandler("APN/1.0 HashiCorp/1.0 Terraform", terraform.VersionString()))
+	sess.Handlers.Build.PushBack(request.MakeAddToUserAgentHandler("APN/1.0 HashiCorp/1.0 Terraform", meta.(*AWSClient).terraformVersion))
 
 	newSession := sess.Copy(&aws.Config{Region: aws.String(region)})
 	newOpsworksconn := opsworks.New(newSession)
