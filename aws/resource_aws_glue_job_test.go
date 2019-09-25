@@ -233,6 +233,40 @@ func TestAccAWSGlueJob_Description(t *testing.T) {
 	})
 }
 
+func TestAccAWSGlueJob_GlueVersion(t *testing.T) {
+	var job glue.Job
+
+	rName := fmt.Sprintf("tf-acc-test-%s", acctest.RandString(5))
+	resourceName := "aws_glue_job.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSGlueJobDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSGlueJobConfig_GlueVersion(rName, "0.9"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSGlueJobExists(resourceName, &job),
+					resource.TestCheckResourceAttr(resourceName, "glue_version", "0.9"),
+				),
+			},
+			{
+				Config: testAccAWSGlueJobConfig_GlueVersion(rName, "1.0"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSGlueJobExists(resourceName, &job),
+					resource.TestCheckResourceAttr(resourceName, "glue_version", "1.0"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func TestAccAWSGlueJob_ExecutionProperty(t *testing.T) {
 	var job glue.Job
 
@@ -643,6 +677,25 @@ resource "aws_glue_job" "test" {
   depends_on = ["aws_iam_role_policy_attachment.test"]
 }
 `, testAccAWSGlueJobConfig_Base(rName), description, rName)
+}
+
+func testAccAWSGlueJobConfig_GlueVersion(rName, glueVersion string) string {
+	return fmt.Sprintf(`
+%s
+
+resource "aws_glue_job" "test" {
+  glue_version       = "%s"
+  name               = "%s"
+  role_arn           = "${aws_iam_role.test.arn}"
+  allocated_capacity = 10
+
+  command {
+    script_location = "testscriptlocation"
+  }
+
+  depends_on = ["aws_iam_role_policy_attachment.test"]
+}
+`, testAccAWSGlueJobConfig_Base(rName), glueVersion, rName)
 }
 
 func testAccAWSGlueJobConfig_ExecutionProperty(rName string, maxConcurrentRuns int) string {
