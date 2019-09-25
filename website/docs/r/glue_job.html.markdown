@@ -61,7 +61,8 @@ be removed in future releases, please use `max_capacity` instead.
 * `role_arn` – (Required) The ARN of the IAM role associated with this job.
 * `timeout` – (Optional) The job timeout in minutes. The default is 2880 minutes (48 hours).
 * `security_configuration` - (Optional) The name of the Security Configuration to be associated with the job.
-
+* `glue_version` - (Optional) The version of glue to use, for example "1.0".  For information about available versionse see [AWS Glue Release Notes](https://docs.aws.amazon.com/glue/latest/dg/release-notes.html).
+  
 ### command Argument Reference
 
 * `name` - (Optional) The name of the job command. Defaults to `glueetl`
