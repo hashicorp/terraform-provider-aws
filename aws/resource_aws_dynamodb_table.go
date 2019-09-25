@@ -386,6 +386,9 @@ func resourceAwsDynamoDbTableCreate(d *schema.ResourceData, meta interface{}) er
 		}
 		return nil
 	})
+	if isResourceTimeoutError(err) {
+		output, err = conn.CreateTable(req)
+	}
 	if err != nil {
 		return fmt.Errorf("error creating DynamoDB Table: %s", err)
 	}
@@ -652,7 +655,7 @@ func deleteAwsDynamoDbTable(tableName string, conn *dynamodb.DynamoDB) error {
 		TableName: aws.String(tableName),
 	}
 
-	return resource.Retry(5*time.Minute, func() *resource.RetryError {
+	err := resource.Retry(5*time.Minute, func() *resource.RetryError {
 		_, err := conn.DeleteTable(input)
 		if err != nil {
 			// Subscriber limit exceeded: Only 10 tables can be created, updated, or deleted simultaneously
@@ -674,6 +677,13 @@ func deleteAwsDynamoDbTable(tableName string, conn *dynamodb.DynamoDB) error {
 		}
 		return nil
 	})
+	if isResourceTimeoutError(err) {
+		_, err = conn.DeleteTable(input)
+	}
+	if err != nil {
+		return fmt.Errorf("Error deleting DynamoDB table: %s", err)
+	}
+	return nil
 }
 
 func waitForDynamodbTableDeletion(conn *dynamodb.DynamoDB, tableName string, timeout time.Duration) error {
@@ -759,9 +769,11 @@ func updateDynamoDbPITR(d *schema.ResourceData, conn *dynamodb.DynamoDB) error {
 		}
 		return nil
 	})
-
+	if isResourceTimeoutError(err) {
+		_, err = conn.UpdateContinuousBackups(input)
+	}
 	if err != nil {
-		return err
+		return fmt.Errorf("Error updating DynamoDB PITR status: %s", err)
 	}
 
 	if err := waitForDynamoDbBackupUpdateToBeCompleted(d.Id(), toEnable, conn); err != nil {

@@ -15,8 +15,10 @@ import (
 )
 
 func TestAccAWSSesTemplate_Basic(t *testing.T) {
+	resourceName := "aws_ses_template.test"
 	name := acctest.RandString(5)
 	var template ses.Template
+
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSSES(t) },
 		Providers:    testAccProviders,
@@ -25,12 +27,17 @@ func TestAccAWSSesTemplate_Basic(t *testing.T) {
 			{
 				Config: testAccCheckAwsSesTemplateResourceConfigBasic1(name),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckSesTemplate("aws_ses_template.test", &template),
-					resource.TestCheckResourceAttr("aws_ses_template.test", "name", name),
-					resource.TestCheckResourceAttr("aws_ses_template.test", "html", "html"),
-					resource.TestCheckResourceAttr("aws_ses_template.test", "subject", "subject"),
-					resource.TestCheckResourceAttr("aws_ses_template.test", "text", ""),
+					testAccCheckSesTemplate(resourceName, &template),
+					resource.TestCheckResourceAttr(resourceName, "name", name),
+					resource.TestCheckResourceAttr(resourceName, "html", "html"),
+					resource.TestCheckResourceAttr(resourceName, "subject", "subject"),
+					resource.TestCheckResourceAttr(resourceName, "text", ""),
 				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})
@@ -40,6 +47,8 @@ func TestAccAWSSesTemplate_Update(t *testing.T) {
 	t.Skipf("Skip due to SES.UpdateTemplate eventual consistency issues")
 	name := acctest.RandString(5)
 	var template ses.Template
+	resourceName := "aws_ses_template.test"
+
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSSES(t) },
 		Providers:    testAccProviders,
@@ -48,55 +57,37 @@ func TestAccAWSSesTemplate_Update(t *testing.T) {
 			{
 				Config: testAccCheckAwsSesTemplateResourceConfigBasic1(name),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckSesTemplate("aws_ses_template.test", &template),
-					resource.TestCheckResourceAttr("aws_ses_template.test", "name", name),
-					resource.TestCheckResourceAttr("aws_ses_template.test", "html", "html"),
-					resource.TestCheckResourceAttr("aws_ses_template.test", "subject", "subject"),
-					resource.TestCheckResourceAttr("aws_ses_template.test", "text", ""),
+					testAccCheckSesTemplate(resourceName, &template),
+					resource.TestCheckResourceAttr(resourceName, "name", name),
+					resource.TestCheckResourceAttr(resourceName, "html", "html"),
+					resource.TestCheckResourceAttr(resourceName, "subject", "subject"),
+					resource.TestCheckResourceAttr(resourceName, "text", ""),
 				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 			{
 				Config: testAccCheckAwsSesTemplateResourceConfigBasic2(name),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckSesTemplate("aws_ses_template.test", &template),
-					resource.TestCheckResourceAttr("aws_ses_template.test", "name", name),
-					resource.TestCheckResourceAttr("aws_ses_template.test", "html", "html"),
-					resource.TestCheckResourceAttr("aws_ses_template.test", "subject", "subject"),
-					resource.TestCheckResourceAttr("aws_ses_template.test", "text", "text"),
+					testAccCheckSesTemplate(resourceName, &template),
+					resource.TestCheckResourceAttr(resourceName, "name", name),
+					resource.TestCheckResourceAttr(resourceName, "html", "html"),
+					resource.TestCheckResourceAttr(resourceName, "subject", "subject"),
+					resource.TestCheckResourceAttr(resourceName, "text", "text"),
 				),
 			},
 			{
 				Config: testAccCheckAwsSesTemplateResourceConfigBasic3(name),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckSesTemplate("aws_ses_template.test", &template),
-					resource.TestCheckResourceAttr("aws_ses_template.test", "name", name),
-					resource.TestCheckResourceAttr("aws_ses_template.test", "html", "html update"),
-					resource.TestCheckResourceAttr("aws_ses_template.test", "subject", "subject"),
-					resource.TestCheckResourceAttr("aws_ses_template.test", "text", ""),
+					testAccCheckSesTemplate(resourceName, &template),
+					resource.TestCheckResourceAttr(resourceName, "name", name),
+					resource.TestCheckResourceAttr(resourceName, "html", "html update"),
+					resource.TestCheckResourceAttr(resourceName, "subject", "subject"),
+					resource.TestCheckResourceAttr(resourceName, "text", ""),
 				),
-			},
-		},
-	})
-}
-
-func TestAccAWSSesTemplate_Import(t *testing.T) {
-	resourceName := "aws_ses_template.test"
-
-	name := acctest.RandString(5)
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSSES(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckSesTemplateDestroy,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccCheckAwsSesTemplateResourceConfigBasic1(name),
-			},
-
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
 			},
 		},
 	})

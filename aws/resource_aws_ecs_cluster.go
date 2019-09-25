@@ -7,10 +7,10 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
-	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/ecs"
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/helper/schema"
+	"github.com/hashicorp/terraform/helper/validation"
 )
 
 func resourceAwsEcsCluster() *schema.Resource {
@@ -34,6 +34,26 @@ func resourceAwsEcsCluster() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"setting": {
+				Type:     schema.TypeSet,
+				Optional: true,
+				Computed: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"name": {
+							Type:     schema.TypeString,
+							Required: true,
+							ValidateFunc: validation.StringInSlice([]string{
+								ecs.ClusterSettingNameContainerInsights,
+							}, false),
+						},
+						"value": {
+							Type:     schema.TypeString,
+							Required: true,
+						},
+					},
+				},
+			},
 		},
 	}
 }
@@ -56,10 +76,16 @@ func resourceAwsEcsClusterCreate(d *schema.ResourceData, meta interface{}) error
 	clusterName := d.Get("name").(string)
 	log.Printf("[DEBUG] Creating ECS cluster %s", clusterName)
 
-	out, err := conn.CreateCluster(&ecs.CreateClusterInput{
+	input := ecs.CreateClusterInput{
 		ClusterName: aws.String(clusterName),
 		Tags:        tagsFromMapECS(d.Get("tags").(map[string]interface{})),
-	})
+	}
+
+	if v, ok := d.GetOk("setting"); ok {
+		input.Settings = expandEcsSettings(v.(*schema.Set).List())
+	}
+
+	out, err := conn.CreateCluster(&input)
 	if err != nil {
 		return err
 	}
@@ -97,6 +123,9 @@ func resourceAwsEcsClusterRead(d *schema.ResourceData, meta interface{}) error {
 
 		return nil
 	})
+	if isResourceTimeoutError(err) {
+		out, err = conn.DescribeClusters(input)
+	}
 
 	if isResourceNotFoundError(err) {
 		log.Printf("[WARN] ECS Cluster (%s) not found, removing from state", d.Id())
@@ -132,6 +161,10 @@ func resourceAwsEcsClusterRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("arn", cluster.ClusterArn)
 	d.Set("name", cluster.ClusterName)
 
+	if err := d.Set("setting", flattenEcsSettings(cluster.Settings)); err != nil {
+		return fmt.Errorf("error setting setting: %s", err)
+	}
+
 	if err := d.Set("tags", tagsToMapECS(cluster.Tags)); err != nil {
 		return fmt.Errorf("error setting tags: %s", err)
 	}
@@ -141,6 +174,18 @@ func resourceAwsEcsClusterRead(d *schema.ResourceData, meta interface{}) error {
 
 func resourceAwsEcsClusterUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).ecsconn
+
+	if d.HasChange("setting") {
+		input := ecs.UpdateClusterSettingsInput{
+			Cluster:  aws.String(d.Id()),
+			Settings: expandEcsSettings(d.Get("setting").(*schema.Set).List()),
+		}
+
+		_, err := conn.UpdateClusterSettings(&input)
+		if err != nil {
+			return fmt.Errorf("error changing ECS cluster settings (%s): %s", d.Id(), err)
+		}
+	}
 
 	if d.HasChange("tags") {
 		oldTagsRaw, newTagsRaw := d.GetChange("tags")
@@ -185,66 +230,114 @@ func resourceAwsEcsClusterDelete(d *schema.ResourceData, meta interface{}) error
 	conn := meta.(*AWSClient).ecsconn
 
 	log.Printf("[DEBUG] Deleting ECS cluster %s", d.Id())
-
+	input := &ecs.DeleteClusterInput{
+		Cluster: aws.String(d.Id()),
+	}
 	err := resource.Retry(10*time.Minute, func() *resource.RetryError {
-		out, err := conn.DeleteCluster(&ecs.DeleteClusterInput{
-			Cluster: aws.String(d.Id()),
-		})
+		_, err := conn.DeleteCluster(input)
 
 		if err == nil {
-			log.Printf("[DEBUG] ECS cluster %s deleted: %s", d.Id(), out)
+			log.Printf("[DEBUG] ECS cluster %s deleted", d.Id())
 			return nil
 		}
 
-		awsErr, ok := err.(awserr.Error)
-		if !ok {
-			return resource.NonRetryableError(err)
-		}
-
-		if awsErr.Code() == "ClusterContainsContainerInstancesException" {
-			log.Printf("[TRACE] Retrying ECS cluster %q deletion after %q", d.Id(), awsErr.Code())
+		if isAWSErr(err, "ClusterContainsContainerInstancesException", "") {
+			log.Printf("[TRACE] Retrying ECS cluster %q deletion after %s", d.Id(), err)
 			return resource.RetryableError(err)
 		}
-
-		if awsErr.Code() == "ClusterContainsServicesException" {
-			log.Printf("[TRACE] Retrying ECS cluster %q deletion after %q", d.Id(), awsErr.Code())
+		if isAWSErr(err, "ClusterContainsServicesException", "") {
+			log.Printf("[TRACE] Retrying ECS cluster %q deletion after %s", d.Id(), err)
 			return resource.RetryableError(err)
 		}
-
 		return resource.NonRetryableError(err)
 	})
+	if isResourceTimeoutError(err) {
+		_, err = conn.DeleteCluster(input)
+	}
 	if err != nil {
-		return err
+		return fmt.Errorf("Error deleting ECS cluster: %s", err)
 	}
 
 	clusterName := d.Get("name").(string)
+	dcInput := &ecs.DescribeClustersInput{
+		Clusters: []*string{aws.String(clusterName)},
+	}
+	var out *ecs.DescribeClustersOutput
 	err = resource.Retry(5*time.Minute, func() *resource.RetryError {
 		log.Printf("[DEBUG] Checking if ECS Cluster %q is INACTIVE", d.Id())
-		out, err := conn.DescribeClusters(&ecs.DescribeClustersInput{
-			Clusters: []*string{aws.String(clusterName)},
-		})
-
-		for _, c := range out.Clusters {
-			if *c.ClusterName == clusterName {
-				if *c.Status == "INACTIVE" {
-					return nil
-				}
-
-				return resource.RetryableError(
-					fmt.Errorf("ECS Cluster %q is still %q", clusterName, *c.Status))
-			}
-		}
+		out, err = conn.DescribeClusters(dcInput)
 
 		if err != nil {
 			return resource.NonRetryableError(err)
 		}
+		if !ecsClusterInactive(out, clusterName) {
+			return resource.RetryableError(fmt.Errorf("ECS Cluster %q is not inactive", clusterName))
+		}
 
 		return nil
 	})
+	if isResourceTimeoutError(err) {
+		out, err = conn.DescribeClusters(dcInput)
+		if err != nil {
+			return fmt.Errorf("Error waiting for ECS cluster to become inactive: %s", err)
+		}
+		if !ecsClusterInactive(out, clusterName) {
+			return fmt.Errorf("ECS Cluster %q is still not inactive", clusterName)
+		}
+	}
 	if err != nil {
-		return err
+		return fmt.Errorf("Error waiting for ECS cluster to become inactive: %s", err)
 	}
 
 	log.Printf("[DEBUG] ECS cluster %q deleted", d.Id())
 	return nil
+}
+
+func ecsClusterInactive(out *ecs.DescribeClustersOutput, clusterName string) bool {
+	for _, c := range out.Clusters {
+		if aws.StringValue(c.ClusterName) == clusterName {
+			if *c.Status == "INACTIVE" {
+				return true
+			}
+		}
+	}
+	return false
+}
+
+func expandEcsSettings(configured []interface{}) []*ecs.ClusterSetting {
+	if len(configured) == 0 {
+		return nil
+	}
+
+	settings := make([]*ecs.ClusterSetting, 0, len(configured))
+
+	for _, raw := range configured {
+		data := raw.(map[string]interface{})
+
+		setting := &ecs.ClusterSetting{
+			Name:  aws.String(data["name"].(string)),
+			Value: aws.String(data["value"].(string)),
+		}
+
+		settings = append(settings, setting)
+	}
+
+	return settings
+}
+
+func flattenEcsSettings(list []*ecs.ClusterSetting) []map[string]interface{} {
+	if len(list) == 0 {
+		return nil
+	}
+
+	result := make([]map[string]interface{}, 0, len(list))
+	for _, setting := range list {
+		l := map[string]interface{}{
+			"name":  aws.StringValue(setting.Name),
+			"value": aws.StringValue(setting.Value),
+		}
+
+		result = append(result, l)
+	}
+	return result
 }

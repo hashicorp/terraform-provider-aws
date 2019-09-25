@@ -4,12 +4,10 @@ import (
 	"fmt"
 	"log"
 	"strings"
-	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/apigateway"
-	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/helper/schema"
 )
 
@@ -172,26 +170,20 @@ func resourceAwsApiGatewayModelUpdate(d *schema.ResourceData, meta interface{}) 
 func resourceAwsApiGatewayModelDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).apigateway
 	log.Printf("[DEBUG] Deleting API Gateway Model: %s", d.Id())
+	input := &apigateway.DeleteModelInput{
+		ModelName: aws.String(d.Get("name").(string)),
+		RestApiId: aws.String(d.Get("rest_api_id").(string)),
+	}
 
-	return resource.Retry(5*time.Minute, func() *resource.RetryError {
-		log.Printf("[DEBUG] schema is %#v", d)
-		_, err := conn.DeleteModel(&apigateway.DeleteModelInput{
-			ModelName: aws.String(d.Get("name").(string)),
-			RestApiId: aws.String(d.Get("rest_api_id").(string)),
-		})
-		if err == nil {
-			return nil
-		}
+	log.Printf("[DEBUG] schema is %#v", d)
+	_, err := conn.DeleteModel(input)
 
-		apigatewayErr, ok := err.(awserr.Error)
-		if apigatewayErr.Code() == "NotFoundException" {
-			return nil
-		}
+	if isAWSErr(err, "NotFoundException", "") {
+		return nil
+	}
 
-		if !ok {
-			return resource.NonRetryableError(err)
-		}
-
-		return resource.NonRetryableError(err)
-	})
+	if err != nil {
+		return fmt.Errorf("Error deleting API gateway model: %s", err)
+	}
+	return nil
 }

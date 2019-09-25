@@ -2,6 +2,7 @@ package aws
 
 import (
 	"fmt"
+	"log"
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -9,6 +10,56 @@ import (
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/terraform"
 )
+
+func init() {
+	resource.AddTestSweepers("aws_egress_only_internet_gateway", &resource.Sweeper{
+		Name: "aws_egress_only_internet_gateway",
+		F:    testSweepEc2EgressOnlyInternetGateways,
+	})
+}
+
+func testSweepEc2EgressOnlyInternetGateways(region string) error {
+	client, err := sharedClientForRegion(region)
+	if err != nil {
+		return fmt.Errorf("error getting client: %s", err)
+	}
+	conn := client.(*AWSClient).ec2conn
+
+	input := &ec2.DescribeEgressOnlyInternetGatewaysInput{}
+	err = conn.DescribeEgressOnlyInternetGatewaysPages(input, func(page *ec2.DescribeEgressOnlyInternetGatewaysOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
+		}
+
+		for _, gateway := range page.EgressOnlyInternetGateways {
+			id := aws.StringValue(gateway.EgressOnlyInternetGatewayId)
+			input := &ec2.DeleteEgressOnlyInternetGatewayInput{
+				EgressOnlyInternetGatewayId: gateway.EgressOnlyInternetGatewayId,
+			}
+
+			log.Printf("[INFO] Deleting EC2 Egress Only Internet Gateway: %s", id)
+
+			_, err := conn.DeleteEgressOnlyInternetGateway(input)
+
+			if err != nil {
+				log.Printf("[ERROR] Error deleting EC2 Egress Only Internet Gateway (%s): %s", id, err)
+			}
+		}
+
+		return !lastPage
+	})
+
+	if testSweepSkipSweepError(err) {
+		log.Printf("[WARN] Skipping EC2 Egress Only Internet Gateway sweep for %s: %s", region, err)
+		return nil
+	}
+
+	if err != nil {
+		return fmt.Errorf("Error describing EC2 Egress Only Internet Gateways: %s", err)
+	}
+
+	return nil
+}
 
 func TestAccAWSEgressOnlyInternetGateway_basic(t *testing.T) {
 	var igw ec2.EgressOnlyInternetGateway

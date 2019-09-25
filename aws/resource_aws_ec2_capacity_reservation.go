@@ -165,13 +165,16 @@ func resourceAwsEc2CapacityReservationRead(d *schema.ResourceData, meta interfac
 	})
 
 	if err != nil {
-		return fmt.Errorf("Error describing EC2 Capacity Reservations: %s", err)
+		if isAWSErr(err, "InvalidCapacityReservationId.NotFound", "") {
+			log.Printf("[WARN] EC2 Capacity Reservation (%s) not found, removing from state", d.Id())
+			d.SetId("")
+			return nil
+		}
+		return fmt.Errorf("error reading EC2 Capacity Reservation %s: %s", d.Id(), err)
 	}
 
-	// If nothing was found, then return no state
-	if len(resp.CapacityReservations) == 0 {
-		log.Printf("[WARN] EC2 Capacity Reservation (%s) not found, removing from state", d.Id())
-		d.SetId("")
+	if resp == nil || len(resp.CapacityReservations) == 0 || resp.CapacityReservations[0] == nil {
+		return fmt.Errorf("error reading EC2 Capacity Reservation (%s): empty response", d.Id())
 	}
 
 	reservation := resp.CapacityReservations[0]

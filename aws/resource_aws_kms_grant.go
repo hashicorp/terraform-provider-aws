@@ -149,7 +149,6 @@ func resourceAwsKmsGrantCreate(d *schema.ResourceData, meta interface{}) error {
 
 	err := resource.Retry(3*time.Minute, func() *resource.RetryError {
 		var err error
-
 		out, err = conn.CreateGrant(&input)
 
 		if err != nil {
@@ -169,8 +168,12 @@ func resourceAwsKmsGrantCreate(d *schema.ResourceData, meta interface{}) error {
 		return nil
 	})
 
+	if isResourceTimeoutError(err) {
+		out, err = conn.CreateGrant(&input)
+	}
+
 	if err != nil {
-		return err
+		return fmt.Errorf("Error creating KMS grant: %s", err)
 	}
 
 	log.Printf("[DEBUG] Created new KMS Grant: %s", *out.GrantId)
@@ -333,14 +336,19 @@ func findKmsGrantByIdWithRetry(conn *kms.KMS, keyId string, grantId string) (*km
 
 		return nil
 	})
+	if isResourceTimeoutError(err) {
+		grant, err = findKmsGrantById(conn, keyId, grantId, nil)
+	}
 
 	return grant, err
 }
 
 // Used by the tests as well
 func waitForKmsGrantToBeRevoked(conn *kms.KMS, keyId string, grantId string) error {
+	var grant *kms.GrantListEntry
 	err := resource.Retry(3*time.Minute, func() *resource.RetryError {
-		grant, err := findKmsGrantById(conn, keyId, grantId, nil)
+		var err error
+		grant, err = findKmsGrantById(conn, keyId, grantId, nil)
 
 		if isResourceNotFoundError(err) {
 			return nil
@@ -354,6 +362,9 @@ func waitForKmsGrantToBeRevoked(conn *kms.KMS, keyId string, grantId string) err
 
 		return resource.NonRetryableError(err)
 	})
+	if isResourceTimeoutError(err) {
+		grant, err = findKmsGrantById(conn, keyId, grantId, nil)
+	}
 
 	return err
 }
@@ -387,6 +398,10 @@ func findKmsGrantById(conn *kms.KMS, keyId string, grantId string, marker *strin
 
 		return nil
 	})
+	if isResourceTimeoutError(err) {
+		out, err = conn.ListGrants(&input)
+	}
+
 	if err != nil {
 		return nil, fmt.Errorf("error listing KMS Grants: %s", err)
 	}

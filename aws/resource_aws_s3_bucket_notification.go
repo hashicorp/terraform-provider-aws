@@ -310,7 +310,8 @@ func resourceAwsS3BucketNotificationPut(d *schema.ResourceData, meta interface{}
 
 	log.Printf("[DEBUG] S3 bucket: %s, Putting notification: %v", bucket, i)
 	err := resource.Retry(1*time.Minute, func() *resource.RetryError {
-		if _, err := s3conn.PutBucketNotificationConfiguration(i); err != nil {
+		_, err := s3conn.PutBucketNotificationConfiguration(i)
+		if err != nil {
 			if awserr, ok := err.(awserr.Error); ok {
 				switch awserr.Message() {
 				case "Unable to validate the following destination configurations":
@@ -323,6 +324,9 @@ func resourceAwsS3BucketNotificationPut(d *schema.ResourceData, meta interface{}
 		// Successful put configuration
 		return nil
 	})
+	if isResourceTimeoutError(err) {
+		_, err = s3conn.PutBucketNotificationConfiguration(i)
+	}
 	if err != nil {
 		return fmt.Errorf("Error putting S3 notification configuration: %s", err)
 	}

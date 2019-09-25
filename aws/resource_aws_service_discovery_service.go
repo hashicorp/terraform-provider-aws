@@ -32,9 +32,15 @@ func resourceAwsServiceDiscoveryService() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
+			"namespace_id": {
+				Type:     schema.TypeString,
+				Optional: true,
+				ForceNew: true,
+				Computed: true,
+			},
 			"dns_config": {
 				Type:     schema.TypeList,
-				Required: true,
+				Optional: true,
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
@@ -133,12 +139,20 @@ func resourceAwsServiceDiscoveryServiceCreate(d *schema.ResourceData, meta inter
 	conn := meta.(*AWSClient).sdconn
 
 	input := &servicediscovery.CreateServiceInput{
-		Name:      aws.String(d.Get("name").(string)),
-		DnsConfig: expandServiceDiscoveryDnsConfig(d.Get("dns_config").([]interface{})[0].(map[string]interface{})),
+		Name: aws.String(d.Get("name").(string)),
+	}
+
+	dnsConfig := d.Get("dns_config").([]interface{})
+	if len(dnsConfig) > 0 {
+		input.DnsConfig = expandServiceDiscoveryDnsConfig(dnsConfig[0].(map[string]interface{}))
 	}
 
 	if v, ok := d.GetOk("description"); ok {
 		input.Description = aws.String(v.(string))
+	}
+
+	if v, ok := d.GetOk("namespace_id"); ok {
+		input.NamespaceId = aws.String(v.(string))
 	}
 
 	hcconfig := d.Get("health_check_config").([]interface{})
@@ -182,6 +196,7 @@ func resourceAwsServiceDiscoveryServiceRead(d *schema.ResourceData, meta interfa
 	d.Set("arn", service.Arn)
 	d.Set("name", service.Name)
 	d.Set("description", service.Description)
+	d.Set("namespace_id", service.NamespaceId)
 	d.Set("dns_config", flattenServiceDiscoveryDnsConfig(service.DnsConfig))
 	d.Set("health_check_config", flattenServiceDiscoveryHealthCheckConfig(service.HealthCheckConfig))
 	d.Set("health_check_custom_config", flattenServiceDiscoveryHealthCheckCustomConfig(service.HealthCheckCustomConfig))
@@ -202,6 +217,7 @@ func resourceAwsServiceDiscoveryServiceUpdate(d *schema.ResourceData, meta inter
 	if d.HasChange("description") {
 		sc.Description = aws.String(d.Get("description").(string))
 	}
+
 	if d.HasChange("health_check_config") {
 		hcconfig := d.Get("health_check_config").([]interface{})
 		sc.HealthCheckConfig = expandServiceDiscoveryHealthCheckConfig(hcconfig[0].(map[string]interface{}))
@@ -265,18 +281,32 @@ func expandServiceDiscoveryDnsConfig(configured map[string]interface{}) *service
 }
 
 func flattenServiceDiscoveryDnsConfig(config *servicediscovery.DnsConfig) []map[string]interface{} {
+	if config == nil {
+		return nil
+	}
+
 	result := map[string]interface{}{}
 
-	result["namespace_id"] = *config.NamespaceId
-	result["routing_policy"] = *config.RoutingPolicy
-	drs := make([]map[string]interface{}, 0)
-	for _, v := range config.DnsRecords {
-		dr := map[string]interface{}{}
-		dr["ttl"] = *v.TTL
-		dr["type"] = *v.Type
-		drs = append(drs, dr)
+	if config.NamespaceId != nil {
+		result["namespace_id"] = *config.NamespaceId
 	}
-	result["dns_records"] = drs
+	if config.RoutingPolicy != nil {
+		result["routing_policy"] = *config.RoutingPolicy
+	}
+	if config.DnsRecords != nil {
+		drs := make([]map[string]interface{}, 0)
+		for _, v := range config.DnsRecords {
+			dr := map[string]interface{}{}
+			dr["ttl"] = *v.TTL
+			dr["type"] = *v.Type
+			drs = append(drs, dr)
+		}
+		result["dns_records"] = drs
+	}
+
+	if len(result) < 1 {
+		return nil
+	}
 
 	return []map[string]interface{}{result}
 }

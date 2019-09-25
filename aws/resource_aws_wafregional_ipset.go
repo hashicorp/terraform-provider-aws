@@ -18,6 +18,9 @@ func resourceAwsWafRegionalIPSet() *schema.Resource {
 		Read:   resourceAwsWafRegionalIPSetRead,
 		Update: resourceAwsWafRegionalIPSetUpdate,
 		Delete: resourceAwsWafRegionalIPSetDelete,
+		Importer: &schema.ResourceImporter{
+			State: schema.ImportStatePassthrough,
+		},
 
 		Schema: map[string]*schema.Schema{
 			"name": {

@@ -33,7 +33,7 @@ func resourceAwsEksCluster() *schema.Resource {
 		},
 
 		Timeouts: &schema.ResourceTimeout{
-			Create: schema.DefaultTimeout(15 * time.Minute),
+			Create: schema.DefaultTimeout(30 * time.Minute),
 			Update: schema.DefaultTimeout(60 * time.Minute),
 			Delete: schema.DefaultTimeout(15 * time.Minute),
 		},
@@ -64,6 +64,26 @@ func resourceAwsEksCluster() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"identity": {
+				Type:     schema.TypeList,
+				Computed: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"oidc": {
+							Type:     schema.TypeList,
+							Computed: true,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"issuer": {
+										Type:     schema.TypeString,
+										Computed: true,
+									},
+								},
+							},
+						},
+					},
+				},
+			},
 			"name": {
 				Type:         schema.TypeString,
 				Required:     true,
@@ -79,6 +99,10 @@ func resourceAwsEksCluster() *schema.Resource {
 				Required:     true,
 				ForceNew:     true,
 				ValidateFunc: validateArn,
+			},
+			"status": {
+				Type:     schema.TypeString,
+				Computed: true,
 			},
 			"version": {
 				Type:     schema.TypeString,
@@ -173,7 +197,9 @@ func resourceAwsEksClusterCreate(d *schema.ResourceData, meta interface{}) error
 		}
 		return nil
 	})
-
+	if isResourceTimeoutError(err) {
+		_, err = conn.CreateCluster(input)
+	}
 	if err != nil {
 		return fmt.Errorf("error creating EKS Cluster (%s): %s", name, err)
 	}
@@ -227,9 +253,15 @@ func resourceAwsEksClusterRead(d *schema.ResourceData, meta interface{}) error {
 
 	d.Set("created_at", aws.TimeValue(cluster.CreatedAt).String())
 	d.Set("endpoint", cluster.Endpoint)
+
+	if err := d.Set("identity", flattenEksIdentity(cluster.Identity)); err != nil {
+		return fmt.Errorf("error setting identity: %s", err)
+	}
+
 	d.Set("name", cluster.Name)
 	d.Set("platform_version", cluster.PlatformVersion)
 	d.Set("role_arn", cluster.RoleArn)
+	d.Set("status", cluster.Status)
 	d.Set("version", cluster.Version)
 	if err := d.Set("enabled_cluster_log_types", flattenEksEnabledLogTypes(cluster.Logging)); err != nil {
 		return fmt.Errorf("error setting enabled_cluster_log_types: %s", err)
@@ -418,6 +450,30 @@ func flattenEksCertificate(certificate *eks.Certificate) []map[string]interface{
 
 	m := map[string]interface{}{
 		"data": aws.StringValue(certificate.Data),
+	}
+
+	return []map[string]interface{}{m}
+}
+
+func flattenEksIdentity(identity *eks.Identity) []map[string]interface{} {
+	if identity == nil {
+		return []map[string]interface{}{}
+	}
+
+	m := map[string]interface{}{
+		"oidc": flattenEksOidc(identity.Oidc),
+	}
+
+	return []map[string]interface{}{m}
+}
+
+func flattenEksOidc(oidc *eks.OIDC) []map[string]interface{} {
+	if oidc == nil {
+		return []map[string]interface{}{}
+	}
+
+	m := map[string]interface{}{
+		"issuer": aws.StringValue(oidc.Issuer),
 	}
 
 	return []map[string]interface{}{m}

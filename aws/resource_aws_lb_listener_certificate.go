@@ -86,6 +86,9 @@ func resourceAwsLbListenerCertificateRead(d *schema.ResourceData, meta interface
 
 		return nil
 	})
+	if isResourceTimeoutError(err) {
+		certificate, err = findAwsLbListenerCertificate(certificateArn, listenerArn, true, nil, conn)
+	}
 	if err != nil {
 		if certificate == nil {
 			log.Printf("[WARN] %s - removing from state", err)

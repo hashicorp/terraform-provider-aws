@@ -104,6 +104,9 @@ provider "aws" {
 }
 ```
 
+If specifying the profile through the `AWS_PROFILE` environment variable, you
+may also need to set `AWS_SDK_LOAD_CONFIG` to a truthy value (e.g. `AWS_SDK_LOAD_CONFIG=1`) for advanced AWS client configurations, such as profiles that use the `source_profile` or `role_arn` configurations.
+
 ### ECS and CodeBuild Task Roles
 
 If you're running Terraform on ECS or CodeBuild and you have configured an [IAM Task Role](http://docs.aws.amazon.com/AmazonECS/latest/developerguide/task-iam-roles.html),
@@ -299,7 +302,7 @@ Approaches differ per authentication providers:
  * EC2 instance w/ IAM Instance Profile - [Metadata API](http://docs.aws.amazon.com/AWSEC2/latest/UserGuide/ec2-instance-metadata.html)
     is always used. Introduced in Terraform `0.6.16`.
  * All other providers (environment variable, shared credentials file, ...)
-    will try two approaches in the following order
+    will try three approaches in the following order
    * `iam:GetUser` - Typically useful for IAM Users. It also means
       that each user needs to be privileged to call `iam:GetUser` for themselves.
    * `sts:GetCallerIdentity` - _Should_ work for both IAM Users and federated IAM Roles,

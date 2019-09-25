@@ -255,6 +255,8 @@ func resourceAwsAutoscalingGroup() *schema.Resource {
 				Optional: true,
 			},
 
+			// DEPRECATED: Computed: true should be removed in a major version release
+			// Reference: https://github.com/terraform-providers/terraform-provider-aws/issues/9513
 			"load_balancers": {
 				Type:     schema.TypeSet,
 				Optional: true,
@@ -327,6 +329,8 @@ func resourceAwsAutoscalingGroup() *schema.Resource {
 				Default:  false,
 			},
 
+			// DEPRECATED: Computed: true should be removed in a major version release
+			// Reference: https://github.com/terraform-providers/terraform-provider-aws/issues/9513
 			"target_group_arns": {
 				Type:     schema.TypeSet,
 				Optional: true,
@@ -592,6 +596,9 @@ func resourceAwsAutoscalingGroupCreate(d *schema.ResourceData, meta interface{})
 
 		return nil
 	})
+	if isResourceTimeoutError(err) {
+		_, err = conn.CreateAutoScalingGroup(&createOpts)
+	}
 	if err != nil {
 		return fmt.Errorf("Error creating AutoScaling Group: %s", err)
 	}
@@ -1001,23 +1008,38 @@ func resourceAwsAutoscalingGroupDelete(d *schema.ResourceData, meta interface{})
 		// Successful delete
 		return nil
 	})
+	if isResourceTimeoutError(err) {
+		_, err = conn.DeleteAutoScalingGroup(&deleteopts)
+		if isAWSErr(err, "InvalidGroup.NotFound", "") {
+			return nil
+		}
+	}
 	if err != nil {
-		return err
+		return fmt.Errorf("Error deleting autoscaling group: %s", err)
 	}
 
-	return resource.Retry(d.Timeout(schema.TimeoutDelete), func() *resource.RetryError {
-		if g, _ = getAwsAutoscalingGroup(d.Id(), conn); g != nil {
-			return resource.RetryableError(
-				fmt.Errorf("Auto Scaling Group still exists"))
+	var group *autoscaling.Group
+	err = resource.Retry(d.Timeout(schema.TimeoutDelete), func() *resource.RetryError {
+		group, err = getAwsAutoscalingGroup(d.Id(), conn)
+
+		if group != nil {
+			return resource.RetryableError(fmt.Errorf("Auto Scaling Group still exists"))
 		}
 		return nil
 	})
+	if isResourceTimeoutError(err) {
+		group, err = getAwsAutoscalingGroup(d.Id(), conn)
+		if group != nil {
+			return fmt.Errorf("Auto Scaling Group still exists")
+		}
+	}
+	if err != nil {
+		return fmt.Errorf("Error deleting autoscaling group: %s", err)
+	}
+	return nil
 }
 
-func getAwsAutoscalingGroup(
-	asgName string,
-	conn *autoscaling.AutoScaling) (*autoscaling.Group, error) {
-
+func getAwsAutoscalingGroup(asgName string, conn *autoscaling.AutoScaling) (*autoscaling.Group, error) {
 	describeOpts := autoscaling.DescribeAutoScalingGroupsInput{
 		AutoScalingGroupNames: []*string{aws.String(asgName)},
 	}
@@ -1065,7 +1087,8 @@ func resourceAwsAutoscalingGroupDrain(d *schema.ResourceData, meta interface{}) 
 
 	// Next, wait for the autoscale group to drain
 	log.Printf("[DEBUG] Waiting for group to have zero instances")
-	return resource.Retry(d.Timeout(schema.TimeoutDelete), func() *resource.RetryError {
+	var g *autoscaling.Group
+	err := resource.Retry(d.Timeout(schema.TimeoutDelete), func() *resource.RetryError {
 		g, err := getAwsAutoscalingGroup(d.Id(), conn)
 		if err != nil {
 			return resource.NonRetryableError(err)
@@ -1081,8 +1104,21 @@ func resourceAwsAutoscalingGroupDrain(d *schema.ResourceData, meta interface{}) 
 		}
 
 		return resource.RetryableError(
-			fmt.Errorf("group still has %d instances", len(g.Instances)))
+			fmt.Errorf("Group still has %d instances", len(g.Instances)))
 	})
+	if isResourceTimeoutError(err) {
+		g, err = getAwsAutoscalingGroup(d.Id(), conn)
+		if err != nil {
+			return fmt.Errorf("Error getting autoscaling group info when draining: %s", err)
+		}
+		if g != nil && len(g.Instances) > 0 {
+			return fmt.Errorf("Group still has %d instances", len(g.Instances))
+		}
+	}
+	if err != nil {
+		return fmt.Errorf("Error draining autoscaling group: %s", err)
+	}
+	return nil
 }
 
 func enableASGSuspendedProcesses(d *schema.ResourceData, conn *autoscaling.AutoScaling) error {

@@ -17,7 +17,7 @@ func TestAccAWSDynamoDbGlobalTable_basic(t *testing.T) {
 	tableName := fmt.Sprintf("tf-acc-test-%s", acctest.RandString(5))
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSDynamodbGlobalTable(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsDynamoDbGlobalTableDestroy,
 		Steps: []resource.TestStep{
@@ -52,7 +52,7 @@ func TestAccAWSDynamoDbGlobalTable_multipleRegions(t *testing.T) {
 	tableName := fmt.Sprintf("tf-acc-test-%s", acctest.RandString(5))
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSDynamodbGlobalTable(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsDynamoDbGlobalTableDestroy,
 		Steps: []resource.TestStep{
@@ -94,7 +94,7 @@ func TestAccAWSDynamoDbGlobalTable_import(t *testing.T) {
 	tableName := fmt.Sprintf("tf-acc-test-%s", acctest.RandString(5))
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSDynamodbGlobalTable(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckSesTemplateDestroy,
 		Steps: []resource.TestStep{
@@ -145,6 +145,22 @@ func testAccCheckAwsDynamoDbGlobalTableExists(name string) resource.TestCheckFun
 		}
 
 		return nil
+	}
+}
+
+func testAccPreCheckAWSDynamodbGlobalTable(t *testing.T) {
+	conn := testAccProvider.Meta().(*AWSClient).dynamodbconn
+
+	input := &dynamodb.ListGlobalTablesInput{}
+
+	_, err := conn.ListGlobalTables(input)
+
+	if testAccPreCheckSkipError(err) {
+		t.Skipf("skipping acceptance testing: %s", err)
+	}
+
+	if err != nil {
+		t.Fatalf("unexpected PreCheck error: %s", err)
 	}
 }
 

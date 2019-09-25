@@ -65,6 +65,27 @@ contains only a small subset of the available parameters.
 ]
 ```
 
+### With AppMesh Proxy
+
+```hcl
+resource "aws_ecs_task_definition" "service" {
+  family                = "service"
+  container_definitions = "${file("task-definitions/service.json")}"
+
+  proxy_configuration {
+    type           = "APPMESH"
+    container_name = "applicationContainerName"
+    properties = {
+      AppPorts         = "8080"
+      EgressIgnoredIPs = "169.254.170.2,169.254.169.254"
+      IgnoredUID       = "1337"
+      ProxyEgressPort  = 15001
+      ProxyIngressPort = 15000
+    }
+  }
+}
+```
+
 ## Argument Reference
 
 ### Top-Level Arguments
@@ -89,6 +110,7 @@ official [Developer Guide](https://docs.aws.amazon.com/AmazonECS/latest/develope
 * `cpu` - (Optional) The number of cpu units used by the task. If the `requires_compatibilities` is `FARGATE` this field is required.
 * `memory` - (Optional) The amount (in MiB) of memory used by the task. If the `requires_compatibilities` is `FARGATE` this field is required.
 * `requires_compatibilities` - (Optional) A set of launch types required by the task. The valid values are `EC2` and `FARGATE`.
+* `proxy_configuration` - (Optional) The [proxy configuration](#proxy-configuration-arguments) details for the App Mesh proxy.
 * `tags` - (Optional) Key-value mapping of resource tags
 
 #### Volume Block Arguments
@@ -134,6 +156,11 @@ For more information, see [Cluster Query Language in the Amazon EC2 Container
 Service Developer
 Guide](http://docs.aws.amazon.com/AmazonECS/latest/developerguide/cluster-query-language.html).
 
+#### Proxy Configuration Arguments
+
+* `container_name` - (Required) The name of the container that will serve as the App Mesh proxy.
+* `properties` - (Required) The set of network configuration parameters to provide the Container Network Interface (CNI) plugin, specified a key-value mapping.
+* `type` - (Optional) The proxy type. The default value is `APPMESH`. The only supported value is `APPMESH`.
 
 ## Attributes Reference
 

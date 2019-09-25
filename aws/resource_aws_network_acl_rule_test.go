@@ -34,6 +34,47 @@ func TestAccAWSNetworkAclRule_basic(t *testing.T) {
 	})
 }
 
+func TestAccAWSNetworkAclRule_disappears(t *testing.T) {
+	var networkAcl ec2.NetworkAcl
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSNetworkAclRuleDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSNetworkAclRuleBasicConfig,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSNetworkAclRuleExists("aws_network_acl_rule.baz", &networkAcl),
+					testAccCheckAWSNetworkAclRuleDelete("aws_network_acl_rule.baz"),
+				),
+				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}
+
+func TestAccAWSNetworkAclRule_disappears_NetworkAcl(t *testing.T) {
+	var networkAcl ec2.NetworkAcl
+	resourceName := "aws_network_acl.bar"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSNetworkAclRuleDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSNetworkAclRuleBasicConfig,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSNetworkAclExists(resourceName, &networkAcl),
+					testAccCheckAWSNetworkAclDisappears(&networkAcl),
+				),
+				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}
+
 func TestAccAWSNetworkAclRule_missingParam(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -208,26 +249,6 @@ func TestResourceAWSNetworkAclRule_validateICMPArgumentValue(t *testing.T) {
 		}
 	}
 
-}
-
-func TestAccAWSNetworkAclRule_deleteRule(t *testing.T) {
-	var networkAcl ec2.NetworkAcl
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckAWSNetworkAclRuleDestroy,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccAWSNetworkAclRuleBasicConfig,
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSNetworkAclRuleExists("aws_network_acl_rule.baz", &networkAcl),
-					testAccCheckAWSNetworkAclRuleDelete("aws_network_acl_rule.baz"),
-				),
-				ExpectNonEmptyPlan: true,
-			},
-		},
-	})
 }
 
 func testAccCheckAWSNetworkAclRuleDestroy(s *terraform.State) error {

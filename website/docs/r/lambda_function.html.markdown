@@ -3,12 +3,12 @@ layout: "aws"
 page_title: "AWS: aws_lambda_function"
 sidebar_current: "docs-aws-resource-lambda-function"
 description: |-
-  Provides a Lambda Function resource. Lambda allows you to trigger execution of code in response to events in AWS. The Lambda Function itself includes source code and runtime configuration.
+  Provides a Lambda Function resource. Lambda allows you to trigger execution of code in response to events in AWS, enabling serverless backend solutions. The Lambda Function itself includes source code and runtime configuration.
 ---
 
 # Resource: aws_lambda_function
 
-Provides a Lambda Function resource. Lambda allows you to trigger execution of code in response to events in AWS. The Lambda Function itself includes source code and runtime configuration.
+Provides a Lambda Function resource. Lambda allows you to trigger execution of code in response to events in AWS, enabling serverless backend solutions. The Lambda Function itself includes source code and runtime configuration.
 
 For information about Lambda and how to use it, see [What is AWS Lambda?][1]
 
@@ -103,6 +103,7 @@ resource "aws_iam_policy" "lambda_logging" {
   "Statement": [
     {
       "Action": [
+        "logs:CreateLogGroup",
         "logs:CreateLogStream",
         "logs:PutLogEvents"
       ],
@@ -153,7 +154,7 @@ large files efficiently.
 * `vpc_config` - (Optional) Provide this to allow your function to access your VPC. Fields documented below. See [Lambda in VPC][7]
 * `environment` - (Optional) The Lambda environment's configuration settings. Fields documented below.
 * `kms_key_arn` - (Optional) The ARN for the KMS encryption key.
-* `source_code_hash` - (Optional) Used to trigger updates. Must be set to a base64-encoded SHA256 hash of the package file specified with either `filename` or `s3_key`. The usual way to set this is `${base64sha256(file("file.zip"))}`, where "file.zip" is the local filename of the lambda function source archive.
+* `source_code_hash` - (Optional) Used to trigger updates. Must be set to a base64-encoded SHA256 hash of the package file specified with either `filename` or `s3_key`. The usual way to set this is `filebase64sha256("file.zip")` (Terraform 0.11.12 and later) or `base64sha256(file("file.zip"))` (Terraform 0.11.11 and earlier), where "file.zip" is the local filename of the lambda function source archive.
 * `tags` - (Optional) A mapping of tags to assign to the object.
 
 **dead_letter_config** is a child block with a single argument:
