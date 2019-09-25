@@ -59,7 +59,7 @@ func resourceAwsWafRateBasedRule() *schema.Resource {
 			"rate_limit": {
 				Type:         schema.TypeInt,
 				Required:     true,
-				ValidateFunc: validation.IntAtLeast(2000),
+				ValidateFunc: validation.IntAtLeast(100),
 			},
 		},
 	}

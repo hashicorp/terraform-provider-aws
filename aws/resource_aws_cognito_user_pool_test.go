@@ -577,17 +577,34 @@ func TestAccAWSCognitoUserPool_withVerificationMessageTemplate(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAWSCognitoUserPoolExists("aws_cognito_user_pool.pool"),
 					resource.TestCheckResourceAttr("aws_cognito_user_pool.pool", "verification_message_template.0.default_email_option", "CONFIRM_WITH_LINK"),
-					resource.TestCheckResourceAttr("aws_cognito_user_pool.pool", "verification_message_template.0.email_message", "Foo {####} Bar"),
+					resource.TestCheckResourceAttr("aws_cognito_user_pool.pool", "verification_message_template.0.email_message", "foo {####} bar"),
 					resource.TestCheckResourceAttr("aws_cognito_user_pool.pool", "verification_message_template.0.email_message_by_link", "{##foobar##}"),
-					resource.TestCheckResourceAttr("aws_cognito_user_pool.pool", "verification_message_template.0.email_subject", "FooBar {####}"),
+					resource.TestCheckResourceAttr("aws_cognito_user_pool.pool", "verification_message_template.0.email_subject", "foobar {####}"),
 					resource.TestCheckResourceAttr("aws_cognito_user_pool.pool", "verification_message_template.0.email_subject_by_link", "foobar"),
-					resource.TestCheckResourceAttr("aws_cognito_user_pool.pool", "verification_message_template.0.sms_message", "{####} Baz"),
+					resource.TestCheckResourceAttr("aws_cognito_user_pool.pool", "verification_message_template.0.sms_message", "{####} baz"),
+
+					/* Setting Verification template attributes like EmailMessage, EmailSubject or SmsMessage
+					will implicitly set EmailVerificationMessage, EmailVerificationSubject and SmsVerificationMessage attributes.
+					*/
+					resource.TestCheckResourceAttr("aws_cognito_user_pool.pool", "email_verification_message", "foo {####} bar"),
+					resource.TestCheckResourceAttr("aws_cognito_user_pool.pool", "email_verification_subject", "foobar {####}"),
+					resource.TestCheckResourceAttr("aws_cognito_user_pool.pool", "sms_verification_message", "{####} baz"),
 				),
 			},
 			{
-				Config: testAccAWSCognitoUserPoolConfig_withVerificationMessageTemplateUpdated(name),
+				Config: testAccAWSCognitoUserPoolConfig_withVerificationMessageTemplate_DefaultEmailOption(name),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr("aws_cognito_user_pool.pool", "verification_message_template.0.default_email_option", "CONFIRM_WITH_CODE"),
+					resource.TestCheckResourceAttr("aws_cognito_user_pool.pool", "email_verification_message", "{####} Baz"),
+					resource.TestCheckResourceAttr("aws_cognito_user_pool.pool", "email_verification_subject", "BazBaz {####}"),
+					resource.TestCheckResourceAttr("aws_cognito_user_pool.pool", "sms_verification_message", "{####} BazBazBar?"),
+
+					/* Setting EmailVerificationMessage, EmailVerificationSubject and SmsVerificationMessage attributes
+					will implicitly set verification template attributes like EmailMessage, EmailSubject or SmsMessage.
+					*/
+					resource.TestCheckResourceAttr("aws_cognito_user_pool.pool", "verification_message_template.0.email_message", "{####} Baz"),
+					resource.TestCheckResourceAttr("aws_cognito_user_pool.pool", "verification_message_template.0.email_subject", "BazBaz {####}"),
+					resource.TestCheckResourceAttr("aws_cognito_user_pool.pool", "verification_message_template.0.sms_message", "{####} BazBazBar?"),
 				),
 			},
 		},
@@ -1198,30 +1215,29 @@ func testAccAWSCognitoUserPoolConfig_withVerificationMessageTemplate(name string
 resource "aws_cognito_user_pool" "pool" {
   name = "terraform-test-pool-%s"
 
-  email_verification_message = "Foo {####} Bar"
-  email_verification_subject = "FooBar {####}"
-  sms_verification_message   = "{####} Baz"
-
   # Setting Verification template attributes like EmailMessage, EmailSubject or SmsMessage
   # will implicitly set EmailVerificationMessage, EmailVerificationSubject and SmsVerificationMessage
   # attributes.
   verification_message_template {
     default_email_option  = "CONFIRM_WITH_LINK"
+    email_message = "foo {####} bar"
     email_message_by_link = "{##foobar##}"
+    email_subject = "foobar {####}"
     email_subject_by_link = "foobar"
+    sms_message           = "{####} baz"
   }
 }
 `, name)
 }
 
-func testAccAWSCognitoUserPoolConfig_withVerificationMessageTemplateUpdated(name string) string {
+func testAccAWSCognitoUserPoolConfig_withVerificationMessageTemplate_DefaultEmailOption(name string) string {
 	return fmt.Sprintf(`
 resource "aws_cognito_user_pool" "pool" {
   name = "terraform-test-pool-%s"
 
-  email_verification_message = "Foo {####} Bar"
-  email_verification_subject = "FooBar {####}"
-  sms_verification_message   = "{####} Baz"
+  email_verification_message = "{####} Baz"
+  email_verification_subject = "BazBaz {####}"
+  sms_verification_message   = "{####} BazBazBar?"
 
   verification_message_template {
     default_email_option = "CONFIRM_WITH_CODE"

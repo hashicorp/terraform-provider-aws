@@ -286,23 +286,11 @@ func resourceAwsCloudHsm2ClusterDelete(d *schema.ResourceData, meta interface{})
 	}
 
 	if err != nil {
-		return err
-	}
-	log.Println("[INFO] Waiting for CloudHSMv2 Cluster to be deleted")
-
-	stateConf := &resource.StateChangeConf{
-		Pending:    []string{cloudhsmv2.ClusterStateDeleteInProgress},
-		Target:     []string{cloudhsmv2.ClusterStateDeleted},
-		Refresh:    resourceAwsCloudHsm2ClusterRefreshFunc(cloudhsm2, d.Id()),
-		Timeout:    d.Timeout(schema.TimeoutCreate),
-		MinTimeout: 30 * time.Second,
-		Delay:      30 * time.Second,
+		return fmt.Errorf("error deleting CloudHSMv2 Cluster (%s): %s", d.Id(), err)
 	}
 
-	// Wait, catching any errors
-	_, errWait := stateConf.WaitForState()
-	if errWait != nil {
-		return fmt.Errorf("Error waiting for CloudHSMv2 Cluster state to be \"DELETED\": %s", errWait)
+	if err := waitForCloudhsmv2ClusterDeletion(cloudhsm2, d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
+		return fmt.Errorf("error waiting for CloudHSMv2 Cluster (%s) deletion: %s", d.Id(), err)
 	}
 
 	return nil
@@ -366,4 +354,19 @@ func readCloudHsm2ClusterCertificates(cluster *cloudhsmv2.Cluster) []map[string]
 		return []map[string]interface{}{certs}
 	}
 	return []map[string]interface{}{}
+}
+
+func waitForCloudhsmv2ClusterDeletion(conn *cloudhsmv2.CloudHSMV2, id string, timeout time.Duration) error {
+	stateConf := &resource.StateChangeConf{
+		Pending:    []string{cloudhsmv2.ClusterStateDeleteInProgress},
+		Target:     []string{cloudhsmv2.ClusterStateDeleted},
+		Refresh:    resourceAwsCloudHsm2ClusterRefreshFunc(conn, id),
+		Timeout:    timeout,
+		MinTimeout: 30 * time.Second,
+		Delay:      30 * time.Second,
+	}
+
+	_, err := stateConf.WaitForState()
+
+	return err
 }

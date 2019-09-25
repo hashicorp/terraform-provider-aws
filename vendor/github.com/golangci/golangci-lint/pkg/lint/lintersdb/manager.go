@@ -77,6 +77,7 @@ func (Manager) GetMetaLinters() map[string]linter.MetaLinter {
 	return ret
 }
 
+//nolint:funlen
 func (m Manager) GetAllSupportedLinterConfigs() []*linter.Config {
 	var govetCfg *config.GovetSettings
 	if m.cfg != nil {
@@ -237,6 +238,10 @@ func (m Manager) GetAllSupportedLinterConfigs() []*linter.Config {
 			WithPresets(linter.PresetStyle).
 			WithSpeed(10).
 			WithURL("https://github.com/leighmcculloch/gochecknoglobals"),
+		linter.NewConfig(golinters.Funlen{}).
+			WithPresets(linter.PresetStyle).
+			WithSpeed(10).
+			WithURL("https://github.com/ultraware/funlen"),
 	}
 
 	isLocalRun := os.Getenv("GOLANGCI_COM_RUN") == ""

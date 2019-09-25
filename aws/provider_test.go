@@ -15,7 +15,6 @@ import (
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/helper/schema"
 	"github.com/hashicorp/terraform/terraform"
-	"github.com/terraform-providers/terraform-provider-template/template"
 	"github.com/terraform-providers/terraform-provider-tls/tls"
 )
 
@@ -23,14 +22,11 @@ var testAccProviders map[string]terraform.ResourceProvider
 var testAccProvidersWithTLS map[string]terraform.ResourceProvider
 var testAccProviderFactories func(providers *[]*schema.Provider) map[string]terraform.ResourceProviderFactory
 var testAccProvider *schema.Provider
-var testAccTemplateProvider *schema.Provider
 
 func init() {
 	testAccProvider = Provider().(*schema.Provider)
-	testAccTemplateProvider = template.Provider().(*schema.Provider)
 	testAccProviders = map[string]terraform.ResourceProvider{
-		"aws":      testAccProvider,
-		"template": testAccTemplateProvider,
+		"aws": testAccProvider,
 	}
 	testAccProviderFactories = func(providers *[]*schema.Provider) map[string]terraform.ResourceProviderFactory {
 		return map[string]terraform.ResourceProviderFactory{
@@ -78,7 +74,7 @@ func testAccPreCheck(t *testing.T) {
 	log.Printf("[INFO] Test: Using %s as test region", region)
 	os.Setenv("AWS_DEFAULT_REGION", region)
 
-	err := testAccProvider.Configure(terraform.NewResourceConfig(nil))
+	err := testAccProvider.Configure(terraform.NewResourceConfigRaw(nil))
 	if err != nil {
 		t.Fatal(err)
 	}

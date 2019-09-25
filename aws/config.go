@@ -75,6 +75,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/iam"
 	"github.com/aws/aws-sdk-go/service/inspector"
 	"github.com/aws/aws-sdk-go/service/iot"
+	"github.com/aws/aws-sdk-go/service/iotanalytics"
 	"github.com/aws/aws-sdk-go/service/iotevents"
 	"github.com/aws/aws-sdk-go/service/kafka"
 	"github.com/aws/aws-sdk-go/service/kinesis"
@@ -236,6 +237,7 @@ type AWSClient struct {
 	iamconn                             *iam.IAM
 	inspectorconn                       *inspector.Inspector
 	iotconn                             *iot.IoT
+	iotanalyticsconn                    *iotanalytics.IoTAnalytics
 	ioteventsconn                       *iotevents.IoTEvents
 	kafkaconn                           *kafka.Kafka
 	kinesisanalyticsconn                *kinesisanalytics.KinesisAnalytics
@@ -423,6 +425,7 @@ func (c *Config) Client() (interface{}, error) {
 		iamconn:                             iam.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["iam"])})),
 		inspectorconn:                       inspector.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["inspector"])})),
 		iotconn:                             iot.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["iot"])})),
+		iotanalyticsconn:                    iotanalytics.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["iotanalytics"])})),
 		ioteventsconn:                       iotevents.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["iotevents"])})),
 		kafkaconn:                           kafka.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["kafka"])})),
 		kinesisanalyticsconn:                kinesisanalytics.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["kinesisanalytics"])})),
@@ -523,20 +526,6 @@ func (c *Config) Client() (interface{}, error) {
 	client.globalacceleratorconn = globalaccelerator.New(sess.Copy(globalAcceleratorConfig))
 	client.r53conn = route53.New(sess.Copy(route53Config))
 	client.shieldconn = shield.New(sess.Copy(shieldConfig))
-
-	// Workaround for https://github.com/aws/aws-sdk-go/issues/1376
-	client.kinesisconn.Handlers.Retry.PushBack(func(r *request.Request) {
-		if !strings.HasPrefix(r.Operation.Name, "Describe") && !strings.HasPrefix(r.Operation.Name, "List") {
-			return
-		}
-		err, ok := r.Error.(awserr.Error)
-		if !ok || err == nil {
-			return
-		}
-		if err.Code() == kinesis.ErrCodeLimitExceededException {
-			r.Retryable = aws.Bool(true)
-		}
-	})
 
 	// Workaround for https://github.com/aws/aws-sdk-go/issues/1472
 	client.appautoscalingconn.Handlers.Retry.PushBack(func(r *request.Request) {
