@@ -3,6 +3,7 @@
 NOTES:
 
 * provider: The default development, testing, and building of the Terraform AWS Provider binary is now done with Go 1.13. This version of Go now requires macOS 10.11 El Capitan or later and FreeBSD 11.2 or later. Support for previous versions of those operating systems has been discontinued. [GH-10206]
+* provider: The actual Terraform version running the provider will now be included the AWS Go SDK `User-Agent` headers for Terraform 0.12 and later. Terraform 0.11 and earlier will use `Terraform/0.11+compatible` as this information was not accessible in those versions. Previously, the Terraform version in the `User-Agent` header was based on the github.com/hashicorp/terraform dependency in the provider codebase. [GH-9570]
 
 ENHANCEMENTS:
 
@@ -10,6 +11,7 @@ ENHANCEMENTS:
 * data-source/aws_elastic_beanstalk_hosted_zone: Support `ap-east-1`, `ap-northeast-3`, `us-gov-east-1` and `us-gov-west-1` regions [GH-10134]
 * data-source/aws_elb_hosted_zone_id: Support `cn-northwest-1` region  [GH-10134]
 * data-source/aws_redshift_service_account: Support `ap-northeast-3`, `cn-north-1`, `eu-north-1` and `me-south-1` regions [GH-10134]
+* provider: Use real Terraform version in User-Agent header [GH-9570]
 * resource/aws_appsync_graphql_api: Add `additional_authentication_providers` configuration blocks [GH-8587]
 * resource/aws_elastic_beanstalk_environment: Add `endpoint_url` attribute [GH-10015]
 * resource/aws_lightsail_static_ip_attachment: Add `ip_address` attribute [GH-10109]
