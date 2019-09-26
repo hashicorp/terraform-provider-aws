@@ -1,10 +1,11 @@
 ## 2.31.0 (Unreleased)
-## 2.30.0 (September 26, 2019)
 
 FEATURES:
 
 * **New Data Source:** `aws_acmpca_private_certificate` ([#10183](https://github.com/terraform-providers/terraform-provider-aws/issues/10183))
 * **New Resource:** `aws_acmpca_private_certificate` ([#10183](https://github.com/terraform-providers/terraform-provider-aws/issues/10183))
+
+## 2.30.0 (September 26, 2019)
 
 NOTES:
 
