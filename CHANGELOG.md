@@ -1,4 +1,5 @@
-## 2.30.0 (Unreleased)
+## 2.31.0 (Unreleased)
+## 2.30.0 (September 26, 2019)
 
 FEATURES:
 
@@ -7,22 +8,30 @@ FEATURES:
 
 NOTES:
 
-* provider: The default development, testing, and building of the Terraform AWS Provider binary is now done with Go 1.13. This version of Go now requires macOS 10.11 El Capitan or later and FreeBSD 11.2 or later. Support for previous versions of those operating systems has been discontinued. [GH-10206]
+* provider: The default development, testing, and building of the Terraform AWS Provider binary is now done with Go 1.13. This version of Go now requires macOS 10.11 El Capitan or later and FreeBSD 11.2 or later. Support for previous versions of those operating systems has been discontinued. ([#10206](https://github.com/terraform-providers/terraform-provider-aws/issues/10206))
+* provider: The actual Terraform version running the provider will now be included the AWS Go SDK `User-Agent` headers for Terraform 0.12 and later. Terraform 0.11 and earlier will use `Terraform/0.11+compatible` as this information was not accessible in those versions. Previously, the Terraform version in the `User-Agent` header was based on the github.com/hashicorp/terraform dependency in the provider codebase. ([#9570](https://github.com/terraform-providers/terraform-provider-aws/issues/9570))
 
 ENHANCEMENTS:
 
-* data-source/aws_cloudtrail_service_account: Support `cn-north-1` region [GH-10134]
-* data-source/aws_elastic_beanstalk_hosted_zone: Support `ap-east-1`, `ap-northeast-3`, `us-gov-east-1` and `us-gov-west-1` regions [GH-10134]
-* data-source/aws_elb_hosted_zone_id: Support `cn-northwest-1` region  [GH-10134]
-* data-source/aws_redshift_service_account: Support `ap-northeast-3`, `cn-north-1`, `eu-north-1` and `me-south-1` regions [GH-10134]
-* resource/aws_sns_topic_policy: Support resource import [GH-10163]
-* resource/aws_sqs_queue: Support tag-on-create in AWS Commercial regions [GH-10156]
+* data-source/aws_cloudtrail_service_account: Support `cn-north-1` region ([#10134](https://github.com/terraform-providers/terraform-provider-aws/issues/10134))
+* data-source/aws_elastic_beanstalk_hosted_zone: Support `ap-east-1`, `ap-northeast-3`, `us-gov-east-1` and `us-gov-west-1` regions ([#10134](https://github.com/terraform-providers/terraform-provider-aws/issues/10134))
+* data-source/aws_elb_hosted_zone_id: Support `cn-northwest-1` region  ([#10134](https://github.com/terraform-providers/terraform-provider-aws/issues/10134))
+* data-source/aws_redshift_service_account: Support `ap-northeast-3`, `cn-north-1`, `eu-north-1` and `me-south-1` regions ([#10134](https://github.com/terraform-providers/terraform-provider-aws/issues/10134))
+* provider: Use real Terraform version in User-Agent header ([#9570](https://github.com/terraform-providers/terraform-provider-aws/issues/9570))
+* resource/aws_appsync_graphql_api: Add `additional_authentication_providers` configuration blocks ([#8587](https://github.com/terraform-providers/terraform-provider-aws/issues/8587))
+* resource/aws_elastic_beanstalk_environment: Add `endpoint_url` attribute ([#10015](https://github.com/terraform-providers/terraform-provider-aws/issues/10015))
+* resource/aws_lightsail_static_ip_attachment: Add `ip_address` attribute ([#10109](https://github.com/terraform-providers/terraform-provider-aws/issues/10109))
+* resource/aws_opsworks_stack: Switch legacy Opsworks client User-Agent to real Terraform version ([#10246](https://github.com/terraform-providers/terraform-provider-aws/issues/10246))
+* resource/aws_sns_topic_policy: Support resource import ([#10163](https://github.com/terraform-providers/terraform-provider-aws/issues/10163))
+* resource/aws_sqs_queue: Support tag-on-create in AWS Commercial regions ([#10156](https://github.com/terraform-providers/terraform-provider-aws/issues/10156))
 
 BUG FIXES:
 
-* data-source/aws_elb_hosted_zone_id: Correct value for `cn-north-1` region [GH-10134]
-* resource/aws_ec2_client_vpn_endpoint: Ensure missing resource triggers state removal [GH-10187]
-* resource/aws_security_group: Ensure deletion errors are properly raised [GH-10165]
+* data-source/aws_elb_hosted_zone_id: Correct value for `cn-north-1` region ([#10134](https://github.com/terraform-providers/terraform-provider-aws/issues/10134))
+* resource/aws_ec2_client_vpn_endpoint: Ensure missing resource triggers state removal ([#10187](https://github.com/terraform-providers/terraform-provider-aws/issues/10187))
+* resource/aws_instance: Prevent panic when updating `credit_specification` to empty configuration block ([#10212](https://github.com/terraform-providers/terraform-provider-aws/issues/10212))
+* resource/aws_security_group: Ensure deletion errors are properly raised ([#10165](https://github.com/terraform-providers/terraform-provider-aws/issues/10165))
+* resource/aws_spot_fleet_request: Ensure `launch_specification` configuration block `placement_group` argument is passed through to the API when it is specified ([#10103](https://github.com/terraform-providers/terraform-provider-aws/issues/10103))
 
 ## 2.29.0 (September 20, 2019)
 

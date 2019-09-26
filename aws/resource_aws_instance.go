@@ -1204,7 +1204,7 @@ func resourceAwsInstanceUpdate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if d.HasChange("credit_specification") && !d.IsNewResource() {
-		if v, ok := d.GetOk("credit_specification"); ok {
+		if v, ok := d.GetOk("credit_specification"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
 			creditSpecification := v.([]interface{})[0].(map[string]interface{})
 			log.Printf("[DEBUG] Modifying credit specification for Instance (%s)", d.Id())
 			_, err := conn.ModifyInstanceCreditSpecification(&ec2.ModifyInstanceCreditSpecificationInput{
