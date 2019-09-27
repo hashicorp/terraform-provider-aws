@@ -8,7 +8,6 @@ require (
 	github.com/bflad/tfproviderlint v0.4.0
 	github.com/client9/misspell v0.3.4
 	github.com/golangci/golangci-lint v1.19.1
-	github.com/google/gofuzz v0.0.0-20170612174753-24818f796faf // indirect
 	github.com/hashicorp/aws-sdk-go-base v0.3.0
 	github.com/hashicorp/go-cleanhttp v0.5.1
 	github.com/hashicorp/go-multierror v1.0.0
@@ -22,8 +21,6 @@ require (
 	github.com/pquerna/otp v1.2.0
 	github.com/terraform-providers/terraform-provider-tls v2.1.0+incompatible
 	gopkg.in/yaml.v2 v2.2.2
-	k8s.io/apimachinery v0.0.0-20190204010555-a98ff070d70e // indirect
+	k8s.io/apimachinery v0.0.0-20190927035529-0104e33c351d // indirect
 	k8s.io/client-go v10.0.0+incompatible // indirect
-	k8s.io/klog v0.1.0 // indirect
-	sigs.k8s.io/yaml v1.1.0 // indirect
 )
