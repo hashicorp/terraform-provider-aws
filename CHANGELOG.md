@@ -5,6 +5,15 @@ FEATURES:
 * **New Data Source:** `aws_acmpca_private_certificate` ([#10183](https://github.com/terraform-providers/terraform-provider-aws/issues/10183))
 * **New Resource:** `aws_acmpca_private_certificate` ([#10183](https://github.com/terraform-providers/terraform-provider-aws/issues/10183))
 
+ENHANCEMENTS:
+
+* resource_aws_efs_filesystem: Support tag-on-create [GH-10254]
+
+BUG FIXES:
+
+* service/waf: Prevent incorrect `Error getting WAF change token` errors for API calls that should be retried or specially handled [GH-10242]
+* service/wafregional: Prevent incorrect `Error getting WAF regional change token` errors for API calls that should be retried or specially handled [GH-10242]
+
 ## 2.30.0 (September 26, 2019)
 
 NOTES:

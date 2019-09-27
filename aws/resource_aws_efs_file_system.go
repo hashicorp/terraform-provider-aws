@@ -132,6 +132,7 @@ func resourceAwsEfsFileSystemCreate(d *schema.ResourceData, meta interface{}) er
 	createOpts := &efs.CreateFileSystemInput{
 		CreationToken:  aws.String(creationToken),
 		ThroughputMode: aws.String(throughputMode),
+		Tags:           tagsFromMapEFS(d.Get("tags").(map[string]interface{})),
 	}
 
 	if v, ok := d.GetOk("performance_mode"); ok {
@@ -191,11 +192,6 @@ func resourceAwsEfsFileSystemCreate(d *schema.ResourceData, meta interface{}) er
 			return fmt.Errorf("Error creating lifecycle policy for EFS file system %q: %s",
 				d.Id(), err.Error())
 		}
-	}
-
-	err = setTagsEFS(conn, d)
-	if err != nil {
-		return fmt.Errorf("error setting tags for EFS file system (%q): %s", d.Id(), err)
 	}
 
 	return resourceAwsEfsFileSystemRead(d, meta)
