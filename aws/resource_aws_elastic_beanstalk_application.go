@@ -224,6 +224,9 @@ func resourceAwsElasticBeanstalkApplicationRead(d *schema.ResourceData, meta int
 		}
 		return nil
 	})
+	if isResourceTimeoutError(err) {
+		app, err = getBeanstalkApplication(d.Id(), conn)
+	}
 	if err != nil {
 		if app == nil {
 			log.Printf("[WARN] %s, removing from state", err)
@@ -258,8 +261,9 @@ func resourceAwsElasticBeanstalkApplicationDelete(d *schema.ResourceData, meta i
 		return err
 	}
 
-	return resource.Retry(10*time.Second, func() *resource.RetryError {
-		app, err := getBeanstalkApplication(d.Id(), meta.(*AWSClient).elasticbeanstalkconn)
+	var app *elasticbeanstalk.ApplicationDescription
+	err = resource.Retry(10*time.Second, func() *resource.RetryError {
+		app, err = getBeanstalkApplication(d.Id(), meta.(*AWSClient).elasticbeanstalkconn)
 		if err != nil {
 			return resource.NonRetryableError(err)
 		}
@@ -270,6 +274,13 @@ func resourceAwsElasticBeanstalkApplicationDelete(d *schema.ResourceData, meta i
 		}
 		return nil
 	})
+	if isResourceTimeoutError(err) {
+		app, err = getBeanstalkApplication(d.Id(), meta.(*AWSClient).elasticbeanstalkconn)
+	}
+	if err != nil {
+		return fmt.Errorf("Error deleting Beanstalk application: %s", err)
+	}
+	return nil
 }
 
 func getBeanstalkApplication(id string, conn *elasticbeanstalk.ElasticBeanstalk) (*elasticbeanstalk.ApplicationDescription, error) {

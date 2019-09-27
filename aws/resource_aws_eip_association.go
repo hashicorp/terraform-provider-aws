@@ -105,6 +105,9 @@ func resourceAwsEipAssociationCreate(d *schema.ResourceData, meta interface{}) e
 		}
 		return nil
 	})
+	if isResourceTimeoutError(err) {
+		resp, err = conn.AssociateAddress(request)
+	}
 	if err != nil {
 		return fmt.Errorf("Error associating EIP: %s", err)
 	}

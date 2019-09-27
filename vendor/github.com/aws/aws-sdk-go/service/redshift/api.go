@@ -5017,6 +5017,146 @@ func (c *Redshift) DescribeLoggingStatusWithContext(ctx aws.Context, input *Desc
 	return out, req.Send()
 }
 
+const opDescribeNodeConfigurationOptions = "DescribeNodeConfigurationOptions"
+
+// DescribeNodeConfigurationOptionsRequest generates a "aws/request.Request" representing the
+// client's request for the DescribeNodeConfigurationOptions operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See DescribeNodeConfigurationOptions for more information on using the DescribeNodeConfigurationOptions
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the DescribeNodeConfigurationOptionsRequest method.
+//    req, resp := client.DescribeNodeConfigurationOptionsRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/redshift-2012-12-01/DescribeNodeConfigurationOptions
+func (c *Redshift) DescribeNodeConfigurationOptionsRequest(input *DescribeNodeConfigurationOptionsInput) (req *request.Request, output *DescribeNodeConfigurationOptionsOutput) {
+	op := &request.Operation{
+		Name:       opDescribeNodeConfigurationOptions,
+		HTTPMethod: "POST",
+		HTTPPath:   "/",
+		Paginator: &request.Paginator{
+			InputTokens:     []string{"Marker"},
+			OutputTokens:    []string{"Marker"},
+			LimitToken:      "MaxRecords",
+			TruncationToken: "",
+		},
+	}
+
+	if input == nil {
+		input = &DescribeNodeConfigurationOptionsInput{}
+	}
+
+	output = &DescribeNodeConfigurationOptionsOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// DescribeNodeConfigurationOptions API operation for Amazon Redshift.
+//
+// Returns properties of possible node configurations such as node type, number
+// of nodes, and disk usage for the specified action type.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for Amazon Redshift's
+// API operation DescribeNodeConfigurationOptions for usage and error information.
+//
+// Returned Error Codes:
+//   * ErrCodeClusterSnapshotNotFoundFault "ClusterSnapshotNotFound"
+//   The snapshot identifier does not refer to an existing cluster snapshot.
+//
+//   * ErrCodeInvalidClusterSnapshotStateFault "InvalidClusterSnapshotState"
+//   The specified cluster snapshot is not in the available state, or other accounts
+//   are authorized to access the snapshot.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/redshift-2012-12-01/DescribeNodeConfigurationOptions
+func (c *Redshift) DescribeNodeConfigurationOptions(input *DescribeNodeConfigurationOptionsInput) (*DescribeNodeConfigurationOptionsOutput, error) {
+	req, out := c.DescribeNodeConfigurationOptionsRequest(input)
+	return out, req.Send()
+}
+
+// DescribeNodeConfigurationOptionsWithContext is the same as DescribeNodeConfigurationOptions with the addition of
+// the ability to pass a context and additional request options.
+//
+// See DescribeNodeConfigurationOptions for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *Redshift) DescribeNodeConfigurationOptionsWithContext(ctx aws.Context, input *DescribeNodeConfigurationOptionsInput, opts ...request.Option) (*DescribeNodeConfigurationOptionsOutput, error) {
+	req, out := c.DescribeNodeConfigurationOptionsRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
+// DescribeNodeConfigurationOptionsPages iterates over the pages of a DescribeNodeConfigurationOptions operation,
+// calling the "fn" function with the response data for each page. To stop
+// iterating, return false from the fn function.
+//
+// See DescribeNodeConfigurationOptions method for more information on how to use this operation.
+//
+// Note: This operation can generate multiple requests to a service.
+//
+//    // Example iterating over at most 3 pages of a DescribeNodeConfigurationOptions operation.
+//    pageNum := 0
+//    err := client.DescribeNodeConfigurationOptionsPages(params,
+//        func(page *redshift.DescribeNodeConfigurationOptionsOutput, lastPage bool) bool {
+//            pageNum++
+//            fmt.Println(page)
+//            return pageNum <= 3
+//        })
+//
+func (c *Redshift) DescribeNodeConfigurationOptionsPages(input *DescribeNodeConfigurationOptionsInput, fn func(*DescribeNodeConfigurationOptionsOutput, bool) bool) error {
+	return c.DescribeNodeConfigurationOptionsPagesWithContext(aws.BackgroundContext(), input, fn)
+}
+
+// DescribeNodeConfigurationOptionsPagesWithContext same as DescribeNodeConfigurationOptionsPages except
+// it takes a Context and allows setting request options on the pages.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *Redshift) DescribeNodeConfigurationOptionsPagesWithContext(ctx aws.Context, input *DescribeNodeConfigurationOptionsInput, fn func(*DescribeNodeConfigurationOptionsOutput, bool) bool, opts ...request.Option) error {
+	p := request.Pagination{
+		NewRequest: func() (*request.Request, error) {
+			var inCpy *DescribeNodeConfigurationOptionsInput
+			if input != nil {
+				tmp := *input
+				inCpy = &tmp
+			}
+			req, _ := c.DescribeNodeConfigurationOptionsRequest(inCpy)
+			req.SetContext(ctx)
+			req.ApplyOptions(opts...)
+			return req, nil
+		},
+	}
+
+	cont := true
+	for p.Next() && cont {
+		cont = fn(p.Page().(*DescribeNodeConfigurationOptionsOutput), !p.HasNextPage())
+	}
+	return p.Err()
+}
+
 const opDescribeOrderableClusterOptions = "DescribeOrderableClusterOptions"
 
 // DescribeOrderableClusterOptionsRequest generates a "aws/request.Request" representing the
@@ -5739,8 +5879,7 @@ func (c *Redshift) DescribeStorageRequest(input *DescribeStorageInput) (req *req
 
 // DescribeStorage API operation for Amazon Redshift.
 //
-// Returns the total amount of snapshot usage and provisioned storage for a
-// user in megabytes.
+// Returns the total amount of snapshot usage and provisioned storage in megabytes.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -9485,6 +9624,18 @@ type Cluster struct {
 	// Default: false
 	EnhancedVpcRouting *bool `type:"boolean"`
 
+	// The date and time when the next snapshot is expected to be taken for clusters
+	// with a valid snapshot schedule and backups enabled.
+	ExpectedNextSnapshotScheduleTime *time.Time `type:"timestamp"`
+
+	// The status of next expected snapshot for clusters having a valid snapshot
+	// schedule and backups enabled. Possible values are the following:
+	//
+	//    * OnTrack - The next snapshot is expected to be taken on time.
+	//
+	//    * Pending - The next snapshot is pending to be taken.
+	ExpectedNextSnapshotScheduleTimeStatus *string `type:"string"`
+
 	// A value that reports whether the Amazon Redshift cluster has finished applying
 	// any hardware security module (HSM) settings changes specified in a modify
 	// cluster command.
@@ -9516,6 +9667,9 @@ type Cluster struct {
 
 	// The status of a modify operation, if any, initiated for the cluster.
 	ModifyStatus *string `type:"string"`
+
+	// The date and time in UTC when system maintenance can begin.
+	NextMaintenanceWindowStartTime *time.Time `type:"timestamp"`
 
 	// The node type for the nodes in the cluster.
 	NodeType *string `type:"string"`
@@ -9716,6 +9870,18 @@ func (s *Cluster) SetEnhancedVpcRouting(v bool) *Cluster {
 	return s
 }
 
+// SetExpectedNextSnapshotScheduleTime sets the ExpectedNextSnapshotScheduleTime field's value.
+func (s *Cluster) SetExpectedNextSnapshotScheduleTime(v time.Time) *Cluster {
+	s.ExpectedNextSnapshotScheduleTime = &v
+	return s
+}
+
+// SetExpectedNextSnapshotScheduleTimeStatus sets the ExpectedNextSnapshotScheduleTimeStatus field's value.
+func (s *Cluster) SetExpectedNextSnapshotScheduleTimeStatus(v string) *Cluster {
+	s.ExpectedNextSnapshotScheduleTimeStatus = &v
+	return s
+}
+
 // SetHsmStatus sets the HsmStatus field's value.
 func (s *Cluster) SetHsmStatus(v *HsmStatus) *Cluster {
 	s.HsmStatus = v
@@ -9755,6 +9921,12 @@ func (s *Cluster) SetMasterUsername(v string) *Cluster {
 // SetModifyStatus sets the ModifyStatus field's value.
 func (s *Cluster) SetModifyStatus(v string) *Cluster {
 	s.ModifyStatus = &v
+	return s
+}
+
+// SetNextMaintenanceWindowStartTime sets the NextMaintenanceWindowStartTime field's value.
+func (s *Cluster) SetNextMaintenanceWindowStartTime(v time.Time) *Cluster {
+	s.NextMaintenanceWindowStartTime = &v
 	return s
 }
 
@@ -15010,6 +15182,139 @@ func (s *DescribeLoggingStatusInput) SetClusterIdentifier(v string) *DescribeLog
 	return s
 }
 
+type DescribeNodeConfigurationOptionsInput struct {
+	_ struct{} `type:"structure"`
+
+	// The action type to evaluate for possible node configurations. Currently,
+	// it must be "restore-cluster".
+	//
+	// ActionType is a required field
+	ActionType *string `type:"string" required:"true" enum:"ActionType"`
+
+	// A set of name, operator, and value items to filter the results.
+	Filters []*NodeConfigurationOptionsFilter `locationName:"Filter" locationNameList:"NodeConfigurationOptionsFilter" type:"list"`
+
+	// An optional parameter that specifies the starting point to return a set of
+	// response records. When the results of a DescribeNodeConfigurationOptions
+	// request exceed the value specified in MaxRecords, AWS returns a value in
+	// the Marker field of the response. You can retrieve the next set of response
+	// records by providing the returned marker value in the Marker parameter and
+	// retrying the request.
+	Marker *string `type:"string"`
+
+	// The maximum number of response records to return in each call. If the number
+	// of remaining response records exceeds the specified MaxRecords value, a value
+	// is returned in a marker field of the response. You can retrieve the next
+	// set of records by retrying the command with the returned marker value.
+	//
+	// Default: 500
+	//
+	// Constraints: minimum 100, maximum 500.
+	MaxRecords *int64 `type:"integer"`
+
+	// The AWS customer account used to create or copy the snapshot. Required if
+	// you are restoring a snapshot you do not own, optional if you own the snapshot.
+	OwnerAccount *string `type:"string"`
+
+	// The identifier of the snapshot to evaluate for possible node configurations.
+	SnapshotIdentifier *string `type:"string"`
+}
+
+// String returns the string representation
+func (s DescribeNodeConfigurationOptionsInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DescribeNodeConfigurationOptionsInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *DescribeNodeConfigurationOptionsInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "DescribeNodeConfigurationOptionsInput"}
+	if s.ActionType == nil {
+		invalidParams.Add(request.NewErrParamRequired("ActionType"))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetActionType sets the ActionType field's value.
+func (s *DescribeNodeConfigurationOptionsInput) SetActionType(v string) *DescribeNodeConfigurationOptionsInput {
+	s.ActionType = &v
+	return s
+}
+
+// SetFilters sets the Filters field's value.
+func (s *DescribeNodeConfigurationOptionsInput) SetFilters(v []*NodeConfigurationOptionsFilter) *DescribeNodeConfigurationOptionsInput {
+	s.Filters = v
+	return s
+}
+
+// SetMarker sets the Marker field's value.
+func (s *DescribeNodeConfigurationOptionsInput) SetMarker(v string) *DescribeNodeConfigurationOptionsInput {
+	s.Marker = &v
+	return s
+}
+
+// SetMaxRecords sets the MaxRecords field's value.
+func (s *DescribeNodeConfigurationOptionsInput) SetMaxRecords(v int64) *DescribeNodeConfigurationOptionsInput {
+	s.MaxRecords = &v
+	return s
+}
+
+// SetOwnerAccount sets the OwnerAccount field's value.
+func (s *DescribeNodeConfigurationOptionsInput) SetOwnerAccount(v string) *DescribeNodeConfigurationOptionsInput {
+	s.OwnerAccount = &v
+	return s
+}
+
+// SetSnapshotIdentifier sets the SnapshotIdentifier field's value.
+func (s *DescribeNodeConfigurationOptionsInput) SetSnapshotIdentifier(v string) *DescribeNodeConfigurationOptionsInput {
+	s.SnapshotIdentifier = &v
+	return s
+}
+
+type DescribeNodeConfigurationOptionsOutput struct {
+	_ struct{} `type:"structure"`
+
+	// A value that indicates the starting point for the next set of response records
+	// in a subsequent request. If a value is returned in a response, you can retrieve
+	// the next set of records by providing this returned marker value in the Marker
+	// parameter and retrying the command. If the Marker field is empty, all response
+	// records have been retrieved for the request.
+	Marker *string `type:"string"`
+
+	// A list of valid node configurations.
+	NodeConfigurationOptionList []*NodeConfigurationOption `locationNameList:"NodeConfigurationOption" type:"list"`
+}
+
+// String returns the string representation
+func (s DescribeNodeConfigurationOptionsOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DescribeNodeConfigurationOptionsOutput) GoString() string {
+	return s.String()
+}
+
+// SetMarker sets the Marker field's value.
+func (s *DescribeNodeConfigurationOptionsOutput) SetMarker(v string) *DescribeNodeConfigurationOptionsOutput {
+	s.Marker = &v
+	return s
+}
+
+// SetNodeConfigurationOptionList sets the NodeConfigurationOptionList field's value.
+func (s *DescribeNodeConfigurationOptionsOutput) SetNodeConfigurationOptionList(v []*NodeConfigurationOption) *DescribeNodeConfigurationOptionsOutput {
+	s.NodeConfigurationOptionList = v
+	return s
+}
+
 type DescribeOrderableClusterOptionsInput struct {
 	_ struct{} `type:"structure"`
 
@@ -18728,6 +19033,96 @@ func (s *ModifySnapshotScheduleOutput) SetTags(v []*Tag) *ModifySnapshotSchedule
 	return s
 }
 
+// A list of node configurations.
+type NodeConfigurationOption struct {
+	_ struct{} `type:"structure"`
+
+	// The estimated disk utilizaton percentage.
+	EstimatedDiskUtilizationPercent *float64 `type:"double"`
+
+	// The node type, such as, "ds2.8xlarge".
+	NodeType *string `type:"string"`
+
+	// The number of nodes.
+	NumberOfNodes *int64 `type:"integer"`
+}
+
+// String returns the string representation
+func (s NodeConfigurationOption) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s NodeConfigurationOption) GoString() string {
+	return s.String()
+}
+
+// SetEstimatedDiskUtilizationPercent sets the EstimatedDiskUtilizationPercent field's value.
+func (s *NodeConfigurationOption) SetEstimatedDiskUtilizationPercent(v float64) *NodeConfigurationOption {
+	s.EstimatedDiskUtilizationPercent = &v
+	return s
+}
+
+// SetNodeType sets the NodeType field's value.
+func (s *NodeConfigurationOption) SetNodeType(v string) *NodeConfigurationOption {
+	s.NodeType = &v
+	return s
+}
+
+// SetNumberOfNodes sets the NumberOfNodes field's value.
+func (s *NodeConfigurationOption) SetNumberOfNodes(v int64) *NodeConfigurationOption {
+	s.NumberOfNodes = &v
+	return s
+}
+
+// A set of elements to filter the returned node configurations.
+type NodeConfigurationOptionsFilter struct {
+	_ struct{} `type:"structure"`
+
+	// The name of the element to filter.
+	Name *string `type:"string" enum:"NodeConfigurationOptionsFilterName"`
+
+	// The filter operator. If filter Name is NodeType only the 'in' operator is
+	// supported. Provide one value to evaluate for 'eq', 'lt', 'le', 'gt', and
+	// 'ge'. Provide two values to evaluate for 'between'. Provide a list of values
+	// for 'in'.
+	Operator *string `type:"string" enum:"OperatorType"`
+
+	// List of values. Compare Name using Operator to Values. If filter Name is
+	// NumberOfNodes, then values can range from 0 to 200. If filter Name is EstimatedDiskUtilizationPercent,
+	// then values can range from 0 to 100. For example, filter NumberOfNodes (name)
+	// GT (operator) 3 (values).
+	Values []*string `locationName:"Value" locationNameList:"item" type:"list"`
+}
+
+// String returns the string representation
+func (s NodeConfigurationOptionsFilter) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s NodeConfigurationOptionsFilter) GoString() string {
+	return s.String()
+}
+
+// SetName sets the Name field's value.
+func (s *NodeConfigurationOptionsFilter) SetName(v string) *NodeConfigurationOptionsFilter {
+	s.Name = &v
+	return s
+}
+
+// SetOperator sets the Operator field's value.
+func (s *NodeConfigurationOptionsFilter) SetOperator(v string) *NodeConfigurationOptionsFilter {
+	s.Operator = &v
+	return s
+}
+
+// SetValues sets the Values field's value.
+func (s *NodeConfigurationOptionsFilter) SetValues(v []*string) *NodeConfigurationOptionsFilter {
+	s.Values = v
+	return s
+}
+
 // Describes an orderable cluster option.
 type OrderableClusterOption struct {
 	_ struct{} `type:"structure"`
@@ -19502,7 +19897,8 @@ type ResizeClusterInput struct {
 	// The new cluster type for the specified cluster.
 	ClusterType *string `type:"string"`
 
-	// The new node type for the nodes you are adding.
+	// The new node type for the nodes you are adding. If not specified, the cluster's
+	// current node type is used.
 	NodeType *string `type:"string"`
 
 	// The new number of nodes for the cluster.
@@ -19762,6 +20158,9 @@ type RestoreFromClusterSnapshotInput struct {
 	// in the Amazon Redshift Cluster Management Guide.
 	NodeType *string `type:"string"`
 
+	// The number of nodes specified when provisioning the restored cluster.
+	NumberOfNodes *int64 `type:"integer"`
+
 	// The AWS customer account used to create or copy the snapshot. Required if
 	// you are restoring a snapshot you do not own, optional if you own the snapshot.
 	OwnerAccount *string `type:"string"`
@@ -19941,6 +20340,12 @@ func (s *RestoreFromClusterSnapshotInput) SetManualSnapshotRetentionPeriod(v int
 // SetNodeType sets the NodeType field's value.
 func (s *RestoreFromClusterSnapshotInput) SetNodeType(v string) *RestoreFromClusterSnapshotInput {
 	s.NodeType = &v
+	return s
+}
+
+// SetNumberOfNodes sets the NumberOfNodes field's value.
+func (s *RestoreFromClusterSnapshotInput) SetNumberOfNodes(v int64) *RestoreFromClusterSnapshotInput {
+	s.NumberOfNodes = &v
 	return s
 }
 
@@ -21507,6 +21912,45 @@ func (s *VpcSecurityGroupMembership) SetVpcSecurityGroupId(v string) *VpcSecurit
 	s.VpcSecurityGroupId = &v
 	return s
 }
+
+const (
+	// ActionTypeRestoreCluster is a ActionType enum value
+	ActionTypeRestoreCluster = "restore-cluster"
+)
+
+const (
+	// NodeConfigurationOptionsFilterNameNodeType is a NodeConfigurationOptionsFilterName enum value
+	NodeConfigurationOptionsFilterNameNodeType = "NodeType"
+
+	// NodeConfigurationOptionsFilterNameNumberOfNodes is a NodeConfigurationOptionsFilterName enum value
+	NodeConfigurationOptionsFilterNameNumberOfNodes = "NumberOfNodes"
+
+	// NodeConfigurationOptionsFilterNameEstimatedDiskUtilizationPercent is a NodeConfigurationOptionsFilterName enum value
+	NodeConfigurationOptionsFilterNameEstimatedDiskUtilizationPercent = "EstimatedDiskUtilizationPercent"
+)
+
+const (
+	// OperatorTypeEq is a OperatorType enum value
+	OperatorTypeEq = "eq"
+
+	// OperatorTypeLt is a OperatorType enum value
+	OperatorTypeLt = "lt"
+
+	// OperatorTypeGt is a OperatorType enum value
+	OperatorTypeGt = "gt"
+
+	// OperatorTypeLe is a OperatorType enum value
+	OperatorTypeLe = "le"
+
+	// OperatorTypeGe is a OperatorType enum value
+	OperatorTypeGe = "ge"
+
+	// OperatorTypeIn is a OperatorType enum value
+	OperatorTypeIn = "in"
+
+	// OperatorTypeBetween is a OperatorType enum value
+	OperatorTypeBetween = "between"
+)
 
 const (
 	// ParameterApplyTypeStatic is a ParameterApplyType enum value

@@ -219,7 +219,9 @@ func resourceAwsGlueCrawlerCreate(d *schema.ResourceData, meta interface{}) erro
 		}
 		return nil
 	})
-
+	if isResourceTimeoutError(err) {
+		_, err = glueConn.CreateCrawler(crawlerInput)
+	}
 	if err != nil {
 		return fmt.Errorf("error creating Glue crawler: %s", err)
 	}

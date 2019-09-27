@@ -92,7 +92,9 @@ func resourceAwsEbsSnapshotCreate(d *schema.ResourceData, meta interface{}) erro
 
 		return nil
 	})
-
+	if isResourceTimeoutError(err) {
+		res, err = conn.CreateSnapshot(request)
+	}
 	if err != nil {
 		return fmt.Errorf("error creating EC2 EBS Snapshot: %s", err)
 	}
@@ -152,12 +154,11 @@ func resourceAwsEbsSnapshotRead(d *schema.ResourceData, meta interface{}) error 
 
 func resourceAwsEbsSnapshotDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).ec2conn
-
-	return resource.Retry(d.Timeout(schema.TimeoutDelete), func() *resource.RetryError {
-		request := &ec2.DeleteSnapshotInput{
-			SnapshotId: aws.String(d.Id()),
-		}
-		_, err := conn.DeleteSnapshot(request)
+	input := &ec2.DeleteSnapshotInput{
+		SnapshotId: aws.String(d.Id()),
+	}
+	err := resource.Retry(d.Timeout(schema.TimeoutDelete), func() *resource.RetryError {
+		_, err := conn.DeleteSnapshot(input)
 		if err == nil {
 			return nil
 		}
@@ -166,16 +167,22 @@ func resourceAwsEbsSnapshotDelete(d *schema.ResourceData, meta interface{}) erro
 		}
 		return resource.NonRetryableError(err)
 	})
+	if isResourceTimeoutError(err) {
+		_, err = conn.DeleteSnapshot(input)
+	}
+	if err != nil {
+		return fmt.Errorf("Error deleting EBS snapshot: %s", err)
+	}
+	return nil
 }
 
 func resourceAwsEbsSnapshotWaitForAvailable(d *schema.ResourceData, conn *ec2.EC2) error {
 	log.Printf("Waiting for Snapshot %s to become available...", d.Id())
-
-	return resource.Retry(d.Timeout(schema.TimeoutCreate), func() *resource.RetryError {
-		req := &ec2.DescribeSnapshotsInput{
-			SnapshotIds: []*string{aws.String(d.Id())},
-		}
-		err := conn.WaitUntilSnapshotCompleted(req)
+	input := &ec2.DescribeSnapshotsInput{
+		SnapshotIds: []*string{aws.String(d.Id())},
+	}
+	err := resource.Retry(d.Timeout(schema.TimeoutCreate), func() *resource.RetryError {
+		err := conn.WaitUntilSnapshotCompleted(input)
 		if err == nil {
 			return nil
 		}
@@ -184,4 +191,11 @@ func resourceAwsEbsSnapshotWaitForAvailable(d *schema.ResourceData, conn *ec2.EC
 		}
 		return resource.NonRetryableError(err)
 	})
+	if isResourceTimeoutError(err) {
+		err = conn.WaitUntilSnapshotCompleted(input)
+	}
+	if err != nil {
+		return fmt.Errorf("Error waiting for EBS snapshot to complete: %s", err)
+	}
+	return nil
 }

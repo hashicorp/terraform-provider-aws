@@ -162,6 +162,117 @@ func (c *CodeCommit) BatchDescribeMergeConflictsWithContext(ctx aws.Context, inp
 	return out, req.Send()
 }
 
+const opBatchGetCommits = "BatchGetCommits"
+
+// BatchGetCommitsRequest generates a "aws/request.Request" representing the
+// client's request for the BatchGetCommits operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See BatchGetCommits for more information on using the BatchGetCommits
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the BatchGetCommitsRequest method.
+//    req, resp := client.BatchGetCommitsRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/codecommit-2015-04-13/BatchGetCommits
+func (c *CodeCommit) BatchGetCommitsRequest(input *BatchGetCommitsInput) (req *request.Request, output *BatchGetCommitsOutput) {
+	op := &request.Operation{
+		Name:       opBatchGetCommits,
+		HTTPMethod: "POST",
+		HTTPPath:   "/",
+	}
+
+	if input == nil {
+		input = &BatchGetCommitsInput{}
+	}
+
+	output = &BatchGetCommitsOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// BatchGetCommits API operation for AWS CodeCommit.
+//
+// Returns information about the contents of one or more commits in a repository.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for AWS CodeCommit's
+// API operation BatchGetCommits for usage and error information.
+//
+// Returned Error Codes:
+//   * ErrCodeCommitIdsListRequiredException "CommitIdsListRequiredException"
+//
+//   * ErrCodeCommitIdsLimitExceededException "CommitIdsLimitExceededException"
+//   The maximum number of allowed commit IDs in a batch request is 100. Verify
+//   that your batch requests contains no more than 100 commit IDs, and then try
+//   again.
+//
+//   * ErrCodeRepositoryNameRequiredException "RepositoryNameRequiredException"
+//   A repository name is required but was not specified.
+//
+//   * ErrCodeInvalidRepositoryNameException "InvalidRepositoryNameException"
+//   At least one specified repository name is not valid.
+//
+//   This exception only occurs when a specified repository name is not valid.
+//   Other exceptions occur when a required repository parameter is missing, or
+//   when a specified repository does not exist.
+//
+//   * ErrCodeRepositoryDoesNotExistException "RepositoryDoesNotExistException"
+//   The specified repository does not exist.
+//
+//   * ErrCodeEncryptionIntegrityChecksFailedException "EncryptionIntegrityChecksFailedException"
+//   An encryption integrity check failed.
+//
+//   * ErrCodeEncryptionKeyAccessDeniedException "EncryptionKeyAccessDeniedException"
+//   An encryption key could not be accessed.
+//
+//   * ErrCodeEncryptionKeyDisabledException "EncryptionKeyDisabledException"
+//   The encryption key is disabled.
+//
+//   * ErrCodeEncryptionKeyNotFoundException "EncryptionKeyNotFoundException"
+//   No encryption key was found.
+//
+//   * ErrCodeEncryptionKeyUnavailableException "EncryptionKeyUnavailableException"
+//   The encryption key is not available.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/codecommit-2015-04-13/BatchGetCommits
+func (c *CodeCommit) BatchGetCommits(input *BatchGetCommitsInput) (*BatchGetCommitsOutput, error) {
+	req, out := c.BatchGetCommitsRequest(input)
+	return out, req.Send()
+}
+
+// BatchGetCommitsWithContext is the same as BatchGetCommits with the addition of
+// the ability to pass a context and additional request options.
+//
+// See BatchGetCommits for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *CodeCommit) BatchGetCommitsWithContext(ctx aws.Context, input *BatchGetCommitsInput, opts ...request.Option) (*BatchGetCommitsOutput, error) {
+	req, out := c.BatchGetCommitsRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
 const opBatchGetRepositories = "BatchGetRepositories"
 
 // BatchGetRepositoriesRequest generates a "aws/request.Request" representing the
@@ -7975,6 +8086,142 @@ func (s *BatchDescribeMergeConflictsOutput) SetNextToken(v string) *BatchDescrib
 // SetSourceCommitId sets the SourceCommitId field's value.
 func (s *BatchDescribeMergeConflictsOutput) SetSourceCommitId(v string) *BatchDescribeMergeConflictsOutput {
 	s.SourceCommitId = &v
+	return s
+}
+
+// Returns information about errors in a BatchGetCommits operation.
+type BatchGetCommitsError struct {
+	_ struct{} `type:"structure"`
+
+	// A commit ID that either could not be found or was not in a valid format.
+	CommitId *string `locationName:"commitId" type:"string"`
+
+	// An error code that specifies whether the commit ID was not valid or not found.
+	ErrorCode *string `locationName:"errorCode" type:"string"`
+
+	// An error message that provides detail about why the commit ID either was
+	// not found or was not valid.
+	ErrorMessage *string `locationName:"errorMessage" type:"string"`
+}
+
+// String returns the string representation
+func (s BatchGetCommitsError) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s BatchGetCommitsError) GoString() string {
+	return s.String()
+}
+
+// SetCommitId sets the CommitId field's value.
+func (s *BatchGetCommitsError) SetCommitId(v string) *BatchGetCommitsError {
+	s.CommitId = &v
+	return s
+}
+
+// SetErrorCode sets the ErrorCode field's value.
+func (s *BatchGetCommitsError) SetErrorCode(v string) *BatchGetCommitsError {
+	s.ErrorCode = &v
+	return s
+}
+
+// SetErrorMessage sets the ErrorMessage field's value.
+func (s *BatchGetCommitsError) SetErrorMessage(v string) *BatchGetCommitsError {
+	s.ErrorMessage = &v
+	return s
+}
+
+type BatchGetCommitsInput struct {
+	_ struct{} `type:"structure"`
+
+	// The full commit IDs of the commits to get information about.
+	//
+	// You must supply the full SHAs of each commit. You cannot use shortened SHAs.
+	//
+	// CommitIds is a required field
+	CommitIds []*string `locationName:"commitIds" type:"list" required:"true"`
+
+	// The name of the repository that contains the commits.
+	//
+	// RepositoryName is a required field
+	RepositoryName *string `locationName:"repositoryName" min:"1" type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s BatchGetCommitsInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s BatchGetCommitsInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *BatchGetCommitsInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "BatchGetCommitsInput"}
+	if s.CommitIds == nil {
+		invalidParams.Add(request.NewErrParamRequired("CommitIds"))
+	}
+	if s.RepositoryName == nil {
+		invalidParams.Add(request.NewErrParamRequired("RepositoryName"))
+	}
+	if s.RepositoryName != nil && len(*s.RepositoryName) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("RepositoryName", 1))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetCommitIds sets the CommitIds field's value.
+func (s *BatchGetCommitsInput) SetCommitIds(v []*string) *BatchGetCommitsInput {
+	s.CommitIds = v
+	return s
+}
+
+// SetRepositoryName sets the RepositoryName field's value.
+func (s *BatchGetCommitsInput) SetRepositoryName(v string) *BatchGetCommitsInput {
+	s.RepositoryName = &v
+	return s
+}
+
+type BatchGetCommitsOutput struct {
+	_ struct{} `type:"structure"`
+
+	// An array of commit data type objects, each of which contains information
+	// about a specified commit.
+	Commits []*Commit `locationName:"commits" type:"list"`
+
+	// Returns any commit IDs for which information could not be found. For example,
+	// if one of the commit IDs was a shortened SHA or that commit was not found
+	// in the specified repository, the ID will return an error object with additional
+	// information.
+	Errors []*BatchGetCommitsError `locationName:"errors" type:"list"`
+}
+
+// String returns the string representation
+func (s BatchGetCommitsOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s BatchGetCommitsOutput) GoString() string {
+	return s.String()
+}
+
+// SetCommits sets the Commits field's value.
+func (s *BatchGetCommitsOutput) SetCommits(v []*Commit) *BatchGetCommitsOutput {
+	s.Commits = v
+	return s
+}
+
+// SetErrors sets the Errors field's value.
+func (s *BatchGetCommitsOutput) SetErrors(v []*BatchGetCommitsError) *BatchGetCommitsOutput {
+	s.Errors = v
 	return s
 }
 

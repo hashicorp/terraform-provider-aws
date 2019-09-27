@@ -11,8 +11,9 @@ import (
 
 func TestAccAWSSQSQueuePolicy_basic(t *testing.T) {
 	var queueAttributes map[string]*string
-
+	resourceName := "aws_sqs_queue_policy.test"
 	queueName := fmt.Sprintf("sqs-queue-%s", acctest.RandString(5))
+
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
@@ -27,23 +28,6 @@ func TestAccAWSSQSQueuePolicy_basic(t *testing.T) {
 						regexp.MustCompile("^{\"Version\":\"2012-10-17\".+")),
 				),
 			},
-		},
-	})
-}
-
-func TestAccAWSSQSQueuePolicy_import(t *testing.T) {
-	queueName := fmt.Sprintf("sqs-queue-%s", acctest.RandString(5))
-	resourceName := "aws_sqs_queue_policy.test"
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckAWSSQSQueueDestroy,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccAWSSQSPolicyConfig_basic(queueName),
-			},
-
 			{
 				ResourceName:      resourceName,
 				ImportState:       true,

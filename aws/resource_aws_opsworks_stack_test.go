@@ -13,7 +13,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/opsworks"
 )
 
-func TestAccAWSOpsworksStackImportBasic(t *testing.T) {
+func TestAccAWSOpsworksStack_ImportBasic(t *testing.T) {
 	name := acctest.RandString(10)
 
 	resourceName := "aws_opsworks_stack.tf-acc"
@@ -40,7 +40,7 @@ func TestAccAWSOpsworksStackImportBasic(t *testing.T) {
 //// Tests for the No-VPC case
 ///////////////////////////////
 
-func TestAccAWSOpsworksStackNoVpc(t *testing.T) {
+func TestAccAWSOpsworksStack_NoVpc(t *testing.T) {
 	stackName := fmt.Sprintf("tf-opsworks-acc-%d", acctest.RandInt())
 	var opsstack opsworks.Stack
 	resource.ParallelTest(t, resource.TestCase{
@@ -63,7 +63,7 @@ func TestAccAWSOpsworksStackNoVpc(t *testing.T) {
 	})
 }
 
-func TestAccAWSOpsworksStackNoVpcChangeServiceRoleForceNew(t *testing.T) {
+func TestAccAWSOpsworksStack_NoVpcChangeServiceRoleForceNew(t *testing.T) {
 	stackName := fmt.Sprintf("tf-opsworks-acc-%d", acctest.RandInt())
 	var before, after opsworks.Stack
 	resource.ParallelTest(t, resource.TestCase{
@@ -90,7 +90,7 @@ func TestAccAWSOpsworksStackNoVpcChangeServiceRoleForceNew(t *testing.T) {
 	})
 }
 
-func TestAccAWSOpsworksStackVpc(t *testing.T) {
+func TestAccAWSOpsworksStack_Vpc(t *testing.T) {
 	stackName := fmt.Sprintf("tf-opsworks-acc-%d", acctest.RandInt())
 	var opsstack opsworks.Stack
 	resource.ParallelTest(t, resource.TestCase{
@@ -124,7 +124,7 @@ func TestAccAWSOpsworksStackVpc(t *testing.T) {
 	})
 }
 
-func TestAccAWSOpsworksStackNoVpcCreateTags(t *testing.T) {
+func TestAccAWSOpsworksStack_NoVpcCreateTags(t *testing.T) {
 	stackName := fmt.Sprintf("tf-opsworks-acc-%d", acctest.RandInt())
 	var opsstack opsworks.Stack
 	resource.ParallelTest(t, resource.TestCase{

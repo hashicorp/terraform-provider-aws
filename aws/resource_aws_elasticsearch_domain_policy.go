@@ -68,11 +68,13 @@ func resourceAwsElasticSearchDomainPolicyUpsert(d *schema.ResourceData, meta int
 	}
 
 	d.SetId("esd-policy-" + domainName)
-
+	input := &elasticsearch.DescribeElasticsearchDomainInput{
+		DomainName: aws.String(d.Get("domain_name").(string)),
+	}
+	var out *elasticsearch.DescribeElasticsearchDomainOutput
 	err = resource.Retry(50*time.Minute, func() *resource.RetryError {
-		out, err := conn.DescribeElasticsearchDomain(&elasticsearch.DescribeElasticsearchDomainInput{
-			DomainName: aws.String(d.Get("domain_name").(string)),
-		})
+		var err error
+		out, err = conn.DescribeElasticsearchDomain(input)
 		if err != nil {
 			return resource.NonRetryableError(err)
 		}
@@ -84,8 +86,14 @@ func resourceAwsElasticSearchDomainPolicyUpsert(d *schema.ResourceData, meta int
 		return resource.RetryableError(
 			fmt.Errorf("%q: Timeout while waiting for changes to be processed", d.Id()))
 	})
+	if isResourceTimeoutError(err) {
+		out, err = conn.DescribeElasticsearchDomain(input)
+		if err == nil && !*out.DomainStatus.Processing {
+			return nil
+		}
+	}
 	if err != nil {
-		return err
+		return fmt.Errorf("Error upserting Elasticsearch domain policy: %s", err)
 	}
 
 	return resourceAwsElasticSearchDomainPolicyRead(d, meta)
@@ -103,10 +111,13 @@ func resourceAwsElasticSearchDomainPolicyDelete(d *schema.ResourceData, meta int
 	}
 
 	log.Printf("[DEBUG] Waiting for ElasticSearch domain policy %q to be deleted", d.Get("domain_name").(string))
+	input := &elasticsearch.DescribeElasticsearchDomainInput{
+		DomainName: aws.String(d.Get("domain_name").(string)),
+	}
+	var out *elasticsearch.DescribeElasticsearchDomainOutput
 	err = resource.Retry(60*time.Minute, func() *resource.RetryError {
-		out, err := conn.DescribeElasticsearchDomain(&elasticsearch.DescribeElasticsearchDomainInput{
-			DomainName: aws.String(d.Get("domain_name").(string)),
-		})
+		var err error
+		out, err = conn.DescribeElasticsearchDomain(input)
 		if err != nil {
 			return resource.NonRetryableError(err)
 		}
@@ -118,5 +129,14 @@ func resourceAwsElasticSearchDomainPolicyDelete(d *schema.ResourceData, meta int
 		return resource.RetryableError(
 			fmt.Errorf("%q: Timeout while waiting for policy to be deleted", d.Id()))
 	})
-	return err
+	if isResourceTimeoutError(err) {
+		out, err := conn.DescribeElasticsearchDomain(input)
+		if err == nil && !*out.DomainStatus.Processing {
+			return nil
+		}
+	}
+	if err != nil {
+		return fmt.Errorf("Error deleting Elasticsearch domain policy: %s", err)
+	}
+	return nil
 }

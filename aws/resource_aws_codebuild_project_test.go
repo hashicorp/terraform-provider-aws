@@ -6,6 +6,8 @@ import (
 	"regexp"
 	"testing"
 
+	"github.com/hashicorp/terraform/helper/hashcode"
+
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/codebuild"
 	"github.com/hashicorp/terraform/helper/acctest"
@@ -894,6 +896,45 @@ func TestAccAWSCodeBuildProject_WindowsContainer(t *testing.T) {
 	})
 }
 
+func TestAccAWSCodeBuildProject_Artifacts_ArtifactIdentifier(t *testing.T) {
+	var project codebuild.Project
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	bName := acctest.RandomWithPrefix("tf-acc-test-bucket")
+	resourceName := "aws_codebuild_project.test"
+
+	artifactIdentifier1 := "artifactIdentifier1"
+	artifactIdentifier2 := "artifactIdentifier2"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSCodeBuild(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSCodeBuildProjectDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSCodebuildProjectConfig_Artifacts_ArtifactIdentifier(rName, bName, artifactIdentifier1),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSCodeBuildProjectExists(resourceName, &project),
+					resource.TestCheckResourceAttr(resourceName, "artifacts.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "artifacts.0.artifact_identifier", artifactIdentifier1),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccAWSCodebuildProjectConfig_Artifacts_ArtifactIdentifier(rName, bName, artifactIdentifier2),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSCodeBuildProjectExists(resourceName, &project),
+					resource.TestCheckResourceAttr(resourceName, "artifacts.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "artifacts.0.artifact_identifier", artifactIdentifier2),
+				),
+			},
+		},
+	})
+}
+
 func TestAccAWSCodeBuildProject_Artifacts_EncryptionDisabled(t *testing.T) {
 	var project codebuild.Project
 	rName := acctest.RandomWithPrefix("tf-acc-test")
@@ -924,6 +965,82 @@ func TestAccAWSCodeBuildProject_Artifacts_EncryptionDisabled(t *testing.T) {
 					testAccCheckAWSCodeBuildProjectExists(resourceName, &project),
 					resource.TestCheckResourceAttr(resourceName, "artifacts.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "artifacts.0.encryption_disabled", "false"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAWSCodeBuildProject_Artifacts_Location(t *testing.T) {
+	var project codebuild.Project
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	bName := acctest.RandomWithPrefix("tf-acc-test-bucket")
+	bName2 := acctest.RandomWithPrefix("tf-acc-test-bucket2")
+	resourceName := "aws_codebuild_project.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSCodeBuild(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSCodeBuildProjectDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSCodebuildProjectConfig_Artifacts_Location(rName, bName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSCodeBuildProjectExists(resourceName, &project),
+					resource.TestCheckResourceAttr(resourceName, "artifacts.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "artifacts.0.location", bName),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccAWSCodebuildProjectConfig_Artifacts_Location(rName, bName2),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSCodeBuildProjectExists(resourceName, &project),
+					resource.TestCheckResourceAttr(resourceName, "artifacts.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "artifacts.0.location", bName2),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAWSCodeBuildProject_Artifacts_Name(t *testing.T) {
+	var project codebuild.Project
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	bName := acctest.RandomWithPrefix("tf-acc-test-bucket")
+	resourceName := "aws_codebuild_project.test"
+
+	name1 := "name1"
+	name2 := "name2"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSCodeBuild(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSCodeBuildProjectDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSCodebuildProjectConfig_Artifacts_Name(rName, bName, name1),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSCodeBuildProjectExists(resourceName, &project),
+					resource.TestCheckResourceAttr(resourceName, "artifacts.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "artifacts.0.name", name1),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccAWSCodebuildProjectConfig_Artifacts_Name(rName, bName, name2),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSCodeBuildProjectExists(resourceName, &project),
+					resource.TestCheckResourceAttr(resourceName, "artifacts.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "artifacts.0.name", name2),
 				),
 			},
 		},
@@ -981,6 +1098,7 @@ func TestAccAWSCodeBuildProject_Artifacts_OverrideArtifactName(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSCodeBuildProjectExists(resourceName, &project),
 					resource.TestCheckResourceAttr(resourceName, "artifacts.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "artifacts.0.override_artifact_name", "true"),
 				),
 			},
 			{
@@ -993,6 +1111,7 @@ func TestAccAWSCodeBuildProject_Artifacts_OverrideArtifactName(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSCodeBuildProjectExists(resourceName, &project),
 					resource.TestCheckResourceAttr(resourceName, "artifacts.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "artifacts.0.override_artifact_name", "false"),
 				),
 			},
 		},
@@ -1069,6 +1188,45 @@ func TestAccAWSCodeBuildProject_Artifacts_Path(t *testing.T) {
 	})
 }
 
+func TestAccAWSCodeBuildProject_Artifacts_Type(t *testing.T) {
+	var project codebuild.Project
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	bName := acctest.RandomWithPrefix("tf-acc-test-bucket")
+	resourceName := "aws_codebuild_project.test"
+
+	type1 := codebuild.ArtifactsTypeS3
+	type2 := codebuild.ArtifactsTypeCodepipeline
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSCodeBuild(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSCodeBuildProjectDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSCodebuildProjectConfig_Artifacts_Type(rName, bName, type1),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSCodeBuildProjectExists(resourceName, &project),
+					resource.TestCheckResourceAttr(resourceName, "artifacts.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "artifacts.0.type", type1),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccAWSCodebuildProjectConfig_Artifacts_Type(rName, bName, type2),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSCodeBuildProjectExists(resourceName, &project),
+					resource.TestCheckResourceAttr(resourceName, "artifacts.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "artifacts.0.type", type2),
+				),
+			},
+		},
+	})
+}
+
 func TestAccAWSCodeBuildProject_SecondaryArtifacts(t *testing.T) {
 	var project codebuild.Project
 	rName := acctest.RandomWithPrefix("tf-acc-test")
@@ -1085,6 +1243,359 @@ func TestAccAWSCodeBuildProject_SecondaryArtifacts(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSCodeBuildProjectExists(resourceName, &project),
 					resource.TestCheckResourceAttr(resourceName, "secondary_artifacts.#", "2"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccAWSCodeBuildProject_SecondaryArtifacts_ArtifactIdentifier(t *testing.T) {
+	var project codebuild.Project
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	bName := acctest.RandomWithPrefix("tf-acc-test-bucket")
+	resourceName := "aws_codebuild_project.test"
+
+	artifactIdentifier1 := "artifactIdentifier1"
+	artifactIdentifier2 := "artifactIdentifier2"
+
+	hash1 := artifactHash(artifactIdentifier1, "false", bName, codebuild.ArtifactNamespaceNone, "false", codebuild.ArtifactPackagingNone, "", codebuild.ArtifactsTypeS3)
+	hash2 := artifactHash(artifactIdentifier2, "false", bName, codebuild.ArtifactNamespaceNone, "false", codebuild.ArtifactPackagingNone, "", codebuild.ArtifactsTypeS3)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSCodeBuild(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSCodeBuildProjectDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSCodebuildProjectConfig_SecondaryArtifacts_ArtifactIdentifier(rName, bName, artifactIdentifier1),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSCodeBuildProjectExists(resourceName, &project),
+					resource.TestCheckResourceAttr(resourceName, "secondary_artifacts.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, fmt.Sprintf("secondary_artifacts.%d.artifact_identifier", hash1), artifactIdentifier1),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccAWSCodebuildProjectConfig_SecondaryArtifacts_ArtifactIdentifier(rName, bName, artifactIdentifier2),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSCodeBuildProjectExists(resourceName, &project),
+					resource.TestCheckResourceAttr(resourceName, "secondary_artifacts.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, fmt.Sprintf("secondary_artifacts.%d.artifact_identifier", hash2), artifactIdentifier2),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAWSCodeBuildProject_SecondaryArtifacts_OverrideArtifactName(t *testing.T) {
+	var project codebuild.Project
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	bName := acctest.RandomWithPrefix("tf-acc-test-bucket")
+	resourceName := "aws_codebuild_project.test"
+
+	hash1 := artifactHash("secondaryArtifact1", "false", bName, codebuild.ArtifactNamespaceNone, "true", codebuild.ArtifactPackagingNone, "", codebuild.ArtifactsTypeS3)
+	hash2 := artifactHash("secondaryArtifact1", "false", bName, codebuild.ArtifactNamespaceNone, "false", codebuild.ArtifactPackagingNone, "", codebuild.ArtifactsTypeS3)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSCodeBuild(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSCodeBuildProjectDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSCodebuildProjectConfig_SecondaryArtifacts_OverrideArtifactName(rName, bName, true),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSCodeBuildProjectExists(resourceName, &project),
+					resource.TestCheckResourceAttr(resourceName, "secondary_artifacts.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, fmt.Sprintf("secondary_artifacts.%d.override_artifact_name", hash1), "true"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccAWSCodebuildProjectConfig_SecondaryArtifacts_OverrideArtifactName(rName, bName, false),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSCodeBuildProjectExists(resourceName, &project),
+					resource.TestCheckResourceAttr(resourceName, "secondary_artifacts.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, fmt.Sprintf("secondary_artifacts.%d.override_artifact_name", hash2), "false"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAWSCodeBuildProject_SecondaryArtifacts_EncryptionDisabled(t *testing.T) {
+	var project codebuild.Project
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	bName := acctest.RandomWithPrefix("tf-acc-test-bucket")
+	resourceName := "aws_codebuild_project.test"
+
+	hash1 := artifactHash("secondaryArtifact1", "true", bName, codebuild.ArtifactNamespaceNone, "false", codebuild.ArtifactPackagingNone, "", codebuild.ArtifactsTypeS3)
+	hash2 := artifactHash("secondaryArtifact1", "false", bName, codebuild.ArtifactNamespaceNone, "false", codebuild.ArtifactPackagingNone, "", codebuild.ArtifactsTypeS3)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSCodeBuild(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSCodeBuildProjectDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSCodebuildProjectConfig_SecondaryArtifacts_EncryptionDisabled(rName, bName, true),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSCodeBuildProjectExists(resourceName, &project),
+					resource.TestCheckResourceAttr(resourceName, "secondary_artifacts.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, fmt.Sprintf("secondary_artifacts.%d.encryption_disabled", hash1), "true"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccAWSCodebuildProjectConfig_SecondaryArtifacts_EncryptionDisabled(rName, bName, false),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSCodeBuildProjectExists(resourceName, &project),
+					resource.TestCheckResourceAttr(resourceName, "secondary_artifacts.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, fmt.Sprintf("secondary_artifacts.%d.encryption_disabled", hash2), "false"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAWSCodeBuildProject_SecondaryArtifacts_Location(t *testing.T) {
+	var project codebuild.Project
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	bName := acctest.RandomWithPrefix("tf-acc-test-bucket")
+	bName2 := acctest.RandomWithPrefix("tf-acc-test-bucket2")
+	resourceName := "aws_codebuild_project.test"
+
+	hash1 := artifactHash("secondaryArtifact1", "false", bName, codebuild.ArtifactNamespaceNone, "false", codebuild.ArtifactPackagingNone, "", codebuild.ArtifactsTypeS3)
+	hash2 := artifactHash("secondaryArtifact1", "false", bName2, codebuild.ArtifactNamespaceNone, "false", codebuild.ArtifactPackagingNone, "", codebuild.ArtifactsTypeS3)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSCodeBuild(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSCodeBuildProjectDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSCodebuildProjectConfig_SecondaryArtifacts_Location(rName, bName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSCodeBuildProjectExists(resourceName, &project),
+					resource.TestCheckResourceAttr(resourceName, "secondary_artifacts.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, fmt.Sprintf("secondary_artifacts.%d.location", hash1), bName),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccAWSCodebuildProjectConfig_SecondaryArtifacts_Location(rName, bName2),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSCodeBuildProjectExists(resourceName, &project),
+					resource.TestCheckResourceAttr(resourceName, "secondary_artifacts.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, fmt.Sprintf("secondary_artifacts.%d.location", hash2), bName2),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAWSCodeBuildProject_SecondaryArtifacts_Name(t *testing.T) {
+	t.Skip("Currently no solution to allow updates on name attribute")
+
+	var project codebuild.Project
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	bName := acctest.RandomWithPrefix("tf-acc-test-bucket")
+	resourceName := "aws_codebuild_project.test"
+
+	name1 := "name1"
+	name2 := "name2"
+
+	hash1 := artifactHash("secondaryArtifact1", "false", bName, codebuild.ArtifactNamespaceNone, "false", codebuild.ArtifactPackagingNone, "", codebuild.ArtifactsTypeS3)
+	hash2 := artifactHash("secondaryArtifact1", "false", bName, codebuild.ArtifactNamespaceNone, "false", codebuild.ArtifactPackagingNone, "", codebuild.ArtifactsTypeS3)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSCodeBuild(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSCodeBuildProjectDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSCodebuildProjectConfig_SecondaryArtifacts_Name(rName, bName, name1),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSCodeBuildProjectExists(resourceName, &project),
+					resource.TestCheckResourceAttr(resourceName, "secondary_artifacts.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, fmt.Sprintf("secondary_artifacts.%d.name", hash1), name1),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccAWSCodebuildProjectConfig_SecondaryArtifacts_Name(rName, bName, name2),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSCodeBuildProjectExists(resourceName, &project),
+					resource.TestCheckResourceAttr(resourceName, "secondary_artifacts.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, fmt.Sprintf("secondary_artifacts.%d.name", hash2), name2),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAWSCodeBuildProject_SecondaryArtifacts_NamespaceType(t *testing.T) {
+	var project codebuild.Project
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_codebuild_project.test"
+
+	hash1 := artifactHash("secondaryArtifact1", "false", rName, codebuild.ArtifactNamespaceBuildId, "false", codebuild.ArtifactPackagingNone, "", codebuild.ArtifactsTypeS3)
+	hash2 := artifactHash("secondaryArtifact1", "false", rName, codebuild.ArtifactNamespaceNone, "false", codebuild.ArtifactPackagingNone, "", codebuild.ArtifactsTypeS3)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSCodeBuild(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSCodeBuildProjectDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSCodebuildProjectConfig_SecondaryArtifacts_NamespaceType(rName, codebuild.ArtifactNamespaceBuildId),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSCodeBuildProjectExists(resourceName, &project),
+					resource.TestCheckResourceAttr(resourceName, "secondary_artifacts.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, fmt.Sprintf("secondary_artifacts.%d.namespace_type", hash1), codebuild.ArtifactNamespaceBuildId),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccAWSCodebuildProjectConfig_SecondaryArtifacts_NamespaceType(rName, codebuild.ArtifactNamespaceNone),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSCodeBuildProjectExists(resourceName, &project),
+					resource.TestCheckResourceAttr(resourceName, "secondary_artifacts.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, fmt.Sprintf("secondary_artifacts.%d.namespace_type", hash2), codebuild.ArtifactNamespaceNone),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAWSCodeBuildProject_SecondaryArtifacts_Packaging(t *testing.T) {
+	var project codebuild.Project
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_codebuild_project.test"
+
+	hash1 := artifactHash("secondaryArtifact1", "false", rName, codebuild.ArtifactNamespaceNone, "false", codebuild.ArtifactPackagingZip, "", codebuild.ArtifactsTypeS3)
+	hash2 := artifactHash("secondaryArtifact1", "false", rName, codebuild.ArtifactNamespaceNone, "false", codebuild.ArtifactPackagingNone, "", codebuild.ArtifactsTypeS3)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSCodeBuild(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSCodeBuildProjectDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSCodebuildProjectConfig_SecondaryArtifacts_Packaging(rName, codebuild.ArtifactPackagingZip),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSCodeBuildProjectExists(resourceName, &project),
+					resource.TestCheckResourceAttr(resourceName, "secondary_artifacts.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, fmt.Sprintf("secondary_artifacts.%d.packaging", hash1), codebuild.ArtifactPackagingZip),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccAWSCodebuildProjectConfig_SecondaryArtifacts_Packaging(rName, codebuild.ArtifactPackagingNone),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSCodeBuildProjectExists(resourceName, &project),
+					resource.TestCheckResourceAttr(resourceName, "secondary_artifacts.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, fmt.Sprintf("secondary_artifacts.%d.packaging", hash2), codebuild.ArtifactPackagingNone),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAWSCodeBuildProject_SecondaryArtifacts_Path(t *testing.T) {
+	var project codebuild.Project
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_codebuild_project.test"
+
+	path1 := "path1"
+	path2 := "path2"
+
+	hash1 := artifactHash("secondaryArtifact1", "false", rName, codebuild.ArtifactNamespaceNone, "false", codebuild.ArtifactPackagingNone, path1, codebuild.ArtifactsTypeS3)
+	hash2 := artifactHash("secondaryArtifact1", "false", rName, codebuild.ArtifactNamespaceNone, "false", codebuild.ArtifactPackagingNone, path2, codebuild.ArtifactsTypeS3)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSCodeBuild(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSCodeBuildProjectDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSCodebuildProjectConfig_SecondaryArtifacts_Path(rName, path1),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSCodeBuildProjectExists(resourceName, &project),
+					resource.TestCheckResourceAttr(resourceName, "secondary_artifacts.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, fmt.Sprintf("secondary_artifacts.%d.path", hash1), path1),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccAWSCodebuildProjectConfig_SecondaryArtifacts_Path(rName, path2),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSCodeBuildProjectExists(resourceName, &project),
+					resource.TestCheckResourceAttr(resourceName, "secondary_artifacts.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, fmt.Sprintf("secondary_artifacts.%d.path", hash2), path2),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAWSCodeBuildProject_SecondaryArtifacts_Type(t *testing.T) {
+	var project codebuild.Project
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	bName := acctest.RandomWithPrefix("tf-acc-test-bucket")
+	resourceName := "aws_codebuild_project.test"
+
+	type1 := codebuild.ArtifactsTypeS3
+
+	hash1 := artifactHash("secondaryArtifact1", "false", bName, codebuild.ArtifactNamespaceNone, "false", codebuild.ArtifactPackagingNone, "", type1)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSCodeBuild(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSCodeBuildProjectDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSCodebuildProjectConfig_SecondaryArtifacts_Type(rName, bName, type1),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSCodeBuildProjectExists(resourceName, &project),
+					resource.TestCheckResourceAttr(resourceName, "secondary_artifacts.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, fmt.Sprintf("secondary_artifacts.%d.type", hash1), type1),
 				),
 			},
 			{
@@ -2291,6 +2802,32 @@ resource "aws_codebuild_project" "test" {
 `, rName, testAccAWSCodeBuildGitHubSourceLocationFromEnv())
 }
 
+func testAccAWSCodebuildProjectConfig_Artifacts_ArtifactIdentifier(rName string, bName string, artifactIdentifier string) string {
+	return testAccAWSCodeBuildProjectConfig_Base_ServiceRole(rName) + testAccAWSCodeBuildProjectConfig_Base_Bucket(bName) + fmt.Sprintf(`
+resource "aws_codebuild_project" "test" {
+  name          =  %[1]q
+  service_role  = "${aws_iam_role.test.arn}"
+
+  artifacts {
+    artifact_identifier        = %[2]q
+    location                   = "${aws_s3_bucket.test.bucket}"
+    type                       = "S3"
+  }
+
+  environment {
+    compute_type = "BUILD_GENERAL1_SMALL"
+    image        = "2"
+    type         = "LINUX_CONTAINER"
+  }
+
+  source {
+    type     = "GITHUB"
+    location = "https://github.com/hashicorp/packer.git"
+  }
+}
+`, rName, artifactIdentifier)
+}
+
 func testAccAWSCodebuildProjectConfig_Artifacts_EncryptionDisabled(rName string, bName string, encryptionDisabled bool) string {
 	return testAccAWSCodeBuildProjectConfig_Base_ServiceRole(rName) + testAccAWSCodeBuildProjectConfig_Base_Bucket(bName) + fmt.Sprintf(`
 resource "aws_codebuild_project" "test" {
@@ -2315,6 +2852,57 @@ resource "aws_codebuild_project" "test" {
   }
 }
 `, rName, encryptionDisabled)
+}
+
+func testAccAWSCodebuildProjectConfig_Artifacts_Location(rName, bName string) string {
+	return testAccAWSCodeBuildProjectConfig_Base_ServiceRole(rName) + testAccAWSCodeBuildProjectConfig_Base_Bucket(bName) + fmt.Sprintf(`
+resource "aws_codebuild_project" "test" {
+  name          = %[1]q
+  service_role  = "${aws_iam_role.test.arn}"
+
+  artifacts {
+    location  = "${aws_s3_bucket.test.bucket}"
+    type      = "S3"
+  }
+
+  environment {
+    compute_type = "BUILD_GENERAL1_SMALL"
+    image        = "2"
+    type         = "LINUX_CONTAINER"
+  }
+
+  source {
+    type     = "GITHUB"
+    location = "https://github.com/hashicorp/packer.git"
+  }
+}
+`, rName)
+}
+
+func testAccAWSCodebuildProjectConfig_Artifacts_Name(rName string, bName string, name string) string {
+	return testAccAWSCodeBuildProjectConfig_Base_ServiceRole(rName) + testAccAWSCodeBuildProjectConfig_Base_Bucket(bName) + fmt.Sprintf(`
+resource "aws_codebuild_project" "test" {
+  name          =  %[1]q
+  service_role  = "${aws_iam_role.test.arn}"
+
+  artifacts {
+    name        = %[2]q
+    location    = "${aws_s3_bucket.test.bucket}"
+    type        = "S3"
+  }
+
+  environment {
+    compute_type = "BUILD_GENERAL1_SMALL"
+    image        = "2"
+    type         = "LINUX_CONTAINER"
+  }
+
+  source {
+    type     = "GITHUB"
+    location = "https://github.com/hashicorp/packer.git"
+  }
+}
+`, rName, name)
 }
 
 func testAccAWSCodebuildProjectConfig_Artifacts_NamespaceType(rName, namespaceType string) string {
@@ -2351,8 +2939,8 @@ resource "aws_codebuild_project" "test" {
 
   artifacts {
     override_artifact_name = %t
-    location            = "${aws_s3_bucket.test.bucket}"
-    type                = "S3"
+    location               = "${aws_s3_bucket.test.bucket}"
+    type                   = "S3"
   }
 
   environment {
@@ -2421,6 +3009,31 @@ resource "aws_codebuild_project" "test" {
 `, rName, path)
 }
 
+func testAccAWSCodebuildProjectConfig_Artifacts_Type(rName string, bName string, artifactType string) string {
+	return testAccAWSCodeBuildProjectConfig_Base_ServiceRole(rName) + testAccAWSCodeBuildProjectConfig_Base_Bucket(bName) + fmt.Sprintf(`
+resource "aws_codebuild_project" "test" {
+  name          =  %[1]q
+  service_role  = "${aws_iam_role.test.arn}"
+
+  artifacts {
+    type        = %[2]q
+    location    = "${aws_s3_bucket.test.bucket}"
+  }
+
+  environment {
+    compute_type = "BUILD_GENERAL1_SMALL"
+    image        = "2"
+    type         = "LINUX_CONTAINER"
+  }
+
+  source {
+    type     = %[2]q
+    location = "${aws_s3_bucket.test.bucket}/"
+  }
+}
+`, rName, artifactType)
+}
+
 func testAccAWSCodebuildProjectConfig_SecondaryArtifacts(rName string, bName string) string {
 	return testAccAWSCodeBuildProjectConfig_Base_ServiceRole(rName) + testAccAWSCodeBuildProjectConfig_Base_Bucket(bName) + fmt.Sprintf(`
 resource "aws_codebuild_project" "test" {
@@ -2458,6 +3071,291 @@ resource "aws_codebuild_project" "test" {
 `, rName)
 }
 
+func testAccAWSCodebuildProjectConfig_SecondaryArtifacts_ArtifactIdentifier(rName string, bName string, artifactIdentifier string) string {
+	return testAccAWSCodeBuildProjectConfig_Base_ServiceRole(rName) + testAccAWSCodeBuildProjectConfig_Base_Bucket(bName) + fmt.Sprintf(`
+resource "aws_codebuild_project" "test" {
+  name          =  %[1]q
+  service_role  = "${aws_iam_role.test.arn}"
+
+  artifacts {
+    location            = "${aws_s3_bucket.test.bucket}"
+    type                = "S3"
+  }
+
+  secondary_artifacts {
+    artifact_identifier    = %[2]q
+    location               = "${aws_s3_bucket.test.bucket}"
+    type                   = "S3"
+  }
+
+  environment {
+    compute_type = "BUILD_GENERAL1_SMALL"
+    image        = "2"
+    type         = "LINUX_CONTAINER"
+  }
+
+  source {
+    type     = "GITHUB"
+    location = "https://github.com/hashicorp/packer.git"
+  }
+}
+`, rName, artifactIdentifier)
+}
+
+func testAccAWSCodebuildProjectConfig_SecondaryArtifacts_EncryptionDisabled(rName string, bName string, encryptionDisabled bool) string {
+	return testAccAWSCodeBuildProjectConfig_Base_ServiceRole(rName) + testAccAWSCodeBuildProjectConfig_Base_Bucket(bName) + fmt.Sprintf(`
+resource "aws_codebuild_project" "test" {
+  name          = "%s"
+  service_role  = "${aws_iam_role.test.arn}"
+
+  artifacts {
+    location            = "${aws_s3_bucket.test.bucket}"
+    type                = "S3"
+  }
+
+  secondary_artifacts {
+    artifact_identifier = "secondaryArtifact1"
+    encryption_disabled = %t
+    location            = "${aws_s3_bucket.test.bucket}"
+    type                = "S3"
+  }
+
+  environment {
+    compute_type = "BUILD_GENERAL1_SMALL"
+    image        = "2"
+    type         = "LINUX_CONTAINER"
+  }
+
+  source {
+    type     = "GITHUB"
+    location = "https://github.com/hashicorp/packer.git"
+  }
+}
+`, rName, encryptionDisabled)
+}
+
+func testAccAWSCodebuildProjectConfig_SecondaryArtifacts_Location(rName, bName string) string {
+	return testAccAWSCodeBuildProjectConfig_Base_ServiceRole(rName) + testAccAWSCodeBuildProjectConfig_Base_Bucket(bName) + fmt.Sprintf(`
+resource "aws_codebuild_project" "test" {
+  name          = %[1]q
+  service_role  = "${aws_iam_role.test.arn}"
+
+  artifacts {
+    location  = "${aws_s3_bucket.test.bucket}"
+    type      = "S3"
+  }
+
+  secondary_artifacts {
+    artifact_identifier = "secondaryArtifact1"
+    location            = "${aws_s3_bucket.test.bucket}"
+    type                = "S3"
+  }
+
+  environment {
+    compute_type = "BUILD_GENERAL1_SMALL"
+    image        = "2"
+    type         = "LINUX_CONTAINER"
+  }
+
+  source {
+    type     = "GITHUB"
+    location = "https://github.com/hashicorp/packer.git"
+  }
+}
+`, rName)
+}
+
+func testAccAWSCodebuildProjectConfig_SecondaryArtifacts_Name(rName string, bName string, name string) string {
+	return testAccAWSCodeBuildProjectConfig_Base_ServiceRole(rName) + testAccAWSCodeBuildProjectConfig_Base_Bucket(bName) + fmt.Sprintf(`
+resource "aws_codebuild_project" "test" {
+  name          =  %[1]q
+  service_role  = "${aws_iam_role.test.arn}"
+
+  artifacts {
+    location            = "${aws_s3_bucket.test.bucket}"
+    type                = "S3"
+  }
+
+  secondary_artifacts {
+    artifact_identifier = "secondaryArtifact1"
+    name                = %[2]q
+    location            = "${aws_s3_bucket.test.bucket}"
+    type                = "S3"
+  }
+
+  environment {
+    compute_type = "BUILD_GENERAL1_SMALL"
+    image        = "2"
+    type         = "LINUX_CONTAINER"
+  }
+
+  source {
+    type     = "GITHUB"
+    location = "https://github.com/hashicorp/packer.git"
+  }
+}
+`, rName, name)
+}
+
+func testAccAWSCodebuildProjectConfig_SecondaryArtifacts_NamespaceType(rName, namespaceType string) string {
+	return testAccAWSCodeBuildProjectConfig_Base_ServiceRole(rName) + testAccAWSCodeBuildProjectConfig_Base_Bucket(rName) + fmt.Sprintf(`
+resource "aws_codebuild_project" "test" {
+  name          = %[1]q
+  service_role  = "${aws_iam_role.test.arn}"
+
+  artifacts {
+    location       = "${aws_s3_bucket.test.bucket}"
+    type           = "S3"
+  }
+
+  secondary_artifacts {
+    artifact_identifier = "secondaryArtifact1"
+    namespace_type      = %[2]q
+    location            = "${aws_s3_bucket.test.bucket}"
+    type                = "S3"
+  }
+
+  environment {
+    compute_type = "BUILD_GENERAL1_SMALL"
+    image        = "2"
+    type         = "LINUX_CONTAINER"
+  }
+
+  source {
+    type     = "GITHUB"
+    location = "https://github.com/hashicorp/packer.git"
+  }
+}
+`, rName, namespaceType)
+}
+
+func testAccAWSCodebuildProjectConfig_SecondaryArtifacts_OverrideArtifactName(rName string, bName string, overrideArtifactName bool) string {
+	return testAccAWSCodeBuildProjectConfig_Base_ServiceRole(rName) + testAccAWSCodeBuildProjectConfig_Base_Bucket(bName) + fmt.Sprintf(`
+resource "aws_codebuild_project" "test" {
+  name          = "%s"
+  service_role  = "${aws_iam_role.test.arn}"
+
+  artifacts {
+    location            = "${aws_s3_bucket.test.bucket}"
+    type                = "S3"
+  }
+
+  secondary_artifacts {
+    artifact_identifier    = "secondaryArtifact1"
+    override_artifact_name = %t
+    location               = "${aws_s3_bucket.test.bucket}"
+    type                   = "S3"
+  }
+
+  environment {
+    compute_type = "BUILD_GENERAL1_SMALL"
+    image        = "2"
+    type         = "LINUX_CONTAINER"
+  }
+
+  source {
+    type     = "GITHUB"
+    location = "https://github.com/hashicorp/packer.git"
+  }
+}
+`, rName, overrideArtifactName)
+}
+
+func testAccAWSCodebuildProjectConfig_SecondaryArtifacts_Packaging(rName, packaging string) string {
+	return testAccAWSCodeBuildProjectConfig_Base_ServiceRole(rName) + testAccAWSCodeBuildProjectConfig_Base_Bucket(rName) + fmt.Sprintf(`
+resource "aws_codebuild_project" "test" {
+  name          = %[1]q
+  service_role  = "${aws_iam_role.test.arn}"
+
+  artifacts {
+    location  = "${aws_s3_bucket.test.bucket}"
+    type      = "S3"
+  }
+
+  secondary_artifacts {
+    artifact_identifier    = "secondaryArtifact1"
+    packaging           = %[2]q
+    location            = "${aws_s3_bucket.test.bucket}"
+    type                = "S3"
+  }
+
+  environment {
+    compute_type = "BUILD_GENERAL1_SMALL"
+    image        = "2"
+    type         = "LINUX_CONTAINER"
+  }
+
+  source {
+    type     = "GITHUB"
+    location = "https://github.com/hashicorp/packer.git"
+  }
+}
+`, rName, packaging)
+}
+
+func testAccAWSCodebuildProjectConfig_SecondaryArtifacts_Path(rName, path string) string {
+	return testAccAWSCodeBuildProjectConfig_Base_ServiceRole(rName) + testAccAWSCodeBuildProjectConfig_Base_Bucket(rName) + fmt.Sprintf(`
+resource "aws_codebuild_project" "test" {
+  name          = %[1]q
+  service_role  = "${aws_iam_role.test.arn}"
+
+  artifacts {
+    location = "${aws_s3_bucket.test.bucket}"
+    type     = "S3"
+  }
+
+  secondary_artifacts {
+    artifact_identifier    = "secondaryArtifact1"
+    path                   = %[2]q
+    location               = "${aws_s3_bucket.test.bucket}"
+    type                   = "S3"
+  }
+
+  environment {
+    compute_type = "BUILD_GENERAL1_SMALL"
+    image        = "2"
+    type         = "LINUX_CONTAINER"
+  }
+
+  source {
+    type     = "GITHUB"
+    location = "https://github.com/hashicorp/packer.git"
+  }
+}
+`, rName, path)
+}
+
+func testAccAWSCodebuildProjectConfig_SecondaryArtifacts_Type(rName string, bName string, artifactType string) string {
+	return testAccAWSCodeBuildProjectConfig_Base_ServiceRole(rName) + testAccAWSCodeBuildProjectConfig_Base_Bucket(bName) + fmt.Sprintf(`
+resource "aws_codebuild_project" "test" {
+  name          =  %[1]q
+  service_role  = "${aws_iam_role.test.arn}"
+
+  artifacts {
+    location            = "${aws_s3_bucket.test.bucket}"
+    type                = "S3"
+  }
+
+  secondary_artifacts {
+    artifact_identifier = "secondaryArtifact1"
+    type                = %[2]q
+    location            = "${aws_s3_bucket.test.bucket}"
+  }
+
+  environment {
+    compute_type = "BUILD_GENERAL1_SMALL"
+    image        = "2"
+    type         = "LINUX_CONTAINER"
+  }
+
+  source {
+    location = "https://git-codecommit.region-id.amazonaws.com/v1/repos/repo-name"
+    type     = "CODECOMMIT"
+  }
+}
+`, rName, artifactType)
+}
+
 func testAccAWSCodeBuildProjectConfig_SecondarySources_CodeCommit(rName string) string {
 	return testAccAWSCodeBuildProjectConfig_Base_ServiceRole(rName) + fmt.Sprintf(`
 resource "aws_codebuild_project" "test" {
@@ -2492,4 +3390,12 @@ resource "aws_codebuild_project" "test" {
   }
 }
 `, rName)
+}
+
+func artifactHash(artifactIdentifier, encryptionDisabled, location, nameSpaceType, overrideArtifactName,
+	packaging, path, artifactType string) int {
+	buf := fmt.Sprintf("%s-%s-%s-%s-%s-%s-%s-%s-", artifactIdentifier,
+		encryptionDisabled, location, nameSpaceType, overrideArtifactName, packaging, path, artifactType)
+	hash := hashcode.String(buf)
+	return hash
 }
