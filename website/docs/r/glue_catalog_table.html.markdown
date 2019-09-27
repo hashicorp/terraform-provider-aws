@@ -17,7 +17,7 @@ Provides a Glue Catalog Table Resource. You can refer to the [Glue Developer Gui
 ```hcl
 resource "aws_glue_catalog_table" "aws_glue_catalog_table" {
   name          = "my_catalog_table"
-  database_name = "my_datalog_database"
+  database_name = "my_catalog_database"
 }
 ```
 
@@ -25,8 +25,8 @@ resource "aws_glue_catalog_table" "aws_glue_catalog_table" {
 
 ```hcl
 resource "aws_glue_catalog_table" "aws_glue_catalog_table" {
-  name          = "my_datalog_table"
-  database_name = "my_datalog_database"
+  name          = "my_catalog_table"
+  database_name = "my_catalog_database"
 
   table_type = "EXTERNAL_TABLE"
 
