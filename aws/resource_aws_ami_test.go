@@ -38,6 +38,9 @@ func TestAccAWSAMI_basic(t *testing.T) {
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"manage_ebs_snapshots",
+				},
 			},
 		},
 	})
@@ -76,6 +79,9 @@ func TestAccAWSAMI_snapshotSize(t *testing.T) {
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"manage_ebs_snapshots",
+				},
 			},
 		},
 	})
@@ -218,7 +224,8 @@ data "aws_availability_zones" "available" {}
 
 resource "aws_ebs_volume" "foo" {
   availability_zone = "${data.aws_availability_zones.available.names[0]}"
-  size = 8
+  size              = 8
+
   tags = {
     Name = "testAccAmiConfig_basic"
   }
@@ -252,7 +259,8 @@ data "aws_availability_zones" "available" {}
 
 resource "aws_ebs_volume" "foo" {
   availability_zone = "${data.aws_availability_zones.available.names[0]}"
-  size = 20
+  size              = 20
+
   tags = {
     Name = "testAccAmiConfig_snapshotSize"
   }

@@ -20,6 +20,10 @@ func resourceAwsSnsTopicPolicy() *schema.Resource {
 		Update: resourceAwsSnsTopicPolicyUpsert,
 		Delete: resourceAwsSnsTopicPolicyDelete,
 
+		Importer: &schema.ResourceImporter{
+			State: schema.ImportStatePassthrough,
+		},
+
 		Schema: map[string]*schema.Schema{
 			"arn": {
 				Type:     schema.TypeString,
@@ -91,6 +95,7 @@ func resourceAwsSnsTopicPolicyRead(d *schema.ResourceData, meta interface{}) err
 	}
 
 	d.Set("policy", policy)
+	d.Set("arn", attrmap["TopicArn"])
 
 	return nil
 }
@@ -162,5 +167,6 @@ func buildDefaultSnsTopicPolicy(topicArn, accountId string) string {
       }
     }
   ]
-}`, topicArn, accountId)
+}
+`, topicArn, accountId)
 }

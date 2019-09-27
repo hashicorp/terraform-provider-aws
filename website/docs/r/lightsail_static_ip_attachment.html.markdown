@@ -6,7 +6,7 @@ description: |-
   Provides an Lightsail Static IP Attachment
 ---
 
-# aws_lightsail_static_ip_attachment
+# Resource: aws_lightsail_static_ip_attachment
 
 Provides a static IP address attachment - relationship between a Lightsail static IP & Lightsail instance.
 
@@ -44,6 +44,4 @@ The following arguments are supported:
 
 The following attributes are exported in addition to the arguments listed above:
 
-* `arn` - The ARN of the Lightsail static IP
 * `ip_address` - The allocated static IP address
-* `support_code` - The support code.

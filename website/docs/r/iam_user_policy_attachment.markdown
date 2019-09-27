@@ -6,7 +6,7 @@ description: |-
   Attaches a Managed IAM Policy to an IAM user
 ---
 
-# aws_iam_user_policy_attachment
+# Resource: aws_iam_user_policy_attachment
 
 Attaches a Managed IAM Policy to an IAM user
 
@@ -22,7 +22,7 @@ resource "aws_iam_user" "user" {
 resource "aws_iam_policy" "policy" {
   name        = "test-policy"
   description = "A test policy"
-  policy      = "" # insert policy here
+  policy      = ""              # insert policy here
 }
 
 resource "aws_iam_user_policy_attachment" "test-attach" {

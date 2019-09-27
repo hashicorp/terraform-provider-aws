@@ -6,7 +6,7 @@ description: |-
   Provides an ElastiCache parameter group resource.
 ---
 
-# aws_elasticache_parameter_group
+# Resource: aws_elasticache_parameter_group
 
 Provides an ElastiCache parameter group resource.
 

@@ -6,7 +6,7 @@ description: |-
   Provides a resource to manage a Default VPC Routing Table.
 ---
 
-# aws_default_route_table
+# Resource: aws_default_route_table
 
 Provides a resource to manage a Default VPC Routing Table.
 
@@ -71,7 +71,7 @@ The following arguments are supported:
 One of the following destination arguments must be supplied:
 
 * `cidr_block` - (Required) The CIDR block of the route.
-* `ipv6_cidr_block` - Optional) The Ipv6 CIDR block of the route
+* `ipv6_cidr_block` - (Optional) The Ipv6 CIDR block of the route
 
 One of the following target arguments must be supplied:
 

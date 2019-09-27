@@ -36,6 +36,12 @@ func TestAccDataSourceAWSMqBroker_basic(t *testing.T) {
 						"data.aws_mq_broker.by_id", "configuration.#",
 						"aws_mq_broker.acctest", "configuration.#"),
 					resource.TestCheckResourceAttrPair(
+						"data.aws_mq_broker.by_id", "encryption_options.#",
+						"aws_mq_broker.acctest", "encryption_options.#"),
+					resource.TestCheckResourceAttrPair(
+						"data.aws_mq_broker.by_id", "encryption_options.0.use_aws_owned_key",
+						"aws_mq_broker.acctest", "encryption_options.0.use_aws_owned_key"),
+					resource.TestCheckResourceAttrPair(
 						"data.aws_mq_broker.by_id", "engine_type",
 						"aws_mq_broker.acctest", "engine_type"),
 					resource.TestCheckResourceAttrPair(

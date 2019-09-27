@@ -165,11 +165,11 @@ func testAccCheckAWSSpotDatafeedSubscriptionDestroy(s *terraform.State) error {
 func testAccAWSSpotDatafeedSubscription(randInt int) string {
 	return fmt.Sprintf(`
 resource "aws_s3_bucket" "default" {
-	bucket = "tf-spot-datafeed-%d"
+  bucket = "tf-spot-datafeed-%d"
 }
 
 resource "aws_spot_datafeed_subscription" "default" {
-	bucket = "${aws_s3_bucket.default.bucket}"
+  bucket = "${aws_s3_bucket.default.bucket}"
 }
 `, randInt)
 }

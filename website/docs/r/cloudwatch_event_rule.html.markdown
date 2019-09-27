@@ -6,7 +6,7 @@ description: |-
   Provides a CloudWatch Event Rule resource.
 ---
 
-# aws_cloudwatch_event_rule
+# Resource: aws_cloudwatch_event_rule
 
 Provides a CloudWatch Event Rule resource.
 
@@ -76,6 +76,7 @@ The following arguments are supported:
 
 In addition to all arguments above, the following attributes are exported:
 
+* `id` - The name of the rule.
 * `arn` - The Amazon Resource Name (ARN) of the rule.
 
 

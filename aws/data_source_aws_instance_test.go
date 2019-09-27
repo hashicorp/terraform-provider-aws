@@ -1,10 +1,9 @@
 package aws
 
 import (
-	"testing"
-
 	"fmt"
 	"regexp"
+	"testing"
 
 	"github.com/hashicorp/terraform/helper/acctest"
 	"github.com/hashicorp/terraform/helper/resource"
@@ -102,6 +101,32 @@ func TestAccAWSInstanceDataSource_blockDevices(t *testing.T) {
 					resource.TestCheckResourceAttr("aws_instance.foo", "ebs_block_device.#", "3"),
 					resource.TestCheckResourceAttr("aws_instance.foo", "ephemeral_block_device.#", "1"),
 				),
+			},
+		},
+	})
+}
+
+// Test to verify that ebs_block_device kms_key_id does not elicit a panic
+func TestAccAWSInstanceDataSource_EbsBlockDevice_KmsKeyId(t *testing.T) {
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:  func() { testAccPreCheck(t) },
+		Providers: testAccProviders,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccInstanceDataSourceConfig_EbsBlockDevice_KmsKeyId,
+			},
+		},
+	})
+}
+
+// Test to verify that root_block_device kms_key_id does not elicit a panic
+func TestAccAWSInstanceDataSource_RootBlockDevice_KmsKeyId(t *testing.T) {
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:  func() { testAccPreCheck(t) },
+		Providers: testAccProviders,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccInstanceDataSourceConfig_RootBlockDevice_KmsKeyId,
 			},
 		},
 	})
@@ -392,17 +417,18 @@ func testAccInstanceDataSourceConfig_Tags(rInt int) string {
 	return fmt.Sprintf(`
 resource "aws_instance" "web" {
   # us-west-2
-  ami = "ami-4fccb37f"
+  ami           = "ami-4fccb37f"
   instance_type = "m1.small"
+
   tags = {
-    Name = "HelloWorld"
+    Name     = "HelloWorld"
     TestSeed = "%d"
   }
 }
 
 data "aws_instance" "web-instance" {
   instance_tags = {
-    Name = "${aws_instance.web.tags["Name"]}"
+    Name     = "${aws_instance.web.tags["Name"]}"
     TestSeed = "%d"
   }
 }
@@ -485,6 +511,56 @@ data "aws_instance" "foo" {
 }
 `
 
+const testAccInstanceDataSourceConfig_EbsBlockDevice_KmsKeyId = `
+resource "aws_kms_key" "foo" {
+  deletion_window_in_days = 7
+}
+
+resource "aws_instance" "foo" {
+  # us-west-2
+  ami = "ami-55a7ea65"
+  instance_type = "m3.medium"
+
+  root_block_device {
+    volume_type = "gp2"
+    volume_size = 11
+  }
+  ebs_block_device {
+    device_name = "/dev/sdb"
+    encrypted   = true
+    kms_key_id = "${aws_kms_key.foo.arn}"
+    volume_size = 9
+  }
+}
+
+data "aws_instance" "foo" {
+  instance_id = "${aws_instance.foo.id}"
+}
+`
+
+const testAccInstanceDataSourceConfig_RootBlockDevice_KmsKeyId = `
+resource "aws_kms_key" "foo" {
+  deletion_window_in_days = 7
+}
+
+resource "aws_instance" "foo" {
+  # us-west-2
+  ami = "ami-55a7ea65"
+  instance_type = "m3.medium"
+
+  root_block_device {
+    encrypted   = true
+    kms_key_id = "${aws_kms_key.foo.arn}"
+    volume_type = "gp2"
+    volume_size = 11
+  }
+}
+
+data "aws_instance" "foo" {
+  instance_id = "${aws_instance.foo.id}"
+}
+`
+
 const testAccInstanceDataSourceConfig_rootInstanceStore = `
 resource "aws_instance" "foo" {
   ami = "ami-44c36524"
@@ -530,14 +606,15 @@ provider "aws" {
 }
 
 resource "aws_key_pair" "debugging" {
-  key_name = "%s"
+  key_name   = "%s"
   public_key = "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQD3F6tyPEFEzV0LX3X8BsXdMsQz1x2cEikKDEY0aIj41qgxMCP/iteneqXSIFZBp5vizPvaoIR3Um9xK7PGoW8giupGn+EPuxIA4cDM4vzOqOkiMPhz5XK0whEjkVzTo4+S0puvDZuwIsdiW9mxhJc7tgBNL0cYlWSYVkz4G/fslNfRPW5mYAM49f4fhtxPb5ok4Q2Lg9dPKVHO/Bgeu5woMc7RY0p1ej6D4CKFE6lymSDJpW0YHX/wqE9+cfEauh7xZcG0q9t2ta6F6fmX0agvpFyZo8aFbXeUBr7osSCJNgvavWbM/06niWrOvYX2xwWdhXmXSrbX8ZbabVohBK41 phodgson@thoughtworks.com"
 }
 
 resource "aws_instance" "foo" {
-  ami = "ami-408c7f28"
+  ami           = "ami-408c7f28"
   instance_type = "t1.micro"
-  key_name = "${aws_key_pair.debugging.key_name}"
+  key_name      = "${aws_key_pair.debugging.key_name}"
+
   tags = {
     Name = "testAccInstanceDataSourceConfigKeyPair_TestAMI"
   }
@@ -545,14 +622,16 @@ resource "aws_instance" "foo" {
 
 data "aws_instance" "foo" {
   filter {
-    name = "tag:Name"
+    name   = "tag:Name"
     values = ["testAccInstanceDataSourceConfigKeyPair_TestAMI"]
   }
+
   filter {
-    name = "key-name"
+    name   = "key-name"
     values = ["${aws_instance.foo.key_name}"]
   }
-}`, rName)
+}
+`, rName)
 }
 
 const testAccInstanceDataSourceConfig_VPC = `
@@ -591,6 +670,7 @@ func testAccInstanceDataSourceConfig_PlacementGroup(rStr string) string {
 	return fmt.Sprintf(`
 resource "aws_vpc" "foo" {
   cidr_block = "10.1.0.0/16"
+
   tags = {
     Name = "terraform-testacc-instance-data-source-placement-group"
   }
@@ -598,25 +678,27 @@ resource "aws_vpc" "foo" {
 
 resource "aws_subnet" "foo" {
   cidr_block = "10.1.1.0/24"
-  vpc_id = "${aws_vpc.foo.id}"
+  vpc_id     = "${aws_vpc.foo.id}"
+
   tags = {
     Name = "tf-acc-instance-data-source-placement-group"
   }
 }
 
 resource "aws_placement_group" "foo" {
-  name = "testAccInstanceDataSourceConfig_PlacementGroup_%s"
+  name     = "testAccInstanceDataSourceConfig_PlacementGroup_%s"
   strategy = "cluster"
 }
 
 # Limitations: https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/placement-groups.html#concepts-placement-groups
 resource "aws_instance" "foo" {
   # us-west-2
-  ami = "ami-55a7ea65"
-  instance_type = "c3.large"
-  subnet_id = "${aws_subnet.foo.id}"
+  ami                         = "ami-55a7ea65"
+  instance_type               = "c3.large"
+  subnet_id                   = "${aws_subnet.foo.id}"
   associate_public_ip_address = true
-  placement_group = "${aws_placement_group.foo.name}"
+  placement_group             = "${aws_placement_group.foo.name}"
+
   # pre-encoded base64 data
   user_data = "3dc39dda39be1205215e776bad998da361a5955d"
 }
@@ -634,22 +716,22 @@ provider "aws" {
 }
 
 resource "aws_security_group" "tf_test_foo" {
-  name = "tf_test_foo-%d"
+  name        = "tf_test_foo-%d"
   description = "foo"
 
   ingress {
-    protocol = "icmp"
+    protocol  = "icmp"
     from_port = -1
-    to_port = -1
-    self = true
+    to_port   = -1
+    self      = true
   }
 }
 
 resource "aws_instance" "foo" {
-  ami = "ami-408c7f28"
-  instance_type = "m1.small"
+  ami             = "ami-408c7f28"
+  instance_type   = "m1.small"
   security_groups = ["${aws_security_group.tf_test_foo.name}"]
-  user_data = "foo:-with-character's"
+  user_data       = "foo:-with-character's"
 }
 
 data "aws_instance" "foo" {
@@ -710,34 +792,34 @@ data "aws_instance" "foo" {
 
 func testAccInstanceDataSourceConfig_getPasswordData(val bool, rInt int) string {
 	return fmt.Sprintf(`
-	# Find latest Microsoft Windows Server 2016 Core image (Amazon deletes old ones)
-	data "aws_ami" "win2016core" {
-		most_recent = true
-		owners      = ["amazon"]
+# Find latest Microsoft Windows Server 2016 Core image (Amazon deletes old ones)
+data "aws_ami" "win2016core" {
+  most_recent = true
+  owners      = ["amazon"]
 
-		filter {
-			name = "name"
-			values = ["Windows_Server-2016-English-Core-Base-*"]
-		}
-	}
+  filter {
+    name   = "name"
+    values = ["Windows_Server-2016-English-Core-Base-*"]
+  }
+}
 
-	resource "aws_key_pair" "foo" {
-		key_name = "tf-acctest-%d"
-		public_key = "ssh-rsa AAAAB3NzaC1yc2EAAAABJQAAAQEAq6U3HQYC4g8WzU147gZZ7CKQH8TgYn3chZGRPxaGmHW1RUwsyEs0nmombmIhwxudhJ4ehjqXsDLoQpd6+c7BuLgTMvbv8LgE9LX53vnljFe1dsObsr/fYLvpU9LTlo8HgHAqO5ibNdrAUvV31ronzCZhms/Gyfdaue88Fd0/YnsZVGeOZPayRkdOHSpqme2CBrpa8myBeL1CWl0LkDG4+YCURjbaelfyZlIApLYKy3FcCan9XQFKaL32MJZwCgzfOvWIMtYcU8QtXMgnA3/I3gXk8YDUJv5P4lj0s/PJXuTM8DygVAUtebNwPuinS7wwonm5FXcWMuVGsVpG5K7FGQ== tf-acc-winpasswordtest"
-	}
+resource "aws_key_pair" "foo" {
+  key_name   = "tf-acctest-%d"
+  public_key = "ssh-rsa AAAAB3NzaC1yc2EAAAABJQAAAQEAq6U3HQYC4g8WzU147gZZ7CKQH8TgYn3chZGRPxaGmHW1RUwsyEs0nmombmIhwxudhJ4ehjqXsDLoQpd6+c7BuLgTMvbv8LgE9LX53vnljFe1dsObsr/fYLvpU9LTlo8HgHAqO5ibNdrAUvV31ronzCZhms/Gyfdaue88Fd0/YnsZVGeOZPayRkdOHSpqme2CBrpa8myBeL1CWl0LkDG4+YCURjbaelfyZlIApLYKy3FcCan9XQFKaL32MJZwCgzfOvWIMtYcU8QtXMgnA3/I3gXk8YDUJv5P4lj0s/PJXuTM8DygVAUtebNwPuinS7wwonm5FXcWMuVGsVpG5K7FGQ== tf-acc-winpasswordtest"
+}
 
-	resource "aws_instance" "foo" {
-		ami = "${data.aws_ami.win2016core.id}"
-		instance_type = "t2.medium"
-		key_name = "${aws_key_pair.foo.key_name}"
-	}
+resource "aws_instance" "foo" {
+  ami           = "${data.aws_ami.win2016core.id}"
+  instance_type = "t2.medium"
+  key_name      = "${aws_key_pair.foo.key_name}"
+}
 
-	data "aws_instance" "foo" {
-		instance_id = "${aws_instance.foo.id}"
+data "aws_instance" "foo" {
+  instance_id = "${aws_instance.foo.id}"
 
-		get_password_data = %t
-	}
-	`, rInt, val)
+  get_password_data = %t
+}
+`, rInt, val)
 }
 
 func testAccInstanceDataSourceConfigGetUserData(getUserData bool) string {
@@ -747,11 +829,12 @@ data "aws_ami" "amzn-ami-minimal-hvm-ebs" {
   owners      = ["amazon"]
 
   filter {
-    name = "name"
+    name   = "name"
     values = ["amzn-ami-minimal-hvm-*"]
   }
+
   filter {
-    name = "root-device-type"
+    name   = "root-device-type"
     values = ["ebs"]
   }
 }
@@ -777,7 +860,8 @@ resource "aws_instance" "test" {
   ami           = "${data.aws_ami.amzn-ami-minimal-hvm-ebs.id}"
   instance_type = "t2.micro"
   subnet_id     = "${aws_subnet.test.id}"
-  user_data     = <<EUD
+
+  user_data = <<EUD
 #!/bin/bash
 
 echo "hello world"
@@ -798,11 +882,12 @@ data "aws_ami" "amzn-ami-minimal-hvm-ebs" {
   owners      = ["amazon"]
 
   filter {
-    name = "name"
+    name   = "name"
     values = ["amzn-ami-minimal-hvm-*"]
   }
+
   filter {
-    name = "root-device-type"
+    name   = "root-device-type"
     values = ["ebs"]
   }
 }

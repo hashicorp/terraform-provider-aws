@@ -6,7 +6,7 @@ description: |-
   Provides an OpsWorks Ganglia layer resource.
 ---
 
-# aws_opsworks_ganglia_layer
+# Resource: aws_opsworks_ganglia_layer
 
 Provides an OpsWorks Ganglia layer resource.
 

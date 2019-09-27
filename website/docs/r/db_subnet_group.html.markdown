@@ -6,7 +6,7 @@ description: |-
   Provides an RDS DB subnet group resource.
 ---
 
-# aws_db_subnet_group
+# Resource: aws_db_subnet_group
 
 Provides an RDS DB subnet group resource.
 

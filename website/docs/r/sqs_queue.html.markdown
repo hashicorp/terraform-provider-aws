@@ -6,7 +6,7 @@ description: |-
   Provides a SQS resource.
 ---
 
-# aws_sqs_queue
+# Resource: aws_sqs_queue
 
 ## Example Usage
 

@@ -5,7 +5,7 @@ for defining configuration languages for applications. The HCL information
 model is designed to support multiple concrete syntaxes for configuration,
 and this JSON-based format complements [the native syntax](../hclsyntax/spec.md)
 by being easy to machine-generate, whereas the native syntax is oriented
-towards human authoring and maintenence.
+towards human authoring and maintenance
 
 This syntax is defined in terms of JSON as defined in
 [RFC7159](https://tools.ietf.org/html/rfc7159). As such it inherits the JSON
@@ -18,11 +18,11 @@ _Parsing_ such JSON has some additional constraints not beyond what is normally
 supported by JSON parsers, so a specialized parser may be required that
 is able to:
 
-* Preserve the relative ordering of properties defined in an object.
-* Preserve multiple definitions of the same property name.
-* Preserve numeric values to the precision required by the number type
+- Preserve the relative ordering of properties defined in an object.
+- Preserve multiple definitions of the same property name.
+- Preserve numeric values to the precision required by the number type
   in [the HCL syntax-agnostic information model](../spec.md).
-* Retain source location information for parsed tokens/constructs in order
+- Retain source location information for parsed tokens/constructs in order
   to produce good error messages.
 
 ## Structural Elements
@@ -118,6 +118,7 @@ type:
   ]
 }
 ```
+
 ```json
 {
   "foo": []
@@ -147,7 +148,7 @@ the following examples:
     "boz": {
       "baz": {
         "child_attr": "baz"
-      },
+      }
     }
   }
 }
@@ -189,7 +190,7 @@ the following examples:
         "boz": {
           "child_attr": "baz"
         }
-      },
+      }
     },
     {
       "bar": {
@@ -280,9 +281,9 @@ When interpreted as an expression, a JSON array represents a value of a HCL
 tuple type.
 
 Each element of the JSON array represents an element of the HCL tuple type.
-The tuple type is constructed by enumerationg the JSON array elements, creating
+The tuple type is constructed by enumerating the JSON array elements, creating
 for each an element whose type is the result of recursively applying the
-expression mapping rules. Correspondance is preserved between the array element
+expression mapping rules. Correspondence is preserved between the array element
 indices and the tuple element indices.
 
 An instance of the constructed tuple type is then created, whose values are
@@ -325,7 +326,7 @@ HCL null value of the dynamic pseudo-type.
 
 ### Strings
 
-When intepreted as an expression, a JSON string may be interpreted in one of
+When interpreted as an expression, a JSON string may be interpreted in one of
 two ways depending on the evaluation mode.
 
 If evaluating in literal-only mode (as defined by the syntax-agnostic
@@ -402,4 +403,3 @@ to that expression.
 
 If the original expression is not a string or its contents cannot be parsed
 as a native syntax expression then static call analysis is not supported.
-

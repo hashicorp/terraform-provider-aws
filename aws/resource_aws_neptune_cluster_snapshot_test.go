@@ -113,8 +113,8 @@ func testAccCheckNeptuneClusterSnapshotExists(resourceName string, dbClusterSnap
 func testAccAwsNeptuneClusterSnapshotConfig(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_neptune_cluster" "test" {
-  cluster_identifier   = %q
-  skip_final_snapshot  = true
+  cluster_identifier  = %q
+  skip_final_snapshot = true
 }
 
 resource "aws_neptune_cluster_snapshot" "test" {

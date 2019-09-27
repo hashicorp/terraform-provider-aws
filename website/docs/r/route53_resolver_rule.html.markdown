@@ -6,7 +6,7 @@ description: |-
   Provides a Route53 Resolver rule.
 ---
 
-# aws_route53_resolver_rule
+# Resource: aws_route53_resolver_rule
 
 Provides a Route53 Resolver rule.
 
@@ -31,7 +31,7 @@ resource "aws_route53_resolver_rule" "fwd" {
   resolver_endpoint_id = "${aws_route53_resolver_endpoint.foo.id}"
 
   target_ip {
-    ip   = "123.45.67.89"
+    ip = "123.45.67.89"
   }
 
   tags {

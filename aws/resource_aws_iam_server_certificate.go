@@ -183,6 +183,12 @@ func resourceAwsIAMServerCertificateDelete(d *schema.ResourceData, meta interfac
 		return nil
 	})
 
+	if isResourceTimeoutError(err) {
+		_, err = conn.DeleteServerCertificate(&iam.DeleteServerCertificateInput{
+			ServerCertificateName: aws.String(d.Get("name").(string)),
+		})
+	}
+
 	return err
 }
 
@@ -215,11 +221,11 @@ func normalizeCert(cert interface{}) string {
 	}
 
 	var rawCert string
-	switch cert.(type) {
+	switch cert := cert.(type) {
 	case string:
-		rawCert = cert.(string)
+		rawCert = cert
 	case *string:
-		rawCert = *cert.(*string)
+		rawCert = *cert
 	default:
 		return ""
 	}

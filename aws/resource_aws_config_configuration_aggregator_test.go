@@ -59,8 +59,8 @@ func testSweepConfigConfigurationAggregators(region string) error {
 
 func TestAccAWSConfigConfigurationAggregator_account(t *testing.T) {
 	var ca configservice.ConfigurationAggregator
-	rString := acctest.RandString(10)
-	expectedName := fmt.Sprintf("tf-%s", rString)
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_config_configuration_aggregator.example"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -68,20 +68,20 @@ func TestAccAWSConfigConfigurationAggregator_account(t *testing.T) {
 		CheckDestroy: testAccCheckAWSConfigConfigurationAggregatorDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSConfigConfigurationAggregatorConfig_account(rString),
+				Config: testAccAWSConfigConfigurationAggregatorConfig_account(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSConfigConfigurationAggregatorExists("aws_config_configuration_aggregator.example", &ca),
-					testAccCheckAWSConfigConfigurationAggregatorName("aws_config_configuration_aggregator.example", expectedName, &ca),
-					resource.TestCheckResourceAttr("aws_config_configuration_aggregator.example", "name", expectedName),
-					resource.TestCheckResourceAttr("aws_config_configuration_aggregator.example", "account_aggregation_source.#", "1"),
-					resource.TestCheckResourceAttr("aws_config_configuration_aggregator.example", "account_aggregation_source.0.account_ids.#", "1"),
-					resource.TestMatchResourceAttr("aws_config_configuration_aggregator.example", "account_aggregation_source.0.account_ids.0", regexp.MustCompile(`^\d{12}$`)),
-					resource.TestCheckResourceAttr("aws_config_configuration_aggregator.example", "account_aggregation_source.0.regions.#", "1"),
-					resource.TestCheckResourceAttr("aws_config_configuration_aggregator.example", "account_aggregation_source.0.regions.0", "us-west-2"),
+					testAccCheckAWSConfigConfigurationAggregatorExists(resourceName, &ca),
+					testAccCheckAWSConfigConfigurationAggregatorName(resourceName, rName, &ca),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, "account_aggregation_source.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "account_aggregation_source.0.account_ids.#", "1"),
+					resource.TestMatchResourceAttr(resourceName, "account_aggregation_source.0.account_ids.0", regexp.MustCompile(`^\d{12}$`)),
+					resource.TestCheckResourceAttr(resourceName, "account_aggregation_source.0.regions.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "account_aggregation_source.0.regions.0", "us-west-2"),
 				),
 			},
 			{
-				ResourceName:      "aws_config_configuration_aggregator.example",
+				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
 			},
@@ -91,8 +91,8 @@ func TestAccAWSConfigConfigurationAggregator_account(t *testing.T) {
 
 func TestAccAWSConfigConfigurationAggregator_organization(t *testing.T) {
 	var ca configservice.ConfigurationAggregator
-	rString := acctest.RandString(10)
-	expectedName := fmt.Sprintf("tf-%s", rString)
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_config_configuration_aggregator.example"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccOrganizationsAccountPreCheck(t) },
@@ -100,18 +100,18 @@ func TestAccAWSConfigConfigurationAggregator_organization(t *testing.T) {
 		CheckDestroy: testAccCheckAWSConfigConfigurationAggregatorDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSConfigConfigurationAggregatorConfig_organization(rString),
+				Config: testAccAWSConfigConfigurationAggregatorConfig_organization(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSConfigConfigurationAggregatorExists("aws_config_configuration_aggregator.example", &ca),
-					testAccCheckAWSConfigConfigurationAggregatorName("aws_config_configuration_aggregator.example", expectedName, &ca),
-					resource.TestCheckResourceAttr("aws_config_configuration_aggregator.example", "name", expectedName),
-					resource.TestCheckResourceAttr("aws_config_configuration_aggregator.example", "organization_aggregation_source.#", "1"),
-					resource.TestMatchResourceAttr("aws_config_configuration_aggregator.example", "organization_aggregation_source.0.role_arn", regexp.MustCompile(`^arn:aws:iam::\d+:role/`)),
-					resource.TestCheckResourceAttr("aws_config_configuration_aggregator.example", "organization_aggregation_source.0.all_regions", "true"),
+					testAccCheckAWSConfigConfigurationAggregatorExists(resourceName, &ca),
+					testAccCheckAWSConfigConfigurationAggregatorName(resourceName, rName, &ca),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, "organization_aggregation_source.#", "1"),
+					resource.TestMatchResourceAttr(resourceName, "organization_aggregation_source.0.role_arn", regexp.MustCompile(`^arn:aws:iam::\d+:role/`)),
+					resource.TestCheckResourceAttr(resourceName, "organization_aggregation_source.0.all_regions", "true"),
 				),
 			},
 			{
-				ResourceName:      "aws_config_configuration_aggregator.example",
+				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
 			},
@@ -120,7 +120,8 @@ func TestAccAWSConfigConfigurationAggregator_organization(t *testing.T) {
 }
 
 func TestAccAWSConfigConfigurationAggregator_switch(t *testing.T) {
-	rString := acctest.RandString(10)
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_config_configuration_aggregator.example"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccOrganizationsAccountPreCheck(t) },
@@ -128,17 +129,66 @@ func TestAccAWSConfigConfigurationAggregator_switch(t *testing.T) {
 		CheckDestroy: testAccCheckAWSConfigConfigurationAggregatorDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSConfigConfigurationAggregatorConfig_account(rString),
+				Config: testAccAWSConfigConfigurationAggregatorConfig_account(rName),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("aws_config_configuration_aggregator.example", "account_aggregation_source.#", "1"),
-					resource.TestCheckResourceAttr("aws_config_configuration_aggregator.example", "organization_aggregation_source.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "account_aggregation_source.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "organization_aggregation_source.#", "0"),
 				),
 			},
 			{
-				Config: testAccAWSConfigConfigurationAggregatorConfig_organization(rString),
+				Config: testAccAWSConfigConfigurationAggregatorConfig_organization(rName),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("aws_config_configuration_aggregator.example", "account_aggregation_source.#", "0"),
-					resource.TestCheckResourceAttr("aws_config_configuration_aggregator.example", "organization_aggregation_source.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "account_aggregation_source.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "organization_aggregation_source.#", "1"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAWSConfigConfigurationAggregator_tags(t *testing.T) {
+	var ca configservice.ConfigurationAggregator
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_config_configuration_aggregator.example"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSConfigConfigurationAggregatorDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSConfigConfigurationAggregatorConfig_tags(rName, "foo", "bar", "fizz", "buzz"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSConfigConfigurationAggregatorExists(resourceName, &ca),
+					testAccCheckAWSConfigConfigurationAggregatorName(resourceName, rName, &ca),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "3"),
+					resource.TestCheckResourceAttr(resourceName, "tags.Name", rName),
+					resource.TestCheckResourceAttr(resourceName, "tags.foo", "bar"),
+					resource.TestCheckResourceAttr(resourceName, "tags.fizz", "buzz"),
+				),
+			},
+			{
+				Config: testAccAWSConfigConfigurationAggregatorConfig_tags(rName, "foo", "bar2", "fizz2", "buzz2"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSConfigConfigurationAggregatorExists(resourceName, &ca),
+					testAccCheckAWSConfigConfigurationAggregatorName(resourceName, rName, &ca),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "3"),
+					resource.TestCheckResourceAttr(resourceName, "tags.Name", rName),
+					resource.TestCheckResourceAttr(resourceName, "tags.foo", "bar2"),
+					resource.TestCheckResourceAttr(resourceName, "tags.fizz2", "buzz2"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccAWSConfigConfigurationAggregatorConfig_account(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSConfigConfigurationAggregatorExists(resourceName, &ca),
+					testAccCheckAWSConfigConfigurationAggregatorName(resourceName, rName, &ca),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 				),
 			},
 		},
@@ -210,10 +260,10 @@ func testAccCheckAWSConfigConfigurationAggregatorDestroy(s *terraform.State) err
 	return nil
 }
 
-func testAccAWSConfigConfigurationAggregatorConfig_account(rString string) string {
+func testAccAWSConfigConfigurationAggregatorConfig_account(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_config_configuration_aggregator" "example" {
-  name = "tf-%s"
+  name = %[1]q
 
   account_aggregation_source {
     account_ids = ["${data.aws_caller_identity.current.account_id}"]
@@ -222,17 +272,17 @@ resource "aws_config_configuration_aggregator" "example" {
 }
 
 data "aws_caller_identity" "current" {}
-`, rString)
+`, rName)
 }
 
-func testAccAWSConfigConfigurationAggregatorConfig_organization(rString string) string {
+func testAccAWSConfigConfigurationAggregatorConfig_organization(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_organizations_organization" "test" {}
 
 resource "aws_config_configuration_aggregator" "example" {
   depends_on = ["aws_iam_role_policy_attachment.example"]
 
-  name = "tf-%s"
+  name = %[1]q
 
   organization_aggregation_source {
     all_regions = true
@@ -241,7 +291,7 @@ resource "aws_config_configuration_aggregator" "example" {
 }
 
 resource "aws_iam_role" "example" {
-  name = "tf-%s"
+  name = %[1]q
 
   assume_role_policy = <<EOF
 {
@@ -264,5 +314,26 @@ resource "aws_iam_role_policy_attachment" "example" {
   role       = "${aws_iam_role.example.name}"
   policy_arn = "arn:aws:iam::aws:policy/service-role/AWSConfigRoleForOrganizations"
 }
-`, rString, rString)
+`, rName)
+}
+
+func testAccAWSConfigConfigurationAggregatorConfig_tags(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
+	return fmt.Sprintf(`
+resource "aws_config_configuration_aggregator" "example" {
+  name = %[1]q
+
+  account_aggregation_source {
+    account_ids = ["${data.aws_caller_identity.current.account_id}"]
+    regions     = ["us-west-2"]
+  }
+
+  tags = {
+	Name  = %[1]q
+	%[2]s = %[3]q
+	%[4]s = %[5]q
+  }
+}
+
+data "aws_caller_identity" "current" {}
+`, rName, tagKey1, tagValue1, tagKey2, tagValue2)
 }

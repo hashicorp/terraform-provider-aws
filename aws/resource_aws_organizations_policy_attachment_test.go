@@ -12,9 +12,11 @@ import (
 	"github.com/hashicorp/terraform/terraform"
 )
 
-func TestAccAwsOrganizationsPolicyAttachment_account(t *testing.T) {
+func testAccAwsOrganizationsPolicyAttachment_Account(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_organizations_policy_attachment.test"
+	policyIdResourceName := "aws_organizations_policy.test"
+	targetIdResourceName := "aws_organizations_organization.test"
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccOrganizationsAccountPreCheck(t) },
@@ -25,8 +27,64 @@ func TestAccAwsOrganizationsPolicyAttachment_account(t *testing.T) {
 				Config: testAccAwsOrganizationsPolicyAttachmentConfig_Account(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsOrganizationsPolicyAttachmentExists(resourceName),
-					resource.TestCheckResourceAttrSet(resourceName, "policy_id"),
-					resource.TestCheckResourceAttrSet(resourceName, "target_id"),
+					resource.TestCheckResourceAttrPair(resourceName, "policy_id", policyIdResourceName, "id"),
+					resource.TestCheckResourceAttrPair(resourceName, "target_id", targetIdResourceName, "master_account_id"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func testAccAwsOrganizationsPolicyAttachment_OrganizationalUnit(t *testing.T) {
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_organizations_policy_attachment.test"
+	policyIdResourceName := "aws_organizations_policy.test"
+	targetIdResourceName := "aws_organizations_organizational_unit.test"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t); testAccOrganizationsAccountPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAwsOrganizationsPolicyAttachmentDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAwsOrganizationsPolicyAttachmentConfig_OrganizationalUnit(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAwsOrganizationsPolicyAttachmentExists(resourceName),
+					resource.TestCheckResourceAttrPair(resourceName, "policy_id", policyIdResourceName, "id"),
+					resource.TestCheckResourceAttrPair(resourceName, "target_id", targetIdResourceName, "id"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func testAccAwsOrganizationsPolicyAttachment_Root(t *testing.T) {
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_organizations_policy_attachment.test"
+	policyIdResourceName := "aws_organizations_policy.test"
+	targetIdResourceName := "aws_organizations_organization.test"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t); testAccOrganizationsAccountPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAwsOrganizationsPolicyAttachmentDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAwsOrganizationsPolicyAttachmentConfig_Root(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAwsOrganizationsPolicyAttachmentExists(resourceName),
+					resource.TestCheckResourceAttrPair(resourceName, "policy_id", policyIdResourceName, "id"),
+					resource.TestCheckResourceAttrPair(resourceName, "target_id", targetIdResourceName, "roots.0.id"),
 				),
 			},
 			{
@@ -68,15 +126,20 @@ func testAccCheckAwsOrganizationsPolicyAttachmentDestroy(s *terraform.State) err
 			return !lastPage
 		})
 
+		if isAWSErr(err, organizations.ErrCodeAWSOrganizationsNotInUseException, "") {
+			continue
+		}
+
+		if isAWSErr(err, organizations.ErrCodeTargetNotFoundException, "") {
+			continue
+		}
+
 		if err != nil {
-			if isAWSErr(err, organizations.ErrCodeTargetNotFoundException, "") {
-				return nil
-			}
 			return err
 		}
 
 		if output == nil {
-			return nil
+			continue
 		}
 
 		return fmt.Errorf("Policy attachment %q still exists", rs.Primary.ID)
@@ -131,16 +194,65 @@ func testAccCheckAwsOrganizationsPolicyAttachmentExists(resourceName string) res
 
 func testAccAwsOrganizationsPolicyAttachmentConfig_Account(rName string) string {
 	return fmt.Sprintf(`
-data "aws_caller_identity" "current" {}
+resource "aws_organizations_organization" "test" {
+  enabled_policy_types = ["SERVICE_CONTROL_POLICY"]
+}
 
 resource "aws_organizations_policy" "test" {
-  content     = "{\"Version\": \"2012-10-17\", \"Statement\": { \"Effect\": \"Allow\", \"Action\": \"*\", \"Resource\": \"*\"}}"
-  name        = "%s"
+  depends_on = ["aws_organizations_organization.test"]
+
+  content = "{\"Version\": \"2012-10-17\", \"Statement\": { \"Effect\": \"Allow\", \"Action\": \"*\", \"Resource\": \"*\"}}"
+  name    = "%s"
 }
 
 resource "aws_organizations_policy_attachment" "test" {
   policy_id = "${aws_organizations_policy.test.id}"
-  target_id = "${data.aws_caller_identity.current.account_id}"
+  target_id = "${aws_organizations_organization.test.master_account_id}"
+}
+`, rName)
+}
+
+func testAccAwsOrganizationsPolicyAttachmentConfig_OrganizationalUnit(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_organizations_organization" "test" {
+  enabled_policy_types = ["SERVICE_CONTROL_POLICY"]
+}
+
+resource "aws_organizations_organizational_unit" "test" {
+  name      = %[1]q
+  parent_id = "${aws_organizations_organization.test.roots.0.id}"
+}
+
+resource "aws_organizations_policy" "test" {
+  depends_on = ["aws_organizations_organization.test"]
+
+  content = "{\"Version\": \"2012-10-17\", \"Statement\": { \"Effect\": \"Allow\", \"Action\": \"*\", \"Resource\": \"*\"}}"
+  name    = %[1]q
+}
+
+resource "aws_organizations_policy_attachment" "test" {
+  policy_id = "${aws_organizations_policy.test.id}"
+  target_id = "${aws_organizations_organizational_unit.test.id}"
+}
+`, rName)
+}
+
+func testAccAwsOrganizationsPolicyAttachmentConfig_Root(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_organizations_organization" "test" {
+  enabled_policy_types = ["SERVICE_CONTROL_POLICY"]
+}
+
+resource "aws_organizations_policy" "test" {
+  depends_on = ["aws_organizations_organization.test"]
+
+  content = "{\"Version\": \"2012-10-17\", \"Statement\": { \"Effect\": \"Allow\", \"Action\": \"*\", \"Resource\": \"*\"}}"
+  name    = %[1]q
+}
+
+resource "aws_organizations_policy_attachment" "test" {
+  policy_id = "${aws_organizations_policy.test.id}"
+  target_id = "${aws_organizations_organization.test.roots.0.id}"
 }
 `, rName)
 }

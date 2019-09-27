@@ -6,7 +6,7 @@ description: |-
   Adds create volume permission to an EBS Snapshot
 ---
 
-# aws_snapshot_create_volume_permission
+# Resource: aws_snapshot_create_volume_permission
 
 Adds permission to create volumes off of a given EBS Snapshot.
 

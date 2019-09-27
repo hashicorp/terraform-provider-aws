@@ -47,9 +47,10 @@ func resourceAwsRoute53HealthCheck() *schema.Resource {
 				Optional: true,
 			},
 			"request_interval": {
-				Type:     schema.TypeInt,
-				Optional: true,
-				ForceNew: true, // todo this should be updateable but the awslabs route53 service doesnt have the ability
+				Type:         schema.TypeInt,
+				Optional:     true,
+				ForceNew:     true, // todo this should be updateable but the awslabs route53 service doesnt have the ability
+				ValidateFunc: validation.IntInSlice([]int{10, 30}),
 			},
 			"ip_address": {
 				Type:     schema.TypeString,
@@ -384,7 +385,7 @@ func resourceAwsRoute53HealthCheckRead(d *schema.ResourceData, meta interface{})
 func resourceAwsRoute53HealthCheckDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).r53conn
 
-	log.Printf("[DEBUG] Deleteing Route53 health check: %s", d.Id())
+	log.Printf("[DEBUG] Deleting Route53 health check: %s", d.Id())
 	_, err := conn.DeleteHealthCheck(&route53.DeleteHealthCheckInput{HealthCheckId: aws.String(d.Id())})
 	return err
 }
