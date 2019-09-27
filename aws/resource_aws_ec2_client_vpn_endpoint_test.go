@@ -98,6 +98,26 @@ func TestAccAwsEc2ClientVpnEndpoint_basic(t *testing.T) {
 	})
 }
 
+func TestAccAwsEc2ClientVpnEndpoint_disappears(t *testing.T) {
+	rStr := acctest.RandString(5)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProvidersWithTLS,
+		CheckDestroy: testAccCheckAwsEc2ClientVpnEndpointDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccEc2ClientVpnEndpointConfig(rStr),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAwsEc2ClientVpnEndpointExists("aws_ec2_client_vpn_endpoint.test"),
+					testAccCheckAwsEc2ClientVpnEndpointDisappears("aws_ec2_client_vpn_endpoint.test"),
+				),
+				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}
+
 func TestAccAwsEc2ClientVpnEndpoint_msAD(t *testing.T) {
 	rStr := acctest.RandString(5)
 
@@ -275,6 +295,25 @@ func testAccCheckAwsEc2ClientVpnEndpointDestroy(s *terraform.State) error {
 		}
 	}
 	return nil
+}
+
+func testAccCheckAwsEc2ClientVpnEndpointDisappears(name string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		rs, ok := s.RootModule().Resources[name]
+		if !ok {
+			return fmt.Errorf("Not found: %s", name)
+		}
+
+		conn := testAccProvider.Meta().(*AWSClient).ec2conn
+
+		input := &ec2.DeleteClientVpnEndpointInput{
+			ClientVpnEndpointId: aws.String(rs.Primary.ID),
+		}
+
+		_, err := conn.DeleteClientVpnEndpoint(input)
+
+		return err
+	}
 }
 
 func testAccCheckAwsEc2ClientVpnEndpointExists(name string) resource.TestCheckFunc {

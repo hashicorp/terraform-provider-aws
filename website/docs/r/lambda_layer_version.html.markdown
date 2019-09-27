@@ -61,8 +61,10 @@ large files efficiently.
 
 ## Import
 
-Lambda Layers can be imported using `layer_name` and `version` together.
+Lambda Layers can be imported using `arn`.
 
 ```
-$ terraform import aws_lambda_layer_version.test_layer layer-name:1
+$ terraform import \
+    aws_lambda_layer_version.test_layer \
+    arn:aws:lambda:_REGION_:_ACCOUNT_ID_:layer:_LAYER_NAME_:_LAYER_VERSION_
 ```

@@ -49,10 +49,12 @@ The Terraform AWS Provider allows the following endpoints to be customized:
 
 - `acm`
 - `acmpca`
+- `amplify`
 - `apigateway`
 - `applicationautoscaling`
 - `applicationinsights`
 - `appmesh`
+- `appstream`
 - `appsync`
 - `athena`
 - `autoscaling`
@@ -109,12 +111,15 @@ The Terraform AWS Provider allows the following endpoints to be customized:
 - `iam`
 - `inspector`
 - `iot`
+- `iotanalytics`
+- `iotevents`
 - `kafka`
 - `kinesis_analytics` (**DEPRECATED** Use `kinesisanalytics` instead)
 - `kinesis`
 - `kinesisanalytics`
 - `kinesisvideo`
 - `kms`
+- `lakeformation`
 - `lambda`
 - `lexmodels`
 - `licensemanager`
@@ -131,6 +136,7 @@ The Terraform AWS Provider allows the following endpoints to be customized:
 - `neptune`
 - `opsworks`
 - `organizations`
+- `personalize`
 - `pinpoint`
 - `pricing`
 - `quicksight`
@@ -220,7 +226,7 @@ provider "aws" {
     iam            = "http://localhost:4593"
     kinesis        = "http://localhost:4568"
     lambda         = "http://localhost:4574"
-    r53            = "http://localhost:4580"
+    route53        = "http://localhost:4580"
     redshift       = "http://localhost:4577"
     s3             = "http://localhost:4572"
     secretsmanager = "http://localhost:4584"

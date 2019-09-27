@@ -5,9 +5,9 @@ import (
 	"crypto/x509"
 	"encoding/pem"
 	"fmt"
-	"net"
-
 	"github.com/hashicorp/terraform/helper/schema"
+	"net"
+	"net/url"
 )
 
 const pemCertReqType = "CERTIFICATE REQUEST"
@@ -40,6 +40,16 @@ func resourceCertRequest() *schema.Resource {
 				},
 			},
 
+			"uris": {
+				Type:        schema.TypeList,
+				Optional:    true,
+				Description: "List of URIs to use as subjects of the certificate",
+				ForceNew:    true,
+				Elem: &schema.Schema{
+					Type: schema.TypeString,
+				},
+			},
+
 			"key_algorithm": {
 				Type:        schema.TypeString,
 				Required:    true,
@@ -52,6 +62,7 @@ func resourceCertRequest() *schema.Resource {
 				Required:    true,
 				Description: "PEM-encoded private key that the certificate will belong to",
 				ForceNew:    true,
+				Sensitive:   true,
 				StateFunc: func(v interface{}) string {
 					return hashForState(v.(string))
 				},
@@ -106,6 +117,14 @@ func CreateCertRequest(d *schema.ResourceData, meta interface{}) error {
 			return fmt.Errorf("invalid IP address %#v", ipStrI.(string))
 		}
 		certReq.IPAddresses = append(certReq.IPAddresses, ip)
+	}
+	urisI := d.Get("uris").([]interface{})
+	for _, uriI := range urisI {
+		uri, err := url.Parse(uriI.(string))
+		if err != nil {
+			return fmt.Errorf("invalid URI %#v", uriI.(string))
+		}
+		certReq.URIs = append(certReq.URIs, uri)
 	}
 
 	certReqBytes, err := x509.CreateCertificateRequest(rand.Reader, &certReq, key)

@@ -14,6 +14,7 @@ func dataSourcePublicKey() *schema.Resource {
 			"private_key_pem": {
 				Type:        schema.TypeString,
 				Required:    true,
+				Sensitive:   true,
 				Description: "PEM formatted string to use as the private key",
 			},
 			"algorithm": {
@@ -49,7 +50,13 @@ func dataSourcePublicKeyRead(d *schema.ResourceData, meta interface{}) error {
 	keyPemBlock, _ := pem.Decode(bytes)
 
 	if keyPemBlock == nil || (keyPemBlock.Type != "RSA PRIVATE KEY" && keyPemBlock.Type != "EC PRIVATE KEY") {
-		return fmt.Errorf("failed to decode PEM block containing private key of type %#v", keyPemBlock.Type)
+		typ := "unknown"
+
+		if keyPemBlock != nil {
+			typ = keyPemBlock.Type
+		}
+
+		return fmt.Errorf("failed to decode PEM block containing private key of type %#v", typ)
 	}
 
 	keyAlgo := ""

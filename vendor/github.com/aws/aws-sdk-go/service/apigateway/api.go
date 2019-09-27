@@ -2085,6 +2085,10 @@ func (c *APIGateway) DeleteDomainNameRequest(input *DeleteDomainNameInput) (req 
 //   The request has reached its throttling limit. Retry after the specified time
 //   period.
 //
+//   * ErrCodeBadRequestException "BadRequestException"
+//   The submitted request is not valid, for example, the input is incomplete
+//   or incorrect. See the accompanying error message for details.
+//
 func (c *APIGateway) DeleteDomainName(input *DeleteDomainNameInput) (*DeleteDomainNameOutput, error) {
 	req, out := c.DeleteDomainNameRequest(input)
 	return out, req.Send()
@@ -15527,6 +15531,10 @@ type EndpointConfiguration struct {
 	// "EDGE". For a regional API and its custom domain name, the endpoint type
 	// is REGIONAL. For a private API, the endpoint type is PRIVATE.
 	Types []*string `locationName:"types" type:"list"`
+
+	// A list of VpcEndpointIds of an API (RestApi) against which to create Route53
+	// ALIASes. It is only supported for PRIVATE endpoint type.
+	VpcEndpointIds []*string `locationName:"vpcEndpointIds" type:"list"`
 }
 
 // String returns the string representation
@@ -15542,6 +15550,12 @@ func (s EndpointConfiguration) GoString() string {
 // SetTypes sets the Types field's value.
 func (s *EndpointConfiguration) SetTypes(v []*string) *EndpointConfiguration {
 	s.Types = v
+	return s
+}
+
+// SetVpcEndpointIds sets the VpcEndpointIds field's value.
+func (s *EndpointConfiguration) SetVpcEndpointIds(v []*string) *EndpointConfiguration {
+	s.VpcEndpointIds = v
 	return s
 }
 

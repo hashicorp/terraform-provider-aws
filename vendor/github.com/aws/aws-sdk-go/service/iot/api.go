@@ -17355,7 +17355,7 @@ type AttributePayload struct {
 	//
 	// To remove an attribute, call UpdateThing with an empty attribute value.
 	//
-	// The merge attribute is only valid when calling UpdateThing.
+	// The merge attribute is only valid when calling UpdateThing or UpdateThingGroup.
 	Merge *bool `locationName:"merge" type:"boolean"`
 }
 
@@ -28500,7 +28500,7 @@ type ListAttachedPoliciesInput struct {
 	// When true, recursively list attached policies.
 	Recursive *bool `location:"querystring" locationName:"recursive" type:"boolean"`
 
-	// The group for which the policies will be listed.
+	// The group or principal for which the policies will be listed.
 	//
 	// Target is a required field
 	Target *string `location:"uri" locationName:"target" type:"string" required:"true"`
@@ -34440,6 +34440,9 @@ func (s ReplaceTopicRuleOutput) GoString() string {
 type RepublishAction struct {
 	_ struct{} `type:"structure"`
 
+	// The Quality of Service (QoS) level to use when republishing messages.
+	Qos *int64 `locationName:"qos" type:"integer"`
+
 	// The ARN of the IAM role that grants access.
 	//
 	// RoleArn is a required field
@@ -34475,6 +34478,12 @@ func (s *RepublishAction) Validate() error {
 		return invalidParams
 	}
 	return nil
+}
+
+// SetQos sets the Qos field's value.
+func (s *RepublishAction) SetQos(v int64) *RepublishAction {
+	s.Qos = &v
+	return s
 }
 
 // SetRoleArn sets the RoleArn field's value.

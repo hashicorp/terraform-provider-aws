@@ -40,6 +40,29 @@ func FloatAtLeast(min float64) schema.SchemaValidateFunc {
 	}
 }
 
+// validateStringNotMatch returns a SchemaValidateFunc which tests if the provided value
+// does not match a given regexp. Optionally an error message can be provided to
+// return something friendlier than "must match some globby regexp".
+// This function is an inverse copy of validation.StringMatch and will be
+// migrated to the Terraform Provider SDK.
+func validateStringNotMatch(r *regexp.Regexp, message string) schema.SchemaValidateFunc {
+	return func(i interface{}, k string) ([]string, []error) {
+		v, ok := i.(string)
+		if !ok {
+			return nil, []error{fmt.Errorf("expected type of %s to be string", k)}
+		}
+
+		if ok := r.MatchString(v); ok {
+			if message != "" {
+				return nil, []error{fmt.Errorf("invalid value for %s (%s)", k, message)}
+
+			}
+			return nil, []error{fmt.Errorf("expected value of %s to not match regular expression %q", k, r)}
+		}
+		return nil, nil
+	}
+}
+
 // validateTypeStringNullableBoolean provides custom error messaging for TypeString booleans
 // Some arguments require three values: true, false, and "" (unspecified).
 // This ValidateFunc returns a custom message since the message with
@@ -193,31 +216,6 @@ func validateNeptuneEngine() schema.SchemaValidateFunc {
 	return validation.StringInSlice([]string{
 		"neptune",
 	}, false)
-}
-
-func validateElastiCacheClusterId(v interface{}, k string) (ws []string, errors []error) {
-	value := v.(string)
-	if (len(value) < 1) || (len(value) > 20) {
-		errors = append(errors, fmt.Errorf(
-			"%q (%q) must contain from 1 to 20 alphanumeric characters or hyphens", k, value))
-	}
-	if !regexp.MustCompile(`^[0-9a-z-]+$`).MatchString(value) {
-		errors = append(errors, fmt.Errorf(
-			"only lowercase alphanumeric characters and hyphens allowed in %q (%q)", k, value))
-	}
-	if !regexp.MustCompile(`^[a-z]`).MatchString(value) {
-		errors = append(errors, fmt.Errorf(
-			"first character of %q (%q) must be a letter", k, value))
-	}
-	if regexp.MustCompile(`--`).MatchString(value) {
-		errors = append(errors, fmt.Errorf(
-			"%q (%q) cannot contain two consecutive hyphens", k, value))
-	}
-	if regexp.MustCompile(`-$`).MatchString(value) {
-		errors = append(errors, fmt.Errorf(
-			"%q (%q) cannot end with a hyphen", k, value))
-	}
-	return
 }
 
 func validateASGScheduleTimestamp(v interface{}, k string) (ws []string, errors []error) {

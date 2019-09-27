@@ -187,8 +187,11 @@ func resourceAwsCloudTrailCreate(d *schema.ResourceData, meta interface{}) error
 		}
 		return nil
 	})
+	if isResourceTimeoutError(err) {
+		t, err = conn.CreateTrail(&input)
+	}
 	if err != nil {
-		return err
+		return fmt.Errorf("Error creating CloudTrail: %s", err)
 	}
 
 	log.Printf("[DEBUG] CloudTrail created: %s", t)
@@ -358,8 +361,11 @@ func resourceAwsCloudTrailUpdate(d *schema.ResourceData, meta interface{}) error
 		}
 		return nil
 	})
+	if isResourceTimeoutError(err) {
+		t, err = conn.UpdateTrail(&input)
+	}
 	if err != nil {
-		return err
+		return fmt.Errorf("Error updating CloudTrail: %s", err)
 	}
 
 	if d.HasChange("tags") {

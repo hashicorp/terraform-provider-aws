@@ -62,6 +62,49 @@ resource "aws_cloudwatch_log_group" "example" {
 }
 ```
 
+### Enabling IAM Roles for Service Accounts
+
+Only available on Kubernetes version 1.13 and 1.14 clusters created or upgraded on or after September 3, 2019. For more information about this feature, see the [EKS User Guide](https://docs.aws.amazon.com/eks/latest/userguide/enable-iam-roles-for-service-accounts.html).
+
+```hcl
+resource "aws_eks_cluster" "example" {
+  # ... other configuration ...
+}
+
+resource "aws_iam_openid_connect_provider" "example" {
+  client_id_list  = ["sts.amazonaws.com"]
+  thumbprint_list = []
+  url             = "${aws_eks_cluster.example.identity.0.oidc.0.issuer}"
+}
+
+data "aws_caller_identity" "current" {}
+
+data "aws_iam_policy_document" "example_assume_role_policy" {
+  statement {
+    actions = ["sts:AssumeRoleWithWebIdentity"]
+    effect  = "Allow"
+
+    condition {
+      test     = "StringEquals"
+      variable = "${replace(aws_iam_openid_connect_provider.example.url, "https://", "")}:sub"
+      values   = ["system:serviceaccount:kube-system:aws-node"]
+    }
+
+    principals {
+      identifiers = ["${aws_iam_openid_connect_provider.example.arn}"]
+      type        = "Federated"
+    }
+  }
+}
+
+resource "aws_iam_role" "example" {
+  assume_role_policy = "${data.aws_iam_policy_document.example_assume_role_policy.json}"
+  name               = "example"
+}
+```
+
+After adding inline IAM Policies (e.g. [`aws_iam_role_policy` resource](/docs/providers/aws/r/iam_role_policy.html)) or attaching IAM Policies (e.g. [`aws_iam_policy` resource](/docs/providers/aws/r/iam_policy.html) and [`aws_iam_role_policy_attachment` resource](/docs/providers/aws/r/iam_policy.html)) with the desired permissions to the IAM Role, annotate the Kubernetes service account (e.g. [`kubernetes_service_account` resource](/docs/providers/kubernetes/r/service_account.html)) and recreate any pods.
+
 ## Argument Reference
 
 The following arguments are supported:
@@ -88,6 +131,9 @@ In addition to all arguments above, the following attributes are exported:
 * `certificate_authority` - Nested attribute containing `certificate-authority-data` for your cluster.
   * `data` - The base64 encoded certificate data required to communicate with your cluster. Add this to the `certificate-authority-data` section of the `kubeconfig` file for your cluster.
 * `endpoint` - The endpoint for your Kubernetes API server.
+* `identity` - Nested attribute containing identity provider information for your cluster. Only available on Kubernetes version 1.13 and 1.14 clusters created or upgraded on or after September 3, 2019.
+  * `oidc` - Nested attribute containing [OpenID Connect](https://openid.net/connect/) identity provider information for the cluster.
+    * `issuer` - Issuer URL for the OpenID Connect identity provider.
 * `platform_version` - The platform version for the cluster.
 * `status` - The status of the EKS cluster. One of `CREATING`, `ACTIVE`, `DELETING`, `FAILED`. 
 * `version` - The Kubernetes server version for the cluster.

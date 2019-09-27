@@ -256,14 +256,12 @@ func resourceAwsRDSClusterInstanceCreate(d *schema.ResourceData, meta interface{
 		createOpts.MonitoringRoleArn = aws.String(attr.(string))
 	}
 
-	if attr, _ := d.GetOk("engine"); attr == "aurora-postgresql" || attr == "aurora" {
-		if attr, ok := d.GetOk("performance_insights_enabled"); ok {
-			createOpts.EnablePerformanceInsights = aws.Bool(attr.(bool))
-		}
+	if attr, ok := d.GetOk("performance_insights_enabled"); ok {
+		createOpts.EnablePerformanceInsights = aws.Bool(attr.(bool))
+	}
 
-		if attr, ok := d.GetOk("performance_insights_kms_key_id"); ok {
-			createOpts.PerformanceInsightsKMSKeyId = aws.String(attr.(string))
-		}
+	if attr, ok := d.GetOk("performance_insights_kms_key_id"); ok {
+		createOpts.PerformanceInsightsKMSKeyId = aws.String(attr.(string))
 	}
 
 	if attr, ok := d.GetOk("preferred_backup_window"); ok {
@@ -384,6 +382,8 @@ func resourceAwsRDSClusterInstanceRead(d *schema.ResourceData, meta interface{})
 	d.Set("identifier", db.DBInstanceIdentifier)
 	d.Set("instance_class", db.DBInstanceClass)
 	d.Set("kms_key_id", db.KmsKeyId)
+	d.Set("monitoring_interval", db.MonitoringInterval)
+	d.Set("monitoring_role_arn", db.MonitoringRoleArn)
 	d.Set("performance_insights_enabled", db.PerformanceInsightsEnabled)
 	d.Set("performance_insights_kms_key_id", db.PerformanceInsightsKMSKeyId)
 	d.Set("preferred_backup_window", db.PreferredBackupWindow)
@@ -391,14 +391,6 @@ func resourceAwsRDSClusterInstanceRead(d *schema.ResourceData, meta interface{})
 	d.Set("promotion_tier", db.PromotionTier)
 	d.Set("publicly_accessible", db.PubliclyAccessible)
 	d.Set("storage_encrypted", db.StorageEncrypted)
-
-	if db.MonitoringInterval != nil {
-		d.Set("monitoring_interval", db.MonitoringInterval)
-	}
-
-	if db.MonitoringRoleArn != nil {
-		d.Set("monitoring_role_arn", db.MonitoringRoleArn)
-	}
 
 	if len(db.DBParameterGroups) > 0 {
 		d.Set("db_parameter_group_name", db.DBParameterGroups[0].DBParameterGroupName)
@@ -436,15 +428,15 @@ func resourceAwsRDSClusterInstanceUpdate(d *schema.ResourceData, meta interface{
 		requestUpdate = true
 	}
 
-	if d.HasChange("performance_insights_enabled") {
+	if d.HasChange("performance_insights_enabled") || d.HasChange("performance_insights_kms_key_id") {
 		d.SetPartial("performance_insights_enabled")
 		req.EnablePerformanceInsights = aws.Bool(d.Get("performance_insights_enabled").(bool))
-		requestUpdate = true
-	}
 
-	if d.HasChange("performance_insights_kms_key_id") {
-		d.SetPartial("performance_insights_kms_key_id")
-		req.PerformanceInsightsKMSKeyId = aws.String(d.Get("performance_insights_kms_key_id").(string))
+		if v, ok := d.GetOk("performance_insights_kms_key_id"); ok {
+			d.SetPartial("performance_insights_kms_key_id")
+			req.PerformanceInsightsKMSKeyId = aws.String(v.(string))
+		}
+
 		requestUpdate = true
 	}
 
