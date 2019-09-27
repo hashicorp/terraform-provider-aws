@@ -6,6 +6,9 @@ ENHANCEMENTS:
 
 BUG FIXES:
 
+* resource/aws_vpc_peering_connection: Ensure `allow_remote_vpc_dns_resolution` usage works with inter-region peering [GH-7627]
+* resource/aws_vpc_peering_connection_accepter: Ensure `allow_remote_vpc_dns_resolution` usage works with inter-region peering [GH-7627]
+* resource/aws_vpc_peering_connection_options: Ensure `allow_remote_vpc_dns_resolution` usage works with inter-region peering [GH-7627]
 * service/waf: Prevent incorrect `Error getting WAF change token` errors for API calls that should be retried or specially handled [GH-10242]
 * service/wafregional: Prevent incorrect `Error getting WAF regional change token` errors for API calls that should be retried or specially handled [GH-10242]
 
