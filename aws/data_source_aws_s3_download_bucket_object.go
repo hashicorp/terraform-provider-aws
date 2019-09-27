@@ -63,10 +63,10 @@ func dataSourceAwsS3DownloadBucketObjectRead(d *schema.ResourceData, meta interf
 
 	fileName := d.Get("filename").(string)
 	file, err := os.Create(fileName)
-	defer file.Close()
 	if err != nil {
 		return fmt.Errorf("Failed to create a file at %s: %s", fileName, err)
 	}
+	defer file.Close()
 
 	if _, err = file.Write(s3ObjectBytes); err != nil {
 		return fmt.Errorf("Error writing content from s3://%s to %s: %s", uniqueID, fileName, err)
