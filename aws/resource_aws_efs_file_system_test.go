@@ -86,7 +86,7 @@ func TestAccAWSEFSFileSystem_basic(t *testing.T) {
 					resource.TestMatchResourceAttr(
 						"aws_efs_file_system.foo",
 						"dns_name",
-						regexp.MustCompile("^[^.]+.efs.us-west-2.amazonaws.com$"),
+						regexp.MustCompile("^[^.]+.efs.([0-9A-Za-z]+-[0-9A-Za-z]+-[0-9]).amazonaws.com$"),
 					),
 				),
 			},
