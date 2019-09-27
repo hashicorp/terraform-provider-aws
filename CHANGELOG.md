@@ -1,5 +1,9 @@
 ## 2.31.0 (Unreleased)
 
+ENHANCEMENTS:
+
+* resource_aws_efs_filesystem: Support tag-on-create [GH-10254]
+
 BUG FIXES:
 
 * service/waf: Prevent incorrect `Error getting WAF change token` errors for API calls that should be retried or specially handled [GH-10242]
