@@ -102,6 +102,10 @@ func (r *FileReader) validateConfig() error {
 		return errors.New("option run.memprofilepath in config isn't allowed")
 	}
 
+	if c.Run.TracePath != "" {
+		return errors.New("option run.tracepath in config isn't allowed")
+	}
+
 	if c.Run.IsVerbose {
 		return errors.New("can't set run.verbose option with config: only on command-line")
 	}
@@ -110,7 +114,9 @@ func (r *FileReader) validateConfig() error {
 			return fmt.Errorf("error in exclude rule #%d: %v", i, err)
 		}
 	}
-
+	if err := c.LintersSettings.Govet.Validate(); err != nil {
+		return fmt.Errorf("error in govet config: %v", err)
+	}
 	return nil
 }
 

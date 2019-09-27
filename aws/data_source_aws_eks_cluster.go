@@ -46,6 +46,26 @@ func dataSourceAwsEksCluster() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"identity": {
+				Type:     schema.TypeList,
+				Computed: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"oidc": {
+							Type:     schema.TypeList,
+							Computed: true,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"issuer": {
+										Type:     schema.TypeString,
+										Computed: true,
+									},
+								},
+							},
+						},
+					},
+				},
+			},
 			"name": {
 				Type:         schema.TypeString,
 				Required:     true,
@@ -134,6 +154,11 @@ func dataSourceAwsEksClusterRead(d *schema.ResourceData, meta interface{}) error
 		return fmt.Errorf("error setting enabled_cluster_log_types: %s", err)
 	}
 	d.Set("endpoint", cluster.Endpoint)
+
+	if err := d.Set("identity", flattenEksIdentity(cluster.Identity)); err != nil {
+		return fmt.Errorf("error setting identity: %s", err)
+	}
+
 	d.Set("name", cluster.Name)
 	d.Set("platform_version", cluster.PlatformVersion)
 	d.Set("role_arn", cluster.RoleArn)

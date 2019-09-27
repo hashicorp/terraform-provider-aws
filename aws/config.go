@@ -137,7 +137,6 @@ import (
 	"github.com/aws/aws-sdk-go/service/xray"
 	awsbase "github.com/hashicorp/aws-sdk-go-base"
 	"github.com/hashicorp/terraform/helper/logging"
-	"github.com/hashicorp/terraform/terraform"
 )
 
 type Config struct {
@@ -166,6 +165,8 @@ type Config struct {
 	SkipRequestingAccountId bool
 	SkipMetadataApiCheck    bool
 	S3ForcePathStyle        bool
+
+	terraformVersion string
 }
 
 type AWSClient struct {
@@ -294,6 +295,7 @@ type AWSClient struct {
 	stsconn                             *sts.STS
 	supportedplatforms                  []string
 	swfconn                             *swf.SWF
+	terraformVersion                    string
 	transferconn                        *transfer.Transfer
 	wafconn                             *waf.WAF
 	wafregionalconn                     *wafregional.WAFRegional
@@ -335,7 +337,8 @@ func (c *Config) Client() (interface{}, error) {
 		UserAgentProducts: []*awsbase.UserAgentProduct{
 			{Name: "APN", Version: "1.0"},
 			{Name: "HashiCorp", Version: "1.0"},
-			{Name: "Terraform", Version: terraform.VersionString()},
+			{Name: "Terraform", Version: c.terraformVersion,
+				Extra: []string{"+https://www.terraform.io"}},
 		},
 	}
 
@@ -479,6 +482,7 @@ func (c *Config) Client() (interface{}, error) {
 		storagegatewayconn:                  storagegateway.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["storagegateway"])})),
 		stsconn:                             sts.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["sts"])})),
 		swfconn:                             swf.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["swf"])})),
+		terraformVersion:                    c.terraformVersion,
 		transferconn:                        transfer.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["transfer"])})),
 		wafconn:                             waf.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["waf"])})),
 		wafregionalconn:                     wafregional.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["wafregional"])})),
@@ -526,20 +530,6 @@ func (c *Config) Client() (interface{}, error) {
 	client.globalacceleratorconn = globalaccelerator.New(sess.Copy(globalAcceleratorConfig))
 	client.r53conn = route53.New(sess.Copy(route53Config))
 	client.shieldconn = shield.New(sess.Copy(shieldConfig))
-
-	// Workaround for https://github.com/aws/aws-sdk-go/issues/1376
-	client.kinesisconn.Handlers.Retry.PushBack(func(r *request.Request) {
-		if !strings.HasPrefix(r.Operation.Name, "Describe") && !strings.HasPrefix(r.Operation.Name, "List") {
-			return
-		}
-		err, ok := r.Error.(awserr.Error)
-		if !ok || err == nil {
-			return
-		}
-		if err.Code() == kinesis.ErrCodeLimitExceededException {
-			r.Retryable = aws.Bool(true)
-		}
-	})
 
 	// Workaround for https://github.com/aws/aws-sdk-go/issues/1472
 	client.appautoscalingconn.Handlers.Retry.PushBack(func(r *request.Request) {
