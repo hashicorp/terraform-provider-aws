@@ -54,6 +54,7 @@ func resourceAwsCloudwatchLogSubscriptionFilter() *schema.Resource {
 			"distribution": {
 				Type:     schema.TypeString,
 				Optional: true,
+				Default:  cloudwatchlogs.DistributionByLogStream,
 			},
 		},
 	}

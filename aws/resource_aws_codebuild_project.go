@@ -38,6 +38,10 @@ func resourceAwsCodeBuildProject() *schema.Resource {
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
+						"artifact_identifier": {
+							Type:     schema.TypeString,
+							Optional: true,
+						},
 						"name": {
 							Type:     schema.TypeString,
 							Optional: true,
@@ -83,6 +87,10 @@ func resourceAwsCodeBuildProject() *schema.Resource {
 								}
 								return false
 							},
+							ValidateFunc: validation.StringInSlice([]string{
+								codebuild.ArtifactPackagingNone,
+								codebuild.ArtifactPackagingZip,
+							}, false),
 						},
 						"path": {
 							Type:     schema.TypeString,
@@ -344,6 +352,7 @@ func resourceAwsCodeBuildProject() *schema.Resource {
 								codebuild.ArtifactNamespaceNone,
 								codebuild.ArtifactNamespaceBuildId,
 							}, false),
+							Default: codebuild.ArtifactNamespaceNone,
 						},
 						"override_artifact_name": {
 							Type:     schema.TypeBool,
@@ -353,6 +362,11 @@ func resourceAwsCodeBuildProject() *schema.Resource {
 						"packaging": {
 							Type:     schema.TypeString,
 							Optional: true,
+							ValidateFunc: validation.StringInSlice([]string{
+								codebuild.ArtifactPackagingNone,
+								codebuild.ArtifactPackagingZip,
+							}, false),
+							Default: codebuild.ArtifactPackagingNone,
 						},
 						"path": {
 							Type:     schema.TypeString,
@@ -366,9 +380,7 @@ func resourceAwsCodeBuildProject() *schema.Resource {
 							Type:     schema.TypeString,
 							Required: true,
 							ValidateFunc: validation.StringInSlice([]string{
-								codebuild.ArtifactsTypeCodepipeline,
 								codebuild.ArtifactsTypeS3,
-								codebuild.ArtifactsTypeNoArtifacts,
 							}, false),
 						},
 					},
@@ -649,9 +661,11 @@ func resourceAwsCodeBuildProjectCreate(d *schema.ResourceData, meta interface{})
 		}
 
 		return nil
-
 	})
 
+	if isResourceTimeoutError(err) {
+		resp, err = conn.CreateProject(params)
+	}
 	if err != nil {
 		return fmt.Errorf("Error creating CodeBuild project: %s", err)
 	}
@@ -1157,9 +1171,11 @@ func resourceAwsCodeBuildProjectUpdate(d *schema.ResourceData, meta interface{})
 		}
 
 		return nil
-
 	})
 
+	if isResourceTimeoutError(err) {
+		_, err = conn.UpdateProject(params)
+	}
 	if err != nil {
 		return fmt.Errorf(
 			"[ERROR] Error updating CodeBuild project (%s): %s",
@@ -1380,14 +1396,36 @@ func resourceAwsCodeBuildProjectArtifactsHash(v interface{}) int {
 	var buf bytes.Buffer
 	m := v.(map[string]interface{})
 
-	buf.WriteString(fmt.Sprintf("%s-", m["type"].(string)))
-
 	if v, ok := m["artifact_identifier"]; ok {
-		buf.WriteString(fmt.Sprintf("%s:", v.(string)))
+		buf.WriteString(fmt.Sprintf("%s-", v.(string)))
+	}
+
+	if v, ok := m["encryption_disabled"]; ok {
+		buf.WriteString(fmt.Sprintf("%t-", v.(bool)))
+	}
+
+	if v, ok := m["location"]; ok {
+		buf.WriteString(fmt.Sprintf("%s-", v.(string)))
+	}
+
+	if v, ok := m["namespace_type"]; ok {
+		buf.WriteString(fmt.Sprintf("%s-", v.(string)))
 	}
 
 	if v, ok := m["override_artifact_name"]; ok {
 		buf.WriteString(fmt.Sprintf("%t-", v.(bool)))
+	}
+
+	if v, ok := m["packaging"]; ok {
+		buf.WriteString(fmt.Sprintf("%s-", v.(string)))
+	}
+
+	if v, ok := m["path"]; ok {
+		buf.WriteString(fmt.Sprintf("%s-", v.(string)))
+	}
+
+	if v, ok := m["type"]; ok {
+		buf.WriteString(fmt.Sprintf("%s-", v.(string)))
 	}
 
 	return hashcode.String(buf.String())

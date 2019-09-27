@@ -248,6 +248,7 @@ func attachPolicyToRoles(conn *iam.IAM, roles []*string, arn string) error {
 		if attachmentErr != nil {
 			return attachmentErr
 		}
+
 	}
 	return nil
 }

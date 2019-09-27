@@ -8,28 +8,9 @@ import (
 	"github.com/hashicorp/terraform/helper/resource"
 )
 
-func TestAccAWSVpcPeeringConnectionOptions_importBasic(t *testing.T) {
-	resourceName := "aws_vpc_peering_connection_options.foo"
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckAWSVpcPeeringConnectionDestroy,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccVpcPeeringConnectionOptionsConfig,
-			},
-
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-			},
-		},
-	})
-}
-
 func TestAccAWSVpcPeeringConnectionOptions_basic(t *testing.T) {
+	resourceName := "aws_vpc_peering_connection_options.test"
+
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
@@ -39,17 +20,17 @@ func TestAccAWSVpcPeeringConnectionOptions_basic(t *testing.T) {
 				Config: testAccVpcPeeringConnectionOptionsConfig,
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(
-						"aws_vpc_peering_connection_options.foo",
+						resourceName,
 						"accepter.#",
 						"1",
 					),
 					resource.TestCheckResourceAttr(
-						"aws_vpc_peering_connection_options.foo",
+						resourceName,
 						"accepter.1102046665.allow_remote_vpc_dns_resolution",
 						"true",
 					),
 					testAccCheckAWSVpcPeeringConnectionOptions(
-						"aws_vpc_peering_connection.foo",
+						"aws_vpc_peering_connection.test",
 						"accepter",
 						&ec2.VpcPeeringConnectionOptionsDescription{
 							AllowDnsResolutionFromRemoteVpc:            aws.Bool(true),
@@ -58,22 +39,22 @@ func TestAccAWSVpcPeeringConnectionOptions_basic(t *testing.T) {
 						},
 					),
 					resource.TestCheckResourceAttr(
-						"aws_vpc_peering_connection_options.foo",
+						resourceName,
 						"requester.#",
 						"1",
 					),
 					resource.TestCheckResourceAttr(
-						"aws_vpc_peering_connection_options.foo",
+						resourceName,
 						"requester.41753983.allow_classic_link_to_remote_vpc",
 						"true",
 					),
 					resource.TestCheckResourceAttr(
-						"aws_vpc_peering_connection_options.foo",
+						resourceName,
 						"requester.41753983.allow_vpc_to_remote_classic_link",
 						"true",
 					),
 					testAccCheckAWSVpcPeeringConnectionOptions(
-						"aws_vpc_peering_connection.foo",
+						"aws_vpc_peering_connection.test",
 						"requester",
 						&ec2.VpcPeeringConnectionOptionsDescription{
 							AllowDnsResolutionFromRemoteVpc:            aws.Bool(false),
@@ -83,15 +64,20 @@ func TestAccAWSVpcPeeringConnectionOptions_basic(t *testing.T) {
 					),
 				),
 			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
 		},
 	})
 }
 
 const testAccVpcPeeringConnectionOptionsConfig = `
-resource "aws_vpc" "foo" {
+resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"
   tags = {
-    Name = "terraform-testacc-vpc-peering-conn-options-foo"
+    Name = "terraform-testacc-vpc-peering-conn-options-test"
   }
 }
 
@@ -103,14 +89,14 @@ resource "aws_vpc" "bar" {
   }
 }
 
-resource "aws_vpc_peering_connection" "foo" {
-  vpc_id      = "${aws_vpc.foo.id}"
+resource "aws_vpc_peering_connection" "test" {
+  vpc_id      = "${aws_vpc.test.id}"
   peer_vpc_id = "${aws_vpc.bar.id}"
   auto_accept = true
 }
 
-resource "aws_vpc_peering_connection_options" "foo" {
-  vpc_peering_connection_id = "${aws_vpc_peering_connection.foo.id}"
+resource "aws_vpc_peering_connection_options" "test" {
+  vpc_peering_connection_id = "${aws_vpc_peering_connection.test.id}"
 
   accepter {
     allow_remote_vpc_dns_resolution = true

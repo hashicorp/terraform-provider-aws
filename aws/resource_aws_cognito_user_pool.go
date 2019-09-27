@@ -410,6 +410,7 @@ func resourceAwsCognitoUserPool() *schema.Resource {
 			"sms_verification_message": {
 				Type:          schema.TypeString,
 				Optional:      true,
+				Computed:      true,
 				ValidateFunc:  validateCognitoUserPoolSmsVerificationMessage,
 				ConflictsWith: []string{"verification_message_template.0.sms_message"},
 			},
@@ -673,6 +674,9 @@ func resourceAwsCognitoUserPoolCreate(d *schema.ResourceData, meta interface{}) 
 
 		return resource.NonRetryableError(err)
 	})
+	if isResourceTimeoutError(err) {
+		resp, err = conn.CreateUserPool(params)
+	}
 	if err != nil {
 		return fmt.Errorf("Error creating Cognito User Pool: %s", err)
 	}
@@ -944,6 +948,9 @@ func resourceAwsCognitoUserPoolUpdate(d *schema.ResourceData, meta interface{}) 
 
 		return resource.NonRetryableError(err)
 	})
+	if isResourceTimeoutError(err) {
+		_, err = conn.UpdateUserPool(params)
+	}
 	if err != nil {
 		return fmt.Errorf("Error updating Cognito User pool: %s", err)
 	}

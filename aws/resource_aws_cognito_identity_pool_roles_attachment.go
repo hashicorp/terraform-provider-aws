@@ -3,12 +3,10 @@ package aws
 import (
 	"fmt"
 	"log"
-	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/cognitoidentity"
-	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/helper/schema"
 	"github.com/hashicorp/terraform/helper/validation"
 )
@@ -222,19 +220,17 @@ func resourceAwsCognitoIdentityPoolRolesAttachmentDelete(d *schema.ResourceData,
 	conn := meta.(*AWSClient).cognitoconn
 	log.Printf("[DEBUG] Deleting Cognito Identity Pool Roles Association: %s", d.Id())
 
-	return resource.Retry(5*time.Minute, func() *resource.RetryError {
-		_, err := conn.SetIdentityPoolRoles(&cognitoidentity.SetIdentityPoolRolesInput{
-			IdentityPoolId: aws.String(d.Get("identity_pool_id").(string)),
-			Roles:          expandCognitoIdentityPoolRoles(make(map[string]interface{})),
-			RoleMappings:   expandCognitoIdentityPoolRoleMappingsAttachment([]interface{}{}),
-		})
-
-		if err == nil {
-			return nil
-		}
-
-		return resource.NonRetryableError(err)
+	_, err := conn.SetIdentityPoolRoles(&cognitoidentity.SetIdentityPoolRolesInput{
+		IdentityPoolId: aws.String(d.Get("identity_pool_id").(string)),
+		Roles:          expandCognitoIdentityPoolRoles(make(map[string]interface{})),
+		RoleMappings:   expandCognitoIdentityPoolRoleMappingsAttachment([]interface{}{}),
 	})
+
+	if err != nil {
+		return fmt.Errorf("Error deleting Cognito identity pool roles association: %s", err)
+	}
+
+	return nil
 }
 
 // Validating that each role_mapping ambiguous_role_resolution

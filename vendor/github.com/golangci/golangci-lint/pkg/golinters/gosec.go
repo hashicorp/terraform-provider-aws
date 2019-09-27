@@ -8,8 +8,8 @@ import (
 	"log"
 	"strconv"
 
-	"github.com/golangci/gosec"
-	"github.com/golangci/gosec/rules"
+	"github.com/securego/gosec"
+	"github.com/securego/gosec/rules"
 
 	"github.com/golangci/golangci-lint/pkg/lint/linter"
 	"github.com/golangci/golangci-lint/pkg/result"
@@ -29,11 +29,13 @@ func (lint Gosec) Run(ctx context.Context, lintCtx *linter.Context) ([]result.Is
 	gasConfig := gosec.NewConfig()
 	enabledRules := rules.Generate()
 	logger := log.New(ioutil.Discard, "", 0)
-	analyzer := gosec.NewAnalyzer(gasConfig, logger)
+	analyzer := gosec.NewAnalyzer(gasConfig, true, logger)
 	analyzer.LoadRules(enabledRules.Builders())
 
-	analyzer.ProcessProgram(lintCtx.Program)
-	issues, _ := analyzer.Report()
+	for _, pkg := range lintCtx.Packages {
+		analyzer.Check(pkg)
+	}
+	issues, _, _ := analyzer.Report()
 	if len(issues) == 0 {
 		return nil, nil
 	}

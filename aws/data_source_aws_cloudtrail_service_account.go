@@ -19,6 +19,7 @@ var cloudTrailServiceAccountPerRegionMap = map[string]string{
 	"ap-southeast-1": "903692715234",
 	"ap-southeast-2": "284668455005",
 	"ca-central-1":   "819402241893",
+	"cn-north-1":     "193415116832",
 	"cn-northwest-1": "681348832753",
 	"eu-central-1":   "035351147821",
 	"eu-north-1":     "829690693026",
