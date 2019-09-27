@@ -10,6 +10,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
+	"github.com/aws/aws-sdk-go/aws/endpoints"
 	"github.com/aws/aws-sdk-go/service/sqs"
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/helper/schema"
@@ -170,6 +171,11 @@ func resourceAwsSqsQueueCreate(d *schema.ResourceData, meta interface{}) error {
 		QueueName: aws.String(name),
 	}
 
+	// Tag-on-create is currently only supported in AWS Commercial
+	if v, ok := d.GetOk("tags"); ok && meta.(*AWSClient).partition == endpoints.AwsPartitionID {
+		req.Tags = tagsFromMapGeneric(v.(map[string]interface{}))
+	}
+
 	attributes := make(map[string]*string)
 
 	queueResource := *resourceAwsSqsQueue()
@@ -215,7 +221,12 @@ func resourceAwsSqsQueueCreate(d *schema.ResourceData, meta interface{}) error {
 
 	d.SetId(aws.StringValue(output.QueueUrl))
 
-	return resourceAwsSqsQueueUpdate(d, meta)
+	// Tag-on-create is currently only supported in AWS Commercial
+	if meta.(*AWSClient).partition == endpoints.AwsPartitionID {
+		return resourceAwsSqsQueueRead(d, meta)
+	} else {
+		return resourceAwsSqsQueueUpdate(d, meta)
+	}
 }
 
 func resourceAwsSqsQueueUpdate(d *schema.ResourceData, meta interface{}) error {

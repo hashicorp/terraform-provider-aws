@@ -599,30 +599,17 @@ resource "aws_ssm_maintenance_window_task" "target" {
   }
   task_invocation_parameters {
     lambda_parameters {
-      client_context = "${base64encode(data.template_file.client_context.rendered)}"
-      payload = "${data.template_file.payload.rendered}"
+      client_context = base64encode(jsonencode({
+        key1 = "value1"
+        key2 = "value2"
+        key3 = "value3"
+      }))
+      payload = jsonencode({
+        number = %[2]d
+      })
     }
   }
 }
-
-data "template_file" "client_context" {
-  template = <<EOF
-{
-  "key1": "value1",
-  "key2": "value2",
-  "key3": "value3"
-}
-EOF
-}
-
-data "template_file" "payload" {
-  template = <<EOF
-{
-  "number": %[2]d
-}
-EOF
-}
-
 `, rName, rInt)
 }
 
@@ -701,13 +688,15 @@ resource "aws_ssm_maintenance_window_task" "target" {
 }
 
 func testAccAWSSSMMaintenanceWindowTaskStepFunctionConfig(rName string) string {
-	return fmt.Sprintf(testAccAWSSfnActivityBasicConfig(rName)+
-		testAccAWSSSMMaintenanceWindowTaskConfigBase(rName)+`
+	return testAccAWSSSMMaintenanceWindowTaskConfigBase(rName) + fmt.Sprintf(`
+resource "aws_sfn_activity" "test" {
+  name = %[1]q
+}
 
 resource "aws_ssm_maintenance_window_task" "target" {
   window_id = "${aws_ssm_maintenance_window.test.id}"
   task_type = "STEP_FUNCTIONS"
-  task_arn = "${aws_sfn_activity.foo.id}"
+  task_arn = "${aws_sfn_activity.test.id}"
   priority = 1
   service_role_arn = "${aws_iam_role.test.arn}"
   max_concurrency = "2"
@@ -718,22 +707,15 @@ resource "aws_ssm_maintenance_window_task" "target" {
   }
   task_invocation_parameters {
     step_functions_parameters {
-      input = "${data.template_file.input.rendered}"
+      input = jsonencode({
+        key1 = "value1"
+        key2 = "value2"
+        key3 = "value3"
+      })
       name = "tf-step-function-%[1]s"
     }
   }
 }
-
-data "template_file" "input" {
-  template = <<EOF
-{
-  "key1": "value1",
-  "key2": "value2",
-  "key3": "value3"
-}
-EOF
-}
-
 `, rName)
 }
 
