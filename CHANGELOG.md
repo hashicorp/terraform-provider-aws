@@ -1,4 +1,10 @@
 ## 2.31.0 (Unreleased)
+
+BUG FIXES:
+
+* service/waf: Prevent incorrect `Error getting WAF change token` errors for API calls that should be retried or specially handled [GH-10242]
+* service/wafregional: Prevent incorrect `Error getting WAF regional change token` errors for API calls that should be retried or specially handled [GH-10242]
+
 ## 2.30.0 (September 26, 2019)
 
 NOTES:
