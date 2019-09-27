@@ -5,7 +5,7 @@ go 1.13
 require (
 	github.com/aws/aws-sdk-go v1.24.4
 	github.com/beevik/etree v1.1.0
-	github.com/bflad/tfproviderlint v0.4.0
+	github.com/bflad/tfproviderlint v0.5.0
 	github.com/client9/misspell v0.3.4
 	github.com/golangci/golangci-lint v1.19.1
 	github.com/google/gofuzz v0.0.0-20170612174753-24818f796faf // indirect
