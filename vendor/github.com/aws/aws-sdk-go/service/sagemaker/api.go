@@ -7661,14 +7661,6 @@ type AnnotationConsolidationConfig struct {
 	//    arn:aws:lambda:ap-southeast-1:377565633583:function:ACS-NamedEntityRecognition
 	//    arn:aws:lambda:ca-central-1:918755190332:function:ACS-NamedEntityRecognition
 	//
-	//    * Named entity eecognition - Groups similar selections and calculates
-	//    aggregate boundaries, resolving to most-assigned label. arn:aws:lambda:us-east-1:432418664414:function:ACS-NamedEntityRecognition
-	//    arn:aws:lambda:us-east-2:266458841044:function:ACS-NamedEntityRecognition
-	//    arn:aws:lambda:us-west-2:081040173940:function:ACS-NamedEntityRecognition
-	//    arn:aws:lambda:eu-west-1:568282634449:function:ACS-NamedEntityRecognition
-	//    arn:aws:lambda:ap-northeast-1:477331159723:function:ACS-NamedEntityRecognition
-	//    arn:aws:lambda:ap-southeast-2:454466003867:function:ACS-NamedEntityRecognition
-	//
 	// For more information, see Annotation Consolidation (https://docs.aws.amazon.com/sagemaker/latest/dg/sms-annotation-consolidation.html).
 	//
 	// AnnotationConsolidationLambdaArn is a required field
@@ -9039,6 +9031,18 @@ type CreateEndpointConfigInput struct {
 	// The Amazon Resource Name (ARN) of a AWS Key Management Service key that Amazon
 	// SageMaker uses to encrypt data on the storage volume attached to the ML compute
 	// instance that hosts the endpoint.
+	//
+	// Nitro-based instances do not support encryption with AWS KMS. If any of the
+	// models that you specify in the ProductionVariants parameter use nitro-based
+	// instances, do not specify a value for the KmsKeyId parameter. If you specify
+	// a value for KmsKeyId when using any nitro-based instances, the call to CreateEndpointConfig
+	// fails.
+	//
+	// For a list of nitro-based instances, see Nitro-based Instances (https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/instance-types.html#ec2-nitro-instances)
+	// in the Amazon Elastic Compute Cloud User Guide for Linux Instances.
+	//
+	// For more information about storage volumes on nitro-based instances, see
+	// Amazon EBS and NVMe on Linux Instances (https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/nvme-ebs-volumes.html).
 	KmsKeyId *string `type:"string"`
 
 	// An list of ProductionVariant objects, one for each model that you want to
@@ -14014,6 +14018,9 @@ type DescribeTrainingJobOutput struct {
 	//
 	//    * Training - Training is in progress.
 	//
+	//    * Interrupted - The job stopped because the managed spot training instances
+	//    were interrupted.
+	//
 	//    * Uploading - Training is complete and the model artifacts are being uploaded
 	//    to the S3 location.
 	//
@@ -14033,9 +14040,6 @@ type DescribeTrainingJobOutput struct {
 	//
 	//    * MaxWaitTmeExceeded - The job stopped because it exceeded the maximum
 	//    allowed wait time.
-	//
-	//    * Interrupted - The job stopped because the managed spot training instances
-	//    were interrupted.
 	//
 	//    * Stopped - The training job has stopped.
 	//
@@ -14837,7 +14841,7 @@ type FileSystemDataSource struct {
 	DirectoryPath *string `type:"string" required:"true"`
 
 	// The access mode of the mount of the directory associated with the channel.
-	// A directory can be mounted either in ro (read-only) or rw (read-write).
+	// A directory can be mounted either in ro (read-only) or rw (read-write) mode.
 	//
 	// FileSystemAccessMode is a required field
 	FileSystemAccessMode *string `type:"string" required:"true" enum:"FileSystemAccessMode"`
@@ -26760,6 +26764,42 @@ const (
 
 	// ProductionVariantInstanceTypeMlC518xlarge is a ProductionVariantInstanceType enum value
 	ProductionVariantInstanceTypeMlC518xlarge = "ml.c5.18xlarge"
+
+	// ProductionVariantInstanceTypeMlG4dnXlarge is a ProductionVariantInstanceType enum value
+	ProductionVariantInstanceTypeMlG4dnXlarge = "ml.g4dn.xlarge"
+
+	// ProductionVariantInstanceTypeMlG4dn2xlarge is a ProductionVariantInstanceType enum value
+	ProductionVariantInstanceTypeMlG4dn2xlarge = "ml.g4dn.2xlarge"
+
+	// ProductionVariantInstanceTypeMlG4dn4xlarge is a ProductionVariantInstanceType enum value
+	ProductionVariantInstanceTypeMlG4dn4xlarge = "ml.g4dn.4xlarge"
+
+	// ProductionVariantInstanceTypeMlG4dn8xlarge is a ProductionVariantInstanceType enum value
+	ProductionVariantInstanceTypeMlG4dn8xlarge = "ml.g4dn.8xlarge"
+
+	// ProductionVariantInstanceTypeMlG4dn12xlarge is a ProductionVariantInstanceType enum value
+	ProductionVariantInstanceTypeMlG4dn12xlarge = "ml.g4dn.12xlarge"
+
+	// ProductionVariantInstanceTypeMlG4dn16xlarge is a ProductionVariantInstanceType enum value
+	ProductionVariantInstanceTypeMlG4dn16xlarge = "ml.g4dn.16xlarge"
+
+	// ProductionVariantInstanceTypeMlR5Large is a ProductionVariantInstanceType enum value
+	ProductionVariantInstanceTypeMlR5Large = "ml.r5.large"
+
+	// ProductionVariantInstanceTypeMlR5Xlarge is a ProductionVariantInstanceType enum value
+	ProductionVariantInstanceTypeMlR5Xlarge = "ml.r5.xlarge"
+
+	// ProductionVariantInstanceTypeMlR52xlarge is a ProductionVariantInstanceType enum value
+	ProductionVariantInstanceTypeMlR52xlarge = "ml.r5.2xlarge"
+
+	// ProductionVariantInstanceTypeMlR54xlarge is a ProductionVariantInstanceType enum value
+	ProductionVariantInstanceTypeMlR54xlarge = "ml.r5.4xlarge"
+
+	// ProductionVariantInstanceTypeMlR512xlarge is a ProductionVariantInstanceType enum value
+	ProductionVariantInstanceTypeMlR512xlarge = "ml.r5.12xlarge"
+
+	// ProductionVariantInstanceTypeMlR524xlarge is a ProductionVariantInstanceType enum value
+	ProductionVariantInstanceTypeMlR524xlarge = "ml.r5.24xlarge"
 )
 
 const (
@@ -27015,6 +27055,9 @@ const (
 	// TrainingInstanceTypeMlP316xlarge is a TrainingInstanceType enum value
 	TrainingInstanceTypeMlP316xlarge = "ml.p3.16xlarge"
 
+	// TrainingInstanceTypeMlP3dn24xlarge is a TrainingInstanceType enum value
+	TrainingInstanceTypeMlP3dn24xlarge = "ml.p3dn.24xlarge"
+
 	// TrainingInstanceTypeMlC5Xlarge is a TrainingInstanceType enum value
 	TrainingInstanceTypeMlC5Xlarge = "ml.c5.xlarge"
 
@@ -27029,9 +27072,6 @@ const (
 
 	// TrainingInstanceTypeMlC518xlarge is a TrainingInstanceType enum value
 	TrainingInstanceTypeMlC518xlarge = "ml.c5.18xlarge"
-
-	// TrainingInstanceTypeMlP3dn24xlarge is a TrainingInstanceType enum value
-	TrainingInstanceTypeMlP3dn24xlarge = "ml.p3dn.24xlarge"
 )
 
 const (
