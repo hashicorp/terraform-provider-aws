@@ -299,21 +299,22 @@ func resourceAwsDmsEndpointCreate(d *schema.ResourceData, meta interface{}) erro
 	log.Println("[DEBUG] DMS create endpoint:", request)
 
 	err := resource.Retry(5*time.Minute, func() *resource.RetryError {
-		if _, err := conn.CreateEndpoint(request); err != nil {
-			if awserr, ok := err.(awserr.Error); ok {
-				switch awserr.Code() {
-				case "AccessDeniedFault":
-					return resource.RetryableError(awserr)
-				}
-			}
-			// Didn't recognize the error, so shouldn't retry.
+		_, err := conn.CreateEndpoint(request)
+		if isAWSErr(err, "AccessDeniedFault", "") {
+			return resource.RetryableError(err)
+		}
+		if err != nil {
 			return resource.NonRetryableError(err)
 		}
+
 		// Successful delete
 		return nil
 	})
+	if isResourceTimeoutError(err) {
+		_, err = conn.CreateEndpoint(request)
+	}
 	if err != nil {
-		return err
+		return fmt.Errorf("Error creating DMS endpoint: %s", err)
 	}
 
 	d.SetId(d.Get("endpoint_id").(string))

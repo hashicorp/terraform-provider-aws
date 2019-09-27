@@ -12,6 +12,8 @@ import (
 )
 
 func TestAccAWSMediaStoreContainer_basic(t *testing.T) {
+	resourceName := "aws_media_store_container.test"
+
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSMediaStore(t) },
 		Providers:    testAccProviders,
@@ -20,8 +22,13 @@ func TestAccAWSMediaStoreContainer_basic(t *testing.T) {
 			{
 				Config: testAccMediaStoreContainerConfig(acctest.RandString(5)),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsMediaStoreContainerExists("aws_media_store_container.test"),
+					testAccCheckAwsMediaStoreContainerExists(resourceName),
 				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})
@@ -67,26 +74,6 @@ func TestAccAWSMediaStoreContainer_tags(t *testing.T) {
 					testAccCheckAwsMediaStoreContainerExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 				),
-			},
-		},
-	})
-}
-
-func TestAccAWSMediaStoreContainer_import(t *testing.T) {
-	resourceName := "aws_media_store_container.test"
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSMediaStore(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckAwsMediaStoreContainerDestroy,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccMediaStoreContainerConfig(acctest.RandString(5)),
-			},
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
 			},
 		},
 	})

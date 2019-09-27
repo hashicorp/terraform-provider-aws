@@ -1656,6 +1656,53 @@ func TestAccAWSInstance_getPasswordData_trueToFalse(t *testing.T) {
 	})
 }
 
+func TestAccAWSInstance_CreditSpecification_Empty_NonBurstable(t *testing.T) {
+	var instance ec2.Instance
+	resourceName := "aws_instance.test"
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckInstanceDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccInstanceConfig_CreditSpecification_Empty_NonBurstable(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckInstanceExists(resourceName, &instance),
+				),
+			},
+		},
+	})
+}
+
+// Reference: https://github.com/terraform-providers/terraform-provider-aws/issues/10203
+func TestAccAWSInstance_CreditSpecification_UnspecifiedToEmpty_NonBurstable(t *testing.T) {
+	var instance ec2.Instance
+	resourceName := "aws_instance.test"
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckInstanceDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccInstanceConfig_CreditSpecification_Unspecified_NonBurstable(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckInstanceExists(resourceName, &instance),
+				),
+			},
+			{
+				Config: testAccInstanceConfig_CreditSpecification_Empty_NonBurstable(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckInstanceExists(resourceName, &instance),
+				),
+			},
+		},
+	})
+}
+
 func TestAccAWSInstance_creditSpecification_unspecifiedDefaultsToStandard(t *testing.T) {
 	var instance ec2.Instance
 	resName := "aws_instance.foo"
@@ -3937,6 +3984,85 @@ resource "aws_instance" "foo" {
   get_password_data = %t
 }
 `, rInt, val)
+}
+
+func testAccInstanceConfig_CreditSpecification_Empty_NonBurstable(rName string) string {
+	return fmt.Sprintf(`
+data "aws_ami" "amzn-ami-minimal-hvm-ebs" {
+  most_recent = true
+  owners      = ["amazon"]
+
+  filter {
+    name   = "name"
+    values = ["amzn-ami-minimal-hvm-*"]
+  }
+
+  filter {
+    name   = "root-device-type"
+    values = ["ebs"]
+  }
+}
+
+
+resource "aws_vpc" "test" {
+  cidr_block = "172.16.0.0/16"
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_subnet" "test" {
+  cidr_block = "172.16.0.0/24"
+  vpc_id     = "${aws_vpc.test.id}"
+}
+
+resource "aws_instance" "test" {
+  ami           = "${data.aws_ami.amzn-ami-minimal-hvm-ebs.id}"
+  instance_type = "m5.large"
+  subnet_id     = "${aws_subnet.test.id}"
+
+  credit_specification {}
+}
+`, rName)
+}
+
+func testAccInstanceConfig_CreditSpecification_Unspecified_NonBurstable(rName string) string {
+	return fmt.Sprintf(`
+data "aws_ami" "amzn-ami-minimal-hvm-ebs" {
+  most_recent = true
+  owners      = ["amazon"]
+
+  filter {
+    name   = "name"
+    values = ["amzn-ami-minimal-hvm-*"]
+  }
+
+  filter {
+    name   = "root-device-type"
+    values = ["ebs"]
+  }
+}
+
+resource "aws_vpc" "test" {
+  cidr_block = "172.16.0.0/16"
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_subnet" "test" {
+  cidr_block = "172.16.0.0/24"
+  vpc_id     = "${aws_vpc.test.id}"
+}
+
+resource "aws_instance" "test" {
+  ami           = "${data.aws_ami.amzn-ami-minimal-hvm-ebs.id}"
+  instance_type = "m5.large"
+  subnet_id     = "${aws_subnet.test.id}"
+}
+`, rName)
 }
 
 func testAccInstanceConfig_creditSpecification_unspecified(rInt int) string {

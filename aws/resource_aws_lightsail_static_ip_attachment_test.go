@@ -28,6 +28,7 @@ func TestAccAWSLightsailStaticIpAttachment_basic(t *testing.T) {
 				Config: testAccAWSLightsailStaticIpAttachmentConfig_basic(staticIpName, instanceName, keypairName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAWSLightsailStaticIpAttachmentExists("aws_lightsail_static_ip_attachment.test", &staticIp),
+					resource.TestCheckResourceAttrSet("aws_lightsail_static_ip_attachment.test", "ip_address"),
 				),
 			},
 		},

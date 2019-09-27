@@ -1320,13 +1320,8 @@ func resourceAwsDbInstanceRead(d *schema.ResourceData, meta interface{}) error {
 		d.Set("option_group_name", v.OptionGroupMemberships[0].OptionGroupName)
 	}
 
-	if v.MonitoringInterval != nil {
-		d.Set("monitoring_interval", v.MonitoringInterval)
-	}
-
-	if v.MonitoringRoleArn != nil {
-		d.Set("monitoring_role_arn", v.MonitoringRoleArn)
-	}
+	d.Set("monitoring_interval", v.MonitoringInterval)
+	d.Set("monitoring_role_arn", v.MonitoringRoleArn)
 
 	if err := d.Set("enabled_cloudwatch_logs_exports", flattenStringList(v.EnabledCloudwatchLogsExports)); err != nil {
 		return fmt.Errorf("error setting enabled_cloudwatch_logs_exports: %s", err)
@@ -1630,18 +1625,42 @@ func resourceAwsDbInstanceUpdate(d *schema.ResourceData, meta interface{}) error
 		d.SetPartial("performance_insights_enabled")
 		req.EnablePerformanceInsights = aws.Bool(d.Get("performance_insights_enabled").(bool))
 
-		d.SetPartial("performance_insights_kms_key_id")
-		req.PerformanceInsightsKMSKeyId = aws.String(d.Get("performance_insights_kms_key_id").(string))
+		if v, ok := d.GetOk("performance_insights_kms_key_id"); ok {
+			d.SetPartial("performance_insights_kms_key_id")
+			req.PerformanceInsightsKMSKeyId = aws.String(v.(string))
+		}
 
-		d.SetPartial("performance_insights_retention_period")
-		req.PerformanceInsightsRetentionPeriod = aws.Int64(int64(d.Get("performance_insights_retention_period").(int)))
+		if v, ok := d.GetOk("performance_insights_retention_period"); ok {
+			d.SetPartial("performance_insights_retention_period")
+			req.PerformanceInsightsRetentionPeriod = aws.Int64(int64(v.(int)))
+		}
+
 		requestUpdate = true
 	}
 
 	log.Printf("[DEBUG] Send DB Instance Modification request: %t", requestUpdate)
 	if requestUpdate {
 		log.Printf("[DEBUG] DB Instance Modification request: %s", req)
-		_, err := conn.ModifyDBInstance(req)
+
+		err := resource.Retry(2*time.Minute, func() *resource.RetryError {
+			_, err := conn.ModifyDBInstance(req)
+
+			// Retry for IAM eventual consistency
+			if isAWSErr(err, "InvalidParameterValue", "IAM role ARN value is invalid or does not include the required permissions") {
+				return resource.RetryableError(err)
+			}
+
+			if err != nil {
+				return resource.NonRetryableError(err)
+			}
+
+			return nil
+		})
+
+		if isResourceTimeoutError(err) {
+			_, err = conn.ModifyDBInstance(req)
+		}
+
 		if err != nil {
 			return fmt.Errorf("Error modifying DB Instance %s: %s", d.Id(), err)
 		}

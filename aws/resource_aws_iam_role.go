@@ -177,6 +177,9 @@ func resourceAwsIamRoleCreate(d *schema.ResourceData, meta interface{}) error {
 		}
 		return resource.NonRetryableError(err)
 	})
+	if isResourceTimeoutError(err) {
+		createResp, err = iamconn.CreateRole(request)
+	}
 	if err != nil {
 		return fmt.Errorf("Error creating IAM Role %s: %s", name, err)
 	}
@@ -362,7 +365,7 @@ func resourceAwsIamRoleDelete(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	// IAM is eventually consistent and deletion of attached policies may take time
-	return resource.Retry(30*time.Second, func() *resource.RetryError {
+	err := resource.Retry(30*time.Second, func() *resource.RetryError {
 		_, err := iamconn.DeleteRole(deleteRoleInput)
 		if err != nil {
 			if isAWSErr(err, iam.ErrCodeDeleteConflictException, "") {
@@ -373,6 +376,13 @@ func resourceAwsIamRoleDelete(d *schema.ResourceData, meta interface{}) error {
 		}
 		return nil
 	})
+	if isResourceTimeoutError(err) {
+		_, err = iamconn.DeleteRole(deleteRoleInput)
+	}
+	if err != nil {
+		return fmt.Errorf("Error deleting IAM role: %s", err)
+	}
+	return nil
 }
 
 func deleteAwsIamRoleInstanceProfiles(conn *iam.IAM, rolename string) error {

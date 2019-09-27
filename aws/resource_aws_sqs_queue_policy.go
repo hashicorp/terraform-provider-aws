@@ -67,9 +67,11 @@ func resourceAwsSqsQueuePolicyUpsert(d *schema.ResourceData, meta interface{}) e
 		AttributeNames: []*string{aws.String(sqs.QueueAttributeNamePolicy)},
 	}
 	notUpdatedError := fmt.Errorf("SQS attribute %s not updated", sqs.QueueAttributeNamePolicy)
+	var out *sqs.GetQueueAttributesOutput
 	err = resource.Retry(1*time.Minute, func() *resource.RetryError {
 		log.Printf("[DEBUG] Reading SQS attributes: %s", gqaInput)
-		out, err := conn.GetQueueAttributes(gqaInput)
+		var err error
+		out, err = conn.GetQueueAttributes(gqaInput)
 		if err != nil {
 			return resource.NonRetryableError(err)
 		}
@@ -88,8 +90,23 @@ func resourceAwsSqsQueuePolicyUpsert(d *schema.ResourceData, meta interface{}) e
 		}
 		return nil
 	})
+	if isResourceTimeoutError(err) {
+		out, err = conn.GetQueueAttributes(gqaInput)
+		if err == nil {
+			queuePolicy, ok := out.Attributes[sqs.QueueAttributeNamePolicy]
+			if !ok {
+				return notUpdatedError
+			}
+
+			var equivalent bool
+			equivalent, err = awspolicy.PoliciesAreEquivalent(*queuePolicy, policy)
+			if !equivalent {
+				return notUpdatedError
+			}
+		}
+	}
 	if err != nil {
-		return err
+		return fmt.Errorf("Error updating SQS queue attributes: %s", err)
 	}
 
 	d.SetId(url)

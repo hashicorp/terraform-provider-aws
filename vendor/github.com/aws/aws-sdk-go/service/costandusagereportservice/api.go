@@ -229,6 +229,90 @@ func (c *CostandUsageReportService) DescribeReportDefinitionsPagesWithContext(ct
 	return p.Err()
 }
 
+const opModifyReportDefinition = "ModifyReportDefinition"
+
+// ModifyReportDefinitionRequest generates a "aws/request.Request" representing the
+// client's request for the ModifyReportDefinition operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See ModifyReportDefinition for more information on using the ModifyReportDefinition
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the ModifyReportDefinitionRequest method.
+//    req, resp := client.ModifyReportDefinitionRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/cur-2017-01-06/ModifyReportDefinition
+func (c *CostandUsageReportService) ModifyReportDefinitionRequest(input *ModifyReportDefinitionInput) (req *request.Request, output *ModifyReportDefinitionOutput) {
+	op := &request.Operation{
+		Name:       opModifyReportDefinition,
+		HTTPMethod: "POST",
+		HTTPPath:   "/",
+	}
+
+	if input == nil {
+		input = &ModifyReportDefinitionInput{}
+	}
+
+	output = &ModifyReportDefinitionOutput{}
+	req = c.newRequest(op, input, output)
+	req.Handlers.Unmarshal.Swap(jsonrpc.UnmarshalHandler.Name, protocol.UnmarshalDiscardBodyHandler)
+	return
+}
+
+// ModifyReportDefinition API operation for AWS Cost and Usage Report Service.
+//
+// Allows you to programatically update your report preferences.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for AWS Cost and Usage Report Service's
+// API operation ModifyReportDefinition for usage and error information.
+//
+// Returned Error Codes:
+//   * ErrCodeInternalErrorException "InternalErrorException"
+//   An error on the server occurred during the processing of your request. Try
+//   again later.
+//
+//   * ErrCodeValidationException "ValidationException"
+//   The input fails to satisfy the constraints specified by an AWS service.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/cur-2017-01-06/ModifyReportDefinition
+func (c *CostandUsageReportService) ModifyReportDefinition(input *ModifyReportDefinitionInput) (*ModifyReportDefinitionOutput, error) {
+	req, out := c.ModifyReportDefinitionRequest(input)
+	return out, req.Send()
+}
+
+// ModifyReportDefinitionWithContext is the same as ModifyReportDefinition with the addition of
+// the ability to pass a context and additional request options.
+//
+// See ModifyReportDefinition for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *CostandUsageReportService) ModifyReportDefinitionWithContext(ctx aws.Context, input *ModifyReportDefinitionInput, opts ...request.Option) (*ModifyReportDefinitionOutput, error) {
+	req, out := c.ModifyReportDefinitionRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
 const opPutReportDefinition = "PutReportDefinition"
 
 // PutReportDefinitionRequest generates a "aws/request.Request" representing the
@@ -447,6 +531,80 @@ func (s *DescribeReportDefinitionsOutput) SetNextToken(v string) *DescribeReport
 func (s *DescribeReportDefinitionsOutput) SetReportDefinitions(v []*ReportDefinition) *DescribeReportDefinitionsOutput {
 	s.ReportDefinitions = v
 	return s
+}
+
+type ModifyReportDefinitionInput struct {
+	_ struct{} `type:"structure"`
+
+	// The definition of AWS Cost and Usage Report. You can specify the report name,
+	// time unit, report format, compression format, S3 bucket, additional artifacts,
+	// and schema elements in the definition.
+	//
+	// ReportDefinition is a required field
+	ReportDefinition *ReportDefinition `type:"structure" required:"true"`
+
+	// The name of the report that you want to create. The name must be unique,
+	// is case sensitive, and can't include spaces.
+	//
+	// ReportName is a required field
+	ReportName *string `type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s ModifyReportDefinitionInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ModifyReportDefinitionInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *ModifyReportDefinitionInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "ModifyReportDefinitionInput"}
+	if s.ReportDefinition == nil {
+		invalidParams.Add(request.NewErrParamRequired("ReportDefinition"))
+	}
+	if s.ReportName == nil {
+		invalidParams.Add(request.NewErrParamRequired("ReportName"))
+	}
+	if s.ReportDefinition != nil {
+		if err := s.ReportDefinition.Validate(); err != nil {
+			invalidParams.AddNested("ReportDefinition", err.(request.ErrInvalidParams))
+		}
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetReportDefinition sets the ReportDefinition field's value.
+func (s *ModifyReportDefinitionInput) SetReportDefinition(v *ReportDefinition) *ModifyReportDefinitionInput {
+	s.ReportDefinition = v
+	return s
+}
+
+// SetReportName sets the ReportName field's value.
+func (s *ModifyReportDefinitionInput) SetReportName(v string) *ModifyReportDefinitionInput {
+	s.ReportName = &v
+	return s
+}
+
+type ModifyReportDefinitionOutput struct {
+	_ struct{} `type:"structure"`
+}
+
+// String returns the string representation
+func (s ModifyReportDefinitionOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ModifyReportDefinitionOutput) GoString() string {
+	return s.String()
 }
 
 // Creates a Cost and Usage Report.
@@ -714,6 +872,9 @@ const (
 
 	// AWSRegionApNortheast3 is a AWSRegion enum value
 	AWSRegionApNortheast3 = "ap-northeast-3"
+
+	// AWSRegionApEast1 is a AWSRegion enum value
+	AWSRegionApEast1 = "ap-east-1"
 )
 
 // The types of manifest that you want AWS to create for this report.

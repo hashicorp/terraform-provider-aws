@@ -6,7 +6,7 @@ description: |-
   Get an authentication token to communicate with an EKS Cluster
 ---
 
-# Data Source: aws_eks_cluster
+# Data Source: aws_eks_cluster_auth
 
 Get an authentication token to communicate with an EKS cluster.
 
