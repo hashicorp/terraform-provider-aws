@@ -196,6 +196,12 @@ func resourceAwsEc2ClientVpnEndpointRead(d *schema.ResourceData, meta interface{
 		ClientVpnEndpointIds: []*string{aws.String(d.Id())},
 	})
 
+	if isAWSErr(err, "InvalidClientVpnAssociationId.NotFound", "") || isAWSErr(err, "InvalidClientVpnEndpointId.NotFound", "") {
+		log.Printf("[WARN] EC2 Client VPN Endpoint (%s) not found, removing from state", d.Id())
+		d.SetId("")
+		return nil
+	}
+
 	if err != nil {
 		return fmt.Errorf("Error reading Client VPN endpoint: %s", err)
 	}

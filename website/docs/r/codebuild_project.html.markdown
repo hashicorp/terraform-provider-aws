@@ -233,6 +233,7 @@ The following arguments are supported:
 `artifacts` supports the following:
 
 * `type` - (Required) The build output artifact's type. Valid values for this parameter are: `CODEPIPELINE`, `NO_ARTIFACTS` or `S3`.
+* `artifact_identifier` - (Optional) The artifact identifier. Must be the same specified inside AWS CodeBuild buildspec.
 * `encryption_disabled` - (Optional) If set to true, output artifacts will not be encrypted. If `type` is set to `NO_ARTIFACTS` then this value will be ignored. Defaults to `false`.
 * `override_artifact_name` (Optional) If set to true, a name specified in the build spec file overrides the artifact name.
 * `location` - (Optional) Information about the build output artifact location. If `type` is set to `CODEPIPELINE` or `NO_ARTIFACTS` then this value will be ignored. If `type` is set to `S3`, this is the name of the output bucket.

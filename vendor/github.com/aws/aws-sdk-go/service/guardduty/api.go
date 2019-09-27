@@ -140,7 +140,10 @@ func (c *GuardDuty) ArchiveFindingsRequest(input *ArchiveFindingsInput) (req *re
 
 // ArchiveFindings API operation for Amazon GuardDuty.
 //
-// Archives Amazon GuardDuty findings specified by the list of finding IDs.
+// Archives GuardDuty findings specified by the list of finding IDs.
+//
+// Only the master account can archive findings. Member accounts do not have
+// permission to archive findings from their accounts.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -222,9 +225,10 @@ func (c *GuardDuty) CreateDetectorRequest(input *CreateDetectorInput) (req *requ
 
 // CreateDetector API operation for Amazon GuardDuty.
 //
-// Creates a single Amazon GuardDuty detector. A detector is an object that
-// represents the GuardDuty service. A detector must be created in order for
-// GuardDuty to become operational.
+// Creates a single Amazon GuardDuty detector. A detector is a resource that
+// represents the GuardDuty service. To start using GuardDuty, you must create
+// a detector in each region that you enable the service. You can have only
+// one detector per account per region.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -1963,8 +1967,8 @@ func (c *GuardDuty) GetMasterAccountRequest(input *GetMasterAccountInput) (req *
 
 // GetMasterAccount API operation for Amazon GuardDuty.
 //
-// Provides the details for the GuardDuty master account to the current GuardDuty
-// member account.
+// Provides the details for the GuardDuty master account associated with the
+// current GuardDuty member account.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -4221,6 +4225,7 @@ func (s AcceptInvitationOutput) GoString() string {
 	return s.String()
 }
 
+// Contains information about the access keys.
 type AccessKeyDetails struct {
 	_ struct{} `type:"structure"`
 
@@ -4271,6 +4276,7 @@ func (s *AccessKeyDetails) SetUserType(v string) *AccessKeyDetails {
 	return s
 }
 
+// Contains information about the account.
 type AccountDetail struct {
 	_ struct{} `type:"structure"`
 
@@ -4329,6 +4335,7 @@ func (s *AccountDetail) SetEmail(v string) *AccountDetail {
 	return s
 }
 
+// Contains information about action.
 type Action struct {
 	_ struct{} `type:"structure"`
 
@@ -4458,6 +4465,7 @@ func (s ArchiveFindingsOutput) GoString() string {
 	return s.String()
 }
 
+// Contains information about the API operation.
 type AwsApiCallAction struct {
 	_ struct{} `type:"structure"`
 
@@ -4517,6 +4525,7 @@ func (s *AwsApiCallAction) SetServiceName(v string) *AwsApiCallAction {
 	return s
 }
 
+// Contains information about the city associated with the IP address.
 type City struct {
 	_ struct{} `type:"structure"`
 
@@ -4540,15 +4549,18 @@ func (s *City) SetCityName(v string) *City {
 	return s
 }
 
+// Contains information about the condition.
 type Condition struct {
 	_ struct{} `type:"structure"`
 
-	// Represents the equal condition to be applied to a single field when querying
-	// for findings.
+	// Deprecated. Represents the equal condition to be applied to a single field
+	// when querying for findings.
 	//
 	// Deprecated: Eq has been deprecated
 	Eq []*string `locationName:"eq" deprecated:"true" type:"list"`
 
+	// Represents an equal condition to be applied to a single field when querying
+	// for findings.
 	Equals []*string `locationName:"equals" type:"list"`
 
 	// Represents a greater than condition to be applied to a single field when
@@ -4559,14 +4571,14 @@ type Condition struct {
 	// when querying for findings.
 	GreaterThanOrEqual *int64 `locationName:"greaterThanOrEqual" type:"long"`
 
-	// Represents a greater than condition to be applied to a single field when
-	// querying for findings.
+	// Deprecated. Represents a greater than condition to be applied to a single
+	// field when querying for findings.
 	//
 	// Deprecated: Gt has been deprecated
 	Gt *int64 `locationName:"gt" deprecated:"true" type:"integer"`
 
-	// Represents a greater than equal condition to be applied to a single field
-	// when querying for findings.
+	// Deprecated. Represents a greater than equal condition to be applied to a
+	// single field when querying for findings.
 	//
 	// Deprecated: Gte has been deprecated
 	Gte *int64 `locationName:"gte" deprecated:"true" type:"integer"`
@@ -4579,24 +4591,26 @@ type Condition struct {
 	// querying for findings.
 	LessThanOrEqual *int64 `locationName:"lessThanOrEqual" type:"long"`
 
-	// Represents a less than condition to be applied to a single field when querying
-	// for findings.
+	// Deprecated. Represents a less than condition to be applied to a single field
+	// when querying for findings.
 	//
 	// Deprecated: Lt has been deprecated
 	Lt *int64 `locationName:"lt" deprecated:"true" type:"integer"`
 
-	// Represents a less than equal condition to be applied to a single field when
-	// querying for findings.
+	// Deprecated. Represents a less than equal condition to be applied to a single
+	// field when querying for findings.
 	//
 	// Deprecated: Lte has been deprecated
 	Lte *int64 `locationName:"lte" deprecated:"true" type:"integer"`
 
-	// Represents the not equal condition to be applied to a single field when querying
-	// for findings.
+	// Deprecated. Represents the not equal condition to be applied to a single
+	// field when querying for findings.
 	//
 	// Deprecated: Neq has been deprecated
 	Neq []*string `locationName:"neq" deprecated:"true" type:"list"`
 
+	// Represents an not equal condition to be applied to a single field when querying
+	// for findings.
 	NotEquals []*string `locationName:"notEquals" type:"list"`
 }
 
@@ -4682,6 +4696,7 @@ func (s *Condition) SetNotEquals(v []*string) *Condition {
 	return s
 }
 
+// Contains information about the country.
 type Country struct {
 	_ struct{} `type:"structure"`
 
@@ -5827,8 +5842,7 @@ func (s *DeleteMembersInput) SetDetectorId(v string) *DeleteMembersInput {
 type DeleteMembersOutput struct {
 	_ struct{} `type:"structure"`
 
-	// A list of objects containing the unprocessed account and a result string
-	// explaining why it was unprocessed.
+	// The accounts that could not be processed.
 	//
 	// UnprocessedAccounts is a required field
 	UnprocessedAccounts []*UnprocessedAccount `locationName:"unprocessedAccounts" type:"list" required:"true"`
@@ -6063,6 +6077,7 @@ func (s *DisassociateMembersOutput) SetUnprocessedAccounts(v []*UnprocessedAccou
 	return s
 }
 
+// Contains information about the DNS request.
 type DnsRequestAction struct {
 	_ struct{} `type:"structure"`
 
@@ -6086,6 +6101,7 @@ func (s *DnsRequestAction) SetDomain(v string) *DnsRequestAction {
 	return s
 }
 
+// Contains information about the domain.
 type DomainDetails struct {
 	_ struct{} `type:"structure"`
 
@@ -6109,73 +6125,95 @@ func (s *DomainDetails) SetDomain(v string) *DomainDetails {
 	return s
 }
 
+// Contains information about the reason that the finding was generated.
+type Evidence struct {
+	_ struct{} `type:"structure"`
+
+	// A list of threat intelligence details related to the evidence.
+	ThreatIntelligenceDetails []*ThreatIntelligenceDetail `locationName:"threatIntelligenceDetails" type:"list"`
+}
+
+// String returns the string representation
+func (s Evidence) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s Evidence) GoString() string {
+	return s.String()
+}
+
+// SetThreatIntelligenceDetails sets the ThreatIntelligenceDetails field's value.
+func (s *Evidence) SetThreatIntelligenceDetails(v []*ThreatIntelligenceDetail) *Evidence {
+	s.ThreatIntelligenceDetails = v
+	return s
+}
+
+// Contains information about the finding.
 type Finding struct {
 	_ struct{} `type:"structure"`
 
-	// AWS account ID where the activity occurred that prompted GuardDuty to generate
-	// a finding.
+	// The ID of the account in which the finding was generated.
 	//
 	// AccountId is a required field
 	AccountId *string `locationName:"accountId" type:"string" required:"true"`
 
-	// The ARN of a finding described by the action.
+	// The ARN for the finding.
 	//
 	// Arn is a required field
 	Arn *string `locationName:"arn" type:"string" required:"true"`
 
-	// The confidence level of a finding.
+	// The confidence score for the finding.
 	Confidence *float64 `locationName:"confidence" type:"double"`
 
-	// The time stamp at which a finding was generated.
+	// The time and date at which the finding was created.
 	//
 	// CreatedAt is a required field
 	CreatedAt *string `locationName:"createdAt" type:"string" required:"true"`
 
-	// The description of a finding.
+	// The description of the finding.
 	Description *string `locationName:"description" type:"string"`
 
-	// The identifier that corresponds to a finding described by the action.
+	// The ID of the finding.
 	//
 	// Id is a required field
 	Id *string `locationName:"id" type:"string" required:"true"`
 
-	// The AWS resource partition.
+	// The partition associated with the finding.
 	Partition *string `locationName:"partition" type:"string"`
 
-	// The AWS region where the activity occurred that prompted GuardDuty to generate
-	// a finding.
+	// The Region in which the finding was generated.
 	//
 	// Region is a required field
 	Region *string `locationName:"region" type:"string" required:"true"`
 
-	// The AWS resource associated with the activity that prompted GuardDuty to
-	// generate a finding.
+	// Contains information about the resource.
 	//
 	// Resource is a required field
 	Resource *Resource `locationName:"resource" type:"structure" required:"true"`
 
-	// Findings' schema version.
+	// The version of the schema used for the finding.
 	//
 	// SchemaVersion is a required field
 	SchemaVersion *string `locationName:"schemaVersion" type:"string" required:"true"`
 
-	// Additional information assigned to the generated finding by GuardDuty.
+	// Contains information about the service.
 	Service *Service `locationName:"service" type:"structure"`
 
-	// The severity of a finding.
+	// The severity of the finding.
 	//
 	// Severity is a required field
 	Severity *float64 `locationName:"severity" type:"double" required:"true"`
 
-	// The title of a finding.
+	// The title for the finding.
 	Title *string `locationName:"title" type:"string"`
 
-	// The type of a finding described by the action.
+	// The type of the finding.
 	//
 	// Type is a required field
 	Type *string `locationName:"type" min:"1" type:"string" required:"true"`
 
-	// The time stamp at which a finding was last updated.
+	// The time and date at which the finding was laste updated.
 	//
 	// UpdatedAt is a required field
 	UpdatedAt *string `locationName:"updatedAt" type:"string" required:"true"`
@@ -6281,6 +6319,7 @@ func (s *Finding) SetUpdatedAt(v string) *Finding {
 	return s
 }
 
+// Contains finding criteria information.
 type FindingCriteria struct {
 	_ struct{} `type:"structure"`
 
@@ -6305,6 +6344,7 @@ func (s *FindingCriteria) SetCriterion(v map[string]*Condition) *FindingCriteria
 	return s
 }
 
+// Contains information about finding statistics.
 type FindingStatistics struct {
 	_ struct{} `type:"structure"`
 
@@ -6328,6 +6368,7 @@ func (s *FindingStatistics) SetCountBySeverity(v map[string]*int64) *FindingStat
 	return s
 }
 
+// Contains information about the
 type GeoLocation struct {
 	_ struct{} `type:"structure"`
 
@@ -7239,6 +7280,7 @@ func (s *GetThreatIntelSetOutput) SetTags(v map[string]*string) *GetThreatIntelS
 	return s
 }
 
+// Contains information about the instance profile.
 type IamInstanceProfile struct {
 	_ struct{} `type:"structure"`
 
@@ -7271,6 +7313,7 @@ func (s *IamInstanceProfile) SetId(v string) *IamInstanceProfile {
 	return s
 }
 
+// Contains information about the details of an instance.
 type InstanceDetails struct {
 	_ struct{} `type:"structure"`
 
@@ -7393,6 +7436,7 @@ func (s *InstanceDetails) SetTags(v []*Tag) *InstanceDetails {
 	return s
 }
 
+// Contains information about the invitation.
 type Invitation struct {
 	_ struct{} `type:"structure"`
 
@@ -8190,6 +8234,7 @@ func (s *ListTagsForResourceInput) SetResourceArn(v string) *ListTagsForResource
 type ListTagsForResourceOutput struct {
 	_ struct{} `type:"structure"`
 
+	// The tags associated with the resource.
 	Tags map[string]*string `locationName:"tags" min:"1" type:"map"`
 }
 
@@ -8310,6 +8355,7 @@ func (s *ListThreatIntelSetsOutput) SetThreatIntelSetIds(v []*string) *ListThrea
 	return s
 }
 
+// Contains information about the port for the local connection.
 type LocalPortDetails struct {
 	_ struct{} `type:"structure"`
 
@@ -8342,16 +8388,17 @@ func (s *LocalPortDetails) SetPortName(v string) *LocalPortDetails {
 	return s
 }
 
+// Contains information about the Master account and invitation.
 type Master struct {
 	_ struct{} `type:"structure"`
 
-	// Master account ID
+	// The ID of the account used as the Master account.
 	AccountId *string `locationName:"accountId" min:"12" type:"string"`
 
 	// This value is used to validate the master account to the member account.
 	InvitationId *string `locationName:"invitationId" type:"string"`
 
-	// Timestamp at which the invitation was sent
+	// Timestamp at which the invitation was sent.
 	InvitedAt *string `locationName:"invitedAt" type:"string"`
 
 	// The status of the relationship between the master and member accounts.
@@ -8392,6 +8439,7 @@ func (s *Master) SetRelationshipStatus(v string) *Master {
 	return s
 }
 
+// Continas information about the member account
 type Member struct {
 	_ struct{} `type:"structure"`
 
@@ -8479,6 +8527,7 @@ func (s *Member) SetUpdatedAt(v string) *Member {
 	return s
 }
 
+// Contains information about the network connection.
 type NetworkConnectionAction struct {
 	_ struct{} `type:"structure"`
 
@@ -8547,6 +8596,7 @@ func (s *NetworkConnectionAction) SetRemotePortDetails(v *RemotePortDetails) *Ne
 	return s
 }
 
+// Contains information about the network interface.
 type NetworkInterface struct {
 	_ struct{} `type:"structure"`
 
@@ -8651,6 +8701,7 @@ func (s *NetworkInterface) SetVpcId(v string) *NetworkInterface {
 	return s
 }
 
+// Continas information about the organization.
 type Organization struct {
 	_ struct{} `type:"structure"`
 
@@ -8701,6 +8752,7 @@ func (s *Organization) SetOrg(v string) *Organization {
 	return s
 }
 
+// Contains information about the port probe.
 type PortProbeAction struct {
 	_ struct{} `type:"structure"`
 
@@ -8733,6 +8785,7 @@ func (s *PortProbeAction) SetPortProbeDetails(v []*PortProbeDetail) *PortProbeAc
 	return s
 }
 
+// Contains information about the port probe details.
 type PortProbeDetail struct {
 	_ struct{} `type:"structure"`
 
@@ -8765,6 +8818,7 @@ func (s *PortProbeDetail) SetRemoteIpDetails(v *RemoteIpDetails) *PortProbeDetai
 	return s
 }
 
+// Contains information about the private IP address.
 type PrivateIpAddressDetails struct {
 	_ struct{} `type:"structure"`
 
@@ -8797,6 +8851,7 @@ func (s *PrivateIpAddressDetails) SetPrivateIpAddress(v string) *PrivateIpAddres
 	return s
 }
 
+// Contains information about the product code.
 type ProductCode struct {
 	_ struct{} `type:"structure"`
 
@@ -8829,6 +8884,7 @@ func (s *ProductCode) SetProductType(v string) *ProductCode {
 	return s
 }
 
+// Continas information about the remote IP address.
 type RemoteIpDetails struct {
 	_ struct{} `type:"structure"`
 
@@ -8888,6 +8944,7 @@ func (s *RemoteIpDetails) SetOrganization(v *Organization) *RemoteIpDetails {
 	return s
 }
 
+// Contains information about the remote port.
 type RemotePortDetails struct {
 	_ struct{} `type:"structure"`
 
@@ -8920,6 +8977,7 @@ func (s *RemotePortDetails) SetPortName(v string) *RemotePortDetails {
 	return s
 }
 
+// Contains information about the resource.
 type Resource struct {
 	_ struct{} `type:"structure"`
 
@@ -8963,6 +9021,7 @@ func (s *Resource) SetResourceType(v string) *Resource {
 	return s
 }
 
+// Contains information about the security group.
 type SecurityGroup struct {
 	_ struct{} `type:"structure"`
 
@@ -8995,6 +9054,7 @@ func (s *SecurityGroup) SetGroupName(v string) *SecurityGroup {
 	return s
 }
 
+// Contains information about the service.
 type Service struct {
 	_ struct{} `type:"structure"`
 
@@ -9017,6 +9077,9 @@ type Service struct {
 	// Last seen timestamp of the activity that prompted GuardDuty to generate this
 	// finding.
 	EventLastSeen *string `locationName:"eventLastSeen" type:"string"`
+
+	// An evidence object associated with the service.
+	Evidence *Evidence `locationName:"evidence" type:"structure"`
 
 	// Resource role information for this finding.
 	ResourceRole *string `locationName:"resourceRole" type:"string"`
@@ -9074,6 +9137,12 @@ func (s *Service) SetEventLastSeen(v string) *Service {
 	return s
 }
 
+// SetEvidence sets the Evidence field's value.
+func (s *Service) SetEvidence(v *Evidence) *Service {
+	s.Evidence = v
+	return s
+}
+
 // SetResourceRole sets the ResourceRole field's value.
 func (s *Service) SetResourceRole(v string) *Service {
 	s.ResourceRole = &v
@@ -9092,6 +9161,7 @@ func (s *Service) SetUserFeedback(v string) *Service {
 	return s
 }
 
+// Contains information about the criteria for sorting.
 type SortCriteria struct {
 	_ struct{} `type:"structure"`
 
@@ -9297,6 +9367,7 @@ func (s *StopMonitoringMembersOutput) SetUnprocessedAccounts(v []*UnprocessedAcc
 	return s
 }
 
+// Contains information about the tag associated with the resource.
 type Tag struct {
 	_ struct{} `type:"structure"`
 
@@ -9401,6 +9472,41 @@ func (s TagResourceOutput) GoString() string {
 	return s.String()
 }
 
+// An instance of a threat intelligence detail that constitutes evidence for
+// the finding.
+type ThreatIntelligenceDetail struct {
+	_ struct{} `type:"structure"`
+
+	// The name of the threat intelligence list that triggered the finding.
+	ThreatListName *string `locationName:"threatListName" type:"string"`
+
+	// A list of names of the threats in the threat intelligence list that triggered
+	// the finding.
+	ThreatNames []*string `locationName:"threatNames" type:"list"`
+}
+
+// String returns the string representation
+func (s ThreatIntelligenceDetail) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ThreatIntelligenceDetail) GoString() string {
+	return s.String()
+}
+
+// SetThreatListName sets the ThreatListName field's value.
+func (s *ThreatIntelligenceDetail) SetThreatListName(v string) *ThreatIntelligenceDetail {
+	s.ThreatListName = &v
+	return s
+}
+
+// SetThreatNames sets the ThreatNames field's value.
+func (s *ThreatIntelligenceDetail) SetThreatNames(v []*string) *ThreatIntelligenceDetail {
+	s.ThreatNames = v
+	return s
+}
+
 type UnarchiveFindingsInput struct {
 	_ struct{} `type:"structure"`
 
@@ -9471,6 +9577,7 @@ func (s UnarchiveFindingsOutput) GoString() string {
 	return s.String()
 }
 
+// Contains information about the accounts that were not processed.
 type UnprocessedAccount struct {
 	_ struct{} `type:"structure"`
 

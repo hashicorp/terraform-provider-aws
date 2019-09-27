@@ -203,7 +203,7 @@ func waitForDocDBSubnetGroupDeletion(conn *docdb.DocDB, name string) error {
 		DBSubnetGroupName: aws.String(name),
 	}
 
-	return resource.Retry(10*time.Minute, func() *resource.RetryError {
+	err := resource.Retry(10*time.Minute, func() *resource.RetryError {
 		_, err := conn.DescribeDBSubnetGroups(params)
 
 		if isAWSErr(err, docdb.ErrCodeDBSubnetGroupNotFoundFault, "") {
@@ -216,4 +216,14 @@ func waitForDocDBSubnetGroupDeletion(conn *docdb.DocDB, name string) error {
 
 		return resource.RetryableError(fmt.Errorf("DocDB Subnet Group (%s) still exists", name))
 	})
+	if isResourceTimeoutError(err) {
+		_, err = conn.DescribeDBSubnetGroups(params)
+		if isAWSErr(err, docdb.ErrCodeDBSubnetGroupNotFoundFault, "") {
+			return nil
+		}
+	}
+	if err != nil {
+		return fmt.Errorf("Error deleting DocDB subnet group: %s", err)
+	}
+	return nil
 }

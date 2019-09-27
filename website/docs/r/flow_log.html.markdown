@@ -83,7 +83,7 @@ resource "aws_flow_log" "example" {
 }
 
 resource "aws_s3_bucket" "example" {
-  name = "example"
+  bucket = "example"
 }
 ```
 

@@ -8,6 +8,7 @@
             - [AWS Go SDK Updates](#aws-go-sdk-updates)
             - [Terraform Updates](#terraform-updates)
     - [Pull Request Merge Process](#pull-request-merge-process)
+    - [Pull Request Types to CHANGELOG](#pull-request-types-to-changelog)
 - [Release Process](#release-process)
 
 <!-- /TOC -->
@@ -250,12 +251,34 @@ Run the full acceptance testing suite against the pull request and verify there 
 - Add any linked issues that will be closed by the pull request to the same upcoming release milestone
 - Merge the pull request
 - Delete the branch (if the branch is on this repository)
-- Update the repository `CHANGELOG.md` by directly committing to the `master` branch. See also the [Extending Terraform documentation](https://www.terraform.io/docs/extend/best-practices/versioning.html) for more information about the expected CHANGELOG format.
+- Determine if the pull request should have a CHANGELOG entry by reviewing the [Pull Request Types to CHANGELOG section](#pull-request-types-to-changelog). If so, update the repository `CHANGELOG.md` by directly committing to the `master` branch (e.g. editing the file in the GitHub web interface). See also the [Extending Terraform documentation](https://www.terraform.io/docs/extend/best-practices/versioning.html) for more information about the expected CHANGELOG format.
 - Leave a comment on any issues closed by the pull request noting that it has been merged and when to expect the release containing it, e.g.
 
 ```markdown
 The fix for this has been merged and will release with version X.Y.Z of the Terraform AWS Provider, expected in the XXX timeframe.
 ```
+
+### Pull Request Types to CHANGELOG
+
+The CHANGELOG is intended to show operator-impacting changes to the codebase for a particular version. If every change or commit to the code resulted in an entry, the CHANGELOG would become less useful for operators. The lists below are general guidelines on when a decision needs to be made to decide whether a change should have an entry.
+
+Changes that should have a CHANGELOG entry:
+
+- New Resources and Data Sources
+- New full-length documentation guides (e.g. EKS Getting Started Guide, IAM Policy Documents with Terraform)
+- Resource and provider bug fixes
+- Resource and provider enhancements
+- Deprecations
+- Removals
+
+Changes that may have a CHANGELOG entry:
+
+- Dependency updates: If the update contains relevant bug fixes or enhancements that affect operators, those should be called out.
+
+Changes that should _not_ have a CHANGELOG entry:
+
+- Resource and provider documentation updates
+- Testing updates
 
 ## Release Process
 
