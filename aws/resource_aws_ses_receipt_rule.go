@@ -50,8 +50,13 @@ func resourceAwsSesReceiptRule() *schema.Resource {
 			},
 
 			"recipients": {
-				Type:     schema.TypeSet,
-				Elem:     &schema.Schema{Type: schema.TypeString},
+				Type: schema.TypeSet,
+				Elem: &schema.Schema{
+					Type: schema.TypeString,
+					StateFunc: func(val interface{}) string {
+						return strings.ToLower(val.(string))
+					},
+				},
 				Optional: true,
 				Set:      schema.HashString,
 			},

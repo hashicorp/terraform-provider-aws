@@ -38,6 +38,28 @@ func TestAccAWSSESReceiptRule_basic(t *testing.T) {
 	})
 }
 
+func TestAccAWSSESReceiptRule_caseInsensitive(t *testing.T) {
+	rInt := acctest.RandInt()
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			testAccPreCheck(t)
+			testAccPreCheckAWSSES(t)
+		},
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckSESReceiptRuleDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSSESReceiptRuleCaseInsensitiveConfig(rInt),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAwsSESReceiptRuleExists("aws_ses_receipt_rule.basic"),
+					resource.TestCheckResourceAttr("aws_ses_receipt_rule.basic", "recipients.#", "1"),
+					resource.TestCheckResourceAttr("aws_ses_receipt_rule.basic", "recipients.2533918602", "test@example.com"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccAWSSESReceiptRule_s3Action(t *testing.T) {
 	rInt := acctest.RandInt()
 	resource.ParallelTest(t, resource.TestCase{
@@ -295,6 +317,23 @@ resource "aws_ses_receipt_rule" "basic" {
   name          = "basic"
   rule_set_name = "${aws_ses_receipt_rule_set.test.rule_set_name}"
   recipients    = ["test@example.com"]
+  enabled       = true
+  scan_enabled  = true
+  tls_policy    = "Require"
+}
+`, rInt)
+}
+
+func testAccAWSSESReceiptRuleCaseInsensitiveConfig(rInt int) string {
+	return fmt.Sprintf(`
+resource "aws_ses_receipt_rule_set" "test" {
+  rule_set_name = "test-me-%d"
+}
+
+resource "aws_ses_receipt_rule" "basic" {
+  name          = "basic"
+  rule_set_name = "${aws_ses_receipt_rule_set.test.rule_set_name}"
+  recipients    = ["Test@example.com"]
   enabled       = true
   scan_enabled  = true
   tls_policy    = "Require"
