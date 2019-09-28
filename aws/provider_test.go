@@ -36,11 +36,6 @@ func init() {
 				*providers = append(*providers, p.(*schema.Provider))
 				return p, nil
 			},
-			"tls": func() (terraform.ResourceProvider, error) {
-				p := tls.Provider()
-				*providers = append(*providers, p.(*schema.Provider))
-				return p, nil
-			},
 		}
 	}
 	testAccProvidersWithTLS = map[string]terraform.ResourceProvider{
