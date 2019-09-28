@@ -84,7 +84,7 @@ func TestValidateRedshiftClusterDbName(t *testing.T) {
 		"/slash-at-the-beginning",
 		"slash-at-the-end/",
 		"",
-		randomString(100),
+		acctest.RandStringFromCharSet(100, acctest.CharSetAlpha),
 		"TestDBname",
 	}
 	for _, v := range invalidNames {
@@ -801,7 +801,7 @@ func TestResourceAWSRedshiftClusterFinalSnapshotIdentifierValidation(t *testing.
 			ErrCount: 1,
 		},
 		{
-			Value:    randomString(256),
+			Value:    acctest.RandStringFromCharSet(256, acctest.CharSetAlpha),
 			ErrCount: 1,
 		},
 	}
@@ -829,7 +829,7 @@ func TestResourceAWSRedshiftClusterMasterUsernameValidation(t *testing.T) {
 			ErrCount: 1,
 		},
 		{
-			Value:    randomString(129),
+			Value:    acctest.RandStringFromCharSet(129, acctest.CharSetAlpha),
 			ErrCount: 1,
 		},
 		{
