@@ -14,6 +14,7 @@ import (
 const (
 	pemBlockTypeCertificate   = `CERTIFICATE`
 	pemBlockTypeRsaPrivateKey = `RSA PRIVATE KEY`
+	pemBlockTypePublicKey     = `PUBLIC KEY`
 )
 
 var tlsX509CertificateSerialNumberLimit = new(big.Int).Lsh(big.NewInt(1), 128)
@@ -31,6 +32,32 @@ func tlsRsaPrivateKeyPem(bits int) string {
 	block := &pem.Block{
 		Bytes: x509.MarshalPKCS1PrivateKey(key),
 		Type:  pemBlockTypeRsaPrivateKey,
+	}
+
+	return string(pem.EncodeToMemory(block))
+}
+
+// tlsRsaPublicKeyPem generates a RSA public key PEM string.
+// Wrap with tlsPemEscapeNewlines() to allow simple fmt.Sprintf()
+// configurations such as: public_key_pem = "%[1]s"
+func tlsRsaPublicKeyPem(keyPem string) string {
+	keyBlock, _ := pem.Decode([]byte(keyPem))
+
+	key, err := x509.ParsePKCS1PrivateKey(keyBlock.Bytes)
+
+	if err != nil {
+		panic(err)
+	}
+
+	publicKeyBytes, err := x509.MarshalPKIXPublicKey(&key.PublicKey)
+
+	if err != nil {
+		panic(err)
+	}
+
+	block := &pem.Block{
+		Bytes: publicKeyBytes,
+		Type:  pemBlockTypePublicKey,
 	}
 
 	return string(pem.EncodeToMemory(block))
