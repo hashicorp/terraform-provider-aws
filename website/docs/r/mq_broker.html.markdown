@@ -1,7 +1,6 @@
 ---
 layout: "aws"
 page_title: "AWS: aws_mq_broker"
-sidebar_current: "docs-aws-resource-mq-broker"
 description: |-
   Provides an MQ Broker Resource
 ---

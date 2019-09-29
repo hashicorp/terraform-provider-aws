@@ -1,7 +1,6 @@
 ---
 layout: "aws"
 page_title: "AWS: aws_secretsmanager_secret"
-sidebar_current: "docs-aws-resource-secretsmanager-secret"
 description: |-
   Provides a resource to manage AWS Secrets Manager secret metadata
 ---

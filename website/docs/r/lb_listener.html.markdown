@@ -1,7 +1,6 @@
 ---
 layout: "aws"
 page_title: "AWS: aws_lb_listener"
-sidebar_current: "docs-aws-resource-elbv2-listener"
 description: |-
   Provides a Load Balancer Listener resource.
 ---

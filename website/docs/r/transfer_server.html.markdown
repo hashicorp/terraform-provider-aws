@@ -1,7 +1,6 @@
 ---
 layout: "aws"
 page_title: "AWS: aws_transfer_server"
-sidebar_current: "docs-aws-resource-transfer-server"
 description: |-
   Provides a AWS Transfer Server resource.
 ---

@@ -1,7 +1,6 @@
 ---
 layout: "aws"
 page_title: "AWS: aws_eks_cluster"
-sidebar_current: "docs-aws-datasource-eks-cluster"
 description: |-
   Retrieve information about an EKS Cluster
 ---

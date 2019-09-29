@@ -1,7 +1,6 @@
 ---
 layout: "aws"
 page_title: "AWS: aws_route_table"
-sidebar_current: "docs-aws-resource-route-table|"
 description: |-
   Provides a resource to create a VPC routing table.
 ---

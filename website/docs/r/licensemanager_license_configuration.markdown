@@ -1,7 +1,6 @@
 ---
 layout: "aws"
 page_title: "AWS: aws_licensemanager_license_configuration"
-sidebar_current: "docs-aws-resource-licensemanager-license-configuration"
 description: |-
   Provides a License Manager license configuration resource.
 ---

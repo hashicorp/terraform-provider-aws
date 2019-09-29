@@ -1,7 +1,6 @@
 ---
 layout: "aws"
 page_title: "AWS: aws_shield_protection"
-sidebar_current: "docs-aws-resource-shield-protection"
 description: |-
   Enables AWS Shield Advanced for a specific AWS resource.
 ---
