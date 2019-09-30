@@ -187,6 +187,16 @@ func CognitoidentityproviderKeyValueTags(tags map[string]*string) KeyValueTags {
 	return New(tags)
 }
 
+// EksTags returns eks service tags.
+func (tags KeyValueTags) EksTags() map[string]*string {
+	return aws.StringMap(tags.Map())
+}
+
+// EksKeyValueTags creates KeyValueTags from eks service tags.
+func EksKeyValueTags(tags map[string]*string) KeyValueTags {
+	return New(tags)
+}
+
 // GlacierTags returns glacier service tags.
 func (tags KeyValueTags) GlacierTags() map[string]*string {
 	return aws.StringMap(tags.Map())
