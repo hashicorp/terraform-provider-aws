@@ -461,7 +461,7 @@ resource "aws_sns_topic" "test_topic" {}
 func testAccAWSSNSTopicConfig_withName(r string) string {
 	return fmt.Sprintf(`
 resource "aws_sns_topic" "test_topic" {
-    name = "terraform-test-topic-%s"
+  name = "terraform-test-topic-%s"
 }
 `, r)
 }
@@ -478,6 +478,7 @@ func testAccAWSSNSTopicWithPolicy(r string) string {
 	return fmt.Sprintf(`
 resource "aws_sns_topic" "test_topic" {
   name = "example-%s"
+
   policy = <<EOF
 {
   "Statement": [
@@ -505,6 +506,7 @@ func testAccAWSSNSTopicConfig_withIAMRole(r string) string {
 resource "aws_iam_role" "example" {
   name = "tf_acc_test_%s"
   path = "/test/"
+
   assume_role_policy = <<EOF
 {
   "Version": "2012-10-17",
@@ -524,6 +526,7 @@ EOF
 
 resource "aws_sns_topic" "test_topic" {
   name = "tf-acc-test-with-iam-role-%s"
+
   policy = <<EOF
 {
   "Statement": [
@@ -550,6 +553,7 @@ func testAccAWSSNSTopicConfig_withDeliveryPolicy(r string) string {
 	return fmt.Sprintf(`
 resource "aws_sns_topic" "test_topic" {
   name = "tf_acc_test_delivery_policy_%s"
+
   delivery_policy = <<EOF
 {
   "http": {
@@ -575,6 +579,7 @@ func testAccAWSSNSTopicConfig_withFakeIAMRole(r string) string {
 	return fmt.Sprintf(`
 resource "aws_sns_topic" "test_topic" {
   name = "tf_acc_test_fake_iam_role_%s"
+
   policy = <<EOF
 {
   "Statement": [
@@ -666,8 +671,8 @@ EOF
 func testAccAWSSNSTopicConfig_withEncryption(r string) string {
 	return fmt.Sprintf(`
 resource "aws_sns_topic" "test_topic" {
-	name = "terraform-test-topic-%s"
-	kms_master_key_id = "alias/aws/sns"
+  name              = "terraform-test-topic-%s"
+  kms_master_key_id = "alias/aws/sns"
 }
 `, r)
 }
@@ -679,7 +684,8 @@ resource "aws_sns_topic" "test_topic" {
 	tags = {
 		%q = %q
 	}
-	}`, r, tag1Key, tag1Value)
+	}
+`, r, tag1Key, tag1Value)
 }
 
 func testAccAWSSNSTopicConfigTags2(r, tag1Key, tag1Value, tag2Key, tag2Value string) string {
@@ -690,5 +696,6 @@ resource "aws_sns_topic" "test_topic" {
 		%q = %q
 		%q = %q
 	  }
-	}`, r, tag1Key, tag1Value, tag2Key, tag2Value)
+	}
+`, r, tag1Key, tag1Value, tag2Key, tag2Value)
 }

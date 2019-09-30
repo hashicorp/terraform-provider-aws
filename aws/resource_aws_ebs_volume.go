@@ -280,25 +280,77 @@ func resourceAwsEbsVolumeRead(d *schema.ResourceData, meta interface{}) error {
 func resourceAwsEbsVolumeDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).ec2conn
 
-	return resource.Retry(5*time.Minute, func() *resource.RetryError {
-		request := &ec2.DeleteVolumeInput{
-			VolumeId: aws.String(d.Id()),
-		}
-		_, err := conn.DeleteVolume(request)
-		if err == nil {
+	input := &ec2.DeleteVolumeInput{
+		VolumeId: aws.String(d.Id()),
+	}
+
+	err := resource.Retry(5*time.Minute, func() *resource.RetryError {
+		_, err := conn.DeleteVolume(input)
+
+		if isAWSErr(err, "InvalidVolume.NotFound", "") {
 			return nil
 		}
 
-		ebsErr, ok := err.(awserr.Error)
-		if ebsErr.Code() == "VolumeInUse" {
+		if isAWSErr(err, "VolumeInUse", "") {
 			return resource.RetryableError(fmt.Errorf("EBS VolumeInUse - trying again while it detaches"))
 		}
 
-		if !ok {
+		if err != nil {
 			return resource.NonRetryableError(err)
 		}
 
-		return resource.NonRetryableError(err)
+		return nil
 	})
 
+	if isResourceTimeoutError(err) {
+		_, err = conn.DeleteVolume(input)
+	}
+
+	if err != nil {
+		return fmt.Errorf("error deleting EBS Volume (%s): %s", d.Id(), err)
+	}
+
+	describeInput := &ec2.DescribeVolumesInput{
+		VolumeIds: []*string{aws.String(d.Id())},
+	}
+
+	var output *ec2.DescribeVolumesOutput
+	err = resource.Retry(5*time.Minute, func() *resource.RetryError {
+		var err error
+		output, err = conn.DescribeVolumes(describeInput)
+
+		if err != nil {
+			return resource.NonRetryableError(err)
+		}
+
+		for _, volume := range output.Volumes {
+			if aws.StringValue(volume.VolumeId) == d.Id() {
+				state := aws.StringValue(volume.State)
+
+				if state == ec2.VolumeStateDeleting {
+					return resource.RetryableError(fmt.Errorf("EBS Volume (%s) still deleting", d.Id()))
+				}
+
+				return resource.NonRetryableError(fmt.Errorf("EBS Volume (%s) in unexpected state after deletion: %s", d.Id(), state))
+			}
+		}
+
+		return nil
+	})
+
+	if isResourceTimeoutError(err) {
+		output, err = conn.DescribeVolumes(describeInput)
+	}
+
+	if isAWSErr(err, "InvalidVolume.NotFound", "") {
+		return nil
+	}
+
+	for _, volume := range output.Volumes {
+		if aws.StringValue(volume.VolumeId) == d.Id() {
+			return fmt.Errorf("EBS Volume (%s) in unexpected state after deletion: %s", d.Id(), aws.StringValue(volume.State))
+		}
+	}
+
+	return nil
 }

@@ -72,7 +72,7 @@ resource "aws_wafregional_web_acl" "example" {
     type     = "GROUP"
 
     override_action {
-       type = "NONE"
+      type = "NONE"
     }
   }
 }
@@ -154,3 +154,11 @@ In addition to all arguments above, the following attributes are exported:
 
 * `arn` - Amazon Resource Name (ARN) of the WAF Regional WebACL.
 * `id` - The ID of the WAF Regional WebACL.
+
+## Import
+
+WAF Regional Web ACL can be imported using the id, e.g.
+
+```
+$ terraform import aws_wafregional_web_acl.wafacl a1b2c3d4-d5f6-7777-8888-9999aaaabbbbcccc
+```

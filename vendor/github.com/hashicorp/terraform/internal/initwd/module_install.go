@@ -428,7 +428,7 @@ func (i *ModuleInstaller) installRegistryModule(req *earlyconfig.ModuleRequest, 
 		diags = diags.Append(tfdiags.Sourceless(
 			tfdiags.Error,
 			"Failed to download module",
-			fmt.Sprintf("Error attempting to download module %q (%s:%d) source code from %q: %s.", req.Name, req.CallPos.Filename, req.CallPos.Line, dlAddr, err),
+			fmt.Sprintf("Could not download module %q (%s:%d) source code from %q: %s.", req.Name, req.CallPos.Filename, req.CallPos.Line, dlAddr, err),
 		))
 		return nil, nil, diags
 	}
@@ -480,9 +480,18 @@ func (i *ModuleInstaller) installGoGetterModule(req *earlyconfig.ModuleRequest, 
 	packageAddr, _ := splitAddrSubdir(req.SourceAddr)
 	hooks.Download(key, packageAddr, nil)
 
+	if len(req.VersionConstraints) != 0 {
+		diags = diags.Append(tfdiags.Sourceless(
+			tfdiags.Error,
+			"Invalid version constraint",
+			fmt.Sprintf("Cannot apply a version constraint to module %q (at %s:%d) because it has a non Registry URL.", req.Name, req.CallPos.Filename, req.CallPos.Line),
+		))
+		return nil, diags
+	}
+
 	modDir, err := getter.getWithGoGetter(instPath, req.SourceAddr)
 	if err != nil {
-		if err, ok := err.(*MaybeRelativePathErr); ok {
+		if _, ok := err.(*MaybeRelativePathErr); ok {
 			log.Printf(
 				"[TRACE] ModuleInstaller: %s looks like a local path but is missing ./ or ../",
 				req.SourceAddr,
@@ -507,7 +516,7 @@ func (i *ModuleInstaller) installGoGetterModule(req *earlyconfig.ModuleRequest, 
 			diags = diags.Append(tfdiags.Sourceless(
 				tfdiags.Error,
 				"Failed to download module",
-				fmt.Sprintf("Error attempting to download module %q (%s:%d) source code from %q: %s", req.Name, req.CallPos.Filename, req.CallPos.Line, packageAddr, err),
+				fmt.Sprintf("Could not download module %q (%s:%d) source code from %q: %s", req.Name, req.CallPos.Filename, req.CallPos.Line, packageAddr, err),
 			))
 		}
 		return nil, diags

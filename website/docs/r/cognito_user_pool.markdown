@@ -65,6 +65,7 @@ The following arguments are supported:
 
   * `reply_to_email_address` (Optional) - The REPLY-TO email address.
   * `source_arn` (Optional) - The ARN of the email source.
+  * `email_sending_account` (Optional) - Instruct Cognito to either use its built-in functional or Amazon SES to send out emails.
 
 #### Lambda Configuration
 

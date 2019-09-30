@@ -109,7 +109,7 @@ func (lint Gocritic) Run(ctx context.Context, lintCtx *linter.Context) ([]result
 	go func() {
 		defer func() {
 			if err := recover(); err != nil {
-				panicErr = fmt.Errorf("panic occured: %s", err)
+				panicErr = fmt.Errorf("panic occurred: %s", err)
 				lintCtx.Log.Warnf("Panic: %s", debug.Stack())
 			}
 		}()
@@ -134,7 +134,6 @@ func (lint Gocritic) Run(ctx context.Context, lintCtx *linter.Context) ([]result
 
 func (lint Gocritic) runOnPackage(lintpackCtx *lintpack.Context, checkers []*lintpack.Checker,
 	pkgInfo *loader.PackageInfo, ret chan<- result.Issue) {
-
 	for _, f := range pkgInfo.Files {
 		filename := filepath.Base(lintpackCtx.FileSet.Position(f.Pos()).Filename)
 		lintpackCtx.SetFileInfo(filename, f)
@@ -145,7 +144,6 @@ func (lint Gocritic) runOnPackage(lintpackCtx *lintpack.Context, checkers []*lin
 
 func (lint Gocritic) runOnFile(ctx *lintpack.Context, f *ast.File, checkers []*lintpack.Checker,
 	ret chan<- result.Issue) {
-
 	var wg sync.WaitGroup
 	wg.Add(len(checkers))
 	for _, c := range checkers {

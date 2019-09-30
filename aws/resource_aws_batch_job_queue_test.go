@@ -76,7 +76,7 @@ func TestAccAWSBatchJobQueue_basic(t *testing.T) {
 	ri := acctest.RandInt()
 	config := fmt.Sprintf(testAccBatchJobQueueBasic, ri)
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSBatch(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckBatchJobQueueDestroy,
 		Steps: []resource.TestStep{
@@ -97,7 +97,7 @@ func TestAccAWSBatchJobQueue_disappears(t *testing.T) {
 	rInt := acctest.RandInt()
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSBatch(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSLaunchTemplateDestroy,
 		Steps: []resource.TestStep{
@@ -119,7 +119,7 @@ func TestAccAWSBatchJobQueue_update(t *testing.T) {
 	config := fmt.Sprintf(testAccBatchJobQueueBasic, ri)
 	updateConfig := fmt.Sprintf(testAccBatchJobQueueUpdate, ri)
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSBatch(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckBatchJobQueueDestroy,
 		Steps: []resource.TestStep{

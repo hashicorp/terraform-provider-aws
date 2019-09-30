@@ -345,6 +345,7 @@ resource "aws_api_gateway_rest_api" "acctest" {
 resource "aws_iam_role" "invocation_role" {
   name = "%s_auth_invocation_role"
   path = "/"
+
   assume_role_policy = <<EOF
 {
   "Version": "2012-10-17",
@@ -365,6 +366,7 @@ EOF
 resource "aws_iam_role_policy" "invocation_policy" {
   name = "default"
   role = "${aws_iam_role.invocation_role.id}"
+
   policy = <<EOF
 {
   "Version": "2012-10-17",
@@ -381,6 +383,7 @@ EOF
 
 resource "aws_iam_role" "iam_for_lambda" {
   name = "%s_authorizer_lambda"
+
   assume_role_policy = <<EOF
 {
   "Version": "2012-10-17",
@@ -399,12 +402,12 @@ EOF
 }
 
 resource "aws_lambda_function" "authorizer" {
-  filename = "test-fixtures/lambdatest.zip"
+  filename         = "test-fixtures/lambdatest.zip"
   source_code_hash = "${filebase64sha256("test-fixtures/lambdatest.zip")}"
-  function_name = "%s"
-  role = "${aws_iam_role.iam_for_lambda.arn}"
-  handler = "exports.example"
-  runtime = "nodejs8.10"
+  function_name    = "%s"
+  role             = "${aws_iam_role.iam_for_lambda.arn}"
+  handler          = "exports.example"
+  runtime          = "nodejs8.10"
 }
 `, apiGatewayName, apiGatewayName, apiGatewayName, lambdaName)
 }
@@ -429,7 +432,8 @@ resource "aws_api_gateway_authorizer" "acctest" {
   authorizer_credentials = "${aws_iam_role.invocation_role.arn}"
   authorizer_result_ttl_in_seconds = 360
   identity_validation_expression = ".*"
-}`, authorizerName)
+}
+`, authorizerName)
 }
 
 func testAccAWSAPIGatewayAuthorizerConfig_cognito(apiGatewayName, authorizerName, cognitoName string) string {
@@ -440,13 +444,13 @@ resource "aws_api_gateway_rest_api" "acctest" {
 
 resource "aws_cognito_user_pool" "acctest" {
   count = 2
-  name = "%s-${count.index}"
+  name  = "%s-${count.index}"
 }
 
 resource "aws_api_gateway_authorizer" "acctest" {
-  name = "%s-cognito"
-  type = "COGNITO_USER_POOLS"
-  rest_api_id = "${aws_api_gateway_rest_api.acctest.id}"
+  name          = "%s-cognito"
+  type          = "COGNITO_USER_POOLS"
+  rest_api_id   = "${aws_api_gateway_rest_api.acctest.id}"
   provider_arns = ["${aws_cognito_user_pool.acctest.*.arn[0]}", "${aws_cognito_user_pool.acctest.*.arn[1]}"]
 }
 `, apiGatewayName, cognitoName, authorizerName)
@@ -460,13 +464,13 @@ resource "aws_api_gateway_rest_api" "acctest" {
 
 resource "aws_cognito_user_pool" "acctest_update" {
   count = 3
-  name = "%s-${count.index}-update"
+  name  = "%s-${count.index}-update"
 }
 
 resource "aws_api_gateway_authorizer" "acctest" {
-  name = "%s-cognito-update"
-  type = "COGNITO_USER_POOLS"
-  rest_api_id = "${aws_api_gateway_rest_api.acctest.id}"
+  name          = "%s-cognito-update"
+  type          = "COGNITO_USER_POOLS"
+  rest_api_id   = "${aws_api_gateway_rest_api.acctest.id}"
   provider_arns = ["${aws_cognito_user_pool.acctest_update.*.arn[0]}", "${aws_cognito_user_pool.acctest_update.*.arn[1]}", "${aws_cognito_user_pool.acctest_update.*.arn[2]}"]
 }
 `, apiGatewayName, cognitoName, authorizerName)
@@ -501,12 +505,12 @@ resource "aws_api_gateway_rest_api" "acctest" {
 
 resource "aws_cognito_user_pool" "acctest" {
   count = 2
-  name = "%s-${count.index}"
+  name  = "%s-${count.index}"
 }
 
 resource "aws_api_gateway_authorizer" "acctest" {
-  name = "%s-cognito"
-  type = "COGNITO_USER_POOLS"
+  name        = "%s-cognito"
+  type        = "COGNITO_USER_POOLS"
   rest_api_id = "${aws_api_gateway_rest_api.acctest.id}"
 }
 `, apiGatewayName, cognitoName, authorizerName)

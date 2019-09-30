@@ -12,7 +12,6 @@ import (
 	"github.com/hashicorp/terraform/helper/schema"
 
 	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/rds"
 )
 
@@ -310,23 +309,26 @@ func resourceAwsDbParameterGroupUpdate(d *schema.ResourceData, meta interface{})
 
 func resourceAwsDbParameterGroupDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).rdsconn
-	return resource.Retry(3*time.Minute, func() *resource.RetryError {
-		deleteOpts := rds.DeleteDBParameterGroupInput{
-			DBParameterGroupName: aws.String(d.Id()),
-		}
-
+	deleteOpts := rds.DeleteDBParameterGroupInput{
+		DBParameterGroupName: aws.String(d.Id()),
+	}
+	err := resource.Retry(3*time.Minute, func() *resource.RetryError {
 		_, err := conn.DeleteDBParameterGroup(&deleteOpts)
 		if err != nil {
-			awsErr, ok := err.(awserr.Error)
-			if ok && awsErr.Code() == "DBParameterGroupNotFoundFault" {
+			if isAWSErr(err, "DBParameterGroupNotFoundFault", "") || isAWSErr(err, "InvalidDBParameterGroupState", "") {
 				return resource.RetryableError(err)
 			}
-			if ok && awsErr.Code() == "InvalidDBParameterGroupState" {
-				return resource.RetryableError(err)
-			}
+			return resource.NonRetryableError(err)
 		}
-		return resource.NonRetryableError(err)
+		return nil
 	})
+	if isResourceTimeoutError(err) {
+		_, err = conn.DeleteDBParameterGroup(&deleteOpts)
+	}
+	if err != nil {
+		return fmt.Errorf("Error deleting DB parameter group: %s", err)
+	}
+	return nil
 }
 
 func resourceAwsDbParameterHash(v interface{}) int {

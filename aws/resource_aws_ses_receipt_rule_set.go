@@ -48,16 +48,22 @@ func resourceAwsSesReceiptRuleSetCreate(d *schema.ResourceData, meta interface{}
 }
 
 func resourceAwsSesReceiptRuleSetRead(d *schema.ResourceData, meta interface{}) error {
-	ruleSetExists, err := findRuleSet(d.Id(), nil, meta)
+	conn := meta.(*AWSClient).sesConn
 
-	if !ruleSetExists {
-		log.Printf("[WARN] SES Receipt Rule Set (%s) not found", d.Id())
+	input := &ses.DescribeReceiptRuleSetInput{
+		RuleSetName: aws.String(d.Id()),
+	}
+
+	_, err := conn.DescribeReceiptRuleSet(input)
+
+	if isAWSErr(err, ses.ErrCodeRuleSetDoesNotExistException, "") {
+		log.Printf("[WARN] SES Receipt Rule Set (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
 	}
 
 	if err != nil {
-		return err
+		return fmt.Errorf("error describing SES Receipt Rule Set (%s): %s", d.Id(), err)
 	}
 
 	d.Set("rule_set_name", d.Id())
@@ -74,31 +80,4 @@ func resourceAwsSesReceiptRuleSetDelete(d *schema.ResourceData, meta interface{}
 	})
 
 	return err
-}
-
-func findRuleSet(name string, token *string, meta interface{}) (bool, error) {
-	conn := meta.(*AWSClient).sesConn
-
-	ruleSetExists := false
-
-	listOpts := &ses.ListReceiptRuleSetsInput{
-		NextToken: token,
-	}
-
-	response, err := conn.ListReceiptRuleSets(listOpts)
-	for _, element := range response.RuleSets {
-		if *element.Name == name {
-			ruleSetExists = true
-		}
-	}
-
-	if err != nil && !ruleSetExists && response.NextToken != nil {
-		ruleSetExists, err = findRuleSet(name, response.NextToken, meta)
-	}
-
-	if err != nil {
-		return false, err
-	}
-
-	return ruleSetExists, nil
 }

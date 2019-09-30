@@ -3921,7 +3921,7 @@ type CreateFunctionInput struct {
 	// ApiId is a required field
 	ApiId *string `location:"uri" locationName:"apiId" type:"string" required:"true"`
 
-	// The FunctionDataSource name.
+	// The Function DataSource name.
 	//
 	// DataSourceName is a required field
 	DataSourceName *string `locationName:"dataSourceName" type:"string" required:"true"`
@@ -6745,24 +6745,21 @@ type LogConfig struct {
 	// CloudWatchLogsRoleArn is a required field
 	CloudWatchLogsRoleArn *string `locationName:"cloudWatchLogsRoleArn" type:"string" required:"true"`
 
+	// Set to TRUE to exclude sections that contain information such as headers,
+	// context, and evaluated mapping templates, regardless of logging level.
+	ExcludeVerboseContent *bool `locationName:"excludeVerboseContent" type:"boolean"`
+
 	// The field logging level. Values can be NONE, ERROR, or ALL.
 	//
 	//    * NONE: No field-level logs are captured.
 	//
 	//    * ERROR: Logs the following information only for the fields that are in
-	//    error:
-	//
-	// The error section in the server response.
-	//
-	// Field-level errors.
-	//
-	// The generated request/response functions that got resolved for error fields.
+	//    error: The error section in the server response. Field-level errors. The
+	//    generated request/response functions that got resolved for error fields.
 	//
 	//    * ALL: The following information is logged for all fields in the query:
-	//
-	// Field-level tracing information.
-	//
-	// The generated request/response functions that got resolved for each field.
+	//    Field-level tracing information. The generated request/response functions
+	//    that got resolved for each field.
 	//
 	// FieldLogLevel is a required field
 	FieldLogLevel *string `locationName:"fieldLogLevel" type:"string" required:"true" enum:"FieldLogLevel"`
@@ -6797,6 +6794,12 @@ func (s *LogConfig) Validate() error {
 // SetCloudWatchLogsRoleArn sets the CloudWatchLogsRoleArn field's value.
 func (s *LogConfig) SetCloudWatchLogsRoleArn(v string) *LogConfig {
 	s.CloudWatchLogsRoleArn = &v
+	return s
+}
+
+// SetExcludeVerboseContent sets the ExcludeVerboseContent field's value.
+func (s *LogConfig) SetExcludeVerboseContent(v bool) *LogConfig {
+	s.ExcludeVerboseContent = &v
 	return s
 }
 
@@ -7662,7 +7665,7 @@ type UpdateFunctionInput struct {
 	// ApiId is a required field
 	ApiId *string `location:"uri" locationName:"apiId" type:"string" required:"true"`
 
-	// The FunctionDataSource name.
+	// The Function DataSource name.
 	//
 	// DataSourceName is a required field
 	DataSourceName *string `locationName:"dataSourceName" type:"string" required:"true"`

@@ -1,6 +1,6 @@
 ---
 layout: "aws"
-page_title: "AWS: simpledb_domain"
+page_title: "AWS: aws_simpledb_domain"
 sidebar_current: "docs-aws-resource-simpledb-domain"
 description: |-
   Provides a SimpleDB domain resource.

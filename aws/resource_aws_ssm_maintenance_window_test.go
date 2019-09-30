@@ -495,6 +495,7 @@ resource "aws_ssm_maintenance_window" "test" {
   duration = 3
   name     = %q
   schedule = "cron(0 16 ? * TUE *)"
+
   tags = {
     Name = "My Maintenance Window"
   }

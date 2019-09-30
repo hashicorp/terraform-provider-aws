@@ -3,7 +3,6 @@ package aws
 import (
 	"fmt"
 	"log"
-	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/cloudfront"
@@ -163,7 +162,7 @@ func expandPublicKeyConfig(d *schema.ResourceData) *cloudfront.PublicKeyConfig {
 	if v, ok := d.GetOk("caller_reference"); ok {
 		publicKeyConfig.CallerReference = aws.String(v.(string))
 	} else {
-		publicKeyConfig.CallerReference = aws.String(time.Now().Format(time.RFC3339Nano))
+		publicKeyConfig.CallerReference = aws.String(resource.UniqueId())
 	}
 
 	return publicKeyConfig

@@ -55,6 +55,22 @@ func dataSourceAwsMqBroker() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"encryption_options": {
+				Type:     schema.TypeList,
+				Computed: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"kms_key_id": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"use_aws_owned_key": {
+							Type:     schema.TypeBool,
+							Computed: true,
+						},
+					},
+				},
+			},
 			"engine_type": {
 				Type:     schema.TypeString,
 				Computed: true,

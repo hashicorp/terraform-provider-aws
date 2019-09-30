@@ -253,27 +253,27 @@ func testAccCheckSagemakerEndpointConfigurationExists(n string) resource.TestChe
 func testAccSagemakerEndpointConfigurationConfig_Base(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_sagemaker_model" "foo" {
-	name = %q
-	execution_role_arn = "${aws_iam_role.foo.arn}"
+  name               = %q
+  execution_role_arn = "${aws_iam_role.foo.arn}"
 
-
-	primary_container {
-		image = "174872318107.dkr.ecr.us-west-2.amazonaws.com/kmeans:1"
-	}
+  primary_container {
+    image = "174872318107.dkr.ecr.us-west-2.amazonaws.com/kmeans:1"
+  }
 }
 
 resource "aws_iam_role" "foo" {
-  name = %q
-  path = "/"
+  name               = %q
+  path               = "/"
   assume_role_policy = "${data.aws_iam_policy_document.assume_role.json}"
 }
 
 data "aws_iam_policy_document" "assume_role" {
   statement {
-    actions = [ "sts:AssumeRole" ]
+    actions = ["sts:AssumeRole"]
+
     principals {
-      type = "Service"
-      identifiers = [ "sagemaker.amazonaws.com" ]
+      type        = "Service"
+      identifiers = ["sagemaker.amazonaws.com"]
     }
   }
 }

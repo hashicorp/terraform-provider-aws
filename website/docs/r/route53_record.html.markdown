@@ -90,6 +90,31 @@ resource "aws_route53_record" "www" {
 }
 ```
 
+### NS and SOA Record Management
+
+When creating Route 53 zones, the `NS` and `SOA` records for the zone are automatically created. Enabling the `allow_overwrite` argument will allow managing these records in a single Terraform run without the requirement for `terraform import`.
+
+```hcl
+resource "aws_route53_zone" "example" {
+  name = "test.example.com"
+}
+
+resource "aws_route53_record" "example" {
+  allow_overwrite = true
+  name            = "test.example.com"
+  ttl             = 30
+  type            = "NS"
+  zone_id         = "${aws_route53_zone.example.zone_id}"
+
+  records = [
+    "${aws_route53_zone.example.name_servers.0}",
+    "${aws_route53_zone.example.name_servers.1}",
+    "${aws_route53_zone.example.name_servers.2}",
+    "${aws_route53_zone.example.name_servers.3}",
+  ]
+}
+```
+
 ## Argument Reference
 
 The following arguments are supported:
