@@ -33,7 +33,7 @@ func TestAccAWSElbHostedZoneId_basic(t *testing.T) {
 			{
 				Config: testAccCheckAwsElbHostedZoneIdExplicitConfig("eu-west-2", "network"),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("data.aws_elb_hosted_zone_id.regional", "id", "Z2IFOLAFXWLO4F"),
+					resource.TestCheckResourceAttr("data.aws_elb_hosted_zone_id.regional", "id", "ZD4D7Y8KGAS4G"),
 				),
 			},
 		},
