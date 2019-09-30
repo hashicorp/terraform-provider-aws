@@ -90,7 +90,7 @@ func resourceAwsElasticBeanstalkConfigurationTemplateCreate(d *schema.ResourceDa
 	if attr, ok := d.GetOk("source_configuration"); ok {
 		opts.SourceConfiguration = &elasticbeanstalk.SourceConfiguration{
 			ApplicationName: aws.String(appName),
-			TemplateName: aws.String(attr.(string)),
+			TemplateName:    aws.String(attr.(string)),
 		}
 	}
 

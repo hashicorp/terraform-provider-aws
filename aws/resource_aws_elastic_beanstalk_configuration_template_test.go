@@ -82,7 +82,7 @@ func TestAccAWSBeanstalkConfigurationTemplate_SourceConfiguration(t *testing.T) 
 				Config: testAccBeanstalkConfigurationTemplateConfig_SourceConfiguration(acctest.RandString(5)),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBeanstalkConfigurationTemplateExists("aws_elastic_beanstalk_configuration_template.tf_template_child", &config),
-					testAccCheckBeanstalkConfigurationTemplateHasSetting("aws:autoscaling:launchconfiguration","InstanceType", &config),
+					testAccCheckBeanstalkConfigurationTemplateHasSetting("aws:autoscaling:launchconfiguration", "InstanceType", &config),
 					resource.TestCheckResourceAttr(
 						"aws_elastic_beanstalk_configuration_template.tf_template_child", "setting.#", "1"),
 					resource.TestCheckResourceAttr(
