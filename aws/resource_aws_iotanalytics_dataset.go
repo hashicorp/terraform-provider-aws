@@ -357,20 +357,20 @@ func resourceAwsIotAnalyticsDataset() *schema.Resource {
 	}
 }
 
-func parseVariable(rawAction map[string]interface{}) *iotanalytics.Variable {
+func parseVariable(rawVariable map[string]interface{}) *iotanalytics.Variable {
 	variable := &iotanalytics.Variable{
-		Name: aws.String(rawAction["name"].(string)),
+		Name: aws.String(rawVariable["name"].(string)),
 	}
 
-	if v, ok := rawAction["string_value"]; ok {
+	if v, ok := rawVariable["string_value"]; ok {
 		variable.StringValue = aws.String(v.(string))
 	}
 
-	if v, ok := rawAction["double_value"]; ok {
+	if v, ok := rawVariable["double_value"]; ok {
 		variable.DoubleValue = aws.Float64(v.(float64))
 	}
 
-	rawDatasetContentVersionValueSet := rawAction["dataset_content_version_value"].(*schema.Set).List()
+	rawDatasetContentVersionValueSet := rawVariable["dataset_content_version_value"].(*schema.Set).List()
 	if len(rawDatasetContentVersionValueSet) > 0 {
 		rawDatasetContentVersionValue := rawDatasetContentVersionValueSet[0].(map[string]interface{})
 		datasetContentVersionValue := &iotanalytics.DatasetContentVersionValue{
@@ -379,7 +379,7 @@ func parseVariable(rawAction map[string]interface{}) *iotanalytics.Variable {
 		variable.DatasetContentVersionValue = datasetContentVersionValue
 	}
 
-	rawOutputFileUriValueSet := rawAction["output_file_uri_value"].(*schema.Set).List()
+	rawOutputFileUriValueSet := rawVariable["output_file_uri_value"].(*schema.Set).List()
 	if len(rawOutputFileUriValueSet) > 0 {
 		rawOutputFileUriValue := rawOutputFileUriValueSet[0].(map[string]interface{})
 		outputFileUriValue := &iotanalytics.OutputFileUriValue{
@@ -453,7 +453,7 @@ func parseAction(rawAction map[string]interface{}) *iotanalytics.DatasetAction {
 		action.ContainerAction = parseContainerAction(rawContainerAction)
 	}
 
-	rawQueryActionSet := rawAction["container_action"].(*schema.Set).List()
+	rawQueryActionSet := rawAction["query_action"].(*schema.Set).List()
 	if len(rawQueryActionSet) > 0 {
 		rawQueryAction := rawQueryActionSet[0].(map[string]interface{})
 		action.QueryAction = parseSqlQueryAction(rawQueryAction)
@@ -512,8 +512,8 @@ func parseContentDeliveryRule(rawContentDeliveryRule map[string]interface{}) *io
 		Destination: parseDestination(rawDestination),
 	}
 
-	if rawEntryPoint, ok := rawContentDeliveryRule["entry_name"]; ok {
-		datasetContentDeliveryRule.EntryName = aws.String(rawEntryPoint.(string))
+	if rawEntryName, ok := rawContentDeliveryRule["entry_name"]; ok {
+		datasetContentDeliveryRule.EntryName = aws.String(rawEntryName.(string))
 	}
 
 	return datasetContentDeliveryRule
@@ -630,7 +630,240 @@ func resourceAwsIotAnalyticsDatasetCreate(d *schema.ResourceData, meta interface
 	return resourceAwsIotAnalyticsDatasetRead(d, meta)
 }
 
+func wrapMapInList(mapping map[string]interface{}) []map[string]interface{} {
+	// We should use TypeList or TypeSet with MaxItems in case we want single object.
+	// So, schema.ResourceData.Set requires list as type of argument for such fields,
+	// as a result code becames a little bit messy with such instructions : []map[string]interface{}{someObject}.
+	// This helper function wrap mapping in list, and makes code more readable and intuitive.
+	return []map[string]interface{}{mapping}
+}
+
+func flattenVariable(variable *iotanalytics.Variable) map[string]interface{} {
+	rawVariable := make(map[string]interface{})
+	rawVariable["name"] = aws.StringValue(variable.Name)
+
+	if variable.StringValue != nil {
+		rawVariable["string_value"] = aws.StringValue(variable.StringValue)
+	}
+
+	if variable.DoubleValue != nil {
+		rawVariable["string_value"] = aws.StringValue(variable.StringValue)
+	}
+
+	if variable.OutputFileUriValue != nil {
+		outputFileUriValue := map[string]interface{}{
+			"file_name": aws.StringValue(variable.OutputFileUriValue.FileName),
+		}
+		rawVariable["output_file_uri_value"] = wrapMapInList(outputFileUriValue)
+	}
+
+	if variable.DatasetContentVersionValue != nil {
+		datasetContentVersionValue := map[string]interface{}{
+			"dataset_name": aws.StringValue(variable.DatasetContentVersionValue.DatasetName),
+		}
+		rawVariable["dataset_content_version_value"] = wrapMapInList(datasetContentVersionValue)
+	}
+
+	return rawVariable
+}
+
+func flattenContainerAction(containerAction *iotanalytics.ContainerDatasetAction) map[string]interface{} {
+	rawContainerAction := make(map[string]interface{})
+	rawContainerAction["image"] = aws.StringValue(containerAction.Image)
+	rawContainerAction["execution_role_arn"] = aws.StringValue(containerAction.ExecutionRoleArn)
+
+	rawResourceConfiguration := map[string]interface{}{
+		"compute_type":      aws.StringValue(containerAction.ResourceConfiguration.ComputeType),
+		"volume_size_in_gb": aws.Int64Value(containerAction.ResourceConfiguration.VolumeSizeInGB),
+	}
+	rawContainerAction["resource_configuration"] = wrapMapInList(rawResourceConfiguration)
+
+	rawVariables := make([]map[string]interface{}, 0)
+	for _, variable := range containerAction.Variables {
+		rawVariables = append(rawVariables, flattenVariable(variable))
+	}
+	rawContainerAction["variable"] = rawVariables
+
+	return rawContainerAction
+}
+
+func flattenQueryFilter(queryFilter *iotanalytics.QueryFilter) map[string]interface{} {
+	rawDeltaTime := map[string]interface{}{
+		"offset_seconds":  aws.Int64Value(queryFilter.DeltaTime.OffsetSeconds),
+		"time_expression": aws.StringValue(queryFilter.DeltaTime.TimeExpression),
+	}
+	rawQueryFilter := make(map[string]interface{})
+	rawQueryFilter["delta_time"] = wrapMapInList(rawDeltaTime)
+	return rawQueryFilter
+}
+
+func flattenSqlQueryAction(sqlQueryAction *iotanalytics.SqlQueryDatasetAction) map[string]interface{} {
+	rawSqlQueryAction := make(map[string]interface{})
+	rawSqlQueryAction["sql_query"] = aws.StringValue(sqlQueryAction.SqlQuery)
+
+	rawFilters := make([]map[string]interface{}, 0)
+	for _, filter := range sqlQueryAction.Filters {
+		rawFilters = append(rawFilters, flattenQueryFilter(filter))
+	}
+	rawSqlQueryAction["filter"] = rawFilters
+	return rawSqlQueryAction
+}
+
+func flattenAction(action *iotanalytics.DatasetAction) map[string]interface{} {
+	rawAction := make(map[string]interface{})
+	rawAction["name"] = aws.StringValue(action.ActionName)
+
+	if action.ContainerAction != nil {
+		rawContainerAction := flattenContainerAction(action.ContainerAction)
+		rawAction["container_action"] = wrapMapInList(rawContainerAction)
+	}
+
+	if action.QueryAction != nil {
+		rawQueryAction := flattenSqlQueryAction(action.QueryAction)
+		rawAction["query_action"] = wrapMapInList(rawQueryAction)
+	}
+
+	return rawAction
+}
+
+func flattenS3Destination(s3Destination *iotanalytics.S3DestinationConfiguration) map[string]interface{} {
+	rawS3Destination := make(map[string]interface{})
+	rawS3Destination["bucket"] = aws.StringValue(s3Destination.Bucket)
+	rawS3Destination["key"] = aws.StringValue(s3Destination.Key)
+	rawS3Destination["role_arn"] = aws.StringValue(s3Destination.RoleArn)
+
+	if s3Destination.GlueConfiguration != nil {
+		rawGlueConfiguration := map[string]interface{}{
+			"database_name": aws.StringValue(s3Destination.GlueConfiguration.DatabaseName),
+			"table_name":    aws.StringValue(s3Destination.GlueConfiguration.TableName),
+		}
+		rawS3Destination["glue_configuration"] = wrapMapInList(rawGlueConfiguration)
+	}
+	return rawS3Destination
+}
+
+func flattenIotEventsDestination(iotEventsDestination *iotanalytics.IotEventsDestinationConfiguration) map[string]interface{} {
+	rawIotEventsDestination := map[string]interface{}{
+		"input_name": aws.StringValue(iotEventsDestination.InputName),
+		"role_arn":   aws.StringValue(iotEventsDestination.RoleArn),
+	}
+	return rawIotEventsDestination
+}
+
+func flattenDestination(destination *iotanalytics.DatasetContentDeliveryDestination) map[string]interface{} {
+	rawDestination := make(map[string]interface{})
+
+	if destination.IotEventsDestinationConfiguration != nil {
+		rawIotEventsDestination := flattenIotEventsDestination(destination.IotEventsDestinationConfiguration)
+		rawDestination["iotevents_destination"] = wrapMapInList(rawIotEventsDestination)
+	}
+
+	if destination.S3DestinationConfiguration != nil {
+		rawS3Destination := flattenS3Destination(destination.S3DestinationConfiguration)
+		rawDestination["s3_destination"] = wrapMapInList(rawS3Destination)
+	}
+
+	return rawDestination
+}
+
+func flattenContentDeliveryRule(datasetContentDeliveryRule *iotanalytics.DatasetContentDeliveryRule) map[string]interface{} {
+	rawContentDeliveryRule := make(map[string]interface{})
+
+	rawDestination := flattenDestination(datasetContentDeliveryRule.Destination)
+	rawContentDeliveryRule["destination"] = wrapMapInList(rawDestination)
+
+	if datasetContentDeliveryRule.EntryName != nil {
+		rawDestination["entry_name"] = aws.StringValue(datasetContentDeliveryRule.EntryName)
+	}
+
+	return rawContentDeliveryRule
+}
+
+func flattenRetentionPeriod(retentionPeriod *iotanalytics.RetentionPeriod) map[string]interface{} {
+	rawRetentionPeriod := make(map[string]interface{})
+
+	if retentionPeriod.NumberOfDays != nil {
+		rawRetentionPeriod["number_of_days"] = aws.Int64Value(retentionPeriod.NumberOfDays)
+	}
+	if retentionPeriod.Unlimited != nil {
+		rawRetentionPeriod["unlimited"] = aws.BoolValue(retentionPeriod.Unlimited)
+	}
+
+	return rawRetentionPeriod
+}
+
+func flattenTrigger(trigger *iotanalytics.DatasetTrigger) map[string]interface{} {
+	rawTrigger := make(map[string]interface{})
+
+	if trigger.Dataset != nil {
+		rawDataset := map[string]interface{}{
+			"name": aws.StringValue(trigger.Dataset.Name),
+		}
+		rawTrigger["dataset"] = wrapMapInList(rawDataset)
+	}
+
+	if trigger.Schedule != nil {
+		rawSchedule := map[string]interface{}{
+			"name": aws.StringValue(trigger.Schedule.Expression),
+		}
+		rawTrigger["schedule"] = wrapMapInList(rawSchedule)
+	}
+
+	return rawTrigger
+}
+
+func flattenVersioningConfiguration(versioningConfiguration *iotanalytics.VersioningConfiguration) map[string]interface{} {
+	rawVersioningConfiguration := make(map[string]interface{})
+
+	if versioningConfiguration.MaxVersions != nil {
+		rawVersioningConfiguration["max_versions"] = aws.Int64Value(versioningConfiguration.MaxVersions)
+	}
+	if versioningConfiguration.Unlimited != nil {
+		rawVersioningConfiguration["unlimited"] = aws.BoolValue(versioningConfiguration.Unlimited)
+	}
+
+	return rawVersioningConfiguration
+}
+
 func resourceAwsIotAnalyticsDatasetRead(d *schema.ResourceData, meta interface{}) error {
+	conn := meta.(*AWSClient).iotanalyticsconn
+
+	params := &iotanalytics.DescribeDatasetInput{
+		DatasetName: aws.String(d.Id()),
+	}
+	log.Printf("[DEBUG] Reading IoT Analytics Dataset: %s", params)
+	out, err := conn.DescribeDataset(params)
+
+	if err != nil {
+		return err
+	}
+
+	d.Set("name", out.Dataset.Name)
+
+	rawActions := make([]map[string]interface{}, 0)
+	for _, action := range out.Dataset.Actions {
+		rawActions = append(rawActions, flattenAction(action))
+	}
+	d.Set("action", rawActions)
+
+	rawContentDeliveryRules := make([]map[string]interface{}, 0)
+	for _, rule := range out.Dataset.ContentDeliveryRules {
+		rawContentDeliveryRules = append(rawContentDeliveryRules, flattenContentDeliveryRule(rule))
+	}
+	d.Set("content_delivery_rule", rawContentDeliveryRules)
+
+	rawRetentionPeriod := flattenRetentionPeriod(out.Dataset.RetentionPeriod)
+	d.Set("retention_period", wrapMapInList(rawRetentionPeriod))
+
+	rawTriggers := make([]map[string]interface{}, 0)
+	for _, trigger := range out.Dataset.Triggers {
+		rawTriggers = append(rawTriggers, flattenTrigger(trigger))
+	}
+	d.Set("trigger", rawTriggers)
+
+	rawVersioningConfiguration := flattenVersioningConfiguration(out.Dataset.VersioningConfiguration)
+	d.Set("versioning_configuration", wrapMapInList(rawVersioningConfiguration))
+	return nil
 }
 
 func resourceAwsIotAnalyticsDatasetUpdate(d *schema.ResourceData, meta interface{}) error {
