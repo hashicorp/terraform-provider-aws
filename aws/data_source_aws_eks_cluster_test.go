@@ -36,6 +36,7 @@ func TestAccAWSEksClusterDataSource_basic(t *testing.T) {
 					resource.TestMatchResourceAttr(dataSourceResourceName, "platform_version", regexp.MustCompile(`^eks\.\d+$`)),
 					resource.TestCheckResourceAttrPair(resourceName, "role_arn", dataSourceResourceName, "role_arn"),
 					resource.TestCheckResourceAttrPair(resourceName, "status", dataSourceResourceName, "status"),
+					resource.TestCheckResourceAttrPair(resourceName, "tags.%", dataSourceResourceName, "tags.%"),
 					resource.TestCheckResourceAttrPair(resourceName, "version", dataSourceResourceName, "version"),
 					resource.TestCheckResourceAttr(dataSourceResourceName, "vpc_config.#", "1"),
 					resource.TestCheckResourceAttrPair(resourceName, "vpc_config.0.endpoint_private_access", dataSourceResourceName, "vpc_config.0.endpoint_private_access"),
