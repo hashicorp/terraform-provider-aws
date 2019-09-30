@@ -186,6 +186,40 @@ func TestAccAWSIAMServerCertificate_file(t *testing.T) {
 	})
 }
 
+func TestAccAWSIAMServerCertificate_Path(t *testing.T) {
+	var cert iam.ServerCertificate
+
+	resourceName := "aws_iam_server_certificate.test_cert"
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+
+	key := tlsRsaPrivateKeyPem(2048)
+	certificate := tlsRsaX509SelfSignedCertificatePem(key, "example.com")
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckIAMServerCertificateDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccIAMServerCertConfig_path(rName, "/test/", key, certificate),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckCertExists(resourceName, &cert),
+					testAccCheckAWSServerCertAttributes(&cert, &certificate),
+					resource.TestCheckResourceAttr(resourceName, "path", "/test/"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateId:     rName,
+				ImportStateVerifyIgnore: []string{
+					"private_key"},
+			},
+		},
+	})
+}
+
 func testAccCheckCertExists(n string, cert *iam.ServerCertificate) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
