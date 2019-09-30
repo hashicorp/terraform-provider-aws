@@ -65,6 +65,7 @@ func testAccDataSourceAwsSqsQueueConfig(rName string) string {
 resource "aws_sqs_queue" "wrong" {
   name = "%[1]s_wrong"
 }
+
 resource "aws_sqs_queue" "test" {
   name = "%[1]s"
 }

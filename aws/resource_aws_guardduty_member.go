@@ -235,31 +235,61 @@ func inviteGuardDutyMemberWaiter(accountID, detectorID string, timeout time.Dura
 	}
 
 	// wait until e-mail verification finishes
-	return resource.Retry(timeout, func() *resource.RetryError {
+	var out *guardduty.GetMembersOutput
+	err := resource.Retry(timeout, func() *resource.RetryError {
 		log.Printf("[DEBUG] Reading GuardDuty Member: %s", input)
-		gmo, err := conn.GetMembers(&input)
+		var err error
+		out, err = conn.GetMembers(&input)
 
 		if err != nil {
 			return resource.NonRetryableError(fmt.Errorf("error reading GuardDuty Member %q: %s", accountID, err))
 		}
 
-		if gmo == nil || len(gmo.Members) == 0 {
-			return resource.RetryableError(fmt.Errorf("error reading GuardDuty Member %q: member missing from response", accountID))
+		retryable, err := guardDutyMemberInvited(out, accountID)
+		if err != nil {
+			if retryable {
+				return resource.RetryableError(err)
+			}
+			return resource.NonRetryableError(err)
 		}
 
-		member := gmo.Members[0]
-		status := aws.StringValue(member.RelationshipStatus)
-
-		if status == "Disabled" || status == "Enabled" || status == "Invited" {
-			return nil
-		}
-
-		if status == "Created" || status == "EmailVerificationInProgress" {
-			return resource.RetryableError(fmt.Errorf("Expected member to be invited but was in state: %s", status))
-		}
-
-		return resource.NonRetryableError(fmt.Errorf("error inviting GuardDuty Member %q: invalid status: %s", accountID, status))
+		return nil
 	})
+	if isResourceTimeoutError(err) {
+		out, err = conn.GetMembers(&input)
+
+		if err != nil {
+			return fmt.Errorf("Error reading GuardDuty member: %s", err)
+		}
+		_, err = guardDutyMemberInvited(out, accountID)
+		if err != nil {
+			return err // Doesn't need fmt because that happens in the function
+		}
+		return nil
+	}
+	if err != nil {
+		return fmt.Errorf("Error waiting for GuardDuty email verification: %s", err)
+	}
+	return nil
+}
+
+func guardDutyMemberInvited(out *guardduty.GetMembersOutput, accountID string) (bool, error) {
+	if out == nil || len(out.Members) == 0 {
+		return true, fmt.Errorf("error reading GuardDuty Member %q: member missing from response", accountID)
+	}
+
+	member := out.Members[0]
+	status := aws.StringValue(member.RelationshipStatus)
+
+	if status == "Disabled" || status == "Enabled" || status == "Invited" {
+		return false, nil
+	}
+
+	if status == "Created" || status == "EmailVerificationInProgress" {
+		return true, fmt.Errorf("Expected member to be invited but was in state: %s", status)
+	}
+
+	return false, fmt.Errorf("error inviting GuardDuty Member %q: invalid status: %s", accountID, status)
 }
 
 func decodeGuardDutyMemberID(id string) (accountID, detectorID string, err error) {

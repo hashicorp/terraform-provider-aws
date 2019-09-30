@@ -34,6 +34,7 @@ func testAccAwsOrganizationsOrganization_basic(t *testing.T) {
 					testAccMatchResourceAttrGlobalARN(resourceName, "master_account_arn", "organizations", regexp.MustCompile(`account/o-.+/.+`)),
 					resource.TestMatchResourceAttr(resourceName, "master_account_email", regexp.MustCompile(`.+@.+`)),
 					testAccCheckResourceAttrAccountID(resourceName, "master_account_id"),
+					resource.TestCheckResourceAttr(resourceName, "non_master_accounts.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "roots.#", "1"),
 					resource.TestMatchResourceAttr(resourceName, "roots.0.id", regexp.MustCompile(`r-[a-z0-9]{4,32}`)),
 					resource.TestCheckResourceAttrSet(resourceName, "roots.0.name"),

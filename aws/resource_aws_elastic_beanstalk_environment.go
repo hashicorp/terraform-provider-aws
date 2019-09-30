@@ -88,6 +88,10 @@ func resourceAwsElasticBeanstalkEnvironment() *schema.Resource {
 				Optional: true,
 				ForceNew: true,
 			},
+			"endpoint_url": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"tier": {
 				Type:     schema.TypeString,
 				Optional: true,
@@ -647,6 +651,9 @@ func resourceAwsElasticBeanstalkEnvironmentRead(d *schema.ResourceData, meta int
 		return err
 	}
 	if err := d.Set("triggers", flattenBeanstalkTrigger(resources.EnvironmentResources.Triggers)); err != nil {
+		return err
+	}
+	if err := d.Set("endpoint_url", env.EndpointURL); err != nil {
 		return err
 	}
 

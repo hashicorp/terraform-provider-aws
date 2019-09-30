@@ -98,15 +98,16 @@ resource "aws_lambda_permission" "apigw_lambda" {
   principal     = "apigateway.amazonaws.com"
 
   # More: http://docs.aws.amazon.com/apigateway/latest/developerguide/api-gateway-control-access-using-iam-policies-to-invoke-api.html
-  source_arn = "arn:aws:execute-api:${var.myregion}:${var.accountId}:${aws_api_gateway_rest_api.api.id}/*/${aws_api_gateway_method.method.http_method}/${aws_api_gateway_resource.resource.path}"
+  source_arn = "arn:aws:execute-api:${var.myregion}:${var.accountId}:${aws_api_gateway_rest_api.api.id}/*/${aws_api_gateway_method.method.http_method}${aws_api_gateway_resource.resource.path}"
 }
 
 resource "aws_lambda_function" "lambda" {
-  filename         = "lambda.zip"
-  function_name    = "mylambda"
-  role             = "${aws_iam_role.role.arn}"
-  handler          = "lambda.lambda_handler"
-  runtime          = "python2.7"
+  filename      = "lambda.zip"
+  function_name = "mylambda"
+  role          = "${aws_iam_role.role.arn}"
+  handler       = "lambda.lambda_handler"
+  runtime       = "python2.7"
+
   # The filebase64sha256() function is available in Terraform 0.11.12 and later
   # For Terraform 0.11.11 and earlier, use the base64sha256() function and the file() function:
   # source_code_hash = "${base64sha256(file("lambda.zip"))}"
@@ -209,7 +210,7 @@ The following arguments are supported:
 * `http_method` - (Required) The HTTP method (`GET`, `POST`, `PUT`, `DELETE`, `HEAD`, `OPTION`, `ANY`)
   when calling the associated resource.
 * `integration_http_method` - (Optional) The integration HTTP method
-  (`GET`, `POST`, `PUT`, `DELETE`, `HEAD`, `OPTION`) specifying how API Gateway will interact with the back end.
+  (`GET`, `POST`, `PUT`, `DELETE`, `HEAD`, `OPTIONs`, `ANY`, `PATCH`) specifying how API Gateway will interact with the back end.
   **Required** if `type` is `AWS`, `AWS_PROXY`, `HTTP` or `HTTP_PROXY`.
   Not all methods are compatible with all `AWS` integrations.
   e.g. Lambda function [can only be invoked](https://github.com/awslabs/aws-apigateway-importer/issues/9#issuecomment-129651005) via `POST`.

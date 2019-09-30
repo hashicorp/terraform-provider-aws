@@ -255,8 +255,10 @@ func resourceAwsAcmpcaCertificateAuthority() *schema.Resource {
 			"type": {
 				Type:     schema.TypeString,
 				Optional: true,
+				ForceNew: true,
 				Default:  acmpca.CertificateAuthorityTypeSubordinate,
 				ValidateFunc: validation.StringInSlice([]string{
+					acmpca.CertificateAuthorityTypeRoot,
 					acmpca.CertificateAuthorityTypeSubordinate,
 				}, false),
 			},
@@ -288,6 +290,9 @@ func resourceAwsAcmpcaCertificateAuthorityCreate(d *schema.ResourceData, meta in
 		}
 		return nil
 	})
+	if isResourceTimeoutError(err) {
+		output, err = conn.CreateCertificateAuthority(input)
+	}
 	if err != nil {
 		return fmt.Errorf("error creating ACMPCA Certificate Authority: %s", err)
 	}

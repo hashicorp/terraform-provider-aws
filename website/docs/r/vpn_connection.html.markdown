@@ -78,7 +78,7 @@ Other arguments:
 * `static_routes_only` - (Optional, Default `false`) Whether the VPN connection uses static routes exclusively. Static routes must be used for devices that don't support BGP.
 * `tags` - (Optional) Tags to apply to the connection.
 * `tunnel1_inside_cidr` - (Optional) The CIDR block of the inside IP addresses for the first VPN tunnel.
-* `tunnel2_inside_cidr` - (Optional) The CIDR block of the second IP addresses for the first VPN tunnel.
+* `tunnel2_inside_cidr` - (Optional) The CIDR block of the inside IP addresses for the second VPN tunnel.
 * `tunnel1_preshared_key` - (Optional) The preshared key of the first VPN tunnel.
 * `tunnel2_preshared_key` - (Optional) The preshared key of the second VPN tunnel.
 

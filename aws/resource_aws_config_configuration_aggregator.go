@@ -106,6 +106,7 @@ func resourceAwsConfigConfigurationAggregator() *schema.Resource {
 					},
 				},
 			},
+			"tags": tagsSchema(),
 		},
 	}
 }
@@ -117,6 +118,7 @@ func resourceAwsConfigConfigurationAggregatorPut(d *schema.ResourceData, meta in
 
 	req := &configservice.PutConfigurationAggregatorInput{
 		ConfigurationAggregatorName: aws.String(name),
+		Tags:                        tagsFromMapConfigService(d.Get("tags").(map[string]interface{})),
 	}
 
 	account_aggregation_sources := d.Get("account_aggregation_source").([]interface{})
@@ -135,6 +137,17 @@ func resourceAwsConfigConfigurationAggregatorPut(d *schema.ResourceData, meta in
 	}
 
 	d.SetId(strings.ToLower(name))
+
+	if !d.IsNewResource() {
+		if err := setTagsConfigService(conn, d, d.Get("arn").(string)); err != nil {
+			if isAWSErr(err, configservice.ErrCodeResourceNotFoundException, "") {
+				log.Printf("[WARN] Configuration Aggregator not found: %s, removing from state", d.Id())
+				d.SetId("")
+				return nil
+			}
+			return fmt.Errorf("Error updating tags for %s: %s", d.Id(), err)
+		}
+	}
 
 	return resourceAwsConfigConfigurationAggregatorRead(d, meta)
 }
@@ -171,6 +184,15 @@ func resourceAwsConfigConfigurationAggregatorRead(d *schema.ResourceData, meta i
 
 	if err := d.Set("organization_aggregation_source", flattenConfigOrganizationAggregationSource(aggregator.OrganizationAggregationSource)); err != nil {
 		return fmt.Errorf("error setting organization_aggregation_source: %s", err)
+	}
+
+	if err := saveTagsConfigService(conn, d, aws.StringValue(aggregator.ConfigurationAggregatorArn)); err != nil {
+		if isAWSErr(err, configservice.ErrCodeResourceNotFoundException, "") {
+			log.Printf("[WARN] Configiguration Aggregator not found: %s, removing from state", d.Id())
+			d.SetId("")
+			return nil
+		}
+		return fmt.Errorf("Error setting tags for %s: %s", d.Id(), err)
 	}
 
 	return nil

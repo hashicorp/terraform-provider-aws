@@ -36,6 +36,7 @@ EOF
 resource "aws_iam_role_policy" "dlm_lifecycle" {
   name = "dlm-lifecycle-policy"
   role = "${aws_iam_role.dlm_lifecycle_role.id}"
+
   policy = <<EOF
 {
    "Version": "2012-10-17",

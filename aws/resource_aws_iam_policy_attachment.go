@@ -248,6 +248,7 @@ func attachPolicyToRoles(conn *iam.IAM, roles []*string, arn string) error {
 		if attachmentErr != nil {
 			return attachmentErr
 		}
+
 	}
 	return nil
 }
@@ -336,6 +337,9 @@ func detachPolicyFromUsers(conn *iam.IAM, users []*string, arn string) error {
 			UserName:  u,
 			PolicyArn: aws.String(arn),
 		})
+		if isAWSErr(err, iam.ErrCodeNoSuchEntityException, "") {
+			continue
+		}
 		if err != nil {
 			return err
 		}
@@ -348,6 +352,9 @@ func detachPolicyFromRoles(conn *iam.IAM, roles []*string, arn string) error {
 			RoleName:  r,
 			PolicyArn: aws.String(arn),
 		})
+		if isAWSErr(err, iam.ErrCodeNoSuchEntityException, "") {
+			continue
+		}
 		if err != nil {
 			return err
 		}
@@ -360,6 +367,9 @@ func detachPolicyFromGroups(conn *iam.IAM, groups []*string, arn string) error {
 			GroupName: g,
 			PolicyArn: aws.String(arn),
 		})
+		if isAWSErr(err, iam.ErrCodeNoSuchEntityException, "") {
+			continue
+		}
 		if err != nil {
 			return err
 		}

@@ -655,7 +655,7 @@ resource "aws_directory_service_directory" "test" {
   size     = "Small"
 
   vpc_settings {
-    subnet_ids = ["${aws_subnet.test.*.id}"]
+    subnet_ids = aws_subnet.test[*].id
     vpc_id     = "${aws_vpc.test.id}"
   }
 
@@ -666,7 +666,7 @@ resource "aws_directory_service_directory" "test" {
 
 resource "aws_vpc_dhcp_options" "test" {
   domain_name         = "${aws_directory_service_directory.test.name}"
-  domain_name_servers = ["${aws_directory_service_directory.test.dns_ip_addresses}"]
+  domain_name_servers = aws_directory_service_directory.test.dns_ip_addresses
 
   tags = {
     Name = %q
@@ -693,10 +693,11 @@ resource "aws_instance" "test" {
 
   ami                         = "${data.aws_ami.aws-thinstaller.id}"
   associate_public_ip_address = true
+
   # https://docs.aws.amazon.com/storagegateway/latest/userguide/Requirements.html
-  instance_type               = "m4.xlarge"
-  vpc_security_group_ids      = ["${aws_security_group.test.id}"]
-  subnet_id                   = "${aws_subnet.test.*.id[0]}"
+  instance_type          = "m4.xlarge"
+  vpc_security_group_ids = ["${aws_security_group.test.id}"]
+  subnet_id              = "${aws_subnet.test.*.id[0]}"
 
   tags = {
     Name = %q

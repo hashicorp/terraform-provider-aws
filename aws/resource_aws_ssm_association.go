@@ -17,6 +17,9 @@ func resourceAwsSsmAssociation() *schema.Resource {
 		Read:   resourceAwsSsmAssociationRead,
 		Update: resourceAwsSsmAssociationUpdate,
 		Delete: resourceAwsSsmAssociationDelete,
+		Importer: &schema.ResourceImporter{
+			State: schema.ImportStatePassthrough,
+		},
 
 		MigrateState:  resourceAwsSsmAssociationMigrateState,
 		SchemaVersion: 1,

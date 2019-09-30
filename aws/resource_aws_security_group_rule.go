@@ -221,10 +221,11 @@ information and instructions for recovery. Error message: %s`, sg_id, awsErr.Mes
 			ruleType, autherr)
 	}
 
+	var rules []*ec2.IpPermission
 	id := ipPermissionIDHash(sg_id, ruleType, perm)
 	log.Printf("[DEBUG] Computed group rule ID %s", id)
 
-	retErr := resource.Retry(5*time.Minute, func() *resource.RetryError {
+	err = resource.Retry(5*time.Minute, func() *resource.RetryError {
 		sg, err := findResourceSecurityGroup(conn, sg_id)
 
 		if err != nil {
@@ -232,7 +233,6 @@ information and instructions for recovery. Error message: %s`, sg_id, awsErr.Mes
 			return resource.NonRetryableError(err)
 		}
 
-		var rules []*ec2.IpPermission
 		switch ruleType {
 		case "ingress":
 			rules = sg.IpPermissions
@@ -241,7 +241,6 @@ information and instructions for recovery. Error message: %s`, sg_id, awsErr.Mes
 		}
 
 		rule := findRuleMatch(perm, rules, isVPC)
-
 		if rule == nil {
 			log.Printf("[DEBUG] Unable to find matching %s Security Group Rule (%s) for Group %s",
 				ruleType, id, sg_id)
@@ -251,10 +250,26 @@ information and instructions for recovery. Error message: %s`, sg_id, awsErr.Mes
 		log.Printf("[DEBUG] Found rule for Security Group Rule (%s): %s", id, rule)
 		return nil
 	})
+	if isResourceTimeoutError(err) {
+		sg, err := findResourceSecurityGroup(conn, sg_id)
+		if err != nil {
+			return fmt.Errorf("Error finding security group: %s", err)
+		}
 
-	if retErr != nil {
-		return fmt.Errorf("Error finding matching %s Security Group Rule (%s) for Group %s",
-			ruleType, id, sg_id)
+		switch ruleType {
+		case "ingress":
+			rules = sg.IpPermissions
+		default:
+			rules = sg.IpPermissionsEgress
+		}
+
+		rule := findRuleMatch(perm, rules, isVPC)
+		if rule == nil {
+			return fmt.Errorf("Error finding matching security group rule: %s", err)
+		}
+	}
+	if err != nil {
+		return fmt.Errorf("Error finding matching %s Security Group Rule (%s) for Group %s", ruleType, id, sg_id)
 	}
 
 	d.SetId(id)

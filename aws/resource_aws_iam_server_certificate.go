@@ -183,6 +183,12 @@ func resourceAwsIAMServerCertificateDelete(d *schema.ResourceData, meta interfac
 		return nil
 	})
 
+	if isResourceTimeoutError(err) {
+		_, err = conn.DeleteServerCertificate(&iam.DeleteServerCertificateInput{
+			ServerCertificateName: aws.String(d.Get("name").(string)),
+		})
+	}
+
 	return err
 }
 

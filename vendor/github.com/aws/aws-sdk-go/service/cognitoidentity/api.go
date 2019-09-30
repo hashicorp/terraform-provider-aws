@@ -2677,7 +2677,6 @@ type GetIdInput struct {
 	//    * Amazon Cognito user pool: cognito-idp.<region>.amazonaws.com/<YOUR_USER_POOL_ID>,
 	//    for example, cognito-idp.us-east-1.amazonaws.com/us-east-1_123456789.
 	//
-	//
 	//    * Google: accounts.google.com
 	//
 	//    * Amazon: www.amazon.com

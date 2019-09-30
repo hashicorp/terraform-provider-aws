@@ -1265,7 +1265,7 @@ func (c *Route53Resolver) ListResolverEndpointIpAddressesWithContext(ctx aws.Con
 //    // Example iterating over at most 3 pages of a ListResolverEndpointIpAddresses operation.
 //    pageNum := 0
 //    err := client.ListResolverEndpointIpAddressesPages(params,
-//        func(page *ListResolverEndpointIpAddressesOutput, lastPage bool) bool {
+//        func(page *route53resolver.ListResolverEndpointIpAddressesOutput, lastPage bool) bool {
 //            pageNum++
 //            fmt.Println(page)
 //            return pageNum <= 3
@@ -1413,7 +1413,7 @@ func (c *Route53Resolver) ListResolverEndpointsWithContext(ctx aws.Context, inpu
 //    // Example iterating over at most 3 pages of a ListResolverEndpoints operation.
 //    pageNum := 0
 //    err := client.ListResolverEndpointsPages(params,
-//        func(page *ListResolverEndpointsOutput, lastPage bool) bool {
+//        func(page *route53resolver.ListResolverEndpointsOutput, lastPage bool) bool {
 //            pageNum++
 //            fmt.Println(page)
 //            return pageNum <= 3
@@ -1561,7 +1561,7 @@ func (c *Route53Resolver) ListResolverRuleAssociationsWithContext(ctx aws.Contex
 //    // Example iterating over at most 3 pages of a ListResolverRuleAssociations operation.
 //    pageNum := 0
 //    err := client.ListResolverRuleAssociationsPages(params,
-//        func(page *ListResolverRuleAssociationsOutput, lastPage bool) bool {
+//        func(page *route53resolver.ListResolverRuleAssociationsOutput, lastPage bool) bool {
 //            pageNum++
 //            fmt.Println(page)
 //            return pageNum <= 3
@@ -1708,7 +1708,7 @@ func (c *Route53Resolver) ListResolverRulesWithContext(ctx aws.Context, input *L
 //    // Example iterating over at most 3 pages of a ListResolverRules operation.
 //    pageNum := 0
 //    err := client.ListResolverRulesPages(params,
-//        func(page *ListResolverRulesOutput, lastPage bool) bool {
+//        func(page *route53resolver.ListResolverRulesOutput, lastPage bool) bool {
 //            pageNum++
 //            fmt.Println(page)
 //            return pageNum <= 3

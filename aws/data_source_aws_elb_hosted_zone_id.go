@@ -9,6 +9,7 @@ import (
 )
 
 // See https://docs.aws.amazon.com/general/latest/gr/rande.html#elb_region
+// See https://docs.amazonaws.cn/en_us/general/latest/gr/rande.html#elb_region
 // First index is Application/Classic LB id's, second index is NLB id's
 var elbHostedZoneIdPerRegionMap = map[string][]string{
 	"ap-east-1":      {"Z3DQVH9N71FHZ0", "Z12Y7K3UBGUAD1"},

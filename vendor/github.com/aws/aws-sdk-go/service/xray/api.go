@@ -114,7 +114,7 @@ func (c *XRay) BatchGetTracesWithContext(ctx aws.Context, input *BatchGetTracesI
 //    // Example iterating over at most 3 pages of a BatchGetTraces operation.
 //    pageNum := 0
 //    err := client.BatchGetTracesPages(params,
-//        func(page *BatchGetTracesOutput, lastPage bool) bool {
+//        func(page *xray.BatchGetTracesOutput, lastPage bool) bool {
 //            pageNum++
 //            fmt.Println(page)
 //            return pageNum <= 3
@@ -754,7 +754,7 @@ func (c *XRay) GetGroupsWithContext(ctx aws.Context, input *GetGroupsInput, opts
 //    // Example iterating over at most 3 pages of a GetGroups operation.
 //    pageNum := 0
 //    err := client.GetGroupsPages(params,
-//        func(page *GetGroupsOutput, lastPage bool) bool {
+//        func(page *xray.GetGroupsOutput, lastPage bool) bool {
 //            pageNum++
 //            fmt.Println(page)
 //            return pageNum <= 3
@@ -892,7 +892,7 @@ func (c *XRay) GetSamplingRulesWithContext(ctx aws.Context, input *GetSamplingRu
 //    // Example iterating over at most 3 pages of a GetSamplingRules operation.
 //    pageNum := 0
 //    err := client.GetSamplingRulesPages(params,
-//        func(page *GetSamplingRulesOutput, lastPage bool) bool {
+//        func(page *xray.GetSamplingRulesOutput, lastPage bool) bool {
 //            pageNum++
 //            fmt.Println(page)
 //            return pageNum <= 3
@@ -1030,7 +1030,7 @@ func (c *XRay) GetSamplingStatisticSummariesWithContext(ctx aws.Context, input *
 //    // Example iterating over at most 3 pages of a GetSamplingStatisticSummaries operation.
 //    pageNum := 0
 //    err := client.GetSamplingStatisticSummariesPages(params,
-//        func(page *GetSamplingStatisticSummariesOutput, lastPage bool) bool {
+//        func(page *xray.GetSamplingStatisticSummariesOutput, lastPage bool) bool {
 //            pageNum++
 //            fmt.Println(page)
 //            return pageNum <= 3
@@ -1254,7 +1254,7 @@ func (c *XRay) GetServiceGraphWithContext(ctx aws.Context, input *GetServiceGrap
 //    // Example iterating over at most 3 pages of a GetServiceGraph operation.
 //    pageNum := 0
 //    err := client.GetServiceGraphPages(params,
-//        func(page *GetServiceGraphOutput, lastPage bool) bool {
+//        func(page *xray.GetServiceGraphOutput, lastPage bool) bool {
 //            pageNum++
 //            fmt.Println(page)
 //            return pageNum <= 3
@@ -1392,7 +1392,7 @@ func (c *XRay) GetTimeSeriesServiceStatisticsWithContext(ctx aws.Context, input 
 //    // Example iterating over at most 3 pages of a GetTimeSeriesServiceStatistics operation.
 //    pageNum := 0
 //    err := client.GetTimeSeriesServiceStatisticsPages(params,
-//        func(page *GetTimeSeriesServiceStatisticsOutput, lastPage bool) bool {
+//        func(page *xray.GetTimeSeriesServiceStatisticsOutput, lastPage bool) bool {
 //            pageNum++
 //            fmt.Println(page)
 //            return pageNum <= 3
@@ -1530,7 +1530,7 @@ func (c *XRay) GetTraceGraphWithContext(ctx aws.Context, input *GetTraceGraphInp
 //    // Example iterating over at most 3 pages of a GetTraceGraph operation.
 //    pageNum := 0
 //    err := client.GetTraceGraphPages(params,
-//        func(page *GetTraceGraphOutput, lastPage bool) bool {
+//        func(page *xray.GetTraceGraphOutput, lastPage bool) bool {
 //            pageNum++
 //            fmt.Println(page)
 //            return pageNum <= 3
@@ -1684,7 +1684,7 @@ func (c *XRay) GetTraceSummariesWithContext(ctx aws.Context, input *GetTraceSumm
 //    // Example iterating over at most 3 pages of a GetTraceSummaries operation.
 //    pageNum := 0
 //    err := client.GetTraceSummariesPages(params,
-//        func(page *GetTraceSummariesOutput, lastPage bool) bool {
+//        func(page *xray.GetTraceSummariesOutput, lastPage bool) bool {
 //            pageNum++
 //            fmt.Println(page)
 //            return pageNum <= 3

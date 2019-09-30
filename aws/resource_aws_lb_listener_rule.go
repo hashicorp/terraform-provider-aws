@@ -475,9 +475,10 @@ func resourceAwsLbListenerRuleCreate(d *schema.ResourceData, meta interface{}) e
 			return fmt.Errorf("Error creating LB Listener Rule: %v", err)
 		}
 	} else {
+		var priority int64
 		err := resource.Retry(5*time.Minute, func() *resource.RetryError {
 			var err error
-			priority, err := highestListenerRulePriority(elbconn, listenerArn)
+			priority, err = highestListenerRulePriority(elbconn, listenerArn)
 			if err != nil {
 				return resource.NonRetryableError(err)
 			}
@@ -491,12 +492,20 @@ func resourceAwsLbListenerRuleCreate(d *schema.ResourceData, meta interface{}) e
 			}
 			return nil
 		})
+		if isResourceTimeoutError(err) {
+			priority, err = highestListenerRulePriority(elbconn, listenerArn)
+			if err != nil {
+				return fmt.Errorf("Error getting highest listener rule priority: %s", err)
+			}
+			params.Priority = aws.Int64(priority + 1)
+			resp, err = elbconn.CreateRule(params)
+		}
 		if err != nil {
 			return fmt.Errorf("Error creating LB Listener Rule: %v", err)
 		}
 	}
 
-	if len(resp.Rules) == 0 {
+	if resp == nil || len(resp.Rules) == 0 {
 		return errors.New("Error creating LB Listener Rule: no rules returned in response")
 	}
 
@@ -525,7 +534,9 @@ func resourceAwsLbListenerRuleRead(d *schema.ResourceData, meta interface{}) err
 		}
 		return nil
 	})
-
+	if isResourceTimeoutError(err) {
+		resp, err = elbconn.DescribeRules(req)
+	}
 	if err != nil {
 		if isAWSErr(err, elbv2.ErrCodeRuleNotFoundException, "") {
 			log.Printf("[WARN] DescribeRules - removing %s from state", d.Id())

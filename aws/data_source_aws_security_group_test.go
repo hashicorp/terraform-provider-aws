@@ -104,47 +104,50 @@ func testAccDataSourceAwsSecurityGroupCheckDefault(name string) resource.TestChe
 
 func testAccDataSourceAwsSecurityGroupConfig(rInt int) string {
 	return fmt.Sprintf(`
-	resource "aws_vpc" "test" {
-		cidr_block = "172.16.0.0/16"
+resource "aws_vpc" "test" {
+  cidr_block = "172.16.0.0/16"
 
-	tags = {
-			Name = "terraform-testacc-security-group-data-source"
-		}
-	}
+  tags = {
+    Name = "terraform-testacc-security-group-data-source"
+  }
+}
 
-	resource "aws_security_group" "test" {
-		vpc_id = "${aws_vpc.test.id}"
-		name = "test-%d"
-	tags = {
-			Name = "tf-acctest"
-			Seed = "%d"
-		}
-		description = "sg description"
-	}
+resource "aws_security_group" "test" {
+  vpc_id = "${aws_vpc.test.id}"
+  name   = "test-%d"
 
-	data "aws_security_group" "by_id" {
-		id = "${aws_security_group.test.id}"
-	}
+  tags = {
+    Name = "tf-acctest"
+    Seed = "%d"
+  }
 
-	data "aws_security_group" "by_name" {
-		name = "${aws_security_group.test.name}"
-	}
+  description = "sg description"
+}
 
-	data "aws_security_group" "default_by_name" {
-		vpc_id = "${aws_vpc.test.id}"
-		name = "default"
-	}
+data "aws_security_group" "by_id" {
+  id = "${aws_security_group.test.id}"
+}
 
-	data "aws_security_group" "by_tag" {
-	tags = {
-			Seed = "${aws_security_group.test.tags["Seed"]}"
-		}
-	}
+data "aws_security_group" "by_name" {
+  name = "${aws_security_group.test.name}"
+}
 
-	data "aws_security_group" "by_filter" {
-		filter {
-			name = "group-name"
-			values = ["${aws_security_group.test.name}"]
-		}
-	}`, rInt, rInt)
+data "aws_security_group" "default_by_name" {
+  vpc_id = "${aws_vpc.test.id}"
+  name   = "default"
+}
+
+data "aws_security_group" "by_tag" {
+  tags = {
+    Seed = "${aws_security_group.test.tags["Seed"]}"
+  }
+}
+
+data "aws_security_group" "by_filter" {
+  filter {
+    name   = "group-name"
+    values = ["${aws_security_group.test.name}"]
+  }
+}
+`, rInt, rInt)
 }
