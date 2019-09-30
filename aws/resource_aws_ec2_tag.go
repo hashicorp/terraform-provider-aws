@@ -2,6 +2,7 @@ package aws
 
 import (
 	"fmt"
+	"log"
 	"strings"
 	"time"
 
@@ -10,6 +11,19 @@ import (
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/helper/schema"
 )
+
+type ResourceNotExists struct {
+	message string
+}
+
+func NewResourceNotExists(message string) *ResourceNotExists {
+	return &ResourceNotExists{
+		message: message,
+	}
+}
+func (e *ResourceNotExists) Error() string {
+	return e.message
+}
 
 func resourceAwsEc2Tag() *schema.Resource {
 	return &schema.Resource{
@@ -103,20 +117,30 @@ func resourceAwsEc2TagRead(d *schema.ResourceData, meta interface{}) error {
 			},
 		})
 
-		// tag not found _yet_
-		if len(tags.Tags) == 0 {
-			return resource.RetryableError(fmt.Errorf("tag not found"))
-		}
-
 		if err != nil {
 			return resource.RetryableError(err)
+		}
+
+		// tag not found _yet_
+		if len(tags.Tags) == 0 {
+			return resource.RetryableError(NewResourceNotExists("tag not found"))
 		}
 
 		return nil
 	})
 
 	if retryError != nil {
-		return fmt.Errorf("[ERROR] Tag %s not found on resource %s", key, id)
+		if _, ok := retryError.(*ResourceNotExists); !ok {
+			return fmt.Errorf("[ERROR] Could not read tag %s on resource %s", key, id)
+		}
+	}
+
+	if len(tags.Tags) == 0 {
+		// The API call did not fail but the tag does not exists on resource
+		// Did not find the tag, as per contract with TF report:https://www.terraform.io/docs/extend/writing-custom-providers.html
+		log.Printf("[WARN]There are no tags on resource %s", id)
+		d.SetId("")
+		return nil
 	}
 
 	if len(tags.Tags) != 1 {
