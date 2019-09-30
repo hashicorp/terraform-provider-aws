@@ -376,6 +376,8 @@ func TestAccAWSELB_tags(t *testing.T) {
 
 func TestAccAWSELB_Listener_SSLCertificateID_IAMServerCertificate(t *testing.T) {
 	var conf elb.LoadBalancerDescription
+	key := tlsRsaPrivateKeyPem(2048)
+	certificate := tlsRsaX509SelfSignedCertificatePem(key, "example.com")
 	rName := fmt.Sprintf("tf-acctest-%s", acctest.RandString(10))
 	resourceName := "aws_elb.test"
 
@@ -390,22 +392,22 @@ func TestAccAWSELB_Listener_SSLCertificateID_IAMServerCertificate(t *testing.T) 
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProvidersWithTLS,
+		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSELBDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config:      testAccELBConfig_Listener_IAMServerCertificate(rName, "tcp"),
+				Config:      testAccELBConfig_Listener_IAMServerCertificate(rName, certificate, key, "tcp"),
 				ExpectError: regexp.MustCompile(`ssl_certificate_id may be set only when protocol is 'https' or 'ssl'`),
 			},
 			{
-				Config: testAccELBConfig_Listener_IAMServerCertificate(rName, "https"),
+				Config: testAccELBConfig_Listener_IAMServerCertificate(rName, certificate, key, "https"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSELBExists(resourceName, &conf),
 					testCheck,
 				),
 			},
 			{
-				Config:      testAccELBConfig_Listener_IAMServerCertificate_AddInvalidListener(rName),
+				Config:      testAccELBConfig_Listener_IAMServerCertificate_AddInvalidListener(rName, certificate, key),
 				ExpectError: regexp.MustCompile(`ssl_certificate_id may be set only when protocol is 'https' or 'ssl'`),
 			},
 		},
@@ -1682,16 +1684,14 @@ resource "aws_security_group" "test" {
 }
 `
 
-func testAccELBConfig_Listener_IAMServerCertificate(certName, lbProtocol string) string {
+func testAccELBConfig_Listener_IAMServerCertificate(certName, certificate, key, lbProtocol string) string {
 	return fmt.Sprintf(`
 data "aws_availability_zones" "available" {}
 
-%[1]s
-
 resource "aws_iam_server_certificate" "test_cert" {
-  name             = "%[2]s"
-  certificate_body = "${tls_self_signed_cert.example.cert_pem}"
-  private_key      = "${tls_private_key.example.private_key_pem}"
+  name             = "%[1]s"
+  certificate_body = "%[2]s"
+  private_key      = "%[3]s"
 }
 
 resource "aws_elb" "test" {
@@ -1699,25 +1699,23 @@ resource "aws_elb" "test" {
 
   listener {
     instance_port      = 443
-    instance_protocol  = "%[3]s"
+    instance_protocol  = "%[4]s"
     lb_port            = 443
-    lb_protocol        = "%[3]s"
+    lb_protocol        = "%[4]s"
     ssl_certificate_id = "${aws_iam_server_certificate.test_cert.arn}"
   }
 }
-`, testAccTLSServerCert, certName, lbProtocol)
+`, certName, tlsPemEscapeNewlines(certificate), tlsPemEscapeNewlines(key), lbProtocol)
 }
 
-func testAccELBConfig_Listener_IAMServerCertificate_AddInvalidListener(certName string) string {
+func testAccELBConfig_Listener_IAMServerCertificate_AddInvalidListener(certName, certificate, key string) string {
 	return fmt.Sprintf(`
 data "aws_availability_zones" "available" {}
 
-%[1]s
-
 resource "aws_iam_server_certificate" "test_cert" {
-  name             = "%[2]s"
-  certificate_body = "${tls_self_signed_cert.example.cert_pem}"
-  private_key      = "${tls_private_key.example.private_key_pem}"
+  name             = "%[1]s"
+  certificate_body = "%[2]s"
+  private_key      = "%[3]s"
 }
 
 resource "aws_elb" "test" {
@@ -1740,7 +1738,7 @@ resource "aws_elb" "test" {
     ssl_certificate_id = "${aws_iam_server_certificate.test_cert.arn}"
   }
 }
-`, testAccTLSServerCert, certName)
+`, certName, tlsPemEscapeNewlines(certificate), tlsPemEscapeNewlines(key))
 }
 
 const testAccAWSELBConfig_subnets = `
