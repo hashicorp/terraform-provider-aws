@@ -1,7 +1,6 @@
 ---
 layout: "aws"
 page_title: "AWS: aws_acm_certificate"
-sidebar_current: "docs-aws-resource-acm-certificate"
 description: |-
   Requests and manages a certificate from Amazon Certificate Manager (ACM).
 ---

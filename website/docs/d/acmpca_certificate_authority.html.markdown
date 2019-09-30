@@ -1,7 +1,6 @@
 ---
 layout: "aws"
 page_title: "AWS: aws_acmpca_certificate_authority"
-sidebar_current: "docs-aws-datasource-acmpca-certificate-authority"
 description: |-
   Get information on a AWS Certificate Manager Private Certificate Authority
 ---

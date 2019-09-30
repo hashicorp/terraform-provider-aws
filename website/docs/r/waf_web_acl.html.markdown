@@ -1,7 +1,6 @@
 ---
 layout: "aws"
 page_title: "AWS: aws_waf_web_acl"
-sidebar_current: "docs-aws-resource-waf-webacl"
 description: |-
   Provides a AWS WAF web access control group (ACL) resource.
 ---

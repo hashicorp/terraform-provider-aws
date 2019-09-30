@@ -1,7 +1,6 @@
 ---
 layout: "aws"
 page_title: "Serverless with AWS Lambda and API Gateway"
-sidebar_current: "docs-aws-guide-serverless"
 description: |-
   Using Terraform to configure a serverless application with AWS Lambda and API Gateway.
 ---

@@ -1,7 +1,6 @@
 ---
 layout: "aws"
 page_title: "AWS: aws_service_discovery_service"
-sidebar_current: "docs-aws-resource-service-discovery-service"
 description: |-
   Provides a Service Discovery Service resource.
 ---

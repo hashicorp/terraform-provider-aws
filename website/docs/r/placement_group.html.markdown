@@ -1,7 +1,6 @@
 ---
 layout: "aws"
 page_title: "AWS: aws_placement_group"
-sidebar_current: "docs-aws-resource-placement-group"
 description: |-
   Provides an EC2 placement group.
 ---
