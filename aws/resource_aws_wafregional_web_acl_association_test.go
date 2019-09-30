@@ -28,6 +28,24 @@ func TestAccAWSWafRegionalWebAclAssociation_basic(t *testing.T) {
 	})
 }
 
+func TestAccAWSWafRegionalWebAclAssociation_disappears(t *testing.T) {
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckWafRegionalWebAclAssociationDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccCheckWafRegionalWebAclAssociationConfig_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckWafRegionalWebAclAssociationExists("aws_wafregional_web_acl_association.foo"),
+					testAccCheckWafRegionalWebAclAssociationDisappears("aws_wafregional_web_acl_association.foo"),
+				),
+				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}
+
 func TestAccAWSWafRegionalWebAclAssociation_multipleAssociations(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -114,6 +132,33 @@ func testAccCheckWafRegionalWebAclAssociationExists(n string) resource.TestCheck
 		}
 
 		_, err := conn.GetWebACLForResource(input)
+
+		return err
+	}
+}
+
+func testAccCheckWafRegionalWebAclAssociationDisappears(resourceName string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		// waf.WebACLSummary does not contain the information so we instead just use the state information
+
+		rs, ok := s.RootModule().Resources[resourceName]
+		if !ok {
+			return fmt.Errorf("Not found: %s", resourceName)
+		}
+
+		if rs.Primary.ID == "" {
+			return fmt.Errorf("No WebACL association ID is set")
+		}
+
+		_, resourceArn := resourceAwsWafRegionalWebAclAssociationParseId(rs.Primary.ID)
+
+		conn := testAccProvider.Meta().(*AWSClient).wafregionalconn
+
+		input := &wafregional.DisassociateWebACLInput{
+			ResourceArn: aws.String(resourceArn),
+		}
+
+		_, err := conn.DisassociateWebACL(input)
 
 		return err
 	}
