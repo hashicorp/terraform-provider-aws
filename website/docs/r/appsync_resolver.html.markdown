@@ -1,7 +1,6 @@
 ---
 layout: "aws"
 page_title: "AWS: aws_appsync_resolver"
-sidebar_current: "docs-aws-resource-appsync-resolver"
 description: |-
   Provides an AppSync Resolver.
 ---

@@ -1,7 +1,6 @@
 ---
 layout: "aws"
 page_title: "AWS: aws_api_gateway_integration"
-sidebar_current: "docs-aws-resource-api-gateway-integration"
 description: |-
   Provides an HTTP Method Integration for an API Gateway Integration.
 ---

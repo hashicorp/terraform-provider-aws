@@ -1,7 +1,6 @@
 ---
 layout: "aws"
 page_title: "AWS: aws_subnet_ids"
-sidebar_current: "docs-aws-datasource-subnet-ids"
 description: |-
     Provides a list of subnet Ids for a VPC
 ---

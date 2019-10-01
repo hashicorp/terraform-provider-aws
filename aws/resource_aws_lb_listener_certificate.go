@@ -1,7 +1,6 @@
 package aws
 
 import (
-	"errors"
 	"fmt"
 	"log"
 	"time"
@@ -46,13 +45,28 @@ func resourceAwsLbListenerCertificateCreate(d *schema.ResourceData, meta interfa
 	}
 
 	log.Printf("[DEBUG] Adding certificate: %s of listener: %s", d.Get("certificate_arn").(string), d.Get("listener_arn").(string))
-	resp, err := conn.AddListenerCertificates(params)
-	if err != nil {
-		return fmt.Errorf("Error creating LB Listener Certificate: %s", err)
+
+	err := resource.Retry(1*time.Minute, func() *resource.RetryError {
+		_, err := conn.AddListenerCertificates(params)
+
+		// Retry for IAM Server Certificate eventual consistency
+		if isAWSErr(err, elbv2.ErrCodeCertificateNotFoundException, "") {
+			return resource.RetryableError(err)
+		}
+
+		if err != nil {
+			return resource.NonRetryableError(err)
+		}
+
+		return nil
+	})
+
+	if isResourceTimeoutError(err) {
+		_, err = conn.AddListenerCertificates(params)
 	}
 
-	if len(resp.Certificates) == 0 {
-		return errors.New("Error creating LB Listener Certificate: no certificates returned in response")
+	if err != nil {
+		return fmt.Errorf("error adding LB Listener Certificate: %s", err)
 	}
 
 	d.SetId(d.Get("listener_arn").(string) + "_" + d.Get("certificate_arn").(string))

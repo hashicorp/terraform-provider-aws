@@ -742,12 +742,14 @@ behavior "pull_request_path_labeler" "service_labels" {
       "aws/*_aws_elb*",
       "aws/*_aws_lb_cookie_stickiness_policy*",
       "aws/*_aws_lb_ssl_negotiation_policy*",
+      "aws/*_aws_load_balancer*",
       "aws/*_aws_proxy_protocol_policy*",
       "aws/tagsELB*",
       "website/**/app_cookie_stickiness_policy*",
       "website/**/elb*",
       "website/**/lb_cookie_stickiness_policy*",
       "website/**/lb_ssl_negotiation_policy*",
+      "website/**/load_balancer*",
       "website/**/proxy_protocol_policy*"
     ]
     "service/elbv2" = [

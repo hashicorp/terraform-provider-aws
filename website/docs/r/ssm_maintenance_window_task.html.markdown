@@ -1,7 +1,6 @@
 ---
 layout: "aws"
 page_title: "AWS: aws_ssm_maintenance_window_task"
-sidebar_current: "docs-aws-resource-ssm-maintenance-window-task"
 description: |-
   Provides an SSM Maintenance Window Task resource
 ---

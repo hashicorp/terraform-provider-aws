@@ -1,7 +1,6 @@
 ---
 layout: "aws"
 page_title: "AWS: aws_fsx_windows_file_system"
-sidebar_current: "docs-aws-resource-fsx-windows-file-system"
 description: |-
   Manages a FSx Windows File System.
 ---

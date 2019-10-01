@@ -1,7 +1,6 @@
 ---
 layout: "aws"
 page_title: "AWS: aws_ssm_association"
-sidebar_current: "docs-aws-resource-ssm-association"
 description: |-
   Associates an SSM Document to an instance or EC2 tag.
 ---

@@ -1,7 +1,6 @@
 ---
 layout: "aws"
 page_title: "AWS: aws_vpc"
-sidebar_current: "docs-aws-resource-vpc"
 description: |-
   Provides a VPC resource.
 ---

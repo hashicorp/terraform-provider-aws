@@ -1,7 +1,6 @@
 ---
 layout: "aws"
 page_title: "AWS: aws_codecommit_trigger"
-sidebar_current: "docs-aws-resource-codecommit-trigger"
 description: |-
   Provides a CodeCommit Trigger Resource.
 ---

@@ -1,7 +1,6 @@
 ---
 layout: "aws"
 page_title: "AWS: aws_wafregional_rule"
-sidebar_current: "docs-aws-datasource-wafregional-rule"
 description: |-
   Retrieves an AWS WAF Regional rule id.
 ---

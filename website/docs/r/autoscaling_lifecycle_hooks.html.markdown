@@ -1,7 +1,6 @@
 ---
 layout: "aws"
 page_title: "AWS: aws_autoscaling_lifecycle_hook"
-sidebar_current: "docs-aws-resource-autoscaling-lifecycle-hook"
 description: |-
   Provides an AutoScaling Lifecycle Hooks resource.
 ---

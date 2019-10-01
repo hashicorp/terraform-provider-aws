@@ -1,7 +1,6 @@
 ---
 layout: "aws"
 page_title: "AWS: aws_lambda_function"
-sidebar_current: "docs-aws-resource-lambda-function"
 description: |-
   Provides a Lambda Function resource. Lambda allows you to trigger execution of code in response to events in AWS, enabling serverless backend solutions. The Lambda Function itself includes source code and runtime configuration.
 ---
@@ -11,6 +10,8 @@ description: |-
 Provides a Lambda Function resource. Lambda allows you to trigger execution of code in response to events in AWS, enabling serverless backend solutions. The Lambda Function itself includes source code and runtime configuration.
 
 For information about Lambda and how to use it, see [What is AWS Lambda?][1]
+
+For a detailed example of setting up Lambda and API Gateway, see [Serverless Applications with AWS Lambda and API Gateway.][11]
 
 ## Example Usage
 
@@ -205,6 +206,7 @@ For **environment** the following attributes are supported:
 [8]: https://docs.aws.amazon.com/lambda/latest/dg/deployment-package-v2.html
 [9]: https://docs.aws.amazon.com/lambda/latest/dg/concurrent-executions.html
 [10]: https://docs.aws.amazon.com/lambda/latest/dg/configuration-layers.html
+[11]: https://learn.hashicorp.com/terraform/aws/lambda-api-gateway
 
 ## Timeouts
 

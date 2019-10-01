@@ -1,7 +1,6 @@
 ---
 layout: "aws"
 page_title: "AWS: aws_vpc_endpoint_service"
-sidebar_current: "docs-aws-datasource-vpc-endpoint-service"
 description: |-
     Provides details about a specific service that can be specified when creating a VPC endpoint.
 ---
