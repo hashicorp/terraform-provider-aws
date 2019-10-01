@@ -262,6 +262,29 @@ func TestAccAWSS3BucketObject_withContentCharacteristics(t *testing.T) {
 	})
 }
 
+func TestAccAWSS3BucketObject_NonVersioned(t *testing.T) {
+	sourceInitial := testAccAWSS3BucketObjectCreateTempFile(t, "initial object state")
+	defer os.Remove(sourceInitial)
+
+	var originalObj s3.GetObjectOutput
+	resourceName := "aws_s3_bucket_object.object"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSS3BucketObjectDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSS3BucketObjectConfig_NonVersioned(acctest.RandInt(), sourceInitial),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSS3BucketObjectExists(resourceName, &originalObj),
+					testAccCheckAWSS3BucketObjectBody(&originalObj, "initial object state"),
+					resource.TestCheckResourceAttr(resourceName, "version_id", ""),
+				),
+			},
+		},
+	})
+}
 func TestAccAWSS3BucketObject_updates(t *testing.T) {
 	var originalObj, modifiedObj s3.GetObjectOutput
 	resourceName := "aws_s3_bucket_object.object"
@@ -1446,4 +1469,18 @@ resource "aws_s3_bucket_object" "object" {
   object_lock_retain_until_date = "%s"
 }
 `, randInt, content, retainUntilDate)
+}
+func testAccAWSS3BucketObjectConfig_NonVersioned(randInt int, source string) string {
+	return fmt.Sprintf(`
+resource "aws_s3_bucket" "object_bucket_3" {
+  bucket = "tf-object-test-bucket-%d"
+}
+
+resource "aws_s3_bucket_object" "object" {
+  bucket = "${aws_s3_bucket.object_bucket_3.bucket}"
+  key    = "updateable-key"
+  source = "%s"
+  etag   = "${filemd5("%s")}"
+}
+`, randInt, source, source)
 }
