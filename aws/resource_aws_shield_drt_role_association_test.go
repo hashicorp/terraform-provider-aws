@@ -11,10 +11,10 @@ import (
 	"github.com/hashicorp/terraform/terraform"
 )
 
-func TestAccAWSShieldDrtRoleAssociation_RoleArn(t *testing.T) {
-	resourceName := "aws_shield_drt_role.acctest"
+func TestAccAWSShieldDrtRoleAssociation(t *testing.T) {
+	iamResourceName := "aws_iam_role.shield_drt"
+	shieldResourceName := "aws_shield_drt_role_association.shield_drt"
 	rName := acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum)
-	roleArn := "arn:aws:iam::aws:policy/service-role/AWSShieldDRTAccessPolicy"
 
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
@@ -26,30 +26,48 @@ func TestAccAWSShieldDrtRoleAssociation_RoleArn(t *testing.T) {
 		CheckDestroy: testAccCheckAWSShieldDrtRoleAssociationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSShieldDrtRoleAssociationConfig(rName, roleArn),
+				Config: testAccAWSShieldDrtRoleAssociationConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSShieldDrtRoleAssociated(resourceName, roleArn),
+					testAccCheckAWSShieldDrtRoleAssociated(iamResourceName, shieldResourceName),
 				),
 			},
 		},
 	})
 }
 
-func testAccAWSShieldDrtRoleAssociationConfig(refName, roleArn string) string {
+func testAccAWSShieldDrtRoleAssociationConfig(rName string) string {
 	return fmt.Sprintf(`
-variable "name" {
-  default = "%s"
+resource "aws_iam_role" "shield_drt" {
+  name = "%s"
+
+  assume_role_policy = <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "",
+      "Effect": "Allow",
+      "Action": "sts:AssumeRole",
+      "Principal": {
+        "Service": [
+          "drt.shield.amazonaws.com"
+        ]
+       }
+    }
+  ]
+}
+EOF
 }
 
-resource "aws_shield_protection" "acctest" {
-  name = "${var.name}"
+resource "aws_iam_role_policy_attachment" "shield_drt" {
+  role       = "${aws_iam_role.shield_drt.name}"
+  policy_arn = "arn:aws:iam::aws:policy/service-role/AWSShieldDRTAccessPolicy"
 }
 
-resource "aws_shield_drt_role" "acctest" {
-  role_arn   = "%s"
-  depends_on = ["aws_shield_protection.acctest"]
+resource "aws_shield_drt_role_association" "shield_drt" {
+  role_arn = "${aws_iam_role.shield_drt.arn}"
 }
-`, refName, roleArn)
+`, rName)
 }
 
 func testAccPreCheckAWSShieldDrtRoleAssociation(t *testing.T) {
@@ -67,11 +85,16 @@ func testAccPreCheckAWSShieldDrtRoleAssociation(t *testing.T) {
 	}
 }
 
-func testAccCheckAWSShieldDrtRoleAssociated(name, roleArn string) resource.TestCheckFunc {
+func testAccCheckAWSShieldDrtRoleAssociated(iamName, drtName string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		_, ok := s.RootModule().Resources[name]
+		role, ok := s.RootModule().Resources[iamName]
 		if !ok {
-			return fmt.Errorf("Not found: %s", name)
+			return fmt.Errorf("Not found: %s", iamName)
+		}
+
+		_, ok = s.RootModule().Resources[drtName]
+		if !ok {
+			return fmt.Errorf("Not found: %s", drtName)
 		}
 
 		conn := testAccProvider.Meta().(*AWSClient).shieldconn
@@ -80,15 +103,15 @@ func testAccCheckAWSShieldDrtRoleAssociated(name, roleArn string) resource.TestC
 
 		resp, err := conn.DescribeDRTAccess(input)
 		if isAWSErr(err, shield.ErrCodeResourceNotFoundException, "") {
-			return fmt.Errorf("AWS Shield DRT Role %s not associated", roleArn)
+			return fmt.Errorf("AWS Shield DRT Role not associated")
 		}
 
 		if err != nil {
 			return err
 		}
 
-		if aws.StringValue(resp.RoleArn) != roleArn {
-			return fmt.Errorf("AWS Shield DRT Role %s not associated", roleArn)
+		if aws.StringValue(resp.RoleArn) != role.Primary.Attributes["arn"] {
+			return fmt.Errorf("AWS Shield DRT Role incorrectly associated")
 		}
 
 		return nil
