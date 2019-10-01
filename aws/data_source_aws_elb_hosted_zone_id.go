@@ -65,18 +65,18 @@ func dataSourceAwsElbHostedZoneIdRead(d *schema.ResourceData, meta interface{}) 
 	if v, ok := d.GetOk("region"); ok {
 		region = v.(string)
 	}
-	var i int
+	var lbTypeIndex int
 	if v, ok := d.GetOk("elb_type"); ok {
 		if v.(string) == "classic" || v.(string) == "application" {
-			i = 0
+			lbTypeIndex = 0
 		} else if v.(string) == "network" {
-			i = 1
+			lbTypeIndex = 1
 		}
 	} else {
-		i = 0
+		lbTypeIndex = 0
 	}
 	if zoneId, ok := elbHostedZoneIdPerRegionMap[region]; ok {
-		d.SetId(zoneId[i])
+		d.SetId(zoneId[lbTypeIndex])
 		return nil
 	}
 
