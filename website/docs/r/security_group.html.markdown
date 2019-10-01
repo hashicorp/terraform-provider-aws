@@ -185,7 +185,7 @@ In addition to all arguments above, the following attributes are exported:
 configuration options:
 
 - `create` - (Default `10 minutes`) How long to wait for a security group to be created.
-- `delete` - (Default `10 minutes`) How long to wait for a security group to be deleted.
+- `delete` - (Default `30 minutes`) How long to wait for a security group to be deleted.
 
 ## Import
 
