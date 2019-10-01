@@ -11,6 +11,7 @@ import (
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/helper/schema"
 	"github.com/hashicorp/terraform/helper/validation"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 )
 
 func resourceAwsEcrRepository() *schema.Resource {
@@ -65,7 +66,7 @@ func resourceAwsEcrRepositoryCreate(d *schema.ResourceData, meta interface{}) er
 	input := ecr.CreateRepositoryInput{
 		ImageTagMutability: aws.String(d.Get("image_tag_mutability").(string)),
 		RepositoryName:     aws.String(d.Get("name").(string)),
-		Tags:               tagsFromMapECR(d.Get("tags").(map[string]interface{})),
+		Tags:               keyvaluetags.New(d.Get("tags").(map[string]interface{})).IgnoreAws().EcrTags(),
 	}
 
 	log.Printf("[DEBUG] Creating ECR repository: %#v", input)
@@ -119,21 +120,29 @@ func resourceAwsEcrRepositoryRead(d *schema.ResourceData, meta interface{}) erro
 	}
 
 	repository := out.Repositories[0]
+	arn := aws.StringValue(repository.RepositoryArn)
 
-	d.Set("arn", repository.RepositoryArn)
+	d.Set("arn", arn)
 	d.Set("name", repository.RepositoryName)
 	d.Set("registry_id", repository.RegistryId)
 	d.Set("repository_url", repository.RepositoryUri)
 	d.Set("image_tag_mutability", repository.ImageTagMutability)
 
-	if err := getTagsECR(conn, d); err != nil {
-		return fmt.Errorf("error getting ECR repository tags: %s", err)
+	tags, err := keyvaluetags.EcrListTags(conn, arn)
+
+	if err != nil {
+		return fmt.Errorf("error listing tags for ECR Repository (%s): %s", arn, err)
+	}
+
+	if err := d.Set("tags", tags.IgnoreAws().Map()); err != nil {
+		return fmt.Errorf("error setting tags: %s", err)
 	}
 
 	return nil
 }
 
 func resourceAwsEcrRepositoryUpdate(d *schema.ResourceData, meta interface{}) error {
+	arn := d.Get("arn").(string)
 	conn := meta.(*AWSClient).ecrconn
 
 	if d.HasChange("image_tag_mutability") {
@@ -142,8 +151,12 @@ func resourceAwsEcrRepositoryUpdate(d *schema.ResourceData, meta interface{}) er
 		}
 	}
 
-	if err := setTagsECR(conn, d); err != nil {
-		return fmt.Errorf("error setting ECR repository tags: %s", err)
+	if d.HasChange("tags") {
+		o, n := d.GetChange("tags")
+
+		if err := keyvaluetags.EcrUpdateTags(conn, arn, o, n); err != nil {
+			return fmt.Errorf("error updating ECR Repository (%s) tags: %s", arn, err)
+		}
 	}
 
 	return resourceAwsEcrRepositoryRead(d, meta)
