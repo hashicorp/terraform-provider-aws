@@ -41,6 +41,11 @@ func resourceAwsKmsKey() *schema.Resource {
 				Optional: true,
 				Computed: true,
 			},
+			"origin": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+			},
 			"key_usage": {
 				Type:     schema.TypeString,
 				Optional: true,
@@ -173,16 +178,23 @@ func resourceAwsKmsKeyRead(d *schema.ResourceData, meta interface{}) error {
 	}
 	d.Set("policy", policy)
 
-	out, err := retryOnAwsCode("NotFoundException", func() (interface{}, error) {
-		return conn.GetKeyRotationStatus(&kms.GetKeyRotationStatusInput{
-			KeyId: metadata.KeyId,
+	// RM-2543: (eric-luminal) `GetKeyRotationStatus` is not allowed for cmk's
+	// with imported key material. see: https://github.com/awsdocs/aws-kms-developer-guide/blob/master/doc_source/key-state.md
+	if aws.StringValue(metadata.Origin) == "EXTERNAL" {
+		d.Set("origin", "EXTERNAL")
+		d.Set("enable_key_rotation", false)
+	} else {
+		out, err := retryOnAwsCode("NotFoundException", func() (interface{}, error) {
+			return conn.GetKeyRotationStatus(&kms.GetKeyRotationStatusInput{
+				KeyId: metadata.KeyId,
+			})
 		})
-	})
-	if err != nil {
-		return err
+		if err != nil {
+			return err
+		}
+		krs, _ := out.(*kms.GetKeyRotationStatusOutput)
+		d.Set("enable_key_rotation", krs.KeyRotationEnabled)
 	}
-	krs, _ := out.(*kms.GetKeyRotationStatusOutput)
-	d.Set("enable_key_rotation", krs.KeyRotationEnabled)
 
 	tOut, err := retryOnAwsCode("NotFoundException", func() (interface{}, error) {
 		return conn.ListResourceTags(&kms.ListResourceTagsInput{
@@ -379,6 +391,17 @@ func updateKmsKeyRotationStatus(conn *kms.KMS, d *schema.ResourceData) error {
 		Refresh: func() (interface{}, string, error) {
 			log.Printf("[DEBUG] Checking if KMS key %s rotation status is %t",
 				d.Id(), shouldEnableRotation)
+
+			// RM-2543: (eric-luminal) `GetKeyRotationStatus` is not allowed for cmk's
+			// with imported key material. see: https://github.com/awsdocs/aws-kms-developer-guide/blob/master/doc_source/key-state.md
+			if v, ok := d.GetOk("origin"); ok && v == "EXTERNAL" {
+				status := fmt.Sprintf("%t", false)
+				log.Printf("[DEBUG] KMS key %s rotation status received: %s, retrying", d.Id(), status)
+
+				return &kms.GetKeyRotationStatusOutput{
+					KeyRotationEnabled: aws.Bool(false),
+				}, status, nil
+			}
 
 			out, err := retryOnAwsCode("NotFoundException", func() (interface{}, error) {
 				return conn.GetKeyRotationStatus(&kms.GetKeyRotationStatusInput{
