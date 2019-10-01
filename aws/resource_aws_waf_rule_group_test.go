@@ -17,6 +17,9 @@ func init() {
 	resource.AddTestSweepers("aws_waf_rule_group", &resource.Sweeper{
 		Name: "aws_waf_rule_group",
 		F:    testSweepWafRuleGroups,
+		Dependencies: []string{
+			"aws_waf_web_acl",
+		},
 	})
 }
 
