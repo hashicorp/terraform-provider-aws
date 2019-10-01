@@ -10,6 +10,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/ec2"
+	"github.com/aws/aws-sdk-go/service/kms"
 	"github.com/hashicorp/terraform/helper/customdiff"
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/helper/schema"
@@ -537,7 +538,8 @@ func resourceAwsLaunchTemplateRead(d *schema.ResourceData, meta interface{}) err
 	d.Set("user_data", ltData.UserData)
 	d.Set("vpc_security_group_ids", aws.StringValueSlice(ltData.SecurityGroupIds))
 
-	if err := d.Set("block_device_mappings", getBlockDeviceMappings(ltData.BlockDeviceMappings)); err != nil {
+	kmsConn := meta.(*AWSClient).kmsconn
+	if err := d.Set("block_device_mappings", getBlockDeviceMappings(ltData.BlockDeviceMappings, kmsConn)); err != nil {
 		return err
 	}
 
@@ -630,7 +632,7 @@ func resourceAwsLaunchTemplateDelete(d *schema.ResourceData, meta interface{}) e
 	return nil
 }
 
-func getBlockDeviceMappings(m []*ec2.LaunchTemplateBlockDeviceMapping) []interface{} {
+func getBlockDeviceMappings(m []*ec2.LaunchTemplateBlockDeviceMapping, kmsconn *kms.KMS) []interface{} {
 	s := []interface{}{}
 	for _, v := range m {
 		mapping := map[string]interface{}{
@@ -651,7 +653,17 @@ func getBlockDeviceMappings(m []*ec2.LaunchTemplateBlockDeviceMapping) []interfa
 				ebs["iops"] = aws.Int64Value(v.Ebs.Iops)
 			}
 			if v.Ebs.KmsKeyId != nil {
-				ebs["kms_key_id"] = aws.StringValue(v.Ebs.KmsKeyId)
+				keyId := aws.StringValue(v.Ebs.KmsKeyId)
+				if _, errors := validateArn(keyId, keyId); len(errors) > 0 {
+					// keyId is a KeyID UUID rather than an ARN, retrieve ARN
+					kmsResp, err := kmsconn.DescribeKey(&kms.DescribeKeyInput{
+						KeyId: aws.String(keyId),
+					})
+					if err == nil {
+						keyId = aws.StringValue(kmsResp.KeyMetadata.Arn)
+					}
+				}
+				ebs["kms_key_id"] = keyId
 			}
 			if v.Ebs.SnapshotId != nil {
 				ebs["snapshot_id"] = aws.StringValue(v.Ebs.SnapshotId)
