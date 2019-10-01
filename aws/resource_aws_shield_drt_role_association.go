@@ -62,9 +62,9 @@ func resourceAwsShieldDrtRoleAssociationRead(d *schema.ResourceData, meta interf
 func resourceAwsShieldDrtRoleAssociationDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).shieldconn
 
-	input := &shield.DescribeDRTAccessInput{}
+	input := &shield.DisassociateDRTRoleInput{}
 
-	_, err := conn.DescribeDRTAccess(input)
+	_, err := conn.DisassociateDRTRole(input)
 	if err != nil {
 		return fmt.Errorf("error disassociating DRT Role: %v", err)
 	}
