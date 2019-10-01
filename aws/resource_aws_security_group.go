@@ -1412,7 +1412,7 @@ func deleteLingeringLambdaENIs(conn *ec2.EC2, d *schema.ResourceData, filterName
 			},
 			{
 				Name:   aws.String("description"),
-				Values: []*string{aws.String("AWS Lambda VPC ENI: *")},
+				Values: []*string{aws.String("AWS Lambda VPC ENI*")},
 			},
 		},
 	}
