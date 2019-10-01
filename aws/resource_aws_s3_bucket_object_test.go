@@ -270,7 +270,7 @@ func TestAccAWSS3BucketObject_NonVersioned(t *testing.T) {
 	resourceName := "aws_s3_bucket_object.object"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccAssumeRoleARNPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSS3BucketObjectDestroy,
 		Steps: []resource.TestStep{
@@ -285,6 +285,7 @@ func TestAccAWSS3BucketObject_NonVersioned(t *testing.T) {
 		},
 	})
 }
+
 func TestAccAWSS3BucketObject_updates(t *testing.T) {
 	var originalObj, modifiedObj s3.GetObjectOutput
 	resourceName := "aws_s3_bucket_object.object"
@@ -1470,8 +1471,29 @@ resource "aws_s3_bucket_object" "object" {
 }
 `, randInt, content, retainUntilDate)
 }
+
 func testAccAWSS3BucketObjectConfig_NonVersioned(randInt int, source string) string {
-	return fmt.Sprintf(`
+	policy := `{
+		"Version": "2012-10-17",
+		"Statement": [
+			{
+				"Sid": "AllowYeah",
+				"Effect": "Allow",
+				"Action": "s3:*",
+				"Resource": "*"
+			},
+			{
+				"Sid":    "DenyStm1",
+				"Effect": "Deny",
+				"Action": [
+					"s3:GetObjectVersion*",
+					"s3:ListBucketVersions"
+				],
+				"Resource": "*"
+			}
+		]
+	}`
+	return testAccProviderConfigAssumeRolePolicy(policy) + fmt.Sprintf(`
 resource "aws_s3_bucket" "object_bucket_3" {
   bucket = "tf-object-test-bucket-%d"
 }
