@@ -662,6 +662,7 @@ func Provider() *schema.Provider {
 			"aws_glue_trigger":                                        resourceAwsGlueTrigger(),
 			"aws_glue_user_defined_function":                          resourceAwsGlueUserDefinedFunction(),
 			"aws_glue_workflow":                                       resourceAwsGlueWorkflow(),
+			"aws_glue_resource_policy":                                resourceAwsGlueResourcePolicy(),
 			"aws_guardduty_detector":                                  resourceAwsGuardDutyDetector(),
 			"aws_guardduty_filter":                                    resourceAwsGuardDutyFilter(),
 			"aws_guardduty_invite_accepter":                           resourceAwsGuardDutyInviteAccepter(),
