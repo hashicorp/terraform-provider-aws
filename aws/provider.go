@@ -963,6 +963,7 @@ func init() {
 		"es",
 		"firehose",
 		"fms",
+		"forecast",
 		"fsx",
 		"gamelift",
 		"glacier",

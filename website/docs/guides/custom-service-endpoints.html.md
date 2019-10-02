@@ -101,6 +101,7 @@ The Terraform AWS Provider allows the following endpoints to be customized:
 - `es`
 - `firehose`
 - `fms`
+- `forecast`
 - `fsx`
 - `gamelift`
 - `glacier`
