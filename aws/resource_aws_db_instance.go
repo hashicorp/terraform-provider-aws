@@ -1402,14 +1402,13 @@ func resourceAwsDbInstanceDelete(d *schema.ResourceData, meta interface{}) error
 	opts := rds.DeleteDBInstanceInput{DBInstanceIdentifier: aws.String(d.Id())}
 
 	skipFinalSnapshot := d.Get("skip_final_snapshot").(bool)
+	opts.SkipFinalSnapshot = aws.Bool(skipFinalSnapshot)
 	finalSnapshotIdentifier := d.Get("final_snapshot_identifier").(string)
 
 	// Use user-provided snapshot identifier or default to a random one.
 	if !skipFinalSnapshot && finalSnapshotIdentifier != "" {
-		opts.SkipFinalSnapshot = aws.Bool(skipFinalSnapshot)
 		opts.FinalDBSnapshotIdentifier = aws.String(finalSnapshotIdentifier)
 	} else if !skipFinalSnapshot && finalSnapshotIdentifier == "" {
-		opts.SkipFinalSnapshot = aws.Bool(skipFinalSnapshot)
 		opts.FinalDBSnapshotIdentifier = aws.String(resource.PrefixedUniqueId("final-snapshot-"))
 	}
 

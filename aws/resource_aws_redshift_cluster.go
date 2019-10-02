@@ -893,14 +893,13 @@ func resourceAwsRedshiftClusterDelete(d *schema.ResourceData, meta interface{}) 
 	}
 
 	skipFinalSnapshot := d.Get("skip_final_snapshot").(bool)
+	deleteOpts.SkipFinalClusterSnapshot = aws.Bool(skipFinalSnapshot)
 	finalSnapshotIdentifier := d.Get("final_snapshot_identifier").(string)
 
 	// Use user-provided snapshot identifier or default to a random one.
 	if !skipFinalSnapshot && finalSnapshotIdentifier != "" {
-		deleteOpts.SkipFinalClusterSnapshot = aws.Bool(skipFinalSnapshot)
 		deleteOpts.FinalClusterSnapshotIdentifier = aws.String(finalSnapshotIdentifier)
 	} else if !skipFinalSnapshot && finalSnapshotIdentifier == "" {
-		deleteOpts.SkipFinalClusterSnapshot = aws.Bool(skipFinalSnapshot)
 		deleteOpts.FinalClusterSnapshotIdentifier = aws.String(resource.PrefixedUniqueId("final-snapshot-"))
 	}
 

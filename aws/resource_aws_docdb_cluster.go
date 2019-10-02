@@ -689,14 +689,13 @@ func resourceAwsDocDBClusterDelete(d *schema.ResourceData, meta interface{}) err
 	}
 
 	skipFinalSnapshot := d.Get("skip_final_snapshot").(bool)
+	deleteOpts.SkipFinalSnapshot = aws.Bool(skipFinalSnapshot)
 	finalSnapshotIdentifier := d.Get("final_snapshot_identifier").(string)
 
 	// Use user-provided snapshot identifier or default to a random one.
 	if !skipFinalSnapshot && finalSnapshotIdentifier != "" {
-		deleteOpts.SkipFinalSnapshot = aws.Bool(skipFinalSnapshot)
 		deleteOpts.FinalDBSnapshotIdentifier = aws.String(finalSnapshotIdentifier)
 	} else if !skipFinalSnapshot && finalSnapshotIdentifier == "" {
-		deleteOpts.SkipFinalSnapshot = aws.Bool(skipFinalSnapshot)
 		deleteOpts.FinalDBSnapshotIdentifier = aws.String(resource.PrefixedUniqueId("final-snapshot-"))
 	}
 
