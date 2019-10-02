@@ -828,6 +828,33 @@ func TestAccAWSLambdaFunction_VPC_withInvocation(t *testing.T) {
 	})
 }
 
+// Reference: https://github.com/terraform-providers/terraform-provider-aws/issues/10044
+func TestAccAWSLambdaFunction_VpcConfig_ProperIamDependencies(t *testing.T) {
+	var function lambda.GetFunctionOutput
+
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_lambda_function.test"
+	vpcResourceName := "aws_vpc.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckLambdaFunctionDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSLambdaConfigVpcConfigProperIamDependencies(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAwsLambdaFunctionExists(resourceName, rName, &function),
+					resource.TestCheckResourceAttr(resourceName, "vpc_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "vpc_config.0.subnet_ids.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "vpc_config.0.security_group_ids.#", "1"),
+					resource.TestCheckResourceAttrPair(resourceName, "vpc_config.0.vpc_id", vpcResourceName, "id"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccAWSLambdaFunction_EmptyVpcConfig(t *testing.T) {
 	var conf lambda.GetFunctionOutput
 
@@ -1871,6 +1898,83 @@ resource "aws_lambda_function" "lambda_function_test" {
     runtime = "nodejs8.10"
 }
 `, fileName, funcName)
+}
+
+func testAccAWSLambdaConfigVpcConfigProperIamDependencies(rName string) string {
+	return fmt.Sprintf(`
+data "aws_partition" "current" {}
+
+resource "aws_iam_role_policy_attachment" "test" {
+  policy_arn = "arn:${data.aws_partition.current.partition}:iam::aws:policy/service-role/AWSLambdaVPCAccessExecutionRole"
+  role       = "${aws_iam_role.test.id}"
+}
+
+resource "aws_iam_role" "test" {
+  name = %[1]q
+
+  assume_role_policy = <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Action": "sts:AssumeRole",
+      "Principal": {
+        "Service": "lambda.amazonaws.com"
+      },
+      "Effect": "Allow",
+      "Sid": ""
+    }
+  ]
+}
+EOF
+}
+
+resource "aws_vpc" "test" {
+  cidr_block = "10.0.0.0/16"
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_subnet" "test" {
+  depends_on = ["aws_iam_role_policy_attachment.test"]
+
+  vpc_id     = "${aws_vpc.test.id}"
+  cidr_block = "10.0.0.0/24"
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_security_group" "test" {
+  depends_on = ["aws_iam_role_policy_attachment.test"]
+
+  name   = %[1]q
+  vpc_id = "${aws_vpc.test.id}"
+
+  egress {
+    cidr_blocks = ["0.0.0.0/0"]
+    from_port   = 0
+    protocol    = "-1"
+    to_port     = 0
+  }
+}
+
+resource "aws_lambda_function" "test" {
+  filename      = "test-fixtures/lambdatest.zip"
+  function_name = %[1]q
+  role          = "${aws_iam_role.test.arn}"
+  handler       = "exports.example"
+  runtime       = "nodejs8.10"
+
+  vpc_config {
+    subnet_ids         = ["${aws_subnet.test.id}"]
+    security_group_ids = ["${aws_security_group.test.id}"]
+  }
+}
+`, rName)
 }
 
 func testAccAWSLambdaConfigWithTracingConfig(funcName, policyName, roleName, sgName string) string {

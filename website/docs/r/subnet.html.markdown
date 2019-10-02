@@ -9,6 +9,8 @@ description: |-
 
 Provides an VPC subnet resource.
 
+~> **NOTE:** Due to [AWS Lambda improved VPC networking changes that began deploying in September 2019](https://aws.amazon.com/blogs/compute/announcing-improved-vpc-networking-for-aws-lambda-functions/), subnets associated with Lambda Functions can take up to 45 minutes to successfully delete. Terraform AWS Provider version 2.31.0 and later automatically handles this increased timeout, however prior versions require setting the [customizable deletion timeout](#timeouts) to 45 minutes (`delete = "45m"`). AWS and HashiCorp are working together to reduce the amount of time required for resource deletion and updates can be tracked in this [GitHub issue](https://github.com/terraform-providers/terraform-provider-aws/issues/10329).
+
 ## Example Usage
 
 ### Basic Usage
@@ -73,8 +75,8 @@ In addition to all arguments above, the following attributes are exported:
 `aws_subnet` provides the following [Timeouts](/docs/configuration/resources.html#timeouts)
 configuration options:
 
-- `create` - (Default `10 minutes`) How long to wait for a subnet to be created.
-- `delete` - (Default `30 minutes`) How long to wait for a subnet to be deleted.
+- `create` - (Default `10m`) How long to wait for a subnet to be created.
+- `delete` - (Default `20m`) How long to retry on `DependencyViolation` errors during subnet deletion from lingering ENIs left by certain AWS services such as Elastic Load Balancing. NOTE: Lambda ENIs can take up to 45 minutes to delete, which is not affected by changing this customizable timeout (in version 2.31.0 and later of the Terraform AWS Provider) unless it is increased above 45 minutes.
 
 ## Import
 

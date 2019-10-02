@@ -31,7 +31,7 @@ func resourceAwsSecurityGroup() *schema.Resource {
 
 		Timeouts: &schema.ResourceTimeout{
 			Create: schema.DefaultTimeout(10 * time.Minute),
-			Delete: schema.DefaultTimeout(30 * time.Minute),
+			Delete: schema.DefaultTimeout(10 * time.Minute),
 		},
 
 		SchemaVersion: 1,
@@ -1403,6 +1403,11 @@ func sgProtocolIntegers() map[string]int {
 // The AWS Lambda service creates ENIs behind the scenes and keeps these around for a while
 // which would prevent SGs attached to such ENIs from being destroyed
 func deleteLingeringLambdaENIs(conn *ec2.EC2, filterName, resourceId string, timeout time.Duration) error {
+	// AWS Lambda service team confirms P99 deletion time of ~35 minutes. Buffer for safety.
+	if minimumTimeout := 45 * time.Minute; timeout < minimumTimeout {
+		timeout = minimumTimeout
+	}
+
 	resp, err := conn.DescribeNetworkInterfaces(&ec2.DescribeNetworkInterfacesInput{
 		Filters: buildEC2AttributeFilterList(map[string]string{
 			filterName:    resourceId,
@@ -1426,19 +1431,24 @@ func deleteLingeringLambdaENIs(conn *ec2.EC2, filterName, resourceId string, tim
 				},
 				Target: []string{
 					ec2.NetworkInterfaceStatusAvailable,
-					networkInterfaceStatusDeleted,
 				},
-				Refresh:                   networkInterfaceStateRefresh(conn, eniId),
-				Timeout:                   timeout,
-				Delay:                     10 * time.Second,
-				MinTimeout:                5 * time.Second,
-				ContinuousTargetOccurence: 10,
+				Refresh:    networkInterfaceStateRefresh(conn, eniId),
+				Timeout:    timeout,
+				Delay:      10 * time.Second,
+				MinTimeout: 10 * time.Second,
+				// Handle EC2 ENI eventual consistency. It can take up to 3 minutes.
+				ContinuousTargetOccurence: 18,
+				NotFoundChecks:            1,
 			}
 
 			eniRaw, err := stateConf.WaitForState()
 
+			if isResourceNotFoundError(err) {
+				continue
+			}
+
 			if err != nil {
-				return fmt.Errorf("error waiting for ENI (%s) to become available: %s", eniId, err)
+				return fmt.Errorf("error waiting for Lambda V2N ENI (%s) to become available for detachment: %s", eniId, err)
 			}
 
 			eni = eniRaw.(*ec2.NetworkInterface)
@@ -1447,13 +1457,13 @@ func deleteLingeringLambdaENIs(conn *ec2.EC2, filterName, resourceId string, tim
 		err = detachNetworkInterface(conn, eni, timeout)
 
 		if err != nil {
-			return err
+			return fmt.Errorf("error detaching Lambda ENI (%s): %s", eniId, err)
 		}
 
 		err = deleteNetworkInterface(conn, eniId)
 
 		if err != nil {
-			return err
+			return fmt.Errorf("error deleting Lambda ENI (%s): %s", eniId, err)
 		}
 	}
 

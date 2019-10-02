@@ -16,10 +16,6 @@ import (
 	"github.com/hashicorp/terraform/helper/schema"
 )
 
-const (
-	networkInterfaceStatusDeleted = "deleted"
-)
-
 func resourceAwsNetworkInterface() *schema.Resource {
 	return &schema.Resource{
 		Create: resourceAwsNetworkInterfaceCreate,
@@ -466,6 +462,10 @@ func deleteNetworkInterface(conn *ec2.EC2, eniId string) error {
 }
 
 func detachNetworkInterface(conn *ec2.EC2, eni *ec2.NetworkInterface, timeout time.Duration) error {
+	if eni == nil {
+		return nil
+	}
+
 	eniId := aws.StringValue(eni.NetworkInterfaceId)
 	if eni.Attachment == nil {
 		log.Printf("[DEBUG] ENI %s is already detached", eniId)
@@ -494,14 +494,20 @@ func detachNetworkInterface(conn *ec2.EC2, eni *ec2.NetworkInterface, timeout ti
 		Target: []string{
 			ec2.AttachmentStatusDetached,
 		},
-		Refresh:    networkInterfaceAttachmentStateRefresh(conn, eniId),
-		Timeout:    timeout,
-		Delay:      10 * time.Second,
-		MinTimeout: 5 * time.Second,
+		Refresh:        networkInterfaceAttachmentStateRefresh(conn, eniId),
+		Timeout:        timeout,
+		Delay:          10 * time.Second,
+		MinTimeout:     5 * time.Second,
+		NotFoundChecks: 1,
 	}
 
 	log.Printf("[DEBUG] Waiting for ENI (%s) to become detached", eniId)
 	_, err = stateConf.WaitForState()
+
+	if isResourceNotFoundError(err) {
+		return nil
+	}
+
 	if err != nil {
 		return fmt.Errorf("error waiting for ENI (%s) to become detached: %s", eniId, err)
 	}
@@ -516,7 +522,7 @@ func networkInterfaceAttachmentStateRefresh(conn *ec2.EC2, eniId string) resourc
 		})
 
 		if isAWSErr(err, "InvalidNetworkInterfaceID.NotFound", "") {
-			return "", ec2.AttachmentStatusDetached, nil
+			return nil, ec2.AttachmentStatusDetached, nil
 		}
 
 		if err != nil {
@@ -526,12 +532,12 @@ func networkInterfaceAttachmentStateRefresh(conn *ec2.EC2, eniId string) resourc
 		n := len(resp.NetworkInterfaces)
 		switch n {
 		case 0:
-			return "", ec2.AttachmentStatusDetached, nil
+			return nil, ec2.AttachmentStatusDetached, nil
 
 		case 1:
 			attachment := resp.NetworkInterfaces[0].Attachment
 			if attachment == nil {
-				return "", ec2.AttachmentStatusDetached, nil
+				return nil, ec2.AttachmentStatusDetached, nil
 			}
 			return attachment, aws.StringValue(attachment.Status), nil
 
@@ -548,7 +554,7 @@ func networkInterfaceStateRefresh(conn *ec2.EC2, eniId string) resource.StateRef
 		})
 
 		if isAWSErr(err, "InvalidNetworkInterfaceID.NotFound", "") {
-			return "", networkInterfaceStatusDeleted, nil
+			return nil, "", nil
 		}
 
 		if err != nil {
@@ -558,7 +564,7 @@ func networkInterfaceStateRefresh(conn *ec2.EC2, eniId string) resource.StateRef
 		n := len(resp.NetworkInterfaces)
 		switch n {
 		case 0:
-			return "", networkInterfaceStatusDeleted, nil
+			return nil, "", nil
 
 		case 1:
 			eni := resp.NetworkInterfaces[0]
