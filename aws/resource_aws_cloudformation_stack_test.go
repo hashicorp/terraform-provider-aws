@@ -338,6 +338,7 @@ func testAccAWSCloudFormationStackConfig(stackName string) string {
 	return fmt.Sprintf(`
 resource "aws_cloudformation_stack" "network" {
   name = "%[1]s"
+
   template_body = <<STACK
 {
   "Resources" : {
@@ -363,13 +364,15 @@ resource "aws_cloudformation_stack" "network" {
   }
 }
 STACK
-}`, stackName)
+}
+`, stackName)
 }
 
 func testAccAWSCloudFormationStackConfig_yaml(stackName string) string {
 	return fmt.Sprintf(`
 resource "aws_cloudformation_stack" "yaml" {
   name = "%[1]s"
+
   template_body = <<STACK
 Resources:
   MyVPC:
@@ -389,13 +392,15 @@ Outputs:
     Description: The VPC ID
     Value: !Ref MyVPC
 STACK
-}`, stackName)
+}
+`, stackName)
 }
 
 func testAccAWSCloudFormationStackConfig_defaultParams(stackName string) string {
 	return fmt.Sprintf(`
 resource "aws_cloudformation_stack" "asg-demo" {
   name = "%[1]s"
+
   template_body = <<BODY
 {
     "Parameters": {
@@ -612,7 +617,8 @@ func testAccAWSCloudFormationStackConfig_templateUrl_withParams(rName, bucketKey
 	return fmt.Sprintf(`
 resource "aws_s3_bucket" "b" {
   bucket = "%[1]s"
-  acl = "public-read"
+  acl    = "public-read"
+
   policy = <<POLICY
 {
   "Version":"2008-10-17",
@@ -631,24 +637,26 @@ resource "aws_s3_bucket" "b" {
 POLICY
 
   website {
-      index_document = "index.html"
-      error_document = "error.html"
+    index_document = "index.html"
+    error_document = "error.html"
   }
 }
 
 resource "aws_s3_bucket_object" "object" {
   bucket = "${aws_s3_bucket.b.id}"
-  key = "%[2]s"
+  key    = "%[2]s"
   source = "test-fixtures/cloudformation-template.json"
 }
 
 resource "aws_cloudformation_stack" "with-url-and-params" {
   name = "%[1]s"
+
   parameters = {
     VpcCIDR = "%[3]s"
   }
-  template_url = "https://${aws_s3_bucket.b.id}.s3-us-west-2.amazonaws.com/${aws_s3_bucket_object.object.key}"
-  on_failure = "DELETE"
+
+  template_url       = "https://${aws_s3_bucket.b.id}.s3-us-west-2.amazonaws.com/${aws_s3_bucket_object.object.key}"
+  on_failure         = "DELETE"
   timeout_in_minutes = 1
 }
 `, rName, bucketKey, vpcCidr)
@@ -658,7 +666,8 @@ func testAccAWSCloudFormationStackConfig_templateUrl_withParams_withYaml(rName, 
 	return fmt.Sprintf(`
 resource "aws_s3_bucket" "b" {
   bucket = "%[1]s"
-  acl = "public-read"
+  acl    = "public-read"
+
   policy = <<POLICY
 {
   "Version":"2008-10-17",
@@ -677,24 +686,26 @@ resource "aws_s3_bucket" "b" {
 POLICY
 
   website {
-      index_document = "index.html"
-      error_document = "error.html"
+    index_document = "index.html"
+    error_document = "error.html"
   }
 }
 
 resource "aws_s3_bucket_object" "object" {
   bucket = "${aws_s3_bucket.b.id}"
-  key = "%[2]s"
+  key    = "%[2]s"
   source = "test-fixtures/cloudformation-template.yaml"
 }
 
 resource "aws_cloudformation_stack" "with-url-and-params-and-yaml" {
   name = "%[1]s"
+
   parameters = {
     VpcCIDR = "%[3]s"
   }
-  template_url = "https://${aws_s3_bucket.b.id}.s3-us-west-2.amazonaws.com/${aws_s3_bucket_object.object.key}"
-  on_failure = "DELETE"
+
+  template_url       = "https://${aws_s3_bucket.b.id}.s3-us-west-2.amazonaws.com/${aws_s3_bucket_object.object.key}"
+  on_failure         = "DELETE"
   timeout_in_minutes = 1
 }
 `, rName, bucketKey, vpcCidr)

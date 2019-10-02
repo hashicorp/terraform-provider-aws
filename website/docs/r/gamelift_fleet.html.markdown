@@ -1,12 +1,11 @@
 ---
 layout: "aws"
 page_title: "AWS: aws_gamelift_fleet"
-sidebar_current: "docs-aws-resource-gamelift-fleet"
 description: |-
   Provides a Gamelift Fleet resource.
 ---
 
-# aws_gamelift_fleet
+# Resource: aws_gamelift_fleet
 
 Provides a Gamelift Fleet resource.
 

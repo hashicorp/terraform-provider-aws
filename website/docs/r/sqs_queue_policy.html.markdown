@@ -1,12 +1,11 @@
 ---
 layout: "aws"
 page_title: "AWS: aws_sqs_queue_policy"
-sidebar_current: "docs-aws-resource-sqs-queue-policy"
 description: |-
   Provides a SQS Queue Policy resource.
 ---
 
-# aws_sqs_queue_policy
+# Resource: aws_sqs_queue_policy
 
 Allows you to set a policy of an SQS Queue
 while referencing ARN of the queue within the policy.
@@ -34,7 +33,7 @@ resource "aws_sqs_queue_policy" "test" {
       "Resource": "${aws_sqs_queue.q.arn}",
       "Condition": {
         "ArnEquals": {
-          "aws:SourceArn": "${aws_sqs_queue.q.arn}"
+          "aws:SourceArn": "${aws_sns_topic.example.arn}"
         }
       }
     }

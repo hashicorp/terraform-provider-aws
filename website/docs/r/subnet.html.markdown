@@ -1,12 +1,11 @@
 ---
 layout: "aws"
 page_title: "AWS: aws_subnet"
-sidebar_current: "docs-aws-resource-subnet"
 description: |-
   Provides an VPC subnet resource.
 ---
 
-# aws_subnet
+# Resource: aws_subnet
 
 Provides an VPC subnet resource.
 

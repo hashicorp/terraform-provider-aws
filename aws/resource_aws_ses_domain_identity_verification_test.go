@@ -30,7 +30,7 @@ func TestAccAwsSesDomainIdentityVerification_basic(t *testing.T) {
 	domain := fmt.Sprintf("tf-acc-%d.%s", acctest.RandInt(), rootDomain)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSSES(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsSESDomainIdentityDestroy,
 		Steps: []resource.TestStep{
@@ -48,7 +48,7 @@ func TestAccAwsSesDomainIdentityVerification_timeout(t *testing.T) {
 		acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum))
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSSES(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsSESDomainIdentityDestroy,
 		Steps: []resource.TestStep{
@@ -66,7 +66,7 @@ func TestAccAwsSesDomainIdentityVerification_nonexistent(t *testing.T) {
 		acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum))
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSSES(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsSESDomainIdentityDestroy,
 		Steps: []resource.TestStep{
@@ -131,26 +131,26 @@ func testAccCheckAwsSesDomainIdentityVerificationPassed(n string) resource.TestC
 func testAccAwsSesDomainIdentityVerification_basic(rootDomain string, domain string) string {
 	return fmt.Sprintf(`
 data "aws_route53_zone" "test" {
-	name = "%s."
-	private_zone = false
+  name         = "%s."
+  private_zone = false
 }
 
 resource "aws_ses_domain_identity" "test" {
-	domain = "%s"
+  domain = "%s"
 }
 
 resource "aws_route53_record" "domain_identity_verification" {
-	zone_id = "${data.aws_route53_zone.test.id}"
-	name = "_amazonses.${aws_ses_domain_identity.test.id}"
-	type = "TXT"
-	ttl = "600"
-	records = ["${aws_ses_domain_identity.test.verification_token}"]
+  zone_id = "${data.aws_route53_zone.test.id}"
+  name    = "_amazonses.${aws_ses_domain_identity.test.id}"
+  type    = "TXT"
+  ttl     = "600"
+  records = ["${aws_ses_domain_identity.test.verification_token}"]
 }
 
 resource "aws_ses_domain_identity_verification" "test" {
-	domain = "${aws_ses_domain_identity.test.id}"
+  domain = "${aws_ses_domain_identity.test.id}"
 
-	depends_on = ["aws_route53_record.domain_identity_verification"]
+  depends_on = ["aws_route53_record.domain_identity_verification"]
 }
 `, rootDomain, domain)
 }
@@ -158,14 +158,15 @@ resource "aws_ses_domain_identity_verification" "test" {
 func testAccAwsSesDomainIdentityVerification_timeout(domain string) string {
 	return fmt.Sprintf(`
 resource "aws_ses_domain_identity" "test" {
-	domain = "%s"
+  domain = "%s"
 }
 
 resource "aws_ses_domain_identity_verification" "test" {
-	domain = "${aws_ses_domain_identity.test.id}"
-	timeouts {
-		create = "5s"
-	}
+  domain = "${aws_ses_domain_identity.test.id}"
+
+  timeouts {
+    create = "5s"
+  }
 }
 `, domain)
 }
@@ -173,7 +174,7 @@ resource "aws_ses_domain_identity_verification" "test" {
 func testAccAwsSesDomainIdentityVerification_nonexistent(domain string) string {
 	return fmt.Sprintf(`
 resource "aws_ses_domain_identity_verification" "test" {
-	domain = "%s"
+  domain = "%s"
 }
 `, domain)
 }

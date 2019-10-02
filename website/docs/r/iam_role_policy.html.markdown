@@ -1,12 +1,11 @@
 ---
 layout: "aws"
 page_title: "AWS: aws_iam_role_policy"
-sidebar_current: "docs-aws-resource-iam-role-policy"
 description: |-
   Provides an IAM role policy.
 ---
 
-# aws_iam_role_policy
+# Resource: aws_iam_role_policy
 
 Provides an IAM role policy.
 

@@ -1,12 +1,11 @@
 ---
 layout: "aws"
 page_title: "AWS: aws_pinpoint_event_stream"
-sidebar_current: "docs-aws-resource-pinpoint-event-stream"
 description: |-
   Provides a Pinpoint Event Stream resource.
 ---
 
-# aws_pinpoint_event_stream
+# Resource: aws_pinpoint_event_stream
 
 Provides a Pinpoint Event Stream resource.
 

@@ -1,12 +1,11 @@
 ---
 layout: "aws"
 page_title: "AWS: aws_dax_cluster"
-sidebar_current: "docs-aws-resource-dax-cluster"
 description: |-
   Provides an DAX Cluster resource.
 ---
 
-# aws_dax_cluster
+# Resource: aws_dax_cluster
 
 Provides a DAX Cluster resource.
 

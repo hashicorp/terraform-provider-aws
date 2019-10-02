@@ -1,7 +1,6 @@
 ---
 layout: "aws"
 page_title: "AWS: aws_prefix-list"
-sidebar_current: "docs-aws-datasource-prefix-list"
 description: |-
     Provides details about a specific prefix list
 ---

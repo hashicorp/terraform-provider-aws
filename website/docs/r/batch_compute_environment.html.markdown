@@ -1,12 +1,11 @@
 ---
 layout: "aws"
 page_title: "AWS: aws_batch_compute_environment"
-sidebar_current: "docs-aws-resource-batch-compute-environment"
 description: |-
   Creates a AWS Batch compute environment.
 ---
 
-# aws_batch_compute_environment
+# Resource: aws_batch_compute_environment
 
 Creates a AWS Batch compute environment. Compute environments contain the Amazon ECS container instances that are used to run containerized batch jobs.
 

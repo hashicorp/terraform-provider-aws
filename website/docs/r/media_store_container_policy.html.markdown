@@ -1,12 +1,11 @@
 ---
 layout: "aws"
 page_title: "AWS: aws_media_store_container_policy"
-sidebar_current: "docs-aws-resource-media-store-container-policy"
 description: |-
   Provides a MediaStore Container Policy.
 ---
 
-# aws_media_store_container_policy
+# Resource: aws_media_store_container_policy
 
 Provides a MediaStore Container Policy.
 

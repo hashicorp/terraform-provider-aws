@@ -3,6 +3,7 @@ package commands
 import (
 	"fmt"
 	"os"
+	"sort"
 	"strings"
 
 	"github.com/fatih/color"
@@ -36,13 +37,16 @@ func (e *Executor) initHelp() {
 }
 
 func printLinterConfigs(lcs []*linter.Config) {
+	sort.Slice(lcs, func(i, j int) bool {
+		return strings.Compare(lcs[i].Name(), lcs[j].Name()) < 0
+	})
 	for _, lc := range lcs {
 		altNamesStr := ""
 		if len(lc.AlternativeNames) != 0 {
 			altNamesStr = fmt.Sprintf(" (%s)", strings.Join(lc.AlternativeNames, ", "))
 		}
 		fmt.Fprintf(logutils.StdOut, "%s%s: %s [fast: %t, auto-fix: %t]\n", color.YellowString(lc.Name()),
-			altNamesStr, lc.Linter.Desc(), !lc.NeedsSSARepr, lc.CanAutoFix)
+			altNamesStr, lc.Linter.Desc(), !lc.IsSlowLinter(), lc.CanAutoFix)
 	}
 }
 
@@ -72,6 +76,7 @@ func (e *Executor) executeLintersHelp(_ *cobra.Command, args []string) {
 		for _, lc := range linters {
 			linterNames = append(linterNames, lc.Name())
 		}
+		sort.Strings(linterNames)
 		fmt.Fprintf(logutils.StdOut, "%s: %s\n", color.YellowString(p), strings.Join(linterNames, ", "))
 	}
 

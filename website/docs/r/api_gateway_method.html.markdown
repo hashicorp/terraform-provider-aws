@@ -1,12 +1,11 @@
 ---
 layout: "aws"
 page_title: "AWS: aws_api_gateway_method"
-sidebar_current: "docs-aws-resource-api-gateway-method"
 description: |-
   Provides a HTTP Method for an API Gateway Resource.
 ---
 
-# aws_api_gateway_method
+# Resource: aws_api_gateway_method
 
 Provides a HTTP Method for an API Gateway Resource.
 

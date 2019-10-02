@@ -1,12 +1,11 @@
 ---
 layout: "aws"
-page_title: "AWS: dynamodb_table"
-sidebar_current: "docs-aws-resource-dynamodb-table"
+page_title: "AWS: aws_dynamodb_table"
 description: |-
   Provides a DynamoDB table resource
 ---
 
-# aws_dynamodb_table
+# Resource: aws_dynamodb_table
 
 Provides a DynamoDB table resource
 
@@ -61,21 +60,6 @@ resource "aws_dynamodb_table" "basic-dynamodb-table" {
     Environment = "production"
   }
 }
-```
-
-Notes: `attribute` can be lists
-
-```
-  attribute = [{
-    name = "UserId"
-    type = "S"
-  }, {
-    name = "GameTitle"
-    type = "S"
-  }, {
-    name = "TopScore"
-    type = "N"
-  }]
 ```
 
 ## Argument Reference

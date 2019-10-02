@@ -1,12 +1,11 @@
 ---
 layout: "aws"
 page_title: "AWS: aws_ecr_lifecycle_policy"
-sidebar_current: "docs-aws-resource-ecr-lifecycle-policy"
 description: |-
   Manages an ECR repository lifecycle policy.
 ---
 
-# aws_ecr_lifecycle_policy
+# Resource: aws_ecr_lifecycle_policy
 
 Manages an ECR repository lifecycle policy.
 

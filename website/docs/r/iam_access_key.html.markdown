@@ -1,12 +1,11 @@
 ---
 layout: "aws"
 page_title: "AWS: aws_iam_access_key"
-sidebar_current: "docs-aws-resource-iam-access-key"
 description: |-
   Provides an IAM access key. This is a set of credentials that allow API requests to be made as an IAM user.
 ---
 
-# aws_iam_access_key
+# Resource: aws_iam_access_key
 
 Provides an IAM access key. This is a set of credentials that allow API requests to be made as an IAM user.
 

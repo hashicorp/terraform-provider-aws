@@ -1,12 +1,11 @@
 ---
 layout: "aws"
 page_title: "AWS: aws_ssm_document"
-sidebar_current: "docs-aws-resource-ssm-document"
 description: |-
   Provides an SSM Document resource
 ---
 
-# aws_ssm_document
+# Resource: aws_ssm_document
 
 Provides an SSM Document resource
 
@@ -82,3 +81,11 @@ The permissions mapping supports the following:
 
 * `type` - The permission type for the document. The permission type can be `Share`.
 * `account_ids` - The AWS user accounts that should have access to the document. The account IDs can either be a group of account IDs or `All`.
+
+## Import
+
+SSM Documents can be imported using the name, e.g.
+
+```
+$ terraform import aws_ssm_document.example example
+```

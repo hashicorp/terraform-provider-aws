@@ -1,12 +1,11 @@
 ---
 layout: "aws"
 page_title: "AWS: aws_sagemaker_endpoint_configuration"
-sidebar_current: "docs-aws-resource-sagemaker-endpoint-configuration"
 description: |-
   Provides a SageMaker Endpoint Configuration resource.
 ---
 
-# aws_sagemaker_endpoint_configuration
+# Resource: aws_sagemaker_endpoint_configuration
 
 Provides a SageMaker endpoint configuration resource.
 
@@ -17,18 +16,18 @@ Basic usage:
 
 ```hcl
 resource "aws_sagemaker_endpoint_configuration" "ec" {
-    name = "my-endpoint-config"
+  name = "my-endpoint-config"
 
-    production_variant {
-        variant_name            = "variant-1"
-        model_name              = "${aws_sagemaker_model.m.name}"
-        initial_instance_count  = 1
-        instance_type           = "ml.t2.medium"
-    }
+  production_variants {
+    variant_name           = "variant-1"
+    model_name             = "${aws_sagemaker_model.m.name}"
+    initial_instance_count = 1
+    instance_type          = "ml.t2.medium"
+  }
 
-    tags {
-        Name = "foo"
-    }
+  tags {
+    Name = "foo"
+  }
 }
 ```
 
@@ -41,7 +40,7 @@ The following arguments are supported:
 * `name` - (Optional) The name of the endpoint configuration. If omitted, Terraform will assign a random, unique name.
 * `tags` - (Optional) A mapping of tags to assign to the resource.
 
-The `production_variant` block supports:
+The `production_variants` block supports:
 
 * `initial_instance_count` - (Required) Initial number of instances used for auto-scaling.
 * `instance_type` (Required) - The type of instance to start.

@@ -106,6 +106,10 @@ func resourceAwsS3AccountPublicAccessBlockRead(d *schema.ResourceData, meta inte
 		return nil
 	})
 
+	if isResourceTimeoutError(err) {
+		output, err = conn.GetPublicAccessBlock(input)
+	}
+
 	if isAWSErr(err, s3control.ErrCodeNoSuchPublicAccessBlockConfiguration, "") {
 		log.Printf("[WARN] S3 Account Public Access Block (%s) not found, removing from state", d.Id())
 		d.SetId("")

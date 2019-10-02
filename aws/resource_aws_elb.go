@@ -311,9 +311,11 @@ func resourceAwsElbCreate(d *schema.ResourceData, meta interface{}) error {
 		}
 		return nil
 	})
-
+	if isResourceTimeoutError(err) {
+		_, err = elbconn.CreateLoadBalancer(elbOpts)
+	}
 	if err != nil {
-		return err
+		return fmt.Errorf("Error creating ELB: %s", err)
 	}
 
 	// Assign the elb's unique identifier for use later
@@ -511,16 +513,15 @@ func resourceAwsElbUpdate(d *schema.ResourceData, meta interface{}) error {
 			// other listeners on the ELB. Retry here to eliminate that.
 			err := resource.Retry(5*time.Minute, func() *resource.RetryError {
 				log.Printf("[DEBUG] ELB Create Listeners opts: %s", createListenersOpts)
-				if _, err := elbconn.CreateLoadBalancerListeners(createListenersOpts); err != nil {
-					if awsErr, ok := err.(awserr.Error); ok {
-						if awsErr.Code() == "DuplicateListener" {
-							log.Printf("[DEBUG] Duplicate listener found for ELB (%s), retrying", d.Id())
-							return resource.RetryableError(awsErr)
-						}
-						if awsErr.Code() == "CertificateNotFound" && strings.Contains(awsErr.Message(), "Server Certificate not found for the key: arn") {
-							log.Printf("[DEBUG] SSL Cert not found for given ARN, retrying")
-							return resource.RetryableError(awsErr)
-						}
+				_, err := elbconn.CreateLoadBalancerListeners(createListenersOpts)
+				if err != nil {
+					if isAWSErr(err, "DuplicateListener", "") {
+						log.Printf("[DEBUG] Duplicate listener found for ELB (%s), retrying", d.Id())
+						return resource.RetryableError(err)
+					}
+					if isAWSErr(err, "CertificateNotFound", "Server Certificate not found for the key: arn") {
+						log.Printf("[DEBUG] SSL Cert not found for given ARN, retrying")
+						return resource.RetryableError(err)
 					}
 
 					// Didn't recognize the error, so shouldn't retry.
@@ -529,6 +530,9 @@ func resourceAwsElbUpdate(d *schema.ResourceData, meta interface{}) error {
 				// Successful creation
 				return nil
 			})
+			if isResourceTimeoutError(err) {
+				_, err = elbconn.CreateLoadBalancerListeners(createListenersOpts)
+			}
 			if err != nil {
 				return fmt.Errorf("Failure adding new or updated ELB listeners: %s", err)
 			}
@@ -765,18 +769,19 @@ func resourceAwsElbUpdate(d *schema.ResourceData, meta interface{}) error {
 			err := resource.Retry(5*time.Minute, func() *resource.RetryError {
 				_, err := elbconn.AttachLoadBalancerToSubnets(attachOpts)
 				if err != nil {
-					if awsErr, ok := err.(awserr.Error); ok {
+					if isAWSErr(err, "InvalidConfigurationRequest", "cannot be attached to multiple subnets in the same AZ") {
 						// eventually consistent issue with removing a subnet in AZ1 and
 						// immediately adding a new one in the same AZ
-						if awsErr.Code() == "InvalidConfigurationRequest" && strings.Contains(awsErr.Message(), "cannot be attached to multiple subnets in the same AZ") {
-							log.Printf("[DEBUG] retrying az association")
-							return resource.RetryableError(awsErr)
-						}
+						log.Printf("[DEBUG] retrying az association")
+						return resource.RetryableError(err)
 					}
 					return resource.NonRetryableError(err)
 				}
 				return nil
 			})
+			if isResourceTimeoutError(err) {
+				_, err = elbconn.AttachLoadBalancerToSubnets(attachOpts)
+			}
 			if err != nil {
 				return fmt.Errorf("Failure adding ELB subnets: %s", err)
 			}

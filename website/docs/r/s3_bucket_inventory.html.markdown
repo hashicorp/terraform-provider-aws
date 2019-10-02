@@ -1,12 +1,11 @@
 ---
 layout: "aws"
 page_title: "AWS: aws_s3_bucket_inventory"
-sidebar_current: "docs-aws-resource-s3-bucket-inventory"
 description: |-
   Provides a S3 bucket inventory configuration resource.
 ---
 
-# aws_s3_bucket_inventory
+# Resource: aws_s3_bucket_inventory
 
 Provides a S3 bucket [inventory configuration](https://docs.aws.amazon.com/AmazonS3/latest/dev/storage-inventory.html) resource.
 

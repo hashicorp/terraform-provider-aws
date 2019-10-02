@@ -1,12 +1,11 @@
 ---
 layout: "aws"
 page_title: "AWS: aws_pinpoint_gcm_channel"
-sidebar_current: "docs-aws-resource-pinpoint-gcm-channel"
 description: |-
   Provides a Pinpoint GCM Channel resource.
 ---
 
-# aws_pinpoint_gcm_channel
+# Resource: aws_pinpoint_gcm_channel
 
 Provides a Pinpoint GCM Channel resource.
 

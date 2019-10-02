@@ -1,12 +1,11 @@
 ---
 layout: "aws"
 page_title: "AWS: aws_s3_bucket_policy"
-sidebar_current: "docs-aws-resource-s3-bucket-policy"
 description: |-
   Attaches a policy to an S3 bucket resource.
 ---
 
-# aws_s3_bucket_policy
+# Resource: aws_s3_bucket_policy
 
 Attaches a policy to an S3 bucket resource.
 

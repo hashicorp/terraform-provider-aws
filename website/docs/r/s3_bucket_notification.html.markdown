@@ -1,12 +1,11 @@
 ---
 layout: "aws"
 page_title: "AWS: aws_s3_bucket_notification"
-sidebar_current: "docs-aws-resource-s3-bucket-notification"
 description: |-
   Manages a S3 Bucket Notification Configuration
 ---
 
-# aws_s3_bucket_notification
+# Resource: aws_s3_bucket_notification
 
 Manages a S3 Bucket Notification Configuration. For additional information, see the [Configuring S3 Event Notifications section in the Amazon S3 Developer Guide](https://docs.aws.amazon.com/AmazonS3/latest/dev/NotificationHowTo.html).
 

@@ -25,6 +25,15 @@ func resourceAwsKinesisStream() *schema.Resource {
 			State: resourceAwsKinesisStreamImport,
 		},
 
+		SchemaVersion: 1,
+		StateUpgraders: []schema.StateUpgrader{
+			{
+				Type:    resourceAwsKinesisStreamResourceV0().CoreConfigSchema().ImpliedType(),
+				Upgrade: resourceAwsKinesisStreamStateUpgradeV0,
+				Version: 0,
+			},
+		},
+
 		Timeouts: &schema.ResourceTimeout{
 			Create: schema.DefaultTimeout(5 * time.Minute),
 			Update: schema.DefaultTimeout(120 * time.Minute),
@@ -55,6 +64,12 @@ func resourceAwsKinesisStream() *schema.Resource {
 				Optional: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 				Set:      schema.HashString,
+			},
+
+			"enforce_consumer_deletion": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				Default:  false,
 			},
 
 			"encryption_type": {
@@ -204,7 +219,8 @@ func resourceAwsKinesisStreamDelete(d *schema.ResourceData, meta interface{}) er
 	sn := d.Get("name").(string)
 
 	_, err := conn.DeleteStream(&kinesis.DeleteStreamInput{
-		StreamName: aws.String(sn),
+		StreamName:              aws.String(sn),
+		EnforceConsumerDeletion: aws.Bool(d.Get("enforce_consumer_deletion").(bool)),
 	})
 	if err != nil {
 		return err

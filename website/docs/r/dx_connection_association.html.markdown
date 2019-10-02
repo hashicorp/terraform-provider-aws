@@ -1,12 +1,11 @@
 ---
 layout: "aws"
 page_title: "AWS: aws_dx_connection_association"
-sidebar_current: "docs-aws-resource-dx-connection-association"
 description: |-
   Associates a Direct Connect Connection with a LAG.
 ---
 
-# aws_dx_connection_association
+# Resource: aws_dx_connection_association
 
 Associates a Direct Connect Connection with a LAG.
 

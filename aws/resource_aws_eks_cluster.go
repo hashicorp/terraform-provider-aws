@@ -13,6 +13,14 @@ import (
 	"github.com/hashicorp/terraform/helper/validation"
 )
 
+var eksLogTypes = []string{
+	eks.LogTypeApi,
+	eks.LogTypeAudit,
+	eks.LogTypeAuthenticator,
+	eks.LogTypeControllerManager,
+	eks.LogTypeScheduler,
+}
+
 func resourceAwsEksCluster() *schema.Resource {
 	return &schema.Resource{
 		Create: resourceAwsEksClusterCreate,
@@ -25,7 +33,7 @@ func resourceAwsEksCluster() *schema.Resource {
 		},
 
 		Timeouts: &schema.ResourceTimeout{
-			Create: schema.DefaultTimeout(15 * time.Minute),
+			Create: schema.DefaultTimeout(30 * time.Minute),
 			Update: schema.DefaultTimeout(60 * time.Minute),
 			Delete: schema.DefaultTimeout(15 * time.Minute),
 		},
@@ -56,6 +64,26 @@ func resourceAwsEksCluster() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"identity": {
+				Type:     schema.TypeList,
+				Computed: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"oidc": {
+							Type:     schema.TypeList,
+							Computed: true,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"issuer": {
+										Type:     schema.TypeString,
+										Computed: true,
+									},
+								},
+							},
+						},
+					},
+				},
+			},
 			"name": {
 				Type:         schema.TypeString,
 				Required:     true,
@@ -71,6 +99,10 @@ func resourceAwsEksCluster() *schema.Resource {
 				Required:     true,
 				ForceNew:     true,
 				ValidateFunc: validateArn,
+			},
+			"status": {
+				Type:     schema.TypeString,
+				Computed: true,
 			},
 			"version": {
 				Type:     schema.TypeString,
@@ -114,6 +146,15 @@ func resourceAwsEksCluster() *schema.Resource {
 					},
 				},
 			},
+			"enabled_cluster_log_types": {
+				Type:     schema.TypeSet,
+				Optional: true,
+				Elem: &schema.Schema{
+					Type:         schema.TypeString,
+					ValidateFunc: validation.StringInSlice(eksLogTypes, true),
+				},
+				Set: schema.HashString,
+			},
 		},
 	}
 }
@@ -126,6 +167,7 @@ func resourceAwsEksClusterCreate(d *schema.ResourceData, meta interface{}) error
 		Name:               aws.String(name),
 		RoleArn:            aws.String(d.Get("role_arn").(string)),
 		ResourcesVpcConfig: expandEksVpcConfigRequest(d.Get("vpc_config").([]interface{})),
+		Logging:            expandEksLoggingTypes(d.Get("enabled_cluster_log_types").(*schema.Set)),
 	}
 
 	if v, ok := d.GetOk("version"); ok && v.(string) != "" {
@@ -155,7 +197,9 @@ func resourceAwsEksClusterCreate(d *schema.ResourceData, meta interface{}) error
 		}
 		return nil
 	})
-
+	if isResourceTimeoutError(err) {
+		_, err = conn.CreateCluster(input)
+	}
 	if err != nil {
 		return fmt.Errorf("error creating EKS Cluster (%s): %s", name, err)
 	}
@@ -209,10 +253,19 @@ func resourceAwsEksClusterRead(d *schema.ResourceData, meta interface{}) error {
 
 	d.Set("created_at", aws.TimeValue(cluster.CreatedAt).String())
 	d.Set("endpoint", cluster.Endpoint)
+
+	if err := d.Set("identity", flattenEksIdentity(cluster.Identity)); err != nil {
+		return fmt.Errorf("error setting identity: %s", err)
+	}
+
 	d.Set("name", cluster.Name)
 	d.Set("platform_version", cluster.PlatformVersion)
 	d.Set("role_arn", cluster.RoleArn)
+	d.Set("status", cluster.Status)
 	d.Set("version", cluster.Version)
+	if err := d.Set("enabled_cluster_log_types", flattenEksEnabledLogTypes(cluster.Logging)); err != nil {
+		return fmt.Errorf("error setting enabled_cluster_log_types: %s", err)
+	}
 
 	if err := d.Set("vpc_config", flattenEksVpcConfigResponse(cluster.ResourcesVpcConfig)); err != nil {
 		return fmt.Errorf("error setting vpc_config: %s", err)
@@ -246,6 +299,32 @@ func resourceAwsEksClusterUpdate(d *schema.ResourceData, meta interface{}) error
 		err = waitForUpdateEksCluster(conn, d.Id(), updateID, d.Timeout(schema.TimeoutUpdate))
 		if err != nil {
 			return fmt.Errorf("error waiting for EKS Cluster (%s) version update (%s): %s", d.Id(), updateID, err)
+		}
+	}
+
+	if d.HasChange("enabled_cluster_log_types") {
+		_, v := d.GetChange("enabled_cluster_log_types")
+		input := &eks.UpdateClusterConfigInput{
+			Name:    aws.String(d.Id()),
+			Logging: expandEksLoggingTypes(v.(*schema.Set)),
+		}
+
+		log.Printf("[DEBUG] Updating EKS Cluster (%s) logging: %s", d.Id(), input)
+		output, err := conn.UpdateClusterConfig(input)
+
+		if err != nil {
+			return fmt.Errorf("error updating EKS Cluster (%s) logging: %s", d.Id(), err)
+		}
+
+		if output == nil || output.Update == nil || output.Update.Id == nil {
+			return fmt.Errorf("error determining EKS Cluster (%s) logging update ID: empty response", d.Id())
+		}
+
+		updateID := aws.StringValue(output.Update.Id)
+
+		err = waitForUpdateEksCluster(conn, d.Id(), updateID, d.Timeout(schema.TimeoutUpdate))
+		if err != nil {
+			return fmt.Errorf("error waiting for EKS Cluster (%s) logging update (%s): %s", d.Id(), updateID, err)
 		}
 	}
 
@@ -343,6 +422,27 @@ func expandEksVpcConfigUpdateRequest(l []interface{}) *eks.VpcConfigRequest {
 	}
 }
 
+func expandEksLoggingTypes(vEnabledLogTypes *schema.Set) *eks.Logging {
+	vEksLogTypes := []interface{}{}
+	for _, eksLogType := range eksLogTypes {
+		vEksLogTypes = append(vEksLogTypes, eksLogType)
+	}
+	vAllLogTypes := schema.NewSet(schema.HashString, vEksLogTypes)
+
+	return &eks.Logging{
+		ClusterLogging: []*eks.LogSetup{
+			{
+				Enabled: aws.Bool(true),
+				Types:   expandStringSet(vEnabledLogTypes),
+			},
+			{
+				Enabled: aws.Bool(false),
+				Types:   expandStringSet(vAllLogTypes.Difference(vEnabledLogTypes)),
+			},
+		},
+	}
+}
+
 func flattenEksCertificate(certificate *eks.Certificate) []map[string]interface{} {
 	if certificate == nil {
 		return []map[string]interface{}{}
@@ -350,6 +450,30 @@ func flattenEksCertificate(certificate *eks.Certificate) []map[string]interface{
 
 	m := map[string]interface{}{
 		"data": aws.StringValue(certificate.Data),
+	}
+
+	return []map[string]interface{}{m}
+}
+
+func flattenEksIdentity(identity *eks.Identity) []map[string]interface{} {
+	if identity == nil {
+		return []map[string]interface{}{}
+	}
+
+	m := map[string]interface{}{
+		"oidc": flattenEksOidc(identity.Oidc),
+	}
+
+	return []map[string]interface{}{m}
+}
+
+func flattenEksOidc(oidc *eks.OIDC) []map[string]interface{} {
+	if oidc == nil {
+		return []map[string]interface{}{}
+	}
+
+	m := map[string]interface{}{
+		"issuer": aws.StringValue(oidc.Issuer),
 	}
 
 	return []map[string]interface{}{m}
@@ -369,6 +493,23 @@ func flattenEksVpcConfigResponse(vpcConfig *eks.VpcConfigResponse) []map[string]
 	}
 
 	return []map[string]interface{}{m}
+}
+
+func flattenEksEnabledLogTypes(logging *eks.Logging) *schema.Set {
+	enabledLogTypes := []*string{}
+
+	if logging != nil {
+		logSetups := logging.ClusterLogging
+		for _, logSetup := range logSetups {
+			if logSetup == nil || !aws.BoolValue(logSetup.Enabled) {
+				continue
+			}
+
+			enabledLogTypes = append(enabledLogTypes, logSetup.Types...)
+		}
+	}
+
+	return flattenStringSet(enabledLogTypes)
 }
 
 func refreshEksClusterStatus(conn *eks.EKS, clusterName string) resource.StateRefreshFunc {

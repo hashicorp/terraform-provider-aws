@@ -1,12 +1,11 @@
 ---
 layout: "aws"
-page_title: "AWS: waf_byte_match_set"
-sidebar_current: "docs-aws-resource-waf-bytematchset"
+page_title: "AWS: aws_waf_byte_match_set"
 description: |-
   Provides a AWS WAF Byte Match Set resource.
 ---
 
-# aws_waf_byte_match_set
+# Resource: aws_waf_byte_match_set
 
 Provides a WAF Byte Match Set Resource
 

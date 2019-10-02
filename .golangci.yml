@@ -11,6 +11,8 @@ linters:
     - gosimple
     - ineffassign
     - misspell
+    # Run separately for TravisCI memory issues
+    # - staticcheck
     - structcheck
     - unconvert
     - unused

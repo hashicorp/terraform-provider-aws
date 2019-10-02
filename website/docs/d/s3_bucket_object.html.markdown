@@ -1,7 +1,6 @@
 ---
 layout: "aws"
 page_title: "AWS: aws_s3_bucket_object"
-sidebar_current: "docs-aws-datasource-s3-bucket-object"
 description: |-
     Provides metadata and optionally content of an S3 object
 ---
@@ -48,7 +47,7 @@ resource "aws_lambda_function" "test_lambda" {
   s3_key            = "${data.aws_s3_bucket_object.lambda.key}"
   s3_object_version = "${data.aws_s3_bucket_object.lambda.version_id}"
   function_name     = "lambda_function_name"
-  role              = "${aws_iam_role.iam_for_lambda.arn}" # (not shown)
+  role              = "${aws_iam_role.iam_for_lambda.arn}"             # (not shown)
   handler           = "exports.test"
 }
 ```
@@ -77,6 +76,9 @@ In addition to all arguments above, the following attributes are exported:
 * `expires` - The date and time at which the object is no longer cacheable.
 * `last_modified` - Last modified date of the object in RFC1123 format (e.g. `Mon, 02 Jan 2006 15:04:05 MST`)
 * `metadata` - A map of metadata stored with the object in S3
+* `object_lock_legal_hold_status` - Indicates whether this object has an active [legal hold](https://docs.aws.amazon.com/AmazonS3/latest/dev/object-lock-overview.html#object-lock-legal-holds). This field is only returned if you have permission to view an object's legal hold status.
+* `object_lock_mode` - The object lock [retention mode](https://docs.aws.amazon.com/AmazonS3/latest/dev/object-lock-overview.html#object-lock-retention-modes) currently in place for this object.
+* `object_lock_retain_until_date` - The date and time when this object's object lock will expire.
 * `server_side_encryption` - If the object is stored using server-side encryption (KMS or Amazon S3-managed encryption key), this field includes the chosen encryption and algorithm used.
 * `sse_kms_key_id` - If present, specifies the ID of the Key Management Service (KMS) master encryption key that was used for the object.
 * `storage_class` - [Storage class](http://docs.aws.amazon.com/AmazonS3/latest/dev/storage-class-intro.html) information of the object. Available for all objects except for `Standard` storage class objects.

@@ -22,10 +22,12 @@ func resourceAwsGlueJob() *schema.Resource {
 
 		Schema: map[string]*schema.Schema{
 			"allocated_capacity": {
-				Type:         schema.TypeInt,
-				Optional:     true,
-				Default:      10,
-				ValidateFunc: validation.IntAtLeast(2),
+				Type:          schema.TypeInt,
+				Optional:      true,
+				Computed:      true,
+				ConflictsWith: []string{"max_capacity"},
+				Deprecated:    "Please use attribute `max_capacity' instead. This attribute might be removed in future releases.",
+				ValidateFunc:  validation.IntAtLeast(2),
 			},
 			"command": {
 				Type:     schema.TypeList,
@@ -41,6 +43,12 @@ func resourceAwsGlueJob() *schema.Resource {
 						"script_location": {
 							Type:     schema.TypeString,
 							Required: true,
+						},
+						"python_version": {
+							Type:         schema.TypeString,
+							Optional:     true,
+							Computed:     true,
+							ValidateFunc: validation.StringInSlice([]string{"2", "3"}, true),
 						},
 					},
 				},
@@ -73,6 +81,12 @@ func resourceAwsGlueJob() *schema.Resource {
 						},
 					},
 				},
+			},
+			"max_capacity": {
+				Type:          schema.TypeFloat,
+				Optional:      true,
+				Computed:      true,
+				ConflictsWith: []string{"allocated_capacity"},
 			},
 			"max_retries": {
 				Type:         schema.TypeInt,
@@ -114,8 +128,13 @@ func resourceAwsGlueJobCreate(d *schema.ResourceData, meta interface{}) error {
 		Timeout: aws.Int64(int64(d.Get("timeout").(int))),
 	}
 
-	if v, ok := d.GetOk("allocated_capacity"); ok {
-		input.AllocatedCapacity = aws.Int64(int64(v.(int)))
+	if v, ok := d.GetOk("max_capacity"); ok {
+		input.MaxCapacity = aws.Float64(v.(float64))
+	} else {
+		if v, ok := d.GetOk("allocated_capacity"); ok {
+			input.MaxCapacity = aws.Float64(float64(v.(int)))
+			log.Printf("[WARN] Using deprecated `allocated_capacity' attribute.")
+		}
 	}
 
 	if v, ok := d.GetOk("connections"); ok {
@@ -184,7 +203,6 @@ func resourceAwsGlueJobRead(d *schema.ResourceData, meta interface{}) error {
 		return nil
 	}
 
-	d.Set("allocated_capacity", int(aws.Int64Value(job.AllocatedCapacity)))
 	if err := d.Set("command", flattenGlueJobCommand(job.Command)); err != nil {
 		return fmt.Errorf("error setting command: %s", err)
 	}
@@ -198,6 +216,7 @@ func resourceAwsGlueJobRead(d *schema.ResourceData, meta interface{}) error {
 	if err := d.Set("execution_property", flattenGlueExecutionProperty(job.ExecutionProperty)); err != nil {
 		return fmt.Errorf("error setting execution_property: %s", err)
 	}
+	d.Set("max_capacity", aws.Float64Value(job.MaxCapacity))
 	d.Set("max_retries", int(aws.Int64Value(job.MaxRetries)))
 	d.Set("name", job.Name)
 	d.Set("role_arn", job.Role)
@@ -205,6 +224,9 @@ func resourceAwsGlueJobRead(d *schema.ResourceData, meta interface{}) error {
 	if err := d.Set("security_configuration", job.SecurityConfiguration); err != nil {
 		return fmt.Errorf("error setting security_configuration: %s", err)
 	}
+
+	// TODO: Deprecated fields - remove in next major version
+	d.Set("allocated_capacity", int(aws.Int64Value(job.AllocatedCapacity)))
 
 	return nil
 }
@@ -218,8 +240,13 @@ func resourceAwsGlueJobUpdate(d *schema.ResourceData, meta interface{}) error {
 		Timeout: aws.Int64(int64(d.Get("timeout").(int))),
 	}
 
-	if v, ok := d.GetOk("allocated_capacity"); ok {
-		jobUpdate.AllocatedCapacity = aws.Int64(int64(v.(int)))
+	if v, ok := d.GetOk("max_capacity"); ok {
+		jobUpdate.MaxCapacity = aws.Float64(v.(float64))
+	}
+
+	if d.HasChange("allocated_capacity") {
+		jobUpdate.MaxCapacity = aws.Float64(float64(d.Get("allocated_capacity").(int)))
+		log.Printf("[WARN] Using deprecated `allocated_capacity' attribute.")
 	}
 
 	if v, ok := d.GetOk("connections"); ok {
@@ -263,7 +290,7 @@ func resourceAwsGlueJobUpdate(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("error updating Glue Job (%s): %s", d.Id(), err)
 	}
 
-	return nil
+	return resourceAwsGlueJobRead(d, meta)
 }
 
 func resourceAwsGlueJobDelete(d *schema.ResourceData, meta interface{}) error {
@@ -312,6 +339,10 @@ func expandGlueJobCommand(l []interface{}) *glue.JobCommand {
 		ScriptLocation: aws.String(m["script_location"].(string)),
 	}
 
+	if v, ok := m["python_version"].(string); ok && v != "" {
+		jobCommand.PythonVersion = aws.String(v)
+	}
+
 	return jobCommand
 }
 
@@ -343,6 +374,7 @@ func flattenGlueJobCommand(jobCommand *glue.JobCommand) []map[string]interface{}
 	m := map[string]interface{}{
 		"name":            aws.StringValue(jobCommand.Name),
 		"script_location": aws.StringValue(jobCommand.ScriptLocation),
+		"python_version":  aws.StringValue(jobCommand.PythonVersion),
 	}
 
 	return []map[string]interface{}{m}

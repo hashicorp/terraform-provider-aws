@@ -1,12 +1,11 @@
 ---
 layout: "aws"
 page_title: "AWS: aws_neptune_cluster"
-sidebar_current: "docs-aws-resource-neptune-cluster-x"
 description: |-
   Provides an Neptune Cluster Resource
 ---
 
-# aws_neptune_cluster
+# Resource: aws_neptune_cluster
 
 Provides an Neptune Cluster Resource. A Cluster Resource defines attributes that are
 applied to the entire cluster of Neptune Cluster Instances.

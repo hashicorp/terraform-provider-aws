@@ -1,16 +1,15 @@
 ---
 layout: "aws"
 page_title: "AWS: aws_lambda_event_source_mapping"
-sidebar_current: "docs-aws-resource-lambda-event-source-mapping"
 description: |-
   Provides a Lambda event source mapping. This allows Lambda functions to get events from Kinesis, DynamoDB and SQS
 ---
 
-# aws_lambda_event_source_mapping
+# Resource: aws_lambda_event_source_mapping
 
-Provides a Lambda event source mapping. This allows Lambda functions to get events from Kinesis, DynamoDB and SQS
+Provides a Lambda event source mapping. This allows Lambda functions to get events from Kinesis, DynamoDB and SQS.
 
-For information about Lambda and how to use it, see [What is AWS Lambda?][1]
+For information about Lambda and how to use it, see [What is AWS Lambda?][1].
 For information about event source mappings, see [CreateEventSourceMapping][2] in the API docs.
 
 ## Example Usage
@@ -69,8 +68,12 @@ resource "aws_lambda_event_source_mapping" "example" {
 
 ## Import
 
-Lambda Event Source Mappings can be imported using the `UUID` (event source mapping identifier), e.g.
+Lambda event source mappings can be imported using the `UUID` (event source mapping identifier), e.g.
 
 ```
 $ terraform import aws_lambda_event_source_mapping.event_source_mapping 12345kxodurf3443
 ```
+
+~> **Note:** Terraform will recreate the imported resource as AWS does not expose `startingPosition` information for existing Lambda event source mappings. For information about retrieving event source mappings, see [GetEventSourceMapping][3] in the API docs.
+
+[3]: https://docs.aws.amazon.com/lambda/latest/dg/API_GetEventSourceMapping.html

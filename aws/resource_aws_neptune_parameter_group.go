@@ -229,6 +229,9 @@ func resourceAwsNeptuneParameterGroupUpdate(d *schema.ResourceData, meta interfa
 				}
 				return nil
 			})
+			if isResourceTimeoutError(err) {
+				_, err = conn.ResetDBParameterGroup(&resetOpts)
+			}
 			if err != nil {
 				return fmt.Errorf("Error resetting Neptune Parameter Group: %s", err)
 			}
@@ -272,10 +275,10 @@ func resourceAwsNeptuneParameterGroupUpdate(d *schema.ResourceData, meta interfa
 func resourceAwsNeptuneParameterGroupDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).neptuneconn
 
-	return resource.Retry(3*time.Minute, func() *resource.RetryError {
-		deleteOpts := neptune.DeleteDBParameterGroupInput{
-			DBParameterGroupName: aws.String(d.Id()),
-		}
+	deleteOpts := neptune.DeleteDBParameterGroupInput{
+		DBParameterGroupName: aws.String(d.Id()),
+	}
+	err := resource.Retry(3*time.Minute, func() *resource.RetryError {
 		_, err := conn.DeleteDBParameterGroup(&deleteOpts)
 		if err != nil {
 			if isAWSErr(err, neptune.ErrCodeDBParameterGroupNotFoundFault, "") {
@@ -288,4 +291,18 @@ func resourceAwsNeptuneParameterGroupDelete(d *schema.ResourceData, meta interfa
 		}
 		return nil
 	})
+
+	if isResourceTimeoutError(err) {
+		_, err = conn.DeleteDBParameterGroup(&deleteOpts)
+	}
+
+	if isAWSErr(err, neptune.ErrCodeDBParameterGroupNotFoundFault, "") {
+		return nil
+	}
+
+	if err != nil {
+		return fmt.Errorf("Error deleting Neptune Parameter Group: %s", err)
+	}
+
+	return nil
 }

@@ -186,11 +186,13 @@ func resourceAwsDataSyncTaskCreate(d *schema.ResourceData, meta interface{}) err
 
 	d.SetId(aws.StringValue(output.TaskArn))
 
-	// Task creation can take a few minutes
+	// Task creation can take a few minutes\
+	taskInput := &datasync.DescribeTaskInput{
+		TaskArn: aws.String(d.Id()),
+	}
+	var taskOutput *datasync.DescribeTaskOutput
 	err = resource.Retry(d.Timeout(schema.TimeoutCreate), func() *resource.RetryError {
-		output, err := conn.DescribeTask(&datasync.DescribeTaskInput{
-			TaskArn: aws.String(d.Id()),
-		})
+		taskOutput, err := conn.DescribeTask(taskInput)
 
 		if isAWSErr(err, "InvalidRequestException", "not found") {
 			return resource.RetryableError(err)
@@ -200,19 +202,31 @@ func resourceAwsDataSyncTaskCreate(d *schema.ResourceData, meta interface{}) err
 			return resource.NonRetryableError(err)
 		}
 
-		if aws.StringValue(output.Status) == datasync.TaskStatusAvailable || aws.StringValue(output.Status) == datasync.TaskStatusRunning {
+		if aws.StringValue(taskOutput.Status) == datasync.TaskStatusAvailable || aws.StringValue(taskOutput.Status) == datasync.TaskStatusRunning {
 			return nil
 		}
 
 		err = fmt.Errorf("waiting for DataSync Task (%s) creation: last status (%s), error code (%s), error detail: %s",
-			d.Id(), aws.StringValue(output.Status), aws.StringValue(output.ErrorCode), aws.StringValue(output.ErrorDetail))
+			d.Id(), aws.StringValue(taskOutput.Status), aws.StringValue(taskOutput.ErrorCode), aws.StringValue(taskOutput.ErrorDetail))
 
-		if aws.StringValue(output.Status) == datasync.TaskStatusCreating {
+		if aws.StringValue(taskOutput.Status) == datasync.TaskStatusCreating {
 			return resource.RetryableError(err)
 		}
 
-		return resource.NonRetryableError(err)
+		return resource.NonRetryableError(err) // should only happen if err != nil
 	})
+	if isResourceTimeoutError(err) {
+		taskOutput, err = conn.DescribeTask(taskInput)
+		if isAWSErr(err, "InvalidRequestException", "not found") {
+			return fmt.Errorf("Task not found after creation: %s", err)
+		}
+		if err != nil {
+			return fmt.Errorf("Error describing task after creation: %s", err)
+		}
+		if aws.StringValue(taskOutput.Status) == datasync.TaskStatusCreating {
+			return fmt.Errorf("Data sync task status has not finished creating")
+		}
+	}
 	if err != nil {
 		return fmt.Errorf("error waiting for DataSync Task (%s) creation: %s", d.Id(), err)
 	}

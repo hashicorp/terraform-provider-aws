@@ -1,12 +1,11 @@
 ---
 layout: "aws"
 page_title: "AWS: aws_backup_vault"
-sidebar_current: "docs-aws-resource-backup-vault"
 description: |-
   Provides an AWS Backup vault resource.
 ---
 
-# aws_backup_vault
+# Resource: aws_backup_vault
 
 Provides an AWS Backup vault resource.
 
@@ -14,8 +13,8 @@ Provides an AWS Backup vault resource.
 
 ```hcl
 resource "aws_backup_vault" "example" {
-	name = "example_backup_vault"
-	kms_key_arn = "${aws_kms_key.example.arn}"
+  name        = "example_backup_vault"
+  kms_key_arn = "${aws_kms_key.example.arn}"
 }
 ```
 
@@ -34,3 +33,11 @@ In addition to all arguments above, the following attributes are exported:
 * `id` - The name of the vault.
 * `arn` - The ARN of the vault.
 * `recovery_points` - The number of recovery points that are stored in a backup vault.
+
+## Import
+
+Backup vault can be imported using the `name`, e.g.
+
+```
+$ terraform import aws_backup_vault.test-vault TestVault
+```

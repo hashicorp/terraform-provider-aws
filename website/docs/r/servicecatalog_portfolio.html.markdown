@@ -1,12 +1,11 @@
 ---
 layout: "aws"
 page_title: "AWS: aws_servicecatalog_portfolio"
-sidebar_current: "docs-aws-resource-servicecatalog-portfolio"
 description: |-
   Provides a resource to create a Service Catalog portfolio
 ---
 
-# aws_servicecatalog_portfolio
+# Resource: aws_servicecatalog_portfolio
 
 Provides a resource to create a Service Catalog Portfolio.
 

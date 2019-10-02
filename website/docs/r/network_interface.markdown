@@ -1,12 +1,11 @@
 ---
 layout: "aws"
 page_title: "AWS: aws_network_interface"
-sidebar_current: "docs-aws-resource-network-interface"
 description: |-
   Provides an Elastic network interface (ENI) resource.
 ---
 
-# aws_network_interface
+# Resource: aws_network_interface
 
 Provides an Elastic network interface (ENI) resource.
 

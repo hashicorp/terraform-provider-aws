@@ -2114,7 +2114,7 @@ func (c *CloudSearch) UpdateServiceAccessPoliciesRequest(input *UpdateServiceAcc
 // UpdateServiceAccessPolicies API operation for Amazon CloudSearch.
 //
 // Configures the access rules that control access to the domain's document
-// and search endpoints. For more information, see  Configuring Access for an
+// and search endpoints. For more information, see Configuring Access for an
 // Amazon CloudSearch Domain (http://docs.aws.amazon.com/cloudsearch/latest/developerguide/configuring-access.html).
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
@@ -5486,9 +5486,11 @@ type OptionStatus struct {
 	//
 	//    * RequiresIndexDocuments: the option's latest value will not be deployed
 	//    until IndexDocuments has been called and indexing is complete.
+	//
 	//    * Processing: the option's latest value is in the process of being activated.
 	//
 	//    * Active: the option's latest value is completely deployed.
+	//
 	//    * FailedToValidate: the option value is not compatible with the domain's
 	//    data and cannot be used to index the data. You must either modify the
 	//    option value or update or remove the incompatible documents.
@@ -6346,9 +6348,11 @@ const (
 //
 //    * RequiresIndexDocuments: The option's latest value will not be deployed
 //    until IndexDocuments has been called and indexing is complete.
+//
 //    * Processing: The option's latest value is in the process of being activated.
 //
 //    * Active: The option's latest value is fully deployed.
+//
 //    * FailedToValidate: The option value is not compatible with the domain's
 //    data and cannot be used to index the data. You must either modify the
 //    option value or update or remove the incompatible documents.

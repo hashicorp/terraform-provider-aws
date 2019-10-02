@@ -1,12 +1,11 @@
 ---
 layout: "aws"
 page_title: "AWS: aws_cloudwatch_log_destination_policy"
-sidebar_current: "docs-aws-resource-cloudwatch-log-destination-policy"
 description: |-
   Provides a CloudWatch Logs destination policy.
 ---
 
-# aws_cloudwatch_log_destination_policy
+# Resource: aws_cloudwatch_log_destination_policy
 
 Provides a CloudWatch Logs destination policy resource.
 

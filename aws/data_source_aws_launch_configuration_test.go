@@ -52,28 +52,31 @@ func TestAccAWSLaunchConfigurationDataSource_securityGroups(t *testing.T) {
 func testAccLaunchConfigurationDataSourceConfig_basic(rInt int) string {
 	return fmt.Sprintf(`
 resource "aws_launch_configuration" "foo" {
-  name = "terraform-test-%d"
-  image_id = "ami-21f78e11"
-  instance_type = "m1.small"
+  name                        = "terraform-test-%d"
+  image_id                    = "ami-21f78e11"
+  instance_type               = "m1.small"
   associate_public_ip_address = true
-  user_data = "foobar-user-data"
+  user_data                   = "foobar-user-data"
 
   root_block_device {
     volume_type = "gp2"
     volume_size = 11
-	}
+  }
+
   ebs_block_device {
     device_name = "/dev/sdb"
     volume_size = 9
   }
+
   ebs_block_device {
     device_name = "/dev/sdc"
     volume_size = 10
     volume_type = "io1"
-    iops = 100
+    iops        = 100
   }
+
   ephemeral_block_device {
-    device_name = "/dev/sde"
+    device_name  = "/dev/sde"
     virtual_name = "ephemeral0"
   }
 }
@@ -91,14 +94,14 @@ resource "aws_vpc" "test" {
 }
 
 resource "aws_security_group" "test" {
-  name = "terraform-test_%d"
+  name   = "terraform-test_%d"
   vpc_id = "${aws_vpc.test.id}"
 }
 
 resource "aws_launch_configuration" "test" {
-  name = "terraform-test-%d"
-  image_id = "ami-21f78e11"
-  instance_type = "m1.small"
+  name            = "terraform-test-%d"
+  image_id        = "ami-21f78e11"
+  instance_type   = "m1.small"
   security_groups = ["${aws_security_group.test.id}"]
 }
 

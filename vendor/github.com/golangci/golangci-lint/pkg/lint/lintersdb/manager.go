@@ -3,16 +3,19 @@ package lintersdb
 import (
 	"os"
 
+	"github.com/golangci/golangci-lint/pkg/config"
+
 	"github.com/golangci/golangci-lint/pkg/golinters"
 	"github.com/golangci/golangci-lint/pkg/lint/linter"
 )
 
 type Manager struct {
 	nameToLC map[string]*linter.Config
+	cfg      *config.Config
 }
 
-func NewManager() *Manager {
-	m := &Manager{}
+func NewManager(cfg *config.Config) *Manager {
+	m := &Manager{cfg: cfg}
 	nameToLC := make(map[string]*linter.Config)
 	for _, lc := range m.GetAllSupportedLinterConfigs() {
 		for _, name := range lc.AllNames() {
@@ -25,8 +28,8 @@ func NewManager() *Manager {
 }
 
 func (Manager) AllPresets() []string {
-	return []string{linter.PresetBugs, linter.PresetUnused, linter.PresetFormatting,
-		linter.PresetStyle, linter.PresetComplexity, linter.PresetPerformance}
+	return []string{linter.PresetBugs, linter.PresetComplexity, linter.PresetFormatting,
+		linter.PresetPerformance, linter.PresetStyle, linter.PresetUnused}
 }
 
 func (m Manager) allPresetsSet() map[string]bool {
@@ -74,16 +77,26 @@ func (Manager) GetMetaLinters() map[string]linter.MetaLinter {
 	return ret
 }
 
-func (Manager) GetAllSupportedLinterConfigs() []*linter.Config {
+//nolint:funlen
+func (m Manager) GetAllSupportedLinterConfigs() []*linter.Config {
+	var govetCfg *config.GovetSettings
+	if m.cfg != nil {
+		govetCfg = &m.cfg.LintersSettings.Govet
+	}
 	lcs := []*linter.Config{
-		linter.NewConfig(golinters.Govet{}).
-			WithTypeInfo().
+		linter.NewConfig(golinters.NewGovet(govetCfg)).
+			WithLoadForGoAnalysis().
 			WithPresets(linter.PresetBugs).
 			WithSpeed(4).
 			WithAlternativeNames("vet", "vetshadow").
 			WithURL("https://golang.org/cmd/vet/"),
+		linter.NewConfig(golinters.NewBodyclose()).
+			WithLoadForGoAnalysis().
+			WithPresets(linter.PresetPerformance, linter.PresetBugs).
+			WithSpeed(4).
+			WithURL("https://github.com/timakin/bodyclose"),
 		linter.NewConfig(golinters.Errcheck{}).
-			WithTypeInfo().
+			WithLoadTypeInfo().
 			WithPresets(linter.PresetBugs).
 			WithSpeed(10).
 			WithURL("https://github.com/kisielk/errcheck"),
@@ -93,49 +106,50 @@ func (Manager) GetAllSupportedLinterConfigs() []*linter.Config {
 			WithURL("https://github.com/golang/lint"),
 
 		linter.NewConfig(golinters.NewStaticcheck()).
-			WithSSA().
+			WithLoadForGoAnalysis().
 			WithPresets(linter.PresetBugs).
 			WithSpeed(2).
 			WithURL("https://staticcheck.io/"),
 		linter.NewConfig(golinters.NewUnused()).
-			WithSSA().
+			WithLoadDepsTypeInfo().
 			WithPresets(linter.PresetUnused).
 			WithSpeed(5).
 			WithURL("https://github.com/dominikh/go-tools/tree/master/cmd/unused"),
 		linter.NewConfig(golinters.NewGosimple()).
-			WithSSA().
+			WithLoadForGoAnalysis().
 			WithPresets(linter.PresetStyle).
 			WithSpeed(5).
 			WithURL("https://github.com/dominikh/go-tools/tree/master/cmd/gosimple"),
 		linter.NewConfig(golinters.NewStylecheck()).
-			WithSSA().
+			WithLoadForGoAnalysis().
 			WithPresets(linter.PresetStyle).
 			WithSpeed(5).
 			WithURL("https://github.com/dominikh/go-tools/tree/master/stylecheck"),
 
 		linter.NewConfig(golinters.Gosec{}).
-			WithTypeInfo().
+			WithLoadTypeInfo().
 			WithPresets(linter.PresetBugs).
 			WithSpeed(8).
 			WithURL("https://github.com/securego/gosec").
 			WithAlternativeNames("gas"),
 		linter.NewConfig(golinters.Structcheck{}).
-			WithTypeInfo().
+			WithLoadTypeInfo().
 			WithPresets(linter.PresetUnused).
 			WithSpeed(10).
 			WithURL("https://github.com/opennota/check"),
 		linter.NewConfig(golinters.Varcheck{}).
-			WithTypeInfo().
+			WithLoadTypeInfo().
 			WithPresets(linter.PresetUnused).
 			WithSpeed(10).
 			WithURL("https://github.com/opennota/check"),
 		linter.NewConfig(golinters.Interfacer{}).
+			WithLoadDepsTypeInfo().
 			WithSSA().
 			WithPresets(linter.PresetStyle).
 			WithSpeed(6).
 			WithURL("https://github.com/mvdan/interfacer"),
 		linter.NewConfig(golinters.Unconvert{}).
-			WithTypeInfo().
+			WithLoadTypeInfo().
 			WithPresets(linter.PresetStyle).
 			WithSpeed(10).
 			WithURL("https://github.com/mdempsky/unconvert"),
@@ -152,7 +166,7 @@ func (Manager) GetAllSupportedLinterConfigs() []*linter.Config {
 			WithSpeed(9).
 			WithURL("https://github.com/jgautheron/goconst"),
 		linter.NewConfig(golinters.Deadcode{}).
-			WithTypeInfo().
+			WithLoadTypeInfo().
 			WithPresets(linter.PresetUnused).
 			WithSpeed(10).
 			WithURL("https://github.com/remyoudompheng/go-misc/tree/master/deadcode"),
@@ -161,7 +175,7 @@ func (Manager) GetAllSupportedLinterConfigs() []*linter.Config {
 			WithSpeed(8).
 			WithURL("https://github.com/alecthomas/gocyclo"),
 		linter.NewConfig(golinters.TypeCheck{}).
-			WithTypeInfo().
+			WithLoadTypeInfo().
 			WithPresets(linter.PresetBugs).
 			WithSpeed(10).
 			WithURL(""),
@@ -177,12 +191,12 @@ func (Manager) GetAllSupportedLinterConfigs() []*linter.Config {
 			WithAutoFix().
 			WithURL("https://godoc.org/golang.org/x/tools/cmd/goimports"),
 		linter.NewConfig(golinters.Maligned{}).
-			WithTypeInfo().
+			WithLoadTypeInfo().
 			WithPresets(linter.PresetPerformance).
 			WithSpeed(10).
 			WithURL("https://github.com/mdempsky/maligned"),
 		linter.NewConfig(golinters.Depguard{}).
-			WithTypeInfo().
+			WithLoadTypeInfo().
 			WithPresets(linter.PresetStyle).
 			WithSpeed(6).
 			WithURL("https://github.com/OpenPeeDeeP/depguard"),
@@ -198,8 +212,13 @@ func (Manager) GetAllSupportedLinterConfigs() []*linter.Config {
 		linter.NewConfig(golinters.Unparam{}).
 			WithPresets(linter.PresetUnused).
 			WithSpeed(3).
+			WithLoadDepsTypeInfo().
 			WithSSA().
 			WithURL("https://github.com/mvdan/unparam"),
+		linter.NewConfig(golinters.Dogsled{}).
+			WithPresets(linter.PresetStyle).
+			WithSpeed(10).
+			WithURL("https://github.com/alexkohler/dogsled"),
 		linter.NewConfig(golinters.Nakedret{}).
 			WithPresets(linter.PresetComplexity).
 			WithSpeed(10).
@@ -215,7 +234,7 @@ func (Manager) GetAllSupportedLinterConfigs() []*linter.Config {
 		linter.NewConfig(golinters.Gocritic{}).
 			WithPresets(linter.PresetStyle).
 			WithSpeed(5).
-			WithTypeInfo().
+			WithLoadTypeInfo().
 			WithURL("https://github.com/go-critic/go-critic"),
 		linter.NewConfig(golinters.Gochecknoinits{}).
 			WithPresets(linter.PresetStyle).
@@ -225,11 +244,24 @@ func (Manager) GetAllSupportedLinterConfigs() []*linter.Config {
 			WithPresets(linter.PresetStyle).
 			WithSpeed(10).
 			WithURL("https://github.com/leighmcculloch/gochecknoglobals"),
+		linter.NewConfig(golinters.Godox{}).
+			WithPresets(linter.PresetStyle).
+			WithSpeed(10).
+			WithURL("https://github.com/matoous/godox"),
+		linter.NewConfig(golinters.Funlen{}).
+			WithPresets(linter.PresetStyle).
+			WithSpeed(10).
+			WithURL("https://github.com/ultraware/funlen"),
+		linter.NewConfig(golinters.Whitespace{}).
+			WithPresets(linter.PresetStyle).
+			WithSpeed(10).
+			WithAutoFix().
+			WithURL("https://github.com/ultraware/whitespace"),
 	}
 
 	isLocalRun := os.Getenv("GOLANGCI_COM_RUN") == ""
 	enabledByDefault := map[string]bool{
-		golinters.Govet{}.Name():       true,
+		golinters.NewGovet(nil).Name(): true,
 		golinters.Errcheck{}.Name():    true,
 		golinters.Staticcheck{}.Name(): true,
 		golinters.Unused{}.Name():      true,

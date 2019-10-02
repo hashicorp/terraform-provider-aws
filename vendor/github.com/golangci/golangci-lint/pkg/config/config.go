@@ -14,6 +14,7 @@ const (
 	OutFormatTab               = "tab"
 	OutFormatCheckstyle        = "checkstyle"
 	OutFormatCodeClimate       = "code-climate"
+	OutFormatJunitXML          = "junit-xml"
 )
 
 var OutFormats = []string{
@@ -23,6 +24,7 @@ var OutFormats = []string{
 	OutFormatTab,
 	OutFormatCheckstyle,
 	OutFormatCodeClimate,
+	OutFormatJunitXML,
 }
 
 type ExcludePattern struct {
@@ -100,6 +102,7 @@ type Run struct {
 	Silent              bool
 	CPUProfilePath      string
 	MemProfilePath      string
+	TracePath           string
 	Concurrency         int
 	PrintResourcesUsage bool `mapstructure:"print-resources-usage"`
 
@@ -116,14 +119,13 @@ type Run struct {
 	Deadline              time.Duration
 	PrintVersion          bool
 
-	SkipFiles []string `mapstructure:"skip-files"`
-	SkipDirs  []string `mapstructure:"skip-dirs"`
+	SkipFiles          []string `mapstructure:"skip-files"`
+	SkipDirs           []string `mapstructure:"skip-dirs"`
+	UseDefaultSkipDirs bool     `mapstructure:"skip-dirs-use-default"`
 }
 
 type LintersSettings struct {
-	Govet struct {
-		CheckShadowing bool `mapstructure:"check-shadowing"`
-	}
+	Govet  GovetSettings
 	Golint struct {
 		MinConfidence float64 `mapstructure:"min-confidence"`
 	}
@@ -153,9 +155,10 @@ type LintersSettings struct {
 		MinOccurrencesCount int `mapstructure:"min-occurrences"`
 	}
 	Depguard struct {
-		ListType      string `mapstructure:"list-type"`
-		Packages      []string
-		IncludeGoRoot bool `mapstructure:"include-go-root"`
+		ListType                 string `mapstructure:"list-type"`
+		Packages                 []string
+		IncludeGoRoot            bool              `mapstructure:"include-go-root"`
+		PackagesWithErrorMessage map[string]string `mapstructure:"packages-with-error-message"`
 	}
 	Misspell struct {
 		Locale      string
@@ -164,6 +167,13 @@ type LintersSettings struct {
 	Unused struct {
 		CheckExported bool `mapstructure:"check-exported"`
 	}
+	Funlen struct {
+		Lines      int
+		Statements int
+	}
+	Whitespace struct {
+		MultiIf bool `mapstructure:"multi-if"`
+	}
 
 	Lll      LllSettings
 	Unparam  UnparamSettings
@@ -171,6 +181,31 @@ type LintersSettings struct {
 	Prealloc PreallocSettings
 	Errcheck ErrcheckSettings
 	Gocritic GocriticSettings
+	Godox    GodoxSettings
+	Dogsled  DogsledSettings
+}
+
+type GovetSettings struct {
+	CheckShadowing bool `mapstructure:"check-shadowing"`
+	Settings       map[string]map[string]interface{}
+
+	Enable     []string
+	Disable    []string
+	EnableAll  bool `mapstructure:"enable-all"`
+	DisableAll bool `mapstructure:"disable-all"`
+}
+
+func (cfg GovetSettings) Validate() error {
+	if cfg.EnableAll && cfg.DisableAll {
+		return errors.New("enable-all and disable-all can't be combined")
+	}
+	if cfg.EnableAll && len(cfg.Enable) != 0 {
+		return errors.New("enable-all and enable can't be combined")
+	}
+	if cfg.DisableAll && len(cfg.Disable) != 0 {
+		return errors.New("disable-all and disable can't be combined")
+	}
+	return nil
 }
 
 type ErrcheckSettings struct {
@@ -200,6 +235,14 @@ type PreallocSettings struct {
 	ForLoops   bool `mapstructure:"for-loops"`
 }
 
+type GodoxSettings struct {
+	Keywords []string
+}
+
+type DogsledSettings struct {
+	MaxBlankIdentifiers int `mapstructure:"max-blank-identifiers"`
+}
+
 var defaultLintersSettings = LintersSettings{
 	Lll: LllSettings{
 		LineLength: 120,
@@ -219,6 +262,12 @@ var defaultLintersSettings = LintersSettings{
 	Gocritic: GocriticSettings{
 		SettingsPerCheck: map[string]GocriticCheckSettings{},
 	},
+	Godox: GodoxSettings{
+		Keywords: []string{},
+	},
+	Dogsled: DogsledSettings{
+		MaxBlankIdentifiers: 2,
+	},
 }
 
 type Linters struct {
@@ -235,6 +284,7 @@ type ExcludeRule struct {
 	Linters []string
 	Path    string
 	Text    string
+	Source  string
 }
 
 func validateOptionalRegex(value string) error {
@@ -252,6 +302,9 @@ func (e ExcludeRule) Validate() error {
 	if err := validateOptionalRegex(e.Text); err != nil {
 		return fmt.Errorf("invalid text regex: %v", err)
 	}
+	if err := validateOptionalRegex(e.Source); err != nil {
+		return fmt.Errorf("invalid source regex: %v", err)
+	}
 	nonBlank := 0
 	if len(e.Linters) > 0 {
 		nonBlank++
@@ -262,8 +315,11 @@ func (e ExcludeRule) Validate() error {
 	if e.Text != "" {
 		nonBlank++
 	}
+	if e.Source != "" {
+		nonBlank++
+	}
 	if nonBlank < 2 {
-		return errors.New("at least 2 of (text, path, linters) should be set")
+		return errors.New("at least 2 of (text, source, path, linters) should be set")
 	}
 	return nil
 }
@@ -288,6 +344,7 @@ type Config struct { //nolint:maligned
 
 	Output struct {
 		Format              string
+		Color               string
 		PrintIssuedLine     bool `mapstructure:"print-issued-lines"`
 		PrintLinterName     bool `mapstructure:"print-linter-name"`
 		PrintWelcomeMessage bool `mapstructure:"print-welcome"`

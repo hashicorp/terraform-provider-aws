@@ -1,12 +1,11 @@
 ---
 layout: "aws"
 page_title: "AWS: aws_flow_log"
-sidebar_current: "docs-aws-resource-flow-log"
 description: |-
   Provides a VPC/Subnet/ENI Flow Log
 ---
 
-# aws_flow_log
+# Resource: aws_flow_log
 
 Provides a VPC/Subnet/ENI Flow Log to capture IP traffic for a specific network
 interface, subnet, or VPC. Logs are sent to a CloudWatch Log Group or a S3 Bucket.
@@ -27,7 +26,7 @@ resource "aws_cloudwatch_log_group" "example" {
   name = "example"
 }
 
-resource "aws_iam_role" "test_role" {
+resource "aws_iam_role" "example" {
   name = "example"
 
   assume_role_policy = <<EOF
@@ -83,7 +82,7 @@ resource "aws_flow_log" "example" {
 }
 
 resource "aws_s3_bucket" "example" {
-  name = "example"
+  bucket = "example"
 }
 ```
 

@@ -42,9 +42,10 @@ func resourceAwsRouteTable() *schema.Resource {
 			},
 
 			"route": {
-				Type:     schema.TypeSet,
-				Computed: true,
-				Optional: true,
+				Type:       schema.TypeSet,
+				Computed:   true,
+				Optional:   true,
+				ConfigMode: schema.SchemaConfigModeAttr,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"cidr_block": {
@@ -390,8 +391,11 @@ func resourceAwsRouteTableUpdate(d *schema.ResourceData, meta interface{}) error
 				}
 				return nil
 			})
+			if isResourceTimeoutError(err) {
+				_, err = conn.CreateRoute(&opts)
+			}
 			if err != nil {
-				return err
+				return fmt.Errorf("Error creating route: %s", err)
 			}
 
 			routes.Add(route)

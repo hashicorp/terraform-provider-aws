@@ -1,12 +1,11 @@
 ---
 layout: "aws"
 page_title: "AWS: aws_datasync_agent"
-sidebar_current: "docs-aws-resource-datasync-agent"
 description: |-
   Manages an AWS DataSync Agent in the provider region
 ---
 
-# aws_datasync_agent
+# Resource: aws_datasync_agent
 
 Manages an AWS DataSync Agent deployed on premises.
 

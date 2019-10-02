@@ -22,6 +22,8 @@ func resourceAwsCloudFrontDistribution() *schema.Resource {
 		Importer: &schema.ResourceImporter{
 			State: resourceAwsCloudFrontDistributionImport,
 		},
+		MigrateState:  resourceAwsCloudFrontDistributionMigrateState,
+		SchemaVersion: 1,
 
 		Schema: map[string]*schema.Schema{
 			"arn": {
@@ -81,7 +83,7 @@ func resourceAwsCloudFrontDistribution() *schema.Resource {
 													Required: true,
 												},
 												"whitelisted_names": {
-													Type:     schema.TypeList,
+													Type:     schema.TypeSet,
 													Optional: true,
 													Elem:     &schema.Schema{Type: schema.TypeString},
 												},
@@ -89,7 +91,7 @@ func resourceAwsCloudFrontDistribution() *schema.Resource {
 										},
 									},
 									"headers": {
-										Type:     schema.TypeList,
+										Type:     schema.TypeSet,
 										Optional: true,
 										Elem:     &schema.Schema{Type: schema.TypeString},
 									},
@@ -205,9 +207,14 @@ func resourceAwsCloudFrontDistribution() *schema.Resource {
 												"forward": {
 													Type:     schema.TypeString,
 													Required: true,
+													ValidateFunc: validation.StringInSlice([]string{
+														cloudfront.ItemSelectionAll,
+														cloudfront.ItemSelectionNone,
+														cloudfront.ItemSelectionWhitelist,
+													}, false),
 												},
 												"whitelisted_names": {
-													Type:     schema.TypeList,
+													Type:     schema.TypeSet,
 													Optional: true,
 													Elem:     &schema.Schema{Type: schema.TypeString},
 												},
@@ -215,7 +222,7 @@ func resourceAwsCloudFrontDistribution() *schema.Resource {
 										},
 									},
 									"headers": {
-										Type:     schema.TypeList,
+										Type:     schema.TypeSet,
 										Optional: true,
 										Elem:     &schema.Schema{Type: schema.TypeString},
 									},
@@ -362,9 +369,14 @@ func resourceAwsCloudFrontDistribution() *schema.Resource {
 												"forward": {
 													Type:     schema.TypeString,
 													Required: true,
+													ValidateFunc: validation.StringInSlice([]string{
+														cloudfront.ItemSelectionAll,
+														cloudfront.ItemSelectionNone,
+														cloudfront.ItemSelectionWhitelist,
+													}, false),
 												},
 												"whitelisted_names": {
-													Type:     schema.TypeList,
+													Type:     schema.TypeSet,
 													Optional: true,
 													Elem:     &schema.Schema{Type: schema.TypeString},
 												},
@@ -372,7 +384,7 @@ func resourceAwsCloudFrontDistribution() *schema.Resource {
 										},
 									},
 									"headers": {
-										Type:     schema.TypeList,
+										Type:     schema.TypeSet,
 										Optional: true,
 										Elem:     &schema.Schema{Type: schema.TypeString},
 									},
@@ -714,6 +726,11 @@ func resourceAwsCloudFrontDistribution() *schema.Resource {
 				Optional: true,
 				Default:  false,
 			},
+			"wait_for_deployment": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				Default:  true,
+			},
 			"is_ipv6_enabled": {
 				Type:     schema.TypeBool,
 				Optional: true,
@@ -765,9 +782,11 @@ func resourceAwsCloudFrontDistributionCreate(d *schema.ResourceData, meta interf
 
 	d.SetId(*resp.Distribution.Id)
 
-	log.Printf("[DEBUG] Waiting until CloudFront Distribution (%s) is deployed", d.Id())
-	if err := resourceAwsCloudFrontDistributionWaitUntilDeployed(d.Id(), meta); err != nil {
-		return fmt.Errorf("error waiting until CloudFront Distribution (%s) is deployed: %s", d.Id(), err)
+	if d.Get("wait_for_deployment").(bool) {
+		log.Printf("[DEBUG] Waiting until CloudFront Distribution (%s) is deployed", d.Id())
+		if err := resourceAwsCloudFrontDistributionWaitUntilDeployed(d.Id(), meta); err != nil {
+			return fmt.Errorf("error waiting until CloudFront Distribution (%s) is deployed: %s", d.Id(), err)
+		}
 	}
 
 	return resourceAwsCloudFrontDistributionRead(d, meta)
@@ -858,9 +877,11 @@ func resourceAwsCloudFrontDistributionUpdate(d *schema.ResourceData, meta interf
 		return fmt.Errorf("error updating CloudFront Distribution (%s): %s", d.Id(), err)
 	}
 
-	log.Printf("[DEBUG] Waiting until CloudFront Distribution (%s) is deployed", d.Id())
-	if err := resourceAwsCloudFrontDistributionWaitUntilDeployed(d.Id(), meta); err != nil {
-		return fmt.Errorf("error waiting until CloudFront Distribution (%s) is deployed: %s", d.Id(), err)
+	if d.Get("wait_for_deployment").(bool) {
+		log.Printf("[DEBUG] Waiting until CloudFront Distribution (%s) is deployed", d.Id())
+		if err := resourceAwsCloudFrontDistributionWaitUntilDeployed(d.Id(), meta); err != nil {
+			return fmt.Errorf("error waiting until CloudFront Distribution (%s) is deployed: %s", d.Id(), err)
+		}
 	}
 
 	if err := setTagsCloudFront(conn, d, d.Get("arn").(string)); err != nil {
@@ -1044,7 +1065,7 @@ func resourceAwsCloudFrontDistributionWaitUntilDeployed(id string, meta interfac
 		Pending:    []string{"InProgress"},
 		Target:     []string{"Deployed"},
 		Refresh:    resourceAwsCloudFrontWebDistributionStateRefreshFunc(id, meta),
-		Timeout:    70 * time.Minute,
+		Timeout:    90 * time.Minute,
 		MinTimeout: 15 * time.Second,
 		Delay:      1 * time.Minute,
 	}

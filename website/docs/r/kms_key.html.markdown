@@ -1,12 +1,11 @@
 ---
 layout: "aws"
 page_title: "AWS: aws_kms_key"
-sidebar_current: "docs-aws-resource-kms-key"
 description: |-
   Provides a KMS customer master key.
 ---
 
-# aws_kms_key
+# Resource: aws_kms_key
 
 Provides a KMS customer master key.
 

@@ -1,12 +1,11 @@
 ---
 layout: "aws"
-page_title: "AWS: waf_regex_pattern_set"
-sidebar_current: "docs-aws-resource-waf-regex-pattern-set"
+page_title: "AWS: aws_waf_regex_pattern_set"
 description: |-
   Provides a AWS WAF Regex Pattern Set resource.
 ---
 
-# aws_waf_regex_pattern_set
+# Resource: aws_waf_regex_pattern_set
 
 Provides a WAF Regex Pattern Set Resource
 

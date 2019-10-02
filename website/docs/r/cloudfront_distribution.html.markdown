@@ -1,12 +1,11 @@
 ---
 layout: "aws"
-page_title: "AWS: cloudfront_distribution"
-sidebar_current: "docs-aws-resource-cloudfront-distribution"
+page_title: "AWS: aws_cloudfront_distribution"
 description: |-
   Provides a CloudFront web distribution resource.
 ---
 
-# aws_cloudfront_distribution
+# Resource: aws_cloudfront_distribution
 
 Creates an Amazon CloudFront web distribution.
 
@@ -184,7 +183,7 @@ resource "aws_cloudfront_distribution" "s3_distribution" {
 
   default_cache_behavior {
     # ... other configuration ...
-    target_origin_id       = "groupS3"
+    target_origin_id = "groupS3"
   }
 
   # ... other configuration ...
@@ -232,7 +231,7 @@ of several sub-resources - these resources are laid out below.
   * `origin` (Required) - One or more [origins](#origin-arguments) for this
     distribution (multiples allowed).
 
-  * `origin_group` (Required) - One or more [origin_group](#origin-group-arguments) for this
+  * `origin_group` (Optional) - One or more [origin_group](#origin-group-arguments) for this
   distribution (multiples allowed).  
 
   * `price_class` (Optional) - The price class for this distribution. One of
@@ -249,11 +248,17 @@ of several sub-resources - these resources are laid out below.
 
   * `web_acl_id` (Optional) - If you're using AWS WAF to filter CloudFront
     requests, the Id of the AWS WAF web ACL that is associated with the
-    distribution.
+    distribution. The WAF Web ACL must exist in the WAF Global (CloudFront)
+    region and the credentials configuring this argument must have
+    `waf:GetWebACL` permissions assigned.
 
   * `retain_on_delete` (Optional) - Disables the distribution instead of
     deleting it when destroying the resource through Terraform. If this is set,
     the distribution needs to be deleted manually afterwards. Default: `false`.
+
+  * `wait_for_deployment` (Optional) - If enabled, the resource will wait for
+    the distribution status to change from `InProgress` to `Deployed`. Setting
+    this to`false` will skip the process. Default: `true`.
 
 #### Cache Behavior Arguments
 

@@ -9,13 +9,20 @@ type Range struct {
 type Replacement struct {
 	NeedOnlyDelete bool     // need to delete all lines of the issue without replacement with new lines
 	NewLines       []string // is NeedDelete is false it's the replacement lines
+	Inline         *InlineFix
+}
+
+type InlineFix struct {
+	StartCol  int // zero-based
+	Length    int // length of chunk to be replaced
+	NewString string
 }
 
 type Issue struct {
 	FromLinter string
 	Text       string
+	Pos        token.Position
 
-	Pos       token.Position
 	LineRange *Range `json:",omitempty"`
 
 	// HunkPos is used only when golangci-lint is run over a diff

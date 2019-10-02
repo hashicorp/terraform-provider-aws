@@ -88,6 +88,10 @@ func resourceAwsElasticBeanstalkEnvironment() *schema.Resource {
 				Optional: true,
 				ForceNew: true,
 			},
+			"endpoint_url": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"tier": {
 				Type:     schema.TypeString,
 				Optional: true,
@@ -649,6 +653,9 @@ func resourceAwsElasticBeanstalkEnvironmentRead(d *schema.ResourceData, meta int
 	if err := d.Set("triggers", flattenBeanstalkTrigger(resources.EnvironmentResources.Triggers)); err != nil {
 		return err
 	}
+	if err := d.Set("endpoint_url", env.EndpointURL); err != nil {
+		return err
+	}
 
 	tags, err := conn.ListTagsForResource(&elasticbeanstalk.ListTagsForResourceInput{
 		ResourceArn: aws.String(d.Get("arn").(string)),
@@ -922,9 +929,9 @@ func dropGeneratedSecurityGroup(settingValue string, meta interface{}) string {
 
 	// Check to see if groups are ec2-classic or vpc security groups
 	ec2Classic := true
-	beanstalkSGRegexp := "sg-[0-9a-fA-F]{8}"
+	beanstalkSGRegexp := regexp.MustCompile("sg-[0-9a-fA-F]{8}")
 	for _, g := range groups {
-		if ok, _ := regexp.MatchString(beanstalkSGRegexp, g); ok {
+		if beanstalkSGRegexp.MatchString(g) {
 			ec2Classic = false
 			break
 		}

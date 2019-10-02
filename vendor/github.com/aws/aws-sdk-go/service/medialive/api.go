@@ -825,6 +825,97 @@ func (c *MediaLive) DeleteReservationWithContext(ctx aws.Context, input *DeleteR
 	return out, req.Send()
 }
 
+const opDeleteSchedule = "DeleteSchedule"
+
+// DeleteScheduleRequest generates a "aws/request.Request" representing the
+// client's request for the DeleteSchedule operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See DeleteSchedule for more information on using the DeleteSchedule
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the DeleteScheduleRequest method.
+//    req, resp := client.DeleteScheduleRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/medialive-2017-10-14/DeleteSchedule
+func (c *MediaLive) DeleteScheduleRequest(input *DeleteScheduleInput) (req *request.Request, output *DeleteScheduleOutput) {
+	op := &request.Operation{
+		Name:       opDeleteSchedule,
+		HTTPMethod: "DELETE",
+		HTTPPath:   "/prod/channels/{channelId}/schedule",
+	}
+
+	if input == nil {
+		input = &DeleteScheduleInput{}
+	}
+
+	output = &DeleteScheduleOutput{}
+	req = c.newRequest(op, input, output)
+	req.Handlers.Unmarshal.Swap(restjson.UnmarshalHandler.Name, protocol.UnmarshalDiscardBodyHandler)
+	return
+}
+
+// DeleteSchedule API operation for AWS Elemental MediaLive.
+//
+// Delete all schedule actions on a channel.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for AWS Elemental MediaLive's
+// API operation DeleteSchedule for usage and error information.
+//
+// Returned Error Codes:
+//   * ErrCodeBadRequestException "BadRequestException"
+//
+//   * ErrCodeInternalServerErrorException "InternalServerErrorException"
+//
+//   * ErrCodeForbiddenException "ForbiddenException"
+//
+//   * ErrCodeBadGatewayException "BadGatewayException"
+//
+//   * ErrCodeNotFoundException "NotFoundException"
+//
+//   * ErrCodeGatewayTimeoutException "GatewayTimeoutException"
+//
+//   * ErrCodeTooManyRequestsException "TooManyRequestsException"
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/medialive-2017-10-14/DeleteSchedule
+func (c *MediaLive) DeleteSchedule(input *DeleteScheduleInput) (*DeleteScheduleOutput, error) {
+	req, out := c.DeleteScheduleRequest(input)
+	return out, req.Send()
+}
+
+// DeleteScheduleWithContext is the same as DeleteSchedule with the addition of
+// the ability to pass a context and additional request options.
+//
+// See DeleteSchedule for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *MediaLive) DeleteScheduleWithContext(ctx aws.Context, input *DeleteScheduleInput, opts ...request.Option) (*DeleteScheduleOutput, error) {
+	req, out := c.DeleteScheduleRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
 const opDeleteTags = "DeleteTags"
 
 // DeleteTagsRequest generates a "aws/request.Request" representing the
@@ -1467,7 +1558,7 @@ func (c *MediaLive) DescribeScheduleWithContext(ctx aws.Context, input *Describe
 //    // Example iterating over at most 3 pages of a DescribeSchedule operation.
 //    pageNum := 0
 //    err := client.DescribeSchedulePages(params,
-//        func(page *DescribeScheduleOutput, lastPage bool) bool {
+//        func(page *medialive.DescribeScheduleOutput, lastPage bool) bool {
 //            pageNum++
 //            fmt.Println(page)
 //            return pageNum <= 3
@@ -1611,7 +1702,7 @@ func (c *MediaLive) ListChannelsWithContext(ctx aws.Context, input *ListChannels
 //    // Example iterating over at most 3 pages of a ListChannels operation.
 //    pageNum := 0
 //    err := client.ListChannelsPages(params,
-//        func(page *ListChannelsOutput, lastPage bool) bool {
+//        func(page *medialive.ListChannelsOutput, lastPage bool) bool {
 //            pageNum++
 //            fmt.Println(page)
 //            return pageNum <= 3
@@ -1755,7 +1846,7 @@ func (c *MediaLive) ListInputSecurityGroupsWithContext(ctx aws.Context, input *L
 //    // Example iterating over at most 3 pages of a ListInputSecurityGroups operation.
 //    pageNum := 0
 //    err := client.ListInputSecurityGroupsPages(params,
-//        func(page *ListInputSecurityGroupsOutput, lastPage bool) bool {
+//        func(page *medialive.ListInputSecurityGroupsOutput, lastPage bool) bool {
 //            pageNum++
 //            fmt.Println(page)
 //            return pageNum <= 3
@@ -1899,7 +1990,7 @@ func (c *MediaLive) ListInputsWithContext(ctx aws.Context, input *ListInputsInpu
 //    // Example iterating over at most 3 pages of a ListInputs operation.
 //    pageNum := 0
 //    err := client.ListInputsPages(params,
-//        func(page *ListInputsOutput, lastPage bool) bool {
+//        func(page *medialive.ListInputsOutput, lastPage bool) bool {
 //            pageNum++
 //            fmt.Println(page)
 //            return pageNum <= 3
@@ -2043,7 +2134,7 @@ func (c *MediaLive) ListOfferingsWithContext(ctx aws.Context, input *ListOfferin
 //    // Example iterating over at most 3 pages of a ListOfferings operation.
 //    pageNum := 0
 //    err := client.ListOfferingsPages(params,
-//        func(page *ListOfferingsOutput, lastPage bool) bool {
+//        func(page *medialive.ListOfferingsOutput, lastPage bool) bool {
 //            pageNum++
 //            fmt.Println(page)
 //            return pageNum <= 3
@@ -2187,7 +2278,7 @@ func (c *MediaLive) ListReservationsWithContext(ctx aws.Context, input *ListRese
 //    // Example iterating over at most 3 pages of a ListReservations operation.
 //    pageNum := 0
 //    err := client.ListReservationsPages(params,
-//        func(page *ListReservationsOutput, lastPage bool) bool {
+//        func(page *medialive.ListReservationsOutput, lastPage bool) bool {
 //            pageNum++
 //            fmt.Println(page)
 //            return pageNum <= 3
@@ -2676,6 +2767,100 @@ func (c *MediaLive) UpdateChannelWithContext(ctx aws.Context, input *UpdateChann
 	return out, req.Send()
 }
 
+const opUpdateChannelClass = "UpdateChannelClass"
+
+// UpdateChannelClassRequest generates a "aws/request.Request" representing the
+// client's request for the UpdateChannelClass operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See UpdateChannelClass for more information on using the UpdateChannelClass
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the UpdateChannelClassRequest method.
+//    req, resp := client.UpdateChannelClassRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/medialive-2017-10-14/UpdateChannelClass
+func (c *MediaLive) UpdateChannelClassRequest(input *UpdateChannelClassInput) (req *request.Request, output *UpdateChannelClassOutput) {
+	op := &request.Operation{
+		Name:       opUpdateChannelClass,
+		HTTPMethod: "PUT",
+		HTTPPath:   "/prod/channels/{channelId}/channelClass",
+	}
+
+	if input == nil {
+		input = &UpdateChannelClassInput{}
+	}
+
+	output = &UpdateChannelClassOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// UpdateChannelClass API operation for AWS Elemental MediaLive.
+//
+// Changes the class of the channel.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for AWS Elemental MediaLive's
+// API operation UpdateChannelClass for usage and error information.
+//
+// Returned Error Codes:
+//   * ErrCodeBadRequestException "BadRequestException"
+//
+//   * ErrCodeUnprocessableEntityException "UnprocessableEntityException"
+//
+//   * ErrCodeInternalServerErrorException "InternalServerErrorException"
+//
+//   * ErrCodeForbiddenException "ForbiddenException"
+//
+//   * ErrCodeBadGatewayException "BadGatewayException"
+//
+//   * ErrCodeNotFoundException "NotFoundException"
+//
+//   * ErrCodeGatewayTimeoutException "GatewayTimeoutException"
+//
+//   * ErrCodeTooManyRequestsException "TooManyRequestsException"
+//
+//   * ErrCodeConflictException "ConflictException"
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/medialive-2017-10-14/UpdateChannelClass
+func (c *MediaLive) UpdateChannelClass(input *UpdateChannelClassInput) (*UpdateChannelClassOutput, error) {
+	req, out := c.UpdateChannelClassRequest(input)
+	return out, req.Send()
+}
+
+// UpdateChannelClassWithContext is the same as UpdateChannelClass with the addition of
+// the ability to pass a context and additional request options.
+//
+// See UpdateChannelClass for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *MediaLive) UpdateChannelClassWithContext(ctx aws.Context, input *UpdateChannelClassInput, opts ...request.Option) (*UpdateChannelClassOutput, error) {
+	req, out := c.UpdateChannelClassRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
 const opUpdateInput = "UpdateInput"
 
 // UpdateInputRequest generates a "aws/request.Request" representing the
@@ -2856,6 +3041,99 @@ func (c *MediaLive) UpdateInputSecurityGroupWithContext(ctx aws.Context, input *
 	return out, req.Send()
 }
 
+const opUpdateReservation = "UpdateReservation"
+
+// UpdateReservationRequest generates a "aws/request.Request" representing the
+// client's request for the UpdateReservation operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See UpdateReservation for more information on using the UpdateReservation
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the UpdateReservationRequest method.
+//    req, resp := client.UpdateReservationRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/medialive-2017-10-14/UpdateReservation
+func (c *MediaLive) UpdateReservationRequest(input *UpdateReservationInput) (req *request.Request, output *UpdateReservationOutput) {
+	op := &request.Operation{
+		Name:       opUpdateReservation,
+		HTTPMethod: "PUT",
+		HTTPPath:   "/prod/reservations/{reservationId}",
+	}
+
+	if input == nil {
+		input = &UpdateReservationInput{}
+	}
+
+	output = &UpdateReservationOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// UpdateReservation API operation for AWS Elemental MediaLive.
+//
+// Update reservation.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for AWS Elemental MediaLive's
+// API operation UpdateReservation for usage and error information.
+//
+// Returned Error Codes:
+//   * ErrCodeBadRequestException "BadRequestException"
+//
+//   * ErrCodeInternalServerErrorException "InternalServerErrorException"
+//
+//   * ErrCodeForbiddenException "ForbiddenException"
+//
+//   * ErrCodeBadGatewayException "BadGatewayException"
+//
+//   * ErrCodeNotFoundException "NotFoundException"
+//
+//   * ErrCodeGatewayTimeoutException "GatewayTimeoutException"
+//
+//   * ErrCodeTooManyRequestsException "TooManyRequestsException"
+//
+//   * ErrCodeConflictException "ConflictException"
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/medialive-2017-10-14/UpdateReservation
+func (c *MediaLive) UpdateReservation(input *UpdateReservationInput) (*UpdateReservationOutput, error) {
+	req, out := c.UpdateReservationRequest(input)
+	return out, req.Send()
+}
+
+// UpdateReservationWithContext is the same as UpdateReservation with the addition of
+// the ability to pass a context and additional request options.
+//
+// See UpdateReservation for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *MediaLive) UpdateReservationWithContext(ctx aws.Context, input *UpdateReservationInput, opts ...request.Option) (*UpdateReservationOutput, error) {
+	req, out := c.UpdateReservationRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
+// Aac Settings
 type AacSettings struct {
 	_ struct{} `type:"structure"`
 
@@ -2963,6 +3241,7 @@ func (s *AacSettings) SetVbrQuality(v string) *AacSettings {
 	return s
 }
 
+// Ac3 Settings
 type Ac3Settings struct {
 	_ struct{} `type:"structure"`
 
@@ -3059,9 +3338,11 @@ func (s *Ac3Settings) SetMetadataControl(v string) *Ac3Settings {
 	return s
 }
 
+// Archive Container Settings
 type ArchiveContainerSettings struct {
 	_ struct{} `type:"structure"`
 
+	// M2ts Settings
 	M2tsSettings *M2tsSettings `locationName:"m2tsSettings" type:"structure"`
 }
 
@@ -3096,6 +3377,7 @@ func (s *ArchiveContainerSettings) SetM2tsSettings(v *M2tsSettings) *ArchiveCont
 	return s
 }
 
+// Archive Group Settings
 type ArchiveGroupSettings struct {
 	_ struct{} `type:"structure"`
 
@@ -3147,6 +3429,7 @@ func (s *ArchiveGroupSettings) SetRolloverInterval(v int64) *ArchiveGroupSetting
 	return s
 }
 
+// Archive Output Settings
 type ArchiveOutputSettings struct {
 	_ struct{} `type:"structure"`
 
@@ -3210,6 +3493,7 @@ func (s *ArchiveOutputSettings) SetNameModifier(v string) *ArchiveOutputSettings
 	return s
 }
 
+// Arib Destination Settings
 type AribDestinationSettings struct {
 	_ struct{} `type:"structure"`
 }
@@ -3224,6 +3508,7 @@ func (s AribDestinationSettings) GoString() string {
 	return s.String()
 }
 
+// Arib Source Settings
 type AribSourceSettings struct {
 	_ struct{} `type:"structure"`
 }
@@ -3238,6 +3523,7 @@ func (s AribSourceSettings) GoString() string {
 	return s.String()
 }
 
+// Audio Channel Mapping
 type AudioChannelMapping struct {
 	_ struct{} `type:"structure"`
 
@@ -3301,17 +3587,23 @@ func (s *AudioChannelMapping) SetOutputChannel(v int64) *AudioChannelMapping {
 	return s
 }
 
+// Audio Codec Settings
 type AudioCodecSettings struct {
 	_ struct{} `type:"structure"`
 
+	// Aac Settings
 	AacSettings *AacSettings `locationName:"aacSettings" type:"structure"`
 
+	// Ac3 Settings
 	Ac3Settings *Ac3Settings `locationName:"ac3Settings" type:"structure"`
 
+	// Eac3 Settings
 	Eac3Settings *Eac3Settings `locationName:"eac3Settings" type:"structure"`
 
+	// Mp2 Settings
 	Mp2Settings *Mp2Settings `locationName:"mp2Settings" type:"structure"`
 
+	// Pass Through Settings
 	PassThroughSettings *PassThroughSettings `locationName:"passThroughSettings" type:"structure"`
 }
 
@@ -3375,6 +3667,7 @@ func (s *AudioCodecSettings) SetPassThroughSettings(v *PassThroughSettings) *Aud
 	return s
 }
 
+// Audio Description
 type AudioDescription struct {
 	_ struct{} `type:"structure"`
 
@@ -3526,6 +3819,7 @@ func (s *AudioDescription) SetStreamName(v string) *AudioDescription {
 	return s
 }
 
+// Audio Language Selection
 type AudioLanguageSelection struct {
 	_ struct{} `type:"structure"`
 
@@ -3578,6 +3872,7 @@ func (s *AudioLanguageSelection) SetLanguageSelectionPolicy(v string) *AudioLang
 	return s
 }
 
+// Audio Normalization Settings
 type AudioNormalizationSettings struct {
 	_ struct{} `type:"structure"`
 
@@ -3624,19 +3919,18 @@ func (s *AudioNormalizationSettings) SetTargetLkfs(v float64) *AudioNormalizatio
 	return s
 }
 
+// Audio Only Hls Settings
 type AudioOnlyHlsSettings struct {
 	_ struct{} `type:"structure"`
 
 	// Specifies the group to which the audio Rendition belongs.
 	AudioGroupId *string `locationName:"audioGroupId" type:"string"`
 
-	// For use with an audio only Stream. Must be a .jpg or .png file. If given,
-	// this image will be used as the cover-art for the audio only output. Ideally,
-	// it should be formatted for an iPhone screen for two reasons. The iPhone does
-	// not resize the image, it crops a centered image on the top/bottom and left/right.
-	// Additionally, this image file gets saved bit-for-bit into every 10-second
-	// segment file, so will increase bandwidth by {image file size} * {segment
-	// count} * {user count.}.
+	// Optional. Specifies the .jpg or .png image to use as the cover art for an
+	// audio-only output. We recommend a low bit-size file because the image increases
+	// the output audio bandwidth.The image is attached to the audio as an ID3 tag,
+	// frame type APIC, picture type 0x10, as per the "ID3 tag version 2.4.0 - Native
+	// Frames" standard.
 	AudioOnlyImage *InputLocation `locationName:"audioOnlyImage" type:"structure"`
 
 	// Four types of audio-only tracks are supported:Audio-Only Variant StreamThe
@@ -3696,6 +3990,7 @@ func (s *AudioOnlyHlsSettings) SetAudioTrackType(v string) *AudioOnlyHlsSettings
 	return s
 }
 
+// Audio Pid Selection
 type AudioPidSelection struct {
 	_ struct{} `type:"structure"`
 
@@ -3734,6 +4029,7 @@ func (s *AudioPidSelection) SetPid(v int64) *AudioPidSelection {
 	return s
 }
 
+// Audio Selector
 type AudioSelector struct {
 	_ struct{} `type:"structure"`
 
@@ -3790,11 +4086,14 @@ func (s *AudioSelector) SetSelectorSettings(v *AudioSelectorSettings) *AudioSele
 	return s
 }
 
+// Audio Selector Settings
 type AudioSelectorSettings struct {
 	_ struct{} `type:"structure"`
 
+	// Audio Language Selection
 	AudioLanguageSelection *AudioLanguageSelection `locationName:"audioLanguageSelection" type:"structure"`
 
+	// Audio Pid Selection
 	AudioPidSelection *AudioPidSelection `locationName:"audioPidSelection" type:"structure"`
 }
 
@@ -3840,6 +4139,7 @@ func (s *AudioSelectorSettings) SetAudioPidSelection(v *AudioPidSelection) *Audi
 	return s
 }
 
+// Avail Blanking
 type AvailBlanking struct {
 	_ struct{} `type:"structure"`
 
@@ -3889,6 +4189,7 @@ func (s *AvailBlanking) SetState(v string) *AvailBlanking {
 	return s
 }
 
+// Avail Configuration
 type AvailConfiguration struct {
 	_ struct{} `type:"structure"`
 
@@ -3927,11 +4228,14 @@ func (s *AvailConfiguration) SetAvailSettings(v *AvailSettings) *AvailConfigurat
 	return s
 }
 
+// Avail Settings
 type AvailSettings struct {
 	_ struct{} `type:"structure"`
 
+	// Scte35 Splice Insert
 	Scte35SpliceInsert *Scte35SpliceInsert `locationName:"scte35SpliceInsert" type:"structure"`
 
+	// Scte35 Time Signal Apos
 	Scte35TimeSignalApos *Scte35TimeSignalApos `locationName:"scte35TimeSignalApos" type:"structure"`
 }
 
@@ -4219,6 +4523,7 @@ func (s *BatchUpdateScheduleOutput) SetDeletes(v *BatchScheduleActionDeleteResul
 	return s
 }
 
+// Blackout Slate
 type BlackoutSlate struct {
 	_ struct{} `type:"structure"`
 
@@ -4309,6 +4614,7 @@ func (s *BlackoutSlate) SetState(v string) *BlackoutSlate {
 	return s
 }
 
+// Burn In Destination Settings
 type BurnInDestinationSettings struct {
 	_ struct{} `type:"structure"`
 
@@ -4626,31 +4932,44 @@ func (s *CaptionDescription) SetName(v string) *CaptionDescription {
 	return s
 }
 
+// Caption Destination Settings
 type CaptionDestinationSettings struct {
 	_ struct{} `type:"structure"`
 
+	// Arib Destination Settings
 	AribDestinationSettings *AribDestinationSettings `locationName:"aribDestinationSettings" type:"structure"`
 
+	// Burn In Destination Settings
 	BurnInDestinationSettings *BurnInDestinationSettings `locationName:"burnInDestinationSettings" type:"structure"`
 
+	// Dvb Sub Destination Settings
 	DvbSubDestinationSettings *DvbSubDestinationSettings `locationName:"dvbSubDestinationSettings" type:"structure"`
 
+	// Embedded Destination Settings
 	EmbeddedDestinationSettings *EmbeddedDestinationSettings `locationName:"embeddedDestinationSettings" type:"structure"`
 
+	// Embedded Plus Scte20 Destination Settings
 	EmbeddedPlusScte20DestinationSettings *EmbeddedPlusScte20DestinationSettings `locationName:"embeddedPlusScte20DestinationSettings" type:"structure"`
 
+	// Rtmp Caption Info Destination Settings
 	RtmpCaptionInfoDestinationSettings *RtmpCaptionInfoDestinationSettings `locationName:"rtmpCaptionInfoDestinationSettings" type:"structure"`
 
+	// Scte20 Plus Embedded Destination Settings
 	Scte20PlusEmbeddedDestinationSettings *Scte20PlusEmbeddedDestinationSettings `locationName:"scte20PlusEmbeddedDestinationSettings" type:"structure"`
 
+	// Scte27 Destination Settings
 	Scte27DestinationSettings *Scte27DestinationSettings `locationName:"scte27DestinationSettings" type:"structure"`
 
+	// Smpte Tt Destination Settings
 	SmpteTtDestinationSettings *SmpteTtDestinationSettings `locationName:"smpteTtDestinationSettings" type:"structure"`
 
+	// Teletext Destination Settings
 	TeletextDestinationSettings *TeletextDestinationSettings `locationName:"teletextDestinationSettings" type:"structure"`
 
+	// Ttml Destination Settings
 	TtmlDestinationSettings *TtmlDestinationSettings `locationName:"ttmlDestinationSettings" type:"structure"`
 
+	// Webvtt Destination Settings
 	WebvttDestinationSettings *WebvttDestinationSettings `locationName:"webvttDestinationSettings" type:"structure"`
 }
 
@@ -4903,19 +5222,26 @@ func (s *CaptionSelector) SetSelectorSettings(v *CaptionSelectorSettings) *Capti
 	return s
 }
 
+// Caption Selector Settings
 type CaptionSelectorSettings struct {
 	_ struct{} `type:"structure"`
 
+	// Arib Source Settings
 	AribSourceSettings *AribSourceSettings `locationName:"aribSourceSettings" type:"structure"`
 
+	// Dvb Sub Source Settings
 	DvbSubSourceSettings *DvbSubSourceSettings `locationName:"dvbSubSourceSettings" type:"structure"`
 
+	// Embedded Source Settings
 	EmbeddedSourceSettings *EmbeddedSourceSettings `locationName:"embeddedSourceSettings" type:"structure"`
 
+	// Scte20 Source Settings
 	Scte20SourceSettings *Scte20SourceSettings `locationName:"scte20SourceSettings" type:"structure"`
 
+	// Scte27 Source Settings
 	Scte27SourceSettings *Scte27SourceSettings `locationName:"scte27SourceSettings" type:"structure"`
 
+	// Teletext Source Settings
 	TeletextSourceSettings *TeletextSourceSettings `locationName:"teletextSourceSettings" type:"structure"`
 }
 
@@ -5001,6 +5327,10 @@ type Channel struct {
 	// The unique arn of the channel.
 	Arn *string `locationName:"arn" type:"string"`
 
+	// The class for this channel. STANDARD for a channel with two pipelines or
+	// SINGLE_PIPELINE for a channel with one pipeline.
+	ChannelClass *string `locationName:"channelClass" type:"string" enum:"ChannelClass"`
+
 	// A list of destinations of the channel. For UDP outputs, there is onedestination
 	// per output. For other types (HLS, for example), there isone destination per
 	// packager.
@@ -5009,6 +5339,7 @@ type Channel struct {
 	// The endpoints where outgoing connections initiate from
 	EgressEndpoints []*ChannelEgressEndpoint `locationName:"egressEndpoints" type:"list"`
 
+	// Encoder Settings
 	EncoderSettings *EncoderSettings `locationName:"encoderSettings" type:"structure"`
 
 	// The unique id of the channel.
@@ -5024,6 +5355,9 @@ type Channel struct {
 
 	// The name of the channel. (user-mutable)
 	Name *string `locationName:"name" type:"string"`
+
+	// Runtime details for the pipelines of a running channel.
+	PipelineDetails []*PipelineDetail `locationName:"pipelineDetails" type:"list"`
 
 	// The number of currently healthy pipelines.
 	PipelinesRunningCount *int64 `locationName:"pipelinesRunningCount" type:"integer"`
@@ -5050,6 +5384,12 @@ func (s Channel) GoString() string {
 // SetArn sets the Arn field's value.
 func (s *Channel) SetArn(v string) *Channel {
 	s.Arn = &v
+	return s
+}
+
+// SetChannelClass sets the ChannelClass field's value.
+func (s *Channel) SetChannelClass(v string) *Channel {
+	s.ChannelClass = &v
 	return s
 }
 
@@ -5098,6 +5438,12 @@ func (s *Channel) SetLogLevel(v string) *Channel {
 // SetName sets the Name field's value.
 func (s *Channel) SetName(v string) *Channel {
 	s.Name = &v
+	return s
+}
+
+// SetPipelineDetails sets the PipelineDetails field's value.
+func (s *Channel) SetPipelineDetails(v []*PipelineDetail) *Channel {
+	s.PipelineDetails = v
 	return s
 }
 
@@ -5154,6 +5500,10 @@ type ChannelSummary struct {
 	// The unique arn of the channel.
 	Arn *string `locationName:"arn" type:"string"`
 
+	// The class for this channel. STANDARD for a channel with two pipelines or
+	// SINGLE_PIPELINE for a channel with one pipeline.
+	ChannelClass *string `locationName:"channelClass" type:"string" enum:"ChannelClass"`
+
 	// A list of destinations of the channel. For UDP outputs, there is onedestination
 	// per output. For other types (HLS, for example), there isone destination per
 	// packager.
@@ -5201,6 +5551,12 @@ func (s ChannelSummary) GoString() string {
 // SetArn sets the Arn field's value.
 func (s *ChannelSummary) SetArn(v string) *ChannelSummary {
 	s.Arn = &v
+	return s
+}
+
+// SetChannelClass sets the ChannelClass field's value.
+func (s *ChannelSummary) SetChannelClass(v string) *ChannelSummary {
+	s.ChannelClass = &v
 	return s
 }
 
@@ -5270,11 +5626,31 @@ func (s *ChannelSummary) SetTags(v map[string]*string) *ChannelSummary {
 	return s
 }
 
+// Passthrough applies no color space conversion to the output
+type ColorSpacePassthroughSettings struct {
+	_ struct{} `type:"structure"`
+}
+
+// String returns the string representation
+func (s ColorSpacePassthroughSettings) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ColorSpacePassthroughSettings) GoString() string {
+	return s.String()
+}
+
 type CreateChannelInput struct {
 	_ struct{} `type:"structure"`
 
+	// A standard channel has two encoding pipelines and a single pipeline channel
+	// only has one.
+	ChannelClass *string `locationName:"channelClass" type:"string" enum:"ChannelClass"`
+
 	Destinations []*OutputDestination `locationName:"destinations" type:"list"`
 
+	// Encoder Settings
 	EncoderSettings *EncoderSettings `locationName:"encoderSettings" type:"structure"`
 
 	InputAttachments []*InputAttachment `locationName:"inputAttachments" type:"list"`
@@ -5338,6 +5714,12 @@ func (s *CreateChannelInput) Validate() error {
 		return invalidParams
 	}
 	return nil
+}
+
+// SetChannelClass sets the ChannelClass field's value.
+func (s *CreateChannelInput) SetChannelClass(v string) *CreateChannelInput {
+	s.ChannelClass = &v
+	return s
 }
 
 // SetDestinations sets the Destinations field's value.
@@ -5715,10 +6097,15 @@ type DeleteChannelOutput struct {
 
 	Arn *string `locationName:"arn" type:"string"`
 
+	// A standard channel has two encoding pipelines and a single pipeline channel
+	// only has one.
+	ChannelClass *string `locationName:"channelClass" type:"string" enum:"ChannelClass"`
+
 	Destinations []*OutputDestination `locationName:"destinations" type:"list"`
 
 	EgressEndpoints []*ChannelEgressEndpoint `locationName:"egressEndpoints" type:"list"`
 
+	// Encoder Settings
 	EncoderSettings *EncoderSettings `locationName:"encoderSettings" type:"structure"`
 
 	Id *string `locationName:"id" type:"string"`
@@ -5731,6 +6118,8 @@ type DeleteChannelOutput struct {
 	LogLevel *string `locationName:"logLevel" type:"string" enum:"LogLevel"`
 
 	Name *string `locationName:"name" type:"string"`
+
+	PipelineDetails []*PipelineDetail `locationName:"pipelineDetails" type:"list"`
 
 	PipelinesRunningCount *int64 `locationName:"pipelinesRunningCount" type:"integer"`
 
@@ -5754,6 +6143,12 @@ func (s DeleteChannelOutput) GoString() string {
 // SetArn sets the Arn field's value.
 func (s *DeleteChannelOutput) SetArn(v string) *DeleteChannelOutput {
 	s.Arn = &v
+	return s
+}
+
+// SetChannelClass sets the ChannelClass field's value.
+func (s *DeleteChannelOutput) SetChannelClass(v string) *DeleteChannelOutput {
+	s.ChannelClass = &v
 	return s
 }
 
@@ -5802,6 +6197,12 @@ func (s *DeleteChannelOutput) SetLogLevel(v string) *DeleteChannelOutput {
 // SetName sets the Name field's value.
 func (s *DeleteChannelOutput) SetName(v string) *DeleteChannelOutput {
 	s.Name = &v
+	return s
+}
+
+// SetPipelineDetails sets the PipelineDetails field's value.
+func (s *DeleteChannelOutput) SetPipelineDetails(v []*PipelineDetail) *DeleteChannelOutput {
+	s.PipelineDetails = v
 	return s
 }
 
@@ -6013,6 +6414,8 @@ type DeleteReservationOutput struct {
 	// Current reservation state
 	State *string `locationName:"state" type:"string" enum:"ReservationState"`
 
+	Tags map[string]*string `locationName:"tags" type:"map"`
+
 	UsagePrice *float64 `locationName:"usagePrice" type:"double"`
 }
 
@@ -6122,10 +6525,69 @@ func (s *DeleteReservationOutput) SetState(v string) *DeleteReservationOutput {
 	return s
 }
 
+// SetTags sets the Tags field's value.
+func (s *DeleteReservationOutput) SetTags(v map[string]*string) *DeleteReservationOutput {
+	s.Tags = v
+	return s
+}
+
 // SetUsagePrice sets the UsagePrice field's value.
 func (s *DeleteReservationOutput) SetUsagePrice(v float64) *DeleteReservationOutput {
 	s.UsagePrice = &v
 	return s
+}
+
+type DeleteScheduleInput struct {
+	_ struct{} `type:"structure"`
+
+	// ChannelId is a required field
+	ChannelId *string `location:"uri" locationName:"channelId" type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s DeleteScheduleInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DeleteScheduleInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *DeleteScheduleInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "DeleteScheduleInput"}
+	if s.ChannelId == nil {
+		invalidParams.Add(request.NewErrParamRequired("ChannelId"))
+	}
+	if s.ChannelId != nil && len(*s.ChannelId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("ChannelId", 1))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetChannelId sets the ChannelId field's value.
+func (s *DeleteScheduleInput) SetChannelId(v string) *DeleteScheduleInput {
+	s.ChannelId = &v
+	return s
+}
+
+type DeleteScheduleOutput struct {
+	_ struct{} `type:"structure"`
+}
+
+// String returns the string representation
+func (s DeleteScheduleOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DeleteScheduleOutput) GoString() string {
+	return s.String()
 }
 
 type DeleteTagsInput struct {
@@ -6237,10 +6699,15 @@ type DescribeChannelOutput struct {
 
 	Arn *string `locationName:"arn" type:"string"`
 
+	// A standard channel has two encoding pipelines and a single pipeline channel
+	// only has one.
+	ChannelClass *string `locationName:"channelClass" type:"string" enum:"ChannelClass"`
+
 	Destinations []*OutputDestination `locationName:"destinations" type:"list"`
 
 	EgressEndpoints []*ChannelEgressEndpoint `locationName:"egressEndpoints" type:"list"`
 
+	// Encoder Settings
 	EncoderSettings *EncoderSettings `locationName:"encoderSettings" type:"structure"`
 
 	Id *string `locationName:"id" type:"string"`
@@ -6253,6 +6720,8 @@ type DescribeChannelOutput struct {
 	LogLevel *string `locationName:"logLevel" type:"string" enum:"LogLevel"`
 
 	Name *string `locationName:"name" type:"string"`
+
+	PipelineDetails []*PipelineDetail `locationName:"pipelineDetails" type:"list"`
 
 	PipelinesRunningCount *int64 `locationName:"pipelinesRunningCount" type:"integer"`
 
@@ -6276,6 +6745,12 @@ func (s DescribeChannelOutput) GoString() string {
 // SetArn sets the Arn field's value.
 func (s *DescribeChannelOutput) SetArn(v string) *DescribeChannelOutput {
 	s.Arn = &v
+	return s
+}
+
+// SetChannelClass sets the ChannelClass field's value.
+func (s *DescribeChannelOutput) SetChannelClass(v string) *DescribeChannelOutput {
+	s.ChannelClass = &v
 	return s
 }
 
@@ -6324,6 +6799,12 @@ func (s *DescribeChannelOutput) SetLogLevel(v string) *DescribeChannelOutput {
 // SetName sets the Name field's value.
 func (s *DescribeChannelOutput) SetName(v string) *DescribeChannelOutput {
 	s.Name = &v
+	return s
+}
+
+// SetPipelineDetails sets the PipelineDetails field's value.
+func (s *DescribeChannelOutput) SetPipelineDetails(v []*PipelineDetail) *DescribeChannelOutput {
+	s.PipelineDetails = v
 	return s
 }
 
@@ -6401,6 +6882,15 @@ type DescribeInputOutput struct {
 
 	Id *string `locationName:"id" type:"string"`
 
+	// A standard input has two sources and a single pipeline input only has one.
+	InputClass *string `locationName:"inputClass" type:"string" enum:"InputClass"`
+
+	// There are two types of input sources, static and dynamic. If an input source
+	// is dynamic you canchange the source url of the input dynamically using an
+	// input switch action. However, the only input typeto support a dynamic url
+	// at this time is MP4_FILE. By default all input sources are static.
+	InputSourceType *string `locationName:"inputSourceType" type:"string" enum:"InputSourceType"`
+
 	MediaConnectFlows []*MediaConnectFlow `locationName:"mediaConnectFlows" type:"list"`
 
 	Name *string `locationName:"name" type:"string"`
@@ -6449,6 +6939,18 @@ func (s *DescribeInputOutput) SetDestinations(v []*InputDestination) *DescribeIn
 // SetId sets the Id field's value.
 func (s *DescribeInputOutput) SetId(v string) *DescribeInputOutput {
 	s.Id = &v
+	return s
+}
+
+// SetInputClass sets the InputClass field's value.
+func (s *DescribeInputOutput) SetInputClass(v string) *DescribeInputOutput {
+	s.InputClass = &v
+	return s
+}
+
+// SetInputSourceType sets the InputSourceType field's value.
+func (s *DescribeInputOutput) SetInputSourceType(v string) *DescribeInputOutput {
+	s.InputSourceType = &v
 	return s
 }
 
@@ -6823,6 +7325,8 @@ type DescribeReservationOutput struct {
 	// Current reservation state
 	State *string `locationName:"state" type:"string" enum:"ReservationState"`
 
+	Tags map[string]*string `locationName:"tags" type:"map"`
+
 	UsagePrice *float64 `locationName:"usagePrice" type:"double"`
 }
 
@@ -6929,6 +7433,12 @@ func (s *DescribeReservationOutput) SetStart(v string) *DescribeReservationOutpu
 // SetState sets the State field's value.
 func (s *DescribeReservationOutput) SetState(v string) *DescribeReservationOutput {
 	s.State = &v
+	return s
+}
+
+// SetTags sets the Tags field's value.
+func (s *DescribeReservationOutput) SetTags(v map[string]*string) *DescribeReservationOutput {
+	s.Tags = v
 	return s
 }
 
@@ -7174,6 +7684,7 @@ func (s *DvbSdtSettings) SetServiceProviderName(v string) *DvbSdtSettings {
 	return s
 }
 
+// Dvb Sub Destination Settings
 type DvbSubDestinationSettings struct {
 	_ struct{} `type:"structure"`
 
@@ -7407,6 +7918,7 @@ func (s *DvbSubDestinationSettings) SetYPosition(v int64) *DvbSubDestinationSett
 	return s
 }
 
+// Dvb Sub Source Settings
 type DvbSubSourceSettings struct {
 	_ struct{} `type:"structure"`
 
@@ -7483,6 +7995,7 @@ func (s *DvbTdtSettings) SetRepInterval(v int64) *DvbTdtSettings {
 	return s
 }
 
+// Eac3 Settings
 type Eac3Settings struct {
 	_ struct{} `type:"structure"`
 
@@ -7703,6 +8216,7 @@ func (s *Eac3Settings) SetSurroundMode(v string) *Eac3Settings {
 	return s
 }
 
+// Embedded Destination Settings
 type EmbeddedDestinationSettings struct {
 	_ struct{} `type:"structure"`
 }
@@ -7717,6 +8231,7 @@ func (s EmbeddedDestinationSettings) GoString() string {
 	return s.String()
 }
 
+// Embedded Plus Scte20 Destination Settings
 type EmbeddedPlusScte20DestinationSettings struct {
 	_ struct{} `type:"structure"`
 }
@@ -7731,6 +8246,7 @@ func (s EmbeddedPlusScte20DestinationSettings) GoString() string {
 	return s.String()
 }
 
+// Embedded Source Settings
 type EmbeddedSourceSettings struct {
 	_ struct{} `type:"structure"`
 
@@ -7801,6 +8317,7 @@ func (s *EmbeddedSourceSettings) SetSource608TrackNumber(v int64) *EmbeddedSourc
 	return s
 }
 
+// Encoder Settings
 type EncoderSettings struct {
 	_ struct{} `type:"structure"`
 
@@ -7985,6 +8502,7 @@ func (s *EncoderSettings) SetVideoDescriptions(v []*VideoDescription) *EncoderSe
 	return s
 }
 
+// Fec Output Settings
 type FecOutputSettings struct {
 	_ struct{} `type:"structure"`
 
@@ -8259,6 +8777,7 @@ func (s *FrameCaptureSettings) SetCaptureInterval(v int64) *FrameCaptureSettings
 	return s
 }
 
+// Global Configuration
 type GlobalConfiguration struct {
 	_ struct{} `type:"structure"`
 
@@ -8275,6 +8794,12 @@ type GlobalConfiguration struct {
 
 	// Settings for system actions when input is lost.
 	InputLossBehavior *InputLossBehavior `locationName:"inputLossBehavior" type:"structure"`
+
+	// Indicates how MediaLive pipelines are synchronized.PIPELINELOCKING - MediaLive
+	// will attempt to synchronize the output of each pipeline to the other.EPOCHLOCKING
+	// - MediaLive will attempt to synchronize the output of each pipeline to the
+	// Unix epoch.
+	OutputLockingMode *string `locationName:"outputLockingMode" type:"string" enum:"GlobalConfigurationOutputLockingMode"`
 
 	// Indicates whether the rate of frames emitted by the Live encoder should be
 	// paced by its system clock (which optionally may be locked to another source
@@ -8334,6 +8859,12 @@ func (s *GlobalConfiguration) SetInputLossBehavior(v *InputLossBehavior) *Global
 	return s
 }
 
+// SetOutputLockingMode sets the OutputLockingMode field's value.
+func (s *GlobalConfiguration) SetOutputLockingMode(v string) *GlobalConfiguration {
+	s.OutputLockingMode = &v
+	return s
+}
+
 // SetOutputTimingSource sets the OutputTimingSource field's value.
 func (s *GlobalConfiguration) SetOutputTimingSource(v string) *GlobalConfiguration {
 	s.OutputTimingSource = &v
@@ -8346,6 +8877,49 @@ func (s *GlobalConfiguration) SetSupportLowFramerateInputs(v string) *GlobalConf
 	return s
 }
 
+// H264 Color Space Settings
+type H264ColorSpaceSettings struct {
+	_ struct{} `type:"structure"`
+
+	// Passthrough applies no color space conversion to the output
+	ColorSpacePassthroughSettings *ColorSpacePassthroughSettings `locationName:"colorSpacePassthroughSettings" type:"structure"`
+
+	// Rec601 Settings
+	Rec601Settings *Rec601Settings `locationName:"rec601Settings" type:"structure"`
+
+	// Rec709 Settings
+	Rec709Settings *Rec709Settings `locationName:"rec709Settings" type:"structure"`
+}
+
+// String returns the string representation
+func (s H264ColorSpaceSettings) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s H264ColorSpaceSettings) GoString() string {
+	return s.String()
+}
+
+// SetColorSpacePassthroughSettings sets the ColorSpacePassthroughSettings field's value.
+func (s *H264ColorSpaceSettings) SetColorSpacePassthroughSettings(v *ColorSpacePassthroughSettings) *H264ColorSpaceSettings {
+	s.ColorSpacePassthroughSettings = v
+	return s
+}
+
+// SetRec601Settings sets the Rec601Settings field's value.
+func (s *H264ColorSpaceSettings) SetRec601Settings(v *Rec601Settings) *H264ColorSpaceSettings {
+	s.Rec601Settings = v
+	return s
+}
+
+// SetRec709Settings sets the Rec709Settings field's value.
+func (s *H264ColorSpaceSettings) SetRec709Settings(v *Rec709Settings) *H264ColorSpaceSettings {
+	s.Rec709Settings = v
+	return s
+}
+
+// H264 Settings
 type H264Settings struct {
 	_ struct{} `type:"structure"`
 
@@ -8368,11 +8942,14 @@ type H264Settings struct {
 	// Percentage of the buffer that should initially be filled (HRD buffer model).
 	BufFillPct *int64 `locationName:"bufFillPct" type:"integer"`
 
-	// Size of buffer (HRD buffer model) in bits/second.
+	// Size of buffer (HRD buffer model) in bits.
 	BufSize *int64 `locationName:"bufSize" type:"integer"`
 
 	// Includes colorspace metadata in the output.
 	ColorMetadata *string `locationName:"colorMetadata" type:"string" enum:"H264ColorMetadata"`
+
+	// Color Space settings
+	ColorSpaceSettings *H264ColorSpaceSettings `locationName:"colorSpaceSettings" type:"structure"`
 
 	// Entropy encoding mode. Use cabac (must be in Main or High profile) or cavlc.
 	EntropyEncoding *string `locationName:"entropyEncoding" type:"string" enum:"H264EntropyEncoding"`
@@ -8426,7 +9003,7 @@ type H264Settings struct {
 	// while high can produce better quality for certain content.
 	LookAheadRateControl *string `locationName:"lookAheadRateControl" type:"string" enum:"H264LookAheadRateControl"`
 
-	// For QVBR: See the tooltip for Quality level For VBR: Set the maximum bitrate
+	// For QVBR: See the tooltip for Quality levelFor VBR: Set the maximum bitrate
 	// in order to accommodate expected spikes in the complexity of the video.
 	MaxBitrate *int64 `locationName:"maxBitrate" min:"1000" type:"integer"`
 
@@ -8467,7 +9044,7 @@ type H264Settings struct {
 	// level: 6. Max bitrate: 1M to 1.5M
 	QvbrQualityLevel *int64 `locationName:"qvbrQualityLevel" min:"1" type:"integer"`
 
-	// Rate control mode. QVBR: Quality will match the specified quality level except
+	// Rate control mode.QVBR: Quality will match the specified quality level except
 	// when it is constrained by themaximum bitrate. Recommended if you or your
 	// viewers pay for bandwidth.VBR: Quality and bitrate vary, depending on the
 	// video complexity. Recommended instead of QVBRif you want to maintain a specific
@@ -8592,6 +9169,12 @@ func (s *H264Settings) SetBufSize(v int64) *H264Settings {
 // SetColorMetadata sets the ColorMetadata field's value.
 func (s *H264Settings) SetColorMetadata(v string) *H264Settings {
 	s.ColorMetadata = &v
+	return s
+}
+
+// SetColorSpaceSettings sets the ColorSpaceSettings field's value.
+func (s *H264Settings) SetColorSpaceSettings(v *H264ColorSpaceSettings) *H264Settings {
+	s.ColorSpaceSettings = v
 	return s
 }
 
@@ -8781,6 +9364,446 @@ func (s *H264Settings) SetTimecodeInsertion(v string) *H264Settings {
 	return s
 }
 
+// H265 Color Space Settings
+type H265ColorSpaceSettings struct {
+	_ struct{} `type:"structure"`
+
+	// Passthrough applies no color space conversion to the output
+	ColorSpacePassthroughSettings *ColorSpacePassthroughSettings `locationName:"colorSpacePassthroughSettings" type:"structure"`
+
+	// Hdr10 Settings
+	Hdr10Settings *Hdr10Settings `locationName:"hdr10Settings" type:"structure"`
+
+	// Rec601 Settings
+	Rec601Settings *Rec601Settings `locationName:"rec601Settings" type:"structure"`
+
+	// Rec709 Settings
+	Rec709Settings *Rec709Settings `locationName:"rec709Settings" type:"structure"`
+}
+
+// String returns the string representation
+func (s H265ColorSpaceSettings) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s H265ColorSpaceSettings) GoString() string {
+	return s.String()
+}
+
+// SetColorSpacePassthroughSettings sets the ColorSpacePassthroughSettings field's value.
+func (s *H265ColorSpaceSettings) SetColorSpacePassthroughSettings(v *ColorSpacePassthroughSettings) *H265ColorSpaceSettings {
+	s.ColorSpacePassthroughSettings = v
+	return s
+}
+
+// SetHdr10Settings sets the Hdr10Settings field's value.
+func (s *H265ColorSpaceSettings) SetHdr10Settings(v *Hdr10Settings) *H265ColorSpaceSettings {
+	s.Hdr10Settings = v
+	return s
+}
+
+// SetRec601Settings sets the Rec601Settings field's value.
+func (s *H265ColorSpaceSettings) SetRec601Settings(v *Rec601Settings) *H265ColorSpaceSettings {
+	s.Rec601Settings = v
+	return s
+}
+
+// SetRec709Settings sets the Rec709Settings field's value.
+func (s *H265ColorSpaceSettings) SetRec709Settings(v *Rec709Settings) *H265ColorSpaceSettings {
+	s.Rec709Settings = v
+	return s
+}
+
+// H265 Settings
+type H265Settings struct {
+	_ struct{} `type:"structure"`
+
+	// Adaptive quantization. Allows intra-frame quantizers to vary to improve visual
+	// quality.
+	AdaptiveQuantization *string `locationName:"adaptiveQuantization" type:"string" enum:"H265AdaptiveQuantization"`
+
+	// Indicates that AFD values will be written into the output stream. If afdSignaling
+	// is "auto", the system will try to preserve the input AFD value (in cases
+	// where multiple AFD values are valid). If set to "fixed", the AFD value will
+	// be the value configured in the fixedAfd parameter.
+	AfdSignaling *string `locationName:"afdSignaling" type:"string" enum:"AfdSignaling"`
+
+	// Whether or not EML should insert an Alternative Transfer Function SEI message
+	// to support backwards compatibility with non-HDR decoders and displays.
+	AlternativeTransferFunction *string `locationName:"alternativeTransferFunction" type:"string" enum:"H265AlternativeTransferFunction"`
+
+	// Average bitrate in bits/second. Required when the rate control mode is VBR
+	// or CBR. Not used for QVBR. In an MS Smooth output group, each output must
+	// have a unique value when its bitrate is rounded down to the nearest multiple
+	// of 1000.
+	Bitrate *int64 `locationName:"bitrate" min:"100000" type:"integer"`
+
+	// Size of buffer (HRD buffer model) in bits.
+	BufSize *int64 `locationName:"bufSize" min:"100000" type:"integer"`
+
+	// Includes colorspace metadata in the output.
+	ColorMetadata *string `locationName:"colorMetadata" type:"string" enum:"H265ColorMetadata"`
+
+	// Color Space settings
+	ColorSpaceSettings *H265ColorSpaceSettings `locationName:"colorSpaceSettings" type:"structure"`
+
+	// Four bit AFD value to write on all frames of video in the output stream.
+	// Only valid when afdSignaling is set to 'Fixed'.
+	FixedAfd *string `locationName:"fixedAfd" type:"string" enum:"FixedAfd"`
+
+	// If set to enabled, adjust quantization within each frame to reduce flicker
+	// or 'pop' on I-frames.
+	FlickerAq *string `locationName:"flickerAq" type:"string" enum:"H265FlickerAq"`
+
+	// Framerate denominator.
+	//
+	// FramerateDenominator is a required field
+	FramerateDenominator *int64 `locationName:"framerateDenominator" min:"1" type:"integer" required:"true"`
+
+	// Framerate numerator - framerate is a fraction, e.g. 24000 / 1001 = 23.976
+	// fps.
+	//
+	// FramerateNumerator is a required field
+	FramerateNumerator *int64 `locationName:"framerateNumerator" min:"1" type:"integer" required:"true"`
+
+	// Frequency of closed GOPs. In streaming applications, it is recommended that
+	// this be set to 1 so a decoder joining mid-stream will receive an IDR frame
+	// as quickly as possible. Setting this value to 0 will break output segmenting.
+	GopClosedCadence *int64 `locationName:"gopClosedCadence" type:"integer"`
+
+	// GOP size (keyframe interval) in units of either frames or seconds per gopSizeUnits.
+	// Must be greater than zero.
+	GopSize *float64 `locationName:"gopSize" type:"double"`
+
+	// Indicates if the gopSize is specified in frames or seconds. If seconds the
+	// system will convert the gopSize into a frame count at run time.
+	GopSizeUnits *string `locationName:"gopSizeUnits" type:"string" enum:"H265GopSizeUnits"`
+
+	// H.265 Level.
+	Level *string `locationName:"level" type:"string" enum:"H265Level"`
+
+	// Amount of lookahead. A value of low can decrease latency and memory usage,
+	// while high can produce better quality for certain content.
+	LookAheadRateControl *string `locationName:"lookAheadRateControl" type:"string" enum:"H265LookAheadRateControl"`
+
+	// For QVBR: See the tooltip for Quality level
+	MaxBitrate *int64 `locationName:"maxBitrate" min:"100000" type:"integer"`
+
+	// Only meaningful if sceneChangeDetect is set to enabled. Enforces separation
+	// between repeated (cadence) I-frames and I-frames inserted by Scene Change
+	// Detection. If a scene change I-frame is within I-interval frames of a cadence
+	// I-frame, the GOP is shrunk and/or stretched to the scene change I-frame.
+	// GOP stretch requires enabling lookahead as well as setting I-interval. The
+	// normal cadence resumes for the next GOP. Note: Maximum GOP stretch = GOP
+	// size + Min-I-interval - 1
+	MinIInterval *int64 `locationName:"minIInterval" type:"integer"`
+
+	// Pixel Aspect Ratio denominator.
+	ParDenominator *int64 `locationName:"parDenominator" min:"1" type:"integer"`
+
+	// Pixel Aspect Ratio numerator.
+	ParNumerator *int64 `locationName:"parNumerator" min:"1" type:"integer"`
+
+	// H.265 Profile.
+	Profile *string `locationName:"profile" type:"string" enum:"H265Profile"`
+
+	// Controls the target quality for the video encode. Applies only when the rate
+	// control mode is QVBR. Set values for the QVBR quality level field and Max
+	// bitrate field that suit your most important viewing devices. Recommended
+	// values are:- Primary screen: Quality level: 8 to 10. Max bitrate: 4M- PC
+	// or tablet: Quality level: 7. Max bitrate: 1.5M to 3M- Smartphone: Quality
+	// level: 6. Max bitrate: 1M to 1.5M
+	QvbrQualityLevel *int64 `locationName:"qvbrQualityLevel" min:"1" type:"integer"`
+
+	// Rate control mode.QVBR: Quality will match the specified quality level except
+	// when it is constrained by themaximum bitrate. Recommended if you or your
+	// viewers pay for bandwidth.CBR: Quality varies, depending on the video complexity.
+	// Recommended only if you distributeyour assets to devices that cannot handle
+	// variable bitrates.
+	RateControlMode *string `locationName:"rateControlMode" type:"string" enum:"H265RateControlMode"`
+
+	// Sets the scan type of the output to progressive or top-field-first interlaced.
+	ScanType *string `locationName:"scanType" type:"string" enum:"H265ScanType"`
+
+	// Scene change detection.
+	SceneChangeDetect *string `locationName:"sceneChangeDetect" type:"string" enum:"H265SceneChangeDetect"`
+
+	// Number of slices per picture. Must be less than or equal to the number of
+	// macroblock rows for progressive pictures, and less than or equal to half
+	// the number of macroblock rows for interlaced pictures.This field is optional;
+	// when no value is specified the encoder will choose the number of slices based
+	// on encode resolution.
+	Slices *int64 `locationName:"slices" min:"1" type:"integer"`
+
+	// H.265 Tier.
+	Tier *string `locationName:"tier" type:"string" enum:"H265Tier"`
+
+	// Determines how timecodes should be inserted into the video elementary stream.-
+	// 'disabled': Do not include timecodes- 'picTimingSei': Pass through picture
+	// timing SEI messages from the source specified in Timecode Config
+	TimecodeInsertion *string `locationName:"timecodeInsertion" type:"string" enum:"H265TimecodeInsertionBehavior"`
+}
+
+// String returns the string representation
+func (s H265Settings) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s H265Settings) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *H265Settings) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "H265Settings"}
+	if s.Bitrate != nil && *s.Bitrate < 100000 {
+		invalidParams.Add(request.NewErrParamMinValue("Bitrate", 100000))
+	}
+	if s.BufSize != nil && *s.BufSize < 100000 {
+		invalidParams.Add(request.NewErrParamMinValue("BufSize", 100000))
+	}
+	if s.FramerateDenominator == nil {
+		invalidParams.Add(request.NewErrParamRequired("FramerateDenominator"))
+	}
+	if s.FramerateDenominator != nil && *s.FramerateDenominator < 1 {
+		invalidParams.Add(request.NewErrParamMinValue("FramerateDenominator", 1))
+	}
+	if s.FramerateNumerator == nil {
+		invalidParams.Add(request.NewErrParamRequired("FramerateNumerator"))
+	}
+	if s.FramerateNumerator != nil && *s.FramerateNumerator < 1 {
+		invalidParams.Add(request.NewErrParamMinValue("FramerateNumerator", 1))
+	}
+	if s.MaxBitrate != nil && *s.MaxBitrate < 100000 {
+		invalidParams.Add(request.NewErrParamMinValue("MaxBitrate", 100000))
+	}
+	if s.ParDenominator != nil && *s.ParDenominator < 1 {
+		invalidParams.Add(request.NewErrParamMinValue("ParDenominator", 1))
+	}
+	if s.ParNumerator != nil && *s.ParNumerator < 1 {
+		invalidParams.Add(request.NewErrParamMinValue("ParNumerator", 1))
+	}
+	if s.QvbrQualityLevel != nil && *s.QvbrQualityLevel < 1 {
+		invalidParams.Add(request.NewErrParamMinValue("QvbrQualityLevel", 1))
+	}
+	if s.Slices != nil && *s.Slices < 1 {
+		invalidParams.Add(request.NewErrParamMinValue("Slices", 1))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetAdaptiveQuantization sets the AdaptiveQuantization field's value.
+func (s *H265Settings) SetAdaptiveQuantization(v string) *H265Settings {
+	s.AdaptiveQuantization = &v
+	return s
+}
+
+// SetAfdSignaling sets the AfdSignaling field's value.
+func (s *H265Settings) SetAfdSignaling(v string) *H265Settings {
+	s.AfdSignaling = &v
+	return s
+}
+
+// SetAlternativeTransferFunction sets the AlternativeTransferFunction field's value.
+func (s *H265Settings) SetAlternativeTransferFunction(v string) *H265Settings {
+	s.AlternativeTransferFunction = &v
+	return s
+}
+
+// SetBitrate sets the Bitrate field's value.
+func (s *H265Settings) SetBitrate(v int64) *H265Settings {
+	s.Bitrate = &v
+	return s
+}
+
+// SetBufSize sets the BufSize field's value.
+func (s *H265Settings) SetBufSize(v int64) *H265Settings {
+	s.BufSize = &v
+	return s
+}
+
+// SetColorMetadata sets the ColorMetadata field's value.
+func (s *H265Settings) SetColorMetadata(v string) *H265Settings {
+	s.ColorMetadata = &v
+	return s
+}
+
+// SetColorSpaceSettings sets the ColorSpaceSettings field's value.
+func (s *H265Settings) SetColorSpaceSettings(v *H265ColorSpaceSettings) *H265Settings {
+	s.ColorSpaceSettings = v
+	return s
+}
+
+// SetFixedAfd sets the FixedAfd field's value.
+func (s *H265Settings) SetFixedAfd(v string) *H265Settings {
+	s.FixedAfd = &v
+	return s
+}
+
+// SetFlickerAq sets the FlickerAq field's value.
+func (s *H265Settings) SetFlickerAq(v string) *H265Settings {
+	s.FlickerAq = &v
+	return s
+}
+
+// SetFramerateDenominator sets the FramerateDenominator field's value.
+func (s *H265Settings) SetFramerateDenominator(v int64) *H265Settings {
+	s.FramerateDenominator = &v
+	return s
+}
+
+// SetFramerateNumerator sets the FramerateNumerator field's value.
+func (s *H265Settings) SetFramerateNumerator(v int64) *H265Settings {
+	s.FramerateNumerator = &v
+	return s
+}
+
+// SetGopClosedCadence sets the GopClosedCadence field's value.
+func (s *H265Settings) SetGopClosedCadence(v int64) *H265Settings {
+	s.GopClosedCadence = &v
+	return s
+}
+
+// SetGopSize sets the GopSize field's value.
+func (s *H265Settings) SetGopSize(v float64) *H265Settings {
+	s.GopSize = &v
+	return s
+}
+
+// SetGopSizeUnits sets the GopSizeUnits field's value.
+func (s *H265Settings) SetGopSizeUnits(v string) *H265Settings {
+	s.GopSizeUnits = &v
+	return s
+}
+
+// SetLevel sets the Level field's value.
+func (s *H265Settings) SetLevel(v string) *H265Settings {
+	s.Level = &v
+	return s
+}
+
+// SetLookAheadRateControl sets the LookAheadRateControl field's value.
+func (s *H265Settings) SetLookAheadRateControl(v string) *H265Settings {
+	s.LookAheadRateControl = &v
+	return s
+}
+
+// SetMaxBitrate sets the MaxBitrate field's value.
+func (s *H265Settings) SetMaxBitrate(v int64) *H265Settings {
+	s.MaxBitrate = &v
+	return s
+}
+
+// SetMinIInterval sets the MinIInterval field's value.
+func (s *H265Settings) SetMinIInterval(v int64) *H265Settings {
+	s.MinIInterval = &v
+	return s
+}
+
+// SetParDenominator sets the ParDenominator field's value.
+func (s *H265Settings) SetParDenominator(v int64) *H265Settings {
+	s.ParDenominator = &v
+	return s
+}
+
+// SetParNumerator sets the ParNumerator field's value.
+func (s *H265Settings) SetParNumerator(v int64) *H265Settings {
+	s.ParNumerator = &v
+	return s
+}
+
+// SetProfile sets the Profile field's value.
+func (s *H265Settings) SetProfile(v string) *H265Settings {
+	s.Profile = &v
+	return s
+}
+
+// SetQvbrQualityLevel sets the QvbrQualityLevel field's value.
+func (s *H265Settings) SetQvbrQualityLevel(v int64) *H265Settings {
+	s.QvbrQualityLevel = &v
+	return s
+}
+
+// SetRateControlMode sets the RateControlMode field's value.
+func (s *H265Settings) SetRateControlMode(v string) *H265Settings {
+	s.RateControlMode = &v
+	return s
+}
+
+// SetScanType sets the ScanType field's value.
+func (s *H265Settings) SetScanType(v string) *H265Settings {
+	s.ScanType = &v
+	return s
+}
+
+// SetSceneChangeDetect sets the SceneChangeDetect field's value.
+func (s *H265Settings) SetSceneChangeDetect(v string) *H265Settings {
+	s.SceneChangeDetect = &v
+	return s
+}
+
+// SetSlices sets the Slices field's value.
+func (s *H265Settings) SetSlices(v int64) *H265Settings {
+	s.Slices = &v
+	return s
+}
+
+// SetTier sets the Tier field's value.
+func (s *H265Settings) SetTier(v string) *H265Settings {
+	s.Tier = &v
+	return s
+}
+
+// SetTimecodeInsertion sets the TimecodeInsertion field's value.
+func (s *H265Settings) SetTimecodeInsertion(v string) *H265Settings {
+	s.TimecodeInsertion = &v
+	return s
+}
+
+// Hdr10 Settings
+type Hdr10Settings struct {
+	_ struct{} `type:"structure"`
+
+	// Maximum Content Light LevelAn integer metadata value defining the maximum
+	// light level, in nits,of any single pixel within an encoded HDR video stream
+	// or file.
+	MaxCll *int64 `locationName:"maxCll" type:"integer"`
+
+	// Maximum Frame Average Light LevelAn integer metadata value defining the maximum
+	// average light level, in nits,for any single frame within an encoded HDR video
+	// stream or file.
+	MaxFall *int64 `locationName:"maxFall" type:"integer"`
+}
+
+// String returns the string representation
+func (s Hdr10Settings) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s Hdr10Settings) GoString() string {
+	return s.String()
+}
+
+// SetMaxCll sets the MaxCll field's value.
+func (s *Hdr10Settings) SetMaxCll(v int64) *Hdr10Settings {
+	s.MaxCll = &v
+	return s
+}
+
+// SetMaxFall sets the MaxFall field's value.
+func (s *Hdr10Settings) SetMaxFall(v int64) *Hdr10Settings {
+	s.MaxFall = &v
+	return s
+}
+
+// Hls Akamai Settings
 type HlsAkamaiSettings struct {
 	_ struct{} `type:"structure"`
 
@@ -8862,6 +9885,7 @@ func (s *HlsAkamaiSettings) SetToken(v string) *HlsAkamaiSettings {
 	return s
 }
 
+// Hls Basic Put Settings
 type HlsBasicPutSettings struct {
 	_ struct{} `type:"structure"`
 
@@ -8915,15 +9939,20 @@ func (s *HlsBasicPutSettings) SetRestartDelay(v int64) *HlsBasicPutSettings {
 	return s
 }
 
+// Hls Cdn Settings
 type HlsCdnSettings struct {
 	_ struct{} `type:"structure"`
 
+	// Hls Akamai Settings
 	HlsAkamaiSettings *HlsAkamaiSettings `locationName:"hlsAkamaiSettings" type:"structure"`
 
+	// Hls Basic Put Settings
 	HlsBasicPutSettings *HlsBasicPutSettings `locationName:"hlsBasicPutSettings" type:"structure"`
 
+	// Hls Media Store Settings
 	HlsMediaStoreSettings *HlsMediaStoreSettings `locationName:"hlsMediaStoreSettings" type:"structure"`
 
+	// Hls Webdav Settings
 	HlsWebdavSettings *HlsWebdavSettings `locationName:"hlsWebdavSettings" type:"structure"`
 }
 
@@ -8961,6 +9990,7 @@ func (s *HlsCdnSettings) SetHlsWebdavSettings(v *HlsWebdavSettings) *HlsCdnSetti
 	return s
 }
 
+// Hls Group Settings
 type HlsGroupSettings struct {
 	_ struct{} `type:"structure"`
 
@@ -9426,6 +10456,7 @@ func (s *HlsGroupSettings) SetTsFileMode(v string) *HlsGroupSettings {
 	return s
 }
 
+// Hls Input Settings
 type HlsInputSettings struct {
 	_ struct{} `type:"structure"`
 
@@ -9483,6 +10514,7 @@ func (s *HlsInputSettings) SetRetryInterval(v int64) *HlsInputSettings {
 	return s
 }
 
+// Hls Media Store Settings
 type HlsMediaStoreSettings struct {
 	_ struct{} `type:"structure"`
 
@@ -9546,6 +10578,7 @@ func (s *HlsMediaStoreSettings) SetRestartDelay(v int64) *HlsMediaStoreSettings 
 	return s
 }
 
+// Hls Output Settings
 type HlsOutputSettings struct {
 	_ struct{} `type:"structure"`
 
@@ -9612,11 +10645,14 @@ func (s *HlsOutputSettings) SetSegmentModifier(v string) *HlsOutputSettings {
 	return s
 }
 
+// Hls Settings
 type HlsSettings struct {
 	_ struct{} `type:"structure"`
 
+	// Audio Only Hls Settings
 	AudioOnlyHlsSettings *AudioOnlyHlsSettings `locationName:"audioOnlyHlsSettings" type:"structure"`
 
+	// Standard Hls Settings
 	StandardHlsSettings *StandardHlsSettings `locationName:"standardHlsSettings" type:"structure"`
 }
 
@@ -9701,6 +10737,7 @@ func (s *HlsTimedMetadataScheduleActionSettings) SetId3(v string) *HlsTimedMetad
 	return s
 }
 
+// Hls Webdav Settings
 type HlsWebdavSettings struct {
 	_ struct{} `type:"structure"`
 
@@ -9763,6 +10800,22 @@ func (s *HlsWebdavSettings) SetRestartDelay(v int64) *HlsWebdavSettings {
 	return s
 }
 
+// Settings to configure an action so that it occurs immediately. This is only
+// supported for input switch actions currently.
+type ImmediateModeScheduleActionStartSettings struct {
+	_ struct{} `type:"structure"`
+}
+
+// String returns the string representation
+func (s ImmediateModeScheduleActionStartSettings) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ImmediateModeScheduleActionStartSettings) GoString() string {
+	return s.String()
+}
+
 type Input struct {
 	_ struct{} `type:"structure"`
 
@@ -9778,6 +10831,20 @@ type Input struct {
 
 	// The generated ID of the input (unique for user account, immutable).
 	Id *string `locationName:"id" type:"string"`
+
+	// STANDARD - MediaLive expects two sources to be connected to this input. If
+	// the channel is also STANDARD, both sources will be ingested. If the channel
+	// is SINGLE_PIPELINE, only the first source will be ingested; the second source
+	// will always be ignored, even if the first source fails.SINGLE_PIPELINE -
+	// You can connect only one source to this input. If the ChannelClass is also
+	// SINGLE_PIPELINE, this value is valid. If the ChannelClass is STANDARD, this
+	// value is not valid because the channel requires two sources in the input.
+	InputClass *string `locationName:"inputClass" type:"string" enum:"InputClass"`
+
+	// Certain pull input sources can be dynamic, meaning that they can have their
+	// URL's dynamically changesduring input switch actions. Presently, this functionality
+	// only works with MP4_FILE inputs.
+	InputSourceType *string `locationName:"inputSourceType" type:"string" enum:"InputSourceType"`
 
 	// A list of MediaConnect Flows for this input.
 	MediaConnectFlows []*MediaConnectFlow `locationName:"mediaConnectFlows" type:"list"`
@@ -9834,6 +10901,18 @@ func (s *Input) SetDestinations(v []*InputDestination) *Input {
 // SetId sets the Id field's value.
 func (s *Input) SetId(v string) *Input {
 	s.Id = &v
+	return s
+}
+
+// SetInputClass sets the InputClass field's value.
+func (s *Input) SetInputClass(v string) *Input {
+	s.InputClass = &v
+	return s
+}
+
+// SetInputSourceType sets the InputSourceType field's value.
+func (s *Input) SetInputSourceType(v string) *Input {
+	s.InputSourceType = &v
 	return s
 }
 
@@ -9942,6 +11021,7 @@ func (s *InputAttachment) SetInputSettings(v *InputSettings) *InputAttachment {
 	return s
 }
 
+// Input Channel Level
 type InputChannelLevel struct {
 	_ struct{} `type:"structure"`
 
@@ -9995,6 +11075,64 @@ func (s *InputChannelLevel) SetGain(v int64) *InputChannelLevel {
 // SetInputChannel sets the InputChannel field's value.
 func (s *InputChannelLevel) SetInputChannel(v int64) *InputChannelLevel {
 	s.InputChannel = &v
+	return s
+}
+
+// Settings to let you create a clip of the file input, in order to set up the
+// input to ingest only a portion of the file.
+type InputClippingSettings struct {
+	_ struct{} `type:"structure"`
+
+	// The source of the timecodes in the source being clipped.
+	//
+	// InputTimecodeSource is a required field
+	InputTimecodeSource *string `locationName:"inputTimecodeSource" type:"string" required:"true" enum:"InputTimecodeSource"`
+
+	// Settings to identify the start of the clip.
+	StartTimecode *StartTimecode `locationName:"startTimecode" type:"structure"`
+
+	// Settings to identify the end of the clip.
+	StopTimecode *StopTimecode `locationName:"stopTimecode" type:"structure"`
+}
+
+// String returns the string representation
+func (s InputClippingSettings) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s InputClippingSettings) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *InputClippingSettings) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "InputClippingSettings"}
+	if s.InputTimecodeSource == nil {
+		invalidParams.Add(request.NewErrParamRequired("InputTimecodeSource"))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetInputTimecodeSource sets the InputTimecodeSource field's value.
+func (s *InputClippingSettings) SetInputTimecodeSource(v string) *InputClippingSettings {
+	s.InputTimecodeSource = &v
+	return s
+}
+
+// SetStartTimecode sets the StartTimecode field's value.
+func (s *InputClippingSettings) SetStartTimecode(v *StartTimecode) *InputClippingSettings {
+	s.StartTimecode = v
+	return s
+}
+
+// SetStopTimecode sets the StopTimecode field's value.
+func (s *InputClippingSettings) SetStopTimecode(v *StopTimecode) *InputClippingSettings {
+	s.StopTimecode = v
 	return s
 }
 
@@ -10107,6 +11245,7 @@ func (s *InputDestinationVpc) SetNetworkInterfaceId(v string) *InputDestinationV
 	return s
 }
 
+// Input Location
 type InputLocation struct {
 	_ struct{} `type:"structure"`
 
@@ -10168,6 +11307,7 @@ func (s *InputLocation) SetUsername(v string) *InputLocation {
 	return s
 }
 
+// Input Loss Behavior
 type InputLossBehavior struct {
 	_ struct{} `type:"structure"`
 
@@ -10581,14 +11721,26 @@ func (s *InputSpecification) SetResolution(v string) *InputSpecification {
 	return s
 }
 
-// Settings for the action to switch an input.
+// Settings for the "switch input" action: to switch from ingesting one input
+// to ingesting another input.
 type InputSwitchScheduleActionSettings struct {
 	_ struct{} `type:"structure"`
 
-	// The name of the input attachment that should be switched to by this action.
+	// The name of the input attachment (not the name of the input!) to switch to.
+	// The name is specified in the channel configuration.
 	//
 	// InputAttachmentNameReference is a required field
 	InputAttachmentNameReference *string `locationName:"inputAttachmentNameReference" type:"string" required:"true"`
+
+	// Settings to let you create a clip of the file input, in order to set up the
+	// input to ingest only a portion of the file.
+	InputClippingSettings *InputClippingSettings `locationName:"inputClippingSettings" type:"structure"`
+
+	// The value for the variable portion of the URL for the dynamic input, for
+	// this instance of the input. Each time you use the same dynamic input in an
+	// input switch action, you can provide a different value, in order to connect
+	// the input to a different content source.
+	UrlPath []*string `locationName:"urlPath" type:"list"`
 }
 
 // String returns the string representation
@@ -10607,6 +11759,11 @@ func (s *InputSwitchScheduleActionSettings) Validate() error {
 	if s.InputAttachmentNameReference == nil {
 		invalidParams.Add(request.NewErrParamRequired("InputAttachmentNameReference"))
 	}
+	if s.InputClippingSettings != nil {
+		if err := s.InputClippingSettings.Validate(); err != nil {
+			invalidParams.AddNested("InputClippingSettings", err.(request.ErrInvalidParams))
+		}
+	}
 
 	if invalidParams.Len() > 0 {
 		return invalidParams
@@ -10617,6 +11774,18 @@ func (s *InputSwitchScheduleActionSettings) Validate() error {
 // SetInputAttachmentNameReference sets the InputAttachmentNameReference field's value.
 func (s *InputSwitchScheduleActionSettings) SetInputAttachmentNameReference(v string) *InputSwitchScheduleActionSettings {
 	s.InputAttachmentNameReference = &v
+	return s
+}
+
+// SetInputClippingSettings sets the InputClippingSettings field's value.
+func (s *InputSwitchScheduleActionSettings) SetInputClippingSettings(v *InputClippingSettings) *InputSwitchScheduleActionSettings {
+	s.InputClippingSettings = v
+	return s
+}
+
+// SetUrlPath sets the UrlPath field's value.
+func (s *InputSwitchScheduleActionSettings) SetUrlPath(v []*string) *InputSwitchScheduleActionSettings {
+	s.UrlPath = v
 	return s
 }
 
@@ -10722,9 +11891,11 @@ func (s *InputWhitelistRuleCidr) SetCidr(v string) *InputWhitelistRuleCidr {
 	return s
 }
 
+// Key Provider Settings
 type KeyProviderSettings struct {
 	_ struct{} `type:"structure"`
 
+	// Static Key Settings
 	StaticKeySettings *StaticKeySettings `locationName:"staticKeySettings" type:"structure"`
 }
 
@@ -10981,6 +12152,8 @@ func (s *ListInputsOutput) SetNextToken(v string) *ListInputsOutput {
 type ListOfferingsInput struct {
 	_ struct{} `type:"structure"`
 
+	ChannelClass *string `location:"querystring" locationName:"channelClass" type:"string"`
+
 	ChannelConfiguration *string `location:"querystring" locationName:"channelConfiguration" type:"string"`
 
 	Codec *string `location:"querystring" locationName:"codec" type:"string"`
@@ -11023,6 +12196,12 @@ func (s *ListOfferingsInput) Validate() error {
 		return invalidParams
 	}
 	return nil
+}
+
+// SetChannelClass sets the ChannelClass field's value.
+func (s *ListOfferingsInput) SetChannelClass(v string) *ListOfferingsInput {
+	s.ChannelClass = &v
+	return s
 }
 
 // SetChannelConfiguration sets the ChannelConfiguration field's value.
@@ -11118,6 +12297,8 @@ func (s *ListOfferingsOutput) SetOfferings(v []*Offering) *ListOfferingsOutput {
 type ListReservationsInput struct {
 	_ struct{} `type:"structure"`
 
+	ChannelClass *string `location:"querystring" locationName:"channelClass" type:"string"`
+
 	Codec *string `location:"querystring" locationName:"codec" type:"string"`
 
 	MaxResults *int64 `location:"querystring" locationName:"maxResults" min:"1" type:"integer"`
@@ -11158,6 +12339,12 @@ func (s *ListReservationsInput) Validate() error {
 		return invalidParams
 	}
 	return nil
+}
+
+// SetChannelClass sets the ChannelClass field's value.
+func (s *ListReservationsInput) SetChannelClass(v string) *ListReservationsInput {
+	s.ChannelClass = &v
+	return s
 }
 
 // SetCodec sets the Codec field's value.
@@ -11305,6 +12492,7 @@ func (s *ListTagsForResourceOutput) SetTags(v map[string]*string) *ListTagsForRe
 	return s
 }
 
+// M2ts Settings
 type M2tsSettings struct {
 	_ struct{} `type:"structure"`
 
@@ -12102,7 +13290,7 @@ func (s *MediaPackageGroupSettings) SetDestination(v *OutputLocationRef) *MediaP
 	return s
 }
 
-// Media Package Output Destination Settings
+// MediaPackage Output Destination Settings
 type MediaPackageOutputDestinationSettings struct {
 	_ struct{} `type:"structure"`
 
@@ -12158,6 +13346,7 @@ func (s MediaPackageOutputSettings) GoString() string {
 	return s.String()
 }
 
+// Mp2 Settings
 type Mp2Settings struct {
 	_ struct{} `type:"structure"`
 
@@ -12200,6 +13389,7 @@ func (s *Mp2Settings) SetSampleRate(v float64) *Mp2Settings {
 	return s
 }
 
+// Ms Smooth Group Settings
 type MsSmoothGroupSettings struct {
 	_ struct{} `type:"structure"`
 
@@ -12425,8 +13615,13 @@ func (s *MsSmoothGroupSettings) SetTimestampOffsetMode(v string) *MsSmoothGroupS
 	return s
 }
 
+// Ms Smooth Output Settings
 type MsSmoothOutputSettings struct {
 	_ struct{} `type:"structure"`
+
+	// Only applicable when this output is referencing an H.265 video description.Specifies
+	// whether MP4 segments should be packaged as HEV1 or HVC1.
+	H265PackagingType *string `locationName:"h265PackagingType" type:"string" enum:"MsSmoothH265PackagingType"`
 
 	// String concatenated to the end of the destination filename. Required for
 	// multiple outputs of the same type.
@@ -12441,6 +13636,12 @@ func (s MsSmoothOutputSettings) String() string {
 // GoString returns the string representation
 func (s MsSmoothOutputSettings) GoString() string {
 	return s.String()
+}
+
+// SetH265PackagingType sets the H265PackagingType field's value.
+func (s *MsSmoothOutputSettings) SetH265PackagingType(v string) *MsSmoothOutputSettings {
+	s.H265PackagingType = &v
+	return s
 }
 
 // SetNameModifier sets the NameModifier field's value.
@@ -12876,23 +14077,29 @@ func (s *OutputGroup) SetOutputs(v []*Output) *OutputGroup {
 	return s
 }
 
+// Output Group Settings
 type OutputGroupSettings struct {
 	_ struct{} `type:"structure"`
 
+	// Archive Group Settings
 	ArchiveGroupSettings *ArchiveGroupSettings `locationName:"archiveGroupSettings" type:"structure"`
 
 	// Frame Capture Group Settings
 	FrameCaptureGroupSettings *FrameCaptureGroupSettings `locationName:"frameCaptureGroupSettings" type:"structure"`
 
+	// Hls Group Settings
 	HlsGroupSettings *HlsGroupSettings `locationName:"hlsGroupSettings" type:"structure"`
 
 	// Media Package Group Settings
 	MediaPackageGroupSettings *MediaPackageGroupSettings `locationName:"mediaPackageGroupSettings" type:"structure"`
 
+	// Ms Smooth Group Settings
 	MsSmoothGroupSettings *MsSmoothGroupSettings `locationName:"msSmoothGroupSettings" type:"structure"`
 
+	// Rtmp Group Settings
 	RtmpGroupSettings *RtmpGroupSettings `locationName:"rtmpGroupSettings" type:"structure"`
 
+	// Udp Group Settings
 	UdpGroupSettings *UdpGroupSettings `locationName:"udpGroupSettings" type:"structure"`
 }
 
@@ -13011,23 +14218,29 @@ func (s *OutputLocationRef) SetDestinationRefId(v string) *OutputLocationRef {
 	return s
 }
 
+// Output Settings
 type OutputSettings struct {
 	_ struct{} `type:"structure"`
 
+	// Archive Output Settings
 	ArchiveOutputSettings *ArchiveOutputSettings `locationName:"archiveOutputSettings" type:"structure"`
 
 	// Frame Capture Output Settings
 	FrameCaptureOutputSettings *FrameCaptureOutputSettings `locationName:"frameCaptureOutputSettings" type:"structure"`
 
+	// Hls Output Settings
 	HlsOutputSettings *HlsOutputSettings `locationName:"hlsOutputSettings" type:"structure"`
 
 	// Media Package Output Settings
 	MediaPackageOutputSettings *MediaPackageOutputSettings `locationName:"mediaPackageOutputSettings" type:"structure"`
 
+	// Ms Smooth Output Settings
 	MsSmoothOutputSettings *MsSmoothOutputSettings `locationName:"msSmoothOutputSettings" type:"structure"`
 
+	// Rtmp Output Settings
 	RtmpOutputSettings *RtmpOutputSettings `locationName:"rtmpOutputSettings" type:"structure"`
 
+	// Udp Output Settings
 	UdpOutputSettings *UdpOutputSettings `locationName:"udpOutputSettings" type:"structure"`
 }
 
@@ -13113,6 +14326,7 @@ func (s *OutputSettings) SetUdpOutputSettings(v *UdpOutputSettings) *OutputSetti
 	return s
 }
 
+// Pass Through Settings
 type PassThroughSettings struct {
 	_ struct{} `type:"structure"`
 }
@@ -13170,6 +14384,51 @@ func (s *PauseStateScheduleActionSettings) SetPipelines(v []*PipelinePauseStateS
 	return s
 }
 
+// Runtime details of a pipeline when a channel is running.
+type PipelineDetail struct {
+	_ struct{} `type:"structure"`
+
+	// The name of the active input attachment currently being ingested by this
+	// pipeline.
+	ActiveInputAttachmentName *string `locationName:"activeInputAttachmentName" type:"string"`
+
+	// The name of the input switch schedule action that occurred most recently
+	// and that resulted in the switch to the current input attachment for this
+	// pipeline.
+	ActiveInputSwitchActionName *string `locationName:"activeInputSwitchActionName" type:"string"`
+
+	// Pipeline ID
+	PipelineId *string `locationName:"pipelineId" type:"string"`
+}
+
+// String returns the string representation
+func (s PipelineDetail) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s PipelineDetail) GoString() string {
+	return s.String()
+}
+
+// SetActiveInputAttachmentName sets the ActiveInputAttachmentName field's value.
+func (s *PipelineDetail) SetActiveInputAttachmentName(v string) *PipelineDetail {
+	s.ActiveInputAttachmentName = &v
+	return s
+}
+
+// SetActiveInputSwitchActionName sets the ActiveInputSwitchActionName field's value.
+func (s *PipelineDetail) SetActiveInputSwitchActionName(v string) *PipelineDetail {
+	s.ActiveInputSwitchActionName = &v
+	return s
+}
+
+// SetPipelineId sets the PipelineId field's value.
+func (s *PipelineDetail) SetPipelineId(v string) *PipelineDetail {
+	s.PipelineId = &v
+	return s
+}
+
 // Settings for pausing a pipeline.
 type PipelinePauseStateSettings struct {
 	_ struct{} `type:"structure"`
@@ -13223,6 +14482,8 @@ type PurchaseOfferingInput struct {
 	RequestId *string `locationName:"requestId" type:"string" idempotencyToken:"true"`
 
 	Start *string `locationName:"start" type:"string"`
+
+	Tags map[string]*string `locationName:"tags" type:"map"`
 }
 
 // String returns the string representation
@@ -13287,6 +14548,12 @@ func (s *PurchaseOfferingInput) SetStart(v string) *PurchaseOfferingInput {
 	return s
 }
 
+// SetTags sets the Tags field's value.
+func (s *PurchaseOfferingInput) SetTags(v map[string]*string) *PurchaseOfferingInput {
+	s.Tags = v
+	return s
+}
+
 type PurchaseOfferingOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -13310,6 +14577,37 @@ func (s *PurchaseOfferingOutput) SetReservation(v *Reservation) *PurchaseOfferin
 	return s
 }
 
+// Rec601 Settings
+type Rec601Settings struct {
+	_ struct{} `type:"structure"`
+}
+
+// String returns the string representation
+func (s Rec601Settings) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s Rec601Settings) GoString() string {
+	return s.String()
+}
+
+// Rec709 Settings
+type Rec709Settings struct {
+	_ struct{} `type:"structure"`
+}
+
+// String returns the string representation
+func (s Rec709Settings) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s Rec709Settings) GoString() string {
+	return s.String()
+}
+
+// Remix Settings
 type RemixSettings struct {
 	_ struct{} `type:"structure"`
 
@@ -13435,6 +14733,9 @@ type Reservation struct {
 	// Current state of reservation, e.g. 'ACTIVE'
 	State *string `locationName:"state" type:"string" enum:"ReservationState"`
 
+	// A collection of key-value pairs
+	Tags map[string]*string `locationName:"tags" type:"map"`
+
 	// Recurring usage charge for each reserved resource, e.g. '157.0'
 	UsagePrice *float64 `locationName:"usagePrice" type:"double"`
 }
@@ -13545,6 +14846,12 @@ func (s *Reservation) SetState(v string) *Reservation {
 	return s
 }
 
+// SetTags sets the Tags field's value.
+func (s *Reservation) SetTags(v map[string]*string) *Reservation {
+	s.Tags = v
+	return s
+}
+
 // SetUsagePrice sets the UsagePrice field's value.
 func (s *Reservation) SetUsagePrice(v float64) *Reservation {
 	s.UsagePrice = &v
@@ -13554,6 +14861,9 @@ func (s *Reservation) SetUsagePrice(v float64) *Reservation {
 // Resource configuration (codec, resolution, bitrate, ...)
 type ReservationResourceSpecification struct {
 	_ struct{} `type:"structure"`
+
+	// Channel class, e.g. 'STANDARD'
+	ChannelClass *string `locationName:"channelClass" type:"string" enum:"ChannelClass"`
 
 	// Codec, e.g. 'AVC'
 	Codec *string `locationName:"codec" type:"string" enum:"ReservationCodec"`
@@ -13585,6 +14895,12 @@ func (s ReservationResourceSpecification) String() string {
 // GoString returns the string representation
 func (s ReservationResourceSpecification) GoString() string {
 	return s.String()
+}
+
+// SetChannelClass sets the ChannelClass field's value.
+func (s *ReservationResourceSpecification) SetChannelClass(v string) *ReservationResourceSpecification {
+	s.ChannelClass = &v
+	return s
 }
 
 // SetCodec sets the Codec field's value.
@@ -13629,6 +14945,7 @@ func (s *ReservationResourceSpecification) SetVideoQuality(v string) *Reservatio
 	return s
 }
 
+// Rtmp Caption Info Destination Settings
 type RtmpCaptionInfoDestinationSettings struct {
 	_ struct{} `type:"structure"`
 }
@@ -13643,6 +14960,7 @@ func (s RtmpCaptionInfoDestinationSettings) GoString() string {
 	return s.String()
 }
 
+// Rtmp Group Settings
 type RtmpGroupSettings struct {
 	_ struct{} `type:"structure"`
 
@@ -13737,6 +15055,7 @@ func (s *RtmpGroupSettings) SetRestartDelay(v int64) *RtmpGroupSettings {
 	return s
 }
 
+// Rtmp Output Settings
 type RtmpOutputSettings struct {
 	_ struct{} `type:"structure"`
 
@@ -14023,15 +15342,19 @@ func (s *ScheduleActionSettings) SetStaticImageDeactivateSettings(v *StaticImage
 	return s
 }
 
-// Settings to specify the start time for an action.
+// Settings to specify when an action should occur. Only one of the options
+// must be selected.
 type ScheduleActionStartSettings struct {
 	_ struct{} `type:"structure"`
 
-	// Holds the start time for the action.
+	// Option for specifying the start time for an action.
 	FixedModeScheduleActionStartSettings *FixedModeScheduleActionStartSettings `locationName:"fixedModeScheduleActionStartSettings" type:"structure"`
 
-	// Specifies an action to follow for scheduling this action.
+	// Option for specifying an action as relative to another action.
 	FollowModeScheduleActionStartSettings *FollowModeScheduleActionStartSettings `locationName:"followModeScheduleActionStartSettings" type:"structure"`
+
+	// Option for specifying an action that should be applied immediately.
+	ImmediateModeScheduleActionStartSettings *ImmediateModeScheduleActionStartSettings `locationName:"immediateModeScheduleActionStartSettings" type:"structure"`
 }
 
 // String returns the string representation
@@ -14076,6 +15399,13 @@ func (s *ScheduleActionStartSettings) SetFollowModeScheduleActionStartSettings(v
 	return s
 }
 
+// SetImmediateModeScheduleActionStartSettings sets the ImmediateModeScheduleActionStartSettings field's value.
+func (s *ScheduleActionStartSettings) SetImmediateModeScheduleActionStartSettings(v *ImmediateModeScheduleActionStartSettings) *ScheduleActionStartSettings {
+	s.ImmediateModeScheduleActionStartSettings = v
+	return s
+}
+
+// Scte20 Plus Embedded Destination Settings
 type Scte20PlusEmbeddedDestinationSettings struct {
 	_ struct{} `type:"structure"`
 }
@@ -14090,6 +15420,7 @@ func (s Scte20PlusEmbeddedDestinationSettings) GoString() string {
 	return s.String()
 }
 
+// Scte20 Source Settings
 type Scte20SourceSettings struct {
 	_ struct{} `type:"structure"`
 
@@ -14138,6 +15469,7 @@ func (s *Scte20SourceSettings) SetSource608ChannelNumber(v int64) *Scte20SourceS
 	return s
 }
 
+// Scte27 Destination Settings
 type Scte27DestinationSettings struct {
 	_ struct{} `type:"structure"`
 }
@@ -14152,6 +15484,7 @@ func (s Scte27DestinationSettings) GoString() string {
 	return s.String()
 }
 
+// Scte27 Source Settings
 type Scte27SourceSettings struct {
 	_ struct{} `type:"structure"`
 
@@ -14562,6 +15895,7 @@ func (s *Scte35SegmentationDescriptor) SetSubSegmentsExpected(v int64) *Scte35Se
 	return s
 }
 
+// Scte35 Splice Insert
 type Scte35SpliceInsert struct {
 	_ struct{} `type:"structure"`
 
@@ -14673,6 +16007,7 @@ func (s *Scte35SpliceInsertScheduleActionSettings) SetSpliceEventId(v int64) *Sc
 	return s
 }
 
+// Scte35 Time Signal Apos
 type Scte35TimeSignalApos struct {
 	_ struct{} `type:"structure"`
 
@@ -14780,6 +16115,7 @@ func (s *Scte35TimeSignalScheduleActionSettings) SetScte35Descriptors(v []*Scte3
 	return s
 }
 
+// Smpte Tt Destination Settings
 type SmpteTtDestinationSettings struct {
 	_ struct{} `type:"structure"`
 }
@@ -14794,6 +16130,7 @@ func (s SmpteTtDestinationSettings) GoString() string {
 	return s.String()
 }
 
+// Standard Hls Settings
 type StandardHlsSettings struct {
 	_ struct{} `type:"structure"`
 
@@ -14886,10 +16223,15 @@ type StartChannelOutput struct {
 
 	Arn *string `locationName:"arn" type:"string"`
 
+	// A standard channel has two encoding pipelines and a single pipeline channel
+	// only has one.
+	ChannelClass *string `locationName:"channelClass" type:"string" enum:"ChannelClass"`
+
 	Destinations []*OutputDestination `locationName:"destinations" type:"list"`
 
 	EgressEndpoints []*ChannelEgressEndpoint `locationName:"egressEndpoints" type:"list"`
 
+	// Encoder Settings
 	EncoderSettings *EncoderSettings `locationName:"encoderSettings" type:"structure"`
 
 	Id *string `locationName:"id" type:"string"`
@@ -14902,6 +16244,8 @@ type StartChannelOutput struct {
 	LogLevel *string `locationName:"logLevel" type:"string" enum:"LogLevel"`
 
 	Name *string `locationName:"name" type:"string"`
+
+	PipelineDetails []*PipelineDetail `locationName:"pipelineDetails" type:"list"`
 
 	PipelinesRunningCount *int64 `locationName:"pipelinesRunningCount" type:"integer"`
 
@@ -14925,6 +16269,12 @@ func (s StartChannelOutput) GoString() string {
 // SetArn sets the Arn field's value.
 func (s *StartChannelOutput) SetArn(v string) *StartChannelOutput {
 	s.Arn = &v
+	return s
+}
+
+// SetChannelClass sets the ChannelClass field's value.
+func (s *StartChannelOutput) SetChannelClass(v string) *StartChannelOutput {
+	s.ChannelClass = &v
 	return s
 }
 
@@ -14976,6 +16326,12 @@ func (s *StartChannelOutput) SetName(v string) *StartChannelOutput {
 	return s
 }
 
+// SetPipelineDetails sets the PipelineDetails field's value.
+func (s *StartChannelOutput) SetPipelineDetails(v []*PipelineDetail) *StartChannelOutput {
+	s.PipelineDetails = v
+	return s
+}
+
 // SetPipelinesRunningCount sets the PipelinesRunningCount field's value.
 func (s *StartChannelOutput) SetPipelinesRunningCount(v int64) *StartChannelOutput {
 	s.PipelinesRunningCount = &v
@@ -14997,6 +16353,32 @@ func (s *StartChannelOutput) SetState(v string) *StartChannelOutput {
 // SetTags sets the Tags field's value.
 func (s *StartChannelOutput) SetTags(v map[string]*string) *StartChannelOutput {
 	s.Tags = v
+	return s
+}
+
+// Settings to identify the start of the clip.
+type StartTimecode struct {
+	_ struct{} `type:"structure"`
+
+	// The timecode for the frame where you want to start the clip. Optional; if
+	// not specified, the clip starts at first frame in the file. Enter the timecode
+	// as HH:MM:SS:FF or HH:MM:SS;FF.
+	Timecode *string `locationName:"timecode" type:"string"`
+}
+
+// String returns the string representation
+func (s StartTimecode) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s StartTimecode) GoString() string {
+	return s.String()
+}
+
+// SetTimecode sets the Timecode field's value.
+func (s *StartTimecode) SetTimecode(v string) *StartTimecode {
+	s.Timecode = &v
 	return s
 }
 
@@ -15185,6 +16567,7 @@ func (s *StaticImageDeactivateScheduleActionSettings) SetLayer(v int64) *StaticI
 	return s
 }
 
+// Static Key Settings
 type StaticKeySettings struct {
 	_ struct{} `type:"structure"`
 
@@ -15284,10 +16667,15 @@ type StopChannelOutput struct {
 
 	Arn *string `locationName:"arn" type:"string"`
 
+	// A standard channel has two encoding pipelines and a single pipeline channel
+	// only has one.
+	ChannelClass *string `locationName:"channelClass" type:"string" enum:"ChannelClass"`
+
 	Destinations []*OutputDestination `locationName:"destinations" type:"list"`
 
 	EgressEndpoints []*ChannelEgressEndpoint `locationName:"egressEndpoints" type:"list"`
 
+	// Encoder Settings
 	EncoderSettings *EncoderSettings `locationName:"encoderSettings" type:"structure"`
 
 	Id *string `locationName:"id" type:"string"`
@@ -15300,6 +16688,8 @@ type StopChannelOutput struct {
 	LogLevel *string `locationName:"logLevel" type:"string" enum:"LogLevel"`
 
 	Name *string `locationName:"name" type:"string"`
+
+	PipelineDetails []*PipelineDetail `locationName:"pipelineDetails" type:"list"`
 
 	PipelinesRunningCount *int64 `locationName:"pipelinesRunningCount" type:"integer"`
 
@@ -15323,6 +16713,12 @@ func (s StopChannelOutput) GoString() string {
 // SetArn sets the Arn field's value.
 func (s *StopChannelOutput) SetArn(v string) *StopChannelOutput {
 	s.Arn = &v
+	return s
+}
+
+// SetChannelClass sets the ChannelClass field's value.
+func (s *StopChannelOutput) SetChannelClass(v string) *StopChannelOutput {
+	s.ChannelClass = &v
 	return s
 }
 
@@ -15374,6 +16770,12 @@ func (s *StopChannelOutput) SetName(v string) *StopChannelOutput {
 	return s
 }
 
+// SetPipelineDetails sets the PipelineDetails field's value.
+func (s *StopChannelOutput) SetPipelineDetails(v []*PipelineDetail) *StopChannelOutput {
+	s.PipelineDetails = v
+	return s
+}
+
 // SetPipelinesRunningCount sets the PipelinesRunningCount field's value.
 func (s *StopChannelOutput) SetPipelinesRunningCount(v int64) *StopChannelOutput {
 	s.PipelinesRunningCount = &v
@@ -15398,6 +16800,44 @@ func (s *StopChannelOutput) SetTags(v map[string]*string) *StopChannelOutput {
 	return s
 }
 
+// Settings to identify the end of the clip.
+type StopTimecode struct {
+	_ struct{} `type:"structure"`
+
+	// If you specify a StopTimecode in an input (in order to clip the file), you
+	// can specify if you want the clip to exclude (the default) or include the
+	// frame specified by the timecode.
+	LastFrameClippingBehavior *string `locationName:"lastFrameClippingBehavior" type:"string" enum:"LastFrameClippingBehavior"`
+
+	// The timecode for the frame where you want to stop the clip. Optional; if
+	// not specified, the clip continues to the end of the file. Enter the timecode
+	// as HH:MM:SS:FF or HH:MM:SS;FF.
+	Timecode *string `locationName:"timecode" type:"string"`
+}
+
+// String returns the string representation
+func (s StopTimecode) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s StopTimecode) GoString() string {
+	return s.String()
+}
+
+// SetLastFrameClippingBehavior sets the LastFrameClippingBehavior field's value.
+func (s *StopTimecode) SetLastFrameClippingBehavior(v string) *StopTimecode {
+	s.LastFrameClippingBehavior = &v
+	return s
+}
+
+// SetTimecode sets the Timecode field's value.
+func (s *StopTimecode) SetTimecode(v string) *StopTimecode {
+	s.Timecode = &v
+	return s
+}
+
+// Teletext Destination Settings
 type TeletextDestinationSettings struct {
 	_ struct{} `type:"structure"`
 }
@@ -15412,6 +16852,7 @@ func (s TeletextDestinationSettings) GoString() string {
 	return s.String()
 }
 
+// Teletext Source Settings
 type TeletextSourceSettings struct {
 	_ struct{} `type:"structure"`
 
@@ -15437,6 +16878,7 @@ func (s *TeletextSourceSettings) SetPageNumber(v string) *TeletextSourceSettings
 	return s
 }
 
+// Timecode Config
 type TimecodeConfig struct {
 	_ struct{} `type:"structure"`
 
@@ -15495,6 +16937,7 @@ func (s *TimecodeConfig) SetSyncThreshold(v int64) *TimecodeConfig {
 	return s
 }
 
+// Ttml Destination Settings
 type TtmlDestinationSettings struct {
 	_ struct{} `type:"structure"`
 
@@ -15520,9 +16963,11 @@ func (s *TtmlDestinationSettings) SetStyleControl(v string) *TtmlDestinationSett
 	return s
 }
 
+// Udp Container Settings
 type UdpContainerSettings struct {
 	_ struct{} `type:"structure"`
 
+	// M2ts Settings
 	M2tsSettings *M2tsSettings `locationName:"m2tsSettings" type:"structure"`
 }
 
@@ -15557,6 +17002,7 @@ func (s *UdpContainerSettings) SetM2tsSettings(v *M2tsSettings) *UdpContainerSet
 	return s
 }
 
+// Udp Group Settings
 type UdpGroupSettings struct {
 	_ struct{} `type:"structure"`
 
@@ -15604,6 +17050,7 @@ func (s *UdpGroupSettings) SetTimedMetadataId3Period(v int64) *UdpGroupSettings 
 	return s
 }
 
+// Udp Output Settings
 type UdpOutputSettings struct {
 	_ struct{} `type:"structure"`
 
@@ -15613,6 +17060,8 @@ type UdpOutputSettings struct {
 	// switching, input disruptions, picture reordering, etc.
 	BufferMsec *int64 `locationName:"bufferMsec" type:"integer"`
 
+	// Udp Container Settings
+	//
 	// ContainerSettings is a required field
 	ContainerSettings *UdpContainerSettings `locationName:"containerSettings" type:"structure" required:"true"`
 
@@ -15686,6 +17135,100 @@ func (s *UdpOutputSettings) SetFecOutputSettings(v *FecOutputSettings) *UdpOutpu
 	return s
 }
 
+type UpdateChannelClassInput struct {
+	_ struct{} `type:"structure"`
+
+	// A standard channel has two encoding pipelines and a single pipeline channel
+	// only has one.
+	//
+	// ChannelClass is a required field
+	ChannelClass *string `locationName:"channelClass" type:"string" required:"true" enum:"ChannelClass"`
+
+	// ChannelId is a required field
+	ChannelId *string `location:"uri" locationName:"channelId" type:"string" required:"true"`
+
+	Destinations []*OutputDestination `locationName:"destinations" type:"list"`
+}
+
+// String returns the string representation
+func (s UpdateChannelClassInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s UpdateChannelClassInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *UpdateChannelClassInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "UpdateChannelClassInput"}
+	if s.ChannelClass == nil {
+		invalidParams.Add(request.NewErrParamRequired("ChannelClass"))
+	}
+	if s.ChannelId == nil {
+		invalidParams.Add(request.NewErrParamRequired("ChannelId"))
+	}
+	if s.ChannelId != nil && len(*s.ChannelId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("ChannelId", 1))
+	}
+	if s.Destinations != nil {
+		for i, v := range s.Destinations {
+			if v == nil {
+				continue
+			}
+			if err := v.Validate(); err != nil {
+				invalidParams.AddNested(fmt.Sprintf("%s[%v]", "Destinations", i), err.(request.ErrInvalidParams))
+			}
+		}
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetChannelClass sets the ChannelClass field's value.
+func (s *UpdateChannelClassInput) SetChannelClass(v string) *UpdateChannelClassInput {
+	s.ChannelClass = &v
+	return s
+}
+
+// SetChannelId sets the ChannelId field's value.
+func (s *UpdateChannelClassInput) SetChannelId(v string) *UpdateChannelClassInput {
+	s.ChannelId = &v
+	return s
+}
+
+// SetDestinations sets the Destinations field's value.
+func (s *UpdateChannelClassInput) SetDestinations(v []*OutputDestination) *UpdateChannelClassInput {
+	s.Destinations = v
+	return s
+}
+
+type UpdateChannelClassOutput struct {
+	_ struct{} `type:"structure"`
+
+	Channel *Channel `locationName:"channel" type:"structure"`
+}
+
+// String returns the string representation
+func (s UpdateChannelClassOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s UpdateChannelClassOutput) GoString() string {
+	return s.String()
+}
+
+// SetChannel sets the Channel field's value.
+func (s *UpdateChannelClassOutput) SetChannel(v *Channel) *UpdateChannelClassOutput {
+	s.Channel = v
+	return s
+}
+
 type UpdateChannelInput struct {
 	_ struct{} `type:"structure"`
 
@@ -15694,6 +17237,7 @@ type UpdateChannelInput struct {
 
 	Destinations []*OutputDestination `locationName:"destinations" type:"list"`
 
+	// Encoder Settings
 	EncoderSettings *EncoderSettings `locationName:"encoderSettings" type:"structure"`
 
 	InputAttachments []*InputAttachment `locationName:"inputAttachments" type:"list"`
@@ -16016,6 +17560,76 @@ func (s *UpdateInputSecurityGroupOutput) SetSecurityGroup(v *InputSecurityGroup)
 	return s
 }
 
+type UpdateReservationInput struct {
+	_ struct{} `type:"structure"`
+
+	Name *string `locationName:"name" type:"string"`
+
+	// ReservationId is a required field
+	ReservationId *string `location:"uri" locationName:"reservationId" type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s UpdateReservationInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s UpdateReservationInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *UpdateReservationInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "UpdateReservationInput"}
+	if s.ReservationId == nil {
+		invalidParams.Add(request.NewErrParamRequired("ReservationId"))
+	}
+	if s.ReservationId != nil && len(*s.ReservationId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("ReservationId", 1))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetName sets the Name field's value.
+func (s *UpdateReservationInput) SetName(v string) *UpdateReservationInput {
+	s.Name = &v
+	return s
+}
+
+// SetReservationId sets the ReservationId field's value.
+func (s *UpdateReservationInput) SetReservationId(v string) *UpdateReservationInput {
+	s.ReservationId = &v
+	return s
+}
+
+type UpdateReservationOutput struct {
+	_ struct{} `type:"structure"`
+
+	// Reserved resources available to use
+	Reservation *Reservation `locationName:"reservation" type:"structure"`
+}
+
+// String returns the string representation
+func (s UpdateReservationOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s UpdateReservationOutput) GoString() string {
+	return s.String()
+}
+
+// SetReservation sets the Reservation field's value.
+func (s *UpdateReservationOutput) SetReservation(v *Reservation) *UpdateReservationOutput {
+	s.Reservation = v
+	return s
+}
+
 type ValidationError struct {
 	_ struct{} `type:"structure"`
 
@@ -16046,13 +17660,18 @@ func (s *ValidationError) SetErrorMessage(v string) *ValidationError {
 	return s
 }
 
+// Video Codec Settings
 type VideoCodecSettings struct {
 	_ struct{} `type:"structure"`
 
 	// Frame Capture Settings
 	FrameCaptureSettings *FrameCaptureSettings `locationName:"frameCaptureSettings" type:"structure"`
 
+	// H264 Settings
 	H264Settings *H264Settings `locationName:"h264Settings" type:"structure"`
+
+	// H265 Settings
+	H265Settings *H265Settings `locationName:"h265Settings" type:"structure"`
 }
 
 // String returns the string representation
@@ -16078,6 +17697,11 @@ func (s *VideoCodecSettings) Validate() error {
 			invalidParams.AddNested("H264Settings", err.(request.ErrInvalidParams))
 		}
 	}
+	if s.H265Settings != nil {
+		if err := s.H265Settings.Validate(); err != nil {
+			invalidParams.AddNested("H265Settings", err.(request.ErrInvalidParams))
+		}
+	}
 
 	if invalidParams.Len() > 0 {
 		return invalidParams
@@ -16094,6 +17718,12 @@ func (s *VideoCodecSettings) SetFrameCaptureSettings(v *FrameCaptureSettings) *V
 // SetH264Settings sets the H264Settings field's value.
 func (s *VideoCodecSettings) SetH264Settings(v *H264Settings) *VideoCodecSettings {
 	s.H264Settings = v
+	return s
+}
+
+// SetH265Settings sets the H265Settings field's value.
+func (s *VideoCodecSettings) SetH265Settings(v *H265Settings) *VideoCodecSettings {
+	s.H265Settings = v
 	return s
 }
 
@@ -16219,8 +17849,9 @@ func (s *VideoDescription) SetWidth(v int64) *VideoDescription {
 type VideoSelector struct {
 	_ struct{} `type:"structure"`
 
-	// Specifies the colorspace of an input. This setting works in tandem with colorSpaceConversion
-	// to determine if any conversion will be performed.
+	// Specifies the color space of an input. This setting works in tandem with
+	// colorSpaceUsage and a video description's colorSpaceSettingsChoice to determine
+	// if any conversion will be performed.
 	ColorSpace *string `locationName:"colorSpace" type:"string" enum:"VideoSelectorColorSpace"`
 
 	// Applies only if colorSpace is a value other than follow. This field controls
@@ -16265,6 +17896,7 @@ func (s *VideoSelector) SetSelectorSettings(v *VideoSelectorSettings) *VideoSele
 	return s
 }
 
+// Video Selector Pid
 type VideoSelectorPid struct {
 	_ struct{} `type:"structure"`
 
@@ -16288,6 +17920,7 @@ func (s *VideoSelectorPid) SetPid(v int64) *VideoSelectorPid {
 	return s
 }
 
+// Video Selector Program Id
 type VideoSelectorProgramId struct {
 	_ struct{} `type:"structure"`
 
@@ -16313,11 +17946,14 @@ func (s *VideoSelectorProgramId) SetProgramId(v int64) *VideoSelectorProgramId {
 	return s
 }
 
+// Video Selector Settings
 type VideoSelectorSettings struct {
 	_ struct{} `type:"structure"`
 
+	// Video Selector Pid
 	VideoSelectorPid *VideoSelectorPid `locationName:"videoSelectorPid" type:"structure"`
 
+	// Video Selector Program Id
 	VideoSelectorProgramId *VideoSelectorProgramId `locationName:"videoSelectorProgramId" type:"structure"`
 }
 
@@ -16343,6 +17979,7 @@ func (s *VideoSelectorSettings) SetVideoSelectorProgramId(v *VideoSelectorProgra
 	return s
 }
 
+// Webvtt Destination Settings
 type WebvttDestinationSettings struct {
 	_ struct{} `type:"structure"`
 }
@@ -16357,6 +17994,7 @@ func (s WebvttDestinationSettings) GoString() string {
 	return s.String()
 }
 
+// Aac Coding Mode
 const (
 	// AacCodingModeAdReceiverMix is a AacCodingMode enum value
 	AacCodingModeAdReceiverMix = "AD_RECEIVER_MIX"
@@ -16374,6 +18012,7 @@ const (
 	AacCodingModeCodingMode51 = "CODING_MODE_5_1"
 )
 
+// Aac Input Type
 const (
 	// AacInputTypeBroadcasterMixedAd is a AacInputType enum value
 	AacInputTypeBroadcasterMixedAd = "BROADCASTER_MIXED_AD"
@@ -16382,6 +18021,7 @@ const (
 	AacInputTypeNormal = "NORMAL"
 )
 
+// Aac Profile
 const (
 	// AacProfileHev1 is a AacProfile enum value
 	AacProfileHev1 = "HEV1"
@@ -16393,6 +18033,7 @@ const (
 	AacProfileLc = "LC"
 )
 
+// Aac Rate Control Mode
 const (
 	// AacRateControlModeCbr is a AacRateControlMode enum value
 	AacRateControlModeCbr = "CBR"
@@ -16401,6 +18042,7 @@ const (
 	AacRateControlModeVbr = "VBR"
 )
 
+// Aac Raw Format
 const (
 	// AacRawFormatLatmLoas is a AacRawFormat enum value
 	AacRawFormatLatmLoas = "LATM_LOAS"
@@ -16409,6 +18051,7 @@ const (
 	AacRawFormatNone = "NONE"
 )
 
+// Aac Spec
 const (
 	// AacSpecMpeg2 is a AacSpec enum value
 	AacSpecMpeg2 = "MPEG2"
@@ -16417,6 +18060,7 @@ const (
 	AacSpecMpeg4 = "MPEG4"
 )
 
+// Aac Vbr Quality
 const (
 	// AacVbrQualityHigh is a AacVbrQuality enum value
 	AacVbrQualityHigh = "HIGH"
@@ -16431,6 +18075,7 @@ const (
 	AacVbrQualityMediumLow = "MEDIUM_LOW"
 )
 
+// Ac3 Bitstream Mode
 const (
 	// Ac3BitstreamModeCommentary is a Ac3BitstreamMode enum value
 	Ac3BitstreamModeCommentary = "COMMENTARY"
@@ -16457,6 +18102,7 @@ const (
 	Ac3BitstreamModeVoiceOver = "VOICE_OVER"
 )
 
+// Ac3 Coding Mode
 const (
 	// Ac3CodingModeCodingMode10 is a Ac3CodingMode enum value
 	Ac3CodingModeCodingMode10 = "CODING_MODE_1_0"
@@ -16471,6 +18117,7 @@ const (
 	Ac3CodingModeCodingMode32Lfe = "CODING_MODE_3_2_LFE"
 )
 
+// Ac3 Drc Profile
 const (
 	// Ac3DrcProfileFilmStandard is a Ac3DrcProfile enum value
 	Ac3DrcProfileFilmStandard = "FILM_STANDARD"
@@ -16479,6 +18126,7 @@ const (
 	Ac3DrcProfileNone = "NONE"
 )
 
+// Ac3 Lfe Filter
 const (
 	// Ac3LfeFilterDisabled is a Ac3LfeFilter enum value
 	Ac3LfeFilterDisabled = "DISABLED"
@@ -16487,6 +18135,7 @@ const (
 	Ac3LfeFilterEnabled = "ENABLED"
 )
 
+// Ac3 Metadata Control
 const (
 	// Ac3MetadataControlFollowInput is a Ac3MetadataControl enum value
 	Ac3MetadataControlFollowInput = "FOLLOW_INPUT"
@@ -16495,6 +18144,7 @@ const (
 	Ac3MetadataControlUseConfigured = "USE_CONFIGURED"
 )
 
+// Afd Signaling
 const (
 	// AfdSignalingAuto is a AfdSignaling enum value
 	AfdSignalingAuto = "AUTO"
@@ -16506,6 +18156,7 @@ const (
 	AfdSignalingNone = "NONE"
 )
 
+// Audio Description Audio Type Control
 const (
 	// AudioDescriptionAudioTypeControlFollowInput is a AudioDescriptionAudioTypeControl enum value
 	AudioDescriptionAudioTypeControlFollowInput = "FOLLOW_INPUT"
@@ -16514,6 +18165,7 @@ const (
 	AudioDescriptionAudioTypeControlUseConfigured = "USE_CONFIGURED"
 )
 
+// Audio Description Language Code Control
 const (
 	// AudioDescriptionLanguageCodeControlFollowInput is a AudioDescriptionLanguageCodeControl enum value
 	AudioDescriptionLanguageCodeControlFollowInput = "FOLLOW_INPUT"
@@ -16522,6 +18174,7 @@ const (
 	AudioDescriptionLanguageCodeControlUseConfigured = "USE_CONFIGURED"
 )
 
+// Audio Language Selection Policy
 const (
 	// AudioLanguageSelectionPolicyLoose is a AudioLanguageSelectionPolicy enum value
 	AudioLanguageSelectionPolicyLoose = "LOOSE"
@@ -16530,6 +18183,7 @@ const (
 	AudioLanguageSelectionPolicyStrict = "STRICT"
 )
 
+// Audio Normalization Algorithm
 const (
 	// AudioNormalizationAlgorithmItu17701 is a AudioNormalizationAlgorithm enum value
 	AudioNormalizationAlgorithmItu17701 = "ITU_1770_1"
@@ -16538,11 +18192,13 @@ const (
 	AudioNormalizationAlgorithmItu17702 = "ITU_1770_2"
 )
 
+// Audio Normalization Algorithm Control
 const (
 	// AudioNormalizationAlgorithmControlCorrectAudio is a AudioNormalizationAlgorithmControl enum value
 	AudioNormalizationAlgorithmControlCorrectAudio = "CORRECT_AUDIO"
 )
 
+// Audio Only Hls Track Type
 const (
 	// AudioOnlyHlsTrackTypeAlternateAudioAutoSelect is a AudioOnlyHlsTrackType enum value
 	AudioOnlyHlsTrackTypeAlternateAudioAutoSelect = "ALTERNATE_AUDIO_AUTO_SELECT"
@@ -16557,6 +18213,7 @@ const (
 	AudioOnlyHlsTrackTypeAudioOnlyVariantStream = "AUDIO_ONLY_VARIANT_STREAM"
 )
 
+// Audio Type
 const (
 	// AudioTypeCleanEffects is a AudioType enum value
 	AudioTypeCleanEffects = "CLEAN_EFFECTS"
@@ -16571,6 +18228,7 @@ const (
 	AudioTypeVisualImpairedCommentary = "VISUAL_IMPAIRED_COMMENTARY"
 )
 
+// Authentication Scheme
 const (
 	// AuthenticationSchemeAkamai is a AuthenticationScheme enum value
 	AuthenticationSchemeAkamai = "AKAMAI"
@@ -16579,6 +18237,7 @@ const (
 	AuthenticationSchemeCommon = "COMMON"
 )
 
+// Avail Blanking State
 const (
 	// AvailBlankingStateDisabled is a AvailBlankingState enum value
 	AvailBlankingStateDisabled = "DISABLED"
@@ -16587,6 +18246,7 @@ const (
 	AvailBlankingStateEnabled = "ENABLED"
 )
 
+// Blackout Slate Network End Blackout
 const (
 	// BlackoutSlateNetworkEndBlackoutDisabled is a BlackoutSlateNetworkEndBlackout enum value
 	BlackoutSlateNetworkEndBlackoutDisabled = "DISABLED"
@@ -16595,6 +18255,7 @@ const (
 	BlackoutSlateNetworkEndBlackoutEnabled = "ENABLED"
 )
 
+// Blackout Slate State
 const (
 	// BlackoutSlateStateDisabled is a BlackoutSlateState enum value
 	BlackoutSlateStateDisabled = "DISABLED"
@@ -16603,6 +18264,7 @@ const (
 	BlackoutSlateStateEnabled = "ENABLED"
 )
 
+// Burn In Alignment
 const (
 	// BurnInAlignmentCentered is a BurnInAlignment enum value
 	BurnInAlignmentCentered = "CENTERED"
@@ -16614,6 +18276,7 @@ const (
 	BurnInAlignmentSmart = "SMART"
 )
 
+// Burn In Background Color
 const (
 	// BurnInBackgroundColorBlack is a BurnInBackgroundColor enum value
 	BurnInBackgroundColorBlack = "BLACK"
@@ -16625,6 +18288,7 @@ const (
 	BurnInBackgroundColorWhite = "WHITE"
 )
 
+// Burn In Font Color
 const (
 	// BurnInFontColorBlack is a BurnInFontColor enum value
 	BurnInFontColorBlack = "BLACK"
@@ -16645,6 +18309,7 @@ const (
 	BurnInFontColorYellow = "YELLOW"
 )
 
+// Burn In Outline Color
 const (
 	// BurnInOutlineColorBlack is a BurnInOutlineColor enum value
 	BurnInOutlineColorBlack = "BLACK"
@@ -16665,6 +18330,7 @@ const (
 	BurnInOutlineColorYellow = "YELLOW"
 )
 
+// Burn In Shadow Color
 const (
 	// BurnInShadowColorBlack is a BurnInShadowColor enum value
 	BurnInShadowColorBlack = "BLACK"
@@ -16676,12 +18342,23 @@ const (
 	BurnInShadowColorWhite = "WHITE"
 )
 
+// Burn In Teletext Grid Control
 const (
 	// BurnInTeletextGridControlFixed is a BurnInTeletextGridControl enum value
 	BurnInTeletextGridControlFixed = "FIXED"
 
 	// BurnInTeletextGridControlScaled is a BurnInTeletextGridControl enum value
 	BurnInTeletextGridControlScaled = "SCALED"
+)
+
+// A standard channel has two encoding pipelines and a single pipeline channel
+// only has one.
+const (
+	// ChannelClassStandard is a ChannelClass enum value
+	ChannelClassStandard = "STANDARD"
+
+	// ChannelClassSinglePipeline is a ChannelClass enum value
+	ChannelClassSinglePipeline = "SINGLE_PIPELINE"
 )
 
 const (
@@ -16711,8 +18388,15 @@ const (
 
 	// ChannelStateDeleted is a ChannelState enum value
 	ChannelStateDeleted = "DELETED"
+
+	// ChannelStateUpdating is a ChannelState enum value
+	ChannelStateUpdating = "UPDATING"
+
+	// ChannelStateUpdateFailed is a ChannelState enum value
+	ChannelStateUpdateFailed = "UPDATE_FAILED"
 )
 
+// Dvb Sdt Output Sdt
 const (
 	// DvbSdtOutputSdtSdtFollow is a DvbSdtOutputSdt enum value
 	DvbSdtOutputSdtSdtFollow = "SDT_FOLLOW"
@@ -16727,6 +18411,7 @@ const (
 	DvbSdtOutputSdtSdtNone = "SDT_NONE"
 )
 
+// Dvb Sub Destination Alignment
 const (
 	// DvbSubDestinationAlignmentCentered is a DvbSubDestinationAlignment enum value
 	DvbSubDestinationAlignmentCentered = "CENTERED"
@@ -16738,6 +18423,7 @@ const (
 	DvbSubDestinationAlignmentSmart = "SMART"
 )
 
+// Dvb Sub Destination Background Color
 const (
 	// DvbSubDestinationBackgroundColorBlack is a DvbSubDestinationBackgroundColor enum value
 	DvbSubDestinationBackgroundColorBlack = "BLACK"
@@ -16749,6 +18435,7 @@ const (
 	DvbSubDestinationBackgroundColorWhite = "WHITE"
 )
 
+// Dvb Sub Destination Font Color
 const (
 	// DvbSubDestinationFontColorBlack is a DvbSubDestinationFontColor enum value
 	DvbSubDestinationFontColorBlack = "BLACK"
@@ -16769,6 +18456,7 @@ const (
 	DvbSubDestinationFontColorYellow = "YELLOW"
 )
 
+// Dvb Sub Destination Outline Color
 const (
 	// DvbSubDestinationOutlineColorBlack is a DvbSubDestinationOutlineColor enum value
 	DvbSubDestinationOutlineColorBlack = "BLACK"
@@ -16789,6 +18477,7 @@ const (
 	DvbSubDestinationOutlineColorYellow = "YELLOW"
 )
 
+// Dvb Sub Destination Shadow Color
 const (
 	// DvbSubDestinationShadowColorBlack is a DvbSubDestinationShadowColor enum value
 	DvbSubDestinationShadowColorBlack = "BLACK"
@@ -16800,6 +18489,7 @@ const (
 	DvbSubDestinationShadowColorWhite = "WHITE"
 )
 
+// Dvb Sub Destination Teletext Grid Control
 const (
 	// DvbSubDestinationTeletextGridControlFixed is a DvbSubDestinationTeletextGridControl enum value
 	DvbSubDestinationTeletextGridControlFixed = "FIXED"
@@ -16808,6 +18498,7 @@ const (
 	DvbSubDestinationTeletextGridControlScaled = "SCALED"
 )
 
+// Eac3 Attenuation Control
 const (
 	// Eac3AttenuationControlAttenuate3Db is a Eac3AttenuationControl enum value
 	Eac3AttenuationControlAttenuate3Db = "ATTENUATE_3_DB"
@@ -16816,6 +18507,7 @@ const (
 	Eac3AttenuationControlNone = "NONE"
 )
 
+// Eac3 Bitstream Mode
 const (
 	// Eac3BitstreamModeCommentary is a Eac3BitstreamMode enum value
 	Eac3BitstreamModeCommentary = "COMMENTARY"
@@ -16833,6 +18525,7 @@ const (
 	Eac3BitstreamModeVisuallyImpaired = "VISUALLY_IMPAIRED"
 )
 
+// Eac3 Coding Mode
 const (
 	// Eac3CodingModeCodingMode10 is a Eac3CodingMode enum value
 	Eac3CodingModeCodingMode10 = "CODING_MODE_1_0"
@@ -16844,6 +18537,7 @@ const (
 	Eac3CodingModeCodingMode32 = "CODING_MODE_3_2"
 )
 
+// Eac3 Dc Filter
 const (
 	// Eac3DcFilterDisabled is a Eac3DcFilter enum value
 	Eac3DcFilterDisabled = "DISABLED"
@@ -16852,6 +18546,7 @@ const (
 	Eac3DcFilterEnabled = "ENABLED"
 )
 
+// Eac3 Drc Line
 const (
 	// Eac3DrcLineFilmLight is a Eac3DrcLine enum value
 	Eac3DrcLineFilmLight = "FILM_LIGHT"
@@ -16872,6 +18567,7 @@ const (
 	Eac3DrcLineSpeech = "SPEECH"
 )
 
+// Eac3 Drc Rf
 const (
 	// Eac3DrcRfFilmLight is a Eac3DrcRf enum value
 	Eac3DrcRfFilmLight = "FILM_LIGHT"
@@ -16892,6 +18588,7 @@ const (
 	Eac3DrcRfSpeech = "SPEECH"
 )
 
+// Eac3 Lfe Control
 const (
 	// Eac3LfeControlLfe is a Eac3LfeControl enum value
 	Eac3LfeControlLfe = "LFE"
@@ -16900,6 +18597,7 @@ const (
 	Eac3LfeControlNoLfe = "NO_LFE"
 )
 
+// Eac3 Lfe Filter
 const (
 	// Eac3LfeFilterDisabled is a Eac3LfeFilter enum value
 	Eac3LfeFilterDisabled = "DISABLED"
@@ -16908,6 +18606,7 @@ const (
 	Eac3LfeFilterEnabled = "ENABLED"
 )
 
+// Eac3 Metadata Control
 const (
 	// Eac3MetadataControlFollowInput is a Eac3MetadataControl enum value
 	Eac3MetadataControlFollowInput = "FOLLOW_INPUT"
@@ -16916,6 +18615,7 @@ const (
 	Eac3MetadataControlUseConfigured = "USE_CONFIGURED"
 )
 
+// Eac3 Passthrough Control
 const (
 	// Eac3PassthroughControlNoPassthrough is a Eac3PassthroughControl enum value
 	Eac3PassthroughControlNoPassthrough = "NO_PASSTHROUGH"
@@ -16924,6 +18624,7 @@ const (
 	Eac3PassthroughControlWhenPossible = "WHEN_POSSIBLE"
 )
 
+// Eac3 Phase Control
 const (
 	// Eac3PhaseControlNoShift is a Eac3PhaseControl enum value
 	Eac3PhaseControlNoShift = "NO_SHIFT"
@@ -16932,6 +18633,7 @@ const (
 	Eac3PhaseControlShift90Degrees = "SHIFT_90_DEGREES"
 )
 
+// Eac3 Stereo Downmix
 const (
 	// Eac3StereoDownmixDpl2 is a Eac3StereoDownmix enum value
 	Eac3StereoDownmixDpl2 = "DPL2"
@@ -16946,6 +18648,7 @@ const (
 	Eac3StereoDownmixNotIndicated = "NOT_INDICATED"
 )
 
+// Eac3 Surround Ex Mode
 const (
 	// Eac3SurroundExModeDisabled is a Eac3SurroundExMode enum value
 	Eac3SurroundExModeDisabled = "DISABLED"
@@ -16957,6 +18660,7 @@ const (
 	Eac3SurroundExModeNotIndicated = "NOT_INDICATED"
 )
 
+// Eac3 Surround Mode
 const (
 	// Eac3SurroundModeDisabled is a Eac3SurroundMode enum value
 	Eac3SurroundModeDisabled = "DISABLED"
@@ -16968,6 +18672,7 @@ const (
 	Eac3SurroundModeNotIndicated = "NOT_INDICATED"
 )
 
+// Embedded Convert608 To708
 const (
 	// EmbeddedConvert608To708Disabled is a EmbeddedConvert608To708 enum value
 	EmbeddedConvert608To708Disabled = "DISABLED"
@@ -16976,6 +18681,7 @@ const (
 	EmbeddedConvert608To708Upconvert = "UPCONVERT"
 )
 
+// Embedded Scte20 Detection
 const (
 	// EmbeddedScte20DetectionAuto is a EmbeddedScte20Detection enum value
 	EmbeddedScte20DetectionAuto = "AUTO"
@@ -16984,6 +18690,7 @@ const (
 	EmbeddedScte20DetectionOff = "OFF"
 )
 
+// Fec Output Include Fec
 const (
 	// FecOutputIncludeFecColumn is a FecOutputIncludeFec enum value
 	FecOutputIncludeFecColumn = "COLUMN"
@@ -16992,6 +18699,7 @@ const (
 	FecOutputIncludeFecColumnAndRow = "COLUMN_AND_ROW"
 )
 
+// Fixed Afd
 const (
 	// FixedAfdAfd0000 is a FixedAfd enum value
 	FixedAfdAfd0000 = "AFD_0000"
@@ -17036,6 +18744,7 @@ const (
 	FollowPointStart = "START"
 )
 
+// Global Configuration Input End Action
 const (
 	// GlobalConfigurationInputEndActionNone is a GlobalConfigurationInputEndAction enum value
 	GlobalConfigurationInputEndActionNone = "NONE"
@@ -17044,6 +18753,7 @@ const (
 	GlobalConfigurationInputEndActionSwitchAndLoopInputs = "SWITCH_AND_LOOP_INPUTS"
 )
 
+// Global Configuration Low Framerate Inputs
 const (
 	// GlobalConfigurationLowFramerateInputsDisabled is a GlobalConfigurationLowFramerateInputs enum value
 	GlobalConfigurationLowFramerateInputsDisabled = "DISABLED"
@@ -17052,6 +18762,16 @@ const (
 	GlobalConfigurationLowFramerateInputsEnabled = "ENABLED"
 )
 
+// Global Configuration Output Locking Mode
+const (
+	// GlobalConfigurationOutputLockingModeEpochLocking is a GlobalConfigurationOutputLockingMode enum value
+	GlobalConfigurationOutputLockingModeEpochLocking = "EPOCH_LOCKING"
+
+	// GlobalConfigurationOutputLockingModePipelineLocking is a GlobalConfigurationOutputLockingMode enum value
+	GlobalConfigurationOutputLockingModePipelineLocking = "PIPELINE_LOCKING"
+)
+
+// Global Configuration Output Timing Source
 const (
 	// GlobalConfigurationOutputTimingSourceInputClock is a GlobalConfigurationOutputTimingSource enum value
 	GlobalConfigurationOutputTimingSourceInputClock = "INPUT_CLOCK"
@@ -17060,6 +18780,7 @@ const (
 	GlobalConfigurationOutputTimingSourceSystemClock = "SYSTEM_CLOCK"
 )
 
+// H264 Adaptive Quantization
 const (
 	// H264AdaptiveQuantizationHigh is a H264AdaptiveQuantization enum value
 	H264AdaptiveQuantizationHigh = "HIGH"
@@ -17080,6 +18801,7 @@ const (
 	H264AdaptiveQuantizationOff = "OFF"
 )
 
+// H264 Color Metadata
 const (
 	// H264ColorMetadataIgnore is a H264ColorMetadata enum value
 	H264ColorMetadataIgnore = "IGNORE"
@@ -17088,6 +18810,7 @@ const (
 	H264ColorMetadataInsert = "INSERT"
 )
 
+// H264 Entropy Encoding
 const (
 	// H264EntropyEncodingCabac is a H264EntropyEncoding enum value
 	H264EntropyEncodingCabac = "CABAC"
@@ -17096,6 +18819,7 @@ const (
 	H264EntropyEncodingCavlc = "CAVLC"
 )
 
+// H264 Flicker Aq
 const (
 	// H264FlickerAqDisabled is a H264FlickerAq enum value
 	H264FlickerAqDisabled = "DISABLED"
@@ -17104,6 +18828,7 @@ const (
 	H264FlickerAqEnabled = "ENABLED"
 )
 
+// H264 Framerate Control
 const (
 	// H264FramerateControlInitializeFromSource is a H264FramerateControl enum value
 	H264FramerateControlInitializeFromSource = "INITIALIZE_FROM_SOURCE"
@@ -17112,6 +18837,7 @@ const (
 	H264FramerateControlSpecified = "SPECIFIED"
 )
 
+// H264 Gop BReference
 const (
 	// H264GopBReferenceDisabled is a H264GopBReference enum value
 	H264GopBReferenceDisabled = "DISABLED"
@@ -17120,6 +18846,7 @@ const (
 	H264GopBReferenceEnabled = "ENABLED"
 )
 
+// H264 Gop Size Units
 const (
 	// H264GopSizeUnitsFrames is a H264GopSizeUnits enum value
 	H264GopSizeUnitsFrames = "FRAMES"
@@ -17128,6 +18855,7 @@ const (
 	H264GopSizeUnitsSeconds = "SECONDS"
 )
 
+// H264 Level
 const (
 	// H264LevelH264Level1 is a H264Level enum value
 	H264LevelH264Level1 = "H264_LEVEL_1"
@@ -17181,6 +18909,7 @@ const (
 	H264LevelH264LevelAuto = "H264_LEVEL_AUTO"
 )
 
+// H264 Look Ahead Rate Control
 const (
 	// H264LookAheadRateControlHigh is a H264LookAheadRateControl enum value
 	H264LookAheadRateControlHigh = "HIGH"
@@ -17192,6 +18921,7 @@ const (
 	H264LookAheadRateControlMedium = "MEDIUM"
 )
 
+// H264 Par Control
 const (
 	// H264ParControlInitializeFromSource is a H264ParControl enum value
 	H264ParControlInitializeFromSource = "INITIALIZE_FROM_SOURCE"
@@ -17200,6 +18930,7 @@ const (
 	H264ParControlSpecified = "SPECIFIED"
 )
 
+// H264 Profile
 const (
 	// H264ProfileBaseline is a H264Profile enum value
 	H264ProfileBaseline = "BASELINE"
@@ -17220,9 +18951,13 @@ const (
 	H264ProfileMain = "MAIN"
 )
 
+// H264 Rate Control Mode
 const (
 	// H264RateControlModeCbr is a H264RateControlMode enum value
 	H264RateControlModeCbr = "CBR"
+
+	// H264RateControlModeMultiplex is a H264RateControlMode enum value
+	H264RateControlModeMultiplex = "MULTIPLEX"
 
 	// H264RateControlModeQvbr is a H264RateControlMode enum value
 	H264RateControlModeQvbr = "QVBR"
@@ -17231,6 +18966,7 @@ const (
 	H264RateControlModeVbr = "VBR"
 )
 
+// H264 Scan Type
 const (
 	// H264ScanTypeInterlaced is a H264ScanType enum value
 	H264ScanTypeInterlaced = "INTERLACED"
@@ -17239,6 +18975,7 @@ const (
 	H264ScanTypeProgressive = "PROGRESSIVE"
 )
 
+// H264 Scene Change Detect
 const (
 	// H264SceneChangeDetectDisabled is a H264SceneChangeDetect enum value
 	H264SceneChangeDetectDisabled = "DISABLED"
@@ -17247,6 +18984,7 @@ const (
 	H264SceneChangeDetectEnabled = "ENABLED"
 )
 
+// H264 Spatial Aq
 const (
 	// H264SpatialAqDisabled is a H264SpatialAq enum value
 	H264SpatialAqDisabled = "DISABLED"
@@ -17255,6 +18993,7 @@ const (
 	H264SpatialAqEnabled = "ENABLED"
 )
 
+// H264 Sub Gop Length
 const (
 	// H264SubGopLengthDynamic is a H264SubGopLength enum value
 	H264SubGopLengthDynamic = "DYNAMIC"
@@ -17263,6 +19002,7 @@ const (
 	H264SubGopLengthFixed = "FIXED"
 )
 
+// H264 Syntax
 const (
 	// H264SyntaxDefault is a H264Syntax enum value
 	H264SyntaxDefault = "DEFAULT"
@@ -17271,6 +19011,7 @@ const (
 	H264SyntaxRp2027 = "RP2027"
 )
 
+// H264 Temporal Aq
 const (
 	// H264TemporalAqDisabled is a H264TemporalAq enum value
 	H264TemporalAqDisabled = "DISABLED"
@@ -17279,6 +19020,7 @@ const (
 	H264TemporalAqEnabled = "ENABLED"
 )
 
+// H264 Timecode Insertion Behavior
 const (
 	// H264TimecodeInsertionBehaviorDisabled is a H264TimecodeInsertionBehavior enum value
 	H264TimecodeInsertionBehaviorDisabled = "DISABLED"
@@ -17287,6 +19029,172 @@ const (
 	H264TimecodeInsertionBehaviorPicTimingSei = "PIC_TIMING_SEI"
 )
 
+// H265 Adaptive Quantization
+const (
+	// H265AdaptiveQuantizationHigh is a H265AdaptiveQuantization enum value
+	H265AdaptiveQuantizationHigh = "HIGH"
+
+	// H265AdaptiveQuantizationHigher is a H265AdaptiveQuantization enum value
+	H265AdaptiveQuantizationHigher = "HIGHER"
+
+	// H265AdaptiveQuantizationLow is a H265AdaptiveQuantization enum value
+	H265AdaptiveQuantizationLow = "LOW"
+
+	// H265AdaptiveQuantizationMax is a H265AdaptiveQuantization enum value
+	H265AdaptiveQuantizationMax = "MAX"
+
+	// H265AdaptiveQuantizationMedium is a H265AdaptiveQuantization enum value
+	H265AdaptiveQuantizationMedium = "MEDIUM"
+
+	// H265AdaptiveQuantizationOff is a H265AdaptiveQuantization enum value
+	H265AdaptiveQuantizationOff = "OFF"
+)
+
+// H265 Alternative Transfer Function
+const (
+	// H265AlternativeTransferFunctionInsert is a H265AlternativeTransferFunction enum value
+	H265AlternativeTransferFunctionInsert = "INSERT"
+
+	// H265AlternativeTransferFunctionOmit is a H265AlternativeTransferFunction enum value
+	H265AlternativeTransferFunctionOmit = "OMIT"
+)
+
+// H265 Color Metadata
+const (
+	// H265ColorMetadataIgnore is a H265ColorMetadata enum value
+	H265ColorMetadataIgnore = "IGNORE"
+
+	// H265ColorMetadataInsert is a H265ColorMetadata enum value
+	H265ColorMetadataInsert = "INSERT"
+)
+
+// H265 Flicker Aq
+const (
+	// H265FlickerAqDisabled is a H265FlickerAq enum value
+	H265FlickerAqDisabled = "DISABLED"
+
+	// H265FlickerAqEnabled is a H265FlickerAq enum value
+	H265FlickerAqEnabled = "ENABLED"
+)
+
+// H265 Gop Size Units
+const (
+	// H265GopSizeUnitsFrames is a H265GopSizeUnits enum value
+	H265GopSizeUnitsFrames = "FRAMES"
+
+	// H265GopSizeUnitsSeconds is a H265GopSizeUnits enum value
+	H265GopSizeUnitsSeconds = "SECONDS"
+)
+
+// H265 Level
+const (
+	// H265LevelH265Level1 is a H265Level enum value
+	H265LevelH265Level1 = "H265_LEVEL_1"
+
+	// H265LevelH265Level2 is a H265Level enum value
+	H265LevelH265Level2 = "H265_LEVEL_2"
+
+	// H265LevelH265Level21 is a H265Level enum value
+	H265LevelH265Level21 = "H265_LEVEL_2_1"
+
+	// H265LevelH265Level3 is a H265Level enum value
+	H265LevelH265Level3 = "H265_LEVEL_3"
+
+	// H265LevelH265Level31 is a H265Level enum value
+	H265LevelH265Level31 = "H265_LEVEL_3_1"
+
+	// H265LevelH265Level4 is a H265Level enum value
+	H265LevelH265Level4 = "H265_LEVEL_4"
+
+	// H265LevelH265Level41 is a H265Level enum value
+	H265LevelH265Level41 = "H265_LEVEL_4_1"
+
+	// H265LevelH265Level5 is a H265Level enum value
+	H265LevelH265Level5 = "H265_LEVEL_5"
+
+	// H265LevelH265Level51 is a H265Level enum value
+	H265LevelH265Level51 = "H265_LEVEL_5_1"
+
+	// H265LevelH265Level52 is a H265Level enum value
+	H265LevelH265Level52 = "H265_LEVEL_5_2"
+
+	// H265LevelH265Level6 is a H265Level enum value
+	H265LevelH265Level6 = "H265_LEVEL_6"
+
+	// H265LevelH265Level61 is a H265Level enum value
+	H265LevelH265Level61 = "H265_LEVEL_6_1"
+
+	// H265LevelH265Level62 is a H265Level enum value
+	H265LevelH265Level62 = "H265_LEVEL_6_2"
+
+	// H265LevelH265LevelAuto is a H265Level enum value
+	H265LevelH265LevelAuto = "H265_LEVEL_AUTO"
+)
+
+// H265 Look Ahead Rate Control
+const (
+	// H265LookAheadRateControlHigh is a H265LookAheadRateControl enum value
+	H265LookAheadRateControlHigh = "HIGH"
+
+	// H265LookAheadRateControlLow is a H265LookAheadRateControl enum value
+	H265LookAheadRateControlLow = "LOW"
+
+	// H265LookAheadRateControlMedium is a H265LookAheadRateControl enum value
+	H265LookAheadRateControlMedium = "MEDIUM"
+)
+
+// H265 Profile
+const (
+	// H265ProfileMain is a H265Profile enum value
+	H265ProfileMain = "MAIN"
+
+	// H265ProfileMain10bit is a H265Profile enum value
+	H265ProfileMain10bit = "MAIN_10BIT"
+)
+
+// H265 Rate Control Mode
+const (
+	// H265RateControlModeCbr is a H265RateControlMode enum value
+	H265RateControlModeCbr = "CBR"
+
+	// H265RateControlModeQvbr is a H265RateControlMode enum value
+	H265RateControlModeQvbr = "QVBR"
+)
+
+// H265 Scan Type
+const (
+	// H265ScanTypeProgressive is a H265ScanType enum value
+	H265ScanTypeProgressive = "PROGRESSIVE"
+)
+
+// H265 Scene Change Detect
+const (
+	// H265SceneChangeDetectDisabled is a H265SceneChangeDetect enum value
+	H265SceneChangeDetectDisabled = "DISABLED"
+
+	// H265SceneChangeDetectEnabled is a H265SceneChangeDetect enum value
+	H265SceneChangeDetectEnabled = "ENABLED"
+)
+
+// H265 Tier
+const (
+	// H265TierHigh is a H265Tier enum value
+	H265TierHigh = "HIGH"
+
+	// H265TierMain is a H265Tier enum value
+	H265TierMain = "MAIN"
+)
+
+// H265 Timecode Insertion Behavior
+const (
+	// H265TimecodeInsertionBehaviorDisabled is a H265TimecodeInsertionBehavior enum value
+	H265TimecodeInsertionBehaviorDisabled = "DISABLED"
+
+	// H265TimecodeInsertionBehaviorPicTimingSei is a H265TimecodeInsertionBehavior enum value
+	H265TimecodeInsertionBehaviorPicTimingSei = "PIC_TIMING_SEI"
+)
+
+// Hls Ad Markers
 const (
 	// HlsAdMarkersAdobe is a HlsAdMarkers enum value
 	HlsAdMarkersAdobe = "ADOBE"
@@ -17298,6 +19206,7 @@ const (
 	HlsAdMarkersElementalScte35 = "ELEMENTAL_SCTE35"
 )
 
+// Hls Akamai Http Transfer Mode
 const (
 	// HlsAkamaiHttpTransferModeChunked is a HlsAkamaiHttpTransferMode enum value
 	HlsAkamaiHttpTransferModeChunked = "CHUNKED"
@@ -17306,6 +19215,7 @@ const (
 	HlsAkamaiHttpTransferModeNonChunked = "NON_CHUNKED"
 )
 
+// Hls Caption Language Setting
 const (
 	// HlsCaptionLanguageSettingInsert is a HlsCaptionLanguageSetting enum value
 	HlsCaptionLanguageSettingInsert = "INSERT"
@@ -17317,6 +19227,7 @@ const (
 	HlsCaptionLanguageSettingOmit = "OMIT"
 )
 
+// Hls Client Cache
 const (
 	// HlsClientCacheDisabled is a HlsClientCache enum value
 	HlsClientCacheDisabled = "DISABLED"
@@ -17325,6 +19236,7 @@ const (
 	HlsClientCacheEnabled = "ENABLED"
 )
 
+// Hls Codec Specification
 const (
 	// HlsCodecSpecificationRfc4281 is a HlsCodecSpecification enum value
 	HlsCodecSpecificationRfc4281 = "RFC_4281"
@@ -17333,6 +19245,7 @@ const (
 	HlsCodecSpecificationRfc6381 = "RFC_6381"
 )
 
+// Hls Directory Structure
 const (
 	// HlsDirectoryStructureSingleDirectory is a HlsDirectoryStructure enum value
 	HlsDirectoryStructureSingleDirectory = "SINGLE_DIRECTORY"
@@ -17341,6 +19254,7 @@ const (
 	HlsDirectoryStructureSubdirectoryPerStream = "SUBDIRECTORY_PER_STREAM"
 )
 
+// Hls Encryption Type
 const (
 	// HlsEncryptionTypeAes128 is a HlsEncryptionType enum value
 	HlsEncryptionTypeAes128 = "AES128"
@@ -17349,6 +19263,7 @@ const (
 	HlsEncryptionTypeSampleAes = "SAMPLE_AES"
 )
 
+// Hls Iv In Manifest
 const (
 	// HlsIvInManifestExclude is a HlsIvInManifest enum value
 	HlsIvInManifestExclude = "EXCLUDE"
@@ -17357,6 +19272,7 @@ const (
 	HlsIvInManifestInclude = "INCLUDE"
 )
 
+// Hls Iv Source
 const (
 	// HlsIvSourceExplicit is a HlsIvSource enum value
 	HlsIvSourceExplicit = "EXPLICIT"
@@ -17365,6 +19281,7 @@ const (
 	HlsIvSourceFollowsSegmentNumber = "FOLLOWS_SEGMENT_NUMBER"
 )
 
+// Hls Manifest Compression
 const (
 	// HlsManifestCompressionGzip is a HlsManifestCompression enum value
 	HlsManifestCompressionGzip = "GZIP"
@@ -17373,6 +19290,7 @@ const (
 	HlsManifestCompressionNone = "NONE"
 )
 
+// Hls Manifest Duration Format
 const (
 	// HlsManifestDurationFormatFloatingPoint is a HlsManifestDurationFormat enum value
 	HlsManifestDurationFormatFloatingPoint = "FLOATING_POINT"
@@ -17381,11 +19299,13 @@ const (
 	HlsManifestDurationFormatInteger = "INTEGER"
 )
 
+// Hls Media Store Storage Class
 const (
 	// HlsMediaStoreStorageClassTemporal is a HlsMediaStoreStorageClass enum value
 	HlsMediaStoreStorageClassTemporal = "TEMPORAL"
 )
 
+// Hls Mode
 const (
 	// HlsModeLive is a HlsMode enum value
 	HlsModeLive = "LIVE"
@@ -17394,6 +19314,7 @@ const (
 	HlsModeVod = "VOD"
 )
 
+// Hls Output Selection
 const (
 	// HlsOutputSelectionManifestsAndSegments is a HlsOutputSelection enum value
 	HlsOutputSelectionManifestsAndSegments = "MANIFESTS_AND_SEGMENTS"
@@ -17402,6 +19323,7 @@ const (
 	HlsOutputSelectionSegmentsOnly = "SEGMENTS_ONLY"
 )
 
+// Hls Program Date Time
 const (
 	// HlsProgramDateTimeExclude is a HlsProgramDateTime enum value
 	HlsProgramDateTimeExclude = "EXCLUDE"
@@ -17410,6 +19332,7 @@ const (
 	HlsProgramDateTimeInclude = "INCLUDE"
 )
 
+// Hls Redundant Manifest
 const (
 	// HlsRedundantManifestDisabled is a HlsRedundantManifest enum value
 	HlsRedundantManifestDisabled = "DISABLED"
@@ -17418,6 +19341,7 @@ const (
 	HlsRedundantManifestEnabled = "ENABLED"
 )
 
+// Hls Segmentation Mode
 const (
 	// HlsSegmentationModeUseInputSegmentation is a HlsSegmentationMode enum value
 	HlsSegmentationModeUseInputSegmentation = "USE_INPUT_SEGMENTATION"
@@ -17426,6 +19350,7 @@ const (
 	HlsSegmentationModeUseSegmentDuration = "USE_SEGMENT_DURATION"
 )
 
+// Hls Stream Inf Resolution
 const (
 	// HlsStreamInfResolutionExclude is a HlsStreamInfResolution enum value
 	HlsStreamInfResolutionExclude = "EXCLUDE"
@@ -17434,6 +19359,7 @@ const (
 	HlsStreamInfResolutionInclude = "INCLUDE"
 )
 
+// Hls Timed Metadata Id3 Frame
 const (
 	// HlsTimedMetadataId3FrameNone is a HlsTimedMetadataId3Frame enum value
 	HlsTimedMetadataId3FrameNone = "NONE"
@@ -17445,6 +19371,7 @@ const (
 	HlsTimedMetadataId3FrameTdrl = "TDRL"
 )
 
+// Hls Ts File Mode
 const (
 	// HlsTsFileModeSegmentedFiles is a HlsTsFileMode enum value
 	HlsTsFileModeSegmentedFiles = "SEGMENTED_FILES"
@@ -17453,6 +19380,7 @@ const (
 	HlsTsFileModeSingleFile = "SINGLE_FILE"
 )
 
+// Hls Webdav Http Transfer Mode
 const (
 	// HlsWebdavHttpTransferModeChunked is a HlsWebdavHttpTransferMode enum value
 	HlsWebdavHttpTransferModeChunked = "CHUNKED"
@@ -17472,6 +19400,15 @@ const (
 	IFrameOnlyPlaylistTypeStandard = "STANDARD"
 )
 
+// A standard input has two sources and a single pipeline input only has one.
+const (
+	// InputClassStandard is a InputClass enum value
+	InputClassStandard = "STANDARD"
+
+	// InputClassSinglePipeline is a InputClass enum value
+	InputClassSinglePipeline = "SINGLE_PIPELINE"
+)
+
 // codec in increasing order of complexity
 const (
 	// InputCodecMpeg2 is a InputCodec enum value
@@ -17484,6 +19421,7 @@ const (
 	InputCodecHevc = "HEVC"
 )
 
+// Input Deblock Filter
 const (
 	// InputDeblockFilterDisabled is a InputDeblockFilter enum value
 	InputDeblockFilterDisabled = "DISABLED"
@@ -17492,6 +19430,7 @@ const (
 	InputDeblockFilterEnabled = "ENABLED"
 )
 
+// Input Denoise Filter
 const (
 	// InputDenoiseFilterDisabled is a InputDenoiseFilter enum value
 	InputDenoiseFilterDisabled = "DISABLED"
@@ -17500,6 +19439,7 @@ const (
 	InputDenoiseFilterEnabled = "ENABLED"
 )
 
+// Input Filter
 const (
 	// InputFilterAuto is a InputFilter enum value
 	InputFilterAuto = "AUTO"
@@ -17511,6 +19451,7 @@ const (
 	InputFilterForced = "FORCED"
 )
 
+// Input Loss Action For Hls Out
 const (
 	// InputLossActionForHlsOutEmitOutput is a InputLossActionForHlsOut enum value
 	InputLossActionForHlsOutEmitOutput = "EMIT_OUTPUT"
@@ -17519,6 +19460,7 @@ const (
 	InputLossActionForHlsOutPauseOutput = "PAUSE_OUTPUT"
 )
 
+// Input Loss Action For Ms Smooth Out
 const (
 	// InputLossActionForMsSmoothOutEmitOutput is a InputLossActionForMsSmoothOut enum value
 	InputLossActionForMsSmoothOutEmitOutput = "EMIT_OUTPUT"
@@ -17527,6 +19469,7 @@ const (
 	InputLossActionForMsSmoothOutPauseOutput = "PAUSE_OUTPUT"
 )
 
+// Input Loss Action For Rtmp Out
 const (
 	// InputLossActionForRtmpOutEmitOutput is a InputLossActionForRtmpOut enum value
 	InputLossActionForRtmpOutEmitOutput = "EMIT_OUTPUT"
@@ -17535,6 +19478,7 @@ const (
 	InputLossActionForRtmpOutPauseOutput = "PAUSE_OUTPUT"
 )
 
+// Input Loss Action For Udp Out
 const (
 	// InputLossActionForUdpOutDropProgram is a InputLossActionForUdpOut enum value
 	InputLossActionForUdpOutDropProgram = "DROP_PROGRAM"
@@ -17546,6 +19490,7 @@ const (
 	InputLossActionForUdpOutEmitProgram = "EMIT_PROGRAM"
 )
 
+// Input Loss Image Type
 const (
 	// InputLossImageTypeColor is a InputLossImageType enum value
 	InputLossImageTypeColor = "COLOR"
@@ -17594,12 +19539,25 @@ const (
 	InputSecurityGroupStateDeleted = "DELETED"
 )
 
+// Input Source End Behavior
 const (
 	// InputSourceEndBehaviorContinue is a InputSourceEndBehavior enum value
 	InputSourceEndBehaviorContinue = "CONTINUE"
 
 	// InputSourceEndBehaviorLoop is a InputSourceEndBehavior enum value
 	InputSourceEndBehaviorLoop = "LOOP"
+)
+
+// There are two types of input sources, static and dynamic. If an input source
+// is dynamic you canchange the source url of the input dynamically using an
+// input switch action. However, the only input typeto support a dynamic url
+// at this time is MP4_FILE. By default all input sources are static.
+const (
+	// InputSourceTypeStatic is a InputSourceType enum value
+	InputSourceTypeStatic = "STATIC"
+
+	// InputSourceTypeDynamic is a InputSourceType enum value
+	InputSourceTypeDynamic = "DYNAMIC"
 )
 
 const (
@@ -17617,6 +19575,21 @@ const (
 
 	// InputStateDeleted is a InputState enum value
 	InputStateDeleted = "DELETED"
+)
+
+// To clip the file, you must specify the timecode for the start and end of
+// the clip. Specify EMBEDDED to use the timecode embedded in the source content.
+// The embedded timecode must exist in the source content, otherwise MediaLive
+// will output black frames until it reaches the end of the source. Specify
+// ZEROBASED to use a timecode that assumes that the first frame in the file
+// has the timestamp 00:00:00.00. There is no default for this field, you must
+// specify a value.
+const (
+	// InputTimecodeSourceZerobased is a InputTimecodeSource enum value
+	InputTimecodeSourceZerobased = "ZEROBASED"
+
+	// InputTimecodeSourceEmbedded is a InputTimecodeSource enum value
+	InputTimecodeSourceEmbedded = "EMBEDDED"
 )
 
 const (
@@ -17642,6 +19615,17 @@ const (
 	InputTypeMediaconnect = "MEDIACONNECT"
 )
 
+// If you specify a StopTimecode in an input (in order to clip the file), you
+// can specify if you want the clip to exclude (the default) or include the
+// frame specified by the timecode.
+const (
+	// LastFrameClippingBehaviorExcludeLastFrame is a LastFrameClippingBehavior enum value
+	LastFrameClippingBehaviorExcludeLastFrame = "EXCLUDE_LAST_FRAME"
+
+	// LastFrameClippingBehaviorIncludeLastFrame is a LastFrameClippingBehavior enum value
+	LastFrameClippingBehaviorIncludeLastFrame = "INCLUDE_LAST_FRAME"
+)
+
 // The log level the user wants for their channel.
 const (
 	// LogLevelError is a LogLevel enum value
@@ -17660,6 +19644,7 @@ const (
 	LogLevelDisabled = "DISABLED"
 )
 
+// M2ts Absent Input Audio Behavior
 const (
 	// M2tsAbsentInputAudioBehaviorDrop is a M2tsAbsentInputAudioBehavior enum value
 	M2tsAbsentInputAudioBehaviorDrop = "DROP"
@@ -17668,6 +19653,7 @@ const (
 	M2tsAbsentInputAudioBehaviorEncodeSilence = "ENCODE_SILENCE"
 )
 
+// M2ts Arib
 const (
 	// M2tsAribDisabled is a M2tsArib enum value
 	M2tsAribDisabled = "DISABLED"
@@ -17676,6 +19662,7 @@ const (
 	M2tsAribEnabled = "ENABLED"
 )
 
+// M2ts Arib Captions Pid Control
 const (
 	// M2tsAribCaptionsPidControlAuto is a M2tsAribCaptionsPidControl enum value
 	M2tsAribCaptionsPidControlAuto = "AUTO"
@@ -17684,6 +19671,7 @@ const (
 	M2tsAribCaptionsPidControlUseConfigured = "USE_CONFIGURED"
 )
 
+// M2ts Audio Buffer Model
 const (
 	// M2tsAudioBufferModelAtsc is a M2tsAudioBufferModel enum value
 	M2tsAudioBufferModelAtsc = "ATSC"
@@ -17692,6 +19680,7 @@ const (
 	M2tsAudioBufferModelDvb = "DVB"
 )
 
+// M2ts Audio Interval
 const (
 	// M2tsAudioIntervalVideoAndFixedIntervals is a M2tsAudioInterval enum value
 	M2tsAudioIntervalVideoAndFixedIntervals = "VIDEO_AND_FIXED_INTERVALS"
@@ -17700,6 +19689,7 @@ const (
 	M2tsAudioIntervalVideoInterval = "VIDEO_INTERVAL"
 )
 
+// M2ts Audio Stream Type
 const (
 	// M2tsAudioStreamTypeAtsc is a M2tsAudioStreamType enum value
 	M2tsAudioStreamTypeAtsc = "ATSC"
@@ -17708,6 +19698,7 @@ const (
 	M2tsAudioStreamTypeDvb = "DVB"
 )
 
+// M2ts Buffer Model
 const (
 	// M2tsBufferModelMultiplex is a M2tsBufferModel enum value
 	M2tsBufferModelMultiplex = "MULTIPLEX"
@@ -17716,6 +19707,7 @@ const (
 	M2tsBufferModelNone = "NONE"
 )
 
+// M2ts Cc Descriptor
 const (
 	// M2tsCcDescriptorDisabled is a M2tsCcDescriptor enum value
 	M2tsCcDescriptorDisabled = "DISABLED"
@@ -17724,6 +19716,7 @@ const (
 	M2tsCcDescriptorEnabled = "ENABLED"
 )
 
+// M2ts Ebif Control
 const (
 	// M2tsEbifControlNone is a M2tsEbifControl enum value
 	M2tsEbifControlNone = "NONE"
@@ -17732,6 +19725,7 @@ const (
 	M2tsEbifControlPassthrough = "PASSTHROUGH"
 )
 
+// M2ts Ebp Placement
 const (
 	// M2tsEbpPlacementVideoAndAudioPids is a M2tsEbpPlacement enum value
 	M2tsEbpPlacementVideoAndAudioPids = "VIDEO_AND_AUDIO_PIDS"
@@ -17740,6 +19734,7 @@ const (
 	M2tsEbpPlacementVideoPid = "VIDEO_PID"
 )
 
+// M2ts Es Rate In Pes
 const (
 	// M2tsEsRateInPesExclude is a M2tsEsRateInPes enum value
 	M2tsEsRateInPesExclude = "EXCLUDE"
@@ -17748,6 +19743,7 @@ const (
 	M2tsEsRateInPesInclude = "INCLUDE"
 )
 
+// M2ts Klv
 const (
 	// M2tsKlvNone is a M2tsKlv enum value
 	M2tsKlvNone = "NONE"
@@ -17756,6 +19752,7 @@ const (
 	M2tsKlvPassthrough = "PASSTHROUGH"
 )
 
+// M2ts Pcr Control
 const (
 	// M2tsPcrControlConfiguredPcrPeriod is a M2tsPcrControl enum value
 	M2tsPcrControlConfiguredPcrPeriod = "CONFIGURED_PCR_PERIOD"
@@ -17764,6 +19761,7 @@ const (
 	M2tsPcrControlPcrEveryPesPacket = "PCR_EVERY_PES_PACKET"
 )
 
+// M2ts Rate Mode
 const (
 	// M2tsRateModeCbr is a M2tsRateMode enum value
 	M2tsRateModeCbr = "CBR"
@@ -17772,6 +19770,7 @@ const (
 	M2tsRateModeVbr = "VBR"
 )
 
+// M2ts Scte35 Control
 const (
 	// M2tsScte35ControlNone is a M2tsScte35Control enum value
 	M2tsScte35ControlNone = "NONE"
@@ -17780,6 +19779,7 @@ const (
 	M2tsScte35ControlPassthrough = "PASSTHROUGH"
 )
 
+// M2ts Segmentation Markers
 const (
 	// M2tsSegmentationMarkersEbp is a M2tsSegmentationMarkers enum value
 	M2tsSegmentationMarkersEbp = "EBP"
@@ -17800,6 +19800,7 @@ const (
 	M2tsSegmentationMarkersRaiSegstart = "RAI_SEGSTART"
 )
 
+// M2ts Segmentation Style
 const (
 	// M2tsSegmentationStyleMaintainCadence is a M2tsSegmentationStyle enum value
 	M2tsSegmentationStyleMaintainCadence = "MAINTAIN_CADENCE"
@@ -17808,6 +19809,7 @@ const (
 	M2tsSegmentationStyleResetCadence = "RESET_CADENCE"
 )
 
+// M2ts Timed Metadata Behavior
 const (
 	// M2tsTimedMetadataBehaviorNoPassthrough is a M2tsTimedMetadataBehavior enum value
 	M2tsTimedMetadataBehaviorNoPassthrough = "NO_PASSTHROUGH"
@@ -17816,6 +19818,7 @@ const (
 	M2tsTimedMetadataBehaviorPassthrough = "PASSTHROUGH"
 )
 
+// M3u8 Pcr Control
 const (
 	// M3u8PcrControlConfiguredPcrPeriod is a M3u8PcrControl enum value
 	M3u8PcrControlConfiguredPcrPeriod = "CONFIGURED_PCR_PERIOD"
@@ -17824,6 +19827,7 @@ const (
 	M3u8PcrControlPcrEveryPesPacket = "PCR_EVERY_PES_PACKET"
 )
 
+// M3u8 Scte35 Behavior
 const (
 	// M3u8Scte35BehaviorNoPassthrough is a M3u8Scte35Behavior enum value
 	M3u8Scte35BehaviorNoPassthrough = "NO_PASSTHROUGH"
@@ -17832,6 +19836,7 @@ const (
 	M3u8Scte35BehaviorPassthrough = "PASSTHROUGH"
 )
 
+// M3u8 Timed Metadata Behavior
 const (
 	// M3u8TimedMetadataBehaviorNoPassthrough is a M3u8TimedMetadataBehavior enum value
 	M3u8TimedMetadataBehaviorNoPassthrough = "NO_PASSTHROUGH"
@@ -17840,6 +19845,7 @@ const (
 	M3u8TimedMetadataBehaviorPassthrough = "PASSTHROUGH"
 )
 
+// Mp2 Coding Mode
 const (
 	// Mp2CodingModeCodingMode10 is a Mp2CodingMode enum value
 	Mp2CodingModeCodingMode10 = "CODING_MODE_1_0"
@@ -17848,6 +19854,16 @@ const (
 	Mp2CodingModeCodingMode20 = "CODING_MODE_2_0"
 )
 
+// Ms Smooth H265 Packaging Type
+const (
+	// MsSmoothH265PackagingTypeHev1 is a MsSmoothH265PackagingType enum value
+	MsSmoothH265PackagingTypeHev1 = "HEV1"
+
+	// MsSmoothH265PackagingTypeHvc1 is a MsSmoothH265PackagingType enum value
+	MsSmoothH265PackagingTypeHvc1 = "HVC1"
+)
+
+// Network Input Server Validation
 const (
 	// NetworkInputServerValidationCheckCryptographyAndValidateName is a NetworkInputServerValidation enum value
 	NetworkInputServerValidationCheckCryptographyAndValidateName = "CHECK_CRYPTOGRAPHY_AND_VALIDATE_NAME"
@@ -17974,6 +19990,7 @@ const (
 	ReservationVideoQualityPremium = "PREMIUM"
 )
 
+// Rtmp Cache Full Behavior
 const (
 	// RtmpCacheFullBehaviorDisconnectImmediately is a RtmpCacheFullBehavior enum value
 	RtmpCacheFullBehaviorDisconnectImmediately = "DISCONNECT_IMMEDIATELY"
@@ -17982,6 +19999,7 @@ const (
 	RtmpCacheFullBehaviorWaitForServer = "WAIT_FOR_SERVER"
 )
 
+// Rtmp Caption Data
 const (
 	// RtmpCaptionDataAll is a RtmpCaptionData enum value
 	RtmpCaptionDataAll = "ALL"
@@ -17993,6 +20011,7 @@ const (
 	RtmpCaptionDataField1AndField2608 = "FIELD1_AND_FIELD2_608"
 )
 
+// Rtmp Output Certificate Mode
 const (
 	// RtmpOutputCertificateModeSelfSigned is a RtmpOutputCertificateMode enum value
 	RtmpOutputCertificateModeSelfSigned = "SELF_SIGNED"
@@ -18001,6 +20020,7 @@ const (
 	RtmpOutputCertificateModeVerifyAuthenticity = "VERIFY_AUTHENTICITY"
 )
 
+// Scte20 Convert608 To708
 const (
 	// Scte20Convert608To708Disabled is a Scte20Convert608To708 enum value
 	Scte20Convert608To708Disabled = "DISABLED"
@@ -18009,6 +20029,7 @@ const (
 	Scte20Convert608To708Upconvert = "UPCONVERT"
 )
 
+// Scte35 Apos No Regional Blackout Behavior
 const (
 	// Scte35AposNoRegionalBlackoutBehaviorFollow is a Scte35AposNoRegionalBlackoutBehavior enum value
 	Scte35AposNoRegionalBlackoutBehaviorFollow = "FOLLOW"
@@ -18017,6 +20038,7 @@ const (
 	Scte35AposNoRegionalBlackoutBehaviorIgnore = "IGNORE"
 )
 
+// Scte35 Apos Web Delivery Allowed Behavior
 const (
 	// Scte35AposWebDeliveryAllowedBehaviorFollow is a Scte35AposWebDeliveryAllowedBehavior enum value
 	Scte35AposWebDeliveryAllowedBehaviorFollow = "FOLLOW"
@@ -18077,6 +20099,7 @@ const (
 	Scte35SegmentationCancelIndicatorSegmentationEventCanceled = "SEGMENTATION_EVENT_CANCELED"
 )
 
+// Scte35 Splice Insert No Regional Blackout Behavior
 const (
 	// Scte35SpliceInsertNoRegionalBlackoutBehaviorFollow is a Scte35SpliceInsertNoRegionalBlackoutBehavior enum value
 	Scte35SpliceInsertNoRegionalBlackoutBehaviorFollow = "FOLLOW"
@@ -18085,6 +20108,7 @@ const (
 	Scte35SpliceInsertNoRegionalBlackoutBehaviorIgnore = "IGNORE"
 )
 
+// Scte35 Splice Insert Web Delivery Allowed Behavior
 const (
 	// Scte35SpliceInsertWebDeliveryAllowedBehaviorFollow is a Scte35SpliceInsertWebDeliveryAllowedBehavior enum value
 	Scte35SpliceInsertWebDeliveryAllowedBehaviorFollow = "FOLLOW"
@@ -18104,6 +20128,7 @@ const (
 	Scte35WebDeliveryAllowedFlagWebDeliveryAllowed = "WEB_DELIVERY_ALLOWED"
 )
 
+// Smooth Group Audio Only Timecode Control
 const (
 	// SmoothGroupAudioOnlyTimecodeControlPassthrough is a SmoothGroupAudioOnlyTimecodeControl enum value
 	SmoothGroupAudioOnlyTimecodeControlPassthrough = "PASSTHROUGH"
@@ -18112,6 +20137,7 @@ const (
 	SmoothGroupAudioOnlyTimecodeControlUseConfiguredClock = "USE_CONFIGURED_CLOCK"
 )
 
+// Smooth Group Certificate Mode
 const (
 	// SmoothGroupCertificateModeSelfSigned is a SmoothGroupCertificateMode enum value
 	SmoothGroupCertificateModeSelfSigned = "SELF_SIGNED"
@@ -18120,6 +20146,7 @@ const (
 	SmoothGroupCertificateModeVerifyAuthenticity = "VERIFY_AUTHENTICITY"
 )
 
+// Smooth Group Event Id Mode
 const (
 	// SmoothGroupEventIdModeNoEventId is a SmoothGroupEventIdMode enum value
 	SmoothGroupEventIdModeNoEventId = "NO_EVENT_ID"
@@ -18131,6 +20158,7 @@ const (
 	SmoothGroupEventIdModeUseTimestamp = "USE_TIMESTAMP"
 )
 
+// Smooth Group Event Stop Behavior
 const (
 	// SmoothGroupEventStopBehaviorNone is a SmoothGroupEventStopBehavior enum value
 	SmoothGroupEventStopBehaviorNone = "NONE"
@@ -18139,6 +20167,7 @@ const (
 	SmoothGroupEventStopBehaviorSendEos = "SEND_EOS"
 )
 
+// Smooth Group Segmentation Mode
 const (
 	// SmoothGroupSegmentationModeUseInputSegmentation is a SmoothGroupSegmentationMode enum value
 	SmoothGroupSegmentationModeUseInputSegmentation = "USE_INPUT_SEGMENTATION"
@@ -18147,6 +20176,7 @@ const (
 	SmoothGroupSegmentationModeUseSegmentDuration = "USE_SEGMENT_DURATION"
 )
 
+// Smooth Group Sparse Track Type
 const (
 	// SmoothGroupSparseTrackTypeNone is a SmoothGroupSparseTrackType enum value
 	SmoothGroupSparseTrackTypeNone = "NONE"
@@ -18155,6 +20185,7 @@ const (
 	SmoothGroupSparseTrackTypeScte35 = "SCTE_35"
 )
 
+// Smooth Group Stream Manifest Behavior
 const (
 	// SmoothGroupStreamManifestBehaviorDoNotSend is a SmoothGroupStreamManifestBehavior enum value
 	SmoothGroupStreamManifestBehaviorDoNotSend = "DO_NOT_SEND"
@@ -18163,6 +20194,7 @@ const (
 	SmoothGroupStreamManifestBehaviorSend = "SEND"
 )
 
+// Smooth Group Timestamp Offset Mode
 const (
 	// SmoothGroupTimestampOffsetModeUseConfiguredOffset is a SmoothGroupTimestampOffsetMode enum value
 	SmoothGroupTimestampOffsetModeUseConfiguredOffset = "USE_CONFIGURED_OFFSET"
@@ -18171,6 +20203,7 @@ const (
 	SmoothGroupTimestampOffsetModeUseEventStartDate = "USE_EVENT_START_DATE"
 )
 
+// Timecode Config Source
 const (
 	// TimecodeConfigSourceEmbedded is a TimecodeConfigSource enum value
 	TimecodeConfigSourceEmbedded = "EMBEDDED"
@@ -18182,6 +20215,7 @@ const (
 	TimecodeConfigSourceZerobased = "ZEROBASED"
 )
 
+// Ttml Destination Style Control
 const (
 	// TtmlDestinationStyleControlPassthrough is a TtmlDestinationStyleControl enum value
 	TtmlDestinationStyleControlPassthrough = "PASSTHROUGH"
@@ -18190,6 +20224,7 @@ const (
 	TtmlDestinationStyleControlUseConfigured = "USE_CONFIGURED"
 )
 
+// Udp Timed Metadata Id3 Frame
 const (
 	// UdpTimedMetadataId3FrameNone is a UdpTimedMetadataId3Frame enum value
 	UdpTimedMetadataId3FrameNone = "NONE"
@@ -18201,6 +20236,7 @@ const (
 	UdpTimedMetadataId3FrameTdrl = "TDRL"
 )
 
+// Video Description Respond To Afd
 const (
 	// VideoDescriptionRespondToAfdNone is a VideoDescriptionRespondToAfd enum value
 	VideoDescriptionRespondToAfdNone = "NONE"
@@ -18212,6 +20248,7 @@ const (
 	VideoDescriptionRespondToAfdRespond = "RESPOND"
 )
 
+// Video Description Scaling Behavior
 const (
 	// VideoDescriptionScalingBehaviorDefault is a VideoDescriptionScalingBehavior enum value
 	VideoDescriptionScalingBehaviorDefault = "DEFAULT"
@@ -18220,6 +20257,7 @@ const (
 	VideoDescriptionScalingBehaviorStretchToOutput = "STRETCH_TO_OUTPUT"
 )
 
+// Video Selector Color Space
 const (
 	// VideoSelectorColorSpaceFollow is a VideoSelectorColorSpace enum value
 	VideoSelectorColorSpaceFollow = "FOLLOW"
@@ -18231,6 +20269,7 @@ const (
 	VideoSelectorColorSpaceRec709 = "REC_709"
 )
 
+// Video Selector Color Space Usage
 const (
 	// VideoSelectorColorSpaceUsageFallback is a VideoSelectorColorSpaceUsage enum value
 	VideoSelectorColorSpaceUsageFallback = "FALLBACK"

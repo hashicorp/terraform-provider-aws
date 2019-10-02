@@ -1,12 +1,11 @@
 ---
 layout: "aws"
 page_title: "AWS: aws_vpc_endpoint_route_table_association"
-sidebar_current: "docs-aws-resource-vpc-endpoint-route-table-association"
 description: |-
   Manages a VPC Endpoint Route Table Association
 ---
 
-# aws_vpc_endpoint_route_table_association
+# Resource: aws_vpc_endpoint_route_table_association
 
 Manages a VPC Endpoint Route Table Association
 

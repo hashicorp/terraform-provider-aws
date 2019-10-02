@@ -174,6 +174,9 @@ func resourceAwsSnsPlatformApplicationUpdate(d *schema.ResourceData, meta interf
 		}
 		return nil
 	})
+	if isResourceTimeoutError(err) {
+		_, err = snsconn.SetPlatformApplicationAttributes(req)
+	}
 
 	if err != nil {
 		return fmt.Errorf("Error updating SNS platform application: %s", err)

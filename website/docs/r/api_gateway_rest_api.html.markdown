@@ -1,12 +1,11 @@
 ---
 layout: "aws"
 page_title: "AWS: aws_api_gateway_rest_api"
-sidebar_current: "docs-aws-resource-api-gateway-rest-api"
 description: |-
   Provides an API Gateway REST API.
 ---
 
-# aws_api_gateway_rest_api
+# Resource: aws_api_gateway_rest_api
 
 Provides an API Gateway REST API.
 
