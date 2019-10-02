@@ -440,6 +440,12 @@ func resourceAwsRDSClusterCreate(d *schema.ResourceData, meta interface{}) error
 		identifier = resource.PrefixedUniqueId("tf-")
 	}
 
+	if sfs := d.Get("skip_final_snapshot").(bool); !sfs {
+		if _, ok := d.GetOk("final_snapshot_identifier"); !ok {
+			return fmt.Errorf(`provider.aws: aws_rds_cluster: final_snapshot_idenfitier is required if skip_final_snapshot is False`)
+		}
+	}
+
 	if _, ok := d.GetOk("snapshot_identifier"); ok {
 		opts := rds.RestoreDBClusterFromSnapshotInput{
 			CopyTagsToSnapshot:   aws.Bool(d.Get("copy_tags_to_snapshot").(bool)),
@@ -1059,6 +1065,14 @@ func resourceAwsRDSClusterUpdate(d *schema.ResourceData, meta interface{}) error
 	conn := meta.(*AWSClient).rdsconn
 	requestUpdate := false
 
+	if d.HasChange("skip_final_snapshot") || d.HasChange("final_snapshot_identifier") {
+		sfs := d.Get("skip_final_snapshot").(bool)
+		fsi := d.Get("final_snapshot_identifier").(string)
+		if !sfs && fsi == "" {
+			return fmt.Errorf(`provider.aws: aws_rds_cluster: final_snapshot_idenfitier is required if skip_final_snapshot is False`)
+		}
+	}
+
 	req := &rds.ModifyDBClusterInput{
 		ApplyImmediately:    aws.Bool(d.Get("apply_immediately").(bool)),
 		DBClusterIdentifier: aws.String(d.Id()),
@@ -1258,7 +1272,16 @@ func resourceAwsRDSClusterDelete(d *schema.ResourceData, meta interface{}) error
 	}
 
 	skipFinalSnapshot := d.Get("skip_final_snapshot").(bool)
-	deleteOpts.SkipFinalSnapshot = aws.Bool(skipFinalSnapshot)
+	finalSnapshotIdentifier := d.Get("final_snapshot_identifier").(string)
+
+	// Use user-provided snapshot identifier or default to a random one.
+	if !skipFinalSnapshot && finalSnapshotIdentifier != "" {
+		deleteOpts.SkipFinalSnapshot = aws.Bool(skipFinalSnapshot)
+		deleteOpts.FinalDBSnapshotIdentifier = aws.String(finalSnapshotIdentifier)
+	} else if !skipFinalSnapshot && finalSnapshotIdentifier == "" {
+		deleteOpts.SkipFinalSnapshot = aws.Bool(skipFinalSnapshot)
+		deleteOpts.FinalDBSnapshotIdentifier = aws.String(resource.PrefixedUniqueId("final-snapshot-"))
+	}
 
 	if !skipFinalSnapshot {
 		if name, present := d.GetOk("final_snapshot_identifier"); present {

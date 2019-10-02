@@ -256,6 +256,12 @@ func resourceAwsNeptuneClusterCreate(d *schema.ResourceData, meta interface{}) e
 		}
 	}
 
+	if sfs := d.Get("skip_final_snapshot").(bool); !sfs {
+		if _, ok := d.GetOk("final_snapshot_identifier"); !ok {
+			return fmt.Errorf(`provider.aws: aws_neptune_cluster: final_snapshot_idenfitier is required if skip_final_snapshot is False`)
+		}
+	}
+
 	createDbClusterInput := &neptune.CreateDBClusterInput{
 		DBClusterIdentifier: aws.String(d.Get("cluster_identifier").(string)),
 		Engine:              aws.String(d.Get("engine").(string)),
@@ -500,6 +506,14 @@ func resourceAwsNeptuneClusterUpdate(d *schema.ResourceData, meta interface{}) e
 		DBClusterIdentifier: aws.String(d.Id()),
 	}
 
+	if d.HasChange("skip_final_snapshot") || d.HasChange("final_snapshot_identifier") {
+		sfs := d.Get("skip_final_snapshot").(bool)
+		fsi := d.Get("final_snapshot_identifier").(string)
+		if !sfs && fsi == "" {
+			return fmt.Errorf(`provider.aws: aws_neptune_cluster: final_snapshot_idenfitier is required if skip_final_snapshot is False`)
+		}
+	}
+
 	if d.HasChange("vpc_security_group_ids") {
 		if attr := d.Get("vpc_security_group_ids").(*schema.Set); attr.Len() > 0 {
 			req.VpcSecurityGroupIds = expandStringList(attr.List())
@@ -621,14 +635,15 @@ func resourceAwsNeptuneClusterDelete(d *schema.ResourceData, meta interface{}) e
 	}
 
 	skipFinalSnapshot := d.Get("skip_final_snapshot").(bool)
-	deleteOpts.SkipFinalSnapshot = aws.Bool(skipFinalSnapshot)
+	finalSnapshotIdentifier := d.Get("final_snapshot_identifier").(string)
 
-	if !skipFinalSnapshot {
-		if name, present := d.GetOk("final_snapshot_identifier"); present {
-			deleteOpts.FinalDBSnapshotIdentifier = aws.String(name.(string))
-		} else {
-			return fmt.Errorf("Neptune Cluster FinalSnapshotIdentifier is required when a final snapshot is required")
-		}
+	// Use user-provided snapshot identifier or default to a random one.
+	if !skipFinalSnapshot && finalSnapshotIdentifier != "" {
+		deleteOpts.SkipFinalSnapshot = aws.Bool(skipFinalSnapshot)
+		deleteOpts.FinalDBSnapshotIdentifier = aws.String(finalSnapshotIdentifier)
+	} else if !skipFinalSnapshot && finalSnapshotIdentifier == "" {
+		deleteOpts.SkipFinalSnapshot = aws.Bool(skipFinalSnapshot)
+		deleteOpts.FinalDBSnapshotIdentifier = aws.String(resource.PrefixedUniqueId("final-snapshot-"))
 	}
 
 	log.Printf("[DEBUG] Neptune Cluster delete options: %s", deleteOpts)

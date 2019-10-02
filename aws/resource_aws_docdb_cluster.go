@@ -272,6 +272,12 @@ func resourceAwsDocDBClusterCreate(d *schema.ResourceData, meta interface{}) err
 		identifier = resource.PrefixedUniqueId("tf-")
 	}
 
+	if sfs := d.Get("skip_final_snapshot").(bool); !sfs {
+		if _, ok := d.GetOk("final_snapshot_identifier"); !ok {
+			return fmt.Errorf(`provider.aws: aws_docdb_cluster: final_snapshot_idenfitier is required if skip_final_snapshot is False`)
+		}
+	}
+
 	if _, ok := d.GetOk("snapshot_identifier"); ok {
 		opts := docdb.RestoreDBClusterFromSnapshotInput{
 			DBClusterIdentifier: aws.String(identifier),
@@ -570,6 +576,14 @@ func resourceAwsDocDBClusterUpdate(d *schema.ResourceData, meta interface{}) err
 	conn := meta.(*AWSClient).docdbconn
 	requestUpdate := false
 
+	if d.HasChange("skip_final_snapshot") || d.HasChange("final_snapshot_identifier") {
+		sfs := d.Get("skip_final_snapshot").(bool)
+		fsi := d.Get("final_snapshot_identifier").(string)
+		if !sfs && fsi == "" {
+			return fmt.Errorf(`provider.aws: aws_docdb_cluster: final_snapshot_idenfitier is required if skip_final_snapshot is False`)
+		}
+	}
+
 	req := &docdb.ModifyDBClusterInput{
 		ApplyImmediately:    aws.Bool(d.Get("apply_immediately").(bool)),
 		DBClusterIdentifier: aws.String(d.Id()),
@@ -675,14 +689,15 @@ func resourceAwsDocDBClusterDelete(d *schema.ResourceData, meta interface{}) err
 	}
 
 	skipFinalSnapshot := d.Get("skip_final_snapshot").(bool)
-	deleteOpts.SkipFinalSnapshot = aws.Bool(skipFinalSnapshot)
+	finalSnapshotIdentifier := d.Get("final_snapshot_identifier").(string)
 
-	if !skipFinalSnapshot {
-		if name, present := d.GetOk("final_snapshot_identifier"); present {
-			deleteOpts.FinalDBSnapshotIdentifier = aws.String(name.(string))
-		} else {
-			return fmt.Errorf("DocDB Cluster FinalSnapshotIdentifier is required when a final snapshot is required")
-		}
+	// Use user-provided snapshot identifier or default to a random one.
+	if !skipFinalSnapshot && finalSnapshotIdentifier != "" {
+		deleteOpts.SkipFinalSnapshot = aws.Bool(skipFinalSnapshot)
+		deleteOpts.FinalDBSnapshotIdentifier = aws.String(finalSnapshotIdentifier)
+	} else if !skipFinalSnapshot && finalSnapshotIdentifier == "" {
+		deleteOpts.SkipFinalSnapshot = aws.Bool(skipFinalSnapshot)
+		deleteOpts.FinalDBSnapshotIdentifier = aws.String(resource.PrefixedUniqueId("final-snapshot-"))
 	}
 
 	log.Printf("[DEBUG] DocDB Cluster delete options: %s", deleteOpts)

@@ -334,6 +334,12 @@ func resourceAwsRedshiftClusterCreate(d *schema.ResourceData, meta interface{}) 
 	conn := meta.(*AWSClient).redshiftconn
 	tags := tagsFromMapRedshift(d.Get("tags").(map[string]interface{}))
 
+	if sfs := d.Get("skip_final_snapshot").(bool); !sfs {
+		if _, ok := d.GetOk("final_snapshot_identifier"); !ok {
+			return fmt.Errorf(`provider.aws: aws_redshift_cluster: final_snapshot_idenfitier is required if skip_final_snapshot is False`)
+		}
+	}
+
 	if v, ok := d.GetOk("snapshot_identifier"); ok {
 		restoreOpts := &redshift.RestoreFromClusterSnapshotInput{
 			ClusterIdentifier:                aws.String(d.Get("cluster_identifier").(string)),
@@ -642,6 +648,16 @@ func resourceAwsRedshiftClusterUpdate(d *schema.ResourceData, meta interface{}) 
 	conn := meta.(*AWSClient).redshiftconn
 	d.Partial(true)
 
+	if d.HasChange("skip_final_snapshot") || d.HasChange("final_snapshot_identifier") {
+		sfs := d.Get("skip_final_snapshot").(bool)
+		fsi := d.Get("final_snapshot_identifier").(string)
+		if !sfs && fsi == "" {
+			return fmt.Errorf(`provider.aws: aws_redshift_cluster: final_snapshot_idenfitier is required if skip_final_snapshot is False`)
+		}
+		d.SetPartial("skip_final_snapshot")
+		d.SetPartial("final_snapshot_identifier")
+	}
+
 	if tagErr := setTagsRedshift(conn, d); tagErr != nil {
 		return tagErr
 	} else {
@@ -877,7 +893,16 @@ func resourceAwsRedshiftClusterDelete(d *schema.ResourceData, meta interface{}) 
 	}
 
 	skipFinalSnapshot := d.Get("skip_final_snapshot").(bool)
-	deleteOpts.SkipFinalClusterSnapshot = aws.Bool(skipFinalSnapshot)
+	finalSnapshotIdentifier := d.Get("final_snapshot_identifier").(string)
+
+	// Use user-provided snapshot identifier or default to a random one.
+	if !skipFinalSnapshot && finalSnapshotIdentifier != "" {
+		deleteOpts.SkipFinalSnapshot = aws.Bool(skipFinalSnapshot)
+		deleteOpts.FinalDBSnapshotIdentifier = aws.String(finalSnapshotIdentifier)
+	} else if !skipFinalSnapshot && finalSnapshotIdentifier == "" {
+		deleteOpts.SkipFinalSnapshot = aws.Bool(skipFinalSnapshot)
+		deleteOpts.FinalDBSnapshotIdentifier = aws.String(resource.PrefixedUniqueId("final-snapshot-"))
+	}
 
 	if !skipFinalSnapshot {
 		if name, present := d.GetOk("final_snapshot_identifier"); present {
