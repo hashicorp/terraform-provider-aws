@@ -272,7 +272,7 @@ func resourceAwsDocDBClusterCreate(d *schema.ResourceData, meta interface{}) err
 		identifier = resource.PrefixedUniqueId("tf-")
 	}
 
-	if sfs := d.Get("skip_final_snapshot").(bool); !sfs {
+	if skipFinalSnapshot := d.Get("skip_final_snapshot").(bool); !skipFinalSnapshot {
 		if _, ok := d.GetOk("final_snapshot_identifier"); !ok {
 			return fmt.Errorf(`provider.aws: aws_docdb_cluster: final_snapshot_idenfitier is required if skip_final_snapshot is False`)
 		}
@@ -577,9 +577,9 @@ func resourceAwsDocDBClusterUpdate(d *schema.ResourceData, meta interface{}) err
 	requestUpdate := false
 
 	if d.HasChange("skip_final_snapshot") || d.HasChange("final_snapshot_identifier") {
-		sfs := d.Get("skip_final_snapshot").(bool)
-		fsi := d.Get("final_snapshot_identifier").(string)
-		if !sfs && fsi == "" {
+		skipFinalSnapshot := d.Get("skip_final_snapshot").(bool)
+		finalSnapshotIdentifier := d.Get("final_snapshot_identifier").(string)
+		if !skipFinalSnapshot && finalSnapshotIdentifier == "" {
 			return fmt.Errorf(`provider.aws: aws_docdb_cluster: final_snapshot_idenfitier is required if skip_final_snapshot is False`)
 		}
 	}
