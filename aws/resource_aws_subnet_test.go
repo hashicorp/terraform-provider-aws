@@ -43,6 +43,7 @@ func init() {
 			"aws_network_interface",
 			"aws_redshift_cluster",
 			"aws_route53_resolver_endpoint",
+			"aws_sagemaker_notebook_instance",
 			"aws_spot_fleet_request",
 			"aws_vpc_endpoint",
 		},

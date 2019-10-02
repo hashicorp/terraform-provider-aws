@@ -2,6 +2,7 @@ package aws
 
 import (
 	"fmt"
+	"log"
 	"testing"
 	"time"
 
@@ -12,6 +13,70 @@ import (
 )
 
 const sagemakerTestAccSagemakerNotebookInstanceResourceNamePrefix = "terraform-testacc-"
+
+func init() {
+	resource.AddTestSweepers("aws_sagemaker_notebook_instance", &resource.Sweeper{
+		Name: "aws_sagemaker_notebook_instance",
+		F:    testSweepSagemakerNotebookInstances,
+	})
+}
+
+func testSweepSagemakerNotebookInstances(region string) error {
+	client, err := sharedClientForRegion(region)
+	if err != nil {
+		return fmt.Errorf("error getting client: %s", err)
+	}
+	conn := client.(*AWSClient).sagemakerconn
+
+	err = conn.ListNotebookInstancesPages(&sagemaker.ListNotebookInstancesInput{}, func(page *sagemaker.ListNotebookInstancesOutput, lastPage bool) bool {
+		for _, instance := range page.NotebookInstances {
+			name := aws.StringValue(instance.NotebookInstanceName)
+			status := aws.StringValue(instance.NotebookInstanceStatus)
+
+			input := &sagemaker.DeleteNotebookInstanceInput{
+				NotebookInstanceName: instance.NotebookInstanceName,
+			}
+
+			log.Printf("[INFO] Stopping SageMaker Notebook Instance: %s", name)
+			if status != sagemaker.NotebookInstanceStatusFailed && status != sagemaker.NotebookInstanceStatusStopped {
+				if err := stopSagemakerNotebookInstance(conn, name); err != nil {
+					log.Printf("[ERROR] Error stopping SageMaker Notebook Instance (%s): %s", name, err)
+					continue
+				}
+			}
+
+			log.Printf("[INFO] Deleting SageMaker Notebook Instance: %s", name)
+			if _, err := conn.DeleteNotebookInstance(input); err != nil {
+				log.Printf("[ERROR] Error deleting SageMaker Notebook Instance (%s): %s", name, err)
+				continue
+			}
+
+			stateConf := &resource.StateChangeConf{
+				Pending: []string{sagemaker.NotebookInstanceStatusDeleting},
+				Target:  []string{""},
+				Refresh: sagemakerNotebookInstanceStateRefreshFunc(conn, name),
+				Timeout: 10 * time.Minute,
+			}
+
+			if _, err := stateConf.WaitForState(); err != nil {
+				log.Printf("[ERROR] Error waiting for SageMaker Notebook Instance (%s) deletion: %s", name, err)
+			}
+		}
+
+		return !lastPage
+	})
+
+	if testSweepSkipSweepError(err) {
+		log.Printf("[WARN] Skipping SageMaker Notebook Instance sweep for %s: %s", region, err)
+		return nil
+	}
+
+	if err != nil {
+		return fmt.Errorf("Error retrieving SageMaker Notebook Instances: %s", err)
+	}
+
+	return nil
+}
 
 func TestAccAWSSagemakerNotebookInstance_basic(t *testing.T) {
 	var notebook sagemaker.DescribeNotebookInstanceOutput
