@@ -24,7 +24,7 @@ func TestAccDataSourceAwsDynamoDbTable_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("data.aws_dynamodb_table.dynamodb_table_test", "hash_key", "UserId"),
 					resource.TestCheckResourceAttr("data.aws_dynamodb_table.dynamodb_table_test", "range_key", "GameTitle"),
 					resource.TestCheckResourceAttr("data.aws_dynamodb_table.dynamodb_table_test", "attribute.#", "3"),
-					resource.TestCheckResourceAttr("data.aws_dynamodb_table.dynamodb_table_test", "global_secondary_index.#", "1"),
+					resource.TestCheckResourceAttr("data.aws_dynamodb_table.dynamodb_table_test", "global_secondary_index.#", "2"),
 					resource.TestCheckResourceAttr("data.aws_dynamodb_table.dynamodb_table_test", "ttl.#", "1"),
 					resource.TestCheckResourceAttr("data.aws_dynamodb_table.dynamodb_table_test", "tags.%", "2"),
 					resource.TestCheckResourceAttr("data.aws_dynamodb_table.dynamodb_table_test", "tags.Name", "dynamodb-table-1"),
@@ -66,6 +66,16 @@ resource "aws_dynamodb_table" "dynamodb_table_test" {
   global_secondary_index {
     name               = "GameTitleIndex"
     hash_key           = "GameTitle"
+    range_key          = "TopScore"
+    write_capacity     = 10
+    read_capacity      = 10
+    projection_type    = "INCLUDE"
+    non_key_attributes = ["UserId"]
+	}
+	
+	global_secondary_index {
+    name               = "UserIdIndex"
+    hash_key           = "UserId"
     range_key          = "TopScore"
     write_capacity     = 10
     read_capacity      = 10
