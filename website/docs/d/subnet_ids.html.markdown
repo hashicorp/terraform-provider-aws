@@ -22,7 +22,7 @@ data "aws_subnet_ids" "example" {
 
 data "aws_subnet" "example" {
   count = "${length(data.aws_subnet_ids.example.ids)}"
-  id    = "${data.aws_subnet_ids.example.ids[count.index]}"
+  id    = "${tolist(data.aws_subnet_ids.example.ids)[count.index]}"
 }
 
 output "subnet_cidr_blocks" {
