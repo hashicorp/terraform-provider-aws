@@ -319,8 +319,8 @@ func resourceAwsSubnetDelete(d *schema.ResourceData, meta interface{}) error {
 
 	log.Printf("[INFO] Deleting subnet: %s", d.Id())
 
-	if err := deleteLingeringLambdaENIs(conn, d, "subnet-id"); err != nil {
-		return fmt.Errorf("Failed to delete Lambda ENIs: %s", err)
+	if err := deleteLingeringLambdaENIs(conn, "subnet-id", d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
+		return fmt.Errorf("error deleting Lambda ENIs using subnet (%s): %s", d.Id(), err)
 	}
 
 	req := &ec2.DeleteSubnetInput{
