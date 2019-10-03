@@ -14,7 +14,7 @@ require (
 	github.com/hashicorp/go-cleanhttp v0.5.1
 	github.com/hashicorp/go-multierror v1.0.0
 	github.com/hashicorp/go-version v1.2.0
-	github.com/hashicorp/terraform-plugin-sdk v1.0.0
+	github.com/hashicorp/terraform-plugin-sdk v1.1.1
 	github.com/hashicorp/vault v0.10.4
 	github.com/jen20/awspolicyequivalence v1.0.0
 	github.com/json-iterator/go v1.1.5 // indirect

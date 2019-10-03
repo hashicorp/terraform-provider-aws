@@ -267,6 +267,11 @@ func (p *Provider) Configure(c *terraform.ResourceConfig) error {
 		return err
 	}
 
+	if p.TerraformVersion == "" {
+		// Terraform 0.12 introduced this field to the protocol
+		// We can therefore assume that if it's unconfigured at this point, it's 0.10 or 0.11
+		p.TerraformVersion = "0.11+compatible"
+	}
 	meta, err := p.ConfigureFunc(data)
 	if err != nil {
 		return err
