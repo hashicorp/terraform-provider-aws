@@ -15,11 +15,11 @@ behavior "deprecated_import_commenter" "hashicorp_terraform" {
   message = <<-EOF
     Hello, and thank you for your contribution!
 
-    This project recently migrated to the [standalone Terraform Plugin SDK](https://www.terraform.io/docs/extend/plugin-sdk.html). While this will help speed up future feature requests and bug fixes with Terraform AWS Provider's interface with Terraform itself, it also has the unfortunate consequence of requiring some minor changes to pull requests created before the migration.
+    This project recently migrated to the [standalone Terraform Plugin SDK](https://www.terraform.io/docs/extend/plugin-sdk.html). While the migration helps speed up future feature requests and bug fixes to the Terraform AWS Provider's interface with Terraform, it has the unfortunate consequence of requiring minor changes to pull requests created using the old SDK.
 
     This pull request appears to include the Go import path `${var.import_path}`, which was from the older SDK. The newer SDK uses import paths beginning with `github.com/hashicorp/terraform-plugin-sdk/`.
 
-    To resolve this situation without losing any existing work, you may be able to Git rebase your branch against the current master branch (example below), then replacing any remaining old import paths with the newer ones.
+    To resolve this situation without losing any existing work, you may be able to Git rebase your branch against the current master branch (example below); replacing any remaining old import paths with the newer ones.
 
     ```console
     $ git fetch --all
