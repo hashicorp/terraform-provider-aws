@@ -205,6 +205,28 @@ func TestAccAWSDataSyncAgent_Tags(t *testing.T) {
 	})
 }
 
+func TestAccAWSDataSyncAgent_PrivateLink(t *testing.T) {
+	var agent1 datasync.DescribeAgentOutput
+	resourceName := "aws_datasync_agent.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSDataSync(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSDataSyncAgentDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSDataSyncAgentPrivateLink(resourceName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSDataSyncAgentExists(resourceName, &agent1),
+					resource.TestCheckResourceAttr(resourceName, "name", ""),
+					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "datasync", regexp.MustCompile(`agent/agent-.+`)),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+				),
+			},
+		},
+	})
+}
+
 func testAccCheckAWSDataSyncAgentDestroy(s *terraform.State) error {
 	conn := testAccProvider.Meta().(*AWSClient).datasyncconn
 
@@ -426,7 +448,7 @@ func testAccAWSDataSyncAgentPrivateLink(rName string) string {
 resource "aws_vpc_endpoint" "interface" {
   security_group_ids = ["${aws_security_group.test.id}"]
   service_name       = "tf-acc-test-datasync-vpce"
-  subnet_ids         = [${aws_subnet.test.id}]
+  subnet_ids         = ["${aws_subnet.test.id}"]
   vpc_endpoint_type  = "Interface"
   vpc_id             = "${aws_vpc.test.id}"
 }
