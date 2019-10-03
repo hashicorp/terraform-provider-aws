@@ -470,8 +470,7 @@ func TestAccAWSProvider_Endpoints_Deprecated(t *testing.T) {
 			{
 				Config: testAccAWSProviderConfigEndpoints(endpointsDeprecated.String()),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSProviderEndpointsDeprecated(&providers),
-				),
+					testAccCheckAWSProviderEndpointsDeprecated(&providers)),
 			},
 		},
 	})
@@ -749,4 +748,22 @@ data "aws_arn" "test" {
   arn = "arn:aws:s3:::test"
 }
 `, region)
+}
+
+func testAccAssumeRoleARNPreCheck(t *testing.T) {
+	v := os.Getenv("TF_ACC_ASSUME_ROLE_ARN")
+	if v == "" {
+		t.Skip("skipping tests; TF_ACC_ASSUME_ROLE_ARN must be set")
+	}
+}
+
+func testAccProviderConfigAssumeRolePolicy(policy string) string {
+	return fmt.Sprintf(`
+provider "aws" {
+	assume_role {
+		role_arn = %q
+		policy   = %q
+	}
+}
+`, os.Getenv("TF_ACC_ASSUME_ROLE_ARN"), policy)
 }
