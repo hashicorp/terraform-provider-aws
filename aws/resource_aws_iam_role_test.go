@@ -55,7 +55,7 @@ func testSweepIamRoles(region string) error {
 		"EMR_AutoScaling_DefaultRole",
 		"iam_emr",
 		"terraform-",
-		"test_role",
+		"test",
 		"tf",
 	}
 	roles := make([]*iam.Role, 0)
