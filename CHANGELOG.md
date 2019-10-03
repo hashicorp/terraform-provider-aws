@@ -1,4 +1,4 @@
-## 2.31.0 (Unreleased)
+## 2.31.0 (October 03, 2019)
 
 NOTES:
 
@@ -6,23 +6,23 @@ NOTES:
 
 ENHANCEMENTS:
 
-* data-source/aws_eks_cluster: Add `tags` attribute [GH-10307]
-* resource/aws_efs_filesystem: Support tag-on-create [GH-10254]
-* resource/aws_eks_cluster: Add `tags` argument [GH-10307]
-* resource/aws_mq_broker: Add `encryption_options` configuration block (support AWS and customer managed KMS CMKs) [GH-10276]
+* data-source/aws_eks_cluster: Add `tags` attribute ([#10307](https://github.com/terraform-providers/terraform-provider-aws/issues/10307))
+* resource/aws_efs_filesystem: Support tag-on-create ([#10254](https://github.com/terraform-providers/terraform-provider-aws/issues/10254))
+* resource/aws_eks_cluster: Add `tags` argument ([#10307](https://github.com/terraform-providers/terraform-provider-aws/issues/10307))
+* resource/aws_mq_broker: Add `encryption_options` configuration block (support AWS and customer managed KMS CMKs) ([#10276](https://github.com/terraform-providers/terraform-provider-aws/issues/10276))
 
 BUG FIXES:
 
-* resource/aws_lb_listener_certificate: Retry `CertificateNotFound` errors on creation for eventual consistency [GH-10294]
-* resource/aws_s3_bucket_object: Fix object deletion for non-versioned objects [GH-10352]
-* resource/aws_security_group: Handle updated ENI description and longer deletion timeframe for new Lambda Hyperplane ENIs [GH-10114] / [GH-10347]
-* resource/aws_subnet: Handle updated ENI description and longer deletion timeframe for new Lambda Hyperplane ENIs [GH-10114] / [GH-10347]
-* resource/aws_vpc_peering_connection: Ensure `allow_remote_vpc_dns_resolution` usage works with inter-region peering [GH-7627]
-* resource/aws_vpc_peering_connection_accepter: Ensure `allow_remote_vpc_dns_resolution` usage works with inter-region peering [GH-7627]
-* resource/aws_vpc_peering_connection_options: Ensure `allow_remote_vpc_dns_resolution` usage works with inter-region peering [GH-7627]
-* resource/aws_wafregional_web_acl_association: Ensure missing resource triggers state removal [GH-10216]
-* service/waf: Prevent incorrect `Error getting WAF change token` errors for API calls that should be retried or specially handled [GH-10242]
-* service/wafregional: Prevent incorrect `Error getting WAF regional change token` errors for API calls that should be retried or specially handled [GH-10242]
+* resource/aws_lb_listener_certificate: Retry `CertificateNotFound` errors on creation for eventual consistency ([#10294](https://github.com/terraform-providers/terraform-provider-aws/issues/10294))
+* resource/aws_s3_bucket_object: Fix object deletion for non-versioned objects ([#10352](https://github.com/terraform-providers/terraform-provider-aws/issues/10352))
+* resource/aws_security_group: Handle updated ENI description and longer deletion timeframe for new Lambda Hyperplane ENIs ([#10114](https://github.com/terraform-providers/terraform-provider-aws/issues/10114)] / [[#10347](https://github.com/terraform-providers/terraform-provider-aws/issues/10347))
+* resource/aws_subnet: Handle updated ENI description and longer deletion timeframe for new Lambda Hyperplane ENIs ([#10114](https://github.com/terraform-providers/terraform-provider-aws/issues/10114)] / [[#10347](https://github.com/terraform-providers/terraform-provider-aws/issues/10347))
+* resource/aws_vpc_peering_connection: Ensure `allow_remote_vpc_dns_resolution` usage works with inter-region peering ([#7627](https://github.com/terraform-providers/terraform-provider-aws/issues/7627))
+* resource/aws_vpc_peering_connection_accepter: Ensure `allow_remote_vpc_dns_resolution` usage works with inter-region peering ([#7627](https://github.com/terraform-providers/terraform-provider-aws/issues/7627))
+* resource/aws_vpc_peering_connection_options: Ensure `allow_remote_vpc_dns_resolution` usage works with inter-region peering ([#7627](https://github.com/terraform-providers/terraform-provider-aws/issues/7627))
+* resource/aws_wafregional_web_acl_association: Ensure missing resource triggers state removal ([#10216](https://github.com/terraform-providers/terraform-provider-aws/issues/10216))
+* service/waf: Prevent incorrect `Error getting WAF change token` errors for API calls that should be retried or specially handled ([#10242](https://github.com/terraform-providers/terraform-provider-aws/issues/10242))
+* service/wafregional: Prevent incorrect `Error getting WAF regional change token` errors for API calls that should be retried or specially handled ([#10242](https://github.com/terraform-providers/terraform-provider-aws/issues/10242))
 
 ## 2.30.0 (September 26, 2019)
 
