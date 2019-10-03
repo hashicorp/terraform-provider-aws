@@ -450,12 +450,19 @@ func cloudTrailSetEventSelectors(conn *cloudtrail.CloudTrail, d *schema.Resource
 	}
 
 	eventSelectors := expandAwsCloudTrailEventSelector(d.Get("event_selector").([]interface{}))
-	if len(eventSelectors) == 0 {
-		es := &cloudtrail.EventSelector{}
-		eventSelectors = append(eventSelectors, es)
-	}
-
 	input.EventSelectors = eventSelectors
+
+	// Do not error out when trail has event selectors but no event selectors
+	// are defined in the terraform config during update.
+	if len(eventSelectors) == 0 {
+		eventSelectorsOut, err := conn.GetEventSelectors(&cloudtrail.GetEventSelectorsInput{
+			TrailName: aws.String(d.Id()),
+		})
+		if err != nil {
+			return err
+		}
+		input.EventSelectors = eventSelectorsOut.EventSelectors
+	}
 
 	if err := input.Validate(); err != nil {
 		return fmt.Errorf("Error validate CloudTrail (%s): %s", d.Id(), err)

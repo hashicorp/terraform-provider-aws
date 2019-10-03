@@ -19,15 +19,15 @@ func TestAccAWSCloudTrail(t *testing.T) {
 		"Trail": {
 			"basic":                      testAccAWSCloudTrail_basic,
 			"cloudwatch":                 testAccAWSCloudTrail_cloudwatch,
-			"enableLogging":              testAccAWSCloudTrail_enable_logging,
-			"includeGlobalServiceEvents": testAccAWSCloudTrail_include_global_service_events,
-			"isMultiRegion":              testAccAWSCloudTrail_is_multi_region,
-			"isOrganization":             testAccAWSCloudTrail_is_organization,
+			"enableLogging":              testAccAWSCloudTrail_enableLogging,
+			"includeGlobalServiceEvents": testAccAWSCloudTrail_includeGlobalServiceEvents,
+			"isMultiRegion":              testAccAWSCloudTrail_isMultiRegion,
+			"isOrganization":             testAccAWSCloudTrail_isOrganization,
 			"logValidation":              testAccAWSCloudTrail_logValidation,
 			"kmsKey":                     testAccAWSCloudTrail_kmsKey,
 			"tags":                       testAccAWSCloudTrail_tags,
-			"eventSelector":              testAccAWSCloudTrail_event_selector,
-			"eventSelectorDelete":        testAccAWSCloudTrail_event_selector_delete,
+			"eventSelector":              testAccAWSCloudTrail_eventSelector,
+			"deleteEventSelector":        testAccAWSCloudTrail_deleteEventSelector,
 		},
 	}
 
@@ -118,7 +118,7 @@ func testAccAWSCloudTrail_cloudwatch(t *testing.T) {
 	})
 }
 
-func testAccAWSCloudTrail_enable_logging(t *testing.T) {
+func testAccAWSCloudTrail_enableLogging(t *testing.T) {
 	var trail cloudtrail.Trail
 	cloudTrailRandInt := acctest.RandInt()
 	resourceName := "aws_cloudtrail.foobar"
@@ -166,7 +166,7 @@ func testAccAWSCloudTrail_enable_logging(t *testing.T) {
 	})
 }
 
-func testAccAWSCloudTrail_is_multi_region(t *testing.T) {
+func testAccAWSCloudTrail_isMultiRegion(t *testing.T) {
 	var trail cloudtrail.Trail
 	cloudTrailRandInt := acctest.RandInt()
 	resourceName := "aws_cloudtrail.foobar"
@@ -212,7 +212,7 @@ func testAccAWSCloudTrail_is_multi_region(t *testing.T) {
 	})
 }
 
-func testAccAWSCloudTrail_is_organization(t *testing.T) {
+func testAccAWSCloudTrail_isOrganization(t *testing.T) {
 	var trail cloudtrail.Trail
 	cloudTrailRandInt := acctest.RandInt()
 	resourceName := "aws_cloudtrail.foobar"
@@ -374,7 +374,7 @@ func testAccAWSCloudTrail_tags(t *testing.T) {
 	})
 }
 
-func testAccAWSCloudTrail_include_global_service_events(t *testing.T) {
+func testAccAWSCloudTrail_includeGlobalServiceEvents(t *testing.T) {
 	var trail cloudtrail.Trail
 	cloudTrailRandInt := acctest.RandInt()
 	resourceName := "aws_cloudtrail.foobar"
@@ -385,7 +385,7 @@ func testAccAWSCloudTrail_include_global_service_events(t *testing.T) {
 		CheckDestroy: testAccCheckAWSCloudTrailDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSCloudTrailConfig_include_global_service_events(cloudTrailRandInt),
+				Config: testAccAWSCloudTrailConfig_includeGlobalServiceEvents(cloudTrailRandInt),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCloudTrailExists(resourceName, &trail),
 					resource.TestCheckResourceAttr(resourceName, "include_global_service_events", "false"),
@@ -400,7 +400,7 @@ func testAccAWSCloudTrail_include_global_service_events(t *testing.T) {
 	})
 }
 
-func testAccAWSCloudTrail_event_selector(t *testing.T) {
+func testAccAWSCloudTrail_eventSelector(t *testing.T) {
 	cloudTrailRandInt := acctest.RandInt()
 	resourceName := "aws_cloudtrail.foobar"
 
@@ -454,7 +454,7 @@ func testAccAWSCloudTrail_event_selector(t *testing.T) {
 	})
 }
 
-func testAccAWSCloudTrail_event_selector_delete(t *testing.T) {
+func testAccAWSCloudTrail_deleteEventSelector(t *testing.T) {
 	cloudTrailRandInt := acctest.RandInt()
 
 	resource.Test(t, resource.TestCase{
@@ -489,8 +489,16 @@ func testAccAWSCloudTrail_event_selector_delete(t *testing.T) {
 			{
 				Config: testAccAWSCloudTrailConfig_noEventSelector(cloudTrailRandInt),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("aws_cloudtrail.foobar", "event_selector.#", "0"),
+					resource.TestCheckResourceAttr("aws_cloudtrail.foobar", "event_selector.#", "1"),
+					resource.TestCheckResourceAttr("aws_cloudtrail.foobar", "event_selector.0.data_resource.#", "1"),
+					resource.TestCheckResourceAttr("aws_cloudtrail.foobar", "event_selector.0.data_resource.0.type", "AWS::S3::Object"),
+					resource.TestCheckResourceAttr("aws_cloudtrail.foobar", "event_selector.0.data_resource.0.values.#", "2"),
+					resource.TestMatchResourceAttr("aws_cloudtrail.foobar", "event_selector.0.data_resource.0.values.0", regexp.MustCompile(`^arn:[^:]+:s3:::.+/foobar$`)),
+					resource.TestMatchResourceAttr("aws_cloudtrail.foobar", "event_selector.0.data_resource.0.values.1", regexp.MustCompile(`^arn:[^:]+:s3:::.+/baz$`)),
+					resource.TestCheckResourceAttr("aws_cloudtrail.foobar", "event_selector.0.include_management_events", "false"),
+					resource.TestCheckResourceAttr("aws_cloudtrail.foobar", "event_selector.0.read_write_type", "ReadOnly"),
 				),
+				ExpectNonEmptyPlan: true,
 			},
 		},
 	})
@@ -1203,7 +1211,7 @@ POLICY
 }
 `
 
-func testAccAWSCloudTrailConfig_include_global_service_events(cloudTrailRandInt int) string {
+func testAccAWSCloudTrailConfig_includeGlobalServiceEvents(cloudTrailRandInt int) string {
 	return fmt.Sprintf(`
 resource "aws_cloudtrail" "foobar" {
   name                          = "tf-trail-foobar-%d"
@@ -1450,11 +1458,11 @@ resource "aws_lambda_function" "lambda_function_test" {
 func testAccAWSCloudTrailConfig_noEventSelector(cloudTrailRandInt int) string {
 	return fmt.Sprintf(`
 resource "aws_cloudtrail" "foobar" {
-  name           = "tf-trail-sathija-%d"
+  name           = "tf-cloudtrail-test-%d"
   s3_bucket_name = "${aws_s3_bucket.foo.id}"
 }
 resource "aws_s3_bucket" "foo" {
-  bucket        = "tf-test-trail-%d"
+  bucket        = "tf-cloudtrail-test-%d"
   force_destroy = true
   policy = <<POLICY
 {
@@ -1465,14 +1473,14 @@ resource "aws_s3_bucket" "foo" {
 			"Effect": "Allow",
 			"Principal": "*",
 			"Action": "s3:GetBucketAcl",
-			"Resource": "arn:aws:s3:::tf-test-trail-%d"
+			"Resource": "arn:aws:s3:::tf-cloudtrail-test-%d"
 		},
 		{
 			"Sid": "AWSCloudTrailWrite",
 			"Effect": "Allow",
 			"Principal": "*",
 			"Action": "s3:PutObject",
-			"Resource": "arn:aws:s3:::tf-test-trail-%d/*",
+			"Resource": "arn:aws:s3:::tf-cloudtrail-test-%d/*",
 			"Condition": {
 				"StringEquals": {
 					"s3:x-amz-acl": "bucket-owner-full-control"
@@ -1484,7 +1492,7 @@ resource "aws_s3_bucket" "foo" {
 POLICY
 }
 resource "aws_s3_bucket" "bar" {
-  bucket        = "tf-test-trail-event-select-%d"
+  bucket        = "tf-cloudtrail-test-event-select-%d"
   force_destroy = true
 }
 `, cloudTrailRandInt, cloudTrailRandInt, cloudTrailRandInt, cloudTrailRandInt, cloudTrailRandInt)
@@ -1493,7 +1501,7 @@ resource "aws_s3_bucket" "bar" {
 func testAccAWSCloudTrailConfig_addEventSelector(cloudTrailRandInt int) string {
 	return fmt.Sprintf(`
 resource "aws_cloudtrail" "foobar" {
-  name           = "tf-trail-sathija-%d"
+  name           = "tf-cloudtrail-test-%d"
   s3_bucket_name = "${aws_s3_bucket.foo.id}"
 	  event_selector {
 	    read_write_type           = "ReadOnly"
@@ -1508,7 +1516,7 @@ resource "aws_cloudtrail" "foobar" {
 	  }
 }
 resource "aws_s3_bucket" "foo" {
-  bucket        = "tf-test-trail-%d"
+  bucket        = "tf-cloudtrail-test-%d"
   force_destroy = true
   policy = <<POLICY
 {
@@ -1519,14 +1527,14 @@ resource "aws_s3_bucket" "foo" {
 			"Effect": "Allow",
 			"Principal": "*",
 			"Action": "s3:GetBucketAcl",
-			"Resource": "arn:aws:s3:::tf-test-trail-%d"
+			"Resource": "arn:aws:s3:::tf-cloudtrail-test-%d"
 		},
 		{
 			"Sid": "AWSCloudTrailWrite",
 			"Effect": "Allow",
 			"Principal": "*",
 			"Action": "s3:PutObject",
-			"Resource": "arn:aws:s3:::tf-test-trail-%d/*",
+			"Resource": "arn:aws:s3:::tf-cloudtrail-test-%d/*",
 			"Condition": {
 				"StringEquals": {
 					"s3:x-amz-acl": "bucket-owner-full-control"
@@ -1538,7 +1546,7 @@ resource "aws_s3_bucket" "foo" {
 POLICY
 }
 resource "aws_s3_bucket" "bar" {
-  bucket        = "tf-test-trail-event-select-%d"
+  bucket        = "tf-cloudtrail-test-event-select-%d"
   force_destroy = true
 }
 `, cloudTrailRandInt, cloudTrailRandInt, cloudTrailRandInt, cloudTrailRandInt, cloudTrailRandInt)
