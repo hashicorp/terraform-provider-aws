@@ -27,6 +27,8 @@ The following arguments are supported:
 * `name` - (Required) Name of the DataSync Agent.
 * `activation_key` - (Optional) DataSync Agent activation key during resource creation. Conflicts with `ip_address`. If an `ip_address` is provided instead, Terraform will retrieve the `activation_key` as part of the resource creation.
 * `ip_address` - (Optional) DataSync Agent IP address to retrieve activation key during resource creation. Conflicts with `activation_key`. DataSync Agent must be accessible on port 80 from where Terraform is running.
+* `private_link_ip` - (Optional) The IP of the VPC endpoint you connected to our service with via PrivateLink
+* `vpc_endpoint_id` - (Optional) The ARN of the VPC endpoint.
 * `tags` - (Optional) Key-value pairs of resource tags to assign to the DataSync Agent.
 
 ## Attribute Reference
