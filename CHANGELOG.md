@@ -3,7 +3,7 @@
 ENHANCEMENTS:
 
 * data-source/aws_eks_cluster: Add `tags` attribute [GH-10307]
-* resource_aws_efs_filesystem: Support tag-on-create [GH-10254]
+* resource/aws_efs_filesystem: Support tag-on-create [GH-10254]
 * resource/aws_eks_cluster: Add `tags` argument [GH-10307]
 * resource/aws_mq_broker: Add `encryption_options` configuration block (support AWS and customer managed KMS CMKs) [GH-10276]
 
