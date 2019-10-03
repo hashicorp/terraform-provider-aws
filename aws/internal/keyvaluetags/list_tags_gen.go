@@ -30,6 +30,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/ecr"
 	"github.com/aws/aws-sdk-go/service/ecs"
 	"github.com/aws/aws-sdk-go/service/efs"
+	"github.com/aws/aws-sdk-go/service/eks"
 	"github.com/aws/aws-sdk-go/service/elasticache"
 	"github.com/aws/aws-sdk-go/service/elasticbeanstalk"
 	"github.com/aws/aws-sdk-go/service/elasticsearchservice"
@@ -508,6 +509,23 @@ func EfsListTags(conn *efs.EFS, identifier string) (KeyValueTags, error) {
 	}
 
 	return EfsKeyValueTags(output.Tags), nil
+}
+
+// EksListTags lists eks service tags.
+// The identifier is typically the Amazon Resource Name (ARN), although
+// it may also be a different identifier depending on the service.
+func EksListTags(conn *eks.EKS, identifier string) (KeyValueTags, error) {
+	input := &eks.ListTagsForResourceInput{
+		ResourceArn: aws.String(identifier),
+	}
+
+	output, err := conn.ListTagsForResource(input)
+
+	if err != nil {
+		return New(nil), err
+	}
+
+	return EksKeyValueTags(output.Tags), nil
 }
 
 // ElasticacheListTags lists elasticache service tags.
