@@ -14,6 +14,7 @@ ENHANCEMENTS:
 
 BUG FIXES:
 
+* provider: Upstream AWS Go SDK fix for parsing AWS shared credentials files missing right-hand values ([#10310](https://github.com/terraform-providers/terraform-provider-aws/issues/10310))
 * resource/aws_lb_listener_certificate: Retry `CertificateNotFound` errors on creation for eventual consistency ([#10294](https://github.com/terraform-providers/terraform-provider-aws/issues/10294))
 * resource/aws_s3_bucket_object: Fix object deletion for non-versioned objects ([#10352](https://github.com/terraform-providers/terraform-provider-aws/issues/10352))
 * resource/aws_security_group: Handle updated ENI description and longer deletion timeframe for new Lambda Hyperplane ENIs ([#10114](https://github.com/terraform-providers/terraform-provider-aws/issues/10114)] / [[#10347](https://github.com/terraform-providers/terraform-provider-aws/issues/10347))
@@ -21,6 +22,8 @@ BUG FIXES:
 * resource/aws_vpc_peering_connection: Ensure `allow_remote_vpc_dns_resolution` usage works with inter-region peering ([#7627](https://github.com/terraform-providers/terraform-provider-aws/issues/7627))
 * resource/aws_vpc_peering_connection_accepter: Ensure `allow_remote_vpc_dns_resolution` usage works with inter-region peering ([#7627](https://github.com/terraform-providers/terraform-provider-aws/issues/7627))
 * resource/aws_vpc_peering_connection_options: Ensure `allow_remote_vpc_dns_resolution` usage works with inter-region peering ([#7627](https://github.com/terraform-providers/terraform-provider-aws/issues/7627))
+* resource/aws_waf_rate_based_rule: Upstream AWS Go SDK fix to allow `rate_limit` arguments between 100 and 1999 ([#10310](https://github.com/terraform-providers/terraform-provider-aws/issues/10310))
+* resource/aws_wafregional_rate_based_rule: Upstream AWS Go SDK fix to allow `rate_limit` arguments between 100 and 1999 ([#10310](https://github.com/terraform-providers/terraform-provider-aws/issues/10310))
 * resource/aws_wafregional_web_acl_association: Ensure missing resource triggers state removal ([#10216](https://github.com/terraform-providers/terraform-provider-aws/issues/10216))
 * service/waf: Prevent incorrect `Error getting WAF change token` errors for API calls that should be retried or specially handled ([#10242](https://github.com/terraform-providers/terraform-provider-aws/issues/10242))
 * service/wafregional: Prevent incorrect `Error getting WAF regional change token` errors for API calls that should be retried or specially handled ([#10242](https://github.com/terraform-providers/terraform-provider-aws/issues/10242))
