@@ -92,9 +92,8 @@ func resourceAwsDataSyncAgentCreate(d *schema.ResourceData, meta interface{}) er
 
 		requestURL := fmt.Sprintf("http://%s/?gatewayType=SYNC&activationRegion=%s", agentIpAddress, region)
 
-		privateLinkIp := d.Get("private_link_ip").(string)
-		if privateLinkIp != "" {
-			requestURL := fmt.Sprintf("http://%s/?gatewayType=SYNC&activationRegion=%s&endpointType=PRIVATE_LINK&privateLinkEndpoint=%s", agentIpAddress, region, privateLinkIp)
+		if v, ok := d.GetOk("private_link_ip"); ok {
+			requestURL = fmt.Sprintf("http://%s/?gatewayType=SYNC&activationRegion=%s&endpointType=PRIVATE_LINK&privateLinkEndpoint=%s", agentIpAddress, region, v.(string))
 		}
 
 		log.Printf("[DEBUG] Creating HTTP request: %s", requestURL)
@@ -149,9 +148,8 @@ func resourceAwsDataSyncAgentCreate(d *schema.ResourceData, meta interface{}) er
 		Tags:          expandDataSyncTagListEntry(d.Get("tags").(map[string]interface{})),
 	}
 
-	vpc_endpoint_id = d.Get("vpc_endpoint_id").(string)
-	if vpc_endpoint_id != "" {
-		input.SetVpcEndpointId(vpc_endpoint_id)
+	if v, ok := d.GetOk("vpc_endpoint_id"); ok {
+		input.VpcEndpointId = aws.String(v.(string))
 	}
 
 	if v, ok := d.GetOk("name"); ok {
