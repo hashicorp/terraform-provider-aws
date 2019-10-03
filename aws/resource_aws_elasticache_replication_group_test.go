@@ -493,6 +493,24 @@ func TestAccAWSElasticacheReplicationGroup_enableAtRestEncryption(t *testing.T) 
 	})
 }
 
+func TestAccAWSElasticacheReplicationGroup_useCmkKmsKeyId(t *testing.T) {
+	var rg elasticache.ReplicationGroup
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSElasticacheReplicationDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSElasticacheReplicationGroup_UseCmkKmsKeyId(acctest.RandInt(), acctest.RandString(10)),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSElasticacheReplicationGroupExists("aws_elasticache_replication_group.bar", &rg),
+					resource.TestCheckResourceAttrSet("aws_elasticache_replication_group.bar", "kms_key_id"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccAWSElasticacheReplicationGroup_NumberCacheClusters(t *testing.T) {
 	var replicationGroup elasticache.ReplicationGroup
 	rName := acctest.RandomWithPrefix("tf-acc-test")
@@ -1331,6 +1349,73 @@ resource "aws_elasticache_replication_group" "bar" {
   }
 }
 `, rName, numNodeGroups, replicasPerNodeGroup)
+}
+
+func testAccAWSElasticacheReplicationGroup_UseCmkKmsKeyId(rInt int, rString string) string {
+	return fmt.Sprintf(`
+data "aws_availability_zones" "available" {
+  state = "available"
+}
+
+resource "aws_vpc" "foo" {
+  cidr_block = "192.168.0.0/16"
+
+  tags = {
+    Name = "terraform-testacc-elasticache-replication-group-at-rest-encryption"
+  }
+}
+
+resource "aws_subnet" "foo" {
+  vpc_id            = "${aws_vpc.foo.id}"
+  cidr_block        = "192.168.0.0/20"
+  availability_zone = "${data.aws_availability_zones.available.names[0]}"
+
+  tags = {
+    Name = "tf-acc-elasticache-replication-group-at-rest-encryption"
+  }
+}
+
+resource "aws_elasticache_subnet_group" "bar" {
+  name        = "tf-test-cache-subnet-%03d"
+  description = "tf-test-cache-subnet-group-descr"
+
+  subnet_ids = [
+    "${aws_subnet.foo.id}",
+  ]
+}
+
+resource "aws_security_group" "bar" {
+  name        = "tf-test-security-group-%03d"
+  description = "tf-test-security-group-descr"
+  vpc_id      = "${aws_vpc.foo.id}"
+
+  ingress {
+    from_port   = -1
+    to_port     = -1
+    protocol    = "icmp"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+}
+
+resource "aws_kms_key" "bar" {
+  description         = "tf-test-cmk-kms-key-id"
+}
+
+resource "aws_elasticache_replication_group" "bar" {
+  replication_group_id          = "tf-%s"
+  replication_group_description = "test description"
+  node_type                     = "cache.t2.micro"
+  number_cache_clusters         = "1"
+  port                          = 6379
+  subnet_group_name             = "${aws_elasticache_subnet_group.bar.name}"
+  security_group_ids            = ["${aws_security_group.bar.id}"]
+  parameter_group_name          = "default.redis3.2"
+  availability_zones            = ["${data.aws_availability_zones.available.names[0]}"]
+  engine_version                = "3.2.6"
+	at_rest_encryption_enabled    = true
+	kms_key_id										= "${aws_kms_key.bar.arn}"
+}
+`, rInt, rInt, rString)
 }
 
 func testAccAWSElasticacheReplicationGroup_EnableAtRestEncryptionConfig(rInt int, rString string) string {
