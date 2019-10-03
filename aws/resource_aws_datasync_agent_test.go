@@ -420,3 +420,21 @@ resource "aws_datasync_agent" "test" {
 }
 `, key1, value1, key2, value2)
 }
+
+func testAccAWSDataSyncAgentPrivateLink(rName string) string {
+	return testAccAWSDataSyncAgentConfigAgentBase() + fmt.Sprintf(`
+resource "aws_vpc_endpoint" "interface" {
+  security_group_ids = ["${aws_security_group.test.id}"]
+  service_name       = "tf-acc-test-datasync-vpce"
+  subnet_ids         = [${aws_subnet.test.id}]
+  vpc_endpoint_type  = "Interface"
+  vpc_id             = "${aws_vpc.test.id}"
+}
+	  
+resource "aws_datasync_agent" "test" {
+  private_link_ip = "${aws_instance.test.private_ip}"
+  vpc_endpoint_id = "${aws_vpc_endpoint.interface.id}"
+  name       = %q
+}
+`, rName)
+}

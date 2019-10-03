@@ -49,10 +49,22 @@ func resourceAwsDataSyncAgent() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
+			"private_link_ip": {
+				Type:          schema.TypeString,
+				Optional:      true,
+				Computed:      true,
+				ConflictsWith: []string{"activation_key"},
+			},
 			"tags": {
 				Type:     schema.TypeMap,
 				Optional: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
+			},
+			"vpc_endpoint_id": {
+				Type:          schema.TypeString,
+				Optional:      true,
+				Computed:      true,
+				ConflictsWith: []string{"activation_key"},
 			},
 		},
 	}
@@ -79,6 +91,12 @@ func resourceAwsDataSyncAgentCreate(d *schema.ResourceData, meta interface{}) er
 		}
 
 		requestURL := fmt.Sprintf("http://%s/?gatewayType=SYNC&activationRegion=%s", agentIpAddress, region)
+
+		privateLinkIp := d.Get("private_link_ip").(string)
+		if privateLinkIp != "" {
+			requestURL := fmt.Sprintf("http://%s/?gatewayType=SYNC&activationRegion=%s&endpointType=PRIVATE_LINK&privateLinkEndpoint=%s", agentIpAddress, region, privateLinkIp)
+		}
+
 		log.Printf("[DEBUG] Creating HTTP request: %s", requestURL)
 		request, err := http.NewRequest("GET", requestURL, nil)
 		if err != nil {
@@ -129,6 +147,11 @@ func resourceAwsDataSyncAgentCreate(d *schema.ResourceData, meta interface{}) er
 	input := &datasync.CreateAgentInput{
 		ActivationKey: aws.String(activationKey),
 		Tags:          expandDataSyncTagListEntry(d.Get("tags").(map[string]interface{})),
+	}
+
+	vpc_endpoint_id = d.Get("vpc_endpoint_id").(string)
+	if vpc_endpoint_id != "" {
+		input.SetVpcEndpointId(vpc_endpoint_id)
 	}
 
 	if v, ok := d.GetOk("name"); ok {
