@@ -303,7 +303,7 @@ func generateVersioningConfigurationSchema() *schema.Resource {
 			"unlimited": {
 				Type:          schema.TypeBool,
 				Optional:      true,
-				ConflictsWith: []string{"versioning_configuration.0.max_version"},
+				ConflictsWith: []string{"versioning_configuration.0.max_versions"},
 			},
 		},
 	}
@@ -635,7 +635,11 @@ func wrapMapInList(mapping map[string]interface{}) []map[string]interface{} {
 	// So, schema.ResourceData.Set requires list as type of argument for such fields,
 	// as a result code becames a little bit messy with such instructions : []map[string]interface{}{someObject}.
 	// This helper function wrap mapping in list, and makes code more readable and intuitive.
-	return []map[string]interface{}{mapping}
+	if mapping == nil {
+		return make([]map[string]interface{}, 0)
+	} else {
+		return []map[string]interface{}{mapping}
+	}
 }
 
 func flattenVariable(variable *iotanalytics.Variable) map[string]interface{} {
@@ -780,6 +784,10 @@ func flattenContentDeliveryRule(datasetContentDeliveryRule *iotanalytics.Dataset
 }
 
 func flattenRetentionPeriod(retentionPeriod *iotanalytics.RetentionPeriod) map[string]interface{} {
+	if retentionPeriod == nil {
+		return nil
+	}
+
 	rawRetentionPeriod := make(map[string]interface{})
 
 	if retentionPeriod.NumberOfDays != nil {
@@ -813,6 +821,10 @@ func flattenTrigger(trigger *iotanalytics.DatasetTrigger) map[string]interface{}
 }
 
 func flattenVersioningConfiguration(versioningConfiguration *iotanalytics.VersioningConfiguration) map[string]interface{} {
+	if versioningConfiguration == nil {
+		return nil
+	}
+
 	rawVersioningConfiguration := make(map[string]interface{})
 
 	if versioningConfiguration.MaxVersions != nil {
