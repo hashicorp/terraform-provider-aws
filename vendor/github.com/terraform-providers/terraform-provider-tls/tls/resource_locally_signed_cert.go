@@ -3,7 +3,7 @@ package tls
 import (
 	"crypto/x509"
 
-	"github.com/hashicorp/terraform/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 )
 
 func resourceLocallySignedCert() *schema.Resource {
