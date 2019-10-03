@@ -1,5 +1,9 @@
 ## 2.31.0 (Unreleased)
 
+NOTES:
+
+* resource/aws_lambda_function: Environments using Lambda functions with VPC configurations should upgrade their Terraform AWS Provider to this version or later to appropriately handle the networking changes introduced by the [improved VPC networking for AWS Lambda functions](https://aws.amazon.com/blogs/compute/announcing-improved-vpc-networking-for-aws-lambda-functions/) deployment. These changes prevent proper deletion of EC2 Subnets and Security Groups for accounts and regions updated to the new Lambda networking infrastructure in older versions of the Terraform AWS Provider. Additional information and configuration workarounds for prior versions can be found in [this GitHub issue](https://github.com/terraform-providers/terraform-provider-aws/issues/10329).
+
 ENHANCEMENTS:
 
 * data-source/aws_eks_cluster: Add `tags` attribute [GH-10307]
@@ -11,6 +15,8 @@ BUG FIXES:
 
 * resource/aws_lb_listener_certificate: Retry `CertificateNotFound` errors on creation for eventual consistency [GH-10294]
 * resource/aws_s3_bucket_object: Fix object deletion for non-versioned objects [GH-10352]
+* resource/aws_security_group: Handle updated ENI description and longer deletion timeframe for new Lambda Hyperplane ENIs [GH-10114] / [GH-10347]
+* resource/aws_subnet: Handle updated ENI description and longer deletion timeframe for new Lambda Hyperplane ENIs [GH-10114] / [GH-10347]
 * resource/aws_vpc_peering_connection: Ensure `allow_remote_vpc_dns_resolution` usage works with inter-region peering [GH-7627]
 * resource/aws_vpc_peering_connection_accepter: Ensure `allow_remote_vpc_dns_resolution` usage works with inter-region peering [GH-7627]
 * resource/aws_vpc_peering_connection_options: Ensure `allow_remote_vpc_dns_resolution` usage works with inter-region peering [GH-7627]
