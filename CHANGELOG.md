@@ -4,6 +4,7 @@ ENHANCEMENTS:
 
 * resource_aws_efs_filesystem: Support tag-on-create [GH-10254]
 * resource/aws_mq_broker: Add `encryption_options` configuration block (support AWS and customer managed KMS CMKs) [GH-10276]
+* resource/aws_datasync_agent: Add `private_link_ip` and `vpc_endpoint_id` to support private datasync configuration. [GH-9755]
 
 BUG FIXES:
 
