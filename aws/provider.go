@@ -1001,6 +1001,7 @@ func init() {
 		"personalize",
 		"pinpoint",
 		"pricing",
+		"qldb",
 		"quicksight",
 		"r53",
 		"ram",
