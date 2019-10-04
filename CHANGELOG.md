@@ -1,4 +1,9 @@
 ## 2.32.0 (Unreleased)
+
+BUG FIXES:
+
+* resource/aws_s3_bucket: Prevent infinite deletion recursion with `force_destroy` argument and object keys with empty "directory" prefixes present since version 2.29.0 [GH-10388]
+
 ## 2.31.0 (October 03, 2019)
 
 NOTES:
