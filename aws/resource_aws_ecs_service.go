@@ -79,6 +79,12 @@ func resourceAwsEcsService() *schema.Resource {
 				Computed: true,
 			},
 
+			"wait_until_services_stable": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				Default:  false,
+			},
+
 			"scheduling_strategy": {
 				Type:     schema.TypeString,
 				Optional: true,
@@ -498,6 +504,18 @@ func resourceAwsEcsServiceCreate(d *schema.ResourceData, meta interface{}) error
 	log.Printf("[DEBUG] ECS service created: %s", *service.ServiceArn)
 	d.SetId(*service.ServiceArn)
 
+	if d.Get("wait_until_services_stable").(bool) {
+		log.Printf("[DEBUG] Waiting for ECS Service (%s) to become stable: %s", d.Id(), input)
+		w := &ecs.DescribeServicesInput{
+			Cluster:  aws.String(d.Get("cluster").(string)),
+			Services: []*string{aws.String(d.Id())},
+		}
+		err = conn.WaitUntilServicesStable(w)
+		if err != nil {
+			return fmt.Errorf("%s %q", err, d.Get("name").(string))
+		}
+	}
+
 	return resourceAwsEcsServiceRead(d, meta)
 }
 
@@ -863,6 +881,18 @@ func resourceAwsEcsServiceUpdate(d *schema.ResourceData, meta interface{}) error
 		}
 		if err != nil {
 			return fmt.Errorf("Error updating ECS Service (%s): %s", d.Id(), err)
+		}
+
+		if d.Get("wait_until_services_stable").(bool) {
+			log.Printf("[DEBUG] Waiting for ECS Service (%s) to become stable: %s", d.Id(), input)
+			w := &ecs.DescribeServicesInput{
+				Cluster:  aws.String(d.Get("cluster").(string)),
+				Services: []*string{aws.String(d.Id())},
+			}
+			err = conn.WaitUntilServicesStable(w)
+			if err != nil {
+				return fmt.Errorf("%s %q", err, d.Get("name").(string))
+			}
 		}
 	}
 
