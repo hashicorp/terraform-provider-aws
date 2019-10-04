@@ -2053,10 +2053,11 @@ DEFINITION
 }
 
 resource "aws_ecs_service" "jenkins" {
-  name            = "%s"
-  cluster         = "${aws_ecs_cluster.default.id}"
-  task_definition = "${aws_ecs_task_definition.jenkins.family}:${aws_ecs_task_definition.jenkins.revision}"
-  desired_count   = 1
+  name                       = "%s"
+  cluster                    = "${aws_ecs_cluster.default.id}"
+  task_definition            = "${aws_ecs_task_definition.jenkins.family}:${aws_ecs_task_definition.jenkins.revision}"
+  desired_count              = 1
+  wait_until_services_stable = true
 }
 `, clusterName, tdName, svcName)
 }
