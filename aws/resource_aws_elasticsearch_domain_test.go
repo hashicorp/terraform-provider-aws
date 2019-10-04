@@ -372,7 +372,11 @@ func TestAccAWSElasticSearchDomain_CognitoOptionsCreateAndRemove(t *testing.T) {
 	ri := acctest.RandInt()
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckIamServiceLinkedRoleEs(t) },
+		PreCheck:     func() {
+			testAccPreCheck(t)
+			testAccPreCheckAWSCognitoIdentityProvider(t)
+			testAccPreCheckIamServiceLinkedRoleEs(t)
+		},
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckESDomainDestroy,
 		Steps: []resource.TestStep{
@@ -399,7 +403,11 @@ func TestAccAWSElasticSearchDomain_CognitoOptionsUpdate(t *testing.T) {
 	ri := acctest.RandInt()
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckIamServiceLinkedRoleEs(t) },
+		PreCheck:     func() {
+			testAccPreCheck(t)
+			testAccPreCheckAWSCognitoIdentityProvider(t)
+			testAccPreCheckIamServiceLinkedRoleEs(t)
+		},
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckESDomainDestroy,
 		Steps: []resource.TestStep{
