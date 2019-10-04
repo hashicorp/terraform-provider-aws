@@ -33,7 +33,7 @@ func testSweepS3BucketObjects(region string) error {
 		return fmt.Errorf("error getting client: %s", err)
 	}
 
-	conn := client.(*AWSClient).s3conn
+	conn := client.(*AWSClient).s3connUriCleaningDisabled
 	input := &s3.ListBucketsInput{}
 
 	output, err := conn.ListBuckets(input)
