@@ -999,6 +999,9 @@ func (c *AppStream) CreateUsageReportSubscriptionRequest(input *CreateUsageRepor
 //   The resource cannot be created because your AWS account is suspended. For
 //   assistance, contact AWS Support.
 //
+//   * ErrCodeLimitExceededException "LimitExceededException"
+//   The requested limit exceeds the permitted limit for an account.
+//
 // See also, https://docs.aws.amazon.com/goto/WebAPI/appstream-2016-12-01/CreateUsageReportSubscription
 func (c *AppStream) CreateUsageReportSubscription(input *CreateUsageReportSubscriptionInput) (*CreateUsageReportSubscriptionOutput, error) {
 	req, out := c.CreateUsageReportSubscriptionRequest(input)
@@ -3364,6 +3367,9 @@ func (c *AppStream) StartFleetRequest(input *StartFleetInput) (req *request.Requ
 //   * ErrCodeResourceNotAvailableException "ResourceNotAvailableException"
 //   The specified resource exists and is not in use, but isn't available.
 //
+//   * ErrCodeInvalidRoleException "InvalidRoleException"
+//   The specified role is invalid.
+//
 // See also, https://docs.aws.amazon.com/goto/WebAPI/appstream-2016-12-01/StartFleet
 func (c *AppStream) StartFleet(input *StartFleetInput) (*StartFleetOutput, error) {
 	req, out := c.StartFleetRequest(input)
@@ -3964,9 +3970,9 @@ func (c *AppStream) UpdateFleetRequest(input *UpdateFleetInput) (req *request.Re
 //
 // If the fleet is in the STOPPED state, you can update any attribute except
 // the fleet name. If the fleet is in the RUNNING state, you can update the
-// DisplayName, ComputeCapacity, ImageARN, ImageName, and DisconnectTimeoutInSeconds
-// attributes. If the fleet is in the STARTING or STOPPING state, you can't
-// update it.
+// DisplayName, ComputeCapacity, ImageARN, ImageName, IdleDisconnectTimeoutInSeconds,
+// and DisconnectTimeoutInSeconds attributes. If the fleet is in the STARTING
+// or STOPPING state, you can't update it.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -4219,21 +4225,21 @@ func (c *AppStream) UpdateStackWithContext(ctx aws.Context, input *UpdateStackIn
 	return out, req.Send()
 }
 
-// Describes a virtual private cloud (VPC) interface endpoint that lets you
-// create a private connection between the VPC that you specify and AppStream
-// 2.0. When you specify a VPC interface endpoint for a stack, users of the
-// stack can connect to AppStream 2.0 only through that endpoint. When you specify
-// a VPC interface endpoint for an image builder, administrators can connect
-// to the image builder only through that endpoint.
+// Describes an interface VPC endpoint (interface endpoint) that lets you create
+// a private connection between the virtual private cloud (VPC) that you specify
+// and AppStream 2.0. When you specify an interface endpoint for a stack, users
+// of the stack can connect to AppStream 2.0 only through that endpoint. When
+// you specify an interface endpoint for an image builder, administrators can
+// connect to the image builder only through that endpoint.
 type AccessEndpoint struct {
 	_ struct{} `type:"structure"`
 
-	// The type of VPC interface endpoint.
+	// The type of interface endpoint.
 	//
 	// EndpointType is a required field
 	EndpointType *string `type:"string" required:"true" enum:"AccessEndpointType"`
 
-	// The identifier (ID) of the VPC in which the endpoint is used.
+	// The identifier (ID) of the VPC in which the interface endpoint is used.
 	VpceId *string `min:"1" type:"string"`
 }
 
@@ -5005,6 +5011,12 @@ type CreateFleetInput struct {
 	// connected and a small hourly fee for instances that are not streaming apps.
 	FleetType *string `type:"string" enum:"FleetType"`
 
+	// The Amazon Resource Name (ARN) of the IAM role to apply to the fleet. To
+	// assume a role, a fleet instance calls the AWS Security Token Service (STS)
+	// AssumeRole API operation and passes the ARN of the role to use. The operation
+	// creates a new session with temporary credentials.
+	IamRoleArn *string `type:"string"`
+
 	// The amount of time that users can be idle (inactive) before they are disconnected
 	// from their streaming session and the DisconnectTimeoutInSeconds time interval
 	// begins. Users are notified before they are disconnected due to inactivity.
@@ -5199,6 +5211,12 @@ func (s *CreateFleetInput) SetFleetType(v string) *CreateFleetInput {
 	return s
 }
 
+// SetIamRoleArn sets the IamRoleArn field's value.
+func (s *CreateFleetInput) SetIamRoleArn(v string) *CreateFleetInput {
+	s.IamRoleArn = &v
+	return s
+}
+
 // SetIdleDisconnectTimeoutInSeconds sets the IdleDisconnectTimeoutInSeconds field's value.
 func (s *CreateFleetInput) SetIdleDisconnectTimeoutInSeconds(v int64) *CreateFleetInput {
 	s.IdleDisconnectTimeoutInSeconds = &v
@@ -5273,7 +5291,7 @@ func (s *CreateFleetOutput) SetFleet(v *Fleet) *CreateFleetOutput {
 type CreateImageBuilderInput struct {
 	_ struct{} `type:"structure"`
 
-	// The list of virtual private cloud (VPC) interface endpoint objects. Administrators
+	// The list of interface VPC endpoint (interface endpoint) objects. Administrators
 	// can connect to the image builder only through the specified endpoints.
 	AccessEndpoints []*AccessEndpoint `min:"1" type:"list"`
 
@@ -5293,6 +5311,12 @@ type CreateImageBuilderInput struct {
 
 	// Enables or disables default internet access for the image builder.
 	EnableDefaultInternetAccess *bool `type:"boolean"`
+
+	// The Amazon Resource Name (ARN) of the IAM role to apply to the image builder.
+	// To assume a role, the image builder calls the AWS Security Token Service
+	// (STS) AssumeRole API operation and passes the ARN of the role to use. The
+	// operation creates a new session with temporary credentials.
+	IamRoleArn *string `type:"string"`
 
 	// The ARN of the public, private, or shared image to use.
 	ImageArn *string `type:"string"`
@@ -5413,6 +5437,12 @@ func (s *CreateImageBuilderInput) SetDomainJoinInfo(v *DomainJoinInfo) *CreateIm
 // SetEnableDefaultInternetAccess sets the EnableDefaultInternetAccess field's value.
 func (s *CreateImageBuilderInput) SetEnableDefaultInternetAccess(v bool) *CreateImageBuilderInput {
 	s.EnableDefaultInternetAccess = &v
+	return s
+}
+
+// SetIamRoleArn sets the IamRoleArn field's value.
+func (s *CreateImageBuilderInput) SetIamRoleArn(v string) *CreateImageBuilderInput {
+	s.IamRoleArn = &v
 	return s
 }
 
@@ -5561,8 +5591,8 @@ func (s *CreateImageBuilderStreamingURLOutput) SetStreamingURL(v string) *Create
 type CreateStackInput struct {
 	_ struct{} `type:"structure"`
 
-	// The list of virtual private cloud (VPC) interface endpoint objects. Users
-	// of the stack can connect to AppStream 2.0 only through the specified endpoints.
+	// The list of interface VPC endpoint (interface endpoint) objects. Users of
+	// the stack can connect to AppStream 2.0 only through the specified endpoints.
 	AccessEndpoints []*AccessEndpoint `min:"1" type:"list"`
 
 	// The persistent application settings for users of a stack. When these settings
@@ -7862,7 +7892,7 @@ func (s ExpireSessionOutput) GoString() string {
 type Fleet struct {
 	_ struct{} `type:"structure"`
 
-	// The ARN for the fleet.
+	// The Amazon Resource Name (ARN) for the fleet.
 	//
 	// Arn is a required field
 	Arn *string `type:"string" required:"true"`
@@ -7913,6 +7943,12 @@ type Fleet struct {
 	// one to two minutes. You are charged for instance streaming when users are
 	// connected and a small hourly fee for instances that are not streaming apps.
 	FleetType *string `type:"string" enum:"FleetType"`
+
+	// The ARN of the IAM role that is applied to the fleet. To assume a role, the
+	// fleet instance calls the AWS Security Token Service (STS) AssumeRole API
+	// operation and passes the ARN of the role to use. The operation creates a
+	// new session with temporary credentials.
+	IamRoleArn *string `type:"string"`
 
 	// The amount of time that users can be idle (inactive) before they are disconnected
 	// from their streaming session and the DisconnectTimeoutInSeconds time interval
@@ -8039,6 +8075,12 @@ func (s *Fleet) SetFleetErrors(v []*FleetError) *Fleet {
 // SetFleetType sets the FleetType field's value.
 func (s *Fleet) SetFleetType(v string) *Fleet {
 	s.FleetType = &v
+	return s
+}
+
+// SetIamRoleArn sets the IamRoleArn field's value.
+func (s *Fleet) SetIamRoleArn(v string) *Fleet {
+	s.IamRoleArn = &v
 	return s
 }
 
@@ -8320,6 +8362,12 @@ type ImageBuilder struct {
 	// Enables or disables default internet access for the image builder.
 	EnableDefaultInternetAccess *bool `type:"boolean"`
 
+	// The ARN of the IAM role that is applied to the image builder. To assume a
+	// role, the image builder calls the AWS Security Token Service (STS) AssumeRole
+	// API operation and passes the ARN of the role to use. The operation creates
+	// a new session with temporary credentials.
+	IamRoleArn *string `type:"string"`
+
 	// The ARN of the image from which this builder was created.
 	ImageArn *string `type:"string"`
 
@@ -8405,6 +8453,12 @@ func (s *ImageBuilder) SetDomainJoinInfo(v *DomainJoinInfo) *ImageBuilder {
 // SetEnableDefaultInternetAccess sets the EnableDefaultInternetAccess field's value.
 func (s *ImageBuilder) SetEnableDefaultInternetAccess(v bool) *ImageBuilder {
 	s.EnableDefaultInternetAccess = &v
+	return s
+}
+
+// SetIamRoleArn sets the IamRoleArn field's value.
+func (s *ImageBuilder) SetIamRoleArn(v string) *ImageBuilder {
+	s.IamRoleArn = &v
 	return s
 }
 
@@ -9870,6 +9924,12 @@ type UpdateFleetInput struct {
 	// Enables or disables default internet access for the fleet.
 	EnableDefaultInternetAccess *bool `type:"boolean"`
 
+	// The Amazon Resource Name (ARN) of the IAM role to apply to the fleet. To
+	// assume a role, a fleet instance calls the AWS Security Token Service (STS)
+	// AssumeRole API operation and passes the ARN of the role to use. The operation
+	// creates a new session with temporary credentials.
+	IamRoleArn *string `type:"string"`
+
 	// The amount of time that users can be idle (inactive) before they are disconnected
 	// from their streaming session and the DisconnectTimeoutInSeconds time interval
 	// begins. Users are notified before they are disconnected due to inactivity.
@@ -10042,6 +10102,12 @@ func (s *UpdateFleetInput) SetEnableDefaultInternetAccess(v bool) *UpdateFleetIn
 	return s
 }
 
+// SetIamRoleArn sets the IamRoleArn field's value.
+func (s *UpdateFleetInput) SetIamRoleArn(v string) *UpdateFleetInput {
+	s.IamRoleArn = &v
+	return s
+}
+
 // SetIdleDisconnectTimeoutInSeconds sets the IdleDisconnectTimeoutInSeconds field's value.
 func (s *UpdateFleetInput) SetIdleDisconnectTimeoutInSeconds(v int64) *UpdateFleetInput {
 	s.IdleDisconnectTimeoutInSeconds = &v
@@ -10191,8 +10257,8 @@ func (s UpdateImagePermissionsOutput) GoString() string {
 type UpdateStackInput struct {
 	_ struct{} `type:"structure"`
 
-	// The list of virtual private cloud (VPC) interface endpoint objects. Users
-	// of the stack can connect to AppStream 2.0 only through the specified endpoints.
+	// The list of interface VPC endpoint (interface endpoint) objects. Users of
+	// the stack can connect to AppStream 2.0 only through the specified endpoints.
 	AccessEndpoints []*AccessEndpoint `min:"1" type:"list"`
 
 	// The persistent application settings for users of a stack. When these settings
@@ -10812,6 +10878,9 @@ const (
 
 	// FleetAttributeDomainJoinInfo is a FleetAttribute enum value
 	FleetAttributeDomainJoinInfo = "DOMAIN_JOIN_INFO"
+
+	// FleetAttributeIamRoleArn is a FleetAttribute enum value
+	FleetAttributeIamRoleArn = "IAM_ROLE_ARN"
 )
 
 const (
@@ -10832,6 +10901,9 @@ const (
 
 	// FleetErrorCodeIamServiceRoleIsMissing is a FleetErrorCode enum value
 	FleetErrorCodeIamServiceRoleIsMissing = "IAM_SERVICE_ROLE_IS_MISSING"
+
+	// FleetErrorCodeMachineRoleIsMissing is a FleetErrorCode enum value
+	FleetErrorCodeMachineRoleIsMissing = "MACHINE_ROLE_IS_MISSING"
 
 	// FleetErrorCodeStsDisabledInRegion is a FleetErrorCode enum value
 	FleetErrorCodeStsDisabledInRegion = "STS_DISABLED_IN_REGION"
@@ -11055,6 +11127,9 @@ const (
 
 	// StackAttributeUserSettings is a StackAttribute enum value
 	StackAttributeUserSettings = "USER_SETTINGS"
+
+	// StackAttributeIamRoleArn is a StackAttribute enum value
+	StackAttributeIamRoleArn = "IAM_ROLE_ARN"
 
 	// StackAttributeAccessEndpoints is a StackAttribute enum value
 	StackAttributeAccessEndpoints = "ACCESS_ENDPOINTS"

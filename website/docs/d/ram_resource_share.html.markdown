@@ -1,7 +1,6 @@
 ---
 layout: "aws"
 page_title: "AWS: aws_ram_resource_share"
-sidebar_current: "docs-aws-datasource-ram-resource-share"
 description: |-
   Retrieve information about a RAM Resource Share
 ---

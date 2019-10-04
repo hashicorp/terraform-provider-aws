@@ -1,7 +1,6 @@
 ---
 layout: "aws"
 page_title: "AWS: aws_iot_endpoint"
-sidebar_current: "docs-aws-datasource-iot-endpoint"
 description: |-
   Get the unique IoT endpoint
 ---

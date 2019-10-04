@@ -1,7 +1,6 @@
 ---
 layout: "aws"
 page_title: "AWS: aws_globalaccelerator_accelerator"
-sidebar_current: "docs-aws-resource-globalaccelerator-accelerator"
 description: |-
   Provides a Global Accelerator accelerator.
 ---

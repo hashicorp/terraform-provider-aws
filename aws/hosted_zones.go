@@ -5,6 +5,9 @@ import "fmt"
 // This list is copied from
 // http://docs.aws.amazon.com/general/latest/gr/rande.html#s3_website_region_endpoints
 // It currently cannot be generated from the API json.
+// See https://docs.amazonaws.cn/en_us/general/latest/gr/rande.html#s3_website_region_endpoints
+// See https://docs.aws.amazon.com/pt_br/govcloud-us/latest/ug-east/using-govcloud-endpoints.html
+// See https://docs.aws.amazon.com/govcloud-us/latest/UserGuide/using-govcloud-endpoints.html
 var hostedZoneIDsMap = map[string]string{
 	"ap-east-1":      "ZNB98KWMFR0R6",
 	"ap-northeast-1": "Z2M4EHUR26P7ZW",

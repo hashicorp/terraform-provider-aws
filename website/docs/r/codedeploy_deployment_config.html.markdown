@@ -1,7 +1,6 @@
 ---
 layout: "aws"
 page_title: "AWS: aws_codedeploy_deployment_config"
-sidebar_current: "docs-aws-resource-codedeploy-deployment-config"
 description: |-
   Provides a CodeDeploy deployment config.
 ---

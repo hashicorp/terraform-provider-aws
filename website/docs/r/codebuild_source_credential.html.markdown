@@ -1,7 +1,6 @@
 ---
 layout: "aws"
 page_title: "AWS: aws_codebuild_source_credential"
-sidebar_current: "docs-aws-resource-codebuild-source-credential"
 description: |-
   Provides a CodeBuild Source Credential resource.
 ---

@@ -1,7 +1,6 @@
 ---
 layout: "aws"
 page_title: "AWS: aws_appmesh_virtual_node"
-sidebar_current: "docs-aws-resource-appmesh-virtual-node"
 description: |-
   Provides an AWS App Mesh virtual node resource.
 ---

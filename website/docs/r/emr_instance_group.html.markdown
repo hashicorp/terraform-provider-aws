@@ -1,7 +1,6 @@
 ---
 layout: "aws"
 page_title: "AWS: aws_emr_instance_group"
-sidebar_current: "docs-aws-resource-emr-instance-group"
 description: |-
   Provides an Elastic MapReduce Cluster Instance Group
 ---
