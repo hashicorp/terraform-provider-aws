@@ -3,9 +3,9 @@ package aws
 import (
 	"log"
 
-	"github.com/hashicorp/terraform/helper/mutexkv"
-	"github.com/hashicorp/terraform/helper/schema"
-	"github.com/hashicorp/terraform/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/mutexkv"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/terraform"
 	homedir "github.com/mitchellh/go-homedir"
 )
 
@@ -965,6 +965,7 @@ func init() {
 		"es",
 		"firehose",
 		"fms",
+		"forecast",
 		"fsx",
 		"gamelift",
 		"glacier",
@@ -1002,6 +1003,7 @@ func init() {
 		"personalize",
 		"pinpoint",
 		"pricing",
+		"qldb",
 		"quicksight",
 		"r53",
 		"ram",
