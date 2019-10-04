@@ -162,70 +162,6 @@ func testAccCheckAWSIoTAnalyticsDataset_triggerSchedule(rString string) resource
 	}
 }
 
-// func TestAccAWSIoTAnalyticsDataset_triggerDataset(t *testing.T) {
-// 	rString := acctest.RandString(5)
-// 	resourceName := "aws_iotanalytics_dataset.dataset"
-
-// 	resource.ParallelTest(t, resource.TestCase{
-// 		PreCheck:     func() { testAccPreCheck(t) },
-// 		Providers:    testAccProviders,
-// 		CheckDestroy: testAccCheckAWSIoTAnalyticsDatasetDestroy,
-// 		Steps: []resource.TestStep{
-// 			{
-// 				Config: testAccAWSIoTAnalyticsDataset_triggerDataset(rString),
-// 				Check: resource.ComposeTestCheckFunc(
-// 					testAccCheckAWSIoTAnalyticsDatasetExists_basic("aws_iotanalytics_dataset.dataset"),
-// 					resource.TestCheckResourceAttr("aws_iotanalytics_dataset.dataset", "name", fmt.Sprintf("test_dataset_%s", rString)),
-// 					testAccCheckAWSIoTAnalyticsDataset_triggerDataset(rString),
-// 				),
-// 			},
-// 			{
-// 				ResourceName:      resourceName,
-// 				ImportState:       true,
-// 				ImportStateVerify: true,
-// 			},
-// 		},
-// 	})
-// }
-
-// func testAccCheckAWSIoTAnalyticsDataset_triggerDataset(rString string) resource.TestCheckFunc {
-// 	return func(s *terraform.State) error {
-// 		conn := testAccProvider.Meta().(*AWSClient).iotanalyticsconn
-// 		for _, rs := range s.RootModule().Resources {
-// 			if rs.Type != "aws_iotanalytics_dataset" {
-// 				continue
-// 			}
-
-// 			params := &iotanalytics.DescribeDatasetInput{
-// 				DatasetName: aws.String(rs.Primary.ID),
-// 			}
-// 			out, err := conn.DescribeDataset(params)
-
-// 			if err != nil {
-// 				return err
-// 			}
-
-// 			dataset := out.Dataset
-
-// 			if len(dataset.Triggers) != 1 {
-// 				return fmt.Errorf("Expected 1 elements in dataset.Triggers, but not %d ", len(dataset.Triggers))
-// 			}
-
-// 			trigger := dataset.Triggers[0]
-
-// 			if trigger.Schedule != nil {
-// 				return fmt.Errorf("Expected trigger.Schedule is not equal nil")
-// 			}
-
-// 			expectedDatasetName := fmt.Sprintf("test_trigger_dataset_%s", rString)
-// 			if *trigger.Dataset.Name != expectedDatasetName {
-// 				return fmt.Errorf("Expected trigger.Dataset.Name %s is not equal %s", expectedDatasetName, *trigger.Dataset.Name)
-// 			}
-// 		}
-// 		return nil
-// 	}
-// }
-
 func TestAccAWSIoTAnalyticsDataset_retentionPeriodNumberOfDays(t *testing.T) {
 	rString := acctest.RandString(5)
 	resourceName := "aws_iotanalytics_dataset.dataset"
@@ -545,58 +481,6 @@ resource "aws_iotanalytics_dataset" "dataset" {
 }
 `, rString)
 }
-
-// func testAccAWSIoTAnalyticsDataset_triggerDataset(rString string) string {
-// 	return fmt.Sprintf(testAccAWSIoTAnalyticsDatasetRole+`
-
-// resource "aws_iotanalytics_dataset" "dataset_trigger" {
-// 	name = "test_trigger_dataset_%[1]s"
-
-// 	action {
-// 		name = "test_action"
-
-// 		query_action {
-
-// 			filter {
-// 				delta_time {
-// 					offset_seconds = 30
-// 					time_expression = "date"
-// 				}
-// 			}
-
-// 			sql_query = "select * from ${aws_iotanalytics_datastore.datastore.name}"
-// 		}
-// 	}
-// }
-
-// resource "aws_iotanalytics_dataset" "dataset" {
-//   name = "test_dataset_%[1]s"
-
-//   action {
-// 	  name = "test_action"
-
-// 	  query_action {
-
-// 		filter {
-// 			delta_time {
-// 				offset_seconds = 30
-// 				time_expression = "date"
-// 			}
-// 		}
-
-// 		  sql_query = "select * from ${aws_iotanalytics_datastore.datastore.name}"
-// 	  }
-//   }
-
-//   trigger {
-// 	dataset {
-// 		name = "test_trigger_dataset_%[1]s"
-// 	}
-//   }
-
-// }
-// `, rString)
-// }
 
 func testAccAWSIoTAnalyticsDataset_triggerSchedule(rString string) string {
 	return fmt.Sprintf(testAccAWSIoTAnalyticsDatasetRole+`
