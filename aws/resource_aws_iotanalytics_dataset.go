@@ -139,12 +139,16 @@ func generateDatasetActionSchema() *schema.Resource {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			"container_action": {
-				Type:     schema.TypeSet,
-				Optional: true,
-				MaxItems: 1,
-				Elem:     generateContainerDatasetActionSchema(),
-			},
+			// There is problem with testing. This action need image from
+			// aws registry (erc) but terraform can only create repo but not add
+			// image
+			// TODO: find a way to test this type of action properly
+			// "container_action": {
+			// 	Type:     schema.TypeSet,
+			// 	Optional: true,
+			// 	MaxItems: 1,
+			// 	Elem:     generateContainerDatasetActionSchema(),
+			// },
 			"query_action": {
 				Type:     schema.TypeSet,
 				Optional: true,
@@ -261,19 +265,19 @@ func generateRetentionPeriodSchema() *schema.Resource {
 func generateDatasetTriggerSchema() *schema.Resource {
 	return &schema.Resource{
 		Schema: map[string]*schema.Schema{
-			"dataset": {
-				Type:     schema.TypeSet,
-				Optional: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"name": {
-							Type:     schema.TypeString,
-							Required: true,
-						},
-					},
-				},
-			},
+			// "dataset": {
+			// 	Type:     schema.TypeSet,
+			// 	Optional: true,
+			// 	MaxItems: 1,
+			// 	Elem: &schema.Resource{
+			// 		Schema: map[string]*schema.Schema{
+			// 			"name": {
+			// 				Type:     schema.TypeString,
+			// 				Required: true,
+			// 			},
+			// 		},
+			// 	},
+			// },
 			"schedule": {
 				Type:     schema.TypeSet,
 				Optional: true,
@@ -345,6 +349,7 @@ func resourceAwsIotAnalyticsDataset() *schema.Resource {
 			"trigger": {
 				Type:     schema.TypeSet,
 				Optional: true,
+				MaxItems: 5,
 				Elem:     generateDatasetTriggerSchema(),
 			},
 			"versioning_configuration": {
@@ -447,11 +452,11 @@ func parseAction(rawAction map[string]interface{}) *iotanalytics.DatasetAction {
 		ActionName: aws.String(rawAction["name"].(string)),
 	}
 
-	rawContainerActionSet := rawAction["container_action"].(*schema.Set).List()
-	if len(rawContainerActionSet) > 0 {
-		rawContainerAction := rawContainerActionSet[0].(map[string]interface{})
-		action.ContainerAction = parseContainerAction(rawContainerAction)
-	}
+	// rawContainerActionSet := rawAction["container_action"].(*schema.Set).List()
+	// if len(rawContainerActionSet) > 0 {
+	// 	rawContainerAction := rawContainerActionSet[0].(map[string]interface{})
+	// 	action.ContainerAction = parseContainerAction(rawContainerAction)
+	// }
 
 	rawQueryActionSet := rawAction["query_action"].(*schema.Set).List()
 	if len(rawQueryActionSet) > 0 {
@@ -538,13 +543,13 @@ func parseRetentionPeriod(rawRetentionPeriod map[string]interface{}) *iotanalyti
 func parseTrigger(rawTrigger map[string]interface{}) *iotanalytics.DatasetTrigger {
 	trigger := &iotanalytics.DatasetTrigger{}
 
-	rawDatasetSet := rawTrigger["dataset"].(*schema.Set).List()
-	if len(rawDatasetSet) > 0 {
-		rawDataset := rawDatasetSet[0].(map[string]interface{})
-		trigger.Dataset = &iotanalytics.TriggeringDataset{
-			Name: aws.String(rawDataset["name"].(string)),
-		}
-	}
+	// rawDatasetSet := rawTrigger["dataset"].(*schema.Set).List()
+	// if len(rawDatasetSet) > 0 {
+	// 	rawDataset := rawDatasetSet[0].(map[string]interface{})
+	// 	trigger.Dataset = &iotanalytics.TriggeringDataset{
+	// 		Name: aws.String(rawDataset["name"].(string)),
+	// 	}
+	// }
 
 	rawScheduleSet := rawTrigger["schedule"].(*schema.Set).List()
 	if len(rawScheduleSet) > 0 {
@@ -717,10 +722,10 @@ func flattenAction(action *iotanalytics.DatasetAction) map[string]interface{} {
 	rawAction := make(map[string]interface{})
 	rawAction["name"] = aws.StringValue(action.ActionName)
 
-	if action.ContainerAction != nil {
-		rawContainerAction := flattenContainerAction(action.ContainerAction)
-		rawAction["container_action"] = wrapMapInList(rawContainerAction)
-	}
+	// if action.ContainerAction != nil {
+	// 	rawContainerAction := flattenContainerAction(action.ContainerAction)
+	// 	rawAction["container_action"] = wrapMapInList(rawContainerAction)
+	// }
 
 	if action.QueryAction != nil {
 		rawQueryAction := flattenSqlQueryAction(action.QueryAction)
@@ -803,16 +808,16 @@ func flattenRetentionPeriod(retentionPeriod *iotanalytics.RetentionPeriod) map[s
 func flattenTrigger(trigger *iotanalytics.DatasetTrigger) map[string]interface{} {
 	rawTrigger := make(map[string]interface{})
 
-	if trigger.Dataset != nil {
-		rawDataset := map[string]interface{}{
-			"name": aws.StringValue(trigger.Dataset.Name),
-		}
-		rawTrigger["dataset"] = wrapMapInList(rawDataset)
-	}
+	// if trigger.Dataset != nil {
+	// 	rawDataset := map[string]interface{}{
+	// 		"name": aws.StringValue(trigger.Dataset.Name),
+	// 	}
+	// 	rawTrigger["dataset"] = wrapMapInList(rawDataset)
+	// }
 
 	if trigger.Schedule != nil {
 		rawSchedule := map[string]interface{}{
-			"name": aws.StringValue(trigger.Schedule.Expression),
+			"expression": aws.StringValue(trigger.Schedule.Expression),
 		}
 		rawTrigger["schedule"] = wrapMapInList(rawSchedule)
 	}
