@@ -72,7 +72,7 @@ func TestAccAWSElasticSearchDomain_basic(t *testing.T) {
 					testAccCheckESDomainExists("aws_elasticsearch_domain.example", &domain),
 					resource.TestCheckResourceAttr(
 						"aws_elasticsearch_domain.example", "elasticsearch_version", "1.5"),
-					resource.TestMatchResourceAttr("aws_elasticsearch_domain.example", "kibana_endpoint", regexp.MustCompile(".*es.amazonaws.com/_plugin/kibana/")),
+					resource.TestMatchResourceAttr("aws_elasticsearch_domain.example", "kibana_endpoint", regexp.MustCompile(`.*es\..*/_plugin/kibana/`)),
 				),
 			},
 		},
@@ -1021,6 +1021,8 @@ resource "aws_elasticsearch_domain" "example" {
 
 func testAccESDomainConfigWithPolicy(randESId int, randRoleId int) string {
 	return fmt.Sprintf(`
+data "aws_partition" "current" {}
+
 resource "aws_elasticsearch_domain" "example" {
   domain_name = "tf-test-%d"
 
@@ -1039,7 +1041,7 @@ resource "aws_elasticsearch_domain" "example" {
 	"AWS": "${aws_iam_role.example_role.arn}"
       },
       "Action": "es:*",
-      "Resource": "arn:aws:es:*"
+      "Resource": "arn:${data.aws_partition.current.partition}:es:*"
     }
   ]
   }
@@ -1057,7 +1059,7 @@ data "aws_iam_policy_document" "instance-assume-role-policy" {
 
     principals {
       type        = "Service"
-      identifiers = ["ec2.amazonaws.com"]
+      identifiers = ["ec2.${data.aws_partition.current.dns_suffix}"]
     }
   }
 }
@@ -1407,6 +1409,8 @@ resource "aws_elasticsearch_domain" "example" {
 
 func testAccESDomainConfig_LogPublishingOptions(randInt int) string {
 	return fmt.Sprintf(`
+data "aws_partition" "current" {}
+
 resource "aws_cloudwatch_log_group" "example" {
   name = "tf-test-%d"
 }
@@ -1421,14 +1425,14 @@ resource "aws_cloudwatch_log_resource_policy" "example" {
     {
       "Effect": "Allow",
       "Principal": {
-        "Service": "es.amazonaws.com"
+        "Service": "es.${data.aws_partition.current.dns_suffix}"
       },
       "Action": [
         "logs:PutLogEvents",
         "logs:PutLogEventsBatch",
         "logs:CreateLogStream"
       ],
-      "Resource": "arn:aws:logs:*"
+      "Resource": "arn:${data.aws_partition.current.partition}:logs:*"
     }
   ]
 }
@@ -1467,6 +1471,8 @@ func testAccESDomainConfig_CognitoOptions(randInt int, includeCognitoOptions boo
 	}
 
 	return fmt.Sprintf(`
+data "aws_partition" "current" {}
+
 resource "aws_cognito_user_pool" "example" {
   name = "tf-test-%d"
 }
@@ -1499,14 +1505,14 @@ data "aws_iam_policy_document" "assume-role-policy" {
 		
     principals {
       type        = "Service"
-      identifiers = ["es.amazonaws.com"]
+      identifiers = ["es.${data.aws_partition.current.dns_suffix}"]
     }
   }
 }
 	
 resource "aws_iam_role_policy_attachment" "example" {
 	role       = "${aws_iam_role.example.name}"
-	policy_arn = "arn:aws:iam::aws:policy/AmazonESCognitoAccess"
+	policy_arn = "arn:${data.aws_partition.current.partition}:iam::aws:policy/AmazonESCognitoAccess"
 }
 
 resource "aws_elasticsearch_domain" "example" {
