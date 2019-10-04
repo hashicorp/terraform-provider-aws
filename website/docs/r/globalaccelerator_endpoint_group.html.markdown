@@ -1,7 +1,6 @@
 ---
 layout: "aws"
 page_title: "AWS: aws_globalaccelerator_endpoint_group"
-sidebar_current: "docs-aws-resource-globalaccelerator-endpoint-group"
 description: |-
   Provides a Global Accelerator endpoint group.
 ---

@@ -4071,6 +4071,10 @@ func (c *ECS) SubmitTaskStateChangeRequest(input *SubmitTaskStateChangeInput) (r
 //   * ErrCodeAccessDeniedException "AccessDeniedException"
 //   You do not have authorization to perform the requested action.
 //
+//   * ErrCodeInvalidParameterException "InvalidParameterException"
+//   The specified parameter is invalid. Review the available parameters for the
+//   API request.
+//
 // See also, https://docs.aws.amazon.com/goto/WebAPI/ecs-2014-11-13/SubmitTaskStateChange
 func (c *ECS) SubmitTaskStateChange(input *SubmitTaskStateChangeInput) (*SubmitTaskStateChangeOutput, error) {
 	req, out := c.SubmitTaskStateChangeRequest(input)
@@ -5527,9 +5531,6 @@ type Container struct {
 	// The exit code returned from the container.
 	ExitCode *int64 `locationName:"exitCode" type:"integer"`
 
-	// The FireLens configuration for the container.
-	FirelensConfiguration *FirelensConfiguration `locationName:"firelensConfiguration" type:"structure"`
-
 	// The IDs of each GPU assigned to the container.
 	GpuIds []*string `locationName:"gpuIds" type:"list"`
 
@@ -5537,6 +5538,15 @@ type Container struct {
 	// this container in its task definition, then it reports the health status
 	// as UNKNOWN.
 	HealthStatus *string `locationName:"healthStatus" type:"string" enum:"HealthStatus"`
+
+	// The image used for the container.
+	Image *string `locationName:"image" type:"string"`
+
+	// The container image manifest digest.
+	//
+	// The imageDigest is only returned if the container is using an image hosted
+	// in Amazon ECR, otherwise it is omitted.
+	ImageDigest *string `locationName:"imageDigest" type:"string"`
 
 	// The last known status of the container.
 	LastStatus *string `locationName:"lastStatus" type:"string"`
@@ -5595,12 +5605,6 @@ func (s *Container) SetExitCode(v int64) *Container {
 	return s
 }
 
-// SetFirelensConfiguration sets the FirelensConfiguration field's value.
-func (s *Container) SetFirelensConfiguration(v *FirelensConfiguration) *Container {
-	s.FirelensConfiguration = v
-	return s
-}
-
 // SetGpuIds sets the GpuIds field's value.
 func (s *Container) SetGpuIds(v []*string) *Container {
 	s.GpuIds = v
@@ -5610,6 +5614,18 @@ func (s *Container) SetGpuIds(v []*string) *Container {
 // SetHealthStatus sets the HealthStatus field's value.
 func (s *Container) SetHealthStatus(v string) *Container {
 	s.HealthStatus = &v
+	return s
+}
+
+// SetImage sets the Image field's value.
+func (s *Container) SetImage(v string) *Container {
+	s.Image = &v
+	return s
+}
+
+// SetImageDigest sets the ImageDigest field's value.
+func (s *Container) SetImageDigest(v string) *Container {
+	s.ImageDigest = &v
 	return s
 }
 
@@ -5857,7 +5873,9 @@ type ContainerDefinition struct {
 	ExtraHosts []*HostEntry `locationName:"extraHosts" type:"list"`
 
 	// The FireLens configuration for the container. This is used to specify and
-	// configure a log router for container logs.
+	// configure a log router for container logs. For more information, see Custom
+	// Log Routing (https://docs.aws.amazon.com/AmazonECS/latest/developerguide/using_firelens.html)
+	// in the Amazon Elastic Container Service Developer Guide.
 	FirelensConfiguration *FirelensConfiguration `locationName:"firelensConfiguration" type:"structure"`
 
 	// The health check command and associated configuration parameters for the
@@ -6974,6 +6992,9 @@ type ContainerStateChange struct {
 	// exiting.
 	ExitCode *int64 `locationName:"exitCode" type:"integer"`
 
+	// The container image SHA 256 digest.
+	ImageDigest *string `locationName:"imageDigest" type:"string"`
+
 	// Any network bindings associated with the container.
 	NetworkBindings []*NetworkBinding `locationName:"networkBindings" type:"list"`
 
@@ -7006,6 +7027,12 @@ func (s *ContainerStateChange) SetContainerName(v string) *ContainerStateChange 
 // SetExitCode sets the ExitCode field's value.
 func (s *ContainerStateChange) SetExitCode(v int64) *ContainerStateChange {
 	s.ExitCode = &v
+	return s
+}
+
+// SetImageDigest sets the ImageDigest field's value.
+func (s *ContainerStateChange) SetImageDigest(v string) *ContainerStateChange {
+	s.ImageDigest = &v
 	return s
 }
 
@@ -7201,7 +7228,10 @@ type CreateServiceInput struct {
 	//
 	// If the service is using the rolling update (ECS) deployment controller and
 	// using either an Application Load Balancer or Network Load Balancer, you can
-	// specify multiple target groups to attach to the service.
+	// specify multiple target groups to attach to the service. The service-linked
+	// role is required for services that make use of multiple target groups. For
+	// more information, see Using Service-Linked Roles for Amazon ECS (https://docs.aws.amazon.com/AmazonECS/latest/developerguide/using-service-linked-roles.html)
+	// in the Amazon Elastic Container Service Developer Guide.
 	//
 	// If the service is using the CODE_DEPLOY deployment controller, the service
 	// is required to use either an Application Load Balancer or Network Load Balancer.
@@ -7280,8 +7310,10 @@ type CreateServiceInput struct {
 	// If your account has already created the Amazon ECS service-linked role, that
 	// role is used by default for your service unless you specify a role here.
 	// The service-linked role is required if your task definition uses the awsvpc
-	// network mode, in which case you should not specify a role here. For more
-	// information, see Using Service-Linked Roles for Amazon ECS (https://docs.aws.amazon.com/AmazonECS/latest/developerguide/using-service-linked-roles.html)
+	// network mode or if the service is configured to use service discovery, an
+	// external deployment controller, or multiple target groups in which case you
+	// should not specify a role here. For more information, see Using Service-Linked
+	// Roles for Amazon ECS (https://docs.aws.amazon.com/AmazonECS/latest/developerguide/using-service-linked-roles.html)
 	// in the Amazon Elastic Container Service Developer Guide.
 	//
 	// If your specified role has a path other than /, then you must either specify
@@ -9395,7 +9427,9 @@ func (s *Failure) SetReason(v string) *Failure {
 }
 
 // The FireLens configuration for the container. This is used to specify and
-// configure a log router for container logs.
+// configure a log router for container logs. For more information, see Custom
+// Log Routing (https://docs.aws.amazon.com/AmazonECS/latest/developerguide/using_firelens.html)
+// in the Amazon Elastic Container Service Developer Guide.
 type FirelensConfiguration struct {
 	_ struct{} `type:"structure"`
 
@@ -11091,14 +11125,18 @@ type LogConfiguration struct {
 	// parameter are log drivers that the Amazon ECS container agent can communicate
 	// with by default.
 	//
-	// For tasks using the Fargate launch type, the supported log drivers are awslogs
-	// and splunk.
+	// For tasks using the Fargate launch type, the supported log drivers are awslogs,
+	// splunk, and awsfirelens.
 	//
 	// For tasks using the EC2 launch type, the supported log drivers are awslogs,
-	// fluentd, gelf, json-file, journald, logentries, syslog, and splunk.
+	// fluentd, gelf, json-file, journald, logentries, syslog, splunk, and awsfirelens.
 	//
 	// For more information about using the awslogs log driver, see Using the awslogs
 	// Log Driver (https://docs.aws.amazon.com/AmazonECS/latest/developerguide/using_awslogs.html)
+	// in the Amazon Elastic Container Service Developer Guide.
+	//
+	// For more information about using the awsfirelens log driver, see Custom Log
+	// Routing (https://docs.aws.amazon.com/AmazonECS/latest/developerguide/using_firelens.html)
 	// in the Amazon Elastic Container Service Developer Guide.
 	//
 	// If you have a custom driver that is not listed above that you would like
@@ -11123,7 +11161,9 @@ type LogConfiguration struct {
 	// --format '{{.Server.APIVersion}}'
 	Options map[string]*string `locationName:"options" type:"map"`
 
-	// The secrets to pass to the log configuration.
+	// The secrets to pass to the log configuration. For more information, see Specifying
+	// Sensitive Data (https://docs.aws.amazon.com/AmazonECS/latest/developerguide/specifying-sensitive-data.html)
+	// in the Amazon Elastic Container Service Developer Guide.
 	SecretOptions []*Secret `locationName:"secretOptions" type:"list"`
 }
 
@@ -12307,7 +12347,7 @@ type RegisterTaskDefinitionInput struct {
 	// The process namespace to use for the containers in the task. The valid values
 	// are host or task. If host is specified, then all containers within the tasks
 	// that specified the host PID mode on the same container instance share the
-	// same IPC resources with the host Amazon EC2 instance. If task is specified,
+	// same process namespace with the host Amazon EC2 instance. If task is specified,
 	// all containers within the specified task share the same process namespace.
 	// If no value is specified, the default is a private namespace. For more information,
 	// see PID settings (https://docs.docker.com/engine/reference/run/#pid-settings---pid)
@@ -14685,7 +14725,7 @@ type Task struct {
 	// The version counter for the task. Every time a task experiences a change
 	// that triggers a CloudWatch event, the version counter is incremented. If
 	// you are replicating your Amazon ECS task state with CloudWatch Events, you
-	// can compare the version of a task reported by the Amazon ECS API actionss
+	// can compare the version of a task reported by the Amazon ECS API actions
 	// with the version reported in CloudWatch Events for the task (inside the detail
 	// object) to verify that the version in your event stream is current.
 	Version *int64 `locationName:"version" type:"long"`
@@ -15030,7 +15070,7 @@ type TaskDefinition struct {
 	// The process namespace to use for the containers in the task. The valid values
 	// are host or task. If host is specified, then all containers within the tasks
 	// that specified the host PID mode on the same container instance share the
-	// same IPC resources with the host Amazon EC2 instance. If task is specified,
+	// same process namespace with the host Amazon EC2 instance. If task is specified,
 	// all containers within the specified task share the same process namespace.
 	// If no value is specified, the default is a private namespace. For more information,
 	// see PID settings (https://docs.docker.com/engine/reference/run/#pid-settings---pid)

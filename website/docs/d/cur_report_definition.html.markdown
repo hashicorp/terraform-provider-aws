@@ -1,7 +1,6 @@
 ---
 layout: "aws"
 page_title: "AWS: aws_cur_report_definition"
-sidebar_current: "docs-aws-datasource-cur-report-definition"
 description: |-
   Get information on an AWS Cost and Usage Report Definition.
 ---

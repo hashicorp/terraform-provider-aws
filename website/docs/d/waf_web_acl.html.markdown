@@ -1,7 +1,6 @@
 ---
 layout: "aws"
 page_title: "AWS: aws_waf_web_acl"
-sidebar_current: "docs-aws-datasource-waf-web-acl"
 description: |-
   Retrieves a WAF Web ACL id.
 ---

@@ -1,7 +1,6 @@
 ---
 layout: "aws"
 page_title: "AWS: aws_quicksight_group"
-sidebar_current: "docs-aws-resource-quicksight-group"
 description: |-
   Manages a Resource Quick Sight Group.
 ---

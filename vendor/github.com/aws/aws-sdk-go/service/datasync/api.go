@@ -420,8 +420,8 @@ func (c *DataSync) CreateLocationS3Request(input *CreateLocationS3Input) (req *r
 // required permissions and attaching the policy to the role. An example of
 // such a policy is shown in the examples section.
 //
-// For more information, see Configuring Amazon S3 Location Settings in the
-// AWS DataSync User Guide.
+// For more information, see https://docs.aws.amazon.com/datasync/latest/userguide/working-with-locations.html#create-s3-location
+// in the AWS DataSync User Guide.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -2719,12 +2719,12 @@ type CreateAgentInput struct {
 	SecurityGroupArns []*string `min:"1" type:"list"`
 
 	// The Amazon Resource Names (ARNs) of the subnets in which DataSync will create
-	// Elastic Network Interfaces (ENIs) for each data transfer task. The agent
-	// that runs a task must be private. When you start a task that is associated
-	// with an agent created in a VPC, or one that has access to an IP address in
-	// a VPC, then the task is also private. In this case, DataSync creates four
-	// ENIs for each task in your subnet. For a data transfer to work, the agent
-	// must be able to route to all these four ENIs.
+	// elastic network interfaces for each data transfer task. The agent that runs
+	// a task must be private. When you start a task that is associated with an
+	// agent created in a VPC, or one that has access to an IP address in a VPC,
+	// then the task is also private. In this case, DataSync creates four network
+	// interfaces for each task in your subnet. For a data transfer to work, the
+	// agent must be able to route to all these four network interfaces.
 	SubnetArns []*string `min:"1" type:"list"`
 
 	// The key-value pair that represents the tag that you want to associate with
@@ -3151,6 +3151,14 @@ type CreateLocationS3Input struct {
 	// S3Config is a required field
 	S3Config *S3Config `type:"structure" required:"true"`
 
+	// The Amazon S3 storage class that you want to store your files in when this
+	// location is used as a task destination. For more information about S3 storage
+	// classes, see Amazon S3 Storage Classes (https://aws.amazon.com/s3/storage-classes/)
+	// in the Amazon Simple Storage Service Developer Guide. Some storage classes
+	// have behaviors that can affect your S3 storage cost. For detailed information,
+	// see using-storage-classes.
+	S3StorageClass *string `type:"string" enum:"S3StorageClass"`
+
 	// A subdirectory in the Amazon S3 bucket. This subdirectory in Amazon S3 is
 	// used to read data from the S3 source location or write data to the S3 destination.
 	Subdirectory *string `type:"string"`
@@ -3213,6 +3221,12 @@ func (s *CreateLocationS3Input) SetS3Config(v *S3Config) *CreateLocationS3Input 
 	return s
 }
 
+// SetS3StorageClass sets the S3StorageClass field's value.
+func (s *CreateLocationS3Input) SetS3StorageClass(v string) *CreateLocationS3Input {
+	s.S3StorageClass = &v
+	return s
+}
+
 // SetSubdirectory sets the Subdirectory field's value.
 func (s *CreateLocationS3Input) SetSubdirectory(v string) *CreateLocationS3Input {
 	s.Subdirectory = &v
@@ -3260,21 +3274,21 @@ type CreateLocationSmbInput struct {
 	// AgentArns is a required field
 	AgentArns []*string `min:"1" type:"list" required:"true"`
 
-	// The name of the domain that the SMB server belongs to.
+	// The name of the Windows domain that the SMB server belongs to.
 	Domain *string `type:"string"`
 
-	// The mount options that are available for DataSync to use to access an SMB
-	// location.
+	// The mount options used by DataSync to access the SMB server.
 	MountOptions *SmbMountOptions `type:"structure"`
 
-	// The password of the user who has permission to access the SMB server.
+	// The password of the user who can mount the share, has the permissions to
+	// access files and folders in the SMB share.
 	//
 	// Password is a required field
 	Password *string `type:"string" required:"true"`
 
 	// The name of the SMB server. This value is the IP address or Domain Name Service
 	// (DNS) name of the SMB server. An agent that is installed on-premises uses
-	// this host name to mount the SMB server in a network.
+	// this hostname to mount the SMB server in a network.
 	//
 	// This name must either be DNS-compliant or must be an IP version 4 (IPv4)
 	// address.
@@ -3305,7 +3319,7 @@ type CreateLocationSmbInput struct {
 	Tags []*TagListEntry `type:"list"`
 
 	// The user who can mount the share, has the permissions to access files and
-	// directories in the SMB share.
+	// folders in the SMB share.
 	//
 	// User is a required field
 	User *string `type:"string" required:"true"`
@@ -3810,8 +3824,7 @@ type DescribeAgentOutput struct {
 	// The name of the agent.
 	Name *string `min:"1" type:"string"`
 
-	// The VPC endpoint, subnet and security group that an agent uses to access
-	// IP addresses in a VPC (Virtual Private Cloud).
+	// The subnet and the security group that DataSync used to access a VPC endpoint.
 	PrivateLinkConfig *PrivateLinkConfig `type:"structure"`
 
 	// The status of the agent. If the status is ONLINE, then the agent is configured
@@ -4125,6 +4138,14 @@ type DescribeLocationS3Output struct {
 	// For detailed information about using such a role, see Creating a Location
 	// for Amazon S3 in the AWS DataSync User Guide.
 	S3Config *S3Config `type:"structure"`
+
+	// The Amazon S3 storage class that you chose to store your files in when this
+	// location is used as a task destination. For more information about S3 storage
+	// classes, see Amazon S3 Storage Classes (https://aws.amazon.com/s3/storage-classes/)
+	// in the Amazon Simple Storage Service Developer Guide. Some storage classes
+	// have behaviors that can affect your S3 storage cost. For detailed information,
+	// see using-storage-classes.
+	S3StorageClass *string `type:"string" enum:"S3StorageClass"`
 }
 
 // String returns the string representation
@@ -4158,6 +4179,12 @@ func (s *DescribeLocationS3Output) SetLocationUri(v string) *DescribeLocationS3O
 // SetS3Config sets the S3Config field's value.
 func (s *DescribeLocationS3Output) SetS3Config(v *S3Config) *DescribeLocationS3Output {
 	s.S3Config = v
+	return s
+}
+
+// SetS3StorageClass sets the S3StorageClass field's value.
+func (s *DescribeLocationS3Output) SetS3StorageClass(v string) *DescribeLocationS3Output {
+	s.S3StorageClass = &v
 	return s
 }
 
@@ -4211,7 +4238,7 @@ type DescribeLocationSmbOutput struct {
 	// The time that the SMB location was created.
 	CreationTime *time.Time `type:"timestamp"`
 
-	// The name of the domain that the SMB server belongs to.
+	// The name of the Windows domain that the SMB server belongs to.
 	Domain *string `type:"string"`
 
 	// The Amazon resource Name (ARN) of the SMB location that was described.
@@ -4224,7 +4251,8 @@ type DescribeLocationSmbOutput struct {
 	// location.
 	MountOptions *SmbMountOptions `type:"structure"`
 
-	// The user who is logged on the SMB server.
+	// The user who can mount the share, has the permissions to access files and
+	// folders in the SMB share.
 	User *string `type:"string"`
 }
 
@@ -5206,9 +5234,22 @@ type NfsMountOptions struct {
 	_ struct{} `type:"structure"`
 
 	// The specific NFS version that you want DataSync to use to mount your NFS
-	// share. If you don't specify a version, DataSync defaults to AUTOMATIC. That
+	// share. If the server refuses to use the version specified, the sync will
+	// fail. If you don't specify a version, DataSync defaults to AUTOMATIC. That
 	// is, DataSync automatically selects a version based on negotiation with the
 	// NFS server.
+	//
+	// You can specify the following NFS versions:
+	//
+	//    * NFSv3 (https://tools.ietf.org/html/rfc1813) - stateless protocol version
+	//    that allows for asynchronous writes on the server.
+	//
+	//    * NFSv4.0 (https://tools.ietf.org/html/rfc3530) - stateful, firewall-friendly
+	//    protocol version that supports delegations and pseudo filesystems.
+	//
+	//    * NFSv4.1 (https://tools.ietf.org/html/rfc5661) - stateful protocol version
+	//    that supports sessions, directory delegations, and parallel data processing.
+	//    Version 4.1 also includes all features available in version 4.0.
 	Version *string `type:"string" enum:"NfsVersion"`
 }
 
@@ -5328,6 +5369,17 @@ type Options struct {
 	// If Mtime is set to NONE, Atime must also be set to NONE.
 	Mtime *string `type:"string" enum:"Mtime"`
 
+	// A value that determines whether files at the destination should be overwritten
+	// or preserved when copying files. If set to NEVER a destination file will
+	// not be replaced by a source file, even if the destination file differs from
+	// the source file. If you modify files in the destination and you sync the
+	// files, you can use this value to protect against overwriting those changes.
+	//
+	// Some storage classes have specific behaviors that can affect your S3 storage
+	// cost. For detailed information, see using-storage-classes in the AWS DataSync
+	// User Guide.
+	OverwriteMode *string `type:"string" enum:"OverwriteMode"`
+
 	// A value that determines which users or groups can access a file for a specific
 	// purpose such as reading, writing, or execution of the file.
 	//
@@ -5341,7 +5393,10 @@ type Options struct {
 	PosixPermissions *string `type:"string" enum:"PosixPermissions"`
 
 	// A value that specifies whether files in the destination that don't exist
-	// in the source file system should be preserved.
+	// in the source file system should be preserved. This option can affect your
+	// storage cost. If your task deletes objects, you might incur minimum storage
+	// duration charges for certain storage classes. For detailed information, see
+	// using-storage-classes in the AWS DataSync User Guide.
 	//
 	// Default value: PRESERVE.
 	//
@@ -5380,6 +5435,8 @@ type Options struct {
 	// Default value: POINT_IN_TIME_CONSISTENT.
 	//
 	// POINT_IN_TIME_CONSISTENT: Perform verification (recommended).
+	//
+	// ONLY_FILES_TRANSFERRED: Perform verification on only files that were transferred.
 	//
 	// NONE: Skip verification.
 	VerifyMode *string `type:"string" enum:"VerifyMode"`
@@ -5429,6 +5486,12 @@ func (s *Options) SetGid(v string) *Options {
 // SetMtime sets the Mtime field's value.
 func (s *Options) SetMtime(v string) *Options {
 	s.Mtime = &v
+	return s
+}
+
+// SetOverwriteMode sets the OverwriteMode field's value.
+func (s *Options) SetOverwriteMode(v string) *Options {
+	s.OverwriteMode = &v
 	return s
 }
 
@@ -5574,7 +5637,7 @@ type SmbMountOptions struct {
 	// The specific SMB version that you want DataSync to use to mount your SMB
 	// share. If you don't specify a version, DataSync defaults to AUTOMATIC. That
 	// is, DataSync automatically selects a version based on negotiation with the
-	// SMB Server server.
+	// SMB server.
 	Version *string `type:"string" enum:"SmbVersion"`
 }
 
@@ -6305,6 +6368,14 @@ const (
 )
 
 const (
+	// OverwriteModeAlways is a OverwriteMode enum value
+	OverwriteModeAlways = "ALWAYS"
+
+	// OverwriteModeNever is a OverwriteMode enum value
+	OverwriteModeNever = "NEVER"
+)
+
+const (
 	// PhaseStatusPending is a PhaseStatus enum value
 	PhaseStatusPending = "PENDING"
 
@@ -6340,6 +6411,26 @@ const (
 
 	// PreserveDevicesPreserve is a PreserveDevices enum value
 	PreserveDevicesPreserve = "PRESERVE"
+)
+
+const (
+	// S3StorageClassStandard is a S3StorageClass enum value
+	S3StorageClassStandard = "STANDARD"
+
+	// S3StorageClassStandardIa is a S3StorageClass enum value
+	S3StorageClassStandardIa = "STANDARD_IA"
+
+	// S3StorageClassOnezoneIa is a S3StorageClass enum value
+	S3StorageClassOnezoneIa = "ONEZONE_IA"
+
+	// S3StorageClassIntelligentTiering is a S3StorageClass enum value
+	S3StorageClassIntelligentTiering = "INTELLIGENT_TIERING"
+
+	// S3StorageClassGlacier is a S3StorageClass enum value
+	S3StorageClassGlacier = "GLACIER"
+
+	// S3StorageClassDeepArchive is a S3StorageClass enum value
+	S3StorageClassDeepArchive = "DEEP_ARCHIVE"
 )
 
 const (
@@ -6404,6 +6495,9 @@ const (
 const (
 	// VerifyModePointInTimeConsistent is a VerifyMode enum value
 	VerifyModePointInTimeConsistent = "POINT_IN_TIME_CONSISTENT"
+
+	// VerifyModeOnlyFilesTransferred is a VerifyMode enum value
+	VerifyModeOnlyFilesTransferred = "ONLY_FILES_TRANSFERRED"
 
 	// VerifyModeNone is a VerifyMode enum value
 	VerifyModeNone = "NONE"

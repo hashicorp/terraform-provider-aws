@@ -10,10 +10,10 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/ec2"
-	"github.com/hashicorp/terraform/helper/hashcode"
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/helper/schema"
-	"github.com/hashicorp/terraform/helper/validation"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/hashcode"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
 )
 
 func resourceAwsSpotFleetRequest() *schema.Resource {
@@ -404,6 +404,14 @@ func buildSpotFleetLaunchSpecification(d map[string]interface{}, meta interface{
 	if v, ok := d["placement_tenancy"]; ok {
 		placement.Tenancy = aws.String(v.(string))
 		opts.Placement = placement
+	}
+
+	if v, ok := d["placement_group"]; ok {
+		if v.(string) != "" {
+			// If instanceInterruptionBehavior is set to STOP, this can't be set at all, even to an empty string, so check for "" to avoid those errors
+			placement.GroupName = aws.String(v.(string))
+			opts.Placement = placement
+		}
 	}
 
 	if v, ok := d["ebs_optimized"]; ok {

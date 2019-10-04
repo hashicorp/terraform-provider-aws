@@ -1,7 +1,6 @@
 ---
 layout: "aws"
 page_title: "AWS: aws_elb"
-sidebar_current: "docs-aws-datasource-elb"
 description: |-
   Provides a classic Elastic Load Balancer data source.
 ---

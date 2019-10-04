@@ -8,9 +8,9 @@ import (
 	"testing"
 	"time"
 
-	"github.com/hashicorp/terraform/helper/acctest"
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/terraform"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/rds"
@@ -1919,26 +1919,6 @@ func TestAccAWSDBInstance_MinorVersion(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSDBInstanceConfigAutoMinorVersion,
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSDBInstanceExists("aws_db_instance.bar", &v),
-				),
-			},
-		},
-	})
-}
-
-// See https://github.com/hashicorp/terraform/issues/11881
-func TestAccAWSDBInstance_diffSuppressInitialState(t *testing.T) {
-	var v rds.DBInstance
-	rInt := acctest.RandInt()
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckAWSDBInstanceDestroy,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccAWSDBInstanceConfigSuppressInitialState(rInt),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSDBInstanceExists("aws_db_instance.bar", &v),
 				),
@@ -4179,29 +4159,6 @@ resource "aws_db_instance" "bar" {
   security_group_names = ["default"]
   parameter_group_name = "default.mysql5.6"
   skip_final_snapshot  = true
-}
-`, rInt)
-}
-
-func testAccAWSDBInstanceConfigSuppressInitialState(rInt int) string {
-	return fmt.Sprintf(`
-resource "aws_db_instance" "bar" {
-  identifier          = "foobarbaz-test-terraform-%d"
-  allocated_storage   = 10
-  engine              = "MySQL"
-  instance_class      = "db.t2.micro"
-  name                = "baz"
-  password            = "barbarbarbar"
-  username            = "foo"
-  skip_final_snapshot = true
-}
-
-data "template_file" "test" {
-  template = ""
-
-  vars = {
-    test_var = "${aws_db_instance.bar.engine_version}"
-  }
 }
 `, rInt)
 }

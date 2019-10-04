@@ -1,7 +1,6 @@
 ---
 layout: "aws"
 page_title: "AWS: aws_s3_bucket_object"
-sidebar_current: "docs-aws-resource-s3-bucket-object"
 description: |-
   Provides a S3 bucket object resource.
 ---

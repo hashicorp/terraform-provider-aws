@@ -1,7 +1,6 @@
 ---
 layout: "aws"
 page_title: "EKS Getting Started Guide"
-sidebar_current: "docs-aws-guide-eks-getting-started"
 description: |-
   Using Terraform to configure AWS EKS.
 ---
