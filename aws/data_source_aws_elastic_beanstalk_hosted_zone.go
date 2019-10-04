@@ -3,7 +3,7 @@ package aws
 import (
 	"fmt"
 
-	"github.com/hashicorp/terraform/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 )
 
 // See http://docs.aws.amazon.com/general/latest/gr/rande.html#elasticbeanstalk_region

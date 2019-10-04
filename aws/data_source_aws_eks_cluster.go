@@ -6,8 +6,9 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/eks"
-	"github.com/hashicorp/terraform/helper/schema"
-	"github.com/hashicorp/terraform/helper/validation"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 )
 
 func dataSourceAwsEksCluster() *schema.Resource {
@@ -84,6 +85,7 @@ func dataSourceAwsEksCluster() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"tags": tagsSchemaComputed(),
 			"vpc_config": {
 				Type:     schema.TypeList,
 				MaxItems: 1,
@@ -163,6 +165,11 @@ func dataSourceAwsEksClusterRead(d *schema.ResourceData, meta interface{}) error
 	d.Set("platform_version", cluster.PlatformVersion)
 	d.Set("role_arn", cluster.RoleArn)
 	d.Set("status", cluster.Status)
+
+	if err := d.Set("tags", keyvaluetags.EksKeyValueTags(cluster.Tags).IgnoreAws().Map()); err != nil {
+		return fmt.Errorf("error setting tags: %s", err)
+	}
+
 	d.Set("version", cluster.Version)
 
 	if err := d.Set("vpc_config", flattenEksVpcConfigResponse(cluster.ResourcesVpcConfig)); err != nil {

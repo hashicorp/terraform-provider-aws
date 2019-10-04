@@ -100,6 +100,7 @@ var mapServiceNames = []string{
 	"codecommit",
 	"cognitoidentity",
 	"cognitoidentityprovider",
+	"eks",
 	"glacier",
 	"glue",
 	"guardduty",

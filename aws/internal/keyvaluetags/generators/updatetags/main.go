@@ -46,6 +46,7 @@ var serviceNames = []string{
 	"ecr",
 	"ecs",
 	"efs",
+	"eks",
 	"elasticache",
 	"elasticsearchservice",
 	"emr",

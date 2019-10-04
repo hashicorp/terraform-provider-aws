@@ -3318,6 +3318,8 @@ type DescribeBrokerResponse struct {
 
 	PendingEngineVersion *string `locationName:"pendingEngineVersion" type:"string"`
 
+	PendingHostInstanceType *string `locationName:"pendingHostInstanceType" type:"string"`
+
 	PendingSecurityGroups []*string `locationName:"pendingSecurityGroups" type:"list"`
 
 	PubliclyAccessible *bool `locationName:"publiclyAccessible" type:"boolean"`
@@ -3434,6 +3436,12 @@ func (s *DescribeBrokerResponse) SetMaintenanceWindowStartTime(v *WeeklyStartTim
 // SetPendingEngineVersion sets the PendingEngineVersion field's value.
 func (s *DescribeBrokerResponse) SetPendingEngineVersion(v string) *DescribeBrokerResponse {
 	s.PendingEngineVersion = &v
+	return s
+}
+
+// SetPendingHostInstanceType sets the PendingHostInstanceType field's value.
+func (s *DescribeBrokerResponse) SetPendingHostInstanceType(v string) *DescribeBrokerResponse {
+	s.PendingHostInstanceType = &v
 	return s
 }
 
@@ -4547,6 +4555,8 @@ type UpdateBrokerRequest struct {
 
 	EngineVersion *string `locationName:"engineVersion" type:"string"`
 
+	HostInstanceType *string `locationName:"hostInstanceType" type:"string"`
+
 	// The list of information about logs to be enabled for the specified broker.
 	Logs *Logs `locationName:"logs" type:"structure"`
 
@@ -4603,6 +4613,12 @@ func (s *UpdateBrokerRequest) SetEngineVersion(v string) *UpdateBrokerRequest {
 	return s
 }
 
+// SetHostInstanceType sets the HostInstanceType field's value.
+func (s *UpdateBrokerRequest) SetHostInstanceType(v string) *UpdateBrokerRequest {
+	s.HostInstanceType = &v
+	return s
+}
+
 // SetLogs sets the Logs field's value.
 func (s *UpdateBrokerRequest) SetLogs(v *Logs) *UpdateBrokerRequest {
 	s.Logs = v
@@ -4626,6 +4642,8 @@ type UpdateBrokerResponse struct {
 	Configuration *ConfigurationId `locationName:"configuration" type:"structure"`
 
 	EngineVersion *string `locationName:"engineVersion" type:"string"`
+
+	HostInstanceType *string `locationName:"hostInstanceType" type:"string"`
 
 	// The list of information about logs to be enabled for the specified broker.
 	Logs *Logs `locationName:"logs" type:"structure"`
@@ -4664,6 +4682,12 @@ func (s *UpdateBrokerResponse) SetConfiguration(v *ConfigurationId) *UpdateBroke
 // SetEngineVersion sets the EngineVersion field's value.
 func (s *UpdateBrokerResponse) SetEngineVersion(v string) *UpdateBrokerResponse {
 	s.EngineVersion = &v
+	return s
+}
+
+// SetHostInstanceType sets the HostInstanceType field's value.
+func (s *UpdateBrokerResponse) SetHostInstanceType(v string) *UpdateBrokerResponse {
+	s.HostInstanceType = &v
 	return s
 }
 

@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"log"
 
-	"github.com/hashicorp/terraform/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/terraform"
 )
 
 func resourceAwsVpcMigrateState(
