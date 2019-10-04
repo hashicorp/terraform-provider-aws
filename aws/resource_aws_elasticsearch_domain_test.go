@@ -4,11 +4,13 @@ import (
 	"fmt"
 	"log"
 	"regexp"
+	"strings"
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	elasticsearch "github.com/aws/aws-sdk-go/service/elasticsearchservice"
+	"github.com/aws/aws-sdk-go/service/iam"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/terraform"
@@ -60,7 +62,7 @@ func TestAccAWSElasticSearchDomain_basic(t *testing.T) {
 	ri := acctest.RandInt()
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckIamServiceLinkedRoleEs(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckESDomainDestroy,
 		Steps: []resource.TestStep{
@@ -83,7 +85,7 @@ func TestAccAWSElasticSearchDomain_ClusterConfig_ZoneAwarenessConfig(t *testing.
 	resourceName := "aws_elasticsearch_domain.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckIamServiceLinkedRoleEs(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckESDomainDestroy,
 		Steps: []resource.TestStep{
@@ -140,7 +142,7 @@ func TestAccAWSElasticSearchDomain_withDedicatedMaster(t *testing.T) {
 	ri := acctest.RandInt()
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckIamServiceLinkedRoleEs(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckESDomainDestroy,
 		Steps: []resource.TestStep{
@@ -172,7 +174,7 @@ func TestAccAWSElasticSearchDomain_duplicate(t *testing.T) {
 	name := fmt.Sprintf("tf-test-%d", ri)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:  func() { testAccPreCheck(t) },
+		PreCheck:  func() { testAccPreCheck(t); testAccPreCheckIamServiceLinkedRoleEs(t) },
 		Providers: testAccProviders,
 		CheckDestroy: func(s *terraform.State) error {
 			conn := testAccProvider.Meta().(*AWSClient).esconn
@@ -220,7 +222,7 @@ func TestAccAWSElasticSearchDomain_importBasic(t *testing.T) {
 	resourceId := fmt.Sprintf("tf-test-%d", ri)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckIamServiceLinkedRoleEs(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckESDomainDestroy,
 		Steps: []resource.TestStep{
@@ -242,7 +244,7 @@ func TestAccAWSElasticSearchDomain_v23(t *testing.T) {
 	ri := acctest.RandInt()
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckIamServiceLinkedRoleEs(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckESDomainDestroy,
 		Steps: []resource.TestStep{
@@ -263,7 +265,7 @@ func TestAccAWSElasticSearchDomain_complex(t *testing.T) {
 	ri := acctest.RandInt()
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckIamServiceLinkedRoleEs(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckESDomainDestroy,
 		Steps: []resource.TestStep{
@@ -282,7 +284,7 @@ func TestAccAWSElasticSearchDomain_vpc(t *testing.T) {
 	ri := acctest.RandInt()
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckIamServiceLinkedRoleEs(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckESDomainDestroy,
 		Steps: []resource.TestStep{
@@ -301,7 +303,7 @@ func TestAccAWSElasticSearchDomain_vpc_update(t *testing.T) {
 	ri := acctest.RandInt()
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckIamServiceLinkedRoleEs(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckESDomainDestroy,
 		Steps: []resource.TestStep{
@@ -328,7 +330,7 @@ func TestAccAWSElasticSearchDomain_internetToVpcEndpoint(t *testing.T) {
 	ri := acctest.RandInt()
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckIamServiceLinkedRoleEs(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckESDomainDestroy,
 		Steps: []resource.TestStep{
@@ -351,7 +353,7 @@ func TestAccAWSElasticSearchDomain_internetToVpcEndpoint(t *testing.T) {
 func TestAccAWSElasticSearchDomain_LogPublishingOptions(t *testing.T) {
 	var domain elasticsearch.ElasticsearchDomainStatus
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckIamServiceLinkedRoleEs(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckESDomainDestroy,
 		Steps: []resource.TestStep{
@@ -370,7 +372,7 @@ func TestAccAWSElasticSearchDomain_CognitoOptionsCreateAndRemove(t *testing.T) {
 	ri := acctest.RandInt()
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckIamServiceLinkedRoleEs(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckESDomainDestroy,
 		Steps: []resource.TestStep{
@@ -397,7 +399,7 @@ func TestAccAWSElasticSearchDomain_CognitoOptionsUpdate(t *testing.T) {
 	ri := acctest.RandInt()
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckIamServiceLinkedRoleEs(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckESDomainDestroy,
 		Steps: []resource.TestStep{
@@ -433,7 +435,7 @@ func TestAccAWSElasticSearchDomain_policy(t *testing.T) {
 	var domain elasticsearch.ElasticsearchDomainStatus
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckIamServiceLinkedRoleEs(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckESDomainDestroy,
 		Steps: []resource.TestStep{
@@ -451,7 +453,7 @@ func TestAccAWSElasticSearchDomain_encrypt_at_rest_default_key(t *testing.T) {
 	var domain elasticsearch.ElasticsearchDomainStatus
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckIamServiceLinkedRoleEs(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckESDomainDestroy,
 		Steps: []resource.TestStep{
@@ -470,7 +472,7 @@ func TestAccAWSElasticSearchDomain_encrypt_at_rest_specify_key(t *testing.T) {
 	var domain elasticsearch.ElasticsearchDomainStatus
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckIamServiceLinkedRoleEs(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckESDomainDestroy,
 		Steps: []resource.TestStep{
@@ -489,7 +491,7 @@ func TestAccAWSElasticSearchDomain_NodeToNodeEncryption(t *testing.T) {
 	var domain elasticsearch.ElasticsearchDomainStatus
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckIamServiceLinkedRoleEs(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckESDomainDestroy,
 		Steps: []resource.TestStep{
@@ -510,7 +512,7 @@ func TestAccAWSElasticSearchDomain_tags(t *testing.T) {
 	ri := acctest.RandInt()
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckIamServiceLinkedRoleEs(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSELBDestroy,
 		Steps: []resource.TestStep{
@@ -539,7 +541,7 @@ func TestAccAWSElasticSearchDomain_update(t *testing.T) {
 	ri := acctest.RandInt()
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckIamServiceLinkedRoleEs(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckESDomainDestroy,
 		Steps: []resource.TestStep{
@@ -567,7 +569,7 @@ func TestAccAWSElasticSearchDomain_update_volume_type(t *testing.T) {
 	ri := acctest.RandInt()
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckIamServiceLinkedRoleEs(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckESDomainDestroy,
 		Steps: []resource.TestStep{
@@ -602,7 +604,7 @@ func TestAccAWSElasticSearchDomain_update_version(t *testing.T) {
 	ri := acctest.RandInt()
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckIamServiceLinkedRoleEs(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckESDomainDestroy,
 		Steps: []resource.TestStep{
@@ -792,6 +794,38 @@ func testAccCheckESDomainDestroy(s *terraform.State) error {
 		}
 	}
 	return nil
+}
+
+func testAccPreCheckIamServiceLinkedRoleEs(t *testing.T) {
+	conn := testAccProvider.Meta().(*AWSClient).iamconn
+	dnsSuffix := testAccProvider.Meta().(*AWSClient).dnsSuffix
+
+	input := &iam.ListRolesInput{
+		PathPrefix: aws.String("/aws-service-role/es."),
+	}
+
+	var role *iam.Role
+	err := conn.ListRolesPages(input, func(page *iam.ListRolesOutput, lastPage bool) bool {
+		for _, r := range page.Roles {
+			if strings.HasPrefix(aws.StringValue(r.Path), "/aws-service-role/es.") {
+				role = r
+			}
+		}
+
+		return !lastPage
+	})
+
+	if testAccPreCheckSkipError(err) {
+		t.Skipf("skipping acceptance testing: %s", err)
+	}
+
+	if err != nil {
+		t.Fatalf("unexpected PreCheck error: %s", err)
+	}
+
+	if role == nil {
+		t.Fatalf("missing IAM Service Linked Role (es.%s), please create it in the AWS account and retry", dnsSuffix)
+	}
 }
 
 func testAccESDomainConfig(randInt int) string {

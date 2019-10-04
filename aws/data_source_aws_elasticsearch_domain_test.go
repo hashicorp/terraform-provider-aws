@@ -14,7 +14,7 @@ func TestAccAWSDataElasticsearchDomain_basic(t *testing.T) {
 	resourceName := "aws_elasticsearch_domain.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:  func() { testAccPreCheck(t) },
+		PreCheck:  func() { testAccPreCheck(t); testAccPreCheckIamServiceLinkedRoleEs(t) },
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
 			{
@@ -44,7 +44,7 @@ func TestAccAWSDataElasticsearchDomain_advanced(t *testing.T) {
 	resourceName := "aws_elasticsearch_domain.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:  func() { testAccPreCheck(t) },
+		PreCheck:  func() { testAccPreCheck(t); testAccPreCheckIamServiceLinkedRoleEs(t) },
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
 			{
