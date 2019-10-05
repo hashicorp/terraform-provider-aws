@@ -9,6 +9,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/apigatewayv2"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 )
 
 func resourceAwsApiGateway2Api() *schema.Resource {
@@ -101,15 +102,16 @@ func resourceAwsApiGateway2ApiCreate(d *schema.ResourceData, meta interface{}) e
 
 	d.SetId(aws.StringValue(resp.ApiId))
 
-	arn := arn.ARN{
-		Partition: meta.(*AWSClient).partition,
-		Service:   "apigateway",
-		Region:    meta.(*AWSClient).region,
-		Resource:  fmt.Sprintf("/apis/%s", d.Id()),
-	}.String()
-	err = setTagsApiGateway2(conn, d, arn)
-	if err != nil {
-		return fmt.Errorf("error creating API Gateway v2 API (%s) tags: %s", d.Id(), err)
+	if v := d.Get("tags").(map[string]interface{}); len(v) > 0 {
+		arn := arn.ARN{
+			Partition: meta.(*AWSClient).partition,
+			Service:   "apigateway",
+			Region:    meta.(*AWSClient).region,
+			Resource:  fmt.Sprintf("/apis/%s", d.Id()),
+		}.String()
+		if err := keyvaluetags.Apigatewayv2UpdateTags(conn, arn, nil, v); err != nil {
+			return fmt.Errorf("error adding API Gateway v2 API (%s) tags: %s", d.Id(), err)
+		}
 	}
 
 	return resourceAwsApiGateway2ApiRead(d, meta)
@@ -151,8 +153,7 @@ func resourceAwsApiGateway2ApiRead(d *schema.ResourceData, meta interface{}) err
 	d.Set("name", resp.Name)
 	d.Set("protocol_type", resp.ProtocolType)
 	d.Set("route_selection_expression", resp.RouteSelectionExpression)
-	err = d.Set("tags", tagsToMapGeneric(resp.Tags))
-	if err != nil {
+	if err := d.Set("tags", keyvaluetags.Apigatewayv2KeyValueTags(resp.Tags).IgnoreAws().Map()); err != nil {
 		return fmt.Errorf("error setting tags: %s", err)
 	}
 	d.Set("version", resp.Version)
@@ -196,9 +197,11 @@ func resourceAwsApiGateway2ApiUpdate(d *schema.ResourceData, meta interface{}) e
 		}
 	}
 
-	err := setTagsApiGateway2(conn, d, d.Get("arn").(string))
-	if err != nil {
-		return fmt.Errorf("error updating API Gateway v2 API (%s) tags: %s", d.Id(), err)
+	if d.HasChange("tags") {
+		o, n := d.GetChange("tags")
+		if err := keyvaluetags.Apigatewayv2UpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
+			return fmt.Errorf("error updating API Gateway v2 API (%s) tags: %s", d.Id(), err)
+		}
 	}
 
 	return resourceAwsApiGateway2ApiRead(d, meta)
