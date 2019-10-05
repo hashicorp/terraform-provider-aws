@@ -18,7 +18,7 @@ func dataSourceAwsOrganizationsOrganizationalUnit() *schema.Resource {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			"organizational_units": {
+			"children": {
 				Type:     schema.TypeList,
 				Computed: true,
 				Elem: &schema.Resource{
@@ -52,7 +52,7 @@ func dataSourceAwsOrganizationsOrganizationalUnitRead(d *schema.ResourceData, me
 		ParentId: aws.String(parent_id),
 	}
 
-	var organizational_units []*organizations.OrganizationalUnit
+	var children []*organizations.OrganizationalUnit
 	for {
 		ous, err := conn.ListOrganizationalUnitsForParent(params)
 
@@ -61,7 +61,7 @@ func dataSourceAwsOrganizationsOrganizationalUnitRead(d *schema.ResourceData, me
 		}
 
 		for _, ou := range ous.OrganizationalUnits {
-			organizational_units = append(organizational_units, ou)
+			children = append(children, ou)
 		}
 
 		if ous.NextToken == nil {
@@ -70,8 +70,8 @@ func dataSourceAwsOrganizationsOrganizationalUnitRead(d *schema.ResourceData, me
 		params.NextToken = ous.NextToken
 	}
 
-	if err := d.Set("organizational_units", flattenOrganizationsOrganizationalUnits(organizational_units)); err != nil {
-		return fmt.Errorf("Error setting organizational_units.")
+	if err := d.Set("children", flattenOrganizationsOrganizationalUnits(children)); err != nil {
+		return fmt.Errorf("Error setting children.")
 	}
 
 	return nil

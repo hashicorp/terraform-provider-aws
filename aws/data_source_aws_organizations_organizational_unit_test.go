@@ -16,9 +16,9 @@ func TestAccDataSourceAwsOrganizationsOrganizationalUnit_basic(t *testing.T) {
 			{
 				Config: testAccDataSourceAwsOrganizationsOrganizationalUnitConfig,
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttrPair(resourceName, "name", dataSourceName, "organizational_units.0.name"),
-					resource.TestCheckResourceAttrPair(resourceName, "id", dataSourceName, "organizational_units.0.id"),
-					resource.TestCheckResourceAttrPair(resourceName, "arn", dataSourceName, "organizational_units.0.arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "name", dataSourceName, "children.0.name"),
+					resource.TestCheckResourceAttrPair(resourceName, "id", dataSourceName, "children.0.id"),
+					resource.TestCheckResourceAttrPair(resourceName, "arn", dataSourceName, "children.0.arn"),
 				),
 				/* We ExpectNonEmptyPlan due to the explicit datasource dependency on the test_ou2 resource.
 				 * See Terraform config comments for more details. */
