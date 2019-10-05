@@ -6,7 +6,7 @@ import (
 	"github.com/hashicorp/terraform/helper/resource"
 )
 
-func TestAccDataSourceAwsOrganizationsOU_basic(t *testing.T) {
+func TestAccDataSourceAwsOrganizationsOrganizationalUnit_basic(t *testing.T) {
 	resourceName := "aws_organizations_organizational_unit.test_ou2"
 	dataSourceName := "data.aws_organizations_organizational_unit.test"
 	resource.ParallelTest(t, resource.TestCase{
@@ -21,7 +21,7 @@ func TestAccDataSourceAwsOrganizationsOU_basic(t *testing.T) {
 					resource.TestCheckResourceAttrPair(resourceName, "arn", dataSourceName, "organizational_units.0.arn"),
 				),
 				/* We ExpectNonEmptyPlan due to the explicit datasource dependency on the test_ou2 resource.
-				 * See Terraform config comment for more details. */
+				 * See Terraform config comments for more details. */
 				ExpectNonEmptyPlan: true,
 			},
 		},
