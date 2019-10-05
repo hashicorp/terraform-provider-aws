@@ -284,6 +284,7 @@ func Provider() terraform.ResourceProvider {
 			"aws_wafregional_rule":                          dataSourceAwsWafRegionalRule(),
 			"aws_wafregional_web_acl":                       dataSourceAwsWafRegionalWebAcl(),
 			"aws_workspaces_bundle":                         dataSourceAwsWorkspaceBundle(),
+			"aws_qldb_ledger":                               dataSourceAwsQLDBLedger(),
 
 			// Adding the Aliases for the ALB -> LB Rename
 			"aws_lb":               dataSourceAwsLb(),
@@ -809,6 +810,7 @@ func Provider() terraform.ResourceProvider {
 			"aws_pinpoint_gcm_channel":                                resourceAwsPinpointGCMChannel(),
 			"aws_pinpoint_sms_channel":                                resourceAwsPinpointSMSChannel(),
 			"aws_xray_sampling_rule":                                  resourceAwsXraySamplingRule(),
+			"aws_qldb_ledger":                                         resourceAwsQLDBLedger(),
 
 			// ALBs are actually LBs because they can be type `network` or `application`
 			// To avoid regressions, we will add a new resource for each and they both point

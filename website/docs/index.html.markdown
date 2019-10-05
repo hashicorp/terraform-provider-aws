@@ -251,6 +251,8 @@ for more information about connecting to alternate AWS endpoints or AWS compatib
   - [`aws_instance` data source](/docs/providers/aws/d/instance.html)
   - [`aws_instance` resource](/docs/providers/aws/r/instance.html)
   - [`aws_launch_template` resource](/docs/providers/aws/r/launch_template.html)
+  - [`aws_qldb_ledger` data source](/docs/providers/aws/d/qldb_ledger.html)
+  - [`aws_qldb_ledger` resource](/docs/providers/aws/r/qldb_ledger.html)
   - [`aws_redshift_cluster` resource](/docs/providers/aws/r/redshift_cluster.html)
   - [`aws_redshift_subnet_group` resource](/docs/providers/aws/r/redshift_subnet_group.html)
   - [`aws_s3_account_public_access_block` resource](/docs/providers/aws/r/s3_account_public_access_block.html)
