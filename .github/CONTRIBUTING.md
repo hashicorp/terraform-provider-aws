@@ -216,7 +216,7 @@ In addition to the below checklist and the items noted in the Extending Terrafor
 
 #### Adding Resource Tagging Support
 
-AWS provides key-value metadata across many services and resources, which can be used for a variety of use cases including billing, ownership, and more. See the [AWS Tagging Stategy page](https://aws.amazon.com/answers/account-management/aws-tagging-strategies/) for more information about tagging at a high level.
+AWS provides key-value metadata across many services and resources, which can be used for a variety of use cases including billing, ownership, and more. See the [AWS Tagging Strategy page](https://aws.amazon.com/answers/account-management/aws-tagging-strategies/) for more information about tagging at a high level.
 
 Implementing tagging support for Terraform AWS Provider resources requires the following, each with its own section below:
 
@@ -255,7 +255,7 @@ More details about this code generation, including fixes for potential error mes
 
 - In the resource Go file (e.g. `aws/resource_aws_eks_cluster.go`), add the following Go import: `"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"`
 - In the resource schema, add `"tags": tagsSchema(),`
-- In the resource `Create` function, implement the logic to convert the configuration tags into the service tags, e.g. with EKS Clusters:
+- If the API supports tagging on creation (the `Input` struct accepts a `Tags` field), in the resource `Create` function, implement the logic to convert the configuration tags into the service tags, e.g. with EKS Clusters:
 
   ```go
   input := &eks.CreateClusterInput{
@@ -273,6 +273,16 @@ More details about this code generation, including fixes for potential error mes
 
   if v := d.Get("tags").(map[string]interface{}); len(v) > 0 {
     input.Tags = keyvaluetags.New(v).IgnoreAws().EksTags()
+  }
+  ```
+
+- Otherwise if the API does not support tagging on creation (the `Input` struct does not accept a `Tags` field), in the resource `Create` function, implement the logic to convert the configuration tags into the service API call to tag a resource, e.g. with CloudHSM v2 Clusters:
+
+  ```go
+  if v := d.Get("tags").(map[string]interface{}); len(v) > 0 {
+    if err := keyvaluetags.Cloudhsmv2UpdateTags(conn, d.Id(), nil, v); err != nil {
+      return fmt.Errorf("error adding CloudHSM v2 Cluster (%s) tags: %s", d.Id(), err)
+    }
   }
   ```
 
