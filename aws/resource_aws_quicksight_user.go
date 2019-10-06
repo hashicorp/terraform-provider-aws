@@ -75,8 +75,8 @@ func resourceAwsQuickSightUser() *schema.Resource {
 			},
 
 			"user_name": {
-				Type:     schema.TypeString,
-				Optional: true,
+				Type:         schema.TypeString,
+				Optional:     true,
 				ValidateFunc: validation.NoZeroValues,
 			},
 
@@ -99,6 +99,8 @@ func resourceAwsQuickSightUserCreate(d *schema.ResourceData, meta interface{}) e
 
 	awsAccountID := meta.(*AWSClient).accountid
 
+	namespace := d.Get("namespace").(string)
+
 	if v, ok := d.GetOk("aws_account_id"); ok {
 		awsAccountID = v.(string)
 	}
@@ -107,7 +109,7 @@ func resourceAwsQuickSightUserCreate(d *schema.ResourceData, meta interface{}) e
 		AwsAccountId: aws.String(awsAccountID),
 		Email:        aws.String(d.Get("email").(string)),
 		IdentityType: aws.String(d.Get("identity_type").(string)),
-		Namespace:    aws.String(d.Get("namespace").(string)),
+		Namespace:    aws.String(namespace),
 		UserRole:     aws.String(d.Get("user_role").(string)),
 	}
 
@@ -159,7 +161,7 @@ func resourceAwsQuickSightUserRead(d *schema.ResourceData, meta interface{}) err
 
 	d.Set("arn", resp.User.Arn)
 	d.Set("aws_account_id", awsAccountID)
-	d.Set("email", resp.User.email)
+	d.Set("email", resp.User.Email)
 	d.Set("identity_type", resp.User.IdentityType)
 	d.Set("namespace", namespace)
 	d.Set("user_role", resp.User.Role)
@@ -181,13 +183,8 @@ func resourceAwsQuickSightUserUpdate(d *schema.ResourceData, meta interface{}) e
 		Email:        aws.String(d.Get("email").(string)),
 		Namespace:    aws.String(namespace),
 		Role:         aws.String(d.Get("user_role").(string)),
-		UserName:     aws.String(userName)
+		UserName:     aws.String(userName),
 	}
-
-	if v, ok := d.GetOk("user_name"); ok {
-		createOpts.UserName = aws.String(v.(string))
-	}
-
 
 	_, err = conn.UpdateUser(updateOpts)
 	if isAWSErr(err, quicksight.ErrCodeResourceNotFoundException, "") {
@@ -210,7 +207,7 @@ func resourceAwsQuickSightUserDelete(d *schema.ResourceData, meta interface{}) e
 		return err
 	}
 
-	deleteOpts := &quicksight.DeleteGroupInput{
+	deleteOpts := &quicksight.DeleteUserInput{
 		AwsAccountId: aws.String(awsAccountID),
 		Namespace:    aws.String(namespace),
 		UserName:     aws.String(userName),

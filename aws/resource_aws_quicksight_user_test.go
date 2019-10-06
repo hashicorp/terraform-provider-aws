@@ -83,7 +83,7 @@ func TestAccAWSQuickSightUser_withRealEmail(t *testing.T) {
 	})
 }
 
-func TestAccAWSQuickSightUser *testing.T) {
+func TestAccAWSQuickSightUser_basic(t *testing.T) {
 	var user quicksight.User
 	resourceName := "aws_quicksight_user.default"
 	rName := acctest.RandomWithPrefix("tf-acc-test")
