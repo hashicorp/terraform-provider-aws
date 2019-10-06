@@ -2,6 +2,7 @@ package aws
 
 import (
 	"fmt"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 	"log"
 	"strings"
 	"time"
@@ -90,10 +91,8 @@ func resourceAwsQLDBLedgerCreate(d *schema.ResourceData, meta interface{}) error
 		Name:               aws.String(d.Get("name").(string)),
 		PermissionsMode:    aws.String(d.Get("permissions_mode").(string)),
 		DeletionProtection: aws.Bool(d.Get("deletion_protection").(bool)),
-		Tags:               tagsFromMapQLDBCreate(d.Get("tags").(map[string]interface{})),
+		Tags:               keyvaluetags.New(d.Get("tags").(map[string]interface{})).IgnoreAws().QldbTags(),
 	}
-
-	//createOpts.
 
 	log.Printf("[DEBUG] QLDB Ledger create config: %#v", *createOpts)
 	qldbResp, err := conn.CreateLedger(createOpts)
@@ -131,6 +130,16 @@ func resourceAwsQLDBLedgerRead(d *schema.ResourceData, meta interface{}) error {
 	// ARN
 	d.Set("arn", qldbLedger.Arn)
 
+	// Tags
+	log.Printf(
+		"[INFO] Fetching tags for %s",
+		d.Id())
+	tags, err := keyvaluetags.QldbListTags(conn, d.Get("arn").(string))
+	if err != nil {
+		return fmt.Errorf("Error listing tags for QLDB Ledger: %s", err)
+	}
+	d.Set("tags", tags.Map())
+
 	// Setting the permissions_mode manually because GO AWS SDK currently
 	// does not return the set permissions_mode
 	d.Set("permissions_mode", qldb.PermissionsModeAllowAll)
@@ -161,10 +170,11 @@ func resourceAwsQLDBLedgerUpdate(d *schema.ResourceData, meta interface{}) error
 		d.SetPartial("deletion_protection")
 	}
 
-	if err := setTagsQLDB(conn, d); err != nil {
-		return err
-	} else {
-		d.SetPartial("tags")
+	if d.HasChange("tags") {
+		o, n := d.GetChange("tags")
+		if err := keyvaluetags.QldbUpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
+			return fmt.Errorf("error updating tags: %s", err)
+		}
 	}
 
 	d.Partial(false)

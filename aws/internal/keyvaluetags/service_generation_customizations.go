@@ -4,6 +4,7 @@ package keyvaluetags
 
 import (
 	"fmt"
+	"github.com/aws/aws-sdk-go/service/qldb"
 	"reflect"
 
 	"github.com/aws/aws-sdk-go/service/acmpca"
@@ -213,6 +214,8 @@ func ServiceClientType(serviceName string) string {
 		funcType = reflect.TypeOf(organizations.New)
 	case "pinpoint":
 		funcType = reflect.TypeOf(pinpoint.New)
+	case "qldb":
+		funcType = reflect.TypeOf(qldb.New)
 	case "ram":
 		funcType = reflect.TypeOf(ram.New)
 	case "rds":

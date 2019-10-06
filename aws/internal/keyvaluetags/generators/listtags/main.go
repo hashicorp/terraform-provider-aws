@@ -69,6 +69,7 @@ var serviceNames = []string{
 	"neptune",
 	"opsworks",
 	"organizations",
+	"qldb",
 	"rds",
 	"route53resolver",
 	"sagemaker",
