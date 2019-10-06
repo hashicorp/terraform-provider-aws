@@ -61,7 +61,7 @@ func TestAccAWSQuickSightUser_withRealEmail(t *testing.T) {
 		CheckDestroy: testAccCheckQuickSightUserDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSQuickSightUserEmail(rName, "nottarealemailbutworks"),
+				Config: testAccAWSQuickSightUserConfigWithEmail(rName, "nottarealemailbutworks"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckQuickSightUserExists(resourceName, &user),
 					resource.TestCheckResourceAttr(resourceName, "email", "nottarealemailbutworks"),
