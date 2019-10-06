@@ -26,6 +26,10 @@ ENHANCEMENTS:
 
 * resource/aws_emr_instance_group: Add `configurations_json` argument ([#10426](https://github.com/terraform-providers/terraform-provider-aws/issues/10426))
 
+FEATURES:
+
+* **New Resource:** `aws_quicksight_users`
+
 BUG FIXES:
 
 * provider: Fix session handling to correctly validate and use assume_role credentials ([#10379](https://github.com/terraform-providers/terraform-provider-aws/issues/10379))
