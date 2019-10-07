@@ -1,7 +1,6 @@
 ---
 layout: "aws"
 page_title: "AWS: aws_cloudwatch_event_rule"
-sidebar_current: "docs-aws-resource-cloudwatch-event-rule"
 description: |-
   Provides a CloudWatch Event Rule resource.
 ---
@@ -76,6 +75,7 @@ The following arguments are supported:
 
 In addition to all arguments above, the following attributes are exported:
 
+* `id` - The name of the rule.
 * `arn` - The Amazon Resource Name (ARN) of the rule.
 
 

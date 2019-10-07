@@ -1,7 +1,6 @@
 ---
 layout: "aws"
 page_title: "AWS: aws_lambda_invocation"
-sidebar_current: "docs-aws-datasource-lambda-invocation"
 description: |-
   Invoke AWS Lambda Function as data source
 ---

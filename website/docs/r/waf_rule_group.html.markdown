@@ -1,7 +1,6 @@
 ---
 layout: "aws"
 page_title: "AWS: aws_waf_rule_group"
-sidebar_current: "docs-aws-resource-waf-rule-group"
 description: |-
   Provides a AWS WAF rule group resource.
 ---

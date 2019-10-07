@@ -1,7 +1,6 @@
 ---
 layout: "aws"
 page_title: "AWS: aws_glue_classifier"
-sidebar_current: "docs-aws-resource-glue-classifier"
 description: |-
   Provides an Glue Classifier resource.
 ---

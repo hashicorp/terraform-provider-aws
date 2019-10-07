@@ -8,12 +8,13 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/iam"
-	"github.com/hashicorp/terraform/helper/acctest"
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/terraform"
 )
 
-func TestAccAWSIAMInstanceProfile_importBasic(t *testing.T) {
+func TestAccAWSIAMInstanceProfile_basic(t *testing.T) {
+	var conf iam.GetInstanceProfileOutput
 	resourceName := "aws_iam_instance_profile.test"
 	rName := acctest.RandString(5)
 
@@ -23,33 +24,15 @@ func TestAccAWSIAMInstanceProfile_importBasic(t *testing.T) {
 		CheckDestroy: testAccCheckAWSInstanceProfileDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSInstanceProfilePrefixNameConfig(rName),
-			},
-
-			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"name_prefix"},
-			},
-		},
-	})
-}
-
-func TestAccAWSIAMInstanceProfile_basic(t *testing.T) {
-	var conf iam.GetInstanceProfileOutput
-
-	rName := acctest.RandString(5)
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckAWSInstanceProfileDestroy,
-		Steps: []resource.TestStep{
-			{
 				Config: testAccAwsIamInstanceProfileConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSInstanceProfileExists("aws_iam_instance_profile.test", &conf),
+					testAccCheckAWSInstanceProfileExists(resourceName, &conf),
 				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})
@@ -57,6 +40,7 @@ func TestAccAWSIAMInstanceProfile_basic(t *testing.T) {
 
 func TestAccAWSIAMInstanceProfile_withRoleNotRoles(t *testing.T) {
 	var conf iam.GetInstanceProfileOutput
+	resourceName := "aws_iam_instance_profile.test"
 
 	rName := acctest.RandString(5)
 	resource.ParallelTest(t, resource.TestCase{
@@ -67,8 +51,14 @@ func TestAccAWSIAMInstanceProfile_withRoleNotRoles(t *testing.T) {
 			{
 				Config: testAccAWSInstanceProfileWithRoleSpecified(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSInstanceProfileExists("aws_iam_instance_profile.test", &conf),
+					testAccCheckAWSInstanceProfileExists(resourceName, &conf),
 				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"name_prefix"},
 			},
 		},
 	})
@@ -92,10 +82,11 @@ func TestAccAWSIAMInstanceProfile_missingRoleThrowsError(t *testing.T) {
 func TestAccAWSIAMInstanceProfile_namePrefix(t *testing.T) {
 	var conf iam.GetInstanceProfileOutput
 	rName := acctest.RandString(5)
+	resourceName := "aws_iam_instance_profile.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:        func() { testAccPreCheck(t) },
-		IDRefreshName:   "aws_iam_instance_profile.test",
+		IDRefreshName:   resourceName,
 		IDRefreshIgnore: []string{"name_prefix"},
 		Providers:       testAccProviders,
 		CheckDestroy:    testAccCheckAWSInstanceProfileDestroy,
@@ -103,10 +94,16 @@ func TestAccAWSIAMInstanceProfile_namePrefix(t *testing.T) {
 			{
 				Config: testAccAWSInstanceProfilePrefixNameConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSInstanceProfileExists("aws_iam_instance_profile.test", &conf),
+					testAccCheckAWSInstanceProfileExists(resourceName, &conf),
 					testAccCheckAWSInstanceProfileGeneratedNamePrefix(
-						"aws_iam_instance_profile.test", "test-"),
+						resourceName, "test-"),
 				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"name_prefix"},
 			},
 		},
 	})

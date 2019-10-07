@@ -1,7 +1,6 @@
 ---
 layout: "aws"
 page_title: "AWS: aws_backup_vault"
-sidebar_current: "docs-aws-resource-backup-vault"
 description: |-
   Provides an AWS Backup vault resource.
 ---

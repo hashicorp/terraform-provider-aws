@@ -9,7 +9,7 @@ import (
 	"encoding/pem"
 	"fmt"
 
-	"github.com/hashicorp/terraform/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 )
 
 type keyAlgo func(d *schema.ResourceData) (interface{}, error)

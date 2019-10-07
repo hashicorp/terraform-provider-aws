@@ -1278,6 +1278,9 @@ func (c *RDS) CreateDBClusterRequest(input *CreateDBClusterInput) (req *request.
 //
 //   * ErrCodeInvalidGlobalClusterStateFault "InvalidGlobalClusterStateFault"
 //
+//   * ErrCodeDomainNotFoundFault "DomainNotFoundFault"
+//   Domain doesn't refer to an existing Active Directory domain.
+//
 // See also, https://docs.aws.amazon.com/goto/WebAPI/rds-2014-10-31/CreateDBCluster
 func (c *RDS) CreateDBCluster(input *CreateDBClusterInput) (*CreateDBClusterOutput, error) {
 	req, out := c.CreateDBClusterRequest(input)
@@ -1872,6 +1875,9 @@ func (c *RDS) CreateDBInstanceReadReplicaRequest(input *CreateDBInstanceReadRepl
 //
 //   * ErrCodeKMSKeyNotAccessibleFault "KMSKeyNotAccessibleFault"
 //   An error occurred accessing an AWS KMS key.
+//
+//   * ErrCodeDomainNotFoundFault "DomainNotFoundFault"
+//   Domain doesn't refer to an existing Active Directory domain.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/rds-2014-10-31/CreateDBInstanceReadReplica
 func (c *RDS) CreateDBInstanceReadReplica(input *CreateDBInstanceReadReplicaInput) (*CreateDBInstanceReadReplicaOutput, error) {
@@ -7995,6 +8001,9 @@ func (c *RDS) ModifyDBClusterRequest(input *ModifyDBClusterInput) (req *request.
 //   * ErrCodeDBClusterAlreadyExistsFault "DBClusterAlreadyExistsFault"
 //   The user already has a DB cluster with the given identifier.
 //
+//   * ErrCodeDomainNotFoundFault "DomainNotFoundFault"
+//   Domain doesn't refer to an existing Active Directory domain.
+//
 // See also, https://docs.aws.amazon.com/goto/WebAPI/rds-2014-10-31/ModifyDBCluster
 func (c *RDS) ModifyDBCluster(input *ModifyDBClusterInput) (*ModifyDBClusterOutput, error) {
 	req, out := c.ModifyDBClusterRequest(input)
@@ -10192,6 +10201,9 @@ func (c *RDS) RestoreDBClusterFromS3Request(input *RestoreDBClusterFromS3Input) 
 //   * ErrCodeDBClusterNotFoundFault "DBClusterNotFoundFault"
 //   DBClusterIdentifier doesn't refer to an existing DB cluster.
 //
+//   * ErrCodeDomainNotFoundFault "DomainNotFoundFault"
+//   Domain doesn't refer to an existing Active Directory domain.
+//
 //   * ErrCodeInsufficientStorageClusterCapacityFault "InsufficientStorageClusterCapacity"
 //   There is insufficient storage available for the current action. You might
 //   be able to resolve this error by updating your subnet group to use different
@@ -10344,6 +10356,9 @@ func (c *RDS) RestoreDBClusterFromSnapshotRequest(input *RestoreDBClusterFromSna
 //   * ErrCodeKMSKeyNotAccessibleFault "KMSKeyNotAccessibleFault"
 //   An error occurred accessing an AWS KMS key.
 //
+//   * ErrCodeDomainNotFoundFault "DomainNotFoundFault"
+//   Domain doesn't refer to an existing Active Directory domain.
+//
 //   * ErrCodeDBClusterParameterGroupNotFoundFault "DBClusterParameterGroupNotFound"
 //   DBClusterParameterGroupName doesn't refer to an existing DB cluster parameter
 //   group.
@@ -10493,6 +10508,9 @@ func (c *RDS) RestoreDBClusterToPointInTimeRequest(input *RestoreDBClusterToPoin
 //   * ErrCodeStorageQuotaExceededFault "StorageQuotaExceeded"
 //   The request would result in the user exceeding the allowed amount of storage
 //   available across all DB instances.
+//
+//   * ErrCodeDomainNotFoundFault "DomainNotFoundFault"
+//   Domain doesn't refer to an existing Active Directory domain.
 //
 //   * ErrCodeDBClusterParameterGroupNotFoundFault "DBClusterParameterGroupNotFound"
 //   DBClusterParameterGroupName doesn't refer to an existing DB cluster parameter
@@ -14773,11 +14791,19 @@ type CreateDBInstanceInput struct {
 	// Instance (https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/USER_DeleteInstance.html).
 	DeletionProtection *bool `type:"boolean"`
 
-	// For an Amazon RDS DB instance that's running Microsoft SQL Server, this parameter
-	// specifies the Active Directory directory ID to create the instance in. Amazon
-	// RDS uses Windows Authentication to authenticate users that connect to the
-	// DB instance. For more information, see Using Windows Authentication with
-	// an Amazon RDS DB Instance Running Microsoft SQL Server (https://docs.aws.amazon.com/AmazonRDS/latest/DeveloperGuide/USER_SQLServerWinAuth.html)
+	// The Active Directory directory ID to create the DB instance in. Currently,
+	// only Microsoft SQL Server and Oracle DB instances can be created in an Active
+	// Directory Domain.
+	//
+	// For Microsoft SQL Server DB instances, Amazon RDS can use Windows Authentication
+	// to authenticate users that connect to the DB instance. For more information,
+	// see Using Windows Authentication with an Amazon RDS DB Instance Running Microsoft
+	// SQL Server (https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/USER_SQLServerWinAuth.html)
+	// in the Amazon RDS User Guide.
+	//
+	// For Oracle DB instance, Amazon RDS can use Kerberos Authentication to authenticate
+	// users that connect to the DB instance. For more information, see Using Kerberos
+	// Authentication with Amazon RDS for Oracle (https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/oracle-kerberos.html)
 	// in the Amazon RDS User Guide.
 	Domain *string `type:"string"`
 
@@ -15667,6 +15693,18 @@ type CreateDBInstanceReadReplicaInput struct {
 	// DestinationRegion is used for presigning the request to a given region.
 	DestinationRegion *string `type:"string"`
 
+	// The Active Directory directory ID to create the DB instance in.
+	//
+	// For Oracle DB instances, Amazon RDS can use Kerberos Authentication to authenticate
+	// users that connect to the DB instance. For more information, see Using Kerberos
+	// Authentication with Amazon RDS for Oracle (https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/oracle-kerberos.html)
+	// in the Amazon RDS User Guide.
+	Domain *string `type:"string"`
+
+	// Specify the name of the IAM role to be used when making API calls to the
+	// Directory Service.
+	DomainIAMRoleName *string `type:"string"`
+
 	// The list of logs that the new DB instance is to export to CloudWatch Logs.
 	// The values in the list depend on the DB engine being used. For more information,
 	// see Publishing Database Logs to Amazon CloudWatch Logs (https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/USER_LogAccess.html#USER_LogAccess.Procedural.UploadtoCloudWatch)
@@ -15952,6 +15990,18 @@ func (s *CreateDBInstanceReadReplicaInput) SetDeletionProtection(v bool) *Create
 // SetDestinationRegion sets the DestinationRegion field's value.
 func (s *CreateDBInstanceReadReplicaInput) SetDestinationRegion(v string) *CreateDBInstanceReadReplicaInput {
 	s.DestinationRegion = &v
+	return s
+}
+
+// SetDomain sets the Domain field's value.
+func (s *CreateDBInstanceReadReplicaInput) SetDomain(v string) *CreateDBInstanceReadReplicaInput {
+	s.Domain = &v
+	return s
+}
+
+// SetDomainIAMRoleName sets the DomainIAMRoleName field's value.
+func (s *CreateDBInstanceReadReplicaInput) SetDomainIAMRoleName(v string) *CreateDBInstanceReadReplicaInput {
+	s.DomainIAMRoleName = &v
 	return s
 }
 
@@ -22398,7 +22448,14 @@ type DescribeDBInstancesInput struct {
 	//
 	//    * dbi-resource-id - Accepts DB instance resource identifiers. The results
 	//    list will only include information about the DB instances identified by
-	//    these resource identifiers.
+	//    these DB instance resource identifiers.
+	//
+	//    * domain - Accepts Active Directory directory IDs. The results list will
+	//    only include information about the DB instances associated with these
+	//    domains.
+	//
+	//    * engine - Accepts engine names. The results list will only include information
+	//    about the DB instances for these engines.
 	Filters []*Filter `locationNameList:"Filter" type:"list"`
 
 	// An optional pagination token provided by a previous DescribeDBInstances request.
@@ -27437,10 +27494,21 @@ type ModifyDBInstanceInput struct {
 	// Instance (https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/USER_DeleteInstance.html).
 	DeletionProtection *bool `type:"boolean"`
 
-	// The Active Directory Domain to move the instance to. Specify none to remove
-	// the instance from its current domain. The domain must be created prior to
-	// this operation. Currently only a Microsoft SQL Server instance can be created
-	// in a Active Directory Domain.
+	// The Active Directory directory ID to move the DB instance to. Specify none
+	// to remove the instance from its current domain. The domain must be created
+	// prior to this operation. Currently, only Microsoft SQL Server and Oracle
+	// DB instances can be created in an Active Directory Domain.
+	//
+	// For Microsoft SQL Server DB instances, Amazon RDS can use Windows Authentication
+	// to authenticate users that connect to the DB instance. For more information,
+	// see Using Windows Authentication with an Amazon RDS DB Instance Running Microsoft
+	// SQL Server (https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/USER_SQLServerWinAuth.html)
+	// in the Amazon RDS User Guide.
+	//
+	// For Oracle DB instances, Amazon RDS can use Kerberos Authentication to authenticate
+	// users that connect to the DB instance. For more information, see Using Kerberos
+	// Authentication with Amazon RDS for Oracle (https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/oracle-kerberos.html)
+	// in the Amazon RDS User Guide.
 	Domain *string `type:"string"`
 
 	// The name of the IAM role to use when making API calls to the Directory Service.
@@ -29469,6 +29537,9 @@ type OrderableDBInstanceOption struct {
 	// Indicates whether a DB instance supports provisioned IOPS.
 	SupportsIops *bool `type:"boolean"`
 
+	// Whether a DB instance supports Kerberos Authentication.
+	SupportsKerberosAuthentication *bool `type:"boolean"`
+
 	// True if a DB instance supports Performance Insights, otherwise false.
 	SupportsPerformanceInsights *bool `type:"boolean"`
 
@@ -29604,6 +29675,12 @@ func (s *OrderableDBInstanceOption) SetSupportsIAMDatabaseAuthentication(v bool)
 // SetSupportsIops sets the SupportsIops field's value.
 func (s *OrderableDBInstanceOption) SetSupportsIops(v bool) *OrderableDBInstanceOption {
 	s.SupportsIops = &v
+	return s
+}
+
+// SetSupportsKerberosAuthentication sets the SupportsKerberosAuthentication field's value.
+func (s *OrderableDBInstanceOption) SetSupportsKerberosAuthentication(v bool) *OrderableDBInstanceOption {
+	s.SupportsKerberosAuthentication = &v
 	return s
 }
 
@@ -32594,7 +32671,21 @@ type RestoreDBInstanceFromDBSnapshotInput struct {
 	// Instance (https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/USER_DeleteInstance.html).
 	DeletionProtection *bool `type:"boolean"`
 
-	// Specify the Active Directory Domain to restore the instance in.
+	// Specify the Active Directory directory ID to restore the DB instance in.
+	// The domain must be created prior to this operation. Currently, only Microsoft
+	// SQL Server and Oracle DB instances can be created in an Active Directory
+	// Domain.
+	//
+	// For Microsoft SQL Server DB instances, Amazon RDS can use Windows Authentication
+	// to authenticate users that connect to the DB instance. For more information,
+	// see Using Windows Authentication with an Amazon RDS DB Instance Running Microsoft
+	// SQL Server (https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/USER_SQLServerWinAuth.html)
+	// in the Amazon RDS User Guide.
+	//
+	// For Oracle DB instances, Amazon RDS can use Kerberos Authentication to authenticate
+	// users that connect to the DB instance. For more information, see Using Kerberos
+	// Authentication with Amazon RDS for Oracle (https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/oracle-kerberos.html)
+	// in the Amazon RDS User Guide.
 	Domain *string `type:"string"`
 
 	// Specify the name of the IAM role to be used when making API calls to the
@@ -33656,7 +33747,21 @@ type RestoreDBInstanceToPointInTimeInput struct {
 	// Instance (https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/USER_DeleteInstance.html).
 	DeletionProtection *bool `type:"boolean"`
 
-	// Specify the Active Directory Domain to restore the instance in.
+	// Specify the Active Directory directory ID to restore the DB instance in.
+	// The domain must be created prior to this operation. Currently, only Microsoft
+	// SQL Server and Oracle DB instances can be created in an Active Directory
+	// Domain.
+	//
+	// For Microsoft SQL Server DB instances, Amazon RDS can use Windows Authentication
+	// to authenticate users that connect to the DB instance. For more information,
+	// see Using Windows Authentication with an Amazon RDS DB Instance Running Microsoft
+	// SQL Server (https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/USER_SQLServerWinAuth.html)
+	// in the Amazon RDS User Guide.
+	//
+	// For Oracle DB instances, Amazon RDS can use Kerberos Authentication to authenticate
+	// users that connect to the DB instance. For more information, see Using Kerberos
+	// Authentication with Amazon RDS for Oracle (https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/oracle-kerberos.html)
+	// in the Amazon RDS User Guide.
 	Domain *string `type:"string"`
 
 	// Specify the name of the IAM role to be used when making API calls to the
