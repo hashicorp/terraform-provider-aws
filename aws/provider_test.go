@@ -287,6 +287,14 @@ provider "aws" {
 `, testAccGetAlternateRegion())
 }
 
+func testAccProviderConfigIgnoreTags1(key1 string) string {
+	return fmt.Sprintf(`
+provider "aws" {
+  ignore_tags = [%[1]q]
+}
+`, key1)
+}
+
 // Provider configuration hardcoded for us-east-1.
 // This should only be necessary for testing ACM Certificates with CloudFront
 // related infrastucture such as API Gateway Domain Names for EDGE endpoints,
@@ -471,6 +479,60 @@ func TestAccAWSProvider_Endpoints_Deprecated(t *testing.T) {
 				Config: testAccAWSProviderConfigEndpoints(endpointsDeprecated.String()),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSProviderEndpointsDeprecated(&providers)),
+			},
+		},
+	})
+}
+
+func TestAccAWSProvider_IgnoreTags_None(t *testing.T) {
+	var providers []*schema.Provider
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:          func() { testAccPreCheck(t) },
+		ProviderFactories: testAccProviderFactories(&providers),
+		CheckDestroy:      nil,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSProviderConfigIgnoreTags0(),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSProviderIgnoreTags(&providers, []string{}),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAWSProvider_IgnoreTags_One(t *testing.T) {
+	var providers []*schema.Provider
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:          func() { testAccPreCheck(t) },
+		ProviderFactories: testAccProviderFactories(&providers),
+		CheckDestroy:      nil,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSProviderConfigIgnoreTags1("test"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSProviderIgnoreTags(&providers, []string{"test"}),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAWSProvider_IgnoreTags_Multiple(t *testing.T) {
+	var providers []*schema.Provider
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:          func() { testAccPreCheck(t) },
+		ProviderFactories: testAccProviderFactories(&providers),
+		CheckDestroy:      nil,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSProviderConfigIgnoreTags2("test1", "test2"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSProviderIgnoreTags(&providers, []string{"test1", "test2"}),
+				),
 			},
 		},
 	})
@@ -691,6 +753,60 @@ func testAccCheckAWSProviderEndpointsDeprecated(providers *[]*schema.Provider) r
 	}
 }
 
+func testAccCheckAWSProviderIgnoreTags(providers *[]*schema.Provider, expectedIgnoreTags []string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		if providers == nil {
+			return fmt.Errorf("no providers initialized")
+		}
+
+		for _, provider := range *providers {
+			if provider == nil || provider.Meta() == nil || provider.Meta().(*AWSClient) == nil {
+				continue
+			}
+
+			providerClient := provider.Meta().(*AWSClient)
+
+			actualIgnoreTags := providerClient.ignoreTags.Keys()
+
+			if len(actualIgnoreTags) != len(expectedIgnoreTags) {
+				return fmt.Errorf("expected ignore_tags (%d) length, got: %d", len(expectedIgnoreTags), len(actualIgnoreTags))
+			}
+
+			for _, expectedElement := range expectedIgnoreTags {
+				var found bool
+
+				for _, actualElement := range actualIgnoreTags {
+					if actualElement == expectedElement {
+						found = true
+						break
+					}
+				}
+
+				if !found {
+					return fmt.Errorf("expected ignore_tags element, but was missing: %s", expectedElement)
+				}
+			}
+
+			for _, actualElement := range actualIgnoreTags {
+				var found bool
+
+				for _, expectedElement := range expectedIgnoreTags {
+					if actualElement == expectedElement {
+						found = true
+						break
+					}
+				}
+
+				if !found {
+					return fmt.Errorf("unexpected ignore_tags element: %s", actualElement)
+				}
+			}
+		}
+
+		return nil
+	}
+}
+
 func testAccCheckAWSProviderPartition(providers *[]*schema.Provider, expectedPartition string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		if providers == nil {
@@ -731,6 +847,56 @@ data "aws_arn" "test" {
   arn = "arn:aws:s3:::test"
 }
 `, endpoints)
+}
+
+func testAccAWSProviderConfigIgnoreTags0() string {
+	return fmt.Sprintf(`
+provider "aws" {
+  skip_credentials_validation = true
+  skip_get_ec2_platforms      = true
+  skip_metadata_api_check     = true
+  skip_requesting_account_id  = true
+}
+
+# Required to initialize the provider
+data "aws_arn" "test" {
+  arn = "arn:aws:s3:::test"
+}
+`)
+}
+
+func testAccAWSProviderConfigIgnoreTags1(tag1 string) string {
+	return fmt.Sprintf(`
+provider "aws" {
+  ignore_tags                 = [%[1]q]
+  skip_credentials_validation = true
+  skip_get_ec2_platforms      = true
+  skip_metadata_api_check     = true
+  skip_requesting_account_id  = true
+}
+
+# Required to initialize the provider
+data "aws_arn" "test" {
+  arn = "arn:aws:s3:::test"
+}
+`, tag1)
+}
+
+func testAccAWSProviderConfigIgnoreTags2(tag1, tag2 string) string {
+	return fmt.Sprintf(`
+provider "aws" {
+  ignore_tags                 = [%[1]q, %[2]q]
+  skip_credentials_validation = true
+  skip_get_ec2_platforms      = true
+  skip_metadata_api_check     = true
+  skip_requesting_account_id  = true
+}
+
+# Required to initialize the provider
+data "aws_arn" "test" {
+  arn = "arn:aws:s3:::test"
+}
+`, tag1, tag2)
 }
 
 func testAccAWSProviderConfigRegion(region string) string {

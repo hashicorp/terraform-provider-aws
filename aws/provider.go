@@ -90,6 +90,14 @@ func Provider() terraform.ResourceProvider {
 
 			"endpoints": endpointsSchema(),
 
+			"ignore_tags": {
+				Type:        schema.TypeSet,
+				Optional:    true,
+				Elem:        &schema.Schema{Type: schema.TypeString},
+				Set:         schema.HashString,
+				Description: "Resource tag keys to ignore configuring across all resources.",
+			},
+
 			"insecure": {
 				Type:        schema.TypeBool,
 				Optional:    true,
@@ -1090,6 +1098,12 @@ func providerConfigure(d *schema.ResourceData, terraformVersion string) (interfa
 		endpoints := endpointsSetI.(map[string]interface{})
 		for _, endpointServiceName := range endpointServiceNames {
 			config.Endpoints[endpointServiceName] = endpoints[endpointServiceName].(string)
+		}
+	}
+
+	if v, ok := d.GetOk("ignore_tags"); ok {
+		for _, ignoreTagRaw := range v.(*schema.Set).List() {
+			config.IgnoreTags = append(config.IgnoreTags, ignoreTagRaw.(string))
 		}
 	}
 
