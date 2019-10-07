@@ -102,7 +102,7 @@ resource "aws_elasticsearch_domain" "test" {
 POLICY
 
   cluster_config {
-    instance_type = "t2.micro.elasticsearch"
+    instance_type = "t2.small.elasticsearch"
     instance_count = 2
 	dedicated_master_enabled = false
 	zone_awareness_config {
@@ -219,7 +219,7 @@ resource "aws_elasticsearch_domain" "test" {
 POLICY
 
   cluster_config {
-    instance_type = "t2.micro.elasticsearch"
+    instance_type = "t2.small.elasticsearch"
     instance_count = 2
     dedicated_master_enabled = false
 	zone_awareness_config {

@@ -372,7 +372,7 @@ func TestAccAWSElasticSearchDomain_CognitoOptionsCreateAndRemove(t *testing.T) {
 	ri := acctest.RandInt()
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() {
+		PreCheck: func() {
 			testAccPreCheck(t)
 			testAccPreCheckAWSCognitoIdentityProvider(t)
 			testAccPreCheckIamServiceLinkedRoleEs(t)
@@ -403,7 +403,7 @@ func TestAccAWSElasticSearchDomain_CognitoOptionsUpdate(t *testing.T) {
 	ri := acctest.RandInt()
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() {
+		PreCheck: func() {
 			testAccPreCheck(t)
 			testAccPreCheckAWSCognitoIdentityProvider(t)
 			testAccPreCheckIamServiceLinkedRoleEs(t)
@@ -855,7 +855,7 @@ resource "aws_elasticsearch_domain" "test" {
   domain_name = %[1]q
 
   cluster_config {
-    instance_type          = "t2.micro.elasticsearch"
+    instance_type          = "t2.small.elasticsearch"
     instance_count         = 6
     zone_awareness_enabled = true
 
@@ -878,7 +878,7 @@ resource "aws_elasticsearch_domain" "test" {
   domain_name = %[1]q
 
   cluster_config {
-    instance_type          = "t2.micro.elasticsearch"
+    instance_type          = "t2.small.elasticsearch"
     instance_count         = 6
     zone_awareness_enabled = %[2]t
   }
@@ -897,11 +897,11 @@ resource "aws_elasticsearch_domain" "example" {
   domain_name = "tf-test-%d"
 
   cluster_config {
-    instance_type            = "t2.micro.elasticsearch"
+    instance_type            = "t2.small.elasticsearch"
     instance_count           = "1"
     dedicated_master_enabled = %t
     dedicated_master_count   = "3"
-    dedicated_master_type    = "t2.micro.elasticsearch"
+    dedicated_master_type    = "t2.small.elasticsearch"
   }
 
   ebs_options {
@@ -929,7 +929,7 @@ resource "aws_elasticsearch_domain" "example" {
   cluster_config {
     instance_count         = %d
     zone_awareness_enabled = true
-    instance_type          = "t2.micro.elasticsearch"
+    instance_type          = "t2.small.elasticsearch"
   }
 
   snapshot_options {
@@ -1161,13 +1161,14 @@ resource "aws_elasticsearch_domain" "example" {
   }
 
   ebs_options {
-    ebs_enabled = false
+    ebs_enabled = true
+    volume_size = 10
   }
 
   cluster_config {
     instance_count         = 2
     zone_awareness_enabled = true
-    instance_type          = "m3.medium.elasticsearch"
+    instance_type          = "t2.small.elasticsearch"
   }
 
   snapshot_options {
@@ -1242,13 +1243,14 @@ resource "aws_elasticsearch_domain" "example" {
   domain_name = "tf-test-%d"
 
   ebs_options {
-    ebs_enabled = false
+    ebs_enabled = true
+    volume_size = 10
   }
 
   cluster_config {
     instance_count         = 2
     zone_awareness_enabled = true
-    instance_type          = "m3.medium.elasticsearch"
+    instance_type          = "t2.small.elasticsearch"
   }
 
   vpc_options {
@@ -1334,13 +1336,14 @@ resource "aws_elasticsearch_domain" "example" {
   domain_name = "tf-test-%d"
 
   ebs_options {
-    ebs_enabled = false
+    ebs_enabled = true
+    volume_size = 10
   }
 
   cluster_config {
     instance_count         = 2
     zone_awareness_enabled = true
-    instance_type          = "m3.medium.elasticsearch"
+    instance_type          = "t2.small.elasticsearch"
   }
 
   vpc_options {
@@ -1404,7 +1407,7 @@ resource "aws_elasticsearch_domain" "example" {
   cluster_config {
     instance_count         = 2
     zone_awareness_enabled = true
-    instance_type          = "t2.micro.elasticsearch"
+    instance_type          = "t2.small.elasticsearch"
   }
 
   vpc_options {
