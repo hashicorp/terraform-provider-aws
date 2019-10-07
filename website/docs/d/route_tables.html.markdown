@@ -1,7 +1,6 @@
 ---
 layout: "aws"
 page_title: "AWS: aws_route_tables"
-sidebar_current: "docs-aws-datasource-route-tables"
 description: |-
     Get information on Amazon route tables.
 ---

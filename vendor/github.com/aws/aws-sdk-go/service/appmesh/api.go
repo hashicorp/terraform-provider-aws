@@ -4889,6 +4889,37 @@ func (s *DnsServiceDiscovery) SetHostname(v string) *DnsServiceDiscovery {
 	return s
 }
 
+// An object representing the duration between retry attempts.
+type Duration struct {
+	_ struct{} `type:"structure"`
+
+	Unit *string `locationName:"unit" type:"string" enum:"DurationUnit"`
+
+	Value *int64 `locationName:"value" type:"long"`
+}
+
+// String returns the string representation
+func (s Duration) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s Duration) GoString() string {
+	return s.String()
+}
+
+// SetUnit sets the Unit field's value.
+func (s *Duration) SetUnit(v string) *Duration {
+	s.Unit = &v
+	return s
+}
+
+// SetValue sets the Value field's value.
+func (s *Duration) SetValue(v int64) *Duration {
+	s.Value = &v
+	return s
+}
+
 // An object representing the egress filter rules for a service mesh.
 type EgressFilter struct {
 	_ struct{} `type:"structure"`
@@ -5168,6 +5199,79 @@ func (s *HealthCheckPolicy) SetUnhealthyThreshold(v int64) *HealthCheckPolicy {
 	return s
 }
 
+// An object that represents a retry policy.
+type HttpRetryPolicy struct {
+	_ struct{} `type:"structure"`
+
+	HttpRetryEvents []*string `locationName:"httpRetryEvents" min:"1" type:"list"`
+
+	// MaxRetries is a required field
+	MaxRetries *int64 `locationName:"maxRetries" type:"long" required:"true"`
+
+	// An object representing the duration between retry attempts.
+	//
+	// PerRetryTimeout is a required field
+	PerRetryTimeout *Duration `locationName:"perRetryTimeout" type:"structure" required:"true"`
+
+	TcpRetryEvents []*string `locationName:"tcpRetryEvents" min:"1" type:"list"`
+}
+
+// String returns the string representation
+func (s HttpRetryPolicy) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s HttpRetryPolicy) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *HttpRetryPolicy) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "HttpRetryPolicy"}
+	if s.HttpRetryEvents != nil && len(s.HttpRetryEvents) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("HttpRetryEvents", 1))
+	}
+	if s.MaxRetries == nil {
+		invalidParams.Add(request.NewErrParamRequired("MaxRetries"))
+	}
+	if s.PerRetryTimeout == nil {
+		invalidParams.Add(request.NewErrParamRequired("PerRetryTimeout"))
+	}
+	if s.TcpRetryEvents != nil && len(s.TcpRetryEvents) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("TcpRetryEvents", 1))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetHttpRetryEvents sets the HttpRetryEvents field's value.
+func (s *HttpRetryPolicy) SetHttpRetryEvents(v []*string) *HttpRetryPolicy {
+	s.HttpRetryEvents = v
+	return s
+}
+
+// SetMaxRetries sets the MaxRetries field's value.
+func (s *HttpRetryPolicy) SetMaxRetries(v int64) *HttpRetryPolicy {
+	s.MaxRetries = &v
+	return s
+}
+
+// SetPerRetryTimeout sets the PerRetryTimeout field's value.
+func (s *HttpRetryPolicy) SetPerRetryTimeout(v *Duration) *HttpRetryPolicy {
+	s.PerRetryTimeout = v
+	return s
+}
+
+// SetTcpRetryEvents sets the TcpRetryEvents field's value.
+func (s *HttpRetryPolicy) SetTcpRetryEvents(v []*string) *HttpRetryPolicy {
+	s.TcpRetryEvents = v
+	return s
+}
+
 // An object representing the HTTP routing specification for a route.
 type HttpRoute struct {
 	_ struct{} `type:"structure"`
@@ -5183,6 +5287,9 @@ type HttpRoute struct {
 	//
 	// Match is a required field
 	Match *HttpRouteMatch `locationName:"match" type:"structure" required:"true"`
+
+	// An object that represents a retry policy.
+	RetryPolicy *HttpRetryPolicy `locationName:"retryPolicy" type:"structure"`
 }
 
 // String returns the string representation
@@ -5214,6 +5321,11 @@ func (s *HttpRoute) Validate() error {
 			invalidParams.AddNested("Match", err.(request.ErrInvalidParams))
 		}
 	}
+	if s.RetryPolicy != nil {
+		if err := s.RetryPolicy.Validate(); err != nil {
+			invalidParams.AddNested("RetryPolicy", err.(request.ErrInvalidParams))
+		}
+	}
 
 	if invalidParams.Len() > 0 {
 		return invalidParams
@@ -5230,6 +5342,12 @@ func (s *HttpRoute) SetAction(v *HttpRouteAction) *HttpRoute {
 // SetMatch sets the Match field's value.
 func (s *HttpRoute) SetMatch(v *HttpRouteMatch) *HttpRoute {
 	s.Match = v
+	return s
+}
+
+// SetRetryPolicy sets the RetryPolicy field's value.
+func (s *HttpRoute) SetRetryPolicy(v *HttpRetryPolicy) *HttpRoute {
+	s.RetryPolicy = v
 	return s
 }
 
@@ -8277,6 +8395,14 @@ func (s *WeightedTarget) SetWeight(v int64) *WeightedTarget {
 }
 
 const (
+	// DurationUnitMs is a DurationUnit enum value
+	DurationUnitMs = "ms"
+
+	// DurationUnitS is a DurationUnit enum value
+	DurationUnitS = "s"
+)
+
+const (
 	// EgressFilterTypeAllowAll is a EgressFilterType enum value
 	EgressFilterTypeAllowAll = "ALLOW_ALL"
 
@@ -8349,6 +8475,11 @@ const (
 
 	// RouteStatusCodeInactive is a RouteStatusCode enum value
 	RouteStatusCodeInactive = "INACTIVE"
+)
+
+const (
+	// TcpRetryPolicyEventConnectionError is a TcpRetryPolicyEvent enum value
+	TcpRetryPolicyEventConnectionError = "connection-error"
 )
 
 const (

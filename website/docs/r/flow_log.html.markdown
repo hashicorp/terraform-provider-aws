@@ -1,7 +1,6 @@
 ---
 layout: "aws"
 page_title: "AWS: aws_flow_log"
-sidebar_current: "docs-aws-resource-flow-log"
 description: |-
   Provides a VPC/Subnet/ENI Flow Log
 ---

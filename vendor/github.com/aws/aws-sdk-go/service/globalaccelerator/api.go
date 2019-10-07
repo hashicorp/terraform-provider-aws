@@ -1549,6 +1549,18 @@ type Accelerator struct {
 	// The date and time that the accelerator was created.
 	CreatedTime *time.Time `type:"timestamp"`
 
+	// The Domain Name System (DNS) name that Global Accelerator creates that points
+	// to your accelerator's static IP addresses.
+	//
+	// The naming convention for the DNS name is: a lower case letter a, followed
+	// by a 16-bit random hex string, followed by .awsglobalaccelerator.com. For
+	// example: a1234567890abcdef.awsglobalaccelerator.com.
+	//
+	// For more information about the default DNS name, see Support for DNS Addressing
+	// in Global Accelerator (https://docs.aws.amazon.com/global-accelerator/latest/dg/about-accelerators.html#about-accelerators.dns-addressing)
+	// in the AWS Global Accelerator Developer Guide.
+	DnsName *string `type:"string"`
+
 	// Indicates whether the accelerator is enabled. The value is true or false.
 	// The default value is true.
 	//
@@ -1592,6 +1604,12 @@ func (s *Accelerator) SetAcceleratorArn(v string) *Accelerator {
 // SetCreatedTime sets the CreatedTime field's value.
 func (s *Accelerator) SetCreatedTime(v time.Time) *Accelerator {
 	s.CreatedTime = &v
+	return s
+}
+
+// SetDnsName sets the DnsName field's value.
+func (s *Accelerator) SetDnsName(v string) *Accelerator {
+	s.DnsName = &v
 	return s
 }
 

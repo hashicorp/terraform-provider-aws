@@ -1,7 +1,6 @@
 ---
 layout: "aws"
 page_title: "AWS: aws_wafregional_rate_based_rule"
-sidebar_current: "docs-aws-resource-wafregional-rate-based-rule"
 description: |-
   Provides a AWS WAF Regional rate based rule resource.
 ---
@@ -28,7 +27,7 @@ resource "aws_wafregional_rate_based_rule" "wafrule" {
   metric_name = "tfWAFRule"
 
   rate_key   = "IP"
-  rate_limit = 2000
+  rate_limit = 100
 
   predicate {
     data_id = "${aws_wafregional_ipset.ipset.id}"
@@ -45,7 +44,7 @@ The following arguments are supported:
 * `metric_name` - (Required) The name or description for the Amazon CloudWatch metric of this rule.
 * `name` - (Required) The name or description of the rule.
 * `rate_key` - (Required) Valid value is IP.
-* `rate_limit` - (Required) The maximum number of requests, which have an identical value in the field specified by the RateKey, allowed in a five-minute period. Minimum value is 2000.
+* `rate_limit` - (Required) The maximum number of requests, which have an identical value in the field specified by the RateKey, allowed in a five-minute period. Minimum value is 100.
 * `predicate` - (Optional) The objects to include in a rule (documented below).
 
 ## Nested Blocks
