@@ -1,7 +1,6 @@
 ---
 layout: "aws"
 page_title: "AWS: aws_vpc_peering_connection_options"
-sidebar_current: "docs-aws-resource-vpc-peering-options"
 description: |-
   Provides a resource to manage VPC peering connection options.
 ---

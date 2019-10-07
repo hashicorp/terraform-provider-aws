@@ -12,9 +12,9 @@ import (
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/aws/endpoints"
 	"github.com/aws/aws-sdk-go/service/organizations"
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/helper/schema"
-	"github.com/hashicorp/terraform/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/terraform"
 	"github.com/terraform-providers/terraform-provider-tls/tls"
 )
 
@@ -470,8 +470,7 @@ func TestAccAWSProvider_Endpoints_Deprecated(t *testing.T) {
 			{
 				Config: testAccAWSProviderConfigEndpoints(endpointsDeprecated.String()),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSProviderEndpointsDeprecated(&providers),
-				),
+					testAccCheckAWSProviderEndpointsDeprecated(&providers)),
 			},
 		},
 	})
@@ -749,4 +748,22 @@ data "aws_arn" "test" {
   arn = "arn:aws:s3:::test"
 }
 `, region)
+}
+
+func testAccAssumeRoleARNPreCheck(t *testing.T) {
+	v := os.Getenv("TF_ACC_ASSUME_ROLE_ARN")
+	if v == "" {
+		t.Skip("skipping tests; TF_ACC_ASSUME_ROLE_ARN must be set")
+	}
+}
+
+func testAccProviderConfigAssumeRolePolicy(policy string) string {
+	return fmt.Sprintf(`
+provider "aws" {
+	assume_role {
+		role_arn = %q
+		policy   = %q
+	}
+}
+`, os.Getenv("TF_ACC_ASSUME_ROLE_ARN"), policy)
 }

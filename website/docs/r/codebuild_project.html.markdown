@@ -1,7 +1,6 @@
 ---
 layout: "aws"
 page_title: "AWS: aws_codebuild_project"
-sidebar_current: "docs-aws-resource-codebuild-project"
 description: |-
   Provides a CodeBuild Project resource.
 ---

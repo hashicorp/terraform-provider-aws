@@ -1,7 +1,6 @@
 ---
 layout: "aws"
 page_title: "AWS: aws_cloudwatch_metric_alarm"
-sidebar_current: "docs-aws-resource-cloudwatch-metric-alarm"
 description: |-
   Provides a CloudWatch Metric Alarm resource.
 ---

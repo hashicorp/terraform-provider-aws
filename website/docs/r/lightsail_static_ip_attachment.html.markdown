@@ -1,7 +1,6 @@
 ---
 layout: "aws"
 page_title: "AWS: aws_lightsail_static_ip_attachment"
-sidebar_current: "docs-aws-resource-lightsail-static-ip-attachment"
 description: |-
   Provides an Lightsail Static IP Attachment
 ---

@@ -1,7 +1,6 @@
 ---
 layout: "aws"
 page_title: "AWS: aws_config_configuration_aggregator"
-sidebar_current: "docs-aws-resource-config-configuration-aggregator"
 description: |-
   Manages an AWS Config Configuration Aggregator.
 ---
