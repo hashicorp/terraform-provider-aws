@@ -140,12 +140,14 @@ func resourceAwsWafWebAcl() *schema.Resource {
 					},
 				},
 			},
+			"tags": tagsSchema(),
 		},
 	}
 }
 
 func resourceAwsWafWebAclCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).wafconn
+	tags := tagsFromMapWAF(d.Get("tags").(map[string]interface{}))
 
 	wr := newWafRetryer(conn)
 	out, err := wr.RetryWithToken(func(token *string) (interface{}, error) {
@@ -154,6 +156,7 @@ func resourceAwsWafWebAclCreate(d *schema.ResourceData, meta interface{}) error 
 			DefaultAction: expandWafAction(d.Get("default_action").(*schema.Set).List()),
 			MetricName:    aws.String(d.Get("metric_name").(string)),
 			Name:          aws.String(d.Get("name").(string)),
+			Tags:          tags,
 		}
 
 		return conn.CreateWebACL(params)
@@ -212,6 +215,17 @@ func resourceAwsWafWebAclRead(d *schema.ResourceData, meta interface{}) error {
 	}
 	d.Set("name", resp.WebACL.Name)
 	d.Set("metric_name", resp.WebACL.MetricName)
+
+	tagList, err := conn.ListTagsForResource(&waf.ListTagsForResourceInput{
+		ResourceARN: aws.String(arn),
+	})
+	if err != nil {
+		return fmt.Errorf("Failed to get WAF ACL parameter tags for %s: %s", d.Get("name"), err)
+	}
+	if err := d.Set("tags", tagsToMapWAF(tagList.TagInfoForResource.TagList)); err != nil {
+		return fmt.Errorf("error setting tags: %s", err)
+	}
+
 	if err := d.Set("rules", flattenWafWebAclRules(resp.WebACL.Rules)); err != nil {
 		return fmt.Errorf("error setting rules: %s", err)
 	}
@@ -258,6 +272,12 @@ func resourceAwsWafWebAclUpdate(d *schema.ResourceData, meta interface{}) error 
 		})
 		if err != nil {
 			return fmt.Errorf("Error Updating WAF ACL: %s", err)
+		}
+
+		if !d.IsNewResource() {
+			if err := setTagsWAF(conn, d); err != nil {
+				return fmt.Errorf("error updating WAF ACL tags for %s: %s", d.Id(), err)
+			}
 		}
 	}
 
