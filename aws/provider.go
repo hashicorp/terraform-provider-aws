@@ -90,12 +90,20 @@ func Provider() terraform.ResourceProvider {
 
 			"endpoints": endpointsSchema(),
 
+			"ignore_tag_prefixes": {
+				Type:        schema.TypeSet,
+				Optional:    true,
+				Elem:        &schema.Schema{Type: schema.TypeString},
+				Set:         schema.HashString,
+				Description: "Resource tag key prefixes to ignore across all resources.",
+			},
+
 			"ignore_tags": {
 				Type:        schema.TypeSet,
 				Optional:    true,
 				Elem:        &schema.Schema{Type: schema.TypeString},
 				Set:         schema.HashString,
-				Description: "Resource tag keys to ignore configuring across all resources.",
+				Description: "Resource tag keys to ignore across all resources.",
 			},
 
 			"insecure": {
@@ -1098,6 +1106,12 @@ func providerConfigure(d *schema.ResourceData, terraformVersion string) (interfa
 		endpoints := endpointsSetI.(map[string]interface{})
 		for _, endpointServiceName := range endpointServiceNames {
 			config.Endpoints[endpointServiceName] = endpoints[endpointServiceName].(string)
+		}
+	}
+
+	if v, ok := d.GetOk("ignore_tag_prefixes"); ok {
+		for _, ignoreTagPrefixRaw := range v.(*schema.Set).List() {
+			config.IgnoreTagPrefixes = append(config.IgnoreTagPrefixes, ignoreTagPrefixRaw.(string))
 		}
 	}
 

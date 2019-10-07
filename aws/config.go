@@ -159,9 +159,10 @@ type Config struct {
 	AllowedAccountIds   []string
 	ForbiddenAccountIds []string
 
-	Endpoints  map[string]string
-	IgnoreTags []string
-	Insecure   bool
+	Endpoints         map[string]string
+	IgnoreTagPrefixes []string
+	IgnoreTags        []string
+	Insecure          bool
 
 	SkipCredsValidation     bool
 	SkipGetEC2Platforms     bool
@@ -241,6 +242,7 @@ type AWSClient struct {
 	glueconn                            *glue.Glue
 	guarddutyconn                       *guardduty.GuardDuty
 	iamconn                             *iam.IAM
+	ignoreTagPrefixes                   keyvaluetags.KeyValueTags
 	ignoreTags                          keyvaluetags.KeyValueTags
 	inspectorconn                       *inspector.Inspector
 	iotconn                             *iot.IoT
@@ -435,6 +437,7 @@ func (c *Config) Client() (interface{}, error) {
 		glueconn:                            glue.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["glue"])})),
 		guarddutyconn:                       guardduty.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["guardduty"])})),
 		iamconn:                             iam.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["iam"])})),
+		ignoreTagPrefixes:                   keyvaluetags.New(c.IgnoreTagPrefixes),
 		ignoreTags:                          keyvaluetags.New(c.IgnoreTags),
 		inspectorconn:                       inspector.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["inspector"])})),
 		iotconn:                             iot.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["iot"])})),
