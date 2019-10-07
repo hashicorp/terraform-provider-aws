@@ -256,16 +256,88 @@ func TestKeyValueTagsKeys(t *testing.T) {
 		want []string
 	}{
 		{
-			name: "empty",
+			name: "empty_map_string_interface",
+			tags: New(map[string]interface{}{}),
+			want: []string{},
+		},
+		{
+			name: "empty_map_string_stringPointer",
+			tags: New(map[string]*string{}),
+			want: []string{},
+		},
+		{
+			name: "empty_map_string_string",
 			tags: New(map[string]string{}),
 			want: []string{},
 		},
 		{
-			name: "non_empty",
+			name: "empty_slice_interface",
+			tags: New(map[string]interface{}{}),
+			want: []string{},
+		},
+		{
+			name: "empty_slice_string",
+			tags: New(map[string]string{}),
+			want: []string{},
+		},
+		{
+			name: "non_empty_map_string_interface",
+			tags: New(map[string]interface{}{
+				"key1": "value1",
+				"key2": "value2",
+				"key3": "value3",
+			}),
+			want: []string{
+				"key1",
+				"key2",
+				"key3",
+			},
+		},
+		{
+			name: "non_empty_map_string_string",
 			tags: New(map[string]string{
 				"key1": "value1",
 				"key2": "value2",
 				"key3": "value3",
+			}),
+			want: []string{
+				"key1",
+				"key2",
+				"key3",
+			},
+		},
+		{
+			name: "non_empty_map_string_stringPointer",
+			tags: New(map[string]*string{
+				"key1": testStringPtr("value1"),
+				"key2": testStringPtr("value2"),
+				"key3": testStringPtr("value3"),
+			}),
+			want: []string{
+				"key1",
+				"key2",
+				"key3",
+			},
+		},
+		{
+			name: "non_empty_slice_interface",
+			tags: New([]interface{}{
+				"key1",
+				"key2",
+				"key3",
+			}),
+			want: []string{
+				"key1",
+				"key2",
+				"key3",
+			},
+		},
+		{
+			name: "non_empty_slice_string",
+			tags: New([]string{
+				"key1",
+				"key2",
+				"key3",
 			}),
 			want: []string{
 				"key1",

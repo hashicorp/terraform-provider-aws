@@ -179,6 +179,14 @@ func New(i interface{}) KeyValueTags {
 		}
 
 		return kvtm
+	case []string:
+		kvtm := make(KeyValueTags, len(value))
+
+		for _, v := range value {
+			kvtm[v] = nil
+		}
+
+		return kvtm
 	case []interface{}:
 		kvtm := make(KeyValueTags, len(value))
 
