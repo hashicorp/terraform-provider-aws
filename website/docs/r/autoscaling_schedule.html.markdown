@@ -1,7 +1,6 @@
 ---
 layout: "aws"
 page_title: "AWS: aws_autoscaling_schedule"
-sidebar_current: "docs-aws-resource-autoscaling-schedule"
 description: |-
   Provides an AutoScaling Schedule resource.
 ---

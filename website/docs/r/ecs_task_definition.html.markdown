@@ -1,7 +1,6 @@
 ---
 layout: "aws"
 page_title: "AWS: aws_ecs_task_definition"
-sidebar_current: "docs-aws-resource-ecs-task-definition"
 description: |-
   Manages a revision of an ECS task definition.
 ---

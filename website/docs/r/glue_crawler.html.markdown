@@ -1,7 +1,6 @@
 ---
 layout: "aws"
 page_title: "AWS: aws_glue_crawler"
-sidebar_current: "docs-aws-resource-glue-crawler"
 description: |-
   Manages a Glue Crawler
 ---

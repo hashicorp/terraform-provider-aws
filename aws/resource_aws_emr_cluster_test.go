@@ -10,9 +10,9 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/emr"
-	"github.com/hashicorp/terraform/helper/acctest"
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/terraform"
 )
 
 func init() {
@@ -1593,7 +1593,7 @@ resource "aws_emr_cluster" "test" {
   }
 
   bootstrap_action {
-    path = "s3://${aws_s3_bucket.tester.bucket}/testscript.sh"
+    path = "s3://${aws_s3_bucket_object.testobject.bucket}/${aws_s3_bucket_object.testobject.key}"
     name = "test"
 
     args = ["1",
@@ -1848,17 +1848,11 @@ resource "aws_s3_bucket" "tester" {
 resource "aws_s3_bucket_object" "testobject" {
   bucket = "${aws_s3_bucket.tester.bucket}"
   key    = "testscript.sh"
-
-  #source = "testscript.sh"
-  content = "${data.template_file.testscript.rendered}"
-  acl     = "public-read"
-}
-
-data "template_file" "testscript" {
-  template = <<POLICY
+  content = <<EOF
 #!/bin/bash
 echo $@
-POLICY
+EOF
+  acl     = "public-read"
 }
 `, r, r, r, r, r, r, r)
 }
