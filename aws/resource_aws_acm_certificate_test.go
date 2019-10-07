@@ -11,9 +11,9 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/acm"
-	"github.com/hashicorp/terraform/helper/acctest"
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/terraform"
 )
 
 var certificateArnRegex = regexp.MustCompile(`^arn:aws:acm:[^:]+:[^:]+:certificate/.+$`)
@@ -526,7 +526,7 @@ func TestAccAWSAcmCertificate_tags(t *testing.T) {
 }
 
 func TestAccAWSAcmCertificate_imported_DomainName(t *testing.T) {
-	resourceName := "aws_acm_certificate.cert"
+	resourceName := "aws_acm_certificate.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -534,17 +534,17 @@ func TestAccAWSAcmCertificate_imported_DomainName(t *testing.T) {
 		CheckDestroy: testAccCheckAcmCertificateDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAcmCertificateConfig_selfSigned("example"),
+				Config: testAccAcmCertificateConfigPrivateKey("example.com"),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 					resource.TestCheckResourceAttr(resourceName, "domain_name", "example.com"),
 				),
 			},
 			{
-				Config: testAccAcmCertificateConfig_selfSigned("example2"),
+				Config: testAccAcmCertificateConfigPrivateKey("example.org"),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
-					resource.TestCheckResourceAttr(resourceName, "domain_name", "example2.com"),
+					resource.TestCheckResourceAttr(resourceName, "domain_name", "example.org"),
 				),
 			},
 			{
@@ -655,65 +655,16 @@ resource "aws_acm_certificate" "cert" {
 `, domainName, validationMethod, tag1Key, tag1Value, tag2Key, tag2Value)
 }
 
-func testAccAcmCertificateConfig_selfSigned(certName string) string {
-	return fmt.Sprintf(`
-resource "tls_private_key" "%[1]s" {
-  algorithm = "RSA"
-}
-
-resource "tls_self_signed_cert" "%[1]s" {
-  key_algorithm   = "RSA"
-  private_key_pem = "${tls_private_key.%[1]s.private_key_pem}"
-
-  subject {
-    common_name  = "%[1]s.com"
-    organization = "ACME Examples, Inc"
-  }
-
-  validity_period_hours = 12
-
-  allowed_uses = [
-    "key_encipherment",
-    "digital_signature",
-    "server_auth",
-  ]
-}
-
-resource "aws_acm_certificate" "cert" {
-  private_key      = "${tls_private_key.%[1]s.private_key_pem}"
-  certificate_body = "${tls_self_signed_cert.%[1]s.cert_pem}"
-}
-`, certName)
-}
-
 func testAccAcmCertificateConfigPrivateKey(commonName string) string {
+	key := tlsRsaPrivateKeyPem(2048)
+	certificate := tlsRsaX509SelfSignedCertificatePem(key, commonName)
+
 	return fmt.Sprintf(`
-resource "tls_private_key" "test" {
-  algorithm = "RSA"
-}
-
-resource "tls_self_signed_cert" "test" {
-  allowed_uses = [
-    "key_encipherment",
-    "digital_signature",
-    "server_auth",
-  ]
-
-  key_algorithm         = "RSA"
-  private_key_pem       = "${tls_private_key.test.private_key_pem}"
-  validity_period_hours = 12
-
-  subject {
-    common_name  = %q
-    organization = "ACME Examples, Inc"
-  }
-}
-
 resource "aws_acm_certificate" "test" {
-  certificate_body = "${tls_self_signed_cert.test.cert_pem}"
-  private_key      = "${tls_private_key.test.private_key_pem}"
+  certificate_body = "%[1]s"
+  private_key      = "%[2]s"
 }
-`, commonName)
+`, tlsPemEscapeNewlines(certificate), tlsPemEscapeNewlines(key))
 }
 
 func testAccAcmCertificateConfig_disableCTLogging(domainName, validationMethod string) string {

@@ -1,7 +1,6 @@
 ---
 layout: "aws"
 page_title: "AWS: aws_network_acl_rule"
-sidebar_current: "docs-aws-resource-network-acl-rule"
 description: |-
   Provides an network ACL Rule resource.
 ---

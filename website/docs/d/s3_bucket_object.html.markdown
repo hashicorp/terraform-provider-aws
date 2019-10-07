@@ -1,7 +1,6 @@
 ---
 layout: "aws"
 page_title: "AWS: aws_s3_bucket_object"
-sidebar_current: "docs-aws-datasource-s3-bucket-object"
 description: |-
     Provides metadata and optionally content of an S3 object
 ---

@@ -1,7 +1,6 @@
 ---
 layout: "aws"
 page_title: "AWS: aws_sqs_queue_policy"
-sidebar_current: "docs-aws-resource-sqs-queue-policy"
 description: |-
   Provides a SQS Queue Policy resource.
 ---
