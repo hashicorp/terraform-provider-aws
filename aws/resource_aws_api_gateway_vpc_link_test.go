@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 	"testing"
+	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/apigateway"
@@ -41,7 +42,7 @@ func testSweepAPIGatewayVpcLinks(region string) error {
 				continue
 			}
 
-			if err := waitForApiGatewayVpcLinkDeletion(conn, id); err != nil {
+			if err := waitForApiGatewayVpcLinkDeletion(conn, id, 20*time.Minute); err != nil {
 				log.Printf("[ERROR] Error waiting for API Gateway VPC Link (%s) deletion: %s", id, err)
 			}
 		}
