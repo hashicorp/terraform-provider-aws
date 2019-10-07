@@ -11,7 +11,9 @@ import (
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 )
 
 // add sweeper to delete known test vpcs
@@ -137,6 +139,32 @@ func TestAccAWSVpc_disappears(t *testing.T) {
 					testAccCheckVpcDisappears(&vpc),
 				),
 				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}
+
+func TestAccAWSVpc_ignoreTags(t *testing.T) {
+	var providers []*schema.Provider
+	var vpc ec2.Vpc
+	resourceName := "aws_vpc.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:          func() { testAccPreCheck(t) },
+		ProviderFactories: testAccProviderFactories(&providers),
+		CheckDestroy:      testAccCheckVpcDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccVpcConfigTags,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckVpcExists(resourceName, &vpc),
+					testAccCheckEc2UpdateTags(&vpc, nil, map[string]string{"ignorekey1": "ignorevalue1"}),
+				),
+				ExpectNonEmptyPlan: true,
+			},
+			{
+				Config:   testAccProviderConfigIgnoreTags1("ignorekey1") + testAccVpcConfigTags,
+				PlanOnly: true,
 			},
 		},
 	})
@@ -330,6 +358,14 @@ func testAccCheckVpcDestroy(s *terraform.State) error {
 	}
 
 	return nil
+}
+
+func testAccCheckEc2UpdateTags(vpc *ec2.Vpc, oldTags, newTags map[string]string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := testAccProvider.Meta().(*AWSClient).ec2conn
+
+		return keyvaluetags.Ec2UpdateTags(conn, aws.StringValue(vpc.VpcId), oldTags, newTags)
+	}
 }
 
 func testAccCheckVpcCidr(vpc *ec2.Vpc, expected string) resource.TestCheckFunc {
