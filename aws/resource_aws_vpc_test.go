@@ -163,6 +163,10 @@ func TestAccAWSVpc_ignoreTags(t *testing.T) {
 				ExpectNonEmptyPlan: true,
 			},
 			{
+				Config:   testAccProviderConfigIgnoreTagPrefixes1("ignorekey") + testAccVpcConfigTags,
+				PlanOnly: true,
+			},
+			{
 				Config:   testAccProviderConfigIgnoreTags1("ignorekey1") + testAccVpcConfigTags,
 				PlanOnly: true,
 			},

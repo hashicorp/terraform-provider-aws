@@ -267,6 +267,7 @@ func resourceAwsVpcCreate(d *schema.ResourceData, meta interface{}) error {
 func resourceAwsVpcRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).ec2conn
 	ignoreTags := meta.(*AWSClient).ignoreTags
+	ignoreTagPrefixes := meta.(*AWSClient).ignoreTagPrefixes
 
 	// Refresh the VPC state
 	vpcRaw, _, err := VPCStateRefreshFunc(conn, d.Id())()
@@ -295,7 +296,7 @@ func resourceAwsVpcRead(d *schema.ResourceData, meta interface{}) error {
 	}.String()
 	d.Set("arn", arn)
 
-	if err := d.Set("tags", keyvaluetags.Ec2KeyValueTags(vpc.Tags).IgnoreAws().Ignore(ignoreTags).Map()); err != nil {
+	if err := d.Set("tags", keyvaluetags.Ec2KeyValueTags(vpc.Tags).IgnoreAws().IgnorePrefixes(ignoreTagPrefixes).Ignore(ignoreTags).Map()); err != nil {
 		return fmt.Errorf("error setting tags: %s", err)
 	}
 

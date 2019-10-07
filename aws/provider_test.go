@@ -287,6 +287,14 @@ provider "aws" {
 `, testAccGetAlternateRegion())
 }
 
+func testAccProviderConfigIgnoreTagPrefixes1(keyPrefix1 string) string {
+	return fmt.Sprintf(`
+provider "aws" {
+  ignore_tag_prefixes = [%[1]q]
+}
+`, keyPrefix1)
+}
+
 func testAccProviderConfigIgnoreTags1(key1 string) string {
 	return fmt.Sprintf(`
 provider "aws" {
