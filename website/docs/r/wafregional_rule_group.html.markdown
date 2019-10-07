@@ -1,7 +1,6 @@
 ---
 layout: "aws"
 page_title: "AWS: aws_wafregional_rule_group"
-sidebar_current: "docs-aws-resource-wafregional-rule-group"
 description: |-
   Provides a AWS WAF Regional Rule Group resource.
 ---

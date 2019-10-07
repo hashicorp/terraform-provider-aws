@@ -1,7 +1,6 @@
 ---
 layout: "aws"
 page_title: "AWS: aws_rds_cluster_endpoint"
-sidebar_current: "docs-aws-resource-rds-cluster-endpoint"
 description: |-
   Manages a RDS Aurora Cluster Endpoint
 ---

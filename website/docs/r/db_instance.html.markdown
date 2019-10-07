@@ -1,7 +1,6 @@
 ---
 layout: "aws"
 page_title: "AWS: aws_db_instance"
-sidebar_current: "docs-aws-resource-db-instance"
 description: |-
   Provides an RDS instance resource.
 ---

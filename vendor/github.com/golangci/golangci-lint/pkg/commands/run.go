@@ -10,6 +10,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/golangci/golangci-lint/pkg/packages"
 	"github.com/golangci/golangci-lint/pkg/result/processors"
 
 	"github.com/fatih/color"
@@ -26,7 +27,7 @@ import (
 	"github.com/golangci/golangci-lint/pkg/result"
 )
 
-func getDefaultExcludeHelp() string {
+func getDefaultIssueExcludeHelp() string {
 	parts := []string{"Use or not use default excludes:"}
 	for _, ep := range config.DefaultExcludePatterns {
 		parts = append(parts,
@@ -38,6 +39,15 @@ func getDefaultExcludeHelp() string {
 	return strings.Join(parts, "\n")
 }
 
+func getDefaultDirectoryExcludeHelp() string {
+	parts := []string{"Use or not use default excluded directories:"}
+	for _, dir := range packages.StdExcludeDirRegexps {
+		parts = append(parts, fmt.Sprintf("  - %s", color.YellowString(dir)))
+	}
+	parts = append(parts, "")
+	return strings.Join(parts, "\n")
+}
+
 const welcomeMessage = "Run this tool in cloud on every github pull " +
 	"request in https://golangci.com for free (public repos)"
 
@@ -45,6 +55,7 @@ func wh(text string) string {
 	return color.GreenString(text)
 }
 
+//nolint:funlen
 func initFlagSet(fs *pflag.FlagSet, cfg *config.Config, m *lintersdb.Manager, isFinalInit bool) {
 	hideFlag := func(name string) {
 		if err := fs.MarkHidden(name); err != nil {
@@ -82,6 +93,7 @@ func initFlagSet(fs *pflag.FlagSet, cfg *config.Config, m *lintersdb.Manager, is
 	fs.StringVarP(&rc.Config, "config", "c", "", wh("Read config from file path `PATH`"))
 	fs.BoolVar(&rc.NoConfig, "no-config", false, wh("Don't read config"))
 	fs.StringSliceVar(&rc.SkipDirs, "skip-dirs", nil, wh("Regexps of directories to skip"))
+	fs.BoolVar(&rc.UseDefaultSkipDirs, "skip-dirs-use-default", true, getDefaultDirectoryExcludeHelp())
 	fs.StringSliceVar(&rc.SkipFiles, "skip-files", nil, wh("Regexps of files to skip"))
 
 	// Linters settings config
@@ -161,7 +173,7 @@ func initFlagSet(fs *pflag.FlagSet, cfg *config.Config, m *lintersdb.Manager, is
 	// Issues config
 	ic := &cfg.Issues
 	fs.StringSliceVarP(&ic.ExcludePatterns, "exclude", "e", nil, wh("Exclude issue by regexp"))
-	fs.BoolVar(&ic.UseDefaultExcludes, "exclude-use-default", true, getDefaultExcludeHelp())
+	fs.BoolVar(&ic.UseDefaultExcludes, "exclude-use-default", true, getDefaultIssueExcludeHelp())
 
 	fs.IntVar(&ic.MaxIssuesPerLinter, "max-issues-per-linter", 50,
 		wh("Maximum issues count per one linter. Set to 0 to disable"))
@@ -394,7 +406,7 @@ func (e *Executor) executeRun(_ *cobra.Command, args []string) {
 	defer cancel()
 
 	if needTrackResources {
-		go watchResources(ctx, trackResourcesEndCh, e.log)
+		go watchResources(ctx, trackResourcesEndCh, e.log, e.debugf)
 	}
 
 	if err := e.runAndPrint(ctx, args); err != nil {
@@ -435,24 +447,34 @@ func (e *Executor) setupExitCode(ctx context.Context) {
 	}
 }
 
-func watchResources(ctx context.Context, done chan struct{}, logger logutils.Log) {
+func watchResources(ctx context.Context, done chan struct{}, logger logutils.Log, debugf logutils.DebugFunc) {
 	startedAt := time.Now()
+	debugf("Started tracking time")
 
-	var rssValues []uint64
+	var maxRSSMB, totalRSSMB float64
+	var iterationsCount int
 	ticker := time.NewTicker(100 * time.Millisecond)
 	defer ticker.Stop()
 
 	logEveryRecord := os.Getenv("GL_MEM_LOG_EVERY") == "1"
+	const MB = 1024 * 1024
 
 	track := func() {
+		debugf("Starting memory tracing iteration ...")
 		var m runtime.MemStats
 		runtime.ReadMemStats(&m)
 
 		if logEveryRecord {
+			debugf("Stopping memory tracing iteration, printing ...")
 			printMemStats(&m, logger)
 		}
 
-		rssValues = append(rssValues, m.Sys)
+		rssMB := float64(m.Sys) / MB
+		if rssMB > maxRSSMB {
+			maxRSSMB = rssMB
+		}
+		totalRSSMB += rssMB
+		iterationsCount++
 	}
 
 	for {
@@ -462,7 +484,8 @@ func watchResources(ctx context.Context, done chan struct{}, logger logutils.Log
 		select {
 		case <-ctx.Done():
 			stop = true
-		case <-ticker.C: // track every second
+			debugf("Stopped resources tracking")
+		case <-ticker.C:
 		}
 
 		if stop {
@@ -471,19 +494,10 @@ func watchResources(ctx context.Context, done chan struct{}, logger logutils.Log
 	}
 	track()
 
-	var avg, max uint64
-	for _, v := range rssValues {
-		avg += v
-		if v > max {
-			max = v
-		}
-	}
-	avg /= uint64(len(rssValues))
+	avgRSSMB := totalRSSMB / float64(iterationsCount)
 
-	const MB = 1024 * 1024
-	maxMB := float64(max) / MB
 	logger.Infof("Memory: %d samples, avg is %.1fMB, max is %.1fMB",
-		len(rssValues), float64(avg)/MB, maxMB)
+		iterationsCount, avgRSSMB, maxRSSMB)
 	logger.Infof("Execution took %s", time.Since(startedAt))
 	close(done)
 }
