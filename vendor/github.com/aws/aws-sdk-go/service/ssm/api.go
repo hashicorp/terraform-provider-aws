@@ -194,12 +194,9 @@ func (c *SSM) CancelCommandRequest(input *CancelCommandInput) (req *request.Requ
 //
 //   You do not have permission to access the instance.
 //
-//   SSM Agent is not running. On managed instances and Linux instances, verify
-//   that the SSM Agent is running. On EC2 Windows instances, verify that the
-//   EC2Config service is running.
+//   SSM Agent is not running. Verify that SSM Agent is running.
 //
-//   SSM Agent or EC2Config service is not registered to the SSM endpoint. Try
-//   reinstalling SSM Agent or EC2Config service.
+//   SSM Agent is not registered with the SSM endpoint. Try reinstalling SSM Agent.
 //
 //   The instance is not in valid state. Valid states are: Running, Pending, Stopped,
 //   Stopping. Invalid states are: Shutting-down and Terminated.
@@ -482,12 +479,9 @@ func (c *SSM) CreateAssociationRequest(input *CreateAssociationInput) (req *requ
 //
 //   You do not have permission to access the instance.
 //
-//   SSM Agent is not running. On managed instances and Linux instances, verify
-//   that the SSM Agent is running. On EC2 Windows instances, verify that the
-//   EC2Config service is running.
+//   SSM Agent is not running. Verify that SSM Agent is running.
 //
-//   SSM Agent or EC2Config service is not registered to the SSM endpoint. Try
-//   reinstalling SSM Agent or EC2Config service.
+//   SSM Agent is not registered with the SSM endpoint. Try reinstalling SSM Agent.
 //
 //   The instance is not in valid state. Valid states are: Running, Pending, Stopped,
 //   Stopping. Invalid states are: Shutting-down and Terminated.
@@ -609,12 +603,9 @@ func (c *SSM) CreateAssociationBatchRequest(input *CreateAssociationBatchInput) 
 //
 //   You do not have permission to access the instance.
 //
-//   SSM Agent is not running. On managed instances and Linux instances, verify
-//   that the SSM Agent is running. On EC2 Windows instances, verify that the
-//   EC2Config service is running.
+//   SSM Agent is not running. Verify that SSM Agent is running.
 //
-//   SSM Agent or EC2Config service is not registered to the SSM endpoint. Try
-//   reinstalling SSM Agent or EC2Config service.
+//   SSM Agent is not registered with the SSM endpoint. Try reinstalling SSM Agent.
 //
 //   The instance is not in valid state. Valid states are: Running, Pending, Stopped,
 //   Stopping. Invalid states are: Shutting-down and Terminated.
@@ -736,7 +727,7 @@ func (c *SSM) CreateDocumentRequest(input *CreateDocumentInput) (req *request.Re
 //   The content for the document is not valid.
 //
 //   * ErrCodeDocumentLimitExceeded "DocumentLimitExceeded"
-//   You can have at most 200 active Systems Manager documents.
+//   You can have at most 500 active Systems Manager documents.
 //
 //   * ErrCodeInvalidDocumentSchemaVersion "InvalidDocumentSchemaVersion"
 //   The version of the document schema is not supported.
@@ -1313,12 +1304,9 @@ func (c *SSM) DeleteAssociationRequest(input *DeleteAssociationInput) (req *requ
 //
 //   You do not have permission to access the instance.
 //
-//   SSM Agent is not running. On managed instances and Linux instances, verify
-//   that the SSM Agent is running. On EC2 Windows instances, verify that the
-//   EC2Config service is running.
+//   SSM Agent is not running. Verify that SSM Agent is running.
 //
-//   SSM Agent or EC2Config service is not registered to the SSM endpoint. Try
-//   reinstalling SSM Agent or EC2Config service.
+//   SSM Agent is not registered with the SSM endpoint. Try reinstalling SSM Agent.
 //
 //   The instance is not in valid state. Valid states are: Running, Pending, Stopped,
 //   Stopping. Invalid states are: Shutting-down and Terminated.
@@ -1745,8 +1733,7 @@ func (c *SSM) DeleteParametersRequest(input *DeleteParametersInput) (req *reques
 
 // DeleteParameters API operation for Amazon Simple Systems Manager (SSM).
 //
-// Delete a list of parameters. This API is used to delete parameters by using
-// the Amazon EC2 console.
+// Delete a list of parameters.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -2012,12 +1999,9 @@ func (c *SSM) DeregisterManagedInstanceRequest(input *DeregisterManagedInstanceI
 //
 //   You do not have permission to access the instance.
 //
-//   SSM Agent is not running. On managed instances and Linux instances, verify
-//   that the SSM Agent is running. On EC2 Windows instances, verify that the
-//   EC2Config service is running.
+//   SSM Agent is not running. Verify that SSM Agent is running.
 //
-//   SSM Agent or EC2Config service is not registered to the SSM endpoint. Try
-//   reinstalling SSM Agent or EC2Config service.
+//   SSM Agent is not registered with the SSM endpoint. Try reinstalling SSM Agent.
 //
 //   The instance is not in valid state. Valid states are: Running, Pending, Stopped,
 //   Stopping. Invalid states are: Shutting-down and Terminated.
@@ -2356,9 +2340,9 @@ func (c *SSM) DescribeActivationsRequest(input *DescribeActivationsInput) (req *
 
 // DescribeActivations API operation for Amazon Simple Systems Manager (SSM).
 //
-// Details about the activation, including: the date and time the activation
-// was created, the expiration date, the IAM role assigned to the instances
-// in the activation, and the number of instances activated by this registration.
+// Describes details about the activation, such as the date and time the activation
+// was created, its expiration date, the IAM role assigned to the instances
+// in the activation, and the number of instances registered by using this activation.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -2527,12 +2511,9 @@ func (c *SSM) DescribeAssociationRequest(input *DescribeAssociationInput) (req *
 //
 //   You do not have permission to access the instance.
 //
-//   SSM Agent is not running. On managed instances and Linux instances, verify
-//   that the SSM Agent is running. On EC2 Windows instances, verify that the
-//   EC2Config service is running.
+//   SSM Agent is not running. Verify that SSM Agent is running.
 //
-//   SSM Agent or EC2Config service is not registered to the SSM endpoint. Try
-//   reinstalling SSM Agent or EC2Config service.
+//   SSM Agent is not registered with the SSM endpoint. Try reinstalling SSM Agent.
 //
 //   The instance is not in valid state. Valid states are: Running, Pending, Stopped,
 //   Stopping. Invalid states are: Shutting-down and Terminated.
@@ -2958,7 +2939,7 @@ func (c *SSM) DescribeAvailablePatchesRequest(input *DescribeAvailablePatchesInp
 
 // DescribeAvailablePatches API operation for Amazon Simple Systems Manager (SSM).
 //
-// Lists all patches that could possibly be included in a patch baseline.
+// Lists all patches eligible to be included in a patch baseline.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -3228,12 +3209,9 @@ func (c *SSM) DescribeEffectiveInstanceAssociationsRequest(input *DescribeEffect
 //
 //   You do not have permission to access the instance.
 //
-//   SSM Agent is not running. On managed instances and Linux instances, verify
-//   that the SSM Agent is running. On EC2 Windows instances, verify that the
-//   EC2Config service is running.
+//   SSM Agent is not running. Verify that SSM Agent is running.
 //
-//   SSM Agent or EC2Config service is not registered to the SSM endpoint. Try
-//   reinstalling SSM Agent or EC2Config service.
+//   SSM Agent is not registered with the SSM endpoint. Try reinstalling SSM Agent.
 //
 //   The instance is not in valid state. Valid states are: Running, Pending, Stopped,
 //   Stopping. Invalid states are: Shutting-down and Terminated.
@@ -3422,12 +3400,9 @@ func (c *SSM) DescribeInstanceAssociationsStatusRequest(input *DescribeInstanceA
 //
 //   You do not have permission to access the instance.
 //
-//   SSM Agent is not running. On managed instances and Linux instances, verify
-//   that the SSM Agent is running. On EC2 Windows instances, verify that the
-//   EC2Config service is running.
+//   SSM Agent is not running. Verify that SSM Agent is running.
 //
-//   SSM Agent or EC2Config service is not registered to the SSM endpoint. Try
-//   reinstalling SSM Agent or EC2Config service.
+//   SSM Agent is not registered with the SSM endpoint. Try reinstalling SSM Agent.
 //
 //   The instance is not in valid state. Valid states are: Running, Pending, Stopped,
 //   Stopping. Invalid states are: Shutting-down and Terminated.
@@ -3534,12 +3509,9 @@ func (c *SSM) DescribeInstanceInformationRequest(input *DescribeInstanceInformat
 //
 //   You do not have permission to access the instance.
 //
-//   SSM Agent is not running. On managed instances and Linux instances, verify
-//   that the SSM Agent is running. On EC2 Windows instances, verify that the
-//   EC2Config service is running.
+//   SSM Agent is not running. Verify that SSM Agent is running.
 //
-//   SSM Agent or EC2Config service is not registered to the SSM endpoint. Try
-//   reinstalling SSM Agent or EC2Config service.
+//   SSM Agent is not registered with the SSM endpoint. Try reinstalling SSM Agent.
 //
 //   The instance is not in valid state. Valid states are: Running, Pending, Stopped,
 //   Stopping. Invalid states are: Shutting-down and Terminated.
@@ -3857,12 +3829,9 @@ func (c *SSM) DescribeInstancePatchesRequest(input *DescribeInstancePatchesInput
 //
 //   You do not have permission to access the instance.
 //
-//   SSM Agent is not running. On managed instances and Linux instances, verify
-//   that the SSM Agent is running. On EC2 Windows instances, verify that the
-//   EC2Config service is running.
+//   SSM Agent is not running. Verify that SSM Agent is running.
 //
-//   SSM Agent or EC2Config service is not registered to the SSM endpoint. Try
-//   reinstalling SSM Agent or EC2Config service.
+//   SSM Agent is not registered with the SSM endpoint. Try reinstalling SSM Agent.
 //
 //   The instance is not in valid state. Valid states are: Running, Pending, Stopped,
 //   Stopping. Invalid states are: Shutting-down and Terminated.
@@ -5485,12 +5454,9 @@ func (c *SSM) GetCommandInvocationRequest(input *GetCommandInvocationInput) (req
 //
 //   You do not have permission to access the instance.
 //
-//   SSM Agent is not running. On managed instances and Linux instances, verify
-//   that the SSM Agent is running. On EC2 Windows instances, verify that the
-//   EC2Config service is running.
+//   SSM Agent is not running. Verify that SSM Agent is running.
 //
-//   SSM Agent or EC2Config service is not registered to the SSM endpoint. Try
-//   reinstalling SSM Agent or EC2Config service.
+//   SSM Agent is not registered with the SSM endpoint. Try reinstalling SSM Agent.
 //
 //   The instance is not in valid state. Valid states are: Running, Pending, Stopped,
 //   Stopping. Invalid states are: Shutting-down and Terminated.
@@ -6180,8 +6146,7 @@ func (c *SSM) GetMaintenanceWindowExecutionRequest(input *GetMaintenanceWindowEx
 
 // GetMaintenanceWindowExecution API operation for Amazon Simple Systems Manager (SSM).
 //
-// Retrieves details about a specific task run as part of a maintenance window
-// execution.
+// Retrieves details about a specific a maintenance window execution.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -6354,8 +6319,7 @@ func (c *SSM) GetMaintenanceWindowExecutionTaskInvocationRequest(input *GetMaint
 
 // GetMaintenanceWindowExecutionTaskInvocation API operation for Amazon Simple Systems Manager (SSM).
 //
-// Retrieves a task invocation. A task invocation is a specific task running
-// on a specific target. maintenance windows report status for all invocations.
+// Retrieves information about a specific task running on a specific target.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -7832,12 +7796,9 @@ func (c *SSM) ListCommandInvocationsRequest(input *ListCommandInvocationsInput) 
 //
 //   You do not have permission to access the instance.
 //
-//   SSM Agent is not running. On managed instances and Linux instances, verify
-//   that the SSM Agent is running. On EC2 Windows instances, verify that the
-//   EC2Config service is running.
+//   SSM Agent is not running. Verify that SSM Agent is running.
 //
-//   SSM Agent or EC2Config service is not registered to the SSM endpoint. Try
-//   reinstalling SSM Agent or EC2Config service.
+//   SSM Agent is not registered with the SSM endpoint. Try reinstalling SSM Agent.
 //
 //   The instance is not in valid state. Valid states are: Running, Pending, Stopped,
 //   Stopping. Invalid states are: Shutting-down and Terminated.
@@ -7990,12 +7951,9 @@ func (c *SSM) ListCommandsRequest(input *ListCommandsInput) (req *request.Reques
 //
 //   You do not have permission to access the instance.
 //
-//   SSM Agent is not running. On managed instances and Linux instances, verify
-//   that the SSM Agent is running. On EC2 Windows instances, verify that the
-//   EC2Config service is running.
+//   SSM Agent is not running. Verify that SSM Agent is running.
 //
-//   SSM Agent or EC2Config service is not registered to the SSM endpoint. Try
-//   reinstalling SSM Agent or EC2Config service.
+//   SSM Agent is not registered with the SSM endpoint. Try reinstalling SSM Agent.
 //
 //   The instance is not in valid state. Valid states are: Running, Pending, Stopped,
 //   Stopping. Invalid states are: Shutting-down and Terminated.
@@ -8551,12 +8509,9 @@ func (c *SSM) ListInventoryEntriesRequest(input *ListInventoryEntriesInput) (req
 //
 //   You do not have permission to access the instance.
 //
-//   SSM Agent is not running. On managed instances and Linux instances, verify
-//   that the SSM Agent is running. On EC2 Windows instances, verify that the
-//   EC2Config service is running.
+//   SSM Agent is not running. Verify that SSM Agent is running.
 //
-//   SSM Agent or EC2Config service is not registered to the SSM endpoint. Try
-//   reinstalling SSM Agent or EC2Config service.
+//   SSM Agent is not registered with the SSM endpoint. Try reinstalling SSM Agent.
 //
 //   The instance is not in valid state. Valid states are: Running, Pending, Stopped,
 //   Stopping. Invalid states are: Shutting-down and Terminated.
@@ -8933,7 +8888,7 @@ func (c *SSM) ModifyDocumentPermissionRequest(input *ModifyDocumentPermissionInp
 //   documents. If you need to increase this limit, contact AWS Support.
 //
 //   * ErrCodeDocumentLimitExceeded "DocumentLimitExceeded"
-//   You can have at most 200 active Systems Manager documents.
+//   You can have at most 500 active Systems Manager documents.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/ModifyDocumentPermission
 func (c *SSM) ModifyDocumentPermission(input *ModifyDocumentPermissionInput) (*ModifyDocumentPermissionOutput, error) {
@@ -9163,12 +9118,9 @@ func (c *SSM) PutInventoryRequest(input *PutInventoryInput) (req *request.Reques
 //
 //   You do not have permission to access the instance.
 //
-//   SSM Agent is not running. On managed instances and Linux instances, verify
-//   that the SSM Agent is running. On EC2 Windows instances, verify that the
-//   EC2Config service is running.
+//   SSM Agent is not running. Verify that SSM Agent is running.
 //
-//   SSM Agent or EC2Config service is not registered to the SSM endpoint. Try
-//   reinstalling SSM Agent or EC2Config service.
+//   SSM Agent is not registered with the SSM endpoint. Try reinstalling SSM Agent.
 //
 //   The instance is not in valid state. Valid states are: Running, Pending, Stopped,
 //   Stopping. Invalid states are: Shutting-down and Terminated.
@@ -9406,7 +9358,12 @@ func (c *SSM) RegisterDefaultPatchBaselineRequest(input *RegisterDefaultPatchBas
 
 // RegisterDefaultPatchBaseline API operation for Amazon Simple Systems Manager (SSM).
 //
-// Defines the default patch baseline.
+// Defines the default patch baseline for the relevant operating system.
+//
+// To reset the AWS predefined patch baseline as the default, specify the full
+// patch baseline ARN as the baseline ID value. For example, for CentOS, specify
+// arn:aws:ssm:us-east-2:733109147000:patchbaseline/pb-0574b43a65ea646ed instead
+// of pb-0574b43a65ea646ed.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -9723,7 +9680,7 @@ func (c *SSM) RegisterTaskWithMaintenanceWindowRequest(input *RegisterTaskWithMa
 //   Manager Limits (http://docs.aws.amazon.com/general/latest/gr/aws_service_limits.html#limits_ssm).
 //
 //   * ErrCodeFeatureNotAvailableException "FeatureNotAvailableException"
-//   You attempted to register a LAMBDA or STEP_FUNCTION task in a region where
+//   You attempted to register a LAMBDA or STEP_FUNCTIONS task in a region where
 //   the corresponding service is not available.
 //
 //   * ErrCodeInternalServerError "InternalServerError"
@@ -9796,7 +9753,7 @@ func (c *SSM) RemoveTagsFromResourceRequest(input *RemoveTagsFromResourceInput) 
 
 // RemoveTagsFromResource API operation for Amazon Simple Systems Manager (SSM).
 //
-// Removes all tags from the specified resource.
+// Removes tag keys from the specified resource.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -10192,12 +10149,9 @@ func (c *SSM) SendCommandRequest(input *SendCommandInput) (req *request.Request,
 //
 //   You do not have permission to access the instance.
 //
-//   SSM Agent is not running. On managed instances and Linux instances, verify
-//   that the SSM Agent is running. On EC2 Windows instances, verify that the
-//   EC2Config service is running.
+//   SSM Agent is not running. Verify that SSM Agent is running.
 //
-//   SSM Agent or EC2Config service is not registered to the SSM endpoint. Try
-//   reinstalling SSM Agent or EC2Config service.
+//   SSM Agent is not registered with the SSM endpoint. Try reinstalling SSM Agent.
 //
 //   The instance is not in valid state. Valid states are: Running, Pending, Stopped,
 //   Stopping. Invalid states are: Shutting-down and Terminated.
@@ -10759,6 +10713,13 @@ func (c *SSM) UpdateAssociationRequest(input *UpdateAssociationInput) (req *requ
 // Updates an association. You can update the association name and version,
 // the document version, schedule, parameters, and Amazon S3 output.
 //
+// In order to call this API action, your IAM user account, group, or role must
+// be configured with permission to call the DescribeAssociation API action.
+// If you don't have permission to call DescribeAssociation, then you receive
+// the following error: An error occurred (AccessDeniedException) when calling
+// the UpdateAssociation operation: User: <user_arn> is not authorized to perform:
+// ssm:DescribeAssociation on resource: <resource_arn>
+//
 // When you update an association, the association immediately runs against
 // the specified targets.
 //
@@ -10898,12 +10859,9 @@ func (c *SSM) UpdateAssociationStatusRequest(input *UpdateAssociationStatusInput
 //
 //   You do not have permission to access the instance.
 //
-//   SSM Agent is not running. On managed instances and Linux instances, verify
-//   that the SSM Agent is running. On EC2 Windows instances, verify that the
-//   EC2Config service is running.
+//   SSM Agent is not running. Verify that SSM Agent is running.
 //
-//   SSM Agent or EC2Config service is not registered to the SSM endpoint. Try
-//   reinstalling SSM Agent or EC2Config service.
+//   SSM Agent is not registered with the SSM endpoint. Try reinstalling SSM Agent.
 //
 //   The instance is not in valid state. Valid states are: Running, Pending, Stopped,
 //   Stopping. Invalid states are: Shutting-down and Terminated.
@@ -10987,7 +10945,7 @@ func (c *SSM) UpdateDocumentRequest(input *UpdateDocumentInput) (req *request.Re
 
 // UpdateDocument API operation for Amazon Simple Systems Manager (SSM).
 //
-// The document you want to update.
+// Updates one or more values for an SSM document.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -11271,21 +11229,22 @@ func (c *SSM) UpdateMaintenanceWindowTargetRequest(input *UpdateMaintenanceWindo
 
 // UpdateMaintenanceWindowTarget API operation for Amazon Simple Systems Manager (SSM).
 //
-// Modifies the target of an existing maintenance window. You can't change the
-// target type, but you can change the following:
+// Modifies the target of an existing maintenance window. You can change the
+// following:
 //
-// The target from being an ID target to a Tag target, or a Tag target to an
-// ID target.
+//    * Name
 //
-// IDs for an ID target.
+//    * Description
 //
-// Tags for a Tag target.
+//    * Owner
 //
-// Owner.
+//    * IDs for an ID target
 //
-// Name.
+//    * Tags for a Tag target
 //
-// Description.
+//    * From any supported tag type to another. The three supported tag types
+//    are ID target, Tag target, and resource group. For more information, see
+//    Target.
 //
 // If a parameter is null, then the corresponding field is not modified.
 //
@@ -11479,7 +11438,7 @@ func (c *SSM) UpdateManagedInstanceRoleRequest(input *UpdateManagedInstanceRoleI
 
 // UpdateManagedInstanceRole API operation for Amazon Simple Systems Manager (SSM).
 //
-// Assigns or changes an Amazon Identity and Access Management (IAM) role to
+// Assigns or changes an Amazon Identity and Access Management (IAM) role for
 // the managed instance.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
@@ -11495,12 +11454,9 @@ func (c *SSM) UpdateManagedInstanceRoleRequest(input *UpdateManagedInstanceRoleI
 //
 //   You do not have permission to access the instance.
 //
-//   SSM Agent is not running. On managed instances and Linux instances, verify
-//   that the SSM Agent is running. On EC2 Windows instances, verify that the
-//   EC2Config service is running.
+//   SSM Agent is not running. Verify that SSM Agent is running.
 //
-//   SSM Agent or EC2Config service is not registered to the SSM endpoint. Try
-//   reinstalling SSM Agent or EC2Config service.
+//   SSM Agent is not registered with the SSM endpoint. Try reinstalling SSM Agent.
 //
 //   The instance is not in valid state. Valid states are: Running, Pending, Stopped,
 //   Stopping. Invalid states are: Shutting-down and Terminated.
@@ -15475,6 +15431,12 @@ type CreateAssociationInput struct {
 	DocumentVersion *string `type:"string"`
 
 	// The instance ID.
+	//
+	// InstanceId has been deprecated. To specify an instance ID for an association,
+	// use the Targets parameter. If you use the parameter InstanceId, you cannot
+	// use the parameters AssociationName, DocumentVersion, MaxErrors, MaxConcurrency,
+	// OutputLocation, or ScheduleExpression. To use these parameters, you must
+	// use the Targets parameter.
 	InstanceId *string `type:"string"`
 
 	// The maximum number of targets allowed to run the association at the same
@@ -15534,7 +15496,8 @@ type CreateAssociationInput struct {
 	// A cron expression when the association will be applied to the target(s).
 	ScheduleExpression *string `min:"1" type:"string"`
 
-	// The targets (either instances or tags) for the association.
+	// The targets (either instances or tags) for the association. You must specify
+	// a value for Targets if you don't specify a value for InstanceId.
 	Targets []*Target `type:"list"`
 }
 
@@ -16718,8 +16681,8 @@ func (s DeleteAssociationOutput) GoString() string {
 type DeleteDocumentInput struct {
 	_ struct{} `type:"structure"`
 
-	// (Optional) The version of the document that you want to delete. If not provided,
-	// all versions of the document are deleted.
+	// The version of the document that you want to delete. If not provided, all
+	// versions of the document are deleted.
 	DocumentVersion *string `type:"string"`
 
 	// The name of the document.
@@ -16727,8 +16690,8 @@ type DeleteDocumentInput struct {
 	// Name is a required field
 	Name *string `type:"string" required:"true"`
 
-	// (Optional) The version name of the document that you want to delete. If not
-	// provided, all versions of the document are deleted.
+	// The version name of the document that you want to delete. If not provided,
+	// all versions of the document are deleted.
 	VersionName *string `type:"string"`
 }
 
@@ -19145,11 +19108,9 @@ func (s *DescribeInstancePatchStatesOutput) SetNextToken(v string) *DescribeInst
 type DescribeInstancePatchesInput struct {
 	_ struct{} `type:"structure"`
 
-	// Each entry in the array is a structure containing:
-	//
-	// Key (string, between 1 and 128 characters)
-	//
-	// Values (array of strings, each string between 1 and 256 characters)
+	// An array of structures. Each entry in the array is a structure containing
+	// a Key, Value combination. Valid values for Key are Classification | KBId
+	// | Severity | State.
 	Filters []*PatchOrchestratorFilter `type:"list"`
 
 	// The ID of the instance whose patch state information should be retrieved.
@@ -23250,7 +23211,7 @@ type GetMaintenanceWindowExecutionTaskInvocationOutput struct {
 	TaskExecutionId *string `min:"36" type:"string"`
 
 	// Retrieves the task type for a maintenance window. Task types include the
-	// following: LAMBDA, STEP_FUNCTION, AUTOMATION, RUN_COMMAND.
+	// following: LAMBDA, STEP_FUNCTIONS, AUTOMATION, RUN_COMMAND.
 	TaskType *string `type:"string" enum:"MaintenanceWindowTaskType"`
 
 	// The maintenance window execution ID.
@@ -23771,8 +23732,8 @@ type GetMaintenanceWindowTaskOutput struct {
 
 	// The resource that the task used during execution. For RUN_COMMAND and AUTOMATION
 	// task types, the TaskArn is the Systems Manager Document name/ARN. For LAMBDA
-	// tasks, the value is the function name/ARN. For STEP_FUNCTION tasks, the value
-	// is the state machine ARN.
+	// tasks, the value is the function name/ARN. For STEP_FUNCTIONS tasks, the
+	// value is the state machine ARN.
 	TaskArn *string `min:"1" type:"string"`
 
 	// The parameters to pass to the task when it runs.
@@ -25147,10 +25108,10 @@ type InstanceInformation struct {
 	// The instance ID.
 	InstanceId *string `type:"string"`
 
-	// Indicates whether latest version of SSM Agent is running on your instance.
-	// Some older versions of Windows Server use the EC2Config service to process
-	// SSM requests. For this reason, this field does not indicate whether or not
-	// the latest version is installed on Windows managed instances.
+	// Indicates whether the latest version of SSM Agent is running on your Linux
+	// Managed Instance. This field does not indicate whether or not the latest
+	// version is installed on Windows managed instances, because some older versions
+	// of Windows Server use the EC2Config service to process SSM requests.
 	IsLatestVersion *bool `type:"boolean"`
 
 	// The date the association was last run.
@@ -26421,7 +26382,7 @@ type LabelParameterVersionInput struct {
 
 	// The specific version of the parameter on which you want to attach one or
 	// more labels. If no version is specified, the system attaches the label to
-	// the latest version.)
+	// the latest version.
 	ParameterVersion *int64 `type:"long"`
 }
 
@@ -26482,6 +26443,9 @@ type LabelParameterVersionOutput struct {
 	// label requirements, see Labeling Parameters (http://docs.aws.amazon.com/systems-manager/latest/userguide/sysman-paramstore-labels.html)
 	// in the AWS Systems Manager User Guide.
 	InvalidLabels []*string `min:"1" type:"list"`
+
+	// The version of the parameter that has been labeled.
+	ParameterVersion *int64 `type:"long"`
 }
 
 // String returns the string representation
@@ -26497,6 +26461,12 @@ func (s LabelParameterVersionOutput) GoString() string {
 // SetInvalidLabels sets the InvalidLabels field's value.
 func (s *LabelParameterVersionOutput) SetInvalidLabels(v []*string) *LabelParameterVersionOutput {
 	s.InvalidLabels = v
+	return s
+}
+
+// SetParameterVersion sets the ParameterVersion field's value.
+func (s *LabelParameterVersionOutput) SetParameterVersion(v int64) *LabelParameterVersionOutput {
+	s.ParameterVersion = &v
 	return s
 }
 
@@ -28662,7 +28632,7 @@ func (s *MaintenanceWindowRunCommandParameters) SetTimeoutSeconds(v int64) *Main
 	return s
 }
 
-// The parameters for a STEP_FUNCTION task.
+// The parameters for a STEP_FUNCTIONS task.
 //
 // For information about specifying and updating task parameters, see RegisterTaskWithMaintenanceWindow
 // and UpdateMaintenanceWindowTask.
@@ -28682,10 +28652,10 @@ func (s *MaintenanceWindowRunCommandParameters) SetTimeoutSeconds(v int64) *Main
 type MaintenanceWindowStepFunctionsParameters struct {
 	_ struct{} `type:"structure"`
 
-	// The inputs for the STEP_FUNCTION task.
+	// The inputs for the STEP_FUNCTIONS task.
 	Input *string `type:"string" sensitive:"true"`
 
-	// The name of the STEP_FUNCTION task.
+	// The name of the STEP_FUNCTIONS task.
 	Name *string `min:"1" type:"string"`
 }
 
@@ -28850,8 +28820,8 @@ type MaintenanceWindowTask struct {
 
 	// The resource that the task uses during execution. For RUN_COMMAND and AUTOMATION
 	// task types, TaskArn is the Systems Manager document name or ARN. For LAMBDA
-	// tasks, it's the function name or ARN. For STEP_FUNCTION tasks, it's the state
-	// machine ARN.
+	// tasks, it's the function name or ARN. For STEP_FUNCTIONS tasks, it's the
+	// state machine ARN.
 	TaskArn *string `min:"1" type:"string"`
 
 	// The parameters that should be passed to the task when it is run.
@@ -28863,7 +28833,7 @@ type MaintenanceWindowTask struct {
 	TaskParameters map[string]*MaintenanceWindowTaskParameterValueExpression `type:"map" sensitive:"true"`
 
 	// The type of task. The type can be one of the following: RUN_COMMAND, AUTOMATION,
-	// LAMBDA, or STEP_FUNCTION.
+	// LAMBDA, or STEP_FUNCTIONS.
 	Type *string `type:"string" enum:"MaintenanceWindowTaskType"`
 
 	// The ID of the maintenance window where the task is registered.
@@ -28974,7 +28944,7 @@ type MaintenanceWindowTaskInvocationParameters struct {
 	// The parameters for a RUN_COMMAND task type.
 	RunCommand *MaintenanceWindowRunCommandParameters `type:"structure"`
 
-	// The parameters for a STEP_FUNCTION task type.
+	// The parameters for a STEP_FUNCTIONS task type.
 	StepFunctions *MaintenanceWindowStepFunctionsParameters `type:"structure"`
 }
 
@@ -31575,29 +31545,66 @@ type PutParameterInput struct {
 	// action.
 	Tags []*Tag `type:"list"`
 
+	// The parameter tier to assign to a parameter.
+	//
 	// Parameter Store offers a standard tier and an advanced tier for parameters.
-	// Standard parameters have a value limit of 4 KB and can't be configured to
-	// use parameter policies. You can create a maximum of 10,000 standard parameters
-	// per account and per Region. Standard parameters are offered at no additional
-	// cost.
+	// Standard parameters have a content size limit of 4 KB and can't be configured
+	// to use parameter policies. You can create a maximum of 10,000 standard parameters
+	// for each Region in an AWS account. Standard parameters are offered at no
+	// additional cost.
 	//
-	// Advanced parameters have a value limit of 8 KB and can be configured to use
-	// parameter policies. You can create a maximum of 100,000 advanced parameters
-	// per account and per Region. Advanced parameters incur a charge.
+	// Advanced parameters have a content size limit of 8 KB and can be configured
+	// to use parameter policies. You can create a maximum of 100,000 advanced parameters
+	// for each Region in an AWS account. Advanced parameters incur a charge. For
+	// more information, see About Advanced Parameters (http://docs.aws.amazon.com/systems-manager/latest/userguide/parameter-store-advanced-parameters.html)
+	// in the AWS Systems Manager User Guide.
 	//
-	// If you don't specify a parameter tier when you create a new parameter, the
-	// parameter defaults to using the standard tier. You can change a standard
-	// parameter to an advanced parameter at any time. But you can't revert an advanced
-	// parameter to a standard parameter. Reverting an advanced parameter to a standard
-	// parameter would result in data loss because the system would truncate the
-	// size of the parameter from 8 KB to 4 KB. Reverting would also remove any
-	// policies attached to the parameter. Lastly, advanced parameters use a different
-	// form of encryption than standard parameters.
+	// You can change a standard parameter to an advanced parameter any time. But
+	// you can't revert an advanced parameter to a standard parameter. Reverting
+	// an advanced parameter to a standard parameter would result in data loss because
+	// the system would truncate the size of the parameter from 8 KB to 4 KB. Reverting
+	// would also remove any policies attached to the parameter. Lastly, advanced
+	// parameters use a different form of encryption than standard parameters.
 	//
 	// If you no longer need an advanced parameter, or if you no longer want to
 	// incur charges for an advanced parameter, you must delete it and recreate
-	// it as a new standard parameter. For more information, see About Advanced
-	// Parameters (http://docs.aws.amazon.com/systems-manager/latest/userguide/parameter-store-advanced-parameters.html)
+	// it as a new standard parameter.
+	//
+	// Using the Default Tier Configuration
+	//
+	// In PutParameter requests, you can specify the tier to create the parameter
+	// in. Whenever you specify a tier in the request, Parameter Store creates or
+	// updates the parameter according to that request. However, if you do not specify
+	// a tier in a request, Parameter Store assigns the tier based on the current
+	// Parameter Store default tier configuration.
+	//
+	// The default tier when you begin using Parameter Store is the standard-parameter
+	// tier. If you use the advanced-parameter tier, you can specify one of the
+	// following as the default:
+	//
+	//    * Advanced: With this option, Parameter Store evaluates all requests as
+	//    advanced parameters.
+	//
+	//    * Intelligent-Tiering: With this option, Parameter Store evaluates each
+	//    request to determine if the parameter is standard or advanced. If the
+	//    request doesn't include any options that require an advanced parameter,
+	//    the parameter is created in the standard-parameter tier. If one or more
+	//    options requiring an advanced parameter are included in the request, Parameter
+	//    Store create a parameter in the advanced-parameter tier. This approach
+	//    helps control your parameter-related costs by always creating standard
+	//    parameters unless an advanced parameter is necessary.
+	//
+	// Options that require an advanced parameter include the following:
+	//
+	//    * The content size of the parameter is more than 4 KB.
+	//
+	//    * The parameter uses a parameter policy.
+	//
+	//    * More than 10,000 parameters already exist in your AWS account in the
+	//    current Region.
+	//
+	// For more information about configuring the default tier option, see Specifying
+	// a Default Parameter Tier (http://docs.aws.amazon.com/systems-manager/latest/userguide/ps-default-tier.html)
 	// in the AWS Systems Manager User Guide.
 	Tier *string `type:"string" enum:"ParameterTier"`
 
@@ -31731,6 +31738,9 @@ func (s *PutParameterInput) SetValue(v string) *PutParameterInput {
 type PutParameterOutput struct {
 	_ struct{} `type:"structure"`
 
+	// The tier assigned to the parameter.
+	Tier *string `type:"string" enum:"ParameterTier"`
+
 	// The new version number of a parameter. If you edit a parameter value, Parameter
 	// Store automatically creates a new version and assigns this new version a
 	// unique ID. You can reference a parameter version ID in API actions or in
@@ -31748,6 +31758,12 @@ func (s PutParameterOutput) String() string {
 // GoString returns the string representation
 func (s PutParameterOutput) GoString() string {
 	return s.String()
+}
+
+// SetTier sets the Tier field's value.
+func (s *PutParameterOutput) SetTier(v string) *PutParameterOutput {
+	s.Tier = &v
+	return s
 }
 
 // SetVersion sets the Version field's value.
@@ -31934,8 +31950,8 @@ type RegisterTargetWithMaintenanceWindowInput struct {
 	// The targets to register with the maintenance window. In other words, the
 	// instances to run commands on when the maintenance window runs.
 	//
-	// You can specify targets using either instance IDs or tags that have been
-	// applied to instances.
+	// You can specify targets using instance IDs, resource group names, or tags
+	// that have been applied to instances.
 	//
 	// Example 1: Specify instance IDs
 	//
@@ -31948,6 +31964,19 @@ type RegisterTargetWithMaintenanceWindowInput struct {
 	// Example 3: Use tag-keys applied to instances
 	//
 	// Key=tag-key,Values=my-tag-key-1,my-tag-key-2
+	//
+	// Example 4: Use resource group names
+	//
+	// Key=resource-groups:Name,Values=resource-group-name
+	//
+	// Example 5: Use filters for resource group types
+	//
+	// Key=resource-groups:ResourceTypeFilters,Values=resource-type-1,resource-type-2
+	//
+	// For Key=resource-groups:ResourceTypeFilters, specify resource types in the
+	// following format
+	//
+	// Key=resource-groups:ResourceTypeFilters,Values=AWS::EC2::INSTANCE,AWS::EC2::VPC
 	//
 	// For more information about these examples formats, including the best use
 	// case for each one, see Examples: Register Targets with a Maintenance Window
@@ -32140,7 +32169,7 @@ type RegisterTaskWithMaintenanceWindowInput struct {
 	//
 	// Specify maintenance window targets using the following format:
 	//
-	// Key=<WindowTargetIds>,Values=<window-target-id-1>,<window-target-id-2>
+	// Key=WindowTargetIds;,Values=<window-target-id-1>,<window-target-id-2>
 	//
 	// Targets is a required field
 	Targets []*Target `type:"list" required:"true"`
@@ -32403,8 +32432,7 @@ func (s *RelatedOpsItem) SetOpsItemId(v string) *RelatedOpsItem {
 type RemoveTagsFromResourceInput struct {
 	_ struct{} `type:"structure"`
 
-	// The resource ID for which you want to remove tags. Use the ID of the resource.
-	// Here are some examples:
+	// The ID of the resource from which you want to remove tags. For example:
 	//
 	// ManagedInstance: mi-012345abcde
 	//
@@ -32415,17 +32443,17 @@ type RemoveTagsFromResourceInput struct {
 	// For the Document and Parameter values, use the name of the resource.
 	//
 	// The ManagedInstance type for this API action is only for on-premises managed
-	// instances. You must specify the name of the managed instance in the following
-	// format: mi-ID_number. For example, mi-1a2b3c4d5e6f.
+	// instances. Specify the name of the managed instance in the following format:
+	// mi-ID_number. For example, mi-1a2b3c4d5e6f.
 	//
 	// ResourceId is a required field
 	ResourceId *string `type:"string" required:"true"`
 
-	// The type of resource of which you want to remove a tag.
+	// The type of resource from which you want to remove a tag.
 	//
 	// The ManagedInstance type for this API action is only for on-premises managed
-	// instances. You must specify the name of the managed instance in the following
-	// format: mi-ID_number. For example, mi-1a2b3c4d5e6f.
+	// instances. Specify the name of the managed instance in the following format:
+	// mi-ID_number. For example, mi-1a2b3c4d5e6f.
 	//
 	// ResourceType is a required field
 	ResourceType *string `type:"string" required:"true" enum:"ResourceTypeForTagging"`
@@ -32954,7 +32982,7 @@ type ResumeSessionOutput struct {
 	SessionId *string `min:"1" type:"string"`
 
 	// A URL back to SSM Agent on the instance that the Session Manager client uses
-	// to send commands and receive output from the instance. Format: wss://ssm-messages.region.amazonaws.com/v1/data-channel/session-id?stream=(input|output).
+	// to send commands and receive output from the instance. Format: wss://ssmmessages.region.amazonaws.com/v1/data-channel/session-id?stream=(input|output).
 	//
 	// region represents the Region identifier for an AWS Region supported by AWS
 	// Systems Manager, such as us-east-2 for the US East (Ohio) Region. For a list
@@ -34215,7 +34243,7 @@ type StartSessionOutput struct {
 	SessionId *string `min:"1" type:"string"`
 
 	// A URL back to SSM Agent on the instance that the Session Manager client uses
-	// to send commands and receive output from the instance. Format: wss://ssm-messages.region.amazonaws.com/v1/data-channel/session-id?stream=(input|output)
+	// to send commands and receive output from the instance. Format: wss://ssmmessages.region.amazonaws.com/v1/data-channel/session-id?stream=(input|output)
 	//
 	// region represents the Region identifier for an AWS Region supported by AWS
 	// Systems Manager, such as us-east-2 for the US East (Ohio) Region. For a list
@@ -34671,24 +34699,46 @@ func (s *Tag) SetValue(v string) *Tag {
 }
 
 // An array of search criteria that targets instances using a Key,Value combination
-// that you specify. Targets is required if you don't provide one or more instance
-// IDs in the call.
+// that you specify.
+//
+// Supported formats include the following.
+//
+//    * Key=InstanceIds,Values=instance-id-1,instance-id-2,instance-id-3
+//
+//    * Key=tag:my-tag-key,Values=my-tag-value-1,my-tag-value-2
+//
+//    * Key=tag-key,Values=my-tag-key-1,my-tag-key-2
+//
+//    * (Maintenance window targets only) Key=resource-groups:Name,Values=resource-group-name
+//
+//    * (Maintenance window targets only) Key=resource-groups:ResourceTypeFilters,Values=resource-type-1,resource-type-2
+//
+// For example:
+//
+//    * Key=InstanceIds,Values=i-02573cafcfEXAMPLE,i-0471e04240EXAMPLE,i-07782c72faEXAMPLE
+//
+//    * Key=tag:CostCenter,Values=CostCenter1,CostCenter2,CostCenter3
+//
+//    * Key=tag-key,Values=Name,Instance-Type,CostCenter
+//
+//    * (Maintenance window targets only) Key=resource-groups:Name,Values=ProductionResourceGroup
+//
+//    * (Maintenance window targets only) Key=resource-groups:ResourceTypeFilters,Values=AWS::EC2::INSTANCE,AWS::EC2::VPC
+//
+// For information about how to send commands that target instances using Key,Value
+// parameters, see Using Targets and Rate Controls to Send Commands to a Fleet
+// (https://docs.aws.amazon.com/systems-manager/latest/userguide/send-commands-multiple.html#send-commands-targeting)
+// in the AWS Systems Manager User Guide.
 type Target struct {
 	_ struct{} `type:"structure"`
 
 	// User-defined criteria for sending commands that target instances that meet
-	// the criteria. Key can be tag:<Amazon EC2 tag> or InstanceIds. For more information
-	// about how to send commands that target instances using Key,Value parameters,
-	// see Using Targets and Rate Controls to Send Commands to a Fleet (https://docs.aws.amazon.com/systems-manager/latest/userguide/send-commands-multiple.html#send-commands-targeting)
-	// in the AWS Systems Manager User Guide.
+	// the criteria.
 	Key *string `min:"1" type:"string"`
 
 	// User-defined criteria that maps to Key. For example, if you specified tag:ServerRole,
 	// you could specify value:WebServer to run a command on instances that include
-	// Amazon EC2 tags of ServerRole,WebServer. For more information about how to
-	// send commands that target instances using Key,Value parameters, see Using
-	// Targets and Rate Controls to Send Commands to a Fleet (https://docs.aws.amazon.com/systems-manager/latest/userguide/send-commands-multiple.html)
-	// in the AWS Systems Manager User Guide.
+	// Amazon EC2 tags of ServerRole,WebServer.
 	Values []*string `type:"list"`
 }
 
@@ -35302,7 +35352,7 @@ type UpdateDocumentInput struct {
 	// supports JSON and YAML documents. JSON is the default format.
 	DocumentFormat *string `type:"string" enum:"DocumentFormat"`
 
-	// The version of the document that you want to update.
+	// (Required) The version of the document that you want to update.
 	DocumentVersion *string `type:"string"`
 
 	// The name of the document that you want to update.
@@ -37457,6 +37507,9 @@ const (
 const (
 	// MaintenanceWindowResourceTypeInstance is a MaintenanceWindowResourceType enum value
 	MaintenanceWindowResourceTypeInstance = "INSTANCE"
+
+	// MaintenanceWindowResourceTypeResourceGroup is a MaintenanceWindowResourceType enum value
+	MaintenanceWindowResourceTypeResourceGroup = "RESOURCE_GROUP"
 )
 
 const (
@@ -37624,6 +37677,9 @@ const (
 
 	// ParameterTierAdvanced is a ParameterTier enum value
 	ParameterTierAdvanced = "Advanced"
+
+	// ParameterTierIntelligentTiering is a ParameterTier enum value
+	ParameterTierIntelligentTiering = "Intelligent-Tiering"
 )
 
 const (

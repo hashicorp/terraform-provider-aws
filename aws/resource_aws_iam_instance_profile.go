@@ -9,8 +9,8 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/iam"
 
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 )
 
 func resourceAwsIamInstanceProfile() *schema.Resource {
@@ -174,6 +174,9 @@ func instanceProfileAddRole(iamconn *iam.IAM, profileName, roleName string) erro
 		}
 		return nil
 	})
+	if isResourceTimeoutError(err) {
+		_, err = iamconn.AddRoleToInstanceProfile(request)
+	}
 	if err != nil {
 		return fmt.Errorf("Error adding IAM Role %s to Instance Profile %s: %s", roleName, profileName, err)
 	}

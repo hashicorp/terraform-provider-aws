@@ -747,6 +747,10 @@ func (c *CodeBuild) ImportSourceCredentialsRequest(input *ImportSourceCredential
 //   * ErrCodeAccountLimitExceededException "AccountLimitExceededException"
 //   An AWS service limit was exceeded for the calling AWS account.
 //
+//   * ErrCodeResourceAlreadyExistsException "ResourceAlreadyExistsException"
+//   The specified AWS resource cannot be created, because an AWS resource with
+//   the same settings already exists.
+//
 // See also, https://docs.aws.amazon.com/goto/WebAPI/codebuild-2016-10-06/ImportSourceCredentials
 func (c *CodeBuild) ImportSourceCredentials(input *ImportSourceCredentialsInput) (*ImportSourceCredentialsOutput, error) {
 	req, out := c.ImportSourceCredentialsRequest(input)
@@ -3269,6 +3273,11 @@ type ImportSourceCredentialsInput struct {
 	// ServerType is a required field
 	ServerType *string `locationName:"serverType" type:"string" required:"true" enum:"ServerType"`
 
+	// Set to false to prevent overwriting the repository source credentials. Set
+	// to true to overwrite the repository source credentials. The default value
+	// is true.
+	ShouldOverwrite *bool `locationName:"shouldOverwrite" type:"boolean"`
+
 	// For GitHub or GitHub Enterprise, this is the personal access token. For Bitbucket,
 	// this is the app password.
 	//
@@ -3324,6 +3333,12 @@ func (s *ImportSourceCredentialsInput) SetAuthType(v string) *ImportSourceCreden
 // SetServerType sets the ServerType field's value.
 func (s *ImportSourceCredentialsInput) SetServerType(v string) *ImportSourceCredentialsInput {
 	s.ServerType = &v
+	return s
+}
+
+// SetShouldOverwrite sets the ShouldOverwrite field's value.
+func (s *ImportSourceCredentialsInput) SetShouldOverwrite(v bool) *ImportSourceCredentialsInput {
+	s.ShouldOverwrite = &v
 	return s
 }
 
@@ -4616,14 +4631,12 @@ type ProjectEnvironment struct {
 	ImagePullCredentialsType *string `locationName:"imagePullCredentialsType" type:"string" enum:"ImagePullCredentialsType"`
 
 	// Enables running the Docker daemon inside a Docker container. Set to true
-	// only if the build project is be used to build Docker images, and the specified
-	// build environment image is not provided by AWS CodeBuild with Docker support.
-	// Otherwise, all associated builds that attempt to interact with the Docker
-	// daemon fail. You must also start the Docker daemon so that builds can interact
-	// with it. One way to do this is to initialize the Docker daemon during the
-	// install phase of your build spec by running the following build commands.
-	// (Do not run these commands if the specified build environment image is provided
-	// by AWS CodeBuild with Docker support.)
+	// only if the build project is used to build Docker images. Otherwise, a build
+	// that attempts to interact with the Docker daemon fails.
+	//
+	// You can initialize the Docker daemon during the install phase of your build
+	// by adding one of the following sets of commands to the install phase of your
+	// buildspec file:
 	//
 	// If the operating system's base image is Ubuntu Linux:
 	//

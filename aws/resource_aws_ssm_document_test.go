@@ -8,9 +8,9 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/ssm"
-	"github.com/hashicorp/terraform/helper/acctest"
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/terraform"
 )
 
 func TestAccAWSSSMDocument_basic(t *testing.T) {
@@ -31,6 +31,11 @@ func TestAccAWSSSMDocument_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(
 						"aws_ssm_document.foo", "tags.Name", "My Document"),
 				),
+			},
+			{
+				ResourceName:      "aws_ssm_document.foo",
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})
@@ -54,6 +59,11 @@ func TestAccAWSSSMDocument_update(t *testing.T) {
 					resource.TestCheckResourceAttr(
 						"aws_ssm_document.foo", "default_version", "1"),
 				),
+			},
+			{
+				ResourceName:      "aws_ssm_document.foo",
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 			{
 				Config: testAccAWSSSMDocument20UpdatedConfig(name),
@@ -86,6 +96,11 @@ func TestAccAWSSSMDocument_permission_public(t *testing.T) {
 						"aws_ssm_document.foo", "permissions.account_ids", "all"),
 				),
 			},
+			{
+				ResourceName:      "aws_ssm_document.foo",
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
 		},
 	})
 }
@@ -106,6 +121,11 @@ func TestAccAWSSSMDocument_permission_private(t *testing.T) {
 						"aws_ssm_document.foo", "permissions.type", "Share"),
 				),
 			},
+			{
+				ResourceName:      "aws_ssm_document.foo",
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
 		},
 	})
 }
@@ -125,6 +145,11 @@ func TestAccAWSSSMDocument_permission_batching(t *testing.T) {
 					resource.TestCheckResourceAttr(
 						"aws_ssm_document.foo", "permissions.type", "Share"),
 				),
+			},
+			{
+				ResourceName:      "aws_ssm_document.foo",
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})
@@ -148,6 +173,11 @@ func TestAccAWSSSMDocument_permission_change(t *testing.T) {
 						"aws_ssm_document.foo", "permissions.type", "Share"),
 					resource.TestCheckResourceAttr("aws_ssm_document.foo", "permissions.account_ids", idsInitial),
 				),
+			},
+			{
+				ResourceName:      "aws_ssm_document.foo",
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 			{
 				Config: testAccAWSSSMDocumentPrivatePermissionConfig(name, idsRemove),
@@ -196,6 +226,11 @@ func TestAccAWSSSMDocument_params(t *testing.T) {
 						"aws_ssm_document.foo", "parameter.2.type", "String"),
 				),
 			},
+			{
+				ResourceName:      "aws_ssm_document.foo",
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
 		},
 	})
 }
@@ -213,6 +248,43 @@ func TestAccAWSSSMDocument_automation(t *testing.T) {
 					testAccCheckAWSSSMDocumentExists("aws_ssm_document.foo"),
 					resource.TestCheckResourceAttr(
 						"aws_ssm_document.foo", "document_type", "Automation"),
+				),
+			},
+			{
+				ResourceName:      "aws_ssm_document.foo",
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccAWSSSMDocument_SchemaVersion_1(t *testing.T) {
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_ssm_document.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSSSMDocumentDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSSSMDocumentConfigSchemaVersion1(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSSSMDocumentExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "schema_version", "1.0"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccAWSSSMDocumentConfigSchemaVersion1Update(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSSSMDocumentExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "schema_version", "1.0"),
 				),
 			},
 		},
@@ -233,6 +305,11 @@ func TestAccAWSSSMDocument_session(t *testing.T) {
 					resource.TestCheckResourceAttr(
 						"aws_ssm_document.foo", "document_type", "Session"),
 				),
+			},
+			{
+				ResourceName:      "aws_ssm_document.foo",
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})
@@ -276,6 +353,11 @@ mainSteps:
 				),
 			},
 			{
+				ResourceName:      "aws_ssm_document.foo",
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
 				Config: testAccAWSSSMDocumentConfig_DocumentFormat_YAML(name, content2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSSSMDocumentExists("aws_ssm_document.foo"),
@@ -303,6 +385,11 @@ func TestAccAWSSSMDocument_Tags(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 			{
 				Config: testAccAWSSSMDocumentConfig_Tags_Multiple(rName, "key1", "value1updated", "key2", "value2"),
@@ -717,6 +804,54 @@ resource "aws_ssm_document" "foo" {
 DOC
 }
 `, rName, content)
+}
+
+func testAccAWSSSMDocumentConfigSchemaVersion1(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_ssm_document" "test" {
+  name          = %[1]q
+  document_type = "Session"
+
+  content = <<DOC
+{
+    "schemaVersion": "1.0",
+    "description": "Document to hold regional settings for Session Manager",
+    "sessionType": "Standard_Stream",
+    "inputs": {
+        "s3BucketName": "test",
+        "s3KeyPrefix": "test",
+        "s3EncryptionEnabled": true,
+        "cloudWatchLogGroupName": "/logs/sessions",
+        "cloudWatchEncryptionEnabled": false
+    }
+}
+DOC
+}
+`, rName)
+}
+
+func testAccAWSSSMDocumentConfigSchemaVersion1Update(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_ssm_document" "test" {
+  name          = %[1]q
+  document_type = "Session"
+
+  content = <<DOC
+{
+    "schemaVersion": "1.0",
+    "description": "Document to hold regional settings for Session Manager",
+    "sessionType": "Standard_Stream",
+    "inputs": {
+        "s3BucketName": "test",
+        "s3KeyPrefix": "test",
+        "s3EncryptionEnabled": true,
+        "cloudWatchLogGroupName": "/logs/sessions-updated",
+        "cloudWatchEncryptionEnabled": false
+    }
+}
+DOC
+}
+`, rName)
 }
 
 func testAccAWSSSMDocumentConfig_Tags_Single(rName, key1, value1 string) string {

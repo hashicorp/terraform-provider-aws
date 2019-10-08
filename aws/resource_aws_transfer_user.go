@@ -9,9 +9,9 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/transfer"
 
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/helper/schema"
-	"github.com/hashicorp/terraform/helper/validation"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
 )
 
 func resourceAwsTransferUser() *schema.Resource {
@@ -231,7 +231,7 @@ func waitForTransferUserDeletion(conn *transfer.Transfer, serverID, userName str
 		UserName: aws.String(userName),
 	}
 
-	return resource.Retry(10*time.Minute, func() *resource.RetryError {
+	err := resource.Retry(10*time.Minute, func() *resource.RetryError {
 		_, err := conn.DescribeUser(params)
 
 		if isAWSErr(err, transfer.ErrCodeResourceNotFoundException, "") {
@@ -244,4 +244,15 @@ func waitForTransferUserDeletion(conn *transfer.Transfer, serverID, userName str
 
 		return resource.RetryableError(fmt.Errorf("Transfer User (%s) for Server (%s) still exists", userName, serverID))
 	})
+
+	if isResourceTimeoutError(err) {
+		_, err = conn.DescribeUser(params)
+	}
+	if isAWSErr(err, transfer.ErrCodeResourceNotFoundException, "") {
+		return nil
+	}
+	if err != nil {
+		return fmt.Errorf("Error decoding transfer user ID: %s", err)
+	}
+	return nil
 }

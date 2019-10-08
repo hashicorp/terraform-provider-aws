@@ -1,7 +1,6 @@
 ---
 layout: "aws"
 page_title: "AWS: aws_redshift_event_subscription"
-sidebar_current: "docs-aws-resource-redshift-event-subscription"
 description: |-
   Provides a Redshift event subscription resource.
 ---

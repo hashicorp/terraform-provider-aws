@@ -2421,6 +2421,9 @@ type CreateBrokerRequest struct {
 	// The deployment mode of the broker.
 	DeploymentMode *string `locationName:"deploymentMode" type:"string" enum:"DeploymentMode"`
 
+	// Encryption options for the broker.
+	EncryptionOptions *EncryptionOptions `locationName:"encryptionOptions" type:"structure"`
+
 	// The type of broker engine. Note: Currently, Amazon MQ supports only ActiveMQ.
 	EngineType *string `locationName:"engineType" type:"string" enum:"EngineType"`
 
@@ -2456,6 +2459,21 @@ func (s CreateBrokerRequest) GoString() string {
 	return s.String()
 }
 
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *CreateBrokerRequest) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "CreateBrokerRequest"}
+	if s.EncryptionOptions != nil {
+		if err := s.EncryptionOptions.Validate(); err != nil {
+			invalidParams.AddNested("EncryptionOptions", err.(request.ErrInvalidParams))
+		}
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
 // SetAutoMinorVersionUpgrade sets the AutoMinorVersionUpgrade field's value.
 func (s *CreateBrokerRequest) SetAutoMinorVersionUpgrade(v bool) *CreateBrokerRequest {
 	s.AutoMinorVersionUpgrade = &v
@@ -2483,6 +2501,12 @@ func (s *CreateBrokerRequest) SetCreatorRequestId(v string) *CreateBrokerRequest
 // SetDeploymentMode sets the DeploymentMode field's value.
 func (s *CreateBrokerRequest) SetDeploymentMode(v string) *CreateBrokerRequest {
 	s.DeploymentMode = &v
+	return s
+}
+
+// SetEncryptionOptions sets the EncryptionOptions field's value.
+func (s *CreateBrokerRequest) SetEncryptionOptions(v *EncryptionOptions) *CreateBrokerRequest {
+	s.EncryptionOptions = v
 	return s
 }
 
@@ -3274,6 +3298,9 @@ type DescribeBrokerResponse struct {
 	// The deployment mode of the broker.
 	DeploymentMode *string `locationName:"deploymentMode" type:"string" enum:"DeploymentMode"`
 
+	// Encryption options for the broker.
+	EncryptionOptions *EncryptionOptions `locationName:"encryptionOptions" type:"structure"`
+
 	// The type of broker engine. Note: Currently, Amazon MQ supports only ActiveMQ.
 	EngineType *string `locationName:"engineType" type:"string" enum:"EngineType"`
 
@@ -3290,6 +3317,10 @@ type DescribeBrokerResponse struct {
 	MaintenanceWindowStartTime *WeeklyStartTime `locationName:"maintenanceWindowStartTime" type:"structure"`
 
 	PendingEngineVersion *string `locationName:"pendingEngineVersion" type:"string"`
+
+	PendingHostInstanceType *string `locationName:"pendingHostInstanceType" type:"string"`
+
+	PendingSecurityGroups []*string `locationName:"pendingSecurityGroups" type:"list"`
 
 	PubliclyAccessible *bool `locationName:"publiclyAccessible" type:"boolean"`
 
@@ -3366,6 +3397,12 @@ func (s *DescribeBrokerResponse) SetDeploymentMode(v string) *DescribeBrokerResp
 	return s
 }
 
+// SetEncryptionOptions sets the EncryptionOptions field's value.
+func (s *DescribeBrokerResponse) SetEncryptionOptions(v *EncryptionOptions) *DescribeBrokerResponse {
+	s.EncryptionOptions = v
+	return s
+}
+
 // SetEngineType sets the EngineType field's value.
 func (s *DescribeBrokerResponse) SetEngineType(v string) *DescribeBrokerResponse {
 	s.EngineType = &v
@@ -3399,6 +3436,18 @@ func (s *DescribeBrokerResponse) SetMaintenanceWindowStartTime(v *WeeklyStartTim
 // SetPendingEngineVersion sets the PendingEngineVersion field's value.
 func (s *DescribeBrokerResponse) SetPendingEngineVersion(v string) *DescribeBrokerResponse {
 	s.PendingEngineVersion = &v
+	return s
+}
+
+// SetPendingHostInstanceType sets the PendingHostInstanceType field's value.
+func (s *DescribeBrokerResponse) SetPendingHostInstanceType(v string) *DescribeBrokerResponse {
+	s.PendingHostInstanceType = &v
+	return s
+}
+
+// SetPendingSecurityGroups sets the PendingSecurityGroups field's value.
+func (s *DescribeBrokerResponse) SetPendingSecurityGroups(v []*string) *DescribeBrokerResponse {
+	s.PendingSecurityGroups = v
 	return s
 }
 
@@ -3766,6 +3815,56 @@ func (s *DescribeUserResponse) SetPending(v *UserPendingChanges) *DescribeUserRe
 // SetUsername sets the Username field's value.
 func (s *DescribeUserResponse) SetUsername(v string) *DescribeUserResponse {
 	s.Username = &v
+	return s
+}
+
+// Encryption options for the broker.
+type EncryptionOptions struct {
+	_ struct{} `type:"structure"`
+
+	// The customer master key (CMK) to use for the AWS Key Management Service (KMS).
+	// This key is used to encrypt your data at rest. If not provided, Amazon MQ
+	// will use a default CMK to encrypt your data.
+	KmsKeyId *string `locationName:"kmsKeyId" type:"string"`
+
+	// Enables the use of an AWS owned CMK using AWS Key Management Service (KMS).
+	//
+	// UseAwsOwnedKey is a required field
+	UseAwsOwnedKey *bool `locationName:"useAwsOwnedKey" type:"boolean" required:"true"`
+}
+
+// String returns the string representation
+func (s EncryptionOptions) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s EncryptionOptions) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *EncryptionOptions) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "EncryptionOptions"}
+	if s.UseAwsOwnedKey == nil {
+		invalidParams.Add(request.NewErrParamRequired("UseAwsOwnedKey"))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetKmsKeyId sets the KmsKeyId field's value.
+func (s *EncryptionOptions) SetKmsKeyId(v string) *EncryptionOptions {
+	s.KmsKeyId = &v
+	return s
+}
+
+// SetUseAwsOwnedKey sets the UseAwsOwnedKey field's value.
+func (s *EncryptionOptions) SetUseAwsOwnedKey(v bool) *EncryptionOptions {
+	s.UseAwsOwnedKey = &v
 	return s
 }
 
@@ -4456,8 +4555,12 @@ type UpdateBrokerRequest struct {
 
 	EngineVersion *string `locationName:"engineVersion" type:"string"`
 
+	HostInstanceType *string `locationName:"hostInstanceType" type:"string"`
+
 	// The list of information about logs to be enabled for the specified broker.
 	Logs *Logs `locationName:"logs" type:"structure"`
+
+	SecurityGroups []*string `locationName:"securityGroups" type:"list"`
 }
 
 // String returns the string representation
@@ -4510,9 +4613,21 @@ func (s *UpdateBrokerRequest) SetEngineVersion(v string) *UpdateBrokerRequest {
 	return s
 }
 
+// SetHostInstanceType sets the HostInstanceType field's value.
+func (s *UpdateBrokerRequest) SetHostInstanceType(v string) *UpdateBrokerRequest {
+	s.HostInstanceType = &v
+	return s
+}
+
 // SetLogs sets the Logs field's value.
 func (s *UpdateBrokerRequest) SetLogs(v *Logs) *UpdateBrokerRequest {
 	s.Logs = v
+	return s
+}
+
+// SetSecurityGroups sets the SecurityGroups field's value.
+func (s *UpdateBrokerRequest) SetSecurityGroups(v []*string) *UpdateBrokerRequest {
+	s.SecurityGroups = v
 	return s
 }
 
@@ -4528,8 +4643,12 @@ type UpdateBrokerResponse struct {
 
 	EngineVersion *string `locationName:"engineVersion" type:"string"`
 
+	HostInstanceType *string `locationName:"hostInstanceType" type:"string"`
+
 	// The list of information about logs to be enabled for the specified broker.
 	Logs *Logs `locationName:"logs" type:"structure"`
+
+	SecurityGroups []*string `locationName:"securityGroups" type:"list"`
 }
 
 // String returns the string representation
@@ -4566,9 +4685,21 @@ func (s *UpdateBrokerResponse) SetEngineVersion(v string) *UpdateBrokerResponse 
 	return s
 }
 
+// SetHostInstanceType sets the HostInstanceType field's value.
+func (s *UpdateBrokerResponse) SetHostInstanceType(v string) *UpdateBrokerResponse {
+	s.HostInstanceType = &v
+	return s
+}
+
 // SetLogs sets the Logs field's value.
 func (s *UpdateBrokerResponse) SetLogs(v *Logs) *UpdateBrokerResponse {
 	s.Logs = v
+	return s
+}
+
+// SetSecurityGroups sets the SecurityGroups field's value.
+func (s *UpdateBrokerResponse) SetSecurityGroups(v []*string) *UpdateBrokerResponse {
+	s.SecurityGroups = v
 	return s
 }
 

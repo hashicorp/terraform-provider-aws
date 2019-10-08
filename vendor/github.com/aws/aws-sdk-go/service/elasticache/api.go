@@ -463,19 +463,19 @@ func (c *ElastiCache) CopySnapshotRequest(input *CopySnapshotInput) (req *reques
 //    * Error Message: ElastiCache has not been granted READ permissions %s
 //    on the S3 Bucket. Solution: Add List and Read permissions on the bucket.
 //    For more information, see Step 2: Grant ElastiCache Access to Your Amazon
-//    S3 Bucket (https://docs.aws.amazon.com/AmazonElastiCache/latest/red-ug/backups-exporting.html#backups-exporting-grant-access.html)
+//    S3 Bucket (https://docs.aws.amazon.com/AmazonElastiCache/latest/red-ug/backups-exporting.html#backups-exporting-grant-access)
 //    in the ElastiCache User Guide.
 //
 //    * Error Message: ElastiCache has not been granted WRITE permissions %s
 //    on the S3 Bucket. Solution: Add Upload/Delete permissions on the bucket.
 //    For more information, see Step 2: Grant ElastiCache Access to Your Amazon
-//    S3 Bucket (https://docs.aws.amazon.com/AmazonElastiCache/latest/red-ug/backups-exporting.html#backups-exporting-grant-access.html)
+//    S3 Bucket (https://docs.aws.amazon.com/AmazonElastiCache/latest/red-ug/backups-exporting.html#backups-exporting-grant-access)
 //    in the ElastiCache User Guide.
 //
 //    * Error Message: ElastiCache has not been granted READ_ACP permissions
 //    %s on the S3 Bucket. Solution: Add View Permissions on the bucket. For
 //    more information, see Step 2: Grant ElastiCache Access to Your Amazon
-//    S3 Bucket (https://docs.aws.amazon.com/AmazonElastiCache/latest/red-ug/backups-exporting.html#backups-exporting-grant-access.html)
+//    S3 Bucket (https://docs.aws.amazon.com/AmazonElastiCache/latest/red-ug/backups-exporting.html#backups-exporting-grant-access)
 //    in the ElastiCache User Guide.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
@@ -1006,7 +1006,7 @@ func (c *ElastiCache) CreateReplicationGroupRequest(input *CreateReplicationGrou
 // replicas. Writes to the primary are asynchronously propagated to the replicas.
 //
 // A Redis (cluster mode enabled) replication group is a collection of 1 to
-// 15 node groups (shards). Each node group (shard) has one read/write primary
+// 90 node groups (shards). Each node group (shard) has one read/write primary
 // node and up to 5 read-only replica nodes. Writes to the primary are asynchronously
 // propagated to the replicas. Redis (cluster mode enabled) replication groups
 // partition the data across node groups (shards).
@@ -1079,7 +1079,7 @@ func (c *ElastiCache) CreateReplicationGroupRequest(input *CreateReplicationGrou
 //   * ErrCodeNodeGroupsPerReplicationGroupQuotaExceededFault "NodeGroupsPerReplicationGroupQuotaExceeded"
 //   The request cannot be processed because it would exceed the maximum allowed
 //   number of node groups (shards) in a single replication group. The default
-//   maximum is 15
+//   maximum is 90
 //
 //   * ErrCodeInvalidParameterValueException "InvalidParameterValue"
 //   The value for a parameter is invalid.
@@ -1305,7 +1305,7 @@ func (c *ElastiCache) DecreaseReplicaCountRequest(input *DecreaseReplicaCountInp
 //   * ErrCodeNodeGroupsPerReplicationGroupQuotaExceededFault "NodeGroupsPerReplicationGroupQuotaExceeded"
 //   The request cannot be processed because it would exceed the maximum allowed
 //   number of node groups (shards) in a single replication group. The default
-//   maximum is 15
+//   maximum is 90
 //
 //   * ErrCodeNodeQuotaForCustomerExceededFault "NodeQuotaForCustomerExceeded"
 //   The request cannot be processed because it would exceed the allowed number
@@ -4025,7 +4025,7 @@ func (c *ElastiCache) IncreaseReplicaCountRequest(input *IncreaseReplicaCountInp
 //   * ErrCodeNodeGroupsPerReplicationGroupQuotaExceededFault "NodeGroupsPerReplicationGroupQuotaExceeded"
 //   The request cannot be processed because it would exceed the maximum allowed
 //   number of node groups (shards) in a single replication group. The default
-//   maximum is 15
+//   maximum is 90
 //
 //   * ErrCodeNodeQuotaForCustomerExceededFault "NodeQuotaForCustomerExceeded"
 //   The request cannot be processed because it would exceed the allowed number
@@ -4033,6 +4033,9 @@ func (c *ElastiCache) IncreaseReplicaCountRequest(input *IncreaseReplicaCountInp
 //
 //   * ErrCodeNoOperationFault "NoOperationFault"
 //   The operation was not performed because no changes were required.
+//
+//   * ErrCodeInvalidKMSKeyFault "InvalidKMSKeyFault"
+//   The KMS key supplied is not valid.
 //
 //   * ErrCodeInvalidParameterValueException "InvalidParameterValue"
 //   The value for a parameter is invalid.
@@ -4107,10 +4110,10 @@ func (c *ElastiCache) ListAllowedNodeTypeModificationsRequest(input *ListAllowed
 // ListAllowedNodeTypeModifications API operation for Amazon ElastiCache.
 //
 // Lists all available node types that you can scale your Redis cluster's or
-// replication group's current node type up to.
+// replication group's current node type.
 //
 // When you use the ModifyCacheCluster or ModifyReplicationGroup operations
-// to scale up your cluster or replication group, the value of the CacheNodeType
+// to scale your cluster or replication group, the value of the CacheNodeType
 // parameter must be one of the node types returned by this operation.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
@@ -4653,6 +4656,9 @@ func (c *ElastiCache) ModifyReplicationGroupRequest(input *ModifyReplicationGrou
 //   * ErrCodeInvalidVPCNetworkStateFault "InvalidVPCNetworkStateFault"
 //   The VPC network is in an invalid state.
 //
+//   * ErrCodeInvalidKMSKeyFault "InvalidKMSKeyFault"
+//   The KMS key supplied is not valid.
+//
 //   * ErrCodeInvalidParameterValueException "InvalidParameterValue"
 //   The value for a parameter is invalid.
 //
@@ -4756,11 +4762,14 @@ func (c *ElastiCache) ModifyReplicationGroupShardConfigurationRequest(input *Mod
 //   * ErrCodeNodeGroupsPerReplicationGroupQuotaExceededFault "NodeGroupsPerReplicationGroupQuotaExceeded"
 //   The request cannot be processed because it would exceed the maximum allowed
 //   number of node groups (shards) in a single replication group. The default
-//   maximum is 15
+//   maximum is 90
 //
 //   * ErrCodeNodeQuotaForCustomerExceededFault "NodeQuotaForCustomerExceeded"
 //   The request cannot be processed because it would exceed the allowed number
 //   of cache nodes per customer.
+//
+//   * ErrCodeInvalidKMSKeyFault "InvalidKMSKeyFault"
+//   The KMS key supplied is not valid.
 //
 //   * ErrCodeInvalidParameterValueException "InvalidParameterValue"
 //   The value for a parameter is invalid.
@@ -5360,6 +5369,9 @@ func (c *ElastiCache) TestFailoverRequest(input *TestFailoverInput) (req *reques
 //   * ErrCodeTestFailoverNotAvailableFault "TestFailoverNotAvailableFault"
 //   The TestFailover action is not available.
 //
+//   * ErrCodeInvalidKMSKeyFault "InvalidKMSKeyFault"
+//   The KMS key supplied is not valid.
+//
 //   * ErrCodeInvalidParameterValueException "InvalidParameterValue"
 //   The value for a parameter is invalid.
 //
@@ -5750,7 +5762,7 @@ type CacheCluster struct {
 	// to true when you create a cluster.
 	//
 	// Required: Only available when creating a replication group in an Amazon VPC
-	// using redis version 3.2.6 or 4.x.
+	// using redis version 3.2.6, 4.x or later.
 	//
 	// Default: false
 	AtRestEncryptionEnabled *bool `type:"boolean"`
@@ -5912,7 +5924,7 @@ type CacheCluster struct {
 	// to true when you create a cluster.
 	//
 	// Required: Only available when creating a replication group in an Amazon VPC
-	// using redis version 3.2.6 or 4.x.
+	// using redis version 3.2.6, 4.x or later.
 	//
 	// Default: false
 	TransitEncryptionEnabled *bool `type:"boolean"`
@@ -6749,6 +6761,9 @@ func (s *ConfigureShard) SetPreferredAvailabilityZones(v []*string) *ConfigureSh
 type CopySnapshotInput struct {
 	_ struct{} `type:"structure"`
 
+	// The ID of the KMS key used to encrypt the target snapshot.
+	KmsKeyId *string `type:"string"`
+
 	// The name of an existing snapshot from which to make a copy.
 	//
 	// SourceSnapshotName is a required field
@@ -6798,6 +6813,12 @@ func (s *CopySnapshotInput) Validate() error {
 		return invalidParams
 	}
 	return nil
+}
+
+// SetKmsKeyId sets the KmsKeyId field's value.
+func (s *CopySnapshotInput) SetKmsKeyId(v string) *CopySnapshotInput {
+	s.KmsKeyId = &v
+	return s
 }
 
 // SetSourceSnapshotName sets the SourceSnapshotName field's value.
@@ -6878,7 +6899,7 @@ type CreateCacheClusterInput struct {
 	//
 	// Constraints:
 	//
-	//    * A name must contain from 1 to 20 alphanumeric characters or hyphens.
+	//    * A name must contain from 1 to 50 alphanumeric characters or hyphens.
 	//
 	//    * The first character must be a letter.
 	//
@@ -7571,7 +7592,7 @@ type CreateReplicationGroupInput struct {
 	// group.
 	//
 	// Required: Only available when creating a replication group in an Amazon VPC
-	// using redis version 3.2.6 or 4.x.
+	// using redis version 3.2.6, 4.x or later.
 	//
 	// Default: false
 	AtRestEncryptionEnabled *bool `type:"boolean"`
@@ -7700,6 +7721,9 @@ type CreateReplicationGroupInput struct {
 	// engine version.
 	EngineVersion *string `type:"string"`
 
+	// The ID of the KMS key used to encrypt the disk on the cluster.
+	KmsKeyId *string `type:"string"`
+
 	// A list of node group (shard) configuration options. Each node group (shard)
 	// configuration has the following members: PrimaryAvailabilityZone, ReplicaAvailabilityZones,
 	// ReplicaCount, and Slots.
@@ -7807,7 +7831,7 @@ type CreateReplicationGroupInput struct {
 	//
 	// Constraints:
 	//
-	//    * A name must contain from 1 to 20 alphanumeric characters or hyphens.
+	//    * A name must contain from 1 to 40 alphanumeric characters or hyphens.
 	//
 	//    * The first character must be a letter.
 	//
@@ -7866,13 +7890,13 @@ type CreateReplicationGroupInput struct {
 	// to true when you create a cluster.
 	//
 	// This parameter is valid only if the Engine parameter is redis, the EngineVersion
-	// parameter is 3.2.6 or 4.x, and the cluster is being created in an Amazon
-	// VPC.
+	// parameter is 3.2.6, 4.x or later, and the cluster is being created in an
+	// Amazon VPC.
 	//
 	// If you enable in-transit encryption, you must also specify a value for CacheSubnetGroup.
 	//
 	// Required: Only available when creating a replication group in an Amazon VPC
-	// using redis version 3.2.6 or 4.x.
+	// using redis version 3.2.6, 4.x or later.
 	//
 	// Default: false
 	//
@@ -7974,6 +7998,12 @@ func (s *CreateReplicationGroupInput) SetEngine(v string) *CreateReplicationGrou
 // SetEngineVersion sets the EngineVersion field's value.
 func (s *CreateReplicationGroupInput) SetEngineVersion(v string) *CreateReplicationGroupInput {
 	s.EngineVersion = &v
+	return s
+}
+
+// SetKmsKeyId sets the KmsKeyId field's value.
+func (s *CreateReplicationGroupInput) SetKmsKeyId(v string) *CreateReplicationGroupInput {
+	s.KmsKeyId = &v
 	return s
 }
 
@@ -8116,6 +8146,9 @@ type CreateSnapshotInput struct {
 	// cluster.
 	CacheClusterId *string `type:"string"`
 
+	// The ID of the KMS key used to encrypt the snapshot.
+	KmsKeyId *string `type:"string"`
+
 	// The identifier of an existing replication group. The snapshot is created
 	// from this replication group.
 	ReplicationGroupId *string `type:"string"`
@@ -8152,6 +8185,12 @@ func (s *CreateSnapshotInput) Validate() error {
 // SetCacheClusterId sets the CacheClusterId field's value.
 func (s *CreateSnapshotInput) SetCacheClusterId(v string) *CreateSnapshotInput {
 	s.CacheClusterId = &v
+	return s
+}
+
+// SetKmsKeyId sets the KmsKeyId field's value.
+func (s *CreateSnapshotInput) SetKmsKeyId(v string) *CreateSnapshotInput {
+	s.KmsKeyId = &v
 	return s
 }
 
@@ -10641,6 +10680,14 @@ type ListAllowedNodeTypeModificationsOutput struct {
 	// A string list, each element of which specifies a cache node type which you
 	// can use to scale your cluster or replication group.
 	//
+	// When scaling down on a Redis cluster or replication group using ModifyCacheCluster
+	// or ModifyReplicationGroup, use a value from this list for the CacheNodeType
+	// parameter.
+	ScaleDownModifications []*string `type:"list"`
+
+	// A string list, each element of which specifies a cache node type which you
+	// can use to scale your cluster or replication group.
+	//
 	// When scaling up a Redis cluster or replication group using ModifyCacheCluster
 	// or ModifyReplicationGroup, use a value from this list for the CacheNodeType
 	// parameter.
@@ -10655,6 +10702,12 @@ func (s ListAllowedNodeTypeModificationsOutput) String() string {
 // GoString returns the string representation
 func (s ListAllowedNodeTypeModificationsOutput) GoString() string {
 	return s.String()
+}
+
+// SetScaleDownModifications sets the ScaleDownModifications field's value.
+func (s *ListAllowedNodeTypeModificationsOutput) SetScaleDownModifications(v []*string) *ListAllowedNodeTypeModificationsOutput {
+	s.ScaleDownModifications = v
+	return s
 }
 
 // SetScaleUpModifications sets the ScaleUpModifications field's value.
@@ -10725,7 +10778,7 @@ type ModifyCacheClusterInput struct {
 	// Only newly created nodes are located in different Availability Zones. For
 	// instructions on how to move existing Memcached nodes to different Availability
 	// Zones, see the Availability Zone Considerations section of Cache Node Considerations
-	// for Memcached (https://docs.aws.amazon.com/AmazonElastiCache/latest/mem-ug/CacheNode.Memcached.html).
+	// for Memcached (https://docs.aws.amazon.com/AmazonElastiCache/latest/mem-ug/CacheNodes.SupportedTypes.html).
 	AZMode *string `type:"string" enum:"AZMode"`
 
 	// If true, this parameter causes the modifications in this request and any
@@ -10821,7 +10874,7 @@ type ModifyCacheClusterInput struct {
 	// Availability Zone. Only newly created nodes can be located in different Availability
 	// Zones. For guidance on how to move existing Memcached nodes to different
 	// Availability Zones, see the Availability Zone Considerations section of Cache
-	// Node Considerations for Memcached (https://docs.aws.amazon.com/AmazonElastiCache/latest/mem-ug/CacheNode.Memcached.html).
+	// Node Considerations for Memcached (https://docs.aws.amazon.com/AmazonElastiCache/latest/mem-ug/CacheNodes.SupportedTypes.html).
 	//
 	// Impact of new add/remove requests upon pending requests
 	//
@@ -11679,8 +11732,8 @@ type NodeGroup struct {
 
 	// The identifier for the node group (shard). A Redis (cluster mode disabled)
 	// replication group contains only 1 node group; therefore, the node group ID
-	// is 0001. A Redis (cluster mode enabled) replication group contains 1 to 15
-	// node groups numbered 0001 to 0015. Optionally, the user can provide the id
+	// is 0001. A Redis (cluster mode enabled) replication group contains 1 to 90
+	// node groups numbered 0001 to 0090. Optionally, the user can provide the id
 	// for a node group.
 	NodeGroupId *string `type:"string"`
 
@@ -12640,7 +12693,7 @@ type ReplicationGroup struct {
 	// to true when you create a cluster.
 	//
 	// Required: Only available when creating a replication group in an Amazon VPC
-	// using redis version 3.2.6 or 4.x.
+	// using redis version 3.2.6, 4.x or later.
 	//
 	// Default: false
 	AtRestEncryptionEnabled *bool `type:"boolean"`
@@ -12680,6 +12733,9 @@ type ReplicationGroup struct {
 
 	// The user supplied description of the replication group.
 	Description *string `type:"string"`
+
+	// The ID of the KMS key used to encrypt the disk in the cluster.
+	KmsKeyId *string `type:"string"`
 
 	// The names of all the cache clusters that are part of this replication group.
 	MemberClusters []*string `locationNameList:"ClusterId" type:"list"`
@@ -12731,7 +12787,7 @@ type ReplicationGroup struct {
 	// to true when you create a cluster.
 	//
 	// Required: Only available when creating a replication group in an Amazon VPC
-	// using redis version 3.2.6 or 4.x.
+	// using redis version 3.2.6, 4.x or later.
 	//
 	// Default: false
 	TransitEncryptionEnabled *bool `type:"boolean"`
@@ -12786,6 +12842,12 @@ func (s *ReplicationGroup) SetConfigurationEndpoint(v *Endpoint) *ReplicationGro
 // SetDescription sets the Description field's value.
 func (s *ReplicationGroup) SetDescription(v string) *ReplicationGroup {
 	s.Description = &v
+	return s
+}
+
+// SetKmsKeyId sets the KmsKeyId field's value.
+func (s *ReplicationGroup) SetKmsKeyId(v string) *ReplicationGroup {
+	s.KmsKeyId = &v
 	return s
 }
 
@@ -13683,6 +13745,9 @@ type Snapshot struct {
 	// The version of the cache engine version that is used by the source cluster.
 	EngineVersion *string `type:"string"`
 
+	// The ID of the KMS key used to encrypt the snapshot.
+	KmsKeyId *string `type:"string"`
+
 	// A list of the cache nodes in the source cluster.
 	NodeSnapshots []*NodeSnapshot `locationNameList:"NodeSnapshot" type:"list"`
 
@@ -13830,6 +13895,12 @@ func (s *Snapshot) SetEngine(v string) *Snapshot {
 // SetEngineVersion sets the EngineVersion field's value.
 func (s *Snapshot) SetEngineVersion(v string) *Snapshot {
 	s.EngineVersion = &v
+	return s
+}
+
+// SetKmsKeyId sets the KmsKeyId field's value.
+func (s *Snapshot) SetKmsKeyId(v string) *Snapshot {
+	s.KmsKeyId = &v
 	return s
 }
 

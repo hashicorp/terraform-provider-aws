@@ -1,7 +1,6 @@
 ---
 layout: "aws"
 page_title: "Serverless with AWS Lambda and API Gateway"
-sidebar_current: "docs-aws-guide-serverless"
 description: |-
   Using Terraform to configure a serverless application with AWS Lambda and API Gateway.
 ---
@@ -151,7 +150,7 @@ resource "aws_lambda_function" "example" {
   # is the name of the property under which the handler function was
   # exported in that file.
   handler = "main.handler"
-  runtime = "nodejs6.10"
+  runtime = "nodejs8.10"
 
   role = "${aws_iam_role.lambda_exec.arn}"
 }
@@ -227,7 +226,7 @@ aws_lambda_function.example: Creating...
   publish:          "" => "false"
   qualified_arn:    "" => "<computed>"
   role:             "" => "arn:aws:iam::123456:role/serverless_example_lambda"
-  runtime:          "" => "nodejs6.10"
+  runtime:          "" => "nodejs8.10"
   s3_bucket:        "" => "terraform-serverless-example"
   s3_key:           "" => "v1.0.0/example.zip"
   source_code_hash: "" => "<computed>"

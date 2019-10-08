@@ -91,7 +91,7 @@ const (
 	// ErrCodeResourceNotFound for service response error code
 	// "ResourceNotFound".
 	//
-	// Could not fine the referenced resource. Only state machine and activity ARNs
+	// Could not find the referenced resource. Only state machine and activity ARNs
 	// are supported.
 	ErrCodeResourceNotFound = "ResourceNotFound"
 

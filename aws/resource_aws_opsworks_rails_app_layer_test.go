@@ -7,9 +7,9 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/opsworks"
-	"github.com/hashicorp/terraform/helper/acctest"
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/terraform"
 )
 
 // These tests assume the existence of predefined Opsworks IAM roles named `aws-opsworks-ec2-role`
@@ -77,10 +77,6 @@ func testAccCheckAwsOpsworksRailsAppLayerDestroy(s *terraform.State) error {
 
 func testAccAwsOpsworksRailsAppLayerConfigVpcCreate(name string) string {
 	return fmt.Sprintf(`
-provider "aws" {
-  region = "us-west-2"
-}
-
 resource "aws_opsworks_rails_app_layer" "tf-acc" {
   stack_id = "${aws_opsworks_stack.tf-acc.id}"
   name     = "%s"
@@ -101,10 +97,6 @@ resource "aws_opsworks_rails_app_layer" "tf-acc" {
 
 func testAccAwsOpsworksRailsAppLayerNoManageBundlerConfigVpcCreate(name string) string {
 	return fmt.Sprintf(`
-provider "aws" {
-  region = "us-west-2"
-}
-
 resource "aws_opsworks_rails_app_layer" "tf-acc" {
   stack_id = "${aws_opsworks_stack.tf-acc.id}"
   name     = "%s"

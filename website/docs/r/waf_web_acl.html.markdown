@@ -1,7 +1,6 @@
 ---
 layout: "aws"
 page_title: "AWS: aws_waf_web_acl"
-sidebar_current: "docs-aws-resource-waf-webacl"
 description: |-
   Provides a AWS WAF web access control group (ACL) resource.
 ---
@@ -91,7 +90,7 @@ The following arguments are supported:
 
 ### `default_action` Configuration Block
 
-* `type` - (Required) Specifies how you want AWS WAF to respond to requests that match the settings in a rule.
+* `type` - (Required) Specifies how you want AWS WAF to respond to requests that don't match the criteria in any of the `rules`.
   e.g. `ALLOW`, `BLOCK` or `COUNT`
 
 ### `logging_configuration` Configuration Block

@@ -1,7 +1,6 @@
 ---
 layout: "aws"
 page_title: "AWS: aws_opsworks_custom_layer"
-sidebar_current: "docs-aws-resource-opsworks-custom-layer"
 description: |-
   Provides an OpsWorks custom layer resource.
 ---

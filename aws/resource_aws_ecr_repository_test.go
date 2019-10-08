@@ -6,9 +6,9 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ecr"
-	"github.com/hashicorp/terraform/helper/acctest"
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/terraform"
 )
 
 func TestAccAWSEcrRepository_basic(t *testing.T) {
@@ -65,6 +65,32 @@ func TestAccAWSEcrRepository_tags(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Usage", "changed"),
 				),
+			},
+		},
+	})
+}
+
+func TestAccAWSEcrRepository_immutability(t *testing.T) {
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_ecr_repository.default"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSEcrRepositoryDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSEcrRepositoryConfig_immutability(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSEcrRepositoryExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, "image_tag_mutability", "IMMUTABLE"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})
@@ -156,6 +182,15 @@ resource "aws_ecr_repository" "default" {
   tags = {
     Usage = "changed"
   }
+}
+`, rName)
+}
+
+func testAccAWSEcrRepositoryConfig_immutability(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_ecr_repository" "default" {
+  name = %q
+  image_tag_mutability = "IMMUTABLE"
 }
 `, rName)
 }

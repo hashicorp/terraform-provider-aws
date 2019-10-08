@@ -10,10 +10,10 @@ import (
 	"strings"
 	"time"
 
-	"github.com/hashicorp/terraform/helper/hashcode"
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/helper/schema"
-	"github.com/hashicorp/terraform/helper/validation"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/hashcode"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
@@ -278,6 +278,18 @@ func resourceAwsRoute53RecordUpdate(d *schema.ResourceData, meta interface{}) er
 	oldRec := &route53.ResourceRecordSet{
 		Name: aws.String(en),
 		Type: aws.String(typeo.(string)),
+	}
+
+	// If the old record had a weighted_routing_policy we need to pass that in
+	// here because otherwise the API will give us an error.
+	if v, _ := d.GetChange("weighted_routing_policy"); v != nil {
+		if o, ok := v.([]interface{}); ok {
+			if len(o) == 1 {
+				if v, ok := o[0].(map[string]interface{}); ok {
+					oldRec.Weight = aws.Int64(int64(v["weight"].(int)))
+				}
+			}
+		}
 	}
 
 	if v, _ := d.GetChange("ttl"); v.(int) != 0 {

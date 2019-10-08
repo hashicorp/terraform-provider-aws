@@ -6,8 +6,9 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/eks"
-	"github.com/hashicorp/terraform/helper/schema"
-	"github.com/hashicorp/terraform/helper/validation"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 )
 
 func dataSourceAwsEksCluster() *schema.Resource {
@@ -46,6 +47,26 @@ func dataSourceAwsEksCluster() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"identity": {
+				Type:     schema.TypeList,
+				Computed: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"oidc": {
+							Type:     schema.TypeList,
+							Computed: true,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"issuer": {
+										Type:     schema.TypeString,
+										Computed: true,
+									},
+								},
+							},
+						},
+					},
+				},
+			},
 			"name": {
 				Type:         schema.TypeString,
 				Required:     true,
@@ -60,6 +81,11 @@ func dataSourceAwsEksCluster() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"status": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"tags": tagsSchemaComputed(),
 			"vpc_config": {
 				Type:     schema.TypeList,
 				MaxItems: 1,
@@ -130,9 +156,20 @@ func dataSourceAwsEksClusterRead(d *schema.ResourceData, meta interface{}) error
 		return fmt.Errorf("error setting enabled_cluster_log_types: %s", err)
 	}
 	d.Set("endpoint", cluster.Endpoint)
+
+	if err := d.Set("identity", flattenEksIdentity(cluster.Identity)); err != nil {
+		return fmt.Errorf("error setting identity: %s", err)
+	}
+
 	d.Set("name", cluster.Name)
 	d.Set("platform_version", cluster.PlatformVersion)
 	d.Set("role_arn", cluster.RoleArn)
+	d.Set("status", cluster.Status)
+
+	if err := d.Set("tags", keyvaluetags.EksKeyValueTags(cluster.Tags).IgnoreAws().Map()); err != nil {
+		return fmt.Errorf("error setting tags: %s", err)
+	}
+
 	d.Set("version", cluster.Version)
 
 	if err := d.Set("vpc_config", flattenEksVpcConfigResponse(cluster.ResourcesVpcConfig)); err != nil {

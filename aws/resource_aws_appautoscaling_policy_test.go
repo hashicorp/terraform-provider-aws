@@ -2,14 +2,74 @@ package aws
 
 import (
 	"fmt"
+	"reflect"
+	"strings"
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/applicationautoscaling"
-	"github.com/hashicorp/terraform/helper/acctest"
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/terraform"
 )
+
+func TestValidateAppautoscalingPolicyImportInput(t *testing.T) {
+	testCases := []struct {
+		input         string
+		errorExpected bool
+		expected      []string
+	}{
+		{
+			input:         "appstream/fleet/sample-fleet/appstream:fleet:DesiredCapacity/test-policy-name",
+			expected:      []string{"appstream", "fleet/sample-fleet", "appstream:fleet:DesiredCapacity", "test-policy-name"},
+			errorExpected: false,
+		},
+		{
+			input:         "dynamodb/table/tableName/dynamodb:table:ReadCapacityUnits/DynamoDBReadCapacityUtilization:table/tableName",
+			expected:      []string{"dynamodb", "table/tableName", "dynamodb:table:ReadCapacityUnits", "DynamoDBReadCapacityUtilization:table/tableName"},
+			errorExpected: false,
+		},
+		{
+			input:         "ec2/spot-fleet-request/sfr-d77c6508-1c1d-4e79-8789-fc019ee44c96/ec2:spot-fleet-request:TargetCapacity/test-appautoscaling-policy-ruuhd",
+			expected:      []string{"ec2", "spot-fleet-request/sfr-d77c6508-1c1d-4e79-8789-fc019ee44c96", "ec2:spot-fleet-request:TargetCapacity", "test-appautoscaling-policy-ruuhd"},
+			errorExpected: false,
+		},
+		{
+			input:         "ecs/service/clusterName/serviceName/ecs:service:DesiredCount/scale-down",
+			expected:      []string{"ecs", "service/clusterName/serviceName", "ecs:service:DesiredCount", "scale-down"},
+			errorExpected: false,
+		},
+		{
+			input:         "elasticmapreduce/instancegroup/j-2EEZNYKUA1NTV/ig-1791Y4E1L8YI0/elasticmapreduce:instancegroup:InstanceCount/test-appautoscaling-policy-ruuhd",
+			expected:      []string{"elasticmapreduce", "instancegroup/j-2EEZNYKUA1NTV/ig-1791Y4E1L8YI0", "elasticmapreduce:instancegroup:InstanceCount", "test-appautoscaling-policy-ruuhd"},
+			errorExpected: false,
+		},
+		{
+			input:         "rds/cluster:id/rds:cluster:ReadReplicaCount/cpu-auto-scaling",
+			expected:      []string{"rds", "cluster:id", "rds:cluster:ReadReplicaCount", "cpu-auto-scaling"},
+			errorExpected: false,
+		},
+		{
+			input:         "dynamodb/missing/parts",
+			errorExpected: true,
+		},
+	}
+
+	for _, tc := range testCases {
+		idParts, err := validateAppautoscalingPolicyImportInput(tc.input)
+		if tc.errorExpected == false && err != nil {
+			t.Errorf("validateAppautoscalingPolicyImportInput(%q): resulted in an unexpected error: %s", tc.input, err)
+		}
+
+		if tc.errorExpected == true && err == nil {
+			t.Errorf("validateAppautoscalingPolicyImportInput(%q): expected an error, but returned successfully", tc.input)
+		}
+
+		if !reflect.DeepEqual(tc.expected, idParts) {
+			t.Errorf("validateAppautoscalingPolicyImportInput(%q): expected %q, but got %q", tc.input, strings.Join(tc.expected, "/"), strings.Join(idParts, "/"))
+		}
+	}
+}
 
 func TestAccAWSAppautoScalingPolicy_basic(t *testing.T) {
 	var policy applicationautoscaling.ScalingPolicy
@@ -184,7 +244,8 @@ func TestAccAWSAppautoScalingPolicy_dynamoDb(t *testing.T) {
 				Config: testAccAWSAppautoscalingPolicyDynamoDB(randPolicyName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSAppautoscalingPolicyExists("aws_appautoscaling_policy.dynamo_test", &policy),
-					resource.TestCheckResourceAttr("aws_appautoscaling_policy.dynamo_test", "name", randPolicyName),
+					resource.TestCheckResourceAttr("aws_appautoscaling_policy.dynamo_test", "name", fmt.Sprintf("DynamoDBWriteCapacityUtilization:table/%s", randPolicyName)),
+					resource.TestCheckResourceAttr("aws_appautoscaling_policy.dynamo_test", "policy_type", "TargetTrackingScaling"),
 					resource.TestCheckResourceAttr("aws_appautoscaling_policy.dynamo_test", "service_namespace", "dynamodb"),
 					resource.TestCheckResourceAttr("aws_appautoscaling_policy.dynamo_test", "scalable_dimension", "dynamodb:table:WriteCapacityUnits"),
 				),
@@ -529,10 +590,10 @@ resource "aws_appautoscaling_target" "dynamo_test" {
 }
 
 resource "aws_appautoscaling_policy" "dynamo_test" {
-  name               = "%s"
-  policy_type        = "TargetTrackingScaling"
-  service_namespace  = "dynamodb"
-  resource_id        = "table/${aws_dynamodb_table.dynamodb_table_test.name}"
+  name = "DynamoDBWriteCapacityUtilization:${aws_appautoscaling_target.dynamo_test.resource_id}"
+  policy_type = "TargetTrackingScaling"
+  service_namespace = "dynamodb"
+  resource_id = "table/${aws_dynamodb_table.dynamodb_table_test.name}"
   scalable_dimension = "dynamodb:table:WriteCapacityUnits"
 
   target_tracking_scaling_policy_configuration {
@@ -547,7 +608,7 @@ resource "aws_appautoscaling_policy" "dynamo_test" {
 
   depends_on = ["aws_appautoscaling_target.dynamo_test"]
 }
-`, randPolicyName, randPolicyName)
+`, randPolicyName)
 }
 
 func testAccAWSAppautoscalingPolicy_multiplePoliciesSameName(tableName1, tableName2, namePrefix string) string {

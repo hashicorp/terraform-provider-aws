@@ -6,7 +6,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/lightsail"
-	"github.com/hashicorp/terraform/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 )
 
 func resourceAwsLightsailStaticIpAttachment() *schema.Resource {
@@ -25,6 +25,10 @@ func resourceAwsLightsailStaticIpAttachment() *schema.Resource {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
+			},
+			"ip_address": {
+				Type:     schema.TypeString,
+				Computed: true,
 			},
 		},
 	}
@@ -76,6 +80,7 @@ func resourceAwsLightsailStaticIpAttachmentRead(d *schema.ResourceData, meta int
 	log.Printf("[INFO] Received Lightsail Static IP: %s", *out)
 
 	d.Set("instance_name", out.StaticIp.AttachedTo)
+	d.Set("ip_address", out.StaticIp.IpAddress)
 
 	return nil
 }

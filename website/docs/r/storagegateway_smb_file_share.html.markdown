@@ -1,7 +1,6 @@
 ---
 layout: "aws"
 page_title: "AWS: aws_storagegateway_smb_file_share"
-sidebar_current: "docs-aws-resource-storagegateway-smb-file-share"
 description: |-
   Manages an AWS Storage Gateway SMB File Share
 ---

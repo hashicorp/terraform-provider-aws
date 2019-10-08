@@ -1,7 +1,6 @@
 ---
 layout: "aws"
 page_title: "AWS: aws_glue_script"
-sidebar_current: "docs-aws-datasource-glue-script"
 description: |-
   Generate Glue script from Directed Acyclic Graph
 ---

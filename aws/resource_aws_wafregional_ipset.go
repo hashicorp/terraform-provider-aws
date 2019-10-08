@@ -9,7 +9,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/waf"
 	"github.com/aws/aws-sdk-go/service/wafregional"
-	"github.com/hashicorp/terraform/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 )
 
 func resourceAwsWafRegionalIPSet() *schema.Resource {
@@ -18,6 +18,9 @@ func resourceAwsWafRegionalIPSet() *schema.Resource {
 		Read:   resourceAwsWafRegionalIPSetRead,
 		Update: resourceAwsWafRegionalIPSetUpdate,
 		Delete: resourceAwsWafRegionalIPSetDelete,
+		Importer: &schema.ResourceImporter{
+			State: schema.ImportStatePassthrough,
+		},
 
 		Schema: map[string]*schema.Schema{
 			"name": {

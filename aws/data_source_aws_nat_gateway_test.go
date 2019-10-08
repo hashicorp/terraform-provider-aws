@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/hashicorp/terraform/helper/acctest"
-	"github.com/hashicorp/terraform/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
 )
 
 func TestAccDataSourceAwsNatGateway(t *testing.T) {
@@ -43,10 +43,6 @@ func TestAccDataSourceAwsNatGateway(t *testing.T) {
 
 func testAccDataSourceAwsNatGatewayConfig(rInt int) string {
 	return fmt.Sprintf(`
-provider "aws" {
-  region = "us-west-2"
-}
-
 resource "aws_vpc" "test" {
   cidr_block = "172.%d.0.0/16"
 

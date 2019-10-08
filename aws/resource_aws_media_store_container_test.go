@@ -6,28 +6,12 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/mediastore"
-	"github.com/hashicorp/terraform/helper/acctest"
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/terraform"
 )
 
 func TestAccAWSMediaStoreContainer_basic(t *testing.T) {
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSMediaStore(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckAwsMediaStoreContainerDestroy,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccMediaStoreContainerConfig(acctest.RandString(5)),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsMediaStoreContainerExists("aws_media_store_container.test"),
-				),
-			},
-		},
-	})
-}
-
-func TestAccAWSMediaStoreContainer_import(t *testing.T) {
 	resourceName := "aws_media_store_container.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -37,11 +21,59 @@ func TestAccAWSMediaStoreContainer_import(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccMediaStoreContainerConfig(acctest.RandString(5)),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAwsMediaStoreContainerExists(resourceName),
+				),
 			},
 			{
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccAWSMediaStoreContainer_tags(t *testing.T) {
+	rName := acctest.RandString(5)
+	resourceName := "aws_media_store_container.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSMediaStore(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAwsMediaStoreContainerDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccMediaStoreContainerConfigWithTags(rName, "foo", "bar", "fizz", "buzz"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAwsMediaStoreContainerExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "3"),
+					resource.TestCheckResourceAttr(resourceName, "tags.Name", fmt.Sprintf("tf_mediastore_%s", rName)),
+					resource.TestCheckResourceAttr(resourceName, "tags.foo", "bar"),
+					resource.TestCheckResourceAttr(resourceName, "tags.fizz", "buzz"),
+				),
+			},
+			{
+				Config: testAccMediaStoreContainerConfigWithTags(rName, "foo", "bar2", "fizz2", "buzz2"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAwsMediaStoreContainerExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "3"),
+					resource.TestCheckResourceAttr(resourceName, "tags.Name", fmt.Sprintf("tf_mediastore_%s", rName)),
+					resource.TestCheckResourceAttr(resourceName, "tags.foo", "bar2"),
+					resource.TestCheckResourceAttr(resourceName, "tags.fizz2", "buzz2"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccMediaStoreContainerConfig(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAwsMediaStoreContainerExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+				),
 			},
 		},
 	})
@@ -115,4 +147,18 @@ resource "aws_media_store_container" "test" {
   name = "tf_mediastore_%s"
 }
 `, rName)
+}
+
+func testAccMediaStoreContainerConfigWithTags(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
+	return fmt.Sprintf(`
+resource "aws_media_store_container" "test" {
+  name = "tf_mediastore_%[1]s"
+
+  tags = {
+	Name  = "tf_mediastore_%[1]s"
+	%[2]s = %[3]q
+	%[4]s = %[5]q
+  }
+}
+`, rName, tagKey1, tagValue1, tagKey2, tagValue2)
 }

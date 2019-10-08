@@ -1,7 +1,6 @@
 ---
 layout: "aws"
 page_title: "AWS: aws_ses_identity_policy"
-sidebar_current: "docs-aws-resource-ses-identity-policy"
 description: |-
   Manages a SES Identity Policy
 ---
