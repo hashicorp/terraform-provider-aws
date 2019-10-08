@@ -238,6 +238,65 @@ func TestAccAWSWafWebAcl_disappears(t *testing.T) {
 	})
 }
 
+func TestAccAWSWafWebAcl_Tags(t *testing.T) {
+	var webACL waf.WebACL
+	rName := fmt.Sprintf("wafacl%s", acctest.RandString(5))
+	resourceName := "aws_waf_web_acl.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSWaf(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSWafWebAclDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSWafWebAclConfigTags1(rName, "key1", "value1"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSWafWebAclExists(resourceName, &webACL),
+					resource.TestCheckResourceAttr(resourceName, "default_action.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "default_action.4234791575.type", "ALLOW"),
+					resource.TestCheckResourceAttr(resourceName, "metric_name", rName),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
+					resource.TestCheckResourceAttr(resourceName, "rules.#", "0"),
+				),
+			},
+			{
+				Config: testAccAWSWafWebAclConfigTags2(rName, "key1", "value1updated", "key2", "value2"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSWafWebAclExists(resourceName, &webACL),
+					resource.TestCheckResourceAttr(resourceName, "default_action.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "default_action.4234791575.type", "ALLOW"),
+					resource.TestCheckResourceAttr(resourceName, "metric_name", rName),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+					resource.TestCheckResourceAttr(resourceName, "rules.#", "0"),
+				),
+			},
+			{
+				Config: testAccAWSWafWebAclConfigTags1(rName, "key2", "value2"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSWafWebAclExists(resourceName, &webACL),
+					resource.TestCheckResourceAttr(resourceName, "default_action.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "default_action.4234791575.type", "ALLOW"),
+					resource.TestCheckResourceAttr(resourceName, "metric_name", rName),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+					resource.TestCheckResourceAttr(resourceName, "rules.#", "0"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func testAccCheckAWSWafWebAclDisappears(v *waf.WebACL) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := testAccProvider.Meta().(*AWSClient).wafconn
@@ -325,6 +384,8 @@ resource "aws_waf_web_acl" "test" {
   default_action {
     type = "ALLOW"
   }
+
+
 }
 `, rName, rName)
 }
@@ -338,6 +399,8 @@ resource "aws_waf_web_acl" "test" {
   default_action {
     type = %q
   }
+
+
 }
 `, rName, rName, defaultAction)
 }
@@ -380,6 +443,8 @@ resource "aws_waf_web_acl" "test" {
       type = "BLOCK"
     }
   }
+
+
 }
 `, rName, rName, rName, rName, rName)
 }
@@ -408,6 +473,8 @@ resource "aws_waf_web_acl" "test" {
       type = "NONE"
     }
   }
+
+
 }
 `, rName, rName, rName, rName)
 }
@@ -465,6 +532,8 @@ resource "aws_waf_web_acl" "test" {
       type = "NONE"
     }
   }
+
+
 }
 `, rName, rName, rName, rName, rName, rName, rName)
 }
@@ -492,6 +561,8 @@ resource "aws_waf_web_acl" "test" {
         type = "HEADER"
       }
     }
+
+
   }
 }
 
@@ -546,6 +617,8 @@ resource "aws_waf_web_acl" "test" {
   logging_configuration {
     log_destination = "${aws_kinesis_firehose_delivery_stream.test.arn}"
   }
+
+
 }
 
 resource "aws_s3_bucket" "test" {
@@ -584,4 +657,37 @@ resource "aws_kinesis_firehose_delivery_stream" "test" {
   }
 }
 `, rName)
+}
+
+func testAccAWSWafWebAclConfigTags1(rName, tag1Key, tag1Value string) string {
+	return fmt.Sprintf(`
+resource "aws_waf_web_acl" "test" {
+  metric_name = %q
+  name        = %q
+
+  default_action {
+    type = "ALLOW"
+  }
+	tags = {
+		%q = %q
+	}
+}
+`, rName, rName, tag1Key, tag1Value)
+}
+
+func testAccAWSWafWebAclConfigTags2(rName, tag1Key, tag1Value, tag2Key, tag2Value string) string {
+	return fmt.Sprintf(`
+resource "aws_waf_web_acl" "test" {
+  metric_name = %q
+  name        = %q
+
+  default_action {
+    type = "ALLOW"
+  }
+	tags = {
+		%q = %q
+		%q = %q
+	}
+}
+`, rName, rName, tag1Key, tag1Value, tag2Key, tag2Value)
 }

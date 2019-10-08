@@ -156,7 +156,10 @@ func resourceAwsWafWebAclCreate(d *schema.ResourceData, meta interface{}) error 
 			DefaultAction: expandWafAction(d.Get("default_action").(*schema.Set).List()),
 			MetricName:    aws.String(d.Get("metric_name").(string)),
 			Name:          aws.String(d.Get("name").(string)),
-			Tags:          tags,
+		}
+
+		if len(tags) > 0 {
+			params.Tags = tags
 		}
 
 		return conn.CreateWebACL(params)
