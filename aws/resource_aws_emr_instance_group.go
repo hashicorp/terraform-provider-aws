@@ -177,6 +177,12 @@ func resourceAwsEMRInstanceGroupRead(d *schema.ResourceData, meta interface{}) e
 		return fmt.Errorf("error reading EMR Instance Group (%s): %s", d.Id(), err)
 	}
 
+	if *ig.Status.State == "TERMINATED" {
+		log.Printf("[DEBUG] EMR Instance Group (%s) terminated, removing", d.Id())
+		d.SetId("")
+		return nil
+	}
+
 	var autoscalingPolicyString string
 	if ig.AutoScalingPolicy != nil {
 		// AutoScalingPolicy has an additional Status field and null values that are causing a new hashcode to be generated for `instance_group`.
