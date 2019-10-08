@@ -276,6 +276,8 @@ github.com/gobwas/glob/syntax/ast
 github.com/gobwas/glob/syntax/lexer
 github.com/gobwas/glob/util/runes
 github.com/gobwas/glob/util/strings
+# github.com/gofrs/flock v0.7.1
+github.com/gofrs/flock
 # github.com/gogo/protobuf v1.2.1
 github.com/gogo/protobuf/proto
 github.com/gogo/protobuf/sortkeys
@@ -495,7 +497,7 @@ github.com/kisielk/gotool
 github.com/kisielk/gotool/internal/load
 # github.com/konsorten/go-windows-terminal-sequences v1.0.1
 github.com/konsorten/go-windows-terminal-sequences
-# github.com/kubernetes-sigs/aws-iam-authenticator v0.3.1-0.20181019024009-82544ec86140
+# github.com/kubernetes-sigs/aws-iam-authenticator v0.4.0
 github.com/kubernetes-sigs/aws-iam-authenticator/pkg/arn
 github.com/kubernetes-sigs/aws-iam-authenticator/pkg/token
 # github.com/magiconair/properties v1.8.0

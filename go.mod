@@ -8,6 +8,7 @@ require (
 	github.com/beevik/etree v1.1.0
 	github.com/bflad/tfproviderlint v0.5.0
 	github.com/client9/misspell v0.3.4
+	github.com/gofrs/flock v0.7.1 // indirect
 	github.com/golangci/golangci-lint v1.19.1
 	github.com/google/gofuzz v0.0.0-20170612174753-24818f796faf // indirect
 	github.com/hashicorp/aws-sdk-go-base v0.4.0
@@ -18,7 +19,7 @@ require (
 	github.com/hashicorp/vault v0.10.4
 	github.com/jen20/awspolicyequivalence v1.0.0
 	github.com/json-iterator/go v1.1.5 // indirect
-	github.com/kubernetes-sigs/aws-iam-authenticator v0.3.1-0.20181019024009-82544ec86140
+	github.com/kubernetes-sigs/aws-iam-authenticator v0.4.0
 	github.com/mitchellh/copystructure v1.0.0
 	github.com/mitchellh/go-homedir v1.1.0
 	github.com/modern-go/concurrent v0.0.0-20180306012644-bacd9c7ef1dd // indirect
