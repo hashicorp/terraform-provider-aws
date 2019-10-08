@@ -667,6 +667,33 @@ func TestAccAWSMqBroker_updateTags(t *testing.T) {
 	})
 }
 
+func TestAccAWSMqBroker_updateSecurityGroup(t *testing.T) {
+	sgName := fmt.Sprintf("tf-acc-test-%s", acctest.RandString(5))
+	brokerName := fmt.Sprintf("tf-acc-test-%s", acctest.RandString(5))
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSMq(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAwsMqBrokerDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccMqBrokerConfig(sgName, brokerName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAwsMqBrokerExists("aws_mq_broker.test"),
+					resource.TestCheckResourceAttr("aws_mq_broker.test", "security_groups.#", "1"),
+				),
+			},
+			{
+				Config: testAccMqBrokerConfig_updateSecurityGroups(sgName, brokerName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAwsMqBrokerExists("aws_mq_broker.test"),
+					resource.TestCheckResourceAttr("aws_mq_broker.test", "security_groups.#", "2"),
+				),
+			},
+		},
+	})
+}
+
 func testAccCheckAwsMqBrokerDestroy(s *terraform.State) error {
 	conn := testAccProvider.Meta().(*AWSClient).mqconn
 
@@ -1117,14 +1144,32 @@ resource "aws_mq_broker" "test" {
   host_instance_type = "mq.t2.micro"
   security_groups    = ["${aws_security_group.test.id}"]
 
+}
+`, sgName, brokerName)
+}
+
+func testAccMqBrokerConfig_updateSecurityGroups(sgName, brokerName string) string {
+	return fmt.Sprintf(`
+resource "aws_security_group" "test" {
+  name = "%s"
+}
+
+resource "aws_security_group" "test2" {
+  name = "%s-2"
+}
+
+resource "aws_mq_broker" "test" {
+  apply_immediately  = true
+  broker_name        = "%s"
+  engine_type        = "ActiveMQ"
+  engine_version     = "5.15.0"
+  host_instance_type = "mq.t2.micro"
+  security_groups    = ["${aws_security_group.test.id}", "${aws_security_group.test2.id}"]
+
   user {
     username = "Test"
     password = "TestTest1234"
   }
-
-  tags = {
-    role = "test-role"
-  }
 }
-`, sgName, brokerName)
+`, sgName, sgName, brokerName)
 }
